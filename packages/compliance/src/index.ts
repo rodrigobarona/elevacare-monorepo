@@ -38,6 +38,11 @@ export {
   PHASE5_DSAR_COLLECTOR_IDS,
 } from "./dsar-phase5-collectors"
 export {
+  eraseMemberSessionDocuments,
+  ensureSessionDocumentDsarCollector,
+  SESSION_DOCUMENT_DSAR_COLLECTOR_ID,
+} from "./session-document-lifecycle"
+export {
   dsarExport,
   signDsarDownloadToken,
   verifyDsarDownloadToken,

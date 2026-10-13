@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   isWritableSessionRecordKind,
   SESSION_RECORD_KINDS,
+  SessionDocumentError,
   SessionRecordError,
 } from "./errors"
 
@@ -21,5 +22,11 @@ describe("session record kinds", () => {
     const err = new SessionRecordError("INTAKE_READONLY")
     expect(err.code).toBe("INTAKE_READONLY")
     expect(err.name).toBe("SessionRecordError")
+  })
+
+  it("exposes document error codes", () => {
+    const err = new SessionDocumentError("INVALID_PATHNAME")
+    expect(err.code).toBe("INVALID_PATHNAME")
+    expect(err.name).toBe("SessionDocumentError")
   })
 })

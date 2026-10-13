@@ -45,6 +45,7 @@ export type AuditEntity =
   | "account_deletion_request"
   | "session"
   | "record"
+  | "session_document"
   | "org_data_key"
   | "payout"
   | "refund"

@@ -72,6 +72,16 @@ export const CLINICAL_RECORDS_TABLES = ["records"] as const
 export type ClinicalRecordsTable = (typeof CLINICAL_RECORDS_TABLES)[number]
 
 /**
+ * Private-blob session documents. Author/assigned-expert writes via
+ * uploaded_by; member SELECT only when scope = shared. Must not go
+ * through TENANT_TABLES or CLINICAL_RECORDS_TABLES — those rebuilds
+ * assume created_by / kind / published_at.
+ */
+export const SESSION_DOCUMENTS_TABLES = ["session_documents"] as const
+
+export type SessionDocumentsTable = (typeof SESSION_DOCUMENTS_TABLES)[number]
+
+/**
  * Member clinic-share opt-outs. Member writes own rows; org can SELECT
  * so the records D-11 predicate can see them.
  */
@@ -277,6 +287,73 @@ export function buildMainRlsStatements(): string[] {
       `CREATE POLICY ${table}_member_published_read ON ${table} FOR SELECT ` +
         `USING (` +
         `published_at IS NOT NULL ` +
+        `AND member_user_id::text = current_setting('eleva.user_id', true)` +
+        `);`
+    )
+  }
+  for (const table of SESSION_DOCUMENTS_TABLES) {
+    out.push(`ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY;`)
+    out.push(`ALTER TABLE ${table} FORCE ROW LEVEL SECURITY;`)
+    out.push(`DROP POLICY IF EXISTS ${table}_tenant_isolation ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_author_select ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_author_insert ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_author_update ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_author_delete ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_clinic_shared_read ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_member_shared_read ON ${table};`)
+    out.push(
+      `CREATE POLICY ${table}_author_select ON ${table} FOR SELECT ` +
+        `USING (` +
+        `org_id::text = current_setting('eleva.org_id', true) ` +
+        `AND (` +
+        `uploaded_by::text = current_setting('eleva.user_id', true) ` +
+        `OR EXISTS (` +
+        `SELECT 1 FROM bookings b WHERE b.id = ${table}.booking_id ` +
+        `AND b.expert_user_id::text = current_setting('eleva.user_id', true)` +
+        `)` +
+        `)` +
+        `);`
+    )
+    const authorRow =
+      `org_id::text = current_setting('eleva.org_id', true) ` +
+      `AND uploaded_by::text = current_setting('eleva.user_id', true)`
+    out.push(
+      `CREATE POLICY ${table}_author_insert ON ${table} FOR INSERT ` +
+        `WITH CHECK (${authorRow});`
+    )
+    out.push(
+      `CREATE POLICY ${table}_author_update ON ${table} FOR UPDATE ` +
+        `USING (${authorRow}) WITH CHECK (${authorRow});`
+    )
+    out.push(
+      `CREATE POLICY ${table}_author_delete ON ${table} FOR DELETE ` +
+        `USING (${authorRow});`
+    )
+    out.push(
+      `CREATE POLICY ${table}_clinic_shared_read ON ${table} FOR SELECT ` +
+        `USING (` +
+        `deleted_at IS NULL ` +
+        `AND scope = 'shared' ` +
+        `AND org_id::text = current_setting('eleva.org_id', true) ` +
+        `AND member_user_id IS NOT NULL ` +
+        `AND EXISTS (` +
+        `SELECT 1 FROM auth.organization o WHERE o.id = ${table}.org_id AND o.clinic_shared_records = true` +
+        `) ` +
+        `AND EXISTS (` +
+        `SELECT 1 FROM expert_profiles ep WHERE ep.org_id = ${table}.org_id ` +
+        `AND ep.user_id::text = current_setting('eleva.user_id', true)` +
+        `) ` +
+        `AND NOT EXISTS (` +
+        `SELECT 1 FROM record_access_optouts opt ` +
+        `WHERE opt.member_user_id = ${table}.member_user_id AND opt.org_id = ${table}.org_id` +
+        `)` +
+        `);`
+    )
+    out.push(
+      `CREATE POLICY ${table}_member_shared_read ON ${table} FOR SELECT ` +
+        `USING (` +
+        `deleted_at IS NULL ` +
+        `AND scope = 'shared' ` +
         `AND member_user_id::text = current_setting('eleva.user_id', true)` +
         `);`
     )

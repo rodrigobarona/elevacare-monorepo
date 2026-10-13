@@ -172,6 +172,10 @@ export {
   type MemberBookingPolicyRow,
   type MemberListResult,
 } from "./queries/member"
+export {
+  listMemberOwnedSessionDocuments,
+  type MemberOwnedSessionDocument,
+} from "./queries/session-documents"
 export { countBillableSeats } from "./queries/seats"
 export type {
   LocalizedRichText,

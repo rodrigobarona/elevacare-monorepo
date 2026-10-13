@@ -23,6 +23,7 @@ vi.mock("@eleva/storage", () => ({
 }))
 
 vi.mock("@eleva/db", () => ({
+  listMemberOwnedSessionDocuments: async () => [],
   getMemberProfile: async () => ({
     id: "user-1",
     email: "ada@eleva.care",

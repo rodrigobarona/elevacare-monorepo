@@ -20,7 +20,14 @@
  *     calling put().
  */
 
-import { put, del, get, type PutBlobResult } from "@vercel/blob"
+import {
+  put,
+  del,
+  get,
+  head,
+  BlobNotFoundError,
+  type PutBlobResult,
+} from "@vercel/blob"
 import { requireBlobEnv, requirePrivateBlobEnv } from "@eleva/config/env"
 import { createHash } from "node:crypto"
 
@@ -197,7 +204,12 @@ export async function deletePrivateDocument(url: string): Promise<void> {
     return
   }
   const { BLOB_PRIVATE_READ_WRITE_TOKEN } = requirePrivateBlobEnv()
-  await del(url, { token: BLOB_PRIVATE_READ_WRITE_TOKEN })
+  try {
+    await del(url, { token: BLOB_PRIVATE_READ_WRITE_TOKEN })
+  } catch (err) {
+    if (err instanceof BlobNotFoundError) return
+    throw err
+  }
 }
 
 export type PrivateDocumentResult = {
@@ -209,6 +221,48 @@ export type PrivateDocumentResult = {
  * the blob no longer exists. The caller (an API route) is responsible
  * for auth checks before calling this.
  */
+export type PrivateBlobMetadata = {
+  url: string
+  pathname: string
+  contentType: string
+  size: number
+}
+
+/**
+ * Look up a private blob by pathname. Returns null when the object is
+ * missing. Callers must authorize the pathname before persisting.
+ */
+export async function headPrivateDocument(
+  pathname: string
+): Promise<PrivateBlobMetadata | null> {
+  if (e2ePrivateBlobMockEnabled()) {
+    const stored = lookupE2ePrivateBlob(pathname)
+    if (!stored) return null
+    return {
+      url: e2ePrivateBlobUrl(pathname),
+      pathname: e2ePrivateBlobPathname(pathname),
+      contentType: stored.contentType,
+      size: stored.body.byteLength,
+    }
+  }
+  const { BLOB_PRIVATE_READ_WRITE_TOKEN } = requirePrivateBlobEnv()
+  try {
+    const result = await head(pathname, {
+      token: BLOB_PRIVATE_READ_WRITE_TOKEN,
+    })
+    if (!result?.url) return null
+    return {
+      url: result.url,
+      pathname: result.pathname,
+      contentType: result.contentType,
+      size: result.size,
+    }
+  } catch (err) {
+    if (err instanceof BlobNotFoundError) return null
+    throw err
+  }
+}
+
 export async function getPrivateDocument(
   url: string
 ): Promise<PrivateDocumentResult> {

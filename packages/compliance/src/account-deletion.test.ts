@@ -3,6 +3,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 const withPlatformAudit = vi.fn()
 const withPlatformAdminContext = vi.fn()
 const pseudonymiseBookingConsents = vi.fn()
+const eraseMemberSessionDocuments = vi.fn(async (..._args: unknown[]) => ({
+  deleted: 0,
+  retainedExpertOnly: 0,
+  blobFailures: 0,
+}))
 
 vi.mock("@eleva/audit", () => ({
   withPlatformAudit: (...args: unknown[]) => withPlatformAudit(...args),
@@ -74,6 +79,11 @@ vi.mock("@eleva/db", () => ({
   },
   withPlatformAdminContext: (...args: unknown[]) =>
     withPlatformAdminContext(...args),
+}))
+
+vi.mock("./session-document-lifecycle", () => ({
+  eraseMemberSessionDocuments: (...args: unknown[]) =>
+    eraseMemberSessionDocuments(...args),
 }))
 
 vi.mock("./retention", async () => {
@@ -284,6 +294,15 @@ describe("cancelAccountDeletion", () => {
 })
 
 describe("sweepAccountDeletions", () => {
+  beforeEach(() => {
+    eraseMemberSessionDocuments.mockReset()
+    eraseMemberSessionDocuments.mockResolvedValue({
+      deleted: 0,
+      retainedExpertOnly: 0,
+      blobFailures: 0,
+    })
+  })
+
   it("catches confirm-after-mark and leaves succeeded payments refund_pending", async () => {
     const paymentSets: unknown[] = []
     withPlatformAdminContext.mockImplementation(
@@ -570,6 +589,77 @@ describe("sweepAccountDeletions", () => {
       { id: "req-1", userId: "user-1", orgId: "org-1" },
     ])
     expect(statusSets).not.toContainEqual({ status: "completed" })
+  })
+
+  it("does not anonymise or complete when session-document Blob deletion fails", async () => {
+    eraseMemberSessionDocuments.mockResolvedValue({
+      deleted: 0,
+      retainedExpertOnly: 0,
+      blobFailures: 1,
+    })
+    withPlatformAdminContext.mockImplementation(
+      async (fn: (tx: unknown) => unknown) =>
+        fn({
+          select: () => ({
+            from: () => ({
+              innerJoin: () => ({
+                innerJoin: () => ({
+                  where: async () => [
+                    {
+                      id: "req-1",
+                      userId: "user-1",
+                      orgId: "org-1",
+                      scheduledFor: new Date("2026-01-01T00:00:00.000Z"),
+                    },
+                  ],
+                }),
+              }),
+            }),
+          }),
+        })
+    )
+
+    const ops: string[] = []
+    withPlatformAudit.mockImplementation(
+      async (_opts: unknown, fn: (tx: unknown, ctx: unknown) => unknown) => {
+        const tx = {
+          execute: async () => undefined,
+          select: () => ({
+            from: () => ({
+              where: () => ({
+                limit: async () => [{ id: "req-1" }],
+              }),
+              leftJoin: () => ({
+                where: async () => [],
+              }),
+            }),
+          }),
+          update: (table: { id: string }) => ({
+            set: (values: Record<string, unknown>) => {
+              if (table.id === "user.id") ops.push("anonymise")
+              if (table.id === "adr.id" && values.status === "completed") {
+                ops.push("complete")
+              }
+              return {
+                where: () => ({
+                  returning: async () => [{ id: "req-1" }],
+                }),
+              }
+            },
+          }),
+          delete: () => ({ where: async () => undefined }),
+        }
+        return fn(tx, emitCtx())
+      }
+    )
+
+    const result = await sweepAccountDeletions(
+      new Date("2026-09-11T00:00:00.000Z")
+    )
+    expect(result.completed).toBe(0)
+    expect(result.awaitingCompletion).toEqual([])
+    expect(ops).not.toContain("anonymise")
+    expect(ops).not.toContain("complete")
   })
 })
 

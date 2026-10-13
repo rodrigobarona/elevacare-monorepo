@@ -109,6 +109,10 @@ import {
   UpsertSessionRecordRequestSchema,
   UpsertSessionRecordResponseSchema,
   SummarizeSessionRecordsResponseSchema,
+  ListSessionDocumentsResponseSchema,
+  CompleteSessionDocumentRequestSchema,
+  CompleteSessionDocumentResponseSchema,
+  SessionDocumentUrlResponseSchema,
 } from "@eleva/api-client"
 
 const ErrorSchema = z.object({
@@ -3254,6 +3258,197 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "403": {
               description: "Caller is not the assigned expert",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/sessions/{bookingId}/documents": {
+        get: {
+          operationId: "listSessionDocuments",
+          summary: "List session documents for a booking",
+          description:
+            "Assigned expert lists all non-deleted documents. Member lists only scope=shared. Filenames are decrypted in the expert org. Bytes stay in the private Blob store. Not HIPAA.",
+          tags: ["Sessions"],
+          requestParams: {
+            path: z.object({ bookingId: z.string().uuid() }),
+          },
+          responses: {
+            ...stdWithNotFound,
+            "200": {
+              description: "Session documents",
+              content: {
+                "application/json": {
+                  schema: ListSessionDocumentsResponseSchema,
+                },
+              },
+            },
+            "403": {
+              description: "Caller is not the assigned expert or member",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+        post: {
+          operationId: "completeSessionDocument",
+          summary: "Persist metadata after a private Blob upload",
+          description:
+            "Assigned expert or booking member. Pathname must start with records/<expertOrgId>/<memberUserId>/<actorUserId>/. The API looks up the private Blob by pathname and stores the store's url, MIME, and size — not client-supplied values. Members always persist scope=shared. Audit payload is bookingId + scope (no filename).",
+          tags: ["Sessions"],
+          requestParams: {
+            path: z.object({ bookingId: z.string().uuid() }),
+          },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: CompleteSessionDocumentRequestSchema,
+              },
+            },
+          },
+          responses: {
+            ...stdWithNotFound,
+            "200": {
+              description: "Persisted document metadata",
+              content: {
+                "application/json": {
+                  schema: CompleteSessionDocumentResponseSchema,
+                },
+              },
+            },
+            "403": {
+              description: "Caller cannot upload, or member set expert_only",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "409": {
+              description: "A document already exists at this pathname",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "422": {
+              description: "Pathname, MIME, or size failed validation",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+      },
+      "/sessions/{bookingId}/documents/upload-token": {
+        post: {
+          operationId: "mintSessionDocumentUploadToken",
+          summary: "Mint a private Blob client-upload token",
+          description:
+            "Vercel Blob handleUpload protocol. Token is bound to the private store and pathname prefix records/<expertOrgId>/<memberUserId>/<actorUserId>/. Not form-data.",
+          tags: ["Sessions"],
+          requestParams: {
+            path: z.object({ bookingId: z.string().uuid() }),
+          },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: z.object({}).passthrough(),
+              },
+            },
+          },
+          responses: {
+            ...stdWithNotFound,
+            "200": {
+              description: "Blob client-upload token payload",
+              content: {
+                "application/json": {
+                  schema: z.object({}).passthrough(),
+                },
+              },
+            },
+            "400": {
+              description: "Pathname rejected",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+      },
+      "/sessions/{bookingId}/documents/{documentId}/url": {
+        get: {
+          operationId: "mintSessionDocumentUrl",
+          summary: "Mint a short-lived download URL",
+          description:
+            "Assigned expert, or member when scope=shared. URL expires in 15 minutes and is audited. Direct private Blob URLs return 403.",
+          tags: ["Sessions"],
+          requestParams: {
+            path: z.object({
+              bookingId: z.string().uuid(),
+              documentId: z.string().uuid(),
+            }),
+          },
+          responses: {
+            ...stdWithNotFound,
+            "200": {
+              description: "Signed download URL",
+              content: {
+                "application/json": {
+                  schema: SessionDocumentUrlResponseSchema,
+                },
+              },
+            },
+            "403": {
+              description: "Caller cannot read this document",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+      },
+      "/sessions/{bookingId}/documents/{documentId}": {
+        delete: {
+          operationId: "deleteSessionDocument",
+          summary: "Delete a session document",
+          description:
+            "Uploader only (D-11). Soft-deletes the row after deleting the private Blob object. A store 404 counts as deleted.",
+          tags: ["Sessions"],
+          requestParams: {
+            path: z.object({
+              bookingId: z.string().uuid(),
+              documentId: z.string().uuid(),
+            }),
+          },
+          responses: {
+            ...stdWithNotFound,
+            "204": {
+              description: "Deleted",
+            },
+            "403": {
+              description: "Caller is not the uploader",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+      },
+      "/sessions/{bookingId}/documents/{documentId}/download": {
+        get: {
+          operationId: "downloadSessionDocument",
+          summary: "Stream a session document with a short-lived grant",
+          security: [],
+          description:
+            "Grant from GET .../url. Expires in 15 minutes. Rate-limited at RATE_LIMITS.public.",
+          tags: ["Sessions"],
+          requestParams: {
+            path: z.object({
+              bookingId: z.string().uuid(),
+              documentId: z.string().uuid(),
+            }),
+            query: z.object({ g: z.string().min(1) }),
+          },
+          responses: {
+            "200": {
+              description: "Private document bytes",
+              content: {
+                "application/pdf": { schema: z.any() },
+                "image/jpeg": { schema: z.any() },
+                "image/png": { schema: z.any() },
+                "image/webp": { schema: z.any() },
+              },
+            },
+            "410": {
+              description: "Grant missing or expired",
               content: { "application/json": { schema: ErrorSchema } },
             },
             ...stdWithNotFound,
