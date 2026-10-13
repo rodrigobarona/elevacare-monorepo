@@ -25,6 +25,9 @@ import {
   RotateCalendarFeedTokenResponseSchema,
   ListExpertBookingsQuerySchema,
   ListExpertBookingsResponseSchema,
+  AcceptExpertBookingResponseSchema,
+  DeclineExpertBookingRequestSchema,
+  DeclineExpertBookingResponseSchema,
   CreateOrganizationRequestSchema,
   CreateOrganizationResponseSchema,
   ExpertOnboardingStepSchema,
@@ -1925,6 +1928,69 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
                   schema: ListExpertBookingsResponseSchema,
                 },
               },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/expert/bookings/{id}/accept": {
+        post: {
+          operationId: "acceptExpertBookingRequest",
+          summary: "Accept a Request to book",
+          description:
+            "Flips awaiting_confirmation to confirmed, creates the session and guest activation, and emits booking.request_accepted. Idempotent if already confirmed.",
+          tags: ["Expert Calendar"],
+          requestParams: {
+            path: z.object({ id: z.string().uuid() }),
+          },
+          responses: {
+            "200": {
+              description: "Request accepted",
+              content: {
+                "application/json": {
+                  schema: AcceptExpertBookingResponseSchema,
+                },
+              },
+            },
+            "409": {
+              description:
+                "Not awaiting confirmation, or the response window ended",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/expert/bookings/{id}/decline": {
+        post: {
+          operationId: "declineExpertBookingRequest",
+          summary: "Decline a Request to book",
+          description:
+            "Cancels an awaiting_confirmation booking, refunds 100%, and releases the slot.",
+          tags: ["Expert Calendar"],
+          requestParams: {
+            path: z.object({ id: z.string().uuid() }),
+          },
+          requestBody: {
+            required: false,
+            content: {
+              "application/json": {
+                schema: DeclineExpertBookingRequestSchema,
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Request declined",
+              content: {
+                "application/json": {
+                  schema: DeclineExpertBookingResponseSchema,
+                },
+              },
+            },
+            "409": {
+              description: "Not awaiting confirmation",
+              content: { "application/json": { schema: ErrorSchema } },
             },
             ...stdWithNotFound,
           },
@@ -4458,6 +4524,12 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
         summary: "Expire lapsed slot holds",
         description:
           "Expires lapsed holds, cancelling still-cancelable PaymentIntents first and keeping holds whose payment can still settle.",
+      }),
+      "/workflows/booking-request-expiry": internalWorkflow({
+        operationId: "expireBookingRequests",
+        summary: "Expire unanswered Request to book rows",
+        description:
+          "Every minute: cancel awaiting_confirmation bookings past approval_deadline_at (24 hours or session start). Full refund and slot release. Does not create a session or guest login.",
       }),
       "/workflows/stripe-stuck-events": internalWorkflow({
         operationId: "detectStuckStripeEvents",

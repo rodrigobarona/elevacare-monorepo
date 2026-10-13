@@ -30,6 +30,11 @@ export interface BookingConfirmedProps {
   country?: string
   price?: string
   cancellationPolicyName?: string
+  heading?: string
+  subheading?: string
+  preview?: string
+  /** Hide when this send has no .ics attachment (request pending). */
+  showIcsHint?: boolean
 }
 
 export function BookingConfirmedEmail({
@@ -53,20 +58,24 @@ export function BookingConfirmedEmail({
   country,
   price,
   cancellationPolicyName,
+  heading,
+  subheading,
+  preview,
+  showIcsHint = true,
 }: BookingConfirmedProps) {
   const t = getEmailTranslations(locale)
   const isExpert = audience === "expert"
   const greet = greetingName ?? memberName
-  const title = isExpert
-    ? t.booking.expertConfirmedTitle
-    : t.booking.confirmedTitle
-  const subtitle = isExpert
-    ? t.booking.expertConfirmedSubtitle
-    : t.booking.confirmedSubtitle
-  const preview = t.subject.newBooking(memberName, formattedDate)
+  const title =
+    heading ??
+    (isExpert ? t.booking.expertConfirmedTitle : t.booking.confirmedTitle)
+  const subtitle =
+    subheading ??
+    (isExpert ? t.booking.expertConfirmedSubtitle : t.booking.confirmedSubtitle)
+  const previewText = preview ?? t.subject.newBooking(memberName, formattedDate)
 
   return (
-    <EmailLayout preview={preview} locale={locale} jsonLd={jsonLd}>
+    <EmailLayout preview={previewText} locale={locale} jsonLd={jsonLd}>
       <EmailHeading>{title}</EmailHeading>
       <EmailBodyText className="mb-[8px]">
         {t.booking.greeting(greet)}
@@ -136,9 +145,11 @@ export function BookingConfirmedEmail({
         </Section>
       ) : null}
 
-      <EmailBodyText className="mt-[24px] text-[13px] leading-[20px]">
-        {t.booking.icsHintAdd}
-      </EmailBodyText>
+      {showIcsHint ? (
+        <EmailBodyText className="mt-[24px] text-[13px] leading-[20px]">
+          {t.booking.icsHintAdd}
+        </EmailBodyText>
+      ) : null}
     </EmailLayout>
   )
 }

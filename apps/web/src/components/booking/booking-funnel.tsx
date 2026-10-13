@@ -94,6 +94,7 @@ export function BookingFunnel({
   title,
   modes,
   cancellationPolicy,
+  requiresApproval = false,
   geoCountry,
   geoTimeZone,
   consents,
@@ -111,6 +112,7 @@ export function BookingFunnel({
   title: LocalizedText
   modes: PublicEventTypeMode[]
   cancellationPolicy: CancellationPolicy
+  requiresApproval?: boolean
   geoCountry: string
   geoTimeZone: string
   consents: FunnelConsentDoc[]
@@ -174,7 +176,14 @@ export function BookingFunnel({
   const [confirmState, setConfirmState] = useState<
     "idle" | "pending" | "confirmed" | "failed"
   >("idle")
+  const [settledStatus, setSettledStatus] = useState<
+    "confirmed" | "awaiting_confirmation" | null
+  >(null)
   const confirmInFlight = useRef(false)
+  const isRequest =
+    settledStatus != null
+      ? settledStatus === "awaiting_confirmation"
+      : requiresApproval
 
   const evaluations = evaluateModes(modes, {
     memberCountry: country,
@@ -254,6 +263,7 @@ export function BookingFunnel({
           paymentIntentId: paid.paymentIntentId,
         })
         setPayment({ ...paid, bookingId: result.bookingId })
+        setSettledStatus(result.status)
         setConfirmState("confirmed")
         clearFunnelReturn()
       } catch (error) {
@@ -456,6 +466,7 @@ export function BookingFunnel({
           bookingId: confirmed.bookingId,
           publishableKey: "",
         })
+        setSettledStatus(confirmed.status)
         setConfirmState("confirmed")
         setStep("done")
         return
@@ -840,6 +851,11 @@ export function BookingFunnel({
                 {t("pay.heading")}
               </h1>
               <p className="text-muted-foreground">{t("pay.sub")}</p>
+              {requiresApproval ? (
+                <p className="text-sm text-muted-foreground">
+                  {t("pay.requestHint")}
+                </p>
+              ) : null}
             </header>
             {formError ? (
               <FieldError>{t(`errors.${formError}`)}</FieldError>
@@ -896,12 +912,16 @@ export function BookingFunnel({
                 data-state={confirmState}
               >
                 {confirmState === "confirmed"
-                  ? t("done.heading")
+                  ? isRequest
+                    ? t("done.requestHeading")
+                    : t("done.heading")
                   : t("done.pending")}
               </h1>
               <p className="max-w-md text-muted-foreground">
                 {confirmState === "confirmed"
-                  ? t("done.sub")
+                  ? isRequest
+                    ? t("done.requestSub")
+                    : t("done.sub")
                   : t("done.pendingSub")}
               </p>
             </header>
@@ -952,7 +972,7 @@ export function BookingFunnel({
                     : t("done.video")}
               </p>
             </div>
-            {confirmState === "confirmed" ? (
+            {confirmState === "confirmed" && !isRequest ? (
               <div className="space-y-3">
                 <div className="flex flex-wrap gap-3">
                   <Button
@@ -1010,6 +1030,21 @@ export function BookingFunnel({
                 <p className="text-sm text-muted-foreground">
                   {t("done.activateHint")}
                 </p>
+              </div>
+            ) : confirmState === "confirmed" && isRequest ? (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  {t("done.requestNoJoin")}
+                </p>
+                <LinkButton
+                  href={`/signup?${new URLSearchParams({
+                    name,
+                    email,
+                    ...(phone ? { phone } : {}),
+                  }).toString()}`}
+                >
+                  {t("done.activate")}
+                </LinkButton>
               </div>
             ) : null}
           </div>

@@ -77,6 +77,10 @@ const BOOKING_NOTIFICATION_SUBSCRIBERS = {
   "booking.confirmed": [SEND_NOTIFICATION_SUBSCRIBER],
   "booking.cancelled": [SEND_NOTIFICATION_SUBSCRIBER],
   "booking.rescheduled": [SEND_NOTIFICATION_SUBSCRIBER],
+  "booking.requested": [SEND_NOTIFICATION_SUBSCRIBER],
+  "booking.request_accepted": [SEND_NOTIFICATION_SUBSCRIBER],
+  "booking.request_declined": [SEND_NOTIFICATION_SUBSCRIBER],
+  "booking.request_expired": [SEND_NOTIFICATION_SUBSCRIBER],
 } as const
 
 const PAYMENT_PAYOUT_NOTIFICATION_SUBSCRIBERS = {

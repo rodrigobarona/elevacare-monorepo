@@ -148,6 +148,11 @@ export {
   getExpertBookingById,
   type ExpertBookingListItem,
 } from "./queries/expert-bookings"
+export {
+  getExpertBookingForApproval,
+  listExpiredBookingRequests,
+  type ExpertBookingApprovalRow,
+} from "./queries/booking-request"
 export type { CalendarFeedToken } from "./schema/main/offer-model"
 export {
   getUserAvatarUrl,

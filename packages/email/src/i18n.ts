@@ -7,6 +7,21 @@ const translations = {
       confirmedTitle: "Booking confirmed",
       confirmedSubtitle:
         "Your session is booked. The calendar invite is attached.",
+      requestedTitle: "Booking request sent",
+      requestedSubtitle:
+        "The expert has 24 hours, or until the session if sooner, to accept. You will not get a join link until they accept. A decline or timeout refunds 100%.",
+      requestAcceptedTitle: "Booking request accepted",
+      requestAcceptedSubtitle:
+        "The expert accepted your request. The calendar invite is attached.",
+      requestDeclinedTitle: "Booking request declined",
+      requestDeclinedSubtitle:
+        "The expert declined this request. A full refund is on the way and the slot is free again.",
+      requestExpiredTitle: "Booking request expired",
+      requestExpiredSubtitle:
+        "The expert did not respond in time. A full refund is on the way and the slot is free again.",
+      expertRequestedTitle: "New booking request",
+      expertRequestedSubtitle:
+        "A member asked to book. Accept or decline within 24 hours, or before the session if that is sooner.",
       rescheduledTitle: "Booking Rescheduled",
       rescheduledSubtitle:
         "A session has been rescheduled. The updated calendar invite is attached.",
@@ -93,6 +108,14 @@ const translations = {
     subject: {
       newBooking: (member: string, date: string) =>
         `New booking: ${member} — ${date}`,
+      requested: (member: string, date: string) =>
+        `Booking request: ${member} — ${date}`,
+      requestAccepted: (member: string, date: string) =>
+        `Request accepted: ${member} — ${date}`,
+      requestDeclined: (member: string, date: string) =>
+        `Request declined: ${member} — ${date}`,
+      requestExpired: (member: string, date: string) =>
+        `Request expired: ${member} — ${date}`,
       rescheduled: (member: string, date: string) =>
         `Rescheduled: ${member} — ${date}`,
       cancelled: (member: string, date: string) =>
@@ -127,6 +150,21 @@ const translations = {
       confirmedTitle: "Marcação confirmada",
       confirmedSubtitle:
         "A sua sessão está marcada. O convite de calendário está em anexo.",
+      requestedTitle: "Pedido de reserva enviado",
+      requestedSubtitle:
+        "O especialista tem 24 horas, ou até à sessão se for mais cedo, para aceitar. Só recebe o link de entrada depois da aceitação. Uma recusa ou o fim do prazo devolve 100%.",
+      requestAcceptedTitle: "Pedido de reserva aceite",
+      requestAcceptedSubtitle:
+        "O especialista aceitou o seu pedido. O convite de calendário está em anexo.",
+      requestDeclinedTitle: "Pedido de reserva recusado",
+      requestDeclinedSubtitle:
+        "O especialista recusou este pedido. O reembolso total está a caminho e o horário ficou livre.",
+      requestExpiredTitle: "Pedido de reserva expirado",
+      requestExpiredSubtitle:
+        "O especialista não respondeu a tempo. O reembolso total está a caminho e o horário ficou livre.",
+      expertRequestedTitle: "Novo pedido de reserva",
+      expertRequestedSubtitle:
+        "Um membro pediu para marcar. Aceite ou recuse em 24 horas, ou antes da sessão se for mais cedo.",
       rescheduledTitle: "Marcação Reagendada",
       rescheduledSubtitle:
         "Uma sessão foi reagendada. O convite de calendário atualizado está em anexo.",
@@ -215,6 +253,14 @@ const translations = {
     subject: {
       newBooking: (member: string, date: string) =>
         `Nova marcação: ${member} — ${date}`,
+      requested: (member: string, date: string) =>
+        `Pedido de reserva: ${member} — ${date}`,
+      requestAccepted: (member: string, date: string) =>
+        `Pedido aceite: ${member} — ${date}`,
+      requestDeclined: (member: string, date: string) =>
+        `Pedido recusado: ${member} — ${date}`,
+      requestExpired: (member: string, date: string) =>
+        `Pedido expirado: ${member} — ${date}`,
       rescheduled: (member: string, date: string) =>
         `Reagendada: ${member} — ${date}`,
       cancelled: (member: string, date: string) =>
@@ -249,6 +295,21 @@ const translations = {
       confirmedTitle: "Reserva confirmada",
       confirmedSubtitle:
         "Tu sesión está reservada. La invitación de calendario está adjunta.",
+      requestedTitle: "Solicitud de reserva enviada",
+      requestedSubtitle:
+        "El experto tiene 24 horas, o hasta la sesión si es antes, para aceptar. No recibirás el enlace de acceso hasta que acepte. Un rechazo o el fin del plazo reembolsa el 100%.",
+      requestAcceptedTitle: "Solicitud de reserva aceptada",
+      requestAcceptedSubtitle:
+        "El experto aceptó tu solicitud. La invitación de calendario está adjunta.",
+      requestDeclinedTitle: "Solicitud de reserva rechazada",
+      requestDeclinedSubtitle:
+        "El experto rechazó esta solicitud. El reembolso total está en camino y el hueco queda libre.",
+      requestExpiredTitle: "Solicitud de reserva caducada",
+      requestExpiredSubtitle:
+        "El experto no respondió a tiempo. El reembolso total está en camino y el hueco queda libre.",
+      expertRequestedTitle: "Nueva solicitud de reserva",
+      expertRequestedSubtitle:
+        "Un miembro pidió reservar. Acepta o rechaza en 24 horas, o antes de la sesión si es antes.",
       rescheduledTitle: "Reserva Reprogramada",
       rescheduledSubtitle:
         "Una sesión ha sido reprogramada. La invitación de calendario actualizada está adjunta.",
@@ -337,6 +398,14 @@ const translations = {
     subject: {
       newBooking: (member: string, date: string) =>
         `Nueva reserva: ${member} — ${date}`,
+      requested: (member: string, date: string) =>
+        `Solicitud de reserva: ${member} — ${date}`,
+      requestAccepted: (member: string, date: string) =>
+        `Solicitud aceptada: ${member} — ${date}`,
+      requestDeclined: (member: string, date: string) =>
+        `Solicitud rechazada: ${member} — ${date}`,
+      requestExpired: (member: string, date: string) =>
+        `Solicitud caducada: ${member} — ${date}`,
       rescheduled: (member: string, date: string) =>
         `Reprogramada: ${member} — ${date}`,
       cancelled: (member: string, date: string) =>
@@ -374,6 +443,14 @@ export interface EmailTranslations {
     greeting: (name: string) => string
     confirmedTitle: string
     confirmedSubtitle: string
+    requestedTitle: string
+    requestedSubtitle: string
+    requestAcceptedTitle: string
+    requestAcceptedSubtitle: string
+    requestDeclinedTitle: string
+    requestDeclinedSubtitle: string
+    requestExpiredTitle: string
+    requestExpiredSubtitle: string
     rescheduledTitle: string
     rescheduledSubtitle: string
     cancelledTitle: string
@@ -389,6 +466,8 @@ export interface EmailTranslations {
     joinHint: string
     expertConfirmedTitle: string
     expertConfirmedSubtitle: string
+    expertRequestedTitle: string
+    expertRequestedSubtitle: string
     activateHint: string
     activateCta: string
     calendarCta: string
@@ -446,6 +525,10 @@ export interface EmailTranslations {
   }
   subject: {
     newBooking: (member: string, date: string) => string
+    requested: (member: string, date: string) => string
+    requestAccepted: (member: string, date: string) => string
+    requestDeclined: (member: string, date: string) => string
+    requestExpired: (member: string, date: string) => string
     rescheduled: (member: string, date: string) => string
     cancelled: (member: string, date: string) => string
     reminder24h: (member: string, date: string) => string

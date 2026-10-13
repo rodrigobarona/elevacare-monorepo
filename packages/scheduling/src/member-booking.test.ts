@@ -168,6 +168,31 @@ describe("cancelMemberBooking", () => {
     expect(withAudit).not.toHaveBeenCalled()
   })
 
+  it("pending request: 100% refund even inside a strict window", async () => {
+    const captured = captureTx()
+    getMemberBookingForPolicy.mockResolvedValue(
+      booking({
+        status: "awaiting_confirmation",
+        cancellationPolicy: "strict",
+        startsAt: hoursFromNow(1),
+      })
+    )
+    const result = await cancelMemberBooking({
+      userId: "user-1",
+      orgId: "space-1",
+      bookingId: "booking-1",
+      now,
+    })
+    expect(result.refund).toMatchObject({
+      refundPercent: 100,
+      reason: "pending_request",
+      refundCents: 6000,
+    })
+    expect(captured.paymentSets).toEqual([
+      { refundDueCents: 6000, status: "refund_pending" },
+    ])
+  })
+
   it("flexible, 24h out: full refund due", async () => {
     const captured = captureTx()
     getMemberBookingForPolicy.mockResolvedValue(
