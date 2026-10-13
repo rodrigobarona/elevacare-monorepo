@@ -21,6 +21,7 @@
     "./dispatch": "./src/dispatch.ts",
     "./slug": "./src/slug.ts",
     "./cancellation-policy": "./src/cancellation-policy.ts",
+    "./booking-settings": "./src/booking-settings.ts",
     "./public-site-parity": "./src/public-site-parity.ts"
   },
   "scripts": {

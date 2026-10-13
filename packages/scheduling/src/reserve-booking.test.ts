@@ -77,6 +77,7 @@ const offer: ResolvedOffer = {
   bufferBeforeMinutes: 0,
   bufferAfterMinutes: 0,
   cancellationPolicy: "flexible",
+  requiresApproval: false,
 }
 
 const grants = FUNNEL_CONSENT_KINDS.map((kind) => ({

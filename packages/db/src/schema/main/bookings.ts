@@ -17,6 +17,7 @@ import {
   uuid,
   varchar,
   jsonb,
+  boolean,
 } from "drizzle-orm/pg-core"
 import { createdAt, orgIdColumn, pkColumn, updatedAt } from "./shared"
 import { organization, user } from "../auth"
@@ -175,6 +176,8 @@ export const slotReservations = pgTable(
     funnel: jsonb("funnel").$type<ReservationFunnelSnapshot>(),
     /** Policy disclosed to the member at reserve time; copied onto the booking. */
     cancellationPolicy: cancellationPolicyEnum("cancellation_policy"),
+    /** Instant Book vs Request to book, snapshotted at reserve. */
+    requiresApproval: boolean("requires_approval").notNull().default(false),
 
     createdAt: createdAt(),
   },
@@ -302,6 +305,12 @@ export const bookings = pgTable(
     cancellationPolicyVersion: integer("cancellation_policy_version")
       .notNull()
       .default(1),
+    /** Instant Book vs Request to book, snapshotted at insert. */
+    requiresApproval: boolean("requires_approval").notNull().default(false),
+    approvalDeadlineAt: timestamp("approval_deadline_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
     cancellationReason: text("cancellation_reason"),
     cancelledAt: timestamp("cancelled_at", {
       withTimezone: true,
@@ -329,6 +338,9 @@ export const bookings = pgTable(
     memberIdx: index("bookings_member_idx").on(t.memberUserId),
     statusIdx: index("bookings_status_idx").on(t.status),
     timeIdx: index("bookings_time_idx").on(t.expertProfileId, t.startsAt),
+    approvalDeadlineIdx: index("bookings_awaiting_confirmation_idx")
+      .on(t.approvalDeadlineAt)
+      .where(sql`status = 'awaiting_confirmation'`),
     stripePaymentIdx: uniqueIndex("bookings_stripe_payment_idx")
       .on(t.stripePaymentIntentId)
       .where(sql`stripe_payment_intent_id IS NOT NULL`),

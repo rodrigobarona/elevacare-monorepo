@@ -26,6 +26,7 @@ export type ExpertBookingListItem = {
   locationCity: string | null
   locationCountry: string | null
   locationAddress: string | null
+  approvalDeadlineAt: Date | null
 }
 
 function firstNameFromGuest(guestName: string | null): string | null {
@@ -57,6 +58,7 @@ async function selectExpertBookingsInRange(
       locationCity: expertPracticeLocations.city,
       locationCountry: expertPracticeLocations.country,
       locationAddress: expertPracticeLocations.address,
+      approvalDeadlineAt: bookings.approvalDeadlineAt,
     })
     .from(bookings)
     .innerJoin(
@@ -105,6 +107,7 @@ async function selectExpertBookingsInRange(
     locationCity: row.locationCity,
     locationCountry: row.locationCountry,
     locationAddress: row.locationAddress,
+    approvalDeadlineAt: row.approvalDeadlineAt,
   }))
 }
 

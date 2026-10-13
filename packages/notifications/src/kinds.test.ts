@@ -82,7 +82,7 @@ describe("NOTIFICATION_KINDS", () => {
     const sql = readFileSync(
       resolve(
         import.meta.dirname,
-        "../../db/src/migrations/main/0042_notifications.sql"
+        "../../db/src/migrations/main/0057_booking_request.sql"
       ),
       "utf8"
     )

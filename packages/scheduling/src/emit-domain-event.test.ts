@@ -11,6 +11,10 @@ describe("booking notification events", () => {
       "booking.confirmed",
       "booking.cancelled",
       "booking.rescheduled",
+      "booking.requested",
+      "booking.request_accepted",
+      "booking.request_declined",
+      "booking.request_expired",
     ])
     expect(BOOKING_NOTIFICATION_EVENT_TYPES).not.toContain("invoice.issued")
   })
@@ -141,6 +145,65 @@ describe("booking notification events", () => {
     expect(aToB).not.toBe(aToC)
     expect(aToB).not.toBe(aToBAgain)
     expect(aToB).toBe(`booking:${bookingId}:rescheduled:${timeA}:${timeB}:1`)
+  })
+
+  it("emits send-notification only for booking.requested", async () => {
+    const inserts: unknown[] = []
+    const tx = {
+      insert: () => ({
+        values: (values: Record<string, unknown>) => {
+          inserts.push(values)
+          return {
+            onConflictDoNothing: () => ({
+              returning: async () =>
+                typeof values.type === "string" ? [{ id: "evt-3" }] : [],
+            }),
+          }
+        },
+      }),
+    }
+    await emitBookingNotificationEvent(tx as never, {
+      orgId: "00000000-0000-4000-8000-000000000001",
+      type: "booking.requested",
+      bookingId: "00000000-0000-4000-8000-000000000002",
+      startsAt: new Date("2026-10-20T10:00:00.000Z"),
+      occurredAt: new Date("2026-10-13T10:00:00.000Z"),
+    })
+    expect(inserts[1]).toEqual([
+      expect.objectContaining({
+        subscriberId: "send-notification",
+        eventId: "evt-3",
+      }),
+    ])
+  })
+
+  it("emits calendar-sync and room create when a request is accepted", async () => {
+    const inserts: unknown[] = []
+    const tx = {
+      insert: () => ({
+        values: (values: Record<string, unknown>) => {
+          inserts.push(values)
+          return {
+            onConflictDoNothing: () => ({
+              returning: async () =>
+                typeof values.type === "string" ? [{ id: "evt-4" }] : [],
+            }),
+          }
+        },
+      }),
+    }
+    await emitBookingNotificationEvent(tx as never, {
+      orgId: "00000000-0000-4000-8000-000000000001",
+      type: "booking.request_accepted",
+      bookingId: "00000000-0000-4000-8000-000000000002",
+      startsAt: new Date("2026-10-20T10:00:00.000Z"),
+      occurredAt: new Date("2026-10-13T10:00:00.000Z"),
+    })
+    expect(inserts[1]).toEqual([
+      expect.objectContaining({ subscriberId: "send-notification" }),
+      expect.objectContaining({ subscriberId: "calendar-sync" }),
+      expect.objectContaining({ subscriberId: "ensure-session-room" }),
+    ])
   })
 
   it("keeps a retry of the same reschedule occurrence on one key", () => {

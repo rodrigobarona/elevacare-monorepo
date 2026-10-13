@@ -30,6 +30,9 @@ export interface BookingConfirmedProps {
   country?: string
   price?: string
   cancellationPolicyName?: string
+  heading?: string
+  subheading?: string
+  preview?: string
 }
 
 export function BookingConfirmedEmail({
@@ -53,20 +56,23 @@ export function BookingConfirmedEmail({
   country,
   price,
   cancellationPolicyName,
+  heading,
+  subheading,
+  preview,
 }: BookingConfirmedProps) {
   const t = getEmailTranslations(locale)
   const isExpert = audience === "expert"
   const greet = greetingName ?? memberName
-  const title = isExpert
-    ? t.booking.expertConfirmedTitle
-    : t.booking.confirmedTitle
-  const subtitle = isExpert
-    ? t.booking.expertConfirmedSubtitle
-    : t.booking.confirmedSubtitle
-  const preview = t.subject.newBooking(memberName, formattedDate)
+  const title =
+    heading ??
+    (isExpert ? t.booking.expertConfirmedTitle : t.booking.confirmedTitle)
+  const subtitle =
+    subheading ??
+    (isExpert ? t.booking.expertConfirmedSubtitle : t.booking.confirmedSubtitle)
+  const previewText = preview ?? t.subject.newBooking(memberName, formattedDate)
 
   return (
-    <EmailLayout preview={preview} locale={locale} jsonLd={jsonLd}>
+    <EmailLayout preview={previewText} locale={locale} jsonLd={jsonLd}>
       <EmailHeading>{title}</EmailHeading>
       <EmailBodyText className="mb-[8px]">
         {t.booking.greeting(greet)}

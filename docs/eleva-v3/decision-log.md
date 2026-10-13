@@ -32,6 +32,24 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-13: Instant Book vs Request to book (Airbnb-style)
+
+- Decision: Keep `event_types.requires_approval` (default false = Instant
+  Book). Snapshot onto the reservation and booking. Request mode parks
+  after pay/free confirm in `awaiting_confirmation` — no session, guest
+  activation, `booking.confirmed`, or Connect transfer until the expert
+  accepts. Response window is 24 hours or session start if sooner
+  (`approvalDeadlineAt`). Capture payment now; decline, expiry, or member
+  cancel of a pending request refunds 100% and frees the slot.
+  Cancellation policy applies only after confirmed. Transfer is blocked
+  with `booking_not_confirmed`. Out of v1: guest requirements, pre-booking
+  questions, approve first N, per-mode/date, search ranking, expert cancel
+  of a confirmed booking.
+- Owner: engineering
+- Status: `active`
+- Related: Phase 10.1 booking settings, cancellation-policy snapshot pattern
+- Next review: after expert calendar Accept/Decline is in use.
+
 ### 2026-10-13: Session documents use the private Blob store (10.1)
 
 - Decision: Booking documents persist in `session_documents` with

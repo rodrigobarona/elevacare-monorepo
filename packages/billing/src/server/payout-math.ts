@@ -199,6 +199,7 @@ export type TransferBlockReason =
   | "payment_not_succeeded"
   | "dispute_open"
   | "booking_cancelled"
+  | "booking_not_confirmed"
 
 /**
  * A scheduled payout must not move money once the member is owed a refund:
@@ -216,6 +217,9 @@ export function transferBlockReason(input: {
 }): TransferBlockReason | null {
   if (input.paymentStatus !== "succeeded") return "payment_not_succeeded"
   if (input.disputeStatus === "open") return "dispute_open"
+  if (input.bookingStatus === "awaiting_confirmation") {
+    return "booking_not_confirmed"
+  }
   if (input.bookingStatus === "refunded") return "booking_cancelled"
   if (
     input.bookingStatus === "cancelled" &&

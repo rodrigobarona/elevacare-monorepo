@@ -130,6 +130,10 @@ export async function POST(request: Request) {
     ConfirmBookingResponseSchema.parse({
       bookingId: result.bookingId,
       alreadyConfirmed: result.alreadyConfirmed,
+      status: result.status,
+      ...(result.approvalDeadlineAt
+        ? { approvalDeadlineAt: result.approvalDeadlineAt }
+        : {}),
     }),
     { status: result.alreadyConfirmed ? 200 : 201, headers }
   )

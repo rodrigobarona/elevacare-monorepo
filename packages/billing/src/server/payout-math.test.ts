@@ -100,6 +100,12 @@ describe("transferBlockReason", () => {
     )
   })
 
+  it("blocks a request that is still awaiting confirmation", () => {
+    expect(
+      transferBlockReason({ ...ok, bookingStatus: "awaiting_confirmation" })
+    ).toBe("booking_not_confirmed")
+  })
+
   it.each(["cancelled", "refunded"])(
     "blocks a %s booking even if the payment flip was missed",
     (bookingStatus) => {

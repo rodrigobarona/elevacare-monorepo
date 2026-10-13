@@ -86,6 +86,19 @@ async function main() {
 
   await registerSchedule(
     {
+      name: "Booking request expiry",
+      path: "/workflows/booking-request-expiry",
+      cron: "* * * * *",
+      retries: 1,
+      requireBearer: true,
+      description:
+        "Expire awaiting_confirmation requests past the 24h/start deadline; 100% refund and slot release",
+    },
+    { dryRun }
+  )
+
+  await registerSchedule(
+    {
       name: "Invoicing retry",
       path: "/workflows/invoicing-retry",
       cron: "*/30 * * * *",

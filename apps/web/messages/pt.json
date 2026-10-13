@@ -235,6 +235,7 @@
       "hold": "A reserva expira em {time}",
       "expired": "Esta reserva terminou. Escolha um novo horário para continuar.",
       "restart": "Escolher outro horário",
+      "requestHint": "Paga agora. O especialista aceita ou recusa em 24 horas, ou antes da sessão se for mais cedo. Uma recusa devolve 100%.",
       "pay": "Pagar {price}",
       "processing": "A confirmar o pagamento…",
       "failed": "Não foi possível concluir o pagamento. Tente novamente.",
@@ -243,6 +244,9 @@
     "done": {
       "heading": "A sua reserva está confirmada",
       "sub": "Guardámos a sua sessão. O email de confirmação está a caminho.",
+      "requestHeading": "Pedido enviado",
+      "requestSub": "O especialista tem 24 horas, ou até à sessão se for mais cedo, para aceitar. Só recebe o link de entrada depois da aceitação. Uma recusa ou o fim do prazo devolve 100%.",
+      "requestNoJoin": "Os detalhes para entrar só chegam depois de o especialista aceitar.",
       "pending": "Pagamento recebido",
       "pendingSub": "Estamos a confirmar a sessão. Recebe um email assim que estiver pronta. A Eleva.care é uma plataforma digital de saúde — quem acompanha continua responsável pelo seu cuidado.",
       "video": "O link de vídeo chega antes da sessão.",
