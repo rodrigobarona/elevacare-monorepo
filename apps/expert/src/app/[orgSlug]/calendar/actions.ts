@@ -1,7 +1,10 @@
 "use server"
 
 import { requireSession } from "@eleva/auth/server"
-import { ListExpertBookingsQuerySchema } from "@eleva/api-client"
+import {
+  DeclineExpertBookingRequestSchema,
+  ListExpertBookingsQuerySchema,
+} from "@eleva/api-client"
 import { getAuthedApiClient } from "@/lib/server-api"
 import { mapExpertApiError } from "@/lib/map-api-error"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
@@ -23,6 +26,7 @@ export async function listCalendarBookingsAction(
       timezone: string
       sessionMode: "online" | "in_person" | "phone"
       memberFirstName: string | null
+      approvalDeadlineAt: string | null
       eventTypeTitle: { en: string; pt?: string; es?: string }
       eventTypeSlug: string
       modeLabel: { en: string; pt?: string; es?: string } | null
@@ -42,12 +46,68 @@ export async function listCalendarBookingsAction(
     await requireSession("events:manage")
     const api = await getAuthedApiClient()
     const data = await api.expert.bookings.list(parsed.data)
-    return { ok: true, data }
+    return {
+      ok: true,
+      data: {
+        bookings: data.bookings.map((booking) => ({
+          ...booking,
+          approvalDeadlineAt: booking.approvalDeadlineAt ?? null,
+        })),
+      },
+    }
   } catch (err) {
     console.error("list-calendar-bookings failed", err)
     return {
       ok: false,
       error: mapExpertApiError(err, "load-failed"),
+    }
+  }
+}
+
+export async function acceptCalendarBookingAction(
+  bookingId: string
+): Promise<ActionResult<{ bookingId: string }>> {
+  try {
+    const session = await requireSession("events:manage")
+    const api = await getAuthedApiClient()
+    const result = await api.expert.bookings.accept(bookingId)
+    revalidateExpertWorkspace(session, "calendar")
+    return { ok: true, data: { bookingId: result.bookingId } }
+  } catch (err) {
+    console.error("accept-calendar-booking failed", err)
+    return {
+      ok: false,
+      error: mapExpertApiError(err, "requestFailed", {
+        conflict: "requestExpired",
+      }),
+    }
+  }
+}
+
+export async function declineCalendarBookingAction(
+  bookingId: string,
+  note?: string
+): Promise<ActionResult<{ bookingId: string; refundCents: number }>> {
+  const parsed = DeclineExpertBookingRequestSchema.safeParse(
+    note?.trim() ? { note: note.trim() } : {}
+  )
+  if (!parsed.success) {
+    return { ok: false, error: "validation" }
+  }
+  try {
+    const session = await requireSession("events:manage")
+    const api = await getAuthedApiClient()
+    const result = await api.expert.bookings.decline(bookingId, parsed.data)
+    revalidateExpertWorkspace(session, "calendar")
+    return {
+      ok: true,
+      data: { bookingId: result.bookingId, refundCents: result.refundCents },
+    }
+  } catch (err) {
+    console.error("decline-calendar-booking failed", err)
+    return {
+      ok: false,
+      error: mapExpertApiError(err, "requestFailed"),
     }
   }
 }

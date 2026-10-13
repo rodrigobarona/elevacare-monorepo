@@ -1,10 +1,14 @@
 import { randomUUID } from "node:crypto"
 import { and, eq } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
-import { CANCELLATION_POLICY_VERSION } from "@eleva/config"
+import {
+  CANCELLATION_POLICY_VERSION,
+  resolveApprovalDeadline,
+} from "@eleva/config"
 import { main, withPlatformAdminContext, type Tx } from "@eleva/db"
 import {
   authorizeConfirmAccess,
+  emitGuestActivationRequired,
   isUniqueViolation,
   type ConfirmBookingPaymentResult,
 } from "./confirm-booking"
@@ -49,14 +53,22 @@ export async function confirmFreeReservation(input: {
     return { ok: false, error: "not_found" }
   }
 
-  if (booking?.status === "confirmed" && payment?.status === "succeeded") {
+  if (
+    (booking?.status === "confirmed" ||
+      booking?.status === "awaiting_confirmation") &&
+    payment?.status === "succeeded"
+  ) {
     await persistIntakeAfterConfirm(booking.id)
-    return {
-      ok: true,
-      alreadyConfirmed: true,
+    return freeConfirmResult({
       bookingId: booking.id,
       orgId: reservation.orgId,
-    }
+      alreadyConfirmed: true,
+      status:
+        booking.status === "awaiting_confirmation"
+          ? "awaiting_confirmation"
+          : "confirmed",
+      approvalDeadlineAt: booking.approvalDeadlineAt,
+    })
   }
 
   const funnel = reservation.funnel
@@ -66,7 +78,15 @@ export async function confirmFreeReservation(input: {
 
   const bookingId = booking?.id ?? randomUUID()
   const paymentId = payment?.id ?? randomUUID()
-  const alreadyConfirmed = Boolean(booking?.status === "confirmed")
+  const requestApproval = reservation.requiresApproval === true
+  const alreadyConfirmed = Boolean(
+    booking?.status === "confirmed" ||
+    booking?.status === "awaiting_confirmation"
+  )
+  const now = new Date()
+  const approvalDeadlineAt = requestApproval
+    ? resolveApprovalDeadline({ now, startsAt: reservation.startsAt })
+    : null
 
   try {
     await withAudit(
@@ -78,14 +98,18 @@ export async function confirmFreeReservation(input: {
             paymentId,
             reservation,
             funnel,
+            requiresApproval: requestApproval,
+            approvalDeadlineAt,
+            now,
           })
         } else if (!alreadyConfirmed) {
-          const now = new Date()
           await tx
             .update(main.bookings)
             .set({
-              status: "confirmed",
-              confirmedAt: now,
+              status: requestApproval ? "awaiting_confirmation" : "confirmed",
+              confirmedAt: requestApproval ? null : now,
+              requiresApproval: requestApproval,
+              approvalDeadlineAt,
               ...(funnel.guest?.taxId
                 ? { buyerTaxId: funnel.guest.taxId }
                 : {}),
@@ -108,7 +132,31 @@ export async function confirmFreeReservation(input: {
             .where(eq(main.slotReservations.id, reservation.id))
         }
 
-        await emitGuestActivation(tx, {
+        if (requestApproval) {
+          if (!alreadyConfirmed) {
+            await emitBookingNotificationEvent(tx, {
+              orgId: reservation.orgId,
+              type: "booking.requested",
+              bookingId,
+              startsAt: reservation.startsAt,
+              occurredAt: now,
+            })
+          }
+          await ctx.emit({
+            entity: "booking",
+            action: "submitted",
+            entityId: bookingId,
+            payload: {
+              reservationId: reservation.id,
+              free: true,
+              idempotentReplay: alreadyConfirmed,
+              status: "awaiting_confirmation",
+            },
+          })
+          return
+        }
+
+        await emitGuestActivationRequired(tx, {
           orgId: reservation.orgId,
           bookingId,
           reservationId: reservation.id,
@@ -128,7 +176,7 @@ export async function confirmFreeReservation(input: {
           type: "booking.confirmed",
           bookingId,
           startsAt: reservation.startsAt,
-          occurredAt: new Date(),
+          occurredAt: now,
         })
         await ctx.emit({
           entity: "booking",
@@ -145,14 +193,21 @@ export async function confirmFreeReservation(input: {
   } catch (err) {
     if (isUniqueViolation(err)) {
       const raced = await loadFreeConfirmTarget(input.reservationId)
-      if (raced?.booking?.status === "confirmed") {
+      if (
+        raced?.booking?.status === "confirmed" ||
+        raced?.booking?.status === "awaiting_confirmation"
+      ) {
         await persistIntakeAfterConfirm(raced.booking.id)
-        return {
-          ok: true,
-          alreadyConfirmed: true,
+        return freeConfirmResult({
           bookingId: raced.booking.id,
           orgId: raced.reservation.orgId,
-        }
+          alreadyConfirmed: true,
+          status:
+            raced.booking.status === "awaiting_confirmation"
+              ? "awaiting_confirmation"
+              : "confirmed",
+          approvalDeadlineAt: raced.booking.approvalDeadlineAt,
+        })
       }
     }
     console.error("[bookings/confirm-free] confirm failed", err)
@@ -160,11 +215,31 @@ export async function confirmFreeReservation(input: {
   }
 
   await persistIntakeAfterConfirm(bookingId)
-  return {
-    ok: true,
-    alreadyConfirmed,
+  return freeConfirmResult({
     bookingId,
     orgId: reservation.orgId,
+    alreadyConfirmed,
+    status: requestApproval ? "awaiting_confirmation" : "confirmed",
+    approvalDeadlineAt,
+  })
+}
+
+function freeConfirmResult(input: {
+  bookingId: string
+  orgId: string
+  alreadyConfirmed: boolean
+  status: "confirmed" | "awaiting_confirmation"
+  approvalDeadlineAt?: Date | null
+}): Extract<ConfirmBookingPaymentResult, { ok: true }> {
+  return {
+    ok: true,
+    alreadyConfirmed: input.alreadyConfirmed,
+    bookingId: input.bookingId,
+    orgId: input.orgId,
+    status: input.status,
+    ...(input.approvalDeadlineAt
+      ? { approvalDeadlineAt: input.approvalDeadlineAt.toISOString() }
+      : {}),
   }
 }
 
@@ -175,10 +250,12 @@ async function insertConfirmedFreeBooking(
     paymentId: string
     reservation: typeof main.slotReservations.$inferSelect
     funnel: NonNullable<typeof main.slotReservations.$inferSelect.funnel>
+    requiresApproval: boolean
+    approvalDeadlineAt: Date | null
+    now: Date
   }
 ) {
-  const { reservation, funnel } = input
-  const now = new Date()
+  const { reservation, funnel, now } = input
   await tx.insert(main.bookings).values({
     id: input.bookingId,
     orgId: reservation.orgId,
@@ -201,8 +278,10 @@ async function insertConfirmedFreeBooking(
     startsAt: reservation.startsAt,
     endsAt: reservation.endsAt,
     timezone: funnel.timezone,
-    status: "confirmed",
-    confirmedAt: now,
+    status: input.requiresApproval ? "awaiting_confirmation" : "confirmed",
+    confirmedAt: input.requiresApproval ? null : now,
+    requiresApproval: input.requiresApproval,
+    approvalDeadlineAt: input.approvalDeadlineAt,
     sessionMode: funnel.sessionMode,
     bookedLocale: funnel.language,
     cancellationPolicy: reservation.cancellationPolicy ?? "flexible",
@@ -231,58 +310,6 @@ async function insertConfirmedFreeBooking(
       bookingId: input.bookingId,
     })
     .where(eq(main.slotReservations.id, reservation.id))
-}
-
-async function emitGuestActivation(
-  tx: Tx,
-  input: {
-    orgId: string
-    bookingId: string
-    reservationId: string
-  }
-) {
-  const inserted = await tx
-    .insert(main.domainEventsOutbox)
-    .values({
-      orgId: input.orgId,
-      type: "booking.guest_activation_required",
-      payload: {
-        bookingId: input.bookingId,
-        reservationId: input.reservationId,
-        hasGuest: true,
-      },
-      idempotencyKey: `booking:${input.bookingId}:guest-activation`,
-    })
-    .onConflictDoNothing({
-      target: main.domainEventsOutbox.idempotencyKey,
-    })
-    .returning({ id: main.domainEventsOutbox.id })
-
-  const eventId =
-    inserted[0]?.id ??
-    (
-      await tx
-        .select({ id: main.domainEventsOutbox.id })
-        .from(main.domainEventsOutbox)
-        .where(
-          eq(
-            main.domainEventsOutbox.idempotencyKey,
-            `booking:${input.bookingId}:guest-activation`
-          )
-        )
-        .limit(1)
-    )[0]?.id
-  if (!eventId) return
-
-  await tx
-    .insert(main.domainEventDeliveries)
-    .values({
-      orgId: input.orgId,
-      eventId,
-      subscriberId: "guest-activation",
-      status: "pending",
-    })
-    .onConflictDoNothing()
 }
 
 async function loadFreeConfirmTarget(reservationId: string) {

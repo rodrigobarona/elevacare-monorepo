@@ -59,6 +59,7 @@ describe("POST /bookings/confirm deletion race", () => {
       ok: true,
       bookingId: "00000000-0000-4000-8000-000000000099",
       alreadyConfirmed: false,
+      status: "confirmed",
     })
 
     const response = await POST(

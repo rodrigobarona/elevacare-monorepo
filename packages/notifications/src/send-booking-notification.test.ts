@@ -15,14 +15,39 @@ const {
   getEmailTranslations: vi.fn(() => ({
     booking: {
       confirmedTitle: "New Booking Confirmed",
+      confirmedSubtitle: "Booked",
+      requestedTitle: "Booking request sent",
+      requestedSubtitle: "Waiting",
+      requestAcceptedTitle: "Booking request accepted",
+      requestAcceptedSubtitle: "Accepted",
+      requestDeclinedTitle: "Booking request declined",
+      requestDeclinedSubtitle: "Declined",
+      requestExpiredTitle: "Booking request expired",
+      requestExpiredSubtitle: "Expired",
       rescheduledTitle: "Booking Rescheduled",
+      rescheduledSubtitle: "Moved",
       cancelledTitle: "Booking Cancelled",
+      cancelledSubtitle: "Cancelled",
       reminder24hTitle: "Session reminder (24 h)",
+      reminder24hSubtitle: "24h",
       reminder1hTitle: "Session reminder (1 h)",
+      reminder1hSubtitle: "1h",
+      expertConfirmedTitle: "New booking",
+      expertConfirmedSubtitle: "A member booked",
+      expertRequestedTitle: "New booking request",
+      expertRequestedSubtitle: "A member asked",
     },
     subject: {
       newBooking: (member: string, date: string) =>
         `New booking: ${member} — ${date}`,
+      requested: (member: string, date: string) =>
+        `Booking request: ${member} — ${date}`,
+      requestAccepted: (member: string, date: string) =>
+        `Request accepted: ${member} — ${date}`,
+      requestDeclined: (member: string, date: string) =>
+        `Request declined: ${member} — ${date}`,
+      requestExpired: (member: string, date: string) =>
+        `Request expired: ${member} — ${date}`,
       rescheduled: (member: string, date: string) =>
         `Rescheduled: ${member} — ${date}`,
       cancelled: (member: string, date: string) =>

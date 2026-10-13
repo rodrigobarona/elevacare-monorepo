@@ -53,6 +53,7 @@ export async function GET(
         expertDisplayName: link.expertDisplayName,
         eventTitle: link.eventTitle,
         cancellationPolicy: link.cancellationPolicy,
+        requiresApproval: link.requiresApproval,
         modes,
       }),
       { status: 200, headers }

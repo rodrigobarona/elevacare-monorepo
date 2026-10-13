@@ -32,6 +32,10 @@ describe("closed-gate invoice domain events", () => {
         "booking.confirmed",
         "booking.cancelled",
         "booking.rescheduled",
+        "booking.requested",
+        "booking.request_accepted",
+        "booking.request_declined",
+        "booking.request_expired",
       ])
     )
     expect(DEFAULT_SUBSCRIBERS["booking.confirmed"]).toEqual([
@@ -41,6 +45,18 @@ describe("closed-gate invoice domain events", () => {
       "send-notification",
     ])
     expect(DEFAULT_SUBSCRIBERS["booking.rescheduled"]).toEqual([
+      "send-notification",
+    ])
+    expect(DEFAULT_SUBSCRIBERS["booking.requested"]).toEqual([
+      "send-notification",
+    ])
+    expect(DEFAULT_SUBSCRIBERS["booking.request_accepted"]).toEqual([
+      "send-notification",
+    ])
+    expect(DEFAULT_SUBSCRIBERS["booking.request_declined"]).toEqual([
+      "send-notification",
+    ])
+    expect(DEFAULT_SUBSCRIBERS["booking.request_expired"]).toEqual([
       "send-notification",
     ])
     expect(DOMAIN_EVENT_TYPES).toEqual(

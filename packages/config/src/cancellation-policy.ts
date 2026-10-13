@@ -173,7 +173,10 @@ export function isCancellationPolicy(
 
 const HOUR_MS = 3_600_000
 
-export type CancellationRefundReason = "grace_period" | "policy_tier"
+export type CancellationRefundReason =
+  | "grace_period"
+  | "policy_tier"
+  | "pending_request"
 
 export type CancellationRefundQuote = {
   policy: CancellationPolicy

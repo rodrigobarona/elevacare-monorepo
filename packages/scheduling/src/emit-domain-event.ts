@@ -5,6 +5,10 @@ export const BOOKING_NOTIFICATION_EVENT_TYPES = [
   "booking.confirmed",
   "booking.cancelled",
   "booking.rescheduled",
+  "booking.requested",
+  "booking.request_accepted",
+  "booking.request_declined",
+  "booking.request_expired",
 ] as const
 
 export type BookingNotificationEventType =
@@ -51,14 +55,20 @@ export function bookingNotificationIdempotencyKey(input: {
 export type EmitBookingNotificationInput =
   | {
       orgId: string
-      type: "booking.confirmed"
+      type:
+        | "booking.confirmed"
+        | "booking.requested"
+        | "booking.request_accepted"
       bookingId: string
       startsAt: Date
       occurredAt: Date
     }
   | {
       orgId: string
-      type: "booking.cancelled"
+      type:
+        | "booking.cancelled"
+        | "booking.request_declined"
+        | "booking.request_expired"
       bookingId: string
       startsAt: Date
       occurredAt: Date
@@ -74,6 +84,30 @@ export type EmitBookingNotificationInput =
       occurredAt: Date
       scheduleRevision: number
     }
+
+function deliverySubscribers(
+  type: BookingNotificationEventType
+): readonly string[] {
+  switch (type) {
+    case "booking.requested":
+    case "booking.request_declined":
+    case "booking.request_expired":
+      return [SEND_NOTIFICATION_SUBSCRIBER]
+    case "booking.confirmed":
+    case "booking.cancelled":
+    case "booking.rescheduled":
+    case "booking.request_accepted":
+      return [
+        SEND_NOTIFICATION_SUBSCRIBER,
+        CALENDAR_SYNC_SUBSCRIBER,
+        ENSURE_SESSION_ROOM_SUBSCRIBER,
+      ]
+    default: {
+      const _exhaustive: never = type
+      return _exhaustive
+    }
+  }
+}
 
 /**
  * Scheduling cannot import `@eleva/workflows` (workflows -> billing ->
@@ -107,7 +141,10 @@ export async function emitBookingNotificationEvent(
     occurredAt,
     ...(previousStartsAt ? { previousStartsAt } : {}),
     ...(scheduleRevision !== undefined ? { scheduleRevision } : {}),
-    ...(input.type === "booking.cancelled" && input.refundCents !== undefined
+    ...((input.type === "booking.cancelled" ||
+      input.type === "booking.request_declined" ||
+      input.type === "booking.request_expired") &&
+    input.refundCents !== undefined
       ? { refundCents: input.refundCents }
       : {}),
   }
@@ -144,11 +181,7 @@ export async function emitBookingNotificationEvent(
   await tx
     .insert(main.domainEventDeliveries)
     .values(
-      [
-        SEND_NOTIFICATION_SUBSCRIBER,
-        CALENDAR_SYNC_SUBSCRIBER,
-        ENSURE_SESSION_ROOM_SUBSCRIBER,
-      ].map((subscriberId) => ({
+      deliverySubscribers(input.type).map((subscriberId) => ({
         orgId: input.orgId,
         eventId,
         subscriberId,

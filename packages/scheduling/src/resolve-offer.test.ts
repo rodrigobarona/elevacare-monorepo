@@ -33,6 +33,7 @@ const eventType: OfferEventTypeRow = {
   bufferBeforeMinutes: 0,
   bufferAfterMinutes: 0,
   cancellationPolicy: "flexible",
+  requiresApproval: false,
 }
 
 const now = new Date("2026-09-09T12:00:00Z")
