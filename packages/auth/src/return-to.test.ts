@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  isTrustedReturnTo,
   rewriteMagicLinkVerifyUrl,
   sanitizeReturnTo,
   toGatewayCallbackURL,
@@ -137,6 +138,32 @@ describe("sanitizeReturnTo", () => {
       expect(toGatewayCallbackURL(null, gateway)).toBe(
         "http://localhost:3000/dashboard"
       )
+    })
+
+    it("keeps an already-built gateway callback with nested query params", () => {
+      const built = toGatewayCallbackURL("/join/abc?foo=1&bar=2", gateway)
+      expect(built).toBe(
+        "http://localhost:3000/dashboard?returnTo=%2Fjoin%2Fabc%3Ffoo%3D1%26bar%3D2"
+      )
+      expect(toGatewayCallbackURL(built, gateway)).toBe(built)
+    })
+  })
+
+  describe("isTrustedReturnTo", () => {
+    const gateway = "http://localhost:3000"
+
+    it("accepts a same-origin gateway callback", () => {
+      expect(
+        isTrustedReturnTo(
+          "http://localhost:3000/dashboard?returnTo=%2Fjoin%2Fabc%3Ffoo%3D1%26bar%3D2",
+          gateway
+        )
+      ).toBe(true)
+    })
+
+    it("rejects invalid values so callers can use stored returnTo", () => {
+      expect(isTrustedReturnTo("https://evil.com/foo", gateway)).toBe(false)
+      expect(isTrustedReturnTo(null, gateway)).toBe(false)
     })
   })
 

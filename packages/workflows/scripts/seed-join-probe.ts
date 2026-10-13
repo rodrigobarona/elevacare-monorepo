@@ -12,19 +12,28 @@ import {
 import { mintJoinGrant, sessionJoinPath } from "@eleva/video/join-grant"
 import { ensureSessionRoom } from "@eleva/workflows/video"
 
-const EXPERT_EMAIL = "rbarona@hey.com"
-const EXPERT_NAME = "Rodrigo Barona"
-const ORG_SLUG = "rbarona"
-const USERNAME = "rbarona"
+const EXPERT_EMAIL =
+  process.env.JOIN_PROBE_EXPERT_EMAIL ?? "join-probe-expert@example.test"
+const EXPERT_NAME = process.env.JOIN_PROBE_EXPERT_NAME ?? "Join Probe Expert"
+const ORG_SLUG = process.env.JOIN_PROBE_ORG_SLUG ?? "join-probe"
+const USERNAME = process.env.JOIN_PROBE_USERNAME ?? "join-probe"
 const EVENT_SLUG = "hey"
-const EVENT_TITLE = "Rodrigo Barona HEY"
+const EVENT_TITLE = `${EXPERT_NAME} HEY`
 const GUEST_EMAIL = "tonight.guest@example.test"
 const GUEST_NAME = "Tonight Guest"
 const TIMEZONE = "Europe/Lisbon"
 const DURATION_MINUTES = 60
 const WEEKDAYS = [1, 2, 3, 4, 5, 6, 0] as const
-/** Tonight 21:30 Europe/Lisbon (WEST, UTC+1 on 12 Oct 2026). */
-const TONIGHT_START = new Date("2026-10-12T21:30:00+01:00")
+
+function probeStart(): Date {
+  const raw = process.env.JOIN_PROBE_START
+  if (!raw) return new Date(Date.now() + 5 * 60_000)
+  const parsed = new Date(raw)
+  if (Number.isNaN(parsed.getTime())) {
+    throw new Error("JOIN_PROBE_START must be a valid ISO timestamp")
+  }
+  return parsed
+}
 
 async function upsertUser(email: string, name: string, emailVerified: boolean) {
   const [existing] = await db()
@@ -68,7 +77,11 @@ async function upsertExpertOrg(
     .from(auth.organization)
     .where(eq(auth.organization.slug, slug))
     .limit(1)
-  if (bySlug) return bySlug
+  if (bySlug) {
+    throw new Error(
+      `Organization slug "${slug}" exists but is not associated with expert ${expertUserId}`
+    )
+  }
   const [inserted] = await db()
     .insert(auth.organization)
     .values({ name, slug, type: "expert" })
@@ -340,6 +353,7 @@ async function seedTonightJoinProbe() {
         and(
           eq(main.bookings.expertProfileId, ids.expertProfileId),
           eq(main.bookings.eventTypeId, ids.eventTypeId),
+          eq(main.bookings.memberUserId, guest.id),
           inArray(main.bookings.status, ["confirmed", "rescheduled"]),
           gt(main.bookings.endsAt, now)
         )
@@ -347,7 +361,7 @@ async function seedTonightJoinProbe() {
       .limit(1)
   )
 
-  const targetStart = TONIGHT_START
+  const targetStart = probeStart()
   const targetEnd = new Date(targetStart.getTime() + DURATION_MINUTES * 60_000)
 
   let bookingId = live?.id
@@ -503,7 +517,7 @@ async function seedTonightJoinProbe() {
   console.log(`Ends:   ${endsAt.toISOString()}`)
   console.log(`Room:   ${room.roomName}`)
   console.log("")
-  console.log("1. Expert (signed in as rbarona@hey.com):")
+  console.log(`1. Expert (signed in as ${EXPERT_EMAIL}):`)
   console.log(`   ${gateway}/${expertOrg.slug}/team/sessions/${bookingId}/join`)
   console.log("")
   console.log("2. Guest (incognito, no login):")

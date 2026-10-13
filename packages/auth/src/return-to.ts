@@ -43,10 +43,30 @@ function isGatewayAuthPath(path: string): boolean {
   )
 }
 
+function relativeFromAbsoluteUrl(url: URL): string | undefined {
+  if (!ABSOLUTE_RETURN_TO_HOSTS.has(url.hostname)) return undefined
+  const relative = `${url.pathname}${url.search}${url.hash}`
+  if (
+    !relative ||
+    !relative.startsWith("/") ||
+    relative.startsWith("//") ||
+    relative.includes("://")
+  ) {
+    return "/"
+  }
+  return relative
+}
+
 export function sanitizeReturnTo(
   raw: string | null | undefined
 ): string | undefined {
   if (!raw) return undefined
+
+  try {
+    return relativeFromAbsoluteUrl(new URL(raw))
+  } catch {
+    // Percent-encoded relative paths still need a decode pass.
+  }
 
   let decoded: string
   try {
@@ -62,21 +82,24 @@ export function sanitizeReturnTo(
   }
 
   try {
-    const url = new URL(decoded)
-    if (!ABSOLUTE_RETURN_TO_HOSTS.has(url.hostname)) return undefined
-    const relative = `${url.pathname}${url.search}${url.hash}`
-    if (
-      !relative ||
-      !relative.startsWith("/") ||
-      relative.startsWith("//") ||
-      relative.includes("://")
-    ) {
-      return "/"
-    }
-    return relative
+    return relativeFromAbsoluteUrl(new URL(decoded))
   } catch {
     return undefined
   }
+}
+
+/** True when `raw` is a relative path we would keep, or an absolute URL on the gateway origin. */
+export function isTrustedReturnTo(
+  raw: string | null | undefined,
+  gateway = resolveGatewayUrl()
+): boolean {
+  if (!raw) return false
+  try {
+    if (new URL(raw).origin === new URL(gateway).origin) return true
+  } catch {
+    // Relative or invalid — fall through to the path sanitizer.
+  }
+  return sanitizeReturnTo(raw) !== undefined
 }
 
 /**
@@ -91,8 +114,18 @@ export function toGatewayCallbackURL(
   returnTo?: string | null,
   gateway = resolveGatewayUrl()
 ): string {
-  const path = sanitizeReturnTo(returnTo) ?? "/dashboard"
   const base = gateway.replace(/\/$/, "")
+  if (returnTo) {
+    try {
+      const candidate = new URL(returnTo)
+      if (candidate.origin === new URL(base).origin) {
+        return candidate.toString()
+      }
+    } catch {
+      // Relative or invalid — sanitize below.
+    }
+  }
+  const path = sanitizeReturnTo(returnTo) ?? "/dashboard"
   if (isGatewayAuthPath(path)) return `${base}${path}`
   return `${base}/dashboard?returnTo=${encodeURIComponent(path)}`
 }

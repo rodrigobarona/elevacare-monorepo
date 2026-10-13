@@ -1,5 +1,5 @@
 const CANCEL_RE =
-  /notallowederror|blocked-by-browser|permission denied|local-screen-share-canceled/i
+  /local-screen-share-canceled|permission denied by user|aborterror/i
 const SCREEN_SHARE_RE = /screenshare|screen-share|screen share/i
 
 function errorText(value: unknown): string {

@@ -32,6 +32,17 @@ describe("isScreenShareCanceled", () => {
       })
     ).toBe(false)
   })
+
+  it("does not treat a generic NotAllowedError as picker cancellation", () => {
+    const denied = new Error("Permission denied")
+    denied.name = "NotAllowedError"
+    expect(isScreenShareCanceled(denied)).toBe(false)
+    expect(
+      isScreenShareCanceled(
+        "NotAllowedError: Permission denied by permissions policy"
+      )
+    ).toBe(false)
+  })
 })
 
 describe("isScreenShareCancelLog", () => {

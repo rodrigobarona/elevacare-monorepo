@@ -105,23 +105,23 @@ Each entry should include:
 
 - Decision: After founder review of draft 225, previous-API
   `PATCH status: 1` finalized it as **FT ELEVA/16** (date 2026-03-06,
-  €10,50, cliente 17, `ch_3T5RnxK5Ap4Um3Sp0oYTdiyc`). Internal rascunho
+  €10,50, cliente 17, worksheet charge id on file). Internal rascunho
   notes were cleared so they do not print. Email
-  `PATCH /api/email/document/225` returned `success: true` to
-  **patimota@gmail.com**. AT `communication_status` is still
+  `PATCH /api/email/document/225` returned `success: true` to the
+  cliente-17 mailbox. AT `communication_status` is still
   **unsent** — API Comunicação needs Portal das Finanças credentials
   (not in env; operator-gated). Comunicar in TOC UI. Do not re-issue.
   `issueInvoice()` stays closed.
 - Owner: founder (Rodrigo Barona)
 - Status: `active`
-- Related: worksheet card `ch_3T5RnxK5Ap4Um3Sp0oYTdiyc`
+- Related: 2026 commission worksheet card for this session
 - Next review: founder confirms inbox + AT communication in TOC.
 
 ### 2026-10-12: Next Patricia FT saved as TOConline draft 225
 
 - Decision: Chronological next Stripe charge is Raquel
-  (`ch_3T42zSK5Ap4Um3Sp0dNJkBPv`) — skipped, no NIF/cliente. Next ready
-  Patricia charge is `ch_3T5RnxK5Ap4Um3Sp0oYTdiyc` (paid 2026-02-27,
+  (worksheet charge id on file) — skipped, no NIF/cliente. Next ready
+  Patricia charge is the 2026-02-27 payment (paid 2026-02-27,
   session **2026-03-06**, commission €10,50). Created as previous-API
   draft only: `POST /api/commercial_sales_documents` id **225**,
   `status: 0`, `document_no` null (ELEVA number not consumed),
@@ -131,19 +131,19 @@ Each entry should include:
   finalized as FT ELEVA/16 and emailed.
 - Owner: founder (Rodrigo Barona)
 - Status: `superseded`
-- Related: worksheet card `ch_3T5RnxK5Ap4Um3Sp0oYTdiyc`
+- Related: 2026 commission worksheet card for this session
 - Next review: n/a — see FT ELEVA/16 entry.
 
 ### 2026-10-12: TOConline invoice email is related email_addresses, not attributes.email
 
-- Decision: Cliente **17** (Patricia Mota) and **18** (BEE C AND J
-  UNIPESSOAL LDA) have empty `customers.attributes.email`. The mailbox
+- Decision: Cliente **17** (Patricia) and **18** (the Bee company)
+  have empty `customers.attributes.email`. The mailbox
   is on JSON:API `relationships.main_email_address` /
-  `email_addresses`: Patricia **patimota@gmail.com** (id 62, primary);
-  Bee **juliocastrosoares@gmail.com** (id 63, primary). GET with
-  `include=email_addresses,main_email_address`. `PATCH /api/email/document`
-  `to_email` should use those addresses. Do not treat a null attribute
-  as “no email on the cliente”. `issueInvoice()` stays closed.
+  `email_addresses` (Patricia id 62 primary; Bee id 63 primary).
+  GET with `include=email_addresses,main_email_address`.
+  `PATCH /api/email/document` `to_email` should use those addresses.
+  Do not treat a null attribute as “no email on the cliente”.
+  `issueInvoice()` stays closed.
 - Owner: founder (Rodrigo Barona)
 - Status: `active`
 - Related: TOConline “Clientes, Morada e E-mail”, worksheet fiscal cards
@@ -172,8 +172,8 @@ Each entry should include:
 - Decision: GET-only `filter[customer_id]` on sales documents. Patricia
   (cliente 17) already has **FT ELEVA/1–13** (issued 2026-02-23,
   €10,50 each, AT `communication_status=success`). All 13 map to 2026
-  destination charges via the PaymentIntent stem in the line
-  (`pi_3SoQTl…` → `ch_3SoQTl…`); ELEVA/5 had `pi_XXXXXX` and was
+  destination charges via the PaymentIntent stem in the line;
+  ELEVA/5 had a placeholder PI id and was
   matched by session 2026-01-29 15:00 UTC + amount. Bee (cliente 18)
   has **FT ELEVA/14–15** for **2025** sessions (€13,50 / €11,25) — not
   among Julio’s four 2026 worksheet charges. Do not re-issue any of
@@ -190,14 +190,12 @@ Each entry should include:
 - Decision: Live `GET /api/customers` on Eleva’s TOConline company
   (no FT POST) found the two clientes already created for commission
   FTs. Reuse these ids; do not create a second customer per expert.
-  - Patrícia / NIF `234065818` → TOConline `customer_id` **17**,
-    `business_name` `Patricia Mota` (shorter than Identity legal name
-    Patrícia Gonçalves Fernandes da Mota). Stripe Connect
-    `acct_1R2634GbopiCXJgJ` is in `internal_observations`.
-  - Julio’s company / NIF `515678180` → TOConline `customer_id` **18**,
-    `business_name` `BEE C AND J UNIPESSOAL LDA`, `contact_name`
-    Julio Castro Soares. Stripe Connect `acct_1RORceGhxEomGqMZ` in
-    `internal_observations`.
+  - Patrícia / personal NIF on file → TOConline `customer_id` **17**,
+    business name shorter than the Identity legal name. Stripe Connect
+    account id is in `internal_observations`.
+  - Julio’s company / company NIF on file → TOConline `customer_id` **18**,
+    company business name, contact name Julio. Stripe Connect
+    account id is in `internal_observations`.
     Raquel, Jessica, and Madalena are not in Clientes yet. `issueInvoice()`
     stays closed.
 - Owner: founder (Rodrigo Barona)
@@ -240,10 +238,10 @@ Each entry should include:
   a personal NIF (ENI / natural person, typically 1–3…) or a company
   denomination + NIF (Unipessoal Lda and similar, typically 5…). An
   expert can have **both** on file; only one is the default FT
-  customer. Julio Castro Soares is the Identity person;
-  commission invoices go to **Bee, C And J, Unipessoal Lda** /
-  NIF `515678180` at Rua Chaby Pinheiro, Nº 7 - 3º C, 2795-060
-  Linda-a-Velha — not his personal NIF. v3 still has a single
+  customer. Julio is the Identity person;
+  commission invoices go to **the Bee company** /
+  company NIF and registered address on file — not his personal NIF.
+  v3 still has a single
   `expert_profiles.nif` and does **not** yet store personal vs company
   identities (unbuilt). Manual 2026 ELEVA-FEE worksheets follow this
   split; `issueInvoice()` stays closed.

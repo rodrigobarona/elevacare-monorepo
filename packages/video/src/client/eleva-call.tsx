@@ -75,6 +75,7 @@ export type ElevaCallProps = {
 type ChatMessage = {
   id: string
   fromLocal: boolean
+  fromName: string
   text: string
 }
 
@@ -170,32 +171,43 @@ function CallShell({
   notesDirtyRef.current = notesDirty
   reportDirtyRef.current = reportDirty
   const localUserName = useParticipantProperty(localId, "user_name")
-  const remoteUserName = useParticipantProperty(remoteIds[0] ?? "", "user_name")
   const localName = localCallDisplayName(
     localUserName,
     labels.you,
     labels.youNamed
   )
-  const remoteName = callDisplayName(remoteUserName, labels.remote)
 
+  const remoteFallback = labels.remote
   const sendAppMessage = useAppMessage({
-    onAppMessage: useCallback((ev: { data?: unknown }) => {
-      const text =
-        ev.data &&
-        typeof ev.data === "object" &&
-        "text" in ev.data &&
-        typeof (ev.data as { text: unknown }).text === "string"
-          ? (ev.data as { text: string }).text
-          : null
-      if (!text) return
-      setMessages((curr) => [
-        ...curr,
-        { id: crypto.randomUUID(), fromLocal: false, text },
-      ])
-      if (!chatOpenRef.current) {
-        setUnreadCount((count) => count + 1)
-      }
-    }, []),
+    onAppMessage: useCallback(
+      (ev: { data?: unknown; fromId?: string }) => {
+        const text =
+          ev.data &&
+          typeof ev.data === "object" &&
+          "text" in ev.data &&
+          typeof (ev.data as { text: unknown }).text === "string"
+            ? (ev.data as { text: string }).text
+            : null
+        if (!text) return
+        const fromId = typeof ev.fromId === "string" ? ev.fromId : ""
+        const senderName = fromId
+          ? daily?.participants()?.[fromId]?.user_name
+          : undefined
+        setMessages((curr) => [
+          ...curr,
+          {
+            id: crypto.randomUUID(),
+            fromLocal: false,
+            fromName: callDisplayName(senderName, remoteFallback),
+            text,
+          },
+        ])
+        if (!chatOpenRef.current) {
+          setUnreadCount((count) => count + 1)
+        }
+      },
+      [daily, remoteFallback]
+    ),
   })
 
   function toggleChat() {
@@ -452,7 +464,7 @@ function CallShell({
     sendAppMessage({ text })
     setMessages((curr) => [
       ...curr,
-      { id: crypto.randomUUID(), fromLocal: true, text },
+      { id: crypto.randomUUID(), fromLocal: true, fromName: localName, text },
     ])
     setChatDraft("")
   }
@@ -573,8 +585,6 @@ function CallShell({
           draft={chatDraft}
           onDraftChange={setChatDraft}
           onSend={handleSend}
-          localName={localName}
-          remoteName={remoteName}
         />
       ) : null}
 
@@ -739,16 +749,12 @@ function ChatPanel({
   draft,
   onDraftChange,
   onSend,
-  localName,
-  remoteName,
 }: {
   labels: ElevaCallLabels
   messages: ChatMessage[]
   draft: string
   onDraftChange: (value: string) => void
   onSend: () => void
-  localName: string
-  remoteName: string
 }) {
   const inputId = useId()
   const listRef = useRef<HTMLDivElement>(null)
@@ -766,10 +772,7 @@ function ChatPanel({
         ) : (
           messages.map((msg) => (
             <p key={msg.id} className="py-0.5">
-              <span className="font-medium">
-                {msg.fromLocal ? localName : remoteName}:
-              </span>{" "}
-              {msg.text}
+              <span className="font-medium">{msg.fromName}:</span> {msg.text}
             </p>
           ))
         )}
