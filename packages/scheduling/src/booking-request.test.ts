@@ -131,24 +131,6 @@ describe("acceptBookingRequest", () => {
     expect(withAudit).not.toHaveBeenCalled()
   })
 
-  it("rejects after start when the deadline is missing", async () => {
-    getExpertBookingForApproval.mockResolvedValue(
-      row({
-        approvalDeadlineAt: null,
-        startsAt: new Date("2026-10-13T09:00:00.000Z"),
-      })
-    )
-    await expect(
-      acceptBookingRequest({
-        actorUserId: "expert-1",
-        orgId: "org-1",
-        expertProfileId: "ep-1",
-        bookingId: "booking-1",
-        now,
-      })
-    ).rejects.toMatchObject({ code: "REQUEST_EXPIRED" })
-  })
-
   it("rejects after the approval window", async () => {
     getExpertBookingForApproval.mockResolvedValue(
       row({ approvalDeadlineAt: new Date("2026-10-13T09:00:00.000Z") })

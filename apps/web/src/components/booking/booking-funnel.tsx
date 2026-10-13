@@ -181,9 +181,7 @@ export function BookingFunnel({
   >(null)
   const confirmInFlight = useRef(false)
   const isRequest =
-    settledStatus != null
-      ? settledStatus === "awaiting_confirmation"
-      : requiresApproval
+    requiresApproval || settledStatus === "awaiting_confirmation"
 
   const evaluations = evaluateModes(modes, {
     memberCountry: country,

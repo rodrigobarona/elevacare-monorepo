@@ -44,8 +44,10 @@ export async function acceptBookingRequest(input: {
     if (row.status === "confirmed") return { bookingId: row.id }
     throw new BookingRequestError("INVALID_STATUS")
   }
-  const deadline = row.approvalDeadlineAt ?? row.startsAt
-  if (deadline.getTime() <= now.getTime()) {
+  if (
+    row.approvalDeadlineAt &&
+    row.approvalDeadlineAt.getTime() <= now.getTime()
+  ) {
     throw new BookingRequestError("REQUEST_EXPIRED")
   }
 
