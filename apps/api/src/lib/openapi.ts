@@ -105,6 +105,10 @@ import {
   AddSessionParticipantResponseSchema,
   RemoveSessionParticipantResponseSchema,
   DailyWebhookResponseSchema,
+  ListSessionRecordsResponseSchema,
+  UpsertSessionRecordRequestSchema,
+  UpsertSessionRecordResponseSchema,
+  SummarizeSessionRecordsResponseSchema,
 } from "@eleva/api-client"
 
 const ErrorSchema = z.object({
@@ -3149,6 +3153,107 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "410": {
               description: "Session is not active",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/sessions/{bookingId}/records": {
+        get: {
+          operationId: "listSessionRecords",
+          summary: "List encrypted session records for a booking",
+          description:
+            "Assigned expert reads intake, in-call notes, live transcript, unpublished internal report, and AI draft for this booking. Member reads only published rows and never the internal report. Bodies are decrypted in the expert org. Not HIPAA.",
+          tags: ["Sessions"],
+          requestParams: {
+            path: z.object({ bookingId: z.string().uuid() }),
+          },
+          responses: {
+            ...stdWithNotFound,
+            "200": {
+              description: "Session records",
+              content: {
+                "application/json": {
+                  schema: ListSessionRecordsResponseSchema,
+                },
+              },
+            },
+            "403": {
+              description: "Caller is not the assigned expert or member",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+        put: {
+          operationId: "upsertSessionRecord",
+          summary: "Save in-call notes, transcript, or internal report",
+          description:
+            "Assigned expert only. Upserts records.kind note|transcript|internal_report. Internal report stays unpublished (expert-only). Intake is copied from the booking form at confirm and is read-only. AI drafts are written only by POST .../summarize. Audit payload is kind + bookingId (no PHI).",
+          tags: ["Sessions"],
+          requestParams: {
+            path: z.object({ bookingId: z.string().uuid() }),
+          },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: UpsertSessionRecordRequestSchema,
+              },
+            },
+          },
+          responses: {
+            ...stdWithNotFound,
+            "200": {
+              description: "Saved record",
+              content: {
+                "application/json": {
+                  schema: UpsertSessionRecordResponseSchema,
+                },
+              },
+            },
+            "403": {
+              description: "Caller is not the assigned expert",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "409": {
+              description: "Intake is read-only",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "422": {
+              description: "Request body failed validation",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+      },
+      "/sessions/{bookingId}/records/summarize": {
+        post: {
+          operationId: "summarizeSessionRecords",
+          summary: "Draft an AI summary of session notes and transcript",
+          description:
+            "Fail closed until a zero-retention model is on APPROVED_MODELS (ADR-009). Returns 409 AI_MODEL_ZERO_RETENTION_REQUIRED.",
+          tags: ["Sessions"],
+          requestParams: {
+            path: z.object({ bookingId: z.string().uuid() }),
+          },
+          responses: {
+            "200": {
+              description:
+                "AI summary draft (unreachable until a zero-retention model is allow-listed)",
+              content: {
+                "application/json": {
+                  schema: SummarizeSessionRecordsResponseSchema,
+                },
+              },
+            },
+            "409": {
+              description:
+                "No zero-retention model is allow-listed for clinical text",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "403": {
+              description: "Caller is not the assigned expert",
               content: { "application/json": { schema: ErrorSchema } },
             },
             ...stdWithNotFound,

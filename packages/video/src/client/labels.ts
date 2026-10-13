@@ -31,6 +31,19 @@ export type ElevaCallLabels = {
   retry: string
   notesTitle: string
   notesPlaceholder: string
+  intakeTitle: string
+  transcriptTitle: string
+  transcriptEmpty: string
+  notesSaved: string
+  notesSaveFailed: string
+  reportTitle: string
+  reportHint: string
+  reportNotes: string
+  reportNotesPlaceholder: string
+  reportSuggestions: string
+  reportSuggestionsPlaceholder: string
+  reportRecommendations: string
+  reportRecommendationsPlaceholder: string
   you: string
   remote: string
   connecting: string
@@ -63,6 +76,19 @@ export function elevaCallLabels(t: (key: string) => string): ElevaCallLabels {
     retry: t("retry"),
     notesTitle: t("notesTitle"),
     notesPlaceholder: t("notesPlaceholder"),
+    intakeTitle: t("intakeTitle"),
+    transcriptTitle: t("transcriptTitle"),
+    transcriptEmpty: t("transcriptEmpty"),
+    notesSaved: t("notesSaved"),
+    notesSaveFailed: t("notesSaveFailed"),
+    reportTitle: t("reportTitle"),
+    reportHint: t("reportHint"),
+    reportNotes: t("reportNotes"),
+    reportNotesPlaceholder: t("reportNotesPlaceholder"),
+    reportSuggestions: t("reportSuggestions"),
+    reportSuggestionsPlaceholder: t("reportSuggestionsPlaceholder"),
+    reportRecommendations: t("reportRecommendations"),
+    reportRecommendationsPlaceholder: t("reportRecommendationsPlaceholder"),
     you: t("you"),
     remote: t("remote"),
     connecting: t("connecting"),

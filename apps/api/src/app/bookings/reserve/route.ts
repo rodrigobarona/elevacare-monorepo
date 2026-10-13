@@ -143,6 +143,7 @@ export async function POST(request: Request) {
       consents: body.consents,
       cancellationPolicy: body.cancellationPolicy,
       promoCode: body.promoCode,
+      intakeNotes: body.intakeNotes,
       busyTimeProvider: holdCalendarBusyTimeProvider,
     })
   } catch (err) {

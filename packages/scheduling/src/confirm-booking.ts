@@ -9,6 +9,7 @@ import {
 import { emitBookingNotificationEvent } from "./emit-domain-event"
 import { ensureSessionRow } from "./ensure-session-row"
 import { emitPaymentFailedEvent } from "./emit-payment-event"
+import { persistIntakeAfterConfirm } from "./persist-booking-intake"
 import { hashReservationToken } from "./reservation-token"
 import { timingSafeEqual } from "node:crypto"
 
@@ -155,6 +156,7 @@ export async function confirmBookingPayment(
       payment.stripePaymentIntentId === input.paymentIntentId ||
       reservation.stripePaymentIntentId === input.paymentIntentId
     if (sameIntent) {
+      await persistIntakeAfterConfirm(booking.id)
       return {
         ok: true,
         alreadyConfirmed: true,
@@ -275,6 +277,7 @@ export async function confirmBookingPayment(
         input.paymentIntentId
       )
       if (raced?.booking.status === "confirmed") {
+        await persistIntakeAfterConfirm(raced.booking.id)
         return {
           ok: true,
           alreadyConfirmed: true,
@@ -290,6 +293,7 @@ export async function confirmBookingPayment(
     return { ok: false, error: "db_error" }
   }
 
+  await persistIntakeAfterConfirm(booking.id)
   return {
     ok: true,
     alreadyConfirmed,

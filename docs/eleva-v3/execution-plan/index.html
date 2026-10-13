@@ -457,7 +457,7 @@ that does not depend on it, then stops at the gated PR and reports the missing e
 <td>D-11</td>
 <td>Clinical access model (author; clinic opt-in; staff never)</td>
 <td>DPO + product</td>
-<td>PR 10.1</td>
+<td>Clinic share UI (Phase 11); DPO re-sign before production PHI. 10.1 ships author-only (working pre-launch).</td>
 </tr>
 <tr>
 <td>D-12</td>
@@ -882,7 +882,7 @@ Plan: docs/eleva-v3/execution-plan/phases/NN-&lt;slug&gt;.md
 </tr>
 <tr>
 <td>Recording pipeline dragging Phase 10 into an S3/BAA dependency</td>
-<td>Recording lives only in 16.8, gated on D-07/D-08; Phase 10 = notes, documents, CRM, AI from typed notes</td>
+<td>Cloud recording stays 16.8/D-08. Phase 10.1 (EU-first, D-07 deferred) stores encrypted notes + live Daily transcript + unpublished internal report; not HIPAA.</td>
 <td>9, 10, 16</td>
 </tr>
 <tr>
@@ -5898,7 +5898,7 @@ operator tasks pending.</code></pre></div>
 </tr>
 <tr>
 <td>Depends on</td>
-<td>Phase 9, Phase 4B (<code>@eleva/editor</code>, <code>approved-models</code> allow-list); <strong>D-11 (clinical access model) signed — owner, date and evidence in <code>decision-log.md</code> — before PR 10.1 opens</strong> (entry gate, checked in the prompt)</td>
+<td>Phase 9, Phase 4B (<code>@eleva/editor</code>, <code>approved-models</code> allow-list); <strong>D-11 working pre-launch</strong> (founder 2026-10-12 — author-only RLS; clinic share stays Phase 11). HIPAA/D-07 stays deferred (EU-first; not a 10.1 blocker). Live Daily transcription (not cloud recording) is in 10.1; 16.8 still owns D-08 S3 recording.</td>
 </tr>
 <tr>
 <td>Effort</td>
@@ -5921,7 +5921,10 @@ differentiator and must ship behind a flag with strict PHI boundaries (ADR-009).
 <p>In:</p>
 <ul>
 <li><strong>Records</strong> (<code>records</code>: id, expert_org_id, member_user_id, booking_id nullable, kind
-<code>note|report|document_ref|ai_draft</code> (<code>transcript</code> is added by Phase 16.8; one shared <code>RECORD_KINDS</code> const in
+<code>intake|note|transcript|ai_draft|internal_report|report|document_ref</code> (live <code>transcript</code>
+and unpublished expert <code>internal_report</code> pulled into 10.1 on founder 2026-10-12 — not 16.8
+cloud recording and not the 10.2 member-published <code>report</code>; clinic-shared SELECT excludes
+<code>internal_report</code>; one shared <code>RECORD_KINDS</code> const in
 <code>packages/db/src/schema/main/records.ts</code>, reused by the migration enum, API Zod schemas,
 <code>@eleva/audit</code> unions and tests), <code>title_encrypted</code> + <code>body_encrypted</code> (envelope,
 <code>encryptForOrg(expertOrgId)</code>; naming convention <code>&lt;field&gt;_encrypted</code> everywhere),
@@ -6005,12 +6008,13 @@ notes (and, optionally, the intake answers the member typed at booking) as the o
 versioned prompt contracts (<code>packages/ai/prompts/session-report.v1.ts</code>) and Zod-validated
 structured output -&gt; <code>records.kind = ai_draft</code> (never auto-published) -&gt; expert reviews, edits,
 publishes. PHI stays inside the request to the gateway with <strong>zero data retention verified per
-model</strong> (the <code>PHI_APPROVED_MODELS</code> allow-list below), prompts logged without content, model
-pinned via config. <strong>Recording and transcription are not in this phase</strong>: Daily&#39;s HIPAA
+model</strong> (the <code>APPROVED_MODELS</code> allow-list below), prompts logged without content, model
+pinned via config. <strong>Cloud recording is not in this phase</strong>: Daily&#39;s HIPAA
 recording requires a customer-owned S3 landing zone and its own consent kind; the whole
-recording -&gt; transcript -&gt; draft pipeline (including the <code>syncRoomRecording</code> fencing design
-written for it) lives in <strong>Phase 16.8</strong> and is gated on the storage decision D-08. Nothing in
-Phase 10 writes <code>sessions.recording_*</code> columns or calls Daily.</li>
+recording -&gt; S3 landing -&gt; draft pipeline (including the <code>syncRoomRecording</code> fencing design
+written for it) lives in <strong>Phase 16.8</strong> and is gated on the storage decision D-08. Live Daily
+transcription (<code>startTranscription</code> / <code>transcription-message</code>, recording off) is in <strong>10.1</strong>.
+Nothing in Phase 10 writes <code>sessions.recording_*</code> columns.</li>
 <li><strong>Encryption key controls (ADR-009 operations, P1)</strong>: <code>packages/encryption</code> gains the operating
 rules this phase depends on — the KEK custody contract is the one Phase 1 / ADR-009 and Phase
 15 share: each KEK version is a Vercel <strong>sensitive</strong> environment variable <code>ELEVA_KEK_V&lt;n&gt;</code>
@@ -6092,8 +6096,8 @@ expires (&lt;= 15 min).</li>
 unchanged; decrypt works before, during and after; <code>record: decrypted</code> audit rows present.</li>
 <li><input disabled="" type="checkbox"> Clinical access matrix: authoring expert reads; clinic colleague reads only with
 <code>clinic_shared_records</code> on and no member opt-out; staff never see <code>body_encrypted</code>.</li>
-<li><input disabled="" type="checkbox"> No <code>@daily-co/*</code>, <code>sessions.recording_*</code> or <code>transcript</code> kind touched in this phase (grep
-check in the PR body).</li>
+<li><input disabled="" type="checkbox"> No <code>sessions.recording_*</code> or Daily cloud recording in this phase (grep
+check in the PR body). Live <code>transcript</code> kind is in 10.1; S3 recording stays 16.8.</li>
 <li><input disabled="" type="checkbox"> Retention sweep deletes an expired unpublished AI draft in a
 seeded test; account deletion after grace period shreds keys and rows; DSAR includes published
 records and owned documents.</li>
@@ -6155,8 +6159,8 @@ Before writing code:
 Workflow (mandatory) — this is the outer loop; the &quot;PHASE 10 TASK&quot; section further down is
 what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
-- Entry gate: decision-log.md must contain D-11 (clinical access model) with Status accepted,
-  owner, date and evidence link — if it is still proposed, STOP and report; PR 10.1 cannot open.
+- Entry gate: D-11 is working pre-launch (author-only now; clinic share Phase 11;
+  DPO re-sign before production PHI). Do not STOP; PR 10.1 can open.
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-10.1/records-consent-retention
 - Second PR (opened after the first merges): phase-10.2/crm-ai-reports. Each PR: &lt;= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
@@ -6187,7 +6191,8 @@ PR 10.1 — records, documents, consent, retention:
    — created HERE so policy A below compiles; no UI or endpoint in this phase (Phase 11 adds the
    toggle, notice and opt-out API); rls-classes test for the clinical-shared class.
 1. packages/db: records (id, expert_org_id, member_user_id, booking_id nullable, kind from the
-   shared RECORD_KINDS const = note|report|document_ref|ai_draft (transcript joins in 16.8; single enum reused by
+   shared RECORD_KINDS const = intake|note|transcript|ai_draft|internal_report|report|document_ref
+   (live Daily transcript is 10.1; cloud recording/S3 stays 16.8; single enum reused by
    the pg enum, Zod schemas, audit unions and tests), title_encrypted, body_encrypted (text, envelope ciphertext), format
    markdown|json, version int, published_at nullable, created_by, created_at, updated_at,
    deleted_at), session_documents (id, expert_org_id, member_user_id, booking_id nullable,
@@ -6309,9 +6314,9 @@ PR 10.2 — CRM + AI reports beta:
    expert; for other experts of the same clinic org only when organizations.clinic_shared_records
    is true AND no record_access_optouts row exists for (member_user_id, org_id); staff never read
    body_encrypted (column-level policy: staff role sees metadata columns only). Class tests for
-   all four viewers. No recording, transcription, sessions.recording_* columns or Daily calls in
-   this phase — that pipeline is Phase 16.8 (see that file for the fencing design already
-   written for it).
+   all four viewers. No cloud recording, sessions.recording_* columns or Daily recording APIs in
+   this phase — live transcription + encrypted transcript records are 10.1; cloud recording/S3
+   is Phase 16.8 (see that file for the fencing design already written for it).
 8. @eleva/ai (only AI Gateway; no direct provider SDKs): packages/ai/src/prompts/session-report.
    v1.ts (system + user template; language from booking locale; output schema Zod { summary,
    observations[], recommendations[], followUpQuestions[], redFlags[] , disclaimer }), draftSession
@@ -8241,9 +8246,9 @@ and run the standard loop from README section 4.</p>
 </tr>
 <tr>
 <td>16.8</td>
-<td><strong>Session recording + transcription — the only home for this feature</strong> (Daily HIPAA cloud recording into a disposable EU AWS S3 landing zone, pull-encrypt-store into the private Blob store via <code>@eleva/storage</code>, <code>session_recording</code> consent kind, <code>syncRoomRecording</code> fencing, transcript -&gt; AI draft, retention)</td>
-<td><code>docs/eleva-v3/execution-plan/phases/09-video-daily.md</code> (recording off, PR 09.0 confirms the domain setting), <code>docs/eleva-v3/execution-plan/phases/10-records-crm-ai.md</code> (stripped here by the 2026-09 amendment), <code>docs/eleva-v3/compliance-data-governance.md</code></td>
-<td>Gated on <strong>D-08</strong> (storage decision: AWS S3 EU landing zone with IAM role trust for Daily; Vercel Blob, Neon object storage and R2 are not accepted Daily destinations) + DPO sign-off; see the 16.8 design note below.</td>
+<td><strong>Cloud session recording</strong> (Daily cloud recording into a disposable EU AWS S3 landing zone, pull-encrypt-store into the private Blob store via <code>@eleva/storage</code>, <code>session_recording</code> consent kind, <code>syncRoomRecording</code> fencing, optional recording-derived transcript). <strong>Live Deepgram transcription without recording</strong> was pulled into Phase 10.1 on 2026-10-12 (founder; EU-first, D-07 deferred).</td>
+<td><code>docs/eleva-v3/execution-plan/phases/09-video-daily.md</code> (recording off), <code>docs/eleva-v3/execution-plan/phases/10-records-crm-ai.md</code>, <code>docs/eleva-v3/compliance-data-governance.md</code></td>
+<td>Gated on <strong>D-08</strong> (S3 landing zone) + DPO sign-off. Live transcript in 10.1 does <strong>not</strong> unblock this row.</td>
 </tr>
 <tr>
 <td>16.9</td>
@@ -8349,7 +8354,7 @@ Retention: transcripts 2 y (<code>data-retention-export-matrix.md</code>).</li>
 grant it (join-page banner; withdrawable at any time); the consent boolean drives Daily&#39;s
 recording mode through the fenced sync below, never a raw flag.</li>
 <li><strong>AI draft from transcript</strong> — <code>draftSessionReport</code> (Phase 10, typed-notes input) gains a
-<code>transcriptRecordId</code> input behind <code>ff.session_recording</code>; same <code>PHI_APPROVED_MODELS</code> rule.</li>
+<code>transcriptRecordId</code> input behind <code>ff.session_recording</code>; same <code>APPROVED_MODELS</code> rule.</li>
 </ol>
 <h3 id="16-post-launch-backlog--room-recording-sync-fencing-design-verbatim-from-the-original-phase-10-text"><a class="anchor" href="#16-post-launch-backlog--room-recording-sync-fencing-design-verbatim-from-the-original-phase-10-text" aria-label="Link to section">#</a>Room recording sync — fencing design (verbatim from the original Phase 10 text)</h3>
 <p>Phase 9 creates the room at booking confirmation with <code>enable_recording: false</code>, and consent is
@@ -8592,8 +8597,9 @@ copy the title verbatim into the new phase file heading):
         member-facing summaries; evaluation harness) — origin docs/eleva-v3/ai-reporting-spec.md,
         docs/eleva-v3/execution-plan/phases/10-records-crm-ai.md (beta flag); DPIA update, consent
         copy review, AI Gateway model pinning.
-  16.8  Session recording + transcription — THE ONLY HOME for recording (Phase 9 keeps
-        recording off; Phase 10 has no recording code). Origin
+  16.8  Session recording + S3 transcription ingest — THE ONLY HOME for cloud recording
+        (Phase 9 keeps recording off; Phase 10.1 has live Daily transcription and encrypted
+        transcript records, not S3). Origin
         docs/eleva-v3/execution-plan/phases/09-video-daily.md,
         docs/eleva-v3/execution-plan/phases/10-records-crm-ai.md,
         docs/eleva-v3/compliance-data-governance.md. Gated on D-08 in decision-log.md (storage)

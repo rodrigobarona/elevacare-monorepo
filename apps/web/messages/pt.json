@@ -206,6 +206,8 @@
       "phoneHint": "Necessário para uma sessão por telefone. Pode incluir o indicativo do país.",
       "taxId": "NIF / IVA (opcional)",
       "taxIdHint": "NIF português ou IVA da UE, para faturação quando a emissão abrir.",
+      "intakeNotes": "Algo que queira que o especialista saiba (opcional)",
+      "intakeNotesHint": "Uma pré-agenda breve. O especialista vê isto no registo da sessão.",
       "promo": "Código promocional (opcional)",
       "promoHint": "Guardamos o código nesta marcação. Os descontos automáticos ainda não são aplicados.",
       "consentsIntro": "Para marcar uma sessão de saúde nesta plataforma digital de saúde, confirme:",

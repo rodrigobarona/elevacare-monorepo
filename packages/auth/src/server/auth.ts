@@ -265,6 +265,12 @@ function createAuth() {
                 defaultValue: "personal",
                 input: true,
               },
+              clinicSharedRecords: {
+                type: "boolean",
+                required: true,
+                defaultValue: false,
+                input: false,
+              },
             },
           },
         },

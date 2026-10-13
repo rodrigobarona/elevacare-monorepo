@@ -107,6 +107,8 @@ export const RLS_TABLE_ASSIGNMENTS: readonly RlsTableAssignment[] = [
   // via session_participants_participant_read — not a new handbook class.
   { table: "session_participants", class: "tenant-owned" },
   { table: "session_note_drafts", class: "tenant-owned" },
+  { table: "records", class: "tenant-owned" },
+  { table: "record_access_optouts", class: "owner-user-visible" },
   { table: "daily_webhook_events", class: "staff-only" },
   { table: "billing_customers", class: "tenant-owned" },
   { table: "billing_subscriptions", class: "tenant-owned" },

@@ -582,6 +582,48 @@ export const DailyWebhookResponseSchema = z.object({
   reason: z.string().optional(),
 })
 
+export const BookingRecordKindSchema = z.enum([
+  "intake",
+  "note",
+  "transcript",
+  "ai_draft",
+  "internal_report",
+])
+
+export const BookingRecordSchema = z.object({
+  id: z.string().uuid(),
+  kind: BookingRecordKindSchema,
+  title: z.string(),
+  body: z.string(),
+  version: z.number().int().positive(),
+  updatedAt: z.string().datetime(),
+})
+
+export const ListSessionRecordsResponseSchema = z.object({
+  records: z.array(BookingRecordSchema),
+})
+
+export const UpsertSessionRecordRequestSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("transcript"),
+    body: z.string().max(500_000),
+  }),
+  z.object({
+    kind: z.literal("note"),
+    body: z.string().max(100_000),
+  }),
+  z.object({
+    kind: z.literal("internal_report"),
+    body: z.string().max(100_000),
+  }),
+])
+
+export const UpsertSessionRecordResponseSchema = BookingRecordSchema
+
+export const SummarizeSessionRecordsResponseSchema = z.object({
+  record: BookingRecordSchema,
+})
+
 export type MeProfile = z.infer<typeof MeProfileSchema>
 export type PatchMeRequest = z.infer<typeof PatchMeRequestSchema>
 export type PutNotificationPreferencesRequest = z.infer<
@@ -635,6 +677,17 @@ export type RemoveSessionParticipantResponse = z.infer<
   typeof RemoveSessionParticipantResponseSchema
 >
 export type DailyWebhookResponse = z.infer<typeof DailyWebhookResponseSchema>
+export type BookingRecordKind = z.infer<typeof BookingRecordKindSchema>
+export type BookingRecord = z.infer<typeof BookingRecordSchema>
+export type ListSessionRecordsResponse = z.infer<
+  typeof ListSessionRecordsResponseSchema
+>
+export type UpsertSessionRecordRequest = z.infer<
+  typeof UpsertSessionRecordRequestSchema
+>
+export type UpsertSessionRecordResponse = z.infer<
+  typeof UpsertSessionRecordResponseSchema
+>
 
 // ── Expert Profile ──────────────────────────────────────────────────
 
@@ -1610,6 +1663,7 @@ export const ReserveBookingRequestSchema = z.object({
   /** Policy shown to the member; 409 POLICY_CHANGED when it no longer matches. */
   cancellationPolicy: CancellationPolicySchema.optional(),
   promoCode: z.string().trim().min(2).max(32).optional(),
+  intakeNotes: z.string().trim().max(8000).optional(),
 })
 
 export const ReserveBookingResponseSchema = z.object({
@@ -2887,6 +2941,28 @@ export function createApiClient(options: ApiClientOptions) {
           `/sessions/${encodeURIComponent(bookingId)}/participants/${encodeURIComponent(userId)}`
         )
         return RemoveSessionParticipantResponseSchema.parse(raw)
+      },
+      async listRecords(bookingId: string) {
+        const raw = await request<unknown>(
+          "GET",
+          `/sessions/${encodeURIComponent(bookingId)}/records`
+        )
+        return ListSessionRecordsResponseSchema.parse(raw)
+      },
+      async upsertRecord(bookingId: string, data: UpsertSessionRecordRequest) {
+        const raw = await request<unknown>(
+          "PUT",
+          `/sessions/${encodeURIComponent(bookingId)}/records`,
+          data
+        )
+        return UpsertSessionRecordResponseSchema.parse(raw)
+      },
+      async summarizeRecords(bookingId: string) {
+        const raw = await request<unknown>(
+          "POST",
+          `/sessions/${encodeURIComponent(bookingId)}/records/summarize`
+        )
+        return SummarizeSessionRecordsResponseSchema.parse(raw)
       },
     },
 

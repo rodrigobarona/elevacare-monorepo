@@ -6,7 +6,10 @@ import { createApiClient } from "@eleva/api-client"
 import {
   JoinSession,
   elevaCallLabels,
+  parseInternalReport,
   type ElevaCallLabels,
+  type ElevaCallRecords,
+  type SessionRecordBundle,
 } from "@eleva/video/client"
 
 export function JoinClient({
@@ -20,10 +23,36 @@ export function JoinClient({
 }) {
   const t = useTranslations("sessions.call")
   const labels = useMemo((): ElevaCallLabels => elevaCallLabels(t), [t])
+  const api = useMemo(
+    () => createApiClient({ baseUrl: apiBaseUrl }),
+    [apiBaseUrl]
+  )
 
   const join = useCallback(() => {
-    return createApiClient({ baseUrl: apiBaseUrl }).sessions.join(bookingId)
-  }, [apiBaseUrl, bookingId])
+    return api.sessions.join(bookingId)
+  }, [api, bookingId])
+
+  const records = useMemo((): ElevaCallRecords => {
+    return {
+      async load(): Promise<SessionRecordBundle> {
+        const { records: rows } = await api.sessions.listRecords(bookingId)
+        const byKind = new Map(rows.map((row) => [row.kind, row.body]))
+        return {
+          intake: byKind.get("intake") ?? "",
+          note: byKind.get("note") ?? "",
+          transcript: byKind.get("transcript") ?? "",
+          internalReport: parseInternalReport(
+            byKind.get("internal_report") ?? ""
+          ),
+        }
+      },
+      save(kind, body) {
+        return api.sessions.upsertRecord(bookingId, { kind, body }).then(() => {
+          /* persisted */
+        })
+      },
+    }
+  }, [api, bookingId])
 
   return (
     <JoinSession
@@ -31,6 +60,7 @@ export function JoinClient({
       labels={labels}
       backHref={backHref}
       showNotesSlot
+      records={records}
     />
   )
 }

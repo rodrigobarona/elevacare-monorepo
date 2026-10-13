@@ -3,7 +3,7 @@
 | Field      | Value                                                                                                                                                                                                                                                                                                                                                                                                             |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Branch     | `phase-10/records-crm-ai` (split: `phase-10.1/records-consent-retention`, `phase-10.2/crm-ai-reports`)                                                                                                                                                                                                                                                                                                            |
-| Depends on | Phase 9, Phase 4B (`@eleva/editor`, `approved-models` allow-list); **D-11 (clinical access model) signed — owner, date and evidence in `decision-log.md` — before PR 10.1 opens** (entry gate, checked in the prompt)                                                                                                                                                                                             |
+| Depends on | Phase 9, Phase 4B (`@eleva/editor`, `approved-models` allow-list); **D-11 working pre-launch** (founder 2026-10-12 — author-only RLS; clinic share stays Phase 11). HIPAA/D-07 stays deferred (EU-first; not a 10.1 blocker). Live Daily transcription (not cloud recording) is in 10.1; 16.8 still owns D-08 S3 recording.                                                                                       |
 | Effort     | 2 weeks                                                                                                                                                                                                                                                                                                                                                                                                           |
 | Touches    | `packages/db/src/schema/main/{records,session-documents,expert-notes,consents,crm}.ts`, `packages/encryption` (usage), `packages/storage` (private store), `packages/compliance/**` (retention jobs, DSAR collectors), `packages/crm/**`, `packages/ai/**`, `packages/encryption` (KEK/DEK operations), `apps/api/src/app/{records,notes,crm,ai,workflows}/**`, `apps/expert/**`, `apps/app/**`, `packages/flags` |
 | Exit gate  | Expert writes encrypted notes during/after a session, uploads documents to the private store, publishes a report the member can read via the app; retention jobs purge on schedule; consent captured; AI draft (behind `ff.ai_reports_beta`) from typed notes reviewed and published by the expert; KEK rotation job proven; no PHI in Sentry/logs                                                                |
@@ -19,7 +19,10 @@ differentiator and must ship behind a flag with strict PHI boundaries (ADR-009).
 In:
 
 - **Records** (`records`: id, expert_org_id, member_user_id, booking_id nullable, kind
-  `note|report|document_ref|ai_draft` (`transcript` is added by Phase 16.8; one shared `RECORD_KINDS` const in
+  `intake|note|transcript|ai_draft|internal_report|report|document_ref` (live `transcript`
+  and unpublished expert `internal_report` pulled into 10.1 on founder 2026-10-12 — not 16.8
+  cloud recording and not the 10.2 member-published `report`; clinic-shared SELECT excludes
+  `internal_report`; one shared `RECORD_KINDS` const in
   `packages/db/src/schema/main/records.ts`, reused by the migration enum, API Zod schemas,
   `@eleva/audit` unions and tests), `title_encrypted` + `body_encrypted` (envelope,
   `encryptForOrg(expertOrgId)`; naming convention `<field>_encrypted` everywhere),
@@ -105,12 +108,13 @@ record_access_optouts(member_user_id, expert_org_id)))` — the two objects this
   versioned prompt contracts (`packages/ai/prompts/session-report.v1.ts`) and Zod-validated
   structured output -> `records.kind = ai_draft` (never auto-published) -> expert reviews, edits,
   publishes. PHI stays inside the request to the gateway with **zero data retention verified per
-  model** (the `PHI_APPROVED_MODELS` allow-list below), prompts logged without content, model
-  pinned via config. **Recording and transcription are not in this phase**: Daily's HIPAA
+  model** (the `APPROVED_MODELS` allow-list below), prompts logged without content, model
+  pinned via config. **Cloud recording is not in this phase**: Daily's HIPAA
   recording requires a customer-owned S3 landing zone and its own consent kind; the whole
-  recording -> transcript -> draft pipeline (including the `syncRoomRecording` fencing design
-  written for it) lives in **Phase 16.8** and is gated on the storage decision D-08. Nothing in
-  Phase 10 writes `sessions.recording_*` columns or calls Daily.
+  recording -> S3 landing -> draft pipeline (including the `syncRoomRecording` fencing design
+  written for it) lives in **Phase 16.8** and is gated on the storage decision D-08. Live Daily
+  transcription (`startTranscription` / `transcription-message`, recording off) is in **10.1**.
+  Nothing in Phase 10 writes `sessions.recording_*` columns.
 - **Encryption key controls (ADR-009 operations, P1)**: `packages/encryption` gains the operating
   rules this phase depends on — the KEK custody contract is the one Phase 1 / ADR-009 and Phase
   15 share: each KEK version is a Vercel **sensitive** environment variable `ELEVA_KEK_V<n>`
@@ -193,8 +197,8 @@ created|updated|archived`), API `/records/templates` CRUD + `POST /records/templ
       unchanged; decrypt works before, during and after; `record: decrypted` audit rows present.
 - [ ] Clinical access matrix: authoring expert reads; clinic colleague reads only with
       `clinic_shared_records` on and no member opt-out; staff never see `body_encrypted`.
-- [ ] No `@daily-co/*`, `sessions.recording_*` or `transcript` kind touched in this phase (grep
-      check in the PR body).
+- [ ] No `sessions.recording_*` or Daily cloud recording in this phase (grep
+      check in the PR body). Live `transcript` kind is in 10.1; S3 recording stays 16.8.
 - [ ] Retention sweep deletes an expired unpublished AI draft in a
       seeded test; account deletion after grace period shreds keys and rows; DSAR includes published
       records and owned documents.
@@ -258,8 +262,8 @@ Before writing code:
 Workflow (mandatory) — this is the outer loop; the "PHASE 10 TASK" section further down is
 what you implement at the "Implement the deliverables" step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
-- Entry gate: decision-log.md must contain D-11 (clinical access model) with Status accepted,
-  owner, date and evidence link — if it is still proposed, STOP and report; PR 10.1 cannot open.
+- Entry gate: D-11 is working pre-launch (author-only now; clinic share Phase 11;
+  DPO re-sign before production PHI). Do not STOP; PR 10.1 can open.
 - git checkout main && git pull --ff-only && git checkout -b phase-10.1/records-consent-retention
 - Second PR (opened after the first merges): phase-10.2/crm-ai-reports. Each PR: <= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
@@ -290,7 +294,8 @@ PR 10.1 — records, documents, consent, retention:
    — created HERE so policy A below compiles; no UI or endpoint in this phase (Phase 11 adds the
    toggle, notice and opt-out API); rls-classes test for the clinical-shared class.
 1. packages/db: records (id, expert_org_id, member_user_id, booking_id nullable, kind from the
-   shared RECORD_KINDS const = note|report|document_ref|ai_draft (transcript joins in 16.8; single enum reused by
+   shared RECORD_KINDS const = intake|note|transcript|ai_draft|internal_report|report|document_ref
+   (live Daily transcript is 10.1; cloud recording/S3 stays 16.8; single enum reused by
    the pg enum, Zod schemas, audit unions and tests), title_encrypted, body_encrypted (text, envelope ciphertext), format
    markdown|json, version int, published_at nullable, created_by, created_at, updated_at,
    deleted_at), session_documents (id, expert_org_id, member_user_id, booking_id nullable,
@@ -412,9 +417,9 @@ PR 10.2 — CRM + AI reports beta:
    expert; for other experts of the same clinic org only when organizations.clinic_shared_records
    is true AND no record_access_optouts row exists for (member_user_id, org_id); staff never read
    body_encrypted (column-level policy: staff role sees metadata columns only). Class tests for
-   all four viewers. No recording, transcription, sessions.recording_* columns or Daily calls in
-   this phase — that pipeline is Phase 16.8 (see that file for the fencing design already
-   written for it).
+   all four viewers. No cloud recording, sessions.recording_* columns or Daily recording APIs in
+   this phase — live transcription + encrypted transcript records are 10.1; cloud recording/S3
+   is Phase 16.8 (see that file for the fencing design already written for it).
 8. @eleva/ai (only AI Gateway; no direct provider SDKs): packages/ai/src/prompts/session-report.
    v1.ts (system + user template; language from booking locale; output schema Zod { summary,
    observations[], recommendations[], followUpQuestions[], redFlags[] , disclaimer }), draftSession

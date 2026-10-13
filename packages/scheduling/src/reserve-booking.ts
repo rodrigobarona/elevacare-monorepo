@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto"
+import { randomBytes, randomUUID } from "node:crypto"
 import type { CancellationPolicy } from "@eleva/config/cancellation-policy"
 import { and, eq, isNull, or, sql } from "drizzle-orm"
 import type { Redis } from "@upstash/redis"
@@ -15,6 +15,7 @@ import {
 } from "@eleva/db"
 import type { Tx } from "@eleva/db/context"
 import { bookingLinks, consents } from "@eleva/db/schema"
+import { encryptHoldIntake } from "@eleva/records"
 import { assertRequestedSlotAvailable } from "./assert-slot-available"
 import { assertModeBookable } from "./mode-bookable"
 import { emptyBusyTimeProvider, type BusyTimeProvider } from "./offer-slots"
@@ -58,6 +59,8 @@ export type ReserveBookingInput = {
   /** Policy the member was shown; a mismatch means the expert changed it. */
   cancellationPolicy?: CancellationPolicy
   promoCode?: string
+  /** Member pre-agenda observations from the booking form. */
+  intakeNotes?: string
   busyTimeProvider?: BusyTimeProvider
 }
 
@@ -280,6 +283,20 @@ export async function reserveBooking(
   }
 
   const holdToken = randomBytes(32).toString("hex")
+  const reservationId = randomUUID()
+  const intakeNotes = input.intakeNotes?.trim()
+  let intakeNotesEncrypted: string | undefined
+  if (intakeNotes) {
+    try {
+      intakeNotesEncrypted = await encryptHoldIntake(
+        expert.orgId,
+        intakeNotes,
+        reservationId
+      )
+    } catch {
+      return { ok: false, error: "db_error" }
+    }
+  }
   const funnelGuest =
     !input.session && input.guest
       ? {
@@ -293,6 +310,7 @@ export async function reserveBooking(
   let reserved
   try {
     reserved = await reserveSlot(redis, {
+      id: reservationId,
       eventTypeId: offer.eventTypeId,
       expertProfileId: expert.id,
       expertUserId: expert.userId,
@@ -312,6 +330,7 @@ export async function reserveBooking(
         sessionMode: offer.mode,
         ...(funnelGuest ? { guest: funnelGuest } : {}),
         ...(input.promoCode ? { promoCode: input.promoCode } : {}),
+        ...(intakeNotesEncrypted ? { intakeNotesEncrypted } : {}),
       },
       cancellationPolicy: offer.cancellationPolicy,
       audit: {
@@ -328,7 +347,7 @@ export async function reserveBooking(
           })),
         },
       },
-      afterInsert: async (tx, reservationId) => {
+      afterInsert: async (tx, insertedId) => {
         if (offer.bookingLinkId) {
           await claimBookingLink(tx, {
             linkId: offer.bookingLinkId,
@@ -337,7 +356,7 @@ export async function reserveBooking(
         }
         await insertFunnelConsents(tx, {
           orgId: expert.orgId,
-          reservationId,
+          reservationId: insertedId,
           locale: input.language,
           grants: input.consents,
           userId: input.session?.userId,

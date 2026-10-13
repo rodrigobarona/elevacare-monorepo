@@ -455,6 +455,9 @@ importers:
       '@eleva/observability':
         specifier: workspace:*
         version: link:../../packages/observability
+      '@eleva/records':
+        specifier: workspace:*
+        version: link:../../packages/records
       '@eleva/scheduling':
         specifier: workspace:*
         version: link:../../packages/scheduling
@@ -1843,6 +1846,40 @@ importers:
         specifier: 'catalog:'
         version: 6.0.3
 
+  packages/records:
+    dependencies:
+      '@eleva/ai':
+        specifier: workspace:*
+        version: link:../ai
+      '@eleva/audit':
+        specifier: workspace:*
+        version: link:../audit
+      '@eleva/db':
+        specifier: workspace:*
+        version: link:../db
+      '@eleva/encryption':
+        specifier: workspace:*
+        version: link:../encryption
+      drizzle-orm:
+        specifier: 'catalog:'
+        version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(@upstash/redis@1.38.0)(kysely@0.29.5)
+    devDependencies:
+      '@eleva/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@eleva/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      eslint:
+        specifier: 'catalog:'
+        version: 10.4.0(jiti@2.6.1)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.8.0)(@vitest/coverage-v8@4.1.6)(jsdom@28.1.0(@noble/hashes@2.4.0))(vite@8.0.9(@types/node@25.8.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.1)(tsx@4.22.0)(yaml@2.9.0))
+
   packages/scheduling:
     dependencies:
       '@eleva/audit':
@@ -1857,6 +1894,9 @@ importers:
       '@eleva/db':
         specifier: workspace:*
         version: link:../db
+      '@eleva/records':
+        specifier: workspace:*
+        version: link:../records
       '@upstash/redis':
         specifier: 'catalog:'
         version: 1.38.0

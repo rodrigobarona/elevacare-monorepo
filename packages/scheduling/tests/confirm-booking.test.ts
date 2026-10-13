@@ -62,6 +62,9 @@ function mockConfirmTarget(
     status: "requires_payment",
     stripePaymentIntentId: paymentIntentId,
   }
+  vi.doMock("@eleva/records", () => ({
+    persistBookingIntake: vi.fn(async () => undefined),
+  }))
   vi.doMock("@eleva/db", () => ({
     main: {
       slotReservations: { id: "id" },

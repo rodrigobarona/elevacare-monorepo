@@ -44,6 +44,7 @@ export type AuditEntity =
   | "dsar_request"
   | "account_deletion_request"
   | "session"
+  | "record"
   | "org_data_key"
   | "payout"
   | "refund"

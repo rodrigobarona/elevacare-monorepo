@@ -66,6 +66,7 @@ export async function reserveSlot(
   input: ReserveSlotInput
 ): Promise<ReserveSlotResult> {
   const {
+    id,
     eventTypeId,
     expertProfileId,
     expertUserId,
@@ -122,6 +123,7 @@ export async function reserveSlot(
       const [row] = await tx
         .insert(slotReservations)
         .values({
+          ...(id ? { id } : {}),
           orgId,
           eventTypeId,
           expertProfileId,

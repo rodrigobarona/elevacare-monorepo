@@ -5,6 +5,8 @@ import {
   buildMainRlsStatements,
   TENANT_TABLES,
   DELEGATE_VISIBLE_TABLES,
+  CLINICAL_RECORDS_TABLES,
+  RECORD_OPTOUT_TABLES,
   STAFF_ONLY_TABLES,
   OWNER_USER_TABLES,
   INBOX_TABLES,
@@ -247,6 +249,54 @@ describe("owner-user-visible RLS", () => {
     expect(read).not.toContain("eleva.platform_admin")
     expect(writes).toContain("eleva.platform_admin")
     expect(writes).toContain("domain_events_publisher")
+  })
+})
+
+describe("clinical records RLS", () => {
+  const stmts = buildMainRlsStatements()
+
+  it("splits author select from author mutations and member published reads", () => {
+    expect(TENANT_TABLES).not.toContain("records")
+    expect(CLINICAL_RECORDS_TABLES).toContain("records")
+    expect(RECORD_OPTOUT_TABLES).toContain("record_access_optouts")
+    const select = stmts.find((s) =>
+      s.startsWith("CREATE POLICY records_author_select")
+    )
+    const insert = stmts.find((s) =>
+      s.startsWith("CREATE POLICY records_author_insert")
+    )
+    const update = stmts.find((s) =>
+      s.startsWith("CREATE POLICY records_author_update")
+    )
+    const del = stmts.find((s) =>
+      s.startsWith("CREATE POLICY records_author_delete")
+    )
+    const clinicRead = stmts.find((s) =>
+      s.startsWith("CREATE POLICY records_clinic_shared_read")
+    )
+    const published = stmts.find((s) =>
+      s.startsWith("CREATE POLICY records_member_published_read")
+    )
+    expect(
+      stmts.find((s) => s.startsWith("CREATE POLICY records_author_write"))
+    ).toBeUndefined()
+    expect(select).toContain("FOR SELECT")
+    expect(select).toContain("expert_user_id")
+    expect(insert).toContain("FOR INSERT")
+    expect(insert).toContain("WITH CHECK")
+    expect(insert).not.toContain("expert_user_id")
+    expect(update).toContain("FOR UPDATE")
+    expect(update).toContain("WITH CHECK")
+    expect(update).not.toContain("expert_user_id")
+    expect(del).toContain("FOR DELETE")
+    expect(del).not.toContain("expert_user_id")
+    expect(clinicRead).toContain("FOR SELECT")
+    expect(clinicRead).toContain("clinic_shared_records")
+    expect(clinicRead).toContain("expert_profiles")
+    expect(clinicRead).toContain("internal_report")
+    expect(clinicRead).not.toContain("auth.member")
+    expect(published).toContain("FOR SELECT")
+    expect(published).toContain("published_at IS NOT NULL")
   })
 })
 

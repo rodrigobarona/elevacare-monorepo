@@ -64,3 +64,8 @@ export function requireZeroRetentionModel(modelId: string): ApprovedModel {
   }
   return model
 }
+
+/** First allow-listed zero-retention model, or null (PHI must fail closed). */
+export function firstZeroRetentionModel(): ApprovedModel | null {
+  return APPROVED_MODELS.find((model) => model.zeroRetention) ?? null
+}

@@ -4,6 +4,7 @@ import {
   AiModelNotApprovedError,
   AiModelZeroRetentionRequiredError,
   assertApprovedModel,
+  firstZeroRetentionModel,
   requireZeroRetentionModel,
 } from "./approved-models"
 
@@ -25,5 +26,9 @@ describe("requireZeroRetentionModel", () => {
     expect(() => requireZeroRetentionModel("openai/gpt-4.1-mini")).toThrow(
       AiModelZeroRetentionRequiredError
     )
+  })
+
+  it("has no PHI-safe model on the seed allow-list", () => {
+    expect(firstZeroRetentionModel()).toBeNull()
   })
 })

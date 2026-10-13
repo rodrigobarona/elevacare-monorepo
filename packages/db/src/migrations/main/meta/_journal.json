@@ -379,6 +379,20 @@
       "when": 1780300000000,
       "tag": "0053_better_auth_17_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1781300000000,
+      "tag": "0054_phase10_session_records",
+      "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1781301000000,
+      "tag": "0055_phase10_internal_report",
+      "breakpoints": true
     }
   ]
 }
