@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 const withPlatformAudit = vi.fn()
 const withPlatformAdminContext = vi.fn()
 const pseudonymiseBookingConsents = vi.fn()
-const eraseMemberSessionDocuments = vi.fn(async () => ({
+const eraseMemberSessionDocuments = vi.fn(async (..._args: unknown[]) => ({
   deleted: 0,
   retainedExpertOnly: 0,
   blobFailures: 0,
