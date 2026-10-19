@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Eleva.care — Salud de la Mujer, Elevada",
-    "description": "Conecta con especialistas verificados en salud de la mujer para una atención personalizada y basada en evidencia — 100% online."
+    "description": "Conecta con especialistas en salud de la mujer para un cuidado personalizado y basado en la evidencia — online, por teléfono o en persona."
   },
   "nav": {
     "about": "Acerca de",
@@ -101,39 +101,114 @@
     }
   },
   "about": {
-    "title": "Acerca de — Eleva.care",
-    "description": "Eleva.care conecta mujeres con especialistas de salud verificados para una atención personalizada y basada en evidencia — 100% online.",
-    "eyebrow": "Nuestra misión",
-    "heading": "La salud de la mujer merece ",
-    "headingAccent": "mejor",
-    "intro": "Eleva.care se fundó con una creencia sencilla: toda mujer debería tener acceso a atención especializada y basada en evidencia — sin importar dónde viva.",
+    "title": "Sobre nosotros — Eleva.care",
+    "description": "Eleva Care conecta a mujeres con especialistas independientes y con licencia en salud de la mujer. Conoce nuestra misión, nuestras creencias y el equipo.",
+    "eyebrow": "Sobre nosotros",
+    "heading": "Transformando la salud de la mujer con compasión y ",
+    "headingAccent": "cuidado basado en la evidencia",
+    "intro": "Estamos aquí para facilitarte encontrar la ayuda adecuada, en el momento justo. Eleva Care te conecta con especialistas con licencia mediante una plataforma segura y de confianza.",
     "stats": {
-      "online": "Consultas online",
-      "languages": "Idiomas soportados",
-      "specialities": "Especialidades"
-    },
-    "valuesHeading": "Lo que defendemos",
-    "values": {
-      "evidenceBased": {
-        "title": "Basado en evidencia",
-        "description": "Todos los especialistas en nuestra plataforma están rigurosamente verificados. Combinamos experiencia clínica con la investigación más reciente para ofrecer atención fundamentada en la ciencia."
+      "modes": {
+        "value": "3",
+        "label": "Formas de consulta: online, por teléfono o en persona"
       },
-      "accessible": {
-        "title": "Accesible",
-        "description": "El apoyo de calidad en salud de la mujer no debería depender de la geografía. Nuestro modelo 100% online elimina barreras y lleva la atención experta hasta ti."
+      "languages": {
+        "value": "3",
+        "label": "Idiomas: español, inglés y portugués"
       },
-      "humanCentred": {
-        "title": "Centrado en la persona",
-        "description": "Detrás de cada consulta hay una conexión real. Diseñamos cada interacción con empatía, confianza y atención a tus necesidades individuales."
-      },
-      "inclusive": {
-        "title": "Inclusivo",
-        "description": "La salud de la mujer abarca todas las edades y etapas de la vida. Nuestra red multidisciplinar cubre embarazo, salud pélvica, bienestar mental, nutrición y mucho más."
+      "specialities": {
+        "value": "4",
+        "label": "Áreas de cuidado, del embarazo a cada etapa de la vida"
       }
     },
-    "ctaHeading": "¿Lista para empezar?",
-    "ctaDescription": "Encuentra la especialista adecuada para tu camino de salud — solo toma un minuto.",
-    "cta": "Encontrar especialista"
+    "mission": {
+      "eyebrow": "Nuestra misión",
+      "heading": "Un cuidado en el que confiar, en cada paso",
+      "p1": "Creemos que toda mujer merece un cuidado experto y cercano. Nuestra plataforma te ayuda a encontrar profesionales independientes y con licencia en quienes confiar, para que te sientas acompañada en cada paso.",
+      "p2": "Nosotros ponemos la tecnología que facilita el acceso al cuidado. El especialista que eliges te atiende. Juntos, te ayudamos a avanzar con confianza."
+    },
+    "vision": {
+      "eyebrow": "Nuestra visión",
+      "heading": "Unimos ciencia y cuidado, para que el apoyo se sienta ",
+      "headingAccent": "personal",
+      "lead": "Acercamos la experiencia adecuada a ti, haciendo que el cuidado especializado sea más accesible en cada etapa de la vida."
+    },
+    "beliefs": {
+      "eyebrow": "Nuestras creencias",
+      "heading": "Lo que defendemos",
+      "access": {
+        "title": "Acceso a un cuidado de calidad",
+        "description": "Toda mujer merece acceso a un cuidado de calidad, sin importar dónde viva o sus circunstancias."
+      },
+      "knowledge": {
+        "title": "El conocimiento es poder",
+        "description": "Información clara y basada en la evidencia para decidir con confianza."
+      },
+      "collaborative": {
+        "title": "Cuidado colaborativo",
+        "description": "Los mejores resultados llegan cuando trabajamos junto a profesionales de confianza."
+      },
+      "lifelong": {
+        "title": "Un viaje de por vida",
+        "description": "La salud de la mujer cambia con el tiempo, y estamos aquí para acompañarte en cada etapa."
+      }
+    },
+    "team": {
+      "eyebrow": "Conoce a nuestro equipo",
+      "heading": "Liderados por innovadores y expertos con calidez humana",
+      "p1": "Eleva Care nació de una idea sencilla: el cuidado experto debe ser más fácil de alcanzar. Nuestros fundadores y asesores vieron las brechas que enfrentan las mujeres y construyeron una forma mejor de conectarte con profesionales de confianza.",
+      "p2": "Hoy, Eleva Care opera una plataforma digital segura que conecta a mujeres con profesionales independientes y con licencia. Nosotros ponemos la tecnología; el especialista que eliges te atiende.",
+      "storyCta": "Lee nuestra historia",
+      "leadershipHeading": "Nuestro liderazgo",
+      "roles": {
+        "patriciaMota": "Cofundadora y Directora Ejecutiva",
+        "rodrigoBarona": "Cofundador y Director Técnico"
+      }
+    },
+    "advisors": {
+      "eyebrow": "Guiados por expertos de referencia",
+      "heading": "Consejo asesor",
+      "lead": "Nuestro consejo reúne a líderes en salud de la mujer, innovación e investigación clínica.",
+      "kariBo": {
+        "role": "Asesora en salud del suelo pélvico",
+        "quote": "El entrenamiento del suelo pélvico basado en la evidencia no solo previene y trata disfunciones: empodera a las mujeres para vivir con confianza en cada etapa de la vida."
+      },
+      "rubenBarakat": {
+        "role": "Asesor en ciencias del ejercicio",
+        "quote": "La evidencia muestra que el ejercicio personalizado durante el embarazo puede transformar la salud de las mujeres."
+      },
+      "alexandreDelgado": {
+        "role": "Asesor en fisioterapia obstétrica",
+        "quote": "La fisioterapia basada en la evidencia transforma la experiencia del embarazo y el parto, empoderando a las mujeres en cada etapa."
+      },
+      "cristineHomsiJorge": {
+        "role": "Asesora en salud de la mujer",
+        "quote": "La investigación clínica y la educación empoderan a las mujeres para tomar decisiones informadas sobre su salud."
+      },
+      "annelieGutke": {
+        "role": "Asesora en salud de la mujer",
+        "quote": "Comprender los mecanismos del dolor transforma cómo cuidamos a las mujeres durante el embarazo y más allá."
+      },
+      "joanaBarros": {
+        "role": "Asesora en cuidado a lo largo de la vida",
+        "quote": "Un cuidado continuo y en equipo, de la adolescencia al embarazo, el parto y la menopausia, garantiza a las mujeres el apoyo personalizado que necesitan para prosperar."
+      },
+      "patriciaDriusso": {
+        "role": "Asesora en salud de la mujer",
+        "quote": "La investigación clínica impulsa la rehabilitación y empodera a las mujeres mediante educación basada en la evidencia."
+      },
+      "jennyBagwell": {
+        "role": "Asesora en biomecánica y salud perinatal",
+        "quote": "Entender el movimiento durante y después del embarazo ayuda a optimizar el cuidado y los resultados a largo plazo."
+      }
+    },
+    "join": {
+      "eyebrow": "Únete a nuestra red",
+      "heading": "Transforma con nosotros el cuidado de la salud de la mujer",
+      "lead": "Únete a una comunidad de profesionales independientes que hacen accesible un cuidado de calidad para todas las mujeres. Define tus horarios, tarifas y políticas; nosotros ponemos la tecnología, tú el cuidado.",
+      "cta": "Ser especialista",
+      "secondary": "Encontrar un especialista"
+    }
   },
   "experts": {
     "title": "Encontrar especialista — Eleva.care",
@@ -376,7 +451,8 @@
     "instagram": "Instagram",
     "linkedin": "LinkedIn",
     "tagline": "Cuidado experto de la salud de la mujer, cerca de ti. Online, por teléfono o en persona.",
-    "credits": "Créditos fotográficos"
+    "credits": "Créditos fotográficos",
+    "story": "Nuestra historia"
   },
   "legal": {
     "draftBanner": "Borrador previo al lanzamiento. Este no es texto legal de producción. Legal y el DPO lo sustituirán antes de que Eleva.care entre en producción.",
@@ -461,7 +537,7 @@
     "description": "Únete a Eleva.care como profesional independiente y licenciado en una plataforma digital de salud.",
     "draftBanner": "Borrador previo al lanzamiento. Comisión, plazos de payout y términos legales no son finales. Finanzas y el DPO volverán a firmar antes del go-live.",
     "heading": "Ejercer en Eleva.care",
-    "body": "Eleva.care es una plataforma digital de salud que permite la prestación de servicios de salud remotos (teleconsultas / telemedicina) por profesionales independientes y licenciados. Los especialistas mantienen autonomía clínica. Eleva opera la tecnología de agenda, reserva y pago. Los miembros reservan sesiones contigo — esta página no inventa porcentajes de payout ni liquidación semanal.",
+    "body": "Eleva.care es una plataforma digital de salud para profesionales independientes y licenciados. Mantienes total autonomía clínica. Eleva opera la tecnología de agenda, reserva y pago, para que los miembros puedan reservar sesiones contigo online, por teléfono o en persona.",
     "cta": "Crear tu cuenta",
     "stepsHeading": "Cómo funciona",
     "steps": [
@@ -481,22 +557,25 @@
         "title": "Recibe reservas de miembros",
         "body": "Los miembros reservan y pagan online. Tú y el miembro recibís confirmaciones y recordatorios por email."
       }
-    ]
+    ],
+    "eyebrow": "Para especialistas"
   },
   "forClinics": {
     "title": "Para clínicas — Eleva.care",
     "description": "Gestiona un Team de clínica en Eleva.care, una plataforma digital de salud para profesionales independientes.",
     "draftBanner": "Borrador previo al lanzamiento. Precios por plaza y términos de colaboración no son finales. Finanzas y el DPO volverán a firmar antes del go-live.",
     "heading": "Clínicas y Teams",
-    "body": "Las clínicas usan Eleva.care como Team: varios especialistas licenciados en una organización, con la misma plataforma digital de salud que los miembros ya usan para reservar. Eleva asume responsabilidad organizativa, técnica y administrativa por la operación de la plataforma. Cuotas por plaza y contratos de colaboración son decisiones financieras de trabajo y no constan en esta página.",
-    "cta": "Crear tu cuenta"
+    "body": "Las clínicas usan Eleva.care como Team: varios especialistas licenciados en una organización, en la misma plataforma digital de salud que los miembros ya usan para reservar. Eleva asume la responsabilidad organizativa, técnica y administrativa de la operación de la plataforma, para que tu equipo se centre en el cuidado.",
+    "cta": "Crear tu cuenta",
+    "eyebrow": "Para clínicas"
   },
   "contact": {
     "title": "Contacto — Eleva.care",
     "description": "Página de contacto en borrador. El formulario público espera la aprobación legal y del DPO.",
     "draftBanner": "Borrador previo al lanzamiento. Esta página aún no recoge mensajes. Legal y el DPO aprobarán el formulario antes de que Eleva.care entre en producción.",
     "heading": "Contacto",
-    "body": "El formulario público de contacto estará aquí cuando Legal y el DPO aprueben el texto y las reglas de retención. Hasta entonces esta página no envía ni guarda mensajes."
+    "body": "El formulario público de contacto estará aquí cuando Legal y el DPO aprueben el texto y las reglas de retención. Hasta entonces esta página no envía ni guarda mensajes.",
+    "eyebrow": "Contacto"
   },
   "trust": {
     "draftBanner": "Borrador previo al lanzamiento. Esta página no afirma una certificación ni una auditoría concluida. La Fase 13 publicará texto con evidencia, responsable, aprobador, enlace a la evidencia y fecha de revisión.",
@@ -529,5 +608,70 @@
     "viewOnPexels": "Ver en Pexels",
     "pexels": "Pexels",
     "viewOnPexelsBy": "Ver la foto de {name} en Pexels"
+  },
+  "history": {
+    "title": "Nuestra historia — Eleva.care",
+    "description": "Una carta de nuestra fundadora, Patrícia Mota, sobre por qué existe Eleva Care.",
+    "eyebrow": "Una carta de nuestra fundadora",
+    "heading": "La historia detrás de ",
+    "headingAccent": "Eleva Care",
+    "lead": "Cómo una fisioterapeuta se convirtió en pionera de la salud de la mujer basada en la evidencia.",
+    "author": "Patrícia Mota",
+    "authorRole": "Fundadora, fisioterapeuta y doctora en biomecánica",
+    "sections": [
+      {
+        "title": "¡Hola!",
+        "paragraphs": [
+          "¡Hola! Soy Patrícia Mota, fisioterapeuta, y quiero contaros cómo nació Eleva Care.",
+          "El movimiento forma parte de mi vida desde niña: primero con la gimnasia rítmica, después con la natación sincronizada. Cuando me convertí en fisioterapeuta, trabajaba principalmente con problemas musculoesqueléticos y ortopédicos. Fue entonces cuando me encontré con un reto: cuando mis pacientes quedaban embarazadas, no me sentía preparada para responder a sus dudas. Confieso que me incomodaba no tener respuestas claras para quienes confiaban en mí."
+        ]
+      },
+      {
+        "title": "El camino académico",
+        "paragraphs": [
+          "Este sentimiento me llevó a hacer un doctorado en Biomecánica con la profesora Kari Bø, investigando cómo se adaptan los músculos abdominales durante el embarazo y después del parto. Mientras tanto, me convertí en madre de tres hijos y viví en primera persona muchas de las cuestiones que estudiaba.",
+          "Me di cuenta de algo importante: <b>aunque existe evidencia científica sólida, hay un gran abismo entre el conocimiento producido y lo que realmente llega a las personas</b>."
+        ]
+      },
+      {
+        "title": "El problema que descubrí",
+        "paragraphs": [
+          "Por un lado, ya contamos con bastante evidencia sobre estrategias eficaces para la salud de la mujer, pero ese conocimiento suele quedar atrapado en artículos científicos de difícil acceso y comprensión para quienes no pertenecen al área. La información tarda en trasladarse a la práctica clínica, y aún más en llegar al público general.",
+          "Al mismo tiempo, vemos a diario en redes sociales promesas de soluciones rápidas para problemas complejos de salud femenina, desde recuperar el cuerpo de antes del embarazo en tiempo récord hasta ejercicios milagrosos para la incontinencia urinaria. Demasiadas veces estas soluciones son solo marketing sofisticado, sin base científica alguna.",
+          "<b>Lo que me preocupa no es solo la desinformación en sí, sino cómo puede alejar a las mujeres de enfoques que realmente funcionan</b>, basados en la evidencia científica y la experiencia clínica. Síntomas como la incontinencia, el dolor pélvico, las disfunciones sexuales o los cambios musculoesqueléticos tienen soluciones probadas que muchas veces no llegan a quienes más las necesitan."
+        ]
+      },
+      {
+        "title": "El momento de inspiración",
+        "paragraphs": [
+          "Mientras trabajaba en un proyecto de investigación en California con Jenny Bagwell, eché mucho de menos a mis pacientes. Esa distancia me hizo pensar: ¿por qué no crear una forma de llevar información de calidad y cuidados especializados a todas las mujeres, estén donde estén?",
+          "Entonces Rodrigo, mi marido, reunió todas esas piezas y creó la plataforma Eleva Care. Quizá estemos reinventando un poco la rueda, después de todo."
+        ]
+      },
+      {
+        "title": "Nuestra misión",
+        "paragraphs": [
+          "Queremos construir un puente entre la ciencia más actual y las personas que la necesitan, de un modo realmente accesible: atención en salud femenina de primer nivel, disponible cuando y donde sea necesaria.",
+          "Nuestra visión es sencilla: una plataforma digital segura que conecte a cualquier mujer con especialistas independientes y con licencia en salud femenina, adaptándose a su horario y ubicación, y no al revés."
+        ]
+      },
+      {
+        "title": "El equipo que me enorgullece",
+        "paragraphs": [
+          "Cuando compartí esta idea con colegas a quienes admiro, la respuesta fue inmediata y cálida. Hoy contamos con un grupo de asesores que me llena de orgullo y gratitud. Son profesionales de gran experiencia, verdaderos referentes en sus áreas.",
+          "Más allá de eso, son personas por las que tengo un enorme cariño y que ya han contribuido mucho a lo que Eleva Care es hoy. Su generosidad al compartir conocimiento, experiencia y visión ha sido fundamental para nuestro crecimiento.",
+          "Paralelamente, estamos formando una red de profesionales independientes en quienes confío plenamente, que comparten los mismos valores y la misma pasión por los cuidados basados en la evidencia.",
+          "Eleva Care está dando sus primeros pasos. Estamos aprendiendo y creciendo cada día. Si te identificas con esta visión, como profesional que quiere colaborar o como persona que busca cuidados basados en la evidencia, nuestra puerta está abierta. Queremos que cada mujer que nos contacte sepa que recibirá orientación fundamentada en la mejor evidencia disponible y en la experiencia clínica de profesionales especializados.",
+          "Comparte esta visión con la familia y los amigos que busquen información sobre salud femenina. Ayúdanos a difundir el conocimiento de forma accesible y con calidad."
+        ]
+      }
+    ],
+    "signOff": "Con dedicación a la ciencia y cuidado genuino,",
+    "photoCaption": "Patrícia Mota y Rodrigo Barona, fundadores de Eleva Care",
+    "cta": {
+      "eyebrow": "¿Lista para un cuidado basado en la evidencia?",
+      "heading": "Encuentra un especialista que entienda tu camino",
+      "action": "Encontrar un especialista"
+    }
   }
 }

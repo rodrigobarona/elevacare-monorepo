@@ -35,6 +35,8 @@ export const RESERVED_USERNAMES: ReadonlySet<string> = new Set([
   // Marketing + marketplace
   "home",
   "about",
+  "history",
+  "credits",
   "legal",
   "privacy",
   "terms",

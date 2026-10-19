@@ -67,6 +67,8 @@ export const MEMBER_ORG_SEGMENTS = [
 export const WEB_MARKETING_PATHS = [
   "home",
   "about",
+  "history",
+  "credits",
   "legal",
   "help",
   "support",

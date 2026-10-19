@@ -29,11 +29,12 @@ export default async function BecomeExpertPage({ params }: Props) {
   return (
     <MarketingDraftPage
       draftBanner={t("draftBanner")}
+      eyebrow={t("eyebrow")}
       heading={t("heading")}
       headingTestId="become-expert-heading"
       body={t("body")}
-      ctaHref="/signup"
-      ctaLabel={t("cta")}
+      imageSlug="expert-at-desk"
+      cta={{ href: "/signup", label: t("cta") }}
       stepsHeading={t("stepsHeading")}
       steps={t.raw("steps") as { title: string; body: string }[]}
     />
