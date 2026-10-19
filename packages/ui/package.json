@@ -48,6 +48,7 @@
     "./components/*": "./src/components/*.tsx",
     "./components/booking/*": "./src/components/booking/*.tsx",
     "./components/button-variants": "./src/components/button-variants.ts",
+    "./blocks/*": "./src/blocks/*.tsx",
     "./hooks/*": "./src/hooks/*.ts"
   }
 }
