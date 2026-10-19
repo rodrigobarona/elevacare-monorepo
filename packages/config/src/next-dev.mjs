@@ -94,3 +94,9 @@ export function resolveGatewayStaticAssetRewrites(env = process.env) {
     },
   ]
 }
+
+/** `images.remotePatterns` for `@eleva/media` (public Blob) and Mux posters. */
+export const ELEVA_IMAGE_REMOTE_PATTERNS = [
+  { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
+  { protocol: "https", hostname: "image.mux.com" },
+]
