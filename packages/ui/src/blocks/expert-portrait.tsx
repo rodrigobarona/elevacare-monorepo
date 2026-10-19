@@ -31,7 +31,6 @@ export function ExpertPortrait({
   }
   return (
     // Expert avatars are user uploads on Blob; sizes vary, so a plain img.
-    // eslint-disable-next-line @next/next/no-img-element
     <img
       src={avatarUrl}
       alt=""

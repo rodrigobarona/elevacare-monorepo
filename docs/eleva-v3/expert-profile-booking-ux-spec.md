@@ -86,18 +86,63 @@ A bottom bar shows the lowest price and "See times".
 
 ## Expert app
 
-- New "Public profile" page: photo, display name, headline, rich bio (native
-  EN/PT/ES; AI translation is a later slice), social links, credentials, with a link to
-  preview the public page. Today experts can only set these during setup.
-- Service editor: a "Details" tab for "What's included", "What to expect" and
-  "Example questions".
+- New "Public profile" page: photo, display name, headline, rich bio, social
+  links and credentials, with a link to the public page. Today experts can only
+  set the basics during setup.
+  - Photo: uploaded to the public Blob store under
+    `expert/portrait/<userId>/`, 4:5 preview, JPG/PNG/WebP up to 5 MB. The
+    upload route and the profile API only accept the uploader's own folder, and
+    replacing a photo deletes the old file only when it is in that folder. The
+    account avatar (`user.image`, possibly an OAuth picture) is never used.
+  - Bio: the expert picks the language they write in. Other languages can be
+    filled by "Translate from …" (`POST /ai/editor`, command `translate`); the
+    result is stored as `ai_draft` until the expert edits that tab.
+- Service editor: a "Details" tab for "What to expect", "What's included" and
+  "Questions you can help with" (stored as `exampleQuestions`), per language.
+  Empty lists are hidden on the public page.
+
+## Content from v2 (inspiration, not copy)
+
+The v2 MDX content (`_context/clone-repo/eleva-care-app/src/content`) is a
+source of structure and tone. Every number,
+policy, badge and audience noun is rewritten against v3 facts.
+
+- Profile editor hints (from `help/expert/*/getting-started/profile.mdx`):
+  - Bio in four beats: what you do and for whom, how you work, training,
+    why this work. Written in the first person.
+  - Photo tips next to the upload: recent headshot, natural light, plain
+    background; no group photos, heavy filters or logos.
+  - Credentials: title, institution, year; list only training you can show.
+  - Only list areas of care you are qualified for.
+- Service "Details" hints (from `getting-started/services.mdx`): a clear
+  title rather than "Session 1"; what happens, who it is for, what the
+  member leaves with, how to prepare. These map to "What's included",
+  "What to expect" and "Example questions".
+- Member "How booking works" (from `help/patient/*/booking.mdx`, rewritten):
+  choose a service and time; add details (no account needed); pay securely
+  or confirm a free session; join from the confirmation email, with the
+  waiting room opening the call 15 minutes before the start. Request to Book
+  services say the expert confirms first.
+- Must not carry over: commission percentages and plan prices, the flat
+  24-hour refund grid (v3 uses Flexible/Moderate/Strict per service), star
+  ratings and Top Expert benefits, HIPAA/BAA or certification claims,
+  "account required to book", "join 5 minutes before", payout timing,
+  session packages, "automated invoicing", the word "patients" in member
+  copy, and "Workspace" for personal Spaces.
+- Content track (founder 2026-10-19: bring it all, adapted to today's
+  product; v2 was early thinking and nothing in it is mandatory), one PR per
+  surface after slice 4: richer Become an expert and For clinics pages, a
+  member and expert help center on the website, an evidence-based care
+  page, and fuller legal and trust drafts. All stay marked as drafts; legal
+  and trust text still needs legal and DPO review.
 
 ## Slices
 
 1. Data and API: migration, Zod schemas, OpenAPI, audit, public and expert
    endpoints.
 2. Expert "Public profile" page and the service editor "Details" tab.
-3. Public profile redesign.
+3. Public profile redesign. Also drop the experts directory "Rating" sort,
+   which has no data behind it.
 4. Booking flow confidence pass (fixed step list, richer summary, details
    grouping, payment recap).
 5. Later: post-session reviews; session packs and monthly plans (separate

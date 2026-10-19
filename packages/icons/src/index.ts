@@ -5,3 +5,4 @@
 export * from "./icons"
 export * from "./presets"
 export { NAV_ICON_NAMES, type NavIconName } from "./nav-icon-names"
+export { SOCIAL_LINK_ICONS } from "./social-link-icons"

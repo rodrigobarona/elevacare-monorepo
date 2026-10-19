@@ -149,3 +149,13 @@ export function toPlainTextFromNodes(value: PlateValue): string {
   walk(value)
   return parts.join("").replace(/\n+$/u, "").trim()
 }
+
+/** One paragraph per non-empty line; marks and headings are not inferred. */
+export function plainTextToPlateValue(text: string): PlateValue {
+  const paragraphs = text.split(/\n+/u).filter((part) => part.length > 0)
+  if (paragraphs.length === 0) return [{ type: "p", children: [{ text: "" }] }]
+  return paragraphs.map((paragraph) => ({
+    type: "p",
+    children: [{ text: paragraph }],
+  }))
+}

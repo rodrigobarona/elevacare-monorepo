@@ -1,4 +1,6 @@
 import { PatchExpertProfileRequestSchema } from "@eleva/api-client"
+import { isExpertPortraitUrl } from "@eleva/config/expert-profile-content"
+import { deletePublicBlob } from "@eleva/storage"
 import { buildLocalizedRichText } from "@eleva/editor/build-localized-rich-text"
 import { localizedRichTextWriteSchema } from "@eleva/editor/types"
 import { corsHeaders } from "@/lib/cors"
@@ -80,6 +82,22 @@ export async function PATCH(request: Request) {
 
   const data = body.data
 
+  if (data.avatarUrl && !isExpertPortraitUrl(data.avatarUrl, session.user.id)) {
+    return secureJson(
+      {
+        error: "validation",
+        issues: [
+          {
+            code: "custom",
+            path: ["avatarUrl"],
+            message: "Portrait must be your own upload",
+          },
+        ],
+      },
+      { status: 422, headers }
+    )
+  }
+
   let bioUpdate: BioUpdate | null = null
   if (data.bioRich !== undefined) {
     const resolved = resolveRichBio(data.bioRich)
@@ -127,6 +145,9 @@ export async function PATCH(request: Request) {
               headline: data.headline ?? null,
             }),
             ...(bioUpdate ?? {}),
+            ...(data.avatarUrl !== undefined && {
+              avatarUrl: data.avatarUrl ?? null,
+            }),
             ...(data.socialLinks && { socialLinks: data.socialLinks }),
             ...(data.credentials && { credentials: data.credentials }),
             metadata: { ...(profile.metadata ?? {}), completedSteps: steps },
@@ -144,6 +165,20 @@ export async function PATCH(request: Request) {
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal server error"
     return secureJson({ error: "internal", message }, { status: 500, headers })
+  }
+
+  const previousPortrait = profile.avatarUrl
+  if (
+    data.avatarUrl !== undefined &&
+    previousPortrait &&
+    previousPortrait !== data.avatarUrl &&
+    isExpertPortraitUrl(previousPortrait, session.user.id)
+  ) {
+    try {
+      await deletePublicBlob(previousPortrait)
+    } catch (err) {
+      console.warn("[expert/profile] failed to delete old portrait", err)
+    }
   }
 
   return secureJson({ ok: true }, { status: 200, headers })

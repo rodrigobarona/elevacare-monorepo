@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useTransition } from "react"
 
 import type { Locale } from "@eleva/config"
 import { locales } from "@eleva/config"
@@ -10,6 +10,7 @@ import { cn } from "@eleva/ui/lib/utils"
 import { RichTextEditor, type RichTextEditorLabels } from "./rich-text-editor"
 import type { RichTextEditorProps } from "./rich-text-editor"
 import type { PlateValue, RichTextSource } from "./types"
+import { plainTextToPlateValue, toPlainTextFromNodes } from "./types"
 
 const EMPTY_VALUE: PlateValue = [{ type: "p", children: [{ text: "" }] }]
 
@@ -28,6 +29,9 @@ export type LocalizedRichTextFieldLabels = {
   sourceBadge: string
   aiDraftBadge: string
   translateFrom: (sourceLocaleName: string) => string
+  translating: string
+  translateFailed: string
+  sourceEmpty: string
 }
 
 const DEFAULT_FIELD_LABELS: LocalizedRichTextFieldLabels = {
@@ -39,6 +43,9 @@ const DEFAULT_FIELD_LABELS: LocalizedRichTextFieldLabels = {
   sourceBadge: "source",
   aiDraftBadge: "AI draft",
   translateFrom: (sourceLocaleName) => `Translate from ${sourceLocaleName}`,
+  translating: "Translating…",
+  translateFailed: "Translation failed",
+  sourceEmpty: "Write the source text first",
 }
 
 export type LocalizedRichTextFieldProps = {
@@ -58,14 +65,18 @@ export type LocalizedRichTextFieldProps = {
    */
   ai?: RichTextEditorProps["ai"]
   /**
-   * Translate action should call `POST /ai/editor` with command `translate`
-   * and mark the tab `source: "ai_draft"` until the human edits.
+   * Returns the translated plain text (`POST /ai/editor` command `translate`).
+   * The field stores it as `ai_draft` until the author edits that tab.
    */
-  onTranslateFromSource?: (targetLocale: Locale) => void | Promise<void>
+  onTranslate?: (input: {
+    text: string
+    sourceLocale: Locale
+    targetLocale: Locale
+  }) => Promise<string>
 }
 
 /**
- * Locale tabs + per-locale Plate editor. Pass `ai` / `onTranslateFromSource`
+ * Locale tabs + per-locale Plate editor. Pass `ai` / `onTranslate`
  * to wire `POST /ai/editor`.
  */
 export function LocalizedRichTextField({
@@ -77,7 +88,7 @@ export function LocalizedRichTextField({
   labels: labelsProp,
   editorLabels,
   ai,
-  onTranslateFromSource,
+  onTranslate,
 }: LocalizedRichTextFieldProps) {
   const labels: LocalizedRichTextFieldLabels = {
     ...DEFAULT_FIELD_LABELS,
@@ -88,7 +99,47 @@ export function LocalizedRichTextField({
     },
   }
   const [activeLocale, setActiveLocale] = useState<Locale>(sourceLocale)
+  // Plate is uncontrolled: bump to remount the editor with translated text.
+  const [revision, setRevision] = useState(0)
+  const [translateError, setTranslateError] = useState<string | null>(null)
+  const [isTranslating, startTranslating] = useTransition()
   const entry = value[activeLocale]
+  const sourceText = toPlainTextFromNodes(
+    value[sourceLocale]?.json ?? EMPTY_VALUE
+  )
+
+  function translateInto(targetLocale: Locale) {
+    if (!onTranslate) return
+    if (!sourceText) {
+      setTranslateError(labels.sourceEmpty)
+      return
+    }
+    setTranslateError(null)
+    startTranslating(async () => {
+      try {
+        const translated = (
+          await onTranslate({ text: sourceText, sourceLocale, targetLocale })
+        ).trim()
+        if (!translated) {
+          setTranslateError(labels.translateFailed)
+          return
+        }
+        onChange({
+          sourceLocale,
+          locales: {
+            ...value,
+            [targetLocale]: {
+              json: plainTextToPlateValue(translated),
+              source: "ai_draft",
+            },
+          },
+        })
+        setRevision((current) => current + 1)
+      } catch {
+        setTranslateError(labels.translateFailed)
+      }
+    })
+  }
 
   return (
     <div className={cn("space-y-2", className)}>
@@ -103,8 +154,11 @@ export function LocalizedRichTextField({
               type="button"
               size="sm"
               variant={isActive ? "secondary" : "ghost"}
-              isDisabled={isDisabled}
-              onPress={() => setActiveLocale(locale)}
+              isDisabled={isDisabled || isTranslating}
+              onPress={() => {
+                setActiveLocale(locale)
+                setTranslateError(null)
+              }}
             >
               {labels.localeNames[locale]}
               {isSource ? ` · ${labels.sourceBadge}` : ""}
@@ -118,20 +172,25 @@ export function LocalizedRichTextField({
             size="sm"
             variant="outline"
             className="ms-auto"
-            isDisabled={isDisabled || !onTranslateFromSource}
-            onPress={() => {
-              void onTranslateFromSource?.(activeLocale)
-            }}
+            isDisabled={isDisabled || isTranslating || !onTranslate}
+            onPress={() => translateInto(activeLocale)}
           >
-            {labels.translateFrom(labels.localeNames[sourceLocale])}
+            {isTranslating
+              ? labels.translating
+              : labels.translateFrom(labels.localeNames[sourceLocale])}
           </Button>
         ) : null}
       </div>
+      {translateError ? (
+        <p role="alert" className="text-sm text-destructive">
+          {translateError}
+        </p>
+      ) : null}
       <RichTextEditor
-        key={activeLocale}
+        key={`${activeLocale}:${revision}`}
         value={entry?.json ?? EMPTY_VALUE}
         locale={activeLocale}
-        isDisabled={isDisabled}
+        isDisabled={isDisabled || isTranslating}
         labels={editorLabels}
         ai={ai}
         onChangeWithSource={(json, source) => {

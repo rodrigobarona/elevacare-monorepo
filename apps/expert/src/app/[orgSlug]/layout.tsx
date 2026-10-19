@@ -53,6 +53,12 @@ export default async function ExpertLayout({
         items: [
           { title: t("dashboard"), url: base, icon: "SquaresFourIcon" },
           {
+            title: t("publicProfile"),
+            url: `${base}/profile`,
+            icon: "UserIcon",
+            needs: "expert:onboard",
+          },
+          {
             title: t("eventTypes"),
             url: `${base}/event-types`,
             icon: "CalendarDotsIcon",

@@ -70,3 +70,44 @@ export function isAllowedSocialLinkUrl(
     }
   }
 }
+
+export const EXPERT_PORTRAIT_UPLOAD = {
+  prefix: "expert",
+  kind: "portrait",
+  contentTypes: ["image/jpeg", "image/png", "image/webp"],
+  maxBytes: 5 * 1024 * 1024,
+} as const
+
+const PUBLIC_BLOB_HOST_SUFFIX = ".public.blob.vercel-storage.com"
+
+const PORTRAIT_ROOT = `${EXPERT_PORTRAIT_UPLOAD.prefix}/${EXPERT_PORTRAIT_UPLOAD.kind}`
+
+/** Blob pathname for a portrait owned by `userId`: `expert/portrait/<userId>/<file>`. */
+export const EXPERT_PORTRAIT_PATHNAME = new RegExp(
+  `^${PORTRAIT_ROOT}/([^/]+)/[^/]+$`
+)
+
+/**
+ * Portraits must come from Eleva's public Blob store under the portrait path.
+ * Pass `ownerUserId` to also require the path to belong to that user.
+ */
+export function isExpertPortraitUrl(
+  url: string,
+  ownerUserId?: string
+): boolean {
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    return false
+  }
+  if (
+    parsed.protocol !== "https:" ||
+    !parsed.hostname.toLowerCase().endsWith(PUBLIC_BLOB_HOST_SUFFIX)
+  ) {
+    return false
+  }
+  const owner = EXPERT_PORTRAIT_PATHNAME.exec(parsed.pathname.slice(1))?.[1]
+  if (!owner) return false
+  return ownerUserId === undefined || owner === ownerUserId
+}

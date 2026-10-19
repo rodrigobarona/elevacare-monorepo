@@ -7,9 +7,11 @@ import {
   TabsTrigger,
 } from "@eleva/ui/components/tabs"
 import { useTranslations } from "next-intl"
-import type { BookingLinkListItem } from "@eleva/api-client"
+import type { BookingLinkListItem, LocalizedList } from "@eleva/api-client"
+import type { Locale } from "@eleva/config"
 import { EventTypeForm } from "./event-type-form"
 import type { EventTypeFormData } from "./actions"
+import { EventTypeDetailsPanel } from "./event-type-details-panel"
 import { EventTypeKindPanel } from "./event-type-kind-panel"
 import {
   EventTypeModesPanel,
@@ -25,6 +27,12 @@ interface Props {
   workspaceBase: string
   publicPrefix: string
   defaults: Partial<EventTypeFormData>
+  detailLists: {
+    whatToExpect: LocalizedList
+    whatsIncluded: LocalizedList
+    exampleQuestions: LocalizedList
+  }
+  detailsLocale: Locale
   kind: "clinical" | "non_clinical"
   visibility: "public" | "unlisted" | "private"
   modes: ModeRow[]
@@ -47,6 +55,8 @@ export function EventTypeBuilder({
   workspaceBase,
   publicPrefix,
   defaults,
+  detailLists,
+  detailsLocale,
   kind,
   visibility,
   modes,
@@ -67,6 +77,9 @@ export function EventTypeBuilder({
       <TabsList variant="line" className="mb-4 w-full max-w-full flex-wrap">
         <TabsTrigger id="basics" data-testid="tab-basics">
           {t("basics")}
+        </TabsTrigger>
+        <TabsTrigger id="details" data-testid="tab-details">
+          {t("details")}
         </TabsTrigger>
         <TabsTrigger id="kind" data-testid="tab-kind">
           {t("kind")}
@@ -90,6 +103,14 @@ export function EventTypeBuilder({
           workspaceBase={workspaceBase}
           publicPrefix={publicPrefix}
           panel="basics"
+        />
+      </TabsContent>
+
+      <TabsContent id="details">
+        <EventTypeDetailsPanel
+          eventTypeId={eventTypeId}
+          initialLists={detailLists}
+          defaultLocale={detailsLocale}
         />
       </TabsContent>
 

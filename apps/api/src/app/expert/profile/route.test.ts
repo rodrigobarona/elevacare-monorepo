@@ -2,12 +2,23 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const updateExpertProfile = vi.fn()
 const emit = vi.fn()
+const deletePublicBlob = vi.fn()
+const PORTRAITS = "https://store.public.blob.vercel-storage.com/expert/portrait"
+const OLD_PORTRAIT = `${PORTRAITS}/user-1/old.jpg`
+const NEW_PORTRAIT = `${PORTRAITS}/user-1/new.jpg`
+const FOREIGN_PORTRAIT = `${PORTRAITS}/user-2/theirs.jpg`
+let storedAvatarUrl: string | null = OLD_PORTRAIT
+
+vi.mock("@eleva/storage", () => ({
+  deletePublicBlob: (...args: unknown[]) => deletePublicBlob(...args),
+}))
 
 vi.mock("@eleva/db", () => ({
   getExpertProfileByUserId: vi.fn(async () => ({
     id: "profile-1",
     orgId: "org-1",
     metadata: {},
+    avatarUrl: storedAvatarUrl,
   })),
   updateExpertProfile: (...args: unknown[]) => updateExpertProfile(...args),
 }))
@@ -52,6 +63,41 @@ describe("PATCH /expert/profile content", () => {
   beforeEach(() => {
     updateExpertProfile.mockReset()
     emit.mockReset()
+    deletePublicBlob.mockReset()
+    storedAvatarUrl = OLD_PORTRAIT
+  })
+
+  it("replaces the portrait and deletes the old file", async () => {
+    const response = await patch({ avatarUrl: NEW_PORTRAIT })
+
+    expect(response.status).toBe(200)
+    expect(updatedFields().avatarUrl).toBe(NEW_PORTRAIT)
+    expect(deletePublicBlob).toHaveBeenCalledWith(OLD_PORTRAIT)
+  })
+
+  it("rejects portraits from outside the portrait upload path", async () => {
+    const response = await patch({
+      avatarUrl: "https://example.com/expert/portrait/x.jpg",
+    })
+
+    expect(response.status).toBe(422)
+    expect(deletePublicBlob).not.toHaveBeenCalled()
+  })
+
+  it("rejects another expert's portrait", async () => {
+    const response = await patch({ avatarUrl: FOREIGN_PORTRAIT })
+
+    expect(response.status).toBe(422)
+    expect(updateExpertProfile).not.toHaveBeenCalled()
+    expect(deletePublicBlob).not.toHaveBeenCalled()
+  })
+
+  it("never deletes a previous portrait the expert does not own", async () => {
+    storedAvatarUrl = FOREIGN_PORTRAIT
+    const response = await patch({ avatarUrl: NEW_PORTRAIT })
+
+    expect(response.status).toBe(200)
+    expect(deletePublicBlob).not.toHaveBeenCalled()
   })
 
   it("derives sanitized html and mirrors the source text into bio", async () => {

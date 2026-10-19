@@ -759,6 +759,9 @@ importers:
       '@eleva/db':
         specifier: workspace:^
         version: link:../../packages/db
+      '@eleva/editor':
+        specifier: workspace:*
+        version: link:../../packages/editor
       '@eleva/flags':
         specifier: workspace:^
         version: link:../../packages/flags

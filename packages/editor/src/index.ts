@@ -13,6 +13,7 @@ export {
   localizedRichTextSchema,
   localizedRichTextWriteEntrySchema,
   localizedRichTextWriteSchema,
+  plainTextToPlateValue,
   toPlainTextFromNodes,
 } from "./types"
 export { toSanitizedHtml } from "./sanitize"

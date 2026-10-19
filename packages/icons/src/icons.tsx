@@ -7,6 +7,7 @@ export type { Icon, IconProps } from "@phosphor-icons/react/lib"
 export {
   ArrowLeftIcon,
   ArrowRightIcon,
+  ArrowSquareOutIcon,
   ArrowsClockwiseIcon,
   BellIcon,
   BookOpenIcon,
@@ -31,13 +32,17 @@ export {
   DeviceMobileIcon,
   DotsThreeIcon,
   EnvelopeIcon,
+  FacebookLogoIcon,
   GearIcon,
   GlobeIcon,
+  GraduationCapIcon,
   HandHeartIcon,
   HeartbeatIcon,
   HouseIcon,
   ImagesIcon,
   InfoIcon,
+  InstagramLogoIcon,
+  LinkedinLogoIcon,
   ListBulletsIcon,
   ListChecksIcon,
   MagnifyingGlassIcon,
@@ -64,6 +69,7 @@ export {
   TextAlignLeftIcon,
   TextBIcon,
   TextItalicIcon,
+  TiktokLogoIcon,
   TranslateIcon,
   TrashIcon,
   UserIcon,
@@ -75,6 +81,7 @@ export {
   WarningOctagonIcon,
   XCircleIcon,
   XIcon,
+  YoutubeLogoIcon,
 } from "@phosphor-icons/react/ssr"
 
 /** @deprecated Use SquaresFourIcon — Lucide migration alias */

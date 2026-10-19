@@ -24,7 +24,7 @@ import {
   displayRegion,
 } from "@eleva/ui/lib/booking/display-names"
 import { cn } from "@eleva/ui/lib/utils"
-import { ExpertPortrait } from "@/components/expert-portrait"
+import { ExpertPortrait } from "@eleva/ui/blocks/expert-portrait"
 import { PublicRateLimited } from "@/components/public-rate-limited"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"

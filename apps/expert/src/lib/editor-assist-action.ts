@@ -14,8 +14,7 @@ export type EditorAssistActionResult =
 
 /**
  * Thin proxy for `POST /ai/editor` — consumes the text stream into a string
- * for the event-type description assist buttons (LocalizedText until Plate
- * description storage lands).
+ * for service descriptions and the public profile bio.
  */
 export async function editorAssistAction(input: {
   command: EditorAssistCommand

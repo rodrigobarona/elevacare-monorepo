@@ -8,6 +8,7 @@ import glossaryJson from "@eleva/config/glossary.json"
 
 import { assertApprovedModel } from "./approved-models"
 import { resolveEditorModelId } from "./editor-assist"
+import { describeLocale } from "./locale-variants"
 
 export type MessageTree = { [key: string]: string | MessageTree }
 
@@ -79,8 +80,8 @@ export function buildTranslateMessagesPrompt(
     "Preserve ICU placeholders exactly (e.g. {name}, {count, plural, ...}).",
     "Use plain language. Prefer 'members' over 'patients' or 'users'.",
     "Prefer 'Space' for personal organizations. Never invent clinical claims.",
-    `Source locale: ${input.sourceLocale}`,
-    `Target locale: ${input.targetLocale}`,
+    `Source locale: ${describeLocale(input.sourceLocale)}`,
+    `Target locale: ${describeLocale(input.targetLocale)}`,
     "Fixed glossary terms (do not translate these tokens when they appear):",
     glossaryLines,
     "",

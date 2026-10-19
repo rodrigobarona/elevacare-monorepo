@@ -82,8 +82,10 @@ describe("buildEditorAssistPrompt", () => {
       sourceLocale: "en",
       targetLocale: "pt",
     })
-    expect(prompt).toContain("Source locale: en")
-    expect(prompt).toContain("Target locale: pt")
+    expect(prompt).toContain("Source locale: en (English)")
+    expect(prompt).toContain(
+      "Target locale: pt (European Portuguese, as written in Portugal"
+    )
   })
 })
 
