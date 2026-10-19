@@ -640,6 +640,12 @@ importers:
       '@eleva/config':
         specifier: workspace:^
         version: link:../../packages/config
+      '@eleva/icons':
+        specifier: workspace:*
+        version: link:../../packages/icons
+      '@eleva/media':
+        specifier: workspace:*
+        version: link:../../packages/media
       '@eleva/observability':
         specifier: workspace:*
         version: link:../../packages/observability
