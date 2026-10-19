@@ -375,7 +375,8 @@
     "community": "Comunidad",
     "instagram": "Instagram",
     "linkedin": "LinkedIn",
-    "tagline": "Cuidado experto de la salud de la mujer, cerca de ti. Online, por teléfono o en persona."
+    "tagline": "Cuidado experto de la salud de la mujer, cerca de ti. Online, por teléfono o en persona.",
+    "credits": "Créditos fotográficos"
   },
   "legal": {
     "draftBanner": "Borrador previo al lanzamiento. Este no es texto legal de producción. Legal y el DPO lo sustituirán antes de que Eleva.care entre en producción.",
@@ -519,5 +520,14 @@
     "description": "Es posible que el enlace esté desactualizado o que el perfil ya no esté disponible. Explora especialistas verificados o vuelve a la página de inicio.",
     "findExpert": "Encontrar especialista",
     "home": "Ir al inicio"
+  },
+  "credits": {
+    "title": "Créditos fotográficos",
+    "description": "Los fotógrafos cuyo trabajo aparece en Eleva.care.",
+    "eyebrow": "Gracias",
+    "lead": "Algunas de las fotos de Eleva.care proceden de Pexels. Estos son los fotógrafos que las hicieron.",
+    "viewOnPexels": "Ver en Pexels",
+    "pexels": "Pexels",
+    "viewOnPexelsBy": "Ver la foto de {name} en Pexels"
   }
 }

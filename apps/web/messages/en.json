@@ -375,7 +375,8 @@
     "community": "Community",
     "instagram": "Instagram",
     "linkedin": "LinkedIn",
-    "tagline": "Expert women's health care, close to you. Online, by phone or in person."
+    "tagline": "Expert women's health care, close to you. Online, by phone or in person.",
+    "credits": "Photo credits"
   },
   "legal": {
     "draftBanner": "Working pre-launch draft. This is not production legal text. Legal and the DPO will replace it before Eleva.care goes live.",
@@ -519,5 +520,14 @@
     "description": "The link may be old or the profile may no longer be listed. Browse verified experts or go back to the home page.",
     "findExpert": "Find an expert",
     "home": "Go to home"
+  },
+  "credits": {
+    "title": "Photo credits",
+    "description": "The photographers whose work appears on Eleva.care.",
+    "eyebrow": "Thank you",
+    "lead": "Some of the photos on Eleva.care come from Pexels. These are the photographers behind them.",
+    "viewOnPexels": "View on Pexels",
+    "pexels": "Pexels",
+    "viewOnPexelsBy": "View the photo by {name} on Pexels"
   }
 }

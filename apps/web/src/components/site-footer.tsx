@@ -72,6 +72,9 @@ export async function SiteFooter() {
                 {t(FOOTER_LABEL_KEYS[slug])}
               </Link>
             ))}
+            <Link href="/credits" className={LINK_CLASS}>
+              {t("credits")}
+            </Link>
           </FooterColumn>
           <FooterColumn title={t("community")} testId="footer-community">
             {COMMUNITY_EXTERNAL_LINKS.map((link) => (

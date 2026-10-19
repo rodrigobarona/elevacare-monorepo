@@ -34,6 +34,6 @@ text and no consent banner for decorative video.
 
 - Blocks in `@eleva/ui/blocks` take media as slots, so `@eleva/ui` never depends on
   `@eleva/media`.
-- Adding a Pexels image without a credit fails the library test. A public photo credits
-  page built from `creditedMedia()` is still to do.
+- Adding a Pexels image without a credit fails the library test. `/credits` (linked from
+  the footer) renders every Pexels photographer from `creditedMedia()`.
 - Adding another video host needs a new vendor block and an update to this ADR.
