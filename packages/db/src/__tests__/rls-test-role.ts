@@ -4,8 +4,9 @@ import type { PoolClient } from "@neondatabase/serverless"
 export const RLS_TEST_ROLE = "eleva_rls_test"
 
 export async function provisionRlsTestRole(client: PoolClient): Promise<void> {
-  // Test files run in parallel; concurrent GRANTs on the same catalog rows fail
-  // with "tuple concurrently updated", so serialise provisioning.
+  // Concurrent GRANTs on the same catalog rows fail with "tuple concurrently
+  // updated". These GRANTs also race fixture DDL, so the suite runs with
+  // --no-file-parallelism (neon-branch.yml).
   await client.query("BEGIN")
   try {
     await client.query(
