@@ -1,5 +1,6 @@
 "use client"
 
+import type { ReactNode } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import type { FinanceSummaryResponse, PayoutStatus } from "@eleva/api-client"
 import {
@@ -9,13 +10,9 @@ import {
   ConnectTaxSettings,
 } from "@eleva/billing/embedded"
 import { Button, LinkButton } from "@eleva/ui/components/button"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@eleva/ui/components/card"
-import { Separator } from "@eleva/ui/components/separator"
+import { Section, Stat, StatGrid } from "@eleva/ui/components/page-header"
+import { StatusPill } from "@eleva/ui/components/status-pill"
+import type { StatusTone } from "@eleva/ui/components/status-pill"
 import { toast } from "sonner"
 import { exportFinanceCsv } from "./actions"
 
@@ -32,33 +29,33 @@ function formatEuros(cents: number, locale: string): string {
   }).format(cents / 100)
 }
 
-function payoutStatusLabel(
+function payoutStatusDisplay(
   status: PayoutStatus | null,
   t: (key: string) => string
-): string {
-  if (!status) return t("noPayout")
+): { label: string; tone: StatusTone } {
+  if (!status) return { label: t("noPayout"), tone: "neutral" }
   switch (status) {
     case "pending":
-      return t("status.pending")
+      return { label: t("status.pending"), tone: "neutral" }
     case "scheduled":
-      return t("status.scheduled")
+      return { label: t("status.scheduled"), tone: "neutral" }
     case "approval_required":
-      return t("status.approvalRequired")
+      return { label: t("status.approvalRequired"), tone: "attention" }
     case "transferred":
-      return t("status.transferred")
+      return { label: t("status.transferred"), tone: "positive" }
     case "paid_out":
-      return t("status.paidOut")
+      return { label: t("status.paidOut"), tone: "positive" }
     case "failed":
-      return t("status.failed")
+      return { label: t("status.failed"), tone: "attention" }
     case "held":
-      return t("status.held")
+      return { label: t("status.held"), tone: "attention" }
     case "reversal_pending":
-      return t("status.reversalPending")
+      return { label: t("status.reversalPending"), tone: "attention" }
     case "reversed":
-      return t("status.reversed")
+      return { label: t("status.reversed"), tone: "neutral" }
     default: {
       const _exhaustive: never = status
-      return t("noPayout")
+      return { label: t("noPayout"), tone: "neutral" }
     }
   }
 }
@@ -68,7 +65,12 @@ export function FinanceDashboard({
   invoicesHref,
   summary,
   bookings,
-}: FinanceSummaryResponse & { orgSlug: string; invoicesHref: string | null }) {
+  showStripePanels,
+}: FinanceSummaryResponse & {
+  orgSlug: string
+  invoicesHref: string | null
+  showStripePanels: boolean
+}) {
   const t = useTranslations("finance")
   const rawLocale = useLocale()
   const localeKey = (["en", "pt", "es"] as const).includes(
@@ -78,152 +80,169 @@ export function FinanceDashboard({
     : "en"
   const intlLocale = INTL_LOCALE[localeKey]
   const euros = (cents: number) => formatEuros(cents, intlLocale)
+  const dateFormatter = new Intl.DateTimeFormat(intlLocale, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  })
+
+  async function handleExport() {
+    try {
+      const result = await exportFinanceCsv(orgSlug)
+      if (!result.ok) {
+        toast.error(t("exportFailed"))
+        return
+      }
+      const blob = new Blob([result.csv], { type: "text/csv" })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = "finance.csv"
+      link.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      toast.error(t("exportFailed"))
+    }
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <SummaryCard label={t("gross")} value={euros(summary.grossCents)} />
-        <SummaryCard label={t("fees")} value={euros(summary.feesCents)} />
-        <SummaryCard label={t("net")} value={euros(summary.netCents)} />
-        <SummaryCard label={t("pending")} value={euros(summary.pendingCents)} />
-        <SummaryCard label={t("paid")} value={euros(summary.paidCents)} />
-      </div>
+    <div className="space-y-10">
+      <StatGrid className="gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-3">
+        <Stat
+          label={t("net")}
+          value={euros(summary.netCents)}
+          hint={t("netHint", {
+            gross: euros(summary.grossCents),
+            fees: euros(summary.feesCents),
+          })}
+        />
+        <Stat
+          label={t("pending")}
+          value={euros(summary.pendingCents)}
+          hint={t("pendingHint")}
+        />
+        <Stat
+          label={t("paid")}
+          value={euros(summary.paidCents)}
+          hint={t("paidHint")}
+        />
+      </StatGrid>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-4">
-          <CardTitle>{t("bookings")}</CardTitle>
+      <Section
+        title={t("bookings")}
+        description={t("bookingsHint")}
+        actions={
           <div className="flex flex-wrap gap-2">
             {invoicesHref ? (
-              <LinkButton href={invoicesHref} variant="outline">
+              <LinkButton href={invoicesHref} variant="outline" size="sm">
                 {t("invoices.link")}
               </LinkButton>
             ) : null}
             <Button
               variant="outline"
-              onPress={() => {
-                void (async () => {
-                  try {
-                    const result = await exportFinanceCsv(orgSlug)
-                    if (!result.ok) {
-                      toast.error(t("exportFailed"))
-                      return
-                    }
-                    if (typeof window === "undefined") return
-                    const blob = new Blob([result.csv], { type: "text/csv" })
-                    const url = URL.createObjectURL(blob)
-                    const link = document.createElement("a")
-                    link.href = url
-                    link.download = "finance.csv"
-                    link.click()
-                    URL.revokeObjectURL(url)
-                  } catch {
-                    toast.error(t("exportFailed"))
-                  }
-                })()
-              }}
+              size="sm"
+              onPress={() => void handleExport()}
             >
               {t("exportCsv")}
             </Button>
           </div>
-        </CardHeader>
-        <CardContent>
-          {bookings.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("empty")}</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left">
-                    <th className="py-2 pr-4 font-medium">{t("booking")}</th>
-                    <th className="py-2 pr-4 font-medium">{t("gross")}</th>
-                    <th className="py-2 pr-4 font-medium">{t("fees")}</th>
-                    <th className="py-2 pr-4 font-medium">{t("net")}</th>
-                    <th className="py-2 pr-4 font-medium">
-                      {t("payoutState")}
-                    </th>
-                    <th className="py-2 font-medium">{t("eligibleAt")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bookings.map((row) => (
-                    <tr key={row.bookingPaymentId} className="border-b">
-                      <td className="py-2 pr-4 font-mono text-xs">
+        }
+      >
+        {bookings.length === 0 ? (
+          <p className="rounded-3xl border border-dashed border-sand-300 bg-sand-50/70 p-6 text-sm text-muted-foreground dark:border-border dark:bg-card">
+            {t("empty")}
+          </p>
+        ) : (
+          <div className="overflow-x-auto rounded-3xl border bg-card shadow-1">
+            <table className="w-full min-w-[40rem] text-sm">
+              <thead>
+                <tr className="border-b text-left text-xs text-muted-foreground">
+                  <th scope="col" className="px-5 py-3 font-medium">
+                    {t("booking")}
+                  </th>
+                  <th scope="col" className="px-5 py-3 text-right font-medium">
+                    {t("gross")}
+                  </th>
+                  <th scope="col" className="px-5 py-3 text-right font-medium">
+                    {t("fees")}
+                  </th>
+                  <th scope="col" className="px-5 py-3 text-right font-medium">
+                    {t("net")}
+                  </th>
+                  <th scope="col" className="px-5 py-3 font-medium">
+                    {t("payoutState")}
+                  </th>
+                  <th scope="col" className="px-5 py-3 font-medium">
+                    {t("eligibleAt")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {bookings.map((row) => {
+                  const payout = payoutStatusDisplay(row.payoutStatus, t)
+                  return (
+                    <tr
+                      key={row.bookingPaymentId}
+                      className="border-b last:border-b-0"
+                    >
+                      <td className="px-5 py-3 font-mono text-xs text-muted-foreground">
                         {row.bookingId.slice(0, 8)}
                       </td>
-                      <td className="py-2 pr-4">{euros(row.amountCents)}</td>
-                      <td className="py-2 pr-4">{euros(row.feeCents)}</td>
-                      <td className="py-2 pr-4">{euros(row.netCents)}</td>
-                      <td className="py-2 pr-4">
-                        {payoutStatusLabel(row.payoutStatus, t)}
+                      <td className="px-5 py-3 text-right tabular-nums">
+                        {euros(row.amountCents)}
                       </td>
-                      <td className="py-2">
+                      <td className="px-5 py-3 text-right text-muted-foreground tabular-nums">
+                        {euros(row.feeCents)}
+                      </td>
+                      <td className="px-5 py-3 text-right font-medium tabular-nums">
+                        {euros(row.netCents)}
+                      </td>
+                      <td className="px-5 py-3">
+                        <StatusPill tone={payout.tone}>
+                          {payout.label}
+                        </StatusPill>
+                      </td>
+                      <td className="px-5 py-3 text-muted-foreground">
                         {row.eligibleAt
-                          ? new Date(row.eligibleAt).toLocaleString(intlLocale)
+                          ? dateFormatter.format(new Date(row.eligibleAt))
                           : "—"}
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Section>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("balance")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ConnectBalances />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("payouts")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ConnectPayouts />
-          </CardContent>
-        </Card>
-      </div>
-
-      <Separator />
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("accountDetails")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ConnectAccountManagement />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("taxSettings")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ConnectTaxSettings />
-          </CardContent>
-        </Card>
-      </div>
+      {showStripePanels ? (
+        <Section title={t("stripeTitle")} description={t("stripeHint")}>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Panel title={t("balance")}>
+              <ConnectBalances />
+            </Panel>
+            <Panel title={t("payouts")}>
+              <ConnectPayouts />
+            </Panel>
+            <Panel title={t("accountDetails")}>
+              <ConnectAccountManagement />
+            </Panel>
+            <Panel title={t("taxSettings")}>
+              <ConnectTaxSettings />
+            </Panel>
+          </div>
+        </Section>
+      ) : null}
     </div>
   )
 }
 
-function SummaryCard({ label, value }: { label: string; value: string }) {
+function Panel({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {label}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="text-2xl font-semibold">{value}</CardContent>
-    </Card>
+    <section className="rounded-3xl border bg-card p-5 shadow-1">
+      <h3 className="mb-4 text-sm font-medium">{title}</h3>
+      {children}
+    </section>
   )
 }

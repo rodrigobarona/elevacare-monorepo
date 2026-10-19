@@ -1,4 +1,5 @@
 import { headers } from "next/headers"
+import { env } from "@eleva/config/env"
 import { redirect, notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { getSessionForOrg } from "@eleva/auth/server"
@@ -39,8 +40,7 @@ export default async function ExpertLayout({
   const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
 
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"
-  const stripePublishableKey =
-    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
+  const stripePublishableKey = env().STRIPE_PUBLISHABLE_KEY ?? ""
   const showConnect = !!(profile?.stripeAccountId && stripePublishableKey)
 
   const t = await getTranslations("nav")

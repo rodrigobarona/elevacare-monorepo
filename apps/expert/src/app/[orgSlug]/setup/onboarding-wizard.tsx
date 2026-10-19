@@ -169,6 +169,7 @@ export function OnboardingWizard({
               <StepIdentity
                 profile={profile}
                 apiBaseUrl={apiBaseUrl}
+                stripePublishableKey={stripePublishableKey}
                 onDone={handleStepDone}
               />
             )}

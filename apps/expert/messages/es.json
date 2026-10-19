@@ -477,7 +477,7 @@
   },
   "finance": {
     "title": "Finanzas",
-    "description": "Gestiona tus pagos, saldos y ajustes fiscales.",
+    "description": "Lo que has ganado, lo que está en camino y tus ajustes de pagos en Stripe.",
     "balance": "Saldo",
     "payouts": "Pagos",
     "accountDetails": "Datos de la cuenta",
@@ -487,7 +487,7 @@
     "net": "Neto",
     "pending": "Pendiente",
     "paid": "Pagado",
-    "bookings": "Reservas",
+    "bookings": "Pagos de sesiones",
     "booking": "Reserva",
     "payoutState": "Estado del pago",
     "eligibleAt": "Elegible",
@@ -561,6 +561,22 @@
       "held": "En espera",
       "reversalPending": "Reversión pendiente",
       "reversed": "Revertido"
+    },
+    "eyebrow": "Tus ingresos",
+    "bookingsHint": "Cada sesión pagada, la comisión de Eleva y el estado de la transferencia.",
+    "netHint": "De {gross} pagados por los miembros, tras {fees} de comisión de Eleva y posibles reembolsos",
+    "pendingHint": "Ganado, aún no enviado a tu banco",
+    "paidHint": "Ya enviado a tu cuenta bancaria",
+    "stripeTitle": "Pagos y cuenta",
+    "stripeHint": "Gestionado de forma segura por Stripe, nuestro socio de pagos.",
+    "connect": {
+      "title": "Configura los pagos para cobrar",
+      "description": "Conecta tu cuenta bancaria a través de Stripe para recibir los ingresos de las sesiones pagadas. Lleva unos minutos y se queda en Eleva.",
+      "start": "Configurar pagos",
+      "starting": "Abriendo pagos…",
+      "error": "No se pudieron iniciar los pagos. Inténtalo de nuevo.",
+      "unavailableTitle": "Los pagos aún no están disponibles",
+      "unavailable": "Los pagos no están configurados en este entorno. Contacta con soporte."
     }
   },
   "onboarding": {
