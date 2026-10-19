@@ -311,7 +311,8 @@
       "mode": "How you'll meet",
       "when": "When",
       "price": "Price",
-      "chooseTime": "Pick a time to continue"
+      "chooseTime": "Pick a time to continue",
+      "policy": "{policy} cancellation policy"
     },
     "modes": {
       "online": {
@@ -394,6 +395,11 @@
           "label": "I consent to",
           "link": "health data processing"
         }
+      },
+      "sections": {
+        "contact": "Your contact details",
+        "optional": "Optional details",
+        "confirm": "Policy and consent"
       }
     },
     "pay": {
@@ -424,7 +430,13 @@
       "ics": "Add to calendar",
       "retry": "Try confirming again",
       "activate": "Create your Eleva account",
-      "activateHint": "Save this session to your Space and manage it later."
+      "activateHint": "Save this session to your Space and manage it later.",
+      "nextHeading": "What happens next",
+      "next": {
+        "email": "Check your inbox: the confirmation email includes your calendar invite and session details.",
+        "joinOnline": "Join the video call from the link in your email, from 15 minutes before the start. No account needed.",
+        "policy": "Changes and refunds follow the {policy} cancellation policy."
+      }
     },
     "link": {
       "specialPrice": "Special price",
@@ -447,7 +459,8 @@
     },
     "policy": {
       "heading": "Cancellation policy"
-    }
+    },
+    "stepOf": "Step {current} of {total}"
   },
   "footer": {
     "about": "About",

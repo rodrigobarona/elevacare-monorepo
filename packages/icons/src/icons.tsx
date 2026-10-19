@@ -29,6 +29,7 @@ export {
   CreditCardIcon,
   DeviceMobileIcon,
   DotsThreeIcon,
+  EnvelopeIcon,
   GearIcon,
   GlobeIcon,
   HandHeartIcon,

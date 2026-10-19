@@ -22,7 +22,7 @@ import {
 } from "@eleva/config/cancellation-policy"
 import type { Locale } from "@eleva/config/i18n"
 import { BookingPaymentElement } from "@eleva/billing/client"
-import { Button, LinkButton } from "@eleva/ui/components/button"
+import { Button } from "@eleva/ui/components/button"
 import { Field, FieldError, FieldLabel } from "@eleva/ui/components/field"
 import { Input } from "@eleva/ui/components/input"
 import { Textarea } from "@eleva/ui/components/textarea"
@@ -50,8 +50,14 @@ import { displayLanguage } from "@eleva/ui/lib/booking/display-names"
 import { maskPhone, toE164 } from "@eleva/ui/lib/booking/e164"
 import { addMonths, startOfMonth } from "@eleva/ui/lib/booking/slot-groups"
 import { createPublicApiClient } from "@/lib/public-api"
-import { CheckCircleIcon } from "@eleva/icons"
 import { downloadBookingIcs } from "@eleva/calendar/ics-download"
+import {
+  FormCard,
+  FunnelStepper,
+  StepHeader,
+} from "@/components/booking/booking-chrome"
+import { BookingDone } from "@/components/booking/booking-done"
+import { ExpertAvatar } from "@/components/expert-avatar"
 import type { FunnelConsentDoc } from "@/lib/booking-consents"
 import {
   bookingReturnUrl,
@@ -89,6 +95,7 @@ type Payment = {
 export function BookingFunnel({
   locale,
   expertName,
+  expertAvatarUrl = null,
   username,
   eventSlug,
   title,
@@ -107,6 +114,7 @@ export function BookingFunnel({
 }: {
   locale: Locale
   expertName: string
+  expertAvatarUrl?: string | null
   username: string
   eventSlug: string
   title: LocalizedText
@@ -516,29 +524,92 @@ export function BookingFunnel({
     )
   }
 
-  const progress =
-    step === "meet"
-      ? 20
-      : step === "when"
-        ? 40
-        : step === "details"
-          ? 65
-          : step === "pay"
-            ? 85
-            : 100
+  const flowSteps: FunnelStep[] = [
+    ...(skipMeet ? [] : (["meet"] as const)),
+    "when",
+    "details",
+    ...(priceCents > 0 ? (["pay"] as const) : []),
+  ]
+  const stepIndex = flowSteps.indexOf(step)
+  const expertMedia = (
+    <ExpertAvatar
+      displayName={expertName}
+      username={username}
+      avatarUrl={expertAvatarUrl}
+    />
+  )
+  const signupHref = `/signup?${new URLSearchParams({
+    name,
+    email,
+    ...(phone ? { phone } : {}),
+  }).toString()}`
+
+  if (step === "done" && slot && selectedMode) {
+    const accessNote =
+      selectedMode.mode === "phone"
+        ? t("done.phone", {
+            phone: maskPhone(toE164(phone, country) ?? phone),
+          })
+        : selectedMode.mode === "in_person" && selectedMode.location
+          ? t("done.inPerson", {
+              location: `${selectedMode.location.name}, ${selectedMode.location.city}`,
+            })
+          : t("done.video")
+    return (
+      <BookingDone
+        confirmState={confirmState}
+        isRequest={isRequest}
+        errorMessage={formError ? t(`errors.${formError}`) : null}
+        onRetry={
+          reservation && payment
+            ? () => void confirmPaidHold(reservation, payment)
+            : undefined
+        }
+        expertName={expertName}
+        offerTitle={offerTitle}
+        media={expertMedia}
+        whenLabel={whenLabel}
+        modeLabel={locationCopy ?? t(`modes.${selectedMode.mode}.title`)}
+        priceLabel={formatBookingPrice(priceCents, locale)}
+        accessNote={accessNote}
+        policyName={policyCopy.name}
+        isOnline={selectedMode.mode === "online"}
+        signupHref={signupHref}
+        onAddToCalendar={() =>
+          downloadBookingIcs({
+            uid: payment?.bookingId ?? reservation?.reservationId ?? eventSlug,
+            summary: `${offerTitle} · ${expertName}`,
+            description: accessNote,
+            start: slot.start,
+            end: slot.end,
+            timeZone,
+            location:
+              selectedMode.mode === "in_person"
+                ? locationCopy
+                : selectedMode.mode === "phone"
+                  ? t("done.phoneLocation", {
+                      phone: maskPhone(toE164(phone, country) ?? phone),
+                    })
+                  : t("done.videoLocation"),
+            expertName,
+            memberName: name,
+            memberEmail: email,
+          })
+        }
+      />
+    )
+  }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
+    <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-14">
       <section>
-        <p className="text-sm font-medium tracking-widest text-primary uppercase">
-          {t(`steps.${step}`)}
-        </p>
-        <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted">
-          <div
-            className="h-full bg-primary transition-all"
-            style={{ width: `${progress}%` }}
+        {stepIndex >= 0 ? (
+          <FunnelStepper
+            label={`${t("stepOf", { current: stepIndex + 1, total: flowSteps.length })} · ${t(`steps.${step}`)}`}
+            total={flowSteps.length}
+            current={stepIndex}
           />
-        </div>
+        ) : null}
 
         {linkNote ? (
           <aside
@@ -552,12 +623,7 @@ export function BookingFunnel({
 
         {step === "meet" ? (
           <div className="mt-8 space-y-8">
-            <header className="space-y-2">
-              <h1 className="font-heading text-3xl font-semibold tracking-tight">
-                {t("meet.heading")}
-              </h1>
-              <p className="text-muted-foreground">{t("meet.sub")}</p>
-            </header>
+            <StepHeader title={t("meet.heading")} sub={t("meet.sub")} />
             <CountrySelect
               value={country}
               onChange={(next) => {
@@ -613,15 +679,11 @@ export function BookingFunnel({
 
         {step === "when" ? (
           <div className="mt-8 space-y-6">
-            <header className="space-y-2">
-              <h1
-                data-testid="booking-when-heading"
-                className="font-heading text-3xl font-semibold tracking-tight"
-              >
-                {t("when.heading")}
-              </h1>
-              <p className="text-muted-foreground">{t("when.sub")}</p>
-            </header>
+            <StepHeader
+              title={t("when.heading")}
+              sub={t("when.sub")}
+              testId="booking-when-heading"
+            />
             <TimezoneSelect
               value={timeZone}
               onChange={(next) => {
@@ -706,120 +768,122 @@ export function BookingFunnel({
 
         {step === "details" ? (
           <div className="mt-8 space-y-6">
-            <header className="space-y-2">
-              <h1
-                data-testid="booking-details-heading"
-                className="font-heading text-3xl font-semibold tracking-tight"
-              >
-                {t("details.heading")}
-              </h1>
-              <p className="text-muted-foreground">{t("details.sub")}</p>
-            </header>
-            <Field>
-              <FieldLabel>{t("details.name")}</FieldLabel>
-              <Input
-                data-testid="booking-guest-name"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                autoComplete="name"
-              />
-            </Field>
-            <Field>
-              <FieldLabel>{t("details.email")}</FieldLabel>
-              <Input
-                data-testid="booking-guest-email"
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                autoComplete="email"
-              />
-            </Field>
-            <Field>
-              <FieldLabel>{t("details.phone")}</FieldLabel>
-              <Input
-                type="tel"
-                value={phone}
-                onChange={(event) => setPhone(event.target.value)}
-                autoComplete="tel"
-              />
-              <p className="text-sm text-muted-foreground">
-                {t("details.phoneHint")}
-              </p>
-            </Field>
-            <Field>
-              <FieldLabel>{t("details.taxId")}</FieldLabel>
-              <Input
-                data-testid="booking-guest-tax-id"
-                value={taxId}
-                onChange={(event) => setTaxId(event.target.value)}
-                autoComplete="off"
-                inputMode="text"
-              />
-              <p className="text-sm text-muted-foreground">
-                {t("details.taxIdHint")}
-              </p>
-            </Field>
-            <Field>
-              <FieldLabel>{t("details.intakeNotes")}</FieldLabel>
-              <Textarea
-                data-testid="booking-intake-notes"
-                value={intakeNotes}
-                onChange={(event) => {
-                  if (holdActive) return
-                  setIntakeNotes(event.target.value)
-                }}
-                maxLength={8000}
-                readOnly={holdActive}
-                className={
-                  holdActive ? "cursor-not-allowed opacity-50" : undefined
-                }
-              />
-              <p className="text-sm text-muted-foreground">
-                {t("details.intakeNotesHint")}
-              </p>
-            </Field>
-            {priceCents > 0 ? (
+            <StepHeader
+              title={t("details.heading")}
+              sub={t("details.sub")}
+              testId="booking-details-heading"
+            />
+            <FormCard title={t("details.sections.contact")}>
               <Field>
-                <FieldLabel>{t("details.promo")}</FieldLabel>
+                <FieldLabel>{t("details.name")}</FieldLabel>
                 <Input
-                  data-testid="booking-promo"
-                  value={promoCode}
-                  onChange={(event) => setPromoCode(event.target.value)}
-                  autoComplete="off"
+                  data-testid="booking-guest-name"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  autoComplete="name"
+                />
+              </Field>
+              <Field>
+                <FieldLabel>{t("details.email")}</FieldLabel>
+                <Input
+                  data-testid="booking-guest-email"
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  autoComplete="email"
+                />
+              </Field>
+              <Field>
+                <FieldLabel>{t("details.phone")}</FieldLabel>
+                <Input
+                  type="tel"
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
+                  autoComplete="tel"
                 />
                 <p className="text-sm text-muted-foreground">
-                  {t("details.promoHint")}
+                  {t("details.phoneHint")}
                 </p>
               </Field>
-            ) : null}
-            <CancellationPolicySummary
-              heading={t("policy.heading")}
-              name={policyCopy.name}
-              lines={policyCopy.lines}
-              deadlines={policyDeadlines}
-              className="rounded-lg border p-4"
-            />
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                {t("details.consentsIntro")}
-              </p>
-              {consents.map((doc) => (
-                <ConsentCheckbox
-                  key={doc.kind}
-                  id={doc.kind}
-                  isSelected={Boolean(granted[doc.kind])}
-                  onChange={(selected) =>
-                    setGranted((current) => ({
-                      ...current,
-                      [doc.kind]: selected,
-                    }))
-                  }
-                  label={t(`details.consents.${doc.kind}.label`)}
-                  href={doc.href}
-                  linkLabel={t(`details.consents.${doc.kind}.link`)}
+            </FormCard>
+            <FormCard title={t("details.sections.optional")}>
+              <Field>
+                <FieldLabel>{t("details.taxId")}</FieldLabel>
+                <Input
+                  data-testid="booking-guest-tax-id"
+                  value={taxId}
+                  onChange={(event) => setTaxId(event.target.value)}
+                  autoComplete="off"
+                  inputMode="text"
                 />
-              ))}
-            </div>
+                <p className="text-sm text-muted-foreground">
+                  {t("details.taxIdHint")}
+                </p>
+              </Field>
+              <Field>
+                <FieldLabel>{t("details.intakeNotes")}</FieldLabel>
+                <Textarea
+                  data-testid="booking-intake-notes"
+                  value={intakeNotes}
+                  onChange={(event) => {
+                    if (holdActive) return
+                    setIntakeNotes(event.target.value)
+                  }}
+                  maxLength={8000}
+                  readOnly={holdActive}
+                  className={
+                    holdActive ? "cursor-not-allowed opacity-50" : undefined
+                  }
+                />
+                <p className="text-sm text-muted-foreground">
+                  {t("details.intakeNotesHint")}
+                </p>
+              </Field>
+              {priceCents > 0 ? (
+                <Field>
+                  <FieldLabel>{t("details.promo")}</FieldLabel>
+                  <Input
+                    data-testid="booking-promo"
+                    value={promoCode}
+                    onChange={(event) => setPromoCode(event.target.value)}
+                    autoComplete="off"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    {t("details.promoHint")}
+                  </p>
+                </Field>
+              ) : null}
+            </FormCard>
+            <FormCard title={t("details.sections.confirm")}>
+              <CancellationPolicySummary
+                heading={t("policy.heading")}
+                name={policyCopy.name}
+                lines={policyCopy.lines}
+                deadlines={policyDeadlines}
+                className="rounded-2xl bg-muted/60 p-4"
+              />
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  {t("details.consentsIntro")}
+                </p>
+                {consents.map((doc) => (
+                  <ConsentCheckbox
+                    key={doc.kind}
+                    id={doc.kind}
+                    isSelected={Boolean(granted[doc.kind])}
+                    onChange={(selected) =>
+                      setGranted((current) => ({
+                        ...current,
+                        [doc.kind]: selected,
+                      }))
+                    }
+                    label={t(`details.consents.${doc.kind}.label`)}
+                    href={doc.href}
+                    linkLabel={t(`details.consents.${doc.kind}.link`)}
+                  />
+                ))}
+              </div>
+            </FormCard>
             {formError ? (
               <FieldError>{t(`errors.${formError}`)}</FieldError>
             ) : null}
@@ -846,17 +910,13 @@ export function BookingFunnel({
 
         {step === "pay" && payment && reservation ? (
           <div className="mt-8 space-y-6">
-            <header className="space-y-2">
-              <h1 className="font-heading text-3xl font-semibold tracking-tight">
-                {t("pay.heading")}
-              </h1>
-              <p className="text-muted-foreground">{t("pay.sub")}</p>
+            <StepHeader title={t("pay.heading")} sub={t("pay.sub")}>
               {requiresApproval ? (
                 <p className="text-sm text-muted-foreground">
                   {t("pay.requestHint")}
                 </p>
               ) : null}
-            </header>
+            </StepHeader>
             {formError ? (
               <FieldError>{t(`errors.${formError}`)}</FieldError>
             ) : null}
@@ -899,156 +959,6 @@ export function BookingFunnel({
             )}
           </div>
         ) : null}
-
-        {step === "done" && slot && selectedMode ? (
-          <div className="mt-8 space-y-8">
-            <header className="space-y-3">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <CheckCircleIcon className="size-8" weight="fill" />
-              </div>
-              <h1
-                className="font-heading text-3xl font-semibold"
-                data-testid="booking-done-heading"
-                data-state={confirmState}
-              >
-                {confirmState === "confirmed"
-                  ? isRequest
-                    ? t("done.requestHeading")
-                    : t("done.heading")
-                  : t("done.pending")}
-              </h1>
-              <p className="max-w-md text-muted-foreground">
-                {confirmState === "confirmed"
-                  ? isRequest
-                    ? t("done.requestSub")
-                    : t("done.sub")
-                  : t("done.pendingSub")}
-              </p>
-            </header>
-            {confirmState === "failed" && formError ? (
-              <div className="space-y-3">
-                <FieldError>{t(`errors.${formError}`)}</FieldError>
-                {reservation && payment ? (
-                  <Button
-                    onPress={() => void confirmPaidHold(reservation, payment)}
-                  >
-                    {t("done.retry")}
-                  </Button>
-                ) : null}
-              </div>
-            ) : null}
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-              <p className="text-sm text-muted-foreground">{expertName}</p>
-              <p className="font-heading text-lg font-semibold">{offerTitle}</p>
-              <dl className="mt-4 space-y-3 text-sm">
-                <div className="flex justify-between gap-4">
-                  <dt className="text-muted-foreground">{t("summary.when")}</dt>
-                  <dd className="text-right font-medium">{whenLabel}</dd>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <dt className="text-muted-foreground">{t("summary.mode")}</dt>
-                  <dd className="text-right font-medium">
-                    {locationCopy ?? t(`modes.${selectedMode.mode}.title`)}
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <dt className="text-muted-foreground">
-                    {t("summary.price")}
-                  </dt>
-                  <dd className="text-right font-medium">
-                    {formatBookingPrice(priceCents, locale)}
-                  </dd>
-                </div>
-              </dl>
-              <p className="mt-4 text-sm text-muted-foreground">
-                {selectedMode.mode === "phone"
-                  ? t("done.phone", {
-                      phone: maskPhone(toE164(phone, country) ?? phone),
-                    })
-                  : selectedMode.mode === "in_person" && selectedMode.location
-                    ? t("done.inPerson", {
-                        location: `${selectedMode.location.name}, ${selectedMode.location.city}`,
-                      })
-                    : t("done.video")}
-              </p>
-            </div>
-            {confirmState === "confirmed" && !isRequest ? (
-              <div className="space-y-3">
-                <div className="flex flex-wrap gap-3">
-                  <Button
-                    variant="outline"
-                    onPress={() =>
-                      downloadBookingIcs({
-                        uid:
-                          payment?.bookingId ??
-                          reservation?.reservationId ??
-                          eventSlug,
-                        summary: `${offerTitle} · ${expertName}`,
-                        description:
-                          selectedMode.mode === "online"
-                            ? t("done.video")
-                            : selectedMode.mode === "phone"
-                              ? t("done.phone", {
-                                  phone: maskPhone(
-                                    toE164(phone, country) ?? phone
-                                  ),
-                                })
-                              : t("done.inPerson", {
-                                  location: locationCopy ?? "",
-                                }),
-                        start: slot.start,
-                        end: slot.end,
-                        timeZone,
-                        location:
-                          selectedMode.mode === "in_person"
-                            ? locationCopy
-                            : selectedMode.mode === "phone"
-                              ? t("done.phoneLocation", {
-                                  phone: maskPhone(
-                                    toE164(phone, country) ?? phone
-                                  ),
-                                })
-                              : t("done.videoLocation"),
-                        expertName,
-                        memberName: name,
-                        memberEmail: email,
-                      })
-                    }
-                  >
-                    {t("done.ics")}
-                  </Button>
-                  <LinkButton
-                    href={`/signup?${new URLSearchParams({
-                      name,
-                      email,
-                      ...(phone ? { phone } : {}),
-                    }).toString()}`}
-                  >
-                    {t("done.activate")}
-                  </LinkButton>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {t("done.activateHint")}
-                </p>
-              </div>
-            ) : confirmState === "confirmed" && isRequest ? (
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  {t("done.requestNoJoin")}
-                </p>
-                <LinkButton
-                  href={`/signup?${new URLSearchParams({
-                    name,
-                    email,
-                    ...(phone ? { phone } : {}),
-                  }).toString()}`}
-                >
-                  {t("done.activate")}
-                </LinkButton>
-              </div>
-            ) : null}
-          </div>
-        ) : null}
       </section>
 
       <BookingSummary
@@ -1077,6 +987,8 @@ export function BookingFunnel({
               })
             : undefined
         }
+        media={expertMedia}
+        footer={t("summary.policy", { policy: policyCopy.name })}
       />
     </div>
   )
