@@ -7,33 +7,16 @@ import { LinkButton } from "@eleva/ui/components/button"
 import { findMemberBooking } from "@/lib/find-member-booking"
 import { getAuthedApiClient, requireMemberOrg } from "@/lib/member-api"
 import { eventTitle, formatDateTime, formatMoney } from "@/lib/member-format"
+import {
+  isAwaitingConfirmation,
+  isBookingStatus,
+  isSessionMode,
+} from "@/lib/booking-status"
 import { JoinCta } from "@eleva/video/join-cta"
 import { SessionActions } from "../../_components/session-actions"
 import { IcsDownloadButton } from "./ics-download-button"
 
 export const dynamic = "force-dynamic"
-
-const BOOKING_STATUS_KEYS = [
-  "confirmed",
-  "rescheduled",
-  "cancelled",
-  "pending_payment",
-  "completed",
-  "no_show",
-] as const
-
-type BookingStatusKey = (typeof BOOKING_STATUS_KEYS)[number]
-
-function isBookingStatus(value: string): value is BookingStatusKey {
-  return (BOOKING_STATUS_KEYS as readonly string[]).includes(value)
-}
-
-const MODE_KEYS = ["online", "in_person", "phone"] as const
-type ModeKey = (typeof MODE_KEYS)[number]
-
-function isMode(value: string): value is ModeKey {
-  return (MODE_KEYS as readonly string[]).includes(value)
-}
 
 function invoiceStatusKey(status: ExpertInvoiceStatus) {
   switch (status) {
@@ -73,6 +56,7 @@ export default async function SessionDetailPage({
     }),
   ])
   const payment = payments.payments.find((row) => row.bookingId === booking.id)
+  const awaiting = isAwaitingConfirmation(booking.status)
   const title = eventTitle(booking.eventType.title, locale)
   const memberName = session.user.displayName ?? session.user.email
 
@@ -95,7 +79,7 @@ export default async function SessionDetailPage({
         <div>
           <dt className="text-sm text-muted-foreground">{t("mode")}</dt>
           <dd>
-            {isMode(booking.sessionMode)
+            {isSessionMode(booking.sessionMode)
               ? t(`modes.${booking.sessionMode}`)
               : booking.sessionMode}
           </dd>
@@ -147,22 +131,26 @@ export default async function SessionDetailPage({
       </dl>
 
       <div className="flex flex-wrap gap-2">
-        <JoinCta
-          href={`/${orgSlug}/sessions/${bookingId}/join`}
-          sessionMode={booking.sessionMode}
-          status={booking.status}
-          startsAt={booking.startsAt}
-          endsAt={booking.endsAt}
-          joinLabel={t("join")}
-          joinSoonLabel={t("joinSoon")}
-        />
+        {awaiting ? null : (
+          <JoinCta
+            href={`/${orgSlug}/sessions/${bookingId}/join`}
+            sessionMode={booking.sessionMode}
+            status={booking.status}
+            startsAt={booking.startsAt}
+            endsAt={booking.endsAt}
+            joinLabel={t("join")}
+            joinSoonLabel={t("joinSoon")}
+          />
+        )}
         <IcsDownloadButton
           booking={booking}
           memberName={memberName}
           memberEmail={session.user.email}
         />
       </div>
-      <p className="text-xs text-muted-foreground">{t("joinSoon")}</p>
+      <p className="text-xs text-muted-foreground">
+        {awaiting ? t("awaitingConfirmationHint") : t("joinSoon")}
+      </p>
 
       <SessionActions
         orgSlug={orgSlug}
