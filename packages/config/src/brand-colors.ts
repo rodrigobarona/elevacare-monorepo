@@ -82,6 +82,20 @@ export const BRAND_SCALES = {
     900: "#680002",
     950: "#460000",
   },
+  /** Brand v3 warm paper (docs/eleva-v3/brand-book/v3/tokens.json). */
+  sand: {
+    50: "#fdfaf5",
+    100: "#f9f3eb",
+    200: "#f0e6d9",
+    300: "#e3d5c3",
+    400: "#cdbaa4",
+    500: "#af9a83",
+    600: "#907c68",
+    700: "#716050",
+    800: "#55483b",
+    900: "#3b3128",
+    950: "#241d17",
+  },
   info: {
     50: "#eef9ff",
     100: "#daf1ff",
