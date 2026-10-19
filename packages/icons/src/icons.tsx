@@ -31,6 +31,8 @@ export {
   DotsThreeIcon,
   GearIcon,
   GlobeIcon,
+  HandHeartIcon,
+  HeartbeatIcon,
   HouseIcon,
   ImagesIcon,
   InfoIcon,

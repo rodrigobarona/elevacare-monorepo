@@ -1,6 +1,17 @@
+import { defaultLocale, isLocale, type Locale } from "@eleva/config/i18n"
+import {
+  ArrowRightIcon,
+  HandHeartIcon,
+  HeartbeatIcon,
+  MapPinIcon,
+  UsersIcon,
+} from "@eleva/icons"
+import { ElevaImage } from "@eleva/media/image"
+import { CtaBand } from "@eleva/ui/blocks/cta-band"
+import { Container, Section, SectionHeader } from "@eleva/ui/blocks/section"
+import { TrustStrip } from "@eleva/ui/blocks/trust-strip"
 import { buttonVariants } from "@eleva/ui/components/button-variants"
-import { ArrowRightIcon } from "@eleva/icons"
-import { useTranslations } from "next-intl"
+import { Accent } from "@eleva/ui/components/typography"
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import { Link } from "@/i18n/navigation"
 import { SiteFooter } from "@/components/site-footer"
@@ -20,103 +31,122 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-const stats = [
-  { value: "100%", key: "online" },
-  { value: "3+", key: "languages" },
-  { value: "4", key: "specialities" },
-] as const
-
-const valueKeys = [
-  "evidenceBased",
-  "accessible",
-  "humanCentred",
-  "inclusive",
-] as const
+const STATS = ["modes", "languages", "specialities"] as const
 
 export default async function AboutPage({ params }: Props) {
-  const { locale } = await params
-  setRequestLocale(locale)
+  const { locale: requestLocale } = await params
+  setRequestLocale(requestLocale)
+  const locale: Locale = isLocale(requestLocale) ? requestLocale : defaultLocale
+  const t = await getTranslations("about")
 
   return (
     <div className="flex min-h-dvh flex-col">
       <SiteHeader />
-      <AboutContent />
-      <SiteFooter />
-    </div>
-  )
-}
-
-function AboutContent() {
-  const t = useTranslations()
-
-  return (
-    <>
       <main className="flex-1">
-        <section className="px-6 py-24 text-center">
-          <div className="mx-auto max-w-3xl">
-            <p className="mb-4 text-sm font-medium tracking-widest text-primary uppercase">
-              {t("about.eyebrow")}
-            </p>
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-              {t("about.heading")}
-              <span className="text-primary">{t("about.headingAccent")}</span>
-            </h1>
-            <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
-              {t("about.intro")}
-            </p>
-          </div>
-        </section>
+        <Section>
+          <Container className="grid items-center gap-12 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
+            <SectionHeader
+              as="h1"
+              eyebrow={t("eyebrow")}
+              title={
+                <>
+                  {t("heading")}
+                  <Accent>{t("headingAccent")}</Accent>
+                </>
+              }
+              lead={t("intro")}
+            />
+            <div className="relative aspect-4/3 overflow-hidden rounded-4xl shadow-2">
+              <ElevaImage
+                slug="community-women"
+                locale={locale}
+                fill
+                priority
+                sizes="(min-width: 1024px) 45vw, 100vw"
+                className="object-cover"
+              />
+            </div>
+          </Container>
+        </Section>
 
-        <section className="border-y bg-muted/40 px-6 py-12">
-          <div className="mx-auto grid max-w-4xl grid-cols-1 gap-8 sm:grid-cols-3">
-            {stats.map((stat) => (
-              <div key={stat.key} className="text-center">
-                <p className="text-3xl font-bold text-primary">{stat.value}</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {t(`about.stats.${stat.key}`)}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="px-6 py-24">
-          <div className="mx-auto max-w-6xl">
-            <h2 className="text-center text-2xl font-bold tracking-tight sm:text-3xl">
-              {t("about.valuesHeading")}
-            </h2>
-            <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2">
-              {valueKeys.map((key) => (
-                <div key={key} className="rounded-lg border p-6">
-                  <h3 className="text-lg font-semibold">
-                    {t(`about.values.${key}.title`)}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                    {t(`about.values.${key}.description`)}
-                  </p>
+        <Section tone="muted" spacing="compact">
+          <Container>
+            <dl className="grid gap-8 sm:grid-cols-3">
+              {STATS.map((key) => (
+                <div key={key} className="flex flex-col gap-1">
+                  <dt className="text-sm text-muted-foreground">
+                    {t(`stats.${key}.label`)}
+                  </dt>
+                  <dd className="order-first font-heading text-headline text-primary">
+                    {t(`stats.${key}.value`)}
+                  </dd>
                 </div>
               ))}
-            </div>
-          </div>
-        </section>
+            </dl>
+          </Container>
+        </Section>
 
-        <section className="bg-muted/40 px-6 py-24 text-center">
-          <div className="mx-auto max-w-2xl">
-            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
-              {t("about.ctaHeading")}
-            </h2>
-            <p className="mt-4 text-base text-muted-foreground">
-              {t("about.ctaDescription")}
-            </p>
-            <div className="mt-8 flex justify-center gap-4">
-              <Link href="/experts" className={buttonVariants({ size: "lg" })}>
-                {t("about.cta")}
-                <ArrowRightIcon data-icon="inline-end" />
-              </Link>
-            </div>
-          </div>
-        </section>
+        <Section>
+          <Container className="flex flex-col gap-12">
+            <SectionHeader
+              eyebrow={t("valuesEyebrow")}
+              title={t("valuesHeading")}
+            />
+            <TrustStrip
+              items={[
+                {
+                  icon: <HeartbeatIcon />,
+                  title: t("values.evidenceBased.title"),
+                  description: t("values.evidenceBased.description"),
+                },
+                {
+                  icon: <MapPinIcon />,
+                  title: t("values.accessible.title"),
+                  description: t("values.accessible.description"),
+                },
+                {
+                  icon: <HandHeartIcon />,
+                  title: t("values.humanCentred.title"),
+                  description: t("values.humanCentred.description"),
+                },
+                {
+                  icon: <UsersIcon />,
+                  title: t("values.inclusive.title"),
+                  description: t("values.inclusive.description"),
+                },
+              ]}
+            />
+          </Container>
+        </Section>
+
+        <Section spacing="compact" className="pb-24">
+          <Container>
+            <CtaBand
+              title={t("ctaHeading")}
+              lead={t("ctaDescription")}
+              media={
+                <ElevaImage
+                  slug="support-conversation"
+                  locale={locale}
+                  fill
+                  sizes="(min-width: 1024px) 40vw, 100vw"
+                  className="object-cover"
+                />
+              }
+              actions={
+                <Link
+                  href="/experts"
+                  className={buttonVariants({ variant: "inverse", size: "lg" })}
+                >
+                  {t("cta")}
+                  <ArrowRightIcon data-icon="inline-end" />
+                </Link>
+              }
+            />
+          </Container>
+        </Section>
       </main>
-    </>
+      <SiteFooter />
+    </div>
   )
 }

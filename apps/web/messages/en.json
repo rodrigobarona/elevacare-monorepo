@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Eleva.care — Women's Health, Elevated",
-    "description": "Connect with verified women's health experts for personalised, evidence-based care — 100% online."
+    "description": "Connect with women's health experts for personalised, evidence-based care — online, by phone or in person."
   },
   "nav": {
     "about": "About",
@@ -102,25 +102,34 @@
   },
   "about": {
     "title": "About — Eleva.care",
-    "description": "Eleva.care connects women with verified health experts for personalised, evidence-based care — 100% online.",
+    "description": "Eleva.care connects women with independent women's health experts — online, by phone or in person.",
     "eyebrow": "Our mission",
     "heading": "Women's health deserves ",
     "headingAccent": "better",
-    "intro": "Eleva.care was founded on a simple belief: every woman should have access to expert, evidence-based health support — no matter where she lives.",
+    "intro": "Eleva.care was founded on a simple belief: every woman should have access to expert, evidence-based health support, wherever she lives and however she prefers to meet.",
     "stats": {
-      "online": "Online consultations",
-      "languages": "Languages supported",
-      "specialities": "Care specialities"
+      "modes": {
+        "value": "3",
+        "label": "Ways to meet: online, by phone or in person"
+      },
+      "languages": {
+        "value": "3",
+        "label": "Languages: English, Portuguese and Spanish"
+      },
+      "specialities": {
+        "value": "4",
+        "label": "Care areas, from pregnancy to every life stage"
+      }
     },
     "valuesHeading": "What we stand for",
     "values": {
       "evidenceBased": {
         "title": "Evidence-based",
-        "description": "Every expert on our platform is rigorously verified. We pair clinical expertise with the latest research so you receive care grounded in science."
+        "description": "Experts on Eleva are independent health professionals. They share their background on their profile so you can choose with confidence."
       },
       "accessible": {
         "title": "Accessible",
-        "description": "Quality women's health support should not depend on geography. Our 100% online model removes barriers and brings expert care to you."
+        "description": "Good women's health support should not depend on where you live. Meet online, by phone or in person, in your language."
       },
       "humanCentred": {
         "title": "Human-centred",
@@ -128,12 +137,13 @@
       },
       "inclusive": {
         "title": "Inclusive",
-        "description": "Women's health spans every age and life stage. Our multidisciplinary network covers pregnancy, pelvic health, mental well-being, nutrition, and more."
+        "description": "Women's health spans every age and life stage: pregnancy, pelvic health, menopause, cancer support and more."
       }
     },
     "ctaHeading": "Ready to get started?",
     "ctaDescription": "Find the right expert for your health journey — it only takes a minute.",
-    "cta": "Find my expert"
+    "cta": "Find my expert",
+    "valuesEyebrow": "Our values"
   },
   "experts": {
     "title": "Find an expert — Eleva.care",
