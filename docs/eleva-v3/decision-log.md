@@ -32,6 +32,27 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-19: Brand v3 rollout — member and expert app slices (proposed)
+
+- Decision: signed-in apps follow the web rollout, one surface per PR,
+  checked locally against a Neon dev branch (`dev-local-v3-redesign`),
+  never the production branch.
+  - Member app (#192): Space home with the next session featured, sessions,
+    booking detail with a manage aside, payments list, v3 `PageHeader`,
+    `EmptyState` and `SettingsFieldset` (shared by every app's settings).
+  - Expert app: practice dashboard (week stats, booking requests with
+    accept/decline in place, next 14 days, shortcuts) and the services list.
+    Expert copy now says "Services" instead of "Event Types".
+  - `StatusPill`, `DateTile` and `bookingDateParts` live in `@eleva/ui`;
+    public profile and explorer URL helpers live in `@eleva/config/env`.
+- Out of scope, follow-ups (not shipped):
+  - Expert schedule, calendar, connected calendars, integrations, finance,
+    setup and service editor keep the previous layout for now.
+  - Account, team, academy and admin apps are not restyled yet.
+  - The dashboard has no earnings stat: finance reads stay on the finance
+    page until payouts are proven end to end.
+- Owner: founder (review), engineering (rollout). Status: `proposed`.
+
 ### 2026-10-19: Brand v3 rollout — public web and email slices (proposed)
 
 - Decision: brand v3 rolls out one surface per PR. Shipped as PRs (each
@@ -46,10 +67,7 @@ Each entry should include:
   "independent, licensed experts" wording and the advisor list stay
   pending founder review.
 - Out of scope, follow-ups (not shipped):
-  - Authenticated apps (app, expert, account, team, academy, admin) are not
-    restyled yet. Visual checks need a local session, and the local API env
-    points at the production Neon branch, so they wait for a safe dev
-    database.
+  - Authenticated apps: see the member and expert app slices entry above.
   - Email header logo: no public URL serves the logo PNG, so the header
     keeps the text wordmark.
   - Email copy: the footer says "active account" for guest bookings, and the

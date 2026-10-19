@@ -148,7 +148,7 @@
     "cancelledRefund": "Session cancelled. {amount} will be refunded to your original payment method.",
     "rescheduleUnavailable": "Rescheduling is only available while cancelling would still give a full refund. You can still cancel.",
     "refundChanged": "Your refund has changed since you opened this. Check the new amount and confirm again.",
-    "awaitingConfirmationHint": "Your expert will confirm this session soon. You can join once it is confirmed.",
+    "awaitingConfirmationHint": "Your expert will confirm this session soon. Once it is confirmed, you can join from 15 minutes before the start.",
     "nextTitle": "Your next session",
     "bookAgain": "Book again",
     "withExpert": "With {name}",
