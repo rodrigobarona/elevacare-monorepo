@@ -347,7 +347,7 @@
     "saving": "Guardando...",
     "saved": "Horario guardado correctamente.",
     "to": "a",
-    "addWindow": "Añadir intervalo",
+    "addWindow": "Añadir horas",
     "remove": "Quitar",
     "overrideDate": "Fecha",
     "overrideBlockDay": "Bloquear todo el día",
@@ -370,7 +370,14 @@
       "startBeforeEnd": "{day}: la hora de inicio debe ser anterior a la de fin",
       "overrideStartBeforeEnd": "La hora de inicio de la excepción debe ser anterior a la de fin",
       "overlappingWindows": "{day}: los intervalos de disponibilidad no pueden solaparse"
-    }
+    },
+    "weeklyHoursHint": "Los miembros pueden reservar contigo dentro de este horario, en tu zona horaria.",
+    "dateOverridesHint": "Bloquea un festivo o cambia tu horario para un solo día.",
+    "overrideEmpty": "Aún no hay excepciones.",
+    "unavailable": "No disponible",
+    "startTimeLabel": "Inicio del {day}",
+    "endTimeLabel": "Fin del {day}",
+    "removeWindowLabel": "Quitar franja del {day}"
   },
   "calendar": {
     "title": "Calendario",
