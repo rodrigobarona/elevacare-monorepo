@@ -9,7 +9,9 @@ Base URL: `https://api33.toconline.pt`
 | **v1**     | `/api/v1/{resource}` | Flat JSON                                 | `application/json`         |
 | **Legacy** | `/api/{resource}`    | JSON:API `{ data: { type, attributes } }` | `application/vnd.api+json` |
 
-Prefer v1 for sales documents (single-call creation with lines).
+ELEVA FTs use the previous API (draft → finalize); v1 FT POST auto-finalizes
+and is banned. Use v1 for receipts (Recibo with `lines`). SSOT:
+`docs/eleva-v3/toconline-platform-fee-issuance-flow.md`.
 
 ---
 
@@ -279,15 +281,23 @@ v1 auto-finalizes on create (no `finalize` field).
 
 ## Sales Receipts — v1
 
-| Method   | Path                                         | Description   |
-| -------- | -------------------------------------------- | ------------- |
-| `POST`   | `/api/v1/commercial_sales_receipts`          | Create header |
-| `POST`   | `/api/commercial_sales_receipt_lines`        | Add line      |
-| `PATCH`  | `/api/v1/commercial_sales_receipts/:id`      | Update        |
-| `PATCH`  | `/api/v1/commercial_sales_receipts/:id/void` | Void          |
-| `GET`    | `/api/v1/commercial_sales_receipts/:id`      | Get by ID     |
-| `GET`    | `/api/v1/commercial_sales_receipts`          | List all      |
-| `DELETE` | `/api/v1/commercial_sales_receipts/:id`      | Delete        |
+Live path uses **one** v1 POST **with `lines`** (settles the FT); the FT itself
+still uses the previous-API flow (header → line → `status: 1` → AT). A
+previous-API Recibo header-then-line fallback is **unverified**: the receipt
+header route and payload have not been proven against TOConline, so do not use
+it live. Only the line endpoint below is documented by TOConline.
+`document_series_id` 303 = `RC ELEVA` (the field the live 2026-10-13 batch
+used; TOConline accepted it for every receipt).
+
+| Method   | Path                                         | Description                      |
+| -------- | -------------------------------------------- | -------------------------------- |
+| `POST`   | `/api/v1/commercial_sales_receipts`          | Create receipt **with `lines`**  |
+| `POST`   | `/api/commercial_sales_receipt_lines`        | Add line (previous API fallback) |
+| `PATCH`  | `/api/v1/commercial_sales_receipts/:id`      | Update                           |
+| `PATCH`  | `/api/v1/commercial_sales_receipts/:id/void` | Void                             |
+| `GET`    | `/api/v1/commercial_sales_receipts/:id`      | Get by ID                        |
+| `GET`    | `/api/v1/commercial_sales_receipts`          | List all                         |
+| `DELETE` | `/api/v1/commercial_sales_receipts/:id`      | Delete                           |
 
 ---
 

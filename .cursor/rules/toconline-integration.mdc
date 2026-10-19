@@ -75,17 +75,21 @@ TOCONLINE_SERIES_PREFIX=ELEVA # production. TEST is TOConline-only sandbox — n
 | **v1** | `/api/v1/{resource}` | Flat JSON | Sales/purchase documents, receipts, payments |
 | **Legacy** | `/api/{resource}` | JSON:API `{ data: { type, attributes } }` | Customers, suppliers, addresses, contacts, products, services |
 
-Always prefer v1 endpoints for sales documents:
+Live path (`issueInvoice()` closed): **previous JSON:API for FTs**, then
+**v1 Recibo with `lines`**. Never `POST /api/v1/commercial_sales_documents`
+(auto-finalizes). SSOT: `docs/eleva-v3/toconline-platform-fee-issuance-flow.md`.
 
 ```typescript
-// v1 — flat JSON, single call creates header + lines
-POST /api/v1/commercial_sales_documents
-{ "document_type": "FT", "finalize": 1, "lines": [...] }
+// FT — previous JSON:API (header + line + finalize)
+POST /api/commercial_sales_documents
+POST /api/commercial_sales_document_lines
+PATCH /api/commercial_sales_documents         // status: 1
+PATCH /api/send_document_at_webservice
+POST /api/v1/commercial_sales_receipts        // lines settle the FT (RC ELEVA)
+PATCH /api/email/document/{id}
 
-// Legacy — JSON:API, requires separate header + line + finalize calls
-POST /api/commercial_sales_documents          // header
-POST /api/commercial_sales_document_lines     // each line
-PATCH /api/commercial_sales_documents         // finalize (status: 1)
+// Banned — v1 FT auto-finalizes
+// POST /api/v1/commercial_sales_documents
 ```
 
 ## Document Series
@@ -96,7 +100,8 @@ The `ELEVA` series prefix is already configured in TOConline. Retrieve the serie
 GET /api/commercial_document_series?filter[prefix]=ELEVA&filter[document_type]=FT
 ```
 
-Invoice numbers follow: `ELEVA FT {YYYY}/{N}` (e.g. `ELEVA FT 2026/1`).
+Invoice numbers follow: `FT ELEVA/{n}` (e.g. `FT ELEVA/16`). Recibos:
+`RC ELEVA/{n}` on series id 303.
 
 ## Customer Upsert Pattern
 
@@ -123,37 +128,14 @@ if (!existing.data.length) {
 }
 ```
 
-## Platform Fee Invoice (v1 — Single Call)
+## Platform Fee Invoice (previous API — live path)
 
-```typescript
-const invoice = await toconline.post('/api/v1/commercial_sales_documents', {
-  document_type: 'FT',
-  finalize: 1,
-  date: new Date().toISOString().split('T')[0],
-  customer_tax_registration_number: expert.fiscalNif,
-  customer_business_name: expert.fiscalBusinessName,
-  customer_address_detail: expert.fiscalAddress,
-  customer_postcode: expert.fiscalPostcode,
-  customer_city: expert.fiscalCity,
-  customer_country: expert.fiscalCountry,
-  due_date: dueDate,
-  payment_mechanism: 'TB',
-  vat_included_prices: true,
-  currency_iso_code: 'EUR',
-  notes: `Servico de plataforma Eleva Care - ${bookingDescription}`,
-  external_reference: stripeSessionId,
-  lines: [{
-    item_type: 'Service',
-    description: 'Servico de plataforma Eleva Care',
-    quantity: 1,
-    unit_price: platformFeeEuros,
-    tax_code: vatConfig.code,
-    tax_percentage: vatConfig.rate,
-  }],
-});
-```
-
-Set `finalize: 1` to create and finalize in one call. The response includes the assigned document number and ATCUD.
+Follow the sequence in "API Format" above and the SSOT
+`docs/eleva-v3/toconline-platform-fee-issuance-flow.md`: previous-API FT
+header → line → `status: 1` → AT → v1 Recibo with `lines` → email. Line
+description is Airbnb-style (service fee + session date), never a Stripe id;
+the FT date is the session date. `issueInvoice()` stays closed until this
+path is wired in code. The v1 single-call `finalize: 1` FT is banned.
 
 ## VAT Matrix
 

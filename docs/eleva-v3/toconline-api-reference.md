@@ -4,8 +4,8 @@
 > (and `/llms.txt` / `/llms-full.txt`). How to query:
 > `_context/TOConline-api/toconline-docs.md`. Do not invent fields.
 > Do not vendor the full GitBook corpus (gitleaks + size).
-> **API version**: v1 (current, auto-finalize) + previous JSON:API (drafts)
-> **Last updated**: 2026-09-15
+> **API version**: previous JSON:API for FTs (live path) + v1 Recibos with `lines`. v1 FT POST is banned (auto-finalize).
+> **Last updated**: 2026-10-13
 > **Related**: [ADR-013 — Accounting Integration](adrs/ADR-013-accounting-integration.md)
 
 > **07.0 (2026-09-14):** Official docs treat `API_URL` / `OAUTH_URL` as
@@ -478,8 +478,9 @@ FR: the associated receipt is created automatically when the FR is finalized
 
 ### Sales Documents — previous API / drafts (`/api/commercial_sales_documents`)
 
-Previous JSON:API. Header, lines, and finalize are **separate** calls. Use
-this only when a draft is required. v1 cannot create an unfinalized document.
+Previous JSON:API. Header, lines, and finalize are **separate** calls. This
+is the **live ELEVA FT path** (draft → `status: 1` → AT → Recibo → email);
+v1 cannot create an unfinalized document, so v1 FT POST stays banned.
 
 | Method   | Path                                                        | Description                |
 | -------- | ----------------------------------------------------------- | -------------------------- |
@@ -557,31 +558,47 @@ Other line types: `Product`, `TaxDescriptor`, description-only (no value).
 
 ### Sales Receipts — v1 (`/api/v1/commercial_sales_receipts`)
 
-| Method   | Path                                                     | Description           |
-| -------- | -------------------------------------------------------- | --------------------- |
-| `POST`   | `/api/v1/commercial_sales_receipts`                      | Create receipt header |
-| `POST`   | `/api/commercial_sales_receipt_lines`                    | Add receipt line      |
-| `PATCH`  | `/api/v1/commercial_sales_receipts/:salesReceiptId`      | Update receipt        |
-| `PATCH`  | `/api/v1/commercial_sales_receipts/:salesReceiptId/void` | Void receipt          |
-| `GET`    | `/api/v1/commercial_sales_receipts/:salesReceiptId`      | Get by ID             |
-| `GET`    | `/api/v1/commercial_sales_receipts`                      | List all              |
-| `DELETE` | `/api/v1/commercial_sales_receipts/:salesReceiptId`      | Delete receipt        |
-| `DELETE` | `/api/v1/commercial_sales_receipt_lines/`                | Delete receipt lines  |
+Official: https://api-docs.toconline.pt/apis/vendas/recibos-de-venda.md
 
-#### Create receipt header (v1)
+Eleva issues **FT** (not FR), so Recibo is a required live-path step. v1 POST
+**with `lines`** is one call and settles the FT (`status: 3`, `pending_total: 0`).
+This is allowed. v1 **FT** POST is not.
+
+| Method   | Path                                                     | Description                      |
+| -------- | -------------------------------------------------------- | -------------------------------- |
+| `POST`   | `/api/v1/commercial_sales_receipts`                      | Create receipt **with `lines`**  |
+| `POST`   | `/api/commercial_sales_receipt_lines`                    | Add line (previous API fallback) |
+| `PATCH`  | `/api/v1/commercial_sales_receipts/:salesReceiptId`      | Update receipt                   |
+| `PATCH`  | `/api/v1/commercial_sales_receipts/:salesReceiptId/void` | Void receipt                     |
+| `GET`    | `/api/v1/commercial_sales_receipts/:salesReceiptId`      | Get by ID                        |
+| `GET`    | `/api/v1/commercial_sales_receipts`                      | List all                         |
+| `DELETE` | `/api/v1/commercial_sales_receipts/:salesReceiptId`      | Delete receipt                   |
+| `DELETE` | `/api/v1/commercial_sales_receipt_lines/:id`             | Delete receipt line              |
+
+#### Create receipt with lines (v1 — live path)
+
+`GET /api/commercial_document_series?filter[document_type]=RC&filter[prefix]=ELEVA`
+→ id **303**. `payment_mechanism: DDA`. `date` = FT date. `receivable_id` = FT id.
+Proven 2026-10-13: `RC ELEVA/16` id 126 (FT 225), `RC ELEVA/17` id 127 (FT 226).
 
 ```json
 {
-  "date": "2026-02-24",
-  "payment_mechanism": "MO",
-  "gross_total": 10.69,
-  "net_total": 9.25,
-  "standalone": true,
-  "observations": ""
+  "date": "2026-03-06",
+  "payment_mechanism": "DDA",
+  "document_series_id": 303,
+  "customer_id": 17,
+  "internal_observations": "ch_…",
+  "lines": [
+    {
+      "receivable_type": "Document",
+      "receivable_id": 225,
+      "received_value": 10.5
+    }
+  ]
 }
 ```
 
-#### Add receipt line
+#### Add receipt line (previous API fallback)
 
 ```json
 {

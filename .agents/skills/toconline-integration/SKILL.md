@@ -11,7 +11,7 @@ description: >-
   VAT rules, or working in packages/accounting.
 ---
 
-TOConline API base: `https://api33.toconline.pt`. OAuth: `https://app33.toconline.pt/oauth`. Auth flow: Authorization Code + PKCE (S256), scope `commercial`. Eleva document series prefix: `ELEVA`.
+Hosts come from env (`TOCONLINE_API_BASE_URL` / `TOCONLINE_OAUTH_BASE_URL`), never hardcoded `api33`. Auth: Authorization Code **without PKCE**, HTTP Basic, scope `commercial` (07.0). Series prefix: `ELEVA` (`FT ELEVA/{n}`). Tier 1 issuer: **previous JSON:API FT** (header → line → finalize → AT → **v1 Recibo with lines** → email). Never v1 FT POST. SSOT: `docs/eleva-v3/toconline-platform-fee-issuance-flow.md`. `issueInvoice()` stays closed.
 
 ## Integration routing
 
@@ -44,6 +44,7 @@ Read the relevant reference file before answering any integration question or wr
 
 ## Key documentation
 
-- [TOConline API Reference](docs/eleva-v3/toconline-api-reference.md)
-- [ADR-013 — Accounting Integration](docs/eleva-v3/adrs/ADR-013-accounting-integration.md)
+- [Tier 1 issuance flow (SSOT)](../../../docs/eleva-v3/toconline-platform-fee-issuance-flow.md)
+- [TOConline API Reference](../../../docs/eleva-v3/toconline-api-reference.md)
+- [ADR-013 — Accounting Integration](../../../docs/eleva-v3/adrs/ADR-013-accounting-integration.md)
 - [TOConline API docs (external)](https://api-docs.toconline.pt/llms.txt)
