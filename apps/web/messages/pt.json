@@ -17,12 +17,88 @@
     "more": "Mais"
   },
   "home": {
-    "eyebrow": "Saúde da mulher, elevada",
-    "heading": "Cuidado especializado, ",
-    "headingAccent": "perto de si",
-    "description": "Conecte-se com especialistas verificados em saúde da mulher para cuidados personalizados e baseados em evidência — em qualquer lugar, a qualquer hora.",
-    "cta": "Encontrar especialista",
-    "ctaSecondary": "Tornar-se parceiro"
+    "hero": {
+      "eyebrow": "Saúde da mulher, elevada",
+      "heading": "Especialistas em saúde da mulher, ",
+      "headingAccent": "ao seu ritmo.",
+      "description": "Marque especialistas de confiança em gravidez, saúde pélvica e todas as fases da vida. Online, por telefone ou presencialmente.",
+      "cta": "Encontrar especialista",
+      "ctaSecondary": "Tornar-me parceiro",
+      "disclaimer": "A Eleva liga-a a especialistas de saúde independentes, com prática própria."
+    },
+    "trust": {
+      "independent": {
+        "title": "Especialistas independentes",
+        "description": "Profissionais qualificados, com prática própria."
+      },
+      "modes": {
+        "title": "Online ou presencial",
+        "description": "Vídeo, telefone ou uma clínica perto de si."
+      },
+      "languages": {
+        "title": "Na sua língua",
+        "description": "Português, inglês e espanhol."
+      },
+      "pricing": {
+        "title": "Preços claros",
+        "description": "Paga ao marcar. Condições de cancelamento à vista."
+      }
+    },
+    "services": {
+      "eyebrow": "Como a apoiamos",
+      "heading": "Cuidados especializados, ",
+      "headingAccent": "feitos para si",
+      "lead": "Da primeira ecografia à vida depois da menopausa, encontre a especialista que entende o seu momento.",
+      "action": "Ver especialistas",
+      "pregnancy": {
+        "title": "Gravidez e pós-parto",
+        "description": "Apoio sereno e baseado em evidência na gravidez e nos primeiros meses."
+      },
+      "pelvicHealth": {
+        "title": "Saúde pélvica",
+        "description": "Cuidados especializados do pavimento pélvico em todas as fases."
+      },
+      "everyStage": {
+        "title": "Em todas as fases",
+        "description": "Apoio da adolescência à menopausa, e depois."
+      },
+      "cancerJourney": {
+        "title": "O seu percurso oncológico",
+        "description": "Cuidados especializados e próximos, durante e após o tratamento."
+      }
+    },
+    "how": {
+      "eyebrow": "Como funciona",
+      "heading": "Da primeira dúvida à primeira sessão",
+      "lead": "Sem listas de espera e sem precisar de conta para marcar.",
+      "find": {
+        "title": "Encontre a sua especialista",
+        "description": "Pesquise por necessidade, língua, preço e forma de consulta."
+      },
+      "book": {
+        "title": "Marque um horário",
+        "description": "Escolha o horário que lhe convém e pague em segurança em poucos passos."
+      },
+      "meet": {
+        "title": "Encontre-se com a especialista",
+        "description": "Entre online a partir do email de confirmação, ou presencialmente."
+      }
+    },
+    "belief": {
+      "eyebrow": "Aquilo em que acreditamos",
+      "heading": "A saúde da mulher é ",
+      "headingAccent": "um percurso para a vida",
+      "lead": "Reunimos especialistas que ouvem, explicam e trabalham consigo, para que cada decisão sobre a sua saúde seja verdadeiramente sua.",
+      "cta": "A nossa missão"
+    },
+    "experts": {
+      "eyebrow": "Para especialistas",
+      "heading": "Faça crescer a sua prática ",
+      "headingAccent": "com a Eleva",
+      "lead": "Marcações, pagamentos e sessões por vídeo num só lugar, para se poder concentrar nos cuidados.",
+      "cta": "Tornar-me especialista",
+      "ctaSecondary": "Para clínicas"
+    }
   },
   "about": {
     "title": "Sobre — Eleva.care",
@@ -298,7 +374,9 @@
     "forClinics": "Para clínicas",
     "community": "Comunidade",
     "instagram": "Instagram",
-    "linkedin": "LinkedIn"
+    "linkedin": "LinkedIn",
+    "tagline": "Cuidados especializados de saúde da mulher, perto de si. Online, por telefone ou presencialmente.",
+    "credits": "Créditos de fotografia"
   },
   "legal": {
     "draftBanner": "Rascunho de pré-lançamento. Este não é texto jurídico de produção. A área jurídica e o DPO substituem-no antes da Eleva.care ir ao ar.",
@@ -442,5 +520,14 @@
     "description": "A ligação pode estar desatualizada ou o perfil pode já não estar disponível. Explore especialistas verificados ou volte à página inicial.",
     "findExpert": "Encontrar especialista",
     "home": "Ir para o início"
+  },
+  "credits": {
+    "title": "Créditos de fotografia",
+    "description": "Os fotógrafos cujo trabalho aparece na Eleva.care.",
+    "eyebrow": "Obrigado",
+    "lead": "Algumas das fotografias da Eleva.care vêm do Pexels. Estes são os fotógrafos por trás delas.",
+    "viewOnPexels": "Ver no Pexels",
+    "pexels": "Pexels",
+    "viewOnPexelsBy": "Ver a fotografia de {name} no Pexels"
   }
 }

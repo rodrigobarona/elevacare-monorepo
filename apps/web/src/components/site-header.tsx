@@ -24,9 +24,9 @@ export async function SiteHeader() {
   const nav = PUBLIC_SITE_NAV
 
   return (
-    <header className="border-b px-4 py-4 sm:px-6">
-      <nav className="mx-auto flex max-w-6xl items-center justify-between gap-3">
-        <Link href="/" className="shrink-0 rounded-sm">
+    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 px-4 py-3 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 sm:px-6">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between gap-3">
+        <Link href="/" aria-label="Eleva.care" className="shrink-0 rounded-sm">
           <LogoMark className="size-7 sm:hidden" />
           <Logo className="hidden h-6 sm:block" />
         </Link>
@@ -35,7 +35,7 @@ export async function SiteHeader() {
             <Link
               key={item.href}
               href={item.href}
-              className="hidden text-sm whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground md:inline-flex"
+              className="hidden rounded-full px-3 py-1.5 text-sm whitespace-nowrap text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:inline-flex"
             >
               {t(item.labelKey)}
             </Link>

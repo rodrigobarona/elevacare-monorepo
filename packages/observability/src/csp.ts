@@ -40,6 +40,10 @@ const VENDORS: Record<string, VendorEntry> = {
     scriptSrc: ["https://cdn.sentry-cdn.com"],
     connectSrc: ["https://*.sentry.io", "https://*.ingest.sentry.io"],
   },
+  mux: {
+    connectSrc: ["https://stream.mux.com", "https://*.mux.com"],
+    mediaSrc: ["https://stream.mux.com", "https://*.mux.com"],
+  },
   eleva: {
     connectSrc: ["https://api.eleva.care"],
   },
