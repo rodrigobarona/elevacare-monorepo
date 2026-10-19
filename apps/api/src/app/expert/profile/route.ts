@@ -90,6 +90,8 @@ export async function PATCH(request: Request) {
       )
     }
     bioUpdate = resolved
+  } else if (data.bio !== undefined) {
+    bioUpdate = { bio: data.bio ?? null, bioRich: null, bioSourceLocale: null }
   }
 
   const completedSteps = (profile.metadata as Record<string, unknown>)
@@ -124,7 +126,6 @@ export async function PATCH(request: Request) {
             ...(data.headline !== undefined && {
               headline: data.headline ?? null,
             }),
-            ...(data.bio !== undefined && { bio: data.bio ?? null }),
             ...(bioUpdate ?? {}),
             ...(data.socialLinks && { socialLinks: data.socialLinks }),
             ...(data.credentials && { credentials: data.credentials }),

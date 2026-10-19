@@ -95,6 +95,26 @@ describe("PATCH /expert/profile content", () => {
     })
   })
 
+  it("drops the rich bio when only the plain bio changes", async () => {
+    const response = await patch({ bio: "Plain bio" })
+
+    expect(response.status).toBe(200)
+    expect(updatedFields()).toMatchObject({
+      bio: "Plain bio",
+      bioRich: null,
+      bioSourceLocale: null,
+    })
+  })
+
+  it("defaults omitted credential fields to null", async () => {
+    const response = await patch({ credentials: [{ title: "BSc" }] })
+
+    expect(response.status).toBe(200)
+    expect(updatedFields().credentials).toEqual([
+      { title: "BSc", institution: null, year: null },
+    ])
+  })
+
   it("rejects malformed Plate nodes", async () => {
     const response = await patch({
       bioRich: {

@@ -797,8 +797,9 @@ export const ExpertCredentialSchema = z.object({
     .trim()
     .min(1)
     .max(PROFILE_CONTENT_LIMITS.credentialText)
-    .nullable(),
-  year: z.number().int().min(1900).max(2100).nullable(),
+    .nullable()
+    .default(null),
+  year: z.number().int().min(1900).max(2100).nullable().default(null),
 })
 
 export type ExpertCredential = z.infer<typeof ExpertCredentialSchema>
