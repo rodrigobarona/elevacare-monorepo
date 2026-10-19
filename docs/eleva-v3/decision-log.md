@@ -32,6 +32,21 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-19: Brand v3 warm editorial (proposed)
+
+- Decision: the founder chose a brand evolution (option B) for the premium
+  redesign. `brand-book/v3/README.md` proposes warm sand surfaces (new
+  `sand` scale), Fraunces display and headings in place of Lora, fluid display
+  type steps, a 0.75rem base radius, warm-tinted shadows and motion tokens.
+  All v2 colour scales stay unchanged, and every text pair passes WCAG AA
+  (`v3/tokens.json`).
+- The logo, wordmark and name are unchanged, and dark mode keeps the v2
+  surfaces.
+- Rollout: tokens merge to `main` with the kit. Vercel deploys are manual, so
+  the founder reviews the v3 preview before any production deploy. Until then
+  this stays `proposed`, not founder-approved.
+- Owner: founder (approval), engineering (kit). Status: `proposed`.
+
 ### 2026-10-13: Remaining 2026 ELEVA FTs issued (18–90)
 
 - Decision: Operator batch issued the remaining 2026 platform-fee FTs
