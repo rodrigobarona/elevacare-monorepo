@@ -4,6 +4,22 @@ import type { PoolClient } from "@neondatabase/serverless"
 export const RLS_TEST_ROLE = "eleva_rls_test"
 
 export async function provisionRlsTestRole(client: PoolClient): Promise<void> {
+  // Test files run in parallel; concurrent GRANTs on the same catalog rows fail
+  // with "tuple concurrently updated", so serialise provisioning.
+  await client.query("BEGIN")
+  try {
+    await client.query(
+      "SELECT pg_advisory_xact_lock(hashtext('eleva_rls_test_provision'))"
+    )
+    await grantRlsTestRole(client)
+    await client.query("COMMIT")
+  } catch (error) {
+    await client.query("ROLLBACK")
+    throw error
+  }
+}
+
+async function grantRlsTestRole(client: PoolClient): Promise<void> {
   await client.query(`
     DO $$ BEGIN
       CREATE ROLE ${RLS_TEST_ROLE} NOINHERIT NOBYPASSRLS NOSUPERUSER NOLOGIN;
