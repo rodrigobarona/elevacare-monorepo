@@ -476,7 +476,45 @@
   },
   "integrations": {
     "title": "Integrations",
-    "description": "Connect calendars, invoicing tools, and other services to your Eleva practice."
+    "description": "Connect calendars, invoicing tools, and other services to your Eleva practice.",
+    "eyebrow": "Connected tools",
+    "category": {
+      "calendar": {
+        "title": "Calendars",
+        "hint": "Check your existing calendar for conflicts and add confirmed sessions to it."
+      },
+      "invoicing": {
+        "title": "Invoicing",
+        "hint": "How invoices for paid sessions are issued to members."
+      },
+      "crm": {
+        "title": "CRM",
+        "hint": "Keep member records in sync with your other tools."
+      },
+      "video": {
+        "title": "Video",
+        "hint": "Video providers for online sessions."
+      },
+      "other": {
+        "title": "Other",
+        "hint": "More services you can connect."
+      }
+    },
+    "availableIn": "Available in {countries}",
+    "configureCalendars": "Manage calendars",
+    "connectCalendar": "Connect",
+    "status": {
+      "connected": "Connected",
+      "connecting": "Connecting",
+      "disconnected": "Disconnected",
+      "error": "Needs attention",
+      "expired": "Expired"
+    },
+    "names": {
+      "manual": "Manual invoicing"
+    },
+    "connectCalendarNamed": "Connect {name}",
+    "configureCalendarsNamed": "Manage {name}"
   },
   "finance": {
     "title": "Finance",

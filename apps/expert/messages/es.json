@@ -476,7 +476,45 @@
   },
   "integrations": {
     "title": "Integraciones",
-    "description": "Conecta calendarios, facturación y otros servicios a tu práctica Eleva."
+    "description": "Conecta calendarios, facturación y otros servicios a tu práctica Eleva.",
+    "eyebrow": "Herramientas conectadas",
+    "category": {
+      "calendar": {
+        "title": "Calendarios",
+        "hint": "Comprueba conflictos en tu calendario actual y añade las sesiones confirmadas."
+      },
+      "invoicing": {
+        "title": "Facturación",
+        "hint": "Cómo se emiten a los miembros las facturas de las sesiones pagadas."
+      },
+      "crm": {
+        "title": "CRM",
+        "hint": "Mantén los registros de los miembros sincronizados con tus otras herramientas."
+      },
+      "video": {
+        "title": "Vídeo",
+        "hint": "Proveedores de vídeo para sesiones online."
+      },
+      "other": {
+        "title": "Otros",
+        "hint": "Más servicios que puedes conectar."
+      }
+    },
+    "availableIn": "Disponible en {countries}",
+    "configureCalendars": "Gestionar calendarios",
+    "connectCalendar": "Conectar",
+    "status": {
+      "connected": "Conectado",
+      "connecting": "Conectando",
+      "disconnected": "Desconectado",
+      "error": "Requiere atención",
+      "expired": "Caducado"
+    },
+    "names": {
+      "manual": "Facturación manual"
+    },
+    "connectCalendarNamed": "Conectar {name}",
+    "configureCalendarsNamed": "Gestionar {name}"
   },
   "finance": {
     "title": "Finanzas",
