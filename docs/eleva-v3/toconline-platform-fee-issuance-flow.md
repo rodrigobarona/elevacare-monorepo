@@ -15,7 +15,8 @@ Do this in one go. Do not leave an FT at `status: 1` with `pending_total > 0`.
    `vat_included_prices: true`. Cliente by NIF (17 Patricia, 18 Bee, 21 Raquel,
    22 Jessica, 23 Madalena). Series prefix `ELEVA` → `FT ELEVA/{n}`.
 2. **FT line** — `POST /api/commercial_sales_document_lines`. Inclusive
-   `unit_price`. Service `item_id` 5, tax NOR 23% PT. Airbnb-style platform-fee
+   `unit_price`. Service `item_id` 5, tax NOR 23% PT (D-03 working example,
+   **not** accountant-confirmed for live issuance; see Tax status). Airbnb-style platform-fee
    copy; Stripe id is `external_reference` / internal notes only.
 3. **Finalize** — `PATCH /api/commercial_sales_documents` `{ status: 1 }`.
    If the line fails, delete the draft header. No rascunho review.
@@ -34,6 +35,16 @@ Do this in one go. Do not leave an FT at `status: 1` with `pending_total > 0`.
    Recibo email is optional; the FT mail is the expert copy.
 
 `issueInvoice()` stays closed. Never `POST /api/v1/commercial_sales_documents`.
+
+## Tax status (unresolved)
+
+The 2026-09-15 accountant reply is conditional: fiscal codes and rates must be
+confirmed before production. The 2026-10-13 batch used NOR 23% PT as the D-03
+working example. That treatment is **not** approved for these documents yet.
+Until the accountant confirms it in writing, treat the batch as unresolved. If
+the code or rate changes, correct each affected FT with a credit note (NC) that
+references it, then issue a new FT with the confirmed treatment. Never edit or
+void a communicated FT in place.
 
 ## Recibo body (proven 2026-10-13)
 

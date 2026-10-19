@@ -281,9 +281,11 @@ v1 auto-finalizes on create (no `finalize` field).
 
 ## Sales Receipts — v1
 
-Live path uses **one** v1 POST **with `lines`** (settles the FT). For the
-**Recibo only**, previous-API header-then-line is a fallback; the FT itself
-still uses the previous-API flow (header → line → `status: 1` → AT).
+Live path uses **one** v1 POST **with `lines`** (settles the FT); the FT itself
+still uses the previous-API flow (header → line → `status: 1` → AT). A
+previous-API Recibo header-then-line fallback is **unverified**: the receipt
+header route and payload have not been proven against TOConline, so do not use
+it live. Only the line endpoint below is documented by TOConline.
 `document_series_id` 303 = `RC ELEVA` (the field the live 2026-10-13 batch
 used; TOConline accepted it for every receipt).
 
