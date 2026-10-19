@@ -38,15 +38,22 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0057_booking_request")
+    expect(last?.tag).toBe("0058_booking_checkout_session")
     expect(last?.statements.length).toBeGreaterThan(0)
     expect(last?.hash).toHaveLength(64)
-    expect(last?.statements.join("\n")).toContain("requires_approval")
-    expect(last?.statements.join("\n")).toContain("booking.requested")
+    expect(last?.statements.join("\n")).toContain("stripe_checkout_session_id")
+    expect(last?.statements.join("\n")).toContain("discount_cents")
+    const bookingRequest = migrations.find(
+      (m) => m.tag === "0057_booking_request"
+    )
+    expect(bookingRequest?.statements.join("\n")).toContain("requires_approval")
+    expect(bookingRequest?.statements.join("\n")).toContain("booking.requested")
     const sessionDocuments = migrations.find(
       (m) => m.tag === "0056_phase10_session_documents"
     )
-    expect(sessionDocuments?.statements.join("\n")).toContain("session_documents")
+    expect(sessionDocuments?.statements.join("\n")).toContain(
+      "session_documents"
+    )
     const internalReport = migrations.find(
       (m) => m.tag === "0055_phase10_internal_report"
     )
