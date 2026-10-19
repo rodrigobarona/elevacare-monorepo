@@ -1731,9 +1731,9 @@ export const PublicEventTypeSchema = z.object({
   sessionMode: z.enum(["online", "in_person", "phone"]),
   cancellationPolicy: CancellationPolicySchema,
   requiresApproval: z.boolean(),
-  whatsIncluded: LocalizedListSchema,
-  whatToExpect: LocalizedListSchema,
-  exampleQuestions: LocalizedListSchema,
+  whatsIncluded: LocalizedListSchema.default({}),
+  whatToExpect: LocalizedListSchema.default({}),
+  exampleQuestions: LocalizedListSchema.default({}),
   modes: z.array(PublicEventTypeModeSchema),
 })
 
