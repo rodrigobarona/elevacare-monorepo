@@ -6,9 +6,11 @@
 @source "../**/*.{ts,tsx}";
 
 /*
- * Eleva brand v2 scales. Source of truth: docs/eleva-v3/brand-book/v2/tokens.json
- * (founder-approved 2026-10-06). Components use the semantic tokens below; use a
- * raw scale step only when no semantic token fits.
+ * Eleva brand v3 scales. Source of truth: docs/eleva-v3/brand-book/v3/tokens.json
+ * (v2 teal/coral/status scales unchanged; v3 adds warm sand surfaces, Fraunces
+ * display type, fluid display steps, warm shadows and a softer radius).
+ * Components use the semantic tokens below; use a raw scale step only when no
+ * semantic token fits.
  */
 @theme static {
   /* teal */
@@ -47,6 +49,18 @@
   --color-neutral-800: oklch(0.395 0.012 215);
   --color-neutral-900: oklch(0.315 0.01 215);
   --color-neutral-950: oklch(0.235 0.008 215);
+  /* sand: warm paper surfaces and hairlines */
+  --color-sand-50: oklch(0.985 0.007 80);
+  --color-sand-100: oklch(0.967 0.013 78);
+  --color-sand-200: oklch(0.93 0.021 76);
+  --color-sand-300: oklch(0.88 0.029 74);
+  --color-sand-400: oklch(0.8 0.037 72);
+  --color-sand-500: oklch(0.7 0.041 70);
+  --color-sand-600: oklch(0.6 0.039 68);
+  --color-sand-700: oklch(0.5 0.033 66);
+  --color-sand-800: oklch(0.41 0.027 64);
+  --color-sand-900: oklch(0.32 0.021 62);
+  --color-sand-950: oklch(0.235 0.015 60);
   /* success */
   --color-success-50: oklch(0.977 0.018 152);
   --color-success-100: oklch(0.948 0.037 152);
@@ -102,23 +116,40 @@
   --color-highlight-yellow: oklch(0.879 0.162 90.9);
 
   --shadow-1:
-    0 1px 2px 0 oklch(0.244 0.042 211.6 / 6%),
-    0 1px 3px 0 oklch(0.244 0.042 211.6 / 8%);
+    0 1px 2px 0 oklch(0.32 0.03 60 / 6%), 0 1px 3px 0 oklch(0.32 0.03 60 / 7%);
   --shadow-2:
-    0 4px 12px -2px oklch(0.244 0.042 211.6 / 10%),
-    0 2px 4px -2px oklch(0.244 0.042 211.6 / 6%);
+    0 6px 16px -4px oklch(0.32 0.03 60 / 10%),
+    0 2px 6px -2px oklch(0.32 0.03 60 / 6%);
   --shadow-3:
-    0 16px 40px -8px oklch(0.244 0.042 211.6 / 18%),
-    0 4px 12px -4px oklch(0.244 0.042 211.6 / 8%);
+    0 24px 48px -12px oklch(0.32 0.03 60 / 18%),
+    0 8px 16px -8px oklch(0.32 0.03 60 / 8%);
+
+  /* Fluid display steps for editorial headings (marketing + page heroes) */
+  --text-display: clamp(2.75rem, 1.9rem + 3.6vw, 5rem);
+  --text-display--line-height: 1.04;
+  --text-display--letter-spacing: -0.025em;
+  --text-headline: clamp(2rem, 1.55rem + 1.9vw, 3.25rem);
+  --text-headline--line-height: 1.1;
+  --text-headline--letter-spacing: -0.02em;
+  --text-title: clamp(1.5rem, 1.3rem + 0.8vw, 2rem);
+  --text-title--line-height: 1.2;
+  --text-title--letter-spacing: -0.012em;
+  --text-lead: clamp(1.125rem, 1.05rem + 0.35vw, 1.3125rem);
+  --text-lead--line-height: 1.6;
+  --text-eyebrow: 0.75rem;
+  --text-eyebrow--line-height: 1.4;
+  --text-eyebrow--letter-spacing: 0.14em;
 
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
   --duration-fast: 120ms;
   --duration-base: 200ms;
   --duration-slow: 320ms;
+  --duration-slower: 560ms;
 }
 
 :root {
-  --background: oklch(1 0 0);
+  --background: var(--color-sand-50);
   --foreground: var(--color-neutral-950);
   --card: oklch(1 0 0);
   --card-foreground: var(--color-neutral-950);
@@ -128,7 +159,7 @@
   --primary-foreground: var(--color-teal-50);
   --secondary: var(--color-coral-100);
   --secondary-foreground: var(--color-coral-800);
-  --muted: var(--color-neutral-100);
+  --muted: var(--color-sand-100);
   --muted-foreground: var(--color-neutral-700);
   --accent: var(--color-teal-50);
   --accent-foreground: var(--color-teal-800);
@@ -141,22 +172,22 @@
   --info: var(--color-info-700);
   --info-subtle: var(--color-info-50);
   --status-foreground: oklch(1 0 0);
-  --border: var(--color-neutral-200);
-  --input: var(--color-neutral-200);
+  --border: var(--color-sand-200);
+  --input: var(--color-sand-300);
   --ring: var(--color-teal-500);
   --chart-1: var(--color-teal-700);
   --chart-2: var(--color-coral-500);
   --chart-3: var(--color-teal-300);
   --chart-4: var(--color-coral-300);
-  --chart-5: var(--color-neutral-500);
-  --radius: 0.625rem;
-  --sidebar: var(--color-neutral-50);
+  --chart-5: var(--color-sand-500);
+  --radius: 0.75rem;
+  --sidebar: var(--color-sand-100);
   --sidebar-foreground: var(--color-neutral-950);
   --sidebar-primary: var(--color-teal-700);
   --sidebar-primary-foreground: var(--color-teal-50);
   --sidebar-accent: var(--color-teal-50);
   --sidebar-accent-foreground: var(--color-teal-800);
-  --sidebar-border: var(--color-neutral-200);
+  --sidebar-border: var(--color-sand-200);
   --sidebar-ring: var(--color-teal-500);
 }
 
@@ -249,9 +280,10 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --font-serif: var(--font-lora), ui-serif, Georgia, serif;
+  --font-serif: var(--font-fraunces), ui-serif, Georgia, serif;
   --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-heading: var(--font-lora), ui-serif, Georgia, serif;
+  --font-heading: var(--font-fraunces), ui-serif, Georgia, serif;
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
   --font-mono:
     var(--font-ibm-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
@@ -261,6 +293,36 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
   }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  ::selection {
+    background: var(--color-coral-200);
+    color: var(--color-coral-950);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@utility eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-eyebrow);
+  line-height: var(--text-eyebrow--line-height);
+  letter-spacing: var(--text-eyebrow--letter-spacing);
+  text-transform: uppercase;
 }

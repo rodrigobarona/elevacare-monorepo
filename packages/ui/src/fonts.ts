@@ -11,11 +11,21 @@ import localFont from "next/font/local"
  * Latin subset covers Eleva locales (en/pt/es); Latin-1 accents (ã, ç, ñ, …)
  * are included. Paths are relative to this file.
  */
-export const lora = localFont({
-  src: "./fonts/files/lora-latin.woff2",
+export const fraunces = localFont({
+  src: [
+    {
+      path: "./fonts/files/fraunces-latin.woff2",
+      weight: "300 700",
+      style: "normal",
+    },
+    {
+      path: "./fonts/files/fraunces-italic-latin.woff2",
+      weight: "300 700",
+      style: "italic",
+    },
+  ],
   display: "swap",
-  weight: "400 600",
-  variable: "--font-lora",
+  variable: "--font-fraunces",
   preload: true,
   // localFont accepts a metric-override family name or false (not `true`).
   adjustFontFallback: "Times New Roman",
@@ -52,7 +62,7 @@ export const ibmPlexMono = localFont({
 
 /** Apply on `<html>` to expose Eleva font CSS variables app-wide. */
 export const fontClassName = [
-  lora.variable,
+  fraunces.variable,
   dmSans.variable,
   ibmPlexMono.variable,
 ].join(" ")

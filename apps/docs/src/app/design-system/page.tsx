@@ -15,6 +15,7 @@ import {
   StatGrid,
 } from "@eleva/ui/components/page-header"
 import { Skeleton } from "@eleva/ui/components/skeleton"
+import { Accent, Eyebrow, Heading, Lead } from "@eleva/ui/components/typography"
 import {
   Table,
   TableBody,
@@ -26,13 +27,14 @@ import {
 
 export const metadata: Metadata = {
   title: "Design system · Eleva Care",
-  description: "Brand v2 tokens and the shared @eleva/ui kit.",
+  description: "Brand v3 tokens and the shared @eleva/ui kit.",
 }
 
 const SCALES = [
   "teal",
   "coral",
   "neutral",
+  "sand",
   "success",
   "warning",
   "danger",
@@ -64,9 +66,9 @@ export default function DesignSystemPage() {
   return (
     <main className="mx-auto max-w-6xl space-y-16 px-6 py-12">
       <PageHeader
-        eyebrow="Brand v2"
+        eyebrow="Brand v3 · proposed"
         title="Eleva design system"
-        description="Tokens and components shared by every Eleva app. Source of truth: docs/eleva-v3/brand-book/v2 and @eleva/ui."
+        description="Tokens and components shared by every Eleva app. Source of truth: docs/eleva-v3/brand-book/v3 and @eleva/ui."
       />
 
       <Section title="Brand" description="Logo assets inherit currentColor.">
@@ -152,15 +154,23 @@ export default function DesignSystemPage() {
 
       <Section
         title="Typography"
-        description="Lora for display, DM Sans for UI, IBM Plex Mono for code."
+        description="Fraunces for display and headings, DM Sans for UI and body, IBM Plex Mono for eyebrows and data. Display steps are fluid."
       >
-        <div className="space-y-3 rounded-xl border bg-card p-6">
-          <p className="font-serif text-4xl tracking-tight text-primary">
-            Care that elevates
-          </p>
-          <p className="text-2xl font-semibold tracking-tight">
-            Section heading
-          </p>
+        <div className="space-y-6 rounded-2xl border bg-card p-8 shadow-1">
+          <Eyebrow>Eyebrow · text-eyebrow</Eyebrow>
+          <Heading as="p" size="display">
+            Women&apos;s health experts, <Accent>on‑demand.</Accent>
+          </Heading>
+          <Heading as="p" size="headline">
+            Expert-led care, tailored to you
+          </Heading>
+          <Heading as="p" size="title">
+            Pregnancy &amp; postpartum
+          </Heading>
+          <Lead>
+            Book trusted specialists online or near you. Clear prices, flexible
+            cancellation and a calm space to talk.
+          </Lead>
           <p className="text-base">
             Body copy for members and experts. Keep sentences short and plain.
           </p>
@@ -178,6 +188,14 @@ export default function DesignSystemPage() {
           <Button variant="destructive">Cancel booking</Button>
           <Button variant="link">Link</Button>
           <Button isDisabled>Disabled</Button>
+        </div>
+        <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-teal-900 p-6">
+          <Button size="xl" variant="inverse">
+            Find an expert
+          </Button>
+          <Button size="xl" variant="accent">
+            Take the quiz
+          </Button>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge>Default</Badge>
