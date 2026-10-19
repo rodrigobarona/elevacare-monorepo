@@ -1,4 +1,5 @@
 import { getLocale, getTranslations } from "next-intl/server"
+import { CalendarDotsIcon, ClockIcon } from "@eleva/icons"
 import { EmptyState } from "@eleva/ui/components/empty-state"
 import { PageHeader, Section } from "@eleva/ui/components/page-header"
 import { marketplaceExpertsUrl } from "@/lib/experts-url"
@@ -26,17 +27,18 @@ export default async function SessionsPage({
   const memberName = session.user.displayName ?? session.user.email
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-12">
       <PageHeader title={t("title")} description={t("subtitle")} />
 
       <Section title={t("upcomingTitle")}>
         {upcoming.bookings.length === 0 ? (
           <EmptyState
+            icon={<CalendarDotsIcon />}
             title={t("emptyUpcoming")}
             action={<FindExpertButton href={marketplaceExpertsUrl(locale)} />}
           />
         ) : (
-          <div className="grid gap-4">
+          <div className="grid gap-3">
             {upcoming.bookings.map((booking) => (
               <BookingCard
                 key={booking.id}
@@ -52,9 +54,9 @@ export default async function SessionsPage({
 
       <Section title={t("pastTitle")}>
         {past.bookings.length === 0 ? (
-          <EmptyState title={t("emptyPast")} />
+          <EmptyState icon={<ClockIcon />} title={t("emptyPast")} />
         ) : (
-          <div className="grid gap-4">
+          <div className="grid gap-3">
             {past.bookings.map((booking) => (
               <BookingCard
                 key={booking.id}

@@ -23,7 +23,11 @@
     "pastTitle": "Past sessions",
     "pastEmpty": "You have no past sessions yet.",
     "findExpert": "Find an expert",
-    "viewAll": "View all sessions"
+    "viewAll": "View all sessions",
+    "eyebrow": "Your Space",
+    "welcomeBack": "Welcome back",
+    "upcomingEmptyHint": "Browse verified experts and book a session at a time that suits you.",
+    "pastEmptyHint": "Sessions you have attended will appear here."
   },
   "sessions": {
     "title": "Sessions",
@@ -40,7 +44,7 @@
     "price": "Price",
     "addToCalendar": "Add to calendar",
     "join": "Join session",
-    "joinSoon": "Video uses standard Daily (not HIPAA). Join turns on when the room is ready. Recording is off.",
+    "joinSoon": "You can join video sessions from 15 minutes before the start. Sessions are not recorded.",
     "joinNotOnline": "This session is not a video call. Your expert will meet you as planned.",
     "joinMissingGrant": "This join link is missing its invite. Open the link from your email or calendar invite.",
     "joinInvalidGrant": "This join link is not valid. Open the link from your email or calendar invite.",
@@ -144,7 +148,13 @@
     "cancelledRefund": "Session cancelled. {amount} will be refunded to your original payment method.",
     "rescheduleUnavailable": "Rescheduling is only available while cancelling would still give a full refund. You can still cancel.",
     "refundChanged": "Your refund has changed since you opened this. Check the new amount and confirm again.",
-    "awaitingConfirmationHint": "Your expert will confirm this session soon. You can join once it is confirmed."
+    "awaitingConfirmationHint": "Your expert will confirm this session soon. You can join once it is confirmed.",
+    "nextTitle": "Your next session",
+    "bookAgain": "Book again",
+    "withExpert": "With {name}",
+    "viewReceipt": "View receipt",
+    "manageTitle": "Manage booking",
+    "manageHint": "Reschedule or cancel within your expert's cancellation policy."
   },
   "payments": {
     "title": "Payments",
@@ -197,14 +207,14 @@
     "language": {
       "title": "Language",
       "description": "Choose the language used across Eleva for your account.",
-      "footerHint": "Saved as ELEVA_LOCALE and applied on your next visit.",
+      "footerHint": "Applied across Eleva on your next visit.",
       "saved": "Language preference updated.",
       "error": "Could not update language. Please try again."
     },
     "theme": {
       "title": "Theme",
       "description": "Choose light, dark, or match your device.",
-      "footerHint": "Saved as ELEVA_THEME and shared across Eleva apps.",
+      "footerHint": "Shared across all Eleva apps.",
       "light": "Light",
       "dark": "Dark",
       "system": "System",

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 
 import { cn } from "@eleva/ui/lib/utils"
+import { Eyebrow } from "@eleva/ui/components/typography"
 
 interface PageHeaderProps {
   title: string
@@ -21,24 +22,20 @@ export function PageHeader({
   return (
     <header
       className={cn(
-        "mb-8",
+        "mb-10",
         actions
-          ? "flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
-          : "space-y-2",
+          ? "flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"
+          : "space-y-3",
         className
       )}
     >
-      <div className="space-y-2">
-        {eyebrow ? (
-          <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-            {eyebrow}
-          </p>
-        ) : null}
-        <h1 className="font-serif text-3xl tracking-tight text-primary">
+      <div className="space-y-3">
+        {eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}
+        <h1 className="font-display text-3xl leading-tight font-normal tracking-tight text-balance text-foreground sm:text-4xl">
           {title}
         </h1>
         {description ? (
-          <p className="max-w-prose text-sm leading-6 text-muted-foreground">
+          <p className="max-w-prose text-base leading-7 text-muted-foreground">
             {description}
           </p>
         ) : null}
@@ -70,7 +67,9 @@ export function Section({
     <section className={cn("space-y-4", className)}>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
-          <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+          <h2 className="font-display text-xl leading-snug font-medium tracking-tight">
+            {title}
+          </h2>
           {description ? (
             <p className="text-sm text-muted-foreground">{description}</p>
           ) : null}
@@ -94,13 +93,13 @@ export function Stat({ label, value, hint, className }: StatProps) {
   return (
     <div
       className={cn(
-        "rounded-xl border bg-card p-4 text-card-foreground shadow-1",
+        "rounded-2xl border bg-card p-5 text-card-foreground shadow-1",
         className
       )}
     >
       <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="mt-1">
-        <span className="block text-2xl font-semibold tracking-tight tabular-nums">
+      <dd className="mt-2">
+        <span className="block font-display text-3xl font-normal tracking-tight tabular-nums">
           {value}
         </span>
         {hint ? (
