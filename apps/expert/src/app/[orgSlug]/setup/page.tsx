@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import { env } from "@eleva/config/env"
 import { getTranslations } from "next-intl/server"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { guardSessionForOrg } from "@eleva/auth"
@@ -66,8 +67,7 @@ export default async function OnboardingPage({
       : wizardSteps[currentStepIndex]
 
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"
-  const stripePublishableKey =
-    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
+  const stripePublishableKey = env().STRIPE_PUBLISHABLE_KEY ?? ""
 
   const t = await getTranslations("onboarding")
 

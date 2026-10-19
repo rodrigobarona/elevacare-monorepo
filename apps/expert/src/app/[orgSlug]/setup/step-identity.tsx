@@ -11,10 +11,16 @@ import type { OnboardingProfile } from "./onboarding-wizard"
 interface Props {
   profile: OnboardingProfile
   apiBaseUrl: string
+  stripePublishableKey: string
   onDone: () => void
 }
 
-export function StepIdentity({ profile, apiBaseUrl, onDone }: Props) {
+export function StepIdentity({
+  profile,
+  apiBaseUrl,
+  stripePublishableKey,
+  onDone,
+}: Props) {
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
@@ -30,9 +36,7 @@ export function StepIdentity({ profile, apiBaseUrl, onDone }: Props) {
       const { clientSecret } = await api.stripe.identity.createSession()
 
       const { loadStripe } = await import("@stripe/stripe-js")
-      const stripe = await loadStripe(
-        process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
-      )
+      const stripe = await loadStripe(stripePublishableKey)
       if (!stripe) throw new Error("Stripe failed to load")
 
       const result = await stripe.verifyIdentity(clientSecret)

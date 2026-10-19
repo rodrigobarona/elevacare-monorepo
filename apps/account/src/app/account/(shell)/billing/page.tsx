@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server"
+import { env } from "@eleva/config/env"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import {
   SettingsFieldset,
@@ -11,8 +12,7 @@ import { BillingClient } from "./billing-client"
 export default async function BillingPage() {
   const t = await getTranslations("billing")
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"
-  const stripePublishableKey =
-    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
+  const stripePublishableKey = env().STRIPE_PUBLISHABLE_KEY ?? ""
 
   return (
     <>
