@@ -16,6 +16,7 @@ export {
   CalendarIcon,
   CameraIcon,
   CaretDownIcon,
+  CaretLeftIcon,
   CaretRightIcon,
   CaretUpDownIcon,
   CaretUpIcon,
