@@ -51,7 +51,8 @@ Each entry should include:
 - Out of scope (not shipped): session packs and monthly plans (a later phase
   once the founder sets commercial terms; nothing is built or shown), reviews,
   AI translation of the rich bio.
-- Owner: founder (review), engineering. Status: `proposed`.
+- Owner: founder (review), engineering. Status: `proposed`. Next review:
+  founder walkthrough once the profile redesign slice is on main.
 
 ### 2026-10-19: Brand v3 rollout — member and expert app slices (proposed)
 

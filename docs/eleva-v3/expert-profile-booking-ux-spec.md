@@ -87,7 +87,7 @@ A bottom bar shows the lowest price and "See times".
 ## Expert app
 
 - New "Public profile" page: photo, display name, headline, rich bio (native
-  EN/PT/ES with AI translation), social links, credentials, with a link to
+  EN/PT/ES; AI translation is a later slice), social links, credentials, with a link to
   preview the public page. Today experts can only set these during setup.
 - Service editor: a "Details" tab for "What's included", "What to expect" and
   "Example questions".

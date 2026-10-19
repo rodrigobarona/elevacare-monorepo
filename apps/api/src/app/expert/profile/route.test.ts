@@ -115,6 +115,20 @@ describe("PATCH /expert/profile content", () => {
     ])
   })
 
+  it("rejects a rich bio without its source locale", async () => {
+    const response = await patch({
+      bioRich: {
+        sourceLocale: "en",
+        locales: {
+          pt: { json: [{ type: "p", children: [{ text: "Olá" }] }] },
+        },
+      },
+    })
+
+    expect(response.status).toBe(422)
+    expect(updateExpertProfile).not.toHaveBeenCalled()
+  })
+
   it("rejects malformed Plate nodes", async () => {
     const response = await patch({
       bioRich: {

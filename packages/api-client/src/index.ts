@@ -755,14 +755,19 @@ const RichTextWriteEntrySchema = z.object({
   source: z.enum(RICH_TEXT_SOURCE_VALUES).optional(),
 })
 
-export const LocalizedRichTextWriteRequestSchema = z.object({
-  sourceLocale: LocaleSchema,
-  locales: z.object({
-    en: RichTextWriteEntrySchema.optional(),
-    pt: RichTextWriteEntrySchema.optional(),
-    es: RichTextWriteEntrySchema.optional(),
-  }),
-})
+export const LocalizedRichTextWriteRequestSchema = z
+  .object({
+    sourceLocale: LocaleSchema,
+    locales: z.object({
+      en: RichTextWriteEntrySchema.optional(),
+      pt: RichTextWriteEntrySchema.optional(),
+      es: RichTextWriteEntrySchema.optional(),
+    }),
+  })
+  .refine((value) => value.locales[value.sourceLocale] !== undefined, {
+    message: "sourceLocale must exist in locales",
+    path: ["sourceLocale"],
+  })
 
 export type LocalizedRichTextWriteRequest = z.infer<
   typeof LocalizedRichTextWriteRequestSchema
