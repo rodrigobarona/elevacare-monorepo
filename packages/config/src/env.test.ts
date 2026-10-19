@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import {
   env,
+  expertProfileUrl,
+  marketplaceExpertsUrl,
   resetEnvCache,
   requireAuthEnv,
   requireCronSecret,
@@ -289,5 +291,31 @@ describe("requireToconlineEnv", () => {
     process.env.TOCONLINE_OAUTH_REDIRECT = "https://eleva.care/callback"
     process.env.TOCONLINE_SERIES_PREFIX = "TEST"
     expect(() => requireToconlineEnv()).toThrow(/HTTPS/)
+  })
+})
+
+describe("public gateway URLs", () => {
+  beforeEach(() => {
+    process.env = { ...ORIGINAL, NEXT_PUBLIC_APP_URL: "https://dev.eleva.care" }
+  })
+
+  afterEach(() => {
+    process.env = ORIGINAL
+  })
+
+  it("omits the prefix for English and prefixes other locales", () => {
+    expect(marketplaceExpertsUrl("en")).toBe("https://dev.eleva.care/experts")
+    expect(marketplaceExpertsUrl("pt")).toBe(
+      "https://dev.eleva.care/pt/experts"
+    )
+  })
+
+  it("encodes the username and ignores unsupported locales", () => {
+    expect(expertProfileUrl("es", "ana mota")).toBe(
+      "https://dev.eleva.care/es/ana%20mota"
+    )
+    expect(expertProfileUrl("fr/../x", "fisiomota")).toBe(
+      "https://dev.eleva.care/fisiomota"
+    )
   })
 })

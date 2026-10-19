@@ -1,7 +1,7 @@
 {
   "nav": {
     "dashboard": "Panel",
-    "eventTypes": "Tipos de Evento",
+    "eventTypes": "Servicios",
     "schedule": "Horario",
     "calendar": "Calendario",
     "calendars": "Calendarios conectados",
@@ -10,8 +10,44 @@
   },
   "dashboard": {
     "expert": {
+      "eyebrow": "Tu consulta",
       "welcome": "Hola, {name}",
-      "subtitle": "Tu horario, reservas e informes están aquí."
+      "welcomeBack": "Hola de nuevo",
+      "subtitle": "Esto es lo que viene en tu consulta.",
+      "viewProfile": "Ver perfil público",
+      "newService": "Nuevo servicio",
+      "stats": {
+        "week": "Sesiones esta semana",
+        "requests": "Solicitudes por revisar",
+        "services": "Servicios publicados",
+        "servicesHint": "{total, plural, one {# servicio en total} other {# servicios en total}}"
+      },
+      "requestsTitle": "Esperando tu respuesta",
+      "requestsHint": "Acepta o rechaza antes del plazo. Las solicitudes rechazadas se reembolsan íntegramente.",
+      "respondBy": "Responde antes del {date}",
+      "upcomingTitle": "Próximas sesiones",
+      "openCalendar": "Abrir calendario",
+      "upcomingEmpty": "No hay sesiones en las próximas dos semanas",
+      "upcomingEmptyHint": "Comparte el enlace de tu perfil para que los miembros puedan reservar contigo.",
+      "modeOnline": "Online",
+      "modeInPerson": "Presencial",
+      "modePhone": "Teléfono",
+      "status": {
+        "confirmed": "Confirmada",
+        "completed": "Completada",
+        "awaitingPayment": "Pendiente de pago"
+      },
+      "shortcutsTitle": "Gestiona tu consulta",
+      "shortcuts": {
+        "services": "Servicios",
+        "servicesHint": "Precios, duraciones, modalidades y enlaces de reserva.",
+        "schedule": "Horario",
+        "scheduleHint": "Horas semanales y días libres.",
+        "calendars": "Calendarios conectados",
+        "calendarsHint": "Evita reservas duplicadas con Google o Microsoft.",
+        "finance": "Finanzas",
+        "financeHint": "Pagos, facturas y datos de facturación."
+      }
     }
   },
   "sessions": {
@@ -74,15 +110,15 @@
     }
   },
   "eventTypes": {
-    "title": "Tipos de evento",
+    "title": "Servicios",
     "description": "Define los servicios que los miembros pueden reservar.",
-    "create": "Nuevo tipo de evento",
-    "createTitle": "Crear tipo de evento",
+    "create": "Nuevo servicio",
+    "createTitle": "Crear servicio",
     "createDescription": "Crea un nuevo servicio reservable.",
-    "editTitle": "Editar tipo de evento",
-    "editDescription": "Actualiza los detalles y las reglas de reserva de este tipo de evento.",
-    "empty": "Todavía no has creado ningún tipo de evento.",
-    "createFirst": "Crea tu primer tipo de evento",
+    "editTitle": "Editar servicio",
+    "editDescription": "Actualiza los detalles y las reglas de reserva de este servicio.",
+    "empty": "Aún no hay servicios",
+    "createFirst": "Crear tu primer servicio",
     "status": {
       "published": "Publicado",
       "draft": "Borrador"
@@ -200,13 +236,13 @@
       }
     },
     "actions": {
-      "ariaLabel": "Acciones del tipo de evento",
+      "ariaLabel": "Acciones del servicio",
       "edit": "Editar",
       "publish": "Publicar",
       "unpublish": "Despublicar",
       "delete": "Eliminar",
-      "deleteTitle": "¿Eliminar tipo de evento?",
-      "deleteDescription": "Esta acción no se puede deshacer. Se eliminará permanentemente el tipo de evento y todos los datos asociados.",
+      "deleteTitle": "¿Eliminar servicio?",
+      "deleteDescription": "Esta acción no se puede deshacer. Se eliminará permanentemente el servicio y todos los datos asociados.",
       "cancel": "Cancelar",
       "deleting": "Eliminando..."
     },
@@ -296,7 +332,8 @@
     "bookingSetting": {
       "label": "Cómo reservan los miembros",
       "help": "La reserva instantánea confirma en cuanto pagan. Solicitar reserva retiene el hueco y el pago hasta que aceptes."
-    }
+    },
+    "emptyHint": "Añade un servicio con su precio, duración y cómo te encuentran los miembros. Podrás publicarlo cuando esté listo."
   },
   "schedule": {
     "title": "Horario",

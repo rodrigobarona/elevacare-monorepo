@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { isLocale } from "./i18n"
 
 /**
  * Eleva v3 environment variable validator.
@@ -491,6 +492,20 @@ export function resolveGatewayUrl(hostHeader?: string | null): string {
   }
 
   return "https://eleva.care"
+}
+
+function localePrefix(locale: string): string {
+  return isLocale(locale) && locale !== "en" ? `/${locale}` : ""
+}
+
+/** Public marketplace explorer on the gateway, in the given locale. */
+export function marketplaceExpertsUrl(locale: string): string {
+  return `${resolveGatewayUrl()}${localePrefix(locale)}/experts`
+}
+
+/** Public expert profile on the gateway, in the given locale. */
+export function expertProfileUrl(locale: string, username: string): string {
+  return `${resolveGatewayUrl()}${localePrefix(locale)}/${encodeURIComponent(username)}`
 }
 
 /**

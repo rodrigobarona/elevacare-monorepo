@@ -148,7 +148,7 @@
     "cancelledRefund": "Sesión cancelada. Se reembolsarán {amount} a tu método de pago original.",
     "rescheduleUnavailable": "Solo puedes reprogramar mientras cancelar aún dé un reembolso completo. Todavía puedes cancelar.",
     "refundChanged": "Tu reembolso ha cambiado desde que abriste esta ventana. Revisa el nuevo importe y confirma de nuevo.",
-    "awaitingConfirmationHint": "Tu especialista confirmará esta sesión pronto. Podrás unirte en cuanto esté confirmada.",
+    "awaitingConfirmationHint": "Tu especialista confirmará esta sesión pronto. Una vez confirmada, podrás unirte desde 15 minutos antes del inicio.",
     "nextTitle": "Tu próxima sesión",
     "bookAgain": "Reservar de nuevo",
     "withExpert": "Con {name}",

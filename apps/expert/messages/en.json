@@ -1,7 +1,7 @@
 {
   "nav": {
     "dashboard": "Dashboard",
-    "eventTypes": "Event Types",
+    "eventTypes": "Services",
     "schedule": "Schedule",
     "calendar": "Calendar",
     "calendars": "Connected calendars",
@@ -10,8 +10,44 @@
   },
   "dashboard": {
     "expert": {
+      "eyebrow": "Your practice",
       "welcome": "Hello, {name}",
-      "subtitle": "Your schedule, bookings, and reports live here."
+      "welcomeBack": "Welcome back",
+      "subtitle": "Here is what is coming up in your practice.",
+      "viewProfile": "View public profile",
+      "newService": "New service",
+      "stats": {
+        "week": "Sessions this week",
+        "requests": "Requests to review",
+        "services": "Published services",
+        "servicesHint": "{total, plural, one {# service in total} other {# services in total}}"
+      },
+      "requestsTitle": "Waiting for your answer",
+      "requestsHint": "Accept or decline before the deadline. Declined requests are refunded in full.",
+      "respondBy": "Respond by {date}",
+      "upcomingTitle": "Next sessions",
+      "openCalendar": "Open calendar",
+      "upcomingEmpty": "No sessions in the next two weeks",
+      "upcomingEmptyHint": "Share your profile link so members can book you.",
+      "modeOnline": "Online",
+      "modeInPerson": "In person",
+      "modePhone": "Phone",
+      "status": {
+        "confirmed": "Confirmed",
+        "completed": "Completed",
+        "awaitingPayment": "Awaiting payment"
+      },
+      "shortcutsTitle": "Manage your practice",
+      "shortcuts": {
+        "services": "Services",
+        "servicesHint": "Prices, durations, modes and booking links.",
+        "schedule": "Schedule",
+        "scheduleHint": "Weekly hours and days off.",
+        "calendars": "Connected calendars",
+        "calendarsHint": "Avoid double bookings with Google or Microsoft.",
+        "finance": "Finance",
+        "financeHint": "Payouts, invoices and billing details."
+      }
     }
   },
   "sessions": {
@@ -74,15 +110,15 @@
     }
   },
   "eventTypes": {
-    "title": "Event Types",
+    "title": "Services",
     "description": "Define the bookable services you offer.",
-    "create": "New event type",
-    "createTitle": "Create Event Type",
+    "create": "New service",
+    "createTitle": "Create service",
     "createDescription": "Create a new bookable service.",
-    "editTitle": "Edit Event Type",
-    "editDescription": "Update this event type's details and booking rules.",
-    "empty": "You haven't created any event types yet.",
-    "createFirst": "Create your first event type",
+    "editTitle": "Edit service",
+    "editDescription": "Update this service's details and booking rules.",
+    "empty": "No services yet",
+    "createFirst": "Create your first service",
     "status": {
       "published": "Published",
       "draft": "Draft"
@@ -200,13 +236,13 @@
       }
     },
     "actions": {
-      "ariaLabel": "Event type actions",
+      "ariaLabel": "Service actions",
       "edit": "Edit",
       "publish": "Publish",
       "unpublish": "Unpublish",
       "delete": "Delete",
-      "deleteTitle": "Delete event type?",
-      "deleteDescription": "This action cannot be undone. This will permanently delete the event type and all associated data.",
+      "deleteTitle": "Delete service?",
+      "deleteDescription": "This action cannot be undone. This will permanently delete the service and all associated data.",
       "cancel": "Cancel",
       "deleting": "Deleting..."
     },
@@ -296,7 +332,8 @@
     "bookingSetting": {
       "label": "How members book",
       "help": "Instant Book confirms as soon as they pay. Request to book holds the slot and the payment until you accept."
-    }
+    },
+    "emptyHint": "Add a service with its price, duration and how members meet you. You can publish it when it is ready."
   },
   "schedule": {
     "title": "Schedule",
