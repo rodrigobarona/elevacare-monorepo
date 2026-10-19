@@ -38,7 +38,7 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0058_booking_checkout_session")
+    expect(last?.tag).toBe("0059_expert_profile_content")
     expect(last?.statements.length).toBeGreaterThan(0)
     expect(last?.hash).toHaveLength(64)
     expect(last?.statements.join("\n")).toContain("stripe_checkout_session_id")
