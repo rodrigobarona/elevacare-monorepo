@@ -17,7 +17,7 @@ export function EmailCard({
 
   return (
     <Section
-      className={`${surface} rounded-[12px] border border-solid px-[20px] py-[20px]`}
+      className={`${surface} rounded-[16px] border border-solid px-[24px] py-[20px]`}
     >
       {children}
     </Section>

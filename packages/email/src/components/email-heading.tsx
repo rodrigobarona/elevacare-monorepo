@@ -3,7 +3,7 @@ import type { ReactNode } from "react"
 
 export function EmailHeading({ children }: { children: ReactNode }) {
   return (
-    <Text className="text-brand m-0 mb-[8px] text-[24px] leading-[30px] font-semibold">
+    <Text className="text-fg-2 m-0 mb-[12px] font-serif text-[28px] leading-[34px] font-normal">
       {children}
     </Text>
   )
