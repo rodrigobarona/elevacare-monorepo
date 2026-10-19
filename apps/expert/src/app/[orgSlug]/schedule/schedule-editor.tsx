@@ -340,7 +340,10 @@ export function ScheduleEditor({
                   {day.enabled ? (
                     <div className="space-y-2">
                       {day.windows.map((w, wIdx) => (
-                        <div key={wIdx} className="flex items-center gap-2">
+                        <div
+                          key={wIdx}
+                          className="flex flex-wrap items-center gap-2"
+                        >
                           <Input
                             type="time"
                             aria-label={t("startTimeLabel", { day: dayLabel })}
@@ -353,7 +356,7 @@ export function ScheduleEditor({
                                 e.target.value
                               )
                             }
-                            className="w-32"
+                            className="w-28 sm:w-32"
                           />
                           <span className="text-sm text-muted-foreground">
                             {t("to")}
@@ -365,7 +368,7 @@ export function ScheduleEditor({
                             onChange={(e) =>
                               updateWindow(idx, wIdx, "endTime", e.target.value)
                             }
-                            className="w-32"
+                            className="w-28 sm:w-32"
                           />
                           {day.windows.length > 1 && (
                             <Button
