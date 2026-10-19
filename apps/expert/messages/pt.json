@@ -347,7 +347,7 @@
     "saving": "A guardar...",
     "saved": "Horário guardado com sucesso.",
     "to": "até",
-    "addWindow": "Adicionar intervalo",
+    "addWindow": "Adicionar horas",
     "remove": "Remover",
     "overrideDate": "Data",
     "overrideBlockDay": "Bloquear o dia inteiro",
@@ -370,7 +370,14 @@
       "startBeforeEnd": "{day}: a hora de início tem de ser anterior à hora de fim",
       "overrideStartBeforeEnd": "A hora de início da exceção tem de ser anterior à hora de fim",
       "overlappingWindows": "{day}: os intervalos de disponibilidade não se podem sobrepor"
-    }
+    },
+    "weeklyHoursHint": "Os membros podem marcar consigo dentro destas horas, no seu fuso horário.",
+    "dateOverridesHint": "Bloqueie um feriado ou altere o horário de um só dia.",
+    "overrideEmpty": "Ainda sem exceções.",
+    "unavailable": "Indisponível",
+    "startTimeLabel": "Início de {day}",
+    "endTimeLabel": "Fim de {day}",
+    "removeWindowLabel": "Remover intervalo de {day}"
   },
   "calendar": {
     "title": "Calendário",

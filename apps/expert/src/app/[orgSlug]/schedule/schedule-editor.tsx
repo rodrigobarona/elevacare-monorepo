@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { PlusIcon, XIcon } from "@eleva/icons"
 import { Button } from "@eleva/ui/components/button"
 import { Input } from "@eleva/ui/components/input"
@@ -20,6 +20,7 @@ import { toast } from "sonner"
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@eleva/ui/components/card"
@@ -30,7 +31,20 @@ import {
   type AvailabilityRuleInput,
 } from "./actions"
 
-const DAY_INDICES = [0, 1, 2, 3, 4, 5, 6] as const
+/** Rendered Monday-first; values stay JS weekday indices (0 = Sunday). */
+function formatOverrideDate(isoDate: string, locale: string): string {
+  const [year, month, day] = isoDate.split("-").map(Number)
+  if (!year || !month || !day) return isoDate
+  return new Intl.DateTimeFormat(locale, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, month - 1, day)))
+}
+
+const DAY_INDICES = [1, 2, 3, 4, 5, 6, 0] as const
 
 interface TimeWindow {
   startTime: string
@@ -97,6 +111,7 @@ export function ScheduleEditor({
 }: Props) {
   const router = useRouter()
   const t = useTranslations("schedule")
+  const locale = useLocale()
   const [pending, setPending] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [timezone, setTimezone] = React.useState(
@@ -303,95 +318,117 @@ export function ScheduleEditor({
       <Card>
         <CardHeader>
           <CardTitle>{t("weeklyHours")}</CardTitle>
+          <CardDescription>{t("weeklyHoursHint")}</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {DAY_INDICES.map((idx) => {
-            const day = days[idx]!
-            const dayLabel = t(`days.${idx}`)
-            return (
-              <div key={idx} className="space-y-2">
-                <div className="flex items-center gap-4">
+        <CardContent>
+          <ul className="divide-y divide-border">
+            {DAY_INDICES.map((idx) => {
+              const day = days[idx]!
+              const dayLabel = t(`days.${idx}`)
+              return (
+                <li
+                  key={idx}
+                  className="grid gap-3 py-4 first:pt-0 last:pb-0 sm:grid-cols-[10rem_minmax(0,1fr)_auto] sm:items-start"
+                >
                   <CheckboxField
                     id={`schedule-day-${idx}`}
-                    className="w-28"
+                    className="sm:pt-2"
                     label={dayLabel}
                     isSelected={day.enabled}
                     onChange={(v) => toggleDay(idx, v)}
                   />
-                  {day.enabled && (
+                  {day.enabled ? (
+                    <div className="space-y-2">
+                      {day.windows.map((w, wIdx) => (
+                        <div key={wIdx} className="flex items-center gap-2">
+                          <Input
+                            type="time"
+                            aria-label={t("startTimeLabel", { day: dayLabel })}
+                            value={w.startTime}
+                            onChange={(e) =>
+                              updateWindow(
+                                idx,
+                                wIdx,
+                                "startTime",
+                                e.target.value
+                              )
+                            }
+                            className="w-32"
+                          />
+                          <span className="text-sm text-muted-foreground">
+                            {t("to")}
+                          </span>
+                          <Input
+                            type="time"
+                            aria-label={t("endTimeLabel", { day: dayLabel })}
+                            value={w.endTime}
+                            onChange={(e) =>
+                              updateWindow(idx, wIdx, "endTime", e.target.value)
+                            }
+                            className="w-32"
+                          />
+                          {day.windows.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-sm"
+                              aria-label={t("removeWindowLabel", {
+                                day: dayLabel,
+                              })}
+                              onPress={() => removeWindow(idx, wIdx)}
+                            >
+                              <XIcon aria-hidden />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground sm:pt-2">
+                      {t("unavailable")}
+                    </p>
+                  )}
+                  {day.enabled ? (
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
                       onPress={() => addWindow(idx)}
-                      className="ml-auto"
+                      className="justify-self-start sm:justify-self-end"
                     >
-                      <PlusIcon className="mr-1 h-3 w-3" />
+                      <PlusIcon aria-hidden />
                       {t("addWindow")}
                     </Button>
-                  )}
-                </div>
-                {day.enabled &&
-                  day.windows.map((w, wIdx) => (
-                    <div
-                      key={wIdx}
-                      className="ml-[7.5rem] flex items-center gap-2"
-                    >
-                      <Input
-                        type="time"
-                        value={w.startTime}
-                        onChange={(e) =>
-                          updateWindow(idx, wIdx, "startTime", e.target.value)
-                        }
-                        className="w-32"
-                      />
-                      <span className="text-sm text-muted-foreground">
-                        {t("to")}
-                      </span>
-                      <Input
-                        type="time"
-                        value={w.endTime}
-                        onChange={(e) =>
-                          updateWindow(idx, wIdx, "endTime", e.target.value)
-                        }
-                        className="w-32"
-                      />
-                      {day.windows.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onPress={() => removeWindow(idx, wIdx)}
-                        >
-                          <XIcon className="h-3 w-3" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-              </div>
-            )
-          })}
+                  ) : null}
+                </li>
+              )
+            })}
+          </ul>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
           <CardTitle>{t("dateOverrides")}</CardTitle>
+          <CardDescription>{t("dateOverridesHint")}</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {overrides.length > 0 && (
-            <div className="space-y-2">
+        <CardContent className="space-y-5">
+          {overrides.length > 0 ? (
+            <ul className="divide-y divide-border rounded-2xl border border-border">
               {overrides.map((ov) => (
-                <div
+                <li
                   key={ov.id}
-                  className="flex items-center justify-between rounded border p-2 text-sm"
+                  className="flex items-center justify-between gap-3 px-4 py-3 text-sm"
                 >
-                  <span>
-                    {ov.overrideDate}
-                    {ov.isBlocked
-                      ? ` — ${t("blocked")}`
-                      : ` — ${ov.startTime ?? ""} ${t("to")} ${ov.endTime ?? ""}`}
+                  <span className="min-w-0">
+                    <span className="font-medium text-foreground first-letter:uppercase">
+                      {formatOverrideDate(ov.overrideDate, locale)}
+                    </span>
+                    <span className="block text-muted-foreground">
+                      {ov.isBlocked
+                        ? t("blocked")
+                        : `${ov.startTime?.slice(0, 5) ?? ""} ${t("to")} ${ov.endTime?.slice(0, 5) ?? ""}`}
+                    </span>
                   </span>
                   <Button
                     variant="ghost"
@@ -401,15 +438,22 @@ export function ScheduleEditor({
                   >
                     {t("remove")}
                   </Button>
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {t("overrideEmpty")}
+            </p>
           )}
 
-          <div className="flex flex-wrap items-end gap-3">
+          <div className="flex flex-wrap items-end gap-3 rounded-2xl bg-sand-50/70 p-4 dark:bg-muted/40">
             <div className="space-y-1.5">
-              <Label>{t("overrideDate")}</Label>
+              <Label htmlFor="schedule-override-date">
+                {t("overrideDate")}
+              </Label>
               <Input
+                id="schedule-override-date"
                 type="date"
                 value={newDate}
                 onChange={(e) => setNewDate(e.target.value)}
@@ -426,8 +470,11 @@ export function ScheduleEditor({
             {!newBlocked && (
               <>
                 <div className="space-y-1.5">
-                  <Label>{t("overrideFrom")}</Label>
+                  <Label htmlFor="schedule-override-from">
+                    {t("overrideFrom")}
+                  </Label>
                   <Input
+                    id="schedule-override-from"
                     type="time"
                     value={newStart}
                     onChange={(e) => setNewStart(e.target.value)}
@@ -435,8 +482,11 @@ export function ScheduleEditor({
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>{t("overrideTo")}</Label>
+                  <Label htmlFor="schedule-override-to">
+                    {t("overrideTo")}
+                  </Label>
                   <Input
+                    id="schedule-override-to"
                     type="time"
                     value={newEnd}
                     onChange={(e) => setNewEnd(e.target.value)}
@@ -457,9 +507,11 @@ export function ScheduleEditor({
         </CardContent>
       </Card>
 
-      <Button onPress={handleSave} isDisabled={pending}>
-        {pending ? t("saving") : t("save")}
-      </Button>
+      <div className="flex justify-end">
+        <Button onPress={handleSave} isDisabled={pending}>
+          {pending ? t("saving") : t("save")}
+        </Button>
+      </div>
     </div>
   )
 }

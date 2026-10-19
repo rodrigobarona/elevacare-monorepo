@@ -340,14 +340,14 @@
     "description": "Set your weekly availability and date overrides.",
     "timezone": "Timezone",
     "weeklyHours": "Weekly hours",
-    "dateOverrides": "Date overrides",
-    "addOverride": "Add override",
+    "dateOverrides": "Date exceptions",
+    "addOverride": "Add exception",
     "blocked": "Blocked",
     "save": "Save schedule",
     "saving": "Saving...",
     "saved": "Schedule saved successfully.",
     "to": "to",
-    "addWindow": "Add window",
+    "addWindow": "Add hours",
     "remove": "Remove",
     "overrideDate": "Date",
     "overrideBlockDay": "Block entire day",
@@ -370,7 +370,14 @@
       "startBeforeEnd": "{day}: start time must be before end time",
       "overrideStartBeforeEnd": "Override start time must be before end time",
       "overlappingWindows": "{day}: availability windows must not overlap"
-    }
+    },
+    "weeklyHoursHint": "Members can book you inside these hours, in your timezone.",
+    "dateOverridesHint": "Block a holiday or change your hours for one date.",
+    "overrideEmpty": "No exceptions yet.",
+    "unavailable": "Unavailable",
+    "startTimeLabel": "{day} start time",
+    "endTimeLabel": "{day} end time",
+    "removeWindowLabel": "Remove {day} time range"
   },
   "calendar": {
     "title": "Calendar",
