@@ -39,7 +39,7 @@ const STATUS_TONE: Record<ConnectionStatus, StatusTone> = {
 }
 
 function isConnectionStatus(value: string): value is ConnectionStatus {
-  return value in STATUS_TONE
+  return Object.hasOwn(STATUS_TONE, value)
 }
 
 function categoryIcon(category: IntegrationCategory): ReactNode {
