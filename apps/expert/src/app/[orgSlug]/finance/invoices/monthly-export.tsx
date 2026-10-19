@@ -68,7 +68,7 @@ export function MonthlyExport() {
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-end">
+    <div className="flex flex-col gap-3 rounded-3xl border bg-card p-5 shadow-1 sm:flex-row sm:items-end">
       <div className="space-y-1.5">
         <Label htmlFor="saft-month">{t("exportMonth")}</Label>
         <Input
@@ -100,9 +100,6 @@ export function MonthlyExport() {
           {t("openExport")}
         </LinkButton>
       ) : null}
-      <p className="text-sm text-muted-foreground sm:flex-1">
-        {t("exportHint")}
-      </p>
     </div>
   )
 }

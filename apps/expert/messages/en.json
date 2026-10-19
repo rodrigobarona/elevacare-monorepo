@@ -593,7 +593,12 @@
         "blocked": "This request was blocked. Please try again.",
         "conflict": "This invoice cannot be updated in its current state.",
         "generic": "Something went wrong. Please try again."
-      }
+      },
+      "eyebrow": "Finance",
+      "listTitle": "Invoices",
+      "listHint": "One row per paid session. Automatic issuance stays closed until fiscal setup is complete.",
+      "exportTitle": "Monthly export",
+      "emptyHint": "Invoices appear here after a member pays for a session."
     },
     "status": {
       "pending": "Pending",

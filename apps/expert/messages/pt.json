@@ -593,7 +593,12 @@
         "blocked": "Este pedido foi bloqueado. Tenta novamente.",
         "conflict": "Esta fatura não pode ser atualizada no estado atual.",
         "generic": "Algo correu mal. Tenta novamente."
-      }
+      },
+      "eyebrow": "Finanças",
+      "listTitle": "Faturas",
+      "listHint": "Uma linha por sessão paga. A emissão automática continua fechada até a configuração fiscal estar concluída.",
+      "exportTitle": "Exportação mensal",
+      "emptyHint": "As faturas aparecem aqui depois de um membro pagar uma sessão."
     },
     "status": {
       "pending": "Pendente",
