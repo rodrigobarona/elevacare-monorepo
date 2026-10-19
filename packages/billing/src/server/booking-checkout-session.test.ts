@@ -2,14 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import type Stripe from "stripe"
 
 const create = vi.fn()
-const list = vi.fn()
-const update = vi.fn()
 const customersCreate = vi.fn()
 
 vi.mock("./client", () => ({
   stripe: () => ({
     checkout: { sessions: { create } },
-    customers: { list, update, create: customersCreate },
+    customers: { create: customersCreate },
   }),
 }))
 
@@ -23,10 +21,11 @@ vi.mock("@eleva/config/env", () => ({
 
 const {
   bookingCheckoutSnapshotFromSession,
+  checkoutSessionExpiresAt,
   checkoutSessionIdempotencyKey,
   createBookingCheckoutSession,
-  findOrCreateBookingCustomer,
   isBookingPaymentCheckoutSession,
+  resolveBookingCustomer,
 } = await import("./booking-checkout-session")
 
 describe("checkoutSessionIdempotencyKey", () => {
@@ -57,6 +56,7 @@ describe("createBookingCheckoutSession", () => {
       customerId: "cus_member",
       returnUrl: "https://eleva.care/anaquick/quick-chat",
       idempotencyKey: "cs:22222222-2222-4222-8222-222222222222",
+      expiresAt: 1_800_001_860,
     })
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -70,6 +70,7 @@ describe("createBookingCheckoutSession", () => {
         tax_id_collection: { enabled: true },
         billing_address_collection: "required",
         payment_method_configuration: "pmc_test_booking",
+        expires_at: 1_800_001_860,
         payment_intent_data: expect.objectContaining({
           transfer_group: "11111111-1111-4111-8111-111111111111",
         }),
@@ -110,6 +111,7 @@ describe("createBookingCheckoutSession", () => {
           customerId: "cus_member",
           returnUrl: "https://eleva.care/anaquick/quick-chat",
           idempotencyKey: "cs:22222222-2222-4222-8222-222222222222",
+          expiresAt: 1_800_001_860,
         })
       ).rejects.toThrow("STRIPE_PMC_BOOKING is not configured")
     } finally {
@@ -118,32 +120,51 @@ describe("createBookingCheckoutSession", () => {
   })
 })
 
-describe("findOrCreateBookingCustomer", () => {
+describe("checkoutSessionExpiresAt", () => {
+  it("derives a stable expiry from the reservation creation time", () => {
+    const createdAt = new Date("2027-01-15T10:00:00.000Z")
+    const first = checkoutSessionExpiresAt(createdAt)
+    expect(first).toBe(Math.floor(createdAt.getTime() / 1000) + 31 * 60)
+    expect(checkoutSessionExpiresAt(new Date(createdAt))).toBe(first)
+  })
+})
+
+describe("resolveBookingCustomer", () => {
   beforeEach(() => {
-    list.mockReset()
-    update.mockReset()
     customersCreate.mockReset()
   })
 
-  it("reuses a platform customer without eleva_org_id", async () => {
-    list.mockResolvedValue({
-      data: [
-        { id: "cus_org", metadata: { eleva_org_id: "org-1" } },
-        { id: "cus_member", metadata: {} },
-      ],
-    })
-    update.mockResolvedValue({ id: "cus_member" })
+  it("reuses only a Customer already bound to the buyer", async () => {
     await expect(
-      findOrCreateBookingCustomer({
+      resolveBookingCustomer({
+        reservationId: "22222222-2222-4222-8222-222222222222",
+        name: "Ada",
+        email: "ada@example.com",
+        boundCustomerId: "cus_member",
+      })
+    ).resolves.toBe("cus_member")
+    expect(customersCreate).not.toHaveBeenCalled()
+  })
+
+  it("creates a reservation-scoped Customer instead of matching by email", async () => {
+    customersCreate.mockResolvedValue({ id: "cus_new" })
+    await expect(
+      resolveBookingCustomer({
+        reservationId: "22222222-2222-4222-8222-222222222222",
         name: "Ada",
         email: "ada@example.com",
         phone: "+351910000000",
       })
-    ).resolves.toBe("cus_member")
-    expect(customersCreate).not.toHaveBeenCalled()
-    expect(update).toHaveBeenCalledWith(
-      "cus_member",
-      expect.objectContaining({ name: "Ada", phone: "+351910000000" })
+    ).resolves.toBe("cus_new")
+    expect(customersCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: "ada@example.com",
+        phone: "+351910000000",
+        metadata: expect.objectContaining({
+          eleva_reservation_id: "22222222-2222-4222-8222-222222222222",
+        }),
+      }),
+      { idempotencyKey: "cus:22222222-2222-4222-8222-222222222222" }
     )
   })
 })

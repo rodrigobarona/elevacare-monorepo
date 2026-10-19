@@ -57,10 +57,11 @@ export type { CreatePaymentIntentForReservationResult } from "./payments"
 export {
   CHECKOUT_SESSION_EXPIRES_SECONDS,
   bookingCheckoutSnapshotFromSession,
+  checkoutSessionExpiresAt,
   checkoutSessionIdempotencyKey,
   createBookingCheckoutSession,
-  findOrCreateBookingCustomer,
   isBookingPaymentCheckoutSession,
+  resolveBookingCustomer,
   stripeObjectId,
 } from "./booking-checkout-session"
 export type {

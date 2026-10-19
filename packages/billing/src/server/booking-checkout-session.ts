@@ -10,6 +10,17 @@ export function checkoutSessionIdempotencyKey(reservationId: string): string {
   return `cs:${reservationId}`
 }
 
+/**
+ * Idempotent retries must resend identical parameters, so the expiry is
+ * derived from the persisted reservation creation time, never from "now".
+ */
+export function checkoutSessionExpiresAt(reservationCreatedAt: Date): number {
+  return (
+    Math.floor(reservationCreatedAt.getTime() / 1000) +
+    CHECKOUT_SESSION_EXPIRES_SECONDS
+  )
+}
+
 export function stripeObjectId(
   value: string | { id: string } | null | undefined
 ): string | null {
@@ -27,6 +38,8 @@ export type CreateBookingCheckoutSessionInput = {
   customerId: string
   returnUrl: string
   idempotencyKey: string
+  /** Unix seconds from `checkoutSessionExpiresAt(reservation.createdAt)`. */
+  expiresAt: number
 }
 
 export async function createBookingCheckoutSession(
@@ -41,8 +54,6 @@ export async function createBookingCheckoutSession(
     throw new Error("STRIPE_PMC_BOOKING is not configured")
   }
 
-  const expiresAt =
-    Math.floor(Date.now() / 1000) + CHECKOUT_SESSION_EXPIRES_SECONDS
   const metadata = {
     reservationId: input.reservationId,
     bookingId: input.bookingId,
@@ -67,7 +78,7 @@ export async function createBookingCheckoutSession(
         business: { enabled: true, optional: true },
       },
       billing_address_collection: "required",
-      expires_at: expiresAt,
+      expires_at: input.expiresAt,
       payment_method_configuration: pmc,
       line_items: [
         {
@@ -96,32 +107,33 @@ export async function createBookingCheckoutSession(
   }
 }
 
-export async function findOrCreateBookingCustomer(input: {
+/**
+ * Resolves the Stripe Customer for a booking. An email address does not
+ * prove ownership, so a Customer is only reused when the caller passes the
+ * id already bound to this buyer (e.g. stored on the signed-in member);
+ * otherwise a new Customer is created, idempotent per reservation.
+ */
+export async function resolveBookingCustomer(input: {
+  reservationId: string
   name: string
   email: string
   phone?: string
+  boundCustomerId?: string | null
 }): Promise<string> {
-  const listed = await stripe().customers.list({
-    email: input.email,
-    limit: 10,
-  })
-  const existing = listed.data.find(
-    (customer) => !customer.deleted && !customer.metadata?.eleva_org_id
-  )
-  if (existing) {
-    await stripe().customers.update(existing.id, {
-      name: input.name,
-      ...(input.phone ? { phone: input.phone } : {}),
-    })
-    return existing.id
-  }
+  if (input.boundCustomerId) return input.boundCustomerId
 
-  const created = await stripe().customers.create({
-    name: input.name,
-    email: input.email,
-    ...(input.phone ? { phone: input.phone } : {}),
-    metadata: { eleva_customer_kind: "booking" },
-  })
+  const created = await stripe().customers.create(
+    {
+      name: input.name,
+      email: input.email,
+      ...(input.phone ? { phone: input.phone } : {}),
+      metadata: {
+        eleva_customer_kind: "booking",
+        eleva_reservation_id: input.reservationId,
+      },
+    },
+    { idempotencyKey: `cus:${input.reservationId}` }
+  )
   return created.id
 }
 
