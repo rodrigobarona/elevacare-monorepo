@@ -103,8 +103,8 @@ A bottom bar shows the lowest price and "See times".
 
 ## Content from v2 (inspiration, not copy)
 
-The v2 MDX content (`_context/clone-repo/eleva-care-app/src/content`, same as
-the `clerk-workos` branch) is a source of structure and tone. Every number,
+The v2 MDX content (`_context/clone-repo/eleva-care-app/src/content`) is a
+source of structure and tone. Every number,
 policy, badge and audience noun is rewritten against v3 facts.
 
 - Profile editor hints (from `help/expert/*/getting-started/profile.mdx`):
