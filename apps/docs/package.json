@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@eleva/config": "workspace:^",
+    "@eleva/icons": "workspace:*",
+    "@eleva/media": "workspace:*",
     "@eleva/observability": "workspace:*",
     "@eleva/ui": "workspace:*",
     "next": "catalog:",

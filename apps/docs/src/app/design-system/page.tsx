@@ -25,6 +25,9 @@ import {
   TableRow,
 } from "@eleva/ui/components/table"
 
+import { BlocksShowcase } from "./blocks-showcase"
+import { MediaGallery } from "./media-gallery"
+
 export const metadata: Metadata = {
   title: "Design system · Eleva Care",
   description: "Brand v3 tokens and the shared @eleva/ui kit.",
@@ -275,6 +278,22 @@ export default function DesignSystemPage() {
             </TableBody>
           </Table>
         </DataTableShell>
+      </Section>
+
+      <section id="blocks">
+        <Section
+          title="Marketing blocks"
+          description="Organisms from @eleva/ui/blocks. Media comes in as a slot (ElevaImage / ElevaVideo from @eleva/media) so the kit has no media dependency; links take linkAs for next-intl."
+        >
+          <BlocksShowcase />
+        </Section>
+      </section>
+
+      <Section
+        title="Media library"
+        description="Curated assets in @eleva/media (public Blob + Mux). Use the slug; Pexels photographers are credited on /credits. Never put member or health data here."
+      >
+        <MediaGallery />
       </Section>
 
       <Section title="Empty and loading states">
