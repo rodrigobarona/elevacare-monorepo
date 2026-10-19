@@ -8,6 +8,7 @@ import {
 import { ElevaImage } from "@eleva/media/image"
 import { ElevaVideo } from "@eleva/media/video"
 import { CtaBand } from "@eleva/ui/blocks/cta-band"
+import { ExpertCard, ExpertCardInitials } from "@eleva/ui/blocks/expert-card"
 import { MediaCard } from "@eleva/ui/blocks/media-card"
 import { MediaHero, MediaHeroActions } from "@eleva/ui/blocks/media-hero"
 import { Container, Section, SectionHeader } from "@eleva/ui/blocks/section"
@@ -20,6 +21,29 @@ const CARDS = [
   { slug: "service-pregnancy", title: "Pregnancy & postpartum" },
   { slug: "service-pelvic-health", title: "Pelvic health" },
   { slug: "service-every-stage", title: "Every life stage" },
+] as const
+
+const SAMPLE_EXPERTS = [
+  {
+    slug: "expert-at-desk",
+    initials: "SE",
+    name: "Sample Expert, PT",
+    headline: "Pelvic health and postpartum recovery, online and in Lisbon.",
+    badge: "Top Expert",
+    tags: ["Physiotherapy", "Pelvic health"],
+    meta: "Portuguese · English",
+    price: "From €60",
+  },
+  {
+    slug: null,
+    initials: "NE",
+    name: "No-photo Expert",
+    headline: "Cards fall back to an initials tile when there is no portrait.",
+    badge: undefined,
+    tags: ["Nutrition"],
+    meta: "Spanish",
+    price: "Price on request",
+  },
 ] as const
 
 function BlockFrame({
@@ -136,6 +160,43 @@ export function BlocksShowcase() {
                 />
               ))}
             </div>
+          </Container>
+        </Section>
+      </BlockFrame>
+
+      <BlockFrame name="ExpertCard">
+        <Section spacing="compact">
+          <Container>
+            <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {SAMPLE_EXPERTS.map((expert) => (
+                <li key={expert.name}>
+                  <ExpertCard
+                    href="#blocks"
+                    media={
+                      expert.slug ? (
+                        <ElevaImage
+                          slug={expert.slug}
+                          locale="en"
+                          fill
+                          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                        />
+                      ) : (
+                        <ExpertCardInitials
+                          initials={expert.initials}
+                          className="bg-teal-700"
+                        />
+                      )
+                    }
+                    name={expert.name}
+                    headline={expert.headline}
+                    badge={expert.badge}
+                    tags={expert.tags}
+                    meta={expert.meta}
+                    price={expert.price}
+                  />
+                </li>
+              ))}
+            </ul>
           </Container>
         </Section>
       </BlockFrame>

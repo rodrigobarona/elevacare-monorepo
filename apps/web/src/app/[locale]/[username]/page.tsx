@@ -1,18 +1,30 @@
-import { Suspense } from "react"
+import { Suspense, type ReactNode } from "react"
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import type { PublicEventType } from "@eleva/api-client"
+import type { Locale } from "@eleva/config/i18n"
 import { describeCancellationPolicy } from "@eleva/config/cancellation-policy"
 import { isReserved } from "@eleva/config/reserved-usernames"
-import { CaretRightIcon } from "@eleva/icons"
-import { VerifiedBadge } from "@eleva/ui/components/brand"
-import { buttonVariants } from "@eleva/ui/components/button-variants"
 import {
-  displayLanguage,
+  ArrowRightIcon,
+  CaretRightIcon,
+  ClockIcon,
+  GlobeIcon,
+  MapPinIcon,
+  PhoneIcon,
+  TranslateIcon,
+  VideoCameraIcon,
+} from "@eleva/icons"
+import { Container, Section } from "@eleva/ui/blocks/section"
+import { buttonVariants } from "@eleva/ui/components/button-variants"
+import { Heading } from "@eleva/ui/components/typography"
+import {
+  displayLanguageLabel,
   displayRegion,
 } from "@eleva/ui/lib/booking/display-names"
-import { ExpertAvatar } from "@/components/expert-avatar"
+import { cn } from "@eleva/ui/lib/utils"
+import { ExpertPortrait } from "@/components/expert-portrait"
 import { PublicRateLimited } from "@/components/public-rate-limited"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
@@ -23,6 +35,7 @@ import { formatEur } from "@/lib/format-eur"
 import { formatSlotDateTime } from "@/lib/format-slot-time"
 import { hreflangLanguages, localePath } from "@/lib/hreflang"
 import { isSupportedLocale, pickLocalizedText } from "@/lib/localized-text"
+import { isMarketplaceCategory } from "@/lib/marketplace-categories"
 import {
   createPublicApiClient,
   getPublicExpert,
@@ -33,6 +46,14 @@ import {
   pickUpcomingSlotRows,
   type UpcomingModeSlots,
 } from "@/lib/upcoming-slots"
+
+type SessionMode = PublicEventType["modes"][number]["mode"]
+
+const MODE_ICONS = {
+  online: VideoCameraIcon,
+  in_person: MapPinIcon,
+  phone: PhoneIcon,
+} satisfies Record<SessionMode, unknown>
 
 function publicPlaceLabel(
   location: { name: string; city: string } | null
@@ -100,126 +121,283 @@ export default async function ExpertProfilePage({ params }: Props) {
   const bookableEvents = expert.eventTypes.filter(
     (eventType) => eventType.modes.length > 0
   )
+  const categories = expert.categorySlugs.filter(isMarketplaceCategory)
+  const languages = expert.languages
+    .map((code) => displayLanguageLabel(code, locale))
+    .join(", ")
+  const countries = expert.serviceCountries
+    .map((code) => displayRegion(code, locale))
+    .join(", ")
 
   return (
     <div className="flex min-h-dvh flex-col">
       <SiteHeader />
-      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
-        <div className="flex gap-5">
-          <ExpertAvatar
-            displayName={expert.displayName}
-            username={expert.username}
-            avatarUrl={expert.avatarUrl}
-            isPriority
-            className="size-20 text-2xl"
-          />
-          <div>
-            <div className="flex items-center gap-2">
-              <h1
-                data-testid="expert-profile-heading"
-                className="font-heading text-3xl tracking-tight"
-              >
-                {expert.displayName}
-              </h1>
-              <VerifiedBadge title={tExperts("verified")} className="size-6" />
-            </div>
-            {expert.headline ? (
-              <p className="mt-2 text-muted-foreground">{expert.headline}</p>
-            ) : null}
-            <p className="mt-3 text-sm text-muted-foreground">
-              {[
-                expert.languages
-                  .map((code) => displayLanguage(code, locale))
-                  .join(", "),
-                expert.serviceCountries
-                  .map((code) => displayRegion(code, locale))
-                  .join(", "),
-                expert.categorySlugs.join(", "),
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
-          </div>
-        </div>
-
-        {expert.bio ? (
-          <p className="mt-8 text-base leading-relaxed">{expert.bio}</p>
-        ) : null}
-
-        <section className="mt-10">
-          <h2 className="font-heading text-xl">{t("upcoming")}</h2>
-          {bookableEvents.length > 0 ? (
-            <Suspense
-              fallback={
-                <div className="mt-3 h-10 animate-pulse rounded-md bg-muted" />
-              }
+      <main className="flex-1">
+        <Section spacing="compact" className="pt-12 sm:pt-16">
+          <Container
+            className={cn(
+              "grid items-center gap-10",
+              expert.avatarUrl &&
+                "lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16"
+            )}
+          >
+            <div
+              className={cn(
+                "relative overflow-hidden bg-muted shadow-2",
+                expert.avatarUrl
+                  ? "mx-auto aspect-[4/5] w-full max-w-sm rounded-4xl lg:max-w-none"
+                  : "size-28 rounded-full"
+              )}
             >
-              <UpcomingSlots
-                locale={locale}
+              <ExpertPortrait
+                displayName={expert.displayName}
                 username={expert.username}
-                eventTypes={bookableEvents}
-                timeZone={geo.timeZone}
+                avatarUrl={expert.avatarUrl}
+                isPriority
+                className={expert.avatarUrl ? undefined : "text-4xl"}
               />
-            </Suspense>
-          ) : (
-            <p className="mt-3 text-sm text-muted-foreground">{t("noSlots")}</p>
-          )}
-        </section>
-
-        <section className="mt-10">
-          <h2 className="font-heading text-xl">{t("offers")}</h2>
-          <ul className="mt-4 space-y-3">
-            {expert.eventTypes.map((eventType) => {
-              const prices = eventType.modes.map((mode) => mode.priceCents)
-              const minPrice =
-                prices.length > 0 ? Math.min(...prices) : eventType.priceAmount
-              return (
-                <li
-                  key={eventType.slug}
-                  id={eventType.slug}
-                  className="rounded-xl border p-4"
+            </div>
+            <div className="flex flex-col gap-6">
+              {categories.length > 0 ? (
+                <ul className="flex flex-wrap gap-2">
+                  {categories.map((slug) => (
+                    <li key={slug}>
+                      <Link
+                        href={`/experts/${slug}`}
+                        className="inline-flex h-8 items-center rounded-full bg-teal-50 px-3 text-sm text-teal-800 transition-colors hover:bg-teal-100 dark:bg-teal-950 dark:text-teal-200"
+                      >
+                        {tExperts(`categories.${slug}`)}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              <div className="flex flex-col gap-3">
+                <h1
+                  data-testid="expert-profile-heading"
+                  className="font-display text-4xl leading-tight font-medium tracking-tight text-balance sm:text-5xl"
                 >
-                  <p className="font-medium">
-                    {pickLocalizedText(eventType.title, locale)}
+                  {expert.displayName}
+                </h1>
+                {expert.headline ? (
+                  <p className="text-lg text-pretty text-muted-foreground sm:text-xl">
+                    {expert.headline}
                   </p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {t("offerMeta", {
-                      duration: String(eventType.durationMinutes),
-                      price: formatEur(minPrice, locale),
-                      modes: [
-                        ...new Set(eventType.modes.map((mode) => mode.mode)),
-                      ]
-                        .map((mode) => t(`modes.${mode}`))
-                        .join(", "),
+                ) : null}
+              </div>
+              <dl className="grid max-w-2xl gap-3 text-sm sm:grid-cols-2">
+                {languages ? (
+                  <Fact
+                    icon={<TranslateIcon />}
+                    label={t("languages")}
+                    value={languages}
+                  />
+                ) : null}
+                {countries ? (
+                  <Fact
+                    icon={<GlobeIcon />}
+                    label={t("countries")}
+                    value={countries}
+                  />
+                ) : null}
+              </dl>
+              {bookableEvents.length > 0 ? (
+                <div className="flex flex-wrap gap-3">
+                  <a
+                    href="#availability"
+                    className={buttonVariants({
+                      size: "lg",
+                      className: "rounded-full",
                     })}
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {t("cancellationPolicy", {
-                      name: describeCancellationPolicy(
-                        eventType.cancellationPolicy,
-                        locale
-                      ).name,
+                  >
+                    {t("seeAvailability")}
+                    <ArrowRightIcon data-icon="inline-end" />
+                  </a>
+                  <a
+                    href="#offers"
+                    className={buttonVariants({
+                      size: "lg",
+                      variant: "outline",
+                      className: "rounded-full",
                     })}
+                  >
+                    {t("viewOffers")}
+                  </a>
+                </div>
+              ) : null}
+            </div>
+          </Container>
+        </Section>
+
+        <Section spacing="compact" className="pb-24">
+          <Container className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-16">
+            <div className="flex flex-col gap-14">
+              {expert.bio ? (
+                <section className="flex flex-col gap-4">
+                  <Heading as="h2" size="title">
+                    {t("about", { name: expert.displayName })}
+                  </Heading>
+                  <p className="text-lg leading-relaxed text-pretty whitespace-pre-line text-muted-foreground">
+                    {expert.bio}
                   </p>
-                  {eventType.modes.length > 0 ? (
-                    <Link
-                      href={`/${expert.username}/${eventType.slug}`}
-                      className={buttonVariants({
-                        size: "sm",
-                        className: "mt-3",
-                      })}
-                    >
-                      {t("book")}
-                    </Link>
-                  ) : null}
-                </li>
-              )
-            })}
-          </ul>
-        </section>
+                </section>
+              ) : null}
+
+              <section id="offers" className="flex scroll-mt-24 flex-col gap-5">
+                <Heading as="h2" size="title">
+                  {t("offers")}
+                </Heading>
+                <ul className="flex flex-col gap-4">
+                  {expert.eventTypes.map((eventType) => (
+                    <OfferCard
+                      key={eventType.slug}
+                      eventType={eventType}
+                      username={expert.username}
+                      locale={locale}
+                      t={t}
+                    />
+                  ))}
+                </ul>
+              </section>
+            </div>
+
+            <aside
+              id="availability"
+              className="scroll-mt-24 lg:sticky lg:top-24 lg:self-start"
+            >
+              <div className="flex flex-col gap-4 rounded-3xl border bg-card p-6 shadow-2">
+                <div className="flex flex-col gap-1">
+                  <Heading as="h2" size="subtitle">
+                    {t("upcoming")}
+                  </Heading>
+                  <p className="text-sm text-muted-foreground">
+                    {t("timeZoneNote", { timeZone: geo.timeZone })}
+                  </p>
+                </div>
+                {bookableEvents.length > 0 ? (
+                  <Suspense
+                    fallback={
+                      <div className="flex flex-col gap-2">
+                        {[0, 1, 2].map((row) => (
+                          <div
+                            key={row}
+                            className="h-14 animate-pulse rounded-2xl bg-muted"
+                          />
+                        ))}
+                      </div>
+                    }
+                  >
+                    <UpcomingSlots
+                      locale={locale}
+                      username={expert.username}
+                      eventTypes={bookableEvents}
+                      timeZone={geo.timeZone}
+                    />
+                  </Suspense>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    {t("noSlots")}
+                  </p>
+                )}
+              </div>
+            </aside>
+          </Container>
+        </Section>
       </main>
       <SiteFooter />
     </div>
+  )
+}
+
+function Fact({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode
+  label: string
+  value: string
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-teal-50 text-teal-800 dark:bg-teal-950 dark:text-teal-200 [&_svg]:size-4">
+        {icon}
+      </span>
+      <div>
+        <dt className="text-muted-foreground">{label}</dt>
+        <dd className="font-medium text-foreground">{value}</dd>
+      </div>
+    </div>
+  )
+}
+
+function OfferCard({
+  eventType,
+  username,
+  locale,
+  t,
+}: {
+  eventType: PublicEventType
+  username: string
+  locale: Locale
+  t: Awaited<ReturnType<typeof getTranslations<"profile">>>
+}) {
+  const prices = eventType.modes.map((mode) => mode.priceCents)
+  const minPrice =
+    prices.length > 0 ? Math.min(...prices) : eventType.priceAmount
+  const modes = [...new Set(eventType.modes.map((mode) => mode.mode))]
+  const policy = describeCancellationPolicy(
+    eventType.cancellationPolicy,
+    locale
+  )
+
+  return (
+    <li
+      id={eventType.slug}
+      className="flex flex-col gap-4 rounded-3xl border bg-card p-6 sm:flex-row sm:items-start sm:justify-between"
+    >
+      <div className="flex flex-col gap-3">
+        <h3 className="font-display text-xl leading-tight font-medium tracking-tight">
+          {pickLocalizedText(eventType.title, locale)}
+        </h3>
+        <ul className="flex flex-wrap gap-2 text-sm">
+          <li className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1">
+            <ClockIcon aria-hidden className="size-4 text-muted-foreground" />
+            {t("duration", { duration: String(eventType.durationMinutes) })}
+          </li>
+          {modes.map((mode) => {
+            const Icon = MODE_ICONS[mode]
+            return (
+              <li
+                key={mode}
+                className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1"
+              >
+                <Icon aria-hidden className="size-4 text-muted-foreground" />
+                {t(`modeChips.${mode}`)}
+              </li>
+            )
+          })}
+        </ul>
+        <p className="text-sm text-muted-foreground">
+          {t("cancellationPolicy", { name: policy.name })}
+        </p>
+      </div>
+      <div className="flex shrink-0 flex-row items-center justify-between gap-4 sm:flex-col sm:items-end">
+        <p className="text-lg font-medium">
+          {minPrice === 0
+            ? t("free")
+            : t("fromPrice", { price: formatEur(minPrice, locale) })}
+        </p>
+        {eventType.modes.length > 0 ? (
+          <Link
+            href={`/${username}/${eventType.slug}`}
+            className={buttonVariants({ className: "rounded-full" })}
+          >
+            {t("book")}
+          </Link>
+        ) : null}
+      </div>
+    </li>
   )
 }
 
@@ -267,17 +445,17 @@ async function UpcomingSlots({
   const upcoming = pickUpcomingSlotRows(modeSlots)
 
   if (upcoming.length === 0) {
-    return <p className="mt-3 text-sm text-muted-foreground">{t("noSlots")}</p>
+    return <p className="text-sm text-muted-foreground">{t("noSlots")}</p>
   }
 
   return (
-    <ul className="mt-3 space-y-2">
+    <ul className="flex flex-col gap-2">
       {upcoming.map((slot) => {
         const when = formatSlotDateTime(slot.start, locale, timeZone)
-        const modeLabel = t(`modes.${slot.mode}`)
+        const Icon = MODE_ICONS[slot.mode]
         const place = slot.locationLabel
-          ? `${modeLabel} · ${slot.locationLabel}`
-          : modeLabel
+          ? `${t(`modeChips.${slot.mode}`)} · ${slot.locationLabel}`
+          : t(`modeChips.${slot.mode}`)
         return (
           <li key={`${slot.eventSlug}-${slot.modeId}-${slot.start}`}>
             <Link
@@ -288,12 +466,16 @@ async function UpcomingSlots({
               data-testid="profile-upcoming-slot"
               data-event-slug={slot.eventSlug}
               aria-label={t("bookSlot", { offer: slot.eventTitle, when })}
-              className="flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-muted/60"
+              className="group flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm transition-colors hover:border-primary hover:bg-teal-50/60 dark:hover:bg-teal-950/40"
             >
-              <span>
-                {slot.eventTitle} · {place} · {when}
+              <Icon aria-hidden className="size-5 shrink-0 text-primary" />
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="font-medium text-foreground">{when}</span>
+                <span className="truncate text-muted-foreground">
+                  {slot.eventTitle} · {place}
+                </span>
               </span>
-              <CaretRightIcon className="size-4 shrink-0 text-muted-foreground" />
+              <CaretRightIcon className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
             </Link>
           </li>
         )

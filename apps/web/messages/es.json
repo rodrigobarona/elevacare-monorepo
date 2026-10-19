@@ -213,11 +213,11 @@
   "experts": {
     "title": "Encontrar especialista — Eleva.care",
     "categoryTitle": "Especialistas en {category} — Eleva.care",
-    "description": "Explora especialistas verificadas en salud de la mujer, ofertas y disponibilidad en tu idioma y país.",
-    "eyebrow": "Marketplace",
-    "heading": "Encontrar especialista",
+    "description": "Encuentra especialistas independientes en salud de la mujer, sus consultas y disponibilidad en tu idioma y país.",
+    "eyebrow": "Encontrar especialista",
+    "heading": "Especialistas en salud de la mujer, cerca de ti",
     "categoryHeading": "{category}",
-    "intro": "Filtra por idioma y ordena por precio o valoración. Las miembros eligen cómo quieren reunirse en la página de la especialista.",
+    "intro": "Explora por área de cuidado, filtra por idioma y elige cómo quieres reunirte: online, por teléfono o en persona.",
     "empty": "Aún no hay especialistas con estos filtros.",
     "filterError": "Esos filtros no son válidos. Restablece e inténtalo de nuevo.",
     "resetFilters": "Restablecer filtros",
@@ -253,7 +253,15 @@
       "price": "Precio",
       "rating": "Valoración"
     },
-    "verified": "Perfil verificado"
+    "categoriesLabel": "Áreas de cuidado",
+    "allCategories": "Todas las áreas",
+    "join": {
+      "eyebrow": "Para especialistas",
+      "heading": "Trae tu consulta a Eleva",
+      "lead": "Define tu horario, tarifas y políticas. Nosotros ponemos la tecnología; tú, el cuidado.",
+      "cta": "Hazte especialista"
+    },
+    "free": "Gratis"
   },
   "profile": {
     "title": "{name} — Eleva.care",
@@ -261,16 +269,24 @@
     "upcoming": "Disponibilidad próxima",
     "noSlots": "No hay horarios en las próximas dos semanas.",
     "rateLimited": "Demasiadas solicitudes ahora mismo. Espera un minuto e inténtalo de nuevo.",
-    "offers": "Ofertas",
-    "offerMeta": "{duration} min · desde {price} · {modes}",
+    "offers": "Consultas",
     "book": "Elegir hora",
     "bookSlot": "Reservar {offer} el {when}",
-    "modes": {
-      "online": "vídeo",
-      "in_person": "presencial",
-      "phone": "teléfono"
+    "cancellationPolicy": "Política de cancelación: {name}",
+    "languages": "Idiomas",
+    "countries": "Atiende a miembros de",
+    "seeAvailability": "Ver disponibilidad",
+    "viewOffers": "Ver consultas",
+    "about": "Sobre {name}",
+    "duration": "{duration} min",
+    "fromPrice": "Desde {price}",
+    "timeZoneNote": "Elige un horario para empezar a reservar. Horarios en {timeZone}.",
+    "modeChips": {
+      "online": "Videollamada",
+      "in_person": "En persona",
+      "phone": "Teléfono"
     },
-    "cancellationPolicy": "Política de cancelación: {name}"
+    "free": "Gratis"
   },
   "booking": {
     "meta": {
