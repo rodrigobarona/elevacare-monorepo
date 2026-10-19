@@ -32,6 +32,33 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-19: Brand v3 rollout — public web and email slices (proposed)
+
+- Decision: brand v3 rolls out one surface per PR. Shipped as PRs (each
+  still `proposed` until the founder reviews a preview deploy):
+  - Web: home (#184, merged), docs blocks gallery (#190), about, history,
+    expert, clinic and contact pages (#187), experts explorer and public
+    profile with the `ExpertCard` block (#188), booking funnel (#189,
+    visual only).
+  - Email: v3 theme tokens, serif headings, pill buttons (#191).
+- Copy honesty: "verified" claims are removed from the explorer and
+  profile because there is no credential-verification schema. The official
+  "independent, licensed experts" wording and the advisor list stay
+  pending founder review.
+- Out of scope, follow-ups (not shipped):
+  - Authenticated apps (app, expert, account, team, academy, admin) are not
+    restyled yet. Visual checks need a local session, and the local API env
+    points at the production Neon branch, so they wait for a safe dev
+    database.
+  - Email header logo: no public URL serves the logo PNG, so the header
+    keeps the text wordmark.
+  - Email copy: the footer says "active account" for guest bookings, and the
+    member join hint shows the "standard Daily, not HIPAA" line.
+  - Booking inputs lack accessible names (Field/FieldLabel association), and
+    the header login `LinkButton` has a hydration warning.
+  - Decide whether to keep the `VerifiedBadge` kit primitive.
+- Owner: founder (review), engineering (rollout). Status: `proposed`.
+
 ### 2026-10-19: Brand v3 warm editorial (proposed)
 
 - Decision: the founder chose a brand evolution (option B) for the premium
