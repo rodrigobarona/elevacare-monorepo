@@ -104,6 +104,17 @@ export const sessionParticipantRoleEnum = pgEnum("session_participant_role", [
   "supervisor",
 ])
 
+/** Billing address collected by Stripe Checkout (ui_mode: elements). */
+export type BookingBillingAddress = {
+  name?: string | null
+  line1?: string | null
+  line2?: string | null
+  city?: string | null
+  state?: string | null
+  postalCode?: string | null
+  country?: string | null
+}
+
 /** Guest PII is copied onto bookings then scrubbed from this snapshot. */
 export type ReservationFunnelSnapshot = {
   timezone: string
@@ -170,6 +181,9 @@ export const slotReservations = pgTable(
     stripePaymentIntentId: varchar("stripe_payment_intent_id", {
       length: 255,
     }),
+    stripeCheckoutSessionId: varchar("stripe_checkout_session_id", {
+      length: 255,
+    }),
     eventTypeModeId: uuid("event_type_mode_id"),
     priceCents: integer("price_cents"),
     currency: varchar("currency", { length: 3 }),
@@ -194,6 +208,9 @@ export const slotReservations = pgTable(
     stripePiIdx: uniqueIndex("slot_reservations_stripe_pi_idx")
       .on(t.stripePaymentIntentId)
       .where(sql`stripe_payment_intent_id IS NOT NULL`),
+    stripeCsIdx: uniqueIndex("slot_reservations_stripe_cs_idx")
+      .on(t.stripeCheckoutSessionId)
+      .where(sql`stripe_checkout_session_id IS NOT NULL`),
     priceChk: check(
       "slot_reservations_price_cents",
       sql`price_cents IS NULL OR price_cents >= 0`
@@ -262,6 +279,8 @@ export const bookings = pgTable(
     memberCountry: varchar("member_country", { length: 2 }),
     /** Optional member NIF / VAT captured at checkout or from profile. */
     buyerTaxId: varchar("buyer_tax_id", { length: 32 }),
+    buyerBusinessName: varchar("buyer_business_name", { length: 200 }),
+    billingAddress: jsonb("billing_address").$type<BookingBillingAddress>(),
     bookingLinkId: uuid("booking_link_id"),
     priceCents: integer("price_cents").notNull(),
 
@@ -286,6 +305,10 @@ export const bookings = pgTable(
     stripePaymentIntentId: varchar("stripe_payment_intent_id", {
       length: 255,
     }),
+    stripeCheckoutSessionId: varchar("stripe_checkout_session_id", {
+      length: 255,
+    }),
+    stripeCustomerId: varchar("stripe_customer_id", { length: 255 }),
 
     /** Self-reference for rescheduled bookings. */
     rescheduledFromId: uuid("rescheduled_from_id").references(
@@ -344,6 +367,9 @@ export const bookings = pgTable(
     stripePaymentIdx: uniqueIndex("bookings_stripe_payment_idx")
       .on(t.stripePaymentIntentId)
       .where(sql`stripe_payment_intent_id IS NOT NULL`),
+    stripeCsIdx: uniqueIndex("bookings_stripe_cs_idx")
+      .on(t.stripeCheckoutSessionId)
+      .where(sql`stripe_checkout_session_id IS NOT NULL`),
     counterpartyIdx: index("bookings_counterparty_org_idx")
       .on(t.counterpartyOrgId)
       .where(sql`counterparty_org_id IS NOT NULL`),
@@ -527,6 +553,13 @@ export const bookingPayments = pgTable(
     stripePaymentIntentId: varchar("stripe_payment_intent_id", {
       length: 255,
     }),
+    stripeCheckoutSessionId: varchar("stripe_checkout_session_id", {
+      length: 255,
+    }),
+    stripeCustomerId: varchar("stripe_customer_id", { length: 255 }),
+    stripePromotionCodeId: varchar("stripe_promotion_code_id", {
+      length: 255,
+    }),
     stripeChargeId: varchar("stripe_charge_id", { length: 255 }),
     status: bookingPaymentStatusEnum("status")
       .notNull()
@@ -539,6 +572,9 @@ export const bookingPayments = pgTable(
     platformFeeNetCents: integer("platform_fee_net_cents").notNull().default(0),
     platformFeeVatCents: integer("platform_fee_vat_cents").notNull().default(0),
     processingFeeCents: integer("processing_fee_cents").notNull().default(0),
+    discountCents: integer("discount_cents").notNull().default(0),
+    presentmentCurrency: varchar("presentment_currency", { length: 3 }),
+    presentmentAmountCents: integer("presentment_amount_cents"),
     transferGroup: varchar("transfer_group", { length: 255 }),
     stripeIdempotencyKey: varchar("stripe_idempotency_key", {
       length: 255,
@@ -563,6 +599,12 @@ export const bookingPayments = pgTable(
     stripePiIdx: uniqueIndex("booking_payments_stripe_pi_idx")
       .on(t.stripePaymentIntentId)
       .where(sql`stripe_payment_intent_id IS NOT NULL`),
+    stripeCsIdx: uniqueIndex("booking_payments_stripe_cs_idx")
+      .on(t.stripeCheckoutSessionId)
+      .where(sql`stripe_checkout_session_id IS NOT NULL`),
+    stripeCustomerIdx: index("booking_payments_stripe_customer_idx")
+      .on(t.stripeCustomerId)
+      .where(sql`stripe_customer_id IS NOT NULL`),
     idempotencyIdx: uniqueIndex("booking_payments_idempotency_idx").on(
       t.stripeIdempotencyKey
     ),
@@ -583,6 +625,11 @@ export const bookingPayments = pgTable(
     processingFeeChk: check(
       "booking_payments_processing_fee",
       sql`processing_fee_cents >= 0`
+    ),
+    discountChk: check("booking_payments_discount", sql`discount_cents >= 0`),
+    presentmentAmountChk: check(
+      "booking_payments_presentment_amount",
+      sql`presentment_amount_cents IS NULL OR presentment_amount_cents >= 0`
     ),
     platformFeeSplitChk: check(
       "booking_payments_platform_fee_split",
