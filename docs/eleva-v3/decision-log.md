@@ -45,9 +45,25 @@ Each entry should include:
     Expert copy now says "Services" instead of "Event Types".
   - `StatusPill`, `DateTile` and `bookingDateParts` live in `@eleva/ui`;
     public profile and explorer URL helpers live in `@eleva/config/env`.
+  - Expert follow-up slices, each its own PR: schedule editor (#194),
+    finance (#195), calendar week view (#196), integrations (#197),
+    connected calendars (#198), member invoices (#199) and the service
+    editor shell with a localized basics/policies form (#200). Layout and
+    copy only; booking, Stripe, calendar OAuth and invoicing behaviour is
+    unchanged, and `issueInvoice()` stays closed.
+  - Bug fix (#195): the expert layout, setup and account billing read
+    `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, which no env file defines, so
+    Stripe embedded components never mounted. They now read the canonical
+    `STRIPE_PUBLISHABLE_KEY` via `env()`. Finance no longer bounces experts
+    without a Stripe account to setup; it offers payouts setup in place
+    (or an "unavailable" notice when Stripe is not configured).
 - Out of scope, follow-ups (not shipped):
-  - Expert schedule, calendar, connected calendars, integrations, finance,
-    setup and service editor keep the previous layout for now.
+  - Expert setup/onboarding wizard keeps the previous layout for now.
+  - Invoicing can only be configured during onboarding; there is no
+    post-onboarding invoicing settings page yet.
+  - The connected-calendar account cards and the invoices table were only
+    checked in their empty states locally (no OAuth account or invoice rows
+    on the dev branch).
   - Account, team, academy and admin apps are not restyled yet.
   - The dashboard has no earnings stat: finance reads stay on the finance
     page until payouts are proven end to end.
