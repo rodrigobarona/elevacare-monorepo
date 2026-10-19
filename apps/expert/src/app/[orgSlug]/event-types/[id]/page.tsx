@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation"
-import { getTranslations } from "next-intl/server"
+import Link from "next/link"
+import { getLocale, getTranslations } from "next-intl/server"
+import { ArrowLeftIcon } from "@eleva/icons"
 import { PageHeader } from "@eleva/ui/components/page-header"
+import { StatusPill } from "@eleva/ui/components/status-pill"
 import {
   getEventType,
   listBookingLinksForEventType,
@@ -57,11 +60,17 @@ export default async function EditEventTypePage(props: {
       listCalendarIntegrations(profile.orgId, profile.id),
     ])
 
-  const t = await getTranslations("eventTypes")
+  const [t, locale] = await Promise.all([
+    getTranslations("eventTypes"),
+    getLocale(),
+  ])
+  const title = eventType.title as LocalizedText
+  const serviceTitle =
+    (locale === "pt" || locale === "es" ? title[locale] : undefined) || title.en
 
   const defaults: Partial<EventTypeFormData> = {
     slug: eventType.slug,
-    title: eventType.title as LocalizedText,
+    title,
     description: (eventType.description as LocalizedText) ?? { en: "" },
     durationMinutes: eventType.durationMinutes,
     priceAmount: eventType.priceAmount,
@@ -124,9 +133,28 @@ export default async function EditEventTypePage(props: {
   }))
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <PageHeader title={t("editTitle")} description={t("editDescription")} />
+    <div className="mx-auto max-w-3xl space-y-8">
+      <div className="space-y-4">
+        <Link
+          href={`${base}/event-types`}
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeftIcon aria-hidden className="size-4" />
+          {t("backToServices")}
+        </Link>
+        <PageHeader
+          eyebrow={t("editTitle")}
+          title={serviceTitle}
+          description={t("editDescription")}
+          actions={
+            <StatusPill tone={eventType.published ? "positive" : "neutral"}>
+              {eventType.published ? t("status.published") : t("status.draft")}
+            </StatusPill>
+          }
+        />
+      </div>
       <EventTypeBuilder
+        publicPrefix={`eleva.care/${profile.username}/`}
         eventTypeId={id}
         workspaceBase={base}
         defaults={defaults}

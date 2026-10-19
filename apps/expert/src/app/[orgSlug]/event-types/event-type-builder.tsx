@@ -23,6 +23,7 @@ import type { CalendarIntegrationOption } from "./destination-override-select"
 interface Props {
   eventTypeId: string
   workspaceBase: string
+  publicPrefix: string
   defaults: Partial<EventTypeFormData>
   kind: "clinical" | "non_clinical"
   visibility: "public" | "unlisted" | "private"
@@ -44,6 +45,7 @@ interface Props {
 export function EventTypeBuilder({
   eventTypeId,
   workspaceBase,
+  publicPrefix,
   defaults,
   kind,
   visibility,
@@ -86,6 +88,7 @@ export function EventTypeBuilder({
           eventTypeId={eventTypeId}
           defaultValues={defaults}
           workspaceBase={workspaceBase}
+          publicPrefix={publicPrefix}
           panel="basics"
         />
       </TabsContent>
@@ -104,6 +107,7 @@ export function EventTypeBuilder({
           eventTypeId={eventTypeId}
           defaultValues={defaults}
           workspaceBase={workspaceBase}
+          publicPrefix={publicPrefix}
           panel="policies"
         />
       </TabsContent>
