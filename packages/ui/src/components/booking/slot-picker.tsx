@@ -87,7 +87,7 @@ export function SlotPicker({
           >
             <ArrowLeftIcon className="size-4" />
           </Button>
-          <p className="min-w-40 text-center font-medium capitalize">
+          <p className="min-w-40 text-center font-medium first-letter:uppercase">
             {monthLabel}
           </p>
           <Button

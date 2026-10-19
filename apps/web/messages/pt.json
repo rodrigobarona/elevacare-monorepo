@@ -311,7 +311,8 @@
       "mode": "Como se encontram",
       "when": "Quando",
       "price": "Preço",
-      "chooseTime": "Escolha um horário para continuar"
+      "chooseTime": "Escolha um horário para continuar",
+      "policy": "Política de cancelamento {policy}"
     },
     "modes": {
       "online": {
@@ -394,6 +395,11 @@
           "label": "Autorizo o",
           "link": "tratamento de dados de saúde"
         }
+      },
+      "sections": {
+        "contact": "Os seus contactos",
+        "optional": "Detalhes opcionais",
+        "confirm": "Política e consentimento"
       }
     },
     "pay": {
@@ -424,7 +430,13 @@
       "ics": "Adicionar ao calendário",
       "retry": "Tentar confirmar de novo",
       "activate": "Criar a sua conta Eleva",
-      "activateHint": "Guarde esta sessão no seu Space e faça a gestão mais tarde."
+      "activateHint": "Guarde esta sessão no seu Space e faça a gestão mais tarde.",
+      "nextHeading": "O que acontece a seguir",
+      "next": {
+        "email": "Veja o seu email: a confirmação inclui o convite de calendário e os detalhes da sessão.",
+        "joinOnline": "Entre na videochamada pelo link do email, a partir de 15 minutos antes do início. Não precisa de conta.",
+        "policy": "Alterações e reembolsos seguem a política de cancelamento {policy}."
+      }
     },
     "link": {
       "specialPrice": "Preço especial",
@@ -447,7 +459,8 @@
     },
     "policy": {
       "heading": "Política de cancelamento"
-    }
+    },
+    "stepOf": "Passo {current} de {total}"
   },
   "footer": {
     "about": "Sobre",
