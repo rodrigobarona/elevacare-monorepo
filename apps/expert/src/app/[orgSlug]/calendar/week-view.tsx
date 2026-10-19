@@ -137,13 +137,18 @@ export function WeekView({
 
   const selected = bookings.find((b) => b.id === selectedId) ?? null
   const today = new Date()
-  const weekdayFormatter = new Intl.DateTimeFormat(locale, { weekday: "short" })
-  const rangeFormatter = new Intl.DateTimeFormat(locale, {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  })
-  const timeFormatter = new Intl.DateTimeFormat(locale, { timeStyle: "short" })
+  const { weekdayFormatter, rangeFormatter, timeFormatter } = React.useMemo(
+    () => ({
+      weekdayFormatter: new Intl.DateTimeFormat(locale, { weekday: "short" }),
+      rangeFormatter: new Intl.DateTimeFormat(locale, {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }),
+      timeFormatter: new Intl.DateTimeFormat(locale, { timeStyle: "short" }),
+    }),
+    [locale]
+  )
   function modeName(mode: CalendarBooking["sessionMode"]): string {
     switch (mode) {
       case "online":
