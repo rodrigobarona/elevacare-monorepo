@@ -478,8 +478,9 @@ FR: the associated receipt is created automatically when the FR is finalized
 
 ### Sales Documents — previous API / drafts (`/api/commercial_sales_documents`)
 
-Previous JSON:API. Header, lines, and finalize are **separate** calls. Use
-this only when a draft is required. v1 cannot create an unfinalized document.
+Previous JSON:API. Header, lines, and finalize are **separate** calls. This
+is the **live ELEVA FT path** (draft → `status: 1` → AT → Recibo → email);
+v1 cannot create an unfinalized document, so v1 FT POST stays banned.
 
 | Method   | Path                                                        | Description                |
 | -------- | ----------------------------------------------------------- | -------------------------- |
@@ -572,7 +573,7 @@ This is allowed. v1 **FT** POST is not.
 | `GET`    | `/api/v1/commercial_sales_receipts/:salesReceiptId`      | Get by ID                        |
 | `GET`    | `/api/v1/commercial_sales_receipts`                      | List all                         |
 | `DELETE` | `/api/v1/commercial_sales_receipts/:salesReceiptId`      | Delete receipt                   |
-| `DELETE` | `/api/v1/commercial_sales_receipt_lines/`                | Delete receipt lines             |
+| `DELETE` | `/api/v1/commercial_sales_receipt_lines/:id`             | Delete receipt line              |
 
 #### Create receipt with lines (v1 — live path)
 

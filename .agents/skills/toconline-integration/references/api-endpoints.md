@@ -9,7 +9,9 @@ Base URL: `https://api33.toconline.pt`
 | **v1**     | `/api/v1/{resource}` | Flat JSON                                 | `application/json`         |
 | **Legacy** | `/api/{resource}`    | JSON:API `{ data: { type, attributes } }` | `application/vnd.api+json` |
 
-Prefer v1 for sales documents (single-call creation with lines).
+ELEVA FTs use the previous API (draft → finalize); v1 FT POST auto-finalizes
+and is banned. Use v1 for receipts (Recibo with `lines`). SSOT:
+`docs/eleva-v3/toconline-platform-fee-issuance-flow.md`.
 
 ---
 
@@ -279,8 +281,11 @@ v1 auto-finalizes on create (no `finalize` field).
 
 ## Sales Receipts — v1
 
-Live path uses **one** v1 POST **with `lines`** (settles the FT). Previous-API
-header-then-line is fallback only. `document_series_id` 303 = `RC ELEVA`.
+Live path uses **one** v1 POST **with `lines`** (settles the FT). For the
+**Recibo only**, previous-API header-then-line is a fallback; the FT itself
+still uses the previous-API flow (header → line → `status: 1` → AT).
+`document_series_id` 303 = `RC ELEVA` (the field the live 2026-10-13 batch
+used; TOConline accepted it for every receipt).
 
 | Method   | Path                                         | Description                      |
 | -------- | -------------------------------------------- | -------------------------------- |

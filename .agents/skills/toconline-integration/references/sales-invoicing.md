@@ -17,6 +17,10 @@ Never `POST /api/v1/commercial_sales_documents` (auto-finalizes). v1 Recibo
 with `lines` is required so the TOC list is green (`status: 3`,
 `pending_total: 0`). An FT without Recibo stays red unpaid AR.
 
+The public v1 receipt schema names the series `commercial_document_series_id`;
+the live 2026-10-13 batch sent `document_series_id` and TOConline accepted it
+for all 73 receipts. Keep the field the live path proved.
+
 ```json
 {
   "date": "<FT date>",

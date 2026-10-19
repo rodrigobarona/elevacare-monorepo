@@ -128,37 +128,14 @@ if (!existing.data.length) {
 }
 ```
 
-## Platform Fee Invoice (v1 — Single Call)
+## Platform Fee Invoice (previous API — live path)
 
-```typescript
-const invoice = await toconline.post('/api/v1/commercial_sales_documents', {
-  document_type: 'FT',
-  finalize: 1,
-  date: new Date().toISOString().split('T')[0],
-  customer_tax_registration_number: expert.fiscalNif,
-  customer_business_name: expert.fiscalBusinessName,
-  customer_address_detail: expert.fiscalAddress,
-  customer_postcode: expert.fiscalPostcode,
-  customer_city: expert.fiscalCity,
-  customer_country: expert.fiscalCountry,
-  due_date: dueDate,
-  payment_mechanism: 'TB',
-  vat_included_prices: true,
-  currency_iso_code: 'EUR',
-  notes: `Servico de plataforma Eleva Care - ${bookingDescription}`,
-  external_reference: stripeSessionId,
-  lines: [{
-    item_type: 'Service',
-    description: 'Servico de plataforma Eleva Care',
-    quantity: 1,
-    unit_price: platformFeeEuros,
-    tax_code: vatConfig.code,
-    tax_percentage: vatConfig.rate,
-  }],
-});
-```
-
-Set `finalize: 1` to create and finalize in one call. The response includes the assigned document number and ATCUD.
+Follow the sequence in "API Format" above and the SSOT
+`docs/eleva-v3/toconline-platform-fee-issuance-flow.md`: previous-API FT
+header → line → `status: 1` → AT → v1 Recibo with `lines` → email. Line
+description is Airbnb-style (service fee + session date), never a Stripe id;
+the FT date is the session date. `issueInvoice()` stays closed until this
+path is wired in code. The v1 single-call `finalize: 1` FT is banned.
 
 ## VAT Matrix
 
