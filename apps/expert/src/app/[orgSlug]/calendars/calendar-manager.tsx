@@ -5,26 +5,35 @@ import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { authClient, CALENDAR_OAUTH_SCOPES } from "@eleva/auth/client"
+import { CalendarDotsIcon } from "@eleva/icons"
 import { Button } from "@eleva/ui/components/button"
-import { Badge } from "@eleva/ui/components/badge"
-import { Alert, AlertDescription } from "@eleva/ui/components/alert"
 import { CheckboxField } from "@eleva/ui/components/checkbox-field"
-import {
-  RadioGroup,
-  RadioGroupItem,
-} from "@eleva/ui/components/radio-group"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@eleva/ui/components/card"
+import { RadioGroup, RadioGroupItem } from "@eleva/ui/components/radio-group"
+import { StatusPill } from "@eleva/ui/components/status-pill"
+import type { StatusTone } from "@eleva/ui/components/status-pill"
 import {
   disconnectCalendarAction,
   loadSubCalendars,
   saveBusySources,
   saveDestinationCalendar,
 } from "./actions"
+
+const STATUS_TONE: Record<string, StatusTone> = {
+  connected: "positive",
+  connecting: "neutral",
+  disconnected: "neutral",
+  error: "attention",
+  expired: "attention",
+}
+
+const PROVIDERS = [
+  { provider: "google", slug: "google-calendar", name: "Google Calendar" },
+  {
+    provider: "microsoft",
+    slug: "microsoft-calendar",
+    name: "Microsoft Calendar",
+  },
+] as const
 
 interface CalendarIntegration {
   id: string
@@ -291,175 +300,188 @@ export function CalendarManager({
   )
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {!hasConnectedCalendar ? (
-        <Alert>
-          <AlertDescription>{t("noCalendarFallback")}</AlertDescription>
-        </Alert>
+        <p className="flex items-start gap-3 rounded-3xl bg-sand-100 p-5 text-sm text-muted-foreground dark:bg-muted/40">
+          <CalendarDotsIcon
+            aria-hidden
+            className="mt-0.5 size-5 shrink-0 text-teal-700 dark:text-teal-300"
+          />
+          {t("noCalendarFallback")}
+        </p>
       ) : null}
 
       {needsReconnect ? (
-        <Alert>
-          <AlertDescription>{t("reconnectBanner")}</AlertDescription>
-        </Alert>
+        <p
+          role="status"
+          className="rounded-3xl border border-coral-200 bg-coral-50 p-5 text-sm text-coral-900 dark:border-coral-900 dark:bg-coral-950/40 dark:text-coral-100"
+        >
+          {t("reconnectBanner")}
+        </p>
       ) : null}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("connectTitle")}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      <section className="space-y-3">
+        <div className="space-y-1">
+          <h2 className="font-display text-xl font-medium tracking-tight">
+            {t("connectTitle")}
+          </h2>
           <p className="text-sm text-muted-foreground">
             {t("connectDescription")}
           </p>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              onPress={() => handleConnect("google")}
-              isDisabled={pending !== null}
-            >
-              {connectedSlugs.has("google-calendar")
-                ? t("reconnectGoogle")
-                : t("connectGoogle")}
-            </Button>
-            <Button
-              variant="secondary"
-              onPress={() => handleConnect("microsoft")}
-              isDisabled={pending !== null}
-            >
-              {connectedSlugs.has("microsoft-calendar")
-                ? t("reconnectMicrosoft")
-                : t("connectMicrosoft")}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+        <ul className="divide-y rounded-3xl border bg-card shadow-1">
+          {PROVIDERS.map((item) => {
+            const isLinked = connectedSlugs.has(item.slug)
+            return (
+              <li
+                key={item.provider}
+                className="flex flex-wrap items-center justify-between gap-3 p-5"
+              >
+                <div className="flex items-center gap-3">
+                  <span
+                    aria-hidden
+                    className="flex size-10 items-center justify-center rounded-2xl bg-teal-50 text-teal-700 dark:bg-teal-950 dark:text-teal-200"
+                  >
+                    <CalendarDotsIcon className="size-5" />
+                  </span>
+                  <span className="font-medium">{item.name}</span>
+                </div>
+                <Button
+                  variant={isLinked ? "outline" : "default"}
+                  size="sm"
+                  onPress={() => handleConnect(item.provider)}
+                  isDisabled={pending !== null}
+                >
+                  {item.provider === "google"
+                    ? isLinked
+                      ? t("reconnectGoogle")
+                      : t("connectGoogle")
+                    : isLinked
+                      ? t("reconnectMicrosoft")
+                      : t("connectMicrosoft")}
+                </Button>
+              </li>
+            )
+          })}
+        </ul>
+      </section>
 
       {integrations.length > 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("connectedTitle")}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <section className="space-y-3">
+          <div className="space-y-1">
+            <h2 className="font-display text-xl font-medium tracking-tight">
+              {t("connectedTitle")}
+            </h2>
             <p className="text-sm text-muted-foreground">
               {t("configureHint")}
             </p>
-            <RadioGroup
-              value={destination}
-              onChange={handleDestinationChange}
-              aria-label={t("destinationLabel")}
-              isDisabled={pending !== null}
-              className="gap-4"
-            >
-              {integrations.map((cal) => {
-                const calendars = subCalendars[cal.id] ?? []
-                const busyIds = busyByIntegration[cal.id] ?? new Set()
-                const canConfigure = cal.status === "connected"
-                const failed = loadErrors[cal.id] === true
-                const loaded = loadedIds[cal.id] === true
+          </div>
+          <RadioGroup
+            value={destination}
+            onChange={handleDestinationChange}
+            aria-label={t("destinationLabel")}
+            isDisabled={pending !== null}
+            className="gap-4"
+          >
+            {integrations.map((cal) => {
+              const calendars = subCalendars[cal.id] ?? []
+              const busyIds = busyByIntegration[cal.id] ?? new Set()
+              const canConfigure = cal.status === "connected"
+              const failed = loadErrors[cal.id] === true
+              const loaded = loadedIds[cal.id] === true
 
-                return (
-                  <div
-                    key={cal.id}
-                    className="space-y-3 rounded-lg border p-3"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="space-y-0.5">
-                        <p className="text-sm font-medium">
-                          {cal.providerLabel}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {cal.accountIdentifier ?? ""}
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge
-                          variant={
-                            cal.status === "connected"
-                              ? "default"
-                              : "secondary"
-                          }
-                        >
-                          {t(
-                            `status.${cal.status}` as Parameters<typeof t>[0]
-                          )}
-                        </Badge>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onPress={() => handleDisconnect(cal.id)}
-                          isDisabled={pending !== null}
-                        >
-                          {t("disconnect")}
-                        </Button>
-                      </div>
+              return (
+                <div
+                  key={cal.id}
+                  className="space-y-4 rounded-3xl border bg-card p-5 shadow-1"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="min-w-0 space-y-0.5">
+                      <p className="font-medium">{cal.providerLabel}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {cal.accountIdentifier ?? ""}
+                      </p>
                     </div>
-
-                    {canConfigure ? (
-                      <div className="space-y-3 border-t pt-3">
-                        {failed ? (
-                          <p className="text-sm text-muted-foreground">
-                            {t("error.load-failed")}
-                          </p>
-                        ) : !loaded ? (
-                          <p className="text-sm text-muted-foreground">
-                            {t("loadingCalendars")}
-                          </p>
-                        ) : calendars.length === 0 ? (
-                          <p className="text-sm text-muted-foreground">
-                            {t("noSubCalendars")}
-                          </p>
-                        ) : (
-                          calendars.map((sub) => {
-                            const key = destinationKey(cal.id, sub.id)
-                            return (
-                              <div
-                                key={sub.id}
-                                className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
-                              >
-                                <div className="min-w-0">
-                                  <p className="truncate text-sm font-medium">
-                                    {sub.name}
-                                    {sub.primary ? (
-                                      <span className="ml-1 text-xs font-normal text-muted-foreground">
-                                        ({t("primary")})
-                                      </span>
-                                    ) : null}
-                                  </p>
-                                  {sub.email ? (
-                                    <p className="truncate text-xs text-muted-foreground">
-                                      {sub.email}
-                                    </p>
-                                  ) : null}
-                                </div>
-                                <div className="flex flex-wrap items-center gap-4">
-                                  <CheckboxField
-                                    id={`busy-${cal.id}-${sub.id}`}
-                                    label={t("useForBusy")}
-                                    isSelected={busyIds.has(sub.id)}
-                                    isDisabled={pending !== null}
-                                    onChange={(selected) =>
-                                      toggleBusy(cal.id, sub, selected)
-                                    }
-                                  />
-                                  <RadioGroupItem
-                                    value={key}
-                                    className="flex size-auto aspect-auto w-auto items-center gap-2 rounded-md border-0 bg-transparent p-0 text-sm text-foreground after:hidden data-selected:bg-transparent data-selected:text-foreground"
-                                  >
-                                    {t("useAsDestination")}
-                                  </RadioGroupItem>
-                                </div>
-                              </div>
-                            )
-                          })
-                        )}
-                      </div>
-                    ) : null}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusPill tone={STATUS_TONE[cal.status] ?? "neutral"}>
+                        {t(`status.${cal.status}` as Parameters<typeof t>[0])}
+                      </StatusPill>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onPress={() => handleDisconnect(cal.id)}
+                        isDisabled={pending !== null}
+                      >
+                        {t("disconnect")}
+                      </Button>
+                    </div>
                   </div>
-                )
-              })}
-            </RadioGroup>
-          </CardContent>
-        </Card>
+
+                  {canConfigure ? (
+                    failed ? (
+                      <p className="text-sm text-muted-foreground">
+                        {t("error.load-failed")}
+                      </p>
+                    ) : !loaded ? (
+                      <p className="text-sm text-muted-foreground">
+                        {t("loadingCalendars")}
+                      </p>
+                    ) : calendars.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        {t("noSubCalendars")}
+                      </p>
+                    ) : (
+                      <ul className="divide-y rounded-2xl bg-sand-50 dark:bg-muted/40">
+                        {calendars.map((sub) => {
+                          const key = destinationKey(cal.id, sub.id)
+                          return (
+                            <li
+                              key={sub.id}
+                              className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between"
+                            >
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-medium">
+                                  {sub.name}
+                                  {sub.primary ? (
+                                    <span className="ml-1 text-xs font-normal text-muted-foreground">
+                                      ({t("primary")})
+                                    </span>
+                                  ) : null}
+                                </p>
+                                {sub.email ? (
+                                  <p className="truncate text-xs text-muted-foreground">
+                                    {sub.email}
+                                  </p>
+                                ) : null}
+                              </div>
+                              <div className="flex flex-wrap items-center gap-4">
+                                <CheckboxField
+                                  id={`busy-${cal.id}-${sub.id}`}
+                                  label={t("useForBusy")}
+                                  isSelected={busyIds.has(sub.id)}
+                                  isDisabled={pending !== null}
+                                  onChange={(selected) =>
+                                    toggleBusy(cal.id, sub, selected)
+                                  }
+                                />
+                                <RadioGroupItem
+                                  value={key}
+                                  className="flex aspect-auto size-auto w-auto items-center gap-2 rounded-md border-0 bg-transparent p-0 text-sm text-foreground after:hidden data-selected:bg-transparent data-selected:text-foreground"
+                                >
+                                  {t("useAsDestination")}
+                                </RadioGroupItem>
+                              </div>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    )
+                  ) : null}
+                </div>
+              )
+            })}
+          </RadioGroup>
+        </section>
       ) : null}
     </div>
   )

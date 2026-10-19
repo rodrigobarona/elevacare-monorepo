@@ -469,7 +469,8 @@
       "save-failed": "Não foi possível guardar as definições do calendário.",
       "validation": "O pedido é inválido.",
       "unauthorized-calendar": "Não pode alterar este calendário."
-    }
+    },
+    "eyebrow": "Os seus calendários"
   },
   "integrations": {
     "title": "Integrações",

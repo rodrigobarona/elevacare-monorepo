@@ -469,7 +469,8 @@
       "save-failed": "No se pudieron guardar los ajustes del calendario.",
       "validation": "La solicitud no es válida.",
       "unauthorized-calendar": "No puedes cambiar este calendario."
-    }
+    },
+    "eyebrow": "Tus calendarios"
   },
   "integrations": {
     "title": "Integraciones",
