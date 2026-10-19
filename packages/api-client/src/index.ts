@@ -833,11 +833,11 @@ export const PatchExpertProfileRequestSchema = z.object({
   displayName: z.string().min(1).optional(),
   headline: z.string().nullish(),
   bio: z.string().nullish(),
-  /** Public portrait uploaded to `expert/portrait/`; `null` removes it. */
+  /** Public portrait uploaded to `expert/portrait/<userId>/`; `null` removes it. */
   avatarUrl: z
     .string()
     .max(PROFILE_CONTENT_LIMITS.url)
-    .refine(isExpertPortraitUrl, {
+    .refine((url) => isExpertPortraitUrl(url), {
       message: "Portrait must be uploaded through Eleva",
     })
     .nullish(),

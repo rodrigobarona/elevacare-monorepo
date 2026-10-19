@@ -82,6 +82,22 @@ export async function PATCH(request: Request) {
 
   const data = body.data
 
+  if (data.avatarUrl && !isExpertPortraitUrl(data.avatarUrl, session.user.id)) {
+    return secureJson(
+      {
+        error: "validation",
+        issues: [
+          {
+            code: "custom",
+            path: ["avatarUrl"],
+            message: "Portrait must be your own upload",
+          },
+        ],
+      },
+      { status: 422, headers }
+    )
+  }
+
   let bioUpdate: BioUpdate | null = null
   if (data.bioRich !== undefined) {
     const resolved = resolveRichBio(data.bioRich)
@@ -156,7 +172,7 @@ export async function PATCH(request: Request) {
     data.avatarUrl !== undefined &&
     previousPortrait &&
     previousPortrait !== data.avatarUrl &&
-    isExpertPortraitUrl(previousPortrait)
+    isExpertPortraitUrl(previousPortrait, session.user.id)
   ) {
     try {
       await deletePublicBlob(previousPortrait)

@@ -55,10 +55,11 @@ export function PortraitSection({
 
     setIsUploading(true)
     try {
-      const token = await getPortraitUploadToken()
+      const { token, ownerId } = await getPortraitUploadToken()
       const uploaded = await uploadBlobClient({
         prefix: EXPERT_PORTRAIT_UPLOAD.prefix,
         kind: EXPERT_PORTRAIT_UPLOAD.kind,
+        ownerId,
         file,
         handleUploadUrl: `${apiBaseUrl}/blob/upload`,
         headers: { Authorization: `Bearer ${token}` },

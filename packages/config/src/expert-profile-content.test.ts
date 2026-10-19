@@ -36,12 +36,16 @@ describe("isAllowedSocialLinkUrl", () => {
 })
 
 describe("isExpertPortraitUrl", () => {
+  const own =
+    "https://abc123.public.blob.vercel-storage.com/expert/portrait/user-1/me-x1.jpg"
+
   it("accepts portraits in the public Blob store", () => {
-    expect(
-      isExpertPortraitUrl(
-        "https://abc123.public.blob.vercel-storage.com/expert/portrait/me-x1.jpg"
-      )
-    ).toBe(true)
+    expect(isExpertPortraitUrl(own)).toBe(true)
+  })
+
+  it("checks the owner segment when an owner is given", () => {
+    expect(isExpertPortraitUrl(own, "user-1")).toBe(true)
+    expect(isExpertPortraitUrl(own, "user-2")).toBe(false)
   })
 
   it("rejects other paths, hosts and protocols", () => {
@@ -51,11 +55,18 @@ describe("isExpertPortraitUrl", () => {
       )
     ).toBe(false)
     expect(
-      isExpertPortraitUrl("https://evil.example.com/expert/portrait/me.jpg")
+      isExpertPortraitUrl(
+        "https://abc123.public.blob.vercel-storage.com/expert/portrait/me.jpg"
+      )
     ).toBe(false)
     expect(
       isExpertPortraitUrl(
-        "http://abc123.public.blob.vercel-storage.com/expert/portrait/me.jpg"
+        "https://evil.example.com/expert/portrait/user-1/me.jpg"
+      )
+    ).toBe(false)
+    expect(
+      isExpertPortraitUrl(
+        "http://abc123.public.blob.vercel-storage.com/expert/portrait/user-1/me.jpg"
       )
     ).toBe(false)
   })

@@ -25,6 +25,11 @@ export interface UploadBlobClientInput {
   prefix: string
   /** Logical document / asset kind within the prefix. */
   kind: string
+  /**
+   * Owner id appended after `kind` (`prefix/kind/ownerId/file`) for
+   * policies that scope pathnames to the uploader.
+   */
+  ownerId?: string
   /** File from <input type="file"> or DataTransfer drop. */
   file: File
   /**
@@ -84,7 +89,10 @@ export async function uploadBlobClient(
   const baseBudget = Math.max(1, 80 - ext.length)
   const base = sanitize(rawBase).slice(0, baseBudget)
   const safeName = `${base}${ext}`
-  const pathname = `${prefix}/${kind}/${safeName}`
+  const folder = input.ownerId
+    ? `${prefix}/${kind}/${input.ownerId}`
+    : `${prefix}/${kind}`
+  const pathname = `${folder}/${safeName}`
 
   const result: BlobUploadResult = await blobUpload(pathname, file, {
     access: input.access ?? "public",

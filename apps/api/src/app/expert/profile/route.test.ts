@@ -3,10 +3,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 const updateExpertProfile = vi.fn()
 const emit = vi.fn()
 const deletePublicBlob = vi.fn()
-const OLD_PORTRAIT =
-  "https://store.public.blob.vercel-storage.com/expert/portrait/old.jpg"
-const NEW_PORTRAIT =
-  "https://store.public.blob.vercel-storage.com/expert/portrait/new.jpg"
+const PORTRAITS = "https://store.public.blob.vercel-storage.com/expert/portrait"
+const OLD_PORTRAIT = `${PORTRAITS}/user-1/old.jpg`
+const NEW_PORTRAIT = `${PORTRAITS}/user-1/new.jpg`
+const FOREIGN_PORTRAIT = `${PORTRAITS}/user-2/theirs.jpg`
+let storedAvatarUrl: string | null = OLD_PORTRAIT
 
 vi.mock("@eleva/storage", () => ({
   deletePublicBlob: (...args: unknown[]) => deletePublicBlob(...args),
@@ -17,7 +18,7 @@ vi.mock("@eleva/db", () => ({
     id: "profile-1",
     orgId: "org-1",
     metadata: {},
-    avatarUrl: OLD_PORTRAIT,
+    avatarUrl: storedAvatarUrl,
   })),
   updateExpertProfile: (...args: unknown[]) => updateExpertProfile(...args),
 }))
@@ -63,6 +64,7 @@ describe("PATCH /expert/profile content", () => {
     updateExpertProfile.mockReset()
     emit.mockReset()
     deletePublicBlob.mockReset()
+    storedAvatarUrl = OLD_PORTRAIT
   })
 
   it("replaces the portrait and deletes the old file", async () => {
@@ -79,6 +81,22 @@ describe("PATCH /expert/profile content", () => {
     })
 
     expect(response.status).toBe(422)
+    expect(deletePublicBlob).not.toHaveBeenCalled()
+  })
+
+  it("rejects another expert's portrait", async () => {
+    const response = await patch({ avatarUrl: FOREIGN_PORTRAIT })
+
+    expect(response.status).toBe(422)
+    expect(updateExpertProfile).not.toHaveBeenCalled()
+    expect(deletePublicBlob).not.toHaveBeenCalled()
+  })
+
+  it("never deletes a previous portrait the expert does not own", async () => {
+    storedAvatarUrl = FOREIGN_PORTRAIT
+    const response = await patch({ avatarUrl: NEW_PORTRAIT })
+
+    expect(response.status).toBe(200)
     expect(deletePublicBlob).not.toHaveBeenCalled()
   })
 

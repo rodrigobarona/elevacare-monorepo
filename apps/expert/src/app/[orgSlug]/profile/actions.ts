@@ -20,9 +20,15 @@ export type PublicProfileActionResult =
   | { ok: true }
   | { ok: false; error: string; message?: string }
 
-export async function getPortraitUploadToken(): Promise<string> {
+export async function getPortraitUploadToken(): Promise<{
+  token: string
+  ownerId: string
+}> {
   const session = await requireSession("expert:onboard")
-  return mintUploadToken(session.user.id)
+  return {
+    token: await mintUploadToken(session.user.id),
+    ownerId: session.user.id,
+  }
 }
 
 export async function savePublicProfile(

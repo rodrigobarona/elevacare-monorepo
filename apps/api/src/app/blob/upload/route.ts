@@ -16,7 +16,10 @@
 
 import { handleBlobUpload } from "@eleva/storage/blob-upload-handler"
 import { verifyUploadToken } from "@eleva/auth/upload-token"
-import { EXPERT_PORTRAIT_UPLOAD } from "@eleva/config/expert-profile-content"
+import {
+  EXPERT_PORTRAIT_PATHNAME,
+  EXPERT_PORTRAIT_UPLOAD,
+} from "@eleva/config/expert-profile-content"
 import { corsHeaders } from "@/lib/cors"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -32,11 +35,12 @@ export const runtime = "nodejs"
 
 // ── Upload policies ─────────────────────────────────────────────────
 // Each policy maps a pathname prefix to its validation rules.
-// The `match` function receives the full pathname and returns the
-// logical `kind` string on success, or `null` to reject.
+// The `match` function receives the full pathname and the verified
+// uploader, and returns the logical `kind` string on success, or `null`
+// to reject.
 
 interface UploadPolicy {
-  match: (pathname: string) => string | null
+  match: (pathname: string, userId: string) => string | null
   allowedContentTypes?: readonly string[]
   maxBytes?: number
 }
@@ -55,9 +59,11 @@ const UPLOAD_POLICIES: Record<string, UploadPolicy> = {
     maxBytes: AVATAR_MAX_BYTES,
   },
   [EXPERT_PORTRAIT_UPLOAD.prefix]: {
-    match: (pathname) => {
-      const m = pathname.match(/^expert\/portrait\/[^/]+$/)
-      return m ? EXPERT_PORTRAIT_UPLOAD.kind : null
+    // Portraits live under the uploader's own id so a profile can only
+    // reference (and later delete) its owner's files.
+    match: (pathname, userId) => {
+      const owner = EXPERT_PORTRAIT_PATHNAME.exec(pathname)?.[1]
+      return owner === userId ? EXPERT_PORTRAIT_UPLOAD.kind : null
     },
     allowedContentTypes: EXPERT_PORTRAIT_UPLOAD.contentTypes,
     maxBytes: EXPERT_PORTRAIT_UPLOAD.maxBytes,
@@ -65,10 +71,11 @@ const UPLOAD_POLICIES: Record<string, UploadPolicy> = {
 }
 
 function resolvePolicy(
-  pathname: string
+  pathname: string,
+  userId: string
 ): { policy: UploadPolicy; kind: string } | null {
   for (const [, policy] of Object.entries(UPLOAD_POLICIES)) {
-    const kind = policy.match(pathname)
+    const kind = policy.match(pathname, userId)
     if (kind) return { policy, kind }
   }
   return null
@@ -111,7 +118,7 @@ export async function POST(request: Request): Promise<Response> {
           throw new Error("unauthorized")
         }
 
-        const resolved = resolvePolicy(pathname)
+        const resolved = resolvePolicy(pathname, verified.userId)
         if (!resolved) throw new Error("invalid-pathname")
 
         return {

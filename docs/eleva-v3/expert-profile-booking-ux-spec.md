@@ -89,8 +89,10 @@ A bottom bar shows the lowest price and "See times".
 - New "Public profile" page: photo, display name, headline, rich bio, social
   links and credentials, with a link to the public page. Today experts can only
   set the basics during setup.
-  - Photo: uploaded to the public Blob store under `expert/portrait/`, 4:5
-    preview, JPG/PNG/WebP up to 5 MB. Replacing it deletes the old file. The
+  - Photo: uploaded to the public Blob store under
+    `expert/portrait/<userId>/`, 4:5 preview, JPG/PNG/WebP up to 5 MB. The
+    upload route and the profile API only accept the uploader's own folder, and
+    replacing a photo deletes the old file only when it is in that folder. The
     account avatar (`user.image`, possibly an OAuth picture) is never used.
   - Bio: the expert picks the language they write in. Other languages can be
     filled by "Translate from …" (`POST /ai/editor`, command `translate`); the
