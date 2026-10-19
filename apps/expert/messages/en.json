@@ -477,7 +477,7 @@
   },
   "finance": {
     "title": "Finance",
-    "description": "Manage your payouts, balances, and tax settings.",
+    "description": "What you have earned, what is on its way, and your Stripe payout settings.",
     "balance": "Balance",
     "payouts": "Payouts",
     "accountDetails": "Account Details",
@@ -487,7 +487,7 @@
     "net": "Net",
     "pending": "Pending",
     "paid": "Paid out",
-    "bookings": "Bookings",
+    "bookings": "Session payments",
     "booking": "Booking",
     "payoutState": "Payout state",
     "eligibleAt": "Eligible",
@@ -561,6 +561,20 @@
       "held": "On hold",
       "reversalPending": "Reversal pending",
       "reversed": "Reversed"
+    },
+    "eyebrow": "Your earnings",
+    "bookingsHint": "Every paid session, the Eleva fee, and where its payout stands.",
+    "netHint": "From {gross} paid by members, after {fees} in Eleva fees and any refunds",
+    "pendingHint": "Earned, not yet sent to your bank",
+    "paidHint": "Already sent to your bank account",
+    "stripeTitle": "Payouts and account",
+    "stripeHint": "Managed securely by Stripe, our payments partner.",
+    "connect": {
+      "title": "Set up payouts to get paid",
+      "description": "Connect your bank account through Stripe so earnings from paid sessions reach you. It takes a few minutes and stays on Eleva.",
+      "start": "Set up payouts",
+      "starting": "Opening payouts…",
+      "error": "Could not start payouts setup. Please try again."
     }
   },
   "onboarding": {

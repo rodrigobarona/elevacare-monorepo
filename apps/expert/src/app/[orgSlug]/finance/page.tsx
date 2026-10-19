@@ -1,9 +1,10 @@
-import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
+import { env } from "@eleva/config/env"
 import { financeSummary, listFinanceBookings } from "@eleva/billing/server"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { expertWorkspacePath } from "@/lib/workspace-paths"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
+import { FinanceConnectPrompt } from "./finance-connect-prompt"
 import { FinanceDashboard } from "./finance-dashboard"
 
 export const dynamic = "force-dynamic"
@@ -18,20 +19,37 @@ export default async function FinancePage({
     orgSlug,
     "payouts:view_own"
   )
+  const t = await getTranslations("finance")
 
   if (!profile.stripeAccountId) {
-    redirect(expertWorkspacePath(session, "setup"))
+    return (
+      <div className="space-y-8">
+        <PageHeader
+          eyebrow={t("eyebrow")}
+          title={t("title")}
+          description={t("description")}
+        />
+        <FinanceConnectPrompt
+          apiBaseUrl={
+            process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"
+          }
+        />
+      </div>
+    )
   }
 
-  const [t, summary, bookings] = await Promise.all([
-    getTranslations("finance"),
+  const [summary, bookings] = await Promise.all([
     financeSummary(session.orgId),
     listFinanceBookings(session.orgId),
   ])
 
   return (
-    <div className="space-y-6">
-      <PageHeader title={t("title")} description={t("description")} />
+    <div className="space-y-8">
+      <PageHeader
+        eyebrow={t("eyebrow")}
+        title={t("title")}
+        description={t("description")}
+      />
       <FinanceDashboard
         orgSlug={orgSlug}
         invoicesHref={
@@ -41,6 +59,7 @@ export default async function FinancePage({
         }
         summary={summary}
         bookings={bookings}
+        showStripePanels={Boolean(env().STRIPE_PUBLISHABLE_KEY)}
       />
     </div>
   )

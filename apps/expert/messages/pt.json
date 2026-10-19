@@ -477,7 +477,7 @@
   },
   "finance": {
     "title": "Finanças",
-    "description": "Gira os pagamentos, saldos e definições fiscais.",
+    "description": "O que ganhou, o que está a caminho e as definições de pagamentos no Stripe.",
     "balance": "Saldo",
     "payouts": "Pagamentos",
     "accountDetails": "Dados da conta",
@@ -487,7 +487,7 @@
     "net": "Líquido",
     "pending": "Pendente",
     "paid": "Pago",
-    "bookings": "Marcações",
+    "bookings": "Pagamentos de sessões",
     "booking": "Marcação",
     "payoutState": "Estado do pagamento",
     "eligibleAt": "Elegível",
@@ -561,6 +561,20 @@
       "held": "Em retenção",
       "reversalPending": "Reversão pendente",
       "reversed": "Revertido"
+    },
+    "eyebrow": "Os seus ganhos",
+    "bookingsHint": "Cada sessão paga, a comissão Eleva e o estado da transferência.",
+    "netHint": "De {gross} pagos pelos membros, após {fees} de comissão Eleva e eventuais reembolsos",
+    "pendingHint": "Ganho, ainda não enviado para o seu banco",
+    "paidHint": "Já enviado para a sua conta bancária",
+    "stripeTitle": "Pagamentos e conta",
+    "stripeHint": "Gerido em segurança pelo Stripe, o nosso parceiro de pagamentos.",
+    "connect": {
+      "title": "Configure os pagamentos para receber",
+      "description": "Ligue a sua conta bancária através do Stripe para receber os ganhos das sessões pagas. Demora poucos minutos e fica na Eleva.",
+      "start": "Configurar pagamentos",
+      "starting": "A abrir pagamentos…",
+      "error": "Não foi possível iniciar a configuração de pagamentos. Tente novamente."
     }
   },
   "onboarding": {
