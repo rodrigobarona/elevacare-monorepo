@@ -1,8 +1,43 @@
 # TOConline Sales Invoicing and VAT Rules
 
+## Live operator path (`issueInvoice()` closed)
+
+SSOT: `docs/eleva-v3/toconline-platform-fee-issuance-flow.md`.
+
+One sequence, no review queue:
+
+1. Previous JSON:API FT header (`POST /api/commercial_sales_documents`)
+2. FT line (`POST /api/commercial_sales_document_lines`)
+3. Finalize (`PATCH` `status: 1`)
+4. AT (`PATCH /api/send_document_at_webservice`)
+5. Recibo (`POST /api/v1/commercial_sales_receipts` **with `lines`**)
+6. Email the FT (`PATCH /api/email/document/{id}`)
+
+Never `POST /api/v1/commercial_sales_documents` (auto-finalizes). v1 Recibo
+with `lines` is required so the TOC list is green (`status: 3`,
+`pending_total: 0`). An FT without Recibo stays red unpaid AR.
+
+```json
+{
+  "date": "<FT date>",
+  "payment_mechanism": "DDA",
+  "document_series_id": 303,
+  "customer_id": 17,
+  "lines": [
+    {
+      "receivable_type": "Document",
+      "receivable_id": 225,
+      "received_value": 10.5
+    }
+  ]
+}
+```
+
+Series: `FT ELEVA/{n}` and `RC ELEVA/{n}`. Clone `RC ELEVA/1` (id 94).
+
 ## Invoice Creation Flow
 
-### v1 API (preferred — single-call)
+### v1 API (banned for FTs — auto-finalize)
 
 Create a sales document with header + lines in one request:
 
@@ -59,9 +94,9 @@ Key fields:
 | `lines[].tax_code`                 | `NOR` (normal), `ISE` (isento/exempt)                               |
 | `lines[].tax_percentage`           | Accountant-pending. Do not copy 23/13/6 into issuance until signed. |
 
-### Legacy API (multi-step)
+### Previous API (live FT path)
 
-If v1 is unavailable, use the legacy JSON:API flow:
+Use the previous JSON:API for FTs (header, line, finalize are separate):
 
 ```
 1. POST /api/commercial_sales_documents       → create header (returns document_id)

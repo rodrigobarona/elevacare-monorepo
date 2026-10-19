@@ -279,15 +279,18 @@ v1 auto-finalizes on create (no `finalize` field).
 
 ## Sales Receipts — v1
 
-| Method   | Path                                         | Description   |
-| -------- | -------------------------------------------- | ------------- |
-| `POST`   | `/api/v1/commercial_sales_receipts`          | Create header |
-| `POST`   | `/api/commercial_sales_receipt_lines`        | Add line      |
-| `PATCH`  | `/api/v1/commercial_sales_receipts/:id`      | Update        |
-| `PATCH`  | `/api/v1/commercial_sales_receipts/:id/void` | Void          |
-| `GET`    | `/api/v1/commercial_sales_receipts/:id`      | Get by ID     |
-| `GET`    | `/api/v1/commercial_sales_receipts`          | List all      |
-| `DELETE` | `/api/v1/commercial_sales_receipts/:id`      | Delete        |
+Live path uses **one** v1 POST **with `lines`** (settles the FT). Previous-API
+header-then-line is fallback only. `document_series_id` 303 = `RC ELEVA`.
+
+| Method   | Path                                         | Description                      |
+| -------- | -------------------------------------------- | -------------------------------- |
+| `POST`   | `/api/v1/commercial_sales_receipts`          | Create receipt **with `lines`**  |
+| `POST`   | `/api/commercial_sales_receipt_lines`        | Add line (previous API fallback) |
+| `PATCH`  | `/api/v1/commercial_sales_receipts/:id`      | Update                           |
+| `PATCH`  | `/api/v1/commercial_sales_receipts/:id/void` | Void                             |
+| `GET`    | `/api/v1/commercial_sales_receipts/:id`      | Get by ID                        |
+| `GET`    | `/api/v1/commercial_sales_receipts`          | List all                         |
+| `DELETE` | `/api/v1/commercial_sales_receipts/:id`      | Delete                           |
 
 ---
 

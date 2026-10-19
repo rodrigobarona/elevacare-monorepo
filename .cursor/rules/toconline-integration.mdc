@@ -75,17 +75,21 @@ TOCONLINE_SERIES_PREFIX=ELEVA # production. TEST is TOConline-only sandbox — n
 | **v1** | `/api/v1/{resource}` | Flat JSON | Sales/purchase documents, receipts, payments |
 | **Legacy** | `/api/{resource}` | JSON:API `{ data: { type, attributes } }` | Customers, suppliers, addresses, contacts, products, services |
 
-Always prefer v1 endpoints for sales documents:
+Live path (`issueInvoice()` closed): **previous JSON:API for FTs**, then
+**v1 Recibo with `lines`**. Never `POST /api/v1/commercial_sales_documents`
+(auto-finalizes). SSOT: `docs/eleva-v3/toconline-platform-fee-issuance-flow.md`.
 
 ```typescript
-// v1 — flat JSON, single call creates header + lines
-POST /api/v1/commercial_sales_documents
-{ "document_type": "FT", "finalize": 1, "lines": [...] }
+// FT — previous JSON:API (header + line + finalize)
+POST /api/commercial_sales_documents
+POST /api/commercial_sales_document_lines
+PATCH /api/commercial_sales_documents         // status: 1
+PATCH /api/send_document_at_webservice
+POST /api/v1/commercial_sales_receipts        // lines settle the FT (RC ELEVA)
+PATCH /api/email/document/{id}
 
-// Legacy — JSON:API, requires separate header + line + finalize calls
-POST /api/commercial_sales_documents          // header
-POST /api/commercial_sales_document_lines     // each line
-PATCH /api/commercial_sales_documents         // finalize (status: 1)
+// Banned — v1 FT auto-finalizes
+// POST /api/v1/commercial_sales_documents
 ```
 
 ## Document Series
@@ -96,7 +100,8 @@ The `ELEVA` series prefix is already configured in TOConline. Retrieve the serie
 GET /api/commercial_document_series?filter[prefix]=ELEVA&filter[document_type]=FT
 ```
 
-Invoice numbers follow: `ELEVA FT {YYYY}/{N}` (e.g. `ELEVA FT 2026/1`).
+Invoice numbers follow: `FT ELEVA/{n}` (e.g. `FT ELEVA/16`). Recibos:
+`RC ELEVA/{n}` on series id 303.
 
 ## Customer Upsert Pattern
 

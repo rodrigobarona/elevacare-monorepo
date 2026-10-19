@@ -32,6 +32,98 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-13: Remaining 2026 ELEVA FTs issued (18–90)
+
+- Decision: Operator batch issued the remaining 2026 platform-fee FTs
+  on the proven fluid path (previous-API header → line → `status: 1` →
+  AT → v1 Recibo with `lines` → email). **73** documents: **FT ELEVA/18**
+  (id 227) through **FT ELEVA/90** (id 299), each with matching
+  `RC ELEVA/{n}`, AT `communication_status=success`, and email to the
+  cliente mailbox. Two 2026-03-04 sessions were dated **2026-03-09**
+  (series floor after ELEVA/17). Julio
+  `py_3ULl0LK5Ap4Um3Sp18JmkZuB` session **2026-12-17** is deferred —
+  no future-dated FT. `issueInvoice()` stays closed. No v1 FT POST.
+- Owner: founder (Rodrigo Barona)
+- Status: `active`
+- Related: worksheet
+  `~/Documents/eleva-2026-commission-report.html`, progress
+  `~/Documents/eleva-2026-issue-progress.json`,
+  `docs/eleva-v3/toconline-platform-fee-issuance-flow.md`
+- Next review: issue Julio’s 2026-12-17 session on that day.
+
+### 2026-10-13: Recibo closes every ELEVA FT (fluid live path)
+
+- Decision: A finalized FT with no Recibo stays **red** in the TOC list
+  (`status: 1`, `pending_total` unpaid). Green is settled AR
+  (`status: 3`, `pending_total: 0`, `receipts_ids` set) — not AT or
+  email. Live path is now one sequence: previous-API FT header → line →
+  `status: 1` → AT → **v1 Recibo with `lines`** (RC ELEVA series 303,
+  DDA, `receivable_type: Document`, `received_value` = gross) → email
+  the FT. v1 **FT** POST stays banned. `issueInvoice()` stays closed.
+  Catch-up 2026-10-13: **RC ELEVA/16** id 126 settled FT 225;
+  **RC ELEVA/17** id 127 settled FT 226.
+- Owner: founder (Rodrigo Barona)
+- Status: `active`
+- Related: `docs/eleva-v3/toconline-platform-fee-issuance-flow.md`
+- Next review: Julio 2026-12-17 session still deferred.
+
+### 2026-10-13: FT ELEVA/17 issued to Raquel (cliente 21)
+
+- Decision: The charge skipped yesterday for missing NIF,
+  `ch_3T42zSK5Ap4Um3Sp0dNJkBPv`, is now **FT ELEVA/17** (TOC id 226,
+  line 227, date 2026-03-09 session day, €10,50 = 8,54 + 1,96 IVA).
+  Settled **RC ELEVA/17** (id 127). Previous-API live path: header →
+  line → `status: 1` → AT PATCH `communication_status=success` → Recibo
+  → email to the cliente's invoice mailbox. Cliente **21**. Do not
+  re-issue. `issueInvoice()` stays closed. Raquel’s second 2026 charge
+  (`ch_3TzD4PK5Ap4Um3Sp1jBivgx9`, session 2026-08-17) is still unissued.
+- Owner: founder (Rodrigo Barona)
+- Status: `active`
+- Related: worksheet
+  `~/Documents/eleva-2026-commission-report.html`, sidecar
+  `~/Documents/eleva-2026-toc-raquel-ch_3T42zS.json`
+- Next review: remaining ELEVA FTs still unissued.
+
+### 2026-10-13: Madalena is a founder-confirmed individual Cliente
+
+- Decision: A founder-confirmed personal NIF (checksum valid, natural
+  person; value kept in the restricted invoicing sidecar, not here) is
+  now live TOConline Cliente **23**, Patricia-style (short
+  `business_name`, Identity legal name on the fiscal card, street on
+  `main_address` 155, invoice mailbox on related `email_addresses` 107
+  from the expert's Connect account). Same digits as the earlier
+  Checkout guest/payer tax ID field — founder confirmation is now the
+  expert invoicing source of truth; do not treat Checkout
+  `tax_id_collection` as expert NIF in general. Reuse id 23; do not
+  create a duplicate. No FTs issued in this slice.
+  `issueInvoice()` stays closed. 2026 worksheet Clientes: Patricia 17,
+  Bee 18, Raquel 21, Jessica 22, Madalena 23.
+- Owner: founder (Rodrigo Barona)
+- Status: `active`
+- Related: worksheet
+  `~/Documents/eleva-2026-commission-report.html`, sidecar
+  `~/Documents/eleva-2026-toconline-customers.json`
+- Next review: remaining ELEVA FTs still unissued.
+
+### 2026-10-13: Paid bookings charge via Checkout Sessions Elements
+
+- Decision: Charge paid bookings with Stripe Checkout Sessions
+  (`mode: payment`, `ui_mode: elements`) so Adaptive Pricing, automatic
+  tax, promo codes, tax ID, and billing address stay on Stripe objects.
+  Confirm still happens on `payment_intent.succeeded`.
+  `checkout.session.completed` only enriches Customer / tax / address /
+  discount / CS ids. Instant Book vs Request stays in `flipPaidBooking`.
+  Amount matching, application fee, and Instant Book decline/expiry
+  refunds use the **charged** total (`session.amount_total` /
+  PaymentIntent amount), not the reservation list price when a promo
+  applied. Signed-in members keep the member-or-guest bookability gate
+  (not forced through `funnel.guest`). Schema `0058` and the helper are
+  additive; the live pay path flips in a follow-up.
+- Owner: engineering
+- Status: `proposed`
+- Related: Phase 04.2 payments, Instant Book 2026-10-13, Stripe Checkout
+- Next review: after the live Checkout Sessions flip is on main.
+
 ### 2026-10-13: Instant Book vs Request to book (Airbnb-style)
 
 - Decision: Keep `event_types.requires_approval` (default false = Instant
