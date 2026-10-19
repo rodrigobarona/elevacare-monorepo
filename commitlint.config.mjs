@@ -60,6 +60,7 @@ export default {
         "compliance",
         "observability",
         "video",
+        "media",
         "config",
         "eslint-config",
         "typescript-config",

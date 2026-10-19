@@ -1,6 +1,7 @@
 import { withBotId } from "botid/next/config"
 import createNextIntlPlugin from "next-intl/plugin"
 import {
+  ELEVA_IMAGE_REMOTE_PATTERNS,
   resolveAllowedDevOrigins,
   resolveGatewayStaticAssetRewrites,
 } from "@eleva/config/next-dev"
@@ -66,6 +67,7 @@ const nextConfig = {
    * dispatch logic that handles canonical URLs explicitly.
    */
   skipTrailingSlashRedirect: true,
+  images: { remotePatterns: ELEVA_IMAGE_REMOTE_PATTERNS },
   async rewrites() {
     return {
       beforeFiles: [
@@ -80,6 +82,7 @@ const nextConfig = {
     "@eleva/calendar",
     "@eleva/config",
     "@eleva/db",
+    "@eleva/media",
     "@eleva/ui",
   ],
 }
