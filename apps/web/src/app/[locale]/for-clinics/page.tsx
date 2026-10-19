@@ -29,11 +29,12 @@ export default async function ForClinicsPage({ params }: Props) {
   return (
     <MarketingDraftPage
       draftBanner={t("draftBanner")}
+      eyebrow={t("eyebrow")}
       heading={t("heading")}
       headingTestId="for-clinics-heading"
       body={t("body")}
-      ctaHref="/signup"
-      ctaLabel={t("cta")}
+      imageSlug="clinic-lounge"
+      cta={{ href: "/signup", label: t("cta") }}
     />
   )
 }

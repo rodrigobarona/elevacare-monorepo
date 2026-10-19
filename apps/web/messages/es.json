@@ -471,7 +471,7 @@
     "description": "Únete a Eleva.care como profesional independiente y licenciado en una plataforma digital de salud.",
     "draftBanner": "Borrador previo al lanzamiento. Comisión, plazos de payout y términos legales no son finales. Finanzas y el DPO volverán a firmar antes del go-live.",
     "heading": "Ejercer en Eleva.care",
-    "body": "Eleva.care es una plataforma digital de salud que permite la prestación de servicios de salud remotos (teleconsultas / telemedicina) por profesionales independientes y licenciados. Los especialistas mantienen autonomía clínica. Eleva opera la tecnología de agenda, reserva y pago. Los miembros reservan sesiones contigo — esta página no inventa porcentajes de payout ni liquidación semanal.",
+    "body": "Eleva.care es una plataforma digital de salud para profesionales independientes y licenciados. Mantienes total autonomía clínica. Eleva opera la tecnología de agenda, reserva y pago, para que los miembros puedan reservar sesiones contigo online, por teléfono o en persona.",
     "cta": "Crear tu cuenta",
     "stepsHeading": "Cómo funciona",
     "steps": [
@@ -491,22 +491,25 @@
         "title": "Recibe reservas de miembros",
         "body": "Los miembros reservan y pagan online. Tú y el miembro recibís confirmaciones y recordatorios por email."
       }
-    ]
+    ],
+    "eyebrow": "Para especialistas"
   },
   "forClinics": {
     "title": "Para clínicas — Eleva.care",
     "description": "Gestiona un Team de clínica en Eleva.care, una plataforma digital de salud para profesionales independientes.",
     "draftBanner": "Borrador previo al lanzamiento. Precios por plaza y términos de colaboración no son finales. Finanzas y el DPO volverán a firmar antes del go-live.",
     "heading": "Clínicas y Teams",
-    "body": "Las clínicas usan Eleva.care como Team: varios especialistas licenciados en una organización, con la misma plataforma digital de salud que los miembros ya usan para reservar. Eleva asume responsabilidad organizativa, técnica y administrativa por la operación de la plataforma. Cuotas por plaza y contratos de colaboración son decisiones financieras de trabajo y no constan en esta página.",
-    "cta": "Crear tu cuenta"
+    "body": "Las clínicas usan Eleva.care como Team: varios especialistas licenciados en una organización, en la misma plataforma digital de salud que los miembros ya usan para reservar. Eleva asume la responsabilidad organizativa, técnica y administrativa de la operación de la plataforma, para que tu equipo se centre en el cuidado.",
+    "cta": "Crear tu cuenta",
+    "eyebrow": "Para clínicas"
   },
   "contact": {
     "title": "Contacto — Eleva.care",
     "description": "Página de contacto en borrador. El formulario público espera la aprobación legal y del DPO.",
     "draftBanner": "Borrador previo al lanzamiento. Esta página aún no recoge mensajes. Legal y el DPO aprobarán el formulario antes de que Eleva.care entre en producción.",
     "heading": "Contacto",
-    "body": "El formulario público de contacto estará aquí cuando Legal y el DPO aprueben el texto y las reglas de retención. Hasta entonces esta página no envía ni guarda mensajes."
+    "body": "El formulario público de contacto estará aquí cuando Legal y el DPO aprueben el texto y las reglas de retención. Hasta entonces esta página no envía ni guarda mensajes.",
+    "eyebrow": "Contacto"
   },
   "trust": {
     "draftBanner": "Borrador previo al lanzamiento. Esta página no afirma una certificación ni una auditoría concluida. La Fase 13 publicará texto con evidencia, responsable, aprobador, enlace a la evidencia y fecha de revisión.",
