@@ -75,6 +75,9 @@ export interface PublicExpertProfile extends PublicExpertCard {
   /** ISO-639-1 + ISO-3166-1 — we keep them denormalised for cards. */
   worldwideMode: boolean
   serviceCountries: string[]
+  bioRich: main.LocalizedRichText | null
+  socialLinks: main.ExpertSocialLink[]
+  credentials: main.ExpertCredential[]
 }
 
 export interface PublicClinicProfile {
@@ -154,6 +157,9 @@ export async function findExpertByUsername(
         topExpertActive: main.expertProfiles.topExpertActive,
         worldwideMode: main.expertProfiles.worldwideMode,
         serviceCountries: main.expertProfiles.serviceCountries,
+        bioRich: main.expertProfiles.bioRich,
+        socialLinks: main.expertProfiles.socialLinks,
+        credentials: main.expertProfiles.credentials,
       })
       .from(main.expertProfiles)
       .where(

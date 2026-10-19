@@ -119,6 +119,11 @@ export async function PATCH(
   }
   if (data.title !== undefined) updates.title = data.title
   if (data.description !== undefined) updates.description = data.description
+  if (data.whatsIncluded !== undefined)
+    updates.whatsIncluded = data.whatsIncluded
+  if (data.whatToExpect !== undefined) updates.whatToExpect = data.whatToExpect
+  if (data.exampleQuestions !== undefined)
+    updates.exampleQuestions = data.exampleQuestions
   if (data.durationMinutes !== undefined)
     updates.durationMinutes = data.durationMinutes
   if (data.priceAmount !== undefined) updates.priceAmount = data.priceAmount

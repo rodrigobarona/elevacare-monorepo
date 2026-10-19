@@ -1,3 +1,4 @@
+import type { SocialLinkKind } from "@eleva/config/expert-profile-content"
 import { sql } from "drizzle-orm"
 import { timestamp, uuid } from "drizzle-orm/pg-core"
 
@@ -57,3 +58,21 @@ export type LocalizedRichText = Partial<{
   pt: LocalizedRichTextEntry
   es: LocalizedRichTextEntry
 }>
+
+/** Short localized bullet list (e.g. "What's included"). */
+export type LocalizedList = Partial<{
+  en: string[]
+  pt: string[]
+  es: string[]
+}>
+
+export type ExpertSocialLink = {
+  kind: SocialLinkKind
+  url: string
+}
+
+export type ExpertCredential = {
+  title: string
+  institution: string | null
+  year: number | null
+}

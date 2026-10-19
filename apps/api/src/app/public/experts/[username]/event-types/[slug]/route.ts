@@ -52,6 +52,9 @@ export async function GET(
         sessionMode: eventType.sessionMode,
         cancellationPolicy: eventType.cancellationPolicy,
         requiresApproval: eventType.requiresApproval,
+        whatsIncluded: eventType.whatsIncluded,
+        whatToExpect: eventType.whatToExpect,
+        exampleQuestions: eventType.exampleQuestions,
         modes: modesByEventType.get(eventType.id) ?? [],
       }),
       { status: 200, headers }

@@ -14,6 +14,7 @@ import {
   CreateIdentitySessionResponseSchema,
   SyncExistingOnboardingResponseSchema,
   CreateEventTypeRequestSchema,
+  PatchExpertProfileRequestSchema,
   UpdateEventTypeRequestSchema,
   CreateEventTypeModeRequestSchema,
   PatchEventTypeModeRequestSchema,
@@ -684,19 +685,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             required: true,
             content: {
               "application/json": {
-                schema: z.object({
-                  nif: z.string().nullish(),
-                  licenseScope: z.string().nullish(),
-                  languages: z.array(z.string()).optional(),
-                  practiceCountries: z.array(z.string()).optional(),
-                  worldwideMode: z.boolean().optional(),
-                  sessionModes: z
-                    .array(z.enum(["online", "in_person", "phone"]))
-                    .optional(),
-                  displayName: z.string().min(1).optional(),
-                  headline: z.string().nullish(),
-                  bio: z.string().nullish(),
-                }),
+                schema: PatchExpertProfileRequestSchema,
               },
             },
           },

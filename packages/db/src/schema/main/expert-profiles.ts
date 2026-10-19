@@ -19,6 +19,9 @@ import {
   orgIdColumn,
   pkColumn,
   updatedAt,
+  type ExpertCredential,
+  type ExpertSocialLink,
+  type LocalizedRichText,
 } from "./shared"
 import { organization, user } from "../auth"
 
@@ -107,8 +110,20 @@ export const expertProfiles = pgTable(
 
     displayName: text("display_name").notNull(),
     headline: text("headline"),
+    /** Plain-text bio; mirrors the rich bio's source locale for search. */
     bio: text("bio"),
+    /** Rich bio per locale (ADR-023). */
+    bioRich: jsonb("bio_rich").$type<LocalizedRichText>(),
+    bioSourceLocale: varchar("bio_source_locale", { length: 2 }),
     avatarUrl: text("avatar_url"),
+    socialLinks: jsonb("social_links")
+      .$type<ExpertSocialLink[]>()
+      .notNull()
+      .default([]),
+    credentials: jsonb("credentials")
+      .$type<ExpertCredential[]>()
+      .notNull()
+      .default([]),
 
     /** ISO-639-1 codes (e.g., 'pt', 'en', 'es'). */
     languages: text("languages").array().notNull().default(["en"]),
@@ -243,6 +258,10 @@ export const expertProfiles = pgTable(
     serviceCountriesFormatChk: check(
       "expert_profiles_service_countries_format",
       sql`public.iso3166_alpha2_codes(service_countries)`
+    ),
+    contentShapeChk: check(
+      "expert_profiles_content_shape",
+      sql`jsonb_typeof(social_links) = 'array' AND jsonb_typeof(credentials) = 'array' AND (bio_rich IS NULL OR jsonb_typeof(bio_rich) = 'object') AND (bio_source_locale IS NULL OR bio_source_locale IN ('en', 'pt', 'es'))`
     ),
     tenantPolicy: pgPolicy("expert_profiles_tenant_isolation", {
       using: sql`org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true'`,

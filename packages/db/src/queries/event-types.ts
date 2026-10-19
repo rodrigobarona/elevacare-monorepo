@@ -95,6 +95,9 @@ export async function updateEventType(
       | "slug"
       | "title"
       | "description"
+      | "whatsIncluded"
+      | "whatToExpect"
+      | "exampleQuestions"
       | "durationMinutes"
       | "priceAmount"
       | "currency"
@@ -177,6 +180,9 @@ export async function findPublicEventType(
       | "slug"
       | "title"
       | "description"
+      | "whatsIncluded"
+      | "whatToExpect"
+      | "exampleQuestions"
       | "durationMinutes"
       | "priceAmount"
       | "currency"
@@ -200,6 +206,9 @@ export async function findPublicEventType(
         slug: eventTypes.slug,
         title: eventTypes.title,
         description: eventTypes.description,
+        whatsIncluded: eventTypes.whatsIncluded,
+        whatToExpect: eventTypes.whatToExpect,
+        exampleQuestions: eventTypes.exampleQuestions,
         durationMinutes: eventTypes.durationMinutes,
         priceAmount: eventTypes.priceAmount,
         currency: eventTypes.currency,
@@ -240,6 +249,9 @@ export async function listPublicEventTypes(
     | "slug"
     | "title"
     | "description"
+    | "whatsIncluded"
+    | "whatToExpect"
+    | "exampleQuestions"
     | "durationMinutes"
     | "priceAmount"
     | "currency"
@@ -256,6 +268,9 @@ export async function listPublicEventTypes(
         slug: eventTypes.slug,
         title: eventTypes.title,
         description: eventTypes.description,
+        whatsIncluded: eventTypes.whatsIncluded,
+        whatToExpect: eventTypes.whatToExpect,
+        exampleQuestions: eventTypes.exampleQuestions,
         durationMinutes: eventTypes.durationMinutes,
         priceAmount: eventTypes.priceAmount,
         currency: eventTypes.currency,

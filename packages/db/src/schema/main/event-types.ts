@@ -19,6 +19,7 @@ import {
   orgIdColumn,
   pkColumn,
   updatedAt,
+  type LocalizedList,
   type LocalizedText,
 } from "./shared"
 import { organization } from "../auth"
@@ -69,6 +70,18 @@ export const eventTypes = pgTable(
     slug: varchar("slug", { length: 50 }).notNull(),
     title: jsonb("title").$type<LocalizedText>().notNull(),
     description: jsonb("description").$type<LocalizedText>(),
+    whatsIncluded: jsonb("whats_included")
+      .$type<LocalizedList>()
+      .notNull()
+      .default({}),
+    whatToExpect: jsonb("what_to_expect")
+      .$type<LocalizedList>()
+      .notNull()
+      .default({}),
+    exampleQuestions: jsonb("example_questions")
+      .$type<LocalizedList>()
+      .notNull()
+      .default({}),
 
     durationMinutes: integer("duration_minutes").notNull().default(60),
     priceAmount: integer("price_amount").notNull().default(0),
@@ -132,6 +145,10 @@ export const eventTypes = pgTable(
     ),
     priceChk: check("event_types_price_non_negative", sql`price_amount >= 0`),
     currencyChk: check("event_types_currency_eur", sql`currency = 'EUR'`),
+    contentShapeChk: check(
+      "event_types_content_shape",
+      sql`jsonb_typeof(whats_included) = 'object' AND jsonb_typeof(what_to_expect) = 'object' AND jsonb_typeof(example_questions) = 'object'`
+    ),
     windowsChk: check(
       "event_types_windows_non_negative",
       sql`(booking_window_days IS NULL OR booking_window_days >= 0) AND minimum_notice_minutes >= 0 AND buffer_before_minutes >= 0 AND buffer_after_minutes >= 0 AND (reschedule_window_hours IS NULL OR reschedule_window_hours >= 0) AND position >= 0`
