@@ -32,6 +32,28 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-19: Expert profile and booking UX direction (proposed)
+
+- Decision: redesign the public expert profile and the booking flow per
+  [`expert-profile-booking-ux-spec.md`](./expert-profile-booking-ux-spec.md).
+  - Layout: two columns (portrait and bio left, sticky service cards right),
+    in the intro.co / old eleva-care-app direction but a clear step up.
+  - New expert content: rich bio (ADR-023), social links (https only, host
+    checked per network), credentials, and per-service "What's included",
+    "What to expect" and "Example questions".
+  - Trust: no stars, counts or badges until real data exists; post-session
+    reviews are a later slice.
+  - Booking flow keeps its steps but always shows them, with the exact date,
+    time zone and cancellation deadline as a date in the summary.
+- Slice 1 (data and API) adds migration 0059, the api-client schemas and the
+  expert/public endpoints. Expert editing pages, the profile redesign and the
+  booking flow pass follow as separate PRs.
+- Out of scope (not shipped): session packs and monthly plans (a later phase
+  once the founder sets commercial terms; nothing is built or shown), reviews,
+  AI translation of the rich bio.
+- Owner: founder (review), engineering. Status: `proposed`. Next review:
+  founder walkthrough once the profile redesign slice is on main.
+
 ### 2026-10-19: Brand v3 rollout — member and expert app slices (proposed)
 
 - Decision: signed-in apps follow the web rollout, one surface per PR,

@@ -1,4 +1,6 @@
-import { z } from "zod"
+import { PatchExpertProfileRequestSchema } from "@eleva/api-client"
+import { buildLocalizedRichText } from "@eleva/editor/build-localized-rich-text"
+import { localizedRichTextWriteSchema } from "@eleva/editor/types"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -16,19 +18,29 @@ export const ROUTE_POLICY = {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-const ALLOWED_SESSION_MODES = ["online", "in_person", "phone"] as const
+type BioUpdate = {
+  bio: string | null
+  bioRich: ReturnType<typeof buildLocalizedRichText> | null
+  bioSourceLocale: "en" | "pt" | "es" | null
+}
 
-const PatchProfileSchema = z.object({
-  nif: z.string().nullish(),
-  licenseScope: z.string().nullish(),
-  languages: z.array(z.string()).optional(),
-  practiceCountries: z.array(z.string()).optional(),
-  worldwideMode: z.boolean().optional(),
-  sessionModes: z.array(z.enum(ALLOWED_SESSION_MODES)).optional(),
-  displayName: z.string().min(1).optional(),
-  headline: z.string().nullish(),
-  bio: z.string().nullish(),
-})
+/**
+ * Validates the Plate node tree and derives sanitized HTML and plain text.
+ * The plain-text `bio` mirrors the source locale so search keeps working.
+ */
+function resolveRichBio(input: unknown): BioUpdate | { issues: unknown } {
+  if (input === null) return { bio: null, bioRich: null, bioSourceLocale: null }
+  const parsed = localizedRichTextWriteSchema.safeParse(input)
+  if (!parsed.success) return { issues: parsed.error.issues }
+  const built = buildLocalizedRichText(parsed.data)
+  const source = built[parsed.data.sourceLocale]
+  if (!source) return { bio: null, bioRich: null, bioSourceLocale: null }
+  return {
+    bio: source.text,
+    bioRich: built,
+    bioSourceLocale: parsed.data.sourceLocale,
+  }
+}
 
 export async function PATCH(request: Request) {
   const headers = corsHeaders(request, "PATCH, OPTIONS")
@@ -48,7 +60,7 @@ export async function PATCH(request: Request) {
   )
   if (rateLimited) return rateLimited
 
-  const body = PatchProfileSchema.safeParse(
+  const body = PatchExpertProfileRequestSchema.safeParse(
     await request.json().catch(() => ({}))
   )
   if (!body.success) {
@@ -67,6 +79,20 @@ export async function PATCH(request: Request) {
   }
 
   const data = body.data
+
+  let bioUpdate: BioUpdate | null = null
+  if (data.bioRich !== undefined) {
+    const resolved = resolveRichBio(data.bioRich)
+    if ("issues" in resolved) {
+      return secureJson(
+        { error: "validation", issues: resolved.issues },
+        { status: 422, headers }
+      )
+    }
+    bioUpdate = resolved
+  } else if (data.bio !== undefined) {
+    bioUpdate = { bio: data.bio ?? null, bioRich: null, bioSourceLocale: null }
+  }
 
   const completedSteps = (profile.metadata as Record<string, unknown>)
     ?.completedSteps
@@ -100,7 +126,9 @@ export async function PATCH(request: Request) {
             ...(data.headline !== undefined && {
               headline: data.headline ?? null,
             }),
-            ...(data.bio !== undefined && { bio: data.bio ?? null }),
+            ...(bioUpdate ?? {}),
+            ...(data.socialLinks && { socialLinks: data.socialLinks }),
+            ...(data.credentials && { credentials: data.credentials }),
             metadata: { ...(profile.metadata ?? {}), completedSteps: steps },
           },
           tx

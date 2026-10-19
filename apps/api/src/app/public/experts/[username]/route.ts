@@ -3,6 +3,7 @@ import {
   findExpertByUsername,
   listPublicEventTypeModes,
   listPublicEventTypes,
+  type LocalizedRichText,
 } from "@eleva/db"
 import {
   handlePublicGet,
@@ -20,6 +21,20 @@ export const ROUTE_POLICY = {
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
+
+function toPublicRichText(
+  value: LocalizedRichText | null
+): Partial<Record<"en" | "pt" | "es", { html: string; text: string }>> | null {
+  if (!value) return null
+  const result: Partial<
+    Record<"en" | "pt" | "es", { html: string; text: string }>
+  > = {}
+  for (const locale of ["en", "pt", "es"] as const) {
+    const entry = value[locale]
+    if (entry) result[locale] = { html: entry.html, text: entry.text }
+  }
+  return Object.keys(result).length > 0 ? result : null
+}
 
 export async function GET(
   request: Request,
@@ -43,7 +58,10 @@ export async function GET(
         displayName: expert.displayName,
         headline: expert.headline,
         bio: expert.bio,
+        bioRich: toPublicRichText(expert.bioRich),
         avatarUrl: expert.avatarUrl,
+        socialLinks: expert.socialLinks,
+        credentials: expert.credentials,
         languages: expert.languages,
         serviceCountries: expert.serviceCountries,
         categorySlugs: expert.categorySlugs,
@@ -58,6 +76,9 @@ export async function GET(
           sessionMode: eventType.sessionMode,
           cancellationPolicy: eventType.cancellationPolicy,
           requiresApproval: eventType.requiresApproval,
+          whatsIncluded: eventType.whatsIncluded,
+          whatToExpect: eventType.whatToExpect,
+          exampleQuestions: eventType.exampleQuestions,
           modes: modesByEventType.get(eventType.id) ?? [],
         })),
       }),

@@ -22,6 +22,7 @@
     "./slug": "./src/slug.ts",
     "./cancellation-policy": "./src/cancellation-policy.ts",
     "./booking-settings": "./src/booking-settings.ts",
+    "./expert-profile-content": "./src/expert-profile-content.ts",
     "./public-site-parity": "./src/public-site-parity.ts"
   },
   "scripts": {

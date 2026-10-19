@@ -1,5 +1,10 @@
 import { z } from "zod"
 import { CANCELLATION_POLICY_VALUES } from "@eleva/config/cancellation-policy"
+import {
+  isAllowedSocialLinkUrl,
+  PROFILE_CONTENT_LIMITS,
+  SOCIAL_LINK_KINDS,
+} from "@eleva/config/expert-profile-content"
 import { LocaleSchema } from "@eleva/config/i18n"
 
 // ---------------------------------------------------------------------------
@@ -739,6 +744,84 @@ const LocalizedTextSchema = z.object({
   es: z.string().optional(),
 })
 
+const RICH_TEXT_SOURCE_VALUES = ["human", "ai_draft"] as const
+
+/**
+ * Rich-text write payload (ADR-023): Plate JSON per locale, never HTML. The
+ * API re-validates the node tree and derives sanitized HTML and plain text.
+ */
+const RichTextWriteEntrySchema = z.object({
+  json: z.array(z.record(z.string(), z.unknown())),
+  source: z.enum(RICH_TEXT_SOURCE_VALUES).optional(),
+})
+
+export const LocalizedRichTextWriteRequestSchema = z
+  .object({
+    sourceLocale: LocaleSchema,
+    locales: z.object({
+      en: RichTextWriteEntrySchema.optional(),
+      pt: RichTextWriteEntrySchema.optional(),
+      es: RichTextWriteEntrySchema.optional(),
+    }),
+  })
+  .refine((value) => value.locales[value.sourceLocale] !== undefined, {
+    message: "sourceLocale must exist in locales",
+    path: ["sourceLocale"],
+  })
+
+export type LocalizedRichTextWriteRequest = z.infer<
+  typeof LocalizedRichTextWriteRequestSchema
+>
+
+export const SocialLinkKindSchema = z.enum(SOCIAL_LINK_KINDS)
+
+export const ExpertSocialLinkSchema = z
+  .object({
+    kind: SocialLinkKindSchema,
+    url: z.string().trim().max(PROFILE_CONTENT_LIMITS.url),
+  })
+  .refine((link) => isAllowedSocialLinkUrl(link.kind, link.url), {
+    message: "URL must be https and match the network",
+    path: ["url"],
+  })
+
+export type ExpertSocialLink = z.infer<typeof ExpertSocialLinkSchema>
+
+export const ExpertSocialLinksSchema = z
+  .array(ExpertSocialLinkSchema)
+  .max(PROFILE_CONTENT_LIMITS.socialLinks)
+  .refine(
+    (links) => new Set(links.map((link) => link.kind)).size === links.length,
+    { message: "Each network can appear once" }
+  )
+
+export const ExpertCredentialSchema = z.object({
+  title: z.string().trim().min(1).max(PROFILE_CONTENT_LIMITS.credentialText),
+  institution: z
+    .string()
+    .trim()
+    .min(1)
+    .max(PROFILE_CONTENT_LIMITS.credentialText)
+    .nullable()
+    .default(null),
+  year: z.number().int().min(1900).max(2100).nullable().default(null),
+})
+
+export type ExpertCredential = z.infer<typeof ExpertCredentialSchema>
+
+const LocalizedListItemsSchema = z
+  .array(z.string().trim().min(1).max(PROFILE_CONTENT_LIMITS.listItemText))
+  .max(PROFILE_CONTENT_LIMITS.listItems)
+
+/** Short per-locale bullet list (e.g. a service's "What's included"). */
+export const LocalizedListSchema = z.object({
+  en: LocalizedListItemsSchema.optional(),
+  pt: LocalizedListItemsSchema.optional(),
+  es: LocalizedListItemsSchema.optional(),
+})
+
+export type LocalizedList = z.infer<typeof LocalizedListSchema>
+
 export const PatchExpertProfileRequestSchema = z.object({
   nif: z.string().nullish(),
   licenseScope: z.string().nullish(),
@@ -749,6 +832,13 @@ export const PatchExpertProfileRequestSchema = z.object({
   displayName: z.string().min(1).optional(),
   headline: z.string().nullish(),
   bio: z.string().nullish(),
+  /** Rich bio; `null` clears it. Also refreshes the plain-text `bio`. */
+  bioRich: LocalizedRichTextWriteRequestSchema.nullish(),
+  socialLinks: ExpertSocialLinksSchema.optional(),
+  credentials: z
+    .array(ExpertCredentialSchema)
+    .max(PROFILE_CONTENT_LIMITS.credentials)
+    .optional(),
 })
 
 export type PatchExpertProfileRequest = z.infer<
@@ -1213,6 +1303,9 @@ export const CreateEventTypeRequestSchema = z.object({
   slug: z.string().optional(),
   title: LocalizedTextSchema,
   description: LocalizedTextSchema.nullish(),
+  whatsIncluded: LocalizedListSchema.optional(),
+  whatToExpect: LocalizedListSchema.optional(),
+  exampleQuestions: LocalizedListSchema.optional(),
   durationMinutes: z.number().int().positive(),
   priceAmount: z.number().int().nonnegative(),
   currency: z.literal("EUR"),
@@ -1638,7 +1731,22 @@ export const PublicEventTypeSchema = z.object({
   sessionMode: z.enum(["online", "in_person", "phone"]),
   cancellationPolicy: CancellationPolicySchema,
   requiresApproval: z.boolean(),
+  whatsIncluded: LocalizedListSchema.default({}),
+  whatToExpect: LocalizedListSchema.default({}),
+  exampleQuestions: LocalizedListSchema.default({}),
   modes: z.array(PublicEventTypeModeSchema),
+})
+
+/** Public rich text: sanitized HTML and plain text only, never editor JSON. */
+const PublicRichTextEntrySchema = z.object({
+  html: z.string(),
+  text: z.string(),
+})
+
+export const PublicLocalizedRichTextSchema = z.object({
+  en: PublicRichTextEntrySchema.optional(),
+  pt: PublicRichTextEntrySchema.optional(),
+  es: PublicRichTextEntrySchema.optional(),
 })
 
 export const PublicExpertProfileSchema = z.object({
@@ -1646,7 +1754,12 @@ export const PublicExpertProfileSchema = z.object({
   displayName: z.string(),
   headline: z.string().nullable(),
   bio: z.string().nullable(),
+  bioRich: PublicLocalizedRichTextSchema.nullable(),
   avatarUrl: z.string().nullable(),
+  socialLinks: z.array(
+    z.object({ kind: SocialLinkKindSchema, url: z.string() })
+  ),
+  credentials: z.array(ExpertCredentialSchema),
   languages: z.array(z.string()),
   serviceCountries: z.array(z.string()),
   categorySlugs: z.array(z.string()),

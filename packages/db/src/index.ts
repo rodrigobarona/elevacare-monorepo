@@ -183,6 +183,9 @@ export {
 } from "./queries/session-documents"
 export { countBillableSeats } from "./queries/seats"
 export type {
+  ExpertCredential,
+  ExpertSocialLink,
+  LocalizedList,
   LocalizedRichText,
   LocalizedRichTextEntry,
   LocalizedText,

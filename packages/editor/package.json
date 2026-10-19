@@ -33,6 +33,7 @@
     "./rich-text-editor": "./src/rich-text-editor.tsx",
     "./rich-text-viewer": "./src/rich-text-viewer.tsx",
     "./localized-rich-text-field": "./src/localized-rich-text-field.tsx",
+    "./build-localized-rich-text": "./src/build-localized-rich-text.ts",
     "./serialize": "./src/serialize.ts",
     "./sanitize": "./src/sanitize.ts",
     "./types": "./src/types.ts",
