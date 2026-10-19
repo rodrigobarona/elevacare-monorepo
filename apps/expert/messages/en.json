@@ -574,7 +574,9 @@
       "description": "Connect your bank account through Stripe so earnings from paid sessions reach you. It takes a few minutes and stays on Eleva.",
       "start": "Set up payouts",
       "starting": "Opening payouts…",
-      "error": "Could not start payouts setup. Please try again."
+      "error": "Could not start payouts setup. Please try again.",
+      "unavailableTitle": "Payouts are not available yet",
+      "unavailable": "Payments are not configured on this environment. Please contact support."
     }
   },
   "onboarding": {

@@ -574,7 +574,9 @@
       "description": "Ligue a sua conta bancária através do Stripe para receber os ganhos das sessões pagas. Demora poucos minutos e fica na Eleva.",
       "start": "Configurar pagamentos",
       "starting": "A abrir pagamentos…",
-      "error": "Não foi possível iniciar a configuração de pagamentos. Tente novamente."
+      "error": "Não foi possível iniciar a configuração de pagamentos. Tente novamente.",
+      "unavailableTitle": "Os pagamentos ainda não estão disponíveis",
+      "unavailable": "Os pagamentos não estão configurados neste ambiente. Contacte o suporte."
     }
   },
   "onboarding": {

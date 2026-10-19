@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server"
 import { env } from "@eleva/config/env"
 import { financeSummary, listFinanceBookings } from "@eleva/billing/server"
+import { EmptyState } from "@eleva/ui/components/empty-state"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { expertWorkspacePath } from "@/lib/workspace-paths"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
@@ -21,6 +22,8 @@ export default async function FinancePage({
   )
   const t = await getTranslations("finance")
 
+  const stripeConfigured = Boolean(env().STRIPE_PUBLISHABLE_KEY)
+
   if (!profile.stripeAccountId) {
     return (
       <div className="space-y-8">
@@ -29,11 +32,19 @@ export default async function FinancePage({
           title={t("title")}
           description={t("description")}
         />
-        <FinanceConnectPrompt
-          apiBaseUrl={
-            process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"
-          }
-        />
+        {stripeConfigured ? (
+          <FinanceConnectPrompt
+            apiBaseUrl={
+              process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"
+            }
+          />
+        ) : (
+          <EmptyState
+            variant="error"
+            title={t("connect.unavailableTitle")}
+            description={t("connect.unavailable")}
+          />
+        )}
       </div>
     )
   }
@@ -59,7 +70,7 @@ export default async function FinancePage({
         }
         summary={summary}
         bookings={bookings}
-        showStripePanels={Boolean(env().STRIPE_PUBLISHABLE_KEY)}
+        showStripePanels={stripeConfigured}
       />
     </div>
   )

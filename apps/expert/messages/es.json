@@ -574,7 +574,9 @@
       "description": "Conecta tu cuenta bancaria a través de Stripe para recibir los ingresos de las sesiones pagadas. Lleva unos minutos y se queda en Eleva.",
       "start": "Configurar pagos",
       "starting": "Abriendo pagos…",
-      "error": "No se pudieron iniciar los pagos. Inténtalo de nuevo."
+      "error": "No se pudieron iniciar los pagos. Inténtalo de nuevo.",
+      "unavailableTitle": "Los pagos aún no están disponibles",
+      "unavailable": "Los pagos no están configurados en este entorno. Contacta con soporte."
     }
   },
   "onboarding": {
