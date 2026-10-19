@@ -3,6 +3,7 @@ import {
   Container,
   Head,
   Html,
+  Img,
   Preview,
   Section,
   Tailwind,
@@ -11,6 +12,10 @@ import {
 import type { ReactNode } from "react"
 import { elevaTailwindConfig } from "../theme"
 import { getEmailTranslations, type EmailLocale } from "../i18n"
+
+// Absolute production URL: inboxes cannot load localhost or preview hosts,
+// and SVG is stripped by Gmail and Outlook.
+const LOGO_URL = "https://eleva.care/eleva-logo-white.png"
 
 interface LayoutProps {
   preview: string
@@ -48,12 +53,16 @@ export function EmailLayout({
         <Body className="bg-canvas m-0 font-sans">
           <Preview>{preview}</Preview>
           <Container className="mx-auto w-full max-w-[600px] px-[16px] py-[40px]">
-            <Section className="border-stroke bg-bg overflow-hidden rounded-[24px] border border-solid">
+            <Section className="border-stroke bg-bg overflow-hidden rounded-[12px] border border-solid">
               <Section className="bg-brand px-[32px] py-[28px]">
-                <Text className="text-fg-inverted m-0 text-[20px] leading-[24px] font-semibold">
-                  Eleva Care
-                </Text>
-                <Text className="text-fg-inverted m-0 mt-[4px] text-[12px] leading-[16px]">
+                <Img
+                  src={LOGO_URL}
+                  alt="Eleva Care"
+                  width="160"
+                  height="32"
+                  className="block h-[32px] w-[160px] border-none"
+                />
+                <Text className="text-fg-inverted m-0 mt-[10px] text-[12px] leading-[16px]">
                   {t.layout.tagline}
                 </Text>
               </Section>

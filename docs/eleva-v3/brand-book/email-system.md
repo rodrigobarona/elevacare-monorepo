@@ -26,10 +26,12 @@ remain for history.
 
 - **Headings:** Georgia (`font-serif`) 28/34, regular weight — the
   email-safe stand-in for Fraunces. Body and UI stay on the system sans stack.
-- **Buttons:** pill (`999px`) primary teal fill; secondary teal 2px outline.
-- **Shapes:** message card 24px radius, details card 16px.
-- **Header:** teal band with the "Eleva Care" text wordmark until a hosted
-  logo PNG exists (no public URL serves `eleva-logo-white.png` yet).
+- **Buttons:** 8px radius (not pill); primary teal fill, secondary teal 2px
+  outline.
+- **Shapes:** message card 12px radius, details card 8px.
+- **Header:** teal band with the white logo PNG
+  (`https://eleva.care/eleva-logo-white.png`, 160×32, served from
+  `apps/web/public`) and the tagline. Never SVG, never a localhost URL.
 
 ## Relationship to master brand
 
