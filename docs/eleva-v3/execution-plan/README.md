@@ -70,27 +70,28 @@ These are recorded as ADRs in Phase 1. Do not re-open them inside a phase prompt
 
 ## 3. Current state (why phases are ordered this way)
 
-The monorepo is roughly 40% built and WorkOS-locked. Keep: `apps/api` (~35 routes, OpenAPI,
-Stripe webhook state machine, rate limit, BotID), `packages/db` (22 main migrations, RLS via
-`eleva.org_id`, `withOrgContext`), `@eleva/audit`, `@eleva/billing`, `@eleva/scheduling`
-(`reserveSlot`), `@eleva/calendar`, `@eleva/accounting` registry, `@eleva/flags`, `@eleva/storage`,
-`@eleva/observability`, `apps/expert`, `apps/account`. Thin or stub: `apps/app`, `apps/team`,
-`apps/academy`, `apps/admin`, `apps/docs`, `apps/email`, packages `ai`, `crm`, `notifications`,
-`compliance`, `academy`. Missing: Daily code, PostHog code, Playwright, public booking funnel,
-audit DB migrations folder.
+Refreshed 2026-10-19 from [`audits/2026-10-phases-01-10-audit.md`](../audits/2026-10-phases-01-10-audit.md).
 
-WorkOS blast radius that Phases 2-3 remove: `packages/auth/*`, `packages/encryption` (Vault),
-`packages/calendar/src/credential-manager.ts` (Pipes), `packages/billing/src/server/provisioning.ts`
-(seat meter), `packages/workflows/.../calendar-event-sync.ts`, `packages/dashboard/workos-widgets-*`
-and `switch-org-action.ts`, `apps/account/src/app/(auth)/*`, `apps/api/src/app/workos/sync`,
-`infra/workos/*`, DB columns `users.workos_user_id`, `organizations.workos_org_id`,
-`memberships.workos_role`, `billing_customers.workos_org_id`, `expert_integrations.workos_user_id`,
-bearer bridge headers `x-eleva-workos-*`, `.cursor/rules/workos-*.mdc`, `.cursor/skills/workos-rbac-widgets`,
-`docs/eleva-v3/identity-rbac-spec.md`, `workos-multi-app.md`, ADR-004, ADR-015.
+Identity is Better Auth (ADR-017); WorkOS is fully removed. Phases 01–08 are engineering-on-main,
+Phase 09 video is on main with its staging exit gate unproven, and Phase 10 is open (about 40% of
+PR 10.1).
 
-v3 is **not live** until Phase 15. `main` may be temporarily inconsistent between Phase 2 and
-Phase 3 (Better Auth landed, WorkOS not yet deleted) — this is accepted because no production
-traffic depends on v3 before cutover.
+- `apps/api`: ~130 route handlers, every one with a `ROUTE_POLICY`; OpenAPI at `GET /openapi.json`
+  with a coverage test. Stripe (platform + Connect), Resend, Daily and QStash webhooks/workflows.
+- `packages/db`: 59 main migrations plus the audit project migrations; RLS via `eleva.org_id`
+  and the 7-class taxonomy.
+- Domain packages with real code: `auth`, `audit`, `billing`, `scheduling`, `calendar`,
+  `accounting` (closed-gate TOConline), `notifications`, `compliance`, `video` (Daily, standard,
+  **not HIPAA**), `records` (encrypted session records), `encryption`, `storage`, `media`,
+  `editor`, `flags`, `observability`, `ui`, `icons`, `dashboard`, `email`, `api-client`.
+- Stubs: `crm`, `academy`.
+- Apps: public marketing and booking (`apps/web`), member (`apps/app`), expert, account, team,
+  admin, docs and email are live in code; academy and the marketing surfaces are thin.
+- Playwright `e2e/` covers auth, booking, member, expert offer, legacy URLs and contract checks;
+  live money and video flows are opt-in loopback, never Production.
+
+Still gated: live FT POST / Comunicação / `invoice.issued` (`issueInvoice()` closed), D-07
+(HIPAA), and the 04B human-evidence waiver. v3 is **not live** until Phase 15.
 
 ## 4. The phase loop (applies to every phase)
 
