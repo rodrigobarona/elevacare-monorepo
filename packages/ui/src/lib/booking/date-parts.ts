@@ -8,9 +8,9 @@ export function bookingDateParts(
   const format = (options: Intl.DateTimeFormatOptions) =>
     new Intl.DateTimeFormat(locale, { timeZone, ...options })
   return {
-    month: format({ month: "short" }).format(start).replace(".", ""),
+    month: format({ month: "short" }).format(start).replaceAll(".", ""),
     day: format({ day: "numeric" }).format(start),
-    weekday: format({ weekday: "short" }).format(start).replace(".", ""),
+    weekday: format({ weekday: "short" }).format(start).replaceAll(".", ""),
     longDate: format({ weekday: "long", day: "numeric", month: "long" }).format(
       start
     ),

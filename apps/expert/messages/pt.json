@@ -113,10 +113,10 @@
     "title": "Serviços",
     "description": "Defina os serviços que os membros podem reservar.",
     "create": "Novo serviço",
-    "createTitle": "Criar tipo de evento",
+    "createTitle": "Criar serviço",
     "createDescription": "Crie um novo serviço reservável.",
-    "editTitle": "Editar tipo de evento",
-    "editDescription": "Atualize os detalhes e as regras de reserva deste tipo de evento.",
+    "editTitle": "Editar serviço",
+    "editDescription": "Atualize os detalhes e as regras de reserva deste serviço.",
     "empty": "Ainda sem serviços",
     "createFirst": "Criar o primeiro serviço",
     "status": {

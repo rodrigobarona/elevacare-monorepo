@@ -113,10 +113,10 @@
     "title": "Services",
     "description": "Define the bookable services you offer.",
     "create": "New service",
-    "createTitle": "Create Event Type",
+    "createTitle": "Create service",
     "createDescription": "Create a new bookable service.",
-    "editTitle": "Edit Event Type",
-    "editDescription": "Update this event type's details and booking rules.",
+    "editTitle": "Edit service",
+    "editDescription": "Update this service's details and booking rules.",
     "empty": "No services yet",
     "createFirst": "Create your first service",
     "status": {

@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { isLocale } from "./i18n"
 
 /**
  * Eleva v3 environment variable validator.
@@ -494,7 +495,7 @@ export function resolveGatewayUrl(hostHeader?: string | null): string {
 }
 
 function localePrefix(locale: string): string {
-  return locale === "en" ? "" : `/${locale}`
+  return isLocale(locale) && locale !== "en" ? `/${locale}` : ""
 }
 
 /** Public marketplace explorer on the gateway, in the given locale. */
