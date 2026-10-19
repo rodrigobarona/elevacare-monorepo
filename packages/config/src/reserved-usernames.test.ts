@@ -18,6 +18,8 @@ describe("reserved usernames", () => {
       "logout",
       "docs",
       "home",
+      "history",
+      "credits",
       "signin",
       "signup",
       "book",

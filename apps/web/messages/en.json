@@ -102,11 +102,11 @@
   },
   "about": {
     "title": "About — Eleva.care",
-    "description": "Eleva.care connects women with independent women's health experts — online, by phone or in person.",
-    "eyebrow": "Our mission",
-    "heading": "Women's health deserves ",
-    "headingAccent": "better",
-    "intro": "Eleva.care was founded on a simple belief: every woman should have access to expert, evidence-based health support, wherever she lives and however she prefers to meet.",
+    "description": "Eleva Care connects women with independent, licensed women's health experts. Meet our mission, our beliefs and the team behind it.",
+    "eyebrow": "About us",
+    "heading": "Transforming women's health with compassion and ",
+    "headingAccent": "proven care",
+    "intro": "We're here to make it easier to find the right help, at the right moment. Eleva Care connects you with licensed care experts through a secure, trusted technology platform.",
     "stats": {
       "modes": {
         "value": "3",
@@ -121,29 +121,94 @@
         "label": "Care areas, from pregnancy to every life stage"
       }
     },
-    "valuesHeading": "What we stand for",
-    "values": {
-      "evidenceBased": {
-        "title": "Evidence-based",
-        "description": "Experts on Eleva are independent health professionals. They share their background on their profile so you can choose with confidence."
+    "mission": {
+      "eyebrow": "Our mission",
+      "heading": "Care you can trust, at every step",
+      "p1": "We believe every woman deserves access to knowledgeable, compassionate care. Our platform helps you find independent, licensed experts you can trust, so you feel supported at every step.",
+      "p2": "We provide the technology that makes care simpler to access. Your chosen expert provides your care. Together, we help you move forward with confidence."
+    },
+    "vision": {
+      "eyebrow": "Our vision",
+      "heading": "Bridging science and care, so support feels ",
+      "headingAccent": "personal",
+      "lead": "We bring trusted expertise closer to you, making specialised care easier to access across every life stage."
+    },
+    "beliefs": {
+      "eyebrow": "Our beliefs",
+      "heading": "What we stand for",
+      "access": {
+        "title": "Quality care access",
+        "description": "Every woman deserves access to quality care, regardless of location or circumstances."
       },
-      "accessible": {
-        "title": "Accessible",
-        "description": "Good women's health support should not depend on where you live. Meet online, by phone or in person, in your language."
+      "knowledge": {
+        "title": "Knowledge is power",
+        "description": "Clear, evidence-based information helps you make confident health decisions."
       },
-      "humanCentred": {
-        "title": "Human-centred",
-        "description": "Behind every consultation is a real connection. We design every interaction around empathy, trust, and your individual needs."
+      "collaborative": {
+        "title": "Collaborative care",
+        "description": "Better outcomes happen when people work together with trusted professionals."
       },
-      "inclusive": {
-        "title": "Inclusive",
-        "description": "Women's health spans every age and life stage: pregnancy, pelvic health, menopause, cancer support and more."
+      "lifelong": {
+        "title": "A lifelong journey",
+        "description": "Women's health is a lifelong journey with changing needs, and we meet you where you are."
       }
     },
-    "ctaHeading": "Ready to get started?",
-    "ctaDescription": "Find the right expert for your health journey — it only takes a minute.",
-    "cta": "Find my expert",
-    "valuesEyebrow": "Our values"
+    "team": {
+      "eyebrow": "Meet our team",
+      "heading": "Led by healthcare innovators and compassionate experts",
+      "p1": "Eleva Care grew from a simple idea: expert care should be easier to reach. Our founders and advisors saw the gaps women face, and built a better way to connect you with trusted professionals.",
+      "p2": "Today, Eleva Care operates a secure digital platform that connects women with independent, licensed care experts. We provide the technology; your chosen expert provides your care.",
+      "storyCta": "Read our story",
+      "leadershipHeading": "Our leadership",
+      "roles": {
+        "patriciaMota": "Co-founder and Chief Executive Officer",
+        "rodrigoBarona": "Co-founder and Chief Technology Officer"
+      }
+    },
+    "advisors": {
+      "eyebrow": "Guided by leading experts",
+      "heading": "Board of advisors",
+      "lead": "Our advisory board brings together leaders in women's health, innovation and clinical research.",
+      "kariBo": {
+        "role": "Board advisor, pelvic floor health",
+        "quote": "Evidence-based pelvic-floor muscle training not only prevents and treats dysfunction; it empowers women to live confidently and fully at every stage of life."
+      },
+      "rubenBarakat": {
+        "role": "Board advisor, exercise science",
+        "quote": "Evidence shows that personalised exercise during pregnancy can transform women's health outcomes."
+      },
+      "alexandreDelgado": {
+        "role": "Board advisor, obstetric physical therapy",
+        "quote": "Evidence-based physical therapy transforms the pregnancy and birth experience, empowering women through every stage."
+      },
+      "cristineHomsiJorge": {
+        "role": "Board advisor, women's health",
+        "quote": "Clinical research and education empower women to make informed decisions about their health."
+      },
+      "annelieGutke": {
+        "role": "Board advisor, women's health",
+        "quote": "Understanding pain mechanisms transforms how we care for women during pregnancy and beyond."
+      },
+      "joanaBarros": {
+        "role": "Board advisor, women's lifecycle care",
+        "quote": "Seamless, team-based care across every life stage, from adolescence through pregnancy, childbirth and menopause, ensures women receive the personalised support they need to thrive."
+      },
+      "patriciaDriusso": {
+        "role": "Board advisor, women's health",
+        "quote": "Clinical research advances rehabilitation while empowering women through evidence-based education."
+      },
+      "jennyBagwell": {
+        "role": "Board advisor, biomechanics and perinatal health",
+        "quote": "Understanding movement patterns during and after pregnancy helps optimise care and improve long-term outcomes for women."
+      }
+    },
+    "join": {
+      "eyebrow": "Join our network",
+      "heading": "Transform women's health care with us",
+      "lead": "Join a community of independent professionals making quality care accessible to women everywhere. Set your own schedule, rates and policies; we provide the technology, you provide the care.",
+      "cta": "Become an expert",
+      "secondary": "Find an expert"
+    }
   },
   "experts": {
     "title": "Find an expert — Eleva.care",
@@ -386,7 +451,8 @@
     "instagram": "Instagram",
     "linkedin": "LinkedIn",
     "tagline": "Expert women's health care, close to you. Online, by phone or in person.",
-    "credits": "Photo credits"
+    "credits": "Photo credits",
+    "story": "Our story"
   },
   "legal": {
     "draftBanner": "Working pre-launch draft. This is not production legal text. Legal and the DPO will replace it before Eleva.care goes live.",
@@ -542,5 +608,70 @@
     "viewOnPexels": "View on Pexels",
     "pexels": "Pexels",
     "viewOnPexelsBy": "View the photo by {name} on Pexels"
+  },
+  "history": {
+    "title": "Our story — Eleva.care",
+    "description": "A letter from our founder, Patrícia Mota, about why Eleva Care exists.",
+    "eyebrow": "A letter from our founder",
+    "heading": "The story behind ",
+    "headingAccent": "Eleva Care",
+    "lead": "How a physiotherapist became a pioneer in evidence-based women's health.",
+    "author": "Patrícia Mota",
+    "authorRole": "Founder, physiotherapist and PhD in biomechanics",
+    "sections": [
+      {
+        "title": "Hello!",
+        "paragraphs": [
+          "Hi! I'm Patrícia Mota, a physiotherapist, and I'd like to share with you how Eleva Care was born.",
+          "Movement has been part of my life since I was a child: first through rhythmic gymnastics, then through synchronised swimming. When I became a physiotherapist, I worked mainly with musculoskeletal and orthopaedic conditions. That's when I faced a challenge: when my patients became pregnant, I didn't feel prepared to answer their questions. I'll admit it bothered me not to have clear answers for people who trusted me."
+        ]
+      },
+      {
+        "title": "The academic journey",
+        "paragraphs": [
+          "This feeling led me to pursue a PhD in Biomechanics with Professor Kari Bø, studying how abdominal muscles adapt during pregnancy and after childbirth. Meanwhile, I became a mother of three and personally experienced many of the issues I was researching.",
+          "I realised something important: <b>although strong scientific evidence exists, there's a huge gap between the knowledge being produced and what actually reaches people</b>."
+        ]
+      },
+      {
+        "title": "The problem I discovered",
+        "paragraphs": [
+          "On one hand, we already have a lot of evidence about effective strategies for women's health, but this knowledge often remains trapped in scientific articles that are hard to access and understand for those outside the field. It takes time for information to be translated into clinical practice, and even longer to reach the general public.",
+          "At the same time, we see countless promises on social media of quick fixes for complex women's health issues, from getting your pre-pregnancy body back in record time to miracle exercises for urinary incontinence. Too often these so-called solutions are clever marketing with no scientific foundation.",
+          "<b>What worries me isn't just misinformation itself, but how it can pull women away from approaches that truly work</b>: those based on solid science and clinical experience. Symptoms like incontinence, pelvic pain, sexual dysfunction or musculoskeletal changes have proven solutions that often don't reach the women who need them."
+        ]
+      },
+      {
+        "title": "The moment of inspiration",
+        "paragraphs": [
+          "While working on a research project in California with Jenny Bagwell, I missed my patients deeply. That distance made me think: why not create a way to deliver high-quality information and specialised care to women everywhere, regardless of where they live?",
+          "That's when Rodrigo, my husband, brought all these pieces together and created the Eleva Care platform. Maybe we're reinventing the wheel a little, after all."
+        ]
+      },
+      {
+        "title": "Our mission",
+        "paragraphs": [
+          "We want to build a bridge between cutting-edge science and the people who need it, in a truly accessible way: world-class women's health care, available whenever and wherever it's needed.",
+          "Our vision is simple: a secure digital platform that connects any woman with independent, licensed women's health specialists, adapting to her time and location, not the other way around."
+        ]
+      },
+      {
+        "title": "The team I'm proud of",
+        "paragraphs": [
+          "When I shared this idea with colleagues I admire, the response was warm and immediate. Today we have a group of advisors who fill me with pride and gratitude. They are extraordinarily experienced professionals, true leaders in their fields.",
+          "More than that, they're people I deeply care for, who have already contributed so much to what Eleva Care is today. Their generosity in sharing knowledge, experience and vision has been essential to our growth.",
+          "At the same time, we're growing a network of independent professionals I trust completely: people who share the same values and the same passion for evidence-based care.",
+          "Eleva Care is taking its first steps. We're learning and growing every day. If you connect with this vision, whether as a professional who wants to collaborate or as someone seeking evidence-based care, our door is open. We want every woman who reaches out to know she'll receive guidance grounded in the best available evidence and in the clinical experience of specialised professionals.",
+          "Share this vision with the family and friends who are looking for information on women's health. Help us spread knowledge in a way that is both accessible and high quality."
+        ]
+      }
+    ],
+    "signOff": "With dedication to science and genuine care,",
+    "photoCaption": "Patrícia Mota and Rodrigo Barona, founders of Eleva Care",
+    "cta": {
+      "eyebrow": "Ready for evidence-based care?",
+      "heading": "Find an expert who understands your health journey",
+      "action": "Find an expert"
+    }
   }
 }
