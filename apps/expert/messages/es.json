@@ -470,7 +470,9 @@
       "validation": "La solicitud no es válida.",
       "unauthorized-calendar": "No puedes cambiar este calendario."
     },
-    "eyebrow": "Tus calendarios"
+    "eyebrow": "Tus calendarios",
+    "useForBusyNamed": "Comprobar conflictos en {calendar} ({account})",
+    "useAsDestinationNamed": "Escribir sesiones en {calendar} ({account})"
   },
   "integrations": {
     "title": "Integraciones",

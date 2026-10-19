@@ -458,6 +458,10 @@ export function CalendarManager({
                                 <CheckboxField
                                   id={`busy-${cal.id}-${sub.id}`}
                                   label={t("useForBusy")}
+                                  aria-label={t("useForBusyNamed", {
+                                    calendar: sub.name,
+                                    account: cal.accountIdentifier ?? "",
+                                  })}
                                   isSelected={busyIds.has(sub.id)}
                                   isDisabled={pending !== null}
                                   onChange={(selected) =>
@@ -466,6 +470,10 @@ export function CalendarManager({
                                 />
                                 <RadioGroupItem
                                   value={key}
+                                  aria-label={t("useAsDestinationNamed", {
+                                    calendar: sub.name,
+                                    account: cal.accountIdentifier ?? "",
+                                  })}
                                   className="flex aspect-auto size-auto w-auto items-center gap-2 rounded-md border-0 bg-transparent p-0 text-sm text-foreground after:hidden data-selected:bg-transparent data-selected:text-foreground"
                                 >
                                   {t("useAsDestination")}

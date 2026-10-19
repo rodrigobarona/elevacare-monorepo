@@ -470,7 +470,9 @@
       "validation": "O pedido é inválido.",
       "unauthorized-calendar": "Não pode alterar este calendário."
     },
-    "eyebrow": "Os seus calendários"
+    "eyebrow": "Os seus calendários",
+    "useForBusyNamed": "Verificar conflitos em {calendar} ({account})",
+    "useAsDestinationNamed": "Escrever sessões em {calendar} ({account})"
   },
   "integrations": {
     "title": "Integrações",
