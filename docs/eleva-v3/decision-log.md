@@ -48,9 +48,17 @@ Each entry should include:
 - Slice 1 (data and API) adds migration 0059, the api-client schemas and the
   expert/public endpoints. Expert editing pages, the profile redesign and the
   booking flow pass follow as separate PRs.
+- Slice 2 (expert editing) adds the expert Public profile page and a Details
+  tab in the service editor.
+  - Portraits go to the public Blob store under `expert/portrait/<userId>/`.
+    The upload route and `PATCH /expert/profile` only accept the uploader's
+    own folder, and a replaced portrait is deleted only from that folder. The
+    account avatar (`user.image`) is never used as the public portrait.
+  - Bio translation runs through `POST /ai/editor` and is saved as an
+    `ai_draft` the expert reviews. Prompts name European Portuguese and
+    Spanish from Spain.
 - Out of scope (not shipped): session packs and monthly plans (a later phase
-  once the founder sets commercial terms; nothing is built or shown), reviews,
-  AI translation of the rich bio.
+  once the founder sets commercial terms; nothing is built or shown), reviews.
 - Owner: founder (review), engineering. Status: `proposed`. Next review:
   founder walkthrough once the profile redesign slice is on main.
 
