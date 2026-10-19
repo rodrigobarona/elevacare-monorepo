@@ -59,6 +59,8 @@ interface Props {
   workspaceBase: string
   /** Restrict which cards render (edit builder tabs). Default: full form. */
   panel?: "full" | "basics" | "policies"
+  /** Public booking URL prefix shown before the slug, e.g. `eleva.care/fisiomota/`. */
+  publicPrefix: string
 }
 
 type SessionMode = "online" | "in_person" | "phone"
@@ -84,9 +86,11 @@ export function EventTypeForm({
   defaultValues,
   workspaceBase,
   panel = "full",
+  publicPrefix,
 }: Props) {
   const router = useRouter()
   const t = useTranslations("eventTypes")
+  const tf = useTranslations("eventTypes.form")
   const uiLocale = useLocale()
   const policyLocale: CancellationPolicyLocale =
     uiLocale === "pt" || uiLocale === "es" ? uiLocale : "en"
@@ -291,10 +295,10 @@ export function EventTypeForm({
         <Alert variant="destructive">
           <AlertDescription>
             {error === "slug-taken"
-              ? "This slug is already in use. Choose a different one."
+              ? tf("slugTaken")
               : error === "slug-too-short"
-                ? "Slug must be at least 3 characters."
-                : "Something went wrong. Please try again."}
+                ? tf("slugTooShort")
+                : t("error.generic")}
           </AlertDescription>
         </Alert>
       )}
@@ -303,7 +307,7 @@ export function EventTypeForm({
         <>
           <Card>
             <CardHeader>
-              <CardTitle>Basic Information</CardTitle>
+              <CardTitle>{tf("basicsTitle")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex gap-1 border-b">
@@ -324,8 +328,13 @@ export function EventTypeForm({
               </div>
 
               <div className="space-y-1.5">
-                <Label>Title ({LOCALE_LABELS[activeLocale]})</Label>
+                <Label htmlFor="event-type-title">
+                  {tf("titleLabel", {
+                    language: LOCALE_LABELS[activeLocale] ?? activeLocale,
+                  })}
+                </Label>
                 <Input
+                  id="event-type-title"
                   value={
                     activeLocale === "en"
                       ? title.en
@@ -338,14 +347,19 @@ export function EventTypeForm({
                       setSlug(autoSlug(val))
                     }
                   }}
-                  placeholder="e.g., Initial Consultation"
+                  placeholder={tf("titlePlaceholder")}
                   required={activeLocale === "en"}
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label>Description ({LOCALE_LABELS[activeLocale]})</Label>
+                <Label htmlFor="event-type-description">
+                  {tf("descriptionLabel", {
+                    language: LOCALE_LABELS[activeLocale] ?? activeLocale,
+                  })}
+                </Label>
                 <Textarea
+                  id="event-type-description"
                   value={descriptionForLocale(activeLocale)}
                   onChange={(e) =>
                     setDescription((prev) => ({
@@ -353,7 +367,7 @@ export function EventTypeForm({
                       [activeLocale]: e.target.value,
                     }))
                   }
-                  placeholder="Describe what to expect"
+                  placeholder={tf("descriptionPlaceholder")}
                   rows={3}
                   data-testid="event-type-description"
                 />
@@ -404,14 +418,14 @@ export function EventTypeForm({
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="slug">URL Slug</Label>
+                <Label htmlFor="slug">{tf("slugLabel")}</Label>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span>eleva.care/[username]/</span>
+                  <span>{publicPrefix}</span>
                   <Input
                     id="slug"
                     value={slug}
                     onChange={(e) => setSlug(e.target.value.toLowerCase())}
-                    placeholder="initial-consultation"
+                    placeholder={tf("slugPlaceholder")}
                     pattern="[a-z0-9][a-z0-9-]*[a-z0-9]"
                     className="max-w-xs"
                   />
@@ -422,12 +436,12 @@ export function EventTypeForm({
 
           <Card>
             <CardHeader>
-              <CardTitle>Session Details</CardTitle>
+              <CardTitle>{tf("sessionTitle")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="duration">Duration (min)</Label>
+                  <Label htmlFor="duration">{tf("duration")}</Label>
                   <Input
                     id="duration"
                     type="number"
@@ -439,7 +453,7 @@ export function EventTypeForm({
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="price">Price</Label>
+                  <Label htmlFor="price">{tf("price")}</Label>
                   <Input
                     id="price"
                     type="number"
@@ -451,7 +465,7 @@ export function EventTypeForm({
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Currency</Label>
+                  <Label>{tf("currency")}</Label>
                   <p className="text-sm text-muted-foreground">{currency}</p>
                 </div>
               </div>
@@ -463,20 +477,20 @@ export function EventTypeForm({
                     if (isSessionMode(key)) setSessionMode(key)
                   }}
                 >
-                  <Label>Session mode</Label>
+                  <Label>{tf("sessionMode")}</Label>
                   <SelectTrigger className="max-w-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem id="online">Online (video)</SelectItem>
-                    <SelectItem id="in_person">In person</SelectItem>
-                    <SelectItem id="phone">Phone</SelectItem>
+                    <SelectItem id="online">{tf("modeOnline")}</SelectItem>
+                    <SelectItem id="in_person">{tf("modeInPerson")}</SelectItem>
+                    <SelectItem id="phone">{tf("modePhone")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-1.5">
-                <Label>Languages supported</Label>
+                <Label>{tf("languages")}</Label>
                 <div className="flex gap-4">
                   {LOCALES.map((lang) => (
                     <CheckboxField
@@ -498,26 +512,24 @@ export function EventTypeForm({
         <Card>
           <CardHeader>
             <CardTitle>
-              {panel === "policies" ? t("policiesTitle") : "Booking Rules"}
+              {panel === "policies" ? t("policiesTitle") : tf("rulesTitle")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label htmlFor="bookingWindow">
-                  Booking window (days in advance)
-                </Label>
+                <Label htmlFor="bookingWindow">{tf("bookingWindow")}</Label>
                 <Input
                   id="bookingWindow"
                   type="number"
                   min={1}
                   value={bookingWindow}
                   onChange={(e) => setBookingWindow(e.target.value)}
-                  placeholder="No limit"
+                  placeholder={tf("noLimit")}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="minimumNotice">Minimum notice (min)</Label>
+                <Label htmlFor="minimumNotice">{tf("minimumNotice")}</Label>
                 <Input
                   id="minimumNotice"
                   type="number"
@@ -530,7 +542,7 @@ export function EventTypeForm({
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label htmlFor="bufferBefore">Buffer before (min)</Label>
+                <Label htmlFor="bufferBefore">{tf("bufferBefore")}</Label>
                 <Input
                   id="bufferBefore"
                   type="number"
@@ -540,7 +552,7 @@ export function EventTypeForm({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="bufferAfter">Buffer after (min)</Label>
+                <Label htmlFor="bufferAfter">{tf("bufferAfter")}</Label>
                 <Input
                   id="bufferAfter"
                   type="number"
@@ -571,7 +583,7 @@ export function EventTypeForm({
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="rescheduleWindow">
-                  Reschedule window (hours)
+                  {tf("rescheduleWindow")}
                 </Label>
                 <Input
                   id="rescheduleWindow"
@@ -579,7 +591,7 @@ export function EventTypeForm({
                   min={0}
                   value={rescheduleWindow}
                   onChange={(e) => setRescheduleWindow(e.target.value)}
-                  placeholder="No limit"
+                  placeholder={tf("noLimit")}
                 />
               </div>
             </div>
@@ -605,7 +617,7 @@ export function EventTypeForm({
             <div className="space-y-3">
               <CheckboxField
                 id="event-type-worldwide-mode"
-                label="Worldwide mode (bypass country-license validation)"
+                label={tf("worldwideMode")}
                 isSelected={worldwideMode}
                 onChange={setWorldwideMode}
               />
@@ -622,10 +634,10 @@ export function EventTypeForm({
           }
         >
           {pending
-            ? "Saving..."
+            ? tf("saving")
             : mode === "create"
-              ? "Create event type"
-              : "Save changes"}
+              ? tf("create")
+              : tf("save")}
         </Button>
         {panel === "full" ? (
           <Button
@@ -633,7 +645,7 @@ export function EventTypeForm({
             variant="outline"
             onPress={() => router.push(`${workspaceBase}/event-types`)}
           >
-            Cancel
+            {tf("cancel")}
           </Button>
         ) : null}
       </div>
