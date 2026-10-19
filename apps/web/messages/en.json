@@ -213,11 +213,11 @@
   "experts": {
     "title": "Find an expert — Eleva.care",
     "categoryTitle": "{category} experts — Eleva.care",
-    "description": "Browse verified women's health experts, offers, and upcoming availability in your language and country.",
-    "eyebrow": "Marketplace",
-    "heading": "Find an expert",
+    "description": "Browse independent women's health experts, their offers and upcoming availability in your language and country.",
+    "eyebrow": "Find your expert",
+    "heading": "Women's health experts, close to you",
     "categoryHeading": "{category}",
-    "intro": "Filter by language and sort by price or rating. Members choose how they want to meet on the expert's page.",
+    "intro": "Browse by area of care, filter by language, and choose how you want to meet: online, by phone or in person.",
     "empty": "No experts match these filters yet.",
     "filterError": "Those filters are not valid. Reset and try again.",
     "resetFilters": "Reset filters",
@@ -253,7 +253,15 @@
       "price": "Price",
       "rating": "Rating"
     },
-    "verified": "Verified profile"
+    "categoriesLabel": "Areas of care",
+    "allCategories": "All areas",
+    "join": {
+      "eyebrow": "For experts",
+      "heading": "Bring your practice to Eleva",
+      "lead": "Set your own schedule, rates and policies. We provide the technology; you provide the care.",
+      "cta": "Become an expert"
+    },
+    "free": "Free"
   },
   "profile": {
     "title": "{name} — Eleva.care",
@@ -261,16 +269,24 @@
     "upcoming": "Upcoming availability",
     "noSlots": "No upcoming slots in the next two weeks.",
     "rateLimited": "Too many requests just now. Wait a minute and try again.",
-    "offers": "Offers",
-    "offerMeta": "{duration} min · from {price} · {modes}",
+    "offers": "Services",
     "book": "Choose a time",
     "bookSlot": "Book {offer} at {when}",
-    "modes": {
-      "online": "video",
-      "in_person": "in person",
-      "phone": "phone"
+    "cancellationPolicy": "Cancellation policy: {name}",
+    "languages": "Languages",
+    "countries": "Sees members from",
+    "seeAvailability": "See availability",
+    "viewOffers": "View services",
+    "about": "About {name}",
+    "duration": "{duration} min",
+    "fromPrice": "From {price}",
+    "timeZoneNote": "Pick a time to start booking. Times are shown in {timeZone}.",
+    "modeChips": {
+      "online": "Video call",
+      "in_person": "In person",
+      "phone": "Phone"
     },
-    "cancellationPolicy": "Cancellation policy: {name}"
+    "free": "Free"
   },
   "booking": {
     "meta": {

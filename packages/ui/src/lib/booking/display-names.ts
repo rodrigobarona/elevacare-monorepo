@@ -32,6 +32,12 @@ export function displayLanguage(code: string, locale: string): string {
   return displayName("language", code, locale)
 }
 
+/** Standalone label form: "Francês" rather than "francês" in `pt`. */
+export function displayLanguageLabel(code: string, locale: string): string {
+  const name = displayLanguage(code, locale)
+  return name.charAt(0).toLocaleUpperCase(locale) + name.slice(1)
+}
+
 /** Localized country name for an ISO 3166-1 alpha-2 code. */
 export function displayRegion(code: string, locale: string): string {
   return displayName("region", code.toUpperCase(), locale)
