@@ -70,3 +70,29 @@ export function isAllowedSocialLinkUrl(
     }
   }
 }
+
+export const EXPERT_PORTRAIT_UPLOAD = {
+  prefix: "expert",
+  kind: "portrait",
+  contentTypes: ["image/jpeg", "image/png", "image/webp"],
+  maxBytes: 5 * 1024 * 1024,
+} as const
+
+const PUBLIC_BLOB_HOST_SUFFIX = ".public.blob.vercel-storage.com"
+
+/** Portraits must come from Eleva's public Blob store under the portrait path. */
+export function isExpertPortraitUrl(url: string): boolean {
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    return false
+  }
+  return (
+    parsed.protocol === "https:" &&
+    parsed.hostname.toLowerCase().endsWith(PUBLIC_BLOB_HOST_SUFFIX) &&
+    parsed.pathname.startsWith(
+      `/${EXPERT_PORTRAIT_UPLOAD.prefix}/${EXPERT_PORTRAIT_UPLOAD.kind}/`
+    )
+  )
+}

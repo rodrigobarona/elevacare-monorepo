@@ -2,6 +2,7 @@ import { z } from "zod"
 import { CANCELLATION_POLICY_VALUES } from "@eleva/config/cancellation-policy"
 import {
   isAllowedSocialLinkUrl,
+  isExpertPortraitUrl,
   PROFILE_CONTENT_LIMITS,
   SOCIAL_LINK_KINDS,
 } from "@eleva/config/expert-profile-content"
@@ -832,6 +833,14 @@ export const PatchExpertProfileRequestSchema = z.object({
   displayName: z.string().min(1).optional(),
   headline: z.string().nullish(),
   bio: z.string().nullish(),
+  /** Public portrait uploaded to `expert/portrait/`; `null` removes it. */
+  avatarUrl: z
+    .string()
+    .max(PROFILE_CONTENT_LIMITS.url)
+    .refine(isExpertPortraitUrl, {
+      message: "Portrait must be uploaded through Eleva",
+    })
+    .nullish(),
   /** Rich bio; `null` clears it. Also refreshes the plain-text `bio`. */
   bioRich: LocalizedRichTextWriteRequestSchema.nullish(),
   socialLinks: ExpertSocialLinksSchema.optional(),

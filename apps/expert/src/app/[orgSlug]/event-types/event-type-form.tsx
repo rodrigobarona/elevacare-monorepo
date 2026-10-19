@@ -18,6 +18,7 @@ import {
   type CancellationPolicy,
   type CancellationPolicyLocale,
 } from "@eleva/config/cancellation-policy"
+import { localeNames, locales, type Locale } from "@eleva/config"
 import { toast } from "sonner"
 import { Button } from "@eleva/ui/components/button"
 import { Input } from "@eleva/ui/components/input"
@@ -45,7 +46,7 @@ import {
   updateEventTypeAction,
   type EventTypeFormData,
 } from "./actions"
-import { editorAssistAction } from "./editor-assist-action"
+import { editorAssistAction } from "@/lib/editor-assist-action"
 import type { EditorAssistCommand } from "@eleva/api-client"
 
 export type { EventTypeFormData }
@@ -71,13 +72,6 @@ function isSessionMode(value: unknown): value is SessionMode {
     typeof value === "string" &&
     (SESSION_MODES as readonly string[]).includes(value)
   )
-}
-
-const LOCALES = ["en", "pt", "es"] as const
-const LOCALE_LABELS: Record<string, string> = {
-  en: "English",
-  pt: "Português",
-  es: "Español",
 }
 
 export function EventTypeForm({
@@ -106,7 +100,7 @@ export function EventTypeForm({
   const [assistPending, setAssistPending] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [assistError, setAssistError] = React.useState<string | null>(null)
-  const [activeLocale, setActiveLocale] = React.useState<string>("en")
+  const [activeLocale, setActiveLocale] = React.useState<Locale>("en")
 
   const [slug, setSlug] = React.useState(defaultValues?.slug ?? "")
   const [title, setTitle] = React.useState<LocalizedText>(
@@ -311,7 +305,7 @@ export function EventTypeForm({
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex gap-1 border-b">
-                {LOCALES.map((loc) => (
+                {locales.map((loc) => (
                   <button
                     key={loc}
                     type="button"
@@ -322,7 +316,7 @@ export function EventTypeForm({
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    {LOCALE_LABELS[loc]}
+                    {localeNames[loc]}
                   </button>
                 ))}
               </div>
@@ -330,7 +324,7 @@ export function EventTypeForm({
               <div className="space-y-1.5">
                 <Label htmlFor="event-type-title">
                   {tf("titleLabel", {
-                    language: LOCALE_LABELS[activeLocale] ?? activeLocale,
+                    language: localeNames[activeLocale],
                   })}
                 </Label>
                 <Input
@@ -355,7 +349,7 @@ export function EventTypeForm({
               <div className="space-y-1.5">
                 <Label htmlFor="event-type-description">
                   {tf("descriptionLabel", {
-                    language: LOCALE_LABELS[activeLocale] ?? activeLocale,
+                    language: localeNames[activeLocale],
                   })}
                 </Label>
                 <Textarea
@@ -492,11 +486,11 @@ export function EventTypeForm({
               <div className="space-y-1.5">
                 <Label>{tf("languages")}</Label>
                 <div className="flex gap-4">
-                  {LOCALES.map((lang) => (
+                  {locales.map((lang) => (
                     <CheckboxField
                       key={lang}
                       id={`event-type-lang-${lang}`}
-                      label={LOCALE_LABELS[lang]}
+                      label={localeNames[lang]}
                       isSelected={languages.includes(lang)}
                       onChange={() => toggleLanguage(lang)}
                     />

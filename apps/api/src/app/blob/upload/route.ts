@@ -16,6 +16,7 @@
 
 import { handleBlobUpload } from "@eleva/storage/blob-upload-handler"
 import { verifyUploadToken } from "@eleva/auth/upload-token"
+import { EXPERT_PORTRAIT_UPLOAD } from "@eleva/config/expert-profile-content"
 import { corsHeaders } from "@/lib/cors"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -52,6 +53,14 @@ const UPLOAD_POLICIES: Record<string, UploadPolicy> = {
     },
     allowedContentTypes: AVATAR_CONTENT_TYPES,
     maxBytes: AVATAR_MAX_BYTES,
+  },
+  [EXPERT_PORTRAIT_UPLOAD.prefix]: {
+    match: (pathname) => {
+      const m = pathname.match(/^expert\/portrait\/[^/]+$/)
+      return m ? EXPERT_PORTRAIT_UPLOAD.kind : null
+    },
+    allowedContentTypes: EXPERT_PORTRAIT_UPLOAD.contentTypes,
+    maxBytes: EXPERT_PORTRAIT_UPLOAD.maxBytes,
   },
 }
 

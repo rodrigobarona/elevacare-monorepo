@@ -6,7 +6,8 @@
     "calendar": "Calendário",
     "calendars": "Calendários ligados",
     "integrations": "Integrações",
-    "finance": "Finanças"
+    "finance": "Finanças",
+    "publicProfile": "Perfil público"
   },
   "dashboard": {
     "expert": {
@@ -147,7 +148,8 @@
       "kind": "Tipo",
       "policies": "Políticas",
       "modes": "Modos de entrega",
-      "privateLinks": "Links privados"
+      "privateLinks": "Links privados",
+      "details": "Detalhes"
     },
     "kind": {
       "title": "Tipo de serviço e visibilidade",
@@ -366,7 +368,35 @@
       "save": "Guardar alterações",
       "cancel": "Cancelar"
     },
-    "backToServices": "Serviços"
+    "backToServices": "Serviços",
+    "details": {
+      "title": "O que os membros recebem",
+      "description": "Listas curtas mostradas no cartão do serviço e na página de marcação, para que os membros saibam exatamente o que estão a pagar. Escreva-as em cada língua em que oferece o serviço.",
+      "language": "Língua",
+      "whatToExpect": {
+        "label": "O que esperar",
+        "hint": "Como decorre a sessão, passo a passo.",
+        "placeholder": "Começamos com uma breve conversa sobre os seus objetivos"
+      },
+      "whatsIncluded": {
+        "label": "O que está incluído",
+        "hint": "O que os membros recebem. Indique apenas o que realmente entrega.",
+        "placeholder": "Um plano de exercícios por escrito depois da sessão"
+      },
+      "exampleQuestions": {
+        "label": "Perguntas em que pode ajudar",
+        "hint": "Perguntas reais que os membros trazem. Ajudam a perceber se esta sessão é a certa.",
+        "placeholder": "Posso continuar a correr durante a gravidez?"
+      },
+      "itemLabel": "{list}, item {number}",
+      "removeItem": "Remover item {number}",
+      "addItem": "Adicionar item",
+      "emptyHidden": "As listas vazias não aparecem na sua página pública.",
+      "save": "Guardar",
+      "saving": "A guardar…",
+      "saved": "Detalhes guardados",
+      "saveFailed": "Não foi possível guardar os detalhes. Tente novamente."
+    }
   },
   "schedule": {
     "title": "Horário",
@@ -773,5 +803,125 @@
       "stepDone": "Passo {number}: {label} (concluído)",
       "next": "Passo seguinte"
     }
+  },
+  "publicProfile": {
+    "eyebrow": "A sua página pública",
+    "title": "Perfil público",
+    "description": "É isto que os membros veem antes de marcar. Uma foto clara, uma biografia acolhedora e a sua formação ajudam-nos a escolher com confiança.",
+    "viewPublic": "Ver página pública",
+    "saved": "Guardado",
+    "saveFailed": "Não foi possível guardar. Tente novamente.",
+    "save": "Guardar",
+    "saving": "A guardar…",
+    "portrait": {
+      "title": "Fotografia",
+      "description": "A sua fotografia é o maior elemento da sua página. Os membros marcam com pessoas, não com logótipos.",
+      "upload": "Carregar fotografia",
+      "replace": "Substituir fotografia",
+      "remove": "Remover",
+      "uploading": "A carregar…",
+      "hint": "JPG, PNG ou WebP, até 5 MB. O formato retrato (4:5) resulta melhor.",
+      "tooLarge": "A fotografia tem mais de 5 MB.",
+      "invalidType": "Use uma imagem JPG, PNG ou WebP.",
+      "uploaded": "Fotografia atualizada",
+      "removed": "Fotografia removida",
+      "doTitle": "Resulta bem",
+      "do": [
+        "Uma fotografia recente, só de si",
+        "Luz natural e fundo simples",
+        "Vestido(a) como numa sessão",
+        "Uma expressão natural e descontraída"
+      ],
+      "avoidTitle": "Evite",
+      "avoid": [
+        "Fotografias de grupo ou de férias recortadas",
+        "Filtros ou edições fortes",
+        "Logótipos ou ilustrações em vez de si"
+      ],
+      "uploadFailed": "O carregamento falhou. Tente novamente."
+    },
+    "basics": {
+      "title": "Nome e título",
+      "description": "Aparece no topo da sua página e no seu cartão na pesquisa.",
+      "displayName": "Nome a apresentar",
+      "displayNameHint": "O nome pelo qual os membros a(o) conhecem. Pode incluir um título, por exemplo \"Dra. Ana Mota\".",
+      "headline": "Título",
+      "headlinePlaceholder": "Fisioterapeuta de pavimento pélvico na gravidez e pós-parto",
+      "headlineHint": "Uma linha: o que faz e quem ajuda."
+    },
+    "bio": {
+      "title": "Sobre si",
+      "description": "Escreva na sua língua. Os membros leem na deles: traduza com IA e reveja o rascunho antes de guardar.",
+      "writeIn": "Escrevo em",
+      "guideTitle": "Uma biografia que ajuda a escolher",
+      "guide": [
+        "O que faz e quem ajuda",
+        "Como trabalha com os membros",
+        "A sua formação e experiência",
+        "Porque é que este trabalho é importante para si"
+      ],
+      "guideTip": "Escreva na primeira pessoa: \"Ajudo…\" é mais próximo do que \"Ela ajuda…\".",
+      "placeholder": "Sou fisioterapeuta há 12 anos e ajudo mulheres a voltarem a sentir-se fortes depois da gravidez…",
+      "translating": "A traduzir…",
+      "translateFailed": "A tradução falhou. Tente novamente.",
+      "sourceEmpty": "Escreva primeiro a biografia na sua língua.",
+      "localeSource": "original",
+      "localeAiDraft": "rascunho IA — reveja",
+      "translateFrom": "Traduzir de {language}",
+      "cleared": "Biografia removida"
+    },
+    "social": {
+      "title": "Redes sociais",
+      "description": "Perfis profissionais que os membros podem consultar antes de marcar. As ligações abrem num novo separador.",
+      "empty": "Ainda sem ligações.",
+      "add": "Adicionar ligação",
+      "network": "Rede",
+      "url": "Ligação",
+      "remove": "Remover ligação {network}",
+      "invalid": "Verifique a ligação: tem de começar por https:// e corresponder à rede.",
+      "kinds": {
+        "website": "Website",
+        "instagram": "Instagram",
+        "linkedin": "LinkedIn",
+        "youtube": "YouTube",
+        "tiktok": "TikTok",
+        "facebook": "Facebook"
+      },
+      "placeholders": {
+        "website": "https://asuaclinica.pt",
+        "instagram": "https://instagram.com/oseunome",
+        "linkedin": "https://linkedin.com/in/oseunome",
+        "youtube": "https://youtube.com/@oseucanal",
+        "tiktok": "https://tiktok.com/@oseunome",
+        "facebook": "https://facebook.com/asuapagina"
+      }
+    },
+    "credentials": {
+      "title": "Formação e credenciais",
+      "description": "Licenciaturas, especializações e certificações. Indique apenas formação que possa comprovar.",
+      "empty": "Ainda sem credenciais.",
+      "add": "Adicionar credencial",
+      "itemTitle": "Título",
+      "itemTitlePlaceholder": "Mestrado em Fisioterapia na Saúde da Mulher",
+      "institution": "Instituição",
+      "institutionPlaceholder": "Universidade de Lisboa",
+      "year": "Ano",
+      "remove": "Remover credencial",
+      "invalid": "Cada credencial precisa de um título e o ano tem de estar entre 1900 e 2100."
+    }
+  },
+  "richTextEditor": {
+    "bold": "Negrito",
+    "italic": "Itálico",
+    "underline": "Sublinhado",
+    "h1": "Título 1",
+    "h2": "Título 2",
+    "h3": "Título 3",
+    "blockquote": "Citação",
+    "improve": "Melhorar",
+    "shorten": "Encurtar",
+    "fixGrammar": "Corrigir gramática",
+    "assistEmpty": "A IA não devolveu texto. Tente novamente.",
+    "assistFailed": "A assistência IA falhou. Tente novamente."
   }
 }

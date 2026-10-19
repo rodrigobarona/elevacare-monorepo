@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { getLocale, getTranslations } from "next-intl/server"
+import { isLocale } from "@eleva/config"
 import { ArrowLeftIcon } from "@eleva/icons"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { StatusPill } from "@eleva/ui/components/status-pill"
@@ -158,6 +159,12 @@ export default async function EditEventTypePage(props: {
         eventTypeId={id}
         workspaceBase={base}
         defaults={defaults}
+        detailLists={{
+          whatToExpect: eventType.whatToExpect,
+          whatsIncluded: eventType.whatsIncluded,
+          exampleQuestions: eventType.exampleQuestions,
+        }}
+        detailsLocale={isLocale(locale) ? locale : "en"}
         kind={eventType.kind}
         visibility={eventType.visibility}
         modes={modeRows}

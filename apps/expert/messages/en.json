@@ -6,7 +6,8 @@
     "calendar": "Calendar",
     "calendars": "Connected calendars",
     "integrations": "Integrations",
-    "finance": "Finance"
+    "finance": "Finance",
+    "publicProfile": "Public profile"
   },
   "dashboard": {
     "expert": {
@@ -147,7 +148,8 @@
       "kind": "Kind",
       "policies": "Policies",
       "modes": "Delivery modes",
-      "privateLinks": "Private links"
+      "privateLinks": "Private links",
+      "details": "Details"
     },
     "kind": {
       "title": "Service kind & visibility",
@@ -366,7 +368,35 @@
       "save": "Save changes",
       "cancel": "Cancel"
     },
-    "backToServices": "Services"
+    "backToServices": "Services",
+    "details": {
+      "title": "What members get",
+      "description": "Short lists shown on your service card and booking page, so members know exactly what they are paying for. Write them in each language you offer the service in.",
+      "language": "Language",
+      "whatToExpect": {
+        "label": "What to expect",
+        "hint": "How the session goes, step by step.",
+        "placeholder": "We start with a short chat about your goals"
+      },
+      "whatsIncluded": {
+        "label": "What's included",
+        "hint": "What members get. List only what you actually deliver.",
+        "placeholder": "A written exercise plan after the session"
+      },
+      "exampleQuestions": {
+        "label": "Questions you can help with",
+        "hint": "Real questions members bring. They help people decide if this session is right for them.",
+        "placeholder": "Is it safe to keep running during pregnancy?"
+      },
+      "itemLabel": "{list}, item {number}",
+      "removeItem": "Remove item {number}",
+      "addItem": "Add item",
+      "emptyHidden": "Empty lists are hidden on your public page.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Details saved",
+      "saveFailed": "Could not save the details. Please try again."
+    }
   },
   "schedule": {
     "title": "Schedule",
@@ -773,5 +803,125 @@
       "stepDone": "Step {number}: {label} (complete)",
       "next": "Next step"
     }
+  },
+  "publicProfile": {
+    "eyebrow": "Your public page",
+    "title": "Public profile",
+    "description": "This is what members see before they book. A clear photo, a warm bio and your training help them feel confident choosing you.",
+    "viewPublic": "View public page",
+    "saved": "Saved",
+    "saveFailed": "Could not save. Please try again.",
+    "save": "Save",
+    "saving": "Saving…",
+    "portrait": {
+      "title": "Photo",
+      "description": "Your photo is the largest element on your public page. Members book people, not logos.",
+      "upload": "Upload photo",
+      "replace": "Replace photo",
+      "remove": "Remove",
+      "uploading": "Uploading…",
+      "hint": "JPG, PNG or WebP, up to 5 MB. Portrait (4:5) works best.",
+      "tooLarge": "The photo is larger than 5 MB.",
+      "invalidType": "Use a JPG, PNG or WebP image.",
+      "uploaded": "Photo updated",
+      "removed": "Photo removed",
+      "doTitle": "Works well",
+      "do": [
+        "A recent photo of you alone",
+        "Natural light and a plain background",
+        "Dressed as you would for a session",
+        "A relaxed, natural expression"
+      ],
+      "avoidTitle": "Avoid",
+      "avoid": [
+        "Group or cropped holiday photos",
+        "Heavy filters or edits",
+        "Logos or illustrations instead of you"
+      ],
+      "uploadFailed": "Upload failed. Please try again."
+    },
+    "basics": {
+      "title": "Name and headline",
+      "description": "Shown at the top of your page and on your card in search.",
+      "displayName": "Display name",
+      "displayNameHint": "The name members know you by. You can include a title, for example \"Dr. Ana Mota\".",
+      "headline": "Headline",
+      "headlinePlaceholder": "Pelvic floor physiotherapist for pregnancy and postpartum",
+      "headlineHint": "One line: what you do and who you help."
+    },
+    "bio": {
+      "title": "About you",
+      "description": "Write in your own language. Members read it in theirs: translate it with AI, then check the draft before saving.",
+      "writeIn": "I write in",
+      "guideTitle": "A bio that helps members choose",
+      "guide": [
+        "What you do and who you help",
+        "How you work with members",
+        "Your training and experience",
+        "Why this work matters to you"
+      ],
+      "guideTip": "Write in the first person: \"I help…\" feels warmer than \"She helps…\".",
+      "placeholder": "I'm a physiotherapist with 12 years of experience helping women feel strong again after pregnancy…",
+      "translating": "Translating…",
+      "translateFailed": "Translation failed. Please try again.",
+      "sourceEmpty": "Write the bio in your language first.",
+      "localeSource": "source",
+      "localeAiDraft": "AI draft — check it",
+      "translateFrom": "Translate from {language}",
+      "cleared": "Bio removed"
+    },
+    "social": {
+      "title": "Social links",
+      "description": "Professional profiles members can check before booking. Links open in a new tab.",
+      "empty": "No links yet.",
+      "add": "Add link",
+      "network": "Network",
+      "url": "Link",
+      "remove": "Remove {network} link",
+      "invalid": "Check the link: it must start with https:// and match the network.",
+      "kinds": {
+        "website": "Website",
+        "instagram": "Instagram",
+        "linkedin": "LinkedIn",
+        "youtube": "YouTube",
+        "tiktok": "TikTok",
+        "facebook": "Facebook"
+      },
+      "placeholders": {
+        "website": "https://yourpractice.com",
+        "instagram": "https://instagram.com/yourname",
+        "linkedin": "https://linkedin.com/in/yourname",
+        "youtube": "https://youtube.com/@yourchannel",
+        "tiktok": "https://tiktok.com/@yourname",
+        "facebook": "https://facebook.com/yourpage"
+      }
+    },
+    "credentials": {
+      "title": "Training and credentials",
+      "description": "Degrees, specialisations and certifications. List only training you can show if asked.",
+      "empty": "No credentials yet.",
+      "add": "Add credential",
+      "itemTitle": "Title",
+      "itemTitlePlaceholder": "MSc in Women's Health Physiotherapy",
+      "institution": "Institution",
+      "institutionPlaceholder": "University of Lisbon",
+      "year": "Year",
+      "remove": "Remove credential",
+      "invalid": "Each credential needs a title, and the year must be between 1900 and 2100."
+    }
+  },
+  "richTextEditor": {
+    "bold": "Bold",
+    "italic": "Italic",
+    "underline": "Underline",
+    "h1": "Heading 1",
+    "h2": "Heading 2",
+    "h3": "Heading 3",
+    "blockquote": "Quote",
+    "improve": "Improve",
+    "shorten": "Shorten",
+    "fixGrammar": "Fix grammar",
+    "assistEmpty": "AI assist returned no text. Please try again.",
+    "assistFailed": "AI assist failed. Please try again."
   }
 }

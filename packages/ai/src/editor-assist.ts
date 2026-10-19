@@ -7,6 +7,7 @@
 import { streamText } from "ai"
 
 import { assertApprovedModel } from "./approved-models"
+import { describeLocale } from "./locale-variants"
 
 export const EDITOR_ASSIST_COMMANDS = [
   "improve",
@@ -95,9 +96,9 @@ export function buildEditorAssistPrompt(input: EditorAssistInput): string {
   const instruction = COMMAND_INSTRUCTIONS[input.command]
   const localeHint =
     input.command === "translate"
-      ? `\nSource locale: ${input.sourceLocale}\nTarget locale: ${input.targetLocale}`
+      ? `\nSource locale: ${describeLocale(input.sourceLocale)}\nTarget locale: ${describeLocale(input.targetLocale)}`
       : input.sourceLocale
-        ? `\nLocale: ${input.sourceLocale}`
+        ? `\nLocale: ${describeLocale(input.sourceLocale)}`
         : ""
 
   return [

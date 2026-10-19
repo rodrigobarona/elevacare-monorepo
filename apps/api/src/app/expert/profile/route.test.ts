@@ -2,12 +2,22 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const updateExpertProfile = vi.fn()
 const emit = vi.fn()
+const deletePublicBlob = vi.fn()
+const OLD_PORTRAIT =
+  "https://store.public.blob.vercel-storage.com/expert/portrait/old.jpg"
+const NEW_PORTRAIT =
+  "https://store.public.blob.vercel-storage.com/expert/portrait/new.jpg"
+
+vi.mock("@eleva/storage", () => ({
+  deletePublicBlob: (...args: unknown[]) => deletePublicBlob(...args),
+}))
 
 vi.mock("@eleva/db", () => ({
   getExpertProfileByUserId: vi.fn(async () => ({
     id: "profile-1",
     orgId: "org-1",
     metadata: {},
+    avatarUrl: OLD_PORTRAIT,
   })),
   updateExpertProfile: (...args: unknown[]) => updateExpertProfile(...args),
 }))
@@ -52,6 +62,24 @@ describe("PATCH /expert/profile content", () => {
   beforeEach(() => {
     updateExpertProfile.mockReset()
     emit.mockReset()
+    deletePublicBlob.mockReset()
+  })
+
+  it("replaces the portrait and deletes the old file", async () => {
+    const response = await patch({ avatarUrl: NEW_PORTRAIT })
+
+    expect(response.status).toBe(200)
+    expect(updatedFields().avatarUrl).toBe(NEW_PORTRAIT)
+    expect(deletePublicBlob).toHaveBeenCalledWith(OLD_PORTRAIT)
+  })
+
+  it("rejects portraits from outside the portrait upload path", async () => {
+    const response = await patch({
+      avatarUrl: "https://example.com/expert/portrait/x.jpg",
+    })
+
+    expect(response.status).toBe(422)
+    expect(deletePublicBlob).not.toHaveBeenCalled()
   })
 
   it("derives sanitized html and mirrors the source text into bio", async () => {

@@ -182,6 +182,41 @@ export async function updateEventTypeAction(
   }
 }
 
+const EventTypeDetailsSchema = UpdateEventTypeRequestSchema.pick({
+  whatsIncluded: true,
+  whatToExpect: true,
+  exampleQuestions: true,
+})
+
+/** Saves the member-facing lists shown on the service card and booking page. */
+export async function updateEventTypeDetailsAction(
+  eventTypeId: string,
+  input: unknown
+): Promise<ActionResult> {
+  const parsed = EventTypeDetailsSchema.safeParse(input)
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: "invalid-input",
+      details: parsed.error.issues,
+    }
+  }
+  try {
+    const session = await requireSession("events:manage")
+    const api = await getAuthedApiClient()
+    await api.expert.eventTypes.update(eventTypeId, parsed.data)
+    revalidateExpertWorkspace(session, "event-types")
+    return { ok: true }
+  } catch (err) {
+    console.error("[updateEventTypeDetailsAction]", err)
+    return {
+      ok: false,
+      error: mapExpertApiError(err, "update-failed"),
+      message: humanApiMessage(err),
+    }
+  }
+}
+
 export async function togglePublishAction(
   eventTypeId: string,
   published: boolean

@@ -17,7 +17,7 @@ import { Button } from "@eleva/ui/components/button"
 import { cn } from "@eleva/ui/lib/utils"
 
 import type { EditorAiContext, PlateValue, RichTextSource } from "./types"
-import { toPlainTextFromNodes } from "./types"
+import { plainTextToPlateValue, toPlainTextFromNodes } from "./types"
 
 const EMPTY_VALUE: PlateValue = [{ type: "p", children: [{ text: "" }] }]
 
@@ -82,15 +82,6 @@ export type RichTextEditorProps = {
    * mark `ai_draft` until the next human edit.
    */
   onChangeWithSource?: (value: PlateValue, source: RichTextSource) => void
-}
-
-function plainTextToPlateValue(text: string): PlateValue {
-  const paragraphs = text.split(/\n+/u).filter((part) => part.length > 0)
-  if (paragraphs.length === 0) return EMPTY_VALUE
-  return paragraphs.map((paragraph) => ({
-    type: "p",
-    children: [{ text: paragraph }],
-  }))
 }
 
 export function RichTextEditor({

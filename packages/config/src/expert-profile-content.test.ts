@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest"
-import { isAllowedSocialLinkUrl } from "./expert-profile-content"
+import {
+  isAllowedSocialLinkUrl,
+  isExpertPortraitUrl,
+} from "./expert-profile-content"
 
 describe("isAllowedSocialLinkUrl", () => {
   it("accepts platform links on their own domain", () => {
@@ -29,5 +32,31 @@ describe("isAllowedSocialLinkUrl", () => {
   it("accepts any https website with a real host", () => {
     expect(isAllowedSocialLinkUrl("website", "https://fisiomota.pt")).toBe(true)
     expect(isAllowedSocialLinkUrl("website", "https://localhost")).toBe(false)
+  })
+})
+
+describe("isExpertPortraitUrl", () => {
+  it("accepts portraits in the public Blob store", () => {
+    expect(
+      isExpertPortraitUrl(
+        "https://abc123.public.blob.vercel-storage.com/expert/portrait/me-x1.jpg"
+      )
+    ).toBe(true)
+  })
+
+  it("rejects other paths, hosts and protocols", () => {
+    expect(
+      isExpertPortraitUrl(
+        "https://abc123.public.blob.vercel-storage.com/avatar/profile/me.jpg"
+      )
+    ).toBe(false)
+    expect(
+      isExpertPortraitUrl("https://evil.example.com/expert/portrait/me.jpg")
+    ).toBe(false)
+    expect(
+      isExpertPortraitUrl(
+        "http://abc123.public.blob.vercel-storage.com/expert/portrait/me.jpg"
+      )
+    ).toBe(false)
   })
 })
