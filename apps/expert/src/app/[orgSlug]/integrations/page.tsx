@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server"
-import { PageHeader } from "@eleva/ui/components/page-header"
+import { PageHeader, Section } from "@eleva/ui/components/page-header"
 import { listExpertIntegrations } from "@eleva/db"
 import { listByCategory, listCategories } from "@eleva/integrations"
 import { expertWorkspaceBase } from "@/lib/workspace-paths"
@@ -7,14 +7,6 @@ import { loadExpertWorkspace } from "@/lib/expert-workspace"
 import { IntegrationCard } from "./integration-card"
 
 export const dynamic = "force-dynamic"
-
-const CATEGORY_LABEL: Record<string, string> = {
-  calendar: "Calendars",
-  invoicing: "Invoicing",
-  crm: "CRM",
-  video: "Video",
-  other: "Other",
-}
 
 export default async function IntegrationsPage({
   params,
@@ -28,42 +20,41 @@ export default async function IntegrationsPage({
   )
   const base = expertWorkspaceBase(session)
 
-  const connected = await listExpertIntegrations(profile.orgId, profile.id)
+  const [connected, t] = await Promise.all([
+    listExpertIntegrations(profile.orgId, profile.id),
+    getTranslations("integrations"),
+  ])
   const connectedBySlug = new Map(connected.map((c) => [c.slug, c]))
 
-  const categories = listCategories()
-  const t = await getTranslations("integrations")
-
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
-      <PageHeader title={t("title")} description={t("description")} />
+    <div className="mx-auto max-w-5xl space-y-10">
+      <PageHeader
+        eyebrow={t("eyebrow")}
+        title={t("title")}
+        description={t("description")}
+      />
 
-      {categories.map((category) => {
+      {listCategories().map((category) => {
         const manifests = listByCategory(category)
         if (manifests.length === 0) return null
 
         return (
-          <section key={category} className="space-y-4">
-            <h2 className="text-lg font-medium">
-              {t(`category.${category}`, {
-                defaultMessage: CATEGORY_LABEL[category] ?? category,
-              })}
-            </h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {manifests.map((manifest) => {
-                const connection = connectedBySlug.get(manifest.slug)
-                return (
-                  <IntegrationCard
-                    key={manifest.slug}
-                    manifest={manifest}
-                    status={connection?.status ?? null}
-                    integrationId={connection?.id ?? null}
-                    workspaceBase={base}
-                  />
-                )
-              })}
-            </div>
-          </section>
+          <Section
+            key={category}
+            title={t(`category.${category}.title`)}
+            description={t(`category.${category}.hint`)}
+          >
+            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {manifests.map((manifest) => (
+                <IntegrationCard
+                  key={manifest.slug}
+                  manifest={manifest}
+                  status={connectedBySlug.get(manifest.slug)?.status ?? null}
+                  workspaceBase={base}
+                />
+              ))}
+            </ul>
+          </Section>
         )
       })}
     </div>

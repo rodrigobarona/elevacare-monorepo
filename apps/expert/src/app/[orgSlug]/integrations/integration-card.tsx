@@ -1,38 +1,67 @@
 "use client"
 
-import Link from "next/link"
+import type { ReactNode } from "react"
 import { useLocale, useTranslations } from "next-intl"
-import { Badge } from "@eleva/ui/components/badge"
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@eleva/ui/components/card"
-import type { IntegrationManifest } from "@eleva/integrations"
+  CalendarDotsIcon,
+  PlugIcon,
+  UsersIcon,
+  VideoCameraIcon,
+  WalletIcon,
+} from "@eleva/icons"
+import type {
+  IntegrationCategory,
+  IntegrationManifest,
+} from "@eleva/integrations"
+import { LinkButton } from "@eleva/ui/components/button"
+import { StatusPill } from "@eleva/ui/components/status-pill"
+import type { StatusTone } from "@eleva/ui/components/status-pill"
 
 interface Props {
   manifest: IntegrationManifest
   status: string | null
-  integrationId: string | null
   workspaceBase: string
 }
 
-const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive"> =
-  {
-    connected: "default",
-    connecting: "secondary",
-    disconnected: "secondary",
-    error: "destructive",
-    expired: "destructive",
-  }
+type ConnectionStatus =
+  | "connected"
+  | "connecting"
+  | "disconnected"
+  | "error"
+  | "expired"
 
-export function IntegrationCard({
-  manifest,
-  status,
-  integrationId,
-  workspaceBase,
-}: Props) {
+const STATUS_TONE: Record<ConnectionStatus, StatusTone> = {
+  connected: "positive",
+  connecting: "neutral",
+  disconnected: "neutral",
+  error: "attention",
+  expired: "attention",
+}
+
+function isConnectionStatus(value: string): value is ConnectionStatus {
+  return value in STATUS_TONE
+}
+
+function categoryIcon(category: IntegrationCategory): ReactNode {
+  switch (category) {
+    case "calendar":
+      return <CalendarDotsIcon />
+    case "invoicing":
+      return <WalletIcon />
+    case "crm":
+      return <UsersIcon />
+    case "video":
+      return <VideoCameraIcon />
+    case "other":
+      return <PlugIcon />
+    default: {
+      const _exhaustive: never = category
+      return _exhaustive
+    }
+  }
+}
+
+export function IntegrationCard({ manifest, status, workspaceBase }: Props) {
   const t = useTranslations("integrations")
   const rawLocale = useLocale()
   const locale = (["en", "pt", "es"] as const).includes(
@@ -41,52 +70,58 @@ export function IntegrationCard({
     ? (rawLocale as "en" | "pt" | "es")
     : "en"
   const description = manifest.description[locale] ?? manifest.description.en
-
-  const isConnected = status === "connected"
+  const nameKey = `names.${manifest.slug}`
+  const displayName = t.has(nameKey) ? t(nameKey) : manifest.displayName
+  const knownStatus = status && isConnectionStatus(status) ? status : null
+  const isCalendar = manifest.category === "calendar"
 
   return (
-    <Card className="flex flex-col justify-between">
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <CardTitle className="text-sm font-medium">
-            {manifest.displayName}
-          </CardTitle>
-          {status && (
-            <Badge variant={STATUS_VARIANT[status] ?? "secondary"}>
-              {status in STATUS_VARIANT
-                ? t(`status.${status}` as Parameters<typeof t>[0])
-                : status}
-            </Badge>
-          )}
+    <li className="flex flex-col gap-4 rounded-3xl border bg-card p-5 shadow-1">
+      <div className="flex items-start gap-3">
+        <span
+          aria-hidden
+          className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-teal-50 text-teal-700 dark:bg-teal-950 dark:text-teal-200 [&_svg]:size-5"
+        >
+          {categoryIcon(manifest.category)}
+        </span>
+        <div className="min-w-0 flex-1">
+          <h3 className="font-medium">{displayName}</h3>
+          <p className="text-xs text-muted-foreground">{manifest.publisher}</p>
         </div>
-        <p className="text-xs text-muted-foreground">{manifest.publisher}</p>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <p className="text-sm text-muted-foreground">{description}</p>
+        {knownStatus ? (
+          <StatusPill tone={STATUS_TONE[knownStatus]}>
+            {t(`status.${knownStatus}`)}
+          </StatusPill>
+        ) : null}
+      </div>
 
-        {manifest.category === "calendar" && isConnected && integrationId && (
-          <Link
+      <p className="flex-1 text-sm text-muted-foreground">{description}</p>
+
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        {manifest.countries.length > 0 ? (
+          <p className="text-xs text-muted-foreground">
+            {t("availableIn", { countries: manifest.countries.join(", ") })}
+          </p>
+        ) : (
+          <span />
+        )}
+        {isCalendar ? (
+          <LinkButton
             href={`${workspaceBase}/calendars`}
-            className="text-xs font-medium text-primary hover:underline"
+            variant={knownStatus === "connected" ? "outline" : "default"}
+            size="sm"
+            aria-label={
+              knownStatus === "connected"
+                ? t("configureCalendarsNamed", { name: displayName })
+                : t("connectCalendarNamed", { name: displayName })
+            }
           >
-            {t("configureCalendars")}
-          </Link>
-        )}
-
-        {!isConnected && manifest.connectType === "pipes" && (
-          <p className="text-xs text-muted-foreground">
-            {t("connectViaPipes")}
-          </p>
-        )}
-
-        {manifest.countries.length > 0 && (
-          <p className="text-xs text-muted-foreground">
-            {t("availableIn", {
-              countries: manifest.countries.join(", "),
-            })}
-          </p>
-        )}
-      </CardContent>
-    </Card>
+            {knownStatus === "connected"
+              ? t("configureCalendars")
+              : t("connectCalendar")}
+          </LinkButton>
+        ) : null}
+      </div>
+    </li>
   )
 }

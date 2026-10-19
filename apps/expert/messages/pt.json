@@ -473,7 +473,45 @@
   },
   "integrations": {
     "title": "Integrações",
-    "description": "Ligue calendários, faturação e outros serviços à sua prática Eleva."
+    "description": "Ligue calendários, faturação e outros serviços à sua prática Eleva.",
+    "eyebrow": "Ferramentas ligadas",
+    "category": {
+      "calendar": {
+        "title": "Calendários",
+        "hint": "Verifique conflitos no seu calendário atual e adicione-lhe as sessões confirmadas."
+      },
+      "invoicing": {
+        "title": "Faturação",
+        "hint": "Como são emitidas as faturas das sessões pagas aos membros."
+      },
+      "crm": {
+        "title": "CRM",
+        "hint": "Mantenha os registos dos membros sincronizados com as suas outras ferramentas."
+      },
+      "video": {
+        "title": "Vídeo",
+        "hint": "Fornecedores de vídeo para sessões online."
+      },
+      "other": {
+        "title": "Outros",
+        "hint": "Mais serviços que pode ligar."
+      }
+    },
+    "availableIn": "Disponível em {countries}",
+    "configureCalendars": "Gerir calendários",
+    "connectCalendar": "Ligar",
+    "status": {
+      "connected": "Ligado",
+      "connecting": "A ligar",
+      "disconnected": "Desligado",
+      "error": "Requer atenção",
+      "expired": "Expirado"
+    },
+    "names": {
+      "manual": "Faturação manual"
+    },
+    "connectCalendarNamed": "Ligar {name}",
+    "configureCalendarsNamed": "Gerir {name}"
   },
   "finance": {
     "title": "Finanças",
