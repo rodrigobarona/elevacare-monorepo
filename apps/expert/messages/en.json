@@ -430,7 +430,10 @@
       "no-token": "No active feed to revoke.",
       "validation": "Invalid date range.",
       "copy-failed": "Could not copy the URL."
-    }
+    },
+    "eyebrow": "Your week",
+    "modeInPerson": "In person",
+    "respondBy": "Respond by"
   },
   "calendars": {
     "backToIntegrations": "Integrations",

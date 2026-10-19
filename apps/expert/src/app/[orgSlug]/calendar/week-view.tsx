@@ -2,7 +2,9 @@
 
 import * as React from "react"
 import { useLocale, useTranslations } from "next-intl"
+import { CaretLeftIcon, CaretRightIcon } from "@eleva/icons"
 import { Button } from "@eleva/ui/components/button"
+import { StatusPill } from "@eleva/ui/components/status-pill"
 import { cn } from "@eleva/ui/lib/utils"
 import { JoinCta } from "@eleva/video/join-cta"
 import { listCalendarBookingsAction } from "./actions"
@@ -70,6 +72,14 @@ function pickTitle(
   return title.en
 }
 
+function isSameDay(a: Date, b: Date): boolean {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  )
+}
+
 function minutesFromMidnight(date: Date): number {
   return date.getHours() * 60 + date.getMinutes()
 }
@@ -126,27 +136,61 @@ export function WeekView({
   }, [rangeFromIso, rangeToIso, initialFrom, initialTo, initialBookings])
 
   const selected = bookings.find((b) => b.id === selectedId) ?? null
-  const dayFormatter = new Intl.DateTimeFormat(locale, {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  })
-  const rangeFormatter = new Intl.DateTimeFormat(locale, {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  })
+  const today = new Date()
+  const { weekdayFormatter, rangeFormatter, timeFormatter } = React.useMemo(
+    () => ({
+      weekdayFormatter: new Intl.DateTimeFormat(locale, { weekday: "short" }),
+      rangeFormatter: new Intl.DateTimeFormat(locale, {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }),
+      timeFormatter: new Intl.DateTimeFormat(locale, { timeStyle: "short" }),
+    }),
+    [locale]
+  )
+  function modeName(mode: CalendarBooking["sessionMode"]): string {
+    switch (mode) {
+      case "online":
+        return t("locationOnline")
+      case "phone":
+        return t("locationPhone")
+      case "in_person":
+        return t("modeInPerson")
+      default: {
+        const _exhaustive: never = mode
+        return _exhaustive
+      }
+    }
+  }
+  const legendModes: CalendarBooking["sessionMode"][] = [
+    "online",
+    "phone",
+    "in_person",
+  ]
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+        <h2
+          className="font-display text-xl font-medium tracking-tight"
+          aria-live="polite"
+        >
+          {rangeFormatter.formatRange(rangeFrom, addDays(rangeFrom, 6))}
+          {loading ? (
+            <span className="ml-2 text-sm font-normal text-muted-foreground">
+              {t("loading")}
+            </span>
+          ) : null}
+        </h2>
+        <div className="flex items-center gap-1.5">
           <Button
             variant="outline"
-            size="sm"
+            size="icon-sm"
+            aria-label={t("prevWeek")}
             onPress={() => setWeekStart((w) => addDays(w, -7))}
           >
-            {t("prevWeek")}
+            <CaretLeftIcon />
           </Button>
           <Button
             variant="outline"
@@ -157,39 +201,71 @@ export function WeekView({
           </Button>
           <Button
             variant="outline"
-            size="sm"
+            size="icon-sm"
+            aria-label={t("nextWeek")}
             onPress={() => setWeekStart((w) => addDays(w, 7))}
           >
-            {t("nextWeek")}
+            <CaretRightIcon />
           </Button>
         </div>
-        <p className="text-sm font-medium">
-          {rangeFormatter.format(rangeFrom)} –{" "}
-          {rangeFormatter.format(addDays(rangeFrom, 6))}
-          {loading ? ` · ${t("loading")}` : null}
-        </p>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border">
+      <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+        {legendModes.map((mode) => (
+          <li key={mode} className="flex items-center gap-1.5">
+            <span
+              aria-hidden
+              className={cn("size-2.5 rounded-full", MODE_CLASS[mode])}
+            />
+            {modeName(mode)}
+          </li>
+        ))}
+        <li className="flex items-center gap-1.5">
+          <span
+            aria-hidden
+            className="size-2.5 rounded-full border border-dashed border-foreground/60"
+          />
+          {t("requestPending")}
+        </li>
+      </ul>
+
+      <div className="overflow-x-auto rounded-3xl border bg-card shadow-1">
         <div
           className="grid min-w-[720px]"
           style={{
             gridTemplateColumns: `3.5rem repeat(7, minmax(0, 1fr))`,
           }}
         >
-          <div className="border-b bg-muted/40 p-2" />
-          {days.map((day) => (
-            <div
-              key={day.toISOString()}
-              className="border-b border-l bg-muted/40 p-2 text-center text-xs font-medium"
-            >
-              {dayFormatter.format(day)}
-            </div>
-          ))}
+          <div className="border-b" />
+          {days.map((day) => {
+            const isToday = isSameDay(day, today)
+            return (
+              <div
+                key={day.toISOString()}
+                className={cn(
+                  "border-b border-l px-2 py-3 text-center",
+                  isToday && "bg-teal-50/70 dark:bg-teal-950/30"
+                )}
+              >
+                <span className="block eyebrow text-[10px]">
+                  {weekdayFormatter.format(day).replaceAll(".", "")}
+                </span>
+                <span
+                  className={cn(
+                    "mx-auto mt-1 flex size-8 items-center justify-center rounded-full font-display text-lg tabular-nums",
+                    isToday && "bg-primary text-primary-foreground"
+                  )}
+                  aria-current={isToday ? "date" : undefined}
+                >
+                  {day.getDate()}
+                </span>
+              </div>
+            )
+          })}
 
           {HOURS.map((hour) => (
             <React.Fragment key={hour}>
-              <div className="border-b px-1 py-2 text-right text-[10px] text-muted-foreground">
+              <div className="border-b px-2 py-2 text-right text-[10px] text-muted-foreground tabular-nums">
                 {String(hour).padStart(2, "0")}:00
               </div>
               {days.map((day) => {
@@ -204,7 +280,11 @@ export function WeekView({
                 return (
                   <div
                     key={`${day.toISOString()}-${hour}`}
-                    className="relative min-h-14 border-b border-l p-0.5"
+                    className={cn(
+                      "relative min-h-14 border-b border-l p-0.5",
+                      isSameDay(day, today) &&
+                        "bg-teal-50/40 dark:bg-teal-950/20"
+                    )}
                   >
                     {cellBookings.map((b) => {
                       const start = new Date(b.startsAt)
@@ -224,7 +304,7 @@ export function WeekView({
                           key={b.id}
                           type="button"
                           className={cn(
-                            "absolute inset-x-0.5 overflow-hidden rounded px-1 py-0.5 text-left text-[10px] leading-tight",
+                            "absolute inset-x-0.5 overflow-hidden rounded-lg px-1.5 py-1 text-left text-[11px] leading-tight shadow-1 transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
                             MODE_CLASS[b.sessionMode],
                             b.status === "awaiting_confirmation" &&
                               "ring-dashed ring-2 ring-background/70"
@@ -235,15 +315,18 @@ export function WeekView({
                           }}
                           onClick={() => setSelectedId(b.id)}
                         >
-                          <span className="font-medium">
+                          <span className="block tabular-nums opacity-90">
+                            {timeFormatter.format(start)}
+                          </span>
+                          <span className="block truncate font-medium">
                             {pickTitle(b.eventTypeTitle, locale)}
                           </span>
                           {b.status === "awaiting_confirmation" ? (
-                            <span className="block opacity-90">
+                            <span className="block truncate opacity-90">
                               {t("requestPending")}
                             </span>
                           ) : b.memberFirstName ? (
-                            <span className="block opacity-90">
+                            <span className="block truncate opacity-90">
                               {b.memberFirstName}
                             </span>
                           ) : null}
@@ -259,10 +342,13 @@ export function WeekView({
       </div>
 
       {selected ? (
-        <div className="rounded-lg border p-4 text-sm">
+        <div className="rounded-3xl border bg-card p-5 text-sm shadow-2">
           <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="font-medium">
+            <div className="space-y-1">
+              {selected.status === "awaiting_confirmation" ? (
+                <StatusPill tone="attention">{t("requestPending")}</StatusPill>
+              ) : null}
+              <p className="font-display text-lg font-medium tracking-tight">
                 {pickTitle(selected.eventTypeTitle, locale)}
               </p>
               <p className="text-muted-foreground">
@@ -284,7 +370,7 @@ export function WeekView({
               {t("closeDrawer")}
             </Button>
           </div>
-          <dl className="mt-3 grid gap-2 sm:grid-cols-2">
+          <dl className="mt-4 grid gap-3 rounded-2xl bg-sand-50 p-4 sm:grid-cols-2 dark:bg-muted/40">
             <div>
               <dt className="text-xs text-muted-foreground">{t("member")}</dt>
               <dd>{selected.memberFirstName ?? t("memberUnknown")}</dd>
@@ -292,19 +378,16 @@ export function WeekView({
             <div>
               <dt className="text-xs text-muted-foreground">{t("mode")}</dt>
               <dd>
-                {pickTitle(
-                  selected.modeLabel ?? {
-                    en: selected.sessionMode.replace("_", " "),
-                  },
-                  locale
-                )}
+                {selected.modeLabel
+                  ? pickTitle(selected.modeLabel, locale)
+                  : modeName(selected.sessionMode)}
               </dd>
             </div>
             {selected.status === "awaiting_confirmation" &&
             selected.approvalDeadlineAt ? (
               <div className="sm:col-span-2">
                 <dt className="text-xs text-muted-foreground">
-                  {t("requestPending")}
+                  {t("respondBy")}
                 </dt>
                 <dd>
                   {new Intl.DateTimeFormat(locale, {
@@ -366,7 +449,9 @@ export function WeekView({
       ) : null}
 
       {bookings.length === 0 && !loading ? (
-        <p className="text-sm text-muted-foreground">{t("emptyWeek")}</p>
+        <p className="rounded-3xl border border-dashed border-sand-300 bg-sand-50/70 p-6 text-center text-sm text-muted-foreground dark:border-border dark:bg-card">
+          {t("emptyWeek")}
+        </p>
       ) : null}
     </div>
   )

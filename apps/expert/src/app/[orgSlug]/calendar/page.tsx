@@ -42,9 +42,13 @@ export default async function CalendarPage({
   ])
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-      <div className="space-y-6">
-        <PageHeader title={t("title")} description={t("description")} />
+    <div className="mx-auto max-w-6xl space-y-8">
+      <PageHeader
+        eyebrow={t("eyebrow")}
+        title={t("title")}
+        description={t("description")}
+      />
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
         <WeekView
           orgSlug={orgSlug}
           initialFrom={fromIso}
@@ -69,15 +73,17 @@ export default async function CalendarPage({
             locationAddress: b.locationAddress,
           }))}
         />
-      </div>
 
-      <aside className="space-y-4 lg:pt-16">
-        <IcsFeedCard
-          hasToken={feedToken != null}
-          createdAt={feedToken?.createdAt.toISOString() ?? null}
-        />
-        <p className="text-sm text-muted-foreground">{t("emptyState")}</p>
-      </aside>
+        <aside className="space-y-4">
+          <IcsFeedCard
+            hasToken={feedToken != null}
+            createdAt={feedToken?.createdAt.toISOString() ?? null}
+          />
+          <p className="px-1 text-sm text-muted-foreground">
+            {t("emptyState")}
+          </p>
+        </aside>
+      </div>
     </div>
   )
 }

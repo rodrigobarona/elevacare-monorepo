@@ -430,7 +430,10 @@
       "no-token": "Não há feed ativo para revogar.",
       "validation": "Intervalo de datas inválido.",
       "copy-failed": "Não foi possível copiar o URL."
-    }
+    },
+    "eyebrow": "A sua semana",
+    "modeInPerson": "Presencial",
+    "respondBy": "Responder até"
   },
   "calendars": {
     "backToIntegrations": "Integrações",

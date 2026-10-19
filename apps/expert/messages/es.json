@@ -430,7 +430,10 @@
       "no-token": "No hay feed activo para revocar.",
       "validation": "Rango de fechas no válido.",
       "copy-failed": "No se pudo copiar la URL."
-    }
+    },
+    "eyebrow": "Tu semana",
+    "modeInPerson": "Presencial",
+    "respondBy": "Responder antes de"
   },
   "calendars": {
     "backToIntegrations": "Integraciones",
