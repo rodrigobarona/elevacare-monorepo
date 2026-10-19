@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
+import { ArrowLeftIcon } from "@eleva/icons"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { syncExpertCalendarAccounts } from "@eleva/auth"
 import {
@@ -56,16 +57,20 @@ export default async function CalendarsPage({
   const t = await getTranslations("calendars")
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Link href={`${base}/integrations`} className="hover:underline">
-          {t("backToIntegrations")}
-        </Link>
-        <span>/</span>
-        <span>{t("title")}</span>
-      </div>
+    <div className="mx-auto max-w-3xl space-y-8">
+      <Link
+        href={`${base}/integrations`}
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <ArrowLeftIcon aria-hidden className="size-4" />
+        {t("backToIntegrations")}
+      </Link>
 
-      <PageHeader title={t("title")} description={t("description")} />
+      <PageHeader
+        eyebrow={t("eyebrow")}
+        title={t("title")}
+        description={t("description")}
+      />
 
       <CalendarManager
         integrations={integrations}

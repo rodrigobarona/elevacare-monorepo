@@ -472,7 +472,10 @@
       "save-failed": "Could not save calendar settings.",
       "validation": "The request was invalid.",
       "unauthorized-calendar": "You cannot change this calendar."
-    }
+    },
+    "eyebrow": "Your calendars",
+    "useForBusyNamed": "Check {calendar} ({account}) for conflicts",
+    "useAsDestinationNamed": "Write sessions to {calendar} ({account})"
   },
   "integrations": {
     "title": "Integrations",
