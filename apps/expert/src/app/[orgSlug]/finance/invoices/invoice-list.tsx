@@ -4,7 +4,10 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
 import type { ExpertInvoice, ExpertInvoiceStatus } from "@eleva/api-client"
+import { WalletIcon } from "@eleva/icons"
 import { Button } from "@eleva/ui/components/button"
+import { EmptyState } from "@eleva/ui/components/empty-state"
+import { StatusPill, type StatusTone } from "@eleva/ui/components/status-pill"
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -46,21 +49,21 @@ function formatEuros(cents: number, locale: string): string {
   }).format(cents / 100)
 }
 
-function invoiceStatusLabel(
+function invoiceStatusDisplay(
   status: ExpertInvoiceStatus,
   t: (key: string) => string
-): string {
+): { label: string; tone: StatusTone } {
   switch (status) {
     case "pending":
-      return t("invoiceStatus.pending")
+      return { label: t("invoiceStatus.pending"), tone: "neutral" }
     case "issued":
-      return t("invoiceStatus.issued")
+      return { label: t("invoiceStatus.issued"), tone: "positive" }
     case "failed":
-      return t("invoiceStatus.failed")
+      return { label: t("invoiceStatus.failed"), tone: "attention" }
     case "manual_pending":
-      return t("invoiceStatus.manualPending")
+      return { label: t("invoiceStatus.manualPending"), tone: "neutral" }
     case "manual_issued":
-      return t("invoiceStatus.manualIssued")
+      return { label: t("invoiceStatus.manualIssued"), tone: "positive" }
     default: {
       const _exhaustive: never = status
       return _exhaustive
@@ -135,24 +138,35 @@ export function InvoiceList({
   }
 
   if (rows.length === 0) {
-    return <p className="text-sm text-muted-foreground">{t("empty")}</p>
+    return (
+      <EmptyState
+        variant="first-run"
+        icon={<WalletIcon aria-hidden />}
+        title={t("empty")}
+        description={t("emptyHint")}
+      />
+    )
   }
 
   return (
     <div className="space-y-4">
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-3xl border bg-card shadow-1">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b text-left">
-              <th className="py-2 pr-4 font-medium">{t("booking")}</th>
-              <th className="py-2 pr-4 font-medium">{t("adapter")}</th>
-              <th className="py-2 pr-4 font-medium">{t("amount")}</th>
-              <th className="py-2 pr-4 font-medium">{t("statusLabel")}</th>
-              <th className="py-2 pr-4 font-medium">{t("issuedAt")}</th>
-              <th className="py-2 font-medium">{t("actionsLabel")}</th>
+            <tr className="border-b text-left text-xs text-muted-foreground">
+              <th className="px-5 py-3 font-medium">{t("booking")}</th>
+              <th className="px-3 py-3 font-medium">{t("adapter")}</th>
+              <th className="px-3 py-3 text-right font-medium">
+                {t("amount")}
+              </th>
+              <th className="px-3 py-3 font-medium">{t("statusLabel")}</th>
+              <th className="px-3 py-3 font-medium">{t("issuedAt")}</th>
+              <th className="px-5 py-3 font-medium">
+                <span className="sr-only">{t("actionsLabel")}</span>
+              </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y">
             {rows.map((invoice) => (
               <InvoiceRow
                 key={invoice.id}
@@ -203,6 +217,7 @@ function InvoiceRow({
   const [pending, setPending] = React.useState(false)
   const [markOpen, setMarkOpen] = React.useState(false)
 
+  const status = invoiceStatusDisplay(invoice.status, t)
   const canRetry = invoice.status === "failed"
   const canMarkManual =
     invoice.status === "failed" || invoice.status === "manual_pending"
@@ -248,31 +263,37 @@ function InvoiceRow({
   }
 
   return (
-    <tr className="border-b align-top">
-      <td className="py-2 pr-4 font-mono text-xs">
+    <tr className="align-top">
+      <td className="px-5 py-4 font-mono text-xs">
         {invoice.bookingId.slice(0, 8)}
       </td>
-      <td className="py-2 pr-4">{adapterLabel(invoice.adapter, t)}</td>
-      <td className="py-2 pr-4">{euros(invoice.amountCents)}</td>
-      <td className="py-2 pr-4">
-        <div>{invoiceStatusLabel(invoice.status, t)}</div>
+      <td className="px-3 py-4">{adapterLabel(invoice.adapter, t)}</td>
+      <td className="px-3 py-4 text-right tabular-nums">
+        {euros(invoice.amountCents)}
+      </td>
+      <td className="px-3 py-4">
+        <StatusPill tone={status.tone}>{status.label}</StatusPill>
         {invoice.error === "toconline_v1_auto_finalize_blocked" ? (
-          <p className="mt-1 text-xs text-muted-foreground">{t("blocked")}</p>
+          <p className="mt-1.5 max-w-60 text-xs text-muted-foreground">
+            {t("blocked")}
+          </p>
         ) : invoice.error ? (
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1.5 max-w-60 text-xs text-muted-foreground">
             {t("errors.generic")}
           </p>
         ) : null}
       </td>
-      <td className="py-2 pr-4">
+      <td className="px-3 py-4 text-muted-foreground tabular-nums">
         {invoice.issuedAt
           ? new Date(invoice.issuedAt).toLocaleString(intlLocale, {
               timeZone: "Europe/Lisbon",
+              dateStyle: "medium",
+              timeStyle: "short",
             })
           : "—"}
       </td>
-      <td className="py-2">
-        <div className="flex flex-wrap gap-2">
+      <td className="px-5 py-4">
+        <div className="flex flex-wrap justify-end gap-2">
           {canRetry ? (
             <Button
               size="sm"
