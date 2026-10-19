@@ -23,7 +23,11 @@
     "pastTitle": "Sesiones anteriores",
     "pastEmpty": "Todavía no tienes sesiones anteriores.",
     "findExpert": "Encontrar un especialista",
-    "viewAll": "Ver todas las sesiones"
+    "viewAll": "Ver todas las sesiones",
+    "eyebrow": "Tu Espacio",
+    "welcomeBack": "Bienvenido/a de nuevo",
+    "upcomingEmptyHint": "Explora especialistas verificados y reserva una sesión a la hora que mejor te venga.",
+    "pastEmptyHint": "Las sesiones a las que has asistido aparecerán aquí."
   },
   "sessions": {
     "title": "Sesiones",
@@ -40,7 +44,7 @@
     "price": "Precio",
     "addToCalendar": "Añadir al calendario",
     "join": "Unirse a la sesión",
-    "joinSoon": "El vídeo usa Daily estándar (no es HIPAA). Unirse se activa cuando la sala esté lista. La grabación está desactivada.",
+    "joinSoon": "Puedes unirte a las sesiones por vídeo desde 15 minutos antes del inicio. Las sesiones no se graban.",
     "joinNotOnline": "Esta sesión no es una videollamada. Tu especialista te atenderá como estaba previsto.",
     "joinMissingGrant": "Este enlace de entrada no incluye la invitación. Ábrelo desde el correo o la invitación de calendario.",
     "joinInvalidGrant": "Este enlace de entrada no es válido. Ábrelo desde el correo o la invitación de calendario.",
@@ -144,7 +148,13 @@
     "cancelledRefund": "Sesión cancelada. Se reembolsarán {amount} a tu método de pago original.",
     "rescheduleUnavailable": "Solo puedes reprogramar mientras cancelar aún dé un reembolso completo. Todavía puedes cancelar.",
     "refundChanged": "Tu reembolso ha cambiado desde que abriste esta ventana. Revisa el nuevo importe y confirma de nuevo.",
-    "awaitingConfirmationHint": "Tu especialista confirmará esta sesión pronto. Podrás unirte en cuanto esté confirmada."
+    "awaitingConfirmationHint": "Tu especialista confirmará esta sesión pronto. Podrás unirte en cuanto esté confirmada.",
+    "nextTitle": "Tu próxima sesión",
+    "bookAgain": "Reservar de nuevo",
+    "withExpert": "Con {name}",
+    "viewReceipt": "Ver recibo",
+    "manageTitle": "Gestionar reserva",
+    "manageHint": "Reprograma o cancela dentro de la política de cancelación del especialista."
   },
   "payments": {
     "title": "Pagos",
@@ -197,14 +207,14 @@
     "language": {
       "title": "Idioma",
       "description": "Elige el idioma usado en Eleva para tu cuenta.",
-      "footerHint": "Se guarda como ELEVA_LOCALE y se aplica en la próxima visita.",
+      "footerHint": "Se aplica en toda Eleva en tu próxima visita.",
       "saved": "Preferencia de idioma actualizada.",
       "error": "No se pudo actualizar el idioma. Inténtalo de nuevo."
     },
     "theme": {
       "title": "Tema",
       "description": "Elige claro, oscuro o el del dispositivo.",
-      "footerHint": "Se guarda como ELEVA_THEME y se comparte entre las apps de Eleva.",
+      "footerHint": "Compartido en todas las apps de Eleva.",
       "light": "Claro",
       "dark": "Oscuro",
       "system": "Sistema",

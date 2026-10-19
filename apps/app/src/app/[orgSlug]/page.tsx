@@ -1,4 +1,5 @@
 import { getLocale, getTranslations } from "next-intl/server"
+import { CalendarDotsIcon, ClockIcon } from "@eleva/icons"
 import { LinkButton } from "@eleva/ui/components/button"
 import { EmptyState } from "@eleva/ui/components/empty-state"
 import { PageHeader, Section } from "@eleva/ui/components/page-header"
@@ -15,8 +16,9 @@ export default async function OrgHomePage({
 }) {
   const { orgSlug } = await params
   const session = await requireMemberOrg(orgSlug)
-  const [t, locale, api] = await Promise.all([
+  const [t, ts, locale, api] = await Promise.all([
     getTranslations("home"),
+    getTranslations("sessions"),
     getLocale(),
     getAuthedApiClient(),
   ])
@@ -26,12 +28,14 @@ export default async function OrgHomePage({
   ])
   const expertsUrl = marketplaceExpertsUrl(locale)
   const memberName = session.user.displayName ?? session.user.email
-  const ts = await getTranslations("sessions")
+  const firstName = session.user.displayName?.trim().split(/\s+/)[0]
+  const [next, ...later] = upcoming.bookings
 
   return (
-    <div className="space-y-8" data-testid="member-space-home">
+    <div className="space-y-12" data-testid="member-space-home">
       <PageHeader
-        title={t("welcome", { name: memberName })}
+        eyebrow={t("eyebrow")}
+        title={firstName ? t("welcome", { name: firstName }) : t("welcomeBack")}
         description={t("subtitle")}
         actions={<FindExpertButton href={expertsUrl} />}
       />
@@ -44,14 +48,16 @@ export default async function OrgHomePage({
           </LinkButton>
         }
       >
-        {upcoming.bookings.length === 0 ? (
-          <EmptyState
-            title={t("upcomingEmpty")}
-            action={<FindExpertButton href={expertsUrl} />}
-          />
-        ) : (
-          <div className="grid gap-4">
-            {upcoming.bookings.map((booking) => (
+        {next ? (
+          <div className="grid gap-3">
+            <BookingCard
+              booking={next}
+              orgSlug={orgSlug}
+              memberName={memberName}
+              memberEmail={session.user.email}
+              featured
+            />
+            {later.map((booking) => (
               <BookingCard
                 key={booking.id}
                 booking={booking}
@@ -60,16 +66,27 @@ export default async function OrgHomePage({
                 memberEmail={session.user.email}
               />
             ))}
+            <p className="text-xs text-muted-foreground">{ts("joinSoon")}</p>
           </div>
+        ) : (
+          <EmptyState
+            icon={<CalendarDotsIcon />}
+            title={t("upcomingEmpty")}
+            description={t("upcomingEmptyHint")}
+            action={<FindExpertButton href={expertsUrl} />}
+          />
         )}
-        <p className="text-xs text-muted-foreground">{ts("joinSoon")}</p>
       </Section>
 
       <Section title={t("pastTitle")}>
         {past.bookings.length === 0 ? (
-          <EmptyState title={t("pastEmpty")} />
+          <EmptyState
+            icon={<ClockIcon />}
+            title={t("pastEmpty")}
+            description={t("pastEmptyHint")}
+          />
         ) : (
-          <div className="grid gap-4">
+          <div className="grid gap-3">
             {past.bookings.slice(0, 5).map((booking) => (
               <BookingCard
                 key={booking.id}

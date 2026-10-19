@@ -13,13 +13,14 @@ import {
 type EmptyStateVariant = "first-run" | "no-results" | "error"
 
 const VARIANT_CLASS: Record<EmptyStateVariant, string> = {
-  "first-run": "border border-dashed bg-card",
+  "first-run":
+    "border border-dashed border-sand-300 bg-sand-50/70 dark:border-border dark:bg-card",
   "no-results": "border bg-muted/40",
   error: "border border-destructive/30 bg-destructive-subtle",
 }
 
 const MEDIA_CLASS: Record<EmptyStateVariant, string> = {
-  "first-run": "bg-primary/10 text-primary",
+  "first-run": "bg-teal-50 text-teal-700 dark:bg-teal-950 dark:text-teal-200",
   "no-results": "bg-muted text-muted-foreground",
   error: "bg-destructive/10 text-destructive",
 }
@@ -50,11 +51,21 @@ export function EmptyState({
     <Empty
       role={variant === "error" ? "alert" : "status"}
       data-variant={variant}
-      className={cn("p-8 md:p-12", VARIANT_CLASS[variant], className)}
+      className={cn(
+        "rounded-3xl p-8 md:p-12",
+        VARIANT_CLASS[variant],
+        className
+      )}
     >
       <EmptyHeader>
         {icon ? (
-          <EmptyMedia variant="icon" className={MEDIA_CLASS[variant]}>
+          <EmptyMedia
+            variant="icon"
+            className={cn(
+              "size-12 rounded-full [&_svg:not([class*='size-'])]:size-6",
+              MEDIA_CLASS[variant]
+            )}
+          >
             {icon}
           </EmptyMedia>
         ) : null}

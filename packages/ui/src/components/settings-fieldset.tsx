@@ -10,7 +10,7 @@ function SettingsFieldset({
     <section
       data-slot="settings-fieldset"
       className={cn(
-        "overflow-hidden rounded-lg border border-border bg-background text-foreground",
+        "overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-1",
         className
       )}
       {...props}
@@ -55,7 +55,10 @@ function SettingsFieldsetTitle<T extends React.ElementType = "h3">({
   return (
     <Tag
       data-slot="settings-fieldset-title"
-      className={cn("text-xl font-semibold tracking-tight", className)}
+      className={cn(
+        "font-display text-xl leading-snug font-medium tracking-tight",
+        className
+      )}
       {...props}
     />
   )
@@ -82,7 +85,7 @@ function SettingsFieldsetFooter({
     <footer
       data-slot="settings-fieldset-footer"
       className={cn(
-        "flex flex-col gap-3 border-t border-border bg-muted/40 px-6 py-4 sm:flex-row sm:items-center sm:justify-between",
+        "flex flex-col gap-3 border-t border-border bg-sand-50/70 px-6 py-4 sm:flex-row sm:items-center sm:justify-between dark:bg-muted/40",
         className
       )}
       {...props}

@@ -17,8 +17,30 @@ interface NavMainProps {
   capabilities?: readonly string[]
 }
 
+function matchesPath(pathname: string, url: string): boolean {
+  return pathname === url || (url !== "/" && pathname.startsWith(url + "/"))
+}
+
+/** Longest matching item URL, so a Space home link is not active on its sub-pages. */
+function activeNavUrl(
+  pathname: string,
+  groups: NavGroup[],
+  capabilities: readonly string[]
+): string | null {
+  let best: string | null = null
+  for (const group of groups) {
+    for (const item of group.items) {
+      if (item.needs && !capabilities.includes(item.needs)) continue
+      if (!matchesPath(pathname, item.url)) continue
+      if (best === null || item.url.length > best.length) best = item.url
+    }
+  }
+  return best
+}
+
 export function NavMain({ groups, capabilities = [] }: NavMainProps) {
   const pathname = usePathname()
+  const activeUrl = activeNavUrl(pathname, groups, capabilities)
 
   return (
     <>
@@ -37,9 +59,7 @@ export function NavMain({ groups, capabilities = [] }: NavMainProps) {
             <SidebarGroupContent>
               <SidebarMenu>
                 {visibleItems.map((item) => {
-                  const isActive =
-                    pathname === item.url ||
-                    (item.url !== "/" && pathname.startsWith(item.url + "/"))
+                  const isActive = item.url === activeUrl
 
                   return (
                     <SidebarMenuItem key={item.url}>
