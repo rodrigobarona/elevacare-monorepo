@@ -21,30 +21,13 @@ import {
 import type { ListMeBookingsResponse } from "@eleva/api-client"
 import { downloadBookingIcs } from "@eleva/calendar/ics-download"
 import { eventTitle, formatDateTime, formatMoney } from "@/lib/member-format"
+import {
+  isAwaitingConfirmation,
+  isBookingStatus,
+  isSessionMode,
+} from "@/lib/booking-status"
 
 type MemberBooking = ListMeBookingsResponse["bookings"][number]
-
-const BOOKING_STATUS_KEYS = [
-  "confirmed",
-  "rescheduled",
-  "cancelled",
-  "pending_payment",
-  "completed",
-  "no_show",
-] as const
-
-type BookingStatusKey = (typeof BOOKING_STATUS_KEYS)[number]
-
-function isBookingStatus(value: string): value is BookingStatusKey {
-  return (BOOKING_STATUS_KEYS as readonly string[]).includes(value)
-}
-
-const MODE_KEYS = ["online", "in_person", "phone"] as const
-type ModeKey = (typeof MODE_KEYS)[number]
-
-function isMode(value: string): value is ModeKey {
-  return (MODE_KEYS as readonly string[]).includes(value)
-}
 
 interface BookingCardProps {
   booking: MemberBooking
@@ -65,13 +48,14 @@ export function BookingCard({
   const locale = useLocale()
   const title = eventTitle(booking.eventType.title, locale)
   const when = formatDateTime(booking.startsAt, locale, booking.timezone)
+  const awaiting = isAwaitingConfirmation(booking.status)
 
   function handleIcs() {
     try {
       downloadBookingIcs({
         uid: booking.id,
         summary: `${title} — ${booking.expert.displayName}`,
-        description: isMode(booking.sessionMode)
+        description: isSessionMode(booking.sessionMode)
           ? t(`modes.${booking.sessionMode}`)
           : booking.sessionMode,
         start: booking.startsAt,
@@ -107,16 +91,21 @@ export function BookingCard({
             : booking.status}
         </Badge>
         <Badge variant="outline">
-          {isMode(booking.sessionMode)
+          {isSessionMode(booking.sessionMode)
             ? t(`modes.${booking.sessionMode}`)
             : booking.sessionMode}
         </Badge>
         <span className="text-sm text-muted-foreground">
           {formatMoney(booking.priceCents, locale, booking.currency)}
         </span>
+        {awaiting ? (
+          <p className="w-full text-sm text-muted-foreground">
+            {t("awaitingConfirmationHint")}
+          </p>
+        ) : null}
       </CardContent>
       <CardFooter className="flex flex-wrap gap-2">
-        {showJoin ? (
+        {showJoin && !awaiting ? (
           <JoinCta
             href={`/${orgSlug}/sessions/${booking.id}/join`}
             sessionMode={booking.sessionMode}

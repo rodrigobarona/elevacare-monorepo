@@ -4,7 +4,7 @@ import { cookies, headers } from "next/headers"
 import { revalidatePath } from "next/cache"
 import { buildApiSessionHeaders, requireSession } from "@eleva/auth/server"
 import { mintUploadToken } from "@eleva/auth/upload-token"
-import { createApiClient } from "@eleva/api-client"
+import { createApiClient, UpdateAvatarRequestSchema } from "@eleva/api-client"
 import {
   isLocale,
   cookieName,
@@ -72,10 +72,12 @@ export async function getAvatarUploadToken(): Promise<string> {
   return mintUploadToken(session.user.id)
 }
 
-export async function updateAvatar(url: string): Promise<{ ok: boolean }> {
+export async function updateAvatar(url: unknown): Promise<{ ok: boolean }> {
+  const parsed = UpdateAvatarRequestSchema.safeParse({ url })
+  if (!parsed.success) return { ok: false }
   try {
     const api = await getAuthedApiClient()
-    await api.users.avatar.update({ url })
+    await api.users.avatar.update(parsed.data)
     revalidatePath("/account/settings")
     return { ok: true }
   } catch (err) {

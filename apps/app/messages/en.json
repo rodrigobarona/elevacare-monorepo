@@ -132,6 +132,7 @@
       "rescheduled": "Rescheduled",
       "cancelled": "Cancelled",
       "pending_payment": "Pending payment",
+      "awaiting_confirmation": "Waiting for expert",
       "completed": "Completed",
       "no_show": "No show"
     },
@@ -142,7 +143,8 @@
     "refundDropsAt": "The refund goes down if you cancel after {date}.",
     "cancelledRefund": "Session cancelled. {amount} will be refunded to your original payment method.",
     "rescheduleUnavailable": "Rescheduling is only available while cancelling would still give a full refund. You can still cancel.",
-    "refundChanged": "Your refund has changed since you opened this. Check the new amount and confirm again."
+    "refundChanged": "Your refund has changed since you opened this. Check the new amount and confirm again.",
+    "awaitingConfirmationHint": "Your expert will confirm this session soon. You can join once it is confirmed."
   },
   "payments": {
     "title": "Payments",
