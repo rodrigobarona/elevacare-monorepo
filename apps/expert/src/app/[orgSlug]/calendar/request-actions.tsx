@@ -62,6 +62,7 @@ export function RequestActions({
         maxLength={180}
         onChange={(event) => setNote(event.target.value)}
         placeholder={t("declineNote")}
+        aria-label={t("declineNote")}
       />
       <div className="flex flex-wrap gap-2">
         <Button onPress={() => void accept()} isDisabled={pending !== null}>

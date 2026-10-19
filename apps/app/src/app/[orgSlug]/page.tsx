@@ -3,7 +3,7 @@ import { CalendarDotsIcon, ClockIcon } from "@eleva/icons"
 import { LinkButton } from "@eleva/ui/components/button"
 import { EmptyState } from "@eleva/ui/components/empty-state"
 import { PageHeader, Section } from "@eleva/ui/components/page-header"
-import { marketplaceExpertsUrl } from "@/lib/experts-url"
+import { marketplaceExpertsUrl } from "@eleva/config/env"
 import { getAuthedApiClient, requireMemberOrg } from "@/lib/member-api"
 import { BookingCard, FindExpertButton } from "./_components/booking-card"
 

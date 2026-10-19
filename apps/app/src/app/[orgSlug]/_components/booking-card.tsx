@@ -14,14 +14,16 @@ import { cn } from "@eleva/ui/lib/utils"
 import { JoinCta } from "@eleva/video/join-cta"
 import type { ListMeBookingsResponse } from "@eleva/api-client"
 import { downloadBookingIcs } from "@eleva/calendar/ics-download"
-import { expertProfileUrl } from "@/lib/experts-url"
+import { expertProfileUrl } from "@eleva/config/env"
 import { eventTitle, formatMoney } from "@/lib/member-format"
 import {
   isAwaitingConfirmation,
   isBookingStatus,
   isSessionMode,
 } from "@/lib/booking-status"
-import { bookingDateParts, DateTile, StatusPill } from "./booking-visuals"
+import { DateTile } from "@eleva/ui/components/date-tile"
+import { bookingDateParts } from "@eleva/ui/lib/booking/date-parts"
+import { StatusPill } from "./booking-visuals"
 
 type MemberBooking = ListMeBookingsResponse["bookings"][number]
 

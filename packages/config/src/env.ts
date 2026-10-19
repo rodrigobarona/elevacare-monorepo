@@ -493,6 +493,20 @@ export function resolveGatewayUrl(hostHeader?: string | null): string {
   return "https://eleva.care"
 }
 
+function localePrefix(locale: string): string {
+  return locale === "en" ? "" : `/${locale}`
+}
+
+/** Public marketplace explorer on the gateway, in the given locale. */
+export function marketplaceExpertsUrl(locale: string): string {
+  return `${resolveGatewayUrl()}${localePrefix(locale)}/experts`
+}
+
+/** Public expert profile on the gateway, in the given locale. */
+export function expertProfileUrl(locale: string, username: string): string {
+  return `${resolveGatewayUrl()}${localePrefix(locale)}/${encodeURIComponent(username)}`
+}
+
 /**
  * Microsoft OAuth app credentials. Prefers `MICROSOFT_OAUTH_*` (Phase 2 /
  * Better Auth) and falls back to the legacy `MS_OAUTH_*` aliases so a

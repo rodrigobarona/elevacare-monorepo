@@ -14,11 +14,9 @@ import {
   isSessionMode,
 } from "@/lib/booking-status"
 import { JoinCta } from "@eleva/video/join-cta"
-import {
-  bookingDateParts,
-  DateTile,
-  StatusPill,
-} from "../../_components/booking-visuals"
+import { DateTile } from "@eleva/ui/components/date-tile"
+import { bookingDateParts } from "@eleva/ui/lib/booking/date-parts"
+import { StatusPill } from "../../_components/booking-visuals"
 import { SessionActions } from "../../_components/session-actions"
 import { IcsDownloadButton } from "./ics-download-button"
 

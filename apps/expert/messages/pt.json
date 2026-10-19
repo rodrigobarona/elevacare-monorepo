@@ -1,7 +1,7 @@
 {
   "nav": {
     "dashboard": "Painel",
-    "eventTypes": "Tipos de Evento",
+    "eventTypes": "Serviços",
     "schedule": "Horário",
     "calendar": "Calendário",
     "calendars": "Calendários ligados",
@@ -10,8 +10,44 @@
   },
   "dashboard": {
     "expert": {
+      "eyebrow": "A sua prática",
       "welcome": "Olá, {name}",
-      "subtitle": "O seu horário, reservas e relatórios estão aqui."
+      "welcomeBack": "Olá de novo",
+      "subtitle": "Eis o que vem aí na sua prática.",
+      "viewProfile": "Ver perfil público",
+      "newService": "Novo serviço",
+      "stats": {
+        "week": "Sessões esta semana",
+        "requests": "Pedidos por rever",
+        "services": "Serviços publicados",
+        "servicesHint": "{total, plural, one {# serviço no total} other {# serviços no total}}"
+      },
+      "requestsTitle": "À espera da sua resposta",
+      "requestsHint": "Aceite ou recuse antes do prazo. Os pedidos recusados são reembolsados na totalidade.",
+      "respondBy": "Responda até {date}",
+      "upcomingTitle": "Próximas sessões",
+      "openCalendar": "Abrir calendário",
+      "upcomingEmpty": "Sem sessões nas próximas duas semanas",
+      "upcomingEmptyHint": "Partilhe o link do seu perfil para que os membros possam marcar consigo.",
+      "modeOnline": "Online",
+      "modeInPerson": "Presencial",
+      "modePhone": "Telefone",
+      "status": {
+        "confirmed": "Confirmada",
+        "completed": "Concluída",
+        "awaitingPayment": "A aguardar pagamento"
+      },
+      "shortcutsTitle": "Gerir a sua prática",
+      "shortcuts": {
+        "services": "Serviços",
+        "servicesHint": "Preços, durações, modalidades e links de marcação.",
+        "schedule": "Horário",
+        "scheduleHint": "Horas semanais e dias de folga.",
+        "calendars": "Calendários ligados",
+        "calendarsHint": "Evite marcações sobrepostas com Google ou Microsoft.",
+        "finance": "Finanças",
+        "financeHint": "Pagamentos, faturas e dados de faturação."
+      }
     }
   },
   "sessions": {
@@ -74,15 +110,15 @@
     }
   },
   "eventTypes": {
-    "title": "Tipos de evento",
+    "title": "Serviços",
     "description": "Defina os serviços que os membros podem reservar.",
-    "create": "Novo tipo de evento",
+    "create": "Novo serviço",
     "createTitle": "Criar tipo de evento",
     "createDescription": "Crie um novo serviço reservável.",
     "editTitle": "Editar tipo de evento",
     "editDescription": "Atualize os detalhes e as regras de reserva deste tipo de evento.",
-    "empty": "Ainda não criou nenhum tipo de evento.",
-    "createFirst": "Crie o seu primeiro tipo de evento",
+    "empty": "Ainda sem serviços",
+    "createFirst": "Criar o primeiro serviço",
     "status": {
       "published": "Publicado",
       "draft": "Rascunho"
@@ -200,13 +236,13 @@
       }
     },
     "actions": {
-      "ariaLabel": "Ações do tipo de evento",
+      "ariaLabel": "Ações do serviço",
       "edit": "Editar",
       "publish": "Publicar",
       "unpublish": "Despublicar",
       "delete": "Eliminar",
-      "deleteTitle": "Eliminar tipo de evento?",
-      "deleteDescription": "Esta ação não pode ser anulada. O tipo de evento e todos os dados associados serão eliminados permanentemente.",
+      "deleteTitle": "Eliminar serviço?",
+      "deleteDescription": "Esta ação não pode ser anulada. O serviço e todos os dados associados serão eliminados permanentemente.",
       "cancel": "Cancelar",
       "deleting": "A eliminar..."
     },
@@ -296,7 +332,8 @@
     "bookingSetting": {
       "label": "Como os membros marcam",
       "help": "A reserva imediata confirma assim que pagam. O pedido de reserva segura o horário e o pagamento até aceitar."
-    }
+    },
+    "emptyHint": "Adicione um serviço com preço, duração e a forma como os membros se encontram consigo. Pode publicá-lo quando estiver pronto."
   },
   "schedule": {
     "title": "Horário",

@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
+import { DotsThreeIcon } from "@eleva/icons"
 import { Button } from "@eleva/ui/components/button"
 import {
   DropdownMenu,
@@ -93,11 +94,11 @@ export function EventTypeActions({
       <DropdownMenuTrigger>
         <Button
           variant="ghost"
-          size="sm"
+          size="icon-sm"
           isDisabled={pending}
           aria-label={t("actions.ariaLabel")}
         >
-          &#x2022;&#x2022;&#x2022;
+          <DotsThreeIcon aria-hidden weight="bold" />
         </Button>
         <DropdownMenu placement="bottom end">
           <DropdownMenuItem

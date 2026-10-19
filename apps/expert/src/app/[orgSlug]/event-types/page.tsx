@@ -1,17 +1,13 @@
 import Link from "next/link"
 import { getTranslations, getLocale } from "next-intl/server"
+import { ListChecksIcon, PlusIcon } from "@eleva/icons"
 import { PageHeader } from "@eleva/ui/components/page-header"
+import { LinkButton } from "@eleva/ui/components/button"
+import { EmptyState } from "@eleva/ui/components/empty-state"
+import { StatusPill } from "@eleva/ui/components/status-pill"
 import { listEventTypeModes, listExpertEventTypes } from "@eleva/db"
 import { expertWorkspaceBase } from "@/lib/workspace-paths"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
-import { Button } from "@eleva/ui/components/button"
-import { Badge } from "@eleva/ui/components/badge"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@eleva/ui/components/card"
 import { EventTypeActions } from "./event-type-actions"
 
 export const dynamic = "force-dynamic"
@@ -30,7 +26,11 @@ export default async function EventTypesPage({
   )
   const base = expertWorkspaceBase(session)
 
-  const eventTypes = await listExpertEventTypes(profile.orgId, profile.id)
+  const [eventTypes, t, locale] = await Promise.all([
+    listExpertEventTypes(profile.orgId, profile.id),
+    getTranslations("eventTypes"),
+    getLocale(),
+  ])
   const modeCounts = await Promise.all(
     eventTypes.map(async (et) => {
       const modes = await listEventTypeModes(profile.orgId, et.id)
@@ -39,71 +39,62 @@ export default async function EventTypesPage({
   )
   const modeCountById = new Map(modeCounts)
 
-  const t = await getTranslations("eventTypes")
-  const locale = await getLocale()
-
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-5xl space-y-10">
       <PageHeader
         title={t("title")}
         description={t("description")}
         actions={
-          <Link href={`${base}/event-types/new`}>
-            <Button>{t("create")}</Button>
-          </Link>
+          <LinkButton href={`${base}/event-types/new`}>
+            <PlusIcon aria-hidden />
+            {t("create")}
+          </LinkButton>
         }
+        className="mb-0"
       />
 
       {eventTypes.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">{t("empty")}</p>
-            <Link
-              href={`${base}/event-types/new`}
-              className="mt-4 inline-block"
-            >
-              <Button variant="outline">{t("createFirst")}</Button>
-            </Link>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={<ListChecksIcon />}
+          title={t("empty")}
+          description={t("emptyHint")}
+          action={
+            <LinkButton href={`${base}/event-types/new`}>
+              {t("createFirst")}
+            </LinkButton>
+          }
+        />
       ) : (
-        <div className="grid gap-4">
+        <ul className="divide-y divide-border overflow-hidden rounded-3xl border border-border bg-card shadow-1">
           {eventTypes.map((et) => {
             const etTitle = et.title as LocalizedText
             const modeCount = modeCountById.get(et.id) ?? 0
             return (
-              <Card key={et.id} data-testid={`event-type-card-${et.slug}`}>
-                <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-                  <div className="space-y-1">
-                    <CardTitle className="text-base">
+              <li
+                key={et.id}
+                data-testid={`event-type-card-${et.slug}`}
+                className="relative flex items-start gap-4 p-5 transition-colors focus-within:bg-sand-50/70 hover:bg-sand-50/70 sm:px-6 dark:focus-within:bg-muted/40 dark:hover:bg-muted/40"
+              >
+                <div className="min-w-0 flex-1 space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="font-display text-lg leading-snug font-medium">
                       <Link
                         href={`${base}/event-types/${et.id}`}
-                        className="hover:underline"
+                        className="outline-none after:absolute after:inset-0 after:content-[''] focus-visible:underline"
                       >
                         {etTitle[locale as keyof typeof etTitle] ?? etTitle.en}
                       </Link>
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      /{profile.username}/{et.slug}
-                    </p>
+                    </h2>
+                    <StatusPill tone={et.published ? "positive" : "neutral"}>
+                      {et.published ? t("status.published") : t("status.draft")}
+                    </StatusPill>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {et.published ? (
-                      <Badge>{t("status.published")}</Badge>
-                    ) : (
-                      <Badge variant="secondary">{t("status.draft")}</Badge>
-                    )}
-                    <EventTypeActions
-                      eventTypeId={et.id}
-                      published={et.published}
-                      workspaceBase={base}
-                    />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
+                  <p className="font-mono text-xs text-muted-foreground">
+                    /{profile.username}/{et.slug}
+                  </p>
+                  <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
                     <span>{et.durationMinutes} min</span>
-                    <span>
+                    <span className="font-medium text-foreground tabular-nums">
                       {new Intl.NumberFormat(locale, {
                         style: "currency",
                         currency: et.currency.toUpperCase(),
@@ -115,12 +106,19 @@ export default async function EventTypesPage({
                     <span>
                       {(et.languages as string[]).join(", ").toUpperCase()}
                     </span>
-                  </div>
-                </CardContent>
-              </Card>
+                  </p>
+                </div>
+                <div className="relative z-10 shrink-0">
+                  <EventTypeActions
+                    eventTypeId={et.id}
+                    published={et.published}
+                    workspaceBase={base}
+                  />
+                </div>
+              </li>
             )
           })}
-        </div>
+        </ul>
       )}
     </div>
   )
