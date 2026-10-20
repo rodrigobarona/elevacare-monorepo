@@ -46,13 +46,18 @@ export async function setFirstVisitRequiresApproval(
   expect(rows.length).toBe(1)
 }
 
-/** Reserve → pay (Stripe TEST card) → confirm; returns the parked request. */
-export async function payRequestToBook(
+/** Reserve → pay (Stripe TEST card) → confirm the seeded first-visit offer. */
+export async function payFirstVisit(
   request: APIRequestContext,
   label: string
-): Promise<{ bookingId: string; approvalDeadlineAt: string }> {
+): Promise<{
+  bookingId: string
+  guestEmail: string
+  status: string
+  approvalDeadlineAt?: string
+}> {
   const modeId = await fetchOfferModeId(request)
-  const guestEmail = uniqueEmail(`request-${label}`)
+  const guestEmail = uniqueEmail(label)
 
   let reserved: { reservationId: string; reservationToken: string } | null =
     null
@@ -113,6 +118,15 @@ export async function payRequestToBook(
     approvalDeadlineAt?: string
   }
   expect(confirmed.bookingId).toBe(intentBody.bookingId)
+  return { ...confirmed, guestEmail }
+}
+
+/** Pays a Request to book slot and asserts it is parked for the expert. */
+export async function payRequestToBook(
+  request: APIRequestContext,
+  label: string
+): Promise<{ bookingId: string; approvalDeadlineAt: string }> {
+  const confirmed = await payFirstVisit(request, `request-${label}`)
   expect(confirmed.status).toBe("awaiting_confirmation")
   expect(confirmed.approvalDeadlineAt).toBeTruthy()
 
@@ -129,6 +143,20 @@ export async function payRequestToBook(
     bookingId: confirmed.bookingId,
     approvalDeadlineAt: confirmed.approvalDeadlineAt!,
   }
+}
+
+/** The personal Space slug guest activation minted for this member. */
+export async function memberSpaceSlug(bookingId: string): Promise<string> {
+  const rows = (await sql()`
+    SELECT o.slug
+    FROM bookings b
+    JOIN auth.member m ON m.user_id = b.member_user_id
+    JOIN auth.organization o ON o.id = m.organization_id
+    WHERE b.id = ${bookingId} AND o.type = 'personal'
+    LIMIT 1
+  `) as Array<{ slug: string }>
+  expect(rows[0]?.slug, "guest activation minted a personal Space").toBeTruthy()
+  return rows[0]!.slug
 }
 
 export async function expertSession(
