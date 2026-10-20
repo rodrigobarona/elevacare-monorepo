@@ -5,6 +5,9 @@
   "dashboard": {
     "welcome": "Eleva operator console",
     "subtitle": "Approvals, payouts, and audit.",
-    "signedInAs": "Signed in as {email}"
+    "signedInAs": "Signed in as {email}",
+    "eyebrow": "Operator",
+    "emptyTitle": "Operator tools are on the way",
+    "emptyBody": "Expert approvals, payouts and the audit trail arrive with the operator console."
   }
 }

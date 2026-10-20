@@ -1,19 +1,14 @@
 {
   "nav": {
-    "dashboard": "Dashboard",
-    "courses": "Courses",
-    "analytics": "Analytics",
-    "settings": "Settings"
+    "dashboard": "Dashboard"
   },
   "academy": {
     "title": "Eleva Academy",
     "subtitle": "Create and manage your online courses.",
-    "comingSoon": "Course management for {orgSlug}. Coming soon.",
+    "comingSoon": "Course management is on the way.",
     "courses": {
-      "title": "Courses",
-      "create": "New course",
-      "empty": "You haven't created any courses yet.",
-      "createFirst": "Create your first course"
-    }
+      "empty": "You haven't created any courses yet."
+    },
+    "eyebrow": "Academy"
   }
 }

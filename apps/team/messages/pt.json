@@ -1,14 +1,14 @@
 {
   "nav": {
-    "dashboard": "Painel",
-    "members": "Membros",
-    "billing": "Faturação",
-    "settings": "Definições",
-    "landingPage": "Página de Destino"
+    "dashboard": "Painel"
   },
   "dashboard": {
-    "welcome": "Equipa: {name}",
-    "subtitle": "Gerir membros, faturação e horários."
+    "eyebrow": "Equipa",
+    "title": "Espaço da equipa",
+    "subtitle": "Membros, agendas partilhadas e faturação da sua clínica.",
+    "emptyTitle": "As ferramentas de equipa estão a caminho",
+    "emptyBody": "Convidar membros, agendas partilhadas e faturação da clínica chegam numa próxima versão. A sua caixa de entrada já funciona.",
+    "openInbox": "Abrir caixa de entrada"
   },
   "members": {
     "title": "Membros da Equipa",

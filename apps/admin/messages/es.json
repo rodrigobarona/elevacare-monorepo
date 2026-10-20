@@ -5,6 +5,9 @@
   "dashboard": {
     "welcome": "Consola del operador Eleva",
     "subtitle": "Aprobaciones, pagos y auditoría.",
-    "signedInAs": "Sesión iniciada como {email}"
+    "signedInAs": "Sesión iniciada como {email}",
+    "eyebrow": "Operador",
+    "emptyTitle": "Las herramientas de operador están en camino",
+    "emptyBody": "La aprobación de expertos, los pagos y el registro de auditoría llegan con la consola de operador."
   }
 }

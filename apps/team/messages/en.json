@@ -1,14 +1,14 @@
 {
   "nav": {
-    "dashboard": "Dashboard",
-    "members": "Members",
-    "billing": "Billing",
-    "settings": "Settings",
-    "landingPage": "Landing Page"
+    "dashboard": "Dashboard"
   },
   "dashboard": {
-    "welcome": "Team: {name}",
-    "subtitle": "Manage members, billing, and schedules."
+    "eyebrow": "Team",
+    "title": "Team workspace",
+    "subtitle": "Members, shared schedules and billing for your clinic.",
+    "emptyTitle": "Team tools are on the way",
+    "emptyBody": "Inviting members, shared schedules and clinic billing arrive in a later release. Your inbox already works.",
+    "openInbox": "Open inbox"
   },
   "members": {
     "title": "Team Members",
