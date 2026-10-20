@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto"
 import { uploadPrivateBlob } from "@eleva/storage"
 import { ensurePhase5DsarCollectors } from "./dsar-phase5-collectors"
 import { ensureSessionDocumentDsarCollector } from "./session-document-lifecycle"
+import { ensureSessionReportDsarCollector } from "./session-report-dsar"
 import { listDsarCollectors } from "./dsar-collectors"
 import { createZipBuffer } from "./zip"
 
@@ -27,6 +28,7 @@ export async function dsarExport(
 ): Promise<DsarExportResult> {
   ensurePhase5DsarCollectors()
   ensureSessionDocumentDsarCollector()
+  ensureSessionReportDsarCollector()
   const collectors = listDsarCollectors()
   const entries: { name: string; data: Uint8Array }[] = []
 

@@ -1,16 +1,24 @@
-import { and, eq, isNotNull, ne, sql } from "drizzle-orm"
+import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm"
 import { withAudit, type AuditCtx } from "@eleva/audit"
 import {
   withOrgAndUserContext,
+  withOrgContext,
   withPlatformAdminContext,
+  withUserContext,
   type Tx,
 } from "@eleva/db"
-import { bookings, records, slotReservations } from "@eleva/db/schema"
+import {
+  bookings,
+  expertProfiles,
+  records,
+  slotReservations,
+} from "@eleva/db/schema"
 import { decryptRecordFields, encryptRecordFields } from "@eleva/encryption"
 import { decryptHoldIntake } from "./hold-intake"
 import { recordLogger } from "./record-logger"
 import {
   isWritableSessionRecordKind,
+  PUBLISHABLE_SESSION_RECORD_KIND,
   SESSION_RECORD_TITLES,
   SessionRecordError,
   type SessionRecordKind,
@@ -24,6 +32,7 @@ export type SessionRecordView = {
   body: string
   version: number
   updatedAt: string
+  publishedAt: string | null
 }
 
 type BookingRow = {
@@ -72,6 +81,7 @@ async function decryptRow(
     body: plain.body ?? "",
     version: row.version,
     updatedAt: row.updatedAt.toISOString(),
+    publishedAt: row.publishedAt?.toISOString() ?? null,
   }
 }
 
@@ -102,7 +112,7 @@ async function listDecrypted(
   ]
   if (options?.publishedOnly) {
     filters.push(isNotNull(records.publishedAt))
-    filters.push(ne(records.kind, "internal_report"))
+    filters.push(eq(records.kind, PUBLISHABLE_SESSION_RECORD_KIND))
   }
   const rows = await tx
     .select()
@@ -370,7 +380,7 @@ export async function listSessionRecords(input: {
       input.actorUserId,
       (tx) => listDecrypted(tx, booking, { publishedOnly: true })
     )
-    return listed.filter((row) => row.kind !== "internal_report")
+    return listed.filter((row) => row.kind === PUBLISHABLE_SESSION_RECORD_KIND)
   }
 
   throw new SessionRecordError("FORBIDDEN")
@@ -406,4 +416,133 @@ export async function upsertSessionRecord(input: {
         body: input.body,
       })
   )
+}
+
+export async function setSessionRecordPublished(input: {
+  bookingId: string
+  recordId: string
+  actorUserId: string
+  published: boolean
+}): Promise<SessionRecordView> {
+  const booking = await requireAssignedExpert(input)
+  if (!booking.memberUserId) throw new SessionRecordError("NOT_PUBLISHABLE")
+  return withAudit(
+    { orgId: booking.orgId, actorUserId: input.actorUserId },
+    async (tx, ctx) => {
+      const [existing] = await tx
+        .select({ kind: records.kind, publishedAt: records.publishedAt })
+        .from(records)
+        .where(
+          and(
+            eq(records.id, input.recordId),
+            eq(records.orgId, booking.orgId),
+            eq(records.bookingId, booking.id),
+            eq(records.createdBy, input.actorUserId)
+          )
+        )
+        .limit(1)
+      if (!existing) throw new SessionRecordError("NOT_FOUND")
+      if (existing.kind !== PUBLISHABLE_SESSION_RECORD_KIND) {
+        throw new SessionRecordError("NOT_PUBLISHABLE")
+      }
+      const [updated] = await tx
+        .update(records)
+        .set({
+          publishedAt: input.published
+            ? (existing.publishedAt ?? new Date())
+            : null,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(records.id, input.recordId),
+            eq(records.createdBy, input.actorUserId)
+          )
+        )
+        .returning()
+      if (!updated) throw new SessionRecordError("NOT_FOUND")
+      await ctx.emit({
+        entity: "record",
+        action: input.published ? "published" : "unpublished",
+        entityId: updated.id,
+        payload: { kind: updated.kind, bookingId: booking.id },
+      })
+      const view = await decryptRow(booking.orgId, updated)
+      if (!view) throw new SessionRecordError("NOT_FOUND")
+      return view
+    }
+  )
+}
+
+export type MemberReportView = SessionRecordView & {
+  bookingId: string
+  sessionStartsAt: string
+  expertDisplayName: string
+}
+
+/** Published session reports across every booking of this member. */
+export async function listMemberReports(input: {
+  memberUserId: string
+}): Promise<MemberReportView[]> {
+  const rows = await withUserContext(input.memberUserId, (tx) =>
+    tx
+      .select()
+      .from(records)
+      .where(
+        and(
+          eq(records.memberUserId, input.memberUserId),
+          eq(records.kind, PUBLISHABLE_SESSION_RECORD_KIND),
+          isNotNull(records.publishedAt),
+          isNotNull(records.bookingId)
+        )
+      )
+      .orderBy(desc(records.publishedAt))
+  )
+  if (rows.length === 0) return []
+
+  const bookingIdsByOrg = new Map<string, string[]>()
+  for (const row of rows) {
+    const ids = bookingIdsByOrg.get(row.orgId) ?? []
+    ids.push(row.bookingId!)
+    bookingIdsByOrg.set(row.orgId, ids)
+  }
+  const sessions = new Map<
+    string,
+    { startsAt: Date; displayName: string; memberUserId: string | null }
+  >()
+  await Promise.all(
+    [...bookingIdsByOrg.entries()].map(async ([orgId, ids]) => {
+      const found = await withOrgContext(orgId, (tx) =>
+        tx
+          .select({
+            id: bookings.id,
+            startsAt: bookings.startsAt,
+            memberUserId: bookings.memberUserId,
+            displayName: expertProfiles.displayName,
+          })
+          .from(bookings)
+          .innerJoin(
+            expertProfiles,
+            eq(expertProfiles.id, bookings.expertProfileId)
+          )
+          .where(inArray(bookings.id, ids))
+      )
+      for (const row of found) sessions.set(row.id, row)
+    })
+  )
+
+  const reports: MemberReportView[] = []
+  for (const row of rows) {
+    const session = sessions.get(row.bookingId!)
+    if (!session || session.memberUserId !== input.memberUserId) continue
+    const view = await decryptRow(row.orgId, row)
+    if (!view) continue
+    reports.push({
+      ...view,
+      bookingId: row.bookingId!,
+      sessionStartsAt: session.startsAt.toISOString(),
+      expertDisplayName: session.displayName,
+    })
+  }
+  return reports
 }

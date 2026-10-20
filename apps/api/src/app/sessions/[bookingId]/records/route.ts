@@ -31,6 +31,7 @@ const RECORD_STATUS: Record<SessionRecordError["code"], number> = {
   NOT_FOUND: 404,
   FORBIDDEN: 403,
   INTAKE_READONLY: 409,
+  NOT_PUBLISHABLE: 409,
   AI_MODEL_ZERO_RETENTION_REQUIRED: 409,
 }
 

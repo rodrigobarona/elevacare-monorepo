@@ -37,6 +37,25 @@ vi.mock("@eleva/db", () => ({
   listMemberNotificationPreferences: async () => [],
 }))
 
+const listMemberReports = vi.fn(async (..._args: unknown[]) => [
+  {
+    id: "rec-1",
+    kind: "report",
+    title: "Session report",
+    body: "Keep stretching daily",
+    version: 1,
+    updatedAt: "2026-10-20T10:00:00.000Z",
+    publishedAt: "2026-10-20T10:00:00.000Z",
+    bookingId: "booking-1",
+    sessionStartsAt: "2026-10-19T09:00:00.000Z",
+    expertDisplayName: "Dr. Mota",
+  },
+])
+
+vi.mock("@eleva/records", () => ({
+  listMemberReports: (...args: unknown[]) => listMemberReports(...args),
+}))
+
 vi.mock("./member-consents", () => ({
   listMemberConsents: async () => [],
 }))
@@ -107,9 +126,12 @@ describe("dsarExport", () => {
       "notification_preferences.csv",
       "notes.json",
       "notes.csv",
+      "session_reports.json",
+      "session_reports.csv",
     ]) {
       expect(zip).toContain(name)
     }
+    expect(listMemberReports).toHaveBeenCalledWith({ memberUserId: "user-1" })
     expect(result.blobUrl).toContain("export.zip")
   })
 })

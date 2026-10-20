@@ -4,7 +4,8 @@
     "sessions": "Sesiones",
     "payments": "Pagos",
     "settings": "Ajustes",
-    "privacy": "Privacidad"
+    "privacy": "Privacidad",
+    "reports": "Informes"
   },
   "common": {
     "save": "Guardar",
@@ -154,7 +155,9 @@
     "withExpert": "Con {name}",
     "viewReceipt": "Ver recibo",
     "manageTitle": "Gestionar reserva",
-    "manageHint": "Reprograma o cancela dentro de la política de cancelación del especialista."
+    "manageHint": "Reprograma o cancela dentro de la política de cancelación del especialista.",
+    "report": "Informe",
+    "viewReport": "Leer informe"
   },
   "payments": {
     "title": "Pagos",
@@ -313,5 +316,17 @@
     "invalidStatus": "Esta sesión ya no se puede cambiar.",
     "slotTaken": "Ese horario ya no está disponible. Elige otro inicio.",
     "notFoundSession": "Sesión no encontrada."
+  },
+  "reports": {
+    "title": "Informes",
+    "subtitle": "Informes que tus expertos han compartido contigo después de una sesión.",
+    "emptyTitle": "Aún no hay informes",
+    "emptyBody": "Cuando un experto publique el informe de una sesión, aparecerá aquí.",
+    "byExpert": "De {name}",
+    "sessionOn": "Sesión del {date}",
+    "publishedOn": "Compartido el {date}",
+    "read": "Leer",
+    "back": "Todos los informes",
+    "eyebrow": "Informe de la sesión"
   }
 }

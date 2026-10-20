@@ -595,6 +595,7 @@ export const BookingRecordKindSchema = z.enum([
   "transcript",
   "ai_draft",
   "internal_report",
+  "report",
 ])
 
 export const BookingRecordSchema = z.object({
@@ -604,6 +605,8 @@ export const BookingRecordSchema = z.object({
   body: z.string(),
   version: z.number().int().positive(),
   updatedAt: z.string().datetime(),
+  /** Set when the member can read it. Only `report` can be published. */
+  publishedAt: z.string().datetime().nullable(),
 })
 
 export const ListSessionRecordsResponseSchema = z.object({
@@ -623,9 +626,25 @@ export const UpsertSessionRecordRequestSchema = z.discriminatedUnion("kind", [
     kind: z.literal("internal_report"),
     body: z.string().max(100_000),
   }),
+  z.object({
+    kind: z.literal("report"),
+    body: z.string().max(100_000),
+  }),
 ])
 
 export const UpsertSessionRecordResponseSchema = BookingRecordSchema
+
+export const PublishSessionRecordResponseSchema = BookingRecordSchema
+
+export const MemberReportSchema = BookingRecordSchema.extend({
+  bookingId: z.string().uuid(),
+  sessionStartsAt: z.string().datetime(),
+  expertDisplayName: z.string(),
+})
+
+export const ListMeReportsResponseSchema = z.object({
+  reports: z.array(MemberReportSchema),
+})
 
 export const SummarizeSessionRecordsResponseSchema = z.object({
   record: BookingRecordSchema,
@@ -723,6 +742,8 @@ export type UpsertSessionRecordRequest = z.infer<
 export type UpsertSessionRecordResponse = z.infer<
   typeof UpsertSessionRecordResponseSchema
 >
+export type MemberReport = z.infer<typeof MemberReportSchema>
+export type ListMeReportsResponse = z.infer<typeof ListMeReportsResponseSchema>
 export type SessionDocumentScope = z.infer<typeof SessionDocumentScopeSchema>
 export type SessionDocument = z.infer<typeof SessionDocumentSchema>
 export type ListSessionDocumentsResponse = z.infer<
@@ -2505,6 +2526,10 @@ export function createApiClient(options: ApiClientOptions) {
         )
         return VerifyPhoneConfirmResponseSchema.parse(raw)
       },
+      async listReports() {
+        const raw = await request<unknown>("GET", "/me/reports")
+        return ListMeReportsResponseSchema.parse(raw)
+      },
       async listConsents() {
         const raw = await request<unknown>("GET", "/me/consents")
         return ListMeConsentsResponseSchema.parse(raw)
@@ -3166,6 +3191,20 @@ export function createApiClient(options: ApiClientOptions) {
           data
         )
         return UpsertSessionRecordResponseSchema.parse(raw)
+      },
+      async publishRecord(bookingId: string, recordId: string) {
+        const raw = await request<unknown>(
+          "POST",
+          `/sessions/${encodeURIComponent(bookingId)}/records/${encodeURIComponent(recordId)}/publish`
+        )
+        return PublishSessionRecordResponseSchema.parse(raw)
+      },
+      async unpublishRecord(bookingId: string, recordId: string) {
+        const raw = await request<unknown>(
+          "POST",
+          `/sessions/${encodeURIComponent(bookingId)}/records/${encodeURIComponent(recordId)}/unpublish`
+        )
+        return PublishSessionRecordResponseSchema.parse(raw)
       },
       async summarizeRecords(bookingId: string) {
         const raw = await request<unknown>(

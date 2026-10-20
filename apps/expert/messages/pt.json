@@ -108,6 +108,30 @@
         "INVALID_GRANT": "Este link de entrada é inválido ou expirou. Abra o email ou o convite de calendário mais recente.",
         "internal": "Algo correu mal. Tente de novo."
       }
+    },
+    "report": {
+      "title": "Relatório da sessão",
+      "subtitle": "Escreva o relatório desta sessão. O membro só o vê depois de o publicar.",
+      "editorTitle": "Relatório",
+      "statusDraft": "Rascunho",
+      "statusPublished": "Publicado",
+      "privacyHint": "Encriptado e visível apenas para si até ser publicado. Ao publicar, o relatório fica disponível na conta do membro.",
+      "placeholder": "Resumo, observações e recomendações para o seu membro…",
+      "save": "Guardar rascunho",
+      "publish": "Publicar ao membro",
+      "unpublish": "Despublicar",
+      "back": "Voltar ao calendário",
+      "saved": "Relatório guardado",
+      "saveFailed": "Não foi possível guardar o relatório",
+      "loadFailed": "Não foi possível carregar o relatório",
+      "publishedToast": "Relatório publicado ao membro",
+      "unpublishedToast": "Relatório ocultado do membro",
+      "publishFailed": "Não foi possível alterar a visibilidade do relatório",
+      "notPublishable": "Este membro ainda não tem conta Eleva, por isso o relatório não pode ser partilhado.",
+      "saveBeforePublish": "Guarde as alterações antes de publicar.",
+      "open": "Relatório da sessão",
+      "saveUpdateMember": "Guardar e atualizar a cópia do membro",
+      "publishedEditHint": "O seu membro já vê este relatório. Ao guardar, a cópia dele é atualizada."
     }
   },
   "eventTypes": {

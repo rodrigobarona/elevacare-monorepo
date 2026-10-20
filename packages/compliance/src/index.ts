@@ -44,6 +44,10 @@ export {
   SESSION_DOCUMENT_DSAR_COLLECTOR_ID,
 } from "./session-document-lifecycle"
 export {
+  ensureSessionReportDsarCollector,
+  SESSION_REPORT_DSAR_COLLECTOR_ID,
+} from "./session-report-dsar"
+export {
   dsarExport,
   signDsarDownloadToken,
   verifyDsarDownloadToken,

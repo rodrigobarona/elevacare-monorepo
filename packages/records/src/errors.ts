@@ -2,6 +2,7 @@ export type SessionRecordErrorCode =
   | "NOT_FOUND"
   | "FORBIDDEN"
   | "INTAKE_READONLY"
+  | "NOT_PUBLISHABLE"
   | "AI_MODEL_ZERO_RETENTION_REQUIRED"
 
 export type SessionDocumentErrorCode =
@@ -34,6 +35,7 @@ export const SESSION_RECORD_KINDS = [
   "transcript",
   "ai_draft",
   "internal_report",
+  "report",
 ] as const
 
 export type SessionRecordKind = (typeof SESSION_RECORD_KINDS)[number]
@@ -42,6 +44,7 @@ export const WRITABLE_SESSION_RECORD_KINDS = [
   "note",
   "transcript",
   "internal_report",
+  "report",
 ] as const
 
 export type WritableSessionRecordKind =
@@ -53,7 +56,12 @@ export const SESSION_RECORD_TITLES: Record<SessionRecordKind, string> = {
   transcript: "Transcript",
   ai_draft: "AI summary",
   internal_report: "Internal report",
+  report: "Session report",
 }
+
+/** The only kind a member can ever see once published. */
+export const PUBLISHABLE_SESSION_RECORD_KIND =
+  "report" satisfies SessionRecordKind
 
 export function isWritableSessionRecordKind(
   kind: string
