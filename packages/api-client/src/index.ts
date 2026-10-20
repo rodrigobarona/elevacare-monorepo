@@ -498,6 +498,22 @@ export const PutMeConsentRequestSchema = z.object({
   locale: LocaleSchema.optional(),
 })
 
+export const MemberRecordAccessChoiceSchema = z.object({
+  orgId: z.string().uuid(),
+  orgName: z.string(),
+  clinicSharedRecords: z.boolean(),
+  optedOut: z.boolean(),
+})
+
+export const ListMeRecordAccessOptoutsResponseSchema = z.object({
+  choices: z.array(MemberRecordAccessChoiceSchema),
+})
+
+export const PutMeRecordAccessOptoutRequestSchema = z.object({
+  orgId: z.string().uuid(),
+  optedOut: z.boolean(),
+})
+
 export const CancellationPolicySchema = z.enum(CANCELLATION_POLICY_VALUES)
 export type CancellationPolicy = z.infer<typeof CancellationPolicySchema>
 
@@ -909,6 +925,12 @@ export type MeNotificationPreferencesResponse = z.infer<
   typeof MeNotificationPreferencesResponseSchema
 >
 export type PutMeConsentRequest = z.infer<typeof PutMeConsentRequestSchema>
+export type PutMeRecordAccessOptoutRequest = z.infer<
+  typeof PutMeRecordAccessOptoutRequestSchema
+>
+export type ListMeRecordAccessOptoutsResponse = z.infer<
+  typeof ListMeRecordAccessOptoutsResponseSchema
+>
 export type CancellationQuote = z.infer<typeof CancellationQuoteSchema>
 export type CancelMeBookingResponse = z.infer<
   typeof CancelMeBookingResponseSchema
@@ -2799,6 +2821,18 @@ export function createApiClient(options: ApiClientOptions) {
       async putConsent(data: PutMeConsentRequest) {
         const raw = await request<unknown>("PUT", "/me/consents", data)
         return ListMeConsentsResponseSchema.parse(raw)
+      },
+      async listRecordAccessOptouts() {
+        const raw = await request<unknown>("GET", "/me/record-access-optouts")
+        return ListMeRecordAccessOptoutsResponseSchema.parse(raw)
+      },
+      async putRecordAccessOptout(data: PutMeRecordAccessOptoutRequest) {
+        const raw = await request<unknown>(
+          "PUT",
+          "/me/record-access-optouts",
+          data
+        )
+        return ListMeRecordAccessOptoutsResponseSchema.parse(raw)
       },
       async cancellationQuote(bookingId: string) {
         const raw = await request<unknown>(

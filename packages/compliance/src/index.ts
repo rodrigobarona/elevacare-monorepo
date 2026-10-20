@@ -25,6 +25,12 @@ export {
   type MemberConsentStatus,
 } from "./member-consents"
 export {
+  listMemberRecordAccessChoices,
+  setMemberRecordAccessOptout,
+  MemberRecordAccessForbiddenError,
+  type MemberRecordAccessChoice,
+} from "./member-record-access"
+export {
   ACCOUNT_DELETION_GRACE_DAYS,
   AI_DRAFT_RETENTION_DAYS,
   NOTIFICATION_DELIVERY_RETENTION_DAYS,

@@ -285,6 +285,15 @@
       "aiProcessingHint": "Permite transcribir tus sesiones de vídeo en directo para que tu experto conserve un registro escrito, y permite que tu experto prepare informes de sesión a partir de sus propias notas con un modelo de IA que no guarda copia de tus datos. Tu experto revisa cada borrador antes de que lo veas. Está desactivado hasta que lo actives y puedes retirarlo en cualquier momento; al retirarlo, la transcripción se detiene desde tu próxima llamada. La redacción con IA aún no está activa.",
       "aiProcessingNoticeLink": "Leer el aviso de tratamiento por IA."
     },
+    "recordAccess": {
+      "title": "Registros de sesión en la clínica",
+      "description": "Cuando una clínica activa registros compartidos, otros especialistas de esa clínica pueden leer registros de sesión para continuidad asistencial. Puede excluirse por clínica.",
+      "optOutLabel": "No permitir acceso compartido en {clinic}",
+      "sharedOn": "Esta clínica tiene registros compartidos activados.",
+      "sharedOff": "Los registros compartidos están desactivados en esta clínica.",
+      "optOutSuccess": "Preferencia de la clínica guardada.",
+      "optInSuccess": "Volvió a permitir el acceso compartido en la clínica."
+    },
     "dsar": {
       "title": "Descargar tus datos",
       "description": "Solicita una copia de los datos que Eleva tiene sobre ti. El archivo se prepara en zip y el enlace caduca a las 24 horas.",

@@ -23,11 +23,16 @@ export default async function PrivacyPage({
   const session = await requireMemberOrg(orgSlug)
   const apiPromise = getAuthedApiClient()
   const consentsPromise = apiPromise.then((api) => api.me.listConsents())
-  const [t, { consents }, pendingDeletion] = await Promise.all([
-    getTranslations("privacy"),
-    consentsPromise,
-    getPendingAccountDeletion(session.user.id),
-  ])
+  const recordAccessPromise = apiPromise.then((api) =>
+    api.me.listRecordAccessOptouts()
+  )
+  const [t, { consents }, { choices: recordAccessChoices }, pendingDeletion] =
+    await Promise.all([
+      getTranslations("privacy"),
+      consentsPromise,
+      recordAccessPromise,
+      getPendingAccountDeletion(session.user.id),
+    ])
 
   return (
     <div className="space-y-8">
@@ -37,6 +42,7 @@ export default async function PrivacyPage({
         consents={consents}
         scheduledFor={pendingDeletion?.scheduledFor.toISOString() ?? null}
         aiProcessingNoticeHref={aiProcessingNoticeHref}
+        recordAccessChoices={recordAccessChoices}
       />
     </div>
   )

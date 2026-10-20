@@ -285,6 +285,15 @@
       "aiProcessingHint": "Permite transcrever as suas sessões de vídeo em direto para o especialista ficar com um registo escrito, e permite que o especialista prepare relatórios de sessão a partir das próprias notas com um modelo de IA que não guarda cópia dos seus dados. O especialista revê cada rascunho antes de o ver. Fica desligado até o ativar e pode retirar a qualquer momento; ao retirar, a transcrição para a partir da próxima chamada. A redação com IA ainda não está ativa.",
       "aiProcessingNoticeLink": "Ler o aviso de tratamento por IA."
     },
+    "recordAccess": {
+      "title": "Registos de sessão na clínica",
+      "description": "Quando uma clínica ativa registos partilhados, outros especialistas dessa clínica podem ler registos de sessão para continuidade de cuidados. Pode optar por não participar por clínica.",
+      "optOutLabel": "Não permitir acesso partilhado em {clinic}",
+      "sharedOn": "Esta clínica tem registos partilhados ligados.",
+      "sharedOff": "Os registos partilhados estão desligados nesta clínica.",
+      "optOutSuccess": "Preferência de partilha na clínica guardada.",
+      "optInSuccess": "Voltou a permitir o acesso partilhado na clínica."
+    },
     "dsar": {
       "title": "Descarregar os seus dados",
       "description": "Peça uma cópia dos dados que a Eleva tem sobre si. O ficheiro é preparado em zip e o link expira ao fim de 24 horas.",

@@ -285,6 +285,15 @@
       "aiProcessingHint": "Lets your video sessions be transcribed live so your expert keeps a written record, and lets your expert draft session reports from their own notes with an AI model that keeps no copy of your data. Your expert reviews every draft before you see it. Off unless you turn it on, and you can withdraw at any time; withdrawing stops transcription from your next call. AI drafting is not switched on yet.",
       "aiProcessingNoticeLink": "Read the AI processing notice."
     },
+    "recordAccess": {
+      "title": "Clinic session records",
+      "description": "When a clinic enables shared records, other experts in that clinic may read session records for care continuity. You can opt out per clinic.",
+      "optOutLabel": "Do not allow shared access at {clinic}",
+      "sharedOn": "This clinic has shared records turned on.",
+      "sharedOff": "Shared records are off for this clinic today.",
+      "optOutSuccess": "Clinic record-sharing preference saved.",
+      "optInSuccess": "You allow shared clinic access again."
+    },
     "dsar": {
       "title": "Download your data",
       "description": "Request a copy of the data Eleva holds about you. The file is prepared as a zip and the download link expires after 24 hours.",
