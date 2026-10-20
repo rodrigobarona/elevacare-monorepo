@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useLocale, useTranslations } from "next-intl"
+import { pickLocalized } from "@eleva/config/i18n-locales"
 import { CaretLeftIcon, CaretRightIcon } from "@eleva/icons"
 import { Button, LinkButton } from "@eleva/ui/components/button"
 import { StatusPill } from "@eleva/ui/components/status-pill"
@@ -61,15 +62,6 @@ function addDays(date: Date, days: number): Date {
   const d = new Date(date)
   d.setDate(d.getDate() + days)
   return d
-}
-
-function pickTitle(
-  title: { en: string; pt?: string; es?: string },
-  locale: string
-): string {
-  if (locale.startsWith("pt") && title.pt) return title.pt
-  if (locale.startsWith("es") && title.es) return title.es
-  return title.en
 }
 
 function isSameDay(a: Date, b: Date): boolean {
@@ -320,7 +312,7 @@ export function WeekView({
                             {timeFormatter.format(start)}
                           </span>
                           <span className="block truncate font-medium">
-                            {pickTitle(b.eventTypeTitle, locale)}
+                            {pickLocalized(b.eventTypeTitle, locale)}
                           </span>
                           {b.status === "awaiting_confirmation" ? (
                             <span className="block truncate opacity-90">
@@ -350,7 +342,7 @@ export function WeekView({
                 <StatusPill tone="attention">{t("requestPending")}</StatusPill>
               ) : null}
               <p className="font-display text-lg font-medium tracking-tight">
-                {pickTitle(selected.eventTypeTitle, locale)}
+                {pickLocalized(selected.eventTypeTitle, locale)}
               </p>
               <p className="text-muted-foreground">
                 {new Intl.DateTimeFormat(locale, {
@@ -380,7 +372,7 @@ export function WeekView({
               <dt className="text-xs text-muted-foreground">{t("mode")}</dt>
               <dd>
                 {selected.modeLabel
-                  ? pickTitle(selected.modeLabel, locale)
+                  ? pickLocalized(selected.modeLabel, locale)
                   : modeName(selected.sessionMode)}
               </dd>
             </div>

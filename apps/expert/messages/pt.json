@@ -7,7 +7,8 @@
     "calendars": "Calendários ligados",
     "integrations": "Integrações",
     "finance": "Finanças",
-    "publicProfile": "Perfil público"
+    "publicProfile": "Perfil público",
+    "members": "Membros"
   },
   "dashboard": {
     "expert": {
@@ -1041,5 +1042,21 @@
     "fixGrammar": "Corrigir gramática",
     "assistEmpty": "A IA não devolveu texto. Tente novamente.",
     "assistFailed": "A assistência IA falhou. Tente novamente."
+  },
+  "members": {
+    "title": "Membros",
+    "subtitle": "Todas as pessoas que marcaram uma sessão consigo.",
+    "emptyTitle": "Ainda sem membros",
+    "emptyBody": "Os membros aparecem aqui depois da primeira marcação.",
+    "unnamed": "Membro",
+    "sessionCount": "{count, plural, one {# sessão} other {# sessões}}",
+    "nextSession": "Próxima: {date}",
+    "lastSession": "Última: {date}",
+    "detailEyebrow": "Membro",
+    "sessionsTitle": "Sessões",
+    "upcoming": "Próxima",
+    "past": "Passada",
+    "openReport": "Relatório da sessão",
+    "back": "Todos os membros"
   }
 }

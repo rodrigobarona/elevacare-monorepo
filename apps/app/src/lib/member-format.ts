@@ -1,11 +1,4 @@
-export function eventTitle(
-  title: { en: string; pt?: string; es?: string },
-  locale: string
-): string {
-  if (locale === "pt" && title.pt) return title.pt
-  if (locale === "es" && title.es) return title.es
-  return title.en
-}
+export { pickLocalized as eventTitle } from "@eleva/config/i18n-locales"
 
 export function formatMoney(
   amountCents: number,

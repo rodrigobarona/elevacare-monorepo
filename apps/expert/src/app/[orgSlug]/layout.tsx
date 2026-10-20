@@ -77,6 +77,12 @@ export default async function ExpertLayout({
             needs: "events:manage",
           },
           {
+            title: t("members"),
+            url: `${base}/members`,
+            icon: "UsersIcon",
+            needs: "events:manage",
+          },
+          {
             title: t("calendars"),
             url: `${base}/calendars`,
             icon: "CalendarDotsIcon",

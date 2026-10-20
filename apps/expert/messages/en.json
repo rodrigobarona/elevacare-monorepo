@@ -7,7 +7,8 @@
     "calendars": "Connected calendars",
     "integrations": "Integrations",
     "finance": "Finance",
-    "publicProfile": "Public profile"
+    "publicProfile": "Public profile",
+    "members": "Members"
   },
   "dashboard": {
     "expert": {
@@ -1041,5 +1042,21 @@
     "fixGrammar": "Fix grammar",
     "assistEmpty": "AI assist returned no text. Please try again.",
     "assistFailed": "AI assist failed. Please try again."
+  },
+  "members": {
+    "title": "Members",
+    "subtitle": "Everyone who has booked a session with you.",
+    "emptyTitle": "No members yet",
+    "emptyBody": "Members appear here after their first booking.",
+    "unnamed": "Member",
+    "sessionCount": "{count, plural, one {# session} other {# sessions}}",
+    "nextSession": "Next: {date}",
+    "lastSession": "Last: {date}",
+    "detailEyebrow": "Member",
+    "sessionsTitle": "Sessions",
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "openReport": "Session report",
+    "back": "All members"
   }
 }
