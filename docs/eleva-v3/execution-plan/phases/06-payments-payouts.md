@@ -27,7 +27,9 @@ In:
   `expert_profiles.connect_status`). **Capabilities (D-05, working decision pending Stripe/legal
   confirmation in PR 06.0)**: with separate charges and transfers the connected account only
   **receives transfers**, so request the `transfers` capability only — no `card_payments`, so
-  `charges_enabled` is irrelevant and never gates anything; Connect's own KYC is the identity
+  `charges_enabled` is irrelevant and never gates anything. **06.0 outcome:** PT Custom is
+  transfers-only; Express keeps `card_payments` + `transfers` until hosted onboarding proves a
+  transfers-only Express account becomes receivable (D-05 exception, AUD-043); Connect's own KYC is the identity
   check. Gating: an expert cannot publish event types until `details_submitted &&
 payouts_enabled && capabilities.transfers = active`. Stripe Identity stays implemented behind
   `ff.expert_identity_verification` (default **off**) for the case legal requires a second
@@ -166,7 +168,8 @@ Out: TOConline invoices (Phase 7), clinic SaaS billing (Phase 11), admin UI (Pha
       `details_submitted && payouts_enabled && capabilities.transfers === "active"` (and, when
       `ff.expert_identity_verification` is on, Identity `verified`) — the same predicate as the
       Scope and the prompt, tested with each term false in turn; no `card_payments` capability is
-      requested.
+      requested for PT Custom (Express keeps it per the D-05 exception until hosted onboarding
+      proves transfers-only).
 - [ ] PR 06.0 spike report committed under `docs/eleva-v3/spikes/06-stripe-funds-flow.md`: test-mode
       evidence for platform PaymentIntent, delayed transfer with `source_transaction`, full +
       partial refund, transfer reversal, dispute hold, connected-account webhooks, clinic 0% flow.
@@ -312,7 +315,8 @@ PR 06.1 — Connect onboarding hardening:
 1. @eleva/billing connect.ts: create Express accounts with controller settings from
    payments-payouts-spec.md (fees payer application, losses collector application, stripe dashboard
    type express), country from expert profile (PT first), business_type individual|company,
-   capability transfers ONLY (D-05; no card_payments — the platform charges the member); store
+   capability transfers ONLY for PT Custom (D-05; no card_payments — the platform charges the
+   member; Express keeps card_payments until hosted onboarding proves otherwise); store
    account id + status fields on billing_customers (payouts_enabled, details_submitted,
    requirements_currently_due jsonb, connect_capabilities jsonb, identity_status nullable).
    account-session.ts: enable components account_onboarding, account_management, payouts,
