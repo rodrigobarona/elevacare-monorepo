@@ -4,6 +4,7 @@ import {
   BOOKING_SETTING_VALUES,
   describeBookingSetting,
   resolveApprovalDeadline,
+  slotRequiresApproval,
 } from "./booking-settings"
 
 describe("describeBookingSetting", () => {
@@ -34,5 +35,39 @@ describe("resolveApprovalDeadline", () => {
     expect(resolveApprovalDeadline({ startsAt, now }).toISOString()).toBe(
       startsAt.toISOString()
     )
+  })
+})
+
+describe("slotRequiresApproval", () => {
+  const now = new Date("2026-10-20T10:00:00.000Z")
+  const at = (hours: number) => new Date(now.getTime() + hours * 3_600_000)
+
+  it("always asks when the offer is Request to book", () => {
+    expect(
+      slotRequiresApproval({
+        requiresApproval: true,
+        instantBookLeadMinutes: null,
+        startsAt: at(72),
+        now,
+      })
+    ).toBe(true)
+  })
+
+  it("is instant with no lead time", () => {
+    expect(
+      slotRequiresApproval({
+        requiresApproval: false,
+        instantBookLeadMinutes: null,
+        startsAt: at(1),
+        now,
+      })
+    ).toBe(false)
+  })
+
+  it("asks only inside the lead time", () => {
+    const base = { requiresApproval: false, instantBookLeadMinutes: 1440, now }
+    expect(slotRequiresApproval({ ...base, startsAt: at(23) })).toBe(true)
+    expect(slotRequiresApproval({ ...base, startsAt: at(24) })).toBe(false)
+    expect(slotRequiresApproval({ ...base, startsAt: at(48) })).toBe(false)
   })
 })

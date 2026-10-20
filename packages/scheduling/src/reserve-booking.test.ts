@@ -78,6 +78,7 @@ const offer: ResolvedOffer = {
   bufferAfterMinutes: 0,
   cancellationPolicy: "flexible",
   requiresApproval: false,
+  instantBookLeadMinutes: null,
 }
 
 const grants = FUNNEL_CONSENT_KINDS.map((kind) => ({
@@ -126,6 +127,29 @@ describe("reserveBooking", () => {
       reservationId: "res-1",
       reservationToken: "tok-1",
     } satisfies ReserveSlotResult)
+  })
+
+  it("snapshots Request to book for slots inside the Instant Book lead time", async () => {
+    const { reserveBooking } = await import("./reserve-booking")
+    resolveOffer.mockResolvedValue({
+      ok: true,
+      offer: { ...offer, instantBookLeadMinutes: 1440 },
+    })
+    const soon = {
+      ...baseInput,
+      startsAt: new Date("2026-09-01T20:00:00Z"),
+      endsAt: new Date("2026-09-01T20:25:00Z"),
+    }
+    await reserveBooking(redis, soon)
+    expect(reserveSlot.mock.calls[0]?.[1]).toMatchObject({
+      requiresApproval: true,
+    })
+
+    reserveSlot.mockClear()
+    await reserveBooking(redis, baseInput)
+    expect(reserveSlot.mock.calls[0]?.[1]).toMatchObject({
+      requiresApproval: false,
+    })
   })
 
   it("rejects stale consents before resolving the offer or locking", async () => {

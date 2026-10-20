@@ -54,6 +54,7 @@ export async function GET(
         eventTitle: link.eventTitle,
         cancellationPolicy: link.cancellationPolicy,
         requiresApproval: link.requiresApproval,
+        instantBookLeadMinutes: link.instantBookLeadMinutes,
         modes,
       }),
       { status: 200, headers }

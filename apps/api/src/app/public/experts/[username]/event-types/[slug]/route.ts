@@ -52,6 +52,7 @@ export async function GET(
         sessionMode: eventType.sessionMode,
         cancellationPolicy: eventType.cancellationPolicy,
         requiresApproval: eventType.requiresApproval,
+        instantBookLeadMinutes: eventType.instantBookLeadMinutes,
         whatsIncluded: eventType.whatsIncluded,
         whatToExpect: eventType.whatToExpect,
         exampleQuestions: eventType.exampleQuestions,

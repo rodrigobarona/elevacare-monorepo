@@ -26,6 +26,7 @@ export type ResolvedOffer = {
   bufferAfterMinutes: number
   cancellationPolicy: CancellationPolicy
   requiresApproval: boolean
+  instantBookLeadMinutes: number | null
 }
 
 export type ResolveOfferInput = {
@@ -67,6 +68,7 @@ export type OfferEventTypeRow = {
   bufferAfterMinutes: number
   cancellationPolicy: CancellationPolicy
   requiresApproval: boolean
+  instantBookLeadMinutes: number | null
 }
 
 export type OfferLinkRow = {
@@ -176,6 +178,7 @@ export function composeResolvedOffer(input: {
       bufferAfterMinutes: eventType.bufferAfterMinutes,
       cancellationPolicy: eventType.cancellationPolicy,
       requiresApproval: eventType.requiresApproval,
+      instantBookLeadMinutes: eventType.instantBookLeadMinutes,
     },
   }
 }

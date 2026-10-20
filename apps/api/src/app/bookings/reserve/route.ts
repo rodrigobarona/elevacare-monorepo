@@ -179,6 +179,7 @@ export async function POST(request: Request) {
       reservationId: result.reservationId,
       reservationToken: result.reservationToken,
       expiresAt: result.expiresAt.toISOString(),
+      requiresApproval: result.requiresApproval,
     }),
     { status: 201, headers }
   )

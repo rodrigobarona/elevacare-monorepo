@@ -13,6 +13,14 @@ export const DEFAULT_BOOKING_SETTING: BookingSetting = "instant"
 /** Expert must accept or decline within this many hours, or before start. */
 export const APPROVAL_WINDOW_HOURS = 24
 
+/**
+ * Optional Instant Book lead time: slots starting sooner than this need the
+ * expert to confirm (e.g. in-person offers). `null` means always instant.
+ */
+export const INSTANT_BOOK_LEAD_MINUTES_OPTIONS = [120, 720, 1440, 2880] as const
+
+export const INSTANT_BOOK_LEAD_MINUTES_MAX = 7 * 24 * 60
+
 export type BookingSettingLocale = "en" | "pt" | "es"
 
 const SETTING_COPY: Record<
@@ -91,6 +99,19 @@ export function bookingSettingFromRequiresApproval(
   requiresApproval: boolean
 ): BookingSetting {
   return requiresApproval ? "request" : "instant"
+}
+
+/** True when this slot needs the expert to accept before it is confirmed. */
+export function slotRequiresApproval(input: {
+  requiresApproval: boolean
+  instantBookLeadMinutes: number | null
+  startsAt: Date
+  now: Date
+}): boolean {
+  if (input.requiresApproval) return true
+  if (input.instantBookLeadMinutes == null) return false
+  const leadMs = input.instantBookLeadMinutes * 60 * 1000
+  return input.startsAt.getTime() - input.now.getTime() < leadMs
 }
 
 /**

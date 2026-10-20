@@ -34,6 +34,7 @@ export interface EventTypeFormData {
   cancellationPolicy?: CancellationPolicy
   rescheduleWindowHours?: number | null
   requiresApproval: boolean
+  instantBookLeadMinutes?: number | null
   worldwideMode: boolean
 }
 
@@ -66,6 +67,7 @@ function toCreatePayload(data: EventTypeFormData): CreateEventTypeRequest {
     cancellationPolicy: data.cancellationPolicy,
     rescheduleWindowHours: data.rescheduleWindowHours ?? null,
     requiresApproval: data.requiresApproval,
+    instantBookLeadMinutes: data.instantBookLeadMinutes ?? null,
     worldwideMode: data.worldwideMode,
   }
 }
@@ -149,6 +151,9 @@ export async function updateEventTypeAction(
     }
     if (data.requiresApproval !== undefined) {
       updates.requiresApproval = data.requiresApproval
+    }
+    if (data.instantBookLeadMinutes !== undefined) {
+      updates.instantBookLeadMinutes = data.instantBookLeadMinutes
     }
     if (data.worldwideMode !== undefined) {
       updates.worldwideMode = data.worldwideMode

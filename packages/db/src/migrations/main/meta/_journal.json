@@ -456,6 +456,13 @@
       "when": 1782100000000,
       "tag": "0064_sessions_room_deleted_at",
       "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1782200000000,
+      "tag": "0065_event_types_instant_book_lead",
+      "breakpoints": true
     }
   ]
 }

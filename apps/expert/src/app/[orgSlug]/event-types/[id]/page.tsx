@@ -87,6 +87,7 @@ export default async function EditEventTypePage(props: {
     cancellationPolicy: eventType.cancellationPolicy,
     rescheduleWindowHours: eventType.rescheduleWindowHours,
     requiresApproval: eventType.requiresApproval,
+    instantBookLeadMinutes: eventType.instantBookLeadMinutes,
     worldwideMode: eventType.worldwideMode,
   }
 

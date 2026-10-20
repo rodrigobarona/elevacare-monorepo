@@ -34,6 +34,7 @@ const eventType: OfferEventTypeRow = {
   bufferAfterMinutes: 0,
   cancellationPolicy: "flexible",
   requiresApproval: false,
+  instantBookLeadMinutes: null,
 }
 
 const now = new Date("2026-09-09T12:00:00Z")

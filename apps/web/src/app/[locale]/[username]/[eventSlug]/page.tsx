@@ -118,6 +118,7 @@ export default async function PublicBookingPage({
         modes={eventType.modes}
         cancellationPolicy={eventType.cancellationPolicy}
         requiresApproval={eventType.requiresApproval}
+        instantBookLeadMinutes={eventType.instantBookLeadMinutes}
         geoCountry={geo.country}
         geoTimeZone={geo.timeZone}
         consents={funnelConsentDocs(locale)}
