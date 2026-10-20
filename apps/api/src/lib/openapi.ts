@@ -129,6 +129,15 @@ import {
   RecordTemplatePhiErrorSchema,
   ApplyRecordTemplateRequestSchema,
   ApplyRecordTemplateResponseSchema,
+  CreateCrmContactRequestSchema,
+  CreateCrmFollowUpRequestSchema,
+  CrmContactSchema,
+  CrmFollowUpSchema,
+  ListCrmContactsQuerySchema,
+  ListCrmContactsResponseSchema,
+  ListCrmFollowUpsQuerySchema,
+  ListCrmFollowUpsResponseSchema,
+  UpdateCrmContactRequestSchema,
 } from "@eleva/api-client"
 
 const ErrorSchema = z.object({
@@ -3540,6 +3549,137 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             "403": {
               description: "Caller is not the booking's assigned expert",
               content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+      },
+      "/crm/contacts": {
+        get: {
+          operationId: "listCrmContacts",
+          summary: "List the expert's CRM contacts",
+          description:
+            "Requires events:manage and an expert profile in the active org. Returns the caller's manual leads, then members who booked the caller (session stats from bookings) with their stage and tags. Members without a CRM row show as active; guests are read-only (id null). Lead email/phone are decrypted in the expert org.",
+          tags: ["CRM"],
+          requestParams: { query: ListCrmContactsQuerySchema },
+          responses: {
+            ...stdErrors,
+            "200": {
+              description: "Contacts",
+              content: {
+                "application/json": { schema: ListCrmContactsResponseSchema },
+              },
+            },
+            "403": {
+              description: "Caller has no expert profile in this org",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+        post: {
+          operationId: "createCrmContact",
+          summary: "Create a lead or a member's CRM row",
+          description:
+            "With memberUserId: upserts the CRM row for a member who booked the caller (404 MEMBER_NOT_FOUND otherwise). With name: creates a manual lead; email and phone are encrypted with the org key. Audited as crm_contact.created or crm_contact.updated.",
+          tags: ["CRM"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: CreateCrmContactRequestSchema },
+            },
+          },
+          responses: {
+            ...stdWithNotFound,
+            "201": {
+              description: "Contact",
+              content: { "application/json": { schema: CrmContactSchema } },
+            },
+          },
+        },
+      },
+      "/crm/contacts/{contactId}": {
+        patch: {
+          operationId: "updateCrmContact",
+          summary: "Change a contact's stage, tags or lead details",
+          description:
+            "Stage and tags for any visible contact. Name, email and phone only for leads (409 NOT_A_LEAD for members, whose identity comes from bookings). A stage change is audited as crm_contact.status_changed, anything else as crm_contact.updated.",
+          tags: ["CRM"],
+          requestParams: {
+            path: z.object({ contactId: z.string().uuid() }),
+          },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: UpdateCrmContactRequestSchema },
+            },
+          },
+          responses: {
+            ...stdWithNotFound,
+            "200": {
+              description: "Contact",
+              content: { "application/json": { schema: CrmContactSchema } },
+            },
+            "409": {
+              description: "Identity fields sent for a member contact",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+      },
+      "/crm/follow-ups": {
+        get: {
+          operationId: "listCrmFollowUps",
+          summary: "List the caller's follow-ups",
+          description:
+            "Open follow-ups by default, soonest due first. Notes are decrypted in the expert org. Only the author sees a follow-up.",
+          tags: ["CRM"],
+          requestParams: { query: ListCrmFollowUpsQuerySchema },
+          responses: {
+            ...stdErrors,
+            "200": {
+              description: "Follow-ups",
+              content: {
+                "application/json": { schema: ListCrmFollowUpsResponseSchema },
+              },
+            },
+          },
+        },
+        post: {
+          operationId: "createCrmFollowUp",
+          summary: "Schedule a follow-up on a contact",
+          description:
+            "The contact must exist (create a member's row first with POST /crm/contacts). The note is encrypted with the org key. Audited as crm_follow_up.created.",
+          tags: ["CRM"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: CreateCrmFollowUpRequestSchema },
+            },
+          },
+          responses: {
+            ...stdWithNotFound,
+            "201": {
+              description: "Follow-up",
+              content: { "application/json": { schema: CrmFollowUpSchema } },
+            },
+          },
+        },
+      },
+      "/crm/follow-ups/{followUpId}/done": {
+        post: {
+          operationId: "completeCrmFollowUp",
+          summary: "Mark a follow-up done",
+          description:
+            "Author only. Completing a done follow-up returns it unchanged. Audited as crm_follow_up.status_changed.",
+          tags: ["CRM"],
+          requestParams: {
+            path: z.object({ followUpId: z.string().uuid() }),
+          },
+          requestBody: emptyRequestBody,
+          responses: {
+            ...stdWithNotFound,
+            "200": {
+              description: "Follow-up",
+              content: { "application/json": { schema: CrmFollowUpSchema } },
             },
           },
         },

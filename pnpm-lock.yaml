@@ -440,6 +440,9 @@ importers:
       '@eleva/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@eleva/crm':
+        specifier: workspace:*
+        version: link:../../packages/crm
       '@eleva/db':
         specifier: workspace:*
         version: link:../../packages/db

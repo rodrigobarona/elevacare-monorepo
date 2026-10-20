@@ -747,6 +747,120 @@ export const RecordTemplatePhiErrorSchema = z.object({
   scanned: z.object({ title: z.string(), body: z.string() }).optional(),
 })
 
+export const CrmLifecycleStageSchema = z.enum([
+  "lead",
+  "active",
+  "dormant",
+  "churned",
+])
+
+export const CrmFollowUpKindSchema = z.enum(["call", "message", "review"])
+
+const CrmTagsSchema = z.array(z.string().trim().min(1).max(40)).max(10)
+const CrmEmailSchema = z.string().trim().email().max(320)
+const CrmPhoneSchema = z
+  .string()
+  .trim()
+  .regex(/^\+?[0-9 ()-]{6,32}$/, "phone number")
+
+export const CrmContactListItemSchema = z.object({
+  /** Null until the expert first sets a stage, tag or follow-up. */
+  id: z.string().uuid().nullable(),
+  source: z.enum(["member", "guest", "lead"]),
+  memberUserId: z.string().uuid().nullable(),
+  name: z.string().nullable(),
+  email: z.string().nullable(),
+  phone: z.string().nullable(),
+  lifecycleStage: CrmLifecycleStageSchema,
+  tags: z.array(z.string()),
+  sessionCount: z.number().int().nonnegative(),
+  lastSessionAt: z.string().datetime().nullable(),
+  nextSessionAt: z.string().datetime().nullable(),
+  openFollowUps: z.number().int().nonnegative(),
+})
+
+export const CrmContactSchema = z.object({
+  id: z.string().uuid(),
+  source: z.enum(["member", "lead"]),
+  memberUserId: z.string().uuid().nullable(),
+  name: z.string().nullable(),
+  email: z.string().nullable(),
+  phone: z.string().nullable(),
+  lifecycleStage: CrmLifecycleStageSchema,
+  tags: z.array(z.string()),
+  updatedAt: z.string().datetime(),
+})
+
+export const ListCrmContactsQuerySchema = z.object({
+  stage: CrmLifecycleStageSchema.optional(),
+})
+
+export const ListCrmContactsResponseSchema = z.object({
+  contacts: z.array(CrmContactListItemSchema),
+})
+
+export const CreateCrmContactRequestSchema = z.union([
+  z
+    .object({
+      memberUserId: z.string().uuid(),
+      lifecycleStage: CrmLifecycleStageSchema.optional(),
+      tags: CrmTagsSchema.optional(),
+    })
+    .strict(),
+  z
+    .object({
+      name: z.string().trim().min(1).max(200),
+      email: CrmEmailSchema.optional(),
+      phone: CrmPhoneSchema.optional(),
+      lifecycleStage: CrmLifecycleStageSchema.optional(),
+      tags: CrmTagsSchema.optional(),
+    })
+    .strict(),
+])
+
+export const UpdateCrmContactRequestSchema = z
+  .object({
+    lifecycleStage: CrmLifecycleStageSchema.optional(),
+    tags: CrmTagsSchema.optional(),
+    /** Leads only. */
+    name: z.string().trim().min(1).max(200).optional(),
+    email: CrmEmailSchema.nullable().optional(),
+    phone: CrmPhoneSchema.nullable().optional(),
+  })
+  .strict()
+  .refine((v) => Object.values(v).some((x) => x !== undefined), {
+    message: "at least one field is required",
+  })
+
+export const CrmFollowUpSchema = z.object({
+  id: z.string().uuid(),
+  contactId: z.string().uuid(),
+  contactName: z.string().nullable(),
+  memberUserId: z.string().uuid().nullable(),
+  dueAt: z.string().datetime(),
+  kind: CrmFollowUpKindSchema,
+  note: z.string().nullable(),
+  doneAt: z.string().datetime().nullable(),
+})
+
+export const ListCrmFollowUpsQuerySchema = z.object({
+  status: z.enum(["open", "done", "all"]).optional(),
+  contactId: z.string().uuid().optional(),
+})
+
+export const ListCrmFollowUpsResponseSchema = z.object({
+  followUps: z.array(CrmFollowUpSchema),
+})
+
+export const CreateCrmFollowUpRequestSchema = z
+  .object({
+    contactId: z.string().uuid(),
+    dueAt: z.string().datetime({ offset: true }),
+    kind: CrmFollowUpKindSchema,
+    note: z.string().trim().max(2000).optional(),
+  })
+  .strict()
+
 export const SessionDocumentScopeSchema = z.enum(["expert_only", "shared"])
 
 export const SessionDocumentSchema = z.object({
@@ -830,6 +944,20 @@ export type RemoveSessionParticipantResponse = z.infer<
 export type DailyWebhookResponse = z.infer<typeof DailyWebhookResponseSchema>
 export type BookingRecordKind = z.infer<typeof BookingRecordKindSchema>
 export type BookingRecord = z.infer<typeof BookingRecordSchema>
+export type CrmLifecycleStage = z.infer<typeof CrmLifecycleStageSchema>
+export type CrmFollowUpKind = z.infer<typeof CrmFollowUpKindSchema>
+export type CrmContactListItem = z.infer<typeof CrmContactListItemSchema>
+export type CrmContact = z.infer<typeof CrmContactSchema>
+export type CreateCrmContactRequest = z.infer<
+  typeof CreateCrmContactRequestSchema
+>
+export type UpdateCrmContactRequest = z.infer<
+  typeof UpdateCrmContactRequestSchema
+>
+export type CrmFollowUp = z.infer<typeof CrmFollowUpSchema>
+export type CreateCrmFollowUpRequest = z.infer<
+  typeof CreateCrmFollowUpRequestSchema
+>
 export type RecordTemplate = z.infer<typeof RecordTemplateSchema>
 export type RecordTemplateKind = z.infer<typeof RecordTemplateKindSchema>
 export type StarterRecordTemplate = z.infer<typeof StarterRecordTemplateSchema>
