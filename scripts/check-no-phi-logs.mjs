@@ -36,6 +36,7 @@ const JOIN_URL_TOKEN_RE =
 const REVEAL_RE = /\.reveal\(\s*\)/
 const REVEAL_ALLOWED_PREFIXES = [
   "packages/records/src/",
+  "packages/crm/src/",
   "packages/encryption/src/",
   "packages/observability/src/",
 ]
@@ -185,7 +186,7 @@ for (const file of files) {
     !REVEAL_ALLOWED_PREFIXES.some((prefix) => rel.startsWith(prefix))
   ) {
     violations.push(
-      `${rel}: Decrypted#reveal() outside @eleva/records / @eleva/encryption`
+      `${rel}: Decrypted#reveal() outside @eleva/records / @eleva/crm / @eleva/encryption`
     )
   }
 }
