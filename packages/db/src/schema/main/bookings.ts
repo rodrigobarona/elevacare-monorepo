@@ -465,6 +465,11 @@ export const sessions = pgTable(
       withTimezone: true,
       mode: "date",
     }),
+    /** Daily room deleted after expiry; `dailyRoomName` is kept for late webhooks. */
+    roomDeletedAt: timestamp("room_deleted_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
     roomCreateAttemptAt: timestamp("room_create_attempt_at", {
       withTimezone: true,
       mode: "date",

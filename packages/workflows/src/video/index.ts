@@ -5,9 +5,12 @@ export {
   deleteSessionRoom,
   ensureSessionRoom,
   expectedRoomName,
+  expiredRoomCutoff,
   shouldCancelUnstartedSession,
+  sweepExpiredSessionRooms,
   sweepMissingSessionRooms,
   type EnsureSessionRoomResult,
+  type ExpiredRoomResult,
   type SessionRoomDaily,
   type SessionRoomDeps,
 } from "./ensure-session-room"

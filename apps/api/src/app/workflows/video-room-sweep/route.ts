@@ -1,4 +1,7 @@
-import { sweepMissingSessionRooms } from "@eleva/workflows/video"
+import {
+  sweepExpiredSessionRooms,
+  sweepMissingSessionRooms,
+} from "@eleva/workflows/video"
 import type { RoutePolicy } from "@/lib/route-policy"
 import {
   internalWorkflowOptions,
@@ -17,6 +20,7 @@ export const ROUTE_POLICY = {
  * Every 15 minutes: create Daily rooms for confirmed/rescheduled online
  * bookings that start within 2 hours and still have no room name.
  * Phone and in-person bookings are excluded by the sweep query.
+ * Also deletes rooms whose join window closed over an hour ago (AUD-036).
  *
  * Authz: Bearer `WORKFLOWS_DRAIN_SECRET`.
  */
@@ -24,7 +28,12 @@ export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
 export async function POST(request: Request) {
-  return runInternalWorkflow(request, async () => sweepMissingSessionRooms())
+  return runInternalWorkflow(request, async () => {
+    const now = new Date()
+    const missing = await sweepMissingSessionRooms(now)
+    const expired = await sweepExpiredSessionRooms(now)
+    return { ...missing, expired }
+  })
 }
 
 export async function OPTIONS(request: Request) {

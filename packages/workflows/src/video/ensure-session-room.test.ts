@@ -3,6 +3,7 @@ import {
   classifyRoomLease,
   classifySessionRoomBooking,
   expectedRoomName,
+  expiredRoomCutoff,
   needsCancelledSessionPlaceholder,
   shouldCancelUnstartedSession,
 } from "./ensure-session-room"
@@ -97,6 +98,15 @@ describe("expectedRoomName", () => {
   it("uses the deterministic eleva-{bookingId} name", () => {
     const bookingId = "22222222-2222-4222-8222-222222222222"
     expect(expectedRoomName(bookingId)).toBe(`eleva-${bookingId.toLowerCase()}`)
+  })
+})
+
+describe("expiredRoomCutoff", () => {
+  it("waits for the 30 min join trail plus a 1 h webhook grace", () => {
+    const now = new Date("2026-10-20T12:00:00.000Z")
+    expect(expiredRoomCutoff(now).toISOString()).toBe(
+      "2026-10-20T10:30:00.000Z"
+    )
   })
 })
 

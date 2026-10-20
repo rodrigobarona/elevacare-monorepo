@@ -449,6 +449,13 @@
       "when": 1782000000000,
       "tag": "0063_record_templates",
       "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1782100000000,
+      "tag": "0064_sessions_room_deleted_at",
+      "breakpoints": true
     }
   ]
 }
