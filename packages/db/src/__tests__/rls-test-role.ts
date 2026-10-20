@@ -40,6 +40,9 @@ async function grantRlsTestRole(client: PoolClient): Promise<void> {
   await client.query(
     `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO ${RLS_TEST_ROLE}`
   )
+  // records / session_documents clinic-share policies read auth.organization.
+  await client.query(`GRANT USAGE ON SCHEMA auth TO ${RLS_TEST_ROLE}`)
+  await client.query(`GRANT SELECT ON auth.organization TO ${RLS_TEST_ROLE}`)
 }
 
 export async function setLocalRlsTestRole(client: PoolClient): Promise<void> {
