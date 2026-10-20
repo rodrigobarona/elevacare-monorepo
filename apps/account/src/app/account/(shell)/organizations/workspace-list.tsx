@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { isRedirectError } from "next/dist/client/components/redirect-error"
+import { unstable_rethrow } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import type { MembershipRole, OrgType } from "@eleva/auth/types"
@@ -36,7 +36,7 @@ export function WorkspaceList({ rows }: { rows: WorkspaceRow[] }) {
     try {
       await switchOrganization(row.orgId, row.homeUrl)
     } catch (err) {
-      if (isRedirectError(err)) throw err
+      unstable_rethrow(err)
       console.error("[account/workspaces] switch failed", err)
       toast.error(t("openFailed"))
       setOpeningId(null)
