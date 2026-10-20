@@ -31,6 +31,7 @@ import { Input } from "@eleva/ui/components/input"
 import { Textarea } from "@eleva/ui/components/textarea"
 import { callDisplayName, localCallDisplayName } from "./call-display-name"
 import type { ElevaCallLabels } from "./labels"
+import { NoteTemplatesMenu, type NoteTemplates } from "./note-templates-menu"
 import { OvertimeNotice, type CallWindow } from "./overtime-notice"
 import {
   EMPTY_INTERNAL_REPORT,
@@ -61,6 +62,7 @@ export type ElevaCallRecords = {
     kind: "note" | "transcript" | "internal_report",
     body: string
   ) => Promise<void>
+  noteTemplates?: NoteTemplates
 }
 
 export type ElevaCallProps = {
@@ -604,6 +606,7 @@ function CallShell({
           transcript={transcript}
           internalReport={internalReport}
           saveFailed={saveFailed}
+          noteTemplates={records?.noteTemplates}
           onNoteChange={(value) => {
             setNote(value)
             setNotesDirty(true)
@@ -812,6 +815,7 @@ function SessionNotesPanel({
   transcript,
   internalReport,
   saveFailed,
+  noteTemplates,
   onNoteChange,
   onReportChange,
 }: {
@@ -821,6 +825,7 @@ function SessionNotesPanel({
   transcript: string
   internalReport: InternalReportDraft
   saveFailed: boolean
+  noteTemplates?: NoteTemplates
   onNoteChange: (value: string) => void
   onReportChange: (patch: Partial<InternalReportDraft>) => void
 }) {
@@ -835,7 +840,17 @@ function SessionNotesPanel({
         </div>
       ) : null}
       <div>
-        <p className="font-medium text-foreground">{labels.notesTitle}</p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="font-medium text-foreground">{labels.notesTitle}</p>
+          {noteTemplates ? (
+            <NoteTemplatesMenu
+              templates={noteTemplates}
+              labels={labels}
+              note={note}
+              onApplied={onNoteChange}
+            />
+          ) : null}
+        </div>
         <Textarea
           className="mt-2 min-h-32"
           value={note}
