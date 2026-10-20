@@ -32,6 +32,18 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-20: Email header logo and corner radius (accepted)
+
+- Decision (founder feedback): emails show the white logo PNG in the teal
+  header instead of a "Eleva Care" text wordmark, and drop pill shapes.
+  - Logo: `https://eleva.care/eleva-logo-white.png` at 160×32, served from
+    `apps/web/public` so the URL survives the v3 web cutover. PNG only (Gmail
+    and Outlook strip SVG), always an absolute production URL.
+  - Shapes: buttons 8px (primary teal fill, secondary 2px teal outline),
+    message card 12px, details card 8px.
+- Spec: [`brand-book/email-system.md`](./brand-book/email-system.md).
+- Owner: founder, engineering. Status: `accepted`.
+
 ### 2026-10-19: Expert profile and booking UX direction (proposed)
 
 - Decision: redesign the public expert profile and the booking flow per
