@@ -72,6 +72,7 @@ describe("POST /bookings/reserve concurrency", () => {
         reservationId: "00000000-0000-4000-8000-000000000022",
         reservationToken: "reservation-token-concurrency",
         expiresAt: new Date("2026-06-15T10:05:00.000Z"),
+        requiresApproval: false,
       }
     })
 

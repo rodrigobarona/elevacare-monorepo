@@ -95,9 +95,11 @@ describe("POST /bookings/reserve member bookability", () => {
       reservationId: "00000000-0000-4000-8000-000000000022",
       reservationToken: "reservation-token-16xx",
       expiresAt: new Date("2026-09-20T10:05:00.000Z"),
+      requiresApproval: false,
     })
     const response = await POST(reserveRequest())
     expect(response.status).toBe(201)
+    expect(await response.json()).toMatchObject({ requiresApproval: false })
     expect(reserveBooking).toHaveBeenCalled()
   })
 })

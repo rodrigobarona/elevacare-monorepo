@@ -85,6 +85,8 @@ type Reservation = {
   reservationId: string
   reservationToken: string
   expiresAt: string
+  /** Server decision at reserve; absent on holds saved before it existed. */
+  requiresApproval?: boolean
 }
 
 type Payment = {
@@ -195,14 +197,16 @@ export function BookingFunnel({
   const isRequest =
     settledStatus != null
       ? settledStatus === "awaiting_confirmation"
-      : slot
-        ? slotRequiresApproval({
-            requiresApproval,
-            instantBookLeadMinutes,
-            startsAt: new Date(slot.start),
-            now: new Date(nowMs),
-          })
-        : requiresApproval
+      : reservation?.requiresApproval != null
+        ? reservation.requiresApproval
+        : slot
+          ? slotRequiresApproval({
+              requiresApproval,
+              instantBookLeadMinutes,
+              startsAt: new Date(slot.start),
+              now: new Date(nowMs),
+            })
+          : requiresApproval
 
   const evaluations = evaluateModes(modes, {
     memberCountry: country,

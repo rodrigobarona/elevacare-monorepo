@@ -86,6 +86,8 @@ export type ReserveBookingResult =
       reservationId: string
       reservationToken: string
       expiresAt: Date
+      /** Request to Book vs Instant Book, decided once here and snapshotted. */
+      requiresApproval: boolean
     }
   | { ok: false; error: ReserveBookingError }
 
@@ -308,6 +310,13 @@ export async function reserveBooking(
         }
       : undefined
 
+  const requiresApproval = slotRequiresApproval({
+    requiresApproval: offer.requiresApproval,
+    instantBookLeadMinutes: offer.instantBookLeadMinutes,
+    startsAt: input.startsAt,
+    now: new Date(),
+  })
+
   let reserved
   try {
     reserved = await reserveSlot(redis, {
@@ -334,12 +343,7 @@ export async function reserveBooking(
         ...(intakeNotesEncrypted ? { intakeNotesEncrypted } : {}),
       },
       cancellationPolicy: offer.cancellationPolicy,
-      requiresApproval: slotRequiresApproval({
-        requiresApproval: offer.requiresApproval,
-        instantBookLeadMinutes: offer.instantBookLeadMinutes,
-        startsAt: input.startsAt,
-        now: new Date(),
-      }),
+      requiresApproval,
       audit: {
         actorUserId: input.session?.userId ?? null,
         payload: {
@@ -393,5 +397,6 @@ export async function reserveBooking(
     reservationId: reserved.reservationId,
     reservationToken: reserved.reservationToken,
     expiresAt: new Date(Date.now() + RESERVE_TTL_SECONDS * 1000),
+    requiresApproval,
   }
 }

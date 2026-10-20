@@ -2006,6 +2006,8 @@ export const ReserveBookingResponseSchema = z.object({
   reservationId: z.string().uuid(),
   reservationToken: z.string().min(16).max(128),
   expiresAt: z.string().datetime(),
+  /** True when this hold is Request to Book (snapshotted at reserve). */
+  requiresApproval: z.boolean(),
 })
 
 export type ListPublicExpertsQuery = z.infer<
