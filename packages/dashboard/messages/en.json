@@ -71,7 +71,8 @@
         "wizardDescription": "This is how your workspace will appear in Eleva."
       }
     },
-    "back": "Back"
+    "back": "Back",
+    "stepOf": "Step {step} of {total}"
   },
   "routeStates": {
     "loading": "Loading…",

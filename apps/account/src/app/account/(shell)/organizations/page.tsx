@@ -2,7 +2,9 @@ import { getTranslations } from "next-intl/server"
 import { redirectToGatewayLogin } from "@eleva/auth/guards"
 import { getUserOrganizations } from "@eleva/auth/server"
 import { resolveOrgHomeUrl } from "@eleva/dashboard/resolve-org-home-url"
+import { BuildingsIcon } from "@eleva/icons"
 import { LinkButton } from "@eleva/ui/components/button"
+import { EmptyState } from "@eleva/ui/components/empty-state"
 import { PageHeader, Section } from "@eleva/ui/components/page-header"
 import { WorkspaceList, type WorkspaceRow } from "./workspace-list"
 
@@ -54,20 +56,20 @@ export default async function OrganizationsPage() {
         {workspaces.length > 0 ? (
           <WorkspaceList rows={workspaces} />
         ) : (
-          <div className="rounded-3xl border border-dashed p-8 text-center">
-            <p className="font-medium">{t("emptyTitle")}</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {t("emptyBody")}
-            </p>
-            <LinkButton
-              href="/account/workspaces/new"
-              variant="outline"
-              size="sm"
-              className="mt-4"
-            >
-              {t("createWorkspace")}
-            </LinkButton>
-          </div>
+          <EmptyState
+            icon={<BuildingsIcon />}
+            title={t("emptyTitle")}
+            description={t("emptyBody")}
+            action={
+              <LinkButton
+                href="/account/workspaces/new"
+                variant="outline"
+                size="sm"
+              >
+                {t("createWorkspace")}
+              </LinkButton>
+            }
+          />
         )}
       </Section>
     </div>

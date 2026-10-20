@@ -27,6 +27,8 @@ export default async function CreateWorkspacePage({
       backLabel={t("back")}
       step={2}
       totalSteps={2}
+      stepCaption={t("stepOf", { step: 2, total: 2 })}
+      progressAriaLabel={t("stepOf", { step: 2, total: 2 })}
       title={t(`types.${type}.wizardTitle`)}
       description={t(`types.${type}.wizardDescription`)}
     >
