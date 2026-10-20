@@ -15,8 +15,8 @@ export type JoinSessionProps = {
   join: () => Promise<{
     roomUrl: string
     token: string
-    endsAt?: string
-    expiresAt?: string
+    endsAt: string
+    expiresAt: string
   }>
   labels: ElevaCallLabels
   backHref: string
@@ -34,7 +34,7 @@ export function JoinSession({
   const [creds, setCreds] = useState<{
     roomUrl: string
     token: string
-    callWindow?: CallWindow
+    callWindow: CallWindow
   } | null>(null)
   const [error, setError] = useState<ElevaCallErrorCode | null>(null)
   const [windowHint, setWindowHint] = useState<string | null>(null)
@@ -54,10 +54,7 @@ export function JoinSession({
         setCreds({
           roomUrl: result.roomUrl,
           token: result.token,
-          callWindow:
-            result.endsAt && result.expiresAt
-              ? { endsAt: result.endsAt, closesAt: result.expiresAt }
-              : undefined,
+          callWindow: { endsAt: result.endsAt, closesAt: result.expiresAt },
         })
         setLoading(false)
       })
