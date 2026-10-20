@@ -81,6 +81,8 @@
       "intakeTitle": "Member pre-agenda",
       "transcriptTitle": "Live transcript",
       "transcriptEmpty": "Transcript appears as you speak. Recording stays off.",
+      "transcriptOff": "Live transcript is off: the member has not allowed AI processing.",
+      "transcriptionOnNotice": "Live transcript is on for your expert's session notes, because you allowed AI processing. You can turn it off in Privacy settings.",
       "notesSaved": "Saved",
       "notesSaveFailed": "Could not save notes. Keep this page open and try again.",
       "notesTemplates": "Templates",
@@ -280,7 +282,7 @@
         "marketing": "Marketing messages",
         "ai_processing": "AI help with session reports"
       },
-      "aiProcessingHint": "Lets your expert draft session reports from their own notes with an AI model that keeps no copy of your data. Your expert reviews every draft before you see it. Off unless you turn it on, and you can withdraw at any time. AI drafting is not switched on yet."
+      "aiProcessingHint": "Lets your video sessions be transcribed live so your expert keeps a written record, and lets your expert draft session reports from their own notes with an AI model that keeps no copy of your data. Your expert reviews every draft before you see it. Off unless you turn it on, and you can withdraw at any time; withdrawing stops transcription from your next call. AI drafting is not switched on yet."
     },
     "dsar": {
       "title": "Download your data",

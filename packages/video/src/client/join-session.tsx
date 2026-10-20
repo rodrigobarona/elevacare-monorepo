@@ -17,6 +17,7 @@ export type JoinSessionProps = {
     token: string
     endsAt: string
     expiresAt: string
+    transcriptionAllowed: boolean
   }>
   labels: ElevaCallLabels
   backHref: string
@@ -35,6 +36,7 @@ export function JoinSession({
     roomUrl: string
     token: string
     callWindow: CallWindow
+    transcriptionAllowed: boolean
   } | null>(null)
   const [error, setError] = useState<ElevaCallErrorCode | null>(null)
   const [windowHint, setWindowHint] = useState<string | null>(null)
@@ -55,6 +57,7 @@ export function JoinSession({
           roomUrl: result.roomUrl,
           token: result.token,
           callWindow: { endsAt: result.endsAt, closesAt: result.expiresAt },
+          transcriptionAllowed: result.transcriptionAllowed,
         })
         setLoading(false)
       })
@@ -131,6 +134,7 @@ export function JoinSession({
       records={records}
       backHref={backHref}
       callWindow={creds.callWindow}
+      transcriptionAllowed={creds.transcriptionAllowed}
       onLeft={() => setLeft(true)}
     />
   )

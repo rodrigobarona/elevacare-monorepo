@@ -177,6 +177,7 @@ export {
   cacheBookingPaymentReceipt,
   lockMemberHealthConsentInvariant,
   memberHasConfirmedFutureBooking,
+  hasActiveAiProcessingConsent,
   type MemberProfile,
   type MemberNotificationPreference,
   type MemberBookingListItem,

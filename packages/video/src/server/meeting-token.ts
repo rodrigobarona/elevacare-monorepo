@@ -1,11 +1,19 @@
 import { SignJWT, jwtVerify } from "jose"
 import { z } from "zod"
 
+export type MeetingTokenAdmin = "participants" | "transcription"
+
+const ADMIN_ABBREVIATIONS: Record<MeetingTokenAdmin, string> = {
+  participants: "p",
+  transcription: "t",
+}
+
 export type MintMeetingTokenInput = {
   roomName: string
   userId: string
   userName: string
-  isOwner: boolean
+  /** Scoped admin rights; nobody is a Daily owner (owners get every right). */
+  canAdmin: MeetingTokenAdmin[]
   exp: number
   domainId: string
   apiKey: string
@@ -15,12 +23,14 @@ export type MintMeetingTokenInput = {
  * Self-signed Daily JWT claims use the abbreviations in
  * https://docs.daily.co/docs/guides/privacy-and-security/self-signing-tokens
  * (`ud` = user_id, `u` = user_name, `ejt` = eject_at_token_exp,
- * `erui` = enable_recording_ui). Omit `er` / `sr` so recording stays off.
+ * `erui` = enable_recording_ui, `p.ca` = permissions.canAdmin). Omit
+ * `er` / `sr` so recording stays off.
  */
 export const meetingTokenClaimsSchema = z.object({
   r: z.string().min(1),
   d: z.string().min(1),
-  o: z.boolean(),
+  o: z.literal(false),
+  p: z.object({ ca: z.union([z.literal(false), z.string().min(1)]) }),
   ud: z.string().min(1),
   u: z.string(),
   ejt: z.literal(true),
@@ -59,7 +69,15 @@ export async function mintMeetingToken(
   return new SignJWT({
     r: input.roomName,
     d: input.domainId,
-    o: input.isOwner,
+    o: false,
+    p: {
+      ca:
+        input.canAdmin.length === 0
+          ? false
+          : [...new Set(input.canAdmin)]
+              .map((right) => ADMIN_ABBREVIATIONS[right])
+              .join(","),
+    },
     ud: input.userId,
     u: input.userName,
     ejt: true,

@@ -74,6 +74,8 @@ export type ElevaCallProps = {
   records?: ElevaCallRecords
   backHref: string
   callWindow?: CallWindow
+  /** Member's active ai_processing consent, decided by the join API. */
+  transcriptionAllowed?: boolean
 }
 
 type ChatMessage = {
@@ -99,6 +101,7 @@ export function ElevaCall({
   records,
   backHref,
   callWindow,
+  transcriptionAllowed = false,
 }: ElevaCallProps) {
   return (
     <DailyProvider url={roomUrl} token={token}>
@@ -109,6 +112,7 @@ export function ElevaCall({
         records={records}
         backHref={backHref}
         callWindow={callWindow}
+        transcriptionAllowed={transcriptionAllowed}
       />
     </DailyProvider>
   )
@@ -121,6 +125,7 @@ function CallShell({
   records,
   backHref,
   callWindow,
+  transcriptionAllowed,
 }: Omit<ElevaCallProps, "roomUrl" | "token">) {
   const daily = useDaily()
   const meetingState = useMeetingState()
@@ -391,7 +396,7 @@ function CallShell({
   const left = meetingState === "left-meeting"
 
   useEffect(() => {
-    if (!showNotesSlot || !joined || !daily) return
+    if (!showNotesSlot || !joined || !daily || !transcriptionAllowed) return
     const call = daily as unknown as DailyTranscriptionCall
     if (typeof call.startTranscription === "function") {
       void call.startTranscription().catch(() => {
@@ -407,7 +412,7 @@ function CallShell({
     return () => {
       call.off("transcription-message", onMessage)
     }
-  }, [daily, joined, showNotesSlot])
+  }, [daily, joined, showNotesSlot, transcriptionAllowed])
 
   const handleLeft = useCallback(() => {
     onLeft?.()
@@ -493,6 +498,15 @@ function CallShell({
       <p className="text-xs text-muted-foreground">{labels.notHipaa}</p>
       {joined && callWindow ? (
         <OvertimeNotice window={callWindow} labels={labels} />
+      ) : null}
+      {joined && !showNotesSlot && transcriptionAllowed ? (
+        <p
+          className="rounded-3xl bg-muted px-4 py-3 text-sm text-muted-foreground"
+          role="status"
+          data-testid="transcription-notice"
+        >
+          {labels.transcriptionOnNotice}
+        </p>
       ) : null}
 
       {!joined ? (
@@ -604,6 +618,7 @@ function CallShell({
           intake={intake}
           note={note}
           transcript={transcript}
+          transcriptionAllowed={Boolean(transcriptionAllowed)}
           internalReport={internalReport}
           saveFailed={saveFailed}
           noteTemplates={records?.noteTemplates}
@@ -813,6 +828,7 @@ function SessionNotesPanel({
   intake,
   note,
   transcript,
+  transcriptionAllowed,
   internalReport,
   saveFailed,
   noteTemplates,
@@ -823,6 +839,7 @@ function SessionNotesPanel({
   intake: string
   note: string
   transcript: string
+  transcriptionAllowed: boolean
   internalReport: InternalReportDraft
   saveFailed: boolean
   noteTemplates?: NoteTemplates
@@ -902,7 +919,11 @@ function SessionNotesPanel({
             {transcript}
           </pre>
         ) : (
-          <p className="mt-1 text-muted-foreground">{labels.transcriptEmpty}</p>
+          <p className="mt-1 text-muted-foreground">
+            {transcriptionAllowed
+              ? labels.transcriptEmpty
+              : labels.transcriptOff}
+          </p>
         )}
       </div>
     </aside>
