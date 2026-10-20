@@ -25,6 +25,9 @@ alwaysApply: false
   `{firstName}'s Space`.
 - `requireApiAuth` accepts exactly one credential: session cookie (origin-checked),
   `Authorization: Bearer <jwt>`, or `x-api-key`. Cross-mode is 400.
+- JWTs are stateless (15 min): revoking the minting session does not end them
+  before `exp`. Membership is re-read per request, and privileged mutations use
+  `requireRevocableApiAuth`, which refuses JWTs (`api-auth-jwt-revoke.test.ts`).
 - Calendar tokens: `auth.api.getAccessToken({ body: { accountId, userId } })` —
   persist both on the connection; do not store tokens in `packages/calendar`.
 - Do not reintroduce the previous identity SDK, widgets, or vendor infra
