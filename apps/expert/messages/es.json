@@ -129,7 +129,9 @@
       "publishFailed": "No se pudo cambiar la visibilidad del informe",
       "notPublishable": "Este miembro aún no tiene cuenta en Eleva, así que no se puede compartir el informe.",
       "saveBeforePublish": "Guarda los cambios antes de publicar.",
-      "open": "Informe de la sesión"
+      "open": "Informe de la sesión",
+      "saveUpdateMember": "Guardar y actualizar la copia del miembro",
+      "publishedEditHint": "Tu miembro ya ve este informe. Al guardar, se actualiza su copia."
     }
   },
   "eventTypes": {

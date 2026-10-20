@@ -129,7 +129,9 @@
       "publishFailed": "Não foi possível alterar a visibilidade do relatório",
       "notPublishable": "Este membro ainda não tem conta Eleva, por isso o relatório não pode ser partilhado.",
       "saveBeforePublish": "Guarde as alterações antes de publicar.",
-      "open": "Relatório da sessão"
+      "open": "Relatório da sessão",
+      "saveUpdateMember": "Guardar e atualizar a cópia do membro",
+      "publishedEditHint": "O seu membro já vê este relatório. Ao guardar, a cópia dele é atualizada."
     }
   },
   "eventTypes": {

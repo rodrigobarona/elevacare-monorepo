@@ -447,6 +447,7 @@ export function WeekView({
             />
           )}
           {selected.status === "confirmed" ||
+          selected.status === "rescheduled" ||
           selected.status === "completed" ? (
             <LinkButton
               className="mt-3"

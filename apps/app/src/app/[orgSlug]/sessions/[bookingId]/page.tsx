@@ -73,7 +73,7 @@ export default async function SessionDetailPage({
       if (err instanceof ApiClientError && err.status === 409) return null
       throw err
     }),
-    api.me.listReports(),
+    api.me.listReports().catch(() => ({ reports: [] })),
   ])
   const report = reports.find((row) => row.bookingId === booking.id)
   const payment = payments.payments.find((row) => row.bookingId === booking.id)

@@ -110,7 +110,7 @@ export function ReportEditor({
       />
       <div className="flex flex-wrap items-center gap-3">
         <Button onPress={save} isDisabled={!loaded || isPending || !isDirty}>
-          {t("save")}
+          {isPublished ? t("saveUpdateMember") : t("save")}
         </Button>
         <Button
           variant="outline"
@@ -125,7 +125,7 @@ export function ReportEditor({
       </div>
       {isDirty && record ? (
         <p className="text-xs text-muted-foreground">
-          {t("saveBeforePublish")}
+          {isPublished ? t("publishedEditHint") : t("saveBeforePublish")}
         </p>
       ) : null}
     </section>

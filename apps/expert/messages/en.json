@@ -129,7 +129,9 @@
       "publishFailed": "Could not change the report visibility",
       "notPublishable": "This member has no Eleva account yet, so the report cannot be shared.",
       "saveBeforePublish": "Save your changes before publishing.",
-      "open": "Session report"
+      "open": "Session report",
+      "saveUpdateMember": "Save and update member's copy",
+      "publishedEditHint": "Your member already sees this report. Saving updates their copy."
     }
   },
   "eventTypes": {
