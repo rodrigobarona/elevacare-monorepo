@@ -16,6 +16,7 @@ import { checkBot } from "@/lib/bot-protection"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
+import { rejectUnexpectedBody } from "@/lib/empty-body"
 
 export const ROUTE_POLICY = {
   auth: "session",
@@ -60,6 +61,9 @@ export async function POST(
     headers
   )
   if (rateLimited) return rateLimited
+
+  const unexpectedBody = await rejectUnexpectedBody(request, headers)
+  if (unexpectedBody) return unexpectedBody
 
   const { provider: rawProvider } = await params
   const parsed = ProviderParamSchema.safeParse(rawProvider)

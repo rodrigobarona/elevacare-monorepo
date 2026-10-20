@@ -104,13 +104,13 @@ AUD-014, AUD-017 (BotID production off), Twilio IE1 residency, staging auth cook
 
 ### P3
 
-| ID      | Finding                                                                                                                | Fix                                                                      |
-| ------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| AUD-045 | Empty-body POSTs (publish/unpublish, read-all, feed-token, identity, invoicing retry) have no `z.object({}).strict()`. | Shared no-body schema                                                    |
-| AUD-046 | Optional Instant Book lead-time is not modelled (boolean `requiresApproval` only).                                     | Lead-time column that forces approval inside the window                  |
-| AUD-047 | Doc drift: webhook rule says "two-file" (code is registry + dispatcher + setup); Phase 01 says `drizzle/audit`.        | Align wording                                                            |
-| AUD-048 | No `apps/email` template-lint script; quiet-hours SMS deferral and `ended + 2 min` attendance finalize not built.      | Add lint to CI; keep `endsAt + 30m` sweep as SSOT or build the delay job |
-| AUD-049 | Passkey sign-in and Google `account_not_linked` are not in Playwright.                                                 | Extend `e2e/auth-api.spec.ts`                                            |
+| ID      | Finding                                                                                                                | Fix                                                                                                                                                                                      |
+| ------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AUD-045 | Empty-body POSTs (publish/unpublish, read-all, feed-token, identity, invoicing retry) have no `z.object({}).strict()`. | **Fixed 2026-10-20**: `EmptyRequestSchema` in `@eleva/api-client`, `rejectUnexpectedBody` on 17 action POSTs (422 `validation` for any non-`{}` body), optional `requestBody` in OpenAPI |
+| AUD-046 | Optional Instant Book lead-time is not modelled (boolean `requiresApproval` only).                                     | Lead-time column that forces approval inside the window                                                                                                                                  |
+| AUD-047 | Doc drift: webhook rule says "two-file" (code is registry + dispatcher + setup); Phase 01 says `drizzle/audit`.        | Align wording                                                                                                                                                                            |
+| AUD-048 | No `apps/email` template-lint script; quiet-hours SMS deferral and `ended + 2 min` attendance finalize not built.      | Add lint to CI; keep `endsAt + 30m` sweep as SSOT or build the delay job                                                                                                                 |
+| AUD-049 | Passkey sign-in and Google `account_not_linked` are not in Playwright.                                                 | Extend `e2e/auth-api.spec.ts`                                                                                                                                                            |
 
 ### Rejected or reclassified candidates
 
