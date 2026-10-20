@@ -154,6 +154,7 @@
     "logoutTitle": "Sign out",
     "logoutDescription": "End this session on this device.",
     "errorGeneric": "Something went wrong. Please try again.",
+    "accountNotLinked": "This email already has an Eleva account. Sign in with your password, a magic link or a passkey instead.",
     "passwordStepDescription": "Enter your password, or get a sign-in link by email.",
     "continue": "Continue",
     "or": "or",

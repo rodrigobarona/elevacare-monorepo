@@ -179,10 +179,11 @@ export function SettingsSecurity() {
               size="sm"
               variant="outline"
               onPress={onAddPasskey}
+              data-testid="settings-add-passkey"
             >
               {t("addPasskey")}
             </Button>
-            <ul className="space-y-2">
+            <ul className="space-y-2" data-testid="settings-passkeys">
               {passkeys.map((passkey) => (
                 <li
                   key={passkey.id}

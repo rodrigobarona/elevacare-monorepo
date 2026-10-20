@@ -145,6 +145,7 @@ export function SignupForm({
     await authClient.signIn.social({
       provider: "google",
       callbackURL: toGatewayCallbackURL("/dashboard"),
+      errorCallbackURL: new URL("/login", window.location.href).toString(),
     })
   }
 

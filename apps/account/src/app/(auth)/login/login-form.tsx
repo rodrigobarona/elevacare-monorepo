@@ -24,6 +24,8 @@ import {
   EmailChip,
   InboxActions,
   authErrorMessage,
+  oauthErrorCallbackURL,
+  oauthErrorMessage,
 } from "@/components/auth-ui"
 
 type Step = "email" | "password" | "magicSent"
@@ -36,7 +38,9 @@ export function LoginForm() {
   const [email, setEmail] = useState(searchParams.get("email") ?? "")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(() =>
+    oauthErrorMessage(searchParams.get("error"), t)
+  )
   const [pending, setPending] = useState(false)
   const [signedIn, setSignedIn] = useState(false)
   const [googlePending, setGooglePending] = useState(false)
@@ -123,7 +127,11 @@ export function LoginForm() {
 
   async function onGoogle() {
     setGooglePending(true)
-    await authClient.signIn.social({ provider: "google", callbackURL: next })
+    await authClient.signIn.social({
+      provider: "google",
+      callbackURL: next,
+      errorCallbackURL: oauthErrorCallbackURL(),
+    })
   }
 
   async function onPasskey() {

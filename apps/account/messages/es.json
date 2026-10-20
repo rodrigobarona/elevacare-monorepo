@@ -154,6 +154,7 @@
     "logoutTitle": "Cerrar sesión",
     "logoutDescription": "Cierra esta sesión en este dispositivo.",
     "errorGeneric": "Algo salió mal. Inténtalo de nuevo.",
+    "accountNotLinked": "Este correo ya tiene una cuenta de Eleva. Inicia sesión con tu contraseña, un enlace mágico o una llave de acceso.",
     "passwordStepDescription": "Introduce tu contraseña o recibe un enlace de acceso por email.",
     "continue": "Continuar",
     "or": "o",
