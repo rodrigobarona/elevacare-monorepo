@@ -25,6 +25,8 @@
  * - Phase 4B: `platejs`, `@platejs/*`, `slate*`, `@radix-ui/*` outside
  *   `@eleva/editor` (ADR-023). Owning package omits `boundariesConfig`
  *   from its local eslint.config.js (same pattern as `@eleva/billing`).
+ * - Phase 10: `Decrypted#reveal()` outside `@eleva/records` /
+ *   `@eleva/encryption` (apps receive plaintext only as DTO fields).
  *
  * Each addition above must also land in docs/eleva-v3/implementation-sprints.md
  * under "Global Rules Applied Every Sprint".
@@ -173,6 +175,19 @@ export const boundariesConfig = [
             // No standalone npm packages today (TOConline + Moloni use
             // raw fetch); patterns ready when a community SDK appears.
           ],
+        },
+      ],
+    },
+  },
+  {
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "CallExpression[callee.type='MemberExpression'][callee.property.name='reveal'][arguments.length=0]",
+          message:
+            "Decrypted PHI is unwrapped only inside @eleva/records / @eleva/encryption when mapping into a response DTO (Phase 10 PHI lint).",
         },
       ],
     },

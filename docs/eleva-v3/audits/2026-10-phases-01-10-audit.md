@@ -22,11 +22,7 @@ not a regression.
 Phase 09 video engineering is on main. Its **exit gate is still unproven**: there is no staging
 Eleva grant join across two browsers and no Daily webhook subscription evidence.
 
-Phase 10 is roughly **40% of PR 10.1**. Encrypted session records, documents and the in-call
-autosave exist. The PHI-handling guard rails (branded decrypted type, allow-list logger), publish,
-retention, `ai_processing` consent and clinical tombstones do not exist yet. **Do not open Phase 10.2
-(AI drafts, CRM) until 10.1a–d land.** Update 2026-10-20: 10.1a (structural PHI guards) is on main;
-only its ESLint `Decrypted` response ban remains.
+Phase 10 started at roughly **40% of PR 10.1** (encrypted session records, documents and the in-call autosave). Update 2026-10-20: 10.1a (structural PHI guards, with the `reveal()` boundary enforced by `pnpm check:no-phi-logs`), 10.1b (`ai_processing` consent), 10.1c (publish and member reports) and 10.1d (retention sweep and clinical tombstones) are on main; 10.1e (expert members list) and 10.1f (record templates) are in review. The open items in the AUD-026–031 rows below still apply. **Do not open Phase 10.2 (AI drafts, CRM) until 10.1 closes and its consent UI, legal text and DPO retention questions are answered.**
 
 The product UI is functional but visually thin. The public marketing site does not yet carry the
 MVP's premium patterns. Brand v3 tokens and the curated media library landed in this pass
@@ -71,7 +67,7 @@ No new P0. One candidate P0 was reclassified, see "Rejected or reclassified cand
 
 | ID      | Finding                                                                                                                                                                                                                | Evidence                                                                                              | Fix                                                                                                                                                                                                                                                       |
 | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| AUD-026 | No `Decrypted<T>` brand, PHI registry or allow-list logger. Decrypted record text is a plain string, and record/document routes `console.error` raw errors, so a future change can leak plaintext into logs or Sentry. | `packages/records/src/session-records.ts`; `packages/observability/src/redaction.ts` is key-name only | **Mostly fixed 2026-10-20** (10.1a): `Decrypted<T>`, PHI registry, `recordLogger`, Sentry key allow-list. Open: ESLint ban on `Decrypted` in responses                                                                                                    |
+| AUD-026 | No `Decrypted<T>` brand, PHI registry or allow-list logger. Decrypted record text is a plain string, and record/document routes `console.error` raw errors, so a future change can leak plaintext into logs or Sentry. | `packages/records/src/session-records.ts`; `packages/observability/src/redaction.ts` is key-name only | **Fixed 2026-10-20** (10.1a): `Decrypted<T>`, PHI registry, `recordLogger`, Sentry key allow-list; `Decrypted#reveal()` outside `@eleva/records`/`@eleva/encryption` fails `pnpm check:no-phi-logs` (ESLint boundary rule warns in the editor)            |
 | AUD-027 | No publish path. `publishedAt` is never written, so member policy B never exposes a report.                                                                                                                            | no `…/publish` route                                                                                  | **Fixed 2026-10-20** (10.1c): publish/unpublish API (author expert, kind `report` only, audited), `GET /me/reports`, member reports list + detail, expert report editor. Open: browser walkthrough with a real member login                               |
 | AUD-028 | Retention sweep absent (`ai_draft` 90 days, documents).                                                                                                                                                                | `packages/compliance/src/retention.ts` only pseudonymises consents                                    | **Partly fixed 2026-10-20** (10.1d): `POST /workflows/retention-sweep` deletes unpublished `ai_draft` 90 days after the last change, daily `0 2 * * *` UTC. Open: session-document expiry (the matrix has no period yet), notification-delivery retention |
 | AUD-029 | `ai_processing` is not a consent kind.                                                                                                                                                                                 | `CONSENT_KINDS` = terms/privacy/health/marketing                                                      | **Partly fixed 2026-10-20** (10.1b): kind + migration 0060, `/me/consents`, Privacy toggle, `hasActiveAiProcessingConsent`. Open: join banner, booking checkbox, versioned legal text                                                                     |
@@ -133,7 +129,7 @@ AUD-022 stays product backlog.
 
 ## Phase 10 remaining slice order
 
-1. **10.1a** PHI hardening (AUD-026) — landed 2026-10-20 except the ESLint `Decrypted` response ban
+1. **10.1a** PHI hardening (AUD-026) — landed 2026-10-20, including the `reveal()` CI guard
 2. **10.1b** `ai_processing` consent (AUD-029)
 3. **10.1c** publish + member reports (AUD-027) — engineering on branch 2026-10-20
 4. **10.1d** retention sweep, clinical tombstone, DSAR decrypt + signed URLs (AUD-028, AUD-030)
@@ -149,9 +145,9 @@ Retention sweeps and account deletion run under platform-admin context. `records
 
 ## Fix pack
 
-| PR      | Contents                                                                                      |
-| ------- | --------------------------------------------------------------------------------------------- |
-| this PR | This audit, AUD-033 README §3 refresh                                                         |
-| next    | AUD-034 + AUD-038 (small product fixes)                                                       |
-| then    | 10.1a PHI hardening (AUD-026) — landed 2026-10-20; ESLint `Decrypted` response ban still open |
-| Track B | AUD-044 redesign slices (blocks → web → app → expert → account → team/academy/admin → email)  |
+| PR      | Contents                                                                                     |
+| ------- | -------------------------------------------------------------------------------------------- |
+| this PR | This audit, AUD-033 README §3 refresh                                                        |
+| next    | AUD-034 + AUD-038 (small product fixes)                                                      |
+| then    | 10.1a PHI hardening (AUD-026) — landed 2026-10-20, including the `reveal()` CI guard         |
+| Track B | AUD-044 redesign slices (blocks → web → app → expert → account → team/academy/admin → email) |

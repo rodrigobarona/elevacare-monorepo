@@ -3,6 +3,9 @@
  * CI guard: Daily meeting-token JWTs must not appear in source as literals,
  * in ctx.emit payloads, or in join URLs. Complements Sentry/BetterStack
  * JWT redaction in @eleva/observability. Does not scan other audit writers.
+ *
+ * Also fails on `Decrypted#reveal()` outside the packages that map PHI into
+ * response DTOs, because the repo-wide ESLint boundary rule only warns.
  */
 import { readdir, readFile } from "node:fs/promises"
 import path from "node:path"
@@ -30,6 +33,12 @@ const MEETING_TOKEN_FIELD_RE =
 const GENERIC_TOKEN_FIELD_RE = /\btoken(?:\s*:|\s*[,}])/
 const JOIN_URL_TOKEN_RE =
   /sessions\/[^"'`\s]+\/join[^"'`\s]*[?&#](?:token|t|meetingToken|meeting_token)=/
+const REVEAL_RE = /\.reveal\(\s*\)/
+const REVEAL_ALLOWED_PREFIXES = [
+  "packages/records/src/",
+  "packages/encryption/src/",
+  "packages/observability/src/",
+]
 const LOG_TOKEN_RE =
   /(?:console|logger|log)\.(?:log|debug|info|warn|error|trace|fatal|table)\([\s\S]{0,240}?\b(?:meetingToken|meeting_token|meeting token)\b/i
 
@@ -170,6 +179,14 @@ for (const file of files) {
   }
   if (LOG_TOKEN_RE.test(content)) {
     violations.push(`${rel}: log call mentions a meeting token`)
+  }
+  if (
+    REVEAL_RE.test(content) &&
+    !REVEAL_ALLOWED_PREFIXES.some((prefix) => rel.startsWith(prefix))
+  ) {
+    violations.push(
+      `${rel}: Decrypted#reveal() outside @eleva/records / @eleva/encryption`
+    )
   }
 }
 
