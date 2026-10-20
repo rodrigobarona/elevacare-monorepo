@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic"
 
 const MemberIdSchema = z.string().uuid()
 
-const REPORTABLE_STATUSES = new Set(["confirmed", "completed"])
+const REPORTABLE_STATUSES = new Set(["confirmed", "rescheduled", "completed"])
 
 export default async function ExpertMemberDetailPage({
   params,
