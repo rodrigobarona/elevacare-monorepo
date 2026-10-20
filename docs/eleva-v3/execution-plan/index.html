@@ -4035,7 +4035,9 @@ requirements polling (<code>account.updated</code> webhook -&gt; <code>billing_c
 <code>expert_profiles.connect_status</code>). <strong>Capabilities (D-05, working decision pending Stripe/legal
 confirmation in PR 06.0)</strong>: with separate charges and transfers the connected account only
 <strong>receives transfers</strong>, so request the <code>transfers</code> capability only — no <code>card_payments</code>, so
-<code>charges_enabled</code> is irrelevant and never gates anything; Connect&#39;s own KYC is the identity
+<code>charges_enabled</code> is irrelevant and never gates anything. <strong>06.0 outcome:</strong> PT Custom is
+transfers-only; Express keeps <code>card_payments</code> + <code>transfers</code> until hosted onboarding proves a
+transfers-only Express account becomes receivable (D-05 exception, AUD-043); Connect&#39;s own KYC is the identity
 check. Gating: an expert cannot publish event types until <code>details_submitted &amp;&amp; payouts_enabled &amp;&amp; capabilities.transfers = active</code>. Stripe Identity stays implemented behind
 <code>ff.expert_identity_verification</code> (default <strong>off</strong>) for the case legal requires a second
 verification for clinical experts; it is not part of the launch gate. Clear status UI with next
@@ -4190,7 +4192,8 @@ is intentional under Hobby / abuse constraints.</p>
 <code>details_submitted &amp;&amp; payouts_enabled &amp;&amp; capabilities.transfers === &quot;active&quot;</code> (and, when
 <code>ff.expert_identity_verification</code> is on, Identity <code>verified</code>) — the same predicate as the
 Scope and the prompt, tested with each term false in turn; no <code>card_payments</code> capability is
-requested.</li>
+requested for PT Custom (Express keeps it per the D-05 exception until hosted onboarding
+proves transfers-only).</li>
 <li><input disabled="" type="checkbox"> PR 06.0 spike report committed under <code>docs/eleva-v3/spikes/06-stripe-funds-flow.md</code>: test-mode
 evidence for platform PaymentIntent, delayed transfer with <code>source_transaction</code>, full +
 partial refund, transfer reversal, dispute hold, connected-account webhooks, clinic 0% flow.</li>
@@ -4334,7 +4337,8 @@ PR 06.1 — Connect onboarding hardening:
 1. @eleva/billing connect.ts: create Express accounts with controller settings from
    payments-payouts-spec.md (fees payer application, losses collector application, stripe dashboard
    type express), country from expert profile (PT first), business_type individual|company,
-   capability transfers ONLY (D-05; no card_payments — the platform charges the member); store
+   capability transfers ONLY for PT Custom (D-05; no card_payments — the platform charges the
+   member; Express keeps card_payments until hosted onboarding proves otherwise); store
    account id + status fields on billing_customers (payouts_enabled, details_submitted,
    requirements_currently_due jsonb, connect_capabilities jsonb, identity_status nullable).
    account-session.ts: enable components account_onboarding, account_management, payouts,
