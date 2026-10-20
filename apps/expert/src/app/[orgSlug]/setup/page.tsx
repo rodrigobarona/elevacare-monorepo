@@ -81,7 +81,7 @@ export default async function OnboardingPage({
   const workspaceBase = expertWorkspaceBase(session)
 
   return (
-    <div className="py-2 sm:py-6">
+    <div className="space-y-8">
       <OnboardingWizard
         workspaceBase={workspaceBase}
         steps={wizardSteps as unknown as string[]}

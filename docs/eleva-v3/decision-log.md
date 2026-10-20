@@ -293,7 +293,6 @@ Each entry should include:
     without a Stripe account to setup; it offers payouts setup in place
     (or an "unavailable" notice when Stripe is not configured).
 - Out of scope, follow-ups (not shipped):
-  - Expert setup/onboarding wizard keeps the previous layout for now.
   - Invoicing can only be configured during onboarding; there is no
     post-onboarding invoicing settings page yet.
   - The connected-calendar account cards and the invoices table were only
@@ -306,8 +305,12 @@ Each entry should include:
   Connect, save or payouts buttons were pressed. Local `.env.local` still
   targets the dev branch (switch back to production when signed-in app
   review finishes; dev branch deletion is a separate founder call).
-  Next rollout order: expert setup/onboarding wizard, then account, team,
-  academy and admin. CodeRabbit CLI was ~0.7.6 vs 0.9.0 with ~3 reviews/h
+  Expert setup/onboarding wizard v3 layout slice (`PageHeader`,
+  `SettingsFieldset`, `SetupProgressNav`, per-step hints) ships on
+  `feat/expert-setup-v3` — layout and copy only; step forms and Stripe
+  Connect/Identity/invoicing behaviour unchanged; founder walkthrough
+  **unproven**. Next rollout order: account, team, academy and admin.
+  CodeRabbit CLI was ~0.7.6 vs 0.9.0 with ~3 reviews/h
   on the Hobby allowance, pacing merge batches — not a merge gate; Vercel
   Hobby deploy quota failures are likewise not merge gates.
   - The dashboard has no earnings stat: finance reads stay on the finance
