@@ -1,7 +1,12 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto"
-import { and, eq, isNull } from "drizzle-orm"
+import { and, eq, isNull, ne } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
-import { main, withOrgContext, type Tx } from "@eleva/db"
+import {
+  main,
+  withOrgContext,
+  withPlatformAdminContext,
+  type Tx,
+} from "@eleva/db"
 import { EncryptionError } from "./errors"
 
 const KEK_ENV = /^ELEVA_KEK_V(\d+)$/
@@ -29,6 +34,8 @@ export interface OrgDekStore {
     keyVersion: number
   ): Promise<OrgDekRow | undefined>
   listAll(orgId: string): Promise<OrgDekRow[]>
+  /** Orgs with at least one DEK row wrapped by a KEK other than `kekVersion`. */
+  listOrgIdsNotWrappedWith(kekVersion: string, limit: number): Promise<string[]>
   insertIfAbsent(row: {
     orgId: string
     keyVersion: number
@@ -74,8 +81,24 @@ export function loadKekMap(): Map<number, Buffer> {
   return map
 }
 
+/**
+ * `ENCRYPTION_KEK_VERSION` pins the wrap version; unset means the highest
+ * loaded `ELEVA_KEK_V<n>`. A pin with no matching key refuses to run.
+ */
 export function currentKekVersion(): number {
-  const versions = [...loadKekMap().keys()]
+  const kekMap = loadKekMap()
+  const pinned = process.env.ENCRYPTION_KEK_VERSION?.trim()
+  if (pinned) {
+    const version = parseKekVersion(pinned)
+    if (!kekMap.has(version)) {
+      throw new EncryptionError(
+        "KEK_VERSION_NOT_LOADED",
+        `ENCRYPTION_KEK_VERSION=${version} but ELEVA_KEK_V${version} is not set`
+      )
+    }
+    return version
+  }
+  const versions = [...kekMap.keys()]
   let max = versions[0]
   if (max === undefined) {
     throw new EncryptionError("KEK_MISSING", "ELEVA_KEK_V<n> is required")
@@ -190,6 +213,17 @@ const drizzleOrgDekStore: OrgDekStore = {
         .select()
         .from(main.orgDataKeys)
         .where(eq(main.orgDataKeys.orgId, orgId))
+    })
+  },
+  async listOrgIdsNotWrappedWith(kekVersion, limit) {
+    return withPlatformAdminContext(async (tx) => {
+      const rows = await tx
+        .selectDistinct({ orgId: main.orgDataKeys.orgId })
+        .from(main.orgDataKeys)
+        .where(ne(main.orgDataKeys.kekVersion, kekVersion))
+        .orderBy(main.orgDataKeys.orgId)
+        .limit(limit)
+      return rows.map((row) => row.orgId)
     })
   },
   async insertIfAbsent(row) {
@@ -341,6 +375,65 @@ export async function rotateKek(orgId: string): Promise<{ rewrapped: number }> {
   return rotateOrg(store(), orgId, currentKekVersion())
 }
 
+export interface RotateAllKeksResult {
+  kekVersion: number
+  dryRun: boolean
+  /** Orgs re-wrapped, or (dry run) orgs that still need it. */
+  orgs: number
+  rewrapped: number
+  hasMore: boolean
+}
+
+/**
+ * Re-wraps every org's DEKs under the current KEK, in batches. Never
+ * touches ciphertext. Idempotent: a second run finds nothing to do. Fails
+ * closed if an old row's KEK is no longer loaded.
+ */
+export async function rotateAllOrgKeks(
+  options: { dryRun?: boolean; batchSize?: number; maxOrgs?: number } = {}
+): Promise<RotateAllKeksResult> {
+  const dekStore = store()
+  const kekVersion = currentKekVersion()
+  const target = String(kekVersion)
+  const batchSize = options.batchSize ?? 50
+  const maxOrgs = options.maxOrgs ?? 500
+
+  if (options.dryRun) {
+    const pending = await dekStore.listOrgIdsNotWrappedWith(target, maxOrgs + 1)
+    return {
+      kekVersion,
+      dryRun: true,
+      orgs: Math.min(pending.length, maxOrgs),
+      rewrapped: 0,
+      hasMore: pending.length > maxOrgs,
+    }
+  }
+
+  let orgs = 0
+  let rewrapped = 0
+  while (orgs < maxOrgs) {
+    const orgIds = await dekStore.listOrgIdsNotWrappedWith(
+      target,
+      Math.min(batchSize, maxOrgs - orgs)
+    )
+    if (orgIds.length === 0) {
+      return { kekVersion, dryRun: false, orgs, rewrapped, hasMore: false }
+    }
+    for (const orgId of orgIds) {
+      rewrapped += (await rotateOrg(dekStore, orgId, kekVersion)).rewrapped
+      orgs += 1
+    }
+  }
+  const remaining = await dekStore.listOrgIdsNotWrappedWith(target, 1)
+  return {
+    kekVersion,
+    dryRun: false,
+    orgs,
+    rewrapped,
+    hasMore: remaining.length > 0,
+  }
+}
+
 async function rotateOrg(
   dekStore: OrgDekStore,
   orgId: string,
@@ -386,6 +479,13 @@ export function createMemoryOrgDekStore(): OrgDekStore {
     },
     async listAll(orgId) {
       return [...rows.values()].filter((row) => row.orgId === orgId)
+    },
+    async listOrgIdsNotWrappedWith(kekVersion, limit) {
+      const orgIds = new Set<string>()
+      for (const row of rows.values()) {
+        if (row.kekVersion !== kekVersion) orgIds.add(row.orgId)
+      }
+      return [...orgIds].sort().slice(0, limit)
     },
     async insertIfAbsent(row) {
       for (const existing of rows.values()) {

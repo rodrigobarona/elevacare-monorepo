@@ -60,6 +60,7 @@
     "db:seed:demo": "pnpm --filter=@eleva/db db:seed:demo",
     "db:seed:categories": "pnpm --filter=@eleva/db db:seed:categories",
     "db:fix:stripe-state-machine": "pnpm --filter=@eleva/db db:fix:stripe-state-machine",
+    "encryption:rotate-kek": "pnpm --filter=@eleva/encryption rotate-kek",
     "db:backfill:auth-identity": "pnpm --filter=@eleva/db db:backfill:auth-identity -- --verify"
   },
   "devDependencies": {

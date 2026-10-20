@@ -171,18 +171,25 @@ Should cover:
 ### Envelope KEK rotation (ADR-020)
 
 `@eleva/encryption` wraps each org DEK with `ELEVA_KEK_V<n>` (base64, 32 bytes).
-The highest `n` present at process start is current. Never log KEK or DEK bytes.
+The highest `n` present at process start is current, unless
+`ENCRYPTION_KEK_VERSION=<n>` pins it (a pin with no matching `ELEVA_KEK_V<n>`
+refuses to run). Never log KEK or DEK bytes.
 Generate a new version with `openssl rand -base64 32`.
 
 1. Add `ELEVA_KEK_V<n+1>` next to the existing `ELEVA_KEK_V<n>` in Vercel (all
    apps that import `@eleva/encryption`, at least `apps/api`). Do not delete the
    old var yet.
 2. Deploy so every instance loads the new current version.
-3. For each org, call `rotateKek(orgId)` from `@eleva/encryption`. This re-wraps
-   DEK rows only; stored ciphertext stays readable because decrypt loads the DEK
-   by `dek_v`, not by the `kek_v` prefix.
-4. Confirm every `org_data_keys` row (including retired) has `kek_version` equal
-   to the new `n` — zero rows may still reference the old key. Keep
+3. Re-wrap every org. Production KEKs are write-only Vercel vars, so run it
+   inside the deployment: `POST /workflows/kek-rotation` with Bearer
+   `WORKFLOWS_DRAIN_SECRET`. An empty body is a dry run (`orgs` = pending);
+   `{ "apply": true }` re-wraps, and `hasMore: true` means call again. Locally
+   (dev branch), `pnpm encryption:rotate-kek` dry-runs and `-- --apply` loops
+   until done. Both re-wrap DEK rows only (`rotateAllOrgKeks`, one audited
+   `org_data_key rotated` per row); stored ciphertext stays readable because
+   decrypt loads the DEK by `dek_v`, not by the `kek_v` prefix.
+4. Confirm a dry run reports `orgs: 0` — every `org_data_keys` row (including
+   retired) has `kek_version` equal to the new `n`. Keep
    `ELEVA_KEK_V<n>` in env until that count is zero. Then the old var can leave
    Vercel; store it offline until Phase 14 record export is done.
 5. `shredOrgKeys(orgId)` is erasure, not rotation — it deletes DEK rows and
