@@ -5,6 +5,7 @@ import { EmailCard } from "../components/email-card"
 import { EmailBodyText, EmailHeading } from "../components/email-heading"
 import { EmailButton } from "../components/email-button"
 import { JoinSessionCta } from "../components/join-session-cta"
+import { SessionAccess, type SessionPlace } from "../components/session-access"
 import { getEmailTranslations, type EmailLocale } from "../i18n"
 import { formatSessionMode } from "../session-mode"
 
@@ -13,7 +14,9 @@ export interface BookingConfirmedProps {
   eventTypeName: string
   formattedDate: string
   sessionMode: string
-  location?: string
+  place?: SessionPlace
+  /** Member copy for phone sessions. */
+  maskedPhone?: string | null
   locale?: EmailLocale
   jsonLd?: Record<string, unknown>
   /** Eleva join page. Never a raw Daily room URL. */
@@ -42,7 +45,8 @@ export function BookingConfirmedEmail({
   eventTypeName,
   formattedDate,
   sessionMode,
-  location,
+  place,
+  maskedPhone,
   locale = "en",
   jsonLd,
   joinHref,
@@ -102,8 +106,8 @@ export function BookingConfirmedEmail({
           label={t.labels.mode}
           value={formatSessionMode(sessionMode, locale)}
         />
-        {location ? (
-          <DetailRow label={t.labels.location} value={location} />
+        {place ? (
+          <DetailRow label={t.labels.location} value={place.name} />
         ) : null}
         {isExpert && language ? (
           <DetailRow label={t.labels.language} value={language} />
@@ -123,6 +127,14 @@ export function BookingConfirmedEmail({
       </EmailCard>
 
       {joinHref ? <JoinSessionCta href={joinHref} locale={locale} /> : null}
+      {isExpert ? null : (
+        <SessionAccess
+          sessionMode={sessionMode}
+          locale={locale}
+          place={place}
+          maskedPhone={maskedPhone}
+        />
+      )}
 
       {activateHref ? (
         <>
@@ -159,7 +171,12 @@ BookingConfirmedEmail.PreviewProps = {
   eventTypeName: "Primeira Consulta",
   formattedDate: "Segunda-feira, 16 de junho de 2026, 10:00",
   sessionMode: "in_person",
-  location: "Clínica Chiado, Lisboa",
+  place: {
+    name: "Clínica Chiado",
+    address: "Rua Garrett 10, 1200-204 Lisboa",
+    mapsHref:
+      "https://www.google.com/maps/search/?api=1&query=Rua%20Garrett%2010%2C%201200-204%20Lisboa",
+  },
   locale: "pt",
 } satisfies BookingConfirmedProps
 

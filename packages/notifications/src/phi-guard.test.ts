@@ -73,7 +73,7 @@ function booking(
     memberPhone: null,
     language: locale,
     memberCountry: "PT",
-    locationName: null,
+    location: null,
   }
 }
 

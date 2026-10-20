@@ -346,7 +346,7 @@ describe("deliverBookingReminder", () => {
     priceCents: 6000,
     language: "en",
     memberCountry: "PT",
-    locationName: null,
+    location: null,
   }
 
   it("sends through sendBookingNotification when still confirmed", async () => {

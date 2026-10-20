@@ -48,6 +48,13 @@ const translations = {
         "Want to save this session to your Space? Create your Eleva account.",
       activateCta: "Create account",
       calendarCta: "Open calendar",
+      phoneCallNotice: (phone: string) =>
+        `Your expert will call you on ${phone} at the session time.`,
+      phoneCallNoticeNoNumber:
+        "Your expert will call you on the number you gave when booking.",
+      openInMaps: "Open in Maps",
+      videoCall: "Video call",
+      phoneCall: "Phone call",
     },
     invoice: {
       blockedTitle: "Platform-fee invoice recorded",
@@ -191,6 +198,13 @@ const translations = {
         "Quer guardar esta sessão no seu Space? Crie a sua conta Eleva.",
       activateCta: "Criar conta",
       calendarCta: "Abrir calendário",
+      phoneCallNotice: (phone: string) =>
+        `O seu especialista vai ligar-lhe para ${phone} à hora da sessão.`,
+      phoneCallNoticeNoNumber:
+        "O seu especialista vai ligar-lhe para o número que indicou na reserva.",
+      openInMaps: "Abrir no Maps",
+      videoCall: "Videochamada",
+      phoneCall: "Chamada telefónica",
     },
     invoice: {
       blockedTitle: "Taxa de plataforma registada",
@@ -336,6 +350,13 @@ const translations = {
         "¿Quieres guardar esta sesión en tu Space? Crea tu cuenta Eleva.",
       activateCta: "Crear cuenta",
       calendarCta: "Abrir calendario",
+      phoneCallNotice: (phone: string) =>
+        `Tu especialista te llamará al ${phone} a la hora de la sesión.`,
+      phoneCallNoticeNoNumber:
+        "Tu especialista te llamará al número que indicaste al reservar.",
+      openInMaps: "Abrir en Maps",
+      videoCall: "Videollamada",
+      phoneCall: "Llamada telefónica",
     },
     invoice: {
       blockedTitle: "Tasa de plataforma registrada",
@@ -471,6 +492,11 @@ export interface EmailTranslations {
     activateHint: string
     activateCta: string
     calendarCta: string
+    phoneCallNotice: (phone: string) => string
+    phoneCallNoticeNoNumber: string
+    openInMaps: string
+    videoCall: string
+    phoneCall: string
   }
   invoice: {
     blockedTitle: string

@@ -20,10 +20,6 @@ export function callingCodeFor(country: string): string | null {
   }
 }
 
-export function normalizePhone(raw: string): string {
-  return raw.replace(/[^\d+]/g, "")
-}
-
 export function toE164(raw: string, country: string): string | null {
   const trimmed = raw.trim()
   if (trimmed.length === 0) return null
@@ -35,10 +31,4 @@ export function toE164(raw: string, country: string): string | null {
 export function isE164(value: string): boolean {
   const parsed = parsePhoneNumberFromString(value.trim())
   return parsed?.isValid() === true
-}
-
-export function maskPhone(e164: string): string {
-  const value = normalizePhone(e164)
-  if (value.length < 6) return value
-  return `${value.slice(0, 4)} ··· ${value.slice(-3)}`
 }

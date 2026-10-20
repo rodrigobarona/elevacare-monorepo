@@ -10,6 +10,7 @@ import {
   type CancellationPolicy,
 } from "@eleva/config/cancellation-policy"
 import { resolveGatewayUrl } from "@eleva/config/env"
+import { maskPhone } from "@eleva/config/phone"
 import { auth, main, withPlatformAdminContext } from "@eleva/db"
 import {
   joinGrantExpUnix,
@@ -25,6 +26,7 @@ import {
   renderBookingReminder,
   renderBookingRescheduled,
   type EmailLocale,
+  type SessionPlace,
 } from "@eleva/email"
 import type { EmailAttachment } from "./send-email"
 import { sendNotification } from "./send-notification"
@@ -143,7 +145,16 @@ export type LoadedBooking = {
   priceCents: number
   language: string | null
   memberCountry: string | null
-  locationName: string | null
+  location: {
+    name: string
+    address: string
+    line2: string | null
+    postalCode: string | null
+    city: string
+    latitude: number | null
+    longitude: number | null
+    instructions: { en: string; pt?: string; es?: string } | null
+  } | null
 }
 
 export async function sendBookingNotification(
@@ -196,8 +207,10 @@ export async function sendBookingNotification(
     booking.cancellationPolicy,
     locale
   ).name
+  const place = sessionPlace(booking, locale)
   const htmlInput = {
     kind: event.type,
+    place,
     memberName: memberFirst,
     eventTypeName,
     formattedDate,
@@ -214,6 +227,10 @@ export async function sendBookingNotification(
     ...htmlInput,
     joinHref: memberJoinHref,
     activateHref: memberActivateHref(event.type, booking, gateway),
+    maskedPhone:
+      booking.sessionMode === "phone"
+        ? maskMemberPhone(booking.guestPhone ?? booking.memberPhone)
+        : undefined,
   })
   const expertHtml = await renderBookingHtml({
     ...htmlInput,
@@ -232,7 +249,6 @@ export async function sendBookingNotification(
           language: formatLanguage(booking.language, locale),
           country: formatCountry(booking.memberCountry, locale),
           price: formatMoney(booking.priceCents, booking.currency, locale),
-          location: booking.locationName ?? undefined,
           calendarHref: `${gateway.replace(/\/$/, "")}/${booking.orgSlug}/team/calendar`,
         }
       : {}),
@@ -268,13 +284,15 @@ export async function sendBookingNotification(
     event.type,
     booking,
     icsSummary(locale, expertFirst),
-    memberJoinHref
+    memberJoinHref,
+    locale
   )
   const expertAttachments = calendarAttachments(
     event.type,
     booking,
     icsSummary(locale, memberFirst),
-    expertJoinHref
+    expertJoinHref,
+    locale
   )
   const results = await Promise.allSettled([
     send({
@@ -373,13 +391,15 @@ function deliveryIdempotencyKey(
 
 /**
  * Calendar files carry no service name or notes: calendars sync to third
- * parties, so the summary names only the counterpart's first name.
+ * parties, so the summary names only the counterpart's first name and
+ * `LOCATION` never holds a phone number, masked or not.
  */
 export function calendarAttachments(
   kind: BookingSendKind,
   booking: LoadedBooking,
   summary: string,
-  joinHref?: string
+  joinHref?: string,
+  locale: EmailLocale = "en"
 ): EmailAttachment[] | undefined {
   const attendeeEmail = booking.memberEmail ?? booking.guestEmail
   const event: IcsEventInput = {
@@ -389,7 +409,7 @@ export function calendarAttachments(
     endTime: booking.endsAt,
     timezone: booking.timezone,
     url: joinHref,
-    location: joinHref,
+    location: icsLocation(booking, joinHref, locale),
     organizer: { name: booking.expertName, email: booking.expertEmail },
     attendees: attendeeEmail
       ? [
@@ -428,6 +448,59 @@ export function calendarAttachments(
       return _exhaustive
     }
   }
+}
+
+function icsLocation(
+  booking: Pick<LoadedBooking, "sessionMode" | "location">,
+  joinHref: string | undefined,
+  locale: EmailLocale
+): string | undefined {
+  const t = getEmailTranslations(locale)
+  switch (booking.sessionMode) {
+    case "online":
+      return joinHref ?? t.booking.videoCall
+    case "phone":
+      return t.booking.phoneCall
+    case "in_person":
+      return booking.location
+        ? `${booking.location.name}, ${formatAddress(booking.location)}`
+        : t.modes.in_person
+    default:
+      return undefined
+  }
+}
+
+function formatAddress(
+  location: NonNullable<LoadedBooking["location"]>
+): string {
+  const city = [location.postalCode, location.city].filter(Boolean).join(" ")
+  return [location.address, location.line2, city].filter(Boolean).join(", ")
+}
+
+export function sessionPlace(
+  booking: Pick<LoadedBooking, "sessionMode" | "location">,
+  locale: EmailLocale
+): SessionPlace | undefined {
+  const location = booking.location
+  if (booking.sessionMode !== "in_person" || !location) return undefined
+  const address = formatAddress(location)
+  const query =
+    location.latitude !== null && location.longitude !== null
+      ? `${location.latitude},${location.longitude}`
+      : `${location.name}, ${address}`
+  const instructions = location.instructions
+    ? localizedTitle(location.instructions, locale)
+    : undefined
+  return {
+    name: location.name,
+    address,
+    mapsHref: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`,
+    ...(instructions ? { instructions } : {}),
+  }
+}
+
+function maskMemberPhone(phone: string | null): string | null {
+  return phone ? maskPhone(phone) : null
 }
 
 function icsAttachment(
@@ -703,7 +776,8 @@ async function renderBookingHtml(input: {
   language?: string
   country?: string
   price?: string
-  location?: string
+  place?: SessionPlace
+  maskedPhone?: string | null
 }): Promise<string> {
   const t = getEmailTranslations(input.locale)
   const copy = emailCopyForKind(input.kind, t, input.audience === "expert")
@@ -729,7 +803,8 @@ async function renderBookingHtml(input: {
         language: input.language,
         country: input.country,
         price: input.price,
-        location: input.location,
+        place: input.place,
+        maskedPhone: input.maskedPhone,
         cancellationPolicyName: input.cancellationPolicyName,
         heading: copy.heading,
         subheading: copy.subheading,
@@ -760,6 +835,8 @@ async function renderBookingHtml(input: {
         sessionMode: input.sessionMode,
         locale: input.locale,
         joinHref: input.joinHref,
+        place: input.place,
+        maskedPhone: input.maskedPhone,
       })
     case "booking.reminder_24h":
       return renderBookingReminder({
@@ -770,6 +847,8 @@ async function renderBookingHtml(input: {
         sessionMode: input.sessionMode,
         locale: input.locale,
         joinHref: input.joinHref,
+        place: input.place,
+        maskedPhone: input.maskedPhone,
       })
     case "booking.reminder_1h":
       return renderBookingReminder({
@@ -780,6 +859,8 @@ async function renderBookingHtml(input: {
         sessionMode: input.sessionMode,
         locale: input.locale,
         joinHref: input.joinHref,
+        place: input.place,
+        maskedPhone: input.maskedPhone,
       })
     default: {
       const _exhaustive: never = input.kind
@@ -925,7 +1006,15 @@ export async function loadBookingForNotification(
         priceCents: main.bookings.priceCents,
         language: main.bookings.language,
         memberCountry: main.bookings.memberCountry,
+        locationId: main.expertPracticeLocations.id,
         locationName: main.expertPracticeLocations.name,
+        locationAddress: main.expertPracticeLocations.address,
+        locationLine2: main.expertPracticeLocations.line2,
+        locationPostalCode: main.expertPracticeLocations.postalCode,
+        locationCity: main.expertPracticeLocations.city,
+        locationLatitude: main.expertPracticeLocations.latitude,
+        locationLongitude: main.expertPracticeLocations.longitude,
+        locationInstructions: main.expertPracticeLocations.instructions,
       })
       .from(main.bookings)
       .innerJoin(
@@ -979,8 +1068,33 @@ export async function loadBookingForNotification(
       memberEmailVerified = member?.emailVerified ?? false
     }
 
+    const {
+      locationId,
+      locationName,
+      locationAddress,
+      locationLine2,
+      locationPostalCode,
+      locationCity,
+      locationLatitude,
+      locationLongitude,
+      locationInstructions,
+      ...booking
+    } = row
     return {
-      ...row,
+      ...booking,
+      location:
+        locationId && locationName && locationAddress && locationCity
+          ? {
+              name: locationName,
+              address: locationAddress,
+              line2: locationLine2,
+              postalCode: locationPostalCode,
+              city: locationCity,
+              latitude: locationLatitude,
+              longitude: locationLongitude,
+              instructions: locationInstructions,
+            }
+          : null,
       memberEmail,
       memberName,
       memberPhone,

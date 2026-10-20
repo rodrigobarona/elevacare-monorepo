@@ -12,6 +12,7 @@ export type {
   AuthEmailKind,
   AuthTransactionalProps,
 } from "./components/auth-transactional"
+export type { SessionPlace } from "./components/session-access"
 export type { BookingConfirmedProps } from "./templates"
 export type { BookingRescheduledProps } from "./templates"
 export type { BookingCancelledProps } from "./templates"
