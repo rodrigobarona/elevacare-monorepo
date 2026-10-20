@@ -47,8 +47,11 @@ Each entry should include:
     is on (`409 IDENTITY_REQUIRED`). Paid offers still need Connect at publish.
   - Stripe Identity loads through `@eleva/billing/embedded`
     (`verifyElevaIdentity`), not a direct `@stripe/stripe-js` import.
-- Out of scope: an admin review gate before `active`, and a settings page to
-  change invoicing after setup (next slice).
+- After setup, Finance > Invoicing (`/{org}/finance/invoicing`) shows the
+  method, reconnects an expired TOConline link, and disconnects or changes it
+  through the same picker. OAuth callbacks that land on `/setup` after
+  onboarding are forwarded there.
+- Out of scope: an admin review gate before `active`.
 - Owner: engineering. Status: `proposed`.
 - Next review: 2026-10-27 (founder sign-off on the approved-to-active rule).
 - Related: `apps/api/src/app/expert/profile/steps/[step]/complete/route.ts`,

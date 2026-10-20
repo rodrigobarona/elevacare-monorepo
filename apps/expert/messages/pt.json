@@ -689,6 +689,48 @@
       "error": "Não foi possível iniciar a configuração de pagamentos. Tente novamente.",
       "unavailableTitle": "Os pagamentos ainda não estão disponíveis",
       "unavailable": "Os pagamentos não estão configurados neste ambiente. Contacte o suporte."
+    },
+    "invoicing": {
+      "link": "Definições de faturação",
+      "eyebrow": "Finanças",
+      "title": "Faturação",
+      "description": "Escolha como são emitidas as faturas das suas sessões e altere quando quiser.",
+      "backToFinance": "Voltar a finanças",
+      "currentTitle": "Método de faturação",
+      "currentHint": "O fornecedor ou método que a Eleva regista para as suas sessões.",
+      "connectedSince": "Ligado a {date}",
+      "health": {
+        "connected": {
+          "label": "Ligado",
+          "body": "A sua conta está ligada. A emissão automática de faturas ainda não está ativa."
+        },
+        "manual": {
+          "label": "Manual",
+          "body": "Emite a cada membro uma fatura certificada por conta própria, fora da Eleva."
+        },
+        "attention": {
+          "label": "Requer atenção",
+          "body": "A ligação expirou ou falhou. Volte a ligar para a manter."
+        }
+      },
+      "reconnect": "Voltar a ligar",
+      "disconnect": "Desligar",
+      "changeMethod": "Mudar de método",
+      "confirm": {
+        "disconnectTitle": "Desligar {provider}?",
+        "disconnectBody": "A Eleva apaga as credenciais guardadas de {provider}. Os documentos já emitidos em {provider} ficam lá. Pode voltar a ligar ou escolher outro método depois.",
+        "disconnectAction": "Desligar",
+        "changeTitle": "Mudar de método de faturação?",
+        "changeBody": "A sua escolha de faturação manual é removida para poder escolher outro método.",
+        "changeAction": "Continuar",
+        "cancel": "Cancelar"
+      },
+      "connectedToast": "Fornecedor de faturação ligado.",
+      "savedToast": "Método de faturação guardado.",
+      "disconnectedToast": "{provider} desligado.",
+      "disconnectFailed": "Não foi possível desligar. Tente novamente.",
+      "reconnectFailed": "Não foi possível iniciar a ligação. Tente novamente.",
+      "changedToast": "Método de faturação removido. Escolha um novo."
     }
   },
   "onboarding": {
