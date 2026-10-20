@@ -1,6 +1,9 @@
+import { withPhiScope } from "@eleva/observability"
 import { z } from "zod"
 import { SummarizeSessionRecordsResponseSchema } from "@eleva/api-client"
 import {
+  describeError,
+  recordLogger,
   requireAssignedExpert,
   SessionRecordError,
   summarizeSessionRecords,
@@ -29,7 +32,7 @@ const RECORD_STATUS: Record<SessionRecordError["code"], number> = {
   AI_MODEL_ZERO_RETENTION_REQUIRED: 409,
 }
 
-export async function POST(
+async function handlePOST(
   request: Request,
   { params }: { params: Promise<{ bookingId: string }> }
 ) {
@@ -78,7 +81,10 @@ export async function POST(
         { status: RECORD_STATUS[err.code], headers }
       )
     }
-    console.error("[sessions/records/summarize] failed", err)
+    recordLogger.error("records summarize failed", {
+      bookingId: bookingId.data,
+      status: describeError(err),
+    })
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }
@@ -88,4 +94,8 @@ export async function OPTIONS(request: Request) {
     status: 204,
     headers: corsHeaders(request, "POST, OPTIONS"),
   })
+}
+
+export function POST(...args: Parameters<typeof handlePOST>) {
+  return withPhiScope(() => handlePOST(...args))
 }

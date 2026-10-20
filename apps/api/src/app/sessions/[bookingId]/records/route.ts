@@ -1,3 +1,4 @@
+import { registerPhi, withPhiScope } from "@eleva/observability"
 import { z } from "zod"
 import {
   ListSessionRecordsResponseSchema,
@@ -5,7 +6,9 @@ import {
   UpsertSessionRecordResponseSchema,
 } from "@eleva/api-client"
 import {
+  describeError,
   listSessionRecords,
+  recordLogger,
   SessionRecordError,
   upsertSessionRecord,
 } from "@eleva/records"
@@ -33,7 +36,7 @@ const RECORD_STATUS: Record<SessionRecordError["code"], number> = {
 
 const BookingIdSchema = z.string().uuid()
 
-export async function GET(
+async function handleGET(
   request: Request,
   { params }: { params: Promise<{ bookingId: string }> }
 ) {
@@ -78,12 +81,15 @@ export async function GET(
         { status: RECORD_STATUS[err.code], headers }
       )
     }
-    console.error("[sessions/records] list failed", err)
+    recordLogger.error("records list failed", {
+      bookingId: bookingId.data,
+      status: describeError(err),
+    })
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }
 
-export async function PUT(
+async function handlePUT(
   request: Request,
   { params }: { params: Promise<{ bookingId: string }> }
 ) {
@@ -123,6 +129,8 @@ export async function PUT(
     )
   }
 
+  registerPhi(parsed.data.body)
+
   try {
     const record = await upsertSessionRecord({
       bookingId: bookingId.data,
@@ -140,7 +148,10 @@ export async function PUT(
         { status: RECORD_STATUS[err.code], headers }
       )
     }
-    console.error("[sessions/records] upsert failed", err)
+    recordLogger.error("records upsert failed", {
+      bookingId: bookingId.data,
+      status: describeError(err),
+    })
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }
@@ -150,4 +161,12 @@ export async function OPTIONS(request: Request) {
     status: 204,
     headers: corsHeaders(request, "GET, PUT, OPTIONS"),
   })
+}
+
+export function GET(...args: Parameters<typeof handleGET>) {
+  return withPhiScope(() => handleGET(...args))
+}
+
+export function PUT(...args: Parameters<typeof handlePUT>) {
+  return withPhiScope(() => handlePUT(...args))
 }

@@ -1,9 +1,12 @@
 import {
   deleteSessionDocument,
+  describeError,
   markSessionDocumentDeleted,
+  recordLogger,
   SessionDocumentError,
 } from "@eleva/records"
 import { deletePrivateDocument } from "@eleva/storage"
+import { withPhiScope } from "@eleva/observability"
 import { z } from "zod"
 import { apiAuthFailure, requireApiAuth } from "@/lib/auth"
 import { corsHeaders } from "@/lib/cors"
@@ -23,7 +26,7 @@ export const runtime = "nodejs"
 
 const IdSchema = z.string().uuid()
 
-export async function DELETE(
+async function handleDELETE(
   request: Request,
   { params }: { params: Promise<{ bookingId: string; documentId: string }> }
 ) {
@@ -60,7 +63,11 @@ export async function DELETE(
     try {
       await deletePrivateDocument(blobUrl)
     } catch (err) {
-      console.error("[sessions/documents] blob delete failed", err)
+      recordLogger.error("documents blob delete failed", {
+        bookingId: bookingId.data,
+        documentId: documentId.data,
+        status: describeError(err),
+      })
       return secureJson({ error: "internal" }, { status: 500, headers })
     }
     await markSessionDocumentDeleted({
@@ -76,7 +83,11 @@ export async function DELETE(
         { status: DOCUMENT_STATUS[err.code], headers }
       )
     }
-    console.error("[sessions/documents] delete failed", err)
+    recordLogger.error("documents delete failed", {
+      bookingId: bookingId.data,
+      documentId: documentId.data,
+      status: describeError(err),
+    })
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }
@@ -86,4 +97,8 @@ export async function OPTIONS(request: Request) {
     status: 204,
     headers: corsHeaders(request, "DELETE, OPTIONS"),
   })
+}
+
+export function DELETE(...args: Parameters<typeof handleDELETE>) {
+  return withPhiScope(() => handleDELETE(...args))
 }

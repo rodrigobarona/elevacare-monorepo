@@ -5,13 +5,16 @@ import {
 } from "@eleva/api-client"
 import {
   completeSessionDocument,
+  describeError,
   documentUploadPrefix,
   isSessionDocumentPathname,
   listSessionDocuments,
+  recordLogger,
   requireDocumentUploader,
   SessionDocumentError,
 } from "@eleva/records"
 import { headPrivateDocument } from "@eleva/storage"
+import { withPhiScope } from "@eleva/observability"
 import { z } from "zod"
 import { apiAuthFailure, requireApiAuth } from "@/lib/auth"
 import { corsHeaders } from "@/lib/cors"
@@ -31,7 +34,7 @@ export const runtime = "nodejs"
 
 const BookingIdSchema = z.string().uuid()
 
-export async function GET(
+async function handleGET(
   request: Request,
   { params }: { params: Promise<{ bookingId: string }> }
 ) {
@@ -76,12 +79,15 @@ export async function GET(
         { status: DOCUMENT_STATUS[err.code], headers }
       )
     }
-    console.error("[sessions/documents] list failed", err)
+    recordLogger.error("documents list failed", {
+      bookingId: bookingId.data,
+      status: describeError(err),
+    })
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }
 
-export async function POST(
+async function handlePOST(
   request: Request,
   { params }: { params: Promise<{ bookingId: string }> }
 ) {
@@ -157,7 +163,10 @@ export async function POST(
         { status: DOCUMENT_STATUS[err.code], headers }
       )
     }
-    console.error("[sessions/documents] complete failed", err)
+    recordLogger.error("documents complete failed", {
+      bookingId: bookingId.data,
+      status: describeError(err),
+    })
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }
@@ -167,4 +176,12 @@ export async function OPTIONS(request: Request) {
     status: 204,
     headers: corsHeaders(request, "GET, POST, OPTIONS"),
   })
+}
+
+export function GET(...args: Parameters<typeof handleGET>) {
+  return withPhiScope(() => handleGET(...args))
+}
+
+export function POST(...args: Parameters<typeof handlePOST>) {
+  return withPhiScope(() => handlePOST(...args))
 }

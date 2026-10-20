@@ -11,6 +11,16 @@ export {
   redactString,
   redactPayload,
 } from "./redaction"
+export {
+  Decrypted,
+  isDecrypted,
+  PHI_PLACEHOLDER,
+  registerPhi,
+  registeredPhiCount,
+  scrubRegisteredPhi,
+  withPhiScope,
+} from "./phi"
+export { SENTRY_EVENT_KEYS, sanitizeSentryEvent } from "./sentry-event"
 export { initSentry, captureException, type SentryInitOptions } from "./sentry"
 export { heartbeat } from "./heartbeat"
 export { reportProbeFailure } from "./probes"

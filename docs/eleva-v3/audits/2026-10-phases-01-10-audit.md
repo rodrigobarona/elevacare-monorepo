@@ -25,7 +25,8 @@ Eleva grant join across two browsers and no Daily webhook subscription evidence.
 Phase 10 is roughly **40% of PR 10.1**. Encrypted session records, documents and the in-call
 autosave exist. The PHI-handling guard rails (branded decrypted type, allow-list logger), publish,
 retention, `ai_processing` consent and clinical tombstones do not exist yet. **Do not open Phase 10.2
-(AI drafts, CRM) until 10.1a–d land.**
+(AI drafts, CRM) until 10.1a–d land.** Update 2026-10-20: 10.1a (structural PHI guards) is on main;
+only its ESLint `Decrypted` response ban remains.
 
 The product UI is functional but visually thin. The public marketing site does not yet carry the
 MVP's premium patterns. Brand v3 tokens and the curated media library landed in this pass
@@ -57,7 +58,7 @@ MVP's premium patterns. Brand v3 tokens and the curated media library landed in 
 | 07 Invoicing      | Closed-gate on main | **Gated** (correct) — `issueInvoice()` closed, no `invoice.issued`                          |
 | 08 Notifications  | Lane 1 on main      | Engineering closed; Twilio IE1 unproven; mode-aware copy partial (AUD-042)                  |
 | 09 Video          | On main             | **Exit gate unproven** (staging grant join + Daily webhooks)                                |
-| 10 Records        | ~40% of 10.1        | **Open** — AUD-026–AUD-032                                                                  |
+| 10 Records        | ~50% of 10.1        | **Open** — AUD-027–AUD-032; AUD-026 mostly fixed (10.1a, 2026-10-20)                        |
 
 ## Findings register
 
@@ -68,16 +69,16 @@ No new P0. One candidate P0 was reclassified, see "Rejected or reclassified cand
 
 ### P1
 
-| ID      | Finding                                                                                                                                                                                                                | Evidence                                                                                              | Fix                                                                                                          |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| AUD-026 | No `Decrypted<T>` brand, PHI registry or allow-list logger. Decrypted record text is a plain string, and record/document routes `console.error` raw errors, so a future change can leak plaintext into logs or Sentry. | `packages/records/src/session-records.ts`; `packages/observability/src/redaction.ts` is key-name only | Slice 10.1a: brand decrypt return, `recordLogger` allow-list, Sentry walk, ESLint ban on logging `Decrypted` |
-| AUD-027 | No publish path. `publishedAt` is never written, so member policy B never exposes a report.                                                                                                                            | no `…/publish` route                                                                                  | Slice 10.1c: publish/unpublish API + audit + member reports UI                                               |
-| AUD-028 | Retention sweep absent (`ai_draft` 90 days, documents).                                                                                                                                                                | `packages/compliance/src/retention.ts` only pseudonymises consents                                    | Slice 10.1d: `POST /workflows/retention-sweep` + QStash schedule                                             |
-| AUD-029 | `ai_processing` is not a consent kind.                                                                                                                                                                                 | `CONSENT_KINDS` = terms/privacy/health/marketing                                                      | Slice 10.1b: enum migration + legal copy + `/me/consents` + join banner                                      |
-| AUD-030 | Account deletion erases member documents but does not tombstone expert clinical records.                                                                                                                               | `account-deletion.ts`                                                                                 | Slice 10.1d: tombstone `member_user_id` and strip metadata per the retention matrix                          |
-| AUD-031 | Policy A SELECT also matches the booking's expert, wider than D-11 author-only.                                                                                                                                        | `records_author_select` in `0054`                                                                     | Narrow to `created_by`, or record the booking-expert rule as intentional in D-11                             |
-| AUD-032 | `summarizeSessionRecords` always throws; there is no consent or author gate yet. Safe today, but 10.2 must not ship on top of it before AUD-026–030.                                                                   | `packages/records/src/summarize.ts`                                                                   | Slice 10.2b after 10.1a–d                                                                                    |
-| AUD-033 | Execution-plan README §3 "Current state" describes the pre-Phase-02 monorepo (WorkOS-locked, ~35 routes, 22 migrations).                                                                                               | `execution-plan/README.md` §3                                                                         | **Fixed in this PR**                                                                                         |
+| ID      | Finding                                                                                                                                                                                                                | Evidence                                                                                              | Fix                                                                                                                                                    |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| AUD-026 | No `Decrypted<T>` brand, PHI registry or allow-list logger. Decrypted record text is a plain string, and record/document routes `console.error` raw errors, so a future change can leak plaintext into logs or Sentry. | `packages/records/src/session-records.ts`; `packages/observability/src/redaction.ts` is key-name only | **Mostly fixed 2026-10-20** (10.1a): `Decrypted<T>`, PHI registry, `recordLogger`, Sentry key allow-list. Open: ESLint ban on `Decrypted` in responses |
+| AUD-027 | No publish path. `publishedAt` is never written, so member policy B never exposes a report.                                                                                                                            | no `…/publish` route                                                                                  | Slice 10.1c: publish/unpublish API + audit + member reports UI                                                                                         |
+| AUD-028 | Retention sweep absent (`ai_draft` 90 days, documents).                                                                                                                                                                | `packages/compliance/src/retention.ts` only pseudonymises consents                                    | Slice 10.1d: `POST /workflows/retention-sweep` + QStash schedule                                                                                       |
+| AUD-029 | `ai_processing` is not a consent kind.                                                                                                                                                                                 | `CONSENT_KINDS` = terms/privacy/health/marketing                                                      | Slice 10.1b: enum migration + legal copy + `/me/consents` + join banner                                                                                |
+| AUD-030 | Account deletion erases member documents but does not tombstone expert clinical records.                                                                                                                               | `account-deletion.ts`                                                                                 | Slice 10.1d: tombstone `member_user_id` and strip metadata per the retention matrix                                                                    |
+| AUD-031 | Policy A SELECT also matches the booking's expert, wider than D-11 author-only.                                                                                                                                        | `records_author_select` in `0054`                                                                     | Narrow to `created_by`, or record the booking-expert rule as intentional in D-11                                                                       |
+| AUD-032 | `summarizeSessionRecords` always throws; there is no consent or author gate yet. Safe today, but 10.2 must not ship on top of it before AUD-026–030.                                                                   | `packages/records/src/summarize.ts`                                                                   | Slice 10.2b after 10.1a–d                                                                                                                              |
+| AUD-033 | Execution-plan README §3 "Current state" describes the pre-Phase-02 monorepo (WorkOS-locked, ~35 routes, 22 migrations).                                                                                               | `execution-plan/README.md` §3                                                                         | **Fixed in this PR**                                                                                                                                   |
 
 Carried-forward P1 evidence gaps (no new IDs):
 
@@ -90,11 +91,11 @@ Carried-forward P1 evidence gaps (no new IDs):
 
 | ID      | Finding                                                                                                                          | Evidence                                                                        | Fix                                                                                 |
 | ------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| AUD-034 | Member session card has no `awaiting_confirmation` label, so Request-to-book bookings show a raw status and a Join affordance.   | `apps/app/src/app/[orgSlug]/_components/booking-card.tsx`                       | Add the status key and "Waiting for expert" copy; hide Join until confirmed         |
+| AUD-034 | Member session card has no `awaiting_confirmation` label, so Request-to-book bookings show a raw status and a Join affordance.   | `apps/app/src/app/[orgSlug]/_components/booking-card.tsx`                       | **Fixed on main** (verified 2026-10-20): label present, Join hidden while awaiting  |
 | AUD-035 | No e2e for Request to book (pay → accept / decline / expiry).                                                                    | no match in `e2e/`                                                              | Loopback spec on a `requiresApproval` seed offer                                    |
 | AUD-036 | Calls hard-eject at `endAt + 30m` with no soft warning at the booked end, and rooms are never deleted on inactivity.             | `room-options.ts` `eject_at_room_exp`; no idle-delete job                       | In-call soft warning at `endsAt`; QStash idle/trail room delete                     |
 | AUD-037 | Unaudited writes: session-room lease, participant capacity flags, notification delivery claims.                                  | `ensure-session-room.ts`, `participants.ts`, `claim-delivery.ts`                | Wrap in `withPlatformAudit`, or document as operational exemptions                  |
-| AUD-038 | `updateAvatar(url)` Server Action has no Zod validation.                                                                         | `apps/account/.../settings/actions.ts`                                          | Validate with the `@eleva/api-client` schema before the API call                    |
+| AUD-038 | `updateAvatar(url)` Server Action has no Zod validation.                                                                         | `apps/account/.../settings/actions.ts`                                          | **Fixed on main** (verified 2026-10-20): `UpdateAvatarRequestSchema.safeParse`      |
 | AUD-039 | Two Route Handlers outside `apps/api` (post-auth `/dashboard` redirect, Stripe billing return).                                  | `apps/account/src/app/(auth)/dashboard/route.ts`, `.../billing/return/route.ts` | Keep as documented redirect-only exceptions, or move to a page + `redirect()`       |
 | AUD-040 | No contract test for JWT validity after session revoke.                                                                          | `api-auth.test.ts`                                                              | Mint JWT → revoke → assert documented behaviour                                     |
 | AUD-041 | Live RLS isolation tests do not cover `session_participants`, `records`, `session_documents` (extends AUD-014).                  | `rls-isolation.test.ts`                                                         | Add cross-org/cross-member fixtures under `ELEVA_RLS_INTEGRATION=1`                 |
@@ -132,7 +133,7 @@ AUD-022 stays product backlog.
 
 ## Phase 10 remaining slice order
 
-1. **10.1a** PHI hardening (AUD-026)
+1. **10.1a** PHI hardening (AUD-026) — landed 2026-10-20 except the ESLint `Decrypted` response ban
 2. **10.1b** `ai_processing` consent (AUD-029)
 3. **10.1c** publish + member reports (AUD-027)
 4. **10.1d** retention sweep, clinical tombstone, DSAR decrypt + signed URLs (AUD-028, AUD-030)
@@ -146,9 +147,9 @@ AUD-031 is a D-11 decision, not a slice: resolve it before 10.1c exposes reports
 
 ## Fix pack
 
-| PR      | Contents                                                                                     |
-| ------- | -------------------------------------------------------------------------------------------- |
-| this PR | This audit, AUD-033 README §3 refresh                                                        |
-| next    | AUD-034 + AUD-038 (small product fixes)                                                      |
-| then    | 10.1a PHI hardening (AUD-026)                                                                |
-| Track B | AUD-044 redesign slices (blocks → web → app → expert → account → team/academy/admin → email) |
+| PR      | Contents                                                                                      |
+| ------- | --------------------------------------------------------------------------------------------- |
+| this PR | This audit, AUD-033 README §3 refresh                                                         |
+| next    | AUD-034 + AUD-038 (small product fixes)                                                       |
+| then    | 10.1a PHI hardening (AUD-026) — landed 2026-10-20; ESLint `Decrypted` response ban still open |
+| Track B | AUD-044 redesign slices (blocks → web → app → expert → account → team/academy/admin → email)  |

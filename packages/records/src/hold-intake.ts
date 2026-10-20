@@ -1,4 +1,5 @@
 import { decryptForOrg, encryptForOrg } from "@eleva/encryption"
+import { Decrypted, registerPhi } from "@eleva/observability"
 
 function holdIntakeAad(reservationId: string): string {
   return `reservation-intake:${reservationId}`
@@ -16,6 +17,12 @@ export async function decryptHoldIntake(
   orgId: string,
   ciphertext: string,
   reservationId: string
-): Promise<string> {
-  return decryptForOrg(orgId, ciphertext, holdIntakeAad(reservationId))
+): Promise<Decrypted<string>> {
+  const notes = await decryptForOrg(
+    orgId,
+    ciphertext,
+    holdIntakeAad(reservationId)
+  )
+  registerPhi(notes)
+  return new Decrypted(notes)
 }

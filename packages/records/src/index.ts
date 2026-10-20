@@ -1,3 +1,8 @@
+export {
+  describeError,
+  recordLogger,
+  type RecordLogFields,
+} from "./record-logger"
 export { decryptHoldIntake, encryptHoldIntake } from "./hold-intake"
 export {
   listSessionRecords,

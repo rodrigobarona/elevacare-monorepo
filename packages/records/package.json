@@ -18,6 +18,7 @@
     "@eleva/audit": "workspace:*",
     "@eleva/db": "workspace:*",
     "@eleva/encryption": "workspace:*",
+    "@eleva/observability": "workspace:*",
     "drizzle-orm": "catalog:"
   },
   "devDependencies": {

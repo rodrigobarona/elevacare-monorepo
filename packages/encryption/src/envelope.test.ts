@@ -153,7 +153,11 @@ describe("record field helpers", () => {
     const decrypted = await decryptRecordFields(ORG_ID, encrypted, {
       recordId: "rec_1",
     })
-    expect(decrypted).toEqual({ transcript: "session notes", report: "labs" })
+    expect(JSON.stringify(decrypted)).toBe('"[redacted]"')
+    expect(decrypted.reveal()).toEqual({
+      transcript: "session notes",
+      report: "labs",
+    })
   })
 
   it("rejects swapped field ciphertexts", async () => {
