@@ -320,6 +320,7 @@ export const MemberConsentKindSchema = z.enum([
   "privacy",
   "health_data_processing",
   "marketing",
+  "ai_processing",
 ])
 
 export const MemberNotificationPreferenceSchema = z.object({

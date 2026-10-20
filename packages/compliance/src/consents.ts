@@ -5,6 +5,7 @@ export const CONSENT_KINDS = [
   "privacy",
   "health_data_processing",
   "marketing",
+  "ai_processing",
 ] as const
 
 export type ConsentKind = (typeof CONSENT_KINDS)[number]

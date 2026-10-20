@@ -264,8 +264,10 @@
         "terms": "Terms of use",
         "privacy": "Privacy notice",
         "health_data_processing": "Health data processing",
-        "marketing": "Marketing messages"
-      }
+        "marketing": "Marketing messages",
+        "ai_processing": "AI help with session reports"
+      },
+      "aiProcessingHint": "Lets your expert draft session reports from their own notes with an AI model that keeps no copy of your data. Your expert reviews every draft before you see it. Off unless you turn it on, and you can withdraw at any time. AI drafting is not switched on yet."
     },
     "dsar": {
       "title": "Download your data",

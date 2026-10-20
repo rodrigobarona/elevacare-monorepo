@@ -264,8 +264,10 @@
         "terms": "Términos de uso",
         "privacy": "Aviso de privacidad",
         "health_data_processing": "Tratamiento de datos de salud",
-        "marketing": "Mensajes de marketing"
-      }
+        "marketing": "Mensajes de marketing",
+        "ai_processing": "Ayuda de IA en los informes de sesión"
+      },
+      "aiProcessingHint": "Permite que tu experto prepare informes de sesión a partir de sus propias notas con un modelo de IA que no guarda copia de tus datos. Tu experto revisa cada borrador antes de que lo veas. Está desactivado hasta que lo actives y puedes retirarlo en cualquier momento. La redacción con IA aún no está activa."
     },
     "dsar": {
       "title": "Descargar tus datos",

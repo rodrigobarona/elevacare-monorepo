@@ -421,6 +421,13 @@
       "when": 1781600000000,
       "tag": "0059_expert_profile_content",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1781700000000,
+      "tag": "0060_ai_processing_consent",
+      "breakpoints": true
     }
   ]
 }

@@ -16,6 +16,7 @@ export {
   type FunnelConsentKind,
 } from "./consents"
 export {
+  hasActiveAiProcessingConsent,
   listMemberConsents,
   updateMemberConsent,
   MemberConsentConflictError,
