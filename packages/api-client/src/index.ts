@@ -12,6 +12,9 @@ import { LocaleSchema } from "@eleva/config/i18n"
 // Shared Zod schemas (used by both client and server)
 // ---------------------------------------------------------------------------
 
+/** Body for action POSTs that take no input: omit it or send `{}`. */
+export const EmptyRequestSchema = z.object({}).strict()
+
 export const CompleteOnboardingRequestSchema = z.object({
   spaceName: z.string().min(2).max(100).trim(),
   locale: LocaleSchema.optional(),
@@ -1042,7 +1045,7 @@ export type ListExpertInvoicesResponse = z.infer<
   typeof ListExpertInvoicesResponseSchema
 >
 
-export const ExpertInvoiceActionRequestSchema = z.object({}).strict()
+export const ExpertInvoiceActionRequestSchema = EmptyRequestSchema
 export type ExpertInvoiceActionRequest = z.infer<
   typeof ExpertInvoiceActionRequestSchema
 >

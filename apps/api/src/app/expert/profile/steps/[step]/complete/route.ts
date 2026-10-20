@@ -15,6 +15,7 @@ import { getFlag } from "@eleva/flags"
 import { eq } from "drizzle-orm"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import type { RoutePolicy } from "@/lib/route-policy"
+import { rejectUnexpectedBody } from "@/lib/empty-body"
 
 function isPracticeScopeComplete(profile: {
   practiceCountry: string
@@ -64,6 +65,9 @@ export async function POST(
     RATE_LIMITS.authenticated
   )
   if (rateLimited) return rateLimited
+
+  const unexpectedBody = await rejectUnexpectedBody(request, headers)
+  if (unexpectedBody) return unexpectedBody
 
   const { step: stepParam } = await params
   const parsedStep = ExpertOnboardingStepSchema.safeParse(stepParam)

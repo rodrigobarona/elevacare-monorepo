@@ -10,6 +10,7 @@ import { apiAuthFailure, requireApiAuth } from "@/lib/auth"
 import { corsHeaders } from "@/lib/cors"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
+import { rejectUnexpectedBody } from "@/lib/empty-body"
 
 const RECORD_STATUS: Record<SessionRecordError["code"], number> = {
   NOT_FOUND: 404,
@@ -52,6 +53,9 @@ export async function handleSetPublished(
     headers
   )
   if (rateLimited) return rateLimited
+
+  const unexpectedBody = await rejectUnexpectedBody(request, headers)
+  if (unexpectedBody) return unexpectedBody
 
   try {
     const record = await setSessionRecordPublished({

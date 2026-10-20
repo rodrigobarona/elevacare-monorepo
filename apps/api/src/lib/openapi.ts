@@ -87,6 +87,7 @@ import {
   ListExpertInvoicesQuerySchema,
   ListExpertInvoicesResponseSchema,
   ExpertInvoiceActionRequestSchema,
+  EmptyRequestSchema,
   ExpertInvoiceActionResponseSchema,
   ExportSaftQuerySchema,
   ExportSaftResponseSchema,
@@ -180,6 +181,11 @@ const RateLimitErrorSchema = z.object({
 })
 
 const OkSchema = z.object({ ok: z.literal(true) })
+
+const emptyRequestBody = {
+  required: false,
+  content: { "application/json": { schema: EmptyRequestSchema } },
+}
 
 const stdErrors = {
   "401": {
@@ -767,6 +773,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               },
             },
           ],
+          requestBody: emptyRequestBody,
           responses: {
             "200": {
               description: "Step completed",
@@ -1388,6 +1395,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               schema: { type: "string" },
             },
           ],
+          requestBody: emptyRequestBody,
           responses: {
             "200": {
               description: "Event type published",
@@ -1437,6 +1445,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               schema: { type: "string" },
             },
           ],
+          requestBody: emptyRequestBody,
           responses: {
             "200": {
               description: "Event type unpublished",
@@ -1763,6 +1772,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               schema: { type: "string" },
             },
           ],
+          requestBody: emptyRequestBody,
           responses: {
             "200": {
               description: "Booking link revoked",
@@ -1942,6 +1952,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           requestParams: {
             path: z.object({ id: z.string().uuid() }),
           },
+          requestBody: emptyRequestBody,
           responses: {
             "200": {
               description: "Request accepted",
@@ -2016,6 +2027,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "rotateCalendarFeedToken",
           summary: "Create or rotate the ICS feed token (raw token once)",
           tags: ["Expert Calendar"],
+          requestBody: emptyRequestBody,
           responses: {
             "201": {
               description: "New feed token",
@@ -2197,14 +2209,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           description:
             "Creates a Stripe Identity verification session for the authenticated expert. Returns the client_secret to mount the embedded Identity modal. Webhook updates `expert_profiles.stripe_identity_status`.",
           tags: ["Stripe"],
-          requestBody: {
-            required: false,
-            content: {
-              "application/json": {
-                schema: z.object({}).passthrough(),
-              },
-            },
-          },
+          requestBody: emptyRequestBody,
           responses: {
             "200": {
               description: "Identity session created",
@@ -3309,6 +3314,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               recordId: z.string().uuid(),
             }),
           },
+          requestBody: emptyRequestBody,
           responses: {
             "200": {
               description: "The report with its new publishedAt",
@@ -3344,6 +3350,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               recordId: z.string().uuid(),
             }),
           },
+          requestBody: emptyRequestBody,
           responses: {
             "200": {
               description: "The report with its new publishedAt",
@@ -3894,6 +3901,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           requestParams: {
             path: z.object({ id: z.string().uuid() }),
           },
+          requestBody: emptyRequestBody,
           responses: {
             "200": {
               description: "Booking cancelled",
@@ -3951,6 +3959,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           description:
             "Creates a pending DSAR and kicks off a private-Blob zip export via QStash. The signed download URL is only returned on GET when status is ready.",
           tags: ["Privacy"],
+          requestBody: emptyRequestBody,
           responses: {
             "201": {
               description: "Export requested",
@@ -4002,6 +4011,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           description:
             "Marks deletion_scheduled_at, cancels future bookings, and flags succeeded payments refund_pending. Stripe refunds are not executed here. 14-day grace.",
           tags: ["Privacy"],
+          requestBody: emptyRequestBody,
           responses: {
             "201": {
               description: "Deletion scheduled",
@@ -4024,6 +4034,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           description:
             "Clears deletion_scheduled_at so the member can book again.",
           tags: ["Privacy"],
+          requestBody: emptyRequestBody,
           responses: {
             "200": {
               description: "Deletion cancelled",
@@ -4046,6 +4057,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           description:
             "Deletes the expert's stored invoicing credentials and returns invoicing setup to not_started so a provider or manual invoicing must be chosen again. Issued documents and invoice rows are untouched. Returns disconnected=false when no provider is set.",
           tags: ["Accounting"],
+          requestBody: emptyRequestBody,
           responses: {
             "200": {
               description: "Disconnect outcome",
@@ -4075,6 +4087,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               provider: z.enum(["toconline", "moloni"]),
             }),
           },
+          requestBody: emptyRequestBody,
           responses: {
             "200": {
               description: "Authorization URL",
@@ -4196,6 +4209,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           requestParams: {
             path: z.object({ id: z.string().uuid() }),
           },
+          requestBody: emptyRequestBody,
           responses: {
             "200": {
               description: "Closed-gate invoice outcome after the retry",
@@ -4479,6 +4493,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               schema: { type: "string", format: "uuid" },
             },
           ],
+          requestBody: emptyRequestBody,
           responses: {
             "200": {
               description: "Notification marked read",
@@ -4497,6 +4512,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           description:
             "Owner UPDATE for every unread row belonging to the session user. Emits inbox.updated.",
           tags: ["Notifications"],
+          requestBody: emptyRequestBody,
           responses: {
             "200": {
               description: "Unread rows marked read",

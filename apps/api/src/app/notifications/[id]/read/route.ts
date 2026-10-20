@@ -5,6 +5,7 @@ import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
 import { InboxNotificationIdSchema } from "@eleva/api-client"
 import { InboxNotFoundError, markInboxRead } from "@eleva/notifications"
+import { rejectUnexpectedBody } from "@/lib/empty-body"
 
 export const ROUTE_POLICY = {
   auth: "session",
@@ -36,6 +37,9 @@ export async function POST(
     headers
   )
   if (rateLimited) return rateLimited
+
+  const unexpectedBody = await rejectUnexpectedBody(request, headers)
+  if (unexpectedBody) return unexpectedBody
 
   const { id } = await context.params
   const parsedId = InboxNotificationIdSchema.safeParse(id)
