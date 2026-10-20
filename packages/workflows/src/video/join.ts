@@ -1,6 +1,11 @@
 import { and, eq, isNull } from "drizzle-orm"
 import { withPlatformAudit } from "@eleva/audit"
-import { auth, main, withPlatformAdminContext } from "@eleva/db"
+import {
+  auth,
+  hasActiveAiProcessingConsent,
+  main,
+  withPlatformAdminContext,
+} from "@eleva/db"
 import {
   JOIN_LEAD_MS,
   JOIN_TRAIL_MS,
@@ -81,10 +86,13 @@ export type JoinSessionResult = {
   token: string
   expiresAt: string
   endsAt: string
+  /** Live transcription needs the member's active ai_processing consent. */
+  transcriptionAllowed: boolean
 }
 
 export type JoinSessionDeps = {
   mint?: typeof mintMeetingToken
+  hasAiConsent?: typeof hasActiveAiProcessingConsent
   getDomainId?: () => Promise<string>
   apiKey?: string
   domainId?: string
@@ -277,6 +285,9 @@ export async function joinSession(
     deps.domainId ?? process.env.DAILY_DOMAIN_ID ?? (await getDomainId())
   const mint = deps.mint ?? mintMeetingToken
   const exp = tokenExpUnix(now, row.session.endsAt)
+  const transcriptionAllowed = await (
+    deps.hasAiConsent ?? hasActiveAiProcessingConsent
+  )({ memberUserId: row.session.memberUserId, bookingId: input.bookingId })
 
   const actorUserId =
     input.actorUserId === undefined ? input.userId : input.actorUserId
@@ -336,6 +347,7 @@ export async function joinSession(
         token,
         expiresAt: new Date(exp * 1000).toISOString(),
         endsAt: row.session.endsAt.toISOString(),
+        transcriptionAllowed,
       }
     }
   )

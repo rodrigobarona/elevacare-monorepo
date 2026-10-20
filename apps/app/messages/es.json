@@ -81,6 +81,8 @@
       "intakeTitle": "Preagenda del miembro",
       "transcriptTitle": "Transcripción en vivo",
       "transcriptEmpty": "La transcripción aparece mientras habláis. La grabación sigue desactivada.",
+      "transcriptOff": "La transcripción en directo está desactivada: el miembro no ha autorizado el procesamiento con IA.",
+      "transcriptionOnNotice": "La transcripción en directo está activada para las notas de tu experto, porque autorizaste el procesamiento con IA. Puedes desactivarla en los ajustes de Privacidad.",
       "notesSaved": "Guardado",
       "notesSaveFailed": "No se pudieron guardar las notas. Mantén esta página abierta e inténtalo de nuevo.",
       "reportTitle": "Informe interno",

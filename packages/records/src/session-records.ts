@@ -1,6 +1,7 @@
 import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm"
 import { withAudit, type AuditCtx } from "@eleva/audit"
 import {
+  hasActiveAiProcessingConsent,
   withOrgAndUserContext,
   withOrgContext,
   withPlatformAdminContext,
@@ -403,6 +404,15 @@ export async function upsertSessionRecord(input: {
   if (!booking) throw new SessionRecordError("NOT_FOUND")
   if (input.actorUserId !== booking.expertUserId) {
     throw new SessionRecordError("FORBIDDEN")
+  }
+  if (
+    kind === "transcript" &&
+    !(await hasActiveAiProcessingConsent({
+      memberUserId: booking.memberUserId,
+      bookingId: booking.id,
+    }))
+  ) {
+    throw new SessionRecordError("AI_CONSENT_REQUIRED")
   }
   // withAudit(actorUserId) uses withOrgAndUserContext, which sets
   // eleva.user_id for records_author_insert / records_author_update WITH CHECK.

@@ -89,6 +89,8 @@
       "intakeTitle": "Pré-agenda do membro",
       "transcriptTitle": "Transcrição em direto",
       "transcriptEmpty": "A transcrição aparece à medida que falam. A gravação continua desligada.",
+      "transcriptOff": "A transcrição em direto está desligada: o membro não autorizou o processamento por IA.",
+      "transcriptionOnNotice": "A transcrição em direto está ligada para as notas do seu especialista, porque autorizou o processamento por IA. Pode desligá-la nas definições de Privacidade.",
       "notesSaved": "Guardado",
       "notesSaveFailed": "Não foi possível guardar as notas. Mantenha esta página aberta e tente de novo.",
       "reportTitle": "Relatório interno",

@@ -36,6 +36,8 @@ export type ElevaCallLabels = {
   intakeTitle: string
   transcriptTitle: string
   transcriptEmpty: string
+  transcriptOff: string
+  transcriptionOnNotice: string
   notesSaved: string
   notesSaveFailed: string
   reportTitle: string
@@ -89,6 +91,8 @@ export function elevaCallLabels(
     intakeTitle: t("intakeTitle"),
     transcriptTitle: t("transcriptTitle"),
     transcriptEmpty: t("transcriptEmpty"),
+    transcriptOff: t("transcriptOff"),
+    transcriptionOnNotice: t("transcriptionOnNotice"),
     notesSaved: t("notesSaved"),
     notesSaveFailed: t("notesSaveFailed"),
     reportTitle: t("reportTitle"),

@@ -560,6 +560,8 @@ export const JoinSessionResponseSchema = z.object({
   expiresAt: z.string().datetime(),
   /** Booked end. The room stays open past it until `expiresAt`. */
   endsAt: z.string().datetime(),
+  /** Live transcription needs the member's active ai_processing consent. */
+  transcriptionAllowed: z.boolean(),
 })
 
 export const JoinSessionErrorSchema = z.object({

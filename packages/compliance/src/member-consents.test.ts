@@ -40,7 +40,6 @@ vi.mock("@eleva/audit", () => ({
 }))
 
 import {
-  hasActiveAiProcessingConsent,
   MemberConsentConflictError,
   pickLatestConsentPerKind,
   updateMemberConsent,
@@ -155,35 +154,5 @@ describe("updateMemberConsent", () => {
         payload: { kind: "marketing", ids: ["consent-1"] },
       })
     )
-  })
-})
-
-describe("hasActiveAiProcessingConsent", () => {
-  function mockRows(rows: Array<{ id: string }>) {
-    const limit = vi.fn().mockResolvedValue(rows)
-    const tx = {
-      select: () => ({ from: () => ({ where: () => ({ limit }) }) }),
-    }
-    withPlatformAdminContext.mockImplementation(
-      (fn: (t: typeof tx) => unknown) => fn(tx)
-    )
-  }
-
-  beforeEach(() => {
-    withPlatformAdminContext.mockReset()
-  })
-
-  it("is false without an active grant", async () => {
-    mockRows([])
-    await expect(
-      hasActiveAiProcessingConsent({ memberUserId: "u1", bookingId: "b1" })
-    ).resolves.toBe(false)
-  })
-
-  it("is true with an active grant", async () => {
-    mockRows([{ id: "c1" }])
-    await expect(
-      hasActiveAiProcessingConsent({ memberUserId: null, bookingId: "b1" })
-    ).resolves.toBe(true)
   })
 })

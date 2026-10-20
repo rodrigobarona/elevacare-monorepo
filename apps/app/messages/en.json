@@ -81,6 +81,8 @@
       "intakeTitle": "Member pre-agenda",
       "transcriptTitle": "Live transcript",
       "transcriptEmpty": "Transcript appears as you speak. Recording stays off.",
+      "transcriptOff": "Live transcript is off: the member has not allowed AI processing.",
+      "transcriptionOnNotice": "Live transcript is on for your expert's session notes, because you allowed AI processing. You can turn it off in Privacy settings.",
       "notesSaved": "Saved",
       "notesSaveFailed": "Could not save notes. Keep this page open and try again.",
       "reportTitle": "Internal report",
