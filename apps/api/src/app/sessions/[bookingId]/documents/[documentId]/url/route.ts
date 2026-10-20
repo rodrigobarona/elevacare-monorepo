@@ -1,5 +1,11 @@
 import { SessionDocumentUrlResponseSchema } from "@eleva/api-client"
-import { mintSessionDocumentUrl, SessionDocumentError } from "@eleva/records"
+import {
+  describeError,
+  mintSessionDocumentUrl,
+  recordLogger,
+  SessionDocumentError,
+} from "@eleva/records"
+import { withPhiScope } from "@eleva/observability"
 import { z } from "zod"
 import { apiAuthFailure, requireApiAuth } from "@/lib/auth"
 import { corsHeaders } from "@/lib/cors"
@@ -19,7 +25,7 @@ export const runtime = "nodejs"
 
 const IdSchema = z.string().uuid()
 
-export async function GET(
+async function handleGET(
   request: Request,
   { params }: { params: Promise<{ bookingId: string; documentId: string }> }
 ) {
@@ -64,7 +70,11 @@ export async function GET(
         { status: DOCUMENT_STATUS[err.code], headers }
       )
     }
-    console.error("[sessions/documents] url failed", err)
+    recordLogger.error("documents url failed", {
+      bookingId: bookingId.data,
+      documentId: documentId.data,
+      status: describeError(err),
+    })
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }
@@ -74,4 +84,8 @@ export async function OPTIONS(request: Request) {
     status: 204,
     headers: corsHeaders(request, "GET, OPTIONS"),
   })
+}
+
+export function GET(...args: Parameters<typeof handleGET>) {
+  return withPhiScope(() => handleGET(...args))
 }

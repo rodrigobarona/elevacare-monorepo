@@ -8,6 +8,7 @@ import {
 import { bookings, records, slotReservations } from "@eleva/db/schema"
 import { decryptRecordFields, encryptRecordFields } from "@eleva/encryption"
 import { decryptHoldIntake } from "./hold-intake"
+import { recordLogger } from "./record-logger"
 import {
   isWritableSessionRecordKind,
   SESSION_RECORD_TITLES,
@@ -57,11 +58,13 @@ async function decryptRow(
   row: typeof records.$inferSelect
 ): Promise<SessionRecordView | null> {
   if (!isSessionKind(row.kind)) return null
-  const plain = await decryptRecordFields(
-    orgId,
-    { title: row.titleEncrypted, body: row.bodyEncrypted },
-    { recordId: row.id }
-  )
+  const plain = (
+    await decryptRecordFields(
+      orgId,
+      { title: row.titleEncrypted, body: row.bodyEncrypted },
+      { recordId: row.id }
+    )
+  ).reveal()
   return {
     id: row.id,
     kind: row.kind,
@@ -295,12 +298,12 @@ async function hydrateIntake(
   let notes = ""
   try {
     notes = encrypted
-      ? (
-          await decryptHoldIntake(booking.orgId, encrypted, reservation.id)
-        ).trim()
+      ? (await decryptHoldIntake(booking.orgId, encrypted, reservation.id))
+          .reveal()
+          .trim()
       : (reservation.funnel?.intakeNotes?.trim() ?? "")
   } catch {
-    console.error("[records] intake decrypt failed", {
+    recordLogger.error("intake decrypt failed", {
       bookingId: booking.id,
       status: "decrypt_failed",
     })

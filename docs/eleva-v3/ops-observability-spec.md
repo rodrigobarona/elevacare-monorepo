@@ -66,6 +66,29 @@ Logs should include:
 
 Logs should not casually include sensitive content.
 
+### Clinical content (PHI) guards
+
+Record and document code follows these rules, enforced in code rather than by convention:
+
+- Decryption returns `Decrypted<T>` (`@eleva/observability`). It prints `[redacted]` through
+  `JSON.stringify`, `util.inspect` and string coercion. Code must call `reveal()` explicitly, and
+  only to map into a response DTO validated by a Zod response schema.
+- Every plaintext produced by decryption, and every record body received on `PUT
+/sessions/{bookingId}/records`, is registered in a per-request PHI registry
+  (`withPhiScope`, `AsyncLocalStorage`). `redactString` replaces any registered value with `[phi]`
+  wherever it appears, including `Error.message`. Values shorter than six characters are not
+  registered. Outside a scope, registration does nothing, so values cannot leak between requests.
+- Record and document routes log only through `recordLogger` (`@eleva/records`). Its payload is an
+  allow-list of scalar IDs, `status`, `modelId`, `tokenCount` and `durationMs`. Other keys are
+  dropped at runtime. Errors are logged as class name and code, never as their message.
+- Sentry `beforeSend` and `beforeSendTransaction` walk the whole event, redact record keys
+  (`body`, `title`, `notes`, `transcript`, `summary`, `observations`, `recommendations`) and
+  `Decrypted` values, scrub registered PHI from every string, and drop unknown top-level event keys.
+
+Still to do: an ESLint rule that forbids passing a `Decrypted` value to `NextResponse.json` or
+`secureJson`, and deriving the AI output keys from the `draftSessionReport` Zod schema once it exists
+(Phase 10.2b).
+
 ## Error Tracking Strategy
 
 Sentry should capture:

@@ -52,7 +52,8 @@ describe("record field encryption", () => {
 
   it("handles an empty field map", async () => {
     await expect(encryptRecordFields(ORG_ID, {}, OWNER)).resolves.toEqual({})
-    await expect(decryptRecordFields(ORG_ID, {}, OWNER)).resolves.toEqual({})
+    const empty = await decryptRecordFields(ORG_ID, {}, OWNER)
+    expect(empty.reveal()).toEqual({})
   })
 
   it("binds ciphertext to the owning record", async () => {

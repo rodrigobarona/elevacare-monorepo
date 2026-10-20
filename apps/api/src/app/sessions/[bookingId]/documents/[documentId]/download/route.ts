@@ -1,9 +1,12 @@
 import {
+  describeError,
   loadSessionDocumentForDownload,
+  recordLogger,
   SessionDocumentError,
   verifyDocumentUrlGrant,
 } from "@eleva/records"
 import { getPrivateDocument } from "@eleva/storage"
+import { withPhiScope } from "@eleva/observability"
 import { z } from "zod"
 import { corsHeaders } from "@/lib/cors"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -25,7 +28,7 @@ function safeFilename(name: string): string {
   return name.replace(/[^a-zA-Z0-9._-]+/g, "-").slice(0, 80) || "document"
 }
 
-export async function GET(
+async function handleGET(
   request: Request,
   { params }: { params: Promise<{ bookingId: string; documentId: string }> }
 ) {
@@ -83,7 +86,11 @@ export async function GET(
         { status: DOCUMENT_STATUS[err.code], headers }
       )
     }
-    console.error("[sessions/documents] download failed", err)
+    recordLogger.error("documents download failed", {
+      bookingId: bookingId.data,
+      documentId: documentId.data,
+      status: describeError(err),
+    })
     return Response.json({ error: "internal" }, { status: 500, headers })
   }
 }
@@ -93,4 +100,8 @@ export async function OPTIONS(request: Request) {
     status: 204,
     headers: corsHeaders(request, "GET, OPTIONS"),
   })
+}
+
+export function GET(...args: Parameters<typeof handleGET>) {
+  return withPhiScope(() => handleGET(...args))
 }

@@ -102,11 +102,13 @@ async function decryptMetadata(
   orgId: string,
   row: typeof sessionDocuments.$inferSelect
 ): Promise<string> {
-  const plain = await decryptRecordFields(
-    orgId,
-    { metadata: row.metadataEncrypted },
-    { recordId: row.id }
-  )
+  const plain = (
+    await decryptRecordFields(
+      orgId,
+      { metadata: row.metadataEncrypted },
+      { recordId: row.id }
+    )
+  ).reveal()
   try {
     const parsed = JSON.parse(plain.metadata ?? "{}") as {
       originalName?: unknown

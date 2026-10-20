@@ -1,6 +1,7 @@
 import { env } from "@eleva/config/env"
 import { getCorrelationId } from "./correlation"
 import { redactPayload } from "./redaction"
+import { sanitizeSentryEvent } from "./sentry-event"
 
 /**
  * Sentry init helpers. We wrap `@sentry/nextjs` instead of importing it
@@ -52,7 +53,10 @@ export async function initSentry(
         event.tags = { ...event.tags, app: options.app }
       }
       // Deep-redact the event payload so PHI/PCI never leaves the box.
-      return redactPayload(event)
+      return sanitizeSentryEvent(event)
+    },
+    beforeSendTransaction(event) {
+      return sanitizeSentryEvent(event)
     },
     beforeBreadcrumb(breadcrumb) {
       return redactPayload(breadcrumb)

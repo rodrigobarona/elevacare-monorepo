@@ -8,8 +8,12 @@
  *   strictly required by an admin surface \u2014 handled by audit, not logs)
  *
  * Applied as a Sentry beforeSend hook + a BetterStack transport filter.
- * Field-name based so new rules are testable without real PHI samples.
+ * Three layers: `Decrypted<T>` values are always redacted, field names in
+ * REDACTED_KEYS are scrubbed, and strings are matched against the
+ * request-scoped PHI registry plus the value patterns below.
  */
+
+import { isDecrypted, scrubRegisteredPhi } from "./phi"
 
 /** Field names whose values must be fully scrubbed. Case-insensitive match. */
 export const REDACTED_KEYS = new Set<string>([
@@ -42,6 +46,17 @@ export const REDACTED_KEYS = new Set<string>([
   "refresh_token",
   "encryptionkey",
   "encryption_key",
+  // Clinical record and AI report content.
+  "body",
+  "bodyencrypted",
+  "body_encrypted",
+  "title",
+  "titleencrypted",
+  "notes",
+  "intakenotes",
+  "summary",
+  "observations",
+  "recommendations",
 ])
 
 /** Regex patterns applied to string values that survive field-name scrubbing. */
@@ -65,7 +80,7 @@ export function redactString(value: string): string {
   for (const re of REDACTED_VALUE_PATTERNS) {
     if (re.test(value)) return REDACTED_PLACEHOLDER
   }
-  return value
+  return scrubRegisteredPhi(value)
 }
 
 /**
@@ -80,6 +95,14 @@ function deepRedact(value: unknown, seen: WeakSet<object>): unknown {
   if (value == null) return value
   if (typeof value === "string") return redactString(value)
   if (typeof value !== "object") return value
+  if (isDecrypted(value)) return REDACTED_PLACEHOLDER
+  if (value instanceof Error) {
+    return {
+      name: value.name,
+      message: redactString(value.message),
+      stack: value.stack ? redactString(value.stack) : undefined,
+    }
+  }
   if (seen.has(value as object)) return "[circular]"
   seen.add(value as object)
 

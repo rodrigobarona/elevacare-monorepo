@@ -1,10 +1,13 @@
 import {
+  describeError,
   documentUploadPrefix,
   isSessionDocumentPathname,
+  recordLogger,
   requireDocumentUploader,
   SessionDocumentError,
 } from "@eleva/records"
 import { handleBlobUpload } from "@eleva/storage/blob-upload-handler"
+import { withPhiScope } from "@eleva/observability"
 import { z } from "zod"
 import { apiAuthFailure, requireApiAuth } from "@/lib/auth"
 import { corsHeaders } from "@/lib/cors"
@@ -37,7 +40,7 @@ export async function OPTIONS(request: Request) {
   })
 }
 
-export async function POST(
+async function handlePOST(
   request: Request,
   { params }: { params: Promise<{ bookingId: string }> }
 ): Promise<Response> {
@@ -108,7 +111,14 @@ export async function POST(
       },
     })
   } catch (err) {
-    console.error("[sessions/documents/upload-token] failed", err)
+    recordLogger.error("documents upload-token failed", {
+      bookingId: bookingId.data,
+      status: describeError(err),
+    })
     return Response.json({ error: "upload-rejected" }, { status: 400, headers })
   }
+}
+
+export function POST(...args: Parameters<typeof handlePOST>) {
+  return withPhiScope(() => handlePOST(...args))
 }
