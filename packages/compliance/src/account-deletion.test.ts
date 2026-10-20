@@ -3,6 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 const withPlatformAudit = vi.fn()
 const withPlatformAdminContext = vi.fn()
 const pseudonymiseBookingConsents = vi.fn()
+const eraseMemberClinicalRecords = vi.fn(async (..._args: unknown[]) => ({
+  deleted: 0,
+  tombstoned: 2,
+}))
 const eraseMemberSessionDocuments = vi.fn(async (..._args: unknown[]) => ({
   deleted: 0,
   retainedExpertOnly: 0,
@@ -93,6 +97,8 @@ vi.mock("./retention", async () => {
     ...actual,
     pseudonymiseBookingConsents: (...args: unknown[]) =>
       pseudonymiseBookingConsents(...args),
+    eraseMemberClinicalRecords: (...args: unknown[]) =>
+      eraseMemberClinicalRecords(...args),
   }
 })
 
@@ -119,6 +125,7 @@ describe("scheduleAccountDeletion", () => {
     withPlatformAudit.mockReset()
     withPlatformAdminContext.mockReset()
     pseudonymiseBookingConsents.mockReset()
+    eraseMemberClinicalRecords.mockClear()
   })
 
   it("marks the user, inserts a pending request, and flags succeeded future payments refund_pending", async () => {
@@ -495,6 +502,11 @@ describe("sweepAccountDeletions", () => {
     expect(consents.every((row) => row.userId === null)).toBe(true)
     expect(ops.indexOf("anonymise")).toBeGreaterThanOrEqual(0)
     expect(ops.indexOf("anonymise")).toBeLessThan(ops.indexOf("complete"))
+    expect(eraseMemberClinicalRecords).toHaveBeenCalledTimes(1)
+    expect(eraseMemberClinicalRecords).toHaveBeenCalledWith(
+      expect.anything(),
+      "user-1"
+    )
     expect(userSets[0]).toMatchObject({
       email: anonymisedAccountEmail("user-1"),
       banned: true,

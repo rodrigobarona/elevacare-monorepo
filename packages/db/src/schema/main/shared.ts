@@ -1,6 +1,6 @@
 import type { SocialLinkKind } from "@eleva/config/expert-profile-content"
 import { sql } from "drizzle-orm"
-import { timestamp, uuid } from "drizzle-orm/pg-core"
+import { customType, timestamp, uuid } from "drizzle-orm/pg-core"
 
 /**
  * Column helpers reused across every tenant-scoped table.
@@ -76,3 +76,9 @@ export type ExpertCredential = {
   institution: string | null
   year: number | null
 }
+
+export const bytea = customType<{ data: Buffer; driverData: Buffer }>({
+  dataType() {
+    return "bytea"
+  },
+})

@@ -118,6 +118,30 @@ Use this document to answer:
 - Deletion: pseudonymise (`user_id` → NULL, `subject_pseudonym` = HMAC of the former user id under `RETENTION_PSEUDONYM_KEY`, `guest_email_hash` → NULL) and retain for the Portuguese clinical-record minimum. DPO fills the year before go-live; **do not invent a year number** in engineering.
 - Audit access: yes; audit events keep the pseudonym
 
+### Session records — expert-authored (`records.created_by` ≠ member)
+
+- Data type: encrypted notes, internal reports, published session reports, transcripts and intake about a member
+- Sensitivity: clinical / PHI; ciphertext under the expert org key
+- Export: published reports only (DSAR, member-visible)
+- Deletion: on account deletion, `member_user_id` → NULL and `subject_pseudonym` = HMAC of the former user id under `RETENTION_PSEUDONYM_KEY`. The row stays under the clinical-record retention exception. The hard delete at the end of the statutory period is **not scheduled** until the DPO sets the period; do not invent a year number in engineering
+- Audit access: yes (`account_deletion_request` payload counts tombstoned rows)
+
+### Session records — member-authored (`records.created_by` = member, or `kind = intake`)
+
+- Data type: rows the member wrote about themselves, including the booking-form intake that is stored with the expert as `created_by`
+- Sensitivity: clinical / PHI
+- Export: yes (DSAR)
+- Deletion: deleted on the account-deletion sweep
+- Audit access: yes
+
+### Unpublished AI drafts (`records.kind = ai_draft`, `published_at IS NULL`)
+
+- Data type: AI-generated report drafts awaiting expert review
+- Sensitivity: clinical / PHI
+- Export: no (never member-visible)
+- Deletion: `POST /workflows/retention-sweep` deletes drafts 90 days after their last change (daily, batched)
+- Audit access: yes (`record.deleted`, one event per org batch with the count)
+
 ### Account deletion grace
 
 - Named working pre-launch constant: `ACCOUNT_DELETION_GRACE_DAYS = 14`

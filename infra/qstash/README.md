@@ -18,6 +18,7 @@ tying our deploy automation to the layout of any single app.
 | `/workflows/audit-outbox-drainer`            | `0 6,18 * * *`                                   | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/audit`      |
 | `/workflows/stripe-stuck-events`             | `*/10 * * * *`                                   | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/billing`    |
 | `/workflows/account-deletion-sweep`          | `0 * * * *`                                      | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/compliance` |
+| `/workflows/retention-sweep`                 | `0 2 * * *` (≈ 03:00 Europe/Lisbon in WEST)      | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/compliance` |
 | `/workflows/process-expert-transfers`        | `0 */2 * * *`                                    | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/billing`    |
 | `/workflows/process-pending-payouts`         | `0 5 * * *` (≈ 06:00 Europe/Lisbon in WEST)      | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/billing`    |
 | `/workflows/check-upcoming-payouts`          | `0 7 * * *` (≈ 08:00 Europe/Lisbon in WEST)      | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/billing`    |

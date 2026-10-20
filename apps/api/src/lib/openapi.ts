@@ -4598,6 +4598,12 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
         summary: "Promote eligible pending payouts",
         description: "Promotes pending payouts whose eligibleAt has passed.",
       }),
+      "/workflows/retention-sweep": internalWorkflow({
+        operationId: "sweepRetention",
+        summary: "Purge expired clinical drafts",
+        description:
+          "Deletes unpublished AI drafts untouched for 90 days. Batched; hasMore means the next run continues.",
+      }),
       "/workflows/slot-reservation-expiry": internalWorkflow({
         operationId: "expireSlotReservations",
         summary: "Expire lapsed slot holds",
