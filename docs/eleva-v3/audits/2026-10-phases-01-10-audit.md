@@ -42,19 +42,19 @@ MVP's premium patterns. Brand v3 tokens and the curated media library landed in 
 
 ## Phase closeout (honest stamps)
 
-| Phase             | Engineering         | Stamp                                                                                       |
-| ----------------- | ------------------- | ------------------------------------------------------------------------------------------- |
-| 01 Rebaseline     | On main             | Engineering closed                                                                          |
-| 02 Better Auth    | On main             | Engineering closed; JWT-after-revoke and passkey/Google linking untested (AUD-040, AUD-049) |
-| 03 WorkOS removal | On main             | Engineering closed; live calendar busy/create unproven (04B waiver)                         |
-| 04 Public booking | On main             | Engineering closed; staging reserve→pay→confirm not run; BotID prod off (AUD-017)           |
-| 04B Offer builder | On main             | **Waived / unproven** (founder 2026-09-25)                                                  |
-| 05 Member app     | On main             | Engineering closed (loopback)                                                               |
-| 06 Payments       | Machinery on main   | **Gated** — live pay→transfer→payout unproven; AUD-001 staging re-run open                  |
-| 07 Invoicing      | Closed-gate on main | **Gated** (correct) — `issueInvoice()` closed, no `invoice.issued`                          |
-| 08 Notifications  | Lane 1 on main      | Engineering closed; Twilio IE1 unproven; mode-aware copy partial (AUD-042)                  |
-| 09 Video          | On main             | **Exit gate unproven** (staging grant join + Daily webhooks)                                |
-| 10 Records        | 10.1 merged         | **Open** — 10.1a–f on main 2026-10-20; open items in AUD-027–029, AUD-032 is 10.2b          |
+| Phase             | Engineering         | Stamp                                                                                                               |
+| ----------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| 01 Rebaseline     | On main             | Engineering closed                                                                                                  |
+| 02 Better Auth    | On main             | Engineering closed; JWT-after-revoke untested (AUD-040); passkey + `account_not_linked` loopback e2e PASS (AUD-049) |
+| 03 WorkOS removal | On main             | Engineering closed; live calendar busy/create unproven (04B waiver)                                                 |
+| 04 Public booking | On main             | Engineering closed; staging reserve→pay→confirm not run; BotID prod off (AUD-017)                                   |
+| 04B Offer builder | On main             | **Waived / unproven** (founder 2026-09-25)                                                                          |
+| 05 Member app     | On main             | Engineering closed (loopback)                                                                                       |
+| 06 Payments       | Machinery on main   | **Gated** — live pay→transfer→payout unproven; AUD-001 staging re-run open                                          |
+| 07 Invoicing      | Closed-gate on main | **Gated** (correct) — `issueInvoice()` closed, no `invoice.issued`                                                  |
+| 08 Notifications  | Lane 1 on main      | Engineering closed; Twilio IE1 unproven; mode-aware copy partial (AUD-042)                                          |
+| 09 Video          | On main             | **Exit gate unproven** (staging grant join + Daily webhooks)                                                        |
+| 10 Records        | 10.1 merged         | **Open** — 10.1a–f on main 2026-10-20; open items in AUD-027–029, AUD-032 is 10.2b                                  |
 
 ## Findings register
 
@@ -110,7 +110,7 @@ AUD-014, AUD-017 (BotID production off), Twilio IE1 residency, staging auth cook
 | AUD-046 | Optional Instant Book lead-time is not modelled (boolean `requiresApproval` only).                                     | Lead-time column that forces approval inside the window                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | AUD-047 | Doc drift: webhook rule says "two-file" (code is registry + dispatcher + setup); Phase 01 says `drizzle/audit`.        | **Fixed 2026-10-20**: AGENTS.md, phase 04/06/11 docs and payments spec say three-file contract (registry + dispatcher + setup); Phase 01 points at `packages/db/src/migrations/audit`                                                                                                                                                                                                                                                                                                                                                                                        |
 | AUD-048 | No `apps/email` template-lint script; quiet-hours SMS deferral and `ended + 2 min` attendance finalize not built.      | **Fixed 2026-10-20**: template lint already runs in CI (`pnpm lint` covers `@eleva/email-preview`, which lints `packages/email` templates/components). `phi-guard.test.ts` now renders every kind × locale × mode (online/phone/in person) and checks subject, SMS, in-app and ICS for service name, surname and phone. Quiet-hours SMS is skipped, not deferred (decision-log 2026-10-06, AUD-004); attendance finalizes on `meeting.ended` with the `endsAt + 30 min` fallback sweep (`video-attendance-sweep`) as SSOT (decision-log 2026-10-07) — no `ended + 2 min` job |
-| AUD-049 | Passkey sign-in and Google `account_not_linked` are not in Playwright.                                                 | Extend `e2e/auth-api.spec.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| AUD-049 | Passkey sign-in and Google `account_not_linked` are not in Playwright.                                                 | **Fixed 2026-10-20 (loopback)**: `pnpm e2e:passkey` (CDP virtual authenticator: add in settings → passkey login) PASS; `/login?error=account_not_linked` renders the guidance (Playwright PASS) and social sign-in now passes `errorCallbackURL`. Better Auth's redirect to that URL, its `trustedOrigins` check and real Google OAuth are not exercised locally                                                                                                                                                                                                             |
 
 ### Rejected or reclassified candidates
 

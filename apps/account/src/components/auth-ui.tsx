@@ -183,6 +183,24 @@ export function InboxActions({
 }
 
 /** Maps Better Auth error codes to localized copy. */
+/** Better Auth appends `?error=` to `errorCallbackURL` after a failed OAuth callback. */
+export function oauthErrorMessage(
+  code: string | null,
+  t: (key: string) => string
+): string | null {
+  if (!code) return null
+  if (code === "account_not_linked") return t("accountNotLinked")
+  return t("errorGeneric")
+}
+
+/** Current page as the OAuth error target, without a stale `error` param. */
+export function oauthErrorCallbackURL(): string {
+  const url = new URL(window.location.href)
+  url.searchParams.delete("error")
+  url.searchParams.delete("error_description")
+  return url.toString()
+}
+
 export function authErrorMessage(
   error: { code?: string; status?: number; message?: string },
   t: (key: string) => string

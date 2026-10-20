@@ -47,6 +47,7 @@ export interface ElevaAuthClient {
     social: (body: {
       provider: string
       callbackURL?: string
+      errorCallbackURL?: string
     }) => Promise<unknown>
     passkey: (body?: {
       autoFill?: boolean

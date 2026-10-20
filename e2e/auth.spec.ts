@@ -58,6 +58,15 @@ test.describe("auth screens", () => {
     await expect(page.getByTestId("two-factor-form")).toBeVisible()
   })
 
+  test("Google account_not_linked lands on login with guidance", async ({
+    page,
+  }) => {
+    await page.goto(`${accountUrl}/login?error=account_not_linked`)
+    await expect(page.getByTestId("login-error")).toContainText(
+      /already has an Eleva account/
+    )
+  })
+
   test("signup without consent stays on the form", async ({ page }) => {
     await page.goto(`${accountUrl}/signup`)
     await page.getByTestId("signup-email").fill(uniqueEmail("consent"))
