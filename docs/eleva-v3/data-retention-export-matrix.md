@@ -126,9 +126,9 @@ Use this document to answer:
 - Deletion: on account deletion, `member_user_id` → NULL and `subject_pseudonym` = HMAC of the former user id under `RETENTION_PSEUDONYM_KEY`. The row stays under the clinical-record retention exception. The hard delete at the end of the statutory period is **not scheduled** until the DPO sets the period; do not invent a year number in engineering
 - Audit access: yes (`account_deletion_request` payload counts tombstoned rows)
 
-### Session records — member-authored (`records.created_by` = member)
+### Session records — member-authored (`records.created_by` = member, or `kind = intake`)
 
-- Data type: rows the member wrote about themselves
+- Data type: rows the member wrote about themselves, including the booking-form intake that is stored with the expert as `created_by`
 - Sensitivity: clinical / PHI
 - Export: yes (DSAR)
 - Deletion: deleted on the account-deletion sweep

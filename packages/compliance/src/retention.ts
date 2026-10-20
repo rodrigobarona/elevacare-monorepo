@@ -1,5 +1,5 @@
 import { createHmac } from "node:crypto"
-import { and, eq, inArray, isNotNull, isNull, lt, ne } from "drizzle-orm"
+import { and, eq, inArray, isNotNull, isNull, lt, or } from "drizzle-orm"
 import { withPlatformAudit } from "@eleva/audit"
 import { withPlatformAdminContext, type Tx } from "@eleva/db"
 import { consents, records } from "@eleva/db/schema"
@@ -67,23 +67,28 @@ export type ClinicalRecordErasureResult = {
 
 /**
  * D-12 / AUD-030 account finalizer step. Records the member wrote are
- * erased. Expert-authored records stay under the clinical retention
- * exception with the member id replaced by the HMAC tombstone; their
- * hard delete waits for the statutory period the DPO sets.
+ * erased, including `intake` (the member's booking-form text, stored with
+ * the expert as `created_by`). Expert-authored records stay under the
+ * clinical retention exception with the member id replaced by the HMAC
+ * tombstone; their hard delete waits for the statutory period the DPO sets.
  */
 export async function eraseMemberClinicalRecords(
   tx: Tx,
   userId: string
 ): Promise<ClinicalRecordErasureResult> {
   const token = subjectPseudonymForUser(userId)
+  const memberAuthored = or(
+    eq(records.createdBy, userId),
+    eq(records.kind, "intake")
+  )
   const deleted = await tx
     .delete(records)
-    .where(and(eq(records.memberUserId, userId), eq(records.createdBy, userId)))
+    .where(and(eq(records.memberUserId, userId), memberAuthored))
     .returning({ id: records.id })
   const tombstoned = await tx
     .update(records)
     .set({ memberUserId: null, subjectPseudonym: token })
-    .where(and(eq(records.memberUserId, userId), ne(records.createdBy, userId)))
+    .where(eq(records.memberUserId, userId))
     .returning({ id: records.id })
   return { deleted: deleted.length, tombstoned: tombstoned.length }
 }

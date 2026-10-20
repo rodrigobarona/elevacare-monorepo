@@ -32,6 +32,31 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-20: Session-record retention on account deletion and AI drafts (proposed)
+
+- Decision (engineering, under the D-11 and D-12 working decisions):
+  - Unpublished `ai_draft` records are deleted 90 days after their last
+    update by the daily retention sweep (`POST /workflows/retention-sweep`).
+  - When a member's account deletion comes due, records the member wrote
+    are hard-deleted. That includes the booking-form `intake`, which is
+    stored with the expert as `created_by`.
+  - Records an expert wrote about the member stay under the clinical
+    retention exception. `member_user_id` is replaced by an HMAC tombstone
+    (`subject_pseudonym`, migration 0062), the same token D-12 uses for
+    consents. They have no scheduled hard delete until the DPO sets the
+    statutory clinical period; no number is assumed.
+- Compatibility: D-12 already erases account data and keeps legally
+  required rows pseudonymised; this applies the same rule to `records`.
+  D-11 author-only reads are unchanged. Open question for the DPO: whether
+  an intake the expert relied on should be kept as part of the clinical
+  record instead of deleted.
+- Owner: engineering. Status: `proposed` (needs DPO review).
+- Next review: 2026-10-27.
+- Related: AUD-028 and AUD-030 in
+  `docs/eleva-v3/audits/2026-10-phases-01-10-audit.md`,
+  `docs/eleva-v3/data-retention-export-matrix.md`,
+  `packages/compliance/src/retention.ts`.
+
 ### 2026-10-20: AI processing consent and author-only record reads (proposed)
 
 - Decision (engineering, under the D-11 working decision):
