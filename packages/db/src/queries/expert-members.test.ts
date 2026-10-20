@@ -10,6 +10,7 @@ vi.mock("../context", () => ({
       innerJoin: () => chain,
       leftJoin: () => chain,
       where: () => chain,
+      groupBy: () => chain,
       orderBy: () => chain,
       limit: async () => rows.current,
     }
@@ -53,44 +54,29 @@ describe("listExpertMembers", () => {
     rows.current = []
   })
 
-  it("groups bookings per member, newest first, with last and next session", async () => {
+  // Grouping, counts and the status allowlist run in SQL; this covers the
+  // row mapping. Live check: summed sessionCount equals eligible bookings.
+  it("maps aggregated rows to dates and numbers", async () => {
     rows.current = [
-      booking({
-        id: "b4",
-        startsAt: "2026-11-10T09:00:00.000Z",
+      {
         memberUserId: "u1",
-        userName: "Ana Silva",
-        userEmail: "ana@example.test",
-      }),
-      booking({
-        id: "b3",
-        startsAt: "2026-11-01T09:00:00.000Z",
-        memberUserId: "u1",
-        userName: "Ana Silva",
-      }),
-      booking({
-        id: "b2",
-        startsAt: "2026-10-10T09:00:00.000Z",
-        guestName: "Rui Costa",
-        guestEmail: "Rui@Example.test",
-      }),
-      booking({
-        id: "b1",
-        startsAt: "2026-10-01T09:00:00.000Z",
-        memberUserId: "u1",
-        userName: "Ana Silva",
-      }),
-      booking({
-        id: "b0",
-        startsAt: "2026-09-01T09:00:00.000Z",
-        guestName: "Rui",
-        guestEmail: "rui@example.test",
-      }),
+        name: "Ana Silva",
+        email: "ana@example.test",
+        sessionCount: "3",
+        lastSessionAt: "2026-10-01T09:00:00.000Z",
+        nextSessionAt: "2026-11-01T09:00:00.000Z",
+      },
+      {
+        memberUserId: null,
+        name: "Rui Costa",
+        email: "Rui@Example.test",
+        sessionCount: 2,
+        lastSessionAt: "2026-10-10T09:00:00.000Z",
+        nextSessionAt: null,
+      },
     ]
 
-    const members = await listExpertMembers("org-1", "exp-1", NOW)
-
-    expect(members).toEqual([
+    expect(await listExpertMembers("org-1", "exp-1", NOW)).toEqual([
       {
         memberUserId: "u1",
         name: "Ana Silva",
@@ -108,11 +94,6 @@ describe("listExpertMembers", () => {
         nextSessionAt: null,
       },
     ])
-  })
-
-  it("skips bookings with no member id and no email", async () => {
-    rows.current = [booking({ id: "b1", startsAt: "2026-10-01T09:00:00Z" })]
-    expect(await listExpertMembers("org-1", "exp-1", NOW)).toEqual([])
   })
 })
 

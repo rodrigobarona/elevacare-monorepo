@@ -1,11 +1,20 @@
-import { and, desc, eq, notInArray } from "drizzle-orm"
+import { and, desc, eq, inArray, sql } from "drizzle-orm"
 import { withOrgContext, type Tx } from "../context"
 import { user } from "../schema/auth"
 import { bookings, eventTypes } from "../schema/main/index"
 import type { LocalizedText } from "../schema/main/shared"
 
-const EXCLUDED_STATUSES = ["cancelled", "refunded"] as const
-const MEMBER_BOOKINGS_LIMIT = 2000
+/** Real bookings only: open holds and unpaid checkouts are not members yet. */
+const MEMBER_STATUSES = [
+  "awaiting_confirmation",
+  "reserved",
+  "confirmed",
+  "rescheduled",
+  "completed",
+  "no_show",
+] as const
+const MEMBER_LIST_LIMIT = 2000
+const MEMBER_SESSIONS_LIMIT = 500
 
 export type ExpertMemberListItem = {
   /** Present when the member has an Eleva account; guests have none. */
@@ -33,20 +42,11 @@ export type ExpertMemberDetail = {
   sessions: ExpertMemberSession[]
 }
 
-function memberKey(row: {
-  memberUserId: string | null
-  email: string | null
-}): string | null {
-  if (row.memberUserId) return `u:${row.memberUserId}`
-  const email = row.email?.trim().toLowerCase()
-  return email ? `g:${email}` : null
-}
-
 async function selectExpertBookingsWithMembers(
   tx: Tx,
   orgId: string,
   expertProfileId: string,
-  memberUserId?: string
+  memberUserId: string
 ) {
   return tx
     .select({
@@ -75,50 +75,66 @@ async function selectExpertBookingsWithMembers(
       and(
         eq(bookings.orgId, orgId),
         eq(bookings.expertProfileId, expertProfileId),
-        notInArray(bookings.status, [...EXCLUDED_STATUSES]),
-        memberUserId ? eq(bookings.memberUserId, memberUserId) : undefined
+        inArray(bookings.status, [...MEMBER_STATUSES]),
+        eq(bookings.memberUserId, memberUserId)
       )
     )
     .orderBy(desc(bookings.startsAt), desc(bookings.id))
-    .limit(MEMBER_BOOKINGS_LIMIT)
+    .limit(MEMBER_SESSIONS_LIMIT)
 }
 
 /**
- * Expert member list derived from their bookings, newest first.
- * Guests without an account are grouped by email.
+ * Expert member list derived from their bookings, most recent booking
+ * first. Guests without an account are grouped by normalised email.
  */
 export async function listExpertMembers(
   orgId: string,
   expertProfileId: string,
   now: Date = new Date()
 ): Promise<ExpertMemberListItem[]> {
+  const email = sql`coalesce(${bookings.guestEmail}, ${user.email})`
+  const memberKey = sql<string>`coalesce('u:' || ${bookings.memberUserId}::text, 'g:' || lower(trim(${email})))`
+  const latest = sql`${bookings.startsAt} desc, ${bookings.id} desc`
   const rows = await withOrgContext(orgId, (tx: Tx) =>
-    selectExpertBookingsWithMembers(tx, orgId, expertProfileId)
-  )
-
-  const members = new Map<string, ExpertMemberListItem>()
-  for (const row of rows) {
-    const email = row.guestEmail ?? row.userEmail
-    const key = memberKey({ memberUserId: row.memberUserId, email })
-    if (!key) continue
-    const existing = members.get(key)
-    const isPast = row.startsAt.getTime() <= now.getTime()
-    if (!existing) {
-      members.set(key, {
-        memberUserId: row.memberUserId,
-        name: row.guestName ?? row.userName,
-        email,
-        sessionCount: 1,
-        lastSessionAt: isPast ? row.startsAt : null,
-        nextSessionAt: isPast ? null : row.startsAt,
+    tx
+      .select({
+        memberUserId: sql<
+          string | null
+        >`(array_agg(${bookings.memberUserId}::text order by ${latest}))[1]`,
+        name: sql<
+          string | null
+        >`(array_agg(coalesce(${bookings.guestName}, ${user.name}) order by ${latest}))[1]`,
+        email: sql<string | null>`(array_agg(${email} order by ${latest}))[1]`,
+        sessionCount: sql<number>`count(*)::int`,
+        lastSessionAt: sql<
+          string | null
+        >`max(${bookings.startsAt}) filter (where ${bookings.startsAt} <= ${now})`,
+        nextSessionAt: sql<
+          string | null
+        >`min(${bookings.startsAt}) filter (where ${bookings.startsAt} > ${now})`,
       })
-      continue
-    }
-    existing.sessionCount += 1
-    if (isPast && !existing.lastSessionAt) existing.lastSessionAt = row.startsAt
-    if (!isPast) existing.nextSessionAt = row.startsAt
-  }
-  return [...members.values()]
+      .from(bookings)
+      .leftJoin(user, eq(user.id, bookings.memberUserId))
+      .where(
+        and(
+          eq(bookings.orgId, orgId),
+          eq(bookings.expertProfileId, expertProfileId),
+          inArray(bookings.status, [...MEMBER_STATUSES]),
+          sql`${memberKey} is not null`
+        )
+      )
+      .groupBy(memberKey)
+      .orderBy(desc(sql`max(${bookings.startsAt})`))
+      .limit(MEMBER_LIST_LIMIT)
+  )
+  return rows.map((row) => ({
+    memberUserId: row.memberUserId,
+    name: row.name,
+    email: row.email,
+    sessionCount: Number(row.sessionCount),
+    lastSessionAt: row.lastSessionAt ? new Date(row.lastSessionAt) : null,
+    nextSessionAt: row.nextSessionAt ? new Date(row.nextSessionAt) : null,
+  }))
 }
 
 /** One member's sessions with this expert, newest first. */
