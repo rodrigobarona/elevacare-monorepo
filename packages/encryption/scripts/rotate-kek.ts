@@ -20,6 +20,9 @@ async function main() {
       `${apply ? "rotated" : "pending"} kek=v${result.kekVersion} orgs=${result.orgs} rewrapped=${result.rewrapped} hasMore=${result.hasMore}`
     )
     if (!apply || !result.hasMore) break
+    if (result.rewrapped === 0) {
+      throw new Error("rotation made no progress; stopping")
+    }
   }
   if (apply) console.log(`done: ${total} org(s) re-wrapped`)
 }

@@ -442,7 +442,7 @@ async function rotateOrg(
   const rows = await dekStore.listAll(orgId)
   let rewrapped = 0
   for (const row of rows) {
-    if (parseKekVersion(row.kekVersion) === nextVersion) continue
+    if (row.kekVersion === String(nextVersion)) continue
     const aad = { orgId, keyVersion: row.keyVersion }
     const dek = unwrapDek(row.wrappedDek, parseKekVersion(row.kekVersion), aad)
     await dekStore.updateWrapped(

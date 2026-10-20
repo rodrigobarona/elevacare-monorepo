@@ -179,7 +179,10 @@ Generate a new version with `openssl rand -base64 32`.
 1. Add `ELEVA_KEK_V<n+1>` next to the existing `ELEVA_KEK_V<n>` in Vercel (all
    apps that import `@eleva/encryption`, at least `apps/api`). Do not delete the
    old var yet.
-2. Deploy so every instance loads the new current version.
+2. Unset `ENCRYPTION_KEK_VERSION`, or set it to `n+1`, then deploy so every
+   instance loads the new current version. A dry run must now report
+   `kekVersion: n+1`; if it still says `n`, a pin or stale deploy is in the
+   way — stop here.
 3. Re-wrap every org. Production KEKs are write-only Vercel vars, so run it
    inside the deployment: `POST /workflows/kek-rotation` with Bearer
    `WORKFLOWS_DRAIN_SECRET`. An empty body is a dry run (`orgs` = pending);
@@ -188,8 +191,9 @@ Generate a new version with `openssl rand -base64 32`.
    until done. Both re-wrap DEK rows only (`rotateAllOrgKeks`, one audited
    `org_data_key rotated` per row); stored ciphertext stays readable because
    decrypt loads the DEK by `dek_v`, not by the `kek_v` prefix.
-4. Confirm a dry run reports `orgs: 0` — every `org_data_keys` row (including
-   retired) has `kek_version` equal to the new `n`. Keep
+4. Confirm a dry run reports `kekVersion: n+1` and `orgs: 0` — every
+   `org_data_keys` row (including retired) has `kek_version` equal to it.
+   `orgs: 0` with `kekVersion: n` proves nothing (it checked the old version). Keep
    `ELEVA_KEK_V<n>` in env until that count is zero. Then the old var can leave
    Vercel; store it offline until Phase 14 record export is done.
 5. `shredOrgKeys(orgId)` is erasure, not rotation — it deletes DEK rows and
