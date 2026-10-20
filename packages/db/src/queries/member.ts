@@ -700,21 +700,35 @@ export async function memberHasConfirmedFutureBooking(
 
 /**
  * Whether AI may process this member's session content right now: an
- * active ai_processing grant exists for the member or the booking.
- * Withdrawal closes every active row, so absent or withdrawn means no.
+ * active ai_processing grant at account level (Privacy settings) or one
+ * scoped to this booking or its reservation (booking-funnel opt-in). A
+ * funnel opt-in never widens to other bookings. Withdrawal closes every
+ * active row, so absent or withdrawn means no.
  */
 export async function hasActiveAiProcessingConsent(input: {
   memberUserId: string | null
   bookingId: string
 }): Promise<boolean> {
-  const subject = input.memberUserId
-    ? or(
-        eq(main.consents.userId, input.memberUserId),
-        eq(main.consents.bookingId, input.bookingId)
-      )
-    : eq(main.consents.bookingId, input.bookingId)
-  const [active] = await withPlatformAdminContext((tx) =>
-    tx
+  const [active] = await withPlatformAdminContext((tx) => {
+    const bookingReservation = tx
+      .select({ id: main.bookings.reservationId })
+      .from(main.bookings)
+      .where(eq(main.bookings.id, input.bookingId))
+    const bookingScoped = or(
+      eq(main.consents.bookingId, input.bookingId),
+      inArray(main.consents.reservationId, bookingReservation)
+    )
+    const subject = input.memberUserId
+      ? or(
+          and(
+            eq(main.consents.userId, input.memberUserId),
+            isNull(main.consents.bookingId),
+            isNull(main.consents.reservationId)
+          ),
+          bookingScoped
+        )
+      : bookingScoped
+    return tx
       .select({ id: main.consents.id })
       .from(main.consents)
       .where(
@@ -725,7 +739,7 @@ export async function hasActiveAiProcessingConsent(input: {
         )
       )
       .limit(1)
-  )
+  })
   return Boolean(active)
 }
 

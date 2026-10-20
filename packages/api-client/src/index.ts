@@ -2002,6 +2002,8 @@ export const ReserveBookingRequestSchema = z.object({
   cancellationPolicy: CancellationPolicySchema.optional(),
   promoCode: z.string().trim().min(2).max(32).optional(),
   intakeNotes: z.string().trim().max(8000).optional(),
+  /** Optional ai_processing grant scoped to this booking (live transcript). */
+  aiProcessing: z.boolean().optional(),
 })
 
 export const ReserveBookingResponseSchema = z.object({

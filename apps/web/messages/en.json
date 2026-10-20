@@ -413,6 +413,10 @@
       "promo": "Promo code (optional)",
       "promoHint": "We'll save this with your booking. Automatic discounts are not applied yet.",
       "consentsIntro": "To book a health session on this digital health platform, please confirm:",
+      "aiConsent": {
+        "label": "Optional: allow live transcription and AI-assisted notes for this session. Your expert still writes the report; you can withdraw any time in Privacy settings. See the",
+        "link": "privacy notice"
+      },
       "hold": "Continue to payment",
       "confirmFree": "Confirm booking",
       "holding": "Holding your time…",

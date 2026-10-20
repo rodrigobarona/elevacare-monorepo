@@ -413,6 +413,10 @@
       "promo": "Código promocional (opcional)",
       "promoHint": "Lo guardamos con tu reserva. Los descuentos automáticos aún no se aplican.",
       "consentsIntro": "Para reservar una sesión de salud en esta plataforma digital de salud, confirma:",
+      "aiConsent": {
+        "label": "Opcional: autorizo la transcripción en directo y notas asistidas por IA en esta sesión. Tu experto sigue redactando el informe; puedes retirar la autorización cuando quieras en los ajustes de Privacidad. Consulta el",
+        "link": "aviso de privacidad"
+      },
       "hold": "Continuar al pago",
       "confirmFree": "Confirmar reserva",
       "holding": "Reservando tu hora…",
