@@ -7,7 +7,7 @@
 | Entry gate | Before PR 06.1 opens, finance has approved in `decision-log.md`: the settlement matrix (D-03 VAT basis of the commission, D-04 processing-fee bearer for marketplace and clinic bookings) and the Connect capability/verification requirement (D-05). Before PR 06.2 opens: the refund, dispute and no-show policy (D-06). PR 06.0 (spike, test mode) produces the evidence those approvals are based on. |
 | Effort     | 2 weeks                                                                                                                                                                                                                                                                                                                                                                                                   |
 | Touches    | `packages/billing/**`, `packages/workflows/src/payments/**`, `packages/db/src/schema/main/{billing,booking-payments,payout-states}.ts`, `apps/api/src/app/{stripe,payments,payouts,workflows,webhooks}/**`, `infra/stripe/**`, `infra/qstash/**`, `apps/expert/**` (finance + onboarding), `packages/api-client/**`                                                                                       |
-| Exit gate  | Pay -> confirm -> eligible -> transfer -> payout observable end to end in Stripe test mode with a pilot expert; refunds (full/partial) and disputes update ledger; every Stripe event in the two-file contract (platform + Connect endpoints); expert Connect onboarding completes with Embedded Components                                                                                               |
+| Exit gate  | Pay -> confirm -> eligible -> transfer -> payout observable end to end in Stripe test mode with a pilot expert; refunds (full/partial) and disputes update ledger; every Stripe event in the three-file contract (platform + Connect endpoints); expert Connect onboarding completes with Embedded Components                                                                                             |
 
 ## Why this phase exists
 
@@ -153,13 +153,13 @@ Out: TOConline invoices (Phase 7), clinic SaaS billing (Phase 11), admin UI (Pha
 >
 > ### Founder evidence checklist (06 money-path)
 >
-> | Item                                         | Engineering           | Evidence still needed                                                                                                                                                                                                                                                                  |
-> | -------------------------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-> | Contract e2e (`pnpm e2e:phase06`)            | Shipped               | Re-run anytime on loopback                                                                                                                                                                                                                                                             |
-> | Live pay → confirm (PaymentIntent)           | Code on main          | Stripe **test-mode** / staging — never Production                                                                                                                                                                                                                                      |
-> | Pay → eligible → **transfer** → payout       | Code on main          | Stripe **test-mode** / staging. Code does **not** wait for an issued platform-fee invoice before transfer — founder waiver AUD-007 (2026-09-25) while `issueInvoice()` is closed; the PR that opens issuance adds the skip-until-issued check. Never bypass `issueInvoice()` / FT POST |
-> | Connect Embedded onboarding unlock predicate | Shipped               | Human Connect session proof                                                                                                                                                                                                                                                            |
-> | Webhook two-file parity (platform + Connect) | Shipped + unit parity | Staging endpoint apply if rotated                                                                                                                                                                                                                                                      |
+> | Item                                           | Engineering           | Evidence still needed                                                                                                                                                                                                                                                                  |
+> | ---------------------------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | Contract e2e (`pnpm e2e:phase06`)              | Shipped               | Re-run anytime on loopback                                                                                                                                                                                                                                                             |
+> | Live pay → confirm (PaymentIntent)             | Code on main          | Stripe **test-mode** / staging — never Production                                                                                                                                                                                                                                      |
+> | Pay → eligible → **transfer** → payout         | Code on main          | Stripe **test-mode** / staging. Code does **not** wait for an issued platform-fee invoice before transfer — founder waiver AUD-007 (2026-09-25) while `issueInvoice()` is closed; the PR that opens issuance adds the skip-until-issued check. Never bypass `issueInvoice()` / FT POST |
+> | Connect Embedded onboarding unlock predicate   | Shipped               | Human Connect session proof                                                                                                                                                                                                                                                            |
+> | Webhook three-file parity (platform + Connect) | Shipped + unit parity | Staging endpoint apply if rotated                                                                                                                                                                                                                                                      |
 
 - [ ] New expert completes Connect onboarding in Embedded Components; `account.updated` /
       `capability.updated` flip `connect_status` and unlock publishing only when
@@ -320,7 +320,7 @@ PR 06.1 — Connect onboarding hardening:
    behind ff.expert_identity_verification (default off).
 2. Webhook: add account.updated, identity.verification_session.verified,
    identity.verification_session.requires_input, capability.updated to BOTH
-   packages/billing/src/server/webhook.ts and infra/stripe/setup-webhooks.ts (two-file contract);
+   packages/billing/src/server/webhook-events.ts, webhook.ts and infra/stripe/setup-webhooks.ts (three-file contract);
    handlers update billing_customers inside withAudit; add the parity unit test that asserts the
    dispatcher's handled event set equals WEBHOOK_EVENTS.
 3. apps/expert onboarding (append steps to the Phase 4B onboarding-steps.ts registry rendered by
@@ -400,7 +400,7 @@ PR 06.2 — payout engine, refunds, disputes, finance UI:
    dispute loss, then the same two-step reversal path when a transfer exists (the charge is
    already reversed by Stripe); state-machine test covers every transition in the union above
    plus reversal_pending.
-7. Webhook handlers (two-file contract, idempotent, withAudit): payment_intent.succeeded (also
+7. Webhook handlers (three-file contract, idempotent, withAudit): payment_intent.succeeded (also
    creates payout_states pending), payment_intent.processing (async_short hold extension from
    Phase 4), payment_intent.payment_failed, payment_intent.canceled, charge.refunded,
    refund.updated (failed refunds), charge.dispute.created, charge.dispute.closed,

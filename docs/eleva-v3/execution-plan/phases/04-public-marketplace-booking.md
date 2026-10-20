@@ -728,7 +728,7 @@ PR 04.2 — funnel + payment + marketing/legal:
    Refund execution itself is Phase 6 — here only record the intent
    (booking_payments.status = refund_pending) and emit audit. Also handle
    payment_intent.succeeded / payment_intent.payment_failed in packages/billing/src/server/
-   webhook.ts to confirm/fail the booking (two-file contract: also add the events to
+   webhook.ts to confirm/fail the booking (three-file contract: also add the events to
    infra/stripe/setup-webhooks.ts and re-run
    pnpm stripe:setup:webhooks -- --url "https://api.dev.eleva.care/webhooks/stripe" --apply
    against the staging Stripe account; production is re-run in Phase 15).
