@@ -16,7 +16,7 @@ import {
   PAID_PRICE_CENTS,
 } from "./local"
 
-const CONSENTS = [
+export const CONSENTS = [
   { kind: "terms" as const, version: "dev-2026-09-09" },
   { kind: "privacy" as const, version: "dev-2026-09-09" },
   { kind: "health_data_processing" as const, version: "dev-2026-09-09" },
@@ -94,7 +94,9 @@ export async function pickSlotHoursFromNow(
   }
 }
 
-async function fetchOfferModeId(request: APIRequestContext): Promise<string> {
+export async function fetchOfferModeId(
+  request: APIRequestContext
+): Promise<string> {
   const offer = await request.get(
     `${apiUrl}/public/experts/${PAID_EXPERT}/event-types/${PAID_OFFER}`
   )
@@ -153,7 +155,7 @@ function leadWindowSkipReason(
   return `flexible needs ≥25h lead (${slot.leadHours.toFixed(1)}h @ ${slot.startsAt})`
 }
 
-async function confirmStripePaymentIntent(
+export async function confirmStripePaymentIntent(
   paymentIntentId: string
 ): Promise<void> {
   const key = requireStripeTestSecretKey()
@@ -180,7 +182,7 @@ async function confirmStripePaymentIntent(
   expect(body.status).toBe("succeeded")
 }
 
-async function sessionFromMagicLink(
+export async function sessionFromMagicLink(
   request: APIRequestContext,
   email: string
 ): Promise<string> {
