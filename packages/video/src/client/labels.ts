@@ -51,6 +51,8 @@ export type ElevaCallLabels = {
   remote: string
   screenShareOf: (name: string) => string
   connecting: string
+  overtimeTitle: string
+  overtimeBody: (closesAt: string) => string
   errors: Record<ElevaCallErrorCode, string>
 }
 
@@ -102,6 +104,8 @@ export function elevaCallLabels(
     remote: t("remote"),
     screenShareOf: (name) => t("screenShareOf", { name }),
     connecting: t("connecting"),
+    overtimeTitle: t("overtimeTitle"),
+    overtimeBody: (closesAt) => t("overtimeBody", { closesAt }),
     errors: {
       SESSION_NOT_OPEN: t("errors.SESSION_NOT_OPEN"),
       SESSION_NOT_ACTIVE: t("errors.SESSION_NOT_ACTIVE"),

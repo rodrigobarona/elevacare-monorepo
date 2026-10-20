@@ -56,4 +56,12 @@ describe("elevaCallLabels", () => {
     expect(labels.youNamed("Rodrigo")).toBe("Rodrigo (you)")
     expect(labels.screenShareOf("Ana")).toBe("Ana's screen")
   })
+
+  it("passes the room close time into the overtime copy", () => {
+    const labels = elevaCallLabels((key, values) => {
+      if (key === "overtimeBody") return `closes at ${String(values?.closesAt)}`
+      return key
+    })
+    expect(labels.overtimeBody("11:30")).toBe("closes at 11:30")
+  })
 })

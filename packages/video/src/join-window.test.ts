@@ -4,6 +4,7 @@ import {
   JOIN_TRAIL_MS,
   isJoinCtaEnabled,
   isJoinWindowOpen,
+  isOvertime,
 } from "./join-window"
 
 const START = new Date("2026-10-08T12:00:00.000Z")
@@ -46,5 +47,18 @@ describe("isJoinCtaEnabled", () => {
         now: new Date(START.getTime() - JOIN_LEAD_MS - 1),
       })
     ).toBe(false)
+  })
+})
+
+describe("isOvertime", () => {
+  it("flips at the booked end, not at room close", () => {
+    const end = END.toISOString()
+    expect(isOvertime(end, END.getTime() - 1)).toBe(false)
+    expect(isOvertime(end, END.getTime())).toBe(true)
+    expect(isOvertime(end, END.getTime() + JOIN_TRAIL_MS)).toBe(true)
+  })
+
+  it("never shows for an unparseable end", () => {
+    expect(isOvertime("not-a-date", Date.now())).toBe(false)
   })
 })

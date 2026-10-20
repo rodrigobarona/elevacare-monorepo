@@ -15,6 +15,12 @@ export function isJoinWindowOpen(
   )
 }
 
+/** Past the booked end; the call may continue until the token expires. */
+export function isOvertime(endsAt: string, now: number): boolean {
+  const end = Date.parse(endsAt)
+  return Number.isFinite(end) && now >= end
+}
+
 export function isJoinCtaEnabled(input: {
   sessionMode: string
   status: string

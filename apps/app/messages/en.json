@@ -71,6 +71,8 @@
       "leave": "Leave",
       "leftTitle": "You left the session",
       "leftBody": "Thanks for joining. You can close this page.",
+      "overtimeTitle": "Booked time is over",
+      "overtimeBody": "You can keep going — the room closes at {closesAt}.",
       "back": "Back to session",
       "errorTitle": "Could not join",
       "retry": "Try again",
