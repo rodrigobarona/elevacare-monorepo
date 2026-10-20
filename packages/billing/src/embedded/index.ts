@@ -20,3 +20,7 @@ export {
 export { elevaConnectAppearance } from "./appearance"
 export type { ElevaConnectAppearance } from "./appearance"
 export { initElevaEmbeddedCheckout, type EmbeddedCheckout } from "./checkout"
+export {
+  verifyElevaIdentity,
+  type IdentityVerificationResult,
+} from "./identity"

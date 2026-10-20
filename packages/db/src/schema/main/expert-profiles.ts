@@ -49,8 +49,10 @@ const tsvector = customType<{ data: string }>({
  * Lifecycle states (see ADR-013 + identity-rbac-spec.md):
  *   draft         -> Become-Partner application submitted, not approved yet
  *   approved      -> admin approved; expert may begin Connect onboarding
- *   active        -> Connect + Identity + invoicing all green; appears
- *                    in marketplace
+ *   active        -> onboarding finished (practice + invoicing, plus
+ *                    identity when `ff.expert_identity_verification` is on);
+ *                    appears in marketplace. Paid offers still need Connect
+ *                    at publish.
  *   suspended     -> admin pause (e.g., compliance issue)
  */
 

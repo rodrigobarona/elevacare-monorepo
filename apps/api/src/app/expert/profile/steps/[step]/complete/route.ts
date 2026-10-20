@@ -11,6 +11,7 @@ import {
   main,
   updateExpertProfile,
 } from "@eleva/db"
+import { getFlag } from "@eleva/flags"
 import { eq } from "drizzle-orm"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -134,6 +135,28 @@ export async function POST(
     )
   }
 
+  if (
+    step === "schedule" &&
+    (await getFlag("ff.expert_identity_verification"))
+  ) {
+    const identityOk =
+      profile.stripeIdentityStatus === "verified" ||
+      profile.stripeIdentityStatus === "processing"
+    if (!identityOk) {
+      return secureJson(
+        {
+          error: "IDENTITY_REQUIRED",
+          message: "Start identity verification before finishing onboarding",
+        },
+        { status: 409, headers }
+      )
+    }
+  }
+
+  // Finishing the last step takes a self-service expert out of onboarding.
+  // Draft (application pending) and suspended profiles keep their status.
+  const activate = step === "schedule" && profile.status === "approved"
+
   await withAudit(
     { orgId: profile.orgId, actorUserId: session.user.id },
     async (tx, ctx) => {
@@ -162,6 +185,7 @@ export async function POST(
         profile.orgId,
         {
           metadata: { ...currentMeta, completedSteps: steps },
+          ...(activate ? { status: "active" as const } : {}),
         },
         tx
       )
@@ -169,7 +193,11 @@ export async function POST(
         entity: "expert_profile",
         action: "updated",
         entityId: profile.id,
-        payload: { step, completedSteps: steps },
+        payload: {
+          step,
+          completedSteps: steps,
+          ...(activate ? { status: "active" } : {}),
+        },
       })
     }
   )

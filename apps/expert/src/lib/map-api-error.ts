@@ -19,6 +19,12 @@ export function mapExpertApiError(
     if (err.body.error === "PRACTICE_INCOMPLETE") {
       return "practice-incomplete"
     }
+    if (err.body.error === "invoicing_required") {
+      return "invoicing-required"
+    }
+    if (err.body.error === "IDENTITY_REQUIRED") {
+      return "identity-required"
+    }
     if (err.status === 409 || err.body.error === "conflict") {
       if (err.body.error === "CONNECT_INCOMPLETE") {
         return codes?.connectIncomplete ?? "connect-incomplete"

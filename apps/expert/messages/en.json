@@ -692,15 +692,15 @@
     }
   },
   "onboarding": {
-    "title": "Expert onboarding",
-    "description": "Complete all steps to activate your expert profile.",
+    "title": "Set up your practice",
+    "description": "A few short steps and you're ready to welcome members.",
     "steps": {
-      "profile": "Profile & Fiscal Info",
-      "practice": "Practice",
-      "connect": "Payments",
-      "identity": "Identity Verification",
-      "invoicing": "Invoicing Setup",
-      "schedule": "First Event Type"
+      "profile": "Your details",
+      "practice": "Where you practise",
+      "connect": "Payouts",
+      "identity": "Identity check",
+      "invoicing": "Invoicing",
+      "schedule": "Finish setup"
     },
     "practice": {
       "intro": "Tell us where you are licensed to work and which languages you use with members. This shapes what you can offer publicly.",
@@ -801,7 +801,59 @@
       "nav": "Onboarding steps",
       "step": "Step {number}: {label}",
       "stepDone": "Step {number}: {label} (complete)",
-      "next": "Next step"
+      "next": "Next step",
+      "stepOf": "Step {number} of {total}"
+    },
+    "eyebrow": "Expert setup",
+    "stepHints": {
+      "profile": "Tax number and how you meet members.",
+      "practice": "Country, languages and where you see members.",
+      "connect": "Where your earnings are paid. You can finish this later.",
+      "identity": "A quick, secure ID check with Stripe.",
+      "invoicing": "How invoices are issued for your sessions.",
+      "schedule": "Review what happens next and open your practice."
+    },
+    "profileStep": {
+      "nif": "Tax number (NIF)",
+      "nifHint": "Used on your invoices. You can add it later.",
+      "modes": "How do you meet members?",
+      "modesHint": "Pick all that apply. Online is used if you leave this empty.",
+      "modeOnline": "Online",
+      "modeInPerson": "In person",
+      "modePhone": "Phone",
+      "submit": "Save and continue",
+      "saving": "Saving…"
+    },
+    "identityStep": {
+      "intro": "We verify every expert's identity before members can book. Stripe handles it securely on this page.",
+      "start": "Start identity check",
+      "starting": "Opening…",
+      "verified": "Verified",
+      "verifiedBody": "Your identity is verified.",
+      "processing": "In review",
+      "processingBody": "Stripe is reviewing your check. This usually takes a few minutes.",
+      "continue": "Continue",
+      "later": "Continue for now"
+    },
+    "finish": {
+      "title": "You're ready to open your practice",
+      "body": "Finishing setup opens your dashboard, where you can:",
+      "items": [
+        "Create your first service and set its price",
+        "Set the weekly hours members can book",
+        "Connect Google or Microsoft calendars to avoid double bookings",
+        "Polish your public profile with a photo and bio"
+      ],
+      "submit": "Finish setup",
+      "finishing": "Opening your practice…"
+    },
+    "errors": {
+      "validation": "Check the form and try again.",
+      "save-failed": "We couldn't save that. Please try again.",
+      "practice-incomplete": "Finish the practice step first.",
+      "invoicing-required": "Choose how invoices are issued first.",
+      "identity-required": "Start the identity check first.",
+      "invalid-step": "Something went wrong. Refresh and try again."
     }
   },
   "publicProfile": {
