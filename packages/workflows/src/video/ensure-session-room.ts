@@ -6,6 +6,7 @@ import {
   isNotNull,
   isNull,
   lte,
+  ne,
   notInArray,
   or,
   sql,
@@ -465,12 +466,30 @@ export async function deleteSessionRoom(
   }
 
   if (session.status !== "cancelled") {
-    await withPlatformAdminContext(async (tx) => {
-      await tx
-        .update(main.sessions)
-        .set({ status: "cancelled" })
-        .where(eq(main.sessions.bookingId, bookingId))
-    })
+    await withPlatformAudit(
+      { orgId: session.orgId, actorUserId: null },
+      async (tx, ctx) => {
+        const updated = await tx
+          .update(main.sessions)
+          .set({ status: "cancelled" })
+          .where(
+            and(
+              eq(main.sessions.bookingId, bookingId),
+              ne(main.sessions.status, "cancelled")
+            )
+          )
+          .returning({ id: main.sessions.id })
+        await ctx.emit({
+          entity: "session",
+          action: "canceled",
+          entityId: bookingId,
+          payload:
+            updated.length > 0
+              ? { reason: "booking_cancelled" }
+              : { skipped: true, reason: "status_race" },
+        })
+      }
+    )
   }
 
   if (!session.dailyRoomName) return

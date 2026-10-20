@@ -32,6 +32,26 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-20: Operational audit exemptions and null-org deliveries (proposed)
+
+- Decision (engineering, AUD-037):
+  - Room-create leases, capacity retry flags, notification claim/lease
+    rows, webhook receipts and in-app inbox rows skip `withAudit`. They are
+    retry and concurrency state; the business transition each supports is
+    audited. The list lives in `packages/audit/README.md` (Operational
+    Exemptions).
+  - Notification deliveries and e-mail suppressions with `org_id` NULL
+    (password reset, e-mail verification, guest booking mail) are **not
+    audited today** because `audit_outbox.org_id` is NOT NULL. This is an
+    open gap, not an accepted exemption: auth e-mail is security-relevant.
+  - `audit_outbox.org_id` stays NOT NULL. The proposed direction is a
+    platform-org outbox (a reserved platform organization id, or a separate
+    platform outbox table) so user-scoped events can be audited.
+- Owner: engineering. Status: `proposed`.
+- Next review: Phase 13 compliance hardening, before launch.
+- Related: AUD-037 in `docs/eleva-v3/audits/2026-10-phases-01-10-audit.md`,
+  `packages/notifications/src/handle-resend-webhook.ts`.
+
 ### 2026-10-20: Record templates ship as plain text (proposed)
 
 - Decision (engineering, Phase 10.1f):

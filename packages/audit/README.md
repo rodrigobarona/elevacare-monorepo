@@ -251,6 +251,24 @@ curl -X POST https://<api-domain>/workflows/audit-outbox-drainer \
 - **DO NOT** include: passwords, full email addresses, health data payloads, tokens
 - **Prefer** structured diffs: `{ before: { name: "Old" }, after: { name: "New" } }`
 
+## Operational Exemptions
+
+These writes skip `withAudit` on purpose. They are coordination state for
+retries and concurrency, not business changes; the business transition each
+one supports is audited where it happens.
+
+| Write                                                                                                                       | Where                                         | Audited transition                                                                                                                                                           |
+| --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Daily room-create lease (`room_create_lease_until`, `room_create_attempt_at`, `room_attempt_seq`), session start/end resync | `@eleva/workflows` `ensure-session-room.ts`   | `session.room_created`, `session.room_unresolved`, `session.room_deleted`                                                                                                    |
+| Room capacity retry flag (`sessions.capacity_pending_at`)                                                                   | `@eleva/workflows` `video/participants.ts`    | `session.participant_added` / `participant_removed` / `ejected`                                                                                                              |
+| Notification delivery claim, lease, attempt and provider-id rows                                                            | `@eleva/notifications` `claim-delivery.ts`    | `notification.sent` / `failed` / `suppressed` when the delivery finishes                                                                                                     |
+| Resend webhook receipt rows (`notification_webhook_receipts`)                                                               | `@eleva/notifications` `claim-delivery.ts`    | Same transaction as the `notification.*` event it deduplicates                                                                                                               |
+| In-app inbox row (`notifications`)                                                                                          | `@eleva/notifications` `send-notification.ts` | The inbox row is the delivery; the delivery outcome emits `notification.*`                                                                                                   |
+| Deliveries and suppressions with `org_id` NULL (auth and guest e-mail)                                                      | `@eleva/notifications`                        | **Open gap, not an exemption**: unaudited because `audit_outbox.org_id` is NOT NULL. Covers password-reset and verification mail; see the decision log (platform-org outbox) |
+
+Anything not on this list that writes tenant data must go through `withAudit`
+or `withPlatformAudit`.
+
 ## Troubleshooting
 
 | Symptom                                   | Cause                                                   | Fix                                                     |

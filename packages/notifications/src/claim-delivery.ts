@@ -353,18 +353,6 @@ export async function completeEmailFromWebhookInTx(
   return Boolean(updated[0])
 }
 
-export async function completeEmailFromWebhook(input: {
-  id: string
-  providerId: string
-  status: Extract<DeliveryStatus, "delivered" | "bounced" | "complained">
-  error?: string | null
-  now: Date
-}): Promise<boolean> {
-  return withPlatformAdminContext(async (tx) =>
-    completeEmailFromWebhookInTx(tx, input)
-  )
-}
-
 export type EmailSuppressionReason = "hard_bounce" | "complaint"
 
 /** False when this provider message id was already applied. */
@@ -431,15 +419,6 @@ export async function upsertEmailSuppressionInTx(
     created: false,
     reason: updated?.reason ?? input.reason,
   }
-}
-
-export async function upsertEmailSuppression(input: {
-  email: string
-  reason: EmailSuppressionReason
-}): Promise<{ id: string; created: boolean; reason: EmailSuppressionReason }> {
-  return withPlatformAdminContext(async (tx) =>
-    upsertEmailSuppressionInTx(tx, input)
-  )
 }
 
 export async function recordProviderId(input: {
