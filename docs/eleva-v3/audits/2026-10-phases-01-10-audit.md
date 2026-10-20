@@ -143,7 +143,7 @@ AUD-022 stays product backlog.
 8. **10.2b** `draftSessionReport` behind `ff.ai_reports_beta` (AUD-032)
 9. **10.2c** CRM
 
-AUD-031 is a D-11 decision, not a slice: resolve it before 10.1c exposes reports.
+AUD-031 was resolved on 2026-10-20 by narrowing record reads to the author (migration 0061). Session documents keep the booking-expert read because members upload them.
 
 ## Fix pack
 
