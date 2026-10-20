@@ -240,25 +240,27 @@ fiscal software (Tier 2: TOConline, Moloni, or manual export).</p>
 </tr>
 </tbody></table>
 <h2 id="readme--3-current-state-why-phases-are-ordered-this-way"><a class="anchor" href="#readme--3-current-state-why-phases-are-ordered-this-way" aria-label="Link to section">#</a>3. Current state (why phases are ordered this way)</h2>
-<p>The monorepo is roughly 40% built and WorkOS-locked. Keep: <code>apps/api</code> (~35 routes, OpenAPI,
-Stripe webhook state machine, rate limit, BotID), <code>packages/db</code> (22 main migrations, RLS via
-<code>eleva.org_id</code>, <code>withOrgContext</code>), <code>@eleva/audit</code>, <code>@eleva/billing</code>, <code>@eleva/scheduling</code>
-(<code>reserveSlot</code>), <code>@eleva/calendar</code>, <code>@eleva/accounting</code> registry, <code>@eleva/flags</code>, <code>@eleva/storage</code>,
-<code>@eleva/observability</code>, <code>apps/expert</code>, <code>apps/account</code>. Thin or stub: <code>apps/app</code>, <code>apps/team</code>,
-<code>apps/academy</code>, <code>apps/admin</code>, <code>apps/docs</code>, <code>apps/email</code>, packages <code>ai</code>, <code>crm</code>, <code>notifications</code>,
-<code>compliance</code>, <code>academy</code>. Missing: Daily code, PostHog code, Playwright, public booking funnel,
-audit DB migrations folder.</p>
-<p>WorkOS blast radius that Phases 2-3 remove: <code>packages/auth/*</code>, <code>packages/encryption</code> (Vault),
-<code>packages/calendar/src/credential-manager.ts</code> (Pipes), <code>packages/billing/src/server/provisioning.ts</code>
-(seat meter), <code>packages/workflows/.../calendar-event-sync.ts</code>, <code>packages/dashboard/workos-widgets-*</code>
-and <code>switch-org-action.ts</code>, <code>apps/account/src/app/(auth)/*</code>, <code>apps/api/src/app/workos/sync</code>,
-<code>infra/workos/*</code>, DB columns <code>users.workos_user_id</code>, <code>organizations.workos_org_id</code>,
-<code>memberships.workos_role</code>, <code>billing_customers.workos_org_id</code>, <code>expert_integrations.workos_user_id</code>,
-bearer bridge headers <code>x-eleva-workos-*</code>, <code>.cursor/rules/workos-*.mdc</code>, <code>.cursor/skills/workos-rbac-widgets</code>,
-<code>docs/eleva-v3/identity-rbac-spec.md</code>, <code>workos-multi-app.md</code>, ADR-004, ADR-015.</p>
-<p>v3 is <strong>not live</strong> until Phase 15. <code>main</code> may be temporarily inconsistent between Phase 2 and
-Phase 3 (Better Auth landed, WorkOS not yet deleted) — this is accepted because no production
-traffic depends on v3 before cutover.</p>
+<p>Refreshed 2026-10-19 from <a href="#2026-10-phases-01-10-audit"><code>audits/2026-10-phases-01-10-audit.md</code></a>.</p>
+<p>Identity is Better Auth (ADR-017); WorkOS is fully removed. Phases 01–08 are engineering-on-main,
+Phase 09 video is on main with its staging exit gate unproven, and Phase 10 is open (about 40% of
+PR 10.1).</p>
+<ul>
+<li><code>apps/api</code>: ~130 route handlers, every one with a <code>ROUTE_POLICY</code>; OpenAPI at <code>GET /openapi.json</code>
+with a coverage test. Stripe (platform + Connect), Resend, Daily and QStash webhooks/workflows.</li>
+<li><code>packages/db</code>: 59 main migrations plus the audit project migrations; RLS via <code>eleva.org_id</code>
+and the 7-class taxonomy.</li>
+<li>Domain packages with real code: <code>auth</code>, <code>audit</code>, <code>billing</code>, <code>scheduling</code>, <code>calendar</code>,
+<code>accounting</code> (closed-gate TOConline), <code>notifications</code>, <code>compliance</code>, <code>video</code> (Daily, standard,
+<strong>not HIPAA</strong>), <code>records</code> (encrypted session records), <code>encryption</code>, <code>storage</code>, <code>media</code>,
+<code>editor</code>, <code>flags</code>, <code>observability</code>, <code>ui</code>, <code>icons</code>, <code>dashboard</code>, <code>email</code>, <code>api-client</code>.</li>
+<li>Stubs: <code>crm</code>, <code>academy</code>.</li>
+<li>Apps: public marketing and booking (<code>apps/web</code>), member (<code>apps/app</code>), expert, account, team,
+admin, docs and email are live in code; academy and the marketing surfaces are thin.</li>
+<li>Playwright <code>e2e/</code> covers auth, booking, member, expert offer, legacy URLs and contract checks;
+live money and video flows are opt-in loopback, never Production.</li>
+</ul>
+<p>Still gated: live FT POST / Comunicação / <code>invoice.issued</code> (<code>issueInvoice()</code> closed), D-07
+(HIPAA), and the 04B human-evidence waiver. v3 is <strong>not live</strong> until Phase 15.</p>
 <h2 id="readme--4-the-phase-loop-applies-to-every-phase"><a class="anchor" href="#readme--4-the-phase-loop-applies-to-every-phase" aria-label="Link to section">#</a>4. The phase loop (applies to every phase)</h2>
 <figure class="mermaid"><figcaption>Diagram (Mermaid source — paste into any Mermaid renderer)</figcaption><pre><code>flowchart LR
   A[git checkout main and pull] --&gt; B[git checkout -b phase-NN/slug]
@@ -1154,7 +1156,7 @@ the PR URL, and anything you could not complete with the reason.</code></pre></d
 </tr>
 <tr>
 <td>Touches</td>
-<td><code>docs/eleva-v3/**</code>, <code>AGENTS.md</code>, <code>.cursor/rules/**</code>, <code>.cursor/skills/**</code>, <code>.coderabbit.yaml</code>, <code>.github/workflows/**</code>, <code>e2e/**</code>, <code>playwright.config.ts</code>, <code>packages/db/drizzle/audit/**</code>, <code>.env.example</code>, <code>turbo.json</code></td>
+<td><code>docs/eleva-v3/**</code>, <code>AGENTS.md</code>, <code>.cursor/rules/**</code>, <code>.cursor/skills/**</code>, <code>.coderabbit.yaml</code>, <code>.github/workflows/**</code>, <code>e2e/**</code>, <code>playwright.config.ts</code>, <code>packages/db/src/migrations/audit/**</code>, <code>.env.example</code>, <code>turbo.json</code></td>
 </tr>
 <tr>
 <td>Exit gate</td>
@@ -1243,7 +1245,7 @@ commit the migrations folder; document in <code>schema-and-migration-rules.md</c
 <li><code>.github/workflows/e2e.yml</code>, <code>.github/workflows/neon-branch.yml</code> (or jobs inside <code>ci.yml</code>),
 <code>scripts/check-i18n-parity.mjs</code>, <code>playwright.config.ts</code>, <code>e2e/smoke.spec.ts</code>,
 <code>@playwright/test</code> in the catalog.</li>
-<li><code>packages/db/drizzle/audit/*</code> migrations committed; <code>db:generate:audit</code> / <code>db:migrate:audit</code>
+<li><code>packages/db/src/migrations/audit/*</code> migrations committed; <code>db:generate:audit</code> / <code>db:migrate:audit</code>
 scripts.</li>
 <li><code>.env.example</code>, <code>turbo.json</code> updated.</li>
 </ol>
@@ -1260,7 +1262,7 @@ plan is excluded on purpose: its blast-radius section and Phase 3 describe the r
 neon-branch-migrate-and-rls, i18n-parity — all green.</li>
 <li><input disabled="" type="checkbox"> Neon branch is created on PR open and deleted on PR close (verify in Neon console or via
 <code>neonctl branches list</code>).</li>
-<li><input disabled="" type="checkbox"> <code>packages/db/drizzle/audit</code> exists with at least the initial migration and journal.</li>
+<li><input disabled="" type="checkbox"> <code>packages/db/src/migrations/audit</code> exists with at least the initial migration and journal.</li>
 <li><input disabled="" type="checkbox"> <code>.cursor/rules</code> contains <code>better-auth.mdc</code>, <code>daily-video.mdc</code>, <code>encryption.mdc</code> and no
 <code>workos-*.mdc</code>.</li>
 <li><input disabled="" type="checkbox"> <code>schema-and-migration-rules.md</code> lists the seven RLS policy classes with templates and
@@ -1481,7 +1483,7 @@ E. CI foundations.
      required checks list.
 
 F. Audit database migrations. Ensure packages/db has drizzle.config.audit.ts and scripts
-   db:generate:audit / db:migrate:audit; run generate and commit packages/db/drizzle/audit/**
+   db:generate:audit / db:migrate:audit; run generate and commit packages/db/src/migrations/audit/**
    (or the folder the config points to). Document in schema-and-migration-rules.md.
 
 G. .env.example and turbo.json globalEnv: add the new variables listed in B; annotate WORKOS_*
@@ -3072,7 +3074,7 @@ PR 04.2 — funnel + payment + marketing/legal:
    Refund execution itself is Phase 6 — here only record the intent
    (booking_payments.status = refund_pending) and emit audit. Also handle
    payment_intent.succeeded / payment_intent.payment_failed in packages/billing/src/server/
-   webhook.ts to confirm/fail the booking (two-file contract: also add the events to
+   webhook.ts to confirm/fail the booking (three-file contract: also add the events to
    infra/stripe/setup-webhooks.ts and re-run
    pnpm stripe:setup:webhooks -- --url &quot;https://api.dev.eleva.care/webhooks/stripe&quot; --apply
    against the staging Stripe account; production is re-run in Phase 15).
@@ -4015,7 +4017,7 @@ Report: endpoints, migrations, tests, CodeRabbit CLI counts, PR URL, deferred it
 </tr>
 <tr>
 <td>Exit gate</td>
-<td>Pay -&gt; confirm -&gt; eligible -&gt; transfer -&gt; payout observable end to end in Stripe test mode with a pilot expert; refunds (full/partial) and disputes update ledger; every Stripe event in the two-file contract (platform + Connect endpoints); expert Connect onboarding completes with Embedded Components</td>
+<td>Pay -&gt; confirm -&gt; eligible -&gt; transfer -&gt; payout observable end to end in Stripe test mode with a pilot expert; refunds (full/partial) and disputes update ledger; every Stripe event in the three-file contract (platform + Connect endpoints); expert Connect onboarding completes with Embedded Components</td>
 </tr>
 </tbody></table>
 <h2 id="06-payments-payouts--why-this-phase-exists"><a class="anchor" href="#06-payments-payouts--why-this-phase-exists" aria-label="Link to section">#</a>Why this phase exists</h2>
@@ -4176,7 +4178,7 @@ is intentional under Hobby / abuse constraints.</p>
 <td>Human Connect session proof</td>
 </tr>
 <tr>
-<td>Webhook two-file parity (platform + Connect)</td>
+<td>Webhook three-file parity (platform + Connect)</td>
 <td>Shipped + unit parity</td>
 <td>Staging endpoint apply if rotated</td>
 </tr>
@@ -4340,7 +4342,7 @@ PR 06.1 — Connect onboarding hardening:
    behind ff.expert_identity_verification (default off).
 2. Webhook: add account.updated, identity.verification_session.verified,
    identity.verification_session.requires_input, capability.updated to BOTH
-   packages/billing/src/server/webhook.ts and infra/stripe/setup-webhooks.ts (two-file contract);
+   packages/billing/src/server/webhook-events.ts, webhook.ts and infra/stripe/setup-webhooks.ts (three-file contract);
    handlers update billing_customers inside withAudit; add the parity unit test that asserts the
    dispatcher&#39;s handled event set equals WEBHOOK_EVENTS.
 3. apps/expert onboarding (append steps to the Phase 4B onboarding-steps.ts registry rendered by
@@ -4420,7 +4422,7 @@ PR 06.2 — payout engine, refunds, disputes, finance UI:
    dispute loss, then the same two-step reversal path when a transfer exists (the charge is
    already reversed by Stripe); state-machine test covers every transition in the union above
    plus reversal_pending.
-7. Webhook handlers (two-file contract, idempotent, withAudit): payment_intent.succeeded (also
+7. Webhook handlers (three-file contract, idempotent, withAudit): payment_intent.succeeded (also
    creates payout_states pending), payment_intent.processing (async_short hold extension from
    Phase 4), payment_intent.payment_failed, payment_intent.canceled, charge.refunded,
    refund.updated (failed refunds), charge.dispute.created, charge.dispute.closed,
@@ -6423,7 +6425,7 @@ exceeded by a publish -&gt; <code>409 SEAT_LIMIT_REACHED</code>.</li>
 <code>team.reports</code>); Embedded Checkout (<code>POST /billing/checkout</code> exists — extend for team plans) and
 Customer Portal (<code>POST /billing/portal</code>); <code>billing_subscriptions</code> status webhook handlers
 (<code>customer.subscription.created/updated/deleted</code>, <code>invoice.paid/payment_failed/finalized</code>) in
-the two-file contract; Tier 1b <code>issueClinicSaasInvoice</code> activated on <code>invoice.finalized</code>.</li>
+the three-file contract; Tier 1b <code>issueClinicSaasInvoice</code> activated on <code>invoice.finalized</code>.</li>
 <li><strong>Clinic dashboard</strong> (<code>apps/team/[orgSlug]</code>): overview (upcoming sessions across experts,
 revenue, seats), members (list, roles, invite, remove), schedule view (read-only across
 experts), bookings (list/filter by expert), billing (plan, seats, invoices, portal button),
@@ -6625,7 +6627,7 @@ PHASE 11 TASK — Clinic (Team) SaaS product.
    the plan cap roll back and return 409 SEAT_LIMIT_REACHED; a plain CHECK constraint cannot
    express this cross-table rule, so the lock + count IS the enforcement. Test: cap 5, four
    billable members, two idle members publish concurrently -&gt; exactly one succeeds and one gets
-   409 (with five billable members both must get 409 — test that too); the same rule drives the unit tests and the acceptance criteria. Webhooks (two-file contract): customer.subscription.created,
+   409 (with five billable members both must get 409 — test that too); the same rule drives the unit tests and the acceptance criteria. Webhooks (three-file contract): customer.subscription.created,
    customer.subscription.updated, customer.subscription.deleted, invoice.paid,
    invoice.payment_failed, invoice.finalized -&gt; billing_subscriptions + emitDomainEvent; on
    invoice.finalized call @eleva/accounting issueClinicSaasInvoice (flag

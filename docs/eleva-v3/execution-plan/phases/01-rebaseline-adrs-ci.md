@@ -1,12 +1,12 @@
 # Phase 1 — Re-baseline: ADR-017..021 + ADR-023, handbook, rules, CI foundations
 
-| Field      | Value                                                                                                                                                                                                                |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Branch     | `phase-01/rebaseline-adrs-ci`                                                                                                                                                                                        |
-| Depends on | Phase 0                                                                                                                                                                                                              |
-| Effort     | 1 week                                                                                                                                                                                                               |
-| Touches    | `docs/eleva-v3/**`, `AGENTS.md`, `.cursor/rules/**`, `.cursor/skills/**`, `.coderabbit.yaml`, `.github/workflows/**`, `e2e/**`, `playwright.config.ts`, `packages/db/drizzle/audit/**`, `.env.example`, `turbo.json` |
-| Exit gate  | Handbook has zero WorkOS-as-decision statements; ADR-017..021 + ADR-023 accepted; CI runs lint/typecheck/build/vitest/e2e-smoke/rls-isolation on a Neon branch per PR; audit DB migrations committed                 |
+| Field      | Value                                                                                                                                                                                                                       |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Branch     | `phase-01/rebaseline-adrs-ci`                                                                                                                                                                                               |
+| Depends on | Phase 0                                                                                                                                                                                                                     |
+| Effort     | 1 week                                                                                                                                                                                                                      |
+| Touches    | `docs/eleva-v3/**`, `AGENTS.md`, `.cursor/rules/**`, `.cursor/skills/**`, `.coderabbit.yaml`, `.github/workflows/**`, `e2e/**`, `playwright.config.ts`, `packages/db/src/migrations/audit/**`, `.env.example`, `turbo.json` |
+| Exit gate  | Handbook has zero WorkOS-as-decision statements; ADR-017..021 + ADR-023 accepted; CI runs lint/typecheck/build/vitest/e2e-smoke/rls-isolation on a Neon branch per PR; audit DB migrations committed                        |
 
 ## Why this phase exists
 
@@ -92,7 +92,7 @@ Out: any runtime code change (Phase 2+), deleting WorkOS packages (Phase 3).
 8. `.github/workflows/e2e.yml`, `.github/workflows/neon-branch.yml` (or jobs inside `ci.yml`),
    `scripts/check-i18n-parity.mjs`, `playwright.config.ts`, `e2e/smoke.spec.ts`,
    `@playwright/test` in the catalog.
-9. `packages/db/drizzle/audit/*` migrations committed; `db:generate:audit` / `db:migrate:audit`
+9. `packages/db/src/migrations/audit/*` migrations committed; `db:generate:audit` / `db:migrate:audit`
    scripts.
 10. `.env.example`, `turbo.json` updated.
 
@@ -108,7 +108,7 @@ Out: any runtime code change (Phase 2+), deleting WorkOS packages (Phase 3).
       neon-branch-migrate-and-rls, i18n-parity — all green.
 - [ ] Neon branch is created on PR open and deleted on PR close (verify in Neon console or via
       `neonctl branches list`).
-- [ ] `packages/db/drizzle/audit` exists with at least the initial migration and journal.
+- [ ] `packages/db/src/migrations/audit` exists with at least the initial migration and journal.
 - [ ] `.cursor/rules` contains `better-auth.mdc`, `daily-video.mdc`, `encryption.mdc` and no
       `workos-*.mdc`.
 - [ ] `schema-and-migration-rules.md` lists the seven RLS policy classes with templates and
@@ -333,7 +333,7 @@ E. CI foundations.
      required checks list.
 
 F. Audit database migrations. Ensure packages/db has drizzle.config.audit.ts and scripts
-   db:generate:audit / db:migrate:audit; run generate and commit packages/db/drizzle/audit/**
+   db:generate:audit / db:migrate:audit; run generate and commit packages/db/src/migrations/audit/**
    (or the folder the config points to). Document in schema-and-migration-rules.md.
 
 G. .env.example and turbo.json globalEnv: add the new variables listed in B; annotate WORKOS_*

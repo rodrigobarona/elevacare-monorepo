@@ -10,6 +10,12 @@ alwaysApply: false
 
 # API-First & Agentic-First Architecture
 
+All `route.ts` files live in `apps/api`. The only frontend exceptions are
+GET redirect handlers that must write cookies before redirecting (a Server
+Component cannot): `apps/account` `(auth)/dashboard` (last-active-org cookie)
+and `account/(shell)/billing/return` (entitlement refresh after Stripe
+Checkout). `pnpm check:route-guards` fails on any other frontend `route.ts`.
+
 ## Route Handlers in `apps/api`
 
 Every route handler MUST follow this pattern:

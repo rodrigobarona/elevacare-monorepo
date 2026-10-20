@@ -42,7 +42,7 @@ In:
   `team.reports`); Embedded Checkout (`POST /billing/checkout` exists — extend for team plans) and
   Customer Portal (`POST /billing/portal`); `billing_subscriptions` status webhook handlers
   (`customer.subscription.created/updated/deleted`, `invoice.paid/payment_failed/finalized`) in
-  the two-file contract; Tier 1b `issueClinicSaasInvoice` activated on `invoice.finalized`.
+  the three-file contract; Tier 1b `issueClinicSaasInvoice` activated on `invoice.finalized`.
 - **Clinic dashboard** (`apps/team/[orgSlug]`): overview (upcoming sessions across experts,
   revenue, seats), members (list, roles, invite, remove), schedule view (read-only across
   experts), bookings (list/filter by expert), billing (plan, seats, invoices, portal button),
@@ -248,7 +248,7 @@ PHASE 11 TASK — Clinic (Team) SaaS product.
    the plan cap roll back and return 409 SEAT_LIMIT_REACHED; a plain CHECK constraint cannot
    express this cross-table rule, so the lock + count IS the enforcement. Test: cap 5, four
    billable members, two idle members publish concurrently -> exactly one succeeds and one gets
-   409 (with five billable members both must get 409 — test that too); the same rule drives the unit tests and the acceptance criteria. Webhooks (two-file contract): customer.subscription.created,
+   409 (with five billable members both must get 409 — test that too); the same rule drives the unit tests and the acceptance criteria. Webhooks (three-file contract): customer.subscription.created,
    customer.subscription.updated, customer.subscription.deleted, invoice.paid,
    invoice.payment_failed, invoice.finalized -> billing_subscriptions + emitDomainEvent; on
    invoice.finalized call @eleva/accounting issueClinicSaasInvoice (flag

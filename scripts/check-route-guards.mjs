@@ -133,4 +133,31 @@ if (existsSync(authenticatedExpertsDir)) {
   process.exit(1)
 }
 
+// HTTP endpoints live in apps/api. Only GET redirect handlers that must set
+// cookies (a Server Component cannot) may live in a frontend app.
+const FRONTEND_ROUTE_EXCEPTIONS = new Set([
+  "apps/account/src/app/(auth)/dashboard/route.ts",
+  "apps/account/src/app/account/(shell)/billing/return/route.ts",
+])
+const appsDir = path.join(ROOT, "apps")
+const frontendRoutes = []
+for (const entry of await readdir(appsDir, { withFileTypes: true })) {
+  if (!entry.isDirectory() || entry.name === "api" || entry.name === "poc") {
+    continue
+  }
+  const appDir = path.join(appsDir, entry.name, "src/app")
+  if (!existsSync(appDir)) continue
+  for (const file of await walk(appDir)) {
+    const relative = path.relative(ROOT, file)
+    if (!FRONTEND_ROUTE_EXCEPTIONS.has(relative)) frontendRoutes.push(relative)
+  }
+}
+if (frontendRoutes.length > 0) {
+  console.error(
+    "Route guard check failed. Route Handlers belong in apps/api; move these or add a documented redirect-only exception:\n"
+  )
+  for (const file of frontendRoutes) console.error(`  ${file}`)
+  process.exit(1)
+}
+
 console.log(`Route guard check passed (${routes.length} routes).`)
