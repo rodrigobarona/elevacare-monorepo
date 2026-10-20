@@ -3,7 +3,7 @@
     "account": "Conta",
     "settings": "Definições",
     "billing": "Faturação",
-    "organizations": "Organizações",
+    "organizations": "Espaços de trabalho",
     "privacy": "Privacidade"
   },
   "settings": {
@@ -68,7 +68,8 @@
       "title": "Sessões",
       "description": "Reveja dispositivos e browsers onde tem sessão iniciada.",
       "footerHint": "Revogue sessões que não reconheça."
-    }
+    },
+    "eyebrow": "Conta"
   },
   "onboarding": {
     "title": "Bem-vindo à Eleva",
@@ -85,16 +86,32 @@
     "errorGeneric": "Não foi possível concluir a configuração. Tente novamente."
   },
   "organizations": {
-    "title": "Áreas de trabalho",
-    "description": "Gira as suas áreas de trabalho, crie novas ou alterne entre elas.",
-    "createWorkspace": "Criar área de trabalho"
+    "eyebrow": "Conta",
+    "title": "Espaços de trabalho",
+    "description": "O seu Space e os espaços de trabalho a que pertence. Abra um para mudar para ele.",
+    "createWorkspace": "Criar espaço de trabalho",
+    "spaceTitle": "O seu Space",
+    "spaceHint": "O seu Space pessoal para marcações e histórico de sessões.",
+    "workTitle": "Espaços de trabalho",
+    "workHint": "Espaços de especialista, equipa e academia de que é membro.",
+    "emptyTitle": "Ainda sem espaços de trabalho",
+    "emptyBody": "Crie um espaço de especialista, equipa ou academia quando estiver pronto.",
+    "current": "Atual",
+    "open": "Abrir",
+    "opening": "A abrir…",
+    "openNamed": "Abrir {name}",
+    "openFailed": "Não foi possível abrir esse espaço. Tente novamente.",
+    "role": {
+      "admin": "Administrador",
+      "member": "Membro"
+    }
   },
   "billing": {
     "title": "Faturação",
     "description": "Gerir a sua subscrição pessoal e métodos de pagamento.",
     "subscriptionTitle": "Subscrição",
     "subscriptionDescription": "Escolha um plano e gira o pagamento ou o portal de faturação.",
-    "placeholder": "Gestão de faturação em breve."
+    "eyebrow": "Conta"
   },
   "auth": {
     "loginTitle": "Olá de novo",
@@ -177,8 +194,25 @@
     ]
   },
   "privacy": {
-    "title": "Privacidade e Dados",
-    "description": "Exportar os seus dados ou eliminar a sua conta.",
-    "placeholder": "Controlos de privacidade em breve."
+    "eyebrow": "Conta",
+    "title": "Privacidade e dados",
+    "description": "Os seus consentimentos, exportação de dados e eliminação da conta.",
+    "controls": {
+      "consents": {
+        "title": "Consentimentos",
+        "body": "Veja e altere o que aceitou, incluindo marketing e tratamento de dados de saúde."
+      },
+      "export": {
+        "title": "Exportar os seus dados",
+        "body": "Peça uma cópia dos dados que a Eleva tem sobre si."
+      },
+      "deletion": {
+        "title": "Eliminar a conta",
+        "body": "Agende a eliminação com um período de espera de 14 dias. Os registos ligados a uma sessão são desidentificados e conservados pelo mínimo legal."
+      }
+    },
+    "spaceHint": "Estes controlos estão no seu Space.",
+    "noSpace": "Precisa de um Space pessoal para gerir estes controlos.",
+    "openControls": "Abrir controlos de privacidade"
   }
 }

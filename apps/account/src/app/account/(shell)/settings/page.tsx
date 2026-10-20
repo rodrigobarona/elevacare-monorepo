@@ -13,8 +13,9 @@ export default async function SettingsPage() {
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"
 
   return (
-    <>
+    <div className="mx-auto max-w-3xl space-y-8">
       <PageHeader
+        eyebrow={t("settings.eyebrow")}
         title={t("settings.title")}
         description={t("settings.pageDescription")}
       />
@@ -25,6 +26,6 @@ export default async function SettingsPage() {
         apiBaseUrl={apiBaseUrl}
         preferredLocale={preferredLocale}
       />
-    </>
+    </div>
   )
 }

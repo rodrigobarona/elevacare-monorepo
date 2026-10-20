@@ -15,8 +15,12 @@ export default async function BillingPage() {
   const stripePublishableKey = env().STRIPE_PUBLISHABLE_KEY ?? ""
 
   return (
-    <>
-      <PageHeader title={t("title")} description={t("description")} />
+    <div className="mx-auto max-w-3xl space-y-8">
+      <PageHeader
+        eyebrow={t("eyebrow")}
+        title={t("title")}
+        description={t("description")}
+      />
       <SettingsFieldset>
         <SettingsFieldsetContent>
           <SettingsFieldsetTitle>
@@ -33,6 +37,6 @@ export default async function BillingPage() {
           </div>
         </SettingsFieldsetContent>
       </SettingsFieldset>
-    </>
+    </div>
   )
 }
