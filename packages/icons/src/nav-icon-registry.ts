@@ -6,6 +6,7 @@ import type { NavIconName } from "./nav-icon-names"
  * Do not use SSR icons here; duotone styling is applied in ElevaIcon via CSS.
  */
 import {
+  AddressBookIcon,
   BookOpenIcon,
   BuildingsIcon,
   CalendarDotsIcon,
@@ -39,6 +40,7 @@ export const navIconRegistry: Record<NavIconName, Icon> = {
   WalletIcon,
   BookOpenIcon,
   ChartBarIcon,
+  AddressBookIcon,
 }
 
 export function getNavIcon(name: NavIconName): Icon {

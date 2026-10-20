@@ -9,7 +9,8 @@
     "finance": "Finanças",
     "publicProfile": "Perfil público",
     "members": "Membros",
-    "templates": "Modelos"
+    "templates": "Modelos",
+    "crm": "Relações"
   },
   "dashboard": {
     "expert": {
@@ -1126,5 +1127,55 @@
     "phiDetected": "Remova os dados do membro antes de guardar",
     "phiTitle": "Isto parece conter dados de um membro",
     "phiBody": "Os modelos não podem conter nomes, e-mails, telefones, números de identificação ou datas. Substitua as partes destacadas por um marcador ou remova-as."
+  },
+  "crm": {
+    "title": "Relações",
+    "subtitle": "Em que ponto está cada membro e o que acompanhar. O histórico de sessões vem das suas marcações.",
+    "loading": "A carregar…",
+    "loadFailed": "Não foi possível carregar as suas relações. Tente novamente.",
+    "saveFailed": "Não foi possível guardar. Tente novamente.",
+    "saved": "Guardado",
+    "leadAdded": "Contacto adicionado",
+    "followUpAdded": "Acompanhamento agendado",
+    "followUpDone": "Acompanhamento concluído",
+    "dueTitle": "Acompanhamentos",
+    "dueEmpty": "Nada para acompanhar. Agende acompanhamentos a partir de um membro abaixo.",
+    "dueOn": "Até {date}",
+    "markDone": "Concluir",
+    "filterAll": "Todos",
+    "stage": {
+      "lead": "Potencial",
+      "active": "Ativo",
+      "dormant": "Inativo",
+      "churned": "Perdido"
+    },
+    "kind": {
+      "call": "Chamada",
+      "message": "Mensagem",
+      "review": "Revisão"
+    },
+    "addLead": "Adicionar contacto",
+    "emptyTitle": "Ainda não há ninguém aqui",
+    "emptyBody": "Os membros aparecem depois de marcarem consigo. Adicione contactos de pessoas com quem está a falar.",
+    "unnamed": "Sem nome",
+    "sourceLead": "Potencial",
+    "sessionCount": "{count, plural, =0 {Sem sessões} one {# sessão} other {# sessões}}",
+    "openCount": "{count, plural, one {# por acompanhar} other {# por acompanhar}}",
+    "guestHint": "Este membro marcou como convidado, sem conta, por isso as fases e os acompanhamentos ainda não estão disponíveis.",
+    "viewSessions": "Ver sessões",
+    "stageLabel": "Fase",
+    "tagsLabel": "Etiquetas",
+    "tagsPlaceholder": "joelho, desporto",
+    "saveTags": "Guardar",
+    "followUpsTitle": "Acompanhamentos",
+    "followUpsEmpty": "Sem acompanhamentos em aberto.",
+    "dueLabel": "Data",
+    "noteLabel": "Nota (privada, encriptada)",
+    "addFollowUp": "Agendar acompanhamento",
+    "leadHint": "Alguém com quem está a falar e que ainda não marcou. O email e o telefone são encriptados.",
+    "nameLabel": "Nome",
+    "emailLabel": "Email",
+    "phoneLabel": "Telefone",
+    "saveLead": "Adicionar contacto"
   }
 }

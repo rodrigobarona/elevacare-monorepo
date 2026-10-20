@@ -9,7 +9,8 @@
     "finance": "Finanzas",
     "publicProfile": "Perfil público",
     "members": "Miembros",
-    "templates": "Plantillas"
+    "templates": "Plantillas",
+    "crm": "Relaciones"
   },
   "dashboard": {
     "expert": {
@@ -1126,5 +1127,55 @@
     "phiDetected": "Quita los datos del miembro antes de guardar",
     "phiTitle": "Esto parece contener datos de un miembro",
     "phiBody": "Las plantillas no pueden contener nombres, correos, teléfonos, números de identificación ni fechas. Sustituye las partes resaltadas por un marcador o elimínalas."
+  },
+  "crm": {
+    "title": "Relaciones",
+    "subtitle": "En qué punto está cada miembro y qué tienes que seguir. El historial de sesiones viene de tus reservas.",
+    "loading": "Cargando…",
+    "loadFailed": "No se han podido cargar tus relaciones. Inténtalo de nuevo.",
+    "saveFailed": "No se ha podido guardar. Inténtalo de nuevo.",
+    "saved": "Guardado",
+    "leadAdded": "Contacto añadido",
+    "followUpAdded": "Seguimiento programado",
+    "followUpDone": "Seguimiento hecho",
+    "dueTitle": "Seguimientos",
+    "dueEmpty": "Nada pendiente. Programa seguimientos desde un miembro de la lista.",
+    "dueOn": "Para el {date}",
+    "markDone": "Hecho",
+    "filterAll": "Todos",
+    "stage": {
+      "lead": "Potencial",
+      "active": "Activo",
+      "dormant": "Inactivo",
+      "churned": "Perdido"
+    },
+    "kind": {
+      "call": "Llamada",
+      "message": "Mensaje",
+      "review": "Revisión"
+    },
+    "addLead": "Añadir contacto",
+    "emptyTitle": "Todavía no hay nadie",
+    "emptyBody": "Los miembros aparecen cuando reservan contigo. Añade contactos de personas con las que estás hablando.",
+    "unnamed": "Sin nombre",
+    "sourceLead": "Potencial",
+    "sessionCount": "{count, plural, =0 {Sin sesiones} one {# sesión} other {# sesiones}}",
+    "openCount": "{count, plural, one {# pendiente} other {# pendientes}}",
+    "guestHint": "Este miembro reservó como invitado, sin cuenta, así que las fases y los seguimientos aún no están disponibles.",
+    "viewSessions": "Ver sesiones",
+    "stageLabel": "Fase",
+    "tagsLabel": "Etiquetas",
+    "tagsPlaceholder": "rodilla, deporte",
+    "saveTags": "Guardar",
+    "followUpsTitle": "Seguimientos",
+    "followUpsEmpty": "No hay seguimientos pendientes.",
+    "dueLabel": "Fecha",
+    "noteLabel": "Nota (privada, cifrada)",
+    "addFollowUp": "Programar seguimiento",
+    "leadHint": "Alguien con quien estás hablando y que aún no ha reservado. El email y el teléfono se cifran.",
+    "nameLabel": "Nombre",
+    "emailLabel": "Email",
+    "phoneLabel": "Teléfono",
+    "saveLead": "Añadir contacto"
   }
 }

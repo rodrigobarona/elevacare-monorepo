@@ -83,6 +83,12 @@ export default async function ExpertLayout({
             needs: "events:manage",
           },
           {
+            title: t("crm"),
+            url: `${base}/crm`,
+            icon: "AddressBookIcon",
+            needs: "events:manage",
+          },
+          {
             title: t("templates"),
             url: `${base}/templates`,
             icon: "BookOpenIcon",

@@ -9,7 +9,8 @@
     "finance": "Finance",
     "publicProfile": "Public profile",
     "members": "Members",
-    "templates": "Templates"
+    "templates": "Templates",
+    "crm": "Relationships"
   },
   "dashboard": {
     "expert": {
@@ -1126,5 +1127,55 @@
     "phiDetected": "Remove member details before saving",
     "phiTitle": "This looks like member data",
     "phiBody": "Templates can't contain names, e-mails, phone numbers, ID numbers or dates. Replace the highlighted parts with a placeholder or remove them."
+  },
+  "crm": {
+    "title": "Relationships",
+    "subtitle": "Where each member stands and what to follow up on. Session history comes from your bookings.",
+    "loading": "Loading…",
+    "loadFailed": "Couldn't load your relationships. Try again.",
+    "saveFailed": "Couldn't save. Try again.",
+    "saved": "Saved",
+    "leadAdded": "Lead added",
+    "followUpAdded": "Follow-up scheduled",
+    "followUpDone": "Follow-up done",
+    "dueTitle": "Follow-ups",
+    "dueEmpty": "Nothing to follow up on. Schedule follow-ups from a member below.",
+    "dueOn": "Due {date}",
+    "markDone": "Done",
+    "filterAll": "All",
+    "stage": {
+      "lead": "Lead",
+      "active": "Active",
+      "dormant": "Dormant",
+      "churned": "Churned"
+    },
+    "kind": {
+      "call": "Call",
+      "message": "Message",
+      "review": "Review"
+    },
+    "addLead": "Add lead",
+    "emptyTitle": "No one here yet",
+    "emptyBody": "Members appear after they book you. Add leads for people you're talking to.",
+    "unnamed": "Unnamed",
+    "sourceLead": "Lead",
+    "sessionCount": "{count, plural, =0 {No sessions} one {# session} other {# sessions}}",
+    "openCount": "{count, plural, one {# to follow up} other {# to follow up}}",
+    "guestHint": "This member booked as a guest without an account, so stages and follow-ups aren't available yet.",
+    "viewSessions": "View sessions",
+    "stageLabel": "Stage",
+    "tagsLabel": "Tags",
+    "tagsPlaceholder": "knee, sports",
+    "saveTags": "Save",
+    "followUpsTitle": "Follow-ups",
+    "followUpsEmpty": "No open follow-ups.",
+    "dueLabel": "Due date",
+    "noteLabel": "Note (private, encrypted)",
+    "addFollowUp": "Schedule follow-up",
+    "leadHint": "Someone you're talking to who hasn't booked yet. Email and phone are encrypted.",
+    "nameLabel": "Name",
+    "emailLabel": "Email",
+    "phoneLabel": "Phone",
+    "saveLead": "Add lead"
   }
 }
