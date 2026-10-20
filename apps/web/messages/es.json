@@ -14,7 +14,38 @@
     "signout": "Cerrar sesión",
     "becomeExpert": "Hazte especialista",
     "forClinics": "Para clínicas",
-    "more": "Más"
+    "menu": {
+      "open": "Abrir menú",
+      "close": "Cerrar menú",
+      "label": "Menú",
+      "care": {
+        "trigger": "Encontrar cuidado",
+        "heading": "Áreas de cuidado",
+        "browseAll": "Ver todos los especialistas",
+        "browseAllDescription": "Filtra por especialidad, idioma y forma de consulta.",
+        "featuredTitle": "¿No sabes por dónde empezar?",
+        "featuredDescription": "Cada perfil muestra credenciales, precios y condiciones de cancelación antes de reservar."
+      },
+      "professionals": {
+        "trigger": "Para profesionales",
+        "heading": "Trabaja con Eleva",
+        "becomeExpertDescription": "Gestiona tu consulta con reservas, pagos y vídeo en un solo lugar.",
+        "forClinicsDescription": "Reúne a todo tu equipo en un calendario y un flujo de pagos compartidos.",
+        "featuredTitle": "Pensada para especialistas independientes",
+        "featuredDescription": "Tú defines tu horario, tus precios y tus políticas."
+      },
+      "company": {
+        "trigger": "Empresa",
+        "heading": "Sobre Eleva",
+        "aboutDescription": "Quiénes somos y los especialistas que nos asesoran.",
+        "storyDescription": "Por qué creamos Eleva y hacia dónde vamos.",
+        "contact": "Contacto",
+        "contactDescription": "Dudas, prensa o colaboraciones.",
+        "story": "Nuestra historia",
+        "featuredTitle": "Guiada por la investigación clínica",
+        "featuredDescription": "Nuestros asesores son fisioterapeutas, médicos e investigadores en salud de la mujer."
+      }
+    }
   },
   "home": {
     "hero": {
@@ -108,17 +139,20 @@
     "headingAccent": "cuidado basado en la evidencia",
     "intro": "Estamos aquí para facilitarte encontrar la ayuda adecuada, en el momento justo. Eleva Care te conecta con especialistas con licencia mediante una plataforma segura y de confianza.",
     "stats": {
+      "eyebrow": "Eleva en resumen",
       "modes": {
-        "value": "3",
-        "label": "Formas de consulta: online, por teléfono o en persona"
+        "title": "formas de consultar con tu especialista",
+        "items": {
+          "online": "Videollamada",
+          "phone": "Teléfono",
+          "inPerson": "En persona"
+        }
       },
       "languages": {
-        "value": "3",
-        "label": "Idiomas: español, inglés y portugués"
+        "title": "idiomas, escritos de forma nativa"
       },
       "specialities": {
-        "value": "4",
-        "label": "Áreas de cuidado, del embarazo a cada etapa de la vida"
+        "title": "áreas de cuidado para empezar"
       }
     },
     "mission": {

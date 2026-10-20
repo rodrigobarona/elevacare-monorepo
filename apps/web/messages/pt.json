@@ -14,7 +14,38 @@
     "signout": "Sair",
     "becomeExpert": "Tornar-se especialista",
     "forClinics": "Para clínicas",
-    "more": "Mais"
+    "menu": {
+      "open": "Abrir menu",
+      "close": "Fechar menu",
+      "label": "Menu",
+      "care": {
+        "trigger": "Encontrar cuidados",
+        "heading": "Áreas de cuidado",
+        "browseAll": "Ver todos os especialistas",
+        "browseAllDescription": "Filtre por especialidade, língua e forma de consulta.",
+        "featuredTitle": "Não sabe por onde começar?",
+        "featuredDescription": "Cada perfil mostra credenciais, preços e condições de cancelamento antes de reservar."
+      },
+      "professionals": {
+        "trigger": "Para profissionais",
+        "heading": "Trabalhe com a Eleva",
+        "becomeExpertDescription": "Gira a sua prática com marcações, pagamentos e vídeo num só lugar.",
+        "forClinicsDescription": "Junte toda a equipa num calendário e num fluxo de pagamentos partilhados.",
+        "featuredTitle": "Feita para especialistas independentes",
+        "featuredDescription": "Você define o horário, os preços e as políticas."
+      },
+      "company": {
+        "trigger": "Empresa",
+        "heading": "Sobre a Eleva",
+        "aboutDescription": "Quem somos e os especialistas que nos aconselham.",
+        "storyDescription": "Porque criámos a Eleva e para onde vamos.",
+        "contact": "Contacto",
+        "contactDescription": "Dúvidas, imprensa ou parcerias.",
+        "story": "A nossa história",
+        "featuredTitle": "Orientada pela investigação clínica",
+        "featuredDescription": "Os nossos conselheiros são fisioterapeutas, médicos e investigadores em saúde da mulher."
+      }
+    }
   },
   "home": {
     "hero": {
@@ -108,17 +139,20 @@
     "headingAccent": "cuidado baseado em evidência",
     "intro": "Estamos aqui para tornar mais fácil encontrar a ajuda certa, no momento certo. A Eleva Care liga-a a profissionais licenciados através de uma plataforma segura e de confiança.",
     "stats": {
+      "eyebrow": "A Eleva em resumo",
       "modes": {
-        "value": "3",
-        "label": "Formas de consulta: online, por telefone ou presencial"
+        "title": "formas de consultar o seu especialista",
+        "items": {
+          "online": "Videochamada",
+          "phone": "Telefone",
+          "inPerson": "Presencial"
+        }
       },
       "languages": {
-        "value": "3",
-        "label": "Línguas: português, inglês e espanhol"
+        "title": "línguas, escritas de forma nativa"
       },
       "specialities": {
-        "value": "4",
-        "label": "Áreas de cuidado, da gravidez a todas as fases da vida"
+        "title": "áreas de cuidado para começar"
       }
     },
     "mission": {
