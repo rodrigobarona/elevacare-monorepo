@@ -79,6 +79,8 @@
       "leave": "Sair",
       "leftTitle": "Saiu da sessão",
       "leftBody": "Obrigado por participar. Pode fechar esta página.",
+      "overtimeTitle": "O tempo marcado terminou",
+      "overtimeBody": "Pode continuar — a sala fecha às {closesAt}.",
       "back": "Voltar ao calendário",
       "errorTitle": "Não foi possível entrar",
       "retry": "Tentar de novo",

@@ -80,6 +80,7 @@ export type JoinSessionResult = {
   roomUrl: string
   token: string
   expiresAt: string
+  endsAt: string
 }
 
 export type JoinSessionDeps = {
@@ -334,6 +335,7 @@ export async function joinSession(
         roomUrl: row.session.dailyRoomUrl!,
         token,
         expiresAt: new Date(exp * 1000).toISOString(),
+        endsAt: row.session.endsAt.toISOString(),
       }
     }
   )

@@ -558,6 +558,8 @@ export const JoinSessionResponseSchema = z.object({
   roomUrl: z.string().url(),
   token: z.string().min(1),
   expiresAt: z.string().datetime(),
+  /** Booked end. The room stays open past it until `expiresAt`. */
+  endsAt: z.string().datetime(),
 })
 
 export const JoinSessionErrorSchema = z.object({

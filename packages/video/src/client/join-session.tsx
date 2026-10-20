@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Button, LinkButton } from "@eleva/ui/components/button"
 import { ElevaCall, type ElevaCallRecords } from "./eleva-call"
+import type { CallWindow } from "./overtime-notice"
 import {
   joinErrorCode,
   joinErrorWindow,
@@ -11,7 +12,12 @@ import {
 } from "./labels"
 
 export type JoinSessionProps = {
-  join: () => Promise<{ roomUrl: string; token: string }>
+  join: () => Promise<{
+    roomUrl: string
+    token: string
+    endsAt?: string
+    expiresAt?: string
+  }>
   labels: ElevaCallLabels
   backHref: string
   showNotesSlot?: boolean
@@ -28,6 +34,7 @@ export function JoinSession({
   const [creds, setCreds] = useState<{
     roomUrl: string
     token: string
+    callWindow?: CallWindow
   } | null>(null)
   const [error, setError] = useState<ElevaCallErrorCode | null>(null)
   const [windowHint, setWindowHint] = useState<string | null>(null)
@@ -44,7 +51,14 @@ export function JoinSession({
     void join()
       .then((result) => {
         if (id !== reqId.current) return
-        setCreds({ roomUrl: result.roomUrl, token: result.token })
+        setCreds({
+          roomUrl: result.roomUrl,
+          token: result.token,
+          callWindow:
+            result.endsAt && result.expiresAt
+              ? { endsAt: result.endsAt, closesAt: result.expiresAt }
+              : undefined,
+        })
         setLoading(false)
       })
       .catch((err: unknown) => {
@@ -119,6 +133,7 @@ export function JoinSession({
       showNotesSlot={showNotesSlot}
       records={records}
       backHref={backHref}
+      callWindow={creds.callWindow}
       onLeft={() => setLeft(true)}
     />
   )

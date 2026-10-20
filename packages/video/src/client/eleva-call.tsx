@@ -31,6 +31,7 @@ import { Input } from "@eleva/ui/components/input"
 import { Textarea } from "@eleva/ui/components/textarea"
 import { callDisplayName, localCallDisplayName } from "./call-display-name"
 import type { ElevaCallLabels } from "./labels"
+import { OvertimeNotice, type CallWindow } from "./overtime-notice"
 import {
   EMPTY_INTERNAL_REPORT,
   serializeInternalReport,
@@ -70,6 +71,7 @@ export type ElevaCallProps = {
   showNotesSlot?: boolean
   records?: ElevaCallRecords
   backHref: string
+  callWindow?: CallWindow
 }
 
 type ChatMessage = {
@@ -94,6 +96,7 @@ export function ElevaCall({
   showNotesSlot = false,
   records,
   backHref,
+  callWindow,
 }: ElevaCallProps) {
   return (
     <DailyProvider url={roomUrl} token={token}>
@@ -103,6 +106,7 @@ export function ElevaCall({
         showNotesSlot={showNotesSlot}
         records={records}
         backHref={backHref}
+        callWindow={callWindow}
       />
     </DailyProvider>
   )
@@ -114,6 +118,7 @@ function CallShell({
   showNotesSlot,
   records,
   backHref,
+  callWindow,
 }: Omit<ElevaCallProps, "roomUrl" | "token">) {
   const daily = useDaily()
   const meetingState = useMeetingState()
@@ -484,6 +489,9 @@ function CallShell({
     <div className="flex min-h-[70vh] flex-col gap-4" data-testid="eleva-call">
       <DailyAudio />
       <p className="text-xs text-muted-foreground">{labels.notHipaa}</p>
+      {joined && callWindow ? (
+        <OvertimeNotice window={callWindow} labels={labels} />
+      ) : null}
 
       {!joined ? (
         <Prejoin
