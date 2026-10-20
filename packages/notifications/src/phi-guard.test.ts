@@ -23,10 +23,14 @@ import { sendBookingNotification } from "./send-booking-notification"
  * Subjects, SMS and in-app bodies are visible on lock screens and in inbox
  * previews (ADR-006, Phase 08 acceptance: no PHI in subjects/SMS). The
  * service name can reveal a condition and the surname identifies the
- * member, so both may only appear inside the email body.
+ * member, so both may only appear inside the email body. Calendar invites
+ * sync to shared and work calendars, so the ICS gets the same rule, and it
+ * never carries the member's phone number in any form.
  */
 const SERVICE = "SentinelConditionTherapy"
 const SURNAME = "Sentinelsurname"
+const PHONE = "+351912345678"
+const PHONE_FRAGMENTS = [PHONE, "912345678", "··· 678"]
 const STARTS_AT_DATE = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
 STARTS_AT_DATE.setUTCSeconds(0, 0)
 const STARTS_AT = STARTS_AT_DATE.toISOString()
@@ -41,9 +45,23 @@ const KINDS = [
 
 const LOCALES = ["en", "pt", "es"] as const
 
+const MODES = ["online", "phone", "in_person"] as const
+
+const CLINIC: NonNullable<LoadedBooking["location"]> = {
+  name: "Clínica Chiado",
+  address: "Rua Garrett 10",
+  line2: null,
+  postalCode: "1200-204",
+  city: "Lisboa",
+  latitude: null,
+  longitude: null,
+  instructions: { en: "Ring the second bell." },
+}
+
 function booking(
   status: LoadedBooking["status"],
-  locale: (typeof LOCALES)[number]
+  locale: (typeof LOCALES)[number],
+  mode: (typeof MODES)[number]
 ): LoadedBooking {
   return {
     id: "00000000-0000-4000-8000-000000000002",
@@ -53,7 +71,7 @@ function booking(
     startsAt: new Date(STARTS_AT),
     endsAt: new Date(STARTS_AT_DATE.getTime() + 50 * 60 * 1000),
     timezone: "Europe/Lisbon",
-    sessionMode: "online",
+    sessionMode: mode,
     bookedLocale: locale,
     memberUserId: "00000000-0000-4000-8000-000000000003",
     memberEmail: "member@example.com",
@@ -70,60 +88,82 @@ function booking(
     currency: "EUR",
     priceCents: 6000,
     guestPhone: null,
-    memberPhone: null,
+    memberPhone: PHONE,
     language: locale,
     memberCountry: "PT",
-    location: null,
+    location: mode === "in_person" ? CLINIC : null,
   }
 }
 
 describe("notification PHI guard", () => {
   for (const { kind, status } of KINDS) {
     for (const locale of LOCALES) {
-      it(`keeps ${kind} (${locale}) subjects and SMS bodies free of PHI`, async () => {
-        const send = vi.fn().mockResolvedValue({ kind, deliveries: [] })
-        await sendBookingNotification(
-          {
-            id: `evt-${kind}-${locale}`,
-            type: kind,
-            orgId: "00000000-0000-4000-8000-000000000001",
-            payload: {
-              bookingId: "00000000-0000-4000-8000-000000000002",
-              startsAt: STARTS_AT,
-              occurredAt: "2026-09-21T15:00:00.000Z",
-              previousStartsAt: new Date(
-                STARTS_AT_DATE.getTime() - 2 * 24 * 60 * 60 * 1000
-              ).toISOString(),
-              scheduleRevision: 1,
-            },
-          },
-          { loadBooking: async () => booking(status, locale), send }
-        )
-
-        expect(send).toHaveBeenCalledTimes(2)
-        for (const [input] of send.mock.calls as Array<
-          [
+      for (const mode of MODES) {
+        it(`keeps ${kind} (${locale}, ${mode}) subjects, SMS and ICS free of PHI`, async () => {
+          const send = vi.fn().mockResolvedValue({ kind, deliveries: [] })
+          await sendBookingNotification(
             {
-              ctx: {
-                subject: string
-                body: string
-                title: string
-                html: string
-              }
+              id: `evt-${kind}-${locale}`,
+              type: kind,
+              orgId: "00000000-0000-4000-8000-000000000001",
+              payload: {
+                bookingId: "00000000-0000-4000-8000-000000000002",
+                startsAt: STARTS_AT,
+                occurredAt: "2026-09-21T15:00:00.000Z",
+                previousStartsAt: new Date(
+                  STARTS_AT_DATE.getTime() - 2 * 24 * 60 * 60 * 1000
+                ).toISOString(),
+                scheduleRevision: 1,
+              },
             },
-          ]
-        >) {
-          expect(input.ctx.html).toContain(SERVICE)
-          for (const field of [
-            input.ctx.subject,
-            input.ctx.body,
-            input.ctx.title,
-          ]) {
-            expect(field).not.toContain(SERVICE)
-            expect(field).not.toContain(SURNAME)
+            { loadBooking: async () => booking(status, locale, mode), send }
+          )
+
+          expect(send).toHaveBeenCalledTimes(2)
+          for (const [input] of send.mock.calls as Array<
+            [
+              {
+                ctx: {
+                  subject: string
+                  body: string
+                  title: string
+                  html: string
+                  attachments?: Array<{ content: string }>
+                }
+              },
+            ]
+          >) {
+            expect(input.ctx.html).toContain(SERVICE)
+            for (const field of [
+              input.ctx.subject,
+              input.ctx.body,
+              input.ctx.title,
+            ]) {
+              expect(field).not.toContain(SERVICE)
+              expect(field).not.toContain(SURNAME)
+            }
+            for (const { content } of input.ctx.attachments ?? []) {
+              const ics = content.replace(/\r\n /g, "")
+              expect(ics).not.toContain(SERVICE)
+              expect(ics).not.toContain(SURNAME)
+              for (const fragment of PHONE_FRAGMENTS) {
+                expect(ics).not.toContain(fragment)
+              }
+            }
+            for (const fragment of [PHONE, "912345678"]) {
+              expect(input.ctx.subject).not.toContain(fragment)
+              expect(input.ctx.body).not.toContain(fragment)
+              expect(input.ctx.title).not.toContain(fragment)
+            }
           }
-        }
-      })
+          if (kind === "booking.confirmed" || kind === "booking.rescheduled") {
+            expect(
+              (send.mock.calls[0]?.[0] as { ctx: { attachments?: unknown[] } })
+                .ctx.attachments
+            ).toHaveLength(1)
+          }
+        })
+      }
     }
   }
 })
