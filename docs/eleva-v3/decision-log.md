@@ -32,6 +32,28 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-20: Expert setup wizard v3 and activation rule (proposed)
+
+- Decision (engineering, for founder review): `/{org}/setup` uses the v3
+  design (sticky stepper aside, one goal per step, localized en/pt/es) and its
+  last step is a summary that finishes setup instead of the old schedule form,
+  which never saved its fields. The default weekly schedule is still created
+  when that step completes and is edited later under Schedules.
+  - Activation: completing the last step moves a self-service profile from
+    `approved` to `active` (listed in the marketplace). Before this change
+    nothing set `active`, so experts stayed in setup forever.
+  - The last step requires practice and invoicing as before, plus a verified
+    or processing Stripe Identity check when `ff.expert_identity_verification`
+    is on (`409 IDENTITY_REQUIRED`). Paid offers still need Connect at publish.
+  - Stripe Identity loads through `@eleva/billing/embedded`
+    (`verifyElevaIdentity`), not a direct `@stripe/stripe-js` import.
+- Out of scope: an admin review gate before `active`, and a settings page to
+  change invoicing after setup (next slice).
+- Owner: engineering. Status: `proposed`.
+- Next review: 2026-10-27 (founder sign-off on the approved-to-active rule).
+- Related: `apps/api/src/app/expert/profile/steps/[step]/complete/route.ts`,
+  `apps/expert/src/app/[orgSlug]/setup/`.
+
 ### 2026-10-20: Identifier-first sign-in and sign-up (accepted)
 
 - Decision (founder feedback): `/login` and `/signup` ask for one thing at a

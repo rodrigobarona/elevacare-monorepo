@@ -54,7 +54,6 @@ const ADAPTERS = [
 interface Props {
   profile: OnboardingProfile
   onDone: () => void
-  workspaceBase: string
   invoicingError?: string
   toconlineEnabled: boolean
 }

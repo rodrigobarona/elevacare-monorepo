@@ -692,15 +692,15 @@
     }
   },
   "onboarding": {
-    "title": "Onboarding de especialista",
-    "description": "Complete todos os passos para ativar o seu perfil de especialista.",
+    "title": "Configure a sua prática",
+    "description": "Alguns passos rápidos e fica pronto para receber membros.",
     "steps": {
-      "profile": "Perfil e dados fiscais",
-      "practice": "Prática",
-      "connect": "Pagamentos",
+      "profile": "Os seus dados",
+      "practice": "Onde exerce",
+      "connect": "Recebimentos",
       "identity": "Verificação de identidade",
       "invoicing": "Faturação",
-      "schedule": "Primeiro tipo de evento"
+      "schedule": "Concluir"
     },
     "practice": {
       "intro": "Indique onde está autorizado a trabalhar e que línguas usa com os membros. Isto define o que pode oferecer publicamente.",
@@ -801,7 +801,59 @@
       "nav": "Passos da configuração",
       "step": "Passo {number}: {label}",
       "stepDone": "Passo {number}: {label} (concluído)",
-      "next": "Passo seguinte"
+      "next": "Passo seguinte",
+      "stepOf": "Passo {number} de {total}"
+    },
+    "eyebrow": "Configuração de especialista",
+    "stepHints": {
+      "profile": "NIF e como atende os membros.",
+      "practice": "País, idiomas e onde atende.",
+      "connect": "Onde recebe os seus ganhos. Pode concluir mais tarde.",
+      "identity": "Uma verificação rápida e segura com a Stripe.",
+      "invoicing": "Como são emitidas as faturas das suas sessões.",
+      "schedule": "Veja o que vem a seguir e abra a sua prática."
+    },
+    "profileStep": {
+      "nif": "Número de contribuinte (NIF)",
+      "nifHint": "Aparece nas suas faturas. Pode adicioná-lo mais tarde.",
+      "modes": "Como atende os membros?",
+      "modesHint": "Escolha todas as opções que se aplicam. Se deixar vazio, usamos online.",
+      "modeOnline": "Online",
+      "modeInPerson": "Presencial",
+      "modePhone": "Telefone",
+      "submit": "Guardar e continuar",
+      "saving": "A guardar…"
+    },
+    "identityStep": {
+      "intro": "Verificamos a identidade de todos os especialistas antes de os membros poderem marcar. A Stripe trata disso com segurança nesta página.",
+      "start": "Iniciar verificação",
+      "starting": "A abrir…",
+      "verified": "Verificado",
+      "verifiedBody": "A sua identidade está verificada.",
+      "processing": "Em análise",
+      "processingBody": "A Stripe está a analisar a verificação. Normalmente demora poucos minutos.",
+      "continue": "Continuar",
+      "later": "Continuar por agora"
+    },
+    "finish": {
+      "title": "Está pronto para abrir a sua prática",
+      "body": "Ao concluir, abre o seu painel, onde pode:",
+      "items": [
+        "Criar o seu primeiro serviço e definir o preço",
+        "Definir o horário semanal em que os membros podem marcar",
+        "Ligar calendários Google ou Microsoft para evitar marcações sobrepostas",
+        "Completar o perfil público com foto e biografia"
+      ],
+      "submit": "Concluir configuração",
+      "finishing": "A abrir a sua prática…"
+    },
+    "errors": {
+      "validation": "Verifique o formulário e tente novamente.",
+      "save-failed": "Não conseguimos guardar. Tente novamente.",
+      "practice-incomplete": "Conclua primeiro o passo da prática.",
+      "invoicing-required": "Escolha primeiro como são emitidas as faturas.",
+      "identity-required": "Inicie primeiro a verificação de identidade.",
+      "invalid-step": "Algo correu mal. Atualize a página e tente novamente."
     }
   },
   "publicProfile": {

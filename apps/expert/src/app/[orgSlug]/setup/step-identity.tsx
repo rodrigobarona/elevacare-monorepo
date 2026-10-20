@@ -1,11 +1,15 @@
 "use client"
 
 import * as React from "react"
+import { useTranslations } from "next-intl"
+import { verifyElevaIdentity } from "@eleva/billing/embedded"
+import { SealCheckIcon } from "@eleva/icons"
 import { Button } from "@eleva/ui/components/button"
 import { Alert, AlertDescription } from "@eleva/ui/components/alert"
-import { Badge } from "@eleva/ui/components/badge"
+import { StatusPill } from "@eleva/ui/components/status-pill"
 import { createApiClient } from "@eleva/api-client"
 import { markStepComplete } from "./actions"
+import { setupErrorMessage } from "./setup-errors"
 import type { OnboardingProfile } from "./onboarding-wizard"
 
 interface Props {
@@ -21,109 +25,112 @@ export function StepIdentity({
   stripePublishableKey,
   onDone,
 }: Props) {
+  const t = useTranslations("onboarding")
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
-  const isVerified = profile.stripeIdentityStatus === "verified"
-  const isProcessing = profile.stripeIdentityStatus === "processing"
+  async function complete() {
+    const result = await markStepComplete("identity")
+    if (result.ok) onDone()
+    else setError(setupErrorMessage(t, result.error))
+  }
 
-  async function handleStartVerification() {
+  async function run(task: () => Promise<void>) {
     setLoading(true)
     setError(null)
-
     try {
-      const api = createApiClient({ baseUrl: apiBaseUrl })
-      const { clientSecret } = await api.stripe.identity.createSession()
-
-      const { loadStripe } = await import("@stripe/stripe-js")
-      const stripe = await loadStripe(stripePublishableKey)
-      if (!stripe) throw new Error("Stripe failed to load")
-
-      const result = await stripe.verifyIdentity(clientSecret)
-      if (result.error) {
-        setError(result.error.message ?? "Verification failed")
-      } else {
-        const markResult = await markStepComplete("identity")
-        if (markResult.ok) onDone()
-        else setError(markResult.error)
-      }
+      await task()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error")
+      setError(
+        err instanceof Error && err.message
+          ? err.message
+          : setupErrorMessage(t, "save-failed")
+      )
     } finally {
       setLoading(false)
     }
   }
 
-  if (isVerified) {
+  async function startVerification() {
+    const api = createApiClient({ baseUrl: apiBaseUrl })
+    const { clientSecret } = await api.stripe.identity.createSession()
+    const result = await verifyElevaIdentity({
+      publishableKey: stripePublishableKey,
+      clientSecret,
+    })
+    if (!result.ok) {
+      setError(result.message ?? setupErrorMessage(t, "save-failed"))
+      return
+    }
+    await complete()
+  }
+
+  const errorAlert = error ? (
+    <Alert variant="destructive">
+      <AlertDescription>{error}</AlertDescription>
+    </Alert>
+  ) : null
+
+  if (profile.stripeIdentityStatus === "verified") {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Badge
-            variant="outline"
-            className="border-success/40 bg-success-subtle text-success"
-          >
-            Verified
-          </Badge>
-          <span className="text-sm text-muted-foreground">
-            Your identity has been verified.
-          </span>
+      <div className="flex flex-col gap-5">
+        {errorAlert}
+        <div className="flex items-center gap-3 rounded-2xl bg-teal-50 p-4 dark:bg-teal-950">
+          <SealCheckIcon
+            weight="duotone"
+            className="size-7 text-teal-700 dark:text-teal-300"
+          />
+          <div className="flex flex-col gap-0.5">
+            <StatusPill tone="positive" className="self-start">
+              {t("identityStep.verified")}
+            </StatusPill>
+            <p className="text-sm">{t("identityStep.verifiedBody")}</p>
+          </div>
         </div>
-        <Button
-          size="sm"
-          isDisabled={loading}
-          onPress={async () => {
-            setLoading(true)
-            setError(null)
-            try {
-              const r = await markStepComplete("identity")
-              if (r.ok) onDone()
-              else setError(r.error)
-            } catch (err) {
-              setError(err instanceof Error ? err.message : "Unknown error")
-            } finally {
-              setLoading(false)
-            }
-          }}
-        >
-          Continue
-        </Button>
+        <div>
+          <Button size="lg" isPending={loading} onPress={() => run(complete)}>
+            {t("identityStep.continue")}
+          </Button>
+        </div>
       </div>
     )
   }
 
-  if (isProcessing) {
+  if (profile.stripeIdentityStatus === "processing") {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Badge variant="secondary">Processing</Badge>
-          <span className="text-sm text-muted-foreground">
-            Your verification is being reviewed. This may take a few minutes.
-          </span>
+      <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-1.5 rounded-2xl bg-muted p-4">
+          <StatusPill tone="attention" className="self-start">
+            {t("identityStep.processing")}
+          </StatusPill>
+          <p className="text-sm text-muted-foreground">
+            {t("identityStep.processingBody")}
+          </p>
         </div>
-        <Button variant="outline" size="sm" onPress={onDone}>
-          Continue for now
-        </Button>
+        <div>
+          <Button variant="outline" size="lg" onPress={onDone}>
+            {t("identityStep.later")}
+          </Button>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-4">
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      <p className="text-sm text-muted-foreground">
-        We need to verify your identity as part of the onboarding process. This
-        uses Stripe Identity for a secure, inline verification — no redirects
-        needed.
+    <div className="flex flex-col gap-5">
+      {errorAlert}
+      <p className="text-sm text-pretty text-muted-foreground">
+        {t("identityStep.intro")}
       </p>
-
-      <Button onPress={handleStartVerification} isDisabled={loading}>
-        {loading ? "Loading..." : "Start identity verification"}
-      </Button>
+      <div>
+        <Button
+          size="lg"
+          isPending={loading}
+          onPress={() => run(startVerification)}
+        >
+          {loading ? t("identityStep.starting") : t("identityStep.start")}
+        </Button>
+      </div>
     </div>
   )
 }

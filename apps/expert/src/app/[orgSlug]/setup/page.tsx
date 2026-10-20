@@ -1,7 +1,5 @@
 import { redirect } from "next/navigation"
 import { env } from "@eleva/config/env"
-import { getTranslations } from "next-intl/server"
-import { PageHeader } from "@eleva/ui/components/page-header"
 import { guardSessionForOrg } from "@eleva/auth"
 import { getConnectOnboardingState } from "@eleva/billing/server"
 import { getFlag } from "@eleva/flags"
@@ -69,16 +67,11 @@ export default async function OnboardingPage({
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"
   const stripePublishableKey = env().STRIPE_PUBLISHABLE_KEY ?? ""
 
-  const t = await getTranslations("onboarding")
-
   const workspaceBase = expertWorkspaceBase(session)
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <PageHeader title={t("title")} description={t("description")} />
-
+    <div className="py-2 sm:py-6">
       <OnboardingWizard
-        orgSlug={orgSlug}
         workspaceBase={workspaceBase}
         steps={wizardSteps as unknown as string[]}
         completedSteps={completed}
