@@ -9,7 +9,15 @@ export async function rejectUnexpectedBody(
   request: Request,
   headers: Record<string, string>
 ): Promise<Response | null> {
-  const raw = (await request.text().catch(() => "")).trim()
+  let raw: string
+  try {
+    raw = (await request.text()).trim()
+  } catch {
+    return secureJson(
+      { error: "validation", message: "body could not be read" },
+      { status: 422, headers }
+    )
+  }
   if (raw === "") return null
 
   let json: unknown

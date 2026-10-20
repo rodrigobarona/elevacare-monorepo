@@ -1411,21 +1411,24 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             ...stdWithNotFound,
             "422": {
               description:
-                "OFFER_INVARIANT_VIOLATION — active modes fail publishEventType gates (handle, modes, country/language scope)",
+                "Validation error (unexpected body), or OFFER_INVARIANT_VIOLATION — active modes fail publishEventType gates (handle, modes, country/language scope)",
               content: {
                 "application/json": {
-                  schema: z.object({
-                    error: z.literal("OFFER_INVARIANT_VIOLATION"),
-                    code: z.literal("OFFER_INVARIANT_VIOLATION"),
-                    message: z.string(),
-                    violations: z.array(
-                      z.object({
-                        modeId: z.string().nullable(),
-                        code: z.string(),
-                        message: z.string(),
-                      })
-                    ),
-                  }),
+                  schema: z.union([
+                    ErrorSchema,
+                    z.object({
+                      error: z.literal("OFFER_INVARIANT_VIOLATION"),
+                      code: z.literal("OFFER_INVARIANT_VIOLATION"),
+                      message: z.string(),
+                      violations: z.array(
+                        z.object({
+                          modeId: z.string().nullable(),
+                          code: z.string(),
+                          message: z.string(),
+                        })
+                      ),
+                    }),
+                  ]),
                 },
               },
             },
