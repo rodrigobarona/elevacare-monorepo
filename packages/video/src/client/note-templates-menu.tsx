@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useTransition } from "react"
+import { useEffect, useRef, useState, useTransition } from "react"
 import { Button } from "@eleva/ui/components/button"
 import {
   DropdownMenu,
@@ -36,6 +36,11 @@ export function NoteTemplatesMenu({
   const [items, setItems] = useState<NoteTemplateSummary[]>([])
   const [status, setStatus] = useState<Status>(null)
   const [isPending, startTransition] = useTransition()
+  const noteRef = useRef(note)
+
+  useEffect(() => {
+    noteRef.current = note
+  }, [note])
 
   useEffect(() => {
     let cancelled = false
@@ -57,7 +62,8 @@ export function NoteTemplatesMenu({
     startTransition(async () => {
       try {
         const filled = await templates.apply(templateId)
-        onApplied(note.trim() ? `${note}\n\n${filled}` : filled)
+        const current = noteRef.current
+        onApplied(current.trim() ? `${current}\n\n${filled}` : filled)
       } catch {
         setStatus("applyFailed")
       }
