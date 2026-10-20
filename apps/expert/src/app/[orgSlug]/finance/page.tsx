@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server"
 import { env } from "@eleva/config/env"
 import { financeSummary, listFinanceBookings } from "@eleva/billing/server"
+import { LinkButton } from "@eleva/ui/components/button"
 import { EmptyState } from "@eleva/ui/components/empty-state"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { expertWorkspacePath } from "@/lib/workspace-paths"
@@ -23,6 +24,17 @@ export default async function FinancePage({
   const t = await getTranslations("finance")
 
   const stripeConfigured = Boolean(env().STRIPE_PUBLISHABLE_KEY)
+  const invoicingSettings = session.capabilities.includes(
+    "expert:invoicing_manage"
+  ) ? (
+    <LinkButton
+      href={expertWorkspacePath(session, "finance/invoicing")}
+      variant="outline"
+      size="sm"
+    >
+      {t("invoicing.link")}
+    </LinkButton>
+  ) : null
 
   if (!profile.stripeAccountId) {
     return (
@@ -31,6 +43,7 @@ export default async function FinancePage({
           eyebrow={t("eyebrow")}
           title={t("title")}
           description={t("description")}
+          actions={invoicingSettings}
         />
         {stripeConfigured ? (
           <FinanceConnectPrompt
@@ -60,6 +73,7 @@ export default async function FinancePage({
         eyebrow={t("eyebrow")}
         title={t("title")}
         description={t("description")}
+        actions={invoicingSettings}
       />
       <FinanceDashboard
         orgSlug={orgSlug}

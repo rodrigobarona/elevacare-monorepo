@@ -147,6 +147,7 @@ export async function saveInvoicingChoice(
     await api.expert.profile.setInvoicing(payload)
 
     revalidateExpertWorkspace(session, "setup")
+    revalidateExpertWorkspace(session, "finance/invoicing")
     return { ok: true }
   } catch (err) {
     console.error("[onboarding] saveInvoicingChoice failed", err)

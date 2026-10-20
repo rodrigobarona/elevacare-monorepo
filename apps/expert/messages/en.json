@@ -689,6 +689,48 @@
       "error": "Could not start payouts setup. Please try again.",
       "unavailableTitle": "Payouts are not available yet",
       "unavailable": "Payments are not configured on this environment. Please contact support."
+    },
+    "invoicing": {
+      "link": "Invoicing settings",
+      "eyebrow": "Finance",
+      "title": "Invoicing",
+      "description": "Choose how invoices for your sessions are issued, and change it any time.",
+      "backToFinance": "Back to finance",
+      "currentTitle": "Invoicing method",
+      "currentHint": "The provider or method Eleva records for your sessions.",
+      "connectedSince": "Connected on {date}",
+      "health": {
+        "connected": {
+          "label": "Connected",
+          "body": "Your account is linked. Automatic invoice issuance is not active yet."
+        },
+        "manual": {
+          "label": "Manual",
+          "body": "You issue a certified invoice to each member yourself, outside Eleva."
+        },
+        "attention": {
+          "label": "Needs attention",
+          "body": "The connection expired or failed. Reconnect to keep it linked."
+        }
+      },
+      "reconnect": "Reconnect",
+      "disconnect": "Disconnect",
+      "changeMethod": "Change method",
+      "confirm": {
+        "disconnectTitle": "Disconnect {provider}?",
+        "disconnectBody": "Eleva deletes the stored credentials for {provider}. Documents already in {provider} stay there. You can connect again or choose another method afterwards.",
+        "disconnectAction": "Disconnect",
+        "changeTitle": "Change invoicing method?",
+        "changeBody": "Your manual invoicing choice is cleared so you can pick another method.",
+        "changeAction": "Continue",
+        "cancel": "Cancel"
+      },
+      "connectedToast": "Invoicing provider connected.",
+      "savedToast": "Invoicing method saved.",
+      "disconnectedToast": "{provider} disconnected.",
+      "disconnectFailed": "Could not disconnect. Please try again.",
+      "reconnectFailed": "Could not start the connection. Please try again.",
+      "changedToast": "Invoicing method cleared. Pick a new one."
     }
   },
   "onboarding": {

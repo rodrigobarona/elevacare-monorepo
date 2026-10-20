@@ -689,6 +689,48 @@
       "error": "No se pudieron iniciar los pagos. Inténtalo de nuevo.",
       "unavailableTitle": "Los pagos aún no están disponibles",
       "unavailable": "Los pagos no están configurados en este entorno. Contacta con soporte."
+    },
+    "invoicing": {
+      "link": "Ajustes de facturación",
+      "eyebrow": "Finanzas",
+      "title": "Facturación",
+      "description": "Elige cómo se emiten las facturas de tus sesiones y cámbialo cuando quieras.",
+      "backToFinance": "Volver a finanzas",
+      "currentTitle": "Método de facturación",
+      "currentHint": "El proveedor o método que Eleva registra para tus sesiones.",
+      "connectedSince": "Conectado el {date}",
+      "health": {
+        "connected": {
+          "label": "Conectado",
+          "body": "Tu cuenta está vinculada. La emisión automática de facturas aún no está activa."
+        },
+        "manual": {
+          "label": "Manual",
+          "body": "Emites tú mismo una factura certificada a cada miembro, fuera de Eleva."
+        },
+        "attention": {
+          "label": "Requiere atención",
+          "body": "La conexión caducó o falló. Vuelve a conectar para mantenerla."
+        }
+      },
+      "reconnect": "Volver a conectar",
+      "disconnect": "Desconectar",
+      "changeMethod": "Cambiar de método",
+      "confirm": {
+        "disconnectTitle": "¿Desconectar {provider}?",
+        "disconnectBody": "Eleva elimina las credenciales guardadas de {provider}. Los documentos ya emitidos en {provider} se quedan allí. Puedes volver a conectar o elegir otro método después.",
+        "disconnectAction": "Desconectar",
+        "changeTitle": "¿Cambiar de método de facturación?",
+        "changeBody": "Se elimina tu elección de facturación manual para que puedas elegir otro método.",
+        "changeAction": "Continuar",
+        "cancel": "Cancelar"
+      },
+      "connectedToast": "Proveedor de facturación conectado.",
+      "savedToast": "Método de facturación guardado.",
+      "disconnectedToast": "{provider} desconectado.",
+      "disconnectFailed": "No se pudo desconectar. Inténtalo de nuevo.",
+      "reconnectFailed": "No se pudo iniciar la conexión. Inténtalo de nuevo.",
+      "changedToast": "Método de facturación eliminado. Elige uno nuevo."
     }
   },
   "onboarding": {

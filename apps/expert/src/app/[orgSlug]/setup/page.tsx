@@ -31,7 +31,18 @@ export default async function OnboardingPage({
   const profile = await resolveOrCreateExpertProfileForSession(session, orgSlug)
 
   if (!requiresExpertOnboarding(profile)) {
-    redirect(expertWorkspacePath(session))
+    const callback = new URLSearchParams()
+    if (query.invoicing_error) {
+      callback.set("invoicing_error", query.invoicing_error)
+    }
+    if (query.invoicing_connected === "true") {
+      callback.set("invoicing_connected", "true")
+    }
+    redirect(
+      callback.size > 0
+        ? `${expertWorkspacePath(session, "finance/invoicing")}?${callback}`
+        : expertWorkspacePath(session)
+    )
   }
 
   const [identityEnabled, expertInvoicingEnabled, toconlineInvoicingEnabled] =
