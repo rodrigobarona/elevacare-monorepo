@@ -32,6 +32,24 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-20: Phase 10 retention sweep + AI legal notice (active)
+
+- Decision (engineering, AUD-028 / AUD-029):
+  - `POST /workflows/retention-sweep` runs `runRetentionSweep`: unpublished
+    `ai_draft` (90d), `session_documents` (private Blob delete then row;
+    working pre-launch **7×365d**), and `notification_deliveries` (365d).
+    Blob delete failures increment `retention_sweep_attempts` (max 3) on
+    migration **0069**.
+  - Optional `ai_processing` consent links to versioned draft
+    `/legal/ai-processing` (`AI_PROCESSING_CONSENT_DOCUMENT`, same
+    `CONSENT_DOCUMENT_VERSION` as funnel consents). **Not DPO/legal
+    production text.**
+- Owner: engineering. Status: `active` (working pre-launch).
+- Next review: DPO final retention periods + legal sign-off on AI copy before
+  go-live; QStash schedule apply on staging only when operator chooses.
+- Related: `docs/eleva-v3/data-retention-export-matrix.md`,
+  `docs/eleva-v3/audits/2026-10-phases-01-10-audit.md` (AUD-028, AUD-029).
+
 ### 2026-10-20: Operational audit exemptions and null-org deliveries (proposed)
 
 - Decision (engineering, AUD-037):

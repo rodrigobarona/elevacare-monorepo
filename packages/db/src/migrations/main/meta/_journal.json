@@ -484,6 +484,13 @@
       "when": 1782500000000,
       "tag": "0068_crm_follow_up_notify_attempts",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1782600000000,
+      "tag": "0069_session_document_retention_sweep",
+      "breakpoints": true
     }
   ]
 }

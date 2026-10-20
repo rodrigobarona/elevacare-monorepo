@@ -110,6 +110,7 @@ export function BookingFunnel({
   geoCountry,
   geoTimeZone,
   consents,
+  aiProcessingConsent,
   linkToken,
   linkNote,
   specialPriceCents,
@@ -130,6 +131,7 @@ export function BookingFunnel({
   geoCountry: string
   geoTimeZone: string
   consents: FunnelConsentDoc[]
+  aiProcessingConsent: { version: string; href: string }
   linkToken?: string
   linkNote?: string | null
   specialPriceCents?: number | null
@@ -182,7 +184,7 @@ export function BookingFunnel({
   const [intakeNotes, setIntakeNotes] = useState("")
   const [granted, setGranted] = useState<Record<string, boolean>>({})
   const [aiOptIn, setAiOptIn] = useState(false)
-  const privacyHref = consents.find((doc) => doc.kind === "privacy")?.href
+  const aiProcessingHref = aiProcessingConsent?.href
   const [reservation, setReservation] = useState<Reservation | null>(null)
   const [payment, setPayment] = useState<Payment | null>(null)
   const [nowMs, setNowMs] = useState(() => Date.now())
@@ -900,13 +902,13 @@ export function BookingFunnel({
                     linkLabel={t(`details.consents.${doc.kind}.link`)}
                   />
                 ))}
-                {privacyHref ? (
+                {aiProcessingHref ? (
                   <ConsentCheckbox
                     id="ai_processing"
                     isSelected={aiOptIn}
                     onChange={setAiOptIn}
                     label={t("details.aiConsent.label")}
-                    href={privacyHref}
+                    href={aiProcessingHref}
                     linkLabel={t("details.aiConsent.link")}
                   />
                 ) : null}

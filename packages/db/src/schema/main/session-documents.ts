@@ -51,6 +51,10 @@ export const sessionDocuments = pgTable(
       .references(() => user.id, { onDelete: "restrict" }),
     createdAt: createdAt(),
     deletedAt: deletedAt(),
+    retentionLastError: text("retention_last_error"),
+    retentionSweepAttempts: integer("retention_sweep_attempts")
+      .notNull()
+      .default(0),
   },
   (t) => ({
     orgIdx: index("session_documents_org_idx").on(t.orgId),

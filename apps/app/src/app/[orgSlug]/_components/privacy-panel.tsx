@@ -58,12 +58,14 @@ interface PrivacyPanelProps {
   orgSlug: string
   consents: MemberConsent[]
   scheduledFor: string | null
+  aiProcessingNoticeHref: string
 }
 
 export function PrivacyPanel({
   orgSlug,
   consents,
   scheduledFor: initialScheduledFor,
+  aiProcessingNoticeHref,
 }: PrivacyPanelProps) {
   const t = useTranslations("privacy")
   const tc = useTranslations("common")
@@ -210,7 +212,14 @@ export function PrivacyPanel({
                     <p className="font-medium">{t(`consents.kinds.${kind}`)}</p>
                     {kind === "ai_processing" ? (
                       <p className="max-w-prose text-sm text-muted-foreground">
-                        {t("consents.aiProcessingHint")}
+                        {t("consents.aiProcessingHint")}{" "}
+                        <LinkButton
+                          href={aiProcessingNoticeHref}
+                          variant="link"
+                          className="h-auto p-0 text-sm"
+                        >
+                          {t("consents.aiProcessingNoticeLink")}
+                        </LinkButton>
                       </p>
                     ) : null}
                     <p className="text-sm text-muted-foreground">

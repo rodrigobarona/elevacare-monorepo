@@ -415,7 +415,7 @@
       "consentsIntro": "To book a health session on this digital health platform, please confirm:",
       "aiConsent": {
         "label": "Optional: allow live transcription and AI-assisted notes for this session. Your expert still writes the report; you can withdraw any time in Privacy settings. See the",
-        "link": "privacy notice"
+        "link": "AI processing notice"
       },
       "hold": "Continue to payment",
       "confirmFree": "Confirm booking",
@@ -507,6 +507,7 @@
     "terms": "Terms",
     "privacy": "Privacy",
     "healthData": "Health data",
+    "aiProcessing": "AI processing",
     "cookies": "Cookies",
     "payments": "Payments",
     "expertAgreement": "Expert agreement",
@@ -559,6 +560,18 @@
           "p3": "You can refuse this processing, but then we cannot complete a health-session booking. Account-only use of the platform does not require this consent.",
           "p4": "The version of this notice at reserve time is stored with your booking. A stale version is rejected so we never record consent against text you did not see.",
           "p5": "This is a working draft for development. Legal and the DPO will issue the production health-data notice before go-live."
+        }
+      },
+      "ai-processing": {
+        "title": "AI processing — Eleva.care",
+        "description": "Working draft notice for optional live transcription and AI-assisted session reports.",
+        "heading": "AI processing",
+        "paragraphs": {
+          "p1": "If you opt in, Eleva may process audio from your online video session to produce a live transcript for the expert who delivered that session. Transcription runs through our video provider (Daily) under a standard (non-HIPAA) configuration with cloud recording off.",
+          "p2": "The transcript and the expert's own session notes may later be sent to an AI model so the expert can draft a session report. The model is configured for zero retention: it must not keep a copy of your data for training or reuse. The expert reviews every draft before anything is shared with you.",
+          "p3": "AI-assisted report drafting is not enabled in the product yet. When it ships, it will stay behind a separate product flag and the same consent. Until then, only live transcription (when you opt in) applies.",
+          "p4": "You can turn this off in Privacy settings or skip the optional checkbox at booking. Withdrawal stops transcription from your next call and closes booking-scoped opt-ins. It does not delete transcripts or reports already stored in your encrypted session record.",
+          "p5": "This is a working draft for development (version tied to other Eleva legal notices). Legal and the DPO will replace it before go-live."
         }
       },
       "cookies": {

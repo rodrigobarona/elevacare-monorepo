@@ -4915,9 +4915,9 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       }),
       "/workflows/retention-sweep": internalWorkflow({
         operationId: "sweepRetention",
-        summary: "Purge expired clinical drafts",
+        summary: "Daily retention sweep",
         description:
-          "Deletes unpublished AI drafts untouched for 90 days. Batched; hasMore means the next run continues.",
+          "Purges unpublished AI drafts (90d), expired session documents (private Blob then row), and notification delivery logs (1y). Batched; hasMore means the next run continues.",
       }),
       "/workflows/slot-reservation-expiry": internalWorkflow({
         operationId: "expireSlotReservations",

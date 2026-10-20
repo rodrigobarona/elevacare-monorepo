@@ -282,7 +282,8 @@
         "marketing": "Mensagens de marketing",
         "ai_processing": "Ajuda de IA nos relatórios de sessão"
       },
-      "aiProcessingHint": "Permite transcrever as suas sessões de vídeo em direto para o especialista ficar com um registo escrito, e permite que o especialista prepare relatórios de sessão a partir das próprias notas com um modelo de IA que não guarda cópia dos seus dados. O especialista revê cada rascunho antes de o ver. Fica desligado até o ativar e pode retirar a qualquer momento; ao retirar, a transcrição para a partir da próxima chamada. A redação com IA ainda não está ativa."
+      "aiProcessingHint": "Permite transcrever as suas sessões de vídeo em direto para o especialista ficar com um registo escrito, e permite que o especialista prepare relatórios de sessão a partir das próprias notas com um modelo de IA que não guarda cópia dos seus dados. O especialista revê cada rascunho antes de o ver. Fica desligado até o ativar e pode retirar a qualquer momento; ao retirar, a transcrição para a partir da próxima chamada. A redação com IA ainda não está ativa.",
+      "aiProcessingNoticeLink": "Ler o aviso de tratamento por IA."
     },
     "dsar": {
       "title": "Descarregar os seus dados",

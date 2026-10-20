@@ -282,7 +282,8 @@
         "marketing": "Mensajes de marketing",
         "ai_processing": "Ayuda de IA en los informes de sesión"
       },
-      "aiProcessingHint": "Permite transcribir tus sesiones de vídeo en directo para que tu experto conserve un registro escrito, y permite que tu experto prepare informes de sesión a partir de sus propias notas con un modelo de IA que no guarda copia de tus datos. Tu experto revisa cada borrador antes de que lo veas. Está desactivado hasta que lo actives y puedes retirarlo en cualquier momento; al retirarlo, la transcripción se detiene desde tu próxima llamada. La redacción con IA aún no está activa."
+      "aiProcessingHint": "Permite transcribir tus sesiones de vídeo en directo para que tu experto conserve un registro escrito, y permite que tu experto prepare informes de sesión a partir de sus propias notas con un modelo de IA que no guarda copia de tus datos. Tu experto revisa cada borrador antes de que lo veas. Está desactivado hasta que lo actives y puedes retirarlo en cualquier momento; al retirarlo, la transcripción se detiene desde tu próxima llamada. La redacción con IA aún no está activa.",
+      "aiProcessingNoticeLink": "Leer el aviso de tratamiento por IA."
     },
     "dsar": {
       "title": "Descargar tus datos",

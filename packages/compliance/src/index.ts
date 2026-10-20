@@ -1,4 +1,6 @@
 export {
+  AI_PROCESSING_CONSENT_DOCUMENT,
+  AI_PROCESSING_DOCUMENT_SLUG,
   CONSENT_DOCUMENTS,
   CONSENT_DOCUMENT_SLUGS,
   CONSENT_DOCUMENT_VERSION,
@@ -25,12 +27,20 @@ export {
 export {
   ACCOUNT_DELETION_GRACE_DAYS,
   AI_DRAFT_RETENTION_DAYS,
+  NOTIFICATION_DELIVERY_RETENTION_DAYS,
+  SESSION_DOCUMENT_RETENTION_DAYS,
+  SESSION_DOCUMENT_RETENTION_MAX_ATTEMPTS,
   eraseMemberClinicalRecords,
   pseudonymiseBookingConsents,
+  runRetentionSweep,
   subjectPseudonymForUser,
   sweepExpiredAiDrafts,
+  sweepExpiredNotificationDeliveries,
+  sweepExpiredSessionDocuments,
   type ClinicalRecordErasureResult,
+  type NotificationDeliverySweepResult,
   type RetentionSweepResult,
+  type SessionDocumentSweepResult,
 } from "./retention"
 export {
   listDsarCollectors,

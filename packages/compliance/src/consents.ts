@@ -60,6 +60,9 @@ export const CONSENT_DOCUMENT_SLUGS = {
   health_data_processing: "health-data",
 } as const satisfies Record<FunnelConsentKind, string>
 
+/** Public legal slug for optional {@link ConsentKind} `ai_processing`. */
+export const AI_PROCESSING_DOCUMENT_SLUG = "ai-processing"
+
 export type ConsentDocument = {
   version: string
   urls: Record<"en" | "pt" | "es", string>
@@ -91,6 +94,16 @@ export const CONSENT_DOCUMENTS: Record<FunnelConsentKind, ConsentDocument> = {
   terms: documentFor("terms"),
   privacy: documentFor("privacy"),
   health_data_processing: documentFor("health_data_processing"),
+}
+
+/** Versioned notice for `ai_processing` (booking opt-in + Privacy settings). */
+export const AI_PROCESSING_CONSENT_DOCUMENT: ConsentDocument = {
+  version: CONSENT_DOCUMENT_VERSION,
+  urls: {
+    en: localeLegalUrl("en", AI_PROCESSING_DOCUMENT_SLUG),
+    pt: localeLegalUrl("pt", AI_PROCESSING_DOCUMENT_SLUG),
+    es: localeLegalUrl("es", AI_PROCESSING_DOCUMENT_SLUG),
+  },
 }
 
 export function requiredConsentVersions(
