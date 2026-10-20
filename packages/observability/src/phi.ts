@@ -10,7 +10,8 @@ import { createHash } from "node:crypto"
  *   Callers must `reveal()` explicitly when mapping into a response DTO.
  * - The PHI registry remembers every plaintext produced inside a scope
  *   (one request or one job) so free-form strings such as `Error.message`
- *   can be scrubbed even when the value is not under a known key.
+ *   can be scrubbed even when the value is not under a known key. Values
+ *   live only in that scope's memory and are dropped when it ends.
  */
 
 const DECRYPTED_MARKER = Symbol.for("eleva.decrypted")
@@ -55,7 +56,7 @@ export function isDecrypted(value: unknown): value is Decrypted<unknown> {
 const MIN_REGISTERED_LENGTH = 6
 const PREFIX_LENGTH = 64
 
-type PhiEntry = { prefix: string; digest: string }
+type PhiEntry = { value: string; prefix: string }
 
 const registry = new AsyncLocalStorage<Map<string, PhiEntry>>()
 
@@ -78,23 +79,33 @@ export function registerPhi(value: string | null | undefined): void {
   if (trimmed.length < MIN_REGISTERED_LENGTH) return
   const hash = digest(trimmed)
   if (store.has(hash)) return
-  store.set(hash, { prefix: trimmed.slice(0, PREFIX_LENGTH), digest: hash })
+  store.set(hash, { value: trimmed, prefix: trimmed.slice(0, PREFIX_LENGTH) })
 }
 
 export function registeredPhiCount(): number {
   return registry.getStore()?.size ?? 0
 }
 
-/** Replace every registered plaintext found in `value` with "[phi]". */
+/**
+ * Replace every registered plaintext found in `value` with "[phi]". If
+ * only the opening of a registered value remains (a truncated copy), the
+ * whole string is replaced because its tail cannot be located reliably.
+ */
 export function scrubRegisteredPhi(value: string): string {
   const store = registry.getStore()
   if (!store || store.size === 0) return value
   if (store.has(digest(value.trim()))) return PHI_PLACEHOLDER
+  const entries = [...store.values()].sort(
+    (a, b) => b.value.length - a.value.length
+  )
   let out = value
-  for (const entry of store.values()) {
-    if (out.includes(entry.prefix)) {
-      out = out.split(entry.prefix).join(PHI_PLACEHOLDER)
+  for (const entry of entries) {
+    if (out.includes(entry.value)) {
+      out = out.split(entry.value).join(PHI_PLACEHOLDER)
     }
+  }
+  for (const entry of entries) {
+    if (out.includes(entry.prefix)) return PHI_PLACEHOLDER
   }
   return out
 }

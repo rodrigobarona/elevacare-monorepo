@@ -25,7 +25,8 @@ Eleva grant join across two browsers and no Daily webhook subscription evidence.
 Phase 10 is roughly **40% of PR 10.1**. Encrypted session records, documents and the in-call
 autosave exist. The PHI-handling guard rails (branded decrypted type, allow-list logger), publish,
 retention, `ai_processing` consent and clinical tombstones do not exist yet. **Do not open Phase 10.2
-(AI drafts, CRM) until 10.1a–d land.**
+(AI drafts, CRM) until 10.1a–d land.** Update 2026-10-20: 10.1a (structural PHI guards) is on main;
+only its ESLint `Decrypted` response ban remains.
 
 The product UI is functional but visually thin. The public marketing site does not yet carry the
 MVP's premium patterns. Brand v3 tokens and the curated media library landed in this pass
@@ -57,7 +58,7 @@ MVP's premium patterns. Brand v3 tokens and the curated media library landed in 
 | 07 Invoicing      | Closed-gate on main | **Gated** (correct) — `issueInvoice()` closed, no `invoice.issued`                          |
 | 08 Notifications  | Lane 1 on main      | Engineering closed; Twilio IE1 unproven; mode-aware copy partial (AUD-042)                  |
 | 09 Video          | On main             | **Exit gate unproven** (staging grant join + Daily webhooks)                                |
-| 10 Records        | ~40% of 10.1        | **Open** — AUD-026–AUD-032                                                                  |
+| 10 Records        | ~50% of 10.1        | **Open** — AUD-027–AUD-032; AUD-026 mostly fixed (10.1a, 2026-10-20)                        |
 
 ## Findings register
 
@@ -132,7 +133,7 @@ AUD-022 stays product backlog.
 
 ## Phase 10 remaining slice order
 
-1. **10.1a** PHI hardening (AUD-026)
+1. **10.1a** PHI hardening (AUD-026) — landed 2026-10-20 except the ESLint `Decrypted` response ban
 2. **10.1b** `ai_processing` consent (AUD-029)
 3. **10.1c** publish + member reports (AUD-027)
 4. **10.1d** retention sweep, clinical tombstone, DSAR decrypt + signed URLs (AUD-028, AUD-030)
@@ -146,9 +147,9 @@ AUD-031 is a D-11 decision, not a slice: resolve it before 10.1c exposes reports
 
 ## Fix pack
 
-| PR      | Contents                                                                                     |
-| ------- | -------------------------------------------------------------------------------------------- |
-| this PR | This audit, AUD-033 README §3 refresh                                                        |
-| next    | AUD-034 + AUD-038 (small product fixes)                                                      |
-| then    | 10.1a PHI hardening (AUD-026)                                                                |
-| Track B | AUD-044 redesign slices (blocks → web → app → expert → account → team/academy/admin → email) |
+| PR      | Contents                                                                                      |
+| ------- | --------------------------------------------------------------------------------------------- |
+| this PR | This audit, AUD-033 README §3 refresh                                                         |
+| next    | AUD-034 + AUD-038 (small product fixes)                                                       |
+| then    | 10.1a PHI hardening (AUD-026) — landed 2026-10-20; ESLint `Decrypted` response ban still open |
+| Track B | AUD-044 redesign slices (blocks → web → app → expert → account → team/academy/admin → email)  |

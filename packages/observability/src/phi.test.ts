@@ -72,6 +72,18 @@ describe("PHI registry", () => {
     ])
   })
 
+  it("scrubs values longer than the stored prefix, whole or truncated", () => {
+    const long = `${"Member history of migraine with aura. ".repeat(3)}TAIL-MARKER`
+    withPhiScope(() => {
+      registerPhi(long)
+      const embedded = scrubRegisteredPhi(`note: ${long} end`)
+      expect(embedded).toBe("note: [phi] end")
+      const truncated = scrubRegisteredPhi(`note: ${long.slice(0, 80)}…`)
+      expect(truncated).toBe("[phi]")
+      expect(truncated).not.toContain("migraine")
+    })
+  })
+
   it("ignores values too short to match safely", () => {
     withPhiScope(() => {
       registerPhi("pain")
@@ -115,6 +127,11 @@ describe("Sentry event sanitizer", () => {
       const out = sanitizeSentryEvent(event) as Record<string, unknown>
       expectNoPhi(out)
       expect(out.newSdkField).toBeUndefined()
+      expect(
+        sanitizeSentryEvent({
+          sdkProcessingMetadata: { dsc: { trace_id: "t" } },
+        })
+      ).toEqual({ sdkProcessingMetadata: { dsc: { trace_id: "t" } } })
       expect(out.event_id).toBe("abc")
     })
   })

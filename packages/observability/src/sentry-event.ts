@@ -35,11 +35,18 @@ export const SENTRY_EVENT_KEYS = new Set<string>([
   "debug_meta",
 ])
 
+/**
+ * SDK-internal state read after beforeSend (dynamic sampling context) and
+ * stripped before the envelope is sent, so it passes through untouched.
+ */
+const SDK_INTERNAL_KEYS = new Set<string>(["sdkProcessingMetadata"])
+
 export function sanitizeSentryEvent<T extends object>(event: T): T {
-  const redacted = redactPayload(event) as Record<string, unknown>
+  const source = event as Record<string, unknown>
   const out: Record<string, unknown> = {}
-  for (const [key, value] of Object.entries(redacted)) {
-    if (SENTRY_EVENT_KEYS.has(key)) out[key] = value
+  for (const [key, value] of Object.entries(source)) {
+    if (SDK_INTERNAL_KEYS.has(key)) out[key] = value
+    else if (SENTRY_EVENT_KEYS.has(key)) out[key] = redactPayload(value)
   }
   return out as T
 }
