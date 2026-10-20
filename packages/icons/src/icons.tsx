@@ -5,6 +5,7 @@
 export type { Icon, IconProps } from "@phosphor-icons/react/lib"
 
 export {
+  AddressBookIcon,
   ArrowLeftIcon,
   ArrowRightIcon,
   ArrowSquareOutIcon,

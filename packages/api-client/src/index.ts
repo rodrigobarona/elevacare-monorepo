@@ -3542,6 +3542,50 @@ export function createApiClient(options: ApiClientOptions) {
       },
     },
 
+    crm: {
+      async listContacts(query?: { stage?: CrmLifecycleStage }) {
+        const qs = query?.stage
+          ? `?stage=${encodeURIComponent(query.stage)}`
+          : ""
+        const raw = await request<unknown>("GET", `/crm/contacts${qs}`)
+        return ListCrmContactsResponseSchema.parse(raw)
+      },
+      async createContact(data: CreateCrmContactRequest) {
+        const raw = await request<unknown>("POST", "/crm/contacts", data)
+        return CrmContactSchema.parse(raw)
+      },
+      async updateContact(id: string, data: UpdateCrmContactRequest) {
+        const raw = await request<unknown>(
+          "PATCH",
+          `/crm/contacts/${encodeURIComponent(id)}`,
+          data
+        )
+        return CrmContactSchema.parse(raw)
+      },
+      async listFollowUps(query?: {
+        status?: "open" | "done" | "all"
+        contactId?: string
+      }) {
+        const params = new URLSearchParams()
+        if (query?.status) params.set("status", query.status)
+        if (query?.contactId) params.set("contactId", query.contactId)
+        const qs = params.size ? `?${params.toString()}` : ""
+        const raw = await request<unknown>("GET", `/crm/follow-ups${qs}`)
+        return ListCrmFollowUpsResponseSchema.parse(raw)
+      },
+      async createFollowUp(data: CreateCrmFollowUpRequest) {
+        const raw = await request<unknown>("POST", "/crm/follow-ups", data)
+        return CrmFollowUpSchema.parse(raw)
+      },
+      async completeFollowUp(id: string) {
+        const raw = await request<unknown>(
+          "POST",
+          `/crm/follow-ups/${encodeURIComponent(id)}/done`
+        )
+        return CrmFollowUpSchema.parse(raw)
+      },
+    },
+
     workflows: {
       async bookingReminder(data: BookingReminderRequest) {
         const raw = await request<unknown>(
