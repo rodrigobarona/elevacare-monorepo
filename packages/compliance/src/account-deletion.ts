@@ -3,7 +3,9 @@ import { withPlatformAudit } from "@eleva/audit"
 import { auth, main, withPlatformAdminContext, type Tx } from "@eleva/db"
 import {
   ACCOUNT_DELETION_GRACE_DAYS,
+  eraseMemberClinicalRecords,
   pseudonymiseBookingConsents,
+  type ClinicalRecordErasureResult,
 } from "./retention"
 import { eraseMemberSessionDocuments } from "./session-document-lifecycle"
 
@@ -481,6 +483,7 @@ export async function sweepAccountDeletions(
         const ids = await cancelFutureBookingsInTx(tx, userId, now)
         let docsFailed = false
         let blobFailures = 0
+        let clinical: ClinicalRecordErasureResult | null = null
         if (due) {
           await tx
             .delete(main.consents)
@@ -498,6 +501,7 @@ export async function sweepAccountDeletions(
           blobFailures = docs.blobFailures
           docsFailed = blobFailures > 0
           if (!docsFailed) {
+            clinical = await eraseMemberClinicalRecords(tx, userId)
             await eraseAccountRecord(tx, userId, now)
             if (ids.length === 0) {
               const [completed] = await tx
@@ -533,6 +537,12 @@ export async function sweepAccountDeletions(
                 raceCatch: true,
                 ...(docsFailed
                   ? { sessionDocumentBlobFailures: blobFailures }
+                  : {}),
+                ...(clinical
+                  ? {
+                      clinicalRecordsDeleted: clinical.deleted,
+                      clinicalRecordsTombstoned: clinical.tombstoned,
+                    }
                   : {}),
               }
             : {

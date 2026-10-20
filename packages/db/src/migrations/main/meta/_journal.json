@@ -435,6 +435,13 @@
       "when": 1781800000000,
       "tag": "0061_records_author_only_select",
       "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1781900000000,
+      "tag": "0062_records_subject_pseudonym",
+      "breakpoints": true
     }
   ]
 }

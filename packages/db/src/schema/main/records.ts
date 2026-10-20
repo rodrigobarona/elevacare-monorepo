@@ -11,7 +11,7 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core"
-import { createdAt, orgIdColumn, pkColumn, updatedAt } from "./shared"
+import { bytea, createdAt, orgIdColumn, pkColumn, updatedAt } from "./shared"
 import { organization, user } from "../auth"
 import { bookings } from "./bookings"
 
@@ -49,6 +49,8 @@ export const records = pgTable(
     memberUserId: uuid("member_user_id").references(() => user.id, {
       onDelete: "set null",
     }),
+    /** HMAC tombstone of the deleted member (`RETENTION_PSEUDONYM_KEY`). */
+    subjectPseudonym: bytea("subject_pseudonym"),
     bookingId: uuid("booking_id").references(() => bookings.id, {
       onDelete: "cascade",
     }),

@@ -24,8 +24,13 @@ export {
 } from "./member-consents"
 export {
   ACCOUNT_DELETION_GRACE_DAYS,
+  AI_DRAFT_RETENTION_DAYS,
+  eraseMemberClinicalRecords,
   pseudonymiseBookingConsents,
   subjectPseudonymForUser,
+  sweepExpiredAiDrafts,
+  type ClinicalRecordErasureResult,
+  type RetentionSweepResult,
 } from "./retention"
 export {
   listDsarCollectors,

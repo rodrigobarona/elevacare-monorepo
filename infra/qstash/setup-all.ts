@@ -69,6 +69,19 @@ async function main() {
     { dryRun }
   )
 
+  await registerSchedule(
+    {
+      name: "Retention sweep",
+      path: "/workflows/retention-sweep",
+      cron: "0 2 * * *",
+      retries: 3,
+      requireBearer: true,
+      description:
+        "Daily 10.1d sweep: delete unpublished AI drafts untouched for 90 days",
+    },
+    { dryRun }
+  )
+
   await registerSchedule(DOMAIN_EVENTS_PUBLISHER_SCHEDULE, { dryRun })
 
   await registerSchedule(

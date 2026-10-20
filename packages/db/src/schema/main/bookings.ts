@@ -3,7 +3,6 @@ import {
   type AnyPgColumn,
   char,
   check,
-  customType,
   foreignKey,
   index,
   integer,
@@ -19,7 +18,7 @@ import {
   jsonb,
   boolean,
 } from "drizzle-orm/pg-core"
-import { createdAt, orgIdColumn, pkColumn, updatedAt } from "./shared"
+import { bytea, createdAt, orgIdColumn, pkColumn, updatedAt } from "./shared"
 import { organization, user } from "../auth"
 import { expertProfiles, sessionModeEnum } from "./expert-profiles"
 import { cancellationPolicyEnum, eventTypes } from "./event-types"
@@ -56,12 +55,6 @@ export const bookingPaymentStatusEnum = pgEnum("booking_payment_status", [
   "refunded",
   "refund_pending",
 ])
-
-const bytea = customType<{ data: Buffer; driverData: Buffer }>({
-  dataType() {
-    return "bytea"
-  },
-})
 
 export const consentSubjectKindEnum = pgEnum("consent_subject_kind", [
   "user",
