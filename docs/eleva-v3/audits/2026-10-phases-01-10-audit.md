@@ -143,7 +143,7 @@ AUD-022 stays product backlog.
 
 - Bodies are plain text with placeholders, not Plate JSON, because the notes and report editors are still plain text.
 - The Eleva starter set ships as code constants (`@eleva/records` `STARTER_RECORD_TEMPLATES`) that experts copy into their library, not as seeded rows.
-- "Start from template" in the notes and report composers and "Save as template" from a record are not wired yet. The API already accepts `sourceBookingId` for the save path; the buttons land once 10.1c (report composer) is on main.
+- The report composer has "Start from template" and "Save as template". The in-call notes panel does not have them yet. "Save as template" also refuses sentences of 40+ characters copied verbatim from that session's records, so experts save structure, not findings.
 - The scrubber checks the member's name, e-mail, phone and session date/time. Date of birth and location are not checked because bookings do not store them.
 
 AUD-031 was resolved on 2026-10-20 by narrowing record reads to the author (migration 0061). Session documents keep the booking-expert read because members upload them.

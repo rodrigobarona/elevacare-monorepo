@@ -133,7 +133,18 @@
       "saveBeforePublish": "Guarda los cambios antes de publicar.",
       "open": "Informe de la sesión",
       "saveUpdateMember": "Guardar y actualizar la copia del miembro",
-      "publishedEditHint": "Tu miembro ya ve este informe. Al guardar, se actualiza su copia."
+      "publishedEditHint": "Tu miembro ya ve este informe. Al guardar, se actualiza su copia.",
+      "templatesMenu": "Plantillas",
+      "startFrom": "Empezar con «{title}»",
+      "saveAsTemplate": "Guardar como plantilla",
+      "manageTemplates": "Gestionar plantillas",
+      "templateDefaultTitle": "Plantilla de informe de sesión",
+      "templateSaved": "Guardada en tus plantillas",
+      "templateSaveFailed": "No se pudo guardar la plantilla",
+      "templateApplyFailed": "No se pudo aplicar la plantilla",
+      "templatePhi": "Quita los datos del miembro antes de guardar como plantilla",
+      "templatePhiTitle": "Este informe contiene datos del miembro",
+      "templatePhiBody": "Una plantilla no puede contener el nombre, contacto, fechas de este miembro ni frases copiadas de esta sesión. Edita las partes resaltadas o crea la plantilla desde cero en Plantillas."
     }
   },
   "eventTypes": {

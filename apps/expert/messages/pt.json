@@ -133,7 +133,18 @@
       "saveBeforePublish": "Guarde as alterações antes de publicar.",
       "open": "Relatório da sessão",
       "saveUpdateMember": "Guardar e atualizar a cópia do membro",
-      "publishedEditHint": "O seu membro já vê este relatório. Ao guardar, a cópia dele é atualizada."
+      "publishedEditHint": "O seu membro já vê este relatório. Ao guardar, a cópia dele é atualizada.",
+      "templatesMenu": "Modelos",
+      "startFrom": "Começar por “{title}”",
+      "saveAsTemplate": "Guardar como modelo",
+      "manageTemplates": "Gerir modelos",
+      "templateDefaultTitle": "Modelo de relatório de sessão",
+      "templateSaved": "Guardado nos seus modelos",
+      "templateSaveFailed": "Não foi possível guardar o modelo",
+      "templateApplyFailed": "Não foi possível aplicar o modelo",
+      "templatePhi": "Remova os dados do membro antes de guardar como modelo",
+      "templatePhiTitle": "Este relatório contém dados do membro",
+      "templatePhiBody": "Um modelo não pode conter o nome, contactos, datas deste membro nem frases copiadas desta sessão. Edite as partes destacadas ou crie o modelo de raiz em Modelos."
     }
   },
   "eventTypes": {

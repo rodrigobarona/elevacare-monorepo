@@ -4,6 +4,7 @@ import { getExpertBookingById } from "@eleva/db"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
 import { getApiBaseUrl } from "@/lib/server-api"
+import { expertWorkspacePath } from "@/lib/workspace-paths"
 import { ReportEditor } from "./report-editor"
 
 export const dynamic = "force-dynamic"
@@ -14,7 +15,10 @@ export default async function ExpertSessionReportPage({
   params: Promise<{ orgSlug: string; bookingId: string }>
 }) {
   const { orgSlug, bookingId } = await params
-  const { profile } = await loadExpertWorkspace(orgSlug, "events:manage")
+  const { session, profile } = await loadExpertWorkspace(
+    orgSlug,
+    "events:manage"
+  )
   const [t, format, booking] = await Promise.all([
     getTranslations("sessions.report"),
     getFormatter(),
@@ -36,6 +40,7 @@ export default async function ExpertSessionReportPage({
         bookingId={bookingId}
         apiBaseUrl={getApiBaseUrl()}
         backHref={`/${orgSlug}/calendar`}
+        templatesHref={expertWorkspacePath(session, "templates")}
       />
     </div>
   )

@@ -133,7 +133,18 @@
       "saveBeforePublish": "Save your changes before publishing.",
       "open": "Session report",
       "saveUpdateMember": "Save and update member's copy",
-      "publishedEditHint": "Your member already sees this report. Saving updates their copy."
+      "publishedEditHint": "Your member already sees this report. Saving updates their copy.",
+      "templatesMenu": "Templates",
+      "startFrom": "Start from “{title}”",
+      "saveAsTemplate": "Save as template",
+      "manageTemplates": "Manage templates",
+      "templateDefaultTitle": "Session report template",
+      "templateSaved": "Saved to your templates",
+      "templateSaveFailed": "Could not save the template",
+      "templateApplyFailed": "Could not apply the template",
+      "templatePhi": "Remove member details before saving as a template",
+      "templatePhiTitle": "This report contains member details",
+      "templatePhiBody": "A template can't contain this member's name, contact details, dates or sentences copied from this session. Edit the highlighted parts, or create the template from scratch in Templates."
     }
   },
   "eventTypes": {

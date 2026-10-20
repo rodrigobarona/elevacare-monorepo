@@ -1,6 +1,6 @@
 "use client"
 
-import { Fragment, useEffect, useMemo, useState, useTransition } from "react"
+import { useEffect, useMemo, useState, useTransition } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { toast } from "sonner"
 import {
@@ -28,6 +28,7 @@ import {
 import { StatusPill } from "@eleva/ui/components/status-pill"
 import { Tabs, TabsList, TabsTrigger } from "@eleva/ui/components/tabs"
 import { Textarea } from "@eleva/ui/components/textarea"
+import { PhiHighlight } from "./phi-highlight"
 
 const KINDS: readonly RecordTemplateKind[] = [
   "note",
@@ -48,36 +49,6 @@ type Draft = {
 
 function toLocale(value: string): TemplateLocale {
   return LOCALES.find((l) => l === value) ?? "en"
-}
-
-function Highlighted({
-  text,
-  findings,
-}: {
-  text: string
-  findings: readonly TemplatePhiFinding[]
-}) {
-  const parts: React.ReactNode[] = []
-  let cursor = 0
-  for (const finding of findings) {
-    if (finding.start < cursor) continue
-    parts.push(
-      <Fragment key={`t${cursor}`}>
-        {text.slice(cursor, finding.start)}
-      </Fragment>
-    )
-    parts.push(
-      <mark
-        key={`m${finding.start}`}
-        className="rounded bg-destructive/15 px-0.5 text-destructive"
-      >
-        {text.slice(finding.start, finding.end)}
-      </mark>
-    )
-    cursor = finding.end
-  }
-  parts.push(<Fragment key="rest">{text.slice(cursor)}</Fragment>)
-  return <p className="text-sm whitespace-pre-wrap">{parts}</p>
 }
 
 export function TemplateLibrary({ apiBaseUrl }: { apiBaseUrl: string }) {
@@ -397,10 +368,10 @@ export function TemplateLibrary({ apiBaseUrl }: { apiBaseUrl: string }) {
                 <AlertDescription className="space-y-2">
                   <p>{t("phiBody")}</p>
                   {titleFindings.length > 0 ? (
-                    <Highlighted text={draft.title} findings={titleFindings} />
+                    <PhiHighlight text={draft.title} findings={titleFindings} />
                   ) : null}
                   {bodyFindings.length > 0 ? (
-                    <Highlighted text={draft.body} findings={bodyFindings} />
+                    <PhiHighlight text={draft.body} findings={bodyFindings} />
                   ) : null}
                 </AlertDescription>
               </Alert>
