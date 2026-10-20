@@ -75,8 +75,10 @@ In:
   Phase 10 RLS (authoring expert; same-clinic experts only when `organizations.clinic_shared_records`
   is on and the member has not opted out; staff never in plaintext). This phase adds the **clinic
   admin toggle** (`PATCH /teams/[id]/settings { clinicSharedRecords }`, default **off**, reason
-  required, audited `team: shared_records_enabled|disabled`, and a member-facing notice + opt-out
-  in `apps/app` privacy settings that writes `record_access_optouts`). No new RLS policy is
+  required, audited `team: shared_records_enabled|disabled`, and a member-facing notice). Member
+  opt-out (`GET`/`PUT /me/record-access-optouts` + Privacy panel writing `record_access_optouts`)
+  shipped on main **2026-10-20** (PR #250) as Phase 11 prep; clinic admin toggle stays in this
+  phase. No new RLS policy is
   written here; the Phase 10 class tests are re-run with the toggle on and off.
 - **Clinic public page** resolves through `public_handles` (owner_kind `clinic`, created in Phase 4) — this phase only inserts clinic owners into the existing table.
 - Playwright `e2e/team.spec.ts`.

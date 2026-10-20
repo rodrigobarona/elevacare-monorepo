@@ -2517,7 +2517,7 @@ capabilities.transfers = active`. Stripe Identity stays implemented behind
   by Eleva staff never in plaintext (metadata only; break-glass decrypt is a Phase 12 dual-control
   action). Phase 10 enforces author-only INSERT/UPDATE/DELETE (`created_by = eleva.user_id`) and
   author/assigned-expert SELECT; clinic_shared_read is compiled but inactive. Phase 11 only adds
-  the toggle. Unblocks: Phase 10 PR 10.1.
+  the toggle. **2026-10-20 engineering:** member per-clinic opt-out API + Privacy UI (`/me/record-access-optouts`, PR #250); clinic admin `clinic_shared_records` toggle still Phase 11.
 - Reference: [`execution-plan/phases/10-records-crm-ai.md`](./execution-plan/phases/10-records-crm-ai.md), [`execution-plan/phases/11-team-clinics.md`](./execution-plan/phases/11-team-clinics.md)
 
 ### D-12 (2026-09-07): Account deletion vs legal retention of clinical records
