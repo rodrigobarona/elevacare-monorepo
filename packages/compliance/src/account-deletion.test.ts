@@ -76,6 +76,9 @@ vi.mock("@eleva/db", () => ({
     notificationPreferences: {
       userId: "prefs.user_id",
     },
+    crmContacts: {
+      memberUserId: "crm_contacts.member_user_id",
+    },
     slotReservations: {
       id: "slots.id",
       status: "slot_reservations.status",
@@ -411,6 +414,7 @@ describe("sweepAccountDeletions", () => {
       { id: "b1", userId: "user-1", bookingId: "booking-1" },
       { id: "b2", userId: "user-1", bookingId: "booking-2" },
     ]
+    const deletedTables: unknown[] = []
     const bookingScopeBefore = consents.filter((row) => row.bookingId).length
     const ops: string[] = []
     const userSets: unknown[] = []
@@ -467,8 +471,9 @@ describe("sweepAccountDeletions", () => {
               }
             },
           }),
-          delete: () => ({
+          delete: (table: unknown) => ({
             where: async () => {
+              deletedTables.push(table)
               for (let i = consents.length - 1; i >= 0; i--) {
                 const row = consents[i]!
                 if (row.userId === "user-1" && row.bookingId == null) {
@@ -495,6 +500,9 @@ describe("sweepAccountDeletions", () => {
       new Date("2026-09-11T00:00:00.000Z")
     )
     expect(result.completed).toBe(1)
+    expect(deletedTables).toContainEqual({
+      memberUserId: "crm_contacts.member_user_id",
+    })
     expect(consents.filter((row) => row.bookingId == null)).toHaveLength(0)
     expect(consents.filter((row) => row.bookingId)).toHaveLength(
       bookingScopeBefore
