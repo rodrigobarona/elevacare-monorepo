@@ -8,7 +8,8 @@
     "integrations": "Integraciones",
     "finance": "Finanzas",
     "publicProfile": "Perfil público",
-    "members": "Miembros"
+    "members": "Miembros",
+    "templates": "Plantillas"
   },
   "dashboard": {
     "expert": {
@@ -132,7 +133,18 @@
       "saveBeforePublish": "Guarda los cambios antes de publicar.",
       "open": "Informe de la sesión",
       "saveUpdateMember": "Guardar y actualizar la copia del miembro",
-      "publishedEditHint": "Tu miembro ya ve este informe. Al guardar, se actualiza su copia."
+      "publishedEditHint": "Tu miembro ya ve este informe. Al guardar, se actualiza su copia.",
+      "templatesMenu": "Plantillas",
+      "startFrom": "Empezar con «{title}»",
+      "saveAsTemplate": "Guardar como plantilla",
+      "manageTemplates": "Gestionar plantillas",
+      "templateDefaultTitle": "Plantilla de informe de sesión",
+      "templateSaved": "Guardada en tus plantillas",
+      "templateSaveFailed": "No se pudo guardar la plantilla",
+      "templateApplyFailed": "No se pudo aplicar la plantilla",
+      "templatePhi": "Quita los datos del miembro antes de guardar como plantilla",
+      "templatePhiTitle": "Este informe contiene datos del miembro",
+      "templatePhiBody": "Una plantilla no puede contener el nombre, contacto, fechas de este miembro ni frases copiadas de esta sesión. Edita las partes resaltadas o crea la plantilla desde cero en Plantillas."
     }
   },
   "eventTypes": {
@@ -1058,5 +1070,44 @@
     "past": "Pasada",
     "openReport": "Informe de la sesión",
     "back": "Todos los miembros"
+  },
+  "templates": {
+    "title": "Plantillas",
+    "subtitle": "Estructuras reutilizables para notas, informes, consultas y mensajes. Las plantillas nunca guardan datos de miembros.",
+    "filterAll": "Todas",
+    "kind": {
+      "note": "Nota",
+      "report": "Informe",
+      "consultation": "Consulta",
+      "message": "Mensaje"
+    },
+    "new": "Nueva plantilla",
+    "yours": "Tus plantillas",
+    "loading": "Cargando plantillas…",
+    "emptyTitle": "Aún no tienes plantillas",
+    "emptyBody": "Empieza con una plantilla inicial de Eleva o crea la tuya.",
+    "default": "Predeterminada",
+    "edit": "Editar",
+    "duplicate": "Duplicar",
+    "archive": "Archivar",
+    "copyOf": "{title} (copia)",
+    "starters": "Plantillas iniciales de Eleva",
+    "startersBody": "Solo la estructura. Añade una a tu biblioteca y adáptala.",
+    "useStarter": "Añadir a mis plantillas",
+    "newTitle": "Nueva plantilla",
+    "editTitle": "Editar plantilla",
+    "placeholdersHint": "Usa {first}, {date} y {expert}. Se rellenan al aplicar la plantilla a una sesión.",
+    "kindLabel": "Tipo",
+    "titleLabel": "Título",
+    "bodyLabel": "Contenido",
+    "save": "Guardar plantilla",
+    "saved": "Plantilla guardada",
+    "saveFailed": "No se pudo guardar la plantilla",
+    "loadFailed": "No se pudieron cargar las plantillas",
+    "archived": "Plantilla archivada",
+    "archiveFailed": "No se pudo archivar la plantilla",
+    "phiDetected": "Quita los datos del miembro antes de guardar",
+    "phiTitle": "Esto parece contener datos de un miembro",
+    "phiBody": "Las plantillas no pueden contener nombres, correos, teléfonos, números de identificación ni fechas. Sustituye las partes resaltadas por un marcador o elimínalas."
   }
 }

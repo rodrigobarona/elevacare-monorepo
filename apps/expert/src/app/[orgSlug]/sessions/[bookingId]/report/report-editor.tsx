@@ -1,29 +1,45 @@
 "use client"
 
 import { useEffect, useMemo, useState, useTransition } from "react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { toast } from "sonner"
 import {
   ApiClientError,
   createApiClient,
+  RecordTemplatePhiErrorSchema,
   type BookingRecord,
+  type RecordTemplate,
+  type TemplatePhiFinding,
 } from "@eleva/api-client"
+import { Alert, AlertDescription, AlertTitle } from "@eleva/ui/components/alert"
 import { Button, LinkButton } from "@eleva/ui/components/button"
+import {
+  DropdownMenu,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@eleva/ui/components/dropdown-menu"
 import { StatusPill } from "@eleva/ui/components/status-pill"
 import { Textarea } from "@eleva/ui/components/textarea"
+import { PhiHighlight } from "../../../templates/phi-highlight"
 
 const REPORT_MAX = 100_000
+const TEMPLATE_LOCALES = ["en", "pt", "es"] as const
 
 export function ReportEditor({
   bookingId,
   apiBaseUrl,
   backHref,
+  templatesHref,
 }: {
   bookingId: string
   apiBaseUrl: string
   backHref: string
+  templatesHref: string
 }) {
   const t = useTranslations("sessions.report")
+  const uiLocale = useLocale()
+  const templateLocale = TEMPLATE_LOCALES.find((l) => l === uiLocale) ?? "en"
   const api = useMemo(
     () => createApiClient({ baseUrl: apiBaseUrl }),
     [apiBaseUrl]
@@ -31,10 +47,21 @@ export function ReportEditor({
   const [record, setRecord] = useState<BookingRecord | null>(null)
   const [body, setBody] = useState("")
   const [loaded, setLoaded] = useState(false)
+  const [templates, setTemplates] = useState<RecordTemplate[]>([])
+  const [phiFindings, setPhiFindings] = useState<TemplatePhiFinding[]>([])
+  const [phiScannedBody, setPhiScannedBody] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
     let cancelled = false
+    api.recordTemplates
+      .list({ kind: "report" })
+      .then((result) => {
+        if (!cancelled) setTemplates(result.templates)
+      })
+      .catch(() => {
+        // Templates are optional; the editor works without them.
+      })
     api.sessions
       .listRecords(bookingId)
       .then(({ records }) => {
@@ -68,6 +95,48 @@ export function ReportEditor({
         toast.success(t("saved"))
       } catch {
         toast.error(t("saveFailed"))
+      }
+    })
+  }
+
+  function startFromTemplate(templateId: string) {
+    startTransition(async () => {
+      try {
+        const filled = await api.recordTemplates.apply(templateId, bookingId)
+        setBody((current) =>
+          current.trim() ? `${current}\n\n${filled.body}` : filled.body
+        )
+      } catch {
+        toast.error(t("templateApplyFailed"))
+      }
+    })
+  }
+
+  function saveAsTemplate() {
+    setPhiFindings([])
+    startTransition(async () => {
+      try {
+        const created = await api.recordTemplates.create({
+          kind: "report",
+          locale: templateLocale,
+          title: t("templateDefaultTitle"),
+          body,
+          sourceBookingId: bookingId,
+        })
+        setTemplates((list) => [...list, created])
+        toast.success(t("templateSaved"))
+      } catch (err) {
+        const phi =
+          err instanceof ApiClientError
+            ? RecordTemplatePhiErrorSchema.safeParse(err.body)
+            : null
+        if (phi?.success) {
+          setPhiFindings(phi.data.findings.filter((f) => f.field === "body"))
+          setPhiScannedBody(phi.data.scanned?.body ?? null)
+          toast.error(t("templatePhi"))
+          return
+        }
+        toast.error(t("templateSaveFailed"))
       }
     })
   }
@@ -106,8 +175,23 @@ export function ReportEditor({
         maxLength={REPORT_MAX}
         disabled={!loaded || isPending}
         placeholder={t("placeholder")}
-        onChange={(event) => setBody(event.target.value)}
+        onChange={(event) => {
+          setPhiFindings([])
+          setBody(event.target.value)
+        }}
       />
+      {phiFindings.length > 0 ? (
+        <Alert variant="destructive">
+          <AlertTitle>{t("templatePhiTitle")}</AlertTitle>
+          <AlertDescription className="space-y-2">
+            <p>{t("templatePhiBody")}</p>
+            <PhiHighlight
+              text={phiScannedBody ?? body}
+              findings={phiFindings}
+            />
+          </AlertDescription>
+        </Alert>
+      ) : null}
       <div className="flex flex-wrap items-center gap-3">
         <Button onPress={save} isDisabled={!loaded || isPending || !isDirty}>
           {isPublished ? t("saveUpdateMember") : t("save")}
@@ -119,6 +203,39 @@ export function ReportEditor({
         >
           {isPublished ? t("unpublish") : t("publish")}
         </Button>
+        <DropdownMenuTrigger>
+          <Button variant="outline" isDisabled={!loaded || isPending}>
+            {t("templatesMenu")}
+          </Button>
+          <DropdownMenu placement="bottom start">
+            {templates.map((template) => (
+              <DropdownMenuItem
+                key={template.id}
+                id={template.id}
+                textValue={template.title}
+                onAction={() => startFromTemplate(template.id)}
+              >
+                {t("startFrom", { title: template.title })}
+              </DropdownMenuItem>
+            ))}
+            {templates.length > 0 ? <DropdownMenuSeparator /> : null}
+            <DropdownMenuItem
+              id="save-as-template"
+              textValue={t("saveAsTemplate")}
+              isDisabled={!body.trim()}
+              onAction={saveAsTemplate}
+            >
+              {t("saveAsTemplate")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              id="manage-templates"
+              textValue={t("manageTemplates")}
+              href={templatesHref}
+            >
+              {t("manageTemplates")}
+            </DropdownMenuItem>
+          </DropdownMenu>
+        </DropdownMenuTrigger>
         <LinkButton variant="ghost" href={backHref}>
           {t("back")}
         </LinkButton>

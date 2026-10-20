@@ -45,6 +45,7 @@ export type AuditEntity =
   | "account_deletion_request"
   | "session"
   | "record"
+  | "record_template"
   | "session_document"
   | "org_data_key"
   | "payout"
@@ -137,6 +138,7 @@ export type AuditAction =
   | "history_recorded"
   | "ejected"
   | "note_drafted"
+  | "archived"
 
 export interface AuditContext {
   /** UUID v4 \u2014 row ID in audit_outbox and audit_events (idempotent key). */

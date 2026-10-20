@@ -8,7 +8,8 @@
     "integrations": "Integrations",
     "finance": "Finance",
     "publicProfile": "Public profile",
-    "members": "Members"
+    "members": "Members",
+    "templates": "Templates"
   },
   "dashboard": {
     "expert": {
@@ -132,7 +133,18 @@
       "saveBeforePublish": "Save your changes before publishing.",
       "open": "Session report",
       "saveUpdateMember": "Save and update member's copy",
-      "publishedEditHint": "Your member already sees this report. Saving updates their copy."
+      "publishedEditHint": "Your member already sees this report. Saving updates their copy.",
+      "templatesMenu": "Templates",
+      "startFrom": "Start from “{title}”",
+      "saveAsTemplate": "Save as template",
+      "manageTemplates": "Manage templates",
+      "templateDefaultTitle": "Session report template",
+      "templateSaved": "Saved to your templates",
+      "templateSaveFailed": "Could not save the template",
+      "templateApplyFailed": "Could not apply the template",
+      "templatePhi": "Remove member details before saving as a template",
+      "templatePhiTitle": "This report contains member details",
+      "templatePhiBody": "A template can't contain this member's name, contact details, dates or sentences copied from this session. Edit the highlighted parts, or create the template from scratch in Templates."
     }
   },
   "eventTypes": {
@@ -1058,5 +1070,44 @@
     "past": "Past",
     "openReport": "Session report",
     "back": "All members"
+  },
+  "templates": {
+    "title": "Templates",
+    "subtitle": "Reusable skeletons for notes, reports, consultations and messages. Templates never hold member details.",
+    "filterAll": "All",
+    "kind": {
+      "note": "Note",
+      "report": "Report",
+      "consultation": "Consultation",
+      "message": "Message"
+    },
+    "new": "New template",
+    "yours": "Your templates",
+    "loading": "Loading templates…",
+    "emptyTitle": "No templates yet",
+    "emptyBody": "Start from an Eleva starter below or create your own.",
+    "default": "Default",
+    "edit": "Edit",
+    "duplicate": "Duplicate",
+    "archive": "Archive",
+    "copyOf": "{title} (copy)",
+    "starters": "Eleva starters",
+    "startersBody": "Structure only. Add one to your library, then make it yours.",
+    "useStarter": "Add to my templates",
+    "newTitle": "New template",
+    "editTitle": "Edit template",
+    "placeholdersHint": "Use {first}, {date} and {expert}. They are filled in when you apply the template to a session.",
+    "kindLabel": "Type",
+    "titleLabel": "Title",
+    "bodyLabel": "Content",
+    "save": "Save template",
+    "saved": "Template saved",
+    "saveFailed": "Could not save the template",
+    "loadFailed": "Could not load templates",
+    "archived": "Template archived",
+    "archiveFailed": "Could not archive the template",
+    "phiDetected": "Remove member details before saving",
+    "phiTitle": "This looks like member data",
+    "phiBody": "Templates can't contain names, e-mails, phone numbers, ID numbers or dates. Replace the highlighted parts with a placeholder or remove them."
   }
 }

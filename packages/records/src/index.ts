@@ -51,3 +51,29 @@ export {
   type SessionRecordKind,
   type WritableSessionRecordKind,
 } from "./errors"
+export {
+  applyRecordTemplate,
+  archiveRecordTemplate,
+  createRecordTemplate,
+  listRecordTemplates,
+  RecordTemplateError,
+  updateRecordTemplate,
+  type RecordTemplateErrorCode,
+  type RecordTemplateView,
+  type TemplatePhiFieldFinding,
+} from "./record-templates"
+export {
+  fillTemplatePlaceholders,
+  scanTemplateForPhi,
+  TEMPLATE_PHI_DETECTORS,
+  TEMPLATE_PLACEHOLDERS,
+  tokenizeTemplatePlaceholders,
+  type TemplatePhiDetector,
+  type TemplatePhiFinding,
+} from "./template-phi-scan"
+export {
+  findStarterTemplate,
+  STARTER_RECORD_TEMPLATES,
+  type StarterRecordTemplate,
+  type StarterTemplateLocale,
+} from "./starter-templates"

@@ -119,6 +119,14 @@ import {
   CompleteSessionDocumentRequestSchema,
   CompleteSessionDocumentResponseSchema,
   SessionDocumentUrlResponseSchema,
+  ListRecordTemplatesResponseSchema,
+  CreateRecordTemplateRequestSchema,
+  UpdateRecordTemplateRequestSchema,
+  RecordTemplateSchema,
+  RecordTemplateKindSchema,
+  RecordTemplatePhiErrorSchema,
+  ApplyRecordTemplateRequestSchema,
+  ApplyRecordTemplateResponseSchema,
 } from "@eleva/api-client"
 
 const ErrorSchema = z.object({
@@ -3388,6 +3396,139 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               content: { "application/json": { schema: ErrorSchema } },
             },
             ...stdWithNotFound,
+          },
+        },
+      },
+      "/records/templates": {
+        get: {
+          operationId: "listRecordTemplates",
+          summary: "List the expert org's record templates and Eleva starters",
+          description:
+            "Requires events:manage in the active expert org. Returns non-archived org templates plus the Eleva starter set (structure only, en/pt/es). Templates are not PHI.",
+          tags: ["Records"],
+          requestParams: {
+            query: z.object({ kind: RecordTemplateKindSchema.optional() }),
+          },
+          responses: {
+            ...stdErrors,
+            "200": {
+              description: "Templates and starters",
+              content: {
+                "application/json": {
+                  schema: ListRecordTemplatesResponseSchema,
+                },
+              },
+            },
+          },
+        },
+        post: {
+          operationId: "createRecordTemplate",
+          summary: "Create a record template",
+          description:
+            "Runs the template PHI scrubber (member identifiers, e-mails, phones, NIF/DNI/NIE, dates, sentences copied from the source record) before any write. With sourceBookingId (Save as template), filled placeholders are tokenised first and the scrubber checks that booking's member. Refuses with 422 PHI_DETECTED and the offending spans. Audited as record_template.created.",
+          tags: ["Records"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: CreateRecordTemplateRequestSchema },
+            },
+          },
+          responses: {
+            ...stdWithNotFound,
+            "201": {
+              description: "Template created",
+              content: { "application/json": { schema: RecordTemplateSchema } },
+            },
+            "422": {
+              description:
+                "Validation failed or the scrubber found member data",
+              content: {
+                "application/json": {
+                  schema: z.union([RecordTemplatePhiErrorSchema, ErrorSchema]),
+                },
+              },
+            },
+          },
+        },
+      },
+      "/records/templates/{templateId}": {
+        patch: {
+          operationId: "updateRecordTemplate",
+          summary: "Edit a record template",
+          description:
+            "Same PHI scrubber as create. Bumps version. Audited as record_template.updated.",
+          tags: ["Records"],
+          requestParams: {
+            path: z.object({ templateId: z.string().uuid() }),
+          },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: UpdateRecordTemplateRequestSchema },
+            },
+          },
+          responses: {
+            ...stdWithNotFound,
+            "200": {
+              description: "Template updated",
+              content: { "application/json": { schema: RecordTemplateSchema } },
+            },
+            "422": {
+              description:
+                "Validation failed or the scrubber found member data",
+              content: {
+                "application/json": {
+                  schema: z.union([RecordTemplatePhiErrorSchema, ErrorSchema]),
+                },
+              },
+            },
+          },
+        },
+        delete: {
+          operationId: "archiveRecordTemplate",
+          summary: "Archive a record template",
+          description:
+            "Soft-archives the template. Audited as record_template.archived.",
+          tags: ["Records"],
+          requestParams: {
+            path: z.object({ templateId: z.string().uuid() }),
+          },
+          responses: {
+            ...stdWithNotFound,
+            "204": { description: "Archived" },
+          },
+        },
+      },
+      "/records/templates/{templateId}/apply": {
+        post: {
+          operationId: "applyRecordTemplate",
+          summary: "Fill a template for one booking",
+          description:
+            "Assigned expert only. Fills {{member.firstName}}, {{session.date}} and {{expert.name}} for the booking and returns the text for the editor. Nothing is stored.",
+          tags: ["Records"],
+          requestParams: {
+            path: z.object({ templateId: z.string().uuid() }),
+          },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: ApplyRecordTemplateRequestSchema },
+            },
+          },
+          responses: {
+            ...stdWithNotFound,
+            "200": {
+              description: "Filled template",
+              content: {
+                "application/json": {
+                  schema: ApplyRecordTemplateResponseSchema,
+                },
+              },
+            },
+            "403": {
+              description: "Caller is not the booking's assigned expert",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
           },
         },
       },

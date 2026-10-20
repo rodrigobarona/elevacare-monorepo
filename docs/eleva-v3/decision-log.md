@@ -32,6 +32,32 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-20: Record templates ship as plain text (proposed)
+
+- Decision (engineering, Phase 10.1f):
+  - Template bodies are plain text with `{{member.firstName}}`,
+    `{{session.date}}` and `{{expert.name}}` placeholders, not Plate JSON.
+    The notes and report editors are still plain textareas, so ADR-023
+    does not apply to record templates until those editors move to Plate;
+    the migration then converts bodies in place.
+  - The Eleva starter set is code constants
+    (`@eleva/records` `STARTER_RECORD_TEMPLATES`) that experts copy into
+    their library, not seeded rows, so starters stay versioned with the
+    code and no org owns platform content.
+  - "Start from" and "Save as template" are in the report composer only;
+    the in-call notes panel gets them later. "Save as template" refuses
+    40+ character sentences copied verbatim from that session's records.
+  - The scrubber checks the member's name, e-mail, phone and session
+    date/time. Date of birth and location are not checked because bookings
+    do not store them.
+- Compatibility: the scrubber and placeholder model carry over unchanged
+  when bodies become Plate JSON.
+- Owner: engineering. Status: `proposed`.
+- Next review: when the notes/report editors adopt Plate.
+- Related: `docs/eleva-v3/adrs/ADR-023-plate-rich-text-editor.md`,
+  10.1f note in `docs/eleva-v3/audits/2026-10-phases-01-10-audit.md`,
+  migration `0063_record_templates`.
+
 ### 2026-10-20: Session-record retention on account deletion and AI drafts (proposed)
 
 - Decision (engineering, under the D-11 and D-12 working decisions):
