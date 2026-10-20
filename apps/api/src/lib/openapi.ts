@@ -109,7 +109,9 @@ import {
   AddSessionParticipantResponseSchema,
   RemoveSessionParticipantResponseSchema,
   DailyWebhookResponseSchema,
+  ListMeReportsResponseSchema,
   ListSessionRecordsResponseSchema,
+  PublishSessionRecordResponseSchema,
   UpsertSessionRecordRequestSchema,
   UpsertSessionRecordResponseSchema,
   SummarizeSessionRecordsResponseSchema,
@@ -3286,6 +3288,76 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
+      "/sessions/{bookingId}/records/{recordId}/publish": {
+        post: {
+          operationId: "publishSessionRecord",
+          summary: "Publish a session report to the member",
+          description:
+            "Assigned expert who wrote the report only. The member can then read it under GET /me/reports. Audited as record.published.",
+          tags: ["Sessions"],
+          requestParams: {
+            path: z.object({
+              bookingId: z.string().uuid(),
+              recordId: z.string().uuid(),
+            }),
+          },
+          responses: {
+            "200": {
+              description: "The report with its new publishedAt",
+              content: {
+                "application/json": {
+                  schema: PublishSessionRecordResponseSchema,
+                },
+              },
+            },
+            "409": {
+              description:
+                "NOT_PUBLISHABLE: only kind report on a booking with a member account",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "403": {
+              description: "Caller is not the assigned expert",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/sessions/{bookingId}/records/{recordId}/unpublish": {
+        post: {
+          operationId: "unpublishSessionRecord",
+          summary: "Hide a published session report from the member",
+          description:
+            "Assigned expert who wrote the report only. Audited as record.unpublished.",
+          tags: ["Sessions"],
+          requestParams: {
+            path: z.object({
+              bookingId: z.string().uuid(),
+              recordId: z.string().uuid(),
+            }),
+          },
+          responses: {
+            "200": {
+              description: "The report with its new publishedAt",
+              content: {
+                "application/json": {
+                  schema: PublishSessionRecordResponseSchema,
+                },
+              },
+            },
+            "409": {
+              description:
+                "NOT_PUBLISHABLE: only kind report on a booking with a member account",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "403": {
+              description: "Caller is not the assigned expert",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
       "/sessions/{bookingId}/records/summarize": {
         post: {
           operationId: "summarizeSessionRecords",
@@ -3580,6 +3652,24 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
                 "application/json": {
                   schema: MeNotificationPreferencesResponseSchema,
                 },
+              },
+            },
+            ...stdErrors,
+          },
+        },
+      },
+      "/me/reports": {
+        get: {
+          operationId: "listMeReports",
+          summary: "List session reports experts have published to me",
+          description:
+            "Published kind=report records across the member's bookings, newest first, decrypted per expert org. Internal reports, notes and transcripts are never returned.",
+          tags: ["Me"],
+          responses: {
+            "200": {
+              description: "Published session reports",
+              content: {
+                "application/json": { schema: ListMeReportsResponseSchema },
               },
             },
             ...stdErrors,

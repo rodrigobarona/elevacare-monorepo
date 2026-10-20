@@ -131,6 +131,7 @@ export async function getExpertBookingById(
   id: string
   sessionMode: SessionMode
   status: string
+  startsAt: Date
 } | null> {
   return withOrgContext(orgId, async (tx: Tx) => {
     const [row] = await tx
@@ -138,6 +139,7 @@ export async function getExpertBookingById(
         id: bookings.id,
         sessionMode: bookings.sessionMode,
         status: bookings.status,
+        startsAt: bookings.startsAt,
       })
       .from(bookings)
       .where(

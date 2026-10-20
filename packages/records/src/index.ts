@@ -5,10 +5,13 @@ export {
 } from "./record-logger"
 export { decryptHoldIntake, encryptHoldIntake } from "./hold-intake"
 export {
+  listMemberReports,
   listSessionRecords,
   persistBookingIntake,
   requireAssignedExpert,
+  setSessionRecordPublished,
   upsertSessionRecord,
+  type MemberReportView,
   type SessionRecordView,
 } from "./session-records"
 export { summarizeSessionRecords } from "./summarize"
@@ -41,6 +44,7 @@ export {
   SESSION_RECORD_KINDS,
   WRITABLE_SESSION_RECORD_KINDS,
   SESSION_RECORD_TITLES,
+  PUBLISHABLE_SESSION_RECORD_KIND,
   isWritableSessionRecordKind,
   type SessionRecordErrorCode,
   type SessionDocumentErrorCode,

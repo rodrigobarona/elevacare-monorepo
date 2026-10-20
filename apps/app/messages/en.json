@@ -4,7 +4,8 @@
     "sessions": "Sessions",
     "payments": "Payments",
     "settings": "Settings",
-    "privacy": "Privacy"
+    "privacy": "Privacy",
+    "reports": "Reports"
   },
   "common": {
     "save": "Save",
@@ -154,7 +155,9 @@
     "withExpert": "With {name}",
     "viewReceipt": "View receipt",
     "manageTitle": "Manage booking",
-    "manageHint": "Reschedule or cancel within your expert's cancellation policy."
+    "manageHint": "Reschedule or cancel within your expert's cancellation policy.",
+    "report": "Report",
+    "viewReport": "Read report"
   },
   "payments": {
     "title": "Payments",
@@ -313,5 +316,17 @@
     "invalidStatus": "This session can no longer be changed.",
     "slotTaken": "That time is no longer available. Choose another start time.",
     "notFoundSession": "Session not found."
+  },
+  "reports": {
+    "title": "Reports",
+    "subtitle": "Reports your experts have shared with you after a session.",
+    "emptyTitle": "No reports yet",
+    "emptyBody": "When an expert publishes a session report, it appears here.",
+    "byExpert": "From {name}",
+    "sessionOn": "Session on {date}",
+    "publishedOn": "Shared {date}",
+    "read": "Read",
+    "back": "All reports",
+    "eyebrow": "Session report"
   }
 }

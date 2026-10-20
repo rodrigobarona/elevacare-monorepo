@@ -53,6 +53,11 @@ export default async function OrgSlugLayout({
             icon: "CreditCardIcon",
           },
           {
+            title: t("reports"),
+            url: `/${orgSlug}/reports`,
+            icon: "BookOpenIcon",
+          },
+          {
             title: t("settings"),
             url: `/${orgSlug}/settings`,
             icon: "GearIcon",

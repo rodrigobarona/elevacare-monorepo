@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { CaretLeftIcon, CaretRightIcon } from "@eleva/icons"
-import { Button } from "@eleva/ui/components/button"
+import { Button, LinkButton } from "@eleva/ui/components/button"
 import { StatusPill } from "@eleva/ui/components/status-pill"
 import { cn } from "@eleva/ui/lib/utils"
 import { JoinCta } from "@eleva/video/join-cta"
@@ -91,6 +91,7 @@ export function WeekView({
   orgSlug,
 }: Props) {
   const t = useTranslations("calendar")
+  const tReport = useTranslations("sessions.report")
   const locale = useLocale()
   const [weekStart, setWeekStart] = React.useState(() =>
     startOfWeek(new Date(initialFrom))
@@ -445,6 +446,16 @@ export function WeekView({
               pending="hint"
             />
           )}
+          {selected.status === "confirmed" ||
+          selected.status === "completed" ? (
+            <LinkButton
+              className="mt-3"
+              variant="outline"
+              href={`/${orgSlug}/team/sessions/${selected.id}/report`}
+            >
+              {tReport("open")}
+            </LinkButton>
+          ) : null}
         </div>
       ) : null}
 

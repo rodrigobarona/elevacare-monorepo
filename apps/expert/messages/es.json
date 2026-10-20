@@ -108,6 +108,28 @@
         "INVALID_GRANT": "Este enlace de entrada no es válido o ha caducado. Abre el correo o la invitación de calendario más reciente.",
         "internal": "Algo ha fallado. Inténtalo de nuevo."
       }
+    },
+    "report": {
+      "title": "Informe de la sesión",
+      "subtitle": "Escribe el informe de esta sesión. El miembro solo lo verá cuando lo publiques.",
+      "editorTitle": "Informe",
+      "statusDraft": "Borrador",
+      "statusPublished": "Publicado",
+      "privacyHint": "Cifrado y visible solo para ti hasta que lo publiques. Al publicarlo, el informe aparece en la cuenta del miembro.",
+      "placeholder": "Resumen, observaciones y recomendaciones para tu miembro…",
+      "save": "Guardar borrador",
+      "publish": "Publicar al miembro",
+      "unpublish": "Despublicar",
+      "back": "Volver al calendario",
+      "saved": "Informe guardado",
+      "saveFailed": "No se pudo guardar el informe",
+      "loadFailed": "No se pudo cargar el informe",
+      "publishedToast": "Informe publicado al miembro",
+      "unpublishedToast": "Informe ocultado al miembro",
+      "publishFailed": "No se pudo cambiar la visibilidad del informe",
+      "notPublishable": "Este miembro aún no tiene cuenta en Eleva, así que no se puede compartir el informe.",
+      "saveBeforePublish": "Guarda los cambios antes de publicar.",
+      "open": "Informe de la sesión"
     }
   },
   "eventTypes": {

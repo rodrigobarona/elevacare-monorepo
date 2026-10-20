@@ -4,7 +4,8 @@
     "sessions": "Sessões",
     "payments": "Pagamentos",
     "settings": "Definições",
-    "privacy": "Privacidade"
+    "privacy": "Privacidade",
+    "reports": "Relatórios"
   },
   "common": {
     "save": "Guardar",
@@ -154,7 +155,9 @@
     "withExpert": "Com {name}",
     "viewReceipt": "Ver recibo",
     "manageTitle": "Gerir marcação",
-    "manageHint": "Reagende ou cancele dentro da política de cancelamento do especialista."
+    "manageHint": "Reagende ou cancele dentro da política de cancelamento do especialista.",
+    "report": "Relatório",
+    "viewReport": "Ler relatório"
   },
   "payments": {
     "title": "Pagamentos",
@@ -313,5 +316,17 @@
     "invalidStatus": "Esta sessão já não pode ser alterada.",
     "slotTaken": "Esse horário já não está disponível. Escolha outro início.",
     "notFoundSession": "Sessão não encontrada."
+  },
+  "reports": {
+    "title": "Relatórios",
+    "subtitle": "Relatórios que os seus especialistas partilharam consigo depois de uma sessão.",
+    "emptyTitle": "Ainda sem relatórios",
+    "emptyBody": "Quando um especialista publicar o relatório de uma sessão, ele aparece aqui.",
+    "byExpert": "De {name}",
+    "sessionOn": "Sessão de {date}",
+    "publishedOn": "Partilhado a {date}",
+    "read": "Ler",
+    "back": "Todos os relatórios",
+    "eyebrow": "Relatório da sessão"
   }
 }

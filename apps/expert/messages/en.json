@@ -108,6 +108,28 @@
         "INVALID_GRANT": "This join link is invalid or has expired. Open the latest email or calendar invite.",
         "internal": "Something went wrong. Try again."
       }
+    },
+    "report": {
+      "title": "Session report",
+      "subtitle": "Write the report for this session. Your member only sees it after you publish.",
+      "editorTitle": "Report",
+      "statusDraft": "Draft",
+      "statusPublished": "Published",
+      "privacyHint": "Encrypted and visible only to you until published. Publishing shares this report with the member in their account.",
+      "placeholder": "Summary, observations and recommendations for your member…",
+      "save": "Save draft",
+      "publish": "Publish to member",
+      "unpublish": "Unpublish",
+      "back": "Back to calendar",
+      "saved": "Report saved",
+      "saveFailed": "Could not save the report",
+      "loadFailed": "Could not load the report",
+      "publishedToast": "Report published to your member",
+      "unpublishedToast": "Report hidden from your member",
+      "publishFailed": "Could not change the report visibility",
+      "notPublishable": "This member has no Eleva account yet, so the report cannot be shared.",
+      "saveBeforePublish": "Save your changes before publishing.",
+      "open": "Session report"
     }
   },
   "eventTypes": {

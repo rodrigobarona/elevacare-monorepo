@@ -67,13 +67,15 @@ export default async function SessionDetailPage({
   const booking = await findMemberBooking(api, bookingId)
   if (!booking) notFound()
 
-  const [payments, quote] = await Promise.all([
+  const [payments, quote, { reports }] = await Promise.all([
     api.me.listPayments({ bookingId: booking.id }),
     api.me.cancellationQuote(booking.id).catch((err: unknown) => {
       if (err instanceof ApiClientError && err.status === 409) return null
       throw err
     }),
+    api.me.listReports(),
   ])
+  const report = reports.find((row) => row.bookingId === booking.id)
   const payment = payments.payments.find((row) => row.bookingId === booking.id)
   const awaiting = isAwaitingConfirmation(booking.status)
   const title = eventTitle(booking.eventType.title, locale)
@@ -159,6 +161,18 @@ export default async function SessionDetailPage({
                     </span>
                   ) : null}
                 </span>
+              </DetailRow>
+            ) : null}
+            {report ? (
+              <DetailRow label={t("report")}>
+                <LinkButton
+                  variant="link"
+                  size="sm"
+                  href={`/${orgSlug}/reports/${report.id}`}
+                  className="h-auto p-0"
+                >
+                  {t("viewReport")}
+                </LinkButton>
               </DetailRow>
             ) : null}
           </dl>

@@ -13,7 +13,7 @@ describe("session record kinds", () => {
     expect(isWritableSessionRecordKind("transcript")).toBe(true)
     expect(isWritableSessionRecordKind("ai_draft")).toBe(false)
     expect(isWritableSessionRecordKind("internal_report")).toBe(true)
-    expect(isWritableSessionRecordKind("report")).toBe(false)
+    expect(isWritableSessionRecordKind("report")).toBe(true)
     expect(SESSION_RECORD_KINDS).toContain("intake")
     expect(SESSION_RECORD_KINDS).toContain("internal_report")
   })
