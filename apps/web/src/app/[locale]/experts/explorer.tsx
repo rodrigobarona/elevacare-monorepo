@@ -1,7 +1,9 @@
 import type { ReactNode } from "react"
 import { getTranslations } from "next-intl/server"
 import { ApiClientError } from "@eleva/api-client"
+import { defaultLocale, isLocale } from "@eleva/config/i18n"
 import { ArrowRightIcon, CaretDownIcon } from "@eleva/icons"
+import { ElevaImage } from "@eleva/media/image"
 import { CtaBand } from "@eleva/ui/blocks/cta-band"
 import { ExpertCard } from "@eleva/ui/blocks/expert-card"
 import { Container, Section, SectionHeader } from "@eleva/ui/blocks/section"
@@ -281,6 +283,14 @@ export async function Explorer({
               eyebrow={t("join.eyebrow")}
               title={t("join.heading")}
               lead={t("join.lead")}
+              media={
+                <ElevaImage
+                  slug="physio-session"
+                  locale={isLocale(locale) ? locale : defaultLocale}
+                  fill
+                  sizes="(min-width: 1024px) 50vw, 100vw"
+                />
+              }
               actions={
                 <Link
                   href="/become-expert"

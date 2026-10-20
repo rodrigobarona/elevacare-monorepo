@@ -139,6 +139,14 @@ export default async function HistoryPage({ params }: Props) {
             <CtaBand
               eyebrow={t("cta.eyebrow")}
               title={t("cta.heading")}
+              media={
+                <ElevaImage
+                  slug="online-session-home"
+                  locale={locale}
+                  fill
+                  sizes="(min-width: 1024px) 50vw, 100vw"
+                />
+              }
               actions={
                 <Link
                   href="/experts"

@@ -14,7 +14,38 @@
     "signout": "Sign out",
     "becomeExpert": "Become an expert",
     "forClinics": "For clinics",
-    "more": "More"
+    "menu": {
+      "open": "Open menu",
+      "close": "Close menu",
+      "label": "Menu",
+      "care": {
+        "trigger": "Find care",
+        "heading": "Care areas",
+        "browseAll": "Browse all experts",
+        "browseAllDescription": "Filter by speciality, language and how you want to meet.",
+        "featuredTitle": "Not sure where to start?",
+        "featuredDescription": "Every expert profile shows credentials, prices and cancellation terms before you book."
+      },
+      "professionals": {
+        "trigger": "For professionals",
+        "heading": "Work with Eleva",
+        "becomeExpertDescription": "Run your own practice with booking, payments and video in one place.",
+        "forClinicsDescription": "Bring your whole team onto one shared calendar and payout flow.",
+        "featuredTitle": "Built for independent experts",
+        "featuredDescription": "You set your schedule, prices and policies."
+      },
+      "company": {
+        "trigger": "Company",
+        "heading": "About Eleva",
+        "aboutDescription": "Who we are and the experts who advise us.",
+        "storyDescription": "Why we started Eleva and where we are going.",
+        "contact": "Contact",
+        "contactDescription": "Questions, press or partnerships.",
+        "story": "Our story",
+        "featuredTitle": "Guided by clinical research",
+        "featuredDescription": "Our advisors are physiotherapists, doctors and researchers in women's health."
+      }
+    }
   },
   "home": {
     "hero": {
@@ -108,17 +139,20 @@
     "headingAccent": "proven care",
     "intro": "We're here to make it easier to find the right help, at the right moment. Eleva Care connects you with licensed care experts through a secure, trusted technology platform.",
     "stats": {
+      "eyebrow": "Eleva at a glance",
       "modes": {
-        "value": "3",
-        "label": "Ways to meet: online, by phone or in person"
+        "title": "ways to meet your expert",
+        "items": {
+          "online": "Video call",
+          "phone": "Phone",
+          "inPerson": "In person"
+        }
       },
       "languages": {
-        "value": "3",
-        "label": "Languages: English, Portuguese and Spanish"
+        "title": "languages, written natively"
       },
       "specialities": {
-        "value": "4",
-        "label": "Care areas, from pregnancy to every life stage"
+        "title": "care areas to start with"
       }
     },
     "mission": {

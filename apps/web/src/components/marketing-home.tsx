@@ -20,29 +20,7 @@ import { Accent, Eyebrow, Heading, Lead } from "@eleva/ui/components/typography"
 import { Link } from "@/i18n/navigation"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
-
-const SERVICES = [
-  {
-    key: "pregnancy",
-    slug: "service-pregnancy",
-    href: "/experts/midwifery",
-  },
-  {
-    key: "pelvicHealth",
-    slug: "service-pelvic-health",
-    href: "/experts/pelvic-health",
-  },
-  {
-    key: "everyStage",
-    slug: "service-every-stage",
-    href: "/experts/wellness",
-  },
-  {
-    key: "cancerJourney",
-    slug: "service-cancer-journey",
-    href: "/experts/physiotherapy",
-  },
-] as const
+import { CARE_AREAS } from "@/lib/care-areas"
 
 export async function MarketingHome() {
   return (
@@ -111,22 +89,22 @@ async function MarketingContent() {
           <TrustStrip
             items={[
               {
-                icon: <SealCheckIcon />,
+                icon: <SealCheckIcon weight="duotone" />,
                 title: t("trust.independent.title"),
                 description: t("trust.independent.description"),
               },
               {
-                icon: <VideoCameraIcon />,
+                icon: <VideoCameraIcon weight="duotone" />,
                 title: t("trust.modes.title"),
                 description: t("trust.modes.description"),
               },
               {
-                icon: <TranslateIcon />,
+                icon: <TranslateIcon weight="duotone" />,
                 title: t("trust.languages.title"),
                 description: t("trust.languages.description"),
               },
               {
-                icon: <TagIcon />,
+                icon: <TagIcon weight="duotone" />,
                 title: t("trust.pricing.title"),
                 description: t("trust.pricing.description"),
               },
@@ -148,7 +126,7 @@ async function MarketingContent() {
             lead={t("services.lead")}
           />
           <div className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
-            {SERVICES.map((service) => (
+            {CARE_AREAS.map((service) => (
               <MediaCard
                 key={service.key}
                 linkAs={Link}

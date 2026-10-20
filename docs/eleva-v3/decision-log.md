@@ -32,6 +32,25 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-20: Public header menus and marketing blocks (accepted)
+
+- Decision (founder feedback): the public header groups its links into three
+  menus in the style of dub.co and resend.com, and the weak marketing blocks
+  get stronger visuals.
+  - Menus: Find care (the four care areas with photos, plus Browse all
+    experts), For professionals (Become an expert, For clinics) and Company
+    (About, Our story, Contact). Each desktop panel has a photo card; below
+    `lg` the same links sit in a side sheet. SSOT:
+    `apps/web/src/lib/public-site-nav.ts` and `apps/web/src/lib/care-areas.ts`.
+  - Trust strip: one panel with hairline dividers and solid teal duotone icon
+    tiles.
+  - About facts: each count is derived from the list it describes (meeting
+    modes, launch locales, care areas), so numbers cannot drift from content.
+  - The Our story and Experts CTA bands now carry a photo like the others.
+- Out of scope: help center and evidence entries in the menus (pages not
+  built yet); trust pages stay out of the nav until legal sign-off.
+- Owner: founder, engineering. Status: `accepted`.
+
 ### 2026-10-20: Email header logo and corner radius (accepted)
 
 - Decision (founder feedback): emails show the white logo PNG in the teal

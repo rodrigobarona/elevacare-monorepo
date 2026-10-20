@@ -1,15 +1,22 @@
 import { Suspense } from "react"
 import { cookies } from "next/headers"
-import { getTranslations } from "next-intl/server"
+import { getLocale, getTranslations } from "next-intl/server"
 import { requestHasSessionCookie } from "@eleva/auth/credentials"
+import { defaultLocale, isLocale } from "@eleva/config/i18n"
 import { Logo, LogoMark } from "@eleva/ui/components/brand"
 import { Link } from "@/i18n/navigation"
 import { PUBLIC_SITE_NAV } from "@/lib/public-site-nav"
 import { AuthHeaderPlaceholder } from "./auth-header-placeholder"
 import { LanguageSwitcher } from "./language-switcher"
-import { MobileNavMenu } from "./mobile-nav-menu"
 import { SignedOutButtons } from "./signed-out-buttons"
 import { SiteHeaderAuthSlot } from "./site-header-auth-slot"
+import { SiteMegaMenu } from "./site-mega-menu"
+import { SiteMobileNav } from "./site-mobile-nav"
+import {
+  SiteNavMobileGroups,
+  SiteNavPanel,
+  type NavCopy,
+} from "./site-nav-panels"
 
 /**
  * Shared public-site header. The auth slot streams in behind Suspense; the
@@ -18,10 +25,15 @@ import { SiteHeaderAuthSlot } from "./site-header-auth-slot"
  * later.
  */
 export async function SiteHeader() {
-  const t = await getTranslations("nav")
-  const jar = await cookies()
+  const [t, tHome, requestLocale, jar] = await Promise.all([
+    getTranslations("nav"),
+    getTranslations("home"),
+    getLocale(),
+    cookies(),
+  ])
   const hasSessionCookie = requestHasSessionCookie(jar)
-  const nav = PUBLIC_SITE_NAV
+  const locale = isLocale(requestLocale) ? requestLocale : defaultLocale
+  const copy: NavCopy = { nav: (key) => t(key), home: (key) => tHome(key) }
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 px-4 py-3 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 sm:px-6">
@@ -30,23 +42,17 @@ export async function SiteHeader() {
           <LogoMark className="size-7 sm:hidden" />
           <Logo className="hidden h-6 sm:block" />
         </Link>
-        <div className="flex min-w-0 items-center gap-2 sm:gap-4">
-          {nav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="hidden rounded-full px-3 py-1.5 text-sm whitespace-nowrap text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:inline-flex"
-            >
-              {t(item.labelKey)}
-            </Link>
-          ))}
-          <MobileNavMenu
-            label={t("more")}
-            items={nav.map((item) => ({
-              href: item.href,
-              label: t(item.labelKey),
+        <div className="flex min-w-0 flex-1 items-center pl-4">
+          <SiteMegaMenu
+            items={PUBLIC_SITE_NAV.map((menu) => ({
+              id: menu.id,
+              label: t(`menu.${menu.id}.trigger`),
+              matches: menu.matches,
+              panel: <SiteNavPanel menu={menu} copy={copy} locale={locale} />,
             }))}
           />
+        </div>
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <LanguageSwitcher />
           <Suspense
             fallback={
@@ -62,6 +68,13 @@ export async function SiteHeader() {
           >
             <SiteHeaderAuthSlot />
           </Suspense>
+          <SiteMobileNav openLabel={t("menu.open")} title={t("menu.label")}>
+            <SiteNavMobileGroups
+              menus={PUBLIC_SITE_NAV}
+              copy={copy}
+              locale={locale}
+            />
+          </SiteMobileNav>
         </div>
       </nav>
     </header>

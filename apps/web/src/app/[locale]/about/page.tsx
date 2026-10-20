@@ -1,10 +1,19 @@
-import { defaultLocale, isLocale, type Locale } from "@eleva/config/i18n"
+import {
+  defaultLocale,
+  isLocale,
+  localeNames,
+  locales,
+  type Locale,
+} from "@eleva/config/i18n"
 import {
   ArrowRightIcon,
   BookOpenIcon,
   HandHeartIcon,
   HeartbeatIcon,
+  MapPinIcon,
+  PhoneIcon,
   UsersIcon,
+  VideoCameraIcon,
 } from "@eleva/icons"
 import { ElevaImage } from "@eleva/media/image"
 import { CtaBand } from "@eleva/ui/blocks/cta-band"
@@ -16,7 +25,9 @@ import { getTranslations, setRequestLocale } from "next-intl/server"
 import { Link } from "@/i18n/navigation"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
+import { CARE_AREAS } from "@/lib/care-areas"
 import type { Metadata } from "next"
+import type * as React from "react"
 
 type Props = {
   params: Promise<{ locale: string }>
@@ -31,7 +42,56 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-const STATS = ["modes", "languages", "specialities"] as const
+const MEETING_MODES = [
+  { key: "online", icon: VideoCameraIcon },
+  { key: "phone", icon: PhoneIcon },
+  { key: "inPerson", icon: MapPinIcon },
+] as const
+
+type Fact = {
+  key: string
+  label: string
+  icon?: React.ReactNode
+  href?: string
+  lang?: string
+}
+
+const factChipClass =
+  "inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1.5 text-sm text-teal-900 ring-1 ring-teal-100 dark:bg-teal-950 dark:text-teal-100 dark:ring-teal-900 [&_svg]:size-4 [&_svg]:text-teal-700 dark:[&_svg]:text-teal-300"
+
+function FactCard({ title, facts }: { title: string; facts: Fact[] }) {
+  return (
+    <li className="flex flex-col gap-6 rounded-3xl bg-background p-7 shadow-1 ring-1 ring-border/60 sm:p-8">
+      <p className="flex items-end gap-3">
+        <span className="font-heading text-7xl leading-[0.85] text-primary tabular-nums">
+          {facts.length}
+        </span>
+        <span className="text-lg font-medium text-balance text-foreground">
+          {title}
+        </span>
+      </p>
+      <ul className="flex flex-wrap gap-2">
+        {facts.map((fact) => (
+          <li key={fact.key}>
+            {fact.href ? (
+              <Link
+                href={fact.href}
+                className={`${factChipClass} transition-colors hover:bg-teal-100 dark:hover:bg-teal-900`}
+              >
+                {fact.label}
+              </Link>
+            ) : (
+              <span lang={fact.lang} className={factChipClass}>
+                {fact.icon}
+                {fact.label}
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </li>
+  )
+}
 
 const LEADERSHIP = [
   {
@@ -85,7 +145,10 @@ export default async function AboutPage({ params }: Props) {
   const { locale: requestLocale } = await params
   setRequestLocale(requestLocale)
   const locale: Locale = isLocale(requestLocale) ? requestLocale : defaultLocale
-  const t = await getTranslations("about")
+  const [t, tHome] = await Promise.all([
+    getTranslations("about"),
+    getTranslations("home"),
+  ])
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -118,19 +181,36 @@ export default async function AboutPage({ params }: Props) {
         </Section>
 
         <Section tone="muted" spacing="compact">
-          <Container>
-            <dl className="grid gap-8 sm:grid-cols-3">
-              {STATS.map((key) => (
-                <div key={key} className="flex flex-col gap-1">
-                  <dt className="text-sm text-muted-foreground">
-                    {t(`stats.${key}.label`)}
-                  </dt>
-                  <dd className="order-first font-heading text-headline text-primary">
-                    {t(`stats.${key}.value`)}
-                  </dd>
-                </div>
-              ))}
-            </dl>
+          <Container className="flex flex-col gap-8">
+            <p className="text-sm font-medium tracking-wide text-teal-800 uppercase dark:text-teal-300">
+              {t("stats.eyebrow")}
+            </p>
+            <ul className="grid gap-4 md:grid-cols-3">
+              <FactCard
+                title={t("stats.modes.title")}
+                facts={MEETING_MODES.map(({ key, icon: Icon }) => ({
+                  key,
+                  label: t(`stats.modes.items.${key}`),
+                  icon: <Icon weight="duotone" />,
+                }))}
+              />
+              <FactCard
+                title={t("stats.languages.title")}
+                facts={locales.map((code) => ({
+                  key: code,
+                  label: localeNames[code],
+                  lang: code,
+                }))}
+              />
+              <FactCard
+                title={t("stats.specialities.title")}
+                facts={CARE_AREAS.map((area) => ({
+                  key: area.key,
+                  label: tHome(`services.${area.key}.title`),
+                  href: area.href,
+                }))}
+              />
+            </ul>
           </Container>
         </Section>
 
@@ -184,22 +264,22 @@ export default async function AboutPage({ params }: Props) {
             <TrustStrip
               items={[
                 {
-                  icon: <HeartbeatIcon />,
+                  icon: <HeartbeatIcon weight="duotone" />,
                   title: t("beliefs.access.title"),
                   description: t("beliefs.access.description"),
                 },
                 {
-                  icon: <BookOpenIcon />,
+                  icon: <BookOpenIcon weight="duotone" />,
                   title: t("beliefs.knowledge.title"),
                   description: t("beliefs.knowledge.description"),
                 },
                 {
-                  icon: <UsersIcon />,
+                  icon: <UsersIcon weight="duotone" />,
                   title: t("beliefs.collaborative.title"),
                   description: t("beliefs.collaborative.description"),
                 },
                 {
-                  icon: <HandHeartIcon />,
+                  icon: <HandHeartIcon weight="duotone" />,
                   title: t("beliefs.lifelong.title"),
                   description: t("beliefs.lifelong.description"),
                 },
