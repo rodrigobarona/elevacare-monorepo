@@ -34,7 +34,12 @@ export default async function ReportDetailPage({
         description={t("sessionOn", { date: sessionDate })}
       />
       <article className="rounded-3xl border bg-card p-6 text-card-foreground shadow-1 sm:p-8">
-        <p className="leading-relaxed whitespace-pre-wrap">{report.body}</p>
+        <p
+          className="leading-relaxed whitespace-pre-wrap"
+          data-testid="member-report-body"
+        >
+          {report.body}
+        </p>
         {report.publishedAt ? (
           <p className="mt-6 text-xs text-muted-foreground">
             {t("publishedOn", {
