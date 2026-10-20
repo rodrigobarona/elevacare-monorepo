@@ -137,7 +137,7 @@ AUD-022 stays product backlog.
 6. **10.1f** record templates — landed 2026-10-20 (in-call notes panel template actions added the same day)
 7. **10.2a** KEK rotation CLI + decrypt audit sampling — rotation job landed 2026-10-20 (`rotateAllOrgKeks`, `pnpm encryption:rotate-kek`, `POST /workflows/kek-rotation`; unit-proven with two KEKs live and the old one retired; dev dry run only, no live rotation). Decrypt audit sampling open
 8. **10.2b** `draftSessionReport` behind `ff.ai_reports_beta` (AUD-032)
-9. **10.2c** CRM
+9. **10.2c** CRM — schema landed 2026-10-20 (`crm_contacts`, `crm_follow_ups`, migration 0066, tenant RLS live-tested on the dev branch, member rows removed by account deletion). Domain package, API, expert UI and the due-reminder job open
 
    10.1f (2026-10-20) adds `record_templates` (migration 0063, tenant RLS, audited `record_template.created|updated|archived`), `/records/templates` CRUD + `POST /records/templates/{id}/apply`, the template PHI scrubber, and the expert `/templates` gallery. It differs from the phase spec in four ways (decision log, "Record templates ship as plain text"):
 

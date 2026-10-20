@@ -52,6 +52,26 @@ Each entry should include:
 - Related: AUD-037 in `docs/eleva-v3/audits/2026-10-phases-01-10-audit.md`,
   `packages/notifications/src/handle-resend-webhook.ts`.
 
+### 2026-10-20: CRM contacts reuse booking history (proposed)
+
+- Decision (engineering, Phase 10.2c):
+  - `crm_contacts` holds only the relationship layer: lifecycle stage
+    (`lead|active|dormant|churned`), tags, and for manual leads a name plus
+    encrypted email/phone. Session history, last session and upcoming
+    sessions are read from `bookings` at query time; there is no
+    `last_session_at` column to keep in sync (crm-spec: "CRM should not
+    reinvent booking state").
+  - Member contacts are created when the expert first acts on that member
+    (stage, tag or follow-up), not from booking domain events. The members
+    list stays the booking-derived view.
+  - `crm_follow_ups.note_encrypted` is ciphertext; `notified_at` lets the
+    due-reminder job notify once.
+  - Account deletion deletes the member's contact rows and their follow-ups
+    (Phase 10 spec). Manual leads are the expert's own records and are not
+    matched by email.
+- Out of scope for the first slice: segments, suggested appointments,
+  Resend audiences, org-wide CRM views (crm-spec "Deferred").
+
 ### 2026-10-20: Record templates ship as plain text (proposed)
 
 - Decision (engineering, Phase 10.1f):

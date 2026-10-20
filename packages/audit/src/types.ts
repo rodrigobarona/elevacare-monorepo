@@ -46,6 +46,8 @@ export type AuditEntity =
   | "session"
   | "record"
   | "record_template"
+  | "crm_contact"
+  | "crm_follow_up"
   | "session_document"
   | "org_data_key"
   | "payout"

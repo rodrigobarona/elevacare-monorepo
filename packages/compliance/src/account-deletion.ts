@@ -497,6 +497,9 @@ export async function sweepAccountDeletions(
           await tx
             .delete(main.notificationPreferences)
             .where(eq(main.notificationPreferences.userId, userId))
+          await tx
+            .delete(main.crmContacts)
+            .where(eq(main.crmContacts.memberUserId, userId))
           const docs = await eraseMemberSessionDocuments(tx, userId)
           blobFailures = docs.blobFailures
           docsFailed = blobFailures > 0

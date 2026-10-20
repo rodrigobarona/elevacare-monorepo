@@ -47,6 +47,8 @@ export const TENANT_TABLES = [
   "sessions",
   "session_note_drafts",
   "record_templates",
+  "crm_contacts",
+  "crm_follow_ups",
   "expert_practice_locations",
   "event_locations",
   "billing_customers",
