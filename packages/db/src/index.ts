@@ -149,6 +149,13 @@ export {
   type ExpertBookingListItem,
 } from "./queries/expert-bookings"
 export {
+  getExpertMember,
+  listExpertMembers,
+  type ExpertMemberDetail,
+  type ExpertMemberListItem,
+  type ExpertMemberSession,
+} from "./queries/expert-members"
+export {
   getExpertBookingForApproval,
   listExpiredBookingRequests,
   type ExpertBookingApprovalRow,

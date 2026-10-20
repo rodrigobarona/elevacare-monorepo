@@ -24,3 +24,12 @@ export function requiredLocalesForApp(appName: string): readonly Locale[] {
   }
   return REQUIRED_LOCALES_BY_APP.default
 }
+
+export type LocalizedCopy = { en: string; pt?: string; es?: string }
+
+/** Copy for `locale` with English fallback; `pt-BR` reads as `pt`. */
+export function pickLocalized(text: LocalizedCopy, locale: string): string {
+  if (locale.startsWith("pt") && text.pt) return text.pt
+  if (locale.startsWith("es") && text.es) return text.es
+  return text.en
+}
