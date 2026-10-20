@@ -64,6 +64,7 @@ export type PublicBookingLink = {
   eventTitle: LocalizedText
   cancellationPolicy: (typeof main.eventTypes.$inferSelect)["cancellationPolicy"]
   requiresApproval: boolean
+  instantBookLeadMinutes: number | null
 }
 
 export const MAX_MARKETPLACE_OFFSET = 10_000
@@ -393,6 +394,7 @@ export async function findUsableBookingLink(
         eventTitle: main.eventTypes.title,
         cancellationPolicy: main.eventTypes.cancellationPolicy,
         requiresApproval: main.eventTypes.requiresApproval,
+        instantBookLeadMinutes: main.eventTypes.instantBookLeadMinutes,
       })
       .from(main.bookingLinks)
       .innerJoin(
@@ -434,6 +436,7 @@ export async function findUsableBookingLink(
       eventTitle: row.eventTitle,
       cancellationPolicy: row.cancellationPolicy,
       requiresApproval: row.requiresApproval,
+      instantBookLeadMinutes: row.instantBookLeadMinutes,
     }
   })
 }

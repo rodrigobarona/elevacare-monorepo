@@ -103,6 +103,7 @@ export async function POST(request: Request) {
               data.cancellationPolicy ?? DEFAULT_CANCELLATION_POLICY,
             rescheduleWindowHours: data.rescheduleWindowHours ?? null,
             requiresApproval: data.requiresApproval,
+            instantBookLeadMinutes: data.instantBookLeadMinutes ?? null,
             worldwideMode: data.worldwideMode,
           },
           tx

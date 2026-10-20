@@ -146,6 +146,8 @@ export async function PATCH(
     updates.rescheduleWindowHours = data.rescheduleWindowHours
   if (data.requiresApproval !== undefined)
     updates.requiresApproval = data.requiresApproval
+  if (data.instantBookLeadMinutes !== undefined)
+    updates.instantBookLeadMinutes = data.instantBookLeadMinutes
   if (data.worldwideMode !== undefined)
     updates.worldwideMode = data.worldwideMode
   if (data.published !== undefined) updates.published = data.published

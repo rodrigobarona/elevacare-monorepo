@@ -381,7 +381,11 @@
     },
     "bookingSetting": {
       "label": "How members book",
-      "help": "Instant Book confirms as soon as they pay. Request to book holds the slot and the payment until you accept."
+      "help": "Instant Book confirms as soon as they pay. Request to book holds the slot and the payment until you accept.",
+      "leadLabel": "Ask me to confirm last-minute bookings",
+      "leadNone": "Never — always instant",
+      "leadHours": "If it starts within {hours} h",
+      "leadHelp": "Bookings closer than this wait for you to accept, like Request to book. Useful for in-person sessions."
     },
     "emptyHint": "Add a service with its price, duration and how members meet you. You can publish it when it is ready.",
     "form": {

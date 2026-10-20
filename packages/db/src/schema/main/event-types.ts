@@ -110,6 +110,8 @@ export const eventTypes = pgTable(
     rescheduleWindowHours: integer("reschedule_window_hours"),
 
     requiresApproval: boolean("requires_approval").notNull().default(false),
+    /** Instant Book only: slots sooner than this need expert confirmation. */
+    instantBookLeadMinutes: integer("instant_book_lead_minutes"),
     worldwideMode: boolean("worldwide_mode").notNull().default(false),
     active: boolean("active").notNull().default(true),
     published: boolean("published").notNull().default(false),

@@ -417,6 +417,11 @@ Each entry should include:
   with `booking_not_confirmed`. Out of v1: guest requirements, pre-booking
   questions, approve first N, per-mode/date, search ranking, expert cancel
   of a confirmed booking.
+- 2026-10-20 addendum (AUD-046): Instant Book offers may set
+  `instant_book_lead_minutes` (presets 2/12/24/48 h, max 7 days). A slot
+  that starts sooner than that is snapshotted as Request to book;
+  `slotRequiresApproval()` in `@eleva/config/booking-settings` decides for
+  both reserve and the funnel copy.
 - Owner: engineering
 - Status: `active`
 - Related: Phase 10.1 booking settings, cancellation-policy snapshot pattern

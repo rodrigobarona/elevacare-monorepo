@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { INSTANT_BOOK_LEAD_MINUTES_MAX } from "@eleva/config/booking-settings"
 import { CANCELLATION_POLICY_VALUES } from "@eleva/config/cancellation-policy"
 import {
   isAllowedSocialLinkUrl,
@@ -1461,6 +1462,13 @@ export const CreateEventTypeRequestSchema = z.object({
   cancellationPolicy: CancellationPolicySchema.optional(),
   rescheduleWindowHours: z.number().int().positive().nullish(),
   requiresApproval: z.boolean(),
+  /** Instant Book only: slots sooner than this need expert confirmation. */
+  instantBookLeadMinutes: z
+    .number()
+    .int()
+    .positive()
+    .max(INSTANT_BOOK_LEAD_MINUTES_MAX)
+    .nullish(),
   worldwideMode: z.boolean(),
 })
 
@@ -1872,6 +1880,7 @@ export const PublicEventTypeSchema = z.object({
   sessionMode: z.enum(["online", "in_person", "phone"]),
   cancellationPolicy: CancellationPolicySchema,
   requiresApproval: z.boolean(),
+  instantBookLeadMinutes: z.number().int().positive().nullable().default(null),
   whatsIncluded: LocalizedListSchema.default({}),
   whatToExpect: LocalizedListSchema.default({}),
   exampleQuestions: LocalizedListSchema.default({}),
@@ -1945,6 +1954,7 @@ export const PublicBookingLinkResponseSchema = z.object({
   eventTitle: PublicLocalizedTextSchema,
   cancellationPolicy: CancellationPolicySchema,
   requiresApproval: z.boolean(),
+  instantBookLeadMinutes: z.number().int().positive().nullable().default(null),
   modes: z.array(PublicEventTypeModeSchema).min(1),
 })
 

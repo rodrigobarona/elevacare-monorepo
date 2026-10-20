@@ -49,6 +49,7 @@ import { formatCountdown, isExpired } from "@eleva/ui/lib/booking/countdown"
 import { displayLanguage } from "@eleva/ui/lib/booking/display-names"
 import { toE164 } from "@eleva/ui/lib/booking/e164"
 import { maskPhone } from "@eleva/config/phone"
+import { slotRequiresApproval } from "@eleva/config/booking-settings"
 import { addMonths, startOfMonth } from "@eleva/ui/lib/booking/slot-groups"
 import { createPublicApiClient } from "@/lib/public-api"
 import { downloadBookingIcs } from "@eleva/calendar/ics-download"
@@ -103,6 +104,7 @@ export function BookingFunnel({
   modes,
   cancellationPolicy,
   requiresApproval = false,
+  instantBookLeadMinutes = null,
   geoCountry,
   geoTimeZone,
   consents,
@@ -122,6 +124,7 @@ export function BookingFunnel({
   modes: PublicEventTypeMode[]
   cancellationPolicy: CancellationPolicy
   requiresApproval?: boolean
+  instantBookLeadMinutes?: number | null
   geoCountry: string
   geoTimeZone: string
   consents: FunnelConsentDoc[]
@@ -192,7 +195,14 @@ export function BookingFunnel({
   const isRequest =
     settledStatus != null
       ? settledStatus === "awaiting_confirmation"
-      : requiresApproval
+      : slot
+        ? slotRequiresApproval({
+            requiresApproval,
+            instantBookLeadMinutes,
+            startsAt: new Date(slot.start),
+            now: new Date(nowMs),
+          })
+        : requiresApproval
 
   const evaluations = evaluateModes(modes, {
     memberCountry: country,
@@ -912,7 +922,7 @@ export function BookingFunnel({
         {step === "pay" && payment && reservation ? (
           <div className="mt-8 space-y-6">
             <StepHeader title={t("pay.heading")} sub={t("pay.sub")}>
-              {requiresApproval ? (
+              {isRequest ? (
                 <p className="text-sm text-muted-foreground">
                   {t("pay.requestHint")}
                 </p>

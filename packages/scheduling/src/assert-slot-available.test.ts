@@ -32,6 +32,7 @@ const eventType: OfferEventTypeRow = {
   bufferAfterMinutes: 0,
   cancellationPolicy: "flexible",
   requiresApproval: false,
+  instantBookLeadMinutes: null,
 }
 
 const resolved = composeResolvedOffer({ orgId: "org-1", mode, eventType })

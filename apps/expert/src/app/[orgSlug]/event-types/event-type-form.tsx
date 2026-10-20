@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
 import {
   BOOKING_SETTING_VALUES,
+  INSTANT_BOOK_LEAD_MINUTES_OPTIONS,
   bookingSettingFromRequiresApproval,
   describeBookingSetting,
   isBookingSetting,
@@ -73,6 +74,8 @@ function isSessionMode(value: unknown): value is SessionMode {
     (SESSION_MODES as readonly string[]).includes(value)
   )
 }
+
+const NO_INSTANT_LEAD = "none"
 
 export function EventTypeForm({
   mode,
@@ -148,6 +151,11 @@ export function EventTypeForm({
   const [requiresApproval, setRequiresApproval] = React.useState(
     defaultValues?.requiresApproval ?? false
   )
+  const [instantLead, setInstantLead] = React.useState(
+    defaultValues?.instantBookLeadMinutes != null
+      ? String(defaultValues.instantBookLeadMinutes)
+      : NO_INSTANT_LEAD
+  )
   const [worldwideMode, setWorldwideMode] = React.useState(
     defaultValues?.worldwideMode ?? false
   )
@@ -185,6 +193,10 @@ export function EventTypeForm({
       cancellationPolicy,
       rescheduleWindowHours: rescheduleWindow ? Number(rescheduleWindow) : null,
       requiresApproval,
+      instantBookLeadMinutes:
+        requiresApproval || instantLead === NO_INSTANT_LEAD
+          ? null
+          : Number(instantLead),
       worldwideMode,
     }
 
@@ -200,6 +212,7 @@ export function EventTypeForm({
               cancellationPolicy: formData.cancellationPolicy,
               rescheduleWindowHours: formData.rescheduleWindowHours,
               requiresApproval: formData.requiresApproval,
+              instantBookLeadMinutes: formData.instantBookLeadMinutes,
               worldwideMode: formData.worldwideMode,
             })
           : panel === "basics"
@@ -606,6 +619,39 @@ export function EventTypeForm({
                     setRequiresApproval(id === "request")
                 }}
               />
+              {requiresApproval ? null : (
+                <div className="space-y-1.5 pt-2">
+                  <Label id="instant-book-lead-label">
+                    {t("bookingSetting.leadLabel")}
+                  </Label>
+                  <Select
+                    aria-labelledby="instant-book-lead-label"
+                    selectedKey={instantLead}
+                    onSelectionChange={(key) => {
+                      if (typeof key === "string") setInstantLead(key)
+                    }}
+                  >
+                    <SelectTrigger className="max-w-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem id={NO_INSTANT_LEAD}>
+                        {t("bookingSetting.leadNone")}
+                      </SelectItem>
+                      {INSTANT_BOOK_LEAD_MINUTES_OPTIONS.map((minutes) => (
+                        <SelectItem key={minutes} id={String(minutes)}>
+                          {t("bookingSetting.leadHours", {
+                            hours: minutes / 60,
+                          })}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground">
+                    {t("bookingSetting.leadHelp")}
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-3">

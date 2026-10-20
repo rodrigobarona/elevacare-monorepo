@@ -1,4 +1,5 @@
 import { randomBytes, randomUUID } from "node:crypto"
+import { slotRequiresApproval } from "@eleva/config/booking-settings"
 import type { CancellationPolicy } from "@eleva/config/cancellation-policy"
 import { and, eq, isNull, or, sql } from "drizzle-orm"
 import type { Redis } from "@upstash/redis"
@@ -333,7 +334,12 @@ export async function reserveBooking(
         ...(intakeNotesEncrypted ? { intakeNotesEncrypted } : {}),
       },
       cancellationPolicy: offer.cancellationPolicy,
-      requiresApproval: offer.requiresApproval,
+      requiresApproval: slotRequiresApproval({
+        requiresApproval: offer.requiresApproval,
+        instantBookLeadMinutes: offer.instantBookLeadMinutes,
+        startsAt: input.startsAt,
+        now: new Date(),
+      }),
       audit: {
         actorUserId: input.session?.userId ?? null,
         payload: {

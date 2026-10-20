@@ -381,7 +381,11 @@
     },
     "bookingSetting": {
       "label": "Cómo reservan los miembros",
-      "help": "La reserva instantánea confirma en cuanto pagan. Solicitar reserva retiene el hueco y el pago hasta que aceptes."
+      "help": "La reserva instantánea confirma en cuanto pagan. Solicitar reserva retiene el hueco y el pago hasta que aceptes.",
+      "leadLabel": "Pedir confirmación para reservas de última hora",
+      "leadNone": "Nunca, siempre inmediata",
+      "leadHours": "Si empieza en menos de {hours} h",
+      "leadHelp": "Las reservas más cercanas esperan a que las aceptes, como en Solicitud de reserva. Útil para sesiones presenciales."
     },
     "emptyHint": "Añade un servicio con su precio, duración y cómo te encuentran los miembros. Podrás publicarlo cuando esté listo.",
     "form": {

@@ -381,7 +381,11 @@
     },
     "bookingSetting": {
       "label": "Como os membros marcam",
-      "help": "A reserva imediata confirma assim que pagam. O pedido de reserva segura o horário e o pagamento até aceitar."
+      "help": "A reserva imediata confirma assim que pagam. O pedido de reserva segura o horário e o pagamento até aceitar.",
+      "leadLabel": "Pedir confirmação para marcações de última hora",
+      "leadNone": "Nunca — sempre imediata",
+      "leadHours": "Se começar dentro de {hours} h",
+      "leadHelp": "Marcações mais próximas do que isto esperam que aceite, como em Pedido de marcação. Útil para sessões presenciais."
     },
     "emptyHint": "Adicione um serviço com preço, duração e a forma como os membros se encontram consigo. Pode publicá-lo quando estiver pronto.",
     "form": {

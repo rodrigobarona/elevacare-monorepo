@@ -112,6 +112,7 @@ export async function updateEventType(
       | "cancellationPolicy"
       | "rescheduleWindowHours"
       | "requiresApproval"
+      | "instantBookLeadMinutes"
       | "worldwideMode"
       | "active"
       | "published"
@@ -195,6 +196,7 @@ export async function findPublicEventType(
       | "worldwideMode"
       | "cancellationPolicy"
       | "requiresApproval"
+      | "instantBookLeadMinutes"
     >
   | undefined
 > {
@@ -221,6 +223,7 @@ export async function findPublicEventType(
         worldwideMode: eventTypes.worldwideMode,
         cancellationPolicy: eventTypes.cancellationPolicy,
         requiresApproval: eventTypes.requiresApproval,
+        instantBookLeadMinutes: eventTypes.instantBookLeadMinutes,
       })
       .from(eventTypes)
       .where(
@@ -259,6 +262,7 @@ export async function listPublicEventTypes(
     | "sessionMode"
     | "cancellationPolicy"
     | "requiresApproval"
+    | "instantBookLeadMinutes"
   >[]
 > {
   return withPlatformAdminContext(async (tx: Tx) => {
@@ -278,6 +282,7 @@ export async function listPublicEventTypes(
         sessionMode: eventTypes.sessionMode,
         cancellationPolicy: eventTypes.cancellationPolicy,
         requiresApproval: eventTypes.requiresApproval,
+        instantBookLeadMinutes: eventTypes.instantBookLeadMinutes,
       })
       .from(eventTypes)
       .where(
