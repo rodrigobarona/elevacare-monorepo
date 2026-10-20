@@ -5,7 +5,10 @@ import { isReserved } from "@eleva/config/reserved-usernames"
 import { BookingFunnel } from "@/components/booking/booking-funnel"
 import { BookingLayout } from "@/components/booking/booking-layout"
 import { PublicRateLimited } from "@/components/public-rate-limited"
-import { funnelConsentDocs } from "@/lib/booking-consents"
+import {
+  aiProcessingConsentDoc,
+  funnelConsentDocs,
+} from "@/lib/booking-consents"
 import { readBookingGeo } from "@/lib/booking-geo"
 import { parseBookingSelection } from "@/lib/booking-selection"
 import { hreflangLanguages, localePath } from "@/lib/hreflang"
@@ -122,6 +125,7 @@ export default async function PublicBookingPage({
         geoCountry={geo.country}
         geoTimeZone={geo.timeZone}
         consents={funnelConsentDocs(locale)}
+        aiProcessingConsent={aiProcessingConsentDoc(locale)}
         initialModeId={selectedMode?.id ?? null}
         initialSlot={initialSlot}
       />

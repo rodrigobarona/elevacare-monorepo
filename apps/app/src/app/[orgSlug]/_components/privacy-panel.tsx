@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
+import { AI_PROCESSING_CONSENT_DOCUMENT } from "@eleva/compliance"
+import { isLocale } from "@eleva/config/i18n"
 import { toast } from "sonner"
 import type { ListMeConsentsResponse } from "@eleva/api-client"
 import { Button, LinkButton } from "@eleva/ui/components/button"
@@ -68,6 +70,10 @@ export function PrivacyPanel({
   const t = useTranslations("privacy")
   const tc = useTranslations("common")
   const te = useTranslations("errors")
+  const locale = useLocale()
+  const aiProcessingNoticeHref = isLocale(locale)
+    ? AI_PROCESSING_CONSENT_DOCUMENT.urls[locale]
+    : AI_PROCESSING_CONSENT_DOCUMENT.urls.en
   const router = useRouter()
   const [consentPending, setConsentPending] = useState<string | null>(null)
   const [dsarId, setDsarId] = useState<string | null>(null)
@@ -210,7 +216,14 @@ export function PrivacyPanel({
                     <p className="font-medium">{t(`consents.kinds.${kind}`)}</p>
                     {kind === "ai_processing" ? (
                       <p className="max-w-prose text-sm text-muted-foreground">
-                        {t("consents.aiProcessingHint")}
+                        {t("consents.aiProcessingHint")}{" "}
+                        <LinkButton
+                          href={aiProcessingNoticeHref}
+                          variant="link"
+                          className="h-auto p-0 text-sm"
+                        >
+                          {t("consents.aiProcessingNoticeLink")}
+                        </LinkButton>
                       </p>
                     ) : null}
                     <p className="text-sm text-muted-foreground">

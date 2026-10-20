@@ -1,4 +1,4 @@
-import { sweepExpiredAiDrafts } from "@eleva/compliance"
+import { runRetentionSweep } from "@eleva/compliance"
 import type { RoutePolicy } from "@/lib/route-policy"
 import {
   internalWorkflowOptions,
@@ -14,8 +14,8 @@ export const ROUTE_POLICY = {
 /**
  * POST /workflows/retention-sweep
  *
- * Daily: delete unpublished AI drafts untouched for 90 days (one audit
- * event per org). Batched; `hasMore` means the next run continues.
+ * Daily: purge expired AI drafts (90d), session documents (Blob then row),
+ * and notification delivery logs (1y). Batched; `hasMore` schedules another run.
  *
  * Authz: Bearer `WORKFLOWS_DRAIN_SECRET`.
  */
@@ -23,7 +23,7 @@ export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
 export async function POST(request: Request) {
-  return runInternalWorkflow(request, async () => sweepExpiredAiDrafts())
+  return runInternalWorkflow(request, async () => runRetentionSweep())
 }
 
 export async function OPTIONS(request: Request) {

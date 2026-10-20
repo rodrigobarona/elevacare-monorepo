@@ -1,4 +1,5 @@
 import {
+  AI_PROCESSING_CONSENT_DOCUMENT,
   CONSENT_DOCUMENTS,
   FUNNEL_CONSENT_KINDS,
   type FunnelConsentKind,
@@ -17,4 +18,14 @@ export function funnelConsentDocs(locale: Locale): FunnelConsentDoc[] {
     version: CONSENT_DOCUMENTS[kind].version,
     href: CONSENT_DOCUMENTS[kind].urls[locale],
   }))
+}
+
+export function aiProcessingConsentDoc(locale: Locale): {
+  version: string
+  href: string
+} {
+  return {
+    version: AI_PROCESSING_CONSENT_DOCUMENT.version,
+    href: AI_PROCESSING_CONSENT_DOCUMENT.urls[locale],
+  }
 }

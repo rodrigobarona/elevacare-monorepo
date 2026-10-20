@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import {
+  AI_PROCESSING_CONSENT_DOCUMENT,
   CONSENT_DOCUMENTS,
   CONSENT_DOCUMENT_VERSION,
   CONSENT_KINDS,
@@ -24,6 +25,16 @@ describe("CONSENT_DOCUMENTS", () => {
       expect(doc.urls.pt).toMatch(/^\/pt\/legal\//)
       expect(doc.urls.es).toMatch(/^\/es\/legal\//)
     }
+  })
+
+  it("records a version and locale URLs for ai_processing", () => {
+    expect(AI_PROCESSING_CONSENT_DOCUMENT.version).toBe(
+      CONSENT_DOCUMENT_VERSION
+    )
+    expect(AI_PROCESSING_CONSENT_DOCUMENT.urls.en).toBe("/legal/ai-processing")
+    expect(AI_PROCESSING_CONSENT_DOCUMENT.urls.pt).toBe(
+      "/pt/legal/ai-processing"
+    )
   })
 
   it("exposes required versions for reserve-time checks", () => {

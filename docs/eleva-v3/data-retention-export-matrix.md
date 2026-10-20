@@ -78,6 +78,14 @@ Use this document to answer:
 - Deletion: policy-driven and auditable
 - Audit access: yes
 
+### Session documents (`session_documents`, private Blob)
+
+- Data type: expert/member uploads on a booking (PHI bytes in the private store)
+- Sensitivity: clinical / PHI
+- Export: yes (DSAR metadata; signed download while the row exists)
+- Deletion: `POST /workflows/retention-sweep` hard-deletes rows older than `SESSION_DOCUMENT_RETENTION_DAYS` (working pre-launch **7×365 days** in `@eleva/compliance`; DPO sets the final period before GA). Order: **Blob delete first**, then row. Failed Blob deletes increment `retention_sweep_attempts` and stop after 3 attempts.
+- Audit access: yes (`session_document.deleted`, reason `retention`)
+
 ### Transcript artifacts
 
 - Data type: call transcripts and transcript-derived artifacts
@@ -169,7 +177,7 @@ Use this document to answer:
 - Data type: notification intents and delivery metadata
 - Sensitivity: operational, sometimes personal
 - Export: selective
-- Deletion: depends on operational value and policy
+- Deletion: `POST /workflows/retention-sweep` deletes `notification_deliveries` rows older than **365 days** (batched). User-scoped auth kinds (`org_id IS NULL`) purge without org audit; org-scoped rows emit `notification.deleted` (scope `delivery_log`).
 - Audit access: for critical flows
 
 ### Audit logs

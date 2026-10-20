@@ -10,6 +10,7 @@ const FOOTER_LABEL_KEYS = {
   terms: "terms",
   privacy: "privacy",
   "health-data": "healthData",
+  "ai-processing": "aiProcessing",
   cookies: "cookies",
   payments: "payments",
   "expert-agreement": "expertAgreement",

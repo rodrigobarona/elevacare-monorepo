@@ -415,7 +415,7 @@
       "consentsIntro": "Para reservar una sesión de salud en esta plataforma digital de salud, confirma:",
       "aiConsent": {
         "label": "Opcional: autorizo la transcripción en directo y notas asistidas por IA en esta sesión. Tu experto sigue redactando el informe; puedes retirar la autorización cuando quieras en los ajustes de Privacidad. Consulta el",
-        "link": "aviso de privacidad"
+        "link": "aviso de tratamiento por IA"
       },
       "hold": "Continuar al pago",
       "confirmFree": "Confirmar reserva",
@@ -507,6 +507,7 @@
     "terms": "Términos",
     "privacy": "Privacidad",
     "healthData": "Datos de salud",
+    "aiProcessing": "Tratamiento por IA",
     "cookies": "Cookies",
     "payments": "Pagos",
     "expertAgreement": "Acuerdo de especialistas",
@@ -559,6 +560,18 @@
           "p3": "Puede rechazar este tratamiento, pero entonces no podemos completar una reserva de sesión de salud. El uso solo de cuenta de la plataforma no exige este consentimiento.",
           "p4": "La versión de este aviso en el momento de la reserva queda asociada a su reserva. Una versión obsoleta se rechaza para no registrar un consentimiento sobre un texto que no vio.",
           "p5": "Este es un borrador de desarrollo. Legal y el DPO emitirán el aviso de producción antes del go-live."
+        }
+      },
+      "ai-processing": {
+        "title": "Tratamiento por IA — Eleva.care",
+        "description": "Borrador del aviso para transcripción en directo opcional e informes de sesión asistidos por IA.",
+        "heading": "Tratamiento por IA",
+        "paragraphs": {
+          "p1": "Si opta por activarlo, Eleva puede tratar el audio de su sesión de vídeo online para producir una transcripción en directo para el especialista que impartió esa sesión. La transcripción pasa por nuestro proveedor de vídeo (Daily) en una configuración estándar (no HIPAA), con grabación en la nube desactivada.",
+          "p2": "La transcripción y las notas de sesión del especialista pueden enviarse más tarde a un modelo de IA para que el especialista redacte un informe de sesión. El modelo está configurado con retención cero: no debe guardar copia de sus datos para entrenamiento ni reutilización. El especialista revisa cada borrador antes de compartirlo con usted.",
+          "p3": "La redacción asistida por IA aún no está activa en el producto. Cuando esté disponible, irá detrás de un flag de producto separado y del mismo consentimiento. Hasta entonces, solo aplica la transcripción en directo (cuando opte).",
+          "p4": "Puede desactivarlo en los ajustes de Privacidad o no marcar la casilla opcional en la reserva. La retirada detiene la transcripción a partir de su próxima llamada y cierra los opt-in asociados a la reserva. No borra transcripciones o informes ya guardados en el registro cifrado de la sesión.",
+          "p5": "Este es un borrador de desarrollo (versión alineada con los demás avisos legales de Eleva). Legal y el DPO sustituirán este texto antes del go-live."
         }
       },
       "cookies": {

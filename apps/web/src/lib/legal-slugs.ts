@@ -2,6 +2,7 @@ export const LEGAL_SLUGS = [
   "terms",
   "privacy",
   "health-data",
+  "ai-processing",
   "cookies",
   "payments",
   "expert-agreement",

@@ -7,6 +7,10 @@ const { withPlatformAdminContext, withPlatformAudit } = vi.hoisted(() => ({
 
 vi.mock("@eleva/db", () => ({ withPlatformAdminContext }))
 vi.mock("@eleva/audit", () => ({ withPlatformAudit }))
+vi.mock("@eleva/storage", () => ({
+  deletePrivateDocument: vi.fn(),
+}))
+
 vi.mock("@eleva/db/schema", () => ({
   consents: { userId: "user_id", bookingId: "booking_id" },
   records: {
@@ -18,13 +22,30 @@ vi.mock("@eleva/db/schema", () => ({
     publishedAt: "published_at",
     updatedAt: "updated_at",
   },
+  sessionDocuments: {
+    id: "id",
+    orgId: "org_id",
+    blobUrl: "blob_url",
+    createdAt: "created_at",
+    retentionSweepAttempts: "retention_sweep_attempts",
+    retentionLastError: "retention_last_error",
+  },
+  notificationDeliveries: {
+    id: "id",
+    orgId: "org_id",
+    createdAt: "created_at",
+  },
 }))
 
+import { deletePrivateDocument } from "@eleva/storage"
 import {
   AI_DRAFT_RETENTION_DAYS,
+  NOTIFICATION_DELIVERY_RETENTION_DAYS,
   eraseMemberClinicalRecords,
   subjectPseudonymForUser,
   sweepExpiredAiDrafts,
+  sweepExpiredNotificationDeliveries,
+  sweepExpiredSessionDocuments,
 } from "./retention"
 
 afterEach(() => {
@@ -103,7 +124,14 @@ describe("sweepExpiredAiDrafts", () => {
 
     const result = await sweepExpiredAiDrafts(new Date("2026-10-20"))
 
-    expect(result).toEqual({ aiDraftsDeleted: 0, orgs: 0, hasMore: false })
+    expect(result).toEqual({
+      aiDraftsDeleted: 0,
+      sessionDocumentsDeleted: 0,
+      sessionDocumentsBlobFailures: 0,
+      notificationDeliveriesDeleted: 0,
+      orgs: 0,
+      hasMore: false,
+    })
     expect(withPlatformAudit).not.toHaveBeenCalled()
   })
 
@@ -142,7 +170,14 @@ describe("sweepExpiredAiDrafts", () => {
 
     const result = await sweepExpiredAiDrafts(new Date("2026-10-20"))
 
-    expect(result).toEqual({ aiDraftsDeleted: 3, orgs: 2, hasMore: false })
+    expect(result).toEqual({
+      aiDraftsDeleted: 3,
+      sessionDocumentsDeleted: 0,
+      sessionDocumentsBlobFailures: 0,
+      notificationDeliveriesDeleted: 0,
+      orgs: 2,
+      hasMore: false,
+    })
     expect(withPlatformAudit).toHaveBeenCalledTimes(2)
     expect(withPlatformAudit.mock.calls.map((call) => call[0])).toEqual([
       { orgId: "org-a" },
@@ -158,6 +193,146 @@ describe("sweepExpiredAiDrafts", () => {
         count: 2,
         reason: "retention",
         retentionDays: 90,
+      },
+    })
+  })
+})
+
+describe("sweepExpiredSessionDocuments", () => {
+  const emit = vi.fn()
+
+  beforeEach(() => {
+    withPlatformAdminContext.mockReset()
+    withPlatformAudit.mockReset()
+    emit.mockReset()
+    vi.mocked(deletePrivateDocument).mockReset()
+    vi.mocked(deletePrivateDocument).mockResolvedValue(undefined)
+  })
+
+  it("deletes blob then row when document is expired", async () => {
+    withPlatformAdminContext.mockImplementation(async (fn) =>
+      fn({
+        select: () => ({
+          from: () => ({
+            where: () => ({
+              limit: async () => [
+                { id: "doc-1", orgId: "org-a", blobUrl: "https://blob/doc" },
+              ],
+            }),
+          }),
+        }),
+        update: vi.fn(),
+      })
+    )
+    withPlatformAudit.mockImplementation(async (_opts, fn) =>
+      fn(
+        {
+          delete: () => ({
+            where: () => ({ returning: async () => [{ id: "doc-1" }] }),
+          }),
+        },
+        { emit }
+      )
+    )
+
+    const result = await sweepExpiredSessionDocuments(new Date("2026-10-20"))
+
+    expect(deletePrivateDocument).toHaveBeenCalledWith("https://blob/doc")
+    expect(result).toEqual({ deleted: 1, blobFailures: 0, hasMore: false })
+    expect(emit).toHaveBeenCalledWith({
+      entity: "session_document",
+      action: "deleted",
+      entityId: "doc-1",
+      payload: { reason: "retention", retentionDays: 365 * 7 },
+    })
+  })
+
+  it("keeps row and increments attempts when blob delete fails", async () => {
+    vi.mocked(deletePrivateDocument).mockRejectedValue(new Error("blob down"))
+    const update = vi.fn(() => ({
+      set: () => ({
+        where: () => ({
+          returning: async () => [{ attempts: 1 }],
+        }),
+      }),
+    }))
+    withPlatformAdminContext.mockImplementation(async (fn) =>
+      fn({
+        select: () => ({
+          from: () => ({
+            where: () => ({
+              limit: async () => [
+                { id: "doc-2", orgId: "org-a", blobUrl: "https://blob/doc2" },
+              ],
+            }),
+          }),
+        }),
+        update,
+      })
+    )
+
+    const result = await sweepExpiredSessionDocuments(new Date("2026-10-20"))
+
+    expect(result).toEqual({ deleted: 0, blobFailures: 1, hasMore: false })
+    expect(withPlatformAudit).not.toHaveBeenCalled()
+    expect(update).toHaveBeenCalled()
+  })
+})
+
+describe("sweepExpiredNotificationDeliveries", () => {
+  beforeEach(() => {
+    withPlatformAdminContext.mockReset()
+    withPlatformAudit.mockReset()
+  })
+
+  it("uses a one-year retention window", () => {
+    expect(NOTIFICATION_DELIVERY_RETENTION_DAYS).toBe(365)
+  })
+
+  it("deletes expired delivery rows with audit per org", async () => {
+    const emit = vi.fn()
+    withPlatformAdminContext.mockImplementation(async (fn) =>
+      fn({
+        select: () => ({
+          from: () => ({
+            where: () => ({
+              limit: async () => [
+                { id: "d1", orgId: "org-a" },
+                { id: "d2", orgId: null },
+              ],
+            }),
+          }),
+        }),
+        delete: () => ({
+          where: () => ({ returning: async () => [{ id: "d2" }] }),
+        }),
+      })
+    )
+    withPlatformAudit.mockImplementation(async (_opts, fn) =>
+      fn(
+        {
+          delete: () => ({
+            where: () => ({ returning: async () => [{ id: "d1" }] }),
+          }),
+        },
+        { emit }
+      )
+    )
+
+    const result = await sweepExpiredNotificationDeliveries(
+      new Date("2026-10-20")
+    )
+
+    expect(result).toEqual({ deleted: 2, hasMore: false })
+    expect(emit).toHaveBeenCalledWith({
+      entity: "notification",
+      action: "deleted",
+      entityId: null,
+      payload: {
+        reason: "retention",
+        retentionDays: 365,
+        count: 1,
+        scope: "delivery_log",
       },
     })
   })
