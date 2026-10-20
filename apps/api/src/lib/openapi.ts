@@ -4791,9 +4791,9 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       }),
       "/workflows/video-room-sweep": internalWorkflow({
         operationId: "sweepMissingSessionRooms",
-        summary: "Create missing Daily session rooms",
+        summary: "Create missing and delete expired Daily session rooms",
         description:
-          "Creates Daily rooms for confirmed or rescheduled online bookings that start within 2 hours and still have no room. Phone and in-person bookings are never included. Standard Daily, recording off, not HIPAA.",
+          "Creates Daily rooms for confirmed or rescheduled online bookings that start within 2 hours and still have no room. Phone and in-person bookings are never included. Also deletes rooms whose join window (booked end + 30 min) closed over an hour ago; the room name stays on the session so late webhooks still map. Standard Daily, recording off, not HIPAA.",
       }),
       "/workflows/video-eject-retry": internalWorkflow({
         operationId: "retryPendingSessionEjects",

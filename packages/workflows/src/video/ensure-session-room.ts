@@ -15,6 +15,7 @@ import { withAudit, withPlatformAudit } from "@eleva/audit"
 import { main, withPlatformAdminContext } from "@eleva/db"
 import {
   DailyHttpError,
+  JOIN_TRAIL_MS,
   buildSessionRoomBody,
   dailyClientFromEnv,
   isElevaRoomName,
@@ -29,6 +30,8 @@ import { countActiveDelegates } from "./participants"
 const ROOM_LEASE_MS = 60_000
 const SWEEP_AHEAD_MS = 2 * 60 * 60 * 1000
 const SWEEP_BATCH = 25
+/** Extra wait after room `exp` so late Daily webhooks land first. */
+const ROOM_DELETE_GRACE_MS = 60 * 60 * 1000
 const TERMINAL_SESSION_STATUSES = new Set([
   "cancelled",
   "ended",
@@ -560,6 +563,86 @@ export async function sweepMissingSessionRooms(
     results.push(await ensureSessionRoom(booking.id, deps))
   }
   return { scanned: bookings.length, results }
+}
+
+/** Sessions that ended before this instant have an expired room. */
+export function expiredRoomCutoff(now: Date): Date {
+  return new Date(now.getTime() - JOIN_TRAIL_MS - ROOM_DELETE_GRACE_MS)
+}
+
+export type ExpiredRoomResult =
+  | { bookingId: string; deleted: true }
+  | { bookingId: string; failed: string }
+
+/**
+ * Delete Daily rooms whose join window closed (booked end + 30 min) at
+ * least an hour ago. `dailyRoomName` stays so late webhooks still map;
+ * `roomDeletedAt` marks the row done.
+ */
+export async function sweepExpiredSessionRooms(
+  now = new Date(),
+  deps: SessionRoomDeps = {}
+) {
+  const rows = await withPlatformAdminContext(async (tx) => {
+    return tx
+      .select({
+        bookingId: main.sessions.bookingId,
+        orgId: main.sessions.orgId,
+        dailyRoomName: main.sessions.dailyRoomName,
+      })
+      .from(main.sessions)
+      .where(
+        and(
+          isNotNull(main.sessions.dailyRoomName),
+          isNull(main.sessions.roomDeletedAt),
+          lte(main.sessions.endsAt, expiredRoomCutoff(now))
+        )
+      )
+      .orderBy(main.sessions.endsAt)
+      .limit(SWEEP_BATCH)
+  })
+
+  const results: ExpiredRoomResult[] = []
+  for (const row of rows) {
+    const roomName = row.dailyRoomName!
+    try {
+      if (isElevaRoomName(roomName)) {
+        await daily(deps).deleteRoom(roomName)
+      }
+      await withAudit(
+        { orgId: row.orgId, actorUserId: null },
+        async (tx, ctx) => {
+          const updated = await tx
+            .update(main.sessions)
+            .set({ roomDeletedAt: now })
+            .where(
+              and(
+                eq(main.sessions.bookingId, row.bookingId),
+                isNull(main.sessions.roomDeletedAt)
+              )
+            )
+            .returning({ id: main.sessions.id })
+          await ctx.emit({
+            entity: "session",
+            action: "room_deleted",
+            entityId: row.bookingId,
+            payload:
+              updated.length > 0
+                ? { roomName, reason: "expired" }
+                : { roomName, skipped: true, reason: "already_deleted" },
+          })
+        }
+      )
+      results.push({ bookingId: row.bookingId, deleted: true })
+    } catch (err) {
+      results.push({
+        bookingId: row.bookingId,
+        failed:
+          err instanceof DailyHttpError ? `daily_${err.status}` : "internal",
+      })
+    }
+  }
+  return { scanned: rows.length, results }
 }
 
 export function expectedRoomName(bookingId: string) {
