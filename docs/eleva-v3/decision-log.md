@@ -50,6 +50,7 @@ Each entry should include:
 - Out of scope: an admin review gate before `active`, and a settings page to
   change invoicing after setup (next slice).
 - Owner: engineering. Status: `proposed`.
+- Next review: 2026-10-27 (founder sign-off on the approved-to-active rule).
 - Related: `apps/api/src/app/expert/profile/steps/[step]/complete/route.ts`,
   `apps/expert/src/app/[orgSlug]/setup/`.
 

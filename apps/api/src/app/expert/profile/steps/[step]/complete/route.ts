@@ -153,10 +153,6 @@ export async function POST(
     }
   }
 
-  // Finishing the last step takes a self-service expert out of onboarding.
-  // Draft (application pending) and suspended profiles keep their status.
-  const activate = step === "schedule" && profile.status === "approved"
-
   await withAudit(
     { orgId: profile.orgId, actorUserId: session.user.id },
     async (tx, ctx) => {
@@ -169,11 +165,17 @@ export async function POST(
         )
       }
       const [fresh] = await tx
-        .select({ metadata: main.expertProfiles.metadata })
+        .select({
+          metadata: main.expertProfiles.metadata,
+          status: main.expertProfiles.status,
+        })
         .from(main.expertProfiles)
         .where(eq(main.expertProfiles.id, profile.id))
         .limit(1)
         .for("update")
+      // Finishing the last step takes a self-service expert out of onboarding.
+      // Draft (application pending) and suspended profiles keep their status.
+      const activate = step === "schedule" && fresh?.status === "approved"
       const currentMeta =
         (fresh?.metadata as Record<string, unknown> | null) ?? {}
       const completedSteps = currentMeta.completedSteps
