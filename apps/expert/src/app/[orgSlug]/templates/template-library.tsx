@@ -64,6 +64,10 @@ export function TemplateLibrary({ apiBaseUrl }: { apiBaseUrl: string }) {
   const [filter, setFilter] = useState<string>("all")
   const [draft, setDraft] = useState<Draft | null>(null)
   const [findings, setFindings] = useState<TemplatePhiFinding[]>([])
+  const [scanned, setScanned] = useState<{
+    title: string
+    body: string
+  } | null>(null)
   const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
@@ -137,6 +141,7 @@ export function TemplateLibrary({ apiBaseUrl }: { apiBaseUrl: string }) {
             : null
         if (phi?.success) {
           setFindings(phi.data.findings)
+          setScanned(phi.data.scanned ?? null)
           toast.error(t("phiDetected"))
           return
         }
@@ -368,10 +373,16 @@ export function TemplateLibrary({ apiBaseUrl }: { apiBaseUrl: string }) {
                 <AlertDescription className="space-y-2">
                   <p>{t("phiBody")}</p>
                   {titleFindings.length > 0 ? (
-                    <PhiHighlight text={draft.title} findings={titleFindings} />
+                    <PhiHighlight
+                      text={scanned?.title ?? draft.title}
+                      findings={titleFindings}
+                    />
                   ) : null}
                   {bodyFindings.length > 0 ? (
-                    <PhiHighlight text={draft.body} findings={bodyFindings} />
+                    <PhiHighlight
+                      text={scanned?.body ?? draft.body}
+                      findings={bodyFindings}
+                    />
                   ) : null}
                 </AlertDescription>
               </Alert>

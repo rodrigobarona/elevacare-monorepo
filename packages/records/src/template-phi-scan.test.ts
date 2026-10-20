@@ -30,7 +30,7 @@ describe("scanTemplateForPhi", () => {
   })
 
   it("flags the source member's name, including a single name part", () => {
-    const context = { identifiers: ["Maria Fernandes"] }
+    const context = { names: ["Maria Fernandes"] }
     expect(detectors("Notes for Maria Fernandes", context)).toEqual([
       "member_identifier",
     ])
@@ -38,6 +38,14 @@ describe("scanTemplateForPhi", () => {
       "member_identifier",
     ])
     expect(detectors("Marianne", context)).toEqual([])
+  })
+
+  it("matches non-name identifiers only as whole values", () => {
+    const context = { identifiers: ["+351 912 345 678", "20 Oct 2026"] }
+    expect(detectors("Review again in 2026, set 345", context)).toEqual([])
+    expect(detectors("Booked on 20 Oct 2026", context)).toContain(
+      "member_identifier"
+    )
   })
 
   it("flags e-mail addresses", () => {
@@ -106,7 +114,7 @@ describe("placeholders", () => {
       "Hi {{member.firstName}}, see you after {{session.date}}. {{expert.name}}"
     )
     expect(
-      scanTemplateForPhi(tokenised, { identifiers: ["Maria Fernandes"] })
+      scanTemplateForPhi(tokenised, { names: ["Maria Fernandes"] })
     ).toEqual([])
   })
 })

@@ -735,6 +735,8 @@ export const TemplatePhiFindingSchema = z.object({
 export const RecordTemplatePhiErrorSchema = z.object({
   error: z.literal("PHI_DETECTED"),
   findings: z.array(TemplatePhiFindingSchema),
+  /** The trimmed, tokenised text the finding offsets refer to. */
+  scanned: z.object({ title: z.string(), body: z.string() }).optional(),
 })
 
 export const SessionDocumentScopeSchema = z.enum(["expert_only", "shared"])

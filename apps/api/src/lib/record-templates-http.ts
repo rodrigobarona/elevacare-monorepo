@@ -62,6 +62,7 @@ export function templateErrorResponse(
               start,
               end,
             })),
+            scanned: err.scanned,
           }
         : { error: err.code }
     return secureJson(body, { status: TEMPLATE_STATUS[err.code], headers })

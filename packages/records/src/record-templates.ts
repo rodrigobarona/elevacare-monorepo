@@ -33,7 +33,9 @@ export class RecordTemplateError extends Error {
 
   constructor(
     readonly code: RecordTemplateErrorCode,
-    readonly findings: readonly TemplatePhiFieldFinding[] = []
+    readonly findings: readonly TemplatePhiFieldFinding[] = [],
+    /** The exact text the findings' offsets refer to (trimmed and tokenised). */
+    readonly scanned?: { title: string; body: string }
   ) {
     super(code)
   }
@@ -69,6 +71,7 @@ function toView(row: RecordTemplateRow): RecordTemplateView {
 
 type BookingContext = {
   values: TemplatePlaceholderValues
+  names: string[]
   identifiers: string[]
   sourceTexts: string[]
 }
@@ -146,9 +149,8 @@ async function loadBookingContext(input: {
     "session.date": sessionDateLabel(row.startsAt, row.timezone, input.locale),
     "expert.name": row.expertName ?? undefined,
   }
+  const names = [memberName, row.memberName ?? ""].filter(Boolean)
   const identifiers = [
-    memberName,
-    row.memberName ?? "",
     row.guestEmail ?? "",
     row.memberEmail ?? "",
     row.guestPhone ?? "",
@@ -165,12 +167,12 @@ async function loadBookingContext(input: {
       ).map((record) => record.body)
     : []
 
-  return { values, identifiers, sourceTexts }
+  return { values, names, identifiers, sourceTexts }
 }
 
 function assertNoPhi(
   fields: { title: string; body: string },
-  context?: Pick<BookingContext, "identifiers" | "sourceTexts">
+  context?: Pick<BookingContext, "names" | "identifiers" | "sourceTexts">
 ) {
   const findings: TemplatePhiFieldFinding[] = [
     ...scanTemplateForPhi(fields.title, context).map((f) => ({
@@ -183,7 +185,7 @@ function assertNoPhi(
     })),
   ]
   if (findings.length > 0) {
-    throw new RecordTemplateError("PHI_DETECTED", findings)
+    throw new RecordTemplateError("PHI_DETECTED", findings, fields)
   }
 }
 

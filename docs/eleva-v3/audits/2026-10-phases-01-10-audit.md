@@ -139,7 +139,7 @@ AUD-022 stays product backlog.
 8. **10.2b** `draftSessionReport` behind `ff.ai_reports_beta` (AUD-032)
 9. **10.2c** CRM
 
-   10.1f (2026-10-20) adds `record_templates` (migration 0063, tenant RLS, audited `record_template.created|updated|archived`), `/records/templates` CRUD + `POST /records/templates/{id}/apply`, the template PHI scrubber, and the expert `/templates` gallery. It differs from the phase spec in four ways:
+   10.1f (2026-10-20) adds `record_templates` (migration 0063, tenant RLS, audited `record_template.created|updated|archived`), `/records/templates` CRUD + `POST /records/templates/{id}/apply`, the template PHI scrubber, and the expert `/templates` gallery. It differs from the phase spec in four ways (decision log, "Record templates ship as plain text"):
 
 - Bodies are plain text with placeholders, not Plate JSON, because the notes and report editors are still plain text.
 - The Eleva starter set ships as code constants (`@eleva/records` `STARTER_RECORD_TEMPLATES`) that experts copy into their library, not as seeded rows.

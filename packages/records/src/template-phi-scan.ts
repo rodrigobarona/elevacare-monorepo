@@ -17,7 +17,9 @@ export type TemplatePhiFinding = {
 }
 
 export type TemplatePhiContext = {
-  /** Exact identifiers of the source booking's member (name, e-mail, phone, dates, location). */
+  /** The source booking's member names; each name part is matched too. */
+  names?: readonly string[]
+  /** Other exact identifiers (e-mail, phone, dates), matched only as whole values. */
   identifiers?: readonly string[]
   /** Decrypted text of the source record; long sentences must not be copied verbatim. */
   sourceTexts?: readonly string[]
@@ -76,15 +78,22 @@ function collect(
   }
 }
 
-function identifierTerms(identifiers: readonly string[]): string[] {
+function identifierTerms(
+  names: readonly string[],
+  identifiers: readonly string[]
+): string[] {
   const terms = new Set<string>()
-  for (const raw of identifiers) {
+  for (const raw of names) {
     const value = raw.trim()
     if (value.length < IDENTIFIER_MIN) continue
     terms.add(value)
     for (const part of value.split(/\s+/)) {
       if (part.length >= IDENTIFIER_MIN) terms.add(part)
     }
+  }
+  for (const raw of identifiers) {
+    const value = raw.trim()
+    if (value.length >= IDENTIFIER_MIN) terms.add(value)
   }
   return [...terms].sort((a, b) => b.length - a.length)
 }
@@ -125,7 +134,10 @@ export function scanTemplateForPhi(
   const masked = maskPlaceholders(text)
   const findings: TemplatePhiFinding[] = []
 
-  for (const term of identifierTerms(context.identifiers ?? [])) {
+  for (const term of identifierTerms(
+    context.names ?? [],
+    context.identifiers ?? []
+  )) {
     collect(
       findings,
       masked,

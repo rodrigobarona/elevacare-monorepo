@@ -49,6 +49,7 @@ export function ReportEditor({
   const [loaded, setLoaded] = useState(false)
   const [templates, setTemplates] = useState<RecordTemplate[]>([])
   const [phiFindings, setPhiFindings] = useState<TemplatePhiFinding[]>([])
+  const [phiScannedBody, setPhiScannedBody] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
@@ -131,6 +132,7 @@ export function ReportEditor({
             : null
         if (phi?.success) {
           setPhiFindings(phi.data.findings.filter((f) => f.field === "body"))
+          setPhiScannedBody(phi.data.scanned?.body ?? null)
           toast.error(t("templatePhi"))
           return
         }
@@ -183,7 +185,10 @@ export function ReportEditor({
           <AlertTitle>{t("templatePhiTitle")}</AlertTitle>
           <AlertDescription className="space-y-2">
             <p>{t("templatePhiBody")}</p>
-            <PhiHighlight text={body} findings={phiFindings} />
+            <PhiHighlight
+              text={phiScannedBody ?? body}
+              findings={phiFindings}
+            />
           </AlertDescription>
         </Alert>
       ) : null}

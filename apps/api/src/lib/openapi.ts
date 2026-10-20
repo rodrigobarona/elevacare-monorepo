@@ -3443,7 +3443,9 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               description:
                 "Validation failed or the scrubber found member data",
               content: {
-                "application/json": { schema: RecordTemplatePhiErrorSchema },
+                "application/json": {
+                  schema: z.union([RecordTemplatePhiErrorSchema, ErrorSchema]),
+                },
               },
             },
           },
@@ -3475,7 +3477,9 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               description:
                 "Validation failed or the scrubber found member data",
               content: {
-                "application/json": { schema: RecordTemplatePhiErrorSchema },
+                "application/json": {
+                  schema: z.union([RecordTemplatePhiErrorSchema, ErrorSchema]),
+                },
               },
             },
           },
