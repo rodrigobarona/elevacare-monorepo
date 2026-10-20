@@ -12,7 +12,7 @@ describe("mintMeetingToken", () => {
       roomName: "eleva-11111111-1111-4111-8111-111111111111",
       userId: "user_1",
       userName: "Ana",
-      isOwner: true,
+      canAdmin: ["participants", "transcription"],
       exp,
       domainId: DOMAIN_ID,
       apiKey: API_KEY,
@@ -21,7 +21,8 @@ describe("mintMeetingToken", () => {
     const claims = await readMeetingTokenClaims(token, API_KEY)
     expect(claims.r).toBe("eleva-11111111-1111-4111-8111-111111111111")
     expect(claims.d).toBe(DOMAIN_ID)
-    expect(claims.o).toBe(true)
+    expect(claims.o).toBe(false)
+    expect(claims.p).toEqual({ ca: "p,t" })
     expect(claims.ud).toBe("user_1")
     expect(claims.u).toBe("Ana")
     expect(claims.ejt).toBe(true)
@@ -30,13 +31,28 @@ describe("mintMeetingToken", () => {
     expect(claims).not.toHaveProperty("sr")
   })
 
+  it("grants no admin rights when canAdmin is empty", async () => {
+    const token = await mintMeetingToken({
+      roomName: "eleva-x",
+      userId: "user_2",
+      userName: "Rui",
+      canAdmin: [],
+      exp: Math.floor(Date.now() / 1000) + 60,
+      domainId: DOMAIN_ID,
+      apiKey: API_KEY,
+    })
+    const claims = await readMeetingTokenClaims(token, API_KEY)
+    expect(claims.o).toBe(false)
+    expect(claims.p).toEqual({ ca: false })
+  })
+
   it("refuses a token without a room name", async () => {
     await expect(
       mintMeetingToken({
         roomName: "",
         userId: "user_1",
         userName: "Ana",
-        isOwner: false,
+        canAdmin: [],
         exp: Math.floor(Date.now() / 1000) + 60,
         domainId: DOMAIN_ID,
         apiKey: API_KEY,
@@ -70,7 +86,7 @@ describe("mintMeetingToken", () => {
         roomName: "eleva-x",
         userId: "user_1",
         userName: "Ana",
-        isOwner: false,
+        canAdmin: [],
         exp: Math.floor(Date.now() / 1000) + 60,
         domainId: "",
         apiKey: API_KEY,

@@ -328,7 +328,12 @@ export async function joinSession(
         roomName: row.session.dailyRoomName!,
         userId: input.userId,
         userName: input.userName,
-        isOwner: caller.role === "expert",
+        canAdmin:
+          caller.role === "expert"
+            ? transcriptionAllowed
+              ? ["participants", "transcription"]
+              : ["participants"]
+            : [],
         exp,
         domainId,
         apiKey,
