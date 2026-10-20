@@ -19,6 +19,7 @@ const SESSION_STATUS: Record<SessionRecordError["code"], number> = {
   FORBIDDEN: 403,
   INTAKE_READONLY: 409,
   AI_MODEL_ZERO_RETENTION_REQUIRED: 409,
+  NOT_PUBLISHABLE: 409,
 }
 
 export type TemplateCaller = { orgId: string; userId: string }
