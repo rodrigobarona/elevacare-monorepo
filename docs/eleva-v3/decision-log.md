@@ -48,7 +48,11 @@ Each entry should include:
 - Owner: engineering. Status: `proposed` (consent copy is a draft, not
   DPO-approved).
 - Next review: 2026-10-27 (DPO/legal review of the consent copy).
-- Related: `packages/compliance/src/member-consents.ts`,
+- Related: D-11 (working pre-launch, now author-only SELECT for expert
+  records), migrations `0060_ai_processing_consent` and
+  `0061_records_author_only_select`, AUD-029 and AUD-031 in
+  `docs/eleva-v3/audits/2026-10-phases-01-10-audit.md`,
+  `packages/compliance/src/member-consents.ts`,
   `packages/db/src/rls/policies.ts`.
 
 ### 2026-10-20: Expert setup wizard v3 and activation rule (proposed)
