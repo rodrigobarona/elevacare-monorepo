@@ -22,7 +22,7 @@ not a regression.
 Phase 09 video engineering is on main. Its **exit gate is still unproven**: there is no staging
 Eleva grant join across two browsers and no Daily webhook subscription evidence.
 
-Phase 10 started at roughly **40% of PR 10.1** (encrypted session records, documents and the in-call autosave). Update 2026-10-20: 10.1a (structural PHI guards, with the `reveal()` boundary enforced by `pnpm check:no-phi-logs`), 10.1b (`ai_processing` consent), 10.1c (publish and member reports) and 10.1d (retention sweep and clinical tombstones) are on main; 10.1e (expert members list) and 10.1f (record templates) are in review. The open items in the AUD-026–031 rows below still apply. **Do not open Phase 10.2 (AI drafts, CRM) until 10.1 closes and its consent UI, legal text and DPO retention questions are answered.**
+Phase 10 started at roughly **40% of PR 10.1** (encrypted session records, documents and the in-call autosave). Update 2026-10-20: all of PR 10.1 is on main — 10.1a (structural PHI guards, with the `reveal()` boundary enforced by `pnpm check:no-phi-logs`), 10.1b (`ai_processing` consent), 10.1c (publish and member reports), 10.1d (retention sweep and clinical tombstones), 10.1e (expert members list) and 10.1f (record templates). Phase 10 stays **open**: the AUD-027–029 rows below list what is left (member-login walkthrough, consent banner and booking checkbox, versioned legal text, document and notification retention periods). **Do not open the AI slices of Phase 10.2 (drafts, CRM) until the consent UI, legal text and DPO retention questions are answered.**
 
 The product UI is functional but visually thin. The public marketing site does not yet carry the
 MVP's premium patterns. Brand v3 tokens and the curated media library landed in this pass
@@ -54,7 +54,7 @@ MVP's premium patterns. Brand v3 tokens and the curated media library landed in 
 | 07 Invoicing      | Closed-gate on main | **Gated** (correct) — `issueInvoice()` closed, no `invoice.issued`                          |
 | 08 Notifications  | Lane 1 on main      | Engineering closed; Twilio IE1 unproven; mode-aware copy partial (AUD-042)                  |
 | 09 Video          | On main             | **Exit gate unproven** (staging grant join + Daily webhooks)                                |
-| 10 Records        | ~50% of 10.1        | **Open** — AUD-027–AUD-032; AUD-026 mostly fixed (10.1a, 2026-10-20)                        |
+| 10 Records        | 10.1 merged         | **Open** — 10.1a–f on main 2026-10-20; open items in AUD-027–029, AUD-032 is 10.2b          |
 
 ## Findings register
 
@@ -130,11 +130,11 @@ AUD-022 stays product backlog.
 ## Phase 10 remaining slice order
 
 1. **10.1a** PHI hardening (AUD-026) — landed 2026-10-20, including the `reveal()` CI guard
-2. **10.1b** `ai_processing` consent (AUD-029)
-3. **10.1c** publish + member reports (AUD-027) — engineering on branch 2026-10-20
-4. **10.1d** retention sweep, clinical tombstone, DSAR decrypt + signed URLs (AUD-028, AUD-030)
-5. **10.1e** expert `/members` list and detail
-6. **10.1f** record templates
+2. **10.1b** `ai_processing` consent (AUD-029) — landed 2026-10-20 (join banner, booking checkbox, legal text open)
+3. **10.1c** publish + member reports (AUD-027) — landed 2026-10-20
+4. **10.1d** retention sweep, clinical tombstone, DSAR decrypt + signed URLs (AUD-028, AUD-030) — landed 2026-10-20
+5. **10.1e** expert `/members` list and detail — landed 2026-10-20
+6. **10.1f** record templates — landed 2026-10-20 (in-call notes panel template actions open)
 7. **10.2a** KEK rotation CLI + decrypt audit sampling
 8. **10.2b** `draftSessionReport` behind `ff.ai_reports_beta` (AUD-032)
 9. **10.2c** CRM
