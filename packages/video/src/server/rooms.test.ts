@@ -5,6 +5,23 @@ import { createDailyClient, dailyClientFromEnv } from "./rooms"
 const BOOKING_ID = "11111111-1111-4111-8111-111111111111"
 
 describe("createDailyClient", () => {
+  it("treats DELETE 404 as already deleted and throws on other errors", async () => {
+    const statuses = [404, 500]
+    const fetchImpl = vi.fn(
+      async () => new Response("{}", { status: statuses.shift() ?? 500 })
+    )
+    const client = createDailyClient({
+      apiKey: "key",
+      domain: "eleva.daily.co",
+      fetch: fetchImpl as unknown as typeof fetch,
+    })
+
+    await expect(client.deleteRoom(`eleva-${BOOKING_ID}`)).resolves.toBe(
+      undefined
+    )
+    await expect(client.deleteRoom(`eleva-${BOOKING_ID}`)).rejects.toThrow()
+  })
+
   it("GET-or-creates a named room and rewrites the product URL", async () => {
     const input = {
       bookingId: BOOKING_ID,
