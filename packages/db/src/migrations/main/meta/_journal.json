@@ -477,6 +477,13 @@
       "when": 1782400000000,
       "tag": "0067_crm_follow_up_due_kind",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1782500000000,
+      "tag": "0068_crm_follow_up_notify_attempts",
+      "breakpoints": true
     }
   ]
 }

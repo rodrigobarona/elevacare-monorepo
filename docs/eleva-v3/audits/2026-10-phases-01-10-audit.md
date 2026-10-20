@@ -22,7 +22,7 @@ not a regression.
 Phase 09 video engineering is on main. Its **exit gate is still unproven**: there is no staging
 Eleva grant join across two browsers and no Daily webhook subscription evidence.
 
-Phase 10 started at roughly **40% of PR 10.1** (encrypted session records, documents and the in-call autosave). Update 2026-10-20: all of PR 10.1 is on main — 10.1a (structural PHI guards, with the `reveal()` boundary enforced by `pnpm check:no-phi-logs`), 10.1b (`ai_processing` consent), 10.1c (publish and member reports), 10.1d (retention sweep and clinical tombstones), 10.1e (expert members list) and 10.1f (record templates). Phase 10 stays **open**: the AUD-028–029 rows below list what is left (consent banner and booking checkbox, versioned legal text, document and notification retention periods). **Do not open the AI slices of Phase 10.2 (drafts, CRM) until the consent UI, legal text and DPO retention questions are answered.**
+Phase 10 started at roughly **40% of PR 10.1** (encrypted session records, documents and the in-call autosave). Update 2026-10-20: all of PR 10.1 is on main — 10.1a–f (PHI guards, `ai_processing` consent + booking opt-in, publish/member reports, retention sweep/tombstones, expert members, record templates). **10.2a** (KEK rotation + decrypt audit sampling) and **10.2c** CRM (schema, domain, API, expert Relationships UI, hourly in-app due digest) are on main or in the final due-digest PR. Phase 10 stays **open**: **10.2b** AI report drafts stay gated (AUD-032); AUD-028 still lacks session-document and notification-delivery retention; AUD-029 still lacks versioned AI legal text (copy is draft). **Do not stamp Phase 10 closed** until DPO/legal sign-off on retention copy and 10.2b remains off until consent/legal gates re-open it.
 
 The product UI is functional but visually thin. The public marketing site does not yet carry the
 MVP's premium patterns. Brand v3 tokens and the curated media library landed in this pass
@@ -54,7 +54,7 @@ MVP's premium patterns. Brand v3 tokens and the curated media library landed in 
 | 07 Invoicing      | Closed-gate on main | **Gated** (correct) — `issueInvoice()` closed, no `invoice.issued`                                                  |
 | 08 Notifications  | Lane 1 on main      | Engineering closed; Twilio IE1 unproven; mode-aware copy partial (AUD-042)                                          |
 | 09 Video          | On main             | **Exit gate unproven** (staging grant join + Daily webhooks)                                                        |
-| 10 Records        | 10.1 merged         | **Open** — 10.1a–f on main 2026-10-20; open items in AUD-028, AUD-029, AUD-032 is 10.2b                             |
+| 10 Records        | 10.1 + 10.2a/c      | **Open** — 10.1a–f, 10.2a, 10.2c (CRM + due digest) on main 2026-10-20; **10.2b gated**; AUD-028/029 leftovers      |
 
 ## Findings register
 
@@ -137,7 +137,7 @@ AUD-022 stays product backlog.
 6. **10.1f** record templates — landed 2026-10-20 (in-call notes panel template actions added the same day)
 7. **10.2a** KEK rotation CLI + decrypt audit sampling — rotation job landed 2026-10-20 (`rotateAllOrgKeks`, `pnpm encryption:rotate-kek`, `POST /workflows/kek-rotation`; unit-proven with two KEKs live and the old one retired; dev dry run only, no live rotation). Decrypt audit: `record.decrypted` (viewer, purpose, record ids; no plaintext) on expert session reads (1% sample), member report reads and DSAR export (100%). Staff have no plaintext read path yet (break-glass is Phase 12), so the 100% staff rate has no caller
 8. **10.2b** `draftSessionReport` behind `ff.ai_reports_beta` (AUD-032)
-9. **10.2c** CRM — schema landed 2026-10-20 (`crm_contacts`, `crm_follow_ups`, migration 0066, tenant RLS live-tested on the dev branch, member rows removed by account deletion). Domain package, API, expert UI and the due-reminder job open
+9. **10.2c** CRM — landed 2026-10-20: migrations 0066–0068 (`crm_contacts`, `crm_follow_ups`, `crm.follow_up_due` kind, `notify_attempts` retry cap), tenant RLS + platform-admin bypass for the due sweep (decision log), `@eleva/crm`, `/crm/*` API, expert `/crm` Relationships UI, `POST /workflows/crm-follow-up-due` + QStash schedule in `setup-all` only (**not applied** to staging/production)
 
    10.1f (2026-10-20) adds `record_templates` (migration 0063, tenant RLS, audited `record_template.created|updated|archived`), `/records/templates` CRUD + `POST /records/templates/{id}/apply`, the template PHI scrubber, and the expert `/templates` gallery. It differs from the phase spec in four ways (decision log, "Record templates ship as plain text"):
 

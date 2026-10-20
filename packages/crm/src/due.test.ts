@@ -115,6 +115,7 @@ describe("notifyDueFollowUps", () => {
 
   it("does not stamp notified_at when the digest is not delivered", async () => {
     const markNotified = vi.fn()
+    const markAttempted = vi.fn().mockResolvedValue(undefined)
     const result = await notifyDueFollowUps(
       { now: NOW },
       {
@@ -126,10 +127,54 @@ describe("notifyDueFollowUps", () => {
           ],
         }),
         markNotified,
+        markAttempted,
       }
     )
     expect(result).toEqual({ scanned: 1, notified: 0, errors: 1 })
     expect(markNotified).not.toHaveBeenCalled()
+    expect(markAttempted).toHaveBeenCalledWith({ ids: ["fu-1"] })
+  })
+
+  it("treats a preference-disabled empty delivery list as terminal", async () => {
+    const markNotified = vi.fn().mockResolvedValue(undefined)
+    const markAttempted = vi.fn()
+    const result = await notifyDueFollowUps(
+      { now: NOW },
+      {
+        listDue: async () => [row()],
+        send: async () => ({
+          kind: "crm.follow_up_due",
+          deliveries: [],
+        }),
+        markNotified,
+        markAttempted,
+      }
+    )
+    expect(result).toEqual({ scanned: 1, notified: 1, errors: 0 })
+    expect(markNotified).toHaveBeenCalledWith({ ids: ["fu-1"], now: NOW })
+    expect(markAttempted).not.toHaveBeenCalled()
+  })
+
+  it("does not stamp notified_at when the in-app delivery is held", async () => {
+    const markNotified = vi.fn()
+    const markAttempted = vi.fn().mockResolvedValue(undefined)
+    const result = await notifyDueFollowUps(
+      { now: NOW },
+      {
+        listDue: async () => [row()],
+        send: async () => ({
+          kind: "crm.follow_up_due",
+          deliveries: [
+            { channel: "in_app", deliveryId: "d-1", status: "held" },
+          ],
+        }),
+        markNotified,
+        markAttempted,
+      }
+    )
+    expect(result).toEqual({ scanned: 1, notified: 0, errors: 1 })
+    expect(markNotified).not.toHaveBeenCalled()
+    expect(markAttempted).not.toHaveBeenCalled()
   })
 
   it("continues other authors when one digest throws", async () => {
@@ -138,6 +183,7 @@ describe("notifyDueFollowUps", () => {
       .mockRejectedValueOnce(new Error("boom"))
       .mockResolvedValueOnce(sent())
     const markNotified = vi.fn().mockResolvedValue(undefined)
+    const markAttempted = vi.fn().mockResolvedValue(undefined)
 
     const result = await notifyDueFollowUps(
       { now: NOW },
@@ -148,11 +194,38 @@ describe("notifyDueFollowUps", () => {
         ],
         send,
         markNotified,
+        markAttempted,
       }
     )
 
     expect(result).toEqual({ scanned: 2, notified: 1, errors: 1 })
     expect(markNotified).toHaveBeenCalledTimes(1)
+    expect(markNotified).toHaveBeenCalledWith({ ids: ["b1"], now: NOW })
+    expect(markAttempted).toHaveBeenCalledWith({ ids: ["a1"] })
+  })
+
+  it("continues other authors when recording an attempt throws", async () => {
+    const send = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("boom"))
+      .mockResolvedValueOnce(sent())
+    const markNotified = vi.fn().mockResolvedValue(undefined)
+    const markAttempted = vi.fn().mockRejectedValueOnce(new Error("stamp"))
+
+    const result = await notifyDueFollowUps(
+      { now: NOW },
+      {
+        listDue: async () => [
+          row({ id: "a1" }),
+          row({ id: "b1", authorId: "expert-2" }),
+        ],
+        send,
+        markNotified,
+        markAttempted,
+      }
+    )
+
+    expect(result).toEqual({ scanned: 2, notified: 1, errors: 1 })
     expect(markNotified).toHaveBeenCalledWith({ ids: ["b1"], now: NOW })
   })
 })

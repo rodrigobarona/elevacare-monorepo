@@ -132,7 +132,8 @@ Some tenant-owned tables also allow `eleva.platform_admin` writes (`ADMIN_BYPASS
 session. `expert_invoices`, `platform_fee_invoices`, `platform_fee_credit_notes`, and
 `clinic_saas_invoices` are in that set: tenant `org_id` isolation stays the class; the
 bypass is a documented **read/write** hatch (`USING` and `WITH CHECK`), not a new RLS
-class. Same pattern as `expert_profiles`, `payout_states`, and the billing mirrors.
+class. Same pattern as `expert_profiles`, `payout_states`, the billing mirrors, and
+`crm_follow_ups` (hourly due-digest scan; notes stay encrypted).
 `public_handles` is the documented exception: SELECT is public-read (`USING true`) and
 writes are staff-only (`eleva.platform_admin`). The table has no `org_id` because
 handles are a global namespace (one citext PK), so a tenant-owned WITH CHECK cannot

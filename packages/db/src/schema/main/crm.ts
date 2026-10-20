@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm"
 import {
   index,
+  integer,
   pgEnum,
   pgPolicy,
   pgTable,
@@ -102,6 +103,11 @@ export const crmFollowUps = pgTable(
     doneAt: timestamp("done_at", { withTimezone: true }),
     /** Set by the due-reminder job so each follow-up notifies once. */
     notifiedAt: timestamp("notified_at", { withTimezone: true }),
+    /**
+     * Failed digest attempts. The sweep skips rows at the cap so a
+     * poison author cannot occupy the 500-row scan.
+     */
+    notifyAttempts: integer("notify_attempts").notNull().default(0),
     createdBy: uuid("created_by")
       .notNull()
       .references(() => user.id, { onDelete: "restrict" }),

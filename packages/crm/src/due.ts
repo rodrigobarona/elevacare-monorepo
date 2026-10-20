@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto"
-import { and, asc, eq, inArray, isNull, lte } from "drizzle-orm"
+import { and, asc, eq, inArray, isNull, lt, lte, sql } from "drizzle-orm"
 import { resolveExpertWorkspaceBase } from "@eleva/auth/org-routing"
 import { withPlatformAdminContext } from "@eleva/db"
 import { member, organization, user } from "@eleva/db/schema/auth"
@@ -13,6 +13,7 @@ import {
 } from "@eleva/notifications"
 
 const DUE_SCAN_LIMIT = 500
+const MAX_NOTIFY_ATTEMPTS = 5
 
 export type DueFollowUpRow = {
   id: string
@@ -34,6 +35,7 @@ export type NotifyDueFollowUpsDeps = {
   listDue?: (input: { now: Date; limit: number }) => Promise<DueFollowUpRow[]>
   send?: (input: SendNotificationInput) => Promise<SendNotificationResult>
   markNotified?: (input: { ids: string[]; now: Date }) => Promise<void>
+  markAttempted?: (input: { ids: string[] }) => Promise<void>
 }
 
 /**
@@ -67,7 +69,8 @@ async function listDueFollowUps(input: {
         and(
           isNull(crmFollowUps.doneAt),
           isNull(crmFollowUps.notifiedAt),
-          lte(crmFollowUps.dueAt, input.now)
+          lte(crmFollowUps.dueAt, input.now),
+          lt(crmFollowUps.notifyAttempts, MAX_NOTIFY_ATTEMPTS)
         )
       )
       .orderBy(asc(crmFollowUps.dueAt))
@@ -84,6 +87,23 @@ async function markFollowUpsNotified(input: {
     tx
       .update(crmFollowUps)
       .set({ notifiedAt: input.now })
+      .where(
+        and(
+          inArray(crmFollowUps.id, input.ids),
+          isNull(crmFollowUps.notifiedAt)
+        )
+      )
+  )
+}
+
+async function bumpNotifyAttempts(input: { ids: string[] }): Promise<void> {
+  if (input.ids.length === 0) return
+  await withPlatformAdminContext((tx) =>
+    tx
+      .update(crmFollowUps)
+      .set({
+        notifyAttempts: sql`${crmFollowUps.notifyAttempts} + 1`,
+      })
       .where(
         and(
           inArray(crmFollowUps.id, input.ids),
@@ -124,9 +144,14 @@ export function dueDigestIdempotencyKey(digest: DueFollowUpDigest): string {
 }
 
 function isDelivered(result: SendNotificationResult): boolean {
+  if (result.deliveries.length === 0) return true
   return result.deliveries.some(
     (delivery) => delivery.status === "sent" || delivery.status === "suppressed"
   )
+}
+
+function isHeld(result: SendNotificationResult): boolean {
+  return result.deliveries.some((delivery) => delivery.status === "held")
 }
 
 /**
@@ -142,6 +167,7 @@ export async function notifyDueFollowUps(
   const listDue = deps.listDue ?? listDueFollowUps
   const send = deps.send ?? sendNotification
   const markNotified = deps.markNotified ?? markFollowUpsNotified
+  const markAttempted = deps.markAttempted ?? bumpNotifyAttempts
 
   const rows = await listDue({ now, limit: input?.limit ?? DUE_SCAN_LIMIT })
   let notified = 0
@@ -165,6 +191,9 @@ export async function notifyDueFollowUps(
         idempotencyKey: dueDigestIdempotencyKey(digest),
       })
       if (!isDelivered(result)) {
+        if (!isHeld(result)) {
+          await recordAttempt(markAttempted, digest)
+        }
         errors += 1
         continue
       }
@@ -174,8 +203,22 @@ export async function notifyDueFollowUps(
       console.error("[crm-follow-up-due] digest failed", {
         orgId: digest.orgId,
       })
+      await recordAttempt(markAttempted, digest)
       errors += 1
     }
   }
   return { scanned: rows.length, notified, errors }
+}
+
+async function recordAttempt(
+  markAttempted: (input: { ids: string[] }) => Promise<void>,
+  digest: DueFollowUpDigest
+): Promise<void> {
+  try {
+    await markAttempted({ ids: digest.followUpIds })
+  } catch {
+    console.error("[crm-follow-up-due] attempt stamp failed", {
+      orgId: digest.orgId,
+    })
+  }
 }
