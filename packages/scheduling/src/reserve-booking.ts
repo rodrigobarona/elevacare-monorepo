@@ -3,9 +3,11 @@ import type { CancellationPolicy } from "@eleva/config/cancellation-policy"
 import { and, eq, isNull, or, sql } from "drizzle-orm"
 import type { Redis } from "@upstash/redis"
 import {
+  CONSENT_DOCUMENT_VERSION,
   FUNNEL_CONSENT_KINDS,
   hashGuestEmail,
   validateFunnelConsents,
+  type ConsentKind,
   type FunnelConsentKind,
 } from "@eleva/compliance"
 import {
@@ -61,6 +63,8 @@ export type ReserveBookingInput = {
   promoCode?: string
   /** Member pre-agenda observations from the booking form. */
   intakeNotes?: string
+  /** Optional ai_processing grant scoped to this booking. */
+  aiProcessing?: boolean
   busyTimeProvider?: BusyTimeProvider
 }
 
@@ -127,6 +131,7 @@ export async function insertFunnelConsents(
     reservationId: string
     locale: string
     grants: { kind: string; version: string }[]
+    aiProcessing?: boolean
     userId?: string
     guestEmail?: string
   }
@@ -154,12 +159,22 @@ export async function insertFunnelConsents(
     }
   }
 
-  await tx.insert(consents).values(
+  const rows: Array<{ kind: ConsentKind; documentVersion: string }> =
     FUNNEL_CONSENT_KINDS.map((kind: FunnelConsentKind) => ({
-      orgId: input.orgId,
-      ...subject,
       kind,
       documentVersion: byKind.get(kind) as string,
+    }))
+  if (input.aiProcessing) {
+    rows.push({
+      kind: "ai_processing",
+      documentVersion: CONSENT_DOCUMENT_VERSION,
+    })
+  }
+  await tx.insert(consents).values(
+    rows.map((row) => ({
+      orgId: input.orgId,
+      ...subject,
+      ...row,
       locale: input.locale,
       source: "funnel" as const,
       reservationId: input.reservationId,
@@ -346,6 +361,7 @@ export async function reserveBooking(
             kind: grant.kind,
             version: grant.version,
           })),
+          aiProcessing: Boolean(input.aiProcessing),
         },
       },
       afterInsert: async (tx, insertedId) => {
@@ -360,6 +376,7 @@ export async function reserveBooking(
           reservationId: insertedId,
           locale: input.language,
           grants: input.consents,
+          aiProcessing: input.aiProcessing,
           userId: input.session?.userId,
           guestEmail: input.session ? undefined : memberEmail,
         })

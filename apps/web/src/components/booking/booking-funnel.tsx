@@ -176,6 +176,8 @@ export function BookingFunnel({
   const [promoCode, setPromoCode] = useState("")
   const [intakeNotes, setIntakeNotes] = useState("")
   const [granted, setGranted] = useState<Record<string, boolean>>({})
+  const [aiOptIn, setAiOptIn] = useState(false)
+  const privacyHref = consents.find((doc) => doc.kind === "privacy")?.href
   const [reservation, setReservation] = useState<Reservation | null>(null)
   const [payment, setPayment] = useState<Payment | null>(null)
   const [nowMs, setNowMs] = useState(() => Date.now())
@@ -461,6 +463,7 @@ export function BookingFunnel({
             kind: doc.kind,
             version: doc.version,
           })),
+          ...(aiOptIn ? { aiProcessing: true } : {}),
           cancellationPolicy,
         }))
       if (!activeHold) setReservation(reserved)
@@ -883,6 +886,16 @@ export function BookingFunnel({
                     linkLabel={t(`details.consents.${doc.kind}.link`)}
                   />
                 ))}
+                {privacyHref ? (
+                  <ConsentCheckbox
+                    id="ai_processing"
+                    isSelected={aiOptIn}
+                    onChange={setAiOptIn}
+                    label={t("details.aiConsent.label")}
+                    href={privacyHref}
+                    linkLabel={t("details.aiConsent.link")}
+                  />
+                ) : null}
               </div>
             </FormCard>
             {formError ? (

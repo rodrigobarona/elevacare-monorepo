@@ -413,6 +413,10 @@
       "promo": "Código promocional (opcional)",
       "promoHint": "Guardamos o código nesta marcação. Os descontos automáticos ainda não são aplicados.",
       "consentsIntro": "Para marcar uma sessão de saúde nesta plataforma digital de saúde, confirme:",
+      "aiConsent": {
+        "label": "Opcional: autorizo a transcrição em direto e notas assistidas por IA nesta sessão. O especialista continua a escrever o relatório; pode retirar a autorização a qualquer momento nas definições de Privacidade. Consulte o",
+        "link": "aviso de privacidade"
+      },
       "hold": "Continuar para pagamento",
       "confirmFree": "Confirmar marcação",
       "holding": "A reservar o horário…",
