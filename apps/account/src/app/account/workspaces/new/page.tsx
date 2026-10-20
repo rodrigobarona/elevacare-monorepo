@@ -11,7 +11,7 @@ export default async function NewWorkspacePage() {
     >
       <div className="w-full max-w-3xl space-y-8">
         <div className="space-y-2 text-center">
-          <h1 className="text-3xl font-semibold tracking-tight">
+          <h1 className="font-heading text-3xl tracking-tight">
             {t("pickerTitle")}
           </h1>
           <p className="text-muted-foreground">{t("pickerDescription")}</p>

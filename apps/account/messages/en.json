@@ -3,7 +3,7 @@
     "account": "Account",
     "settings": "Settings",
     "billing": "Billing",
-    "organizations": "Organizations",
+    "organizations": "Workspaces",
     "privacy": "Privacy"
   },
   "settings": {
@@ -68,7 +68,8 @@
       "title": "Sessions",
       "description": "Review devices and browsers where you are currently signed in.",
       "footerHint": "Revoke sessions you do not recognize."
-    }
+    },
+    "eyebrow": "Account"
   },
   "onboarding": {
     "title": "Welcome to Eleva",
@@ -85,16 +86,32 @@
     "errorGeneric": "We couldn't complete onboarding. Please try again."
   },
   "organizations": {
+    "eyebrow": "Account",
     "title": "Workspaces",
-    "description": "Manage your workspaces, create new ones, or switch between them.",
-    "createWorkspace": "Create workspace"
+    "description": "Your Space and the workspaces you belong to. Open one to switch to it.",
+    "createWorkspace": "Create workspace",
+    "spaceTitle": "Your Space",
+    "spaceHint": "Your personal Space for bookings and session history.",
+    "workTitle": "Workspaces",
+    "workHint": "Expert, team and academy workspaces you are a member of.",
+    "emptyTitle": "No workspaces yet",
+    "emptyBody": "Create an expert, team or academy workspace when you are ready.",
+    "current": "Current",
+    "open": "Open",
+    "opening": "Opening…",
+    "openNamed": "Open {name}",
+    "openFailed": "Could not open that workspace. Please try again.",
+    "role": {
+      "admin": "Admin",
+      "member": "Member"
+    }
   },
   "billing": {
     "title": "Billing",
     "description": "Manage your personal subscription and payment methods.",
     "subscriptionTitle": "Subscription",
     "subscriptionDescription": "Choose a plan and manage checkout or your billing portal.",
-    "placeholder": "Billing management coming soon."
+    "eyebrow": "Account"
   },
   "auth": {
     "loginTitle": "Welcome back",
@@ -177,8 +194,25 @@
     ]
   },
   "privacy": {
-    "title": "Privacy & Data",
-    "description": "Export your data or delete your account.",
-    "placeholder": "Privacy controls coming soon."
+    "eyebrow": "Account",
+    "title": "Privacy & data",
+    "description": "Your consents, data export and account deletion.",
+    "controls": {
+      "consents": {
+        "title": "Consents",
+        "body": "See and change what you agreed to, including marketing and health-data processing."
+      },
+      "export": {
+        "title": "Export your data",
+        "body": "Request a copy of the data Eleva holds about you."
+      },
+      "deletion": {
+        "title": "Delete your account",
+        "body": "Schedule deletion with a 14-day waiting period. Records tied to a session are de-identified and kept for the legal minimum."
+      }
+    },
+    "spaceHint": "These controls live in your Space.",
+    "noSpace": "You need a personal Space to manage these controls.",
+    "openControls": "Open privacy controls"
   }
 }
