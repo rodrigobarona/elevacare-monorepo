@@ -7,6 +7,8 @@ import {
   createMemoryOrgDekStore,
   getOrCreateOrgDek,
   getOrgDek,
+  currentKekVersion,
+  rotateAllOrgKeks,
   rotateKek,
   shredOrgKeys,
   unwrapDek,
@@ -15,6 +17,7 @@ import { decryptRecordFields, encryptRecordFields } from "./records"
 import { decryptOAuthToken, encryptOAuthToken } from "./tokens"
 
 const ORG_ID = "11111111-1111-4111-8111-111111111111"
+const OTHER_ORG_ID = "22222222-2222-4222-8222-222222222222"
 const KEK_V1 = Buffer.alloc(32, 1).toString("base64")
 const KEK_V2 = Buffer.alloc(32, 2).toString("base64")
 
@@ -36,6 +39,7 @@ beforeEach(() => {
 afterEach(() => {
   __setOrgDekStoreForTests(undefined)
   __resetKekCacheForTests()
+  delete process.env.ENCRYPTION_KEK_VERSION
   for (const key of Object.keys(process.env)) {
     if (/^ELEVA_KEK_V\d+$/.test(key)) delete process.env[key]
   }
@@ -118,6 +122,55 @@ describe("envelope encryption", () => {
     __resetKekCacheForTests()
     await rotateKek(ORG_ID)
     await expect(decryptForOrg(ORG_ID, ciphertext)).resolves.toBe("keep-me")
+  })
+
+  it("rotateAllOrgKeks re-wraps every org once and old KEK can be retired", async () => {
+    const first = await encryptForOrg(ORG_ID, "org-one")
+    const second = await encryptForOrg(OTHER_ORG_ID, "org-two")
+    installKeks({ ELEVA_KEK_V1: KEK_V1, ELEVA_KEK_V2: KEK_V2 })
+
+    await expect(rotateAllOrgKeks({ dryRun: true })).resolves.toMatchObject({
+      kekVersion: 2,
+      dryRun: true,
+      orgs: 2,
+      rewrapped: 0,
+    })
+    await expect(rotateAllOrgKeks({ batchSize: 1 })).resolves.toEqual({
+      kekVersion: 2,
+      dryRun: false,
+      orgs: 2,
+      rewrapped: 2,
+      hasMore: false,
+    })
+    await expect(rotateAllOrgKeks()).resolves.toMatchObject({
+      orgs: 0,
+      rewrapped: 0,
+      hasMore: false,
+    })
+
+    installKeks({ ELEVA_KEK_V2: KEK_V2 })
+    await expect(decryptForOrg(ORG_ID, first)).resolves.toBe("org-one")
+    await expect(decryptForOrg(OTHER_ORG_ID, second)).resolves.toBe("org-two")
+  })
+
+  it("rotateAllOrgKeks stops at maxOrgs and reports hasMore", async () => {
+    await encryptForOrg(ORG_ID, "a")
+    await encryptForOrg(OTHER_ORG_ID, "b")
+    installKeks({ ELEVA_KEK_V1: KEK_V1, ELEVA_KEK_V2: KEK_V2 })
+    await expect(rotateAllOrgKeks({ maxOrgs: 1 })).resolves.toMatchObject({
+      orgs: 1,
+      hasMore: true,
+    })
+  })
+
+  it("ENCRYPTION_KEK_VERSION pins the wrap version", async () => {
+    installKeks({ ELEVA_KEK_V1: KEK_V1, ELEVA_KEK_V2: KEK_V2 })
+    process.env.ENCRYPTION_KEK_VERSION = "1"
+    expect(currentKekVersion()).toBe(1)
+    process.env.ENCRYPTION_KEK_VERSION = "3"
+    expect(() => currentKekVersion()).toThrow(
+      expect.objectContaining({ code: "KEK_VERSION_NOT_LOADED" })
+    )
   })
 
   it("throws KEY_SHREDDED after shredOrgKeys", async () => {

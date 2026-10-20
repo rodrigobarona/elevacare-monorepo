@@ -14,6 +14,7 @@ import {
   decryptForOrg,
   encryptRecordFields,
   decryptRecordFields,
+  rotateAllOrgKeks,
   rotateKek,
   shredOrgKeys,
 } from "@eleva/encryption"
@@ -23,6 +24,8 @@ const plaintext = await decryptForOrg(orgId, ciphertext, aad)
 ```
 
 - `rotateKek(orgId)` re-wraps every DEK for that org with the current KEK.
+- `rotateAllOrgKeks({ dryRun, maxOrgs })` does it for every org still wrapped by
+  an older KEK (`pnpm encryption:rotate-kek`, `POST /workflows/kek-rotation`).
   Existing ciphertext stays readable because decrypt loads the DEK by version.
 - `shredOrgKeys(orgId)` deletes every DEK row. Later decrypt throws
   `EncryptionError("KEY_SHREDDED")`.

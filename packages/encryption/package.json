@@ -11,7 +11,8 @@
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "rotate-kek": "tsx --env-file=../../.env.local scripts/rotate-kek.ts"
   },
   "dependencies": {
     "@eleva/audit": "workspace:*",
@@ -24,6 +25,7 @@
     "@eleva/eslint-config": "workspace:*",
     "@eleva/typescript-config": "workspace:*",
     "eslint": "catalog:",
+    "tsx": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

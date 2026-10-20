@@ -2152,6 +2152,14 @@ export const ReconciliationWorkflowRequestSchema = z
   })
   .strict()
 
+/** Dry run unless `apply: true`. */
+export const KekRotationWorkflowRequestSchema = z
+  .object({
+    apply: z.boolean().optional(),
+    maxOrgs: z.number().int().min(1).max(5000).optional(),
+  })
+  .strict()
+
 export const BookingReminderResponseSchema = z.discriminatedUnion("status", [
   z.object({
     ok: z.literal(true),

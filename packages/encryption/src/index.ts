@@ -1,6 +1,12 @@
 export { EncryptionError } from "./errors"
 export { encryptForOrg, decryptForOrg, parseCiphertext } from "./envelope"
-export { getOrCreateOrgDek, rotateKek, shredOrgKeys } from "./keys"
+export {
+  getOrCreateOrgDek,
+  rotateAllOrgKeks,
+  rotateKek,
+  shredOrgKeys,
+  type RotateAllKeksResult,
+} from "./keys"
 export { encryptRecordFields, decryptRecordFields } from "./records"
 export {
   encryptOAuthToken,

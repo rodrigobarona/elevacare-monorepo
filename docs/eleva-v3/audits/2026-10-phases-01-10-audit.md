@@ -135,7 +135,7 @@ AUD-022 stays product backlog.
 4. **10.1d** retention sweep, clinical tombstone, DSAR decrypt + signed URLs (AUD-028, AUD-030) — landed 2026-10-20
 5. **10.1e** expert `/members` list and detail — landed 2026-10-20
 6. **10.1f** record templates — landed 2026-10-20 (in-call notes panel template actions added the same day)
-7. **10.2a** KEK rotation CLI + decrypt audit sampling
+7. **10.2a** KEK rotation CLI + decrypt audit sampling — rotation job landed 2026-10-20 (`rotateAllOrgKeks`, `pnpm encryption:rotate-kek`, `POST /workflows/kek-rotation`; unit-proven with two KEKs live and the old one retired; dev dry run only, no live rotation). Decrypt audit sampling open
 8. **10.2b** `draftSessionReport` behind `ff.ai_reports_beta` (AUD-032)
 9. **10.2c** CRM
 

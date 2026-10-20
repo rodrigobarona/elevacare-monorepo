@@ -103,6 +103,7 @@ import {
   EditorAssistRequestSchema,
   DsarExportWorkflowRequestSchema,
   ReconciliationWorkflowRequestSchema,
+  KekRotationWorkflowRequestSchema,
   JoinSessionRequestSchema,
   JoinSessionResponseSchema,
   JoinSessionErrorSchema,
@@ -4758,6 +4759,13 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
         operationId: "processPendingPayouts",
         summary: "Promote eligible pending payouts",
         description: "Promotes pending payouts whose eligibleAt has passed.",
+      }),
+      "/workflows/kek-rotation": internalWorkflow({
+        operationId: "rotateKeks",
+        summary: "Re-wrap org data keys under the current KEK",
+        description:
+          "On-demand ADR-020 KEK rotation. Re-wraps DEKs only, never ciphertext. Dry run unless apply is true; hasMore means call again.",
+        requestSchema: KekRotationWorkflowRequestSchema,
       }),
       "/workflows/retention-sweep": internalWorkflow({
         operationId: "sweepRetention",
