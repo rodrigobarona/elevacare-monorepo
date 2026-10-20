@@ -33,20 +33,7 @@ export default async function AcademyLayout({
   const base = `/${orgSlug}/academy`
   const dashboardConfig = await buildDashboardConfig(session, [
     {
-      items: [
-        { title: t("dashboard"), url: base, icon: "SquaresFourIcon" },
-        { title: t("courses"), url: `${base}/courses`, icon: "BookOpenIcon" },
-        {
-          title: t("analytics"),
-          url: `${base}/analytics`,
-          icon: "ChartBarIcon",
-        },
-        {
-          title: t("settings"),
-          url: `${base}/settings`,
-          icon: "GearIcon",
-        },
-      ],
+      items: [{ title: t("dashboard"), url: base, icon: "SquaresFourIcon" }],
     },
   ])
 

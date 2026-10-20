@@ -1,14 +1,14 @@
 {
   "nav": {
-    "dashboard": "Panel",
-    "members": "Miembros",
-    "billing": "Facturación",
-    "settings": "Configuración",
-    "landingPage": "Página de Destino"
+    "dashboard": "Panel"
   },
   "dashboard": {
-    "welcome": "Equipo: {name}",
-    "subtitle": "Gestiona miembros, facturación y horarios."
+    "eyebrow": "Equipo",
+    "title": "Espacio del equipo",
+    "subtitle": "Miembros, agendas compartidas y facturación de tu clínica.",
+    "emptyTitle": "Las herramientas de equipo están en camino",
+    "emptyBody": "Invitar miembros, agendas compartidas y la facturación de la clínica llegan en una próxima versión. Tu bandeja de entrada ya funciona.",
+    "openInbox": "Abrir bandeja de entrada"
   },
   "members": {
     "title": "Miembros del Equipo",

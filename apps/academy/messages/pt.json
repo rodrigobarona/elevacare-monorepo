@@ -1,19 +1,14 @@
 {
   "nav": {
-    "dashboard": "Painel",
-    "courses": "Cursos",
-    "analytics": "Análises",
-    "settings": "Definições"
+    "dashboard": "Painel"
   },
   "academy": {
     "title": "Eleva Academy",
     "subtitle": "Crie e gira os seus cursos online.",
-    "comingSoon": "Gestão de cursos para {orgSlug}. Em breve.",
+    "comingSoon": "A gestão de cursos está a caminho.",
     "courses": {
-      "title": "Cursos",
-      "create": "Novo curso",
-      "empty": "Ainda não criou nenhum curso.",
-      "createFirst": "Crie o seu primeiro curso"
-    }
+      "empty": "Ainda não criou nenhum curso."
+    },
+    "eyebrow": "Academia"
   }
 }
