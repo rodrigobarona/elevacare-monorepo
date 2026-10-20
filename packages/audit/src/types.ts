@@ -45,6 +45,7 @@ export type AuditEntity =
   | "account_deletion_request"
   | "session"
   | "record"
+  | "record_access_optout"
   | "record_template"
   | "crm_contact"
   | "crm_follow_up"

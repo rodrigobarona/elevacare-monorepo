@@ -4,8 +4,12 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
-import type { ListMeConsentsResponse } from "@eleva/api-client"
+import type {
+  ListMeConsentsResponse,
+  ListMeRecordAccessOptoutsResponse,
+} from "@eleva/api-client"
 import { Button, LinkButton } from "@eleva/ui/components/button"
+import { CheckboxField } from "@eleva/ui/components/checkbox-field"
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -28,6 +32,7 @@ import {
   getDsarAction,
   requestDsarAction,
   updateConsentAction,
+  updateRecordAccessOptoutAction,
 } from "../actions"
 
 type MemberConsent = ListMeConsentsResponse["consents"][number]
@@ -59,6 +64,7 @@ interface PrivacyPanelProps {
   consents: MemberConsent[]
   scheduledFor: string | null
   aiProcessingNoticeHref: string
+  recordAccessChoices: ListMeRecordAccessOptoutsResponse["choices"]
 }
 
 export function PrivacyPanel({
@@ -66,12 +72,19 @@ export function PrivacyPanel({
   consents,
   scheduledFor: initialScheduledFor,
   aiProcessingNoticeHref,
+  recordAccessChoices: initialRecordAccessChoices,
 }: PrivacyPanelProps) {
   const t = useTranslations("privacy")
   const tc = useTranslations("common")
   const te = useTranslations("errors")
   const router = useRouter()
   const [consentPending, setConsentPending] = useState<string | null>(null)
+  const [recordAccessChoices, setRecordAccessChoices] = useState(
+    initialRecordAccessChoices
+  )
+  const [recordAccessPending, setRecordAccessPending] = useState<string | null>(
+    null
+  )
   const [dsarId, setDsarId] = useState<string | null>(null)
   const [dsarStatus, setDsarStatus] = useState<string | null>(null)
   const [downloadUrl, setDownloadUrl] = useState<string | undefined>()
@@ -189,6 +202,33 @@ export function PrivacyPanel({
 
   const consentByKind = new Map(consents.map((row) => [row.kind, row]))
 
+  async function handleRecordAccessOptout(orgId: string, optedOut: boolean) {
+    setRecordAccessPending(orgId)
+    try {
+      const result = await updateRecordAccessOptoutAction(orgSlug, {
+        orgId,
+        optedOut,
+      })
+      if (!result.ok) {
+        toast.error(te(result.error))
+        return
+      }
+      setRecordAccessChoices((current) =>
+        current.map((choice) =>
+          choice.orgId === orgId ? { ...choice, optedOut } : choice
+        )
+      )
+      toast.success(
+        optedOut
+          ? t("recordAccess.optOutSuccess")
+          : t("recordAccess.optInSuccess")
+      )
+      router.refresh()
+    } finally {
+      setRecordAccessPending(null)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <SettingsFieldset>
@@ -253,6 +293,44 @@ export function PrivacyPanel({
           </ul>
         </SettingsFieldsetContent>
       </SettingsFieldset>
+
+      {recordAccessChoices.length > 0 ? (
+        <SettingsFieldset>
+          <SettingsFieldsetContent>
+            <SettingsFieldsetTitle>
+              {t("recordAccess.title")}
+            </SettingsFieldsetTitle>
+            <SettingsFieldsetDescription>
+              {t("recordAccess.description")}
+            </SettingsFieldsetDescription>
+            <ul className="mt-4 space-y-4">
+              {recordAccessChoices.map((choice) => (
+                <li
+                  key={choice.orgId}
+                  className="border-b border-border/60 pb-4 last:border-0"
+                  data-testid={`member-record-access-${choice.orgId}`}
+                >
+                  <CheckboxField
+                    isSelected={choice.optedOut}
+                    isDisabled={recordAccessPending === choice.orgId}
+                    onChange={(selected) =>
+                      void handleRecordAccessOptout(choice.orgId, selected)
+                    }
+                    label={t("recordAccess.optOutLabel", {
+                      clinic: choice.orgName,
+                    })}
+                  />
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {choice.clinicSharedRecords
+                      ? t("recordAccess.sharedOn")
+                      : t("recordAccess.sharedOff")}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </SettingsFieldsetContent>
+        </SettingsFieldset>
+      ) : null}
 
       <SettingsFieldset>
         <SettingsFieldsetContent>

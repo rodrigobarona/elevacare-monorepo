@@ -8,6 +8,7 @@ import {
   type CancellationQuote,
   PatchMeRequestSchema,
   PutMeConsentRequestSchema,
+  PutMeRecordAccessOptoutRequestSchema,
   PutNotificationPreferencesRequestSchema,
   RescheduleMeBookingRequestSchema,
   UpdateAvatarRequestSchema,
@@ -151,6 +152,25 @@ export async function updateNotificationPreferencesAction(
     return { ok: true }
   } catch (err) {
     console.error("updateNotificationPreferencesAction failed", err)
+    return { ok: false, error: mapGenericError(err) }
+  }
+}
+
+export async function updateRecordAccessOptoutAction(
+  orgSlug: string,
+  input: unknown
+): Promise<ActionResult> {
+  const slug = OrgSlugSchema.safeParse(orgSlug)
+  const body = PutMeRecordAccessOptoutRequestSchema.safeParse(input)
+  if (!slug.success || !body.success) return { ok: false, error: "validation" }
+  try {
+    await requireMemberOrg(slug.data)
+    const api = await getAuthedApiClient()
+    await api.me.putRecordAccessOptout(body.data)
+    revalidateMember(slug.data)
+    return { ok: true }
+  } catch (err) {
+    console.error("updateRecordAccessOptoutAction failed", err)
     return { ok: false, error: mapGenericError(err) }
   }
 }

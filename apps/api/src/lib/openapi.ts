@@ -74,6 +74,8 @@ import {
   MeNotificationPreferencesResponseSchema,
   ListMeConsentsResponseSchema,
   PutMeConsentRequestSchema,
+  ListMeRecordAccessOptoutsResponseSchema,
+  PutMeRecordAccessOptoutRequestSchema,
   CancelMeBookingResponseSchema,
   CancellationQuoteSchema,
   RescheduleMeBookingRequestSchema,
@@ -4005,6 +4007,54 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "409": {
               description: "health_data_processing still required",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdErrors,
+          },
+        },
+      },
+      "/me/record-access-optouts": {
+        get: {
+          operationId: "listMeRecordAccessOptouts",
+          summary: "List clinic record-sharing opt-outs for the member",
+          description:
+            "Returns team clinics where the member has booked, with whether the clinic has shared records enabled and whether the member opted out (D-11).",
+          tags: ["Me"],
+          responses: {
+            "200": {
+              description: "Clinic choices",
+              content: {
+                "application/json": {
+                  schema: ListMeRecordAccessOptoutsResponseSchema,
+                },
+              },
+            },
+            ...stdErrors,
+          },
+        },
+        put: {
+          operationId: "putMeRecordAccessOptout",
+          summary: "Opt out or back in to clinic shared session records",
+          tags: ["Me"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: PutMeRecordAccessOptoutRequestSchema,
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Updated choices",
+              content: {
+                "application/json": {
+                  schema: ListMeRecordAccessOptoutsResponseSchema,
+                },
+              },
+            },
+            "403": {
+              description: "Not eligible for this clinic org",
               content: { "application/json": { schema: ErrorSchema } },
             },
             ...stdErrors,
