@@ -38,6 +38,14 @@ export type ElevaCallLabels = {
   transcriptEmpty: string
   notesSaved: string
   notesSaveFailed: string
+  notesTemplates: string
+  notesStartFrom: (title: string) => string
+  notesSaveAsTemplate: string
+  notesManageTemplates: string
+  notesTemplateSaved: string
+  notesTemplatePhi: string
+  notesTemplateApplyFailed: string
+  notesTemplateSaveFailed: string
   reportTitle: string
   reportHint: string
   reportNotes: string
@@ -91,6 +99,14 @@ export function elevaCallLabels(
     transcriptEmpty: t("transcriptEmpty"),
     notesSaved: t("notesSaved"),
     notesSaveFailed: t("notesSaveFailed"),
+    notesTemplates: t("notesTemplates"),
+    notesStartFrom: (title) => t("notesStartFrom", { title }),
+    notesSaveAsTemplate: t("notesSaveAsTemplate"),
+    notesManageTemplates: t("notesManageTemplates"),
+    notesTemplateSaved: t("notesTemplateSaved"),
+    notesTemplatePhi: t("notesTemplatePhi"),
+    notesTemplateApplyFailed: t("notesTemplateApplyFailed"),
+    notesTemplateSaveFailed: t("notesTemplateSaveFailed"),
     reportTitle: t("reportTitle"),
     reportHint: t("reportHint"),
     reportNotes: t("reportNotes"),

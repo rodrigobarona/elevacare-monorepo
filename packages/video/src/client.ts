@@ -21,6 +21,10 @@ export {
 } from "./client/labels"
 export { JoinSession, type JoinSessionProps } from "./client/join-session"
 export {
+  type NoteTemplates,
+  type NoteTemplateSummary,
+} from "./client/note-templates-menu"
+export {
   JOIN_LEAD_MS,
   JOIN_TRAIL_MS,
   isJoinCtaEnabled,
