@@ -3266,7 +3266,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "upsertSessionRecord",
           summary: "Save in-call notes, transcript, or internal report",
           description:
-            "Assigned expert only. Upserts records.kind note|transcript|internal_report. Internal report stays unpublished (expert-only). Intake is copied from the booking form at confirm and is read-only. AI drafts are written only by POST .../summarize. Audit payload is kind + bookingId (no PHI).",
+            "Assigned expert only. Upserts records.kind note|transcript|internal_report. Internal report stays unpublished (expert-only). Intake is copied from the booking form at confirm and is read-only. AI drafts are written only by POST .../summarize. A transcript needs the member's active ai_processing consent (403 AI_CONSENT_REQUIRED). Audit payload is kind + bookingId (no PHI).",
           tags: ["Sessions"],
           requestParams: {
             path: z.object({ bookingId: z.string().uuid() }),
@@ -3290,7 +3290,8 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               },
             },
             "403": {
-              description: "Caller is not the assigned expert",
+              description:
+                "Caller is not the assigned expert, or AI_CONSENT_REQUIRED for a transcript",
               content: { "application/json": { schema: ErrorSchema } },
             },
             "409": {
