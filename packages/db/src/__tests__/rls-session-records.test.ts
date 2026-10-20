@@ -43,6 +43,22 @@ describe.skipIf(!enabled || !databaseUrl)("rls session records", () => {
   const sharedDocId = randomUUID()
   const expertOnlyDocId = randomUUID()
   const participantId = randomUUID()
+  const colleagueRecordId = randomUUID()
+  const colleagueDocId = randomUUID()
+  const docIds = [sharedDocId, expertOnlyDocId, colleagueDocId]
+
+  const doc = (id: string, scope: "shared" | "expert_only") => ({
+    id,
+    orgId: orgA,
+    bookingId: bookingA,
+    memberUserId: member,
+    blobPathname: `rls/${id}`,
+    blobUrl: `https://blob.test/rls/${id}`,
+    mime: "application/pdf",
+    sizeBytes: 1,
+    metadataEncrypted: "rls-meta",
+    scope,
+  })
   const users = [expertA, colleagueA, expertB, member, otherMember]
 
   beforeAll(async () => {
@@ -80,28 +96,25 @@ describe.skipIf(!enabled || !databaseUrl)("rls session records", () => {
           type: "expert",
         },
       ])
-    await db()
-      .insert(expertProfiles)
-      .values({
+    // Tenant rows go through the production context helpers, so the insert
+    // policies are exercised too. Only auth tables are written as owner.
+    await withOrgContext(orgA, async (tx) => {
+      await tx.insert(expertProfiles).values({
         id: profileA,
         orgId: orgA,
         userId: expertA,
         username: `rls${orgA.slice(0, 8)}`,
         displayName: "RLS Expert A",
       })
-    await db()
-      .insert(eventTypes)
-      .values({
+      await tx.insert(eventTypes).values({
         id: eventTypeA,
         orgId: orgA,
         expertProfileId: profileA,
         slug: "rls-visit",
         title: { en: "RLS visit" },
       })
-    const startsAt = new Date(Date.now() + 24 * 60 * 60 * 1000)
-    await db()
-      .insert(bookings)
-      .values({
+      const startsAt = new Date(Date.now() + 24 * 60 * 60 * 1000)
+      await tx.insert(bookings).values({
         id: bookingA,
         orgId: orgA,
         eventTypeId: eventTypeA,
@@ -116,54 +129,52 @@ describe.skipIf(!enabled || !databaseUrl)("rls session records", () => {
         sessionMode: "online",
         status: "confirmed",
       })
-    await db().insert(records).values({
-      id: recordId,
-      orgId: orgA,
-      bookingId: bookingA,
-      memberUserId: member,
-      kind: "report",
-      titleEncrypted: "rls-title",
-      bodyEncrypted: "rls-body",
-      createdBy: expertA,
+      await tx.insert(sessionParticipants).values({
+        id: participantId,
+        orgId: orgA,
+        bookingId: bookingA,
+        userId: colleagueA,
+        role: "delegate",
+        addedBy: expertA,
+      })
     })
-    await db()
-      .insert(sessionDocuments)
-      .values([
-        {
-          id: sharedDocId,
-          orgId: orgA,
-          bookingId: bookingA,
-          memberUserId: member,
-          blobPathname: `rls/${sharedDocId}`,
-          blobUrl: `https://blob.test/rls/${sharedDocId}`,
-          mime: "application/pdf",
-          sizeBytes: 1,
-          metadataEncrypted: "rls-meta",
-          scope: "shared",
-          uploadedBy: member,
-        },
-        {
-          id: expertOnlyDocId,
-          orgId: orgA,
-          bookingId: bookingA,
-          memberUserId: member,
-          blobPathname: `rls/${expertOnlyDocId}`,
-          blobUrl: `https://blob.test/rls/${expertOnlyDocId}`,
-          mime: "application/pdf",
-          sizeBytes: 1,
-          metadataEncrypted: "rls-meta",
-          scope: "expert_only",
-          uploadedBy: expertA,
-        },
-      ])
-    await db().insert(sessionParticipants).values({
-      id: participantId,
-      orgId: orgA,
-      bookingId: bookingA,
-      userId: colleagueA,
-      role: "delegate",
-      addedBy: expertA,
+    await withOrgAndUserContext(orgA, expertA, async (tx) => {
+      await tx.insert(records).values({
+        id: recordId,
+        orgId: orgA,
+        bookingId: bookingA,
+        memberUserId: member,
+        kind: "report",
+        titleEncrypted: "rls-title",
+        bodyEncrypted: "rls-body",
+        createdBy: expertA,
+      })
+      await tx.insert(sessionDocuments).values({
+        ...doc(expertOnlyDocId, "expert_only"),
+        uploadedBy: expertA,
+      })
     })
+    await withOrgAndUserContext(orgA, colleagueA, async (tx) => {
+      await tx.insert(records).values({
+        id: colleagueRecordId,
+        orgId: orgA,
+        bookingId: bookingA,
+        memberUserId: member,
+        kind: "note",
+        titleEncrypted: "rls-title",
+        bodyEncrypted: "rls-body",
+        createdBy: colleagueA,
+      })
+      await tx.insert(sessionDocuments).values({
+        ...doc(colleagueDocId, "expert_only"),
+        uploadedBy: colleagueA,
+      })
+    })
+    await withOrgAndUserContext(orgA, member, (tx) =>
+      tx
+        .insert(sessionDocuments)
+        .values({ ...doc(sharedDocId, "shared"), uploadedBy: member })
+    )
   }, 60_000)
 
   afterAll(async () => {
@@ -173,18 +184,21 @@ describe.skipIf(!enabled || !databaseUrl)("rls session records", () => {
     await db().delete(user).where(inArray(user.id, users))
   }, 60_000)
 
-  const readRecord = (orgId: string, userId: string) =>
+  const readRecord = (orgId: string, userId: string, id = recordId) =>
     withOrgAndUserContext(orgId, userId, (tx) =>
-      tx
-        .select({ id: records.id })
-        .from(records)
-        .where(eq(records.id, recordId))
+      tx.select({ id: records.id }).from(records).where(eq(records.id, id))
     )
 
   it("records: author only; other experts and orgs see nothing", async () => {
     expect(await readRecord(orgA, expertA)).toEqual([{ id: recordId }])
     expect(await readRecord(orgA, colleagueA)).toEqual([])
     expect(await readRecord(orgB, expertB)).toEqual([])
+
+    // Author-only even on the booking expert's own booking.
+    expect(await readRecord(orgA, colleagueA, colleagueRecordId)).toEqual([
+      { id: colleagueRecordId },
+    ])
+    expect(await readRecord(orgA, expertA, colleagueRecordId)).toEqual([])
 
     const edited = await withOrgAndUserContext(orgA, colleagueA, (tx) =>
       tx
@@ -206,10 +220,14 @@ describe.skipIf(!enabled || !databaseUrl)("rls session records", () => {
       )
     expect(await memberRead(member)).toEqual([])
 
-    await db()
-      .update(records)
-      .set({ publishedAt: new Date() })
-      .where(eq(records.id, recordId))
+    const published = await withOrgAndUserContext(orgA, expertA, (tx) =>
+      tx
+        .update(records)
+        .set({ publishedAt: new Date() })
+        .where(eq(records.id, recordId))
+        .returning({ id: records.id })
+    )
+    expect(published).toEqual([{ id: recordId }])
 
     expect(await memberRead(member)).toEqual([{ id: recordId }])
     expect(await memberRead(otherMember)).toEqual([])
@@ -221,19 +239,23 @@ describe.skipIf(!enabled || !databaseUrl)("rls session records", () => {
         tx
           .select({ id: sessionDocuments.id })
           .from(sessionDocuments)
-          .where(inArray(sessionDocuments.id, [sharedDocId, expertOnlyDocId]))
+          .where(inArray(sessionDocuments.id, docIds))
       )
     const memberRead = (userId: string) =>
       withUserContext(userId, (tx) =>
         tx
           .select({ id: sessionDocuments.id })
           .from(sessionDocuments)
-          .where(inArray(sessionDocuments.id, [sharedDocId, expertOnlyDocId]))
+          .where(inArray(sessionDocuments.id, docIds))
       )
 
-    const expertRows = (await orgRead(orgA, expertA)).map((r) => r.id).sort()
-    expect(expertRows).toEqual([sharedDocId, expertOnlyDocId].sort())
-    expect(await orgRead(orgA, colleagueA)).toEqual([])
+    const ids = async (rows: Promise<{ id: string }[]>) =>
+      (await rows).map((row) => row.id).sort()
+
+    // The booking expert reads every document on the booking.
+    expect(await ids(orgRead(orgA, expertA))).toEqual([...docIds].sort())
+    // A colleague reads only what they uploaded.
+    expect(await ids(orgRead(orgA, colleagueA))).toEqual([colleagueDocId])
     expect(await orgRead(orgB, expertB)).toEqual([])
     expect(await memberRead(member)).toEqual([{ id: sharedDocId }])
     expect(await memberRead(otherMember)).toEqual([])
