@@ -89,6 +89,13 @@ const translations = {
       approvalSubtitle:
         "A payout is waiting for staff review before it is sent.",
     },
+    crm: {
+      followUpDueTitle: "Follow-ups due",
+      followUpDueBody: (count: number) =>
+        count === 1
+          ? "1 member follow-up is due. Open Relationships to review it."
+          : `${count} member follow-ups are due. Open Relationships to review them.`,
+    },
     labels: {
       member: "Member",
       service: "Service",
@@ -240,6 +247,13 @@ const translations = {
       approvalTitle: "Payout precisa de aprovação",
       approvalSubtitle:
         "Um payout está à espera de revisão da equipa antes de ser enviado.",
+    },
+    crm: {
+      followUpDueTitle: "Acompanhamentos pendentes",
+      followUpDueBody: (count: number) =>
+        count === 1
+          ? "Tem 1 acompanhamento de membro pendente. Abra Relações para o rever."
+          : `Tem ${count} acompanhamentos de membros pendentes. Abra Relações para os rever.`,
     },
     labels: {
       member: "Membro",
@@ -393,6 +407,13 @@ const translations = {
       approvalSubtitle:
         "Un payout espera revisión del equipo antes de enviarse.",
     },
+    crm: {
+      followUpDueTitle: "Seguimientos pendientes",
+      followUpDueBody: (count: number) =>
+        count === 1
+          ? "Tienes 1 seguimiento de miembro pendiente. Abre Relaciones para revisarlo."
+          : `Tienes ${count} seguimientos de miembros pendientes. Abre Relaciones para revisarlos.`,
+    },
     labels: {
       member: "Miembro",
       service: "Servicio",
@@ -525,6 +546,10 @@ export interface EmailTranslations {
     paidSubtitle: string
     approvalTitle: string
     approvalSubtitle: string
+  }
+  crm: {
+    followUpDueTitle: string
+    followUpDueBody: (count: number) => string
   }
   labels: {
     member: string

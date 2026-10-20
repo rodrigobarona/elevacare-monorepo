@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm"
 import {
   index,
+  integer,
   pgEnum,
   pgPolicy,
   pgTable,
@@ -102,6 +103,11 @@ export const crmFollowUps = pgTable(
     doneAt: timestamp("done_at", { withTimezone: true }),
     /** Set by the due-reminder job so each follow-up notifies once. */
     notifiedAt: timestamp("notified_at", { withTimezone: true }),
+    /**
+     * Failed digest attempts. The sweep skips rows at the cap so a
+     * poison author cannot occupy the 500-row scan.
+     */
+    notifyAttempts: integer("notify_attempts").notNull().default(0),
     createdBy: uuid("created_by")
       .notNull()
       .references(() => user.id, { onDelete: "restrict" }),
@@ -114,8 +120,8 @@ export const crmFollowUps = pgTable(
       .where(sql`done_at IS NULL`),
     contactIdx: index("crm_follow_ups_contact_idx").on(t.contactId),
     tenantPolicy: pgPolicy("crm_follow_ups_tenant_isolation", {
-      using: sql`org_id::text = current_setting('eleva.org_id', true)`,
-      withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,
+      using: sql`org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true'`,
+      withCheck: sql`org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true'`,
     }),
   })
 )

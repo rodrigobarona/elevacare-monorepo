@@ -65,7 +65,18 @@ Each entry should include:
     (stage, tag or follow-up), not from booking domain events. The members
     list stays the booking-derived view.
   - `crm_follow_ups.note_encrypted` is ciphertext; `notified_at` lets the
-    due-reminder job notify once.
+    due-reminder job notify once. Failed sends increment
+    `notify_attempts` (cap 5) so a poison author cannot occupy the
+    500-row hourly scan; preference-disabled in-app (empty deliveries)
+    is terminal. Held deliveries stay retryable.
+  - The due sweep runs under `withPlatformAdminContext`. `crm_follow_ups`
+    is in `ADMIN_BYPASS_TABLES`: tenant isolation stays the class; the
+    policy also allows `eleva.platform_admin = 'true'` on USING and WITH
+    CHECK so the job can list ids/routing across orgs and stamp
+    `notified_at` / `notify_attempts`. The sweep never selects
+    `note_encrypted`. Ciphertext is still readable to any other
+    platform-admin caller; plaintext needs the org DEK. Same hatch as
+    billing webhook tables — not a new RLS class.
   - Account deletion deletes the member's contact rows and their follow-ups
     (Phase 10 spec). Manual leads are the expert's own records and are not
     matched by email.
@@ -289,6 +300,16 @@ Each entry should include:
     checked in their empty states locally (no OAuth account or invoice rows
     on the dev branch).
   - Account, team, academy and admin apps are not restyled yet.
+- Addendum 2026-10-20 (founder loopback, **unproven**): connected-calendar
+  cards and the invoices table were reviewed **empty only** on the Neon
+  dev branch — no Google/Microsoft OAuth row and no invoice rows; no
+  Connect, save or payouts buttons were pressed. Local `.env.local` still
+  targets the dev branch (switch back to production when signed-in app
+  review finishes; dev branch deletion is a separate founder call).
+  Next rollout order: expert setup/onboarding wizard, then account, team,
+  academy and admin. CodeRabbit CLI was ~0.7.6 vs 0.9.0 with ~3 reviews/h
+  on the Hobby allowance, pacing merge batches — not a merge gate; Vercel
+  Hobby deploy quota failures are likewise not merge gates.
   - The dashboard has no earnings stat: finance reads stay on the finance
     page until payouts are proven end to end.
 - Owner: founder (review), engineering (rollout). Status: `proposed`.

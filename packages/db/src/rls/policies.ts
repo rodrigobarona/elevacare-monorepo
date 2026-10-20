@@ -175,6 +175,8 @@ export const ADMIN_BYPASS_TABLES = new Set<string>([
   "platform_fee_invoices",
   "platform_fee_credit_notes",
   "clinic_saas_invoices",
+  // Hourly follow-up-due sweep scans across orgs; notes stay encrypted.
+  "crm_follow_ups",
 ])
 
 function isDualOrganization(table: string): boolean {

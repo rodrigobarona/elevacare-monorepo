@@ -119,6 +119,13 @@ export const NOTIFICATION_KINDS = {
     category: "payment",
     templateId: "payout.approval_required",
   },
+  "crm.follow_up_due": {
+    channels: ["in_app"],
+    urgency: "normal",
+    scope: "org",
+    category: "reminder",
+    templateId: "crm.follow_up_due",
+  },
   "auth.magic_link": {
     channels: ["email"],
     urgency: "urgent",

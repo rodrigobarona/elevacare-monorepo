@@ -17,3 +17,11 @@ export {
   type CrmFollowUp,
   type CrmFollowUpStatus,
 } from "./follow-ups"
+export {
+  dueDigestIdempotencyKey,
+  groupDueFollowUps,
+  notifyDueFollowUps,
+  type DueFollowUpDigest,
+  type DueFollowUpRow,
+  type NotifyDueFollowUpsDeps,
+} from "./due"

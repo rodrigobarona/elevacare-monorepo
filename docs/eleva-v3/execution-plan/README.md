@@ -73,7 +73,7 @@ These are recorded as ADRs in Phase 1. Do not re-open them inside a phase prompt
 Refreshed 2026-10-19 from [`audits/2026-10-phases-01-10-audit.md`](../audits/2026-10-phases-01-10-audit.md).
 
 Identity is Better Auth (ADR-017); WorkOS is fully removed. Phases 01–08 are engineering-on-main,
-Phase 09 video is on main with its staging exit gate unproven, and Phase 10 is open (about 40% of
+Phase 09 video is on main with its staging exit gate unproven, and Phase 10 is open (10.1 + 10.2a/c on main; 10.2b AI gated; about 40% of
 PR 10.1).
 
 - `apps/api`: ~130 route handlers, every one with a `ROUTE_POLICY`; OpenAPI at `GET /openapi.json`

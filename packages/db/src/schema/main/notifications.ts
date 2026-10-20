@@ -43,6 +43,7 @@ const notificationKindChk = sql`
     'payment.receipt',
     'payout.paid',
     'payout.approval_required',
+    'crm.follow_up_due',
     'auth.magic_link',
     'auth.verify_email',
     'auth.reset_password',
