@@ -115,6 +115,7 @@ export type AuditAction =
   | "active_organization_changed"
   | "shredded"
   | "rotated"
+  | "decrypted"
   | "revoked"
   | "held"
   | "transferred"

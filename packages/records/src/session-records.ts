@@ -15,6 +15,7 @@ import {
   slotReservations,
 } from "@eleva/db/schema"
 import { decryptRecordFields, encryptRecordFields } from "@eleva/encryption"
+import { auditRecordRead } from "./decrypt-audit"
 import { decryptHoldIntake } from "./hold-intake"
 import { recordLogger } from "./record-logger"
 import {
@@ -372,7 +373,16 @@ export async function listSessionRecords(input: {
       input.actorUserId,
       (tx) => listDecrypted(tx, booking)
     )
-    return hydrateIntake(booking, input.actorUserId, listed)
+    const hydrated = await hydrateIntake(booking, input.actorUserId, listed)
+    await auditRecordRead({
+      orgId: booking.orgId,
+      actorUserId: input.actorUserId,
+      viewer: "owning_expert",
+      purpose: "session_view",
+      bookingId: booking.id,
+      recordIds: hydrated.map((row) => row.id),
+    })
+    return hydrated
   }
 
   if (booking.memberUserId && input.actorUserId === booking.memberUserId) {
@@ -381,7 +391,18 @@ export async function listSessionRecords(input: {
       input.actorUserId,
       (tx) => listDecrypted(tx, booking, { publishedOnly: true })
     )
-    return listed.filter((row) => row.kind === PUBLISHABLE_SESSION_RECORD_KIND)
+    const reports = listed.filter(
+      (row) => row.kind === PUBLISHABLE_SESSION_RECORD_KIND
+    )
+    await auditRecordRead({
+      orgId: booking.orgId,
+      actorUserId: input.actorUserId,
+      viewer: "member",
+      purpose: "member_report",
+      bookingId: booking.id,
+      recordIds: reports.map((row) => row.id),
+    })
+    return reports
   }
 
   throw new SessionRecordError("FORBIDDEN")
@@ -493,6 +514,7 @@ export type MemberReportView = SessionRecordView & {
 /** Published session reports across every booking of this member. */
 export async function listMemberReports(input: {
   memberUserId: string
+  purpose?: "member_report" | "dsar_export"
 }): Promise<MemberReportView[]> {
   const rows = await withUserContext(input.memberUserId, (tx) =>
     tx
@@ -542,6 +564,7 @@ export async function listMemberReports(input: {
   )
 
   const reports: MemberReportView[] = []
+  const readByBooking = new Map<string, { orgId: string; ids: string[] }>()
   for (const row of rows) {
     const session = sessions.get(row.bookingId!)
     if (!session || session.memberUserId !== input.memberUserId) continue
@@ -552,6 +575,22 @@ export async function listMemberReports(input: {
       bookingId: row.bookingId!,
       sessionStartsAt: session.startsAt.toISOString(),
       expertDisplayName: session.displayName,
+    })
+    const read = readByBooking.get(row.bookingId!) ?? {
+      orgId: row.orgId,
+      ids: [],
+    }
+    read.ids.push(view.id)
+    readByBooking.set(row.bookingId!, read)
+  }
+  for (const [bookingId, entry] of readByBooking) {
+    await auditRecordRead({
+      orgId: entry.orgId,
+      actorUserId: input.memberUserId,
+      viewer: "member",
+      purpose: input.purpose ?? "member_report",
+      bookingId,
+      recordIds: entry.ids,
     })
   }
   return reports
