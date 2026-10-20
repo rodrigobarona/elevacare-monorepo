@@ -131,7 +131,10 @@ describe("dsarExport", () => {
     ]) {
       expect(zip).toContain(name)
     }
-    expect(listMemberReports).toHaveBeenCalledWith({ memberUserId: "user-1" })
+    expect(listMemberReports).toHaveBeenCalledWith({
+      memberUserId: "user-1",
+      purpose: "dsar_export",
+    })
     expect(result.blobUrl).toContain("export.zip")
   })
 })

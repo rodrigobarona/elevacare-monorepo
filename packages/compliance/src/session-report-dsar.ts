@@ -12,7 +12,10 @@ export function ensureSessionReportDsarCollector(): void {
     id: SESSION_REPORT_DSAR_COLLECTOR_ID,
     collect: (userId) =>
       withPhiScope(async () => {
-        const reports = await listMemberReports({ memberUserId: userId })
+        const reports = await listMemberReports({
+          memberUserId: userId,
+          purpose: "dsar_export",
+        })
         const json = reports.map((report) => ({
           id: report.id,
           bookingId: report.bookingId,
