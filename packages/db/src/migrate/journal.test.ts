@@ -39,7 +39,7 @@ describe("migration journal helpers", () => {
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
     expect(last?.tag).toBe("0069_session_document_retention_sweep")
-    expect(last?.statements.length).toBeGreaterThan(0)
+    expect(last?.statements.length).toBe(2)
     expect(last?.hash).toHaveLength(64)
     expect(last?.statements.join("\n")).toContain("retention_sweep_attempts")
     const notifyAttempts = migrations.find(

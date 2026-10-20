@@ -1,5 +1,9 @@
-import { getTranslations } from "next-intl/server"
-import { getPendingAccountDeletion } from "@eleva/compliance"
+import { getLocale, getTranslations } from "next-intl/server"
+import {
+  AI_PROCESSING_CONSENT_DOCUMENT,
+  getPendingAccountDeletion,
+} from "@eleva/compliance"
+import { isLocale } from "@eleva/config/i18n"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { getAuthedApiClient, requireMemberOrg } from "@/lib/member-api"
 import { PrivacyPanel } from "../_components/privacy-panel"
@@ -12,6 +16,10 @@ export default async function PrivacyPage({
   params: Promise<{ orgSlug: string }>
 }) {
   const { orgSlug } = await params
+  const locale = await getLocale()
+  const aiProcessingNoticeHref = isLocale(locale)
+    ? AI_PROCESSING_CONSENT_DOCUMENT.urls[locale]
+    : AI_PROCESSING_CONSENT_DOCUMENT.urls.en
   const session = await requireMemberOrg(orgSlug)
   const apiPromise = getAuthedApiClient()
   const consentsPromise = apiPromise.then((api) => api.me.listConsents())
@@ -28,6 +36,7 @@ export default async function PrivacyPage({
         orgSlug={orgSlug}
         consents={consents}
         scheduledFor={pendingDeletion?.scheduledFor.toISOString() ?? null}
+        aiProcessingNoticeHref={aiProcessingNoticeHref}
       />
     </div>
   )

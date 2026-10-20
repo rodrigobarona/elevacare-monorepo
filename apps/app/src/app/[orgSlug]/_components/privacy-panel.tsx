@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { useLocale, useTranslations } from "next-intl"
-import { AI_PROCESSING_CONSENT_DOCUMENT } from "@eleva/compliance"
-import { isLocale } from "@eleva/config/i18n"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import type { ListMeConsentsResponse } from "@eleva/api-client"
 import { Button, LinkButton } from "@eleva/ui/components/button"
@@ -60,20 +58,18 @@ interface PrivacyPanelProps {
   orgSlug: string
   consents: MemberConsent[]
   scheduledFor: string | null
+  aiProcessingNoticeHref: string
 }
 
 export function PrivacyPanel({
   orgSlug,
   consents,
   scheduledFor: initialScheduledFor,
+  aiProcessingNoticeHref,
 }: PrivacyPanelProps) {
   const t = useTranslations("privacy")
   const tc = useTranslations("common")
   const te = useTranslations("errors")
-  const locale = useLocale()
-  const aiProcessingNoticeHref = isLocale(locale)
-    ? AI_PROCESSING_CONSENT_DOCUMENT.urls[locale]
-    : AI_PROCESSING_CONSENT_DOCUMENT.urls.en
   const router = useRouter()
   const [consentPending, setConsentPending] = useState<string | null>(null)
   const [dsarId, setDsarId] = useState<string | null>(null)
