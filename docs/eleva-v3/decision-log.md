@@ -53,6 +53,8 @@ Each entry should include:
   needs a product decision), Apple sign-in, and showing the Google step to
   experts with a different default.
 - Owner: founder, engineering. Status: `accepted`.
+- Related: ADR-017, `packages/auth/src/client.ts`,
+  `@eleva/ui/components/google-sign-in-button`.
 
 ### 2026-10-20: Public header menus and marketing blocks (accepted)
 
