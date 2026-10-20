@@ -56,6 +56,7 @@ test.describe("video join — Eleva prejoin", () => {
       }
       await page.goto(`${accountUrl}/login`)
       await page.getByTestId("login-email").fill(memberEmail)
+      await page.getByTestId("login-continue").click()
       await page.getByTestId("login-password").fill(memberPassword)
       const signedIn = page.waitForResponse(
         (response) =>

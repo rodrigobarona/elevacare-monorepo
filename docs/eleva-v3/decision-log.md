@@ -32,6 +32,30 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-20: Identifier-first sign-in and sign-up (accepted)
+
+- Decision (founder feedback): `/login` and `/signup` ask for one thing at a
+  time. Step 1 is Continue with Google or an email; step 2 is the password or
+  an emailed sign-in link (sign-up: name, password, consent); step 3 is the
+  "check your inbox" screen with Gmail/Outlook shortcuts and a 30-second
+  resend cooldown.
+  - No account lookup between steps, so the form never reveals whether an
+    email is registered (one generic credential error).
+  - Passkeys: browser autofill on the email field (`username webauthn`) plus a
+    quiet "Sign in with a passkey" button.
+  - Google button follows Google's branding guidelines (white pill, `#747775`
+    border, standard G mark, Google Sans Medium vendored in `@eleva/ui`,
+    lazy-loaded). Shared as `@eleva/ui/components/google-sign-in-button`.
+  - Brand panel is CSS-only (drifting gradients, dot texture, rotating care
+    area word, real value points) to keep the page light; motion respects
+    `prefers-reduced-motion`.
+- Out of scope: enterprise SSO (no Better Auth SSO plugin configured yet;
+  needs a product decision), Apple sign-in, and showing the Google step to
+  experts with a different default.
+- Owner: founder, engineering. Status: `accepted`.
+- Related: ADR-017, `packages/auth/src/client.ts`,
+  `@eleva/ui/components/google-sign-in-button`.
+
 ### 2026-10-20: Public header menus and marketing blocks (accepted)
 
 - Decision (founder feedback): the public header groups its links into three

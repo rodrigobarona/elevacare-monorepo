@@ -263,8 +263,9 @@ test.describe("member Space without live Stripe", () => {
     const signup = await page.goto(`${accountUrl}/signup`)
     test.skip(signup?.status() !== 200, "needs local account app on :3006")
 
-    await page.getByTestId("signup-name").fill("E2e Prefs")
     await page.getByTestId("signup-email").fill(email)
+    await page.getByTestId("signup-continue").click()
+    await page.getByTestId("signup-name").fill("E2e Prefs")
     await page.getByTestId("signup-password").fill(E2E_PASSWORD)
     await page.getByTestId("signup-consent").click()
     await page.getByTestId("signup-submit").click()
@@ -279,6 +280,7 @@ test.describe("member Space without live Stripe", () => {
     // activeOrganizationId (personal Space) so Space RSC → API /me succeeds.
     await page.goto(`${accountUrl}/login`)
     await page.getByTestId("login-email").fill(email)
+    await page.getByTestId("login-continue").click()
     await page.getByTestId("login-password").fill(E2E_PASSWORD)
     const signedIn = page.waitForResponse(
       (response) =>
@@ -311,8 +313,9 @@ test.describe("member Space without live Stripe", () => {
     const signup = await page.goto(`${accountUrl}/signup`)
     test.skip(signup?.status() !== 200, "needs local account app on :3006")
 
-    await page.getByTestId("signup-name").fill("E2e Magic")
     await page.getByTestId("signup-email").fill(email)
+    await page.getByTestId("signup-continue").click()
+    await page.getByTestId("signup-name").fill("E2e Magic")
     await page.getByTestId("signup-password").fill(E2E_PASSWORD)
     await page.getByTestId("signup-consent").click()
     await page.getByTestId("signup-submit").click()
@@ -323,6 +326,7 @@ test.describe("member Space without live Stripe", () => {
 
     await page.goto(`${accountUrl}/login`)
     await page.getByTestId("login-email").fill(email)
+    await page.getByTestId("login-continue").click()
     await page.getByTestId("login-magic").click()
     await expect(page.getByTestId("login-magic-sent")).toBeVisible({
       timeout: 45_000,

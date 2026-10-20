@@ -17,8 +17,9 @@ import { Label } from "@eleva/ui/components/label"
 
 export function ResetPasswordForm() {
   const t = useTranslations("auth")
-  const token = useSearchParams().get("token")
-  const [email, setEmail] = useState("")
+  const searchParams = useSearchParams()
+  const token = searchParams.get("token")
+  const [email, setEmail] = useState(searchParams.get("email") ?? "")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
