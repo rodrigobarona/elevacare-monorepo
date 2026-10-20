@@ -109,19 +109,31 @@ export function InvoicingSettings({
 
   async function handleReconnect() {
     setPending(true)
-    const result = await startToconlineOAuth()
-    if (result.ok) {
-      window.location.assign(result.url)
-      return
+    try {
+      const result = await startToconlineOAuth()
+      if (result.ok) {
+        window.location.assign(result.url)
+        return
+      }
+      toast.error(t("reconnectFailed"))
+    } catch (err) {
+      console.error("[finance/invoicing] reconnect failed", err)
+      toast.error(t("reconnectFailed"))
     }
     setPending(false)
-    toast.error(t("reconnectFailed"))
   }
 
   async function handleDisconnect() {
     setPending(true)
-    const result = await disconnectInvoicing()
-    setPending(false)
+    let result: Awaited<ReturnType<typeof disconnectInvoicing>>
+    try {
+      result = await disconnectInvoicing()
+    } catch (err) {
+      console.error("[finance/invoicing] disconnect failed", err)
+      result = { ok: false, error: "disconnect-failed" }
+    } finally {
+      setPending(false)
+    }
     if (!result.ok) {
       toast.error(t("disconnectFailed"))
       return
