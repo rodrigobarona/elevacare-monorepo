@@ -144,6 +144,7 @@ export async function POST(request: Request) {
       cancellationPolicy: body.cancellationPolicy,
       promoCode: body.promoCode,
       intakeNotes: body.intakeNotes,
+      aiProcessing: body.aiProcessing,
       busyTimeProvider: holdCalendarBusyTimeProvider,
     })
   } catch (err) {
