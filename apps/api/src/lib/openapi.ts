@@ -4907,6 +4907,12 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           "On-demand ADR-020 KEK rotation. Re-wraps DEKs only, never ciphertext. Dry run unless apply is true; hasMore means call again.",
         requestSchema: KekRotationWorkflowRequestSchema,
       }),
+      "/workflows/crm-follow-up-due": internalWorkflow({
+        operationId: "notifyDueCrmFollowUps",
+        summary: "Notify authors of due CRM follow-ups",
+        description:
+          "Hourly in-app digest of open follow-ups past dueAt. One digest per author; payload is a count (no names or notes).",
+      }),
       "/workflows/retention-sweep": internalWorkflow({
         operationId: "sweepRetention",
         summary: "Purge expired clinical drafts",

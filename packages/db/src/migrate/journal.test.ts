@@ -38,10 +38,12 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0066_crm")
+    expect(last?.tag).toBe("0067_crm_follow_up_due_kind")
     expect(last?.statements.length).toBeGreaterThan(0)
     expect(last?.hash).toHaveLength(64)
-    expect(last?.statements.join("\n")).toContain(
+    expect(last?.statements.join("\n")).toContain("crm.follow_up_due")
+    const crm = migrations.find((m) => m.tag === "0066_crm")
+    expect(crm?.statements.join("\n")).toContain(
       "crm_follow_ups_tenant_isolation"
     )
     const recordTemplates = migrations.find(

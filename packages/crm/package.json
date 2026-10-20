@@ -15,8 +15,11 @@
   },
   "dependencies": {
     "@eleva/audit": "workspace:*",
+    "@eleva/auth": "workspace:*",
     "@eleva/db": "workspace:*",
+    "@eleva/email": "workspace:*",
     "@eleva/encryption": "workspace:*",
+    "@eleva/notifications": "workspace:*",
     "drizzle-orm": "catalog:"
   },
   "devDependencies": {

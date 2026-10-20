@@ -82,6 +82,19 @@ async function main() {
     { dryRun }
   )
 
+  await registerSchedule(
+    {
+      name: "CRM follow-up due digest",
+      path: "/workflows/crm-follow-up-due",
+      cron: "0 * * * *",
+      retries: 3,
+      requireBearer: true,
+      description:
+        "Hourly 10.2c: in-app digest of open follow-ups past dueAt (count only)",
+    },
+    { dryRun }
+  )
+
   await registerSchedule(DOMAIN_EVENTS_PUBLISHER_SCHEDULE, { dryRun })
 
   await registerSchedule(

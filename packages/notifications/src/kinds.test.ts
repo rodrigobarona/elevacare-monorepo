@@ -79,21 +79,26 @@ describe("NOTIFICATION_KINDS", () => {
   })
 
   it("keeps SQL CHECK kinds in lockstep with NOTIFICATION_KINDS", () => {
-    const sql = readFileSync(
-      resolve(
-        import.meta.dirname,
-        "../../db/src/migrations/main/0057_booking_request.sql"
-      ),
-      "utf8"
-    )
+    const migration = (file: string) =>
+      readFileSync(
+        resolve(import.meta.dirname, "../../db/src/migrations/main", file),
+        "utf8"
+      )
+    const kindsSql = migration("0067_crm_follow_up_due_kind.sql")
+    const scopeSql = migration("0057_booking_request.sql")
     const expected = sortedStrings(NOTIFICATION_KIND_VALUES)
     expect(
-      sortedStrings(quotedKindsFromCheck(sql, "notifications_kind"))
+      sortedStrings(quotedKindsFromCheck(kindsSql, "notifications_kind"))
     ).toEqual(expected)
     expect(
-      sortedStrings(quotedKindsFromCheck(sql, "notification_deliveries_kind"))
+      sortedStrings(
+        quotedKindsFromCheck(kindsSql, "notification_deliveries_kind")
+      )
     ).toEqual(expected)
-    const userScoped = quotedKindsFromCheck(sql, "notifications_kind_org_scope")
+    const userScoped = quotedKindsFromCheck(
+      scopeSql,
+      "notifications_kind_org_scope"
+    )
     expect(sortedStrings([...new Set(userScoped)])).toEqual(
       sortedStrings(USER_SCOPED_NOTIFICATION_KINDS)
     )
