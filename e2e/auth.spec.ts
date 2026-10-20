@@ -23,13 +23,27 @@ test.describe("auth screens", () => {
     page,
   }) => {
     await page.goto(`${accountUrl}/login`)
+    await expect(page.getByTestId("login-email-form")).toBeVisible()
+    await expect(page.getByTestId("login-google")).toBeVisible()
+    await expect(page.getByTestId("login-password")).toHaveCount(0)
+    await page.getByTestId("login-email").fill("nobody@example.com")
+    await page.getByTestId("login-continue").click()
     await expect(page.getByTestId("login-form")).toBeVisible()
-    await expect(page.getByTestId("login-email")).toBeVisible()
+    await expect(page.getByTestId("auth-email-chip")).toContainText(
+      "nobody@example.com"
+    )
     await expect(page.getByTestId("login-password")).toBeVisible()
     await expect(page.getByTestId("login-magic")).toBeVisible()
     await expect(page.getByTestId("login-forgot-password")).toBeVisible()
+    await page.getByTestId("auth-change-email").click()
+    await expect(page.getByTestId("login-email")).toHaveValue(
+      "nobody@example.com"
+    )
 
     await page.goto(`${accountUrl}/signup`)
+    await expect(page.getByTestId("signup-email-form")).toBeVisible()
+    await page.getByTestId("signup-email").fill("nobody@example.com")
+    await page.getByTestId("signup-continue").click()
     await expect(page.getByTestId("signup-form")).toBeVisible()
     await expect(page.getByTestId("signup-consent")).toBeVisible()
 
@@ -46,8 +60,9 @@ test.describe("auth screens", () => {
 
   test("signup without consent stays on the form", async ({ page }) => {
     await page.goto(`${accountUrl}/signup`)
-    await page.getByTestId("signup-name").fill("No Consent")
     await page.getByTestId("signup-email").fill(uniqueEmail("consent"))
+    await page.getByTestId("signup-continue").click()
+    await page.getByTestId("signup-name").fill("No Consent")
     await page.getByTestId("signup-password").fill(E2E_PASSWORD)
     await page.getByTestId("signup-submit").click()
     await expect(page.getByTestId("signup-error")).toBeVisible()
@@ -57,6 +72,7 @@ test.describe("auth screens", () => {
   test("wrong password shows an error", async ({ page }) => {
     await page.goto(`${accountUrl}/login`)
     await page.getByTestId("login-email").fill("nobody@example.com")
+    await page.getByTestId("login-continue").click()
     await page.getByTestId("login-password").fill(E2E_PASSWORD_WRONG)
     await page.getByTestId("login-submit").click()
     await expect(page.getByTestId("login-error")).toBeVisible({
@@ -80,8 +96,9 @@ test.describe("auth journey", () => {
     const name = "E2e Member"
 
     await page.goto(`${accountUrl}/signup`)
-    await page.getByTestId("signup-name").fill(name)
     await page.getByTestId("signup-email").fill(email)
+    await page.getByTestId("signup-continue").click()
+    await page.getByTestId("signup-name").fill(name)
     await page.getByTestId("signup-password").fill(E2E_PASSWORD)
     await page.getByTestId("signup-consent").click()
     await page.getByTestId("signup-submit").click()
@@ -93,6 +110,7 @@ test.describe("auth journey", () => {
 
     await page.goto(`${accountUrl}/login`)
     await page.getByTestId("login-email").fill(email)
+    await page.getByTestId("login-continue").click()
     await page.getByTestId("login-password").fill(E2E_PASSWORD)
     const signedIn = page.waitForResponse(
       (response) =>
@@ -121,6 +139,7 @@ test.describe("auth journey", () => {
 
     await page.goto(`${accountUrl}/login`)
     await page.getByTestId("login-email").fill(email)
+    await page.getByTestId("login-continue").click()
     await page.getByTestId("login-magic").click()
     await expect(page.getByTestId("login-magic-sent")).toBeVisible({
       timeout: 15_000,

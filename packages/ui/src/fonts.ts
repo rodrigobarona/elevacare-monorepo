@@ -60,6 +60,20 @@ export const ibmPlexMono = localFont({
   adjustFontFallback: "Arial",
 })
 
+/**
+ * Google Sans Medium for the "Continue with Google" button only (Google
+ * Identity branding guidelines). Not part of `fontClassName`; apply via
+ * `googleSans.className` on the button.
+ */
+export const googleSans = localFont({
+  src: "./fonts/files/google-sans-medium-latin.woff2",
+  weight: "500",
+  style: "normal",
+  display: "swap",
+  preload: false,
+  adjustFontFallback: "Arial",
+})
+
 /** Apply on `<html>` to expose Eleva font CSS variables app-wide. */
 export const fontClassName = [
   fraunces.variable,

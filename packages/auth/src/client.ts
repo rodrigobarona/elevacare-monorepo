@@ -26,6 +26,8 @@ function authBaseUrl(): string {
 
 interface AuthClientError {
   message?: string
+  code?: string
+  status?: number
 }
 
 export interface ElevaAuthClient {
@@ -47,6 +49,7 @@ export interface ElevaAuthClient {
       callbackURL?: string
     }) => Promise<unknown>
     passkey: (body?: {
+      autoFill?: boolean
       fetchOptions?: { onSuccess?: () => void }
     }) => Promise<{ error?: AuthClientError | null }>
   }
@@ -78,6 +81,10 @@ export interface ElevaAuthClient {
   }
   updateUser: (body: {
     name: string
+  }) => Promise<{ error?: AuthClientError | null }>
+  sendVerificationEmail: (body: {
+    email: string
+    callbackURL?: string
   }) => Promise<{ error?: AuthClientError | null }>
   requestPasswordReset: (body: {
     email: string
