@@ -442,6 +442,13 @@
       "when": 1781900000000,
       "tag": "0062_records_subject_pseudonym",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1782000000000,
+      "tag": "0063_record_templates",
+      "breakpoints": true
     }
   ]
 }

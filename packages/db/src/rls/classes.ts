@@ -109,6 +109,7 @@ export const RLS_TABLE_ASSIGNMENTS: readonly RlsTableAssignment[] = [
   { table: "session_note_drafts", class: "tenant-owned" },
   { table: "records", class: "tenant-owned" },
   { table: "session_documents", class: "tenant-owned" },
+  { table: "record_templates", class: "tenant-owned" },
   { table: "record_access_optouts", class: "owner-user-visible" },
   { table: "daily_webhook_events", class: "staff-only" },
   { table: "billing_customers", class: "tenant-owned" },

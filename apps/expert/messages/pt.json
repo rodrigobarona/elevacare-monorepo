@@ -8,7 +8,8 @@
     "integrations": "Integrações",
     "finance": "Finanças",
     "publicProfile": "Perfil público",
-    "members": "Membros"
+    "members": "Membros",
+    "templates": "Modelos"
   },
   "dashboard": {
     "expert": {
@@ -1058,5 +1059,44 @@
     "past": "Passada",
     "openReport": "Relatório da sessão",
     "back": "Todos os membros"
+  },
+  "templates": {
+    "title": "Modelos",
+    "subtitle": "Estruturas reutilizáveis para notas, relatórios, consultas e mensagens. Os modelos nunca guardam dados de membros.",
+    "filterAll": "Todos",
+    "kind": {
+      "note": "Nota",
+      "report": "Relatório",
+      "consultation": "Consulta",
+      "message": "Mensagem"
+    },
+    "new": "Novo modelo",
+    "yours": "Os seus modelos",
+    "loading": "A carregar modelos…",
+    "emptyTitle": "Ainda não tem modelos",
+    "emptyBody": "Comece por um modelo inicial da Eleva abaixo ou crie o seu.",
+    "default": "Predefinido",
+    "edit": "Editar",
+    "duplicate": "Duplicar",
+    "archive": "Arquivar",
+    "copyOf": "{title} (cópia)",
+    "starters": "Modelos iniciais da Eleva",
+    "startersBody": "Apenas a estrutura. Adicione um à sua biblioteca e adapte-o.",
+    "useStarter": "Adicionar aos meus modelos",
+    "newTitle": "Novo modelo",
+    "editTitle": "Editar modelo",
+    "placeholdersHint": "Use {first}, {date} e {expert}. São preenchidos quando aplica o modelo a uma sessão.",
+    "kindLabel": "Tipo",
+    "titleLabel": "Título",
+    "bodyLabel": "Conteúdo",
+    "save": "Guardar modelo",
+    "saved": "Modelo guardado",
+    "saveFailed": "Não foi possível guardar o modelo",
+    "loadFailed": "Não foi possível carregar os modelos",
+    "archived": "Modelo arquivado",
+    "archiveFailed": "Não foi possível arquivar o modelo",
+    "phiDetected": "Remova os dados do membro antes de guardar",
+    "phiTitle": "Isto parece conter dados de um membro",
+    "phiBody": "Os modelos não podem conter nomes, e-mails, telefones, números de identificação ou datas. Substitua as partes destacadas por um marcador ou remova-as."
   }
 }

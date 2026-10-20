@@ -38,10 +38,12 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0062_records_subject_pseudonym")
+    expect(last?.tag).toBe("0063_record_templates")
     expect(last?.statements.length).toBeGreaterThan(0)
     expect(last?.hash).toHaveLength(64)
-    expect(last?.statements.join("\n")).toContain("subject_pseudonym")
+    expect(last?.statements.join("\n")).toContain(
+      "record_templates_tenant_isolation"
+    )
     const checkoutSession = migrations.find(
       (m) => m.tag === "0058_booking_checkout_session"
     )

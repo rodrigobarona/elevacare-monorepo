@@ -139,6 +139,13 @@ AUD-022 stays product backlog.
 8. **10.2b** `draftSessionReport` behind `ff.ai_reports_beta` (AUD-032)
 9. **10.2c** CRM
 
+   10.1f (2026-10-20) adds `record_templates` (migration 0063, tenant RLS, audited `record_template.created|updated|archived`), `/records/templates` CRUD + `POST /records/templates/{id}/apply`, the template PHI scrubber, and the expert `/templates` gallery. It differs from the phase spec in four ways:
+
+- Bodies are plain text with placeholders, not Plate JSON, because the notes and report editors are still plain text.
+- The Eleva starter set ships as code constants (`@eleva/records` `STARTER_RECORD_TEMPLATES`) that experts copy into their library, not as seeded rows.
+- "Start from template" in the notes and report composers and "Save as template" from a record are not wired yet. The API already accepts `sourceBookingId` for the save path; the buttons land once 10.1c (report composer) is on main.
+- The scrubber checks the member's name, e-mail, phone and session date/time. Date of birth and location are not checked because bookings do not store them.
+
 AUD-031 was resolved on 2026-10-20 by narrowing record reads to the author (migration 0061). Session documents keep the booking-expert read because members upload them.
 
 Retention sweeps and account deletion run under platform-admin context. `records` and `session_documents` have no platform-admin RLS clause, so they rely on the owner role having `BYPASSRLS` (true on Neon today). If Phase 13 moves the app to a `NOBYPASSRLS` role, add a narrow service policy for these jobs first.

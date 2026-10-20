@@ -650,6 +650,93 @@ export const SummarizeSessionRecordsResponseSchema = z.object({
   record: BookingRecordSchema,
 })
 
+export const RecordTemplateKindSchema = z.enum([
+  "note",
+  "report",
+  "consultation",
+  "message",
+])
+
+export const RecordTemplateLocaleSchema = z.enum(["en", "pt", "es"])
+
+export const RecordTemplateSchema = z.object({
+  id: z.string().uuid(),
+  kind: RecordTemplateKindSchema,
+  locale: z.string(),
+  title: z.string(),
+  body: z.string(),
+  tags: z.array(z.string()),
+  isDefault: z.boolean(),
+  version: z.number().int().positive(),
+  archivedAt: z.string().datetime().nullable(),
+  updatedAt: z.string().datetime(),
+})
+
+export const StarterRecordTemplateSchema = z.object({
+  key: z.string(),
+  kind: RecordTemplateKindSchema,
+  specialty: z.string(),
+  locale: RecordTemplateLocaleSchema,
+  title: z.string(),
+  body: z.string(),
+})
+
+export const ListRecordTemplatesResponseSchema = z.object({
+  templates: z.array(RecordTemplateSchema),
+  starters: z.array(StarterRecordTemplateSchema),
+})
+
+const TemplateTagsSchema = z.array(z.string().trim().min(1).max(40)).max(10)
+
+export const CreateRecordTemplateRequestSchema = z.object({
+  kind: RecordTemplateKindSchema,
+  locale: RecordTemplateLocaleSchema,
+  title: z.string().trim().min(1).max(200),
+  body: z.string().min(1).max(20_000),
+  tags: TemplateTagsSchema.optional(),
+  isDefault: z.boolean().optional(),
+  sourceBookingId: z.string().uuid().optional(),
+})
+
+export const UpdateRecordTemplateRequestSchema = z
+  .object({
+    title: z.string().trim().min(1).max(200).optional(),
+    body: z.string().min(1).max(20_000).optional(),
+    tags: TemplateTagsSchema.optional(),
+    isDefault: z.boolean().optional(),
+  })
+  .refine((v) => Object.values(v).some((x) => x !== undefined), {
+    message: "at least one field is required",
+  })
+
+export const ApplyRecordTemplateRequestSchema = z.object({
+  bookingId: z.string().uuid(),
+})
+
+export const ApplyRecordTemplateResponseSchema = z.object({
+  title: z.string(),
+  body: z.string(),
+})
+
+export const TemplatePhiFindingSchema = z.object({
+  field: z.enum(["title", "body"]),
+  detector: z.enum([
+    "member_identifier",
+    "email",
+    "phone",
+    "national_id",
+    "date",
+    "source_text",
+  ]),
+  start: z.number().int().nonnegative(),
+  end: z.number().int().nonnegative(),
+})
+
+export const RecordTemplatePhiErrorSchema = z.object({
+  error: z.literal("PHI_DETECTED"),
+  findings: z.array(TemplatePhiFindingSchema),
+})
+
 export const SessionDocumentScopeSchema = z.enum(["expert_only", "shared"])
 
 export const SessionDocumentSchema = z.object({
@@ -733,6 +820,22 @@ export type RemoveSessionParticipantResponse = z.infer<
 export type DailyWebhookResponse = z.infer<typeof DailyWebhookResponseSchema>
 export type BookingRecordKind = z.infer<typeof BookingRecordKindSchema>
 export type BookingRecord = z.infer<typeof BookingRecordSchema>
+export type RecordTemplate = z.infer<typeof RecordTemplateSchema>
+export type RecordTemplateKind = z.infer<typeof RecordTemplateKindSchema>
+export type StarterRecordTemplate = z.infer<typeof StarterRecordTemplateSchema>
+export type ListRecordTemplatesResponse = z.infer<
+  typeof ListRecordTemplatesResponseSchema
+>
+export type CreateRecordTemplateRequest = z.infer<
+  typeof CreateRecordTemplateRequestSchema
+>
+export type UpdateRecordTemplateRequest = z.infer<
+  typeof UpdateRecordTemplateRequestSchema
+>
+export type ApplyRecordTemplateResponse = z.infer<
+  typeof ApplyRecordTemplateResponseSchema
+>
+export type TemplatePhiFinding = z.infer<typeof TemplatePhiFindingSchema>
 export type ListSessionRecordsResponse = z.infer<
   typeof ListSessionRecordsResponseSchema
 >
@@ -3243,6 +3346,40 @@ export function createApiClient(options: ApiClientOptions) {
           "DELETE",
           `/sessions/${encodeURIComponent(bookingId)}/documents/${encodeURIComponent(documentId)}`
         )
+      },
+    },
+
+    recordTemplates: {
+      async list(query?: { kind?: RecordTemplateKind }) {
+        const qs = query?.kind ? `?kind=${encodeURIComponent(query.kind)}` : ""
+        const raw = await request<unknown>("GET", `/records/templates${qs}`)
+        return ListRecordTemplatesResponseSchema.parse(raw)
+      },
+      async create(data: CreateRecordTemplateRequest) {
+        const raw = await request<unknown>("POST", "/records/templates", data)
+        return RecordTemplateSchema.parse(raw)
+      },
+      async update(id: string, data: UpdateRecordTemplateRequest) {
+        const raw = await request<unknown>(
+          "PATCH",
+          `/records/templates/${encodeURIComponent(id)}`,
+          data
+        )
+        return RecordTemplateSchema.parse(raw)
+      },
+      async archive(id: string) {
+        await request<unknown>(
+          "DELETE",
+          `/records/templates/${encodeURIComponent(id)}`
+        )
+      },
+      async apply(id: string, bookingId: string) {
+        const raw = await request<unknown>(
+          "POST",
+          `/records/templates/${encodeURIComponent(id)}/apply`,
+          { bookingId }
+        )
+        return ApplyRecordTemplateResponseSchema.parse(raw)
       },
     },
 

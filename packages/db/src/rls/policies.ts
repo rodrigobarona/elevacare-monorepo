@@ -46,6 +46,7 @@ export const TENANT_TABLES = [
   "consents",
   "sessions",
   "session_note_drafts",
+  "record_templates",
   "expert_practice_locations",
   "event_locations",
   "billing_customers",
