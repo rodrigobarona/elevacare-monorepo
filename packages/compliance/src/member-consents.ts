@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull } from "drizzle-orm"
+import { and, desc, eq, isNull, or } from "drizzle-orm"
 import { withAudit, withPlatformAudit } from "@eleva/audit"
 import {
   lockMemberHealthConsentInvariant,
@@ -61,6 +61,37 @@ export async function listMemberConsents(
       source: null,
     }
   })
+}
+
+/**
+ * Whether AI may process this member's session content right now: an
+ * active ai_processing grant exists for the member or the booking.
+ * Withdrawal closes every active row, so absent or withdrawn means no.
+ */
+export async function hasActiveAiProcessingConsent(input: {
+  memberUserId: string | null
+  bookingId: string
+}): Promise<boolean> {
+  const subject = input.memberUserId
+    ? or(
+        eq(main.consents.userId, input.memberUserId),
+        eq(main.consents.bookingId, input.bookingId)
+      )
+    : eq(main.consents.bookingId, input.bookingId)
+  const [active] = await withPlatformAdminContext((tx) =>
+    tx
+      .select({ id: main.consents.id })
+      .from(main.consents)
+      .where(
+        and(
+          eq(main.consents.kind, "ai_processing"),
+          isNull(main.consents.withdrawnAt),
+          subject
+        )
+      )
+      .limit(1)
+  )
+  return Boolean(active)
 }
 
 export function pickLatestConsentPerKind(

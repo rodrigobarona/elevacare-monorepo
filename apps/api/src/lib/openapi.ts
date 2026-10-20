@@ -3605,7 +3605,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "putMeConsent",
           summary: "Grant or withdraw one consent kind",
           description:
-            "Marketing withdraws immediately. health_data_processing returns 409 while a confirmed future booking exists.",
+            "Marketing and ai_processing withdraw immediately. health_data_processing returns 409 while a confirmed future booking exists.",
           tags: ["Me"],
           requestBody: {
             required: true,

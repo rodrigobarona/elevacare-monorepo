@@ -421,6 +421,20 @@
       "when": 1781600000000,
       "tag": "0059_expert_profile_content",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1781700000000,
+      "tag": "0060_ai_processing_consent",
+      "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1781800000000,
+      "tag": "0061_records_author_only_select",
+      "breakpoints": true
     }
   ]
 }

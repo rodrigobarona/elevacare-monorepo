@@ -32,6 +32,29 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-20: AI processing consent and author-only record reads (proposed)
+
+- Decision (engineering, under the D-11 working decision):
+  - `ai_processing` is a consent kind (migration 0060). It is off unless the
+    member grants it from Privacy, and withdrawal closes every active row,
+    including booking-scoped ones. `hasActiveAiProcessingConsent` in
+    `@eleva/compliance` is the check Phase 10.2b must run before any AI draft.
+  - Expert records are readable by their author only (AUD-031, migration
+    0061). The booking-expert read clause is removed from `records`. It stays
+    on `session_documents`, because members upload files their expert must
+    read.
+- Out of scope: the join-page consent banner, a booking-form checkbox and
+  versioned legal text for `ai_processing`; AI drafting stays fail-closed.
+- Owner: engineering. Status: `proposed` (consent copy is a draft, not
+  DPO-approved).
+- Next review: 2026-10-27 (DPO/legal review of the consent copy).
+- Related: D-11 (working pre-launch, now author-only SELECT for expert
+  records), migrations `0060_ai_processing_consent` and
+  `0061_records_author_only_select`, AUD-029 and AUD-031 in
+  `docs/eleva-v3/audits/2026-10-phases-01-10-audit.md`,
+  `packages/compliance/src/member-consents.ts`,
+  `packages/db/src/rls/policies.ts`.
+
 ### 2026-10-20: Expert setup wizard v3 and activation rule (proposed)
 
 - Decision (engineering, for founder review): `/{org}/setup` uses the v3

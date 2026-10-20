@@ -76,14 +76,7 @@ export const records = pgTable(
     authorSelectPolicy: pgPolicy("records_author_select", {
       for: "select",
       using: sql`org_id::text = current_setting('eleva.org_id', true)
-        AND (
-          created_by::text = current_setting('eleva.user_id', true)
-          OR EXISTS (
-            SELECT 1 FROM bookings b
-            WHERE b.id = records.booking_id
-              AND b.expert_user_id::text = current_setting('eleva.user_id', true)
-          )
-        )`,
+        AND created_by::text = current_setting('eleva.user_id', true)`,
     }),
     authorInsertPolicy: pgPolicy("records_author_insert", {
       for: "insert",

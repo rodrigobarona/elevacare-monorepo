@@ -38,6 +38,7 @@ const CONSENT_KINDS: ConsentKind[] = [
   "privacy",
   "health_data_processing",
   "marketing",
+  "ai_processing",
 ]
 
 const DSAR_STATUS_KEYS = [
@@ -207,6 +208,11 @@ export function PrivacyPanel({
                 >
                   <div>
                     <p className="font-medium">{t(`consents.kinds.${kind}`)}</p>
+                    {kind === "ai_processing" ? (
+                      <p className="max-w-prose text-sm text-muted-foreground">
+                        {t("consents.aiProcessingHint")}
+                      </p>
+                    ) : null}
                     <p className="text-sm text-muted-foreground">
                       {row?.version
                         ? t("consents.version", { version: row.version })

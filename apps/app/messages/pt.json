@@ -264,8 +264,10 @@
         "terms": "Termos de utilização",
         "privacy": "Aviso de privacidade",
         "health_data_processing": "Tratamento de dados de saúde",
-        "marketing": "Mensagens de marketing"
-      }
+        "marketing": "Mensagens de marketing",
+        "ai_processing": "Ajuda de IA nos relatórios de sessão"
+      },
+      "aiProcessingHint": "Permite que o seu especialista prepare relatórios de sessão a partir das próprias notas com um modelo de IA que não guarda cópia dos seus dados. O especialista revê cada rascunho antes de o ver. Fica desligado até o ativar e pode retirar a qualquer momento. A redação com IA ainda não está ativa."
     },
     "dsar": {
       "title": "Descarregar os seus dados",
