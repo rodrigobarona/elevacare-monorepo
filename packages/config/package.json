@@ -23,7 +23,8 @@
     "./cancellation-policy": "./src/cancellation-policy.ts",
     "./booking-settings": "./src/booking-settings.ts",
     "./expert-profile-content": "./src/expert-profile-content.ts",
-    "./public-site-parity": "./src/public-site-parity.ts"
+    "./public-site-parity": "./src/public-site-parity.ts",
+    "./phone": "./src/phone.ts"
   },
   "scripts": {
     "lint": "eslint .",

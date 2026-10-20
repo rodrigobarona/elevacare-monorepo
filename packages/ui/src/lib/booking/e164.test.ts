@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { isE164, maskPhone, toE164 } from "./e164"
+import { isE164, toE164 } from "./e164"
 
 describe("toE164", () => {
   it("keeps a valid international number", () => {
@@ -28,12 +28,6 @@ describe("toE164", () => {
 
   it("rejects a too-short number", () => {
     expect(toE164("12", "PT")).toBeNull()
-  })
-})
-
-describe("maskPhone", () => {
-  it("hides the middle digits", () => {
-    expect(maskPhone("+351912345678")).toBe("+351 ··· 678")
   })
 })
 

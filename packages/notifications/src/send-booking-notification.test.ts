@@ -36,7 +36,10 @@ const {
       expertConfirmedSubtitle: "A member booked",
       expertRequestedTitle: "New booking request",
       expertRequestedSubtitle: "A member asked",
+      videoCall: "Video call",
+      phoneCall: "Phone call",
     },
+    modes: { online: "Video", in_person: "In person", phone: "Phone" },
     subject: {
       newBooking: (member: string, date: string) =>
         `New booking: ${member} — ${date}`,
@@ -146,7 +149,7 @@ function booking(overrides: Partial<LoadedBooking> = {}): LoadedBooking {
     memberPhone: null,
     language: "en",
     memberCountry: "PT",
-    locationName: null,
+    location: null,
     ...overrides,
   }
 }
@@ -414,6 +417,84 @@ describe("sendBookingNotification", () => {
     expect(renderBookingReminder).toHaveBeenCalledWith(
       expect.objectContaining({ window: "24h", joinHref: undefined })
     )
+  })
+
+  it("gives in-person members the address, maps link and ICS location", async () => {
+    const send = vi
+      .fn()
+      .mockResolvedValue({ kind: "booking.confirmed", deliveries: [] })
+    await sendBookingNotification(
+      {
+        id: "evt-place",
+        type: "booking.confirmed",
+        orgId: ORG_ID,
+        payload: eventPayload(),
+      },
+      {
+        loadBooking: async () =>
+          booking({
+            sessionMode: "in_person",
+            location: {
+              name: "Clínica Chiado",
+              address: "Rua Garrett 10",
+              line2: null,
+              postalCode: "1200-204",
+              city: "Lisboa",
+              latitude: 38.71,
+              longitude: -9.14,
+              instructions: { en: "Ring 2B", pt: "Toque no 2B" },
+            },
+          }),
+        send,
+      }
+    )
+    expect(renderBookingConfirmed).toHaveBeenCalledWith(
+      expect.objectContaining({
+        place: {
+          name: "Clínica Chiado",
+          address: "Rua Garrett 10, 1200-204 Lisboa",
+          mapsHref:
+            "https://www.google.com/maps/search/?api=1&query=38.71%2C-9.14",
+          instructions: "Ring 2B",
+        },
+      })
+    )
+    const ics = unfoldIcs(send.mock.calls[0]![0].ctx.attachments[0].content)
+    expect(ics).toContain(
+      "LOCATION:Clínica Chiado\\, Rua Garrett 10\\, 1200-204 Lisboa"
+    )
+  })
+
+  it("masks the phone in member copy and keeps it out of the ICS", async () => {
+    const send = vi
+      .fn()
+      .mockResolvedValue({ kind: "booking.confirmed", deliveries: [] })
+    await sendBookingNotification(
+      {
+        id: "evt-phone",
+        type: "booking.confirmed",
+        orgId: ORG_ID,
+        payload: eventPayload(),
+      },
+      {
+        loadBooking: async () =>
+          booking({ sessionMode: "phone", memberPhone: "+351912345678" }),
+        send,
+      }
+    )
+    const [memberCall, expertCall] = renderBookingConfirmed.mock
+      .calls as unknown as [
+      [Record<string, unknown>],
+      [Record<string, unknown>],
+    ]
+    expect(memberCall[0]).toMatchObject({ maskedPhone: "+351 ··· 678" })
+    expect(expertCall[0].maskedPhone).toBeUndefined()
+    for (const call of send.mock.calls) {
+      const ics = unfoldIcs(call[0].ctx.attachments[0].content)
+      expect(ics).toContain("LOCATION:Phone call")
+      expect(ics).not.toContain("+351")
+      expect(ics).not.toContain("··· 678")
+    }
   })
 
   it("puts an Eleva join deep link on the 1h reminder", async () => {
