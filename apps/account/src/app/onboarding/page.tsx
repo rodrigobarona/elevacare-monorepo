@@ -4,6 +4,7 @@ import { LOGIN_PATH } from "@eleva/auth"
 import { getSession } from "@eleva/auth/server"
 import { normalizeLocale } from "@eleva/config/i18n"
 import { checkExistingMembership } from "./actions"
+import { AuthHeading } from "@/components/auth-ui"
 import { OnboardingForm } from "./onboarding-form"
 
 export const dynamic = "force-dynamic"
@@ -33,15 +34,11 @@ export default async function OnboardingPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="w-full max-w-md space-y-8">
-        <header className="space-y-2 text-center">
-          <h1 className="font-heading text-3xl tracking-tight text-foreground">
-            {t("title")}
-          </h1>
-          <p className="text-sm leading-6 text-muted-foreground">
-            {t("subtitle", { name: displayName })}
-          </p>
-        </header>
+      <div className="w-full max-w-md space-y-8 text-center">
+        <AuthHeading
+          title={t("title")}
+          description={t("subtitle", { name: displayName })}
+        />
 
         <OnboardingForm
           defaultName={t("defaultName", { name: firstName })}

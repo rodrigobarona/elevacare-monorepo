@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { ArrowLeftIcon } from "@eleva/icons"
+import { Progress } from "@eleva/ui/components/progress"
 import { cn } from "@eleva/ui/lib/utils"
 
 interface SetupShellProps {
@@ -9,6 +10,8 @@ interface SetupShellProps {
   totalSteps: number
   title: string
   description?: string
+  stepCaption?: string
+  progressAriaLabel?: string
   children: React.ReactNode
 }
 
@@ -19,13 +22,13 @@ export function SetupShell({
   totalSteps,
   title,
   description,
+  stepCaption,
+  progressAriaLabel,
   children,
 }: SetupShellProps) {
-  const progress = Math.min(100, Math.round((step / totalSteps) * 100))
-
   return (
     <main className="min-h-screen bg-background">
-      <header className="border-b border-border">
+      <header className="border-b border-border bg-card">
         <div className="mx-auto flex h-14 max-w-3xl items-center px-4 sm:px-6">
           <Link
             href={backHref}
@@ -35,18 +38,30 @@ export function SetupShell({
             {backLabel}
           </Link>
         </div>
-        <div className="h-1 w-full bg-muted">
-          <div
-            className="h-full bg-primary transition-all"
-            style={{ width: `${progress}%` }}
+        <div className="px-4 pb-3 sm:px-6">
+          <Progress
+            value={step}
+            minValue={0}
+            maxValue={totalSteps}
+            aria-label={progressAriaLabel ?? `Step ${step} of ${totalSteps}`}
+            className="mx-auto max-w-3xl"
           />
         </div>
       </header>
       <div className="mx-auto flex w-full max-w-xl flex-col gap-8 px-4 py-12 sm:px-6">
         <div className={cn("space-y-2")}>
-          <h1 className="font-heading text-3xl tracking-tight">{title}</h1>
+          {stepCaption ? (
+            <p className="text-xs font-medium text-muted-foreground tabular-nums">
+              {stepCaption}
+            </p>
+          ) : null}
+          <h1 className="font-display text-3xl leading-tight font-normal tracking-tight text-foreground">
+            {title}
+          </h1>
           {description ? (
-            <p className="text-muted-foreground">{description}</p>
+            <p className="text-base leading-7 text-muted-foreground">
+              {description}
+            </p>
           ) : null}
         </div>
         {children}

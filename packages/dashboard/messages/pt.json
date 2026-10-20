@@ -71,7 +71,8 @@
         "wizardDescription": "É assim que a sua área de trabalho aparecerá na Eleva."
       }
     },
-    "back": "Voltar"
+    "back": "Voltar",
+    "stepOf": "Passo {step} de {total}"
   },
   "routeStates": {
     "loading": "A carregar…",

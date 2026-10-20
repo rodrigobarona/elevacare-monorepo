@@ -48,7 +48,7 @@ export function WorkspaceList({ rows }: { rows: WorkspaceRow[] }) {
       {rows.map((row) => (
         <li
           key={row.orgId}
-          className="flex flex-wrap items-center gap-4 rounded-3xl border bg-card p-4 shadow-1 sm:p-5"
+          className="flex flex-wrap items-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-1 sm:p-5"
         >
           <span
             aria-hidden

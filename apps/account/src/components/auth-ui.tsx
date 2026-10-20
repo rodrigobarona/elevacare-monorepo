@@ -36,19 +36,21 @@ export function AuthHeading({
   title,
   description,
   icon,
+  className,
 }: {
   title: ReactNode
   description?: ReactNode
   icon?: ReactNode
+  className?: string
 }) {
   return (
-    <header className="flex flex-col gap-2">
+    <header className={cn("flex flex-col gap-2", className)}>
       {icon ? (
         <span className="mb-2 flex size-14 items-center justify-center rounded-2xl bg-teal-700 text-white shadow-2 ring-6 ring-teal-50 motion-safe:animate-in motion-safe:duration-500 motion-safe:zoom-in-50 dark:bg-teal-600 dark:ring-teal-950 [&_svg]:size-7">
           {icon}
         </span>
       ) : null}
-      <h1 className="font-heading text-3xl leading-tight text-balance text-foreground sm:text-4xl">
+      <h1 className="font-display text-3xl leading-tight font-normal tracking-tight text-balance text-foreground sm:text-4xl">
         {title}
       </h1>
       {description ? (

@@ -305,11 +305,10 @@ Each entry should include:
   Connect, save or payouts buttons were pressed. Local `.env.local` still
   targets the dev branch (switch back to production when signed-in app
   review finishes; dev branch deletion is a separate founder call).
-  Expert setup/onboarding wizard v3 layout slice (`PageHeader`,
-  `SettingsFieldset`, `SetupProgressNav`, per-step hints) ships on
-  `feat/expert-setup-v3` — layout and copy only; step forms and Stripe
-  Connect/Identity/invoicing behaviour unchanged; founder walkthrough
-  **unproven**. Next rollout order: account, team, academy and admin.
+  Expert setup/onboarding wizard v3 layout merged (#246) — layout and copy
+  only; founder walkthrough **unproven**. Account app v3 polish in progress
+  (`feat/account-brand-v3`: auth headings, workspace create shell, org
+  `EmptyState`, card tokens). Next rollout: team, academy and admin.
   CodeRabbit CLI was ~0.7.6 vs 0.9.0 with ~3 reviews/h
   on the Hobby allowance, pacing merge batches — not a merge gate; Vercel
   Hobby deploy quota failures are likewise not merge gates.
