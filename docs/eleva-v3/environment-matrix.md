@@ -216,19 +216,19 @@ Locale prefixing uses next-intl `localePrefix: 'as-needed'`: EN serves at the ro
 
 ### Server-facing (api.eleva.care)
 
-| Concern                                                   | Production URL                                             |
-| --------------------------------------------------------- | ---------------------------------------------------------- |
-| Stripe webhook (external)                                 | `https://api.eleva.care/webhooks/stripe`                   |
-| Twilio SMS StatusCallback                                 | `https://api.eleva.care/webhooks/twilio/status`            |
-| Stripe AccountSession (session-aware, CORS + credentials) | `https://api.eleva.care/stripe/account-session`            |
-| Daily webhooks (room events + transcripts)                | `https://api.eleva.care/webhooks/daily`                    |
-| Resend delivery-events webhook                            | `https://api.eleva.care/webhooks/resend`                   |
-| Calendar OAuth callback (Google)                          | `https://api.eleva.care/calendar/oauth/google/callback`    |
-| Calendar OAuth callback (Microsoft)                       | `https://api.eleva.care/calendar/oauth/microsoft/callback` |
-| TOConline OAuth callback (Tier 1 + expert-side)           | `https://api.eleva.care/accounting/toconline/callback`     |
-| Moloni OAuth callback                                     | `https://api.eleva.care/accounting/moloni/callback`        |
-| Per-adapter Tier 2 accounting callbacks                   | `https://api.eleva.care/accounting/[adapter]/callback`     |
-| Health check                                              | `https://api.eleva.care/health`                            |
+| Concern                                                     | Production URL                                         |
+| ----------------------------------------------------------- | ------------------------------------------------------ |
+| Stripe webhook (external)                                   | `https://api.eleva.care/webhooks/stripe`               |
+| Twilio SMS StatusCallback                                   | `https://api.eleva.care/webhooks/twilio/status`        |
+| Stripe AccountSession (session-aware, CORS + credentials)   | `https://api.eleva.care/stripe/account-session`        |
+| Daily webhooks (room events + transcripts)                  | `https://api.eleva.care/webhooks/daily`                |
+| Resend delivery-events webhook                              | `https://api.eleva.care/webhooks/resend`               |
+| Google OAuth callback (login + calendar via Better Auth)    | `https://api.eleva.care/auth/callback/google`          |
+| Microsoft OAuth callback (login + calendar via Better Auth) | `https://api.eleva.care/auth/callback/microsoft`       |
+| TOConline OAuth callback (Tier 1 + expert-side)             | `https://api.eleva.care/accounting/toconline/callback` |
+| Moloni OAuth callback                                       | `https://api.eleva.care/accounting/moloni/callback`    |
+| Per-adapter Tier 2 accounting callbacks                     | `https://api.eleva.care/accounting/[adapter]/callback` |
+| Health check                                                | `https://api.eleva.care/health`                        |
 
 ### Third-party-hosted
 
@@ -339,17 +339,17 @@ Apps run via `pnpm dev` through Turborepo; `.env.local` in the monorepo root pop
 
 Webhooks, OAuth callbacks, and session-aware APIs live on the `api.eleva.care` subdomain in production and `api.dev.eleva.care` in staging. Better Auth human-facing callback lives at `eleva.care/callback` (rewritten from gateway to account). Preview deployments call the staging API and never mint `.eleva.care` cookies. In local dev the gateway runs on `localhost:3000`, the app on `:3001`, the api on `:3002`; Stripe CLI forwards webhooks.
 
-| Integration                                 | Local                                                | Staging                                                | Production                                         |
-| ------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------- |
-| Stripe webhook                              | `localhost:3002/webhooks/stripe` via `stripe listen` | `api.dev.eleva.care/webhooks/stripe`                   | `api.eleva.care/webhooks/stripe`                   |
-| Stripe AccountSession (session-aware, CORS) | `localhost:3002/stripe/account-session`              | `api.dev.eleva.care/stripe/account-session`            | `api.eleva.care/stripe/account-session`            |
-| Better Auth callback (human-facing)         | `localhost:3000/callback` (gateway → account app)    | `dev.eleva.care/callback`                              | `eleva.care/callback`                              |
-| Daily webhooks                              | `localhost:3002/webhooks/daily` (tunnel)             | `api.dev.eleva.care/webhooks/daily`                    | `api.eleva.care/webhooks/daily`                    |
-| Google Calendar OAuth                       | `localhost:3002/calendar/oauth/google/callback`      | `api.dev.eleva.care/calendar/oauth/google/callback`    | `api.eleva.care/calendar/oauth/google/callback`    |
-| Microsoft Calendar OAuth                    | `localhost:3002/calendar/oauth/microsoft/callback`   | `api.dev.eleva.care/calendar/oauth/microsoft/callback` | `api.eleva.care/calendar/oauth/microsoft/callback` |
-| TOConline OAuth                             | `localhost:3002/accounting/toconline/callback`       | `api.dev.eleva.care/accounting/toconline/callback`     | `api.eleva.care/accounting/toconline/callback`     |
-| Daily transcript webhook (16.8)             | local tunnel when needed                             | `api.dev.eleva.care/webhooks/daily`                    | `api.eleva.care/webhooks/daily`                    |
-| Resend delivery events                      | local tunnel                                         | `api.dev.eleva.care/webhooks/resend`                   | `api.eleva.care/webhooks/resend`                   |
+| Integration                                 | Local                                                | Staging                                            | Production                                     |
+| ------------------------------------------- | ---------------------------------------------------- | -------------------------------------------------- | ---------------------------------------------- |
+| Stripe webhook                              | `localhost:3002/webhooks/stripe` via `stripe listen` | `api.dev.eleva.care/webhooks/stripe`               | `api.eleva.care/webhooks/stripe`               |
+| Stripe AccountSession (session-aware, CORS) | `localhost:3002/stripe/account-session`              | `api.dev.eleva.care/stripe/account-session`        | `api.eleva.care/stripe/account-session`        |
+| Better Auth callback (human-facing)         | `localhost:3000/callback` (gateway → account app)    | `dev.eleva.care/callback`                          | `eleva.care/callback`                          |
+| Daily webhooks                              | `localhost:3002/webhooks/daily` (tunnel)             | `api.dev.eleva.care/webhooks/daily`                | `api.eleva.care/webhooks/daily`                |
+| Google OAuth (login + calendar)             | `localhost:3002/auth/callback/google`                | `api.dev.eleva.care/auth/callback/google`          | `api.eleva.care/auth/callback/google`          |
+| Microsoft OAuth (login + calendar)          | `localhost:3002/auth/callback/microsoft`             | `api.dev.eleva.care/auth/callback/microsoft`       | `api.eleva.care/auth/callback/microsoft`       |
+| TOConline OAuth                             | `localhost:3002/accounting/toconline/callback`       | `api.dev.eleva.care/accounting/toconline/callback` | `api.eleva.care/accounting/toconline/callback` |
+| Daily transcript webhook (16.8)             | local tunnel when needed                             | `api.dev.eleva.care/webhooks/daily`                | `api.eleva.care/webhooks/daily`                |
+| Resend delivery events                      | local tunnel                                         | `api.dev.eleva.care/webhooks/resend`               | `api.eleva.care/webhooks/resend`               |
 
 ## Secret Loading Mechanics
 
@@ -399,7 +399,7 @@ Keep `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, and `ELEVA_KEK_V1`.
 | `ELEVA_KEK_V*` (`ELEVA_KEK_V1`, `ELEVA_KEK_V2`, …)                            | `@eleva/encryption`    | Every active wrap version. Base64 32 bytes; never logged. After `rotateKek`, keep the previous `ELEVA_KEK_V<n>` until `org_data_keys.kek_version = n` is 0, then delete that env var (ADR-020).                                                       |
 | `CONSENT_HASH_KEY`                                                            | `@eleva/compliance`    | HMAC-SHA256 key for guest consent email hashes. ≥32 characters. Never log.                                                                                                                                                                            |
 | `RETENTION_PSEUDONYM_KEY`                                                     | `@eleva/compliance`    | HMAC-SHA256 key for booking-scope consent `subject_pseudonym` (D-12). ≥32 characters. **Separate** from `CONSENT_HASH_KEY`. Never log.                                                                                                                |
-| `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET`                       | Better Auth + calendar | social login + calendar scopes                                                                                                                                                                                                                        |
+| `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET`                       | Better Auth + calendar | social login + calendar scopes. Register redirect `{BETTER_AUTH_URL}/callback/google`. Operator guide: [`operator-tasks/google-oauth-setup.md`](./operator-tasks/google-oauth-setup.md). Run `pnpm check:google-oauth`.                               |
 | `MICROSOFT_OAUTH_CLIENT_ID` / `MICROSOFT_OAUTH_CLIENT_SECRET`                 | calendar               | calendar only                                                                                                                                                                                                                                         |
 | `DAILY_API_KEY` / `DAILY_DOMAIN` / `DAILY_DOMAIN_ID` / `DAILY_WEBHOOK_SECRET` | `@eleva/video`         | Standard Daily domain until D-07 (not HIPAA). `DAILY_DOMAIN_ID` is the domain UUID for self-signed meeting tokens (`d` claim); optional if GET `/v1` returns it. Brand `sessions.eleva.care` only after a later D-07. Recording off.                  |
 
@@ -413,3 +413,4 @@ Neon branch-per-PR (Phase 1.2 CI) needs GitHub secret `NEON_API_KEY` and secret 
 - [`ops-observability-spec.md`](./ops-observability-spec.md)
 - [`implementation-sprints.md`](./implementation-sprints.md)
 - [`operator-tasks/daily-setup.md`](./operator-tasks/daily-setup.md)
+- [`operator-tasks/google-oauth-setup.md`](./operator-tasks/google-oauth-setup.md)
