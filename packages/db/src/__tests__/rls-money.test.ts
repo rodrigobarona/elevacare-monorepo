@@ -96,6 +96,8 @@ describe.skipIf(!enabled || !databaseUrl)(
           eventTypeId: eventTypeA,
           expertProfileId: profileA,
           expertUserId: expertA,
+          guestEmail: "rls-money-guest@example.test",
+          guestName: "RLS Money Guest",
           priceCents: 6000,
           priceAmount: 6000,
           startsAt,
