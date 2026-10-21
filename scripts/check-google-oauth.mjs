@@ -44,7 +44,8 @@ for (const file of ENV_FILES) {
     ) {
       value = value.slice(1, -1)
     }
-    if (env[key] === undefined || env[key] === "") env[key] = value
+    // Next.js precedence: exported vars (even empty) win, then .env.local, then .env.
+    if (!(key in env)) env[key] = value
   }
 }
 
@@ -127,7 +128,22 @@ for (const key of checks) {
 }
 
 const betterAuthUrl = env.BETTER_AUTH_URL?.trim() ?? ""
+let betterAuthUrlValid = false
 if (betterAuthUrl) {
+  try {
+    const { protocol } = new URL(betterAuthUrl)
+    betterAuthUrlValid = protocol === "http:" || protocol === "https:"
+  } catch {
+    betterAuthUrlValid = false
+  }
+  if (!betterAuthUrlValid) {
+    console.error(
+      "\nERROR: BETTER_AUTH_URL must be an absolute http(s) URL (e.g. https://api.eleva.care/auth)."
+    )
+    failed = true
+  }
+}
+if (betterAuthUrlValid) {
   const derived = authCallback(betterAuthUrl)
   console.log(`\nDerived Google redirect from BETTER_AUTH_URL:\n  ${derived}`)
   for (const frag of STALE_REDIRECT_FRAGMENTS) {

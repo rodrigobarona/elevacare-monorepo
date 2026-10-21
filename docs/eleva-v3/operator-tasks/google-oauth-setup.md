@@ -66,7 +66,10 @@ as Enabled.
   - `https://www.googleapis.com/auth/calendar.events`
 - [ ] **Publishing**
   - **Testing** (local/staging proof): add every Google account that will
-    complete OAuth (founder, demo experts).
+    complete OAuth (founder, demo experts). In Testing mode Google expires
+    refresh tokens after **7 days** when calendar scopes are granted, so
+    expect to reconnect calendars weekly; a first successful connection is
+    not proof of a durable calendar integration.
   - **In production** (public experts/members): Google may require
     verification for calendar scopes — start early; until then keep
     Testing + test users.
@@ -130,8 +133,10 @@ only after a **live** Google round-trip.
 - [ ] Network: `accounts.google.com` → `…/auth/callback/google`
 - [ ] Happy path: Google account that maps to an Eleva user (or intended
       signup) → session cookie lands
-- [ ] `account_not_linked`: Google email with **no** Eleva user →
-      `/login?error=account_not_linked` guidance (implicit linking is off)
+- [ ] `account_not_linked`: Google account whose verified email **already
+      belongs to an Eleva user** with no linked Google account →
+      `/login?error=account_not_linked` guidance (implicit linking is off).
+      An email with no Eleva user tests signup, not this path.
 - [ ] No CSRF / origin reject in API logs
 
 ## Step 7 — Prove Phase 03–04B Google calendar (unproven stamp)
