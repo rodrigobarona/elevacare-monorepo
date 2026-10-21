@@ -1,0 +1,38 @@
+{
+  "name": "@eleva/content",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@eleva/config": "workspace:*",
+    "@eleva/icons": "workspace:*",
+    "@eleva/ui": "workspace:*",
+    "fumadocs-core": "catalog:",
+    "next": "catalog:",
+    "react": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@eleva/eslint-config": "workspace:*",
+    "@eleva/typescript-config": "workspace:*",
+    "@types/mdx": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "exports": {
+    "./schemas": "./src/schemas.ts",
+    "./loader": "./src/loader.ts",
+    "./locales": "./src/locales.ts",
+    "./mdx-components": "./src/mdx-components.tsx",
+    "./toc": "./src/toc.tsx",
+    "./sources.css": "./sources.css"
+  }
+}
