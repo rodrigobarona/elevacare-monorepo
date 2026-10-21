@@ -1,4 +1,9 @@
-import { createHash } from "node:crypto"
+import { createHash, timingSafeEqual } from "node:crypto"
+import { isIP } from "node:net"
+import {
+  PUBLIC_SSR_CLIENT_IP_HEADER,
+  PUBLIC_SSR_SECRET_HEADER,
+} from "@eleva/api-client"
 import { Ratelimit } from "@upstash/ratelimit"
 import { Redis } from "@upstash/redis"
 import { secureJson } from "./security-headers"
@@ -50,6 +55,11 @@ export interface RateLimitConfig {
 export const RATE_LIMITS = {
   authenticated: { prefix: "auth", maxRequests: 60, windowMs: 60_000 },
   public: { prefix: "pub", maxRequests: 10, windowMs: 60_000 },
+  /**
+   * Public reads rendered by `apps/web` on behalf of one visitor (keyed on the
+   * forwarded visitor IP). A profile render fans out one slots read per mode.
+   */
+  publicSsr: { prefix: "pub-ssr", maxRequests: 60, windowMs: 60_000 },
   onboarding: { prefix: "onboard", maxRequests: 5, windowMs: 60_000 },
   e2eBypass: { prefix: "e2e-verify", maxRequests: 5, windowMs: 60_000 },
   internalWorkflow: { prefix: "wf", maxRequests: 300, windowMs: 60_000 },
@@ -110,7 +120,8 @@ export async function applyRateLimit(
   routeHeaders?: HeadersInit
 ): Promise<Response | null> {
   if (
-    config.prefix === RATE_LIMITS.public.prefix &&
+    (config.prefix === RATE_LIMITS.public.prefix ||
+      config.prefix === RATE_LIMITS.publicSsr.prefix) &&
     isLocalPublicRateLimitExempt(identifier)
   ) {
     return null
@@ -161,6 +172,28 @@ export function rateLimitKey(request: Request, userId?: string): string {
   const ip = forwarded?.split(",")[0]?.trim() ?? "unknown"
   if (process.env.RATE_LIMIT_IP_DEBUG === "true") logIpSource(request, ip)
   return `ip:${ip}`
+}
+
+/**
+ * Visitor IP forwarded by `apps/web` server renders, or null when the shared
+ * secret is unset, missing, or wrong (callers then key on the request IP).
+ */
+export function trustedSsrClientIp(
+  request: Request,
+  env: Record<string, string | undefined> = process.env
+): string | null {
+  const secret = env.PUBLIC_SSR_SHARED_SECRET
+  if (!secret) return null
+  const presented = request.headers.get(PUBLIC_SSR_SECRET_HEADER)
+  if (!presented) return null
+  const expected = Buffer.from(secret)
+  const actual = Buffer.from(presented)
+  if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
+    return null
+  }
+  const ip = request.headers.get(PUBLIC_SSR_CLIENT_IP_HEADER)?.trim()
+  if (!ip || isIP(ip) === 0) return null
+  return ip
 }
 
 /**

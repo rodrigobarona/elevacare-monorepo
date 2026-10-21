@@ -13,13 +13,12 @@ import { readBookingGeo } from "@/lib/booking-geo"
 import { parseBookingSelection } from "@/lib/booking-selection"
 import { hreflangLanguages, localePath } from "@/lib/hreflang"
 import { isSupportedLocale, pickLocalizedText } from "@/lib/localized-text"
+import { isNotFoundApiError, isRateLimitedApiError } from "@/lib/public-api"
 import {
   findPublicSlot,
   getPublicEventType,
   getPublicExpert,
-  isNotFoundApiError,
-  isRateLimitedApiError,
-} from "@/lib/public-api"
+} from "@/lib/public-api-server"
 
 type Props = {
   params: Promise<{ locale: string; username: string; eventSlug: string }>

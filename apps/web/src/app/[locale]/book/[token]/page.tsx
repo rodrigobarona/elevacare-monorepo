@@ -10,7 +10,8 @@ import {
 } from "@/lib/booking-consents"
 import { readBookingGeo } from "@/lib/booking-geo"
 import { isSupportedLocale, pickLocalizedText } from "@/lib/localized-text"
-import { getPublicBookingLink, isRateLimitedApiError } from "@/lib/public-api"
+import { isRateLimitedApiError } from "@/lib/public-api"
+import { getPublicBookingLink } from "@/lib/public-api-server"
 
 type Props = {
   params: Promise<{ locale: string; token: string }>

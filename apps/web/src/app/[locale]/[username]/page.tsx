@@ -36,12 +36,11 @@ import { formatSlotDateTime } from "@/lib/format-slot-time"
 import { hreflangLanguages, localePath } from "@/lib/hreflang"
 import { isSupportedLocale, pickLocalizedText } from "@/lib/localized-text"
 import { isMarketplaceCategory } from "@/lib/marketplace-categories"
+import { isNotFoundApiError, isRateLimitedApiError } from "@/lib/public-api"
 import {
-  createPublicApiClient,
+  createServerPublicApiClient,
   getPublicExpert,
-  isNotFoundApiError,
-  isRateLimitedApiError,
-} from "@/lib/public-api"
+} from "@/lib/public-api-server"
 import {
   pickUpcomingSlotRows,
   type UpcomingModeSlots,
@@ -415,7 +414,7 @@ async function UpcomingSlots({
   const t = await getTranslations("profile")
   const from = new Date()
   const to = new Date(from.getTime() + 14 * 24 * 60 * 60 * 1000)
-  const api = createPublicApiClient()
+  const api = await createServerPublicApiClient()
   const modeQueries = eventTypes.flatMap((eventType) =>
     eventType.modes.map((mode) => ({
       eventSlug: eventType.slug,

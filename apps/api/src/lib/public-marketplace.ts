@@ -1,5 +1,10 @@
 import { corsHeaders } from "@/lib/cors"
-import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
+import {
+  applyRateLimit,
+  rateLimitKey,
+  RATE_LIMITS,
+  trustedSsrClientIp,
+} from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 
 export const PUBLIC_NOT_FOUND = { error: "not_found" } as const
@@ -9,11 +14,10 @@ export async function handlePublicGet(
   handler: (headers: Record<string, string>) => Promise<Response>
 ): Promise<Response> {
   const headers = corsHeaders(request, "GET, OPTIONS")
-  const rateLimited = await applyRateLimit(
-    rateLimitKey(request),
-    RATE_LIMITS.public,
-    headers
-  )
+  const ssrClientIp = trustedSsrClientIp(request)
+  const rateLimited = ssrClientIp
+    ? await applyRateLimit(`ip:${ssrClientIp}`, RATE_LIMITS.publicSsr, headers)
+    : await applyRateLimit(rateLimitKey(request), RATE_LIMITS.public, headers)
   if (rateLimited) return rateLimited
   try {
     return await handler(headers)
