@@ -47,6 +47,7 @@ export type AuditEntity =
   | "record"
   | "record_access_optout"
   | "record_template"
+  | "ai_draft"
   | "crm_contact"
   | "crm_follow_up"
   | "session_document"
@@ -142,6 +143,7 @@ export type AuditAction =
   | "history_recorded"
   | "ejected"
   | "note_drafted"
+  | "generated"
   | "archived"
 
 export interface AuditContext {

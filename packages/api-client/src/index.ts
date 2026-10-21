@@ -674,6 +674,21 @@ export const SummarizeSessionRecordsResponseSchema = z.object({
   record: BookingRecordSchema,
 })
 
+export const SessionReportDraftRequestSchema = z.object({
+  bookingId: z.string().uuid(),
+  noteRecordIds: z.array(z.string().uuid()).min(1),
+})
+
+export const SessionReportDraftResponseSchema = z.object({
+  record: BookingRecordSchema,
+})
+
+export const SessionReportDraftStatusResponseSchema = z.object({
+  bookingId: z.string().uuid(),
+  aiDraft: BookingRecordSchema.nullable(),
+  lastFailedAt: z.string().datetime().nullable(),
+})
+
 export const RecordTemplateKindSchema = z.enum([
   "note",
   "report",
@@ -3646,6 +3661,19 @@ export function createApiClient(options: ApiClientOptions) {
        */
       editorAssist(data: EditorAssistRequest) {
         return requestStream("POST", "/ai/editor", data)
+      },
+      async draftSessionReport(
+        data: z.infer<typeof SessionReportDraftRequestSchema>
+      ) {
+        const raw = await request<unknown>("POST", "/ai/session-report", data)
+        return SessionReportDraftResponseSchema.parse(raw)
+      },
+      async sessionReportStatus(bookingId: string) {
+        const raw = await request<unknown>(
+          "GET",
+          `/ai/session-report?bookingId=${encodeURIComponent(bookingId)}`
+        )
+        return SessionReportDraftStatusResponseSchema.parse(raw)
       },
     },
   }

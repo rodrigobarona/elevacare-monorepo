@@ -31,11 +31,13 @@ export function ReportEditor({
   apiBaseUrl,
   backHref,
   templatesHref,
+  aiReportsBeta,
 }: {
   bookingId: string
   apiBaseUrl: string
   backHref: string
   templatesHref: string
+  aiReportsBeta: boolean
 }) {
   const t = useTranslations("sessions.report")
   const uiLocale = useLocale()
@@ -141,6 +143,31 @@ export function ReportEditor({
     })
   }
 
+  function draftWithAi() {
+    startTransition(async () => {
+      try {
+        const { records } = await api.sessions.listRecords(bookingId)
+        const noteRecordIds = records
+          .filter((row) => row.kind === "note")
+          .map((row) => row.id)
+        if (noteRecordIds.length === 0) {
+          toast.error(t("draftWithAiNoNotes"))
+          return
+        }
+        const { record: draft } = await api.ai.draftSessionReport({
+          bookingId,
+          noteRecordIds,
+        })
+        setBody((current) =>
+          current.trim() ? `${current}\n\n${draft.body}` : draft.body
+        )
+        toast.success(t("draftWithAiReady"))
+      } catch {
+        toast.error(t("draftWithAiFailed"))
+      }
+    })
+  }
+
   function togglePublished() {
     if (!record) return
     startTransition(async () => {
@@ -203,6 +230,15 @@ export function ReportEditor({
         >
           {isPublished ? t("unpublish") : t("publish")}
         </Button>
+        {aiReportsBeta ? (
+          <Button
+            variant="outline"
+            onPress={draftWithAi}
+            isDisabled={!loaded || isPending}
+          >
+            {t("draftWithAi")}
+          </Button>
+        ) : null}
         <DropdownMenuTrigger>
           <Button variant="outline" isDisabled={!loaded || isPending}>
             {t("templatesMenu")}

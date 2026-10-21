@@ -119,6 +119,9 @@ import {
   UpsertSessionRecordRequestSchema,
   UpsertSessionRecordResponseSchema,
   SummarizeSessionRecordsResponseSchema,
+  SessionReportDraftRequestSchema,
+  SessionReportDraftResponseSchema,
+  SessionReportDraftStatusResponseSchema,
   ListSessionDocumentsResponseSchema,
   CompleteSessionDocumentRequestSchema,
   CompleteSessionDocumentResponseSchema,
@@ -4713,6 +4716,53 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               description: "Unread rows marked read",
               content: {
                 "application/json": { schema: MarkInboxReadAllResponseSchema },
+              },
+            },
+            ...stdErrors,
+          },
+        },
+      },
+      "/ai/session-report": {
+        get: {
+          operationId: "getSessionReportDraftStatus",
+          summary: "AI session report draft status",
+          tags: ["AI"],
+          requestParams: {
+            query: z.object({ bookingId: z.string().uuid() }),
+          },
+          responses: {
+            "200": {
+              description: "Latest ai_draft record for the booking (if any)",
+              content: {
+                "application/json": {
+                  schema: SessionReportDraftStatusResponseSchema,
+                },
+              },
+            },
+            ...stdErrors,
+          },
+        },
+        post: {
+          operationId: "draftSessionReport",
+          summary: "Generate an AI session report draft from typed notes",
+          description:
+            "Expert only. Requires ff.ai_reports_beta, member ai_processing consent, and zero-retention model on the allow-list. Never auto-publishes.",
+          tags: ["AI"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: SessionReportDraftRequestSchema,
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Encrypted unpublished ai_draft record",
+              content: {
+                "application/json": {
+                  schema: SessionReportDraftResponseSchema,
+                },
               },
             },
             ...stdErrors,
