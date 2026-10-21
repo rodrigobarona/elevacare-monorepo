@@ -32,6 +32,22 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-21: Dev-prod evidence exception (active, operator-gated)
+
+- Decision (founder-approved engineering exception):
+  - Phase **06** (Stripe test-mode pay → transfer → payout + AUD-001 cancellation refunds),
+    **09** (two-browser Eleva grant join + Daily `meeting.*` / `participant.*` webhooks), and
+    **04** guest funnel evidence may run on **production hostnames** (`eleva.care`, `api.eleva.care`)
+    while the product remains in pre-launch configuration.
+  - **Stripe test keys only** — abort if production env exposes live `sk_live_*`.
+  - **Seeded expert only** — `fisiomota` / `first-visit` / €60; no real members or PHI in notes.
+  - **Daily standard, recording off, not HIPAA** — unchanged from Phase 09 posture.
+  - **BotID** — prod may stay `off` (AUD-017); record observed state in the runbook row.
+  - **Capture** — redacted join URLs, Stripe object ids, Daily webhook delivery ids in
+    [`audits/staging-evidence-runbook-2026-10.md`](./audits/staging-evidence-runbook-2026-10.md);
+    stamp audit rows **dev-prod PASS** with date, not “production ready”.
+- Blockers (stop and ask): live Stripe keys, missing `DAILY_WEBHOOK_SECRET`, or founder revokes the exception.
+
 ### 2026-10-21: Content approach, no blog, four public pillars (active)
 
 - Decision (founder + engineering):

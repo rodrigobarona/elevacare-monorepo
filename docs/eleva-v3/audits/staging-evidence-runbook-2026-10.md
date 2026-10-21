@@ -2,7 +2,9 @@
 
 Date: 2026-10-20  
 Scope: honest exit gates for **Phase 06** (money) and **Phase 09** (video), plus optional re-runs called out in the 01–10 audit.  
-Policy: **no production mutations**; staging only unless the founder explicitly approves prod. `issueInvoice()` stays closed.
+Policy: default **staging only**; **dev-prod** runs on production hostnames are allowed only under the
+[2026-10-21 dev-prod evidence exception](../decision-log.md) (Stripe test keys, seeded `fisiomota`, no real members).
+`issueInvoice()` stays closed.
 
 ## Prerequisites
 
@@ -40,13 +42,27 @@ Prebuilt-only Daily probe is **not** this gate (see `docs/eleva-v3/spikes/09-dai
 | 1    | Guest reserve → pay → confirm on staging | End-to-end without loopback                             |
 | 2    | BotID                                    | Staging on; prod promotion tracked separately (AUD-017) |
 
+## Dev-prod batch (production hostnames, Stripe test mode)
+
+Use this section when staging W3 is unavailable but the founder exception is active. Same steps as
+above; only the base URLs change (`https://eleva.care`, `https://api.eleva.care`).
+
+| Gate             | Status (2026-10-21) | Evidence                                                                                                                                                          |
+| ---------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Deploy freshness | **Partial**         | `x-vercel-id` present on `api.eleva.care/health` (includes `fra1`); Hobby deploy quota blocked CLI redeploy of all nine apps — retry fra1 batch after quota reset |
+| Phase 06 money   | **PENDING**         | Operator: reserve → Checkout (4242) → confirm → transfer; AUD-001 Flexible/Moderate/Strict cancels                                                                |
+| Phase 09 video   | **PENDING**         | Operator: expert join + guest `/join/{bookingId}?g=`; Daily webhook log ids                                                                                       |
+| Phase 04 guest   | **PENDING**         | Operator: unsigned reserve → pay → confirm; note BotID prod state                                                                                                 |
+
+Pre-flight: confirm Stripe dashboard is **test mode**; confirm `DAILY_WEBHOOK_SECRET` on prod API before trusting webhook rows.
+
 ## After evidence
 
-- Update `docs/eleva-v3/audits/2026-10-phases-01-10-audit.md` carried-forward rows (06 exit, 09 exit, AUD-001 staging) with **staging PASS** and date — not “production ready”.
+- Update `docs/eleva-v3/audits/2026-10-phases-01-10-audit.md` carried-forward rows (06 exit, 09 exit, AUD-001) with **staging PASS** or **dev-prod PASS** and date — not “production ready”.
 - Do **not** stamp Phase 10 closed or open live tax (`issueInvoice()`).
 
 ## Out of scope for this runbook
 
 - TOConline Comunicação / live FT issuance (Phase 07 gated).
-- 10.2b AI report drafts (AUD-032 gated).
+- Turning on `ff.ai_reports_beta` in production (10.2b ships **off**; generation fail-closed until zero-retention model attestation).
 - HIPAA / cloud recording (D-07/D-08 deferred).
