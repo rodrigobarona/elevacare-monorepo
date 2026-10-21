@@ -165,79 +165,43 @@ export async function deleteEventType(
   await (txOpt ? run(txOpt) : withOrgContext(orgId, run))
 }
 
-/**
- * Public query for the booking funnel — resolves an event type by slug
- * for a given expert. Uses platform admin context (no RLS) with
- * explicit active+published filter.
- */
-export async function findPublicEventType(
-  expertProfileId: string,
-  slug: string
-): Promise<
-  | Pick<
-      EventType,
-      | "id"
-      | "orgId"
-      | "slug"
-      | "title"
-      | "description"
-      | "whatsIncluded"
-      | "whatToExpect"
-      | "exampleQuestions"
-      | "durationMinutes"
-      | "priceAmount"
-      | "currency"
-      | "languages"
-      | "sessionMode"
-      | "bookingWindowDays"
-      | "minimumNoticeMinutes"
-      | "bufferBeforeMinutes"
-      | "bufferAfterMinutes"
-      | "worldwideMode"
-      | "cancellationPolicy"
-      | "requiresApproval"
-      | "instantBookLeadMinutes"
-    >
-  | undefined
-> {
-  return withPlatformAdminContext(async (tx: Tx) => {
-    const [row] = await tx
-      .select({
-        id: eventTypes.id,
-        orgId: eventTypes.orgId,
-        slug: eventTypes.slug,
-        title: eventTypes.title,
-        description: eventTypes.description,
-        whatsIncluded: eventTypes.whatsIncluded,
-        whatToExpect: eventTypes.whatToExpect,
-        exampleQuestions: eventTypes.exampleQuestions,
-        durationMinutes: eventTypes.durationMinutes,
-        priceAmount: eventTypes.priceAmount,
-        currency: eventTypes.currency,
-        languages: eventTypes.languages,
-        sessionMode: eventTypes.sessionMode,
-        bookingWindowDays: eventTypes.bookingWindowDays,
-        minimumNoticeMinutes: eventTypes.minimumNoticeMinutes,
-        bufferBeforeMinutes: eventTypes.bufferBeforeMinutes,
-        bufferAfterMinutes: eventTypes.bufferAfterMinutes,
-        worldwideMode: eventTypes.worldwideMode,
-        cancellationPolicy: eventTypes.cancellationPolicy,
-        requiresApproval: eventTypes.requiresApproval,
-        instantBookLeadMinutes: eventTypes.instantBookLeadMinutes,
-      })
-      .from(eventTypes)
-      .where(
-        and(
-          eq(eventTypes.expertProfileId, expertProfileId),
-          eq(eventTypes.slug, slug.toLowerCase()),
-          eq(eventTypes.active, true),
-          eq(eventTypes.published, true),
-          isNull(eventTypes.deletedAt)
-        )
-      )
-      .limit(1)
-    return row
-  })
+export const publicEventTypeColumns = {
+  id: eventTypes.id,
+  orgId: eventTypes.orgId,
+  slug: eventTypes.slug,
+  title: eventTypes.title,
+  description: eventTypes.description,
+  whatsIncluded: eventTypes.whatsIncluded,
+  whatToExpect: eventTypes.whatToExpect,
+  exampleQuestions: eventTypes.exampleQuestions,
+  durationMinutes: eventTypes.durationMinutes,
+  priceAmount: eventTypes.priceAmount,
+  currency: eventTypes.currency,
+  languages: eventTypes.languages,
+  sessionMode: eventTypes.sessionMode,
+  bookingWindowDays: eventTypes.bookingWindowDays,
+  minimumNoticeMinutes: eventTypes.minimumNoticeMinutes,
+  bufferBeforeMinutes: eventTypes.bufferBeforeMinutes,
+  bufferAfterMinutes: eventTypes.bufferAfterMinutes,
+  worldwideMode: eventTypes.worldwideMode,
+  cancellationPolicy: eventTypes.cancellationPolicy,
+  requiresApproval: eventTypes.requiresApproval,
+  instantBookLeadMinutes: eventTypes.instantBookLeadMinutes,
+}
+
+export type PublicEventTypeRow = Pick<
+  EventType,
+  keyof typeof publicEventTypeColumns
+>
+
+/** Bookable event type by slug: active, published, not deleted. */
+export function publicEventTypeWhere(slug: string) {
+  return and(
+    eq(eventTypes.slug, slug.toLowerCase()),
+    eq(eventTypes.active, true),
+    eq(eventTypes.published, true),
+    isNull(eventTypes.deletedAt)
+  )
 }
 
 /**

@@ -412,7 +412,9 @@ async function UpcomingSlots({
   timeZone: string
 }) {
   const t = await getTranslations("profile")
+  // Hour-aligned so the API's calendar busy cache key repeats across renders.
   const from = new Date()
+  from.setUTCMinutes(0, 0, 0)
   const to = new Date(from.getTime() + 14 * 24 * 60 * 60 * 1000)
   const api = await createServerPublicApiClient()
   const modeQueries = eventTypes.flatMap((eventType) =>

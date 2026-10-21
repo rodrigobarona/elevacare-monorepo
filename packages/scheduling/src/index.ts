@@ -49,6 +49,7 @@ export {
 export type { MemberBookabilityError } from "./assert-member-can-book"
 export {
   resolveOffer,
+  resolveOfferWithSchedule,
   hashBookingLinkToken,
   normalizeEmail,
 } from "./resolve-offer"
@@ -56,6 +57,7 @@ export type {
   ResolvedOffer,
   ResolveOfferInput,
   ResolveOfferResult,
+  ResolveOfferWithScheduleResult,
 } from "./resolve-offer"
 export {
   reserveSlot,

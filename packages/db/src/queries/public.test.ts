@@ -130,16 +130,51 @@ describe("public queries", () => {
         icon: { name: "icon" },
         sortOrder: { name: "sortOrder" },
       },
+      eventTypes: {
+        expertProfileId: { name: "eventTypeExpertProfileId" },
+      },
       expertListings: {
         expertProfileId: { name: "expertProfileId" },
         categoryId: { name: "categoryId" },
         sortOrder: { name: "sortOrder" },
       },
     }))
+    vi.doMock("./event-types", () => ({
+      publicEventTypeColumns: { id: { name: "eventTypeId" } },
+      publicEventTypeWhere: (slug: string) => ({ eventTypeSlug: slug }),
+    }))
 
     const mod = await import("./public")
     return { mod, recorder }
   }
+
+  it("findPublicBookableEventType skips the db for reserved usernames", async () => {
+    const { mod, recorder } = await loadModule([])
+    expect(await mod.findPublicBookableEventType("admin", "x")).toBeNull()
+    expect(await mod.findPublicBookableEventType("  ", "x")).toBeNull()
+    expect(recorder.selectCalls).toHaveLength(0)
+  })
+
+  it("findPublicBookableEventType returns expert and event type from one join", async () => {
+    const row = {
+      expert: { id: "ep1", userId: "u1", orgId: "o1", username: "fisiomota" },
+      eventType: { id: "et1" },
+    }
+    const { mod, recorder } = await loadModule([[row]])
+    expect(
+      await mod.findPublicBookableEventType("FisioMota", "first-visit")
+    ).toEqual(row)
+    expect(recorder.selectCalls).toHaveLength(1)
+    expect(recorder.innerJoinCalls).toHaveLength(1)
+    expect(recorder.limitCalls).toEqual([1])
+  })
+
+  it("findPublicBookableEventType returns null when nothing matches", async () => {
+    const { mod } = await loadModule([[]])
+    expect(
+      await mod.findPublicBookableEventType("fisiomota", "nope")
+    ).toBeNull()
+  })
 
   it("findExpertByUsername short-circuits reserved names", async () => {
     const { mod, recorder } = await loadModule([])

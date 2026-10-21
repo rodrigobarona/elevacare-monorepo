@@ -1,5 +1,5 @@
 import { and, eq, isNull } from "drizzle-orm"
-import { withOrgContext } from "../context"
+import { withOrgContext, type Tx } from "../context"
 import { bookingLinks, eventTypeModes, eventTypes } from "../schema/main"
 
 export type OfferResolveModeRow = {
@@ -45,16 +45,19 @@ export type OfferResolveLinkRow = {
   recipientEmail: string | null
 }
 
-export async function loadOfferForResolve(input: {
-  expertOrgId: string
-  eventTypeModeId: string
-  tokenHash?: string
-}): Promise<{
+export async function loadOfferForResolve(
+  input: {
+    expertOrgId: string
+    eventTypeModeId: string
+    tokenHash?: string
+  },
+  txOpt?: Tx
+): Promise<{
   mode: OfferResolveModeRow
   eventType: OfferResolveEventTypeRow
   link: OfferResolveLinkRow | null
 } | null> {
-  return withOrgContext(input.expertOrgId, async (tx) => {
+  const run = async (tx: Tx) => {
     const [mode] = await tx
       .select({
         id: eventTypeModes.id,
@@ -136,5 +139,6 @@ export async function loadOfferForResolve(input: {
 
     if (!link) return null
     return { mode, eventType, link }
-  })
+  }
+  return txOpt ? run(txOpt) : withOrgContext(input.expertOrgId, run)
 }
