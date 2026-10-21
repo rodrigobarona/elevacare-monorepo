@@ -491,6 +491,13 @@
       "when": 1782600000000,
       "tag": "0069_session_document_retention_sweep",
       "breakpoints": true
+    },
+    {
+      "idx": 70,
+      "version": "7",
+      "when": 1761009600000,
+      "tag": "0070_booking_payments_admin_rls",
+      "breakpoints": true
     }
   ]
 }
