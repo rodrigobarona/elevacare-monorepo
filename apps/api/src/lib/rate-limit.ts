@@ -69,6 +69,12 @@ export const RATE_LIMITS = {
   icsFeed: { prefix: "ics-feed", maxRequests: 60, windowMs: 3_600_000 },
   /** Plate editor assist (`POST /ai/editor`) — per org. */
   editorAi: { prefix: "editor-ai", maxRequests: 30, windowMs: 3_600_000 },
+  /** Session report AI draft (`POST /ai/session-report`) — per org. */
+  sessionReportAi: {
+    prefix: "session-report-ai",
+    maxRequests: 5,
+    windowMs: 3_600_000,
+  },
 } as const satisfies Record<string, RateLimitConfig>
 
 function isLoopbackApiOrigin(env: NodeJS.ProcessEnv = process.env): boolean {

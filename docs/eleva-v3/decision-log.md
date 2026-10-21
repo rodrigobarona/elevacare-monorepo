@@ -46,7 +46,8 @@ Each entry should include:
   - **Capture** — redacted join URLs, Stripe object ids, Daily webhook delivery ids in
     [`audits/staging-evidence-runbook-2026-10.md`](./audits/staging-evidence-runbook-2026-10.md);
     stamp audit rows **dev-prod PASS** with date, not “production ready”.
-- Blockers (stop and ask): live Stripe keys, missing `DAILY_WEBHOOK_SECRET`, or founder revokes the exception.
+- Blockers (stop and ask): live Stripe keys, missing `DAILY_WEBHOOK_SECRET`, BotID blocking guest funnel without test bypass, or founder revokes the exception.
+- Status: `active` — engineering may run; human evidence rows stay **PENDING** until operator runs complete.
 
 ### 2026-10-21: Content approach, no blog, four public pillars (active)
 

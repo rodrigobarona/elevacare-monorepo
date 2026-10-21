@@ -9,6 +9,11 @@ export type {
   OfferKind,
   OfferMode,
 } from "./offer-invariants"
+export {
+  offerInvariantFieldForCode,
+  isOfferInvariantError,
+  type OfferInvariantField,
+} from "./offer-invariant-fields"
 export { normalizeAvailabilityRules } from "./normalize-rules"
 export type {
   AvailabilityRuleInput,

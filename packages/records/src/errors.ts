@@ -4,6 +4,7 @@ export type SessionRecordErrorCode =
   | "INTAKE_READONLY"
   | "NOT_PUBLISHABLE"
   | "AI_MODEL_ZERO_RETENTION_REQUIRED"
+  | "AI_MODEL_NOT_APPROVED"
   | "AI_CONSENT_REQUIRED"
 
 export type SessionDocumentErrorCode =

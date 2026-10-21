@@ -75,16 +75,16 @@ closed until the evidence column is real.
 Engineering slices **09.1–09.6.3** are on main. This is **not** a proven
 exit gate and **not HIPAA**.
 
-| Item                                                              | State               | Evidence                                         |
-| ----------------------------------------------------------------- | ------------------- | ------------------------------------------------ |
-| 09.1–09.5 server, rooms, join, ElevaCall, emails, pay-fail cancel | on main             | PRs #163–#166                                    |
-| 09.6.1 attendance fallback (`endsAt + 30m`)                       | on main             | #167                                             |
-| 09.6.2 Playwright fake-device join                                | on main             | #168 (`E2E_VIDEO_JOIN=1` leftover)               |
-| 09.6.3a eject-before-capacity                                     | on main             | #169                                             |
-| 09.6.3b webhook `processed_at` in session tx                      | on main             | #170                                             |
-| Join Permissions-Policy camera/mic                                | on main             | `@eleva/observability` `joinPermissionsPolicy()` |
-| Meeting-token JWT redaction + `check-no-phi-logs`                 | on main             | `redaction.ts` + `pnpm check:no-phi-logs`        |
-| 09.0 live Daily probe                                             | **PASS (Prebuilt)** | Spike addendum 2026-10-08; not Eleva join pages  |
-| Staging two-browser call                                          | leftover            | Operator; not a merge gate                       |
-| `ended + 2 min` `finalizeAttendance`                              | **not built**       | Decision-log attendance SSOT                     |
-| D-07 HIPAA / BAA                                                  | Deferred            | Never claim BAA or HIPAA                         |
+| Item                                                              | State               | Evidence                                                                                                                |
+| ----------------------------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 09.1–09.5 server, rooms, join, ElevaCall, emails, pay-fail cancel | on main             | PRs #163–#166                                                                                                           |
+| 09.6.1 attendance fallback (`endsAt + 30m`)                       | on main             | #167                                                                                                                    |
+| 09.6.2 Playwright fake-device join                                | on main             | #168 (`E2E_VIDEO_JOIN=1` leftover)                                                                                      |
+| 09.6.3a eject-before-capacity                                     | on main             | #169                                                                                                                    |
+| 09.6.3b webhook `processed_at` in session tx                      | on main             | #170                                                                                                                    |
+| Join Permissions-Policy camera/mic                                | on main             | `@eleva/observability` `joinPermissionsPolicy()`                                                                        |
+| Meeting-token JWT redaction + `check-no-phi-logs`                 | on main             | `redaction.ts` + `pnpm check:no-phi-logs`                                                                               |
+| 09.0 live Daily probe                                             | **PASS (Prebuilt)** | Spike addendum 2026-10-08; not Eleva join pages                                                                         |
+| Staging two-browser call                                          | leftover            | Operator; not a merge gate                                                                                              |
+| `ended + 2 min` `finalizeAttendance`                              | **superseded**      | Attendance SSOT is `meeting.ended` + `video-attendance-sweep` (`endsAt + 30 min` fallback); see decision-log 2026-10-07 |
+| D-07 HIPAA / BAA                                                  | Deferred            | Never claim BAA or HIPAA                                                                                                |

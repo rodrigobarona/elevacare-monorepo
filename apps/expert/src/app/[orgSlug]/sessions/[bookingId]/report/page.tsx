@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { getFormatter, getTranslations } from "next-intl/server"
 import { getExpertBookingById } from "@eleva/db"
+import { getFlag } from "@eleva/flags"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
 import { getApiBaseUrl } from "@/lib/server-api"
@@ -19,10 +20,11 @@ export default async function ExpertSessionReportPage({
     orgSlug,
     "events:manage"
   )
-  const [t, format, booking] = await Promise.all([
+  const [t, format, booking, aiReportsBeta] = await Promise.all([
     getTranslations("sessions.report"),
     getFormatter(),
     getExpertBookingById(profile.orgId, profile.id, bookingId),
+    getFlag("ff.ai_reports_beta"),
   ])
   if (!booking) notFound()
 
@@ -41,6 +43,7 @@ export default async function ExpertSessionReportPage({
         apiBaseUrl={getApiBaseUrl()}
         backHref={`/${orgSlug}/calendar`}
         templatesHref={expertWorkspacePath(session, "templates")}
+        aiReportsBeta={aiReportsBeta}
       />
     </div>
   )
