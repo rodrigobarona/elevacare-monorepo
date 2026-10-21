@@ -1,3 +1,4 @@
 @import "tailwindcss" source("../..");
 @import "@eleva/ui/globals.css";
 @import "@eleva/media/sources.css";
+@import "@eleva/content/sources.css";

@@ -511,6 +511,8 @@
     "cookies": "Cookies",
     "payments": "Pagamentos",
     "expertAgreement": "Acordo de especialistas",
+    "accessibility": "Acessibilidade",
+    "complaints": "Reclamações",
     "draftNote": "Estas páginas são rascunhos de pré-lançamento (versão {version}). A área jurídica e o DPO voltam a assinar antes do go-live.",
     "solutions": "Juntar-se à Eleva",
     "becomeExpert": "Tornar-se especialista",
@@ -521,6 +523,11 @@
     "tagline": "Cuidados especializados de saúde da mulher, perto de si. Online, por telefone ou presencialmente.",
     "credits": "Créditos de fotografia",
     "story": "A nossa história"
+  },
+  "longform": {
+    "versionLabel": "Versão do documento {version}",
+    "lastUpdatedLabel": "Última atualização {date}",
+    "tocTitle": "Nesta página"
   },
   "legal": {
     "draftBanner": "Rascunho de pré-lançamento. Este não é texto jurídico de produção. A área jurídica e o DPO substituem-no antes da Eleva.care ir ao ar.",

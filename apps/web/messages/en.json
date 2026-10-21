@@ -511,6 +511,8 @@
     "cookies": "Cookies",
     "payments": "Payments",
     "expertAgreement": "Expert agreement",
+    "accessibility": "Accessibility",
+    "complaints": "Complaints",
     "draftNote": "These pages are working pre-launch drafts (version {version}). Legal and the DPO will re-sign before go-live.",
     "solutions": "Join Eleva",
     "becomeExpert": "Become an expert",
@@ -521,6 +523,11 @@
     "tagline": "Expert women's health care, close to you. Online, by phone or in person.",
     "credits": "Photo credits",
     "story": "Our story"
+  },
+  "longform": {
+    "versionLabel": "Document version {version}",
+    "lastUpdatedLabel": "Last updated {date}",
+    "tocTitle": "On this page"
   },
   "legal": {
     "draftBanner": "Working pre-launch draft. This is not production legal text. Legal and the DPO will replace it before Eleva.care goes live.",

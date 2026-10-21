@@ -511,6 +511,8 @@
     "cookies": "Cookies",
     "payments": "Pagos",
     "expertAgreement": "Acuerdo de especialistas",
+    "accessibility": "Accesibilidad",
+    "complaints": "Reclamaciones",
     "draftNote": "Estas páginas son borradores previos al lanzamiento (versión {version}). Legal y el DPO volverán a firmar antes del go-live.",
     "solutions": "Unirse a Eleva",
     "becomeExpert": "Hazte especialista",
@@ -521,6 +523,11 @@
     "tagline": "Cuidado experto de la salud de la mujer, cerca de ti. Online, por teléfono o en persona.",
     "credits": "Créditos fotográficos",
     "story": "Nuestra historia"
+  },
+  "longform": {
+    "versionLabel": "Versión del documento {version}",
+    "lastUpdatedLabel": "Última actualización {date}",
+    "tocTitle": "En esta página"
   },
   "legal": {
     "draftBanner": "Borrador previo al lanzamiento. Este no es texto legal de producción. Legal y el DPO lo sustituirán antes de que Eleva.care entre en producción.",

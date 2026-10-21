@@ -14,6 +14,8 @@ const FOOTER_LABEL_KEYS = {
   cookies: "cookies",
   payments: "payments",
   "expert-agreement": "expertAgreement",
+  accessibility: "accessibility",
+  complaints: "complaints",
 } as const
 
 const LINK_CLASS =

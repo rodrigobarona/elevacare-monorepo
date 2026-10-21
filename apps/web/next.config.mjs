@@ -1,4 +1,5 @@
 import { withBotId } from "botid/next/config"
+import { createMDX } from "fumadocs-mdx/next"
 import createNextIntlPlugin from "next-intl/plugin"
 import {
   ELEVA_IMAGE_REMOTE_PATTERNS,
@@ -7,6 +8,7 @@ import {
 } from "@eleva/config/next-dev"
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts")
+const withMDX = createMDX()
 
 /**
  * AUD-017: same-origin `/api/*` → apps/api so BotID can sign booking-funnel
@@ -81,10 +83,11 @@ const nextConfig = {
     "@eleva/billing",
     "@eleva/calendar",
     "@eleva/config",
+    "@eleva/content",
     "@eleva/db",
     "@eleva/media",
     "@eleva/ui",
   ],
 }
 
-export default withBotId(withNextIntl(nextConfig))
+export default withBotId(withNextIntl(withMDX(nextConfig)))

@@ -6,7 +6,18 @@ export const LEGAL_SLUGS = [
   "cookies",
   "payments",
   "expert-agreement",
+  "accessibility",
+  "complaints",
 ] as const
+
+/** Slugs rendered from `@eleva/content` MDX (final text). Others stay on JSON until ported. */
+export const LEGAL_MDX_SLUGS = ["accessibility", "complaints"] as const
+
+export type LegalMdxSlug = (typeof LEGAL_MDX_SLUGS)[number]
+
+export function isLegalMdxSlug(slug: string): slug is LegalMdxSlug {
+  return (LEGAL_MDX_SLUGS as readonly string[]).includes(slug)
+}
 
 export type LegalSlug = (typeof LEGAL_SLUGS)[number]
 
