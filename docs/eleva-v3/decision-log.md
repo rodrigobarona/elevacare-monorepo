@@ -32,6 +32,47 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-21: Content approach, no blog, four public pillars (active)
+
+- Decision (founder + engineering):
+  - **Long-form content is Git-versioned MDX** in `@eleva/content`
+    (legal, trust, evidence-based care, help center), read with headless
+    Fumadocs (`fumadocs-core` + `fumadocs-mdx`). All UI comes from
+    `@eleva/ui` (React Aria); Fumadocs UI is not used because it depends
+    on Radix (ADR-023 boundary).
+  - **Landing pages stay TSX on v3 blocks** with copy in next-intl JSON
+    (`apps/web/messages/*.json`). The old repo's MDX landing pages full of
+    bespoke section components are not ported as MDX.
+  - **CMS later, not now.** Every content type has a Zod frontmatter
+    schema and is read through a small loader interface
+    (`getDocument`, `listDocuments`, `getTree`). A future Sanity/Payload
+    migration swaps the loader, not the pages.
+  - **No blog.** The editorial channel is the Femme Focus newsletter by
+    Eleva on Beehiiv. The public site has four pillars: Eleva as a care
+    marketplace and clinics, Academy, newsletter and community (Beehiiv),
+    and the "Just Between Us... and Science" podcast sponsorship. They are
+    grouped in one "Learn & community" mega dropdown and the footer.
+  - **`/community` changes disposition** from 404 (D-10, 2026-09-10) to a
+    landing page that links out to the Beehiiv community.
+  - Legal and trust documents are written as final text in en/pt/es from
+    a sourced fact sheet (`docs/eleva-v3/legal/fact-sheet.md`). Publication
+    stays behind one switch: `CONSENT_DOCUMENT_VERSION` in
+    `@eleva/compliance` moves from `dev-2026-09-09` to the publication date
+    only after founder review.
+  - Cookie consent uses c15t hosted on Inth (organization `eleva`,
+    project `eleva-care`, runtime region Europe/Frankfurt), strict opt-in:
+    no optional requests before a choice.
+- Owner: founder (content, pillars), engineering (implementation).
+  Status: `active`.
+- Out of scope (follow-ups, not shipped):
+  - Headless CMS adoption.
+  - Showing latest Beehiiv issues on-site via a cached `GET` in `apps/api`
+    (Beehiiv API v2).
+  - Legal/DPO sign-off of the legal set; the version switch above.
+  - Native-speaker review of AI-drafted help locales.
+- Related: [`content-seo-spec.md`](./content-seo-spec.md),
+  ADR-023, D-10.
+
 ### 2026-10-20: Phase 10 retention sweep + AI legal notice (active)
 
 - Decision (engineering, AUD-028 / AUD-029):

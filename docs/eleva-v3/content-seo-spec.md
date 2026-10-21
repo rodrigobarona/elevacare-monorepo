@@ -10,7 +10,7 @@ It should guide:
 
 - marketing information architecture
 - expert marketplace discoverability
-- docs/blog strategy
+- docs and editorial strategy
 - localized metadata and structured data
 - content ownership boundaries
 
@@ -55,9 +55,12 @@ Includes:
 
 Includes:
 
-- blog
-- evidence and methodology pages
-- future thought-leadership content
+- evidence and methodology pages (`/evidence-based-care`)
+- the Femme Focus newsletter (Beehiiv), the podcast and the community,
+  surfaced through `/newsletter`, `/podcast` and `/community`
+
+There is no on-site blog (decision 2026-10-21). Newsletter issues live on
+Beehiiv; the site links out to them.
 
 ## SEO Goals
 
@@ -100,6 +103,20 @@ The system should support content entities such as:
 - legal/trust content
 
 Content should remain easily editable and versioned.
+
+### Where content lives (decision 2026-10-21)
+
+- **Long-form MDX** lives in `packages/content` (`@eleva/content`):
+  `content/legal`, `content/trust`, `content/pages` (for example
+  `evidence-based-care`) and `content/help/{members,experts,clinics}`.
+  Each document has one file per locale and Zod-validated frontmatter.
+  `apps/web` renders legal, trust and pages; `apps/docs` renders help.
+- **Landing pages** (home, about, become-expert, for-clinics, history,
+  newsletter, podcast, community) are TSX on `@eleva/ui` blocks with copy
+  in `apps/web/messages/*.json`.
+- **CMS readiness**: pages read content only through the `@eleva/content`
+  loader (`getDocument`, `listDocuments`, `getTree`), so a CMS can replace
+  the MDX source without page rewrites.
 
 ## Localization
 
@@ -162,13 +179,17 @@ Profile content should make room for:
 
 ## Docs Strategy
 
-Fumadocs is the preferred docs/content direction for:
+Fumadocs is used headless (`fumadocs-core` + `fumadocs-mdx`) for:
 
-- help and support content
+- help and support content (`/docs/members`, `/docs/experts`, `/docs/clinics`)
 - product guides
-- future docs-oriented information architecture
+- the future API reference under `/docs/api-reference`
 
-The docs system should remain compatible with markdown-first authoring and versioned changes in Git.
+Fumadocs UI is not used: it depends on Radix, which is banned outside
+`packages/editor` (ADR-023). Layout, sidebar, table of contents and search
+dialog are built from `@eleva/ui`. The search index and `llms.txt` are
+generated at build time as static files, because HTTP API route handlers
+(`route.ts`) live only in `apps/api`.
 
 ## AI And Search-Readable Content
 
@@ -206,11 +227,29 @@ Locales: `en` unprefixed, `pt` / `es` prefixed. `pt-BR` is retired (D-01): gatew
 
 Private booking links (`/book/[token]`) are `robots: noindex`. Contact POST + Resend remain gated.
 
+### Changes on 2026-10-21
+
+| Route                                                    | New disposition                                                  |
+| -------------------------------------------------------- | ---------------------------------------------------------------- |
+| `/community`                                             | Landing page linking to the Beehiiv community (replaces the 404) |
+| `/newsletter`, `/podcast`                                | New pillar landing pages                                         |
+| `/evidence-based-care`                                   | New MDX page with references                                     |
+| `/legal/*`                                               | MDX final text; adds `accessibility` and `complaints`            |
+| `/legal/cookie`, `/legal/payment-policies`               | `301` → `/legal/cookies`, `/legal/payments`                      |
+| `/trust/dpa`, `/trust/sub-processors`                    | Real MDX pages (the `/trust/dpa` redirect is removed)            |
+| `/help/patient/*`, `/help/expert/*`, `/help/workspace/*` | `301` → `/docs/members/*`, `/docs/experts/*`, `/docs/clinics/*`  |
+
+## Resolved Questions (2026-10-21)
+
+- **web vs docs**: marketing, legal, trust and evidence pages render in
+  `apps/web`; the help center renders in `apps/docs`. Both read from
+  `@eleva/content`.
+- **Blog**: none. Beehiiv (Femme Focus) is the editorial channel.
+- **CMS timing**: Git-first MDX now; the loader interface keeps a CMS
+  migration cheap.
+
 ## Open Questions
 
-- what content should live in `apps/web` versus `apps/docs`
-- what editorial/blog strategy belongs in the first build
-- whether a headless CMS layer is required early or if Git-first content is enough
 - exact expert profile SEO policy for indexing and localization
 
 ## Related Docs
