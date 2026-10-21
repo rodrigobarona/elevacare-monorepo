@@ -103,3 +103,6 @@ catalog:
   platejs: ^53.3.14
   "@platejs/basic-nodes": ^53.0.0
   isomorphic-dompurify: ^2.17.0
+
+  # Opt-in public profile performance gate (Phase 04 AC)
+  lighthouse: ^12.8.1
