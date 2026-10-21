@@ -1,5 +1,10 @@
 import { createHash } from "node:crypto"
-import { loadOfferForResolve } from "@eleva/db"
+import {
+  getScheduleForBooking,
+  loadOfferForResolve,
+  withOrgContext,
+  type BookingScheduleData,
+} from "@eleva/db"
 import type { CancellationPolicy } from "@eleva/config/cancellation-policy"
 import type { CountryScopeType, OfferMode } from "./offer-invariants"
 
@@ -202,5 +207,45 @@ export async function resolveOffer(
     link: loaded.link,
     viewerEmail: input.viewerEmail,
     enforceRecipient: input.enforceRecipient,
+  })
+}
+
+export type ResolveOfferWithScheduleResult =
+  | { ok: true; offer: ResolvedOffer; schedule: BookingScheduleData }
+  | { ok: false; error: "not_found" }
+
+/** `resolveOffer` plus the offer's schedule windows in one org transaction. */
+export async function resolveOfferWithSchedule(
+  input: ResolveOfferInput
+): Promise<ResolveOfferWithScheduleResult> {
+  return withOrgContext(input.expertOrgId, async (tx) => {
+    const loaded = await loadOfferForResolve(
+      {
+        expertOrgId: input.expertOrgId,
+        eventTypeModeId: input.eventTypeModeId,
+        tokenHash: input.linkToken
+          ? hashBookingLinkToken(input.linkToken)
+          : undefined,
+      },
+      tx
+    )
+    if (!loaded) return { ok: false, error: "not_found" }
+
+    const resolved = composeResolvedOffer({
+      orgId: input.expertOrgId,
+      mode: loaded.mode,
+      eventType: loaded.eventType,
+      link: loaded.link,
+      viewerEmail: input.viewerEmail,
+      enforceRecipient: input.enforceRecipient,
+    })
+    if (!resolved.ok) return resolved
+
+    const schedule = await getScheduleForBooking(
+      input.expertOrgId,
+      resolved.offer.scheduleId,
+      tx
+    )
+    return { ok: true, offer: resolved.offer, schedule }
   })
 }

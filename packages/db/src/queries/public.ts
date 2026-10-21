@@ -15,6 +15,11 @@ import { isReserved } from "@eleva/config/reserved-usernames"
 import { withPlatformAdminContext } from "../context"
 import * as auth from "../schema/auth"
 import * as main from "../schema/main"
+import {
+  publicEventTypeColumns,
+  publicEventTypeWhere,
+  type PublicEventTypeRow,
+} from "./event-types"
 
 type ArrayCastSuffix = "text[]" | "session_mode[]"
 
@@ -188,6 +193,53 @@ export async function findExpertByUsername(
       ...expert,
       categorySlugs: listings.map((l) => l.slug),
     }
+  })
+}
+
+export interface PublicBookableEventType {
+  expert: Pick<PublicExpertProfile, "id" | "userId" | "orgId" | "username">
+  eventType: PublicEventTypeRow
+}
+
+/**
+ * Expert + bookable event type in one query, for the slots and event-type
+ * routes. Same username rules as `findExpertByUsername`; event-type rules
+ * come from `publicEventTypeWhere`.
+ */
+export async function findPublicBookableEventType(
+  username: string,
+  slug: string
+): Promise<PublicBookableEventType | null> {
+  const lowered = username.trim().toLowerCase()
+  if (lowered.length === 0) return null
+  if (isReserved(lowered)) return null
+
+  return withPlatformAdminContext(async (tx) => {
+    const [row] = await tx
+      .select({
+        expert: {
+          id: main.expertProfiles.id,
+          userId: main.expertProfiles.userId,
+          orgId: main.expertProfiles.orgId,
+          username: main.expertProfiles.username,
+        },
+        eventType: publicEventTypeColumns,
+      })
+      .from(main.expertProfiles)
+      .innerJoin(
+        main.eventTypes,
+        eq(main.eventTypes.expertProfileId, main.expertProfiles.id)
+      )
+      .where(
+        and(
+          eq(main.expertProfiles.username, lowered),
+          eq(main.expertProfiles.status, "active"),
+          isNull(main.expertProfiles.deletedAt),
+          publicEventTypeWhere(slug)
+        )
+      )
+      .limit(1)
+    return row ?? null
   })
 }
 

@@ -52,9 +52,10 @@ export async function getExpertScheduleForBooking(
 
 export async function getScheduleForBooking(
   orgId: string,
-  scheduleId: string
+  scheduleId: string,
+  txOpt?: Tx
 ): Promise<BookingScheduleData> {
-  return withOrgContext(orgId, async (tx: Tx) => {
+  const run = async (tx: Tx): Promise<BookingScheduleData> => {
     const [schedule] = await tx
       .select({ id: schedules.id, timezone: schedules.timezone })
       .from(schedules)
@@ -73,7 +74,8 @@ export async function getScheduleForBooking(
 
     const windows = await loadScheduleWindows(tx, schedule.id)
     return { schedule, ...windows }
-  })
+  }
+  return txOpt ? run(txOpt) : withOrgContext(orgId, run)
 }
 
 async function loadScheduleWindows(tx: Tx, scheduleId: string) {

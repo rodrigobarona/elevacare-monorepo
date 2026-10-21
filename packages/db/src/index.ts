@@ -33,6 +33,8 @@ export {
   type ListExpertsFilters,
   type ListExpertsResult,
   type SlugAvailability,
+  findPublicBookableEventType,
+  type PublicBookableEventType,
 } from "./queries/public"
 export { pingMainDb, pingAuditDb } from "./ping"
 export {
@@ -48,8 +50,8 @@ export {
   createEventType,
   updateEventType,
   deleteEventType,
-  findPublicEventType,
   listPublicEventTypes,
+  type PublicEventTypeRow,
 } from "./queries/event-types"
 export {
   listEventTypeModes,

@@ -6,21 +6,28 @@ import {
   trustedSsrClientIp,
 } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
+import { createServerTiming, type ServerTiming } from "@/lib/server-timing"
 
 export const PUBLIC_NOT_FOUND = { error: "not_found" } as const
 
 export async function handlePublicGet(
   request: Request,
-  handler: (headers: Record<string, string>) => Promise<Response>
+  handler: (
+    headers: Record<string, string>,
+    timing: ServerTiming
+  ) => Promise<Response>
 ): Promise<Response> {
   const headers = corsHeaders(request, "GET, OPTIONS")
+  const timing = createServerTiming()
   const ssrClientIp = trustedSsrClientIp(request)
-  const rateLimited = ssrClientIp
-    ? await applyRateLimit(`ip:${ssrClientIp}`, RATE_LIMITS.publicSsr, headers)
-    : await applyRateLimit(rateLimitKey(request), RATE_LIMITS.public, headers)
-  if (rateLimited) return rateLimited
+  const rateLimited = await timing.time("ratelimit", () =>
+    ssrClientIp
+      ? applyRateLimit(`ip:${ssrClientIp}`, RATE_LIMITS.publicSsr, headers)
+      : applyRateLimit(rateLimitKey(request), RATE_LIMITS.public, headers)
+  )
+  if (rateLimited) return timing.apply(rateLimited)
   try {
-    return await handler(headers)
+    return timing.apply(await handler(headers, timing))
   } catch (err) {
     console.error("public route failure", err)
     return secureJson({ error: "internal" }, { status: 500, headers })

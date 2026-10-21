@@ -2,13 +2,11 @@ import {
   PublicSlotsQuerySchema,
   PublicSlotsResponseSchema,
 } from "@eleva/api-client"
+import { findPublicBookableEventType, listExpertBusyBookings } from "@eleva/db"
 import {
-  findExpertByUsername,
-  findPublicEventType,
-  getScheduleForBooking,
-  listExpertBusyBookings,
-} from "@eleva/db"
-import { getAvailableSlotsForOffer, resolveOffer } from "@eleva/scheduling"
+  getAvailableSlotsForOffer,
+  resolveOfferWithSchedule,
+} from "@eleva/scheduling"
 import { calendarBusyTimeProvider } from "@/lib/calendar-busy"
 import {
   handlePublicGet,
@@ -34,7 +32,7 @@ export async function GET(
   request: Request,
   context: { params: Promise<{ username: string; slug: string }> }
 ) {
-  return handlePublicGet(request, async (headers) => {
+  return handlePublicGet(request, async (headers, timing) => {
     const parsed = PublicSlotsQuerySchema.safeParse(
       Object.fromEntries(new URL(request.url).searchParams)
     )
@@ -68,42 +66,52 @@ export async function GET(
     }
 
     const { username, slug } = await context.params
-    const expert = await findExpertByUsername(username)
-    if (!expert) {
-      return secureJson(PUBLIC_NOT_FOUND, { status: 404, headers })
-    }
-
-    const eventType = await findPublicEventType(expert.id, slug)
-    if (!eventType) {
-      return secureJson(PUBLIC_NOT_FOUND, { status: 404, headers })
-    }
-
-    const resolved = await resolveOffer({
-      expertOrgId: eventType.orgId,
-      eventTypeModeId: modeId,
-      linkToken,
-    })
-    if (!resolved.ok || resolved.offer.eventTypeId !== eventType.id) {
-      return secureJson(PUBLIC_NOT_FOUND, { status: 404, headers })
-    }
-
-    const { schedule, rules, overrides } = await getScheduleForBooking(
-      eventType.orgId,
-      resolved.offer.scheduleId
+    const target = await timing.time("event-type", () =>
+      findPublicBookableEventType(username, slug)
     )
-    if (!schedule) {
+    if (!target) {
       return secureJson(PUBLIC_NOT_FOUND, { status: 404, headers })
     }
+    const { expert, eventType } = target
 
-    const [existingBookings, externalBusyTimes] = await Promise.all([
-      listExpertBusyBookings(expert.id, rangeStart, rangeEnd),
-      calendarBusyTimeProvider.getBusy({
+    const bookingsPromise = timing.time("bookings", () =>
+      listExpertBusyBookings(expert.id, rangeStart, rangeEnd)
+    )
+    // Bookings settle before any early return so a 404 leaves no dangling query.
+    const bookingsSettled = bookingsPromise.then(
+      (value) => ({ ok: true as const, value }),
+      (error: unknown) => ({ ok: false as const, error })
+    )
+    const resolved = await timing.time("offer", () =>
+      resolveOfferWithSchedule({
         expertOrgId: eventType.orgId,
-        expertProfileId: expert.id,
-        expertUserId: expert.userId,
-        from: rangeStart,
-        to: rangeEnd,
-      }),
+        eventTypeModeId: modeId,
+        linkToken,
+      })
+    )
+    if (
+      !resolved.ok ||
+      resolved.offer.eventTypeId !== eventType.id ||
+      !resolved.schedule.schedule
+    ) {
+      await bookingsSettled
+      return secureJson(PUBLIC_NOT_FOUND, { status: 404, headers })
+    }
+    const { rules, overrides } = resolved.schedule
+    const schedule = resolved.schedule.schedule
+
+    // External calendars only after the offer is confirmed (third-party quota).
+    const [existingBookings, externalBusyTimes] = await Promise.all([
+      bookingsPromise,
+      timing.time("calendar", () =>
+        calendarBusyTimeProvider.getBusy({
+          expertOrgId: eventType.orgId,
+          expertProfileId: expert.id,
+          expertUserId: expert.userId,
+          from: rangeStart,
+          to: rangeEnd,
+        })
+      ),
     ])
 
     const slots = getAvailableSlotsForOffer({

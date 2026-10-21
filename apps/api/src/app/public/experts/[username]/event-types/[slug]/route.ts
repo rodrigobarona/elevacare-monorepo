@@ -1,7 +1,6 @@
 import { PublicEventTypeDetailSchema } from "@eleva/api-client"
 import {
-  findExpertByUsername,
-  findPublicEventType,
+  findPublicBookableEventType,
   listPublicEventTypeModes,
 } from "@eleva/db"
 import {
@@ -27,15 +26,11 @@ export async function GET(
 ) {
   return handlePublicGet(request, async (headers) => {
     const { username, slug } = await context.params
-    const expert = await findExpertByUsername(username)
-    if (!expert) {
+    const target = await findPublicBookableEventType(username, slug)
+    if (!target) {
       return secureJson(PUBLIC_NOT_FOUND, { status: 404, headers })
     }
-
-    const eventType = await findPublicEventType(expert.id, slug)
-    if (!eventType) {
-      return secureJson(PUBLIC_NOT_FOUND, { status: 404, headers })
-    }
+    const { expert, eventType } = target
 
     const modesByEventType = await listPublicEventTypeModes([eventType.id])
 
