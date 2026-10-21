@@ -69,6 +69,14 @@ schema-management primitives, not operator workflows.
 | ----------------- | -------------------------------------------------------------------------- | ----------- |
 | `pnpm flags:sync` | Sync the local feature-flag definitions into Vercel Edge Config + PostHog. | Yes         |
 
+### Google OAuth (Better Auth + Calendar)
+
+| Command                   | What it does                                                                                                                                                          | Idempotent? |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| `pnpm check:google-oauth` | Prints canonical Google Cloud redirect URIs + JS origins, consent scopes, and verifies `GOOGLE_OAUTH_CLIENT_ID` / `SECRET` + `BETTER_AUTH_URL` presence (no secrets). | Yes         |
+
+Operator guide: [`google-oauth-setup.md`](./google-oauth-setup.md).
+
 ## Required env vars (per command)
 
 Every script reads from `.env.local` by default. To run against a
@@ -88,6 +96,9 @@ swap your `.env.local` to the target environment's values.
 | `API_BASE_URL`                           | All `qstash:*` setup commands. **Must be a public URL** (no localhost).                             |
 | `DATABASE_URL`                           | All `stripe:backfill:*`, `stripe:replay:*`, `db:*` commands                                         |
 | `AUDIT_DATABASE_URL`                     | `db:*` commands that touch the audit Neon project                                                   |
+| `GOOGLE_OAUTH_CLIENT_ID`                 | `check:google-oauth` (presence only)                                                                |
+| `GOOGLE_OAUTH_CLIENT_SECRET`             | `check:google-oauth` (presence only)                                                                |
+| `BETTER_AUTH_URL`                        | `check:google-oauth` (derives `{BETTER_AUTH_URL}/callback/google`)                                  |
 
 the previous identity provider API keys and session JWTs (removed, see ADR-017).
 
