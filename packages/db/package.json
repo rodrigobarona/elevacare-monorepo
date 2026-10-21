@@ -13,7 +13,8 @@
     "./context": "./src/context.ts",
     "./client": "./src/client.ts",
     "./rls": "./src/rls/index.ts",
-    "./queries/admin": "./src/queries/admin.ts"
+    "./queries/admin": "./src/queries/admin.ts",
+    "./seed/offer-fixture-specs": "./src/seed/offer-fixture-specs.ts"
   },
   "scripts": {
     "lint": "eslint .",
