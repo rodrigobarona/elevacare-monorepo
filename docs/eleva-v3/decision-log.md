@@ -32,13 +32,22 @@ Each entry should include:
 
 ## Current Entries
 
-### 2026-10-21: Dev-prod evidence runs on eleva.care (Stripe test mode) (active)
+### 2026-10-21: Dev-prod evidence exception (active, operator-gated)
 
 - Decision (founder-approved engineering exception):
-  - Phase 06 pay→transfer→payout, AUD-001 cancellation refunds, Phase 09 two-browser Daily join + webhooks, and Phase 04 guest booking funnel may be recorded against **production hosts** (`eleva.care`, `api.eleva.care`) while the product remains in **dev mode**: Stripe **test** keys only, seeded `fisiomota` / `first-visit` (EUR 60), no real members or live money.
-  - Evidence IDs (Stripe PaymentIntent, Daily room, booking UUID) are captured redacted in `docs/eleva-v3/audits/staging-evidence-runbook-2026-10.md` with date and operator.
-  - Blockers: stop and escalate if production env exposes **live** Stripe keys, Daily webhook secret is unavailable, or BotID blocks the guest funnel without an opt-in test bypass.
-- Status: `active` — engineering may run; human evidence rows stay **pending** until runs complete.
+  - Phase **06** (Stripe test-mode pay → transfer → payout + AUD-001 cancellation refunds),
+    **09** (two-browser Eleva grant join + Daily `meeting.*` / `participant.*` webhooks), and
+    **04** guest funnel evidence may run on **production hostnames** (`eleva.care`, `api.eleva.care`)
+    while the product remains in pre-launch configuration.
+  - **Stripe test keys only** — abort if production env exposes live `sk_live_*`.
+  - **Seeded expert only** — `fisiomota` / `first-visit` / €60; no real members or PHI in notes.
+  - **Daily standard, recording off, not HIPAA** — unchanged from Phase 09 posture.
+  - **BotID** — prod may stay `off` (AUD-017); record observed state in the runbook row.
+  - **Capture** — redacted join URLs, Stripe object ids, Daily webhook delivery ids in
+    [`audits/staging-evidence-runbook-2026-10.md`](./audits/staging-evidence-runbook-2026-10.md);
+    stamp audit rows **dev-prod PASS** with date, not “production ready”.
+- Blockers (stop and ask): live Stripe keys, missing `DAILY_WEBHOOK_SECRET`, BotID blocking guest funnel without test bypass, or founder revokes the exception.
+- Status: `active` — engineering may run; human evidence rows stay **PENDING** until operator runs complete.
 
 ### 2026-10-21: Content approach, no blog, four public pillars (active)
 

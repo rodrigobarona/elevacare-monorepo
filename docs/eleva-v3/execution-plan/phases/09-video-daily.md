@@ -67,7 +67,7 @@ In:
   emits `session.attendance_corrected`). Out-of-order sequence `participant.joined`
   (t=10:02) delivered after `meeting.ended` (t=10:31) → final status `ended`, not
   `no_show`. Join/leave history is never used for authorization. RLS for expert org +
-  buyer org. The delayed QStash `finalizeAttendance` at `ended + 2 min` was never built.
+  buyer org. ~~The delayed QStash `finalizeAttendance` at `ended + 2 min`~~ **Superseded** — never built; do not add it.
 
 **Attendance SSOT (2026-10-07):** 09.3 writes attendance on `meeting.ended`; late
 participant events can flip `no_show → ended` (`session.attendance_corrected`). The
