@@ -41,6 +41,13 @@ import {
 } from "./destination-override-select"
 import { loadSubCalendars } from "../calendars/actions"
 import { defaultTimezoneForCountry, euCountriesInService } from "@eleva/config"
+import {
+  offerInvariantFieldForCode,
+  OFFER_INVARIANT_MESSAGES,
+  type OfferInvariantError,
+  type OfferInvariantField,
+} from "@eleva/scheduling"
+import { FieldError } from "@eleva/ui/components/field"
 
 export type ModeRow = {
   id: string
@@ -92,6 +99,7 @@ interface Props {
     destinationIntegrationId: string | null
     destinationExternalCalendarId: string | null
   }
+  publishFieldHint?: { modeId: string; code: OfferInvariantError }
 }
 
 export function EventTypeModesPanel({
@@ -106,12 +114,16 @@ export function EventTypeModesPanel({
   defaultTimezone,
   integrations,
   eventTypeDestination,
+  publishFieldHint,
 }: Props) {
   const t = useTranslations("eventTypes.modes")
   const tDest = useTranslations("eventTypes.destination")
   const router = useRouter()
   const [pending, setPending] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = React.useState<
+    Partial<Record<OfferInvariantField, string>>
+  >({})
   const [showForm, setShowForm] = React.useState(initialModes.length === 0)
   const [editingModeId, setEditingModeId] = React.useState<string | null>(null)
 
@@ -198,6 +210,40 @@ export function EventTypeModesPanel({
     return t("error.generic")
   }
 
+  function clearFieldErrors() {
+    setFieldErrors({})
+  }
+
+  const applyInvariantFeedback = React.useCallback(
+    (invariantCode?: OfferInvariantError, message?: string) => {
+      setFieldErrors({})
+      if (!invariantCode) return
+      const text =
+        message?.trim() || OFFER_INVARIANT_MESSAGES[invariantCode] || undefined
+      if (!text) return
+      const field = offerInvariantFieldForCode(invariantCode)
+      setFieldErrors({ [field]: text })
+      setError(null)
+    },
+    []
+  )
+
+  const handleModeActionFailure = React.useCallback(
+    (result: {
+      error: string
+      message?: string
+      invariantCode?: OfferInvariantError
+    }) => {
+      if (result.error === "offer-invariant" && result.invariantCode) {
+        applyInvariantFeedback(result.invariantCode, result.message)
+        return
+      }
+      setFieldErrors({})
+      setError(formatModeError(result.error, result.message))
+    },
+    [applyInvariantFeedback, t]
+  )
+
   function resetFormFields(nextMode: SessionMode = "online") {
     setMode(nextMode)
     setScheduleId(defaultScheduleId)
@@ -238,8 +284,46 @@ export function EventTypeModesPanel({
     )
     setLabelEn(row.label?.en ?? "")
     setError(null)
+    clearFieldErrors()
     setShowForm(true)
   }
+
+  React.useEffect(() => {
+    if (!publishFieldHint) return
+    const row = initialModes.find((m) => m.id === publishFieldHint.modeId)
+    if (!row) return
+    setEditingModeId(row.id)
+    setMode(row.mode)
+    setScheduleId(row.scheduleId)
+    setLocationId(row.locationId ?? "")
+    setLanguages(
+      row.languages.length > 0 ? row.languages : profileLanguages.slice(0, 1)
+    )
+    setWorldwide(row.countryScopeType === "worldwide")
+    const editableCountries = row.countryScopeCodes.filter((c) =>
+      serviceCountries.includes(c)
+    )
+    setCountryCodes(
+      editableCountries.length > 0
+        ? editableCountries
+        : serviceCountries.slice(0, 1)
+    )
+    setPriceOverride(
+      row.priceCents != null ? (row.priceCents / 100).toFixed(2) : ""
+    )
+    setLabelEn(row.label?.en ?? "")
+    setShowForm(true)
+    applyInvariantFeedback(
+      publishFieldHint.code,
+      OFFER_INVARIANT_MESSAGES[publishFieldHint.code]
+    )
+  }, [
+    publishFieldHint,
+    initialModes,
+    profileLanguages,
+    serviceCountries,
+    applyInvariantFeedback,
+  ])
 
   function cancelForm() {
     setShowForm(false)
@@ -414,6 +498,7 @@ export function EventTypeModesPanel({
     e.preventDefault()
     setPending(true)
     setError(null)
+    clearFieldErrors()
 
     try {
       const shared = buildSharedFields()
@@ -430,7 +515,7 @@ export function EventTypeModesPanel({
           payload
         )
         if (!result.ok) {
-          setError(formatModeError(result.error, result.message))
+          handleModeActionFailure(result)
           return
         }
       } else {
@@ -441,7 +526,7 @@ export function EventTypeModesPanel({
         }
         const result = await createEventTypeModeAction(eventTypeId, payload)
         if (!result.ok) {
-          setError(formatModeError(result.error, result.message))
+          handleModeActionFailure(result)
           return
         }
       }
@@ -459,7 +544,7 @@ export function EventTypeModesPanel({
     try {
       const result = await deactivateEventTypeModeAction(eventTypeId, modeId)
       if (!result.ok) {
-        setError(formatModeError(result.error, result.message))
+        handleModeActionFailure(result)
         return
       }
       if (editingModeId === modeId) cancelForm()
@@ -812,6 +897,11 @@ export function EventTypeModesPanel({
                     {t("needLocation")}
                   </p>
                 ) : null}
+                {fieldErrors.location ? (
+                  <FieldError data-testid="mode-field-error-location">
+                    {fieldErrors.location}
+                  </FieldError>
+                ) : null}
                 {!showNewLocation ? (
                   <Button
                     variant="ghost"
@@ -933,12 +1023,19 @@ export function EventTypeModesPanel({
             ) : null}
 
             {canUseWorldwide ? (
-              <CheckboxField
-                isSelected={worldwide}
-                onChange={setWorldwide}
-                label={t("fields.worldwide")}
-                data-testid="mode-worldwide"
-              />
+              <div className="space-y-1">
+                <CheckboxField
+                  isSelected={worldwide}
+                  onChange={setWorldwide}
+                  label={t("fields.worldwide")}
+                  data-testid="mode-worldwide"
+                />
+                {fieldErrors.worldwide ? (
+                  <FieldError data-testid="mode-field-error-worldwide">
+                    {fieldErrors.worldwide}
+                  </FieldError>
+                ) : null}
+              </div>
             ) : null}
 
             {!worldwide || !canUseWorldwide ? (
@@ -992,6 +1089,11 @@ export function EventTypeModesPanel({
                     />
                   ))}
                 </div>
+                {fieldErrors.countries ? (
+                  <FieldError data-testid="mode-field-error-countries">
+                    {fieldErrors.countries}
+                  </FieldError>
+                ) : null}
               </fieldset>
             ) : null}
 
@@ -1009,6 +1111,11 @@ export function EventTypeModesPanel({
                   />
                 ))}
               </div>
+              {fieldErrors.languages ? (
+                <FieldError data-testid="mode-field-error-languages">
+                  {fieldErrors.languages}
+                </FieldError>
+              ) : null}
             </fieldset>
 
             <div className="grid gap-4 sm:grid-cols-2">

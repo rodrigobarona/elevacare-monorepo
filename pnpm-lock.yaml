@@ -789,6 +789,9 @@ importers:
       '@eleva/observability':
         specifier: workspace:^
         version: link:../../packages/observability
+      '@eleva/scheduling':
+        specifier: workspace:^
+        version: link:../../packages/scheduling
       '@eleva/storage':
         specifier: workspace:^
         version: link:../../packages/storage
@@ -4273,6 +4276,7 @@ packages:
   '@opentelemetry/sdk-trace-base@2.7.0':
     resolution: {integrity: sha512-Yg9zEXJB50DLVLpsKPk7NmNqlPlS+OvqhJGh0A8oawIOTPOwlm4eXs9BMJV7L79lvEwI+dWtAj+YjTyddV336A==}
     engines: {node: ^18.19.0 || >=20.6.0}
+    deprecated: Use @opentelemetry/sdk-trace package
     peerDependencies:
       '@opentelemetry/api': '>=1.3.0 <1.10.0'
 
