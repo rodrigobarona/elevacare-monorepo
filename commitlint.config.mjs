@@ -61,6 +61,8 @@ export default {
         "observability",
         "video",
         "media",
+        "content",
+        "consent",
         "config",
         "eslint-config",
         "typescript-config",

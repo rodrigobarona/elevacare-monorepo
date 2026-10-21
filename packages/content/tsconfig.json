@@ -1,0 +1,12 @@
+{
+  "extends": "@eleva/typescript-config/base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "preserve",
+    "resolveJsonModule": true,
+    "noEmit": true
+  },
+  "include": ["src/**/*", "scripts/**/*"],
+  "exclude": ["node_modules"]
+}
