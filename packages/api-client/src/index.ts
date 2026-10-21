@@ -2508,6 +2508,14 @@ export interface SubCalendar {
 // Client
 // ---------------------------------------------------------------------------
 
+/**
+ * Server-rendered public pages call the API from a shared Vercel egress IP.
+ * They forward the visitor IP in this header, authenticated by
+ * `PUBLIC_SSR_SHARED_SECRET`, so the API rate-limits per visitor.
+ */
+export const PUBLIC_SSR_CLIENT_IP_HEADER = "x-eleva-ssr-client-ip"
+export const PUBLIC_SSR_SECRET_HEADER = "x-eleva-ssr-secret"
+
 export class ApiClientError extends Error {
   readonly status: number
   readonly body: ApiError

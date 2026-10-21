@@ -1,5 +1,55 @@
+import {
+  PUBLIC_SSR_CLIENT_IP_HEADER,
+  PUBLIC_SSR_SECRET_HEADER,
+} from "@eleva/api-client"
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { isLocalPublicRateLimitExempt, rateLimitKey } from "./rate-limit"
+import {
+  isLocalPublicRateLimitExempt,
+  rateLimitKey,
+  trustedSsrClientIp,
+} from "./rate-limit"
+
+const FIXTURE = "fixture"
+
+function ssrRequest(token: string | null, clientIp: string): Request {
+  const headers: Record<string, string> = {
+    "x-forwarded-for": "34.200.0.1",
+    [PUBLIC_SSR_CLIENT_IP_HEADER]: clientIp,
+  }
+  if (token !== null) headers[PUBLIC_SSR_SECRET_HEADER] = token
+  return new Request("https://api.eleva.care/public/experts/anaquick", {
+    headers,
+  })
+}
+
+describe("trustedSsrClientIp", () => {
+  const env = { PUBLIC_SSR_SHARED_SECRET: FIXTURE }
+
+  it("returns the forwarded visitor IP when the secret matches", () => {
+    const request = ssrRequest(FIXTURE, "2001:db8::7")
+    expect(trustedSsrClientIp(request, env)).toBe("2001:db8::7")
+  })
+
+  it("ignores the forwarded IP with a wrong or missing secret", () => {
+    expect(
+      trustedSsrClientIp(ssrRequest("fixturX", "203.0.113.9"), env)
+    ).toBeNull()
+    expect(trustedSsrClientIp(ssrRequest(null, "203.0.113.9"), env)).toBeNull()
+  })
+
+  it("is off when the API has no secret configured", () => {
+    expect(trustedSsrClientIp(ssrRequest("", "203.0.113.9"), {})).toBeNull()
+  })
+
+  it("rejects values that are not an IP", () => {
+    expect(
+      trustedSsrClientIp(ssrRequest(FIXTURE, "user:attacker"), env)
+    ).toBeNull()
+    expect(
+      trustedSsrClientIp(ssrRequest(FIXTURE, "1.2.3.4:5678"), env)
+    ).toBeNull()
+  })
+})
 
 afterEach(() => {
   vi.unstubAllEnvs()
