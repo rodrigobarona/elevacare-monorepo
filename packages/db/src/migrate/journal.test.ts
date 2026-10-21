@@ -38,10 +38,19 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0069_session_document_retention_sweep")
+    expect(last?.tag).toBe("0070_booking_payments_admin_rls")
     expect(last?.statements.length).toBe(2)
     expect(last?.hash).toHaveLength(64)
-    expect(last?.statements.join("\n")).toContain("retention_sweep_attempts")
+    expect(last?.statements.join("\n")).toContain(
+      "booking_payments_tenant_isolation"
+    )
+    expect(last?.statements.join("\n")).toContain("eleva.platform_admin")
+    const retentionSweep = migrations.find(
+      (m) => m.tag === "0069_session_document_retention_sweep"
+    )
+    expect(retentionSweep?.statements.join("\n")).toContain(
+      "retention_sweep_attempts"
+    )
     const notifyAttempts = migrations.find(
       (m) => m.tag === "0068_crm_follow_up_notify_attempts"
     )
