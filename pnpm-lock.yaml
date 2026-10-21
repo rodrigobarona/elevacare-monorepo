@@ -1186,7 +1186,10 @@ importers:
         version: link:../config
       ai:
         specifier: ^7.0.112
-        version: 7.0.112(zod@4.5.4)
+        version: 7.0.112(zod@4.4.3)
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.3
     devDependencies:
       '@eleva/eslint-config':
         specifier: workspace:*
@@ -9600,21 +9603,21 @@ snapshots:
 
   '@acemir/cssom@0.9.31': {}
 
-  '@ai-sdk/gateway@4.0.90(zod@4.5.4)':
+  '@ai-sdk/gateway@4.0.90(zod@4.4.3)':
     dependencies:
       '@ai-sdk/provider': 4.0.18
-      '@ai-sdk/provider-utils': 5.0.46(zod@4.5.4)
+      '@ai-sdk/provider-utils': 5.0.46(zod@4.4.3)
       '@vercel/oidc': 3.2.0
-      zod: 4.5.4
+      zod: 4.4.3
 
-  '@ai-sdk/provider-utils@5.0.46(zod@4.5.4)':
+  '@ai-sdk/provider-utils@5.0.46(zod@4.4.3)':
     dependencies:
       '@ai-sdk/provider': 4.0.18
       '@standard-schema/spec': 1.1.0
       '@workflow/serde': 4.1.0
       eventsource-parser: 3.0.8
       undici: 7.29.1
-      zod: 4.5.4
+      zod: 4.4.3
 
   '@ai-sdk/provider@4.0.18':
     dependencies:
@@ -12847,12 +12850,12 @@ snapshots:
 
   agent-base@7.1.4: {}
 
-  ai@7.0.112(zod@4.5.4):
+  ai@7.0.112(zod@4.4.3):
     dependencies:
-      '@ai-sdk/gateway': 4.0.90(zod@4.5.4)
+      '@ai-sdk/gateway': 4.0.90(zod@4.4.3)
       '@ai-sdk/provider': 4.0.18
-      '@ai-sdk/provider-utils': 5.0.46(zod@4.5.4)
-      zod: 4.5.4
+      '@ai-sdk/provider-utils': 5.0.46(zod@4.4.3)
+      zod: 4.4.3
 
   ajv-formats@2.1.1(ajv@8.18.0):
     optionalDependencies:
