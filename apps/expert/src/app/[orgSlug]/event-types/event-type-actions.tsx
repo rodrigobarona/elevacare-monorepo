@@ -18,6 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@eleva/ui/components/alert-dialog"
+import { isOfferInvariantError } from "@eleva/scheduling"
 import { togglePublishAction, deleteEventTypeAction } from "./actions"
 
 interface Props {
@@ -59,6 +60,24 @@ export function EventTypeActions({
     try {
       const result = await togglePublishAction(eventTypeId, !published)
       if (!result.ok) {
+        const violations = result.publishViolations
+        if (violations?.length) {
+          const target =
+            violations.find((v) => v.modeId != null) ?? violations[0]!
+          if (target.modeId) {
+            const params = new URLSearchParams({
+              tab: "modes",
+              modeId: target.modeId,
+            })
+            if (isOfferInvariantError(target.code)) {
+              params.set("invariant", target.code)
+            }
+            router.push(
+              `${workspaceBase}/event-types/${eventTypeId}?${params.toString()}`
+            )
+            return
+          }
+        }
         setError(friendlyError(result.error, result.message))
         return
       }
