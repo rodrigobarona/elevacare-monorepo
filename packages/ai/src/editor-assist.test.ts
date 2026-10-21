@@ -23,8 +23,8 @@ describe("resolveEditorModelId", () => {
   })
 
   it("returns an allow-listed pinned model", () => {
-    process.env.AI_GATEWAY_MODEL_EDITOR = "openai/gpt-4.1-mini"
-    expect(resolveEditorModelId()).toBe("openai/gpt-4.1-mini")
+    process.env.AI_GATEWAY_MODEL_EDITOR = "openai/gpt-6-luna"
+    expect(resolveEditorModelId()).toBe("openai/gpt-6-luna")
   })
 
   it("fails closed when the env var is missing", () => {
@@ -96,7 +96,7 @@ describe("editorAssist", () => {
   })
 
   it("streams after allow-list checks pass", async () => {
-    process.env.AI_GATEWAY_MODEL_EDITOR = "openai/gpt-4.1-mini"
+    process.env.AI_GATEWAY_MODEL_EDITOR = "openai/gpt-6-luna"
     const { streamText } = await import("ai")
     editorAssist({
       command: "improve",
@@ -105,12 +105,18 @@ describe("editorAssist", () => {
     })
     expect(streamText).toHaveBeenCalledOnce()
     expect(vi.mocked(streamText).mock.calls[0]?.[0]).toMatchObject({
-      model: "openai/gpt-4.1-mini",
+      model: "openai/gpt-6-luna",
+      providerOptions: {
+        gateway: {
+          zeroDataRetention: true,
+          inferenceRegion: { scope: "zone", geoRegion: "eu" },
+        },
+      },
     })
   })
 
   it("never calls the gateway for clinical context", async () => {
-    process.env.AI_GATEWAY_MODEL_EDITOR = "openai/gpt-4.1-mini"
+    process.env.AI_GATEWAY_MODEL_EDITOR = "openai/gpt-6-luna"
     const { streamText } = await import("ai")
     expect(() =>
       editorAssist({

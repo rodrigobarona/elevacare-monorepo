@@ -86,11 +86,16 @@ type ChatMessage = {
 }
 
 type DailyTranscriptionCall = {
-  startTranscription?: () => Promise<unknown>
+  startTranscription?: (options?: {
+    transcription_geo?: "global" | "eu"
+  }) => Promise<unknown>
   stopTranscription?: () => Promise<unknown>
   on: (event: string, handler: (ev: unknown) => void) => void
   off: (event: string, handler: (ev: unknown) => void) => void
 }
+
+/** Deepgram (via Daily) transcribes inside the EU. */
+const LIVE_TRANSCRIPTION_OPTIONS = { transcription_geo: "eu" } as const
 
 export function ElevaCall({
   roomUrl,
@@ -399,7 +404,7 @@ function CallShell({
     if (!showNotesSlot || !joined || !daily || !transcriptionAllowed) return
     const call = daily as unknown as DailyTranscriptionCall
     if (typeof call.startTranscription === "function") {
-      void call.startTranscription().catch(() => {
+      void call.startTranscription(LIVE_TRANSCRIPTION_OPTIONS).catch(() => {
         /* live transcript is best-effort; notes still persist */
       })
     }

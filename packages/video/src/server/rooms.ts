@@ -20,6 +20,7 @@ export type DailyRoom = {
     enable_recording_ui?: boolean
     eject_at_room_exp?: boolean
     enforce_unique_user_ids?: boolean
+    geo?: string
   }
 }
 

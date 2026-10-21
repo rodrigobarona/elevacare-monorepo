@@ -65,6 +65,7 @@ describe("buildSessionRoomBody", () => {
       unixSeconds(new Date(endAt.getTime() + JOIN_TRAIL_MS))
     )
     expect(body.properties.lang).toBe("pt")
+    expect(body.properties.geo).toBe("eu-central-1")
   })
 
   it("adds extra participants to the cap", () => {
@@ -151,11 +152,27 @@ describe("roomMatchesContract", () => {
             enable_recording: "",
             eject_at_room_exp: true,
             enforce_unique_user_ids: true,
+            geo: "eu-central-1",
           },
         },
         expected
       )
     ).toBe(true)
+  })
+
+  it("rejects a room hosted outside the EU call server", () => {
+    expect(
+      roomMatchesContract(
+        { privacy: "private", config: { ...expected, geo: undefined } },
+        expected
+      )
+    ).toBe(false)
+    expect(
+      roomMatchesContract(
+        { privacy: "private", config: { ...expected, geo: "us-east-1" } },
+        expected
+      )
+    ).toBe(false)
   })
 
   it("rejects a recording UI leftover and a stale window", () => {

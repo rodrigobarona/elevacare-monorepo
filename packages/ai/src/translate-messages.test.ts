@@ -91,13 +91,23 @@ describe("translateMessages", () => {
         messages: { hello: "Hello" },
       },
       {
-        env: { AI_GATEWAY_MODEL_EDITOR: "openai/gpt-4.1-mini" },
+        env: { AI_GATEWAY_MODEL_EDITOR: "openai/gpt-6-luna" },
         generate: generate as never,
       }
     )
 
     expect(result).toEqual({ pt: { hello: "Olá" } })
     expect(generate).toHaveBeenCalledOnce()
+    expect(generate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        providerOptions: {
+          gateway: {
+            zeroDataRetention: true,
+            inferenceRegion: { scope: "zone", geoRegion: "eu" },
+          },
+        },
+      })
+    )
   })
 
   it("accepts fenced JSON from the model", async () => {
@@ -112,7 +122,7 @@ describe("translateMessages", () => {
         messages: { hello: "Hello" },
       },
       {
-        env: { AI_GATEWAY_MODEL_EDITOR: "openai/gpt-4.1-mini" },
+        env: { AI_GATEWAY_MODEL_EDITOR: "openai/gpt-6-luna" },
         generate: generate as never,
       }
     )
@@ -133,7 +143,7 @@ describe("translateMessages", () => {
           messages: { hello: "Hello" },
         },
         {
-          env: { AI_GATEWAY_MODEL_EDITOR: "openai/gpt-4.1-mini" },
+          env: { AI_GATEWAY_MODEL_EDITOR: "openai/gpt-6-luna" },
           generate: generate as never,
         }
       )
@@ -154,7 +164,7 @@ describe("translateMessages", () => {
           messages: { hello: "Hello" },
         },
         {
-          env: { AI_GATEWAY_MODEL_EDITOR: "openai/gpt-4.1-mini" },
+          env: { AI_GATEWAY_MODEL_EDITOR: "openai/gpt-6-luna" },
           generate: generate as never,
         }
       )
@@ -172,7 +182,7 @@ describe("translateMessages", () => {
           messages: { hello: "Hello" },
         },
         {
-          env: { AI_GATEWAY_MODEL_EDITOR: "openai/gpt-4.1-mini" },
+          env: { AI_GATEWAY_MODEL_EDITOR: "openai/gpt-6-luna" },
           generate: generate as never,
         }
       )

@@ -2,15 +2,13 @@ import { describe, expect, it } from "vitest"
 
 import {
   AiModelNotApprovedError,
-  AiModelZeroRetentionRequiredError,
+  GATEWAY_PROVIDER_OPTIONS,
   assertApprovedModel,
-  firstZeroRetentionModel,
-  requireZeroRetentionModel,
 } from "./approved-models"
 
 describe("assertApprovedModel", () => {
   it("returns a known model", () => {
-    const model = assertApprovedModel("openai/gpt-4.1-mini")
+    const model = assertApprovedModel("openai/gpt-6-luna")
     expect(model.provider).toBe("vercel-ai-gateway")
   })
 
@@ -19,16 +17,21 @@ describe("assertApprovedModel", () => {
       AiModelNotApprovedError
     )
   })
-})
 
-describe("requireZeroRetentionModel", () => {
-  it("rejects non-zero-retention models (Phase 10 clinical gate)", () => {
-    expect(() => requireZeroRetentionModel("openai/gpt-4.1-mini")).toThrow(
-      AiModelZeroRetentionRequiredError
+  it("rejects the previous model, which has no EU inference", () => {
+    expect(() => assertApprovedModel("openai/gpt-4.1-mini")).toThrow(
+      AiModelNotApprovedError
     )
   })
+})
 
-  it("has no PHI-safe model on the seed allow-list", () => {
-    expect(firstZeroRetentionModel()).toBeNull()
+describe("GATEWAY_PROVIDER_OPTIONS", () => {
+  it("requires zero data retention and EU inference on every call", () => {
+    expect(GATEWAY_PROVIDER_OPTIONS).toEqual({
+      gateway: {
+        zeroDataRetention: true,
+        inferenceRegion: { scope: "zone", geoRegion: "eu" },
+      },
+    })
   })
 })
