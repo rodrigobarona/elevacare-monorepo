@@ -46,7 +46,8 @@ export function Callout({
   title?: ReactNode
   children: ReactNode
 }) {
-  const { Icon, tone } = CALLOUT_TYPES[resolveCalloutType(type)]
+  const { Icon, tone } =
+    CALLOUT_TYPES[resolveCalloutType(type)] ?? CALLOUT_TYPES.info
   return (
     <Alert className={cn("my-6 text-base", tone)}>
       <Icon aria-hidden />

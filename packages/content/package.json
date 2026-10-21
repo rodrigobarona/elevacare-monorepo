@@ -15,7 +15,6 @@
     "fumadocs-core": "catalog:",
     "next": "catalog:",
     "react": "catalog:",
-    "react-aria-components": "^1.21.1",
     "zod": "catalog:"
   },
   "devDependencies": {
@@ -25,7 +24,6 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "eslint": "catalog:",
-    "gray-matter": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },

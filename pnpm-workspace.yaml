@@ -98,7 +98,6 @@ catalog:
   fumadocs-core: 16.17.7
   fumadocs-mdx: 15.4.9
   "@types/mdx": ^2.0.14
-  gray-matter: ^4.0.3
 
   # Rich text (Plate / ADR-023 — @eleva/editor)
   platejs: ^53.3.14
