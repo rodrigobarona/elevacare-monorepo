@@ -4,6 +4,7 @@
  *   pnpm --filter @eleva/media media:search "pregnant woman natural light home" [--orientation landscape] [--per 12]
  *   pnpm --filter @eleva/media media:import <slug> <pexelsId> --alt-en "…" --alt-pt "…" --alt-es "…" [--tags a,b]
  *   pnpm --filter @eleva/media media:import-local <slug> <path> --alt-en "…" --alt-pt "…" --alt-es "…" [--tags a,b]
+ *   pnpm --filter @eleva/media media:import-video <slug> <mp4> --poster <image> --alt-en "…" --alt-pt "…" --alt-es "…" [--tags a,b] [--width N] [--height N] [--blur path]
  *
  * Reads PEXELS_API_KEY and BLOB_READ_WRITE_TOKEN from the repo `.env.local`.
  * Public store only: never import member, health or session imagery.
@@ -16,7 +17,7 @@ import { parseArgs } from "node:util"
 
 import { uploadPublicBlob } from "@eleva/storage"
 
-import type { MediaAsset, MediaImage } from "../src/types"
+import type { MediaAsset, MediaImage, MediaVideo } from "../src/types"
 
 const LIBRARY_PATH = fileURLToPath(
   new URL("../src/library.json", import.meta.url)
@@ -242,15 +243,96 @@ async function importLocal(argv: string[]): Promise<void> {
   console.log(`imported ${slug} → ${url}`)
 }
 
+async function importVideo(argv: string[]): Promise<void> {
+  const { values, positionals } = parseArgs({
+    args: argv,
+    allowPositionals: true,
+    options: {
+      poster: { type: "string" },
+      "alt-en": { type: "string" },
+      "alt-pt": { type: "string" },
+      "alt-es": { type: "string" },
+      tags: { type: "string" },
+      width: { type: "string", default: "1920" },
+      height: { type: "string", default: "1080" },
+      blur: { type: "string" },
+    },
+  })
+  const slug = assertSlug(positionals[0])
+  const mp4Path = positionals[1]
+  if (!mp4Path) throw new Error("import-video needs an mp4 path")
+  if (typeof values.poster !== "string") {
+    throw new Error("import-video needs --poster <image>")
+  }
+  const width = Number(values.width)
+  const height = Number(values.height)
+  if (!width || !height) {
+    throw new Error("import-video needs valid --width and --height")
+  }
+
+  const posterExt = path.extname(values.poster).toLowerCase()
+  const posterType =
+    posterExt === ".png"
+      ? "image/png"
+      : posterExt === ".webp"
+        ? "image/webp"
+        : "image/jpeg"
+
+  const [videoBody, posterBody] = await Promise.all([
+    readFile(mp4Path),
+    readFile(values.poster),
+  ])
+
+  let blurDataURL: string
+  if (typeof values.blur === "string") {
+    const blur = await readFile(values.blur)
+    blurDataURL = `data:image/jpeg;base64,${blur.toString("base64")}`
+  } else {
+    blurDataURL = `data:${posterType};base64,${posterBody.toString("base64")}`
+  }
+
+  const [{ url }, { url: posterUrl }] = await Promise.all([
+    uploadPublicBlob({
+      pathname: `media/eleva/${slug}.mp4`,
+      body: videoBody,
+      contentType: "video/mp4",
+    }),
+    uploadPublicBlob({
+      pathname: `media/eleva/${slug}-poster${posterExt || ".jpg"}`,
+      body: posterBody,
+      contentType: posterType,
+    }),
+  ])
+
+  const asset: MediaVideo = {
+    kind: "video",
+    slug,
+    url,
+    poster: posterUrl,
+    blurDataURL,
+    width,
+    height,
+    alt: altFrom(values),
+    tags: tagsFrom(values.tags),
+    license: "eleva-owned",
+    credit: { name: "Eleva Care" },
+    source: { provider: "eleva" },
+  }
+  await upsert(asset)
+  console.log(`imported video ${slug} → ${url}`)
+  console.log(`poster → ${posterUrl}`)
+}
+
 const [command, ...rest] = process.argv.slice(2)
 const commands: Record<string, (argv: string[]) => Promise<void>> = {
   search,
   import: importPexels,
   "import-local": importLocal,
+  "import-video": importVideo,
 }
 const run = command ? commands[command] : undefined
 if (!run) {
-  console.error("usage: media.ts <search|import|import-local> …")
+  console.error("usage: media.ts <search|import|import-local|import-video> …")
   process.exit(1)
 }
 await run(rest)

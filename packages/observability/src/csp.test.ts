@@ -45,12 +45,6 @@ describe("buildCspHeader", () => {
     }
   })
 
-  it("allows Mux HLS manifests and segments (ADR-024)", () => {
-    const header = buildCspHeader()
-    expect(header).toMatch(/connect-src[^;]*https:\/\/stream\.mux\.com/)
-    expect(header).toMatch(/media-src[^;]*https:\/\/\*\.mux\.com/)
-  })
-
   it("includes sentry ingest domains in connect-src", () => {
     const header = buildCspHeader()
     expect(header).toMatch(/connect-src[^;]*sentry\.io/)

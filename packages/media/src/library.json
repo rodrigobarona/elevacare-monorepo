@@ -119,12 +119,11 @@
   {
     "kind": "video",
     "slug": "hero-intro",
-    "provider": "mux",
-    "playbackId": "Ol6kzy3beOk2U4RHBssK2n7wtDlqHLWvmOPWH01VOVwA",
-    "poster": "https://image.mux.com/Ol6kzy3beOk2U4RHBssK2n7wtDlqHLWvmOPWH01VOVwA/thumbnail.webp?time=2",
-    "blurDataURL": "data:image/webp;base64,UklGRpAAAABXRUJQVlA4IIQAAAAQAgCdASoQAAkAAQAcJZACdAYoBbPblVQAAP7YaCS/eS26ynwmRr4iZilZCcpQM/s11YXCZJ78kaC8Cs5X14xj7zGfO6uR8mD0mWRF0T3sIXeuSLXx+c+3N49lFTaXa5FmqiEuJyOfOm6/AeL4qtyrN8fghf/GcDYOmasq7e9/XIYAAAA=",
-    "width": 1920,
-    "height": 1080,
+    "url": "https://ptrfw8k5nah8ubqb.public.blob.vercel-storage.com/media/eleva/hero-intro-QeMB4v7xRZBUPFyVaoctGN32weOoQ4.mp4",
+    "poster": "https://ptrfw8k5nah8ubqb.public.blob.vercel-storage.com/media/eleva/hero-intro-poster-ypDzJyq0SrVaGScAqTEvz6CX0TcMbe.jpg",
+    "blurDataURL": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAgAAHAAbAAD//gAPTGF2YzYzLjEuMTAxAP/bAEMACAoKCwoLDQ0NDQ0NEA8QEBAQEBAQEBAQEBISEhUVFRISEhAQEhIUFBUVFxcXFRUVFRcXGRkZHh4cHCMjJCsrM//EAHEAAQEBAQAAAAAAAAAAAAAAAAcFBgMBAQEAAAAAAAAAAAAAAAAAAAMEEAACAQMCAwIPAQEAAAAAAAABAgMSBBEhABMiQTFRFAUGByQjcdKikpFi4WFUQjIRAQEBAAMBAAAAAAAAAAAAAAECAAMxEVH/wAARCAAOABgDASIAAhEAAxEA/9oADAMBAAIRAxEAPwDHeKbVJ7mZZYy8cavU3MFXC1dq61Aa4x7dxj4QIYpUjkJlkKRR0NU4/wAsuBzZOmnXey8ip+Ms0D1Hhycaqr/riDhkEddCe3IO7Fjc1ixlZFPp8EJXTC0TMvq9OXpgjGg2DVCfPQ1PDxRcV73MrjCa6nRIIwaXkRXclcUcxBH0APfvlVc/1J8XubV/OFaQWtrZtDDDGxuJa3VcOxZatf0dSR37F+LJ9vy/na6RsHrf/9k=",
+    "width": 1280,
+    "height": 720,
     "alt": {
       "en": "Women of different ages laughing together in a warm studio",
       "pt": "Mulheres de várias idades a rir juntas num estúdio acolhedor",
@@ -134,6 +133,9 @@
     "license": "eleva-owned",
     "credit": {
       "name": "Eleva Care"
+    },
+    "source": {
+      "provider": "eleva"
     }
   },
   {

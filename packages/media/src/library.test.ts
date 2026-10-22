@@ -45,6 +45,16 @@ describe("@eleva/media library", () => {
     }
   })
 
+  it("serves hero video from public Blob with poster and blur", () => {
+    const hero = getVideo("hero-intro")
+    expect(hero.url).toMatch(BLOB_HOST)
+    expect(hero.poster).toMatch(BLOB_HOST)
+    expect(hero.width).toBeGreaterThan(0)
+    expect(hero.height).toBeGreaterThan(0)
+    expect(hero.blurDataURL).toMatch(/^data:image\//)
+    expect(hero.source.provider).toBe("eleva")
+  })
+
   it("throws for unknown slugs and kind mismatches", () => {
     expect(() => getImage("missing")).toThrow(/no image/)
     expect(() => getImage("hero-intro")).toThrow(/no image/)
