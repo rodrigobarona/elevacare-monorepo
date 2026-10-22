@@ -123,6 +123,17 @@ await withAudit(
 Same as `withAudit` but runs under platform-admin context for cross-tenant
 operations. The `orgId` is still recorded on the audit row for filtering.
 
+### Platform-scoped notification audit
+
+User-scoped auth e-mail and other notification deliveries with
+`notification_deliveries.org_id = NULL` cannot use the member's Space org on
+the outbox row. Set `ELEVA_PLATFORM_AUDIT_ORG_ID` to a reserved organization
+UUID (created once in Neon; not a member-facing Space). Helpers:
+
+- `getPlatformAuditOrgId()` / `resolveNotificationAuditOrgId(deliveryOrgId)` in
+  `@eleva/audit`
+- `recordNotificationDeliveryAudit()` in `@eleva/notifications`
+
 ## Closed Unions — `AuditEntity` and `AuditAction`
 
 Entity and action values are **closed TypeScript unions** in
@@ -257,14 +268,15 @@ These writes skip `withAudit` on purpose. They are coordination state for
 retries and concurrency, not business changes; the business transition each
 one supports is audited where it happens.
 
-| Write                                                                                                                       | Where                                         | Audited transition                                                                                                                                                           |
-| --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Daily room-create lease (`room_create_lease_until`, `room_create_attempt_at`, `room_attempt_seq`), session start/end resync | `@eleva/workflows` `ensure-session-room.ts`   | `session.room_created`, `session.room_unresolved`, `session.room_deleted`                                                                                                    |
-| Room capacity retry flag (`sessions.capacity_pending_at`)                                                                   | `@eleva/workflows` `video/participants.ts`    | `session.participant_added` / `participant_removed` / `ejected`                                                                                                              |
-| Notification delivery claim, lease, attempt and provider-id rows                                                            | `@eleva/notifications` `claim-delivery.ts`    | `notification.sent` / `failed` / `suppressed` when the delivery finishes                                                                                                     |
-| Resend webhook receipt rows (`notification_webhook_receipts`)                                                               | `@eleva/notifications` `claim-delivery.ts`    | Same transaction as the `notification.*` event it deduplicates                                                                                                               |
-| In-app inbox row (`notifications`)                                                                                          | `@eleva/notifications` `send-notification.ts` | The inbox row is the delivery; the delivery outcome emits `notification.*`                                                                                                   |
-| Deliveries and suppressions with `org_id` NULL (auth and guest e-mail)                                                      | `@eleva/notifications`                        | **Open gap, not an exemption**: unaudited because `audit_outbox.org_id` is NOT NULL. Covers password-reset and verification mail; see the decision log (platform-org outbox) |
+| Write                                                                                                                       | Where                                         | Audited transition                                                                                                          |
+| --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Daily room-create lease (`room_create_lease_until`, `room_create_attempt_at`, `room_attempt_seq`), session start/end resync | `@eleva/workflows` `ensure-session-room.ts`   | `session.room_created`, `session.room_unresolved`, `session.room_deleted`                                                   |
+| Room capacity retry flag (`sessions.capacity_pending_at`)                                                                   | `@eleva/workflows` `video/participants.ts`    | `session.participant_added` / `participant_removed` / `ejected`                                                             |
+| Notification delivery claim, lease, attempt and provider-id rows                                                            | `@eleva/notifications` `claim-delivery.ts`    | `notification.sent` / `failed` / `suppressed` when the delivery finishes                                                    |
+| Resend webhook receipt rows (`notification_webhook_receipts`)                                                               | `@eleva/notifications` `claim-delivery.ts`    | Same transaction as the `notification.*` event it deduplicates                                                              |
+| In-app inbox row (`notifications`)                                                                                          | `@eleva/notifications` `send-notification.ts` | The inbox row is the delivery; the delivery outcome emits `notification.*`                                                  |
+| Deliveries with `org_id` NULL (auth and guest e-mail) when `ELEVA_PLATFORM_AUDIT_ORG_ID` is unset                           | `@eleva/notifications`                        | Still unaudited in local dev only; staging/production must set the platform org UUID                                        |
+| Deliveries with `org_id` NULL when `ELEVA_PLATFORM_AUDIT_ORG_ID` is set                                                     | `@eleva/notifications`                        | `notification.sent` / `failed` / `suppressed` under the platform org; payload includes `platformScoped` + `recipientUserId` |
 
 Anything not on this list that writes tenant data must go through `withAudit`
 or `withPlatformAudit`.

@@ -743,8 +743,8 @@ describe("sendNotification", () => {
     expect(store.rows.size).toBe(0)
   })
 
-  it("sends a user-scoped auth email without org audit", async () => {
-    let audits = 0
+  it("records a platform-scoped delivery audit hook for user-scoped auth email", async () => {
+    let auditInput: unknown
     const result = await sendNotification(
       {
         kind: "auth.magic_link",
@@ -754,15 +754,53 @@ describe("sendNotification", () => {
       },
       {
         ...store.deps(now),
-        recordAudit: async () => {
-          audits += 1
+        recordAudit: async (input) => {
+          auditInput = input
         },
       }
     )
     expect(result.deliveries.map((row) => row.channel)).toEqual(["email"])
     expect(result.deliveries[0]?.status).toBe("sent")
     expect(store.sendCalls).toBe(1)
-    expect(audits).toBe(0)
+    expect(auditInput).toMatchObject({
+      deliveryOrgId: null,
+      recipientUserId: USER_ID,
+      kind: "auth.magic_link",
+      action: "sent",
+    })
+  })
+
+  it("audits user-scoped auth email under the platform org when configured", async () => {
+    const platformOrg = "00000000-0000-4000-8000-000000000099"
+    const previous = process.env.ELEVA_PLATFORM_AUDIT_ORG_ID
+    process.env.ELEVA_PLATFORM_AUDIT_ORG_ID = platformOrg
+    let auditInput: unknown
+    try {
+      await sendNotification(
+        {
+          kind: "auth.magic_link",
+          recipient: { userId: USER_ID },
+          ctx: content,
+          idempotencyKey: "auth:magic:2",
+        },
+        {
+          ...store.deps(now),
+          recordAudit: async (input) => {
+            auditInput = input
+          },
+        }
+      )
+      expect(auditInput).toMatchObject({
+        deliveryOrgId: null,
+        recipientUserId: USER_ID,
+        kind: "auth.magic_link",
+        channel: "email",
+        action: "sent",
+      })
+    } finally {
+      if (previous === undefined) delete process.env.ELEVA_PLATFORM_AUDIT_ORG_ID
+      else process.env.ELEVA_PLATFORM_AUDIT_ORG_ID = previous
+    }
   })
 
   it("rejects orgId on a user-scoped kind", async () => {

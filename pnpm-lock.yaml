@@ -1297,6 +1297,9 @@ importers:
 
   packages/audit:
     dependencies:
+      '@eleva/config':
+        specifier: workspace:*
+        version: link:../config
       '@eleva/db':
         specifier: workspace:*
         version: link:../db
@@ -1306,6 +1309,9 @@ importers:
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(@upstash/redis@1.38.0)(kysely@0.29.5)
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.3
     devDependencies:
       '@eleva/eslint-config':
         specifier: workspace:*
