@@ -1489,6 +1489,9 @@ importers:
       '@eleva/db':
         specifier: workspace:*
         version: link:../db
+      '@eleva/encryption':
+        specifier: workspace:*
+        version: link:../encryption
       '@eleva/observability':
         specifier: workspace:*
         version: link:../observability

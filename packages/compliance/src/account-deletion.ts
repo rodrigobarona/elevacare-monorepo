@@ -1,6 +1,7 @@
 import { and, eq, gt, inArray, isNull, sql } from "drizzle-orm"
 import { withPlatformAudit } from "@eleva/audit"
 import { auth, main, withPlatformAdminContext, type Tx } from "@eleva/db"
+import { shredOrgKeys } from "@eleva/encryption"
 import {
   ACCOUNT_DELETION_GRACE_DAYS,
   eraseMemberClinicalRecords,
@@ -484,6 +485,7 @@ export async function sweepAccountDeletions(
         let docsFailed = false
         let blobFailures = 0
         let clinical: ClinicalRecordErasureResult | null = null
+        let keysShredded: number | null = null
         if (due) {
           await tx
             .delete(main.consents)
@@ -505,6 +507,12 @@ export async function sweepAccountDeletions(
           docsFailed = blobFailures > 0
           if (!docsFailed) {
             clinical = await eraseMemberClinicalRecords(tx, userId)
+            // Crypto-shred the personal Space key. The grace period has already
+            // elapsed, so erasure is irrevocable by design: shredOrgKeys runs in
+            // its own audited transaction and is idempotent. If a later step
+            // rolls this transaction back, the request stays pending and the
+            // next sweep re-runs to completion (never marked completed first).
+            keysShredded = (await shredOrgKeys(row.orgId)).shredded
             await eraseAccountRecord(tx, userId, now)
             if (ids.length === 0) {
               const [completed] = await tx
@@ -536,6 +544,9 @@ export async function sweepAccountDeletions(
             ? {
                 status: finished ? "completed" : "pending",
                 accountAnonymised: !docsFailed,
+                ...(keysShredded !== null
+                  ? { memberKeysShredded: keysShredded }
+                  : {}),
                 awaitingPaymentCancel: ids.length > 0 && !docsFailed,
                 raceCatch: true,
                 ...(docsFailed
