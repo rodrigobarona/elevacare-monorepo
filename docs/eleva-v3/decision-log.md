@@ -49,6 +49,28 @@ Each entry should include:
 - Blockers (stop and ask): live Stripe keys, missing `DAILY_WEBHOOK_SECRET`, BotID blocking guest funnel without test bypass, or founder revokes the exception.
 - Status: `active` — engineering may run; human evidence rows stay **PENDING** until operator runs complete.
 
+### 2026-10-22: Content migration engineering status (active)
+
+- Decision (engineering progress on branch `feat/content-legal-mdx` / PR #263):
+  - **Shipped on main path:** `@eleva/content` MDX (legal, trust, evidence, help en/pt/es);
+    headless Fumadocs in `apps/docs` (hub, portals, search index, `llms.txt`, help redirects);
+    `@eleva/site-chrome` mega menu/mobile nav, docs marketing strip, **shared
+    `PublicSiteFooter`** on web + docs; landing JSON for become-expert, for-clinics,
+    about, history; pillar pages `/newsletter`, `/podcast`, `/community` with
+    `ConsentGate` for Beehiiv embeds; `@eleva/consent` (c15t/Inth) on all
+    user-facing apps with Eleva theme + `ELEVA_LOCALE` on `resolveConsent`;
+    content vitest + Playwright smoke (legal metadata, docs, pillars).
+  - **Still open before “content plan closed”:** founder fields on fact sheet
+    (share capital, registry, DPO name, RAL, ERS); native review of AI-drafted
+    help copy; **manual Inth five-journey verification** on a production build;
+    Beehiiv/podcast production URLs in `@eleva/config/editorial-pillars`;
+    full **SiteHeader** on docs (auth + i18n `Link` stay web-only today);
+    `CONSENT_DOCUMENT_VERSION` publication switch after legal/DPO sign-off.
+  - **Fact sheet SSOT:** `docs/eleva-v3/legal/fact-sheet.md` (restored in repo
+    2026-10-22; vitest cross-checks sub-processors names).
+- Owner: engineering + founder (legal fields, pillars URLs). Status: `active`.
+- Related: content migration plan, [`consent-inth-manual-checklist.md`](./audits/consent-inth-manual-checklist.md).
+
 ### 2026-10-21: Content approach, no blog, four public pillars (active)
 
 - Decision (founder + engineering):

@@ -1,0 +1,401 @@
+[
+  {
+    "url": "/members/booking",
+    "title": "How to Book an Appointment",
+    "portal": "members",
+    "locale": "en",
+    "excerpt": "How to Book an Appointment Booking an appointment on Eleva Care is simple and takes just a few minutes. Follow this guide to find the right expert and schedule your consultation. Finding an Expert Browse by Specialty <Tabs items={['Pregnanc"
+  },
+  {
+    "url": "/members/faq",
+    "title": "Frequently Asked Questions",
+    "portal": "members",
+    "locale": "en",
+    "excerpt": "Find answers to common questions about using Eleva Care. Click any question to expand the answer. <Callout title=\"Can't find your answer?\" Contact us at support@eleva.care and we'll be happy to help. </Callout Getting Started <Accordions ty"
+  },
+  {
+    "url": "/members",
+    "title": "Getting Started",
+    "portal": "members",
+    "locale": "en",
+    "excerpt": "Welcome to Eleva Care Eleva Care connects you with trusted, independent women's health experts. Whether you're seeking support during pregnancy, postpartum care, pelvic health guidance, or menopause management, we're here to help you find t"
+  },
+  {
+    "url": "/members/payments",
+    "title": "Payments & Pricing",
+    "portal": "members",
+    "locale": "en",
+    "excerpt": "Payments & Pricing Eleva Care provides a secure, transparent payment system. This guide covers everything you need to know about paying for your appointments. Accepted Payment Methods <Tabs items={['Cards', 'Regional Methods']} <Tab value=\""
+  },
+  {
+    "url": "/members/reviews",
+    "title": "Reviews & Ratings",
+    "portal": "members",
+    "locale": "en",
+    "excerpt": "Reviews & Ratings Your feedback helps other members find the right expert and helps experts improve their services. Learn how our review system works. Leaving a Review You can leave a review after your appointment is completed. You'll recei"
+  },
+  {
+    "url": "/pt/members/booking",
+    "title": "Como Marcar Consulta",
+    "portal": "members",
+    "locale": "pt",
+    "excerpt": "Como Marcar uma Consulta Marcar uma consulta na Eleva Care é simples e leva apenas alguns minutos. Segue este guia para encontrar o especialista certo e agendar a tua consulta. Encontrar um Especialista Explorar por Especialidade <Tabs item"
+  },
+  {
+    "url": "/pt/members/faq",
+    "title": "Perguntas Frequentes",
+    "portal": "members",
+    "locale": "pt",
+    "excerpt": "Encontre respostas às perguntas comuns sobre usar a Eleva Care. Clique em qualquer pergunta para expandir a resposta. <Callout title=\"Não encontra a sua resposta?\" Contacte nos em support@eleva.care e teremos todo o gosto em ajudar. </Callo"
+  },
+  {
+    "url": "/pt/members",
+    "title": "Começar",
+    "portal": "members",
+    "locale": "pt",
+    "excerpt": "Bem vinda à Eleva Care A Eleva Care conecta te com especialistas independentes e de confiança em saúde feminina. Quer procures apoio durante a gravidez, cuidados pós parto, orientação em saúde pélvica ou gestão da menopausa, estamos aqui pa"
+  },
+  {
+    "url": "/pt/members/payments",
+    "title": "Pagamentos e Preços",
+    "portal": "members",
+    "locale": "pt",
+    "excerpt": "Pagamentos e Preços A Eleva Care fornece um sistema de pagamento seguro e transparente. Este guia cobre tudo o que precisas de saber sobre pagar as tuas consultas. Métodos de Pagamento Aceites <Tabs items={['Cartões', 'Métodos Regionais']} "
+  },
+  {
+    "url": "/pt/members/reviews",
+    "title": "Avaliações e Classificações",
+    "portal": "members",
+    "locale": "pt",
+    "excerpt": "Avaliações e Classificações O teu feedback ajuda outros pacientes a encontrar o especialista certo e ajuda os especialistas a melhorar os seus serviços. Aprende como funciona o nosso sistema de avaliações. Deixar uma Avaliação Podes deixar "
+  },
+  {
+    "url": "/es/members/booking",
+    "title": "How to Book an Appointment",
+    "portal": "members",
+    "locale": "es",
+    "excerpt": "How to Book an Appointment Booking an appointment on Eleva Care is simple and takes just a few minutes. Follow this guide to find the right expert and schedule your consultation. Finding an Expert Browse by Specialty <Tabs items={['Pregnanc"
+  },
+  {
+    "url": "/es/members/faq",
+    "title": "Frequently Asked Questions",
+    "portal": "members",
+    "locale": "es",
+    "excerpt": "Find answers to common questions about using Eleva Care. Click any question to expand the answer. <Callout title=\"Can't find your answer?\" Contact us at support@eleva.care and we'll be happy to help. </Callout Getting Started <Accordions ty"
+  },
+  {
+    "url": "/es/members",
+    "title": "Getting Started",
+    "portal": "members",
+    "locale": "es",
+    "excerpt": "Welcome to Eleva Care Eleva Care connects you with trusted, independent women's health experts. Whether you're seeking support during pregnancy, postpartum care, pelvic health guidance, or menopause management, we're here to help you find t"
+  },
+  {
+    "url": "/es/members/payments",
+    "title": "Payments & Pricing",
+    "portal": "members",
+    "locale": "es",
+    "excerpt": "Payments & Pricing Eleva Care provides a secure, transparent payment system. This guide covers everything you need to know about paying for your appointments. Accepted Payment Methods <Tabs items={['Cards', 'Regional Methods']} <Tab value=\""
+  },
+  {
+    "url": "/es/members/reviews",
+    "title": "Reviews & Ratings",
+    "portal": "members",
+    "locale": "es",
+    "excerpt": "Reviews & Ratings Your feedback helps other members find the right expert and helps experts improve their services. Learn how our review system works. Leaving a Review You can leave a review after your appointment is completed. You'll recei"
+  },
+  {
+    "url": "/experts/earnings/payouts",
+    "title": "Payouts & Earnings",
+    "portal": "experts",
+    "locale": "en",
+    "excerpt": "Payouts & Earnings Eleva Care uses Stripe Connect for secure, automated payouts. This guide explains how earnings work and how to maximize your income. How Payments Work <Steps <Step member Books Payment is collected at the time of booking."
+  },
+  {
+    "url": "/experts/earnings/pricing",
+    "title": "Pricing Strategy",
+    "portal": "experts",
+    "locale": "en",
+    "excerpt": "Pricing Strategy Setting the right price is crucial for building a successful practice on Eleva Care. This guide helps you develop a pricing strategy that works. Pricing Principles <Tabs items={['Value Based', 'Market Position']} <Tab value"
+  },
+  {
+    "url": "/experts/getting-started/availability",
+    "title": "Managing Availability",
+    "portal": "experts",
+    "locale": "en",
+    "excerpt": "Managing Availability Your availability determines when members can book appointments. Set up your schedule to balance member access with your work life needs. Weekly Schedule Define your recurring weekly availability: <Steps <Step Access A"
+  },
+  {
+    "url": "/experts/getting-started/profile",
+    "title": "Setting Up Your Profile",
+    "portal": "experts",
+    "locale": "en",
+    "excerpt": "Setting Up Your Profile Your profile is your digital presence on Eleva Care. A complete, professional profile helps members find you and builds trust before they book. Profile Elements <Tabs items={['Required', 'Optional']} <Tab value=\"Requ"
+  },
+  {
+    "url": "/experts/getting-started/services",
+    "title": "Creating Services",
+    "portal": "experts",
+    "locale": "en",
+    "excerpt": "Creating Services Services are the consultations you offer to members. Each service has its own description, duration, and price. Service Components <Tabs items={['Required', 'Optional']} <Tab value=\"Required\" Required Fields | Field | Desc"
+  },
+  {
+    "url": "/experts",
+    "title": "Welcome to Expert Resources",
+    "portal": "experts",
+    "locale": "en",
+    "excerpt": "Welcome to Expert Resources Eleva Care empowers independent healthcare professionals to reach members globally while maintaining full control of their practice. This resource center will help you get started and make the most of our platfor"
+  },
+  {
+    "url": "/pt/experts/earnings/payouts",
+    "title": "Pagamentos e Ganhos",
+    "portal": "experts",
+    "locale": "pt",
+    "excerpt": "Pagamentos e Ganhos A Eleva Care usa o Stripe Connect para pagamentos seguros e automatizados. Este guia explica como funcionam os ganhos e como maximizar os seus rendimentos. Como Funcionam os Pagamentos <Steps <Step Paciente Marca O pagam"
+  },
+  {
+    "url": "/pt/experts/earnings/pricing",
+    "title": "Estratégia de Preços",
+    "portal": "experts",
+    "locale": "pt",
+    "excerpt": "Estratégia de Preços Definir o preço certo é crucial para construir uma prática de sucesso na Eleva Care. Este guia ajuda o a desenvolver uma estratégia de preços que funciona. Princípios de Preços <Tabs items={['Baseado em Valor', 'Posição"
+  },
+  {
+    "url": "/pt/experts/getting-started/availability",
+    "title": "Gerir Disponibilidade",
+    "portal": "experts",
+    "locale": "pt",
+    "excerpt": "Gerir Disponibilidade A sua disponibilidade determina quando os pacientes podem marcar consultas. Configure a sua agenda para equilibrar o acesso dos pacientes com as suas necessidades de vida pessoal. Agenda Semanal Defina a sua disponibil"
+  },
+  {
+    "url": "/pt/experts/getting-started/profile",
+    "title": "Configurar o Seu Perfil",
+    "portal": "experts",
+    "locale": "pt",
+    "excerpt": "Configurar o Seu Perfil O seu perfil é a sua presença digital na Eleva Care. Um perfil completo e profissional ajuda os pacientes a encontrá lo e constrói confiança antes de marcarem. Elementos do Perfil <Tabs items={['Obrigatório', 'Opcion"
+  },
+  {
+    "url": "/pt/experts/getting-started/services",
+    "title": "Criar Serviços",
+    "portal": "experts",
+    "locale": "pt",
+    "excerpt": "Criar Serviços Serviços são as consultas que oferece aos pacientes. Cada serviço tem a sua própria descrição, duração e preço. Componentes do Serviço <Tabs items={['Obrigatório', 'Opcional']} <Tab value=\"Obrigatório\" Campos Obrigatórios | C"
+  },
+  {
+    "url": "/pt/experts",
+    "title": "Bem-vindo aos Recursos para Especialistas",
+    "portal": "experts",
+    "locale": "pt",
+    "excerpt": "Bem vindo aos Recursos para Especialistas A Eleva Care capacita profissionais de saúde independentes a alcançar pacientes globalmente, mantendo total controlo da sua prática. Este centro de recursos ajuda o a começar e a tirar o máximo part"
+  },
+  {
+    "url": "/es/experts/earnings/payouts",
+    "title": "Payouts & Earnings",
+    "portal": "experts",
+    "locale": "es",
+    "excerpt": "Payouts & Earnings Eleva Care uses Stripe Connect for secure, automated payouts. This guide explains how earnings work and how to maximize your income. How Payments Work <Steps <Step member Books Payment is collected at the time of booking."
+  },
+  {
+    "url": "/es/experts/earnings/pricing",
+    "title": "Pricing Strategy",
+    "portal": "experts",
+    "locale": "es",
+    "excerpt": "Pricing Strategy Setting the right price is crucial for building a successful practice on Eleva Care. This guide helps you develop a pricing strategy that works. Pricing Principles <Tabs items={['Value Based', 'Market Position']} <Tab value"
+  },
+  {
+    "url": "/es/experts/getting-started/availability",
+    "title": "Managing Availability",
+    "portal": "experts",
+    "locale": "es",
+    "excerpt": "Managing Availability Your availability determines when members can book appointments. Set up your schedule to balance member access with your work life needs. Weekly Schedule Define your recurring weekly availability: <Steps <Step Access A"
+  },
+  {
+    "url": "/es/experts/getting-started/profile",
+    "title": "Setting Up Your Profile",
+    "portal": "experts",
+    "locale": "es",
+    "excerpt": "Setting Up Your Profile Your profile is your digital presence on Eleva Care. A complete, professional profile helps members find you and builds trust before they book. Profile Elements <Tabs items={['Required', 'Optional']} <Tab value=\"Requ"
+  },
+  {
+    "url": "/es/experts/getting-started/services",
+    "title": "Creating Services",
+    "portal": "experts",
+    "locale": "es",
+    "excerpt": "Creating Services Services are the consultations you offer to members. Each service has its own description, duration, and price. Service Components <Tabs items={['Required', 'Optional']} <Tab value=\"Required\" Required Fields | Field | Desc"
+  },
+  {
+    "url": "/es/experts",
+    "title": "Welcome to Expert Resources",
+    "portal": "experts",
+    "locale": "es",
+    "excerpt": "Welcome to Expert Resources Eleva Care empowers independent healthcare professionals to reach members globally while maintaining full control of their practice. This resource center will help you get started and make the most of our platfor"
+  },
+  {
+    "url": "/clinics/analytics/dashboard",
+    "title": "Analytics Dashboard",
+    "portal": "clinics",
+    "locale": "en",
+    "excerpt": "Analytics Dashboard Your Partner Dashboard provides comprehensive analytics to help you track performance, optimize operations, and grow your clinic. Dashboard Overview Access your analytics at Partner Dashboard → Analytics . Key Metrics at"
+  },
+  {
+    "url": "/clinics/getting-started/branding",
+    "title": "Customize Your Branding",
+    "portal": "clinics",
+    "locale": "en",
+    "excerpt": "Customize Your Branding Make your Eleva Care presence match your brand identity. This guide covers all customization options available to workspaces. Standard Branding (All Plans) Logo & Identity Every clinic can customize: Primary Logo : D"
+  },
+  {
+    "url": "/clinics/getting-started/setup",
+    "title": "Set Up Your Workspace",
+    "portal": "clinics",
+    "locale": "en",
+    "excerpt": "Set Up Your clinic This guide walks you through the complete setup process for your clinic on Eleva Care—whether you're a medical practice, wellness center, employer, or healthcare institution. Setup Process <Steps <Step Apply for Partnersh"
+  },
+  {
+    "url": "/clinics",
+    "title": "Welcome to Workspace Portal",
+    "portal": "clinics",
+    "locale": "en",
+    "excerpt": "Welcome to clinic Portal Eleva Care empowers healthcare organizations—clinics, wellness centers, employers, and health institutions—to deliver digital health services through our proven platform technology. What is a clinic? A clinic is you"
+  },
+  {
+    "url": "/clinics/pricing/plans",
+    "title": "Workspace Plans",
+    "portal": "clinics",
+    "locale": "en",
+    "excerpt": "clinic Plans Choose the clinic plan that fits your size and needs. All plans include platform access, payment processing, and partner support. Plan Comparison | Feature | Starter | Professional | Enterprise | | | | | | | Monthly Price | €99"
+  },
+  {
+    "url": "/clinics/pricing/revenue",
+    "title": "Revenue Sharing Model",
+    "portal": "clinics",
+    "locale": "en",
+    "excerpt": "Revenue Sharing Model Eleva Care uses a transparent three party revenue model that ensures fair compensation for everyone involved—members, experts, workspaces, and the platform. How It Works When a member books an appointment through your "
+  },
+  {
+    "url": "/clinics/team/experts",
+    "title": "Manage Your Experts",
+    "portal": "clinics",
+    "locale": "en",
+    "excerpt": "Manage Your Experts Your team of healthcare professionals is the heart of your clinic. This guide covers everything you need to know about managing experts on Eleva Care. Expert Types <Tabs items={['In House Experts', 'Network Experts']} <T"
+  },
+  {
+    "url": "/clinics/team/invitations",
+    "title": "Expert Invitations",
+    "portal": "clinics",
+    "locale": "en",
+    "excerpt": "Expert Invitations This guide walks you through the process of inviting healthcare professionals to join your clinic on Eleva Care. Invitation Flow Sending Invitations Step 1: Access Team Management 1. Log in to your Partner Dashboard 2. Na"
+  },
+  {
+    "url": "/pt/clinics/analytics/dashboard",
+    "title": "Analytics Dashboard",
+    "portal": "clinics",
+    "locale": "pt",
+    "excerpt": "Analytics Dashboard Your Partner Dashboard provides comprehensive analytics to help you track performance, optimize operations, and grow your clinic. Dashboard Overview Access your analytics at Partner Dashboard → Analytics . Key Metrics at"
+  },
+  {
+    "url": "/pt/clinics/getting-started/branding",
+    "title": "Customize Your Branding",
+    "portal": "clinics",
+    "locale": "pt",
+    "excerpt": "Customize Your Branding Make your Eleva Care presence match your brand identity. This guide covers all customization options available to workspaces. Standard Branding (All Plans) Logo & Identity Every clinic can customize: Primary Logo : D"
+  },
+  {
+    "url": "/pt/clinics/getting-started/setup",
+    "title": "Set Up Your Workspace",
+    "portal": "clinics",
+    "locale": "pt",
+    "excerpt": "Set Up Your clinic This guide walks you through the complete setup process for your clinic on Eleva Care—whether you're a medical practice, wellness center, employer, or healthcare institution. Setup Process <Steps <Step Apply for Partnersh"
+  },
+  {
+    "url": "/pt/clinics",
+    "title": "Welcome to Workspace Portal",
+    "portal": "clinics",
+    "locale": "pt",
+    "excerpt": "Welcome to clinic Portal Eleva Care empowers healthcare organizations—clinics, wellness centers, employers, and health institutions—to deliver digital health services through our proven platform technology. What is a clinic? A clinic is you"
+  },
+  {
+    "url": "/pt/clinics/pricing/plans",
+    "title": "Workspace Plans",
+    "portal": "clinics",
+    "locale": "pt",
+    "excerpt": "clinic Plans Choose the clinic plan that fits your size and needs. All plans include platform access, payment processing, and partner support. Plan Comparison | Feature | Starter | Professional | Enterprise | | | | | | | Monthly Price | €99"
+  },
+  {
+    "url": "/pt/clinics/pricing/revenue",
+    "title": "Revenue Sharing Model",
+    "portal": "clinics",
+    "locale": "pt",
+    "excerpt": "Revenue Sharing Model Eleva Care uses a transparent three party revenue model that ensures fair compensation for everyone involved—members, experts, workspaces, and the platform. How It Works When a member books an appointment through your "
+  },
+  {
+    "url": "/pt/clinics/team/experts",
+    "title": "Manage Your Experts",
+    "portal": "clinics",
+    "locale": "pt",
+    "excerpt": "Manage Your Experts Your team of healthcare professionals is the heart of your clinic. This guide covers everything you need to know about managing experts on Eleva Care. Expert Types <Tabs items={['In House Experts', 'Network Experts']} <T"
+  },
+  {
+    "url": "/pt/clinics/team/invitations",
+    "title": "Expert Invitations",
+    "portal": "clinics",
+    "locale": "pt",
+    "excerpt": "Expert Invitations This guide walks you through the process of inviting healthcare professionals to join your clinic on Eleva Care. Invitation Flow Sending Invitations Step 1: Access Team Management 1. Log in to your Partner Dashboard 2. Na"
+  },
+  {
+    "url": "/es/clinics/analytics/dashboard",
+    "title": "Analytics Dashboard",
+    "portal": "clinics",
+    "locale": "es",
+    "excerpt": "Analytics Dashboard Your Partner Dashboard provides comprehensive analytics to help you track performance, optimize operations, and grow your clinic. Dashboard Overview Access your analytics at Partner Dashboard → Analytics . Key Metrics at"
+  },
+  {
+    "url": "/es/clinics/getting-started/branding",
+    "title": "Customize Your Branding",
+    "portal": "clinics",
+    "locale": "es",
+    "excerpt": "Customize Your Branding Make your Eleva Care presence match your brand identity. This guide covers all customization options available to workspaces. Standard Branding (All Plans) Logo & Identity Every clinic can customize: Primary Logo : D"
+  },
+  {
+    "url": "/es/clinics/getting-started/setup",
+    "title": "Set Up Your Workspace",
+    "portal": "clinics",
+    "locale": "es",
+    "excerpt": "Set Up Your clinic This guide walks you through the complete setup process for your clinic on Eleva Care—whether you're a medical practice, wellness center, employer, or healthcare institution. Setup Process <Steps <Step Apply for Partnersh"
+  },
+  {
+    "url": "/es/clinics",
+    "title": "Welcome to Workspace Portal",
+    "portal": "clinics",
+    "locale": "es",
+    "excerpt": "Welcome to clinic Portal Eleva Care empowers healthcare organizations—clinics, wellness centers, employers, and health institutions—to deliver digital health services through our proven platform technology. What is a clinic? A clinic is you"
+  },
+  {
+    "url": "/es/clinics/pricing/plans",
+    "title": "Workspace Plans",
+    "portal": "clinics",
+    "locale": "es",
+    "excerpt": "clinic Plans Choose the clinic plan that fits your size and needs. All plans include platform access, payment processing, and partner support. Plan Comparison | Feature | Starter | Professional | Enterprise | | | | | | | Monthly Price | €99"
+  },
+  {
+    "url": "/es/clinics/pricing/revenue",
+    "title": "Revenue Sharing Model",
+    "portal": "clinics",
+    "locale": "es",
+    "excerpt": "Revenue Sharing Model Eleva Care uses a transparent three party revenue model that ensures fair compensation for everyone involved—members, experts, workspaces, and the platform. How It Works When a member books an appointment through your "
+  },
+  {
+    "url": "/es/clinics/team/experts",
+    "title": "Manage Your Experts",
+    "portal": "clinics",
+    "locale": "es",
+    "excerpt": "Manage Your Experts Your team of healthcare professionals is the heart of your clinic. This guide covers everything you need to know about managing experts on Eleva Care. Expert Types <Tabs items={['In House Experts', 'Network Experts']} <T"
+  },
+  {
+    "url": "/es/clinics/team/invitations",
+    "title": "Expert Invitations",
+    "portal": "clinics",
+    "locale": "es",
+    "excerpt": "Expert Invitations This guide walks you through the process of inviting healthcare professionals to join your clinic on Eleva Care. Invitation Flow Sending Invitations Step 1: Access Team Management 1. Log in to your Partner Dashboard 2. Na"
+  }
+]

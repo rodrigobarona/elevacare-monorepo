@@ -20,7 +20,7 @@ export function MediaGallery() {
                 className="object-cover"
               />
             ) : (
-              // eslint-disable-next-line @next/next/no-img-element -- Mux poster is a remote thumbnail, not a curated image
+              // eslint-disable-next-line @next/next/no-img-element -- video poster is Blob-hosted, not ElevaImage
               <img
                 src={asset.poster}
                 alt={asset.alt.en}

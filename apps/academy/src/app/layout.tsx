@@ -1,4 +1,5 @@
 import "./styles.css"
+import { ConsentShell } from "@eleva/consent/shell"
 import { fontClassName } from "@eleva/ui/fonts"
 import { cn } from "@eleva/ui/lib/utils"
 import { NextIntlClientProvider } from "next-intl"
@@ -33,11 +34,13 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="font-sans antialiased" suppressHydrationWarning>
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <DashboardProviders initialTheme={initialTheme}>
-            {children}
-          </DashboardProviders>
-        </NextIntlClientProvider>
+        <ConsentShell>
+          <NextIntlClientProvider locale={locale} messages={messages}>
+            <DashboardProviders initialTheme={initialTheme}>
+              {children}
+            </DashboardProviders>
+          </NextIntlClientProvider>
+        </ConsentShell>
       </body>
     </html>
   )

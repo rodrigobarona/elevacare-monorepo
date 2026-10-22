@@ -9,7 +9,6 @@ import { LongformLayout } from "@/components/longform-layout"
 import { hreflangLanguages, localePath } from "@/lib/hreflang"
 import { getLegalMdxDocument } from "@/lib/legal-source"
 import {
-  isLegalMdxSlug,
   isLegalSlug,
   LEGAL_PARAGRAPH_KEYS,
   LEGAL_SLUGS,
@@ -29,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {}
   }
 
-  if (isLegalMdxSlug(slug) && isContentLocale(locale)) {
+  if (isContentLocale(locale)) {
     const doc = getLegalMdxDocument(slug, locale)
     if (doc) {
       const path = `/legal/${slug}`
@@ -69,33 +68,33 @@ export default async function LegalDocumentPage({ params }: Props) {
   const t = await getTranslations({ locale, namespace: "legal" })
   const tLongform = await getTranslations({ locale, namespace: "longform" })
 
-  if (isLegalMdxSlug(slug) && isContentLocale(locale)) {
+  if (isContentLocale(locale)) {
     const doc = getLegalMdxDocument(slug, locale)
-    if (!doc) {
-      notFound()
+    if (doc) {
+      return (
+        <div className="flex min-h-dvh flex-col">
+          <SiteHeader />
+          <main className="flex-1 px-6 py-16">
+            <LongformLayout
+              title={doc.frontmatter.title}
+              description={
+                doc.frontmatter.summary ?? doc.frontmatter.description
+              }
+              versionLabel={tLongform("versionLabel", {
+                version: CONSENT_DOCUMENT_VERSION,
+              })}
+              lastUpdatedLabel={tLongform("lastUpdatedLabel", {
+                date: doc.frontmatter.lastUpdated,
+              })}
+              tocTitle={tLongform("tocTitle")}
+              Body={doc.Body}
+              toc={doc.toc}
+            />
+          </main>
+          <SiteFooter />
+        </div>
+      )
     }
-
-    return (
-      <div className="flex min-h-dvh flex-col">
-        <SiteHeader />
-        <main className="flex-1 px-6 py-16">
-          <LongformLayout
-            title={doc.frontmatter.title}
-            description={doc.frontmatter.summary ?? doc.frontmatter.description}
-            versionLabel={tLongform("versionLabel", {
-              version: CONSENT_DOCUMENT_VERSION,
-            })}
-            lastUpdatedLabel={tLongform("lastUpdatedLabel", {
-              date: doc.frontmatter.lastUpdated,
-            })}
-            tocTitle={tLongform("tocTitle")}
-            Body={doc.Body}
-            toc={doc.toc}
-          />
-        </main>
-        <SiteFooter />
-      </div>
-    )
   }
 
   return (

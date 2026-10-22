@@ -1,3 +1,4 @@
+import { withElevaConsentManifest } from "@eleva/consent/with-consent-manifest"
 import { withBotId } from "botid/next/config"
 import { createMDX } from "fumadocs-mdx/next"
 import createNextIntlPlugin from "next-intl/plugin"
@@ -5,6 +6,7 @@ import {
   ELEVA_IMAGE_REMOTE_PATTERNS,
   resolveAllowedDevOrigins,
   resolveGatewayStaticAssetRewrites,
+  withElevaImagesConfig,
 } from "@eleva/config/next-dev"
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts")
@@ -86,8 +88,16 @@ const nextConfig = {
     "@eleva/content",
     "@eleva/db",
     "@eleva/media",
+    "@eleva/site-chrome",
     "@eleva/ui",
+    "@eleva/consent",
+    "c15t",
+    "@c15t/core",
+    "@c15t/nextjs",
+    "@c15t/react",
   ],
 }
 
-export default withBotId(withNextIntl(withMDX(nextConfig)))
+export default withElevaImagesConfig(
+  withBotId(withNextIntl(withElevaConsentManifest(withMDX(nextConfig))))
+)

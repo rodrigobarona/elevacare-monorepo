@@ -12,4 +12,18 @@ export const legal: any = defineDocs({
   },
 })
 
+export const trust: any = defineDocs({
+  dir: "../../packages/content/content/trust",
+  docs: {
+    schema: frontmatterSchema,
+  },
+})
+
+export const pages: any = defineDocs({
+  dir: "../../packages/content/content/pages",
+  docs: {
+    schema: frontmatterSchema,
+  },
+})
+
 export default defineConfig()

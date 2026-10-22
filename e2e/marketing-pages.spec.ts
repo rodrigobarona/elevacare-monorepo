@@ -6,11 +6,13 @@ test.describe("phase 04 marketing pages", () => {
     expect(expert?.status()).toBe(200)
     await expect(page.getByTestId("legal-draft-banner")).toBeVisible()
     await expect(page.getByTestId("become-expert-heading")).toBeVisible()
+    await expect(page.getByText("Why practise on Eleva")).toBeVisible()
 
     const clinics = await page.goto("/for-clinics")
     expect(clinics?.status()).toBe(200)
     await expect(page.getByTestId("legal-draft-banner")).toBeVisible()
     await expect(page.getByTestId("for-clinics-heading")).toBeVisible()
+    await expect(page.getByText("Why clinics choose Eleva")).toBeVisible()
 
     const pt = await page.goto("/pt/become-expert")
     expect(pt?.status()).toBe(200)

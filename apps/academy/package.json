@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@eleva/auth": "workspace:^",
+    "@eleva/consent": "workspace:*",
     "@eleva/config": "workspace:^",
     "@eleva/dashboard": "workspace:*",
     "@eleva/db": "workspace:^",

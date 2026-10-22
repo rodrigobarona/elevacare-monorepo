@@ -44,6 +44,24 @@
         "story": "Our story",
         "featuredTitle": "Guided by clinical research",
         "featuredDescription": "Our advisors are physiotherapists, doctors and researchers in women's health."
+      },
+      "learn": {
+        "trigger": "Learn & community",
+        "heading": "Learn with Eleva",
+        "academy": "Academy",
+        "academyDescription": "Courses and learning paths for members and professionals.",
+        "newsletter": "Femme Focus newsletter",
+        "newsletterDescription": "Women's health essays and clinical context from the Eleva editorial team.",
+        "podcast": "Just Between Us… and Science",
+        "podcastDescription": "Conversations with researchers and clinicians, sponsored by Eleva.",
+        "community": "Community",
+        "communityDescription": "Join the Femme Focus community on Beehiiv.",
+        "help": "Help center",
+        "helpDescription": "Guides for members, experts and clinic teams.",
+        "evidence": "Evidence-based care",
+        "evidenceDescription": "How Eleva talks about research-informed care on the platform.",
+        "featuredTitle": "Editorial, not anonymous blogs",
+        "featuredDescription": "Long-form trust content lives here and in our help center—not a product blog."
       }
     }
   },
@@ -509,15 +527,22 @@
     "healthData": "Health data",
     "aiProcessing": "AI processing",
     "cookies": "Cookies",
+    "cookieSettings": "Cookie settings",
     "payments": "Payments",
     "expertAgreement": "Expert agreement",
     "accessibility": "Accessibility",
     "complaints": "Complaints",
+    "complaintsBook": "Electronic complaints book",
+    "trustSecurity": "Security",
+    "evidenceBasedCare": "Evidence-based care",
     "draftNote": "These pages are working pre-launch drafts (version {version}). Legal and the DPO will re-sign before go-live.",
     "solutions": "Join Eleva",
     "becomeExpert": "Become an expert",
     "forClinics": "For clinics",
     "community": "Community",
+    "newsletter": "Femme Focus newsletter",
+    "podcast": "Podcast",
+    "helpCenter": "Help center",
     "instagram": "Instagram",
     "linkedin": "LinkedIn",
     "tagline": "Expert women's health care, close to you. Online, by phone or in person.",
@@ -587,10 +612,10 @@
         "heading": "Cookie policy",
         "paragraphs": {
           "p1": "Eleva uses strictly necessary cookies to keep you signed in and to remember locale and theme. Session cookies follow the platform CSRF and subdomain model.",
-          "p2": "A marketing or analytics cookie banner (planned: c15t with Inth) is a separate product decision. This draft does not enable those cookies.",
-          "p3": "Essential cookies do not require a banner under ePrivacy when they are limited to delivering the service you requested (sign-in, locale, security).",
-          "p4": "You can delete cookies in your browser. Signing out clears the session cookie on .eleva.care and the host.",
-          "p5": "This policy will be updated when a consent-management tool ships. It is not a production cookie notice."
+          "p2": "Optional marketing and analytics cookies load only after you choose them in the Eleva cookie banner (c15t, hosted on Inth in the EU). Until you accept a category, those scripts and embeds do not run.",
+          "p3": "Essential cookies do not require consent under ePrivacy when they are limited to delivering the service you requested (sign-in, locale, security).",
+          "p4": "You can delete cookies in your browser or reopen Cookie settings in the footer to change your choices. Signing out clears the session cookie on .eleva.care and the host.",
+          "p5": "This JSON fallback is for locales without MDX; the published cookie policy lives at /legal/cookies."
         }
       },
       "payments": {
@@ -630,7 +655,7 @@
     "steps": [
       {
         "title": "Create your account",
-        "body": "Sign up and open an Expert workspace from your account. You start on the community plan and can upgrade later."
+        "body": "Sign up and open your expert practice from your account. You start on the community tier and can upgrade later."
       },
       {
         "title": "Set up your practice",
@@ -645,16 +670,175 @@
         "body": "Members book and pay online. You and the member receive confirmations and reminders by email."
       }
     ],
-    "eyebrow": "For experts"
+    "eyebrow": "For experts",
+    "benefitsHeading": "Why practise on Eleva",
+    "benefits": [
+      {
+        "icon": "shield",
+        "title": "Full clinical independence",
+        "body": "You remain an independent, licensed professional. Eleva provides scheduling, booking and payment technology—you decide how to care for each member."
+      },
+      {
+        "icon": "currency",
+        "title": "Your rates and policies",
+        "body": "Set prices and Flexible, Moderate or Strict cancellation rules per service. Payouts run through Stripe Connect after sessions complete."
+      },
+      {
+        "icon": "calendar",
+        "title": "Flexible scheduling",
+        "body": "Publish weekly availability, connect external calendars, and offer online, phone or in-person sessions from one practice."
+      },
+      {
+        "icon": "video",
+        "title": "Secure sessions",
+        "body": "Video rooms, reminders and join links are built in. Recording stays off on the standard plan we use today."
+      },
+      {
+        "icon": "users",
+        "title": "Reach members",
+        "body": "Members discover experts through Eleva's marketplace and your public profile—without promising specific marketing results."
+      },
+      {
+        "icon": "chart",
+        "title": "Practice tools",
+        "body": "Booking pages, service builder, cancellation policies and dashboard views help you run day-to-day operations in one place."
+      }
+    ],
+    "requirementsHeading": "Who can join",
+    "requirements": [
+      {
+        "title": "Licensed professional",
+        "body": "You hold the licence or registration required to deliver the services you publish in your jurisdiction."
+      },
+      {
+        "title": "Evidence-based communication",
+        "body": "Profiles and member-facing copy follow Eleva's ERS-safe framing: no guarantees, no unproven statistics, and no claim that Eleva provides clinical care."
+      },
+      {
+        "title": "Languages you publish",
+        "body": "Write profile and service copy in the languages you actually offer (English, Portuguese or Spanish)."
+      },
+      {
+        "title": "Stripe verification before payouts",
+        "body": "Identity and payout details are collected through Stripe Connect before paid services go live."
+      }
+    ],
+    "finalHeading": "Ready to open your practice?",
+    "finalBody": "Create your account, start on the community tier, and upgrade when it fits your practice. Commission and legal terms will be re-signed before public launch.",
+    "finalCta": "Create your account"
   },
   "forClinics": {
     "title": "For clinics — Eleva.care",
     "description": "Run a clinic Team on Eleva.care, a digital health platform for independent professionals.",
     "draftBanner": "Working pre-launch draft. Seat pricing and partnership terms are not final. Finance and the DPO will re-sign before go-live.",
     "heading": "Clinics and Teams",
-    "body": "Clinics use Eleva.care as a Team: several licensed experts under one organization, on the same digital health platform members already use to book. Eleva assumes organizational, technical and administrative responsibility for operating the platform, so your team can focus on care.",
+    "body": "Clinics use Eleva.care as a Team: several licensed experts under one organization, on the same digital health platform members already use to book. Eleva runs scheduling, booking and payout technology so your team can focus on care.",
     "cta": "Create your account",
-    "eyebrow": "For clinics"
+    "eyebrow": "For clinics",
+    "stepsHeading": "How a Team clinic works",
+    "steps": [
+      {
+        "title": "Create your Team organization",
+        "body": "Register your clinic and invite licensed experts to join the same Team space with shared branding."
+      },
+      {
+        "title": "Configure locations and services",
+        "body": "Set clinic locations, team calendars, and which services each expert publishes to members."
+      },
+      {
+        "title": "Coordinate bookings and payouts",
+        "body": "Members book through Eleva; Stripe Connect routes payouts according to your clinic policies."
+      },
+      {
+        "title": "Review team performance",
+        "body": "Use dashboard views to monitor bookings and member feedback—without replacing each expert's clinical responsibility."
+      }
+    ],
+    "benefitsHeading": "Why clinics choose Eleva",
+    "benefits": [
+      {
+        "icon": "buildings",
+        "title": "One Team space",
+        "body": "Invite licensed experts under a clinic organization with shared branding and coordinated scheduling."
+      },
+      {
+        "icon": "calendar",
+        "title": "Shared operations",
+        "body": "Locations, team calendars and published services stay aligned so members book the right expert and modality."
+      },
+      {
+        "icon": "currency",
+        "title": "Transparent payouts",
+        "body": "Stripe Connect routes funds according to your clinic setup. Seat pricing and partnership terms are still pre-launch drafts."
+      },
+      {
+        "icon": "chart",
+        "title": "Clinic visibility",
+        "body": "Dashboard views help you monitor bookings and feedback across the team without replacing individual clinical responsibility."
+      },
+      {
+        "icon": "users",
+        "title": "Member-ready experience",
+        "body": "Members use the same Eleva booking flow they already trust for independent experts."
+      },
+      {
+        "icon": "headset",
+        "title": "Partner onboarding",
+        "body": "Contact us when you need a walkthrough of Team setup, branding or expert invitations before go-live."
+      }
+    ],
+    "requirementsHeading": "Good fit for",
+    "requirements": [
+      {
+        "title": "Women's health clinics and teams",
+        "body": "Physiotherapy, pelvic health, obstetric care and related specialties with several licensed experts."
+      },
+      {
+        "title": "Licensed experts only",
+        "body": "Each clinician keeps their own licence, scope of practice and member relationship."
+      },
+      {
+        "title": "Operational owner",
+        "body": "A clinic admin coordinates invites, branding and which services are published to members."
+      },
+      {
+        "title": "Pre-launch terms",
+        "body": "Partnership and seat pricing remain working drafts until finance and legal re-sign."
+      }
+    ],
+    "finalHeading": "Start your clinic Team",
+    "finalBody": "Create your organization, invite experts, and configure locations and services. We will publish final clinic terms before launch.",
+    "finalCta": "Create your account"
+  },
+  "pillars": {
+    "newsletter": {
+      "title": "Femme Focus — Eleva.care",
+      "description": "Subscribe to Femme Focus, the Eleva newsletter on women's health.",
+      "eyebrow": "Newsletter",
+      "heading": "Femme Focus by Eleva",
+      "body": "Essays, clinical context and community stories from the Eleva editorial team. Subscribe on Beehiiv—no Eleva account required.",
+      "cta": "Subscribe on Beehiiv",
+      "embedTitle": "Subscribe"
+    },
+    "podcast": {
+      "title": "Just Between Us… and Science — Eleva.care",
+      "description": "Podcast conversations on women's health research and practice.",
+      "eyebrow": "Podcast",
+      "heading": "Just Between Us… and Science",
+      "body": "Hosted conversations with researchers and clinicians. Listen on your favourite platform; new episodes announced in Femme Focus.",
+      "spotify": "Spotify",
+      "apple": "Apple Podcasts",
+      "youtube": "YouTube",
+      "newsletterFallback": "Get episode announcements in Femme Focus"
+    },
+    "community": {
+      "title": "Community — Eleva.care",
+      "description": "Join the Femme Focus community on Beehiiv.",
+      "eyebrow": "Community",
+      "heading": "Femme Focus community",
+      "body": "Discuss episodes and newsletter topics with other members. The community lives on Beehiiv today; Eleva accounts are optional.",
+      "cta": "Open community"
+    }
   },
   "contact": {
     "title": "Contact — Eleva.care",

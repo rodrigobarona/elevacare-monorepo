@@ -291,7 +291,7 @@ export default function DesignSystemPage() {
 
       <Section
         title="Media library"
-        description="Curated assets in @eleva/media (public Blob + Mux). Use the slug; Pexels photographers are credited on /credits. Never put member or health data here."
+        description="Curated assets in @eleva/media (public Blob). Use the slug; Pexels photographers are credited on /credits. Never put member or health data here."
       >
         <MediaGallery />
       </Section>
