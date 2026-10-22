@@ -8,6 +8,8 @@
 | Touches    | `packages/db/src/schema/main/{records,session-documents,expert-notes,consents,crm}.ts`, `packages/encryption` (usage), `packages/storage` (private store), `packages/compliance/**` (retention jobs, DSAR collectors), `packages/crm/**`, `packages/ai/**`, `packages/encryption` (KEK/DEK operations), `apps/api/src/app/{records,notes,crm,ai,workflows}/**`, `apps/expert/**`, `apps/app/**`, `packages/flags` |
 | Exit gate  | Expert writes encrypted notes during/after a session, uploads documents to the private store, publishes a report the member can read via the app; retention jobs purge on schedule; consent captured; AI draft (behind `ff.ai_reports_beta`) from typed notes reviewed and published by the expert; KEK rotation job proven; no PHI in Sentry/logs                                                                |
 
+> **Close-out stamp (2026-10-22):** AUD-050–AUD-054 fixed on `main` (key shred on deletion, DSAR document links, clinic RLS matrix, PHI app guards + Sentry in PHI apps, AI zero-retention attestation). Still open and **not** stamped: DPO/legal sign-off (AUD-028/029), live Sentry-DSN redaction proof, real-gateway generation on staging, and the `crm.follow_up_due` delivery check.
+
 > **Engineering stamp (2026-10-21):** 10.1a–f, 10.2a, 10.2b (#265, flag default **off**, zero-retention model guard), and 10.2c are on `main`. Phase **closes on DPO/legal** only (AUD-029 production `ai_processing` copy, AUD-028 final retention numbers) — not on engineering merge alone.
 
 ## Why this phase exists
@@ -191,24 +193,24 @@ created|updated|archived`), API `/records/templates` CRUD + `POST /records/templ
 
 ## Acceptance criteria
 
-- [ ] Record body at rest is ciphertext (`v1:` prefix); reading via API returns plaintext only to
+- [x] Record body at rest is ciphertext (`v1:` prefix); reading via API returns plaintext only to
       authorized roles; member sees only published records.
-- [ ] Documents live in the private Blob store; direct URL without signature 403; signed URL
+- [x] Documents live in the private Blob store; direct URL without signature 403; signed URL
       expires (<= 15 min).
-- [ ] `pnpm encryption:rotate-kek` re-wraps every DEK with two KEK versions live; ciphertext
+- [x] `pnpm encryption:rotate-kek` re-wraps every DEK with two KEK versions live; ciphertext
       unchanged; decrypt works before, during and after; `record: decrypted` audit rows present.
-- [ ] Clinical access matrix: authoring expert reads; clinic colleague reads only with
+- [x] Clinical access matrix: authoring expert reads; clinic colleague reads only with
       `clinic_shared_records` on and no member opt-out; staff never see `body_encrypted`.
 - [ ] No `sessions.recording_*` or Daily cloud recording in this phase (grep
       check in the PR body). Live `transcript` kind is in 10.1; S3 recording stays 16.8.
-- [ ] Retention sweep deletes an expired unpublished AI draft in a
+- [x] Retention sweep deletes an expired unpublished AI draft in a
       seeded test; account deletion after grace period shreds keys and rows; DSAR includes published
       records and owned documents.
 - [x] **10.2b engineering:** `draftSessionReport` + `/ai/session-report` + expert “Draft with AI” behind `ff.ai_reports_beta` (default off); per-note author/consent gates; encrypted unpublished `ai_draft`; audit + redaction keys; mocked AI Gateway tests in `@eleva/ai`. Real generation stays fail-closed until an approved zero-retention model is attested.
 - [ ] AI draft generated from fixture typed notes through the AI Gateway (mock in tests, real on
       staging) validates against the Zod schema; publishing requires expert action; audit trail
       complete.
-- [ ] Sentry test event with a record payload arrives redacted.
+- [ ] Sentry test event with a record payload arrives redacted. _(unit-level `beforeSend`/breadcrumb redaction proven in `sentry.test.ts`; live DSN delivery pending.)_
 - [ ] CRM follow-up due -> notification kind `crm.follow_up_due` delivered.
 
 ## Tests

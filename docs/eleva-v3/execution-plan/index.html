@@ -5921,6 +5921,9 @@ operator tasks pending.</code></pre></div>
 </tr>
 </tbody></table>
 <blockquote>
+<p><strong>Close-out stamp (2026-10-22):</strong> AUD-050–AUD-054 fixed on <code>main</code> (key shred on deletion, DSAR document links, clinic RLS matrix, PHI app guards + Sentry in PHI apps, AI zero-retention attestation). Still open and <strong>not</strong> stamped: DPO/legal sign-off (AUD-028/029), live Sentry-DSN redaction proof, real-gateway generation on staging, and the <code>crm.follow_up_due</code> delivery check.</p>
+</blockquote>
+<blockquote>
 <p><strong>Engineering stamp (2026-10-21):</strong> 10.1a–f, 10.2a, 10.2b (#265, flag default <strong>off</strong>, zero-retention model guard), and 10.2c are on <code>main</code>. Phase <strong>closes on DPO/legal</strong> only (AUD-029 production <code>ai_processing</code> copy, AUD-028 final retention numbers) — not on engineering merge alone.</p>
 </blockquote>
 <h2 id="10-records-crm-ai--why-this-phase-exists"><a class="anchor" href="#10-records-crm-ai--why-this-phase-exists" aria-label="Link to section">#</a>Why this phase exists</h2>
@@ -6098,24 +6101,24 @@ PHI-refusal on save).</li>
 </ol>
 <h2 id="10-records-crm-ai--acceptance-criteria"><a class="anchor" href="#10-records-crm-ai--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
 <ul>
-<li><input disabled="" type="checkbox"> Record body at rest is ciphertext (<code>v1:</code> prefix); reading via API returns plaintext only to
+<li><input checked="" disabled="" type="checkbox"> Record body at rest is ciphertext (<code>v1:</code> prefix); reading via API returns plaintext only to
 authorized roles; member sees only published records.</li>
-<li><input disabled="" type="checkbox"> Documents live in the private Blob store; direct URL without signature 403; signed URL
+<li><input checked="" disabled="" type="checkbox"> Documents live in the private Blob store; direct URL without signature 403; signed URL
 expires (&lt;= 15 min).</li>
-<li><input disabled="" type="checkbox"> <code>pnpm encryption:rotate-kek</code> re-wraps every DEK with two KEK versions live; ciphertext
+<li><input checked="" disabled="" type="checkbox"> <code>pnpm encryption:rotate-kek</code> re-wraps every DEK with two KEK versions live; ciphertext
 unchanged; decrypt works before, during and after; <code>record: decrypted</code> audit rows present.</li>
-<li><input disabled="" type="checkbox"> Clinical access matrix: authoring expert reads; clinic colleague reads only with
+<li><input checked="" disabled="" type="checkbox"> Clinical access matrix: authoring expert reads; clinic colleague reads only with
 <code>clinic_shared_records</code> on and no member opt-out; staff never see <code>body_encrypted</code>.</li>
 <li><input disabled="" type="checkbox"> No <code>sessions.recording_*</code> or Daily cloud recording in this phase (grep
 check in the PR body). Live <code>transcript</code> kind is in 10.1; S3 recording stays 16.8.</li>
-<li><input disabled="" type="checkbox"> Retention sweep deletes an expired unpublished AI draft in a
+<li><input checked="" disabled="" type="checkbox"> Retention sweep deletes an expired unpublished AI draft in a
 seeded test; account deletion after grace period shreds keys and rows; DSAR includes published
 records and owned documents.</li>
 <li><input checked="" disabled="" type="checkbox"> <strong>10.2b engineering:</strong> <code>draftSessionReport</code> + <code>/ai/session-report</code> + expert “Draft with AI” behind <code>ff.ai_reports_beta</code> (default off); per-note author/consent gates; encrypted unpublished <code>ai_draft</code>; audit + redaction keys; mocked AI Gateway tests in <code>@eleva/ai</code>. Real generation stays fail-closed until an approved zero-retention model is attested.</li>
 <li><input disabled="" type="checkbox"> AI draft generated from fixture typed notes through the AI Gateway (mock in tests, real on
 staging) validates against the Zod schema; publishing requires expert action; audit trail
 complete.</li>
-<li><input disabled="" type="checkbox"> Sentry test event with a record payload arrives redacted.</li>
+<li><input disabled="" type="checkbox"> Sentry test event with a record payload arrives redacted. <em>(unit-level <code>beforeSend</code>/breadcrumb redaction proven in <code>sentry.test.ts</code>; live DSN delivery pending.)</em></li>
 <li><input disabled="" type="checkbox"> CRM follow-up due -&gt; notification kind <code>crm.follow_up_due</code> delivered.</li>
 </ul>
 <h2 id="10-records-crm-ai--tests"><a class="anchor" href="#10-records-crm-ai--tests" aria-label="Link to section">#</a>Tests</h2>
