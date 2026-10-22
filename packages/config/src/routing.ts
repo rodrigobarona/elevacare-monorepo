@@ -16,6 +16,9 @@ export const ACCOUNT_STANDALONE_PATHS = [
   "logout",
   "login",
   "signup",
+  "verify-email",
+  "reset-password",
+  "two-factor",
 ] as const
 
 /** All first-level paths that the account app claims. */
@@ -35,9 +38,9 @@ export const APP_STANDALONE_PATHS = [] as const
  * the web proxy to detect org-slug-prefixed app routes.
  *
  * Member Space chrome (`settings` / `privacy` / `sessions` / `payments` /
- * `notifications`) must rewrite to the member app even at depth 2 —
- * otherwise the gateway treats them as public booking event slugs and
- * serves a marketing 404.
+ * `notifications` / `reports`) must rewrite to the member app even at
+ * depth 2 — otherwise the gateway treats them as public booking event
+ * slugs and serves a marketing 404.
  */
 export const ORG_SCOPED_SEGMENTS = [
   "team",
@@ -48,6 +51,7 @@ export const ORG_SCOPED_SEGMENTS = [
   "sessions",
   "payments",
   "notifications",
+  "reports",
 ] as const
 
 /** Member-app second segments under /[orgSlug]/* (subset of ORG_SCOPED). */
@@ -57,6 +61,7 @@ export const MEMBER_ORG_SEGMENTS = [
   "sessions",
   "payments",
   "notifications",
+  "reports",
 ] as const
 
 /**

@@ -55,11 +55,13 @@ const localeSet = new Set<string>(locales)
  *  4. Platform admin (/admin/*) -> admin subdomain redirect
  *  5. Fixed account segments (/onboarding, /account/*) -> account zone
  *  6. Account standalone (/dashboard, /login, /callback, /logout,
- *     /signup) at depth 1 -> account zone
+ *     /signup, /verify-email, /reset-password, /two-factor) at depth 1
+ *     -> account zone
  *  7. App standalone at depth 1 -> app zone
  *  8. Org-scoped second segment (/:slug/team|admin|academy|settings|privacy|
- *     sessions|payments|notifications) -> respective satellite / member app
- *     (team org experts → /team, managers → /admin; member Space chrome → app)
+ *     sessions|payments|notifications|reports) -> respective satellite /
+ *     member app (team org experts → /team, managers → /admin; member
+ *     Space chrome → app)
  *  9. Public marketplace (Phase 04):
  *       /:username            without session -> marketing (public profile)
  *       /:username/:eventSlug                 -> marketing (booking funnel)
