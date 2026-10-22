@@ -613,9 +613,9 @@
         "paragraphs": {
           "p1": "A Eleva usa cookies estritamente necessários para o manter autenticado e para lembrar o idioma e o tema. Os cookies de sessão seguem o modelo CSRF e de subdomínio da plataforma.",
           "p2": "Cookies opcionais de marketing e analítica só carregam depois de os escolher no banner de cookies da Eleva (c15t, alojado na Inth na UE). Até aceitar uma categoria, esses scripts e embeds não correm.",
-          "p3": "Os cookies essenciais não exigem banner ao abrigo da ePrivacy quando se limitam a prestar o serviço que pediu (autenticação, idioma, segurança).",
-          "p4": "Pode apagar cookies no browser. Terminar sessão limpa o cookie de sessão em .eleva.care e no anfitrião.",
-          "p5": "Esta política será atualizada quando existir uma ferramenta de gestão de consentimento. Não é um aviso de cookies de produção."
+          "p3": "Os cookies essenciais não exigem consentimento ao abrigo da ePrivacy quando se limitam a prestar o serviço que pediu (autenticação, idioma, segurança).",
+          "p4": "Pode apagar cookies no browser ou reabrir as Definições de cookies no rodapé para alterar as suas escolhas. Terminar sessão limpa o cookie de sessão em .eleva.care e no anfitrião.",
+          "p5": "Este texto de reserva serve os idiomas sem MDX; a política de cookies publicada está em /legal/cookies."
         }
       },
       "payments": {

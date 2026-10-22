@@ -9,6 +9,7 @@ import {
   getHelpLoader,
   type HelpPortalId,
 } from "@/lib/help-source"
+import { getDocsChromeCopy } from "@/lib/docs-chrome-copy"
 import { docsLocalePrefix } from "@/lib/locale-prefix"
 
 export async function renderHelpPortalPage({
@@ -35,6 +36,7 @@ export async function renderHelpPortalPage({
 
   const tree = getHelpLoader(portal).getTree(contentLocale)
   const localePrefix = docsLocalePrefix(contentLocale)
+  const copy = getDocsChromeCopy(contentLocale)
   const components = getMdxComponents()
   const Body = doc.Body
 
@@ -43,11 +45,7 @@ export async function renderHelpPortalPage({
       <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[240px_minmax(0,1fr)_200px]">
         <aside className="hidden lg:block">
           <div className="sticky top-24">
-            <DocsSidebar
-              tree={tree}
-              localePrefix={localePrefix}
-              title="Help topics"
-            />
+            <DocsSidebar tree={tree} title={copy.helpTopics} />
           </div>
         </aside>
         <article className="max-w-3xl min-w-0 lg:max-w-none">
@@ -63,7 +61,7 @@ export async function renderHelpPortalPage({
         </article>
         <aside className="hidden xl:block">
           <div className="sticky top-24">
-            <TableOfContents items={doc.toc} title="On this page" />
+            <TableOfContents items={doc.toc} title={copy.onThisPage} />
           </div>
         </aside>
       </div>

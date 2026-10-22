@@ -74,7 +74,7 @@ export default async function DocsHubPage({ params }: Props) {
         </ul>
         <p className="mt-10 text-sm text-muted-foreground">
           Machine-readable index:{" "}
-          <a href="/llms.txt" className="underline underline-offset-2">
+          <a href="/docs/llms.txt" className="underline underline-offset-2">
             llms.txt
           </a>
         </p>

@@ -3,11 +3,9 @@ import Link from "next/link"
 
 function SidebarNode({
   node,
-  localePrefix,
   depth = 0,
 }: {
   node: Root["children"][number]
-  localePrefix: string
   depth?: number
 }) {
   if (node.type === "folder") {
@@ -24,7 +22,6 @@ function SidebarNode({
             <SidebarNode
               key={String(child.$id ?? child.name ?? index)}
               node={child}
-              localePrefix={localePrefix}
               depth={depth + 1}
             />
           ))}
@@ -38,7 +35,7 @@ function SidebarNode({
   return (
     <li>
       <Link
-        href={`${localePrefix}${node.url}`}
+        href={node.url}
         className="block rounded-md py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
         style={{ paddingLeft: 12 + depth * 12 }}
       >
@@ -48,15 +45,7 @@ function SidebarNode({
   )
 }
 
-export function DocsSidebar({
-  tree,
-  localePrefix,
-  title,
-}: {
-  tree: Root
-  localePrefix: string
-  title: string
-}) {
+export function DocsSidebar({ tree, title }: { tree: Root; title: string }) {
   return (
     <nav aria-label={title} className="text-sm">
       <p className="eyebrow text-muted-foreground">{title}</p>
@@ -65,7 +54,6 @@ export function DocsSidebar({
           <SidebarNode
             key={String(node.$id ?? node.name ?? index)}
             node={node}
-            localePrefix={localePrefix}
           />
         ))}
       </ul>

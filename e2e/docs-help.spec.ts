@@ -41,4 +41,24 @@ test.describe("Help center (docs zone)", () => {
     expect(llms.status()).toBe(200)
     expect(await llms.text()).toContain("members")
   })
+
+  test("default-locale URLs are unprefixed and locale links do not double up", async ({
+    request,
+  }) => {
+    test.skip(
+      !process.env.E2E_DOCS_URL && !webUrl.includes("localhost"),
+      "Docs smoke needs local docs on :3008 or E2E_DOCS_URL"
+    )
+
+    for (const path of ["", "/members", "/members/booking", "/experts"]) {
+      const res = await request.get(docsPath(path || "/"))
+      expect(res.status(), path || "/").toBe(200)
+    }
+
+    const pt = await request.get(docsPath("/pt/members"))
+    expect(pt.status()).toBe(200)
+    const html = await pt.text()
+    expect(html).toContain("/docs/pt/members/booking")
+    expect(html).not.toContain("/docs/pt/pt/")
+  })
 })

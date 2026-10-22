@@ -5,6 +5,8 @@ type DocsChromeCopy = {
   portals: { members: string; experts: string; clinics: string }
   evidenceBasedCare: string
   portalsNavLabel: string
+  helpTopics: string
+  onThisPage: string
 }
 
 const en: DocsChromeCopy = {
@@ -16,6 +18,8 @@ const en: DocsChromeCopy = {
   },
   evidenceBasedCare: "Evidence-based care",
   portalsNavLabel: "Help portals",
+  helpTopics: "Help topics",
+  onThisPage: "On this page",
 }
 
 const pt: DocsChromeCopy = {
@@ -27,6 +31,8 @@ const pt: DocsChromeCopy = {
   },
   evidenceBasedCare: "Cuidados baseados em evidência",
   portalsNavLabel: "Portais de ajuda",
+  helpTopics: "Tópicos de ajuda",
+  onThisPage: "Nesta página",
 }
 
 const es: DocsChromeCopy = {
@@ -38,6 +44,8 @@ const es: DocsChromeCopy = {
   },
   evidenceBasedCare: "Atención basada en evidencia",
   portalsNavLabel: "Portales de ayuda",
+  helpTopics: "Temas de ayuda",
+  onThisPage: "En esta página",
 }
 
 const COPY: Record<Locale, DocsChromeCopy> = { en, pt, es }
