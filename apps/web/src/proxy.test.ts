@@ -181,6 +181,38 @@ describe("createGatewayProxy integration", () => {
     )
   })
 
+  it("rewrites /verify-email to account zone in production", async () => {
+    vi.stubEnv("NODE_ENV", "production")
+    const proxy = createGatewayProxy({
+      origins: {
+        ...testOrigins,
+        account: "https://account.eleva.care",
+      },
+      intlMiddleware: marketingIntl,
+    })
+    const res = await proxy(makeRequest("/verify-email"))
+    expect(res.status).toBe(200)
+    expect(res.headers.get("x-middleware-rewrite")).toBe(
+      "https://account.eleva.care/verify-email"
+    )
+  })
+
+  it("rewrites /:orgSlug/reports to app zone in production", async () => {
+    vi.stubEnv("NODE_ENV", "production")
+    const proxy = createGatewayProxy({
+      origins: {
+        ...testOrigins,
+        app: "https://app.eleva.care",
+      },
+      intlMiddleware: marketingIntl,
+    })
+    const res = await proxy(makeRequest("/space-3d4f155f88c8/reports"))
+    expect(res.status).toBe(200)
+    expect(res.headers.get("x-middleware-rewrite")).toBe(
+      "https://app.eleva.care/space-3d4f155f88c8/reports"
+    )
+  })
+
   it("redirects /login to local account port in development", async () => {
     vi.stubEnv("NODE_ENV", "development")
     const proxy = createGatewayProxy({

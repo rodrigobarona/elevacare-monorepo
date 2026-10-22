@@ -86,8 +86,20 @@ describe("resolveDispatch - account zone", () => {
   })
 
   it("rewrites auth-flow standalones to account", () => {
-    for (const path of ["/login", "/signup", "/callback", "/logout"]) {
+    for (const path of [
+      "/login",
+      "/signup",
+      "/callback",
+      "/logout",
+      "/verify-email",
+      "/reset-password",
+      "/two-factor",
+    ]) {
       expect(resolveDispatch(path, false, origins)).toEqual({
+        kind: "rewrite",
+        origin: "http://account",
+      })
+      expect(resolveDispatch(path, true, origins)).toEqual({
         kind: "rewrite",
         origin: "http://account",
       })
@@ -167,7 +179,11 @@ describe("resolveDispatch - org-scoped second segment", () => {
       "sessions",
       "payments",
       "notifications",
+      "reports",
     ] as const) {
+      expect(
+        resolveDispatch(`/space-abc123/${segment}`, false, origins)
+      ).toEqual({ kind: "rewrite", origin: "http://app" })
       expect(
         resolveDispatch(`/space-abc123/${segment}`, true, origins)
       ).toEqual({ kind: "rewrite", origin: "http://app" })
