@@ -11,14 +11,24 @@ import {
   type PatchEventTypeModeRequest,
 } from "@eleva/api-client"
 import { getAuthedApiClient } from "@/lib/server-api"
-import { humanApiMessage, mapExpertApiError } from "@/lib/map-api-error"
+import {
+  humanApiMessage,
+  mapExpertApiError,
+  offerInvariantCode,
+} from "@/lib/map-api-error"
+import type { OfferInvariantError } from "@eleva/scheduling/offer-invariants"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
 
 const IdSchema = z.string().uuid()
 
 type ActionResult =
   | { ok: true; id?: string }
-  | { ok: false; error: string; message?: string }
+  | {
+      ok: false
+      error: string
+      message?: string
+      invariantCode?: OfferInvariantError
+    }
 
 export async function createEventTypeModeAction(
   eventTypeId: string,
@@ -58,6 +68,7 @@ export async function createEventTypeModeAction(
       ok: false,
       error,
       message: error === "offer-invariant" ? humanApiMessage(err) : undefined,
+      invariantCode: offerInvariantCode(err),
     }
   }
 }
@@ -99,6 +110,7 @@ export async function patchEventTypeModeAction(
       ok: false,
       error,
       message: error === "offer-invariant" ? humanApiMessage(err) : undefined,
+      invariantCode: offerInvariantCode(err),
     }
   }
 }

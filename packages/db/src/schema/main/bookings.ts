@@ -644,8 +644,8 @@ export const bookingPayments = pgTable(
       sql`dispute_status IN ('none','open','won','lost')`
     ),
     tenantPolicy: pgPolicy("booking_payments_tenant_isolation", {
-      using: sql`org_id::text = current_setting('eleva.org_id', true)`,
-      withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,
+      using: sql`org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true'`,
+      withCheck: sql`org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true'`,
     }),
   })
 )

@@ -1,4 +1,7 @@
 import { ApiClientError } from "@eleva/api-client"
+import type { OfferInvariantError } from "@eleva/scheduling/offer-invariants"
+import { isOfferInvariantError } from "@eleva/scheduling/offer-invariant-fields"
+import type { PublishViolation } from "@eleva/scheduling/publish-event-type"
 
 export function mapExpertApiError(
   err: unknown,
@@ -57,4 +60,45 @@ export function humanApiMessage(err: unknown): string | undefined {
     return err.body.message
   }
   return undefined
+}
+
+function readBodyRecord(err: unknown): Record<string, unknown> | null {
+  if (!(err instanceof ApiClientError)) return null
+  const body = err.body
+  if (!body || typeof body !== "object") return null
+  return body as Record<string, unknown>
+}
+
+export function offerInvariantCode(
+  err: unknown
+): OfferInvariantError | undefined {
+  const body = readBodyRecord(err)
+  if (!body || body.error !== "OFFER_INVARIANT_VIOLATION") return undefined
+  const code = body.code
+  return typeof code === "string" && isOfferInvariantError(code)
+    ? code
+    : undefined
+}
+
+export function offerInvariantViolations(
+  err: unknown
+): PublishViolation[] | undefined {
+  const body = readBodyRecord(err)
+  if (!body || body.error !== "OFFER_INVARIANT_VIOLATION") return undefined
+  const raw = body.violations
+  if (!Array.isArray(raw)) return undefined
+  const violations: PublishViolation[] = []
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue
+    const row = item as Record<string, unknown>
+    const code = row.code
+    const message = row.message
+    if (typeof code !== "string" || typeof message !== "string") continue
+    violations.push({
+      modeId: typeof row.modeId === "string" ? row.modeId : null,
+      code: code as PublishViolation["code"],
+      message,
+    })
+  }
+  return violations.length > 0 ? violations : undefined
 }

@@ -318,12 +318,13 @@ Out: payouts/transfers (Phase 6), emails beyond stubs (Phase 8), video (Phase 9)
       `pt/en/es`.
 - [ ] Slot picker shows correct slots for an expert in `Europe/Lisbon` viewed from
       `America/Sao_Paulo`, honoring buffers, min notice, overrides and existing bookings.
-- [ ] Offer fixtures: _Quick chat_ shows video + phone cards to a visitor in Portugal, only the
+- [x] Offer fixtures: _Quick chat_ shows video + phone cards to a visitor in Portugal, only the
       video card to a visitor in Brazil (phone scope = EU), and hides both for a language the
       expert does not offer; phone and video slots come from different schedules; a phone booking
       blocks the overlapping video slot. _Physiotherapy_ follow-up shows three location cards with
       their own prices and schedules; a clinical mode with `worldwide` scope is rejected by the
-      invariant test.
+      invariant test. (`packages/scheduling/src/offer-fixtures.test.ts`, driven by the seed specs in
+      `packages/db/src/seed/offer-fixture-specs.ts`.)
 - [ ] A private booking link books a slot outside the public schedule for an event type with
       `visibility = private` while the profile has `accepting_bookings = false`; the link is
       exhausted after `max_uses` and a revoked link returns 404.

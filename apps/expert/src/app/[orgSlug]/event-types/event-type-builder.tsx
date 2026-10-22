@@ -6,7 +6,9 @@ import {
   TabsList,
   TabsTrigger,
 } from "@eleva/ui/components/tabs"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
+import { isOfferInvariantError } from "@eleva/scheduling/offer-invariant-fields"
 import type { BookingLinkListItem, LocalizedList } from "@eleva/api-client"
 import type { Locale } from "@eleva/config"
 import { EventTypeForm } from "./event-type-form"
@@ -71,9 +73,40 @@ export function EventTypeBuilder({
   eventTypeDestination,
 }: Props) {
   const t = useTranslations("eventTypes.tabs")
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const tabParam = searchParams.get("tab")
+  const selectedTab =
+    tabParam === "details" ||
+    tabParam === "kind" ||
+    tabParam === "policies" ||
+    tabParam === "modes" ||
+    tabParam === "privateLinks"
+      ? tabParam
+      : "basics"
+  const publishModeId = searchParams.get("modeId")
+  const invariantParam = searchParams.get("invariant")
+  const publishInvariantCode =
+    invariantParam && isOfferInvariantError(invariantParam)
+      ? invariantParam
+      : undefined
 
   return (
-    <Tabs defaultSelectedKey="basics" className="w-full">
+    <Tabs
+      selectedKey={selectedTab}
+      onSelectionChange={(key) => {
+        if (typeof key !== "string") return
+        const params = new URLSearchParams(searchParams.toString())
+        if (key === "basics") params.delete("tab")
+        else params.set("tab", key)
+        const query = params.toString()
+        router.replace(
+          `${workspaceBase}/event-types/${eventTypeId}${query ? `?${query}` : ""}`,
+          { scroll: false }
+        )
+      }}
+      className="w-full"
+    >
       <TabsList variant="line" className="mb-4 w-full max-w-full flex-wrap">
         <TabsTrigger id="basics" data-testid="tab-basics">
           {t("basics")}
@@ -146,6 +179,11 @@ export function EventTypeBuilder({
           defaultTimezone={defaultTimezone}
           integrations={integrations}
           eventTypeDestination={eventTypeDestination}
+          publishFieldHint={
+            publishModeId && publishInvariantCode
+              ? { modeId: publishModeId, code: publishInvariantCode }
+              : undefined
+          }
         />
       </TabsContent>
 

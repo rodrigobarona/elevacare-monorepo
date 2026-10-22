@@ -166,6 +166,8 @@ export const ADMIN_BYPASS_TABLES = new Set<string>([
   // dropping the bypass clause on each run.
   "billing_customers",
   "billing_subscriptions",
+  // Payouts, refunds and the Stripe webhook read payments across orgs.
+  "booking_payments",
   "payout_states",
   "booking_refunds",
   "transfer_reversals",

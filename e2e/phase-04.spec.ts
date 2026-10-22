@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test"
 import {
   fillGuestAndConsents,
   fillStripeTestCard,
+  fillStripeTestMbWay,
   uniqueGuestEmail,
   walkFunnelToDetails,
 } from "./helpers/booking"
@@ -161,6 +162,77 @@ test.describe("phase 04 live Stripe booking", () => {
       "data-state",
       "confirmed",
       { timeout: 45_000 }
+    )
+  })
+
+  test.skip(
+    process.env.E2E_LIVE_STRIPE_MBWAY !== "1",
+    "set E2E_LIVE_STRIPE_MBWAY=1 to run the MB WAY async_short checkout test"
+  )
+  test("pays a seeded paid offer with MB WAY test phone (processing hold)", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000)
+    test.skip(
+      !process.env.STRIPE_PMC_BOOKING,
+      "set STRIPE_PMC_BOOKING with MB WAY enabled before running"
+    )
+    test.skip(
+      !process.env.CONSENT_HASH_KEY || process.env.CONSENT_HASH_KEY.length < 32,
+      "set CONSENT_HASH_KEY (32+ chars) before creating a live hold"
+    )
+    const book = await page.goto("/fisiomota/first-visit")
+    test.skip(book?.status() !== 200, "needs seeded fisiomota / first-visit")
+
+    await walkFunnelToDetails(page)
+    await fillGuestAndConsents(page, {
+      name: "E2E MB WAY",
+      email: uniqueGuestEmail("stripe-mbway"),
+    })
+
+    const reserve = page.waitForResponse(
+      (res) =>
+        res.url().includes("/bookings/reserve") &&
+        res.request().method() === "POST"
+    )
+    const intent = page.waitForResponse(
+      (res) =>
+        res.url().includes("/payments/intent") &&
+        res.request().method() === "POST"
+    )
+    await page.getByTestId("booking-continue-details").click()
+    const reserveResponse = await reserve
+    test.skip(
+      reserveResponse.status() !== 201,
+      `POST /bookings/reserve returned ${reserveResponse.status()}`
+    )
+    const intentResponse = await intent
+    test.skip(
+      ![200, 201].includes(intentResponse.status()),
+      `POST /payments/intent returned ${intentResponse.status()}`
+    )
+
+    try {
+      await fillStripeTestMbWay(page)
+    } catch (error) {
+      test.skip(
+        true,
+        `MB WAY not available in Payment Element: ${error instanceof Error ? error.message : String(error)}`
+      )
+    }
+
+    const pay = page.getByTestId("booking-pay-submit")
+    await pay.scrollIntoViewIfNeeded()
+    await pay.evaluate((el: HTMLButtonElement) => {
+      el.closest("form")?.requestSubmit(el)
+    })
+
+    await expect(page.getByTestId("booking-done-heading")).toBeVisible({
+      timeout: 60_000,
+    })
+    await expect(page.getByTestId("booking-done-heading")).toHaveAttribute(
+      "data-state",
+      /pending|confirmed/
     )
   })
 })

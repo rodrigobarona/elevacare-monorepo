@@ -9,12 +9,23 @@ import {
   type UpdateEventTypeRequest,
 } from "@eleva/api-client"
 import { getAuthedApiClient } from "@/lib/server-api"
-import { humanApiMessage, mapExpertApiError } from "@/lib/map-api-error"
+import {
+  humanApiMessage,
+  mapExpertApiError,
+  offerInvariantViolations,
+} from "@/lib/map-api-error"
+import type { PublishViolation } from "@eleva/scheduling/publish-event-type"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
 
 type ActionResult =
   | { ok: true; id?: string }
-  | { ok: false; error: string; message?: string; details?: unknown }
+  | {
+      ok: false
+      error: string
+      message?: string
+      details?: unknown
+      publishViolations?: PublishViolation[]
+    }
 
 export interface EventTypeFormData {
   slug: string
@@ -247,6 +258,7 @@ export async function togglePublishAction(
       ok: false,
       error,
       message: error === "offer-invariant" ? humanApiMessage(err) : undefined,
+      publishViolations: offerInvariantViolations(err),
     }
   }
 }

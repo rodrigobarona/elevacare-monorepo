@@ -30,6 +30,22 @@ export {
 } from "./editor-assist"
 
 export {
+  SESSION_REPORT_PROMPT_VERSION,
+  SessionReportDraftSchema,
+  buildSessionReportPrompt,
+  formatSessionReportDraftBody,
+  type SessionReportDraft,
+} from "./prompts/session-report.v1"
+
+export {
+  generateSessionReportDraft,
+  resolveSessionReportModelId,
+  SESSION_REPORT_DRAFT_OUTPUT_KEYS,
+  type SessionReportGenerationInput,
+  type SessionReportGenerationResult,
+} from "./session-report-draft"
+
+export {
   AI_TRANSLATE_MESSAGES_EMPTY,
   AI_TRANSLATE_MESSAGES_PARSE,
   AiTranslateMessagesEmptyError,
