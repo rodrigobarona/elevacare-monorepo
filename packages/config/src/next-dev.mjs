@@ -99,25 +99,3 @@ export function resolveGatewayStaticAssetRewrites(env = process.env) {
 export const ELEVA_IMAGE_REMOTE_PATTERNS = [
   { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
 ]
-
-/**
- * Re-apply {@link ELEVA_IMAGE_REMOTE_PATTERNS} after third-party Next config
- * wrappers (fumadocs-mdx, next-intl, c15t). Some compose as outer functions
- * and drop `images`, which leaves `images-manifest.json` with empty
- * `remotePatterns` and `/_next/image` returns 400 ("url parameter is not allowed").
- */
-export function withElevaImagesConfig(config) {
-  const apply = (resolved) => ({
-    ...resolved,
-    images: {
-      ...(resolved?.images ?? {}),
-      remotePatterns: ELEVA_IMAGE_REMOTE_PATTERNS,
-    },
-  })
-
-  if (typeof config === "function") {
-    return async (phase, ctx) => apply(await config(phase, ctx))
-  }
-
-  return apply(config)
-}

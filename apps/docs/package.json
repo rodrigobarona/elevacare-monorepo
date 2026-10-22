@@ -11,6 +11,7 @@
     "start": "next start --port 3008",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
+    "pretypecheck": "fumadocs-mdx",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

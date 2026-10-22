@@ -4,7 +4,6 @@ import { env } from "node:process"
 import {
   ELEVA_IMAGE_REMOTE_PATTERNS,
   resolveZoneAssetPrefix,
-  withElevaImagesConfig,
 } from "@eleva/config/next-dev"
 
 const withMDX = createMDX()
@@ -27,6 +26,4 @@ const nextConfig = {
   assetPrefix: resolveZoneAssetPrefix("docs", env.DOCS_ASSET_PREFIX, env),
 }
 
-export default withElevaImagesConfig(
-  withElevaConsentManifest(withMDX(nextConfig))
-)
+export default withElevaConsentManifest(withMDX(nextConfig))

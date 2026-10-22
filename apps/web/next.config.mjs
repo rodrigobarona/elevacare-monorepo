@@ -6,7 +6,6 @@ import {
   ELEVA_IMAGE_REMOTE_PATTERNS,
   resolveAllowedDevOrigins,
   resolveGatewayStaticAssetRewrites,
-  withElevaImagesConfig,
 } from "@eleva/config/next-dev"
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts")
@@ -98,6 +97,9 @@ const nextConfig = {
   ],
 }
 
-export default withElevaImagesConfig(
-  withBotId(withNextIntl(withElevaConsentManifest(withMDX(nextConfig))))
+// `withElevaConsentManifest` returns an async config function, so it must wrap
+// the other plugins: next-intl, BotID and fumadocs-mdx spread their input and
+// would silently drop every key (images, MDX rules, transpilePackages).
+export default withElevaConsentManifest(
+  withBotId(withNextIntl(withMDX(nextConfig)))
 )

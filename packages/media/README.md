@@ -13,9 +13,10 @@ import { ElevaVideo } from "@eleva/media/video"
 ```
 
 Set `images.remotePatterns: ELEVA_IMAGE_REMOTE_PATTERNS` from
-`@eleva/config/next-dev`. Apps that wrap config with fumadocs-mdx, next-intl, or
-c15t should export `withElevaImagesConfig(...)` as the outermost wrapper so
-production `images-manifest.json` keeps Blob hostnames allowed.
+`@eleva/config/next-dev`. `withElevaConsentManifest` returns an async config
+function, so it must be the outermost wrapper (`withElevaConsentManifest(withBotId(withNextIntl(withMDX(config))))`);
+inner plugins spread their input and would otherwise drop `images`, leaving
+`images-manifest.json` with empty `remotePatterns` (`/_next/image` 400).
 
 ## Curating
 

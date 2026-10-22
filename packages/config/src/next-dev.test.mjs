@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest"
-import {
-  ELEVA_IMAGE_REMOTE_PATTERNS,
-  resolveAllowedDevOrigins,
-  withElevaImagesConfig,
-} from "./next-dev.mjs"
+import { resolveAllowedDevOrigins } from "./next-dev.mjs"
 
 describe("resolveAllowedDevOrigins", () => {
   it("allows account and app loopback hosts used by Playwright", () => {
@@ -31,21 +27,5 @@ describe("resolveAllowedDevOrigins", () => {
     expect(origins).toContain("127.0.0.1:3006")
     expect(origins).toContain("localhost:3006")
     expect(origins).toContain("127.0.0.1:3102")
-  })
-})
-
-describe("withElevaImagesConfig", () => {
-  it("restores remotePatterns when a wrapper drops images", async () => {
-    const stripped = { transpilePackages: ["@eleva/ui"] }
-    const wrapped = withElevaImagesConfig(stripped)
-    expect(wrapped.images.remotePatterns).toEqual(ELEVA_IMAGE_REMOTE_PATTERNS)
-  })
-
-  it("merges onto async config functions", async () => {
-    const wrapped = withElevaImagesConfig(async () => ({
-      experimental: { turbopackFileSystemCacheForDev: false },
-    }))
-    const resolved = await wrapped("phase-production-build", {})
-    expect(resolved.images.remotePatterns).toEqual(ELEVA_IMAGE_REMOTE_PATTERNS)
   })
 })
