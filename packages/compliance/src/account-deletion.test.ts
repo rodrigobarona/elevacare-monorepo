@@ -7,10 +7,15 @@ const eraseMemberClinicalRecords = vi.fn(async (..._args: unknown[]) => ({
   deleted: 0,
   tombstoned: 2,
 }))
+const shredOrgKeys = vi.fn(async (..._args: unknown[]) => ({ shredded: 1 }))
 const eraseMemberSessionDocuments = vi.fn(async (..._args: unknown[]) => ({
   deleted: 0,
   retainedExpertOnly: 0,
   blobFailures: 0,
+}))
+
+vi.mock("@eleva/encryption", () => ({
+  shredOrgKeys: (...args: unknown[]) => shredOrgKeys(...args),
 }))
 
 vi.mock("@eleva/audit", () => ({
@@ -305,6 +310,7 @@ describe("cancelAccountDeletion", () => {
 
 describe("sweepAccountDeletions", () => {
   beforeEach(() => {
+    shredOrgKeys.mockClear()
     eraseMemberSessionDocuments.mockReset()
     eraseMemberSessionDocuments.mockResolvedValue({
       deleted: 0,
@@ -419,6 +425,10 @@ describe("sweepAccountDeletions", () => {
     const ops: string[] = []
     const userSets: unknown[] = []
 
+    shredOrgKeys.mockImplementationOnce(async () => {
+      ops.push("shred")
+      return { shredded: 1 }
+    })
     withPlatformAdminContext.mockImplementation(
       async (fn: (tx: unknown) => unknown) =>
         fn({
@@ -510,6 +520,9 @@ describe("sweepAccountDeletions", () => {
     expect(consents.every((row) => row.userId === null)).toBe(true)
     expect(ops.indexOf("anonymise")).toBeGreaterThanOrEqual(0)
     expect(ops.indexOf("anonymise")).toBeLessThan(ops.indexOf("complete"))
+    expect(shredOrgKeys).toHaveBeenCalledExactlyOnceWith("org-1")
+    expect(ops.indexOf("shred")).toBeGreaterThanOrEqual(0)
+    expect(ops.indexOf("shred")).toBeLessThan(ops.indexOf("anonymise"))
     expect(eraseMemberClinicalRecords).toHaveBeenCalledTimes(1)
     expect(eraseMemberClinicalRecords).toHaveBeenCalledWith(
       expect.anything(),
@@ -678,6 +691,71 @@ describe("sweepAccountDeletions", () => {
     )
     expect(result.completed).toBe(0)
     expect(result.awaitingCompletion).toEqual([])
+    expect(ops).not.toContain("anonymise")
+    expect(ops).not.toContain("complete")
+    expect(shredOrgKeys).not.toHaveBeenCalled()
+  })
+
+  it("keeps the request pending when the key shred fails so the next sweep retries", async () => {
+    shredOrgKeys.mockRejectedValueOnce(new Error("store unavailable"))
+    withPlatformAdminContext.mockImplementation(
+      async (fn: (tx: unknown) => unknown) =>
+        fn({
+          select: () => ({
+            from: () => ({
+              innerJoin: () => ({
+                innerJoin: () => ({
+                  where: async () => [
+                    {
+                      id: "req-1",
+                      userId: "user-1",
+                      orgId: "org-1",
+                      scheduledFor: new Date("2026-01-01T00:00:00.000Z"),
+                    },
+                  ],
+                }),
+              }),
+            }),
+          }),
+        })
+    )
+    const ops: string[] = []
+    withPlatformAudit.mockImplementation(
+      async (_opts: unknown, fn: (tx: unknown, ctx: unknown) => unknown) => {
+        const tx = {
+          execute: async () => undefined,
+          select: () => ({
+            from: () => ({
+              where: () => ({
+                limit: async () => [{ id: "req-1" }],
+              }),
+              leftJoin: () => ({
+                where: async () => [],
+              }),
+            }),
+          }),
+          update: (table: { id: string }) => ({
+            set: (values: Record<string, unknown>) => {
+              if (table.id === "user.id") ops.push("anonymise")
+              if (table.id === "adr.id" && values.status === "completed") {
+                ops.push("complete")
+              }
+              return {
+                where: () => ({
+                  returning: async () => [{ id: "req-1" }],
+                }),
+              }
+            },
+          }),
+          delete: () => ({ where: async () => undefined }),
+        }
+        return fn(tx, emitCtx())
+      }
+    )
+
+    await expect(
+      sweepAccountDeletions(new Date("2026-09-11T00:00:00.000Z"))
+    ).rejects.toThrow("store unavailable")
     expect(ops).not.toContain("anonymise")
     expect(ops).not.toContain("complete")
   })
