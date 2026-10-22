@@ -6,7 +6,10 @@
 import { generateText } from "ai"
 import glossaryJson from "@eleva/config/glossary.json"
 
-import { assertApprovedModel } from "./approved-models"
+import {
+  GATEWAY_PROVIDER_OPTIONS,
+  assertApprovedModel,
+} from "./approved-models"
 import { resolveEditorModelId } from "./editor-assist"
 import { describeLocale } from "./locale-variants"
 
@@ -143,16 +146,18 @@ export async function translateMessages(
     return {}
   }
 
-  const modelId = resolveEditorModelId(options?.env ?? process.env)
-  assertApprovedModel(modelId)
+  const model = assertApprovedModel(
+    resolveEditorModelId(options?.env ?? process.env)
+  )
   const generate = options?.generate ?? generateText
   const result: TranslateMessagesResult = {}
 
   for (const targetLocale of input.targetLocales) {
     const prompt = buildTranslateMessagesPrompt({ ...input, targetLocale })
     const { text, finishReason } = await generate({
-      model: modelId,
+      model: model.modelId,
       prompt,
+      providerOptions: GATEWAY_PROVIDER_OPTIONS,
       maxOutputTokens: options?.maxOutputTokens ?? 8192,
     })
     if (finishReason === "length") {

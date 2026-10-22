@@ -6,7 +6,10 @@
 
 import { streamText } from "ai"
 
-import { assertApprovedModel } from "./approved-models"
+import {
+  GATEWAY_PROVIDER_OPTIONS,
+  assertApprovedModel,
+} from "./approved-models"
 import { describeLocale } from "./locale-variants"
 
 export const EDITOR_ASSIST_COMMANDS = [
@@ -136,12 +139,13 @@ export function editorAssist(
   }
 ): EditorAssistStream {
   assertEditorAssistInput(input)
-  const modelId = resolveEditorModelId()
+  const model = assertApprovedModel(resolveEditorModelId())
   const prompt = buildEditorAssistPrompt(input)
 
   return streamText({
-    model: modelId,
+    model: model.modelId,
     prompt,
+    providerOptions: GATEWAY_PROVIDER_OPTIONS,
     abortSignal: options?.abortSignal,
     maxOutputTokens: options?.maxOutputTokens ?? 2048,
     onFinish: options?.onFinish,

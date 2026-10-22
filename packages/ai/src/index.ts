@@ -4,9 +4,9 @@ export {
   AI_MODEL_ZERO_RETENTION_REQUIRED,
   AiModelNotApprovedError,
   AiModelZeroRetentionRequiredError,
+  GATEWAY_PROVIDER_OPTIONS,
   assertApprovedModel,
   requireZeroRetentionModel,
-  firstZeroRetentionModel,
   type ApprovedModel,
 } from "./approved-models"
 
