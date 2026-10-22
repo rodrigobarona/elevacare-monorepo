@@ -18,7 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@eleva/ui/components/alert-dialog"
-import { isOfferInvariantError } from "@eleva/scheduling"
+import { isOfferInvariantError } from "@eleva/scheduling/offer-invariant-fields"
 import { togglePublishAction, deleteEventTypeAction } from "./actions"
 
 interface Props {

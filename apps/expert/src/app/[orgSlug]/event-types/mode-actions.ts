@@ -16,7 +16,7 @@ import {
   mapExpertApiError,
   offerInvariantCode,
 } from "@/lib/map-api-error"
-import type { OfferInvariantError } from "@eleva/scheduling"
+import type { OfferInvariantError } from "@eleva/scheduling/offer-invariants"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
 
 const IdSchema = z.string().uuid()

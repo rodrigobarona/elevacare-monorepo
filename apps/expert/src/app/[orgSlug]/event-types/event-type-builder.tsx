@@ -8,7 +8,7 @@ import {
 } from "@eleva/ui/components/tabs"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { isOfferInvariantError } from "@eleva/scheduling"
+import { isOfferInvariantError } from "@eleva/scheduling/offer-invariant-fields"
 import type { BookingLinkListItem, LocalizedList } from "@eleva/api-client"
 import type { Locale } from "@eleva/config"
 import { EventTypeForm } from "./event-type-form"
