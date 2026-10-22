@@ -9,8 +9,22 @@ import {
   resetDsarCollectorsForTests,
 } from "./dsar-collectors"
 
+const mintSessionDocumentUrl = vi.fn()
 const deletePrivateDocument = vi.fn()
 const listMemberOwnedSessionDocuments = vi.fn()
+
+vi.mock("@eleva/records", () => {
+  class SessionDocumentError extends Error {
+    constructor(readonly code: string) {
+      super(code)
+    }
+  }
+  return {
+    SessionDocumentError,
+    mintSessionDocumentUrl: (...args: unknown[]) =>
+      mintSessionDocumentUrl(...args),
+  }
+})
 
 vi.mock("@eleva/storage", () => ({
   deletePrivateDocument: (...args: unknown[]) => deletePrivateDocument(...args),
@@ -35,6 +49,8 @@ afterEach(() => {
   resetDsarCollectorsForTests()
   deletePrivateDocument.mockReset()
   listMemberOwnedSessionDocuments.mockReset()
+  mintSessionDocumentUrl.mockReset()
+  vi.unstubAllEnvs()
 })
 
 describe("eraseMemberSessionDocuments", () => {
@@ -77,32 +93,88 @@ describe("eraseMemberSessionDocuments", () => {
   })
 })
 
+const ownedRow = (id: string) => ({
+  id,
+  orgId: "org-1",
+  bookingId: "booking-1",
+  mime: "application/pdf",
+  sizeBytes: 1200,
+  scope: "shared",
+  uploadedBy: "user-1",
+  createdAt: new Date("2026-10-13T10:00:00.000Z"),
+})
+
 describe("ensureSessionDocumentDsarCollector", () => {
-  it("registers once and lists owned document metadata", async () => {
-    listMemberOwnedSessionDocuments.mockResolvedValue([
-      {
-        id: "doc-1",
-        orgId: "org-1",
-        bookingId: "booking-1",
-        mime: "application/pdf",
-        sizeBytes: 1200,
-        scope: "shared",
-        uploadedBy: "user-1",
-        createdAt: new Date("2026-10-13T10:00:00.000Z"),
-      },
-    ])
+  it("registers once and lists owned documents with a signed download link", async () => {
+    vi.stubEnv("API_URL", "https://api.eleva.test")
+    listMemberOwnedSessionDocuments.mockResolvedValue([ownedRow("doc-1")])
+    mintSessionDocumentUrl.mockResolvedValue({
+      url: "https://api.eleva.test/sessions/booking-1/documents/doc-1/download?g=t",
+      expiresAt: "2026-10-13T10:15:00.000Z",
+    })
     ensureSessionDocumentDsarCollector()
     ensureSessionDocumentDsarCollector()
     expect(listDsarCollectors().map((c) => c.id)).toEqual([
       SESSION_DOCUMENT_DSAR_COLLECTOR_ID,
     ])
     const result = await listDsarCollectors()[0]!.collect("user-1")
+    expect(mintSessionDocumentUrl).toHaveBeenCalledWith({
+      bookingId: "booking-1",
+      documentId: "doc-1",
+      actorUserId: "user-1",
+      apiBase: "https://api.eleva.test",
+    })
     expect(result.json).toEqual([
       expect.objectContaining({
         id: "doc-1",
         mime: "application/pdf",
         uploadedBySelf: true,
+        downloadUrl:
+          "https://api.eleva.test/sessions/booking-1/documents/doc-1/download?g=t",
+        downloadUrlExpiresAt: "2026-10-13T10:15:00.000Z",
+        downloadUrlRefreshPath:
+          "https://api.eleva.test/sessions/booking-1/documents/doc-1/url",
       }),
     ])
+  })
+
+  it("still lists a document with a null link when the grant cannot be minted", async () => {
+    vi.stubEnv("API_URL", "https://api.eleva.test")
+    const { SessionDocumentError } = await import("@eleva/records")
+    listMemberOwnedSessionDocuments.mockResolvedValue([ownedRow("doc-2")])
+    mintSessionDocumentUrl.mockRejectedValue(
+      new SessionDocumentError("FORBIDDEN")
+    )
+    ensureSessionDocumentDsarCollector()
+    const result = await listDsarCollectors()[0]!.collect("user-1")
+    expect(result.json).toEqual([
+      expect.objectContaining({
+        id: "doc-2",
+        downloadUrl: null,
+        downloadUrlExpiresAt: null,
+      }),
+    ])
+  })
+
+  it("does not mint grants when no API base is configured", async () => {
+    vi.stubEnv("API_URL", "")
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "")
+    listMemberOwnedSessionDocuments.mockResolvedValue([ownedRow("doc-3")])
+    ensureSessionDocumentDsarCollector()
+    const result = await listDsarCollectors()[0]!.collect("user-1")
+    expect(mintSessionDocumentUrl).not.toHaveBeenCalled()
+    expect(result.json).toEqual([
+      expect.objectContaining({ id: "doc-3", downloadUrl: null }),
+    ])
+  })
+
+  it("propagates unexpected failures instead of exporting a silent gap", async () => {
+    vi.stubEnv("API_URL", "https://api.eleva.test")
+    listMemberOwnedSessionDocuments.mockResolvedValue([ownedRow("doc-4")])
+    mintSessionDocumentUrl.mockRejectedValue(new Error("db down"))
+    ensureSessionDocumentDsarCollector()
+    await expect(listDsarCollectors()[0]!.collect("user-1")).rejects.toThrow(
+      "db down"
+    )
   })
 })
