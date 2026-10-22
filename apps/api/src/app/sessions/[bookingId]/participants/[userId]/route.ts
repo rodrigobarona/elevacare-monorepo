@@ -1,4 +1,5 @@
 import { RemoveSessionParticipantResponseSchema } from "@eleva/api-client"
+import { z } from "zod"
 import {
   removeSessionParticipant,
   SessionParticipantError,
@@ -18,6 +19,11 @@ export const ROUTE_POLICY = {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
+const ParticipantParamsSchema = z.object({
+  bookingId: z.string().uuid(),
+  userId: z.string().uuid(),
+})
+
 const PARTICIPANT_STATUS: Record<SessionParticipantError["code"], number> = {
   NOT_ASSIGNED_EXPERT: 403,
   SESSION_NOT_ACTIVE: 410,
@@ -30,7 +36,14 @@ export async function DELETE(
   { params }: { params: Promise<{ bookingId: string; userId: string }> }
 ) {
   const headers = corsHeaders(request, "DELETE, OPTIONS")
-  const { bookingId, userId } = await params
+  const parsedParams = ParticipantParamsSchema.safeParse(await params)
+  if (!parsedParams.success) {
+    return secureJson(
+      { error: "validation", issues: parsedParams.error.issues },
+      { status: 422, headers }
+    )
+  }
+  const { bookingId, userId } = parsedParams.data
 
   let session
   try {

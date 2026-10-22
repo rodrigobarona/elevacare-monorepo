@@ -15,6 +15,7 @@ import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, resolveApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { checkBot } from "@/lib/bot-protection"
+import { withIdempotency } from "@/lib/idempotency"
 import { PUBLIC_NOT_FOUND } from "@/lib/public-marketplace"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -73,69 +74,85 @@ export async function POST(request: Request) {
   )
   if (rateLimited) return rateLimited
 
-  const parsed = ConfirmBookingRequestSchema.safeParse(
-    await request.json().catch(() => ({}))
-  )
-  if (!parsed.success) {
-    return secureJson(
-      { error: "validation", issues: parsed.error.issues },
-      { status: 400, headers }
-    )
-  }
-
-  const sessionUserId =
+  const actorUserId =
     auth.type === "anonymous" ? undefined : auth.session.user.id
 
-  let result
-  try {
-    result = parsed.data.paymentIntentId
-      ? await confirmBookingPayment({
-          reservationId: parsed.data.reservationId,
-          reservationToken: parsed.data.reservationToken,
-          paymentIntentId: parsed.data.paymentIntentId,
-          sessionUserId,
-          source: "public",
-          retrieveIntent: retrieveBookingPaymentIntent,
-        })
-      : await confirmFreeReservation({
-          reservationId: parsed.data.reservationId,
-          reservationToken: parsed.data.reservationToken,
-          sessionUserId,
-        })
-  } catch (err) {
-    console.error("[bookings/confirm] failed", err)
-    return secureJson({ error: "internal" }, { status: 500, headers })
-  }
+  return withIdempotency(
+    request,
+    {
+      scope: "bookings.confirm",
+      actor: rateLimitKey(request, actorUserId),
+      headers,
+    },
+    async () => {
+      const parsed = ConfirmBookingRequestSchema.safeParse(
+        await request.json().catch(() => ({}))
+      )
+      if (!parsed.success) {
+        return secureJson(
+          { error: "validation", issues: parsed.error.issues },
+          { status: 400, headers }
+        )
+      }
 
-  if (!result.ok) {
-    if (result.error === "not_found") {
-      return secureJson(PUBLIC_NOT_FOUND, { status: 404, headers })
-    }
-    if (result.error === "payment_mismatch") {
-      return secureJson({ error: "PAYMENT_MISMATCH" }, { status: 409, headers })
-    }
-    if (result.error === "unavailable") {
-      return secureJson({ error: "unavailable" }, { status: 503, headers })
-    }
-    return secureJson({ error: "internal" }, { status: 500, headers })
-  }
+      const sessionUserId =
+        auth.type === "anonymous" ? undefined : auth.session.user.id
 
-  if (shouldAwaitDomainEventPublish()) {
-    await kickGuestActivationPublisher()
-  } else {
-    after(kickGuestActivationPublisher)
-  }
+      let result
+      try {
+        result = parsed.data.paymentIntentId
+          ? await confirmBookingPayment({
+              reservationId: parsed.data.reservationId,
+              reservationToken: parsed.data.reservationToken,
+              paymentIntentId: parsed.data.paymentIntentId,
+              sessionUserId,
+              source: "public",
+              retrieveIntent: retrieveBookingPaymentIntent,
+            })
+          : await confirmFreeReservation({
+              reservationId: parsed.data.reservationId,
+              reservationToken: parsed.data.reservationToken,
+              sessionUserId,
+            })
+      } catch (err) {
+        console.error("[bookings/confirm] failed", err)
+        return secureJson({ error: "internal" }, { status: 500, headers })
+      }
 
-  return secureJson(
-    ConfirmBookingResponseSchema.parse({
-      bookingId: result.bookingId,
-      alreadyConfirmed: result.alreadyConfirmed,
-      status: result.status,
-      ...(result.approvalDeadlineAt
-        ? { approvalDeadlineAt: result.approvalDeadlineAt }
-        : {}),
-    }),
-    { status: result.alreadyConfirmed ? 200 : 201, headers }
+      if (!result.ok) {
+        if (result.error === "not_found") {
+          return secureJson(PUBLIC_NOT_FOUND, { status: 404, headers })
+        }
+        if (result.error === "payment_mismatch") {
+          return secureJson(
+            { error: "PAYMENT_MISMATCH" },
+            { status: 409, headers }
+          )
+        }
+        if (result.error === "unavailable") {
+          return secureJson({ error: "unavailable" }, { status: 503, headers })
+        }
+        return secureJson({ error: "internal" }, { status: 500, headers })
+      }
+
+      if (shouldAwaitDomainEventPublish()) {
+        await kickGuestActivationPublisher()
+      } else {
+        after(kickGuestActivationPublisher)
+      }
+
+      return secureJson(
+        ConfirmBookingResponseSchema.parse({
+          bookingId: result.bookingId,
+          alreadyConfirmed: result.alreadyConfirmed,
+          status: result.status,
+          ...(result.approvalDeadlineAt
+            ? { approvalDeadlineAt: result.approvalDeadlineAt }
+            : {}),
+        }),
+        { status: result.alreadyConfirmed ? 200 : 201, headers }
+      )
+    }
   )
 }
 

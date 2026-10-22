@@ -11,7 +11,7 @@ import { withAudit } from "@eleva/audit"
 import { getFlag } from "@eleva/flags"
 import { getExpertProfileByUserId, main } from "@eleva/db"
 import { corsHeaders } from "@/lib/cors"
-import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
+import { apiAuthFailure, requireRevocableApiCapability } from "@/lib/auth"
 import { checkBot } from "@/lib/bot-protection"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
@@ -37,7 +37,10 @@ export async function POST(
 
   let session
   try {
-    session = await requireApiCapability(request, "expert:invoicing_manage")
+    session = await requireRevocableApiCapability(
+      request,
+      "expert:invoicing_manage"
+    )
   } catch (err) {
     const failure = apiAuthFailure(err, headers)
     if (failure) return failure

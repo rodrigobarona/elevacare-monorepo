@@ -1,10 +1,9 @@
-import { UnauthorizedError } from "@eleva/auth"
 import type { CreateIdentitySessionResponse } from "@eleva/api-client"
 import { createIdentityVerificationSession } from "@eleva/billing/server"
 import { getExpertProfileByUserId } from "@eleva/db"
 import { getFlag } from "@eleva/flags"
 import { corsHeaders } from "@/lib/cors"
-import { requireApiAuth } from "@/lib/auth"
+import { apiAuthFailure, requirePrivilegedApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -45,14 +44,10 @@ export async function POST(request: Request): Promise<Response> {
 
   let session
   try {
-    session = await requireApiAuth(request)
+    session = await requirePrivilegedApiAuth(request)
   } catch (err) {
-    if (err instanceof UnauthorizedError) {
-      return secureJson(
-        { error: "unauthorized", code: err.code },
-        { status: 401, headers }
-      )
-    }
+    const failure = apiAuthFailure(err, headers)
+    if (failure) return failure
     throw err
   }
 

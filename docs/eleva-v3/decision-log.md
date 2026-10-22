@@ -49,6 +49,26 @@ Each entry should include:
 - Blockers (stop and ask): live Stripe keys, missing `DAILY_WEBHOOK_SECRET`, BotID blocking guest funnel without test bypass, or founder revokes the exception.
 - Status: `active` — engineering may run; human evidence rows stay **PENDING** until operator runs complete.
 
+### 2026-10-22: API security hardening D1–D3 (active)
+
+- `pnpm check:route-guards` now enforces `ROUTE_POLICY` instead of only checking it exists:
+  `rateLimit: true` needs a reachable `applyRateLimit(`, `botId: true` a reachable `checkBot(`, and a
+  mutating public/session route a reachable Zod parse or `withAudit`/`withPlatformAudit` (route file or
+  two local import hops; Better Auth's catch-all is the only exemption).
+- Money and privacy mutations (refunds, payout approve/hold/release, platform-fee invoicing, accounting
+  connect/disconnect, Stripe Connect/identity/account-session, billing checkout/subscribe/portal, account
+  deletion, DSAR, cancel-deletion) reject non-revocable JWT bearers (`403 jwt-not-revocable`) via
+  `requirePrivilegedApiAuth` / `requireRevocableApiCapability`.
+- Rate limiting fails closed (`503 rate_limit_unavailable`) for the `public`, `publicSsr` and `webhook`
+  tiers on Vercel production/preview when Redis is missing or erroring; authenticated tiers, local dev
+  and CI keep the permissive default.
+- `Idempotency-Key` (8–128 chars) is honoured on `POST /bookings/reserve`, `/bookings/confirm` and
+  `/payments/intent` (Redis, per-actor, 1 h replay of 2xx only, `Idempotent-Replayed: true`) and
+  documented in OpenAPI alongside the existing refund key.
+- Out of scope / follow-up: the `withApiRoute(policy, handler)` wrapper is deferred until a route family
+  needs it (the CI check already enforces the behaviour); web booking client does not send keys yet.
+- Status: `active`.
+
 ### 2026-10-22: Phase 10 close-out — record DTO and PHI lint (active)
 
 - Decision: keep the shipped plain DTO (`SessionRecordView`, mapped from `Decrypted<T>` inside

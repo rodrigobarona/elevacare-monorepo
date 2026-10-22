@@ -1,5 +1,4 @@
 import { z } from "zod"
-import { UnauthorizedError } from "@eleva/auth"
 import {
   BillingSubscribeRequestSchema,
   type BillingSubscribeRequest,
@@ -12,7 +11,7 @@ import {
 } from "@eleva/billing/server"
 import { secureJson } from "../../../lib/security-headers"
 import { corsHeaders } from "../../../lib/cors"
-import { requireApiAuth } from "../../../lib/auth"
+import { apiAuthFailure, requirePrivilegedApiAuth } from "../../../lib/auth"
 import {
   applyRateLimit,
   RATE_LIMITS,
@@ -62,14 +61,10 @@ export async function POST(request: Request) {
 
   let session
   try {
-    session = await requireApiAuth(request)
+    session = await requirePrivilegedApiAuth(request)
   } catch (err) {
-    if (err instanceof UnauthorizedError) {
-      return secureJson(
-        { error: "unauthorized", code: err.code },
-        { status: 401, headers }
-      )
-    }
+    const failure = apiAuthFailure(err, headers)
+    if (failure) return failure
     throw err
   }
 

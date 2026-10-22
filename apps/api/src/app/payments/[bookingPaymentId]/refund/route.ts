@@ -7,7 +7,7 @@ import { isRefundError, refundBookingPayment } from "@eleva/billing/server"
 import { corsHeaders } from "@/lib/cors"
 import {
   apiAuthFailure,
-  requireApiAuth,
+  requirePrivilegedApiAuth,
   requireStaffPayoutMutator,
 } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -33,7 +33,7 @@ export async function POST(
 
   let session
   try {
-    session = await requireApiAuth(request)
+    session = await requirePrivilegedApiAuth(request)
   } catch (err) {
     const failure = apiAuthFailure(err, headers)
     if (failure) return failure
