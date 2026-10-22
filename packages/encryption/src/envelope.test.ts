@@ -124,6 +124,33 @@ describe("envelope encryption", () => {
     await expect(decryptForOrg(ORG_ID, ciphertext)).resolves.toBe("keep-me")
   })
 
+  it("KEK rotation re-wraps the DEK only: stored ciphertext is byte-identical", async () => {
+    const dekStore = createMemoryOrgDekStore()
+    __setOrgDekStoreForTests(dekStore)
+    const ciphertext = await encryptForOrg(ORG_ID, "clinical-note")
+    const [row] = await dekStore.listAll(ORG_ID)
+    const before = {
+      kekVersion: row?.kekVersion,
+      keyVersion: row?.keyVersion,
+      wrappedDek: row?.wrappedDek,
+    }
+    expect(before.kekVersion).toBe("1")
+
+    installKeks({ ELEVA_KEK_V1: KEK_V1, ELEVA_KEK_V2: KEK_V2 })
+    await expect(rotateAllOrgKeks()).resolves.toMatchObject({ rewrapped: 1 })
+
+    const [after] = await dekStore.listAll(ORG_ID)
+    expect(after?.kekVersion).toBe("2")
+    expect(after?.wrappedDek).not.toBe(before.wrappedDek)
+    expect(after?.keyVersion).toBe(before.keyVersion)
+    // No stored record is rewritten: the very same ciphertext string still
+    // decrypts, with the retired KEK gone.
+    installKeks({ ELEVA_KEK_V2: KEK_V2 })
+    await expect(decryptForOrg(ORG_ID, ciphertext)).resolves.toBe(
+      "clinical-note"
+    )
+  })
+
   it("rotateAllOrgKeks re-wraps every org once and old KEK can be retired", async () => {
     const first = await encryptForOrg(ORG_ID, "org-one")
     const second = await encryptForOrg(OTHER_ORG_ID, "org-two")
