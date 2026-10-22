@@ -26,7 +26,9 @@
  *   `@eleva/editor` (ADR-023). Owning package omits `boundariesConfig`
  *   from its local eslint.config.js (same pattern as `@eleva/billing`).
  * - Phase 10: `Decrypted#reveal()` outside `@eleva/records` /
- *   `@eleva/encryption` (apps receive plaintext only as DTO fields).
+ *   `@eleva/encryption` (apps receive plaintext only as DTO fields), and apps
+ *   cannot import `Decrypted`/`isDecrypted` or the `decrypt*` helpers, so a
+ *   `Decrypted` value can never reach `NextResponse.json` / `secureJson`.
  *
  * Each addition above must also land in docs/eleva-v3/implementation-sprints.md
  * under "Global Rules Applied Every Sprint".
@@ -113,6 +115,22 @@ export const boundariesConfig = [
               name: "@daily-co/daily-js",
               message:
                 "Import Daily only through @eleva/video (ADR-018 boundary lint).",
+            },
+            {
+              name: "@eleva/observability",
+              importNames: ["Decrypted", "isDecrypted"],
+              message:
+                'Apps never hold Decrypted<T> PHI: it serializes to "[redacted]". Return the plain DTO from @eleva/records (e.g. SessionRecordView) through secureJson (Phase 10 PHI lint).',
+            },
+            {
+              name: "@eleva/encryption",
+              importNames: [
+                "decryptForOrg",
+                "decryptRecordFields",
+                "decryptOAuthToken",
+              ],
+              message:
+                "Decrypt only inside domain packages (@eleva/records, @eleva/crm, @eleva/auth). Apps call their DTO-returning functions (Phase 10 PHI lint).",
             },
             {
               name: "@daily-co/daily-react",

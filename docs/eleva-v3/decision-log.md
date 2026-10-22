@@ -49,6 +49,20 @@ Each entry should include:
 - Blockers (stop and ask): live Stripe keys, missing `DAILY_WEBHOOK_SECRET`, BotID blocking guest funnel without test bypass, or founder revokes the exception.
 - Status: `active` — engineering may run; human evidence rows stay **PENDING** until operator runs complete.
 
+### 2026-10-22: Phase 10 close-out — record DTO and PHI lint (active)
+
+- Decision: keep the shipped plain DTO (`SessionRecordView`, mapped from `Decrypted<T>` inside
+  `@eleva/records` and validated by the `@eleva/api-client` response schemas registered in OpenAPI)
+  instead of introducing a second `toRecordResponse(decrypted, viewer)` indirection. The spec
+  wording in `execution-plan/phases/10-records-crm-ai.md` now names the real mapper.
+- Enforcement: instead of a type-blind ESLint rule on `NextResponse.json`, apps cannot import
+  `Decrypted`/`isDecrypted` or `decryptForOrg`/`decryptRecordFields`/`decryptOAuthToken`
+  (`packages/eslint-config/boundaries.js`), so a `Decrypted` value cannot be constructed in a route
+  handler. `.reveal()` stays banned outside the domain packages.
+- Drift guard: `packages/records/src/ai-draft-redaction.test.ts` fails when a key of
+  `SessionReportDraftSchema` is not scrubbed by the Sentry/logger key list.
+- Status: `active`; Phase 10 stays open for DPO/legal sign-off (AUD-028/029).
+
 ### 2026-10-22: Content migration engineering status (active)
 
 - Decision (engineering progress on branch `feat/content-legal-mdx` / PR #263):

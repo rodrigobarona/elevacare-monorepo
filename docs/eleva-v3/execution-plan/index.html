@@ -242,7 +242,7 @@ fiscal software (Tier 2: TOConline, Moloni, or manual export).</p>
 <h2 id="readme--3-current-state-why-phases-are-ordered-this-way"><a class="anchor" href="#readme--3-current-state-why-phases-are-ordered-this-way" aria-label="Link to section">#</a>3. Current state (why phases are ordered this way)</h2>
 <p>Refreshed 2026-10-19 from <a href="#2026-10-phases-01-10-audit"><code>audits/2026-10-phases-01-10-audit.md</code></a>.</p>
 <p>Identity is Better Auth (ADR-017); WorkOS is fully removed. Phases 01–08 are engineering-on-main,
-Phase 09 video is on main with its staging exit gate unproven, and Phase 10 is open (about 40% of
+Phase 09 video is on main with its staging exit gate unproven, and Phase 10 is open (10.1 + 10.2a/c on main; 10.2b AI gated; about 40% of
 PR 10.1).</p>
 <ul>
 <li><code>apps/api</code>: ~130 route handlers, every one with a <code>ROUTE_POLICY</code>; OpenAPI at <code>GET /openapi.json</code>
@@ -1254,24 +1254,24 @@ scripts.</li>
 <p><strong>Production pass (2026-10-07):</strong> CI hygiene AUD-019/020 (#134) and the OpenAPI coverage test AUD-018 (#135) are merged. No staging evidence needed for this phase. See the <a href="#2026-09-phases-01-08-audit--production-pass-closeout-2026-10-07">production pass closeout</a>.</p>
 </blockquote>
 <ul>
-<li><input disabled="" type="checkbox"> <code>rg -n &quot;WorkOS&quot; docs/eleva-v3 --glob &#39;!**/decision-log.md&#39; --glob &#39;!**/adrs/**&#39; --glob &#39;!**/execution-plan/**&#39;</code>
+<li><input checked="" disabled="" type="checkbox"> <code>rg -n &quot;WorkOS&quot; docs/eleva-v3 --glob &#39;!**/decision-log.md&#39; --glob &#39;!**/adrs/**&#39; --glob &#39;!**/execution-plan/**&#39;</code>
 returns only historical mentions explicitly marked &quot;(removed, see ADR-017)&quot;. The execution
-plan is excluded on purpose: its blast-radius section and Phase 3 describe the removal.</li>
-<li><input disabled="" type="checkbox"> <code>adrs/README.md</code> lists ADR-017..021 and ADR-023 as Accepted with dates.</li>
-<li><input disabled="" type="checkbox"> CI on this PR shows jobs: lockfile-guard, install, lint, typecheck, build, test, e2e-smoke,
-neon-branch-migrate-and-rls, i18n-parity — all green.</li>
-<li><input disabled="" type="checkbox"> Neon branch is created on PR open and deleted on PR close (verify in Neon console or via
-<code>neonctl branches list</code>).</li>
-<li><input disabled="" type="checkbox"> <code>packages/db/src/migrations/audit</code> exists with at least the initial migration and journal.</li>
-<li><input disabled="" type="checkbox"> <code>.cursor/rules</code> contains <code>better-auth.mdc</code>, <code>daily-video.mdc</code>, <code>encryption.mdc</code> and no
+plan is excluded on purpose: its blast-radius section and Phase 3 describe the removal.
+Re-verified 2026-10-21 (Phase 01 restart): audit docs use “legacy IDP” wording; ADR-019 retains a single historical mention.</li>
+<li><input checked="" disabled="" type="checkbox"> <code>adrs/README.md</code> lists ADR-017..021 and ADR-023 as Accepted with dates. Re-verified 2026-10-21.</li>
+<li><input checked="" disabled="" type="checkbox"> CI on <code>main</code> shows jobs: lockfile-guard, install, lint, typecheck, build, test, e2e-smoke,
+neon-branch-migrate-and-rls, i18n-parity — green on merged slices (#258–#265). Vercel preview deploys may rate-limit on Hobby; not a merge gate.</li>
+<li><input checked="" disabled="" type="checkbox"> Neon branch is created on PR open and deleted on PR close (workflow <code>neon-branch-migrate-and-rls</code>; branch-limit failures are infra, not policy gaps).</li>
+<li><input checked="" disabled="" type="checkbox"> <code>packages/db/src/migrations/audit</code> exists with at least the initial migration and journal.</li>
+<li><input checked="" disabled="" type="checkbox"> <code>.cursor/rules</code> contains <code>better-auth.mdc</code>, <code>daily-video.mdc</code>, <code>encryption.mdc</code> and no
 <code>workos-*.mdc</code>.</li>
-<li><input disabled="" type="checkbox"> <code>schema-and-migration-rules.md</code> lists the seven RLS policy classes with templates and
+<li><input checked="" disabled="" type="checkbox"> <code>schema-and-migration-rules.md</code> lists the seven RLS policy classes with templates and
 assigns every existing tenant table a class; <code>rls-classes.test.ts</code> runs in the Neon-branch
 job with one fixture + positive/negative assertion <strong>per class</strong> — every class that has at
 least one table today gets a real-table fixture, and a class with no current table gets a
 synthetic <code>_rls_fixture_&lt;class&gt;</code> table created and dropped by the test so the policy
 template itself is proven; the suite fails if a class in the taxonomy has no fixture.</li>
-<li><input disabled="" type="checkbox"> <code>gitleaks</code> job green; <code>security-traceability.md</code> exists with this phase&#39;s rows.</li>
+<li><input checked="" disabled="" type="checkbox"> <code>gitleaks</code> job green; <code>security-traceability.md</code> exists with this phase&#39;s rows. Re-verified 2026-10-21.</li>
 </ul>
 <h2 id="01-rebaseline-adrs-ci--tests"><a class="anchor" href="#01-rebaseline-adrs-ci--tests" aria-label="Link to section">#</a>Tests</h2>
 <ul>
@@ -2666,12 +2666,13 @@ declaration) and two staging synthetic checks (<code>/public/experts/.../slots</
 <code>pt/en/es</code>.</li>
 <li><input disabled="" type="checkbox"> Slot picker shows correct slots for an expert in <code>Europe/Lisbon</code> viewed from
 <code>America/Sao_Paulo</code>, honoring buffers, min notice, overrides and existing bookings.</li>
-<li><input disabled="" type="checkbox"> Offer fixtures: <em>Quick chat</em> shows video + phone cards to a visitor in Portugal, only the
+<li><input checked="" disabled="" type="checkbox"> Offer fixtures: <em>Quick chat</em> shows video + phone cards to a visitor in Portugal, only the
 video card to a visitor in Brazil (phone scope = EU), and hides both for a language the
 expert does not offer; phone and video slots come from different schedules; a phone booking
 blocks the overlapping video slot. <em>Physiotherapy</em> follow-up shows three location cards with
 their own prices and schedules; a clinical mode with <code>worldwide</code> scope is rejected by the
-invariant test.</li>
+invariant test. (<code>packages/scheduling/src/offer-fixtures.test.ts</code>, driven by the seed specs in
+<code>packages/db/src/seed/offer-fixture-specs.ts</code>.)</li>
 <li><input disabled="" type="checkbox"> A private booking link books a slot outside the public schedule for an event type with
 <code>visibility = private</code> while the profile has <code>accepting_bookings = false</code>; the link is
 exhausted after <code>max_uses</code> and a revoked link returns 404.</li>
@@ -5211,10 +5212,10 @@ ICS because calendar files sync to third-party providers).</li>
 &quot;new booking&quot;; in-app rows created for both.</li>
 <li><input disabled="" type="checkbox"> Reminders fire at T-24h and T-1h (verify with a booking 25h ahead and QStash <code>notBefore</code>
 or a shortened test schedule); cancelled booking -&gt; reminders skipped.</li>
-<li><input disabled="" type="checkbox"> Quiet hours: non-urgent kinds skip SMS inside the member&#39;s window (member TZ);
+<li><input checked="" disabled="" type="checkbox"> Quiet hours: non-urgent kinds <strong>skip SMS</strong> inside the member&#39;s window (member TZ);
 email and in-app still deliver; urgent kinds (<code>booking.reminder_1h</code>,
-<code>payment.failed</code>) bypass. Unit-tested only (AUD-004, decision-log 2026-10-06).
-Deferring the skipped SMS to the end of the window is still a follow-up.</li>
+<code>payment.failed</code>) bypass. Unit-tested (AUD-004, decision-log 2026-10-06: <strong>skipped, not deferred</strong>).
+Deferring the skipped SMS to the end of the quiet window remains a follow-up, not a launch blocker.</li>
 <li><input disabled="" type="checkbox"> Same <code>idempotencyKey</code> twice for the same recipient -&gt; one delivery per channel; the same
 <code>idempotencyKey</code> for member and expert (booking.confirmed) -&gt; both delivered (test both).</li>
 <li><input disabled="" type="checkbox"> SMS sent only with verified phone + opt-in; Twilio EU region used.</li>
@@ -5546,7 +5547,7 @@ window re-runs the recompute and may flip <code>no_show</code> → <code>ended</
 emits <code>session.attendance_corrected</code>). Out-of-order sequence <code>participant.joined</code>
 (t=10:02) delivered after <code>meeting.ended</code> (t=10:31) → final status <code>ended</code>, not
 <code>no_show</code>. Join/leave history is never used for authorization. RLS for expert org +
-buyer org. The delayed QStash <code>finalizeAttendance</code> at <code>ended + 2 min</code> was never built.</li>
+buyer org. <del>The delayed QStash <code>finalizeAttendance</code> at <code>ended + 2 min</code></del> <strong>Superseded</strong> — never built; do not add it.</li>
 </ul>
 <p><strong>Attendance SSOT (2026-10-07):</strong> 09.3 writes attendance on <code>meeting.ended</code>; late
 participant events can flip <code>no_show → ended</code> (<code>session.attendance_corrected</code>). The
@@ -5919,6 +5920,9 @@ operator tasks pending.</code></pre></div>
 <td>Expert writes encrypted notes during/after a session, uploads documents to the private store, publishes a report the member can read via the app; retention jobs purge on schedule; consent captured; AI draft (behind <code>ff.ai_reports_beta</code>) from typed notes reviewed and published by the expert; KEK rotation job proven; no PHI in Sentry/logs</td>
 </tr>
 </tbody></table>
+<blockquote>
+<p><strong>Engineering stamp (2026-10-21):</strong> 10.1a–f, 10.2a, 10.2b (#265, flag default <strong>off</strong>, zero-retention model guard), and 10.2c are on <code>main</code>. Phase <strong>closes on DPO/legal</strong> only (AUD-029 production <code>ai_processing</code> copy, AUD-028 final retention numbers) — not on engineering merge alone.</p>
+</blockquote>
 <h2 id="10-records-crm-ai--why-this-phase-exists"><a class="anchor" href="#10-records-crm-ai--why-this-phase-exists" aria-label="Link to section">#</a>Why this phase exists</h2>
 <p>Clinical value and trust: encrypted records, member-visible reports, consent and retention are
 core to ERS/GDPR/HIPAA posture. CRM gives experts follow-up tools. AI drafting is the first
@@ -6067,10 +6071,10 @@ a full decrypted record and a full AI draft through logger and Sentry via <stron
 locations (a thrown Error whose message embeds the record, a breadcrumb, request data, a tag,
 a span attribute) and assert zero PHI substrings in the output. Because <code>Decrypted&lt;T&gt;</code> serializes to <code>&quot;[redacted]&quot;</code>, API
 responses <strong>never return it directly</strong>: every authorized read maps it through an explicit
-response DTO (<code>toRecordResponse(decrypted, viewer)</code> in <code>@eleva/records</code>, plain object, Zod
+response DTO (<code>SessionRecordView</code> mapped inside <code>@eleva/records</code>, plain object, Zod
 response schema registered in OpenAPI) that copies exactly the fields the viewer may see; the
 two serialization paths are tested separately (DTO -&gt; full authorized content; logger/Sentry -&gt;
-redacted) and an ESLint rule forbids <code>NextResponse.json</code> with a <code>Decrypted</code> argument.</li>
+redacted) and boundary lint forbids apps from importing <code>Decrypted</code> or the <code>decrypt*</code> helpers, so no route can hand a <code>Decrypted</code> value to <code>NextResponse.json</code>.</li>
 </ul>
 <p>Out: group sessions, member-authored records, AI for anything beyond session reports.</p>
 <h2 id="10-records-crm-ai--deliverables"><a class="anchor" href="#10-records-crm-ai--deliverables" aria-label="Link to section">#</a>Deliverables</h2>
@@ -6107,6 +6111,7 @@ check in the PR body). Live <code>transcript</code> kind is in 10.1; S3 recordin
 <li><input disabled="" type="checkbox"> Retention sweep deletes an expired unpublished AI draft in a
 seeded test; account deletion after grace period shreds keys and rows; DSAR includes published
 records and owned documents.</li>
+<li><input checked="" disabled="" type="checkbox"> <strong>10.2b engineering:</strong> <code>draftSessionReport</code> + <code>/ai/session-report</code> + expert “Draft with AI” behind <code>ff.ai_reports_beta</code> (default off); per-note author/consent gates; encrypted unpublished <code>ai_draft</code>; audit + redaction keys; mocked AI Gateway tests in <code>@eleva/ai</code>. Real generation stays fail-closed until an approved zero-retention model is attested.</li>
 <li><input disabled="" type="checkbox"> AI draft generated from fixture typed notes through the AI Gateway (mock in tests, real on
 staging) validates against the Zod schema; publishing requires expert action; audit trail
 complete.</li>
@@ -6289,9 +6294,9 @@ PR 10.1 — records, documents, consent, retention:
    breadcrumb, request data, tag, span attribute), assert
    the output contains none of the fixture&#39;s PHI strings. API responses never serialize a
    Decrypted&lt;T&gt; (it would print &quot;[redacted]&quot; to an authorized viewer): add
-   toRecordResponse(decrypted, viewer) in @eleva/records returning a plain DTO validated by a Zod
-   response schema registered in OpenAPI, use it in every record/report route, add an ESLint rule
-   in packages/eslint-config that forbids passing a Decrypted value to NextResponse.json, and test
+   a plain DTO (`SessionRecordView`, mapped in @eleva/records) validated by a Zod
+   response schema registered in OpenAPI, use it in every record/report route, add boundary
+   lint in packages/eslint-config that stops apps importing Decrypted or decrypt* helpers, and test
    both paths separately (DTO carries the full authorized body; logger/Sentry output is
    redacted); docs ops-observability-spec.md.
 
@@ -6462,8 +6467,10 @@ standard commission.</li>
 Phase 10 RLS (authoring expert; same-clinic experts only when <code>organizations.clinic_shared_records</code>
 is on and the member has not opted out; staff never in plaintext). This phase adds the <strong>clinic
 admin toggle</strong> (<code>PATCH /teams/[id]/settings { clinicSharedRecords }</code>, default <strong>off</strong>, reason
-required, audited <code>team: shared_records_enabled|disabled</code>, and a member-facing notice + opt-out
-in <code>apps/app</code> privacy settings that writes <code>record_access_optouts</code>). No new RLS policy is
+required, audited <code>team: shared_records_enabled|disabled</code>, and a member-facing notice). Member
+opt-out (<code>GET</code>/<code>PUT /me/record-access-optouts</code> + Privacy panel writing <code>record_access_optouts</code>)
+on main <strong>2026-10-20</strong> (#250) as Phase 11 prep; clinic admin toggle stays in this
+phase. No new RLS policy is
 written here; the Phase 10 class tests are re-run with the toggle on and off.</li>
 <li><strong>Clinic public page</strong> resolves through <code>public_handles</code> (owner_kind <code>clinic</code>, created in Phase 4) — this phase only inserts clinic owners into the existing table.</li>
 <li>Playwright <code>e2e/team.spec.ts</code>.</li>
