@@ -115,10 +115,52 @@ export function isLocalPublicRateLimitExempt(identifier: string): boolean {
   )
 }
 
+/** Unauthenticated tiers: an outage must not remove the only abuse control. */
+const FAIL_CLOSED_PREFIXES: ReadonlySet<string> = new Set([
+  RATE_LIMITS.public.prefix,
+  RATE_LIMITS.publicSsr.prefix,
+  RATE_LIMITS.webhook.prefix,
+])
+
+/**
+ * Whether a missing/unreachable limiter rejects (503) instead of allowing.
+ * Only the public and webhook tiers, and only on Vercel production/preview:
+ * local dev and CI (`next start` without Redis) keep the permissive default.
+ */
+export function isRateLimitFailClosed(
+  config: RateLimitConfig,
+  env: Record<string, string | undefined> = process.env
+): boolean {
+  if (!FAIL_CLOSED_PREFIXES.has(config.prefix)) return false
+  return env.VERCEL_ENV === "production" || env.VERCEL_ENV === "preview"
+}
+
+function routeHeadersRecord(
+  routeHeaders?: HeadersInit
+): Record<string, string> {
+  return Object.fromEntries(
+    routeHeaders instanceof Headers
+      ? routeHeaders.entries()
+      : Object.entries(routeHeaders ?? {})
+  )
+}
+
+function rateLimitUnavailable(routeHeaders?: HeadersInit): Response {
+  return secureJson(
+    { error: "rate_limit_unavailable" },
+    {
+      status: 503,
+      headers: { ...routeHeadersRecord(routeHeaders), "Retry-After": "30" },
+    }
+  )
+}
+
 /**
  * Apply rate limiting. Returns null if allowed, or a Response if blocked.
- * Gracefully degrades (allows request) if Redis is unavailable.
- * Pass `routeHeaders` to merge CORS/security headers into the 429 response.
+ * Degrades open (allows the request) when Redis is unavailable, except for the
+ * public and webhook tiers on Vercel, which fail closed with 503
+ * (`isRateLimitFailClosed`).
+ * Pass `routeHeaders` to merge CORS/security headers into the 429/503 response.
  */
 export async function applyRateLimit(
   identifier: string,
@@ -134,7 +176,11 @@ export async function applyRateLimit(
   }
 
   const limiter = getLimiter(config.prefix, config.maxRequests, config.windowMs)
-  if (!limiter) return null
+  if (!limiter) {
+    return isRateLimitFailClosed(config)
+      ? rateLimitUnavailable(routeHeaders)
+      : null
+  }
 
   try {
     const result = await limiter.limit(identifier)
@@ -148,11 +194,7 @@ export async function applyRateLimit(
         {
           status: 429,
           headers: {
-            ...Object.fromEntries(
-              routeHeaders instanceof Headers
-                ? routeHeaders.entries()
-                : Object.entries(routeHeaders ?? {})
-            ),
+            ...routeHeadersRecord(routeHeaders),
             "Retry-After": String(retryAfter),
             "X-RateLimit-Limit": String(config.maxRequests),
             "X-RateLimit-Remaining": String(result.remaining),
@@ -162,7 +204,9 @@ export async function applyRateLimit(
       )
     }
   } catch {
-    // Redis unavailable -- fail open to avoid blocking legitimate traffic
+    // Redis unreachable: authenticated tiers fail open so members are not
+    // locked out; public/webhook tiers fail closed on Vercel.
+    if (isRateLimitFailClosed(config)) return rateLimitUnavailable(routeHeaders)
   }
 
   return null

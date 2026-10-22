@@ -8,6 +8,7 @@ import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, resolveApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { checkBot } from "@/lib/bot-protection"
+import { withIdempotency } from "@/lib/idempotency"
 import { PUBLIC_NOT_FOUND } from "@/lib/public-marketplace"
 import {
   paymentIntentBookabilityStatus,
@@ -57,62 +58,75 @@ export async function POST(request: Request) {
   )
   if (rateLimited) return rateLimited
 
-  const parsed = CreatePaymentIntentRequestSchema.safeParse(
-    await request.json().catch(() => ({}))
-  )
-  if (!parsed.success) {
-    return secureJson(
-      { error: "validation", issues: parsed.error.issues },
-      { status: 422, headers }
-    )
-  }
-
-  const sessionUserId =
+  const actorUserId =
     auth.type === "anonymous" ? undefined : auth.session.user.id
 
-  const blocked = await rejectIfMemberCannotBook(sessionUserId, headers)
-  if (blocked) return blocked
+  return withIdempotency(
+    request,
+    {
+      scope: "payments.intent",
+      actor: rateLimitKey(request, actorUserId),
+      headers,
+    },
+    async () => {
+      const parsed = CreatePaymentIntentRequestSchema.safeParse(
+        await request.json().catch(() => ({}))
+      )
+      if (!parsed.success) {
+        return secureJson(
+          { error: "validation", issues: parsed.error.issues },
+          { status: 422, headers }
+        )
+      }
 
-  let result
-  try {
-    result = await createPaymentIntentForReservation({
-      reservationId: parsed.data.reservationId,
-      reservationToken: parsed.data.reservationToken,
-      sessionUserId,
-    })
-  } catch (err) {
-    if (err instanceof BookingError) {
-      return secureJson({ error: err.code }, { status: 409, headers })
-    }
-    console.error("[payments/intent] failed", err)
-    return secureJson({ error: "internal" }, { status: 500, headers })
-  }
+      const sessionUserId =
+        auth.type === "anonymous" ? undefined : auth.session.user.id
 
-  if (!result.ok) {
-    if (result.error === "not_found") {
-      return secureJson(PUBLIC_NOT_FOUND, { status: 404, headers })
-    }
-    if (result.error === "unavailable") {
-      return secureJson({ error: "unavailable" }, { status: 503, headers })
-    }
-    const bookability = paymentIntentBookabilityStatus(result.error)
-    if (bookability) {
+      const blocked = await rejectIfMemberCannotBook(sessionUserId, headers)
+      if (blocked) return blocked
+
+      let result
+      try {
+        result = await createPaymentIntentForReservation({
+          reservationId: parsed.data.reservationId,
+          reservationToken: parsed.data.reservationToken,
+          sessionUserId,
+        })
+      } catch (err) {
+        if (err instanceof BookingError) {
+          return secureJson({ error: err.code }, { status: 409, headers })
+        }
+        console.error("[payments/intent] failed", err)
+        return secureJson({ error: "internal" }, { status: 500, headers })
+      }
+
+      if (!result.ok) {
+        if (result.error === "not_found") {
+          return secureJson(PUBLIC_NOT_FOUND, { status: 404, headers })
+        }
+        if (result.error === "unavailable") {
+          return secureJson({ error: "unavailable" }, { status: 503, headers })
+        }
+        const bookability = paymentIntentBookabilityStatus(result.error)
+        if (bookability) {
+          return secureJson(
+            { error: result.error },
+            { status: bookability, headers }
+          )
+        }
+        return secureJson({ error: "internal" }, { status: 500, headers })
+      }
+
       return secureJson(
-        { error: result.error },
-        { status: bookability, headers }
+        CreatePaymentIntentResponseSchema.parse({
+          clientSecret: result.clientSecret,
+          paymentIntentId: result.paymentIntentId,
+          bookingId: result.bookingId,
+          publishableKey: result.publishableKey,
+        }),
+        { status: 201, headers }
       )
     }
-    return secureJson({ error: "internal" }, { status: 500, headers })
-  }
-
-  return secureJson(
-    CreatePaymentIntentResponseSchema.parse({
-      clientSecret: result.clientSecret,
-      paymentIntentId: result.paymentIntentId,
-      bookingId: result.bookingId,
-      publishableKey: result.publishableKey,
-    }),
-    { status: 201, headers }
   )
 }
 

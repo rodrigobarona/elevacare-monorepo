@@ -152,3 +152,72 @@ describe("isLocalPublicRateLimitExempt", () => {
     expect(isLocalPublicRateLimitExempt("ip:unknown")).toBe(false)
   })
 })
+
+describe("applyRateLimit outage behaviour", () => {
+  async function loadWithRedis(configured: boolean, limitThrows = false) {
+    vi.resetModules()
+    vi.doMock("@upstash/redis", () => ({ Redis: class {} }))
+    vi.doMock("@upstash/ratelimit", () => {
+      class Ratelimit {
+        static slidingWindow() {
+          return {}
+        }
+        async limit() {
+          if (limitThrows) throw new Error("redis down")
+          return { success: true, remaining: 1, reset: Date.now() + 1000 }
+        }
+      }
+      return { Ratelimit }
+    })
+    if (configured) {
+      vi.stubEnv("KV_REST_API_URL", "https://redis.invalid")
+      vi.stubEnv("KV_REST_API_TOKEN", "token")
+    } else {
+      vi.stubEnv("KV_REST_API_URL", "")
+      vi.stubEnv("KV_REST_API_TOKEN", "")
+    }
+    return import("./rate-limit")
+  }
+
+  it("fails closed with 503 for public and webhook tiers on Vercel without Redis", async () => {
+    vi.stubEnv("VERCEL_ENV", "production")
+    const { applyRateLimit, RATE_LIMITS } = await loadWithRedis(false)
+    for (const config of [RATE_LIMITS.public, RATE_LIMITS.webhook]) {
+      const response = await applyRateLimit("ip:203.0.113.7", config)
+      expect(response?.status).toBe(503)
+      expect(response?.headers.get("Retry-After")).toBe("30")
+      expect(await response?.json()).toEqual({
+        error: "rate_limit_unavailable",
+      })
+    }
+  })
+
+  it("fails closed on preview when the limiter throws", async () => {
+    vi.stubEnv("VERCEL_ENV", "preview")
+    const { applyRateLimit, RATE_LIMITS } = await loadWithRedis(true, true)
+    const response = await applyRateLimit("ip:203.0.113.7", RATE_LIMITS.public)
+    expect(response?.status).toBe(503)
+  })
+
+  it("keeps authenticated tiers fail-open during an outage", async () => {
+    vi.stubEnv("VERCEL_ENV", "production")
+    const { applyRateLimit, RATE_LIMITS } = await loadWithRedis(false)
+    expect(await applyRateLimit("user:1", RATE_LIMITS.authenticated)).toBeNull()
+  })
+
+  it("stays permissive off Vercel (local dev, CI)", async () => {
+    vi.stubEnv("VERCEL_ENV", "")
+    const { applyRateLimit, RATE_LIMITS } = await loadWithRedis(false)
+    expect(
+      await applyRateLimit("ip:203.0.113.7", RATE_LIMITS.public)
+    ).toBeNull()
+  })
+
+  it("allows requests when Redis is healthy", async () => {
+    vi.stubEnv("VERCEL_ENV", "production")
+    const { applyRateLimit, RATE_LIMITS } = await loadWithRedis(true)
+    expect(
+      await applyRateLimit("ip:203.0.113.7", RATE_LIMITS.public)
+    ).toBeNull()
+  })
+})

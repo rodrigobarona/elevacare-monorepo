@@ -228,6 +228,17 @@ const stdPublicErrors = {
   },
 } as const
 
+/** Optional `Idempotency-Key` header (see `lib/idempotency.ts`). */
+const IdempotencyKeyHeaderSchema = z.object({
+  "Idempotency-Key": z
+    .string()
+    .regex(/^[A-Za-z0-9_:.-]{8,128}$/)
+    .optional()
+    .describe(
+      "Client-generated unique key (8-128 chars of A-Z a-z 0-9 _ : . -). A retry with the same key and body replays the first 2xx response (`Idempotent-Replayed: true`) for one hour; the same key with a different body returns 422 IDEMPOTENCY_KEY_REUSED; a duplicate while the first request is running returns 409 IDEMPOTENCY_IN_PROGRESS."
+    ),
+})
+
 const stdPublicWithNotFound = {
   ...stdPublicErrors,
   "404": {
@@ -2535,6 +2546,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             "Holds a public or private-link slot for 5 minutes after consent, mode, and availability checks. Optional session; guests send email and name. Returns a one-time reservationToken that is never logged. Send the cancellationPolicy the member was shown; it is stored on the hold and snapshotted onto the booking.",
           tags: ["Bookings"],
           security: [],
+          requestParams: { header: IdempotencyKeyHeaderSchema },
           requestBody: {
             required: true,
             content: {
@@ -2583,6 +2595,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             "Authorizes the reservationToken, inserts a pending_payment booking, then creates a platform PaymentIntent (no Stripe calls inside a DB transaction). Token or user mismatches return 404.",
           tags: ["Payments"],
           security: [],
+          requestParams: { header: IdempotencyKeyHeaderSchema },
           requestBody: {
             required: true,
             content: {
@@ -2631,6 +2644,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           tags: ["Payments"],
           requestParams: {
             path: z.object({ bookingPaymentId: z.string().uuid() }),
+            header: IdempotencyKeyHeaderSchema,
           },
           requestBody: {
             required: true,
@@ -2781,6 +2795,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             "Authorizes reservationToken like /payments/intent, retrieves the PaymentIntent from Stripe, and flips pending_payment → confirmed. First flip returns 201; retries return 200 with alreadyConfirmed. Mismatched intents return 409 PAYMENT_MISMATCH.",
           tags: ["Bookings"],
           security: [],
+          requestParams: { header: IdempotencyKeyHeaderSchema },
           requestBody: {
             required: true,
             content: {

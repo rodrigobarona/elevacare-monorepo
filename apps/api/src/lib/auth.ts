@@ -55,14 +55,28 @@ export async function requirePrivilegedApiAuth(
   return requireRevocableApiAuth(request)
 }
 
+function assertCapability(session: ElevaSession, capability: string): void {
+  if (!session.capabilities.includes(capability)) {
+    throw new UnauthorizedError("missing-capability", `missing: ${capability}`)
+  }
+}
+
 export async function requireApiCapability(
   request: Request,
   capability: string
 ): Promise<ElevaSession> {
   const session = await requireApiAuth(request)
-  if (!session.capabilities.includes(capability)) {
-    throw new UnauthorizedError("missing-capability", `missing: ${capability}`)
-  }
+  assertCapability(session, capability)
+  return session
+}
+
+/** Capability-gated money/privacy mutation: rejects non-revocable JWTs. */
+export async function requireRevocableApiCapability(
+  request: Request,
+  capability: string
+): Promise<ElevaSession> {
+  const session = await requirePrivilegedApiAuth(request)
+  assertCapability(session, capability)
   return session
 }
 
@@ -70,7 +84,7 @@ export async function requireStaffPayoutMutator(
   request: Request,
   capability: string
 ): Promise<ElevaSession> {
-  const session = await requireApiCapability(request, capability)
+  const session = await requireRevocableApiCapability(request, capability)
   const authUserRole = await getAuthUserRole(session.user.id)
   if (
     !canMutateStaffPayouts({

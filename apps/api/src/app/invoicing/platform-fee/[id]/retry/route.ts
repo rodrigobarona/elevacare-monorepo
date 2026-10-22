@@ -5,7 +5,7 @@ import {
   retryPlatformFeeInvoice,
 } from "@eleva/accounting"
 import { corsHeaders } from "@/lib/cors"
-import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
+import { apiAuthFailure, requireRevocableApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -36,7 +36,10 @@ export async function POST(
 
   let session
   try {
-    session = await requireApiCapability(request, "accounting:reconcile")
+    session = await requireRevocableApiCapability(
+      request,
+      "accounting:reconcile"
+    )
   } catch (err) {
     const failure = apiAuthFailure(err, headers)
     if (failure) return failure

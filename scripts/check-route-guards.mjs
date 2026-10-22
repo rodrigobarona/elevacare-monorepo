@@ -1,6 +1,13 @@
 #!/usr/bin/env node
 /**
- * CI guard: every apps/api route.ts must export a real ROUTE_POLICY object.
+ * CI guard for apps/api route handlers.
+ *
+ * 1. Every route.ts exports a literal ROUTE_POLICY (auth, rateLimit, botId).
+ * 2. The policy is enforced, not just documented: `rateLimit: true` requires a
+ *    reachable `applyRateLimit(` call, `botId: true` a reachable `checkBot(`,
+ *    and a mutating public/session route a reachable Zod parse or audit
+ *    wrapper. "Reachable" = the route file or a local module it imports
+ *    (two import hops, `@/` and relative specifiers).
  */
 import { existsSync } from "node:fs"
 import { readdir, readFile } from "node:fs/promises"
@@ -9,6 +16,7 @@ import ts from "typescript"
 
 const ROOT = path.resolve(import.meta.dirname, "..")
 const APP_DIR = path.join(ROOT, "apps/api/src/app")
+const SRC_DIR = path.join(ROOT, "apps/api/src")
 const AUTH_MODES = new Set(["public", "session", "signature", "internal"])
 
 async function walk(dir) {
@@ -104,13 +112,143 @@ function isValidPolicy(policy) {
   )
 }
 
+// Routes whose request validation is owned by a vendor handler.
+const VALIDATION_EXEMPT = new Set(["apps/api/src/app/auth/[...all]/route.ts"])
+const MUTATING_EXPORT =
+  /export\s+(?:async\s+function|const)\s+(?:POST|PUT|PATCH|DELETE)\b/
+const AUDIT_OR_HELPER_CALL =
+  /\bwithAudit\(|\bwithPlatformAudit\(|\bparseJson\(|\breadJson\(/
+// `Schema.parse(` / `.safeParse(` count only for request-side schemas: JSON
+// and *Response* schemas are output validation, not input validation.
+const SCHEMA_PARSE_CALL = /\b([A-Za-z_$][\w$]*)\.(?:safeParse|parse)\(/g
+
+function validatesRequest(source) {
+  if (AUDIT_OR_HELPER_CALL.test(source)) return true
+  for (const match of source.matchAll(SCHEMA_PARSE_CALL)) {
+    const receiver = match[1]
+    if (receiver !== "JSON" && !/Response/.test(receiver)) return true
+  }
+  return false
+}
+
+const sourceCache = new Map()
+async function sourceOf(file) {
+  if (!sourceCache.has(file))
+    sourceCache.set(file, await readFile(file, "utf8"))
+  return sourceCache.get(file)
+}
+
+// Comments never count as an enforcement call site.
+const COMMENTS = /\/\*[\s\S]*?\*\/|\/\/.*$/gm
+async function codeOf(file) {
+  return (await sourceOf(file)).replace(COMMENTS, "")
+}
+
+function resolveLocal(from, specifier) {
+  let base
+  if (specifier.startsWith("@/")) base = path.join(SRC_DIR, specifier.slice(2))
+  else if (specifier.startsWith(".")) {
+    base = path.resolve(path.dirname(from), specifier)
+  } else return null
+  return (
+    [`${base}.ts`, `${base}.tsx`, path.join(base, "index.ts")].find(
+      (candidate) => existsSync(candidate)
+    ) ?? null
+  )
+}
+
+async function localImports(file) {
+  const sf = ts.createSourceFile(
+    file,
+    await sourceOf(file),
+    ts.ScriptTarget.Latest,
+    true
+  )
+  const resolved = []
+  sf.forEachChild((node) => {
+    if (
+      ts.isImportDeclaration(node) &&
+      ts.isStringLiteral(node.moduleSpecifier)
+    ) {
+      const target = resolveLocal(file, node.moduleSpecifier.text)
+      if (target) resolved.push(target)
+    }
+  })
+  return resolved
+}
+
+async function reachable(file, hops = 2) {
+  const seen = new Set([file])
+  let frontier = [file]
+  for (let hop = 0; hop < hops; hop++) {
+    const next = []
+    for (const current of frontier) {
+      for (const dep of await localImports(current)) {
+        if (!seen.has(dep)) {
+          seen.add(dep)
+          next.push(dep)
+        }
+      }
+    }
+    frontier = next
+  }
+  return [...seen]
+}
+
+// Guard definitions and shared infrastructure modules never count as an
+// enforcement call site (they parse unrelated data or only define the guard),
+// otherwise every route importing them would pass vacuously.
+const GUARD_DEFINITIONS = [
+  "lib/rate-limit.ts",
+  "lib/bot-protection.ts",
+  "lib/auth.ts",
+  "lib/cors.ts",
+  "lib/security-headers.ts",
+  "lib/route-policy.ts",
+  "lib/idempotency.ts",
+  "lib/openapi.ts",
+]
+async function reachesCall(file, matches) {
+  for (const candidate of await reachable(file)) {
+    if (GUARD_DEFINITIONS.some((def) => candidate.endsWith(def))) continue
+    if (matches(await codeOf(candidate))) return true
+  }
+  return false
+}
+
 const routes = await walk(APP_DIR)
 const missing = []
+const unenforced = []
 
 for (const file of routes) {
-  const content = await readFile(file, "utf8")
-  if (!isValidPolicy(extractPolicy(content))) {
-    missing.push(path.relative(ROOT, file))
+  const content = await codeOf(file)
+  const relative = path.relative(ROOT, file)
+  const policy = extractPolicy(content)
+  if (!isValidPolicy(policy)) {
+    missing.push(relative)
+    continue
+  }
+  if (
+    policy.rateLimit &&
+    !(await reachesCall(file, (src) => /\bapplyRateLimit\(/.test(src)))
+  ) {
+    unenforced.push(`${relative}: rateLimit:true but no applyRateLimit() call`)
+  }
+  if (
+    policy.botId &&
+    !(await reachesCall(file, (src) => /\bcheckBot\(/.test(src)))
+  ) {
+    unenforced.push(`${relative}: botId:true but no checkBot() call`)
+  }
+  if (
+    MUTATING_EXPORT.test(content) &&
+    (policy.auth === "public" || policy.auth === "session") &&
+    !VALIDATION_EXEMPT.has(relative) &&
+    !(await reachesCall(file, validatesRequest))
+  ) {
+    unenforced.push(
+      `${relative}: mutating ${policy.auth} route without Zod parse or audit wrapper`
+    )
   }
 }
 
@@ -119,6 +257,12 @@ if (missing.length > 0) {
     "Route guard check failed. Each apps/api route.ts must export ROUTE_POLICY with auth, rateLimit, and botId:\n"
   )
   for (const file of missing) console.error(`  ${file}`)
+  process.exit(1)
+}
+
+if (unenforced.length > 0) {
+  console.error("Route guard check failed. ROUTE_POLICY is not enforced:\n")
+  for (const line of unenforced) console.error(`  ${line}`)
   process.exit(1)
 }
 
