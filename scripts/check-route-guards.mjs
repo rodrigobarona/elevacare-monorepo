@@ -138,6 +138,12 @@ async function sourceOf(file) {
   return sourceCache.get(file)
 }
 
+// Comments never count as an enforcement call site.
+const COMMENTS = /\/\*[\s\S]*?\*\/|\/\/.*$/gm
+async function codeOf(file) {
+  return (await sourceOf(file)).replace(COMMENTS, "")
+}
+
 function resolveLocal(from, specifier) {
   let base
   if (specifier.startsWith("@/")) base = path.join(SRC_DIR, specifier.slice(2))
@@ -189,12 +195,23 @@ async function reachable(file, hops = 2) {
   return [...seen]
 }
 
-// The guard definitions themselves never count as an enforcement call site.
-const GUARD_DEFINITIONS = ["lib/rate-limit.ts", "lib/bot-protection.ts"]
+// Guard definitions and shared infrastructure modules never count as an
+// enforcement call site (they parse unrelated data or only define the guard),
+// otherwise every route importing them would pass vacuously.
+const GUARD_DEFINITIONS = [
+  "lib/rate-limit.ts",
+  "lib/bot-protection.ts",
+  "lib/auth.ts",
+  "lib/cors.ts",
+  "lib/security-headers.ts",
+  "lib/route-policy.ts",
+  "lib/idempotency.ts",
+  "lib/openapi.ts",
+]
 async function reachesCall(file, matches) {
   for (const candidate of await reachable(file)) {
     if (GUARD_DEFINITIONS.some((def) => candidate.endsWith(def))) continue
-    if (matches(await sourceOf(candidate))) return true
+    if (matches(await codeOf(candidate))) return true
   }
   return false
 }
@@ -204,7 +221,7 @@ const missing = []
 const unenforced = []
 
 for (const file of routes) {
-  const content = await sourceOf(file)
+  const content = await codeOf(file)
   const relative = path.relative(ROOT, file)
   const policy = extractPolicy(content)
   if (!isValidPolicy(policy)) {

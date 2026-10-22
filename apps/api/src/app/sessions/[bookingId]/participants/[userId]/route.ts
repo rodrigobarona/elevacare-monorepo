@@ -36,14 +36,6 @@ export async function DELETE(
   { params }: { params: Promise<{ bookingId: string; userId: string }> }
 ) {
   const headers = corsHeaders(request, "DELETE, OPTIONS")
-  const parsedParams = ParticipantParamsSchema.safeParse(await params)
-  if (!parsedParams.success) {
-    return secureJson(
-      { error: "validation", issues: parsedParams.error.issues },
-      { status: 422, headers }
-    )
-  }
-  const { bookingId, userId } = parsedParams.data
 
   let session
   try {
@@ -60,6 +52,15 @@ export async function DELETE(
     headers
   )
   if (rateLimited) return rateLimited
+
+  const parsedParams = ParticipantParamsSchema.safeParse(await params)
+  if (!parsedParams.success) {
+    return secureJson(
+      { error: "validation", issues: parsedParams.error.issues },
+      { status: 422, headers }
+    )
+  }
+  const { bookingId, userId } = parsedParams.data
 
   try {
     const result = await removeSessionParticipant({
