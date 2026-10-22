@@ -1,5 +1,6 @@
 "use client"
 
+import { CookieSettingsLink } from "@eleva/consent/cookie-settings-link"
 import { useTranslations } from "next-intl"
 import { GlobeIcon, SignOutIcon, UserIcon, GearIcon } from "@eleva/icons"
 import { Button } from "@eleva/ui/components/button"
@@ -107,6 +108,11 @@ export function NavUser({
             {t("settings")}
           </DropdownMenuItem>
           <NavThemeMenu />
+          <DropdownMenuItem className="p-0">
+            <CookieSettingsLink className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden hover:bg-accent">
+              {t("cookieSettings")}
+            </CookieSettingsLink>
+          </DropdownMenuItem>
           {homepageUrl && (
             <DropdownMenuItem
               href={homepageUrl}

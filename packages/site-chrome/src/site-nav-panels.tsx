@@ -1,3 +1,5 @@
+"use client"
+
 import type { Locale } from "@eleva/config/i18n"
 import {
   ArrowRightIcon,
@@ -11,12 +13,9 @@ import {
 } from "@eleva/icons"
 import { ElevaImage } from "@eleva/media/image"
 import { cn } from "@eleva/ui/lib/utils"
-import { Link } from "@/i18n/navigation"
-import type {
-  SiteNavIcon,
-  SiteNavLink,
-  SiteNavMenu,
-} from "@/lib/public-site-nav"
+import { usePublicNavigation } from "./navigation-context"
+import { navString, type NavCopyRecords } from "./nav-copy"
+import type { SiteNavIcon, SiteNavLink, SiteNavMenu } from "./public-site-nav"
 
 const ICONS: Record<SiteNavIcon, Icon> = {
   search: MagnifyingGlassIcon,
@@ -27,18 +26,12 @@ const ICONS: Record<SiteNavIcon, Icon> = {
   envelope: EnvelopeIcon,
 }
 
-export type NavTranslate = (key: string) => string
-
-export type NavCopy = {
-  nav: NavTranslate
-  home: NavTranslate
-}
+export type NavCopy = NavCopyRecords
 
 function linkCopy(link: SiteNavLink, copy: NavCopy) {
-  const t = link.namespace === "home" ? copy.home : copy.nav
   return {
-    title: t(link.titleKey),
-    description: t(link.descriptionKey),
+    title: navString(copy, link, "titleKey"),
+    description: navString(copy, link, "descriptionKey"),
   }
 }
 
@@ -53,6 +46,7 @@ function NavRow({
   locale: Locale
   compact?: boolean
 }) {
+  const { Link } = usePublicNavigation()
   const { title, description } = linkCopy(link, copy)
   const LinkIcon = "icon" in link ? ICONS[link.icon] : null
 
@@ -112,6 +106,8 @@ function FeaturedCard({
   copy: NavCopy
   locale: Locale
 }) {
+  const { Link } = usePublicNavigation()
+
   return (
     <Link
       href={menu.featured.href}
@@ -130,10 +126,10 @@ function FeaturedCard({
       />
       <span className="relative flex flex-col gap-1">
         <span className="font-heading text-lg leading-snug">
-          {copy.nav(`menu.${menu.id}.featuredTitle`)}
+          {copy.nav[`menu.${menu.id}.featuredTitle`]}
         </span>
         <span className="text-sm text-pretty text-white/80">
-          {copy.nav(`menu.${menu.id}.featuredDescription`)}
+          {copy.nav[`menu.${menu.id}.featuredDescription`]}
         </span>
       </span>
     </Link>
@@ -163,7 +159,7 @@ export function SiteNavPanel({
     >
       <div className="flex flex-col gap-3">
         <p className="px-3 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          {copy.nav(`menu.${menu.id}.heading`)}
+          {copy.nav[`menu.${menu.id}.heading`]}
         </p>
         <ul className={cn("grid gap-1", wide && "grid-cols-2")}>
           {menu.links.map((link) => (
@@ -182,6 +178,7 @@ export function SiteNavPanel({
 }
 
 function FooterLink({ link, copy }: { link: SiteNavLink; copy: NavCopy }) {
+  const { Link } = usePublicNavigation()
   const { title, description } = linkCopy(link, copy)
 
   return (
@@ -213,7 +210,7 @@ export function SiteNavMobileGroups({
       {menus.map((menu) => (
         <section key={menu.id} className="flex flex-col gap-1">
           <h2 className="px-3 pb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            {copy.nav(`menu.${menu.id}.trigger`)}
+            {copy.nav[`menu.${menu.id}.trigger`]}
           </h2>
           <ul className="flex flex-col">
             {[...(menu.footerLink ? [menu.footerLink] : []), ...menu.links].map(

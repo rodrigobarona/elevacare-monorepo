@@ -5,18 +5,26 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack --port 3008",
+    "prebuild": "fumadocs-mdx && node scripts/build-help-static.mjs",
+    "predev": "fumadocs-mdx && node scripts/build-help-static.mjs",
     "build": "next build",
     "start": "next start --port 3008",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
+    "pretypecheck": "fumadocs-mdx",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@eleva/config": "workspace:^",
+    "@eleva/consent": "workspace:*",
+    "@eleva/content": "workspace:*",
     "@eleva/icons": "workspace:*",
     "@eleva/media": "workspace:*",
     "@eleva/observability": "workspace:*",
     "@eleva/ui": "workspace:*",
+    "@eleva/site-chrome": "workspace:*",
+    "fumadocs-core": "catalog:",
+    "fumadocs-mdx": "catalog:",
     "next": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
@@ -25,10 +33,12 @@
     "@eleva/eslint-config": "workspace:*",
     "@eleva/typescript-config": "workspace:*",
     "@tailwindcss/postcss": "catalog:",
+    "@types/mdx": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "eslint": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "zod": "catalog:"
   }
 }

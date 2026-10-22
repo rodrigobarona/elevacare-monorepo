@@ -40,12 +40,21 @@ const VENDORS: Record<string, VendorEntry> = {
     scriptSrc: ["https://cdn.sentry-cdn.com"],
     connectSrc: ["https://*.sentry.io", "https://*.ingest.sentry.io"],
   },
-  mux: {
-    connectSrc: ["https://stream.mux.com", "https://*.mux.com"],
-    mediaSrc: ["https://stream.mux.com", "https://*.mux.com"],
+  inth: {
+    connectSrc: ["https://*.inth.app"],
+  },
+  beehiiv: {
+    connectSrc: ["https://*.beehiiv.com"],
+    frameSrc: ["https://*.beehiiv.com", "https://embed.beehiiv.com"],
+    formAction: ["https://*.beehiiv.com"],
   },
   eleva: {
     connectSrc: ["https://api.eleva.care"],
+  },
+  // ADR-024: marketing video + posters live in the public Vercel Blob store.
+  // `img-src https:` already covers posters; `<video>` needs media-src.
+  vercelBlobPublic: {
+    mediaSrc: ["https://*.public.blob.vercel-storage.com"],
   },
 }
 

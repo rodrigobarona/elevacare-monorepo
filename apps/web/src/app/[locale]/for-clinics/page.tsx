@@ -1,6 +1,9 @@
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import type { Metadata } from "next"
-import { MarketingDraftPage } from "@/components/marketing-draft-page"
+import {
+  MarketingDraftPage,
+  type MarketingIconId,
+} from "@/components/marketing-draft-page"
 import { hreflangLanguages, localePath } from "@/lib/hreflang"
 
 type Props = {
@@ -35,6 +38,21 @@ export default async function ForClinicsPage({ params }: Props) {
       body={t("body")}
       imageSlug="clinic-lounge"
       cta={{ href: "/signup", label: t("cta") }}
+      stepsHeading={t("stepsHeading")}
+      steps={t.raw("steps") as { title: string; body: string }[]}
+      benefitsHeading={t("benefitsHeading")}
+      benefits={
+        t.raw("benefits") as {
+          icon: MarketingIconId
+          title: string
+          body: string
+        }[]
+      }
+      requirementsHeading={t("requirementsHeading")}
+      requirements={t.raw("requirements") as { title: string; body: string }[]}
+      finalHeading={t("finalHeading")}
+      finalBody={t("finalBody")}
+      finalCta={{ href: "/signup", label: t("finalCta") }}
     />
   )
 }

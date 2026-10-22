@@ -1,8 +1,8 @@
-# ADR-024: Curated marketing media on Blob and Mux
+# ADR-024: Curated marketing media on public Blob
 
 ## Status
 
-Accepted
+Accepted (amended 2026-10-22 — video moved from Mux to Blob progressive MP4)
 
 ## Date
 
@@ -15,6 +15,9 @@ video across public and product surfaces. The MVP used ad-hoc `public/img` files
 cookie-gated Mux player. v3 needs one reusable source with licence records, localized alt
 text and no consent banner for decorative video.
 
+Mux was only used for one muted looping hero clip. Keeping it would add a DPA/sub-processor
+for visitor CDN traffic without HLS benefits on a single ambient asset.
+
 ## Decision
 
 1. **One library.** `@eleva/media` (`packages/media/src/library.json`) is the only source of
@@ -24,11 +27,12 @@ text and no consent banner for decorative video.
 2. **Images** are curated with the `media:*` scripts (Pexels API) and uploaded to the
    **public** Vercel Blob store through `@eleva/storage`. They are served via `next/image`.
    No member, expert or health data ever goes in this library.
-3. **Video** stays on Mux, HLS only. `ElevaVideo` disables Mux Data tracking and cookies, so
-   decorative video needs no consent. Reduced motion shows the poster only.
-4. **CSP.** The `mux` vendor block allows `https://stream.mux.com` and `https://*.mux.com` in
-   `connect-src` and `media-src` for HLS manifests and segments. Images already pass
-   `img-src https:`.
+3. **Video** uses the same **public** Blob store: web-optimized progressive MP4 plus a poster
+   image. `ElevaVideo` renders native `<video>` (muted, autoplay, loop, no controls). Reduced
+   motion shows the poster only. No third-party player or analytics.
+4. **CSP.** Marketing video and posters are served from `https://*.public.blob.vercel-storage.com`.
+   Posters and images need the Blob host under `img-src`; video needs it under `media-src`
+   (`img-src` does not cover `<video>`). No Mux vendor block.
 
 ## Consequences
 
@@ -36,4 +40,9 @@ text and no consent banner for decorative video.
   `@eleva/media`.
 - Adding a Pexels image without a credit fails the library test. `/credits` (linked from
   the footer) renders every Pexels photographer from `creditedMedia()`.
-- Adding another video host needs a new vendor block and an update to this ADR.
+- Academy/course streaming (Phase 16) may choose Blob signed URLs or another host in a
+  separate ADR; this decision covers marketing ambient video only.
+
+## Supersedes
+
+- 2026-10-19 decision to host hero video on Mux HLS with `@mux/mux-video-react`.

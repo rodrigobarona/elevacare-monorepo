@@ -1,0 +1,36 @@
+{
+  "name": "@eleva/consent",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@eleva/config": "workspace:*",
+    "c15t": "catalog:"
+  },
+  "peerDependencies": {
+    "next": "16.x",
+    "react": "19.x"
+  },
+  "devDependencies": {
+    "@eleva/eslint-config": "workspace:*",
+    "@eleva/typescript-config": "workspace:*",
+    "@types/react": "catalog:",
+    "eslint": "catalog:",
+    "react": "catalog:",
+    "typescript": "catalog:"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./next": "./src/next.ts",
+    "./chrome": "./src/consent-chrome.tsx",
+    "./shell": "./src/consent-shell.tsx",
+    "./c15t-transpile-packages": "./c15t-transpile-packages.mjs",
+    "./cookie-settings-link": "./src/cookie-settings-link.tsx",
+    "./with-consent-manifest": "./with-consent-manifest.mjs",
+    "./env": "./src/env.ts"
+  }
+}

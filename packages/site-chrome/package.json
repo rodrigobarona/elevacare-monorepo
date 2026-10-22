@@ -1,0 +1,41 @@
+{
+  "name": "@eleva/site-chrome",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@eleva/compliance": "workspace:*",
+    "@eleva/config": "workspace:*",
+    "@eleva/consent": "workspace:*",
+    "@eleva/icons": "workspace:*",
+    "@eleva/media": "workspace:*",
+    "@eleva/ui": "workspace:*",
+    "next": "catalog:",
+    "react": "catalog:"
+  },
+  "devDependencies": {
+    "@eleva/eslint-config": "workspace:*",
+    "@eleva/typescript-config": "workspace:*",
+    "@types/react": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:"
+  },
+  "exports": {
+    "./care-areas": "./src/care-areas.ts",
+    "./public-site-nav": "./src/public-site-nav.ts",
+    "./nav-copy": "./src/nav-copy.ts",
+    "./navigation": "./src/navigation-context.tsx",
+    "./site-mega-menu": "./src/site-mega-menu.tsx",
+    "./site-mobile-nav": "./src/site-mobile-nav.tsx",
+    "./site-nav-panels": "./src/site-nav-panels.tsx",
+    "./gateway-marketing-url": "./src/gateway-marketing-url.ts",
+    "./docs-marketing-strip": "./src/docs-marketing-strip.tsx",
+    "./public-site-footer": "./src/public-site-footer.tsx",
+    "./footer-copy": "./src/footer-copy.ts",
+    "./sources.css": "./sources.css"
+  }
+}

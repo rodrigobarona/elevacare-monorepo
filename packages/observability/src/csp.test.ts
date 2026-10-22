@@ -16,6 +16,11 @@ describe("buildCspHeader", () => {
     expect(header).toMatch(/connect-src[^;]*wss:\/\/\*\.daily\.co/)
   })
 
+  it("allows public Blob video in media-src (ADR-024)", () => {
+    const header = buildCspHeader()
+    expect(header).toMatch(/media-src[^;]*\.public\.blob\.vercel-storage\.com/)
+  })
+
   it("adds the branded Daily domain when DAILY_DOMAIN is set", () => {
     const prev = process.env.DAILY_DOMAIN
     process.env.DAILY_DOMAIN = "eleva"
@@ -43,12 +48,6 @@ describe("buildCspHeader", () => {
       if (prev === undefined) delete process.env.DAILY_DOMAIN
       else process.env.DAILY_DOMAIN = prev
     }
-  })
-
-  it("allows Mux HLS manifests and segments (ADR-024)", () => {
-    const header = buildCspHeader()
-    expect(header).toMatch(/connect-src[^;]*https:\/\/stream\.mux\.com/)
-    expect(header).toMatch(/media-src[^;]*https:\/\/\*\.mux\.com/)
   })
 
   it("includes sentry ingest domains in connect-src", () => {

@@ -101,6 +101,12 @@ export default defineConfig({
           url: webUrl,
           reuseExistingServer: !process.env.CI,
           timeout: 120_000,
+          env: {
+            ELEVA_CONSENT_TEST_COUNTRY: "DE",
+            NEXT_PUBLIC_C15T_BACKEND_URL:
+              process.env.NEXT_PUBLIC_C15T_BACKEND_URL ??
+              "https://eleva-care-eleva.inth.app",
+          },
         },
         {
           command: "pnpm --filter=@eleva/api start",

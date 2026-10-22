@@ -31,8 +31,7 @@ export interface MediaImage {
 export interface MediaVideo {
   kind: "video"
   slug: string
-  provider: "mux"
-  playbackId: string
+  url: string
   poster: string
   blurDataURL: string
   width: number
@@ -41,6 +40,9 @@ export interface MediaVideo {
   tags: string[]
   license: MediaLicense
   credit: MediaCredit
+  source: {
+    provider: "eleva"
+  }
 }
 
 export type MediaAsset = MediaImage | MediaVideo

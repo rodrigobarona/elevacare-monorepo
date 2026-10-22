@@ -16,6 +16,46 @@ const QUIZ_FIRST_SEGMENTS = new Set([
 
 const HELP_FIRST_SEGMENTS = new Set(["help", "support", "faq"])
 
+/** Legacy eleva-care-app help URLs → Fumadocs portal slugs under `/docs`. */
+const LEGACY_HELP_PORTAL: Record<string, "members" | "experts" | "clinics"> = {
+  patient: "members",
+  expert: "experts",
+  workspace: "clinics",
+}
+
+function docsHelpPath(
+  locale: Locale,
+  portal: "members" | "experts" | "clinics",
+  articleSegments: string[]
+): string {
+  const localeInDocs = locale === defaultLocale ? "" : `/${locale}`
+  const article =
+    articleSegments.length > 0 ? `/${articleSegments.join("/")}` : ""
+  return `/docs${localeInDocs}/${portal}${article}`
+}
+
+function rewriteLegacyHelpPath(pathname: string): string | null {
+  const { locale, rest } = parseLocalePath(pathname)
+  const first = rest[0]?.toLowerCase()
+  if (!first || !HELP_FIRST_SEGMENTS.has(first)) return null
+
+  if (first !== "help") {
+    return "/docs"
+  }
+  if (rest.length === 1) {
+    return "/docs"
+  }
+
+  const legacyPortal = rest[1]?.toLowerCase() ?? ""
+  const portal = Object.hasOwn(LEGACY_HELP_PORTAL, legacyPortal)
+    ? LEGACY_HELP_PORTAL[legacyPortal]
+    : undefined
+  if (!portal) {
+    return "/docs"
+  }
+  return docsHelpPath(locale, portal, rest.slice(2))
+}
+
 export const COMMUNITY_EXTERNAL_LINKS = [
   { id: "instagram", href: "https://instagram.com/eleva.care" },
   { id: "linkedin", href: "https://linkedin.com/company/eleva-care" },
@@ -46,14 +86,18 @@ export function rewriteParityPath(pathname: string): string | null {
   if (QUIZ_FIRST_SEGMENTS.has(first)) {
     return `${localePrefix(locale)}/experts`
   }
-  if (HELP_FIRST_SEGMENTS.has(first)) {
-    return "/docs"
+  const legacyHelp = rewriteLegacyHelpPath(pathname)
+  if (legacyHelp) {
+    return legacyHelp
   }
   if (first === "trust" && rest.length === 1) {
     return `${localePrefix(locale)}/trust/security`
   }
-  if (first === "trust" && rest[1]?.toLowerCase() === "dpa") {
-    return `${localePrefix(locale)}/trust/ers`
+  if (first === "legal" && rest[1]?.toLowerCase() === "cookie") {
+    return `${localePrefix(locale)}/legal/cookies`
+  }
+  if (first === "legal" && rest[1]?.toLowerCase() === "payment-policies") {
+    return `${localePrefix(locale)}/legal/payments`
   }
   return null
 }
@@ -74,19 +118,41 @@ export const PUBLIC_SITE_PARITY_REDIRECTS = [
     locationPath: "/es/experts",
   },
   { id: "help-en", path: "/help", locationPath: "/docs" },
-  { id: "help-patient", path: "/help/patient", locationPath: "/docs" },
+  { id: "help-patient", path: "/help/patient", locationPath: "/docs/members" },
+  {
+    id: "help-patient-booking",
+    path: "/help/patient/booking",
+    locationPath: "/docs/members/booking",
+  },
   {
     id: "help-pt-article",
     path: "/pt/help/patient/booking",
-    locationPath: "/docs",
+    locationPath: "/docs/pt/members/booking",
   },
-  { id: "help-expert", path: "/help/expert", locationPath: "/docs" },
-  { id: "help-workspace", path: "/es/help/workspace", locationPath: "/docs" },
+  { id: "help-expert", path: "/help/expert", locationPath: "/docs/experts" },
+  {
+    id: "help-workspace",
+    path: "/es/help/workspace",
+    locationPath: "/docs/es/clinics",
+  },
   { id: "support", path: "/support", locationPath: "/docs" },
   { id: "faq-pt", path: "/pt/faq", locationPath: "/docs" },
   { id: "trust-index", path: "/trust", locationPath: "/trust/security" },
-  { id: "trust-dpa", path: "/trust/dpa", locationPath: "/trust/ers" },
-  { id: "trust-dpa-pt", path: "/pt/trust/dpa", locationPath: "/pt/trust/ers" },
+  {
+    id: "legal-cookie",
+    path: "/legal/cookie",
+    locationPath: "/legal/cookies",
+  },
+  {
+    id: "legal-cookie-pt",
+    path: "/pt/legal/cookie",
+    locationPath: "/pt/legal/cookies",
+  },
+  {
+    id: "legal-payment-policies",
+    path: "/legal/payment-policies",
+    locationPath: "/legal/payments",
+  },
 ] as const
 
 export const RETIRED_LOCALE_REDIRECTS = [

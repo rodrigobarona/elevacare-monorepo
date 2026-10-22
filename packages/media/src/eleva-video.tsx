@@ -1,6 +1,5 @@
 "use client"
 
-import dynamic from "next/dynamic"
 import Image from "next/image"
 import { useSyncExternalStore } from "react"
 
@@ -8,8 +7,6 @@ import type { Locale } from "@eleva/config/i18n-locales"
 import { cn } from "@eleva/ui/lib/utils"
 
 import { getVideo } from "./index"
-
-const MuxVideo = dynamic(() => import("@mux/mux-video-react"), { ssr: false })
 
 const REDUCED_MOTION = "(prefers-reduced-motion: reduce)"
 
@@ -29,8 +26,8 @@ function usePrefersReducedMotion(): boolean {
 
 /**
  * Muted, looping ambient video (hero/backdrops) with a poster underneath.
- * Mux Data tracking and cookies are off, so no consent is needed; reduced
- * motion shows the poster only.
+ * Progressive MP4 on public Blob — no third-party player or tracking.
+ * Reduced motion shows the poster only.
  */
 export function ElevaVideo({
   slug,
@@ -58,15 +55,12 @@ export function ElevaVideo({
         className="object-cover"
       />
       {reducedMotion ? null : (
-        <MuxVideo
-          playbackId={video.playbackId}
-          streamType="on-demand"
-          autoPlay="muted"
+        <video
+          src={video.url}
+          autoPlay
           muted
           loop
           playsInline
-          disableTracking
-          disableCookies
           aria-hidden
           tabIndex={-1}
           className="absolute inset-0 size-full object-cover"

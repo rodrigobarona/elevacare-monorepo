@@ -166,8 +166,10 @@ const proseLink =
 /** Typographic defaults plus the shared MDX blocks. */
 export function getMdxComponents(overrides?: MDXComponents): MDXComponents {
   return {
+    // Page layouts already render the frontmatter title as the single <h1>,
+    // so a leading `# Heading` in the MDX body is demoted to <h2>.
     h1: ({ className, ...props }) => (
-      <h1
+      <h2
         className={cn("font-display text-headline font-normal", className)}
         {...props}
       />

@@ -1,4 +1,6 @@
+import { withElevaConsentManifest } from "@eleva/consent/with-consent-manifest"
 import { withBotId } from "botid/next/config"
+import { createMDX } from "fumadocs-mdx/next"
 import createNextIntlPlugin from "next-intl/plugin"
 import {
   ELEVA_IMAGE_REMOTE_PATTERNS,
@@ -7,6 +9,7 @@ import {
 } from "@eleva/config/next-dev"
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts")
+const withMDX = createMDX()
 
 /**
  * AUD-017: same-origin `/api/*` → apps/api so BotID can sign booking-funnel
@@ -81,10 +84,22 @@ const nextConfig = {
     "@eleva/billing",
     "@eleva/calendar",
     "@eleva/config",
+    "@eleva/content",
     "@eleva/db",
     "@eleva/media",
+    "@eleva/site-chrome",
     "@eleva/ui",
+    "@eleva/consent",
+    "c15t",
+    "@c15t/core",
+    "@c15t/nextjs",
+    "@c15t/react",
   ],
 }
 
-export default withBotId(withNextIntl(nextConfig))
+// `withElevaConsentManifest` returns an async config function, so it must wrap
+// the other plugins: next-intl, BotID and fumadocs-mdx spread their input and
+// would silently drop every key (images, MDX rules, transpilePackages).
+export default withElevaConsentManifest(
+  withBotId(withNextIntl(withMDX(nextConfig)))
+)

@@ -1,3 +1,5 @@
+import { C15T_TRANSPILE_PACKAGES } from "@eleva/consent/c15t-transpile-packages"
+import { withElevaConsentManifest } from "@eleva/consent/with-consent-manifest"
 import { env } from "node:process"
 import createNextIntlPlugin from "next-intl/plugin"
 import {
@@ -34,8 +36,9 @@ const nextConfig = {
     "@eleva/observability",
     "@eleva/storage",
     "@eleva/ui",
+    ...C15T_TRANSPILE_PACKAGES,
   ],
   assetPrefix: resolveZoneAssetPrefix("expert", env.EXPERT_ASSET_PREFIX, env),
 }
 
-export default withNextIntl(nextConfig)
+export default withElevaConsentManifest(withNextIntl(nextConfig))

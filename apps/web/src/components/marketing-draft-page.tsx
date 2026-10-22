@@ -1,14 +1,53 @@
 import { defaultLocale, isLocale, type Locale } from "@eleva/config/i18n"
-import { ArrowRightIcon, InfoIcon } from "@eleva/icons"
+import {
+  ArrowRightIcon,
+  BuildingsIcon,
+  CalendarCheckIcon,
+  ChartBarIcon,
+  EnvelopeIcon,
+  WalletIcon,
+  InfoIcon,
+  ShieldCheckIcon,
+  StethoscopeIcon,
+  UsersIcon,
+  VideoCameraIcon,
+  type Icon,
+} from "@eleva/icons"
 import { ElevaImage } from "@eleva/media/image"
 import { Container, Section, SectionHeader } from "@eleva/ui/blocks/section"
 import { Steps } from "@eleva/ui/blocks/steps"
+import { TrustStrip } from "@eleva/ui/blocks/trust-strip"
 import { buttonVariants } from "@eleva/ui/components/button-variants"
 import { Eyebrow, Heading, Lead } from "@eleva/ui/components/typography"
 import { getLocale } from "next-intl/server"
 import { Link } from "@/i18n/navigation"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
+
+export type MarketingIconId =
+  | "shield"
+  | "calendar"
+  | "video"
+  | "users"
+  | "chart"
+  | "currency"
+  | "buildings"
+  | "headset"
+  | "stethoscope"
+
+const MARKETING_ICONS: Record<MarketingIconId, Icon> = {
+  shield: ShieldCheckIcon,
+  calendar: CalendarCheckIcon,
+  video: VideoCameraIcon,
+  users: UsersIcon,
+  chart: ChartBarIcon,
+  currency: WalletIcon,
+  buildings: BuildingsIcon,
+  headset: EnvelopeIcon,
+  stethoscope: StethoscopeIcon,
+}
+
+type CardItem = { icon: MarketingIconId; title: string; body: string }
 
 type Props = {
   draftBanner: string
@@ -20,6 +59,13 @@ type Props = {
   cta?: { href: string; label: string }
   stepsHeading?: string
   steps?: { title: string; body: string }[]
+  benefitsHeading?: string
+  benefits?: CardItem[]
+  requirementsHeading?: string
+  requirements?: { title: string; body: string }[]
+  finalHeading?: string
+  finalBody?: string
+  finalCta?: { href: string; label: string }
 }
 
 /** Public pages whose terms are still pre-launch drafts (become expert, clinics, contact). */
@@ -33,9 +79,25 @@ export async function MarketingDraftPage({
   cta,
   stepsHeading,
   steps = [],
+  benefitsHeading,
+  benefits = [],
+  requirementsHeading,
+  requirements = [],
+  finalHeading,
+  finalBody,
+  finalCta,
 }: Props) {
   const requestLocale = await getLocale()
   const locale: Locale = isLocale(requestLocale) ? requestLocale : defaultLocale
+
+  const benefitItems = benefits.map((item) => {
+    const IconComponent = MARKETING_ICONS[item.icon]
+    return {
+      icon: <IconComponent weight="duotone" aria-hidden />,
+      title: item.title,
+      description: item.body,
+    }
+  })
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -92,8 +154,17 @@ export async function MarketingDraftPage({
           </Container>
         </Section>
 
-        {steps.length > 0 ? (
+        {benefits.length > 0 ? (
           <Section tone="muted">
+            <Container className="flex flex-col gap-12">
+              <SectionHeader title={benefitsHeading} />
+              <TrustStrip className="lg:grid-cols-3" items={benefitItems} />
+            </Container>
+          </Section>
+        ) : null}
+
+        {steps.length > 0 ? (
+          <Section tone={benefits.length > 0 ? "default" : "muted"}>
             <Container className="flex flex-col gap-12">
               <SectionHeader title={stepsHeading} />
               <Steps
@@ -103,6 +174,41 @@ export async function MarketingDraftPage({
                   description: step.body,
                 }))}
               />
+            </Container>
+          </Section>
+        ) : null}
+
+        {requirements.length > 0 ? (
+          <Section tone="muted">
+            <Container className="flex max-w-4xl flex-col gap-10">
+              <SectionHeader title={requirementsHeading} />
+              <ul className="grid gap-8 sm:grid-cols-2">
+                {requirements.map((item) => (
+                  <li key={item.title} className="flex flex-col gap-2">
+                    <p className="font-medium text-foreground">{item.title}</p>
+                    <p className="text-sm text-pretty text-muted-foreground">
+                      {item.body}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </Container>
+          </Section>
+        ) : null}
+
+        {finalHeading && finalBody ? (
+          <Section>
+            <Container className="flex max-w-3xl flex-col items-start gap-6">
+              <SectionHeader title={finalHeading} lead={finalBody} />
+              {finalCta ? (
+                <Link
+                  href={finalCta.href}
+                  className={buttonVariants({ size: "xl" })}
+                >
+                  {finalCta.label}
+                  <ArrowRightIcon data-icon="inline-end" />
+                </Link>
+              ) : null}
             </Container>
           </Section>
         ) : null}

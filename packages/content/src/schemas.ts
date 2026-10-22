@@ -1,8 +1,18 @@
 import { z } from "zod"
 
-const isoDate = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, "Use an ISO calendar date (YYYY-MM-DD)")
+/**
+ * ISO calendar date. YAML parses an unquoted `2026-10-22` into a `Date`, so
+ * normalise that back to the `YYYY-MM-DD` string the pages render.
+ */
+const isoDate = z.preprocess(
+  (value) =>
+    value instanceof Date && !Number.isNaN(value.getTime())
+      ? value.toISOString().slice(0, 10)
+      : value,
+  z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Use an ISO calendar date (YYYY-MM-DD)")
+)
 
 /** Fields shared by every long-form document. */
 export const baseFrontmatterSchema = z.object({
@@ -23,6 +33,7 @@ export const legalFrontmatterSchema = baseFrontmatterSchema.extend({
 
 export const pageFrontmatterSchema = baseFrontmatterSchema.extend({
   lastUpdated: isoDate,
+  summary: z.string().min(1).optional(),
   eyebrow: z.string().min(1).optional(),
 })
 

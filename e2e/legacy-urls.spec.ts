@@ -48,7 +48,9 @@ test.describe("D-10 public-site parity", () => {
     for (const slug of LEGAL_SLUGS) {
       const legal = await page.goto(`/legal/${slug}`)
       expect(legal?.status(), slug).toBe(200)
-      await expect(page.getByTestId("legal-draft-banner")).toBeVisible()
+      await expect(page.getByTestId("longform-version")).toBeVisible()
+      await expect(page.getByTestId("longform-last-updated")).toBeVisible()
+      await expect(page.getByTestId("legal-draft-banner")).toHaveCount(0)
     }
 
     const contact = await page.goto("/contact")
@@ -56,27 +58,50 @@ test.describe("D-10 public-site parity", () => {
     await expect(page.getByTestId("legal-draft-banner")).toBeVisible()
     await expect(page.getByTestId("contact-heading")).toBeVisible()
 
-    for (const slug of ["security", "ers"] as const) {
+    for (const slug of ["security", "ers", "dpa", "sub-processors"] as const) {
       const trust = await page.goto(`/trust/${slug}`)
       expect(trust?.status(), slug).toBe(200)
-      await expect(page.getByTestId("legal-draft-banner")).toBeVisible()
+      await expect(page.getByTestId("longform-version")).toBeVisible()
+      await expect(page.getByTestId("legal-draft-banner")).toHaveCount(0)
     }
+
+    const evidence = await page.goto("/evidence-based-care")
+    expect(evidence?.status()).toBe(200)
+    await expect(page.getByTestId("longform-version")).toBeVisible()
   })
 
-  test("keeps community as external footer links with no v3 route", async ({
+  test("serves editorial pillar pages and footer community links", async ({
     page,
     request,
   }) => {
-    const community = await request.get("/community", { maxRedirects: 0 })
-    expect(community.status()).toBe(404)
+    for (const path of ["/newsletter", "/podcast", "/community"] as const) {
+      const res = await request.get(path)
+      expect(res.status(), path).toBe(200)
+    }
 
     await page.goto("/")
     const nav = page.getByTestId("footer-community")
     await expect(nav).toBeVisible()
+    await expect(nav.getByTestId("footer-community-newsletter")).toBeVisible()
+    await expect(nav.getByTestId("footer-community-podcast")).toBeVisible()
+    await expect(nav.getByTestId("footer-community-hub")).toBeVisible()
     for (const link of COMMUNITY_EXTERNAL_LINKS) {
       const item = nav.getByTestId(`footer-community-${link.id}`)
       await expect(item).toBeVisible()
       await expect(item).toHaveAttribute("href", link.href)
+    }
+  })
+
+  test("rewrites legacy help paths to docs portals", async ({ request }) => {
+    const cases = [
+      { path: "/help", target: "/docs" },
+      { path: "/help/patient/booking", target: "/docs/members/booking" },
+      { path: "/pt/help/patient/booking", target: "/docs/pt/members/booking" },
+    ] as const
+    for (const row of cases) {
+      const res = await request.get(row.path, { maxRedirects: 0 })
+      expect(res.status(), row.path).toBe(301)
+      expect(locationPath(res.headers()["location"]), row.path).toBe(row.target)
     }
   })
 

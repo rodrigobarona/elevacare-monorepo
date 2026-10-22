@@ -1,9 +1,13 @@
+import { isContentLocale } from "@eleva/content/locales"
+import { CONSENT_DOCUMENT_VERSION } from "@eleva/compliance"
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
+import { LongformLayout } from "@/components/longform-layout"
 import { hreflangLanguages, localePath } from "@/lib/hreflang"
+import { getTrustMdxDocument } from "@/lib/trust-source"
 import { isTrustSlug, TRUST_SLUGS } from "@/lib/trust-slugs"
 
 type Props = {
@@ -19,6 +23,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!isTrustSlug(slug)) {
     return {}
   }
+
+  if (isContentLocale(locale)) {
+    const doc = getTrustMdxDocument(slug, locale)
+    if (doc) {
+      const path = `/trust/${slug}`
+      return {
+        title: doc.frontmatter.title,
+        description: doc.frontmatter.description,
+        robots: doc.frontmatter.noindex
+          ? { index: false, follow: false }
+          : { index: true, follow: true },
+        alternates: {
+          canonical: localePath(locale, path),
+          languages: hreflangLanguages(path),
+        },
+      }
+    }
+  }
+
   const t = await getTranslations({ locale, namespace: "trust" })
   const path = `/trust/${slug}`
   return {
@@ -39,6 +62,36 @@ export default async function TrustPage({ params }: Props) {
   }
   setRequestLocale(locale)
   const t = await getTranslations({ locale, namespace: "trust" })
+  const tLongform = await getTranslations({ locale, namespace: "longform" })
+
+  if (isContentLocale(locale)) {
+    const doc = getTrustMdxDocument(slug, locale)
+    if (doc) {
+      return (
+        <div className="flex min-h-dvh flex-col">
+          <SiteHeader />
+          <main className="flex-1 px-6 py-16">
+            <LongformLayout
+              title={doc.frontmatter.title}
+              description={
+                doc.frontmatter.summary ?? doc.frontmatter.description
+              }
+              versionLabel={tLongform("versionLabel", {
+                version: CONSENT_DOCUMENT_VERSION,
+              })}
+              lastUpdatedLabel={tLongform("lastUpdatedLabel", {
+                date: doc.frontmatter.lastUpdated,
+              })}
+              tocTitle={tLongform("tocTitle")}
+              Body={doc.Body}
+              toc={doc.toc}
+            />
+          </main>
+          <SiteFooter />
+        </div>
+      )
+    }
+  }
 
   return (
     <div className="flex min-h-dvh flex-col">

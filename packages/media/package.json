@@ -9,12 +9,12 @@
     "test": "vitest run",
     "media:search": "node --env-file-if-exists=../../.env.local --import tsx/esm scripts/media.ts search",
     "media:import": "node --env-file-if-exists=../../.env.local --import tsx/esm scripts/media.ts import",
-    "media:import-local": "node --env-file-if-exists=../../.env.local --import tsx/esm scripts/media.ts import-local"
+    "media:import-local": "node --env-file-if-exists=../../.env.local --import tsx/esm scripts/media.ts import-local",
+    "media:import-video": "node --env-file-if-exists=../../.env.local --import tsx/esm scripts/media.ts import-video"
   },
   "dependencies": {
     "@eleva/config": "workspace:*",
     "@eleva/ui": "workspace:*",
-    "@mux/mux-video-react": "^0.31.5",
     "next": "catalog:",
     "react": "catalog:"
   },

@@ -150,7 +150,9 @@ describe("createGatewayProxy integration", () => {
 
     const help = await proxy(makeRequest("/help/patient/booking"))
     expect(help.status).toBe(301)
-    expect(help.headers.get("location")).toBe("http://localhost:3000/docs")
+    expect(help.headers.get("location")).toBe(
+      "http://localhost:3000/docs/members/booking"
+    )
   })
 
   it("falls through to intl middleware for marketing paths", async () => {

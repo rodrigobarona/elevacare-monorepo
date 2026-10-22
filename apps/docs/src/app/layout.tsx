@@ -1,4 +1,5 @@
 import "./styles.css"
+import { ConsentShell } from "@eleva/consent/shell"
 import { fontClassName } from "@eleva/ui/fonts"
 
 export const metadata = {
@@ -14,7 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={fontClassName} suppressHydrationWarning>
       <body className="antialiased" suppressHydrationWarning>
-        {children}
+        <ConsentShell>{children}</ConsentShell>
       </body>
     </html>
   )

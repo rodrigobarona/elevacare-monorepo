@@ -44,6 +44,24 @@
         "story": "A nossa história",
         "featuredTitle": "Orientada pela investigação clínica",
         "featuredDescription": "Os nossos conselheiros são fisioterapeutas, médicos e investigadores em saúde da mulher."
+      },
+      "learn": {
+        "trigger": "Aprender e comunidade",
+        "heading": "Aprenda com a Eleva",
+        "academy": "Academy",
+        "academyDescription": "Cursos e percursos para membros e profissionais.",
+        "newsletter": "Newsletter Femme Focus",
+        "newsletterDescription": "Ensaios e contexto clínico sobre saúde da mulher.",
+        "podcast": "Just Between Us… and Science",
+        "podcastDescription": "Conversas com investigadores e clínicos, patrocinadas pela Eleva.",
+        "community": "Comunidade",
+        "communityDescription": "Junte-se à comunidade Femme Focus na Beehiiv.",
+        "help": "Centro de ajuda",
+        "helpDescription": "Guias para membros, especialistas e equipas de clínica.",
+        "evidence": "Cuidados baseados em evidência",
+        "evidenceDescription": "Como a Eleva fala de cuidados informados pela investigação.",
+        "featuredTitle": "Editorial, não blog anónimo",
+        "featuredDescription": "Conteúdo de confiança vive aqui e no centro de ajuda — não num blog de produto."
       }
     }
   },
@@ -509,18 +527,32 @@
     "healthData": "Dados de saúde",
     "aiProcessing": "Tratamento por IA",
     "cookies": "Cookies",
+    "cookieSettings": "Definições de cookies",
     "payments": "Pagamentos",
     "expertAgreement": "Acordo de especialistas",
+    "accessibility": "Acessibilidade",
+    "complaints": "Reclamações",
+    "complaintsBook": "Livro de reclamações eletrónico",
+    "trustSecurity": "Segurança",
+    "evidenceBasedCare": "Cuidados baseados em evidência",
     "draftNote": "Estas páginas são rascunhos de pré-lançamento (versão {version}). A área jurídica e o DPO voltam a assinar antes do go-live.",
     "solutions": "Juntar-se à Eleva",
     "becomeExpert": "Tornar-se especialista",
     "forClinics": "Para clínicas",
     "community": "Comunidade",
+    "newsletter": "Newsletter Femme Focus",
+    "podcast": "Podcast",
+    "helpCenter": "Centro de ajuda",
     "instagram": "Instagram",
     "linkedin": "LinkedIn",
     "tagline": "Cuidados especializados de saúde da mulher, perto de si. Online, por telefone ou presencialmente.",
     "credits": "Créditos de fotografia",
     "story": "A nossa história"
+  },
+  "longform": {
+    "versionLabel": "Versão do documento {version}",
+    "lastUpdatedLabel": "Última atualização {date}",
+    "tocTitle": "Nesta página"
   },
   "legal": {
     "draftBanner": "Rascunho de pré-lançamento. Este não é texto jurídico de produção. A área jurídica e o DPO substituem-no antes da Eleva.care ir ao ar.",
@@ -580,10 +612,10 @@
         "heading": "Política de cookies",
         "paragraphs": {
           "p1": "A Eleva usa cookies estritamente necessários para o manter autenticado e para lembrar o idioma e o tema. Os cookies de sessão seguem o modelo CSRF e de subdomínio da plataforma.",
-          "p2": "Um banner de cookies de marketing ou analítica (previsto: c15t com Inth) é uma decisão de produto à parte. Este rascunho não ativa esses cookies.",
-          "p3": "Os cookies essenciais não exigem banner ao abrigo da ePrivacy quando se limitam a prestar o serviço que pediu (autenticação, idioma, segurança).",
-          "p4": "Pode apagar cookies no browser. Terminar sessão limpa o cookie de sessão em .eleva.care e no anfitrião.",
-          "p5": "Esta política será atualizada quando existir uma ferramenta de gestão de consentimento. Não é um aviso de cookies de produção."
+          "p2": "Cookies opcionais de marketing e analítica só carregam depois de os escolher no banner de cookies da Eleva (c15t, alojado na Inth na UE). Até aceitar uma categoria, esses scripts e embeds não correm.",
+          "p3": "Os cookies essenciais não exigem consentimento ao abrigo da ePrivacy quando se limitam a prestar o serviço que pediu (autenticação, idioma, segurança).",
+          "p4": "Pode apagar cookies no browser ou reabrir as Definições de cookies no rodapé para alterar as suas escolhas. Terminar sessão limpa o cookie de sessão em .eleva.care e no anfitrião.",
+          "p5": "Este texto de reserva serve os idiomas sem MDX; a política de cookies publicada está em /legal/cookies."
         }
       },
       "payments": {
@@ -623,7 +655,7 @@
     "steps": [
       {
         "title": "Crie a sua conta",
-        "body": "Registe-se e abra uma área de trabalho de Especialista a partir da sua conta. Começa no plano comunidade e pode mudar de plano mais tarde."
+        "body": "Registe-se e abra a sua prática de especialista a partir da sua conta. Começa no plano comunidade e pode mudar de plano mais tarde."
       },
       {
         "title": "Configure a sua prática",
@@ -638,16 +670,175 @@
         "body": "Os membros marcam e pagam online. Você e o membro recebem confirmações e lembretes por email."
       }
     ],
-    "eyebrow": "Para especialistas"
+    "eyebrow": "Para especialistas",
+    "benefitsHeading": "Porquê exercer na Eleva",
+    "benefits": [
+      {
+        "icon": "shield",
+        "title": "Autonomia clínica total",
+        "body": "Continua a ser um profissional independente e licenciado. A Eleva fornece tecnologia de agenda, reserva e pagamento—você decide como cuidar de cada membro."
+      },
+      {
+        "icon": "currency",
+        "title": "Os seus preços e políticas",
+        "body": "Defina preços e políticas de cancelamento Flexível, Moderada ou Rigorosa por serviço. Os pagamentos passam pela Stripe Connect após a sessão."
+      },
+      {
+        "icon": "calendar",
+        "title": "Agenda flexível",
+        "body": "Publique disponibilidade semanal, ligue calendários externos e ofereça sessões online, telefónicas ou presenciais numa só prática."
+      },
+      {
+        "icon": "video",
+        "title": "Sessões seguras",
+        "body": "Salas de vídeo, lembretes e links de entrada estão integrados. A gravação permanece desligada no plano standard que usamos hoje."
+      },
+      {
+        "icon": "users",
+        "title": "Alcance membros",
+        "body": "Os membros descobrem especialistas no marketplace Eleva e no seu perfil público—sem prometer resultados de marketing específicos."
+      },
+      {
+        "icon": "chart",
+        "title": "Ferramentas de prática",
+        "body": "Páginas de reserva, construtor de serviços, políticas de cancelamento e painel ajudam no dia a dia num só lugar."
+      }
+    ],
+    "requirementsHeading": "Quem pode aderir",
+    "requirements": [
+      {
+        "title": "Profissional licenciado",
+        "body": "Tem a licença ou registo exigido para prestar os serviços que publica na sua jurisdição."
+      },
+      {
+        "title": "Comunicação baseada em evidência",
+        "body": "Perfis e textos para membros seguem o enquadramento ERS da Eleva: sem garantias, sem estatísticas não comprovadas e sem sugerir que a Eleva presta cuidados clínicos."
+      },
+      {
+        "title": "Idiomas que publica",
+        "body": "Escreva perfil e serviços nos idiomas que realmente oferece (inglês, português ou espanhol)."
+      },
+      {
+        "title": "Verificação Stripe antes dos payouts",
+        "body": "Identidade e dados de pagamento são recolhidos pela Stripe Connect antes de serviços pagos ficarem visíveis."
+      }
+    ],
+    "finalHeading": "Pronto para abrir a sua prática?",
+    "finalBody": "Crie a sua conta, comece no plano comunidade e mude de plano quando fizer sentido. Comissão e termos jurídicos serão assinados de novo antes do lançamento público.",
+    "finalCta": "Criar a sua conta"
   },
   "forClinics": {
     "title": "Para clínicas — Eleva.care",
     "description": "Gira uma Team de clínica na Eleva.care, uma plataforma digital de saúde para profissionais independentes.",
     "draftBanner": "Rascunho de pré-lançamento. Preços por lugar e termos de parceria não são finais. A área financeira e o DPO voltam a assinar antes do go-live.",
     "heading": "Clínicas e Teams",
-    "body": "As clínicas usam a Eleva.care como Team: vários especialistas licenciados numa organização, na mesma plataforma digital de saúde que os membros já usam para marcar. A Eleva assume a responsabilidade organizacional, técnica e administrativa pela operação da plataforma, para que a sua equipa se possa focar nos cuidados.",
+    "body": "As clínicas usam a Eleva.care como Team: vários especialistas licenciados numa organização, na mesma plataforma digital de saúde que os membros já usam para marcar. A Eleva opera a tecnologia de agenda, reservas e pagamentos para a sua equipa se focar nos cuidados.",
     "cta": "Criar a sua conta",
-    "eyebrow": "Para clínicas"
+    "eyebrow": "Para clínicas",
+    "stepsHeading": "Como funciona uma clínica Team",
+    "steps": [
+      {
+        "title": "Crie a organização Team",
+        "body": "Registe a clínica e convide especialistas licenciados para o mesmo espaço Team com marca partilhada."
+      },
+      {
+        "title": "Configure locais e serviços",
+        "body": "Defina locais, calendários de equipa e que serviços cada especialista publica aos membros."
+      },
+      {
+        "title": "Coordene marcações e pagamentos",
+        "body": "Os membros marcam na Eleva; a Stripe Connect encaminha os pagamentos segundo as políticas da clínica."
+      },
+      {
+        "title": "Acompanhe a equipa",
+        "body": "Use o painel para monitorizar marcações e feedback — sem substituir a responsabilidade clínica de cada especialista."
+      }
+    ],
+    "benefitsHeading": "Porquê clínicas escolhem a Eleva",
+    "benefits": [
+      {
+        "icon": "buildings",
+        "title": "Um espaço Team",
+        "body": "Convide especialistas licenciados numa organização de clínica com marca partilhada e agenda coordenada."
+      },
+      {
+        "icon": "calendar",
+        "title": "Operações partilhadas",
+        "body": "Locais, calendários de equipa e serviços publicados alinham-se para os membros marcarem o especialista e modalidade certos."
+      },
+      {
+        "icon": "currency",
+        "title": "Pagamentos transparentes",
+        "body": "A Stripe Connect encaminha fundos conforme a configuração da clínica. Preços por lugar e termos de parceria continuam em rascunho pré-lançamento."
+      },
+      {
+        "icon": "chart",
+        "title": "Visibilidade da clínica",
+        "body": "O painel ajuda a monitorizar marcações e feedback da equipa sem substituir a responsabilidade clínica individual."
+      },
+      {
+        "icon": "users",
+        "title": "Experiência pronta para membros",
+        "body": "Os membros usam o mesmo fluxo de reserva Eleva que já conhecem de especialistas independentes."
+      },
+      {
+        "icon": "headset",
+        "title": "Onboarding de parceiros",
+        "body": "Contacte-nos para uma demonstração de Team, marca ou convites a especialistas antes do go-live."
+      }
+    ],
+    "requirementsHeading": "Indicado para",
+    "requirements": [
+      {
+        "title": "Clínicas e equipas de saúde da mulher",
+        "body": "Fisioterapia, saúde pélvica, cuidados obstétricos e especialidades afins com vários especialistas licenciados."
+      },
+      {
+        "title": "Apenas especialistas licenciados",
+        "body": "Cada clínico mantém a sua licença, âmbito de prática e relação com o membro."
+      },
+      {
+        "title": "Responsável operacional",
+        "body": "Um administrador da clínica coordena convites, marca e serviços publicados aos membros."
+      },
+      {
+        "title": "Termos pré-lançamento",
+        "body": "Parceria e preços por lugar permanecem rascunhos até finanças e jurídico assinarem."
+      }
+    ],
+    "finalHeading": "Comece a sua clínica Team",
+    "finalBody": "Crie a organização, convide especialistas e configure locais e serviços. Publicaremos termos finais de clínica antes do lançamento.",
+    "finalCta": "Criar a sua conta"
+  },
+  "pillars": {
+    "newsletter": {
+      "title": "Femme Focus — Eleva.care",
+      "description": "Subscreva a newsletter Femme Focus da Eleva sobre saúde da mulher.",
+      "eyebrow": "Newsletter",
+      "heading": "Femme Focus pela Eleva",
+      "body": "Ensaios, contexto clínico e histórias da comunidade. Subscreva na Beehiiv — não precisa de conta Eleva.",
+      "cta": "Subscrever na Beehiiv",
+      "embedTitle": "Subscrever"
+    },
+    "podcast": {
+      "title": "Just Between Us… and Science — Eleva.care",
+      "description": "Conversas sobre investigação e prática em saúde da mulher.",
+      "eyebrow": "Podcast",
+      "heading": "Just Between Us… and Science",
+      "body": "Conversas com investigadores e clínicos. Ouça na sua plataforma favorita; novos episódios anunciados na Femme Focus.",
+      "spotify": "Spotify",
+      "apple": "Apple Podcasts",
+      "youtube": "YouTube",
+      "newsletterFallback": "Receba anúncios de episódios na Femme Focus"
+    },
+    "community": {
+      "title": "Comunidade — Eleva.care",
+      "description": "Junte-se à comunidade Femme Focus na Beehiiv.",
+      "eyebrow": "Comunidade",
+      "heading": "Comunidade Femme Focus",
+      "body": "Discuta episódios e temas da newsletter com outras pessoas. A comunidade está na Beehiiv; conta Eleva é opcional.",
+      "cta": "Abrir comunidade"
+    }
   },
   "contact": {
     "title": "Contacto — Eleva.care",

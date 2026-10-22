@@ -24,13 +24,15 @@ test.describe("phase 04 shipped surfaces", () => {
     for (const slug of LEGAL_SLUGS) {
       const legal = await page.goto(`/legal/${slug}`)
       expect(legal?.status()).toBe(200)
-      await expect(page.getByTestId("legal-draft-banner")).toBeVisible()
+      await expect(page.getByTestId("longform-version")).toBeVisible()
+      await expect(page.getByTestId("longform-last-updated")).toBeVisible()
+      await expect(page.getByTestId("legal-draft-banner")).toHaveCount(0)
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible()
     }
 
     const legalPt = await page.goto("/pt/legal/privacy")
     expect(legalPt?.status()).toBe(200)
-    await expect(page.getByTestId("legal-draft-banner")).toBeVisible()
+    await expect(page.getByTestId("longform-version")).toBeVisible()
   })
 
   test("explorer lists a seeded expert and opens the profile", async ({

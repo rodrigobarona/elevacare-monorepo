@@ -3,7 +3,7 @@
 import { CaretDownIcon } from "@eleva/icons"
 import { cn } from "@eleva/ui/lib/utils"
 import * as React from "react"
-import { usePathname } from "@/i18n/navigation"
+import { usePublicNavigation } from "./navigation-context"
 
 export type SiteMegaMenuItem = {
   id: string
@@ -31,11 +31,12 @@ export function SiteMegaMenu({
 }: {
   items: readonly SiteMegaMenuItem[]
 }) {
+  const { usePathname } = usePublicNavigation()
+  const pathname = usePathname()
   const [openId, setOpenId] = React.useState<string | null>(null)
   const openedByHover = React.useRef(false)
   const timer = React.useRef<number | undefined>(undefined)
   const rootRef = React.useRef<HTMLDivElement>(null)
-  const pathname = usePathname()
   const baseId = React.useId()
 
   const clearTimer = React.useCallback(() => {
@@ -50,6 +51,10 @@ export function SiteMegaMenu({
   const schedule = (next: string | null, delay: number) => {
     clearTimer()
     timer.current = window.setTimeout(() => {
+      // Keep the panel open while keyboard focus is inside it.
+      if (next === null && rootRef.current?.contains(document.activeElement)) {
+        return
+      }
       openedByHover.current = next !== null
       setOpenId(next)
     }, delay)

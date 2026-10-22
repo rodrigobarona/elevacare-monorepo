@@ -3,7 +3,8 @@
   "compilerOptions": {
     "paths": {
       "@/*": ["./src/*"],
-      "@eleva/ui/*": ["../../packages/ui/src/*"]
+      "@eleva/ui/*": ["../../packages/ui/src/*"],
+      "fumadocs-mdx:collections/*": ["./.source/*"]
     },
     "plugins": [{ "name": "next" }]
   },
@@ -12,7 +13,8 @@
     "next.config.mjs",
     "src/**/*",
     ".next/types/**/*.ts",
+    ".source/**/*.ts",
     "messages/**/*.json"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "source.config.ts"]
 }

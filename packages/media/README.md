@@ -12,8 +12,11 @@ import { ElevaVideo } from "@eleva/media/video"
 <ElevaVideo slug="hero-intro" locale={locale} priority className="aspect-video" />
 ```
 
-Apps need `images.remotePatterns: ELEVA_IMAGE_REMOTE_PATTERNS` from
-`@eleva/config/next-dev`.
+Set `images.remotePatterns: ELEVA_IMAGE_REMOTE_PATTERNS` from
+`@eleva/config/next-dev`. `withElevaConsentManifest` returns an async config
+function, so it must be the outermost wrapper (`withElevaConsentManifest(withBotId(withNextIntl(withMDX(config))))`);
+inner plugins spread their input and would otherwise drop `images`, leaving
+`images-manifest.json` with empty `remotePatterns` (`/_next/image` 400).
 
 ## Curating
 
@@ -28,11 +31,14 @@ pnpm --filter @eleva/media media:import pregnancy-home 5425038 \
   --alt-en "…" --alt-pt "…" --alt-es "…" --tags pregnancy,home
 pnpm --filter @eleva/media media:import-local service-pregnancy ./photo.jpg \
   --width 1600 --height 1067 --blur ./photo-24px.jpg --alt-en "…" --alt-pt "…" --alt-es "…"
+pnpm --filter @eleva/media media:import-video hero-intro ./hero-intro.mp4 \
+  --poster ./hero-intro-poster.jpg --width 1920 --height 1080 --blur ./hero-intro-blur.jpg \
+  --alt-en "…" --alt-pt "…" --alt-es "…" --tags hero,community
 ```
 
 ## Licences
 
-- `eleva-owned`: MVP photography and the Mux intro video.
+- `eleva-owned`: MVP photography and the hero intro video (Blob MP4 + poster).
 - `pexels`: [Pexels licence](https://www.pexels.com/license/). Free to use;
   credit is appreciated, not required. `creditedMedia()` feeds the photo
   credits on the public site's legal page.

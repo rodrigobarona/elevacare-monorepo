@@ -4,6 +4,7 @@
     "profile": "Profile",
     "settings": "Settings",
     "homepage": "Visit Homepage",
+    "cookieSettings": "Cookie settings",
     "signOut": "Sign out",
     "orgSwitcher": "Organization switcher",
     "orgSwitchError": "Error switching organization",
