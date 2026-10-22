@@ -1,5 +1,4 @@
 import { and, eq, isNull } from "drizzle-orm"
-import { EU_PHONE_COUNTRIES } from "@eleva/config"
 import { db } from "../client"
 import { withOrgContext, withPlatformAdminContext, type Tx } from "../context"
 import * as auth from "../schema/auth"
@@ -12,8 +11,14 @@ import {
   DEMO_PRIVATE_INVITE_SLUG,
   hashDemoBookingLinkToken,
 } from "./demo-booking-links"
-
-const WEEKDAYS = [1, 2, 3, 4, 5] as const
+import {
+  OFFER_FIXTURE_DAY_END,
+  OFFER_FIXTURE_DAY_START,
+  OFFER_FIXTURE_WEEKDAYS,
+  PHYSIOTHERAPY_FIXTURE,
+  QUICK_CHAT_FIXTURE,
+  type OfferFixture,
+} from "./offer-fixture-specs"
 
 async function upsertUser(email: string, name: string): Promise<string> {
   const client = db()
@@ -176,12 +181,12 @@ async function upsertSchedule(
     })
     .returning({ id: main.schedules.id })
   await tx.insert(main.availabilityRules).values(
-    WEEKDAYS.map((dayOfWeek) => ({
+    OFFER_FIXTURE_WEEKDAYS.map((dayOfWeek) => ({
       orgId: input.orgId,
       scheduleId: inserted!.id,
       dayOfWeek,
-      startTime: "09:00:00",
-      endTime: "17:00:00",
+      startTime: OFFER_FIXTURE_DAY_START,
+      endTime: OFFER_FIXTURE_DAY_END,
     }))
   )
   return inserted!.id
@@ -381,264 +386,137 @@ async function upsertLocation(
   return inserted!.id
 }
 
-async function seedQuickChat() {
-  const userId = await upsertUser("coach.quick@example.test", "Ana Quick")
-  const orgId = await upsertOrg("anaquick", "Ana Quick (solo)")
-  await ensureMembership(userId, orgId)
-  const expertId = await withOrgContext(orgId, async (tx) => {
-    const profileId = await upsertExpert(tx, {
-      userId,
-      orgId,
-      username: "anaquick",
-      displayName: "Ana Quick",
-      languages: ["pt", "en", "es", "fr"],
-      practiceCountry: "PT",
-      serviceCountries: [...EU_PHONE_COUNTRIES],
-      worldwideRemote: true,
-    })
-    const onlineSchedule = await upsertSchedule(tx, {
-      orgId,
-      expertProfileId: profileId,
-      name: "Online",
-      timezone: "Europe/Lisbon",
-      isDefault: true,
-    })
-    const phoneSchedule = await upsertSchedule(tx, {
-      orgId,
-      expertProfileId: profileId,
-      name: "Phone",
-      timezone: "Europe/Lisbon",
-    })
-    const eventTypeId = await upsertEventType(tx, {
-      orgId,
-      expertProfileId: profileId,
-      slug: "quick-chat",
-      title: { en: "Quick chat", pt: "Conversa rápida", es: "Charla rápida" },
-      kind: "non_clinical",
-      durationMinutes: 20,
-      priceAmount: 0,
-      languages: ["pt", "en", "es", "fr"],
-    })
-    await ensureMode(tx, {
-      orgId,
-      eventTypeId,
-      mode: "online",
-      scheduleId: onlineSchedule,
-      countryScopeType: "worldwide",
-      countryScopeCodes: [],
-      languages: ["pt", "en", "es", "fr"],
-      sortOrder: 0,
-    })
-    await ensureMode(tx, {
-      orgId,
-      eventTypeId,
-      mode: "phone",
-      scheduleId: phoneSchedule,
-      countryScopeType: "list",
-      countryScopeCodes: [...EU_PHONE_COUNTRIES],
-      languages: ["pt", "en", "es", "fr"],
-      sortOrder: 1,
-    })
-    return profileId
-  })
-  await ensureHandle("anaquick", expertId)
+type SeededFixture = {
+  userId: string
+  orgId: string
+  profileId: string
+  scheduleIds: Map<string, string>
 }
 
-async function seedPhysiotherapy() {
-  const userId = await upsertUser("fisio.mota@example.test", "Fisio Mota")
-  const orgId = await upsertOrg("fisiomota", "Fisio Mota (solo)")
+async function seedFixture(
+  fixture: OfferFixture,
+  extra?: (tx: Tx, seeded: SeededFixture) => Promise<void>
+) {
+  const userId = await upsertUser(fixture.user.email, fixture.user.name)
+  const orgId = await upsertOrg(fixture.org.slug, fixture.org.name)
   await ensureMembership(userId, orgId)
   const expertId = await withOrgContext(orgId, async (tx) => {
     const profileId = await upsertExpert(tx, {
       userId,
       orgId,
-      username: "fisiomota",
-      displayName: "Fisio Mota",
-      languages: ["pt", "en", "es"],
-      practiceCountry: "PT",
-      serviceCountries: ["PT", "ES"],
-      worldwideRemote: false,
+      ...fixture.profile,
     })
-    const onlineSchedule = await upsertSchedule(tx, {
-      orgId,
-      expertProfileId: profileId,
-      name: "Online",
-      timezone: "Europe/Lisbon",
-      isDefault: true,
-    })
-    const lisboa = await upsertLocation(tx, {
-      orgId,
-      expertProfileId: profileId,
-      name: "Lisboa",
-      address: "Av. da Liberdade 100",
-      city: "Lisboa",
-      region: "Lisboa",
-      country: "PT",
-      timezone: "Europe/Lisbon",
-      isPrimary: true,
-    })
-    const porto = await upsertLocation(tx, {
-      orgId,
-      expertProfileId: profileId,
-      name: "Porto",
-      address: "Rua de Santa Catarina 200",
-      city: "Porto",
-      region: "Porto",
-      country: "PT",
-      timezone: "Europe/Lisbon",
-    })
-    const madrid = await upsertLocation(tx, {
-      orgId,
-      expertProfileId: profileId,
-      name: "Madrid",
-      address: "Calle de Alcalá 50",
-      city: "Madrid",
-      region: "Madrid",
-      country: "ES",
-      timezone: "Europe/Madrid",
-    })
-    const lisboaSchedule = await upsertSchedule(tx, {
-      orgId,
-      expertProfileId: profileId,
-      name: "Lisboa clinic",
-      timezone: "Europe/Lisbon",
-    })
-    const portoSchedule = await upsertSchedule(tx, {
-      orgId,
-      expertProfileId: profileId,
-      name: "Porto clinic",
-      timezone: "Europe/Lisbon",
-    })
-    const madridSchedule = await upsertSchedule(tx, {
-      orgId,
-      expertProfileId: profileId,
-      name: "Madrid clinic",
-      timezone: "Europe/Madrid",
-    })
-    const firstVisitId = await upsertEventType(tx, {
-      orgId,
-      expertProfileId: profileId,
-      slug: "first-visit",
-      title: {
-        en: "First visit",
-        pt: "Primeira consulta",
-        es: "Primera visita",
-      },
-      kind: "clinical",
-      durationMinutes: 60,
-      priceAmount: 6000,
-      languages: ["pt", "en", "es"],
-    })
-    await ensureMode(tx, {
-      orgId,
-      eventTypeId: firstVisitId,
-      mode: "online",
-      scheduleId: onlineSchedule,
-      countryScopeType: "list",
-      countryScopeCodes: ["PT", "ES"],
-      languages: ["pt", "en", "es"],
-      priceCents: 6000,
-      sortOrder: 0,
-    })
-    const followUpId = await upsertEventType(tx, {
-      orgId,
-      expertProfileId: profileId,
-      slug: "follow-up",
-      title: { en: "Follow-up", pt: "Seguimento", es: "Seguimiento" },
-      kind: "clinical",
-      durationMinutes: 45,
-      priceAmount: 4500,
-      languages: ["pt", "en", "es"],
-    })
-    await ensureMode(tx, {
-      orgId,
-      eventTypeId: followUpId,
-      mode: "in_person",
-      scheduleId: lisboaSchedule,
-      locationId: lisboa,
-      countryScopeType: "list",
-      countryScopeCodes: ["PT"],
-      languages: ["pt", "en", "es"],
-      priceCents: 4500,
-      sortOrder: 0,
-    })
-    await ensureMode(tx, {
-      orgId,
-      eventTypeId: followUpId,
-      mode: "in_person",
-      scheduleId: portoSchedule,
-      locationId: porto,
-      countryScopeType: "list",
-      countryScopeCodes: ["PT"],
-      languages: ["pt", "en", "es"],
-      priceCents: 4500,
-      sortOrder: 1,
-    })
-    await ensureMode(tx, {
-      orgId,
-      eventTypeId: followUpId,
-      mode: "in_person",
-      scheduleId: madridSchedule,
-      locationId: madrid,
-      countryScopeType: "list",
-      countryScopeCodes: ["ES"],
-      languages: ["pt", "en", "es"],
-      priceCents: 5500,
-      sortOrder: 2,
-    })
-    const privateInviteId = await upsertEventType(tx, {
-      orgId,
-      expertProfileId: profileId,
-      slug: DEMO_PRIVATE_INVITE_SLUG,
-      title: {
-        en: "Private invite",
-        pt: "Convite privado",
-        es: "Invitación privada",
-      },
-      kind: "clinical",
-      durationMinutes: 60,
-      priceAmount: 6000,
-      languages: ["pt", "en", "es"],
-      published: false,
-    })
-    const privateModeId = await ensureMode(tx, {
-      orgId,
-      eventTypeId: privateInviteId,
-      mode: "online",
-      scheduleId: onlineSchedule,
-      countryScopeType: "list",
-      countryScopeCodes: ["PT", "ES"],
-      languages: ["pt", "en", "es"],
-      priceCents: 6000,
-      sortOrder: 0,
-    })
-    const linkInput = {
-      orgId,
-      eventTypeId: privateInviteId,
-      eventTypeModeId: privateModeId,
-      scheduleId: onlineSchedule,
-      priceCents: DEMO_PRIVATE_INVITE_PRICE_CENTS,
-      note: DEMO_PRIVATE_INVITE_NOTE,
-      createdBy: userId,
+    const scheduleIds = new Map<string, string>()
+    for (const schedule of fixture.schedules) {
+      scheduleIds.set(
+        schedule.name,
+        await upsertSchedule(tx, {
+          orgId,
+          expertProfileId: profileId,
+          ...schedule,
+        })
+      )
     }
-    await upsertBookingLink(tx, {
-      ...linkInput,
-      token: DEMO_BOOKING_LINK_TOKENS.open,
-      maxUses: 1,
-      useCount: 0,
-    })
-    await upsertBookingLink(tx, {
-      ...linkInput,
-      token: DEMO_BOOKING_LINK_TOKENS.exhausted,
-      maxUses: 1,
-      useCount: 1,
-    })
+    const locationIds = new Map<string, string>()
+    for (const location of fixture.locations) {
+      locationIds.set(
+        location.name,
+        await upsertLocation(tx, {
+          orgId,
+          expertProfileId: profileId,
+          ...location,
+        })
+      )
+    }
+    for (const { modes, ...eventType } of fixture.eventTypes) {
+      const eventTypeId = await upsertEventType(tx, {
+        orgId,
+        expertProfileId: profileId,
+        ...eventType,
+      })
+      for (const [sortOrder, mode] of modes.entries()) {
+        await ensureMode(tx, {
+          orgId,
+          eventTypeId,
+          mode: mode.mode,
+          scheduleId: requireId(scheduleIds, mode.schedule),
+          locationId:
+            mode.location === undefined
+              ? undefined
+              : requireId(locationIds, mode.location),
+          countryScopeType: mode.countryScopeType,
+          countryScopeCodes: mode.countryScopeCodes,
+          languages: mode.languages,
+          priceCents: mode.priceCents,
+          sortOrder,
+        })
+      }
+    }
+    await extra?.(tx, { userId, orgId, profileId, scheduleIds })
     return profileId
   })
-  await ensureHandle("fisiomota", expertId)
+  await ensureHandle(fixture.profile.username, expertId)
+}
+
+function requireId(ids: Map<string, string>, name: string): string {
+  const id = ids.get(name)
+  if (!id) throw new Error(`offer fixture references unknown ${name}`)
+  return id
+}
+
+async function seedPrivateInvite(tx: Tx, seeded: SeededFixture) {
+  const { orgId, profileId, userId } = seeded
+  const onlineSchedule = requireId(seeded.scheduleIds, "Online")
+  const privateInviteId = await upsertEventType(tx, {
+    orgId,
+    expertProfileId: profileId,
+    slug: DEMO_PRIVATE_INVITE_SLUG,
+    title: {
+      en: "Private invite",
+      pt: "Convite privado",
+      es: "Invitación privada",
+    },
+    kind: "clinical",
+    durationMinutes: 60,
+    priceAmount: 6000,
+    languages: ["pt", "en", "es"],
+    published: false,
+  })
+  const privateModeId = await ensureMode(tx, {
+    orgId,
+    eventTypeId: privateInviteId,
+    mode: "online",
+    scheduleId: onlineSchedule,
+    countryScopeType: "list",
+    countryScopeCodes: ["PT", "ES"],
+    languages: ["pt", "en", "es"],
+    priceCents: 6000,
+    sortOrder: 0,
+  })
+  const linkInput = {
+    orgId,
+    eventTypeId: privateInviteId,
+    eventTypeModeId: privateModeId,
+    scheduleId: onlineSchedule,
+    priceCents: DEMO_PRIVATE_INVITE_PRICE_CENTS,
+    note: DEMO_PRIVATE_INVITE_NOTE,
+    createdBy: userId,
+  }
+  await upsertBookingLink(tx, {
+    ...linkInput,
+    token: DEMO_BOOKING_LINK_TOKENS.open,
+    maxUses: 1,
+    useCount: 0,
+  })
+  await upsertBookingLink(tx, {
+    ...linkInput,
+    token: DEMO_BOOKING_LINK_TOKENS.exhausted,
+    maxUses: 1,
+    useCount: 1,
+  })
 }
 
 export async function seedOfferFixtures() {
-  await seedQuickChat()
-  await seedPhysiotherapy()
+  await seedFixture(QUICK_CHAT_FIXTURE)
+  await seedFixture(PHYSIOTHERAPY_FIXTURE, seedPrivateInvite)
 }

@@ -158,7 +158,11 @@
       "templateApplyFailed": "No se pudo aplicar la plantilla",
       "templatePhi": "Quita los datos del miembro antes de guardar como plantilla",
       "templatePhiTitle": "Este informe contiene datos del miembro",
-      "templatePhiBody": "Una plantilla no puede contener el nombre, contacto, fechas de este miembro ni frases copiadas de esta sesión. Edita las partes resaltadas o crea la plantilla desde cero en Plantillas."
+      "templatePhiBody": "Una plantilla no puede contener el nombre, contacto, fechas de este miembro ni frases copiadas de esta sesión. Edita las partes resaltadas o crea la plantilla desde cero en Plantillas.",
+      "draftWithAi": "Borrador con IA",
+      "draftWithAiFailed": "No se pudo generar el borrador con IA",
+      "draftWithAiNoNotes": "Añade notas de la sesión antes de usar la IA",
+      "draftWithAiReady": "Borrador de IA insertado — revísalo antes de publicar"
     }
   },
   "eventTypes": {

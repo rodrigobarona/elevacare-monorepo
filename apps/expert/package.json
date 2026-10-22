@@ -23,6 +23,7 @@
     "@eleva/flags": "workspace:^",
     "@eleva/integrations": "workspace:^",
     "@eleva/observability": "workspace:^",
+    "@eleva/scheduling": "workspace:^",
     "@eleva/storage": "workspace:^",
     "@eleva/ui": "workspace:*",
     "@eleva/video": "workspace:*",

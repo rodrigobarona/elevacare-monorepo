@@ -1,14 +1,25 @@
+import { draftSessionReport } from "./draft-session-report"
 import { SessionRecordError } from "./errors"
-import type { SessionRecordView } from "./session-records"
+import { listSessionRecords, type SessionRecordView } from "./session-records"
 
 /**
- * AI summary of session notes + transcript. Fail closed until a
- * zero-retention model is on APPROVED_MODELS (ADR-009).
- * Authorization is enforced by the API route (assigned expert only).
+ * Legacy entrypoint used by `POST .../records/summarize`. Prefer
+ * `POST /ai/session-report` with explicit `noteRecordIds`.
  */
-export async function summarizeSessionRecords(_input: {
+export async function summarizeSessionRecords(input: {
   bookingId: string
   actorUserId: string
 }): Promise<SessionRecordView> {
-  throw new SessionRecordError("AI_MODEL_ZERO_RETENTION_REQUIRED")
+  const listed = await listSessionRecords(input)
+  const noteRecordIds = listed
+    .filter((row) => row.kind === "note")
+    .map((row) => row.id)
+  if (noteRecordIds.length === 0) {
+    throw new SessionRecordError("FORBIDDEN")
+  }
+  return draftSessionReport({
+    bookingId: input.bookingId,
+    actorUserId: input.actorUserId,
+    noteRecordIds,
+  })
 }

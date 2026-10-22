@@ -183,10 +183,10 @@ Out: push (Expo) — post-launch; Novu (retired).
       "new booking"; in-app rows created for both.
 - [ ] Reminders fire at T-24h and T-1h (verify with a booking 25h ahead and QStash `notBefore`
       or a shortened test schedule); cancelled booking -> reminders skipped.
-- [ ] Quiet hours: non-urgent kinds skip SMS inside the member's window (member TZ);
+- [x] Quiet hours: non-urgent kinds **skip SMS** inside the member's window (member TZ);
       email and in-app still deliver; urgent kinds (`booking.reminder_1h`,
-      `payment.failed`) bypass. Unit-tested only (AUD-004, decision-log 2026-10-06).
-      Deferring the skipped SMS to the end of the window is still a follow-up.
+      `payment.failed`) bypass. Unit-tested (AUD-004, decision-log 2026-10-06: **skipped, not deferred**).
+      Deferring the skipped SMS to the end of the quiet window remains a follow-up, not a launch blocker.
 - [ ] Same `idempotencyKey` twice for the same recipient -> one delivery per channel; the same
       `idempotencyKey` for member and expert (booking.confirmed) -> both delivered (test both).
 - [ ] SMS sent only with verified phone + opt-in; Twilio EU region used.

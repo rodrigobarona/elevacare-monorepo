@@ -43,17 +43,17 @@ Treat these as **local-contention flakes until re-run in isolation**. If they fa
 
 ## Phase closeout (honest stamps)
 
-| Phase             | Engineering              | Evidence                                                                      | Stamp                                                        |
-| ----------------- | ------------------------ | ----------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| 01 Rebaseline     | On main                  | CI jobs exist; audit migrations exist                                         | Engineering closed                                           |
-| 02 Better Auth    | On main                  | Auth e2e present; D-13 working pre-launch                                     | Engineering closed; cookie/CSRF not a prod security sign-off |
-| 03 WorkOS removal | On main with leftovers   | Calendar OAuth/busy still unproven (04B waiver)                               | Engineering closed with hygiene leftovers                    |
-| 04 Public booking | On main                  | Funnel e2e mostly mocked; live Stripe opt-in                                  | Engineering closed; **busy + hold-sweep incomplete**         |
-| 04B Offer builder | On main                  | Founder waived all human evidence 2026-09-25                                  | **Waived / unproven** (not a Phase 09 blocker)               |
-| 05 Member app     | On main                  | Loopback e2e opt-in                                                           | Engineering closed **except money leg depends on AUD-001**   |
-| 06 Payments       | Machinery on main        | Live pay→transfer→payout **unproven**; acceptance boxes unticked              | **Gated / evidence-incomplete**; P0 refund gap               |
-| 07 Invoicing      | Closed-gate code on main | Live FT / Comunicação / `invoice.issued` blocked                              | **Gated** (correct)                                          |
-| 08 Notifications  | Lane 1 on main           | Twilio US1 trial proven; IE1 residency unproven; quiet hours + ICS **merged** | Engineering closed; EU SMS claim still TODO                  |
+| Phase                 | Engineering              | Evidence                                                                      | Stamp                                                        |
+| --------------------- | ------------------------ | ----------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| 01 Rebaseline         | On main                  | CI jobs exist; audit migrations exist                                         | Engineering closed                                           |
+| 02 Better Auth        | On main                  | Auth e2e present; D-13 working pre-launch                                     | Engineering closed; cookie/CSRF not a prod security sign-off |
+| 03 Legacy IDP removal | On main with leftovers   | Calendar OAuth/busy still unproven (04B waiver)                               | Engineering closed with hygiene leftovers                    |
+| 04 Public booking     | On main                  | Funnel e2e mostly mocked; live Stripe opt-in                                  | Engineering closed; **busy + hold-sweep incomplete**         |
+| 04B Offer builder     | On main                  | Founder waived all human evidence 2026-09-25                                  | **Waived / unproven** (not a Phase 09 blocker)               |
+| 05 Member app         | On main                  | Loopback e2e opt-in                                                           | Engineering closed **except money leg depends on AUD-001**   |
+| 06 Payments           | Machinery on main        | Live pay→transfer→payout **unproven**; acceptance boxes unticked              | **Gated / evidence-incomplete**; P0 refund gap               |
+| 07 Invoicing          | Closed-gate code on main | Live FT / Comunicação / `invoice.issued` blocked                              | **Gated** (correct)                                          |
+| 08 Notifications      | Lane 1 on main           | Twilio US1 trial proven; IE1 residency unproven; quiet hours + ICS **merged** | Engineering closed; EU SMS claim still TODO                  |
 
 ## Findings register
 
@@ -99,7 +99,7 @@ Severity: **P0** blocks any production money. **P1** must be fixed or explicitly
 
 | Criterion                                                                    | Status      | Evidence                                                          |
 | ---------------------------------------------------------------------------- | ----------- | ----------------------------------------------------------------- |
-| Handbook WorkOS-as-decision gone (historical only)                           | Implemented | Handbook rewrite; execution-plan blast-radius retained on purpose |
+| Handbook legacy-IDP-as-decision gone (historical only)                       | Implemented | Handbook rewrite; execution-plan blast-radius retained on purpose |
 | ADR-017..021 + ADR-023 accepted                                              | Implemented | `docs/eleva-v3/adrs/`                                             |
 | CI: lint/typecheck/build/test/e2e-smoke/i18n/gitleaks                        | Implemented | `.github/workflows/ci.yml`, `e2e.yml`                             |
 | Neon branch + RLS class suite                                                | Partial     | Workflow exists; live isolation is opt-in and narrow (AUD-014)    |
@@ -123,7 +123,7 @@ Severity: **P0** blocks any production money. **P1** must be fixed or explicitly
 | Playwright `e2e/auth.spec.ts`                                                        | Implemented                       | present                                                   |
 | Legacy expand-only                                                                   | Done then contracted in 03        | migrations 0022 → 0024                                    |
 
-## Phase 03 — WorkOS removal
+## Phase 03 — Legacy IDP removal (ADR-019)
 
 | Criterion                                                         | Status      | Evidence                                                     |
 | ----------------------------------------------------------------- | ----------- | ------------------------------------------------------------ |
@@ -251,7 +251,7 @@ Production pass. "Merged" means the fix is on `main` with unit or loopback tests
 | AUD-011 | Merged                        | #129            | Optimistic compare-and-set on the stored credential                                                                                                                                                                                                                                                         |
 | AUD-012 | Merged                        | #131            | —                                                                                                                                                                                                                                                                                                           |
 | AUD-013 | Merged                        | #118            | —                                                                                                                                                                                                                                                                                                           |
-| AUD-014 | Merged; Neon RLS suite PASS   | #136            | Behavioural tests on money tables stay open                                                                                                                                                                                                                                                                 |
+| AUD-014 | Merged; Neon RLS suite PASS   | #136, #259      | **Closed 2026-10-21**: `rls-money.test.ts` in CI `neon-branch` + migration `0070_booking_payments_admin_rls` (platform_admin read for workers)                                                                                                                                                              |
 | AUD-015 | Merged                        | #130            | Operator: run migration 0049                                                                                                                                                                                                                                                                                |
 | AUD-016 | Merged                        | #128            | —                                                                                                                                                                                                                                                                                                           |
 | AUD-017 | Merged; staging proof pending | #144            | BotID is installed behind `BOTID_MODE` (default off) with a flagged same-origin `/api/*` funnel rewrite and hashed rate-limit IP logging. Production stays off until the staging runbook (`operator-tasks/botid-staging-validation.md`) shows independent per-IP keys and correct blocking. Not proven yet. |

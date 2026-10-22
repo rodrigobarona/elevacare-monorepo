@@ -182,3 +182,43 @@ export async function fillStripeTestCard(page: Page): Promise<void> {
     "12345"
   )
 }
+
+/** Stripe test mode: MB WAY (async_short) when enabled on STRIPE_PMC_BOOKING. */
+export async function fillStripeTestMbWay(page: Page): Promise<void> {
+  await expect(page.getByTestId("booking-pay-submit")).toBeEnabled({
+    timeout: 20_000,
+  })
+
+  let mbWayFrame: Frame | undefined
+  await expect
+    .poll(
+      async () => {
+        for (const frame of page.frames()) {
+          const tab = frame
+            .getByRole("tab", { name: /MB WAY/i })
+            .or(frame.getByRole("button", { name: /MB WAY/i }))
+          if ((await tab.count()) > 0 && (await tab.first().isVisible())) {
+            await tab.first().click()
+            mbWayFrame = frame
+            return true
+          }
+        }
+        return false
+      },
+      { timeout: 20_000 }
+    )
+    .toBeTruthy()
+
+  if (!mbWayFrame) {
+    throw new Error("Stripe Payment Element MB WAY option did not load")
+  }
+
+  const phoneFilled = await fillFirstVisible(
+    page.frames(),
+    'input[name="phone"], input[type="tel"], input[autocomplete="tel"]',
+    "+351910000000"
+  )
+  if (!phoneFilled) {
+    throw new Error("Stripe MB WAY phone field not found in any frame")
+  }
+}

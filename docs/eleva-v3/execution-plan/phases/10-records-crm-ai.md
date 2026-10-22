@@ -8,6 +8,8 @@
 | Touches    | `packages/db/src/schema/main/{records,session-documents,expert-notes,consents,crm}.ts`, `packages/encryption` (usage), `packages/storage` (private store), `packages/compliance/**` (retention jobs, DSAR collectors), `packages/crm/**`, `packages/ai/**`, `packages/encryption` (KEK/DEK operations), `apps/api/src/app/{records,notes,crm,ai,workflows}/**`, `apps/expert/**`, `apps/app/**`, `packages/flags` |
 | Exit gate  | Expert writes encrypted notes during/after a session, uploads documents to the private store, publishes a report the member can read via the app; retention jobs purge on schedule; consent captured; AI draft (behind `ff.ai_reports_beta`) from typed notes reviewed and published by the expert; KEK rotation job proven; no PHI in Sentry/logs                                                                |
 
+> **Engineering stamp (2026-10-21):** 10.1a–f, 10.2a, 10.2b (#265, flag default **off**, zero-retention model guard), and 10.2c are on `main`. Phase **closes on DPO/legal** only (AUD-029 production `ai_processing` copy, AUD-028 final retention numbers) — not on engineering merge alone.
+
 ## Why this phase exists
 
 Clinical value and trust: encrypted records, member-visible reports, consent and retention are
@@ -202,6 +204,7 @@ created|updated|archived`), API `/records/templates` CRUD + `POST /records/templ
 - [ ] Retention sweep deletes an expired unpublished AI draft in a
       seeded test; account deletion after grace period shreds keys and rows; DSAR includes published
       records and owned documents.
+- [x] **10.2b engineering:** `draftSessionReport` + `/ai/session-report` + expert “Draft with AI” behind `ff.ai_reports_beta` (default off); per-note author/consent gates; encrypted unpublished `ai_draft`; audit + redaction keys; mocked AI Gateway tests in `@eleva/ai`. Real generation stays fail-closed until an approved zero-retention model is attested.
 - [ ] AI draft generated from fixture typed notes through the AI Gateway (mock in tests, real on
       staging) validates against the Zod schema; publishing requires expert action; audit trail
       complete.

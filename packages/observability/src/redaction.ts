@@ -57,6 +57,11 @@ export const REDACTED_KEYS = new Set<string>([
   "summary",
   "observations",
   "recommendations",
+  "followupquestions",
+  "follow_up_questions",
+  "redflags",
+  "red_flags",
+  "disclaimer",
 ])
 
 /** Regex patterns applied to string values that survive field-name scrubbing. */

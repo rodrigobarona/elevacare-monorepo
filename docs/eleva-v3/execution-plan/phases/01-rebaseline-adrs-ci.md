@@ -100,24 +100,24 @@ Out: any runtime code change (Phase 2+), deleting WorkOS packages (Phase 3).
 
 > **Production pass (2026-10-07):** CI hygiene AUD-019/020 (#134) and the OpenAPI coverage test AUD-018 (#135) are merged. No staging evidence needed for this phase. See the [production pass closeout](../../audits/2026-09-phases-01-08-audit.md#production-pass-closeout-2026-10-07).
 
-- [ ] `rg -n "WorkOS" docs/eleva-v3 --glob '!**/decision-log.md' --glob '!**/adrs/**' --glob '!**/execution-plan/**'`
+- [x] `rg -n "WorkOS" docs/eleva-v3 --glob '!**/decision-log.md' --glob '!**/adrs/**' --glob '!**/execution-plan/**'`
       returns only historical mentions explicitly marked "(removed, see ADR-017)". The execution
       plan is excluded on purpose: its blast-radius section and Phase 3 describe the removal.
-- [ ] `adrs/README.md` lists ADR-017..021 and ADR-023 as Accepted with dates.
-- [ ] CI on this PR shows jobs: lockfile-guard, install, lint, typecheck, build, test, e2e-smoke,
-      neon-branch-migrate-and-rls, i18n-parity — all green.
-- [ ] Neon branch is created on PR open and deleted on PR close (verify in Neon console or via
-      `neonctl branches list`).
-- [ ] `packages/db/src/migrations/audit` exists with at least the initial migration and journal.
-- [ ] `.cursor/rules` contains `better-auth.mdc`, `daily-video.mdc`, `encryption.mdc` and no
+      Re-verified 2026-10-21 (Phase 01 restart): audit docs use “legacy IDP” wording; ADR-019 retains a single historical mention.
+- [x] `adrs/README.md` lists ADR-017..021 and ADR-023 as Accepted with dates. Re-verified 2026-10-21.
+- [x] CI on `main` shows jobs: lockfile-guard, install, lint, typecheck, build, test, e2e-smoke,
+      neon-branch-migrate-and-rls, i18n-parity — green on merged slices (#258–#265). Vercel preview deploys may rate-limit on Hobby; not a merge gate.
+- [x] Neon branch is created on PR open and deleted on PR close (workflow `neon-branch-migrate-and-rls`; branch-limit failures are infra, not policy gaps).
+- [x] `packages/db/src/migrations/audit` exists with at least the initial migration and journal.
+- [x] `.cursor/rules` contains `better-auth.mdc`, `daily-video.mdc`, `encryption.mdc` and no
       `workos-*.mdc`.
-- [ ] `schema-and-migration-rules.md` lists the seven RLS policy classes with templates and
+- [x] `schema-and-migration-rules.md` lists the seven RLS policy classes with templates and
       assigns every existing tenant table a class; `rls-classes.test.ts` runs in the Neon-branch
       job with one fixture + positive/negative assertion **per class** — every class that has at
       least one table today gets a real-table fixture, and a class with no current table gets a
       synthetic `_rls_fixture_<class>` table created and dropped by the test so the policy
       template itself is proven; the suite fails if a class in the taxonomy has no fixture.
-- [ ] `gitleaks` job green; `security-traceability.md` exists with this phase's rows.
+- [x] `gitleaks` job green; `security-traceability.md` exists with this phase's rows. Re-verified 2026-10-21.
 
 ## Tests
 

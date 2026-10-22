@@ -158,7 +158,11 @@
       "templateApplyFailed": "Não foi possível aplicar o modelo",
       "templatePhi": "Remova os dados do membro antes de guardar como modelo",
       "templatePhiTitle": "Este relatório contém dados do membro",
-      "templatePhiBody": "Um modelo não pode conter o nome, contactos, datas deste membro nem frases copiadas desta sessão. Edite as partes destacadas ou crie o modelo de raiz em Modelos."
+      "templatePhiBody": "Um modelo não pode conter o nome, contactos, datas deste membro nem frases copiadas desta sessão. Edite as partes destacadas ou crie o modelo de raiz em Modelos.",
+      "draftWithAi": "Rascunho com IA",
+      "draftWithAiFailed": "Não foi possível gerar o rascunho com IA",
+      "draftWithAiNoNotes": "Adicione notas da sessão antes de usar a IA",
+      "draftWithAiReady": "Rascunho de IA inserido — reveja antes de publicar"
     }
   },
   "eventTypes": {
