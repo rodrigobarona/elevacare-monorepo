@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from "vitest"
-import { AiModelNotApprovedError } from "./approved-models"
+import {
+  AiModelNotApprovedError,
+  AiModelZeroRetentionRequiredError,
+} from "./approved-models"
 import { AiModelEnvMissingError } from "./editor-assist"
 import {
   generateSessionReportDraft,
@@ -48,11 +51,28 @@ describe("generateSessionReportDraft", () => {
 
     const result = await generateSessionReportDraft(
       { locale: "en", noteTexts: ["Note body"] },
-      { generateObject }
+      { generateObject, attestZeroRetention: async () => undefined }
     )
 
     expect(result.body).toContain("## Recommendations")
     expect(result.promptVersion).toBe("session-report.v1")
     expect(generateObject).toHaveBeenCalledOnce()
+  })
+
+  it("never calls the model when the zero-retention attestation fails", async () => {
+    process.env.AI_GATEWAY_MODEL_SESSION_REPORT = "openai/gpt-6-luna"
+    const generateObject = vi.fn()
+    await expect(
+      generateSessionReportDraft(
+        { locale: "en", noteTexts: ["PHI note"] },
+        {
+          generateObject,
+          attestZeroRetention: async () => {
+            throw new AiModelZeroRetentionRequiredError("openai/gpt-6-luna")
+          },
+        }
+      )
+    ).rejects.toBeInstanceOf(AiModelZeroRetentionRequiredError)
+    expect(generateObject).not.toHaveBeenCalled()
   })
 })
