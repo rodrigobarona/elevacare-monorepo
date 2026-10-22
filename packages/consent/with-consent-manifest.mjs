@@ -1,3 +1,5 @@
+import process from "node:process"
+
 import { withConsentManifest } from "c15t/next/build"
 
 /** Public Inth hosted runtime (org `eleva`, project `eleva-care`). */
