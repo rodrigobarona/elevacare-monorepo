@@ -6,6 +6,10 @@ import {
 } from "./approved-models"
 import { AiModelEnvMissingError } from "./editor-assist"
 import {
+  assertZeroRetentionRoutingOptions,
+  attestZeroRetentionEu,
+} from "./zero-retention-attestation"
+import {
   buildSessionReportPrompt,
   formatSessionReportDraftBody,
   SESSION_REPORT_PROMPT_VERSION,
@@ -44,9 +48,16 @@ type GenerateObjectFn = typeof generateObject
 
 export async function generateSessionReportDraft(
   input: SessionReportGenerationInput,
-  options?: { generateObject?: GenerateObjectFn }
+  options?: {
+    generateObject?: GenerateObjectFn
+    /** Defaults to the live gateway attestation; tests inject a stub. */
+    attestZeroRetention?: (modelId: string) => Promise<unknown>
+  }
 ): Promise<SessionReportGenerationResult> {
   const modelId = resolveSessionReportModelId()
+  // Fail closed before any PHI is built into a prompt or sent.
+  assertZeroRetentionRoutingOptions(GATEWAY_PROVIDER_OPTIONS)
+  await (options?.attestZeroRetention ?? attestZeroRetentionEu)(modelId)
   const { system, user } = buildSessionReportPrompt(input)
   const generate = options?.generateObject ?? generateObject
 

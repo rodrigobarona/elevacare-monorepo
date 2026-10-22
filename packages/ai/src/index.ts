@@ -58,3 +58,9 @@ export {
   type TranslateMessagesInput,
   type TranslateMessagesResult,
 } from "./translate-messages"
+export {
+  ZERO_RETENTION_ATTESTATION_TTL_MS,
+  assertZeroRetentionRoutingOptions,
+  attestZeroRetentionEu,
+  type ZeroRetentionAttestation,
+} from "./zero-retention-attestation"
