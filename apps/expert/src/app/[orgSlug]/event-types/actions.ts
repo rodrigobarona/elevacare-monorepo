@@ -14,7 +14,7 @@ import {
   mapExpertApiError,
   offerInvariantViolations,
 } from "@/lib/map-api-error"
-import type { PublishViolation } from "@eleva/scheduling"
+import type { PublishViolation } from "@eleva/scheduling/publish-event-type"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
 
 type ActionResult =

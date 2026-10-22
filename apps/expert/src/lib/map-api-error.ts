@@ -1,9 +1,7 @@
 import { ApiClientError } from "@eleva/api-client"
-import {
-  isOfferInvariantError,
-  type OfferInvariantError,
-} from "@eleva/scheduling"
-import type { PublishViolation } from "@eleva/scheduling"
+import type { OfferInvariantError } from "@eleva/scheduling/offer-invariants"
+import { isOfferInvariantError } from "@eleva/scheduling/offer-invariant-fields"
+import type { PublishViolation } from "@eleva/scheduling/publish-event-type"
 
 export function mapExpertApiError(
   err: unknown,

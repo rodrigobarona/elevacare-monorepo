@@ -42,11 +42,13 @@ import {
 import { loadSubCalendars } from "../calendars/actions"
 import { defaultTimezoneForCountry, euCountriesInService } from "@eleva/config"
 import {
-  offerInvariantFieldForCode,
   OFFER_INVARIANT_MESSAGES,
   type OfferInvariantError,
+} from "@eleva/scheduling/offer-invariants"
+import {
+  offerInvariantFieldForCode,
   type OfferInvariantField,
-} from "@eleva/scheduling"
+} from "@eleva/scheduling/offer-invariant-fields"
 import { FieldError } from "@eleva/ui/components/field"
 
 export type ModeRow = {
