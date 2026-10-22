@@ -12,6 +12,8 @@ export type ApprovedModel = {
 }
 
 export const AI_MODEL_NOT_APPROVED = "AI_MODEL_NOT_APPROVED" as const
+export const AI_MODEL_ZERO_RETENTION_REQUIRED =
+  "AI_MODEL_ZERO_RETENTION_REQUIRED" as const
 
 export class AiModelNotApprovedError extends Error {
   readonly code = AI_MODEL_NOT_APPROVED
@@ -19,6 +21,15 @@ export class AiModelNotApprovedError extends Error {
   constructor(modelId: string) {
     super(`Model is not on the approved allow-list: ${modelId}`)
     this.name = "AiModelNotApprovedError"
+  }
+}
+
+export class AiModelZeroRetentionRequiredError extends Error {
+  readonly code = AI_MODEL_ZERO_RETENTION_REQUIRED
+
+  constructor(modelId: string) {
+    super(`Model is approved but lacks zero-retention: ${modelId}`)
+    this.name = "AiModelZeroRetentionRequiredError"
   }
 }
 
@@ -54,4 +65,14 @@ export function assertApprovedModel(modelId: string): ApprovedModel {
     throw new AiModelNotApprovedError(modelId)
   }
   return model
+}
+
+/**
+ * Models for PHI / clinical context. Every allow-listed model already
+ * qualifies (zero data retention + EU inference, enforced per call by
+ * {@link GATEWAY_PROVIDER_OPTIONS}), so this is the allow-list check under
+ * the name the Phase 10 callers use.
+ */
+export function requireZeroRetentionModel(modelId: string): ApprovedModel {
+  return assertApprovedModel(modelId)
 }
