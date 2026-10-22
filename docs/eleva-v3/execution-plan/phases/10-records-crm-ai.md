@@ -163,10 +163,10 @@ record_access_optouts(member_user_id, expert_org_id)))` — the two objects this
   locations (a thrown Error whose message embeds the record, a breadcrumb, request data, a tag,
   a span attribute) and assert zero PHI substrings in the output. Because `Decrypted<T>` serializes to `"[redacted]"`, API
   responses **never return it directly**: every authorized read maps it through an explicit
-  response DTO (`toRecordResponse(decrypted, viewer)` in `@eleva/records`, plain object, Zod
+  response DTO (`SessionRecordView` mapped inside `@eleva/records`, plain object, Zod
   response schema registered in OpenAPI) that copies exactly the fields the viewer may see; the
   two serialization paths are tested separately (DTO -> full authorized content; logger/Sentry ->
-  redacted) and an ESLint rule forbids `NextResponse.json` with a `Decrypted` argument.
+  redacted) and boundary lint forbids apps from importing `Decrypted` or the `decrypt*` helpers, so no route can hand a `Decrypted` value to `NextResponse.json`.
 
 Out: group sessions, member-authored records, AI for anything beyond session reports.
 
@@ -389,9 +389,9 @@ PR 10.1 — records, documents, consent, retention:
    breadcrumb, request data, tag, span attribute), assert
    the output contains none of the fixture's PHI strings. API responses never serialize a
    Decrypted<T> (it would print "[redacted]" to an authorized viewer): add
-   toRecordResponse(decrypted, viewer) in @eleva/records returning a plain DTO validated by a Zod
-   response schema registered in OpenAPI, use it in every record/report route, add an ESLint rule
-   in packages/eslint-config that forbids passing a Decrypted value to NextResponse.json, and test
+   a plain DTO (`SessionRecordView`, mapped in @eleva/records) validated by a Zod
+   response schema registered in OpenAPI, use it in every record/report route, add boundary
+   lint in packages/eslint-config that stops apps importing Decrypted or decrypt* helpers, and test
    both paths separately (DTO carries the full authorized body; logger/Sentry output is
    redacted); docs ops-observability-spec.md.
 
