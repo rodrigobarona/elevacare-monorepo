@@ -1,4 +1,5 @@
 import { env } from "@eleva/config/env"
+import type * as SentryNextjs from "@sentry/nextjs"
 import { getCorrelationId } from "./correlation"
 import { redactPayload } from "./redaction"
 import { sanitizeSentryEvent } from "./sentry-event"
@@ -22,7 +23,7 @@ export interface SentryInitOptions {
   tracesSampleRate?: number
 }
 
-async function loadSentry() {
+async function loadSentry(): Promise<typeof SentryNextjs> {
   // Dynamic import so consumers that only pull observability for
   // withHeaders or correlation helpers do not pay the Sentry bundle cost.
   return import("@sentry/nextjs")
@@ -76,9 +77,7 @@ export async function captureException(
   Sentry.captureException(err, safeContext ? { extra: safeContext } : undefined)
 }
 
-type RequestErrorArgs = Parameters<
-  Awaited<ReturnType<typeof loadSentry>>["captureRequestError"]
->
+type RequestErrorArgs = Parameters<typeof SentryNextjs.captureRequestError>
 
 /**
  * Next.js `onRequestError` hook target: reports server render / route errors
