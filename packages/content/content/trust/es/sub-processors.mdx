@@ -1,0 +1,25 @@
+---
+title: Subencargados — Eleva.care
+description: Terceros que tratan datos personales por cuenta de Eleva.care.
+lastUpdated: 2026-10-22
+summary: Nombres, finalidades, ubicaciones y mecanismos de transferencia.
+---
+
+## Resumen
+
+Eleva uses vetted vendors under Article 28 GDPR contracts. This page lists **sub-processors** that handle personal data on our instructions. Transfer mechanisms combine **EU Standard Contractual Clauses** in each vendor DPA with **EU–US Data Privacy Framework** certification where the vendor maintains it (checked periodically).
+
+| Vendor | Purpose | Location | Transfer basis |
+| --- | --- | --- | --- |
+| Vercel | Hosting, Functions (fra1), AI Gateway | EU / US | DPA + SCCs; DPF (Vercel Inc.) |
+| Neon | PostgreSQL database | AWS eu-central-1 | DPA + SCCs; DPF (Databricks) |
+| Upstash | Redis rate limits, QStash jobs | EU region when configured | DPA + SCCs; DPF |
+| Resend | Transactional email | US storage | DPA Module 2 + DPF |
+| Stripe | Payments and Connect | EU entity + US group | DPA (Ireland) + SCCs; DPF |
+| Daily | Video rooms (recording off) | US metadata; EU media geo when set | DPA + DPF |
+| Sentry | Error monitoring (EU data region) | EU (de.sentry.io) | DPA + DPF |
+| Inth (c15t) | Consent records | EU (Frankfurt) | DPA when executed |
+
+Google and Microsoft process calendar data as **independent controllers** when an expert connects OAuth; they are not Eleva subprocessors.
+
+**Última revisión de proveedores:** 2026-10-22. See also [Acuerdo de tratamiento de datos](/trust/dpa).

@@ -10,6 +10,7 @@
   "dependencies": {
     "@eleva/api-client": "workspace:*",
     "@eleva/auth": "workspace:*",
+    "@eleva/consent": "workspace:*",
     "@eleva/config": "workspace:*",
     "@eleva/ui": "workspace:*",
     "@eleva/icons": "workspace:*",

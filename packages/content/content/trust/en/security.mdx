@@ -1,0 +1,44 @@
+---
+title: Security — Eleva.care
+description: Technical and organisational measures on Eleva.care.
+lastUpdated: 2026-10-22
+summary: Encryption, access control, audit logging, and vendor due diligence.
+---
+
+## Scope
+
+This page describes how **BÚZIOS E TARTARUGAS, LDA** protects personal data on Eleva.care. Eleva operates the technology platform; **independent experts** deliver healthcare.
+
+## Organisational measures
+
+- Privacy and security responsibilities assigned within the company, with a data protection contact at [dpo@eleva.care](mailto:dpo@eleva.care).
+- Vendor review before onboarding subprocessors (see [Sub-processors](/trust/sub-processors)).
+- Development practices that include code review, dependency monitoring, and least-privilege access to production systems.
+
+## Technical measures
+
+- **Encryption in transit:** TLS for all browser and API traffic; strict transport security on public sites.
+- **Encryption at rest:** Database and private file storage use industry-standard encryption from our cloud providers.
+- **Access control:** Role-based access in product apps; row-level protections in the database where applicable.
+- **Audit trail:** Mutating operations emit events through an audit outbox shipped to a separate audit database.
+- **Rate limiting and abuse prevention:** Public and authenticated API routes are rate limited; selected public flows use bot protection.
+- **Payments:** Card data is handled by **Stripe**; Eleva does not store full card numbers.
+- **Video:** Sessions use **Daily** with cloud recording **disabled** on the standard plan (not a HIPAA/BAA deployment).
+
+## Data location
+
+- Primary application database: **Neon**, AWS **eu-central-1** (Frankfurt).
+- Serverless functions: Vercel **fra1** (Frankfurt) where configured.
+- Error monitoring: **Sentry** with EU data storage when configured to `de.sentry.io`.
+
+Some vendors still process metadata in the United States under their DPA and Standard Contractual Clauses; see the privacy notice and sub-processor list.
+
+## Reporting issues
+
+Report suspected vulnerabilities to [security@eleva.care](mailto:security@eleva.care). For personal data incidents affecting you, contact [privacy@eleva.care](mailto:privacy@eleva.care).
+
+## Related documents
+
+- [Privacy notice](/legal/privacy)
+- [Data processing agreement](/trust/dpa)
+- [Sub-processors](/trust/sub-processors)

@@ -1,0 +1,44 @@
+---
+title: Seguridad — Eleva.care
+description: Medidas técnicas y organizativas en Eleva.care.
+lastUpdated: 2026-10-22
+summary: Cifrado, control de acceso, auditoría y diligencia de proveedores.
+---
+
+## Ámbito
+
+Esta página describe cómo **BÚZIOS E TARTARUGAS, LDA** protege datos personales en Eleva.care. Eleva opera la plataforma tecnológica; **expertos independientes** prestan atención sanitaria.
+
+## Medidas organizativas
+
+- Responsabilidades de privacidad y seguridad asignadas en la empresa, con contacto de protección de datos en [dpo@eleva.care](mailto:dpo@eleva.care).
+- Revisión de proveedores antes de subcontratar (ver [Subencargados](/trust/sub-processors)).
+- Prácticas de desarrollo con revisión de código, monitorización de dependencias y acceso de mínimo privilegio a producción.
+
+## Medidas técnicas
+
+- **Cifrado en tránsito:** TLS para tráfico web y API; HSTS en sitios públicos.
+- **Cifrado en reposo:** Base de datos y almacenamiento privado con cifrado de los proveedores cloud.
+- **Control de acceso:** Acceso por roles en las apps; protecciones a nivel de fila en la base de datos cuando aplica.
+- **Pista de auditoría:** Las mutaciones emiten eventos vía outbox de auditoría a una base de auditoría separada.
+- **Límite de tasa y abuso:** Rutas públicas y autenticadas limitadas; flujos públicos seleccionados con protección anti-bot.
+- **Pagos:** Datos de tarjeta gestionados por **Stripe**; Eleva no almacena números completos de tarjeta.
+- **Vídeo:** Sesiones **Daily** con grabación cloud **desactivada** en el plan standard (no es despliegue HIPAA/BAA).
+
+## Ubicación de los datos
+
+- Base de datos principal: **Neon**, AWS **eu-central-1** (Fráncfort).
+- Funciones serverless: Vercel **fra1** (Fráncfort) cuando está configurado.
+- Monitorización de errores: **Sentry** con almacenamiento en la UE cuando está configurado a `de.sentry.io`.
+
+Algunos proveedores aún tratan metadatos en EE. UU. bajo su DPA y Cláusulas Contractuales Tipo; ver aviso de privacidad y lista de subencargados.
+
+## Informar problemas
+
+Vulnerabilidades: [security@eleva.care](mailto:security@eleva.care). Incidentes con sus datos: [privacy@eleva.care](mailto:privacy@eleva.care).
+
+## Documentos relacionados
+
+- [Aviso de privacidad](/legal/privacy)
+- [Acuerdo de tratamiento de datos](/trust/dpa)
+- [Subencargados](/trust/sub-processors)

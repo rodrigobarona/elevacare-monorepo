@@ -23,6 +23,7 @@ export const legalFrontmatterSchema = baseFrontmatterSchema.extend({
 
 export const pageFrontmatterSchema = baseFrontmatterSchema.extend({
   lastUpdated: isoDate,
+  summary: z.string().min(1).optional(),
   eyebrow: z.string().min(1).optional(),
 })
 

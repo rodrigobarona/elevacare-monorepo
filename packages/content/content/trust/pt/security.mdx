@@ -1,0 +1,44 @@
+---
+title: Segurança — Eleva.care
+description: Medidas técnicas e organizativas na Eleva.care.
+lastUpdated: 2026-10-22
+summary: Encriptação, controlo de acesso, auditoria e due diligence de fornecedores.
+---
+
+## Âmbito
+
+Esta página descreve como a **BÚZIOS E TARTARUGAS, LDA** protege dados pessoais na Eleva.care. A Eleva opera a plataforma tecnológica; **especialistas independentes** prestam cuidados de saúde.
+
+## Medidas organizativas
+
+- Responsabilidades de privacidade e segurança atribuídas na empresa, com contacto de proteção de dados em [dpo@eleva.care](mailto:dpo@eleva.care).
+- Revisão de fornecedores antes de subcontratar (ver [Subcontratantes](/trust/sub-processors)).
+- Práticas de desenvolvimento com revisão de código, monitorização de dependências e acesso de privilégio mínimo a produção.
+
+## Medidas técnicas
+
+- **Encriptação em trânsito:** TLS para tráfego web e API; HSTS nos sites públicos.
+- **Encriptação em repouso:** Base de dados e armazenamento privado de ficheiros com encriptação dos fornecedores cloud.
+- **Controlo de acesso:** Acesso por funções nas apps; proteções ao nível de linha na base de dados quando aplicável.
+- **Trilho de auditoria:** Operações de escrita emitem eventos via outbox de auditoria para base de auditoria separada.
+- **Rate limiting e abuso:** Rotas públicas e autenticadas com limites; fluxos públicos selecionados com proteção anti-bot.
+- **Pagamentos:** Dados de cartão tratados pela **Stripe**; a Eleva não guarda números completos de cartão.
+- **Vídeo:** Sessões **Daily** com gravação cloud **desativada** no plano standard (não é implementação HIPAA/BAA).
+
+## Localização dos dados
+
+- Base de dados principal: **Neon**, AWS **eu-central-1** (Frankfurt).
+- Funções serverless: Vercel **fra1** (Frankfurt) quando configurado.
+- Monitorização de erros: **Sentry** com armazenamento na UE quando configurado para `de.sentry.io`.
+
+Alguns fornecedores ainda tratam metadados nos EUA ao abrigo do respetivo ATD e Cláusulas Contratuais Tipo; ver aviso de privacidade e lista de subcontratantes.
+
+## Reportar problemas
+
+Vulnerabilidades suspeitas: [security@eleva.care](mailto:security@eleva.care). Incidentes com os seus dados: [privacy@eleva.care](mailto:privacy@eleva.care).
+
+## Documentos relacionados
+
+- [Política de privacidade](/legal/privacy)
+- [Acordo de tratamento de dados](/trust/dpa)
+- [Subcontratantes](/trust/sub-processors)

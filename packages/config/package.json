@@ -24,6 +24,8 @@
     "./booking-settings": "./src/booking-settings.ts",
     "./expert-profile-content": "./src/expert-profile-content.ts",
     "./public-site-parity": "./src/public-site-parity.ts",
+    "./editorial-pillars": "./src/editorial-pillars.ts",
+    "./legal-slugs": "./src/legal-slugs.ts",
     "./phone": "./src/phone.ts"
   },
   "scripts": {
