@@ -186,6 +186,8 @@ jobs:
               --glob '!packages/auth/eslint.config.js' \
               --glob '!packages/editor/eslint.config.js' \
               --glob '!packages/icons/eslint.config.js' \
+              --glob '!packages/content/src/content-compliance.test.ts' \
+              --glob '!apps/web/src/marketing-copy.test.ts' \
               --glob '!.cursor/hooks/state/**' \
               .
           )"
