@@ -253,8 +253,8 @@ async function importVideo(argv: string[]): Promise<void> {
       "alt-pt": { type: "string" },
       "alt-es": { type: "string" },
       tags: { type: "string" },
-      width: { type: "string", default: "1920" },
-      height: { type: "string", default: "1080" },
+      width: { type: "string" },
+      height: { type: "string" },
       blur: { type: "string" },
     },
   })
@@ -264,11 +264,22 @@ async function importVideo(argv: string[]): Promise<void> {
   if (typeof values.poster !== "string") {
     throw new Error("import-video needs --poster <image>")
   }
+  if (typeof values.blur !== "string") {
+    throw new Error(
+      "import-video needs --blur <small image> (blur placeholder)"
+    )
+  }
   const width = Number(values.width)
   const height = Number(values.height)
-  if (!width || !height) {
-    throw new Error("import-video needs valid --width and --height")
+  if (
+    !Number.isInteger(width) ||
+    !Number.isInteger(height) ||
+    width <= 0 ||
+    height <= 0
+  ) {
+    throw new Error("import-video needs the video's --width and --height")
   }
+  const alt = altFrom(values)
 
   const posterExt = path.extname(values.poster).toLowerCase()
   const posterType =
@@ -283,13 +294,8 @@ async function importVideo(argv: string[]): Promise<void> {
     readFile(values.poster),
   ])
 
-  let blurDataURL: string
-  if (typeof values.blur === "string") {
-    const blur = await readFile(values.blur)
-    blurDataURL = `data:image/jpeg;base64,${blur.toString("base64")}`
-  } else {
-    blurDataURL = `data:${posterType};base64,${posterBody.toString("base64")}`
-  }
+  const blur = await readFile(values.blur)
+  const blurDataURL = `data:image/jpeg;base64,${blur.toString("base64")}`
 
   const [{ url }, { url: posterUrl }] = await Promise.all([
     uploadPublicBlob({
@@ -312,7 +318,7 @@ async function importVideo(argv: string[]): Promise<void> {
     blurDataURL,
     width,
     height,
-    alt: altFrom(values),
+    alt,
     tags: tagsFrom(values.tags),
     license: "eleva-owned",
     credit: { name: "Eleva Care" },

@@ -30,8 +30,9 @@ for visitor CDN traffic without HLS benefits on a single ambient asset.
 3. **Video** uses the same **public** Blob store: web-optimized progressive MP4 plus a poster
    image. `ElevaVideo` renders native `<video>` (muted, autoplay, loop, no controls). Reduced
    motion shows the poster only. No third-party player or analytics.
-4. **CSP.** Marketing video and posters are served from `https://*.public.blob.vercel-storage.com`
-   (already allowed via `img-src https:` and same-origin Blob CDN). No Mux vendor block.
+4. **CSP.** Marketing video and posters are served from `https://*.public.blob.vercel-storage.com`.
+   Posters and images need the Blob host under `img-src`; video needs it under `media-src`
+   (`img-src` does not cover `<video>`). No Mux vendor block.
 
 ## Consequences
 

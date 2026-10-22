@@ -51,6 +51,10 @@ export function SiteMegaMenu({
   const schedule = (next: string | null, delay: number) => {
     clearTimer()
     timer.current = window.setTimeout(() => {
+      // Keep the panel open while keyboard focus is inside it.
+      if (next === null && rootRef.current?.contains(document.activeElement)) {
+        return
+      }
       openedByHover.current = next !== null
       setOpenId(next)
     }, delay)

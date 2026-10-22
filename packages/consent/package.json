@@ -12,8 +12,8 @@
     "c15t": "catalog:"
   },
   "peerDependencies": {
-    "next": "catalog:",
-    "react": "catalog:"
+    "next": "16.x",
+    "react": "19.x"
   },
   "devDependencies": {
     "@eleva/eslint-config": "workspace:*",

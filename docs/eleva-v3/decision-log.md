@@ -68,6 +68,22 @@ Each entry should include:
     `CONSENT_DOCUMENT_VERSION` publication switch after legal/DPO sign-off.
   - **Fact sheet SSOT:** `docs/eleva-v3/legal/fact-sheet.md` (restored in repo
     2026-10-22; vitest cross-checks sub-processors names).
+  - **Media: Mux dropped.** Marketing video + posters ship from the **public Vercel
+    Blob** store via `@eleva/storage`/`@eleva/media` (native `<video>`, no third-party
+    player); see the 2026-10-22 amendment in
+    [ADR-024](./adrs/ADR-024-marketing-media-library.md) (supersedes the Mux choice).
+    CSP gained `media-src https://*.public.blob.vercel-storage.com` (`img-src` does not
+    cover `<video>`).
+  - **Build/runtime fixes landed with the migration:** `withElevaConsentManifest` must be the
+    **outermost** `next.config` wrapper (it returns an async function that
+    `withMDX`/`withNextIntl`/`withBotId` would otherwise spread, dropping Turbopack MDX
+    rules and `images`); `pretypecheck: fumadocs-mdx` for generated `.source`; shared
+    Zod frontmatter schemas with `Date` normalisation for `lastUpdated`; docs default-locale
+    (`en`) help URLs are served unprefixed via `beforeFiles` rewrites while `pt`/`es`
+    stay prefixed; CI build runs with `--concurrency=2`. The CI **Build** job has also been
+    cancelled on `main` (infra, not caused by this PR).
+  - Not changed: `CONSENT_DOCUMENT_VERSION` stays at its working pre-launch value;
+    landing/legal draft banners stay until founder/DPO review.
 - Owner: engineering + founder (legal fields, pillars URLs). Status: `active`.
 - Related: content migration plan, [`consent-inth-manual-checklist.md`](./audits/consent-inth-manual-checklist.md).
 

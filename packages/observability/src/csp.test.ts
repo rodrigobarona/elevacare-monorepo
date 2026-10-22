@@ -16,6 +16,11 @@ describe("buildCspHeader", () => {
     expect(header).toMatch(/connect-src[^;]*wss:\/\/\*\.daily\.co/)
   })
 
+  it("allows public Blob video in media-src (ADR-024)", () => {
+    const header = buildCspHeader()
+    expect(header).toMatch(/media-src[^;]*\.public\.blob\.vercel-storage\.com/)
+  })
+
   it("adds the branded Daily domain when DAILY_DOMAIN is set", () => {
     const prev = process.env.DAILY_DOMAIN
     process.env.DAILY_DOMAIN = "eleva"

@@ -5,7 +5,10 @@ import { z } from "zod"
  * normalise that back to the `YYYY-MM-DD` string the pages render.
  */
 const isoDate = z.preprocess(
-  (value) => (value instanceof Date ? value.toISOString().slice(0, 10) : value),
+  (value) =>
+    value instanceof Date && !Number.isNaN(value.getTime())
+      ? value.toISOString().slice(0, 10)
+      : value,
   z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Use an ISO calendar date (YYYY-MM-DD)")

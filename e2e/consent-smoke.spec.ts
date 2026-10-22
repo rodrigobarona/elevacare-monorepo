@@ -24,7 +24,7 @@ test.describe("Cookie consent (c15t / Inth)", () => {
   }) => {
     await page.goto("/")
     const reject = page.getByRole("button", {
-      name: /reject|decline|only necessary|necessary only|rejeitar|recusar|rechazar|opcionais|opcionales/i,
+      name: /reject|decline|only necessary|necessary only|rejeitar|recusar|rechazar|solo necesarias|apenas necessárias/i,
     })
     await expect(reject).toBeVisible({ timeout: 20_000 })
     await reject.click()

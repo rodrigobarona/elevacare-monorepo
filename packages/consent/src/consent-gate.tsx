@@ -8,12 +8,13 @@ export type ConsentCategory =
   | "necessary"
   | "measurement"
   | "marketing"
+  | "functionality"
   | "experience"
 
 type Props = {
   category: ConsentCategory
   children: ReactNode
-  /** Reserved for a click-to-load placeholder once c15t exposes a slot API. */
+  /** Replaces the built-in c15t placeholder while the category is not allowed. */
   placeholder?: ReactNode
 }
 
@@ -26,7 +27,9 @@ export function ConsentGate({ category, children, placeholder }: Props) {
     return children
   }
 
-  void placeholder
-
-  return <C15tConsentGate category={category}>{children}</C15tConsentGate>
+  return (
+    <C15tConsentGate category={category} placeholder={placeholder}>
+      {children}
+    </C15tConsentGate>
+  )
 }

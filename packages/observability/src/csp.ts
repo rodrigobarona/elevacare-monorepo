@@ -51,6 +51,11 @@ const VENDORS: Record<string, VendorEntry> = {
   eleva: {
     connectSrc: ["https://api.eleva.care"],
   },
+  // ADR-024: marketing video + posters live in the public Vercel Blob store.
+  // `img-src https:` already covers posters; `<video>` needs media-src.
+  vercelBlobPublic: {
+    mediaSrc: ["https://*.public.blob.vercel-storage.com"],
+  },
 }
 
 // ---------------------------------------------------------------------------

@@ -47,7 +47,9 @@ function rewriteLegacyHelpPath(pathname: string): string | null {
   }
 
   const legacyPortal = rest[1]?.toLowerCase() ?? ""
-  const portal = LEGACY_HELP_PORTAL[legacyPortal]
+  const portal = Object.hasOwn(LEGACY_HELP_PORTAL, legacyPortal)
+    ? LEGACY_HELP_PORTAL[legacyPortal]
+    : undefined
   if (!portal) {
     return "/docs"
   }

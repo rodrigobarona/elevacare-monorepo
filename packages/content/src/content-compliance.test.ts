@@ -72,7 +72,7 @@ function parseFrontmatter(raw: string): Record<string, unknown> {
   const match = raw.match(/^---\n([\s\S]*?)\n---/)
   expect(match, "frontmatter block").toBeTruthy()
   const fm: Record<string, unknown> = {}
-  for (const line of match![1].split("\n")) {
+  for (const line of (match?.[1] ?? "").split("\n")) {
     const idx = line.indexOf(":")
     if (idx === -1) continue
     const key = line.slice(0, idx).trim()
@@ -163,7 +163,7 @@ describe("content compliance", () => {
   })
 
   it("resolves internal help links to existing MDX paths", () => {
-    const linkRe = /(?:href=\{?"|]\()(\/(?:members|experts|clinics)[^)\s"#]*)/g
+    const linkRe = /(?:href=\{?"|]\()(\/(?:members|experts|clinics)[^)\s"#?]*)/g
     for (const portal of ["members", "experts", "clinics"] as const) {
       for (const locale of fs.readdirSync(
         path.join(contentRoot, "help", portal)
@@ -180,7 +180,7 @@ describe("content compliance", () => {
             .join("---")
           let match: RegExpExecArray | null
           while ((match = linkRe.exec(body)) !== null) {
-            const href = match[1].split("#")[0]
+            const href = match[1] ?? ""
             const rel = href.replace(/^\/(members|experts|clinics)\/?/, "")
             const target = rel
               ? path.join(localeDir, `${rel}.mdx`)
