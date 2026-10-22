@@ -1,6 +1,9 @@
 import { generateObject } from "ai"
 
-import { requireZeroRetentionModel } from "./approved-models"
+import {
+  GATEWAY_PROVIDER_OPTIONS,
+  requireZeroRetentionModel,
+} from "./approved-models"
 import { AiModelEnvMissingError } from "./editor-assist"
 import {
   buildSessionReportPrompt,
@@ -52,11 +55,7 @@ export async function generateSessionReportDraft(
     schema: SessionReportDraftSchema,
     system,
     prompt: user,
-    providerOptions: {
-      gateway: {
-        zeroDataRetention: true,
-      },
-    },
+    providerOptions: GATEWAY_PROVIDER_OPTIONS,
   })
 
   const draft = SessionReportDraftSchema.parse(result.object)

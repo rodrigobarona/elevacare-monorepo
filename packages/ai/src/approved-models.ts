@@ -1,12 +1,13 @@
 /**
  * AI model allow-list (ADR-023 / Phase 4B). Fail closed: unknown model ids throw.
- * Phase 10 requires `zeroRetention: true` for PHI / clinical context.
+ * A model qualifies only if the AI Gateway lists a provider for it that has
+ * zero data retention and serves the EU zone (`/v1/models/{id}/endpoints`:
+ * `has_zdr: true` plus an `inference_regions` entry with `geo_region: "eu"`).
  */
 
 export type ApprovedModel = {
   modelId: string
   provider: string
-  zeroRetention: boolean
   evidenceUrl: string
 }
 
@@ -32,18 +33,27 @@ export class AiModelZeroRetentionRequiredError extends Error {
   }
 }
 
-/**
- * Seed allow-list for editor assist. Replace evidence URLs when legal confirms
- * the vendor zero-retention attestation for each model.
- */
 export const APPROVED_MODELS: readonly ApprovedModel[] = [
   {
-    modelId: "openai/gpt-4.1-mini",
+    modelId: "openai/gpt-6-luna",
     provider: "vercel-ai-gateway",
-    zeroRetention: false,
-    evidenceUrl: "https://vercel.com/docs/ai-gateway",
+    evidenceUrl:
+      "https://ai-gateway.vercel.sh/v1/models/openai/gpt-6-luna/endpoints",
   },
 ] as const
+
+/**
+ * Gateway options for every call: only zero-data-retention providers, with
+ * inference (and anything the provider keeps at rest) in the EU. If no
+ * provider meets both, the gateway fails the request instead of relaxing
+ * either constraint.
+ */
+export const GATEWAY_PROVIDER_OPTIONS = {
+  gateway: {
+    zeroDataRetention: true,
+    inferenceRegion: { scope: "zone", geoRegion: "eu" },
+  },
+} as const
 
 const APPROVED_BY_ID = new Map(
   APPROVED_MODELS.map((model) => [model.modelId, model] as const)
@@ -57,15 +67,12 @@ export function assertApprovedModel(modelId: string): ApprovedModel {
   return model
 }
 
+/**
+ * Models for PHI / clinical context. Every allow-listed model already
+ * qualifies (zero data retention + EU inference, enforced per call by
+ * {@link GATEWAY_PROVIDER_OPTIONS}), so this is the allow-list check under
+ * the name the Phase 10 callers use.
+ */
 export function requireZeroRetentionModel(modelId: string): ApprovedModel {
-  const model = assertApprovedModel(modelId)
-  if (!model.zeroRetention) {
-    throw new AiModelZeroRetentionRequiredError(modelId)
-  }
-  return model
-}
-
-/** First allow-listed zero-retention model, or null (PHI must fail closed). */
-export function firstZeroRetentionModel(): ApprovedModel | null {
-  return APPROVED_MODELS.find((model) => model.zeroRetention) ?? null
+  return assertApprovedModel(modelId)
 }

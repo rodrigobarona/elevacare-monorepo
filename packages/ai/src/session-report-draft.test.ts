@@ -1,9 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
-import * as approvedModels from "./approved-models"
-import {
-  AiModelNotApprovedError,
-  AiModelZeroRetentionRequiredError,
-} from "./approved-models"
+import { AiModelNotApprovedError } from "./approved-models"
 import { AiModelEnvMissingError } from "./editor-assist"
 import {
   generateSessionReportDraft,
@@ -17,12 +13,12 @@ describe("resolveSessionReportModelId", () => {
     )
   })
 
-  it("fails closed when the configured model lacks zero retention", () => {
+  it("fails closed when the configured model is not on the EU zero-retention allow-list", () => {
     expect(() =>
       resolveSessionReportModelId({
         AI_GATEWAY_MODEL_SESSION_REPORT: "openai/gpt-4.1-mini",
       })
-    ).toThrow(AiModelZeroRetentionRequiredError)
+    ).toThrow(AiModelNotApprovedError)
   })
 
   it("fails closed for unknown models", () => {
@@ -36,13 +32,7 @@ describe("resolveSessionReportModelId", () => {
 
 describe("generateSessionReportDraft", () => {
   it("maps mocked gateway output into composer body text", async () => {
-    process.env.AI_GATEWAY_MODEL_SESSION_REPORT = "openai/zdr-fixture"
-    vi.spyOn(approvedModels, "requireZeroRetentionModel").mockReturnValue({
-      modelId: "openai/zdr-fixture",
-      provider: "vercel-ai-gateway",
-      zeroRetention: true,
-      evidenceUrl: "https://example.test/zdr",
-    })
+    process.env.AI_GATEWAY_MODEL_SESSION_REPORT = "openai/gpt-6-luna"
 
     const generateObject = vi.fn().mockResolvedValue({
       object: {

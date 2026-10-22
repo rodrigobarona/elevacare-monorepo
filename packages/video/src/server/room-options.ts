@@ -5,6 +5,9 @@ export { JOIN_LEAD_MS, JOIN_TRAIL_MS }
 
 export type DailyLang = "en" | "pt" | "es"
 
+/** Daily call server (signaling + SFU) region: Frankfurt keeps media in the EU. */
+export const SESSION_ROOM_GEO = "eu-central-1"
+
 export type CreateSessionRoomInput = {
   bookingId: string
   startAt: Date
@@ -24,6 +27,7 @@ export type SessionRoomProperties = {
   enable_knocking: false
   enforce_unique_user_ids: true
   lang: DailyLang
+  geo: typeof SESSION_ROOM_GEO
 }
 
 export type SessionRoomCreateBody = {
@@ -81,6 +85,7 @@ export function buildSessionRoomBody(
       enable_knocking: false,
       enforce_unique_user_ids: true,
       lang: input.lang ?? "pt",
+      geo: SESSION_ROOM_GEO,
     },
   }
 }
@@ -107,6 +112,7 @@ export function roomMatchesContract(
       enable_recording_ui?: boolean
       eject_at_room_exp?: boolean
       enforce_unique_user_ids?: boolean
+      geo?: string
     }
   },
   expected: SessionRoomProperties
@@ -119,6 +125,7 @@ export function roomMatchesContract(
   if (config.max_participants !== expected.max_participants) return false
   if (config.eject_at_room_exp !== true) return false
   if (config.enforce_unique_user_ids !== true) return false
+  if (config.geo !== expected.geo) return false
   // Daily enable_recording is "cloud" | "local" | "cloud-audio-only" | "raw-tracks".
   // Omit it on create (default off). "" / false / missing means off.
   if (isRecordingEnabled(config.enable_recording)) return false
