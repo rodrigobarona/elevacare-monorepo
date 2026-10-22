@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { withAudit } from "@eleva/audit"
+import { recordNotificationDeliveryAudit } from "./audit-delivery"
 import { listMemberNotificationPreferences } from "@eleva/db"
 import {
   channelEnabled,
@@ -137,7 +137,8 @@ export type SendNotificationDeps = {
   sendSms?: (input: SendSmsInput) => Promise<SendSmsResult>
   listSms?: (input: { to: string; dateSentAfter: Date }) => Promise<ListedSms[]>
   recordAudit?: (input: {
-    orgId: string
+    deliveryOrgId: string | null | undefined
+    recipientUserId?: string | null
     deliveryId: string
     kind: NotificationKind
     channel: NotificationChannel
@@ -243,27 +244,14 @@ function parseInput(input: SendNotificationInput): ParsedSend {
 }
 
 async function defaultAudit(input: {
-  orgId: string
+  deliveryOrgId: string | null | undefined
+  recipientUserId?: string | null
   deliveryId: string
   kind: NotificationKind
   channel: NotificationChannel
   action: "sent" | "failed" | "suppressed"
 }): Promise<void> {
-  await withAudit(
-    { orgId: input.orgId, actorUserId: null },
-    async (_tx, ctx) => {
-      await ctx.emit({
-        entity: "notification",
-        action: input.action,
-        entityId: input.deliveryId,
-        payload: {
-          kind: input.kind,
-          channel: input.channel,
-          category: NOTIFICATION_KINDS[input.kind].category,
-        },
-      })
-    }
-  )
+  await recordNotificationDeliveryAudit(input)
 }
 
 function isUserRecipient(
@@ -521,15 +509,14 @@ async function finish(input: {
       providerId: input.providerId ?? null,
     }
   }
-  if (input.parsed.orgId) {
-    await input.recordAudit({
-      orgId: input.parsed.orgId,
-      deliveryId: input.row.id,
-      kind: input.parsed.kind,
-      channel: input.channel,
-      action: input.status,
-    })
-  }
+  await input.recordAudit({
+    deliveryOrgId: input.parsed.orgId ?? null,
+    recipientUserId: input.row.userId,
+    deliveryId: input.row.id,
+    kind: input.parsed.kind,
+    channel: input.channel,
+    action: input.status,
+  })
   return {
     channel: input.channel,
     deliveryId: input.row.id,

@@ -246,7 +246,7 @@ Each entry should include:
 - Related: `docs/eleva-v3/data-retention-export-matrix.md`,
   `docs/eleva-v3/audits/2026-10-phases-01-10-audit.md` (AUD-028, AUD-029).
 
-### 2026-10-20: Operational audit exemptions and null-org deliveries (proposed)
+### 2026-10-20: Operational audit exemptions and null-org deliveries (active)
 
 - Decision (engineering, AUD-037):
   - Room-create leases, capacity retry flags, notification claim/lease
@@ -254,14 +254,16 @@ Each entry should include:
     retry and concurrency state; the business transition each supports is
     audited. The list lives in `packages/audit/README.md` (Operational
     Exemptions).
-  - Notification deliveries and e-mail suppressions with `org_id` NULL
-    (password reset, e-mail verification, guest booking mail) are **not
-    audited today** because `audit_outbox.org_id` is NOT NULL. This is an
-    open gap, not an accepted exemption: auth e-mail is security-relevant.
-  - `audit_outbox.org_id` stays NOT NULL. The proposed direction is a
-    platform-org outbox (a reserved platform organization id, or a separate
-    platform outbox table) so user-scoped events can be audited.
-- Owner: engineering. Status: `proposed`.
+  - Notification deliveries with `org_id` NULL (password reset, e-mail
+    verification, guest booking mail) now audit through
+    `ELEVA_PLATFORM_AUDIT_ORG_ID` (`resolveNotificationAuditOrgId` in
+    `@eleva/audit`, `recordNotificationDeliveryAudit` in `@eleva/notifications`)
+    on send completion, Resend webhooks, and Twilio status callbacks. Payload
+    marks `platformScoped: true` and `recipientUserId` when the delivery row
+    has no tenant org. Without the env var, behaviour matches the previous
+    skip (local dev only — set the platform org in staging/production).
+  - `audit_outbox.org_id` stays NOT NULL; no separate outbox table.
+- Owner: engineering. Status: `active`.
 - Next review: Phase 13 compliance hardening, before launch.
 - Related: AUD-037 in `docs/eleva-v3/audits/2026-10-phases-01-10-audit.md`,
   `packages/notifications/src/handle-resend-webhook.ts`.
