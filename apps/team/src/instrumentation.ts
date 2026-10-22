@@ -14,3 +14,12 @@ export async function register(): Promise<void> {
     await initSentry({ app: "team" })
   }
 }
+
+export async function onRequestError(
+  ...args: Parameters<
+    typeof import("@eleva/observability/sentry").captureRequestError
+  >
+): Promise<void> {
+  const { captureRequestError } = await import("@eleva/observability/sentry")
+  await captureRequestError(...args)
+}

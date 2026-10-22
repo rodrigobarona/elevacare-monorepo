@@ -75,3 +75,21 @@ export async function captureException(
   const safeContext = context ? redactPayload(context) : undefined
   Sentry.captureException(err, safeContext ? { extra: safeContext } : undefined)
 }
+
+type RequestErrorArgs = Parameters<
+  Awaited<ReturnType<typeof loadSentry>>["captureRequestError"]
+>
+
+/**
+ * Next.js `onRequestError` hook target: reports server render / route errors
+ * (including React Server Component failures) through the same redacting
+ * `beforeSend`. No-op without a DSN, like `initSentry`.
+ */
+export async function captureRequestError(
+  ...args: RequestErrorArgs
+): Promise<void> {
+  const e = env()
+  if (!e.SENTRY_DSN && !e.NEXT_PUBLIC_SENTRY_DSN) return
+  const Sentry = await loadSentry()
+  Sentry.captureRequestError(...args)
+}

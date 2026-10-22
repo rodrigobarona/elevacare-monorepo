@@ -1,8 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const init = vi.fn()
+const { init, captureRequestError: sentryCaptureRequestError } = vi.hoisted(
+  () => ({ init: vi.fn(), captureRequestError: vi.fn() })
+)
 
-vi.mock("@sentry/nextjs", () => ({ init, captureException: vi.fn() }))
+vi.mock("@sentry/nextjs", () => ({
+  init,
+  captureException: vi.fn(),
+  captureRequestError: sentryCaptureRequestError,
+}))
 vi.mock("@eleva/config/env", () => ({
   env: () => ({
     SENTRY_DSN: "https://public@example.ingest.sentry.io/1",
@@ -10,7 +16,7 @@ vi.mock("@eleva/config/env", () => ({
   }),
 }))
 
-import { initSentry } from "./sentry"
+import { captureRequestError, initSentry } from "./sentry"
 import { Decrypted, registerPhi, withPhiScope } from "./phi"
 
 type SentryOptions = {
@@ -62,5 +68,25 @@ describe("initSentry for PHI-rendering apps", () => {
       data: { body: "private note", title: "Session notes" },
     })
     expect(JSON.stringify(crumb)).not.toContain("private note")
+  })
+})
+
+describe("captureRequestError", () => {
+  it("forwards Next.js request errors to Sentry when a DSN is configured", async () => {
+    sentryCaptureRequestError.mockReset()
+    const error = new Error("render failed")
+    const request = { path: "/sessions/1", method: "GET", headers: {} }
+    const context = {
+      routerKind: "App Router",
+      routePath: "/sessions/[id]",
+      routeType: "render",
+      renderSource: "react-server-components",
+    } as const
+    await captureRequestError(error, request, context)
+    expect(sentryCaptureRequestError).toHaveBeenCalledWith(
+      error,
+      request,
+      context
+    )
   })
 })
