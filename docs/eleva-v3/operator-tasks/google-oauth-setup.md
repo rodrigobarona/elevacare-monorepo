@@ -126,17 +126,18 @@ extra approved HTTPS Eleva origin.
 
 ## Step 6 — Prove Phase 02 (AUD-049 real Google path)
 
-Loopback passkey + `/login?error=account_not_linked` UI are done. Stamp
-only after a **live** Google round-trip.
+Loopback passkey + `/login?error=account_not_linked` UI mapping are done.
+Stamp only after a **live** Google round-trip. Implicit Google linking is **on**
+(ADR-017 amendment 2026-10-23).
 
 - [ ] Open account login (local gateway or `https://dev.eleva.care` / prod)
 - [ ] Network: `accounts.google.com` → `…/auth/callback/google`
-- [ ] Happy path: Google account that maps to an Eleva user (or intended
-      signup) → session cookie lands
-- [ ] `account_not_linked`: Google account whose verified email **already
-      belongs to an Eleva user** with no linked Google account →
-      `/login?error=account_not_linked` guidance (implicit linking is off).
-      An email with no Eleva user tests signup, not this path.
+- [ ] Happy path (new Google e-mail): signup → session cookie lands
+- [ ] Same-email link: Eleva user with password/magic-link/passkey and **no**
+      Google `account` row → Continue with Google (same verified e-mail) →
+      Google account linked + session (not `account_not_linked`)
+- [ ] Optional regression: `/login?error=account_not_linked` still shows guidance
+      copy (edge / non-trusted provider); not the same-email Google happy path
 - [ ] No CSRF / origin reject in API logs
 
 ## Step 7 — Prove Phase 03–04B Google calendar (unproven stamp)

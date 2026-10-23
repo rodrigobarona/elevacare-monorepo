@@ -58,6 +58,8 @@ test.describe("auth screens", () => {
     await expect(page.getByTestId("two-factor-form")).toBeVisible()
   })
 
+  // UI mapping only — same-email Google now implicit-links (ADR-017 2026-10-23).
+  // Live OAuth link-on-sign-in is operator-gated (google-oauth-setup.md).
   test("Google account_not_linked lands on login with guidance", async ({
     page,
   }) => {

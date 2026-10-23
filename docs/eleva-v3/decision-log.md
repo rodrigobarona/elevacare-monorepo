@@ -32,6 +32,22 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-23: Google implicit account linking (active)
+
+- Decision: enable Better Auth implicit link-on-sign-in for Google
+  (`accountLinking.disableImplicitLinking: false`, keep `enabled: true` and
+  `trustedProviders: ["google"]`). Same verified e-mail Google OAuth attaches to an existing
+  Eleva user (password / magic-link / passkey) and opens a session instead of
+  `account_not_linked`.
+- Rationale: recovery UX when the member does not remember password / link / passkey; matches
+  Better Auth default for trusted providers ([users-accounts § account linking](https://www.better-auth.com/docs/concepts/users-accounts#account-linking)).
+- Trade-off: softens ADR-017’s prior “no implicit link” hardening. Mitigation: Google-verified
+  e-mail + Google is the only trusted social provider; no `allowDifferentEmails`.
+- Explicit `linkSocial()` unchanged for calendar scopes / settings.
+- Related: [ADR-017](./adrs/ADR-017-better-auth-identity.md) amendment 2026-10-23;
+  [`operator-tasks/google-oauth-setup.md`](./operator-tasks/google-oauth-setup.md).
+- Status: `active`.
+
 ### 2026-10-21: Dev-prod evidence exception (active, operator-gated)
 
 - Decision (founder-approved engineering exception):

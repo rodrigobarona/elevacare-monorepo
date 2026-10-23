@@ -2,11 +2,11 @@
 
 ## Status
 
-Accepted
+Accepted (amended 2026-10-23: Google implicit account linking on)
 
 ## Date
 
-2026-09-07
+2026-09-07 (original), 2026-10-23 (account linking amendment)
 
 ## Context
 
@@ -70,10 +70,12 @@ without password export (ADR-019); Phase 2 proves the vendor behaviour in a spik
    Google/Microsoft tokens with `BETTER_AUTH_SECRET`; Phase 2 has an integration check that
    fails if the flag is missing or false). `@eleva/calendar` reads tokens through
    `auth.api.getAccessToken({ body: { accountId, userId } })` (ADR-004 amended). Account linking:
-   `accountLinking.disableImplicitLinking: true`, `trustedProviders: ["google"]` only for
-   explicit `linkSocial()` after a verified magic-link session; a Google sign-in whose
-   e-mail matches an existing user returns `account_not_linked` (ADR-019). No linking by
-   unverified e-mail match.
+   `accountLinking.enabled: true`, `disableImplicitLinking: false`,
+   `trustedProviders: ["google"]`. A Google sign-in whose verified e-mail matches an existing
+   Eleva user **implicitly links** the Google `account` row and opens a session (Better Auth
+   default with trusted provider). Explicit `linkSocial()` remains for calendar scopes and
+   settings. No `allowDifferentEmails`. No linking by unverified e-mail match outside trusted
+   providers.
 6. **Consumers.** Frontends use exactly three entry points from `@eleva/auth`: `client`
    (`createAuthClient` with the matching client plugins), `server` (`getSession()` — a
    `React.cache`d fetch of `/auth/get-session` forwarding cookies) and `proxy`
@@ -89,6 +91,19 @@ without password export (ADR-019); Phase 2 proves the vendor behaviour in a spik
    dual-read behind a flag); Phase 3 = contract (drop `workos_*` columns, delete
    `@workos-inc/*`, `infra/workos`, Widgets wrappers and `@radix-ui/themes`). `WORKOS_*` env vars
    are removed in Phase 3.
+
+## Amendment (2026-10-23)
+
+Product need: members who registered with password / magic-link / passkey and forgot
+credentials can recover by **Continue with Google** on the same verified e-mail.
+
+- Set `accountLinking.disableImplicitLinking: false` (was `true`).
+- Keep `trustedProviders: ["google"]` only; do not enable `allowDifferentEmails`.
+- Softens the original account-takeover hardening (implicit same-email OAuth). Mitigation:
+  Google e-mail verification + Eleva trusts only Google for social sign-in linking.
+- Calendar connect stays explicit `linkSocial()` with scopes.
+- UI still maps `account_not_linked` for edge cases / non-trusted providers; happy path no
+  longer expects that error for same-email Google.
 
 ## Alternatives Considered
 

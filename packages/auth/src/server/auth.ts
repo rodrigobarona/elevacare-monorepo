@@ -185,7 +185,10 @@ function createAuth() {
       encryptOAuthTokens: true,
       accountLinking: {
         enabled: true,
-        disableImplicitLinking: true,
+        // Implicit link-on-sign-in for Google: same-email OAuth attaches to the
+        // existing user (password / magic-link / passkey) instead of account_not_linked.
+        // Mitigated by trustedProviders + Google-verified email (ADR-017 amendment).
+        disableImplicitLinking: false,
         trustedProviders: ["google"],
       },
     },
