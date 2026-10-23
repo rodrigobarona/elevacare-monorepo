@@ -4,6 +4,7 @@ import {
   type APIRequestContext,
   type Page,
 } from "@playwright/test"
+import { CONSENT_DOCUMENT_VERSION } from "@eleva/compliance"
 import {
   ACCOUNT_ORIGIN,
   E2E_PASSWORD,
@@ -592,9 +593,12 @@ async function assertDeleteAccountBlocksReserve(
     language: "en" as const,
     memberCountry: "PT",
     consents: [
-      { kind: "terms" as const, version: "dev-2026-09-09" },
-      { kind: "privacy" as const, version: "dev-2026-09-09" },
-      { kind: "health_data_processing" as const, version: "dev-2026-09-09" },
+      { kind: "terms" as const, version: CONSENT_DOCUMENT_VERSION },
+      { kind: "privacy" as const, version: CONSENT_DOCUMENT_VERSION },
+      {
+        kind: "health_data_processing" as const,
+        version: CONSENT_DOCUMENT_VERSION,
+      },
     ],
   }
 

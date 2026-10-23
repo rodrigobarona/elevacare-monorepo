@@ -18,7 +18,7 @@ export const FUNNEL_CONSENT_KINDS = [
 
 export type FunnelConsentKind = (typeof FUNNEL_CONSENT_KINDS)[number]
 
-export const CONSENT_DOCUMENT_VERSION = "dev-2026-09-09"
+export const CONSENT_DOCUMENT_VERSION = "2026-10-24"
 
 const DRAFT_CONSENT_VERSION_PREFIX = "dev-"
 
@@ -27,9 +27,8 @@ export function isDraftConsentVersion(version: string): boolean {
 }
 
 /**
- * Working pre-launch versions (prefix `dev-`) must not accept consent on
- * the production Vercel environment. Legal and the DPO replace this
- * value before go-live (D-10).
+ * Versions with prefix `dev-` must not accept consent on the production
+ * Vercel environment (D-10). Published versions use `YYYY-MM-DD`.
  */
 type DeploymentEnv = {
   VERCEL_ENV?: string
@@ -86,9 +85,8 @@ function documentFor(kind: FunnelConsentKind): ConsentDocument {
 }
 
 /**
- * Working pre-launch document versions (D-10). Recorded 2026-09-09 by
- * Rodrigo Barona as founder/product owner. Not DPO-approved. Re-sign
- * before go-live.
+ * Published consent document versions (D-10). Founder-approved
+ * publication 2026-10-24 (`CONSENT_DOCUMENT_VERSION`).
  */
 export const CONSENT_DOCUMENTS: Record<FunnelConsentKind, ConsentDocument> = {
   terms: documentFor("terms"),

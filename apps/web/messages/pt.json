@@ -535,7 +535,7 @@
     "complaintsBook": "Livro de reclamações eletrónico",
     "trustSecurity": "Segurança",
     "evidenceBasedCare": "Cuidados baseados em evidência",
-    "draftNote": "Estas páginas são rascunhos de pré-lançamento (versão {version}). A área jurídica e o DPO voltam a assinar antes do go-live.",
+    "versionNote": "Versão do documento {version}",
     "solutions": "Juntar-se à Eleva",
     "becomeExpert": "Tornar-se especialista",
     "forClinics": "Para clínicas",
@@ -555,7 +555,6 @@
     "tocTitle": "Nesta página"
   },
   "legal": {
-    "draftBanner": "Rascunho de pré-lançamento. Este não é texto jurídico de produção. A área jurídica e o DPO substituem-no antes da Eleva.care ir ao ar.",
     "versionLabel": "Versão {version}",
     "documents": {
       "terms": {
@@ -849,7 +848,6 @@
     "eyebrow": "Contacto"
   },
   "trust": {
-    "draftBanner": "Rascunho de pré-lançamento. Esta página não afirma uma certificação nem uma auditoria concluída. A Fase 13 publica texto com evidência, dono, aprovador, ligação à evidência e data de revisão.",
     "pages": {
       "security": {
         "title": "Segurança — Eleva.care",

@@ -45,18 +45,21 @@ describe("CONSENT_DOCUMENTS", () => {
     })
   })
 
-  it("treats the working pre-launch version as a draft", () => {
-    expect(isDraftConsentVersion(CONSENT_DOCUMENT_VERSION)).toBe(true)
+  it("treats only the dev- prefix as a draft version", () => {
+    expect(isDraftConsentVersion(CONSENT_DOCUMENT_VERSION)).toBe(false)
+    expect(isDraftConsentVersion("dev-2026-09-09")).toBe(true)
     expect(isDraftConsentVersion("2026-09-21")).toBe(false)
   })
 
-  it("refuses draft consent versions on the production Vercel environment", () => {
+  it("allows the published consent version on the production Vercel environment", () => {
     expect(() =>
       assertConsentVersionsApprovedForDeployment({ VERCEL_ENV: "production" })
-    ).toThrow(/cannot accept production consent/)
-    expect(() => requiredConsentVersions({ VERCEL_ENV: "production" })).toThrow(
-      /cannot accept production consent/
-    )
+    ).not.toThrow()
+    expect(requiredConsentVersions({ VERCEL_ENV: "production" })).toEqual({
+      terms: CONSENT_DOCUMENT_VERSION,
+      privacy: CONSENT_DOCUMENT_VERSION,
+      health_data_processing: CONSENT_DOCUMENT_VERSION,
+    })
   })
 
   it("accepts the current funnel versions and rejects a stale one", () => {

@@ -2,7 +2,7 @@
 
 Engineering mounts `@eleva/consent` on all user-facing apps with strict opt-in, Eleva theme tokens, and `ELEVA_LOCALE` passed to `resolveConsent({ language })`. This checklist is **evidence for handoff**, not a legal compliance stamp. Run against a **production build** (`next build && next start`), not dev-only HMR.
 
-**Backend:** Inth org `eleva`, project `eleva-care`, runtime `https://eleva-care-eleva.inth.app/` (Frankfurt). **Do not** bump `CONSENT_DOCUMENT_VERSION` until founder/DPO re-sign legal.
+**Backend:** Inth org `eleva`, project `eleva-care`, runtime `https://eleva-care-eleva.inth.app/` (Frankfurt). Funnel consent version: `CONSENT_DOCUMENT_VERSION` = **`2026-10-24`** (published 2026-10-24, founder-approved).
 
 ## Browser setup
 

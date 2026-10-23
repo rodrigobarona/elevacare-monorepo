@@ -98,12 +98,6 @@ export default async function TrustPage({ params }: Props) {
       <SiteHeader />
       <main className="flex-1 px-6 py-16">
         <article className="mx-auto max-w-3xl">
-          <p
-            data-testid="legal-draft-banner"
-            className="mb-4 rounded-md border border-warning/30 bg-warning-subtle px-3 py-2 text-sm text-warning"
-          >
-            {t("draftBanner")}
-          </p>
           <h1 className="text-3xl font-bold tracking-tight">
             {t(`pages.${slug}.heading`)}
           </h1>

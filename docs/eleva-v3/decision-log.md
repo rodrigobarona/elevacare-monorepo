@@ -32,6 +32,22 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-24: Publish consent documents (D-10 switch) (active)
+
+- Decision (founder): publish the legal/trust consent set. Set
+  `CONSENT_DOCUMENT_VERSION` in `@eleva/compliance` from `dev-2026-09-09` to
+  **`2026-10-24`** so production (`VERCEL_ENV=production`) can accept funnel
+  consents on `POST /bookings/reserve`. Remove legal/trust fallback draft
+  banners and replace the public footer draft note with a neutral document
+  version line. Marketing landing draft banners (`/become-expert`,
+  `/for-clinics`, `/contact`) stay unchanged.
+- Unblocks: production booking reserve that previously 500'd with
+  `cannot accept production consent`.
+- Owner: founder (publication approval) + engineering (switch).
+- Status: `active`.
+- Related: D-10, [`legal/fact-sheet.md`](./legal/fact-sheet.md) §6,
+  [`audits/consent-inth-manual-checklist.md`](./audits/consent-inth-manual-checklist.md).
+
 ### 2026-10-23: Better Auth rate-limit Redis TTL + Vercel IP headers (active)
 
 - Decision: `secondaryStorage.increment` must `INCR` + `EXPIRE key ttl NX` so
@@ -2671,18 +2687,18 @@ capabilities.transfers = active`. Stripe Identity stays implemented behind
 ### D-10 (2026-09-07): Public-site parity dispositions
 
 - Owner: product (founder)
-- Status: active — working pre-launch decision recorded 2026-09-09 by Rodrigo
-  Barona (founder, product owner). Draft legal pages and `CONSENT_DOCUMENTS`
-  version `dev-2026-09-09` are not DPO-approved. Re-sign before go-live.
-- Review date: 2026-09-21 (legal + DPO re-sign before production)
-- Summary: every surface of the live MVP site has a disposition. On `main`
-  as of 2026-09-10: expert URLs via `public_handles`; `/pt-BR/*` 301 (D-01);
-  versioned `/{locale}/legal/*` (`CONSENT_DOCUMENTS`); `/become-expert` and
-  `/for-clinics` drafts. Quiz / help / trust / contact / community footer
-  301s and `e2e/legacy-urls.spec.ts` land in PR `#45` (open, rebased onto
-  `#46`). Contact POST is still at the DPO gate. Trust copy stays
-  evidence-free until Phase 13. Blocks: Phase 4 PR 04.2 leftovers.
-- Reference: [`execution-plan/phases/04-public-marketplace-booking.md`](./execution-plan/phases/04-public-marketplace-booking.md) "Public-site parity"
+- Status: active — **consent set published 2026-10-24** (founder-approved).
+  `CONSENT_DOCUMENT_VERSION` is `2026-10-24` (no `dev-` prefix). Legal/trust
+  draft chrome removed; marketing landing drafts (`/become-expert`,
+  `/for-clinics`, `/contact`) remain. Earlier working pre-launch record
+  (2026-09-09, version `dev-2026-09-09`) is superseded for the publication
+  switch; see decision-log entry 2026-10-24.
+- Summary: every surface of the live MVP site has a disposition. Expert URLs
+  via `public_handles`; `/pt-BR/*` 301 (D-01); versioned `/{locale}/legal/*`
+  (`CONSENT_DOCUMENTS`). Contact POST and Phase 13 evidence-backed trust
+  claims remain separate follow-ups.
+- Reference: [`execution-plan/phases/04-public-marketplace-booking.md`](./execution-plan/phases/04-public-marketplace-booking.md) "Public-site parity",
+  [`legal/fact-sheet.md`](./legal/fact-sheet.md) §6
 
 ### D-11 (2026-09-07): Clinical access model
 

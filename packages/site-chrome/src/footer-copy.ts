@@ -29,7 +29,7 @@ export type FooterCopy = {
   instagram: string
   linkedin: string
   rights: (year: string) => string
-  draftNote: (version: string) => string
+  versionNote: (version: string) => string
 }
 
 const en: FooterCopy = {
@@ -62,8 +62,7 @@ const en: FooterCopy = {
   instagram: "Instagram",
   linkedin: "LinkedIn",
   rights: (year) => `© ${year} Eleva.care. All rights reserved.`,
-  draftNote: (version) =>
-    `These pages are working pre-launch drafts (version ${version}). Legal and the DPO will re-sign before go-live.`,
+  versionNote: (version) => `Document version ${version}`,
 }
 
 const pt: FooterCopy = {
@@ -96,8 +95,7 @@ const pt: FooterCopy = {
   instagram: "Instagram",
   linkedin: "LinkedIn",
   rights: (year) => `© ${year} Eleva.care. Todos os direitos reservados.`,
-  draftNote: (version) =>
-    `Estas páginas são rascunhos de pré-lançamento (versão ${version}). A área jurídica e o DPO voltam a assinar antes do go-live.`,
+  versionNote: (version) => `Versão do documento ${version}`,
 }
 
 const es: FooterCopy = {
@@ -130,8 +128,7 @@ const es: FooterCopy = {
   instagram: "Instagram",
   linkedin: "LinkedIn",
   rights: (year) => `© ${year} Eleva.care. Todos los derechos reservados.`,
-  draftNote: (version) =>
-    `Estas páginas son borradores previos al lanzamiento (versión ${version}). Legal y el DPO volverán a firmar antes del go-live.`,
+  versionNote: (version) => `Versión del documento ${version}`,
 }
 
 export const FOOTER_COPY: Record<Locale, FooterCopy> = { en, pt, es }

@@ -39,6 +39,7 @@ vi.mock("@eleva/audit", () => ({
   withPlatformAudit,
 }))
 
+import { CONSENT_DOCUMENT_VERSION } from "./consents"
 import {
   MemberConsentConflictError,
   pickLatestConsentPerKind,
@@ -52,14 +53,14 @@ describe("pickLatestConsentPerKind", () => {
     const latest = pickLatestConsentPerKind([
       {
         kind: "health_data_processing",
-        documentVersion: "dev-2026-09-09",
+        documentVersion: CONSENT_DOCUMENT_VERSION,
         grantedAt: withdrawnGrantedAt,
         withdrawnAt: new Date("2026-06-02T00:00:00.000Z"),
         source: "funnel",
       },
       {
         kind: "health_data_processing",
-        documentVersion: "dev-2026-09-09",
+        documentVersion: CONSENT_DOCUMENT_VERSION,
         grantedAt: activeGrantedAt,
         withdrawnAt: null,
         source: "account",
@@ -67,7 +68,7 @@ describe("pickLatestConsentPerKind", () => {
     ])
     expect(latest.get("health_data_processing")).toEqual({
       kind: "health_data_processing",
-      version: "dev-2026-09-09",
+      version: CONSENT_DOCUMENT_VERSION,
       grantedAt: activeGrantedAt,
       withdrawnAt: null,
       source: "account",

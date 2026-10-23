@@ -194,7 +194,7 @@ Source: <https://www.gov.pt/servicos/realizar-uma-arbitragem-de-conflitos-de-con
 
 ## 6. Publication switch
 
-`CONSENT_DOCUMENT_VERSION` in `@eleva/compliance` stays at its development
-value until the founder approves the final texts. On approval, set it to the
-publication date (`YYYY-MM-DD`), which records every new consent against the
-published version.
+`CONSENT_DOCUMENT_VERSION` in `@eleva/compliance` is **`2026-10-24`**
+(founder-approved publication). New funnel and account consents record against
+this version. A future legal revision bumps the constant to a new
+`YYYY-MM-DD` (never reintroduce a `dev-` prefix on production).

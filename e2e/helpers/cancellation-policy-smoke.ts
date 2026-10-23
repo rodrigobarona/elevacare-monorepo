@@ -1,5 +1,6 @@
 import { neon } from "@neondatabase/serverless"
 import { expect, test, type APIRequestContext } from "@playwright/test"
+import { CONSENT_DOCUMENT_VERSION } from "@eleva/compliance"
 import type { CancellationPolicy } from "@eleva/config/cancellation-policy"
 import {
   apiUrl,
@@ -17,9 +18,12 @@ import {
 } from "./local"
 
 export const CONSENTS = [
-  { kind: "terms" as const, version: "dev-2026-09-09" },
-  { kind: "privacy" as const, version: "dev-2026-09-09" },
-  { kind: "health_data_processing" as const, version: "dev-2026-09-09" },
+  { kind: "terms" as const, version: CONSENT_DOCUMENT_VERSION },
+  { kind: "privacy" as const, version: CONSENT_DOCUMENT_VERSION },
+  {
+    kind: "health_data_processing" as const,
+    version: CONSENT_DOCUMENT_VERSION,
+  },
 ]
 
 export type PolicySmokeCase = {

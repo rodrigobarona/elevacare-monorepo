@@ -168,7 +168,7 @@ export function PublicSiteFooter({ locale: rawLocale }: { locale: string }) {
         <div className="flex flex-col gap-2 border-t pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>{t.rights(year)}</p>
           <p className="max-w-xl sm:text-right">
-            {t.draftNote(CONSENT_DOCUMENT_VERSION)}
+            {t.versionNote(CONSENT_DOCUMENT_VERSION)}
           </p>
         </div>
       </div>

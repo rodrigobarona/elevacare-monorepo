@@ -535,7 +535,7 @@
     "complaintsBook": "Electronic complaints book",
     "trustSecurity": "Security",
     "evidenceBasedCare": "Evidence-based care",
-    "draftNote": "These pages are working pre-launch drafts (version {version}). Legal and the DPO will re-sign before go-live.",
+    "versionNote": "Document version {version}",
     "solutions": "Join Eleva",
     "becomeExpert": "Become an expert",
     "forClinics": "For clinics",
@@ -555,7 +555,6 @@
     "tocTitle": "On this page"
   },
   "legal": {
-    "draftBanner": "Working pre-launch draft. This is not production legal text. Legal and the DPO will replace it before Eleva.care goes live.",
     "versionLabel": "Version {version}",
     "documents": {
       "terms": {
@@ -849,7 +848,6 @@
     "eyebrow": "Contact"
   },
   "trust": {
-    "draftBanner": "Working pre-launch draft. This page does not claim a certification or completed audit. Phase 13 will publish evidence-backed copy with owner, approver, evidence link, and review date.",
     "pages": {
       "security": {
         "title": "Security — Eleva.care",
