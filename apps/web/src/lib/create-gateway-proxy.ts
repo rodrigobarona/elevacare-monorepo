@@ -5,14 +5,41 @@ import {
   orgSlugNeedingTypeLookup,
 } from "@eleva/auth/org-routing"
 import { resolveDispatch, type GatewayOrigins } from "@eleva/config/dispatch"
-import { isLocale, rewriteRetiredLocalePath } from "@eleva/config/i18n"
+import {
+  defaultLocale,
+  isLocale,
+  normalizeLocale,
+  rewriteRetiredLocalePath,
+  type Locale,
+} from "@eleva/config/i18n"
 import { rewriteParityPath } from "@eleva/config/public-site-parity"
+import { persistLocaleCookie } from "@eleva/observability/proxy-locale"
 import {
   buildAdminRedirect,
   buildLoginRedirect,
   buildRewriteUrl,
   resolveOriginsFromEnv,
 } from "./gateway-dispatch"
+
+/**
+ * Prefer the URL prefix (what the visitor chose on /es, /pt), then
+ * next-intl's resolved locale header, then the default locale.
+ */
+function resolveMarketingLocale(
+  pathname: string,
+  response: NextResponse
+): Locale {
+  const first = pathname.split("/").filter(Boolean)[0]
+  if (first && isLocale(first)) return first
+
+  return (
+    normalizeLocale(
+      response.headers.get("x-middleware-request-x-next-intl-locale")
+    ) ??
+    normalizeLocale(response.headers.get("x-next-intl-locale")) ??
+    defaultLocale
+  )
+}
 
 function rewriteForOrganizationsPath(pathname: string): string | null {
   const segments = pathname.split("/").filter(Boolean)
@@ -128,6 +155,14 @@ export function createGatewayProxy(options: GatewayProxyOptions) {
     // Public `/` stays on marketing. Cookie presence is not a login —
     // a leftover or empty session token must not bounce guests to
     // /dashboard and then /login.
-    return intlMiddleware(request)
+    const intlResponse = await intlMiddleware(request)
+    const response =
+      intlResponse instanceof NextResponse
+        ? intlResponse
+        : new NextResponse(intlResponse.body, intlResponse)
+
+    const locale = resolveMarketingLocale(pathname, response)
+    persistLocaleCookie(request, response, locale)
+    return response
   }
 }

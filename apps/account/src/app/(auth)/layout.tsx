@@ -1,5 +1,7 @@
-import { getTranslations } from "next-intl/server"
+import { getLocale, getTranslations } from "next-intl/server"
+import { defaultLocale, isLocale, type Locale } from "@eleva/config/i18n"
 import { CheckIcon } from "@eleva/icons"
+import { gatewayMarketingPath } from "@eleva/site-chrome/gateway-marketing-url"
 import { Logo } from "@eleva/ui/components/brand"
 
 export default async function AuthLayout({
@@ -8,6 +10,9 @@ export default async function AuthLayout({
   children: React.ReactNode
 }) {
   const t = await getTranslations("auth")
+  const rawLocale = await getLocale()
+  const locale: Locale = isLocale(rawLocale) ? rawLocale : defaultLocale
+  const homeHref = gatewayMarketingPath(locale, "/")
   const careWords = t.raw("careWords") as string[]
   const points = t.raw("brandPoints") as string[]
 
@@ -21,7 +26,13 @@ export default async function AuthLayout({
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgb(255_255_255/0.07)_1px,transparent_0)] bg-size-[22px_22px]" />
         </div>
 
-        <Logo className="h-8 self-start text-white" />
+        <a
+          href={homeHref}
+          aria-label="Eleva.care"
+          className="w-fit self-start rounded-sm"
+        >
+          <Logo className="h-8 text-white" />
+        </a>
 
         <div className="max-w-lg">
           <p className="font-heading text-5xl leading-[1.08] text-balance xl:text-6xl">
@@ -54,13 +65,21 @@ export default async function AuthLayout({
         <p className="text-sm text-teal-100/70">© Eleva.care</p>
       </aside>
 
-      <main className="relative isolate flex flex-col items-center justify-center overflow-hidden px-5 py-12 sm:px-8">
+      <main className="relative isolate flex flex-col overflow-hidden px-5 py-12 sm:px-8">
         <div
           aria-hidden
           className="pointer-events-none absolute -top-40 -right-40 -z-10 size-96 rounded-full bg-teal-100/60 blur-3xl dark:bg-teal-900/30"
         />
-        <Logo className="mb-10 h-7 lg:hidden" />
-        <div className="w-full max-w-sm">{children}</div>
+        <a
+          href={homeHref}
+          aria-label="Eleva.care"
+          className="mb-10 w-fit shrink-0 rounded-sm lg:absolute lg:top-10 lg:left-8 lg:mb-0 xl:top-14 xl:left-14"
+        >
+          <Logo className="h-7" />
+        </a>
+        <div className="flex flex-1 flex-col items-center justify-center">
+          <div className="w-full max-w-sm">{children}</div>
+        </div>
       </main>
     </div>
   )

@@ -18,6 +18,7 @@
     "@eleva/config": "workspace:^",
     "@eleva/dashboard": "workspace:*",
     "@eleva/observability": "workspace:^",
+    "@eleva/site-chrome": "workspace:*",
     "@eleva/storage": "workspace:^",
     "@eleva/ui": "workspace:*",
     "@eleva/icons": "workspace:*",

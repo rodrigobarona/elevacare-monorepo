@@ -165,6 +165,41 @@ describe("createGatewayProxy integration", () => {
     expect(await res.json()).toEqual({ zone: "marketing" })
   })
 
+  it("persists ELEVA_LOCALE=es from a prefixed marketing path", async () => {
+    const proxy = createGatewayProxy({
+      origins: testOrigins,
+      intlMiddleware: marketingIntl,
+    })
+    const res = await proxy(
+      makeRequest("/es", {
+        headers: { host: "dev.eleva.care" },
+      })
+    )
+    expect(res.status).toBe(200)
+    const setCookie = res.headers.getSetCookie?.() ?? []
+    const localeCookie = setCookie.find((c) => c.startsWith("ELEVA_LOCALE="))
+    expect(localeCookie).toBeDefined()
+    expect(localeCookie).toMatch(/^ELEVA_LOCALE=es\b/)
+    expect(localeCookie).toMatch(/Domain=\.eleva\.care/i)
+  })
+
+  it("persists ELEVA_LOCALE=en for unprefixed marketing paths", async () => {
+    const proxy = createGatewayProxy({
+      origins: testOrigins,
+      intlMiddleware: marketingIntl,
+    })
+    const res = await proxy(
+      makeRequest("/about", {
+        headers: { host: "dev.eleva.care" },
+      })
+    )
+    expect(res.status).toBe(200)
+    const setCookie = res.headers.getSetCookie?.() ?? []
+    const localeCookie = setCookie.find((c) => c.startsWith("ELEVA_LOCALE="))
+    expect(localeCookie).toBeDefined()
+    expect(localeCookie).toMatch(/^ELEVA_LOCALE=en\b/)
+  })
+
   it("rewrites /login to account zone in production", async () => {
     vi.stubEnv("NODE_ENV", "production")
     const proxy = createGatewayProxy({
