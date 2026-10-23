@@ -32,6 +32,20 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-23: Better Auth i18n error messages (active)
+
+- Decision: add server-only `@better-auth/i18n` to `@eleva/auth` with built-in
+  translations for Eleva launch locales `en` / `es` / `pt` only.
+- Detection (priority): `ELEVA_LOCALE` cookie → session `user.locale` →
+  `Accept-Language` header; `defaultLocale: "en"`.
+- UI: account login/signup keep Eleva next-intl product copy for mapped codes
+  (`INVALID_EMAIL_OR_PASSWORD`, `EMAIL_NOT_VERIFIED`, rate-limit); unmapped codes
+  and settings/2FA surfaces use the plugin-translated `message`.
+- Out of scope: client i18n plugin; schema migration; full UI chrome (next-intl).
+- Related: [ADR-017](./adrs/ADR-017-better-auth-identity.md) amendment 2026-10-23
+  (i18n); pairs with marketing→auth `ELEVA_LOCALE` persistence.
+- Status: `active`.
+
 ### 2026-10-23: Google implicit account linking (active)
 
 - Decision: enable Better Auth implicit link-on-sign-in for Google
