@@ -214,6 +214,6 @@ export function authErrorMessage(
     case "EMAIL_NOT_VERIFIED":
       return t("emailNotVerified")
     default:
-      return t("errorGeneric")
+      return error.message ?? t("errorGeneric")
   }
 }

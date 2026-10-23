@@ -33,6 +33,7 @@
   "dependencies": {
     "@better-auth/api-key": "catalog:",
     "@better-auth/drizzle-adapter": "catalog:",
+    "@better-auth/i18n": "catalog:",
     "@better-auth/passkey": "catalog:",
     "@eleva/api-client": "workspace:*",
     "@eleva/audit": "workspace:*",

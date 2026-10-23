@@ -1,5 +1,6 @@
 import { apiKey } from "@better-auth/api-key"
 import { drizzleAdapter } from "@better-auth/drizzle-adapter"
+import { i18n, locales } from "@better-auth/i18n"
 import { passkey } from "@better-auth/passkey"
 import { betterAuth } from "better-auth"
 import { nextCookies, toNextJsHandler } from "better-auth/next-js"
@@ -13,6 +14,7 @@ import {
   twoFactor,
 } from "better-auth/plugins"
 import { Redis } from "@upstash/redis"
+import { cookieName } from "@eleva/config/i18n"
 import * as authSchema from "@eleva/db/schema/auth"
 import { db } from "@eleva/db"
 import { ac, adminAccess, adminRoles, organizationRoles } from "../permissions"
@@ -380,6 +382,17 @@ function createAuth() {
       }),
       apiKey({ enableMetadata: true }),
       openAPI({ path: "/reference", disableDefaultReference: true }),
+      i18n({
+        translations: {
+          en: locales.en,
+          es: locales.es,
+          pt: locales.pt,
+        },
+        defaultLocale: "en",
+        detection: ["cookie", "session", "header"],
+        localeCookie: cookieName,
+        userLocaleField: "locale",
+      }),
       nextCookies(),
     ],
     secondaryStorage: storage,

@@ -2,11 +2,11 @@
 
 ## Status
 
-Accepted (amended 2026-10-23: Google implicit account linking on)
+Accepted (amended 2026-10-23: Google implicit account linking on; amended 2026-10-23: i18n error messages)
 
 ## Date
 
-2026-09-07 (original), 2026-10-23 (account linking amendment)
+2026-09-07 (original), 2026-10-23 (account linking + i18n amendments)
 
 ## Context
 
@@ -55,7 +55,9 @@ without password export (ADR-019); Phase 2 proves the vendor behaviour in a spik
    `personal|expert|team|academy|staff`; `organizationHooks` for provisioning, audit and seat sync),
    `admin` (roles `user|staff_support|staff_finance|platform_admin`), `twoFactor`, `passkey`
    (`@better-auth/passkey`), `magicLink`, `bearer`, `jwt`, `apiKey` (`@better-auth/api-key`),
-   `openAPI`, `nextCookies`. Every mail-sending callback routes through
+   `openAPI`, `i18n` (`@better-auth/i18n` — error-message translations for launch locales
+   `en|es|pt`; detection `ELEVA_LOCALE` cookie → `user.locale` → `Accept-Language`),
+   `nextCookies`. Every mail-sending callback routes through
    `packages/notifications/src/auth-mailer.ts` (Resend via `@eleva/email`) so idempotency,
    suppression and delivery records are uniform (Phase 8).
 4. **Session and cookies.** `advanced.crossSubDomainCookies = { enabled: true, domain: ".eleva.care" }`;
@@ -92,7 +94,16 @@ without password export (ADR-019); Phase 2 proves the vendor behaviour in a spik
    `@workos-inc/*`, `infra/workos`, Widgets wrappers and `@radix-ui/themes`). `WORKOS_*` env vars
    are removed in Phase 3.
 
-## Amendment (2026-10-23)
+## Amendment (2026-10-23) — i18n error messages
+
+Add server-only `@better-auth/i18n` so Better Auth JSON errors return translated
+`message` (plus `originalMessage`) for Eleva launch locales. Detection order:
+`ELEVA_LOCALE` cookie → session `user.locale` → `Accept-Language`. Account UI keeps
+next-intl product copy for mapped login codes (`INVALID_EMAIL_OR_PASSWORD`,
+`EMAIL_NOT_VERIFIED`); unmapped paths and settings/2FA use the plugin `message`.
+No client plugin; no schema change.
+
+## Amendment (2026-10-23) — Google implicit account linking
 
 Product need: members who registered with password / magic-link / passkey and forgot
 credentials can recover by **Continue with Google** on the same verified e-mail.
