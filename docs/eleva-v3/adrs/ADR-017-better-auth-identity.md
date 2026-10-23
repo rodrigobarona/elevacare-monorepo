@@ -96,11 +96,20 @@ without password export (ADR-019); Phase 2 proves the vendor behaviour in a spik
 
 Product need: members who registered with password / magic-link / passkey and forgot
 credentials can recover by **Continue with Google** on the same verified e-mail.
+Guest-activation rows (`emailVerified: false`) must also be claimable by Google on that
+e-mail.
 
 - Set `accountLinking.disableImplicitLinking: false` (was `true`).
+- Set `accountLinking.requireLocalEmailVerified: false` (BA default `true` still blocked
+  unverified local rows even for `trustedProviders`).
 - Keep `trustedProviders: ["google"]` only; do not enable `allowDifferentEmails`.
+- Set `account.storeStateStrategy: "cookie"` so OAuth callback state is not lost across
+  Fluid regions / Redis verification reads.
+- Staging cookie domain defaults from `BETTER_AUTH_URL` to `.dev.eleva.care` (not
+  `.eleva.care`) so staging OAuth cookies never collide with production.
 - Softens the original account-takeover hardening (implicit same-email OAuth). Mitigation:
-  Google e-mail verification + Eleva trusts only Google for social sign-in linking.
+  Google e-mail verification + Eleva trusts only Google for social sign-in linking;
+  successful link promotes `emailVerified` from the IdP claim.
 - Calendar connect stays explicit `linkSocial()` with scopes.
 - UI still maps `account_not_linked` for edge cases / non-trusted providers; happy path no
   longer expects that error for same-email Google.

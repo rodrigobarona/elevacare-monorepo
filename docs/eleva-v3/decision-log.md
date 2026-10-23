@@ -35,14 +35,21 @@ Each entry should include:
 ### 2026-10-23: Google implicit account linking (active)
 
 - Decision: enable Better Auth implicit link-on-sign-in for Google
-  (`accountLinking.disableImplicitLinking: false`, keep `enabled: true` and
-  `trustedProviders: ["google"]`). Same verified e-mail Google OAuth attaches to an existing
-  Eleva user (password / magic-link / passkey) and opens a session instead of
-  `account_not_linked`.
-- Rationale: recovery UX when the member does not remember password / link / passkey; matches
-  Better Auth default for trusted providers ([users-accounts § account linking](https://www.better-auth.com/docs/concepts/users-accounts#account-linking)).
-- Trade-off: softens ADR-017’s prior “no implicit link” hardening. Mitigation: Google-verified
-  e-mail + Google is the only trusted social provider; no `allowDifferentEmails`.
+  (`accountLinking.disableImplicitLinking: false`, `requireLocalEmailVerified: false`,
+  keep `enabled: true` and `trustedProviders: ["google"]`). Same verified e-mail Google
+  OAuth attaches to an existing Eleva user (password / magic-link / passkey / unverified
+  guest) and opens a session instead of `account_not_linked`.
+- Also: `account.storeStateStrategy: "cookie"` so OAuth PKCE/state survives Fluid
+  multi-region without Redis verification lookup; staging cookie domain defaults to
+  `.dev.eleva.care` (never share `.eleva.care` with prod).
+- Rationale: recovery UX when the member does not remember password / link / passkey;
+  BA’s default `requireLocalEmailVerified: true` still returned `account_not_linked` for
+  guest-activation rows; cookie state matches Better Auth guidance for reliable callbacks
+  ([users-accounts § account linking](https://www.better-auth.com/docs/concepts/users-accounts#account-linking),
+  [options § storeStateStrategy](https://www.better-auth.com/docs/reference/options#account)).
+- Trade-off: softens ADR-017’s prior “no implicit link” + local-email-verified gate.
+  Mitigation: Google-verified e-mail + Google is the only trusted social provider; no
+  `allowDifferentEmails`; successful link sets `emailVerified` from the IdP claim.
 - Explicit `linkSocial()` unchanged for calendar scopes / settings.
 - Related: [ADR-017](./adrs/ADR-017-better-auth-identity.md) amendment 2026-10-23;
   [`operator-tasks/google-oauth-setup.md`](./operator-tasks/google-oauth-setup.md).

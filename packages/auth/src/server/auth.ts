@@ -48,6 +48,17 @@ function baseURL(): string {
   return process.env.BETTER_AUTH_URL ?? "http://localhost:3002/auth"
 }
 
+/** Better Auth secondaryStorage expects strings; Upstash may auto-parse JSON. */
+function asStorageString(value: unknown): string | null {
+  if (value == null) return null
+  if (typeof value === "string") return value
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return null
+  }
+}
+
 function secondaryStorage() {
   const url = process.env.KV_REST_API_URL
   const token = process.env.KV_REST_API_TOKEN
@@ -55,10 +66,7 @@ function secondaryStorage() {
 
   const redis = new Redis({ url, token })
   return {
-    get: async (key: string) => {
-      const value = await redis.get<string>(key)
-      return value ?? null
-    },
+    get: async (key: string) => asStorageString(await redis.get(key)),
     set: async (key: string, value: string, ttl?: number) => {
       if (ttl) {
         await redis.set(key, value, { ex: ttl })
@@ -69,11 +77,8 @@ function secondaryStorage() {
     delete: async (key: string) => {
       await redis.del(key)
     },
-    getAndDelete: async (key: string) => {
-      const value = await redis.get<string>(key)
-      await redis.del(key)
-      return value ?? null
-    },
+    getAndDelete: async (key: string) =>
+      asStorageString(await redis.getdel(key)),
     increment: async (key: string) => redis.incr(key),
   }
 }
@@ -183,12 +188,21 @@ function createAuth() {
     socialProviders: socialProviders(),
     account: {
       encryptOAuthTokens: true,
+      // Cookie strategy keeps OAuth PKCE/state on the browser round-trip so Fluid
+      // multi-region + Redis verification races cannot drop the callback state.
+      storeStateStrategy: "cookie",
       accountLinking: {
         enabled: true,
         // Implicit link-on-sign-in for Google: same-email OAuth attaches to the
-        // existing user (password / magic-link / passkey) instead of account_not_linked.
-        // Mitigated by trustedProviders + Google-verified email (ADR-017 amendment).
+        // existing user (password / magic-link / passkey / guest) instead of
+        // account_not_linked. Mitigated by trustedProviders + Google-verified
+        // email (ADR-017 amendment).
         disableImplicitLinking: false,
+        // BA defaults this to true: unverified local rows (guest-activation,
+        // pending email verify) still get account_not_linked even when Google
+        // is trusted. Opt out so Google-verified email can claim the row;
+        // successful link then sets emailVerified from the IdP claim.
+        requireLocalEmailVerified: false,
         trustedProviders: ["google"],
       },
     },

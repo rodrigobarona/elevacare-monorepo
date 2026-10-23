@@ -1,3 +1,8 @@
+import {
+  crossSubDomainCookieConfig,
+  defaultCookieDomain,
+} from "./cookie-domain"
+
 export type CredentialSource = "cookie" | "authorization" | "api-key"
 
 export const SESSION_COOKIE_NAMES = [
@@ -26,7 +31,9 @@ export function expiredSessionCookies(): string[] {
   if (process.env.VERCEL_ENV !== "production") {
     return hostOnly
   }
-  const domain = process.env.ELEVA_COOKIE_DOMAIN ?? ".eleva.care"
+  const cookieDomain = crossSubDomainCookieConfig()
+  const domain =
+    cookieDomain.enabled === true ? cookieDomain.domain : defaultCookieDomain()
   return [
     ...SESSION_COOKIE_NAMES.flatMap((name) =>
       SESSION_COOKIE_EXPIRE_ATTRS.map(
