@@ -159,16 +159,17 @@ here.
 
 ## Common failures
 
-| Symptom                             | Likely cause                                                                                                                                                       |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `redirect_uri_mismatch`             | Stale `/calendar/...` URI or `BETTER_AUTH_URL` ≠ registered host                                                                                                   |
-| No Google button                    | Missing ID or secret on API process                                                                                                                                |
-| `access_denied` / not verified      | Testing mode; user not a test user                                                                                                                                 |
-| Connect OK, no busy                 | Calendar API off, missing scopes, or `use_for_busy` off                                                                                                            |
-| Works local, fails staging          | Missing staging redirect / JS origin / Vercel env; redeploy                                                                                                        |
-| CSRF after redirect                 | Frontend origin not in `trustedOrigins()`                                                                                                                          |
-| `account_not_linked`                | Pre-2026-10-23: implicit link off / local email unverified. Redeploy API with `requireLocalEmailVerified: false`                                                   |
-| `state_not_found` / State not found | Callback hit without Google `state`/`code` (bot, bookmark, stripped query), or staging cookie domain was `.eleva.care` colliding with prod — use `.dev.eleva.care` |
+| Symptom                             | Likely cause                                                                                                                                                                                                        |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `redirect_uri_mismatch`             | Stale `/calendar/...` URI or `BETTER_AUTH_URL` ≠ registered host                                                                                                                                                    |
+| No Google button                    | Missing ID or secret on API process                                                                                                                                                                                 |
+| `access_denied` / not verified      | Testing mode; user not a test user                                                                                                                                                                                  |
+| Connect OK, no busy                 | Calendar API off, missing scopes, or `use_for_busy` off                                                                                                                                                             |
+| Works local, fails staging          | Missing staging redirect / JS origin / Vercel env; redeploy                                                                                                                                                         |
+| CSRF after redirect                 | Frontend origin not in `trustedOrigins()`                                                                                                                                                                           |
+| `account_not_linked`                | Pre-2026-10-23: implicit link off / local email unverified. Redeploy API with `requireLocalEmailVerified: false`                                                                                                    |
+| `state_not_found` / State not found | Callback hit without Google `state`/`code` (bot, bookmark, stripped query), or staging cookie domain was `.eleva.care` colliding with prod — use `.dev.eleva.care`                                                  |
+| `429` on `/auth/sign-in/social`     | Better Auth Redis rate-limit key stuck (TTL not applied on `increment`). Clear with `pnpm clear:better-auth-rate-limits` after pulling prod `KV_REST_API_*`; deploy the TTL + Vercel IP-header fix in `@eleva/auth` |
 
 ## Related
 

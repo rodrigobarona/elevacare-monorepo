@@ -71,9 +71,10 @@ schema-management primitives, not operator workflows.
 
 ### Google OAuth (Better Auth + Calendar)
 
-| Command                   | What it does                                                                                                                                                          | Idempotent? |
-| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| `pnpm check:google-oauth` | Prints canonical Google Cloud redirect URIs + JS origins, consent scopes, and verifies `GOOGLE_OAUTH_CLIENT_ID` / `SECRET` + `BETTER_AUTH_URL` presence (no secrets). | Yes         |
+| Command                              | What it does                                                                                                                                                          | Idempotent? |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| `pnpm check:google-oauth`            | Prints canonical Google Cloud redirect URIs + JS origins, consent scopes, and verifies `GOOGLE_OAUTH_CLIENT_ID` / `SECRET` + `BETTER_AUTH_URL` presence (no secrets). | Yes         |
+| `pnpm clear:better-auth-rate-limits` | Deletes stuck Better Auth Redis rate-limit keys (`${ip}\|${path}`) that permanently 429 `/auth/sign-in/*` when TTL was never applied. Needs prod `KV_REST_API_*`.     | Yes         |
 
 Operator guide: [`google-oauth-setup.md`](./google-oauth-setup.md).
 

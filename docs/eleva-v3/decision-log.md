@@ -32,6 +32,19 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-23: Better Auth rate-limit Redis TTL + Vercel IP headers (active)
+
+- Decision: `secondaryStorage.increment` must `INCR` + `EXPIRE key ttl NX` so
+  Better Auth’s 3/10s `/sign-in*` window resets; configure
+  `advanced.ipAddress.ipAddressHeaders` to prefer `x-vercel-forwarded-for` /
+  `x-real-ip` before multi-hop `x-forwarded-for` (avoids shared
+  `no-trusted-ip` bucket). Stuck keys without TTL need a one-shot Redis delete
+  (`pnpm clear:better-auth-rate-limits`).
+- Symptom fixed: permanent `429` on `POST /auth/sign-in/social` (Google login).
+- Related: [`packages/auth/src/server/secondary-storage.ts`](../../packages/auth/src/server/secondary-storage.ts),
+  [`operator-tasks/google-oauth-setup.md`](./operator-tasks/google-oauth-setup.md).
+- Status: `active`.
+
 ### 2026-10-23: Better Auth i18n error messages (active)
 
 - Decision: add server-only `@better-auth/i18n` to `@eleva/auth` with built-in

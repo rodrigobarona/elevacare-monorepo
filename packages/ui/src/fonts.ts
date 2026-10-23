@@ -10,6 +10,13 @@ import localFont from "next/font/local"
  *
  * Latin subset covers Eleva locales (en/pt/es); Latin-1 accents (ã, ç, ñ, …)
  * are included. Paths are relative to this file.
+ *
+ * Preload only the body face (DM Sans). Fraunces ships normal + italic in one
+ * `localFont` call, so `preload: true` would inject `<link rel=preload>` for
+ * both on every route — italic is unused below `lg` on auth (aside is
+ * `hidden`), which triggers Chrome’s “preloaded but not used” console noise.
+ * Heading faces still load via `@font-face` when `font-heading` / `font-display`
+ * apply.
  */
 export const fraunces = localFont({
   src: [
@@ -26,7 +33,7 @@ export const fraunces = localFont({
   ],
   display: "swap",
   variable: "--font-fraunces",
-  preload: true,
+  preload: false,
   // localFont accepts a metric-override family name or false (not `true`).
   adjustFontFallback: "Times New Roman",
 })
@@ -74,8 +81,13 @@ export const googleSans = localFont({
   adjustFontFallback: "Arial",
 })
 
-/** Apply on `<html>` to expose Eleva font CSS variables app-wide. */
+/**
+ * Apply on `<html>`: DM Sans `className` so the preloaded body face is used on
+ * first paint (CSS-variable-only application can leave the preload unused),
+ * plus CSS variables for Tailwind `font-sans` / `font-heading` / `font-mono`.
+ */
 export const fontClassName = [
+  dmSans.className,
   fraunces.variable,
   dmSans.variable,
   ibmPlexMono.variable,

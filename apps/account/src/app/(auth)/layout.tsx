@@ -73,7 +73,7 @@ export default async function AuthLayout({
         <a
           href={homeHref}
           aria-label="Eleva.care"
-          className="mb-10 w-fit shrink-0 rounded-sm lg:absolute lg:top-10 lg:left-8 lg:mb-0 xl:top-14 xl:left-14"
+          className="mb-10 w-fit shrink-0 rounded-sm lg:hidden"
         >
           <Logo className="h-7" />
         </a>
