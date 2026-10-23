@@ -15,6 +15,7 @@
     "check:route-guards": "node scripts/check-route-guards.mjs",
     "check:no-phi-logs": "node scripts/check-no-phi-logs.mjs",
     "check:google-oauth": "node scripts/check-google-oauth.mjs",
+    "clear:better-auth-rate-limits": "node scripts/clear-better-auth-rate-limits.mjs",
     "check:i18n-parity": "node --import tsx/esm scripts/check-i18n-parity.mjs",
     "i18n:draft": "node --import tsx/esm scripts/i18n-draft.mjs",
     "e2e": "E2E_AUTH_BYPASS_TOKEN=\"${E2E_AUTH_BYPASS_TOKEN:-}\" playwright test",

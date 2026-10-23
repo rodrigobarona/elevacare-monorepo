@@ -13,7 +13,6 @@ import {
   organization,
   twoFactor,
 } from "better-auth/plugins"
-import { Redis } from "@upstash/redis"
 import { cookieName } from "@eleva/config/i18n"
 import * as authSchema from "@eleva/db/schema/auth"
 import { db } from "@eleva/db"
@@ -35,6 +34,11 @@ import { invitationAcceptUrl } from "../invitation-accept-url"
 import { crossSubDomainCookieConfig } from "./cookie-domain"
 import { magicLinkServerHeaders } from "./magic-link-headers"
 import { passkeyOrigins } from "./passkey-origin"
+import {
+  AUTH_IP_ADDRESS_HEADERS,
+  createSecondaryStorage,
+  type AuthSecondaryStorage,
+} from "./secondary-storage"
 
 export { setAuthTransactionalMailer } from "../send-auth-email"
 
@@ -48,41 +52,6 @@ function requireSecret(): string {
 
 function baseURL(): string {
   return process.env.BETTER_AUTH_URL ?? "http://localhost:3002/auth"
-}
-
-/** Better Auth secondaryStorage expects strings; Upstash may auto-parse JSON. */
-function asStorageString(value: unknown): string | null {
-  if (value == null) return null
-  if (typeof value === "string") return value
-  try {
-    return JSON.stringify(value)
-  } catch {
-    return null
-  }
-}
-
-function secondaryStorage() {
-  const url = process.env.KV_REST_API_URL
-  const token = process.env.KV_REST_API_TOKEN
-  if (!url || !token) return undefined
-
-  const redis = new Redis({ url, token })
-  return {
-    get: async (key: string) => asStorageString(await redis.get(key)),
-    set: async (key: string, value: string, ttl?: number) => {
-      if (ttl) {
-        await redis.set(key, value, { ex: ttl })
-        return
-      }
-      await redis.set(key, value)
-    },
-    delete: async (key: string) => {
-      await redis.del(key)
-    },
-    getAndDelete: async (key: string) =>
-      asStorageString(await redis.getdel(key)),
-    increment: async (key: string) => redis.incr(key),
-  }
 }
 
 function socialProviders() {
@@ -115,7 +84,7 @@ function socialProviders() {
 }
 
 function requireSecondaryStorageWhenDeployed(
-  storage: ReturnType<typeof secondaryStorage>
+  storage: AuthSecondaryStorage | undefined
 ): void {
   const deployed =
     process.env.VERCEL_ENV === "production" ||
@@ -129,7 +98,7 @@ function requireSecondaryStorageWhenDeployed(
 }
 
 function createAuth() {
-  const storage = secondaryStorage()
+  const storage = createSecondaryStorage()
   requireSecondaryStorageWhenDeployed(storage)
   const issuer = baseURL()
   const passkeyOrigin = passkeyOrigins()
@@ -217,6 +186,11 @@ function createAuth() {
       crossSubDomainCookies: crossSubDomainCookieConfig(),
       useSecureCookies: process.env.NODE_ENV === "production",
       database: { generateId: "uuid" },
+      // Prefer Vercel single-value headers so multi-hop XFF does not collapse
+      // every client into Better Auth's shared `no-trusted-ip` rate-limit bucket.
+      ipAddress: {
+        ipAddressHeaders: [...AUTH_IP_ADDRESS_HEADERS],
+      },
     },
     trustedOrigins: trustedOrigins(),
     rateLimit: {
