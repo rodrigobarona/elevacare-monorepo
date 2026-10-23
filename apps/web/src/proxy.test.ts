@@ -172,7 +172,11 @@ describe("createGatewayProxy integration", () => {
     })
     const res = await proxy(
       makeRequest("/es", {
-        headers: { host: "dev.eleva.care" },
+        headers: {
+          host: "dev.eleva.care",
+          "Sec-Fetch-Dest": "document",
+          "Sec-Fetch-Mode": "navigate",
+        },
       })
     )
     expect(res.status).toBe(200)
@@ -190,7 +194,11 @@ describe("createGatewayProxy integration", () => {
     })
     const res = await proxy(
       makeRequest("/about", {
-        headers: { host: "dev.eleva.care" },
+        headers: {
+          host: "dev.eleva.care",
+          "Sec-Fetch-Dest": "document",
+          "Sec-Fetch-Mode": "navigate",
+        },
       })
     )
     expect(res.status).toBe(200)
@@ -198,6 +206,60 @@ describe("createGatewayProxy integration", () => {
     const localeCookie = setCookie.find((c) => c.startsWith("ELEVA_LOCALE="))
     expect(localeCookie).toBeDefined()
     expect(localeCookie).toMatch(/^ELEVA_LOCALE=en\b/)
+  })
+
+  it("does not persist ELEVA_LOCALE on RSC or prefetch requests", async () => {
+    const proxy = createGatewayProxy({
+      origins: testOrigins,
+      intlMiddleware: marketingIntl,
+    })
+    const rsc = await proxy(
+      makeRequest("/es", {
+        headers: { host: "dev.eleva.care", RSC: "1", "Sec-Fetch-Mode": "cors" },
+      })
+    )
+    expect(
+      (rsc.headers.getSetCookie?.() ?? []).some((c) =>
+        c.startsWith("ELEVA_LOCALE=")
+      )
+    ).toBe(false)
+
+    const prefetch = await proxy(
+      makeRequest("/es", {
+        headers: {
+          host: "dev.eleva.care",
+          "Next-Router-Prefetch": "1",
+          "Sec-Fetch-Dest": "empty",
+        },
+      })
+    )
+    expect(
+      (prefetch.headers.getSetCookie?.() ?? []).some((c) =>
+        c.startsWith("ELEVA_LOCALE=")
+      )
+    ).toBe(false)
+  })
+
+  it("upgrades a matching host-only ELEVA_LOCALE to Domain=.eleva.care", async () => {
+    const proxy = createGatewayProxy({
+      origins: testOrigins,
+      intlMiddleware: marketingIntl,
+    })
+    const res = await proxy(
+      makeRequest("/es", {
+        cookieValues: { ELEVA_LOCALE: "es" },
+        headers: {
+          host: "dev.eleva.care",
+          "Sec-Fetch-Dest": "document",
+          "Sec-Fetch-Mode": "navigate",
+        },
+      })
+    )
+    const setCookie = res.headers.getSetCookie?.() ?? []
+    const localeCookie = setCookie.find((c) => c.startsWith("ELEVA_LOCALE="))
+    expect(localeCookie).toBeDefined()
+    expect(localeCookie).toMatch(/^ELEVA_LOCALE=es\b/)
+    expect(localeCookie).toMatch(/Domain=\.eleva\.care/i)
   })
 
   it("rewrites /login to account zone in production", async () => {

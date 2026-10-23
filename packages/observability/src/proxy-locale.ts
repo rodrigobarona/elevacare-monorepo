@@ -23,16 +23,22 @@ export function resolveLocaleForRequest(req: NextRequest): Locale {
 
 /**
  * Persist the resolved locale to the ELEVA_LOCALE cookie on the
- * response — only if the existing cookie differs, to avoid writing
- * a Set-Cookie header on every request.
+ * response. Skips when the value already matches and no shared-domain
+ * upgrade is needed (localhost stays host-only).
+ *
+ * On `*.eleva.care`, a matching value still gets Set-Cookie with
+ * `Domain=.eleva.care` so a host-only cookie from next-intl's syncCookie
+ * is upgraded. Cookie headers do not expose Domain, so callers should
+ * gate this on document navigations to avoid RSC/prefetch noise.
  */
 export function persistLocaleCookie(
   req: NextRequest,
   response: NextResponse,
   locale: Locale
 ): void {
-  const existingCookie = req.cookies.get(cookieName)?.value
-  if (existingCookie === locale) return
   const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host")
-  response.cookies.set(cookieName, locale, getLocaleCookieOptions(host))
+  const options = getLocaleCookieOptions(host)
+  const existingCookie = req.cookies.get(cookieName)?.value
+  if (existingCookie === locale && !options.domain) return
+  response.cookies.set(cookieName, locale, options)
 }
