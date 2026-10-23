@@ -4,7 +4,7 @@
  *   pnpm --filter @eleva/media media:search "pregnant woman natural light home" [--orientation landscape] [--per 12]
  *   pnpm --filter @eleva/media media:import <slug> <pexelsId> --alt-en "…" --alt-pt "…" --alt-es "…" [--tags a,b]
  *   pnpm --filter @eleva/media media:import-local <slug> <path> --alt-en "…" --alt-pt "…" --alt-es "…" [--tags a,b]
- *   pnpm --filter @eleva/media media:import-video <slug> <mp4> --poster <image> --alt-en "…" --alt-pt "…" --alt-es "…" [--tags a,b] [--width N] [--height N] [--blur path]
+ *   pnpm --filter @eleva/media media:import-video <slug> <mp4> --poster <image> --alt-en "…" --alt-pt "…" --alt-es "…" [--tags a,b] [--width N] [--height N] [--blur path] [--webm path]
  *
  * Reads PEXELS_API_KEY and BLOB_READ_WRITE_TOKEN from the repo `.env.local`.
  * Public store only: never import member, health or session imagery.
@@ -243,6 +243,13 @@ async function importLocal(argv: string[]): Promise<void> {
   console.log(`imported ${slug} → ${url}`)
 }
 
+function posterContentType(ext: string): string {
+  if (ext === ".png") return "image/png"
+  if (ext === ".webp") return "image/webp"
+  if (ext === ".avif") return "image/avif"
+  return "image/jpeg"
+}
+
 async function importVideo(argv: string[]): Promise<void> {
   const { values, positionals } = parseArgs({
     args: argv,
@@ -256,6 +263,7 @@ async function importVideo(argv: string[]): Promise<void> {
       width: { type: "string" },
       height: { type: "string" },
       blur: { type: "string" },
+      webm: { type: "string" },
     },
   })
   const slug = assertSlug(positionals[0])
@@ -282,22 +290,22 @@ async function importVideo(argv: string[]): Promise<void> {
   const alt = altFrom(values)
 
   const posterExt = path.extname(values.poster).toLowerCase()
-  const posterType =
-    posterExt === ".png"
-      ? "image/png"
-      : posterExt === ".webp"
-        ? "image/webp"
-        : "image/jpeg"
+  const posterType = posterContentType(posterExt)
+  const webmPath =
+    typeof values.webm === "string" && values.webm.length > 0
+      ? values.webm
+      : undefined
 
-  const [videoBody, posterBody] = await Promise.all([
+  const [videoBody, posterBody, webmBody] = await Promise.all([
     readFile(mp4Path),
     readFile(values.poster),
+    webmPath ? readFile(webmPath) : Promise.resolve(null),
   ])
 
   const blur = await readFile(values.blur)
   const blurDataURL = `data:image/jpeg;base64,${blur.toString("base64")}`
 
-  const [{ url }, { url: posterUrl }] = await Promise.all([
+  const [mp4Upload, posterUpload, webmUpload] = await Promise.all([
     uploadPublicBlob({
       pathname: `media/eleva/${slug}.mp4`,
       body: videoBody,
@@ -308,13 +316,21 @@ async function importVideo(argv: string[]): Promise<void> {
       body: posterBody,
       contentType: posterType,
     }),
+    webmBody
+      ? uploadPublicBlob({
+          pathname: `media/eleva/${slug}.webm`,
+          body: webmBody,
+          contentType: "video/webm",
+        })
+      : Promise.resolve(null),
   ])
 
   const asset: MediaVideo = {
     kind: "video",
     slug,
-    url,
-    poster: posterUrl,
+    url: mp4Upload.url,
+    ...(webmUpload ? { webmUrl: webmUpload.url } : {}),
+    poster: posterUpload.url,
     blurDataURL,
     width,
     height,
@@ -325,8 +341,9 @@ async function importVideo(argv: string[]): Promise<void> {
     source: { provider: "eleva" },
   }
   await upsert(asset)
-  console.log(`imported video ${slug} → ${url}`)
-  console.log(`poster → ${posterUrl}`)
+  console.log(`imported video ${slug} → ${mp4Upload.url}`)
+  if (webmUpload) console.log(`webm → ${webmUpload.url}`)
+  console.log(`poster → ${posterUpload.url}`)
 }
 
 const [command, ...rest] = process.argv.slice(2)

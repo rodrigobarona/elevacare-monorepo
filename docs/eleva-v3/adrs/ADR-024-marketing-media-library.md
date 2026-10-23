@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted (amended 2026-10-22 — video moved from Mux to Blob progressive MP4)
+Accepted (amended 2026-10-24 — dual progressive WebM + MP4, AVIF/WebP/JPEG poster)
 
 ## Date
 
@@ -27,9 +27,11 @@ for visitor CDN traffic without HLS benefits on a single ambient asset.
 2. **Images** are curated with the `media:*` scripts (Pexels API) and uploaded to the
    **public** Vercel Blob store through `@eleva/storage`. They are served via `next/image`.
    No member, expert or health data ever goes in this library.
-3. **Video** uses the same **public** Blob store: web-optimized progressive MP4 plus a poster
-   image. `ElevaVideo` renders native `<video>` (muted, autoplay, loop, no controls). Reduced
-   motion shows the poster only. No third-party player or analytics.
+3. **Video** uses the same **public** Blob store: progressive **WebM (VP9)** when curated,
+   with progressive **MP4 (H.264)** as the required Safari/universal fallback, plus a poster
+   (AVIF preferred; WebP/JPEG/PNG also allowed). `ElevaVideo` renders native `<video>` with
+   ordered `<source>` elements (muted, autoplay, loop, no controls). Reduced motion shows the
+   poster only. No third-party player or analytics.
 4. **CSP.** Marketing video and posters are served from `https://*.public.blob.vercel-storage.com`.
    Posters and images need the Blob host under `img-src`; video needs it under `media-src`
    (`img-src` does not cover `<video>`). No Mux vendor block.

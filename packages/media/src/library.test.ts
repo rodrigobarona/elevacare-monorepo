@@ -48,6 +48,9 @@ describe("@eleva/media library", () => {
   it("serves hero video from public Blob with poster and blur", () => {
     const hero = getVideo("hero-intro")
     expect(hero.url).toMatch(BLOB_HOST)
+    expect(hero.url).toMatch(/\.mp4(?:\?|$)/)
+    expect(hero.webmUrl).toMatch(BLOB_HOST)
+    expect(hero.webmUrl).toMatch(/\.webm(?:\?|$)/)
     expect(hero.poster).toMatch(BLOB_HOST)
     expect(hero.width).toBeGreaterThan(0)
     expect(hero.height).toBeGreaterThan(0)

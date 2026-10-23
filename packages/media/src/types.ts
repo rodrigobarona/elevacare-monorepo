@@ -31,7 +31,10 @@ export interface MediaImage {
 export interface MediaVideo {
   kind: "video"
   slug: string
+  /** Progressive MP4 (H.264) — Safari / universal fallback. */
   url: string
+  /** Optional progressive WebM (VP9); browsers that support it pick this first. */
+  webmUrl?: string
   poster: string
   blurDataURL: string
   width: number

@@ -115,7 +115,7 @@ Before publishing and then every January, recheck each vendor on
 
 No analytics or advertising cookies are set. Pre-consent mode is strict: no
 optional request runs before opt-in. The homepage hero video is a muted
-Vercel Blob MP4 with no third-party player or tracking (Mux was removed,
+Vercel Blob progressive WebM + MP4 with no third-party player or tracking (Mux was removed,
 ADR-024). Daily sets no cookie on eleva.care pages.
 
 ## 4. Product facts the pages quote

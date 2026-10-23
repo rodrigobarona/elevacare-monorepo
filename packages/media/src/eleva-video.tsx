@@ -26,8 +26,8 @@ function usePrefersReducedMotion(): boolean {
 
 /**
  * Muted, looping ambient video (hero/backdrops) with a poster underneath.
- * Progressive MP4 on public Blob — no third-party player or tracking.
- * Reduced motion shows the poster only.
+ * Progressive WebM (when curated) then MP4 on public Blob — no third-party
+ * player or tracking. Reduced motion shows the poster only.
  */
 export function ElevaVideo({
   slug,
@@ -56,7 +56,6 @@ export function ElevaVideo({
       />
       {reducedMotion ? null : (
         <video
-          src={video.url}
           autoPlay
           muted
           loop
@@ -64,7 +63,12 @@ export function ElevaVideo({
           aria-hidden
           tabIndex={-1}
           className="absolute inset-0 size-full object-cover"
-        />
+        >
+          {video.webmUrl ? (
+            <source src={video.webmUrl} type="video/webm" />
+          ) : null}
+          <source src={video.url} type="video/mp4" />
+        </video>
       )}
     </div>
   )
