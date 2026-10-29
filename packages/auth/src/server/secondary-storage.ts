@@ -11,13 +11,22 @@ export function asStorageString(value: unknown): string | null {
   }
 }
 
+/** The slice of the Upstash client `incrementWithTtl` uses (keeps tests mockable). */
+export type IncrementPipelineClient = {
+  pipeline(): {
+    incr(key: string): unknown
+    expire(key: string, seconds: number, option: "NX"): unknown
+    exec(): Promise<unknown[]>
+  }
+}
+
 /**
  * Atomically INCR + EXPIRE NX. Better Auth rate limiting requires
  * SecondaryStorage.increment(key, ttlSeconds) to set TTL only when the key is
  * created so the window resets; bare INCR leaves counters forever → permanent 429.
  */
 export async function incrementWithTtl(
-  redis: Pick<Redis, "pipeline">,
+  redis: IncrementPipelineClient,
   key: string,
   ttl: number
 ): Promise<number> {
