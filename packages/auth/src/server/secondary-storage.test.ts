@@ -10,6 +10,10 @@ afterEach(() => {
   vi.unstubAllEnvs()
 })
 
+function kvEnv(url: string, token: string): NodeJS.ProcessEnv {
+  return { ...process.env, KV_REST_API_URL: url, KV_REST_API_TOKEN: token }
+}
+
 describe("asStorageString", () => {
   it("returns null for nullish", () => {
     expect(asStorageString(null)).toBeNull()
@@ -77,19 +81,13 @@ describe("incrementWithTtl", () => {
 
 describe("createSecondaryStorage", () => {
   it("returns undefined when KV env is missing", () => {
-    expect(
-      createSecondaryStorage({
-        KV_REST_API_URL: "",
-        KV_REST_API_TOKEN: "",
-      })
-    ).toBeUndefined()
+    expect(createSecondaryStorage(kvEnv("", ""))).toBeUndefined()
   })
 
   it("returns a storage object when KV env is set", () => {
-    const storage = createSecondaryStorage({
-      KV_REST_API_URL: "https://example.upstash.io",
-      KV_REST_API_TOKEN: "token",
-    })
+    const storage = createSecondaryStorage(
+      kvEnv("https://example.upstash.io", "token")
+    )
     expect(storage).toEqual(
       expect.objectContaining({
         get: expect.any(Function),
