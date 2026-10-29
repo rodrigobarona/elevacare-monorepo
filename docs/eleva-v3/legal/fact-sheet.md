@@ -32,15 +32,22 @@ marital status, or the Certidão access code.
 These are decisions, not drafting gaps. The pages state the configured
 behaviour and do not name a value that does not exist yet.
 
-- **DPO.** No DPO is named. The pages give `privacy@eleva.care` as the data
-  protection contact. GDPR art. 37(1)(c) requires a DPO when core activities
-  are large-scale processing of health data; decide before volume grows and
-  add the DPO's contact to the privacy notice when appointed.
-- **ERS.** CAE 86950 is a care-provision activity. If the company itself
-  delivers care (rather than only intermediating independent professionals),
-  it must register with the Entidade Reguladora da Saúde (DL 127/2014) and the
-  ERS number must appear on the site. The pages describe Eleva as an
-  intermediary; experts hold their own ERS registration.
+- **DPO — decided 2026-10-29: external DPO service; provider and name
+  pending.** GDPR art. 37(1)(c) and Lei 58/2019 art. 13(b) (large-scale
+  health data as a core activity). Until the appointment, the pages give
+  `privacy@eleva.care` as the data protection contact. Once appointed:
+  communicate the DPO to the CNPD (<https://www.cnpd.pt/dpo/>), then publish
+  the DPO contact in the privacy notice, health-data notice, DPA and trust
+  pages. See [`dpo-appointment.md`](./dpo-appointment.md).
+- **ERS — decided 2026-10-29: Eleva is an intermediary only and does not
+  register with the ERS as a provider.** Experts are independent, hold their
+  own ERS registration (including as telemedicine units for video sessions)
+  and invoice members. Registration is governed by DL 126/2014 art. 26 and
+  ERS Regulamento 66/2015; DL 127/2014 is the licensing regime. The triggers
+  that would require Eleva to register, and the open risks (CAE 86950,
+  "digital health platform" wording, Eleva as merchant on the card statement,
+  Eleva-funded promotion codes), are listed in
+  [`ers-position.md`](./ers-position.md).
 - **Contracting entity.** Vendor accounts are held in a personal name on
   free/Hobby tiers. DPAs must be accepted in the company's name; Vercel AI
   Gateway zero data retention requires a Pro plan.
