@@ -1,0 +1,55 @@
+name: neon-branch-sweep
+
+# The per-PR Neon branch is deleted when its PR closes (neon-branch.yml).
+# When that delete step fails or is skipped, `pr-N` branches pile up until
+# the project hits its branch quota and every PR's
+# neon-branch-migrate-and-rls job fails with "branches limit exceeded".
+# This sweep deletes `pr-N` branches whose PR is no longer open.
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: neon-branch-sweep
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    name: neon-branch-sweep
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete Neon branches of closed PRs
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID || vars.NEON_PROJECT_ID }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if [ -z "$NEON_API_KEY" ] || [ -z "$NEON_PROJECT_ID" ]; then
+            echo "::error::NEON_API_KEY and NEON_PROJECT_ID are required"
+            exit 1
+          fi
+          api="https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}"
+          branches=$(curl -fsS -H "Authorization: Bearer ${NEON_API_KEY}" "${api}/branches")
+          echo "$branches" | jq -r '.branches[] | select(.name | test("^pr-[0-9]+$")) | "\(.id) \(.name)"' |
+          while read -r id name; do
+            pr="${name#pr-}"
+            state=$(gh pr view "$pr" --repo "$REPO" --json state --jq .state 2>/dev/null || echo "UNKNOWN")
+            if [ "$state" = "OPEN" ]; then
+              echo "keep   ${name} (PR #${pr} open)"
+              continue
+            fi
+            if [ "$state" = "UNKNOWN" ]; then
+              echo "::warning::keep ${name}: could not read PR #${pr}"
+              continue
+            fi
+            echo "delete ${name} (PR #${pr} ${state})"
+            curl -fsS -X DELETE -H "Authorization: Bearer ${NEON_API_KEY}" "${api}/branches/${id}" > /dev/null
+          done
