@@ -2,11 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import type Stripe from "stripe"
 
 const create = vi.fn()
+const list = vi.fn()
 const customersCreate = vi.fn()
 
 vi.mock("./client", () => ({
   stripe: () => ({
-    checkout: { sessions: { create } },
+    checkout: { sessions: { create, list } },
     customers: { create: customersCreate },
   }),
 }))
@@ -26,7 +27,46 @@ const {
   createBookingCheckoutSession,
   isBookingPaymentCheckoutSession,
   resolveBookingCustomer,
+  retrieveBookingCheckoutForIntent,
 } = await import("./booking-checkout-session")
+
+describe("retrieveBookingCheckoutForIntent", () => {
+  beforeEach(() => list.mockReset())
+
+  it("returns the booking session snapshot that created the intent", async () => {
+    list.mockResolvedValue({
+      data: [
+        {
+          id: "cs_1",
+          mode: "payment",
+          metadata: { eleva_booking_id: "b1", reservationId: "r1" },
+          payment_intent: "pi_1",
+          amount_subtotal: 6000,
+          amount_total: 4800,
+          currency: "eur",
+          total_details: { amount_discount: 1200 },
+          customer_details: null,
+          discounts: [],
+        },
+      ],
+    })
+    const snapshot = await retrieveBookingCheckoutForIntent("pi_1")
+    expect(list).toHaveBeenCalledWith({ payment_intent: "pi_1", limit: 1 })
+    expect(snapshot).toEqual(
+      expect.objectContaining({
+        checkoutSessionId: "cs_1",
+        amountSubtotal: 6000,
+        amountTotal: 4800,
+        discountCents: 1200,
+      })
+    )
+  })
+
+  it("returns null for a plain PaymentIntent", async () => {
+    list.mockResolvedValue({ data: [] })
+    await expect(retrieveBookingCheckoutForIntent("pi_2")).resolves.toBeNull()
+  })
+})
 
 describe("checkoutSessionIdempotencyKey", () => {
   it("is stable per reservation id", () => {
@@ -41,7 +81,7 @@ describe("createBookingCheckoutSession", () => {
     create.mockReset()
   })
 
-  it("creates an elements Checkout Session with EUR tax-inclusive line item", async () => {
+  it("creates an elements Checkout Session that keeps Eleva out of the seller role", async () => {
     create.mockResolvedValue({
       id: "cs_1",
       client_secret: "cs_1_secret",
@@ -63,12 +103,10 @@ describe("createBookingCheckoutSession", () => {
         mode: "payment",
         ui_mode: "elements",
         customer: "cus_member",
-        adaptive_pricing: { enabled: true },
-        automatic_tax: { enabled: true },
-        invoice_creation: { enabled: true },
+        customer_update: { name: "auto", address: "auto" },
         allow_promotion_codes: true,
         tax_id_collection: { enabled: true },
-        billing_address_collection: "required",
+        billing_address_collection: "auto",
         payment_method_configuration: "pmc_test_booking",
         expires_at: 1_800_001_860,
         payment_intent_data: expect.objectContaining({
@@ -82,20 +120,17 @@ describe("createBookingCheckoutSession", () => {
     expect(body).not.toHaveProperty("transfer_data")
     expect(body).not.toHaveProperty("application_fee_amount")
     expect(body).not.toHaveProperty("discounts")
+    // Eleva is not the seller: no Stripe Tax, no Stripe invoice, EUR only.
+    expect(body).not.toHaveProperty("automatic_tax")
+    expect(body).not.toHaveProperty("invoice_creation")
+    expect(body).not.toHaveProperty("adaptive_pricing")
     const items = body.line_items as Array<{
-      price_data: {
-        currency: string
-        unit_amount: number
-        tax_behavior: string
-      }
+      price_data: Record<string, unknown>
     }>
     expect(items[0]?.price_data).toEqual(
-      expect.objectContaining({
-        currency: "eur",
-        unit_amount: 6000,
-        tax_behavior: "inclusive",
-      })
+      expect.objectContaining({ currency: "eur", unit_amount: 6000 })
     )
+    expect(items[0]?.price_data).not.toHaveProperty("tax_behavior")
   })
 
   it("refuses to create when STRIPE_PMC_BOOKING is missing", async () => {

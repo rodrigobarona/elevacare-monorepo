@@ -3,6 +3,12 @@ import type { BookingBillingAddress } from "@eleva/db/schema"
 import { env } from "@eleva/config/env"
 import { stripe } from "./client"
 
+/**
+ * Set on the session's PaymentIntent so confirm knows to read the session
+ * (discount, NIF, billing address) without a lookup for plain intents.
+ */
+export const BOOKING_CHECKOUT_METADATA_MARKER = "elements"
+
 /** Stripe's Checkout Session minimum expiry is 30 minutes. */
 export const CHECKOUT_SESSION_EXPIRES_SECONDS = 31 * 60
 
@@ -42,12 +48,25 @@ export type CreateBookingCheckoutSessionInput = {
   expiresAt: number
 }
 
+/**
+ * Paid booking Checkout Session (`ui_mode: "elements"`, decision log
+ * 2026-10-13, flipped 2026-10-29).
+ *
+ * Eleva intermediates a healthcare service the expert sells and invoices,
+ * so the session must not make Eleva look like the seller: no Stripe Tax
+ * (`automatic_tax`; the session is VAT-exempt healthcare under CIVA art. 9
+ * when due at all, and that is the expert's assessment) and no Stripe
+ * invoice (`invoice_creation`; Portuguese invoices come from certified
+ * software, Tier 2). Adaptive Pricing stays off for the EUR-only launch
+ * (D-02) so the PaymentIntent amount is always the EUR session total.
+ * Promotion codes are Eleva-funded (founder 2026-10-29); the member's NIF is
+ * collected through Stripe's tax ID collection.
+ */
 export async function createBookingCheckoutSession(
   input: CreateBookingCheckoutSessionInput
 ): Promise<{
   id: string
   client_secret: string | null
-  payment_intent: string | null
 }> {
   const pmc = env().STRIPE_PMC_BOOKING
   if (!pmc) {
@@ -68,16 +87,11 @@ export async function createBookingCheckoutSession(
       ui_mode: "elements",
       return_url: input.returnUrl,
       customer: input.customerId,
-      adaptive_pricing: { enabled: true },
-      automatic_tax: { enabled: true },
-      invoice_creation: { enabled: true },
+      // Required with tax ID collection on an existing Customer.
+      customer_update: { name: "auto", address: "auto" },
       allow_promotion_codes: true,
       tax_id_collection: { enabled: true },
-      name_collection: {
-        individual: { enabled: true },
-        business: { enabled: true, optional: true },
-      },
-      billing_address_collection: "required",
+      billing_address_collection: "auto",
       expires_at: input.expiresAt,
       payment_method_configuration: pmc,
       line_items: [
@@ -86,14 +100,16 @@ export async function createBookingCheckoutSession(
           price_data: {
             currency: "eur",
             unit_amount: input.amountCents,
-            tax_behavior: "inclusive",
             product_data: { name: input.serviceName },
           },
         },
       ],
       payment_intent_data: {
         transfer_group: input.bookingId,
-        metadata,
+        metadata: {
+          ...metadata,
+          eleva_checkout: BOOKING_CHECKOUT_METADATA_MARKER,
+        },
       },
       metadata,
     },
@@ -103,8 +119,29 @@ export async function createBookingCheckoutSession(
   return {
     id: session.id,
     client_secret: session.client_secret,
-    payment_intent: stripeObjectId(session.payment_intent),
   }
+}
+
+/** Finds the booking Checkout Session that created a PaymentIntent, if any. */
+export async function retrieveBookingCheckoutForIntent(
+  paymentIntentId: string
+): Promise<BookingCheckoutSnapshot | null> {
+  const page = await stripe().checkout.sessions.list({
+    payment_intent: paymentIntentId,
+    limit: 1,
+  })
+  const session = page.data[0]
+  if (!session || !isBookingPaymentCheckoutSession(session)) return null
+  return bookingCheckoutSnapshotFromSession(session)
+}
+
+/** Retrieves a booking Checkout Session by id (public confirm path). */
+export async function retrieveBookingCheckoutSession(
+  checkoutSessionId: string
+): Promise<BookingCheckoutSnapshot | null> {
+  const session = await stripe().checkout.sessions.retrieve(checkoutSessionId)
+  if (!isBookingPaymentCheckoutSession(session)) return null
+  return bookingCheckoutSnapshotFromSession(session)
 }
 
 /**
@@ -144,6 +181,7 @@ export type BookingCheckoutSnapshot = {
   bookingId: string | null
   reservationId: string | null
   orgId: string | null
+  amountSubtotal: number | null
   amountTotal: number | null
   currency: string | null
   discountCents: number
@@ -228,6 +266,7 @@ export function bookingCheckoutSnapshotFromSession(
       null,
     orgId:
       session.metadata?.eleva_org_id ?? session.metadata?.expertOrgId ?? null,
+    amountSubtotal: session.amount_subtotal,
     amountTotal: session.amount_total,
     currency: session.currency,
     discountCents: session.total_details?.amount_discount ?? 0,

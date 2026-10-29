@@ -54,6 +54,11 @@ export {
   retrieveBookingPaymentIntent,
 } from "./payments"
 export type { CreatePaymentIntentForReservationResult } from "./payments"
+export { createCheckoutSessionForReservation } from "./payments"
+export type {
+  CreateCheckoutSessionForReservationInput,
+  CreateCheckoutSessionForReservationResult,
+} from "./payments"
 export {
   CHECKOUT_SESSION_EXPIRES_SECONDS,
   bookingCheckoutSnapshotFromSession,
@@ -62,6 +67,8 @@ export {
   createBookingCheckoutSession,
   isBookingPaymentCheckoutSession,
   resolveBookingCustomer,
+  retrieveBookingCheckoutForIntent,
+  retrieveBookingCheckoutSession,
   stripeObjectId,
 } from "./booking-checkout-session"
 export type {

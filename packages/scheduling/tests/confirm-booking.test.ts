@@ -228,3 +228,80 @@ describe("confirmBookingPayment", () => {
     )
   })
 })
+
+describe("amountsMatch", () => {
+  const checkout = {
+    checkoutSessionId: "cs_test",
+    amountSubtotal: 6000,
+    amountTotal: 4800,
+    currency: "eur",
+    discountCents: 1200,
+    promotionCodeId: "promo_1",
+    customerId: "cus_1",
+    taxId: null,
+    businessName: null,
+    billingAddress: null,
+  }
+
+  it("requires a plain intent to charge the list price", async () => {
+    const { amountsMatch } = await import("../src/confirm-booking")
+    expect(amountsMatch(intentSnapshot({ amount: 6000 }), 6000, "EUR")).toBe(
+      true
+    )
+    expect(amountsMatch(intentSnapshot({ amount: 4800 }), 6000, "EUR")).toBe(
+      false
+    )
+  })
+
+  it("accepts a Checkout Session intent discounted by a Stripe promotion code", async () => {
+    const { amountsMatch } = await import("../src/confirm-booking")
+    expect(
+      amountsMatch(
+        { ...intentSnapshot({ amount: 4800 }), checkout },
+        6000,
+        "EUR"
+      )
+    ).toBe(true)
+  })
+
+  it("rejects a session whose subtotal is not the list price", async () => {
+    const { amountsMatch } = await import("../src/confirm-booking")
+    expect(
+      amountsMatch(
+        {
+          ...intentSnapshot({ amount: 4000 }),
+          checkout: {
+            ...checkout,
+            amountSubtotal: 5000,
+            amountTotal: 4000,
+            discountCents: 1000,
+          },
+        },
+        6000,
+        "EUR"
+      )
+    ).toBe(false)
+  })
+
+  it("rejects an intent amount that differs from the session total", async () => {
+    const { amountsMatch } = await import("../src/confirm-booking")
+    expect(
+      amountsMatch(
+        { ...intentSnapshot({ amount: 4500 }), checkout },
+        6000,
+        "EUR"
+      )
+    ).toBe(false)
+  })
+
+  it("fails closed when a Checkout intent has no matching session", async () => {
+    const { amountsMatch } = await import("../src/confirm-booking")
+    expect(
+      amountsMatch(
+        { ...intentSnapshot({ amount: 6000 }), checkout: null },
+        6000,
+        "EUR"
+      )
+    ).toBe(false)
+  })
+})

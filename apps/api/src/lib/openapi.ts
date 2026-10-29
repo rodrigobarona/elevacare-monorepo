@@ -53,6 +53,8 @@ import {
   VerifyPhoneStartResponseSchema,
   VerifyPhoneConfirmRequestSchema,
   VerifyPhoneConfirmResponseSchema,
+  CreateCheckoutSessionRequestSchema,
+  CreateCheckoutSessionResponseSchema,
   CreatePaymentIntentRequestSchema,
   CreatePaymentIntentResponseSchema,
   RefundBookingPaymentRequestSchema,
@@ -2587,6 +2589,55 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
+      "/payments/checkout-session": {
+        post: {
+          operationId: "createBookingCheckoutSession",
+          summary: "Create a Stripe Checkout Session for a reserved slot",
+          description:
+            "Authorizes the reservationToken, inserts a pending_payment booking, then creates a Checkout Session (ui_mode elements) with Stripe promotion codes and the member's tax ID. Eleva-funded discounts never reduce the expert's share. returnPath is relative to the Eleva origin. Token or user mismatches return 404.",
+          tags: ["Payments"],
+          security: [],
+          requestParams: { header: IdempotencyKeyHeaderSchema },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: CreateCheckoutSessionRequestSchema,
+              },
+            },
+          },
+          responses: {
+            "201": {
+              description: "Checkout Session created (or the open one reused)",
+              content: {
+                "application/json": {
+                  schema: CreateCheckoutSessionResponseSchema,
+                },
+              },
+            },
+            "403": {
+              description: "Bot detected",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "404": {
+              description: "Reservation not found or token mismatch",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "409": {
+              description: "Member cannot book (deletion scheduled or banned)",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "422": {
+              description: "Validation error",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "503": {
+              description: "Stripe or snapshot unavailable",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+      },
       "/payments/intent": {
         post: {
           operationId: "createBookingPaymentIntent",
@@ -2792,7 +2843,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "confirmBookingPayment",
           summary: "Confirm a paid booking reservation",
           description:
-            "Authorizes reservationToken like /payments/intent, retrieves the PaymentIntent from Stripe, and flips pending_payment → confirmed. First flip returns 201; retries return 200 with alreadyConfirmed. Mismatched intents return 409 PAYMENT_MISMATCH.",
+            "Authorizes reservationToken like /payments/intent, retrieves the PaymentIntent from Stripe (send paymentIntentId, or checkoutSessionId on the Checkout Sessions path), and flips pending_payment → confirmed. First flip returns 201; retries return 200 with alreadyConfirmed. Mismatched intents return 409 PAYMENT_MISMATCH.",
           tags: ["Bookings"],
           security: [],
           requestParams: { header: IdempotencyKeyHeaderSchema },
@@ -2821,7 +2872,8 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               content: { "application/json": { schema: ErrorSchema } },
             },
             "409": {
-              description: "PAYMENT_MISMATCH",
+              description:
+                "PAYMENT_MISMATCH (intent does not match the hold), or PAYMENT_PENDING (Checkout Session path: the member has not finished paying yet; retry shortly)",
               content: { "application/json": { schema: ErrorSchema } },
             },
             "403": {

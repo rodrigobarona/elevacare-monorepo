@@ -85,6 +85,7 @@ export type {
 export {
   confirmBookingPayment,
   markBookingPaymentFailed,
+  authorizeCheckoutSessionConfirm,
   authorizeConfirmAccess,
   isUniqueViolation,
   emitGuestActivationRequired,
@@ -100,6 +101,7 @@ export { confirmFreeReservation } from "./confirm-free"
 export type {
   ConfirmBookingPaymentInput,
   ConfirmBookingPaymentResult,
+  BookingCheckoutConfirmSnapshot,
   BookingPaymentIntentSnapshot,
 } from "./confirm-booking"
 export { hashReservationToken } from "./reservation-token"

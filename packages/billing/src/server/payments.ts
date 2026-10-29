@@ -3,8 +3,10 @@ import { and, eq, inArray, sql } from "drizzle-orm"
 import { z } from "zod"
 import { env } from "@eleva/config/env"
 import { CANCELLATION_POLICY_VERSION, PT_VAT_RATE_BPS } from "@eleva/config"
+import { pickLocalized } from "@eleva/config/i18n-locales"
 import { withAudit } from "@eleva/audit"
 import {
+  auth as authSchema,
   main,
   withOrgContext,
   withPlatformAdminContext,
@@ -12,6 +14,8 @@ import {
 } from "@eleva/db"
 import type { ReservationFunnelSnapshot } from "@eleva/db/schema"
 import {
+  type BookingCheckoutConfirmSnapshot,
+  type BookingPaymentIntentSnapshot,
   hashReservationToken,
   assertGuestEmailCanBook,
   assertMemberCanBook,
@@ -19,6 +23,15 @@ import {
   type MemberBookabilityError,
 } from "@eleva/scheduling"
 import { stripe } from "./client"
+import {
+  BOOKING_CHECKOUT_METADATA_MARKER,
+  retrieveBookingCheckoutForIntent,
+  type BookingCheckoutSnapshot,
+  checkoutSessionExpiresAt,
+  checkoutSessionIdempotencyKey,
+  createBookingCheckoutSession,
+  resolveBookingCustomer,
+} from "./booking-checkout-session"
 import {
   computeApplicationFee,
   computeSettlement,
@@ -159,22 +172,15 @@ export type CreatePaymentIntentForReservationResult =
 
 export async function retrieveBookingPaymentIntent(
   paymentIntentId: string
-): Promise<{
-  id: string
-  status: string
-  amount: number
-  currency: string
-  metadata: {
-    reservationId?: string
-    bookingId?: string
-    expertOrgId?: string
-  }
-  paymentMethodType?: string | null
-}> {
+): Promise<BookingPaymentIntentSnapshot> {
   const intent = await stripe().paymentIntents.retrieve(paymentIntentId, {
     expand: ["payment_method"],
   })
   const method = intent.payment_method
+  const checkout =
+    intent.metadata.eleva_checkout === BOOKING_CHECKOUT_METADATA_MARKER
+      ? await retrieveBookingCheckoutForIntent(intent.id)
+      : null
   return {
     id: intent.id,
     status: String(intent.status),
@@ -189,17 +195,57 @@ export async function retrieveBookingPaymentIntent(
       typeof method === "object" && method && "type" in method
         ? String(method.type)
         : null,
+    ...(intent.metadata.eleva_checkout === BOOKING_CHECKOUT_METADATA_MARKER
+      ? { checkout: checkout ? toConfirmCheckout(checkout) : null }
+      : {}),
   }
 }
 
-export async function createPaymentIntentForReservation(
-  input: CreatePaymentIntentForReservationInput
-): Promise<CreatePaymentIntentForReservationResult> {
+function toConfirmCheckout(
+  snapshot: BookingCheckoutSnapshot
+): BookingCheckoutConfirmSnapshot {
+  return {
+    checkoutSessionId: snapshot.checkoutSessionId,
+    amountSubtotal: snapshot.amountSubtotal,
+    amountTotal: snapshot.amountTotal,
+    currency: snapshot.currency,
+    discountCents: snapshot.discountCents,
+    promotionCodeId: snapshot.promotionCodeId,
+    customerId: snapshot.customerId,
+    taxId: snapshot.taxId,
+    businessName: snapshot.businessName,
+    billingAddress: snapshot.billingAddress,
+  }
+}
+
+type PayableReservation = {
+  reservation: typeof main.slotReservations.$inferSelect
+  funnel: ReservationFunnelSnapshot
+  priceCents: number
+  currency: string
+  publishableKey: string
+}
+
+type PrepareError = "not_found" | "unavailable" | MemberBookabilityError
+
+/**
+ * Shared gate for every paid-booking payment surface: capability token,
+ * hold still active, funnel snapshot intact, member/guest bookable, Stripe
+ * configured.
+ */
+async function preparePayableReservation(input: {
+  reservationId: string
+  reservationToken: string
+  sessionUserId?: string
+}): Promise<
+  | ({ ok: true } & PayableReservation)
+  | { ok: false; error: PrepareError | "db_error" }
+> {
   let loaded
   try {
     loaded = await loadReservationForIntent(input.reservationId)
   } catch (err) {
-    console.error("[payments/intent] reservation load failed", err)
+    console.error("[payments] reservation load failed", err)
     return { ok: false, error: "db_error" }
   }
   if (!loaded) return { ok: false, error: "not_found" }
@@ -246,21 +292,26 @@ export async function createPaymentIntentForReservation(
   }
 
   const publishableKey = env().STRIPE_PUBLISHABLE_KEY
-  if (!publishableKey) {
+  if (!publishableKey || !env().STRIPE_PMC_BOOKING) {
     return { ok: false, error: "unavailable" }
   }
 
-  if (reservation.stripePaymentIntentId) {
-    return reuseExistingIntent(
-      reservation.stripePaymentIntentId,
-      publishableKey
-    )
-  }
+  return { ok: true, reservation, funnel, priceCents, currency, publishableKey }
+}
 
-  if (!env().STRIPE_PMC_BOOKING) {
-    return { ok: false, error: "unavailable" }
-  }
-
+/**
+ * Tx A: insert the `pending_payment` booking and its payment row with the
+ * commission computed on the list price (Eleva-funded promotion codes never
+ * change the expert's share). Idempotent per reservation.
+ */
+async function ensurePendingBooking(
+  payable: PayableReservation,
+  input: { sessionUserId?: string; idempotencyKey: string }
+): Promise<
+  | { ok: true; bookingId: string; paymentId: string }
+  | { ok: false; error: "unavailable" | "db_error" }
+> {
+  const { reservation, funnel, priceCents, currency } = payable
   let existing: Awaited<ReturnType<typeof loadBookingForReservation>>
   let entitlements: readonly string[]
   let billing: Awaited<ReturnType<typeof loadBillingSettlementFields>>
@@ -271,15 +322,22 @@ export async function createPaymentIntentForReservation(
       loadBillingSettlementFields(reservation.orgId),
     ])
   } catch (err) {
-    console.error("[payments/intent] booking/entitlements load failed", err)
+    console.error("[payments] booking/entitlements load failed", err)
     return { ok: false, error: "db_error" }
   }
   if (!reservation.userId && !funnel.guest?.email && !existing) {
     return { ok: false, error: "unavailable" }
   }
-  let bookingId = existing?.bookingId ?? randomUUID()
-  let paymentId = existing?.paymentId ?? randomUUID()
-  const idempotencyKey = paymentIntentIdempotencyKey(reservation.id)
+  if (existing) {
+    return {
+      ok: true,
+      bookingId: existing.bookingId,
+      paymentId: existing.paymentId,
+    }
+  }
+
+  const bookingId = randomUUID()
+  const paymentId = randomUUID()
   const buyerKind = isClinicSaaS({ entitlements }) ? "clinic" : "marketplace"
   const fee = computeApplicationFee({
     amountCents: priceCents,
@@ -299,50 +357,75 @@ export async function createPaymentIntentForReservation(
   const applicationFeeCents = settlement.platformFeeGross
   const rate = fee.commissionBps / 10_000
 
-  if (!existing) {
-    try {
-      await withAudit(
-        { orgId: reservation.orgId, actorUserId: input.sessionUserId ?? null },
-        async (tx, ctx) => {
-          await insertPendingBooking(tx, {
-            bookingId,
-            paymentId,
-            reservation,
-            funnel,
-            priceCents,
-            currency,
+  try {
+    await withAudit(
+      { orgId: reservation.orgId, actorUserId: input.sessionUserId ?? null },
+      async (tx, ctx) => {
+        await insertPendingBooking(tx, {
+          bookingId,
+          paymentId,
+          reservation,
+          funnel,
+          priceCents,
+          currency,
+          applicationFeeCents,
+          appliedCommissionBps: fee.commissionBps,
+          platformFeeNetCents: settlement.platformFeeNet,
+          platformFeeVatCents: settlement.vatOnPlatformFee,
+          processingFeeCents: 0,
+          idempotencyKey: input.idempotencyKey,
+        })
+        await ctx.emit({
+          entity: "booking",
+          action: "created",
+          entityId: bookingId,
+          payload: {
+            reservationId: reservation.id,
             applicationFeeCents,
-            appliedCommissionBps: fee.commissionBps,
-            platformFeeNetCents: settlement.platformFeeNet,
-            platformFeeVatCents: settlement.vatOnPlatformFee,
-            processingFeeCents: 0,
-            idempotencyKey,
-          })
-          await ctx.emit({
-            entity: "booking",
-            action: "created",
-            entityId: bookingId,
-            payload: {
-              reservationId: reservation.id,
-              applicationFeeCents,
-              commissionRate: rate,
-            },
-          })
-        }
-      )
-    } catch (err) {
-      const raced = await loadBookingForReservation(
-        reservation.orgId,
-        reservation.id
-      )
-      if (!raced) {
-        console.error("[payments/intent] tx A failed", err)
-        return { ok: false, error: "db_error" }
+            commissionRate: rate,
+          },
+        })
       }
-      bookingId = raced.bookingId
-      paymentId = raced.paymentId
+    )
+  } catch (err) {
+    const raced = await loadBookingForReservation(
+      reservation.orgId,
+      reservation.id
+    )
+    if (!raced) {
+      console.error("[payments] tx A failed", err)
+      return { ok: false, error: "db_error" }
     }
+    return { ok: true, bookingId: raced.bookingId, paymentId: raced.paymentId }
   }
+  return { ok: true, bookingId, paymentId }
+}
+
+export async function createPaymentIntentForReservation(
+  input: CreatePaymentIntentForReservationInput
+): Promise<CreatePaymentIntentForReservationResult> {
+  const payable = await preparePayableReservation(input)
+  if (!payable.ok) return payable
+  const { reservation, priceCents, currency, publishableKey } = payable
+
+  if (reservation.stripePaymentIntentId) {
+    return reuseExistingIntent(
+      reservation.stripePaymentIntentId,
+      publishableKey
+    )
+  }
+  // One payment surface per hold: never open a second charge path.
+  if (reservation.stripeCheckoutSessionId) {
+    return { ok: false, error: "unavailable" }
+  }
+
+  const idempotencyKey = paymentIntentIdempotencyKey(reservation.id)
+  const pending = await ensurePendingBooking(payable, {
+    sessionUserId: input.sessionUserId,
+    idempotencyKey,
+  })
+  if (!pending.ok) return pending
+  const { bookingId, paymentId } = pending
 
   let intent
   try {
@@ -392,6 +475,195 @@ export async function createPaymentIntentForReservation(
     bookingId,
     publishableKey,
   }
+}
+
+export type CreateCheckoutSessionForReservationInput = {
+  reservationId: string
+  reservationToken: string
+  sessionUserId?: string
+  /** Absolute URL on the Eleva gateway, built and validated by the route. */
+  returnUrl: string
+}
+
+export type CreateCheckoutSessionForReservationResult =
+  | {
+      ok: true
+      clientSecret: string
+      checkoutSessionId: string
+      bookingId: string
+      publishableKey: string
+    }
+  | {
+      ok: false
+      error: "not_found" | "unavailable" | "db_error" | MemberBookabilityError
+    }
+
+/**
+ * Paid booking via Checkout Sessions (`ui_mode: "elements"`). Same
+ * commit-intent / vendor call / bind pattern as the PaymentIntent path:
+ * tx A inserts the pending booking, Stripe is called outside any
+ * transaction, tx B binds the session id.
+ */
+export async function createCheckoutSessionForReservation(
+  input: CreateCheckoutSessionForReservationInput
+): Promise<CreateCheckoutSessionForReservationResult> {
+  const payable = await preparePayableReservation(input)
+  if (!payable.ok) return payable
+  const { reservation, funnel, priceCents, currency, publishableKey } = payable
+  if (currency.toLowerCase() !== "eur") {
+    return { ok: false, error: "unavailable" }
+  }
+
+  if (reservation.stripeCheckoutSessionId) {
+    return reuseExistingCheckoutSession(
+      reservation.stripeCheckoutSessionId,
+      publishableKey
+    )
+  }
+  if (reservation.stripePaymentIntentId) {
+    return { ok: false, error: "unavailable" }
+  }
+
+  const idempotencyKey = checkoutSessionIdempotencyKey(reservation.id)
+  const pending = await ensurePendingBooking(payable, {
+    sessionUserId: input.sessionUserId,
+    idempotencyKey,
+  })
+  if (!pending.ok) return pending
+  const { bookingId, paymentId } = pending
+
+  let buyer: { name: string; email: string; phone?: string } | null
+  let serviceName: string
+  try {
+    ;[buyer, serviceName] = await Promise.all([
+      loadBuyerContact(reservation.userId ?? input.sessionUserId, funnel),
+      loadServiceName(
+        reservation.orgId,
+        reservation.eventTypeId,
+        funnel.language
+      ),
+    ])
+  } catch (err) {
+    console.error("[payments/checkout-session] buyer load failed", err)
+    return { ok: false, error: "db_error" }
+  }
+  if (!buyer) return { ok: false, error: "unavailable" }
+
+  let session
+  try {
+    const customerId = await resolveBookingCustomer({
+      reservationId: reservation.id,
+      ...buyer,
+    })
+    session = await createBookingCheckoutSession({
+      amountCents: priceCents,
+      serviceName,
+      bookingId,
+      reservationId: reservation.id,
+      expertOrgId: reservation.orgId,
+      customerId,
+      returnUrl: input.returnUrl,
+      idempotencyKey,
+      expiresAt: checkoutSessionExpiresAt(reservation.createdAt),
+    })
+    if (!session.client_secret) {
+      return { ok: false, error: "unavailable" }
+    }
+    const sessionId = session.id
+    await withAudit(
+      { orgId: reservation.orgId, actorUserId: input.sessionUserId ?? null },
+      async (tx, ctx) => {
+        await bindCheckoutSession(tx, {
+          reservationId: reservation.id,
+          bookingId,
+          checkoutSessionId: sessionId,
+          customerId,
+        })
+        await ctx.emit({
+          entity: "booking_payment",
+          action: "updated",
+          entityId: paymentId,
+          payload: {
+            checkoutSessionId: sessionId,
+            status: "requires_payment",
+          },
+        })
+      }
+    )
+  } catch (err) {
+    console.error("[payments/checkout-session] create or bind failed", err)
+    return { ok: false, error: "unavailable" }
+  }
+
+  return {
+    ok: true,
+    clientSecret: session.client_secret,
+    checkoutSessionId: session.id,
+    bookingId,
+    publishableKey,
+  }
+}
+
+async function reuseExistingCheckoutSession(
+  checkoutSessionId: string,
+  publishableKey: string
+): Promise<CreateCheckoutSessionForReservationResult> {
+  try {
+    const session = await stripe().checkout.sessions.retrieve(checkoutSessionId)
+    const bookingId =
+      session.metadata?.eleva_booking_id ?? session.metadata?.bookingId
+    if (session.status !== "open" || !session.client_secret || !bookingId) {
+      return { ok: false, error: "unavailable" }
+    }
+    return {
+      ok: true,
+      clientSecret: session.client_secret,
+      checkoutSessionId: session.id,
+      bookingId,
+      publishableKey,
+    }
+  } catch {
+    return { ok: false, error: "unavailable" }
+  }
+}
+
+/** Guest contact from the funnel, or the signed-in member's account row. */
+async function loadBuyerContact(
+  userId: string | null | undefined,
+  funnel: ReservationFunnelSnapshot
+): Promise<{ name: string; email: string; phone?: string } | null> {
+  if (funnel.guest) {
+    return {
+      name: funnel.guest.name,
+      email: funnel.guest.email,
+      ...(funnel.guest.phone ? { phone: funnel.guest.phone } : {}),
+    }
+  }
+  if (!userId) return null
+  return withPlatformAdminContext(async (tx) => {
+    const [row] = await tx
+      .select({ name: authSchema.user.name, email: authSchema.user.email })
+      .from(authSchema.user)
+      .where(eq(authSchema.user.id, userId))
+      .limit(1)
+    return row ? { name: row.name, email: row.email } : null
+  })
+}
+
+async function loadServiceName(
+  orgId: string,
+  eventTypeId: string,
+  locale: string
+): Promise<string> {
+  return withOrgContext(orgId, async (tx) => {
+    const [row] = await tx
+      .select({ title: main.eventTypes.title })
+      .from(main.eventTypes)
+      .where(eq(main.eventTypes.id, eventTypeId))
+      .limit(1)
+    const name = row ? pickLocalized(row.title, locale).trim() : ""
+    return name.length > 0 ? name.slice(0, 250) : "Eleva session"
+  })
 }
 
 async function reuseExistingIntent(
@@ -635,6 +907,40 @@ async function bindPaymentIntent(
     .update(main.bookingPayments)
     .set({
       stripePaymentIntentId: input.paymentIntentId,
+      status: "requires_payment",
+    })
+    .where(eq(main.bookingPayments.bookingId, input.bookingId))
+}
+
+async function bindCheckoutSession(
+  tx: Tx,
+  input: {
+    reservationId: string
+    bookingId: string
+    checkoutSessionId: string
+    customerId: string
+  }
+) {
+  await tx
+    .update(main.slotReservations)
+    .set({
+      stripeCheckoutSessionId: input.checkoutSessionId,
+      funnel: sql`"funnel" - 'guest'`,
+    })
+    .where(eq(main.slotReservations.id, input.reservationId))
+  await tx
+    .update(main.bookings)
+    .set({
+      stripeCheckoutSessionId: input.checkoutSessionId,
+      stripeCustomerId: input.customerId,
+      status: "pending_payment",
+    })
+    .where(eq(main.bookings.id, input.bookingId))
+  await tx
+    .update(main.bookingPayments)
+    .set({
+      stripeCheckoutSessionId: input.checkoutSessionId,
+      stripeCustomerId: input.customerId,
       status: "requires_payment",
     })
     .where(eq(main.bookingPayments.bookingId, input.bookingId))
