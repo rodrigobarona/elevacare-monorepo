@@ -114,6 +114,31 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
 - Owner: founder. Status: `active`.
 - Related: D-06, D-11, D-12, [`legal/fact-sheet.md`](./legal/fact-sheet.md) "Open founder inputs".
 
+### 2026-10-29: Legal pages for the launch posture (active)
+
+- Decision (founder): Eleva is an intermediary only; experts are independent,
+  hold their own ERS registration and invoice members from their own
+  certified software. Only regulated health professionals whose licence
+  Eleva has verified with their Ordem may sell at launch. An external DPO is
+  being appointed (no name yet; `privacy@eleva.care` meanwhile). D-06
+  balanced policy: member no-show = cancellation at session start under the
+  service tier (no refund in all three tiers); expert cancellation or no-show
+  = 100% refund including Eleva's fee plus a rebook offer; chargebacks on
+  undelivered sessions are recovered from the expert's payout, delivered
+  sessions are contested with join/attendance logs. Promotion codes are
+  Eleva-funded and never reduce the expert's share. Paid bookings use Stripe
+  Checkout; Eleva collects the member's optional NIF for the expert's invoice
+  and does not invoice the session.
+- Change: rewrote `expert-agreement`, `terms`, `payments`, `privacy` and
+  `trust/ers` in pt/en/es; bumped `CONSENT_DOCUMENT_VERSION` to
+  **`2026-10-29`**.
+- Out of scope (not shipped by this change): automated expert-cancel and
+  no-show refund flows, a no-show time threshold, the external DPO
+  appointment itself, lawyer review of the new text, the DPA page refresh.
+- Owner: founder (policy) + engineering (content).
+- Status: `active`.
+- Related: D-06, D-10, [`legal/fact-sheet.md`](./legal/fact-sheet.md).
+
 ### 2026-10-24: Publish consent documents (D-10 switch) (active)
 
 - Decision (founder): publish the legal/trust consent set. Set
@@ -2813,8 +2838,9 @@ capabilities.transfers = active`. Stripe Identity stays implemented behind
 ### D-10 (2026-09-07): Public-site parity dispositions
 
 - Owner: product (founder)
-- Status: active — **consent set published 2026-10-24** (founder-approved).
-  `CONSENT_DOCUMENT_VERSION` is `2026-10-24` (no `dev-` prefix). Legal/trust
+- Status: active — **consent set published 2026-10-24** (founder-approved),
+  revised 2026-10-29. `CONSENT_DOCUMENT_VERSION` is `2026-10-29` (no `dev-`
+  prefix). Legal/trust
   draft chrome removed; marketing landing drafts (`/become-expert`,
   `/for-clinics`, `/contact`) remain. Earlier working pre-launch record
   (2026-09-09, version `dev-2026-09-09`) is superseded for the publication

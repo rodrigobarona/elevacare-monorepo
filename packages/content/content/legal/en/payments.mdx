@@ -1,128 +1,70 @@
 ---
 title: Payments and refunds — Eleva.care
-description: How bookings are paid through Stripe and how cancellation tiers affect refunds.
-lastUpdated: 2026-10-22
-summary: Platform fees, Flexible/Moderate/Strict policies, and invoicing.
+description: How bookings are paid, who issues the invoice, and how refunds, no-shows and payment disputes work.
+lastUpdated: 2026-10-29
+summary: Stripe Checkout, expert invoices and NIF, promo codes, Flexible/Moderate/Strict policies, no-shows, disputes and transfers.
 ---
 
-# Payment Policies
+## 1. What you pay
 
-_Effective Date: December 31, 2025_
+- You pay the **session price set by the expert**, in euros. The price shown is final: there are no extra charges after confirmation.
+- The session is provided by the expert, who is an independent professional. Eleva is the intermediary that receives the payment and transfers the expert's share to them.
+- From the price, Eleva keeps a **service fee of 15%, including VAT where due**, charged to the expert. Example: for a €100 session, the expert receives €85 and Eleva €15. Eleva pays the payment processing fees.
+- There is no per-booking fee on bookings made through a clinic: the clinic pays Eleva a subscription.
 
-> **Quick Summary**
->
-> - **What this page is about:** How payments and refunds work on Eleva.care.
-> - **Eleva.care is a digital health platform; you pay for services delivered by independent experts.**
-> - **Pricing is transparent:** Expert receives 85%, platform fee 15%—no hidden fees.
-> - **Accepted methods:** Cards (Visa, Mastercard, Amex) and Multibanco (Portugal).
-> - **Refunds for conflicts:** 100% full refund if a booking can't proceed due to availability issues.
-> - **Payment security:** Processed by Stripe (PCI DSS compliant); we never store your card details.
-> - **Questions?** Contact `support@eleva.care`.
+## 2. How you pay
 
-This page explains how payments work on Eleva.care in plain language.
+- Payment is made through **Stripe Checkout**. We accept card (including Apple Pay and Google Pay), Link and MB WAY.
+- While you pay, the time slot is held for 5 minutes, or 10 minutes while an MB WAY payment is being processed. If the payment is not completed within that time, the booking is not confirmed and the slot is released.
+- Where the law requires it, your bank asks for strong customer authentication (3D Secure). If authentication fails, you can try another card or method.
+- Eleva does not store card numbers. Payment data is handled by Stripe, which is PCI DSS certified.
 
-## 1) What you're paying for
+## 3. Invoices and NIF
 
-- Eleva.care is a digital health platform. Payments are for healthcare services delivered by independent, licensed care experts via the Eleva.care platform.
-- Pricing shown at booking includes everything (no hidden fees):
-  - Expert receives 85% of the appointment price
-  - Eleva.care retains 15% as a platform fee (covers tech, infra, support, marketing, Stripe fees)
+- **The expert issues the invoice for the session**, using their own certified invoicing software. Eleva does not invoice the session and does not charge VAT on it.
+- At payment, you may choose to give your **NIF**. Eleva collects it and sends it to the expert, with the booking details, so that the invoice is issued in your name.
+- Eleva's service fee is invoiced by Eleva to the expert, not to you.
 
-Example for €100: Expert €85, Platform fee €15.
+## 4. Promo codes
 
-## 2) Payment methods
+- Eleva may offer promo codes, on the conditions stated for each campaign. You enter the code at payment and see the discounted price before you pay.
+- The discount is **covered by Eleva**. The expert receives the same share they would receive without the code, calculated on the list price.
+- If you are entitled to a refund, it is calculated on the amount you actually paid.
 
-- Cards (Visa, Mastercard, Amex)
-- Multibanco (Portugal)
+## 5. Cancelling a booking
 
-## 3) Multibanco rules (when paying 8 or more days in advance)
+Each service has one of three policies, chosen by the expert and shown before you pay. The policy shown at the time of booking is the one that applies to that booking.
 
-- Not available for appointments taking place in 7 days or less
-- When your appointment is 8 or more days away, we reserve your slot for 7 days while you pay
-- You have 7 full days to complete payment
-- We'll send reminders on day 3 and day 6 with instructions (ATM, online banking, MB WAY)
+| Policy   | 100% refund             | 50% refund                         | No refund                 |
+| -------- | ----------------------- | ---------------------------------- | ------------------------- |
+| Flexible | 24 hours or more before | —                                  | Less than 24 hours before |
+| Moderate | 48 hours or more before | Between 24 and 48 hours before     | Less than 24 hours before |
+| Strict   | 7 days or more before   | Between 48 hours and 7 days before | Less than 48 hours before |
 
-Late Multibanco payments (after 7 days): **100% refund for any conflict**
+- **Grace period:** under any policy, you get a full refund if you cancel within 24 hours of booking and the session is at least 48 hours away.
+- To cancel, use the booking's cancel option or write to [support@eleva.care](mailto:support@eleva.care). The refund goes to the original payment method. How long it takes to appear in your account depends on your bank; it is usually 5 to 10 business days.
 
-We've simplified our policy to be more customer-friendly:
+## 6. No-shows and expert cancellations
 
-- **If the expert blocked the date** after your booking: **100% refund**
-- **If the slot was booked by another member**: **100% refund**
-- **If minimum notice requirements are violated**: **100% refund**
+- **If you do not attend:** if you do not attend and have not cancelled, the no-show is treated as a cancellation at the session start time. Under all three policies, this means there is no refund.
+- **If the expert cancels or does not attend:** you receive **100% of the amount paid, including Eleva's fee**, and we offer you a new booking.
+- If the expert does not attend, tell us at [support@eleva.care](mailto:support@eleva.care). For online sessions, we confirm attendance with the video call join and leave logs.
 
-### Our Customer-First Approach
+## 7. Payment disputes (chargebacks)
 
-**Why 100% refund for all conflicts?**
+- If you have a problem with a payment, contact us first at [support@eleva.care](mailto:support@eleva.care). If the session was not provided because of the expert, we refund you without you needing to open a dispute with your bank.
+- If you open a dispute with your card issuer, Eleva handles it with Stripe:
+  - if the session **was not provided**, Eleva accepts the dispute and recovers the amount from the expert;
+  - if the session **was provided**, Eleva contests the dispute with the booking records and the session attendance records.
+- The final decision lies with the card issuer, under the payment network's rules.
+- Abusive disputes or fraud may lead to suspension of the account.
 
-- We believe late payments shouldn't penalize customers when conflicts arise
-- Even if payment was delayed, if the appointment can't proceed, you deserve a full refund
-- Eleva Care absorbs payment processing costs to maintain trust
-- This policy demonstrates our commitment to fair treatment
+## 8. Transfers to experts
 
-## 4) Refunds for conflicts (late Multibanco)
+Experts receive their share through Stripe Connect. The share for each booking becomes available on the later of 7 days after payment and 24 hours after the end of the session, at 04:00 (Lisbon time). The details are in the [Expert agreement](/legal/expert-agreement).
 
-- **All conflicts**: 100% full refund (no processing fees)
-  - Expert blocked the date
-  - Slot already booked by another member
-  - Minimum notice requirements not met
-- Refund time: typically 5–10 business days (via Stripe)
-- We'll notify you by email with the specific reason
+## 9. Contacts
 
-If something went wrong (system error or edge case), contact support within 48 hours with your payment reference. We’ll review within 2 business days.
+Questions about payments and refunds: [support@eleva.care](mailto:support@eleva.care). Complaints: see [Complaints and dispute resolution](/legal/complaints).
 
-## 5) Choosing a payment method
-
-- Card (instant):
-  - Best for bookings within 8 days, last‑minute, or when you need instant confirmation
-- Multibanco (7‑day window):
-  - Best for bookings 8+ days ahead, local PT preference, comfortable with deferred payment
-
-## 6) Expert payouts (Stripe Connect)
-
-- Experts are independent and are paid via Stripe Connect after successful appointments
-- Standard split: 85% expert / 15% platform
-- Payout timing depends on expert settings and local bank rules
-
-## 7) Currency and pricing
-
-- Prices shown in EUR; processors may apply conversion for international cards
-- Prices are locked at booking; no extra platform fees after confirmation (refund fees may apply as described in section 4)
-- Taxes/fees included in the displayed price
-
-## 8) Payment security and fraud
-
-- We do not store card numbers; payments are processed by Stripe (PCI DSS compliant)
-- We use encryption and fraud detection; suspicious transactions may be delayed/declined
-- Additional verification may be required for high‑value payments
-
-## 9) Chargebacks and disputes
-
-- If a cardholder opens a dispute (chargeback), we follow Stripe’s process and provide evidence (booking logs, communications, policies). While the dispute is open, payouts for the related appointment may be delayed.
-- Outcomes are determined by the card network. If the dispute is resolved in your favor, funds are released; otherwise, the charge is reversed per network rules.
-- Repeated fraud/chargebacks may result in temporary restrictions or account review.
-
-## 10) Strong Customer Authentication (3DS/PSD2)
-
-- Where required (e.g., EEA), we use 3D Secure to comply with PSD2 Strong Customer Authentication.
-- If 3DS is challenged and fails, the payment cannot be completed; you may retry with a different card or method.
-
-## 11) Failed payments
-
-- Failed payments cancel the booking automatically; you’ll be notified by email
-- Retry by creating a new payment; repeated failures may temporarily restrict booking
-
-## 12) Support and refunds
-
-- Payment questions: `support@eleva.care` (we aim to respond within 24 hours)
-- Refund requests: submit within 7 days of the original payment; medical emergencies are considered case‑by‑case; cancellation rules in our Terms apply
-
-## 13) Updates and compliance
-
-- We may update these policies; continued use means you accept updates
-- We follow Portuguese consumer protection, EU PSD2, GDPR data requirements, and Stripe terms
-
----
-
-In case of divergence between language versions, the Portuguese version shall prevail.
-
-If you have questions about payments, contact `support@eleva.care`.
+If the language versions differ, the Portuguese version prevails.

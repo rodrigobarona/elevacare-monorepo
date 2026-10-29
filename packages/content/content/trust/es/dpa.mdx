@@ -1,7 +1,7 @@
 ---
 title: Acuerdo de tratamiento de datos — Eleva.care
 description: Términos de encargado cuando Eleva trata datos bajo instrucciones de un experto.
-lastUpdated: 2026-10-22
+lastUpdated: 2026-10-29
 summary: Roles, subencargados, transferencias y medidas de seguridad.
 ---
 
@@ -16,7 +16,7 @@ _Fecha de vigencia: 31 de diciembre de 2025_
 > - **Para datos de plataforma** (cuentas, reservas, pagos): Eleva.care es el Responsable del Tratamiento.
 > - **Para notas/archivos clínicos** creados por especialistas: el especialista es el Responsable; Eleva.care los almacena de forma segura.
 > - **Sus datos permanecen en la UE** por defecto, protegidos por cifrado y controles de acceso estrictos.
-> - **¿Preguntas?** Contacte `dpo@eleva.care`.
+> - **¿Preguntas?** Contacte `privacy@eleva.care` (Eleva está nombrando un delegado de protección de datos externo).
 
 Este DPA explica cómo Eleva.care trata los datos personales—de forma clara y simple.
 
@@ -62,7 +62,7 @@ Eleva.care es una plataforma digital de salud que permite la prestación de serv
 ## 7) Derechos de titulares
 
 - Plataforma (Responsable): Atendemos acceso, rectificación, borrado, portabilidad, limitación y oposición.
-- Clínico (Encargado): Damos herramientas para que los especialistas atiendan solicitudes de pacientes.
+- Clínico (Encargado): Damos herramientas para que los especialistas atiendan solicitudes de los miembros.
 
 ## 8) Deberes del profesional (como Responsable)
 
@@ -76,7 +76,7 @@ Eleva.care es una plataforma digital de salud que permite la prestación de serv
 ## 10) Responsabilidad
 
 - Eleva.care: responsable por la operación, seguridad y cumplimiento organizativo/técnico/administrativo de la plataforma digital de salud, según lo descrito.
-- Especialistas: responsables por decisiones clínicas, resultados de pacientes y cumplimiento como Responsables de datos clínicos.
+- Especialistas: responsables por decisiones clínicas, resultados de la atención y cumplimiento como Responsables de datos clínicos.
 
 ## 11) Actualizaciones, ley y disputas
 
@@ -89,18 +89,18 @@ Eleva.care es una plataforma digital de salud que permite la prestación de serv
 
 Dependemos de subencargados cuidadosamente evaluados para operar la plataforma. Cada subencargado está vinculado por un DPA y recibe solo los datos mínimos necesarios.
 
-| Proveedor | Finalidad                      | Datos                                                    | Región/Hosting                 | Salvaguardas                                         |
-| --------- | ------------------------------ | -------------------------------------------------------- | ------------------------------ | ---------------------------------------------------- |
-| Neon      | Base de datos principal        | Datos de plataforma; datos clínicos en reposo (cifrados) | UE (Fráncfort)                 | DPA, SCCs (si aplica), cifrado en reposo/en tránsito |
-| Vercel    | Hosting/app edge               | Metadatos de plataforma, logs                            | Regiones UE cuando disponibles | DPA, SCCs (si aplica)                                |
-| Upstash   | Caché/colas                    | Datos de caché no clínicos                               | UE                             | DPA, SCCs (si aplica)                                |
-| Resend    | Email transaccional            | Metadatos y contenido de email                           | IE/UE                          | DPA, SCCs (si aplica)                                |
-| Eleva notifications      | Orquestación de notificaciones | Metadatos de payload de notificación                     | Endpoint UE                    | DPA, SCCs (si aplica)                                |
-| Better Auth     | Identidad/SSO                  | Autenticación y metadatos de perfil                      | Opciones UE                    | DPA, SCCs (si aplica)                                |
-| Stripe    | Pagos                          | Metadatos de pagos (no almacenamos PAN)                  | UE/EEE                         | PCI DSS L1, DPA, SCCs                                |
+| Proveedor           | Finalidad                      | Datos                                                    | Región/Hosting                 | Salvaguardas                                         |
+| ------------------- | ------------------------------ | -------------------------------------------------------- | ------------------------------ | ---------------------------------------------------- |
+| Neon                | Base de datos principal        | Datos de plataforma; datos clínicos en reposo (cifrados) | UE (Fráncfort)                 | DPA, SCCs (si aplica), cifrado en reposo/en tránsito |
+| Vercel              | Hosting/app edge               | Metadatos de plataforma, logs                            | Regiones UE cuando disponibles | DPA, SCCs (si aplica)                                |
+| Upstash             | Caché/colas                    | Datos de caché no clínicos                               | UE                             | DPA, SCCs (si aplica)                                |
+| Resend              | Email transaccional            | Metadatos y contenido de email                           | IE/UE                          | DPA, SCCs (si aplica)                                |
+| Eleva notifications | Orquestación de notificaciones | Metadatos de payload de notificación                     | Endpoint UE                    | DPA, SCCs (si aplica)                                |
+| Better Auth         | Identidad/SSO                  | Autenticación y metadatos de perfil                      | Opciones UE                    | DPA, SCCs (si aplica)                                |
+| Stripe              | Pagos                          | Metadatos de pagos (no almacenamos PAN)                  | UE/EEE                         | PCI DSS L1, DPA, SCCs                                |
 
 Aviso de cambios: actualizaremos esta lista y daremos aviso con al menos 30 días de antelación antes de añadir o reemplazar un subencargado (salvo cambios inmediatos necesarios por seguridad, cumplimiento o continuidad). Los Responsables pueden oponerse con motivos razonables y documentados. Actuaremos de buena fe para mitigar o, si no se resuelve, permitir la terminación del servicio para el tratamiento afectado sin penalización.
 
 En caso de divergencia entre versiones lingüísticas, prevalecerá la versión en portugués.
 
-Contacto (DPO): `dpo@eleva.care` · Operador: BÚZIOS E TARTARUGAS – LDA (Eleva.care), NIPC/NIF 515001708, Rua Gil Vicente, 2, 2775‑198 Parede, Portugal. Soporte `support@eleva.care`.
+Protección de datos: `privacy@eleva.care` · Operador: BÚZIOS E TARTARUGAS – LDA (Eleva.care), NIPC/NIF 515001708, Rua Gil Vicente, 2, 2775‑198 Parede, Portugal. Soporte `support@eleva.care`.

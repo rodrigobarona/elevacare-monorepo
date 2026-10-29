@@ -1,127 +1,70 @@
 ---
 title: Pagamentos e reembolsos — Eleva.care
-description: Como as marcações são pagas via Stripe e como os níveis de cancelamento afetam reembolsos.
-lastUpdated: 2026-10-22
-summary: Taxas da plataforma, políticas Flexível/Moderada/Rígida e faturação.
+description: Como se pagam as marcações, quem emite a fatura e como funcionam os reembolsos, as faltas e as disputas de pagamento.
+lastUpdated: 2026-10-29
+summary: Stripe Checkout, faturas do especialista e NIF, códigos promocionais, políticas Flexível/Moderada/Rígida, faltas, disputas e transferências.
 ---
 
-# Políticas de Pagamento
+## 1. O que paga
 
-_Data de vigência: 31 de dezembro de 2025_
+- Paga o **preço da sessão definido pelo especialista**, em euros. O preço apresentado é final: não há custos acrescidos depois da confirmação.
+- A sessão é prestada pelo especialista, que é um profissional independente. A Eleva é a intermediária que recebe o pagamento e transfere ao especialista a sua parte.
+- Do preço, a Eleva retém uma **taxa de serviço de 15 %, com IVA incluído quando devido**, cobrada ao especialista. Exemplo: numa sessão de 100 €, o especialista recebe 85 € e a Eleva 15 €. As taxas de processamento de pagamentos são suportadas pela Eleva.
+- Nas marcações feitas através de uma clínica não há taxa por marcação: a clínica paga uma subscrição à Eleva.
 
-> **Resumo Rápido**
->
-> - **Sobre o que é esta página:** Como funcionam os pagamentos, reembolsos e faturação na Eleva.care.
-> - **A Eleva.care opera a plataforma digital de saúde; especialistas independentes e licenciados prestam os seus cuidados.**
-> - **Preço incluído:** o preço apresentado inclui tudo—85% vai para o especialista, 15% taxa de plataforma.
-> - **Métodos de pagamento:** cartão de crédito/débito (instantâneo) ou Multibanco (só Portugal, prazo de 7 dias).
-> - **Reembolsos:** 100% de reembolso para conflitos de agenda; solicite em até 7 dias.
-> - **Questões?** Contacte `support@eleva.care`.
+## 2. Como paga
 
-Aqui explicamos como funcionam os pagamentos na Eleva.care de forma simples.
+- O pagamento é feito através do **Stripe Checkout**. Aceitamos cartão (incluindo Apple Pay e Google Pay), Link e MB WAY.
+- Enquanto paga, o horário fica reservado durante 5 minutos, ou 10 minutos enquanto um pagamento MB WAY está a ser processado. Se o pagamento não for concluído nesse prazo, a marcação não é confirmada e o horário fica livre.
+- Quando a lei o exige, o banco pede autenticação forte (3D Secure). Se a autenticação falhar, pode tentar outro cartão ou método.
+- A Eleva não guarda os números dos cartões. Os dados de pagamento são tratados pela Stripe, certificada PCI DSS.
 
-## 1) O que está a pagar
+## 3. Faturas e NIF
 
-- A Eleva.care é uma plataforma digital de saúde. Os pagamentos são para serviços de saúde prestados por especialistas independentes e licenciados através da plataforma Eleva.care.
-- O preço apresentado inclui tudo (sem custos ocultos):
-  - O especialista recebe 85% do preço da consulta
-  - A Eleva.care retém 15% como taxa de plataforma (tecnologia, infraestrutura, suporte, marketing, taxas Stripe)
+- **É o especialista quem emite a fatura da sessão**, com o seu próprio programa de faturação certificado. A Eleva não fatura a sessão e não cobra IVA sobre ela.
+- No pagamento pode indicar, se quiser, o seu **NIF**. A Eleva recolhe-o e envia-o ao especialista, com os dados da marcação, para que a fatura fique em seu nome.
+- A taxa de serviço da Eleva é faturada pela Eleva ao especialista, não a si.
 
-Exemplo €100: Especialista €85, Taxa de plataforma €15.
+## 4. Códigos promocionais
 
-## 2) Métodos de pagamento
+- A Eleva pode oferecer códigos promocionais, com as condições indicadas em cada campanha. Introduz o código no pagamento e vê o preço com desconto antes de pagar.
+- O desconto é **suportado pela Eleva**. O especialista recebe a mesma parte que receberia sem o código, calculada sobre o preço de tabela.
+- Se tiver direito a reembolso, este é calculado sobre o valor que pagou efetivamente.
 
-- Cartões (Visa, Mastercard, Amex)
-- Multibanco (Portugal)
+## 5. Cancelar uma marcação
 
-## 3) Regras do Multibanco (quando paga com 8 dias ou mais de antecedência)
+Cada serviço tem uma de três políticas, escolhida pelo especialista e apresentada antes de pagar. A política mostrada no momento da marcação é a que se aplica a essa marcação.
 
-- Não disponível para consultas que ocorram em 7 dias ou menos
-- Se a consulta for em 8 dias ou mais, reservamos o horário por 7 dias enquanto paga
-- Tem 7 dias completos para concluir o pagamento
-- Enviamos lembretes no dia 3 e no dia 6 com instruções (ATM, homebanking, MB WAY)
+| Política | Reembolso de 100 %     | Reembolso de 50 %             | Sem reembolso           |
+| -------- | ---------------------- | ----------------------------- | ----------------------- |
+| Flexível | 24 horas ou mais antes | —                             | Menos de 24 horas antes |
+| Moderada | 48 horas ou mais antes | Entre 24 e 48 horas antes     | Menos de 24 horas antes |
+| Rígida   | 7 dias ou mais antes   | Entre 48 horas e 7 dias antes | Menos de 48 horas antes |
 
-Pagamentos Multibanco tardios (após 7 dias): **reembolso de 100% para qualquer conflito**
+- **Período de graça:** em qualquer política, tem reembolso total se cancelar nas 24 horas seguintes à marcação e a sessão estiver a pelo menos 48 horas de distância.
+- Para cancelar, use a opção de cancelamento da marcação ou escreva para [support@eleva.care](mailto:support@eleva.care). O reembolso é feito para o método de pagamento original. O prazo até aparecer na sua conta depende do banco; costuma ser de 5 a 10 dias úteis.
 
-Simplificámos a nossa política para ser mais favorável ao cliente:
+## 6. Faltas e cancelamentos do especialista
 
-- **Se o especialista bloqueou a data** após a sua reserva: **reembolso de 100%**
-- **Se o horário foi reservado por outro cliente**: **reembolso de 100%**
-- **Se os requisitos de aviso mínimo foram violados**: **reembolso de 100%**
+- **Se faltar:** se não comparecer sem ter cancelado, a falta é tratada como um cancelamento à hora de início da sessão. Nas três políticas, isso significa que não há reembolso.
+- **Se o especialista cancelar ou faltar:** recebe **100 % do valor pago, incluindo a taxa da Eleva**, e propomos-lhe uma nova marcação.
+- Se o especialista não comparecer, avise-nos em [support@eleva.care](mailto:support@eleva.care). Nas sessões online, confirmamos a presença com os registos de entrada e saída da videochamada.
 
-### A Nossa Abordagem Centrada no Cliente
+## 7. Disputas de pagamento (chargebacks)
 
-**Porquê reembolso de 100% para todos os conflitos?**
+- Se tiver um problema com um pagamento, contacte-nos primeiro em [support@eleva.care](mailto:support@eleva.care). Se a sessão não foi prestada por causa do especialista, reembolsamos sem que precise de abrir uma disputa no banco.
+- Se abrir uma disputa junto do emissor do cartão, a Eleva trata dela com a Stripe:
+  - se a sessão **não foi prestada**, a Eleva aceita a disputa e recupera o valor junto do especialista;
+  - se a sessão **foi prestada**, a Eleva contesta a disputa com os registos da marcação e de presença na sessão.
+- A decisão final cabe ao emissor do cartão, segundo as regras da rede de pagamentos.
+- Disputas abusivas ou fraude podem levar à suspensão da conta.
 
-- Acreditamos que pagamentos tardios não devem penalizar clientes quando surgem conflitos
-- Mesmo que o pagamento tenha sido atrasado, se a consulta não pode prosseguir, merece um reembolso total
-- A Eleva Care absorve os custos de processamento de pagamento para manter a confiança
-- Esta política demonstra o nosso compromisso com tratamento justo
+## 8. Transferências para os especialistas
 
-## 4) Reembolsos por conflitos (Multibanco tardio)
+Os especialistas recebem a sua parte através da Stripe Connect. A parte de cada marcação fica disponível na data mais tardia entre 7 dias após o pagamento e 24 horas após o fim da sessão, às 04:00 (hora de Lisboa). Os detalhes constam do [Acordo de especialista](/pt/legal/expert-agreement).
 
-- **Todos os conflitos**: reembolso total de 100% (sem taxas de processamento)
-  - Especialista bloqueou a data
-  - Horário já reservado por outro cliente
-  - Requisitos de aviso mínimo não cumpridos
-- Prazo de reembolso: normalmente 5–10 dias úteis (via Stripe)
-- Notificamos por e‑mail com o motivo específico
+## 9. Contactos
 
-Se houve erro do sistema ou caso excecional, contacte o suporte em 48 h com a referência; analisamos em 2 dias úteis.
-
-## 5) Escolher método de pagamento
-
-- Cartão (instantâneo):
-  - Melhor para consultas em ≤8 dias, última hora, ou quando precisa de confirmação imediata
-- Multibanco (janela de 7 dias):
-  - Melhor para 8+ dias, preferência local PT, e pagamento diferido
-
-## 6) Pagamentos a especialistas (Stripe Connect)
-
-- Profissionais são independentes e recebem via Stripe Connect após consultas concluídas
-- Divisão padrão: 85% especialista / 15% plataforma
-- O prazo depende das definições do especialista e do banco
-
-## 7) Moeda e preços
-
-- Preços em EUR; pode haver conversão para cartões internacionais
-- Preços fixos no momento da marcação; sem custos extra após confirmação
-- Impostos/taxas incluídos no preço
-
-## 8) Segurança e fraude
-
-- Não guardamos números de cartão; Stripe processa (PCI DSS)
-- Encriptação e deteção de fraude; transações suspeitas podem atrasar/ser recusadas
-- Verificação adicional pode ser exigida em pagamentos de alto valor
-
-## 9) Chargebacks e disputas
-
-- Se o titular abrir uma disputa (chargeback), seguimos o processo da Stripe e fornecemos evidências (registos de marcação, comunicações, políticas). Enquanto a disputa estiver aberta, pagamentos relacionados ao especialista podem ser atrasados.
-- O resultado é determinado pela rede do cartão. Se for a seu favor, os fundos são libertados; caso contrário, o débito é revertido conforme regras da rede.
-- Fraudes/chargebacks repetidos podem resultar em restrições temporárias ou revisão de conta.
-
-## 10) Autenticação Forte do Cliente (3DS/PSD2)
-
-- Onde exigido (p. ex., EEE), usamos 3D Secure para cumprir a PSD2.
-- Se o desafio 3DS falhar, o pagamento não pode ser concluído; pode tentar outra carta ou método.
-
-## 11) Pagamentos falhados
-
-- Cancelam automaticamente a marcação; notificamos por email
-- Volte a tentar com novo pagamento; falhas repetidas podem restringir temporariamente
-
-## 12) Suporte e reembolsos
-
-- Pagamentos: `support@eleva.care` (objetivo de resposta em 24 h)
-- Reembolsos: solicite em até 7 dias; emergências médicas caso a caso; cancelamentos conforme os Termos
-
-## 13) Atualizações e conformidade
-
-- Podemos atualizar estas políticas; o uso contínuo implica aceitação
-- Cumprimos proteção do consumidor PT, PSD2 UE, RGPD e termos da Stripe
-
----
+Questões sobre pagamentos e reembolsos: [support@eleva.care](mailto:support@eleva.care). Reclamações: veja [Reclamações e resolução de litígios](/pt/legal/complaints).
 
 Em caso de divergência entre versões linguísticas, prevalece a versão em português.
-
-Dúvidas sobre pagamentos? `support@eleva.care`.

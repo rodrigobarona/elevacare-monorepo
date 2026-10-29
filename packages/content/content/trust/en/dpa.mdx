@@ -1,7 +1,7 @@
 ---
 title: Data processing agreement — Eleva.care
 description: Processor terms when Eleva stores or transmits data on an expert's instructions.
-lastUpdated: 2026-10-22
+lastUpdated: 2026-10-29
 summary: Roles, subprocessors, transfers, and security measures.
 ---
 
@@ -16,7 +16,7 @@ _Effective Date: December 31, 2025_
 > - **For platform data** (accounts, bookings, payments): Eleva.care is the Data Controller.
 > - **For clinical notes/files** created by experts: the expert is the Controller; Eleva.care stores them securely.
 > - **Your data stays in the EU** by default, protected by encryption and strict access controls.
-> - **Questions?** Contact `dpo@eleva.care`.
+> - **Questions?** Contact `privacy@eleva.care` (Eleva is appointing an external data protection officer).
 
 This DPA explains how Eleva.care handles personal data—clearly and simply.
 
@@ -89,18 +89,18 @@ Eleva.care is a digital health platform that enables the provision of remote hea
 
 We rely on carefully vetted subprocessors to operate the platform. Each subprocessor is bound by a DPA and receives only the minimum data required.
 
-| Provider | Purpose                     | Data                                             | Region/Hosting             | Safeguards                                               |
-| -------- | --------------------------- | ------------------------------------------------ | -------------------------- | -------------------------------------------------------- |
-| Neon     | Primary database            | Platform data; clinical data at rest (encrypted) | EU (Frankfurt)             | DPA, SCCs (if applicable), encryption at rest/in transit |
-| Vercel   | Application hosting / edge  | Platform metadata, logs                          | EU regions where available | DPA, SCCs (if applicable)                                |
-| Upstash  | Caching/queue               | Non-clinical cache data                          | EU                         | DPA, SCCs (if applicable)                                |
-| Resend   | Transactional email         | Email metadata and content                       | IE/EU                      | DPA, SCCs (if applicable)                                |
-| Eleva notifications     | Notifications orchestration | Notification payload metadata                    | EU endpoint                | DPA, SCCs (if applicable)                                |
-| Better Auth    | Identity/SSO                | Auth and profile metadata                        | EU options                 | DPA, SCCs (if applicable)                                |
-| Stripe   | Payments                    | Payment metadata (no card PAN stored by us)      | EU/EEA                     | PCI DSS L1, DPA, SCCs                                    |
+| Provider            | Purpose                     | Data                                             | Region/Hosting             | Safeguards                                               |
+| ------------------- | --------------------------- | ------------------------------------------------ | -------------------------- | -------------------------------------------------------- |
+| Neon                | Primary database            | Platform data; clinical data at rest (encrypted) | EU (Frankfurt)             | DPA, SCCs (if applicable), encryption at rest/in transit |
+| Vercel              | Application hosting / edge  | Platform metadata, logs                          | EU regions where available | DPA, SCCs (if applicable)                                |
+| Upstash             | Caching/queue               | Non-clinical cache data                          | EU                         | DPA, SCCs (if applicable)                                |
+| Resend              | Transactional email         | Email metadata and content                       | IE/EU                      | DPA, SCCs (if applicable)                                |
+| Eleva notifications | Notifications orchestration | Notification payload metadata                    | EU endpoint                | DPA, SCCs (if applicable)                                |
+| Better Auth         | Identity/SSO                | Auth and profile metadata                        | EU options                 | DPA, SCCs (if applicable)                                |
+| Stripe              | Payments                    | Payment metadata (no card PAN stored by us)      | EU/EEA                     | PCI DSS L1, DPA, SCCs                                    |
 
 Change notifications: we will update this list and provide notice at least 30 days before adding or replacing a subprocessor (except where immediate change is required for security, compliance, or continuity). Controllers may object on reasonable, documented grounds. We will work in good faith to mitigate or, if unresolved, allow service termination for the affected processing without penalty.
 
 In case of divergence between language versions, the Portuguese version shall prevail.
 
-Contact (DPO): `dpo@eleva.care` · Operator: BÚZIOS E TARTARUGAS – LDA (Eleva.care), NIPC/VAT 515001708, Rua Gil Vicente, 2, 2775‑198 Parede, Portugal. Support `support@eleva.care`.
+Data protection: `privacy@eleva.care` · Operator: BÚZIOS E TARTARUGAS – LDA (Eleva.care), NIPC/VAT 515001708, Rua Gil Vicente, 2, 2775‑198 Parede, Portugal. Support `support@eleva.care`.
