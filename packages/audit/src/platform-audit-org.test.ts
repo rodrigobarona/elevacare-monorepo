@@ -22,6 +22,12 @@ describe("platform audit org", () => {
     expect(resolveNotificationAuditOrgId(undefined)).toBe(id)
   })
 
+  it("rejects a non-empty value that is not a UUID", async () => {
+    vi.stubEnv("ELEVA_PLATFORM_AUDIT_ORG_ID", "not-a-uuid")
+    const { getPlatformAuditOrgId } = await import("./platform-audit-org")
+    expect(() => getPlatformAuditOrgId()).toThrow()
+  })
+
   it("prefers the delivery org when present", async () => {
     vi.stubEnv(
       "ELEVA_PLATFORM_AUDIT_ORG_ID",

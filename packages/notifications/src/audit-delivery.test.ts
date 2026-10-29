@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { resetEnvCache } from "@eleva/config/env"
 
 const withAudit = vi.hoisted(() => vi.fn())
@@ -14,9 +14,20 @@ vi.mock("@eleva/audit", async () => {
   }
 })
 
+const originalPlatformAuditOrgId = process.env.ELEVA_PLATFORM_AUDIT_ORG_ID
+
+beforeEach(() => {
+  process.env.ELEVA_PLATFORM_AUDIT_ORG_ID = ""
+  resetEnvCache()
+})
+
 afterEach(() => {
   vi.clearAllMocks()
-  delete process.env.ELEVA_PLATFORM_AUDIT_ORG_ID
+  if (originalPlatformAuditOrgId === undefined) {
+    delete process.env.ELEVA_PLATFORM_AUDIT_ORG_ID
+  } else {
+    process.env.ELEVA_PLATFORM_AUDIT_ORG_ID = originalPlatformAuditOrgId
+  }
   resetEnvCache()
 })
 

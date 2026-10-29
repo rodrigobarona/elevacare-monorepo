@@ -1,7 +1,4 @@
 import { env } from "@eleva/config/env"
-import { z } from "zod"
-
-const platformAuditOrgIdSchema = z.string().uuid()
 
 /**
  * Reserved organization id for audit_outbox rows that describe platform-scoped
@@ -10,10 +7,8 @@ const platformAuditOrgIdSchema = z.string().uuid()
  * carries `platformScoped` + `recipientUserId` when needed.
  */
 export function getPlatformAuditOrgId(): string | null {
-  const raw = env().ELEVA_PLATFORM_AUDIT_ORG_ID?.trim()
-  if (!raw) return null
-  const parsed = platformAuditOrgIdSchema.safeParse(raw)
-  return parsed.success ? parsed.data : null
+  // `env()` rejects a non-empty value that is not a UUID.
+  return env().ELEVA_PLATFORM_AUDIT_ORG_ID || null
 }
 
 /** Delivery org when present; otherwise the configured platform audit org. */
