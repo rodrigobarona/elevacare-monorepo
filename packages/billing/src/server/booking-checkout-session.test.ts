@@ -217,6 +217,14 @@ describe("createBookingCheckoutSession", () => {
     // Never accept arbitrary account codes (subscription / 100%-off coupons).
     expect(body).not.toHaveProperty("allow_promotion_codes")
     // Eleva is not the seller: no Stripe Tax, no Stripe invoice, EUR only.
+    // Tagged so another environment's webhook ignores this booking.
+    expect(body.metadata).toEqual(
+      expect.objectContaining({ eleva_env: expect.any(String) })
+    )
+    expect(
+      (body.payment_intent_data as { metadata: Record<string, string> })
+        .metadata.eleva_env
+    ).toEqual(expect.any(String))
     expect(body).not.toHaveProperty("automatic_tax")
     expect(body).not.toHaveProperty("invoice_creation")
     expect(body).not.toHaveProperty("adaptive_pricing")

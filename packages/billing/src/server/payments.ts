@@ -25,6 +25,10 @@ import {
 } from "@eleva/scheduling"
 import { stripe } from "./client"
 import {
+  STRIPE_ENV_METADATA_KEY,
+  stripeEnvironmentTag,
+} from "./stripe-environment"
+import {
   BOOKING_CHECKOUT_METADATA_MARKER,
   bookingCheckoutSnapshotFromSession,
   resolveBookingPromotionCode,
@@ -148,6 +152,7 @@ export async function createBookingPaymentIntent(
         expertOrgId: input.expertOrgId,
         eleva_org_id: input.expertOrgId,
         eleva_booking_id: input.bookingId,
+        [STRIPE_ENV_METADATA_KEY]: stripeEnvironmentTag(),
       },
     },
     { idempotencyKey: input.idempotencyKey }

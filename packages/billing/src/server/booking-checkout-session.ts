@@ -2,6 +2,10 @@ import type Stripe from "stripe"
 import type { BookingBillingAddress } from "@eleva/db/schema"
 import { env } from "@eleva/config/env"
 import { stripe } from "./client"
+import {
+  STRIPE_ENV_METADATA_KEY,
+  stripeEnvironmentTag,
+} from "./stripe-environment"
 
 /**
  * Set on the session's PaymentIntent so confirm knows to read the session
@@ -155,6 +159,7 @@ export async function createBookingCheckoutSession(
     expertOrgId: input.expertOrgId,
     eleva_org_id: input.expertOrgId,
     eleva_booking_id: input.bookingId,
+    [STRIPE_ENV_METADATA_KEY]: stripeEnvironmentTag(),
   }
 
   const session = await stripe().checkout.sessions.create(
