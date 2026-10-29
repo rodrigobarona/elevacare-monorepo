@@ -92,7 +92,10 @@ export async function POST(request: Request) {
         origin && new URL(origin).hostname !== new URL(request.url).hostname
           ? origin
           : resolveGatewayUrl()
-      const returnUrl = new URL(parsed.data.returnPath, base).toString()
+      // String join, not `new URL()`: Stripe's `{CHECKOUT_SESSION_ID}`
+      // template must stay literal (URL would percent-encode the braces).
+      // The schema already guarantees a single leading "/" path.
+      const returnUrl = `${base.replace(/\/+$/, "")}${parsed.data.returnPath}`
 
       let result
       try {

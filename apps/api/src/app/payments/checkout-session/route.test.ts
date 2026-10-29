@@ -88,6 +88,21 @@ describe("POST /payments/checkout-session", () => {
     )
   })
 
+  it("keeps Stripe's {CHECKOUT_SESSION_ID} template literal", async () => {
+    await POST(
+      sessionRequest({
+        returnPath:
+          "/fisiomota/first-visit?checkout_session_id={CHECKOUT_SESSION_ID}",
+      })
+    )
+    expect(createCheckoutSessionForReservation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        returnUrl:
+          "https://dev.eleva.care/fisiomota/first-visit?checkout_session_id={CHECKOUT_SESSION_ID}",
+      })
+    )
+  })
+
   it("rejects an absolute or protocol-relative return path", async () => {
     for (const returnPath of ["https://evil.example/x", "//evil.example/x"]) {
       const response = await POST(sessionRequest({ returnPath }))

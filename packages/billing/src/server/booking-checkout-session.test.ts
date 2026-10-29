@@ -103,9 +103,7 @@ describe("createBookingCheckoutSession", () => {
         mode: "payment",
         ui_mode: "elements",
         customer: "cus_member",
-        customer_update: { name: "auto", address: "auto" },
         allow_promotion_codes: true,
-        tax_id_collection: { enabled: true },
         billing_address_collection: "auto",
         payment_method_configuration: "pmc_test_booking",
         expires_at: 1_800_001_860,
@@ -124,6 +122,8 @@ describe("createBookingCheckoutSession", () => {
     expect(body).not.toHaveProperty("automatic_tax")
     expect(body).not.toHaveProperty("invoice_creation")
     expect(body).not.toHaveProperty("adaptive_pricing")
+    // NIF stays on Eleva's funnel field (private NIF is not a VAT number).
+    expect(body).not.toHaveProperty("tax_id_collection")
     const items = body.line_items as Array<{
       price_data: Record<string, unknown>
     }>

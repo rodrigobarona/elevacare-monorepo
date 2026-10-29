@@ -59,8 +59,10 @@ export type CreateBookingCheckoutSessionInput = {
  * invoice (`invoice_creation`; Portuguese invoices come from certified
  * software, Tier 2). Adaptive Pricing stays off for the EUR-only launch
  * (D-02) so the PaymentIntent amount is always the EUR session total.
- * Promotion codes are Eleva-funded (founder 2026-10-29); the member's NIF is
- * collected through Stripe's tax ID collection.
+ * Promotion codes are Eleva-funded (founder 2026-10-29). The member's NIF is
+ * collected by Eleva's funnel, not Stripe tax ID collection: Stripe's tax ID
+ * UI is business-oriented (business name, VIES VAT validation) and a private
+ * member's NIF is not a VAT number.
  */
 export async function createBookingCheckoutSession(
   input: CreateBookingCheckoutSessionInput
@@ -87,10 +89,7 @@ export async function createBookingCheckoutSession(
       ui_mode: "elements",
       return_url: input.returnUrl,
       customer: input.customerId,
-      // Required with tax ID collection on an existing Customer.
-      customer_update: { name: "auto", address: "auto" },
       allow_promotion_codes: true,
-      tax_id_collection: { enabled: true },
       billing_address_collection: "auto",
       expires_at: input.expiresAt,
       payment_method_configuration: pmc,
