@@ -102,6 +102,11 @@ export async function fillGuestAndConsents(
 }
 
 const CARD_NUMBER = "4242424242424242"
+/**
+ * Production builds load hCaptcha, Google Pay and Link frames before the
+ * card field is interactive; 20s was enough on loopback only.
+ */
+const STRIPE_LOAD_TIMEOUT_MS = 45_000
 const CARD_FIELD =
   'input[name="number"], input[autocomplete="cc-number"], input[placeholder*="1234"]'
 
@@ -131,9 +136,30 @@ async function fillFirstVisible(
   return false
 }
 
+/**
+ * Production builds show the c15t cookie banner as a dialog, which makes the
+ * page behind it (the Stripe iframe included) unreachable. Reject optional
+ * cookies the way a privacy-first member would.
+ */
+export async function dismissCookieBanner(page: Page): Promise<void> {
+  const reject = page.getByRole("button", {
+    name: /reject|decline|only necessary|necessary only|rejeitar|recusar|rechazar|solo necesarias|apenas necessárias/i,
+  })
+  if (
+    await reject
+      .first()
+      .isVisible()
+      .catch(() => false)
+  ) {
+    await reject.first().click()
+    await expect(reject.first()).toBeHidden({ timeout: 10_000 })
+  }
+}
+
 export async function fillStripeTestCard(page: Page): Promise<void> {
+  await dismissCookieBanner(page)
   await expect(page.getByTestId("booking-pay-submit")).toBeEnabled({
-    timeout: 20_000,
+    timeout: STRIPE_LOAD_TIMEOUT_MS,
   })
 
   let cardFrame: Frame | undefined
@@ -153,7 +179,7 @@ export async function fillStripeTestCard(page: Page): Promise<void> {
         }
         return false
       },
-      { timeout: 20_000 }
+      { timeout: STRIPE_LOAD_TIMEOUT_MS }
     )
     .toBeTruthy()
 
@@ -185,6 +211,7 @@ export async function fillStripeTestCard(page: Page): Promise<void> {
 
 /** Stripe test mode: MB WAY (async_short) when enabled on STRIPE_PMC_BOOKING. */
 export async function fillStripeTestMbWay(page: Page): Promise<void> {
+  await dismissCookieBanner(page)
   await expect(page.getByTestId("booking-pay-submit")).toBeEnabled({
     timeout: 20_000,
   })
