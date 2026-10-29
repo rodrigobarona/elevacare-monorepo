@@ -700,8 +700,16 @@ Each entry should include:
   - **Promotion codes are Eleva-funded** (founder 2026-10-29). Commission and the expert transfer
     use the list price (`amount_cents + discount_cents`); `booking_payments.amount_cents` becomes
     what the member paid, which bounds refunds. When the expert's share exceeds the charge, the
-    transfer omits `source_transaction` and is funded from Eleva's balance. Do not create 100%-off
-    booking codes: a zero-total session has no PaymentIntent and cannot confirm.
+    transfer omits `source_transaction` and is funded from Eleva's balance.
+  - **Promotion codes are validated server-side**, never `allow_promotion_codes` (which accepts
+    any active code in the account, subscription coupons included). A code applies to bookings
+    only when the Stripe promotion code or its coupon has `metadata.eleva_scope = booking`, the
+    coupon is valid, not 100% off (a zero-total session cannot confirm) and EUR when amount-off.
+    A different code expires the open session and creates a new one (`422 PROMO_INVALID`
+    otherwise). **Operator rule:** create booking codes in Stripe with
+    `metadata.eleva_scope=booking`.
+  - Session expiry is the reservation's creation + 60 min (Stripe needs 30 min-24 h from the
+    session's own creation); the hold-expiry sweep closes it far earlier.
   - Confirm accepts a discounted intent only when the session subtotal is the list price and the
     intent amount is the session total. The member's NIF, business name and billing address are
     copied from the session.

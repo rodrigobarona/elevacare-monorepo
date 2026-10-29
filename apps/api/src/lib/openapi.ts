@@ -2594,7 +2594,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "createBookingCheckoutSession",
           summary: "Create a Stripe Checkout Session for a reserved slot",
           description:
-            "Authorizes the reservationToken, inserts a pending_payment booking, then creates a Checkout Session (ui_mode elements) with Stripe promotion codes. Eleva-funded discounts never reduce the expert's share. returnPath is relative to the Eleva origin and may carry Stripe's {CHECKOUT_SESSION_ID} template. Token or user mismatches return 404.",
+            "Authorizes the reservationToken, inserts a pending_payment booking, then creates a Checkout Session (ui_mode elements) with an optional, server-validated booking promotion code (Eleva-funded; it never reduces the expert's share). returnPath is relative to the Eleva origin and may carry Stripe's {CHECKOUT_SESSION_ID} template. Token or user mismatches return 404.",
           tags: ["Payments"],
           security: [],
           requestParams: { header: IdempotencyKeyHeaderSchema },
@@ -2628,7 +2628,8 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               content: { "application/json": { schema: ErrorSchema } },
             },
             "422": {
-              description: "Validation error",
+              description:
+                "Validation error, or PROMO_INVALID when the promotion code does not apply to bookings",
               content: { "application/json": { schema: ErrorSchema } },
             },
             "503": {

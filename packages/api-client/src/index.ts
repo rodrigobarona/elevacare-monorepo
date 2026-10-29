@@ -2222,6 +2222,18 @@ export const CreateCheckoutSessionRequestSchema = z.object({
   reservationId: z.string().uuid(),
   reservationToken: z.string().min(16).max(128),
   returnPath: CheckoutReturnPathSchema,
+  /**
+   * Optional booking promotion code. Validated server-side (booking-scoped,
+   * EUR, never 100% off); a different code replaces the open session and
+   * returns a new client secret. 422 `PROMO_INVALID` when it does not apply.
+   */
+  promoCode: z
+    .string()
+    .trim()
+    .min(2)
+    .max(32)
+    .regex(/^[A-Za-z0-9_-]+$/)
+    .optional(),
 })
 
 export const CreateCheckoutSessionResponseSchema = z.object({

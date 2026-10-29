@@ -1,5 +1,6 @@
 import { randomUUID, timingSafeEqual } from "node:crypto"
 import { and, eq, inArray, sql } from "drizzle-orm"
+import type Stripe from "stripe"
 import { z } from "zod"
 import { env } from "@eleva/config/env"
 import { CANCELLATION_POLICY_VERSION, PT_VAT_RATE_BPS } from "@eleva/config"
@@ -25,6 +26,8 @@ import {
 import { stripe } from "./client"
 import {
   BOOKING_CHECKOUT_METADATA_MARKER,
+  bookingCheckoutSnapshotFromSession,
+  resolveBookingPromotionCode,
   retrieveBookingCheckoutForIntent,
   type BookingCheckoutSnapshot,
   checkoutSessionExpiresAt,
@@ -483,6 +486,8 @@ export type CreateCheckoutSessionForReservationInput = {
   sessionUserId?: string
   /** Absolute URL on the Eleva gateway, built and validated by the route. */
   returnUrl: string
+  /** Member-typed promotion code; validated before it reaches Stripe. */
+  promoCode?: string
 }
 
 export type CreateCheckoutSessionForReservationResult =
@@ -495,14 +500,20 @@ export type CreateCheckoutSessionForReservationResult =
     }
   | {
       ok: false
-      error: "not_found" | "unavailable" | "db_error" | MemberBookabilityError
+      error:
+        | "not_found"
+        | "unavailable"
+        | "db_error"
+        | "promo_invalid"
+        | MemberBookabilityError
     }
 
 /**
  * Paid booking via Checkout Sessions (`ui_mode: "elements"`). Same
  * commit-intent / vendor call / bind pattern as the PaymentIntent path:
  * tx A inserts the pending booking, Stripe is called outside any
- * transaction, tx B binds the session id.
+ * transaction, tx B binds the session id. A different promotion code
+ * replaces the open session (expire, then create and rebind).
  */
 export async function createCheckoutSessionForReservation(
   input: CreateCheckoutSessionForReservationInput
@@ -513,15 +524,29 @@ export async function createCheckoutSessionForReservation(
   if (currency.toLowerCase() !== "eur") {
     return { ok: false, error: "unavailable" }
   }
-
-  if (reservation.stripeCheckoutSessionId) {
-    return reuseExistingCheckoutSession(
-      reservation.stripeCheckoutSessionId,
-      publishableKey
-    )
-  }
   if (reservation.stripePaymentIntentId) {
     return { ok: false, error: "unavailable" }
+  }
+
+  let promotionCodeId: string | null = null
+  if (input.promoCode) {
+    try {
+      const promo = await resolveBookingPromotionCode(input.promoCode)
+      if (!promo.ok) return { ok: false, error: "promo_invalid" }
+      promotionCodeId = promo.promotionCodeId
+    } catch (err) {
+      console.error("[payments/checkout-session] promotion lookup failed", err)
+      return { ok: false, error: "unavailable" }
+    }
+  }
+
+  if (reservation.stripeCheckoutSessionId) {
+    return replaceOrReuseCheckoutSession({
+      payable,
+      sessionUserId: input.sessionUserId,
+      returnUrl: input.returnUrl,
+      promotionCodeId,
+    })
   }
 
   const idempotencyKey = checkoutSessionIdempotencyKey(reservation.id)
@@ -530,100 +555,185 @@ export async function createCheckoutSessionForReservation(
     idempotencyKey,
   })
   if (!pending.ok) return pending
-  const { bookingId, paymentId } = pending
 
   let buyer: { name: string; email: string; phone?: string } | null
-  let serviceName: string
   try {
-    ;[buyer, serviceName] = await Promise.all([
-      loadBuyerContact(reservation.userId ?? input.sessionUserId, funnel),
-      loadServiceName(
-        reservation.orgId,
-        reservation.eventTypeId,
-        funnel.language
-      ),
-    ])
+    buyer = await loadBuyerContact(
+      reservation.userId ?? input.sessionUserId,
+      funnel
+    )
   } catch (err) {
     console.error("[payments/checkout-session] buyer load failed", err)
     return { ok: false, error: "db_error" }
   }
   if (!buyer) return { ok: false, error: "unavailable" }
 
-  let session
+  let customerId: string
   try {
-    const customerId = await resolveBookingCustomer({
+    customerId = await resolveBookingCustomer({
       reservationId: reservation.id,
       ...buyer,
     })
+  } catch (err) {
+    console.error("[payments/checkout-session] customer failed", err)
+    return { ok: false, error: "unavailable" }
+  }
+
+  return createAndBindCheckoutSession({
+    payable,
+    bookingId: pending.bookingId,
+    paymentId: pending.paymentId,
+    customerId,
+    promotionCodeId,
+    idempotencyKey: checkoutSessionIdempotencyKey(
+      reservation.id,
+      promotionCodeId
+    ),
+    returnUrl: input.returnUrl,
+    sessionUserId: input.sessionUserId,
+  })
+}
+
+async function replaceOrReuseCheckoutSession(input: {
+  payable: PayableReservation
+  sessionUserId?: string
+  returnUrl: string
+  promotionCodeId: string | null
+}): Promise<CreateCheckoutSessionForReservationResult> {
+  const { reservation, publishableKey } = input.payable
+  const previousId = reservation.stripeCheckoutSessionId as string
+  let previous: Stripe.Checkout.Session
+  try {
+    previous = await stripe().checkout.sessions.retrieve(previousId)
+  } catch {
+    return { ok: false, error: "unavailable" }
+  }
+  const previousSnapshot = bookingCheckoutSnapshotFromSession(previous)
+  const bookingId = previousSnapshot.bookingId
+  if (previous.status !== "open" || !bookingId) {
+    return { ok: false, error: "unavailable" }
+  }
+  if (previousSnapshot.promotionCodeId === input.promotionCodeId) {
+    if (!previous.client_secret) return { ok: false, error: "unavailable" }
+    return {
+      ok: true,
+      clientSecret: previous.client_secret,
+      checkoutSessionId: previous.id,
+      bookingId,
+      publishableKey,
+    }
+  }
+
+  const customerId = previousSnapshot.customerId
+  let existing: Awaited<ReturnType<typeof loadBookingForReservation>>
+  try {
+    existing = await loadBookingForReservation(
+      reservation.orgId,
+      reservation.id
+    )
+  } catch {
+    return { ok: false, error: "db_error" }
+  }
+  if (!customerId || !existing) return { ok: false, error: "unavailable" }
+
+  try {
+    // Close the old session first so only one can ever be paid.
+    await stripe().checkout.sessions.expire(previousId)
+  } catch (err) {
+    console.error("[payments/checkout-session] expire previous failed", err)
+    return { ok: false, error: "unavailable" }
+  }
+
+  return createAndBindCheckoutSession({
+    payable: input.payable,
+    bookingId: existing.bookingId,
+    paymentId: existing.paymentId,
+    customerId,
+    promotionCodeId: input.promotionCodeId,
+    // Unique per transition, stable for retries of the same transition.
+    idempotencyKey: `cs:${reservation.id}:${previousId}:${input.promotionCodeId ?? "none"}`,
+    returnUrl: input.returnUrl,
+    sessionUserId: input.sessionUserId,
+  })
+}
+
+async function createAndBindCheckoutSession(input: {
+  payable: PayableReservation
+  bookingId: string
+  paymentId: string
+  customerId: string
+  promotionCodeId: string | null
+  idempotencyKey: string
+  returnUrl: string
+  sessionUserId?: string
+}): Promise<CreateCheckoutSessionForReservationResult> {
+  const { reservation, funnel, priceCents, publishableKey } = input.payable
+  let serviceName: string
+  try {
+    serviceName = await loadServiceName(
+      reservation.orgId,
+      reservation.eventTypeId,
+      funnel.language
+    )
+  } catch (err) {
+    console.error("[payments/checkout-session] service load failed", err)
+    return { ok: false, error: "db_error" }
+  }
+
+  let session
+  try {
     session = await createBookingCheckoutSession({
       amountCents: priceCents,
       serviceName,
-      bookingId,
+      bookingId: input.bookingId,
       reservationId: reservation.id,
       expertOrgId: reservation.orgId,
-      customerId,
+      customerId: input.customerId,
       returnUrl: input.returnUrl,
-      idempotencyKey,
+      idempotencyKey: input.idempotencyKey,
       expiresAt: checkoutSessionExpiresAt(reservation.createdAt),
+      promotionCodeId: input.promotionCodeId,
     })
-    if (!session.client_secret) {
-      return { ok: false, error: "unavailable" }
-    }
-    const sessionId = session.id
+  } catch (err) {
+    console.error("[payments/checkout-session] Stripe create failed", err)
+    return { ok: false, error: "unavailable" }
+  }
+  const clientSecret = session.client_secret
+  if (!clientSecret) return { ok: false, error: "unavailable" }
+
+  try {
     await withAudit(
       { orgId: reservation.orgId, actorUserId: input.sessionUserId ?? null },
       async (tx, ctx) => {
         await bindCheckoutSession(tx, {
           reservationId: reservation.id,
-          bookingId,
-          checkoutSessionId: sessionId,
-          customerId,
+          bookingId: input.bookingId,
+          checkoutSessionId: session.id,
+          customerId: input.customerId,
         })
         await ctx.emit({
           entity: "booking_payment",
           action: "updated",
-          entityId: paymentId,
+          entityId: input.paymentId,
           payload: {
-            checkoutSessionId: sessionId,
+            checkoutSessionId: session.id,
+            promotionCodeId: input.promotionCodeId,
             status: "requires_payment",
           },
         })
       }
     )
   } catch (err) {
-    console.error("[payments/checkout-session] create or bind failed", err)
-    return { ok: false, error: "unavailable" }
+    console.error("[payments/checkout-session] tx B failed", err)
+    return { ok: false, error: "db_error" }
   }
 
   return {
     ok: true,
-    clientSecret: session.client_secret,
+    clientSecret,
     checkoutSessionId: session.id,
-    bookingId,
+    bookingId: input.bookingId,
     publishableKey,
-  }
-}
-
-async function reuseExistingCheckoutSession(
-  checkoutSessionId: string,
-  publishableKey: string
-): Promise<CreateCheckoutSessionForReservationResult> {
-  try {
-    const session = await stripe().checkout.sessions.retrieve(checkoutSessionId)
-    const bookingId =
-      session.metadata?.eleva_booking_id ?? session.metadata?.bookingId
-    if (session.status !== "open" || !session.client_secret || !bookingId) {
-      return { ok: false, error: "unavailable" }
-    }
-    return {
-      ok: true,
-      clientSecret: session.client_secret,
-      checkoutSessionId: session.id,
-      bookingId,
-      publishableKey,
-    }
-  } catch {
-    return { ok: false, error: "unavailable" }
   }
 }
 

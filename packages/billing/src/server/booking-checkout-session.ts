@@ -9,11 +9,80 @@ import { stripe } from "./client"
  */
 export const BOOKING_CHECKOUT_METADATA_MARKER = "elements"
 
-/** Stripe's Checkout Session minimum expiry is 30 minutes. */
-export const CHECKOUT_SESSION_EXPIRES_SECONDS = 31 * 60
+/**
+ * Session lifetime from the reservation's creation. Stripe requires 30 min
+ * to 24 h from the session's own creation; sessions are only created while
+ * the hold (5-10 min) is active, so 60 min from reserve always leaves more
+ * than 30. The hold-expiry sweep expires the session long before this.
+ */
+export const CHECKOUT_SESSION_EXPIRES_SECONDS = 60 * 60
 
-export function checkoutSessionIdempotencyKey(reservationId: string): string {
-  return `cs:${reservationId}`
+/**
+ * One key per (hold, promotion code): changing the code builds a new
+ * session, and retries of the same request stay idempotent.
+ */
+export function checkoutSessionIdempotencyKey(
+  reservationId: string,
+  promotionCodeId: string | null = null
+): string {
+  return promotionCodeId
+    ? `cs:${reservationId}:${promotionCodeId}`
+    : `cs:${reservationId}`
+}
+
+/** Metadata a Stripe promotion code (or its coupon) needs to work on bookings. */
+export const BOOKING_PROMOTION_SCOPE = "booking"
+
+export type BookingPromotionCodeResult =
+  | { ok: true; promotionCodeId: string }
+  | { ok: false; reason: "not_found" | "not_bookable" }
+
+/**
+ * Validates a member-typed code before it reaches a session. Only codes
+ * Eleva marked for bookings (`metadata.eleva_scope = booking` on the
+ * promotion code or its coupon) apply; never a 100%-off or non-EUR coupon
+ * (a zero-total session has no PaymentIntent and cannot confirm), and never
+ * a code meant for subscriptions.
+ */
+export async function resolveBookingPromotionCode(
+  code: string
+): Promise<BookingPromotionCodeResult> {
+  const page = await stripe().promotionCodes.list({
+    code: code.trim().toUpperCase(),
+    active: true,
+    limit: 1,
+    expand: ["data.promotion.coupon"],
+  })
+  const promotion = page.data[0]
+  if (!promotion) return { ok: false, reason: "not_found" }
+  const coupon = promotionCoupon(promotion)
+  const scoped =
+    promotion.metadata?.eleva_scope === BOOKING_PROMOTION_SCOPE ||
+    coupon?.metadata?.eleva_scope === BOOKING_PROMOTION_SCOPE
+  if (!scoped || !coupon || !coupon.valid) {
+    return { ok: false, reason: "not_bookable" }
+  }
+  if (coupon.percent_off != null && coupon.percent_off >= 100) {
+    return { ok: false, reason: "not_bookable" }
+  }
+  if (
+    coupon.amount_off != null &&
+    (coupon.currency ?? "").toLowerCase() !== "eur"
+  ) {
+    return { ok: false, reason: "not_bookable" }
+  }
+  return { ok: true, promotionCodeId: promotion.id }
+}
+
+function promotionCoupon(
+  promotion: Stripe.PromotionCode
+): Stripe.Coupon | null {
+  const withPromotion = promotion as Stripe.PromotionCode & {
+    promotion?: { coupon?: Stripe.Coupon | string | null }
+    coupon?: Stripe.Coupon | string | null
+  }
+  const coupon = withPromotion.promotion?.coupon ?? withPromotion.coupon
+  return coupon && typeof coupon === "object" ? coupon : null
 }
 
 /**
@@ -46,6 +115,8 @@ export type CreateBookingCheckoutSessionInput = {
   idempotencyKey: string
   /** Unix seconds from `checkoutSessionExpiresAt(reservation.createdAt)`. */
   expiresAt: number
+  /** Validated by `resolveBookingPromotionCode`; Eleva-funded. */
+  promotionCodeId?: string | null
 }
 
 /**
@@ -59,7 +130,8 @@ export type CreateBookingCheckoutSessionInput = {
  * invoice (`invoice_creation`; Portuguese invoices come from certified
  * software, Tier 2). Adaptive Pricing stays off for the EUR-only launch
  * (D-02) so the PaymentIntent amount is always the EUR session total.
- * Promotion codes are Eleva-funded (founder 2026-10-29). The member's NIF is
+ * Promotion codes are Eleva-funded (founder 2026-10-29) and validated by
+ * `resolveBookingPromotionCode` before they reach the session. The member's NIF is
  * collected by Eleva's funnel, not Stripe tax ID collection: Stripe's tax ID
  * UI is business-oriented (business name, VIES VAT validation) and a private
  * member's NIF is not a VAT number.
@@ -89,7 +161,11 @@ export async function createBookingCheckoutSession(
       ui_mode: "elements",
       return_url: input.returnUrl,
       customer: input.customerId,
-      allow_promotion_codes: true,
+      // Never `allow_promotion_codes`: it would accept any active code in
+      // the account (subscription or 100%-off coupons included).
+      ...(input.promotionCodeId
+        ? { discounts: [{ promotion_code: input.promotionCodeId }] }
+        : {}),
       billing_address_collection: "auto",
       expires_at: input.expiresAt,
       payment_method_configuration: pmc,

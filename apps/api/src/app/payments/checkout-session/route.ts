@@ -104,6 +104,7 @@ export async function POST(request: Request) {
           reservationToken: parsed.data.reservationToken,
           sessionUserId: actorUserId,
           returnUrl,
+          promoCode: parsed.data.promoCode,
         })
       } catch (err) {
         if (err instanceof BookingError) {
@@ -116,6 +117,12 @@ export async function POST(request: Request) {
       if (!result.ok) {
         if (result.error === "not_found") {
           return secureJson(PUBLIC_NOT_FOUND, { status: 404, headers })
+        }
+        if (result.error === "promo_invalid") {
+          return secureJson(
+            { error: "PROMO_INVALID" },
+            { status: 422, headers }
+          )
         }
         if (result.error === "unavailable") {
           return secureJson({ error: "unavailable" }, { status: 503, headers })
