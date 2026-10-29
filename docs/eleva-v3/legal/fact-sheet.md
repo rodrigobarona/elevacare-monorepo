@@ -149,6 +149,15 @@ ADR-024). Daily sets no cookie on eleva.care pages.
 | Ranking                   | Filters; text relevance; default alphabetical; price sort; "rating" sort puts active Top Expert (paid) subscribers first    | `listExperts`, `public-offers.ts`                                        |
 | DPO                       | External DPO being appointed; `privacy@eleva.care` meanwhile                                                                | Founder decision 2026-10-29                                              |
 
+Implementation status of the 2026-10-29 rows: member NIF and promotion codes
+are wired in Stripe Checkout (`tax_id_collection`, `allow_promotion_codes` in
+`packages/billing/src/server/booking-checkout-session.ts`). Expert cancel and
+no-show refunds, the member no-show outcome and chargeback recovery are
+**policy only**: there is no expert-cancel or no-show path in code yet, so
+support applies them manually (`support@eleva.care`) until they ship. The
+pages state them as contractual rules and tell members and experts to contact
+support; they must not describe an in-product expert-cancel button.
+
 ### Retention
 
 | Data                                                       | Period                                                                                                         | Basis                                                                 |
