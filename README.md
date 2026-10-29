@@ -2,7 +2,14 @@
 
 ![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/rodrigobarona/elevacare-monorepo?utm_source=oss&utm_medium=github&utm_campaign=rodrigobarona%2Felevacare-monorepo&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 
-Portugal-first health and wellness marketplace connecting patients with certified experts. Built as a pnpm + Turborepo monorepo on Next.js 16, React 19, and Tailwind v4.
+Eleva.care v3: a Portugal-first, EU-first health and wellness marketplace and community. Members
+book sessions with independent, licensed experts; clinics (Teams) run several experts under one
+organization; Academy is the education surface. Built as a pnpm + Turborepo monorepo on Next.js 16,
+React 19 and Tailwind v4.
+
+- Architecture handbook, specs and ADRs: [`docs/eleva-v3/`](docs/eleva-v3/README.md)
+- Phased delivery plan and current status: [`docs/eleva-v3/execution-plan/`](docs/eleva-v3/execution-plan/README.md)
+- Agent and contributor rules: [`AGENTS.md`](AGENTS.md)
 
 ## Prerequisites
 
@@ -16,76 +23,103 @@ pnpm install
 pnpm dev        # starts all apps in parallel via Turborepo
 ```
 
-## Monorepo structure
+End users only ever see `eleva.care` (production) or `dev.eleva.care` (staging). User-facing apps
+are mounted on the root domain through gateway rewrites in `apps/web`; `api`, `account` and `admin`
+use real subdomains. See `docs/eleva-v3/environment-matrix.md`.
 
-### Apps (`apps/`)
+## Apps (`apps/`)
 
-| Directory    | Package        | Port | Purpose                                                                                               |
-| ------------ | -------------- | ---- | ----------------------------------------------------------------------------------------------------- |
-| `apps/web`   | `web`          | 3000 | Marketing gateway and public site — multi-zone rewrites proxy authenticated paths to `app` and `docs` |
-| `apps/app`   | `@eleva/app`   | 3001 | Authenticated product shell (patient, expert, org, admin)                                             |
-| `apps/api`   | `@eleva/api`   | 3002 | Backend API surface (`api.eleva.care`)                                                                |
-| `apps/docs`  | `@eleva/docs`  | 3003 | Public documentation (mounted at `/docs`)                                                             |
-| `apps/email` | `@eleva/email` | 3004 | Internal React Email template preview                                                                 |
+| Directory      | Package                | Port | Purpose                                                                               |
+| -------------- | ---------------------- | ---- | ------------------------------------------------------------------------------------- |
+| `apps/web`     | `@eleva/web`           | 3000 | Public marketing site, expert profiles, booking funnel, and the `eleva.care` gateway  |
+| `apps/app`     | `@eleva/app`           | 3001 | Member app: sessions, join video (`/join/{bookingId}`), payments, reports, privacy    |
+| `apps/api`     | `@eleva/api`           | 3002 | `api.eleva.care`: Better Auth (`/auth/*`), REST + OpenAPI, webhooks, QStash workflows |
+| `apps/expert`  | `@eleva/expert`        | 3003 | Expert app: setup, services, schedules, calendars, sessions, records, CRM, finance    |
+| `apps/team`    | `@eleva/team`          | 3004 | Clinic (Team) admin app — shell today, built in Phase 11                              |
+| `apps/academy` | `@eleva/academy-app`   | 3005 | Academy — placeholder until the Academy phase                                         |
+| `apps/account` | `@eleva/account`       | 3006 | Account hub: sign in/up, 2FA, passkeys, settings, Spaces and workspace creation       |
+| `apps/admin`   | `@eleva/admin`         | 3007 | Staff console (`admin.eleva.care`) — shell today, built in Phase 12                   |
+| `apps/docs`    | `@eleva/docs`          | 3008 | Help center at `/docs` (members, experts, clinics) on headless Fumadocs               |
+| `apps/email`   | `@eleva/email-preview` | 3009 | Internal React Email template preview                                                 |
+| `apps/poc`     | `@eleva/poc`           | 3099 | Internal design playground (excluded from CI, lint and review)                        |
 
-### Packages (`packages/`)
+All HTTP route handlers live in `apps/api`. Frontend apps use Server Actions as thin, Zod-validated
+proxies to `@eleva/api-client` or domain packages.
 
-#### Core infrastructure
+## Packages (`packages/`)
 
-| Package                | Purpose                                                      |
-| ---------------------- | ------------------------------------------------------------ |
-| `@eleva/db`            | Drizzle ORM + Neon — schema, RLS, migrations, seed scripts   |
-| `@eleva/auth`          | Better Auth session, RBAC, org resolution (ADR-017)          |
-| `@eleva/config`        | Shared env validation (Zod), i18n config, reserved usernames |
-| `@eleva/encryption`    | Envelope encryption (ADR-020)                                |
-| `@eleva/observability` | Sentry integration and proxy/CSP entrypoints                 |
-| `@eleva/flags`         | Feature flags via Vercel Flags + Edge Config                 |
-| `@eleva/workflows`     | Durable workflow logic over `@eleva/db`                      |
+### Platform and data
 
-#### Domain packages
+| Package                | Purpose                                                                   |
+| ---------------------- | ------------------------------------------------------------------------- |
+| `@eleva/db`            | Drizzle ORM + Neon: schema, RLS, migrations, query helpers, seeds         |
+| `@eleva/auth`          | Better Auth server/client/proxy, permissions SSOT, provisioning (ADR-017) |
+| `@eleva/audit`         | Transactional audit outbox (`withAudit`) and drainer                      |
+| `@eleva/encryption`    | Envelope encryption, per-org keys, KEK rotation (ADR-020)                 |
+| `@eleva/storage`       | The only `@vercel/blob` access (public and private stores)                |
+| `@eleva/config`        | Env validation, locales, routing, shared constants                        |
+| `@eleva/flags`         | Feature flags (Vercel Flags + Edge Config)                                |
+| `@eleva/observability` | Sentry with PHI redaction, security headers, CSP, heartbeats              |
+| `@eleva/workflows`     | Domain events and QStash-driven workflow logic                            |
+| `@eleva/api-client`    | Typed HTTP client and request/response schemas for `apps/api`             |
 
-| Package                | Purpose                                                  |
-| ---------------------- | -------------------------------------------------------- |
-| `@eleva/billing`       | Stripe Connect, embedded components, Vercel Blob uploads |
-| `@eleva/accounting`    | TOConline/Moloni adapters, invoicing registry            |
-| `@eleva/scheduling`    | Scheduling domain                                        |
-| `@eleva/calendar`      | Calendar domain                                          |
-| `@eleva/compliance`    | Compliance domain                                        |
-| `@eleva/crm`           | CRM domain                                               |
-| `@eleva/notifications` | Notifications domain                                     |
-| `@eleva/audit`         | Audit logging                                            |
-| `@eleva/ai`            | AI module                                                |
+### Domain
 
-#### Shared UI and tooling
+| Package                | Purpose                                                                     |
+| ---------------------- | --------------------------------------------------------------------------- |
+| `@eleva/scheduling`    | Offers, availability, reservations, booking lifecycle, cancellation refunds |
+| `@eleva/calendar`      | External calendar busy-time and destination sync                            |
+| `@eleva/billing`       | Stripe payments, Connect payouts, subscriptions, webhook dispatcher         |
+| `@eleva/accounting`    | TOConline invoicing (issuance gate closed until AT Comunicação is wired)    |
+| `@eleva/notifications` | Email (Resend), SMS (Twilio) and in-app inbox                               |
+| `@eleva/video`         | Daily rooms, meeting tokens, join UI (standard Daily, not HIPAA)            |
+| `@eleva/records`       | Encrypted session records, documents, templates, AI report drafts           |
+| `@eleva/crm`           | Expert relationships and follow-ups                                         |
+| `@eleva/compliance`    | Consents, DSAR export, account deletion, retention sweeps                   |
+| `@eleva/ai`            | Vercel AI Gateway (EU, zero-retention guard) for drafts and translation     |
+| `@eleva/integrations`  | Integration registry and manifests                                          |
+| `@eleva/academy`       | Placeholder for the Academy domain                                          |
 
-| Package                    | Purpose                                                                   |
-| -------------------------- | ------------------------------------------------------------------------- |
-| `@eleva/ui`                | shadcn `aria-luma` (React Aria Components) library, hooks, `globals.css`  |
-| `@eleva/eslint-config`     | Shared ESLint presets (`base`, `next-js`, `react-internal`, `boundaries`) |
-| `@eleva/typescript-config` | Shared TypeScript configs                                                 |
+### UI and content
 
-### Infrastructure (`infra/`)
+| Package                    | Purpose                                                         |
+| -------------------------- | --------------------------------------------------------------- |
+| `@eleva/ui`                | React Aria Components (shadcn `aria-luma`), brand tokens, fonts |
+| `@eleva/icons`             | Phosphor icon SSOT                                              |
+| `@eleva/dashboard`         | Shared authenticated app shell, nav, theme and locale providers |
+| `@eleva/site-chrome`       | Public header, mega menu, mobile nav and footer                 |
+| `@eleva/editor`            | Plate rich-text editor (ADR-023)                                |
+| `@eleva/email`             | Branded React Email templates                                   |
+| `@eleva/content`           | Legal, trust and help MDX (en/pt/es) with loaders               |
+| `@eleva/media`             | Curated marketing media library                                 |
+| `@eleva/consent`           | Cookie consent (c15t on Inth)                                   |
+| `@eleva/eslint-config`     | Shared ESLint presets, including vendor-boundary rules          |
+| `@eleva/typescript-config` | Shared TypeScript configs                                       |
 
-| Package               | Purpose                           |
-| --------------------- | --------------------------------- |
-| `@eleva/infra-stripe` | Stripe products, webhooks, portal |
-| `@eleva/infra-qstash` | QStash schedule provisioning      |
+## Infrastructure (`infra/`)
+
+| Directory      | Purpose                                                   |
+| -------------- | --------------------------------------------------------- |
+| `infra/stripe` | Products, entitlements, webhooks, portal, payment methods |
+| `infra/qstash` | QStash schedule provisioning                              |
+| `infra/flags`  | Feature flag definitions per environment                  |
 
 ## Scripts
 
-Run from the repo root — Turborepo handles cross-package orchestration.
+Run from the repo root. The full catalog is in `docs/eleva-v3/operator-tasks/scripts-catalog.md`.
 
-| Script              | Description                                  |
-| ------------------- | -------------------------------------------- |
-| `pnpm dev`          | Start all apps in development (Turbopack)    |
-| `pnpm build`        | Production build                             |
-| `pnpm lint`         | Lint all packages                            |
-| `pnpm format`       | Format with Prettier                         |
-| `pnpm typecheck`    | TypeScript type checking                     |
-| `pnpm test`         | Run Vitest test suites                       |
-| `pnpm db:seed:demo` | Seed the database with demo data             |
-| `pnpm qstash:list`  | List QStash schedules                        |
-| `pnpm flags:sync`   | Sync feature flag definitions to Edge Config |
+| Script                                       | Description                                         |
+| -------------------------------------------- | --------------------------------------------------- |
+| `pnpm dev`                                   | Start all apps in development (Turbopack)           |
+| `pnpm build`                                 | Production build                                    |
+| `pnpm lint` / `pnpm typecheck` / `pnpm test` | Lint, type-check and Vitest across the workspace    |
+| `pnpm check:route-guards`                    | Every API route declares and enforces its policy    |
+| `pnpm check:api-first-actions`               | No DB write helpers in frontend Server Actions      |
+| `pnpm check:no-phi-logs`                     | No decrypted PHI outside the domain packages        |
+| `pnpm check:i18n-parity`                     | `en`/`pt`/`es` message parity                       |
+| `pnpm e2e` / `pnpm e2e:*`                    | Playwright suites (live money and video are opt-in) |
+| `pnpm review` / `pnpm review:branch`         | CodeRabbit CLI review of local changes / branch     |
+| `pnpm db:seed:demo`                          | Seed demo data                                      |
 
 ## Adding UI components
 
@@ -97,13 +131,3 @@ pnpm exec shadcn add --overwrite button
 ```
 
 Afterwards rewrite generated imports to `@eleva/ui/lib/utils` (`cn`) and `@eleva/icons` (icons).
-
-Components are placed in `packages/ui/src/components` and imported as:
-
-```tsx
-import { Button } from "@eleva/ui/components/button"
-```
-
-## Documentation
-
-The v3 architecture handbook, specs, and decision records live in [`docs/eleva-v3/`](docs/eleva-v3/README.md). ADRs are tracked in [`docs/eleva-v3/adrs/`](docs/eleva-v3/adrs/README.md).

@@ -34,7 +34,8 @@ In:
   `license_scope`, `worldwide_remote` for non-clinical work), Locations (optional), Availability
   (default schedule), First service (compact event type builder). Phase 6 appends Payments and
   Identity, Phase 7 appends Invoicing, completion inserts a `become_partner_applications`
-  row (table **created here**: `id`, `expert_org_id`, `submitted_at`, `status pending|approved|rejected|needs_changes`,
+  row (**not built in 4B** — correction 2026-10-29: setup completion sets `active` directly and the
+  table was never recreated after migration 0013 dropped it; Phase 12 now creates it. Planned shape: `id`, `expert_org_id`, `submitted_at`, `status pending|approved|rejected|needs_changes`,
   `checklist jsonb`, `reviewer_id`, `reviewed_at`, `reason`; RLS `tenant-owned` + staff read — Phase 12
   builds the review queue on top and adds no columns, it does not create the table). Steps are declared in one registry (`onboarding-steps.ts`) so later phases append,
   never fork the shell.

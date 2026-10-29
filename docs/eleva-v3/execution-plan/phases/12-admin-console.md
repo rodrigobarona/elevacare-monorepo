@@ -67,8 +67,12 @@ Out: analytics dashboards (PostHog handles), CMS.
 ## Deliverables
 
 1. Migrations: `admin_notes`, `impersonation_sessions`, `admin_action_requests` (dual control)
-   bookkeeping — `become_partner_applications` **already exists from Phase 4B** with its reviewer
-   columns (`reviewer_id`, `reviewed_at`, `reason`); this phase adds no columns to it; audit unions (`admin: user_banned|user_unbanned|
+   bookkeeping, plus **`become_partner_applications`**. Correction 2026-10-29: the table does
+   **not** exist — migration `0013_drop-become-partner-applications.sql` (2026-05) dropped it and
+   nothing recreated it. This phase creates it (shape in deliverable 3) together with the
+   licence-verification fields required by the founder's 2026-10-29 "regulated professionals only"
+   decision (decision log), and changes setup completion so a profile reaches `approved`, not
+   `active`, until staff approve the application; audit unions (`admin: user_banned|user_unbanned|
 sessions_revoked|impersonation_started|impersonation_ended|partner_approved|partner_rejected|
 commission_override_set|listing_suspended|webhook_replayed|dlq_replayed|flag_viewed...`).
 2. API `apps/api/src/app/admin/**` routes + OpenAPI (tagged `admin`, hidden from public docs
@@ -251,10 +255,12 @@ PR 12.1 — access, users, partners, experts, bookings:
    [R] { reason }. @eleva/dashboard:
    <ImpersonationBanner /> rendered in every app shell when session.impersonatedBy is set, with a
    Stop button calling the API.
-3. Partners: become_partner_applications exists since Phase 4B (id, expert_org_id, submitted_at,
+3. Partners: create become_partner_applications (id, expert_org_id, submitted_at,
    status pending|approved|rejected|needs_changes, checklist jsonb, reviewer_id, reviewed_at,
-   reason) — this phase adds no columns; rows are created by the Phase 4B onboarding
-   completion route, never by this phase. GET /admin/partners?status,
+   reason, professional_body, licence_number, licence_verified_at, licence_evidence_blob_key
+   in the private store) — dropped by migration 0013 and recreated here (correction 2026-10-29).
+   Rows are created by the setup completion route
+   (`apps/api/src/app/expert/profile/steps/[step]/complete`), which now stops at `approved`. GET /admin/partners?status,
    GET /admin/partners/[id] (checklist computed: Connect details_submitted + payouts_enabled +
    capabilities.transfers active (D-05; Stripe Identity status only when
    ff.expert_identity_verification is on),
