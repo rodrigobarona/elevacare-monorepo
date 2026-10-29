@@ -20,22 +20,21 @@ _Data de vigência: 31 de dezembro de 2025_
 
 Este DPA explica como a Eleva.care trata dados pessoais—de forma clara e simples.
 
-A Eleva.care é uma plataforma digital de saúde que permite a prestação de serviços de saúde remotos por profissionais independentes. A Eleva.care não presta cuidados clínicos. O estatuto regulamentar da Eleva.care ao abrigo da legislação portuguesa e da União Europeia em matéria de saúde (por ex., registo como plataforma de telemedicina) é distinto dos seus papéis de proteção de dados ao abrigo do RGPD, e a Eleva.care cumprirá a legislação de saúde aplicável.
+A Eleva.care é uma plataforma digital de saúde que permite a prestação de serviços de saúde remotos por profissionais independentes. A Eleva.care não presta cuidados clínicos. O estatuto regulamentar da Eleva.care ao abrigo da legislação portuguesa e da União Europeia em matéria de saúde é distinto dos seus papéis de proteção de dados ao abrigo do RGPD, e a Eleva.care cumprirá a legislação de saúde aplicável.
 
 ## 1) Quem faz o quê
 
 - A Eleva.care é uma plataforma digital de saúde que permite serviços de saúde remotos por profissionais independentes e licenciados. A Eleva.care não presta cuidados clínicos.
 - Dois papéis:
-  - Responsável (operações de plataforma: contas, marcações, pagamentos, analítica, suporte)
+  - Responsável (operações de plataforma: contas, marcações, pagamentos, suporte)
   - Subcontratante (notas/ficheiros clínicos criados por profissionais: armazenamos em segurança sob instruções)
 
 ## 2) Quando somos Responsável (plataforma)
 
 - Usamos subcontratantes de confiança para operar a plataforma:
   - BD/infra & entrega: Neon (UE), Vercel (regiões UE), Upstash (UE), Resend (Irlanda), Eleva notifications (endpoint UE)
-  - Identidade/SSO: Better Auth (opções UE), Google SSO
+  - Identidade/SSO: Google SSO
   - Pagamentos: Stripe (PCI DSS L1)
-  - Analítica: product analytics (when enabled and consented) (opção de hosting UE)
 - Exigimos DPAs/SCCs, controlos de segurança e residência de dados na UE sempre que possível.
 
 ## 3) Quando somos Subcontratante (para especialistas)
@@ -57,7 +56,7 @@ A Eleva.care é uma plataforma digital de saúde que permite a prestação de se
 ## 6) Retenção e eliminação
 
 - Dados de plataforma: apenas o necessário ou exigido por lei
-- Dados clínicos: retenção definida pelo especialista (p. ex., 10 anos em PT). Em término/instrução, exportamos e eliminamos após período de graça e janela de backups.
+- Registos de sessão (dados clínicos): conservados por defeito durante 7 anos após a última sessão. Em término/instrução, exportamos e eliminamos após período de graça e janela de backups.
 
 ## 7) Direitos dos titulares
 
@@ -96,7 +95,6 @@ Recorremos a subprocessadores cuidadosamente avaliados para operar a plataforma.
 | Upstash             | Cache/filas                  | Dados de cache não clínicos                               | UE                            | DPA, SCCs (se aplicável)                               |
 | Resend              | Email transacional           | Metadados e conteúdo de email                             | IE/UE                         | DPA, SCCs (se aplicável)                               |
 | Eleva notifications | Orquestração de notificações | Metadados de payload de notificação                       | Endpoint UE                   | DPA, SCCs (se aplicável)                               |
-| Better Auth         | Identidade/SSO               | Autenticação e metadados de perfil                        | Opções UE                     | DPA, SCCs (se aplicável)                               |
 | Stripe              | Pagamentos                   | Metadados de pagamentos (não guardamos PAN)               | UE/EEE                        | PCI DSS L1, DPA, SCCs                                  |
 
 Aviso de alterações: atualizaremos esta lista e daremos aviso com pelo menos 30 dias de antecedência antes de adicionar/substituir subprocessadores (salvo alterações imediatas por segurança, conformidade ou continuidade). Os Responsáveis podem opor‑se com fundamentos razoáveis e documentados. Agiremos de boa‑fé para mitigar ou, se irresolúvel, permitir a cessação do serviço para o tratamento afetado sem penalização.

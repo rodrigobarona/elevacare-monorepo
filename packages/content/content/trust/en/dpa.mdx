@@ -20,22 +20,21 @@ _Effective Date: December 31, 2025_
 
 This DPA explains how Eleva.care handles personal data—clearly and simply.
 
-Eleva.care is a digital health platform that enables the provision of remote healthcare services by independent professionals. Eleva.care does not deliver clinical care. Eleva.care's regulatory status under applicable Portuguese and EU health regulations (e.g., registration as a telemedicine platform) is distinct from its GDPR data protection roles, and Eleva.care will comply with applicable health regulations.
+Eleva.care is a digital health platform that enables the provision of remote healthcare services by independent professionals. Eleva.care does not deliver clinical care. Eleva.care's regulatory status under applicable Portuguese and EU health regulations is distinct from its GDPR data protection roles, and Eleva.care will comply with applicable health regulations.
 
 ## 1) Who does what
 
 - Eleva.care is a digital health platform that enables remote healthcare services by independent, licensed professionals. Eleva.care does not provide clinical care.
 - Two roles:
-  - Controller (platform operations: accounts, bookings, payments, analytics, support)
+  - Controller (platform operations: accounts, bookings, payments, support)
   - Processor (clinical notes/files that experts create: we store securely on their instructions)
 
 ## 2) When we are Controller (platform)
 
 - We use trusted processors to run the platform:
   - Database/infra & delivery: Neon (EU), Vercel (EU regions), Upstash (EU), Resend (IE), Eleva notifications (EU endpoint)
-  - Identity/SSO: Better Auth (EU options), Google SSO
+  - Identity/SSO: Google SSO
   - Payments: Stripe (PCI DSS L1)
-  - Analytics: product analytics (when enabled and consented) (EU hosting option)
 - We require DPAs/SCCs, security controls, and EU data residency where available.
 
 ## 3) When we are Processor (for experts)
@@ -57,7 +56,7 @@ Eleva.care is a digital health platform that enables the provision of remote hea
 ## 6) Retention and deletion
 
 - Platform data: kept only as long as needed or required by law
-- Clinical data: retention is set by the expert (e.g., 10 years under PT rules). On instruction/termination, we export and delete following a short grace period and backup window.
+- Session records (clinical data): kept by default for 7 years after the last session. On instruction/termination, we export and delete following a short grace period and backup window.
 
 ## 7) Data subject rights
 
@@ -96,7 +95,6 @@ We rely on carefully vetted subprocessors to operate the platform. Each subproce
 | Upstash             | Caching/queue               | Non-clinical cache data                          | EU                         | DPA, SCCs (if applicable)                                |
 | Resend              | Transactional email         | Email metadata and content                       | IE/EU                      | DPA, SCCs (if applicable)                                |
 | Eleva notifications | Notifications orchestration | Notification payload metadata                    | EU endpoint                | DPA, SCCs (if applicable)                                |
-| Better Auth         | Identity/SSO                | Auth and profile metadata                        | EU options                 | DPA, SCCs (if applicable)                                |
 | Stripe              | Payments                    | Payment metadata (no card PAN stored by us)      | EU/EEA                     | PCI DSS L1, DPA, SCCs                                    |
 
 Change notifications: we will update this list and provide notice at least 30 days before adding or replacing a subprocessor (except where immediate change is required for security, compliance, or continuity). Controllers may object on reasonable, documented grounds. We will work in good faith to mitigate or, if unresolved, allow service termination for the affected processing without penalty.
