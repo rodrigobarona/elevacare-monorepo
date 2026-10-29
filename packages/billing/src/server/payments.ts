@@ -520,7 +520,7 @@ export async function createCheckoutSessionForReservation(
 ): Promise<CreateCheckoutSessionForReservationResult> {
   const payable = await preparePayableReservation(input)
   if (!payable.ok) return payable
-  const { reservation, funnel, priceCents, currency, publishableKey } = payable
+  const { reservation, funnel, currency } = payable
   if (currency.toLowerCase() !== "eur") {
     return { ok: false, error: "unavailable" }
   }
