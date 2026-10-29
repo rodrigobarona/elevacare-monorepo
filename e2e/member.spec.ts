@@ -86,7 +86,7 @@ test.describe("member Space journey", () => {
     page,
     request,
   }) => {
-    // Cold Turbopack first compile of /bookings/reserve + /payments/intent
+    // Cold Turbopack first compile of /bookings/reserve + /payments/checkout-session
     // can consume well over 2 minutes on a fresh local stack.
     test.setTimeout(360_000)
     test.skip(
@@ -122,7 +122,7 @@ test.describe("member Space journey", () => {
     )
     const intent = page.waitForResponse(
       (res) =>
-        res.url().includes("/payments/intent") &&
+        res.url().includes("/payments/checkout-session") &&
         res.request().method() === "POST"
     )
     await page.getByTestId("booking-continue-details").click()
@@ -137,7 +137,7 @@ test.describe("member Space journey", () => {
     const intentResponse = await intent
     test.skip(
       ![200, 201].includes(intentResponse.status()),
-      `POST /payments/intent returned ${intentResponse.status()}`
+      `POST /payments/checkout-session returned ${intentResponse.status()}`
     )
 
     await fillStripeTestCard(page)

@@ -119,7 +119,7 @@ test.describe("phase 04 live Stripe booking", () => {
     )
     const intent = page.waitForResponse(
       (res) =>
-        res.url().includes("/payments/intent") &&
+        res.url().includes("/payments/checkout-session") &&
         res.request().method() === "POST"
     )
     await page.getByTestId("booking-continue-details").click()
@@ -131,7 +131,7 @@ test.describe("phase 04 live Stripe booking", () => {
     const intentResponse = await intent
     test.skip(
       ![200, 201].includes(intentResponse.status()),
-      `POST /payments/intent returned ${intentResponse.status()} — set STRIPE_PMC_BOOKING and restart the API`
+      `POST /payments/checkout-session returned ${intentResponse.status()} — set STRIPE_PMC_BOOKING and restart the API`
     )
 
     await fillStripeTestCard(page)
@@ -167,13 +167,14 @@ test.describe("phase 04 live Stripe booking", () => {
     )
   })
 
-  test.skip(
-    process.env.E2E_LIVE_STRIPE_MBWAY !== "1",
-    "set E2E_LIVE_STRIPE_MBWAY=1 to run the MB WAY async_short checkout test"
-  )
   test("pays a seeded paid offer with MB WAY test phone (processing hold)", async ({
     page,
   }) => {
+    // Scoped to this test: at describe level it also skipped the card test.
+    test.skip(
+      process.env.E2E_LIVE_STRIPE_MBWAY !== "1",
+      "set E2E_LIVE_STRIPE_MBWAY=1 to run the MB WAY async_short checkout test"
+    )
     test.setTimeout(120_000)
     test.skip(
       !process.env.STRIPE_PMC_BOOKING,
@@ -199,7 +200,7 @@ test.describe("phase 04 live Stripe booking", () => {
     )
     const intent = page.waitForResponse(
       (res) =>
-        res.url().includes("/payments/intent") &&
+        res.url().includes("/payments/checkout-session") &&
         res.request().method() === "POST"
     )
     await page.getByTestId("booking-continue-details").click()
@@ -211,7 +212,7 @@ test.describe("phase 04 live Stripe booking", () => {
     const intentResponse = await intent
     test.skip(
       ![200, 201].includes(intentResponse.status()),
-      `POST /payments/intent returned ${intentResponse.status()}`
+      `POST /payments/checkout-session returned ${intentResponse.status()}`
     )
 
     try {

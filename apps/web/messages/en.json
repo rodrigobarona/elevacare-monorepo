@@ -429,7 +429,7 @@
       "intakeNotes": "Anything you want the expert to know (optional)",
       "intakeNotesHint": "A short pre-agenda. The expert sees this with the session record.",
       "promo": "Promo code (optional)",
-      "promoHint": "We'll save this with your booking. Automatic discounts are not applied yet.",
+      "promoHint": "Have a code? Apply it here and you'll see the new total before you pay.",
       "consentsIntro": "To book a health session on this digital health platform, please confirm:",
       "aiConsent": {
         "label": "Optional: allow live transcription and AI-assisted notes for this session. Your expert still writes the report; you can withdraw any time in Privacy settings. See the",
@@ -468,7 +468,15 @@
       "pay": "Pay {price}",
       "processing": "Confirming payment…",
       "failed": "Payment could not be completed. Please try again.",
-      "pendingError": "Payment is still pending. Please wait a moment and try again."
+      "pendingError": "Payment is still pending. Please wait a moment and try again.",
+      "loading": "Loading secure payment…",
+      "loadFailed": "We couldn't load the payment form. Refresh the page to try again.",
+      "promoApply": "Apply",
+      "promoRemove": "Remove",
+      "promoInvalid": "This code isn't valid for this booking. Check it or pay the full price.",
+      "subtotal": "Price",
+      "discount": "Discount",
+      "total": "Total"
     },
     "done": {
       "heading": "Your reservation is confirmed",
@@ -511,7 +519,8 @@
       "confirmMismatch": "This payment does not match the held time. Contact support if you were charged.",
       "generic": "We could not hold that time. Please try again.",
       "rateLimited": "Too many requests just now. Wait a minute and try again.",
-      "policyChanged": "The expert just updated the cancellation policy. Reload the page to review it before booking."
+      "policyChanged": "The expert just updated the cancellation policy. Reload the page to review it before booking.",
+      "paymentFailed": "Your payment was declined or cancelled, so nothing was charged. Pick a time again to retry."
     },
     "policy": {
       "heading": "Cancellation policy"

@@ -21,7 +21,7 @@ import {
   type CancellationPolicy,
 } from "@eleva/config/cancellation-policy"
 import type { Locale } from "@eleva/config/i18n"
-import { BookingPaymentElement } from "@eleva/billing/client"
+import { BookingCheckoutPayment } from "@eleva/billing/client"
 import { Button } from "@eleva/ui/components/button"
 import { Field, FieldError, FieldLabel } from "@eleva/ui/components/field"
 import { Input } from "@eleva/ui/components/input"
@@ -63,6 +63,7 @@ import { ExpertAvatar } from "@/components/expert-avatar"
 import type { FunnelConsentDoc } from "@/lib/booking-consents"
 import {
   bookingReturnUrl,
+  checkoutReturnPath,
   clearFunnelReturn,
   confirmLockKey,
   consumeFunnelRestore,
@@ -91,7 +92,7 @@ type Reservation = {
 
 type Payment = {
   clientSecret: string
-  paymentIntentId: string
+  checkoutSessionId: string
   bookingId: string
   publishableKey: string
 }
@@ -180,7 +181,6 @@ export function BookingFunnel({
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
   const [taxId, setTaxId] = useState("")
-  const [promoCode, setPromoCode] = useState("")
   const [intakeNotes, setIntakeNotes] = useState("")
   const [granted, setGranted] = useState<Record<string, boolean>>({})
   const [aiOptIn, setAiOptIn] = useState(false)
@@ -277,7 +277,7 @@ export function BookingFunnel({
 
   const confirmPaidHold = useCallback(
     async (hold: Reservation, paid: Payment) => {
-      const lockKey = confirmLockKey(hold.reservationId, paid.paymentIntentId)
+      const lockKey = confirmLockKey(hold.reservationId, paid.checkoutSessionId)
       if (confirmInFlight.current || !tryAcquireConfirmLock(lockKey)) return
       confirmInFlight.current = true
       setConfirmState("pending")
@@ -287,7 +287,7 @@ export function BookingFunnel({
         const result = await api.bookings.confirm({
           reservationId: hold.reservationId,
           reservationToken: hold.reservationToken,
-          paymentIntentId: paid.paymentIntentId,
+          checkoutSessionId: paid.checkoutSessionId,
         })
         setPayment({ ...paid, bookingId: result.bookingId })
         setSettledStatus(result.status)
@@ -295,6 +295,15 @@ export function BookingFunnel({
         clearFunnelReturn()
       } catch (error) {
         releaseConfirmLock(lockKey)
+        // Stripe has the payment but it has not settled (e.g. MB WAY waiting
+        // for approval in the app): the webhook confirms; show pending.
+        if (
+          error instanceof ApiClientError &&
+          error.body?.error === "PAYMENT_PENDING"
+        ) {
+          setConfirmState("pending")
+          return
+        }
         if (error instanceof ApiClientError) {
           setFormError(mapConfirmError(error.body?.error))
         } else {
@@ -442,7 +451,6 @@ export function BookingFunnel({
       setFormError("taxIdInvalid")
       return
     }
-    const normalizedPromo = promoCode.trim().toUpperCase()
 
     setIsSubmitting(true)
     setFormError(null)
@@ -471,9 +479,6 @@ export function BookingFunnel({
             ...(normalizedTaxId ? { taxId: normalizedTaxId } : {}),
           },
           ...(e164 ? { phone: e164 } : {}),
-          ...(normalizedPromo.length >= 2
-            ? { promoCode: normalizedPromo }
-            : {}),
           ...(intakeNotes.trim() ? { intakeNotes: intakeNotes.trim() } : {}),
           consents: consents.map((doc) => ({
             kind: doc.kind,
@@ -490,7 +495,7 @@ export function BookingFunnel({
         })
         setPayment({
           clientSecret: "",
-          paymentIntentId: "",
+          checkoutSessionId: "",
           bookingId: confirmed.bookingId,
           publishableKey: "",
         })
@@ -499,14 +504,15 @@ export function BookingFunnel({
         setStep("done")
         return
       }
-      const intent = await api.payments.intent({
+      const session = await api.payments.checkoutSession({
         reservationId: reserved.reservationId,
         reservationToken: reserved.reservationToken,
+        returnPath: checkoutReturnPath(),
       })
-      setPayment(intent)
+      setPayment(session)
       saveFunnelReturn({
         reservation: reserved,
-        payment: intent,
+        payment: session,
         slot,
         modeId: selectedMode.id,
         name,
@@ -859,20 +865,6 @@ export function BookingFunnel({
                   {t("details.intakeNotesHint")}
                 </p>
               </Field>
-              {priceCents > 0 ? (
-                <Field>
-                  <FieldLabel>{t("details.promo")}</FieldLabel>
-                  <Input
-                    data-testid="booking-promo"
-                    value={promoCode}
-                    onChange={(event) => setPromoCode(event.target.value)}
-                    autoComplete="off"
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    {t("details.promoHint")}
-                  </p>
-                </Field>
-              ) : null}
             </FormCard>
             <FormCard title={t("details.sections.confirm")}>
               <CancellationPolicySummary
@@ -956,34 +948,31 @@ export function BookingFunnel({
                 <Button onPress={restart}>{t("pay.restart")}</Button>
               </div>
             ) : (
-              <BookingPaymentElement
+              <BookingCheckoutPayment
                 publishableKey={payment.publishableKey}
                 clientSecret={payment.clientSecret}
                 locale={locale}
-                returnUrl={
-                  typeof window === "undefined" ? "" : bookingReturnUrl()
-                }
-                billingEmail={email}
-                billingName={name}
-                submitLabel={t("pay.pay", {
-                  price: formatBookingPrice(priceCents, locale),
-                })}
-                processingLabel={t("pay.processing")}
-                failedLabel={t("pay.failed")}
-                pendingLabel={t("pay.pendingError")}
+                labels={{
+                  loading: t("pay.loading"),
+                  loadFailed: t("pay.loadFailed"),
+                  promo: t("details.promo"),
+                  promoHint: t("details.promoHint"),
+                  promoApply: t("pay.promoApply"),
+                  promoRemove: t("pay.promoRemove"),
+                  promoInvalid: t("pay.promoInvalid"),
+                  subtotal: t("pay.subtotal"),
+                  discount: t("pay.discount"),
+                  total: t("pay.total"),
+                  pay: (total) => t("pay.pay", { price: total }),
+                  processing: t("pay.processing"),
+                  failed: t("pay.failed"),
+                }}
                 onProcessingChange={setPaymentInFlight}
-                onPaid={(result) => {
+                onSettled={() => {
+                  // The API decides: confirmed, or 409 PAYMENT_PENDING while
+                  // the payment settles (the webhook then confirms).
                   setStep("done")
-                  if (result.status === "succeeded") {
-                    const paid = {
-                      ...payment,
-                      paymentIntentId: result.paymentIntentId,
-                    }
-                    setPayment(paid)
-                    void confirmPaidHold(reservation, paid)
-                    return
-                  }
-                  setConfirmState("pending")
+                  void confirmPaidHold(reservation, payment)
                 }}
               />
             )}

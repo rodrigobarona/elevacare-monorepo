@@ -59,6 +59,7 @@ describe("mapReserveError", () => {
 describe("mapConfirmError", () => {
   it("maps confirm API codes", () => {
     expect(mapConfirmError("PAYMENT_MISMATCH")).toBe("confirmMismatch")
+    expect(mapConfirmError("PAYMENT_FAILED")).toBe("paymentFailed")
     expect(mapConfirmError("unavailable")).toBe("confirmFailed")
     expect(mapConfirmError("mystery")).toBe("confirmFailed")
     expect(mapConfirmError(undefined)).toBe("confirmFailed")

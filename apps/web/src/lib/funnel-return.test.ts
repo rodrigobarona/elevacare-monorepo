@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import {
   bookingReturnUrl,
   captureRedirect,
+  checkoutReturnPath,
   captureRedirectStatus,
   clearFunnelReturn,
   parseRedirectStatus,
@@ -20,7 +21,7 @@ const snapshot: FunnelReturnSnapshot = {
   },
   payment: {
     clientSecret: "cs_test",
-    paymentIntentId: "pi_test",
+    checkoutSessionId: "cs_test_1",
     bookingId: "",
     publishableKey: "pk_test",
   },
@@ -54,20 +55,28 @@ function stubSession(initial: Record<string, string> = {}) {
 }
 
 describe("parseRedirectStatus", () => {
-  it("reads a successful Stripe redirect", () => {
-    expect(parseRedirectStatus("?redirect_status=succeeded")).toBe("succeeded")
-    expect(parseRedirectStatus("redirect_status=processing")).toBe("processing")
+  it("treats a Checkout Session return as an attempt to confirm", () => {
+    expect(parseRedirectStatus("?checkout_session_id=cs_test_1")).toBe(
+      "succeeded"
+    )
+    expect(
+      parseRedirectStatus(
+        "checkout_session_id=cs_test_1&redirect_status=processing"
+      )
+    ).toBe("processing")
   })
 
-  it("reads a failed Stripe redirect", () => {
-    expect(parseRedirectStatus("?redirect_status=failed")).toBe("failed")
+  it("reads a failed redirect", () => {
     expect(
-      parseRedirectStatus("?redirect_status=requires_payment_method")
+      parseRedirectStatus(
+        "?checkout_session_id=cs_test_1&redirect_status=requires_payment_method"
+      )
     ).toBe("failed")
   })
 
-  it("ignores other query values", () => {
-    expect(parseRedirectStatus("?redirect_status=canceled")).toBeNull()
+  it("ignores returns without a Checkout Session id", () => {
+    expect(parseRedirectStatus("?redirect_status=succeeded")).toBeNull()
+    expect(parseRedirectStatus("?checkout_session_id=pi_1")).toBeNull()
     expect(parseRedirectStatus("")).toBeNull()
   })
 })
@@ -81,26 +90,26 @@ describe("captureRedirectStatus", () => {
     stubSession({
       "bookingFunnel:redirect": JSON.stringify({
         status: "succeeded",
-        paymentIntentId: "pi_test",
+        checkoutSessionId: "cs_test_1",
       }),
     })
     expect(captureRedirectStatus("")).toBe("succeeded")
     expect(captureRedirect("")).toEqual({
       status: "succeeded",
-      paymentIntentId: "pi_test",
+      checkoutSessionId: "cs_test_1",
     })
   })
 
-  it("does not merge a URL status with a stored payment intent", () => {
+  it("prefers the session in the URL over a stored one", () => {
     stubSession({
       "bookingFunnel:redirect": JSON.stringify({
         status: "failed",
-        paymentIntentId: "pi_old",
+        checkoutSessionId: "cs_test_old",
       }),
     })
-    expect(captureRedirect("?redirect_status=succeeded")).toEqual({
+    expect(captureRedirect("?checkout_session_id=cs_test_new")).toEqual({
       status: "succeeded",
-      paymentIntentId: null,
+      checkoutSessionId: "cs_test_new",
     })
   })
 })
@@ -116,7 +125,7 @@ describe("takeFunnelRestore", () => {
       "bookingFunnel:v1": JSON.stringify(snapshot),
       "bookingFunnel:redirect": JSON.stringify({
         status: "succeeded",
-        paymentIntentId: "pi_test",
+        checkoutSessionId: "cs_test_1",
       }),
     })
     expect(takeFunnelRestore()?.snapshot.reservation.reservationId).toBe(
@@ -131,7 +140,7 @@ describe("takeFunnelRestore", () => {
       "bookingFunnel:v1": JSON.stringify(snapshot),
       "bookingFunnel:redirect": JSON.stringify({
         status: "succeeded",
-        paymentIntentId: "pi_test",
+        checkoutSessionId: "cs_test_1",
       }),
     })
     expect(takeFunnelRestore()).not.toBeNull()
@@ -142,19 +151,19 @@ describe("takeFunnelRestore", () => {
     expect(takeFunnelRestore()).toBeNull()
   })
 
-  it("does not pair a new redirect status with the previous memo intent", () => {
+  it("does not pair a different session with the previous memo", () => {
     stubSession({
       "bookingFunnel:v1": JSON.stringify(snapshot),
       "bookingFunnel:redirect": JSON.stringify({
         status: "succeeded",
-        paymentIntentId: "pi_test",
+        checkoutSessionId: "cs_test_1",
       }),
     })
     expect(takeFunnelRestore()).not.toBeNull()
     stubSession({
       "bookingFunnel:v1": JSON.stringify(snapshot),
     })
-    expect(takeFunnelRestore("?redirect_status=processing")).toBeNull()
+    expect(takeFunnelRestore("?checkout_session_id=cs_test_other")).toBeNull()
   })
 
   it("keeps the snapshot after a failed redirect so a later success can restore", () => {
@@ -163,21 +172,20 @@ describe("takeFunnelRestore", () => {
     })
     expect(
       takeFunnelRestore(
-        "?redirect_status=requires_payment_method&payment_intent=pi_test"
+        "?redirect_status=requires_payment_method&checkout_session_id=cs_test_1"
       )?.status
     ).toBe("failed")
-    expect(
-      takeFunnelRestore("?redirect_status=succeeded&payment_intent=pi_test")
-        ?.status
-    ).toBe("succeeded")
+    expect(takeFunnelRestore("?checkout_session_id=cs_test_1")?.status).toBe(
+      "succeeded"
+    )
   })
 
-  it("rejects a stored snapshot that does not match the Stripe payment intent", () => {
+  it("rejects a stored snapshot that does not match the Checkout Session", () => {
     stubSession({
       "bookingFunnel:v1": JSON.stringify(snapshot),
       "bookingFunnel:redirect": JSON.stringify({
         status: "succeeded",
-        paymentIntentId: "pi_other",
+        checkoutSessionId: "cs_test_other",
       }),
     })
     expect(takeFunnelRestore()).toBeNull()
@@ -186,7 +194,7 @@ describe("takeFunnelRestore", () => {
 
 describe("confirm lock", () => {
   it("can be acquired again after release", () => {
-    const key = "res-1:pi_test"
+    const key = "res-1:cs_test_1"
     expect(tryAcquireConfirmLock(key)).toBe(true)
     expect(tryAcquireConfirmLock(key)).toBe(false)
     releaseConfirmLock(key)
@@ -196,11 +204,28 @@ describe("confirm lock", () => {
 })
 
 describe("bookingReturnUrl", () => {
-  it("strips Stripe redirect query keys", () => {
+  it("strips Stripe return query keys", () => {
     expect(
       bookingReturnUrl(
-        "https://eleva.care/en/ana/intake?redirect_status=succeeded&payment_intent=pi_1&payment_intent_client_secret=pi_1_secret_xxx&keep=1"
+        "https://eleva.care/en/ana/intake?redirect_status=succeeded&checkout_session_id=cs_test_1&keep=1"
       )
     ).toBe("https://eleva.care/en/ana/intake?keep=1")
+  })
+})
+
+describe("checkoutReturnPath", () => {
+  it("returns a relative path with a literal Stripe template", () => {
+    expect(
+      checkoutReturnPath(
+        "https://dev.eleva.care/pt/fisiomota/first-visit?checkout_session_id=cs_old"
+      )
+    ).toBe(
+      "/pt/fisiomota/first-visit?checkout_session_id={CHECKOUT_SESSION_ID}"
+    )
+    expect(
+      checkoutReturnPath("https://eleva.care/fisiomota/first-visit?link=abc")
+    ).toBe(
+      "/fisiomota/first-visit?link=abc&checkout_session_id={CHECKOUT_SESSION_ID}"
+    )
   })
 })
