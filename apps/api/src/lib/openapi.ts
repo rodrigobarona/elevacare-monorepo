@@ -2896,7 +2896,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "409": {
               description:
-                "PAYMENT_MISMATCH (intent does not match the hold), or PAYMENT_PENDING (Checkout Session path: the member has not finished paying yet; retry shortly)",
+                "PAYMENT_MISMATCH (intent does not match the hold), PAYMENT_PENDING (Checkout Session path: the payment is still settling, e.g. MB WAY approval; retry or wait for the webhook), or PAYMENT_FAILED (the payment was declined or cancelled; the member can retry)",
               content: { "application/json": { schema: ErrorSchema } },
             },
             "403": {

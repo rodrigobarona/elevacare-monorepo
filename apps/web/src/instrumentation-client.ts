@@ -7,12 +7,15 @@ import {
 // checkLevel must match the server-side checkBot() call on each route.
 if (isSameOriginApiEnabled()) {
   initBotId({
-    protect: ["bookings/reserve", "bookings/confirm", "payments/intent"].map(
-      (route) => ({
-        path: `${SAME_ORIGIN_API_PREFIX}/${route}`,
-        method: "POST",
-        advancedOptions: { checkLevel: "deepAnalysis" as const },
-      })
-    ),
+    protect: [
+      "bookings/reserve",
+      "bookings/confirm",
+      "payments/checkout-session",
+      "payments/intent",
+    ].map((route) => ({
+      path: `${SAME_ORIGIN_API_PREFIX}/${route}`,
+      method: "POST",
+      advancedOptions: { checkLevel: "deepAnalysis" as const },
+    })),
   })
 }

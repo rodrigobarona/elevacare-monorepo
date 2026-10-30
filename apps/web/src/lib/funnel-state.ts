@@ -82,6 +82,8 @@ export function mapConfirmError(code: string | undefined): string {
   switch (code) {
     case "PAYMENT_MISMATCH":
       return "confirmMismatch"
+    case "PAYMENT_FAILED":
+      return "paymentFailed"
     case "unavailable":
       return "confirmFailed"
     default:

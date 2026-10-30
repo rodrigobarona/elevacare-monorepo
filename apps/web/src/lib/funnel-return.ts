@@ -9,7 +9,7 @@ export type FunnelReturnSnapshot = {
   }
   payment: {
     clientSecret: string
-    paymentIntentId: string
+    checkoutSessionId: string
     bookingId: string
     publishableKey: string
   }
@@ -26,20 +26,25 @@ export type FunnelReturnSnapshot = {
   timeZone: string
   country: string
   language: string
+  /** Booking promotion code attached to `payment`'s session, if any. */
+  promoCode?: string | null
 }
 
 export type FunnelRedirectStatus = "succeeded" | "processing" | "failed"
 
 export type FunnelRedirect = {
   status: FunnelRedirectStatus
-  paymentIntentId: string | null
+  checkoutSessionId: string | null
 }
 
 type RestoreMemo = {
   status: FunnelRedirectStatus
-  paymentIntentId: string
+  checkoutSessionId: string
   snapshot: FunnelReturnSnapshot
 }
+
+/** Query param Stripe fills from the `{CHECKOUT_SESSION_ID}` template. */
+export const CHECKOUT_SESSION_PARAM = "checkout_session_id"
 
 let restoreMemo: RestoreMemo | null = null
 const confirmLocks = new Set<string>()
@@ -54,16 +59,19 @@ function parseRedirectStatusValue(
   return value === "requires_payment_method" ? "failed" : null
 }
 
+/**
+ * A redirect-based payment method returns to the funnel with the session id.
+ * Stripe adds no reliable status for Checkout Sessions, so a return means
+ * "try to confirm": `/bookings/confirm` answers paid, pending or failed.
+ */
 export function parseRedirect(search: string): FunnelRedirect | null {
   const query = search.startsWith("?") ? search.slice(1) : search
   const params = new URLSearchParams(query)
-  const status = parseRedirectStatusValue(params.get("redirect_status"))
-  if (!status) return null
-  const paymentIntentId = params.get("payment_intent")
-  return {
-    status,
-    paymentIntentId: paymentIntentId ? paymentIntentId : null,
-  }
+  const checkoutSessionId = params.get(CHECKOUT_SESSION_PARAM)
+  if (!checkoutSessionId || !checkoutSessionId.startsWith("cs_")) return null
+  const status =
+    parseRedirectStatusValue(params.get("redirect_status")) ?? "succeeded"
+  return { status, checkoutSessionId }
 }
 
 export function parseRedirectStatus(
@@ -78,14 +86,14 @@ function readStoredRedirect(): FunnelRedirect | null {
     if (!stored) return null
     const storedStatus = parseRedirectStatusValue(stored)
     if (storedStatus) {
-      return { status: storedStatus, paymentIntentId: null }
+      return { status: storedStatus, checkoutSessionId: null }
     }
     const parsed = JSON.parse(stored) as Partial<FunnelRedirect>
     const status = parseRedirectStatusValue(parsed.status ?? null)
     if (!status) return null
     return {
       status,
-      paymentIntentId: parsed.paymentIntentId ?? null,
+      checkoutSessionId: parsed.checkoutSessionId ?? null,
     }
   } catch {
     return null
@@ -124,9 +132,9 @@ export function captureRedirectStatus(
 
 export function confirmLockKey(
   reservationId: string,
-  paymentIntentId: string
+  checkoutSessionId: string
 ): string {
-  return `${reservationId}:${paymentIntentId}`
+  return `${reservationId}:${checkoutSessionId}`
 }
 
 export function tryAcquireConfirmLock(key: string): boolean {
@@ -139,13 +147,13 @@ export function releaseConfirmLock(key: string): void {
   confirmLocks.delete(key)
 }
 
-function snapshotMatchesIntent(
+function snapshotMatchesSession(
   snapshot: FunnelReturnSnapshot,
-  paymentIntentId: string | null
-): paymentIntentId is string {
+  checkoutSessionId: string | null
+): checkoutSessionId is string {
   return (
-    Boolean(paymentIntentId) &&
-    snapshot.payment.paymentIntentId === paymentIntentId
+    Boolean(checkoutSessionId) &&
+    snapshot.payment.checkoutSessionId === checkoutSessionId
   )
 }
 
@@ -159,16 +167,26 @@ export function takeFunnelRestore(
   const redirect = captureRedirect(search)
   const source = redirect ?? restoreMemo
   if (!source) return null
-  const { status, paymentIntentId } = source
+  const { status, checkoutSessionId } = source
   const snapshot =
     loadFunnelReturn({
       allowExpired: status === "succeeded" || status === "processing",
     }) ?? restoreMemo?.snapshot
-  if (!snapshot || !snapshotMatchesIntent(snapshot, paymentIntentId)) {
+  if (!snapshot || !snapshotMatchesSession(snapshot, checkoutSessionId)) {
     return null
   }
-  restoreMemo = { status, paymentIntentId, snapshot }
+  restoreMemo = { status, checkoutSessionId, snapshot }
   return restoreMemo
+}
+
+/** Points the stored snapshot at a replacement session (promo code change). */
+export function updateFunnelReturnPayment(
+  payment: FunnelReturnSnapshot["payment"],
+  promoCode: string | null
+): void {
+  const current = loadFunnelReturn()
+  if (!current) return
+  saveFunnelReturn({ ...current, payment, promoCode })
 }
 
 export function saveFunnelReturn(snapshot: FunnelReturnSnapshot): void {
@@ -237,8 +255,18 @@ export function consumeFunnelRestore(): void {
 
 export function bookingReturnUrl(href = window.location.href): string {
   const url = new URL(href)
-  url.searchParams.delete("payment_intent")
-  url.searchParams.delete("payment_intent_client_secret")
+  url.searchParams.delete(CHECKOUT_SESSION_PARAM)
   url.searchParams.delete("redirect_status")
   return url.toString()
+}
+
+/**
+ * Relative return path for `POST /payments/checkout-session`. The template
+ * is appended as a literal string so Stripe can substitute the session id.
+ */
+export function checkoutReturnPath(href = window.location.href): string {
+  const url = new URL(bookingReturnUrl(href))
+  const base = `${url.pathname}${url.search}`
+  const joiner = url.search ? "&" : "?"
+  return `${base}${joiner}${CHECKOUT_SESSION_PARAM}={CHECKOUT_SESSION_ID}`
 }

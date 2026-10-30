@@ -429,7 +429,7 @@
       "intakeNotes": "Algo que queira que o especialista saiba (opcional)",
       "intakeNotesHint": "Uma pré-agenda breve. O especialista vê isto no registo da sessão.",
       "promo": "Código promocional (opcional)",
-      "promoHint": "Guardamos o código nesta marcação. Os descontos automáticos ainda não são aplicados.",
+      "promoHint": "Tem um código? Aplique-o aqui e veja o novo total antes de pagar.",
       "consentsIntro": "Para marcar uma sessão de saúde nesta plataforma digital de saúde, confirme:",
       "aiConsent": {
         "label": "Opcional: autorizo a transcrição em direto e notas assistidas por IA nesta sessão. O especialista continua a escrever o relatório; pode retirar a autorização a qualquer momento nas definições de Privacidade. Consulte o",
@@ -468,7 +468,16 @@
       "pay": "Pagar {price}",
       "processing": "A confirmar o pagamento…",
       "failed": "Não foi possível concluir o pagamento. Tente novamente.",
-      "pendingError": "O pagamento ainda está pendente. Aguarde um momento e tente novamente."
+      "pendingError": "O pagamento ainda está pendente. Aguarde um momento e tente novamente.",
+      "loading": "A carregar o pagamento seguro…",
+      "loadFailed": "Não foi possível carregar o formulário de pagamento. Atualize a página para tentar de novo.",
+      "promoApply": "Aplicar",
+      "promoRemove": "Remover",
+      "promoInvalid": "Este código não é válido para esta marcação. Verifique-o ou pague o preço total.",
+      "subtotal": "Preço",
+      "discount": "Desconto",
+      "total": "Total",
+      "promoFailed": "Não foi possível atualizar o código agora. Tente de novo dentro de momentos."
     },
     "done": {
       "heading": "A sua reserva está confirmada",
@@ -511,7 +520,8 @@
       "confirmMismatch": "Este pagamento não corresponde ao horário reservado. Se foi cobrado, contacte o suporte.",
       "generic": "Não foi possível reservar esse horário. Tente novamente.",
       "rateLimited": "Demasiados pedidos neste momento. Espere um minuto e tente novamente.",
-      "policyChanged": "O especialista acabou de atualizar a política de cancelamento. Recarregue a página para a rever antes de marcar."
+      "policyChanged": "O especialista acabou de atualizar a política de cancelamento. Recarregue a página para a rever antes de marcar.",
+      "paymentFailed": "O pagamento foi recusado ou cancelado, por isso não foi cobrado nada. Escolha de novo um horário para tentar outra vez."
     },
     "policy": {
       "heading": "Política de cancelamento"

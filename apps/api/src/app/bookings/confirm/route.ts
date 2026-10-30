@@ -103,6 +103,9 @@ export async function POST(request: Request) {
         auth.type === "anonymous" ? undefined : auth.session.user.id
 
       let paymentIntentId = parsed.data.paymentIntentId
+      let prefetchedIntent:
+        | Awaited<ReturnType<typeof retrieveBookingPaymentIntent>>
+        | undefined
       if (parsed.data.checkoutSessionId) {
         let authorized
         try {
@@ -139,6 +142,30 @@ export async function POST(request: Request) {
           )
         }
         paymentIntentId = checkout.paymentIntentId
+        // Runs only after the token + bound-session check above, so there is
+        // no Stripe call before authorization. The browser confirms as soon
+        // as Stripe accepts the payment: an unsettled intent (MB WAY, 3DS) is
+        // pending, a declined one a failure the member can retry; the
+        // webhook confirms pending payments later.
+        let intent
+        try {
+          intent = await retrieveBookingPaymentIntent(paymentIntentId)
+        } catch (err) {
+          console.error("[bookings/confirm] intent retrieve failed", err)
+          return secureJson({ error: "unavailable" }, { status: 503, headers })
+        }
+        if (intent.status !== "succeeded") {
+          const pending =
+            intent.status === "processing" ||
+            intent.status === "requires_action" ||
+            intent.status === "requires_confirmation" ||
+            intent.status === "requires_capture"
+          return secureJson(
+            { error: pending ? "PAYMENT_PENDING" : "PAYMENT_FAILED" },
+            { status: 409, headers }
+          )
+        }
+        prefetchedIntent = intent
       }
 
       let result
@@ -150,7 +177,10 @@ export async function POST(request: Request) {
               paymentIntentId,
               sessionUserId,
               source: "public",
-              retrieveIntent: retrieveBookingPaymentIntent,
+              retrieveIntent: async (id) =>
+                prefetchedIntent?.id === id
+                  ? prefetchedIntent
+                  : retrieveBookingPaymentIntent(id),
             })
           : await confirmFreeReservation({
               reservationId: parsed.data.reservationId,

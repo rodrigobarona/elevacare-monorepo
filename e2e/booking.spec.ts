@@ -82,11 +82,11 @@ async function mockFunnelApis(page: Page, username: string, slug: string) {
     })
   })
 
-  await page.route("**/payments/intent", async (route) => {
+  await page.route("**/payments/checkout-session", async (route) => {
     await route.fulfill({
       json: {
-        clientSecret: "pi_e2e_secret_test",
-        paymentIntentId: "pi_e2e_intent",
+        clientSecret: "cs_e2e_secret_test",
+        checkoutSessionId: "cs_test_e2e_session",
         bookingId: "00000000-0000-4000-8000-000000000003",
         publishableKey: "pk_test_e2e",
       },
@@ -172,7 +172,7 @@ test.describe("booking funnel", () => {
           "bookingFunnel:redirect",
           JSON.stringify({
             status: "succeeded",
-            paymentIntentId: snapshot.payment.paymentIntentId,
+            checkoutSessionId: snapshot.payment.checkoutSessionId,
           })
         )
       },
@@ -183,8 +183,8 @@ test.describe("booking funnel", () => {
           expiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
         },
         payment: {
-          clientSecret: "pi_e2e_secret_test",
-          paymentIntentId: "pi_e2e_intent",
+          clientSecret: "cs_e2e_secret_test",
+          checkoutSessionId: "cs_test_e2e_session",
           bookingId: "00000000-0000-4000-8000-000000000003",
           publishableKey: "pk_test_e2e",
         },
@@ -205,7 +205,7 @@ test.describe("booking funnel", () => {
     )
 
     const response = await page.goto(
-      `/${offer!.username}/${offer!.slug}?redirect_status=succeeded&payment_intent=pi_e2e_intent`
+      `/${offer!.username}/${offer!.slug}?checkout_session_id=cs_test_e2e_session`
     )
     skipUnlessPageOk(response?.status(), "redirect restore page")
     await expect(page.getByTestId("booking-done-heading")).toHaveAttribute(
@@ -217,7 +217,7 @@ test.describe("booking funnel", () => {
       {
         reservationId: "00000000-0000-4000-8000-000000000002",
         reservationToken: "reservation-token-e2e-test",
-        paymentIntentId: "pi_e2e_intent",
+        checkoutSessionId: "cs_test_e2e_session",
       },
     ])
   })

@@ -1,12 +1,13 @@
 /**
  * Browser-safe @eleva/billing/client entrypoint.
  *
- * Payment Element for the public booking funnel. Server-only Stripe
+ * Checkout Sessions payment for the public booking funnel. Server-only Stripe
  * SDK calls live in "@eleva/billing/server".
  */
 
 export {
-  BookingPaymentElement,
-  type BookingPaymentResult,
-} from "./payment-element"
+  BookingCheckoutPayment,
+  type BookingCheckoutLabels,
+  type BookingCheckoutOutcome,
+} from "./checkout-payment"
 export { elevaPaymentElementAppearance } from "./appearance"
