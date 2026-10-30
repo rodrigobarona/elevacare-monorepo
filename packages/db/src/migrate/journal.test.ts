@@ -1,3 +1,4 @@
+import { LICENCE_CHECKLIST_ITEMS } from "@eleva/config/professional-bodies"
 import { describe, expect, it } from "vitest"
 import { resolve } from "node:path"
 import {
@@ -44,6 +45,9 @@ describe("migration journal helpers", () => {
       "become_partner_applications_open_uidx"
     )
     expect(last?.statements.join("\n")).toContain("eleva.platform_admin")
+    for (const item of LICENCE_CHECKLIST_ITEMS) {
+      expect(last?.statements.join("\n")).toContain(`"${item}": true`)
+    }
     const bookingPaymentsRls = migrations.find(
       (m) => m.tag === "0070_booking_payments_admin_rls"
     )

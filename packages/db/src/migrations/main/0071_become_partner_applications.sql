@@ -1,8 +1,11 @@
 -- Launch legal posture (decision log 2026-10-29): only experts whose licence
 -- Eleva staff verified may be listed. Recreates become_partner_applications
 -- (dropped in 0013) and stores the declared licence on the expert profile.
--- Profiles already `active` stay active (no backfill, no auto-suspend); the
--- staff queue lists them as "Needs verification" until a licence is approved.
+-- The expert org may only file or refile a pending, unreviewed application;
+-- decisions and deletes are staff (platform_admin) only, so an approved row
+-- stays a durable verification record. Profiles already `active` stay active
+-- (no backfill, no auto-suspend); the staff queue lists them as "Needs
+-- verification" until a licence is approved.
 ALTER TABLE "expert_profiles" ADD COLUMN IF NOT EXISTS "professional_body" text;
 --> statement-breakpoint
 ALTER TABLE "expert_profiles" ADD COLUMN IF NOT EXISTS "licence_number" varchar(64);
@@ -36,7 +39,7 @@ CREATE TABLE IF NOT EXISTS "become_partner_applications" (
   CONSTRAINT "become_partner_applications_reason"
     CHECK (status NOT IN ('rejected', 'needs_changes') OR (reason IS NOT NULL AND length(btrim(reason)) > 0)),
   CONSTRAINT "become_partner_applications_approved_verification"
-    CHECK (status <> 'approved' OR (reviewer_user_id IS NOT NULL AND reviewed_at IS NOT NULL AND checklist->>'register_checked' = 'true')),
+    CHECK (status <> 'approved' OR (reviewer_user_id IS NOT NULL AND reviewed_at IS NOT NULL AND checklist @> '{"register_checked": true, "name_matches": true, "ers_checked": true}'::jsonb)),
   CONSTRAINT "become_partner_applications_checklist_shape"
     CHECK (jsonb_typeof(checklist) = 'object')
 );
@@ -55,9 +58,28 @@ ALTER TABLE "become_partner_applications" ENABLE ROW LEVEL SECURITY;
 --> statement-breakpoint
 ALTER TABLE "become_partner_applications" FORCE ROW LEVEL SECURITY;
 --> statement-breakpoint
-DROP POLICY IF EXISTS "become_partner_applications_tenant_isolation" ON "become_partner_applications";
+DROP POLICY IF EXISTS "become_partner_applications_read" ON "become_partner_applications";
 --> statement-breakpoint
-CREATE POLICY "become_partner_applications_tenant_isolation" ON "become_partner_applications"
+CREATE POLICY "become_partner_applications_read" ON "become_partner_applications"
+  AS PERMISSIVE FOR SELECT TO public
+  USING (org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true');
+--> statement-breakpoint
+DROP POLICY IF EXISTS "become_partner_applications_expert_file" ON "become_partner_applications";
+--> statement-breakpoint
+CREATE POLICY "become_partner_applications_expert_file" ON "become_partner_applications"
+  AS PERMISSIVE FOR INSERT TO public
+  WITH CHECK (org_id::text = current_setting('eleva.org_id', true) AND status = 'pending' AND reviewer_user_id IS NULL AND reviewed_at IS NULL);
+--> statement-breakpoint
+DROP POLICY IF EXISTS "become_partner_applications_expert_refile" ON "become_partner_applications";
+--> statement-breakpoint
+CREATE POLICY "become_partner_applications_expert_refile" ON "become_partner_applications"
+  AS PERMISSIVE FOR UPDATE TO public
+  USING (org_id::text = current_setting('eleva.org_id', true) AND status IN ('pending', 'needs_changes'))
+  WITH CHECK (org_id::text = current_setting('eleva.org_id', true) AND status = 'pending' AND reviewer_user_id IS NULL AND reviewed_at IS NULL);
+--> statement-breakpoint
+DROP POLICY IF EXISTS "become_partner_applications_staff_write" ON "become_partner_applications";
+--> statement-breakpoint
+CREATE POLICY "become_partner_applications_staff_write" ON "become_partner_applications"
   AS PERMISSIVE FOR ALL TO public
-  USING (org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true')
-  WITH CHECK (org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true');
+  USING (current_setting('eleva.platform_admin', true) = 'true')
+  WITH CHECK (current_setting('eleva.platform_admin', true) = 'true');

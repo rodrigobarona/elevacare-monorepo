@@ -79,8 +79,8 @@ export const ERS_REGISTRATION_NUMBER_MAX_LENGTH = 32
 
 /**
  * Staff licence-verification checklist. Every item must be confirmed before
- * an application is approved; `register_checked` is also enforced by a DB
- * CHECK on `become_partner_applications` (status = 'approved').
+ * an application is approved. A DB CHECK on `become_partner_applications`
+ * repeats this list (status = 'approved'); keep both in step.
  */
 export const LICENCE_CHECKLIST_ITEMS = [
   /** Licence found, active, in the Ordem's public register. */

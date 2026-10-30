@@ -33,8 +33,8 @@ export async function getLatestPartnerApplication(
 /**
  * File the licence for staff review. An open application (pending or
  * needs_changes) is refreshed in place back to `pending` with the new
- * licence snapshot; otherwise a new `pending` row is inserted. Internal —
- * call only inside an audited transaction.
+ * licence snapshot; otherwise a new `pending` row is inserted. Locks the
+ * expert profile row. Internal — call only inside an audited transaction.
  */
 export async function _submitPartnerApplication(
   tx: Tx,
@@ -45,6 +45,14 @@ export async function _submitPartnerApplication(
   }
 ): Promise<{ application: main.BecomePartnerApplication; refreshed: boolean }> {
   const t = main.becomePartnerApplications
+  // Serialise submissions per profile, including the first one (no open row
+  // to lock yet), so concurrent calls never race the open-application index.
+  await tx
+    .select({ id: main.expertProfiles.id })
+    .from(main.expertProfiles)
+    .where(eq(main.expertProfiles.id, input.expertProfileId))
+    .limit(1)
+    .for("update")
   const [open] = await tx
     .select({ id: t.id })
     .from(t)

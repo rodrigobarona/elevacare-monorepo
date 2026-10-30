@@ -175,12 +175,76 @@ describe.skipIf(!enabled || !databaseUrl)(
       expect(rows).toHaveLength(1)
     })
 
-    it("refuses an approval without a recorded verification", async () => {
+    it("never lets the expert org decide its own application", async () => {
+      const decided = await withOrgContext(orgA, (tx) =>
+        tx
+          .update(becomePartnerApplications)
+          .set({ status: "rejected", reason: "self-decided" })
+          .where(eq(becomePartnerApplications.id, applicationA))
+          .returning({ id: becomePartnerApplications.id })
+      ).catch(() => "refused" as const)
+      expect(decided).toBe("refused")
+
+      const resubmitted = await withOrgContext(orgA, (tx) =>
+        tx
+          .update(becomePartnerApplications)
+          .set({ licenceNumber: "12346", status: "pending" })
+          .where(eq(becomePartnerApplications.id, applicationA))
+          .returning({ id: becomePartnerApplications.id })
+      )
+      expect(resubmitted).toHaveLength(1)
+    })
+
+    it("freezes decided applications for the expert org", async () => {
+      const decided = randomUUID()
+      await withPlatformAdminContext((tx) =>
+        tx.insert(becomePartnerApplications).values({
+          id: decided,
+          orgId: orgB,
+          expertProfileId: profileB,
+          ...LICENCE,
+          status: "rejected",
+          reason: "licence not found",
+          reviewerUserId: staff,
+          reviewedAt: new Date(),
+        })
+      )
+
+      const reopened = await withOrgContext(orgB, (tx) =>
+        tx
+          .update(becomePartnerApplications)
+          .set({ status: "pending", reviewerUserId: null, reviewedAt: null })
+          .where(eq(becomePartnerApplications.id, decided))
+          .returning({ id: becomePartnerApplications.id })
+      )
+      expect(reopened).toHaveLength(0)
+
+      const deleted = await withOrgContext(orgB, (tx) =>
+        tx
+          .delete(becomePartnerApplications)
+          .where(eq(becomePartnerApplications.id, decided))
+          .returning({ id: becomePartnerApplications.id })
+      )
+      expect(deleted).toHaveLength(0)
+
+      await withPlatformAdminContext((tx) =>
+        tx
+          .delete(becomePartnerApplications)
+          .where(eq(becomePartnerApplications.id, decided))
+      )
+    })
+
+    it("refuses an approval without a complete verification", async () => {
       await expect(
         withPlatformAdminContext((tx) =>
           tx
             .update(becomePartnerApplications)
-            .set({ status: "approved", reviewedAt: new Date() })
+            .set({
+              status: "approved",
+              reviewerUserId: staff,
+              reviewedAt: new Date(),
+              checklist: { register_checked: true },
+            })
             .where(eq(becomePartnerApplications.id, applicationA))
         )
       ).rejects.toThrow()
@@ -192,7 +256,11 @@ describe.skipIf(!enabled || !databaseUrl)(
             status: "approved",
             reviewerUserId: staff,
             reviewedAt: new Date(),
-            checklist: { register_checked: true },
+            checklist: {
+              register_checked: true,
+              name_matches: true,
+              ers_checked: true,
+            },
           })
           .where(eq(becomePartnerApplications.id, applicationA))
           .returning({ status: becomePartnerApplications.status })
@@ -202,7 +270,7 @@ describe.skipIf(!enabled || !databaseUrl)(
 
     it("refuses needs_changes without a reason", async () => {
       await expect(
-        withOrgContext(orgB, (tx) =>
+        withPlatformAdminContext((tx) =>
           tx.insert(becomePartnerApplications).values({
             orgId: orgB,
             expertProfileId: profileB,

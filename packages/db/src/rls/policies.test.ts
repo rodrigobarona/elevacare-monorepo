@@ -106,20 +106,39 @@ describe("buildMainRlsStatements", () => {
     }
   })
 
-  it.each(["expert_profiles", "become_partner_applications"])(
-    "includes platform_admin bypass for %s",
-    (table) => {
-      const policy = stmts.find((s) =>
-        s.startsWith(`CREATE POLICY ${table}_tenant_isolation`)
-      )
-      expect(policy).toContain(
-        "org_id::text = current_setting('eleva.org_id', true)"
-      )
-      expect(policy).toContain(
-        "current_setting('eleva.platform_admin', true) = 'true'"
-      )
-    }
-  )
+  it("includes platform_admin bypass for expert_profiles", () => {
+    const policy = stmts.find((s) =>
+      s.startsWith("CREATE POLICY expert_profiles_tenant_isolation")
+    )
+    expect(policy).toContain(
+      "org_id::text = current_setting('eleva.org_id', true)"
+    )
+    expect(policy).toContain(
+      "current_setting('eleva.platform_admin', true) = 'true'"
+    )
+  })
+
+  it("lets the expert org file and refile, never decide or delete", () => {
+    expect(TENANT_TABLES).not.toContain("become_partner_applications")
+    const policies = stmts.filter((s) =>
+      s.startsWith("CREATE POLICY become_partner_applications_")
+    )
+    expect(policies).toHaveLength(4)
+    const unreviewed =
+      "WITH CHECK (org_id::text = current_setting('eleva.org_id', true) AND status = 'pending' AND reviewer_user_id IS NULL AND reviewed_at IS NULL)"
+    const insert = policies.find((s) => s.includes("FOR INSERT"))
+    expect(insert).toContain(unreviewed)
+    const update = policies.find((s) => s.includes("FOR UPDATE"))
+    expect(update).toContain("status IN ('pending', 'needs_changes')")
+    expect(update).toContain(unreviewed)
+    expect(
+      policies.filter((s) => s.includes("FOR DELETE") || !s.includes(" FOR "))
+    ).toEqual([
+      expect.stringContaining(
+        "become_partner_applications_staff_write ON become_partner_applications USING (current_setting('eleva.platform_admin', true) = 'true')"
+      ),
+    ])
+  })
 
   it("includes platform_admin bypass for expert_invoices", () => {
     const policy = stmts.find((s) =>

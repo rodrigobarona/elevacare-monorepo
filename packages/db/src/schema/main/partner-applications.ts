@@ -52,10 +52,13 @@ export type PartnerApplicationChecklist = Record<string, boolean>
  * review exactly what the expert sent even if the profile changes later.
  *
  * An `approved` row is the licence verification record: licence snapshot,
- * reviewer, `reviewed_at` and a confirmed `register_checked` item (DB CHECK).
+ * reviewer, `reviewed_at` and every `LICENCE_CHECKLIST_ITEMS` check
+ * confirmed as JSON `true` (DB CHECK).
  *
- * RLS: tenant-owned plus the `eleva.platform_admin` bypass so the staff
- * review queue can read and decide across orgs.
+ * RLS: tenant-owned reads plus the `eleva.platform_admin` bypass for the
+ * staff queue. The expert org may only file a pending, unreviewed row or
+ * refile an open one; decisions and deletes are staff-only, so an approved
+ * row cannot be rewritten (`PARTNER_APPLICATION_TABLES` in rls/policies).
  */
 export const becomePartnerApplications = pgTable(
   "become_partner_applications",
@@ -112,15 +115,28 @@ export const becomePartnerApplications = pgTable(
     ),
     approvedVerificationChk: check(
       "become_partner_applications_approved_verification",
-      sql`status <> 'approved' OR (reviewer_user_id IS NOT NULL AND reviewed_at IS NOT NULL AND checklist->>'register_checked' = 'true')`
+      sql`status <> 'approved' OR (reviewer_user_id IS NOT NULL AND reviewed_at IS NOT NULL AND checklist @> '{"register_checked": true, "name_matches": true, "ers_checked": true}'::jsonb)`
     ),
     checklistShapeChk: check(
       "become_partner_applications_checklist_shape",
       sql`jsonb_typeof(checklist) = 'object'`
     ),
-    tenantPolicy: pgPolicy("become_partner_applications_tenant_isolation", {
+    readPolicy: pgPolicy("become_partner_applications_read", {
+      for: "select",
       using: sql`org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true'`,
-      withCheck: sql`org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true'`,
+    }),
+    expertFilePolicy: pgPolicy("become_partner_applications_expert_file", {
+      for: "insert",
+      withCheck: sql`org_id::text = current_setting('eleva.org_id', true) AND status = 'pending' AND reviewer_user_id IS NULL AND reviewed_at IS NULL`,
+    }),
+    expertRefilePolicy: pgPolicy("become_partner_applications_expert_refile", {
+      for: "update",
+      using: sql`org_id::text = current_setting('eleva.org_id', true) AND status IN ('pending', 'needs_changes')`,
+      withCheck: sql`org_id::text = current_setting('eleva.org_id', true) AND status = 'pending' AND reviewer_user_id IS NULL AND reviewed_at IS NULL`,
+    }),
+    staffWritePolicy: pgPolicy("become_partner_applications_staff_write", {
+      using: sql`current_setting('eleva.platform_admin', true) = 'true'`,
+      withCheck: sql`current_setting('eleva.platform_admin', true) = 'true'`,
     }),
   })
 )
