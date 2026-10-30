@@ -723,10 +723,15 @@ Each entry should include:
     the earlier preference to collect the member's NIF through Stripe `tax_id_collection`.
   - Accountant to confirm the bookkeeping of an Eleva-funded discount (third-party-funded
     voucher on the expert's invoice; marketing cost for Eleva).
+  - **Two payment surfaces, one per caller (2026-10-29).** The browser funnel uses Checkout
+    Sessions (#283). `POST /payments/intent` stays as the **API-only** path for agents and M2M
+    callers, the daily booking probe and the API-level smokes (request-to-book, cancellation
+    refunds), which cannot run Stripe Elements; it has no promotion codes. A hold can only ever
+    have one of the two (`unavailable` otherwise).
 - Owner: engineering
-- Status: `active` (server), funnel switch in the follow-up PR
+- Status: `active`
 - Related: Phase 04.2 payments, Instant Book 2026-10-13, Stripe Checkout
-- Next review: after the funnel uses Checkout Sessions and the PaymentIntent path is removed.
+- Next review: before launch, with the first live (non-test) Stripe run.
 
 ### 2026-10-13: Instant Book vs Request to book (Airbnb-style)
 
