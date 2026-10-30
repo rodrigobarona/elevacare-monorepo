@@ -1,17 +1,33 @@
 ---
 title: Aviso sobre tratamiento con IA — Eleva.care
-description: Cómo Eleva usa funciones asistidas por IA y Vercel AI Gateway con inferencia en la UE.
-lastUpdated: 2026-10-22
-summary: Asistencia de editor, traducción, proveedor, retención y revisión humana.
+description: Cómo Eleva usa funciones asistidas por IA, incluidos los borradores de informes de sesión, y Vercel AI Gateway con inferencia en la UE.
+lastUpdated: 2026-10-29
+summary: Asistencia de editor, traducción, borradores de informes de sesión, transcripción en directo, proveedor, retención y revisión humana.
 ---
 
 ## Funciones
 
-Eleva puede usar IA para **sugerir ediciones** en el constructor de servicios del experto y para **borradores de traducción** de texto visible entre inglés, portugués y español. Estas funciones asisten a personas; expertos y editores siguen siendo responsables del contenido publicado.
+Eleva puede usar IA en los casos siguientes. Estas funciones ayudan a las personas: expertos y editores siguen siendo responsables de lo que publican, y la IA no toma decisiones clínicas.
+
+- **Ayuda a la redacción para expertos.** La IA puede **sugerir ediciones** en el constructor de servicios del experto y preparar **borradores de traducción** de texto visible entre inglés, portugués y español. Estas solicitudes no incluyen datos de miembros ni datos de salud.
+- **Borradores de informes de sesión.** Cuando la función está activa, el experto puede pedir un **borrador asistido por IA** del informe de sesión, redactado para que lo revise el propio experto. Los detalles están en la sección siguiente.
+- **Transcripción en directo.** Si decide activarla, el audio de su sesión en línea se transcribe en directo para el experto que la presta. La grabación en la nube sigue desactivada.
+
+## Borradores de informes de sesión
+
+- **Primero, su consentimiento.** Solo se puede crear un borrador si ha dado su consentimiento específico al tratamiento con IA, al reservar o en los ajustes de Privacidad.
+- **Qué utiliza el borrador.** Las notas de sesión que el experto escribió para esa reserva y, si lo hay, el texto que usted escribió al reservar.
+- **El experto decide.** El borrador es solo un punto de partida. El experto lo revisa, lo edita y sigue siendo responsable del informe. Nunca se publica automáticamente: nada le llega hasta que el experto publique el informe.
+- **Conservación.** El borrador se guarda cifrado en el registro de la sesión. Los borradores que el experto no acepte se eliminan a los 90 días.
+- **Retirar el consentimiento.** Puede retirarlo en cualquier momento en los ajustes de Privacidad. A partir de entonces no se pueden crear nuevos borradores y la transcripción se detiene desde la siguiente llamada. La retirada no elimina las transcripciones ni los informes ya guardados en su registro de sesión cifrado.
 
 ## Proveedor y ubicación
 
 Las solicitudes pasan por **Vercel AI Gateway** a modelos aprobados (actualmente modelos OpenAI vía gateway). Configuramos **inferencia en región UE** (la solicitud falla si no puede ejecutarse en la zona UE) y **cero retención de datos** en el gateway cuando nuestro plan lo permite. Los proveedores pueden retener contenido marcado para revisión de abuso según sus términos.
+
+Los borradores de informes de sesión tienen reglas más estrictas: solo se envían si la solicitud puede ejecutarse con un proveedor con cero retención de datos en la zona UE. Si esto no se puede confirmar, no se crea ningún borrador.
+
+La transcripción en directo pasa por nuestro proveedor de vídeo, Daily, y por su proveedor de conversión de voz a texto, Deepgram, con tratamiento en la UE. Consulte [Subencargados](/es/trust/sub-processors).
 
 ## Entrenamiento
 

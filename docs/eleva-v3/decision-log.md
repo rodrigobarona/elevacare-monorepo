@@ -130,11 +130,14 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
   Checkout; Eleva collects the member's optional NIF for the expert's invoice
   and does not invoice the session.
 - Change: rewrote `expert-agreement`, `terms`, `payments`, `privacy` and
-  `trust/ers` in pt/en/es; bumped `CONSENT_DOCUMENT_VERSION` to
+  `trust/ers`, and revised `ai-processing`, `trust/dpa` (Art. 28 terms and
+  vendor list) and `trust/sub-processors`, in pt/en/es; bumped `CONSENT_DOCUMENT_VERSION` to
   **`2026-10-29`**.
 - Out of scope (not shipped by this change): automated expert-cancel and
   no-show refund flows, a no-show time threshold, the external DPO
-  appointment itself, lawyer review of the new text, the DPA page refresh.
+  appointment itself, lawyer review of the new text, an ERS number field on
+  expert profiles (the agreement requires it to be displayed; the product has
+  no field yet).
 - Owner: founder (policy) + engineering (content).
 - Status: `active` — working pre-launch. D-06 finance + legal re-sign is still
   pending (not waived); the published text lists points for lawyer review in
