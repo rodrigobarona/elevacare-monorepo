@@ -122,14 +122,29 @@ export async function sendViaResend(
   return { providerId: data.id }
 }
 
+/**
+ * Resend rejections that no retry can fix (a malformed or refused `to`,
+ * an invalid payload). Marked `permanent` so the domain-event publisher
+ * dead-letters the delivery at once instead of retrying it 10 times.
+ */
+const PERMANENT_RESEND_ERRORS = new Set([
+  "validation_error",
+  "invalid_parameter",
+  "missing_required_field",
+])
+
 function throwResendError(
   operation: string,
   error: { name?: string; message: string }
 ): never {
-  throw new Error(
+  const failure = new Error(
     `[email] resend ${operation} failed: ${error.name ?? "Error"}: ${error.message}`,
     { cause: error }
-  )
+  ) as Error & { permanent?: boolean }
+  if (error.name && PERMANENT_RESEND_ERRORS.has(error.name)) {
+    failure.permanent = true
+  }
+  throw failure
 }
 
 function emailMatches(listed: ListedEmail, recipient: string): boolean {

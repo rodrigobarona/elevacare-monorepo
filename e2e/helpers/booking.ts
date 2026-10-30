@@ -2,8 +2,16 @@ import { expect, type Frame, type Locator, type Page } from "@playwright/test"
 
 export const apiUrl = process.env.E2E_API_URL ?? "http://127.0.0.1:3002"
 
+/**
+ * Loopback runs use @example.com (the API skips Resend for it outside
+ * deployed runtimes). Against a deployed site, use Resend's test inbox so
+ * confirmation mail is accepted instead of rejected as a validation error.
+ */
 export function uniqueGuestEmail(prefix = "booking"): string {
-  return `${prefix}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}@example.com`
+  const tag = `${prefix}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}`
+  const base = process.env.E2E_BASE_URL ?? "http://localhost:3000"
+  const deployed = !/^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(base)
+  return deployed ? `delivered+${tag}@resend.dev` : `${tag}@example.com`
 }
 
 export async function walkFunnelToDetails(

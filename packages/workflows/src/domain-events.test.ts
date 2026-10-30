@@ -212,3 +212,31 @@ describe("publishPendingDomainEvents", () => {
     )
   })
 })
+
+describe("isPermanentFailure", () => {
+  it("detects a permanent error directly, through cause, or in an AggregateError", async () => {
+    const { isPermanentFailure } = await import("./domain-events")
+    const permanent = Object.assign(new Error("validation_error"), {
+      permanent: true,
+    })
+    expect(isPermanentFailure(permanent)).toBe(true)
+    expect(isPermanentFailure(new Error("wrap", { cause: permanent }))).toBe(
+      true
+    )
+    expect(isPermanentFailure(new AggregateError([permanent], "send"))).toBe(
+      true
+    )
+  })
+
+  it("keeps retrying transient or mixed failures", async () => {
+    const { isPermanentFailure } = await import("./domain-events")
+    const permanent = Object.assign(new Error("validation_error"), {
+      permanent: true,
+    })
+    expect(isPermanentFailure(new Error("timeout"))).toBe(false)
+    expect(
+      isPermanentFailure(new AggregateError([permanent, new Error("503")]))
+    ).toBe(false)
+    expect(isPermanentFailure(new AggregateError([]))).toBe(false)
+  })
+})
