@@ -14,6 +14,7 @@ import {
 } from "@eleva/scheduling"
 import { emitPaymentPayoutNotificationEvent } from "../emit-domain-event"
 import { stripe } from "./client"
+import { foreignEnvironmentReason } from "./stripe-environment"
 import {
   isMissingBillingCustomerError,
   persistConnectStatus,
@@ -375,6 +376,8 @@ function extractErrorDiagnostic(err: unknown): ExtractedErrorDiagnostic {
 }
 
 async function dispatchEvent(event: Stripe.Event): Promise<DispatchOutcome> {
+  const foreign = foreignEnvironmentReason(event)
+  if (foreign) return { kind: "ignored", reason: foreign, resolvedOrgId: null }
   switch (event.type) {
     // SaaS subscription lifecycle.
     case "customer.subscription.created":
