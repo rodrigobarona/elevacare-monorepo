@@ -167,6 +167,68 @@ test.describe("phase 04 live Stripe booking", () => {
     )
   })
 
+  test("pays with an Eleva-funded booking promotion code", async ({ page }) => {
+    // Needs a Stripe test promotion code with metadata eleva_scope=booking
+    // (20% off), e.g. E2EBOOK20 on the shared test account.
+    const code = process.env.E2E_BOOKING_PROMO_CODE
+    test.skip(
+      !code,
+      "set E2E_BOOKING_PROMO_CODE (20% off, eleva_scope=booking)"
+    )
+    test.setTimeout(150_000)
+    const book = await page.goto("/fisiomota/first-visit")
+    test.skip(book?.status() !== 200, "needs seeded fisiomota / first-visit")
+
+    await walkFunnelToDetails(page)
+    await fillGuestAndConsents(page, {
+      name: "E2E Promo",
+      email: uniqueGuestEmail("stripepromo"),
+    })
+    await page.getByTestId("booking-continue-details").click()
+    await expect(page.getByTestId("booking-pay-submit")).toBeVisible({
+      timeout: 45_000,
+    })
+
+    // An unscoped or unknown code is refused inline, total unchanged.
+    await page.getByTestId("booking-promo").fill("NOT-A-REAL-CODE")
+    await page.getByTestId("booking-promo-apply").click()
+    await expect(page.locator("#booking-promo-help")).toHaveAttribute(
+      "role",
+      "alert",
+      { timeout: 30_000 }
+    )
+    await expect(page.getByTestId("booking-pay-submit")).toContainText("60")
+
+    // A booking-scoped code rebuilds the session with the discount.
+    await page.getByTestId("booking-promo").fill(code!)
+    await page.getByTestId("booking-promo").press("Enter")
+    await expect(page.getByTestId("booking-promo-remove")).toBeVisible({
+      timeout: 45_000,
+    })
+    await expect(page.getByTestId("booking-checkout-totals")).toContainText(
+      "48"
+    )
+    await expect(page.getByTestId("booking-pay-submit")).toContainText("48")
+
+    await fillStripeTestCard(page)
+    const confirm = page.waitForResponse(
+      (res) =>
+        res.url().includes("/bookings/confirm") &&
+        res.request().method() === "POST",
+      { timeout: 60_000 }
+    )
+    const pay = page.getByTestId("booking-pay-submit")
+    await pay.evaluate((el: HTMLButtonElement) => {
+      el.closest("form")?.requestSubmit(el)
+    })
+    expect((await confirm).status()).toBe(201)
+    await expect(page.getByTestId("booking-done-heading")).toHaveAttribute(
+      "data-state",
+      "confirmed",
+      { timeout: 45_000 }
+    )
+  })
+
   test("pays a seeded paid offer with MB WAY test phone (processing hold)", async ({
     page,
   }) => {

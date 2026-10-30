@@ -187,6 +187,7 @@ export function BookingFunnel({
   const aiProcessingHref = aiProcessingConsent?.href
   const [reservation, setReservation] = useState<Reservation | null>(null)
   const [payment, setPayment] = useState<Payment | null>(null)
+  const [appliedPromo, setAppliedPromo] = useState<string | null>(null)
   const [nowMs, setNowMs] = useState(() => Date.now())
   const [formError, setFormError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -952,6 +953,26 @@ export function BookingFunnel({
                 publishableKey={payment.publishableKey}
                 clientSecret={payment.clientSecret}
                 locale={locale}
+                appliedPromoCode={appliedPromo}
+                onPromoCodeChange={async (code) => {
+                  try {
+                    const next =
+                      await createPublicApiClient().payments.checkoutSession({
+                        reservationId: reservation.reservationId,
+                        reservationToken: reservation.reservationToken,
+                        returnPath: checkoutReturnPath(),
+                        ...(code ? { promoCode: code } : {}),
+                      })
+                    setPayment(next)
+                    setAppliedPromo(code)
+                    return null
+                  } catch (error) {
+                    return error instanceof ApiClientError &&
+                      error.body?.error === "PROMO_INVALID"
+                      ? t("pay.promoInvalid")
+                      : t("pay.promoFailed")
+                  }
+                }}
                 labels={{
                   loading: t("pay.loading"),
                   loadFailed: t("pay.loadFailed"),

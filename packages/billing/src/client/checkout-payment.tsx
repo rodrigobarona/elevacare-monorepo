@@ -1,13 +1,6 @@
 "use client"
 
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type FormEvent,
-  type ReactNode,
-} from "react"
+import { useMemo, useState, type FormEvent, type ReactNode } from "react"
 import {
   CheckoutElementsProvider,
   PaymentElement,
@@ -52,14 +45,16 @@ export type BookingCheckoutLabels = {
 
 /**
  * Paid booking payment on a Stripe Checkout Session (`ui_mode: "elements"`).
- * Promotion codes are applied on the session, so Stripe validates them and
- * owns the discounted total shown here.
+ * Promotion codes are validated by the Eleva API, which returns a new
+ * session with the discount attached (`onPromoCodeChange`); Stripe owns the
+ * discounted total shown here.
  */
 export function BookingCheckoutPayment({
   publishableKey,
   clientSecret,
   locale,
-  initialPromoCode,
+  appliedPromoCode,
+  onPromoCodeChange,
   labels,
   appearanceTheme = "light",
   onProcessingChange,
@@ -69,7 +64,13 @@ export function BookingCheckoutPayment({
   publishableKey: string
   clientSecret: string
   locale: "en" | "pt" | "es"
-  initialPromoCode?: string
+  /** Code attached to the current session, if any. */
+  appliedPromoCode?: string | null
+  /**
+   * Asks the API for a session with this code (or none). Resolves to an
+   * error message to show, or null once the new session is in place.
+   */
+  onPromoCodeChange: (code: string | null) => Promise<string | null>
   labels: BookingCheckoutLabels
   appearanceTheme?: "light" | "dark"
   onProcessingChange?: (isProcessing: boolean) => void
@@ -92,7 +93,8 @@ export function BookingCheckoutPayment({
       options={{ clientSecret, elementsOptions: { appearance } }}
     >
       <CheckoutForm
-        initialPromoCode={initialPromoCode}
+        appliedPromoCode={appliedPromoCode ?? null}
+        onPromoCodeChange={onPromoCodeChange}
         labels={labels}
         onProcessingChange={onProcessingChange}
         onSettled={onSettled}
@@ -104,55 +106,49 @@ export function BookingCheckoutPayment({
 }
 
 function CheckoutForm({
-  initialPromoCode,
+  appliedPromoCode,
+  onPromoCodeChange,
   labels,
   onProcessingChange,
   onSettled,
   children,
 }: {
-  initialPromoCode?: string
+  appliedPromoCode: string | null
+  onPromoCodeChange: (code: string | null) => Promise<string | null>
   labels: BookingCheckoutLabels
   onProcessingChange?: (isProcessing: boolean) => void
   onSettled: (outcome: BookingCheckoutOutcome) => void
   children?: ReactNode
 }) {
   const state = useCheckoutElements()
-  const [promo, setPromo] = useState(initialPromoCode ?? "")
+  const [promo, setPromo] = useState(appliedPromoCode ?? "")
   const [promoError, setPromoError] = useState<string | null>(null)
   const [promoBusy, setPromoBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
-  const autoApplied = useRef(false)
 
   const checkout = state.type === "success" ? state.checkout : null
-  const applied = checkout?.discountAmounts?.[0] ?? null
+  const discount = appliedPromoCode
+    ? (checkout?.discountAmounts?.[0] ?? null)
+    : null
 
-  async function applyPromo(code: string) {
-    if (!checkout) return
-    const trimmed = code.trim().toUpperCase()
-    if (trimmed.length < 2) return
+  async function changePromo(code: string | null) {
     setPromoBusy(true)
     setPromoError(null)
-    const result = await checkout.applyPromotionCode(trimmed)
+    // On success the provider remounts with the new session.
+    const message = await onPromoCodeChange(code)
     setPromoBusy(false)
-    if (result.type === "error") setPromoError(labels.promoInvalid)
+    if (message) setPromoError(message)
+    else if (!code) setPromo("")
   }
 
-  async function removePromo() {
-    if (!checkout) return
-    setPromoBusy(true)
-    setPromoError(null)
-    await checkout.removePromotionCode()
-    setPromo("")
-    setPromoBusy(false)
+  function applyPromo() {
+    const code = promo.trim().toUpperCase()
+    if (code.length < 2 || promoBusy || isProcessing || appliedPromoCode) {
+      return
+    }
+    void changePromo(code)
   }
-
-  useEffect(() => {
-    if (!checkout || autoApplied.current || !initialPromoCode) return
-    autoApplied.current = true
-    void applyPromo(initialPromoCode)
-    // Apply the code typed earlier in the funnel once, when Stripe is ready.
-  }, [checkout, initialPromoCode])
 
   function markProcessing(next: boolean) {
     setIsProcessing(next)
@@ -163,7 +159,7 @@ function CheckoutForm({
     event.preventDefault()
     // Not gated on `canConfirm`: confirm() surfaces Stripe's own field errors,
     // which a silently disabled button would hide.
-    if (!checkout || isProcessing) return
+    if (!checkout || isProcessing || promoBusy) return
     markProcessing(true)
     setError(null)
     try {
@@ -217,23 +213,28 @@ function CheckoutForm({
           <input
             id="booking-promo"
             data-testid="booking-promo"
-            value={applied ? (applied.promotionCode ?? promo) : promo}
+            value={appliedPromoCode ?? promo}
             onChange={(event) => setPromo(event.target.value)}
             onKeyDown={(event) => {
               // Enter inside the code field must apply it, never submit the
               // payment form (which would charge the card).
               if (event.key !== "Enter") return
               event.preventDefault()
-              if (!applied && !promoBusy) void applyPromo(promo)
+              applyPromo()
             }}
-            readOnly={Boolean(applied) || promoBusy}
+            readOnly={Boolean(appliedPromoCode) || promoBusy}
+            aria-invalid={promoError ? true : undefined}
+            aria-describedby="booking-promo-help"
             autoComplete="off"
-            className="h-10 flex-1 rounded-xl border border-input bg-background px-3 text-sm"
+            autoCapitalize="characters"
+            spellCheck={false}
+            className="h-10 flex-1 rounded-xl border border-input bg-background px-3 text-sm uppercase"
           />
-          {applied ? (
+          {appliedPromoCode ? (
             <button
               type="button"
-              onClick={() => void removePromo()}
+              data-testid="booking-promo-remove"
+              onClick={() => void changePromo(null)}
               disabled={promoBusy || isProcessing}
               className="h-10 rounded-4xl border border-input px-4 text-sm font-medium disabled:opacity-50"
             >
@@ -243,7 +244,7 @@ function CheckoutForm({
             <button
               type="button"
               data-testid="booking-promo-apply"
-              onClick={() => void applyPromo(promo)}
+              onClick={applyPromo}
               disabled={promoBusy || isProcessing || promo.trim().length < 2}
               className="h-10 rounded-4xl border border-input px-4 text-sm font-medium disabled:opacity-50"
             >
@@ -251,25 +252,29 @@ function CheckoutForm({
             </button>
           )}
         </div>
-        {promoError ? (
-          <p role="alert" className="text-sm text-destructive">
-            {promoError}
-          </p>
-        ) : (
-          <p className="text-sm text-muted-foreground">{labels.promoHint}</p>
-        )}
+        <p
+          id="booking-promo-help"
+          role={promoError ? "alert" : undefined}
+          className={
+            promoError
+              ? "text-sm text-destructive"
+              : "text-sm text-muted-foreground"
+          }
+        >
+          {promoError ?? labels.promoHint}
+        </p>
       </div>
 
       <dl
         className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm"
         data-testid="booking-checkout-totals"
       >
-        {applied ? (
+        {discount ? (
           <>
             <dt className="text-muted-foreground">{labels.subtotal}</dt>
             <dd className="text-right">{total.subtotal.amount}</dd>
             <dt className="text-muted-foreground">
-              {labels.discount} · {applied.displayName}
+              {labels.discount} · {appliedPromoCode}
             </dt>
             <dd className="text-right">−{total.discount.amount}</dd>
           </>

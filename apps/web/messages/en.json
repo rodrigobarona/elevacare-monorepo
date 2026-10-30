@@ -476,7 +476,8 @@
       "promoInvalid": "This code isn't valid for this booking. Check it or pay the full price.",
       "subtotal": "Price",
       "discount": "Discount",
-      "total": "Total"
+      "total": "Total",
+      "promoFailed": "We couldn't update the code right now. Try again in a moment."
     },
     "done": {
       "heading": "Your reservation is confirmed",

@@ -476,7 +476,8 @@
       "promoInvalid": "Este código não é válido para esta marcação. Verifique-o ou pague o preço total.",
       "subtotal": "Preço",
       "discount": "Desconto",
-      "total": "Total"
+      "total": "Total",
+      "promoFailed": "Não foi possível atualizar o código agora. Tente de novo dentro de momentos."
     },
     "done": {
       "heading": "A sua reserva está confirmada",
