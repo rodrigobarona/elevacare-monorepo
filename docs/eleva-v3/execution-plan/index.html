@@ -3196,7 +3196,7 @@ Identity, Phase 7 appends Invoicing. <strong>As built in 4B</strong>, setup comp
 straight to <code>active</code>; no application row is written, and <code>become_partner_applications</code> does not
 exist (migration 0013 dropped it). <strong>Correction 2026-10-29:</strong> the licence gate moves to the
 Phase 12 deliverable, which recreates the table (with licence fields) and changes completion to
-create a <code>pending</code> application while the profile stays <code>approved</code> until staff verify it. Steps are declared in one registry (<code>onboarding-steps.ts</code>) so later phases append,
+create a <code>pending</code> application while the profile stays <code>approved</code> until staff verify it (shipped 2026-10-30, see the decision log). Steps are declared in one registry (<code>onboarding-steps.ts</code>) so later phases append,
 never fork the shell.</li>
 <li><strong>Availability</strong> <code>/[orgSlug]/availability</code>: schedules list (name, timezone, default badge, &quot;used
 by&quot; mode chips); editor with weekly grid (drag to create ranges, copy day to others, split
