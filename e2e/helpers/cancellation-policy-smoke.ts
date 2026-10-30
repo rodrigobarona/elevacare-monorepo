@@ -327,7 +327,8 @@ export async function runPolicySmokeCase(
       paymentIntentId: intentBody.paymentIntentId,
     },
   })
-  expect(confirm.status(), await confirm.text()).toBe(201)
+  // 200 when a forwarded webhook confirmed the booking first.
+  expect([200, 201], await confirm.text()).toContain(confirm.status())
   const confirmBody = (await confirm.json()) as { bookingId: string }
   expect(confirmBody.bookingId).toBe(intentBody.bookingId)
 
