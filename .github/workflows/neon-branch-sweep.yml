@@ -37,8 +37,17 @@ jobs:
             exit 1
           fi
           api="https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}"
-          branches=$(curl -fsS -H "Authorization: Bearer ${NEON_API_KEY}" "${api}/branches")
-          echo "$branches" | jq -r '.branches[] | select(.name | test("^pr-[0-9]+$")) | "\(.id) \(.name)"' |
+          # The branches list is paginated: follow pagination.next to the end.
+          all="[]"
+          cursor=""
+          while :; do
+            url="${api}/branches?limit=100${cursor:+&cursor=${cursor}}"
+            page=$(curl -fsS -H "Authorization: Bearer ${NEON_API_KEY}" "$url")
+            all=$(jq -c --argjson acc "$all" '$acc + .branches' <<< "$page")
+            cursor=$(jq -r '.pagination.next // empty' <<< "$page")
+            [ -z "$cursor" ] && break
+          done
+          echo "$all" | jq -r '.[] | select(.name | test("^pr-[0-9]+$")) | "\(.id) \(.name)"' |
           while read -r id name; do
             pr="${name#pr-}"
             state=$(gh pr view "$pr" --repo "$REPO" --json state --jq .state 2>/dev/null || echo "UNKNOWN")
