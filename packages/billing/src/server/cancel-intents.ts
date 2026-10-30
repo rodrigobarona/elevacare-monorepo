@@ -50,7 +50,7 @@ const UUID_RE =
 
 export type ExpiredReservationIntentDecision =
   | { action: "release"; cancelledIntentIds: string[] }
-  | { action: "keep"; paymentIntentId: string; reason: string }
+  | { action: "keep"; paymentIntentId: string | null; reason: string }
   | { action: "retry"; reason: "search_empty" }
 
 /**
@@ -65,9 +65,14 @@ export type ExpiredReservationIntentDecision =
 export async function settleExpiredReservationIntent(input: {
   reservationId: string
   paymentIntentId: string | null
+  /** Set when the hold is paid through a booking Checkout Session. */
+  checkoutSessionId?: string | null
   searchByReservation: boolean
   searchMissIsFinal: boolean
 }): Promise<ExpiredReservationIntentDecision> {
+  if (input.checkoutSessionId && !input.paymentIntentId) {
+    return settleExpiredCheckoutSession(input.checkoutSessionId)
+  }
   let intents: { id: string; status: string }[]
   if (input.paymentIntentId) {
     intents = [await stripe().paymentIntents.retrieve(input.paymentIntentId)]
@@ -111,6 +116,45 @@ export async function settleExpiredReservationIntent(input: {
     }
   }
   return { action: "release", cancelledIntentIds }
+}
+
+/**
+ * Checkout Session holds: the session (strongly consistent, unlike
+ * PaymentIntent search) says whether the member started paying. Stripe
+ * owns a session's PaymentIntent and rejects cancelling it directly, so an
+ * unpaid hold is closed by expiring the session (which cancels the intent).
+ * A session whose intent can still settle, or that already completed, is
+ * kept for the confirm webhook.
+ */
+async function settleExpiredCheckoutSession(
+  checkoutSessionId: string
+): Promise<ExpiredReservationIntentDecision> {
+  const session = await stripe().checkout.sessions.retrieve(checkoutSessionId)
+  const intentId =
+    typeof session.payment_intent === "string"
+      ? session.payment_intent
+      : (session.payment_intent?.id ?? null)
+  if (intentId) {
+    const intent = await stripe().paymentIntents.retrieve(intentId)
+    if (IN_FLIGHT_STATUSES.has(intent.status)) {
+      return {
+        action: "keep",
+        paymentIntentId: intentId,
+        reason: intent.status,
+      }
+    }
+  }
+  if (session.status === "complete") {
+    return {
+      action: "keep",
+      paymentIntentId: intentId,
+      reason: "session_complete",
+    }
+  }
+  if (session.status === "open") {
+    await stripe().checkout.sessions.expire(checkoutSessionId)
+  }
+  return { action: "release", cancelledIntentIds: intentId ? [intentId] : [] }
 }
 
 /**

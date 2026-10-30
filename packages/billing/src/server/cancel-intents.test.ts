@@ -3,10 +3,15 @@ import { describe, expect, it, vi, beforeEach } from "vitest"
 const retrieve = vi.fn()
 const cancel = vi.fn()
 const search = vi.fn()
+const sessionRetrieve = vi.fn()
+const sessionExpire = vi.fn()
 
 vi.mock("./client", () => ({
   stripe: () => ({
     paymentIntents: { retrieve, cancel, search },
+    checkout: {
+      sessions: { retrieve: sessionRetrieve, expire: sessionExpire },
+    },
   }),
 }))
 
@@ -196,5 +201,96 @@ describe("settleExpiredReservationIntent", () => {
       paymentIntentId: "pi_race",
       reason: "payment_intent_unexpected_state",
     })
+  })
+})
+
+describe("settleExpiredReservationIntent — Checkout Session holds", () => {
+  beforeEach(() => {
+    retrieve.mockReset()
+    cancel.mockReset()
+    search.mockReset()
+    sessionRetrieve.mockReset()
+    sessionExpire.mockReset()
+  })
+
+  const base = {
+    reservationId: "11111111-1111-4111-8111-111111111111",
+    paymentIntentId: null,
+    checkoutSessionId: "cs_1",
+    searchByReservation: false,
+    searchMissIsFinal: false,
+  }
+
+  it("expires an open session nobody started paying and releases", async () => {
+    sessionRetrieve.mockResolvedValue({
+      status: "open",
+      payment_intent: null,
+      metadata: {},
+    })
+    await expect(settleExpiredReservationIntent(base)).resolves.toEqual({
+      action: "release",
+      cancelledIntentIds: [],
+    })
+    expect(sessionExpire).toHaveBeenCalledWith("cs_1")
+    expect(search).not.toHaveBeenCalled()
+  })
+
+  it("keeps a session whose MB WAY intent is still processing", async () => {
+    sessionRetrieve.mockResolvedValue({
+      status: "open",
+      payment_intent: "pi_mbway",
+      metadata: { reservationId: base.reservationId },
+    })
+    retrieve.mockResolvedValue({ id: "pi_mbway", status: "processing" })
+    await expect(settleExpiredReservationIntent(base)).resolves.toEqual({
+      action: "keep",
+      paymentIntentId: "pi_mbway",
+      reason: "processing",
+    })
+    expect(sessionExpire).not.toHaveBeenCalled()
+  })
+
+  it("expires the session instead of cancelling its unpaid intent", async () => {
+    sessionRetrieve.mockResolvedValue({
+      status: "open",
+      payment_intent: "pi_failed_card",
+      metadata: {},
+    })
+    retrieve.mockResolvedValue({
+      id: "pi_failed_card",
+      status: "requires_payment_method",
+    })
+    await expect(settleExpiredReservationIntent(base)).resolves.toEqual({
+      action: "release",
+      cancelledIntentIds: ["pi_failed_card"],
+    })
+    expect(sessionExpire).toHaveBeenCalledWith("cs_1")
+    expect(cancel).not.toHaveBeenCalled()
+  })
+
+  it("keeps a completed session for the confirm webhook", async () => {
+    sessionRetrieve.mockResolvedValue({
+      status: "complete",
+      payment_intent: null,
+      metadata: {},
+    })
+    await expect(settleExpiredReservationIntent(base)).resolves.toEqual({
+      action: "keep",
+      paymentIntentId: null,
+      reason: "session_complete",
+    })
+  })
+
+  it("releases an already expired session without calling expire", async () => {
+    sessionRetrieve.mockResolvedValue({
+      status: "expired",
+      payment_intent: null,
+      metadata: {},
+    })
+    await expect(settleExpiredReservationIntent(base)).resolves.toEqual({
+      action: "release",
+      cancelledIntentIds: [],
+    })
+    expect(sessionExpire).not.toHaveBeenCalled()
   })
 })

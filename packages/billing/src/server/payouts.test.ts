@@ -60,6 +60,7 @@ let payoutAttempts = 0
 let persistFailOnce = false
 let failUpdateEmpty = false
 let paymentStatus = "succeeded"
+let paymentAmountCents = 10_000
 let bookingStatus = "completed"
 const failureSets: Record<string, unknown>[] = []
 
@@ -80,7 +81,11 @@ vi.mock("@eleva/db", () => {
       if (currentTable === bookingPayments) {
         return [
           {
-            payment: { ...paidPayment, status: paymentStatus },
+            payment: {
+              ...paidPayment,
+              status: paymentStatus,
+              amountCents: paymentAmountCents,
+            },
             bookingStatus,
           },
         ]
@@ -146,7 +151,45 @@ vi.mock("@eleva/audit", () => ({
   },
 }))
 
-const { executeTransfer } = await import("./payouts")
+const { executeTransfer, listPriceCents } = await import("./payouts")
+
+describe("listPriceCents", () => {
+  it("adds the Eleva-funded discount back to what the member paid", () => {
+    expect(listPriceCents({ amountCents: 4800, discountCents: 1200 })).toBe(
+      6000
+    )
+    expect(listPriceCents({ amountCents: 6000, discountCents: 0 })).toBe(6000)
+  })
+})
+
+describe("executeTransfer source charge", () => {
+  beforeEach(() => {
+    paymentAmountCents = 10_000
+    payoutAttempts = 0
+    persistAttempts = 0
+    persistFailOnce = false
+    paymentStatus = "succeeded"
+    bookingStatus = "completed"
+    transferCreate.mockReset()
+    transferCreate.mockResolvedValue({ id: "tr_src" })
+  })
+
+  it("ties the transfer to the charge when the charge covers it", async () => {
+    await executeTransfer(scheduledPayout.id)
+    expect(transferCreate.mock.calls[0]?.[0]).toEqual(
+      expect.objectContaining({ amount: 8500, source_transaction: "ch_test" })
+    )
+  })
+
+  it("funds the transfer from Eleva's balance when a discount makes it exceed the charge", async () => {
+    // €100 list price, Eleva-funded code charged €80: expert still gets €85.
+    paymentAmountCents = 8000
+    await executeTransfer(scheduledPayout.id)
+    const params = transferCreate.mock.calls[0]?.[0] as Record<string, unknown>
+    expect(params.amount).toBe(8500)
+    expect(params).not.toHaveProperty("source_transaction")
+  })
+})
 
 describe("executeTransfer idempotency", () => {
   beforeEach(() => {

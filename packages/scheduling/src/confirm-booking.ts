@@ -7,6 +7,7 @@ import {
   type Tx,
 } from "@eleva/db"
 import { resolveApprovalDeadline } from "@eleva/config"
+import type { BookingBillingAddress } from "@eleva/db/schema"
 import { emitBookingNotificationEvent } from "./emit-domain-event"
 import { ensureSessionRow } from "./ensure-session-row"
 import { emitPaymentFailedEvent } from "./emit-payment-event"
@@ -19,6 +20,21 @@ const BOOKING_LINK_ID_RE =
 
 export { hashReservationToken }
 
+/** The booking Checkout Session behind an intent (`ui_mode: "elements"`). */
+export type BookingCheckoutConfirmSnapshot = {
+  checkoutSessionId: string
+  amountSubtotal: number | null
+  amountTotal: number | null
+  currency: string | null
+  /** Eleva-funded promotion code discount (founder 2026-10-29). */
+  discountCents: number
+  promotionCodeId: string | null
+  customerId: string | null
+  taxId: string | null
+  businessName: string | null
+  billingAddress: BookingBillingAddress | null
+}
+
 export type BookingPaymentIntentSnapshot = {
   id: string
   status: string
@@ -30,6 +46,11 @@ export type BookingPaymentIntentSnapshot = {
     expertOrgId?: string
   }
   paymentMethodType?: string | null
+  /**
+   * Present (possibly null when Stripe has no matching session) only for
+   * intents created by a booking Checkout Session.
+   */
+  checkout?: BookingCheckoutConfirmSnapshot | null
 }
 
 export type ConfirmBookingPaymentInput = {
@@ -109,15 +130,62 @@ export function authorizeConfirmAccess(input: {
   return "ok"
 }
 
-function amountsMatch(
+/**
+ * Plain intents must charge the list price. Checkout Session intents may
+ * charge less only by a Stripe discount: the session subtotal is the list
+ * price and the intent amount is the session total.
+ */
+export function amountsMatch(
   intent: BookingPaymentIntentSnapshot,
   priceCents: number,
   currency: string
 ): boolean {
+  if (intent.currency.toLowerCase() !== currency.toLowerCase()) return false
+  if (intent.checkout === undefined) return intent.amount === priceCents
+  const checkout = intent.checkout
+  if (!checkout) return false
   return (
-    intent.amount === priceCents &&
-    intent.currency.toLowerCase() === currency.toLowerCase()
+    checkout.currency?.toLowerCase() === currency.toLowerCase() &&
+    checkout.amountSubtotal === priceCents &&
+    checkout.amountTotal === intent.amount &&
+    checkout.discountCents === priceCents - intent.amount &&
+    checkout.discountCents >= 0
   )
+}
+
+/**
+ * Checkout Sessions confirm path: proves the caller holds the reservation
+ * capability and names the session bound to it, before any Stripe call.
+ */
+export async function authorizeCheckoutSessionConfirm(input: {
+  reservationId: string
+  reservationToken: string
+  checkoutSessionId: string
+  sessionUserId?: string
+}): Promise<boolean> {
+  const [reservation] = await withPlatformAdminContext(async (tx) =>
+    tx
+      .select({
+        capabilityHash: main.slotReservations.capabilityHash,
+        userId: main.slotReservations.userId,
+        status: main.slotReservations.status,
+        stripeCheckoutSessionId: main.slotReservations.stripeCheckoutSessionId,
+      })
+      .from(main.slotReservations)
+      .where(eq(main.slotReservations.id, input.reservationId))
+      .limit(1)
+  )
+  if (!reservation) return false
+  if (reservation.stripeCheckoutSessionId !== input.checkoutSessionId) {
+    return false
+  }
+  if (!tokensMatch(reservation.capabilityHash, input.reservationToken)) {
+    return false
+  }
+  if (reservation.userId && reservation.userId !== input.sessionUserId) {
+    return false
+  }
+  return reservation.status === "active" || reservation.status === "converted"
 }
 
 export async function confirmBookingPayment(
@@ -146,7 +214,9 @@ export async function confirmBookingPayment(
       sessionUserId: input.sessionUserId,
       status: reservation.status,
       linkRevoked,
-      hasBoundIntent: Boolean(reservation.stripePaymentIntentId),
+      hasBoundIntent: Boolean(
+        reservation.stripePaymentIntentId ?? reservation.stripeCheckoutSessionId
+      ),
     })
     if (access === "not_found") return { ok: false, error: "not_found" }
   }
@@ -194,7 +264,10 @@ export async function confirmBookingPayment(
     (reservation.stripePaymentIntentId != null &&
       reservation.stripePaymentIntentId !== input.paymentIntentId) ||
     (booking.stripePaymentIntentId != null &&
-      booking.stripePaymentIntentId !== input.paymentIntentId)
+      booking.stripePaymentIntentId !== input.paymentIntentId) ||
+    (reservation.stripeCheckoutSessionId != null &&
+      intent.checkout?.checkoutSessionId !==
+        reservation.stripeCheckoutSessionId)
 
   if (mismatch) {
     try {
@@ -238,6 +311,8 @@ export async function confirmBookingPayment(
           paymentId: payment.id,
           paymentIntentId: input.paymentIntentId,
           paymentMethodType: intent.paymentMethodType ?? null,
+          chargedCents: intent.amount,
+          checkout: intent.checkout ?? null,
           requiresApproval: requestApproval,
           startsAt: booking.startsAt,
         })
@@ -544,6 +619,8 @@ async function flipPaidBooking(
     paymentId: string
     paymentIntentId: string
     paymentMethodType: string | null
+    chargedCents: number
+    checkout: BookingCheckoutConfirmSnapshot | null
     requiresApproval: boolean
     startsAt: Date
   }
@@ -593,6 +670,22 @@ async function flipPaidBooking(
       stripePaymentIntentId: input.paymentIntentId,
       requiresApproval: input.requiresApproval,
       approvalDeadlineAt,
+      ...(input.checkout
+        ? {
+            ...(input.checkout.taxId
+              ? { buyerTaxId: input.checkout.taxId }
+              : {}),
+            ...(input.checkout.businessName
+              ? { buyerBusinessName: input.checkout.businessName.slice(0, 200) }
+              : {}),
+            ...(input.checkout.billingAddress
+              ? { billingAddress: input.checkout.billingAddress }
+              : {}),
+            ...(input.checkout.customerId
+              ? { stripeCustomerId: input.checkout.customerId }
+              : {}),
+          }
+        : {}),
     })
     .where(eq(main.bookings.id, input.bookingId))
   await tx
@@ -602,6 +695,16 @@ async function flipPaidBooking(
       stripePaymentIntentId: input.paymentIntentId,
       paymentMethodType: input.paymentMethodType,
       paidAt: now,
+      // What the member actually paid; refunds are bounded by it. The
+      // expert's share stays on the list price (amount + discount).
+      amountCents: input.chargedCents,
+      ...(input.checkout
+        ? {
+            discountCents: input.checkout.discountCents,
+            stripePromotionCodeId: input.checkout.promotionCodeId,
+            stripeCheckoutSessionId: input.checkout.checkoutSessionId,
+          }
+        : {}),
     })
     .where(eq(main.bookingPayments.id, input.paymentId))
   await tx

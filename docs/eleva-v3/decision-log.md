@@ -688,10 +688,45 @@ Each entry should include:
   applied. Signed-in members keep the member-or-guest bookability gate
   (not forced through `funnel.guest`). Schema `0058` and the helper are
   additive; the live pay path flips in a follow-up.
+- Amendment 2026-10-29 (founder + legal review, server slice). **Supersedes** the original
+  entry's Adaptive Pricing, automatic tax, Stripe invoice and "fee on the charged total" points
+  above; where they conflict, this amendment wins:
+  - **No `automatic_tax`, no `invoice_creation`, no `tax_behavior`.** Eleva intermediates a
+    healthcare service the expert sells and invoices from certified software (Tier 2). A Stripe
+    invoice from Eleva's account, or Stripe Tax computing VAT on the session, would present Eleva as
+    the seller and could charge VAT on a CIVA art. 9 exempt service.
+  - **No Adaptive Pricing** for the EUR-only launch (D-02), so the PaymentIntent amount is always the
+    EUR session total.
+  - **Promotion codes are Eleva-funded** (founder 2026-10-29). Commission and the expert transfer
+    use the list price (`amount_cents + discount_cents`); `booking_payments.amount_cents` becomes
+    what the member paid, which bounds refunds. When the expert's share exceeds the charge, the
+    transfer omits `source_transaction` and is funded from Eleva's balance.
+  - **Promotion codes are validated server-side**, never `allow_promotion_codes` (which accepts
+    any active code in the account, subscription coupons included). A code applies to bookings
+    only when the Stripe promotion code or its coupon has `metadata.eleva_scope = booking`, the
+    coupon is valid, not 100% off (a zero-total session cannot confirm) and EUR when amount-off.
+    A different code expires the open session and creates a new one (`422 PROMO_INVALID`
+    otherwise). **Operator rule:** create booking codes in Stripe with
+    `metadata.eleva_scope=booking`.
+  - Session expiry is the reservation's creation + 60 min (Stripe needs 30 min-24 h from the
+    session's own creation); the hold-expiry sweep closes it far earlier.
+  - Confirm accepts a discounted intent only when the session subtotal is the list price and the
+    intent amount is the session total. The member's NIF, business name and billing address are
+    copied from the session.
+  - `POST /payments/checkout-session` is live; the public confirm accepts `checkoutSessionId`
+    after a token + bound-session check (no Stripe call before authorization). The hold-expiry
+    sweep reads the session and expires it when nobody started paying.
+  - **No Stripe tax ID collection.** The member's NIF stays on Eleva's funnel field (stored as
+    `bookings.buyer_tax_id` for the expert's invoice). Stripe's tax ID UI is business-oriented
+    (requires a business name, validates VAT numbers against VIES) and a private member's NIF is
+    not a VAT number. Confirm still copies a tax ID if a session ever carries one. This replaces
+    the earlier preference to collect the member's NIF through Stripe `tax_id_collection`.
+  - Accountant to confirm the bookkeeping of an Eleva-funded discount (third-party-funded
+    voucher on the expert's invoice; marketing cost for Eleva).
 - Owner: engineering
-- Status: `proposed`
+- Status: `active` (server), funnel switch in the follow-up PR
 - Related: Phase 04.2 payments, Instant Book 2026-10-13, Stripe Checkout
-- Next review: after the live Checkout Sessions flip is on main.
+- Next review: after the funnel uses Checkout Sessions and the PaymentIntent path is removed.
 
 ### 2026-10-13: Instant Book vs Request to book (Airbnb-style)
 

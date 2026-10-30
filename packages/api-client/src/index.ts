@@ -2207,6 +2207,42 @@ export const CreatePaymentIntentResponseSchema = z.object({
   publishableKey: z.string().min(1),
 })
 
+/**
+ * Relative path on the Eleva gateway the member returns to after a
+ * redirect-based payment method. Absolute URLs are rejected (no open
+ * redirect); the API prefixes the gateway origin.
+ */
+export const CheckoutReturnPathSchema = z
+  .string()
+  .min(1)
+  .max(512)
+  .regex(/^\/(?!\/)[^\s\\]*$/, "must be a relative path starting with /")
+
+export const CreateCheckoutSessionRequestSchema = z.object({
+  reservationId: z.string().uuid(),
+  reservationToken: z.string().min(16).max(128),
+  returnPath: CheckoutReturnPathSchema,
+  /**
+   * Optional booking promotion code. Validated server-side (booking-scoped,
+   * EUR, never 100% off); a different code replaces the open session and
+   * returns a new client secret. 422 `PROMO_INVALID` when it does not apply.
+   */
+  promoCode: z
+    .string()
+    .trim()
+    .min(2)
+    .max(32)
+    .regex(/^[A-Za-z0-9_-]+$/)
+    .optional(),
+})
+
+export const CreateCheckoutSessionResponseSchema = z.object({
+  clientSecret: z.string().min(1),
+  checkoutSessionId: z.string().min(1),
+  bookingId: z.string().uuid(),
+  publishableKey: z.string().min(1),
+})
+
 export const RefundBookingPaymentRequestSchema = z.object({
   amountCents: z.number().int().positive().optional(),
   reason: z.string().trim().min(1).max(2000),
@@ -2282,11 +2318,17 @@ export const FinanceSummaryResponseSchema = z.object({
   ),
 })
 
-export const ConfirmBookingRequestSchema = z.object({
-  reservationId: z.string().uuid(),
-  reservationToken: z.string().min(16).max(128),
-  paymentIntentId: z.string().min(1).optional(),
-})
+export const ConfirmBookingRequestSchema = z
+  .object({
+    reservationId: z.string().uuid(),
+    reservationToken: z.string().min(16).max(128),
+    paymentIntentId: z.string().min(1).optional(),
+    /** Checkout Sessions path: the browser never sees the PaymentIntent id. */
+    checkoutSessionId: z.string().startsWith("cs_").max(255).optional(),
+  })
+  .refine((v) => !(v.paymentIntentId && v.checkoutSessionId), {
+    message: "send paymentIntentId or checkoutSessionId, not both",
+  })
 
 export const ConfirmBookingResponseSchema = z.object({
   bookingId: z.string().uuid(),
@@ -2350,6 +2392,12 @@ export type CreatePaymentIntentResponse = z.infer<
   typeof CreatePaymentIntentResponseSchema
 >
 export type ConfirmBookingRequest = z.infer<typeof ConfirmBookingRequestSchema>
+export type CreateCheckoutSessionRequest = z.infer<
+  typeof CreateCheckoutSessionRequestSchema
+>
+export type CreateCheckoutSessionResponse = z.infer<
+  typeof CreateCheckoutSessionResponseSchema
+>
 export type ConfirmBookingResponse = z.infer<
   typeof ConfirmBookingResponseSchema
 >
@@ -3296,6 +3344,14 @@ export function createApiClient(options: ApiClientOptions) {
       async intent(data: CreatePaymentIntentRequest) {
         const raw = await request<unknown>("POST", "/payments/intent", data)
         return CreatePaymentIntentResponseSchema.parse(raw)
+      },
+      async checkoutSession(data: CreateCheckoutSessionRequest) {
+        const raw = await request<unknown>(
+          "POST",
+          "/payments/checkout-session",
+          data
+        )
+        return CreateCheckoutSessionResponseSchema.parse(raw)
       },
       async refund(
         bookingPaymentId: string,

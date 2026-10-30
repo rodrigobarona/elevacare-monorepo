@@ -3,11 +3,88 @@ import type { BookingBillingAddress } from "@eleva/db/schema"
 import { env } from "@eleva/config/env"
 import { stripe } from "./client"
 
-/** Stripe's Checkout Session minimum expiry is 30 minutes. */
-export const CHECKOUT_SESSION_EXPIRES_SECONDS = 31 * 60
+/**
+ * Set on the session's PaymentIntent so confirm knows to read the session
+ * (discount, NIF, billing address) without a lookup for plain intents.
+ */
+export const BOOKING_CHECKOUT_METADATA_MARKER = "elements"
 
-export function checkoutSessionIdempotencyKey(reservationId: string): string {
-  return `cs:${reservationId}`
+/**
+ * Session lifetime from the reservation's creation. Stripe requires 30 min
+ * to 24 h from the session's own creation; sessions are only created while
+ * the hold (5-10 min) is active, so 60 min from reserve always leaves more
+ * than 30. The hold-expiry sweep expires the session long before this.
+ */
+export const CHECKOUT_SESSION_EXPIRES_SECONDS = 60 * 60
+
+/**
+ * One key per (hold, promotion code): changing the code builds a new
+ * session, and retries of the same request stay idempotent.
+ */
+export function checkoutSessionIdempotencyKey(
+  reservationId: string,
+  promotionCodeId: string | null = null
+): string {
+  return promotionCodeId
+    ? `cs:${reservationId}:${promotionCodeId}`
+    : `cs:${reservationId}`
+}
+
+/** Metadata a Stripe promotion code (or its coupon) needs to work on bookings. */
+export const BOOKING_PROMOTION_SCOPE = "booking"
+
+export type BookingPromotionCodeResult =
+  | { ok: true; promotionCodeId: string }
+  | { ok: false; reason: "not_found" | "not_bookable" }
+
+/**
+ * Validates a member-typed code before it reaches a session. Only codes
+ * Eleva marked for bookings (`metadata.eleva_scope = booking` on the
+ * promotion code or its coupon) apply; never a 100%-off or non-EUR coupon
+ * (a zero-total session has no PaymentIntent and cannot confirm), and never
+ * a code meant for subscriptions.
+ */
+export async function resolveBookingPromotionCode(
+  code: string,
+  priceCents: number
+): Promise<BookingPromotionCodeResult> {
+  const page = await stripe().promotionCodes.list({
+    code: code.trim().toUpperCase(),
+    active: true,
+    limit: 1,
+    expand: ["data.promotion.coupon"],
+  })
+  const promotion = page.data[0]
+  if (!promotion) return { ok: false, reason: "not_found" }
+  const coupon = promotionCoupon(promotion)
+  const scoped =
+    promotion.metadata?.eleva_scope === BOOKING_PROMOTION_SCOPE ||
+    coupon?.metadata?.eleva_scope === BOOKING_PROMOTION_SCOPE
+  if (!scoped || !coupon || !coupon.valid) {
+    return { ok: false, reason: "not_bookable" }
+  }
+  if (coupon.percent_off != null && coupon.percent_off >= 100) {
+    return { ok: false, reason: "not_bookable" }
+  }
+  if (
+    coupon.amount_off != null &&
+    ((coupon.currency ?? "").toLowerCase() !== "eur" ||
+      coupon.amount_off >= priceCents)
+  ) {
+    return { ok: false, reason: "not_bookable" }
+  }
+  return { ok: true, promotionCodeId: promotion.id }
+}
+
+function promotionCoupon(
+  promotion: Stripe.PromotionCode
+): Stripe.Coupon | null {
+  const withPromotion = promotion as Stripe.PromotionCode & {
+    promotion?: { coupon?: Stripe.Coupon | string | null }
+    coupon?: Stripe.Coupon | string | null
+  }
+  const coupon = withPromotion.promotion?.coupon ?? withPromotion.coupon
+  return coupon && typeof coupon === "object" ? coupon : null
 }
 
 /**
@@ -40,14 +117,32 @@ export type CreateBookingCheckoutSessionInput = {
   idempotencyKey: string
   /** Unix seconds from `checkoutSessionExpiresAt(reservation.createdAt)`. */
   expiresAt: number
+  /** Validated by `resolveBookingPromotionCode`; Eleva-funded. */
+  promotionCodeId?: string | null
 }
 
+/**
+ * Paid booking Checkout Session (`ui_mode: "elements"`, decision log
+ * 2026-10-13, flipped 2026-10-29).
+ *
+ * Eleva intermediates a healthcare service the expert sells and invoices,
+ * so the session must not make Eleva look like the seller: no Stripe Tax
+ * (`automatic_tax`; the session is VAT-exempt healthcare under CIVA art. 9
+ * when due at all, and that is the expert's assessment) and no Stripe
+ * invoice (`invoice_creation`; Portuguese invoices come from certified
+ * software, Tier 2). Adaptive Pricing stays off for the EUR-only launch
+ * (D-02) so the PaymentIntent amount is always the EUR session total.
+ * Promotion codes are Eleva-funded (founder 2026-10-29) and validated by
+ * `resolveBookingPromotionCode` before they reach the session. The member's NIF is
+ * collected by Eleva's funnel, not Stripe tax ID collection: Stripe's tax ID
+ * UI is business-oriented (business name, VIES VAT validation) and a private
+ * member's NIF is not a VAT number.
+ */
 export async function createBookingCheckoutSession(
   input: CreateBookingCheckoutSessionInput
 ): Promise<{
   id: string
   client_secret: string | null
-  payment_intent: string | null
 }> {
   const pmc = env().STRIPE_PMC_BOOKING
   if (!pmc) {
@@ -68,16 +163,12 @@ export async function createBookingCheckoutSession(
       ui_mode: "elements",
       return_url: input.returnUrl,
       customer: input.customerId,
-      adaptive_pricing: { enabled: true },
-      automatic_tax: { enabled: true },
-      invoice_creation: { enabled: true },
-      allow_promotion_codes: true,
-      tax_id_collection: { enabled: true },
-      name_collection: {
-        individual: { enabled: true },
-        business: { enabled: true, optional: true },
-      },
-      billing_address_collection: "required",
+      // Never `allow_promotion_codes`: it would accept any active code in
+      // the account (subscription or 100%-off coupons included).
+      ...(input.promotionCodeId
+        ? { discounts: [{ promotion_code: input.promotionCodeId }] }
+        : {}),
+      billing_address_collection: "auto",
       expires_at: input.expiresAt,
       payment_method_configuration: pmc,
       line_items: [
@@ -86,14 +177,16 @@ export async function createBookingCheckoutSession(
           price_data: {
             currency: "eur",
             unit_amount: input.amountCents,
-            tax_behavior: "inclusive",
             product_data: { name: input.serviceName },
           },
         },
       ],
       payment_intent_data: {
         transfer_group: input.bookingId,
-        metadata,
+        metadata: {
+          ...metadata,
+          eleva_checkout: BOOKING_CHECKOUT_METADATA_MARKER,
+        },
       },
       metadata,
     },
@@ -103,8 +196,29 @@ export async function createBookingCheckoutSession(
   return {
     id: session.id,
     client_secret: session.client_secret,
-    payment_intent: stripeObjectId(session.payment_intent),
   }
+}
+
+/** Finds the booking Checkout Session that created a PaymentIntent, if any. */
+export async function retrieveBookingCheckoutForIntent(
+  paymentIntentId: string
+): Promise<BookingCheckoutSnapshot | null> {
+  const page = await stripe().checkout.sessions.list({
+    payment_intent: paymentIntentId,
+    limit: 1,
+  })
+  const session = page.data[0]
+  if (!session || !isBookingPaymentCheckoutSession(session)) return null
+  return bookingCheckoutSnapshotFromSession(session)
+}
+
+/** Retrieves a booking Checkout Session by id (public confirm path). */
+export async function retrieveBookingCheckoutSession(
+  checkoutSessionId: string
+): Promise<BookingCheckoutSnapshot | null> {
+  const session = await stripe().checkout.sessions.retrieve(checkoutSessionId)
+  if (!isBookingPaymentCheckoutSession(session)) return null
+  return bookingCheckoutSnapshotFromSession(session)
 }
 
 /**
@@ -144,6 +258,7 @@ export type BookingCheckoutSnapshot = {
   bookingId: string | null
   reservationId: string | null
   orgId: string | null
+  amountSubtotal: number | null
   amountTotal: number | null
   currency: string | null
   discountCents: number
@@ -228,6 +343,7 @@ export function bookingCheckoutSnapshotFromSession(
       null,
     orgId:
       session.metadata?.eleva_org_id ?? session.metadata?.expertOrgId ?? null,
+    amountSubtotal: session.amount_subtotal,
     amountTotal: session.amount_total,
     currency: session.currency,
     discountCents: session.total_details?.amount_discount ?? 0,

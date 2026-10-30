@@ -54,6 +54,7 @@ export async function expireStaleReservations(
         const decision = await settleExpiredReservationIntent({
           reservationId: reservation.id,
           paymentIntentId: reservation.stripePaymentIntentId,
+          checkoutSessionId: reservation.stripeCheckoutSessionId,
           searchByReservation: reservation.intentPendingSince != null,
           searchMissIsFinal:
             reservation.intentPendingSince != null &&

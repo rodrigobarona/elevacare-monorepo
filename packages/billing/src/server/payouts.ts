@@ -79,6 +79,14 @@ export function isPayoutError(err: unknown): err is PayoutError {
 
 type PayoutRow = typeof main.payoutStates.$inferSelect
 
+/** List price of a paid booking: what the member paid plus any discount. */
+export function listPriceCents(payment: {
+  amountCents: number
+  discountCents: number
+}): number {
+  return payment.amountCents + payment.discountCents
+}
+
 async function loadPayout(tx: Tx, payoutStateId: string): Promise<PayoutRow> {
   const [row] = await tx
     .select()
@@ -163,7 +171,9 @@ export async function createPayoutStateForPaidPayment(input: {
   const amountCents = Math.max(
     0,
     computeSettlement({
-      grossCents: snapshot.payment.amountCents,
+      // Eleva-funded promotion codes (founder 2026-10-29): the expert's share
+      // is computed on the list price, i.e. what was charged plus the discount.
+      grossCents: listPriceCents(snapshot.payment),
       commissionBps: snapshot.payment.appliedCommissionBps,
       vatRateBps: PT_VAT_RATE_BPS,
       vatTreatment: "pt_b2b",
@@ -551,7 +561,12 @@ export async function executeTransfer(payoutStateId: string): Promise<{
           currency: "eur",
           destination: current.destinationConnectAccountId,
           transfer_group: payment.bookingId,
-          source_transaction: payment.stripeChargeId,
+          // Stripe caps a source_transaction transfer at the charge. When an
+          // Eleva-funded discount makes the expert's share larger than the
+          // charge, the transfer is funded from Eleva's available balance.
+          ...(transferAmount <= payment.amountCents
+            ? { source_transaction: payment.stripeChargeId }
+            : {}),
           metadata: {
             payout_state_id: current.id,
             booking_payment_id: current.bookingPaymentId,

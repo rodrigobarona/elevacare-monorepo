@@ -3,8 +3,12 @@ import {
   ConfirmBookingRequestSchema,
   ConfirmBookingResponseSchema,
 } from "@eleva/api-client"
-import { retrieveBookingPaymentIntent } from "@eleva/billing/server"
 import {
+  retrieveBookingCheckoutSession,
+  retrieveBookingPaymentIntent,
+} from "@eleva/billing/server"
+import {
+  authorizeCheckoutSessionConfirm,
   confirmBookingPayment,
   confirmFreeReservation,
 } from "@eleva/scheduling"
@@ -98,13 +102,52 @@ export async function POST(request: Request) {
       const sessionUserId =
         auth.type === "anonymous" ? undefined : auth.session.user.id
 
+      let paymentIntentId = parsed.data.paymentIntentId
+      if (parsed.data.checkoutSessionId) {
+        let authorized
+        try {
+          authorized = await authorizeCheckoutSessionConfirm({
+            reservationId: parsed.data.reservationId,
+            reservationToken: parsed.data.reservationToken,
+            checkoutSessionId: parsed.data.checkoutSessionId,
+            sessionUserId,
+          })
+        } catch (err) {
+          console.error("[bookings/confirm] session authorize failed", err)
+          return secureJson({ error: "internal" }, { status: 500, headers })
+        }
+        if (!authorized) {
+          return secureJson(PUBLIC_NOT_FOUND, { status: 404, headers })
+        }
+        let checkout
+        try {
+          checkout = await retrieveBookingCheckoutSession(
+            parsed.data.checkoutSessionId
+          )
+        } catch (err) {
+          console.error("[bookings/confirm] session retrieve failed", err)
+          return secureJson({ error: "unavailable" }, { status: 503, headers })
+        }
+        // A session for another reservation is indistinguishable from none.
+        if (!checkout || checkout.reservationId !== parsed.data.reservationId) {
+          return secureJson(PUBLIC_NOT_FOUND, { status: 404, headers })
+        }
+        if (!checkout.paymentIntentId) {
+          return secureJson(
+            { error: "PAYMENT_PENDING" },
+            { status: 409, headers }
+          )
+        }
+        paymentIntentId = checkout.paymentIntentId
+      }
+
       let result
       try {
-        result = parsed.data.paymentIntentId
+        result = paymentIntentId
           ? await confirmBookingPayment({
               reservationId: parsed.data.reservationId,
               reservationToken: parsed.data.reservationToken,
-              paymentIntentId: parsed.data.paymentIntentId,
+              paymentIntentId,
               sessionUserId,
               source: "public",
               retrieveIntent: retrieveBookingPaymentIntent,
