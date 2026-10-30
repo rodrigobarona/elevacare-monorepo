@@ -84,6 +84,49 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
 - Related: `docs/eleva-v3/execution-plan/phases/12-admin-console.md` deliverable 3,
   `apps/api/src/app/expert/profile/steps/[step]/complete/route.ts`.
 
+### 2026-10-30: Legal pack — provisional rules, corrections and open decisions (proposed)
+
+- Summary: `docs/eleva-v3/legal/` holds internal drafts for a Portuguese lawyer and the external
+  DPO. Nothing here is legal sign-off. This entry adds to the 2026-10-29 "Launch legal posture"
+  entry and does not repeat it.
+- Corrections to the 2026-10-29 entry:
+  - ERS registration is DL 126/2014 art. 26 and ERS Regulamento 66/2015. DL 127/2014 is licensing.
+  - The DPO advises and monitors (GDPR art. 39). Eleva takes the decisions as controller, so AUD-028
+    and AUD-029 close on Eleva's decision with the DPO's advice on record.
+  - The DPO's contact details must be published and given to the CNPD (art. 37(7)). The name need
+    not be published.
+- Provisional rules until the lawyer and DPO have reviewed them:
+  - Breach: every health-data breach is S3 or S4 unless exception E1 (ciphertext only, keys safe) or
+    E2 (contained disclosure to a trusted recipient) is evidenced. Reclassification does not reset
+    the art. 33 clock. The register is kept 5 years, as a proposal with no statutory period. See
+    [`legal/breach-response.md`](./legal/breach-response.md).
+  - Contact: `privacy@eleva.care` is the proposed single interim and published data protection
+    contact, routed to the DPO after the appointment.
+- Handoffs to the public pages (not changed by the legal pack):
+  - Replace `dpo@eleva.care` and its DPO label in the DPA, security, privacy and expert-agreement
+    pages. Founder input needed: is that address monitored, and by whom?
+  - Replace "digital health platform" and "telemedicine" wording in the DPA, expert agreement and
+    `/trust/ers` (all three locales). Risk analysis: [`legal/ers-position.md`](./legal/ers-position.md) §4.
+- Open decisions:
+  - **D-07 route.** Production clinical video on Daily stays blocked until D-07 is signed. D-07 as
+    written means a HIPAA-enabled plan and a BAA, while the 2026-10-12 entry says HIPAA is not an EU
+    launch priority. The founder must either sign D-07 or supersede it with a decision for standard
+    Daily (not HIPAA, recording off) stating scope and conditions. See
+    [`legal/dpia.md`](./legal/dpia.md) §2.6.
+  - **D-12-A intake.** `eraseMemberClinicalRecords` deletes every intake today. Decide whether an
+    intake is kept with the clinical record once a session has taken place. See
+    [`legal/positions-d06-d11-d12.md`](./legal/positions-d06-d11-d12.md).
+  - **R12 access logging.** Decide what Lei 58/2019 art. 29(6)–(7) requires. The DPIA conclusion
+    stays open until each required control is implemented and verified.
+  - **DPA acceptance.** Define the DPA version (shared with `CONSENT_DOCUMENT_VERSION` or its own)
+    and how experts and clinics accept it. See
+    [`legal/experts-dpa-checklist.md`](./legal/experts-dpa-checklist.md).
+- Engineering follow-up: refunds read the current tier table, not `cancellation_policy_version`.
+  Add versioned rules and a policy-version test before any tier edit ships.
+- Owner: founder. Status: `proposed`.
+- Related: D-06, D-07, D-11, D-12, AUD-028, AUD-029, [`legal/README.md`](./legal/README.md).
+- Next review: 2026-11-16 (with the Daily DPF recheck), or at the DPO's appointment if sooner.
+
 ### 2026-10-29: Launch legal posture — intermediary, external DPO, D-06 balanced, regulated experts only (active)
 
 - Decisions (founder, 2026-10-29):
