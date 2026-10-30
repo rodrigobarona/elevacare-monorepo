@@ -9,6 +9,12 @@
  */
 import { expect, test } from "@playwright/test"
 import { apiUrl, authHeaders } from "./helpers/auth"
+import {
+  fillGuestAndConsents,
+  fillStripeTestCard,
+  uniqueGuestEmail,
+  walkFunnelToDetails,
+} from "./helpers/booking"
 import { isStripeTestSecretKey } from "./helpers/cancellation-policy-smoke"
 import {
   isApprovedE2eDatabaseUrl,
@@ -91,6 +97,63 @@ test.describe("Phase 06 — pay → payout state → Connect transfer", () => {
     expect(transfer.source_transaction).toBeTruthy()
     console.log(
       `[payout-smoke] booking=${booking.bookingId} intent=${booking.paymentIntentId} transfer=${transfer.id} destination=${transfer.destination}`
+    )
+  })
+
+  // The member paid less than the list price, so the transfer is larger than
+  // the charge and Eleva funds the gap from its own balance.
+  test("a discounted booking still pays the expert the full net", async ({
+    page,
+    request,
+  }) => {
+    const code = process.env.E2E_BOOKING_PROMO_CODE
+    test.skip(
+      !code,
+      "set E2E_BOOKING_PROMO_CODE (20% off, eleva_scope=booking)"
+    )
+    test.setTimeout(240_000)
+    await bindConnectAccount(process.env.E2E_PAYOUT_CONNECT_ACCOUNT!)
+
+    await page.goto("/fisiomota/first-visit")
+    await walkFunnelToDetails(page)
+    await fillGuestAndConsents(page, {
+      name: "Payout Promo",
+      email: uniqueGuestEmail("payoutpromo"),
+    })
+    await page.getByTestId("booking-continue-details").click()
+    await expect(page.getByTestId("booking-pay-submit")).toBeVisible({
+      timeout: 45_000,
+    })
+    await page.getByTestId("booking-promo").fill(code!)
+    await page.getByTestId("booking-promo").press("Enter")
+    await expect(page.getByTestId("booking-promo-remove")).toBeVisible({
+      timeout: 45_000,
+    })
+
+    await fillStripeTestCard(page)
+    const confirm = page.waitForResponse(
+      (res) =>
+        res.url().includes("/bookings/confirm") &&
+        res.request().method() === "POST",
+      { timeout: 60_000 }
+    )
+    await page.getByTestId("booking-pay-submit").click()
+    const confirmed = (await (await confirm).json()) as { bookingId: string }
+
+    const payout = await waitForPayout(confirmed.bookingId)
+    if (payout.status === "approval_required") {
+      await approveFirstPayout(payout.id)
+    }
+    await shiftPayoutClock(payout.id)
+    await runPayoutSweeps(request)
+
+    const settled = await loadPayout(confirmed.bookingId)
+    expect(settled?.status, "transfer did not run").toBe("transferred")
+    const transfer = await retrieveStripeTransfer(settled!.stripe_transfer_id!)
+    expect(transfer.amount).toBe(EXPERT_NET_CENTS)
+    expect(transfer.source_transaction).toBeNull()
+    console.log(
+      `[payout-smoke] discounted booking=${confirmed.bookingId} transfer=${transfer.id} amount=${transfer.amount}`
     )
   })
 })
