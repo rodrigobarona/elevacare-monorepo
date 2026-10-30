@@ -7,6 +7,10 @@ import {
   type AuthTransactionalProps,
 } from "./components/auth-transactional"
 import {
+  PartnerDecisionEmail,
+  type PartnerDecisionProps,
+} from "./templates/partner-decision"
+import {
   BookingConfirmedEmail,
   type BookingConfirmedProps,
 } from "./templates/booking-confirmed"
@@ -89,6 +93,12 @@ export async function renderInvoiceClosedGate(
   props: InvoiceClosedGateProps
 ): Promise<string> {
   return render(<InvoiceClosedGateEmail {...props} />)
+}
+
+export async function renderPartnerDecision(
+  props: PartnerDecisionProps
+): Promise<string> {
+  return render(<PartnerDecisionEmail {...props} />)
 }
 
 export async function renderPaymentPayoutNotice(

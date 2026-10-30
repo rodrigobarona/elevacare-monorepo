@@ -63,6 +63,10 @@ import {
   ListPayoutsResponseSchema,
   PayoutActionRequestSchema,
   PayoutActionResponseSchema,
+  AdminPartnerQueueResponseSchema,
+  AdminPartnerReviewResponseSchema,
+  LicenceDecisionRequestSchema,
+  LicenceDecisionResponseSchema,
   FinanceSummaryResponseSchema,
   SetActiveOrganizationRequestSchema,
   SetActiveOrganizationResponseSchema,
@@ -277,6 +281,14 @@ const stdRefundErrors = {
   },
   "502": {
     description: "Stripe refund failed",
+    content: { "application/json": { schema: ErrorSchema } },
+  },
+} as const
+
+const stdStaffReview = {
+  ...stdWithNotFound,
+  "403": {
+    description: "Missing applications:review capability",
     content: { "application/json": { schema: ErrorSchema } },
   },
 } as const
@@ -2807,6 +2819,90 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             ...stdWithNotFound,
             "403": {
               description: "Missing payouts:view_own or admin_payouts:read",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+      },
+      "/admin/partners": {
+        get: {
+          operationId: "listPartnerReviews",
+          summary: "List the staff licence review queue",
+          description:
+            "Staff-only (`applications:review`). Oldest first: open applications (`pending`, `needs_changes`) plus `active` profiles with no approved application (`needs_verification`).",
+          tags: ["Admin"],
+          responses: {
+            "200": {
+              description: "Licence review queue",
+              content: {
+                "application/json": {
+                  schema: AdminPartnerQueueResponseSchema,
+                },
+              },
+            },
+            ...stdStaffReview,
+          },
+        },
+      },
+      "/admin/partners/{expertProfileId}": {
+        get: {
+          operationId: "getPartnerReview",
+          summary: "Get one profile's licence review",
+          description:
+            "Staff-only (`applications:review`). Returns the latest application snapshot, or null when the expert never filed.",
+          tags: ["Admin"],
+          requestParams: {
+            path: z.object({ expertProfileId: z.string().uuid() }),
+          },
+          responses: {
+            "200": {
+              description: "Licence review",
+              content: {
+                "application/json": {
+                  schema: AdminPartnerReviewResponseSchema,
+                },
+              },
+            },
+            ...stdStaffReview,
+          },
+        },
+      },
+      "/admin/partners/{expertProfileId}/decision": {
+        post: {
+          operationId: "decidePartnerReview",
+          summary: "Decide an open licence application",
+          description:
+            "Staff-only (`applications:review`, revocable session). `approve` needs every checklist item and is the licence verification record: an `approved` profile becomes `active`, an `active` profile stays active. `needs_changes` and `reject` need a reason and leave the profile status alone. The expert gets an email on each decision.",
+          tags: ["Admin"],
+          requestParams: {
+            path: z.object({ expertProfileId: z.string().uuid() }),
+          },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: LicenceDecisionRequestSchema },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Decision recorded",
+              content: {
+                "application/json": { schema: LicenceDecisionResponseSchema },
+              },
+            },
+            ...stdErrors,
+            "403": {
+              description:
+                "Missing applications:review, or SELF_REVIEW when staff decide their own application",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "404": {
+              description: "APPLICATION_NOT_FOUND",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "409": {
+              description:
+                "APPLICATION_ALREADY_DECIDED, or APPLICATION_CHANGED when the expert refiled after staff loaded it",
               content: { "application/json": { schema: ErrorSchema } },
             },
           },

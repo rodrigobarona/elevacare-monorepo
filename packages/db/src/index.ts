@@ -194,7 +194,16 @@ export {
 export { countBillableSeats } from "./queries/seats"
 export {
   getLatestPartnerApplication,
+  getLicenceReview,
+  licenceReviewState,
+  listLicenceReviewQueue,
+  PARTNER_DECISION_EVENT_TYPES,
+  type LicenceReview,
+  type LicenceReviewQueueRow,
+  type LicenceReviewState,
   type PartnerApplicationLicence,
+  type PartnerDecisionEventType,
+  type PartnerDecisionPayload,
 } from "./queries/partner-applications"
 export type {
   ExpertCredential,

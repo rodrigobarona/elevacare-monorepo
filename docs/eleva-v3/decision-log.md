@@ -53,15 +53,30 @@ Each entry should include:
   - `/{org}/licence` shows the state (pending, needs changes, rejected, unverified, verified); the
     dashboard shows a prompt until verified. Finished `approved` experts can use the dashboard
     to prepare services; they are not public until `active`.
-- PR 2 (`feat(api,admin)`): staff queue in `apps/admin` and `/admin/partners/**` (approve,
-  reject, request changes, plus "Needs verification" for active profiles with no approved
-  application: approve keeps them active, or suspend with a reason).
-- No migration suspends or downgrades anyone: profiles already `active` stay active.
+- Shipped in PR 2 (staff review):
+  - `GET /admin/partners`, `GET /admin/partners/{expertProfileId}` and
+    `POST /admin/partners/{expertProfileId}/decision` (capability `applications:review`, the
+    staff bundle; decisions need a revocable session). `apps/admin` `/partners` is the queue
+    and the detail view.
+  - The queue lists `pending` and `needs_changes` applications plus `active` profiles with no
+    approved application ("Needs verification").
+  - Approve needs every checklist item, records the verification, copies the checked licence
+    onto the profile and moves `approved` to `active`. `active` stays active and `suspended`
+    stays paused. Needs changes and reject need a reason and leave the profile status alone.
+  - Decisions are refused when the expert refiled after staff loaded the page (`409
+APPLICATION_CHANGED`) and when staff would decide their own application (`403 SELF_REVIEW`).
+  - The expert gets an email on each decision: Lane 1 kinds `partner.approved`,
+    `partner.needs_changes`, `partner.rejected` (migration `0072_partner_decision_kinds`).
+- No migration suspends or downgrades anyone: profiles already `active` stay active. A rejected
+  `active` profile also stays listed and returns to "Needs verification". Staff have no suspend
+  action yet, so unlisting it is a manual operation until the Phase 12 listing controls ship.
 - Out of scope (open follow-ups, not shipped):
   - Public profile display of licence number, Ordem and ERS number (ERS Regulation 1058/2016).
   - Licence evidence upload to the private Blob store (`licence_evidence_blob_key`).
-  - `partner.approved` / `partner.rejected` / `partner.needs_changes` notification kinds and
-    emails.
+  - Phase 12 staff hardening on these routes: mandatory 2FA, fresh step-up, dual control for
+    partner approval of a clinical specialty, staff-role route matrix, `e2e/admin.spec.ts`.
+  - Decision history in the staff view (the view shows the latest application; older decisions
+    stay in the table and the audit trail).
   - Exact public-register search URLs per Ordem (the SSOT links each Ordem's official site).
   - Founder confirmation of the "usually within 2 working days" copy.
   - Retiring the free-text `license_scope` column (the wizard no longer writes it).

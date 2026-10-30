@@ -126,6 +126,27 @@ export const NOTIFICATION_KINDS = {
     category: "reminder",
     templateId: "crm.follow_up_due",
   },
+  "partner.approved": {
+    channels: ["email"],
+    urgency: "normal",
+    scope: "org",
+    category: "system",
+    templateId: "partner.approved",
+  },
+  "partner.needs_changes": {
+    channels: ["email"],
+    urgency: "normal",
+    scope: "org",
+    category: "system",
+    templateId: "partner.needs_changes",
+  },
+  "partner.rejected": {
+    channels: ["email"],
+    urgency: "normal",
+    scope: "org",
+    category: "system",
+    templateId: "partner.rejected",
+  },
   "auth.magic_link": {
     channels: ["email"],
     urgency: "urgent",

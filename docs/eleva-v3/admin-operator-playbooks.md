@@ -52,6 +52,28 @@ Should cover:
 - who can approve
 - what gets logged
 
+#### Verify a licence (`/partners` in `apps/admin`)
+
+Only regulated health professionals whose licence staff verified may be listed (decision log
+2026-10-29). Any staff member with `applications:review` can decide. Staff cannot decide their own
+application.
+
+1. Open the oldest item in `/partners`. "Pending" and "Needs changes" have a licence to check.
+   "Needs verification" is a listed expert with no approved licence; they stay listed. If they
+   never sent one there is nothing to decide yet, and their dashboard already asks them to.
+2. Open the Ordem's site from the detail view and find the licence in its public register. Open
+   the ERS site and confirm the registration number. Check the name matches the expert.
+3. Decide:
+   - **Approve** needs every check confirmed. It records you, the time and the checklist, and
+     lists an `approved` profile. An `active` profile stays active; a `suspended` one stays paused.
+   - **Ask for changes** or **Reject** needs a reason. The expert reads it in their email, so keep
+     it plain and factual. The expert can send their details again.
+4. A rejected listed expert stays listed and returns to "Needs verification". Staff have no suspend
+   action yet: escalate to the founder to unlist them.
+
+If the page says the expert sent new details, reload and check again. Every decision is in the
+audit trail as `partner_application.*`.
+
 ### Booking issue support
 
 Should cover:

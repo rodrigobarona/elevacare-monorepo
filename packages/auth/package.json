@@ -16,6 +16,7 @@
     "./return-to": "./src/return-to.ts",
     "./upload-token": "./src/upload-token.ts",
     "./organizations": "./src/organizations.ts",
+    "./partner-review": "./src/partner-review.ts",
     "./org-routing": "./src/org-routing.ts",
     "./permissions": "./src/permissions.ts",
     "./client": "./src/client.ts",

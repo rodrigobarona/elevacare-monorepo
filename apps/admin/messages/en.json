@@ -1,6 +1,7 @@
 {
   "nav": {
-    "overview": "Overview"
+    "overview": "Overview",
+    "partners": "Licence reviews"
   },
   "dashboard": {
     "welcome": "Eleva operator console",
@@ -8,6 +9,72 @@
     "signedInAs": "Signed in as {email}",
     "eyebrow": "Operator",
     "emptyTitle": "Operator tools are on the way",
-    "emptyBody": "Expert approvals, payouts and the audit trail arrive with the operator console."
+    "emptyBody": "Licence reviews are ready. Payouts and the audit trail arrive with the operator console."
+  },
+  "partners": {
+    "eyebrow": "Operator",
+    "title": "Licence reviews",
+    "description": "Check each licence against the Ordem before an expert is listed.",
+    "emptyTitle": "Nothing to review",
+    "emptyBody": "New licences and listed experts who still need a check will show up here.",
+    "columns": {
+      "expert": "Expert",
+      "body": "Professional body",
+      "state": "State",
+      "waiting": "Waiting since"
+    },
+    "unknownBody": "Not sent yet",
+    "states": {
+      "pending": "Pending",
+      "needs_changes": "Needs changes",
+      "needs_verification": "Needs verification",
+      "verified": "Verified",
+      "rejected": "Rejected",
+      "not_submitted": "Not sent"
+    },
+    "detail": {
+      "back": "All licence reviews",
+      "description": "{email} · @{username}",
+      "listedNote": "This expert is listed. They stay listed while you review.",
+      "snapshotTitle": "What the expert sent",
+      "sentAt": "Sent {date}",
+      "reviewedAt": "Last reviewed {date}",
+      "body": "Professional body",
+      "licenceNumber": "Licence number",
+      "ersNumber": "ERS registration number",
+      "openRegister": "Open the {body} site",
+      "openErs": "Open the ERS site",
+      "lastReason": "Last reason",
+      "noApplication": "This expert has not sent a licence yet. They see a prompt on their dashboard. You can decide once they send it.",
+      "approvedNote": "This licence is verified.",
+      "rejectedNote": "This application was rejected. The expert can send their details again.",
+      "decisionTitle": "Your decision",
+      "checklistHelp": "Confirm every check to approve.",
+      "checklist": {
+        "register_checked": "Licence found and active in the Ordem's public register",
+        "name_matches": "Name on the register matches this expert",
+        "ers_checked": "ERS registration number confirmed with the ERS"
+      },
+      "approve": "Approve",
+      "approving": "Approving...",
+      "reasonLabel": "Reason",
+      "reasonHelp": "The expert reads this in their email.",
+      "needsChanges": "Ask for changes",
+      "reject": "Reject",
+      "saving": "Saving...",
+      "toasts": {
+        "approve": "Licence approved",
+        "needs_changes": "Changes requested",
+        "reject": "Application rejected"
+      },
+      "errors": {
+        "validation": "Check the form and try again.",
+        "changed": "The expert sent new details. Reload to see them.",
+        "decided": "Someone already decided this application.",
+        "self": "You cannot review your own application.",
+        "forbidden": "You do not have access to this review.",
+        "failed": "That did not work. Please try again."
+      }
+    }
   }
 }

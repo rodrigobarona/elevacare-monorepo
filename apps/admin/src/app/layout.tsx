@@ -50,7 +50,10 @@ export default async function AdminRootLayout({
     session,
     [
       {
-        items: [{ title: t("overview"), url: "/", icon: "SquaresFourIcon" }],
+        items: [
+          { title: t("overview"), url: "/", icon: "SquaresFourIcon" },
+          { title: t("partners"), url: "/partners", icon: "ShieldIcon" },
+        ],
       },
     ],
     {

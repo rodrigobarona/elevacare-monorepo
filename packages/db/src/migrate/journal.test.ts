@@ -39,14 +39,22 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0071_become_partner_applications")
+    expect(last?.tag).toBe("0072_partner_decision_kinds")
     expect(last?.hash).toHaveLength(64)
-    expect(last?.statements.join("\n")).toContain(
+    expect(last?.statements.join("\n")).toContain("partner.needs_changes")
+    const partnerApplications = migrations.find(
+      (m) => m.tag === "0071_become_partner_applications"
+    )
+    expect(partnerApplications?.statements.join("\n")).toContain(
       "become_partner_applications_open_uidx"
     )
-    expect(last?.statements.join("\n")).toContain("eleva.platform_admin")
+    expect(partnerApplications?.statements.join("\n")).toContain(
+      "eleva.platform_admin"
+    )
     for (const item of LICENCE_CHECKLIST_ITEMS) {
-      expect(last?.statements.join("\n")).toContain(`"${item}": true`)
+      expect(partnerApplications?.statements.join("\n")).toContain(
+        `"${item}": true`
+      )
     }
     const bookingPaymentsRls = migrations.find(
       (m) => m.tag === "0070_booking_payments_admin_rls"

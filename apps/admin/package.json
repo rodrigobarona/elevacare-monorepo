@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@eleva/api-client": "workspace:^",
     "@eleva/auth": "workspace:^",
     "@eleva/billing": "workspace:^",
     "@eleva/config": "workspace:^",
@@ -24,6 +25,7 @@
     "next-themes": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "sonner": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

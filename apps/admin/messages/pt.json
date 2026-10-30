@@ -1,6 +1,7 @@
 {
   "nav": {
-    "overview": "Visão Geral"
+    "overview": "Visão Geral",
+    "partners": "Revisão de cédulas"
   },
   "dashboard": {
     "welcome": "Consola do operador Eleva",
@@ -8,6 +9,72 @@
     "signedInAs": "Sessão iniciada como {email}",
     "eyebrow": "Operador",
     "emptyTitle": "As ferramentas de operador estão a caminho",
-    "emptyBody": "A aprovação de especialistas, os pagamentos e o registo de auditoria chegam com a consola de operador."
+    "emptyBody": "A revisão de cédulas já está disponível. Os pagamentos e o registo de auditoria chegam com a consola de operador."
+  },
+  "partners": {
+    "eyebrow": "Operador",
+    "title": "Revisão de cédulas",
+    "description": "Confirme cada cédula junto da Ordem antes de listar um especialista.",
+    "emptyTitle": "Nada para rever",
+    "emptyBody": "Aqui aparecem as novas cédulas e os especialistas listados que ainda precisam de verificação.",
+    "columns": {
+      "expert": "Especialista",
+      "body": "Ordem profissional",
+      "state": "Estado",
+      "waiting": "A aguardar desde"
+    },
+    "unknownBody": "Ainda não enviado",
+    "states": {
+      "pending": "Pendente",
+      "needs_changes": "Precisa de alterações",
+      "needs_verification": "Precisa de verificação",
+      "verified": "Verificada",
+      "rejected": "Rejeitada",
+      "not_submitted": "Não enviada"
+    },
+    "detail": {
+      "back": "Todas as revisões",
+      "description": "{email} · @{username}",
+      "listedNote": "Este especialista está listado e continua listado durante a revisão.",
+      "snapshotTitle": "O que o especialista enviou",
+      "sentAt": "Enviado em {date}",
+      "reviewedAt": "Última revisão em {date}",
+      "body": "Ordem profissional",
+      "licenceNumber": "Número da cédula",
+      "ersNumber": "Número de registo na ERS",
+      "openRegister": "Abrir o site da {body}",
+      "openErs": "Abrir o site da ERS",
+      "lastReason": "Último motivo",
+      "noApplication": "Este especialista ainda não enviou a cédula. Vê um aviso no painel. Pode decidir assim que a enviar.",
+      "approvedNote": "Esta cédula está verificada.",
+      "rejectedNote": "Este pedido foi rejeitado. O especialista pode enviar os dados novamente.",
+      "decisionTitle": "A sua decisão",
+      "checklistHelp": "Confirme todas as verificações para aprovar.",
+      "checklist": {
+        "register_checked": "Cédula encontrada e ativa no registo público da Ordem",
+        "name_matches": "O nome no registo corresponde a este especialista",
+        "ers_checked": "Número de registo confirmado junto da ERS"
+      },
+      "approve": "Aprovar",
+      "approving": "A aprovar...",
+      "reasonLabel": "Motivo",
+      "reasonHelp": "O especialista lê isto no email.",
+      "needsChanges": "Pedir alterações",
+      "reject": "Rejeitar",
+      "saving": "A guardar...",
+      "toasts": {
+        "approve": "Cédula aprovada",
+        "needs_changes": "Alterações pedidas",
+        "reject": "Pedido rejeitado"
+      },
+      "errors": {
+        "validation": "Verifique o formulário e tente novamente.",
+        "changed": "O especialista enviou novos dados. Recarregue para os ver.",
+        "decided": "Alguém já decidiu este pedido.",
+        "self": "Não pode rever o seu próprio pedido.",
+        "forbidden": "Não tem acesso a esta revisão.",
+        "failed": "Não foi possível concluir. Tente novamente."
+      }
+    }
   }
 }

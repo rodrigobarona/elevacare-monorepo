@@ -26,6 +26,12 @@ export {
   type InvoiceClosedGateStatus,
 } from "./invoice-closed-gate"
 export {
+  PartnerDecisionEmail,
+  partnerDecisionCopy,
+  type PartnerDecisionKind,
+  type PartnerDecisionProps,
+} from "./partner-decision"
+export {
   PaymentPayoutNoticeEmail,
   type PaymentPayoutNoticeProps,
   type PaymentPayoutNoticeKind,

@@ -82,6 +82,19 @@ const translations = {
       receiptTitle: "Payment received",
       receiptSubtitle: "We received your payment for this session.",
     },
+    partner: {
+      approvedTitle: "Your licence is verified",
+      approvedSubtitle:
+        "Thank you. We checked your licence and members can now find your profile.",
+      needsChangesTitle: "We need a change to your licence details",
+      needsChangesSubtitle:
+        "We could not finish checking your licence. Please update your details and send them again.",
+      rejectedTitle: "We could not verify your licence",
+      rejectedSubtitle:
+        "We checked your details and could not verify them. If something looks wrong, update them and send them again.",
+      reasonLabel: "What we found",
+      cta: "Review your licence",
+    },
     payout: {
       paidTitle: "Payout sent",
       paidSubtitle: "Your payout is on the way to your bank account.",
@@ -120,6 +133,9 @@ const translations = {
       price: "Price",
     },
     subject: {
+      partnerApproved: "Your licence is verified",
+      partnerNeedsChanges: "We need a change to your licence details",
+      partnerRejected: "We could not verify your licence",
       newBooking: (member: string, date: string) =>
         `New booking: ${member} — ${date}`,
       requested: (member: string, date: string) =>
@@ -241,6 +257,19 @@ const translations = {
       receiptTitle: "Pagamento recebido",
       receiptSubtitle: "Recebemos o pagamento desta sessão.",
     },
+    partner: {
+      approvedTitle: "A sua cédula está verificada",
+      approvedSubtitle:
+        "Obrigado. Verificámos a sua cédula e os membros já podem encontrar o seu perfil.",
+      needsChangesTitle: "Precisamos de uma alteração nos dados da sua cédula",
+      needsChangesSubtitle:
+        "Não conseguimos concluir a verificação da sua cédula. Atualize os seus dados e envie-os novamente.",
+      rejectedTitle: "Não conseguimos verificar a sua cédula",
+      rejectedSubtitle:
+        "Verificámos os seus dados e não os conseguimos confirmar. Se algo não estiver certo, atualize-os e envie-os novamente.",
+      reasonLabel: "O que encontrámos",
+      cta: "Rever a sua cédula",
+    },
     payout: {
       paidTitle: "Pagamento enviado",
       paidSubtitle: "O seu payout está a caminho da conta bancária.",
@@ -279,6 +308,10 @@ const translations = {
       price: "Preço",
     },
     subject: {
+      partnerApproved: "A sua cédula está verificada",
+      partnerNeedsChanges:
+        "Precisamos de uma alteração nos dados da sua cédula",
+      partnerRejected: "Não conseguimos verificar a sua cédula",
       newBooking: (member: string, date: string) =>
         `Nova marcação: ${member} — ${date}`,
       requested: (member: string, date: string) =>
@@ -400,6 +433,19 @@ const translations = {
       receiptTitle: "Pago recibido",
       receiptSubtitle: "Recibimos el pago de esta sesión.",
     },
+    partner: {
+      approvedTitle: "Tu colegiación está verificada",
+      approvedSubtitle:
+        "Gracias. Hemos comprobado tu colegiación y los miembros ya pueden encontrar tu perfil.",
+      needsChangesTitle: "Necesitamos un cambio en los datos de tu colegiación",
+      needsChangesSubtitle:
+        "No hemos podido terminar de comprobar tu colegiación. Actualiza tus datos y envíalos de nuevo.",
+      rejectedTitle: "No hemos podido verificar tu colegiación",
+      rejectedSubtitle:
+        "Hemos revisado tus datos y no hemos podido confirmarlos. Si algo no está bien, actualízalos y envíalos de nuevo.",
+      reasonLabel: "Lo que hemos encontrado",
+      cta: "Revisar tu colegiación",
+    },
     payout: {
       paidTitle: "Pago enviado",
       paidSubtitle: "Tu payout está en camino a tu cuenta bancaria.",
@@ -438,6 +484,10 @@ const translations = {
       price: "Precio",
     },
     subject: {
+      partnerApproved: "Tu colegiación está verificada",
+      partnerNeedsChanges:
+        "Necesitamos un cambio en los datos de tu colegiación",
+      partnerRejected: "No hemos podido verificar tu colegiación",
       newBooking: (member: string, date: string) =>
         `Nueva reserva: ${member} — ${date}`,
       requested: (member: string, date: string) =>
@@ -541,6 +591,16 @@ export interface EmailTranslations {
     receiptTitle: string
     receiptSubtitle: string
   }
+  partner: {
+    approvedTitle: string
+    approvedSubtitle: string
+    needsChangesTitle: string
+    needsChangesSubtitle: string
+    rejectedTitle: string
+    rejectedSubtitle: string
+    reasonLabel: string
+    cta: string
+  }
   payout: {
     paidTitle: string
     paidSubtitle: string
@@ -575,6 +635,9 @@ export interface EmailTranslations {
     price: string
   }
   subject: {
+    partnerApproved: string
+    partnerNeedsChanges: string
+    partnerRejected: string
     newBooking: (member: string, date: string) => string
     requested: (member: string, date: string) => string
     requestAccepted: (member: string, date: string) => string
