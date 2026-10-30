@@ -47,14 +47,35 @@ Prebuilt-only Daily probe is **not** this gate (see `docs/eleva-v3/spikes/09-dai
 Use this section when staging W3 is unavailable but the founder exception is active. Same steps as
 above; only the base URLs change (`https://eleva.care`, `https://api.eleva.care`).
 
-| Gate             | Status (2026-10-21) | Evidence                                                                                                                                                          |
-| ---------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Deploy freshness | **Partial**         | `x-vercel-id` present on `api.eleva.care/health` (includes `fra1`); Hobby deploy quota blocked CLI redeploy of all nine apps — retry fra1 batch after quota reset |
-| Phase 06 money   | **PENDING**         | Operator: reserve → Checkout (4242) → confirm → transfer; AUD-001 Flexible/Moderate/Strict cancels                                                                |
-| Phase 09 video   | **PENDING**         | Operator: expert join + guest `/join/{bookingId}?g=`; Daily webhook log ids                                                                                       |
-| Phase 04 guest   | **PENDING**         | Operator: unsigned reserve → pay → confirm; note BotID prod state                                                                                                 |
+| Gate             | Status (2026-10-21)   | Evidence                                                                                                                                                          |
+| ---------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Deploy freshness | **Partial**           | `x-vercel-id` present on `api.eleva.care/health` (includes `fra1`); Hobby deploy quota blocked CLI redeploy of all nine apps — retry fra1 batch after quota reset |
+| Phase 06 money   | **PENDING**           | Operator: reserve → Checkout (4242) → confirm → transfer; AUD-001 Flexible/Moderate/Strict cancels                                                                |
+| Phase 09 video   | **PENDING**           | Operator: expert join + guest `/join/{bookingId}?g=`; Daily webhook log ids                                                                                       |
+| Phase 04 guest   | **PASS** (2026-10-29) | Guest funnel on `dev.eleva.care` → `api.eleva.care`, PaymentIntent path. Re-run on Checkout Sessions after the next deploy; note BotID prod state                 |
 
 Pre-flight: confirm Stripe dashboard is **test mode**; confirm `DAILY_WEBHOOK_SECRET` on prod API before trusting webhook rows.
+
+## Accelerated loopback evidence (2026-10-30)
+
+Local API and app against the Neon dev branch, with Stripe test keys and a real Daily room. **This does
+not close a staging or dev-prod gate.** It proves the code paths; the deployed gates above stay open.
+
+Only the clock is shifted, and only in the local database: payout eligibility is days after a session,
+and a call needs a booking inside its join window. Charges, webhooks, transfers and the Daily room are
+real test-mode objects.
+
+| Path                                      | Result     | Evidence                                                                                                                    |
+| ----------------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Pay → webhook → payout → Connect transfer | **PASS**   | `pnpm e2e:payout-smoke`: €60 booking, `tr_3UW9kKGd5f3064kZ13EoUUNK`, €51 tied to the charge                                 |
+| 10% code, Checkout funnel                 | **PASS**   | €54 charged, €51 transferred, tied to the charge                                                                            |
+| 20% code, Checkout funnel                 | **PASS**   | €48 charged, `tr_1UWAfkGd5f3064kZCB7i1VSb`, €51 funded from Eleva's balance                                                 |
+| Cancellation refunds (AUD-001)            | **PASS**   | Flexible €60 and Strict €0. Moderate skipped: no slot in the 25–47h window at run time                                      |
+| Two-browser call                          | **PASS**   | `pnpm e2e:video-call-smoke` on a production build with the CSP on. Meeting `a45150f7-ef28-4cfb-a3d8-40880afa2ff2`, 2 people |
+| Daily webhooks → attendance               | **Replay** | Signed replay gave attendance `both`. Daily's real deliveries go to the deployed API, so they are still unproven            |
+
+Not proven: staff approval of a first payout (the smoke stands in for the API call), the bank payout from
+the connected account, and overtime behaviour in a real call.
 
 ## After evidence
 
