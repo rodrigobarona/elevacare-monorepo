@@ -6,7 +6,8 @@
 - **Scope:** the platform as a whole, centred on health data at scale and four
   higher-risk features:
   - booking with health professionals;
-  - video sessions on Daily;
+  - video sessions on **standard Daily** (not HIPAA, no BAA, recording off).
+    Production clinical video is gated; see §2.6;
   - live transcription;
   - AI-drafted session reports.
 - **Roles:**
@@ -137,6 +138,34 @@ record-keeping duty of the expert, optional transcription and drafting
 assistance, and platform security. See the RoPA for each purpose and its
 lawful basis.
 
+### 2.6 Video: production status (D-07 gate)
+
+This DPIA assesses the **standard Daily** configuration that is built today:
+EU call server (`geo: "eu-central-1"`), recording off
+(`enable_recording: false`), per-invitee tokens, no BAA, **not HIPAA**.
+
+It does **not** approve production clinical sessions on Daily:
+
+- D-07 (Daily HIPAA domain, BAA/DPA and EU processing position) is
+  **deferred** (decision log 2026-10-07 and 2026-10-12). The D-07 entry
+  states that it blocks production PHI-video processing.
+- Standard Daily is cleared for engineering, demos and the
+  accountant/legal review only.
+
+Production clinical video on Daily may start only when **one** of these is
+recorded in `docs/eleva-v3/decision-log.md`:
+
+1. **D-07 signed** by the founder and the DPO; or
+2. an **explicit risk acceptance** by the founder and the DPO for standard
+   Daily (not HIPAA, recording off). It must cite this DPIA (R5, R6, R7) and
+   confirm that:
+   - the Daily DPA is accepted in the company's name;
+   - Daily's DPF status has been rechecked after 2026-11-16;
+   - recording is confirmed off for the account.
+
+Until then, R5 and R6 below are rated for the standard-Daily configuration,
+and the §7 conclusion does not cover production clinical video.
+
 ## 3. Necessity and proportionality (art. 35(7)(b))
 
 | Principle                         | How it is met                                                                                                                                                                                                | Remaining concern                                                                                                                           |
@@ -183,7 +212,7 @@ lawful basis.
 | R3  | Another expert, or the wrong expert, reads a member's records                                                                                       | 2×4 = 8      | Author-only SELECT/INSERT/UPDATE/DELETE on `records` (migration 0061). Clinic sharing compiled but off. Member opt-out API. Cross-org RLS test.                                                              | 1×4 = 4             | Phase 11 toggle needs its own DPIA update (reason required, audited, member opt-out honoured).                                                                                                                              |
 | R4  | Health information leaks through email, SMS or calendar invites (shared inbox, lock-screen preview, forwarded email)                                | 3×3 = 9      | PHI-free payloads. Lane 2 schema. No Daily token in email or ICS. Join grant per booking and person, valid only in the window. Quiet hours.                                                                  | 2×2 = 4             | Keep subjects and bodies generic: "your session with {expert}" without the clinical specialty where possible. Move Twilio to IE1.                                                                                           |
 | R5  | An unauthorised person joins a video session (forwarded link, guessed room)                                                                         | 2×4 = 8      | Eleva join page. Signed grant. One meeting token per invitee. Two-person cap. `enforce_unique_user_ids`. Grant window. Revocation ejects.                                                                    | 1×3 = 3             | Expert UI shows who is in the room. Staging two-browser webhook exit gate still open.                                                                                                                                       |
-| R6  | Video content is captured or retained by the provider; US access to call metadata                                                                   | 2×4 = 8      | Recording off (`enable_recording: false`). EU call server (`geo: "eu-central-1"`). Daily DPA. DPF and SCCs.                                                                                                  | 1×3 = 3             | Recheck Daily on the DPF list on 2026-11-16. Do not claim HIPAA (D-07). Sign the Daily DPA in the company's name.                                                                                                           |
+| R6  | Video content is captured or retained by the provider; US access to call metadata                                                                   | 2×4 = 8      | Recording off (`enable_recording: false`). EU call server (`geo: "eu-central-1"`). Daily DPA. DPF and SCCs.                                                                                                  | 1×3 = 3             | **Production clinical video gated by §2.6** (D-07 signed or a recorded founder/DPO risk acceptance). Recheck Daily on the DPF list on 2026-11-16. Do not claim HIPAA (D-07). Sign the Daily DPA in the company's name.      |
 | R7  | Transcription captures more than intended (third parties, unrelated disclosures), is inaccurate, or happens without a valid choice                  | 3×3 = 9      | Off by default. Member's explicit `ai_processing` consent. Withdrawal closes all rows. Live only, no audio. EU processing (`transcription_geo: "eu"`). Stored encrypted in the record.                       | 2×3 = 6             | Show a visible "transcribing" indicator to both parties. Let either party stop it. The expert confirms consent before starting. Retention follows the record.                                                               |
 | R8  | AI drafts: provider retains or trains on clinical content; data leaves the EU; inaccurate drafts influence care                                     | 3×4 = 12     | `ff.ai_reports_beta` off. Approved-model allowlist. EU inference zone. Fail-closed ZDR attestation, checked live every 6 hours. Consent check. Drafts never shown to the member. 90-day purge. Human review. | 1×3 = 3 (while off) | **Before turning on:** company-held Vercel Pro with ZDR; review the provider's abuse-monitoring retention; TIA for OpenAI (not on DPF); AI Act art. 50 labels; expert attestation on review; update this DPIA.              |
 | R9  | PHI ends up in logs or error monitoring (Sentry, Vercel logs) where it is unencrypted and broadly accessible                                        | 3×3 = 9      | `pnpm check:no-phi-logs` CI grep. Sentry PHI and JWT redaction. EU Sentry. Audit payload allowlist.                                                                                                          | 2×3 = 6             | Run a staging log review to prove logs are PHI-free (security checklist, open). Keep Sentry at 90 days.                                                                                                                     |
@@ -234,6 +263,8 @@ owning-expert reads are sampled (R12).
   until the minors decision is taken.
   - On that basis, **prior consultation with the CNPD under art. 36(1) is not
     required.**
+- **Video:** this conclusion does not cover production clinical sessions on
+  Daily until the §2.6 gate is met.
 - **Prior consultation becomes necessary before launch** in any of these
   cases:
   - the minors question (R13) is answered "yes" without safeguards;

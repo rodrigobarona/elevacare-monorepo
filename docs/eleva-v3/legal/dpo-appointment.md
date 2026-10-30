@@ -190,7 +190,8 @@ To be adapted by the lawyer. A Portuguese version should be the signed text.
 > 6. **Secrecy.** The DPO is bound by professional secrecy on everything
 >    related to the role, including after it ends (Article 38(5) GDPR;
 >    Article 10 Lei 58/2019).
-> 7. **Contact.** Eleva publishes the DPO's contact as `dpo@eleva.care` and
+> 7. **Contact.** Eleva publishes the DPO's contact as `privacy@eleva.care`
+>    (routed to the DPO) and
 >    `[[postal address]]` in its privacy notices, and communicates the DPO's
 >    details to the CNPD.
 > 8. **Term.** This appointment runs for the term of the service contract and
@@ -205,18 +206,26 @@ To be adapted by the lawyer. A Portuguese version should be the signed text.
 
 **Source:** the CNPD DPO page
 (<https://www.cnpd.pt/organizacoes/outras-obrigacoes/encarregado-de-protecao-de-dados/>)
-and the online form (<https://www.cnpd.pt/dpo/>). Checked 2026-10-29. Only the
+and the online form (<https://www.cnpd.pt/dpo/>). Checked 2026-10-30. Only the
 form's opening screen was reviewed; the fields in steps 2 to 4 were not
 captured.
 
 1. **Before filing:**
    - sign the service contract and the appointment letter;
-   - create `dpo@eleva.care`, routed to the DPO and readable only by the DPO.
-     The current public pages already mention `dpo@eleva.care`; the fact sheet
-     uses `privacy@eleva.care`. Decide whether `privacy@` stays as the rights
-     inbox.
-2. **Go to <https://www.cnpd.pt/dpo/>** ("Notificações relativas ao
-   Encarregado de Proteção de Dados") and choose **"Fazer notificação de
+   - route `privacy@eleva.care` to the DPO. It is the **interim** data
+     protection contact today (fact sheet §1) and stays the single published
+     contact after the appointment, so no address changes on the public pages.
+     Some public pages still mention `dpo@eleva.care`; they should use
+     `privacy@eleva.care` (content feedback, see
+     [`experts-dpa-checklist.md`](./experts-dpa-checklist.md) §2). A dedicated
+     `dpo@` alias is optional, only if the DPO asks for one.
+2. **Open the CNPD DPO page**
+   (<https://www.cnpd.pt/organizacoes/outras-obrigacoes/encarregado-de-protecao-de-dados/>)
+   and follow its link to the online form, <https://www.cnpd.pt/dpo/>
+   ("Notificações relativas ao Encarregado de Proteção de Dados"; checked
+   2026-10-30). The form is an ASP.NET page that needs **cookies enabled**.
+   Without cookies, its cookie-detection redirect
+   (`?AspxAutoDetectCookieSupport=1`) loops. Then choose **"Fazer notificação de
    EPD"** (new notification). The form is for entities established in
    Portugal.
 3. **Complete the four steps.** Expect the entity's identification (name, NIPC,
@@ -268,4 +277,5 @@ captured.
   <https://www.cnpd.pt/media/meplvdie/wp243rev01_pt.pdf>
 - CNPD DPO page:
   <https://www.cnpd.pt/organizacoes/outras-obrigacoes/encarregado-de-protecao-de-dados/>
-- CNPD DPO form: <https://www.cnpd.pt/dpo/>
+- CNPD DPO form (linked from the DPO page; needs cookies):
+  <https://www.cnpd.pt/dpo/>

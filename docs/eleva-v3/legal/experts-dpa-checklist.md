@@ -75,9 +75,10 @@ Status key: ✅ covered · 🟡 partial · ❌ missing.
 4. **Analytics** listed among controller processing ("product analytics when
    enabled and consented"). No analytics is live (fact sheet §3). Keep it only
    if future-proofing is intended, and mark it "not active".
-5. **DPO contact `dpo@eleva.care`.** No DPO is appointed yet, and the fact
-   sheet uses `privacy@eleva.care`. Align once the DPO is appointed
-   ([`dpo-appointment.md`](./dpo-appointment.md)).
+5. **DPO contact `dpo@eleva.care`.** No DPO is appointed yet. Use
+   `privacy@eleva.care`, the single interim and published data protection
+   contact (fact sheet §1). It stays the published contact after the
+   appointment, routed to the DPO ([`dpo-appointment.md`](./dpo-appointment.md) §6).
 6. **Effective date 2025-12-31 vs `lastUpdated` 2026-10-22.** Make sure the
    effective date reflects the version experts accepted.
 7. **Clinic organisations.** For a clinic, the **clinic** is the controller,

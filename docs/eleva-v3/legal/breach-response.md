@@ -120,13 +120,17 @@ Use the severity matrix (§5). Factors to weigh (EDPB 9/2022 §IV):
 - vulnerable individuals;
 - number of people affected.
 
-**Health data.** EDPB 9/2022 ¶102: where a breach involves health data,
-damage "should be considered likely to occur". Treat any confidentiality
-breach of plaintext health data as **high** risk by default.
-
-**Encrypted data.** Where only ciphertext was exposed and the KEK and DEKs
-were not compromised, the risk may be low. This is the art. 34(3)(a)
-"unintelligible" exception. Record why the keys are believed to be safe.
+**Health data: default rule.** EDPB 9/2022 ¶102: where a breach involves
+health data, damage "should be considered likely to occur". Every breach
+involving health data is classified **S3 or S4** (notify the CNPD and the data
+subjects) **unless** one of the two low-risk exceptions in §5 (E1, E2) applies
+and its evidence is recorded in the register. The same exception decides
+**both** duties: if it applies, the breach is "unlikely to result in a risk"
+(no CNPD notification under art. 33(1)) and no communication to data
+subjects is needed (art. 34). If the evidence is incomplete, or the DPO does
+not approve, the default rule applies. If new facts undermine the evidence
+(for example, the keys turn out to be exposed), re-classify at once: the
+72-hour clock runs from awareness of those new facts.
 
 ### Step 4. Notify the expert-controllers (processor role, within 24 hours)
 
@@ -144,8 +148,13 @@ members. The DPO decides.
 Notify unless the breach is "unlikely to result in a risk". If in doubt,
 notify.
 
-- Online form: **<https://www.cnpd.pt/databreach/>**. The guidance page is
-  <https://www.cnpd.pt/organizacoes/outras-obrigacoes/violacao-de-dados-ou-data-breach/>.
+- Start from the CNPD guidance page
+  <https://www.cnpd.pt/organizacoes/outras-obrigacoes/violacao-de-dados-ou-data-breach/>
+  and follow its link to the online notification form,
+  <https://www.cnpd.pt/databreach/> (checked 2026-10-30). The form is an
+  ASP.NET page that needs **cookies enabled**. Without cookies, its
+  cookie-detection redirect (`?AspxAutoDetectCookieSupport=1`) loops. Use a
+  normal browser session, not a privacy mode that blocks cookies.
 - Choose a new notification, or "alterar notificação" to complete a phased
   one.
 - The form is only for art. 33 notifications. Its detailed fields were not
@@ -182,9 +191,27 @@ notice.**
 | Severity        | Typical facts                                                                                                                                                                                    | CNPD (art. 33)                    | Data subjects (art. 34)                    | Experts (processor)                           |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------- | ------------------------------------------ | --------------------------------------------- |
 | **S1 Low**      | Personal data, no health data. Few people. Contained at once, no evidence of access. E.g. one booking confirmation sent to the wrong address of the same member, or a short availability outage. | Usually no. Record the reasoning. | No                                         | If clinical content is involved, yes (inform) |
-| **S2 Medium**   | Contact or account data of many people, or a small number of people with non-clinical data that reveals a health relationship (expert name or profession). Or ciphertext exposed with keys safe. | **Yes**                           | Case by case (DPO)                         | Yes                                           |
+| **S2 Medium**   | Contact or account data of many people, or a small number of people with non-clinical data that reveals a health relationship (expert name or profession).                                       | **Yes**                           | Case by case (DPO)                         | Yes                                           |
 | **S3 High**     | Health data in plaintext for any number of people: notes, transcripts, documents, intake. Or credentials enabling access to records. Or a prolonged availability loss of records during care.    | **Yes**                           | **Yes**, unless art. 34(3) applies         | Yes, within 24 hours                          |
 | **S4 Critical** | S3 at scale, a KEK compromise, an ongoing exfiltration, or publication of health data                                                                                                            | **Yes**, phased if needed         | **Yes**, plus a public statement if needed | Yes, immediately                              |
+
+**Low-risk exceptions for health-data incidents.** These are the only ways a
+health-data incident can fall below S3. Each needs the listed evidence in the
+register and the DPO's written approval. Each applies to the CNPD (art. 33)
+and data-subject (art. 34) decisions together.
+
+| ID     | Exception                                                                                                                                                    | Required evidence (in the register)                                                                                                                                                                                                                                                                                                                                             | CNPD (art. 33)                                    | Data subjects (art. 34)     | Experts (processor) |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | --------------------------- | ------------------- |
+| **E1** | **Unintelligible data.** Only application-encrypted ciphertext was exposed (AES-256-GCM, per-organisation DEK, ADR-020). Confidentiality only.               | (1) Which tables or objects were exposed, and that the content fields were ciphertext. (2) Why the KEK (`ELEVA_KEK_V<n>`) and the `org_data_keys` DEKs were **not** compromised: no env-var or secret exposure, Vercel and Neon access logs reviewed. (3) No plaintext copies exposed (logs, Sentry, DSAR zips). (4) An intact backup exists, so there is no availability loss. | **No** (art. 33(1): unlikely to result in a risk) | **No** (art. 34(3)(a))      | Inform (template B) |
+| **E2** | **Contained disclosure to a trusted recipient.** Minor health information (EDPB 01/2021 ¶115) about one or very few people, sent to an identified recipient. | (1) The recipient is identified and trusted (e.g. a health professional bound by secrecy). (2) Written confirmation that the data was deleted and not used or forwarded, received within 24 hours. (3) The information is minor: no mental-health content, notes, transcripts or diagnoses. (4) No further exposure (e.g. the message was not forwarded).                       | **No**                                            | **No** (art. 34(1) not met) | Inform (template B) |
+
+E1 and E2 do **not** apply to:
+
+- availability breaches of records during care, where no backup can restore
+  them in time;
+- KEK or DEK exposure (S4);
+- plaintext notes, transcripts, documents or intake reaching anyone outside
+  the expert's practice.
 
 **Worked examples, adapted from EDPB Guidelines 01/2021:**
 
@@ -192,8 +219,8 @@ notice.**
   notify the SA. Tell patients who are affected by delays.
 - **Stolen log book with health data** (case 12): notify the SA and the data
   subjects.
-- **Health data, minor nature** (¶115, lactose intolerance): may be low risk.
-  Decide case by case.
+- **Health data, minor nature** (¶115, lactose intolerance): low risk only if
+  exception E2 applies with its evidence. Otherwise use the default rule.
 
 ## 6. Templates
 
@@ -203,7 +230,7 @@ Submitted through the online form. This text prepares the answers.
 
 ```text
 1. Controller: BÚZIOS E TARTARUGAS - LDA (Eleva.care), NIPC 515001708, Rua Gil Vicente 2,
-   2775-198 Parede. DPO: [name], dpo@eleva.care, [phone].
+   2775-198 Parede. DPO: [name], privacy@eleva.care, [phone].
    Role in this breach: controller [and/or processor on behalf of N health professionals].
 2. Timeline: occurred [date/time or window]; detected [date/time] via [source];
    aware [date/time]; contained [date/time]. [If >72h: reasons for delay.]
@@ -246,7 +273,7 @@ this notice and, if the risk to your members is high, inform them. We have prepa
 CNPD notice and member message for your approval and can file or send them on your
 written instruction.
 
-Contact: our DPO [name], dpo@eleva.care, [phone]. We will update you by [date/time].
+Contact: our DPO [name], privacy@eleva.care, [phone]. We will update you by [date/time].
 ```
 
 ### C. Notice to members (art. 34)
@@ -272,7 +299,7 @@ protection authority (CNPD) and your expert].
 What you can do: [e.g. be careful with emails that ask for your password; sign in and
 review your account; contact your expert if you have questions about your care].
 
-If you have questions, contact our data protection officer at dpo@eleva.care or reply to
+If you have questions, contact our data protection officer at privacy@eleva.care or reply to
 this email. You also have the right to complain to the CNPD (www.cnpd.pt).
 
 Eleva.care — BÚZIOS E TARTARUGAS - LDA
@@ -301,8 +328,10 @@ art. 5(2) and Lei 58/2019 art. 21(3).
 
 ## Points for lawyer/DPO review
 
-1. **Default classification of health-data incidents as high risk.** Confirm,
-   and confirm when ciphertext-only exposure qualifies for art. 34(3)(a).
+1. **Default classification of health-data incidents as high risk**, and the
+   two low-risk exceptions (E1 ciphertext with keys safe; E2 contained
+   disclosure to a trusted recipient). Confirm the evidence required, and that
+   one exception may decide both the art. 33 and the art. 34 question.
 2. **The 24-hour processor SLA** in the public DPA. Keep it or reword it?
 3. **NIS2 / CNCS.** Is Eleva in scope of the Portuguese NIS2 transposition
    (health sector, digital providers, size thresholds)? Eleva is probably
@@ -320,7 +349,7 @@ art. 5(2) and Lei 58/2019 art. 21(3).
 - GDPR arts. 4(12), 33, 34: <https://eur-lex.europa.eu/eli/reg/2016/679/oj>
 - CNPD breach page:
   <https://www.cnpd.pt/organizacoes/outras-obrigacoes/violacao-de-dados-ou-data-breach/>.
-  Form: <https://www.cnpd.pt/databreach/>
+  Form (linked from that page; needs cookies): <https://www.cnpd.pt/databreach/>
 - EDPB Guidelines 9/2022 on personal data breach notification, v2.0:
   <https://www.edpb.europa.eu/system/files/documents/2023-04/edpb_guidelines_202209_personal_data_breach_notification_v2.0_en.pdf>.
   PT version:
