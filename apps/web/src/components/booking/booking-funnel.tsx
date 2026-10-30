@@ -50,7 +50,11 @@ import { displayLanguage } from "@eleva/ui/lib/booking/display-names"
 import { toE164 } from "@eleva/ui/lib/booking/e164"
 import { maskPhone } from "@eleva/config/phone"
 import { slotRequiresApproval } from "@eleva/config/booking-settings"
-import { addMonths, startOfMonth } from "@eleva/ui/lib/booking/slot-groups"
+import {
+  addMonths,
+  groupSlotsByDay,
+  startOfMonth,
+} from "@eleva/ui/lib/booking/slot-groups"
 import { createPublicApiClient } from "@/lib/public-api"
 import { downloadBookingIcs } from "@eleva/calendar/ics-download"
 import {
@@ -270,7 +274,12 @@ export function BookingFunnel({
         if (cancelled) return
         // A calendar with every day disabled reads as "unavailable" when the
         // next open time is only days away, as it often is at month end.
-        if (result.slots.length === 0 && monthsToAutoSkip.current > 0) {
+        // The request runs a day past month end; only this month's days show.
+        const monthKey = month.toISOString().slice(0, 7)
+        const monthHasOpenTime = groupSlotsByDay(result.slots, timeZone).some(
+          (group) => group.dateKey.startsWith(monthKey)
+        )
+        if (!monthHasOpenTime && monthsToAutoSkip.current > 0) {
           monthsToAutoSkip.current -= 1
           setMonth(addMonths(month, 1))
           return
