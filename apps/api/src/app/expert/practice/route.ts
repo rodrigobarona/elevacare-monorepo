@@ -1,4 +1,7 @@
-import { PatchPracticeRequestSchema } from "@eleva/api-client"
+import {
+  hasFinishedExpertSetup,
+  PatchPracticeRequestSchema,
+} from "@eleva/api-client"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -139,13 +142,19 @@ export async function PATCH(request: Request) {
 
   const data = body.data
 
-  // Practice carries the licence only during setup. A listed profile files
-  // licence changes for staff review via POST /expert/profile/licence-application
+  // Practice carries the licence only during setup. A listed or filed profile
+  // sends licence changes for staff review via POST /expert/profile/licence-application
   // (which refuses once verified), so they never go live unverified.
   const licenceChanged = LICENCE_FIELDS.some(
     (field) => data[field] !== undefined && data[field] !== profile[field]
   )
-  if (licenceChanged && profile.status === "active") {
+  const licenceLocked =
+    profile.status === "active" ||
+    (profile.status === "approved" &&
+      hasFinishedExpertSetup(
+        profile.metadata as Record<string, unknown> | null
+      ))
+  if (licenceChanged && licenceLocked) {
     return secureJson(
       {
         error: "LICENCE_LOCKED",
