@@ -80,7 +80,7 @@ export default defineConfig({
     },
     {
       name: "chromium-video",
-      testMatch: "**/video-join.spec.ts",
+      testMatch: ["**/video-join.spec.ts", "**/video-call-smoke.spec.ts"],
       use: {
         ...devices["Desktop Chrome"],
         launchOptions: {
