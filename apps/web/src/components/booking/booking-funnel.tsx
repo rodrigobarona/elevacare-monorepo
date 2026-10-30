@@ -50,7 +50,11 @@ import { displayLanguage } from "@eleva/ui/lib/booking/display-names"
 import { toE164 } from "@eleva/ui/lib/booking/e164"
 import { maskPhone } from "@eleva/config/phone"
 import { slotRequiresApproval } from "@eleva/config/booking-settings"
-import { addMonths, startOfMonth } from "@eleva/ui/lib/booking/slot-groups"
+import {
+  addMonths,
+  groupSlotsByDay,
+  startOfMonth,
+} from "@eleva/ui/lib/booking/slot-groups"
 import { createPublicApiClient } from "@/lib/public-api"
 import { downloadBookingIcs } from "@eleva/calendar/ics-download"
 import {
@@ -97,6 +101,9 @@ type Payment = {
   bookingId: string
   publishableKey: string
 }
+
+/** How far the calendar looks ahead for the first month with open times. */
+const MAX_AUTO_SKIPPED_MONTHS = 2
 
 export function BookingFunnel({
   locale,
@@ -178,6 +185,7 @@ export function BookingFunnel({
     startOfMonth(initialSlot ? new Date(initialSlot.start) : new Date())
   )
   const [view, setView] = useState<"month" | "week">("month")
+  const monthsToAutoSkip = useRef(MAX_AUTO_SKIPPED_MONTHS)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
@@ -264,6 +272,19 @@ export function BookingFunnel({
       })
       .then((result) => {
         if (cancelled) return
+        // A calendar with every day disabled reads as "unavailable" when the
+        // next open time is only days away, as it often is at month end.
+        // The request runs a day past month end; only this month's days show.
+        const monthKey = month.toISOString().slice(0, 7)
+        const monthHasOpenTime = groupSlotsByDay(result.slots, timeZone).some(
+          (group) => group.dateKey.startsWith(monthKey)
+        )
+        if (!monthHasOpenTime && monthsToAutoSkip.current > 0) {
+          monthsToAutoSkip.current -= 1
+          setMonth(addMonths(month, 1))
+          return
+        }
+        monthsToAutoSkip.current = 0
         setSlots(result.slots)
         setSlotsRequest({ key, error: false })
       })
@@ -695,6 +716,7 @@ export function BookingFunnel({
               modes={cards}
               selectedKey={modeId}
               onSelectionChange={(id) => {
+                monthsToAutoSkip.current = MAX_AUTO_SKIPPED_MONTHS
                 setModeId(id)
                 setSlot(null)
               }}
@@ -768,6 +790,7 @@ export function BookingFunnel({
               }}
               month={month}
               onMonthChange={(next) => {
+                monthsToAutoSkip.current = 0
                 setMonth(next)
                 setSlot(null)
               }}
