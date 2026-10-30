@@ -11,7 +11,6 @@
  */
 import { Client, type Schedule } from "@upstash/qstash"
 
-// Retention sweep is expected only after DPO sign-off (setup-all --with-retention).
 const EXPECTED_PATHS = [
   "/workflows/tick/minutely",
   "/workflows/tick/10min",
@@ -22,6 +21,9 @@ const EXPECTED_PATHS = [
   "/workflows/process-pending-payouts",
   "/workflows/check-upcoming-payouts",
 ] as const
+
+/** Registered only after DPO sign-off (setup-all --with-retention). */
+const OPTIONAL_PATHS = ["/workflows/retention-sweep"] as const
 
 function isExpectedDestination(destination: string, path: string): boolean {
   try {
@@ -77,7 +79,9 @@ async function main() {
 
   const unexpected = schedules.filter(
     (s: Schedule) =>
-      !EXPECTED_PATHS.some((path) => isExpectedDestination(s.destination, path))
+      ![...EXPECTED_PATHS, ...OPTIONAL_PATHS].some((path) =>
+        isExpectedDestination(s.destination, path)
+      )
   )
   if (unexpected.length > 0) {
     console.log(`\n=== Unexpected schedules (delete in Upstash) ===`)

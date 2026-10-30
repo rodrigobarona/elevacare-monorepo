@@ -310,6 +310,20 @@ const WorkflowFailureSchema = z.union([
   ErrorSchema,
 ])
 
+const TickResultSchema = z.object({
+  ok: z.boolean(),
+  cadence: z.enum(["minutely", "10min", "hourly"]),
+  failed: z.number().int().nonnegative(),
+  results: z.record(
+    z.string(),
+    z.object({
+      status: z.number().int(),
+      body: z.unknown().optional(),
+      error: z.string().optional(),
+    })
+  ),
+})
+
 const ProbeReportSchema = z.object({
   status: z.enum(["healthy", "degraded"]),
   ranAt: z.string().datetime(),
@@ -5052,9 +5066,21 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             responses: {
               ...item.post!.responses,
+              "200": {
+                description: "Every job succeeded",
+                content: { "application/json": { schema: TickResultSchema } },
+              },
               "404": {
                 description: "Unknown cadence",
                 content: { "application/json": { schema: ErrorSchema } },
+              },
+              "500": {
+                description: "At least one job failed",
+                content: {
+                  "application/json": {
+                    schema: z.union([TickResultSchema, WorkflowFailureSchema]),
+                  },
+                },
               },
             },
           },

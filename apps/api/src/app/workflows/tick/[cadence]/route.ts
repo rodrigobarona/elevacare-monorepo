@@ -1,3 +1,4 @@
+import { captureException } from "@eleva/observability"
 import { corsHeaders } from "@/lib/cors"
 import {
   authorizeInternalWorkflow,
@@ -59,7 +60,10 @@ export async function POST(
     })
   )
 
-  const results: Record<string, { status: number; body?: unknown }> = {}
+  const results: Record<
+    string,
+    { status: number; body?: unknown; error?: string }
+  > = {}
   let failed = 0
   settled.forEach((outcome, index) => {
     const name = jobs[index]![0]
@@ -67,13 +71,14 @@ export async function POST(
       results[name] = outcome.value
       if (outcome.value.status >= 400) failed += 1
     } else {
-      results[name] = { status: 500 }
+      void captureException(outcome.reason, { probe: "workflow-tick", name })
+      results[name] = { status: 500, error: "job_threw" }
       failed += 1
     }
   })
 
-  // 500 lets QStash record the tick as failed; each job reports its own
-  // errors to Sentry from its handler.
+  // 500 lets QStash record the tick as failed; jobs that answer report
+  // their own errors to Sentry, jobs that throw are reported above.
   return secureJson(
     { ok: failed === 0, cadence, failed, results },
     { status: failed === 0 ? 200 : 500, headers }
