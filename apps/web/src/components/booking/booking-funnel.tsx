@@ -98,6 +98,9 @@ type Payment = {
   publishableKey: string
 }
 
+/** How far the calendar looks ahead for the first month with open times. */
+const MAX_AUTO_SKIPPED_MONTHS = 2
+
 export function BookingFunnel({
   locale,
   expertName,
@@ -178,6 +181,7 @@ export function BookingFunnel({
     startOfMonth(initialSlot ? new Date(initialSlot.start) : new Date())
   )
   const [view, setView] = useState<"month" | "week">("month")
+  const monthsToAutoSkip = useRef(MAX_AUTO_SKIPPED_MONTHS)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
@@ -264,6 +268,14 @@ export function BookingFunnel({
       })
       .then((result) => {
         if (cancelled) return
+        // A calendar with every day disabled reads as "unavailable" when the
+        // next open time is only days away, as it often is at month end.
+        if (result.slots.length === 0 && monthsToAutoSkip.current > 0) {
+          monthsToAutoSkip.current -= 1
+          setMonth(addMonths(month, 1))
+          return
+        }
+        monthsToAutoSkip.current = 0
         setSlots(result.slots)
         setSlotsRequest({ key, error: false })
       })
@@ -695,6 +707,7 @@ export function BookingFunnel({
               modes={cards}
               selectedKey={modeId}
               onSelectionChange={(id) => {
+                monthsToAutoSkip.current = MAX_AUTO_SKIPPED_MONTHS
                 setModeId(id)
                 setSlot(null)
               }}
@@ -768,6 +781,7 @@ export function BookingFunnel({
               }}
               month={month}
               onMonthChange={(next) => {
+                monthsToAutoSkip.current = 0
                 setMonth(next)
                 setSlot(null)
               }}
