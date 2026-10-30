@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { PatchPracticeRequestSchema } from "@eleva/api-client"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -23,22 +23,8 @@ export const ROUTE_POLICY = {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-const countryCode = z
-  .string()
-  .length(2)
-  .regex(/^[A-Za-z]{2}$/, "ISO 3166-1 alpha-2")
-  .transform((v) => v.toUpperCase())
-
-const PatchPracticeSchema = z
-  .object({
-    practiceCountry: countryCode.optional(),
-    serviceCountries: z.array(countryCode).min(1).optional(),
-    languages: z.array(z.string().min(2).max(16)).min(1).optional(),
-    licenseScope: z.string().max(500).nullish(),
-    worldwideRemote: z.boolean().optional(),
-    acceptingBookings: z.boolean().optional(),
-  })
-  .superRefine((value, ctx) => {
+const PatchPracticeSchema = PatchPracticeRequestSchema.superRefine(
+  (value, ctx) => {
     if (value.practiceCountry && value.serviceCountries) {
       if (!value.serviceCountries.includes(value.practiceCountry)) {
         ctx.addIssue({
@@ -48,7 +34,14 @@ const PatchPracticeSchema = z
         })
       }
     }
-  })
+  }
+)
+
+const LICENCE_FIELDS = [
+  "professionalBody",
+  "licenceNumber",
+  "ersRegistrationNumber",
+] as const
 
 function practicePayload(profile: {
   id: string
@@ -56,6 +49,9 @@ function practicePayload(profile: {
   serviceCountries: string[]
   languages: string[]
   licenseScope: string | null
+  professionalBody: string | null
+  licenceNumber: string | null
+  ersRegistrationNumber: string | null
   worldwideRemote: boolean
   acceptingBookings: boolean
 }) {
@@ -65,6 +61,9 @@ function practicePayload(profile: {
     serviceCountries: profile.serviceCountries,
     languages: profile.languages,
     licenseScope: profile.licenseScope,
+    professionalBody: profile.professionalBody,
+    licenceNumber: profile.licenceNumber,
+    ersRegistrationNumber: profile.ersRegistrationNumber,
     worldwideRemote: profile.worldwideRemote,
     acceptingBookings: profile.acceptingBookings,
   }
@@ -139,6 +138,24 @@ export async function PATCH(request: Request) {
   }
 
   const data = body.data
+
+  // Practice carries the licence only during setup. A listed profile files
+  // licence changes for staff review via POST /expert/profile/licence-application
+  // (which refuses once verified), so they never go live unverified.
+  const licenceChanged = LICENCE_FIELDS.some(
+    (field) => data[field] !== undefined && data[field] !== profile[field]
+  )
+  if (licenceChanged && profile.status === "active") {
+    return secureJson(
+      {
+        error: "LICENCE_LOCKED",
+        message:
+          "Listed profiles change their licence through POST /expert/profile/licence-application",
+      },
+      { status: 409, headers }
+    )
+  }
+
   const nextPracticeCountry = data.practiceCountry ?? profile.practiceCountry
   const nextServiceCountries = (
     data.serviceCountries ?? profile.serviceCountries
@@ -218,6 +235,15 @@ export async function PATCH(request: Request) {
           ...(data.languages !== undefined && { languages: data.languages }),
           ...(data.licenseScope !== undefined && {
             licenseScope: data.licenseScope ?? null,
+          }),
+          ...(data.professionalBody !== undefined && {
+            professionalBody: data.professionalBody,
+          }),
+          ...(data.licenceNumber !== undefined && {
+            licenceNumber: data.licenceNumber,
+          }),
+          ...(data.ersRegistrationNumber !== undefined && {
+            ersRegistrationNumber: data.ersRegistrationNumber,
           }),
           ...(data.worldwideRemote !== undefined && {
             worldwideRemote: data.worldwideRemote,

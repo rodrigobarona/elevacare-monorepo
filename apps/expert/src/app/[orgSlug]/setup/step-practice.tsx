@@ -21,6 +21,13 @@ import {
   AccordionTrigger,
 } from "@eleva/ui/components/accordion"
 import { savePracticeStep } from "./actions"
+import {
+  LicenceFields,
+  hasLicenceErrors,
+  validateLicence,
+  type LicenceErrors,
+  type LicenceValue,
+} from "../_components/licence-fields"
 import { EU_SERVICE_COUNTRIES } from "@eleva/config"
 
 /** Launch practice-country picker (Portugal-first markets). */
@@ -43,7 +50,9 @@ export interface PracticeStepProfile {
   practiceCountry: string
   serviceCountries: string[]
   languages: string[]
-  licenseScope: string | null
+  professionalBody: string | null
+  licenceNumber: string | null
+  ersRegistrationNumber: string | null
   worldwideRemote: boolean
 }
 
@@ -93,9 +102,12 @@ export function StepPractice({ profile, onDone }: Props) {
       return new Set(all.filter((c) => c !== base))
     })
   const [languages, setLanguages] = React.useState<string[]>(profile.languages)
-  const [licenseScope, setLicenseScope] = React.useState(
-    profile.licenseScope ?? ""
-  )
+  const [licence, setLicence] = React.useState<LicenceValue>({
+    professionalBody: profile.professionalBody ?? "",
+    licenceNumber: profile.licenceNumber ?? "",
+    ersRegistrationNumber: profile.ersRegistrationNumber ?? "",
+  })
+  const [licenceErrors, setLicenceErrors] = React.useState<LicenceErrors>({})
   const [worldwideRemote, setWorldwideRemote] = React.useState(
     profile.worldwideRemote
   )
@@ -192,6 +204,13 @@ export function StepPractice({ profile, onDone }: Props) {
       return
     }
 
+    const nextLicenceErrors = validateLicence(licence)
+    setLicenceErrors(nextLicenceErrors)
+    if (hasLicenceErrors(nextLicenceErrors)) {
+      setPending(false)
+      return
+    }
+
     const countries = uniqueUpper(
       serviceCountries.includes(practiceCountry)
         ? serviceCountries
@@ -203,7 +222,9 @@ export function StepPractice({ profile, onDone }: Props) {
         practiceCountry,
         serviceCountries: countries,
         languages,
-        licenseScope: licenseScope.trim() || null,
+        professionalBody: licence.professionalBody,
+        licenceNumber: licence.licenceNumber.trim(),
+        ersRegistrationNumber: licence.ersRegistrationNumber.trim(),
         worldwideRemote,
       })
 
@@ -218,6 +239,7 @@ export function StepPractice({ profile, onDone }: Props) {
           "practice-incomplete",
           "invalidCountry",
           "invalidLanguage",
+          "licence-locked",
         ])
         const key = known.has(result.error) ? result.error : "save-failed"
         setError(t(`errors.${key}` as "errors.save-failed"))
@@ -405,16 +427,17 @@ export function StepPractice({ profile, onDone }: Props) {
         </div>
       </fieldset>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="license-scope">{t("licenseScope")}</Label>
-        <Input
-          id="license-scope"
-          value={licenseScope}
-          onChange={(e) => setLicenseScope(e.target.value)}
-          placeholder={t("licenseScopePlaceholder")}
-        />
-        <p className="text-xs text-muted-foreground">{t("licenseScopeHelp")}</p>
-      </div>
+      <LicenceFields
+        idPrefix="practice-licence"
+        value={licence}
+        errors={licenceErrors}
+        onChange={(next) => {
+          setLicence(next)
+          if (hasLicenceErrors(licenceErrors)) {
+            setLicenceErrors(validateLicence(next))
+          }
+        }}
+      />
 
       <div className="space-y-1.5">
         <CheckboxField

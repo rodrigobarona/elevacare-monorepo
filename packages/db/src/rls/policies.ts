@@ -21,6 +21,7 @@ import { RLS_TABLE_ASSIGNMENTS } from "./classes"
 export const TENANT_TABLES = [
   "audit_outbox",
   "expert_profiles",
+  "become_partner_applications",
   "expert_listings",
   "clinic_profiles",
   "expert_integrations",
@@ -179,6 +180,8 @@ export const ADMIN_BYPASS_TABLES = new Set<string>([
   "clinic_saas_invoices",
   // Hourly follow-up-due sweep scans across orgs; notes stay encrypted.
   "crm_follow_ups",
+  // Staff licence-verification queue reads and decides across orgs.
+  "become_partner_applications",
 ])
 
 function isDualOrganization(table: string): boolean {

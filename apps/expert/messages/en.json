@@ -817,9 +817,6 @@
       "whyWeAskTitle": "Why we ask",
       "whyWeAskBody": "Health regulation is national: a licence in one country does not automatically cover another. Worldwide remote is only for non-clinical work (coaching, mentoring).",
       "languagesLabel": "Languages you use with members",
-      "licenseScope": "Licence / registration",
-      "licenseScopePlaceholder": "e.g. OPP 12345",
-      "licenseScopeHelp": "Optional now; required before admin approval for clinical offers.",
       "worldwideRemote": "Worldwide remote (non-clinical only)",
       "worldwideRemoteHelp": "Lets you offer non-clinical sessions without a country limit. Clinical modes still follow the countries above.",
       "saving": "Saving…",
@@ -841,7 +838,8 @@
         "offer-invariant": "This change would break a published offer. Update those modes first.",
         "practice-incomplete": "Complete practice country and languages first.",
         "invalidCountry": "Enter a valid 2-letter country code (ISO 3166-1).",
-        "invalidLanguage": "Enter a valid language code (e.g. pt, en, fr)."
+        "invalidLanguage": "Enter a valid language code (e.g. pt, en, fr).",
+        "licence-locked": "Your licence is verified. To change it, write to support@eleva.care."
       }
     },
     "payments": {
@@ -908,7 +906,7 @@
     "eyebrow": "Expert setup",
     "stepHints": {
       "profile": "Tax number and how you meet members.",
-      "practice": "Country, languages and where you see members.",
+      "practice": "Country, languages, your licence and where you see members.",
       "connect": "Where your earnings are paid. You can finish this later.",
       "identity": "A quick, secure ID check with Stripe.",
       "invoicing": "How invoices are issued for your sessions.",
@@ -937,16 +935,17 @@
       "later": "Continue for now"
     },
     "finish": {
-      "title": "You're ready to open your practice",
-      "body": "Finishing setup opens your dashboard, where you can:",
+      "title": "You're ready to send your practice for review",
+      "body": "When you finish, we check your licence with your Ordem. Members can book you once it's verified. Meanwhile you can:",
       "items": [
         "Create your first service and set its price",
         "Set the weekly hours members can book",
         "Connect Google or Microsoft calendars to avoid double bookings",
         "Polish your public profile with a photo and bio"
       ],
-      "submit": "Finish setup",
-      "finishing": "Opening your practice…"
+      "submit": "Finish and send for verification",
+      "finishing": "Sending for verification…",
+      "addLicence": "Add licence details"
     },
     "errors": {
       "validation": "Check the form and try again.",
@@ -954,7 +953,8 @@
       "practice-incomplete": "Finish the practice step first.",
       "invoicing-required": "Choose how invoices are issued first.",
       "identity-required": "Start the identity check first.",
-      "invalid-step": "Something went wrong. Refresh and try again."
+      "invalid-step": "Something went wrong. Refresh and try again.",
+      "licence-required": "Add your professional body, licence number and ERS registration number in the Practice step."
     }
   },
   "publicProfile": {
@@ -1181,5 +1181,93 @@
     "emailLabel": "Email",
     "phoneLabel": "Phone",
     "saveLead": "Add lead"
+  },
+  "licence": {
+    "fields": {
+      "legend": "Your professional licence",
+      "intro": "Eleva lists regulated health professionals only. We check these details with your professional body before members can find you.",
+      "body": "Professional body",
+      "bodyPlaceholder": "Select your Ordem",
+      "bodyHelp": "The Ordem that issued your licence to practise.",
+      "licenceNumber": "Licence number",
+      "licenceNumberHelp": "Your cédula profissional number, exactly as it appears on the Ordem's register.",
+      "ersNumber": "ERS registration number",
+      "ersNumberHelp": "On your certificate of registration with the Entidade Reguladora da Saúde (ERS).",
+      "whyTitle": "Why we ask for this",
+      "whyBody": "Portuguese rules require every health professional's profile to show their licence number, the professional body that issued it and their ERS registration number. Advertising a provider who isn't registered with the ERS isn't allowed, so we check all three before your profile goes public.",
+      "errors": {
+        "bodyRequired": "Choose the Ordem that issued your licence.",
+        "licenceRequired": "Enter your licence number.",
+        "licenceInvalid": "Use only letters, numbers, spaces, dots, slashes or hyphens.",
+        "ersRequired": "Enter your ERS registration number.",
+        "ersInvalid": "Use only letters, numbers, dots, slashes or hyphens, with no spaces."
+      }
+    },
+    "page": {
+      "title": "Licence verification",
+      "description": "We check every expert's licence before members can find them on Eleva.",
+      "pending": {
+        "title": "Your licence is being verified",
+        "body": "Thanks. We're checking your details with {body}.",
+        "nextTitle": "What happens next",
+        "next": [
+          "We look up your licence number on the Ordem's public register.",
+          "We confirm your ERS registration.",
+          "We email you when we're done, usually within 2 working days."
+        ],
+        "meanwhile": "Meanwhile you can set up your services, hours and calendars. Members can book you once your licence is verified.",
+        "meanwhileListed": "Your profile stays visible while we check."
+      },
+      "needs_changes": {
+        "title": "We need a change to your licence details",
+        "body": "Read the note from our team, update your details below and send them again."
+      },
+      "rejected": {
+        "title": "We couldn't verify your licence",
+        "body": "Read the note from our team. If something was wrong, correct your details below and send them again."
+      },
+      "unsubmitted": {
+        "title": "Confirm your licence details",
+        "body": "Eleva now verifies every expert's licence. Add your details below so we can confirm them."
+      },
+      "verified": {
+        "title": "Your licence is verified",
+        "body": "Verified on {date}. To change these details, write to support@eleva.care."
+      },
+      "reasonLabel": "Note from Eleva",
+      "submit": "Send for verification",
+      "resubmit": "Send again",
+      "submitting": "Sending…",
+      "submitted": "Sent. We'll email you when your licence is verified.",
+      "support": "Questions? Write to <link>support@eleva.care</link>.",
+      "errors": {
+        "validation": "Check the highlighted fields and try again.",
+        "locked": "Your licence is already verified. To change it, write to support@eleva.care.",
+        "not-eligible": "Finish setup before sending your licence.",
+        "failed": "We couldn't send your details. Please try again."
+      }
+    },
+    "notice": {
+      "pending": {
+        "title": "Your licence is being verified",
+        "body": "Members can find and book you once we confirm it, usually within 2 working days.",
+        "cta": "View status"
+      },
+      "needs_changes": {
+        "title": "Your licence details need a change",
+        "body": "Our team asked for a change before we can list you.",
+        "cta": "Review and send again"
+      },
+      "rejected": {
+        "title": "We couldn't verify your licence",
+        "body": "See the note from our team and what you can do next.",
+        "cta": "See details"
+      },
+      "unsubmitted": {
+        "title": "Confirm your licence details",
+        "body": "Eleva now verifies every expert's licence. Add yours so we can confirm it.",
+        "cta": "Add licence details"
+      }
+    }
   }
 }

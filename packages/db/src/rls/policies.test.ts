@@ -106,17 +106,20 @@ describe("buildMainRlsStatements", () => {
     }
   })
 
-  it("includes platform_admin bypass for expert_profiles", () => {
-    const policy = stmts.find((s) =>
-      s.startsWith("CREATE POLICY expert_profiles_tenant_isolation")
-    )
-    expect(policy).toContain(
-      "org_id::text = current_setting('eleva.org_id', true)"
-    )
-    expect(policy).toContain(
-      "current_setting('eleva.platform_admin', true) = 'true'"
-    )
-  })
+  it.each(["expert_profiles", "become_partner_applications"])(
+    "includes platform_admin bypass for %s",
+    (table) => {
+      const policy = stmts.find((s) =>
+        s.startsWith(`CREATE POLICY ${table}_tenant_isolation`)
+      )
+      expect(policy).toContain(
+        "org_id::text = current_setting('eleva.org_id', true)"
+      )
+      expect(policy).toContain(
+        "current_setting('eleva.platform_admin', true) = 'true'"
+      )
+    }
+  )
 
   it("includes platform_admin bypass for expert_invoices", () => {
     const policy = stmts.find((s) =>

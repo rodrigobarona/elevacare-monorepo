@@ -18,23 +18,27 @@ const ITEM_ICONS = [TagIcon, ClockIcon, CalendarDotsIcon, SparkleIcon]
 
 interface Props {
   workspaceBase: string
+  onEditLicence: () => void
 }
 
-export function StepFinish({ workspaceBase }: Props) {
+export function StepFinish({ workspaceBase, onEditLicence }: Props) {
   const t = useTranslations("onboarding")
   const items = t.raw("finish.items") as string[]
   const [pending, setPending] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [needsLicence, setNeedsLicence] = React.useState(false)
 
   async function handleFinish() {
     setPending(true)
     setError(null)
+    setNeedsLicence(false)
     try {
       const result = await markStepComplete("schedule")
       if (result.ok) {
-        window.location.assign(workspaceBase)
+        window.location.assign(`${workspaceBase}/licence`)
         return
       }
+      setNeedsLicence(result.error === "licence-required")
       setError(setupErrorMessage(t, result.error))
     } catch {
       setError(setupErrorMessage(t, "save-failed"))
@@ -46,7 +50,14 @@ export function StepFinish({ workspaceBase }: Props) {
     <div className="flex flex-col gap-6">
       {error ? (
         <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription className="flex flex-col items-start gap-3">
+            {error}
+            {needsLicence ? (
+              <Button size="sm" variant="outline" onPress={onEditLicence}>
+                {t("finish.addLicence")}
+              </Button>
+            ) : null}
+          </AlertDescription>
         </Alert>
       ) : null}
 

@@ -32,6 +32,43 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-30: Licence verification before public listing (active)
+
+- Implements item 4 of the 2026-10-29 "Launch legal posture" entry and supersedes the activation rule of 2026-10-20 "Expert setup wizard v3 and activation rule".
+- Shipped in PR 1 (`feat(db,api,expert)`):
+  - Migration `0071_become_partner_applications` recreates `become_partner_applications`
+    (one open application per profile) and adds `professional_body`, `licence_number`,
+    `ers_registration_number` to `expert_profiles`. RLS lets the expert org file or refile a
+    pending, unreviewed row only; decisions and deletes are staff-only (`eleva.platform_admin`).
+    A DB CHECK refuses an `approved` row without reviewer, `reviewed_at` and every
+    `LICENCE_CHECKLIST_ITEMS` check (the licence verification record).
+  - Professional bodies SSOT: `@eleva/config/professional-bodies` (seven Ordens, official
+    names, official sites) plus the staff checklist ids.
+  - Setup Practice step collects body, licence number and ERS number. Finishing setup on an
+    `approved` profile files a `pending` application and keeps the profile `approved` (not
+    listed). `409 LICENCE_REQUIRED` when the licence is missing.
+  - `GET|POST /expert/profile/licence-application`: experts read their status and resubmit after
+    `needs_changes` / `rejected`. Active profiles without an approved application submit here too
+    and stay active while staff check. A verified licence is locked (`409 LICENCE_LOCKED`).
+  - `/{org}/licence` shows the state (pending, needs changes, rejected, unverified, verified); the
+    dashboard shows a prompt until verified. Finished `approved` experts can use the dashboard
+    to prepare services; they are not public until `active`.
+- PR 2 (`feat(api,admin)`): staff queue in `apps/admin` and `/admin/partners/**` (approve,
+  reject, request changes, plus "Needs verification" for active profiles with no approved
+  application: approve keeps them active, or suspend with a reason).
+- No migration suspends or downgrades anyone: profiles already `active` stay active.
+- Out of scope (open follow-ups, not shipped):
+  - Public profile display of licence number, Ordem and ERS number (ERS Regulation 1058/2016).
+  - Licence evidence upload to the private Blob store (`licence_evidence_blob_key`).
+  - `partner.approved` / `partner.rejected` / `partner.needs_changes` notification kinds and
+    emails.
+  - Exact public-register search URLs per Ordem (the SSOT links each Ordem's official site).
+  - Founder confirmation of the "usually within 2 working days" copy.
+  - Retiring the free-text `license_scope` column (the wizard no longer writes it).
+- Owner: founder (rule), engineering (implementation). Status: `active`.
+- Related: `docs/eleva-v3/execution-plan/phases/12-admin-console.md` deliverable 3,
+  `apps/api/src/app/expert/profile/steps/[step]/complete/route.ts`.
+
 ### 2026-10-29: Launch legal posture — intermediary, external DPO, D-06 balanced, regulated experts only (active)
 
 - Decisions (founder, 2026-10-29):
@@ -423,6 +460,8 @@ Each entry should include:
   through the same picker. OAuth callbacks that land on `/setup` after
   onboarding are forwarded there.
 - Out of scope: an admin review gate before `active`.
+- Superseded 2026-10-30: setup completion no longer activates; see "Licence verification
+  before public listing".
 - Owner: engineering. Status: `proposed`.
 - Next review: 2026-10-27 (founder sign-off on the approved-to-active rule).
 - Related: `apps/api/src/app/expert/profile/steps/[step]/complete/route.ts`,

@@ -28,6 +28,12 @@ export function mapExpertApiError(
     if (err.body.error === "IDENTITY_REQUIRED") {
       return "identity-required"
     }
+    if (err.body.error === "LICENCE_REQUIRED") {
+      return "licence-required"
+    }
+    if (err.body.error === "LICENCE_LOCKED") {
+      return "licence-locked"
+    }
     if (err.status === 409 || err.body.error === "conflict") {
       if (err.body.error === "CONNECT_INCOMPLETE") {
         return codes?.connectIncomplete ?? "connect-incomplete"

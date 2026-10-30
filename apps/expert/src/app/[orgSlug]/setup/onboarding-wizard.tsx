@@ -28,7 +28,9 @@ export interface OnboardingProfile {
   id: string
   orgId: string
   nif: string | null
-  licenseScope: string | null
+  professionalBody: string | null
+  licenceNumber: string | null
+  ersRegistrationNumber: string | null
   languages: string[]
   practiceCountry: string
   serviceCountries: string[]
@@ -104,7 +106,9 @@ export function OnboardingWizard({
                 ? profile.serviceCountries
                 : profile.practiceCountries,
             languages: profile.languages,
-            licenseScope: profile.licenseScope,
+            professionalBody: profile.professionalBody,
+            licenceNumber: profile.licenceNumber,
+            ersRegistrationNumber: profile.ersRegistrationNumber,
             worldwideRemote: profile.worldwideRemote,
           }}
           onDone={handleStepDone}
@@ -135,7 +139,10 @@ export function OnboardingWizard({
         />
       )}
       {activeStep === "schedule" && (
-        <StepFinish workspaceBase={workspaceBase} />
+        <StepFinish
+          workspaceBase={workspaceBase}
+          onEditLicence={() => setActiveStep("practice")}
+        />
       )}
     </>
   )

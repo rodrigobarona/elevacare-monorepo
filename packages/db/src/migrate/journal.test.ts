@@ -38,13 +38,19 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0070_booking_payments_admin_rls")
-    expect(last?.statements.length).toBe(2)
+    expect(last?.tag).toBe("0071_become_partner_applications")
     expect(last?.hash).toHaveLength(64)
     expect(last?.statements.join("\n")).toContain(
-      "booking_payments_tenant_isolation"
+      "become_partner_applications_open_uidx"
     )
     expect(last?.statements.join("\n")).toContain("eleva.platform_admin")
+    const bookingPaymentsRls = migrations.find(
+      (m) => m.tag === "0070_booking_payments_admin_rls"
+    )
+    expect(bookingPaymentsRls?.statements.length).toBe(2)
+    expect(bookingPaymentsRls?.statements.join("\n")).toContain(
+      "booking_payments_tenant_isolation"
+    )
     const retentionSweep = migrations.find(
       (m) => m.tag === "0069_session_document_retention_sweep"
     )

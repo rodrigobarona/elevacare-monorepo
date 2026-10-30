@@ -4,6 +4,7 @@ const SETUP_ERROR_CODES = [
   "practice-incomplete",
   "invoicing-required",
   "identity-required",
+  "licence-required",
   "invalid-step",
 ] as const
 

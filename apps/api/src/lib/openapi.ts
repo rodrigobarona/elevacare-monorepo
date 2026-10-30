@@ -145,6 +145,10 @@ import {
   ListCrmFollowUpsQuerySchema,
   ListCrmFollowUpsResponseSchema,
   UpdateCrmContactRequestSchema,
+  ExpertLicenceApplicationResponseSchema,
+  ExpertLicenceSchema,
+  PatchPracticeRequestSchema,
+  PracticeResponseSchema,
 } from "@eleva/api-client"
 
 const ErrorSchema = z.object({
@@ -815,11 +819,61 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               },
             },
           ],
+          description:
+            "Completing `schedule` on an `approved` profile files the declared licence as a `pending` become-partner application; the profile is listed only after staff approve it.",
           requestBody: emptyRequestBody,
           responses: {
             "200": {
               description: "Step completed",
               content: { "application/json": { schema: OkSchema } },
+            },
+            "409": {
+              description:
+                "PRACTICE_INCOMPLETE, invoicing_required, IDENTITY_REQUIRED or LICENCE_REQUIRED",
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/expert/profile/licence-application": {
+        get: {
+          operationId: "getExpertLicenceApplication",
+          summary: "Get the expert's latest licence verification application",
+          tags: ["Expert Profile"],
+          responses: {
+            "200": {
+              description: "Latest application, or null when none was filed",
+              content: {
+                "application/json": {
+                  schema: ExpertLicenceApplicationResponseSchema,
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+        post: {
+          operationId: "submitExpertLicence",
+          summary: "Submit or resubmit the licence for staff verification",
+          description:
+            "For a finished `approved` profile (after needs_changes or rejected) or an `active` profile that was never verified. Saves the licence on the profile and files a `pending` application. The profile status does not change.",
+          tags: ["Expert Profile"],
+          requestBody: {
+            required: true,
+            content: { "application/json": { schema: ExpertLicenceSchema } },
+          },
+          responses: {
+            "201": {
+              description: "Application filed as pending",
+              content: {
+                "application/json": {
+                  schema: ExpertLicenceApplicationResponseSchema,
+                },
+              },
+            },
+            "409": {
+              description:
+                "LICENCE_LOCKED (already verified), SETUP_INCOMPLETE or PROFILE_NOT_ELIGIBLE",
             },
             ...stdWithNotFound,
           },
@@ -969,14 +1023,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             required: true,
             content: {
               "application/json": {
-                schema: z.object({
-                  practiceCountry: z.string().length(2).optional(),
-                  serviceCountries: z.array(z.string().length(2)).optional(),
-                  languages: z.array(z.string()).optional(),
-                  licenseScope: z.string().nullable().optional(),
-                  worldwideRemote: z.boolean().optional(),
-                  acceptingBookings: z.boolean().optional(),
-                }),
+                schema: PatchPracticeRequestSchema,
               },
             },
           },
@@ -985,12 +1032,13 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               description: "Practice updated",
               content: {
                 "application/json": {
-                  schema: z.object({ practice: z.unknown() }),
+                  schema: PracticeResponseSchema,
                 },
               },
             },
             "409": {
-              description: "Published modes would violate offer invariants",
+              description:
+                "OFFER_INVARIANT_VIOLATION (published modes would break) or LICENCE_LOCKED (licence on an active profile)",
             },
             ...stdWithNotFound,
           },

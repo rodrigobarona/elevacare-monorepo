@@ -2,7 +2,10 @@ import { corsHeaders } from "@/lib/cors"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { checkBot } from "@/lib/bot-protection"
-import { ExpertOnboardingStepSchema } from "@eleva/api-client"
+import {
+  ExpertLicenceSchema,
+  ExpertOnboardingStepSchema,
+} from "@eleva/api-client"
 import { withAudit } from "@eleva/audit"
 import { isExpertInvoicingChoiceComplete } from "@eleva/auth"
 import {
@@ -11,6 +14,7 @@ import {
   main,
   updateExpertProfile,
 } from "@eleva/db"
+import { _submitPartnerApplication } from "@eleva/db/queries/partner-applications"
 import { getFlag } from "@eleva/flags"
 import { eq } from "drizzle-orm"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
@@ -157,6 +161,27 @@ export async function POST(
     }
   }
 
+  // Regulated professionals only (decision log 2026-10-29): finishing setup
+  // files the declared licence for staff review instead of going public.
+  const licence =
+    step === "schedule" && profile.status === "approved"
+      ? ExpertLicenceSchema.safeParse({
+          professionalBody: profile.professionalBody,
+          licenceNumber: profile.licenceNumber,
+          ersRegistrationNumber: profile.ersRegistrationNumber,
+        })
+      : null
+  if (licence && !licence.success) {
+    return secureJson(
+      {
+        error: "LICENCE_REQUIRED",
+        message:
+          "Add your professional body, licence number and ERS registration number in the Practice step before finishing",
+      },
+      { status: 409, headers }
+    )
+  }
+
   await withAudit(
     { orgId: profile.orgId, actorUserId: session.user.id },
     async (tx, ctx) => {
@@ -177,9 +202,6 @@ export async function POST(
         .where(eq(main.expertProfiles.id, profile.id))
         .limit(1)
         .for("update")
-      // Finishing the last step takes a self-service expert out of onboarding.
-      // Draft (application pending) and suspended profiles keep their status.
-      const activate = step === "schedule" && fresh?.status === "approved"
       const currentMeta =
         (fresh?.metadata as Record<string, unknown> | null) ?? {}
       const completedSteps = currentMeta.completedSteps
@@ -189,21 +211,39 @@ export async function POST(
       await updateExpertProfile(
         profile.id,
         profile.orgId,
-        {
-          metadata: { ...currentMeta, completedSteps: steps },
-          ...(activate ? { status: "active" as const } : {}),
-        },
+        { metadata: { ...currentMeta, completedSteps: steps } },
         tx
       )
+
+      // The profile stays `approved` (not public) until staff approve the
+      // application. Draft, active and suspended profiles keep their status.
+      if (licence?.success && fresh?.status === "approved") {
+        const { application, refreshed } = await _submitPartnerApplication(tx, {
+          orgId: profile.orgId,
+          expertProfileId: profile.id,
+          licence: licence.data,
+        })
+        await ctx.emit({
+          entity: "partner_application",
+          action: "submitted",
+          entityId: application.id,
+          payload: {
+            expertProfileId: profile.id,
+            professionalBody: application.professionalBody,
+            refreshed,
+            surface: "setup",
+            step,
+            completedSteps: steps,
+          },
+        })
+        return
+      }
+
       await ctx.emit({
         entity: "expert_profile",
         action: "updated",
         entityId: profile.id,
-        payload: {
-          step,
-          completedSteps: steps,
-          ...(activate ? { status: "active" } : {}),
-        },
+        payload: { step, completedSteps: steps },
       })
     }
   )
