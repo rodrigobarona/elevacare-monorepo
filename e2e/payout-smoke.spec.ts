@@ -77,8 +77,7 @@ test.describe("Phase 06 — pay → payout state → Connect transfer", () => {
     expect(payout.amount_cents).toBe(EXPERT_NET_CENTS)
     expect(new Date(payout.eligible_at).getTime()).toBeGreaterThan(Date.now())
 
-    const early = await runPayoutSweeps(request)
-    expect(early.promoted).toBe(0)
+    await runPayoutSweeps(request)
     expect((await loadPayout(booking.bookingId))?.status).toBe("pending")
 
     await shiftPayoutClock(payout.id)

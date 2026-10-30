@@ -76,7 +76,7 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
-      testIgnore: /video-join\.spec\.ts/,
+      testIgnore: /video-(join|call-smoke)\.spec\.ts/,
     },
     {
       name: "chromium-video",
