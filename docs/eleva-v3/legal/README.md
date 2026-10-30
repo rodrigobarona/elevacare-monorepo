@@ -10,17 +10,17 @@ lawyer/DPO review.** These are drafts prepared for a Portuguese lawyer and the
 external DPO. They are not legal advice and do not record signed decisions
 until the sign-off blocks are completed.
 
-| Document                                                 | What it is                                                                                                                      | Status                            |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
-| [`fact-sheet.md`](./fact-sheet.md)                       | SSOT for company facts, sub-processors, cookies, retention and the law list used by the public pages                            | Living (last verified 2026-10-21) |
-| [`ropa.md`](./ropa.md)                                   | Record of processing activities: GDPR art. 30(1) as controller and art. 30(2) as processor                                      | Draft — pending lawyer/DPO review |
-| [`dpia.md`](./dpia.md)                                   | Data protection impact assessment (art. 35; CNPD Regulamento 1/2018): health data at scale, video, transcription, AI drafts     | Draft — pending lawyer/DPO review |
-| [`retention-schedule.md`](./retention-schedule.md)       | Proposed final retention periods with legal basis, expert duty vs Eleva duty (AUD-028)                                          | Draft — pending lawyer/DPO review |
-| [`dpo-appointment.md`](./dpo-appointment.md)             | Why a DPO is required, tasks, independence, external DPO selection checklist, draft appointment letter, CNPD notification steps | Draft — pending lawyer/DPO review |
-| [`ers-position.md`](./ers-position.md)                   | Memo: Eleva as intermediary vs ERS registration, health advertising, triggers, experts' own obligations                         | Draft — pending lawyer/DPO review |
-| [`breach-response.md`](./breach-response.md)             | Personal data breach procedure (arts. 33–34), severity matrix, CNPD, expert and member templates                                | Draft — pending lawyer/DPO review |
-| [`positions-d06-d11-d12.md`](./positions-d06-d11-d12.md) | Position papers for D-06 (refunds, no-shows, chargebacks), D-11 (clinical access) and D-12 (deletion vs retention)              | Draft — pending lawyer/DPO review |
-| [`experts-dpa-checklist.md`](./experts-dpa-checklist.md) | Art. 28(3) checklist for the expert processor terms, with a gap list against `trust/pt/dpa.mdx`                                 | Draft — pending lawyer/DPO review |
+| Document                                                 | What it is                                                                                                                      | Status                                |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| [`fact-sheet.md`](./fact-sheet.md)                       | SSOT for company facts, sub-processors, cookies, retention and the law list used by the public pages                            | Living (see its "Last verified" line) |
+| [`ropa.md`](./ropa.md)                                   | Record of processing activities: GDPR art. 30(1) as controller and art. 30(2) as processor                                      | Draft — pending lawyer/DPO review     |
+| [`dpia.md`](./dpia.md)                                   | Data protection impact assessment (art. 35; CNPD Regulamento 1/2018): health data at scale, video, transcription, AI drafts     | Draft — pending lawyer/DPO review     |
+| [`retention-schedule.md`](./retention-schedule.md)       | Proposed final retention periods with legal basis, expert duty vs Eleva duty (AUD-028)                                          | Draft — pending lawyer/DPO review     |
+| [`dpo-appointment.md`](./dpo-appointment.md)             | Why a DPO is required, tasks, independence, external DPO selection checklist, draft appointment letter, CNPD notification steps | Draft — pending lawyer/DPO review     |
+| [`ers-position.md`](./ers-position.md)                   | Memo: Eleva as intermediary vs ERS registration, health advertising, triggers, experts' own obligations                         | Draft — pending lawyer/DPO review     |
+| [`breach-response.md`](./breach-response.md)             | Personal data breach procedure (arts. 33–34), severity matrix, CNPD, expert and member templates                                | Draft — pending lawyer/DPO review     |
+| [`positions-d06-d11-d12.md`](./positions-d06-d11-d12.md) | Position papers for D-06 (refunds, no-shows, chargebacks), D-11 (clinical access) and D-12 (deletion vs retention)              | Draft — pending lawyer/DPO review     |
+| [`experts-dpa-checklist.md`](./experts-dpa-checklist.md) | Art. 28(3) checklist for the expert processor terms, with a gap list against `trust/pt/dpa.mdx`                                 | Draft — pending lawyer/DPO review     |
 
 ## Founder decisions these documents rely on (2026-10-29)
 
@@ -40,6 +40,15 @@ until the sign-off blocks are completed.
    their Ordem, may sell at launch.
 5. Promotion codes are **Eleva-funded**. The expert's share is computed on the
    list price.
+
+These decisions are recorded in `docs/eleva-v3/decision-log.md`: decisions 1–4
+in the 2026-10-29 entry "Launch legal posture", and decision 5 in the
+2026-10-29 amendment to the 2026-10-13 "Paid bookings charge via Checkout
+Sessions Elements" entry. The 2026-10-30 entry records the corrections, the
+provisional rules in this pack and the open decisions.
+
+The DPO advises and monitors. Decisions stay with Eleva as controller, so
+"sign-off" in this pack means Eleva's decision with the DPO's advice on record.
 
 ## How to maintain
 

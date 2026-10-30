@@ -88,19 +88,25 @@ on the DPIA (art. 35(2)) and the retention schedule.
   immediately to the security lead;
 - (c) relations with data subjects on data protection matters.
 
-**What Eleva will ask of the DPO in year 1:**
+**What Eleva will ask of the DPO in year 1.** The DPO advises and monitors.
+Approval decisions stay with Eleva as controller, which remains accountable for
+compliance (GDPR arts. 24(1) and 39(1); WP243 §4.1). Any "sign-off" in this pack
+means Eleva's decision, taken with the DPO's advice on record.
 
-1. Sign off the DPIA ([`dpia.md`](./dpia.md)) and the retention schedule
-   ([`retention-schedule.md`](./retention-schedule.md)). This closes AUD-028.
-2. Re-sign D-06 (consumer aspects with the lawyer), D-11 and D-12
-   ([`positions-d06-d11-d12.md`](./positions-d06-d11-d12.md)).
+1. Advise on the DPIA ([`dpia.md`](./dpia.md); art. 35(2)) and the retention
+   schedule ([`retention-schedule.md`](./retention-schedule.md)). Eleva then
+   adopts them, which closes AUD-028.
+2. Advise on D-06 (consumer aspects with the lawyer), D-11 and D-12
+   ([`positions-d06-d11-d12.md`](./positions-d06-d11-d12.md)) before Eleva
+   signs them.
 3. Review the processor terms with experts
    ([`experts-dpa-checklist.md`](./experts-dpa-checklist.md)) and the vendor
    DPAs and TIAs.
-4. Approve the `ai_processing` and transcription consent copy before
-   `ff.ai_reports_beta` is turned on.
-5. Run the breach procedure ([`breach-response.md`](./breach-response.md)) as
-   the CNPD contact.
+4. Advise on the `ai_processing` and transcription consent copy before Eleva
+   approves it and turns on `ff.ai_reports_beta`.
+5. Advise during the breach procedure
+   ([`breach-response.md`](./breach-response.md)) and act as the CNPD contact.
+   The incident lead decides for Eleva.
 6. Handle DSAR escalations and the question of access notification under Lei
    58/2019 art. 29(6).
 7. Run an annual audit (Lei 58/2019 art. 11(a)) and staff training.
@@ -129,9 +135,15 @@ on the DPIA (art. 35(2)) and the retention schedule.
   - **reachable within 4 hours for a suspected breach**, including weekends,
     because of the 72-hour deadline under art. 33.
 - [ ] Professional liability insurance.
-- [ ] An art. 28 DPA with the provider, since the DPO will see personal data.
-      The provider must agree to use Eleva systems (mailbox, ticketing) for
-      DSARs rather than copying data out.
+- [ ] The provider's GDPR role classified with counsel **before** any DPA is
+      required. Art. 28(3)(a) covers processing on the controller's documented
+      instructions, while art. 38(3) bars instructions on how the DPO carries
+      out the tasks, so an art. 28 DPA must not cover the DPO's tasks. Put any
+      instructed support processing, such as DSAR mailbox or ticketing work,
+      under a separate art. 28 DPA.
+- [ ] Confidentiality terms covering the personal data the DPO sees. The
+      provider must agree to use Eleva systems (mailbox, ticketing) for DSARs
+      rather than copying data out.
 - [ ] A fixed scope and fee, including:
   - the annual audit;
   - DPIA reviews on change;
@@ -212,11 +224,11 @@ captured.
 
 1. **Before filing:**
    - sign the service contract and the appointment letter;
-   - route `privacy@eleva.care` to the DPO. It is the **interim** data
-     protection contact today (fact sheet §1) and stays the single published
-     contact after the appointment, so no address changes on the public pages.
-     Some public pages still mention `dpo@eleva.care`; they should use
-     `privacy@eleva.care` (content feedback, see
+   - route `privacy@eleva.care` to the DPO. **Proposed, not yet live:** it
+     becomes the single published data protection contact, before and after
+     the appointment. Today the public pages still publish `dpo@eleva.care`
+     and label it the DPO contact although no DPO is appointed (fact sheet §1).
+     The replacement is a tracked content handoff (decision log 2026-10-30; see
      [`experts-dpa-checklist.md`](./experts-dpa-checklist.md) §2). A dedicated
      `dpo@` alias is optional, only if the DPO asks for one.
 2. **Open the CNPD DPO page**
@@ -260,9 +272,11 @@ captured.
    art. 13(b), not merely advisable. The answer affects the
    timing: before launch, or before reaching scale.
 2. Whether `privacy@eleva.care` and `dpo@eleva.care` should be separate
-   inboxes, and who reads `privacy@`.
+   inboxes, and who reads each one today
+   (`[[FOUNDER INPUT: is dpo@eleva.care monitored, and by whom?]]`).
 3. Review the service contract with the DPO provider: liability caps, on-call
-   breach SLA, DPA terms.
+   breach SLA, and the provider's GDPR role (§4). Confirm whether a separate
+   art. 28 DPA is needed for any instructed support processing.
 4. Whether the CNPD form asks for anything else (fields in steps 2 to 4 not
    verified).
 5. The appointment letter in Portuguese as the signed version.
@@ -272,7 +286,8 @@ captured.
 - GDPR arts. 37–39: <https://eur-lex.europa.eu/eli/reg/2016/679/oj>
 - Lei 58/2019 arts. 9–13:
   <https://diariodarepublica.pt/dr/detalhe/lei/58-2019-123815982>
-- WP243 rev.01, DPO guidelines (EN):
+- WP243 rev.01 (§4.1: compliance stays with the controller), DPO guidelines
+  (EN):
   <https://ec.europa.eu/newsroom/article29/redirection/document/44100>; PT:
   <https://www.cnpd.pt/media/meplvdie/wp243rev01_pt.pdf>
 - CNPD DPO page:

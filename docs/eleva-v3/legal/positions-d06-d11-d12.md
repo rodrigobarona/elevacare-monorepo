@@ -3,10 +3,14 @@
 > **Draft for review by a Portuguese lawyer and the external DPO. Not legal advice. "Signed-ready" means each paper has a decision, a legal basis and a sign-off block. None is signed yet.**
 
 These papers turn the founder's working pre-launch decisions into positions
-that can be signed for production. They are recorded in
-`docs/eleva-v3/decision-log.md`: D-06, D-11 and D-12, plus the founder
-decisions of 2026-10-29. Once a paper is signed, update the decision-log entry
-from "working pre-launch" to "active — signed" and link the signed copy.
+that can be signed for production. The decisions are recorded in
+`docs/eleva-v3/decision-log.md`: D-06, D-11, D-12, the 2026-10-29 entry "Launch
+legal posture", and the 2026-10-30 entry for provisional rules and open
+decisions. [`fact-sheet.md`](./fact-sheet.md) quotes them for the public pages;
+the decision log stays the record of the decision. Signing is Eleva's decision
+as controller; the DPO's row records advice, not approval. Once a paper is
+signed, update the decision-log entry from "working pre-launch" to "active —
+signed" and link the signed copy.
 
 ---
 
@@ -14,13 +18,16 @@ from "working pre-launch" to "active — signed" and link the signed copy.
 
 ### Decision (founder, 2026-10-29, "balanced")
 
-1. **Member cancellation.** The refund follows the service's tier, snapshotted
-   at booking (`@eleva/config/cancellation-policy.ts`):
+1. **Member cancellation.** The refund follows the service's tier. The booking
+   stores the policy, and `resolveCancellationRefund` computes the refund
+   (`@eleva/config/cancellation-policy.ts`, tier table version 1):
    - **Flexible:** 100% if cancelled ≥ 24 h before; 0% after that.
    - **Moderate:** 100% ≥ 48 h; 50% between 24 and 48 h; 0% after that.
    - **Strict:** 100% ≥ 7 days; 50% between 48 h and 7 days; 0% after that.
    - **Grace:** 100% within 24 h of booking if the session is at least 48 h
      away. A cancel exactly on a boundary gets the higher refund.
+   - **Awaiting expert confirmation:** a request-to-book booking that the
+     expert has not confirmed refunds 100% of what is still refundable.
 2. **Member no-show** is treated as a cancellation at the start time under the
    service's tier. In every tier that means **no refund**.
 3. **Expert no-show or expert cancellation** (any time). The member gets
@@ -39,8 +46,16 @@ from "working pre-launch" to "active — signed" and link the signed copy.
 ### Facts the position relies on
 
 - The policy is shown before payment. The hold records the policy displayed.
-- The booking snapshots `cancellation_policy_version`. A stale policy gets
-  `409 POLICY_CHANGED`.
+- The booking stores the policy name and `cancellation_policy_version`.
+  **The stored version does not drive the refund.** `resolveCancellationRefund`
+  takes the policy name and reads the current tier table; the version is only
+  written to the audit payload. Only version 1 exists, so refunds match what
+  was shown today. Editing a tier table would change refunds on existing
+  bookings, so quote, cancel and reschedule must read versioned rules before
+  any tier edit ships.
+- `409 POLICY_CHANGED` fires only when the caller sends a `cancellationPolicy`
+  that differs from the service's current policy name. The field is optional,
+  and a version change under the same name does not trigger it.
 - The member sees a refund quote before cancelling
   (`GET /me/bookings/{id}/cancellation-quote`).
 - Refunds above €200 require dual control (AUD-022).
@@ -49,7 +64,8 @@ from "working pre-launch" to "active — signed" and link the signed copy.
 - **Not built yet:**
   - the expert-cancel path (decision log 2026-09-26);
   - no-show outcome handling;
-  - the rebooking offer.
+  - the rebooking offer;
+  - versioned tier rules for existing bookings.
     These must ship before this paper is signed as "implemented".
 
 ### Legal analysis
@@ -168,7 +184,9 @@ are **standard contract terms** (DL 446/85) in a **consumer** relationship
 The balanced D-06 is **defensible** under DL 446/85 and Lei 24/96 if all of
 the following hold:
 
-- (a) tiers and the no-show rule are disclosed before payment and snapshotted;
+- (a) tiers and the no-show rule are disclosed before payment, and each
+  booking keeps the rules it was sold under (true today only while a single
+  tier-table version exists);
 - (b) technical failures are never charged to the member;
 - (c) the Strict tier is reviewed or narrowed;
 - (d) the expert agreement provides for recovering refunds and chargebacks;
@@ -176,12 +194,12 @@ the following hold:
 
 ### Sign-off
 
-| Role     | Name                                      | Date | Signature |
-| -------- | ----------------------------------------- | ---- | --------- |
-| Founder  | `[[FOUNDER INPUT]]`                       |      |           |
-| Finance  | `[[FOUNDER INPUT: accountant / finance]]` |      |           |
-| Lawyer   | `[[FOUNDER INPUT: counsel]]`              |      |           |
-| DPO (§4) | `[[FOUNDER INPUT: DPO]]`                  |      |           |
+| Role               | Name                                      | Date | Signature |
+| ------------------ | ----------------------------------------- | ---- | --------- |
+| Founder            | `[[FOUNDER INPUT]]`                       |      |           |
+| Finance            | `[[FOUNDER INPUT: accountant / finance]]` |      |           |
+| Lawyer             | `[[FOUNDER INPUT: counsel]]`              |      |           |
+| DPO (advice on §4) | `[[FOUNDER INPUT: DPO]]`                  |      |           |
 
 ---
 
@@ -297,10 +315,10 @@ conditions:
 
 ### Sign-off
 
-| Role    | Name                     | Date | Signature |
-| ------- | ------------------------ | ---- | --------- |
-| Founder | `[[FOUNDER INPUT]]`      |      |           |
-| DPO     | `[[FOUNDER INPUT: DPO]]` |      |           |
+| Role         | Name                     | Date | Signature |
+| ------------ | ------------------------ | ---- | --------- |
+| Founder      | `[[FOUNDER INPUT]]`      |      |           |
+| DPO (advice) | `[[FOUNDER INPUT: DPO]]` |      |           |
 
 ---
 
@@ -320,10 +338,14 @@ grace period** (`ACCOUNT_DELETION_GRACE_DAYS`):
      `RETENTION_PSEUDONYM_KEY`;
    - `guest_email_hash` → NULL.
 
-   They are then kept for the clinical-record period.
+   They are then kept for the clinical-record period. The code sets no end
+   date or sweep for them today.
 
 4. **Member-authored records**, including the booking-form intake, are
-   **deleted**.
+   **deleted**. This is today's behaviour: `eraseMemberClinicalRecords` deletes
+   every row the member wrote and every `kind = "intake"` row. Whether that
+   stays the rule once a session has taken place is **open** (decision D-12-A
+   below).
 5. **Expert-authored records** are kept: `member_user_id` → NULL and the same
    `subject_pseudonym` is set. They stay under the clinical retention
    exception until the period in [`retention-schedule.md`](./retention-schedule.md)
@@ -385,9 +407,18 @@ grace period** (`ACCOUNT_DELETION_GRACE_DAYS`):
     part of the processo clínico (Lei 12/2005 art. 5(2): "qualquer registo
     … que contenha informação de saúde").
 
-  **Proposal:** treat an intake as part of the clinical record once a session
-  has taken place, and keep it with the expert-authored records. Delete it if
-  no session took place.
+  **Open decision D-12-A (founder, on DPO and lawyer advice).** Does an intake
+  survive a member's deletion request once a session has taken place?
+  - **Option 1, today's rule:** delete every intake. No code change. The risk
+    is deleting part of a record the expert must keep.
+  - **Option 2, drafter's proposal:** keep the intake with the expert-authored
+    records once a session has taken place, and delete it if none did. This
+    changes the `eraseMemberClinicalRecords` predicate and its tests,
+    `data-retention-export-matrix.md`, the deletion UI copy and the decision
+    log.
+
+  Until this is decided, Option 1 applies and D-12 is not ready for signature
+  on this point.
 
 - **Consent rows.**
   - Keeping booking-scope consents for the clinical period serves as proof of
@@ -397,22 +428,25 @@ grace period** (`ACCOUNT_DELETION_GRACE_DAYS`):
 
 ### Position
 
-D-12 is **sound and recommended for signature**, with four conditions:
+D-12 is **sound, and can be recommended for signature once four conditions are
+met**:
 
 - (1) the processor terms state the default retention instruction and the
   expert's right to delete early;
-- (2) the intake rule above is adopted;
+- (2) open decision D-12-A is taken, and the decision text,
+  `eraseMemberClinicalRecords`, the retention schedule and the data-retention
+  matrix all state the same rule;
 - (3) the hard delete at the end of the period is scheduled (today it is not);
 - (4) the deletion UI and privacy notice say "kept by your expert as required
   by law", not "anonymised".
 
 ### Sign-off
 
-| Role    | Name                         | Date | Signature |
-| ------- | ---------------------------- | ---- | --------- |
-| Founder | `[[FOUNDER INPUT]]`          |      |           |
-| DPO     | `[[FOUNDER INPUT: DPO]]`     |      |           |
-| Lawyer  | `[[FOUNDER INPUT: counsel]]` |      |           |
+| Role         | Name                         | Date | Signature |
+| ------------ | ---------------------------- | ---- | --------- |
+| Founder      | `[[FOUNDER INPUT]]`          |      |           |
+| DPO (advice) | `[[FOUNDER INPUT: DPO]]`     |      |           |
+| Lawyer       | `[[FOUNDER INPUT: counsel]]` |      |           |
 
 ---
 
@@ -438,8 +472,8 @@ D-12 is **sound and recommended for signature**, with four conditions:
 8. **D-12 legal obligation.** Do the Ordens' regulamentos count as "Member
    State law" for art. 17(3)(b)? Is art. 17(3)(e) needed as an additional
    ground?
-9. **D-12 intake rule** (kept with the clinical record if a session took
-   place).
+9. **D-12 intake rule.** Advice for open decision D-12-A: must an intake the
+   expert relied on be kept as part of the clinical record?
 
 ## Sources
 

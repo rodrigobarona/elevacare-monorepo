@@ -35,22 +35,34 @@
 **When the clock starts.** The 72 hours start when Eleva is "aware", that is,
 when it has "a reasonable degree of certainty that a security incident has
 occurred that has led to personal data being compromised" (EDPB 9/2022 ¶31). A
-short investigation to establish this is allowed and must start immediately.
+short investigation to establish this is allowed and must start immediately
+(¶34).
 
-**Lead authority.** Eleva's main establishment is in Portugal, so the CNPD is
-the lead supervisory authority (art. 56; one-stop-shop, EDPB 9/2022 ¶68–69).
-This holds even when members in other EU states are affected.
+**Lead authority (Eleva as controller).** For Eleva's controller-role
+processing the CNPD is the competent authority. Eleva's main establishment is
+in Portugal, so the CNPD is also the lead supervisory authority for
+cross-border processing, even when members in other EU states are affected
+(arts. 55 and 56(1); EDPB 9/2022 ¶67–69).
+
+**Eleva as processor.** Eleva notifies the expert-controller, not the CNPD.
+Which authority the controller must notify depends on that controller's
+establishment and processing, so this procedure does not settle it. Confirm it
+per expert-controller with the DPO.
 
 ## 2. Roles
 
-| Role            | Who                                                                     | Responsibilities                                                                                                                                                  |
-| --------------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Incident lead   | `[[FOUNDER INPUT: name/role — default the founder]]`                    | Owns the incident end to end. Decides on containment. Signs notifications.                                                                                        |
-| Technical lead  | `[[FOUNDER INPUT: engineering owner]]`                                  | Investigation, containment, evidence preservation, root cause.                                                                                                    |
-| DPO             | External DPO ([`dpo-appointment.md`](./dpo-appointment.md))             | Advises on risk and the duty to notify. Contact point for the CNPD. Reviews notices. Keeps the register with the incident lead. Must be reachable within 4 hours. |
-| Communications  | Founder                                                                 | Member, expert and public messaging. Support macros.                                                                                                              |
-| Legal counsel   | `[[FOUNDER INPUT: law firm]]`                                           | Criminal complaint, police and Ministério Público, contractual claims against vendors.                                                                            |
-| Vendor contacts | Vercel, Neon, Upstash, Stripe, Daily, Resend, Sentry, Twilio, TOConline | Security and support channels listed in the private ops vault, not in this repo.                                                                                  |
+| Role            | Who                                                                                                                                                                                              | Responsibilities                                                                                                                                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Incident lead   | `[[FOUNDER INPUT: name/role — default the founder]]`                                                                                                                                             | Owns the incident end to end. Decides on containment. Signs notifications.                                                                                                                                           |
+| Technical lead  | `[[FOUNDER INPUT: engineering owner]]`                                                                                                                                                           | Investigation, containment, evidence preservation, root cause.                                                                                                                                                       |
+| DPO             | External DPO ([`dpo-appointment.md`](./dpo-appointment.md)) once appointed. Until then the interim data protection contact: `[[FOUNDER INPUT: interim contact name/role]]`, `privacy@eleva.care` | Advises on risk and the duty to notify. Contact point for the CNPD. Reviews notices. Keeps the register with the incident lead. Must be reachable within 4 hours. Advises only: the incident lead decides for Eleva. |
+| Communications  | Founder                                                                                                                                                                                          | Member, expert and public messaging. Support macros.                                                                                                                                                                 |
+| Legal counsel   | `[[FOUNDER INPUT: law firm]]`                                                                                                                                                                    | Criminal complaint, police and Ministério Público, contractual claims against vendors.                                                                                                                               |
+| Vendor contacts | Vercel, Neon, Upstash, Stripe, Daily, Resend, Sentry, Twilio, TOConline                                                                                                                          | Security and support channels listed in the private ops vault, not in this repo.                                                                                                                                     |
+
+No DPO is appointed yet. Until one is, read "the DPO" in this procedure as the
+interim data protection contact, supported by legal counsel. Art. 33(3)(b)
+allows a DPO or another contact point.
 
 Lei 58/2019 art. 11(b) gives the DPO the task of making staff aware that
 incidents must be detected promptly and reported **immediately** to the
@@ -127,10 +139,17 @@ subjects) **unless** one of the two low-risk exceptions in §5 (E1, E2) applies
 and its evidence is recorded in the register. The same exception decides
 **both** duties: if it applies, the breach is "unlikely to result in a risk"
 (no CNPD notification under art. 33(1)) and no communication to data
-subjects is needed (art. 34). If the evidence is incomplete, or the DPO does
-not approve, the default rule applies. If new facts undermine the evidence
-(for example, the keys turn out to be exposed), re-classify at once: the
-72-hour clock runs from awareness of those new facts.
+subjects is needed (art. 34). If the evidence is incomplete, or the DPO advises
+against relying on the exception, the default rule applies.
+
+**Reclassification does not reset the clock.** If new facts undermine the
+evidence (for example, the keys turn out to be exposed), re-classify at once
+and notify without further delay. Art. 33(1) runs from awareness of the breach,
+not from a later change in its risk rating. Keep the original awareness time in
+the register and add the time the new facts were found. If notification now
+falls more than 72 hours after the original awareness time, give the reasons
+for the delay. If the new facts reveal a separate breach, open a separate entry
+with its own awareness time.
 
 ### Step 4. Notify the expert-controllers (processor role, within 24 hours)
 
@@ -139,9 +158,16 @@ or clinic. Use template B. Give them what they need to meet their own duties
 under arts. 33 and 34. Offer to prepare the CNPD notice and the member notices
 for their approval.
 
+Record the date and time of each notice in the register. In principle the
+controller becomes aware once Eleva informs them (EDPB 9/2022 ¶44), but an
+earlier independent discovery counts, so the template states the notice time
+and asks the controller to use their actual awareness time. Eleva may file for
+a controller only with proper authorisation in the contract, and the legal
+responsibility to notify stays with the controller (¶48).
+
 Where Eleva is also controller for the same incident (for example a database
 breach covering both booking data and records), coordinate one message to
-members. The DPO decides.
+members. The incident lead decides, on the DPO's advice.
 
 ### Step 5. Notify the CNPD (controller role, within 72 hours of awareness)
 
@@ -188,16 +214,17 @@ notice.**
 
 ## 5. Severity matrix
 
-| Severity        | Typical facts                                                                                                                                                                                    | CNPD (art. 33)                    | Data subjects (art. 34)                    | Experts (processor)                           |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------- | ------------------------------------------ | --------------------------------------------- |
-| **S1 Low**      | Personal data, no health data. Few people. Contained at once, no evidence of access. E.g. one booking confirmation sent to the wrong address of the same member, or a short availability outage. | Usually no. Record the reasoning. | No                                         | If clinical content is involved, yes (inform) |
-| **S2 Medium**   | Contact or account data of many people, or a small number of people with non-clinical data that reveals a health relationship (expert name or profession).                                       | **Yes**                           | Case by case (DPO)                         | Yes                                           |
-| **S3 High**     | Health data in plaintext for any number of people: notes, transcripts, documents, intake. Or credentials enabling access to records. Or a prolonged availability loss of records during care.    | **Yes**                           | **Yes**, unless art. 34(3) applies         | Yes, within 24 hours                          |
-| **S4 Critical** | S3 at scale, a KEK compromise, an ongoing exfiltration, or publication of health data                                                                                                            | **Yes**, phased if needed         | **Yes**, plus a public statement if needed | Yes, immediately                              |
+| Severity        | Typical facts                                                                                                                                                                                    | CNPD (art. 33)                    | Data subjects (art. 34)                           | Experts (processor)                           |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------- | ------------------------------------------------- | --------------------------------------------- |
+| **S1 Low**      | Personal data, no health data. Few people. Contained at once, no evidence of access. E.g. one booking confirmation sent to the wrong address of the same member, or a short availability outage. | Usually no. Record the reasoning. | No                                                | If clinical content is involved, yes (inform) |
+| **S2 Medium**   | Contact or account data of many people, or a small number of people with non-clinical data that reveals a health relationship (expert name or profession).                                       | **Yes**                           | Case by case (incident lead, on the DPO's advice) | Yes                                           |
+| **S3 High**     | Health data in plaintext for any number of people: notes, transcripts, documents, intake. Or credentials enabling access to records. Or a prolonged availability loss of records during care.    | **Yes**                           | **Yes**, unless art. 34(3) applies                | Yes, within 24 hours                          |
+| **S4 Critical** | S3 at scale, a KEK compromise, an ongoing exfiltration, or publication of health data                                                                                                            | **Yes**, phased if needed         | **Yes**, plus a public statement if needed        | Yes, immediately                              |
 
 **Low-risk exceptions for health-data incidents.** These are the only ways a
 health-data incident can fall below S3. Each needs the listed evidence in the
-register and the DPO's written approval. Each applies to the CNPD (art. 33)
+register, the DPO's written advice and the incident lead's recorded decision.
+Each applies to the CNPD (art. 33)
 and data-subject (art. 34) decisions together.
 
 | ID     | Exception                                                                                                                                                    | Required evidence (in the register)                                                                                                                                                                                                                                                                                                                                             | CNPD (art. 33)                                    | Data subjects (art. 34)     | Experts (processor) |
@@ -230,7 +257,8 @@ Submitted through the online form. This text prepares the answers.
 
 ```text
 1. Controller: BÚZIOS E TARTARUGAS - LDA (Eleva.care), NIPC 515001708, Rua Gil Vicente 2,
-   2775-198 Parede. DPO: [name], privacy@eleva.care, [phone].
+   2775-198 Parede. Contact point: [DPO name once appointed, otherwise the interim data
+   protection contact], privacy@eleva.care, [phone].
    Role in this breach: controller [and/or processor on behalf of N health professionals].
 2. Timeline: occurred [date/time or window]; detected [date/time] via [source];
    aware [date/time]; contained [date/time]. [If >72h: reasons for delay.]
@@ -261,6 +289,7 @@ Dear [expert],
 We are writing as your processor under our data processing terms (GDPR art. 28 and 33(2)).
 On [date/time] we became aware of an incident affecting [describe data, e.g. session
 documents uploaded for N of your bookings between X and Y].
+Time of this notice: [date/time, Europe/Lisbon].
 
 What happened: [plain facts].
 Data involved: [categories; number of your members affected — list available in your
@@ -268,12 +297,16 @@ dashboard / attached securely].
 Encryption: [the content was / was not encrypted with your organisation's key; the key
 was / was not exposed].
 What we have done: [containment].
-What you may need to do: as controller you may need to notify the CNPD within 72 hours of
-this notice and, if the risk to your members is high, inform them. We have prepared a draft
-CNPD notice and member message for your approval and can file or send them on your
-written instruction.
+What you may need to do: as controller you decide whether to notify your supervisory
+authority (the CNPD if you are established in Portugal), without undue delay and, where
+feasible, within 72 hours of becoming aware. In principle you become aware when you receive
+this notice. If you knew of this incident earlier, your time runs from that earlier moment.
+Any short check of your own should start at once. If the risk to your members is high, you
+must also inform them. We have prepared a draft notice and member message for your approval
+and can file or send them on your written instruction.
 
-Contact: our DPO [name], privacy@eleva.care, [phone]. We will update you by [date/time].
+Contact: our data protection contact [DPO name once appointed, otherwise the interim
+contact], privacy@eleva.care, [phone]. We will update you by [date/time].
 ```
 
 ### C. Notice to members (art. 34)
@@ -299,7 +332,7 @@ protection authority (CNPD) and your expert].
 What you can do: [e.g. be careful with emails that ask for your password; sign in and
 review your account; contact your expert if you have questions about your care].
 
-If you have questions, contact our data protection officer at privacy@eleva.care or reply to
+If you have questions, write to our data protection contact at privacy@eleva.care or reply to
 this email. You also have the right to complain to the CNPD (www.cnpd.pt).
 
 Eleva.care — BÚZIOS E TARTARUGAS - LDA
@@ -320,11 +353,15 @@ Eleva.care — BÚZIOS E TARTARUGAS - LDA
 Keep it as a restricted spreadsheet or table in the compliance folder, not in
 this repo. Columns:
 
-| ID  | Aware (date/time) | Reported by | Description | Data categories | Data subjects (number) | Role (C/P) | Severity | Risk reasoning | CNPD notified (date, receipt) | Subjects told (date, channel) / exception | Experts told | Containment and remedy | Root cause | Closed |
-| --- | ----------------- | ----------- | ----------- | --------------- | ---------------------- | ---------- | -------- | -------------- | ----------------------------- | ----------------------------------------- | ------------ | ---------------------- | ---------- | ------ |
+| ID  | Aware (date/time) | New facts found (date/time) | Reported by | Description | Data categories | Data subjects (number) | Role (C/P) | Severity | Risk reasoning | CNPD notified (date, receipt) | Reasons for any delay | Subjects told (date, channel) / exception | Experts told (date/time) | Containment and remedy | Root cause | Closed |
+| --- | ----------------- | --------------------------- | ----------- | ----------- | --------------- | ---------------------- | ---------- | -------- | -------------- | ----------------------------- | --------------------- | ----------------------------------------- | ------------------------ | ---------------------- | ---------- | ------ |
 
-Retention: **5 years** after closure (proposed), to evidence compliance under
-art. 5(2) and Lei 58/2019 art. 21(3).
+Retention: **5 years** after closure. This is a proposal, not a statutory
+period: art. 33(5) sets none. The register evidences accountability (art.
+5(2)). Lei 58/2019 art. 21(3) allows data needed to prove compliance to be kept
+until the limitation period for the corresponding rights has expired; it does
+not fix five years. Counsel must name the limitation period or other legal
+basis that supports the proposal.
 
 ## Points for lawyer/DPO review
 
@@ -339,14 +376,19 @@ art. 5(2) and Lei 58/2019 art. 21(3).
    deadlines apply (24h early warning, 72h notification).
 4. **Templates.** Approve the PT and ES versions of template C, and the
    wording on CNPD complaints.
-5. **Who files for the expert.** Whether Eleva may file a CNPD notification
-   on behalf of an expert-controller on their written instruction, or the
-   expert must file it themselves.
-6. **Register retention** (5 years proposed).
+5. **Who files for the expert.** EDPB 9/2022 ¶48 allows a processor to notify
+   for a controller with proper contractual authorisation, and the controller
+   stays legally responsible. Confirm the clause for the expert terms, and
+   whether the CNPD form accepts such a filing.
+6. **Register retention.** Name the limitation period or other legal basis for
+   the 5-year proposal. Lei 58/2019 art. 21(3) sets no number.
+7. **Authority in processor-role incidents.** Which authority each
+   expert-controller must notify, and whether that affects template B.
 
 ## Sources
 
-- GDPR arts. 4(12), 33, 34: <https://eur-lex.europa.eu/eli/reg/2016/679/oj>
+- GDPR arts. 4(12), 5(2), 33, 34, 55, 56:
+  <https://eur-lex.europa.eu/eli/reg/2016/679/oj>
 - CNPD breach page:
   <https://www.cnpd.pt/organizacoes/outras-obrigacoes/violacao-de-dados-ou-data-breach/>.
   Form (linked from that page; needs cookies): <https://www.cnpd.pt/databreach/>
@@ -356,5 +398,5 @@ art. 5(2) and Lei 58/2019 art. 21(3).
   <https://www.cnpd.pt/media/vfhpxp3p/edpb_guidelines_202209_personal_data_breach_notification_v2-0_pt.pdf>
 - EDPB Guidelines 01/2021 on examples of breach notification:
   <https://www.edpb.europa.eu/system/files/documents/2022-01/edpb_guidelines_012021_pdbnotification_adopted_en.pdf>
-- Lei 58/2019 art. 11:
+- Lei 58/2019 arts. 11, 21:
   <https://diariodarepublica.pt/dr/detalhe/lei/58-2019-123815982>

@@ -17,12 +17,17 @@ or in person. Does Eleva itself have to register at the ERS as an
 "estabelecimento prestador de cuidados de saúde"?
 
 **Short answer.** Probably not, **while Eleva remains a pure intermediary**.
-Founder decision 1 of 2026-10-29 says it does.
+Founder decision 1 of 2026-10-29: Eleva stays an intermediary and does not
+register with the ERS as a provider, unless a §5 trigger occurs.
 
-The ERS regime attaches to whoever operates an organised set of resources to
-provide health care and presents itself to the patient as responsible for that
-care. On the ERS's own test, that is the professional who invoices the patient.
-The experts must register, including as telemedicine units for video sessions.
+The ERS FAQ places the duty on the person or entity that owns, oversees,
+manages, holds or otherwise operates an establishment where care is provided,
+or that works on their own account in an establishment they control. A
+professional is presumed to work on their own account when they provide care
+autonomously and present themselves to the patient as responsible for it, for
+example by issuing their own invoices or receipts or by holding care
+agreements. Invoicing is one indicator, not the whole test. On that test the
+experts must register, including as telemedicine units for video sessions.
 Eleva must not take on the features listed in §5.
 
 Four features of today's set-up weaken the position and need attention:
@@ -39,7 +44,7 @@ See §4.
 of care providers". DL 127/2014 is the **licensing** regime for establishments.
 The **registration** duty is in **art. 26 of the ERS Statutes (DL 126/2014)**
 and **ERS Regulamento n.º 66/2015**. This memo cites both; the fact sheet law
-table should be corrected.
+table is corrected in this PR.
 
 ## 2. Legal framework
 
@@ -93,24 +98,34 @@ table should be corrected.
 ### 2.3 ERS guidance
 
 **ERS FAQ on mandatory registration.** The duty falls on the "pessoa singular
-ou coletiva" that operates the establishment. This includes a professional who
-"exerça a sua atividade profissional por conta própria". The ERS presumes this
-when the professional acts "assumindo-se perante o utente como entidade
-responsável pela prestação de tais cuidados", for instance by "emitindo
-faturas ou recibos próprios aos utentes". In English: by presenting themselves
-to the patient as responsible for the care, for example by issuing their own
-invoices or receipts.
+ou coletiva que é proprietária, tutela, gere, detém ou, de qualquer outra
+forma, explora" an establishment where care is provided, or that "exerça a sua
+atividade profissional por conta própria em estabelecimento de saúde, desde que
+sobre o mesmo detenha o controlo". In English: whoever owns, oversees, manages,
+holds or otherwise operates the establishment, or works on their own account in
+an establishment they control.
+
+The ERS presumes own-account work when the professional provides care "de modo
+autónomo, assumindo-se perante o utente como entidade responsável pela
+prestação de tais cuidados, nomeadamente emitindo faturas ou recibos próprios
+aos utentes, ou possuindo acordos ou convenções". In English: autonomously, and
+presenting themselves to the patient as responsible for the care, in particular
+by issuing their own invoices or receipts or by holding care agreements. Invoicing
+is one indicator of that presumption, not the test itself.
 
 The same FAQ says remote care to patients in mainland Portugal requires
 registration **as a telemedicine unit**, even if the server is abroad.
 
 **Registration fees.**
 
-- €900 + €25 per professional (minimum €1,000, maximum €50,000);
-- €200 for a liberal professional with no associated professionals working
-  part-time in their own establishment;
-- annual contribution of €450 + €12.50 per professional, or €25 in that
-  reduced case.
+- Registration fee: €900 + €25 × NPS, minimum €1,000, maximum €50,000. NPS is
+  the number of health professionals at the establishment.
+- Annual contribution: €450 + €12.50 × NMPS, minimum €500, maximum €25,000.
+  NMPS is the simple average of the number of associated professionals at the
+  end of each month of the calendar year before payment.
+- Reduced amounts: a €200 registration fee and a €25 annual contribution for
+  legally recognised patient associations and for liberal professionals with
+  no associated professionals, working part-time in their own establishment.
 
 These figures come from the ERS FAQ; the fee portaria was not checked.
 
@@ -153,13 +168,14 @@ reading.
 
 ## 3. Analysis: why Eleva is not a provider
 
-| ERS test                                                           | Eleva's facts                                                                                                                                                                                                                        |
-| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Organised resources **for providing** care (DL 127/2014 art. 1(2)) | Eleva provides booking, payment, video and record-keeping software. It employs or contracts no clinicians to deliver care, sets no clinical protocols, assigns no patients to clinicians and operates no premises.                   |
-| Who presents as responsible for the care (ERS FAQ)                 | The expert's own name, Ordem and cédula appear on the profile. The terms and health-data notice say the expert provides care and Eleva does not (`terms`, `health-data`, `trust/ers`). Members choose the expert.                    |
-| Who invoices the patient (ERS FAQ)                                 | **The expert invoices the member** for the session (founder decision 1). Eleva invoices only its 15% platform fee to the expert (ELEVA-FEE series). Clinic bookings carry no booking fee; clinics pay a seat subscription.           |
-| Clinical decisions                                                 | Made by the expert alone. Expert agreement §1: Eleva "não interfere nem influencia o julgamento clínico".                                                                                                                            |
-| Professional regulation                                            | Only regulated professionals with an Ordem-verified licence may sell (founder decision 4). Their conduct is regulated by their Ordem (DL 126/2014 art. 4(3)(a)), and their establishment, including a telemedicine unit, by the ERS. |
+| ERS test                                                                        | Eleva's facts                                                                                                                                                                                                                        |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Owns, oversees, manages, holds or otherwise operates an establishment (ERS FAQ) | Eleva holds no premises and employs no clinicians. It does run the software through which video sessions take place, so "otherwise operates" is the contestable point for telemedicine units (§4(2)).                                |
+| Organised resources **for providing** care (DL 127/2014 art. 1(2))              | Eleva provides booking, payment, video and record-keeping software. It employs or contracts no clinicians to deliver care, sets no clinical protocols, assigns no patients to clinicians and operates no premises.                   |
+| Who presents as responsible for the care (ERS FAQ)                              | The expert's own name, Ordem and cédula appear on the profile. The terms and health-data notice say the expert provides care and Eleva does not (`terms`, `health-data`, `trust/ers`). Members choose the expert.                    |
+| One indicator: own invoices or receipts, or care agreements (ERS FAQ)           | **The expert invoices the member** for the session (founder decision 1). Eleva invoices only its 15% platform fee to the expert (ELEVA-FEE series). Clinic bookings carry no booking fee; clinics pay a seat subscription.           |
+| Clinical decisions                                                              | Made by the expert alone. Expert agreement §1: Eleva "não interfere nem influencia o julgamento clínico".                                                                                                                            |
+| Professional regulation                                                         | Only regulated professionals with an Ordem-verified licence may sell (founder decision 4). Their conduct is regulated by their Ordem (DL 126/2014 art. 4(3)(a)), and their establishment, including a telemedicine unit, by the ERS. |
 
 **Conclusion.** On these facts Eleva is an information-society service provider
 (DL 7/2004) and an online marketplace. It is not a health-care establishment.
@@ -178,8 +194,10 @@ reading.
    establishments.
    - **Recommendation:** describe Eleva as a "marketplace and software
      platform that connects members with independent professionals". Avoid
-     "telemedicine", "consultas Eleva" or "our therapists". Another agent owns
-     the public pages; raise this as content feedback.
+     "telemedicine", "consultas Eleva" or "our therapists". The `/trust/ers`
+     page also says "digital health platform" in all three locales. The public
+     pages are owned elsewhere, so this is tracked as an open item in the
+     decision log (2026-10-30: owner founder, next review 2026-11-16).
 3. **Eleva is the merchant on the card statement.** Payments use Stripe
    **separate charges and transfers**: the charge sits on Eleva's platform
    account, and Eleva later transfers the expert's share
@@ -247,11 +265,25 @@ starting, if it does any of the following:
 Eleva is an "interveniente" (art. 2(a)), so it is directly exposed.
 
 - **Identification (art. 4(1)).** Each profile must identify the professional
-  truthfully and completely. ERS Regulamento n.º 1058/2016 asks for name,
-  NIF, cédula profissional and qualifications (taken from ERS secondary
-  material).
-  - **Recommendation:** show the Ordem and cédula number on every public
-    profile.
+  truthfully and completely. ERS Regulamento n.º 1058/2016 sets the fields.
+  This memo relies on the OMD information note that quotes the regulation; the
+  Diário da República text could not be loaded, so counsel should check it.
+  - **Always (art. 2(2)):** name or firm and commercial designation.
+  - **NIF (art. 2(2)(b), (4)):** required **only** when the advertised party is
+    not subject to ERS registration. Those subject to registration are
+    dispensed from it.
+  - **When subject to ERS registration (art. 2(3)):** the ERS registration
+    number; the operating licence number where the typology needs one; the
+    establishment's address where the advertising concerns an establishment;
+    and, for a health professional, the cédula number and professional
+    qualifications.
+  - **Any identifiable professional (art. 3(2)(b)):** the cédula or card number
+    and its issuing body.
+  - **Recommendation:** show the ERS registration number, the cédula number
+    with the issuing Ordem, and qualifications on every public profile, plus
+    the licence number and address where they apply. Do not treat NIF as a
+    general public-profile field. Every sellable expert should be subject to
+    ERS registration (art. 4(3) below), so the NIF is the exception.
 - **Art. 4(3).** Advertising is unlawful where the provider "não se encontre
   devidamente registado na ERS" (is not duly registered at the ERS).
   - **Recommendation:** collect and verify each expert's **ERS registration
@@ -311,12 +343,13 @@ competent for the experts.
 
 ## 9. Recommended actions
 
-1. Record founder decision 1 and this memo in the decision log. Mark the ERS
-   item "decided — intermediary" in the fact sheet (done in this PR).
+1. Founder decision 1 is in the decision log (2026-10-29), and this memo's
+   corrections and open items in the 2026-10-30 entry. The ERS item is marked
+   "decided — intermediary" in the fact sheet.
 2. Lawyer to confirm the analysis. Optionally, request an informal ERS view
    (pedido de esclarecimento) before scale.
-3. Correct the fact-sheet law table: registration is DL 126/2014 art. 26 + ERS
-   Reg. 66/2015; licensing is DL 127/2014.
+3. Fact-sheet law table corrected in this PR: registration is DL 126/2014
+   art. 26 + ERS Reg. 66/2015; licensing is DL 127/2014.
 4. Review CAE 86950 with the accountant.
 5. Add to expert onboarding: ERS registration number (telemedicine unit),
    Ordem and cédula, and evidence of insurance.
@@ -340,6 +373,10 @@ competent for the experts.
 6. Whether an informal ERS consultation is advisable.
 7. Wording of the public pages ("plataforma digital de saúde", "telemedicina")
    and of the DPA.
+8. Whether "otherwise operates" in the ERS FAQ could reach a platform that runs
+   the video software for independent experts.
+9. Confirm the Regulamento 1058/2016 art. 2 and art. 3 fields against the
+   Diário da República text.
 
 ## Sources
 
@@ -356,6 +393,11 @@ competent for the experts.
   <https://www.ers.pt/media/0grngycb/guia-pr%C3%A1tico_ers_-prestacao_teleconsultas.pdf>
 - DL 238/2015 (health advertising):
   <https://www.omd.pt/content/uploads/2017/12/decreto-lei-238-2015-publicidade-saude.pdf>
+- ERS Regulamento n.º 1058/2016, as quoted in the OMD information note:
+  <https://www.omd.pt/content/uploads/2017/12/informacao-regulamento-ers-1058-2016.pdf>.
+  Official text: <https://diariodarepublica.pt/dr/detalhe/regulamento/1058-2016-75796236>
+  (not loaded). ERS good-practice manual:
+  <https://www.ers.pt/media/e50by3ag/manual-boas-praticas-publicidade-saude.pdf>
 - ERS leaflet on health advertising:
   <https://ers.pt/media/x3enq5ls/triptico_praticas-publicitarias-em-saude_web.pdf>
 - DL 156/2005, consolidated:

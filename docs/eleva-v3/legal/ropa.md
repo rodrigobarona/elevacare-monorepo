@@ -77,8 +77,8 @@ that Lei 58/2019 art. 29(4) extends to service providers.
 
 Explicit consent would remain only for optional processing (P3, P4). Consent
 that is a condition of the service is unlikely to be "freely given" under
-art. 7(4) and recital 43. **The DPO must decide this point.** See Points for
-review.
+art. 7(4) and recital 43. **Eleva must decide this point on the DPO's advice.**
+See Points for review.
 
 ---
 
@@ -327,8 +327,10 @@ review.
 
 - **Purpose:**
   - create a Daily room per session (`geo: "eu-central-1"`, recording off);
-  - mint one meeting token per invitee (two-person cap plus delegates, unique
-    user ids);
+  - mint one meeting token per invitee, with unique user ids. The base cap is
+    two: the assigned expert and the booking member. Each active delegate is an
+    additional participant with their own token and raises Daily
+    `max_participants` by one;
   - control the join window (15 minutes before start to 30 minutes after end);
   - record `meeting.started`, `meeting.ended` and `participant.*` webhooks
     to establish attendance.
@@ -684,7 +686,8 @@ against art. 28(3) are listed in
 - **[SEC-VIDEO]**
   - Join through Eleva pages only.
   - Signed per-person grants.
-  - One meeting token per invitee, two-person cap, unique user ids.
+  - One meeting token per invitee, two-person base cap (active delegates add
+    places), unique user ids.
   - Recording off.
   - EU call server.
 - **[SEC-AI]**
@@ -746,11 +749,11 @@ means OpenAI and Beehiiv. See Points for review.
    needs from Eleva as processor to comply.
 5. **Retention conflicts.** Retention figures differ between this record, the
    fact sheet and `compliance-data-governance.md`: 7 vs 10 years for notes;
-   transcripts 2 years; logs 90 days vs 1 year. Sign off the reconciled
-   schedule.
+   transcripts 2 years; logs 90 days vs 1 year. Advise on the reconciled
+   schedule before Eleva adopts it.
 6. **TIAs** for OpenAI (when the AI drafts flag is turned on) and Beehiiv
-   (before the newsletter embed ships). **Re-verify Daily's DPF status after
-   2026-11-16.**
+   (before the newsletter embed ships). **Re-verify Daily's DPF status on or
+   after 2026-11-16.**
 7. **Contracting entity.** Several vendor accounts are held in a personal name
    on free or Hobby tiers (fact sheet §1). Art. 28 terms must bind the
    company. Twilio stays US1 until IE1 is set up.

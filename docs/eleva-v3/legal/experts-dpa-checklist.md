@@ -20,6 +20,12 @@ Tratamento de Dados (DPA)", effective 2025-12-31, `lastUpdated` 2026-10-22,
 read on 2026-10-29. It is incorporated by reference in the expert agreement
 §3 (`legal/pt/expert-agreement.mdx`).
 
+**Clinics.** The expert agreement is the only incorporation path. There is no
+clinic agreement in `packages/content/content/legal/` and no clinic acceptance
+path, so a clinic cannot be treated as having accepted these terms yet. Add a
+clinic agreement with its own DPA-version acceptance record before any clinic
+acts as controller on Eleva (Phase 11).
+
 **Legal test.** GDPR art. 28(3) requires a contract or other legal act,
 binding on the processor, that sets out:
 
@@ -52,7 +58,7 @@ Status key: ✅ covered · 🟡 partial · ❌ missing.
 | **(f) Assist with arts. 32–36**: security, breach notification, DPIA, prior consultation                                                                                            | §9 "apoiar … DPIAs; notificar violações sem demora". §4 "SLA de notificação de violação … 24h".                                                                                                                            | 🟡     | Add: breach notice content (art. 33(3) items) and the 24-hour target ([`breach-response.md`](./breach-response.md)); provision of Eleva's DPIA ([`dpia.md`](./dpia.md)) to experts; assistance with **art. 36 prior consultation**.                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | **(g) Delete or return all data at the end, at the controller's choice**, unless law requires storage                                                                               | §6 "Em término/instrução, exportamos e eliminamos após período de graça e janela de backups". Clinical retention "definida pelo especialista (p. ex., 10 anos em PT)".                                                     | 🟡     | (1) Make it **at the controller's choice**: return (export) or delete. (2) State the grace and backup windows in days. (3) Remove "10 anos em PT", which has no statutory basis ([`retention-schedule.md`](./retention-schedule.md)). Replace it with the platform default (7 years after the last session, proposed) and per-organisation settings. (4) Cover what happens if the expert neither exports nor instructs. (5) Cover the expert's death or incapacity (Ordem custody rules).                                                                                                                                                                                 |
 | **(h) Make available all information needed to demonstrate compliance; allow and contribute to audits and inspections**                                                             | Missing                                                                                                                                                                                                                    | ❌     | Add an audit clause: documentation first (this pack, SOC 2 reports of vendors under NDA); on-site or remote audits with reasonable notice, at the controller's cost, at most once a year unless there is a breach or a regulator request; confidentiality.                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| **Art. 28(9): in writing, including electronic form, and accepted**                                                                                                                 | Online page; incorporated through the expert agreement                                                                                                                                                                     | 🟡     | Record each expert's acceptance of the agreement and DPA **version** at onboarding (a consent or contract row with `CONSENT_DOCUMENT_VERSION`), and re-accept on material change. Confirm this is recorded today.                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| **Art. 28(9): in writing, including electronic form, and accepted**                                                                                                                 | Online page; incorporated through the expert agreement                                                                                                                                                                     | 🟡     | No acceptance record was found in the code on 2026-10-30: `CONSENT_KINDS` has no expert-agreement or DPA kind. Add a record of each expert's acceptance of the agreement and DPA **version** at onboarding, and re-accept on material change. **Define the version mapping first.** `CONSENT_DOCUMENT_VERSION` versions the published legal pages, while the DPA has its own effective date, and nothing maps one to the other. Either state that the DPA uses the same identifier, or add a DPA-specific version.                                                                                                                                                         |
 
 ## 2. Other gaps and inconsistencies in dpa.mdx
 
@@ -75,10 +81,14 @@ Status key: ✅ covered · 🟡 partial · ❌ missing.
 4. **Analytics** listed among controller processing ("product analytics when
    enabled and consented"). No analytics is live (fact sheet §3). Keep it only
    if future-proofing is intended, and mark it "not active".
-5. **DPO contact `dpo@eleva.care`.** No DPO is appointed yet. Use
-   `privacy@eleva.care`, the single interim and published data protection
-   contact (fact sheet §1). It stays the published contact after the
-   appointment, routed to the DPO ([`dpo-appointment.md`](./dpo-appointment.md) §6).
+5. **DPO contact `dpo@eleva.care`.** The public DPA still publishes this
+   address and labels it the DPO contact, but no DPO is appointed yet.
+   **Proposed replacement, not yet live:** `privacy@eleva.care` as the single
+   interim and published data protection contact (fact sheet §1), routed to the
+   DPO after the appointment
+   ([`dpo-appointment.md`](./dpo-appointment.md) §6). The same address is on the
+   expert agreement, privacy and security pages. This handoff to the public
+   pages is recorded in the decision log (2026-10-30).
 6. **Effective date 2025-12-31 vs `lastUpdated` 2026-10-22.** Make sure the
    effective date reflects the version experts accepted.
 7. **Clinic organisations.** For a clinic, the **clinic** is the controller,
@@ -136,7 +146,9 @@ Alternatively, adopt the **Commission SCCs under art. 28(7)** (Decision (EU)
 4. The audit-clause scope and cost allocation for a micro-enterprise
    processor.
 5. Liability allocation and caps between Eleva and experts (art. 82(4)–(5)).
-6. How acceptance of the DPA version is evidenced (art. 28(9)).
+6. How acceptance of the DPA version is evidenced (art. 28(9)), and whether the
+   DPA shares `CONSENT_DOCUMENT_VERSION` or gets its own version.
+7. How a clinic organisation accepts the terms as controller.
 
 ## Sources
 
