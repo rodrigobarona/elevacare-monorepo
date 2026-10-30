@@ -15,6 +15,7 @@ import {
 } from "@eleva/db"
 import {
   assertOfferInvariants,
+  isUniqueViolation,
   OFFER_INVARIANT_MESSAGES,
   type OfferInvariantError,
 } from "@eleva/scheduling"
@@ -234,11 +235,7 @@ export async function PATCH(
         { status: 422, headers }
       )
     }
-    const dbErr = err as { code?: string; constraint?: string }
-    if (
-      dbErr?.code === "23505" ||
-      dbErr?.constraint === "event_types_expert_slug_idx"
-    ) {
+    if (isUniqueViolation(err)) {
       return secureJson(
         { error: "conflict", message: "slug already taken" },
         { status: 409, headers }

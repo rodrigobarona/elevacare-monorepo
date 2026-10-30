@@ -12,6 +12,7 @@ import { emitBookingNotificationEvent } from "./emit-domain-event"
 import { ensureSessionRow } from "./ensure-session-row"
 import { emitPaymentFailedEvent } from "./emit-payment-event"
 import { persistIntakeAfterConfirm } from "./persist-booking-intake"
+import { isUniqueViolation } from "./pg-errors"
 import { hashReservationToken } from "./reservation-token"
 import { timingSafeEqual } from "node:crypto"
 
@@ -78,24 +79,7 @@ export type ConfirmBookingPaymentResult =
       error: "not_found" | "payment_mismatch" | "unavailable" | "db_error"
     }
 
-export function isUniqueViolation(err: unknown): boolean {
-  let current: unknown = err
-  for (let depth = 0; depth < 4 && current; depth += 1) {
-    if (
-      typeof current === "object" &&
-      current !== null &&
-      "code" in current &&
-      (current as { code: unknown }).code === "23505"
-    ) {
-      return true
-    }
-    current =
-      typeof current === "object" && current !== null && "cause" in current
-        ? (current as { cause: unknown }).cause
-        : undefined
-  }
-  return false
-}
+export { isUniqueViolation }
 
 function tokensMatch(storedHash: string, reservationToken: string): boolean {
   const computed = Buffer.from(hashReservationToken(reservationToken))
