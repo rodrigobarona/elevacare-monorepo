@@ -213,7 +213,7 @@ export async function fillStripeTestCard(page: Page): Promise<void> {
 export async function fillStripeTestMbWay(page: Page): Promise<void> {
   await dismissCookieBanner(page)
   await expect(page.getByTestId("booking-pay-submit")).toBeEnabled({
-    timeout: 20_000,
+    timeout: STRIPE_LOAD_TIMEOUT_MS,
   })
 
   let mbWayFrame: Frame | undefined
@@ -232,7 +232,7 @@ export async function fillStripeTestMbWay(page: Page): Promise<void> {
         }
         return false
       },
-      { timeout: 20_000 }
+      { timeout: STRIPE_LOAD_TIMEOUT_MS }
     )
     .toBeTruthy()
 

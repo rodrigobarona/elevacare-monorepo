@@ -306,6 +306,17 @@ export function BookingFunnel({
           setConfirmState("pending")
           return
         }
+        // Declined after a redirect: back to pay, which offers another try
+        // or a restart when the hold has lapsed.
+        if (
+          error instanceof ApiClientError &&
+          error.body?.error === "PAYMENT_FAILED"
+        ) {
+          setFormError("paymentFailed")
+          setConfirmState("idle")
+          setStep("pay")
+          return
+        }
         if (error instanceof ApiClientError) {
           setFormError(mapConfirmError(error.body?.error))
         } else {
@@ -513,6 +524,7 @@ export function BookingFunnel({
         returnPath: checkoutReturnPath(),
       })
       setPayment(session)
+      setAppliedPromo(null)
       saveFunnelReturn({
         reservation: reserved,
         payment: session,
