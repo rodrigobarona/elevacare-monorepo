@@ -1,8 +1,10 @@
 /**
  * QStash schedules for closed-gate expert invoicing.
  *
- * - `POST /workflows/invoicing-retry` every 30 minutes
  * - `POST /workflows/stripe-toconline-reconciliation` monthly (1st 04:00 UTC)
+ *
+ * `invoicing-retry` runs inside the hourly tick (`/workflows/tick/hourly`,
+ * registered by `setup-all`).
  *
  * Neither job POSTs TOConline commercial sales documents.
  *
@@ -13,16 +15,6 @@
  *   pnpm qstash:setup:invoicing -- --dry-run
  */
 import { isDryRun, registerSchedule } from "./register-schedule"
-
-export const INVOICING_RETRY_SCHEDULE = {
-  name: "Invoicing retry",
-  path: "/workflows/invoicing-retry",
-  cron: "*/30 * * * *",
-  retries: 3,
-  requireBearer: true,
-  description:
-    "Retry failed expert invoices every 30 min (issuance gate stays closed)",
-} as const
 
 export const STRIPE_TOCONLINE_RECONCILIATION_SCHEDULE = {
   name: "Stripe TOConline reconciliation",
@@ -36,7 +28,6 @@ export const STRIPE_TOCONLINE_RECONCILIATION_SCHEDULE = {
 
 async function main() {
   const dryRun = isDryRun()
-  await registerSchedule(INVOICING_RETRY_SCHEDULE, { dryRun })
   await registerSchedule(STRIPE_TOCONLINE_RECONCILIATION_SCHEDULE, {
     dryRun,
   })

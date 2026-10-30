@@ -184,3 +184,44 @@ export async function registerSchedule(
 export function isDryRun(): boolean {
   return process.argv.includes("--dry-run")
 }
+
+/**
+ * Deletes schedules whose destination is one of `paths` on the target API.
+ * Used when jobs move into a shared tick schedule, so the old per-job
+ * schedules do not keep running (and do not count against the quota).
+ */
+export async function removeSchedulesFor(
+  paths: readonly string[],
+  options: SchedulerOptions = {}
+): Promise<number> {
+  const { dryRun = false } = options
+  const { url: apiBaseUrl, invalid } = readPublicApiBaseUrl()
+  const destinations = new Set(
+    paths.map(
+      (path) => `${apiBaseUrl}${path.startsWith("/") ? "" : "/"}${path}`
+    )
+  )
+  if (dryRun) {
+    for (const destination of destinations) {
+      console.log(`[qstash] would remove any schedule for ${destination}`)
+    }
+    return 0
+  }
+  if (invalid) {
+    explainMissingApiBaseUrl()
+    process.exit(1)
+  }
+  const token = readEnv("QSTASH_TOKEN", { required: true })
+  const client = new Client({ baseUrl: process.env.QSTASH_URL, token: token! })
+  const existing = await client.schedules.list()
+  let removed = 0
+  for (const schedule of existing) {
+    if (!destinations.has(schedule.destination)) continue
+    console.log(
+      `[qstash] removing superseded schedule ${schedule.scheduleId} (${schedule.destination})`
+    )
+    await client.schedules.delete(schedule.scheduleId)
+    removed += 1
+  }
+  return removed
+}

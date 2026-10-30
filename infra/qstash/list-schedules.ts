@@ -12,23 +12,18 @@
 import { Client, type Schedule } from "@upstash/qstash"
 
 const EXPECTED_PATHS = [
+  "/workflows/tick/minutely",
+  "/workflows/tick/10min",
+  "/workflows/tick/hourly",
   "/workflows/audit-outbox-drainer",
-  "/workflows/stripe-stuck-events",
-  "/workflows/account-deletion-sweep",
-  "/workflows/retention-sweep",
-  "/workflows/crm-follow-up-due",
-  "/workflows/domain-events-publisher",
-  "/workflows/slot-reservation-expiry",
-  "/workflows/booking-request-expiry",
+  "/workflows/stripe-toconline-reconciliation",
   "/workflows/process-expert-transfers",
   "/workflows/process-pending-payouts",
   "/workflows/check-upcoming-payouts",
-  "/workflows/invoicing-retry",
-  "/workflows/stripe-toconline-reconciliation",
-  "/workflows/video-room-sweep",
-  "/workflows/video-eject-retry",
-  "/workflows/video-attendance-sweep",
 ] as const
+
+/** Registered only after DPO sign-off (setup-all --with-retention). */
+const OPTIONAL_PATHS = ["/workflows/retention-sweep"] as const
 
 function isExpectedDestination(destination: string, path: string): boolean {
   try {
@@ -84,7 +79,9 @@ async function main() {
 
   const unexpected = schedules.filter(
     (s: Schedule) =>
-      !EXPECTED_PATHS.some((path) => isExpectedDestination(s.destination, path))
+      ![...EXPECTED_PATHS, ...OPTIONAL_PATHS].some((path) =>
+        isExpectedDestination(s.destination, path)
+      )
   )
   if (unexpected.length > 0) {
     console.log(`\n=== Unexpected schedules (delete in Upstash) ===`)

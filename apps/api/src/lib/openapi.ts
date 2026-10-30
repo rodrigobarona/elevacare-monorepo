@@ -310,6 +310,20 @@ const WorkflowFailureSchema = z.union([
   ErrorSchema,
 ])
 
+const TickResultSchema = z.object({
+  ok: z.boolean(),
+  cadence: z.enum(["minutely", "10min", "hourly"]),
+  failed: z.number().int().nonnegative(),
+  results: z.record(
+    z.string(),
+    z.object({
+      status: z.number().int(),
+      body: z.unknown().optional(),
+      error: z.string().optional(),
+    })
+  ),
+})
+
 const ProbeReportSchema = z.object({
   status: z.enum(["healthy", "degraded"]),
   ranAt: z.string().datetime(),
@@ -5034,6 +5048,44 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
         description:
           "Purges unpublished AI drafts (90d), expired session documents (private Blob then row), and notification delivery logs (1y). Batched; hasMore means the next run continues.",
       }),
+      "/workflows/tick/{cadence}": (() => {
+        const item = internalWorkflow({
+          operationId: "runWorkflowTick",
+          summary: "Run every job of one cadence",
+          description:
+            "One QStash schedule per cadence (minutely, 10min, hourly) instead of one per job. Runs the cadence's jobs in parallel through their own handlers; a failing job never blocks the others and is reported in results. 500 when any job failed.",
+        })
+        return {
+          ...item,
+          post: {
+            ...item.post!,
+            requestParams: {
+              path: z.object({
+                cadence: z.enum(["minutely", "10min", "hourly"]),
+              }),
+            },
+            responses: {
+              ...item.post!.responses,
+              "200": {
+                description: "Every job succeeded",
+                content: { "application/json": { schema: TickResultSchema } },
+              },
+              "404": {
+                description: "Unknown cadence",
+                content: { "application/json": { schema: ErrorSchema } },
+              },
+              "500": {
+                description: "At least one job failed",
+                content: {
+                  "application/json": {
+                    schema: z.union([TickResultSchema, WorkflowFailureSchema]),
+                  },
+                },
+              },
+            },
+          },
+        }
+      })(),
       "/workflows/slot-reservation-expiry": internalWorkflow({
         operationId: "expireSlotReservations",
         summary: "Expire lapsed slot holds",
