@@ -1,4 +1,4 @@
-import { withPlatformAudit } from "@eleva/audit"
+import { resolveNotificationAuditOrgId, withPlatformAudit } from "@eleva/audit"
 import {
   completeSmsFromCallback,
   completeSmsFromCallbackInTx,
@@ -101,12 +101,13 @@ async function finalizeSmsCallback(input: {
     error: input.error ?? null,
     now: input.now,
   }
-  if (!input.row.orgId) {
+  const auditOrgId = resolveNotificationAuditOrgId(input.row.orgId)
+  if (!auditOrgId) {
     await completeSmsFromCallback(patch)
     return
   }
   await withPlatformAudit(
-    { orgId: input.row.orgId, actorUserId: null },
+    { orgId: auditOrgId, actorUserId: null },
     async (tx, ctx) => {
       const wrote = await completeSmsFromCallbackInTx(tx, patch)
       await ctx.emit({
@@ -117,6 +118,12 @@ async function finalizeSmsCallback(input: {
           channel: "sms",
           providerId: input.messageSid,
           applied: wrote,
+          ...(input.row.orgId
+            ? {}
+            : {
+                platformScoped: true,
+                recipientUserId: input.row.userId,
+              }),
         },
       })
     }

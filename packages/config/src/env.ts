@@ -154,6 +154,14 @@ const calendarOAuthSchema = z.object({
   PASSKEY_RP_ID: stringOptional,
   PASSKEY_ORIGIN: urlOptional,
   ELEVA_KEK_V1: stringOptional,
+  /** Reserved org id for audit_outbox rows on platform-scoped notifications. */
+  // Malformed values fail env parsing instead of silently dropping audit rows.
+  ELEVA_PLATFORM_AUDIT_ORG_ID: z
+    .string()
+    .trim()
+    .uuid()
+    .optional()
+    .or(z.literal("")),
 })
 
 export const envSchema = baseSchema

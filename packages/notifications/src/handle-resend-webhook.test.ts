@@ -6,12 +6,16 @@ import type { DeliveryRow } from "./claim-delivery"
 
 const { auditEmit } = vi.hoisted(() => ({ auditEmit: vi.fn() }))
 
-vi.mock("@eleva/audit", () => ({
-  withPlatformAudit: async (
-    _options: unknown,
-    fn: (tx: Tx, ctx: { emit: typeof auditEmit }) => Promise<unknown>
-  ) => fn({} as Tx, { emit: auditEmit }),
-}))
+vi.mock("@eleva/audit", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@eleva/audit")>()
+  return {
+    ...actual,
+    withPlatformAudit: async (
+      _options: unknown,
+      fn: (tx: Tx, ctx: { emit: typeof auditEmit }) => Promise<unknown>
+    ) => fn({} as Tx, { emit: auditEmit }),
+  }
+})
 
 const DELIVERY_ID = "00000000-0000-4000-8000-000000000001"
 const EMAIL_ID = "re_abc123"
