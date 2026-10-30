@@ -67,6 +67,7 @@ export async function bookPaidOffer(
   request: APIRequestContext
 ): Promise<{ bookingId: string; paymentIntentId: string }> {
   const modeId = await fetchOfferModeId(request)
+  let lastFailure = ""
   for (let rank = 0; rank < 8; rank++) {
     const slot = await pickSlotHoursFromNow(request, modeId, 72, rank)
     const reserve = await request.post(`${apiUrl}/bookings/reserve`, {
@@ -83,7 +84,10 @@ export async function bookPaidOffer(
         consents: CONSENTS,
       },
     })
-    if (reserve.status() !== 201) continue
+    if (reserve.status() !== 201) {
+      lastFailure = `${reserve.status()} ${await reserve.text()}`
+      continue
+    }
     const reserved = (await reserve.json()) as {
       reservationId: string
       reservationToken: string
@@ -106,7 +110,7 @@ export async function bookPaidOffer(
     const { bookingId } = (await confirm.json()) as { bookingId: string }
     return { bookingId, paymentIntentId }
   }
-  throw new Error("no reservable slot for the payout smoke")
+  throw new Error(`no reservable slot for the payout smoke: ${lastFailure}`)
 }
 
 export async function loadPayout(bookingId: string): Promise<PayoutRow | null> {

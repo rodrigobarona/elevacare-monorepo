@@ -16,6 +16,7 @@ import {
   ensureRoom,
   joinGrant,
   loadSessionState,
+  openDailyRoom,
   replayDailyWebhook,
   shiftBookingToJoinWindow,
 } from "./helpers/video-smoke"
@@ -25,6 +26,13 @@ async function joinCall(browser: Browser, url: string): Promise<Page> {
     permissions: ["camera", "microphone"],
   })
   const page = await context.newPage()
+  await page.addInitScript(() => {
+    const seen: string[] = []
+    Object.assign(window, { cspViolations: seen })
+    document.addEventListener("securitypolicyviolation", (event) => {
+      seen.push(`${event.effectiveDirective} ${event.blockedURI}`)
+    })
+  })
   await page.goto(url)
   await expect(page.getByTestId("eleva-call-prejoin")).toBeVisible({
     timeout: 90_000,
@@ -62,6 +70,7 @@ test.describe("Phase 09 — two browsers in an Eleva call", () => {
     const { bookingId } = await bookPaidOffer(request)
     await shiftBookingToJoinWindow(bookingId)
     const session = await ensureRoom(request, bookingId)
+    await openDailyRoom(session.room)
 
     const joinUrl = async (role: "member" | "expert") =>
       `${appUrl}/join/${bookingId}?g=${await joinGrant(bookingId, session, role)}`
@@ -84,6 +93,14 @@ test.describe("Phase 09 — two browsers in an Eleva call", () => {
         { timeout: 60_000 }
       )
       .toBeGreaterThanOrEqual(2)
+
+    for (const page of [expert, guest]) {
+      const violations = await page.evaluate(
+        () => (window as unknown as { cspViolations: string[] }).cspViolations
+      )
+      console.log(`[video-smoke] csp violations: ${violations.join(", ")}`)
+      expect(violations.filter((v) => /daily|pluot/.test(v))).toEqual([])
+    }
 
     await expert.context().close()
     await guest.context().close()

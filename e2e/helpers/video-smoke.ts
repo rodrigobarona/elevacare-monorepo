@@ -39,6 +39,11 @@ export async function shiftBookingToJoinWindow(
     RETURNING booking_id
   `
   expect(rows.length).toBe(1)
+  // Free the original slot so a later smoke run can book it again.
+  await sql`
+    UPDATE slot_reservations SET status = 'released'
+    WHERE booking_id = ${bookingId}
+  `
 }
 
 export async function ensureRoom(
@@ -76,6 +81,21 @@ export function joinGrant(
     endsAt: session.endsAt,
     scheduleRevision: session.scheduleRevision,
   })
+}
+
+/** The room was created for the original slot; open it for the moved one. */
+export async function openDailyRoom(room: string): Promise<void> {
+  const response = await fetch(`https://api.daily.co/v1/rooms/${room}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.DAILY_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      properties: { nbf: Math.floor(Date.now() / 1000) - 60 },
+    }),
+  })
+  expect(response.status, await response.text()).toBe(200)
 }
 
 /** Daily's own record of who was in the room, independent of Eleva. */
