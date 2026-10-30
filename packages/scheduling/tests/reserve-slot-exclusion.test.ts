@@ -6,8 +6,11 @@ vi.mock("@eleva/audit", () => ({
 }))
 
 vi.mock("@eleva/db/context", () => {
-  const exclusion = Object.assign(new Error("conflicting key value"), {
-    code: "23P01",
+  // Same shape as a real failure: Drizzle wraps the driver error.
+  const exclusion = new Error("Failed query: insert", {
+    cause: Object.assign(new Error("conflicting key value"), {
+      code: "23P01",
+    }),
   })
   const mockTx = {
     select: () => ({

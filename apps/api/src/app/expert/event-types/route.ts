@@ -6,6 +6,7 @@ import { secureJson } from "@/lib/security-headers"
 import { withAudit } from "@eleva/audit"
 import { DEFAULT_CANCELLATION_POLICY } from "@eleva/config"
 import { getExpertProfileByUserId, createEventType } from "@eleva/db"
+import { isUniqueViolation } from "@eleva/scheduling"
 import type { RoutePolicy } from "@/lib/route-policy"
 
 export const ROUTE_POLICY = {
@@ -120,11 +121,7 @@ export async function POST(request: Request) {
 
     return secureJson({ ok: true, id: row.id }, { status: 201, headers })
   } catch (err) {
-    const dbErr = err as { code?: string; constraint?: string }
-    if (
-      dbErr?.code === "23505" ||
-      dbErr?.constraint === "event_types_expert_slug_idx"
-    ) {
+    if (isUniqueViolation(err)) {
       return secureJson(
         { error: "conflict", message: "slug already taken" },
         { status: 409, headers }
