@@ -70,25 +70,37 @@ These are recorded as ADRs in Phase 1. Do not re-open them inside a phase prompt
 
 ## 3. Current state (why phases are ordered this way)
 
-Refreshed 2026-10-19 from [`audits/2026-10-phases-01-10-audit.md`](../audits/2026-10-phases-01-10-audit.md).
+Refreshed 2026-10-29 (code on `main` checked against
+[`audits/2026-10-phases-01-10-audit.md`](../audits/2026-10-phases-01-10-audit.md)).
 
-Identity is Better Auth (ADR-017); WorkOS is fully removed. Phases 01–08 are engineering-on-main,
-Phase 09 video is on main with its staging exit gate unproven, and Phase 10 is open (10.1 + 10.2a/c on main; 10.2b AI gated; about 40% of
-PR 10.1).
+Identity is Better Auth (ADR-017); WorkOS is fully removed. Phases 01–10 are engineering-on-main.
+Proof and sign-off lag behind: Phase 06 (pay → transfer → payout) and Phase 09 (Eleva grant join +
+Daily webhooks) have no staging/dev-prod evidence yet, Phase 07 issuance stays closed, and Phase 10
+closes only on DPO/legal sign-off (AUD-028 retention, AUD-029 AI-processing copy). Phases 11–15 are
+not started: `apps/team`, `apps/admin` and `apps/academy` are shells, and there is no Phase 14
+migration code.
 
-- `apps/api`: ~130 route handlers, every one with a `ROUTE_POLICY`; OpenAPI at `GET /openapi.json`
-  with a coverage test. Stripe (platform + Connect), Resend, Daily and QStash webhooks/workflows.
-- `packages/db`: 59 main migrations plus the audit project migrations; RLS via `eleva.org_id`
-  and the 7-class taxonomy.
+- `apps/api`: 145 route handlers, every one with an enforced `ROUTE_POLICY`; OpenAPI at
+  `GET /openapi.json` with a coverage test. Stripe (platform + Connect), Resend, Twilio, Daily and
+  QStash webhooks/workflows.
+- `packages/db`: 71 main migrations (`0000`–`0070`) plus the audit project migration; RLS via
+  `eleva.org_id` and the 7-class taxonomy.
 - Domain packages with real code: `auth`, `audit`, `billing`, `scheduling`, `calendar`,
-  `accounting` (closed-gate TOConline), `notifications`, `compliance`, `video` (Daily, standard,
-  **not HIPAA**), `records` (encrypted session records), `encryption`, `storage`, `media`,
-  `editor`, `flags`, `observability`, `ui`, `icons`, `dashboard`, `email`, `api-client`.
-- Stubs: `crm`, `academy`.
-- Apps: public marketing and booking (`apps/web`), member (`apps/app`), expert, account, team,
-  admin, docs and email are live in code; academy and the marketing surfaces are thin.
-- Playwright `e2e/` covers auth, booking, member, expert offer, legacy URLs and contract checks;
-  live money and video flows are opt-in loopback, never Production.
+  `accounting` (closed-gate TOConline; Moloni adapter is a scaffold), `notifications`,
+  `compliance`, `video` (Daily, standard, **not HIPAA**), `records` (encrypted session records),
+  `crm`, `ai`, `encryption`, `storage`, `media`, `editor`, `content`, `consent`, `flags`,
+  `observability`, `ui`, `icons`, `dashboard`, `site-chrome`, `email`, `api-client`.
+- Stub: `academy`.
+- Apps: public marketing and booking (`apps/web`), member (`apps/app`), expert, account, docs and
+  email are live in code. `/become-expert`, `/for-clinics` and `/contact` still carry draft banners.
+- Paid booking still charges through `POST /payments/intent` (PaymentIntent + Payment Element).
+  The Checkout Sessions (`ui_mode: elements`) helper exists but the funnel has not been switched
+  (decision log 2026-10-13, `proposed`).
+- Expert listing: finishing setup moves a profile to `active` with no review. Founder 2026-10-29
+  (regulated professionals only) requires a licence check before listing — see decision log.
+- Playwright `e2e/` has 21 specs. CI runs the unseeded smoke set; auth, member, admin, video and
+  live money flows are opt-in loopback runs.
+- Hosting: `eleva.care` still serves the MVP. `api.eleva.care` and `dev.eleva.care` run v3.
 
 Still gated: live FT POST / Comunicação / `invoice.issued` (`issueInvoice()` closed), D-07
 (HIPAA), and the 04B human-evidence waiver. v3 is **not live** until Phase 15.

@@ -32,6 +32,36 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-29: Launch legal posture — intermediary, external DPO, D-06 balanced, regulated experts only (active)
+
+- Decisions (founder, 2026-10-29):
+  1. **Intermediary only.** Búzios e Tartarugas, Lda does not deliver care. Experts are independent,
+     hold their own ERS registration and bill members. Eleva does not register with ERS as a
+     provider (DL 127/2014). If Eleva ever employs or contracts clinicians who deliver sessions
+     under its name, it must register first.
+  2. **External DPO.** Eleva appoints an external DPO service (GDPR art. 37(1)(c), large-scale
+     health data). The DPO is named in the privacy notice and notified to the CNPD, and signs off
+     AUD-028 (retention) and AUD-029 (AI-processing copy).
+  3. **D-06 balanced policy.** A member no-show counts as a late cancellation under the service's
+     tier (usually no refund). An expert no-show or expert cancellation refunds 100% to the member,
+     including Eleva's fee, and offers a rebook. Chargebacks: when the session was not delivered,
+     the amount is recovered from the expert's transfer; when it was delivered, Eleva contests with
+     the join and attendance logs.
+  4. **Regulated professionals only at launch.** Only experts with a licence verified against their
+     professional body (Ordem dos Médicos, Psicólogos, Nutricionistas, Fisioterapeutas, Enfermeiros,
+     and so on) may sell. Non-regulated wellness practitioners are out of scope for launch.
+- Consequences for engineering:
+  - Setup completion must stop moving profiles straight to `active` (2026-10-20 "Expert setup
+    wizard v3 and activation rule"). A profile stays `approved` until staff verify the licence.
+    `become_partner_applications` was dropped in migration 0013 and must be recreated (Phase 12
+    deliverable, corrected 2026-10-29).
+  - Expert cancellation and expert/member no-show handling are not built. They are open work that
+    must follow item 3.
+- Legal drafting from these decisions is tracked in `docs/eleva-v3/legal/`. It must be reviewed by a
+  Portuguese lawyer or the appointed DPO before reliance.
+- Owner: founder. Status: `active`.
+- Related: D-06, D-11, D-12, [`legal/fact-sheet.md`](./legal/fact-sheet.md) "Open founder inputs".
+
 ### 2026-10-24: Publish consent documents (D-10 switch) (active)
 
 - Decision (founder): publish the legal/trust consent set. Set

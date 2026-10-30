@@ -240,24 +240,36 @@ fiscal software (Tier 2: TOConline, Moloni, or manual export).</p>
 </tr>
 </tbody></table>
 <h2 id="readme--3-current-state-why-phases-are-ordered-this-way"><a class="anchor" href="#readme--3-current-state-why-phases-are-ordered-this-way" aria-label="Link to section">#</a>3. Current state (why phases are ordered this way)</h2>
-<p>Refreshed 2026-10-19 from <a href="#2026-10-phases-01-10-audit"><code>audits/2026-10-phases-01-10-audit.md</code></a>.</p>
-<p>Identity is Better Auth (ADR-017); WorkOS is fully removed. Phases 01–08 are engineering-on-main,
-Phase 09 video is on main with its staging exit gate unproven, and Phase 10 is open (10.1 + 10.2a/c on main; 10.2b AI gated; about 40% of
-PR 10.1).</p>
+<p>Refreshed 2026-10-29 (code on <code>main</code> checked against
+<a href="#2026-10-phases-01-10-audit"><code>audits/2026-10-phases-01-10-audit.md</code></a>).</p>
+<p>Identity is Better Auth (ADR-017); WorkOS is fully removed. Phases 01–10 are engineering-on-main.
+Proof and sign-off lag behind: Phase 06 (pay → transfer → payout) and Phase 09 (Eleva grant join +
+Daily webhooks) have no staging/dev-prod evidence yet, Phase 07 issuance stays closed, and Phase 10
+closes only on DPO/legal sign-off (AUD-028 retention, AUD-029 AI-processing copy). Phases 11–15 are
+not started: <code>apps/team</code>, <code>apps/admin</code> and <code>apps/academy</code> are shells, and there is no Phase 14
+migration code.</p>
 <ul>
-<li><code>apps/api</code>: ~130 route handlers, every one with a <code>ROUTE_POLICY</code>; OpenAPI at <code>GET /openapi.json</code>
-with a coverage test. Stripe (platform + Connect), Resend, Daily and QStash webhooks/workflows.</li>
-<li><code>packages/db</code>: 59 main migrations plus the audit project migrations; RLS via <code>eleva.org_id</code>
-and the 7-class taxonomy.</li>
+<li><code>apps/api</code>: 145 route handlers, every one with an enforced <code>ROUTE_POLICY</code>; OpenAPI at
+<code>GET /openapi.json</code> with a coverage test. Stripe (platform + Connect), Resend, Twilio, Daily and
+QStash webhooks/workflows.</li>
+<li><code>packages/db</code>: 71 main migrations (<code>0000</code>–<code>0070</code>) plus the audit project migration; RLS via
+<code>eleva.org_id</code> and the 7-class taxonomy.</li>
 <li>Domain packages with real code: <code>auth</code>, <code>audit</code>, <code>billing</code>, <code>scheduling</code>, <code>calendar</code>,
-<code>accounting</code> (closed-gate TOConline), <code>notifications</code>, <code>compliance</code>, <code>video</code> (Daily, standard,
-<strong>not HIPAA</strong>), <code>records</code> (encrypted session records), <code>encryption</code>, <code>storage</code>, <code>media</code>,
-<code>editor</code>, <code>flags</code>, <code>observability</code>, <code>ui</code>, <code>icons</code>, <code>dashboard</code>, <code>email</code>, <code>api-client</code>.</li>
-<li>Stubs: <code>crm</code>, <code>academy</code>.</li>
-<li>Apps: public marketing and booking (<code>apps/web</code>), member (<code>apps/app</code>), expert, account, team,
-admin, docs and email are live in code; academy and the marketing surfaces are thin.</li>
-<li>Playwright <code>e2e/</code> covers auth, booking, member, expert offer, legacy URLs and contract checks;
-live money and video flows are opt-in loopback, never Production.</li>
+<code>accounting</code> (closed-gate TOConline; Moloni adapter is a scaffold), <code>notifications</code>,
+<code>compliance</code>, <code>video</code> (Daily, standard, <strong>not HIPAA</strong>), <code>records</code> (encrypted session records),
+<code>crm</code>, <code>ai</code>, <code>encryption</code>, <code>storage</code>, <code>media</code>, <code>editor</code>, <code>content</code>, <code>consent</code>, <code>flags</code>,
+<code>observability</code>, <code>ui</code>, <code>icons</code>, <code>dashboard</code>, <code>site-chrome</code>, <code>email</code>, <code>api-client</code>.</li>
+<li>Stub: <code>academy</code>.</li>
+<li>Apps: public marketing and booking (<code>apps/web</code>), member (<code>apps/app</code>), expert, account, docs and
+email are live in code. <code>/become-expert</code>, <code>/for-clinics</code> and <code>/contact</code> still carry draft banners.</li>
+<li>Paid booking still charges through <code>POST /payments/intent</code> (PaymentIntent + Payment Element).
+The Checkout Sessions (<code>ui_mode: elements</code>) helper exists but the funnel has not been switched
+(decision log 2026-10-13, <code>proposed</code>).</li>
+<li>Expert listing: finishing setup moves a profile to <code>active</code> with no review. Founder 2026-10-29
+(regulated professionals only) requires a licence check before listing — see decision log.</li>
+<li>Playwright <code>e2e/</code> has 21 specs. CI runs the unseeded smoke set; auth, member, admin, video and
+live money flows are opt-in loopback runs.</li>
+<li>Hosting: <code>eleva.care</code> still serves the MVP. <code>api.eleva.care</code> and <code>dev.eleva.care</code> run v3.</li>
 </ul>
 <p>Still gated: live FT POST / Comunicação / <code>invoice.issued</code> (<code>issueInvoice()</code> closed), D-07
 (HIPAA), and the 04B human-evidence waiver. v3 is <strong>not live</strong> until Phase 15.</p>
@@ -3180,10 +3192,11 @@ handle from <code>public_handles</code>, avatar, headline, bio via <code>@eleva/
 (<code>practice_country</code>, <code>service_countries</code> with plain-language legal helper text, <code>languages</code>,
 <code>license_scope</code>, <code>worldwide_remote</code> for non-clinical work), Locations (optional), Availability
 (default schedule), First service (compact event type builder). Phase 6 appends Payments and
-Identity, Phase 7 appends Invoicing, completion inserts a <code>become_partner_applications</code>
-row (table <strong>created here</strong>: <code>id</code>, <code>expert_org_id</code>, <code>submitted_at</code>, <code>status pending|approved|rejected|needs_changes</code>,
-<code>checklist jsonb</code>, <code>reviewer_id</code>, <code>reviewed_at</code>, <code>reason</code>; RLS <code>tenant-owned</code> + staff read — Phase 12
-builds the review queue on top and adds no columns, it does not create the table). Steps are declared in one registry (<code>onboarding-steps.ts</code>) so later phases append,
+Identity, Phase 7 appends Invoicing. <strong>As built in 4B</strong>, setup completion moves the profile
+straight to <code>active</code>; no application row is written, and <code>become_partner_applications</code> does not
+exist (migration 0013 dropped it). <strong>Correction 2026-10-29:</strong> the licence gate moves to the
+Phase 12 deliverable, which recreates the table (with licence fields) and changes completion to
+create a <code>pending</code> application while the profile stays <code>approved</code> until staff verify it. Steps are declared in one registry (<code>onboarding-steps.ts</code>) so later phases append,
 never fork the shell.</li>
 <li><strong>Availability</strong> <code>/[orgSlug]/availability</code>: schedules list (name, timezone, default badge, &quot;used
 by&quot; mode chips); editor with weekly grid (drag to create ranges, copy day to others, split
@@ -6785,8 +6798,12 @@ pagination), command palette for search, <code>enableOrgSwitcher: false</code>.<
 <h2 id="12-admin-console--deliverables"><a class="anchor" href="#12-admin-console--deliverables" aria-label="Link to section">#</a>Deliverables</h2>
 <ol>
 <li>Migrations: <code>admin_notes</code>, <code>impersonation_sessions</code>, <code>admin_action_requests</code> (dual control)
-bookkeeping — <code>become_partner_applications</code> <strong>already exists from Phase 4B</strong> with its reviewer
-columns (<code>reviewer_id</code>, <code>reviewed_at</code>, <code>reason</code>); this phase adds no columns to it; audit unions (<code>admin: user_banned|user_unbanned| sessions_revoked|impersonation_started|impersonation_ended|partner_approved|partner_rejected| commission_override_set|listing_suspended|webhook_replayed|dlq_replayed|flag_viewed...</code>).</li>
+bookkeeping, plus <strong><code>become_partner_applications</code></strong>. Correction 2026-10-29: the table does
+<strong>not</strong> exist — migration <code>0013_drop-become-partner-applications.sql</code> (2026-05) dropped it and
+nothing recreated it. This phase creates it (shape in deliverable 3) together with the
+licence-verification fields required by the founder&#39;s 2026-10-29 &quot;regulated professionals only&quot;
+decision (decision log), and changes setup completion so a profile reaches <code>approved</code>, not
+<code>active</code>, until staff approve the application; audit unions (<code>admin: user_banned|user_unbanned| sessions_revoked|impersonation_started|impersonation_ended|partner_approved|partner_rejected| commission_override_set|listing_suspended|webhook_replayed|dlq_replayed|flag_viewed...</code>).</li>
 <li>API <code>apps/api/src/app/admin/**</code> routes + OpenAPI (tagged <code>admin</code>, hidden from public docs
 unless staff) + client.</li>
 <li><code>apps/admin</code> pages, nav, proxy, messages <code>pt/en</code> (staff UI may be <code>en</code> + <code>pt</code>).</li>
@@ -6965,16 +6982,26 @@ PR 12.1 — access, users, partners, experts, bookings:
    [R] { reason }. @eleva/dashboard:
    &lt;ImpersonationBanner /&gt; rendered in every app shell when session.impersonatedBy is set, with a
    Stop button calling the API.
-3. Partners: become_partner_applications exists since Phase 4B (id, expert_org_id, submitted_at,
+3. Partners: create become_partner_applications (id, expert_org_id, submitted_at,
    status pending|approved|rejected|needs_changes, checklist jsonb, reviewer_id, reviewed_at,
-   reason) — this phase adds no columns; rows are created by the Phase 4B onboarding
-   completion route, never by this phase. GET /admin/partners?status,
+   reason, professional_body, licence_number, licence_verified_at, licence_evidence_blob_key
+   in the private store) — dropped by migration 0013 and recreated here (correction 2026-10-29).
+   Rows are created by the setup completion route
+   (`apps/api/src/app/expert/profile/steps/[step]/complete`), which now stops at `approved`.
+   **Launch reconciliation:** profiles already `active` without an approved application
+   (self-activated before the gate, and MVP experts imported in Phase 14) are listed in the queue
+   as &quot;needs verification&quot;. Before the Phase 15 cutover each one is verified or moved to
+   `suspended`, so no unverified expert is listed when `eleva.care` switches to v3. GET /admin/partners?status,
    GET /admin/partners/[id] (checklist computed: Connect details_submitted + payouts_enabled +
    capabilities.transfers active (D-05; Stripe Identity status only when
    ff.expert_identity_verification is on),
    invoicing choice, profile completeness, ERS bio check flags), POST /approve [R, stepUp]
-   { reason } — TWO paths by the application&#39;s specialty class (packages/config
-   SPECIALTIES[slug].clinical boolean, SSOT): non-clinical -&gt; executes directly:
+   { reason } — **regulated-only launch (founder 2026-10-29): every approval, on either path,
+   requires a recorded licence verification against the professional body (body, licence number,
+   ERS registration number, reviewer, timestamp, evidence) before `expert_profiles.status` becomes
+   `active`.** Then TWO paths by the application&#39;s specialty class (packages/config
+   SPECIALTIES[slug].clinical boolean, SSOT; at launch every specialty is clinical, so the
+   non-clinical path stays dormant until non-regulated practitioners are allowed): non-clinical -&gt; executes directly:
    expert_profiles.status = active + revalidateTag(&quot;public-experts&quot;) + Lane 1 partner.approved;
    clinical (any ERS-regulated specialty) -&gt; adminRoute({ dualControl: true }) creates an
    admin_action_requests row of kind partner.approve_clinical and returns 202 { requestId } —
