@@ -38,10 +38,14 @@ export default async function OnboardingPage({
     if (query.invoicing_connected === "true") {
       callback.set("invoicing_connected", "true")
     }
+    // Finished setup but not listed yet: the licence verification state.
     redirect(
       callback.size > 0
         ? `${expertWorkspacePath(session, "finance/invoicing")}?${callback}`
-        : expertWorkspacePath(session)
+        : expertWorkspacePath(
+            session,
+            profile.status === "approved" ? "licence" : ""
+          )
     )
   }
 
@@ -58,9 +62,15 @@ export default async function OnboardingPage({
 
   const completedSteps = (profile.metadata as Record<string, unknown>)
     ?.completedSteps
-  const completed: string[] = Array.isArray(completedSteps)
-    ? completedSteps
-    : []
+  // Practice saved before the licence fields existed reopens so the expert
+  // can add them; finishing setup requires a licence to verify.
+  const missingLicence =
+    !profile.professionalBody ||
+    !profile.licenceNumber ||
+    !profile.ersRegistrationNumber
+  const completed: string[] = (
+    Array.isArray(completedSteps) ? (completedSteps as string[]) : []
+  ).filter((step) => !(missingLicence && step === "practice"))
 
   const wizardSteps = identityEnabled
     ? ONBOARDING_STEPS
@@ -94,7 +104,9 @@ export default async function OnboardingPage({
           id: profile.id,
           orgId: profile.orgId,
           nif: profile.nif,
-          licenseScope: profile.licenseScope,
+          professionalBody: profile.professionalBody,
+          licenceNumber: profile.licenceNumber,
+          ersRegistrationNumber: profile.ersRegistrationNumber,
           languages: profile.languages,
           practiceCountry: profile.practiceCountry,
           serviceCountries: profile.serviceCountries,

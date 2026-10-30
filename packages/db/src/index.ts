@@ -192,6 +192,10 @@ export {
   type MemberOwnedSessionDocument,
 } from "./queries/session-documents"
 export { countBillableSeats } from "./queries/seats"
+export {
+  getLatestPartnerApplication,
+  type PartnerApplicationLicence,
+} from "./queries/partner-applications"
 export type {
   ExpertCredential,
   ExpertSocialLink,

@@ -22,7 +22,9 @@ interface PracticeFormData {
   practiceCountry: string
   serviceCountries: string[]
   languages: string[]
-  licenseScope: string | null
+  professionalBody: string
+  licenceNumber: string
+  ersRegistrationNumber: string
   worldwideRemote: boolean
 }
 
@@ -72,7 +74,9 @@ export async function savePracticeStep(
       practiceCountry: data.practiceCountry,
       serviceCountries: data.serviceCountries,
       languages: data.languages,
-      licenseScope: data.licenseScope,
+      professionalBody: data.professionalBody,
+      licenceNumber: data.licenceNumber,
+      ersRegistrationNumber: data.ersRegistrationNumber,
       worldwideRemote: data.worldwideRemote,
     })
   } catch {
@@ -81,6 +85,13 @@ export async function savePracticeStep(
 
   if (!payload.practiceCountry || !payload.languages?.length) {
     return { ok: false, error: "required" }
+  }
+  if (
+    !payload.professionalBody ||
+    !payload.licenceNumber ||
+    !payload.ersRegistrationNumber
+  ) {
+    return { ok: false, error: "validation" }
   }
 
   try {

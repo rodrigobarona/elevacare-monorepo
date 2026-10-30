@@ -92,6 +92,20 @@ export const RECORD_OPTOUT_TABLES = ["record_access_optouts"] as const
 
 export type RecordOptoutTable = (typeof RECORD_OPTOUT_TABLES)[number]
 
+/**
+ * Licence verification applications. Tenant-owned reads; the expert org may
+ * only insert a `pending`, unreviewed row or refile an open one. Decisions
+ * (approved / rejected / needs_changes) and deletes are platform-admin
+ * (staff) only, so a decided row is a durable verification record.
+ * Must not go through TENANT_TABLES — that rebuild drops the status gate.
+ */
+export const PARTNER_APPLICATION_TABLES = [
+  "become_partner_applications",
+] as const
+
+export type PartnerApplicationTable =
+  (typeof PARTNER_APPLICATION_TABLES)[number]
+
 export const DELEGATE_VISIBLE_TABLES = ["session_participants"] as const
 
 export type DelegateVisibleTable = (typeof DELEGATE_VISIBLE_TABLES)[number]
@@ -386,6 +400,34 @@ export function buildMainRlsStatements(): string[] {
     out.push(
       `CREATE POLICY ${table}_participant_read ON ${table} FOR SELECT ` +
         `USING (${org} OR ${participant});`
+    )
+  }
+  for (const table of PARTNER_APPLICATION_TABLES) {
+    const org = `org_id::text = current_setting('eleva.org_id', true)`
+    const staff = `current_setting('eleva.platform_admin', true) = 'true'`
+    const unreviewed = `${org} AND status = 'pending' AND reviewer_user_id IS NULL AND reviewed_at IS NULL`
+    out.push(`ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY;`)
+    out.push(`ALTER TABLE ${table} FORCE ROW LEVEL SECURITY;`)
+    out.push(`DROP POLICY IF EXISTS ${table}_read ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_expert_file ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_expert_refile ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_staff_write ON ${table};`)
+    out.push(
+      `CREATE POLICY ${table}_read ON ${table} FOR SELECT ` +
+        `USING (${org} OR ${staff});`
+    )
+    out.push(
+      `CREATE POLICY ${table}_expert_file ON ${table} FOR INSERT ` +
+        `WITH CHECK (${unreviewed});`
+    )
+    out.push(
+      `CREATE POLICY ${table}_expert_refile ON ${table} FOR UPDATE ` +
+        `USING (${org} AND status IN ('pending', 'needs_changes')) ` +
+        `WITH CHECK (${unreviewed});`
+    )
+    out.push(
+      `CREATE POLICY ${table}_staff_write ON ${table} ` +
+        `USING (${staff}) WITH CHECK (${staff});`
     )
   }
   for (const table of STAFF_ONLY_TABLES) {

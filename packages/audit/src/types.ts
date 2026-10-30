@@ -12,6 +12,8 @@ export type AuditEntity =
   | "role"
   | "permission"
   | "expert_profile"
+  // Licence verification before public listing (2026-10-29).
+  | "partner_application"
   | "expert_integration_credential"
   | "event_type"
   | "event_type_mode"
@@ -77,6 +79,7 @@ export type AuditAction =
   | "submitted"
   | "approved"
   | "rejected"
+  | "changes_requested"
   | "claimed"
   | "released"
   | "reserved"

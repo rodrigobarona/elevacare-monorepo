@@ -26,7 +26,8 @@
     "./public-site-parity": "./src/public-site-parity.ts",
     "./editorial-pillars": "./src/editorial-pillars.ts",
     "./legal-slugs": "./src/legal-slugs.ts",
-    "./phone": "./src/phone.ts"
+    "./phone": "./src/phone.ts",
+    "./professional-bodies": "./src/professional-bodies.ts"
   },
   "scripts": {
     "lint": "eslint .",

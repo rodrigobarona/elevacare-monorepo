@@ -48,11 +48,13 @@ const tsvector = customType<{ data: string }>({
  *
  * Lifecycle states (see ADR-013 + identity-rbac-spec.md):
  *   draft         -> Become-Partner application submitted, not approved yet
- *   approved      -> admin approved; expert may begin Connect onboarding
- *   active        -> onboarding finished (practice + invoicing, plus
- *                    identity when `ff.expert_identity_verification` is on);
- *                    appears in marketplace. Paid offers still need Connect
- *                    at publish.
+ *   approved      -> expert may run setup; stays here after setup until
+ *                    staff approve the licence application
+ *                    (`become_partner_applications`, 2026-10-29)
+ *   active        -> licence verified by staff; appears in marketplace.
+ *                    Profiles active before the gate stay active and show
+ *                    as "Needs verification" to staff until verified.
+ *                    Paid offers still need Connect at publish.
  *   suspended     -> admin pause (e.g., compliance issue)
  */
 
@@ -161,6 +163,16 @@ export const expertProfiles = pgTable(
 
     /** Free-form license scope (e.g., "OPP 12345"). Validated by admin. */
     licenseScope: text("license_scope"),
+
+    /**
+     * Declared licence (decision log 2026-10-29): professional body id from
+     * `@eleva/config/professional-bodies`, the Ordem licence (cédula) number
+     * and the ERS registration number (ERS Regulation 1058/2016). Staff
+     * verify them through `become_partner_applications` before `active`.
+     */
+    professionalBody: text("professional_body"),
+    licenceNumber: varchar("licence_number", { length: 64 }),
+    ersRegistrationNumber: varchar("ers_registration_number", { length: 32 }),
 
     /**
      * Worldwide-mode flag: bypasses country-license validation for

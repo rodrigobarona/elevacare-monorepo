@@ -8,6 +8,13 @@ import {
   SOCIAL_LINK_KINDS,
 } from "@eleva/config/expert-profile-content"
 import { LocaleSchema } from "@eleva/config/i18n"
+import {
+  ERS_REGISTRATION_NUMBER_MAX_LENGTH,
+  ERS_REGISTRATION_NUMBER_PATTERN,
+  LICENCE_NUMBER_MAX_LENGTH,
+  LICENCE_NUMBER_PATTERN,
+  PROFESSIONAL_BODY_IDS,
+} from "@eleva/config/professional-bodies"
 
 // ---------------------------------------------------------------------------
 // Shared Zod schemas (used by both client and server)
@@ -1469,6 +1476,47 @@ export const EXPERT_WIZARD_STEPS = [
   "schedule",
 ] as const satisfies readonly ExpertOnboardingStep[]
 
+/** Setup is finished once the last wizard step (`schedule`) is recorded. */
+export function hasFinishedExpertSetup(
+  metadata: Record<string, unknown> | null | undefined
+): boolean {
+  const steps = metadata?.completedSteps
+  return Array.isArray(steps) && steps.includes("schedule")
+}
+
+export const PartnerApplicationStatusSchema = z.enum([
+  "pending",
+  "approved",
+  "rejected",
+  "needs_changes",
+])
+export type PartnerApplicationStatusValue = z.infer<
+  typeof PartnerApplicationStatusSchema
+>
+
+/** What the expert sees about their own licence verification. */
+export const ExpertLicenceApplicationSchema = z.object({
+  id: z.string().uuid(),
+  status: PartnerApplicationStatusSchema,
+  professionalBody: z.string(),
+  licenceNumber: z.string(),
+  ersRegistrationNumber: z.string(),
+  submittedAt: z.string(),
+  reviewedAt: z.string().nullable(),
+  /** Staff reason, set on `rejected` and `needs_changes`. */
+  reason: z.string().nullable(),
+})
+export type ExpertLicenceApplication = z.infer<
+  typeof ExpertLicenceApplicationSchema
+>
+
+export const ExpertLicenceApplicationResponseSchema = z.object({
+  application: ExpertLicenceApplicationSchema.nullable(),
+})
+export type ExpertLicenceApplicationResponse = z.infer<
+  typeof ExpertLicenceApplicationResponseSchema
+>
+
 // ── Schedule ────────────────────────────────────────────────────────
 
 export const SaveScheduleRequestSchema = z.object({
@@ -1502,11 +1550,39 @@ const CountryCodeSchema = z
   .regex(/^[A-Za-z]{2}$/)
   .transform((v) => v.toUpperCase())
 
+export const ProfessionalBodySchema = z.enum(PROFESSIONAL_BODY_IDS)
+export type ProfessionalBodyValue = z.infer<typeof ProfessionalBodySchema>
+
+export const LicenceNumberSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(LICENCE_NUMBER_MAX_LENGTH)
+  .regex(LICENCE_NUMBER_PATTERN, "letters, digits, '.', '/', '-' or spaces")
+
+export const ErsRegistrationNumberSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(ERS_REGISTRATION_NUMBER_MAX_LENGTH)
+  .regex(ERS_REGISTRATION_NUMBER_PATTERN, "letters, digits, '.', '/' or '-'")
+
+/** Licence an expert declares for staff verification (decision log 2026-10-29). */
+export const ExpertLicenceSchema = z.object({
+  professionalBody: ProfessionalBodySchema,
+  licenceNumber: LicenceNumberSchema,
+  ersRegistrationNumber: ErsRegistrationNumberSchema,
+})
+export type ExpertLicence = z.infer<typeof ExpertLicenceSchema>
+
 export const PatchPracticeRequestSchema = z.object({
   practiceCountry: CountryCodeSchema.optional(),
   serviceCountries: z.array(CountryCodeSchema).min(1).optional(),
   languages: z.array(z.string().min(2).max(16)).min(1).optional(),
   licenseScope: z.string().max(500).nullish(),
+  professionalBody: ProfessionalBodySchema.optional(),
+  licenceNumber: LicenceNumberSchema.optional(),
+  ersRegistrationNumber: ErsRegistrationNumberSchema.optional(),
   worldwideRemote: z.boolean().optional(),
   acceptingBookings: z.boolean().optional(),
 })
@@ -1519,6 +1595,9 @@ export const PracticeResponseSchema = z.object({
     serviceCountries: z.array(z.string()),
     languages: z.array(z.string()),
     licenseScope: z.string().nullable(),
+    professionalBody: z.string().nullable(),
+    licenceNumber: z.string().nullable(),
+    ersRegistrationNumber: z.string().nullable(),
     worldwideRemote: z.boolean(),
     acceptingBookings: z.boolean(),
   }),
@@ -2979,6 +3058,21 @@ export function createApiClient(options: ApiClientOptions) {
         },
         setInvoicing(data: InvoicingRequest) {
           return request<{ ok: true }>("PUT", "/expert/profile/invoicing", data)
+        },
+        async licenceApplication() {
+          const raw = await request<unknown>(
+            "GET",
+            "/expert/profile/licence-application"
+          )
+          return ExpertLicenceApplicationResponseSchema.parse(raw)
+        },
+        async submitLicence(data: ExpertLicence) {
+          const raw = await request<unknown>(
+            "POST",
+            "/expert/profile/licence-application",
+            data
+          )
+          return ExpertLicenceApplicationResponseSchema.parse(raw)
         },
       },
       schedule: {

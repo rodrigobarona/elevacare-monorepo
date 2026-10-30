@@ -817,9 +817,6 @@
       "whyWeAskTitle": "Porque perguntamos",
       "whyWeAskBody": "A regulação de saúde é nacional: uma licença num país não cobre automaticamente outro. O remoto mundial só se aplica a trabalho não clínico (coaching, mentoring).",
       "languagesLabel": "Línguas que usa com os membros",
-      "licenseScope": "Licença / registo",
-      "licenseScopePlaceholder": "ex. OPP 12345",
-      "licenseScopeHelp": "Opcional agora; necessário antes da aprovação administrativa para ofertas clínicas.",
       "worldwideRemote": "Remoto mundial (apenas não clínico)",
       "worldwideRemoteHelp": "Permite sessões não clínicas sem limite de país. Os modos clínicos continuam a seguir os países acima.",
       "saving": "A guardar…",
@@ -841,7 +838,8 @@
         "offer-invariant": "Esta alteração quebraria uma oferta publicada. Atualize esses modos primeiro.",
         "practice-incomplete": "Conclua primeiro o país da prática e as línguas.",
         "invalidCountry": "Introduza um código de país válido de 2 letras (ISO 3166-1).",
-        "invalidLanguage": "Introduza um código de língua válido (ex. pt, en, fr)."
+        "invalidLanguage": "Introduza um código de língua válido (ex. pt, en, fr).",
+        "licence-locked": "A sua cédula está verificada. Para a alterar, escreva para support@eleva.care."
       }
     },
     "payments": {
@@ -908,7 +906,7 @@
     "eyebrow": "Configuração de especialista",
     "stepHints": {
       "profile": "NIF e como atende os membros.",
-      "practice": "País, idiomas e onde atende.",
+      "practice": "País, idiomas, a sua cédula e onde atende.",
       "connect": "Onde recebe os seus ganhos. Pode concluir mais tarde.",
       "identity": "Uma verificação rápida e segura com a Stripe.",
       "invoicing": "Como são emitidas as faturas das suas sessões.",
@@ -937,16 +935,17 @@
       "later": "Continuar por agora"
     },
     "finish": {
-      "title": "Está pronto para abrir a sua prática",
-      "body": "Ao concluir, abre o seu painel, onde pode:",
+      "title": "Tudo pronto para enviar a sua prática para revisão",
+      "body": "Ao concluir, confirmamos a sua cédula junto da sua Ordem. Os membros podem marcar consigo assim que estiver verificada. Entretanto, pode:",
       "items": [
         "Criar o seu primeiro serviço e definir o preço",
         "Definir o horário semanal em que os membros podem marcar",
         "Ligar calendários Google ou Microsoft para evitar marcações sobrepostas",
         "Completar o perfil público com foto e biografia"
       ],
-      "submit": "Concluir configuração",
-      "finishing": "A abrir a sua prática…"
+      "submit": "Concluir e enviar para verificação",
+      "finishing": "A enviar para verificação…",
+      "addLicence": "Adicionar dados da cédula"
     },
     "errors": {
       "validation": "Verifique o formulário e tente novamente.",
@@ -954,7 +953,8 @@
       "practice-incomplete": "Conclua primeiro o passo da prática.",
       "invoicing-required": "Escolha primeiro como são emitidas as faturas.",
       "identity-required": "Inicie primeiro a verificação de identidade.",
-      "invalid-step": "Algo correu mal. Atualize a página e tente novamente."
+      "invalid-step": "Algo correu mal. Atualize a página e tente novamente.",
+      "licence-required": "Indique a sua Ordem, o número da cédula profissional e o número de registo na ERS no passo Onde exerce."
     }
   },
   "publicProfile": {
@@ -1181,5 +1181,93 @@
     "emailLabel": "Email",
     "phoneLabel": "Telefone",
     "saveLead": "Adicionar contacto"
+  },
+  "licence": {
+    "fields": {
+      "legend": "A sua cédula profissional",
+      "intro": "A Eleva só lista profissionais de saúde regulados. Confirmamos estes dados junto da sua Ordem antes de o seu perfil ficar visível para os membros.",
+      "body": "Ordem profissional",
+      "bodyPlaceholder": "Selecione a sua Ordem",
+      "bodyHelp": "A Ordem que emitiu a sua cédula profissional.",
+      "licenceNumber": "Número da cédula profissional",
+      "licenceNumberHelp": "Tal como aparece no registo público da Ordem.",
+      "ersNumber": "Número de registo na ERS",
+      "ersNumberHelp": "Consta do certificado de registo na Entidade Reguladora da Saúde (ERS).",
+      "whyTitle": "Porque pedimos estes dados",
+      "whyBody": "As regras portuguesas obrigam a que o perfil de cada profissional de saúde mostre o número da cédula, a Ordem que a emitiu e o número de registo na ERS. Não é permitido publicitar prestadores sem registo na ERS, por isso confirmamos os três dados antes de o seu perfil ficar público.",
+      "errors": {
+        "bodyRequired": "Escolha a Ordem que emitiu a sua cédula.",
+        "licenceRequired": "Indique o número da sua cédula profissional.",
+        "licenceInvalid": "Use apenas letras, números, espaços, pontos, barras ou hífenes.",
+        "ersRequired": "Indique o seu número de registo na ERS.",
+        "ersInvalid": "Use apenas letras, números, pontos, barras ou hífenes, sem espaços."
+      }
+    },
+    "page": {
+      "title": "Verificação da cédula",
+      "description": "Confirmamos a cédula de cada especialista antes de o perfil ficar visível na Eleva.",
+      "pending": {
+        "title": "Estamos a verificar a sua cédula",
+        "body": "Obrigado. Estamos a confirmar os seus dados junto da {body}.",
+        "nextTitle": "O que acontece a seguir",
+        "next": [
+          "Procuramos o número da sua cédula no registo público da Ordem.",
+          "Confirmamos o seu registo na ERS.",
+          "Enviamos-lhe um email quando terminarmos, normalmente em 2 dias úteis."
+        ],
+        "meanwhile": "Entretanto, pode configurar os seus serviços, horários e calendários. Os membros podem marcar consigo assim que a cédula estiver verificada.",
+        "meanwhileListed": "O seu perfil continua visível enquanto verificamos."
+      },
+      "needs_changes": {
+        "title": "Precisamos de uma alteração aos dados da cédula",
+        "body": "Leia a nota da nossa equipa, atualize os dados abaixo e volte a enviá-los."
+      },
+      "rejected": {
+        "title": "Não conseguimos verificar a sua cédula",
+        "body": "Leia a nota da nossa equipa. Se algum dado estiver errado, corrija-o abaixo e volte a enviar."
+      },
+      "unsubmitted": {
+        "title": "Confirme os dados da sua cédula",
+        "body": "A Eleva passou a verificar a cédula de todos os especialistas. Indique os seus dados abaixo para os podermos confirmar."
+      },
+      "verified": {
+        "title": "A sua cédula está verificada",
+        "body": "Verificada a {date}. Para alterar estes dados, escreva para support@eleva.care."
+      },
+      "reasonLabel": "Nota da Eleva",
+      "submit": "Enviar para verificação",
+      "resubmit": "Voltar a enviar",
+      "submitting": "A enviar…",
+      "submitted": "Enviado. Avisamos por email quando a cédula estiver verificada.",
+      "support": "Dúvidas? Escreva para <link>support@eleva.care</link>.",
+      "errors": {
+        "validation": "Reveja os campos assinalados e tente novamente.",
+        "locked": "A sua cédula já está verificada. Para a alterar, escreva para support@eleva.care.",
+        "not-eligible": "Conclua a configuração antes de enviar a cédula.",
+        "failed": "Não foi possível enviar os seus dados. Tente novamente."
+      }
+    },
+    "notice": {
+      "pending": {
+        "title": "Estamos a verificar a sua cédula",
+        "body": "O seu perfil fica visível e disponível para marcações assim que a confirmarmos, normalmente em 2 dias úteis.",
+        "cta": "Ver estado"
+      },
+      "needs_changes": {
+        "title": "Os dados da sua cédula precisam de uma alteração",
+        "body": "A nossa equipa pediu uma alteração antes de publicarmos o seu perfil.",
+        "cta": "Rever e voltar a enviar"
+      },
+      "rejected": {
+        "title": "Não conseguimos verificar a sua cédula",
+        "body": "Veja a nota da nossa equipa e o que pode fazer a seguir.",
+        "cta": "Ver detalhes"
+      },
+      "unsubmitted": {
+        "title": "Confirme os dados da sua cédula",
+        "body": "A Eleva passou a verificar a cédula de todos os especialistas. Indique a sua para a podermos confirmar.",
+        "cta": "Adicionar dados da cédula"
+      }
+    }
   }
 }

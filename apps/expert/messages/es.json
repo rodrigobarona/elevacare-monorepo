@@ -817,9 +817,6 @@
       "whyWeAskTitle": "Por qué lo pedimos",
       "whyWeAskBody": "La regulación sanitaria es nacional: una licencia en un país no cubre automáticamente otro. El remoto mundial solo aplica a trabajo no clínico (coaching, mentoring).",
       "languagesLabel": "Idiomas que usas con los miembros",
-      "licenseScope": "Licencia / registro",
-      "licenseScopePlaceholder": "p. ej. OPP 12345",
-      "licenseScopeHelp": "Opcional ahora; necesario antes de la aprobación administrativa para ofertas clínicas.",
       "worldwideRemote": "Remoto mundial (solo no clínico)",
       "worldwideRemoteHelp": "Permite sesiones no clínicas sin límite de país. Los modos clínicos siguen los países de arriba.",
       "saving": "Guardando…",
@@ -841,7 +838,8 @@
         "offer-invariant": "Este cambio rompería una oferta publicada. Actualiza esos modos primero.",
         "practice-incomplete": "Completa primero el país de la práctica y los idiomas.",
         "invalidCountry": "Introduce un código de país válido de 2 letras (ISO 3166-1).",
-        "invalidLanguage": "Introduce un código de idioma válido (p. ej. pt, en, fr)."
+        "invalidLanguage": "Introduce un código de idioma válido (p. ej. pt, en, fr).",
+        "licence-locked": "Tu colegiación está verificada. Para cambiarla, escribe a support@eleva.care."
       }
     },
     "payments": {
@@ -908,7 +906,7 @@
     "eyebrow": "Configuración de experto",
     "stepHints": {
       "profile": "Número fiscal y cómo atiendes a los miembros.",
-      "practice": "País, idiomas y dónde atiendes.",
+      "practice": "País, idiomas, tu colegiación y dónde atiendes.",
       "connect": "Dónde recibes tus ganancias. Puedes terminarlo más tarde.",
       "identity": "Una verificación rápida y segura con Stripe.",
       "invoicing": "Cómo se emiten las facturas de tus sesiones.",
@@ -937,16 +935,17 @@
       "later": "Continuar por ahora"
     },
     "finish": {
-      "title": "Ya puedes abrir tu consulta",
-      "body": "Al terminar se abre tu panel, donde puedes:",
+      "title": "Ya puedes enviar tu consulta a revisión",
+      "body": "Al terminar, comprobamos tu colegiación con tu Ordem. Los miembros podrán reservar contigo en cuanto esté verificada. Mientras tanto puedes:",
       "items": [
         "Crear tu primer servicio y fijar su precio",
         "Definir el horario semanal en que los miembros pueden reservar",
         "Conectar calendarios de Google o Microsoft para evitar reservas solapadas",
         "Completar tu perfil público con foto y biografía"
       ],
-      "submit": "Terminar configuración",
-      "finishing": "Abriendo tu consulta…"
+      "submit": "Terminar y enviar a verificación",
+      "finishing": "Enviando a verificación…",
+      "addLicence": "Añadir datos de colegiación"
     },
     "errors": {
       "validation": "Revisa el formulario e inténtalo de nuevo.",
@@ -954,7 +953,8 @@
       "practice-incomplete": "Termina primero el paso de práctica.",
       "invoicing-required": "Elige primero cómo se emiten las facturas.",
       "identity-required": "Inicia primero la verificación de identidad.",
-      "invalid-step": "Algo ha fallado. Actualiza la página e inténtalo de nuevo."
+      "invalid-step": "Algo ha fallado. Actualiza la página e inténtalo de nuevo.",
+      "licence-required": "Indica tu Ordem, tu número de colegiado y tu número de registro en la ERS en el paso Dónde ejerces."
     }
   },
   "publicProfile": {
@@ -1181,5 +1181,93 @@
     "emailLabel": "Email",
     "phoneLabel": "Teléfono",
     "saveLead": "Añadir contacto"
+  },
+  "licence": {
+    "fields": {
+      "legend": "Tu colegiación profesional",
+      "intro": "Eleva solo publica a profesionales sanitarios regulados. Comprobamos estos datos con tu colegio profesional antes de que los miembros puedan encontrarte.",
+      "body": "Colegio profesional (Ordem)",
+      "bodyPlaceholder": "Selecciona tu Ordem",
+      "bodyHelp": "La Ordem que emitió tu cédula para ejercer.",
+      "licenceNumber": "Número de colegiado",
+      "licenceNumberHelp": "Tu número de cédula profissional, tal como aparece en el registro de la Ordem.",
+      "ersNumber": "Número de registro en la ERS",
+      "ersNumberHelp": "Figura en tu certificado de registro en la Entidade Reguladora da Saúde (ERS).",
+      "whyTitle": "Por qué te lo pedimos",
+      "whyBody": "Las normas portuguesas exigen que el perfil de cada profesional sanitario muestre su número de colegiado, el colegio que lo emitió y su número de registro en la ERS. No se permite anunciar a un proveedor sin registro en la ERS, así que comprobamos los tres datos antes de que tu perfil sea público.",
+      "errors": {
+        "bodyRequired": "Elige la Ordem que emitió tu cédula.",
+        "licenceRequired": "Introduce tu número de colegiado.",
+        "licenceInvalid": "Usa solo letras, números, espacios, puntos, barras o guiones.",
+        "ersRequired": "Introduce tu número de registro en la ERS.",
+        "ersInvalid": "Usa solo letras, números, puntos, barras o guiones, sin espacios."
+      }
+    },
+    "page": {
+      "title": "Verificación de la colegiación",
+      "description": "Comprobamos la colegiación de cada experto antes de que los miembros lo encuentren en Eleva.",
+      "pending": {
+        "title": "Estamos verificando tu colegiación",
+        "body": "Gracias. Estamos comprobando tus datos con la {body}.",
+        "nextTitle": "Qué pasa ahora",
+        "next": [
+          "Buscamos tu número de colegiado en el registro público de la Ordem.",
+          "Confirmamos tu registro en la ERS.",
+          "Te escribimos cuando terminemos, normalmente en 2 días hábiles."
+        ],
+        "meanwhile": "Mientras tanto puedes preparar tus servicios, horarios y calendarios. Los miembros podrán reservar contigo cuando tu colegiación esté verificada.",
+        "meanwhileListed": "Tu perfil sigue visible mientras lo comprobamos."
+      },
+      "needs_changes": {
+        "title": "Necesitamos un cambio en tus datos de colegiación",
+        "body": "Lee la nota de nuestro equipo, actualiza tus datos abajo y vuelve a enviarlos."
+      },
+      "rejected": {
+        "title": "No hemos podido verificar tu colegiación",
+        "body": "Lee la nota de nuestro equipo. Si algún dato era incorrecto, corrígelo abajo y vuelve a enviarlo."
+      },
+      "unsubmitted": {
+        "title": "Confirma tus datos de colegiación",
+        "body": "Eleva ahora verifica la colegiación de todos los expertos. Añade tus datos abajo para que podamos confirmarlos."
+      },
+      "verified": {
+        "title": "Tu colegiación está verificada",
+        "body": "Verificada el {date}. Para cambiar estos datos, escribe a support@eleva.care."
+      },
+      "reasonLabel": "Nota de Eleva",
+      "submit": "Enviar a verificación",
+      "resubmit": "Volver a enviar",
+      "submitting": "Enviando…",
+      "submitted": "Enviado. Te avisaremos por email cuando tu colegiación esté verificada.",
+      "support": "¿Dudas? Escribe a <link>support@eleva.care</link>.",
+      "errors": {
+        "validation": "Revisa los campos marcados e inténtalo de nuevo.",
+        "locked": "Tu colegiación ya está verificada. Para cambiarla, escribe a support@eleva.care.",
+        "not-eligible": "Termina la configuración antes de enviar tu colegiación.",
+        "failed": "No hemos podido enviar tus datos. Inténtalo de nuevo."
+      }
+    },
+    "notice": {
+      "pending": {
+        "title": "Estamos verificando tu colegiación",
+        "body": "Los miembros podrán encontrarte y reservar contigo en cuanto la confirmemos, normalmente en 2 días hábiles.",
+        "cta": "Ver estado"
+      },
+      "needs_changes": {
+        "title": "Tus datos de colegiación necesitan un cambio",
+        "body": "Nuestro equipo ha pedido un cambio antes de poder publicarte.",
+        "cta": "Revisar y volver a enviar"
+      },
+      "rejected": {
+        "title": "No hemos podido verificar tu colegiación",
+        "body": "Consulta la nota de nuestro equipo y qué puedes hacer ahora.",
+        "cta": "Ver detalles"
+      },
+      "unsubmitted": {
+        "title": "Confirma tus datos de colegiación",
+        "body": "Eleva ahora verifica la colegiación de todos los expertos. Añade la tuya para que podamos confirmarla.",
+        "cta": "Añadir datos de colegiación"
+      }
+    }
   }
 }

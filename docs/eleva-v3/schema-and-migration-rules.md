@@ -134,6 +134,9 @@ session. `expert_invoices`, `platform_fee_invoices`, `platform_fee_credit_notes`
 bypass is a documented **read/write** hatch (`USING` and `WITH CHECK`), not a new RLS
 class. Same pattern as `expert_profiles`, `payout_states`, the billing mirrors, and
 `crm_follow_ups` (hourly due-digest scan; notes stay encrypted).
+`become_partner_applications` (`PARTNER_APPLICATION_TABLES`) is narrower: the expert org
+reads its rows and may only insert a `pending`, unreviewed row or refile an open one;
+decisions and deletes are staff-only, so a decided row stays a durable verification record.
 `public_handles` is the documented exception: SELECT is public-read (`USING true`) and
 writes are staff-only (`eleva.platform_admin`). The table has no `org_id` because
 handles are a global namespace (one citext PK), so a tenant-owned WITH CHECK cannot
@@ -150,6 +153,7 @@ and the notification worker.
 | `organizations`                  | tenant-owned (`id`)                                                      |
 | `memberships`                    | tenant-owned                                                             |
 | `expert_profiles`                | tenant-owned                                                             |
+| `become_partner_applications`    | tenant-owned read; org files pending only, staff decide                  |
 | `expert_listings`                | public-read                                                              |
 | `clinic_profiles`                | public-read                                                              |
 | `expert_integrations`            | tenant-owned                                                             |

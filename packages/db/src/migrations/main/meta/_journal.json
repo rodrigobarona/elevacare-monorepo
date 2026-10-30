@@ -498,6 +498,13 @@
       "when": 1761009600000,
       "tag": "0070_booking_payments_admin_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1782700000000,
+      "tag": "0071_become_partner_applications",
+      "breakpoints": true
     }
   ]
 }

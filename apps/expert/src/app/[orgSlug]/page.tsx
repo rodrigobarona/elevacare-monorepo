@@ -1,7 +1,11 @@
 import type { ReactNode } from "react"
 import Link from "next/link"
 import { getLocale, getTranslations } from "next-intl/server"
-import { listExpertBookings, listExpertEventTypes } from "@eleva/db"
+import {
+  getLatestPartnerApplication,
+  listExpertBookings,
+  listExpertEventTypes,
+} from "@eleva/db"
 import type { ExpertBookingListItem } from "@eleva/db"
 import { expertProfileUrl } from "@eleva/config/env"
 import {
@@ -26,8 +30,10 @@ import { StatusPill } from "@eleva/ui/components/status-pill"
 import type { StatusTone } from "@eleva/ui/components/status-pill"
 import { bookingDateParts } from "@eleva/ui/lib/booking/date-parts"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
+import { licenceVerificationState } from "@/lib/licence-verification"
 import { expertWorkspaceBase } from "@/lib/workspace-paths"
 import { DashboardRequestActions } from "./_components/dashboard-request-actions"
+import { LicenceVerificationNotice } from "./_components/licence-verification-notice"
 
 export const dynamic = "force-dynamic"
 
@@ -77,13 +83,15 @@ export default async function ExpertDashboardPage({
   const weekEnd = new Date(now.getTime() + 7 * DAY_MS)
   const horizon = new Date(now.getTime() + HORIZON_DAYS * DAY_MS)
 
-  const [bookings, eventTypes, t, tCalendar, locale] = await Promise.all([
-    listExpertBookings(profile.orgId, profile.id, now, horizon),
-    listExpertEventTypes(profile.orgId, profile.id),
-    getTranslations("dashboard.expert"),
-    getTranslations("calendar"),
-    getLocale(),
-  ])
+  const [bookings, eventTypes, application, t, tCalendar, locale] =
+    await Promise.all([
+      listExpertBookings(profile.orgId, profile.id, now, horizon),
+      listExpertEventTypes(profile.orgId, profile.id),
+      getLatestPartnerApplication(profile.orgId, profile.id),
+      getTranslations("dashboard.expert"),
+      getTranslations("calendar"),
+      getLocale(),
+    ])
 
   const requests: ExpertBookingListItem[] = []
   const upcoming: ExpertBookingListItem[] = []
@@ -130,6 +138,10 @@ export default async function ExpertDashboardPage({
 
   return (
     <div className="mx-auto max-w-5xl space-y-12">
+      <LicenceVerificationNotice
+        state={licenceVerificationState(profile, application)}
+        href={`${base}/licence`}
+      />
       <PageHeader
         eyebrow={t("eyebrow")}
         title={
