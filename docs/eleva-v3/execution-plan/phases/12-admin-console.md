@@ -260,13 +260,21 @@ PR 12.1 — access, users, partners, experts, bookings:
    reason, professional_body, licence_number, licence_verified_at, licence_evidence_blob_key
    in the private store) — dropped by migration 0013 and recreated here (correction 2026-10-29).
    Rows are created by the setup completion route
-   (`apps/api/src/app/expert/profile/steps/[step]/complete`), which now stops at `approved`. GET /admin/partners?status,
+   (`apps/api/src/app/expert/profile/steps/[step]/complete`), which now stops at `approved`.
+   **Launch reconciliation:** profiles already `active` without an approved application
+   (self-activated before the gate, and MVP experts imported in Phase 14) are listed in the queue
+   as "needs verification". Before the Phase 15 cutover each one is verified or moved to
+   `suspended`, so no unverified expert is listed when `eleva.care` switches to v3. GET /admin/partners?status,
    GET /admin/partners/[id] (checklist computed: Connect details_submitted + payouts_enabled +
    capabilities.transfers active (D-05; Stripe Identity status only when
    ff.expert_identity_verification is on),
    invoicing choice, profile completeness, ERS bio check flags), POST /approve [R, stepUp]
-   { reason } — TWO paths by the application's specialty class (packages/config
-   SPECIALTIES[slug].clinical boolean, SSOT): non-clinical -> executes directly:
+   { reason } — **regulated-only launch (founder 2026-10-29): every approval, on either path,
+   requires a recorded licence verification against the professional body (body, licence number,
+   ERS registration number, reviewer, timestamp, evidence) before `expert_profiles.status` becomes
+   `active`.** Then TWO paths by the application's specialty class (packages/config
+   SPECIALTIES[slug].clinical boolean, SSOT; at launch every specialty is clinical, so the
+   non-clinical path stays dormant until non-regulated practitioners are allowed): non-clinical -> executes directly:
    expert_profiles.status = active + revalidateTag("public-experts") + Lane 1 partner.approved;
    clinical (any ERS-regulated specialty) -> adminRoute({ dualControl: true }) creates an
    admin_action_requests row of kind partner.approve_clinical and returns 202 { requestId } —

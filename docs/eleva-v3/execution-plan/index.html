@@ -3192,11 +3192,11 @@ handle from <code>public_handles</code>, avatar, headline, bio via <code>@eleva/
 (<code>practice_country</code>, <code>service_countries</code> with plain-language legal helper text, <code>languages</code>,
 <code>license_scope</code>, <code>worldwide_remote</code> for non-clinical work), Locations (optional), Availability
 (default schedule), First service (compact event type builder). Phase 6 appends Payments and
-Identity, Phase 7 appends Invoicing, completion inserts a <code>become_partner_applications</code>
-row (<strong>not built in 4B</strong> — correction 2026-10-29: setup completion sets <code>active</code> directly and the
-table was never recreated after migration 0013 dropped it; Phase 12 now creates it. Planned shape: <code>id</code>, <code>expert_org_id</code>, <code>submitted_at</code>, <code>status pending|approved|rejected|needs_changes</code>,
-<code>checklist jsonb</code>, <code>reviewer_id</code>, <code>reviewed_at</code>, <code>reason</code>; RLS <code>tenant-owned</code> + staff read — Phase 12
-builds the review queue on top and adds no columns, it does not create the table). Steps are declared in one registry (<code>onboarding-steps.ts</code>) so later phases append,
+Identity, Phase 7 appends Invoicing. <strong>As built in 4B</strong>, setup completion moves the profile
+straight to <code>active</code>; no application row is written, and <code>become_partner_applications</code> does not
+exist (migration 0013 dropped it). <strong>Correction 2026-10-29:</strong> the licence gate moves to the
+Phase 12 deliverable, which recreates the table (with licence fields) and changes completion to
+create a <code>pending</code> application while the profile stays <code>approved</code> until staff verify it. Steps are declared in one registry (<code>onboarding-steps.ts</code>) so later phases append,
 never fork the shell.</li>
 <li><strong>Availability</strong> <code>/[orgSlug]/availability</code>: schedules list (name, timezone, default badge, &quot;used
 by&quot; mode chips); editor with weekly grid (drag to create ranges, copy day to others, split
@@ -6987,13 +6987,21 @@ PR 12.1 — access, users, partners, experts, bookings:
    reason, professional_body, licence_number, licence_verified_at, licence_evidence_blob_key
    in the private store) — dropped by migration 0013 and recreated here (correction 2026-10-29).
    Rows are created by the setup completion route
-   (`apps/api/src/app/expert/profile/steps/[step]/complete`), which now stops at `approved`. GET /admin/partners?status,
+   (`apps/api/src/app/expert/profile/steps/[step]/complete`), which now stops at `approved`.
+   **Launch reconciliation:** profiles already `active` without an approved application
+   (self-activated before the gate, and MVP experts imported in Phase 14) are listed in the queue
+   as &quot;needs verification&quot;. Before the Phase 15 cutover each one is verified or moved to
+   `suspended`, so no unverified expert is listed when `eleva.care` switches to v3. GET /admin/partners?status,
    GET /admin/partners/[id] (checklist computed: Connect details_submitted + payouts_enabled +
    capabilities.transfers active (D-05; Stripe Identity status only when
    ff.expert_identity_verification is on),
    invoicing choice, profile completeness, ERS bio check flags), POST /approve [R, stepUp]
-   { reason } — TWO paths by the application&#39;s specialty class (packages/config
-   SPECIALTIES[slug].clinical boolean, SSOT): non-clinical -&gt; executes directly:
+   { reason } — **regulated-only launch (founder 2026-10-29): every approval, on either path,
+   requires a recorded licence verification against the professional body (body, licence number,
+   ERS registration number, reviewer, timestamp, evidence) before `expert_profiles.status` becomes
+   `active`.** Then TWO paths by the application&#39;s specialty class (packages/config
+   SPECIALTIES[slug].clinical boolean, SSOT; at launch every specialty is clinical, so the
+   non-clinical path stays dormant until non-regulated practitioners are allowed): non-clinical -&gt; executes directly:
    expert_profiles.status = active + revalidateTag(&quot;public-experts&quot;) + Lane 1 partner.approved;
    clinical (any ERS-regulated specialty) -&gt; adminRoute({ dualControl: true }) creates an
    admin_action_requests row of kind partner.approve_clinical and returns 202 { requestId } —
