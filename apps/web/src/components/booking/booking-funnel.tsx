@@ -64,6 +64,7 @@ import type { FunnelConsentDoc } from "@/lib/booking-consents"
 import {
   bookingReturnUrl,
   checkoutReturnPath,
+  updateFunnelReturnPayment,
   clearFunnelReturn,
   confirmLockKey,
   consumeFunnelRestore,
@@ -340,6 +341,7 @@ export function BookingFunnel({
     const { status, snapshot } = restored
     setReservation(snapshot.reservation)
     setPayment(snapshot.payment)
+    setAppliedPromo(snapshot.promoCode ?? null)
     setSlot(snapshot.slot)
     setModeId(snapshot.modeId)
     setName(snapshot.name)
@@ -965,6 +967,9 @@ export function BookingFunnel({
                       })
                     setPayment(next)
                     setAppliedPromo(code)
+                    // A redirect-based payment returns with the new
+                    // session id; keep the restore snapshot in step.
+                    updateFunnelReturnPayment(next, code)
                     return null
                   } catch (error) {
                     return error instanceof ApiClientError &&

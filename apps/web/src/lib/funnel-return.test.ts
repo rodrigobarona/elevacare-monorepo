@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import {
+  updateFunnelReturnPayment,
   bookingReturnUrl,
   captureRedirect,
   checkoutReturnPath,
@@ -227,5 +228,26 @@ describe("checkoutReturnPath", () => {
     ).toBe(
       "/fisiomota/first-visit?link=abc&checkout_session_id={CHECKOUT_SESSION_ID}"
     )
+  })
+})
+
+describe("updateFunnelReturnPayment", () => {
+  afterEach(() => {
+    clearFunnelReturn()
+    vi.unstubAllGlobals()
+  })
+
+  it("points the snapshot at the replacement session and code", () => {
+    const store = stubSession({ "bookingFunnel:v1": JSON.stringify(snapshot) })
+    updateFunnelReturnPayment(
+      { ...snapshot.payment, checkoutSessionId: "cs_test_promo" },
+      "SPRING20"
+    )
+    const saved = JSON.parse(store.get("bookingFunnel:v1") ?? "{}")
+    expect(saved.payment.checkoutSessionId).toBe("cs_test_promo")
+    expect(saved.promoCode).toBe("SPRING20")
+    expect(
+      takeFunnelRestore("?checkout_session_id=cs_test_promo")
+    ).not.toBeNull()
   })
 })

@@ -26,6 +26,8 @@ export type FunnelReturnSnapshot = {
   timeZone: string
   country: string
   language: string
+  /** Booking promotion code attached to `payment`'s session, if any. */
+  promoCode?: string | null
 }
 
 export type FunnelRedirectStatus = "succeeded" | "processing" | "failed"
@@ -175,6 +177,16 @@ export function takeFunnelRestore(
   }
   restoreMemo = { status, checkoutSessionId, snapshot }
   return restoreMemo
+}
+
+/** Points the stored snapshot at a replacement session (promo code change). */
+export function updateFunnelReturnPayment(
+  payment: FunnelReturnSnapshot["payment"],
+  promoCode: string | null
+): void {
+  const current = loadFunnelReturn()
+  if (!current) return
+  saveFunnelReturn({ ...current, payment, promoCode })
 }
 
 export function saveFunnelReturn(snapshot: FunnelReturnSnapshot): void {
