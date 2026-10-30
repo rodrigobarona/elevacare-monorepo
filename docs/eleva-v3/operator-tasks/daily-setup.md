@@ -26,13 +26,12 @@ verifies, so the secret must be on the deployed `elevacare-api` **before**
 1. Generate a base64 HMAC secret (do not commit it). Store as
    `DAILY_WEBHOOK_SECRET` on Vercel `elevacare-api` (preview + production
    sensitive; development non-sensitive) and locally. **Done 2026-10-08.**
-2. Redeploy `elevacare-api` so `api.dev.eleva.care` has the secret.
-   **Pending** — Daily's create handshake 401s until that deploy.
-   A 2026-10-08 redeploy hit Hobby `api-deployments-free-per-day`
-   (try again after the quota window).
+2. Redeploy `elevacare-api` so the deployed API has the secret. **Done** for
+   `api.eleva.care` (verified 2026-10-30 with a signed `{ "test": "test" }`).
 3. Create the webhook with that same `hmac` and event types
    `meeting.started`, `meeting.ended`, `participant.joined`,
-   `participant.left`. URL:
+   `participant.left`. **Done 2026-10-30** for production. Check it stays
+   `ACTIVE` with `GET https://api.daily.co/v1/webhooks`. URL:
 
 | Environment | URL                                         |
 | ----------- | ------------------------------------------- |
