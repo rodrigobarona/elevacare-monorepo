@@ -23,7 +23,7 @@ The controller of the platform's data is **BÚZIOS E TARTARUGAS - LDA** ("Eleva"
 - **Account:** name, email, phone number (if you give it, for example for SMS reminders), language and preferences.
 - **Bookings:** expert, service, date, mode, cancellation policy applied, cancellations and refunds.
 - **Payments:** amount, payment and refund status, promo code used and NIF, if you give it. Card details are handled by Stripe; Eleva does not store them.
-- **Online sessions:** video call join and leave logs. Session recording is turned off.
+- **Online sessions:** live audio and video, processed by Daily only to run the call, and video call join and leave logs. Session recording is turned off.
 - **Session records (health data):** what you share before the session, the expert's notes, the report and, only if you turn it on, the live transcript. They are encrypted at the application layer: the Eleva team cannot read them.
 - **Communications:** booking and reminder emails and SMS, and support requests.
 - **Technical data:** IP address, device, security logs and errors.
@@ -39,7 +39,7 @@ The controller of the platform's data is **BÚZIOS E TARTARUGAS - LDA** ("Eleva"
 | Keeping accounting and tax records                                                                                         | Legal obligation                                                                          |
 | Storing session records on the expert's instructions                                                                       | The expert's basis: provision of healthcare (art. 9(2)(h), and Law 58/2019, art. 29)      |
 | Live session transcription                                                                                                 | Your explicit consent (art. 9(2)(a)), which you can withdraw at any time                  |
-| AI draft of the session report from the expert's notes                                                                     | Your explicit consent to AI processing (art. 9(2)(a)), which you can withdraw at any time |
+| AI draft of the session report from the expert's notes and the text you typed when booking                                 | Your explicit consent to AI processing (art. 9(2)(a)), which you can withdraw at any time |
 | Proving attendance at a session and responding to payment disputes                                                         | Legitimate interest (art. 6(1)(f)); establishment, exercise or defence of legal claims    |
 | Security, fraud and abuse prevention                                                                                       | Legitimate interest                                                                       |
 | Verifying experts and reporting their income to the AT (DAC7)                                                              | Legal obligation                                                                          |
@@ -87,7 +87,7 @@ Session records are encrypted at the application layer, health files are kept in
 ## 10. Artificial intelligence and cookies
 
 - Eleva's AI tools help experts write and translate the public text of their profile and services; those requests do not include member data or health data.
-- An AI draft of a session report, built from the expert's notes, only works with your specific consent to AI processing and with a model that has zero data retention. The expert reviews the draft; if they do not accept it, it is deleted after 90 days. See the [AI processing notice](/legal/ai-processing).
+- An AI draft of a session report, built from the expert's notes and the text you typed when booking, only works with your specific consent to AI processing and with a model that has zero data retention. The expert reviews the draft; if they do not accept it, it is deleted after 90 days. See the [AI processing notice](/legal/ai-processing).
 - We do not use analytics or advertising cookies. See the [Cookie policy](/legal/cookies).
 
 ## 11. Minors
