@@ -232,7 +232,7 @@ export async function publishPendingDomainEvents(input: {
         eventId: delivery.eventId,
         message,
       })
-      const dead = delivery.attempts >= maxAttempts
+      const dead = delivery.attempts >= maxAttempts || isPermanentFailure(err)
       await markDeliveryFailed(delivery.id, message, dead)
       if (dead) result.dead += 1
       else result.failed += 1
@@ -390,4 +390,20 @@ function executeRowIds(result: unknown): string[] {
     }
     return []
   })
+}
+
+/**
+ * A subscriber error flagged `permanent` (directly, through `cause`, or
+ * inside an AggregateError) cannot succeed on retry: dead-letter it now.
+ */
+export function isPermanentFailure(err: unknown, depth = 0): boolean {
+  if (!err || typeof err !== "object" || depth > 5) return false
+  if ((err as { permanent?: unknown }).permanent === true) return true
+  if (err instanceof AggregateError) {
+    return (
+      err.errors.length > 0 &&
+      err.errors.every((inner) => isPermanentFailure(inner, depth + 1))
+    )
+  }
+  return isPermanentFailure((err as { cause?: unknown }).cause, depth + 1)
 }
