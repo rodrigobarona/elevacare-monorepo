@@ -133,17 +133,29 @@ const PERMANENT_RESEND_ERRORS = new Set([
   "missing_required_field",
 ])
 
-function throwResendError(
-  operation: string,
-  error: { name?: string; message: string }
-): never {
+type ResendErrorDetail = {
+  name?: string
+  message: string
+  statusCode?: number | null
+}
+
+/**
+ * Resend also uses `validation_error` for a bad API key (400/401) and for
+ * sender problems such as an unverified domain (403). An operator can fix
+ * those, so the delivery must stay retryable.
+ */
+function isPermanentResendError(error: ResendErrorDetail): boolean {
+  if (!error.name || !PERMANENT_RESEND_ERRORS.has(error.name)) return false
+  if (error.statusCode === 401 || error.statusCode === 403) return false
+  return !/api key/i.test(error.message)
+}
+
+function throwResendError(operation: string, error: ResendErrorDetail): never {
   const failure = new Error(
     `[email] resend ${operation} failed: ${error.name ?? "Error"}: ${error.message}`,
     { cause: error }
   ) as Error & { permanent?: boolean }
-  if (error.name && PERMANENT_RESEND_ERRORS.has(error.name)) {
-    failure.permanent = true
-  }
+  if (isPermanentResendError(error)) failure.permanent = true
   throw failure
 }
 
