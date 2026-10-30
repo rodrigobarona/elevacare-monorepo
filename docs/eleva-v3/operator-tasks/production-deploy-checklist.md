@@ -12,10 +12,13 @@ CI only migrates preview branches. If `packages/db/src/migrations/main` changed 
 run `pnpm db:migrate` with the production **unpooled** URL before deploying, or API reads fail with
 Postgres `42703`.
 
+The licence gate needs **0071** and **0072** on production before the API deploys.
+
 ## 2. Deploy
 
-Deploy `elevacare-api` first, then `elevacare-app`, `elevacare-expert`, `elevacare-team` and
-`elevacare-web`. Trigger them from the merged commit, not by redeploying an old deployment: a redeploy
+Deploy `elevacare-api` first, then `elevacare-app`, `elevacare-expert`, `elevacare-team`,
+`elevacare-web` and `elevacare-admin`. `elevacare-admin` needs `NEXT_PUBLIC_API_URL` set first, because
+the licence review queue calls the API. Trigger them from the merged commit, not by redeploying an old deployment: a redeploy
 ships the old code with the new environment.
 
 ## 3. Register schedules
@@ -36,6 +39,8 @@ DPO sign-off (AUD-028). `POST /workflows/tick/minutely` must answer 401 without 
 - [ ] Two browsers on a real booking inside its join window. Attendance is recorded from Daily's real
       webhook deliveries (webhook registered 2026-10-30).
 - [ ] Sentry shows no new `booking confirm not_found` events.
+- [ ] A new expert finishing setup files a licence application, and `/partners` in admin shows it.
+      Active profiles appear as "Needs verification".
 
 ## Known requirements before real money
 
