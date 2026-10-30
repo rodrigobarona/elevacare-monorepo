@@ -50,6 +50,11 @@ export {
   type PaymentPayoutNotificationKind,
   type PaymentPayoutNotificationEvent,
 } from "./send-payment-payout-notification"
+export {
+  sendPartnerDecisionNotification,
+  isPartnerDecisionKind,
+  type PartnerDecisionEvent,
+} from "./send-partner-decision"
 export { SendNotificationError } from "./errors"
 export { LEASE_TTL_MS, RESEND_IDEMPOTENCY_WINDOW_MS } from "./claim-delivery"
 export { createAuthMailer, type AuthTransactionalMailer } from "./auth-mailer"

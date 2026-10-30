@@ -28,6 +28,7 @@ const nextConfig = {
     },
   },
   transpilePackages: [
+    "@eleva/api-client",
     "@eleva/auth",
     "@eleva/billing",
     "@eleva/config",

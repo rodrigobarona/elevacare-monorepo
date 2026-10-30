@@ -51,6 +51,11 @@ vi.mock("@eleva/accounting/platform-fee-events", () => ({
 }))
 
 vi.mock("@eleva/db", () => ({
+  PARTNER_DECISION_EVENT_TYPES: [
+    "partner.approved",
+    "partner.needs_changes",
+    "partner.rejected",
+  ],
   main: {
     domainEventDeliveries: {
       id: "id",

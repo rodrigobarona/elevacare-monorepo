@@ -1,10 +1,12 @@
 import {
   isBookingNotificationKind,
   isClosedGateKind,
+  isPartnerDecisionKind,
   isPaymentPayoutNotificationKind,
   parseBookingNotificationPayload,
   sendBookingNotification,
   sendClosedGateInvoiceNotification,
+  sendPartnerDecisionNotification,
   sendPaymentPayoutNotification,
 } from "@eleva/notifications"
 import type { DomainEventSubscriber } from "../domain-events"
@@ -62,6 +64,15 @@ export const handleSendNotification: DomainEventSubscriber = async (event) => {
   }
   if (isPaymentPayoutNotificationKind(event.type)) {
     await sendPaymentPayoutNotification({
+      id: event.id,
+      type: event.type,
+      orgId: event.orgId,
+      payload: event.payload,
+    })
+    return
+  }
+  if (isPartnerDecisionKind(event.type)) {
+    await sendPartnerDecisionNotification({
       id: event.id,
       type: event.type,
       orgId: event.orgId,

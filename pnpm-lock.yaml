@@ -373,6 +373,9 @@ importers:
 
   apps/admin:
     dependencies:
+      '@eleva/api-client':
+        specifier: workspace:^
+        version: link:../../packages/api-client
       '@eleva/auth':
         specifier: workspace:^
         version: link:../../packages/auth
@@ -412,6 +415,9 @@ importers:
       react-dom:
         specifier: 'catalog:'
         version: 19.2.6(react@19.2.6)
+      sonner:
+        specifier: 'catalog:'
+        version: 2.0.7(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       zod:
         specifier: 'catalog:'
         version: 4.4.3

@@ -84,7 +84,7 @@ describe("NOTIFICATION_KINDS", () => {
         resolve(import.meta.dirname, "../../db/src/migrations/main", file),
         "utf8"
       )
-    const kindsSql = migration("0067_crm_follow_up_due_kind.sql")
+    const kindsSql = migration("0072_partner_decision_kinds.sql")
     const scopeSql = migration("0057_booking_request.sql")
     const expected = sortedStrings(NOTIFICATION_KIND_VALUES)
     expect(

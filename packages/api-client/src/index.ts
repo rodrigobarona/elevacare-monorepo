@@ -11,9 +11,11 @@ import { LocaleSchema } from "@eleva/config/i18n"
 import {
   ERS_REGISTRATION_NUMBER_MAX_LENGTH,
   ERS_REGISTRATION_NUMBER_PATTERN,
+  LICENCE_CHECKLIST_ITEMS,
   LICENCE_NUMBER_MAX_LENGTH,
   LICENCE_NUMBER_PATTERN,
   PROFESSIONAL_BODY_IDS,
+  type LicenceChecklistItem,
 } from "@eleva/config/professional-bodies"
 
 // ---------------------------------------------------------------------------
@@ -1574,6 +1576,96 @@ export const ExpertLicenceSchema = z.object({
   ersRegistrationNumber: ErsRegistrationNumberSchema,
 })
 export type ExpertLicence = z.infer<typeof ExpertLicenceSchema>
+
+export const LicenceReviewStateSchema = z.enum([
+  "pending",
+  "needs_changes",
+  "needs_verification",
+  "verified",
+  "rejected",
+  "not_submitted",
+])
+export type LicenceReviewStateValue = z.infer<typeof LicenceReviewStateSchema>
+
+const ExpertProfileStatusSchema = z.enum([
+  "draft",
+  "approved",
+  "active",
+  "suspended",
+])
+
+/** Staff licence review queue, oldest first. */
+export const AdminPartnerQueueResponseSchema = z.object({
+  items: z.array(
+    z.object({
+      expertProfileId: z.string().uuid(),
+      displayName: z.string(),
+      username: z.string(),
+      profileStatus: ExpertProfileStatusSchema,
+      reviewState: LicenceReviewStateSchema,
+      professionalBody: z.string().nullable(),
+      waitingSince: z.string(),
+    })
+  ),
+})
+export type AdminPartnerQueueResponse = z.infer<
+  typeof AdminPartnerQueueResponseSchema
+>
+
+export const AdminPartnerReviewResponseSchema = z.object({
+  expertProfileId: z.string().uuid(),
+  displayName: z.string(),
+  username: z.string(),
+  email: z.string(),
+  profileStatus: ExpertProfileStatusSchema,
+  reviewState: LicenceReviewStateSchema,
+  /** Latest application snapshot, or null when the expert never filed. */
+  application: ExpertLicenceApplicationSchema.nullable(),
+})
+export type AdminPartnerReviewResponse = z.infer<
+  typeof AdminPartnerReviewResponseSchema
+>
+
+/** Every `LICENCE_CHECKLIST_ITEMS` check, confirmed. */
+const LicenceChecklistSchema = z.object(
+  Object.fromEntries(
+    LICENCE_CHECKLIST_ITEMS.map((item) => [item, z.literal(true)])
+  ) as Record<LicenceChecklistItem, z.ZodLiteral<true>>
+)
+
+const LicenceDecisionReasonSchema = z.string().trim().min(1).max(1000)
+
+const LicenceDecisionTargetSchema = z.object({
+  applicationId: z.string().uuid(),
+  /** The filing staff reviewed; a refile since then refuses with 409. */
+  submittedAt: z.string().datetime({ offset: true }),
+})
+
+export const LicenceDecisionRequestSchema = z.discriminatedUnion("decision", [
+  LicenceDecisionTargetSchema.extend({
+    decision: z.literal("approve"),
+    checklist: LicenceChecklistSchema,
+  }),
+  LicenceDecisionTargetSchema.extend({
+    decision: z.literal("needs_changes"),
+    reason: LicenceDecisionReasonSchema,
+  }),
+  LicenceDecisionTargetSchema.extend({
+    decision: z.literal("reject"),
+    reason: LicenceDecisionReasonSchema,
+  }),
+])
+export type LicenceDecisionRequest = z.infer<
+  typeof LicenceDecisionRequestSchema
+>
+
+export const LicenceDecisionResponseSchema = z.object({
+  status: PartnerApplicationStatusSchema,
+  profileStatus: ExpertProfileStatusSchema,
+})
+export type LicenceDecisionResponse = z.infer<
+  typeof LicenceDecisionResponseSchema
+>
 
 export const PatchPracticeRequestSchema = z.object({
   practiceCountry: CountryCodeSchema.optional(),
@@ -3457,6 +3549,31 @@ export function createApiClient(options: ApiClientOptions) {
           data
         )
         return RefundBookingPaymentResponseSchema.parse(raw)
+      },
+    },
+
+    /** Staff console surface (`applications:review`). */
+    admin: {
+      partners: {
+        async list() {
+          const raw = await request<unknown>("GET", "/admin/partners")
+          return AdminPartnerQueueResponseSchema.parse(raw)
+        },
+        async get(expertProfileId: string) {
+          const raw = await request<unknown>(
+            "GET",
+            `/admin/partners/${encodeURIComponent(expertProfileId)}`
+          )
+          return AdminPartnerReviewResponseSchema.parse(raw)
+        },
+        async decide(expertProfileId: string, data: LicenceDecisionRequest) {
+          const raw = await request<unknown>(
+            "POST",
+            `/admin/partners/${encodeURIComponent(expertProfileId)}/decision`,
+            data
+          )
+          return LicenceDecisionResponseSchema.parse(raw)
+        },
       },
     },
 

@@ -1,6 +1,7 @@
 {
   "nav": {
-    "overview": "Vista General"
+    "overview": "Vista General",
+    "partners": "Revisión de colegiaciones"
   },
   "dashboard": {
     "welcome": "Consola del operador Eleva",
@@ -8,6 +9,72 @@
     "signedInAs": "Sesión iniciada como {email}",
     "eyebrow": "Operador",
     "emptyTitle": "Las herramientas de operador están en camino",
-    "emptyBody": "La aprobación de expertos, los pagos y el registro de auditoría llegan con la consola de operador."
+    "emptyBody": "La revisión de colegiaciones ya está disponible. Los pagos y el registro de auditoría llegarán con la consola de operador."
+  },
+  "partners": {
+    "eyebrow": "Operador",
+    "title": "Revisión de colegiaciones",
+    "description": "Comprueba cada colegiación con la Ordem antes de publicar a un especialista.",
+    "emptyTitle": "Nada que revisar",
+    "emptyBody": "Aquí aparecen las nuevas colegiaciones y los especialistas publicados que aún necesitan verificación.",
+    "columns": {
+      "expert": "Especialista",
+      "body": "Colegio profesional",
+      "state": "Estado",
+      "waiting": "En espera desde"
+    },
+    "unknownBody": "Aún sin enviar",
+    "states": {
+      "pending": "Pendiente",
+      "needs_changes": "Necesita cambios",
+      "needs_verification": "Necesita verificación",
+      "verified": "Verificada",
+      "rejected": "Rechazada",
+      "not_submitted": "Sin enviar"
+    },
+    "detail": {
+      "back": "Todas las revisiones",
+      "description": "{email} · @{username}",
+      "listedNote": "Este especialista está publicado y sigue publicado durante la revisión.",
+      "snapshotTitle": "Lo que envió el especialista",
+      "sentAt": "Enviado el {date}",
+      "reviewedAt": "Última revisión el {date}",
+      "body": "Colegio profesional",
+      "licenceNumber": "Número de colegiación",
+      "ersNumber": "Número de registro en la ERS",
+      "openRegister": "Abrir la web de {body}",
+      "openErs": "Abrir la web de la ERS",
+      "lastReason": "Último motivo",
+      "noApplication": "Este especialista aún no ha enviado su colegiación. Ve un aviso en su panel. Podrás decidir cuando la envíe.",
+      "approvedNote": "Esta colegiación está verificada.",
+      "rejectedNote": "Esta solicitud fue rechazada. El especialista puede enviar sus datos de nuevo.",
+      "decisionTitle": "Tu decisión",
+      "checklistHelp": "Confirma todas las comprobaciones para aprobar.",
+      "checklist": {
+        "register_checked": "Colegiación encontrada y activa en el registro público de la Ordem",
+        "name_matches": "El nombre del registro coincide con este especialista",
+        "ers_checked": "Número de registro confirmado con la ERS"
+      },
+      "approve": "Aprobar",
+      "approving": "Aprobando...",
+      "reasonLabel": "Motivo",
+      "reasonHelp": "El especialista lo leerá en su email.",
+      "needsChanges": "Pedir cambios",
+      "reject": "Rechazar",
+      "saving": "Guardando...",
+      "toasts": {
+        "approve": "Colegiación aprobada",
+        "needs_changes": "Cambios solicitados",
+        "reject": "Solicitud rechazada"
+      },
+      "errors": {
+        "validation": "Revisa el formulario e inténtalo de nuevo.",
+        "changed": "El especialista envió nuevos datos. Recarga para verlos.",
+        "decided": "Alguien ya ha decidido esta solicitud.",
+        "self": "No puedes revisar tu propia solicitud.",
+        "forbidden": "No tienes acceso a esta revisión.",
+        "failed": "No se ha podido completar. Inténtalo de nuevo."
+      }
+    }
   }
 }

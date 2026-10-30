@@ -37,7 +37,7 @@ In:
   straight to `active`; no application row is written, and `become_partner_applications` does not
   exist (migration 0013 dropped it). **Correction 2026-10-29:** the licence gate moves to the
   Phase 12 deliverable, which recreates the table (with licence fields) and changes completion to
-  create a `pending` application while the profile stays `approved` until staff verify it. Steps are declared in one registry (`onboarding-steps.ts`) so later phases append,
+  create a `pending` application while the profile stays `approved` until staff verify it (shipped 2026-10-30, see the decision log). Steps are declared in one registry (`onboarding-steps.ts`) so later phases append,
   never fork the shell.
 - **Availability** `/[orgSlug]/availability`: schedules list (name, timezone, default badge, "used
   by" mode chips); editor with weekly grid (drag to create ranges, copy day to others, split

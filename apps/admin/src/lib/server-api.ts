@@ -1,0 +1,22 @@
+import { headers } from "next/headers"
+import { createApiClient } from "@eleva/api-client"
+import { buildApiSessionHeaders, requireSession } from "@eleva/auth/server"
+
+export function getApiBaseUrl(): string {
+  const url = process.env.NEXT_PUBLIC_API_URL
+  if (!url) {
+    throw new Error(
+      "NEXT_PUBLIC_API_URL environment variable is required but not set"
+    )
+  }
+  return url
+}
+
+export async function getAuthedApiClient() {
+  await requireSession("applications:review")
+  const incomingHeaders = await headers()
+  return createApiClient({
+    baseUrl: getApiBaseUrl(),
+    headers: buildApiSessionHeaders(incomingHeaders),
+  })
+}

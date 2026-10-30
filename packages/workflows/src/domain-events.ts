@@ -9,7 +9,13 @@ import {
   PAYMENT_PAYOUT_NOTIFICATION_EVENT_TYPES,
   type PaymentPayoutNotificationPayload,
 } from "@eleva/billing/notification-events"
-import { main, withPlatformAdminContext, type Tx } from "@eleva/db"
+import {
+  main,
+  PARTNER_DECISION_EVENT_TYPES,
+  withPlatformAdminContext,
+  type PartnerDecisionPayload,
+  type Tx,
+} from "@eleva/db"
 import {
   BOOKING_NOTIFICATION_EVENT_TYPES,
   PAYMENT_FAILED_EVENT_TYPE,
@@ -26,6 +32,7 @@ export const DOMAIN_EVENT_TYPES = [
   REFUND_SUCCEEDED_EVENT_TYPE,
   ...PAYMENT_PAYOUT_NOTIFICATION_EVENT_TYPES,
   ...CLOSED_GATE_INVOICE_EVENT_TYPES,
+  ...PARTNER_DECISION_EVENT_TYPES,
 ] as const
 
 export type DomainEventType = (typeof DOMAIN_EVENT_TYPES)[number]
@@ -72,6 +79,12 @@ export type DomainEvent =
       idempotencyKey: string
       payload: ClosedGateInvoicePayload
     }
+  | {
+      type: (typeof PARTNER_DECISION_EVENT_TYPES)[number]
+      orgId: string
+      idempotencyKey: string
+      payload: PartnerDecisionPayload
+    }
 
 const BOOKING_NOTIFICATION_SUBSCRIBERS = {
   "booking.confirmed": [SEND_NOTIFICATION_SUBSCRIBER],
@@ -98,6 +111,9 @@ export const DEFAULT_SUBSCRIBERS: Record<DomainEventType, readonly string[]> = {
   "invoice.blocked": CLOSED_GATE_INVOICE_SUBSCRIBERS,
   "invoice.skipped": CLOSED_GATE_INVOICE_SUBSCRIBERS,
   "invoice.pending": CLOSED_GATE_INVOICE_SUBSCRIBERS,
+  "partner.approved": [SEND_NOTIFICATION_SUBSCRIBER],
+  "partner.needs_changes": [SEND_NOTIFICATION_SUBSCRIBER],
+  "partner.rejected": [SEND_NOTIFICATION_SUBSCRIBER],
 }
 
 export const OBSERVATIONAL_SUBSCRIBERS = ["logger"] as const
