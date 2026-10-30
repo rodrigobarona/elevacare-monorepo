@@ -158,6 +158,12 @@ export async function createPayoutStateForPaidPayment(input: {
     return { created: false, payoutStateId: snapshot.existingId }
   }
   if (!snapshot.connectAccountId) {
+    // Publishing a paid offer requires Connect, so this needs a human: the
+    // member paid and nothing will ever pay the expert.
+    void captureException(new Error("paid booking has no connect account"), {
+      bookingPaymentId: input.bookingPaymentId,
+      orgId: input.orgId,
+    })
     return { created: false, payoutStateId: null }
   }
   if (!snapshot.booking || !snapshot.payment.paidAt) {

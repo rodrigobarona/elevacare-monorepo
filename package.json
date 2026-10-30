@@ -28,6 +28,7 @@
     "e2e:member": "E2E_MEMBER=1 E2E_SKIP_WEBSERVER=1 playwright test e2e/member.spec.ts --workers=1",
     "e2e:member:stripe": "E2E_LIVE_STRIPE=1 pnpm e2e:member",
     "e2e:cancellation-smoke": "E2E_CANCELLATION_SMOKE=1 E2E_SKIP_WEBSERVER=1 playwright test e2e/cancellation-policy-smoke.spec.ts --workers=1",
+    "e2e:payout-smoke": "E2E_PAYOUT_SMOKE=1 E2E_SKIP_WEBSERVER=1 playwright test e2e/payout-smoke.spec.ts --project=chromium --workers=1",
     "e2e:request-smoke": "E2E_REQUEST_SMOKE=1 E2E_SKIP_WEBSERVER=1 playwright test e2e/booking-request-smoke.spec.ts --workers=1",
     "e2e:passkey": "E2E_AUTH=1 E2E_PASSKEY=1 E2E_SKIP_WEBSERVER=1 playwright test e2e/auth-passkey.spec.ts --project=chromium --workers=1",
     "e2e:report-smoke": "E2E_REPORT_SMOKE=1 E2E_SKIP_WEBSERVER=1 playwright test e2e/member-report.spec.ts --project=chromium --workers=1",
