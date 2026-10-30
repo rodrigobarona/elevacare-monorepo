@@ -142,9 +142,11 @@ export async function POST(request: Request) {
           )
         }
         paymentIntentId = checkout.paymentIntentId
-        // The browser always asks to confirm after Stripe accepts the
-        // payment; an intent that has not settled yet (MB WAY approval,
-        // 3DS) is pending, not a mismatch. The webhook confirms it later.
+        // Runs only after the token + bound-session check above, so there is
+        // no Stripe call before authorization. The browser confirms as soon
+        // as Stripe accepts the payment: an unsettled intent (MB WAY, 3DS) is
+        // pending, a declined one a failure the member can retry; the
+        // webhook confirms pending payments later.
         let intent
         try {
           intent = await retrieveBookingPaymentIntent(paymentIntentId)
@@ -156,7 +158,8 @@ export async function POST(request: Request) {
           const pending =
             intent.status === "processing" ||
             intent.status === "requires_action" ||
-            intent.status === "requires_confirmation"
+            intent.status === "requires_confirmation" ||
+            intent.status === "requires_capture"
           return secureJson(
             { error: pending ? "PAYMENT_PENDING" : "PAYMENT_FAILED" },
             { status: 409, headers }
