@@ -14,6 +14,21 @@ describe("buildCspHeader", () => {
     expect(header).toMatch(/connect-src[^;]*api\.stripe\.com/)
     expect(header).toMatch(/frame-src[^;]*daily\.co/)
     expect(header).toMatch(/connect-src[^;]*wss:\/\/\*\.daily\.co/)
+    // The call bundle loads through a script tag, and failover needs both
+    // fallback domains.
+    for (const domain of [
+      "daily\\.co",
+      "dailywebrtc\\.com",
+      "dailywebrtc\\.net",
+    ]) {
+      expect(header).toMatch(
+        new RegExp(`script-src[^;]*https://\\*\\.${domain}`)
+      )
+      expect(header).toMatch(
+        new RegExp(`connect-src[^;]*wss://\\*\\.${domain}`)
+      )
+    }
+    expect(header).not.toMatch(/script-src[^;]*unsafe-eval/)
   })
 
   it("allows public Blob video in media-src (ADR-024)", () => {

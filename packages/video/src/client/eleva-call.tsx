@@ -96,6 +96,8 @@ type DailyTranscriptionCall = {
 
 /** Deepgram (via Daily) transcribes inside the EU. */
 const LIVE_TRANSCRIPTION_OPTIONS = { transcription_geo: "eu" } as const
+/** Keeps `unsafe-eval` out of the CSP; the bundle loads through a script tag. */
+const DAILY_CONFIG = { avoidEval: true } as const
 
 export function ElevaCall({
   roomUrl,
@@ -109,7 +111,7 @@ export function ElevaCall({
   transcriptionAllowed = false,
 }: ElevaCallProps) {
   return (
-    <DailyProvider url={roomUrl} token={token}>
+    <DailyProvider url={roomUrl} token={token} dailyConfig={DAILY_CONFIG}>
       <CallShell
         labels={labels}
         onLeft={onLeft}

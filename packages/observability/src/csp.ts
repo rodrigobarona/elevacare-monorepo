@@ -31,8 +31,23 @@ const VENDORS: Record<string, VendorEntry> = {
     ],
     formAction: ["https://connect-js.stripe.com"],
   },
+  // Daily's fallback domains are required too: without them failover calls
+  // die. https://docs.daily.co/guides/privacy-and-security/content-security-policy
   daily: {
-    connectSrc: ["https://*.daily.co", "wss://*.daily.co"],
+    scriptSrc: [
+      "https://*.daily.co",
+      "https://*.dailywebrtc.com",
+      "https://*.dailywebrtc.net",
+    ],
+    connectSrc: [
+      "https://*.daily.co",
+      "https://*.dailywebrtc.com",
+      "https://*.dailywebrtc.net",
+      "https://*.pluot.blue",
+      "wss://*.daily.co",
+      "wss://*.dailywebrtc.com",
+      "wss://*.dailywebrtc.net",
+    ],
     frameSrc: ["https://*.daily.co"],
     mediaSrc: ["https://*.daily.co"],
   },
