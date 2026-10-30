@@ -47,10 +47,10 @@ described per vendor in [§4](#4-transfers-to-third-countries-chapter-v).
 | C1  | Accounts and identity                      | Controller       | 6(1)(b), 6(1)(f) | —                                       |
 | C2  | Expert onboarding and licence verification | Controller       | 6(1)(b), 6(1)(f) | —                                       |
 | C3  | Booking and scheduling                     | Controller       | 6(1)(b)          | 9(2)(h)+(3) / 9(2)(a) — see note        |
-| C4  | Payments, refunds, disputes and payouts    | Controller       | 6(1)(b), 6(1)(c) | —                                       |
+| C4  | Payments, refunds, disputes and payouts    | Controller       | 6(1)(b), 6(1)(c) | As C3, to confirm — see note            |
 | C5  | Invoicing, accounting and DAC7 reporting   | Controller       | 6(1)(c)          | —                                       |
-| C6  | Transactional notifications (email, SMS)   | Controller       | 6(1)(b)          | — (PHI-free by design)                  |
-| C7  | Video session delivery and attendance      | Controller (+P1) | 6(1)(b), 6(1)(f) | 9(2)(h)+(3) (care is the expert's)      |
+| C6  | Transactional notifications (email, SMS)   | Controller       | 6(1)(b)          | As C3, to confirm — see note            |
+| C7  | Video session delivery and attendance      | Controller (+P6) | 6(1)(b), 6(1)(f) | 9(2)(h)+(3) (care is the expert's)      |
 | C8  | Customer support and complaints            | Controller       | 6(1)(b), 6(1)(c) | 9(2)(f) only if the member raises it    |
 | C9  | Security, audit and error logs             | Controller       | 6(1)(c), 6(1)(f) | —                                       |
 | C10 | Data subject rights handling               | Controller       | 6(1)(c)          | 9(2)(f)/(g) where needed                |
@@ -239,6 +239,8 @@ See Points for review.
   - art. 6(1)(c) for accounting (CIRC art. 123; CIVA art. 52);
   - art. 6(1)(f) for fraud prevention and defending chargebacks (art. 17(3)(e)
     applies to retention).
+  - the art. 9 condition recorded for C3 where a record reveals a booking with
+    a health professional, to be confirmed (review point 1).
 - **Recipients:**
   - Stripe Payments Europe, Ltd. and Stripe, LLC. Stripe is a processor for
     payment processing and an independent controller for its own AML, KYC
@@ -308,7 +310,10 @@ See Points for review.
   - **No clinical content.** The Resend DPA Exhibit A states "sensitive data —
     not applicable". The expert's name and profession can still reveal health
     information, so this is minimised rather than eliminated.
-- **Lawful basis:** art. 6(1)(b). Account security mail is also art. 6(1)(f).
+- **Lawful basis:**
+  - art. 6(1)(b). Account security mail is also art. 6(1)(f);
+  - the art. 9 condition recorded for C3 where a message reveals a booking with
+    a health professional, to be confirmed (review point 1).
 - **Recipients:**
   - Resend (sending domain `notifications.eleva.care` in `eu-west-1`);
   - Twilio (US1 today; IE1 required before any EU-residency claim);
@@ -730,8 +735,10 @@ means OpenAI and Beehiiv. See Points for review.
 
 ## Points for lawyer/DPO review
 
-1. **Art. 9 condition for booking data (C3).** Confirm 9(2)(h)+(3) with Lei
-   58/2019 art. 29 as the primary condition. Decide whether the mandatory
+1. **Art. 9 condition for booking data (C3, and C4 and C6 where they reveal a
+   booking).** Confirm 9(2)(h)+(3) with Lei 58/2019 art. 29 as the primary
+   condition. Payment records and booking messages carry the expert's name and
+   profession even with clinical content kept out, so they need the same answer. Decide whether the mandatory
    `health_data_processing` consent should stay, be reframed as information,
    or be kept as a belt-and-braces record. A mandatory consent risks failing
    art. 7(4).
