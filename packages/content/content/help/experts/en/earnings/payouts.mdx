@@ -1,6 +1,6 @@
 ---
 title: Payouts & Earnings
-description: Understand how you get paid, platform fees, and managing your earnings.
+description: Understand how you get paid, the service fee, and managing your earnings.
 ---
 
 # Payouts & Earnings
@@ -19,69 +19,45 @@ Eleva Care uses Stripe Connect for secure, automated payouts. This guide explain
   <Step>
     ### Funds Held
 
-    Payment is held in escrow during the consultation period.
+    Eleva holds the payment through Stripe until your share is due.
 
   </Step>
   <Step>
     ### Appointment Completes
 
-    Funds are released 24 hours after the consultation ends.
+    Your share becomes available on the later of 7 days after payment and 24 hours after the session ends. It's released at the next 04:00 Lisbon time.
 
   </Step>
   <Step>
     ### Payout Processed
 
-    Funds are transferred to your bank account on your payout schedule.
+    Stripe then pays it out to your bank account on your account's payout schedule.
 
   </Step>
 </Steps>
 
 <Callout type="info">
-  The 24-hour hold after consultation allows for any disputes or issues to be resolved.
+  This wait leaves time to resolve any disputes or issues. Eleva may hold a
+  transfer while a dispute or refund is open.
 </Callout>
 
-## Platform Fees
+## Service Fee
 
-### Fee Structure
-
-| Tier       | Plan            | Commission | Monthly Fee |
-| ---------- | --------------- | ---------- | ----------- |
-| Community  | Commission-Only | 20%        | €0          |
-| Community  | Subscription    | 12%        | €49/month   |
-| verified expert | Commission-Only | 15%        | €0          |
-| verified expert | Subscription    | 8%         | €177/month  |
-
-<Tabs items={['Commission-Only', 'Subscription']}>
-  <Tab value="Commission-Only">
-    **Best For:**
-
-    - Just starting out
-    - Fewer than 10 bookings/month
-    - Prefer no fixed costs
-    - Testing the platform
-
-  </Tab>
-  <Tab value="Subscription">
-    **Best For:**
-
-    - Consistent bookings
-    - Want to maximize earnings per appointment
-    - Prefer predictable costs
-    - More than 6 bookings/month (break-even point)
-
-  </Tab>
-</Tabs>
+Eleva charges a service fee of **15% of the booking price**, VAT included where due. There are no other deductions. Eleva pays payment processing fees out of its fee.
 
 ### Example Calculation
 
-**€100 Consultation — Community Expert:**
+| Booking Price | Service Fee (15%) | You Receive |
+| ------------- | ----------------- | ----------- |
+| €100          | €15               | €85         |
 
-| Plan                  | Commission | You Receive |
-| --------------------- | ---------- | ----------- |
-| Commission-Only (20%) | €20        | €80         |
-| Subscription (12%)    | €12        | €88         |
+### Clinic Bookings
 
-**Break-even**: With €49/month subscription, you save €8 per booking. Break-even at just over 6 bookings/month (6-7 bookings).
+There is no per-booking fee on bookings made through a clinic. The clinic pays a per-seat subscription, under the terms of its plan.
+
+### Paid Subscriptions
+
+If you join a paid Eleva subscription that changes your fee, the terms shown when you join apply.
 
 ## Setting Up Payouts
 
@@ -120,33 +96,25 @@ Eleva Care uses Stripe Connect for secure, automated payouts. This guide explain
 - Business information (if applicable)
 
 <Callout type="warning">
-  You cannot receive payouts until Stripe verification is complete. Start this process early.
+  You cannot receive payouts until Stripe verification is complete. Start this
+  process early.
 </Callout>
 
 ## Payout Schedule
 
-<Tabs items={['Community', 'verified expert']}>
-  <Tab value="Community">
-    **Community Expert Payouts**
+Your share of a booking becomes available on the later of these two dates:
 
-    | Detail | Value |
-    |--------|-------|
-    | Frequency | Weekly (every Monday) |
-    | Minimum | €10 accumulated earnings |
-    | Processing | 2-3 business days to arrive |
+- 7 days after the member paid
+- 24 hours after the session ends
 
-  </Tab>
-  <Tab value="verified expert">
-    **verified expert Payouts**
+It's released at the next 04:00 Lisbon time. Stripe then pays it out to your bank account on your account's payout schedule.
 
-    | Detail | Value |
-    |--------|-------|
-    | Frequency | Daily (available) |
-    | Minimum | €10 accumulated earnings |
-    | Processing | 1-2 business days to arrive |
+**Example**: A member pays on 1 March at 14:00 for a session that ends on 3 March at 10:00. Seven days after payment is 8 March at 14:00, which is the later date. Your share is released at 04:00 on 9 March.
 
-  </Tab>
-</Tabs>
+<Callout type="info">
+  Eleva staff review the first payout to your account before it's released, so
+  it can take a little longer.
+</Callout>
 
 ## Understanding Your Earnings
 
@@ -168,7 +136,7 @@ Each transaction displays:
 - Booking ID
 - Service provided
 - Gross amount
-- Platform fee
+- Service fee
 - Net amount (your earnings)
 
 ## Taxes & Reporting
@@ -198,47 +166,50 @@ Each transaction displays:
 
 ### member Cancellations
 
-| Cancellation Window | member Refund | Your Earnings |
-| ------------------- | -------------- | ------------- |
-| 48+ hours before    | 100%           | €0            |
-| 24-48 hours before  | 50%            | 50%           |
-| Less than 24 hours  | 0%             | 100%          |
+You choose a cancellation policy for each service: Flexible, Moderate or Strict. The policy shown at the time of booking applies to that booking.
+
+| Policy   | 100% Refund             | 50% Refund                         | No Refund                 |
+| -------- | ----------------------- | ---------------------------------- | ------------------------- |
+| Flexible | 24 hours or more before | —                                  | Less than 24 hours before |
+| Moderate | 48 hours or more before | Between 24 and 48 hours before     | Less than 24 hours before |
+| Strict   | 7 days or more before   | Between 48 hours and 7 days before | Less than 48 hours before |
+
+Under every policy, a member gets a full refund if they cancel within 24 hours of booking and the session is at least 48 hours away.
+
+The amount kept is split between you and Eleva in the same proportions as the booking. On a €100 booking:
+
+| Member Refund | Member Gets Back | You Receive | Eleva Keeps |
+| ------------- | ---------------- | ----------- | ----------- |
+| 100%          | €100             | €0          | €0          |
+| 50%           | €50              | €42.50      | €7.50       |
+| None          | €0               | €85         | €15         |
+
+If a member doesn't attend and hasn't cancelled, it counts as a cancellation at the session start time. The member gets no refund and you receive your share.
 
 ### Your Cancellations
 
-If you cancel an appointment:
+If you have to cancel, or you don't attend:
 
-- member receives full refund
-- You receive no earnings
-- May affect your rating and verified expert eligibility
+- Tell Eleva at [support@eleva.care](mailto:support@eleva.care) as early as possible. Don't ask the member to cancel for you.
+- The member receives 100% of the amount paid, including Eleva's fee, and Eleva offers them a new booking.
+- You receive nothing for that booking. If the transfer was already made, the amount comes off your next transfers.
 
 <Callout type="warning">
-  Frequent cancellations impact your reliability score and may affect verified expert eligibility.
+  The Eleva team handles these refunds. They aren't automatic. Repeated
+  cancellations or no-shows may lead to your account being restricted or
+  suspended.
 </Callout>
 
 ## Maximizing Earnings
 
 <Accordions>
   <Accordion title="Optimize Pricing">
-    - Research competitor rates
-    - Consider your experience and credentials
-    - Adjust based on demand
+    - Research competitor rates - Consider your experience and credentials -
+    Adjust based on demand
   </Accordion>
   <Accordion title="Reduce Cancellations">
-    - Send appointment reminders
-    - Respond promptly to inquiries
-    - Maintain accurate availability
-  </Accordion>
-  <Accordion title="Upgrade to Subscription">
-    If you have consistent bookings, the subscription plan significantly increases your per-appointment earnings.
-  </Accordion>
-  <Accordion title="Work Toward verified expert">
-    verified experts enjoy:
-
-    - Lower platform fees (8-15%)
-    - Daily payouts
-    - Featured placement (more bookings)
-
+    - Send appointment reminders - Respond promptly to inquiries - Maintain
+    accurate availability
   </Accordion>
 </Accordions>
 
@@ -248,14 +219,14 @@ If you cancel an appointment:
   <Accordion title="Payout Not Received">
     1. Check Stripe Connect status
     2. Verify bank account details
-    3. Ensure minimum threshold met
+    3. Check the payout schedule above. Eleva staff review your first payout before it's released
     4. Contact support if still missing
   </Accordion>
   <Accordion title="Incorrect Amount">
     Review transaction breakdown:
 
     - Verify gross amount
-    - Check platform fee rate
+    - Check the 15% service fee
     - Confirm any refunds applied
 
   </Accordion>
@@ -275,7 +246,7 @@ If you cancel an appointment:
   <Card title="Pricing Strategy" href="/experts/earnings/pricing">
     Optimize your consultation pricing
   </Card>
-  <Card title="verified expert Benefits" href="/experts/getting-started/profile">
-    See what you unlock with verified expert status
+  <Card title="Set Up Your Profile" href="/experts/getting-started/profile">
+    Create a compelling professional profile
   </Card>
 </Cards>

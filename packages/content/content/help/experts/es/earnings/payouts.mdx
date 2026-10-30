@@ -1,6 +1,6 @@
 ---
 title: Payouts & Earnings
-description: Understand how you get paid, platform fees, and managing your earnings.
+description: Entienda cómo se le paga, la tarifa de servicio y la gestión de sus ganancias.
 ---
 
 # Payouts & Earnings
@@ -19,69 +19,45 @@ Eleva Care uses Stripe Connect for secure, automated payouts. This guide explain
   <Step>
     ### Funds Held
 
-    Payment is held in escrow during the consultation period.
+    Eleva retiene el pago a través de Stripe hasta que su parte esté disponible.
 
   </Step>
   <Step>
     ### Appointment Completes
 
-    Funds are released 24 hours after the consultation ends.
+    Su parte queda disponible en la fecha más tardía entre 7 días después del pago y 24 horas después del fin de la sesión. Se libera a las 04:00 siguientes, hora de Lisboa.
 
   </Step>
   <Step>
     ### Payout Processed
 
-    Funds are transferred to your bank account on your payout schedule.
+    Después, Stripe paga a su cuenta bancaria según el calendario de pagos de su cuenta.
 
   </Step>
 </Steps>
 
 <Callout type="info">
-  The 24-hour hold after consultation allows for any disputes or issues to be resolved.
+  Esta espera da tiempo para resolver disputas o problemas. Eleva puede retener
+  una transferencia mientras haya una disputa o un reembolso abierto.
 </Callout>
 
-## Platform Fees
+## Tarifa de servicio
 
-### Fee Structure
+Eleva cobra una tarifa de servicio del **15 % del precio de la reserva**, IVA incluido cuando proceda. No hay otras deducciones. Eleva paga las comisiones de procesamiento de pagos con su tarifa.
 
-| Tier       | Plan            | Commission | Monthly Fee |
-| ---------- | --------------- | ---------- | ----------- |
-| Community  | Commission-Only | 20%        | €0          |
-| Community  | Subscription    | 12%        | €49/month   |
-| verified expert | Commission-Only | 15%        | €0          |
-| verified expert | Subscription    | 8%         | €177/month  |
+### Ejemplo de cálculo
 
-<Tabs items={['Commission-Only', 'Subscription']}>
-  <Tab value="Commission-Only">
-    **Best For:**
+| Precio de la reserva | Tarifa de servicio (15 %) | Usted recibe |
+| -------------------- | ------------------------- | ------------ |
+| 100 €                | 15 €                      | 85 €         |
 
-    - Just starting out
-    - Fewer than 10 bookings/month
-    - Prefer no fixed costs
-    - Testing the platform
+### Reservas de clínicas
 
-  </Tab>
-  <Tab value="Subscription">
-    **Best For:**
+En las reservas realizadas a través de una clínica no hay tarifa por reserva. La clínica paga una suscripción por puestos, en las condiciones de su plan.
 
-    - Consistent bookings
-    - Want to maximize earnings per appointment
-    - Prefer predictable costs
-    - More than 6 bookings/month (break-even point)
+### Suscripciones de pago
 
-  </Tab>
-</Tabs>
-
-### Example Calculation
-
-**€100 Consultation — Community Expert:**
-
-| Plan                  | Commission | You Receive |
-| --------------------- | ---------- | ----------- |
-| Commission-Only (20%) | €20        | €80         |
-| Subscription (12%)    | €12        | €88         |
-
-**Break-even**: With €49/month subscription, you save €8 per booking. Break-even at just over 6 bookings/month (6-7 bookings).
+Si contrata una suscripción de pago de Eleva que modifique su tarifa, se aplican las condiciones presentadas en el momento de la contratación.
 
 ## Setting Up Payouts
 
@@ -120,33 +96,25 @@ Eleva Care uses Stripe Connect for secure, automated payouts. This guide explain
 - Business information (if applicable)
 
 <Callout type="warning">
-  You cannot receive payouts until Stripe verification is complete. Start this process early.
+  You cannot receive payouts until Stripe verification is complete. Start this
+  process early.
 </Callout>
 
-## Payout Schedule
+## Calendario de pagos
 
-<Tabs items={['Community', 'verified expert']}>
-  <Tab value="Community">
-    **Community Expert Payouts**
+Su parte de una reserva queda disponible en la fecha más tardía entre estas dos:
 
-    | Detail | Value |
-    |--------|-------|
-    | Frequency | Weekly (every Monday) |
-    | Minimum | €10 accumulated earnings |
-    | Processing | 2-3 business days to arrive |
+- 7 días después de que pague el miembro
+- 24 horas después del fin de la sesión
 
-  </Tab>
-  <Tab value="verified expert">
-    **verified expert Payouts**
+Se libera a las 04:00 siguientes, hora de Lisboa. Después, Stripe paga a su cuenta bancaria según el calendario de pagos de su cuenta.
 
-    | Detail | Value |
-    |--------|-------|
-    | Frequency | Daily (available) |
-    | Minimum | €10 accumulated earnings |
-    | Processing | 1-2 business days to arrive |
+**Ejemplo**: Un miembro paga el 1 de marzo a las 14:00 una sesión que termina el 3 de marzo a las 10:00. Siete días después del pago es el 8 de marzo a las 14:00, que es la fecha más tardía. Su parte se libera a las 04:00 del 9 de marzo.
 
-  </Tab>
-</Tabs>
+<Callout type="info">
+  El equipo de Eleva revisa el primer pago a su cuenta antes de liberarlo, así
+  que puede tardar un poco más.
+</Callout>
 
 ## Understanding Your Earnings
 
@@ -168,7 +136,7 @@ Each transaction displays:
 - Booking ID
 - Service provided
 - Gross amount
-- Platform fee
+- Tarifa de servicio
 - Net amount (your earnings)
 
 ## Taxes & Reporting
@@ -196,49 +164,52 @@ Each transaction displays:
 
 ## Refunds & Cancellations
 
-### member Cancellations
+### Cancelaciones de miembros
 
-| Cancellation Window | member Refund | Your Earnings |
-| ------------------- | -------------- | ------------- |
-| 48+ hours before    | 100%           | €0            |
-| 24-48 hours before  | 50%            | 50%           |
-| Less than 24 hours  | 0%             | 100%          |
+Usted elige una política de cancelación para cada servicio: Flexible, Moderada o Estricta. La política presentada en el momento de la reserva se aplica a esa reserva.
 
-### Your Cancellations
+| Política | Reembolso del 100 %  | Reembolso del 50 %            | Sin reembolso           |
+| -------- | -------------------- | ----------------------------- | ----------------------- |
+| Flexible | 24 horas o más antes | —                             | Menos de 24 horas antes |
+| Moderada | 48 horas o más antes | Entre 24 y 48 horas antes     | Menos de 24 horas antes |
+| Estricta | 7 días o más antes   | Entre 48 horas y 7 días antes | Menos de 48 horas antes |
 
-If you cancel an appointment:
+En cualquier política, el miembro recibe un reembolso total si cancela en las 24 horas siguientes a la reserva y faltan al menos 48 horas para la sesión.
 
-- member receives full refund
-- You receive no earnings
-- May affect your rating and verified expert eligibility
+El importe retenido se reparte entre usted y Eleva en las mismas proporciones que la reserva. En una reserva de 100 €:
+
+| Reembolso al miembro | El miembro recupera | Usted recibe | Eleva se queda |
+| -------------------- | ------------------- | ------------ | -------------- |
+| 100 %                | 100 €               | 0 €          | 0 €            |
+| 50 %                 | 50 €                | 42,50 €      | 7,50 €         |
+| Ninguno              | 0 €                 | 85 €         | 15 €           |
+
+Si el miembro no se presenta sin haber cancelado, cuenta como una cancelación a la hora de inicio de la sesión. El miembro no recibe reembolso y usted recibe su parte.
+
+### Sus cancelaciones
+
+Si tiene que cancelar, o si no se presenta:
+
+- Avise a Eleva en [support@eleva.care](mailto:support@eleva.care) lo antes posible. No pida al miembro que cancele en su lugar.
+- El miembro recibe el 100 % del importe pagado, incluida la tarifa de Eleva, y Eleva le ofrece una nueva reserva.
+- Usted no recibe nada por esa reserva. Si la transferencia ya se hubiera realizado, el importe se descuenta de las transferencias siguientes.
 
 <Callout type="warning">
-  Frequent cancellations impact your reliability score and may affect verified expert eligibility.
+  El equipo de Eleva gestiona estos reembolsos. No son automáticos. Las
+  cancelaciones o inasistencias repetidas pueden dar lugar a la restricción o
+  suspensión de su cuenta.
 </Callout>
 
 ## Maximizing Earnings
 
 <Accordions>
   <Accordion title="Optimize Pricing">
-    - Research competitor rates
-    - Consider your experience and credentials
-    - Adjust based on demand
+    - Research competitor rates - Consider your experience and credentials -
+    Adjust based on demand
   </Accordion>
   <Accordion title="Reduce Cancellations">
-    - Send appointment reminders
-    - Respond promptly to inquiries
-    - Maintain accurate availability
-  </Accordion>
-  <Accordion title="Upgrade to Subscription">
-    If you have consistent bookings, the subscription plan significantly increases your per-appointment earnings.
-  </Accordion>
-  <Accordion title="Work Toward verified expert">
-    verified experts enjoy:
-
-    - Lower platform fees (8-15%)
-    - Daily payouts
-    - Featured placement (more bookings)
-
+    - Send appointment reminders - Respond promptly to inquiries - Maintain
+    accurate availability
   </Accordion>
 </Accordions>
 
@@ -248,14 +219,14 @@ If you cancel an appointment:
   <Accordion title="Payout Not Received">
     1. Check Stripe Connect status
     2. Verify bank account details
-    3. Ensure minimum threshold met
+    3. Consulte el calendario de pagos anterior. El equipo de Eleva revisa su primer pago antes de liberarlo
     4. Contact support if still missing
   </Accordion>
   <Accordion title="Incorrect Amount">
     Review transaction breakdown:
 
     - Verify gross amount
-    - Check platform fee rate
+    - Compruebe la tarifa de servicio del 15 %
     - Confirm any refunds applied
 
   </Accordion>
@@ -275,7 +246,7 @@ If you cancel an appointment:
   <Card title="Pricing Strategy" href="/experts/earnings/pricing">
     Optimize your consultation pricing
   </Card>
-  <Card title="verified expert Benefits" href="/experts/getting-started/profile">
-    See what you unlock with verified expert status
+  <Card title="Configure su perfil" href="/experts/getting-started/profile">
+    Cree un perfil profesional atractivo
   </Card>
 </Cards>

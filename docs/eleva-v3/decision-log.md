@@ -137,7 +137,9 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
   no-show refund flows, a no-show time threshold, the external DPO
   appointment itself, lawyer review of the new text, an ERS number field on
   expert profiles (the agreement requires it to be displayed; the product has
-  no field yet).
+  no field yet), and automatic issuance of the service-fee invoice to experts:
+  the invoice is a contract term in the agreement, but `issueInvoice()` stays
+  closed and AUD-007 stays waived.
 - Owner: founder (policy) + engineering (content).
 - Status: `active` — working pre-launch. D-06 finance + legal re-sign is still
   pending (not waived); the published text lists points for lawyer review in
