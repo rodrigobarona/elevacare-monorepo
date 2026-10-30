@@ -45,7 +45,8 @@ export type BookingPromotionCodeResult =
  * a code meant for subscriptions.
  */
 export async function resolveBookingPromotionCode(
-  code: string
+  code: string,
+  priceCents: number
 ): Promise<BookingPromotionCodeResult> {
   const page = await stripe().promotionCodes.list({
     code: code.trim().toUpperCase(),
@@ -67,7 +68,8 @@ export async function resolveBookingPromotionCode(
   }
   if (
     coupon.amount_off != null &&
-    (coupon.currency ?? "").toLowerCase() !== "eur"
+    ((coupon.currency ?? "").toLowerCase() !== "eur" ||
+      coupon.amount_off >= priceCents)
   ) {
     return { ok: false, reason: "not_bookable" }
   }

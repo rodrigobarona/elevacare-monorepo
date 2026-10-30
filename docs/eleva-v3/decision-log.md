@@ -719,7 +719,8 @@ Each entry should include:
   - **No Stripe tax ID collection.** The member's NIF stays on Eleva's funnel field (stored as
     `bookings.buyer_tax_id` for the expert's invoice). Stripe's tax ID UI is business-oriented
     (requires a business name, validates VAT numbers against VIES) and a private member's NIF is
-    not a VAT number. Confirm still copies a tax ID if a session ever carries one.
+    not a VAT number. Confirm still copies a tax ID if a session ever carries one. This replaces
+    the earlier preference to collect the member's NIF through Stripe `tax_id_collection`.
   - Accountant to confirm the bookkeeping of an Eleva-funded discount (third-party-funded
     voucher on the expert's invoice; marketing cost for Eleva).
 - Owner: engineering

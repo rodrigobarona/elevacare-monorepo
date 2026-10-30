@@ -164,6 +164,7 @@ describe("listPriceCents", () => {
 
 describe("executeTransfer source charge", () => {
   beforeEach(() => {
+    paymentAmountCents = 10_000
     payoutAttempts = 0
     persistAttempts = 0
     persistFailOnce = false
@@ -174,7 +175,6 @@ describe("executeTransfer source charge", () => {
   })
 
   it("ties the transfer to the charge when the charge covers it", async () => {
-    paymentAmountCents = 10_000
     await executeTransfer(scheduledPayout.id)
     expect(transferCreate.mock.calls[0]?.[0]).toEqual(
       expect.objectContaining({ amount: 8500, source_transaction: "ch_test" })
@@ -188,7 +188,6 @@ describe("executeTransfer source charge", () => {
     const params = transferCreate.mock.calls[0]?.[0] as Record<string, unknown>
     expect(params.amount).toBe(8500)
     expect(params).not.toHaveProperty("source_transaction")
-    paymentAmountCents = 10_000
   })
 })
 

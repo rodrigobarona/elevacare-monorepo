@@ -531,7 +531,10 @@ export async function createCheckoutSessionForReservation(
   let promotionCodeId: string | null = null
   if (input.promoCode) {
     try {
-      const promo = await resolveBookingPromotionCode(input.promoCode)
+      const promo = await resolveBookingPromotionCode(
+        input.promoCode,
+        payable.priceCents
+      )
       if (!promo.ok) return { ok: false, error: "promo_invalid" }
       promotionCodeId = promo.promotionCodeId
     } catch (err) {
@@ -610,10 +613,11 @@ async function replaceOrReuseCheckoutSession(input: {
   }
   const previousSnapshot = bookingCheckoutSnapshotFromSession(previous)
   const bookingId = previousSnapshot.bookingId
-  if (previous.status !== "open" || !bookingId) {
+  const isOpen = previous.status === "open"
+  if ((!isOpen && previous.status !== "expired") || !bookingId) {
     return { ok: false, error: "unavailable" }
   }
-  if (previousSnapshot.promotionCodeId === input.promotionCodeId) {
+  if (isOpen && previousSnapshot.promotionCodeId === input.promotionCodeId) {
     if (!previous.client_secret) return { ok: false, error: "unavailable" }
     return {
       ok: true,
@@ -636,12 +640,14 @@ async function replaceOrReuseCheckoutSession(input: {
   }
   if (!customerId || !existing) return { ok: false, error: "unavailable" }
 
-  try {
-    // Close the old session first so only one can ever be paid.
-    await stripe().checkout.sessions.expire(previousId)
-  } catch (err) {
-    console.error("[payments/checkout-session] expire previous failed", err)
-    return { ok: false, error: "unavailable" }
+  if (isOpen) {
+    try {
+      // Close the old session first so only one can ever be paid.
+      await stripe().checkout.sessions.expire(previousId)
+    } catch (err) {
+      console.error("[payments/checkout-session] expire previous failed", err)
+      return { ok: false, error: "unavailable" }
+    }
   }
 
   return createAndBindCheckoutSession({

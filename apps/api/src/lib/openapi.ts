@@ -2632,6 +2632,14 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
                 "Validation error, or PROMO_INVALID when the promotion code does not apply to bookings",
               content: { "application/json": { schema: ErrorSchema } },
             },
+            "429": {
+              description: "Rate limited",
+              content: { "application/json": { schema: RateLimitErrorSchema } },
+            },
+            "500": {
+              description: "Internal error",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
             "503": {
               description: "Stripe or snapshot unavailable",
               content: { "application/json": { schema: ErrorSchema } },

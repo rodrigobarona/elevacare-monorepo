@@ -58,7 +58,9 @@ describe("resolveBookingPromotionCode", () => {
     promotionList.mockResolvedValue(
       promo({ percent_off: 20 }, { eleva_scope: "booking" })
     )
-    await expect(resolveBookingPromotionCode(" spring20 ")).resolves.toEqual({
+    await expect(
+      resolveBookingPromotionCode(" spring20 ", 6000)
+    ).resolves.toEqual({
       ok: true,
       promotionCodeId: "promo_1",
     })
@@ -75,33 +77,50 @@ describe("resolveBookingPromotionCode", () => {
         metadata: { eleva_scope: "booking" },
       })
     )
-    await expect(resolveBookingPromotionCode("TEN")).resolves.toMatchObject({
+    await expect(
+      resolveBookingPromotionCode("TEN", 6000)
+    ).resolves.toMatchObject({
+      ok: true,
+    })
+  })
+
+  it("rejects a fixed amount that covers the whole price", async () => {
+    promotionList.mockResolvedValue(
+      promo({ amount_off: 6000, currency: "eur" }, { eleva_scope: "booking" })
+    )
+    await expect(resolveBookingPromotionCode("ALL", 6000)).resolves.toEqual({
+      ok: false,
+      reason: "not_bookable",
+    })
+    await expect(
+      resolveBookingPromotionCode("ALL", 7000)
+    ).resolves.toMatchObject({
       ok: true,
     })
   })
 
   it("rejects unknown, unscoped, 100%-off and non-EUR codes", async () => {
     promotionList.mockResolvedValueOnce({ data: [] })
-    await expect(resolveBookingPromotionCode("NOPE")).resolves.toEqual({
+    await expect(resolveBookingPromotionCode("NOPE", 6000)).resolves.toEqual({
       ok: false,
       reason: "not_found",
     })
     promotionList.mockResolvedValueOnce(promo({ percent_off: 20 }))
-    await expect(resolveBookingPromotionCode("SUBS")).resolves.toEqual({
+    await expect(resolveBookingPromotionCode("SUBS", 6000)).resolves.toEqual({
       ok: false,
       reason: "not_bookable",
     })
     promotionList.mockResolvedValueOnce(
       promo({ percent_off: 100 }, { eleva_scope: "booking" })
     )
-    await expect(resolveBookingPromotionCode("FREE")).resolves.toEqual({
+    await expect(resolveBookingPromotionCode("FREE", 6000)).resolves.toEqual({
       ok: false,
       reason: "not_bookable",
     })
     promotionList.mockResolvedValueOnce(
       promo({ amount_off: 500, currency: "usd" }, { eleva_scope: "booking" })
     )
-    await expect(resolveBookingPromotionCode("USD")).resolves.toEqual({
+    await expect(resolveBookingPromotionCode("USD", 6000)).resolves.toEqual({
       ok: false,
       reason: "not_bookable",
     })
