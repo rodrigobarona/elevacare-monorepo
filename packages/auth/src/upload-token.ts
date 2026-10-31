@@ -2,11 +2,11 @@ import { hkdfSync } from "node:crypto"
 import { sealData, unsealData } from "iron-session"
 
 const UPLOAD_TOKEN_TTL_SECONDS = 3600
-const UPLOAD_TOKEN_INFO = "eleva:blob-upload-token:v1"
+const UPLOAD_TOKEN_INFO = "eleva:storage-upload-token:v1"
 
 interface UploadTokenPayload {
   sub: string
-  purpose: "blob-upload"
+  purpose: "storage-upload"
   iat: number
 }
 
@@ -19,8 +19,8 @@ function getTokenPassword(): string {
 }
 
 /**
- * Mint a short-lived sealed token that authorises a client-side Vercel
- * Blob upload. The token is encrypted + authenticated via iron-session
+ * Mint a short-lived sealed token that authorises a direct browser
+ * upload. The token is encrypted + authenticated via iron-session
  * using an HKDF-derived key from `BETTER_AUTH_SECRET`.
  *
  * Intended flow:
@@ -28,12 +28,12 @@ function getTokenPassword(): string {
  *   2. Client sends the token as `Authorization: Bearer <token>` to the
  *      API upload route.
  *   3. API route calls `verifyUploadToken(token)` instead of reading
- *      session cookies (which the Blob SDK doesn't send cross-origin).
+ *      session cookies (not sent to the API from other origins).
  */
 export async function mintUploadToken(userId: string): Promise<string> {
   const payload: UploadTokenPayload = {
     sub: userId,
-    purpose: "blob-upload",
+    purpose: "storage-upload",
     iat: Math.floor(Date.now() / 1000),
   }
   return sealData(payload, {
@@ -55,7 +55,7 @@ export async function verifyUploadToken(
       password,
       ttl: UPLOAD_TOKEN_TTL_SECONDS,
     })
-    if (payload.purpose !== "blob-upload") return null
+    if (payload.purpose !== "storage-upload") return null
     if (!payload.sub) return null
     return { userId: payload.sub }
   } catch (err) {

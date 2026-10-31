@@ -112,7 +112,7 @@ export {
   isSaftExportError,
   listSaftExportRows,
   parseSaftMonth,
-  saftBlobPathname,
+  saftStorageKey,
   saftMonthRange,
   signSaftDownloadToken,
   verifySaftDownloadToken,

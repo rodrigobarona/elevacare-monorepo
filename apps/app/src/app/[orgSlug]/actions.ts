@@ -15,7 +15,8 @@ import {
 } from "@eleva/api-client"
 import { requireSession } from "@eleva/auth/server"
 import { mintUploadToken } from "@eleva/auth/upload-token"
-import { deletePublicBlob } from "@eleva/storage"
+import { isAvatarUrl } from "@eleva/config/avatar-upload"
+import { deletePublicObject } from "@eleva/storage"
 import {
   cookieName,
   getLocaleCookieOptions,
@@ -71,19 +72,9 @@ function revalidateMember(orgSlug: string) {
   revalidatePath(`/${orgSlug}/privacy`)
 }
 
-const PUBLIC_BLOB_HOST = /\.public\.blob\.vercel-storage\.com$/
-
 async function discardOrphanPublicAvatar(url: string): Promise<void> {
   try {
-    const parsed = new URL(url)
-    if (
-      parsed.protocol !== "https:" ||
-      !PUBLIC_BLOB_HOST.test(parsed.hostname) ||
-      !parsed.pathname.includes("/avatar/profile/")
-    ) {
-      return
-    }
-    await deletePublicBlob(url)
+    if (isAvatarUrl(url)) await deletePublicObject(url)
   } catch (err) {
     console.warn("discardOrphanPublicAvatar failed", err)
   }

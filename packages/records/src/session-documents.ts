@@ -55,6 +55,12 @@ function isAllowedMime(value: string): value is SessionDocumentMime {
 
 const MAX_BYTES = 10 * 1024 * 1024
 
+/** Limits checked on the presigned PUT and again when the upload completes. */
+export const SESSION_DOCUMENT_UPLOAD = {
+  contentTypes: ALLOWED_MIME,
+  maxBytes: MAX_BYTES,
+} as const
+
 function isUniqueViolation(err: unknown): boolean {
   let current: unknown = err
   for (let i = 0; i < 4; i++) {
@@ -197,7 +203,6 @@ export async function completeSessionDocument(input: {
   bookingId: string
   actorUserId: string
   pathname: string
-  url: string
   mime: string
   sizeBytes: number
   scope: string
@@ -228,10 +233,7 @@ export async function completeSessionDocument(input: {
     id: booking.id,
     actorUserId: input.actorUserId,
   })
-  if (
-    !isSessionDocumentPathname(input.pathname, prefix) ||
-    !input.url.includes(input.pathname)
-  ) {
+  if (!isSessionDocumentPathname(input.pathname, prefix)) {
     throw new SessionDocumentError("INVALID_PATHNAME")
   }
   const originalName = input.originalName.trim().slice(0, 200)
@@ -261,7 +263,7 @@ export async function completeSessionDocument(input: {
               memberUserId: booking.memberUserId,
               bookingId: booking.id,
               blobPathname: input.pathname,
-              blobUrl: input.url,
+              blobUrl: input.pathname,
               mime,
               sizeBytes: input.sizeBytes,
               metadataEncrypted,

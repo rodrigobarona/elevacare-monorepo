@@ -31,9 +31,31 @@ describe("buildCspHeader", () => {
     expect(header).not.toMatch(/script-src[^;]*unsafe-eval/)
   })
 
-  it("allows public Blob video in media-src (ADR-024)", () => {
+  it("allows the media host in img-src and media-src (ADR-024)", () => {
+    const prev = process.env.NEXT_PUBLIC_MEDIA_BASE_URL
+    process.env.NEXT_PUBLIC_MEDIA_BASE_URL = "https://media.example.com"
+    try {
+      const header = buildCspHeader()
+      expect(header).toMatch(/img-src[^;]*https:\/\/media\.example\.com/)
+      expect(header).toMatch(/media-src[^;]*https:\/\/media\.example\.com/)
+    } finally {
+      if (prev === undefined) delete process.env.NEXT_PUBLIC_MEDIA_BASE_URL
+      else process.env.NEXT_PUBLIC_MEDIA_BASE_URL = prev
+    }
+  })
+
+  it("adds no media origin when the host is not configured", () => {
     const header = buildCspHeader()
-    expect(header).toMatch(/media-src[^;]*\.public\.blob\.vercel-storage\.com/)
+    expect(header).not.toContain("blob.vercel-storage.com")
+    expect(header).not.toMatch(/media-src[^;]*media\.example\.com/)
+  })
+
+  it("allows presigned uploads to the EU R2 endpoint only (ADR-025)", () => {
+    const header = buildCspHeader()
+    expect(header).toMatch(
+      /connect-src[^;]*https:\/\/\*\.eu\.r2\.cloudflarestorage\.com/
+    )
+    expect(header).not.toMatch(/https:\/\/\*\.r2\.cloudflarestorage\.com/)
   })
 
   it("adds the branded Daily domain when DAILY_DOMAIN is set", () => {

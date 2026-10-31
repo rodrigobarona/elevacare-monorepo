@@ -9,6 +9,8 @@
  * To add a new vendor: create a block in `VENDORS`, land an ADR.
  */
 
+import { mediaOrigin, R2_S3_CSP_SOURCE } from "@eleva/config/media-host"
+
 // ---------------------------------------------------------------------------
 // Vendor definitions — one block per integration
 // ---------------------------------------------------------------------------
@@ -66,10 +68,10 @@ const VENDORS: Record<string, VendorEntry> = {
   eleva: {
     connectSrc: ["https://api.eleva.care"],
   },
-  // ADR-024: marketing video + posters live in the public Vercel Blob store.
-  // `img-src https:` already covers posters; `<video>` needs media-src.
-  vercelBlobPublic: {
-    mediaSrc: ["https://*.public.blob.vercel-storage.com"],
+  // ADR-025: browsers PUT presigned uploads straight to the R2 S3 endpoint.
+  // The media host itself is per-environment, see resolveAllowlist().
+  r2: {
+    connectSrc: [R2_S3_CSP_SOURCE],
   },
 }
 
@@ -182,6 +184,13 @@ function resolveAllowlist(): Record<string, string[]> {
   if (isDev) {
     merged.scriptSrc?.push("'unsafe-eval'", "'wasm-unsafe-eval'")
     merged.connectSrc?.push("http://127.0.0.1:*")
+  }
+
+  // ADR-024: marketing video + posters. `<video>` needs media-src.
+  const media = mediaOrigin()
+  if (media) {
+    merged.imgSrc?.push(media)
+    merged.mediaSrc?.push(media)
   }
 
   const branded = dailyDomainAllowlist()

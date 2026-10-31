@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import {
   isAllowedSocialLinkUrl,
   isExpertPortraitUrl,
@@ -36,10 +36,17 @@ describe("isAllowedSocialLinkUrl", () => {
 })
 
 describe("isExpertPortraitUrl", () => {
-  const own =
-    "https://abc123.public.blob.vercel-storage.com/expert/portrait/user-1/me-x1.jpg"
+  const own = "https://media.example.com/expert/portrait/user-1/me-x1.jpg"
 
-  it("accepts portraits in the public Blob store", () => {
+  beforeEach(() => {
+    vi.stubEnv("NEXT_PUBLIC_MEDIA_BASE_URL", "https://media.example.com")
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it("accepts portraits on the media host", () => {
     expect(isExpertPortraitUrl(own)).toBe(true)
   })
 
@@ -50,14 +57,10 @@ describe("isExpertPortraitUrl", () => {
 
   it("rejects other paths, hosts and protocols", () => {
     expect(
-      isExpertPortraitUrl(
-        "https://abc123.public.blob.vercel-storage.com/avatar/profile/me.jpg"
-      )
+      isExpertPortraitUrl("https://media.example.com/avatar/profile/me.jpg")
     ).toBe(false)
     expect(
-      isExpertPortraitUrl(
-        "https://abc123.public.blob.vercel-storage.com/expert/portrait/me.jpg"
-      )
+      isExpertPortraitUrl("https://media.example.com/expert/portrait/me.jpg")
     ).toBe(false)
     expect(
       isExpertPortraitUrl(
@@ -66,7 +69,7 @@ describe("isExpertPortraitUrl", () => {
     ).toBe(false)
     expect(
       isExpertPortraitUrl(
-        "http://abc123.public.blob.vercel-storage.com/expert/portrait/user-1/me.jpg"
+        "http://media.example.com/expert/portrait/user-1/me.jpg"
       )
     ).toBe(false)
   })

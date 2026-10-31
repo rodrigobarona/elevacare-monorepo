@@ -9,7 +9,7 @@
  *   - "@eleva/billing/server"   — server-only (Stripe SDK, AccountSession)
  *   - "@eleva/billing/embedded" — client React wrappers for Connect
  *
- * Vercel Blob uploads now live in @eleva/storage.
+ * Object storage lives in @eleva/storage.
  */
 
 export type {

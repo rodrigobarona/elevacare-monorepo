@@ -75,6 +75,10 @@ catalog:
   # SMS
   twilio: ^5.11.1
 
+  # Object storage (Cloudflare R2 via the S3 API — ADR-025)
+  "@aws-sdk/client-s3": ^3.1161.0
+  "@aws-sdk/s3-request-presigner": ^3.1161.0
+
   # Infrastructure
   "@upstash/redis": ^1.38.0
   "@neondatabase/serverless": ^1.1.0

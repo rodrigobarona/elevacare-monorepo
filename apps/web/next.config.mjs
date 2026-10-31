@@ -3,7 +3,7 @@ import { withBotId } from "botid/next/config"
 import { createMDX } from "fumadocs-mdx/next"
 import createNextIntlPlugin from "next-intl/plugin"
 import {
-  ELEVA_IMAGE_REMOTE_PATTERNS,
+  elevaImageRemotePatterns,
   resolveAllowedDevOrigins,
   resolveGatewayStaticAssetRewrites,
 } from "@eleva/config/next-dev"
@@ -70,7 +70,7 @@ const nextConfig = {
    * dispatch logic that handles canonical URLs explicitly.
    */
   skipTrailingSlashRedirect: true,
-  images: { remotePatterns: ELEVA_IMAGE_REMOTE_PATTERNS },
+  images: { remotePatterns: elevaImageRemotePatterns() },
   async rewrites() {
     return {
       beforeFiles: [

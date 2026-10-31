@@ -1,13 +1,34 @@
-import { describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { locales } from "@eleva/config/i18n-locales"
 
-import { creditedMedia, getImage, getVideo, listMedia } from "./index"
+import {
+  creditedMedia,
+  getImage,
+  getVideo,
+  listMedia,
+  listMediaEntries,
+} from "./index"
 
-const BLOB_HOST =
-  /^https:\/\/[a-z0-9]+\.public\.blob\.vercel-storage\.com\/media\//
+const MEDIA_HOST = /^https:\/\/media\.example\.com\/media\//
 
 describe("@eleva/media library", () => {
+  beforeEach(() => {
+    vi.stubEnv("NEXT_PUBLIC_MEDIA_BASE_URL", "https://media.example.com")
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it("stores keys in the manifest, never absolute URLs", () => {
+    for (const entry of listMediaEntries()) {
+      expect(entry.key).toMatch(/^media\//)
+      expect(JSON.stringify(entry)).not.toContain("blob.vercel-storage.com")
+      expect(entry).not.toHaveProperty("url")
+    }
+  })
+
   it("has unique kebab-case slugs", () => {
     const slugs = listMedia().map((a) => a.slug)
     expect(new Set(slugs).size).toBe(slugs.length)
@@ -25,10 +46,10 @@ describe("@eleva/media library", () => {
     }
   })
 
-  it("serves images from the public Blob store with intrinsic size and blur", () => {
+  it("serves images from the media host with intrinsic size and blur", () => {
     for (const asset of listMedia()) {
       if (asset.kind !== "image") continue
-      expect(asset.url).toMatch(BLOB_HOST)
+      expect(asset.url).toMatch(MEDIA_HOST)
       expect(asset.width).toBeGreaterThan(0)
       expect(asset.height).toBeGreaterThan(0)
       expect(asset.blurDataURL).toMatch(/^data:image\//)
@@ -45,13 +66,13 @@ describe("@eleva/media library", () => {
     }
   })
 
-  it("serves hero video from public Blob with poster and blur", () => {
+  it("serves hero video from the media host with poster and blur", () => {
     const hero = getVideo("hero-intro")
-    expect(hero.url).toMatch(BLOB_HOST)
+    expect(hero.url).toMatch(MEDIA_HOST)
     expect(hero.url).toMatch(/\.mp4(?:\?|$)/)
-    expect(hero.webmUrl).toMatch(BLOB_HOST)
+    expect(hero.webmUrl).toMatch(MEDIA_HOST)
     expect(hero.webmUrl).toMatch(/\.webm(?:\?|$)/)
-    expect(hero.poster).toMatch(BLOB_HOST)
+    expect(hero.poster).toMatch(MEDIA_HOST)
     expect(hero.width).toBeGreaterThan(0)
     expect(hero.height).toBeGreaterThan(0)
     expect(hero.blurDataURL).toMatch(/^data:image\//)

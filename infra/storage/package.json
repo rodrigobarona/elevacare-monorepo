@@ -1,0 +1,28 @@
+{
+  "name": "@eleva/infra-storage",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "migrate:blob-to-r2": "tsx --env-file-if-exists=../../.env.local migrate-blob-to-r2.ts"
+  },
+  "dependencies": {
+    "@eleva/config": "workspace:*",
+    "@eleva/db": "workspace:*",
+    "@eleva/media": "workspace:*",
+    "@eleva/storage": "workspace:*",
+    "drizzle-orm": "catalog:"
+  },
+  "devDependencies": {
+    "@eleva/eslint-config": "workspace:*",
+    "@eleva/typescript-config": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

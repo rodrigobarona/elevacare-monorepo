@@ -1,7 +1,7 @@
 # @eleva/media
 
 Curated marketing photos and videos for every Eleva app. `src/library.json` is the
-manifest: Blob URL, intrinsic size, blur placeholder, localized alt (en/pt/es),
+manifest: object key, intrinsic size, blur placeholder, localized alt (en/pt/es),
 tags, licence and credit.
 
 ```tsx
@@ -12,7 +12,9 @@ import { ElevaVideo } from "@eleva/media/video"
 <ElevaVideo slug="hero-intro" locale={locale} priority className="aspect-video" />
 ```
 
-Set `images.remotePatterns: ELEVA_IMAGE_REMOTE_PATTERNS` from
+Keys become URLs through `@eleva/config/media-host`, so frontends need
+`NEXT_PUBLIC_MEDIA_BASE_URL` at build time. Set
+`images.remotePatterns: elevaImageRemotePatterns()` from
 `@eleva/config/next-dev`. `withElevaConsentManifest` returns an async config
 function, so it must be the outermost wrapper (`withElevaConsentManifest(withBotId(withNextIntl(withMDX(config))))`);
 inner plugins spread their input and would otherwise drop `images`, leaving
@@ -20,7 +22,7 @@ inner plugins spread their input and would otherwise drop `images`, leaving
 
 ## Curating
 
-Public Blob store only. Never import member, health or session imagery.
+Public R2 bucket only. Never import member, health or session imagery.
 Follow `docs/eleva-v3/brand-book/art-direction.md`: real women, natural light,
 warm homes and clinics.
 
@@ -42,7 +44,7 @@ Poster may be `.avif`, `.webp`, `.png`, or `.jpg`.
 
 ## Licences
 
-- `eleva-owned`: MVP photography and the hero intro video (Blob WebM + MP4 + poster).
+- `eleva-owned`: MVP photography and the hero intro video (WebM + MP4 + poster).
 - `pexels`: [Pexels licence](https://www.pexels.com/license/). Free to use;
   credit is appreciated, not required. `creditedMedia()` feeds the photo
   credits on the public site's legal page.

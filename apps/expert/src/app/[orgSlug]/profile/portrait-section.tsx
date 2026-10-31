@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { EXPERT_PORTRAIT_UPLOAD } from "@eleva/config/expert-profile-content"
 import { CameraIcon, CheckIcon, Loader2, Trash2, XIcon } from "@eleva/icons"
-import { uploadBlobClient } from "@eleva/storage/blob-upload-client"
+import { uploadFile } from "@eleva/storage/upload-client"
 import { ExpertPortrait } from "@eleva/ui/blocks/expert-portrait"
 import { Button } from "@eleva/ui/components/button"
 import {
@@ -56,12 +56,12 @@ export function PortraitSection({
     setIsUploading(true)
     try {
       const { token, ownerId } = await getPortraitUploadToken()
-      const uploaded = await uploadBlobClient({
+      const uploaded = await uploadFile({
         prefix: EXPERT_PORTRAIT_UPLOAD.prefix,
         kind: EXPERT_PORTRAIT_UPLOAD.kind,
         ownerId,
         file,
-        handleUploadUrl: `${apiBaseUrl}/blob/upload`,
+        apiUploadUrl: `${apiBaseUrl}/storage/upload`,
         headers: { Authorization: `Bearer ${token}` },
       })
       save(

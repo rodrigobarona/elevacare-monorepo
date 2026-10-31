@@ -16,10 +16,10 @@ import {
   verifyDsarDownloadToken,
 } from "./dsar-export"
 
-const uploadPrivateBlob = vi.fn()
+const uploadPrivateObject = vi.fn()
 
 vi.mock("@eleva/storage", () => ({
-  uploadPrivateBlob: (...args: unknown[]) => uploadPrivateBlob(...args),
+  uploadPrivateObject: (...args: unknown[]) => uploadPrivateObject(...args),
 }))
 
 vi.mock("@eleva/db", () => ({
@@ -62,7 +62,7 @@ vi.mock("./member-consents", () => ({
 
 afterEach(() => {
   resetDsarCollectorsForTests()
-  uploadPrivateBlob.mockReset()
+  uploadPrivateObject.mockReset()
   vi.unstubAllEnvs()
 })
 
@@ -86,8 +86,7 @@ describe("Phase 5 DSAR collectors", () => {
 
 describe("dsarExport", () => {
   beforeEach(() => {
-    uploadPrivateBlob.mockResolvedValue({
-      url: "https://private.blob.vercel-storage.com/dsar/user-1/export.zip",
+    uploadPrivateObject.mockResolvedValue({
       pathname: "dsar/user-1/export.zip",
     })
   })
@@ -104,8 +103,8 @@ describe("dsarExport", () => {
     })
 
     const result = await dsarExport("user-1")
-    expect(uploadPrivateBlob).toHaveBeenCalledTimes(1)
-    const upload = uploadPrivateBlob.mock.calls[0]![0] as {
+    expect(uploadPrivateObject).toHaveBeenCalledTimes(1)
+    const upload = uploadPrivateObject.mock.calls[0]![0] as {
       pathname: string
       contentType: string
       body: Buffer
@@ -135,7 +134,7 @@ describe("dsarExport", () => {
       memberUserId: "user-1",
       purpose: "dsar_export",
     })
-    expect(result.blobUrl).toContain("export.zip")
+    expect(result.blobPathname).toContain("export.zip")
   })
 })
 

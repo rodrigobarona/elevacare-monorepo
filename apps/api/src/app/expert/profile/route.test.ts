@@ -1,17 +1,28 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { EXPERT_PORTRAIT_UPLOAD } from "@eleva/config/expert-profile-content"
 
 const updateExpertProfile = vi.fn()
 const emit = vi.fn()
-const deletePublicBlob = vi.fn()
-const PORTRAITS = "https://store.public.blob.vercel-storage.com/expert/portrait"
+const deletePublicObject = vi.fn()
+const verifyUpload = vi.fn()
+const MEDIA_BASE_URL = "https://media.example.com"
+const PORTRAITS = `${MEDIA_BASE_URL}/expert/portrait`
 const OLD_PORTRAIT = `${PORTRAITS}/user-1/old.jpg`
 const NEW_PORTRAIT = `${PORTRAITS}/user-1/new.jpg`
 const FOREIGN_PORTRAIT = `${PORTRAITS}/user-2/theirs.jpg`
 let storedAvatarUrl: string | null = OLD_PORTRAIT
 
 vi.mock("@eleva/storage", () => ({
-  deletePublicBlob: (...args: unknown[]) => deletePublicBlob(...args),
+  deletePublicObject: (...args: unknown[]) => deletePublicObject(...args),
 }))
+
+vi.mock("@eleva/storage/upload-handler", () => {
+  class UploadRejectedError extends Error {}
+  return {
+    UploadRejectedError,
+    verifyUpload: (...args: unknown[]) => verifyUpload(...args),
+  }
+})
 
 vi.mock("@eleva/db", () => ({
   getExpertProfileByUserId: vi.fn(async () => ({
@@ -63,8 +74,45 @@ describe("PATCH /expert/profile content", () => {
   beforeEach(() => {
     updateExpertProfile.mockReset()
     emit.mockReset()
-    deletePublicBlob.mockReset()
+    deletePublicObject.mockReset()
+    verifyUpload.mockReset()
+    verifyUpload.mockResolvedValue({})
+    vi.stubEnv("NEXT_PUBLIC_MEDIA_BASE_URL", MEDIA_BASE_URL)
     storedAvatarUrl = OLD_PORTRAIT
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it("verifies a new portrait against the upload limits before saving", async () => {
+    const response = await patch({ avatarUrl: NEW_PORTRAIT })
+
+    expect(response.status).toBe(200)
+    expect(verifyUpload).toHaveBeenCalledWith({
+      store: "public",
+      pathname: "expert/portrait/user-1/new.jpg",
+      allowedContentTypes: EXPERT_PORTRAIT_UPLOAD.contentTypes,
+      maxBytes: EXPERT_PORTRAIT_UPLOAD.maxBytes,
+    })
+  })
+
+  it("does not save a portrait that fails verification", async () => {
+    const { UploadRejectedError } =
+      await import("@eleva/storage/upload-handler")
+    verifyUpload.mockRejectedValue(new UploadRejectedError("too-large"))
+    const response = await patch({ avatarUrl: NEW_PORTRAIT })
+
+    expect(response.status).toBe(422)
+    expect(updateExpertProfile).not.toHaveBeenCalled()
+    expect(deletePublicObject).not.toHaveBeenCalled()
+  })
+
+  it("does not re-verify an unchanged portrait", async () => {
+    const response = await patch({ avatarUrl: OLD_PORTRAIT })
+
+    expect(response.status).toBe(200)
+    expect(verifyUpload).not.toHaveBeenCalled()
   })
 
   it("replaces the portrait and deletes the old file", async () => {
@@ -72,7 +120,7 @@ describe("PATCH /expert/profile content", () => {
 
     expect(response.status).toBe(200)
     expect(updatedFields().avatarUrl).toBe(NEW_PORTRAIT)
-    expect(deletePublicBlob).toHaveBeenCalledWith(OLD_PORTRAIT)
+    expect(deletePublicObject).toHaveBeenCalledWith(OLD_PORTRAIT)
   })
 
   it("rejects portraits from outside the portrait upload path", async () => {
@@ -81,7 +129,7 @@ describe("PATCH /expert/profile content", () => {
     })
 
     expect(response.status).toBe(422)
-    expect(deletePublicBlob).not.toHaveBeenCalled()
+    expect(deletePublicObject).not.toHaveBeenCalled()
   })
 
   it("rejects another expert's portrait", async () => {
@@ -89,7 +137,7 @@ describe("PATCH /expert/profile content", () => {
 
     expect(response.status).toBe(422)
     expect(updateExpertProfile).not.toHaveBeenCalled()
-    expect(deletePublicBlob).not.toHaveBeenCalled()
+    expect(deletePublicObject).not.toHaveBeenCalled()
   })
 
   it("never deletes a previous portrait the expert does not own", async () => {
@@ -97,7 +145,7 @@ describe("PATCH /expert/profile content", () => {
     const response = await patch({ avatarUrl: NEW_PORTRAIT })
 
     expect(response.status).toBe(200)
-    expect(deletePublicBlob).not.toHaveBeenCalled()
+    expect(deletePublicObject).not.toHaveBeenCalled()
   })
 
   it("derives sanitized html and mirrors the source text into bio", async () => {

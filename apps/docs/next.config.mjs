@@ -2,7 +2,7 @@ import { withElevaConsentManifest } from "@eleva/consent/with-consent-manifest"
 import { createMDX } from "fumadocs-mdx/next"
 import { env } from "node:process"
 import {
-  ELEVA_IMAGE_REMOTE_PATTERNS,
+  elevaImageRemotePatterns,
   resolveZoneAssetPrefix,
 } from "@eleva/config/next-dev"
 
@@ -22,7 +22,7 @@ const nextConfig = {
     "@c15t/nextjs",
     "@c15t/react",
   ],
-  images: { remotePatterns: ELEVA_IMAGE_REMOTE_PATTERNS },
+  images: { remotePatterns: elevaImageRemotePatterns() },
   assetPrefix: resolveZoneAssetPrefix("docs", env.DOCS_ASSET_PREFIX, env),
   /**
    * Default-locale (English) help URLs are unprefixed (`/docs/members/...`,

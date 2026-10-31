@@ -7,8 +7,8 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./blob-upload-handler": "./src/blob-upload-handler.ts",
-    "./blob-upload-client": "./src/blob-upload-client.ts"
+    "./upload-handler": "./src/upload-handler.ts",
+    "./upload-client": "./src/upload-client.ts"
   },
   "scripts": {
     "lint": "eslint .",
@@ -16,8 +16,9 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@eleva/config": "workspace:*",
-    "@vercel/blob": "^2.3.3"
+    "@aws-sdk/client-s3": "catalog:",
+    "@aws-sdk/s3-request-presigner": "catalog:",
+    "@eleva/config": "workspace:*"
   },
   "peerDependencies": {
     "react": "19.x"
@@ -28,6 +29,7 @@
     }
   },
   "devDependencies": {
+    "@eleva/api-client": "workspace:*",
     "@eleva/eslint-config": "workspace:*",
     "@eleva/typescript-config": "workspace:*",
     "@types/node": "catalog:",

@@ -11,9 +11,13 @@ import {
   listSessionDocuments,
   recordLogger,
   requireDocumentUploader,
+  SESSION_DOCUMENT_UPLOAD,
   SessionDocumentError,
 } from "@eleva/records"
-import { headPrivateDocument } from "@eleva/storage"
+import {
+  UploadRejectedError,
+  verifyUpload,
+} from "@eleva/storage/upload-handler"
 import { withPhiScope } from "@eleva/observability"
 import { z } from "zod"
 import { apiAuthFailure, requireApiAuth } from "@/lib/auth"
@@ -139,17 +143,18 @@ async function handlePOST(
     if (!isSessionDocumentPathname(parsed.data.pathname, prefix)) {
       return secureJson({ error: "INVALID_PATHNAME" }, { status: 422, headers })
     }
-    const blob = await headPrivateDocument(parsed.data.pathname)
-    if (!blob || blob.pathname !== parsed.data.pathname) {
-      return secureJson({ error: "INVALID_PATHNAME" }, { status: 422, headers })
-    }
+    const uploaded = await verifyUpload({
+      store: "private",
+      pathname: parsed.data.pathname,
+      allowedContentTypes: SESSION_DOCUMENT_UPLOAD.contentTypes,
+      maxBytes: SESSION_DOCUMENT_UPLOAD.maxBytes,
+    })
     const document = await completeSessionDocument({
       bookingId: bookingId.data,
       actorUserId: session.user.id,
-      pathname: blob.pathname,
-      url: blob.url,
-      mime: blob.contentType.split(";")[0]?.trim() ?? blob.contentType,
-      sizeBytes: blob.size,
+      pathname: uploaded.pathname,
+      mime: uploaded.contentType,
+      sizeBytes: uploaded.size,
       scope: parsed.data.scope,
       originalName: parsed.data.originalName,
     })
@@ -157,6 +162,14 @@ async function handlePOST(
       headers,
     })
   } catch (err) {
+    if (err instanceof UploadRejectedError) {
+      return secureJson(
+        err.code === "not-found"
+          ? { error: "INVALID_PATHNAME" }
+          : { error: "UPLOAD_REJECTED", reason: err.code },
+        { status: 422, headers }
+      )
+    }
     if (err instanceof SessionDocumentError) {
       return secureJson(
         { error: err.code },

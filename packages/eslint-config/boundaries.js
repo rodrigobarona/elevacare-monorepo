@@ -12,7 +12,7 @@
  * - S1: `@vercel/flags` / `flags` outside `@eleva/flags`
  * - S1: `@neondatabase/serverless` outside `@eleva/db`
  * - S2: `stripe`, `@stripe/stripe-js`, `@stripe/connect-js`,
- *        `@stripe/react-connect-js`, `@vercel/blob` outside
+ *        `@stripe/react-connect-js`, `@aws-sdk/*` outside
  *        `@eleva/billing`
  * - S2: `toconline-sdk`, `moloni` outside `@eleva/accounting`
  * - S3: `googleapis` / `@microsoft/microsoft-graph-client` outside `@eleva/calendar`
@@ -83,13 +83,13 @@ export const boundariesConfig = [
                 "Stripe.js access goes through @eleva/billing/embedded (boundary lint).",
             },
             {
-              name: "@vercel/blob",
+              name: "@aws-sdk/client-s3",
               message: "Use @eleva/storage helpers (boundary lint).",
             },
             {
-              name: "@vercel/blob/client",
+              name: "@aws-sdk/s3-request-presigner",
               message:
-                "Use @eleva/storage/blob-upload-client (browser) or @eleva/storage/blob-upload-handler (route handler) (boundary lint).",
+                "Use @eleva/storage/upload-client (browser) or @eleva/storage/upload-handler (route handler) (boundary lint).",
             },
             {
               name: "twilio",

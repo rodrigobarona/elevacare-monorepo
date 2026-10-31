@@ -17,7 +17,7 @@ export const ACCOUNT_DELETION_GRACE_DAYS = 14
 export const AI_DRAFT_RETENTION_DAYS = 90
 
 /**
- * Working pre-launch default for session document hard delete (Blob + row).
+ * Working pre-launch default for session document hard delete (object + row).
  * Final period is DPO-owned — see data-retention-export-matrix.md (AUD-028).
  */
 export const SESSION_DOCUMENT_RETENTION_DAYS = 365 * 7
@@ -25,7 +25,7 @@ export const SESSION_DOCUMENT_RETENTION_DAYS = 365 * 7
 /** Delivery log rows older than this are purged (Phase 10 plan: 1y). */
 export const NOTIFICATION_DELIVERY_RETENTION_DAYS = 365
 
-/** Stop retrying Blob deletes after this many sweep failures. */
+/** Stop retrying object deletes after this many sweep failures. */
 export const SESSION_DOCUMENT_RETENTION_MAX_ATTEMPTS = 3
 
 const RETENTION_SWEEP_BATCH = 500
@@ -198,7 +198,7 @@ export type SessionDocumentSweepResult = {
 
 /**
  * Hard-delete session documents past {@link SESSION_DOCUMENT_RETENTION_DAYS}:
- * private Blob first, then the row. Failed Blob deletes increment
+ * the private object first, then the row. Failed deletes increment
  * `retention_sweep_attempts` and stop after
  * {@link SESSION_DOCUMENT_RETENTION_MAX_ATTEMPTS}.
  */
@@ -237,7 +237,7 @@ export async function sweepExpiredSessionDocuments(
     } catch (err) {
       blobFailures += 1
       const message =
-        err instanceof Error ? err.message : "Unknown blob delete error"
+        err instanceof Error ? err.message : "Unknown storage delete error"
       const [afterFail] = await withPlatformAdminContext((tx) =>
         tx
           .update(sessionDocuments)
@@ -253,7 +253,7 @@ export async function sweepExpiredSessionDocuments(
         afterFail.attempts >= SESSION_DOCUMENT_RETENTION_MAX_ATTEMPTS
       ) {
         console.error(
-          "[retention-sweep] session_document blob delete exhausted retries",
+          "[retention-sweep] session_document object delete exhausted retries",
           { documentId: row.id, orgId: row.orgId }
         )
       }
@@ -366,7 +366,7 @@ export async function sweepExpiredNotificationDeliveries(
 }
 
 /**
- * Daily retention sweep: AI drafts, session documents (Blob + row), and
+ * Daily retention sweep: AI drafts, session documents (object + row), and
  * notification delivery logs. Batched; `hasMore` means schedule another run.
  */
 export async function runRetentionSweep(
