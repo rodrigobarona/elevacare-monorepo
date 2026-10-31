@@ -24,6 +24,7 @@ function MediaCard({
   linkAs: LinkAs = "a",
   aspect = "portrait",
   variant = "default",
+  titleAs: Title = "h3",
   className,
 }: {
   media: React.ReactNode
@@ -35,6 +36,8 @@ function MediaCard({
   linkAs?: LinkComponent
   aspect?: "portrait" | "landscape" | "square" | "fill"
   variant?: "default" | "overlay"
+  /** Use `p` when the card sits before the first section heading. */
+  titleAs?: "h3" | "p"
   className?: string
 }) {
   const heading = href ? (
@@ -83,9 +86,9 @@ function MediaCard({
                 <ArrowUpRightIcon className="size-4" />
               </span>
             ) : null}
-            <h3 className="absolute inset-0 flex items-end px-5 pb-4 text-lg leading-snug font-medium text-pretty text-white">
+            <Title className="absolute inset-0 flex items-end px-5 pb-4 text-lg leading-snug font-medium text-pretty text-white">
               {heading}
-            </h3>
+            </Title>
           </>
         ) : null}
       </div>
@@ -97,9 +100,9 @@ function MediaCard({
       >
         {eyebrow ? <p className="eyebrow text-primary">{eyebrow}</p> : null}
         {variant === "default" ? (
-          <h3 className="font-display text-2xl leading-tight font-medium tracking-tight">
+          <Title className="font-display text-2xl leading-tight font-medium tracking-tight">
             {heading}
-          </h3>
+          </Title>
         ) : null}
         {description ? (
           <p className="text-pretty text-muted-foreground">{description}</p>
