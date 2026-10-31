@@ -5,7 +5,7 @@ description: Configure os seus horários de trabalho, sincronização de calend�
 
 # Gerir Disponibilidade
 
-A sua disponibilidade determina quando os pacientes podem marcar consultas. Configure a sua agenda para equilibrar o acesso dos pacientes com as suas necessidades de vida pessoal.
+A sua disponibilidade determina quando os membros podem marcar consultas. Configure a sua agenda para equilibrar o acesso dos membros com as suas necessidades de vida pessoal.
 
 ## Agenda Semanal
 
@@ -16,33 +16,37 @@ Defina a sua disponibilidade semanal recorrente:
     ### Aceder a Definições de Disponibilidade
 
     Vá a **Dashboard de Especialista** → **Disponibilidade**.
+
   </Step>
   <Step>
     ### Definir Horários
 
     Clique em cada dia para adicionar horários disponíveis com horas de início e fim.
+
   </Step>
   <Step>
     ### Guardar Agenda
 
     Guarde a sua agenda para a ativar.
+
   </Step>
 </Steps>
 
 **Exemplo de Agenda:**
 
-| Dia | Disponibilidade |
-|-----|-----------------|
+| Dia     | Disponibilidade             |
+| ------- | --------------------------- |
 | Segunda | 9:00 - 13:00, 14:00 - 18:00 |
-| Terça | 9:00 - 13:00 |
-| Quarta | 14:00 - 20:00 |
-| Quinta | 9:00 - 13:00, 14:00 - 18:00 |
-| Sexta | 9:00 - 12:00 |
-| Sábado | Indisponível |
-| Domingo | Indisponível |
+| Terça   | 9:00 - 13:00                |
+| Quarta  | 14:00 - 20:00               |
+| Quinta  | 9:00 - 13:00, 14:00 - 18:00 |
+| Sexta   | 9:00 - 12:00                |
+| Sábado  | Indisponível                |
+| Domingo | Indisponível                |
 
 <Callout type="info">
-  Os pacientes veem sempre os horários das consultas no seu fuso horário local, mas o seu dashboard mostra o seu fuso horário.
+  Os membros veem sempre os horários das consultas no seu fuso horário local,
+  mas o seu dashboard mostra o seu fuso horário.
 </Callout>
 
 ## Integração de Calendário
@@ -56,35 +60,40 @@ Conecte o seu Google Calendar para sincronização bidirecional:
     ### Conectar
 
     Vá a **Integrações** → **Google Calendar** e clique em **Conectar**.
+
   </Step>
   <Step>
     ### Autorizar
 
     Conceda acesso à Eleva Care para ler o seu calendário.
+
   </Step>
   <Step>
     ### Selecionar Calendários
 
     Escolha quais calendários sincronizar para bloqueio de disponibilidade.
+
   </Step>
 </Steps>
 
 ### Como Funciona a Sincronização
 
-| Direção | O Que Sincroniza |
-|---------|------------------|
+| Direção        | O Que Sincroniza                                        |
+| -------------- | ------------------------------------------------------- |
 | Google → Eleva | Eventos bloqueiam automaticamente a sua disponibilidade |
-| Eleva → Google | Novas marcações aparecem no seu calendário |
+| Eleva → Google | Novas marcações aparecem no seu calendário              |
 
 <Callout type="info">
-  **Nota de Privacidade**: Apenas lemos horários de eventos e estado livre/ocupado. Não acedemos a detalhes de eventos ou participantes do seu calendário pessoal.
+  **Nota de Privacidade**: Apenas lemos horários de eventos e estado
+  livre/ocupado. Não acedemos a detalhes de eventos ou participantes do seu
+  calendário pessoal.
 </Callout>
 
 ## Definições de Marcação
 
 <Tabs items={['Aviso Mínimo', 'Tempo de Buffer', 'Marcação Antecipada']}>
   <Tab value="Aviso Mínimo">
-    **Com quanta antecedência devem os pacientes marcar?**
+    **Com quanta antecedência devem os membros marcar?**
 
     | Definição | Caso de Uso |
     |-----------|-------------|
@@ -92,17 +101,19 @@ Conecte o seu Google Calendar para sincronização bidirecional:
     | 24 horas | Standard — tempo para preparar |
     | 48 horas | Mais tempo de preparação |
     | 1 semana | Consultas complexas |
+
   </Tab>
   <Tab value="Tempo de Buffer">
     **Adicione tempo entre consultas:**
 
-    - **Antes**: Tempo para preparar para o próximo paciente
+    - **Antes**: Tempo para preparar para o próximo membro
     - **Depois**: Tempo para notas e pausas
 
     **Recomendação**: 15 minutos de buffer antes e depois garante que nunca está apressado.
+
   </Tab>
   <Tab value="Marcação Antecipada">
-    **Com quanta antecedência podem os pacientes marcar?**
+    **Com quanta antecedência podem os membros marcar?**
 
     | Definição | Melhor Para |
     |-----------|-------------|
@@ -110,6 +121,7 @@ Conecte o seu Google Calendar para sincronização bidirecional:
     | 2 semanas | Definição standard |
     | 1 mês | Disponibilidade estendida |
     | 3 meses | Flexibilidade máxima |
+
   </Tab>
 </Tabs>
 
@@ -124,6 +136,7 @@ Conecte o seu Google Calendar para sincronização bidirecional:
     3. Selecione a(s) data(s)
     4. Marque como **Indisponível**
     5. Guarde
+
   </Accordion>
   <Accordion title="Adicionar Disponibilidade Extra">
     Para ocasiões especiais:
@@ -131,6 +144,7 @@ Conecte o seu Google Calendar para sincronização bidirecional:
     1. Adicione uma exceção de data
     2. Defina horários personalizados para esse dia
     3. Isto substitui a sua agenda semanal para essa data específica
+
   </Accordion>
 </Accordions>
 
@@ -140,23 +154,20 @@ Conecte o seu Google Calendar para sincronização bidirecional:
   <Tab value="Cancelar">
     **Quando Precisa de Cancelar**
 
-    1. Vá a **Marcações**
-    2. Selecione a marcação
-    3. Clique em **Cancelar**
-    4. Forneça um motivo
-    5. O paciente é automaticamente reembolsado
+    Não pode cancelar uma marcação confirmada no painel. Envie um e-mail para [support@eleva.care](mailto:support@eleva.care) o mais cedo possível, com a marcação e o motivo. A equipa cancela-a e reembolsa o membro na totalidade.
 
     <Callout type="warning">
-      Cancelar consultas afeta a sua pontuação de fiabilidade e pode impactar a elegibilidade para verified expert.
+      Não peça ao membro que cancele em seu lugar. Cancelamentos repetidos podem levar à restrição ou suspensão da sua conta.
     </Callout>
+
   </Tab>
   <Tab value="Reagendar">
     **Para Reagendar**
 
-    1. Contacte o paciente através da plataforma
+    1. Contacte o membro através da plataforma
     2. Acordem um novo horário
-    3. Cancele a marcação original
-    4. O paciente marca o novo horário
+    3. Envie um e-mail para [support@eleva.care](mailto:support@eleva.care) com a marcação e o novo horário
+
   </Tab>
 </Tabs>
 
@@ -164,7 +175,7 @@ Conecte o seu Google Calendar para sincronização bidirecional:
 
 <Accordions>
   <Accordion title="Consistência">
-    - Defina horários regulares em que os pacientes possam confiar
+    - Defina horários regulares em que os membros possam confiar
     - Atualize a disponibilidade com pelo menos 2 semanas de antecedência
     - Comunique alterações prontamente
   </Accordion>
@@ -174,9 +185,9 @@ Conecte o seu Google Calendar para sincronização bidirecional:
     - Considere diferentes tipos de consulta
   </Accordion>
   <Accordion title="Consciência de Fuso Horário">
-    - Considere a sua base de pacientes alvo
-    - Ofereça horários noturnos para pacientes que trabalham
-    - Lembre-se das diferenças horárias para pacientes internacionais
+    - Considere a sua base de membros alvo
+    - Ofereça horários noturnos para membros que trabalham
+    - Lembre-se das diferenças horárias para membros internacionais
   </Accordion>
 </Accordions>
 
@@ -207,7 +218,7 @@ Conecte o seu Google Calendar para sincronização bidirecional:
   <Card title="Compreender Ganhos" href="/experts/earnings/payouts">
     Saiba sobre processamento de pagamentos
   </Card>
-  <Card title="Tornar-se verified expert" href="/experts/getting-started/profile">
-    Veja o que é necessário para ganhar o estatuto verified expert
+  <Card title="Completar o seu perfil" href="/experts/getting-started/profile">
+    Adicione o que os membros e a Eleva precisam de ver antes de ser listado
   </Card>
 </Cards>

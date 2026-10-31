@@ -1,25 +1,31 @@
 ---
 title: Sub-processors — Eleva.care
 description: Third parties that process personal data for Eleva.care.
-lastUpdated: 2026-10-22
+lastUpdated: 2026-10-29
 summary: Names, purposes, locations, and transfer mechanisms.
 ---
 
 ## Overview
 
-Eleva uses vetted vendors under Article 28 GDPR contracts. This page lists **sub-processors** that handle personal data on our instructions. Transfer mechanisms combine **EU Standard Contractual Clauses** in each vendor DPA with **EU–US Data Privacy Framework** certification where the vendor maintains it (checked periodically).
+Eleva uses vetted vendors under Article 28 GDPR contracts. This page lists the vendors that handle personal data on our instructions. Transfer mechanisms combine **EU Standard Contractual Clauses (SCCs)** in each vendor DPA with **EU–US Data Privacy Framework (DPF)** certification where the vendor maintains it (checked periodically).
 
-| Vendor | Purpose | Location | Transfer basis |
-| --- | --- | --- | --- |
-| Vercel | Hosting, Functions (fra1), AI Gateway | EU / US | DPA + SCCs; DPF (Vercel Inc.) |
-| Neon | PostgreSQL database | AWS eu-central-1 | DPA + SCCs; DPF (Databricks) |
-| Upstash | Redis rate limits, QStash jobs | EU region when configured | DPA + SCCs; DPF |
-| Resend | Transactional email | US storage | DPA Module 2 + DPF |
-| Stripe | Payments and Connect | EU entity + US group | DPA (Ireland) + SCCs; DPF |
-| Daily | Video rooms (recording off) | US metadata; EU media geo when set | DPA + DPF |
-| Sentry | Error monitoring (EU data region) | EU (de.sentry.io) | DPA + DPF |
-| Inth (c15t) | Consent records | EU (Frankfurt) | DPA when executed |
+Neon, Vercel, Daily, Deepgram and OpenAI are the vendors that can handle session records. The other vendors do not receive them.
 
-Google and Microsoft process calendar data as **independent controllers** when an expert connects OAuth; they are not Eleva subprocessors.
+| Vendor                                           | Purpose                                                                                 | Location                                                                                | Transfer basis                                 |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| Vercel                                           | Hosting, functions, file storage, AI Gateway                                            | Frankfurt (fra1); edge network, control plane, build logs and support global/US         | DPA + SCCs; DPF                                |
+| Neon                                             | PostgreSQL database                                                                     | Frankfurt (AWS eu-central-1)                                                            | DPA + SCCs; DPF (Databricks)                   |
+| Upstash                                          | Redis rate limits and caches, QStash jobs                                               | Frankfurt (eu-central-1)                                                                | DPA + SCCs; DPF                                |
+| Resend                                           | Transactional email                                                                     | Sending in Ireland; primary processing in the US                                        | DPA Module 2 + SCCs; DPF                       |
+| Twilio                                           | SMS verification and reminders                                                          | US                                                                                      | DPA + SCCs; DPF                                |
+| Stripe                                           | Payments, Connect payouts, fraud prevention                                             | EEA entity; data replicated to the US                                                   | DPA (Ireland) + SCCs; DPF                      |
+| Daily                                            | Video sessions (recording off); live transcription when the member opts in              | Call server in Frankfurt; transcription in the EU; account and usage metadata in the US | DPA + SCCs; DPF                                |
+| Deepgram (through Daily)                         | Speech-to-text for live transcription                                                   | EU                                                                                      | Covered by Daily's DPA                         |
+| OpenAI (through Vercel AI Gateway)               | Editor assist, translation drafts and, with the member's consent, session-report drafts | EU inference zone                                                                       | Vercel DPA + SCCs; OpenAI is not DPF-certified |
+| Sentry                                           | Error monitoring                                                                        | Germany                                                                                 | DPA + SCCs; DPF                                |
+| TOConline (Ordem dos Contabilistas Certificados) | Invoicing and accounting                                                                | Lisbon, replicated to Porto                                                             | EEA, no transfer                               |
+| Inth (c15t)                                      | Cookie consent records                                                                  | Frankfurt                                                                               | EEA, no transfer                               |
 
-**Last vendor review:** 2026-10-22. See also [Data processing agreement](/trust/dpa).
+Google and Microsoft process sign-in and calendar data as **independent controllers** when a person chooses them; they are not Eleva sub-processors. Stripe also acts as an independent controller for its own legal obligations.
+
+**Last vendor review:** 2026-10-29. See also [Data processing agreement](/trust/dpa).

@@ -5,7 +5,7 @@ description: Defina as suas ofertas de consulta com descrições claras e preço
 
 # Criar Serviços
 
-Serviços são as consultas que oferece aos pacientes. Cada serviço tem a sua própria descrição, duração e preço.
+Serviços são as consultas que oferece aos membros. Cada serviço tem a sua própria descrição, duração e preço.
 
 ## Componentes do Serviço
 
@@ -16,18 +16,20 @@ Serviços são as consultas que oferece aos pacientes. Cada serviço tem a sua p
     | Campo | Descrição |
     |-------|-----------|
     | Título | Nome claro e descritivo (ex: "Consulta Inicial de Saúde Pélvica") |
-    | Descrição | O que os pacientes podem esperar deste serviço |
+    | Descrição | O que os membros podem esperar deste serviço |
     | Duração | Duração da consulta (30, 45, 60 ou 90 minutos) |
     | Preço | A sua tarifa para este serviço |
     | Categoria | Categoria principal do serviço |
+
   </Tab>
   <Tab value="Opcional">
     **Campos Opcionais**
 
-    - Instruções de preparação para pacientes
+    - Instruções de preparação para membros
     - Informação de seguimento
     - Materiais ou formulários necessários
     - Disponibilidade vídeo vs. presencial
+
   </Tab>
 </Tabs>
 
@@ -35,7 +37,7 @@ Serviços são as consultas que oferece aos pacientes. Cada serviço tem a sua p
 
 <Accordions>
   <Accordion title="Consultas Iniciais">
-    Primeiras marcações para novos pacientes:
+    Primeiras marcações para novos membros:
 
     - Duração mais longa (tipicamente 60-90 minutos)
     - Avaliação completa
@@ -47,9 +49,10 @@ Serviços são as consultas que oferece aos pacientes. Cada serviço tem a sua p
     > 60 minutos | €120
     >
     > Avaliação completa incluindo histórico de saúde, avaliação de sintomas e recomendações personalizadas de tratamento.
+
   </Accordion>
   <Accordion title="Sessões de Seguimento">
-    Marcações contínuas para pacientes estabelecidos:
+    Marcações contínuas para membros habituais:
 
     - Duração mais curta (30-45 minutos)
     - Revisão de progresso
@@ -61,6 +64,7 @@ Serviços são as consultas que oferece aos pacientes. Cada serviço tem a sua p
     > 45 minutos | €80
     >
     > Continue o seu plano de tratamento com exercícios, avaliação de progresso e ajustes conforme necessário.
+
   </Accordion>
   <Accordion title="Serviços Especializados">
     Serviços direcionados para necessidades específicas:
@@ -69,6 +73,7 @@ Serviços são as consultas que oferece aos pacientes. Cada serviço tem a sua p
     - Avaliação de recuperação pós-parto
     - Consulta de sintomas de menopausa
     - Preparação pré-cirúrgica
+
   </Accordion>
 </Accordions>
 
@@ -79,81 +84,64 @@ Serviços são as consultas que oferece aos pacientes. Cada serviço tem a sua p
     ### Navegar para Serviços
 
     Vá a **Dashboard de Especialista** → **Serviços** → **Criar Serviço**.
+
   </Step>
   <Step>
     ### Informação Básica
 
     Introduza um título claro e descritivo, selecione a categoria principal, escolha a duração e defina o preço.
+
   </Step>
   <Step>
     ### Escrever Descrição
 
-    Responda: O que acontece durante esta consulta? Para quem é? Que resultados podem os pacientes esperar? O que devem preparar?
+    Responda: O que acontece durante esta consulta? Para quem é? Que resultados podem os membros esperar? O que devem preparar?
+
   </Step>
   <Step>
     ### Configurar Opções
 
     Ative consulta por vídeo, opções presenciais, tempo de buffer e requisitos de aviso prévio.
+
   </Step>
   <Step>
     ### Publicar
 
     Clique em **Guardar e Publicar** para tornar o seu serviço disponível para marcação.
+
   </Step>
 </Steps>
 
 <Callout type="info">
-  Use pontos na sua descrição para a tornar fácil de ler. Os pacientes frequentemente passam os olhos antes de marcar.
+  Use pontos na sua descrição para a tornar fácil de ler. Os membros
+  frequentemente passam os olhos antes de marcar.
 </Callout>
 
 ## Definir Preços dos Serviços
 
 ### Fatores a Considerar
 
-| Fator | Descrição |
-|-------|-----------|
-| Expertise | As suas credenciais e nível de experiência |
-| Mercado | Tarifas locais e preços da concorrência |
-| Duração | Duração e complexidade da sessão |
-| Taxas da Plataforma | 8-15% dependendo do seu plano |
+| Fator           | Descrição                                  |
+| --------------- | ------------------------------------------ |
+| Expertise       | As suas credenciais e nível de experiência |
+| Mercado         | Tarifas locais e preços da concorrência    |
+| Duração         | Duração e complexidade da sessão           |
+| Taxa de Serviço | 15 % do preço da marcação                  |
 
 ### Orientações de Preços
 
-| Tipo de Serviço | Intervalo Típico |
-|-----------------|------------------|
-| Consulta Inicial (60 min) | €80 - €150 |
-| Seguimento (45 min) | €60 - €100 |
-| Sessão Especializada (60 min) | €100 - €180 |
-| Check-In Rápido (30 min) | €40 - €70 |
+| Tipo de Serviço               | Intervalo Típico |
+| ----------------------------- | ---------------- |
+| Consulta Inicial (60 min)     | €80 - €150       |
+| Seguimento (45 min)           | €60 - €100       |
+| Sessão Especializada (60 min) | €100 - €180      |
+| Check-In Rápido (30 min)      | €40 - €70        |
 
-### Taxas da Plataforma
+### Taxa de Serviço
 
-| Plano | Comissão |
-|-------|----------|
-| Só Comissão (Community) | 20% |
-| Subscrição (Community) | 12% |
-| Só Comissão (verified expert) | 15% |
-| Subscrição (verified expert) | 8% |
+A Eleva cobra uma taxa de serviço de 15 % do preço da marcação, com IVA incluído quando devido. Não há outras deduções.
 
-**Exemplo**: Se cobra €100 e está no plano de subscrição 12%, recebe €88.
-
-## Limites de Serviços
-
-<Tabs items={['Community', 'verified expert']}>
-  <Tab value="Community">
-    **Community Experts**
-
-    - Até 5 serviços ativos
-    - Opções básicas de personalização
-  </Tab>
-  <Tab value="verified expert">
-    **verified experts**
-
-    - Serviços ilimitados
-    - Personalização avançada
-    - Ofertas de pacotes (em breve)
-  </Tab>
-</Tabs>
+**Exemplo**: Se cobra €100, a taxa é de €15 e você recebe €85.
 
 ## Gerir Serviços
 
@@ -167,6 +155,7 @@ Serviços são as consultas que oferece aos pacientes. Cada serviço tem a sua p
     <Callout type="warning">
       Alterações a serviços existentes não afetam marcações já feitas.
     </Callout>
+
   </Accordion>
   <Accordion title="Desativar Serviços">
     Para ocultar temporariamente um serviço:
@@ -174,6 +163,7 @@ Serviços são as consultas que oferece aos pacientes. Cada serviço tem a sua p
     1. Vá ao serviço
     2. Desative **Ativo**
     3. O serviço não aparecerá para novas marcações
+
   </Accordion>
   <Accordion title="Eliminar Serviços">
     Para remover permanentemente um serviço:
@@ -181,6 +171,7 @@ Serviços são as consultas que oferece aos pacientes. Cada serviço tem a sua p
     1. Assegure que não há marcações pendentes
     2. Clique em **Eliminar Serviço**
     3. Confirme a eliminação
+
   </Accordion>
 </Accordions>
 
@@ -199,6 +190,7 @@ Serviços são as consultas que oferece aos pacientes. Cada serviço tem a sua p
     - "Consulta 1"
     - "Sessão"
     - "Reunião"
+
   </Tab>
   <Tab value="Descrições">
     **Descrições Detalhadas**
@@ -208,6 +200,7 @@ Serviços são as consultas que oferece aos pacientes. Cada serviço tem a sua p
     - Quem deve marcar isto
     - O que esperar
     - Preparação necessária
+
   </Tab>
   <Tab value="Preços">
     **Preços Competitivos**
@@ -215,13 +208,17 @@ Serviços são as consultas que oferece aos pacientes. Cada serviço tem a sua p
     - Pesquise especialistas semelhantes
     - Considere o seu nível de experiência
     - Comece moderado, ajuste baseado na procura
+
   </Tab>
 </Tabs>
 
 ---
 
 <Cards>
-  <Card title="Definir Disponibilidade" href="/experts/getting-started/availability">
+  <Card
+    title="Definir Disponibilidade"
+    href="/experts/getting-started/availability"
+  >
     Configure quando está disponível para marcações
   </Card>
   <Card title="Compreender Ganhos" href="/experts/earnings/payouts">

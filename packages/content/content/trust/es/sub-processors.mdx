@@ -1,25 +1,31 @@
 ---
 title: Subencargados — Eleva.care
 description: Terceros que tratan datos personales por cuenta de Eleva.care.
-lastUpdated: 2026-10-22
+lastUpdated: 2026-10-29
 summary: Nombres, finalidades, ubicaciones y mecanismos de transferencia.
 ---
 
 ## Resumen
 
-Eleva uses vetted vendors under Article 28 GDPR contracts. This page lists **sub-processors** that handle personal data on our instructions. Transfer mechanisms combine **EU Standard Contractual Clauses** in each vendor DPA with **EU–US Data Privacy Framework** certification where the vendor maintains it (checked periodically).
+Eleva recurre a proveedores evaluados, con contratos conforme al artículo 28 del RGPD. Esta página indica los proveedores que tratan datos personales siguiendo nuestras instrucciones. Los mecanismos de transferencia combinan las **cláusulas contractuales tipo de la UE (SCCs)** del DPA de cada proveedor con la certificación en el **Marco de Privacidad de Datos UE–EE. UU. (DPF)**, cuando el proveedor la mantiene (se verifica periódicamente).
 
-| Vendor | Purpose | Location | Transfer basis |
-| --- | --- | --- | --- |
-| Vercel | Hosting, Functions (fra1), AI Gateway | EU / US | DPA + SCCs; DPF (Vercel Inc.) |
-| Neon | PostgreSQL database | AWS eu-central-1 | DPA + SCCs; DPF (Databricks) |
-| Upstash | Redis rate limits, QStash jobs | EU region when configured | DPA + SCCs; DPF |
-| Resend | Transactional email | US storage | DPA Module 2 + DPF |
-| Stripe | Payments and Connect | EU entity + US group | DPA (Ireland) + SCCs; DPF |
-| Daily | Video rooms (recording off) | US metadata; EU media geo when set | DPA + DPF |
-| Sentry | Error monitoring (EU data region) | EU (de.sentry.io) | DPA + DPF |
-| Inth (c15t) | Consent records | EU (Frankfurt) | DPA when executed |
+Neon, Vercel, Daily, Deepgram y OpenAI son los proveedores que pueden tratar registros de sesión. Los demás no los reciben.
 
-Google and Microsoft process calendar data as **independent controllers** when an expert connects OAuth; they are not Eleva subprocessors.
+| Proveedor                                        | Finalidad                                                                                                             | Ubicación                                                                                         | Base de transferencia                                   |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Vercel                                           | Alojamiento, funciones, almacenamiento de archivos, AI Gateway                                                        | Fráncfort (fra1); red edge, plano de control, registros de compilación y soporte globales/EE. UU. | DPA + SCCs; DPF                                         |
+| Neon                                             | Base de datos PostgreSQL                                                                                              | Fráncfort (AWS eu-central-1)                                                                      | DPA + SCCs; DPF (Databricks)                            |
+| Upstash                                          | Límites de solicitudes y cachés Redis, tareas QStash                                                                  | Fráncfort (eu-central-1)                                                                          | DPA + SCCs; DPF                                         |
+| Resend                                           | Email transaccional                                                                                                   | Envío en Irlanda; tratamiento principal en EE. UU.                                                | DPA Módulo 2 + SCCs; DPF                                |
+| Twilio                                           | Verificación y recordatorios por SMS                                                                                  | EE. UU.                                                                                           | DPA + SCCs; DPF                                         |
+| Stripe                                           | Pagos, transferencias Connect, prevención del fraude                                                                  | Entidad en el EEE; datos replicados en EE. UU.                                                    | DPA (Irlanda) + SCCs; DPF                               |
+| Daily                                            | Sesiones de vídeo (grabación desactivada); transcripción en directo cuando el miembro la activa                       | Servidor de llamadas en Fráncfort; transcripción en la UE; metadatos de cuenta y uso en EE. UU.   | DPA + SCCs; DPF                                         |
+| Deepgram (a través de Daily)                     | Conversión de voz a texto para la transcripción en directo                                                            | UE                                                                                                | Cubierto por el DPA de Daily                            |
+| OpenAI (a través de Vercel AI Gateway)           | Asistencia de edición, borradores de traducción y, con el consentimiento del miembro, borradores de informe de sesión | Zona de inferencia de la UE                                                                       | DPA de Vercel + SCCs; OpenAI no tiene certificación DPF |
+| Sentry                                           | Monitorización de errores                                                                                             | Alemania                                                                                          | DPA + SCCs; DPF                                         |
+| TOConline (Ordem dos Contabilistas Certificados) | Facturación y contabilidad                                                                                            | Lisboa, con réplica en Oporto                                                                     | EEE, sin transferencia                                  |
+| Inth (c15t)                                      | Registros de consentimiento de cookies                                                                                | Fráncfort                                                                                         | EEE, sin transferencia                                  |
 
-**Última revisión de proveedores:** 2026-10-22. See also [Acuerdo de tratamiento de datos](/trust/dpa).
+Google y Microsoft tratan datos de inicio de sesión y de calendario como **responsables independientes** cuando la persona los elige; no son subencargados de Eleva. Stripe también actúa como responsable independiente de sus propias obligaciones legales.
+
+**Última revisión de proveedores:** 2026-10-29. Consulte también el [Acuerdo de tratamiento de datos](/es/trust/dpa).

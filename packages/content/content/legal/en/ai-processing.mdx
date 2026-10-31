@@ -1,17 +1,33 @@
 ---
 title: AI processing notice — Eleva.care
-description: How Eleva uses AI-assisted features and Vercel AI Gateway with EU inference.
-lastUpdated: 2026-10-22
-summary: Editor assist, translation, provider, retention, and human review.
+description: How Eleva uses AI-assisted features, including session-report drafts, and Vercel AI Gateway with EU inference.
+lastUpdated: 2026-10-29
+summary: Editor assist, translation, session-report drafts, live transcription, provider, retention, and human review.
 ---
 
 ## Features
 
-Eleva may use AI to **suggest edits** in the expert service builder and to **draft translations** of user-visible text between English, Portuguese, and Spanish. These features assist humans; experts and editors remain responsible for published content.
+Eleva may use AI in the ways below. These features assist people: experts and editors remain responsible for what they publish, and AI does not make clinical decisions.
+
+- **Writing help for experts.** AI can **suggest edits** in the expert service builder and **draft translations** of user-visible text between English, Portuguese, and Spanish. These requests do not include member data or health data.
+- **Session-report drafts.** Where the feature is enabled, an expert can ask for an **AI-assisted draft** of a session report, written for the expert to review. The details are in the next section.
+- **Live transcription.** If you opt in, the audio of your online session is transcribed live for the expert who delivers it. Cloud recording stays off.
+
+## Session-report drafts
+
+- **Your consent comes first.** A draft can only be created if you have given your specific consent to AI processing, at booking or in your Privacy settings.
+- **What the draft uses.** The session notes the expert wrote for that booking and, if there is any, the text you typed when booking.
+- **The expert decides.** The draft is a starting point. The expert reviews it, edits it and remains responsible for the report. It is never published automatically: nothing reaches you until the expert publishes the report.
+- **Storage.** The draft is kept encrypted in the session record. Drafts the expert does not accept are deleted after 90 days.
+- **Withdrawing consent.** You can withdraw at any time in your Privacy settings. No new draft can then be created, and transcription stops from your next call. Withdrawal does not delete transcripts or reports already stored in your encrypted session record.
 
 ## Provider and location
 
 Requests are sent through **Vercel AI Gateway** to approved models (currently OpenAI models via the gateway). We configure **EU inference region** (requests fail if they cannot run in the EU zone) and **zero data retention** on the gateway path where our plan allows it. Providers may still retain content flagged for abuse review under their terms.
+
+Session-report drafts are stricter: they are only sent if the request can run with a provider that offers zero data retention in the EU zone. If that cannot be confirmed, no draft is created.
+
+Live transcription runs through our video provider, Daily, and its speech-to-text provider, Deepgram, with processing in the EU. See [Sub-processors](/trust/sub-processors).
 
 ## Training
 

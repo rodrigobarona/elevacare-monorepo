@@ -159,6 +159,38 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
 - Owner: founder. Status: `active`.
 - Related: D-06, D-11, D-12, [`legal/fact-sheet.md`](./legal/fact-sheet.md) "Open founder inputs".
 
+### 2026-10-29: Legal pages for the launch posture (active)
+
+- Decision (founder): Eleva is an intermediary only; experts are independent,
+  hold their own ERS registration and invoice members from their own
+  certified software. Only regulated health professionals whose licence
+  Eleva has verified with their Ordem may sell at launch. An external DPO is
+  being appointed (no name yet; `privacy@eleva.care` meanwhile). D-06
+  balanced policy: member no-show = cancellation at session start under the
+  service tier (no refund in all three tiers); expert cancellation or no-show
+  = 100% refund including Eleva's fee plus a rebook offer; chargebacks on
+  undelivered sessions are recovered from the expert's payout, delivered
+  sessions are contested with join/attendance logs. Promotion codes are
+  Eleva-funded and never reduce the expert's share. Paid bookings use Stripe
+  Checkout; Eleva collects the member's optional NIF for the expert's invoice
+  and does not invoice the session.
+- Change: rewrote `expert-agreement`, `terms`, `payments`, `privacy` and
+  `trust/ers`, and revised `ai-processing`, `trust/dpa` (Art. 28 terms and
+  vendor list) and `trust/sub-processors`, in pt/en/es; bumped `CONSENT_DOCUMENT_VERSION` to
+  **`2026-10-29`**.
+- Out of scope (not shipped by this change): automated expert-cancel and
+  no-show refund flows, a no-show time threshold, the external DPO
+  appointment itself, lawyer review of the new text, an ERS number field on
+  expert profiles (the agreement requires it to be displayed; the product has
+  no field yet), and automatic issuance of the service-fee invoice to experts:
+  the invoice is a contract term in the agreement, but `issueInvoice()` stays
+  closed and AUD-007 stays waived.
+- Owner: founder (policy) + engineering (content).
+- Status: `active` — working pre-launch. D-06 finance + legal re-sign is still
+  pending (not waived); the published text lists points for lawyer review in
+  the PR.
+- Related: D-06, D-10, [`legal/fact-sheet.md`](./legal/fact-sheet.md).
+
 ### 2026-10-24: Publish consent documents (D-10 switch) (active)
 
 - Decision (founder): publish the legal/trust consent set. Set
@@ -2797,6 +2829,10 @@ capabilities.transfers = active`. Stripe Identity stays implemented behind
   dual control in the admin console. Working pre-launch decision that unblocks PR 06.2; finance
   and legal re-sign still required before production.
 - Reference: [`payments-payouts-spec.md`](./payments-payouts-spec.md) "Refunds", [`execution-plan/phases/09-video-daily.md`](./execution-plan/phases/09-video-daily.md) (attendance)
+- Update 2026-10-29 (founder, working pre-launch): balanced no-show and
+  dispute policy chosen and published in the legal pages — see the
+  2026-10-29 entry "Legal pages for the launch posture". The finance + legal
+  re-sign is **still pending** (not waived).
 
 ### D-07 (2026-09-07): Daily HIPAA domain, BAA/DPA and EU processing position
 
@@ -2858,8 +2894,9 @@ capabilities.transfers = active`. Stripe Identity stays implemented behind
 ### D-10 (2026-09-07): Public-site parity dispositions
 
 - Owner: product (founder)
-- Status: active — **consent set published 2026-10-24** (founder-approved).
-  `CONSENT_DOCUMENT_VERSION` is `2026-10-24` (no `dev-` prefix). Legal/trust
+- Status: active — **consent set published 2026-10-24** (founder-approved),
+  revised 2026-10-29. `CONSENT_DOCUMENT_VERSION` is `2026-10-29` (no `dev-`
+  prefix). Legal/trust
   draft chrome removed; marketing landing drafts (`/become-expert`,
   `/for-clinics`, `/contact`) remain. Earlier working pre-launch record
   (2026-09-09, version `dev-2026-09-09`) is superseded for the publication

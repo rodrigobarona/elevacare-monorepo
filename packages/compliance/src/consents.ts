@@ -18,7 +18,7 @@ export const FUNNEL_CONSENT_KINDS = [
 
 export type FunnelConsentKind = (typeof FUNNEL_CONSENT_KINDS)[number]
 
-export const CONSENT_DOCUMENT_VERSION = "2026-10-24"
+export const CONSENT_DOCUMENT_VERSION = "2026-10-29"
 
 const DRAFT_CONSENT_VERSION_PREFIX = "dev-"
 
@@ -86,7 +86,7 @@ function documentFor(kind: FunnelConsentKind): ConsentDocument {
 
 /**
  * Published consent document versions (D-10). Founder-approved
- * publication 2026-10-24 (`CONSENT_DOCUMENT_VERSION`).
+ * publication 2026-10-29 (`CONSENT_DOCUMENT_VERSION`).
  */
 export const CONSENT_DOCUMENTS: Record<FunnelConsentKind, ConsentDocument> = {
   terms: documentFor("terms"),

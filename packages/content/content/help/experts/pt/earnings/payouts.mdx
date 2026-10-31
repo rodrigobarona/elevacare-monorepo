@@ -1,6 +1,6 @@
 ---
 title: Pagamentos e Ganhos
-description: Compreenda como é pago, taxas da plataforma e gestão dos seus ganhos.
+description: Compreenda como é pago, a taxa de serviço e a gestão dos seus ganhos.
 ---
 
 # Pagamentos e Ganhos
@@ -11,7 +11,7 @@ A Eleva Care usa o Stripe Connect para pagamentos seguros e automatizados. Este 
 
 <Steps>
   <Step>
-    ### Paciente Marca
+    ### Membro Marca
 
     O pagamento é cobrado no momento da marcação.
 
@@ -19,69 +19,45 @@ A Eleva Care usa o Stripe Connect para pagamentos seguros e automatizados. Este 
   <Step>
     ### Fundos Retidos
 
-    O pagamento é retido em custódia durante o período da consulta.
+    A Eleva retém o pagamento através da Stripe até a sua parte estar disponível.
 
   </Step>
   <Step>
     ### Consulta Concluída
 
-    Os fundos são libertados 24 horas após a conclusão da consulta.
+    A sua parte fica disponível na data mais tardia entre 7 dias após o pagamento e 24 horas após o fim da sessão. É libertada às 04:00 seguintes, hora de Lisboa.
 
   </Step>
   <Step>
     ### Pagamento Processado
 
-    Os fundos são transferidos para a sua conta bancária no seu calendário de pagamentos.
+    Depois, a Stripe paga para a sua conta bancária segundo o calendário de pagamentos da sua conta.
 
   </Step>
 </Steps>
 
 <Callout type="info">
-  A retenção de 24 horas após a consulta permite resolver quaisquer disputas ou problemas.
+  Esta espera dá tempo para resolver disputas ou problemas. A Eleva pode reter
+  uma transferência enquanto houver uma disputa ou um reembolso em aberto.
 </Callout>
 
-## Taxas da Plataforma
+## Taxa de Serviço
 
-### Estrutura de Taxas
-
-| Nível | Plano | Comissão | Taxa Mensal |
-|-------|-------|----------|-------------|
-| Community | Só Comissão | 20% | €0 |
-| Community | Subscrição | 12% | €49/mês |
-| verified expert | Só Comissão | 15% | €0 |
-| verified expert | Subscrição | 8% | €177/mês |
-
-<Tabs items={['Só Comissão', 'Subscrição']}>
-  <Tab value="Só Comissão">
-    **Melhor Para:**
-
-    - Acabou de começar
-    - Menos de 10 marcações/mês
-    - Prefere sem custos fixos
-    - Testar a plataforma
-
-  </Tab>
-  <Tab value="Subscrição">
-    **Melhor Para:**
-
-    - Marcações consistentes
-    - Quer maximizar ganhos por consulta
-    - Prefere custos previsíveis
-    - Mais de 6 marcações/mês (ponto de equilíbrio)
-
-  </Tab>
-</Tabs>
+A Eleva cobra uma taxa de serviço de **15 % do preço da marcação**, com IVA incluído quando devido. Não há outras deduções. A Eleva suporta as taxas de processamento de pagamentos a partir da sua taxa.
 
 ### Exemplo de Cálculo
 
-**Consulta de €100 — Community Expert:**
+| Preço da Marcação | Taxa de Serviço (15 %) | Você Recebe |
+| ----------------- | ---------------------- | ----------- |
+| €100              | €15                    | €85         |
 
-| Plano | Comissão | Você Recebe |
-|-------|----------|-------------|
-| Só Comissão (20%) | €20 | €80 |
-| Subscrição (12%) | €12 | €88 |
+### Marcações de Clínicas
 
-**Ponto de equilíbrio**: Com subscrição de €49/mês, poupa €8 por marcação. Equilíbrio em ~6 marcações/mês.
+Nas marcações feitas através de uma clínica não há taxa por marcação. A clínica paga uma subscrição por lugares, nas condições do seu plano.
+
+### Subscrições Pagas
+
+Se aderir a uma subscrição paga da Eleva que altere a sua taxa, aplicam-se as condições apresentadas no momento da adesão.
 
 ## Configurar Pagamentos
 
@@ -120,33 +96,25 @@ A Eleva Care usa o Stripe Connect para pagamentos seguros e automatizados. Este 
 - Informação empresarial (se aplicável)
 
 <Callout type="warning">
-  Não pode receber pagamentos até a verificação do Stripe estar completa. Inicie este processo cedo.
+  Não pode receber pagamentos até a verificação do Stripe estar completa. Inicie
+  este processo cedo.
 </Callout>
 
 ## Calendário de Pagamentos
 
-<Tabs items={['Community', 'verified expert']}>
-  <Tab value="Community">
-    **Pagamentos Community Expert**
+A sua parte de uma marcação fica disponível na data mais tardia entre estas duas:
 
-    | Detalhe | Valor |
-    |---------|-------|
-    | Frequência | Semanal (todas as segundas) |
-    | Mínimo | €10 ganhos acumulados |
-    | Processamento | 2-3 dias úteis para chegar |
+- 7 dias após o pagamento do membro
+- 24 horas após o fim da sessão
 
-  </Tab>
-  <Tab value="verified expert">
-    **Pagamentos verified expert**
+É libertada às 04:00 seguintes, hora de Lisboa. Depois, a Stripe paga para a sua conta bancária segundo o calendário de pagamentos da sua conta.
 
-    | Detalhe | Valor |
-    |---------|-------|
-    | Frequência | Diário (disponível) |
-    | Mínimo | €10 ganhos acumulados |
-    | Processamento | 1-2 dias úteis para chegar |
+**Exemplo**: Um membro paga a 1 de março às 14:00 uma sessão que termina a 3 de março às 10:00. Sete dias após o pagamento é 8 de março às 14:00, que é a data mais tardia. A sua parte é libertada às 04:00 de 9 de março.
 
-  </Tab>
-</Tabs>
+<Callout type="info">
+  A equipa da Eleva revê o primeiro pagamento para a sua conta antes de o
+  libertar, por isso pode demorar um pouco mais.
+</Callout>
 
 ## Compreender os Seus Ganhos
 
@@ -154,21 +122,21 @@ A Eleva Care usa o Stripe Connect para pagamentos seguros e automatizados. Este 
 
 O seu dashboard de ganhos mostra:
 
-| Estado | Descrição |
-|--------|-----------|
-| Pendente | Consultas ainda não concluídas |
-| Disponível | Pronto para pagamento |
+| Estado      | Descrição                          |
+| ----------- | ---------------------------------- |
+| Pendente    | Consultas ainda não concluídas     |
+| Disponível  | Pronto para pagamento              |
 | Em Trânsito | A ser transferido para o seu banco |
-| Pago | Depositado com sucesso |
+| Pago        | Depositado com sucesso             |
 
 ### Detalhes da Transação
 
 Cada transação mostra:
 
-- Nome do paciente
+- Nome do membro
 - Serviço prestado
 - Montante bruto
-- Taxa da plataforma
+- Taxa de serviço
 - Montante líquido (os seus ganhos)
 
 ## Impostos e Relatórios
@@ -196,25 +164,39 @@ Cada transação mostra:
 
 ## Reembolsos e Cancelamentos
 
-### Cancelamentos de Pacientes
+### Cancelamentos de Membros
 
-| Janela de Cancelamento | Reembolso ao Paciente | Seus Ganhos |
-|------------------------|----------------------|-------------|
-| 48+ horas antes | 100% | €0 |
-| 24-48 horas antes | 50% | 50% |
-| Menos de 24 horas | 0% | 100% |
+Escolhe uma política de cancelamento para cada serviço: Flexível, Moderada ou Rigorosa. A política apresentada no momento da marcação aplica-se a essa marcação.
 
-### Seus Cancelamentos
+| Política | Reembolso de 100 %     | Reembolso de 50 %             | Sem Reembolso           |
+| -------- | ---------------------- | ----------------------------- | ----------------------- |
+| Flexível | 24 horas ou mais antes | —                             | Menos de 24 horas antes |
+| Moderada | 48 horas ou mais antes | Entre 24 e 48 horas antes     | Menos de 24 horas antes |
+| Rigorosa | 7 dias ou mais antes   | Entre 48 horas e 7 dias antes | Menos de 48 horas antes |
 
-Se cancelar uma consulta:
+Em qualquer política, o membro tem reembolso total se cancelar nas 24 horas seguintes à marcação e a sessão estiver a pelo menos 48 horas de distância.
 
-- O paciente recebe reembolso total
-- Não recebe ganhos
-- Pode afetar a sua avaliação e elegibilidade verified expert
+O valor retido é repartido entre si e a Eleva nas mesmas proporções da marcação. Numa marcação de €100:
+
+| Reembolso ao Membro | Membro Recebe de Volta | Você Recebe | A Eleva Fica Com |
+| ------------------- | ---------------------- | ----------- | ---------------- |
+| 100 %               | €100                   | €0          | €0               |
+| 50 %                | €50                    | €42,50      | €7,50            |
+| Nenhum              | €0                     | €85         | €15              |
+
+Se o membro não comparecer sem ter cancelado, conta como um cancelamento à hora de início da sessão. O membro não tem reembolso e você recebe a sua parte.
+
+### Os Seus Cancelamentos
+
+Se tiver de cancelar, ou se não comparecer:
+
+- Avise a Eleva em [support@eleva.care](mailto:support@eleva.care) o mais cedo possível. Não peça ao membro que cancele em seu lugar.
+- O membro recebe 100 % do valor pago, incluindo a taxa da Eleva, e a Eleva oferece-lhe uma nova marcação.
+- Não recebe nada por essa marcação. Se a transferência já tiver sido feita, o valor é descontado nas transferências seguintes.
 
 <Callout type="warning">
-  Cancelamentos frequentes impactam a sua pontuação de fiabilidade e podem afetar a elegibilidade
-  para verified expert.
+  A equipa da Eleva trata destes reembolsos. Não são automáticos. Cancelamentos
+  ou faltas repetidos podem levar à restrição ou suspensão da sua conta.
 </Callout>
 
 ## Maximizar Ganhos
@@ -232,19 +214,6 @@ Se cancelar uma consulta:
     - Mantenha disponibilidade precisa
 
   </Accordion>
-  <Accordion title="Atualizar para Subscrição">
-    Se tem marcações consistentes, o plano de subscrição aumenta significativamente os seus ganhos
-    por consulta.
-
-  </Accordion>
-  <Accordion title="Trabalhar para verified expert">
-    verified experts desfrutam de:
-
-    - Taxas de plataforma mais baixas (8-15%)
-    - Pagamentos diários
-    - Destaque (mais marcações)
-
-  </Accordion>
 </Accordions>
 
 ## Resolução de Problemas
@@ -253,7 +222,7 @@ Se cancelar uma consulta:
   <Accordion title="Pagamento Não Recebido">
     1. Verifique o estado do Stripe Connect
     2. Verifique os detalhes da conta bancária
-    3. Assegure que o limite mínimo foi atingido
+    3. Consulte o calendário de pagamentos acima. A equipa da Eleva revê o seu primeiro pagamento antes de o libertar
     4. Contacte o suporte se ainda faltar
 
   </Accordion>
@@ -261,7 +230,7 @@ Se cancelar uma consulta:
     Reveja o detalhamento da transação:
 
     - Verifique o montante bruto
-    - Verifique a taxa da plataforma
+    - Verifique a taxa de serviço de 15 %
     - Confirme quaisquer reembolsos aplicados
 
   </Accordion>
@@ -281,7 +250,7 @@ Se cancelar uma consulta:
   <Card title="Estratégia de Preços" href="/experts/earnings/pricing">
     Otimize os preços das suas consultas
   </Card>
-  <Card title="Benefícios verified expert" href="/experts/getting-started/profile">
-    Veja o que desbloqueia com o estatuto verified expert
+  <Card title="Configure o Seu Perfil" href="/experts/getting-started/profile">
+    Crie um perfil profissional atrativo
   </Card>
 </Cards>

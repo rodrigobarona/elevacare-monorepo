@@ -1,17 +1,33 @@
 ---
 title: Aviso sobre tratamento com IA — Eleva.care
-description: Como a Eleva usa funcionalidades assistidas por IA e o Vercel AI Gateway com inferência na UE.
-lastUpdated: 2026-10-22
-summary: Assistência de editor, tradução, fornecedor, retenção e revisão humana.
+description: Como a Eleva usa funcionalidades assistidas por IA, incluindo rascunhos de relatórios de sessão, e o Vercel AI Gateway com inferência na UE.
+lastUpdated: 2026-10-29
+summary: Assistência de editor, tradução, rascunhos de relatórios de sessão, transcrição em direto, fornecedor, retenção e revisão humana.
 ---
 
 ## Funcionalidades
 
-A Eleva pode usar IA para **sugerir edições** no construtor de serviços do especialista e para **rascunhar traduções** de texto visível entre inglês, português e espanhol. Estas funcionalidades assistem pessoas; especialistas e editores permanecem responsáveis pelo conteúdo publicado.
+A Eleva pode usar IA nos casos abaixo. Estas funcionalidades apoiam as pessoas: especialistas e editores continuam responsáveis pelo que publicam, e a IA não toma decisões clínicas.
+
+- **Ajuda à escrita para especialistas.** A IA pode **sugerir edições** no construtor de serviços do especialista e **rascunhar traduções** de texto visível entre inglês, português e espanhol. Estes pedidos não incluem dados de membros nem dados de saúde.
+- **Rascunhos de relatórios de sessão.** Quando a funcionalidade está ativa, o especialista pode pedir um **rascunho assistido por IA** do relatório de sessão, escrito para revisão do próprio especialista. Os detalhes estão na secção seguinte.
+- **Transcrição em direto.** Se optar por ativá-la, o áudio da sua sessão online é transcrito em direto para o especialista que a presta. A gravação na cloud mantém-se desligada.
+
+## Rascunhos de relatórios de sessão
+
+- **Primeiro, o seu consentimento.** Só é possível criar um rascunho se tiver dado o seu consentimento específico para tratamento por IA, na marcação ou nas definições de Privacidade.
+- **O que o rascunho usa.** As notas de sessão escritas pelo especialista para essa marcação e, se existir, o texto que escreveu ao marcar.
+- **Quem decide é o especialista.** O rascunho é apenas um ponto de partida. O especialista revê-o, edita-o e continua responsável pelo relatório. Nunca é publicado automaticamente: nada lhe chega enquanto o especialista não publicar o relatório.
+- **Conservação.** O rascunho fica cifrado no registo da sessão. Os rascunhos que o especialista não aceitar são apagados ao fim de 90 dias.
+- **Retirar o consentimento.** Pode retirá-lo a qualquer momento nas definições de Privacidade. Deixa de ser possível criar novos rascunhos e a transcrição para a partir da chamada seguinte. A retirada não apaga as transcrições nem os relatórios já guardados no registo cifrado da sessão.
 
 ## Fornecedor e localização
 
 Os pedidos passam pelo **Vercel AI Gateway** para modelos aprovados (atualmente modelos OpenAI via gateway). Configuramos **inferência na região UE** (o pedido falha se não puder correr na zona UE) e **zero retenção de dados** no gateway quando o nosso plano o permite. Fornecedores podem ainda reter conteúdo sinalizado para revisão de abuso nos seus termos.
+
+Os rascunhos de relatórios de sessão têm regras mais estritas: só são enviados se o pedido puder correr num fornecedor com zero retenção de dados na zona UE. Se isso não puder ser confirmado, não é criado nenhum rascunho.
+
+A transcrição em direto passa pelo nosso fornecedor de vídeo, a Daily, e pelo fornecedor de conversão de voz em texto desta, a Deepgram, com tratamento na UE. Veja [Subcontratantes](/pt/trust/sub-processors).
 
 ## Treino
 

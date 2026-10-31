@@ -32,6 +32,10 @@ const SUB_PROCESSOR_VENDORS = [
   "Daily",
   "Sentry",
   "Inth",
+  "Twilio",
+  "TOConline",
+  "OpenAI",
+  "Deepgram",
 ] as const
 
 const factSheetPath = path.join(
@@ -48,6 +52,13 @@ const BANNED = [
   /\bpt-BR\b/i,
   /\bClerk\b/,
   /\bWorkOS\b/,
+  /\bpacientes?\b/i,
+  /hipaa[- ]compliant/i,
+  /compat[ií]veis com hipaa/i,
+  /€\s?(?:49|177)\b/,
+  /\b(?:49|177)\s?€/,
+  /dpo@eleva\.care/i,
+  /\bSOC\s?2\b/i,
 ] as const
 
 function readMdx(collection: string, locale: string, slug: string): string {
@@ -215,6 +226,19 @@ describe("content compliance", () => {
         factSheet.toLowerCase(),
         `fact-sheet mentions ${vendor}`
       ).toContain(vendor.toLowerCase())
+    }
+  })
+
+  it("names every sub-processor on the DPA and sub-processors pages in each locale", () => {
+    for (const locale of CONTENT_LOCALES) {
+      for (const slug of ["dpa", "sub-processors"] as const) {
+        const page = readMdx("trust", locale, slug)
+        for (const vendor of SUB_PROCESSOR_VENDORS) {
+          expect(page, `trust/${locale}/${slug} names ${vendor}`).toContain(
+            vendor
+          )
+        }
+      }
     }
   })
 

@@ -40,6 +40,8 @@ DPO sign-off (AUD-028). `POST /workflows/tick/minutely` must answer 401 without 
       webhook deliveries (webhook registered 2026-10-30).
 - [ ] Sentry shows no new `booking confirm not_found` events.
 - [ ] A new expert finishing setup files a licence application, and `/partners` in admin shows it.
+- [ ] Every `active` expert profile has an approved licence application. The public terms, FAQ and
+      ERS page say every listed expert is verified, and profiles active before 2026-10-30 are not checked automatically.
       Active profiles appear as "Needs verification".
 
 ## Known requirements before real money
