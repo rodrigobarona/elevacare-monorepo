@@ -131,6 +131,11 @@ import {
   ListSessionDocumentsResponseSchema,
   CompleteSessionDocumentRequestSchema,
   CompleteSessionDocumentResponseSchema,
+  CreateSessionDocumentUploadRequestSchema,
+  CreateSessionDocumentUploadResponseSchema,
+  CreateStorageUploadRequestSchema,
+  CreateStorageUploadResponseSchema,
+  UpdateAvatarRequestSchema,
   SessionDocumentUrlResponseSchema,
   ListRecordTemplatesResponseSchema,
   CreateRecordTemplateRequestSchema,
@@ -720,12 +725,14 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
         put: {
           operationId: "updateAvatar",
           summary: "Set user avatar URL",
+          description:
+            "url must come from POST /storage/upload under avatar/profile/. The API checks the stored object's size and type first; an object that breaks the limits is deleted and answered 422.",
           tags: ["Users"],
           requestBody: {
             required: true,
             content: {
               "application/json": {
-                schema: z.object({ url: z.string().url() }),
+                schema: UpdateAvatarRequestSchema,
               },
             },
           },
@@ -3928,7 +3935,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "listSessionDocuments",
           summary: "List session documents for a booking",
           description:
-            "Assigned expert lists all non-deleted documents. Member lists only scope=shared. Filenames are decrypted in the expert org. Bytes stay in the private Blob store. Not HIPAA.",
+            "Assigned expert lists all non-deleted documents. Member lists only scope=shared. Filenames are decrypted in the expert org. Bytes stay in the private R2 bucket. Not HIPAA.",
           tags: ["Sessions"],
           requestParams: {
             path: z.object({ bookingId: z.string().uuid() }),
@@ -3951,9 +3958,9 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
         },
         post: {
           operationId: "completeSessionDocument",
-          summary: "Persist metadata after a private Blob upload",
+          summary: "Verify a private upload and persist its metadata",
           description:
-            "Assigned expert or booking member. Pathname must start with records/<expertOrgId>/<memberUserId>/<actorUserId>/. The API looks up the private Blob by pathname and stores the store's url, MIME, and size — not client-supplied values. Members always persist scope=shared. Audit payload is bookingId + scope (no filename).",
+            "Assigned expert or booking member. Pathname must start with records/<expertOrgId>/<memberUserId>/<actorUserId>/. The API HEADs the private object and stores its key, MIME, and size — not client-supplied values. An object over 10 MB or of a disallowed type is deleted and answered 422 UPLOAD_REJECTED. Members always persist scope=shared. Audit payload is bookingId + scope (no filename).",
           tags: ["Sessions"],
           requestParams: {
             path: z.object({ bookingId: z.string().uuid() }),
@@ -3994,9 +4001,9 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       "/sessions/{bookingId}/documents/upload-token": {
         post: {
           operationId: "mintSessionDocumentUploadToken",
-          summary: "Mint a private Blob client-upload token",
+          summary: "Presign a private document upload",
           description:
-            "Vercel Blob handleUpload protocol. Token is bound to the private store and pathname prefix records/<expertOrgId>/<memberUserId>/<actorUserId>/. Not form-data.",
+            "Returns a 5-minute presigned PUT into the private R2 bucket. The pathname must start with records/<expertOrgId>/<memberUserId>/<actorUserId>/; a random suffix is added. PUT the bytes to uploadUrl with the returned headers, then POST /sessions/{bookingId}/documents with the returned pathname. Not form-data.",
           tags: ["Sessions"],
           requestParams: {
             path: z.object({ bookingId: z.string().uuid() }),
@@ -4005,22 +4012,22 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             required: true,
             content: {
               "application/json": {
-                schema: z.object({}).passthrough(),
+                schema: CreateSessionDocumentUploadRequestSchema,
               },
             },
           },
           responses: {
             ...stdWithNotFound,
             "200": {
-              description: "Blob client-upload token payload",
+              description: "Presigned upload",
               content: {
                 "application/json": {
-                  schema: z.object({}).passthrough(),
+                  schema: CreateSessionDocumentUploadResponseSchema,
                 },
               },
             },
-            "400": {
-              description: "Pathname rejected",
+            "422": {
+              description: "Pathname, type or size rejected",
               content: { "application/json": { schema: ErrorSchema } },
             },
           },
@@ -4031,7 +4038,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "mintSessionDocumentUrl",
           summary: "Mint a short-lived download URL",
           description:
-            "Assigned expert, or member when scope=shared. URL expires in 15 minutes and is audited. Direct private Blob URLs return 403.",
+            "Assigned expert, or member when scope=shared. URL expires in 15 minutes and is audited. Private objects are only ever streamed through the API.",
           tags: ["Sessions"],
           requestParams: {
             path: z.object({
@@ -4061,7 +4068,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "deleteSessionDocument",
           summary: "Delete a session document",
           description:
-            "Uploader only (D-11). Soft-deletes the row after deleting the private Blob object. A store 404 counts as deleted.",
+            "Uploader only (D-11). Soft-deletes the row after deleting the private object. An object that is already gone counts as deleted.",
           tags: ["Sessions"],
           requestParams: {
             path: z.object({
@@ -4389,7 +4396,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "createDsarRequest",
           summary: "Request a member data export",
           description:
-            "Creates a pending DSAR and kicks off a private-Blob zip export via QStash. The signed download URL is only returned on GET when status is ready.",
+            "Creates a pending DSAR and kicks off a private-bucket zip export via QStash. The signed download URL is only returned on GET when status is ready.",
           tags: ["Privacy"],
           requestBody: emptyRequestBody,
           responses: {
@@ -5109,38 +5116,36 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
-      "/blob/upload": {
+      "/storage/upload": {
         post: {
-          operationId: "handleBlobUpload",
-          summary: "Vercel Blob client-upload handshake",
+          operationId: "createStorageUpload",
+          summary: "Presign a public upload",
           description:
-            "Implements the @vercel/blob client-upload protocol (token generation and upload-completed callback). Auth is a short-lived upload token in Authorization: Bearer, minted for the signed-in user; the pathname must match an allowed upload policy.",
+            "Returns a 5-minute presigned PUT into the public R2 bucket. Auth is a short-lived upload token in Authorization: Bearer, minted for the signed-in user; the pathname must match an allowed upload policy and a random suffix is added. PUT the bytes to uploadUrl with the returned headers, then record url through the owning route (PUT /users/avatar or PATCH /expert/profile), which verifies size and type and deletes an object that breaks them.",
           tags: ["Users"],
           requestBody: {
             required: true,
             content: {
               "application/json": {
-                schema: z.object({
-                  type: z.enum([
-                    "blob.generate-client-token",
-                    "blob.upload-completed",
-                  ]),
-                  payload: z.record(z.string(), z.unknown()),
-                }),
+                schema: CreateStorageUploadRequestSchema,
               },
             },
           },
           responses: {
             "200": {
-              description: "Client token or completion acknowledgement",
+              description: "Presigned upload",
               content: {
                 "application/json": {
-                  schema: z.record(z.string(), z.unknown()),
+                  schema: CreateStorageUploadResponseSchema,
                 },
               },
             },
-            "400": {
-              description: "Upload rejected (bad token, pathname or payload)",
+            "401": {
+              description: "Missing or invalid upload token",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "422": {
+              description: "Pathname, type or size rejected",
               content: { "application/json": { schema: ErrorSchema } },
             },
             "429": {
@@ -5251,7 +5256,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
         operationId: "sweepRetention",
         summary: "Daily retention sweep",
         description:
-          "Purges unpublished AI drafts (90d), expired session documents (private Blob then row), and notification delivery logs (1y). Batched; hasMore means the next run continues.",
+          "Purges unpublished AI drafts (90d), expired session documents (private object then row), and notification delivery logs (1y). Batched; hasMore means the next run continues.",
       }),
       "/workflows/tick/{cadence}": (() => {
         const item = internalWorkflow({

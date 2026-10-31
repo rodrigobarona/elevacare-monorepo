@@ -1,18 +1,27 @@
 import {
+  CreateSessionDocumentUploadRequestSchema,
+  CreateSessionDocumentUploadResponseSchema,
+} from "@eleva/api-client"
+import {
   describeError,
   documentUploadPrefix,
   isSessionDocumentPathname,
   recordLogger,
   requireDocumentUploader,
+  SESSION_DOCUMENT_UPLOAD,
   SessionDocumentError,
 } from "@eleva/records"
-import { handleBlobUpload } from "@eleva/storage/blob-upload-handler"
+import {
+  createUploadUrl,
+  UploadRejectedError,
+} from "@eleva/storage/upload-handler"
 import { withPhiScope } from "@eleva/observability"
 import { z } from "zod"
 import { apiAuthFailure, requireApiAuth } from "@/lib/auth"
 import { corsHeaders } from "@/lib/cors"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import type { RoutePolicy } from "@/lib/route-policy"
+import { secureJson } from "@/lib/security-headers"
 import { DOCUMENT_STATUS } from "../status"
 
 export const ROUTE_POLICY = {
@@ -25,13 +34,6 @@ export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
 const BookingIdSchema = z.string().uuid()
-
-const ALLOWED_TYPES = [
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-] as const
 
 export async function OPTIONS(request: Request) {
   return new Response(null, {
@@ -86,36 +88,50 @@ async function handlePOST(
     throw err
   }
 
+  const body = CreateSessionDocumentUploadRequestSchema.safeParse(
+    await request.json().catch(() => null)
+  )
+  if (!body.success) {
+    return secureJson(
+      { error: "invalid_body", issues: body.error.issues },
+      { status: 422, headers }
+    )
+  }
+
   const prefix = documentUploadPrefix({
     orgId: booking.orgId,
     memberUserId: booking.memberUserId,
     id: booking.id,
     actorUserId: session.user.id,
   })
+  if (!isSessionDocumentPathname(body.data.pathname, prefix)) {
+    return secureJson({ error: "INVALID_PATHNAME" }, { status: 422, headers })
+  }
 
   try {
-    return await handleBlobUpload({
-      request,
-      responseHeaders: headers,
+    const upload = await createUploadUrl({
       store: "private",
-      allowedContentTypes: ALLOWED_TYPES,
-      authorize: (pathname) => {
-        if (!isSessionDocumentPathname(pathname, prefix)) {
-          throw new Error("invalid-pathname")
-        }
-        return {
-          userId: session.user.id,
-          kind: "session_document",
-          allowedContentTypes: ALLOWED_TYPES,
-        }
-      },
+      pathname: body.data.pathname,
+      contentType: body.data.contentType,
+      size: body.data.size,
+      allowedContentTypes: SESSION_DOCUMENT_UPLOAD.contentTypes,
+      maxBytes: SESSION_DOCUMENT_UPLOAD.maxBytes,
+    })
+    return secureJson(CreateSessionDocumentUploadResponseSchema.parse(upload), {
+      headers,
     })
   } catch (err) {
+    if (err instanceof UploadRejectedError) {
+      return secureJson(
+        { error: "UPLOAD_REJECTED", reason: err.code },
+        { status: 422, headers }
+      )
+    }
     recordLogger.error("documents upload-token failed", {
       bookingId: bookingId.data,
       status: describeError(err),
     })
-    return Response.json({ error: "upload-rejected" }, { status: 400, headers })
+    return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }
 

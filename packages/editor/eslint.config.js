@@ -3,7 +3,7 @@ import { config } from "@eleva/eslint-config/base"
 /**
  * ADR-023: Plate / Slate / Radix are allowed here. Keep every other vendor
  * boundary from `@eleva/eslint-config/boundaries` so the editor package cannot
- * import Stripe, Better Auth, Blob, Twilio, Resend, etc. directly.
+ * import Stripe, Better Auth, S3, Twilio, Resend, etc. directly.
  */
 export default [
   ...config,
@@ -34,13 +34,13 @@ export default [
                 "Stripe.js access goes through @eleva/billing/embedded (boundary lint).",
             },
             {
-              name: "@vercel/blob",
+              name: "@aws-sdk/client-s3",
               message: "Use @eleva/storage helpers (boundary lint).",
             },
             {
-              name: "@vercel/blob/client",
+              name: "@aws-sdk/s3-request-presigner",
               message:
-                "Use @eleva/storage/blob-upload-client (browser) or @eleva/storage/blob-upload-handler (route handler) (boundary lint).",
+                "Use @eleva/storage/upload-client (browser) or @eleva/storage/upload-handler (route handler) (boundary lint).",
             },
             {
               name: "twilio",

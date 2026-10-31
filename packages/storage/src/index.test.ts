@@ -1,91 +1,55 @@
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { resetEnvCache } from "@eleva/config/env"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import {
-  UploadValidationError,
-  ALLOWED_DOCUMENT_MIME_TYPES,
-  MAX_DOCUMENT_BYTES,
-  uploadPrivateBlob,
+  uploadPrivateObject,
   getPrivateDocument,
   deletePrivateDocument,
   headPrivateDocument,
 } from "./index"
 
-describe("upload validation constants", () => {
-  it("accepts pdf and common image types", () => {
-    expect(ALLOWED_DOCUMENT_MIME_TYPES.has("application/pdf")).toBe(true)
-    expect(ALLOWED_DOCUMENT_MIME_TYPES.has("image/jpeg")).toBe(true)
-    expect(ALLOWED_DOCUMENT_MIME_TYPES.has("image/png")).toBe(true)
-    expect(ALLOWED_DOCUMENT_MIME_TYPES.has("image/webp")).toBe(true)
+describe("e2e private storage mock", () => {
+  beforeEach(() => {
+    resetEnvCache()
   })
 
-  it("rejects executable / archive / arbitrary types", () => {
-    for (const bad of [
-      "application/octet-stream",
-      "application/zip",
-      "application/x-msdownload",
-      "text/html",
-      "application/javascript",
-    ]) {
-      expect(ALLOWED_DOCUMENT_MIME_TYPES.has(bad)).toBe(false)
-    }
-  })
-
-  it("caps documents at 10MiB", () => {
-    expect(MAX_DOCUMENT_BYTES).toBe(10 * 1024 * 1024)
-  })
-})
-
-describe("UploadValidationError", () => {
-  it("carries machine-readable code", () => {
-    const err = new UploadValidationError("too-large", "boom")
-    expect(err.code).toBe("too-large")
-    expect(err.name).toBe("UploadValidationError")
-    expect(err).toBeInstanceOf(Error)
-  })
-})
-
-describe("e2e private blob mock", () => {
   afterEach(() => {
     vi.unstubAllEnvs()
+    resetEnvCache()
   })
 
-  it("stores and streams without calling Vercel when E2E_MOCK_PRIVATE_BLOB=1", async () => {
+  it("stores and streams without calling R2 when E2E_MOCK_PRIVATE_STORAGE=1", async () => {
     vi.stubEnv("NODE_ENV", "test")
-    vi.stubEnv("E2E_MOCK_PRIVATE_BLOB", "1")
-    const uploaded = await uploadPrivateBlob({
+    vi.stubEnv("E2E_MOCK_PRIVATE_STORAGE", "1")
+    const uploaded = await uploadPrivateObject({
       pathname: "dsar/user-1/export.zip",
       body: Buffer.from("PK"),
       contentType: "application/zip",
     })
-    expect(uploaded.url).toMatch(/^e2e-private:\/\//)
     expect(uploaded.pathname).toBe("dsar/user-1/export.zip")
-    const got = await getPrivateDocument(uploaded.url)
+    const got = await getPrivateDocument(uploaded.pathname)
     expect(got?.stream).toBeInstanceOf(ReadableStream)
-    const byPath = await getPrivateDocument(uploaded.pathname)
-    expect(byPath?.stream).toBeInstanceOf(ReadableStream)
     const meta = await headPrivateDocument(uploaded.pathname)
     expect(meta).toEqual({
-      url: uploaded.url,
       pathname: uploaded.pathname,
       contentType: "application/zip",
       size: 2,
     })
     expect(await headPrivateDocument("dsar/missing.zip")).toBeNull()
-    await deletePrivateDocument(uploaded.url)
-    expect(await getPrivateDocument(uploaded.url)).toBeNull()
+    await deletePrivateDocument(uploaded.pathname)
     expect(await getPrivateDocument(uploaded.pathname)).toBeNull()
   })
 
   it("overwrites a deterministic pathname on repeat uploads", async () => {
     vi.stubEnv("NODE_ENV", "test")
-    vi.stubEnv("E2E_MOCK_PRIVATE_BLOB", "1")
+    vi.stubEnv("E2E_MOCK_PRIVATE_STORAGE", "1")
     const pathname = "invoicing-exports/org-1/saft-2026-03.zip"
-    const first = await uploadPrivateBlob({
+    const first = await uploadPrivateObject({
       pathname,
       body: Buffer.from("first"),
       contentType: "application/zip",
       overwrite: true,
     })
-    const second = await uploadPrivateBlob({
+    const second = await uploadPrivateObject({
       pathname,
       body: Buffer.from("second"),
       contentType: "application/zip",
@@ -101,14 +65,16 @@ describe("e2e private blob mock", () => {
 
   it("never mocks when VERCEL_ENV is production", async () => {
     vi.stubEnv("VERCEL_ENV", "production")
-    vi.stubEnv("E2E_MOCK_PRIVATE_BLOB", "1")
+    vi.stubEnv("E2E_MOCK_PRIVATE_STORAGE", "1")
     vi.stubEnv("E2E_AUTH_CAPTURE", "1")
+    vi.stubEnv("R2_ENDPOINT", "")
+    vi.stubEnv("R2_PRIVATE_BUCKET", "")
     await expect(
-      uploadPrivateBlob({
+      uploadPrivateObject({
         pathname: "dsar/user-1/export.zip",
         body: Buffer.from("PK"),
         contentType: "application/zip",
       })
-    ).rejects.toThrow(/BLOB_PRIVATE_READ_WRITE_TOKEN/)
+    ).rejects.toThrow(/R2_PRIVATE_BUCKET/)
   })
 })

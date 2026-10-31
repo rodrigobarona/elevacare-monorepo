@@ -54,8 +54,7 @@ vi.mock("./dsar-export", async () => {
 
 import { markDsarExpired, processDsarExport } from "./dsar-requests"
 
-const BLOB_URL =
-  "https://private.blob.vercel-storage.com/dsar/user-1/export.zip"
+const STORAGE_KEY = "dsar/user-1/export-abc.zip"
 
 function readyRow(overrides: Record<string, unknown> = {}) {
   return {
@@ -63,7 +62,7 @@ function readyRow(overrides: Record<string, unknown> = {}) {
     status: "ready",
     requestedAt: new Date("2026-09-10T00:00:00.000Z"),
     expiresAt: new Date("2026-09-10T01:00:00.000Z"),
-    blobPathname: BLOB_URL,
+    blobPathname: STORAGE_KEY,
     completedAt: new Date("2026-09-10T00:00:00.000Z"),
     ...overrides,
   }
@@ -111,7 +110,7 @@ describe("markDsarExpired", () => {
       dsarId: "dsar-1",
     })
 
-    expect(deletePrivateDocument).toHaveBeenCalledWith(BLOB_URL)
+    expect(deletePrivateDocument).toHaveBeenCalledWith(STORAGE_KEY)
     expect(deletePrivateDocument.mock.invocationCallOrder[0]).toBeLessThan(
       withAudit.mock.invocationCallOrder[0]!
     )
@@ -215,7 +214,7 @@ describe("processDsarExport", () => {
       }
     )
     dsarExport.mockResolvedValue({
-      blobUrl: BLOB_URL,
+      blobPathname: STORAGE_KEY,
       expiresAt: new Date("2026-09-12T00:00:00.000Z"),
     })
 

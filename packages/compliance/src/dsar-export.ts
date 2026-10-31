@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto"
-import { uploadPrivateBlob } from "@eleva/storage"
+import { uploadPrivateObject } from "@eleva/storage"
 import { ensurePhase5DsarCollectors } from "./dsar-phase5-collectors"
 import { ensureSessionDocumentDsarCollector } from "./session-document-lifecycle"
 import { ensureSessionReportDsarCollector } from "./session-report-dsar"
@@ -10,7 +10,6 @@ export const DSAR_SIGNED_URL_TTL_SECONDS = 24 * 60 * 60
 
 export type DsarExportResult = {
   blobPathname: string
-  blobUrl: string
   expiresAt: Date
 }
 
@@ -42,7 +41,7 @@ export async function dsarExport(
   }
 
   const zip = createZipBuffer(entries)
-  const uploaded = await uploadPrivateBlob({
+  const uploaded = await uploadPrivateObject({
     pathname: `dsar/${userId}/export.zip`,
     body: zip,
     contentType: "application/zip",
@@ -50,7 +49,6 @@ export async function dsarExport(
 
   return {
     blobPathname: uploaded.pathname,
-    blobUrl: uploaded.url,
     expiresAt: new Date(Date.now() + DSAR_SIGNED_URL_TTL_SECONDS * 1000),
   }
 }

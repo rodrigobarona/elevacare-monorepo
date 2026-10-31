@@ -1,7 +1,7 @@
 ---
 title: Seguridad — Eleva.care
 description: Medidas técnicas y organizativas en Eleva.care.
-lastUpdated: 2026-10-29
+lastUpdated: 2026-10-31
 summary: Cifrado, control de acceso, auditoría y diligencia de proveedores.
 ---
 
@@ -29,6 +29,7 @@ Esta página describe cómo **BÚZIOS E TARTARUGAS, LDA** protege datos personal
 
 - Base de datos principal: **Neon**, AWS **eu-central-1** (Fráncfort).
 - Funciones serverless: Vercel **fra1** (Fráncfort) cuando está configurado.
+- Almacenamiento de archivos: **Cloudflare R2**, buckets en jurisdicción UE.
 - Monitorización de errores: **Sentry** con almacenamiento en la UE cuando está configurado a `de.sentry.io`.
 
 Algunos proveedores aún tratan metadatos en EE. UU. bajo su DPA y Cláusulas Contractuales Tipo; ver aviso de privacidad y lista de subencargados.

@@ -22,9 +22,10 @@ The monorepo has a dedicated API application (`apps/api`) deployed on its own su
 1. **Never create `route.ts`** (or `route.js`) inside `apps/web/app/` or `apps/app/src/app/`.
 2. **Server Actions are fine** — `"use server"` functions in web/app are NOT API routes; they run same-origin and are the correct pattern for form submissions and mutations initiated by React components.
 3. If a feature needs a new HTTP endpoint (webhooks, file uploads, integrations), add it under `apps/api/src/app/<feature>/route.ts`.
-4. For **Vercel Blob uploads**, use the existing generic `POST /blob/upload` route:
-   - Add an entry to `UPLOAD_POLICIES` in `apps/api/src/app/blob/upload/route.ts` with a pathname regex.
-   - Call `uploadBlobClient()` from `@eleva/storage/blob-upload-client` on the client side with the matching `prefix` + `kind`.
+4. For **browser uploads**, use the existing generic `POST /storage/upload` route:
+   - Add an entry to `UPLOAD_POLICIES` in `apps/api/src/app/storage/upload/route.ts` with a pathname matcher.
+   - Call `uploadFile()` from `@eleva/storage/upload-client` on the client side with the matching `prefix` + `kind`.
+   - Call `isVerifiedPublicUpload()` in the route that records the URL.
    - Auth uses a short-lived sealed bearer token minted via a server action (`@eleva/auth/upload-token`).
    - **Do NOT create a new route** — extend the policy registry instead.
 5. When adding a new API route, follow the existing patterns in `apps/api`:

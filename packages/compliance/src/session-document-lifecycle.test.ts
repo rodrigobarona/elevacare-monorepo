@@ -54,14 +54,14 @@ afterEach(() => {
 })
 
 describe("eraseMemberSessionDocuments", () => {
-  it("deletes the Blob then the row, skips a store failure, and tombstones expert_only only", async () => {
+  it("deletes the object then the row, skips a store failure, and tombstones expert_only only", async () => {
     const deletedIds: string[] = []
     const tx = {
       select: () => ({
         from: () => ({
           where: async () => [
-            { id: "doc-ok", blobUrl: "https://blob/ok" },
-            { id: "doc-fail", blobUrl: "https://blob/fail" },
+            { id: "doc-ok", blobUrl: "records/org-a/ok.pdf" },
+            { id: "doc-fail", blobUrl: "records/org-a/fail.pdf" },
           ],
         }),
       }),
@@ -79,7 +79,7 @@ describe("eraseMemberSessionDocuments", () => {
       }),
     }
     deletePrivateDocument.mockImplementation(async (url: string) => {
-      if (url.endsWith("/fail")) throw new Error("store down")
+      if (url.endsWith("/fail.pdf")) throw new Error("store down")
     })
 
     const result = await eraseMemberSessionDocuments(tx as never, "user-1")

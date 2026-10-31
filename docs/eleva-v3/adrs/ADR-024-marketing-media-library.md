@@ -1,8 +1,10 @@
-# ADR-024: Curated marketing media on public Blob
+# ADR-024: Curated marketing media in public object storage
 
 ## Status
 
-Accepted (amended 2026-10-24 — dual progressive WebM + MP4, AVIF/WebP/JPEG poster)
+Accepted (amended 2026-10-24 — dual progressive WebM + MP4, AVIF/WebP/JPEG poster; hosting amended
+2026-10-31 by [ADR-025](./ADR-025-r2-object-storage.md) — R2 replaces Vercel Blob, CSP comes from
+the media host)
 
 ## Date
 
@@ -25,15 +27,15 @@ for visitor CDN traffic without HLS benefits on a single ambient asset.
    (`eleva-owned` or `pexels`), credit and source URL. Apps render through `ElevaImage` and
    `ElevaVideo`; they never hardcode media URLs.
 2. **Images** are curated with the `media:*` scripts (Pexels API) and uploaded to the
-   **public** Vercel Blob store through `@eleva/storage`. They are served via `next/image`.
+   **public** R2 bucket through `@eleva/storage`. They are served via `next/image`.
    No member, expert or health data ever goes in this library.
-3. **Video** uses the same **public** Blob store: progressive **WebM (VP9)** when curated,
+3. **Video** uses the same **public** bucket: progressive **WebM (VP9)** when curated,
    with progressive **MP4 (H.264)** as the required Safari/universal fallback, plus a poster
    (AVIF preferred; WebP/JPEG/PNG also allowed). `ElevaVideo` renders native `<video>` with
    ordered `<source>` elements (muted, autoplay, loop, no controls). Reduced motion shows the
    poster only. No third-party player or analytics.
-4. **CSP.** Marketing video and posters are served from `https://*.public.blob.vercel-storage.com`.
-   Posters and images need the Blob host under `img-src`; video needs it under `media-src`
+4. **CSP.** Marketing video and posters are served from the media host (ADR-025).
+   Posters and images need that host under `img-src`; video needs it under `media-src`
    (`img-src` does not cover `<video>`). No Mux vendor block.
 
 ## Consequences
@@ -42,8 +44,8 @@ for visitor CDN traffic without HLS benefits on a single ambient asset.
   `@eleva/media`.
 - Adding a Pexels image without a credit fails the library test. `/credits` (linked from
   the footer) renders every Pexels photographer from `creditedMedia()`.
-- Academy/course streaming (Phase 16) may choose Blob signed URLs or another host in a
-  separate ADR; this decision covers marketing ambient video only.
+- Academy/course streaming (Phase 16) is covered as a direction in ADR-025; this decision
+  covers marketing ambient video only.
 
 ## Supersedes
 

@@ -1,7 +1,7 @@
 ---
 title: Subencargados — Eleva.care
 description: Terceros que tratan datos personales por cuenta de Eleva.care.
-lastUpdated: 2026-10-29
+lastUpdated: 2026-10-31
 summary: Nombres, finalidades, ubicaciones y mecanismos de transferencia.
 ---
 
@@ -9,11 +9,12 @@ summary: Nombres, finalidades, ubicaciones y mecanismos de transferencia.
 
 Eleva recurre a proveedores evaluados, con contratos conforme al artículo 28 del RGPD. Esta página indica los proveedores que tratan datos personales siguiendo nuestras instrucciones. Los mecanismos de transferencia combinan las **cláusulas contractuales tipo de la UE (SCCs)** del DPA de cada proveedor con la certificación en el **Marco de Privacidad de Datos UE–EE. UU. (DPF)**, cuando el proveedor la mantiene (se verifica periódicamente).
 
-Neon, Vercel, Daily, Deepgram y OpenAI son los proveedores que pueden tratar registros de sesión. Los demás no los reciben.
+Neon, Vercel, Cloudflare, Daily, Deepgram y OpenAI son los proveedores que pueden tratar registros de sesión. Los demás no los reciben.
 
 | Proveedor                                        | Finalidad                                                                                                             | Ubicación                                                                                         | Base de transferencia                                   |
 | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| Vercel                                           | Alojamiento, funciones, almacenamiento de archivos, AI Gateway                                                        | Fráncfort (fra1); red edge, plano de control, registros de compilación y soporte globales/EE. UU. | DPA + SCCs; DPF                                         |
+| Vercel                                           | Alojamiento, funciones, AI Gateway                                                                                    | Fráncfort (fra1); red edge, plano de control, registros de compilación y soporte globales/EE. UU. | DPA + SCCs; DPF                                         |
+| Cloudflare, Inc.                                 | Almacenamiento de objetos para archivos subidos y medios públicos                                                     | Almacenamiento en jurisdicción UE; red y soporte globales                                         | DPA + SCCs                                              |
 | Neon                                             | Base de datos PostgreSQL                                                                                              | Fráncfort (AWS eu-central-1)                                                                      | DPA + SCCs; DPF (Databricks)                            |
 | Upstash                                          | Límites de solicitudes y cachés Redis, tareas QStash                                                                  | Fráncfort (eu-central-1)                                                                          | DPA + SCCs; DPF                                         |
 | Resend                                           | Email transaccional                                                                                                   | Envío en Irlanda; tratamiento principal en EE. UU.                                                | DPA Módulo 2 + SCCs; DPF                                |
@@ -28,4 +29,4 @@ Neon, Vercel, Daily, Deepgram y OpenAI son los proveedores que pueden tratar reg
 
 Google y Microsoft tratan datos de inicio de sesión y de calendario como **responsables independientes** cuando la persona los elige; no son subencargados de Eleva. Stripe también actúa como responsable independiente de sus propias obligaciones legales.
 
-**Última revisión de proveedores:** 2026-10-29. Consulte también el [Acuerdo de tratamiento de datos](/es/trust/dpa).
+**Última revisión de proveedores:** 2026-10-31. Consulte también el [Acuerdo de tratamiento de datos](/es/trust/dpa).

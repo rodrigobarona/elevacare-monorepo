@@ -1,0 +1,55 @@
+---
+description: Object storage rules — Cloudflare R2 with two EU buckets (public vs private). Apply when working with file uploads, @eleva/storage, R2 credentials, or any code that stores/reads user-uploaded files.
+globs:
+  - packages/storage/**
+  - apps/api/src/app/storage/**
+  - infra/storage/**
+  - "**/*upload*"
+alwaysApply: false
+---
+
+# Object Storage — Two R2 Buckets
+
+All storage goes through `@eleva/storage` (ADR-025). Two EU jurisdiction buckets, each with its own bucket-scoped credentials, so a leaked public key can never read health data:
+
+| Bucket | Env | Use for |
+|--------|-----|---------|
+| **Public** | `R2_PUBLIC_*` | Avatars, marketing assets. Served from the media host. |
+| **Private** | `R2_PRIVATE_*` | Expert documents, member reports, consultation files, PHI |
+
+## Rules
+
+1. **NEVER store member data, health reports, or expert documents in the public bucket.**
+2. **NEVER import `@aws-sdk/*` directly.** All access goes through `@eleva/storage`. Boundary lint enforces this.
+3. **NEVER give a browser a private presigned GET.** Serve private objects through an API route that checks authorization first, then streams via `getPrivateDocument()`.
+4. **Verify in the recording route.** Any route that records an uploaded object calls `isVerifiedPublicUpload()` or `verifyUpload()` first. Presigning does not limit size.
+5. **Never hardcode the media host.** Use `@eleva/config/media-host`.
+
+## Entrypoints
+
+```ts
+import { uploadFile } from "@eleva/storage/upload-client" // "use client"
+import { createUploadUrl, verifyUpload } from "@eleva/storage/upload-handler" // Route Handler
+import { uploadPublicObject, getPrivateDocument } from "@eleva/storage" // Server
+```
+
+## Upload flow
+
+1. `POST /storage/upload` (or `/sessions/{bookingId}/documents/upload-token`): auth, pathname policy, type, declared size, presigned PUT (5 minutes).
+2. Browser PUTs with the returned headers. `Content-Type` and `If-None-Match: *` are signed.
+3. The owning route verifies with a HEAD, deletes an object that breaks the limit, then records.
+
+## Env
+
+```ts
+import { requireR2PublicEnv, requireR2PrivateEnv } from "@eleva/config/env"
+```
+
+`R2_ENDPOINT` points at a local S3 server such as MinIO and is refused in production.
+
+## Adding a new upload type
+
+1. Decide public or private. If it touches member or health data: private.
+2. If private: add an API route in `apps/api` that streams the object after an auth check.
+3. Add a policy to `UPLOAD_POLICIES` in `apps/api/src/app/storage/upload/route.ts` if using the public client upload.
+4. Verify in the route that records the URL.

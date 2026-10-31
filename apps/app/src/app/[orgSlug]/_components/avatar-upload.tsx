@@ -19,7 +19,8 @@ import {
   SettingsFieldsetStatus,
   SettingsFieldsetTitle,
 } from "@eleva/ui/components/settings-fieldset"
-import { uploadBlobClient } from "@eleva/storage/blob-upload-client"
+import { AVATAR_UPLOAD } from "@eleva/config/avatar-upload"
+import { uploadFile } from "@eleva/storage/upload-client"
 import { toast } from "sonner"
 import {
   getAvatarFallbackStyle,
@@ -40,8 +41,7 @@ interface AvatarUploadProps {
   apiBaseUrl: string
 }
 
-const ACCEPTED_TYPES = "image/jpeg,image/png,image/webp"
-const MAX_SIZE_BYTES = 2 * 1024 * 1024
+const ACCEPTED_TYPES: readonly string[] = AVATAR_UPLOAD.contentTypes
 
 export function AvatarUpload({
   orgSlug,
@@ -64,12 +64,12 @@ export function AvatarUpload({
     const file = event.target.files?.[0]
     if (!file) return
 
-    if (file.size > MAX_SIZE_BYTES) {
+    if (file.size > AVATAR_UPLOAD.maxBytes) {
       toast.error(t("avatar.tooLarge"))
       return
     }
 
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+    if (!ACCEPTED_TYPES.includes(file.type)) {
       toast.error(t("avatar.invalidType"))
       return
     }
@@ -77,11 +77,11 @@ export function AvatarUpload({
     setUploading(true)
     try {
       const uploadToken = await getAvatarUploadToken()
-      const result = await uploadBlobClient({
-        prefix: "avatar",
-        kind: "profile",
+      const result = await uploadFile({
+        prefix: AVATAR_UPLOAD.prefix,
+        kind: AVATAR_UPLOAD.kind,
         file,
-        handleUploadUrl: `${apiBaseUrl}/blob/upload`,
+        apiUploadUrl: `${apiBaseUrl}/storage/upload`,
         headers: { Authorization: `Bearer ${uploadToken}` },
       })
 
@@ -154,7 +154,7 @@ export function AvatarUpload({
           <input
             ref={fileInputRef}
             type="file"
-            accept={ACCEPTED_TYPES}
+            accept={ACCEPTED_TYPES.join(",")}
             className="hidden"
             onChange={handleFileSelect}
             aria-label={t("avatar.changePhoto")}

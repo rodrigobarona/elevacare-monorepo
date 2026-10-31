@@ -87,7 +87,7 @@ There is no ad hoc cron route for core product correctness. Anything that must s
 
 ### Admin / compliance workflows
 
-- `dsarExport` — export all user data → upload to Vercel Blob → time-limited signed URL → notify admin
+- `dsarExport` — export all user data → upload to the private R2 bucket → time-limited signed URL → notify admin
 - `softDeleteScrubber` — 30-day retention enforcement
 - `orgKeyShredder` — org deletion → `shredOrgKeys` (ADR-020) → verify encrypted rows are unreadable
 - `ersAuditExport` — periodic ERS-required export (if applicable)

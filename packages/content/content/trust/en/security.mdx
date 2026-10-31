@@ -1,7 +1,7 @@
 ---
 title: Security — Eleva.care
 description: Technical and organisational measures on Eleva.care.
-lastUpdated: 2026-10-29
+lastUpdated: 2026-10-31
 summary: Encryption, access control, audit logging, and vendor due diligence.
 ---
 
@@ -29,6 +29,7 @@ This page describes how **BÚZIOS E TARTARUGAS, LDA** protects personal data on 
 
 - Primary application database: **Neon**, AWS **eu-central-1** (Frankfurt).
 - Serverless functions: Vercel **fra1** (Frankfurt) where configured.
+- File storage: **Cloudflare R2**, EU jurisdiction buckets.
 - Error monitoring: **Sentry** with EU data storage when configured to `de.sentry.io`.
 
 Some vendors still process metadata in the United States under their DPA and Standard Contractual Clauses; see the privacy notice and sub-processor list.

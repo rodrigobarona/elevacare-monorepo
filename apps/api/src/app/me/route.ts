@@ -1,7 +1,9 @@
+import { AVATAR_UPLOAD, isAvatarUrl } from "@eleva/config/avatar-upload"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireMemberApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
+import { isVerifiedPublicUpload } from "@/lib/verify-public-upload"
 import type { RoutePolicy } from "@/lib/route-policy"
 import {
   PatchMeRequestSchema,
@@ -20,8 +22,6 @@ export const ROUTE_POLICY = {
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
-
-const BLOB_HOST_PATTERN = /\.public\.blob\.vercel-storage\.com$/
 
 function isLocale(value: string | null): value is Locale {
   return value !== null && (locales as readonly string[]).includes(value)
@@ -106,27 +106,16 @@ export async function PATCH(request: Request) {
     )
   }
 
-  if (body.data.avatarUrl) {
-    try {
-      const parsed = new URL(body.data.avatarUrl)
-      if (
-        parsed.protocol !== "https:" ||
-        !BLOB_HOST_PATTERN.test(parsed.hostname)
-      ) {
-        return secureJson(
-          {
-            error: "validation",
-            message: "avatarUrl must be a public Blob URL",
-          },
-          { status: 422, headers }
-        )
-      }
-    } catch {
-      return secureJson(
-        { error: "validation", message: "avatarUrl must be a public Blob URL" },
-        { status: 422, headers }
-      )
-    }
+  if (
+    body.data.avatarUrl &&
+    !(await isVerifiedPublicUpload(body.data.avatarUrl, AVATAR_UPLOAD, (url) =>
+      isAvatarUrl(url, session.user.id)
+    ))
+  ) {
+    return secureJson(
+      { error: "validation", message: "avatarUrl must be an uploaded avatar" },
+      { status: 422, headers }
+    )
   }
 
   const updated = await updateMemberProfile({

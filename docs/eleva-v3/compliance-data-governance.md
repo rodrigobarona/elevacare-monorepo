@@ -239,7 +239,7 @@ v3 launches Portugal-first. The following are launch requirements, not phase-2:
 - **TOConline Tier 1 invoicing** operational (series `ELEVA-FEE-{YYYY}` for solo commission, series `ELEVA-SAAS-{YYYY}` for clinic SaaS) with pilot expert/clinic green end-to-end.
 - **MB WAY** enabled at checkout via Stripe Dynamic Payment Methods. Multibanco reference vouchers excluded.
 - **Consent banner** wired to GA4 (marketing) + PostHog (product) + Resend marketing consent.
-- **DSAR workflow** verified (`dsarExport` collector registry → private Vercel Blob zip → HMAC download URL; 10-minute target). See [DSAR runbook](#dsar-runbook-member-export) below.
+- **DSAR workflow** verified (`dsarExport` collector registry → private R2 zip → HMAC download URL; 10-minute target). See [DSAR runbook](#dsar-runbook-member-export) below.
 - **Envelope crypto-shredding** (`shredOrgKeys`, ADR-020) on org deletion, verified by integration test, **except** when a legal-hold or retention flag (D-12) is set: shred is blocked, DSAR still exports (or states hold), and audit records `org.shred_blocked`. After the hold clears, shred runs and audit records `org.shredded`.
 - **Daily/Neon/Resend EU regions** confirmed contractually before production traffic. Better Auth is self-hosted (no extra subprocessor). The previous identity provider is retired (see ADR-017).
 
@@ -274,12 +274,12 @@ Member data-subject access requests are a Phase 5 privacy API, not a staff-only 
 
 Kickoff stays QStash + localhost inline for Phase 5 (D-17). ADR-007 Vercel Workflows migration is deferred.
 
-Output is a JSON + CSV zip uploaded with `uploadPrivateBlob` from `@eleva/storage` (`BLOB_PRIVATE_READ_WRITE_TOKEN`). Public Blob is never used for DSAR. Path pattern: `dsar/{userId}/export.zip`.
+Output is a JSON + CSV zip uploaded with `uploadPrivateObject` from `@eleva/storage` (`R2_PRIVATE_*`). The public bucket is never used for DSAR. Path pattern: `dsar/{userId}/export.zip`.
 
 ### SLA and download
 
 - **Target:** zip ready within **10 minutes** of the request (local inline path is typically seconds).
-- **Link:** `GET /privacy/dsar/{id}` returns `downloadUrl` **only** when `status = ready`. The URL is HMAC-signed (`BETTER_AUTH_SECRET`) and expires after **24 hours** (`DSAR_SIGNED_URL_TTL_SECONDS`). `GET /privacy/dsar/{id}/file` verifies `exp` + `sig` with a timing-safe compare, then streams the private blob. Expired ready rows are marked `expired`.
+- **Link:** `GET /privacy/dsar/{id}` returns `downloadUrl` **only** when `status = ready`. The URL is HMAC-signed (`BETTER_AUTH_SECRET`) and expires after **24 hours** (`DSAR_SIGNED_URL_TTL_SECONDS`). `GET /privacy/dsar/{id}/file` verifies `exp` + `sig` with a timing-safe compare, then streams the private object. Expired ready rows are marked `expired`.
 - **Failed uploads** mark the row `failed` and audit `dsar_request` / `failed`.
 
 ### Operator notes

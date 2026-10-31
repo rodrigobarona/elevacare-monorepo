@@ -1,6 +1,7 @@
-import { z } from "zod"
+import { AVATAR_UPLOAD, isAvatarUrl } from "@eleva/config/avatar-upload"
+import { UpdateAvatarRequestSchema } from "@eleva/api-client"
 import { getUserAvatarUrl, updateUserAvatarUrl } from "@eleva/db"
-import { deletePublicBlob } from "@eleva/storage"
+import { deletePublicObject } from "@eleva/storage"
 import { withAudit } from "@eleva/audit"
 import { corsHeaders } from "@/lib/cors"
 import {
@@ -10,6 +11,7 @@ import {
 } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
+import { isVerifiedPublicUpload } from "@/lib/verify-public-upload"
 import { UnauthorizedError } from "@eleva/auth"
 import type { RoutePolicy } from "@/lib/route-policy"
 
@@ -22,30 +24,12 @@ export const ROUTE_POLICY = {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-const BLOB_HOST_PATTERN = /\.public\.blob\.vercel-storage\.com$/
-
-const UpdateAvatarSchema = z.object({
-  url: z
-    .string()
-    .url()
-    .refine(
-      (url) => {
-        try {
-          return BLOB_HOST_PATTERN.test(new URL(url).hostname)
-        } catch {
-          return false
-        }
-      },
-      { message: "URL must be a Vercel Blob public store URL" }
-    ),
-})
-
-async function tryDeleteBlob(url: string | null): Promise<void> {
+async function tryDeleteAvatar(url: string | null): Promise<void> {
   if (!url) return
   try {
-    await deletePublicBlob(url)
+    await deletePublicObject(url)
   } catch (err) {
-    console.warn("[users/avatar] failed to delete old blob, continuing", err)
+    console.warn("[users/avatar] failed to delete old avatar, continuing", err)
   }
 }
 
@@ -90,12 +74,23 @@ export async function PUT(request: Request) {
   )
   if (rateLimited) return rateLimited
 
-  const body = UpdateAvatarSchema.safeParse(
+  const body = UpdateAvatarRequestSchema.safeParse(
     await request.json().catch(() => ({}))
   )
   if (!body.success) {
     return secureJson(
       { error: "validation", issues: body.error.issues },
+      { status: 422, headers }
+    )
+  }
+
+  if (
+    !(await isVerifiedPublicUpload(body.data.url, AVATAR_UPLOAD, (url) =>
+      isAvatarUrl(url, session.user.id)
+    ))
+  ) {
+    return secureJson(
+      { error: "validation", message: "url must be an uploaded avatar" },
       { status: 422, headers }
     )
   }
@@ -119,7 +114,7 @@ export async function PUT(request: Request) {
     }
   )
   if (previousUrl && previousUrl !== body.data.url) {
-    await tryDeleteBlob(previousUrl)
+    await tryDeleteAvatar(previousUrl)
   }
   return secureJson({ ok: true }, { status: 200, headers })
 }
@@ -155,7 +150,7 @@ export async function DELETE(request: Request) {
       })
     }
   )
-  await tryDeleteBlob(previousUrl)
+  await tryDeleteAvatar(previousUrl)
   return secureJson({ ok: true }, { status: 200, headers })
 }
 

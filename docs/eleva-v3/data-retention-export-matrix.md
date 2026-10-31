@@ -78,12 +78,12 @@ Use this document to answer:
 - Deletion: policy-driven and auditable
 - Audit access: yes
 
-### Session documents (`session_documents`, private Blob)
+### Session documents (`session_documents`, private R2 bucket)
 
 - Data type: expert/member uploads on a booking (PHI bytes in the private store)
 - Sensitivity: clinical / PHI
 - Export: yes (DSAR metadata; signed download while the row exists)
-- Deletion: `POST /workflows/retention-sweep` hard-deletes rows older than `SESSION_DOCUMENT_RETENTION_DAYS` (working pre-launch **7×365 days** in `@eleva/compliance`; DPO sets the final period before GA). Order: **Blob delete first**, then row. Failed Blob deletes increment `retention_sweep_attempts` and stop after 3 attempts.
+- Deletion: `POST /workflows/retention-sweep` hard-deletes rows older than `SESSION_DOCUMENT_RETENTION_DAYS` (working pre-launch **7×365 days** in `@eleva/compliance`; DPO sets the final period before GA). Order: **object delete first**, then row. Failed object deletes increment `retention_sweep_attempts` and stop after 3 attempts.
 - Audit access: yes (`session_document.deleted`, reason `retention`)
 
 ### Transcript artifacts
@@ -159,9 +159,9 @@ Use this document to answer:
 ### DSAR export
 
 - Data type: member-requested zip of their own exportable records
-- Sensitivity: personal; private Blob only (`BLOB_PRIVATE_READ_WRITE_TOKEN`)
+- Sensitivity: personal; private R2 bucket only (`R2_PRIVATE_*`)
 - Export: JSON + CSV zip; 10-minute target; signed URL expires 24h
-- Deletion: the private Blob object is deleted when `dsar_requests.status` → `expired` (Phase 5.3 expiry job). Signed URL expiry is not enough — the zip must be removed from the private store.
+- Deletion: the private object is deleted when `dsar_requests.status` → `expired` (Phase 5.3 expiry job). Signed URL expiry is not enough — the zip must be removed from the private store.
 - Audit access: yes (`dsar_request` requested / ready / expired / failed)
 
 ### Consent and visibility records

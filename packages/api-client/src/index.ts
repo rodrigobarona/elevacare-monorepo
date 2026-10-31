@@ -299,6 +299,48 @@ export const UpdateAvatarRequestSchema = z.object({
 
 export type UpdateAvatarRequest = z.infer<typeof UpdateAvatarRequestSchema>
 
+// ── Direct uploads (presigned PUT to R2, ADR-025) ───────────────────
+
+export const CreateStorageUploadRequestSchema = z.object({
+  pathname: z.string().min(1).max(500),
+  contentType: z.string().min(1).max(128),
+  size: z.number().int().positive(),
+})
+
+const PresignedUploadSchema = z.object({
+  uploadUrl: z.string().url(),
+  method: z.literal("PUT"),
+  /** Send verbatim on the PUT: they are part of the signature. */
+  headers: z.record(z.string(), z.string()),
+  /** Final object key, with its random suffix. */
+  pathname: z.string(),
+  expiresAt: z.string().datetime(),
+})
+
+export const CreateStorageUploadResponseSchema = PresignedUploadSchema.extend({
+  /** Public URL of the object. Record it through the owning route. */
+  url: z.string().url(),
+})
+
+export const CreateSessionDocumentUploadRequestSchema =
+  CreateStorageUploadRequestSchema
+
+/** Private objects have no public URL; complete with `pathname`. */
+export const CreateSessionDocumentUploadResponseSchema = PresignedUploadSchema
+
+export type CreateStorageUploadRequest = z.infer<
+  typeof CreateStorageUploadRequestSchema
+>
+export type CreateStorageUploadResponse = z.infer<
+  typeof CreateStorageUploadResponseSchema
+>
+export type CreateSessionDocumentUploadRequest = z.infer<
+  typeof CreateSessionDocumentUploadRequestSchema
+>
+export type CreateSessionDocumentUploadResponse = z.infer<
+  typeof CreateSessionDocumentUploadResponseSchema
+>
+
 export function isIanaTimeZone(value: string): boolean {
   if (/^[+-]\d/.test(value)) return false
   try {
@@ -3805,6 +3847,17 @@ export function createApiClient(options: ApiClientOptions) {
           `/sessions/${encodeURIComponent(bookingId)}/documents`
         )
         return ListSessionDocumentsResponseSchema.parse(raw)
+      },
+      async createDocumentUpload(
+        bookingId: string,
+        data: CreateSessionDocumentUploadRequest
+      ) {
+        const raw = await request<unknown>(
+          "POST",
+          `/sessions/${encodeURIComponent(bookingId)}/documents/upload-token`,
+          data
+        )
+        return CreateSessionDocumentUploadResponseSchema.parse(raw)
       },
       async completeDocument(
         bookingId: string,

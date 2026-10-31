@@ -9,11 +9,11 @@ import {
   buildSaftXmlSkeleton,
   isSaftExportError,
   listSaftExportRows,
-  saftBlobPathname,
+  saftStorageKey,
   saftMonthRange,
 } from "@eleva/accounting"
 import { createZipBuffer } from "@eleva/compliance"
-import { uploadPrivateBlob } from "@eleva/storage"
+import { uploadPrivateObject } from "@eleva/storage"
 import { createHash } from "node:crypto"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
@@ -97,8 +97,8 @@ export async function GET(request: Request) {
       .update(zip)
       .digest("hex")
       .slice(0, 16)
-    const uploaded = await uploadPrivateBlob({
-      pathname: saftBlobPathname(session.orgId, query.data.month, contentHash),
+    const uploaded = await uploadPrivateObject({
+      pathname: saftStorageKey(session.orgId, query.data.month, contentHash),
       body: zip,
       contentType: "application/zip",
       overwrite: true,

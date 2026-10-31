@@ -15,7 +15,7 @@ export type EraseMemberSessionDocumentsResult = {
 
 /**
  * Phase 10 / D-12 member-account finalizer: delete member-uploaded and
- * shared documents (Blob first, then the row). Expert-only files stay
+ * shared documents (object first, then the row). Expert-only files stay
  * for clinical retention with `member_user_id` cleared.
  */
 export async function eraseMemberSessionDocuments(
@@ -94,7 +94,7 @@ type DsarDocumentLink = {
  * Per-document signed download link with the standard 15-minute grant TTL
  * (Phase 10 DSAR). Minting goes through the same path as the member UI, so
  * every export link is authorised against the booking and audited as
- * `session_document.opened`. A document that cannot be linked (blob store
+ * `session_document.opened`. A document that cannot be linked (object store
  * outage, scope change) is still listed, with a null URL.
  */
 async function mintDsarDocumentLink(

@@ -26,7 +26,7 @@ function usePrefersReducedMotion(): boolean {
 
 /**
  * Muted, looping ambient video (hero/backdrops) with a poster underneath.
- * Progressive WebM (when curated) then MP4 on public Blob — no third-party
+ * Progressive WebM (when curated) then MP4 on the media host — no third-party
  * player or tracking. Reduced motion shows the poster only.
  */
 export function ElevaVideo({

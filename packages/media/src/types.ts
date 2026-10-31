@@ -9,10 +9,9 @@ export interface MediaCredit {
   url?: string
 }
 
-export interface MediaImage {
+interface MediaImageFields {
   kind: "image"
   slug: string
-  url: string
   width: number
   height: number
   blurDataURL: string
@@ -28,14 +27,9 @@ export interface MediaImage {
   }
 }
 
-export interface MediaVideo {
+interface MediaVideoFields {
   kind: "video"
   slug: string
-  /** Progressive MP4 (H.264) — Safari / universal fallback. */
-  url: string
-  /** Optional progressive WebM (VP9); browsers that support it pick this first. */
-  webmUrl?: string
-  poster: string
   blurDataURL: string
   width: number
   height: number
@@ -46,6 +40,31 @@ export interface MediaVideo {
   source: {
     provider: "eleva"
   }
+}
+
+/** `library.json` stores object keys, so a host change is one env var. */
+export interface MediaImageEntry extends MediaImageFields {
+  key: string
+}
+
+export interface MediaVideoEntry extends MediaVideoFields {
+  /** Progressive MP4 (H.264) — Safari / universal fallback. */
+  key: string
+  /** Optional progressive WebM (VP9); browsers that support it pick this first. */
+  webmKey?: string
+  posterKey: string
+}
+
+export type MediaEntry = MediaImageEntry | MediaVideoEntry
+
+export interface MediaImage extends MediaImageFields {
+  url: string
+}
+
+export interface MediaVideo extends MediaVideoFields {
+  url: string
+  webmUrl?: string
+  poster: string
 }
 
 export type MediaAsset = MediaImage | MediaVideo

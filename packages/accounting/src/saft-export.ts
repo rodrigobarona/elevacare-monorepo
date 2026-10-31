@@ -411,7 +411,7 @@ export function buildSaftDownloadUrl(input: {
   return `${base}/invoicing/exports/saft/file?${params.toString()}`
 }
 
-export function saftBlobPathname(
+export function saftStorageKey(
   orgId: string,
   month: string,
   contentHash?: string

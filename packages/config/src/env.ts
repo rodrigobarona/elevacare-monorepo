@@ -131,8 +131,19 @@ const s2Schema = z.object({
   MOLONI_CLIENT_ID: stringOptional,
   MOLONI_CLIENT_SECRET: stringOptional,
 
-  BLOB_READ_WRITE_TOKEN: stringOptional,
-  BLOB_PRIVATE_READ_WRITE_TOKEN: stringOptional,
+  // ADR-025: two EU jurisdiction buckets with separate credentials, so a leaked
+  // public key can never read health data.
+  R2_ACCOUNT_ID: stringOptional,
+  R2_PUBLIC_BUCKET: stringOptional,
+  R2_PUBLIC_ACCESS_KEY_ID: stringOptional,
+  R2_PUBLIC_SECRET_ACCESS_KEY: stringOptional,
+  R2_PUBLIC_BASE_URL: urlOptional,
+  R2_PRIVATE_BUCKET: stringOptional,
+  R2_PRIVATE_ACCESS_KEY_ID: stringOptional,
+  R2_PRIVATE_SECRET_ACCESS_KEY: stringOptional,
+  /** Local S3 server (MinIO). Refused in production. */
+  R2_ENDPOINT: urlOptional,
+  NEXT_PUBLIC_MEDIA_BASE_URL: urlOptional,
 
   DAILY_API_KEY: stringOptional,
   DAILY_DOMAIN: stringOptional,
@@ -412,24 +423,60 @@ export function requireDailyEnv(): RequiredDailyEnv {
   }
 }
 
-export function requireBlobEnv(): { BLOB_READ_WRITE_TOKEN: string } {
-  const e = env()
-  if (!e.BLOB_READ_WRITE_TOKEN) {
-    throw new Error("@eleva/storage boot: missing BLOB_READ_WRITE_TOKEN")
-  }
-  return { BLOB_READ_WRITE_TOKEN: e.BLOB_READ_WRITE_TOKEN }
+export interface R2BucketEnv {
+  endpoint: string
+  bucket: string
+  accessKeyId: string
+  secretAccessKey: string
 }
 
-export function requirePrivateBlobEnv(): {
-  BLOB_PRIVATE_READ_WRITE_TOKEN: string
-} {
-  const e = env()
-  if (!e.BLOB_PRIVATE_READ_WRITE_TOKEN) {
+function r2BucketEnv(
+  e: Env,
+  store: {
+    bucket: keyof Env
+    accessKeyId: keyof Env
+    secretAccessKey: keyof Env
+  }
+): R2BucketEnv {
+  const value = (name: keyof Env) => {
+    const v = e[name]
+    return typeof v === "string" ? v : ""
+  }
+  const required = [store.bucket, store.accessKeyId, store.secretAccessKey]
+  if (!e.R2_ENDPOINT) required.push("R2_ACCOUNT_ID")
+  const missing = required.filter((name) => !value(name))
+  if (missing.length > 0) {
     throw new Error(
-      "@eleva/storage boot: missing BLOB_PRIVATE_READ_WRITE_TOKEN"
+      `@eleva/storage boot: missing env vars: ${missing.join(", ")}`
     )
   }
-  return { BLOB_PRIVATE_READ_WRITE_TOKEN: e.BLOB_PRIVATE_READ_WRITE_TOKEN }
+  if (e.R2_ENDPOINT && process.env.VERCEL_ENV === "production") {
+    throw new Error("@eleva/storage boot: R2_ENDPOINT is refused in production")
+  }
+  return {
+    // EU jurisdiction buckets are only reachable on the `.eu.` endpoint.
+    endpoint:
+      e.R2_ENDPOINT || `https://${e.R2_ACCOUNT_ID}.eu.r2.cloudflarestorage.com`,
+    bucket: value(store.bucket),
+    accessKeyId: value(store.accessKeyId),
+    secretAccessKey: value(store.secretAccessKey),
+  }
+}
+
+export function requireR2PublicEnv(): R2BucketEnv {
+  return r2BucketEnv(env(), {
+    bucket: "R2_PUBLIC_BUCKET",
+    accessKeyId: "R2_PUBLIC_ACCESS_KEY_ID",
+    secretAccessKey: "R2_PUBLIC_SECRET_ACCESS_KEY",
+  })
+}
+
+export function requireR2PrivateEnv(): R2BucketEnv {
+  return r2BucketEnv(env(), {
+    bucket: "R2_PRIVATE_BUCKET",
+    accessKeyId: "R2_PRIVATE_ACCESS_KEY_ID",
+    secretAccessKey: "R2_PRIVATE_SECRET_ACCESS_KEY",
+  })
 }
 
 /**

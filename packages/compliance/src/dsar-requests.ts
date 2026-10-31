@@ -117,7 +117,7 @@ export async function markDsarExpired(input: {
   if (!existing) return
   if (existing.status === "expired" && !existing.blobPathname) return
 
-  // Blob I/O stays outside withAudit — never vendor SDK calls in a DB tx.
+  // Storage I/O stays outside withAudit — never vendor SDK calls in a DB tx.
   if (existing.blobPathname) {
     await deletePrivateDocument(existing.blobPathname)
   }
@@ -228,7 +228,7 @@ export async function processDsarExport(input: {
           .update(main.dsarRequests)
           .set({
             status: "ready",
-            blobPathname: exported.blobUrl,
+            blobPathname: exported.blobPathname,
             expiresAt: exported.expiresAt,
             completedAt: new Date(),
           })

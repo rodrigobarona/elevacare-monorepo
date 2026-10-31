@@ -24,7 +24,7 @@ The controller of the platform's data is **BÚZIOS E TARTARUGAS - LDA** ("Eleva"
 - **Bookings:** expert, service, date, mode, cancellation policy applied, cancellations and refunds.
 - **Payments:** amount, payment and refund status, promo code used and NIF, if you give it. Card details are handled by Stripe; Eleva does not store them.
 - **Online sessions:** live audio and video, processed by Daily only to run the call, and video call join and leave logs. Session recording is turned off.
-- **Session records (health data):** what you share before the session, the expert's notes, the report and, only if you turn it on, the live transcript. They are encrypted at the application layer: the Eleva team cannot read them.
+- **Session records (health data):** what you share before the session, the expert's notes, the report and, only if you turn it on, the live transcript. The text is encrypted at the application layer, so the Eleva team cannot read it. Files uploaded for a session are encrypted at rest by our storage provider, and access is limited.
 - **Communications:** booking and reminder emails and SMS, and support requests.
 - **Technical data:** IP address, device, security logs and errors.
 - **Experts:** identity, professional licence number (cédula profissional) and professional body (Ordem), ERS registration, verification and payment data collected by Stripe, and the tax data required by DAC7.

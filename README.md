@@ -56,7 +56,7 @@ proxies to `@eleva/api-client` or domain packages.
 | `@eleva/auth`          | Better Auth server/client/proxy, permissions SSOT, provisioning (ADR-017) |
 | `@eleva/audit`         | Transactional audit outbox (`withAudit`) and drainer                      |
 | `@eleva/encryption`    | Envelope encryption, per-org keys, KEK rotation (ADR-020)                 |
-| `@eleva/storage`       | The only `@vercel/blob` access (public and private stores)                |
+| `@eleva/storage`       | The only object storage access (R2 public and private buckets)            |
 | `@eleva/config`        | Env validation, locales, routing, shared constants                        |
 | `@eleva/flags`         | Feature flags (Vercel Flags + Edge Config)                                |
 | `@eleva/observability` | Sentry with PHI redaction, security headers, CSP, heartbeats              |

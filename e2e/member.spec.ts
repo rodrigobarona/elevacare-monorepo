@@ -199,7 +199,7 @@ test.describe("member Space journey", () => {
 
       await persistMarketingPreference(page, request, spaceSlug)
       await assertMemberConsentsApi(page, request, spaceSlug)
-      await requestDsarWithMockedBlob(page, request, spaceSlug)
+      await requestDsarWithMockedStorage(page, request, spaceSlug)
 
       await page.goto(`/${spaceSlug}`)
       const detail = page.getByTestId("member-booking-detail").first()
@@ -251,7 +251,7 @@ test.describe("member Space without live Stripe", () => {
   )
   test.skip(runLiveStripe, "live Stripe journey already covers prefs + DSAR")
 
-  test("password member can persist a preference and request a DSAR with mocked private Blob", async ({
+  test("password member can persist a preference and request a DSAR with mocked private storage", async ({
     page,
     request,
   }) => {
@@ -294,7 +294,7 @@ test.describe("member Space without live Stripe", () => {
 
     await persistMarketingPreference(page, request, spaceSlug)
     await assertMemberConsentsApi(page, request, spaceSlug)
-    await requestDsarWithMockedBlob(page, request, spaceSlug)
+    await requestDsarWithMockedStorage(page, request, spaceSlug)
     await assertDeleteAccountBlocksReserve(page, request, spaceSlug)
   })
 
@@ -402,14 +402,14 @@ async function persistMarketingPreference(
   expect(marketingPref?.enabled).toBe(!wasSelected)
 }
 
-async function requestDsarWithMockedBlob(
+async function requestDsarWithMockedStorage(
   page: Page,
   request: APIRequestContext,
   spaceSlug: string
 ): Promise<void> {
-  // Private Blob is mocked in `@eleva/storage` when E2E_AUTH_CAPTURE=1
-  // or E2E_MOCK_PRIVATE_BLOB=1 (server process). Playwright cannot intercept
-  // Node `@vercel/blob.put`.
+  // Private storage is mocked in `@eleva/storage` when E2E_AUTH_CAPTURE=1
+  // or E2E_MOCK_PRIVATE_STORAGE=1 (server process). Playwright cannot
+  // intercept the server-side S3 client.
   await page.goto(`/${spaceSlug}/privacy`)
   await page.getByTestId("member-dsar-request").click()
   const status = page.getByTestId("member-dsar-status")

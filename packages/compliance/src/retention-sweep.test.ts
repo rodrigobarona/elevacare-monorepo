@@ -216,7 +216,11 @@ describe("sweepExpiredSessionDocuments", () => {
           from: () => ({
             where: () => ({
               limit: async () => [
-                { id: "doc-1", orgId: "org-a", blobUrl: "https://blob/doc" },
+                {
+                  id: "doc-1",
+                  orgId: "org-a",
+                  blobUrl: "records/org-a/doc.pdf",
+                },
               ],
             }),
           }),
@@ -237,7 +241,7 @@ describe("sweepExpiredSessionDocuments", () => {
 
     const result = await sweepExpiredSessionDocuments(new Date("2026-10-20"))
 
-    expect(deletePrivateDocument).toHaveBeenCalledWith("https://blob/doc")
+    expect(deletePrivateDocument).toHaveBeenCalledWith("records/org-a/doc.pdf")
     expect(result).toEqual({ deleted: 1, blobFailures: 0, hasMore: false })
     expect(emit).toHaveBeenCalledWith({
       entity: "session_document",
@@ -262,7 +266,11 @@ describe("sweepExpiredSessionDocuments", () => {
           from: () => ({
             where: () => ({
               limit: async () => [
-                { id: "doc-2", orgId: "org-a", blobUrl: "https://blob/doc2" },
+                {
+                  id: "doc-2",
+                  orgId: "org-a",
+                  blobUrl: "records/org-a/doc2.pdf",
+                },
               ],
             }),
           }),

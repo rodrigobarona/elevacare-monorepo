@@ -1,12 +1,16 @@
 import { PatchExpertProfileRequestSchema } from "@eleva/api-client"
-import { isExpertPortraitUrl } from "@eleva/config/expert-profile-content"
-import { deletePublicBlob } from "@eleva/storage"
+import {
+  EXPERT_PORTRAIT_UPLOAD,
+  isExpertPortraitUrl,
+} from "@eleva/config/expert-profile-content"
+import { deletePublicObject } from "@eleva/storage"
 import { buildLocalizedRichText } from "@eleva/editor/build-localized-rich-text"
 import { localizedRichTextWriteSchema } from "@eleva/editor/types"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
+import { isVerifiedPublicUpload } from "@/lib/verify-public-upload"
 import { withAudit } from "@eleva/audit"
 import { getExpertProfileByUserId, updateExpertProfile } from "@eleva/db"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -82,7 +86,15 @@ export async function PATCH(request: Request) {
 
   const data = body.data
 
-  if (data.avatarUrl && !isExpertPortraitUrl(data.avatarUrl, session.user.id)) {
+  if (
+    data.avatarUrl &&
+    data.avatarUrl !== profile.avatarUrl &&
+    !(await isVerifiedPublicUpload(
+      data.avatarUrl,
+      EXPERT_PORTRAIT_UPLOAD,
+      (url) => isExpertPortraitUrl(url, session.user.id)
+    ))
+  ) {
     return secureJson(
       {
         error: "validation",
@@ -175,7 +187,7 @@ export async function PATCH(request: Request) {
     isExpertPortraitUrl(previousPortrait, session.user.id)
   ) {
     try {
-      await deletePublicBlob(previousPortrait)
+      await deletePublicObject(previousPortrait)
     } catch (err) {
       console.warn("[expert/profile] failed to delete old portrait", err)
     }

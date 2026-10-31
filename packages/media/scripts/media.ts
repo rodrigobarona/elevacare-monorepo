@@ -1,13 +1,13 @@
 /**
- * Curate marketing media into the public Blob store + `src/library.json`.
+ * Curate marketing media into the public R2 bucket + `src/library.json`.
  *
  *   pnpm --filter @eleva/media media:search "pregnant woman natural light home" [--orientation landscape] [--per 12]
  *   pnpm --filter @eleva/media media:import <slug> <pexelsId> --alt-en "…" --alt-pt "…" --alt-es "…" [--tags a,b]
  *   pnpm --filter @eleva/media media:import-local <slug> <path> --alt-en "…" --alt-pt "…" --alt-es "…" [--tags a,b]
  *   pnpm --filter @eleva/media media:import-video <slug> <mp4> --poster <image> --alt-en "…" --alt-pt "…" --alt-es "…" [--tags a,b] [--width N] [--height N] [--blur path] [--webm path]
  *
- * Reads PEXELS_API_KEY and BLOB_READ_WRITE_TOKEN from the repo `.env.local`.
- * Public store only: never import member, health or session imagery.
+ * Reads PEXELS_API_KEY and the R2_PUBLIC_* vars from the repo `.env.local`.
+ * Public bucket only: never import member, health or session imagery.
  */
 import { mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
@@ -15,9 +15,9 @@ import process from "node:process"
 import { fileURLToPath } from "node:url"
 import { parseArgs } from "node:util"
 
-import { uploadPublicBlob } from "@eleva/storage"
+import { uploadPublicObject } from "@eleva/storage"
 
-import type { MediaAsset, MediaImage, MediaVideo } from "../src/types"
+import type { MediaEntry, MediaImageEntry, MediaVideoEntry } from "../src/types"
 
 const LIBRARY_PATH = fileURLToPath(
   new URL("../src/library.json", import.meta.url)
@@ -58,16 +58,16 @@ async function download(url: string): Promise<Buffer> {
   return Buffer.from(await res.arrayBuffer())
 }
 
-async function readLibrary(): Promise<MediaAsset[]> {
-  return JSON.parse(await readFile(LIBRARY_PATH, "utf8")) as MediaAsset[]
+async function readLibrary(): Promise<MediaEntry[]> {
+  return JSON.parse(await readFile(LIBRARY_PATH, "utf8")) as MediaEntry[]
 }
 
-async function writeLibrary(assets: MediaAsset[]): Promise<void> {
+async function writeLibrary(assets: MediaEntry[]): Promise<void> {
   const sorted = [...assets].sort((a, b) => a.slug.localeCompare(b.slug))
   await writeFile(LIBRARY_PATH, `${JSON.stringify(sorted, null, 2)}\n`)
 }
 
-async function upsert(asset: MediaAsset): Promise<void> {
+async function upsert(asset: MediaEntry): Promise<void> {
   const library = await readLibrary()
   await writeLibrary([...library.filter((a) => a.slug !== asset.slug), asset])
 }
@@ -167,15 +167,15 @@ async function importPexels(argv: string[]): Promise<void> {
     download(sized(photo.src.original, width)),
     download(sized(photo.src.original, 24)),
   ])
-  const { url } = await uploadPublicBlob({
+  const { url, pathname } = await uploadPublicObject({
     pathname: `media/pexels/${slug}.jpg`,
     body,
     contentType: "image/jpeg",
   })
-  const asset: MediaImage = {
+  const asset: MediaImageEntry = {
     kind: "image",
     slug,
-    url,
+    key: pathname,
     width,
     height,
     blurDataURL: `data:image/jpeg;base64,${blur.toString("base64")}`,
@@ -221,15 +221,15 @@ async function importLocal(argv: string[]): Promise<void> {
     readFile(file),
     readFile(values.blur),
   ])
-  const { url } = await uploadPublicBlob({
+  const { url, pathname } = await uploadPublicObject({
     pathname: `media/eleva/${slug}${ext}`,
     body,
     contentType,
   })
-  const asset: MediaImage = {
+  const asset: MediaImageEntry = {
     kind: "image",
     slug,
-    url,
+    key: pathname,
     width,
     height,
     blurDataURL: `data:image/jpeg;base64,${blur.toString("base64")}`,
@@ -306,18 +306,18 @@ async function importVideo(argv: string[]): Promise<void> {
   const blurDataURL = `data:image/jpeg;base64,${blur.toString("base64")}`
 
   const [mp4Upload, posterUpload, webmUpload] = await Promise.all([
-    uploadPublicBlob({
+    uploadPublicObject({
       pathname: `media/eleva/${slug}.mp4`,
       body: videoBody,
       contentType: "video/mp4",
     }),
-    uploadPublicBlob({
+    uploadPublicObject({
       pathname: `media/eleva/${slug}-poster${posterExt || ".jpg"}`,
       body: posterBody,
       contentType: posterType,
     }),
     webmBody
-      ? uploadPublicBlob({
+      ? uploadPublicObject({
           pathname: `media/eleva/${slug}.webm`,
           body: webmBody,
           contentType: "video/webm",
@@ -325,12 +325,12 @@ async function importVideo(argv: string[]): Promise<void> {
       : Promise.resolve(null),
   ])
 
-  const asset: MediaVideo = {
+  const asset: MediaVideoEntry = {
     kind: "video",
     slug,
-    url: mp4Upload.url,
-    ...(webmUpload ? { webmUrl: webmUpload.url } : {}),
-    poster: posterUpload.url,
+    key: mp4Upload.pathname,
+    ...(webmUpload ? { webmKey: webmUpload.pathname } : {}),
+    posterKey: posterUpload.pathname,
     blurDataURL,
     width,
     height,

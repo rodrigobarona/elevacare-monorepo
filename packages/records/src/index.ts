@@ -28,6 +28,7 @@ export {
 export { summarizeSessionRecords } from "./summarize"
 export {
   completeSessionDocument,
+  SESSION_DOCUMENT_UPLOAD,
   deleteSessionDocument,
   documentUploadPrefix,
   listSessionDocuments,
