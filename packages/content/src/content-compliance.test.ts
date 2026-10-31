@@ -57,6 +57,8 @@ const BANNED = [
   /compat[ií]veis com hipaa/i,
   /€\s?(?:49|177)\b/,
   /\b(?:49|177)\s?€/,
+  /dpo@eleva\.care/i,
+  /\bSOC\s?2\b/i,
 ] as const
 
 function readMdx(collection: string, locale: string, slug: string): string {
