@@ -24,7 +24,7 @@ El responsable del tratamiento de los datos de la plataforma es **BÚZIOS E TART
 - **Reservas:** especialista, servicio, fecha, modalidad, política de cancelación aplicada, cancelaciones y reembolsos.
 - **Pagos:** importe, estado del pago y del reembolso, código promocional usado y NIF, si lo indica. Los datos de la tarjeta los trata Stripe; Eleva no los guarda.
 - **Sesiones en línea:** audio y vídeo en directo, tratados por Daily únicamente para realizar la llamada, y registros de entrada y salida de la videollamada. La grabación de la sesión está desactivada.
-- **Registros de sesión (datos de salud):** lo que comparte antes de la sesión, las notas del especialista, el informe y, solo si la activa, la transcripción en directo. Se cifran en la capa de aplicación: el equipo de Eleva no puede leerlos.
+- **Registros de sesión (datos de salud):** lo que comparte antes de la sesión, las notas del especialista, el informe y, solo si la activa, la transcripción en directo. El texto se cifra en la capa de aplicación, por lo que el equipo de Eleva no puede leerlo. Los archivos subidos para una sesión los cifra en reposo nuestro proveedor de almacenamiento, con acceso limitado.
 - **Comunicaciones:** correos electrónicos y SMS de reserva y recordatorio, y solicitudes de soporte.
 - **Datos técnicos:** dirección IP, dispositivo, registros de seguridad y errores.
 - **Especialistas:** identidad, número de colegiación (cédula profissional) y colegio profesional (Ordem), registro en la ERS, datos de verificación y de pago recogidos por Stripe y los datos fiscales exigidos por la DAC7.

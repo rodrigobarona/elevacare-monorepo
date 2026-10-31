@@ -7,13 +7,30 @@ export const AVATAR_UPLOAD = {
   maxBytes: 2 * 1024 * 1024,
 } as const
 
-/** Object key for an account avatar: `avatar/profile/<file>`. */
+/** Pathname the browser asks for: `avatar/profile/<file>`. */
 export const AVATAR_PATHNAME = new RegExp(
   `^${AVATAR_UPLOAD.prefix}/${AVATAR_UPLOAD.kind}/[^/]+$`
 )
 
-/** Avatars must be in the public bucket under the avatar path. */
-export function isAvatarUrl(url: string): boolean {
+const avatarFolder = (userId: string) =>
+  `${AVATAR_UPLOAD.prefix}/${AVATAR_UPLOAD.kind}/${userId}/`
+
+/**
+ * Stored key: `avatar/profile/<userId>/<file>`. The server adds the owner so a
+ * profile can only reference (and later delete) its owner's avatar.
+ */
+export function avatarKey(pathname: string, userId: string): string {
+  return `${avatarFolder(userId)}${pathname.slice(pathname.lastIndexOf("/") + 1)}`
+}
+
+/** Avatars must be in the public bucket under the owner's avatar folder. */
+export function isAvatarUrl(url: string, userId: string): boolean {
   const key = mediaKeyFromUrl(url)
-  return key !== null && AVATAR_PATHNAME.test(key)
+  const folder = avatarFolder(userId)
+  return (
+    key !== null &&
+    key.startsWith(folder) &&
+    !key.slice(folder.length).includes("/") &&
+    key.length > folder.length
+  )
 }

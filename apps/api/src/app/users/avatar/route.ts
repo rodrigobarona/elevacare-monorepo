@@ -85,7 +85,9 @@ export async function PUT(request: Request) {
   }
 
   if (
-    !(await isVerifiedPublicUpload(body.data.url, AVATAR_UPLOAD, isAvatarUrl))
+    !(await isVerifiedPublicUpload(body.data.url, AVATAR_UPLOAD, (url) =>
+      isAvatarUrl(url, session.user.id)
+    ))
   ) {
     return secureJson(
       { error: "validation", message: "url must be an uploaded avatar" },

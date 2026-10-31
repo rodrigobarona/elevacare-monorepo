@@ -24,7 +24,7 @@ O responsável pelo tratamento dos dados da plataforma é a **BÚZIOS E TARTARUG
 - **Marcações:** especialista, serviço, data, modalidade, política de cancelamento aplicada, cancelamentos e reembolsos.
 - **Pagamentos:** montante, estado do pagamento e do reembolso, código promocional usado e NIF, se o indicar. Os dados do cartão são tratados pela Stripe; a Eleva não os guarda.
 - **Sessões online:** áudio e vídeo em direto, tratados pela Daily apenas para realizar a chamada, e registos de entrada e saída da videochamada. A gravação da sessão está desligada.
-- **Registos de sessão (dados de saúde):** o que partilha antes da sessão, notas do especialista, relatório e, só se o ativar, a transcrição em direto. São encriptados na camada de aplicação: a equipa da Eleva não os consegue ler.
+- **Registos de sessão (dados de saúde):** o que partilha antes da sessão, notas do especialista, relatório e, só se o ativar, a transcrição em direto. O texto é encriptado na camada de aplicação, pelo que a equipa da Eleva não o consegue ler. Os ficheiros enviados para uma sessão são encriptados em repouso pelo nosso fornecedor de armazenamento, com acesso limitado.
 - **Comunicações:** e-mails e SMS de marcação e lembrete, e pedidos de apoio.
 - **Dados técnicos:** endereço IP, dispositivo, registos de segurança e erros.
 - **Especialistas:** identidade, cédula profissional e ordem, registo na ERS, dados de verificação e de pagamento recolhidos pela Stripe e os dados fiscais exigidos pela DAC7.

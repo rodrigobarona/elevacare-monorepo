@@ -103,7 +103,8 @@ Member/guest ──booking funnel──▶ apps/api (Vercel fra1) ──▶ Neon
                                                      │      └─▶ transcript → encrypted record (Neon)
                                                      └─▶ webhooks: meeting/participant events → attendance (Neon)
 
-Expert ──notes, internal report, published report, documents──▶ encrypted (per-org DEK) ──▶ Neon / private R2 (EU jurisdiction)
+Expert ──notes, internal report, published report──▶ encrypted (per-org DEK) ──▶ Neon
+Member or expert ──session document files──▶ private R2 (EU jurisdiction, provider encryption at rest); only the filename uses the per-org DEK
    └─(flag off) AI draft: transcript+notes ──▶ Vercel AI Gateway (EU zone, ZDR attestation) ──▶ model ──▶ draft (90-day TTL)
 
 Every mutation ──withAudit──▶ audit_outbox ──drainer──▶ audit_events (separate Neon project, append-only)

@@ -74,7 +74,8 @@ function revalidateMember(orgSlug: string) {
 
 async function discardOrphanPublicAvatar(url: string): Promise<void> {
   try {
-    if (isAvatarUrl(url)) await deletePublicObject(url)
+    const session = await requireSession()
+    if (isAvatarUrl(url, session.user.id)) await deletePublicObject(url)
   } catch (err) {
     console.warn("discardOrphanPublicAvatar failed", err)
   }

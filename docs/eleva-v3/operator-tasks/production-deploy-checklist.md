@@ -14,7 +14,14 @@ Postgres `42703`.
 
 The licence gate needs **0071** and **0072** on production before the API deploys.
 
-## 2. Deploy
+## 2. Copy storage
+
+R2 replaces Vercel Blob (ADR-025). Before the first deploy with R2, run
+`migrate-blob-to-r2.ts --apply --copy-only` so files are on R2 first. Run `--apply` right after the
+API deploys to rewrite stored links, then once more to confirm nothing is left.
+`NEXT_PUBLIC_MEDIA_BASE_URL` is read at build time, so set it before building.
+
+## 2b. Deploy
 
 Deploy `elevacare-api` first, then `elevacare-app`, `elevacare-expert`, `elevacare-team`,
 `elevacare-web` and `elevacare-admin`. `elevacare-admin` needs `NEXT_PUBLIC_API_URL` set first, because

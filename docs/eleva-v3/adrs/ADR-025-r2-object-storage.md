@@ -42,12 +42,19 @@ media library.
    rename is a follow-up.
 8. **Migration** is a one-off dry-run-by-default script, `infra/storage/migrate-blob-to-r2.ts`.
 
-### Media domain
+### Media host
 
 An R2 custom domain must be a zone in the same Cloudflare account as the bucket. `eleva.care` DNS
-stays on Vercel, and Cloudflare's partial (CNAME) setup needs the Business plan, so the media host
-is a **separate domain on Cloudflare**. That also makes it cookie-free. The domain is not chosen
-yet.
+stays on Vercel, Cloudflare refuses a subdomain as a zone (error 1116), and partial (CNAME) setup
+needs the Business plan. A custom domain also could not be proven on an EU jurisdiction bucket.
+
+So public objects are served by the `elevacare-media` Worker in `infra/cloudflare/media-worker`,
+bound to the public bucket, at `https://elevacare-media.rbarona.workers.dev`. Founder 2026-10-31:
+start on this address and buy a domain later. Moving means changing `R2_PUBLIC_BASE_URL` and
+`NEXT_PUBLIC_MEDIA_BASE_URL`, then rewriting stored avatar and logo URLs.
+
+`workers.dev` is off the `eleva.care` cookie scope, so media requests carry no session cookie.
+Workers Paid ($5 a month) is needed before launch: the free tier stops at 100,000 requests a day.
 
 ### Why not Neon Object Storage
 

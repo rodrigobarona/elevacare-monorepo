@@ -49,9 +49,10 @@ function setup(input: {
       privateRows.find((r) => r.id === reference.id)!.value = key
     }),
   }
-  const run = (apply: boolean, libraryKeys: string[] = []) =>
+  const run = (apply: boolean, libraryKeys: string[] = [], copyOnly = false) =>
     migrate({
       apply,
+      copyOnly,
       legacy,
       target,
       references,
@@ -125,6 +126,24 @@ describe("migrate", () => {
       "dsar/u1/export.zip",
       "dsar/u2/export.zip",
     ])
+  })
+
+  it("copies without touching references on a copy-only run", async () => {
+    const { run, r2Public, references, publicRows } = setup({
+      legacyPublic: ["avatar/profile/a.png"],
+      publicRows: [
+        {
+          table: "auth.user.image",
+          id: "u1",
+          url: "https://x.public.blob.vercel-storage.com/avatar/profile/a.png",
+        },
+      ],
+    })
+    const report = await run(true, [], true)
+    expect(r2Public.has("avatar/profile/a.png")).toBe(true)
+    expect(report.rewritten).toEqual({ public: 0, private: 0 })
+    expect(references.rewritePublic).not.toHaveBeenCalled()
+    expect(publicRows[0]!.url).toContain("vercel-storage.com")
   })
 
   it("is idempotent: a second run copies and rewrites nothing", async () => {

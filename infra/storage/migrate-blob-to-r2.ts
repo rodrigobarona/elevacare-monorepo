@@ -165,6 +165,7 @@ async function run() {
 
   const report = await migrate({
     apply,
+    copyOnly: process.argv.includes("--copy-only"),
     legacy: createLegacyBlobStore({
       publicToken: process.env.BLOB_READ_WRITE_TOKEN,
       privateToken: process.env.BLOB_PRIVATE_READ_WRITE_TOKEN,

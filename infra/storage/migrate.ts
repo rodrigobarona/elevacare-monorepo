@@ -74,6 +74,8 @@ export function legacyKey(value: string): string {
 
 export async function migrate(input: {
   apply: boolean
+  /** Copy objects but leave database references for a later run. */
+  copyOnly?: boolean
   legacy: LegacyStore
   target: TargetStore
   references: References
@@ -81,6 +83,7 @@ export async function migrate(input: {
   publicUrl: (key: string) => string
 }): Promise<MigrationReport> {
   const { apply, legacy, target, references, publicUrl } = input
+  const rewrite = apply && !input.copyOnly
   const report: MigrationReport = {
     apply,
     mediaListed: false,
@@ -127,7 +130,8 @@ export async function migrate(input: {
       report.missing.push({ table: reference.table, id: reference.id })
       continue
     }
-    if (apply) await references.rewritePublic(reference, publicUrl(key))
+    if (input.copyOnly) continue
+    if (rewrite) await references.rewritePublic(reference, publicUrl(key))
     report.rewritten.public += 1
   }
 
@@ -138,8 +142,8 @@ export async function migrate(input: {
       report.missing.push({ table: reference.table, id: reference.id })
     }
     // A dead URL still becomes a key: expiry and retention address rows by key.
-    if (reference.value !== key) {
-      if (apply) await references.rewritePrivate(reference, key)
+    if (reference.value !== key && !input.copyOnly) {
+      if (rewrite) await references.rewritePrivate(reference, key)
       report.rewritten.private += 1
     }
   }

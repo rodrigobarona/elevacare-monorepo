@@ -108,10 +108,8 @@ export async function PATCH(request: Request) {
 
   if (
     body.data.avatarUrl &&
-    !(await isVerifiedPublicUpload(
-      body.data.avatarUrl,
-      AVATAR_UPLOAD,
-      isAvatarUrl
+    !(await isVerifiedPublicUpload(body.data.avatarUrl, AVATAR_UPLOAD, (url) =>
+      isAvatarUrl(url, session.user.id)
     ))
   ) {
     return secureJson(

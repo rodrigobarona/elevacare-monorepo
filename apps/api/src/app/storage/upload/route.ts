@@ -19,7 +19,11 @@ import {
   CreateStorageUploadResponseSchema,
 } from "@eleva/api-client"
 import { verifyUploadToken } from "@eleva/auth/upload-token"
-import { AVATAR_PATHNAME, AVATAR_UPLOAD } from "@eleva/config/avatar-upload"
+import {
+  AVATAR_PATHNAME,
+  AVATAR_UPLOAD,
+  avatarKey,
+} from "@eleva/config/avatar-upload"
 import {
   EXPERT_PORTRAIT_PATHNAME,
   EXPERT_PORTRAIT_UPLOAD,
@@ -48,6 +52,8 @@ export const runtime = "nodejs"
 
 interface UploadPolicy {
   allows: (pathname: string, userId: string) => boolean
+  /** Final object key, when the server decides it. */
+  key?: (pathname: string, userId: string) => string
   contentTypes: readonly string[]
   maxBytes: number
 }
@@ -55,6 +61,7 @@ interface UploadPolicy {
 const UPLOAD_POLICIES: readonly UploadPolicy[] = [
   {
     allows: (pathname) => AVATAR_PATHNAME.test(pathname),
+    key: avatarKey,
     contentTypes: AVATAR_UPLOAD.contentTypes,
     maxBytes: AVATAR_UPLOAD.maxBytes,
   },
@@ -115,7 +122,7 @@ export async function POST(request: Request): Promise<Response> {
   try {
     const upload = await createUploadUrl({
       store: "public",
-      pathname,
+      pathname: policy.key?.(pathname, verified.userId) ?? pathname,
       contentType,
       size,
       allowedContentTypes: policy.contentTypes,

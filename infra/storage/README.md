@@ -5,7 +5,9 @@ Delete this package once production has been migrated and the old stores are
 closed.
 
 `migrate-blob-to-r2.ts` is a **dry run by default** and idempotent, so a failed
-run can be repeated. `--apply` is the only switch that writes.
+run can be repeated. `--apply` is the only switch that writes. `--apply
+--copy-only` copies objects and leaves references alone, so files are on R2
+before the new code deploys. Run `--apply` after the deploy to rewrite them.
 
 It covers:
 
