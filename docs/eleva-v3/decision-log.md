@@ -46,6 +46,8 @@ Each entry should include:
   Founder has not yet signed this off for production.
 - Owner: founder + engineering.
 - Status: `active`.
+- Related: [`brand-book/art-direction.md`](./brand-book/art-direction.md),
+  [`brand-book/messaging-framework.md`](./brand-book/messaging-framework.md).
 
 ### 2026-10-31: Cloudflare R2 replaces Vercel Blob (active)
 

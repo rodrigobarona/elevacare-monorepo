@@ -83,7 +83,7 @@ function MediaCard({
                 <ArrowUpRightIcon className="size-4" />
               </span>
             ) : null}
-            <h3 className="absolute inset-x-5 bottom-4 text-lg leading-snug font-medium text-pretty text-white">
+            <h3 className="absolute inset-0 flex items-end px-5 pb-4 text-lg leading-snug font-medium text-pretty text-white">
               {heading}
             </h3>
           </>
