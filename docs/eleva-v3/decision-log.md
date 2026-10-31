@@ -41,6 +41,9 @@ Each entry should include:
 - Advisors stand in for live experts because staging only has fixtures without
   photos. They are labelled as advisors and link to `/about#advisors`; they are
   not presented as bookable.
+- Polish pass: scroll reveals (CSS only, off for reduced motion), an advisor
+  quote band, and the hero video on `lg` and up only, so phones get the poster.
+  Fraunces is now preloaded to stop the hero shifting on font swap.
 - Out of scope, follow-ups: live expert cards once real profiles with photos
   exist; member testimonials (no data, needs consent and legal review).
   Founder has not yet signed this off for production.

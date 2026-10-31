@@ -8,53 +8,57 @@ import { cn } from "@eleva/ui/lib/utils"
 
 import { getVideo } from "./index"
 
-const REDUCED_MOTION = "(prefers-reduced-motion: reduce)"
+const AMBIENT_VIDEO =
+  "(prefers-reduced-motion: no-preference) and (min-width: 1024px)"
 
-function subscribeReducedMotion(onChange: () => void) {
-  const query = window.matchMedia(REDUCED_MOTION)
+function subscribeAmbientVideo(onChange: () => void) {
+  const query = window.matchMedia(AMBIENT_VIDEO)
   query.addEventListener("change", onChange)
   return () => query.removeEventListener("change", onChange)
 }
 
-function usePrefersReducedMotion(): boolean {
+function useAmbientVideo(): boolean {
   return useSyncExternalStore(
-    subscribeReducedMotion,
-    () => window.matchMedia(REDUCED_MOTION).matches,
-    () => true
+    subscribeAmbientVideo,
+    () => window.matchMedia(AMBIENT_VIDEO).matches,
+    () => false
   )
 }
 
 /**
  * Muted, looping ambient video (hero/backdrops) with a poster underneath.
  * Progressive WebM (when curated) then MP4 on the media host — no third-party
- * player or tracking. Reduced motion shows the poster only.
+ * player or tracking. Reduced motion and small screens show the poster only,
+ * so phones never download the video.
  */
 export function ElevaVideo({
   slug,
   locale,
   className,
+  sizes = "100vw",
   priority = false,
 }: {
   slug: string
   locale: Locale
   className?: string
+  sizes?: string
   priority?: boolean
 }) {
   const video = getVideo(slug)
-  const reducedMotion = usePrefersReducedMotion()
+  const showVideo = useAmbientVideo()
   return (
     <div className={cn("relative overflow-hidden", className)}>
       <Image
         src={video.poster}
         alt={video.alt[locale]}
         fill
-        sizes="100vw"
+        sizes={sizes}
         priority={priority}
         placeholder="blur"
         blurDataURL={video.blurDataURL}
         className="object-cover"
       />
-      {reducedMotion ? null : (
+      {showVideo ? (
         <video
           autoPlay
           muted
@@ -69,7 +73,7 @@ export function ElevaVideo({
           ) : null}
           <source src={video.url} type="video/mp4" />
         </video>
-      )}
+      ) : null}
     </div>
   )
 }

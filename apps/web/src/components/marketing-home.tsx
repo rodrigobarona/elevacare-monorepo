@@ -50,6 +50,7 @@ async function MarketingContent() {
     getLocale(),
   ])
   const locale: Locale = isLocale(requestLocale) ? requestLocale : defaultLocale
+  const quotedAdvisor = ADVISORS[0]
   const featuredAdvisors = ADVISORS.filter((person) =>
     FEATURED_ADVISOR_IDS.includes(person.id)
   )
@@ -60,12 +61,20 @@ async function MarketingContent() {
   return (
     <>
       <MediaHero
-        media={<ElevaVideo slug="hero-intro" locale={locale} priority />}
+        media={
+          <ElevaVideo
+            slug="hero-intro"
+            locale={locale}
+            sizes="(min-width: 1024px) 64vw, 100vw"
+            priority
+          />
+        }
         aside={
           <>
             <MediaCard
               variant="overlay"
               aspect="fill"
+              titleAs="p"
               linkAs={Link}
               href="/experts/wellness"
               media={
@@ -81,6 +90,7 @@ async function MarketingContent() {
             <MediaCard
               variant="overlay"
               aspect="fill"
+              titleAs="p"
               linkAs={Link}
               href="/experts"
               media={
@@ -172,7 +182,7 @@ async function MarketingContent() {
             }
             lead={t("advisors.lead")}
           />
-          <div className="grid gap-x-6 gap-y-8 sm:grid-cols-3">
+          <div className="grid reveal gap-x-6 gap-y-8 sm:grid-cols-3">
             {featuredAdvisors.map((person) => (
               <MediaCard
                 key={person.id}
@@ -258,7 +268,7 @@ async function MarketingContent() {
               </Link>
             ))}
           </nav>
-          <div className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid reveal gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
             {CARE_AREAS.map((service) => (
               <MediaCard
                 key={service.key}
@@ -278,6 +288,35 @@ async function MarketingContent() {
               />
             ))}
           </div>
+        </Container>
+      </Section>
+
+      <Section tone="primary">
+        <Container size="narrow" className="reveal">
+          <figure className="flex flex-col gap-8">
+            <Eyebrow tone="inverse">{tAbout("advisors.eyebrow")}</Eyebrow>
+            <blockquote className="font-display text-3xl leading-tight font-light text-balance sm:text-5xl">
+              {tAbout("advisors.kariBo.quote")}
+            </blockquote>
+            <figcaption className="flex items-center gap-4">
+              <span className="relative size-14 shrink-0 overflow-hidden rounded-full">
+                <ElevaImage
+                  slug={quotedAdvisor.slug}
+                  locale={locale}
+                  decorative
+                  fill
+                  sizes="56px"
+                  className="object-cover"
+                />
+              </span>
+              <span className="flex flex-col gap-0.5">
+                <span className="font-medium">{quotedAdvisor.name}</span>
+                <span className="text-sm text-white/75">
+                  {tAbout("advisors.kariBo.role")}
+                </span>
+              </span>
+            </figcaption>
+          </figure>
         </Container>
       </Section>
 
@@ -307,7 +346,7 @@ async function MarketingContent() {
               ]}
             />
           </div>
-          <div className="relative aspect-[4/5] overflow-hidden rounded-4xl shadow-2">
+          <div className="relative aspect-[4/5] reveal overflow-hidden rounded-4xl shadow-2">
             <ElevaImage
               slug="online-session-home"
               locale={locale}
@@ -321,7 +360,7 @@ async function MarketingContent() {
 
       <Section>
         <Container className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
-          <div className="relative order-last aspect-[4/3] overflow-hidden rounded-4xl lg:order-first">
+          <div className="relative order-last aspect-[4/3] reveal overflow-hidden rounded-4xl lg:order-first">
             <ElevaImage
               slug="community-women"
               locale={locale}

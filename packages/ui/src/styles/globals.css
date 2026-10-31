@@ -319,6 +319,24 @@
   }
 }
 
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+}
+
+/* Scroll-driven entrance. No JS; browsers without view timelines just show it. */
+@utility reveal {
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 30%;
+    }
+  }
+}
+
 @utility eyebrow {
   font-family: var(--font-mono);
   font-size: var(--text-eyebrow);

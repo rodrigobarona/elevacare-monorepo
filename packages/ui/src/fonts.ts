@@ -11,12 +11,10 @@ import localFont from "next/font/local"
  * Latin subset covers Eleva locales (en/pt/es); Latin-1 accents (ã, ç, ñ, …)
  * are included. Paths are relative to this file.
  *
- * Preload only the body face (DM Sans). Fraunces ships normal + italic in one
- * `localFont` call, so `preload: true` would inject `<link rel=preload>` for
- * both on every route — italic is unused below `lg` on auth (aside is
- * `hidden`), which triggers Chrome’s “preloaded but not used” console noise.
- * Heading faces still load via `@font-face` when `font-heading` / `font-display`
- * apply.
+ * Preload the body and display faces. Fraunces headings set the hero, so a
+ * late swap moves the whole block and shows up as layout shift. The italic
+ * face goes unused below `lg` on auth (aside is `hidden`), which costs a
+ * “preloaded but not used” console note there.
  */
 export const fraunces = localFont({
   src: [
@@ -33,7 +31,7 @@ export const fraunces = localFont({
   ],
   display: "swap",
   variable: "--font-fraunces",
-  preload: false,
+  preload: true,
   // localFont accepts a metric-override family name or false (not `true`).
   adjustFontFallback: "Times New Roman",
 })
