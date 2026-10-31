@@ -53,10 +53,11 @@ Each entry should include:
   - The sub-processor change was written into the trust pages with `lastUpdated: 2026-10-31`.
     `CONSENT_DOCUMENT_VERSION` stays `2026-10-29`; whether this change needs a bump, and the 30-day
     notice the DPA promises experts, is a founder and DPO decision.
-  - Session document **bytes are not application-encrypted**; only `metadata_encrypted` is. See the
-    `dpia.md` data-flow line and fact sheet "Encryption" row, which need a decision.
+  - Session document **bytes are not application-encrypted**; only `metadata_encrypted` is. The
+    DPIA, fact sheet and privacy notice were corrected on 2026-10-31. Adding application-layer
+    encryption for files stays open.
 - Follow-ups, not built: a sweep for uploads never recorded; signing `Content-Length` once tested
-  on real R2; owner-scoped avatar keys (`avatar/profile/<userId>/`); renaming `blob_pathname` and
+  on real R2; renaming `blob_pathname` and
   `blob_url`; retiring `sessionDocumentsBlobFailures` and `blobFailures` counter names; Academy HLS.
 
 ### 2026-10-30: Licence verification before public listing (active)

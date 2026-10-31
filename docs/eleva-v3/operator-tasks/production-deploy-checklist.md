@@ -23,7 +23,7 @@ API deploys to rewrite stored links, then once more to confirm nothing is left.
 
 ## 2b. Deploy
 
-Deploy `elevacare-api` first, then `elevacare-app`, `elevacare-expert`, `elevacare-team`,
+Merges to `main` auto-deploy through Git while Vercel quota remains. When a deploy is run by hand, deploy `elevacare-api` first, then `elevacare-app`, `elevacare-expert`, `elevacare-team`,
 `elevacare-web` and `elevacare-admin`. `elevacare-admin` needs `NEXT_PUBLIC_API_URL` set first, because
 the licence review queue calls the API. Trigger them from the merged commit, not by redeploying an old deployment: a redeploy
 ships the old code with the new environment.
