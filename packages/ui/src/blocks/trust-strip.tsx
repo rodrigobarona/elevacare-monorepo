@@ -9,15 +9,40 @@ export type TrustItem = {
 
 /**
  * Row of reassurance points in one panel split by hairlines. Pass duotone
- * icons: they sit white on a solid teal tile.
+ * icons: they sit white on a solid teal tile. The `bar` variant is a single
+ * slim line of icon and title, for use right under a hero.
  */
 function TrustStrip({
   items,
+  variant = "panel",
   className,
 }: {
   items: readonly TrustItem[]
+  variant?: "panel" | "bar"
   className?: string
 }) {
+  if (variant === "bar") {
+    return (
+      <ul
+        data-slot="trust-strip"
+        className={cn(
+          "grid grid-cols-2 gap-x-6 gap-y-3 lg:flex lg:items-center lg:justify-between",
+          className
+        )}
+      >
+        {items.map((item, index) => (
+          <li
+            key={index}
+            className="flex items-center gap-2.5 text-sm font-medium text-foreground [&_svg]:size-5 [&_svg]:shrink-0 [&_svg]:text-primary"
+          >
+            {item.icon}
+            {item.title}
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
   return (
     <ul
       data-slot="trust-strip"
