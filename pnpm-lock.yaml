@@ -1161,46 +1161,6 @@ importers:
         specifier: 'catalog:'
         version: 6.0.3
 
-  infra/storage:
-    dependencies:
-      '@eleva/config':
-        specifier: workspace:*
-        version: link:../../packages/config
-      '@eleva/db':
-        specifier: workspace:*
-        version: link:../../packages/db
-      '@eleva/media':
-        specifier: workspace:*
-        version: link:../../packages/media
-      '@eleva/storage':
-        specifier: workspace:*
-        version: link:../../packages/storage
-      drizzle-orm:
-        specifier: 'catalog:'
-        version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(@upstash/redis@1.38.0)(kysely@0.29.5)
-    devDependencies:
-      '@eleva/eslint-config':
-        specifier: workspace:*
-        version: link:../../packages/eslint-config
-      '@eleva/typescript-config':
-        specifier: workspace:*
-        version: link:../../packages/typescript-config
-      '@types/node':
-        specifier: 'catalog:'
-        version: 25.8.0
-      eslint:
-        specifier: 'catalog:'
-        version: 10.4.0(jiti@2.6.1)
-      tsx:
-        specifier: 'catalog:'
-        version: 4.22.0
-      typescript:
-        specifier: 'catalog:'
-        version: 6.0.3
-      vitest:
-        specifier: 'catalog:'
-        version: 4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.8.0)(@vitest/coverage-v8@4.1.6)(jsdom@28.1.0(@noble/hashes@2.4.0))(vite@8.0.9(@types/node@25.8.0)(esbuild@0.28.2)(jiti@2.6.1)(terser@5.46.1)(tsx@4.22.0)(yaml@2.9.1))
-
   infra/stripe:
     dependencies:
       '@eleva/billing':

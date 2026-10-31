@@ -60,14 +60,18 @@ Each entry should include:
 - Shipped on `feat/r2-storage`: `@eleva/storage` backend, `POST /storage/upload` (replaces
   `POST /blob/upload`), `/sessions/{bookingId}/documents/upload-token` now returns a presigned PUT,
   size and type checks in the routes that record an object, `@eleva/config/media-host`, keys in
-  `library.json`, CSP, boundary lint, and `infra/storage/migrate-blob-to-r2.ts`.
-- **Not proven against real R2.** No Cloudflare credentials exist yet. Evidence is unit tests and a
-  local MinIO run of `packages/storage/src/r2.integration.test.ts`. Re-run that suite against the
-  real buckets with `R2_INTEGRATION=1` before the production migration. Not proven at all: bucket
-  CORS from a real browser, EU endpoint behaviour, custom-domain caching, and the migration script
-  against production Blob or a real database.
+  `library.json`, CSP, boundary lint, and a one-off migration script (since removed).
+- **Migrated 2026-10-31.** `r2.integration.test.ts` passed 10 of 10 on the dev and production
+  buckets, including the preflight check and the EU endpoint. Every object in the old stores was
+  checked on R2 first (35 public, 1 private). Production and the dev branch were rewritten, the
+  stores and `BLOB_*` variables are gone, and `infra/storage` is removed. Neon branch
+  `restore/pre-r2-link-rewrite-2026-10-31` holds the state before the rewrite. The 12
+  `dsar_requests` rows with `e2e-private://` paths are test data with no object behind them.
+- Not proven: a real browser upload on a deployed site, in both the public and private flows.
 - Open items:
   - D-08 keeps its decision, but its "private Blob store" wording must be revisited before 16.8.
+  - Workers Paid is needed before launch, and media moves off `rbarona.workers.dev` once a domain
+    is bought.
   - Cloudflare's DPA (v6.3) must be accepted in the company's name. A DPF listing is not claimed
     because it was not verified.
   - The sub-processor change was written into the trust pages with `lastUpdated: 2026-10-31`.
