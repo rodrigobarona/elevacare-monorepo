@@ -36,7 +36,7 @@ export interface PublicReference {
 export interface PrivateReference {
   table: string
   id: string
-  /** Current `blob_pathname`: a key, or a URL on older rows. */
+  /** Column read by storage calls: a key, or a Blob URL on older rows. */
   value: string
 }
 

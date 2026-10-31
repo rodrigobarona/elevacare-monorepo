@@ -18,7 +18,7 @@ import {
   uploadPrivateObject,
   uploadPublicObject,
 } from "@eleva/storage"
-import { eq, isNotNull, like, or } from "drizzle-orm"
+import { eq, isNotNull, like } from "drizzle-orm"
 
 import { createLegacyBlobStore } from "./legacy-blob-store"
 import {
@@ -89,15 +89,10 @@ const references: References = {
         tx
           .select({
             id: schema.sessionDocuments.id,
-            value: schema.sessionDocuments.blobPathname,
+            value: schema.sessionDocuments.blobUrl,
           })
           .from(schema.sessionDocuments)
-          .where(
-            or(
-              like(schema.sessionDocuments.blobUrl, LEGACY_URL_PATTERN),
-              like(schema.sessionDocuments.blobPathname, LEGACY_URL_PATTERN)
-            )
-          ),
+          .where(like(schema.sessionDocuments.blobUrl, LEGACY_URL_PATTERN)),
       ])
       return [
         ...dsars.flatMap((row): PrivateReference[] =>

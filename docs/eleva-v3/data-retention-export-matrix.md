@@ -83,7 +83,7 @@ Use this document to answer:
 - Data type: expert/member uploads on a booking (PHI bytes in the private store)
 - Sensitivity: clinical / PHI
 - Export: yes (DSAR metadata; signed download while the row exists)
-- Deletion: `POST /workflows/retention-sweep` hard-deletes rows older than `SESSION_DOCUMENT_RETENTION_DAYS` (working pre-launch **7×365 days** in `@eleva/compliance`; DPO sets the final period before GA). Order: **Blob delete first**, then row. Failed Blob deletes increment `retention_sweep_attempts` and stop after 3 attempts.
+- Deletion: `POST /workflows/retention-sweep` hard-deletes rows older than `SESSION_DOCUMENT_RETENTION_DAYS` (working pre-launch **7×365 days** in `@eleva/compliance`; DPO sets the final period before GA). Order: **object delete first**, then row. Failed object deletes increment `retention_sweep_attempts` and stop after 3 attempts.
 - Audit access: yes (`session_document.deleted`, reason `retention`)
 
 ### Transcript artifacts

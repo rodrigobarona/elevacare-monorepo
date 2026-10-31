@@ -146,6 +146,26 @@ describe("migrate", () => {
     expect(t.privateRows[0]?.value).toBe("dsar/u1/export.zip")
   })
 
+  it("rewrites a session document whose blob_url is still a URL", async () => {
+    const t = setup({
+      legacyPrivate: ["records/org/doc.pdf"],
+      privateRows: [
+        {
+          table: "session_documents",
+          id: "s1",
+          value: `${PRIVATE_OLD}/records/org/doc.pdf`,
+        },
+      ],
+    })
+    const report = await t.run(true)
+    expect(t.r2Private.has("records/org/doc.pdf")).toBe(true)
+    expect(t.references.rewritePrivate).toHaveBeenCalledWith(
+      expect.objectContaining({ table: "session_documents", id: "s1" }),
+      "records/org/doc.pdf"
+    )
+    expect(report.rewritten.private).toBe(1)
+  })
+
   it("reports a gone private object and still normalises its row", async () => {
     const t = setup({ privateRows: [dsarUrl] })
     const report = await t.run(true)

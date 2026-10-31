@@ -279,7 +279,7 @@ Output is a JSON + CSV zip uploaded with `uploadPrivateObject` from `@eleva/stor
 ### SLA and download
 
 - **Target:** zip ready within **10 minutes** of the request (local inline path is typically seconds).
-- **Link:** `GET /privacy/dsar/{id}` returns `downloadUrl` **only** when `status = ready`. The URL is HMAC-signed (`BETTER_AUTH_SECRET`) and expires after **24 hours** (`DSAR_SIGNED_URL_TTL_SECONDS`). `GET /privacy/dsar/{id}/file` verifies `exp` + `sig` with a timing-safe compare, then streams the private blob. Expired ready rows are marked `expired`.
+- **Link:** `GET /privacy/dsar/{id}` returns `downloadUrl` **only** when `status = ready`. The URL is HMAC-signed (`BETTER_AUTH_SECRET`) and expires after **24 hours** (`DSAR_SIGNED_URL_TTL_SECONDS`). `GET /privacy/dsar/{id}/file` verifies `exp` + `sig` with a timing-safe compare, then streams the private object. Expired ready rows are marked `expired`.
 - **Failed uploads** mark the row `failed` and audit `dsar_request` / `failed`.
 
 ### Operator notes

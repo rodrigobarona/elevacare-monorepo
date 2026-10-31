@@ -567,7 +567,7 @@ against art. 28(3) are listed in
 - **Categories of processing:**
   - upload, store and serve files attached to a booking. Envelope-encrypted
     filename metadata; bytes in the **private** R2 bucket
-    (`elevacare-private`, `fra1`).
+    (EU jurisdiction).
   - Downloads use a 15-minute Eleva grant, are streamed by the API and are
     audited.
   - Uploader-only writes.
