@@ -1,9 +1,0 @@
-{
-  "extends": "@eleva/typescript-config/base.json",
-  "compilerOptions": {
-    "outDir": "dist",
-    "rootDir": "."
-  },
-  "include": ["*.ts"],
-  "exclude": ["vitest.config.ts"]
-}
