@@ -35,7 +35,7 @@
     "detail": {
       "back": "Todas as revisões",
       "description": "{email} · @{username}",
-      "listedNote": "Este especialista está listado e continua listado durante a revisão.",
+      "listedNote": "Este especialista está listado e continua listado durante a revisão. Rejeitar remove-o das listagens públicas.",
       "snapshotTitle": "O que o especialista enviou",
       "sentAt": "Enviado em {date}",
       "reviewedAt": "Última revisão em {date}",

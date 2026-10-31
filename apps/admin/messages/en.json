@@ -35,7 +35,7 @@
     "detail": {
       "back": "All licence reviews",
       "description": "{email} · @{username}",
-      "listedNote": "This expert is listed. They stay listed while you review.",
+      "listedNote": "This expert is listed. They stay listed while you review, and rejecting removes them from public listings.",
       "snapshotTitle": "What the expert sent",
       "sentAt": "Sent {date}",
       "reviewedAt": "Last reviewed {date}",

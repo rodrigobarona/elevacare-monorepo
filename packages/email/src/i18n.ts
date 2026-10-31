@@ -91,7 +91,7 @@ const translations = {
         "We could not finish checking your licence. Please update your details and send them again.",
       rejectedTitle: "We could not verify your licence",
       rejectedSubtitle:
-        "We checked your details and could not verify them. If something looks wrong, update them and send them again.",
+        "We checked your details and could not verify them, so your profile is not public. If something looks wrong, update them and send them again.",
       reasonLabel: "What we found",
       cta: "Review your licence",
     },
@@ -266,7 +266,7 @@ const translations = {
         "Não conseguimos concluir a verificação da sua cédula. Atualize os seus dados e envie-os novamente.",
       rejectedTitle: "Não conseguimos verificar a sua cédula",
       rejectedSubtitle:
-        "Verificámos os seus dados e não os conseguimos confirmar. Se algo não estiver certo, atualize-os e envie-os novamente.",
+        "Verificámos os seus dados e não os conseguimos confirmar, por isso o seu perfil não está público. Se algo não estiver certo, atualize-os e envie-os novamente.",
       reasonLabel: "O que encontrámos",
       cta: "Rever a sua cédula",
     },
@@ -442,7 +442,7 @@ const translations = {
         "No hemos podido terminar de comprobar tu colegiación. Actualiza tus datos y envíalos de nuevo.",
       rejectedTitle: "No hemos podido verificar tu colegiación",
       rejectedSubtitle:
-        "Hemos revisado tus datos y no hemos podido confirmarlos. Si algo no está bien, actualízalos y envíalos de nuevo.",
+        "Hemos revisado tus datos y no hemos podido confirmarlos, así que tu perfil no está público. Si algo no está bien, actualízalos y envíalos de nuevo.",
       reasonLabel: "Lo que hemos encontrado",
       cta: "Revisar tu colegiación",
     },
