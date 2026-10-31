@@ -71,7 +71,7 @@ Unchanged from `../art-direction.md`: real women, natural light, warm homes and
 clinics, no stock clichés (stethoscope close-ups, clip-art, staged handshakes).
 v3 adds:
 
-- MVP photos and the hero intro video (public Blob) are reused first.
+- MVP photos and the hero intro video (public bucket) are reused first.
 - Gaps are filled from Pexels (the only stock API key available), using
   specific queries such as "pregnant woman natural light home" rather than
   "health". Each import records the photographer, source URL and licence in

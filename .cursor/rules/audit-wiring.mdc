@@ -66,7 +66,7 @@ await withAudit(
 - Read-only endpoints (GET)
 - Health/readiness probes (`/health`, `/cron/keep-alive`)
 - The drainer itself (`/workflows/audit-outbox-drainer`)
-- Blob upload completion callbacks (audited separately via the initiating action)
+- Presigned upload minting (the route that records the object is audited)
 - Cookie-only mutations (locale preference, last-active-org)
 
 ## Key Files

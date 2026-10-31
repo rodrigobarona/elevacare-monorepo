@@ -63,7 +63,8 @@ Use sequential files: `ADR-<3-digit>-<kebab-title>.md`.
 - [`ADR-021-rbac-ssot-in-code.md`](./ADR-021-rbac-ssot-in-code.md) — **Accepted (2026-09-07)** `packages/auth/src/permissions.ts` (`createAccessControl`); customer labels = `(organization.type, member.role)`; staff = separate `admin` plugin / `type = staff` branch
 - [`ADR-022-react-aria-ui-primitives.md`](./ADR-022-react-aria-ui-primitives.md) — `@eleva/ui` primitives move from Radix UI to Adobe React Aria Components via shadcn `aria-luma`; `radix-ui`/`cmdk`/`react-hook-form` removed; `AppRouterProvider` bridges React Aria `href`s to the Next.js router (absolute URLs hard-navigate for cross-zone); React Aria prop vocabulary (`isDisabled`/`onPress`/`isOpen`) is mandatory in consumers; `@radix-ui/themes` stays only as a WorkOS Widgets peer until Phase 3
 - [`ADR-023-plate-rich-text-editor.md`](./ADR-023-plate-rich-text-editor.md) — **Accepted (2026-09-07)** Plate in `@eleva/editor`; `LocalizedRichText` JSONB; AI assist via `@eleva/ai`; Radix allowed only inside `packages/editor`
-- [`ADR-024-marketing-media-library.md`](./ADR-024-marketing-media-library.md) — **Accepted (2026-10-19, amended 2026-10-24)** `@eleva/media` is the single curated media library (public Blob images + progressive WebM/MP4 hero video via native `<video>`)
+- [`ADR-024-marketing-media-library.md`](./ADR-024-marketing-media-library.md) — **Accepted (2026-10-19, amended 2026-10-24, hosting amended by ADR-025)** `@eleva/media` is the single curated media library (public bucket images + progressive WebM/MP4 hero video via native `<video>`)
+- [`ADR-025-r2-object-storage.md`](./ADR-025-r2-object-storage.md) — **Accepted (2026-10-31)** Cloudflare R2 is the only object store: two EU jurisdiction buckets with separate credentials, presigned PUT uploads verified where they are recorded, private reads stream through the API; amends ADR-024
 
 ## ADR Template
 

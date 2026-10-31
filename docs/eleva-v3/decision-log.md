@@ -32,6 +32,33 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-31: Cloudflare R2 replaces Vercel Blob (active)
+
+- Decision (founder, 2026-10-31): R2 is the only object store, because the production Vercel team
+  (Enterprise) has no Blob. Two EU jurisdiction buckets with separate credentials. Full record in
+  [ADR-025](./adrs/ADR-025-r2-object-storage.md), which amends ADR-024.
+- Shipped on `feat/r2-storage`: `@eleva/storage` backend, `POST /storage/upload` (replaces
+  `POST /blob/upload`), `/sessions/{bookingId}/documents/upload-token` now returns a presigned PUT,
+  size and type checks in the routes that record an object, `@eleva/config/media-host`, keys in
+  `library.json`, CSP, boundary lint, and `infra/storage/migrate-blob-to-r2.ts`.
+- **Not proven against real R2.** No Cloudflare credentials exist yet. Evidence is unit tests and a
+  local MinIO run of `packages/storage/src/r2.integration.test.ts`. Re-run that suite against the
+  real buckets with `R2_INTEGRATION=1` before the production migration. Not proven at all: bucket
+  CORS from a real browser, EU endpoint behaviour, custom-domain caching, and the migration script
+  against production Blob or a real database.
+- Open items:
+  - D-08 keeps its decision, but its "private Blob store" wording must be revisited before 16.8.
+  - Cloudflare's DPA (v6.3) must be accepted in the company's name. A DPF listing is not claimed
+    because it was not verified.
+  - The sub-processor change was written into the trust pages with `lastUpdated: 2026-10-31`.
+    `CONSENT_DOCUMENT_VERSION` stays `2026-10-29`; whether this change needs a bump, and the 30-day
+    notice the DPA promises experts, is a founder and DPO decision.
+  - Session document **bytes are not application-encrypted**; only `metadata_encrypted` is. See the
+    `dpia.md` data-flow line and fact sheet "Encryption" row, which need a decision.
+- Follow-ups, not built: a sweep for uploads never recorded; signing `Content-Length` once tested
+  on real R2; owner-scoped avatar keys (`avatar/profile/<userId>/`); renaming `blob_pathname` and
+  `blob_url`; retiring `sessionDocumentsBlobFailures` and `blobFailures` counter names; Academy HLS.
+
 ### 2026-10-30: Licence verification before public listing (active)
 
 - Implements item 4 of the 2026-10-29 "Launch legal posture" entry and supersedes the activation rule of 2026-10-20 "Expert setup wizard v3 and activation rule".

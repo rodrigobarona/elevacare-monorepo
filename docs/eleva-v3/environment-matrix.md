@@ -127,15 +127,20 @@ Rewrites live in `apps/web/next.config.mjs` and `apps/web/src/proxy.ts`. The gat
 
 ### Marketplace integrations per project
 
-All apps share the same Neon project, Upstash Redis, and Vercel Blob stores. Connect Marketplace integrations so env vars are auto-provisioned:
+All apps share the same Neon project, Upstash Redis, and R2 buckets. Connect Marketplace integrations so env vars are auto-provisioned; the R2 rows are set by hand (ADR-025):
 
-| Integration               | web | app | api | account | admin | expert | team | academy |
-| ------------------------- | --- | --- | --- | ------- | ----- | ------ | ---- | ------- |
-| **Neon Postgres**         | --  | YES | YES | YES     | YES   | YES    | YES  | YES     |
-| **Upstash Redis**         | --  | --  | YES | --      | --    | --     | --   | --      |
-| **Upstash QStash**        | --  | --  | YES | --      | --    | --     | --   | --      |
-| **Vercel Blob (public)**  | --  | --  | YES | YES     | --    | YES    | --   | --      |
-| **Vercel Blob (private)** | --  | --  | YES | YES     | --    | YES    | --   | --      |
+| Integration         | web | app | api | account | admin | expert | team | academy |
+| ------------------- | --- | --- | --- | ------- | ----- | ------ | ---- | ------- |
+| **Neon Postgres**   | --  | YES | YES | YES     | YES   | YES    | YES  | YES     |
+| **Upstash Redis**   | --  | --  | YES | --      | --    | --     | --   | --      |
+| **Upstash QStash**  | --  | --  | YES | --      | --    | --     | --   | --      |
+| **R2 public keys**  | --  | YES | YES | --      | --    | --     | --   | --      |
+| **R2 private keys** | --  | --  | YES | --      | --    | --     | --   | --      |
+
+`R2_ACCOUNT_ID` goes with either key set. `R2_PUBLIC_BASE_URL` goes on `api` and `app`; every
+project that renders media or validates portraits (web, docs, app, account, expert, team, academy)
+sets `NEXT_PUBLIC_MEDIA_BASE_URL` to the same value at build time. `R2_ENDPOINT` is local only and
+refused in production.
 
 ### Context-sensitive root
 
@@ -360,12 +365,12 @@ Webhooks, OAuth callbacks, and session-aware APIs live on the `api.eleva.care` s
 
 ## Development / preview only — never production
 
-| Variable                | Used by                       | Notes                                                                                                                                                                                                                                                                                                                                |
-| ----------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `E2E_AUTH_BYPASS_TOKEN` | `POST /auth/e2e/verify-email` | Playwright / local verify helper. Compared with `timingSafeEqual`. Route is unmounted (404) unless `VERCEL_ENV !== production` **and** the token is set. `apps/api` instrumentation throws if the token is present when `VERCEL_ENV=production`. Confirm absence with `vercel env ls --environment production` at the Phase 15 gate. |
-| `E2E_AUTH_CAPTURE`      | Redis `e2e:auth-url:*`        | Local `.env.local` only. When `1`, Better Auth persists verify/reset/magic URLs in Upstash for Playwright (`sha256` email, 5 min TTL). Ignored when `VERCEL_ENV` is `production` or `preview`, or `NODE_ENV=production`. Never set on Vercel.                                                                                        |
-| `E2E_MOCK_PRIVATE_BLOB` | `@eleva/storage` private put  | Local only. When `1` (or when `E2E_AUTH_CAPTURE=1`), `uploadPrivateBlob` stores zips in memory and skips `@vercel/blob.put`. Ignored when `NODE_ENV` or `VERCEL_ENV` is `production`. Never set on Vercel.                                                                                                                           |
-| `E2E_ALLOW_DB_WRITES`   | Playwright last-resort verify | When `1`, e2e may flip `auth.user.email_verified` if no Redis URL is captured. Off by default. `e2eDatabaseUrl()` also returns null when `VERCEL_ENV` or `NODE_ENV` is `production`.                                                                                                                                                 |
+| Variable                   | Used by                       | Notes                                                                                                                                                                                                                                                                                                                                |
+| -------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `E2E_AUTH_BYPASS_TOKEN`    | `POST /auth/e2e/verify-email` | Playwright / local verify helper. Compared with `timingSafeEqual`. Route is unmounted (404) unless `VERCEL_ENV !== production` **and** the token is set. `apps/api` instrumentation throws if the token is present when `VERCEL_ENV=production`. Confirm absence with `vercel env ls --environment production` at the Phase 15 gate. |
+| `E2E_AUTH_CAPTURE`         | Redis `e2e:auth-url:*`        | Local `.env.local` only. When `1`, Better Auth persists verify/reset/magic URLs in Upstash for Playwright (`sha256` email, 5 min TTL). Ignored when `VERCEL_ENV` is `production` or `preview`, or `NODE_ENV=production`. Never set on Vercel.                                                                                        |
+| `E2E_MOCK_PRIVATE_STORAGE` | `@eleva/storage` private put  | Local only. When `1` (or when `E2E_AUTH_CAPTURE=1`), `uploadPrivateObject` stores zips in memory and skips R2. Ignored when `NODE_ENV` or `VERCEL_ENV` is `production`. Never set on Vercel.                                                                                                                                         |
+| `E2E_ALLOW_DB_WRITES`      | Playwright last-resort verify | When `1`, e2e may flip `auth.user.email_verified` if no Redis URL is captured. Off by default. `e2eDatabaseUrl()` also returns null when `VERCEL_ENV` or `NODE_ENV` is `production`.                                                                                                                                                 |
 
 ## Preview Environments — Integration Posture
 
