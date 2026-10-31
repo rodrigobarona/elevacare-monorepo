@@ -145,7 +145,6 @@ describe("decideLicenceApplication", () => {
       "partner.needs_changes",
       "changes_requested",
     ],
-    ["reject", "rejected", "partner.rejected", "rejected"],
   ] as const)(
     "%s keeps the reason and leaves the profile alone",
     async (decision, status, type, action) => {
@@ -165,6 +164,49 @@ describe("decideLicenceApplication", () => {
         expect.objectContaining({ type, reason: "Number not on the register" })
       )
       expect(emit).toHaveBeenCalledWith(expect.objectContaining({ action }))
+    }
+  )
+
+  it("rejecting a listed profile unlists it and records why", async () => {
+    queue("active")
+    await expect(
+      decide({ decision: "reject", reason: "Number not on the register" })
+    ).resolves.toEqual({ status: "rejected", profileStatus: "approved" })
+
+    expect(updates).toHaveLength(2)
+    expect(updates[0]).toMatchObject({
+      status: "rejected",
+      reason: "Number not on the register",
+      checklist: {},
+    })
+    expect(updates[1]).toMatchObject({ status: "approved" })
+    expect(updates[1]).not.toHaveProperty("licenceNumber")
+    expect(emitEvent).toHaveBeenCalledWith(
+      tx,
+      expect.objectContaining({
+        type: "partner.rejected",
+        reason: "Number not on the register",
+      })
+    )
+    expect(emit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "rejected",
+        payload: expect.objectContaining({
+          profileStatusBefore: "active",
+          profileStatus: "approved",
+        }),
+      })
+    )
+  })
+
+  it.each(["approved", "suspended"])(
+    "rejecting a %s profile leaves its status alone",
+    async (status) => {
+      queue(status)
+      await expect(
+        decide({ decision: "reject", reason: "x" })
+      ).resolves.toEqual({ status: "rejected", profileStatus: status })
+      expect(updates).toHaveLength(1)
     }
   )
 

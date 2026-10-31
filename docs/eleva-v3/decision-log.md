@@ -62,14 +62,16 @@ Each entry should include:
     approved application ("Needs verification").
   - Approve needs every checklist item, records the verification, copies the checked licence
     onto the profile and moves `approved` to `active`. `active` stays active and `suspended`
-    stays paused. Needs changes and reject need a reason and leave the profile status alone.
+    stays paused. Needs changes and reject need a reason. Needs changes leaves the profile
+    status alone; reject moves `active` back to `approved`, which unlists it.
   - Decisions are refused when the expert refiled after staff loaded the page (`409
 APPLICATION_CHANGED`) and when staff would decide their own application (`403 SELF_REVIEW`).
   - The expert gets an email on each decision: Lane 1 kinds `partner.approved`,
     `partner.needs_changes`, `partner.rejected` (migration `0072_partner_decision_kinds`).
-- No migration suspends or downgrades anyone: profiles already `active` stay active. A rejected
-  `active` profile also stays listed and returns to "Needs verification". Staff have no suspend
-  action yet, so unlisting it is a manual operation until the Phase 12 listing controls ship.
+- No migration suspends or downgrades anyone: profiles already `active` stay active until staff
+  decide. Rejection unlists an `active` profile straight away, because the public terms promise
+  that a registration Eleva cannot confirm stops accepting bookings. Bookings already made stay
+  in place; support handles them. A later approval lists the expert again.
 - Out of scope (open follow-ups, not shipped):
   - Public profile display of licence number, Ordem and ERS number (ERS Regulation 1058/2016).
   - Licence evidence upload to the private Blob store (`licence_evidence_blob_key`).

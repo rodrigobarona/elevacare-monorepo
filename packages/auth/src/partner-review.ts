@@ -50,6 +50,15 @@ const OUTCOMES = {
   },
 } as const
 
+function nextProfileStatus(
+  decision: LicenceDecision["decision"],
+  status: main.ExpertProfile["status"]
+): main.ExpertProfile["status"] {
+  if (decision === "approve" && status === "approved") return "active"
+  if (decision === "reject" && status === "active") return "approved"
+  return status
+}
+
 /**
  * Staff decision on an open licence application. The staff member must see
  * what they decide: `submittedAt` is the filing they reviewed, and a refile
@@ -57,9 +66,10 @@ const OUTCOMES = {
  *
  * Approval is the verification record, and it puts the licence staff checked
  * on the profile. `approved` moves to `active`; `active` stays; `suspended`
- * stays paused. Other decisions leave the profile status alone: a listed
- * profile stays listed (no auto-suspend) and in the queue as
- * "Needs verification" until a licence is approved.
+ * stays paused. Rejection unlists: `active` moves back to `approved`, so a
+ * later approval lists the expert again. Needs changes leaves the profile
+ * alone, and a listed profile stays in the queue as "Needs verification"
+ * until a licence is approved.
  */
 export async function decideLicenceApplication(input: {
   expertProfileId: string
@@ -130,10 +140,7 @@ export async function decideLicenceApplication(input: {
         })
         .where(eq(a.id, application.id))
 
-      const profileStatus =
-        decision.decision === "approve" && profile.status === "approved"
-          ? "active"
-          : profile.status
+      const profileStatus = nextProfileStatus(decision.decision, profile.status)
       if (decision.decision === "approve") {
         await tx
           .update(p)
@@ -144,6 +151,11 @@ export async function decideLicenceApplication(input: {
             ersRegistrationNumber: application.ersRegistrationNumber,
             updatedAt: reviewedAt,
           })
+          .where(eq(p.id, input.expertProfileId))
+      } else if (profileStatus !== profile.status) {
+        await tx
+          .update(p)
+          .set({ status: profileStatus, updatedAt: reviewedAt })
           .where(eq(p.id, input.expertProfileId))
       }
 

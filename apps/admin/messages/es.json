@@ -35,7 +35,7 @@
     "detail": {
       "back": "Todas las revisiones",
       "description": "{email} · @{username}",
-      "listedNote": "Este especialista está publicado y sigue publicado durante la revisión.",
+      "listedNote": "Este especialista está publicado y sigue publicado durante la revisión. Rechazar lo retira de los listados públicos.",
       "snapshotTitle": "Lo que envió el especialista",
       "sentAt": "Enviado el {date}",
       "reviewedAt": "Última revisión el {date}",
