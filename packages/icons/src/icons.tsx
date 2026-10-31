@@ -9,6 +9,7 @@ export {
   ArrowLeftIcon,
   ArrowRightIcon,
   ArrowSquareOutIcon,
+  ArrowUpRightIcon,
   ArrowsClockwiseIcon,
   BellIcon,
   BookOpenIcon,

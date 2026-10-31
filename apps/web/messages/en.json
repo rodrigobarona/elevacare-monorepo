@@ -73,7 +73,11 @@
       "description": "Book trusted specialists in pregnancy, pelvic health and every stage of life. Online, by phone or in person.",
       "cta": "Find an expert",
       "ctaSecondary": "Become a partner",
-      "disclaimer": "Eleva connects you with independent health experts who run their own practice."
+      "disclaimer": "Eleva connects you with independent health experts who run their own practice.",
+      "aside": {
+        "stages": "Care for every stage of life",
+        "listen": "Experts who listen"
+      }
     },
     "trust": {
       "independent": {
@@ -92,6 +96,13 @@
         "title": "Clear prices",
         "description": "Pay when you book. Cancellation terms upfront."
       }
+    },
+    "advisors": {
+      "heading": "Guided by leaders in ",
+      "headingAccent": "women's health",
+      "lead": "Our board of advisors brings clinical research into how Eleva works. Your care comes from the independent expert you choose.",
+      "cta": "Meet the board",
+      "more": "{count} more advisors"
     },
     "services": {
       "eyebrow": "How we support you",
@@ -114,7 +125,8 @@
       "cancerJourney": {
         "title": "Your cancer journey",
         "description": "Gentle, expert care during and after treatment."
-      }
+      },
+      "browseLabel": "Browse experts by specialty"
     },
     "how": {
       "eyebrow": "How it works",

@@ -73,7 +73,11 @@
       "description": "Reserva especialistas de confianza en embarazo, salud pélvica y cada etapa de la vida. Online, por teléfono o en persona.",
       "cta": "Encontrar especialista",
       "ctaSecondary": "Ser colaborador",
-      "disclaimer": "Eleva te conecta con especialistas de salud independientes, con consulta propia."
+      "disclaimer": "Eleva te conecta con especialistas de salud independientes, con consulta propia.",
+      "aside": {
+        "stages": "Cuidados en cada etapa de la vida",
+        "listen": "Especialistas que te escuchan"
+      }
     },
     "trust": {
       "independent": {
@@ -92,6 +96,13 @@
         "title": "Precios claros",
         "description": "Pagas al reservar. Condiciones de cancelación a la vista."
       }
+    },
+    "advisors": {
+      "heading": "Con la guía de referentes en ",
+      "headingAccent": "salud de la mujer",
+      "lead": "Nuestro consejo asesor lleva la investigación clínica a la forma de trabajar de Eleva. Tu atención la presta la especialista independiente que elijas.",
+      "cta": "Conocer el consejo",
+      "more": "{count} asesores más"
     },
     "services": {
       "eyebrow": "Cómo te acompañamos",
@@ -114,7 +125,8 @@
       "cancerJourney": {
         "title": "Tu camino con el cáncer",
         "description": "Cuidado experto y cercano durante y después del tratamiento."
-      }
+      },
+      "browseLabel": "Buscar por especialidad"
     },
     "how": {
       "eyebrow": "Cómo funciona",

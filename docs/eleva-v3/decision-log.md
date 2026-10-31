@@ -32,6 +32,23 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-31: Home editorial refresh on staging (active)
+
+- Decision: rework `MarketingHome` around photography, taking structure (not
+  artwork or copy) from a Dribbble concept. Hero gets two linked tiles
+  (desktop only), trust points become a slim bar, a board of advisors section
+  follows the hero, and specialty pills sit above the care cards.
+- Advisors stand in for live experts because staging only has fixtures without
+  photos. They are labelled as advisors and link to `/about#advisors`; they are
+  not presented as bookable.
+- Out of scope, follow-ups: live expert cards once real profiles with photos
+  exist; member testimonials (no data, needs consent and legal review).
+  Founder has not yet signed this off for production.
+- Owner: founder + engineering.
+- Status: `active`.
+- Related: [`brand-book/art-direction.md`](./brand-book/art-direction.md),
+  [`brand-book/messaging-framework.md`](./brand-book/messaging-framework.md).
+
 ### 2026-10-31: Cloudflare R2 replaces Vercel Blob (active)
 
 - Decision (founder, 2026-10-31): R2 is the only object store, because the production Vercel team

@@ -23,6 +23,7 @@ import { buttonVariants } from "@eleva/ui/components/button-variants"
 import { Accent, Heading } from "@eleva/ui/components/typography"
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import { Link } from "@/i18n/navigation"
+import { ADVISORS } from "@/lib/advisors"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { CARE_AREAS } from "@/lib/care-areas"
@@ -100,45 +101,6 @@ const LEADERSHIP = [
     slug: "team-patricia-mota",
   },
   { id: "rodrigoBarona", name: "Rodrigo Barona", slug: "team-rodrigo-barona" },
-] as const
-
-const ADVISORS = [
-  { id: "kariBo", name: "Kari Bø, PT, PhD", slug: "team-kari-bo" },
-  {
-    id: "rubenBarakat",
-    name: "Ruben Barakat, PhD",
-    slug: "team-ruben-barakat",
-  },
-  {
-    id: "alexandreDelgado",
-    name: "Alexandre Delgado, PT, PhD",
-    slug: "team-alexandre-delgado",
-  },
-  {
-    id: "cristineHomsiJorge",
-    name: "Cristine Homsi Jorge, PT, PhD",
-    slug: "team-cristine-homsi-jorge",
-  },
-  {
-    id: "annelieGutke",
-    name: "Annelie Gutke, PT, PhD",
-    slug: "team-annelie-gutke",
-  },
-  {
-    id: "joanaBarros",
-    name: "Joana Goulão Barros, MD, PhD",
-    slug: "team-joana-barros",
-  },
-  {
-    id: "patriciaDriusso",
-    name: "Patricia Driusso, PT, PhD",
-    slug: "team-patricia-driusso",
-  },
-  {
-    id: "jennyBagwell",
-    name: "Jenny Bagwell, PT, PhD, DPT",
-    slug: "team-jenny-bagwell",
-  },
 ] as const
 
 export default async function AboutPage({ params }: Props) {

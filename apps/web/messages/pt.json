@@ -73,7 +73,11 @@
       "description": "Marque especialistas de confiança em gravidez, saúde pélvica e todas as fases da vida. Online, por telefone ou presencialmente.",
       "cta": "Encontrar especialista",
       "ctaSecondary": "Tornar-me parceiro",
-      "disclaimer": "A Eleva liga-a a especialistas de saúde independentes, com prática própria."
+      "disclaimer": "A Eleva liga-a a especialistas de saúde independentes, com prática própria.",
+      "aside": {
+        "stages": "Cuidados em todas as fases da vida",
+        "listen": "Especialistas que a ouvem"
+      }
     },
     "trust": {
       "independent": {
@@ -92,6 +96,13 @@
         "title": "Preços claros",
         "description": "Paga ao marcar. Condições de cancelamento à vista."
       }
+    },
+    "advisors": {
+      "heading": "Com a orientação de referências em ",
+      "headingAccent": "saúde da mulher",
+      "lead": "O nosso conselho consultivo traz a investigação clínica para a forma como a Eleva trabalha. Os seus cuidados vêm da especialista independente que escolher.",
+      "cta": "Conhecer o conselho",
+      "more": "Mais {count} conselheiros"
     },
     "services": {
       "eyebrow": "Como a apoiamos",
@@ -114,7 +125,8 @@
       "cancerJourney": {
         "title": "O seu percurso oncológico",
         "description": "Cuidados especializados e próximos, durante e após o tratamento."
-      }
+      },
+      "browseLabel": "Procurar especialistas por área"
     },
     "how": {
       "eyebrow": "Como funciona",
