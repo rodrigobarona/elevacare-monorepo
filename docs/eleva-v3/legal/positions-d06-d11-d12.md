@@ -351,7 +351,7 @@ grace period** (`ACCOUNT_DELETION_GRACE_DAYS`):
    exception until the period in [`retention-schedule.md`](./retention-schedule.md)
    ends.
 6. **Session documents:**
-   - member-uploaded and shared documents are deleted (Blob first, then the
+   - member-uploaded and shared documents are deleted (object first, then the
      row);
    - expert-only files lose `member_user_id`.
 7. **CRM:** the member's contacts and follow-ups are deleted.

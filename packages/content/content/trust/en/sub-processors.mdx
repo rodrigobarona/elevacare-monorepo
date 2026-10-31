@@ -1,7 +1,7 @@
 ---
 title: Sub-processors — Eleva.care
 description: Third parties that process personal data for Eleva.care.
-lastUpdated: 2026-10-29
+lastUpdated: 2026-10-31
 summary: Names, purposes, locations, and transfer mechanisms.
 ---
 
@@ -9,11 +9,12 @@ summary: Names, purposes, locations, and transfer mechanisms.
 
 Eleva uses vetted vendors under Article 28 GDPR contracts. This page lists the vendors that handle personal data on our instructions. Transfer mechanisms combine **EU Standard Contractual Clauses (SCCs)** in each vendor DPA with **EU–US Data Privacy Framework (DPF)** certification where the vendor maintains it (checked periodically).
 
-Neon, Vercel, Daily, Deepgram and OpenAI are the vendors that can handle session records. The other vendors do not receive them.
+Neon, Vercel, Cloudflare, Daily, Deepgram and OpenAI are the vendors that can handle session records. The other vendors do not receive them.
 
 | Vendor                                           | Purpose                                                                                 | Location                                                                                | Transfer basis                                 |
 | ------------------------------------------------ | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| Vercel                                           | Hosting, functions, file storage, AI Gateway                                            | Frankfurt (fra1); edge network, control plane, build logs and support global/US         | DPA + SCCs; DPF                                |
+| Vercel                                           | Hosting, functions, AI Gateway                                                          | Frankfurt (fra1); edge network, control plane, build logs and support global/US         | DPA + SCCs; DPF                                |
+| Cloudflare, Inc.                                 | Object storage for uploaded files and public media                                      | EU jurisdiction storage; network and support global                                     | DPA + SCCs                                     |
 | Neon                                             | PostgreSQL database                                                                     | Frankfurt (AWS eu-central-1)                                                            | DPA + SCCs; DPF (Databricks)                   |
 | Upstash                                          | Redis rate limits and caches, QStash jobs                                               | Frankfurt (eu-central-1)                                                                | DPA + SCCs; DPF                                |
 | Resend                                           | Transactional email                                                                     | Sending in Ireland; primary processing in the US                                        | DPA Module 2 + SCCs; DPF                       |
@@ -28,4 +29,4 @@ Neon, Vercel, Daily, Deepgram and OpenAI are the vendors that can handle session
 
 Google and Microsoft process sign-in and calendar data as **independent controllers** when a person chooses them; they are not Eleva sub-processors. Stripe also acts as an independent controller for its own legal obligations.
 
-**Last vendor review:** 2026-10-29. See also [Data processing agreement](/trust/dpa).
+**Last vendor review:** 2026-10-31. See also [Data processing agreement](/trust/dpa).

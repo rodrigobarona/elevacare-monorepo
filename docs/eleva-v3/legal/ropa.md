@@ -58,7 +58,7 @@ described per vendor in [§4](#4-transfers-to-third-countries-chapter-v).
 | C12 | Cookies and consent records                | Controller       | 6(1)(c), 6(1)(a) | —                                       |
 | C13 | AI assistance for expert public copy       | Controller       | 6(1)(b), 6(1)(f) | — (no health data)                      |
 | P1  | Session records (intake, notes, reports)   | Processor        | Expert's basis   | Expert: 9(2)(h)+(3)                     |
-| P2  | Session documents (private Blob)           | Processor        | Expert's basis   | Expert: 9(2)(h)+(3)                     |
+| P2  | Session documents (private R2)             | Processor        | Expert's basis   | Expert: 9(2)(h)+(3)                     |
 | P3  | Live transcription                         | Processor        | Expert's basis   | 9(2)(a) explicit consent (member)       |
 | P4  | AI report drafts (flag off)                | Processor        | Expert's basis   | 9(2)(a) explicit consent (member)       |
 | P5  | Expert CRM (contacts, tags, follow-ups)    | Processor        | Expert's basis   | Expert: 9(2)(h)+(3) where health-linked |
@@ -158,7 +158,7 @@ See Points for review.
   - art. 6(1)(c) for identification duties in health advertising.
 - **Recipients:**
   - Neon, Vercel;
-  - public Blob store (avatars only);
+  - public R2 bucket (avatars only);
   - Stripe, which runs its own KYC as an independent controller for its
     regulatory duties;
   - the public, for profile fields only.
@@ -428,7 +428,7 @@ See Points for review.
 ### C10 — Data subject rights handling
 
 - **Purpose:** handle requests under arts. 15–22:
-  - DSAR export (`POST /privacy/dsar` → private Blob zip, signed link valid
+  - DSAR export (`POST /privacy/dsar` → private R2 zip, signed link valid
     24 hours);
   - account deletion (D-12);
   - consent withdrawal;
@@ -442,8 +442,8 @@ See Points for review.
   - the export package (the subject's own data);
   - the outcome.
 - **Lawful basis:** art. 6(1)(c) (arts. 12–22).
-- **Recipients:** Neon, Vercel Blob (private store, `fra1`).
-- **Transfers:** §4 (Vercel).
+- **Recipients:** Neon, Cloudflare R2 (private bucket, EU jurisdiction).
+- **Transfers:** §4 (Vercel, Cloudflare).
 - **Retention:**
   - Export zip: deleted when the request expires.
   - Request log: proposal: 3 years after closure, to evidence compliance
@@ -566,14 +566,14 @@ against art. 28(3) are listed in
 
 - **Categories of processing:**
   - upload, store and serve files attached to a booking. Envelope-encrypted
-    filename metadata; bytes in the **private** Blob store
+    filename metadata; bytes in the **private** R2 bucket
     (`elevacare-private`, `fra1`).
   - Downloads use a 15-minute Eleva grant, are streamed by the API and are
     audited.
   - Uploader-only writes.
 - **Data subjects:** M, G.
 - **Data categories:** health data in documents (reports, exams, worksheets).
-- **Sub-processors:** Vercel (Blob), Neon.
+- **Sub-processors:** Cloudflare (R2), Neon.
 - **Transfers:** §4.
 - **Retention:**
   - The sweep hard-deletes 7×365 days after **upload**
@@ -718,6 +718,7 @@ from US-based vendors, their control planes and their support staff:
 | Vendor              | What may leave the EEA                              | Mechanism (art. 45 / 46)                            |
 | ------------------- | --------------------------------------------------- | --------------------------------------------------- |
 | Vercel Inc.         | Edge network, control plane, build logs, support    | EU-US DPF (adequacy decision 2023/1795) + SCCs      |
+| Cloudflare, Inc.    | Support and network access; objects stay in the EU  | SCCs (DPF not verified)                             |
 | Neon (Databricks)   | Support and operations access                       | DPF + SCCs                                          |
 | Upstash             | Support and operations access                       | DPF + SCCs                                          |
 | Stripe              | Payment data replicated to the US                   | DPF (Stripe, LLC) + SCCs                            |

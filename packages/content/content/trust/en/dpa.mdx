@@ -1,7 +1,7 @@
 ---
 title: Data processing agreement — Eleva.care
 description: Processor terms when Eleva stores or transmits data on an expert's instructions.
-lastUpdated: 2026-10-29
+lastUpdated: 2026-10-31
 summary: Roles, subprocessors, transfers, and security measures.
 ---
 
@@ -40,7 +40,7 @@ Eleva.care is an intermediary marketplace that connects members with independent
 
 - Experts are Controllers of clinical data; we are their Processor.
 - We act only on documented instructions, keep data encrypted (at rest and in transit), and maintain RBAC and audit logs.
-- Session records are stored in Neon (Frankfurt). Section 12 lists every sub-processor that can handle them. We notify before changes.
+- Session records are stored in Neon (Frankfurt) and uploaded session documents in Cloudflare R2 (EU jurisdiction). Section 12 lists every sub-processor that can handle them. We notify before changes.
 
 ## 4) Security at a glance
 
@@ -94,13 +94,14 @@ We rely on carefully vetted vendors to operate the platform. Each one receives o
 
 The expert gives Eleva general written authorisation to use these sub-processors. Each one is bound by a data processing agreement.
 
-| Provider                           | Purpose                                                           | Data                                                                   | Region                                                                                                        | Safeguards                                                                                            |
-| ---------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Neon                               | Primary database                                                  | Encrypted session records; platform data                               | Frankfurt (AWS eu-central-1)                                                                                  | DPA, SCCs, DPF                                                                                        |
-| Vercel                             | Hosting, functions, private file storage, AI Gateway              | Data passing through the application; uploaded session documents; logs | Workloads and file storage in Frankfurt (fra1); edge network, control plane, build logs and support global/US | DPA, SCCs, DPF                                                                                        |
-| Daily                              | Video sessions; live transcription when the member opts in        | Session audio and video; live transcript; account and usage metadata   | Call server in Frankfurt; transcription in the EU; account and usage metadata in the US                       | DPA, SCCs, DPF                                                                                        |
-| Deepgram (through Daily)           | Speech-to-text for live transcription, when the member opts in    | Session audio                                                          | EU                                                                                                            | Covered by Daily's DPA                                                                                |
-| OpenAI (through Vercel AI Gateway) | AI-assisted session-report drafts, only with the member's consent | The expert's session notes; the member's intake text                   | EU inference zone                                                                                             | Vercel DPA (SCCs, DPF); OpenAI is not DPF-certified. Zero data retention is required for these drafts |
+| Provider                           | Purpose                                                           | Data                                                                 | Region                                                                                       | Safeguards                                                                                            |
+| ---------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Neon                               | Primary database                                                  | Encrypted session records; platform data                             | Frankfurt (AWS eu-central-1)                                                                 | DPA, SCCs, DPF                                                                                        |
+| Vercel                             | Hosting, functions, AI Gateway                                    | Data passing through the application; logs                           | Workloads in Frankfurt (fra1); edge network, control plane, build logs and support global/US | DPA, SCCs, DPF                                                                                        |
+| Cloudflare                         | Private object storage                                            | Uploaded session documents; member data exports                      | EU jurisdiction storage; network and support global                                          | DPA, SCCs                                                                                             |
+| Daily                              | Video sessions; live transcription when the member opts in        | Session audio and video; live transcript; account and usage metadata | Call server in Frankfurt; transcription in the EU; account and usage metadata in the US      | DPA, SCCs, DPF                                                                                        |
+| Deepgram (through Daily)           | Speech-to-text for live transcription, when the member opts in    | Session audio                                                        | EU                                                                                           | Covered by Daily's DPA                                                                                |
+| OpenAI (through Vercel AI Gateway) | AI-assisted session-report drafts, only with the member's consent | The expert's session notes; the member's intake text                 | EU inference zone                                                                            | Vercel DPA (SCCs, DPF); OpenAI is not DPF-certified. Zero data retention is required for these drafts |
 
 ### Other vendors (Eleva as controller)
 
