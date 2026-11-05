@@ -1849,8 +1849,9 @@ export type CreateEventTypeRequest = z.infer<
   typeof CreateEventTypeRequestSchema
 >
 
+/** Strict so `published` gets a 422: publishing goes through `/publish`. */
 export const UpdateEventTypeRequestSchema =
-  CreateEventTypeRequestSchema.partial()
+  CreateEventTypeRequestSchema.partial().strict()
 
 export type UpdateEventTypeRequest = z.infer<
   typeof UpdateEventTypeRequestSchema

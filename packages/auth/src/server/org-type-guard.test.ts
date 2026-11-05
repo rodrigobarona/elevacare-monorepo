@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest"
-import { CreateOrganizationRequestSchema } from "@eleva/api-client"
+import {
+  CreateOrganizationRequestSchema,
+  UpdateEventTypeRequestSchema,
+} from "@eleva/api-client"
 import {
   assertCreatableOrgType,
   assertOrgTypeUnchanged,
@@ -39,5 +42,16 @@ describe("CreateOrganizationRequestSchema", () => {
       CreateOrganizationRequestSchema.safeParse({ name: "Ops", type: "staff" })
         .success
     ).toBe(false)
+  })
+})
+
+describe("UpdateEventTypeRequestSchema", () => {
+  it("rejects published so offers only go live through the publish gates", () => {
+    expect(
+      UpdateEventTypeRequestSchema.safeParse({ published: true }).success
+    ).toBe(false)
+    expect(
+      UpdateEventTypeRequestSchema.safeParse({ slug: "visit" }).success
+    ).toBe(true)
   })
 })
