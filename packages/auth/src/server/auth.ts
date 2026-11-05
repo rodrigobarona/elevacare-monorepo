@@ -33,6 +33,10 @@ import { authRateLimitEnabled } from "../e2e-auth-url"
 import { invitationAcceptUrl } from "../invitation-accept-url"
 import { crossSubDomainCookieConfig } from "./cookie-domain"
 import { magicLinkServerHeaders } from "./magic-link-headers"
+import {
+  assertCreatableOrgType,
+  assertOrgTypeUnchanged,
+} from "./org-type-guard"
 import { passkeyOrigins } from "./passkey-origin"
 import {
   AUTH_IP_ADDRESS_HEADERS,
@@ -280,6 +284,12 @@ function createAuth() {
           })
         },
         organizationHooks: {
+          beforeCreateOrganization: async ({ organization }) => {
+            assertCreatableOrgType(organization)
+          },
+          beforeUpdateOrganization: async ({ organization }) => {
+            assertOrgTypeUnchanged(organization)
+          },
           afterAddMember: async ({
             organization,
           }: {
