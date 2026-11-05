@@ -3,36 +3,29 @@ import {
   CreateOrganizationRequestSchema,
   UpdateEventTypeRequestSchema,
 } from "@eleva/api-client"
-import {
-  assertCreatableOrgType,
-  assertOrgTypeUnchanged,
-} from "./org-type-guard"
+import { orgCreateViolation, orgUpdateViolation } from "./org-type-guard"
 
-describe("assertCreatableOrgType", () => {
+describe("orgCreateViolation", () => {
   it("rejects staff organizations", () => {
-    expect(() => assertCreatableOrgType({ type: "staff" })).toThrow(
-      /cannot be created/
-    )
+    expect(orgCreateViolation({ type: "staff" })).toMatch(/cannot be created/)
   })
 
   it.each(["personal", "expert", "team", "academy", undefined])(
     "allows %s",
     (type) => {
-      expect(() => assertCreatableOrgType({ type })).not.toThrow()
+      expect(orgCreateViolation({ type })).toBeNull()
     }
   )
 })
 
-describe("assertOrgTypeUnchanged", () => {
+describe("orgUpdateViolation", () => {
   it("rejects any update that carries a type", () => {
-    expect(() => assertOrgTypeUnchanged({ type: "staff" })).toThrow(
-      /cannot be changed/
-    )
-    expect(() => assertOrgTypeUnchanged({ type: "expert" })).toThrow()
+    expect(orgUpdateViolation({ type: "staff" })).toMatch(/cannot be changed/)
+    expect(orgUpdateViolation({ type: "expert" })).not.toBeNull()
   })
 
   it("allows updates without a type", () => {
-    expect(() => assertOrgTypeUnchanged({ name: "Clinic" })).not.toThrow()
+    expect(orgUpdateViolation({ name: "Clinic" })).toBeNull()
   })
 })
 
