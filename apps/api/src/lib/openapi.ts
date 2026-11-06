@@ -664,47 +664,6 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
-      "/memberships": {
-        post: {
-          operationId: "createMembership",
-          summary: "Create a membership",
-          tags: ["Memberships"],
-          requestBody: {
-            required: true,
-            content: {
-              "application/json": {
-                schema: z.object({
-                  userId: z.string().uuid(),
-                  orgId: z.string().uuid(),
-                  role: z.enum(["admin", "member"]).default("member"),
-                }),
-              },
-            },
-          },
-          responses: {
-            "201": {
-              description: "Membership created",
-              content: {
-                "application/json": {
-                  schema: z.object({ ok: z.literal(true) }),
-                },
-              },
-            },
-            "401": {
-              description: "Unauthorized",
-              content: {
-                "application/json": { schema: ErrorSchema },
-              },
-            },
-            "422": {
-              description: "Validation error",
-              content: {
-                "application/json": { schema: ErrorSchema },
-              },
-            },
-          },
-        },
-      },
       "/users/avatar": {
         get: {
           operationId: "getAvatar",
