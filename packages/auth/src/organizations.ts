@@ -21,7 +21,7 @@ export interface UserOrganizationItem {
   isCurrent: boolean
 }
 
-export type CreateOrganizationType = OrgType
+export type CreateOrganizationType = Exclude<OrgType, "staff">
 
 export interface CreateOrganizationInput {
   userId: string
@@ -139,32 +139,6 @@ export async function setActiveElevaOrganization(input: {
           previousOrganizationId,
           organizationId: input.orgId,
         },
-      })
-    }
-  )
-}
-
-export async function addOrganizationMember(input: {
-  userId: string
-  orgId: string
-  role: "admin" | "member" | "owner"
-  actorUserId: string
-}): Promise<void> {
-  await getAuthApi().addMember({
-    body: {
-      userId: input.userId,
-      organizationId: input.orgId,
-      role: input.role === "admin" ? "admin" : input.role,
-    },
-  })
-  await withAudit(
-    { orgId: input.orgId, actorUserId: input.actorUserId },
-    async (_tx, ctx) => {
-      await ctx.emit({
-        entity: "membership",
-        action: "created",
-        entityId: input.userId,
-        payload: { orgId: input.orgId, role: input.role },
       })
     }
   )

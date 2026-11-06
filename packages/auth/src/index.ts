@@ -69,7 +69,6 @@ export {
   createElevaOrganization,
   setActiveElevaOrganization,
   OrganizationForbiddenError,
-  addOrganizationMember,
   type UserOrganizationItem,
   type CreateOrganizationInput,
   type CreateOrganizationResult,

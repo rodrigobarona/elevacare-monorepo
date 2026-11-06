@@ -151,8 +151,6 @@ export async function PATCH(
     updates.instantBookLeadMinutes = data.instantBookLeadMinutes
   if (data.worldwideMode !== undefined)
     updates.worldwideMode = data.worldwideMode
-  if (data.published !== undefined) updates.published = data.published
-
   if (Object.keys(updates).length === 0) {
     return secureJson({ ok: true }, { status: 200, headers })
   }

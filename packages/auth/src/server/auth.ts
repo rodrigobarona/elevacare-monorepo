@@ -3,6 +3,7 @@ import { drizzleAdapter } from "@better-auth/drizzle-adapter"
 import { i18n, locales } from "@better-auth/i18n"
 import { passkey } from "@better-auth/passkey"
 import { betterAuth } from "better-auth"
+import { APIError } from "better-auth/api"
 import { nextCookies, toNextJsHandler } from "better-auth/next-js"
 import {
   admin,
@@ -33,6 +34,7 @@ import { authRateLimitEnabled } from "../e2e-auth-url"
 import { invitationAcceptUrl } from "../invitation-accept-url"
 import { crossSubDomainCookieConfig } from "./cookie-domain"
 import { magicLinkServerHeaders } from "./magic-link-headers"
+import { orgCreateViolation, orgUpdateViolation } from "./org-type-guard"
 import { passkeyOrigins } from "./passkey-origin"
 import {
   AUTH_IP_ADDRESS_HEADERS,
@@ -280,6 +282,14 @@ function createAuth() {
           })
         },
         organizationHooks: {
+          beforeCreateOrganization: async ({ organization }) => {
+            const message = orgCreateViolation(organization)
+            if (message) throw new APIError("FORBIDDEN", { message })
+          },
+          beforeUpdateOrganization: async ({ organization }) => {
+            const message = orgUpdateViolation(organization)
+            if (message) throw new APIError("FORBIDDEN", { message })
+          },
           afterAddMember: async ({
             organization,
           }: {

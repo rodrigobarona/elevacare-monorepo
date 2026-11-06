@@ -60,9 +60,11 @@ export const OrgTypeSchema = z.enum([
   "staff",
 ])
 
+export const SelfServiceOrgTypeSchema = OrgTypeSchema.exclude(["staff"])
+
 export const CreateOrganizationRequestSchema = z.object({
   name: z.string().min(2).max(100).trim(),
-  type: OrgTypeSchema.default("personal"),
+  type: SelfServiceOrgTypeSchema.default("personal"),
 })
 
 /** Workspace create flow — deliberate work orgs only (not personal onboarding). */
@@ -126,12 +128,6 @@ export const SetActiveOrganizationRequestSchema = z.object({
 export const SetActiveOrganizationResponseSchema = z.object({
   ok: z.literal(true),
   organizationId: z.string().uuid(),
-})
-
-export const CreateMembershipRequestSchema = z.object({
-  userId: z.string().uuid(),
-  orgId: z.string().uuid(),
-  role: z.enum(["admin", "member"]).default("member"),
 })
 
 export const BillingTierSchema = z.enum([
@@ -254,9 +250,6 @@ export type SetActiveOrganizationRequest = z.infer<
 >
 export type SetActiveOrganizationResponse = z.infer<
   typeof SetActiveOrganizationResponseSchema
->
-export type CreateMembershipRequest = z.infer<
-  typeof CreateMembershipRequestSchema
 >
 export type BillingTier = z.infer<typeof BillingTierSchema>
 export type BillingCheckoutRequest = z.infer<
@@ -1856,10 +1849,9 @@ export type CreateEventTypeRequest = z.infer<
   typeof CreateEventTypeRequestSchema
 >
 
+/** Strict so `published` gets a 422: publishing goes through `/publish`. */
 export const UpdateEventTypeRequestSchema =
-  CreateEventTypeRequestSchema.partial().extend({
-    published: z.boolean().optional(),
-  })
+  CreateEventTypeRequestSchema.partial().strict()
 
 export type UpdateEventTypeRequest = z.infer<
   typeof UpdateEventTypeRequestSchema
@@ -2969,12 +2961,6 @@ export function createApiClient(options: ApiClientOptions) {
           data
         )
         return SetActiveOrganizationResponseSchema.parse(raw)
-      },
-    },
-
-    memberships: {
-      create(data: CreateMembershipRequest) {
-        return request<{ ok: true }>("POST", "/memberships", data)
       },
     },
 
