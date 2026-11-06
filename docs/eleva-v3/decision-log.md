@@ -32,6 +32,56 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-06: Expert pilot frame: Patricia Mota (active)
+
+- Decision: the first and only pilot expert is **Patricia Mota**, Eleva
+  co-founder. She tests v3 on `dev.eleva.care` with her real account.
+- Environment fact (checked 2026-11-06 with `vercel inspect`): `dev.eleva.care`
+  and its `account.`, `app.` and `api.` hosts are the **production**
+  deployments of the v3 projects, on the v3 production database. `eleva.care`
+  still serves the MVP (`eleva-care-app`). So the pilot runs on v3
+  production, not on a staging copy.
+- Open risk: Vercel **Preview** deployments of `elevacare-api` use the same
+  `DATABASE_URL` as Production, so any PR preview can read and write pilot
+  data. Give Preview its own Neon branch before any member who is not on the
+  team books.
+- Open: whether Patricia may take bookings from real members during the
+  pilot, and how many. Until the founder decides, bookings come from the
+  team's own test accounts.
+- Paperwork (vendor DPAs, pilot and expert agreements, privacy contact, DPIA
+  addendum) is owned by the founder and must be finished before the public
+  launch. Founder exception to the 2026-11-06 invitation gate, for this
+  co-founder pilot only: these items do not block Patricia's testing. They
+  stay **open** findings in the audit and still block any other expert's
+  invitation and the launch. The engineering and score parts of the gate
+  are unchanged.
+- Owner: founder (Rodrigo Barona).
+- Related: [`audits/2026-11-expert-pilot-council.md`](audits/2026-11-expert-pilot-council.md),
+  2026-11-06 "Expert pilot invitation gate" below.
+
+### 2026-11-06: Owner-first account linking (active)
+
+- Decision: a provider sign-in (Google) may attach to an existing **verified**
+  account only when that account's owner is already signed in. Otherwise
+  Better Auth returns `account_not_linked`, and the login page tells the user
+  to sign in another way, then use Settings → Security → Connect Google.
+  Calendar connect is unaffected (it links from a signed-in session).
+- An **unverified** account (guest activation, pending email verification)
+  can still be claimed by a Google-verified email, with no extra step for
+  guests. The claim first removes everything enrolled before verification
+  (other logins including the password, passkeys, two-factor secrets and
+  backup codes, API keys) in one `withAudit` write (`user.claimed`), then
+  revokes its sessions.
+- Implementation: `packages/auth/src/server/account-claim.ts`
+  (`user.validateUserInfo` gate and `databaseHooks.account.create.before`).
+  `disableImplicitLinking` stays `false`, only so unverified rows remain
+  claimable. Amends the ADR-017 implicit-linking note.
+- Still open from SEC2-01/02: the email telling the user a new sign-in
+  method was linked, and asking for the second factor on email-only
+  recovery when MFA is enrolled (with SEC2-03).
+- Owner: founder (Rodrigo Barona). Related:
+  [`audits/2026-11-expert-pilot-council.md`](audits/2026-11-expert-pilot-council.md).
+
 ### 2026-11-06: Expert pilot invitation gate (active)
 
 - Decision: no real expert from `eleva-care-app` is invited to test v3 on
@@ -42,6 +92,8 @@ Each entry should include:
   lists; a legal or operational finding is open until its owner approves
   documented evidence (for example a signed DPA or an adopted procedure).
 - Owner: founder (Rodrigo Barona).
+- Exception: the co-founder pilot ("Expert pilot frame: Patricia Mota"
+  above) is not blocked by the paperwork items.
 - Status: active. Not met: at the 2026-11-05 baseline (`6e976390`) the
   averages were UX/UI 6.3, security 5.3, privacy and health 5.9.
 - This gate does not decide the pilot's legal frame (participants, member
