@@ -32,6 +32,23 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-06: Expert pilot invitation gate (active)
+
+- Decision: no real expert from `eleva-care-app` is invited to test v3 on
+  `dev.eleva.care` until each review-council discipline (UX/UI, security,
+  privacy and health) averages at least **8.0/10** and no P0/P1 finding in
+  the audit is open. An engineering finding is open until its fix is merged,
+  deployed to `dev.eleva.care` and meets any extra closure condition the audit
+  lists; a legal or operational finding is open until its owner approves
+  documented evidence (for example a signed DPA or an adopted procedure).
+- Owner: founder (Rodrigo Barona).
+- Status: active. Not met: at the 2026-11-05 baseline (`6e976390`) the
+  averages were UX/UI 6.3, security 5.3, privacy and health 5.9.
+- This gate does not decide the pilot's legal frame (participants, member
+  cap, data categories, agreements, data isolation). That needs its own
+  founder entry, and the gate cannot be met without it.
+- Related: [`audits/2026-11-expert-pilot-council.md`](audits/2026-11-expert-pilot-council.md).
+
 ### 2026-10-31: Home editorial refresh on staging (active)
 
 - Decision: rework `MarketingHome` around photography, taking structure (not

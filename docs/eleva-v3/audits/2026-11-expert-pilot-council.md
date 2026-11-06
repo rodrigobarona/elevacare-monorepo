@@ -6,7 +6,9 @@ schedules, calendars, Stripe Connect (test mode), bookings, video, notes and rep
 finance and licence review. This is **not** the production launch (Phase 15).
 
 **Bar.** Each discipline must reach **≥ 8.0** and no P0/P1 may stay open before the first
-real expert is invited.
+real expert is invited. The gate is recorded in
+[`decision-log.md`](../decision-log.md) (2026-11-06: Expert pilot invitation gate). The gate is recorded in
+[`decision-log.md`](../decision-log.md) (2026-11-06: Expert pilot invitation gate).
 
 **Method and limits.** The council has nine reviewers: three for UX/UI, three for security
 and three for privacy and health. Each one reviewed the code and docs on `main` at
@@ -54,10 +56,20 @@ consent model. The gaps fall in four groups:
 
 ## Wave 0 — security P0s (engineering, merged)
 
-A finding counts as closed only once its fix is merged **and** deployed to `dev.eleva.care`.
-All four fixes are merged on `main` (2026-11-06); deployment to `dev.eleva.care` is not yet
-verified, so they stay "merged" rather than "closed". The opt-in sign-in e2e (magic link,
-Google, passkey) still has to be re-run against the Better Auth 1.7.18 upgrade.
+An engineering finding counts as closed only once its fix is merged **and** deployed to
+`dev.eleva.care`. A legal or operational finding (signed DPAs, adopted procedures, named
+contacts) closes on documented evidence approved by its owner. All four fixes are merged on `main` (2026-11-06); deployment to `dev.eleva.care` is not yet
+verified, so they stay "merged" rather than "closed". Extra closure conditions:
+
+- **SEC1-01 / SEC1-02:** fixing the code does not revoke grants already obtained through it.
+  Before either closes, review on staging (and any other environment that ran the vulnerable
+  code) the existing admin memberships, `staff` organizations, and every membership, role change
+  and pending invitation created by an admin, and revoke any not granted by Eleva or the
+  organization's real owner.
+- **SEC3-01/02:** closes only after the opt-in sign-in e2e passes against Better Auth 1.7.18
+  and magic link, Google and passkey sign-in are each verified by hand on `dev.eleva.care`.
+
+The pilot invitation stays blocked until these checks are done.
 
 | ID         | Finding                                                                                             | Status                                                                                                             |
 | ---------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
@@ -76,13 +88,18 @@ Google, passkey) still has to be re-run against the Better Auth 1.7.18 upgrade.
   - linking a new identity to an existing account requires the existing owner to authenticate
     first (sign in with a current factor, then `linkSocial()`), for verified and unverified rows;
   - an unverified row is claimed by proof of email ownership alone; the claim purges its password,
-    passkeys, two-factor secrets and backup codes, and revokes its sessions (anything enrolled
-    before verification is treated as attacker-controlled);
+    passkeys, two-factor secrets, backup codes and any social identities (Google, Microsoft)
+    linked before verification, and revokes its sessions (anything enrolled before verification
+    is treated as attacker-controlled);
   - on a verified account with MFA, email-only recovery (magic link, password reset) asks for the
     second factor;
   - the user is notified on every newly linked identity.
-- SEC2-03: MFA is optional and skipped on magic link, Google and passkey. Enforce MFA for
-  staff roles and add step-up for money, credential and privacy actions.
+- SEC2-03: MFA is optional and skipped on magic link, Google and passkey. Any account with MFA
+  enrolled (staff or not) must complete the second factor on every sign-in path that is not
+  itself a second factor (magic link, password, Google). A passkey counts as a second factor only
+  when the sign-in required user verification (PIN or biometric); today `packages/auth` does not
+  require it. Enforce MFA for staff roles and add step-up for money, credential and privacy
+  actions.
 - SEC1-04: runtime DB role bypasses RLS. Use a non-bypass app role with narrow service policies.
 - SEC3-03: audit trail is not append-only. Use a dedicated insert-only role, a blocking
   trigger, the hash chain, and a separate Neon project as documented.
