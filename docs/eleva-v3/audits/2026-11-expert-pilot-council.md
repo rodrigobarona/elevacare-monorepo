@@ -54,20 +54,32 @@ consent model. The gaps fall in four groups:
 
 ## Wave 0 — security P0s (engineering, in progress)
 
-| ID         | Finding                                                                                             | Status                                                                                                            |
-| ---------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| SEC1-02    | `POST /memberships` let any signed-in user join any org as admin                                    | Fixed in [#301](https://github.com/rodrigobarona/elevacare-monorepo/pull/301), route removed                      |
-| SEC1-01    | `staff` org type was client-settable (create and update), which granted platform staff capabilities | Fixed in #301: schema, domain type and Better Auth org hooks                                                      |
-| SEC1-03    | Event-type PATCH accepted `published: true`, skipping the publish gates                             | Fixed in #301: strict schema, 422                                                                                 |
-| SEC3-01/02 | Better Auth 1.7.3 (OAuth-state-as-magic-link takeover) and Next.js 16.2.6 (proxy bypass, image RCE) | Fixed in [#302](https://github.com/rodrigobarona/elevacare-monorepo/pull/302): Better Auth 1.7.18, Next.js 16.4.5 |
+| ID  | Finding | Status |
+| --- | ------- | ------ |
+
+A finding counts as closed only once its fix is merged **and** deployed to `dev.eleva.care`.
+
+| ID         | Finding                                                                                             | Status                                                                                                                |
+| ---------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| SEC1-02    | `POST /memberships` let any signed-in user join any org as admin                                    | Open; fix in [#301](https://github.com/rodrigobarona/elevacare-monorepo/pull/301), route removed                      |
+| SEC1-01    | `staff` org type was client-settable (create and update), which granted platform staff capabilities | Open; fix in #301: schema, domain type and Better Auth org hooks                                                      |
+| SEC1-03    | Event-type PATCH accepted `published: true`, skipping the publish gates                             | Open; fix in #301: strict schema, 422                                                                                 |
+| SEC3-01/02 | Better Auth 1.7.3 (OAuth-state-as-magic-link takeover) and Next.js 16.2.6 (proxy bypass, image RCE) | Open; fix in [#302](https://github.com/rodrigobarona/elevacare-monorepo/pull/302): Better Auth 1.7.18, Next.js 16.4.5 |
 
 ## Wave 1 — remaining P1s before the first expert is invited
 
 **Security (engineering)**
 
-- SEC2-01/02: implicit Google linking with `requireLocalEmailVerified: false` enables account
-  pre-hijacking and takeover via a lapsed domain. On link to an unverified local row, purge its
-  password and passkeys and revoke its sessions. Notify the user on every newly linked identity.
+- SEC2-01/02: implicit same-email Google linking (with `requireLocalEmailVerified: false`)
+  enables account pre-hijacking, and lets anyone who gains control of the email domain take over
+  accounts — **including already-verified ones**. Acceptance:
+  - linking a new identity to an existing account requires the existing owner to authenticate
+    first (sign in with a current factor, then `linkSocial()`), for verified and unverified rows;
+  - when an unverified row is claimed, its password and passkeys are purged and its sessions
+    revoked;
+  - email-only recovery (magic link, password reset) on an account with MFA asks for the second
+    factor;
+  - the user is notified on every newly linked identity.
 - SEC2-03: MFA is optional and skipped on magic link, Google and passkey. Enforce MFA for
   staff roles and add step-up for money, credential and privacy actions.
 - SEC1-04: runtime DB role bypasses RLS. Use a non-bypass app role with narrow service policies.
@@ -118,5 +130,5 @@ consent model. The gaps fall in four groups:
 
 After each wave, the same nine lenses re-review the changed areas only and update their row
 above. Each update records the commit it was scored at. The pilot invite goes out only when
-all three discipline averages are ≥ 8.0 and the P0/P1 tables above are empty or carry a
-signed, dated waiver from the named owner.
+all three discipline averages are ≥ 8.0 and no P0/P1 above remains open. This audit grants no
+waivers; any exception would be a separate, dated `decision-log.md` entry by the named owner.
