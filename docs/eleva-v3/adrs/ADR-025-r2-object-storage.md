@@ -40,7 +40,8 @@ media library.
    refuses it when `VERCEL_ENV=production`.
 7. **No schema change.** `blob_pathname` and `blob_url` keep their names and now hold the key. A
    rename is a follow-up.
-8. **Migration** is a one-off dry-run-by-default script, `infra/storage/migrate-blob-to-r2.ts`.
+8. **Migration** ran once from a dry-run-by-default script, removed after production moved on
+   2026-10-31. The old Blob stores are deleted.
 
 ### Media host
 

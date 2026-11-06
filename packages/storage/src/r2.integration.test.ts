@@ -1,5 +1,5 @@
 import { resetEnvCache } from "@eleva/config/env"
-import { afterAll, beforeAll, describe, expect, it } from "vitest"
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
 import {
   deletePrivateDocument,
   deletePublicObject,
@@ -26,10 +26,19 @@ const prefix = `integration-test/${Date.now()}`
 describe.skipIf(!enabled)("R2 wire protocol", () => {
   const created: string[] = []
 
-  beforeAll(() => resetEnvCache())
+  beforeAll(() => {
+    resetEnvCache()
+    // `.env.local` can set these, which would send private calls to the mock.
+    vi.stubEnv("E2E_AUTH_CAPTURE", "0")
+    vi.stubEnv("E2E_MOCK_PRIVATE_STORAGE", "0")
+  })
 
   afterAll(async () => {
-    for (const key of created) await deletePrivateDocument(key)
+    try {
+      for (const key of created) await deletePrivateDocument(key)
+    } finally {
+      vi.unstubAllEnvs()
+    }
   })
 
   async function presign(store: "public" | "private", size = 4) {
