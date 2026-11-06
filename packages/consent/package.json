@@ -20,6 +20,7 @@
     "@eleva/typescript-config": "workspace:*",
     "@types/react": "catalog:",
     "eslint": "catalog:",
+    "next": "catalog:",
     "react": "catalog:",
     "typescript": "catalog:"
   },
