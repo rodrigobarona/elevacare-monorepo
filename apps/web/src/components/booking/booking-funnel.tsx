@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useId,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -238,6 +239,15 @@ export function BookingFunnel({
       skipToDetails,
     })
   )
+
+  const fieldId = useId()
+  const stepHeadingRef = useRef<HTMLHeadingElement>(null)
+  const previousStep = useRef(step)
+  useEffect(() => {
+    if (previousStep.current === step) return
+    previousStep.current = step
+    stepHeadingRef.current?.focus()
+  }, [step])
 
   const inferredMode = shouldSkipMeetStep(modes, {
     memberCountry: country,
@@ -637,6 +647,7 @@ export function BookingFunnel({
         policyName={policyCopy.name}
         isOnline={selectedMode.mode === "online"}
         signupHref={signupHref}
+        headingRef={stepHeadingRef}
         onAddToCalendar={() =>
           downloadBookingIcs({
             uid: payment?.bookingId ?? reservation?.reservationId ?? eventSlug,
@@ -685,7 +696,11 @@ export function BookingFunnel({
 
         {step === "meet" ? (
           <div className="mt-8 space-y-8">
-            <StepHeader title={t("meet.heading")} sub={t("meet.sub")} />
+            <StepHeader
+              title={t("meet.heading")}
+              sub={t("meet.sub")}
+              headingRef={stepHeadingRef}
+            />
             <CountrySelect
               value={country}
               onChange={(next) => {
@@ -746,6 +761,7 @@ export function BookingFunnel({
               title={t("when.heading")}
               sub={t("when.sub")}
               testId="booking-when-heading"
+              headingRef={stepHeadingRef}
             />
             <TimezoneSelect
               value={timeZone}
@@ -811,6 +827,8 @@ export function BookingFunnel({
                   t("when.weekdays.sat"),
                   t("when.weekdays.sun"),
                 ],
+                day: (date, count) => t("when.day", { date, count }),
+                timesFor: (date) => t("when.timesFor", { date }),
               }}
             />
             <div className="flex gap-3">
@@ -836,11 +854,16 @@ export function BookingFunnel({
               title={t("details.heading")}
               sub={t("details.sub")}
               testId="booking-details-heading"
+              headingRef={stepHeadingRef}
             />
             <FormCard title={t("details.sections.contact")}>
               <Field>
-                <FieldLabel>{t("details.name")}</FieldLabel>
+                <FieldLabel htmlFor={`${fieldId}-name`}>
+                  {t("details.name")}
+                </FieldLabel>
                 <Input
+                  id={`${fieldId}-name`}
+                  required
                   data-testid="booking-guest-name"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
@@ -848,8 +871,12 @@ export function BookingFunnel({
                 />
               </Field>
               <Field>
-                <FieldLabel>{t("details.email")}</FieldLabel>
+                <FieldLabel htmlFor={`${fieldId}-email`}>
+                  {t("details.email")}
+                </FieldLabel>
                 <Input
+                  id={`${fieldId}-email`}
+                  required
                   data-testid="booking-guest-email"
                   type="email"
                   value={email}
@@ -858,35 +885,56 @@ export function BookingFunnel({
                 />
               </Field>
               <Field>
-                <FieldLabel>{t("details.phone")}</FieldLabel>
+                <FieldLabel htmlFor={`${fieldId}-phone`}>
+                  {t("details.phone")}
+                </FieldLabel>
                 <Input
+                  id={`${fieldId}-phone`}
+                  aria-describedby={`${fieldId}-phone-hint`}
+                  aria-invalid={formError === "phoneRequired" || undefined}
+                  required={selectedMode?.mode === "phone"}
                   type="tel"
                   value={phone}
                   onChange={(event) => setPhone(event.target.value)}
                   autoComplete="tel"
                 />
-                <p className="text-sm text-muted-foreground">
+                <p
+                  id={`${fieldId}-phone-hint`}
+                  className="text-sm text-muted-foreground"
+                >
                   {t("details.phoneHint")}
                 </p>
               </Field>
             </FormCard>
             <FormCard title={t("details.sections.optional")}>
               <Field>
-                <FieldLabel>{t("details.taxId")}</FieldLabel>
+                <FieldLabel htmlFor={`${fieldId}-tax-id`}>
+                  {t("details.taxId")}
+                </FieldLabel>
                 <Input
+                  id={`${fieldId}-tax-id`}
+                  aria-describedby={`${fieldId}-tax-id-hint`}
+                  aria-invalid={formError === "taxIdInvalid" || undefined}
                   data-testid="booking-guest-tax-id"
                   value={taxId}
                   onChange={(event) => setTaxId(event.target.value)}
                   autoComplete="off"
                   inputMode="text"
                 />
-                <p className="text-sm text-muted-foreground">
+                <p
+                  id={`${fieldId}-tax-id-hint`}
+                  className="text-sm text-muted-foreground"
+                >
                   {t("details.taxIdHint")}
                 </p>
               </Field>
               <Field>
-                <FieldLabel>{t("details.intakeNotes")}</FieldLabel>
+                <FieldLabel htmlFor={`${fieldId}-intake`}>
+                  {t("details.intakeNotes")}
+                </FieldLabel>
                 <Textarea
+                  id={`${fieldId}-intake`}
+                  aria-describedby={`${fieldId}-intake-hint`}
                   data-testid="booking-intake-notes"
                   value={intakeNotes}
                   onChange={(event) => {
@@ -899,7 +947,10 @@ export function BookingFunnel({
                     holdActive ? "cursor-not-allowed opacity-50" : undefined
                   }
                 />
-                <p className="text-sm text-muted-foreground">
+                <p
+                  id={`${fieldId}-intake-hint`}
+                  className="text-sm text-muted-foreground"
+                >
                   {t("details.intakeNotesHint")}
                 </p>
               </Field>
@@ -970,7 +1021,11 @@ export function BookingFunnel({
 
         {step === "pay" && payment && reservation ? (
           <div className="mt-8 space-y-6">
-            <StepHeader title={t("pay.heading")} sub={t("pay.sub")}>
+            <StepHeader
+              title={t("pay.heading")}
+              sub={t("pay.sub")}
+              headingRef={stepHeadingRef}
+            >
               {isRequest ? (
                 <p className="text-sm text-muted-foreground">
                   {t("pay.requestHint")}

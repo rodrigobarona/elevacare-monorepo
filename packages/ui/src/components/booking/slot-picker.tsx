@@ -1,6 +1,8 @@
 "use client"
 
+import { ToggleButton } from "react-aria-components"
 import { Button } from "@eleva/ui/components/button"
+import { buttonVariants } from "@eleva/ui/components/button-variants"
 import {
   addMonths,
   calendarDays,
@@ -42,6 +44,10 @@ export function SlotPicker({
     next: string
     empty: string
     weekday: string[]
+    /** Accessible name for a day cell, e.g. "Monday 10 November, 4 times". */
+    day: (date: string, count: number) => string
+    /** Heading over the time list, e.g. "Times on Monday 10 November". */
+    timesFor: (date: string) => string
   }
   className?: string
 }) {
@@ -71,6 +77,15 @@ export function SlotPicker({
     year: "numeric",
     timeZone: "UTC",
   }).format(startOfMonth(month))
+  const dayFormat = new Intl.DateTimeFormat(locale, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone: "UTC",
+  })
+  const activeDayLabel = activeDay
+    ? dayFormat.format(new Date(`${activeDay}T00:00:00Z`))
+    : null
 
   return (
     <div
@@ -87,7 +102,10 @@ export function SlotPicker({
           >
             <ArrowLeftIcon className="size-4" />
           </Button>
-          <p className="min-w-40 text-center font-medium first-letter:uppercase">
+          <p
+            aria-live="polite"
+            className="min-w-40 text-center font-medium first-letter:uppercase"
+          >
             {monthLabel}
           </p>
           <Button
@@ -101,20 +119,19 @@ export function SlotPicker({
           </Button>
         </div>
         <div className="flex rounded-full bg-muted p-1">
-          <Button
-            variant={view === "month" ? "secondary" : "ghost"}
-            size="sm"
-            onPress={() => onViewChange("month")}
-          >
-            {labels.month}
-          </Button>
-          <Button
-            variant={view === "week" ? "secondary" : "ghost"}
-            size="sm"
-            onPress={() => onViewChange("week")}
-          >
-            {labels.week}
-          </Button>
+          {(["month", "week"] as const).map((option) => (
+            <ToggleButton
+              key={option}
+              isSelected={view === option}
+              onChange={() => onViewChange(option)}
+              className={buttonVariants({
+                variant: view === option ? "secondary" : "ghost",
+                size: "sm",
+              })}
+            >
+              {labels[option]}
+            </ToggleButton>
+          ))}
         </div>
       </div>
 
@@ -122,6 +139,7 @@ export function SlotPicker({
         {labels.weekday.map((day) => (
           <p
             key={day}
+            aria-hidden
             className="pb-1 text-center text-xs font-medium text-muted-foreground"
           >
             {day}
@@ -136,6 +154,8 @@ export function SlotPicker({
               key={key}
               type="button"
               disabled={count === 0}
+              aria-label={labels.day(dayFormat.format(day), count)}
+              aria-pressed={count > 0 ? activeDay === key : undefined}
               data-testid={count > 0 ? "booking-slot-day" : undefined}
               onClick={() => {
                 const first = byDay.get(key)?.[0]
@@ -152,7 +172,10 @@ export function SlotPicker({
             >
               {day.getUTCDate()}
               {count > 0 ? (
-                <span className="text-[10px] tabular-nums opacity-80">
+                <span
+                  aria-hidden
+                  className="text-[10px] tabular-nums opacity-80"
+                >
                   {count}
                 </span>
               ) : null}
@@ -161,30 +184,39 @@ export function SlotPicker({
         })}
       </div>
 
-      {daySlots.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{labels.empty}</p>
-      ) : (
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {daySlots.map((slot) => {
-            const time = new Intl.DateTimeFormat(locale, {
-              hour: "2-digit",
-              minute: "2-digit",
-              timeZone,
-            }).format(new Date(slot.start))
-            return (
-              <Button
-                key={slot.start}
-                data-testid="booking-slot-time"
-                data-start={slot.start}
-                variant={selectedStart === slot.start ? "default" : "outline"}
-                onPress={() => onSelect(slot)}
-              >
-                {time}
-              </Button>
-            )
-          })}
-        </div>
-      )}
+      <div className="flex flex-col gap-3">
+        <p aria-live="polite" className="text-sm font-medium">
+          {daySlots.length > 0 && activeDayLabel
+            ? labels.timesFor(activeDayLabel)
+            : labels.empty}
+        </p>
+        {daySlots.length > 0 ? (
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {daySlots.map((slot) => {
+              const time = new Intl.DateTimeFormat(locale, {
+                hour: "2-digit",
+                minute: "2-digit",
+                timeZone,
+              }).format(new Date(slot.start))
+              const isSelected = selectedStart === slot.start
+              return (
+                <ToggleButton
+                  key={slot.start}
+                  data-testid="booking-slot-time"
+                  data-start={slot.start}
+                  isSelected={isSelected}
+                  onChange={() => onSelect(slot)}
+                  className={buttonVariants({
+                    variant: isSelected ? "default" : "outline",
+                  })}
+                >
+                  {time}
+                </ToggleButton>
+              )
+            })}
+          </div>
+        ) : null}
+      </div>
     </div>
   )
 }

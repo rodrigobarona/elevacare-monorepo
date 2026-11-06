@@ -1,4 +1,4 @@
-import type { ReactNode } from "react"
+import type { ReactNode, Ref } from "react"
 import { cn } from "@eleva/ui/lib/utils"
 
 export function FunnelStepper({
@@ -33,18 +33,23 @@ export function StepHeader({
   title,
   sub,
   testId,
+  headingRef,
   children,
 }: {
   title: string
   sub: string
   testId?: string
+  /** Receives focus when the funnel moves to this step. */
+  headingRef?: Ref<HTMLHeadingElement>
   children?: ReactNode
 }) {
   return (
     <header className="space-y-2">
       <h1
+        ref={headingRef}
+        tabIndex={-1}
         data-testid={testId}
-        className="font-display text-3xl font-medium tracking-tight text-balance sm:text-4xl"
+        className="font-display text-3xl font-medium tracking-tight text-balance outline-none sm:text-4xl"
       >
         {title}
       </h1>

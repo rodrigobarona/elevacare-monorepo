@@ -175,6 +175,7 @@
   --border: var(--color-sand-200);
   --input: var(--color-sand-300);
   --ring: var(--color-teal-500);
+  --focus-ring: var(--color-teal-600);
   --chart-1: var(--color-teal-700);
   --chart-2: var(--color-coral-500);
   --chart-3: var(--color-teal-300);
@@ -218,6 +219,7 @@
   --border: var(--color-neutral-800);
   --input: var(--color-neutral-800);
   --ring: var(--color-teal-400);
+  --focus-ring: var(--color-teal-400);
   --chart-1: var(--color-teal-400);
   --chart-2: var(--color-coral-400);
   --chart-3: var(--color-teal-200);
@@ -343,4 +345,14 @@
   line-height: var(--text-eyebrow--line-height);
   letter-spacing: var(--text-eyebrow--letter-spacing);
   text-transform: uppercase;
+}
+
+/*
+ * Keyboard focus indicator, at least 3:1 against the page (WCAG 1.4.11, 2.4.7).
+ * Unlayered so it outranks the primitives' `outline-none` utilities. On dark
+ * or tinted surfaces, set `--focus-ring` locally instead of removing it.
+ */
+:where(:focus-visible, [data-focus-visible]):not([tabindex="-1"]) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
