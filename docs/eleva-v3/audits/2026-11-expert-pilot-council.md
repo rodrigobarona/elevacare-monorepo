@@ -52,19 +52,19 @@ consent model. The gaps fall in four groups:
 3. Accessibility basics in the booking funnel.
 4. The legal and operational frame for putting real people's data on staging.
 
-## Wave 0 — security P0s (engineering, in progress)
-
-| ID  | Finding | Status |
-| --- | ------- | ------ |
+## Wave 0 — security P0s (engineering, merged)
 
 A finding counts as closed only once its fix is merged **and** deployed to `dev.eleva.care`.
+All four fixes are merged on `main` (2026-11-06); deployment to `dev.eleva.care` is not yet
+verified, so they stay "merged" rather than "closed". The opt-in sign-in e2e (magic link,
+Google, passkey) still has to be re-run against the Better Auth 1.7.18 upgrade.
 
-| ID         | Finding                                                                                             | Status                                                                                                                |
-| ---------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| SEC1-02    | `POST /memberships` let any signed-in user join any org as admin                                    | Open; fix in [#301](https://github.com/rodrigobarona/elevacare-monorepo/pull/301), route removed                      |
-| SEC1-01    | `staff` org type was client-settable (create and update), which granted platform staff capabilities | Open; fix in #301: schema, domain type and Better Auth org hooks                                                      |
-| SEC1-03    | Event-type PATCH accepted `published: true`, skipping the publish gates                             | Open; fix in #301: strict schema, 422                                                                                 |
-| SEC3-01/02 | Better Auth 1.7.3 (OAuth-state-as-magic-link takeover) and Next.js 16.2.6 (proxy bypass, image RCE) | Open; fix in [#302](https://github.com/rodrigobarona/elevacare-monorepo/pull/302): Better Auth 1.7.18, Next.js 16.4.5 |
+| ID         | Finding                                                                                             | Status                                                                                                             |
+| ---------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| SEC1-02    | `POST /memberships` let any signed-in user join any org as admin                                    | Merged in [#301](https://github.com/rodrigobarona/elevacare-monorepo/pull/301): route removed                      |
+| SEC1-01    | `staff` org type was client-settable (create and update), which granted platform staff capabilities | Merged in #301: schema, domain type and Better Auth org hooks                                                      |
+| SEC1-03    | Event-type PATCH accepted `published: true`, skipping the publish gates                             | Merged in #301: strict schema, 422                                                                                 |
+| SEC3-01/02 | Better Auth 1.7.3 (OAuth-state-as-magic-link takeover) and Next.js 16.2.6 (proxy bypass, image RCE) | Merged in [#302](https://github.com/rodrigobarona/elevacare-monorepo/pull/302): Better Auth 1.7.18, Next.js 16.4.5 |
 
 ## Wave 1 — remaining P1s before the first expert is invited
 
