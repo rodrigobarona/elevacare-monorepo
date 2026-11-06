@@ -416,6 +416,8 @@
       "previous": "Mês anterior",
       "next": "Mês seguinte",
       "empty": "Sem horários neste dia. Experimente outra data.",
+      "day": "{date}, {count, plural, =0 {sem horários} one {# horário disponível} other {# horários disponíveis}}",
+      "timesFor": "Horários de {date}",
       "loading": "A procurar horários…",
       "loadError": "Não foi possível carregar os horários. Tente novamente.",
       "continue": "Continuar",

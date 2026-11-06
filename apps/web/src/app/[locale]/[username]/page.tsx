@@ -318,14 +318,17 @@ function Fact({
   value: string
 }) {
   return (
-    <div className="flex items-start gap-3">
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-teal-50 text-teal-800 dark:bg-teal-950 dark:text-teal-200 [&_svg]:size-4">
-        {icon}
-      </span>
-      <div>
-        <dt className="text-muted-foreground">{label}</dt>
-        <dd className="font-medium text-foreground">{value}</dd>
-      </div>
+    <div className="relative min-h-9 pl-12">
+      <dt className="text-muted-foreground">
+        <span
+          aria-hidden
+          className="absolute top-0 left-0 flex size-9 items-center justify-center rounded-full bg-teal-50 text-teal-800 dark:bg-teal-950 dark:text-teal-200 [&_svg]:size-4"
+        >
+          {icon}
+        </span>
+        {label}
+      </dt>
+      <dd className="font-medium text-foreground">{value}</dd>
     </div>
   )
 }

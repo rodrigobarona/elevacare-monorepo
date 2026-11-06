@@ -1,6 +1,6 @@
 "use client"
 
-import type { ReactNode } from "react"
+import type { ReactNode, Ref } from "react"
 import { useTranslations } from "next-intl"
 import {
   CalendarCheckIcon,
@@ -29,6 +29,7 @@ export function BookingDone({
   isOnline,
   signupHref,
   onAddToCalendar,
+  headingRef,
 }: {
   confirmState: ConfirmState
   isRequest: boolean
@@ -45,6 +46,7 @@ export function BookingDone({
   isOnline: boolean
   signupHref: string
   onAddToCalendar: () => void
+  headingRef?: Ref<HTMLHeadingElement>
 }) {
   const t = useTranslations("booking")
   const isConfirmed = confirmState === "confirmed"
@@ -62,12 +64,14 @@ export function BookingDone({
 
   return (
     <div className="mx-auto max-w-4xl">
-      <header className="space-y-4 text-center">
+      <header aria-live="polite" className="space-y-4 text-center">
         <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary">
           <CheckCircleIcon className="size-9" weight="fill" />
         </div>
         <h1
-          className="font-display text-4xl font-medium tracking-tight text-balance sm:text-5xl"
+          ref={headingRef}
+          tabIndex={-1}
+          className="font-display text-4xl font-medium tracking-tight text-balance outline-none sm:text-5xl"
           data-testid="booking-done-heading"
           data-state={confirmState}
         >
