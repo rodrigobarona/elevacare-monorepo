@@ -75,10 +75,11 @@ A finding counts as closed only once its fix is merged **and** deployed to `dev.
   accounts — **including already-verified ones**. Acceptance:
   - linking a new identity to an existing account requires the existing owner to authenticate
     first (sign in with a current factor, then `linkSocial()`), for verified and unverified rows;
-  - when an unverified row is claimed, its password and passkeys are purged and its sessions
-    revoked;
-  - email-only recovery (magic link, password reset) on an account with MFA asks for the second
-    factor;
+  - an unverified row is claimed by proof of email ownership alone; the claim purges its password,
+    passkeys, two-factor secrets and backup codes, and revokes its sessions (anything enrolled
+    before verification is treated as attacker-controlled);
+  - on a verified account with MFA, email-only recovery (magic link, password reset) asks for the
+    second factor;
   - the user is notified on every newly linked identity.
 - SEC2-03: MFA is optional and skipped on magic link, Google and passkey. Enforce MFA for
   staff roles and add step-up for money, credential and privacy actions.
