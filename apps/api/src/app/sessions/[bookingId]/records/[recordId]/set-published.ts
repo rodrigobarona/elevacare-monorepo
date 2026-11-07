@@ -20,6 +20,7 @@ const RECORD_STATUS: Record<SessionRecordError["code"], number> = {
   AI_MODEL_ZERO_RETENTION_REQUIRED: 409,
   AI_MODEL_NOT_APPROVED: 409,
   AI_CONSENT_REQUIRED: 403,
+  FEATURE_DISABLED: 403,
 }
 
 const IdSchema = z.string().uuid()

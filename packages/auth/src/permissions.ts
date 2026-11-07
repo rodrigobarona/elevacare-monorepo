@@ -1,5 +1,5 @@
 import { createAccessControl } from "better-auth/plugins/access"
-import { adminAc, defaultAc, userAc } from "better-auth/plugins/admin/access"
+import { defaultAc, userAc } from "better-auth/plugins/admin/access"
 
 const statement = {
   organization: ["create", "update", "delete"],
@@ -60,14 +60,29 @@ export const member = ac.newRole({
 export const organizationRoles = { owner, admin, member }
 
 /**
- * Better Auth admin-plugin user roles. These bind to plugin `adminAc`,
- * not organization `ac` statements such as `adminPayout`. Payout
- * mutations are gated by `PAYOUT_MUTATION_STAFF_ROLES` in
- * `requireStaffPayoutMutator`.
+ * Better Auth admin-plugin user roles (`/auth/admin/*`), least privilege.
+ * They bind to the plugin's `defaultAc`, not organization `ac` statements
+ * such as `adminPayout`. Payout mutations are gated by
+ * `PAYOUT_MUTATION_STAFF_ROLES` in `requireStaffPayoutMutator`.
+ *
+ * No staff role may impersonate, set a password, email or phone, delete
+ * or edit a user: those paths would let staff read members' health
+ * records or take over an account without a trace (D-11: staff never
+ * read plaintext). Support and finance are read-only; only
+ * `platform_admin` may grant roles, ban, and revoke sessions.
  */
-export const staffSupport = adminAc
-export const staffFinance = adminAc
-export const platformAdmin = adminAc
+export const staffSupport = defaultAc.newRole({
+  user: ["list", "get"],
+  session: ["list"],
+})
+export const staffFinance = defaultAc.newRole({
+  user: ["list", "get"],
+  session: ["list"],
+})
+export const platformAdmin = defaultAc.newRole({
+  user: ["create", "list", "get", "set-role", "ban"],
+  session: ["list", "revoke"],
+})
 
 export const adminRoles = {
   user: userAc,

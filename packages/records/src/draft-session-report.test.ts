@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   encryptRecordFields: vi.fn(),
   generateSessionReportDraft: vi.fn(),
   emit: vi.fn(),
+  getFlag: vi.fn(),
 }))
 
 vi.mock("@eleva/ai", () => {
@@ -22,6 +23,7 @@ vi.mock("@eleva/ai", () => {
   }
 })
 vi.mock("@eleva/audit", () => ({ withAudit: mocks.withAudit }))
+vi.mock("@eleva/flags", () => ({ getFlag: mocks.getFlag }))
 vi.mock("@eleva/db", () => ({
   hasActiveAiProcessingConsent: mocks.hasActiveAiProcessingConsent,
   withPlatformAdminContext: mocks.withPlatformAdminContext,
@@ -110,6 +112,7 @@ beforeEach(() => {
     expertUserId: EXPERT,
     memberUserId: MEMBER,
   })
+  mocks.getFlag.mockResolvedValue(true)
   mocks.hasActiveAiProcessingConsent.mockResolvedValue(true)
   mocks.listSessionRecords.mockResolvedValue([])
   mocks.decryptRecordFields.mockResolvedValue({
@@ -122,6 +125,16 @@ beforeEach(() => {
 })
 
 describe("draftSessionReport guards (zero decrypt on every refusal)", () => {
+  it("refuses while the AI reports beta is off, before touching any note", async () => {
+    mocks.getFlag.mockResolvedValue(false)
+    noteRows([noteRow(NOTE_A)])
+    expect(await code(draftSessionReport(input()))).toBe("FEATURE_DISABLED")
+    expect(mocks.getFlag).toHaveBeenCalledWith("ff.ai_reports_beta")
+    expect(mocks.requireAssignedExpert).not.toHaveBeenCalled()
+    expect(mocks.decryptRecordFields).not.toHaveBeenCalled()
+    expect(mocks.generateSessionReportDraft).not.toHaveBeenCalled()
+  })
+
   it("refuses an expert who is not assigned to the booking", async () => {
     mocks.requireAssignedExpert.mockRejectedValue(
       new SessionRecordError("FORBIDDEN")

@@ -124,7 +124,6 @@ import {
   PublishSessionRecordResponseSchema,
   UpsertSessionRecordRequestSchema,
   UpsertSessionRecordResponseSchema,
-  SummarizeSessionRecordsResponseSchema,
   SessionReportDraftRequestSchema,
   SessionReportDraftResponseSchema,
   SessionReportDraftStatusResponseSchema,
@@ -3481,7 +3480,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "upsertSessionRecord",
           summary: "Save in-call notes, transcript, or internal report",
           description:
-            "Assigned expert only. Upserts records.kind note|transcript|internal_report. Internal report stays unpublished (expert-only). Intake is copied from the booking form at confirm and is read-only. AI drafts are written only by POST .../summarize. A transcript needs the member's active ai_processing consent (403 AI_CONSENT_REQUIRED). Audit payload is kind + bookingId (no PHI).",
+            "Assigned expert only. Upserts records.kind note|transcript|internal_report. Internal report stays unpublished (expert-only). Intake is copied from the booking form at confirm and is read-only. AI drafts are written only by POST /ai/session-report. A transcript needs the member's active ai_processing consent (403 AI_CONSENT_REQUIRED). Audit payload is kind + bookingId (no PHI).",
           tags: ["Sessions"],
           requestParams: {
             path: z.object({ bookingId: z.string().uuid() }),
@@ -3582,39 +3581,6 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             "409": {
               description:
                 "NOT_PUBLISHABLE: only kind report on a booking with a member account",
-              content: { "application/json": { schema: ErrorSchema } },
-            },
-            "403": {
-              description: "Caller is not the assigned expert",
-              content: { "application/json": { schema: ErrorSchema } },
-            },
-            ...stdWithNotFound,
-          },
-        },
-      },
-      "/sessions/{bookingId}/records/summarize": {
-        post: {
-          operationId: "summarizeSessionRecords",
-          summary: "Draft an AI summary of session notes and transcript",
-          description:
-            "Fail closed until a zero-retention model is on APPROVED_MODELS (ADR-009). Returns 409 AI_MODEL_ZERO_RETENTION_REQUIRED.",
-          tags: ["Sessions"],
-          requestParams: {
-            path: z.object({ bookingId: z.string().uuid() }),
-          },
-          responses: {
-            "200": {
-              description:
-                "AI summary draft (unreachable until a zero-retention model is allow-listed)",
-              content: {
-                "application/json": {
-                  schema: SummarizeSessionRecordsResponseSchema,
-                },
-              },
-            },
-            "409": {
-              description:
-                "No zero-retention model is allow-listed for clinical text",
               content: { "application/json": { schema: ErrorSchema } },
             },
             "403": {

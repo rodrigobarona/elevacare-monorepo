@@ -61,6 +61,15 @@ describe("account-claim wiring", () => {
     expect(refuseUnverifiedSession).toHaveBeenCalledWith(session)
   })
 
+  it("refuses a staff impersonation session before anything else", async () => {
+    const before = options.databaseHooks?.session?.create?.before
+    refuseUnverifiedSession.mockClear()
+    await expect(
+      before?.({ userId: "user-1", impersonatedBy: "staff-1" })
+    ).rejects.toThrow(/another person/)
+    expect(refuseUnverifiedSession).not.toHaveBeenCalled()
+  })
+
   it("keeps implicit linking on so unverified rows stay claimable", () => {
     expect(options.account?.accountLinking).toMatchObject({
       disableImplicitLinking: false,

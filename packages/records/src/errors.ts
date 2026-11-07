@@ -6,6 +6,8 @@ export type SessionRecordErrorCode =
   | "AI_MODEL_ZERO_RETENTION_REQUIRED"
   | "AI_MODEL_NOT_APPROVED"
   | "AI_CONSENT_REQUIRED"
+  /** `ff.ai_reports_beta` is off: no clinical text reaches the AI model. */
+  | "FEATURE_DISABLED"
 
 export type SessionDocumentErrorCode =
   | "NOT_FOUND"

@@ -35,6 +35,7 @@ import { invitationAcceptUrl } from "../invitation-accept-url"
 import {
   guardAccountLink,
   purgeBeforeClaim,
+  refuseImpersonationSession,
   refuseUnverifiedSession,
 } from "./account-claim"
 import { crossSubDomainCookieConfig } from "./cookie-domain"
@@ -232,7 +233,9 @@ function createAuth() {
           before: async (session: {
             userId: string
             activeOrganizationId?: string | null
+            impersonatedBy?: string | null
           }) => {
+            refuseImpersonationSession(session)
             await refuseUnverifiedSession(session)
             if (session.activeOrganizationId) return
             const orgId = await findDefaultOrganizationId(session.userId)

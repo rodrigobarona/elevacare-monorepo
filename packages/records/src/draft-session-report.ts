@@ -6,6 +6,7 @@ import {
   generateSessionReportDraft,
 } from "@eleva/ai"
 import { withAudit } from "@eleva/audit"
+import { getFlag } from "@eleva/flags"
 import {
   hasActiveAiProcessingConsent,
   withPlatformAdminContext,
@@ -91,6 +92,11 @@ export async function getSessionReportDraftStatus(input: {
 export async function draftSessionReport(
   input: DraftSessionReportInput
 ): Promise<SessionRecordView> {
+  // The switch lives here, not only in the route, so no caller can send
+  // a member's notes to the AI model while the beta is off.
+  if (!(await getFlag("ff.ai_reports_beta"))) {
+    throw new SessionRecordError("FEATURE_DISABLED")
+  }
   const booking = await requireAssignedExpert(input)
   const uniqueIds = [...new Set(input.noteRecordIds)]
   if (uniqueIds.length === 0) {
