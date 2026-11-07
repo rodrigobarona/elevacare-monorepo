@@ -1,0 +1,54 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticCommits",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "timezone": "Europe/Lisbon",
+  "schedule": ["before 7am on monday"],
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "rangeStrategy": "bump",
+  "minimumReleaseAge": "3 days",
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security"],
+    "schedule": ["at any time"],
+    "minimumReleaseAge": null
+  },
+  "osvVulnerabilityAlerts": true,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 7am on the first day of the month"]
+  },
+  "ignorePaths": ["_context/**", "apps/poc/**"],
+  "packageRules": [
+    {
+      "description": "Group non-major updates so one PR (one deploy) covers them",
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchCurrentVersion": "!/^0/",
+      "groupName": "non-major dependencies"
+    },
+    {
+      "description": "Moving SDKs: one PR each, read the changelog first (AGENTS.md)",
+      "matchPackageNames": [
+        "next",
+        "better-auth",
+        "stripe",
+        "@stripe/**",
+        "drizzle-orm",
+        "drizzle-kit",
+        "@daily-co/**",
+        "resend",
+        "twilio"
+      ],
+      "groupName": null
+    },
+    {
+      "description": "GitHub Actions stay pinned to digests",
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions"
+    }
+  ]
+}
