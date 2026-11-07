@@ -5,14 +5,26 @@ const {
   withAudit,
   findDefaultOrganizationId,
   getPlatformAuditOrgId,
+  userRows,
 } = vi.hoisted(() => ({
   getSessionFromCtx: vi.fn(),
   withAudit: vi.fn(),
   findDefaultOrganizationId: vi.fn(),
   getPlatformAuditOrgId: vi.fn(),
+  userRows: [] as { emailVerified: boolean }[],
 }))
 
-vi.mock("better-auth/api", () => ({ getSessionFromCtx }))
+vi.mock("better-auth/api", () => ({
+  getSessionFromCtx,
+  APIError: class extends Error {
+    constructor(
+      readonly status: string,
+      readonly body: { code: string; message: string }
+    ) {
+      super(body.message)
+    }
+  },
+}))
 vi.mock("@eleva/audit", () => ({ withAudit, getPlatformAuditOrgId }))
 vi.mock("../provision-personal-space", () => ({ findDefaultOrganizationId }))
 vi.mock("@eleva/db", () => {
@@ -27,20 +39,37 @@ vi.mock("@eleva/db", () => {
       passkey: table("passkey", ["id", "userId"]),
       twoFactor: table("twoFactor", ["id", "userId"]),
       apikey: table("apikey", ["id", "userId", "referenceId"]),
-      user: table("user", ["id", "twoFactorEnabled"]),
+      user: table("user", ["id", "twoFactorEnabled", "emailVerified"]),
     },
+    db: () => ({
+      select: () => ({
+        from: () => ({
+          where: () => ({ limit: async () => userRows }),
+        }),
+      }),
+    }),
   }
 })
 
 import { eq, or } from "drizzle-orm"
 import { auth } from "@eleva/db"
-import { guardAccountLink, purgeBeforeClaim } from "./account-claim"
+import {
+  guardAccountLink,
+  purgeBeforeClaim,
+  refuseUnverifiedSession,
+} from "./account-claim"
 
-function context(user: { id: string; emailVerified: boolean } | null) {
+const LONG_AGO = new Date("2026-01-01T00:00:00Z")
+
+function context(
+  user: { id: string; emailVerified: boolean; createdAt?: Date } | null
+) {
   return {
     context: {
       internalAdapter: {
-        findUserById: vi.fn(async () => user),
+        findUserById: vi.fn(async () =>
+          user ? { createdAt: LONG_AGO, ...user } : null
+        ),
         deleteUserSessions: vi.fn(async () => {}),
       },
     },
@@ -265,13 +294,43 @@ describe("purgeBeforeClaim", () => {
     ).resolves.toBeUndefined()
   }
 
-  it("skips verified accounts that no claim was approved for (new users)", async () => {
-    const ctx = context({ id: "user-1", emailVerified: true })
+  it("skips a brand-new provider sign-up (verified, created in this request)", async () => {
+    const ctx = context({
+      id: "user-1",
+      emailVerified: true,
+      createdAt: new Date(),
+    })
     await purgeBeforeClaim(google, ctx)
     expect(withAudit).not.toHaveBeenCalled()
     expect(
       ctx.context.internalAdapter.deleteUserSessions
     ).not.toHaveBeenCalled()
+  })
+
+  it("refuses a verified older row reached without its owner or a claim", async () => {
+    // A claim approval lost to a concurrent request: verification still
+    // aborts the link.
+    const ctx = context({ id: "user-1", emailVerified: true })
+    await expect(purgeBeforeClaim(google, ctx)).rejects.toThrow(/raced/)
+  })
+
+  it("never lets an owner-initiated link consume a pending claim", async () => {
+    const unsignedCtx = context({ id: "user-1", emailVerified: false })
+    await approveClaim(unsignedCtx)
+    getSessionFromCtx.mockResolvedValueOnce({ user: { id: "user-1" } })
+    await purgeBeforeClaim(
+      google,
+      context({ id: "user-1", emailVerified: true })
+    )
+    expect(withAudit).not.toHaveBeenCalled()
+    // The unsigned claim still finds its approval and aborts once verified,
+    // even on a row young enough to pass as a new sign-up without it.
+    await expect(
+      purgeBeforeClaim(
+        google,
+        context({ id: "user-1", emailVerified: true, createdAt: new Date() })
+      )
+    ).rejects.toThrow(/raced/)
   })
 
   it("skips owner-initiated links", async () => {
@@ -426,5 +485,29 @@ describe("purgeBeforeClaim", () => {
     expect(
       ctx.context.internalAdapter.deleteUserSessions
     ).not.toHaveBeenCalled()
+  })
+})
+
+describe("refuseUnverifiedSession", () => {
+  beforeEach(() => {
+    userRows.length = 0
+  })
+
+  it("lets a verified user sign in", async () => {
+    userRows.push({ emailVerified: true })
+    await expect(
+      refuseUnverifiedSession({ userId: "user-1" })
+    ).resolves.toBeUndefined()
+  })
+
+  it("refuses a session for an unverified or missing user", async () => {
+    userRows.push({ emailVerified: false })
+    await expect(refuseUnverifiedSession({ userId: "user-1" })).rejects.toThrow(
+      /Confirm your email/
+    )
+    userRows.length = 0
+    await expect(
+      refuseUnverifiedSession({ userId: "missing" })
+    ).rejects.toThrow(/Confirm your email/)
   })
 })

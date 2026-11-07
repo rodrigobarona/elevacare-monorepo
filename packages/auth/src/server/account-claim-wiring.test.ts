@@ -1,13 +1,17 @@
 import { describe, expect, it, vi } from "vitest"
 
-const { purgeBeforeClaim } = vi.hoisted(() => ({
+const { purgeBeforeClaim, refuseUnverifiedSession } = vi.hoisted(() => ({
   purgeBeforeClaim: vi.fn(async () => {}),
+  refuseUnverifiedSession: vi.fn(async () => {
+    throw new Error("unverified")
+  }),
 }))
 
 vi.mock("@eleva/db", () => ({ db: () => ({}), auth: {} }))
 vi.mock("./account-claim", async (importOriginal) => ({
   ...(await importOriginal<typeof import("./account-claim")>()),
   purgeBeforeClaim,
+  refuseUnverifiedSession,
 }))
 vi.stubEnv("BETTER_AUTH_SECRET", "test-secret-test-secret-test-secret-32")
 
@@ -19,6 +23,9 @@ type ResolvedOptions = {
   databaseHooks?: {
     account?: {
       create?: { before?: (account: unknown, ctx: unknown) => unknown }
+    }
+    session?: {
+      create?: { before?: (session: unknown) => unknown }
     }
   }
   account?: {
@@ -44,6 +51,14 @@ describe("account-claim wiring", () => {
     const account = { userId: "user-1", providerId: "google" }
     await before?.(account, null)
     expect(purgeBeforeClaim).toHaveBeenCalledWith(account, null)
+  })
+
+  it("refuses a session for an unverified row before creating it", async () => {
+    const before = options.databaseHooks?.session?.create?.before
+    expect(before).toBeTypeOf("function")
+    const session = { userId: "user-1", activeOrganizationId: "org-1" }
+    await expect(before?.(session)).rejects.toThrow("unverified")
+    expect(refuseUnverifiedSession).toHaveBeenCalledWith(session)
   })
 
   it("keeps implicit linking on so unverified rows stay claimable", () => {

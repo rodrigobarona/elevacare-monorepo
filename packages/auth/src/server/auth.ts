@@ -32,7 +32,11 @@ import {
 import { isTrustedOrigin, trustedOrigins } from "../trusted-origins"
 import { authRateLimitEnabled } from "../e2e-auth-url"
 import { invitationAcceptUrl } from "../invitation-accept-url"
-import { guardAccountLink, purgeBeforeClaim } from "./account-claim"
+import {
+  guardAccountLink,
+  purgeBeforeClaim,
+  refuseUnverifiedSession,
+} from "./account-claim"
 import { crossSubDomainCookieConfig } from "./cookie-domain"
 import { magicLinkServerHeaders } from "./magic-link-headers"
 import { orgCreateViolation, orgUpdateViolation } from "./org-type-guard"
@@ -229,6 +233,7 @@ function createAuth() {
             userId: string
             activeOrganizationId?: string | null
           }) => {
+            await refuseUnverifiedSession(session)
             if (session.activeOrganizationId) return
             const orgId = await findDefaultOrganizationId(session.userId)
             if (!orgId) return

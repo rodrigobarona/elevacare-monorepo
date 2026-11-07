@@ -82,11 +82,20 @@ Each entry should include:
   the row becomes verified while the claim is in flight, the link is
   aborted. Only a claim approved by the gate for that user and provider in
   the same request purges, so a new OAuth user is never treated as a claim.
-- No account is created from a provider that has not verified the email
-  (`email_not_verified`). Password sign-in already requires verification
-  and a magic link verifies the email, so an unverified row never holds a
-  session (staff impersonation aside). Nothing can therefore enroll a
-  passkey or start a link on the row while a claim runs.
+- An unverified row never holds a session. No account is created from a
+  provider that has not verified the email (`email_not_verified`), and
+  `databaseHooks.session.create.before` refuses any session for an
+  unverified row, which also covers an existing provider login or passkey
+  and staff impersonation. Password sign-in already requires verification,
+  and the magic-link and verify-email links mark the row verified before
+  creating the session. Nothing can therefore enroll a passkey or start a
+  link on the row while a claim runs. Production check on 2026-11-07
+  (read-only counts): 22 unverified users, none with a provider login,
+  passkey, two-factor secret or API key, 5 with a password (which cannot
+  sign in), and no live database sessions.
+- The signed-in owner's own link never consumes a pending claim, and a
+  verified row reached without its owner is refused unless it was created
+  in the same sign-up request.
 - Accepted residual risk: Better Auth inserts the provider account after
   the purge transaction commits, so verification landing in that short
   window still lets the link complete. Verifying needs access to the inbox,

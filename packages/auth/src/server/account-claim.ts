@@ -1,7 +1,7 @@
 import { eq, or } from "drizzle-orm"
-import { getSessionFromCtx } from "better-auth/api"
+import { APIError, getSessionFromCtx } from "better-auth/api"
 import { getPlatformAuditOrgId, withAudit } from "@eleva/audit"
-import { auth } from "@eleva/db"
+import { auth, db } from "@eleva/db"
 import { findDefaultOrganizationId } from "../provision-personal-space"
 
 type AuthEndpointContext = Parameters<typeof getSessionFromCtx>[0]
@@ -16,7 +16,9 @@ export const ACCOUNT_NOT_LINKED = "account_not_linked"
  * link that failed before the hook) are swept when new ones are recorded;
  * an entry is honoured until consumed, so a slow request still purges.
  */
-const PENDING_CLAIM_SWEEP_MS = 10 * 60_000
+const PENDING_CLAIM_SWEEP_MS = 60 * 60_000
+/** A provider sign-up inserts the user and its account in one request. */
+const NEW_USER_WINDOW_MS = 60_000
 const pendingClaims = new Map<string, number>()
 
 function claimKey(userId: string, providerId: string): string {
@@ -46,11 +48,20 @@ async function signedInUserId(
 async function findUser(
   ctx: AuthEndpointContext,
   userId: string
-): Promise<{ id: string; emailVerified: boolean } | null> {
+): Promise<{ id: string; emailVerified: boolean; createdAt: Date } | null> {
   const user = await ctx.context.internalAdapter.findUserById(userId)
   return user
-    ? { id: user.id, emailVerified: Boolean(user.emailVerified) }
+    ? {
+        id: user.id,
+        emailVerified: Boolean(user.emailVerified),
+        createdAt: new Date(user.createdAt),
+      }
     : null
+}
+
+function createdJustNow(user: { createdAt: Date }): boolean {
+  const age = Date.now() - user.createdAt.getTime()
+  return age >= 0 && age < NEW_USER_WINDOW_MS
 }
 
 const EMAIL_NOT_VERIFIED = {
@@ -132,14 +143,22 @@ export async function purgeBeforeClaim(
   ctx: AuthEndpointContext | null
 ): Promise<void> {
   if (!ctx || account.providerId === "credential") return
-  // Only a claim the guard approved in this request purges. New OAuth
-  // users, owner-initiated links and returning sign-ins never record one.
-  if (!takePendingClaim(account.userId, account.providerId)) return
   const user = await findUser(ctx, account.userId)
   if (!user) return
+  // The signed-in owner links freely and never consumes a pending claim.
+  if ((await signedInUserId(ctx)) === user.id) return
+  const claimApproved = takePendingClaim(account.userId, account.providerId)
   if (user.emailVerified) {
-    throw new ClaimRaced("account claim raced verification")
+    // The gate refuses unsigned links to verified rows, so reaching here
+    // without the owner means verification won a race. The exception is a
+    // brand-new provider sign-up, whose user row was created moments ago.
+    if (claimApproved || !createdJustNow(user)) {
+      throw new ClaimRaced("account claim raced verification")
+    }
+    return
   }
+  // Only a claim the gate approved purges.
+  if (!claimApproved) return
 
   const orgId =
     (await findDefaultOrganizationId(user.id)) ?? getPlatformAuditOrgId()
@@ -199,4 +218,28 @@ export async function purgeBeforeClaim(
     })
   })
   await ctx.context.internalAdapter.deleteUserSessions(user.id)
+}
+
+/**
+ * `databaseHooks.session.create.before`: an unverified row never gets a
+ * session. Password sign-in already requires verification, a magic link and
+ * the verify-email link mark the row verified before creating the session,
+ * and unverified provider sign-ups are refused by the gate. This closes the
+ * remaining paths (an existing provider login or passkey on an unverified
+ * row, staff impersonation), so nothing can enroll credentials on a row
+ * that a claim may purge.
+ */
+export async function refuseUnverifiedSession(session: {
+  userId: string
+}): Promise<void> {
+  const [row] = await db()
+    .select({ emailVerified: auth.user.emailVerified })
+    .from(auth.user)
+    .where(eq(auth.user.id, session.userId))
+    .limit(1)
+  if (row?.emailVerified) return
+  throw new APIError("FORBIDDEN", {
+    code: "email_not_verified",
+    message: "Confirm your email address before signing in.",
+  })
 }
