@@ -230,11 +230,47 @@ export function requireAuthEnv(): Required<
   }
 }
 
+/**
+ * Neon endpoint id of a connection string: `ep-foo-123` for both the
+ * direct host and its `-pooler` twin.
+ */
+function neonEndpointId(url: string): string | null {
+  try {
+    const host = new URL(url).hostname
+    const first = host.split(".")[0] ?? ""
+    return first.replace(/-pooler$/, "") || null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Preview deployments run unreviewed branch code, so they must never
+ * reach the production database. `PRODUCTION_DB_ENDPOINT` (the Neon
+ * endpoint id of production, e.g. `ep-plain-voice-alu7buik`) is set on
+ * every Preview scope; a preview whose database URL points there refuses
+ * to boot.
+ */
+export function assertPreviewDatabaseIsolated(
+  url: string,
+  source: NodeJS.ProcessEnv = process.env
+): void {
+  if (source.VERCEL_ENV !== "preview") return
+  const blocked = source.PRODUCTION_DB_ENDPOINT?.trim()
+  if (!blocked) return
+  if (neonEndpointId(url) === blocked) {
+    throw new Error(
+      "@eleva/db boot: a preview deployment points at the production database"
+    )
+  }
+}
+
 export function requireDbEnv(): Required<Pick<Env, "DATABASE_URL">> {
   const e = env()
   if (!e.DATABASE_URL) {
     throw new Error("@eleva/db boot: missing DATABASE_URL")
   }
+  assertPreviewDatabaseIsolated(e.DATABASE_URL)
   return { DATABASE_URL: e.DATABASE_URL }
 }
 
@@ -243,6 +279,7 @@ export function requireAuditDbEnv(): Required<Pick<Env, "AUDIT_DATABASE_URL">> {
   if (!e.AUDIT_DATABASE_URL) {
     throw new Error("@eleva/db boot: missing AUDIT_DATABASE_URL")
   }
+  assertPreviewDatabaseIsolated(e.AUDIT_DATABASE_URL)
   return { AUDIT_DATABASE_URL: e.AUDIT_DATABASE_URL }
 }
 

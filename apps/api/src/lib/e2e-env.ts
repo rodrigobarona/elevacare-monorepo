@@ -9,9 +9,14 @@ export function assertE2eBypassNotInProduction(): void {
   }
 }
 
+/**
+ * Mounted only off Vercel (local and CI loopback runs). Preview
+ * deployments run unreviewed branch code, so they never get the bypass.
+ */
 export function isE2eAuthBypassMounted(): boolean {
+  const vercelEnv = process.env.VERCEL_ENV
   return (
-    process.env.VERCEL_ENV !== "production" &&
+    (vercelEnv === undefined || vercelEnv === "development") &&
     Boolean(process.env.E2E_AUTH_BYPASS_TOKEN)
   )
 }

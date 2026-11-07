@@ -29,9 +29,17 @@ describe("e2e auth bypass guards", () => {
     )
   })
 
-  it("mounts only in non-production when a token is set", () => {
+  it("is not mounted on preview deployments", () => {
     process.env.VERCEL_ENV = "preview"
     process.env.E2E_AUTH_BYPASS_TOKEN = "secret"
+    expect(isE2eAuthBypassMounted()).toBe(false)
+  })
+
+  it("mounts off Vercel when a token is set", () => {
+    delete process.env.VERCEL_ENV
+    process.env.E2E_AUTH_BYPASS_TOKEN = "secret"
+    expect(isE2eAuthBypassMounted()).toBe(true)
+    process.env.VERCEL_ENV = "development"
     expect(isE2eAuthBypassMounted()).toBe(true)
   })
 })
