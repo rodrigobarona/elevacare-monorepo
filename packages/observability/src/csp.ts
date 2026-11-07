@@ -193,6 +193,11 @@ function resolveAllowlist(): Record<string, string[]> {
     merged.mediaSrc?.push(media)
   }
 
+  // Browsers call the API host this deployment is built for (staging,
+  // preview or local), which is not always api.eleva.care.
+  const api = apiOrigin()
+  if (api && !merged.connectSrc?.includes(api)) merged.connectSrc?.push(api)
+
   const branded = dailyDomainAllowlist()
   for (const [directive, origins] of Object.entries(branded)) {
     merged[directive] ??= []
@@ -200,6 +205,16 @@ function resolveAllowlist(): Record<string, string[]> {
   }
 
   return merged
+}
+
+function apiOrigin(): string | null {
+  const raw = process.env.NEXT_PUBLIC_API_URL?.trim()
+  if (!raw) return null
+  try {
+    return new URL(raw).origin
+  } catch {
+    return null
+  }
 }
 
 function dailyDomainAllowlist(): Record<string, string[]> {
