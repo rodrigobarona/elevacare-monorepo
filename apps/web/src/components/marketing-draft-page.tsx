@@ -20,7 +20,6 @@ import { TrustStrip } from "@eleva/ui/blocks/trust-strip"
 import { buttonVariants } from "@eleva/ui/components/button-variants"
 import { Eyebrow, Heading, Lead } from "@eleva/ui/components/typography"
 import { getLocale } from "next-intl/server"
-import { Link } from "@/i18n/navigation"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 
@@ -56,6 +55,11 @@ type Props = {
   headingTestId: string
   body: string
   imageSlug?: string
+  /**
+   * Gateway-absolute, unprefixed path into another zone (account
+   * sign-up / workspace creation). Rendered as a plain `<a>`: the
+   * next-intl Link would add `/pt` or `/es` and land on a 404.
+   */
   cta?: { href: string; label: string }
   stepsHeading?: string
   steps?: { title: string; body: string }[]
@@ -123,13 +127,10 @@ export async function MarketingDraftPage({
               </Heading>
               <Lead>{body}</Lead>
               {cta ? (
-                <Link
-                  href={cta.href}
-                  className={buttonVariants({ size: "xl" })}
-                >
+                <a href={cta.href} className={buttonVariants({ size: "xl" })}>
                   {cta.label}
                   <ArrowRightIcon data-icon="inline-end" />
-                </Link>
+                </a>
               ) : null}
               <p
                 data-testid="legal-draft-banner"
@@ -201,13 +202,13 @@ export async function MarketingDraftPage({
             <Container className="flex max-w-3xl flex-col items-start gap-6">
               <SectionHeader title={finalHeading} lead={finalBody} />
               {finalCta ? (
-                <Link
+                <a
                   href={finalCta.href}
                   className={buttonVariants({ size: "xl" })}
                 >
                   {finalCta.label}
                   <ArrowRightIcon data-icon="inline-end" />
-                </Link>
+                </a>
               ) : null}
             </Container>
           </Section>

@@ -97,15 +97,8 @@ export const PUBLIC_SITE_NAV: readonly SiteNavMenu[] = [
       "/community",
       "/evidence-based-care",
       "/docs",
-      "/academy",
     ],
     links: [
-      {
-        href: "/academy",
-        titleKey: "menu.learn.academy",
-        descriptionKey: "menu.learn.academyDescription",
-        icon: "book",
-      },
       {
         href: "/newsletter",
         titleKey: "menu.learn.newsletter",

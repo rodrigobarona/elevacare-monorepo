@@ -83,6 +83,12 @@ export function rewriteParityPath(pathname: string): string | null {
   const first = rest[0]?.toLowerCase()
   if (!first) return null
 
+  // The help center lives at /docs/{locale}/…, not /{locale}/docs/…
+  // (locale-prefixed nav and footer links used to land on a 404).
+  if (first === "docs" && pathname.split("/").filter(Boolean)[0] !== "docs") {
+    const tail = rest.slice(1).join("/")
+    return `/docs${localePrefix(locale)}${tail ? `/${tail}` : ""}`
+  }
   if (QUIZ_FIRST_SEGMENTS.has(first)) {
     return `${localePrefix(locale)}/experts`
   }
@@ -136,6 +142,13 @@ export const PUBLIC_SITE_PARITY_REDIRECTS = [
     locationPath: "/docs/es/clinics",
   },
   { id: "support", path: "/support", locationPath: "/docs" },
+  { id: "docs-pt", path: "/pt/docs", locationPath: "/docs/pt" },
+  {
+    id: "docs-es-article",
+    path: "/es/docs/members/booking",
+    locationPath: "/docs/es/members/booking",
+  },
+  { id: "docs-en", path: "/en/docs", locationPath: "/docs" },
   { id: "faq-pt", path: "/pt/faq", locationPath: "/docs" },
   { id: "trust-index", path: "/trust", locationPath: "/trust/security" },
   {

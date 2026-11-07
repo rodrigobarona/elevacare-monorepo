@@ -37,7 +37,7 @@ export default async function BecomeExpertPage({ params }: Props) {
       headingTestId="become-expert-heading"
       body={t("body")}
       imageSlug="expert-at-desk"
-      cta={{ href: "/signup", label: t("cta") }}
+      cta={{ href: "/account/workspaces/create/expert", label: t("cta") }}
       stepsHeading={t("stepsHeading")}
       steps={t.raw("steps") as { title: string; body: string }[]}
       benefitsHeading={t("benefitsHeading")}
@@ -52,7 +52,10 @@ export default async function BecomeExpertPage({ params }: Props) {
       requirements={t.raw("requirements") as { title: string; body: string }[]}
       finalHeading={t("finalHeading")}
       finalBody={t("finalBody")}
-      finalCta={{ href: "/signup", label: t("finalCta") }}
+      finalCta={{
+        href: "/account/workspaces/create/expert",
+        label: t("finalCta"),
+      }}
     />
   )
 }
