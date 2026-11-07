@@ -152,8 +152,9 @@ endAt + 30 min)` — the Eleva join-window end (room `exp` matches that window i
   join page fetches it via `POST /sessions/[bookingId]/join` and hands it to `daily-js` in
   memory); `session.joined` audit rows carry `userId` and `roomName` only.
 
-Out: **recording and transcription (moved to Phase 16.8 — not Phase 10; the recording design
-needs a customer-owned S3 landing zone, see 16.8)**, group sessions, dial-in.
+Out: **recording (moved to Phase 16.8; the recording design needs a customer-owned S3 landing
+zone, see 16.8)**, group sessions, dial-in. Consent-gated live transcription and encrypted
+transcript records belong to Phase 10.1.
 
 ## Deliverables
 

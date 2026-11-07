@@ -26,7 +26,7 @@ on 2026-11-07. This file is the
 | Daily is the only video vendor (ADR-018)   | Active                                            |
 | Recording / transcripts                    | **Off** (Phase 16.8 + D-08 still required)        |
 | EU media residency as Eleva-controlled     | **No stronger claim than Daily's docs**           |
-| `/trust` and legal pages                   | Stay draft-bannered until D-12                    |
+| `/trust` and legal pages                   | Ship as production copy, no draft banners         |
 | Online rooms for confirmed `mode = online` | Phase 09 engineering may proceed                  |
 | Production PHI-video on Daily              | **Blocked** until approved (`legal/dpia.md` §2.6) |
 | Phone / in-person bookings reach Daily     | Never                                             |
