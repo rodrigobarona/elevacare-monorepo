@@ -25,12 +25,10 @@ const ACCEPTED_TYPES: readonly string[] = EXPERT_PORTRAIT_UPLOAD.contentTypes
 export function PortraitSection({
   initialUrl,
   displayName,
-  username,
   apiBaseUrl,
 }: {
   initialUrl: string | null
   displayName: string
-  username: string
   apiBaseUrl: string
 }) {
   const t = useTranslations("publicProfile.portrait")
@@ -93,9 +91,7 @@ export function PortraitSection({
             <ExpertPortrait
               key={url ?? "initials"}
               displayName={displayName}
-              username={username}
               avatarUrl={url}
-              className={url ? undefined : "text-4xl"}
             />
             <span className="absolute inset-0 flex items-center justify-center bg-foreground/0 transition-colors group-hover:bg-foreground/40 group-focus-visible:bg-foreground/40">
               {isBusy ? (

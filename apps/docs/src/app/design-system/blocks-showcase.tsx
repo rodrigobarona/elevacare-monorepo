@@ -181,10 +181,7 @@ export function BlocksShowcase() {
                           sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                         />
                       ) : (
-                        <ExpertCardInitials
-                          initials={expert.initials}
-                          className="bg-teal-700"
-                        />
+                        <ExpertCardInitials initials={expert.initials} />
                       )
                     }
                     name={expert.name}

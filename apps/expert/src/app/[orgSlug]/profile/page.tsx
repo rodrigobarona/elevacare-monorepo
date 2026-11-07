@@ -73,7 +73,6 @@ export default async function PublicProfilePage({
       <PortraitSection
         initialUrl={profile.avatarUrl}
         displayName={profile.displayName}
-        username={profile.username}
         apiBaseUrl={apiBaseUrl}
       />
       <BasicsSection

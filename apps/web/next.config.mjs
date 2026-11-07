@@ -86,6 +86,7 @@ const nextConfig = {
     "@eleva/config",
     "@eleva/content",
     "@eleva/db",
+    "@eleva/editor",
     "@eleva/media",
     "@eleva/site-chrome",
     "@eleva/ui",

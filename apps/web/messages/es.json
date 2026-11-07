@@ -277,15 +277,14 @@
     "categoryTitle": "Especialistas en {category} — Eleva.care",
     "description": "Encuentra especialistas independientes en salud de la mujer, sus consultas y disponibilidad en tu idioma y país.",
     "eyebrow": "Encontrar especialista",
-    "heading": "Especialistas en salud de la mujer, cerca de ti",
+    "heading": "Especialistas en salud de la mujer, a tu medida",
     "categoryHeading": "{category}",
-    "intro": "Explora por área de cuidado, filtra por idioma y elige cómo quieres reunirte: online, por teléfono o en persona.",
+    "intro": "Personas reales, con formación real. Elige a alguien cuyo trabajo encaje contigo y reserva por vídeo, por teléfono o en persona.",
     "empty": "Aún no hay especialistas con estos filtros.",
     "filterError": "Esos filtros no son válidos. Restablece e inténtalo de nuevo.",
     "resetFilters": "Restablecer filtros",
     "loadError": "El directorio de especialistas no está disponible. Inténtalo de nuevo en breve.",
     "fromPrice": "Desde {price}",
-    "priceOnRequest": "Precio bajo consulta",
     "topExpert": "Top Expert · plan de pago",
     "categories": {
       "psychology": "Psicología",
@@ -323,35 +322,110 @@
       "lead": "Define tu horario, tarifas y políticas. Nosotros ponemos la tecnología; tú, el cuidado.",
       "cta": "Hazte especialista"
     },
-    "free": "Gratis",
     "rankingNote": "Top Expert es un plan de pago para especialistas. Cuando elige “Top Expert primero”, esos especialistas aparecen antes que los demás.",
     "rankingLink": "Cómo ordenamos a los especialistas",
-    "rankingAnchor": "8-cómo-ordenamos-a-los-especialistas"
+    "rankingAnchor": "8-cómo-ordenamos-a-los-especialistas",
+    "trustLine": "Antes de que un perfil se publique, nuestro equipo comprueba la colegiación profesional de cada especialista.",
+    "emptyCategory": "Todavía no hay especialistas en esta área.",
+    "seeAll": "Ver todos los perfiles",
+    "freeSession": "Sesión gratuita disponible",
+    "speaksLanguage": "Habla {language}",
+    "removeLanguageFilter": "Quitar filtro: habla {language}"
   },
   "profile": {
     "title": "{name} — Eleva.care",
-    "description": "Consulta ofertas y disponibilidad de {name} en Eleva.care.",
-    "upcoming": "Disponibilidad próxima",
-    "noSlots": "No hay horarios en las próximas dos semanas.",
+    "description": "Conoce a {name} en Eleva.care: servicios, formación y los próximos horarios libres.",
     "rateLimited": "Demasiadas solicitudes ahora mismo. Espera un minuto e inténtalo de nuevo.",
-    "offers": "Consultas",
-    "book": "Elegir hora",
-    "bookSlot": "Reservar {offer} el {when}",
-    "cancellationPolicy": "Política de cancelación: {name}",
-    "languages": "Idiomas",
-    "countries": "Atiende a miembros de",
-    "seeAvailability": "Ver disponibilidad",
-    "viewOffers": "Ver consultas",
-    "about": "Sobre {name}",
-    "duration": "{duration} min",
+    "free": "Gratis",
     "fromPrice": "Desde {price}",
-    "timeZoneNote": "Elige un horario para empezar a reservar. Horarios en {timeZone}.",
+    "seeTimes": "Ver horarios",
+    "notBooking": "{name} todavía no acepta reservas aquí. Conoce abajo el trabajo de {name}.",
+    "about": "Sobre mí",
+    "readMore": "Leer más",
+    "readLess": "Mostrar menos",
+    "credentials": "Formación y credenciales",
+    "social": {
+      "website": "Web de {name}",
+      "instagram": "{name} en Instagram",
+      "linkedin": "{name} en LinkedIn",
+      "youtube": "{name} en YouTube",
+      "tiktok": "{name} en TikTok",
+      "facebook": "{name} en Facebook"
+    },
+    "share": {
+      "label": "Compartir esta página",
+      "accessible": "Compartir la página de {name}",
+      "copied": "Enlace copiado"
+    },
+    "facts": {
+      "languages": "Habla {languages}",
+      "video": "Vídeo",
+      "phone": "Teléfono",
+      "inPerson": "En persona",
+      "inPersonIn": "En persona en {places}",
+      "countries": "Miembros en {countries}"
+    },
+    "services": {
+      "heading": "Cómo puedo ayudarte",
+      "included": "Qué incluye",
+      "seeAllIncluded": "Ver los {count} incluidos",
+      "whatToExpect": "Qué esperar",
+      "questions": "Preguntas en las que puedo ayudarte",
+      "requestNote": "{name} confirma cada solicitud en 24 horas, o antes de la sesión si es antes.",
+      "eyebrowMixed": "Sesión de {minutes} min",
+      "eyebrow": {
+        "online": "Videollamada de {minutes} min",
+        "phone": "Llamada de {minutes} min",
+        "in_person": "{minutes} min en persona"
+      }
+    },
+    "freeCancelHours": "Cancelación gratuita hasta {hours} horas antes",
+    "freeCancelDays": "Cancelación gratuita hasta {days} días antes",
     "modeChips": {
       "online": "Videollamada",
       "in_person": "En persona",
       "phone": "Teléfono"
     },
-    "free": "Gratis"
+    "bookSlot": "Reservar {offer} el {when}, {mode}",
+    "card": {
+      "heading": "Reservar una sesión",
+      "chooseService": "Elige un servicio",
+      "timesIn": "Horarios en {zone}",
+      "full": "Las próximas dos semanas están completas.",
+      "laterDates": "Ver fechas posteriores",
+      "seeAll": "Ver todos los horarios",
+      "noAccount": "No necesitas cuenta",
+      "meta": "{minutes} min · {price} en total",
+      "metaFrom": "{minutes} min · desde {price} en total",
+      "metaFree": "{minutes} min · Gratis"
+    },
+    "withEleva": {
+      "heading": "Reservar con Eleva",
+      "howItWorks": {
+        "q": "¿Cómo funciona la reserva?",
+        "a": "Elige un servicio y un horario, añade tu nombre y email y paga de forma segura o confirma una sesión gratuita. El email de confirmación tiene todo lo que necesitas."
+      },
+      "account": {
+        "q": "¿Necesito una cuenta?",
+        "a": "No. Puedes reservar solo con tu nombre y email. Después puedes crear un Espacio gratuito para tener tus sesiones en un solo lugar."
+      },
+      "join": {
+        "q": "¿Cómo me uno a una sesión por vídeo?",
+        "a": "Usa el enlace del email de confirmación. Se abre 15 minutos antes del inicio, en tu navegador, sin app ni cuenta."
+      },
+      "cancel": {
+        "q": "¿Puedo cancelar?",
+        "a": "Sí. Cada servicio indica hasta cuándo puedes cancelar sin coste. Para cancelar, entra con el email con el que reservaste y abre tu sesión."
+      },
+      "care": {
+        "q": "¿Quién me atiende?",
+        "a": "{name} te atiende. Eleva gestiona la reserva y la videollamada."
+      },
+      "checks": {
+        "q": "¿Qué comprueba Eleva?",
+        "a": "Antes de que un perfil se publique, nuestro equipo comprueba la colegiación profesional. Cada especialista describe su propia formación y experiencia."
+      }
+    }
   },
   "booking": {
     "meta": {
