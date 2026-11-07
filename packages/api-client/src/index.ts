@@ -2525,6 +2525,24 @@ export const FinanceSummaryResponseSchema = z.object({
   ),
 })
 
+/** Give an active booking hold 5 more minutes (capped 60 min after it started). */
+export const ExtendBookingHoldRequestSchema = z
+  .object({
+    reservationId: z.string().uuid(),
+    reservationToken: z.string().min(16).max(256),
+  })
+  .strict()
+export type ExtendBookingHoldRequest = z.infer<
+  typeof ExtendBookingHoldRequestSchema
+>
+
+export const ExtendBookingHoldResponseSchema = z.object({
+  expiresAt: z.string().datetime(),
+})
+export type ExtendBookingHoldResponse = z.infer<
+  typeof ExtendBookingHoldResponseSchema
+>
+
 export const ConfirmBookingRequestSchema = z
   .object({
     reservationId: z.string().uuid(),
@@ -3553,6 +3571,14 @@ export function createApiClient(options: ApiClientOptions) {
       async confirm(data: ConfirmBookingRequest) {
         const raw = await request<unknown>("POST", "/bookings/confirm", data)
         return ConfirmBookingResponseSchema.parse(raw)
+      },
+      async extendHold(data: ExtendBookingHoldRequest) {
+        const raw = await request<unknown>(
+          "POST",
+          "/bookings/hold/extend",
+          data
+        )
+        return ExtendBookingHoldResponseSchema.parse(raw)
       },
     },
 
