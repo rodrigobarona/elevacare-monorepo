@@ -7,6 +7,26 @@ import {
 } from "./return-to"
 
 describe("sanitizeReturnTo", () => {
+  it("rejects paths a browser would turn into another site (SEC-2-06)", () => {
+    for (const raw of [
+      "/\\evil.com",
+      "/\\/evil.com",
+      "%2F%5Cevil.com",
+      "/\t/evil.com",
+      "%2F%09%2Fevil.com",
+      "/\n/evil.com",
+      "/%0D%0A/evil.com",
+    ]) {
+      expect(sanitizeReturnTo(raw), JSON.stringify(raw)).toBeUndefined()
+    }
+  })
+
+  it("keeps ordinary paths with query and hash", () => {
+    expect(sanitizeReturnTo("/acme/team/calendar?week=2#today")).toBe(
+      "/acme/team/calendar?week=2#today"
+    )
+  })
+
   describe("null/empty input", () => {
     it("returns undefined for null", () => {
       expect(sanitizeReturnTo(null)).toBeUndefined()
