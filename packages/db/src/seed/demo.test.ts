@@ -23,6 +23,7 @@ describe("seedDemo", () => {
     orgExists = false,
     memExists = false,
   } = {}) {
+    const ensureFixtureLicenceApproved = vi.fn().mockResolvedValue(undefined)
     const returning = vi.fn().mockResolvedValue([{ id: "new-id" }])
     const valuesInsert = vi.fn().mockReturnValue({ returning })
     const valuesInsertVoid = vi.fn().mockResolvedValue(undefined)
@@ -77,6 +78,11 @@ describe("seedDemo", () => {
       },
       clinicProfiles: { id: {}, slug: {}, orgId: {}, displayName: {} },
     }))
+    vi.doMock("../context", () => ({
+      withPlatformAdminContext: <T>(fn: (tx: unknown) => Promise<T>) =>
+        fn({ insert, select }),
+    }))
+    vi.doMock("./licence-fixture", () => ({ ensureFixtureLicenceApproved }))
     vi.doMock("drizzle-orm", async () => {
       const actual =
         await vi.importActual<typeof import("drizzle-orm")>("drizzle-orm")
@@ -84,11 +90,11 @@ describe("seedDemo", () => {
     })
 
     const { seedDemo } = await import("./demo")
-    return { seedDemo, insert, select }
+    return { seedDemo, insert, select, ensureFixtureLicenceApproved }
   }
 
   it("seeds three personas with user + org + membership rows each plus profile rows", async () => {
-    const { seedDemo, insert } = await setup()
+    const { seedDemo, insert, ensureFixtureLicenceApproved } = await setup()
     const results = await seedDemo()
     expect(results).toHaveLength(3)
     expect(results.map((r) => r.email).sort()).toEqual([
@@ -99,6 +105,8 @@ describe("seedDemo", () => {
     // Three personas * (user + org + membership) = 9 inserts
     // plus expert_profiles + clinic_profiles.
     expect(insert).toHaveBeenCalledTimes(11)
+    // The expert fixture is public only with an approved licence row.
+    expect(ensureFixtureLicenceApproved).toHaveBeenCalledTimes(1)
   })
 
   it("is idempotent when all rows already exist", async () => {

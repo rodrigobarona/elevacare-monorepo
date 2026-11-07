@@ -170,6 +170,18 @@ export async function Explorer({
                 </Link>
               ) : null}
             </form>
+            <p
+              className="mt-3 text-sm text-muted-foreground"
+              data-testid="experts-ranking-note"
+            >
+              {t("rankingNote")}{" "}
+              <Link
+                href={`/legal/terms#${t("rankingAnchor")}`}
+                className="underline underline-offset-4 hover:text-foreground"
+              >
+                {t("rankingLink")}
+              </Link>
+            </p>
           </Container>
         </Section>
 

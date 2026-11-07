@@ -32,6 +32,26 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-07: Public listing needs a verified licence; paid ranking is labelled (active)
+
+- Findings: beta council LEGAL-EU-01/04, UX-4-07. Profiles that were
+  `active` before the licence gate stayed listed and bookable although the
+  published terms say only verified experts appear, and the "Rating" sort
+  was paid placement shown as merit.
+- Decision: every public query (directory, profile, service page, slots,
+  reserve) requires an approved `become_partner_applications` row for the
+  profile (`licenceVerified()` in `@eleva/db`). This amends the 2026-10-30
+  "No migration suspends or downgrades anyone" line: nothing is
+  downgraded, but unverified profiles are hidden until staff approve them.
+  On 2026-11-07 that hides every active production profile (`anaquick`,
+  `fisiomota`, `patimota`, `rbarona`, all fixtures or team accounts);
+  Patricia Mota's profile lists once staff approve her licence in the
+  admin queue. Seeds record an approved fixture application.
+- Sort labels are "Name (A–Z)", "Lowest price" and "Top Expert first (paid
+  plan)"; the badge reads "Top Expert · paid plan"; a note under the sort
+  links to terms §8, which now describes only the filters the UI offers.
+  This clarifies §8 without changing rights or obligations, so
+  `CONSENT_DOCUMENT_VERSION` stays `2026-10-29`.
 ### 2026-11-07: Preview deployments get their own database and secrets (active)
 
 - Finding: beta council SEC-3-01 (P0) / SEC-1-03. Every v3 Vercel project

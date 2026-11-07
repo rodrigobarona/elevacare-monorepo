@@ -139,6 +139,9 @@ describe("public queries", () => {
         sortOrder: { name: "sortOrder" },
       },
     }))
+    vi.doMock("./public-listing", () => ({
+      licenceVerified: () => ({ licenceVerified: true }),
+    }))
     vi.doMock("./event-types", () => ({
       publicEventTypeColumns: { id: { name: "eventTypeId" } },
       publicEventTypeWhere: (slug: string) => ({ eventTypeSlug: slug }),
