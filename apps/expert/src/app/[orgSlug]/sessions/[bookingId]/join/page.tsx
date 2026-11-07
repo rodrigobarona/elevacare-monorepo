@@ -26,7 +26,7 @@ export default async function ExpertJoinPage({
   ])
   if (!booking) notFound()
 
-  const backHref = `/${orgSlug}/calendar`
+  const backHref = expertWorkspacePath(session, "calendar")
   const apiBaseUrl = getApiBaseUrl()
 
   if (booking.sessionMode !== "online") {

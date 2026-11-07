@@ -41,7 +41,7 @@ export default async function ExpertSessionReportPage({
       <ReportEditor
         bookingId={bookingId}
         apiBaseUrl={getApiBaseUrl()}
-        backHref={`/${orgSlug}/calendar`}
+        backHref={expertWorkspacePath(session, "calendar")}
         templatesHref={expertWorkspacePath(session, "templates")}
         aiReportsBeta={aiReportsBeta}
       />
