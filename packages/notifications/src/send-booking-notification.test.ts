@@ -36,10 +36,17 @@ const {
       expertConfirmedSubtitle: "A member booked",
       expertRequestedTitle: "New booking request",
       expertRequestedSubtitle: "A member asked",
+      expertCancelledSubtitle: "Expert: cancelled",
+      expertRescheduledSubtitle: "Expert: moved",
+      expertReminder24hSubtitle: "Expert: 24h",
+      expertReminder1hSubtitle: "Expert: 1h",
+      expertRequestDeclinedSubtitle: "Expert: declined",
+      expertRequestExpiredSubtitle: "Expert: expired",
       videoCall: "Video call",
       phoneCall: "Phone call",
     },
     modes: { online: "Video", in_person: "In person", phone: "Phone" },
+    labels: { member: "Member", expert: "Expert", free: "Free" },
     subject: {
       newBooking: (member: string, date: string) =>
         `New booking: ${member} — ${date}`,
@@ -259,7 +266,7 @@ describe("sendBookingNotification", () => {
     )
     expect(send.mock.calls[0]?.[0].ctx.body).toMatch(/^Your session with Ana /)
     expect(send.mock.calls[0]?.[0].ctx.subject).toMatch(
-      /^New Booking Confirmed — /
+      /^New Booking Confirmed · Ana · /
     )
     expect(send.mock.calls[1]?.[0].ctx.body).toMatch(/^New booking: Ada /)
     expect(send.mock.calls[1]?.[0].ctx.subject).toMatch(/^New booking: Ada /)
@@ -369,7 +376,7 @@ describe("sendBookingNotification", () => {
       expect.objectContaining({
         activateHref:
           "https://eleva.care/signup?claim=1&email=ada%40example.com&name=Ada+Lovelace&phone=%2B351910000000",
-        audience: undefined,
+        audience: "member",
       })
     )
     expect(renderBookingConfirmed).toHaveBeenNthCalledWith(
@@ -783,6 +790,53 @@ describe("sendBookingNotification", () => {
       })
     )
     expect(send.mock.calls[0]?.[0].ctx.body).toMatch(/^Your session with Ana /)
+  })
+
+  it("greets each reader in their own language and time zone (UX-3-01/02)", async () => {
+    const send = vi.fn().mockResolvedValue({
+      kind: "booking.reminder_24h",
+      deliveries: [],
+    })
+    renderBookingReminder.mockClear()
+    getEmailTranslations.mockClear()
+    await sendBookingNotification(
+      {
+        id: "evt-reminder-locale",
+        type: "booking.reminder_24h",
+        orgId: ORG_ID,
+        payload: eventPayload(),
+      },
+      {
+        loadBooking: async () =>
+          booking({
+            bookedLocale: "pt",
+            timezone: "America/Sao_Paulo",
+            expertLocale: "en",
+            expertTimezone: "Europe/Lisbon",
+          }),
+        send,
+      }
+    )
+    const [memberCall, expertCall] = renderBookingReminder.mock.calls.map(
+      (call) => (call as unknown[])[0] as Record<string, unknown>
+    )
+    expect(memberCall).toEqual(
+      expect.objectContaining({
+        locale: "pt",
+        counterpartLabel: "Expert",
+        subheading: "24h",
+      })
+    )
+    expect(expertCall).toEqual(
+      expect.objectContaining({
+        locale: "en",
+        greetingName: "Ana",
+        counterpartLabel: "Member",
+        subheading: "Expert: 24h",
+      })
+    )
+    // Same instant, each in the reader's own zone.
+    expect(memberCall?.formattedDate).not.toEqual(expertCall?.formattedDate)
   })
 
   it("still sends reminders after a reschedule when startsAt matches", async () => {

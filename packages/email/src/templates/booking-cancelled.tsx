@@ -18,6 +18,11 @@ export interface BookingCancelledProps {
   preview?: string
   /** Hide when this send has no .ics attachment (request declined/expired). */
   showIcsHint?: boolean
+  /** Who the email greets; defaults to memberName. */
+  greetingName?: string
+  /** The other person's row ("Member" for experts, "Expert" for members). */
+  counterpartLabel?: string
+  counterpartName?: string
 }
 
 export function BookingCancelledEmail({
@@ -32,6 +37,9 @@ export function BookingCancelledEmail({
   subheading,
   preview,
   showIcsHint = true,
+  greetingName,
+  counterpartLabel,
+  counterpartName,
 }: BookingCancelledProps) {
   const t = getEmailTranslations(locale)
 
@@ -43,14 +51,18 @@ export function BookingCancelledEmail({
     >
       <EmailHeading>{heading ?? t.booking.cancelledTitle}</EmailHeading>
       <EmailBodyText className="mb-[8px]">
-        {t.booking.greeting(memberName)}
+        {t.booking.greeting(greetingName ?? memberName)}
       </EmailBodyText>
       <EmailBodyText className="mb-[24px]">
         {subheading ?? t.booking.cancelledSubtitle}
       </EmailBodyText>
 
       <EmailCard variant="muted">
-        <DetailRow label={t.labels.member} value={memberName} bold />
+        <DetailRow
+          label={counterpartLabel ?? t.labels.member}
+          value={counterpartName ?? memberName}
+          bold
+        />
         <DetailRow label={t.labels.service} value={eventTypeName} />
         <DetailRow
           label={t.labels.wasScheduled}
