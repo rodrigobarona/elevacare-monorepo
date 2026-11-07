@@ -123,6 +123,23 @@ export interface WithHeadersOptions {
   extra?: Record<string, string>
   /** If false, suppress CSP for this app (docs/email internal). Default true. */
   emitCsp?: boolean
+  /**
+   * Leave responses the handler rewrote to another origin untouched. The
+   * gateway (`apps/web`) fronts other zones; each zone sets its own headers,
+   * so stamping the gateway's CSP on top would stack two policies.
+   */
+  skipCrossOriginRewrites?: boolean
+}
+
+/** True when the proxy response rewrites the request to a different origin. */
+export function isCrossOriginRewrite(req: NextRequest, res: Response): boolean {
+  const target = res.headers.get("x-middleware-rewrite")
+  if (!target) return false
+  try {
+    return new URL(target, req.nextUrl.origin).origin !== req.nextUrl.origin
+  } catch {
+    return false
+  }
 }
 
 export function withHeaders(
@@ -139,6 +156,9 @@ export function withHeaders(
     const res = await withCorrelationId(correlationId, async () =>
       handler(req, event)
     )
+    if (options.skipCrossOriginRewrites && isCrossOriginRewrite(req, res)) {
+      return res
+    }
 
     // Build a NextResponse we can mutate regardless of handler return type.
     const nextRes = res instanceof NextResponse ? res : NextResponse.next(res)

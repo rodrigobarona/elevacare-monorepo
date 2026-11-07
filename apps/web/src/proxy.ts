@@ -1,10 +1,16 @@
 import createMiddleware from "next-intl/middleware"
+import { withHeaders } from "@eleva/observability/proxy"
 import { createGatewayProxy } from "./lib/create-gateway-proxy"
 import { routing } from "./i18n/routing"
 
-export default createGatewayProxy({
-  intlMiddleware: createMiddleware(routing),
-})
+// Secure headers + CSP on pages this app serves. Requests rewritten to
+// another zone keep that zone's own headers.
+export default withHeaders(
+  createGatewayProxy({
+    intlMiddleware: createMiddleware(routing),
+  }),
+  { skipCrossOriginRewrites: true }
+)
 
 // Custom matcher: the gateway also fronts a /trpc path on this app
 // (handled by Next's filesystem, not this proxy), so we exclude it.
