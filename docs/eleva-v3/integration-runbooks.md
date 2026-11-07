@@ -94,7 +94,7 @@ Should cover:
 - transcript not appearing
 - transcript available but downstream workflow failed
 
-Standard Daily only until D-07. Recording off. Not HIPAA.
+Standard Daily. Recording off.
 
 #### Daily outage
 
@@ -113,8 +113,7 @@ room create; webhook backlog.
 4. `payment.failed` or a **full** refund **before** `startAt` already
    cancels the session and deletes the room. Partial refunds and refunds
    after the session leave the session row intact.
-5. Escalate to Daily status + Sentry. Stamp **not HIPAA** in any customer
-   reply.
+5. Escalate to Daily status + Sentry.
 
 ### Resend runbook
 

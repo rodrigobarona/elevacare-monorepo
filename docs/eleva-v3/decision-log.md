@@ -32,6 +32,26 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-07: EU focus, and copy says what Eleva does (active)
+
+- Decision (founder): Eleva is EU-based and EU-focused. US health-privacy
+  frameworks are not mentioned anywhere: product UI, emails, legal and
+  trust pages, marketing, OpenAPI descriptions, READMEs, docs and code
+  copy. Copy never lists what Eleva does not have. It says what Eleva has
+  and does well, for example "Your call is private and is not recorded."
+  US frameworks are revisited only if Eleva expands to the USA.
+- D-07 (a Daily plan tier for US health privacy) is **dropped**, not
+  deferred. Video runs on standard Daily with cloud recording off.
+  Production clinical video still follows DPIA section 2.6 (Daily DPA in
+  the company name, Daily's EU transfer position, recording off). That
+  approval stays an open founder decision.
+- Voice: Eleva is a health reference and companion. Copy and UX flows must
+  feel trustworthy, warm, secure and friendly.
+- Enforcement: guard tests in `packages/content/src/content-compliance.test.ts`
+  and `apps/web/src/marketing-copy.test.ts`; rule recorded in `AGENTS.md`.
+  Applied migration comments are left as written.
+- Owner: founder (Rodrigo Barona).
+
 ### 2026-11-06: Expert pilot invitation gate (active)
 
 - Decision: no real expert from `eleva-care-app` is invited to test v3 on
@@ -175,10 +195,8 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
   - Replace "digital health platform" and "telemedicine" wording in the DPA, expert agreement and
     `/trust/ers` (all three locales). Risk analysis: [`legal/ers-position.md`](./legal/ers-position.md) §4.
 - Open decisions:
-  - **D-07 route.** Production clinical video on Daily stays blocked until D-07 is signed. D-07 as
-    written means a HIPAA-enabled plan and a BAA, while the 2026-10-12 entry says HIPAA is not an EU
-    launch priority. The founder must either sign D-07 or supersede it with a decision for standard
-    Daily (not HIPAA, recording off) stating scope and conditions. See
+  - **Production clinical video.** Production clinical video on Daily stays blocked until the
+    founder records a decision for standard Daily (recording off) stating scope and conditions. See
     [`legal/dpia.md`](./legal/dpia.md) §2.6.
   - **D-12-A intake.** `eraseMemberClinicalRecords` deletes every intake today. Decide whether an
     intake is kept with the clinical record once a session has taken place. See
@@ -331,7 +349,7 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
     while the product remains in pre-launch configuration.
   - **Stripe test keys only** — abort if production env exposes live `sk_live_*`.
   - **Seeded expert only** — `fisiomota` / `first-visit` / €60; no real members or PHI in notes.
-  - **Daily standard, recording off, not HIPAA** — unchanged from Phase 09 posture.
+  - **Daily standard, recording off** — unchanged from Phase 09 posture.
   - **BotID** — prod may stay `off` (AUD-017); record observed state in the runbook row.
   - **Capture** — redacted join URLs, Stripe object ids, Daily webhook delivery ids in
     [`audits/staging-evidence-runbook-2026-10.md`](./audits/staging-evidence-runbook-2026-10.md);
@@ -776,7 +794,7 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
   - Email header logo: no public URL serves the logo PNG, so the header
     keeps the text wordmark.
   - Email copy: the footer says "active account" for guest bookings, and the
-    member join hint shows the "standard Daily, not HIPAA" line.
+    member join hint shows an internal video-vendor compliance line.
   - Booking inputs lack accessible names (Field/FieldLabel association), and
     the header login `LinkButton` has a hydration warning.
   - Decide whether to keep the `VerifiedBadge` kit primitive.
@@ -969,18 +987,16 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
   member opt-out honoured, `scope=shared` only). Member-account erasure
   deletes member-uploaded and shared documents (Blob then row) and
   clears `member_user_id` on remaining expert-only files (D-12).
-  Cloud recording/S3 stays 16.8. Not HIPAA.
+  Cloud recording/S3 stays 16.8.
 - Owner: engineering
 - Status: `active`
 - Related: Phase 10.1, D-07, D-11, ADR-009
 - Next review: DPO re-sign before production clinical records.
 
-### 2026-10-12: HIPAA is not an EU launch priority; session records open on standard Daily
+### 2026-10-12: EU-first; session records open on standard Daily
 
-- Decision: Eleva is **EU-first**. Founder: HIPAA/BAA is nice-to-have, not a
-  launch blocker. **D-07 stays deferred.** Product stays **standard Daily,
-  recording off, not HIPAA** — no BAA claim, no `sessions.eleva.care`
-  CNAME. Phase **10.1** may store encrypted session artifacts on the
+- Decision: Eleva is **EU-first**. **D-07 stays deferred.** Product stays
+  **standard Daily, recording off**, with no `sessions.eleva.care` CNAME. Phase **10.1** may store encrypted session artifacts on the
   member record for that booking: (1) member intake / pre-agenda from the
   booking form, (2) expert in-call notes that must not be lost on
   refresh or leave, (3) a **live** Daily transcript (raw) and later an AI
@@ -1004,7 +1020,7 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
   Safari unsigned guest `/join/{id}?g=`, same private room, live chat).
   That is **not** the Phase 09 staging exit gate. Staging Daily webhook
   subscribe (`meeting.started`/`ended` → `sessions.status`) remains
-  leftover. Not HIPAA.
+  leftover.
 - Owner: engineering
 - Status: `active`
 - Related: Phase 09.7, spike `09-daily-account.md`
@@ -1239,7 +1255,7 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
 ### 2026-10-08: 09.0 standard Daily live probe PASS; Eleva join leftover
 
 - Decision: The 09.0 account probe is **PASS** on standard Daily
-  (`elevacare.daily.co`, recording off, **not HIPAA**). Evidence: REST
+  (`elevacare.daily.co`, recording off). Evidence: REST
   `POST /rooms` for `eleva-97fc22a0-583d-424a-9dc7-c7742167192f`, paid
   quota 100k rooms, two browsers on the Daily Prebuilt mint URL, Daily
   session analytics Ended (2 participants, 8 min). Room contract now
@@ -1259,7 +1275,7 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
 ### 2026-10-08: Phase 09 engineering closed on standard Daily, exit gate unproven
 
 - Decision: Phase 09 slices 09.1–09.6.3 are on main (PRs #163–#170 plus this
-  exit-gate stamp). Product is **standard Daily, recording off, not HIPAA**.
+  exit-gate stamp). Product is **standard Daily, recording off**.
   Join Permissions-Policy is on `/sessions/.../join`. Meeting-token JWTs are
   redacted in observability and blocked by `pnpm check:no-phi-logs`. Do **not**
   stamp the phase exit gate as proven: the 09.0 Daily Prebuilt probe is
@@ -1328,8 +1344,8 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
 - Owner: engineering
 - Status: `active`
 - Related: ADR-018, `scheduling-booking-spec.md`, Phase 09.5
-- Next review: when D-07 HIPAA Daily is signed (room-name and recording rules
-  change); this payment↔session rule stays.
+- Next review: if room-name or recording rules change; this payment↔session
+  rule stays.
 
 ### 2026-10-07: Session attendance finalizes on meeting.ended, then corrects
 
@@ -1345,21 +1361,19 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
 - Reference: [`execution-plan/phases/09-video-daily.md`](./execution-plan/phases/09-video-daily.md),
   [ADR-018](./adrs/ADR-018-daily-video-only.md)
 
-### 2026-10-07: Founder defers D-07 BAA/HIPAA; Phase 09 opens on standard Daily
+### 2026-10-07: Founder defers D-07; Phase 09 opens on standard Daily
 
-- Decision: the founder will show the running product to accounting and legal and does
-  **not** want a Daily BAA or a HIPAA programme for now. Phase 09 engineering may
-  proceed on a **standard (non-HIPAA) Daily** domain with recording off. D-07 is
-  **deferred**, not signed. Stamp **not HIPAA**. Never claim BAA/DPA executed or
-  that D-07 closed.
+- Decision: the founder will show the running product to accounting and legal.
+  Phase 09 engineering may proceed on a **standard Daily** domain with
+  recording off. D-07 is **deferred**, not signed. Never claim that D-07
+  closed.
 - This waiver unblocks Phase 09 **video engineering only**. It does **not** name
   FT POST, Comunicação, or `invoice.issued`. Those stay closed.
   `issueInvoice()` stays unconditionally closed. D-06, D-12 and Twilio IE1 stay
   open. Legal and trust pages stay draft-bannered.
-- Production go-live that claims HIPAA or processes PHI on Daily still needs
-  D-07 (founder + DPO, executed BAA/DPA, HIPAA domain) later. Until then,
-  rooms use deterministic names (`eleva-{bookingId}`), not the HIPAA random-name
-  fingerprint path.
+- Production go-live that processes PHI on Daily still needs a later founder +
+  DPO decision (D-07). Until then, rooms use deterministic names
+  (`eleva-{bookingId}`).
 - Owner: founder. Status: `active`.
 - Reference: [`spikes/09-daily-account.md`](./spikes/09-daily-account.md),
   [`audits/2026-10-phase-09-readiness.md`](./audits/2026-10-phase-09-readiness.md),
@@ -1525,7 +1539,7 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
     `expert_invoices`, not platform-fee invoices minus credit notes) to the PR
     that opens issuance. Until then reconciliation mismatches are not a signal.
   - **Phase 09.0** (Daily account spike, docs/evidence only) may start as soon
-    as D-07 (Daily HIPAA/BAA/DPA, founder + DPO) is in motion. This is a
+    as D-07 (Daily DPA and EU processing position, founder + DPO) is in motion. This is a
     carve-out for the docs/evidence spike only and supersedes nothing else.
     Phase 09 implementation still needs all of: the fix pack above merged;
     FT POST / Comunicação / `invoice.issued` open, or a separate founder
@@ -1553,7 +1567,7 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
   **not** claim those flows were operator-proven. **Not waived:** live FT POST,
   Comunicação, `issueInvoice()` / `invoice.issued` (Phase 07 hard gates).
   **Do not start Phase 09** — still blocked on those tax/issuance gates **and**
-  on D-07 (Daily HIPAA/BAA/DPA founder+DPO sign-off). The 04B waiver does not
+  on D-07 (Daily DPA and EU processing position, founder+DPO sign-off). The 04B waiver does not
   close D-07.
 - Owner: founder (directive); stamped by engineering
 - Status: active
@@ -1760,7 +1774,7 @@ no-session` under local zone URLs; Stripe CLI key expired). Phase 07
   Token still required for EU path. **04B human evidence waived** by founder
   2026-09-25 (“Waivo toda a evidência humana 04B”). Remaining pre-Phase-09
   blockers: hard-blocked **07** FT POST / Comunicação / `invoice.issued`,
-  **and** D-07 (Daily HIPAA/BAA/DPA founder+DPO sign-off) — the 04B waiver
+  **and** D-07 (Daily DPA and EU processing position, founder+DPO sign-off) — the 04B waiver
   closes neither. Do **not** start Phase 09 until both are satisfied.
 - Related: [`execution-plan/phases/04b-expert-offer-builder.md`](./execution-plan/phases/04b-expert-offer-builder.md),
   ADR-023
@@ -2543,7 +2557,7 @@ série`) — that would register them as official Portuguese document series.
 
 - Owner: platform/security
 - Status: active
-- Summary: Two Neon projects stay (`eleva_v3_main` + `eleva_v3_audit`). `withAudit(action, entity, fn)` writes domain rows **and** `main.audit_outbox` row in the same main-DB transaction — atomic commit preserves transactional integrity across the physically separated audit store. `auditOutboxDrainer` Vercel Workflow (ADR-007) copies outbox rows to `eleva_v3_audit.audit_events` with at-least-once delivery (idempotent on pre-generated `audit_id` UUID); marks outbox row `shipped`. Shipped rows purged after 90 days. Audit DB RLS: INSERT via drainer credentials only; SELECT filtered by `org_id` OR `audit:view_all` capability; UPDATE/DELETE revoked. Hash-chain option (prev_hash + row_hash) additive in Sprint 7 for ISO 27001 / SOC 2 integrity evidence. Compliance-control mapping (GDPR Art. 30/17, HIPAA 164.312(b)/(c), ISO 27001 A.12.4, SOC 2 CC7.3) recorded in compliance spec.
+- Summary: Two Neon projects stay (`eleva_v3_main` + `eleva_v3_audit`). `withAudit(action, entity, fn)` writes domain rows **and** `main.audit_outbox` row in the same main-DB transaction — atomic commit preserves transactional integrity across the physically separated audit store. `auditOutboxDrainer` Vercel Workflow (ADR-007) copies outbox rows to `eleva_v3_audit.audit_events` with at-least-once delivery (idempotent on pre-generated `audit_id` UUID); marks outbox row `shipped`. Shipped rows purged after 90 days. Audit DB RLS: INSERT via drainer credentials only; SELECT filtered by `org_id` OR `audit:view_all` capability; UPDATE/DELETE revoked. Hash-chain option (prev_hash + row_hash) additive in Sprint 7 for ISO 27001 / SOC 2 integrity evidence. Compliance-control mapping (GDPR Art. 30/17, ISO 27001 A.12.4, SOC 2 CC7.3) recorded in compliance spec.
 - Reference: [`adrs/ADR-003-tenancy-and-rls.md`](./adrs/ADR-003-tenancy-and-rls.md), [`compliance-data-governance.md`](./compliance-data-governance.md)
 
 ### 2026-04-22: DNS management — Vercel Domains for `eleva.care`
@@ -2691,7 +2705,7 @@ série`) — that would register them as official Portuguese document series.
 - Supersedes **in part**: ADR-004 — only its WorkOS Pipes credential transport and its Google Meet link assumption; the Eleva-owned Google/Microsoft calendar OAuth and the cal.com-inspired scheduling model stay and Phase 4 builds on them; ADR-015 — only the "single WorkOS Application" assumption; the role-focused multi-app split stays; plus the WorkOS Vault/Pipes assumptions in `compliance-data-governance.md` and `calendar-integration-spec.md`. Phase 1 adds "Superseded in part by ADR-017/018/020" banners to ADR-004 and ADR-015 rather than retiring them.
 - Summary:
   - **ADR-017 Identity**: self-hosted Better Auth in `apps/api` (`api.eleva.care/auth/*`), Drizzle adapter, `auth` schema on the main Neon project, plugins `organization`, `admin`, `twoFactor`, `passkey`, `magicLink`, `bearer`, `jwt`, `apiKey`, `openAPI`, `nextCookies`; session cookie on `.eleva.care`; frontend apps never instantiate the auth server. Neon managed Better Auth rejected (Beta, partial organization plugin, no MFA/hooks).
-  - **ADR-018 Video**: Daily.co only (HIPAA-enabled domain, branded `sessions.eleva.care`); Google/Microsoft calendars remain for busy-time and destination sync.
+  - **ADR-018 Video**: Daily.co only (standard Daily domain; branded `sessions.eleva.care` deferred); Google/Microsoft calendars remain for busy-time and destination sync.
   - **ADR-019 Migration**: import MVP data (users, orgs, experts, bookings, payout ledger, records) into v3 with a DNS cutover; same Stripe platform account.
   - **ADR-020 Encryption**: envelope encryption in `@eleva/encryption` (AES-256-GCM, per-org DEK wrapped by a versioned KEK from env, `org_data_keys`, crypto-shred = delete DEK); OAuth tokens encrypted by Better Auth.
   - **ADR-021 RBAC**: single source of truth in code (`packages/auth/src/permissions.ts`); product label derived from `(organization.type, member.role)`.
@@ -2730,7 +2744,7 @@ série`) — that would register them as official Portuguese document series.
 
 - Owner: engineering
 - Status: accepted
-- Summary: the Phase 0 CodeRabbit loop locked several cross-phase contracts that previous documents left ambiguous. (1) Payout states: `payout_states.status` = `pending|scheduled|approval_required|transferred|paid_out|failed|held|reversal_pending|reversed` is the SSOT (`reversal_pending` added by the 2026-09-07 amendment: refund succeeded, transfer reversal not yet confirmed) (Phase 6 and `payments-payouts-spec.md` identical); a hold records `held_from_status` and a dispute won or a hold release restores it — there is no `released` state. (2) Notifications: one `sendNotification({ kind, recipient, orgId?, ctx, idempotencyKey, channelsOverride? })` contract; urgency belongs to `NOTIFICATION_KINDS[kind]`; e-mail is an idempotent provider submission (Resend `Idempotency-Key` = delivery row id, 24 h dedupe), SMS is at-least-once with Twilio status callback + per-delivery `Ref` body-fingerprint reconciliation; disputes and manual holds go to `held` (never `approval_required`) as a `hold_reasons` set, and the row returns to `held_from_status` only when every reason is cleared. (3) Tier 1 invoice retry policy is two-stage (5 fast attempts -> `failed` + alert; 10 sweep attempts -> `dead_lettered` + admin flag). (4) Daily: delegate removal ejects + bans at the provider; webhook transitions are ordered by event time (`sessions.last_event_at`, monotonic status); room creation reconciles lost responses from Eleva-owned intent (`room_create_attempt_at`, `room_attempt_seq`, `room_fingerprint_exp`) matched against the listed rooms' `nbf`/`exp` — Daily HIPAA mode rejects custom room names and room properties have no `meta`, so there is no provider-side handle (supersedes the earlier `room_request_id`-in-`meta` design, 2026-09-07 amendment) — and otherwise lands in `room_unresolved`. (5) Private booking links claim a use inside the durable reservation transaction, after the slot lock. (6) Migration deltas key on the MVP source snapshot (`migration_runs.source_watermark`), never the target completion time; Phase 15 production configuration is gated one mutation at a time (ADR-019). (7) CodeRabbit: the App's 100-file cap is the only file cap; the loop caps are 3 `pnpm review` rounds, 2 `pnpm review:branch` rounds and 2 GitHub App rounds, exiting only with zero open Critical/Major and every remaining Minor/Trivial recorded in the PR body "Deferred findings" table; the PR-size targets of `execution-plan/README.md` section 4 rule 1 (<= 30 files / 400 lines) apply to every prompt; hourly allowance recorded (Advanced trial 10/dev/h until 21 Sep 2026, then Team 8 or Essentials 5).
+- Summary: the Phase 0 CodeRabbit loop locked several cross-phase contracts that previous documents left ambiguous. (1) Payout states: `payout_states.status` = `pending|scheduled|approval_required|transferred|paid_out|failed|held|reversal_pending|reversed` is the SSOT (`reversal_pending` added by the 2026-09-07 amendment: refund succeeded, transfer reversal not yet confirmed) (Phase 6 and `payments-payouts-spec.md` identical); a hold records `held_from_status` and a dispute won or a hold release restores it — there is no `released` state. (2) Notifications: one `sendNotification({ kind, recipient, orgId?, ctx, idempotencyKey, channelsOverride? })` contract; urgency belongs to `NOTIFICATION_KINDS[kind]`; e-mail is an idempotent provider submission (Resend `Idempotency-Key` = delivery row id, 24 h dedupe), SMS is at-least-once with Twilio status callback + per-delivery `Ref` body-fingerprint reconciliation; disputes and manual holds go to `held` (never `approval_required`) as a `hold_reasons` set, and the row returns to `held_from_status` only when every reason is cleared. (3) Tier 1 invoice retry policy is two-stage (5 fast attempts -> `failed` + alert; 10 sweep attempts -> `dead_lettered` + admin flag). (4) Daily: delegate removal ejects + bans at the provider; webhook transitions are ordered by event time (`sessions.last_event_at`, monotonic status); room creation reconciles lost responses from Eleva-owned intent (`room_create_attempt_at`, `room_attempt_seq`, `room_fingerprint_exp`) matched against the listed rooms' `nbf`/`exp` — room properties have no `meta`, so there is no provider-side handle (supersedes the earlier `room_request_id`-in-`meta` design, 2026-09-07 amendment) — and otherwise lands in `room_unresolved`. (5) Private booking links claim a use inside the durable reservation transaction, after the slot lock. (6) Migration deltas key on the MVP source snapshot (`migration_runs.source_watermark`), never the target completion time; Phase 15 production configuration is gated one mutation at a time (ADR-019). (7) CodeRabbit: the App's 100-file cap is the only file cap; the loop caps are 3 `pnpm review` rounds, 2 `pnpm review:branch` rounds and 2 GitHub App rounds, exiting only with zero open Critical/Major and every remaining Minor/Trivial recorded in the PR body "Deferred findings" table; the PR-size targets of `execution-plan/README.md` section 4 rule 1 (<= 30 files / 400 lines) apply to every prompt; hourly allowance recorded (Advanced trial 10/dev/h until 21 Sep 2026, then Team 8 or Essentials 5).
 - Reference: execution-plan phases 4, 6, 7, 8, 9, 12, 14, 15; [`payments-payouts-spec.md`](./payments-payouts-spec.md) "Payout States"; [`notifications-spec.md`](./notifications-spec.md) entrypoint.
 
 ### 2026-09-07: Execution-plan amendment from the external engineering review (D-01..D-14)
@@ -2899,17 +2913,16 @@ capabilities.transfers = active`. Stripe Identity stays implemented behind
   2026-10-29 entry "Legal pages for the launch posture". The finance + legal
   re-sign is **still pending** (not waived).
 
-### D-07 (2026-09-07): Daily HIPAA domain, BAA/DPA and EU processing position
+### D-07 (2026-09-07): Daily plan tier, DPA and EU processing position
 
 - Owner: founder + DPO
-- Status: **deferred** (founder 2026-10-07 — BAA and HIPAA not pursued now)
-- Review date: when the founder wants production PHI-video (clinical sessions on Daily)
-- Summary: the Daily plan tier with HIPAA enabled, the executed BAA/DPA, the documented EU
-  media-processing position (stated only as Daily documents it — no stronger claim on `/trust`),
-  `sessions.eleva.care` verified, recording confirmed off for the domain. **Does not
-  block Phase 09 engineering or accountant/legal demo on standard Daily.** Blocks
-  **production PHI-video processing** (clinical sessions on Daily), not only a HIPAA
-  marketing claim. Phase 09 uses standard Daily until this is signed.
+- Status: **dropped** (founder 2026-11-07; deferred 2026-10-07 before that)
+- Summary: as first written, D-07 covered a special Daily plan tier and its agreement, the
+  documented EU media-processing position (stated only as Daily documents it — no stronger claim
+  on `/trust`), `sessions.eleva.care` verified, and recording confirmed off for the domain. The
+  founder dropped it on 2026-11-07. Video runs on standard Daily with cloud recording off, which
+  is the intended EU setup. No other Daily tier is planned for the EU launch. Production clinical
+  video on Daily follows the gate in [`legal/dpia.md`](./legal/dpia.md) §2.6.
 - Reference: [`spikes/09-daily-account.md`](./spikes/09-daily-account.md),
   [`execution-plan/phases/09-video-daily.md`](./execution-plan/phases/09-video-daily.md)
 
@@ -2918,8 +2931,8 @@ capabilities.transfers = active`. Stripe Identity stays implemented behind
 - Owner: DPO + founder
 - Status: proposed (decide before Phase 16.8 is promoted)
 - Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
-- Summary: Daily HIPAA recording writes only to a customer-owned AWS S3 bucket via IAM role trust;
-  Vercel Blob, Neon object storage and Cloudflare R2 are not accepted destinations. Design: a
+- Summary: Daily custom recording storage writes only to a customer-owned AWS S3 bucket via IAM
+  role trust; Vercel Blob, Neon object storage and Cloudflare R2 are not accepted destinations. Design: a
   disposable EU S3 bucket (SSE-KMS, 72 h lifecycle) as a mailbox, a workflow that pulls, encrypts
   per org and stores through `@eleva/storage` in the private Blob store (EU region confirmed),
   then deletes the S3 object. Recording lives only in 16.8. Blocks: 16.8.

@@ -364,7 +364,7 @@ See Points for review.
   financial record). Rooms are deleted after inactivity.
 - **Security:**
   - [SEC-VIDEO], [SEC-AUDIT].
-  - Not HIPAA. No BAA (D-07 deferred).
+  - Cloud recording is off.
 
 ### C8 — Customer support and complaints
 

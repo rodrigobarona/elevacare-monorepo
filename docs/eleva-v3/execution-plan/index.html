@@ -112,7 +112,7 @@ one organization on a per-seat SaaS plan; <strong>Academy</strong> is the educat
 multilingual (<code>pt</code>, <code>en</code>, <code>es</code> at launch; <code>pt-BR</code> is <strong>retired</strong> as a locale — D-01: <code>/pt-BR/*</code>
 301s to <code>/pt/*</code>, Brazil returns as a content + payments discovery item in Phase 16.2), API-first
 and agentic-first, and built to
-HIPAA/GDPR/ERS-Portugal standards.</p>
+GDPR/ERS-Portugal standards.</p>
 <p>End state of this plan (production, <code>eleva.care</code> DNS switched from the MVP):</p>
 <table>
 <thead>
@@ -200,7 +200,7 @@ fiscal software (Tier 2: TOConline, Moloni, or manual export).</p>
 </tr>
 <tr>
 <td>ADR-018</td>
-<td><strong>Video = Daily.co only.</strong> Until D-07: <strong>standard</strong> (not HIPAA) domain, named rooms, recording off. HIPAA domain <code>elevacare.daily.co</code> / branded <code>sessions.eleva.care</code> wait for a later D-07. Google/Microsoft calendars remain busy-time + destination sync only.</td>
+<td><strong>Video = Daily.co only.</strong> <strong>Standard</strong> Daily domain (<code>elevacare.daily.co</code>), named rooms, recording off. Branded <code>sessions.eleva.care</code> is deferred. Google/Microsoft calendars remain busy-time + destination sync only.</td>
 <td>Google Meet links</td>
 </tr>
 <tr>
@@ -256,7 +256,7 @@ QStash webhooks/workflows.</li>
 <code>eleva.org_id</code> and the 7-class taxonomy.</li>
 <li>Domain packages with real code: <code>auth</code>, <code>audit</code>, <code>billing</code>, <code>scheduling</code>, <code>calendar</code>,
 <code>accounting</code> (closed-gate TOConline; Moloni adapter is a scaffold), <code>notifications</code>,
-<code>compliance</code>, <code>video</code> (Daily, standard, <strong>not HIPAA</strong>), <code>records</code> (encrypted session records),
+<code>compliance</code>, <code>video</code> (Daily, standard, recording off), <code>records</code> (encrypted session records),
 <code>crm</code>, <code>ai</code>, <code>encryption</code>, <code>storage</code>, <code>media</code>, <code>editor</code>, <code>content</code>, <code>consent</code>, <code>flags</code>,
 <code>observability</code>, <code>ui</code>, <code>icons</code>, <code>dashboard</code>, <code>site-chrome</code>, <code>email</code>, <code>api-client</code>.</li>
 <li>Stub: <code>academy</code>.</li>
@@ -271,8 +271,8 @@ The Checkout Sessions (<code>ui_mode: elements</code>) helper exists but the fun
 live money flows are opt-in loopback runs.</li>
 <li>Hosting: <code>eleva.care</code> still serves the MVP. <code>api.eleva.care</code> and <code>dev.eleva.care</code> run v3.</li>
 </ul>
-<p>Still gated: live FT POST / Comunicação / <code>invoice.issued</code> (<code>issueInvoice()</code> closed), D-07
-(HIPAA), and the 04B human-evidence waiver. v3 is <strong>not live</strong> until Phase 15.</p>
+<p>Still gated: live FT POST / Comunicação / <code>invoice.issued</code> (<code>issueInvoice()</code> closed) and the
+04B human-evidence waiver. v3 is <strong>not live</strong> until Phase 15.</p>
 <h2 id="readme--4-the-phase-loop-applies-to-every-phase"><a class="anchor" href="#readme--4-the-phase-loop-applies-to-every-phase" aria-label="Link to section">#</a>4. The phase loop (applies to every phase)</h2>
 <figure class="mermaid"><figcaption>Diagram (Mermaid source — paste into any Mermaid renderer)</figcaption><pre><code>flowchart LR
   A[git checkout main and pull] --&gt; B[git checkout -b phase-NN/slug]
@@ -386,7 +386,7 @@ feature PR.</li>
 </li>
 <li><p><strong>Spike PRs</strong> (<code>phase-NN.0/spike-&lt;slug&gt;</code>): when a phase depends on a vendor behaviour the
 plan asserts but has not proven (Stripe separate charges + reversals, TOConline hostnames and
-OAuth, Daily HIPAA account state), the phase opens with a spike PR whose deliverable is
+OAuth, Daily account state), the phase opens with a spike PR whose deliverable is
 <strong>evidence</strong>, not code: a report under <code>docs/eleva-v3/spikes/NN-&lt;slug&gt;.md</code> (what was tested,
 in which test account, what the API returned, what the plan must change), any throwaway code
 deleted before the next PR, and the decision-log entry the spike unblocks. Spikes run in test
@@ -445,9 +445,9 @@ that does not depend on it, then stops at the gated PR and reports the missing e
 </tr>
 <tr>
 <td>D-07</td>
-<td>Daily HIPAA domain + BAA/DPA, EU processing position. <strong>Deferred 2026-10-07</strong> (no BAA, no HIPAA claim). Phase 09 engineering uses standard Daily.</td>
+<td>Daily plan tier, DPA, EU processing position. <strong>Dropped 2026-11-07</strong>: video runs on standard Daily with recording off.</td>
 <td>founder + DPO</td>
-<td>Production PHI-video processing (clinical sessions on Daily) — not Phase 09 engineering or accountant/legal demo</td>
+<td>None. Production clinical video follows <code>legal/dpia.md</code> §2.6</td>
 </tr>
 <tr>
 <td>D-08</td>
@@ -865,11 +865,6 @@ Plan: docs/eleva-v3/execution-plan/phases/NN-&lt;slug&gt;.md
 <td>2</td>
 </tr>
 <tr>
-<td>Daily HIPAA mode disables features (custom room names, live streaming)</td>
-<td>Until D-07: named rooms <code>eleva-{bookingId}</code> on standard Daily. After D-07: random names + fingerprint. Tokens from day one.</td>
-<td>9</td>
-</tr>
-<tr>
 <td>Commission SSOT vs grandfathered MVP plans</td>
 <td>Mapping table reviewed with finance before Phase 14</td>
 <td>6, 14</td>
@@ -895,8 +890,8 @@ Plan: docs/eleva-v3/execution-plan/phases/NN-&lt;slug&gt;.md
 <td>14, 15</td>
 </tr>
 <tr>
-<td>Recording pipeline dragging Phase 10 into an S3/BAA dependency</td>
-<td>Cloud recording stays 16.8/D-08. Phase 10.1 (EU-first, D-07 deferred) stores encrypted notes + live Daily transcript + unpublished internal report; not HIPAA.</td>
+<td>Recording pipeline dragging Phase 10 into an S3 dependency</td>
+<td>Cloud recording stays 16.8/D-08. Phase 10.1 (EU-first, standard Daily) stores encrypted notes + live Daily transcript + unpublished internal report.</td>
 <td>9, 10, 16</td>
 </tr>
 <tr>
@@ -1190,7 +1185,7 @@ envelope encryption, ADR-021 RBAC SSOT in code, ADR-023 Plate rich-text editor i
 <li>Rewrite <code>identity-rbac-spec.md</code> for Better Auth (tables, plugins, roles, product labels,
 session model, cross-subdomain cookies, agent auth via API keys/JWT).</li>
 <li>Update <code>README.md</code> canon, <code>master-architecture.md</code>, <code>vendor-decision-matrix.md</code>,
-<code>compliance-data-governance.md</code> (WorkOS removed as subprocessor; Daily.co HIPAA/BAA; Better Auth
+<code>compliance-data-governance.md</code> (WorkOS removed as subprocessor; Daily.co added; Better Auth
 is self-hosted so no new subprocessor), <code>calendar-integration-spec.md</code> (tokens via Better Auth
 <code>account</code> table), <code>environment-matrix.md</code> (fix <code>dev.eleva.care</code> vs <code>staging.eleva.care</code> drift,
 add <code>sessions.eleva.care</code>, add <code>BETTER_AUTH_*</code>, <code>ELEVA_KEK_V1</code>, <code>DAILY_*</code>), <code>decision-log.md</code>,
@@ -1314,7 +1309,7 @@ integration).</li>
 <li>Neon branching GitHub Action: <code>/neondatabase/create-branch-action</code>, Neon docs
 <code>/websites/neon_com_docs</code> (branching, <code>neonctl</code>).</li>
 <li>Playwright: <code>/microsoft/playwright</code> (config, CI, webServer).</li>
-<li>Daily.co: <code>/websites/daily_co_reference_rest-api</code> (HIPAA mode constraints).</li>
+<li>Daily.co: <code>/websites/daily_co_reference_rest-api</code> (room and token constraints).</li>
 <li>Drizzle Kit: <code>/drizzle-team/drizzle-orm</code> (<code>drizzle-kit generate</code> with multiple configs).</li>
 </ul>
 <h2 id="01-rebaseline-adrs-ci--risks"><a class="anchor" href="#01-rebaseline-adrs-ci--risks" aria-label="Link to section">#</a>Risks</h2>
@@ -1378,7 +1373,7 @@ A. ADRs (docs/eleva-v3/adrs/). Use the existing ADR format (Status, Date, Contex
      @eleva/auth/proxy getSessionCookie(). Alternatives: keep WorkOS; Neon managed Better Auth
      (rejected: Beta, partial organization plugin, no MFA, no hooks/custom plugins). Consequences:
      WorkOS Vault/Pipes/Widgets removed; RBAC moves to code (ADR-021); encryption to ADR-020.
-   - ADR-018-daily-video-only.md: Daily.co is the only video provider; HIPAA-enabled domain
+   - ADR-018-daily-video-only.md: Daily.co is the only video provider; Daily domain
      elevacare.daily.co branded as sessions.eleva.care; private rooms with random names, nbf/exp
      around the booking, per-participant meeting tokens (expert is_owner), webhooks for
      meeting.started/ended, recording/transcript behind consent + feature flag; Google Meet
@@ -1428,7 +1423,7 @@ B. Handbook rewrite (docs/eleva-v3/). Rewrite identity-rbac-spec.md for Better A
    organization.setActive; product labels; agent auth via API keys and JWT; session cookie on
    .eleva.care; proxy.ts optimistic check). Update README.md &quot;Current Canon&quot; (WorkOS line -&gt;
    Better Auth line; Daily line; encryption line), master-architecture.md, vendor-decision-
-   matrix.md, compliance-data-governance.md (remove WorkOS subprocessor, add Daily.co BAA/HIPAA,
+   matrix.md, compliance-data-governance.md (remove WorkOS subprocessor, add Daily.co subprocessor,
    Better Auth self-hosted), calendar-integration-spec.md (tokens from Better Auth account table
    via auth.api.getAccessToken, scopes via linkSocial), environment-matrix.md (canonical staging
    host is dev.eleva.care; add sessions.eleva.care; env var table with BETTER_AUTH_SECRET,
@@ -3325,7 +3320,7 @@ engineering-proven). This does <strong>not</strong> waive FT POST / Comunicaçã
 </tr>
 </tbody></table>
 <p><strong>Phase 09 video engineering opened 2026-10-07</strong> on standard Daily (D-07
-deferred, not HIPAA). This 04B waiver still does <strong>not</strong> open FT POST /
+deferred, recording off). This 04B waiver still does <strong>not</strong> open FT POST /
 Comunicação / <code>invoice.issued</code>. <code>issueInvoice()</code> stays closed.</p>
 <p><strong>2026-09-24 i18n draft slice:</strong> <code>pnpm i18n:draft</code> + <code>translateMessages</code> +
 14-day draft age gate in <code>check:i18n-parity</code> (<strong>done</strong>, <code>#109</code>).</p>
@@ -3655,7 +3650,7 @@ engineering bar. Clinical field-level refusal UI stays incomplete engineering
 (backlog; not a Phase 09 blocker). Phase 09 video engineering opened
 2026-10-07 on standard Daily (D-07 deferred). Phase 07 hard gates (FT POST /
 Comunicação / `invoice.issued`) stay closed unless a founder waiver names
-all three. The 04B human-evidence waiver covers neither tax nor HIPAA.
+all three. The 04B human-evidence waiver does not cover tax.
 
 Report: endpoints, migrations, packages added (with catalog entries), tests, CodeRabbit CLI
 counts, PR URLs, deferred items, and the founder waiver record (date + phrase intent).</code></pre></div>
@@ -4709,7 +4704,7 @@ be met; production issuance / Comunicação acceptance is explicitly deferred.</
 </tr>
 <tr>
 <td>Phase 09 start</td>
-<td><strong>Open for video engineering</strong> (founder 2026-10-07: D-07 deferred, standard Daily, not HIPAA). Tax/issuance gates in the rows above stay <strong>blocked</strong> — the 2026-10-07 waiver does <strong>not</strong> name FT POST / Comunicação / <code>invoice.issued</code>. <code>issueInvoice()</code> stays closed.</td>
+<td><strong>Open for video engineering</strong> (founder 2026-10-07: D-07 deferred, standard Daily, recording off). Tax/issuance gates in the rows above stay <strong>blocked</strong> — the 2026-10-07 waiver does <strong>not</strong> name FT POST / Comunicação / <code>invoice.issued</code>. <code>issueInvoice()</code> stays closed.</td>
 </tr>
 </tbody></table>
 </blockquote>
@@ -5454,7 +5449,7 @@ tasks pending.</code></pre></div>
 </tr>
 <tr>
 <td>Depends on</td>
-<td>Phases 5, 8. <strong>Pre-check PR 09.0</strong> (<code>docs/eleva-v3/spikes/09-daily-account.md</code>) records the Daily <strong>account mode</strong>. Founder 2026-10-07 deferred D-07 (no BAA, no HIPAA): Phase 09 implements against a <strong>standard Daily domain</strong>, recording off, deterministic room names <code>eleva-{bookingId}</code>. Do <strong>not</strong> claim HIPAA or an executed BAA. HIPAA-mode constraints (no custom names, fingerprint <code>nbf</code>/<code>exp</code>) apply only after D-07 is signed. Tax/issuance gates stay closed and are not a Phase 09 engineering blocker.</td>
+<td>Phases 5, 8. <strong>Pre-check PR 09.0</strong> (<code>docs/eleva-v3/spikes/09-daily-account.md</code>) records the Daily <strong>account mode</strong>. Founder 2026-10-07 deferred D-07 (dropped 2026-11-07): Phase 09 implements against a <strong>standard Daily domain</strong>, recording off, deterministic room names <code>eleva-{bookingId}</code>. Tax/issuance gates stay closed and are not a Phase 09 engineering blocker.</td>
 </tr>
 <tr>
 <td>Effort</td>
@@ -5482,7 +5477,7 @@ tasks pending.</code></pre></div>
 <tbody><tr>
 <td>09.1 <code>@eleva/video</code> server</td>
 <td>on main</td>
-<td>Room option builder, GET-or-create named rooms, local HS256 meeting tokens, webhook HMAC, <code>requireDailyEnv</code>, member Join copy says <strong>standard Daily, not HIPAA</strong></td>
+<td>Room option builder, GET-or-create named rooms, local HS256 meeting tokens, webhook HMAC, <code>requireDailyEnv</code>, member Join copy carries a call privacy line</td>
 <td>—</td>
 </tr>
 <tr>
@@ -5506,20 +5501,19 @@ tasks pending.</code></pre></div>
 <tr>
 <td>Daily account probe</td>
 <td><strong>PASS</strong></td>
-<td>Standard Prebuilt two-browser call 2026-10-08; billing 100k rooms; recording off; <strong>not HIPAA</strong></td>
+<td>Standard Prebuilt two-browser call 2026-10-08; billing 100k rooms; recording off</td>
 <td>Eleva join pages + Daily webhook subscribe</td>
 </tr>
 <tr>
-<td>D-07 HIPAA / BAA</td>
-<td>Deferred</td>
-<td>Stamp <strong>not HIPAA</strong></td>
-<td>Production PHI-video only</td>
+<td>D-07</td>
+<td>Dropped</td>
+<td>Dropped 2026-11-07. Standard Daily with recording off is the intended EU setup</td>
+<td>—</td>
 </tr>
 </tbody></table>
 <p>Leftovers from phases 01–08 (staging W3, live pay→transfer, tax issuance, Twilio IE1, D-06/D-12, waived 04B UX) are <strong>TODOs, not Phase 09 blockers</strong>. See <a href="#2026-10-phase-09-readiness"><code>audits/2026-10-phase-09-readiness.md</code></a> “Stakeholder leftovers”.</p>
 <h2 id="09-video-daily--why-this-phase-exists"><a class="anchor" href="#09-video-daily--why-this-phase-exists" aria-label="Link to section">#</a>Why this phase exists</h2>
-<p>ADR-018: Daily.co is the only video provider. Until D-07 is signed the domain is
-<strong>standard (not HIPAA)</strong>. Every confirmed <strong>online</strong>
+<p>ADR-018: Daily.co is the only video provider, on a <strong>standard</strong> Daily domain. Every confirmed <strong>online</strong>
 booking (snapshotted <code>mode = online</code>; phone and in-person bookings never get a room) needs a room
 created ahead of time, tokens minted per participant at join time, and lifecycle webhooks to
 drive session status and notifications (recording and transcripts: Phase 16.8 only).</p>
@@ -5534,11 +5528,11 @@ session page shows the member&#39;s masked number to the expert and &quot;your e
 the member) and <code>in_person</code> bookings show the location card instead of a join button; both
 <code>ensureSessionRoom</code> and the no-room sweep below filter on the snapshotted <code>mode = &#39;online&#39;</code>
 before creating or scheduling anything, so phone and in-person bookings never reach Daily -&gt;
-private room, name <code>eleva-{bookingId}</code> (standard Daily; HIPAA random names only after D-07),
+private room, name <code>eleva-{bookingId}</code> (standard Daily),
 <code>nbf = startAt - 15 min</code>, <code>exp = endAt + 30 min</code>,
 <code>max_participants</code> = 2 + number of delegated participants (recomputed via Daily room update
 when a delegate is added, so every authorised participant can join), <code>enable_prejoin_ui: true</code>, <code>enable_chat: true</code>,
-<code>enable_screenshare: true</code>, <code>enable_recording: false</code> (recording is Phase 16.8, gated on D-07/D-08),
+<code>enable_screenshare: true</code>, <code>enable_recording: false</code> (recording is Phase 16.8, gated on D-08),
 <code>eject_at_room_exp: true</code>, <code>enforce_unique_user_ids: true</code>; <code>mintMeetingToken({ roomName, userId, userName, isOwner, exp })</code>;
 <code>deleteRoom(roomName)</code>; <code>verifyWebhookSignature(req)</code>; typed webhook event parser.</li>
 <li><code>sessions</code> table: <code>booking_id</code> unique, <code>daily_room_name</code>, <code>daily_room_url</code>, <code>status</code>
@@ -5547,9 +5541,9 @@ the API types and the state machine), <code>attendance</code> nullable (<code>bo
 derived from the full ordered participant history on <code>meeting.ended</code> (or the
 <code>endsAt + 30m</code> sweep) and re-derived by later correction runs when late participant events arrive —
 see the state machine below), <code>room_create_attempt_at</code>, <code>room_attempt_seq int</code>,
-<code>room_fingerprint_exp</code> (nullable UNIQUE; <strong>unused until D-07</strong>. Standard Daily uses
+<code>room_fingerprint_exp</code> (nullable UNIQUE; <strong>unused</strong>. Standard Daily uses
 <code>name: eleva-{bookingId}</code> as the idempotency handle — GET-or-create. Do not allocate
-nbf/exp offsets or reconcile by fingerprint until HIPAA mode is on), <code>last_event_at</code>,
+nbf/exp offsets or reconcile by fingerprint), <code>last_event_at</code>,
 <code>started_at</code>, <code>ended_at</code>, <code>participants jsonb</code>. Transition to <code>no_show</code>: <code>attendance</code> is
 <strong>derived, never written from a single event</strong>. Built flow: <code>meeting.ended</code> writes
 attendance from the ordered <code>participants</code> history; if Daily sent nothing, the 09.6.1
@@ -5624,8 +5618,8 @@ prejoin device check, waiting room (&quot;Your expert will join shortly&quot;), 
 screenshare, chat, leave), expert-only side panel placeholder for notes (Phase 10), post-call
 screen (feedback CTA). Custom UI (no Daily Prebuilt) to keep branding and CSP control.</p>
 </li>
-<li><p>Branding: room URLs use <code>DAILY_DOMAIN</code> (standard <code>{subdomain}.daily.co</code> until D-07).
-<code>sessions.eleva.care</code> CNAME waits for D-07.</p>
+<li><p>Branding: room URLs use <code>DAILY_DOMAIN</code> (standard <code>{subdomain}.daily.co</code>).
+<code>sessions.eleva.care</code> CNAME is deferred.</p>
 </li>
 <li><p>CSP in <code>@eleva/observability</code> security headers: <code>connect-src</code>/<code>frame-src</code>/<code>media-src</code> for
 <code>*.daily.co</code>, <code>wss://*.daily.co</code>, plus <code>DAILY_DOMAIN</code> when set; permissions policy for camera/mic
@@ -5649,8 +5643,9 @@ join page fetches it via <code>POST /sessions/[bookingId]/join</code> and hands 
 memory); <code>session.joined</code> audit rows carry <code>userId</code> and <code>roomName</code> only.</p>
 </li>
 </ul>
-<p>Out: <strong>recording and transcription (moved to Phase 16.8 — not Phase 10; Daily HIPAA recording
-requires a customer-owned S3 landing zone, see 16.8)</strong>, group sessions, dial-in.</p>
+<p>Out: <strong>recording (moved to Phase 16.8; the recording design needs a customer-owned S3 landing
+zone, see 16.8)</strong>, group sessions, dial-in. Consent-gated live transcription and encrypted
+transcript records belong to Phase 10.1.</p>
 <h2 id="09-video-daily--deliverables"><a class="anchor" href="#09-video-daily--deliverables" aria-label="Link to section">#</a>Deliverables</h2>
 <ol>
 <li><code>packages/video/{package.json,src/server/*,src/client/*,src/webhooks.ts,README.md}</code> + tests.</li>
@@ -5682,8 +5677,8 @@ expert of the same organization) -&gt; 403 <code>NOT_A_PARTICIPANT</code>; deleg
 <li><input disabled="" type="checkbox"> CSP allows the call to run without console violations.</li>
 <li><input disabled="" type="checkbox"> Payment failure / refund before <code>startAt</code> cancels the session and deletes the room; refund
 after the session leaves the session record intact (state-machine tests).</li>
-<li><input disabled="" type="checkbox"> PR 09.0 evidence file exists. D-07 is founder-deferred (2026-10-07):
-standard Daily, recording off, <strong>not HIPAA</strong>. Do not claim BAA executed.
+<li><input disabled="" type="checkbox"> PR 09.0 evidence file exists. D-07 was founder-deferred (2026-10-07)
+and dropped (2026-11-07): standard Daily, recording off.
 First live room / exit gate also needs a completed account probe
 (<code>DAILY_API_KEY</code>, recording off). Prebuilt probe PASS 2026-10-08; staging
 webhook + Eleva two-browser join remain leftover.</li>
@@ -5712,17 +5707,15 @@ parser + signature, idempotency.</li>
 </ul>
 <h2 id="09-video-daily--external-docs"><a class="anchor" href="#09-video-daily--external-docs" aria-label="Link to section">#</a>External docs</h2>
 <ul>
-<li>Daily REST API <code>/websites/daily_co_reference_rest-api</code> (rooms, meeting tokens, webhooks, HIPAA
-constraints, custom domains), <code>@daily-co/daily-react</code> <code>/daily-co/daily-react</code>, <code>daily-js</code>.</li>
+<li>Daily REST API <code>/websites/daily_co_reference_rest-api</code> (rooms, meeting tokens, webhooks,
+custom domains), <code>@daily-co/daily-react</code> <code>/daily-co/daily-react</code>, <code>daily-js</code>.</li>
 <li>Next.js CSP guidance <code>/vercel/next.js</code>.</li>
 </ul>
 <h2 id="09-video-daily--risks"><a class="anchor" href="#09-video-daily--risks" aria-label="Link to section">#</a>Risks</h2>
 <ul>
-<li>HIPAA mode restrictions (no custom room names, no live streaming) apply only after D-07.
-Until then use standard Daily and named rooms. Do not discover HIPAA constraints mid-build.</li>
-<li>Daily BAA/DPA deferred by founder 2026-10-07: Phase 09 proceeds on standard Daily.
+<li>Phase 09 runs on standard Daily with named rooms (founder 2026-10-07).
 Fallback if Daily is unavailable: ship phone and in-person modes first (they need no room)
-and keep online join disabled. Never claim HIPAA while D-07 is unsigned.</li>
+and keep online join disabled.</li>
 <li>Browser permissions on iOS Safari: test on device before Phase 15.</li>
 </ul>
 <h2 id="09-video-daily--copy-paste-prompt"><a class="anchor" href="#09-video-daily--copy-paste-prompt" aria-label="Link to section">#</a>Copy-paste prompt</h2>
@@ -5735,8 +5728,8 @@ Before writing code:
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
    docs/eleva-v3/execution-plan/phases/09-video-daily.md in full.
 3. Read every file under &quot;Local references&quot; and docs/eleva-v3/spikes/09-daily-account.md.
-   If that spike is missing, stop. D-07 is founder-deferred (standard Daily, not HIPAA) —
-   do not stop for an unsigned BAA. The 09.0 Prebuilt probe is PASS 2026-10-08;
+   If that spike is missing, stop. D-07 is dropped (standard Daily, recording off) —
+   do not stop for it. The 09.0 Prebuilt probe is PASS 2026-10-08;
    the Phase 09 exit gate still needs Eleva join-page two-browser evidence
    and a Daily webhook subscription after `elevacare-api` is redeployed
    (`DAILY_WEBHOOK_SECRET` is already on Vercel). Pull
@@ -5773,14 +5766,14 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
 1. Create packages/video (@eleva/video): package.json with exports &quot;.&quot; (server), &quot;./client&quot;,
    &quot;./webhooks&quot;; catalog entries for @daily-co/daily-js and @daily-co/daily-react. Server (fetch
    against https://api.daily.co/v1 with DAILY_API_KEY, never log the key). STANDARD Daily
-   (founder 2026-10-07, D-07 deferred — not HIPAA): createSessionRoom({ bookingId, startAt,
+   (founder 2026-10-07, D-07 deferred): createSessionRoom({ bookingId, startAt,
    endAt }) -&gt; POST /rooms { name: &quot;eleva-&quot; + bookingId, privacy: &quot;private&quot;, properties: {
    nbf: startAt-15m, exp: endAt+30m, max_participants: 2 + delegated participant count
    (updateRoom when a delegate is added), enable_prejoin_ui: true, enable_chat: true,
    enable_screenshare: true, enable_recording: false, enable_recording_ui: false,
    eject_at_room_exp: true, enable_knocking: false, enforce_unique_user_ids: true,
    lang: from booking locale } }. Do NOT
-   omit the name. Do NOT implement the HIPAA fingerprint / nbf+exp offset reconciler.
+   omit the name. Do NOT implement the fingerprint / nbf+exp offset reconciler.
    Returns { name, url } with url rewritten to https://${DAILY_DOMAIN}/${name} when
    DAILY_DOMAIN is set. mintMeetingToken({ roomName, userId, userName, isOwner, exp }) is
    a **local HS256 JWT** signed with the Daily API key (room_name ALWAYS set, user_id,
@@ -5815,7 +5808,7 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    endsAt + 30m if no webhook),
    room_created_at, room_create_attempt_at, room_create_lease_until timestamptz nullable,
    room_attempt_seq int NOT NULL DEFAULT 0, room_fingerprint_exp timestamptz nullable UNIQUE
-   (reserved for HIPAA after D-07; leave unused now),
+   (reserved; leave unused),
    last_event_at, started_at,
    ended_at, participants jsonb [{ role, joined_at, left_at }] (history only, never
    authorization), created_at, updated_at) and session_participants (booking_id FK, user_id FK,
@@ -5872,13 +5865,13 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    connect-src https://*.daily.co wss://*.daily.co plus DAILY_DOMAIN; frame-src/media-src
    accordingly; Permissions-Policy camera=(self), microphone=(self), display-capture=(self) only
    on join routes (per-route header via proxy.ts helper). Boundary lint: @daily-co/* only in
-   packages/video. Env: DAILY_API_KEY, DAILY_DOMAIN (standard `{subdomain}.daily.co` until
-   D-07), DAILY_DOMAIN_ID (domain UUID for the meeting-token `d` claim; optional if GET /v1
+   packages/video. Env: DAILY_API_KEY, DAILY_DOMAIN (standard `{subdomain}.daily.co`),
+   DAILY_DOMAIN_ID (domain UUID for the meeting-token `d` claim; optional if GET /v1
    returns it), DAILY_WEBHOOK_SECRET in .env.example, turbo.json, environment-matrix.md. Operator
    tasks doc operator-tasks/daily-setup.md: create a **standard** Daily domain with recording
    off, create the webhook pointing to https://api.dev.eleva.care/webhooks/daily (staging;
    Phase 15 repeats it for https://api.eleva.care/webhooks/daily) with the secret. Do not
-   enable HIPAA or `sessions.eleva.care` until D-07 is signed.
+   enable `sessions.eleva.care` (CNAME deferred).
 7. Tests: unit as above; e2e/video-join.spec.ts loads the join page with
    --use-fake-device-for-media-stream and reaches the prejoin UI. Manual staging test with two
    browsers; paste screenshots in the PR.
@@ -5918,7 +5911,7 @@ operator tasks pending.</code></pre></div>
 </tr>
 <tr>
 <td>Depends on</td>
-<td>Phase 9, Phase 4B (<code>@eleva/editor</code>, <code>approved-models</code> allow-list); <strong>D-11 working pre-launch</strong> (founder 2026-10-12 — author-only RLS; clinic share stays Phase 11). HIPAA/D-07 stays deferred (EU-first; not a 10.1 blocker). Live Daily transcription (not cloud recording) is in 10.1; 16.8 still owns D-08 S3 recording.</td>
+<td>Phase 9, Phase 4B (<code>@eleva/editor</code>, <code>approved-models</code> allow-list); <strong>D-11 working pre-launch</strong> (founder 2026-10-12 — author-only RLS; clinic share stays Phase 11). Video stays on standard Daily (EU-first; D-07 dropped). Live Daily transcription (not cloud recording) is in 10.1; 16.8 still owns D-08 S3 recording.</td>
 </tr>
 <tr>
 <td>Effort</td>
@@ -5941,7 +5934,7 @@ operator tasks pending.</code></pre></div>
 </blockquote>
 <h2 id="10-records-crm-ai--why-this-phase-exists"><a class="anchor" href="#10-records-crm-ai--why-this-phase-exists" aria-label="Link to section">#</a>Why this phase exists</h2>
 <p>Clinical value and trust: encrypted records, member-visible reports, consent and retention are
-core to ERS/GDPR/HIPAA posture. CRM gives experts follow-up tools. AI drafting is the first
+core to ERS/GDPR posture. CRM gives experts follow-up tools. AI drafting is the first
 differentiator and must ship behind a flag with strict PHI boundaries (ADR-009).</p>
 <h2 id="10-records-crm-ai--scope"><a class="anchor" href="#10-records-crm-ai--scope" aria-label="Link to section">#</a>Scope</h2>
 <p>In:</p>
@@ -6035,8 +6028,8 @@ versioned prompt contracts (<code>packages/ai/prompts/session-report.v1.ts</code
 structured output -&gt; <code>records.kind = ai_draft</code> (never auto-published) -&gt; expert reviews, edits,
 publishes. PHI stays inside the request to the gateway with <strong>zero data retention verified per
 model</strong> (the <code>APPROVED_MODELS</code> allow-list below), prompts logged without content, model
-pinned via config. <strong>Cloud recording is not in this phase</strong>: Daily&#39;s HIPAA
-recording requires a customer-owned S3 landing zone and its own consent kind; the whole
+pinned via config. <strong>Cloud recording is not in this phase</strong>: the recording
+design needs a customer-owned S3 landing zone and its own consent kind; the whole
 recording -&gt; S3 landing -&gt; draft pipeline (including the <code>syncRoomRecording</code> fencing design
 written for it) lives in <strong>Phase 16.8</strong> and is gated on the storage decision D-08. Live Daily
 transcription (<code>startTranscription</code> / <code>transcription-message</code>, recording off) is in <strong>10.1</strong>.
@@ -7918,10 +7911,11 @@ skipped.</li>
 <li><strong>Approval gates carried forward</strong> (each recorded in <code>decision-log.md</code> with owner + date;
 the launch checklist links the entry): D-01 <code>pt-BR</code> retirement, D-02 EUR-only, D-03/D-04
 settlement matrix (finance), D-05 Connect capability model, D-06 refund + dispute policy
-incl. no-show, D-07 Daily HIPAA + BAA, D-08 recording storage (gates 16.8, not launch — the
+incl. no-show, D-08 recording storage (gates 16.8, not launch — the
 entry must exist with status <code>proposed</code> or <code>active</code>), D-09 historical invoices, D-10 public-site parity,
 D-11 clinical access model, D-12 deletion vs retention, D-13 cookie/CSRF threat model,
-D-14 payment-method set — each entry must carry Status <code>accepted</code>/<code>active</code> (D-08 may stay
+D-14 payment-method set (D-07 is dropped, 2026-11-07; production clinical video instead needs the
+DPIA section 2.6 approval entry) — each entry must carry Status <code>accepted</code>/<code>active</code> (D-08 may stay
 <code>proposed</code> because recording is Phase 16.8), owner, date, an evidence/reference link and, for
 anything still provisional, a review date; a placeholder entry fails the gate the same as a
 missing one; Phase 13 evidence pack signed (DPIA, sub-processors); pen-test findings closed or
@@ -7929,7 +7923,7 @@ accepted with a named owner.</li>
 <li>Money: Stripe live keys in all projects; Connect platform settings (branding, payout schedule,
 statement descriptor); live webhook endpoint created with <code>pnpm stripe:setup:webhooks -- --url https://api.eleva.care/webhooks/stripe --apply</code>; TOConline production series and OAuth app;
 IVA sign-off recorded; test a 1 EUR live booking + refund + invoices with an internal expert.</li>
-<li>Video: Daily HIPAA domain confirmed, webhook secret set, <code>sessions.eleva.care</code> CNAME live.</li>
+<li>Video: standard Daily domain confirmed with recording off, webhook secret set. The <code>sessions.eleva.care</code> CNAME is deferred and is not a launch gate.</li>
 <li>Notifications: Resend domain verified (DKIM/SPF/DMARC), Twilio EU sender approved.</li>
 <li>Security: penetration test findings closed (high/critical), CSP enforced, rate limits live,
 secrets rotated post pen-test, <code>BETTER_AUTH_SECRET</code> production unique, <code>ELEVA_KEK_V1</code> set
@@ -8355,10 +8349,10 @@ and run the standard loop from README section 4.</p>
 </tr>
 </tbody></table>
 <h2 id="16-post-launch-backlog--168-design-note-session-recording-moved-here-from-phase-10-2026-09-amendment"><a class="anchor" href="#16-post-launch-backlog--168-design-note-session-recording-moved-here-from-phase-10-2026-09-amendment" aria-label="Link to section">#</a>16.8 design note — session recording (moved here from Phase 10, 2026-09 amendment)</h2>
-<p>Daily&#39;s HIPAA mode writes cloud recordings only to a <strong>customer-owned AWS S3 bucket</strong> whose
-bucket policy trusts Daily&#39;s AWS account via an IAM role (<code>recordings_bucket</code> room/domain
-property with <code>bucket_name</code>, <code>bucket_region</code>, <code>assume_role_arn</code>). Vercel Blob, Neon object
-storage and Cloudflare R2 are <strong>not</strong> accepted destinations, so the compliant design is two-hop:</p>
+<p>Daily&#39;s custom recording storage writes cloud recordings only to a <strong>customer-owned AWS S3
+bucket</strong> whose bucket policy trusts Daily&#39;s AWS account via an IAM role (<code>recordings_bucket</code>
+room/domain property with <code>bucket_name</code>, <code>bucket_region</code>, <code>assume_role_arn</code>). Vercel Blob, Neon
+object storage and Cloudflare R2 are <strong>not</strong> accepted destinations, so the design is two-hop:</p>
 <ol>
 <li><strong>Landing zone (mailbox, not storage)</strong> — one small S3 bucket in an EU region (<code>eu-west-1</code> or
 <code>eu-south-2</code>), SSE-KMS, <strong>versioning ON (Daily requires it — its role lists

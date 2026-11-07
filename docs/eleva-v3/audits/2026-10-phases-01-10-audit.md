@@ -7,8 +7,8 @@ and [`2026-10-phase-09-readiness.md`](./2026-10-phase-09-readiness.md).
 Method: per-phase acceptance matrix with file evidence; architecture sweeps (route policy,
 OpenAPI, `withAudit`, RLS, vendor boundaries, vendor I/O inside transactions); UX inventory of
 the MVP and v3 marketing surfaces. No staging or production smokes were run in this pass.  
-Hard limits still in force: no production mutation; `issueInvoice()` stays closed; D-07 deferred
-(**not HIPAA**); the 04B human-evidence waiver stays **waived/unproven**; D-gates are reported,
+Hard limits still in force: no production mutation; `issueInvoice()` stays closed; video stays on
+standard Daily with recording off; the 04B human-evidence waiver stays **waived/unproven**; D-gates are reported,
 not closed by engineering.
 
 ## Executive summary

@@ -90,7 +90,7 @@ export function JoinSession({
       <div className="mx-auto flex max-w-lg flex-col gap-4 py-12 text-center">
         <h1 className="text-xl font-medium">{labels.leftTitle}</h1>
         <p className="text-sm text-muted-foreground">{labels.leftBody}</p>
-        <p className="text-xs text-muted-foreground">{labels.notHipaa}</p>
+        <p className="text-xs text-muted-foreground">{labels.callPrivacy}</p>
         <LinkButton href={backHref}>{labels.back}</LinkButton>
       </div>
     )
@@ -114,7 +114,7 @@ export function JoinSession({
             error === "SESSION_NOT_OPEN" ? windowHint : null
           )}
         </p>
-        <p className="text-xs text-muted-foreground">{labels.notHipaa}</p>
+        <p className="text-xs text-muted-foreground">{labels.callPrivacy}</p>
         <div className="flex flex-wrap gap-2">
           <Button onPress={load}>{labels.retry}</Button>
           <LinkButton variant="outline" href={backHref}>

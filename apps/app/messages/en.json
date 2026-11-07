@@ -50,7 +50,7 @@
     "joinMissingGrant": "This join link is missing its invite. Open the link from your email or calendar invite.",
     "joinInvalidGrant": "This join link is not valid. Open the link from your email or calendar invite.",
     "call": {
-      "notHipaa": "This call uses standard Daily. It is not HIPAA. Recording is off.",
+      "callPrivacy": "Your call is private and is not recorded.",
       "prejoinTitle": "Check your camera and microphone",
       "prejoinHint": "Join when you are ready. Your expert may already be waiting.",
       "join": "Join session",

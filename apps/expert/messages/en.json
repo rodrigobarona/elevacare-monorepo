@@ -59,7 +59,7 @@
     "joinNotOnline": "This session is not a video call.",
     "detailTitle": "Back to calendar",
     "call": {
-      "notHipaa": "This call uses standard Daily. It is not HIPAA. Recording is off.",
+      "callPrivacy": "Your call is private and is not recorded.",
       "prejoinTitle": "Check your camera and microphone",
       "prejoinHint": "Join when you are ready. Your member may already be waiting.",
       "join": "Join session",
@@ -519,7 +519,7 @@
     "locationPhone": "Phone",
     "locationUnknown": "—",
     "join": "Join session",
-    "joinSoon": "Video uses standard Daily (not HIPAA). Join turns on 15 minutes before the start.",
+    "joinSoon": "You can join 15 minutes before the session starts.",
     "requestPending": "Booking request",
     "accept": "Accept",
     "decline": "Decline",

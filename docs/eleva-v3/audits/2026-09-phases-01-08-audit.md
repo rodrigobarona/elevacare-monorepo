@@ -13,8 +13,8 @@ The single production blocker (code fixed; loopback proof partial):
 
 - **AUD-001 (P0).** Was: member cancel set `refund_pending` with no Stripe refund and transfers ignored booking status. **Fix merged** (`processPendingCancellationRefunds` + transfer gate). **Loopback smoke 3 PASS 2026-09-26** for Flexible / Moderate / Strict refunds (see W3). Staging re-run still required before production money.
 
-Phase 09 video engineering opened 2026-10-07 on standard Daily (D-07 deferred,
-not HIPAA). FT POST / Comunicação / `invoice.issued` stay closed. See
+Phase 09 video engineering opened 2026-10-07 on standard Daily (recording
+off). FT POST / Comunicação / `invoice.issued` stay closed. See
 [`2026-10-phase-09-readiness.md`](./2026-10-phase-09-readiness.md).
 
 ## W0 — Baseline pipeline
@@ -213,7 +213,7 @@ Approved pack, recorded in [`decision-log.md`](../decision-log.md) ("Phases 01�
 ## Phase 09 readiness
 
 - **Phase 09.0** is written: [`spikes/09-daily-account.md`](../spikes/09-daily-account.md).
-  Standard Daily, recording off, **not HIPAA**.
+  Standard Daily, recording off.
 - **Phase 09 video engineering** opened 2026-10-07 (founder deferred D-07).
   Tax/issuance stays closed — the waiver did not name FT POST / Comunicação /
   `invoice.issued`. See [`2026-10-phase-09-readiness.md`](./2026-10-phase-09-readiness.md).
