@@ -1,60 +1,82 @@
 ---
 title: Cookie policy — Eleva.care
-description: Cookies and similar technologies used on eleva.care.
-lastUpdated: 2026-10-22
-summary: Categories, providers, and how to change your choices.
+description: The cookies and browser storage Eleva.care uses, what each one does and how long it lasts.
+lastUpdated: 2026-11-07
+summary: Every cookie and storage item by name, with its purpose, provider and duration, and how to change your choices.
 ---
 
-# Cookie Policy
+Eleva.care uses a small set of cookies and browser storage to keep you signed in, remember your language and theme, protect bookings and payments, and remember your cookie choices. This page lists each one by name.
 
-_Effective Date: December 31, 2025_
+Eleva.care is operated by **BÚZIOS E TARTARUGAS - LDA** ("Eleva"). For how we handle your personal data in general, see the [Privacy notice](/legal/privacy).
 
-We use a small number of cookies to run Eleva.care reliably and securely. This page explains what we use and how you can control it.
+## 1. How we use cookies
 
-## 1) What we (don’t) store
+- **Cookies that make Eleva work** are always on. They sign you in, keep your session secure, remember the language and theme you use, and protect payments from fraud. The law allows these without consent because the service cannot work, or cannot give you what you asked for, without them.
+- **Optional cookies** load only after you allow them in **Cookie settings**. Today the only optional category in use is **marketing**, for the Femme Focus newsletter sign-up form from Beehiiv.
+- We use no analytics or advertising cookies, and we never put health information in a cookie.
 
-- We never store clinical data or health information in cookies
-- Cookies are used only for platform features, security, preferences, and minimal analytics
+## 2. Cookies that make Eleva work
 
-## 2) Types of cookies
+On eleva.care the names of Eleva's sign-in cookies start with `__Secure-`, which means your browser only sends them over an encrypted connection. They are shared across eleva.care and its subdomains (for example account.eleva.care), so you stay signed in as you move between areas. They cannot be read by scripts on the page.
 
-- Essential: sign‑in/session, security (CSRF/fraud), load balancing
-- Functional: language, theme, UI preferences
-- Analytics (minimal, EU‑hosted product analytics (when enabled and consented)): performance, errors, usage trends (aggregated/anonymized)
+| Name                                       | Provider             | Purpose                                                                                                        | Duration                                            |
+| ------------------------------------------ | -------------------- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| `__Secure-better-auth.session_token`       | Eleva                | Keeps you signed in and identifies your session securely                                                       | 30 days, renewed while you use Eleva                |
+| `__Secure-better-auth.session_data`        | Eleva                | A short-lived, signed copy of your session, so pages load quickly                                              | 5 minutes                                           |
+| `__Secure-better-auth.oauth_state`         | Eleva                | Protects a sign-in with Google, or a calendar connection, from forged requests                                 | 10 minutes, only while you complete that step       |
+| `__Secure-better-auth.two_factor`          | Eleva                | Remembers that you are halfway through two-step verification                                                   | 10 minutes, only while you complete that step       |
+| `__Secure-better-auth.better-auth-passkey` | Eleva                | Holds the one-time challenge when you add or use a passkey                                                     | 5 minutes, only while you complete that step        |
+| `ELEVA_LOCALE`                             | Eleva                | Remembers your language (English, Portuguese or Spanish) across eleva.care                                     | 1 year                                              |
+| `ELEVA_THEME`                              | Eleva                | Remembers whether you use the light, dark or system theme                                                      | 1 year                                              |
+| `eleva-last-org`                           | Eleva                | Reopens the last Space or practice you used when you go to your dashboard                                      | 1 year                                              |
+| `sidebar_state`                            | Eleva                | Remembers whether the dashboard side menu is open or closed                                                    | 7 days                                              |
+| `c15t`                                     | Eleva, through Inth  | Stores your cookie choices, so we respect them and do not ask again on every visit                             | 1 year                                              |
+| `__stripe_mid`                             | Stripe               | Fraud prevention on the payment step of a booking                                                              | 1 year                                              |
+| `__stripe_sid`                             | Stripe               | Fraud prevention on the payment step of a booking                                                              | 30 minutes                                          |
 
-## 3) Duration
+The Stripe cookies are set only on the payment step of a paid booking, when the Stripe payment form loads. Stripe may also use its own cookies on Stripe's domains to keep payments safe. Stripe explains them in its [cookie policy](https://stripe.com/legal/cookies-policy).
 
-- Session cookies: removed when you close your browser
-- Persistent cookies: typically up to 12 months (often much less)
+## 3. Optional cookies
 
-## 4) Consent and control
+| What                             | Provider | Purpose                                                       | When it loads                                     |
+| -------------------------------- | -------- | ------------------------------------------------------------- | ------------------------------------------------- |
+| Femme Focus newsletter sign-up form | Beehiiv  | Lets you subscribe to the Femme Focus newsletter from our pages | Only after you allow **marketing** in Cookie settings |
 
-- Non‑essential cookies load only after consent
-- You can change choices anytime via “Cookie Preferences” in the footer
-- You can also manage cookies in your browser settings
+When the form loads, Beehiiv may set its own cookies on its domains to run the form. If you do not allow marketing, the form does not load and nothing is sent to Beehiiv. You can still subscribe from the newsletter's own page.
 
-## 5) Providers we rely on (cookies may apply)
+## 4. Browser storage and similar technologies
 
-- Auth/identity: Better Auth (EU options)
-- Payments: Stripe (PCI DSS L1)
-- Analytics: analytics tools (only after consent)
-- Email/notifications/infra (EU endpoints/regions): Resend, Eleva notifications, Vercel, Upstash
+Some features keep small items in your browser's storage instead of a cookie. They stay on your device.
 
-All providers are under DPAs/SCCs as applicable and support EU data hosting.
+| Name                     | Where                         | Purpose                                                                                                                                                          | How long                                         |
+| ------------------------ | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `c15t`                   | Local storage                 | A copy of your cookie choices, used if the browser blocks the `c15t` cookie                                                                                      | Until you change your choices or clear storage   |
+| `eleva-theme`            | Local storage                 | Applies your theme straight away when a page opens                                                                                                               | Until you change the theme or clear storage      |
+| `bookingFunnel:v1`       | Session storage               | Keeps the booking you are making (time, name, email, phone and payment step) so it is not lost if your bank opens another page, for example to confirm MB WAY | Deleted when the booking finishes or you close the tab |
+| `bookingFunnel:redirect` | Session storage               | Remembers the result of the payment step when you come back from your bank                                                                                      | Deleted when the booking finishes or you close the tab |
+| `eleva.mfaReturnTo`      | Session storage               | Takes you back to the page you were on after two-step verification                                                                                              | Deleted when you close the tab                   |
 
-## 6) Data location
+Two security checks also run in your browser:
 
-We prioritize EU data residency. Cookie‑related data is processed in EU regions where available; otherwise, SCCs and supplementary measures apply.
+- **Bot check on booking and payment.** When you reserve a time, confirm a booking or start a payment, Vercel BotID runs a short, invisible check that reads technical signals from your browser and device and sends them with the request. It tells real people apart from automated abuse, so time slots and payments stay available for members. It is part of keeping the service secure and does not build a profile of you.
+- **Stripe's payment form.** Stripe's form reads technical details of your device and connection to detect fraud, as described in Stripe's [privacy policy](https://stripe.com/privacy).
 
-## 7) Changing your mind
+Video sessions run through Daily on the join page. Daily connects your browser to the call server in Frankfurt and sets no cookie on eleva.care pages.
 
-- Open the “Cookie Preferences” link in the footer to adjust categories
-- Blocking essential cookies may impact sign‑in and core features
+## 5. Your choices
 
-## 8) Updates
+- **Cookie settings.** Open **Cookie settings** from the footer of any public page, or from the menu under your name in your dashboard, to allow or refuse optional cookies at any time. Your choice applies from that moment.
+- **Your browser.** You can also delete or block cookies in your browser settings. If you block the cookies in section 2, you will not be able to sign in or complete a booking.
+- **How long a choice lasts.** We keep your cookie choice for 1 year and then ask you again.
 
-We review cookies regularly and may update this policy. We’ll reflect changes here and notify you of material updates.
+Your cookie choices are recorded by our consent provider, Inth (c15t), which keeps them in the European Union. We keep a record of each choice to show that we respect it.
 
----
+## 6. Changes
 
-Questions? Contact `support@eleva.care`.
+When we add or change a cookie, we update this page and the date at the top. If a change needs your consent, we ask you again in Cookie settings before the cookie is used.
+
+## 7. Contact
+
+Questions about cookies or your privacy: [privacy@eleva.care](mailto:privacy@eleva.care).
+
+If the language versions differ, the Portuguese version prevails.

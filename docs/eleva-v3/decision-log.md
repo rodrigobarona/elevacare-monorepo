@@ -32,6 +32,33 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-07: Public beta legal pack adopted (active)
+
+- Decision (founder): the documents below are adopted for the public beta
+  and published as production copy. A DPO and counsel review them later;
+  this is the founder's adoption, not their sign-off.
+  - Adults only: members are 18 or older and book for themselves, recorded
+    per booking as the `adult_confirmation` consent. A booking found to be
+    for someone under 18 is cancelled and refunded in full (terms §4/§5,
+    privacy §11, DPIA R13 closed).
+  - Privacy (en/pt/es): Eleva's own art. 9 conditions (9(2)(h)+(3) and
+    explicit consent), the guest account and Space created after a booking
+    without an account, full retention table, cookies listed by name.
+  - Cookie policy (en/pt/es) rewritten from the cookies the code sets.
+  - Complaints page: consumer arbitration and the DSA point of contact.
+  - DPIA completed with residual risks accepted; RoPA completed; breach
+    response adopted with the founder as incident lead and privacy
+    contact; backup, restore and KEK escrow runbook.
+- `CONSENT_DOCUMENT_VERSION` moves to `2026-11-07`.
+- Follow-ups with dates: (1) the never-used guest account deletion the
+  privacy notice promises ("12 months after your last booking ends") must
+  run as a sweep before 2027-09-01, the earliest date an account
+  qualifies; (2) align `legal/retention-schedule.md` (24 months, draft
+  banner) and the fact sheet c15t row with this pack; (3) name a deputy
+  incident lead and a second KEK holder; (4) raise Neon point-in-time
+  history from 6 hours before launch.
+- Owner: founder (Rodrigo Barona).
+
 ### 2026-11-07: Public listing needs a verified licence; paid ranking is labelled (active)
 
 - Findings: beta council LEGAL-EU-01/04, UX-4-07. Profiles that were
@@ -52,6 +79,7 @@ Each entry should include:
   links to terms §8, which now describes only the filters the UI offers.
   This clarifies §8 without changing rights or obligations, so
   `CONSENT_DOCUMENT_VERSION` stays `2026-10-29`.
+
 ### 2026-11-07: Preview deployments get their own database and secrets (active)
 
 - Finding: beta council SEC-3-01 (P0) / SEC-1-03. Every v3 Vercel project
