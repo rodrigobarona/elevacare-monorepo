@@ -150,7 +150,7 @@ URL. After your prod API is deployed:
 
 ```bash
 API_BASE_URL=https://api.eleva.care pnpm qstash:setup
-pnpm qstash:list   # confirm expected destinations (three ticks, audit-drainer, monthly reconciliation, payouts)
+pnpm qstash:list   # confirm the five QStash schedules (audit drainer, monthly reconciliation, 3 payouts); ticks are under Vercel Cron Jobs
 ```
 
 ### DB — apply migrations
