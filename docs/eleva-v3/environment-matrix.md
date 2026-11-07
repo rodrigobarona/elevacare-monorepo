@@ -252,7 +252,7 @@ renamed in a later ops change.
 - `dev.eleva.care` — gateway staging (rewrites to staging `elevacare-app` for member/expert/team/account routes; rewrites `/docs/*` to staging `elevacare-docs`)
 - `api.dev.eleva.care` — `elevacare-api` Vercel project (separate subdomain, not rewritten). As of 2026-11-07 this host serves the **production** deployment on the v3 production database; see the decision log ("Expert pilot frame").
 
-Per-PR previews: `*.preview.eleva.care` wildcard. Preview env vars in the gateway project point `APP_URL`, `DOCS_URL` at the matching preview deployment URLs of sibling **frontend** apps. Target: **API is always the staging API** (`api.dev.eleva.care`) — previews do not get their own `elevacare-api` deployment or `.eleva.care` cookies (ADR-017). Current state (2026-11-07): Vercel still builds `elevacare-api` preview deployments, and they share the production `DATABASE_URL`.
+Per-PR previews: `*.preview.eleva.care` wildcard. Preview env vars in the gateway project point `APP_URL`, `DOCS_URL` at the matching preview deployment URLs of sibling **frontend** apps. Target: **API is always the staging API** (`api.dev.eleva.care`) — previews do not get their own `elevacare-api` deployment or `.eleva.care` cookies (ADR-017). Current state (2026-11-07, resolved the same day): Vercel still builds `elevacare-api` preview deployments, but every project's Preview scope now has its own database, KEK and Better Auth secret (see "Preview Environments" below).
 
 ## Required DNS Records (Vercel-Managed)
 
@@ -378,11 +378,21 @@ Webhooks, OAuth callbacks, and session-aware APIs live on the `api.eleva.care` s
 
 ## Preview Environments — Integration Posture
 
-> **Current state differs (checked 2026-11-07).** This table is the target.
-> Today `elevacare-api` has one `DATABASE_URL` / `DATABASE_URL_UNPOOLED`
-> entry scoped to both Production and Preview, so API preview deployments
-> use the v3 production database. See the 2026-11-06 "Expert pilot frame"
-> entry in `decision-log.md`.
+> **Preview isolation (2026-11-07).** Every v3 project's Preview scope
+> uses the Neon branch `preview` (`br-small-shadow-al11k5n3`, endpoint
+> `ep-hidden-field-al15c6aa`): created **schema-only** from production
+> `main`, so it holds no member data, then seeded with the synthetic demo
+> personas and the `anaquick` / `fisiomota` offers. `DATABASE_URL*` and
+> `AUDIT_DATABASE_URL*` (both databases on that branch), `ELEVA_KEK_V1` and
+> `BETTER_AUTH_SECRET` have separate Preview-only values; Production
+> entries are Production-only. `PRODUCTION_DB_ENDPOINT=ep-plain-voice-alu7buik`
+> is set on every Preview scope, and `requireDbEnv()` /
+> `requireAuditDbEnv()` refuse to boot a preview pointed at that endpoint.
+> The `/auth/e2e/verify-email` bypass is never mounted on Vercel
+> (production or preview), only on local and CI loopback runs.
+> Still shared with Preview: `STRIPE_SECRET_KEY` (test mode on the pilot)
+> and vendor keys (Resend, Daily, Twilio); split them before live keys
+> reach Production.
 
 | Integration | Posture in preview                                                                                      |
 | ----------- | ------------------------------------------------------------------------------------------------------- |
@@ -419,7 +429,7 @@ Keep `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, and `ELEVA_KEK_V1`.
 | `DAILY_API_KEY` / `DAILY_DOMAIN` / `DAILY_DOMAIN_ID` / `DAILY_WEBHOOK_SECRET` | `@eleva/video`          | Standard Daily domain. `DAILY_DOMAIN_ID` is the domain UUID for self-signed meeting tokens (`d` claim); optional if GET `/v1` returns it. The `sessions.eleva.care` CNAME is deferred. Recording off.                                                 |
 | `PUBLIC_SSR_SHARED_SECRET`                                                    | `apps/web` + `apps/api` | Same value on both. Web server renders forward the visitor IP so public reads use a per-visitor bucket (`pub-ssr`, 60/min) instead of one shared Vercel egress bucket. Unset = SSR shares the 10/min public bucket.                                   |
 
-Neon branch-per-PR (Phase 1.2 CI) needs GitHub secret `NEON_API_KEY` and secret or variable `NEON_PROJECT_ID`. The job branches that project and derives `AUDIT_DATABASE_URL` by pointing the same host at the `audit` database.
+Neon branch-per-PR (Phase 1.2 CI) needs GitHub secret `NEON_API_KEY` and secret or variable `NEON_PROJECT_ID`. The job forks `pr-N` from the schema-only `preview` branch (never production `main`) and derives `AUDIT_DATABASE_URL` by pointing the same host at the `audit` database.
 
 ## Related Docs
 

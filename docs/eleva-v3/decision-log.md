@@ -32,6 +32,25 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-07: Preview deployments get their own database and secrets (active)
+
+- Finding: beta council SEC-3-01 (P0) / SEC-1-03. Every v3 Vercel project
+  shared the production `DATABASE_URL`, audit database, `ELEVA_KEK_V1` and
+  `BETTER_AUTH_SECRET` with Preview, and CI `pr-N` Neon branches were full
+  copies of production.
+- Decision: Preview runs on the Neon branch `preview`, created schema-only
+  from production `main` (no rows copied), with the migration journal
+  copied and synthetic demo data seeded. Preview has its own KEK and Better
+  Auth secret. A boot guard (`PRODUCTION_DB_ENDPOINT` on Preview) refuses a
+  preview pointed at production. The e2e verify-email bypass is never
+  mounted on Vercel. CI forks `pr-N` from `preview`.
+- Resolves the open risk in "Expert pilot frame: Patricia Mota" below.
+- Follow-up: delete leftover `pr-N` branches forked from `main`; give
+  `dev-local-v3-redesign` (a 2026-10-19 copy of production) the same
+  treatment before anyone outside the team uses it; split Stripe/Resend/
+  Daily/Twilio keys per environment before live keys.
+- Owner: founder (Rodrigo Barona).
+
 ### 2026-11-07: EU focus, and copy says what Eleva does (active)
 
 - Decision (founder): Eleva is EU-based and EU-focused. US health-privacy

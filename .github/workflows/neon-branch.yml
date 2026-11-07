@@ -62,6 +62,9 @@ jobs:
         with:
           project_id: ${{ secrets.NEON_PROJECT_ID || vars.NEON_PROJECT_ID }}
           branch_name: pr-${{ github.event.number }}
+          # Fork the schema-only `preview` branch (synthetic seed data), never
+          # production `main`: PR code must not see member data.
+          parent_branch: preview
           database: neondb
           api_key: ${{ secrets.NEON_API_KEY }}
 

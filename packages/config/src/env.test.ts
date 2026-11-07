@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import {
+  assertPreviewDatabaseIsolated,
   env,
   expertProfileUrl,
   marketplaceExpertsUrl,
@@ -317,5 +318,42 @@ describe("public gateway URLs", () => {
     expect(expertProfileUrl("fr/../x", "fisiomota")).toBe(
       "https://dev.eleva.care/fisiomota"
     )
+  })
+})
+
+describe("assertPreviewDatabaseIsolated", () => {
+  const prod =
+    "postgresql://u:p@ep-plain-voice-alu7buik-pooler.c-3.eu-central-1.aws.neon.tech/neondb"
+  const preview =
+    "postgresql://u:p@ep-hidden-field-al15c6aa-pooler.c-3.eu-central-1.aws.neon.tech/neondb"
+  const guard = { PRODUCTION_DB_ENDPOINT: "ep-plain-voice-alu7buik" }
+
+  it("refuses a preview pointed at the production endpoint, pooled or direct", () => {
+    const source = { ...guard, VERCEL_ENV: "preview" }
+    expect(() => assertPreviewDatabaseIsolated(prod, source)).toThrow(
+      /preview deployment points at the production database/
+    )
+    expect(() =>
+      assertPreviewDatabaseIsolated(prod.replace("-pooler", ""), source)
+    ).toThrow()
+  })
+
+  it("allows a preview on its own branch", () => {
+    expect(() =>
+      assertPreviewDatabaseIsolated(preview, {
+        ...guard,
+        VERCEL_ENV: "preview",
+      })
+    ).not.toThrow()
+  })
+
+  it("never blocks production or local runs", () => {
+    expect(() =>
+      assertPreviewDatabaseIsolated(prod, {
+        ...guard,
+        VERCEL_ENV: "production",
+      })
+    ).not.toThrow()
+    expect(() => assertPreviewDatabaseIsolated(prod, guard)).not.toThrow()
   })
 })
