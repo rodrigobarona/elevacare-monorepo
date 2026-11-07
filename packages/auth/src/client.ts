@@ -102,9 +102,14 @@ export interface ElevaAuthClient {
   linkSocial: (body: {
     provider: string
     callbackURL?: string
+    errorCallbackURL?: string
     scopes?: string[]
   }) => Promise<{
     data?: { url?: string; redirect?: boolean } | null
+    error?: AuthClientError | null
+  }>
+  listAccounts: () => Promise<{
+    data?: Array<{ id: string; providerId: string }> | null
     error?: AuthClientError | null
   }>
   listSessions: () => Promise<{ data?: unknown }>

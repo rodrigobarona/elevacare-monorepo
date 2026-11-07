@@ -250,9 +250,9 @@ staging sender / DKIM domain may remain `staging.eleva.care` until mail DNS is
 renamed in a later ops change.
 
 - `dev.eleva.care` — gateway staging (rewrites to staging `elevacare-app` for member/expert/team/account routes; rewrites `/docs/*` to staging `elevacare-docs`)
-- `api.dev.eleva.care` — staging `elevacare-api` Vercel project (separate subdomain, not rewritten)
+- `api.dev.eleva.care` — `elevacare-api` Vercel project (separate subdomain, not rewritten). As of 2026-11-07 this host serves the **production** deployment on the v3 production database; see the decision log ("Expert pilot frame").
 
-Per-PR previews: `*.preview.eleva.care` wildcard. Preview env vars in the gateway project point `APP_URL`, `DOCS_URL` at the matching preview deployment URLs of sibling **frontend** apps. **API is always the staging API** (`api.dev.eleva.care`) — previews do not get their own `elevacare-api` deployment or `.eleva.care` cookies (ADR-017).
+Per-PR previews: `*.preview.eleva.care` wildcard. Preview env vars in the gateway project point `APP_URL`, `DOCS_URL` at the matching preview deployment URLs of sibling **frontend** apps. Target: **API is always the staging API** (`api.dev.eleva.care`) — previews do not get their own `elevacare-api` deployment or `.eleva.care` cookies (ADR-017). Current state (2026-11-07): Vercel still builds `elevacare-api` preview deployments, and they share the production `DATABASE_URL`.
 
 ## Required DNS Records (Vercel-Managed)
 
@@ -315,6 +315,10 @@ Apps run via `pnpm dev` through Turborepo; `.env.local` in the monorepo root pop
 
 ### Staging specifics
 
+> **Target, not current state.** As of 2026-11-07 the `dev.eleva.care` hosts serve the v3
+> **production** deployments on the production Neon database (decision log, "Expert pilot
+> frame"). The list below describes the staging setup Eleva is moving to.
+
 - `dev.eleva.care` is the staging gateway; app routes rewritten from gateway to staging app zone; docs at `/docs/*`; API on `api.dev.eleva.care` subdomain (separate project).
 - **Stripe staging account** (separate from production) with test payment methods + MB WAY test mode.
 - Better Auth on the staging Neon project (`BETTER_AUTH_URL=https://api.dev.eleva.care/auth`). the previous identity provider is retired (see ADR-017).
@@ -342,7 +346,7 @@ Apps run via `pnpm dev` through Turborepo; `.env.local` in the monorepo root pop
 
 ## Integration → Environment Callback Mapping
 
-Webhooks, OAuth callbacks, and session-aware APIs live on the `api.eleva.care` subdomain in production and `api.dev.eleva.care` in staging. Better Auth human-facing callback lives at `eleva.care/callback` (rewritten from gateway to account). Preview deployments call the staging API and never mint `.eleva.care` cookies. In local dev the gateway runs on `localhost:3000`, the app on `:3001`, the api on `:3002`; Stripe CLI forwards webhooks.
+Webhooks, OAuth callbacks, and session-aware APIs live on the `api.eleva.care` subdomain in production and `api.dev.eleva.care` in staging (today the v3 production deployment; see the decision log). Better Auth human-facing callback lives at `eleva.care/callback` (rewritten from gateway to account). Target: preview deployments call the staging API and never mint `.eleva.care` cookies (today API previews exist and share the production database). In local dev the gateway runs on `localhost:3000`, the app on `:3001`, the api on `:3002`; Stripe CLI forwards webhooks.
 
 | Integration                                 | Local                                                | Staging                                            | Production                                     |
 | ------------------------------------------- | ---------------------------------------------------- | -------------------------------------------------- | ---------------------------------------------- |
@@ -374,19 +378,25 @@ Webhooks, OAuth callbacks, and session-aware APIs live on the `api.eleva.care` s
 
 ## Preview Environments — Integration Posture
 
-| Integration | Posture in preview                                            |
-| ----------- | ------------------------------------------------------------- |
-| Stripe      | test mode, staging keys                                       |
-| Better Auth | staging Neon `auth` schema; previews call staging API         |
-| Neon        | ephemeral branch per PR                                       |
-| Daily       | test domain                                                   |
-| Resend      | test key; emails blackholed to internal tester addresses      |
-| Twilio      | disabled; SMS no-ops with log                                 |
-| TOConline   | sandbox only; manual invoicing flow                           |
-| Sentry      | preview-tagged events in `eleva-v3-staging` project           |
-| BetterStack | preview log drain (separate source)                           |
-| PostHog     | preview-tagged events; ff evaluation uses Edge Config staging |
-| GA4         | disabled                                                      |
+> **Current state differs (checked 2026-11-07).** This table is the target.
+> Today `elevacare-api` has one `DATABASE_URL` / `DATABASE_URL_UNPOOLED`
+> entry scoped to both Production and Preview, so API preview deployments
+> use the v3 production database. See the 2026-11-06 "Expert pilot frame"
+> entry in `decision-log.md`.
+
+| Integration | Posture in preview                                                                                      |
+| ----------- | ------------------------------------------------------------------------------------------------------- |
+| Stripe      | test mode, staging keys                                                                                 |
+| Better Auth | target: staging Neon `auth` schema; previews call staging API (today: production database, see callout) |
+| Neon        | ephemeral branch per PR                                                                                 |
+| Daily       | test domain                                                                                             |
+| Resend      | test key; emails blackholed to internal tester addresses                                                |
+| Twilio      | disabled; SMS no-ops with log                                                                           |
+| TOConline   | sandbox only; manual invoicing flow                                                                     |
+| Sentry      | preview-tagged events in `eleva-v3-staging` project                                                     |
+| BetterStack | preview log drain (separate source)                                                                     |
+| PostHog     | preview-tagged events; ff evaluation uses Edge Config staging                                           |
+| GA4         | disabled                                                                                                |
 
 ## Required environment variables (v3 target)
 

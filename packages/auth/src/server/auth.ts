@@ -32,6 +32,11 @@ import {
 import { isTrustedOrigin, trustedOrigins } from "../trusted-origins"
 import { authRateLimitEnabled } from "../e2e-auth-url"
 import { invitationAcceptUrl } from "../invitation-accept-url"
+import {
+  guardAccountLink,
+  purgeBeforeClaim,
+  refuseUnverifiedSession,
+} from "./account-claim"
 import { crossSubDomainCookieConfig } from "./cookie-domain"
 import { magicLinkServerHeaders } from "./magic-link-headers"
 import { orgCreateViolation, orgUpdateViolation } from "./org-type-guard"
@@ -106,7 +111,8 @@ function createAuth() {
   const passkeyOrigin = passkeyOrigins()
 
   // Plugin packages resolve a second @better-auth/core copy; the runtime
-  // contract is 1.7.3. Cast keeps tsc aligned with the spike-proven set.
+  // contract is 1.7.18. Cast keeps tsc aligned with the spike-proven set;
+  // account-claim-wiring.test.ts checks the options it cannot type-check.
   return betterAuth({
     appName: "Eleva.care",
     baseURL: issuer,
@@ -166,15 +172,12 @@ function createAuth() {
       storeStateStrategy: "cookie",
       accountLinking: {
         enabled: true,
-        // Implicit link-on-sign-in for Google: same-email OAuth attaches to the
-        // existing user (password / magic-link / passkey / guest) instead of
-        // account_not_linked. Mitigated by trustedProviders + Google-verified
-        // email (ADR-017 amendment).
+        // Implicit same-email linking stays on only so a Google-verified email
+        // can claim an unverified row (guest-activation, pending verify);
+        // `purgeBeforeClaim` wipes what was enrolled before verification.
+        // Verified rows are refused by `guardAccountLink` unless the owner is
+        // signed in, so takeover-by-email-domain cannot attach Google.
         disableImplicitLinking: false,
-        // BA defaults this to true: unverified local rows (guest-activation,
-        // pending email verify) still get account_not_linked even when Google
-        // is trusted. Opt out so Google-verified email can claim the row;
-        // successful link then sets emailVerified from the IdP claim.
         requireLocalEmailVerified: false,
         trustedProviders: ["google"],
       },
@@ -210,6 +213,16 @@ function createAuth() {
           },
         },
       },
+      account: {
+        create: {
+          before: async (
+            account: { userId: string; providerId: string },
+            ctx: Parameters<typeof purgeBeforeClaim>[1]
+          ) => {
+            await purgeBeforeClaim(account, ctx)
+          },
+        },
+      },
       session: {
         create: {
           // Raw-SQL personal Space provisioning skips BA createOrganization,
@@ -220,6 +233,7 @@ function createAuth() {
             userId: string
             activeOrganizationId?: string | null
           }) => {
+            await refuseUnverifiedSession(session)
             if (session.activeOrganizationId) return
             const orgId = await findDefaultOrganizationId(session.userId)
             if (!orgId) return
@@ -229,6 +243,7 @@ function createAuth() {
       },
     },
     user: {
+      validateUserInfo: guardAccountLink,
       additionalFields: {
         timezone: {
           type: "string",

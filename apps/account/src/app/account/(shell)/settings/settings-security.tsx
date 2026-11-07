@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
+import { useSearchParams } from "next/navigation"
 import { authClient } from "@eleva/auth/client"
 import { Button } from "@eleva/ui/components/button"
 import { Input } from "@eleva/ui/components/input"
@@ -16,6 +17,17 @@ import {
 interface PasskeyRow {
   id: string
   name?: string | null
+}
+
+const GOOGLE_LINK_PARAM = "google"
+
+/** Better Auth OAuth callback `?error=` code → the matching settings message. */
+function googleLinkErrorKey(code: string | null) {
+  if (code === "email_does_not_match") return "googleLinkEmailMismatch"
+  if (code === "account_already_linked_to_different_user") {
+    return "googleLinkTaken"
+  }
+  return "googleLinkFailed"
 }
 
 interface SessionRow {
@@ -33,9 +45,38 @@ export function SettingsSecurity() {
   const [totpCode, setTotpCode] = useState("")
   const [passkeys, setPasskeys] = useState<PasskeyRow[]>([])
   const [sessions, setSessions] = useState<SessionRow[]>([])
+  const [googleLinked, setGoogleLinked] = useState<boolean | null>(null)
+  const searchParams = useSearchParams()
+  const [googleLinkError] = useState(() =>
+    searchParams.get(GOOGLE_LINK_PARAM) === "failed"
+      ? googleLinkErrorKey(searchParams.get("error"))
+      : null
+  )
   const [message, setMessage] = useState<string | null>(null)
+  const notice = message ?? (googleLinkError ? t(googleLinkError) : null)
 
   useEffect(() => {
+    const url = new URL(window.location.href)
+    if (url.searchParams.has(GOOGLE_LINK_PARAM)) {
+      for (const key of [GOOGLE_LINK_PARAM, "error", "error_description"]) {
+        url.searchParams.delete(key)
+      }
+      window.history.replaceState(window.history.state, "", url)
+    }
+    void authClient
+      .listAccounts()
+      .then((result) => {
+        if (result.error) {
+          setMessage(t("error"))
+          return
+        }
+        if (result.data) {
+          setGoogleLinked(
+            result.data.some((account) => account.providerId === "google")
+          )
+        }
+      })
+      .catch(() => setMessage(t("error")))
     void authClient.passkey
       .listUserPasskeys()
       .then((result) => {
@@ -92,6 +133,25 @@ export function SettingsSecurity() {
       return
     }
     setPasskeys((rows) => rows.filter((row) => row.id !== id))
+  }
+
+  async function onConnectGoogle() {
+    const failed = new URL(window.location.href)
+    failed.searchParams.set(GOOGLE_LINK_PARAM, "failed")
+    try {
+      const { data, error } = await authClient.linkSocial({
+        provider: "google",
+        callbackURL: window.location.href,
+        errorCallbackURL: failed.toString(),
+      })
+      if (error || !data?.url) {
+        setMessage(error?.message ?? t("error"))
+        return
+      }
+      window.location.assign(data.url)
+    } catch {
+      setMessage(t("error"))
+    }
   }
 
   async function onRevokeSession(session: SessionRow) {
@@ -202,8 +262,27 @@ export function SettingsSecurity() {
               ))}
             </ul>
           </div>
-          {message ? (
-            <p className="mt-4 text-sm text-muted-foreground">{message}</p>
+          <div className="mt-6 space-y-3">
+            <p className="text-sm font-medium">{t("google")}</p>
+            <p className="text-sm text-muted-foreground">{t("googleHint")}</p>
+            {googleLinked ? (
+              <p className="text-sm" data-testid="settings-google-linked">
+                {t("googleLinked")}
+              </p>
+            ) : googleLinked === false ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onPress={() => void onConnectGoogle()}
+                data-testid="settings-connect-google"
+              >
+                {t("connectGoogle")}
+              </Button>
+            ) : null}
+          </div>
+          {notice ? (
+            <p className="mt-4 text-sm text-muted-foreground">{notice}</p>
           ) : null}
         </SettingsFieldsetContent>
       </SettingsFieldset>

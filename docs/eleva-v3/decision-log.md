@@ -52,6 +52,88 @@ Each entry should include:
   Applied migration comments are left as written.
 - Owner: founder (Rodrigo Barona).
 
+### 2026-11-06: Expert pilot frame: Patricia Mota (active)
+
+- Decision: the first and only pilot expert is **Patricia Mota**, Eleva
+  co-founder. She tests v3 on `dev.eleva.care` with her real account once
+  the invitation gate below is met; her testing does not start before it.
+- Environment fact (checked 2026-11-06 with `vercel inspect`): `dev.eleva.care`
+  and its `account.`, `app.` and `api.` hosts are the **production**
+  deployments of the v3 projects, on the v3 production database. `eleva.care`
+  still serves the MVP (`eleva-care-app`). So the pilot runs on v3
+  production, not on a staging copy.
+- Open risk (checked 2026-11-07 with `vercel env ls` on `elevacare-api`):
+  `DATABASE_URL` and `DATABASE_URL_UNPOOLED` are one entry scoped to both
+  Production and Preview, with no Preview override and no per-branch Neon
+  value. So every PR preview of the API reads and writes the v3 production
+  database, including pilot data. The Preview rows of
+  `environment-matrix.md` describe the target, not this state. Give Preview
+  its own Neon branch before any member who is not on the team books.
+- Open: whether Patricia may take bookings from real members during the
+  pilot, and how many. Until the founder decides, bookings come from the
+  team's own test accounts.
+- Paperwork (vendor DPAs, pilot and expert agreements, privacy contact, DPIA
+  addendum) is owned by the founder and must be finished before the public
+  launch. Founder exception to the 2026-11-06 invitation gate, for this
+  co-founder pilot only: these items do not block Patricia's testing. They
+  stay **open** findings in the audit and still block any other expert's
+  invitation and the launch. Nothing else is excepted: Patricia's pilot
+  invitation still waits for the engineering and score parts of the gate
+  (every discipline at 8.0 or more, no open engineering P0/P1).
+- Owner: founder (Rodrigo Barona).
+- Related: [`audits/2026-11-expert-pilot-council.md`](audits/2026-11-expert-pilot-council.md),
+  2026-11-06 "Expert pilot invitation gate" below.
+
+### 2026-11-06: Owner-first account linking (active)
+
+- Decision: a provider sign-in (Google) may attach to an existing **verified**
+  account only when that account's owner is already signed in. Otherwise
+  Better Auth returns `account_not_linked`, and the login page tells the user
+  to sign in another way, then use Settings → Security → Connect Google.
+  Calendar connect is unaffected (it links from a signed-in session).
+- An **unverified** account (guest activation, pending email verification)
+  can still be claimed by a Google-verified email, with no extra step for
+  guests. The claim first removes everything enrolled before verification
+  (other logins including the password, passkeys, two-factor secrets and
+  backup codes, API keys). Sessions are revoked first, then those rows are
+  deleted in one `withAudit` write that always emits `user.claimed` with the
+  rows it actually removed (under a lock on the user row), then sessions are
+  revoked again. The provider must itself report the email as verified. If
+  the row becomes verified while the claim is in flight, the link is
+  aborted. Only a claim approved by the gate for that user and provider in
+  the same request purges, so a new OAuth user is never treated as a claim.
+- An unverified row never holds a session. No account is created from a
+  provider that has not verified the email (`email_not_verified`), and
+  `databaseHooks.session.create.before` refuses any session for an
+  unverified row, which also covers an existing provider login or passkey
+  and staff impersonation. Password sign-in already requires verification,
+  and the magic-link and verify-email links mark the row verified before
+  creating the session. Nothing can therefore enroll a passkey or start a
+  link on the row while a claim runs. Production check on 2026-11-07
+  (read-only counts): 22 unverified users, none with a provider login,
+  passkey, two-factor secret or API key, 5 with a password (which cannot
+  sign in), and no live database sessions.
+- The signed-in owner's own link never consumes a pending claim, and a
+  verified row reached without its owner is refused unless it was created
+  in the same sign-up request.
+- Accepted residual risk: Better Auth inserts the provider account after
+  the purge transaction commits, so verification landing in that short
+  window still lets the link complete. Verifying needs access to the inbox,
+  so only the email's owner can trigger it, and the purge has already run.
+  A fully atomic check would need Better Auth to share its transaction with
+  the hook.
+- Implementation: `packages/auth/src/server/account-claim.ts`
+  (`user.validateUserInfo` gate and `databaseHooks.account.create.before`).
+  `disableImplicitLinking` stays `false`, only so unverified rows remain
+  claimable. Amends the ADR-017 implicit-linking note and supersedes the
+  2026-10-23 "Google implicit account linking" entry. Unsigned claims are
+  limited to Google, whose verified-email claim is reliable.
+- Still open from SEC2-01/02: the email telling the user a new sign-in
+  method was linked, and asking for the second factor on email-only
+  recovery when MFA is enrolled (with SEC2-03).
+- Owner: founder (Rodrigo Barona). Related:
+  [`audits/2026-11-expert-pilot-council.md`](audits/2026-11-expert-pilot-council.md).
+
 ### 2026-11-06: Expert pilot invitation gate (active)
 
 - Decision: no real expert from `eleva-care-app` is invited to test v3 on
@@ -62,6 +144,8 @@ Each entry should include:
   lists; a legal or operational finding is open until its owner approves
   documented evidence (for example a signed DPA or an adopted procedure).
 - Owner: founder (Rodrigo Barona).
+- Exception: the co-founder pilot ("Expert pilot frame: Patricia Mota"
+  above) is not blocked by the paperwork items.
 - Status: active. Not met: at the 2026-11-05 baseline (`6e976390`) the
   averages were UX/UI 6.3, security 5.3, privacy and health 5.9.
 - This gate does not decide the pilot's legal frame (participants, member
@@ -317,8 +401,11 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
   (i18n); pairs with marketing→auth `ELEVA_LOCALE` persistence.
 - Status: `active`.
 
-### 2026-10-23: Google implicit account linking (active)
+### 2026-10-23: Google implicit account linking (superseded)
 
+- Superseded by 2026-11-06 "Owner-first account linking": implicit linking
+  now attaches Google only to an unverified row (with the purge) or for the
+  signed-in owner. That entry is also the ADR-017 amendment.
 - Decision: enable Better Auth implicit link-on-sign-in for Google
   (`accountLinking.disableImplicitLinking: false`, `requireLocalEmailVerified: false`,
   keep `enabled: true` and `trustedProviders: ["google"]`). Same verified e-mail Google

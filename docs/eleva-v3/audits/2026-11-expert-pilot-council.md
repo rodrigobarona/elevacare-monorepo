@@ -94,6 +94,11 @@ The pilot invitation stays blocked until these checks are done.
   - on a verified account with MFA, email-only recovery (magic link, password reset) asks for the
     second factor;
   - the user is notified on every newly linked identity.
+
+  Status 2026-11-06: the first two items are implemented for provider claims (Google, Microsoft) (decision log, "Owner-first account
+  linking"), pending deploy and a sign-in check on `dev.eleva.care`. The MFA-on-recovery and
+  notification items are still open.
+
 - SEC2-03: MFA is optional and skipped on magic link, Google and passkey. Any account with MFA
   enrolled (staff or not) must complete the second factor on every sign-in path that is not
   itself a second factor (magic link, password, Google). A passkey counts as a second factor only
