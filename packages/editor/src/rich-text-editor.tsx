@@ -171,7 +171,7 @@ export function RichTextEditor({
     >
       <div
         className={cn(
-          "rounded-md border border-input bg-background shadow-xs",
+          "rounded-md border border-input-border bg-background shadow-xs",
           isDisabled && "opacity-60",
           className
         )}

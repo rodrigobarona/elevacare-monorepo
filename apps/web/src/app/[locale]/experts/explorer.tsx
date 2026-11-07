@@ -33,7 +33,7 @@ const LANGUAGES = ["pt", "en", "es"] as const
 const SORTS = ["relevance", "price", "rating"] as const
 
 const SELECT_CLASS =
-  "h-10 w-full appearance-none rounded-full border bg-background py-2 pr-9 pl-4 text-sm shadow-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+  "h-10 w-full appearance-none rounded-full border border-input-border bg-background py-2 pr-9 pl-4 text-sm shadow-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
 
 export async function Explorer({
   locale,

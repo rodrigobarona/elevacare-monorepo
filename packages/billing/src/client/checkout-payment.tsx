@@ -228,7 +228,7 @@ function CheckoutForm({
             autoComplete="off"
             autoCapitalize="characters"
             spellCheck={false}
-            className="h-10 flex-1 rounded-xl border border-input bg-background px-3 text-sm uppercase"
+            className="h-10 flex-1 rounded-xl border border-input-border bg-background px-3 text-sm uppercase"
           />
           {appliedPromoCode ? (
             <button

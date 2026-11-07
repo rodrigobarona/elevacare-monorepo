@@ -82,7 +82,7 @@ export function DocsSearch({ localePrefix }: { localePrefix: string }) {
           placeholder="Search help…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="h-9 w-full rounded-md border border-input bg-background py-1 pr-3 pl-9 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="h-9 w-full rounded-md border border-input-border bg-background py-1 pr-3 pl-9 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
           autoComplete="off"
         />
       </div>
