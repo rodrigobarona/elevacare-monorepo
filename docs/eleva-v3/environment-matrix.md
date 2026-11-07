@@ -104,6 +104,7 @@ Rules:
 - **Vercel manages the full DNS** for `eleva.care`. All records (A, AAAA, CNAME, MX, TXT) are controlled via Vercel Domains.
 - Subdomain creation, DNS record updates, and certificate provisioning are first-class Vercel operations — no third-party DNS provider in the loop.
 - Wildcard SSL covers `*.eleva.care`.
+- Hosting team: the nine v3 projects live on the `wppes-pt` Vercel Enterprise team (since 2026-11-07, billed to Búzios e Tartarugas, Lda). The `eleva.care` DNS zone, the MVP projects and the Upstash Redis/QStash stores (`elevacare-monorepo`) still sit on the founder's Hobby team. Never delete those stores. See the decision log ("Eleva v3 hosting moves to the wppes-pt Enterprise team").
 
 ## Public Surface — App At Root + API On Subdomain (Multi-Zone, ADR-014)
 
@@ -346,7 +347,7 @@ Apps run via `pnpm dev` through Turborepo; `.env.local` in the monorepo root pop
 
 ## Integration → Environment Callback Mapping
 
-Webhooks, OAuth callbacks, and session-aware APIs live on the `api.eleva.care` subdomain in production and `api.dev.eleva.care` in staging (today the v3 production deployment; see the decision log). Better Auth human-facing callback lives at `eleva.care/callback` (rewritten from gateway to account). Target: preview deployments call the staging API and never mint `.eleva.care` cookies (today API previews exist and share the production database). In local dev the gateway runs on `localhost:3000`, the app on `:3001`, the api on `:3002`; Stripe CLI forwards webhooks.
+Webhooks, OAuth callbacks, and session-aware APIs live on the `api.eleva.care` subdomain in production and `api.dev.eleva.care` in staging (today the v3 production deployment; see the decision log). Better Auth human-facing callback lives at `eleva.care/callback` (rewritten from gateway to account). Target: preview deployments call the staging API and never mint `.eleva.care` cookies (today API previews still build, on their own preview database). In local dev the gateway runs on `localhost:3000`, the app on `:3001`, the api on `:3002`; Stripe CLI forwards webhooks.
 
 | Integration                                 | Local                                                | Staging                                            | Production                                     |
 | ------------------------------------------- | ---------------------------------------------------- | -------------------------------------------------- | ---------------------------------------------- |
