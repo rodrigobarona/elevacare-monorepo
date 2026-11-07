@@ -43,6 +43,8 @@ import {
   ReserveBookingRequestSchema,
   ReserveBookingResponseSchema,
   ConfirmBookingRequestSchema,
+  ExtendBookingHoldRequestSchema,
+  ExtendBookingHoldResponseSchema,
   ConfirmBookingResponseSchema,
   BookingReminderRequestSchema,
   BookingReminderResponseSchema,
@@ -2965,6 +2967,45 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             ...stdErrors,
             "403": {
               description: "Missing payouts:view_own",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+      },
+      "/bookings/hold/extend": {
+        post: {
+          operationId: "extendBookingHold",
+          summary: "Give an active booking hold more time",
+          description:
+            "Authorizes reservationToken like /bookings/confirm. Moves expiresAt to now + 5 minutes, never past 60 minutes after the hold was created (WCAG 2.2.1: at least ten extensions). 404 for an unknown token or another user's hold, 409 HOLD_EXPIRED when the hold already ended or was paid, 409 HOLD_LIMIT_REACHED at the cap.",
+          tags: ["Bookings"],
+          security: [],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: ExtendBookingHoldRequestSchema },
+            },
+          },
+          responses: {
+            ...stdPublicWithNotFound,
+            "200": {
+              description: "Hold extended",
+              content: {
+                "application/json": {
+                  schema: ExtendBookingHoldResponseSchema,
+                },
+              },
+            },
+            "400": {
+              description: "Invalid body",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "409": {
+              description: "HOLD_EXPIRED or HOLD_LIMIT_REACHED",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "403": {
+              description: "Bot detected",
               content: { "application/json": { schema: ErrorSchema } },
             },
           },

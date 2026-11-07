@@ -98,6 +98,13 @@ export {
 } from "./booking-request"
 export type { BookingRequestErrorCode } from "./booking-request"
 export { confirmFreeReservation } from "./confirm-free"
+export {
+  extendReservationHold,
+  nextHoldExpiry,
+  HOLD_EXTENSION_MS,
+  MAX_HOLD_MS,
+  type ExtendReservationHoldResult,
+} from "./extend-reservation"
 export type {
   ConfirmBookingPaymentInput,
   ConfirmBookingPaymentResult,

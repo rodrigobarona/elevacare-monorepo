@@ -492,7 +492,11 @@
       "subtotal": "Precio",
       "discount": "Descuento",
       "total": "Total",
-      "promoFailed": "No pudimos actualizar el código ahora. Inténtalo de nuevo en un momento."
+      "promoFailed": "No pudimos actualizar el código ahora. Inténtalo de nuevo en un momento.",
+      "holdEnding": "La reserva de este horario termina en un minuto aproximadamente. ¿Necesita más tiempo?",
+      "extend": "Mantener este horario 5 minutos más",
+      "extendLimit": "Ya no podemos mantener este horario. Complete el pago ahora o elija otro horario.",
+      "extendFailed": "No pudimos añadir más tiempo. Inténtelo de nuevo."
     },
     "done": {
       "heading": "Tu reserva está confirmada",

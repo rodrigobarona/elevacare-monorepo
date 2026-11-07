@@ -106,6 +106,8 @@ type Payment = {
 /** How far the calendar looks ahead for the first month with open times. */
 const MAX_AUTO_SKIPPED_MONTHS = 2
 
+/** Warn this long before a booking hold ends (WCAG 2.2.1 needs >= 20 s). */
+const HOLD_WARNING_MS = 60_000
 export function BookingFunnel({
   locale,
   expertName,
@@ -199,6 +201,9 @@ export function BookingFunnel({
   const [payment, setPayment] = useState<Payment | null>(null)
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null)
   const [nowMs, setNowMs] = useState(() => Date.now())
+  const [holdExtend, setHoldExtend] = useState<
+    "idle" | "pending" | "limit" | "failed"
+  >("idle")
   const [formError, setFormError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [paymentInFlight, setPaymentInFlight] = useState(false)
@@ -419,6 +424,10 @@ export function BookingFunnel({
     isExpired(reservation.expiresAt, nowMs)
   const holdActive =
     reservation != null && !isExpired(reservation.expiresAt, nowMs)
+  const holdEndingSoon =
+    holdActive &&
+    !paymentInFlight &&
+    new Date(reservation.expiresAt).getTime() - nowMs <= HOLD_WARNING_MS
   const priceCents =
     specialPriceCents ?? selectedMode?.priceCents ?? modes[0]?.priceCents ?? 0
   const extraCountries = useMemo(
@@ -577,6 +586,28 @@ export function BookingFunnel({
       }
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  /** WCAG 2.2.1: warn before the hold ends and let the member extend it. */
+  async function extendHold() {
+    if (!reservation) return
+    setHoldExtend("pending")
+    try {
+      const next = await createPublicApiClient().bookings.extendHold({
+        reservationId: reservation.reservationId,
+        reservationToken: reservation.reservationToken,
+      })
+      setReservation({ ...reservation, expiresAt: next.expiresAt })
+      setNowMs(Date.now())
+      setHoldExtend("idle")
+    } catch (error) {
+      setHoldExtend(
+        error instanceof ApiClientError &&
+          error.body?.error === "HOLD_LIMIT_REACHED"
+          ? "limit"
+          : "failed"
+      )
     }
   }
 
@@ -1034,6 +1065,29 @@ export function BookingFunnel({
             </StepHeader>
             {formError ? (
               <FieldError>{t(`errors.${formError}`)}</FieldError>
+            ) : null}
+            {holdEndingSoon ? (
+              <div
+                className="space-y-3 rounded-xl border border-warning bg-warning-subtle p-4"
+                data-testid="booking-hold-ending"
+              >
+                <p role="alert">
+                  {holdExtend === "limit"
+                    ? t("pay.extendLimit")
+                    : holdExtend === "failed"
+                      ? t("pay.extendFailed")
+                      : t("pay.holdEnding")}
+                </p>
+                {holdExtend !== "limit" ? (
+                  <Button
+                    variant="outline"
+                    onPress={extendHold}
+                    isDisabled={holdExtend === "pending"}
+                  >
+                    {t("pay.extend")}
+                  </Button>
+                ) : null}
+              </div>
             ) : null}
             {holdExpired ? (
               <div className="space-y-3">

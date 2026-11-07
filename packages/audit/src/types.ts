@@ -83,6 +83,8 @@ export type AuditAction =
   | "claimed"
   | "released"
   | "reserved"
+  // A booking hold was given more time (WCAG 2.2.1).
+  | "extended"
   | "confirmed"
   | "rescheduled"
   | "granted"
