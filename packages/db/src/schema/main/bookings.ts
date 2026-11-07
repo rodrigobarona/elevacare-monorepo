@@ -73,6 +73,7 @@ export const consentKindEnum = pgEnum("consent_kind", [
   "health_data_processing",
   "marketing",
   "ai_processing",
+  "adult_confirmation",
 ])
 
 export const sessionStatusEnum = pgEnum("session_status", [

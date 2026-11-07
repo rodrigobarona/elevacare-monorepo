@@ -512,6 +512,13 @@
       "when": 1782800000000,
       "tag": "0072_partner_decision_kinds",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1782900000000,
+      "tag": "0073_adult_confirmation_consent",
+      "breakpoints": true
     }
   ]
 }

@@ -24,6 +24,7 @@ export const CONSENTS = [
     kind: "health_data_processing" as const,
     version: CONSENT_DOCUMENT_VERSION,
   },
+  { kind: "adult_confirmation" as const, version: CONSENT_DOCUMENT_VERSION },
 ]
 
 export type PolicySmokeCase = {

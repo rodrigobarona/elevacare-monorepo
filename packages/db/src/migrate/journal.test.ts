@@ -39,9 +39,9 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0072_partner_decision_kinds")
+    expect(last?.tag).toBe("0073_adult_confirmation_consent")
     expect(last?.hash).toHaveLength(64)
-    expect(last?.statements.join("\n")).toContain("partner.needs_changes")
+    expect(last?.statements.join("\n")).toContain("adult_confirmation")
     const partnerApplications = migrations.find(
       (m) => m.tag === "0071_become_partner_applications"
     )

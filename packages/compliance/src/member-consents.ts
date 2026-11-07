@@ -9,7 +9,7 @@ import {
 } from "@eleva/db"
 import {
   CONSENT_DOCUMENT_VERSION,
-  CONSENT_KINDS,
+  MEMBER_CONSENT_KINDS,
   type ConsentKind,
 } from "./consents"
 
@@ -53,7 +53,7 @@ export async function listMemberConsents(
 
   const latest = pickLatestConsentPerKind(rows)
 
-  return CONSENT_KINDS.map((kind) => {
+  return MEMBER_CONSENT_KINDS.map((kind) => {
     const row = latest.get(kind)
     if (row) return row
     return {

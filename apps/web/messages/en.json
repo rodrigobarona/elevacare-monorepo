@@ -465,6 +465,10 @@
         "health_data_processing": {
           "label": "I consent to",
           "link": "health data processing"
+        },
+        "adult_confirmation": {
+          "label": "I am 18 or older and I am booking this session for myself, as set out in the",
+          "link": "booking terms"
         }
       },
       "sections": {
@@ -529,7 +533,7 @@
       "phoneRequired": "Add a phone number so the expert can call you.",
       "guestRequired": "Please add your name and email to continue.",
       "consentOutdated": "Please review the latest notices and try again.",
-      "consentsRequired": "Please confirm the three notices to continue.",
+      "consentsRequired": "Please confirm all four statements to continue.",
       "taxIdInvalid": "Enter a valid NIF or VAT (letters and numbers only, 8–32 characters).",
       "confirmFailed": "Payment went through, but we could not confirm the session yet. Please try again.",
       "confirmMismatch": "This payment does not match the held time. Contact support if you were charged.",

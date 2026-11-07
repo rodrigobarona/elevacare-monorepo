@@ -465,6 +465,10 @@
         "health_data_processing": {
           "label": "Autorizo o",
           "link": "tratamento de dados de saúde"
+        },
+        "adult_confirmation": {
+          "label": "Tenho 18 anos ou mais e estou a marcar esta sessão para mim, conforme os",
+          "link": "termos de marcação"
         }
       },
       "sections": {
@@ -529,7 +533,7 @@
       "phoneRequired": "Indique um telemóvel para poderem ligar-lhe.",
       "guestRequired": "Indique o nome e o email para continuar.",
       "consentOutdated": "Reveja os avisos mais recentes e tente novamente.",
-      "consentsRequired": "Confirme os três avisos para continuar.",
+      "consentsRequired": "Confirme as quatro declarações para continuar.",
       "taxIdInvalid": "Indique um NIF ou IVA válido (só letras e números, 8–32 caracteres).",
       "confirmFailed": "O pagamento passou, mas ainda não confirmámos a sessão. Tente novamente.",
       "confirmMismatch": "Este pagamento não corresponde ao horário reservado. Se foi cobrado, contacte o suporte.",
