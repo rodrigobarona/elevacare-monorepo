@@ -53,6 +53,53 @@ async function compareAndDelete(
 }
 
 /**
+ * SET NX on the slot key. A lock can outlive its hold: paying, cancelling,
+ * declining or erasing ends the hold in the database without always
+ * clearing Redis, so the slot would look free but refuse every booking
+ * until the TTL ran out (up to an hour with extensions). The database is
+ * the source of truth: when the holder's reservation row exists and has
+ * ended, the lock is stale, so it is removed and tried once more.
+ *
+ * No row means the holder is still between SET NX and its insert, so the
+ * lock stays. A failed lookup also keeps it (the old answer: taken).
+ */
+export async function acquireSlotLock(
+  redis: Redis,
+  key: string,
+  holdToken: string,
+  ttlSeconds: number,
+  holdHasEnded: (holder: string) => Promise<boolean>
+): Promise<boolean> {
+  const lock = { nx: true, ex: ttlSeconds } as const
+  if (await redis.set(key, holdToken, lock)) return true
+  const holder = await redis.get<string>(key)
+  if (holder !== null) {
+    const ended = await holdHasEnded(holder).catch(() => false)
+    if (!ended) return false
+    await compareAndDelete(redis, key, holder)
+  }
+  return Boolean(await redis.set(key, holdToken, lock))
+}
+
+async function holdHasEnded(
+  orgId: string,
+  holdToken: string
+): Promise<boolean> {
+  const [row] = await withOrgContext(orgId, (tx: Tx) =>
+    tx
+      .select({
+        status: slotReservations.status,
+        expiresAt: slotReservations.expiresAt,
+      })
+      .from(slotReservations)
+      .where(eq(slotReservations.holdToken, holdToken))
+      .limit(1)
+  )
+  if (!row) return false
+  return row.status !== "active" || row.expiresAt.getTime() <= Date.now()
+}
+
+/**
  * Atomic slot reservation. Uses Upstash Redis SET NX as a distributed
  * lock to prevent concurrent double-booking, then writes the
  * slot_reservations row inside an RLS-scoped DB transaction.
@@ -98,11 +145,13 @@ export async function reserveSlot(
   const skipRedisLock = isRedisSlotLockDisabled()
 
   if (!skipRedisLock) {
-    const acquired = await redis.set(key, holdToken, {
-      nx: true,
-      ex: ttlSeconds,
-    })
-
+    const acquired = await acquireSlotLock(
+      redis,
+      key,
+      holdToken,
+      ttlSeconds,
+      (holder) => holdHasEnded(orgId, holder)
+    )
     if (!acquired) {
       return { success: false, error: "slot_taken" }
     }

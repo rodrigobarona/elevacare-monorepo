@@ -112,6 +112,7 @@ function createMockRedis(): Redis {
         return "OK"
       }
     ),
+    get: vi.fn(async (key: string) => store.get(key) ?? null),
     del: vi.fn(async (key: string) => {
       store.delete(key)
       deleted.add(key)
