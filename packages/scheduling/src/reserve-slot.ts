@@ -72,7 +72,9 @@ export async function acquireSlotLock(
   if (await redis.set(key, holdToken, lock)) return true
   const holder = await redis.get<string>(key)
   if (holder !== null) {
-    if (await holdIsActive(holder)) return false
+    // If the lookup fails, keep the lock: the old answer, slot taken.
+    const active = await holdIsActive(holder).catch(() => true)
+    if (active) return false
     await compareAndDelete(redis, key, holder)
   }
   return Boolean(await redis.set(key, holdToken, lock))

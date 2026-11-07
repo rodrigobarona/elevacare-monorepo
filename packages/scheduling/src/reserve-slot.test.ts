@@ -56,6 +56,17 @@ describe("acquireSlotLock", () => {
     expect(store.get(KEY)).toBe("new")
   })
 
+  it("keeps the lock when the database check fails", async () => {
+    const { redis, store } = fakeRedis({ [KEY]: "unknown" })
+    const holdIsActive = vi.fn(async () => {
+      throw new Error("db down")
+    })
+    expect(await acquireSlotLock(redis, KEY, "new", 300, holdIsActive)).toBe(
+      false
+    )
+    expect(store.get(KEY)).toBe("unknown")
+  })
+
   it("does not delete a lock someone else took in the meantime", async () => {
     const { redis, store } = fakeRedis({ [KEY]: "ended" })
     const holdIsActive = vi.fn(async () => {
