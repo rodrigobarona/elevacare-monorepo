@@ -51,6 +51,7 @@ Each entry should include:
   removes QStash schedules for the ticks and the jobs inside them.
 - Reference: `apps/api/vercel.json`, `apps/api/src/lib/workflow-ticks.ts`,
   `infra/qstash/setup-all.ts`
+
 ### 2026-11-07: Eleva v3 hosting moves to the wppes-pt Enterprise team (active)
 
 - Owner: founder (authorized), engineering (executed)
