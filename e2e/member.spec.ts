@@ -4,7 +4,10 @@ import {
   type APIRequestContext,
   type Page,
 } from "@playwright/test"
-import { CONSENT_DOCUMENT_VERSION } from "@eleva/compliance"
+import {
+  CONSENT_DOCUMENT_VERSION,
+  MEMBER_CONSENT_KINDS,
+} from "@eleva/compliance"
 import {
   ACCOUNT_ORIGIN,
   E2E_PASSWORD,
@@ -431,13 +434,6 @@ async function requestDsarWithMockedStorage(
   const body = await fileRes.body()
   expect(Buffer.from(body.subarray(0, 2)).toString("latin1")).toBe("PK")
 }
-
-const MEMBER_CONSENT_KINDS = [
-  "terms",
-  "privacy",
-  "health_data_processing",
-  "marketing",
-] as const
 
 async function sessionAuthHeaders(page: Page): Promise<Record<string, string>> {
   return authHeaders(cookieHeaderFromPage(await page.context().cookies()))

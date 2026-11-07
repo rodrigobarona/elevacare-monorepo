@@ -50,6 +50,36 @@ describe("buildCspHeader", () => {
     expect(header).not.toMatch(/media-src[^;]*media\.example\.com/)
   })
 
+  it("allows the API origin this deployment calls from the browser", () => {
+    const prev = process.env.NEXT_PUBLIC_API_URL
+    process.env.NEXT_PUBLIC_API_URL = "https://api.dev.eleva.care/v1"
+    try {
+      const header = buildCspHeader()
+      expect(header).toMatch(/connect-src[^;]*https:\/\/api\.dev\.eleva\.care/)
+      expect(header).not.toContain("api.dev.eleva.care/v1")
+    } finally {
+      if (prev === undefined) delete process.env.NEXT_PUBLIC_API_URL
+      else process.env.NEXT_PUBLIC_API_URL = prev
+    }
+  })
+
+  it("does not repeat api.eleva.care when it is the configured API", () => {
+    const prev = process.env.NEXT_PUBLIC_API_URL
+    process.env.NEXT_PUBLIC_API_URL = "https://api.eleva.care"
+    try {
+      const connect = buildCspHeader()
+        .split("; ")
+        .find((d) => d.startsWith("connect-src "))!
+        .split(" ")
+      expect(
+        connect.filter((s) => s === "https://api.eleva.care")
+      ).toHaveLength(1)
+    } finally {
+      if (prev === undefined) delete process.env.NEXT_PUBLIC_API_URL
+      else process.env.NEXT_PUBLIC_API_URL = prev
+    }
+  })
+
   it("allows presigned uploads to the EU R2 endpoint only (ADR-025)", () => {
     const header = buildCspHeader()
     expect(header).toMatch(
