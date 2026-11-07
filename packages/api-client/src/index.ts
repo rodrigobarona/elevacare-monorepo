@@ -2326,8 +2326,14 @@ export const PublicBookingLinkResponseSchema = z.object({
   modes: z.array(PublicEventTypeModeSchema).min(1),
 })
 
+/** Every booking records these four; `adult_confirmation` = 18+ booking for oneself. */
 export const ReserveBookingConsentSchema = z.object({
-  kind: z.enum(["terms", "privacy", "health_data_processing"]),
+  kind: z.enum([
+    "terms",
+    "privacy",
+    "health_data_processing",
+    "adult_confirmation",
+  ]),
   version: z.string().min(1).max(64),
 })
 
@@ -2360,8 +2366,8 @@ export const ReserveBookingRequestSchema = z.object({
   phone: z.string().min(8).max(32).optional(),
   consents: z
     .array(ReserveBookingConsentSchema)
-    .length(3)
-    .refine((grants) => new Set(grants.map((grant) => grant.kind)).size === 3, {
+    .length(4)
+    .refine((grants) => new Set(grants.map((grant) => grant.kind)).size === 4, {
       message: "consents must cover each kind exactly once",
     }),
   /** Policy shown to the member; 409 POLICY_CHANGED when it no longer matches. */

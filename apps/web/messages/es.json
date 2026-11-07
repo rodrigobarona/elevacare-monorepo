@@ -465,6 +465,10 @@
         "health_data_processing": {
           "label": "Doy mi consentimiento para el",
           "link": "tratamiento de datos de salud"
+        },
+        "adult_confirmation": {
+          "label": "Tengo 18 años o más y reservo esta sesión para mí, según los",
+          "link": "términos de reserva"
         }
       },
       "sections": {
@@ -529,7 +533,7 @@
       "phoneRequired": "Añade un teléfono para que puedan llamarte.",
       "guestRequired": "Añade tu nombre y correo para continuar.",
       "consentOutdated": "Revisa los avisos más recientes e inténtalo de nuevo.",
-      "consentsRequired": "Confirma los tres avisos para continuar.",
+      "consentsRequired": "Confirme las cuatro declaraciones para continuar.",
       "taxIdInvalid": "Introduce un NIF o IVA válido (solo letras y números, 8–32 caracteres).",
       "confirmFailed": "El pago se realizó, pero aún no pudimos confirmar la sesión. Inténtalo de nuevo.",
       "confirmMismatch": "Este pago no coincide con la hora reservada. Si te cobraron, contacta con soporte.",

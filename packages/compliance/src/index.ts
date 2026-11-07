@@ -6,6 +6,8 @@ export {
   CONSENT_DOCUMENT_VERSION,
   CONSENT_KINDS,
   FUNNEL_CONSENT_KINDS,
+  MEMBER_CONSENT_KINDS,
+  type MemberConsentKind,
   assertConsentVersionsApprovedForDeployment,
   hashGuestEmail,
   isDraftConsentVersion,

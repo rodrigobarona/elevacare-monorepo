@@ -52,6 +52,7 @@ function reserveRequest() {
         { kind: "terms", version: "working" },
         { kind: "privacy", version: "working" },
         { kind: "health_data_processing", version: "working" },
+        { kind: "adult_confirmation", version: "working" },
       ],
     }),
   })

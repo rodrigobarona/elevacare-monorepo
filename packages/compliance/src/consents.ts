@@ -6,14 +6,31 @@ export const CONSENT_KINDS = [
   "health_data_processing",
   "marketing",
   "ai_processing",
+  "adult_confirmation",
 ] as const
 
 export type ConsentKind = (typeof CONSENT_KINDS)[number]
+
+/**
+ * Kinds a member sees and manages in Privacy settings. `adult_confirmation`
+ * is a per-booking declaration ("I am 18 or older and booking for
+ * myself"), recorded with the booking and not withdrawable.
+ */
+export const MEMBER_CONSENT_KINDS = [
+  "terms",
+  "privacy",
+  "health_data_processing",
+  "marketing",
+  "ai_processing",
+] as const satisfies readonly ConsentKind[]
+
+export type MemberConsentKind = (typeof MEMBER_CONSENT_KINDS)[number]
 
 export const FUNNEL_CONSENT_KINDS = [
   "terms",
   "privacy",
   "health_data_processing",
+  "adult_confirmation",
 ] as const satisfies readonly ConsentKind[]
 
 export type FunnelConsentKind = (typeof FUNNEL_CONSENT_KINDS)[number]
@@ -57,6 +74,8 @@ export const CONSENT_DOCUMENT_SLUGS = {
   terms: "terms",
   privacy: "privacy",
   health_data_processing: "health-data",
+  // The bookings section of the terms: adults booking for themselves.
+  adult_confirmation: "terms",
 } as const satisfies Record<FunnelConsentKind, string>
 
 /** Public legal slug for optional {@link ConsentKind} `ai_processing`. */
@@ -92,6 +111,7 @@ export const CONSENT_DOCUMENTS: Record<FunnelConsentKind, ConsentDocument> = {
   terms: documentFor("terms"),
   privacy: documentFor("privacy"),
   health_data_processing: documentFor("health_data_processing"),
+  adult_confirmation: documentFor("adult_confirmation"),
 }
 
 /** Versioned notice for `ai_processing` (booking opt-in + Privacy settings). */

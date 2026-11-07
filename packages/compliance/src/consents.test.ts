@@ -42,6 +42,7 @@ describe("CONSENT_DOCUMENTS", () => {
       terms: CONSENT_DOCUMENT_VERSION,
       privacy: CONSENT_DOCUMENT_VERSION,
       health_data_processing: CONSENT_DOCUMENT_VERSION,
+      adult_confirmation: CONSENT_DOCUMENT_VERSION,
     })
   })
 
@@ -59,6 +60,7 @@ describe("CONSENT_DOCUMENTS", () => {
       terms: CONSENT_DOCUMENT_VERSION,
       privacy: CONSENT_DOCUMENT_VERSION,
       health_data_processing: CONSENT_DOCUMENT_VERSION,
+      adult_confirmation: CONSENT_DOCUMENT_VERSION,
     })
   })
 
