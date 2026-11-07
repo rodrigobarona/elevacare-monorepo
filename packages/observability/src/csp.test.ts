@@ -67,8 +67,13 @@ describe("buildCspHeader", () => {
     const prev = process.env.NEXT_PUBLIC_API_URL
     process.env.NEXT_PUBLIC_API_URL = "https://api.eleva.care"
     try {
-      const header = buildCspHeader()
-      expect(header.match(/https:\/\/api\.eleva\.care/g)).toHaveLength(1)
+      const connect = buildCspHeader()
+        .split("; ")
+        .find((d) => d.startsWith("connect-src "))!
+        .split(" ")
+      expect(
+        connect.filter((s) => s === "https://api.eleva.care")
+      ).toHaveLength(1)
     } finally {
       if (prev === undefined) delete process.env.NEXT_PUBLIC_API_URL
       else process.env.NEXT_PUBLIC_API_URL = prev
