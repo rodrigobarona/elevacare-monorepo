@@ -10,5 +10,19 @@
       "path": "/cron/booking-probes",
       "schedule": "15 6 * * *"
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "fix/*": false,
+      "feat/*": false,
+      "chore/*": false,
+      "docs/*": false,
+      "test/*": false,
+      "refactor/*": false,
+      "perf/*": false,
+      "ci/*": false,
+      "phase-*": false,
+      "renovate/*": false
+    }
+  }
 }
