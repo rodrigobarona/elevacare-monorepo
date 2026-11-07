@@ -1,5 +1,7 @@
+import { env } from "@eleva/config/env"
 import { captureException } from "@eleva/observability"
 import { corsHeaders } from "@/lib/cors"
+import { bearerMatches } from "@/lib/internal-auth"
 import {
   authorizeInternalWorkflow,
   internalWorkflowOptions,
@@ -15,27 +17,44 @@ export const ROUTE_POLICY = {
 } as const satisfies RoutePolicy
 
 /**
- * POST /workflows/tick/{cadence}
+ * GET|POST /workflows/tick/{cadence}
  *
- * One QStash schedule per cadence instead of one per job: the plan's
- * schedule quota (10) is smaller than the number of recurring jobs. Each
- * job keeps its own route (manual runs, tests); a tick calls those
- * handlers in-process, in parallel, so one failing job never blocks the
- * others. Every job is idempotent, so a QStash retry of the whole tick is
- * safe. Authz: Bearer `WORKFLOWS_DRAIN_SECRET` or a QStash signature.
+ * One schedule per cadence instead of one per job. Each job keeps its own
+ * route (manual runs, tests); a tick calls those handlers in-process, in
+ * parallel, so one failing job never blocks the others. Every job is
+ * idempotent, so a retry of the whole tick is safe.
+ *
+ * GET is Vercel Cron (`apps/api/vercel.json`), which sends
+ * `Authorization: Bearer ${CRON_SECRET}`. Ticks run on Vercel Cron, not
+ * QStash: a minute tick alone is 1,440 messages a day, more than the
+ * QStash daily allowance. POST (Bearer `WORKFLOWS_DRAIN_SECRET` or a
+ * QStash signature) stays for manual runs.
  */
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 export const maxDuration = 300
 
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ cadence: string }> }
-) {
-  const headers = corsHeaders(request, "POST, OPTIONS")
+type TickContext = { params: Promise<{ cadence: string }> }
+
+export async function GET(request: Request, context: TickContext) {
+  // Fails closed when CRON_SECRET is unset.
+  if (!bearerMatches(request.headers.get("authorization"), env().CRON_SECRET)) {
+    return secureJson(
+      { error: "unauthorized" },
+      { status: 401, headers: corsHeaders(request, "GET, POST, OPTIONS") }
+    )
+  }
+  return runTick(request, context)
+}
+
+export async function POST(request: Request, context: TickContext) {
   const denied = await authorizeInternalWorkflow(request)
   if (denied) return denied
+  return runTick(request, context)
+}
 
+async function runTick(request: Request, { params }: TickContext) {
+  const headers = corsHeaders(request, "GET, POST, OPTIONS")
   const { cadence } = await params
   if (!isWorkflowTickCadence(cadence)) {
     return secureJson({ error: "not_found" }, { status: 404, headers })
@@ -77,7 +96,7 @@ export async function POST(
     }
   })
 
-  // 500 lets QStash record the tick as failed; jobs that answer report
+  // 500 records the tick as failed in the cron log; jobs that answer report
   // their own errors to Sentry, jobs that throw are reported above.
   return secureJson(
     { ok: failed === 0, cadence, failed, results },

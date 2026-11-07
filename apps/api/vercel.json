@@ -9,6 +9,18 @@
     {
       "path": "/cron/booking-probes",
       "schedule": "15 6 * * *"
+    },
+    {
+      "path": "/workflows/tick/minutely",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/workflows/tick/10min",
+      "schedule": "*/10 * * * *"
+    },
+    {
+      "path": "/workflows/tick/hourly",
+      "schedule": "5 * * * *"
     }
   ],
   "git": {
