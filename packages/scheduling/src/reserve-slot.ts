@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto"
-import { eq, and, sql } from "drizzle-orm"
+import { eq, and, gt, sql } from "drizzle-orm"
 import type { Redis } from "@upstash/redis"
 import { withAudit } from "@eleva/audit"
 import { withOrgContext, type Tx } from "@eleva/db/context"
@@ -53,6 +53,52 @@ async function compareAndDelete(
 }
 
 /**
+ * SET NX on the slot key. A lock can outlive its hold: paying, cancelling,
+ * declining or erasing ends the hold in the database without always
+ * clearing Redis, so the slot would look free but refuse every booking
+ * until the TTL ran out (up to an hour with extensions). The database is
+ * the source of truth, so a lock whose hold is no longer active is
+ * removed and the lock is tried once more. Two callers that both clear a
+ * stale lock still meet the `slot_reservations_no_overlap` constraint.
+ */
+export async function acquireSlotLock(
+  redis: Redis,
+  key: string,
+  holdToken: string,
+  ttlSeconds: number,
+  holdIsActive: (holder: string) => Promise<boolean>
+): Promise<boolean> {
+  const lock = { nx: true, ex: ttlSeconds } as const
+  if (await redis.set(key, holdToken, lock)) return true
+  const holder = await redis.get<string>(key)
+  if (holder !== null) {
+    if (await holdIsActive(holder)) return false
+    await compareAndDelete(redis, key, holder)
+  }
+  return Boolean(await redis.set(key, holdToken, lock))
+}
+
+async function isHoldActive(
+  orgId: string,
+  holdToken: string
+): Promise<boolean> {
+  const [row] = await withOrgContext(orgId, (tx: Tx) =>
+    tx
+      .select({ id: slotReservations.id })
+      .from(slotReservations)
+      .where(
+        and(
+          eq(slotReservations.holdToken, holdToken),
+          eq(slotReservations.status, "active"),
+          gt(slotReservations.expiresAt, new Date())
+        )
+      )
+      .limit(1)
+  )
+  return Boolean(row)
+}
+
+/**
  * Atomic slot reservation. Uses Upstash Redis SET NX as a distributed
  * lock to prevent concurrent double-booking, then writes the
  * slot_reservations row inside an RLS-scoped DB transaction.
@@ -98,11 +144,13 @@ export async function reserveSlot(
   const skipRedisLock = isRedisSlotLockDisabled()
 
   if (!skipRedisLock) {
-    const acquired = await redis.set(key, holdToken, {
-      nx: true,
-      ex: ttlSeconds,
-    })
-
+    const acquired = await acquireSlotLock(
+      redis,
+      key,
+      holdToken,
+      ttlSeconds,
+      (holder) => isHoldActive(orgId, holder)
+    )
     if (!acquired) {
       return { success: false, error: "slot_taken" }
     }
