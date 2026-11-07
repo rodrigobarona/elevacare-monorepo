@@ -157,7 +157,11 @@ export function withHeaders(
       handler(req, event)
     )
     if (options.skipCrossOriginRewrites && isCrossOriginRewrite(req, res)) {
-      return res
+      // Keep tracing intact across zones; the zone sets its own policy.
+      const passthrough =
+        res instanceof NextResponse ? res : NextResponse.next(res)
+      passthrough.headers.set(correlationHeader, correlationId)
+      return passthrough
     }
 
     // Build a NextResponse we can mutate regardless of handler return type.

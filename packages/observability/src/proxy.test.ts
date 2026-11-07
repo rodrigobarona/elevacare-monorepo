@@ -141,6 +141,7 @@ describe("withHeaders", () => {
     const res = await proxy(req("/acme/calendar"))
     expect(res.headers.get("X-Frame-Options")).toBeNull()
     expect(res.headers.get("Content-Security-Policy")).toBeNull()
+    expect(res.headers.get("x-correlation-id")).toBeTruthy()
   })
 
   it("detects cross-origin rewrites only", () => {
