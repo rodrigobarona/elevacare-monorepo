@@ -1,20 +1,15 @@
 import { ExpertCardInitials } from "@eleva/ui/blocks/expert-card"
-import {
-  getAvatarFallbackStyle,
-  getAvatarInitials,
-} from "@eleva/ui/lib/avatar-utils"
+import { getAvatarInitials } from "@eleva/ui/lib/avatar-utils"
 import { cn } from "@eleva/ui/lib/utils"
 
-/** Fills its parent with the expert photo, or a large initials tile. */
+/** Fills its parent with the expert photo, or a calm monogram tile. */
 export function ExpertPortrait({
   displayName,
-  username,
   avatarUrl,
   isPriority = false,
   className,
 }: {
   displayName: string
-  username: string
   avatarUrl: string | null
   /** Above-the-fold portrait (profile hero): load eagerly for LCP. */
   isPriority?: boolean
@@ -24,7 +19,6 @@ export function ExpertPortrait({
     return (
       <ExpertCardInitials
         initials={getAvatarInitials(displayName)}
-        style={getAvatarFallbackStyle(username)}
         className={className}
       />
     )

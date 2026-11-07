@@ -1088,6 +1088,9 @@ importers:
       '@eleva/content':
         specifier: workspace:*
         version: link:../../packages/content
+      '@eleva/editor':
+        specifier: workspace:*
+        version: link:../../packages/editor
       '@eleva/icons':
         specifier: workspace:*
         version: link:../../packages/icons
