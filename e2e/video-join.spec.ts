@@ -10,8 +10,23 @@ const memberPassword = process.env.E2E_VIDEO_MEMBER_PASSWORD
 const storageState = process.env.E2E_VIDEO_STORAGE_STATE
 
 test.describe("video join — fake media devices", () => {
+  test("public pages keep camera and microphone off", async ({ page }) => {
+    const res = await page.goto("/")
+    const policy = res?.headers()["permissions-policy"] ?? ""
+    expect(policy).toContain("camera=()")
+    expect(policy).toContain("microphone=()")
+  })
+
   test("Chromium exposes fake camera and microphone", async ({ page }) => {
-    await page.goto("/")
+    // A Playwright-served blank page on the same secure origin: the
+    // device probe should not depend on any app route's policy.
+    await page.route("**/__media-probe", (route) =>
+      route.fulfill({
+        contentType: "text/html",
+        body: "<!doctype html><title>media probe</title>",
+      })
+    )
+    await page.goto("/__media-probe")
     const kinds = await page.evaluate(async () => {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
