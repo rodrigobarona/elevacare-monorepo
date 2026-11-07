@@ -9,27 +9,30 @@ type AuthEndpointContext = Parameters<typeof getSessionFromCtx>[0]
 export const ACCOUNT_NOT_LINKED = "account_not_linked"
 
 /**
- * Unsigned claims the guard approved on an unverified row, keyed by user id.
- * The account-create hook consumes the entry in the same request; a row that
- * turns verified between the two steps then aborts the link instead of
- * attaching the provider without the owner. Entries expire so a link that
- * fails before the hook cannot leave one behind.
+ * Unsigned claims the guard approved on an unverified row, keyed by user and
+ * provider. The account-create hook consumes the entry in the same request;
+ * a row that turns verified between the two steps then aborts the link
+ * instead of attaching the provider without the owner. Stale entries (a
+ * link that failed before the hook) are swept when new ones are recorded;
+ * an entry is honoured until consumed, so a slow request still purges.
  */
-const PENDING_CLAIM_TTL_MS = 60_000
+const PENDING_CLAIM_SWEEP_MS = 10 * 60_000
 const pendingClaims = new Map<string, number>()
 
-function recordPendingClaim(userId: string): void {
-  const now = Date.now()
-  for (const [id, expiresAt] of pendingClaims) {
-    if (expiresAt <= now) pendingClaims.delete(id)
-  }
-  pendingClaims.set(userId, now + PENDING_CLAIM_TTL_MS)
+function claimKey(userId: string, providerId: string): string {
+  return `${userId}:${providerId}`
 }
 
-function takePendingClaim(userId: string): boolean {
-  const expiresAt = pendingClaims.get(userId)
-  pendingClaims.delete(userId)
-  return expiresAt !== undefined && expiresAt > Date.now()
+function recordPendingClaim(userId: string, providerId: string): void {
+  const now = Date.now()
+  for (const [key, recordedAt] of pendingClaims) {
+    if (now - recordedAt > PENDING_CLAIM_SWEEP_MS) pendingClaims.delete(key)
+  }
+  pendingClaims.set(claimKey(userId, providerId), now)
+}
+
+function takePendingClaim(userId: string, providerId: string): boolean {
+  return pendingClaims.delete(claimKey(userId, providerId))
 }
 
 /** `null` when signed out. A failed lookup rethrows so callers fail closed. */
@@ -50,6 +53,12 @@ async function findUser(
     : null
 }
 
+const EMAIL_NOT_VERIFIED = {
+  error: "email_not_verified",
+  errorDescription:
+    "Your provider has not confirmed this email address. Confirm it with the provider, or sign in with a sign-in link.",
+}
+
 const NOT_LINKED = {
   error: ACCOUNT_NOT_LINKED,
   errorDescription:
@@ -66,10 +75,26 @@ const NOT_LINKED = {
 export async function guardAccountLink(
   data: {
     user: { id?: unknown; emailVerified?: unknown }
-    source: { action: string; method: string }
+    source: {
+      action: string
+      method: string
+      oauth?: { providerId?: string }
+      sso?: { providerId?: string }
+    }
   },
   ctx: AuthEndpointContext
 ): Promise<{ error: string; errorDescription: string } | undefined> {
+  const viaProvider =
+    data.source.method === "oauth" || data.source.method.startsWith("sso-")
+  if (data.source.action === "create-user") {
+    // No account is created from an unverified provider email, so an
+    // unverified row never holds a session (password sign-in already
+    // requires verification and a magic link verifies). That keeps a claim
+    // from racing anything the old row could enroll.
+    if (viaProvider && data.user.emailVerified !== true)
+      return EMAIL_NOT_VERIFIED
+    return
+  }
   if (data.source.action !== "link-account") return
   const userId = typeof data.user.id === "string" ? data.user.id : null
   if (!userId) return
@@ -80,37 +105,40 @@ export async function guardAccountLink(
     .catch(() => false)
   if (ownerSignedIn) return
   if (user.emailVerified || data.user.emailVerified !== true) return NOT_LINKED
-  recordPendingClaim(userId)
+  const providerId =
+    data.source.oauth?.providerId ?? data.source.sso?.providerId
+  if (!providerId) return NOT_LINKED
+  recordPendingClaim(userId, providerId)
   return
 }
 
 class ClaimRaced extends Error {}
 
 /**
- * `databaseHooks.account.create.before`. When a provider claims an
- * unverified row without the owner signed in, everything enrolled before
+ * `databaseHooks.account.create.before`. Runs only for a claim that
+ * `guardAccountLink` approved in the same request: a provider-verified
+ * email claiming an unverified row without the owner signed in. Everything
+ * enrolled before
  * verification is treated as attacker-controlled. Sessions are revoked,
  * then other logins (password, Google, Microsoft), passkeys, two-factor
  * secrets and backup codes and API keys are removed in one audited write
  * (`user.claimed`, always emitted), then sessions are revoked again so
  * nothing enrolled from a session opened in between survives. Throws, which
- * aborts the link, if the owner check or the audited purge fails, or if the
- * row became verified while the claim was in flight.
+ * aborts the link, if the audited purge fails or if the row became
+ * verified while the claim was in flight.
  */
 export async function purgeBeforeClaim(
   account: { userId: string; providerId: string },
   ctx: AuthEndpointContext | null
 ): Promise<void> {
   if (!ctx || account.providerId === "credential") return
-  const claimApproved = takePendingClaim(account.userId)
+  // Only a claim the guard approved in this request purges. New OAuth
+  // users, owner-initiated links and returning sign-ins never record one.
+  if (!takePendingClaim(account.userId, account.providerId)) return
   const user = await findUser(ctx, account.userId)
   if (!user) return
-  if ((await signedInUserId(ctx)) === user.id) return
   if (user.emailVerified) {
-    // A brand-new user or an unrelated create; only a claim the guard
-    // approved on an unverified row can race verification.
-    if (claimApproved) throw new ClaimRaced("account claim raced verification")
-    return
+    throw new ClaimRaced("account claim raced verification")
   }
 
   const orgId =

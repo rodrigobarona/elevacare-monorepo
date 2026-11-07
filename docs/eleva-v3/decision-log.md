@@ -79,7 +79,19 @@ Each entry should include:
   rows it actually removed (under a lock on the user row), then sessions are
   revoked again. The provider must itself report the email as verified. If
   the row becomes verified while the claim is in flight, the link is
-  aborted.
+  aborted. Only a claim approved by the gate for that user and provider in
+  the same request purges, so a new OAuth user is never treated as a claim.
+- No account is created from a provider that has not verified the email
+  (`email_not_verified`). Password sign-in already requires verification
+  and a magic link verifies the email, so an unverified row never holds a
+  session (staff impersonation aside). Nothing can therefore enroll a
+  passkey or start a link on the row while a claim runs.
+- Accepted residual risk: Better Auth inserts the provider account after
+  the purge transaction commits, so verification landing in that short
+  window still lets the link complete. Verifying needs access to the inbox,
+  so only the email's owner can trigger it, and the purge has already run.
+  A fully atomic check would need Better Auth to share its transaction with
+  the hook.
 - Implementation: `packages/auth/src/server/account-claim.ts`
   (`user.validateUserInfo` gate and `databaseHooks.account.create.before`).
   `disableImplicitLinking` stays `false`, only so unverified rows remain

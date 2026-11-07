@@ -32,6 +32,8 @@ vi.mock("@eleva/db", () => {
   }
 })
 
+import { eq, or } from "drizzle-orm"
+import { auth } from "@eleva/db"
 import { guardAccountLink, purgeBeforeClaim } from "./account-claim"
 
 function context(user: { id: string; emailVerified: boolean } | null) {
@@ -51,7 +53,11 @@ function context(user: { id: string; emailVerified: boolean } | null) {
   }
 }
 
-const linkSource = { action: "link-account", method: "oauth" }
+const linkSource = {
+  action: "link-account",
+  method: "oauth",
+  oauth: { providerId: "google" },
+}
 
 describe("guardAccountLink", () => {
   beforeEach(() => {
@@ -126,17 +132,69 @@ describe("guardAccountLink", () => {
     expect(getSessionFromCtx).not.toHaveBeenCalled()
   })
 
-  it("ignores sign-up and returning sign-in", async () => {
+  it("ignores returning sign-in", async () => {
     const ctx = context({ id: "user-1", emailVerified: true })
-    for (const action of ["create-user", "sign-in"]) {
+    await expect(
+      guardAccountLink(
+        {
+          user: { id: "user-1" },
+          source: { action: "sign-in", method: "oauth" },
+        },
+        ctx
+      )
+    ).resolves.toBeUndefined()
+    expect(getSessionFromCtx).not.toHaveBeenCalled()
+  })
+
+  it("refuses a new provider account whose email the provider has not verified", async () => {
+    const ctx = context(null)
+    for (const method of ["oauth", "sso-oidc"]) {
+      const result = await guardAccountLink(
+        {
+          user: { emailVerified: false },
+          source: { action: "create-user", method },
+        },
+        ctx
+      )
+      expect(result?.error).toBe("email_not_verified")
+    }
+  })
+
+  it("allows provider sign-up with a verified email and email sign-up", async () => {
+    const ctx = context(null)
+    await expect(
+      guardAccountLink(
+        {
+          user: { emailVerified: true },
+          source: { action: "create-user", method: "oauth" },
+        },
+        ctx
+      )
+    ).resolves.toBeUndefined()
+    for (const method of ["email-password", "magic-link"]) {
       await expect(
         guardAccountLink(
-          { user: { id: "user-1" }, source: { action, method: "oauth" } },
+          {
+            user: { emailVerified: false },
+            source: { action: "create-user", method },
+          },
           ctx
         )
       ).resolves.toBeUndefined()
     }
     expect(getSessionFromCtx).not.toHaveBeenCalled()
+  })
+
+  it("refuses an unsigned claim with no provider id", async () => {
+    getSessionFromCtx.mockResolvedValue(null)
+    const result = await guardAccountLink(
+      {
+        user: { id: "user-2", emailVerified: true },
+        source: { action: "link-account", method: "oauth" },
+      },
+      context({ id: "user-2", emailVerified: false })
+    )
+    expect(result?.error).toBe("account_not_linked")
   })
 })
 
@@ -154,12 +212,13 @@ describe("purgeBeforeClaim", () => {
 
   function auditedTx(verifiedNow: boolean, rows: Deleted = {}) {
     const deleted: string[] = []
+    const wheres: Record<string, unknown> = {}
     const emit = vi.fn()
-    const updates: { set: unknown; where: unknown }[] = []
-    const update = vi.fn(() => ({
+    const updates: { table: unknown; set: unknown; where: unknown }[] = []
+    const update = vi.fn((table: unknown) => ({
       set: (set: unknown) => ({
         where: async (where: unknown) => {
-          updates.push({ set, where })
+          updates.push({ table, set, where })
         },
       }),
     }))
@@ -174,9 +233,10 @@ describe("purgeBeforeClaim", () => {
             }),
           }),
           delete: (source: { __name: string }) => ({
-            where: () => ({
+            where: (where: unknown) => ({
               returning: async () => {
                 deleted.push(source.__name)
+                wheres[source.__name] = where
                 return rows[source.__name] ?? []
               },
             }),
@@ -186,14 +246,20 @@ describe("purgeBeforeClaim", () => {
         { emit }
       )
     )
-    return { deleted, emit, update, updates }
+    return { deleted, wheres, emit, update, updates }
   }
 
   /** Runs the guard first, as Better Auth does on the implicit link path. */
-  async function approveClaim(ctx: ReturnType<typeof context>) {
+  async function approveClaim(
+    ctx: ReturnType<typeof context>,
+    providerId = "google"
+  ) {
     await expect(
       guardAccountLink(
-        { user: { id: "user-1", emailVerified: true }, source: linkSource },
+        {
+          user: { id: "user-1", emailVerified: true },
+          source: { ...linkSource, oauth: { providerId } },
+        },
         ctx
       )
     ).resolves.toBeUndefined()
@@ -211,11 +277,35 @@ describe("purgeBeforeClaim", () => {
   it("skips owner-initiated links", async () => {
     getSessionFromCtx.mockResolvedValue({ user: { id: "user-1" } })
     const ctx = context({ id: "user-1", emailVerified: false })
+    await approveClaim(ctx)
     await purgeBeforeClaim(google, ctx)
     expect(withAudit).not.toHaveBeenCalled()
     expect(
       ctx.context.internalAdapter.deleteUserSessions
     ).not.toHaveBeenCalled()
+  })
+
+  it("skips a new OAuth user whose provider email is unverified", async () => {
+    // createOAuthUser inserts the user, then the account, with no guard call
+    // and before the personal Space exists.
+    const ctx = context({ id: "user-1", emailVerified: false })
+    await purgeBeforeClaim({ userId: "user-1", providerId: "microsoft" }, ctx)
+    expect(withAudit).not.toHaveBeenCalled()
+    expect(findDefaultOrganizationId).not.toHaveBeenCalled()
+    expect(
+      ctx.context.internalAdapter.deleteUserSessions
+    ).not.toHaveBeenCalled()
+  })
+
+  it("does not purge for a different provider than the approved claim", async () => {
+    const ctx = context({ id: "user-1", emailVerified: false })
+    await approveClaim(ctx, "google")
+    await purgeBeforeClaim({ userId: "user-1", providerId: "microsoft" }, ctx)
+    expect(withAudit).not.toHaveBeenCalled()
+    // The google claim is still pending and purges when its account lands.
+    auditedTx(false)
+    await purgeBeforeClaim(google, ctx)
+    expect(withAudit).toHaveBeenCalledTimes(1)
   })
 
   it("skips password sign-up rows", async () => {
@@ -244,6 +334,7 @@ describe("purgeBeforeClaim", () => {
   it("audits a claim even when nothing was enrolled", async () => {
     const { emit } = auditedTx(false)
     const ctx = context({ id: "user-1", emailVerified: false })
+    await approveClaim(ctx, "microsoft")
     await purgeBeforeClaim({ userId: "user-1", providerId: "microsoft" }, ctx)
     expect(emit).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -265,25 +356,17 @@ describe("purgeBeforeClaim", () => {
     auditedTx(false)
     findDefaultOrganizationId.mockResolvedValue(null)
     getPlatformAuditOrgId.mockReturnValue("platform-org")
-    await purgeBeforeClaim(
-      google,
-      context({ id: "user-1", emailVerified: false })
-    )
+    const ctx = context({ id: "user-1", emailVerified: false })
+    await approveClaim(ctx)
+    await purgeBeforeClaim(google, ctx)
     expect(withAudit).toHaveBeenCalledWith(
       { orgId: "platform-org", actorUserId: "user-1" },
       expect.any(Function)
     )
   })
 
-  it("aborts the claim when the owner check fails", async () => {
-    getSessionFromCtx.mockRejectedValue(new Error("redis down"))
-    const ctx = context({ id: "user-1", emailVerified: false })
-    await expect(purgeBeforeClaim(google, ctx)).rejects.toThrow("redis down")
-    expect(withAudit).not.toHaveBeenCalled()
-  })
-
   it("purges pre-verification credentials in one audited write", async () => {
-    const { deleted, emit, updates } = auditedTx(false, {
+    const { deleted, wheres, emit, updates } = auditedTx(false, {
       account: [{ providerId: "credential" }, { providerId: "microsoft" }],
       passkey: [{ id: "p1" }],
       twoFactor: [{ id: "t1" }],
@@ -298,9 +381,22 @@ describe("purgeBeforeClaim", () => {
       expect.any(Function)
     )
     expect(deleted).toEqual(["account", "passkey", "twoFactor", "apikey"])
+    const same = (actual: unknown, expected: unknown) =>
+      expect(JSON.stringify(actual)).toBe(JSON.stringify(expected))
+    same(wheres.account, eq(auth.account.userId, "user-1"))
+    same(wheres.passkey, eq(auth.passkey.userId, "user-1"))
+    same(wheres.twoFactor, eq(auth.twoFactor.userId, "user-1"))
+    same(
+      wheres.apikey,
+      or(
+        eq(auth.apikey.userId, "user-1"),
+        eq(auth.apikey.referenceId, "user-1")
+      )
+    )
     expect(updates).toHaveLength(1)
+    expect(updates[0]?.table).toBe(auth.user)
     expect(updates[0]?.set).toEqual({ twoFactorEnabled: false })
-    expect(JSON.stringify(updates[0]?.where)).toContain("user-1")
+    same(updates[0]?.where, eq(auth.user.id, "user-1"))
     expect(emit).toHaveBeenCalledWith(
       expect.objectContaining({
         entity: "user",
@@ -325,6 +421,7 @@ describe("purgeBeforeClaim", () => {
   it("aborts the link when the purge cannot be audited", async () => {
     findDefaultOrganizationId.mockResolvedValue(null)
     const ctx = context({ id: "user-1", emailVerified: false })
+    await approveClaim(ctx)
     await expect(purgeBeforeClaim(google, ctx)).rejects.toThrow(/audit/)
     expect(
       ctx.context.internalAdapter.deleteUserSessions

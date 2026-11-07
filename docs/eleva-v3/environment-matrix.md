@@ -250,9 +250,9 @@ staging sender / DKIM domain may remain `staging.eleva.care` until mail DNS is
 renamed in a later ops change.
 
 - `dev.eleva.care` — gateway staging (rewrites to staging `elevacare-app` for member/expert/team/account routes; rewrites `/docs/*` to staging `elevacare-docs`)
-- `api.dev.eleva.care` — staging `elevacare-api` Vercel project (separate subdomain, not rewritten)
+- `api.dev.eleva.care` — `elevacare-api` Vercel project (separate subdomain, not rewritten). As of 2026-11-07 this host serves the **production** deployment on the v3 production database; see the decision log ("Expert pilot frame").
 
-Per-PR previews: `*.preview.eleva.care` wildcard. Preview env vars in the gateway project point `APP_URL`, `DOCS_URL` at the matching preview deployment URLs of sibling **frontend** apps. **API is always the staging API** (`api.dev.eleva.care`) — previews do not get their own `elevacare-api` deployment or `.eleva.care` cookies (ADR-017).
+Per-PR previews: `*.preview.eleva.care` wildcard. Preview env vars in the gateway project point `APP_URL`, `DOCS_URL` at the matching preview deployment URLs of sibling **frontend** apps. Target: **API is always the staging API** (`api.dev.eleva.care`) — previews do not get their own `elevacare-api` deployment or `.eleva.care` cookies (ADR-017). Current state (2026-11-07): Vercel still builds `elevacare-api` preview deployments, and they share the production `DATABASE_URL`.
 
 ## Required DNS Records (Vercel-Managed)
 
@@ -342,7 +342,7 @@ Apps run via `pnpm dev` through Turborepo; `.env.local` in the monorepo root pop
 
 ## Integration → Environment Callback Mapping
 
-Webhooks, OAuth callbacks, and session-aware APIs live on the `api.eleva.care` subdomain in production and `api.dev.eleva.care` in staging. Better Auth human-facing callback lives at `eleva.care/callback` (rewritten from gateway to account). Preview deployments call the staging API and never mint `.eleva.care` cookies. In local dev the gateway runs on `localhost:3000`, the app on `:3001`, the api on `:3002`; Stripe CLI forwards webhooks.
+Webhooks, OAuth callbacks, and session-aware APIs live on the `api.eleva.care` subdomain in production and `api.dev.eleva.care` in staging (today the v3 production deployment; see the decision log). Better Auth human-facing callback lives at `eleva.care/callback` (rewritten from gateway to account). Preview deployments call the staging API and never mint `.eleva.care` cookies. In local dev the gateway runs on `localhost:3000`, the app on `:3001`, the api on `:3002`; Stripe CLI forwards webhooks.
 
 | Integration                                 | Local                                                | Staging                                            | Production                                     |
 | ------------------------------------------- | ---------------------------------------------------- | -------------------------------------------------- | ---------------------------------------------- |
