@@ -168,6 +168,8 @@ Each entry should include:
   database, including pilot data. The Preview rows of
   `environment-matrix.md` describe the target, not this state. Give Preview
   its own Neon branch before any member who is not on the team books.
+  Resolved 2026-11-07: Preview now has its own database, KEK and auth
+  secret ("Preview deployments get their own database and secrets").
 - Open: whether Patricia may take bookings from real members during the
   pilot, and how many. Until the founder decides, bookings come from the
   team's own test accounts.
