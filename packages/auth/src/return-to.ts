@@ -43,6 +43,22 @@ function isGatewayAuthPath(path: string): boolean {
   )
 }
 
+// Backslash, ASCII control characters (incl. tab, CR, LF) and DEL.
+// eslint-disable-next-line no-control-regex
+const UNSAFE_PATH_CHARS = /[\\\u0000-\u001f\u007f]/
+
+/** Resolve a path the way a browser would and keep it only if it stays on-site. */
+function sameOriginPath(path: string): string | undefined {
+  const probe = "https://return-to.invalid"
+  try {
+    const url = new URL(path, probe)
+    if (url.origin !== probe) return undefined
+    return `${url.pathname}${url.search}${url.hash}`
+  } catch {
+    return undefined
+  }
+}
+
 function relativeFromAbsoluteUrl(url: URL): string | undefined {
   if (!ABSOLUTE_RETURN_TO_HOSTS.has(url.hostname)) return undefined
   const relative = `${url.pathname}${url.search}${url.hash}`
@@ -78,7 +94,10 @@ export function sanitizeReturnTo(
   if (decoded.startsWith("/")) {
     if (decoded.startsWith("//")) return undefined
     if (decoded.includes("://")) return undefined
-    return decoded
+    // Browsers read "\" as "/" and drop tabs and newlines, so "/\evil.com"
+    // or "/<tab>/evil.com" would become the off-site "//evil.com".
+    if (UNSAFE_PATH_CHARS.test(decoded)) return undefined
+    return sameOriginPath(decoded)
   }
 
   try {
