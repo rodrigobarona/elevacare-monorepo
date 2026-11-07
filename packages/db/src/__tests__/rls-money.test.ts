@@ -157,6 +157,15 @@ describe.skipIf(!enabled || !databaseUrl)(
     })
 
     afterAll(async () => {
+      // payout_states.destination_org_id / expert_org_id are ON DELETE
+      // RESTRICT, so the org cascade can trip over them depending on
+      // trigger order. Remove the money rows first.
+      await db()
+        .delete(bookingRefunds)
+        .where(inArray(bookingRefunds.orgId, [orgA, orgB]))
+      await db()
+        .delete(payoutStates)
+        .where(inArray(payoutStates.orgId, [orgA, orgB]))
       await db()
         .delete(organization)
         .where(inArray(organization.id, [orgA, orgB]))
