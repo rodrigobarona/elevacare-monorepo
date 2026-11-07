@@ -52,8 +52,9 @@ const tsvector = customType<{ data: string }>({
  *                    staff approve the licence application
  *                    (`become_partner_applications`, 2026-10-29)
  *   active        -> licence verified by staff; appears in marketplace.
- *                    Profiles active before the gate stay active and show
- *                    as "Needs verification" to staff until verified.
+ *                    Profiles active before the gate stay active but are
+ *                    hidden from every public query until an approved
+ *                    licence application exists (`licenceVerified()`).
  *                    Paid offers still need Connect at publish.
  *   suspended     -> admin pause (e.g., compliance issue)
  */

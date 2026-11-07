@@ -1,6 +1,8 @@
 import { and, eq } from "drizzle-orm"
 import { db } from "../client"
+import { withPlatformAdminContext } from "../context"
 import * as main from "../schema/main"
+import { ensureFixtureLicenceApproved } from "./licence-fixture"
 import * as auth from "../schema/auth"
 
 /**
@@ -180,12 +182,19 @@ export async function seedDemo() {
 
   const solo = results.find((r) => r.email === "pat.mota@example.test")
   if (solo) {
-    await upsertExpertProfile({
+    const profileId = await upsertExpertProfile({
       userId: solo.userId,
       orgId: solo.orgId,
       username: "patimota",
       displayName: "Patricia Mota",
     })
+    await withPlatformAdminContext((tx) =>
+      ensureFixtureLicenceApproved(tx, {
+        orgId: solo.orgId,
+        expertProfileId: profileId,
+        reviewerUserId: solo.userId,
+      })
+    )
   }
 
   const clinic = results.find((r) => r.email === "clinic.admin@example.test")

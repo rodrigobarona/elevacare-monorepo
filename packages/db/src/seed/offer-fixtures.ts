@@ -3,6 +3,7 @@ import { db } from "../client"
 import { withOrgContext, withPlatformAdminContext, type Tx } from "../context"
 import * as auth from "../schema/auth"
 import * as main from "../schema/main"
+import { ensureFixtureLicenceApproved } from "./licence-fixture"
 import {
   DEMO_BOOKING_LINK_EXPIRES_AT,
   DEMO_BOOKING_LINK_TOKENS,
@@ -455,6 +456,13 @@ async function seedFixture(
     await extra?.(tx, { userId, orgId, profileId, scheduleIds })
     return profileId
   })
+  await withPlatformAdminContext((tx) =>
+    ensureFixtureLicenceApproved(tx, {
+      orgId,
+      expertProfileId: expertId,
+      reviewerUserId: userId,
+    })
+  )
   await ensureHandle(fixture.profile.username, expertId)
 }
 

@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, exists, inArray, isNull, sql } from "drizzle-orm"
 import { withOrgContext, withPlatformAdminContext } from "../context"
 import * as main from "../schema/main"
+import { licenceVerified } from "./public-listing"
 import type { LocalizedText } from "../schema/main/shared"
 
 export type MarketplaceSort = "relevance" | "price" | "rating"
@@ -118,6 +119,7 @@ export async function listPublicMarketplaceExperts(
   return withPlatformAdminContext(async (tx) => {
     const conditions = [
       eq(main.expertProfiles.status, "active"),
+      licenceVerified(),
       isNull(main.expertProfiles.deletedAt),
     ]
 

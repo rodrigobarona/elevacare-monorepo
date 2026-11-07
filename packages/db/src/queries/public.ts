@@ -13,6 +13,7 @@ import type { PgColumn } from "drizzle-orm/pg-core"
 import { isReserved } from "@eleva/config/reserved-usernames"
 
 import { withPlatformAdminContext } from "../context"
+import { licenceVerified } from "./public-listing"
 import * as auth from "../schema/auth"
 import * as main from "../schema/main"
 import {
@@ -171,6 +172,7 @@ export async function findExpertByUsername(
         and(
           eq(main.expertProfiles.username, lowered),
           eq(main.expertProfiles.status, "active"),
+          licenceVerified(),
           isNull(main.expertProfiles.deletedAt)
         )
       )
@@ -234,6 +236,7 @@ export async function findPublicBookableEventType(
         and(
           eq(main.expertProfiles.username, lowered),
           eq(main.expertProfiles.status, "active"),
+          licenceVerified(),
           isNull(main.expertProfiles.deletedAt),
           publicEventTypeWhere(slug)
         )
@@ -330,6 +333,7 @@ export async function listExperts(
   return withPlatformAdminContext(async (tx) => {
     const conditions = [
       eq(main.expertProfiles.status, "active"),
+      licenceVerified(),
       isNull(main.expertProfiles.deletedAt),
     ]
 

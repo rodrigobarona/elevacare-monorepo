@@ -286,7 +286,7 @@
     "loadError": "O diretório de especialistas está indisponível. Tente novamente em breve.",
     "fromPrice": "A partir de {price}",
     "priceOnRequest": "Preço sob consulta",
-    "topExpert": "Especialista em destaque",
+    "topExpert": "Top Expert · plano pago",
     "categories": {
       "psychology": "Psicologia",
       "nutrition": "Nutrição",
@@ -311,9 +311,9 @@
       "es": "Espanhol"
     },
     "sort": {
-      "relevance": "Relevância",
-      "price": "Preço",
-      "rating": "Avaliação"
+      "relevance": "Nome (A–Z)",
+      "price": "Preço mais baixo",
+      "rating": "Top Expert primeiro (plano pago)"
     },
     "categoriesLabel": "Áreas de cuidado",
     "allCategories": "Todas as áreas",
@@ -323,7 +323,10 @@
       "lead": "Defina o seu horário, preços e políticas. Nós damos a tecnologia; você presta os cuidados.",
       "cta": "Tornar-se especialista"
     },
-    "free": "Gratuito"
+    "free": "Gratuito",
+    "rankingNote": "O Top Expert é um plano pago para especialistas. Quando escolhe “Top Expert primeiro”, esses especialistas aparecem antes dos restantes.",
+    "rankingLink": "Como ordenamos os especialistas",
+    "rankingAnchor": "8-como-ordenamos-os-especialistas"
   },
   "profile": {
     "title": "{name} — Eleva.care",
