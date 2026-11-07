@@ -122,11 +122,11 @@ function ExpertCardInitials({
     <div
       aria-hidden
       className={cn(
-        "flex size-full items-center justify-center bg-linear-to-br from-sand-50 via-sand-100 to-teal-50 dark:from-teal-950 dark:via-neutral-900 dark:to-teal-950",
+        "[container-type:inline-size] flex size-full items-center justify-center bg-linear-to-br from-sand-50 via-sand-100 to-teal-50 dark:from-teal-950 dark:via-neutral-900 dark:to-teal-950",
         className
       )}
     >
-      <span className="[container-type:inline-size] flex aspect-square w-[min(45%,8rem)] items-center justify-center rounded-full border border-teal-200 bg-background/70 font-display text-[clamp(1.25rem,6cqw,2.5rem)] text-teal-800 dark:border-teal-800 dark:text-teal-200">
+      <span className="flex aspect-square w-[min(45%,8rem)] items-center justify-center rounded-full border border-teal-200 bg-background/70 font-display text-[clamp(1.25rem,12cqw,2.5rem)] text-teal-800 dark:border-teal-800 dark:text-teal-200">
         {initials}
       </span>
     </div>

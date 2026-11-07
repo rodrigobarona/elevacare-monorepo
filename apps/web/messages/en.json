@@ -354,7 +354,7 @@
     },
     "share": {
       "label": "Share this page",
-      "accessible": "Share {name}'s page",
+      "accessible": "Share this page: {name}",
       "copied": "Link copied"
     },
     "facts": {
@@ -397,7 +397,9 @@
       "noAccount": "No account needed",
       "meta": "{minutes} min · {price} total",
       "metaFrom": "{minutes} min · from {price} total",
-      "metaFree": "{minutes} min · Free"
+      "metaFree": "{minutes} min · Free",
+      "metaFreeOption": "{minutes} min · free option available",
+      "loadFailed": "We couldn't load times just now."
     },
     "withEleva": {
       "heading": "Booking with Eleva",
@@ -425,7 +427,8 @@
         "q": "What does Eleva check?",
         "a": "Before a profile goes live, our team checks the expert's professional registration. Experts describe their own training and experience."
       }
-    }
+    },
+    "freeOption": "Free option available"
   },
   "booking": {
     "meta": {

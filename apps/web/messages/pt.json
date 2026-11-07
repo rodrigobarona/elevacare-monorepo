@@ -354,7 +354,7 @@
     },
     "share": {
       "label": "Partilhar esta página",
-      "accessible": "Partilhar a página de {name}",
+      "accessible": "Partilhar esta página: {name}",
       "copied": "Link copiado"
     },
     "facts": {
@@ -397,7 +397,9 @@
       "noAccount": "Não precisa de conta",
       "meta": "{minutes} min · {price} no total",
       "metaFrom": "{minutes} min · desde {price} no total",
-      "metaFree": "{minutes} min · Gratuito"
+      "metaFree": "{minutes} min · Gratuito",
+      "metaFreeOption": "{minutes} min · opção gratuita disponível",
+      "loadFailed": "Não conseguimos carregar os horários agora."
     },
     "withEleva": {
       "heading": "Marcar com a Eleva",
@@ -425,7 +427,8 @@
         "q": "O que é que a Eleva verifica?",
         "a": "Antes de um perfil ficar visível, a nossa equipa verifica a inscrição profissional. A formação e a experiência são descritas por cada especialista."
       }
-    }
+    },
+    "freeOption": "Opção gratuita disponível"
   },
   "booking": {
     "meta": {
