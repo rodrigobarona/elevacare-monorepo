@@ -3,6 +3,16 @@ export type EmailLocale = "en" | "pt" | "es"
 const translations = {
   en: {
     booking: {
+      expertCancelledSubtitle:
+        "This session was cancelled. The time is free again in your calendar, and the attached invite removes it.",
+      expertRescheduledSubtitle:
+        "This session has a new time. The updated invite is attached.",
+      expertReminder24hSubtitle: "You have a session in 24 hours.",
+      expertReminder1hSubtitle: "You have a session in 1 hour.",
+      expertRequestDeclinedSubtitle:
+        "You declined this request. The member gets a full refund and the time is free again.",
+      expertRequestExpiredSubtitle:
+        "This request was not answered in time. The member gets a full refund and the time is free again.",
       greeting: (name: string) => `Hello ${name},`,
       confirmedTitle: "Booking confirmed",
       confirmedSubtitle:
@@ -110,6 +120,8 @@ const translations = {
           : `${count} member follow-ups are due. Open Relationships to review them.`,
     },
     labels: {
+      expert: "Expert",
+      free: "Free",
       member: "Member",
       service: "Service",
       dateTime: "Date & Time",
@@ -176,6 +188,16 @@ const translations = {
   },
   pt: {
     booking: {
+      expertCancelledSubtitle:
+        "Esta sessão foi cancelada. O horário volta a estar livre no seu calendário, e o convite em anexo remove-a.",
+      expertRescheduledSubtitle:
+        "Esta sessão tem um novo horário. O convite atualizado segue em anexo.",
+      expertReminder24hSubtitle: "Tem uma sessão daqui a 24 horas.",
+      expertReminder1hSubtitle: "Tem uma sessão daqui a 1 hora.",
+      expertRequestDeclinedSubtitle:
+        "Recusou este pedido. O membro recebe o reembolso total e o horário volta a estar livre.",
+      expertRequestExpiredSubtitle:
+        "Este pedido não teve resposta a tempo. O membro recebe o reembolso total e o horário volta a estar livre.",
       greeting: (name: string) => `Olá ${name},`,
       confirmedTitle: "Marcação confirmada",
       confirmedSubtitle:
@@ -285,6 +307,8 @@ const translations = {
           : `Tem ${count} acompanhamentos de membros pendentes. Abra Relações para os rever.`,
     },
     labels: {
+      expert: "Especialista",
+      free: "Gratuita",
       member: "Membro",
       service: "Serviço",
       dateTime: "Data e Hora",
@@ -352,6 +376,16 @@ const translations = {
   },
   es: {
     booking: {
+      expertCancelledSubtitle:
+        "Esta sesión se ha cancelado. El horario vuelve a estar libre en su calendario, y la invitación adjunta la elimina.",
+      expertRescheduledSubtitle:
+        "Esta sesión tiene un nuevo horario. La invitación actualizada va adjunta.",
+      expertReminder24hSubtitle: "Tiene una sesión dentro de 24 horas.",
+      expertReminder1hSubtitle: "Tiene una sesión dentro de 1 hora.",
+      expertRequestDeclinedSubtitle:
+        "Ha rechazado esta solicitud. El miembro recibe el reembolso completo y el horario vuelve a estar libre.",
+      expertRequestExpiredSubtitle:
+        "Esta solicitud no se respondió a tiempo. El miembro recibe el reembolso completo y el horario vuelve a estar libre.",
       greeting: (name: string) => `Hola ${name},`,
       confirmedTitle: "Reserva confirmada",
       confirmedSubtitle:
@@ -461,6 +495,8 @@ const translations = {
           : `Tienes ${count} seguimientos de miembros pendientes. Abre Relaciones para revisarlos.`,
     },
     labels: {
+      expert: "Especialista",
+      free: "Gratuita",
       member: "Miembro",
       service: "Servicio",
       dateTime: "Fecha y Hora",
@@ -533,6 +569,12 @@ const translations = {
 export interface EmailTranslations {
   booking: {
     greeting: (name: string) => string
+    expertCancelledSubtitle: string
+    expertRescheduledSubtitle: string
+    expertReminder24hSubtitle: string
+    expertReminder1hSubtitle: string
+    expertRequestDeclinedSubtitle: string
+    expertRequestExpiredSubtitle: string
     confirmedTitle: string
     confirmedSubtitle: string
     requestedTitle: string
@@ -612,6 +654,8 @@ export interface EmailTranslations {
     followUpDueBody: (count: number) => string
   }
   labels: {
+    expert: string
+    free: string
     member: string
     service: string
     dateTime: string

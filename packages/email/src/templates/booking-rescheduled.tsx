@@ -20,6 +20,13 @@ export interface BookingRescheduledProps {
   place?: SessionPlace
   /** Member copy only: the number the expert will call, masked. */
   maskedPhone?: string | null
+  /** Who the email greets; defaults to memberName. */
+  greetingName?: string
+  /** The other person's row ("Member" for experts, "Expert" for members). */
+  counterpartLabel?: string
+  counterpartName?: string
+  subheading?: string
+  preview?: string
 }
 
 export function BookingRescheduledEmail({
@@ -33,25 +40,34 @@ export function BookingRescheduledEmail({
   joinHref,
   place,
   maskedPhone,
+  greetingName,
+  counterpartLabel,
+  counterpartName,
+  subheading,
+  preview,
 }: BookingRescheduledProps) {
   const t = getEmailTranslations(locale)
 
   return (
     <EmailLayout
-      preview={t.subject.rescheduled(memberName, newDate)}
+      preview={preview ?? t.subject.rescheduled(memberName, newDate)}
       locale={locale}
       jsonLd={jsonLd}
     >
       <EmailHeading>{t.booking.rescheduledTitle}</EmailHeading>
       <EmailBodyText className="mb-[8px]">
-        {t.booking.greeting(memberName)}
+        {t.booking.greeting(greetingName ?? memberName)}
       </EmailBodyText>
       <EmailBodyText className="mb-[24px]">
-        {t.booking.rescheduledSubtitle}
+        {subheading ?? t.booking.rescheduledSubtitle}
       </EmailBodyText>
 
       <EmailCard>
-        <DetailRow label={t.labels.member} value={memberName} bold />
+        <DetailRow
+          label={counterpartLabel ?? t.labels.member}
+          value={counterpartName ?? memberName}
+          bold
+        />
         <DetailRow label={t.labels.service} value={eventTypeName} />
         <DetailRow
           label={t.labels.previous}

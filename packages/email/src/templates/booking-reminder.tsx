@@ -22,6 +22,13 @@ export interface BookingReminderProps {
   place?: SessionPlace
   /** Member copy only: the number the expert will call, masked. */
   maskedPhone?: string | null
+  /** Who the email greets; defaults to memberName. */
+  greetingName?: string
+  /** The other person's row ("Member" for experts, "Expert" for members). */
+  counterpartLabel?: string
+  counterpartName?: string
+  subheading?: string
+  preview?: string
 }
 
 export function BookingReminderEmail({
@@ -35,29 +42,40 @@ export function BookingReminderEmail({
   joinHref,
   place,
   maskedPhone,
+  greetingName,
+  counterpartLabel,
+  counterpartName,
+  subheading,
+  preview,
 }: BookingReminderProps) {
   const t = getEmailTranslations(locale)
   const title =
     window === "24h" ? t.booking.reminder24hTitle : t.booking.reminder1hTitle
   const subtitle =
-    window === "24h"
+    subheading ??
+    (window === "24h"
       ? t.booking.reminder24hSubtitle
-      : t.booking.reminder1hSubtitle
-  const preview =
-    window === "24h"
+      : t.booking.reminder1hSubtitle)
+  const previewText =
+    preview ??
+    (window === "24h"
       ? t.subject.reminder24h(memberName, formattedDate)
-      : t.subject.reminder1h(memberName, formattedDate)
+      : t.subject.reminder1h(memberName, formattedDate))
 
   return (
-    <EmailLayout preview={preview} locale={locale} jsonLd={jsonLd}>
+    <EmailLayout preview={previewText} locale={locale} jsonLd={jsonLd}>
       <EmailHeading>{title}</EmailHeading>
       <EmailBodyText className="mb-[8px]">
-        {t.booking.greeting(memberName)}
+        {t.booking.greeting(greetingName ?? memberName)}
       </EmailBodyText>
       <EmailBodyText className="mb-[24px]">{subtitle}</EmailBodyText>
 
       <EmailCard>
-        <DetailRow label={t.labels.member} value={memberName} bold />
+        <DetailRow
+          label={counterpartLabel ?? t.labels.member}
+          value={counterpartName ?? memberName}
+          bold
+        />
         <DetailRow label={t.labels.service} value={eventTypeName} />
         <DetailRow label={t.labels.dateTime} value={formattedDate} />
         <DetailRow

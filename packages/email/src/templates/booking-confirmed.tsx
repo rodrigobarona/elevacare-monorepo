@@ -10,6 +10,8 @@ import { getEmailTranslations, type EmailLocale } from "../i18n"
 import { formatSessionMode } from "../session-mode"
 
 export interface BookingConfirmedProps {
+  /** Member copy: the expert they booked with. */
+  expertName?: string
   memberName: string
   eventTypeName: string
   formattedDate: string
@@ -66,6 +68,7 @@ export function BookingConfirmedEmail({
   subheading,
   preview,
   showIcsHint = true,
+  expertName,
 }: BookingConfirmedProps) {
   const t = getEmailTranslations(locale)
   const isExpert = audience === "expert"
@@ -87,7 +90,11 @@ export function BookingConfirmedEmail({
       <EmailBodyText className="mb-[24px]">{subtitle}</EmailBodyText>
 
       <EmailCard>
-        <DetailRow label={t.labels.member} value={memberName} bold />
+        {isExpert || !expertName ? (
+          <DetailRow label={t.labels.member} value={memberName} bold />
+        ) : (
+          <DetailRow label={t.labels.expert} value={expertName} bold />
+        )}
         {isExpert && memberEmail ? (
           <DetailRow label={t.labels.email} value={memberEmail} />
         ) : null}
@@ -115,10 +122,8 @@ export function BookingConfirmedEmail({
         {isExpert && country ? (
           <DetailRow label={t.labels.country} value={country} />
         ) : null}
-        {isExpert && price ? (
-          <DetailRow label={t.labels.price} value={price} />
-        ) : null}
-        {isExpert && cancellationPolicyName ? (
+        {price ? <DetailRow label={t.labels.price} value={price} /> : null}
+        {cancellationPolicyName ? (
           <DetailRow
             label={t.labels.cancellationPolicy}
             value={cancellationPolicyName}

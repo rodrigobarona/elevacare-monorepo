@@ -138,6 +138,9 @@ export type LoadedBooking = {
   expertUserId: string
   expertEmail: string
   expertName: string
+  /** Expert's own language and time zone for their copy (UX-3-01/02). */
+  expertLocale?: string | null
+  expertTimezone?: string | null
   eventTypeName: { en: string; pt?: string; es?: string }
   scheduleRevision: number
   cancellationPolicy: CancellationPolicy
@@ -178,53 +181,78 @@ export async function sendBookingNotification(
     return
   }
 
+  // Each copy speaks to its reader: the member in the language they
+  // booked in and the time zone they chose; the expert in their own.
   const locale = toEmailLocale(booking.bookedLocale)
+  const expertLocale = toEmailLocale(
+    booking.expertLocale ?? booking.bookedLocale
+  )
+  const expertTimezone = booking.expertTimezone ?? booking.timezone
   const expertFirst = firstName(booking.expertName)
-  const memberFirst = firstName(
-    booking.memberName ?? booking.guestName ?? "member"
-  )
+  const memberFullName = booking.memberName ?? booking.guestName ?? null
+  const memberFirst = firstName(memberFullName ?? "member")
   const snapshotStartsAt = new Date(parsed.startsAt)
-  const formattedDate = formatDateTime(
-    snapshotStartsAt,
-    booking.timezone,
-    locale
-  )
-  const eventTypeName = localizedTitle(booking.eventTypeName, locale)
-  const t = getEmailTranslations(locale)
-  const previousDate = parsed.previousStartsAt
-    ? formatDateTime(
-        new Date(parsed.previousStartsAt),
-        booking.timezone,
-        locale
-      )
-    : formattedDate
+  const view = (viewLocale: EmailLocale, timezone: string) => {
+    const formattedDate = formatDateTime(snapshotStartsAt, timezone, viewLocale)
+    return {
+      t: getEmailTranslations(viewLocale),
+      formattedDate,
+      previousDate: parsed.previousStartsAt
+        ? formatDateTime(
+            new Date(parsed.previousStartsAt),
+            timezone,
+            viewLocale
+          )
+        : formattedDate,
+      eventTypeName: localizedTitle(booking.eventTypeName, viewLocale),
+      cancellationPolicyName: describeCancellationPolicy(
+        booking.cancellationPolicy,
+        viewLocale
+      ).name,
+      place: sessionPlace(booking, viewLocale),
+      refundAmount:
+        parsed.refundCents === undefined
+          ? undefined
+          : formatMoney(parsed.refundCents, booking.currency, viewLocale),
+      price:
+        booking.priceCents > 0
+          ? formatMoney(booking.priceCents, booking.currency, viewLocale)
+          : getEmailTranslations(viewLocale).labels.free,
+    }
+  }
+  const memberView = view(locale, booking.timezone)
+  const expertView = view(expertLocale, expertTimezone)
   const gateway = resolveGatewayUrl()
   const [memberJoinHref, expertJoinHref] = await Promise.all([
     sessionJoinHref(event.type, booking, "member", gateway, mint),
     sessionJoinHref(event.type, booking, "expert", gateway, mint),
   ])
-  const cancellationPolicyName = describeCancellationPolicy(
-    booking.cancellationPolicy,
-    locale
-  ).name
-  const place = sessionPlace(booking, locale)
-  const htmlInput = {
+  const title = titleForKind(event.type, memberView.t.booking)
+  const expertTitle = titleForKind(event.type, expertView.t.booking)
+  // Member subjects name the expert: "Booking confirmed · Ana · Monday…".
+  const memberSubject = `${title} · ${expertFirst} · ${memberView.formattedDate}`
+  const expertSubject = subjectForKind(
+    event.type,
+    expertView.t.subject,
+    memberFirst,
+    expertView.formattedDate
+  )
+  const memberHtml = await renderBookingHtml({
     kind: event.type,
-    place,
+    place: memberView.place,
     memberName: memberFirst,
-    eventTypeName,
-    formattedDate,
-    previousDate,
+    eventTypeName: memberView.eventTypeName,
+    formattedDate: memberView.formattedDate,
+    previousDate: memberView.previousDate,
     sessionMode: booking.sessionMode,
     locale,
-    cancellationPolicyName,
-    refundAmount:
-      parsed.refundCents === undefined
-        ? undefined
-        : formatMoney(parsed.refundCents, booking.currency, locale),
-  }
-  const memberHtml = await renderBookingHtml({
-    ...htmlInput,
+    cancellationPolicyName: memberView.cancellationPolicyName,
+    refundAmount: memberView.refundAmount,
+    audience: "member",
+    greetingName: memberFirst,
+    expertName: booking.expertName,
+    price: memberView.price,
+    previewText: memberSubject,
     joinHref: memberJoinHref,
     activateHref: memberActivateHref(event.type, booking, gateway),
     maskedPhone:
@@ -233,35 +261,34 @@ export async function sendBookingNotification(
         : undefined,
   })
   const expertHtml = await renderBookingHtml({
-    ...htmlInput,
+    kind: event.type,
+    place: expertView.place,
+    memberName: memberFullName ?? memberFirst,
+    eventTypeName: expertView.eventTypeName,
+    formattedDate: expertView.formattedDate,
+    previousDate: expertView.previousDate,
+    sessionMode: booking.sessionMode,
+    locale: expertLocale,
+    cancellationPolicyName: expertView.cancellationPolicyName,
+    refundAmount: expertView.refundAmount,
     joinHref: expertJoinHref,
-    ...(event.type === "booking.confirmed" ||
-    event.type === "booking.requested" ||
-    event.type === "booking.request_accepted"
-      ? {
-          audience: "expert" as const,
-          greetingName: expertFirst,
-          memberName: booking.memberName ?? booking.guestName ?? memberFirst,
-          memberEmail: booking.memberEmail ?? booking.guestEmail ?? undefined,
-          memberPhone: booking.guestPhone ?? booking.memberPhone ?? undefined,
-          duration: formatDuration(booking.startsAt, booking.endsAt, locale),
-          timezone: booking.timezone,
-          language: formatLanguage(booking.language, locale),
-          country: formatCountry(booking.memberCountry, locale),
-          price: formatMoney(booking.priceCents, booking.currency, locale),
-          calendarHref: `${gateway.replace(/\/$/, "")}/${booking.orgSlug}/team/calendar`,
-        }
-      : {}),
+    audience: "expert",
+    greetingName: expertFirst,
+    previewText: expertSubject,
+    memberEmail: booking.memberEmail ?? booking.guestEmail ?? undefined,
+    memberPhone: booking.guestPhone ?? booking.memberPhone ?? undefined,
+    duration: formatDuration(booking.startsAt, booking.endsAt, expertLocale),
+    timezone: expertTimezone,
+    language: formatLanguage(booking.language, expertLocale),
+    country: formatCountry(booking.memberCountry, expertLocale),
+    price: expertView.price,
+    calendarHref: `${gateway.replace(/\/$/, "")}/${booking.orgSlug}/team/calendar`,
   })
-  const title = titleForKind(event.type, t.booking)
-  const memberBody = memberSessionBody(locale, expertFirst, formattedDate)
-  const expertSubject = subjectForKind(
-    event.type,
-    t.subject,
-    memberFirst,
-    formattedDate
+  const memberBody = memberSessionBody(
+    locale,
+    expertFirst,
+    memberView.formattedDate
   )
-  const memberSubject = `${title} — ${formattedDate}`
   const expertBody = expertSubject
 
   const memberRecipient = booking.memberUserId
@@ -290,9 +317,9 @@ export async function sendBookingNotification(
   const expertAttachments = calendarAttachments(
     event.type,
     booking,
-    icsSummary(locale, memberFirst),
+    icsSummary(expertLocale, memberFirst),
     expertJoinHref,
-    locale
+    expertLocale
   )
   const results = await Promise.allSettled([
     send({
@@ -313,7 +340,7 @@ export async function sendBookingNotification(
       orgId: event.orgId,
       recipient: { userId: booking.expertUserId },
       ctx: {
-        title,
+        title: expertTitle,
         body: expertBody,
         subject: expertSubject,
         html: expertHtml,
@@ -621,13 +648,17 @@ function emailCopyForKind(
     case "booking.request_declined":
       return {
         heading: t.booking.requestDeclinedTitle,
-        subheading: t.booking.requestDeclinedSubtitle,
+        subheading: isExpert
+          ? t.booking.expertRequestDeclinedSubtitle
+          : t.booking.requestDeclinedSubtitle,
         preview: t.subject.requestDeclined,
       }
     case "booking.request_expired":
       return {
         heading: t.booking.requestExpiredTitle,
-        subheading: t.booking.requestExpiredSubtitle,
+        subheading: isExpert
+          ? t.booking.expertRequestExpiredSubtitle
+          : t.booking.requestExpiredSubtitle,
         preview: t.subject.requestExpired,
       }
     case "booking.confirmed":
@@ -643,25 +674,33 @@ function emailCopyForKind(
     case "booking.cancelled":
       return {
         heading: t.booking.cancelledTitle,
-        subheading: t.booking.cancelledSubtitle,
+        subheading: isExpert
+          ? t.booking.expertCancelledSubtitle
+          : t.booking.cancelledSubtitle,
         preview: t.subject.cancelled,
       }
     case "booking.rescheduled":
       return {
         heading: t.booking.rescheduledTitle,
-        subheading: t.booking.rescheduledSubtitle,
+        subheading: isExpert
+          ? t.booking.expertRescheduledSubtitle
+          : t.booking.rescheduledSubtitle,
         preview: t.subject.rescheduled,
       }
     case "booking.reminder_24h":
       return {
         heading: t.booking.reminder24hTitle,
-        subheading: t.booking.reminder24hSubtitle,
+        subheading: isExpert
+          ? t.booking.expertReminder24hSubtitle
+          : t.booking.reminder24hSubtitle,
         preview: t.subject.reminder24h,
       }
     case "booking.reminder_1h":
       return {
         heading: t.booking.reminder1hTitle,
-        subheading: t.booking.reminder1hSubtitle,
+        subheading: isExpert
+          ? t.booking.expertReminder1hSubtitle
+          : t.booking.reminder1hSubtitle,
         preview: t.subject.reminder1h,
       }
     default: {
@@ -778,9 +817,24 @@ async function renderBookingHtml(input: {
   price?: string
   place?: SessionPlace
   maskedPhone?: string | null
+  /** Member copy: the expert they booked with. */
+  expertName?: string
+  /** Inbox preview line; defaults to the kind's expert-style preview. */
+  previewText?: string
 }): Promise<string> {
   const t = getEmailTranslations(input.locale)
-  const copy = emailCopyForKind(input.kind, t, input.audience === "expert")
+  const isExpert = input.audience === "expert"
+  const copy = emailCopyForKind(input.kind, t, isExpert)
+  const preview =
+    input.previewText ?? copy.preview(input.memberName, input.formattedDate)
+  // Who is greeted, and who the "other person" row shows.
+  const people = {
+    greetingName: input.greetingName,
+    counterpartLabel: isExpert ? t.labels.member : t.labels.expert,
+    counterpartName: isExpert
+      ? input.memberName
+      : (input.expertName ?? input.memberName),
+  }
   switch (input.kind) {
     case "booking.confirmed":
     case "booking.requested":
@@ -806,9 +860,10 @@ async function renderBookingHtml(input: {
         place: input.place,
         maskedPhone: input.maskedPhone,
         cancellationPolicyName: input.cancellationPolicyName,
+        expertName: input.expertName,
         heading: copy.heading,
         subheading: copy.subheading,
-        preview: copy.preview(input.memberName, input.formattedDate),
+        preview,
         showIcsHint: input.kind !== "booking.requested",
       })
     case "booking.cancelled":
@@ -821,9 +876,10 @@ async function renderBookingHtml(input: {
         cancellationPolicyName: input.cancellationPolicyName,
         refundAmount: input.refundAmount,
         locale: input.locale,
+        ...people,
         heading: copy.heading,
         subheading: copy.subheading,
-        preview: copy.preview(input.memberName, input.formattedDate),
+        preview,
         showIcsHint: input.kind === "booking.cancelled",
       })
     case "booking.rescheduled":
@@ -837,6 +893,9 @@ async function renderBookingHtml(input: {
         joinHref: input.joinHref,
         place: input.place,
         maskedPhone: input.maskedPhone,
+        ...people,
+        subheading: copy.subheading,
+        preview,
       })
     case "booking.reminder_24h":
       return renderBookingReminder({
@@ -849,6 +908,9 @@ async function renderBookingHtml(input: {
         joinHref: input.joinHref,
         place: input.place,
         maskedPhone: input.maskedPhone,
+        ...people,
+        subheading: copy.subheading,
+        preview,
       })
     case "booking.reminder_1h":
       return renderBookingReminder({
@@ -861,6 +923,9 @@ async function renderBookingHtml(input: {
         joinHref: input.joinHref,
         place: input.place,
         maskedPhone: input.maskedPhone,
+        ...people,
+        subheading: copy.subheading,
+        preview,
       })
     default: {
       const _exhaustive: never = input.kind
@@ -899,6 +964,7 @@ function formatDateTime(date: Date, tz: string, locale: EmailLocale): string {
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      timeZoneName: "short",
     })
   } catch {
     return date.toISOString()
@@ -1041,6 +1107,8 @@ export async function loadBookingForNotification(
       .select({
         email: auth.user.email,
         name: auth.user.name,
+        locale: auth.user.locale,
+        timezone: auth.user.timezone,
       })
       .from(auth.user)
       .where(eq(auth.user.id, row.expertUserId))
@@ -1101,6 +1169,8 @@ export async function loadBookingForNotification(
       memberEmailVerified,
       expertEmail: expert.email,
       expertName: expert.name,
+      expertLocale: expert.locale ?? null,
+      expertTimezone: expert.timezone ?? null,
     }
   })
 }
