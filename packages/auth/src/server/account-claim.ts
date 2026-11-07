@@ -233,6 +233,21 @@ export async function purgeBeforeClaim(
  * row, staff impersonation), so nothing can enroll credentials on a row
  * that a claim may purge.
  */
+/**
+ * Staff impersonation is off (D-11: Eleva staff never read members'
+ * health records in plaintext). No admin role grants `impersonate`; this
+ * refuses an impersonation session even if a role is ever widened.
+ */
+export function refuseImpersonationSession(session: {
+  impersonatedBy?: string | null
+}): void {
+  if (!session.impersonatedBy) return
+  throw new APIError("FORBIDDEN", {
+    code: "impersonation_disabled",
+    message: "Signing in as another person is not available.",
+  })
+}
+
 export async function refuseUnverifiedSession(session: {
   userId: string
 }): Promise<void> {

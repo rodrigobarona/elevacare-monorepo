@@ -28,4 +28,37 @@ describe("permissions", () => {
     expect(organizationRoles.owner).toBe(owner)
     expect(ac).toBeDefined()
   })
+
+  it("never lets a staff role impersonate or take over an account", () => {
+    const takeover = [
+      "impersonate",
+      "impersonate-admins",
+      "set-password",
+      "set-email",
+      "set-phone",
+      "delete",
+      "update",
+    ] as const
+    for (const [role, rules] of Object.entries(adminRoles)) {
+      for (const action of takeover) {
+        expect(
+          rules.authorize({ user: [action] }).success,
+          `${role} must not ${action}`
+        ).toBe(false)
+      }
+    }
+  })
+
+  it("keeps support and finance read-only; only platform_admin grants roles", () => {
+    for (const role of ["staff_support", "staff_finance"] as const) {
+      const rules = adminRoles[role]
+      expect(rules.authorize({ user: ["list"] }).success).toBe(true)
+      expect(rules.authorize({ user: ["set-role"] }).success).toBe(false)
+      expect(rules.authorize({ user: ["ban"] }).success).toBe(false)
+      expect(rules.authorize({ session: ["revoke"] }).success).toBe(false)
+    }
+    expect(
+      adminRoles.platform_admin.authorize({ user: ["set-role"] }).success
+    ).toBe(true)
+  })
 })

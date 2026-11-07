@@ -714,10 +714,6 @@ export const ListMeReportsResponseSchema = z.object({
   reports: z.array(MemberReportSchema),
 })
 
-export const SummarizeSessionRecordsResponseSchema = z.object({
-  record: BookingRecordSchema,
-})
-
 export const SessionReportDraftRequestSchema = z.object({
   bookingId: z.string().uuid(),
   noteRecordIds: z.array(z.string().uuid()).min(1),
@@ -3819,13 +3815,6 @@ export function createApiClient(options: ApiClientOptions) {
           `/sessions/${encodeURIComponent(bookingId)}/records/${encodeURIComponent(recordId)}/unpublish`
         )
         return PublishSessionRecordResponseSchema.parse(raw)
-      },
-      async summarizeRecords(bookingId: string) {
-        const raw = await request<unknown>(
-          "POST",
-          `/sessions/${encodeURIComponent(bookingId)}/records/summarize`
-        )
-        return SummarizeSessionRecordsResponseSchema.parse(raw)
       },
       async listDocuments(bookingId: string) {
         const raw = await request<unknown>(

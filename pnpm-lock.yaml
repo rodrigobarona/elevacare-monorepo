@@ -2212,6 +2212,9 @@ importers:
       '@eleva/encryption':
         specifier: workspace:*
         version: link:../encryption
+      '@eleva/flags':
+        specifier: workspace:^
+        version: link:../flags
       '@eleva/observability':
         specifier: workspace:*
         version: link:../observability

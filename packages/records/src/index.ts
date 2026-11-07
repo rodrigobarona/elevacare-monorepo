@@ -25,7 +25,6 @@ export {
   type DraftSessionReportInput,
   type DraftSessionReportStatus,
 } from "./draft-session-report"
-export { summarizeSessionRecords } from "./summarize"
 export {
   completeSessionDocument,
   SESSION_DOCUMENT_UPLOAD,
