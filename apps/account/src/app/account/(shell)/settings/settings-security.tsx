@@ -21,6 +21,15 @@ interface PasskeyRow {
 
 const GOOGLE_LINK_PARAM = "google"
 
+/** Better Auth OAuth callback `?error=` code → the matching settings message. */
+function googleLinkErrorKey(code: string | null) {
+  if (code === "email_does_not_match") return "googleLinkEmailMismatch"
+  if (code === "account_already_linked_to_different_user") {
+    return "googleLinkTaken"
+  }
+  return "googleLinkFailed"
+}
+
 interface SessionRow {
   id: string
   token: string
@@ -38,11 +47,13 @@ export function SettingsSecurity() {
   const [sessions, setSessions] = useState<SessionRow[]>([])
   const [googleLinked, setGoogleLinked] = useState<boolean | null>(null)
   const searchParams = useSearchParams()
-  const [googleLinkFailed] = useState(
-    () => searchParams.get(GOOGLE_LINK_PARAM) === "failed"
+  const [googleLinkError] = useState(() =>
+    searchParams.get(GOOGLE_LINK_PARAM) === "failed"
+      ? googleLinkErrorKey(searchParams.get("error"))
+      : null
   )
   const [message, setMessage] = useState<string | null>(null)
-  const notice = message ?? (googleLinkFailed ? t("googleLinkFailed") : null)
+  const notice = message ?? (googleLinkError ? t(googleLinkError) : null)
 
   useEffect(() => {
     const url = new URL(window.location.href)

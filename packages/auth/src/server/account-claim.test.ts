@@ -1,15 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const { getSessionFromCtx, rows, withAudit, findDefaultOrganizationId } =
-  vi.hoisted(() => ({
-    getSessionFromCtx: vi.fn(),
-    rows: {} as Record<string, unknown[]>,
-    withAudit: vi.fn(),
-    findDefaultOrganizationId: vi.fn(),
-  }))
+const {
+  getSessionFromCtx,
+  withAudit,
+  findDefaultOrganizationId,
+  getPlatformAuditOrgId,
+} = vi.hoisted(() => ({
+  getSessionFromCtx: vi.fn(),
+  withAudit: vi.fn(),
+  findDefaultOrganizationId: vi.fn(),
+  getPlatformAuditOrgId: vi.fn(),
+}))
 
 vi.mock("better-auth/api", () => ({ getSessionFromCtx }))
-vi.mock("@eleva/audit", () => ({ withAudit }))
+vi.mock("@eleva/audit", () => ({ withAudit, getPlatformAuditOrgId }))
 vi.mock("../provision-personal-space", () => ({ findDefaultOrganizationId }))
 vi.mock("@eleva/db", () => {
   const table = (name: string, columns: string[]) =>
@@ -25,13 +29,6 @@ vi.mock("@eleva/db", () => {
       apikey: table("apikey", ["id", "userId", "referenceId"]),
       user: table("user", ["id", "twoFactorEnabled"]),
     },
-    db: () => ({
-      select: () => ({
-        from: (source: { __name: string }) => ({
-          where: async () => rows[source.__name] ?? [],
-        }),
-      }),
-    }),
   }
 })
 
@@ -61,10 +58,12 @@ describe("guardAccountLink", () => {
     getSessionFromCtx.mockReset()
   })
 
+  const googleVerified = { id: "user-1", emailVerified: true }
+
   it("refuses a same-email link to a verified account with no owner session", async () => {
     getSessionFromCtx.mockResolvedValue(null)
     const result = await guardAccountLink(
-      { user: { id: "user-1" }, source: linkSource },
+      { user: googleVerified, source: linkSource },
       context({ id: "user-1", emailVerified: true })
     )
     expect(result?.error).toBe("account_not_linked")
@@ -73,7 +72,7 @@ describe("guardAccountLink", () => {
   it("refuses when someone else is signed in", async () => {
     getSessionFromCtx.mockResolvedValue({ user: { id: "attacker" } })
     const result = await guardAccountLink(
-      { user: { id: "user-1" }, source: linkSource },
+      { user: googleVerified, source: linkSource },
       context({ id: "user-1", emailVerified: true })
     )
     expect(result?.error).toBe("account_not_linked")
@@ -82,25 +81,37 @@ describe("guardAccountLink", () => {
   it("allows the signed-in owner to link (Settings, calendar connect)", async () => {
     getSessionFromCtx.mockResolvedValue({ user: { id: "user-1" } })
     const result = await guardAccountLink(
-      { user: { id: "user-1" }, source: linkSource },
+      { user: { id: "user-1", emailVerified: false }, source: linkSource },
       context({ id: "user-1", emailVerified: true })
     )
     expect(result).toBeUndefined()
   })
 
-  it("lets a provider claim an unverified row", async () => {
+  it("lets a provider-verified email claim an unverified row", async () => {
     getSessionFromCtx.mockResolvedValue(null)
+    // Own id: an approved claim stays pending for the account-create hook.
     const result = await guardAccountLink(
-      { user: { id: "user-1" }, source: linkSource },
-      context({ id: "user-1", emailVerified: false })
+      { user: { id: "guest-1", emailVerified: true }, source: linkSource },
+      context({ id: "guest-1", emailVerified: false })
     )
     expect(result).toBeUndefined()
+  })
+
+  it("refuses an unsigned claim when the provider has not verified the email", async () => {
+    getSessionFromCtx.mockResolvedValue(null)
+    for (const emailVerified of [false, undefined, "true"]) {
+      const result = await guardAccountLink(
+        { user: { id: "user-1", emailVerified }, source: linkSource },
+        context({ id: "user-1", emailVerified: false })
+      )
+      expect(result?.error).toBe("account_not_linked")
+    }
   })
 
   it("refuses when the session lookup fails", async () => {
     getSessionFromCtx.mockRejectedValue(new Error("redis down"))
     const result = await guardAccountLink(
-      { user: { id: "user-1" }, source: linkSource },
+      { user: googleVerified, source: linkSource },
       context({ id: "user-1", emailVerified: true })
     )
     expect(result?.error).toBe("account_not_linked")
@@ -136,42 +147,22 @@ describe("purgeBeforeClaim", () => {
     getSessionFromCtx.mockReset().mockResolvedValue(null)
     withAudit.mockReset()
     findDefaultOrganizationId.mockReset().mockResolvedValue("space-1")
-    for (const key of Object.keys(rows)) delete rows[key]
+    getPlatformAuditOrgId.mockReset().mockReturnValue(null)
   })
 
-  it("skips verified accounts and owner-initiated links", async () => {
-    await purgeBeforeClaim(
-      google,
-      context({ id: "user-1", emailVerified: true })
-    )
-    getSessionFromCtx.mockResolvedValue({ user: { id: "user-1" } })
-    const ownerCtx = context({ id: "user-1", emailVerified: false })
-    await purgeBeforeClaim(google, ownerCtx)
-    expect(withAudit).not.toHaveBeenCalled()
-    expect(
-      ownerCtx.context.internalAdapter.deleteUserSessions
-    ).not.toHaveBeenCalled()
-  })
+  type Deleted = Record<string, Record<string, unknown>[]>
 
-  it("skips password sign-up rows", async () => {
-    const ctx = context({ id: "user-1", emailVerified: false })
-    await purgeBeforeClaim({ userId: "user-1", providerId: "credential" }, ctx)
-    expect(ctx.context.internalAdapter.findUserById).not.toHaveBeenCalled()
-  })
-
-  it("revokes sessions without an audit when nothing was enrolled", async () => {
-    const ctx = context({ id: "user-1", emailVerified: false })
-    await purgeBeforeClaim(google, ctx)
-    expect(withAudit).not.toHaveBeenCalled()
-    expect(ctx.context.internalAdapter.deleteUserSessions).toHaveBeenCalledWith(
-      "user-1"
-    )
-  })
-
-  function auditedTx(verifiedNow: boolean) {
+  function auditedTx(verifiedNow: boolean, rows: Deleted = {}) {
     const deleted: string[] = []
     const emit = vi.fn()
-    const update = vi.fn(() => ({ set: () => ({ where: async () => {} }) }))
+    const updates: { set: unknown; where: unknown }[] = []
+    const update = vi.fn(() => ({
+      set: (set: unknown) => ({
+        where: async (where: unknown) => {
+          updates.push({ set, where })
+        },
+      }),
+    }))
     withAudit.mockImplementation(async (_opts, fn) =>
       fn(
         {
@@ -183,57 +174,123 @@ describe("purgeBeforeClaim", () => {
             }),
           }),
           delete: (source: { __name: string }) => ({
-            where: async () => {
-              deleted.push(source.__name)
-            },
+            where: () => ({
+              returning: async () => {
+                deleted.push(source.__name)
+                return rows[source.__name] ?? []
+              },
+            }),
           }),
           update,
         },
         { emit }
       )
     )
-    return { deleted, emit, update }
+    return { deleted, emit, update, updates }
   }
 
-  it("revokes sessions for a Microsoft claim with nothing enrolled", async () => {
+  /** Runs the guard first, as Better Auth does on the implicit link path. */
+  async function approveClaim(ctx: ReturnType<typeof context>) {
+    await expect(
+      guardAccountLink(
+        { user: { id: "user-1", emailVerified: true }, source: linkSource },
+        ctx
+      )
+    ).resolves.toBeUndefined()
+  }
+
+  it("skips verified accounts that no claim was approved for (new users)", async () => {
+    const ctx = context({ id: "user-1", emailVerified: true })
+    await purgeBeforeClaim(google, ctx)
+    expect(withAudit).not.toHaveBeenCalled()
+    expect(
+      ctx.context.internalAdapter.deleteUserSessions
+    ).not.toHaveBeenCalled()
+  })
+
+  it("skips owner-initiated links", async () => {
+    getSessionFromCtx.mockResolvedValue({ user: { id: "user-1" } })
+    const ctx = context({ id: "user-1", emailVerified: false })
+    await purgeBeforeClaim(google, ctx)
+    expect(withAudit).not.toHaveBeenCalled()
+    expect(
+      ctx.context.internalAdapter.deleteUserSessions
+    ).not.toHaveBeenCalled()
+  })
+
+  it("skips password sign-up rows", async () => {
+    const ctx = context({ id: "user-1", emailVerified: false })
+    await purgeBeforeClaim({ userId: "user-1", providerId: "credential" }, ctx)
+    expect(ctx.context.internalAdapter.findUserById).not.toHaveBeenCalled()
+  })
+
+  it("aborts an approved claim when the row is verified before the hook", async () => {
+    const guardCtx = context({ id: "user-1", emailVerified: false })
+    await approveClaim(guardCtx)
+    const ctx = context({ id: "user-1", emailVerified: true })
+    await expect(purgeBeforeClaim(google, ctx)).rejects.toThrow(/raced/)
+    expect(withAudit).not.toHaveBeenCalled()
+  })
+
+  it("aborts the claim when the row is verified inside the transaction", async () => {
+    const { deleted, emit } = auditedTx(true)
+    const ctx = context({ id: "user-1", emailVerified: false })
+    await approveClaim(ctx)
+    await expect(purgeBeforeClaim(google, ctx)).rejects.toThrow(/raced/)
+    expect(deleted).toEqual([])
+    expect(emit).not.toHaveBeenCalled()
+  })
+
+  it("audits a claim even when nothing was enrolled", async () => {
+    const { emit } = auditedTx(false)
     const ctx = context({ id: "user-1", emailVerified: false })
     await purgeBeforeClaim({ userId: "user-1", providerId: "microsoft" }, ctx)
-    expect(withAudit).not.toHaveBeenCalled()
-    expect(ctx.context.internalAdapter.deleteUserSessions).toHaveBeenCalledWith(
-      "user-1"
+    expect(emit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "claimed",
+        payload: expect.objectContaining({
+          providerId: "microsoft",
+          removedLogins: [],
+          removedPasskeys: 0,
+          sessionsRevoked: true,
+        }),
+      })
+    )
+    expect(
+      ctx.context.internalAdapter.deleteUserSessions
+    ).toHaveBeenCalledTimes(2)
+  })
+
+  it("falls back to the platform audit org when the user has no Space", async () => {
+    auditedTx(false)
+    findDefaultOrganizationId.mockResolvedValue(null)
+    getPlatformAuditOrgId.mockReturnValue("platform-org")
+    await purgeBeforeClaim(
+      google,
+      context({ id: "user-1", emailVerified: false })
+    )
+    expect(withAudit).toHaveBeenCalledWith(
+      { orgId: "platform-org", actorUserId: "user-1" },
+      expect.any(Function)
     )
   })
 
   it("aborts the claim when the owner check fails", async () => {
-    rows.passkey = [{ id: "p1" }]
     getSessionFromCtx.mockRejectedValue(new Error("redis down"))
     const ctx = context({ id: "user-1", emailVerified: false })
     await expect(purgeBeforeClaim(google, ctx)).rejects.toThrow("redis down")
     expect(withAudit).not.toHaveBeenCalled()
   })
 
-  it("keeps everything when the row was verified meanwhile", async () => {
-    rows.passkey = [{ id: "p1" }]
-    const { deleted, emit } = auditedTx(true)
-    const ctx = context({ id: "user-1", emailVerified: false })
-    await purgeBeforeClaim(google, ctx)
-    expect(deleted).toEqual([])
-    expect(emit).not.toHaveBeenCalled()
-    expect(
-      ctx.context.internalAdapter.deleteUserSessions
-    ).not.toHaveBeenCalled()
-  })
-
   it("purges pre-verification credentials in one audited write", async () => {
-    rows.account = [
-      { id: "a1", providerId: "credential" },
-      { id: "a2", providerId: "microsoft" },
-    ]
-    rows.passkey = [{ id: "p1" }]
-    rows.twoFactor = [{ id: "t1" }]
-    rows.apikey = [{ id: "k1" }]
-    const { deleted, emit, update } = auditedTx(false)
+    const { deleted, emit, updates } = auditedTx(false, {
+      account: [{ providerId: "credential" }, { providerId: "microsoft" }],
+      passkey: [{ id: "p1" }],
+      twoFactor: [{ id: "t1" }],
+      apikey: [{ id: "k1" }, { id: "k2" }],
+    })
     const ctx = context({ id: "user-1", emailVerified: false })
+    await approveClaim(ctx)
     await purgeBeforeClaim(google, ctx)
 
     expect(withAudit).toHaveBeenCalledWith(
@@ -241,7 +298,9 @@ describe("purgeBeforeClaim", () => {
       expect.any(Function)
     )
     expect(deleted).toEqual(["account", "passkey", "twoFactor", "apikey"])
-    expect(update).toHaveBeenCalledTimes(1)
+    expect(updates).toHaveLength(1)
+    expect(updates[0]?.set).toEqual({ twoFactorEnabled: false })
+    expect(JSON.stringify(updates[0]?.where)).toContain("user-1")
     expect(emit).toHaveBeenCalledWith(
       expect.objectContaining({
         entity: "user",
@@ -250,16 +309,20 @@ describe("purgeBeforeClaim", () => {
         payload: expect.objectContaining({
           removedLogins: ["credential", "microsoft"],
           removedPasskeys: 1,
+          removedTwoFactor: 1,
+          removedApiKeys: 2,
         }),
       })
     )
     expect(ctx.context.internalAdapter.deleteUserSessions).toHaveBeenCalledWith(
       "user-1"
     )
+    expect(
+      ctx.context.internalAdapter.deleteUserSessions
+    ).toHaveBeenCalledTimes(2)
   })
 
   it("aborts the link when the purge cannot be audited", async () => {
-    rows.passkey = [{ id: "p1" }]
     findDefaultOrganizationId.mockResolvedValue(null)
     const ctx = context({ id: "user-1", emailVerified: false })
     await expect(purgeBeforeClaim(google, ctx)).rejects.toThrow(/audit/)

@@ -41,10 +41,13 @@ Each entry should include:
   deployments of the v3 projects, on the v3 production database. `eleva.care`
   still serves the MVP (`eleva-care-app`). So the pilot runs on v3
   production, not on a staging copy.
-- Open risk: Vercel **Preview** deployments of `elevacare-api` use the same
-  `DATABASE_URL` as Production, so any PR preview can read and write pilot
-  data. Give Preview its own Neon branch before any member who is not on the
-  team books.
+- Open risk (checked 2026-11-07 with `vercel env ls` on `elevacare-api`):
+  `DATABASE_URL` and `DATABASE_URL_UNPOOLED` are one entry scoped to both
+  Production and Preview, with no Preview override and no per-branch Neon
+  value. So every PR preview of the API reads and writes the v3 production
+  database, including pilot data. The Preview rows of
+  `environment-matrix.md` describe the target, not this state. Give Preview
+  its own Neon branch before any member who is not on the team books.
 - Open: whether Patricia may take bookings from real members during the
   pilot, and how many. Until the founder decides, bookings come from the
   team's own test accounts.
@@ -53,8 +56,9 @@ Each entry should include:
   launch. Founder exception to the 2026-11-06 invitation gate, for this
   co-founder pilot only: these items do not block Patricia's testing. They
   stay **open** findings in the audit and still block any other expert's
-  invitation and the launch. The engineering and score parts of the gate
-  are unchanged.
+  invitation and the launch. Nothing else is excepted: Patricia's pilot
+  invitation still waits for the engineering and score parts of the gate
+  (every discipline at 8.0 or more, no open engineering P0/P1).
 - Owner: founder (Rodrigo Barona).
 - Related: [`audits/2026-11-expert-pilot-council.md`](audits/2026-11-expert-pilot-council.md),
   2026-11-06 "Expert pilot invitation gate" below.
@@ -70,8 +74,12 @@ Each entry should include:
   can still be claimed by a Google-verified email, with no extra step for
   guests. The claim first removes everything enrolled before verification
   (other logins including the password, passkeys, two-factor secrets and
-  backup codes, API keys) in one `withAudit` write (`user.claimed`), then
-  revokes its sessions.
+  backup codes, API keys). Sessions are revoked first, then those rows are
+  deleted in one `withAudit` write that always emits `user.claimed` with the
+  rows it actually removed (under a lock on the user row), then sessions are
+  revoked again. The provider must itself report the email as verified. If
+  the row becomes verified while the claim is in flight, the link is
+  aborted.
 - Implementation: `packages/auth/src/server/account-claim.ts`
   (`user.validateUserInfo` gate and `databaseHooks.account.create.before`).
   `disableImplicitLinking` stays `false`, only so unverified rows remain

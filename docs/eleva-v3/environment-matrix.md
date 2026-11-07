@@ -374,6 +374,12 @@ Webhooks, OAuth callbacks, and session-aware APIs live on the `api.eleva.care` s
 
 ## Preview Environments — Integration Posture
 
+> **Current state differs (checked 2026-11-07).** This table is the target.
+> Today `elevacare-api` has one `DATABASE_URL` / `DATABASE_URL_UNPOOLED`
+> entry scoped to both Production and Preview, so API preview deployments
+> use the v3 production database. See the 2026-11-06 "Expert pilot frame"
+> entry in `decision-log.md`.
+
 | Integration | Posture in preview                                            |
 | ----------- | ------------------------------------------------------------- |
 | Stripe      | test mode, staging keys                                       |
