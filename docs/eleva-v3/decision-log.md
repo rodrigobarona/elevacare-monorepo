@@ -105,7 +105,9 @@ Each entry should include:
 - Implementation: `packages/auth/src/server/account-claim.ts`
   (`user.validateUserInfo` gate and `databaseHooks.account.create.before`).
   `disableImplicitLinking` stays `false`, only so unverified rows remain
-  claimable. Amends the ADR-017 implicit-linking note.
+  claimable. Amends the ADR-017 implicit-linking note and supersedes the
+  2026-10-23 "Google implicit account linking" entry. Unsigned claims are
+  limited to Google, whose verified-email claim is reliable.
 - Still open from SEC2-01/02: the email telling the user a new sign-in
   method was linked, and asking for the second factor on email-only
   recovery when MFA is enrolled (with SEC2-03).
@@ -381,8 +383,11 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
   (i18n); pairs with marketing→auth `ELEVA_LOCALE` persistence.
 - Status: `active`.
 
-### 2026-10-23: Google implicit account linking (active)
+### 2026-10-23: Google implicit account linking (superseded)
 
+- Superseded by 2026-11-06 "Owner-first account linking": implicit linking
+  now attaches Google only to an unverified row (with the purge) or for the
+  signed-in owner. That entry is also the ADR-017 amendment.
 - Decision: enable Better Auth implicit link-on-sign-in for Google
   (`accountLinking.disableImplicitLinking: false`, `requireLocalEmailVerified: false`,
   keep `enabled: true` and `trustedProviders: ["google"]`). Same verified e-mail Google

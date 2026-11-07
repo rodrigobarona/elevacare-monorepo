@@ -214,6 +214,18 @@ describe("guardAccountLink", () => {
     expect(getSessionFromCtx).not.toHaveBeenCalled()
   })
 
+  it("refuses an unsigned claim from a provider other than Google", async () => {
+    getSessionFromCtx.mockResolvedValue(null)
+    const result = await guardAccountLink(
+      {
+        user: { id: "user-3", emailVerified: true },
+        source: { ...linkSource, oauth: { providerId: "microsoft" } },
+      },
+      context({ id: "user-3", emailVerified: false })
+    )
+    expect(result?.error).toBe("account_not_linked")
+  })
+
   it("refuses an unsigned claim with no provider id", async () => {
     getSessionFromCtx.mockResolvedValue(null)
     const result = await guardAccountLink(
@@ -393,13 +405,13 @@ describe("purgeBeforeClaim", () => {
   it("audits a claim even when nothing was enrolled", async () => {
     const { emit } = auditedTx(false)
     const ctx = context({ id: "user-1", emailVerified: false })
-    await approveClaim(ctx, "microsoft")
-    await purgeBeforeClaim({ userId: "user-1", providerId: "microsoft" }, ctx)
+    await approveClaim(ctx)
+    await purgeBeforeClaim(google, ctx)
     expect(emit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: "claimed",
         payload: expect.objectContaining({
-          providerId: "microsoft",
+          providerId: "google",
           removedLogins: [],
           removedPasskeys: 0,
           sessionsRevoked: true,

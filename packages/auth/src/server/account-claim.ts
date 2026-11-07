@@ -70,6 +70,8 @@ const EMAIL_NOT_VERIFIED = {
     "Your provider has not confirmed this email address. Confirm it with the provider, or sign in with a sign-in link.",
 }
 
+const CLAIM_PROVIDERS = new Set(["google"])
+
 const NOT_LINKED = {
   error: ACCOUNT_NOT_LINKED,
   errorDescription:
@@ -118,7 +120,9 @@ export async function guardAccountLink(
   if (user.emailVerified || data.user.emailVerified !== true) return NOT_LINKED
   const providerId =
     data.source.oauth?.providerId ?? data.source.sso?.providerId
-  if (!providerId) return NOT_LINKED
+  // Only providers whose email_verified claim is reliable may claim a row
+  // unsigned. Microsoft's flag depends on tenant configuration.
+  if (!providerId || !CLAIM_PROVIDERS.has(providerId)) return NOT_LINKED
   recordPendingClaim(userId, providerId)
   return
 }
