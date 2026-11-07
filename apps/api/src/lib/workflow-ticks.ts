@@ -1,8 +1,7 @@
 /**
- * QStash schedules per cadence (see `POST /workflows/tick/{cadence}`). The
- * plan's schedule quota (10) is smaller than the number of recurring jobs,
- * so jobs that share a cadence share one schedule. Daily and payout jobs
- * keep their own schedules (infra/qstash).
+ * Jobs that share a cadence run in one tick (`/workflows/tick/{cadence}`),
+ * scheduled by Vercel Cron in `apps/api/vercel.json`. Daily, monthly and
+ * payout jobs keep their own QStash schedules (infra/qstash).
  */
 import { POST as accountDeletionSweep } from "@/app/workflows/account-deletion-sweep/route"
 import { POST as bookingRequestExpiry } from "@/app/workflows/booking-request-expiry/route"

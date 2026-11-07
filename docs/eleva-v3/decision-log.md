@@ -32,6 +32,25 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-07: Minute, 10-minute and hourly jobs run on Vercel Cron (active)
+
+- Finding: every QStash schedule stopped at about 09:13 UTC on 2026-11-07
+  and stayed silent for the rest of the UTC day. Two per-minute schedules
+  (`slot-reservation-expiry`, `domain-events-publisher`) used up the free
+  QStash daily message allowance by mid-morning. After that, hold expiry,
+  domain events (session cancels, rooms, notifications that go through the
+  outbox), stuck Stripe events and expert transfers did not run. The tick
+  schedules from `pnpm qstash:setup` had never been registered, so
+  request-to-book expiry, video sweeps and CRM follow-ups did not run at
+  all.
+- Decision: the three ticks (`/workflows/tick/{minutely,10min,hourly}`)
+  run on Vercel Cron, which the Enterprise team runs every minute without
+  a daily cap. The tick route answers GET with `CRON_SECRET` for Vercel
+  Cron; POST stays for manual runs. QStash keeps only the daily, monthly
+  and payout schedules, about 16 messages a day, and `pnpm qstash:setup`
+  removes QStash schedules for the ticks and the jobs inside them.
+- Reference: `apps/api/vercel.json`, `apps/api/src/lib/workflow-ticks.ts`,
+  `infra/qstash/setup-all.ts`
 ### 2026-11-07: Eleva v3 hosting moves to the wppes-pt Enterprise team (active)
 
 - Owner: founder (authorized), engineering (executed)

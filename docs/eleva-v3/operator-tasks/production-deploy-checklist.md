@@ -35,8 +35,10 @@ API_BASE_URL=https://api.eleva.care pnpm qstash:setup
 pnpm qstash:list
 ```
 
-Expect 8 schedules: 3 ticks, audit drainer, reconciliation, 3 payouts. Leave the retention sweep off until
-DPO sign-off (AUD-028). `POST /workflows/tick/minutely` must answer 401 without a token, not 404.
+Expect 5 schedules: audit drainer, reconciliation, 3 payouts. Leave the retention sweep off until
+DPO sign-off (AUD-028). The minute, 10-minute and hourly ticks run on Vercel Cron (`apps/api/vercel.json`),
+not QStash: check them under the `elevacare-api` project's Cron Jobs. `GET /workflows/tick/minutely` must
+answer 401 without the cron token, not 404.
 
 ## 4. Check on the deployed site
 

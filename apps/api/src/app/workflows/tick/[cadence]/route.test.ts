@@ -26,7 +26,11 @@ vi.mock("@/lib/internal-workflow", () => ({
   internalWorkflowOptions: () => new Response(null, { status: 204 }),
 }))
 
-const { POST } = await import("./route")
+vi.mock("@eleva/config/env", () => ({
+  env: () => ({ CRON_SECRET: process.env.CRON_SECRET }),
+}))
+
+const { GET, POST } = await import("./route")
 
 function tick(cadence: string) {
   return POST(
@@ -82,6 +86,37 @@ describe("POST /workflows/tick/{cadence}", () => {
     expect((await tick("weekly")).status).toBe(404)
     authorize.mockResolvedValue(new Response(null, { status: 401 }))
     expect((await tick("minutely")).status).toBe(401)
+    expect(ok).not.toHaveBeenCalled()
+  })
+})
+
+describe("GET /workflows/tick/{cadence} (Vercel Cron)", () => {
+  function cron(authorization?: string) {
+    return GET(
+      new Request("https://api.eleva.care/workflows/tick/10min", {
+        headers: authorization ? { authorization } : {},
+      }),
+      { params: Promise.resolve({ cadence: "10min" }) }
+    )
+  }
+
+  beforeEach(() => {
+    vi.stubEnv("WORKFLOWS_DRAIN_SECRET", "inner-secret")
+    vi.stubEnv("CRON_SECRET", "cron-secret")
+    ok.mockClear()
+  })
+
+  it("runs the tick for Vercel Cron's bearer", async () => {
+    const response = await cron("Bearer cron-secret")
+    expect(response.status).toBe(200)
+    expect(ok).toHaveBeenCalledOnce()
+  })
+
+  it("refuses any other caller, and fails closed without CRON_SECRET", async () => {
+    expect((await cron()).status).toBe(401)
+    expect((await cron("Bearer inner-secret")).status).toBe(401)
+    vi.stubEnv("CRON_SECRET", "")
+    expect((await cron("Bearer ")).status).toBe(401)
     expect(ok).not.toHaveBeenCalled()
   })
 })

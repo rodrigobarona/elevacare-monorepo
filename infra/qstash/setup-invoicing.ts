@@ -4,7 +4,7 @@
  * - `POST /workflows/stripe-toconline-reconciliation` monthly (1st 04:00 UTC)
  *
  * `invoicing-retry` runs inside the hourly tick (`/workflows/tick/hourly`,
- * registered by `setup-all`).
+ * Vercel Cron in `apps/api/vercel.json`).
  *
  * Neither job POSTs TOConline commercial sales documents.
  *

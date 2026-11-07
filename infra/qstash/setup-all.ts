@@ -4,11 +4,12 @@
  * Use this when promoting from staging → production, after rotating
  * QStash tokens, or after migrating to a new API base URL.
  *
- * The plan's schedule quota (10) is smaller than the number of recurring
- * jobs, so jobs that share a cadence share one tick schedule
- * (`POST /workflows/tick/{minutely|10min|hourly}`, see
- * `apps/api/src/lib/workflow-ticks.ts`). Daily, monthly and payout jobs keep
- * their own schedules. Per-job schedules superseded by a tick are removed.
+ * Jobs that run every minute, every 10 minutes or hourly share a tick
+ * (`/workflows/tick/{minutely|10min|hourly}`, see
+ * `apps/api/src/lib/workflow-ticks.ts`) that Vercel Cron triggers, so they
+ * do not use the QStash daily message allowance. QStash keeps the daily,
+ * monthly and payout jobs. Per-job and tick schedules left from earlier
+ * layouts are removed.
  *
  * The retention sweep deletes data on DPO-owned periods (AUD-028) and is
  * only registered with `--with-retention`, after DPO sign-off.
@@ -25,15 +26,17 @@ import {
   isDryRun,
   registerSchedule,
   removeSchedulesFor,
-  type ScheduleSpec,
 } from "./register-schedule"
 import { PAYOUT_SCHEDULES } from "./payout-schedules"
 
 const dryRun = isDryRun()
 const withRetention = process.argv.includes("--with-retention")
 
-/** Jobs that now run inside a tick; their own schedules are removed. */
-const TICKED_JOB_PATHS = [
+/** Run by the Vercel Cron ticks; any QStash schedule for them is removed. */
+const VERCEL_CRON_PATHS = [
+  "/workflows/tick/minutely",
+  "/workflows/tick/10min",
+  "/workflows/tick/hourly",
   "/workflows/slot-reservation-expiry",
   "/workflows/booking-request-expiry",
   "/workflows/domain-events-publisher",
@@ -46,36 +49,6 @@ const TICKED_JOB_PATHS = [
   "/workflows/invoicing-retry",
 ] as const
 
-const TICK_SCHEDULES: ScheduleSpec[] = [
-  {
-    name: "Tick: every minute",
-    path: "/workflows/tick/minutely",
-    cron: "* * * * *",
-    retries: 1,
-    requireBearer: true,
-    description:
-      "Slot hold expiry, request-to-book expiry (100% refunds), domain events, video eject retry",
-  },
-  {
-    name: "Tick: every 10 minutes",
-    path: "/workflows/tick/10min",
-    cron: "*/10 * * * *",
-    retries: 3,
-    requireBearer: true,
-    description:
-      "Stuck Stripe events, Daily room sweep (create missing, delete idle), attendance fallback",
-  },
-  {
-    name: "Tick: hourly",
-    path: "/workflows/tick/hourly",
-    cron: "5 * * * *",
-    retries: 3,
-    requireBearer: true,
-    description:
-      "Account deletion sweep (D-12), CRM follow-up digest, invoicing retry (gate closed)",
-  },
-]
-
 async function main() {
   console.log(
     dryRun
@@ -83,14 +56,11 @@ async function main() {
       : "[qstash:setup:all] Provisioning all schedules"
   )
 
-  // Remove superseded per-job schedules first so the quota has room.
-  const removed = await removeSchedulesFor(TICKED_JOB_PATHS, { dryRun })
+  const removed = await removeSchedulesFor(VERCEL_CRON_PATHS, { dryRun })
   if (removed > 0) {
-    console.log(`[qstash:setup:all] Removed ${removed} superseded schedules`)
-  }
-
-  for (const spec of TICK_SCHEDULES) {
-    await registerSchedule(spec, { dryRun })
+    console.log(
+      `[qstash:setup:all] Removed ${removed} schedules now run by Vercel Cron`
+    )
   }
 
   await registerSchedule(

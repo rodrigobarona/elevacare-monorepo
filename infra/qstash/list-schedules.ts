@@ -11,10 +11,8 @@
  */
 import { Client, type Schedule } from "@upstash/qstash"
 
+/** Minute, 10-minute and hourly ticks run on Vercel Cron, not QStash. */
 const EXPECTED_PATHS = [
-  "/workflows/tick/minutely",
-  "/workflows/tick/10min",
-  "/workflows/tick/hourly",
   "/workflows/audit-outbox-drainer",
   "/workflows/stripe-toconline-reconciliation",
   "/workflows/process-expert-transfers",
