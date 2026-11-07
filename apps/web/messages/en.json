@@ -622,7 +622,7 @@
         "description": "Working draft notice for optional live transcription and AI-assisted session reports.",
         "heading": "AI processing",
         "paragraphs": {
-          "p1": "If you opt in, Eleva may process audio from your online video session to produce a live transcript for the expert who delivered that session. Transcription runs through our video provider (Daily) under a standard (non-HIPAA) configuration with cloud recording off.",
+          "p1": "If you opt in, Eleva may process audio from your online video session to produce a live transcript for the expert who delivered that session. Transcription runs through our video provider (Daily), with cloud recording off.",
           "p2": "The transcript and the expert's own session notes may later be sent to an AI model so the expert can draft a session report. The model is configured for zero retention: it must not keep a copy of your data for training or reuse. The expert reviews every draft before anything is shared with you.",
           "p3": "AI-assisted report drafting is not enabled in the product yet. When it ships, it will stay behind a separate product flag and the same consent. Until then, only live transcription (when you opt in) applies.",
           "p4": "You can turn this off in Privacy settings or skip the optional checkbox at booking. Withdrawal stops transcription from your next call and closes booking-scoped opt-ins. It does not delete transcripts or reports already stored in your encrypted session record.",
@@ -877,7 +877,7 @@
         "title": "Security — Eleva.care",
         "description": "Placeholder for Phase 13 evidence-backed security claims.",
         "heading": "Security",
-        "body": "Eleva does not publish security or compliance claims on this page until Phase 13 records evidence for each sentence. No GDPR, HIPAA, ISO, or ERS badge is implied here."
+        "body": "Here is how Eleva protects your information today."
       },
       "ers": {
         "title": "ERS and health regulation — Eleva.care",

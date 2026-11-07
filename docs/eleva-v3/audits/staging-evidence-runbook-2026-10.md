@@ -11,7 +11,7 @@ Policy: default **staging only**; **dev-prod** runs on production hostnames are 
 1. Staging deploy is current with `main` (including latest migrations — e.g. **0069** after AUD-028 merges).
 2. Operator runs `pnpm db:migrate` against the staging Neon branch (or relies on the neon-branch CI job on the merged commit).
 3. QStash schedules (`setup-all`) are applied on **staging only** when you intentionally enable them (retention sweep, CRM due digest, etc.) — not required for 06/09 exit proofs.
-4. Stripe test mode, Daily standard (recording off, **not HIPAA**), Twilio as configured for staging.
+4. Stripe test mode, Daily standard (recording off), Twilio as configured for staging.
 
 ## Phase 06 — pay → transfer → payout
 
@@ -86,4 +86,4 @@ the connected account, and overtime behaviour in a real call.
 
 - TOConline Comunicação / live FT issuance (Phase 07 gated).
 - Turning on `ff.ai_reports_beta` in production (10.2b ships **off**; generation fail-closed until zero-retention model attestation).
-- HIPAA / cloud recording (D-07/D-08 deferred).
+- Cloud recording (D-08 deferred).

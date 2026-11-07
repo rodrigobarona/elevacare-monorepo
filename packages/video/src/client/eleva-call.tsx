@@ -493,7 +493,7 @@ function CallShell({
       <div className="mx-auto flex max-w-lg flex-col gap-4 py-12 text-center">
         <h1 className="text-xl font-medium">{labels.leftTitle}</h1>
         <p className="text-sm text-muted-foreground">{labels.leftBody}</p>
-        <p className="text-xs text-muted-foreground">{labels.notHipaa}</p>
+        <p className="text-xs text-muted-foreground">{labels.callPrivacy}</p>
         <LinkButton href={backHref}>{labels.back}</LinkButton>
       </div>
     )
@@ -502,7 +502,7 @@ function CallShell({
   return (
     <div className="flex min-h-[70vh] flex-col gap-4" data-testid="eleva-call">
       <DailyAudio />
-      <p className="text-xs text-muted-foreground">{labels.notHipaa}</p>
+      <p className="text-xs text-muted-foreground">{labels.callPrivacy}</p>
       {joined && callWindow ? (
         <OvertimeNotice window={callWindow} labels={labels} />
       ) : null}

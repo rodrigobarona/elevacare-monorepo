@@ -247,7 +247,7 @@ describe("roomMatchesContract", () => {
     ).toBe(false)
   })
 
-  it("rejects recording-on rooms so we never adopt a HIPAA-style leftover", () => {
+  it("rejects recording-on rooms so a leftover recording room is never reused", () => {
     expect(
       roomMatchesContract(
         {

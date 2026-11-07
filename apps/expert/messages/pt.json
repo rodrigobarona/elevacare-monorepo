@@ -59,7 +59,7 @@
     "joinNotOnline": "Esta sessão não é uma videochamada.",
     "detailTitle": "Voltar ao calendário",
     "call": {
-      "notHipaa": "Esta chamada usa Daily standard. Não é HIPAA. A gravação está desligada.",
+      "callPrivacy": "A sua chamada é privada e não é gravada.",
       "prejoinTitle": "Confirme a câmara e o microfone",
       "prejoinHint": "Entre quando estiver pronto. O seu membro pode já estar à espera.",
       "join": "Entrar na sessão",
@@ -519,7 +519,7 @@
     "locationPhone": "Telefone",
     "locationUnknown": "—",
     "join": "Entrar na sessão",
-    "joinSoon": "O vídeo usa Daily standard (não é HIPAA). Entrar activa-se 15 minutos antes do início.",
+    "joinSoon": "Pode entrar 15 minutos antes do início da sessão.",
     "requestPending": "Pedido de reserva",
     "accept": "Aceitar",
     "decline": "Recusar",

@@ -79,7 +79,7 @@ All estimates must therefore be revalidated after a repository audit.
    Payments Correct high-level funds-flow choice Correct refund/reversal and capability assumptions
    Invoicing Sound two-tier model Block Tier 1 on accountant and vendor confirmation
    Notifications Strong design Improve per-subscriber outbox tracking and delivery guarantees
-   Video Daily is a reasonable choice Resolve HIPAA recording storage and DNS contradictions
+   Video Daily is a reasonable choice Resolve recording storage and DNS contradictions
    Records and AI Strong privacy intent Require storage, retention, encryption, and ZDR evidence
    Clinics Coherent business model Move shared-handle infrastructure earlier
    Admin Good operational coverage Add step-up authentication and dual control
@@ -361,16 +361,16 @@ Support multiple presentment currencies with a separate approved accounting desi
 
 Do not leave both contracts in the plan.
 
-P0-7: Daily HIPAA recording conflicts with the proposed storage workflow
+P0-7: Daily recording conflicts with the proposed storage workflow
 
-The plan later enables Daily cloud recording and downloads it after transcription. Daily’s HIPAA restrictions generally require customer-managed recording storage rather than Daily’s default cloud storage.
+The plan later enables Daily cloud recording and downloads it after transcription. The storage design needs customer-managed recording storage rather than Daily’s default cloud storage.
 
 Required correction
 
 Before Phase 10, confirm and document:
 
-signed Daily BAA;
-Healthcare/HIPAA account mode;
+signed Daily DPA;
+Daily account mode;
 supported recording type;
 customer-managed storage requirement;
 exact EU bucket and region;
@@ -382,9 +382,6 @@ behavior when consent is withdrawn;
 whether Daily transcription is enabled under the agreed terms.
 
 If the required compliant storage is not available, keep recording and transcription disabled.
-
-Daily reference:
-https://docs.daily.co/guides/privacy-and-security/hipaa
 
 P0-8: sessions.eleva.care has conflicting DNS ownership
 
@@ -911,7 +908,7 @@ CodeRabbit and one general human approval are not substitutes for a finance appr
    7 Correct two-tier concept Block Tier 1 on accountant and TOConline confirmation; resolve historical invoices
    8 Strong notification architecture Add per-subscriber outbox state and accurate idempotency guarantees
    9 Daily design is credible Resolve DNS ownership and room-creation reconciliation
-   10 Strong privacy intent, very high risk Confirm storage/BAA/ZDR; avoid external calls under DB locks; define @eleva/records
+   10 Strong privacy intent, very high risk Confirm storage/DPA/ZDR; avoid external calls under DB locks; define @eleva/records
    11 Coherent clinic product Define clinical access and processing-fee economics; reuse earlier handle table
    12 Good operational coverage Add step-up authentication and dual control
    13 Good verification phase Move baseline security and observability controls earlier
@@ -1100,14 +1097,14 @@ Portuguese VAT and invoicing matrix signed by accountant.
 TOConline production and test-series procedure validated.
 Historical-invoice migration decision recorded.
 Before Phase 9
-Daily BAA and healthcare configuration confirmed.
+Daily DPA and account configuration confirmed.
 Video data-flow diagram approved.
 Custom-domain ownership finalized.
 Before Phase 10
 DPIA updated.
 Clinical-record retention periods approved.
 Private storage residency and contractual terms confirmed.
-AI provider ZDR, DPA/BAA, and regional processing confirmed.
+AI provider ZDR, DPA, and regional processing confirmed.
 Recording storage architecture approved.
 Key backup and restoration drill completed.
 Before Phase 14
@@ -1152,7 +1149,7 @@ redirect;
 replace;
 or retire with owner approval.
 
-Public statements such as GDPR compliance, HIPAA readiness, ISO 27001 alignment, encryption, and EU residency should not automatically be copied to v3. Every claim should have:
+Public statements such as GDPR compliance, ISO 27001 alignment, encryption, and EU residency should not automatically be copied to v3. Every claim should have:
 
 evidence owner;
 legal approver;
@@ -1311,7 +1308,6 @@ Reference material
 Eleva.care public site: https://eleva.care
 Better Auth documentation: https://www.better-auth.com/docs
 Stripe separate charges and transfers: https://docs.stripe.com/connect/separate-charges-and-transfers
-Daily healthcare/HIPAA guidance: https://docs.daily.co/guides/privacy-and-security/hipaa
 Resend idempotency: https://resend.com/docs/api-reference/idempotency
 Vercel AI Gateway zero-data retention: https://vercel.com/docs/ai-gateway/security-and-compliance/zero-data-retention
 TOConline API documentation: https://api-docs.toconline.pt

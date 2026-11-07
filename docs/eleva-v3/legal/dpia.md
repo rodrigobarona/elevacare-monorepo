@@ -6,7 +6,7 @@
 - **Scope:** the platform as a whole, centred on health data at scale and four
   higher-risk features:
   - booking with health professionals;
-  - video sessions on **standard Daily** (not HIPAA, no BAA, recording off).
+  - video sessions on **standard Daily** (EU call server, recording off).
     Production clinical video is gated; see §2.6;
   - live transcription;
   - AI-drafted session reports.
@@ -20,14 +20,13 @@
   - turning on `ff.ai_reports_beta`;
   - clinic-shared records (Phase 11);
   - cloud recording (Phase 16.8 / D-08);
-  - HIPAA Daily (D-07);
   - any new sub-processor handling health data;
   - a significant incident;
   - otherwise every 12 months.
 - **Related:** [`ropa.md`](./ropa.md),
   [`retention-schedule.md`](./retention-schedule.md),
   [`breach-response.md`](./breach-response.md), ADR-003, ADR-009, ADR-020,
-  D-06, D-07, D-08, D-11, D-12.
+  D-06, D-08, D-11, D-12.
 
 ## 1. Is a DPIA required?
 
@@ -139,31 +138,21 @@ record-keeping duty of the expert, optional transcription and drafting
 assistance, and platform security. See the RoPA for each purpose and its
 lawful basis.
 
-### 2.6 Video: production status (D-07 gate)
+### 2.6 Video: production status
 
 This DPIA assesses the **standard Daily** configuration that is built today:
 EU call server (`geo: "eu-central-1"`), recording off
-(`enable_recording: false`), per-invitee tokens, no BAA, **not HIPAA**.
+(`enable_recording: false`), per-invitee tokens. This is the intended EU
+setup for Eleva video.
 
-It does **not** approve production clinical sessions on Daily:
+It does **not** yet approve production clinical sessions on Daily. Standard
+Daily is cleared for engineering, demos and the accountant/legal review.
 
-- D-07 (Daily HIPAA domain, BAA/DPA and EU processing position) is
-  **deferred** (decision log 2026-10-07 and 2026-10-12). The D-07 entry
-  states that it blocks production PHI-video processing.
-- Standard Daily is cleared for engineering, demos and the
-  accountant/legal review only.
+Production clinical video on Daily may start only when a **decision-log entry
+approves that processing**, with its scope and approval conditions. This is an
+open founder decision (decision log 2026-10-30).
 
-Production clinical video on Daily may start only when **D-07 is signed** and
-recorded in `docs/eleva-v3/decision-log.md`. No other route is authorised today.
-
-D-07 as written covers a HIPAA-enabled Daily plan and an executed BAA. The
-founder stated on 2026-10-12 that HIPAA is not an EU launch priority, and D-07
-stays deferred. Production clinical video on standard Daily (not HIPAA, recording
-off) would need a **new decision-log entry that supersedes D-07 for that
-processing**, with its scope and approval conditions. This is an open founder
-decision (decision log 2026-10-30). This DPIA does not claim HIPAA or a BAA.
-
-Any route that is recorded must cite this DPIA (R5, R6, R7) and confirm that:
+That entry must cite this DPIA (R5, R6, R7) and confirm that:
 
 - the Daily DPA is accepted in the company's name;
 - Daily's DPF status has been rechecked on or after 2026-11-16;
@@ -218,7 +207,7 @@ and the §7 conclusion does not cover production clinical video.
 | R3  | Another expert, or the wrong expert, reads a member's records                                                                                       | 2×4 = 8      | Author-only SELECT/INSERT/UPDATE/DELETE on `records` (migration 0061). Clinic sharing compiled but off. Member opt-out API. Cross-org RLS test.                                                                                    | 1×4 = 4             | Phase 11 toggle needs its own DPIA update (reason required, audited, member opt-out honoured).                                                                                                                                                                                                                        |
 | R4  | Health information leaks through email, SMS or calendar invites (shared inbox, lock-screen preview, forwarded email)                                | 3×3 = 9      | PHI-free payloads. Lane 2 schema. No Daily token in email or ICS. Join grant per booking and person, valid only in the window. Quiet hours.                                                                                        | 2×2 = 4             | Keep subjects and bodies generic: "your session with {expert}" without the clinical specialty where possible. Move Twilio to IE1.                                                                                                                                                                                     |
 | R5  | An unauthorised person joins a video session (forwarded link, guessed room)                                                                         | 2×4 = 8      | Eleva join page. Signed grant. One meeting token per invitee. Two-person base cap for the assigned expert and the booking member; each active delegate adds one place. `enforce_unique_user_ids`. Grant window. Revocation ejects. | 1×3 = 3             | Expert UI shows who is in the room. Staging two-browser webhook exit gate still open.                                                                                                                                                                                                                                 |
-| R6  | Video content is captured or retained by the provider; US access to call metadata                                                                   | 2×4 = 8      | Recording off (`enable_recording: false`). EU call server (`geo: "eu-central-1"`). Daily DPA. DPF and SCCs.                                                                                                                        | 1×3 = 3             | **Production clinical video gated by §2.6** (D-07 signed, or a decision-log entry that supersedes it). Recheck Daily on the DPF list on or after 2026-11-16. Do not claim HIPAA or a BAA. Sign the Daily DPA in the company's name.                                                                                   |
+| R6  | Video content is captured or retained by the provider; US access to call metadata                                                                   | 2×4 = 8      | Recording off (`enable_recording: false`). EU call server (`geo: "eu-central-1"`). Daily DPA. DPF and SCCs.                                                                                                                        | 1×3 = 3             | **Production clinical video gated by §2.6** (a decision-log entry that approves it). Recheck Daily on the DPF list on or after 2026-11-16. Sign the Daily DPA in the company's name.                                                                                                                                  |
 | R7  | Transcription captures more than intended (third parties, unrelated disclosures), is inaccurate, or happens without a valid choice                  | 3×3 = 9      | Off by default. Member's explicit `ai_processing` consent. Withdrawal closes all rows. Live only, no audio. EU processing (`transcription_geo: "eu"`). Stored encrypted in the record.                                             | 2×3 = 6             | Show a visible "transcribing" indicator to both parties. Let either party stop it. The expert confirms consent before starting. Retention follows the record.                                                                                                                                                         |
 | R8  | AI drafts: provider retains or trains on clinical content; data leaves the EU; inaccurate drafts influence care                                     | 3×4 = 12     | `ff.ai_reports_beta` off. Approved-model allowlist. EU inference zone. Fail-closed ZDR attestation, checked live every 6 hours. Consent check. Drafts never shown to the member. 90-day purge. Human review.                       | 1×3 = 3 (while off) | **Before turning on:** company-held Vercel Pro with ZDR; review the provider's abuse-monitoring retention; TIA for OpenAI (not on DPF); AI Act art. 50 labels; expert attestation on review; update this DPIA.                                                                                                        |
 | R9  | PHI ends up in logs or error monitoring (Sentry, Vercel logs) where it is unencrypted and broadly accessible                                        | 3×3 = 9      | `pnpm check:no-phi-logs` CI grep. Sentry PHI and JWT redaction. EU Sentry. Audit payload allowlist.                                                                                                                                | 2×3 = 6             | Run a staging log review to prove logs are PHI-free (security checklist, open). Keep Sentry at 90 days.                                                                                                                                                                                                               |

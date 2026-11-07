@@ -36,6 +36,21 @@ function scanNamespace(
   return strings.join("\n")
 }
 
+describe("ecosystem copy", () => {
+  // EU-focused: no HIPAA mention in any web namespace (decision log 2026-11-07).
+  for (const locale of [
+    { name: "en", messages: en },
+    { name: "pt", messages: pt },
+    { name: "es", messages: es },
+  ] as const) {
+    it(`${locale.name} never mentions HIPAA`, () => {
+      const strings: string[] = []
+      collectStrings(locale.messages, strings)
+      expect(strings.join("\n")).not.toMatch(/\bhipaa\b/i)
+    })
+  }
+})
+
 describe("marketing landing copy", () => {
   for (const locale of [
     { name: "en", messages: en },

@@ -76,12 +76,11 @@ Each audit row may carry `prev_hash` (hash of the previous row within the same `
 
 ### Compliance-control mapping
 
-| Framework | Control | How this design satisfies it |
-| --------- | ------- | ---------------------------- |
-| GDPR | Art. 30 (records of processing) | append-only, tenant-scoped audit trail with DSAR-ready queries |
-| HIPAA (future US) | 164.312(b) (audit controls) | separate DB + drainer + append-only policies; BAA signed with Neon at production plan |
-| ISO 27001 | A.12.4 (logging + monitoring) | hash-chain optional; separate credential scope |
-| SOC 2 | CC7.3 (monitoring) | BetterStack heartbeats on drainer; Sentry on exceptions; correlation-ID to every audit row |
+| Framework | Control                         | How this design satisfies it                                                               |
+| --------- | ------------------------------- | ------------------------------------------------------------------------------------------ |
+| GDPR      | Art. 30 (records of processing) | append-only, tenant-scoped audit trail with DSAR-ready queries                             |
+| ISO 27001 | A.12.4 (logging + monitoring)   | hash-chain optional; separate credential scope                                             |
+| SOC 2     | CC7.3 (monitoring)              | BetterStack heartbeats on drainer; Sentry on exceptions; correlation-ID to every audit row |
 
 ## Consequences
 
@@ -93,4 +92,3 @@ Each audit row may carry `prev_hash` (hash of the previous row within the same `
 - No runtime role can delete or mutate audit rows; DB-level grants make this impossible without DBA action.
 - Hash chain is additive; can be turned on in Sprint 7 without migration pain.
 - Performance: RLS adds a small overhead; indexes on `(org_id, …)` are mandatory on tenant tables; `audit_outbox` is append-only and read-then-purge, kept small.
-- Future HIPAA expansion: architecture unchanged. Sign BAA with Neon at production plan level before onboarding any US-hosted care entity.

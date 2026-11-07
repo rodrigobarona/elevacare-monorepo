@@ -1,51 +1,46 @@
 # Spike 09.0 — Daily account position (standard mode)
 
-**Status:** Founder-deferred HIPAA path. Standard Daily is the Phase 09
-engineering baseline. **Not HIPAA. BAA/DPA not executed.**
+**Status:** Standard Daily is the Phase 09 engineering baseline and the
+intended EU setup. Recording off.
 **Date:** 2026-10-07
 **Owner:** founder (Rodrigo). DPO/legal review of this written position is
 the next human step, not a claim that review already happened.
 **Daily account pre-check:** **PASS (standard Prebuilt probe, 2026-10-08).**
-This file records the founder decision (standard mode, no BAA) **and**
+This file records the founder decision (standard mode) **and**
 the first live room. It is **not** D-07, **not** an Eleva join-page proof,
-and **not** a webhook proof. No HIPAA domain, no BAA packet, no
-`sessions.eleva.care` CNAME. Webhook secret + Eleva two-browser join stay
+and **not** a webhook proof. The `sessions.eleva.care` CNAME is deferred. Webhook secret + Eleva two-browser join stay
 operator leftovers.
 
 ## Why this spike exists
 
-Phase 09 originally required D-07 (Daily HIPAA domain + executed BAA/DPA)
-before implementation. On 2026-10-07 the founder deferred BAA and HIPAA so
-the running product can be shown to accounting and legal. This file is the
+Phase 09 originally required D-07 (a special Daily plan tier and its
+agreement) before implementation. On 2026-10-07 the founder deferred D-07 so
+the running product can be shown to accounting and legal. D-07 was dropped
+on 2026-11-07. This file is the
 09.0 evidence record for that choice. It is **not** D-07 sign-off.
 
 ## Position (show this to legal)
 
-| Claim                                      | Stamp                                           |
-| ------------------------------------------ | ----------------------------------------------- |
-| Daily is the only video vendor (ADR-018)   | Active                                          |
-| HIPAA-enabled Daily domain                 | **Not used**                                    |
-| Daily BAA / DPA executed                   | **No**                                          |
-| Product is HIPAA compliant                 | **No — do not say this**                        |
-| Recording / transcripts                    | **Off** (Phase 16.8 + D-08 still required)      |
-| EU media residency as Eleva-controlled     | **No stronger claim than Daily's docs**         |
-| `/trust` and legal pages                   | Stay draft-bannered until D-12                  |
-| Online rooms for confirmed `mode = online` | Phase 09 engineering may proceed                |
-| Production PHI-video on Daily              | **Blocked** until D-07 (not only a HIPAA claim) |
-| Phone / in-person bookings reach Daily     | Never                                           |
+| Claim                                      | Stamp                                             |
+| ------------------------------------------ | ------------------------------------------------- |
+| Daily is the only video vendor (ADR-018)   | Active                                            |
+| Recording / transcripts                    | **Off** (Phase 16.8 + D-08 still required)        |
+| EU media residency as Eleva-controlled     | **No stronger claim than Daily's docs**           |
+| `/trust` and legal pages                   | Stay draft-bannered until D-12                    |
+| Online rooms for confirmed `mode = online` | Phase 09 engineering may proceed                  |
+| Production PHI-video on Daily              | **Blocked** until approved (`legal/dpia.md` §2.6) |
+| Phone / in-person bookings reach Daily     | Never                                             |
 
 ## Account mode for Phase 09
 
-Use a **standard** Daily domain (not HIPAA mode).
+Use a **standard** Daily domain.
 
-Consequences vs the original HIPAA-mode design in
+Consequences vs the original design in
 [`09-video-daily.md`](../execution-plan/phases/09-video-daily.md):
 
 - Custom room names are allowed. Prefer a deterministic name
   `eleva-{bookingId}` so `ensureSessionRoom` can GET-or-create without the
-  HIPAA fingerprint/`nbf`+`exp` offset dance. If D-07 is signed later,
-  switch to random names and the fingerprint reconciler — do not invent
-  HIPAA mode in code until then.
+  fingerprint/`nbf`+`exp` offset dance.
 - Still: `privacy: "private"`, meeting tokens with `room_name` always set,
   `enable_recording: false`, `enable_recording_ui: false`,
   `start_cloud_recording: false`, `eject_at_room_exp: true`.
@@ -60,7 +55,7 @@ the domain.
 
 ## 09.0 addendum — live probe (2026-10-08)
 
-Standard domain `elevacare.daily.co`. Recording off. **Not HIPAA.**
+Standard domain `elevacare.daily.co`. Recording off.
 Billing unlocked the room quota (dashboard **Max 100,000 rooms**; the
 previous 50 was the unpaid cap). Probe room
 `eleva-97fc22a0-583d-424a-9dc7-c7742167192f` was created via REST
@@ -88,14 +83,7 @@ dashboard leftover `ie7QDEIeB1apQkkBmsqP` is not an Eleva booking name.
    `/expert/sessions/{id}/join` + member `/{org}/sessions/{id}/join`), not
    `elevacare.daily.co?t=`.
 
-**Still later, only if the founder wants HIPAA:**
-
-1. Daily plan tier with HIPAA enabled.
-2. Executed BAA/DPA (D-07).
-3. Custom domain `sessions.eleva.care` CNAME.
-4. Two-browser HIPAA-domain token proof.
-
-A later 09.0 addendum can attach those without rewriting this file.
+**Still later:** custom domain `sessions.eleva.care` CNAME (deferred).
 
 ## Tax / issuance (accountant)
 

@@ -510,7 +510,7 @@ async function seedTonightJoinProbe() {
   ).replace(/\/$/, "")
   const guestPath = sessionJoinPath(bookingId, grant)
 
-  console.log("Tonight join probe is ready (standard Daily, not HIPAA).")
+  console.log("Tonight join probe is ready (recording off).")
   console.log(`Event: ${EVENT_TITLE}`)
   console.log(`Expert: ${EXPERT_EMAIL} (${ORG_SLUG})`)
   console.log(`Starts: ${startsAt.toISOString()}`)

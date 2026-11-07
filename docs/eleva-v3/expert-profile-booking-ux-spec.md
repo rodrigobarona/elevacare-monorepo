@@ -125,7 +125,7 @@ policy, badge and audience noun is rewritten against v3 facts.
   services say the expert confirms first.
 - Must not carry over: commission percentages and plan prices, the flat
   24-hour refund grid (v3 uses Flexible/Moderate/Strict per service), star
-  ratings and Top Expert benefits, HIPAA/BAA or certification claims,
+  ratings and Top Expert benefits, certification claims,
   "account required to book", "join 5 minutes before", payout timing,
   session packages, "automated invoicing", the word "patients" in member
   copy, and "Workspace" for personal Spaces.

@@ -23,7 +23,7 @@ This page describes how **BÚZIOS E TARTARUGAS, LDA** protects personal data on 
 - **Audit trail:** Mutating operations emit events through an audit outbox shipped to a separate audit database.
 - **Rate limiting and abuse prevention:** Public and authenticated API routes are rate limited; selected public flows use bot protection.
 - **Payments:** Card data is handled by **Stripe**; Eleva does not store full card numbers.
-- **Video:** Sessions use **Daily** with cloud recording **disabled** on the standard plan (not a HIPAA/BAA deployment).
+- **Video:** Sessions run on **Daily** through its call server in **Frankfurt**, with cloud recording **turned off**. Each invitee gets their own join link.
 
 ## Data location
 

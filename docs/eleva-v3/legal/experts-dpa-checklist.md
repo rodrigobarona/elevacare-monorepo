@@ -100,7 +100,7 @@ Status key: ✅ covered · 🟡 partial · ❌ missing.
    - AI drafts only when enabled, with EU inference and zero-retention, never
      used for training, deleted after 90 days if unpublished.
 9. **Video.** State that live audio and video are relayed through Daily in the
-   EU (Frankfurt), are not recorded, and are not HIPAA-covered.
+   EU (Frankfurt) and are not recorded.
 10. **Liability (§10).** No allocation under art. 82 between controller and
     processor, and no cap. The lawyer should align this with the expert
     agreement §9.

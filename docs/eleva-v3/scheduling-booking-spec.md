@@ -283,7 +283,7 @@ Never a raw Daily URL or Daily `?t=` token. The join window
 is `[startAt-15m, endAt+30m]`. Meeting tokens are minted on `POST .../join`,
 held in memory by `<ElevaCall>`, and must not appear in URLs, logs, audit
 payloads, or columns (`pnpm check:no-phi-logs`). Standard Daily, recording
-off, **not HIPAA**. If Daily never sends `meeting.ended`, a sweep after the
+off. If Daily never sends `meeting.ended`, a sweep after the
 join window closes (`endsAt + 30m`) finalizes `attendance` from participant
 history (empty → `nobody` / `no_show`). The delayed `ended + 2 min`
 `finalizeAttendance` job is not built. The 09.0 Daily Prebuilt probe is
@@ -339,7 +339,7 @@ Should support:
 - reminder and in-app Join CTAs in the `[startAt-15m, endAt+30m]` window
 
 Transcript pipeline, Notes, and History are Phase 10 / 16.8. Recording stays off
-until D-07.
+(cloud recording is Phase 16.8 / D-08).
 
 ### In Person
 

@@ -40,10 +40,10 @@ and run the standard loop from README section 4.
 
 ## 16.8 design note — session recording (moved here from Phase 10, 2026-09 amendment)
 
-Daily's HIPAA mode writes cloud recordings only to a **customer-owned AWS S3 bucket** whose
-bucket policy trusts Daily's AWS account via an IAM role (`recordings_bucket` room/domain
-property with `bucket_name`, `bucket_region`, `assume_role_arn`). Vercel Blob, Neon object
-storage and Cloudflare R2 are **not** accepted destinations, so the compliant design is two-hop:
+Daily's custom recording storage writes cloud recordings only to a **customer-owned AWS S3
+bucket** whose bucket policy trusts Daily's AWS account via an IAM role (`recordings_bucket`
+room/domain property with `bucket_name`, `bucket_region`, `assume_role_arn`). Vercel Blob, Neon
+object storage and Cloudflare R2 are **not** accepted destinations, so the design is two-hop:
 
 1. **Landing zone (mailbox, not storage)** — one small S3 bucket in an EU region (`eu-west-1` or
    `eu-south-2`), SSE-KMS, **versioning ON (Daily requires it — its role lists

@@ -53,8 +53,8 @@ const BANNED = [
   /\bClerk\b/,
   /\bWorkOS\b/,
   /\bpacientes?\b/i,
-  /hipaa[- ]compliant/i,
-  /compat[ií]veis com hipaa/i,
+  // EU-focused: no HIPAA mention at all (decision log 2026-11-07).
+  /\bhipaa\b/i,
   /€\s?(?:49|177)\b/,
   /\b(?:49|177)\s?€/,
   /dpo@eleva\.care/i,
