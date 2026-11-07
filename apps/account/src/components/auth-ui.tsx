@@ -192,6 +192,7 @@ export function oauthErrorMessage(
 ): string | null {
   if (!code) return null
   if (code === "account_not_linked") return t("accountNotLinked")
+  if (code === "email_not_verified") return t("providerEmailNotVerified")
   return t("errorGeneric")
 }
 

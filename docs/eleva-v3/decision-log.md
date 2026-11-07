@@ -35,7 +35,8 @@ Each entry should include:
 ### 2026-11-06: Expert pilot frame: Patricia Mota (active)
 
 - Decision: the first and only pilot expert is **Patricia Mota**, Eleva
-  co-founder. She tests v3 on `dev.eleva.care` with her real account.
+  co-founder. She tests v3 on `dev.eleva.care` with her real account once
+  the invitation gate below is met; her testing does not start before it.
 - Environment fact (checked 2026-11-06 with `vercel inspect`): `dev.eleva.care`
   and its `account.`, `app.` and `api.` hosts are the **production**
   deployments of the v3 projects, on the v3 production database. `eleva.care`

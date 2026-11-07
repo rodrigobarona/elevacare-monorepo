@@ -162,6 +162,7 @@
     "logoutDescription": "Cierra esta sesión en este dispositivo.",
     "errorGeneric": "Algo salió mal. Inténtalo de nuevo.",
     "accountNotLinked": "Este correo ya tiene una cuenta de Eleva. Inicia sesión con un enlace de acceso, tu contraseña o una llave de acceso y luego conecta Google en Configuración → Seguridad.",
+    "providerEmailNotVerified": "Google aún no ha confirmado esta dirección de correo. Entra con un enlace: te lo enviamos por correo y con un toque ya estás dentro.",
     "passwordStepDescription": "Introduce tu contraseña o recibe un enlace de acceso por email.",
     "continue": "Continuar",
     "or": "o",

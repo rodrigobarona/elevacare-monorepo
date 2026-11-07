@@ -162,6 +162,7 @@
     "logoutDescription": "End this session on this device.",
     "errorGeneric": "Something went wrong. Please try again.",
     "accountNotLinked": "This email already has an Eleva account. Sign in with a sign-in link, your password or a passkey, then connect Google in Settings → Security.",
+    "providerEmailNotVerified": "Google hasn't confirmed this email address yet. Sign in with a link instead: we'll email it to you, and one tap gets you in.",
     "passwordStepDescription": "Enter your password, or get a sign-in link by email.",
     "continue": "Continue",
     "or": "or",
