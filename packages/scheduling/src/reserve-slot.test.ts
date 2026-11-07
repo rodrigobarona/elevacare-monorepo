@@ -30,38 +30,38 @@ const KEY = "slot:exp-1:2026-11-13T09:30:00.000Z"
 describe("acquireSlotLock", () => {
   it("takes a free slot without asking the database", async () => {
     const { redis, store } = fakeRedis()
-    const holdIsActive = vi.fn()
-    expect(await acquireSlotLock(redis, KEY, "new", 300, holdIsActive)).toBe(
+    const holdHasEnded = vi.fn()
+    expect(await acquireSlotLock(redis, KEY, "new", 300, holdHasEnded)).toBe(
       true
     )
     expect(store.get(KEY)).toBe("new")
-    expect(holdIsActive).not.toHaveBeenCalled()
+    expect(holdHasEnded).not.toHaveBeenCalled()
   })
 
-  it("refuses while another hold is still active", async () => {
+  it("refuses while another hold is still active or being written", async () => {
     const { redis, store } = fakeRedis({ [KEY]: "other" })
-    const holdIsActive = vi.fn(async () => true)
-    expect(await acquireSlotLock(redis, KEY, "new", 300, holdIsActive)).toBe(
+    const holdHasEnded = vi.fn(async () => false)
+    expect(await acquireSlotLock(redis, KEY, "new", 300, holdHasEnded)).toBe(
       false
     )
-    expect(holdIsActive).toHaveBeenCalledWith("other")
+    expect(holdHasEnded).toHaveBeenCalledWith("other")
     expect(store.get(KEY)).toBe("other")
   })
 
   it("replaces a lock whose hold already ended (paid, cancelled, released)", async () => {
     const { redis, store } = fakeRedis({ [KEY]: "ended" })
     expect(
-      await acquireSlotLock(redis, KEY, "new", 300, async () => false)
+      await acquireSlotLock(redis, KEY, "new", 300, async () => true)
     ).toBe(true)
     expect(store.get(KEY)).toBe("new")
   })
 
   it("keeps the lock when the database check fails", async () => {
     const { redis, store } = fakeRedis({ [KEY]: "unknown" })
-    const holdIsActive = vi.fn(async () => {
+    const holdHasEnded = vi.fn(async () => {
       throw new Error("db down")
     })
-    expect(await acquireSlotLock(redis, KEY, "new", 300, holdIsActive)).toBe(
+    expect(await acquireSlotLock(redis, KEY, "new", 300, holdHasEnded)).toBe(
       false
     )
     expect(store.get(KEY)).toBe("unknown")
@@ -69,12 +69,12 @@ describe("acquireSlotLock", () => {
 
   it("does not delete a lock someone else took in the meantime", async () => {
     const { redis, store } = fakeRedis({ [KEY]: "ended" })
-    const holdIsActive = vi.fn(async () => {
+    const holdHasEnded = vi.fn(async () => {
       // Another request clears the stale lock and takes the slot first.
       store.set(KEY, "winner")
-      return false
+      return true
     })
-    expect(await acquireSlotLock(redis, KEY, "new", 300, holdIsActive)).toBe(
+    expect(await acquireSlotLock(redis, KEY, "new", 300, holdHasEnded)).toBe(
       false
     )
     expect(store.get(KEY)).toBe("winner")

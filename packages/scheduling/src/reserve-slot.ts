@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto"
-import { eq, and, gt, sql } from "drizzle-orm"
+import { eq, and, sql } from "drizzle-orm"
 import type { Redis } from "@upstash/redis"
 import { withAudit } from "@eleva/audit"
 import { withOrgContext, type Tx } from "@eleva/db/context"
@@ -57,47 +57,46 @@ async function compareAndDelete(
  * declining or erasing ends the hold in the database without always
  * clearing Redis, so the slot would look free but refuse every booking
  * until the TTL ran out (up to an hour with extensions). The database is
- * the source of truth, so a lock whose hold is no longer active is
- * removed and the lock is tried once more. Two callers that both clear a
- * stale lock still meet the `slot_reservations_no_overlap` constraint.
+ * the source of truth: when the holder's reservation row exists and has
+ * ended, the lock is stale, so it is removed and tried once more.
+ *
+ * No row means the holder is still between SET NX and its insert, so the
+ * lock stays. A failed lookup also keeps it (the old answer: taken).
  */
 export async function acquireSlotLock(
   redis: Redis,
   key: string,
   holdToken: string,
   ttlSeconds: number,
-  holdIsActive: (holder: string) => Promise<boolean>
+  holdHasEnded: (holder: string) => Promise<boolean>
 ): Promise<boolean> {
   const lock = { nx: true, ex: ttlSeconds } as const
   if (await redis.set(key, holdToken, lock)) return true
   const holder = await redis.get<string>(key)
   if (holder !== null) {
-    // If the lookup fails, keep the lock: the old answer, slot taken.
-    const active = await holdIsActive(holder).catch(() => true)
-    if (active) return false
+    const ended = await holdHasEnded(holder).catch(() => false)
+    if (!ended) return false
     await compareAndDelete(redis, key, holder)
   }
   return Boolean(await redis.set(key, holdToken, lock))
 }
 
-async function isHoldActive(
+async function holdHasEnded(
   orgId: string,
   holdToken: string
 ): Promise<boolean> {
   const [row] = await withOrgContext(orgId, (tx: Tx) =>
     tx
-      .select({ id: slotReservations.id })
+      .select({
+        status: slotReservations.status,
+        expiresAt: slotReservations.expiresAt,
+      })
       .from(slotReservations)
-      .where(
-        and(
-          eq(slotReservations.holdToken, holdToken),
-          eq(slotReservations.status, "active"),
-          gt(slotReservations.expiresAt, new Date())
-        )
-      )
+      .where(eq(slotReservations.holdToken, holdToken))
       .limit(1)
   )
-  return Boolean(row)
+  if (!row) return false
+  return row.status !== "active" || row.expiresAt.getTime() <= Date.now()
 }
 
 /**
@@ -151,7 +150,7 @@ export async function reserveSlot(
       key,
       holdToken,
       ttlSeconds,
-      (holder) => isHoldActive(orgId, holder)
+      (holder) => holdHasEnded(orgId, holder)
     )
     if (!acquired) {
       return { success: false, error: "slot_taken" }
