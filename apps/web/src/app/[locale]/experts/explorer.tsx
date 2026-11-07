@@ -21,7 +21,7 @@ import {
   isMarketplaceCategory,
   MARKETPLACE_CATEGORY_SLUGS,
 } from "@/lib/marketplace-categories"
-import { createPublicApiClient } from "@/lib/public-api"
+import { createServerPublicApiClient } from "@/lib/public-api-server"
 
 export type ExplorerSearch = {
   language?: string
@@ -47,7 +47,9 @@ export async function Explorer({
   const t = await getTranslations("experts")
   const language = LANGUAGES.find((item) => item === search.language)
   const sort = SORTS.find((item) => item === search.sort)
-  const api = createPublicApiClient()
+  // Server render: forward the visitor IP so each visitor gets their own
+  // rate-limit bucket instead of sharing the server egress IP.
+  const api = await createServerPublicApiClient()
 
   let experts: Awaited<ReturnType<typeof api.public.listExperts>>["experts"] =
     []

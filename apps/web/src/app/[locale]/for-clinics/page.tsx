@@ -37,7 +37,7 @@ export default async function ForClinicsPage({ params }: Props) {
       headingTestId="for-clinics-heading"
       body={t("body")}
       imageSlug="clinic-lounge"
-      cta={{ href: "/signup", label: t("cta") }}
+      cta={{ href: "/account/workspaces/create/team", label: t("cta") }}
       stepsHeading={t("stepsHeading")}
       steps={t.raw("steps") as { title: string; body: string }[]}
       benefitsHeading={t("benefitsHeading")}
@@ -52,7 +52,10 @@ export default async function ForClinicsPage({ params }: Props) {
       requirements={t.raw("requirements") as { title: string; body: string }[]}
       finalHeading={t("finalHeading")}
       finalBody={t("finalBody")}
-      finalCta={{ href: "/signup", label: t("finalCta") }}
+      finalCta={{
+        href: "/account/workspaces/create/team",
+        label: t("finalCta"),
+      }}
     />
   )
 }
