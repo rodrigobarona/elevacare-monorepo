@@ -354,7 +354,7 @@
     },
     "share": {
       "label": "Compartir esta página",
-      "accessible": "Compartir la página de {name}",
+      "accessible": "Compartir esta página: {name}",
       "copied": "Enlace copiado"
     },
     "facts": {
@@ -397,7 +397,9 @@
       "noAccount": "No necesitas cuenta",
       "meta": "{minutes} min · {price} en total",
       "metaFrom": "{minutes} min · desde {price} en total",
-      "metaFree": "{minutes} min · Gratis"
+      "metaFree": "{minutes} min · Gratis",
+      "metaFreeOption": "{minutes} min · opción gratuita disponible",
+      "loadFailed": "No hemos podido cargar los horarios ahora."
     },
     "withEleva": {
       "heading": "Reservar con Eleva",
@@ -425,7 +427,8 @@
         "q": "¿Qué comprueba Eleva?",
         "a": "Antes de que un perfil se publique, nuestro equipo comprueba la colegiación profesional. Cada especialista describe su propia formación y experiencia."
       }
-    }
+    },
+    "freeOption": "Opción gratuita disponible"
   },
   "booking": {
     "meta": {

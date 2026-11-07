@@ -76,7 +76,8 @@ export async function Explorer({
         ...(sort ? { sort } : {}),
         ...(search.cursor ? { cursor: search.cursor } : {}),
       }),
-      isNarrowed ? api.public.listExperts({}) : null,
+      // Only shapes the chips and filters; never fails the page.
+      isNarrowed ? api.public.listExperts({}).catch(() => null) : null,
     ])
     experts = result.experts
     nextCursor = result.nextCursor

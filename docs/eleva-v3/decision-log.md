@@ -32,6 +32,33 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-07: Expert profile, directory and booking UX revision 2.2 (active; two items needs-review)
+
+- Owner: founder. Spec: `expert-profile-booking-ux-spec.md` revision 2.2,
+  researched (intro.co, old production profile, Cal.com, Calendly, HubSpot
+  Meetings, Doctolib, Zocdoc, Airbnb) and scored by a five-judge design
+  council (product design, conversion, EU trust and privacy, accessibility,
+  UX writing) until every surface scored ≥ 8.0 for every judge.
+- Decided and shipping in slices:
+  - Directory: no language or sort controls below 12 listed experts; area
+    chips only for areas with experts; calm cards; "Top Expert · paid plan"
+    stays as the paid-ranking label.
+  - Profile: the expert's home (portrait hero, one share action, services
+    with details, credentials, "Booking with Eleva" answers, one booking
+    card).
+  - Booking (slices 2–3, not built yet): the Month/Week toggle goes; time
+    picking moves to a React Aria calendar; details and payment become one
+    "Confirm" page; terms, privacy notice and the adults-only declaration
+    become one checkbox that still records the three grants; health-data
+    consent and the AI notes opt-in stay separate.
+- needs-review (legal/DPO, before production): the merged terms, privacy and
+  adults-only checkbox (slice 3). Not reviewed; do not mark as approved.
+- needs-review (legal): terms §8 says members "can also sort" the directory;
+  while fewer than 12 experts are listed the sort control is hidden (deep
+  links still sort, default order is alphabetical and unpaid). Either
+  reword §8 at the next legal revision or show the sort again.
+- Next review: when slice 3 is ready, or at 12 listed experts.
+
 ### 2026-11-07: Minute, 10-minute and hourly jobs run on Vercel Cron (active)
 
 - Finding: every QStash schedule stopped at about 09:13 UTC on 2026-11-07

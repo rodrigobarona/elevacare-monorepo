@@ -31,12 +31,14 @@ export type BookingCardService = {
   title: string
   /** "60 min · €60 total". */
   meta: string
-  policy: string
+  policy: string | null
   seeAllHref: string
   /** Slots grouped by local day, soonest first. */
   days: { key: string; label: string; slots: BookingCardSlot[] }[]
   /** Several ways to meet: each time shows its mode icon. */
   showModes: boolean
+  /** Times could not be loaded (not the same as a full calendar). */
+  loadFailed: boolean
 }
 
 /**
@@ -53,6 +55,7 @@ export function BookingCard({
     chooseService: string
     timesIn: string
     full: string
+    loadFailed: string
     laterDates: string
     seeAll: string
     noAccount: string
@@ -67,9 +70,8 @@ export function BookingCard({
 
   return (
     <section
-      id="book"
       aria-labelledby={headingId}
-      className="flex scroll-mt-24 flex-col gap-5 rounded-4xl border bg-card p-6 shadow-2"
+      className="flex flex-col gap-5 rounded-4xl border bg-card p-6 shadow-2"
     >
       <h2
         id={headingId}
@@ -112,7 +114,7 @@ export function BookingCard({
                 {day.slots.map((slot) => {
                   const Icon = MODE_ICONS[slot.mode]
                   return (
-                    <li key={`${slot.mode}-${slot.start}`}>
+                    <li key={slot.href}>
                       <Link
                         href={slot.href}
                         data-testid="profile-upcoming-slot"
@@ -134,7 +136,7 @@ export function BookingCard({
         </div>
       ) : (
         <p className="rounded-2xl bg-muted/60 px-4 py-3 text-sm">
-          {labels.full}
+          {service.loadFailed ? labels.loadFailed : labels.full}
         </p>
       )}
 
@@ -142,14 +144,14 @@ export function BookingCard({
         href={service.seeAllHref}
         className="inline-flex min-h-11 items-center gap-1.5 self-start text-sm font-medium text-primary underline underline-offset-4"
       >
-        {hasSlots ? labels.seeAll : labels.laterDates}
+        {hasSlots || service.loadFailed ? labels.seeAll : labels.laterDates}
         <ArrowRightIcon aria-hidden className="size-4" />
       </Link>
 
       <ul className="flex flex-col gap-1 border-t pt-4 text-sm text-muted-foreground">
         <li className="font-medium text-foreground">{service.meta}</li>
         <li>{labels.noAccount}</li>
-        <li>{service.policy}</li>
+        {service.policy ? <li>{service.policy}</li> : null}
       </ul>
     </section>
   )

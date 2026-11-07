@@ -142,6 +142,10 @@ export default async function ExpertProfilePage({ params }: Props) {
   const credential = heroCredential(expert)
   const bio = pickBio(expert, locale)
   const minPrice = lowestPrice(bookable)
+  const allFree = bookable.every((eventType) => {
+    const price = servicePrice(eventType)
+    return price.min === 0 && !price.varies
+  })
   const pageUrl = new URL(
     localePath(locale, `/${expert.username}`),
     resolveGatewayUrl()
@@ -280,7 +284,10 @@ export default async function ExpertProfilePage({ params }: Props) {
             </div>
 
             {bookable.length > 0 ? (
-              <aside className="lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start">
+              <aside
+                id="book"
+                className="scroll-mt-24 lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start"
+              >
                 <Suspense fallback={<BookingCardSkeleton />}>
                   <ProfileBookingCard
                     locale={locale}
@@ -376,7 +383,9 @@ export default async function ExpertProfilePage({ params }: Props) {
             minPrice == null
               ? null
               : minPrice === 0
-                ? t("free")
+                ? allFree
+                  ? t("free")
+                  : t("freeOption")
                 : t("fromPrice", { price: formatEur(minPrice, locale) })
           }
           actionLabel={t("seeTimes")}
@@ -442,6 +451,7 @@ function ServiceCard({
   const expect = pickList(eventType.whatToExpect, locale)
   const questions = pickList(eventType.exampleQuestions, locale)
   const eyebrow = formatEyebrow(eventType, locale, t)
+  const cancellation = freeCancellationLine(eventType.cancellationPolicy, t)
   const visibleIncluded = included.slice(0, 3)
   const moreIncluded = included.slice(3)
 
@@ -459,7 +469,9 @@ function ServiceCard({
         </div>
         <p className="shrink-0 pt-5 text-lg font-medium tabular-nums">
           {price.min === 0
-            ? t("free")
+            ? price.varies
+              ? t("freeOption")
+              : t("free")
             : price.varies
               ? t("fromPrice", { price: formatEur(price.min, locale) })
               : formatEur(price.min, locale)}
@@ -511,7 +523,7 @@ function ServiceCard({
       ) : null}
       <div className="flex flex-col gap-4 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-1 text-sm text-muted-foreground">
-          <p>{freeCancellationLine(eventType.cancellationPolicy, t)}</p>
+          {cancellation ? <p>{cancellation}</p> : null}
           {eventType.requiresApproval ? (
             <p>{t("services.requestNote", { name: expertName })}</p>
           ) : null}
@@ -581,29 +593,43 @@ async function ProfileBookingCard({
   from.setUTCMinutes(0, 0, 0)
   const to = new Date(from.getTime() + 14 * DAY_MS)
   const api = await createServerPublicApiClient()
-  const modeSlots: UpcomingModeSlots[] = await Promise.all(
-    eventTypes.flatMap((eventType) =>
-      eventType.modes.map(async (mode) => {
-        const query = {
-          eventSlug: eventType.slug,
-          modeId: mode.id,
-          mode: mode.mode,
-          locationLabel: publicPlaceLabel(mode.location),
-        }
-        try {
-          const slots = await api.public.getSlots(username, eventType.slug, {
+  const modeSlots: (UpcomingModeSlots & { failed: boolean })[] =
+    await Promise.all(
+      eventTypes.flatMap((eventType) =>
+        eventType.modes.map(async (mode) => {
+          const query = {
+            eventSlug: eventType.slug,
             modeId: mode.id,
-            from: from.toISOString(),
-            to: to.toISOString(),
-            tz: timeZone,
-          })
-          return { ...query, starts: slots.slots.map((slot) => slot.start) }
-        } catch {
-          return { ...query, starts: [] }
-        }
-      })
+            mode: mode.mode,
+            locationLabel: publicPlaceLabel(mode.location),
+          }
+          try {
+            const slots = await api.public.getSlots(username, eventType.slug, {
+              modeId: mode.id,
+              from: from.toISOString(),
+              to: to.toISOString(),
+              tz: timeZone,
+            })
+            return {
+              ...query,
+              starts: slots.slots.map((slot) => slot.start),
+              failed: false,
+            }
+          } catch {
+            return { ...query, starts: [], failed: true }
+          }
+        })
+      )
     )
-  )
+
+  // A service "failed" when every way to meet failed to load.
+  const serviceFailed = new Map<string, boolean>()
+  for (const mode of modeSlots) {
+    serviceFailed.set(
+      mode.eventSlug,
+      (serviceFailed.get(mode.eventSlug) ?? true) && mode.failed
+    )
+  }
 
   const intlLocale = INTL_LOCALES[locale]
   const dayKey = new Intl.DateTimeFormat("en-CA", {
@@ -672,13 +698,16 @@ async function ProfileBookingCard({
       slug: eventType.slug,
       title,
       meta:
-        price.min === 0
+        price.min === 0 && !price.varies
           ? t("card.metaFree", { minutes: eventType.durationMinutes })
-          : t(price.varies ? "card.metaFrom" : "card.meta", {
-              minutes: eventType.durationMinutes,
-              price: formatEur(price.min, locale),
-            }),
+          : price.min === 0
+            ? t("card.metaFreeOption", { minutes: eventType.durationMinutes })
+            : t(price.varies ? "card.metaFrom" : "card.meta", {
+                minutes: eventType.durationMinutes,
+                price: formatEur(price.min, locale),
+              }),
       policy: freeCancellationLine(eventType.cancellationPolicy, t),
+      loadFailed: serviceFailed.get(eventType.slug) === true,
       seeAllHref: `/${username}/${eventType.slug}`,
       days: [...days.values()],
       showModes: new Set(eventType.modes.map((mode) => mode.mode)).size > 1,
@@ -693,6 +722,7 @@ async function ProfileBookingCard({
         chooseService: t("card.chooseService"),
         timesIn: t("card.timesIn", { zone: zoneName }),
         full: t("card.full"),
+        loadFailed: t("card.loadFailed"),
         laterDates: t("card.laterDates"),
         seeAll: t("card.seeAll"),
         noAccount: t("card.noAccount"),
@@ -751,8 +781,15 @@ function formatEyebrow(
   return place ? `${base} · ${place}` : base
 }
 
-function freeCancellationLine(policy: CancellationPolicy, t: ProfileT): string {
-  const hours = CANCELLATION_POLICY_TIERS[policy][0]?.minHoursBefore ?? 24
+function freeCancellationLine(
+  policy: CancellationPolicy,
+  t: ProfileT
+): string | null {
+  const first = CANCELLATION_POLICY_TIERS[policy][0]
+  if (!first || first.refundPercent !== 100 || first.minHoursBefore <= 0) {
+    return null
+  }
+  const hours = first.minHoursBefore
   return hours >= 72 && hours % 24 === 0
     ? t("freeCancelDays", { days: hours / 24 })
     : t("freeCancelHours", { hours })

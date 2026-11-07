@@ -58,8 +58,10 @@ the repo; the findings that drive this spec:
    pick a service. Time: pick a time. Confirm: say yes. Thank-you: feel
    looked after and know what happens next.
 3. **Only real proof.** No stars, counts, "Top Expert" or verification badges
-   (founder 2026-10-19). Empty blocks are hidden, never shown as "0" or
-   "Price on request".
+   on profiles (founder 2026-10-19). The directory's "Top Expert · paid plan"
+   label is the paid-ranking disclosure (decision log 2026-11-07), not proof,
+   and stays. Empty blocks are hidden, never shown as "0" or "Price on
+   request".
 4. **Care in the copy.** Second person, plain words, "members", say what Eleva
    does for the reader. EN, PT and ES are written natively.
 5. **Nothing is lost.** Every decision is reversible until the member pays;
@@ -121,7 +123,8 @@ Each slice is re-scored against its build before merge.
   come from the unfiltered list, so the member can always switch.
 - **Cards are calm**: three text lines only (name, headline clamped to two
   lines, one meta line: up to two areas of care, then the price: "From €45",
-  "Free first chat" when the lowest offer is free, nothing when unknown).
+  "Free session available" when the lowest offer is free, nothing when
+  unknown).
   How they meet joins the meta line when the card API carries modes.
   Languages appear on the profile, not the card. The name is the link and its
   hit area stretches over the card. Hover lifts the portrait 2 px (none with
@@ -200,7 +203,7 @@ Each slice is re-scored against its build before merge.
   profile goes live, our team checks the expert's professional registration.
   Experts describe their own training and experience.").
 - **Booking card** (sticky `lg:top-24`; time links ≥ 44 px tall): the heading "Book a session";
-  service picker (radio cards for 2 services, a select row for 3 or more);
+  service picker (compact radio rows, one line each, any number of services);
   "Times in {zone} time"; the next six times for the chosen service grouped
   by day. Times for **every** service are fetched on the server, so
   switching service needs no request; only the picker is client code. Each
