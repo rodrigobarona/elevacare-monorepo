@@ -32,6 +32,38 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-07: Eleva v3 hosting moves to the wppes-pt Enterprise team (active)
+
+- Owner: founder (authorized), engineering (executed)
+- Status: active
+- Summary: The nine v3 Vercel projects (`elevacare-web`, `-api`, `-app`,
+  `-expert`, `-team`, `-academy`, `-account`, `-admin`, `-docs`) moved from
+  the personal Hobby team to the `wppes-pt` Enterprise team. That team is
+  billed to Búzios e Tartarugas, Lda, the Eleva controller. Project ids,
+  domains, env vars and Git links are unchanged, and every project was
+  redeployed to production from `main` after the move. The Hobby limit of
+  100 deployments a day no longer gates releases.
+- Moved with the projects: the Neon store `elevacare` (project
+  `raspy-mouse-18304810`). It now belongs to the Neon org linked to
+  `wppes-pt`. Connection strings did not change. This transfer cannot be
+  reversed.
+- Still on the Hobby team, on purpose:
+  - The Upstash Redis and QStash stores named `elevacare-monorepo`. The v3
+    projects keep their `KV_*`, `REDIS_URL` and `QSTASH_*` values as plain
+    env vars. Do not delete these stores: rate limits, slot locks and
+    scheduled jobs depend on them.
+  - The `eleva.care` DNS zone, plus the MVP projects `eleva-care-app` and
+    `eleva-care`.
+- Object storage stays on Cloudflare R2 (ADR-025). The Enterprise team does
+  not use Vercel Blob.
+- Follow-ups:
+  - Move Upstash Redis and QStash to Eleva-owned paid plans before the
+    public beta opens. Free QStash allows 500 messages a day.
+  - Raise the Neon plan for longer point-in-time restore than 6 hours. This
+    overlaps the restore-drill follow-up in the legal pack entry.
+  - Move the `eleva.care` DNS zone once the MVP is retired.
+- Reference: [`environment-matrix.md`](./environment-matrix.md)
+
 ### 2026-11-07: Public beta legal pack adopted (active)
 
 - Decision (founder): the documents below are adopted for the public beta
@@ -136,6 +168,8 @@ Each entry should include:
   database, including pilot data. The Preview rows of
   `environment-matrix.md` describe the target, not this state. Give Preview
   its own Neon branch before any member who is not on the team books.
+  Resolved 2026-11-07: Preview now has its own database, KEK and auth
+  secret ("Preview deployments get their own database and secrets").
 - Open: whether Patricia may take bookings from real members during the
   pilot, and how many. Until the founder decides, bookings come from the
   team's own test accounts.
