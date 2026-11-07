@@ -40,7 +40,7 @@ const translations = {
         "Open the attached .ics file to remove this event from your calendar.",
       joinCta: "Join session",
       joinHint:
-        "Join from Eleva 15 minutes before the start. This is a standard Daily call, not HIPAA.",
+        "You can join from Eleva up to 15 minutes before your session starts.",
       expertConfirmedTitle: "New booking",
       expertConfirmedSubtitle:
         "A member booked a session with you. The calendar invite is attached.",
@@ -213,7 +213,7 @@ const translations = {
         "Abra o ficheiro .ics em anexo para remover este evento do seu calendário.",
       joinCta: "Entrar na sessão",
       joinHint:
-        "Entre a partir da Eleva 15 minutos antes do início. Esta é uma chamada Daily standard, não HIPAA.",
+        "Pode entrar pela Eleva até 15 minutos antes do início da sua sessão.",
       expertConfirmedTitle: "Nova marcação",
       expertConfirmedSubtitle:
         "Um membro marcou uma sessão consigo. O convite de calendário está em anexo.",
@@ -389,7 +389,7 @@ const translations = {
         "Abra el archivo .ics adjunto para eliminar este evento de su calendario.",
       joinCta: "Unirse a la sesión",
       joinHint:
-        "Únase desde Eleva 15 minutos antes del inicio. Esta es una llamada Daily estándar, no HIPAA.",
+        "Puede entrar desde Eleva hasta 15 minutos antes de que empiece su sesión.",
       expertConfirmedTitle: "Nueva reserva",
       expertConfirmedSubtitle:
         "Un miembro reservó una sesión contigo. La invitación de calendario está adjunta.",

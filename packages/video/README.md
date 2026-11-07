@@ -1,7 +1,6 @@
 # `@eleva/video`
 
-Daily.co boundary (ADR-018). **Standard domain only until D-07.** Not HIPAA.
-Recording off. Room names are `eleva-{bookingId}`.
+Daily.co boundary (ADR-018). Standard Daily domain, recording off. Room names are `eleva-{bookingId}`.
 
 ## Exports
 
@@ -36,7 +35,9 @@ Observability already redacts JWTs. The grep does not cover other
 audit-writing paths. Do not treat it as the only control.
 
 Phase 09 engineering is on main against **standard Daily**. The 09.0
-Prebuilt probe PASS 2026-10-08 (recording off, **not HIPAA**). Staging
+Prebuilt probe PASS 2026-10-08 (recording off). Staging
 Eleva join-page two-browser and Daily webhook subscription (secret is
 on Vercel; subscribe after `elevacare-api` redeploy) are still leftover.
-Do not claim HIPAA or an executed BAA.
+Eleva is EU-focused: copy describes what the video setup does (private
+calls, recording off) and never names US-only frameworks (decision log
+2026-11-07).

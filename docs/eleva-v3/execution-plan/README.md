@@ -30,7 +30,7 @@ one organization on a per-seat SaaS plan; **Academy** is the education surface. 
 multilingual (`pt`, `en`, `es` at launch; `pt-BR` is **retired** as a locale — D-01: `/pt-BR/*`
 301s to `/pt/*`, Brazil returns as a content + payments discovery item in Phase 16.2), API-first
 and agentic-first, and built to
-HIPAA/GDPR/ERS-Portugal standards.
+GDPR/ERS-Portugal standards.
 
 End state of this plan (production, `eleva.care` DNS switched from the MVP):
 
@@ -59,7 +59,7 @@ These are recorded as ADRs in Phase 1. Do not re-open them inside a phase prompt
 | #           | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Replaces                                               |
 | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
 | ADR-017     | **Identity = self-hosted Better Auth** in `apps/api` at `api.eleva.care/auth/*`, Drizzle adapter, `auth` schema on the main Neon project. Plugins: `organization`, `admin`, `twoFactor`, `passkey`, `magicLink`, `bearer`, `jwt`, `apiKey`, `openAPI`, `nextCookies`. Neon _managed_ Better Auth rejected (Beta, partial org plugin, no MFA/hooks).                                                                                                                               | WorkOS AuthKit + RBAC + Widgets                        |
-| ADR-018     | **Video = Daily.co only.** Until D-07: **standard** (not HIPAA) domain, named rooms, recording off. HIPAA domain `elevacare.daily.co` / branded `sessions.eleva.care` wait for a later D-07. Google/Microsoft calendars remain busy-time + destination sync only.                                                                                                                                                                                                                 | Google Meet links                                      |
+| ADR-018     | **Video = Daily.co only.** **Standard** Daily domain (`elevacare.daily.co`), named rooms, recording off. Branded `sessions.eleva.care` is deferred. Google/Microsoft calendars remain busy-time + destination sync only.                                                                                                                                                                                                                                                          | Google Meet links                                      |
 | ADR-019     | **MVP data migration + DNS cutover**: import users/orgs/experts/bookings/payout ledger/records from the MVP Neon DB; same Stripe platform account so Connect accounts and customers carry over.                                                                                                                                                                                                                                                                                   | Greenfield relaunch                                    |
 | ADR-020     | **Envelope encryption without a vault**: `@eleva/encryption` = AES-256-GCM, per-org DEK wrapped by a versioned KEK from env, `org_data_keys` table, crypto-shred = delete DEK. OAuth tokens encrypted by Better Auth (`account.encryptOAuthTokens`).                                                                                                                                                                                                                              | WorkOS Vault + Pipes                                   |
 | ADR-021     | **RBAC SSOT in code**: `packages/auth/src/permissions.ts` (`createAccessControl` statements + roles). Product label = `(organization.type, member.role)`.                                                                                                                                                                                                                                                                                                                         | `infra/workos/rbac-config.json`, `widgets-config.json` |
@@ -87,7 +87,7 @@ migration code.
   `eleva.org_id` and the 7-class taxonomy.
 - Domain packages with real code: `auth`, `audit`, `billing`, `scheduling`, `calendar`,
   `accounting` (closed-gate TOConline; Moloni adapter is a scaffold), `notifications`,
-  `compliance`, `video` (Daily, standard, **not HIPAA**), `records` (encrypted session records),
+  `compliance`, `video` (Daily, standard, recording off), `records` (encrypted session records),
   `crm`, `ai`, `encryption`, `storage`, `media`, `editor`, `content`, `consent`, `flags`,
   `observability`, `ui`, `icons`, `dashboard`, `site-chrome`, `email`, `api-client`.
 - Stub: `academy`.
@@ -102,8 +102,8 @@ migration code.
   live money flows are opt-in loopback runs.
 - Hosting: `eleva.care` still serves the MVP. `api.eleva.care` and `dev.eleva.care` run v3.
 
-Still gated: live FT POST / Comunicação / `invoice.issued` (`issueInvoice()` closed), D-07
-(HIPAA), and the 04B human-evidence waiver. v3 is **not live** until Phase 15.
+Still gated: live FT POST / Comunicação / `invoice.issued` (`issueInvoice()` closed) and the
+04B human-evidence waiver. v3 is **not live** until Phase 15.
 
 ## 4. The phase loop (applies to every phase)
 
@@ -208,7 +208,7 @@ Rules of the loop:
       feature PR.
 11. **Spike PRs** (`phase-NN.0/spike-<slug>`): when a phase depends on a vendor behaviour the
     plan asserts but has not proven (Stripe separate charges + reversals, TOConline hostnames and
-    OAuth, Daily HIPAA account state), the phase opens with a spike PR whose deliverable is
+    OAuth, Daily account state), the phase opens with a spike PR whose deliverable is
     **evidence**, not code: a report under `docs/eleva-v3/spikes/NN-<slug>.md` (what was tested,
     in which test account, what the API returned, what the plan must change), any throwaway code
     deleted before the next PR, and the decision-log entry the spike unblocks. Spikes run in test
@@ -228,7 +228,7 @@ Rules of the loop:
     | D-04 | Processing-fee bearer (Eleva marketplace; clinic on 0% bookings)                                                                                                                                  | finance           | PR 06.1                                                                                                            |
     | D-05 | Connect capability = `transfers` only; Identity behind flag                                                                                                                                       | finance + legal   | PR 06.1                                                                                                            |
     | D-06 | Refund, dispute and no-show policy                                                                                                                                                                | finance + product | PR 06.2                                                                                                            |
-    | D-07 | Daily HIPAA domain + BAA/DPA, EU processing position. **Deferred 2026-10-07** (no BAA, no HIPAA claim). Phase 09 engineering uses standard Daily.                                                 | founder + DPO     | Production PHI-video processing (clinical sessions on Daily) — not Phase 09 engineering or accountant/legal demo   |
+    | D-07 | Daily plan tier, DPA, EU processing position. **Dropped 2026-11-07**: video runs on standard Daily with recording off.                                                                            | founder + DPO     | None. Production clinical video follows `legal/dpia.md` §2.6                                                       |
     | D-08 | Recording storage (S3 EU landing zone -> private Blob)                                                                                                                                            | DPO + founder     | 16.8                                                                                                               |
     | D-09 | Historical MVP invoices: `legacy` / `legacy_missing`, no reissue (Aprovado com condições 2026-09-15; regularization still required). Founder 2026-09-17 unblocks 07.1 engineering, not live POST. | accountant        | PR 07.1 **production issuance** (ELEVA Comunicação + remaining Manolo confirmation); 07.1 engineering is unblocked |
     | D-10 | Public-site parity dispositions (quiz, help, community, legal)                                                                                                                                    | product           | PR 04.2                                                                                                            |
@@ -460,21 +460,20 @@ Plan: docs/eleva-v3/execution-plan/phases/NN-<slug>.md
 
 ## 9. Risks carried across phases
 
-| Risk                                                                       | Mitigation                                                                                                                                                     | Phase     |
-| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
-| Auth swap breaks every app at once                                         | Phases 2-3 while v3 has no traffic; Playwright auth spec before Phase 3 merge; WorkOS deletable in one PR                                                      | 2-3       |
-| Cross-subdomain cookies on preview deployments                             | Previews point at staging API; documented in `environment-matrix.md`                                                                                           | 1, 2      |
-| WorkOS Vault records must be decrypted before WorkOS is cancelled          | Export + checksum in Phase 14 before any WorkOS account closure                                                                                                | 14        |
-| Better Auth plugin package churn                                           | Pin in catalog; verify via Context7 at Phase 2 start                                                                                                           | 2         |
-| Daily HIPAA mode disables features (custom room names, live streaming)     | Until D-07: named rooms `eleva-{bookingId}` on standard Daily. After D-07: random names + fingerprint. Tokens from day one.                                    | 9         |
-| Commission SSOT vs grandfathered MVP plans                                 | Mapping table reviewed with finance before Phase 14                                                                                                            | 6, 14     |
-| IVA/TOConline matrix needs accountant sign-off                             | Sign-off is an entry gate of Phase 7, not Phase 15                                                                                                             | 7         |
-| Vendor behaviour asserted, not proven (Stripe reversals, TOConline, Daily) | Spike PRs 06.0 / 07.0 / 09.0 produce evidence before implementation (rule 11)                                                                                  | 6, 7, 9   |
-| Approval gates decided late block PRs mid-phase                            | Gate table (rule 12) names owner + blocked PR; agent finishes ungated PRs and stops at the gate with a report                                                  | all       |
-| Rollback claimed beyond what money movement allows                         | Acceptance point T+48 h / first payout run; after it, fix-forward only (Phases 14-15)                                                                          | 14, 15    |
-| Recording pipeline dragging Phase 10 into an S3/BAA dependency             | Cloud recording stays 16.8/D-08. Phase 10.1 (EU-first, D-07 deferred) stores encrypted notes + live Daily transcript + unpublished internal report; not HIPAA. | 9, 10, 16 |
-| CodeRabbit 100-file cap skips review                                       | Split PRs (target <= 30 files); `path_filters` keep generated files out                                                                                        | all       |
-| CodeRabbit hourly review allowance exhausted ("Review limit reached")      | Advanced trial (10 reviews/dev/h) until 21 Sep 2026, then Team 8 / Essentials 5; space CLI rounds; `@coderabbitai review` when the window resets               | all       |
+| Risk                                                                       | Mitigation                                                                                                                                           | Phase     |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| Auth swap breaks every app at once                                         | Phases 2-3 while v3 has no traffic; Playwright auth spec before Phase 3 merge; WorkOS deletable in one PR                                            | 2-3       |
+| Cross-subdomain cookies on preview deployments                             | Previews point at staging API; documented in `environment-matrix.md`                                                                                 | 1, 2      |
+| WorkOS Vault records must be decrypted before WorkOS is cancelled          | Export + checksum in Phase 14 before any WorkOS account closure                                                                                      | 14        |
+| Better Auth plugin package churn                                           | Pin in catalog; verify via Context7 at Phase 2 start                                                                                                 | 2         |
+| Commission SSOT vs grandfathered MVP plans                                 | Mapping table reviewed with finance before Phase 14                                                                                                  | 6, 14     |
+| IVA/TOConline matrix needs accountant sign-off                             | Sign-off is an entry gate of Phase 7, not Phase 15                                                                                                   | 7         |
+| Vendor behaviour asserted, not proven (Stripe reversals, TOConline, Daily) | Spike PRs 06.0 / 07.0 / 09.0 produce evidence before implementation (rule 11)                                                                        | 6, 7, 9   |
+| Approval gates decided late block PRs mid-phase                            | Gate table (rule 12) names owner + blocked PR; agent finishes ungated PRs and stops at the gate with a report                                        | all       |
+| Rollback claimed beyond what money movement allows                         | Acceptance point T+48 h / first payout run; after it, fix-forward only (Phases 14-15)                                                                | 14, 15    |
+| Recording pipeline dragging Phase 10 into an S3 dependency                 | Cloud recording stays 16.8/D-08. Phase 10.1 (EU-first, standard Daily) stores encrypted notes + live Daily transcript + unpublished internal report. | 9, 10, 16 |
+| CodeRabbit 100-file cap skips review                                       | Split PRs (target <= 30 files); `path_filters` keep generated files out                                                                              | all       |
+| CodeRabbit hourly review allowance exhausted ("Review limit reached")      | Advanced trial (10 reviews/dev/h) until 21 Sep 2026, then Team 8 / Essentials 5; space CLI rounds; `@coderabbitai review` when the window resets     | all       |
 
 ## 10. Related documents
 

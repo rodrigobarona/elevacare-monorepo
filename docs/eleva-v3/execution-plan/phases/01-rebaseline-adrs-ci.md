@@ -26,7 +26,7 @@ In:
 - Rewrite `identity-rbac-spec.md` for Better Auth (tables, plugins, roles, product labels,
   session model, cross-subdomain cookies, agent auth via API keys/JWT).
 - Update `README.md` canon, `master-architecture.md`, `vendor-decision-matrix.md`,
-  `compliance-data-governance.md` (WorkOS removed as subprocessor; Daily.co HIPAA/BAA; Better Auth
+  `compliance-data-governance.md` (WorkOS removed as subprocessor; Daily.co added; Better Auth
   is self-hosted so no new subprocessor), `calendar-integration-spec.md` (tokens via Better Auth
   `account` table), `environment-matrix.md` (fix `dev.eleva.care` vs `staging.eleva.care` drift,
   add `sessions.eleva.care`, add `BETTER_AUTH_*`, `ELEVA_KEK_V1`, `DAILY_*`), `decision-log.md`,
@@ -150,7 +150,7 @@ supersedes sprints".
 - Neon branching GitHub Action: `/neondatabase/create-branch-action`, Neon docs
   `/websites/neon_com_docs` (branching, `neonctl`).
 - Playwright: `/microsoft/playwright` (config, CI, webServer).
-- Daily.co: `/websites/daily_co_reference_rest-api` (HIPAA mode constraints).
+- Daily.co: `/websites/daily_co_reference_rest-api` (room and token constraints).
 - Drizzle Kit: `/drizzle-team/drizzle-orm` (`drizzle-kit generate` with multiple configs).
 
 ## Risks
@@ -216,7 +216,7 @@ A. ADRs (docs/eleva-v3/adrs/). Use the existing ADR format (Status, Date, Contex
      @eleva/auth/proxy getSessionCookie(). Alternatives: keep WorkOS; Neon managed Better Auth
      (rejected: Beta, partial organization plugin, no MFA, no hooks/custom plugins). Consequences:
      WorkOS Vault/Pipes/Widgets removed; RBAC moves to code (ADR-021); encryption to ADR-020.
-   - ADR-018-daily-video-only.md: Daily.co is the only video provider; HIPAA-enabled domain
+   - ADR-018-daily-video-only.md: Daily.co is the only video provider; Daily domain
      elevacare.daily.co branded as sessions.eleva.care; private rooms with random names, nbf/exp
      around the booking, per-participant meeting tokens (expert is_owner), webhooks for
      meeting.started/ended, recording/transcript behind consent + feature flag; Google Meet
@@ -266,7 +266,7 @@ B. Handbook rewrite (docs/eleva-v3/). Rewrite identity-rbac-spec.md for Better A
    organization.setActive; product labels; agent auth via API keys and JWT; session cookie on
    .eleva.care; proxy.ts optimistic check). Update README.md "Current Canon" (WorkOS line ->
    Better Auth line; Daily line; encryption line), master-architecture.md, vendor-decision-
-   matrix.md, compliance-data-governance.md (remove WorkOS subprocessor, add Daily.co BAA/HIPAA,
+   matrix.md, compliance-data-governance.md (remove WorkOS subprocessor, add Daily.co subprocessor,
    Better Auth self-hosted), calendar-integration-spec.md (tokens from Better Auth account table
    via auth.api.getAccessToken, scopes via linkSocial), environment-matrix.md (canonical staging
    host is dev.eleva.care; add sessions.eleva.care; env var table with BETTER_AUTH_SECRET,

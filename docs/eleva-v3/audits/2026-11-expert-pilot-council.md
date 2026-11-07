@@ -124,14 +124,14 @@ The pilot invitation stays blocked until these checks are done.
   moved on step change; slot picker not announced.
 - UX2-05: axe does not scan the expert, member or funnel screens.
 - UX3-01..04: expert emails greet the member and use the member's locale; member emails do not
-  name the expert, the amount paid or the policy; "standard Daily, not HIPAA" appears in
-  member copy.
+  name the expert, the amount paid or the policy; an internal video-vendor compliance note
+  appears in member copy.
 
 **Privacy and health (founder, DPO and legal, with engineering support)**
 
 - PRIV1-01 / PRIV2-01 (P0): no legal frame for real people's data on staging. This needs a
   founder decision-log entry "Expert pilot" (named experts, member cap, data categories,
-  recording off, not HIPAA), a pilot participation agreement plus a privacy addendum, a DPIA
+  recording off), a pilot participation agreement plus a privacy addendum, a DPIA
   pilot addendum, and isolation of pilot data from PR and preview branches.
 - PRIV1-02 / PRIV3-02: expert agreement and DPA are never presented or accepted. Add a
   versioned acceptance at the last setup step.

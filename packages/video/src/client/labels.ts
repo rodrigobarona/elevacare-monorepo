@@ -7,7 +7,7 @@ export type ElevaCallErrorCode =
   | "internal"
 
 export type ElevaCallLabels = {
-  notHipaa: string
+  callPrivacy: string
   prejoinTitle: string
   prejoinHint: string
   join: string
@@ -70,7 +70,7 @@ export function elevaCallLabels(
   t: (key: string, values?: Record<string, string | number>) => string
 ): ElevaCallLabels {
   return {
-    notHipaa: t("notHipaa"),
+    callPrivacy: t("callPrivacy"),
     prejoinTitle: t("prejoinTitle"),
     prejoinHint: t("prejoinHint"),
     join: t("join"),

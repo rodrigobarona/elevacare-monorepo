@@ -142,7 +142,7 @@ builder and template library (Phase 10 / Phase 16), payments and identity onboar
 > | Private link book-while-closed + revoke 404                                               | API + builder tab                    | **Waived** by founder 2026-09-25                                              |
 >
 > **Phase 09 video engineering opened 2026-10-07** on standard Daily (D-07
-> deferred, not HIPAA). This 04B waiver still does **not** open FT POST /
+> deferred, recording off). This 04B waiver still does **not** open FT POST /
 > Comunicação / `invoice.issued`. `issueInvoice()` stays closed.
 >
 > **2026-09-24 i18n draft slice:** `pnpm i18n:draft` + `translateMessages` +
@@ -474,7 +474,7 @@ engineering bar. Clinical field-level refusal UI stays incomplete engineering
 (backlog; not a Phase 09 blocker). Phase 09 video engineering opened
 2026-10-07 on standard Daily (D-07 deferred). Phase 07 hard gates (FT POST /
 Comunicação / `invoice.issued`) stay closed unless a founder waiver names
-all three. The 04B human-evidence waiver covers neither tax nor HIPAA.
+all three. The 04B human-evidence waiver does not cover tax.
 
 Report: endpoints, migrations, packages added (with catalog entries), tests, CodeRabbit CLI
 counts, PR URLs, deferred items, and the founder waiver record (date + phrase intent).

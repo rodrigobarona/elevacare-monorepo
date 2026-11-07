@@ -3456,7 +3456,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "listSessionRecords",
           summary: "List encrypted session records for a booking",
           description:
-            "Assigned expert reads intake, in-call notes, live transcript, unpublished internal report, and AI draft for this booking. Member reads only published rows and never the internal report. Bodies are decrypted in the expert org. Not HIPAA.",
+            "Assigned expert reads intake, in-call notes, live transcript, unpublished internal report, and AI draft for this booking. Member reads only published rows and never the internal report. Bodies are decrypted in the expert org.",
           tags: ["Sessions"],
           requestParams: {
             path: z.object({ bookingId: z.string().uuid() }),
@@ -3894,7 +3894,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "listSessionDocuments",
           summary: "List session documents for a booking",
           description:
-            "Assigned expert lists all non-deleted documents. Member lists only scope=shared. Filenames are decrypted in the expert org. Bytes stay in the private R2 bucket. Not HIPAA.",
+            "Assigned expert lists all non-deleted documents. Member lists only scope=shared. Filenames are decrypted in the expert org. Bytes stay in the private R2 bucket.",
           tags: ["Sessions"],
           requestParams: {
             path: z.object({ bookingId: z.string().uuid() }),
@@ -4085,7 +4085,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "dailyWebhook",
           summary: "Daily webhook receiver",
           description:
-            "HMAC of timestamp.body. Idempotent by event id and ordered by event_ts. Applies meeting.started/ended and participant.joined/left. Standard Daily, recording off, not HIPAA.",
+            "HMAC of timestamp.body. Idempotent by event id and ordered by event_ts. Applies meeting.started/ended and participant.joined/left. Recording off.",
           tags: ["Webhooks"],
           security: [],
           parameters: [
@@ -5284,7 +5284,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
         operationId: "sweepMissingSessionRooms",
         summary: "Create missing and delete expired Daily session rooms",
         description:
-          "Creates Daily rooms for confirmed or rescheduled online bookings that start within 2 hours and still have no room. Phone and in-person bookings are never included. Also deletes rooms whose join window (booked end + 30 min) closed over an hour ago; the room name stays on the session so late webhooks still map. Standard Daily, recording off, not HIPAA.",
+          "Creates Daily rooms for confirmed or rescheduled online bookings that start within 2 hours and still have no room. Phone and in-person bookings are never included. Also deletes rooms whose join window (booked end + 30 min) closed over an hour ago; the room name stays on the session so late webhooks still map. Recording off.",
       }),
       "/workflows/video-eject-retry": internalWorkflow({
         operationId: "retryPendingSessionEjects",
@@ -5296,7 +5296,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
         operationId: "sweepEndedSessionsWithoutAttendance",
         summary: "Finalize attendance when Daily sent no meeting.ended",
         description:
-          "Sessions still scheduled, live, or room_unresolved with null attendance whose Eleva join window (endsAt + 30m) has closed are finalized from participant history (empty history is nobody / no_show). Attendance only — no refund decision. Standard Daily, not HIPAA.",
+          "Sessions still scheduled, live, or room_unresolved with null attendance whose Eleva join window (endsAt + 30m) has closed are finalized from participant history (empty history is nobody / no_show). Attendance only — no refund decision.",
       }),
       "/health": {
         get: {

@@ -622,7 +622,7 @@
         "description": "Borrador del aviso para transcripción en directo opcional e informes de sesión asistidos por IA.",
         "heading": "Tratamiento por IA",
         "paragraphs": {
-          "p1": "Si opta por activarlo, Eleva puede tratar el audio de su sesión de vídeo online para producir una transcripción en directo para el especialista que impartió esa sesión. La transcripción pasa por nuestro proveedor de vídeo (Daily) en una configuración estándar (no HIPAA), con grabación en la nube desactivada.",
+          "p1": "Si opta por activarlo, Eleva puede tratar el audio de su sesión de vídeo online para producir una transcripción en directo para el especialista que impartió esa sesión. La transcripción pasa por nuestro proveedor de vídeo (Daily), con grabación en la nube desactivada.",
           "p2": "La transcripción y las notas de sesión del especialista pueden enviarse más tarde a un modelo de IA para que el especialista redacte un informe de sesión. El modelo está configurado con retención cero: no debe guardar copia de sus datos para entrenamiento ni reutilización. El especialista revisa cada borrador antes de compartirlo con usted.",
           "p3": "La redacción asistida por IA aún no está activa en el producto. Cuando esté disponible, irá detrás de un flag de producto separado y del mismo consentimiento. Hasta entonces, solo aplica la transcripción en directo (cuando opte).",
           "p4": "Puede desactivarlo en los ajustes de Privacidad o no marcar la casilla opcional en la reserva. La retirada detiene la transcripción a partir de su próxima llamada y cierra los opt-in asociados a la reserva. No borra transcripciones o informes ya guardados en el registro cifrado de la sesión.",
@@ -877,7 +877,7 @@
         "title": "Seguridad — Eleva.care",
         "description": "Marcador para las afirmaciones de seguridad de la Fase 13 con evidencia.",
         "heading": "Seguridad",
-        "body": "Eleva no publica afirmaciones de seguridad o cumplimiento en esta página hasta que la Fase 13 registre evidencia para cada frase. Aquí no se implica un sello GDPR, HIPAA, ISO o ERS."
+        "body": "Así es como Eleva protege hoy su información."
       },
       "ers": {
         "title": "ERS y regulación sanitaria — Eleva.care",

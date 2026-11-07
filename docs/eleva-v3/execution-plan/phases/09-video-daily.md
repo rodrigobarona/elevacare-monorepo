@@ -1,30 +1,29 @@
 # Phase 9 — Video with Daily.co (`@eleva/video`, join pages, webhooks)
 
-| Field      | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Branch     | `phase-09/video-daily`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| Depends on | Phases 5, 8. **Pre-check PR 09.0** (`docs/eleva-v3/spikes/09-daily-account.md`) records the Daily **account mode**. Founder 2026-10-07 deferred D-07 (no BAA, no HIPAA): Phase 09 implements against a **standard Daily domain**, recording off, deterministic room names `eleva-{bookingId}`. Do **not** claim HIPAA or an executed BAA. HIPAA-mode constraints (no custom names, fingerprint `nbf`/`exp`) apply only after D-07 is signed. Tax/issuance gates stay closed and are not a Phase 09 engineering blocker. |
-| Effort     | 1.5 weeks                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| Touches    | `packages/video/**` (new), `packages/db/src/schema/main/sessions.ts`, `packages/workflows/src/video/**`, `apps/api/src/app/{sessions,webhooks/daily,workflows}/**`, `apps/app/**` + `apps/expert/**` join pages, `packages/observability` (CSP), `packages/eslint-config/boundaries.js`, `apps/web/vercel.json` or gateway rewrites for `sessions.eleva.care`                                                                                                                                                           |
-| Exit gate  | Expert and member join the same private Daily room via per-participant meeting tokens from their apps; unauthorized token rejected; room expires automatically; `meeting.started/ended` webhooks update the session; no PHI in logs                                                                                                                                                                                                                                                                                     |
+| Field      | Value                                                                                                                                                                                                                                                                                                                                                                       |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Branch     | `phase-09/video-daily`                                                                                                                                                                                                                                                                                                                                                      |
+| Depends on | Phases 5, 8. **Pre-check PR 09.0** (`docs/eleva-v3/spikes/09-daily-account.md`) records the Daily **account mode**. Founder 2026-10-07 deferred D-07 (dropped 2026-11-07): Phase 09 implements against a **standard Daily domain**, recording off, deterministic room names `eleva-{bookingId}`. Tax/issuance gates stay closed and are not a Phase 09 engineering blocker. |
+| Effort     | 1.5 weeks                                                                                                                                                                                                                                                                                                                                                                   |
+| Touches    | `packages/video/**` (new), `packages/db/src/schema/main/sessions.ts`, `packages/workflows/src/video/**`, `apps/api/src/app/{sessions,webhooks/daily,workflows}/**`, `apps/app/**` + `apps/expert/**` join pages, `packages/observability` (CSP), `packages/eslint-config/boundaries.js`, `apps/web/vercel.json` or gateway rewrites for `sessions.eleva.care`               |
+| Exit gate  | Expert and member join the same private Daily room via per-participant meeting tokens from their apps; unauthorized token rejected; room expires automatically; `meeting.started/ended` webhooks update the session; no PHI in logs                                                                                                                                         |
 
 ## Progress (stakeholder demo)
 
-| Slice                       | State    | What stakeholders can see                                                                                                                                        | Still TODO (not a blocker)                 |
-| --------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| 09.1 `@eleva/video` server  | on main  | Room option builder, GET-or-create named rooms, local HS256 meeting tokens, webhook HMAC, `requireDailyEnv`, member Join copy says **standard Daily, not HIPAA** | —                                          |
-| 09.2 session rooms          | on main  | Confirmed online bookings get a session row and a Daily room via domain events + 15-min sweep. Phone/in-person never get a room. Cancel deletes the room.        | —                                          |
-| 09.3 join + webhooks        | on main  | Join mints a per-caller Daily token; experts can add/revoke delegates; Daily webhooks move session status. Attendance fallback is `endsAt + 30m` (09.6.1).       | —                                          |
-| 09.4 ElevaCall + join pages | on main  | Member and expert join pages mount `<ElevaCall>`; in-window Join CTAs; CSP includes `wss://*.daily.co` and `DAILY_DOMAIN`                                        | Eleva two-browser leftover                 |
-| Daily account probe         | **PASS** | Standard Prebuilt two-browser call 2026-10-08; billing 100k rooms; recording off; **not HIPAA**                                                                  | Eleva join pages + Daily webhook subscribe |
-| D-07 HIPAA / BAA            | Deferred | Stamp **not HIPAA**                                                                                                                                              | Production PHI-video only                  |
+| Slice                       | State    | What stakeholders can see                                                                                                                                  | Still TODO (not a blocker)                 |
+| --------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| 09.1 `@eleva/video` server  | on main  | Room option builder, GET-or-create named rooms, local HS256 meeting tokens, webhook HMAC, `requireDailyEnv`, member Join copy carries a call privacy line  | —                                          |
+| 09.2 session rooms          | on main  | Confirmed online bookings get a session row and a Daily room via domain events + 15-min sweep. Phone/in-person never get a room. Cancel deletes the room.  | —                                          |
+| 09.3 join + webhooks        | on main  | Join mints a per-caller Daily token; experts can add/revoke delegates; Daily webhooks move session status. Attendance fallback is `endsAt + 30m` (09.6.1). | —                                          |
+| 09.4 ElevaCall + join pages | on main  | Member and expert join pages mount `<ElevaCall>`; in-window Join CTAs; CSP includes `wss://*.daily.co` and `DAILY_DOMAIN`                                  | Eleva two-browser leftover                 |
+| Daily account probe         | **PASS** | Standard Prebuilt two-browser call 2026-10-08; billing 100k rooms; recording off                                                                           | Eleva join pages + Daily webhook subscribe |
+| D-07                        | Dropped  | Dropped 2026-11-07. Standard Daily with recording off is the intended EU setup                                                                             | —                                          |
 
 Leftovers from phases 01–08 (staging W3, live pay→transfer, tax issuance, Twilio IE1, D-06/D-12, waived 04B UX) are **TODOs, not Phase 09 blockers**. See [`audits/2026-10-phase-09-readiness.md`](../../audits/2026-10-phase-09-readiness.md) “Stakeholder leftovers”.
 
 ## Why this phase exists
 
-ADR-018: Daily.co is the only video provider. Until D-07 is signed the domain is
-**standard (not HIPAA)**. Every confirmed **online**
+ADR-018: Daily.co is the only video provider, on a **standard** Daily domain. Every confirmed **online**
 booking (snapshotted `mode = online`; phone and in-person bookings never get a room) needs a room
 created ahead of time, tokens minted per participant at join time, and lifecycle webhooks to
 drive session status and notifications (recording and transcripts: Phase 16.8 only).
@@ -41,11 +40,11 @@ In:
   the member) and `in_person` bookings show the location card instead of a join button; both
   `ensureSessionRoom` and the no-room sweep below filter on the snapshotted `mode = 'online'`
   before creating or scheduling anything, so phone and in-person bookings never reach Daily ->
-  private room, name `eleva-{bookingId}` (standard Daily; HIPAA random names only after D-07),
+  private room, name `eleva-{bookingId}` (standard Daily),
   `nbf = startAt - 15 min`, `exp = endAt + 30 min`,
   `max_participants` = 2 + number of delegated participants (recomputed via Daily room update
   when a delegate is added, so every authorised participant can join), `enable_prejoin_ui: true`, `enable_chat: true`,
-  `enable_screenshare: true`, `enable_recording: false` (recording is Phase 16.8, gated on D-07/D-08),
+  `enable_screenshare: true`, `enable_recording: false` (recording is Phase 16.8, gated on D-08),
   `eject_at_room_exp: true`, `enforce_unique_user_ids: true`; `mintMeetingToken({ roomName, userId, userName, isOwner, exp })`;
   `deleteRoom(roomName)`; `verifyWebhookSignature(req)`; typed webhook event parser.
 - `sessions` table: `booking_id` unique, `daily_room_name`, `daily_room_url`, `status`
@@ -54,9 +53,9 @@ In:
   derived from the full ordered participant history on `meeting.ended` (or the
   `endsAt + 30m` sweep) and re-derived by later correction runs when late participant events arrive —
   see the state machine below), `room_create_attempt_at`, `room_attempt_seq int`,
-  `room_fingerprint_exp` (nullable UNIQUE; **unused until D-07**. Standard Daily uses
+  `room_fingerprint_exp` (nullable UNIQUE; **unused**. Standard Daily uses
   `name: eleva-{bookingId}` as the idempotency handle — GET-or-create. Do not allocate
-  nbf/exp offsets or reconcile by fingerprint until HIPAA mode is on), `last_event_at`,
+  nbf/exp offsets or reconcile by fingerprint), `last_event_at`,
   `started_at`, `ended_at`, `participants jsonb`. Transition to `no_show`: `attendance` is
   **derived, never written from a single event**. Built flow: `meeting.ended` writes
   attendance from the ordered `participants` history; if Daily sent nothing, the 09.6.1
@@ -130,8 +129,8 @@ token, expiresAt }` (rate-limited, audited `session.joined`); `POST /webhooks/da
   prejoin device check, waiting room ("Your expert will join shortly"), in-call UI (mute, camera,
   screenshare, chat, leave), expert-only side panel placeholder for notes (Phase 10), post-call
   screen (feedback CTA). Custom UI (no Daily Prebuilt) to keep branding and CSP control.
-- Branding: room URLs use `DAILY_DOMAIN` (standard `{subdomain}.daily.co` until D-07).
-  `sessions.eleva.care` CNAME waits for D-07.
+- Branding: room URLs use `DAILY_DOMAIN` (standard `{subdomain}.daily.co`).
+  `sessions.eleva.care` CNAME is deferred.
 - CSP in `@eleva/observability` security headers: `connect-src`/`frame-src`/`media-src` for
   `*.daily.co`, `wss://*.daily.co`, plus `DAILY_DOMAIN` when set; permissions policy for camera/mic
   on join routes only.
@@ -153,8 +152,9 @@ endAt + 30 min)` — the Eleva join-window end (room `exp` matches that window i
   join page fetches it via `POST /sessions/[bookingId]/join` and hands it to `daily-js` in
   memory); `session.joined` audit rows carry `userId` and `roomName` only.
 
-Out: **recording and transcription (moved to Phase 16.8 — not Phase 10; Daily HIPAA recording
-requires a customer-owned S3 landing zone, see 16.8)**, group sessions, dial-in.
+Out: **recording (moved to Phase 16.8; the recording design needs a customer-owned S3 landing
+zone, see 16.8)**, group sessions, dial-in. Consent-gated live transcription and encrypted
+transcript records belong to Phase 10.1.
 
 ## Deliverables
 
@@ -187,8 +187,8 @@ requires a customer-owned S3 landing zone, see 16.8)**, group sessions, dial-in.
 - [ ] CSP allows the call to run without console violations.
 - [ ] Payment failure / refund before `startAt` cancels the session and deletes the room; refund
       after the session leaves the session record intact (state-machine tests).
-- [ ] PR 09.0 evidence file exists. D-07 is founder-deferred (2026-10-07):
-      standard Daily, recording off, **not HIPAA**. Do not claim BAA executed.
+- [ ] PR 09.0 evidence file exists. D-07 was founder-deferred (2026-10-07)
+      and dropped (2026-11-07): standard Daily, recording off.
       First live room / exit gate also needs a completed account probe
       (`DAILY_API_KEY`, recording off). Prebuilt probe PASS 2026-10-08; staging
       webhook + Eleva two-browser join remain leftover.
@@ -217,17 +217,15 @@ requires a customer-owned S3 landing zone, see 16.8)**, group sessions, dial-in.
 
 ## External docs
 
-- Daily REST API `/websites/daily_co_reference_rest-api` (rooms, meeting tokens, webhooks, HIPAA
-  constraints, custom domains), `@daily-co/daily-react` `/daily-co/daily-react`, `daily-js`.
+- Daily REST API `/websites/daily_co_reference_rest-api` (rooms, meeting tokens, webhooks,
+  custom domains), `@daily-co/daily-react` `/daily-co/daily-react`, `daily-js`.
 - Next.js CSP guidance `/vercel/next.js`.
 
 ## Risks
 
-- HIPAA mode restrictions (no custom room names, no live streaming) apply only after D-07.
-  Until then use standard Daily and named rooms. Do not discover HIPAA constraints mid-build.
-- Daily BAA/DPA deferred by founder 2026-10-07: Phase 09 proceeds on standard Daily.
+- Phase 09 runs on standard Daily with named rooms (founder 2026-10-07).
   Fallback if Daily is unavailable: ship phone and in-person modes first (they need no room)
-  and keep online join disabled. Never claim HIPAA while D-07 is unsigned.
+  and keep online join disabled.
 - Browser permissions on iOS Safari: test on device before Phase 15.
 
 ## Copy-paste prompt
@@ -242,8 +240,8 @@ Before writing code:
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
    docs/eleva-v3/execution-plan/phases/09-video-daily.md in full.
 3. Read every file under "Local references" and docs/eleva-v3/spikes/09-daily-account.md.
-   If that spike is missing, stop. D-07 is founder-deferred (standard Daily, not HIPAA) —
-   do not stop for an unsigned BAA. The 09.0 Prebuilt probe is PASS 2026-10-08;
+   If that spike is missing, stop. D-07 is dropped (standard Daily, recording off) —
+   do not stop for it. The 09.0 Prebuilt probe is PASS 2026-10-08;
    the Phase 09 exit gate still needs Eleva join-page two-browser evidence
    and a Daily webhook subscription after `elevacare-api` is redeployed
    (`DAILY_WEBHOOK_SECRET` is already on Vercel). Pull
@@ -280,14 +278,14 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
 1. Create packages/video (@eleva/video): package.json with exports "." (server), "./client",
    "./webhooks"; catalog entries for @daily-co/daily-js and @daily-co/daily-react. Server (fetch
    against https://api.daily.co/v1 with DAILY_API_KEY, never log the key). STANDARD Daily
-   (founder 2026-10-07, D-07 deferred — not HIPAA): createSessionRoom({ bookingId, startAt,
+   (founder 2026-10-07, D-07 deferred): createSessionRoom({ bookingId, startAt,
    endAt }) -> POST /rooms { name: "eleva-" + bookingId, privacy: "private", properties: {
    nbf: startAt-15m, exp: endAt+30m, max_participants: 2 + delegated participant count
    (updateRoom when a delegate is added), enable_prejoin_ui: true, enable_chat: true,
    enable_screenshare: true, enable_recording: false, enable_recording_ui: false,
    eject_at_room_exp: true, enable_knocking: false, enforce_unique_user_ids: true,
    lang: from booking locale } }. Do NOT
-   omit the name. Do NOT implement the HIPAA fingerprint / nbf+exp offset reconciler.
+   omit the name. Do NOT implement the fingerprint / nbf+exp offset reconciler.
    Returns { name, url } with url rewritten to https://${DAILY_DOMAIN}/${name} when
    DAILY_DOMAIN is set. mintMeetingToken({ roomName, userId, userName, isOwner, exp }) is
    a **local HS256 JWT** signed with the Daily API key (room_name ALWAYS set, user_id,
@@ -322,7 +320,7 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    endsAt + 30m if no webhook),
    room_created_at, room_create_attempt_at, room_create_lease_until timestamptz nullable,
    room_attempt_seq int NOT NULL DEFAULT 0, room_fingerprint_exp timestamptz nullable UNIQUE
-   (reserved for HIPAA after D-07; leave unused now),
+   (reserved; leave unused),
    last_event_at, started_at,
    ended_at, participants jsonb [{ role, joined_at, left_at }] (history only, never
    authorization), created_at, updated_at) and session_participants (booking_id FK, user_id FK,
@@ -379,13 +377,13 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    connect-src https://*.daily.co wss://*.daily.co plus DAILY_DOMAIN; frame-src/media-src
    accordingly; Permissions-Policy camera=(self), microphone=(self), display-capture=(self) only
    on join routes (per-route header via proxy.ts helper). Boundary lint: @daily-co/* only in
-   packages/video. Env: DAILY_API_KEY, DAILY_DOMAIN (standard `{subdomain}.daily.co` until
-   D-07), DAILY_DOMAIN_ID (domain UUID for the meeting-token `d` claim; optional if GET /v1
+   packages/video. Env: DAILY_API_KEY, DAILY_DOMAIN (standard `{subdomain}.daily.co`),
+   DAILY_DOMAIN_ID (domain UUID for the meeting-token `d` claim; optional if GET /v1
    returns it), DAILY_WEBHOOK_SECRET in .env.example, turbo.json, environment-matrix.md. Operator
    tasks doc operator-tasks/daily-setup.md: create a **standard** Daily domain with recording
    off, create the webhook pointing to https://api.dev.eleva.care/webhooks/daily (staging;
    Phase 15 repeats it for https://api.eleva.care/webhooks/daily) with the secret. Do not
-   enable HIPAA or `sessions.eleva.care` until D-07 is signed.
+   enable `sessions.eleva.care` (CNAME deferred).
 7. Tests: unit as above; e2e/video-join.spec.ts loads the join page with
    --use-fake-device-for-media-stream and reaches the prejoin UI. Manual staging test with two
    browsers; paste screenshots in the PR.

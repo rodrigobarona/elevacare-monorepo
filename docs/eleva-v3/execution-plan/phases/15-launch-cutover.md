@@ -31,10 +31,11 @@ In:
   - **Approval gates carried forward** (each recorded in `decision-log.md` with owner + date;
     the launch checklist links the entry): D-01 `pt-BR` retirement, D-02 EUR-only, D-03/D-04
     settlement matrix (finance), D-05 Connect capability model, D-06 refund + dispute policy
-    incl. no-show, D-07 Daily HIPAA + BAA, D-08 recording storage (gates 16.8, not launch — the
+    incl. no-show, D-08 recording storage (gates 16.8, not launch — the
     entry must exist with status `proposed` or `active`), D-09 historical invoices, D-10 public-site parity,
     D-11 clinical access model, D-12 deletion vs retention, D-13 cookie/CSRF threat model,
-    D-14 payment-method set — each entry must carry Status `accepted`/`active` (D-08 may stay
+    D-14 payment-method set (D-07 is dropped, 2026-11-07; production clinical video instead needs the
+    DPIA section 2.6 approval entry) — each entry must carry Status `accepted`/`active` (D-08 may stay
     `proposed` because recording is Phase 16.8), owner, date, an evidence/reference link and, for
     anything still provisional, a review date; a placeholder entry fails the gate the same as a
     missing one; Phase 13 evidence pack signed (DPIA, sub-processors); pen-test findings closed or
@@ -43,7 +44,7 @@ In:
     statement descriptor); live webhook endpoint created with `pnpm stripe:setup:webhooks -- --url
 https://api.eleva.care/webhooks/stripe --apply`; TOConline production series and OAuth app;
     IVA sign-off recorded; test a 1 EUR live booking + refund + invoices with an internal expert.
-  - Video: Daily HIPAA domain confirmed, webhook secret set, `sessions.eleva.care` CNAME live.
+  - Video: standard Daily domain confirmed with recording off, webhook secret set. The `sessions.eleva.care` CNAME is deferred and is not a launch gate.
   - Notifications: Resend domain verified (DKIM/SPF/DMARC), Twilio EU sender approved.
   - Security: penetration test findings closed (high/critical), CSP enforced, rate limits live,
     secrets rotated post pen-test, `BETTER_AUTH_SECRET` production unique, `ELEVA_KEK_V1` set

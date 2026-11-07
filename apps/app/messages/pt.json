@@ -50,7 +50,7 @@
     "joinMissingGrant": "Este link de entrada não tem o convite. Abra o link do email ou do convite de calendário.",
     "joinInvalidGrant": "Este link de entrada não é válido. Abra o link do email ou do convite de calendário.",
     "call": {
-      "notHipaa": "Esta chamada usa Daily standard. Não é HIPAA. A gravação está desligada.",
+      "callPrivacy": "A sua chamada é privada e não é gravada.",
       "prejoinTitle": "Confirme a câmara e o microfone",
       "prejoinHint": "Entre quando estiver pronto. O seu especialista pode já estar à espera.",
       "join": "Entrar na sessão",

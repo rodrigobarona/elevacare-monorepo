@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted (amended 2026-10-07: standard Daily until D-07)
+Accepted (amended 2026-10-07 and 2026-11-07: standard Daily, recording off)
 
 ## Date
 
@@ -10,35 +10,29 @@ Accepted (amended 2026-10-07: standard Daily until D-07)
 
 ## Context
 
-The live MVP creates Google Meet links for online sessions. Meet is not a HIPAA-covered video
-product Eleva can BAA, does not give Eleva a first-party room, meeting token or webhook surface,
-and ties session join to a Google account. Daily.co is already the locked video vendor in the
+The live MVP creates Google Meet links for online sessions. Meet does not give Eleva a
+first-party room, meeting token or webhook surface, and ties session join to a Google account. Daily.co is already the locked video vendor in the
 handbook (`vendor-decision-matrix.md`) and in ADR-009 (transcripts as Eleva records). The
 execution plan ([`execution-plan/README.md`](../execution-plan/README.md) section 2) freezes
 Daily as the only video path so Phase 9 does not keep a Meet fallback.
 
-Constraints: EU processing and a BAA/DPA (gate **D-07**); HIPAA-mode rooms cannot use custom
-names or live streaming; session recordings, if ever offered, need a customer-owned S3 landing
+Constraints: EU processing and a Daily DPA; session recordings, if ever offered, need a customer-owned S3 landing
 zone that Daily can assume an IAM role into (gate **D-08**, backlog 16.8 — not Phase 9 or 10);
 the join page lives on `eleva.care/[orgSlug]/sessions/...` (member) and
 `eleva.care/[orgSlug]/expert/sessions/...` (expert) via gateway rewrites — not
 `app.eleva.care`; the branded Daily domain is `sessions.eleva.care`
-(Daily owns the CNAME). Phone and in-person delivery modes must keep working if Daily is down
-or D-07 is unsigned.
+(Daily owns the CNAME). Phone and in-person delivery modes must keep working if Daily is down.
 
 ## Decision
 
 1. **Daily.co only.** Online sessions use `@eleva/video` (`packages/video`) talking to
-   Daily. Until D-07 is signed the domain is **standard (not HIPAA)** — typically
-   `{subdomain}.daily.co`. A HIPAA-enabled domain and branded `sessions.eleva.care`
-   wait for D-07. Google Meet, Zoom and Microsoft Teams are not created, stored or
+   Daily on a **standard** domain, typically `{subdomain}.daily.co`. The branded
+   `sessions.eleva.care` CNAME is deferred. Google Meet, Zoom and Microsoft Teams are not created, stored or
    linked. Google/Microsoft calendars remain busy-time and destination sync only
    (ADR-004 as amended by ADR-017).
-2. **Room contract.** Private rooms. Until D-07: deterministic names
+2. **Room contract.** Private rooms with deterministic names
    (`eleva-{bookingId}`), `nbf`/`exp` around the booking window,
-   `max_participants` derived from the booking, recording off. After D-07:
-   random names (HIPAA mode rejects custom names) and the fingerprint
-   reconciler. Meeting tokens are minted at join time per participant
+   `max_participants` derived from the booking, recording off. Meeting tokens are minted at join time per participant
    (expert `is_owner`); they are never stored, logged or placed in URLs.
 3. **Authorization.** `session_participants` is the Eleva-side allow-list. Revoke is two-phase:
    set `revoked_at` (deny), then Daily `eject`, with a retry job if eject fails.
@@ -53,30 +47,32 @@ or D-07 is unsigned.
 
 ## Amendment (2026-10-07)
 
-Founder deferred D-07 (no Daily BAA, no HIPAA programme) so accounting and legal
-can review the running product. Phase 09 implements against a **standard Daily
-domain**:
+Founder deferred D-07 so accounting and legal can review the running product.
+Phase 09 implements against a **standard Daily domain**:
 
 - Deterministic private room names (`eleva-{bookingId}`).
 - Recording off. Tokens still minted at join time, never stored or logged.
-- Do **not** claim HIPAA, an executed BAA/DPA, or Eleva-controlled EU media
-  residency beyond what Daily documents.
-- The HIPAA-mode room contract in Decision §2 (random names, no custom `name`)
-  applies only after D-07 is signed. Until then, skip the fingerprint
-  reconciler.
+- Do **not** claim Eleva-controlled EU media residency beyond what Daily
+  documents.
+- No fingerprint reconciler.
+
+## Amendment (2026-11-07)
+
+Founder dropped D-07. Standard Daily with cloud recording off is the intended
+EU setup. No other Daily tier is planned for the EU launch.
 
 ## Alternatives Considered
 
 ### Keep Google Meet
 
 - Pros: already in the MVP; experts know it.
-- Cons: no BAA Eleva can rely on; no first-party room or token; join requires a Google account;
+- Cons: no first-party room or token; join requires a Google account;
   no webhook lifecycle; recording lands in the expert's Drive.
 
 ### Zoom / Microsoft Teams
 
 - Pros: clinician familiarity.
-- Cons: same ownership and BAA problems; extra OAuth surface; not EU-first by default.
+- Cons: same ownership problems; extra OAuth surface; not EU-first by default.
 
 ### Daily plus Meet fallback
 
@@ -86,13 +82,12 @@ domain**:
 
 ## Consequences
 
-- Positive: one video vendor, one webhook, one join UX; calendars stay calendars. A Daily
-  BAA is **future D-07 work**, not a Phase 09 consequence.
+- Positive: one video vendor, one webhook, one join UX; calendars stay calendars.
 - Tradeoff: Eleva operates room lifecycle and token minting; Daily account pre-check is a
   spike (PR 09.0). The written 09.0 position exists; the live-account probe is still
   required before the first live room.
 - Operational: `DAILY_API_KEY`, `DAILY_DOMAIN`, `DAILY_WEBHOOK_SECRET` required for
-  standard Daily. DNS CNAME `sessions.eleva.care` → Daily waits for D-07 / Phase 15 C.0.
+  standard Daily. DNS CNAME `sessions.eleva.care` → Daily is deferred (Phase 15 C.0).
   Recording storage is explicitly **not** decided here — see D-08 / 16.8.
 - Supersedes in part: ADR-004 (Google Meet as the online session destination).
 
@@ -102,4 +97,4 @@ domain**:
   [`16-post-launch-backlog.md`](../execution-plan/phases/16-post-launch-backlog.md) item 16.8
 - [ADR-009](ADR-009-ai-and-transcripts.md), [ADR-017](ADR-017-better-auth-identity.md)
 - Daily REST (`/websites/daily_co_reference_rest-api`): rooms, meeting tokens, webhooks,
-  HIPAA constraints, `recordings_bucket`
+  `recordings_bucket`

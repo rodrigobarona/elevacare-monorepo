@@ -3,7 +3,7 @@
 | Field      | Value                                                                                                                                                                                                                                                                                                                                                                                                             |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Branch     | `phase-10/records-crm-ai` (split: `phase-10.1/records-consent-retention`, `phase-10.2/crm-ai-reports`)                                                                                                                                                                                                                                                                                                            |
-| Depends on | Phase 9, Phase 4B (`@eleva/editor`, `approved-models` allow-list); **D-11 working pre-launch** (founder 2026-10-12 — author-only RLS; clinic share stays Phase 11). HIPAA/D-07 stays deferred (EU-first; not a 10.1 blocker). Live Daily transcription (not cloud recording) is in 10.1; 16.8 still owns D-08 S3 recording.                                                                                       |
+| Depends on | Phase 9, Phase 4B (`@eleva/editor`, `approved-models` allow-list); **D-11 working pre-launch** (founder 2026-10-12 — author-only RLS; clinic share stays Phase 11). Video stays on standard Daily (EU-first; D-07 dropped). Live Daily transcription (not cloud recording) is in 10.1; 16.8 still owns D-08 S3 recording.                                                                                         |
 | Effort     | 2 weeks                                                                                                                                                                                                                                                                                                                                                                                                           |
 | Touches    | `packages/db/src/schema/main/{records,session-documents,expert-notes,consents,crm}.ts`, `packages/encryption` (usage), `packages/storage` (private store), `packages/compliance/**` (retention jobs, DSAR collectors), `packages/crm/**`, `packages/ai/**`, `packages/encryption` (KEK/DEK operations), `apps/api/src/app/{records,notes,crm,ai,workflows}/**`, `apps/expert/**`, `apps/app/**`, `packages/flags` |
 | Exit gate  | Expert writes encrypted notes during/after a session, uploads documents to the private store, publishes a report the member can read via the app; retention jobs purge on schedule; consent captured; AI draft (behind `ff.ai_reports_beta`) from typed notes reviewed and published by the expert; KEK rotation job proven; no PHI in Sentry/logs                                                                |
@@ -15,7 +15,7 @@
 ## Why this phase exists
 
 Clinical value and trust: encrypted records, member-visible reports, consent and retention are
-core to ERS/GDPR/HIPAA posture. CRM gives experts follow-up tools. AI drafting is the first
+core to ERS/GDPR posture. CRM gives experts follow-up tools. AI drafting is the first
 differentiator and must ship behind a flag with strict PHI boundaries (ADR-009).
 
 ## Scope
@@ -113,8 +113,8 @@ record_access_optouts(member_user_id, expert_org_id)))` — the two objects this
   structured output -> `records.kind = ai_draft` (never auto-published) -> expert reviews, edits,
   publishes. PHI stays inside the request to the gateway with **zero data retention verified per
   model** (the `APPROVED_MODELS` allow-list below), prompts logged without content, model
-  pinned via config. **Cloud recording is not in this phase**: Daily's HIPAA
-  recording requires a customer-owned S3 landing zone and its own consent kind; the whole
+  pinned via config. **Cloud recording is not in this phase**: the recording
+  design needs a customer-owned S3 landing zone and its own consent kind; the whole
   recording -> S3 landing -> draft pipeline (including the `syncRoomRecording` fencing design
   written for it) lives in **Phase 16.8** and is gated on the storage decision D-08. Live Daily
   transcription (`startTranscription` / `transcription-message`, recording off) is in **10.1**.

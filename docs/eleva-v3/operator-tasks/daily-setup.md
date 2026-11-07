@@ -1,20 +1,18 @@
 # Daily setup (operator)
 
-Status: **standard domain, recording off, not HIPAA.** Founder 2026-10-07
-deferred D-07 (no BAA). Do not enable HIPAA mode or `sessions.eleva.care`
-until D-07 is signed. This file is the operator checklist for a working
-Daily account — not a HIPAA claim.
+Status: **standard domain, recording off.** This is the intended EU setup.
+The `sessions.eleva.care` CNAME is deferred. This file is the operator
+checklist for a working Daily account.
 
 ## Account
 
-1. Create a **standard** Daily domain (not HIPAA). Recording stays **off**.
+1. Create a **standard** Daily domain. Recording stays **off**.
 2. Copy the domain hostname into `DAILY_DOMAIN` (`{subdomain}.daily.co`).
    Optional: `DAILY_DOMAIN_ID` (domain UUID for the meeting-token `d` claim)
    if GET `/v1` does not return it.
 3. Create a Daily REST API key. Store as `DAILY_API_KEY`. Never log it.
 4. Room names are deterministic: `eleva-{bookingId}` (ADR-018, standard
-   domain). HIPAA random names apply only after D-07. Do not rename rooms in
-   the Daily dashboard.
+   domain). Do not rename rooms in the Daily dashboard.
 
 ## Webhook
 
@@ -39,7 +37,7 @@ verifies, so the secret must be on the deployed `elevacare-api` **before**
 | Production  | `https://api.eleva.care/webhooks/daily`     |
 
 Signature failure returns 401. Phase 15 repeats production after staging
-evidence. Do not point production at a HIPAA domain until D-07.
+evidence.
 
 ## Exit-gate leftover (Eleva join pages)
 
@@ -65,4 +63,4 @@ not Phase 09.
 
 - [`environment-matrix.md`](../environment-matrix.md)
 - [`integration-runbooks.md`](../integration-runbooks.md) (Daily outage)
-- ADR-018, decision-log D-07 (deferred 2026-10-07)
+- ADR-018, decision-log D-07 (dropped)

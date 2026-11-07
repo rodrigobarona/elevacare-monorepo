@@ -72,7 +72,7 @@ proxies to `@eleva/api-client` or domain packages.
 | `@eleva/billing`       | Stripe payments, Connect payouts, subscriptions, webhook dispatcher         |
 | `@eleva/accounting`    | TOConline invoicing (issuance gate closed until AT Comunicação is wired)    |
 | `@eleva/notifications` | Email (Resend), SMS (Twilio) and in-app inbox                               |
-| `@eleva/video`         | Daily rooms, meeting tokens, join UI (standard Daily, not HIPAA)            |
+| `@eleva/video`         | Daily rooms, meeting tokens, join UI (standard Daily, recording off)        |
 | `@eleva/records`       | Encrypted session records, documents, templates, AI report drafts           |
 | `@eleva/crm`           | Expert relationships and follow-ups                                         |
 | `@eleva/compliance`    | Consents, DSAR export, account deletion, retention sweeps                   |

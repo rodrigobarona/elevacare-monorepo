@@ -2,7 +2,7 @@
 
 Transactional audit logging for the Eleva platform. Every mutating operation
 records an audit event atomically alongside domain data, ensuring a complete,
-tamper-evident trail for GDPR, SOC 2, and HIPAA compliance.
+tamper-evident trail for GDPR accountability and SOC 2 controls.
 
 ## Architecture
 
@@ -246,15 +246,14 @@ curl -X POST https://<api-domain>/workflows/audit-outbox-drainer \
 
 ## Compliance Mapping
 
-| Framework         | Control               | How this design satisfies it                            |
-| ----------------- | --------------------- | ------------------------------------------------------- |
-| GDPR Art 5(2)     | Accountability        | Complete audit trail of all data processing             |
-| GDPR Art 30       | Records of processing | Structured `entity.action` log with actor + timestamp   |
-| SOC 2 CC6.1       | Logical access        | `membership.created/removed` events track access grants |
-| SOC 2 CC7.2       | System monitoring     | Append-only stream, heartbeat monitoring                |
-| SOC 2 CC8.1       | Change management     | Every mutation recorded with before/after payload       |
-| HIPAA §164.312(b) | Audit controls        | Tamper-evident hash chain (Sprint 7), immutable store   |
-| HIPAA §164.312(c) | Integrity             | Separate DB, no UPDATE/DELETE grants, hash chain        |
+| Framework     | Control               | How this design satisfies it                                              |
+| ------------- | --------------------- | ------------------------------------------------------------------------- |
+| GDPR Art 5(2) | Accountability        | Complete audit trail of all data processing                               |
+| GDPR Art 30   | Records of processing | Structured `entity.action` log with actor + timestamp                     |
+| SOC 2 CC6.1   | Logical access        | `membership.created/removed` events track access grants                   |
+| SOC 2 CC7.2   | System monitoring     | Append-only stream, heartbeat monitoring                                  |
+| SOC 2 CC8.1   | Change management     | Every mutation recorded with before/after payload                         |
+| GDPR Art 32   | Integrity of records  | Separate audit DB; insert-only role and hash chain are tracked as SEC3-03 |
 
 ## Payload Guidelines
 
