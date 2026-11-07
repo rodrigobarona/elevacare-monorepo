@@ -1,6 +1,8 @@
 # Personal data breach response procedure
 
-> **Draft for review by a Portuguese lawyer and the external DPO. Not legal advice. Not yet adopted. Run a tabletop exercise before relying on it.**
+> **Adopted by the controller on 2026-11-07.** Version 1.0. Owner and incident
+> lead: Rodrigo Barona, founder. Next review: after the first tabletop exercise
+> (§9), after any incident, and at the latest on 2027-05-07.
 
 - **Scope:** every suspected personal data breach at Eleva or at one of its
   sub-processors. This covers:
@@ -19,7 +21,9 @@
   - [`ropa.md`](./ropa.md) (what data lives where);
   - `docs/eleva-v3/ops-observability-spec.md`;
   - `docs/eleva-v3/support-escalation-matrix.md`;
-  - `docs/eleva-v3/security-hardening-checklist.md`.
+  - `docs/eleva-v3/security-hardening-checklist.md`;
+  - [`../operator-tasks/backup-restore-kek-escrow.md`](../operator-tasks/backup-restore-kek-escrow.md)
+    (restore and KEK custody).
 
 ## 1. Deadlines at a glance
 
@@ -45,24 +49,27 @@ cross-border processing, even when members in other EU states are affected
 (arts. 55 and 56(1); EDPB 9/2022 ¶67–69).
 
 **Eleva as processor.** Eleva notifies the expert-controller, not the CNPD.
-Which authority the controller must notify depends on that controller's
-establishment and processing, so this procedure does not settle it. Confirm it
-per expert-controller with the DPO.
+Each expert-controller notifies the authority competent for their own
+establishment; for experts established in Portugal this is the CNPD. Template B
+tells the expert this and offers to prepare the notice for them.
 
 ## 2. Roles
 
-| Role            | Who                                                                                                                                                                                              | Responsibilities                                                                                                                                                                                                     |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Incident lead   | `[[FOUNDER INPUT: name/role — default the founder]]`                                                                                                                                             | Owns the incident end to end. Decides on containment. Signs notifications.                                                                                                                                           |
-| Technical lead  | `[[FOUNDER INPUT: engineering owner]]`                                                                                                                                                           | Investigation, containment, evidence preservation, root cause.                                                                                                                                                       |
-| DPO             | External DPO ([`dpo-appointment.md`](./dpo-appointment.md)) once appointed. Until then the interim data protection contact: `[[FOUNDER INPUT: interim contact name/role]]`, `privacy@eleva.care` | Advises on risk and the duty to notify. Contact point for the CNPD. Reviews notices. Keeps the register with the incident lead. Must be reachable within 4 hours. Advises only: the incident lead decides for Eleva. |
-| Communications  | Founder                                                                                                                                                                                          | Member, expert and public messaging. Support macros.                                                                                                                                                                 |
-| Legal counsel   | `[[FOUNDER INPUT: law firm]]`                                                                                                                                                                    | Criminal complaint, police and Ministério Público, contractual claims against vendors.                                                                                                                               |
-| Vendor contacts | Vercel, Neon, Upstash, Stripe, Daily, Resend, Sentry, Twilio, TOConline                                                                                                                          | Security and support channels listed in the private ops vault, not in this repo.                                                                                                                                     |
+| Role                    | Who                                                                                                                                                                                | Responsibilities                                                                                                                                                                                                                                  |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Incident lead           | Rodrigo Barona, founder                                                                                                                                                            | Owns the incident end to end. Starts the 72-hour clock. Decides on containment and notification. Signs notifications.                                                                                                                             |
+| Technical lead          | Rodrigo Barona, founder (engineering owner of the v3 platform)                                                                                                                     | Investigation, containment, evidence preservation, root cause.                                                                                                                                                                                    |
+| Data protection contact | Rodrigo Barona, founder, `privacy@eleva.care`, as interim data protection contact until the external DPO ([`dpo-appointment.md`](./dpo-appointment.md)) is appointed; then the DPO | Contact point for the CNPD (art. 33(3)(b)). Reviews notices. Keeps the register with the incident lead. Once appointed, the DPO advises on risk and the duty to notify and must be reachable within 4 hours; the incident lead decides for Eleva. |
+| Communications          | Rodrigo Barona, founder                                                                                                                                                            | Member, expert and public messaging. Support macros.                                                                                                                                                                                              |
+| Legal counsel           | Portuguese external counsel engaged by the incident lead for the incident; contact details kept in the private ops vault                                                           | Criminal complaint, police and Ministério Público, contractual claims against vendors.                                                                                                                                                            |
+| Vendor contacts         | Vercel, Neon, Upstash, Stripe, Daily, Resend, Sentry, Twilio, TOConline                                                                                                            | Security and support channels listed in the private ops vault, not in this repo.                                                                                                                                                                  |
 
-No DPO is appointed yet. Until one is, read "the DPO" in this procedure as the
-interim data protection contact, supported by legal counsel. Art. 33(3)(b)
-allows a DPO or another contact point.
+Until the external DPO is appointed, read "the DPO" in this procedure as the
+interim data protection contact (the founder), supported by legal counsel.
+Art. 33(3)(b) allows a DPO or another contact point. Because the founder holds
+several roles, every decision and its reasons are written into the register
+at the time they are taken. The founder's mobile number for escalation is kept
+in the private ops vault and on the Sentry and email alert rules in §3a.
 
 Lei 58/2019 art. 11(b) gives the DPO the task of making staff aware that
 incidents must be detected promptly and reported **immediately** to the
@@ -86,10 +93,35 @@ proof.
 - **Stripe** Radar and dispute alerts. **Daily** webhooks: unexpected
   participants in a room.
 - **Vendor security notices**, received by email at the addresses on vendor
-  accounts. Today some of these are personal addresses; see the fact sheet,
-  "Contracting entity".
+  accounts. Each vendor account's security contact is set to an address the
+  founder reads daily; moving every account to a company mailbox is part of the
+  "Contracting entity" action in the fact sheet.
 - **Reports** from members, experts or researchers to `support@`, `privacy@`
   or `legal@`.
+
+## 3a. Alert routing
+
+Every alert reaches the incident lead by **email and mobile push** without
+anyone having to watch a dashboard.
+
+| Signal                                                                                                                               | Tool                                                                               | Rule                                                                     | Recipient     | Channel                    | Response time         |
+| ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------- | -------------------------- | --------------------- |
+| New error that may touch health data (event tagged `phi_scope`, or in `packages/records`, `packages/encryption`, `packages/storage`) | Sentry (EU), project `api`                                                         | Alert on every new issue matching the tag or path                        | Incident lead | Email + Sentry mobile push | Triage within 4 hours |
+| HTTP 5xx spike                                                                                                                       | Sentry, project `api`                                                              | More than 20 events in 5 minutes                                         | Incident lead | Email + Sentry mobile push | Triage within 4 hours |
+| Authorisation failures (401/403) spike                                                                                               | Sentry, project `api`                                                              | More than 50 events in 5 minutes                                         | Incident lead | Email + Sentry mobile push | Triage within 4 hours |
+| Encryption errors (`EncryptionError`, unknown KEK version, `KEY_SHREDDED` outside a deletion)                                        | Sentry, project `api`                                                              | Alert on the first event                                                 | Incident lead | Email + Sentry mobile push | Triage within 1 hour  |
+| Missed job heartbeats: `audit-outbox-drainer`, `slot-reservation-expiry`, `booking-probes`, `keep-alive`, `invoicing-retry`          | BetterStack heartbeats (`BETTERSTACK_HEARTBEAT_URL` on `elevacare-api` Production) | Alert after two missed intervals                                         | Incident lead | Email + SMS                | Same day              |
+| Firewall attack mode, DDoS mitigation                                                                                                | Vercel                                                                             | Vercel's security notifications for the team                             | Incident lead | Email                      | Same day              |
+| Disputes, early fraud warnings, Radar                                                                                                | Stripe                                                                             | Stripe email notifications                                               | Incident lead | Email                      | Within 1 working day  |
+| Vendor security notices                                                                                                              | Vendor email                                                                       | Vendor's own breach-notice clause                                        | Incident lead | Email                      | Triage within 4 hours |
+| Reports from people                                                                                                                  | `privacy@`, `support@`, `legal@`                                                   | Any message mentioning a leak, wrong recipient or access by someone else | Incident lead | Email                      | Triage within 4 hours |
+
+**Operator set-up (one-off, then checked at each review):** create the four
+Sentry alert rules above with the founder as recipient and mobile push on;
+set `BETTERSTACK_HEARTBEAT_URL` on `elevacare-api` Production and create one
+heartbeat monitor per job name; confirm Vercel and Stripe notifications go to
+the founder's address. Until the BetterStack URL is set, the heartbeat helper
+sends nothing, so the operator checks the QStash schedule history weekly.
 
 ## 4. Procedure
 
@@ -183,8 +215,8 @@ notify.
   normal browser session, not a privacy mode that blocks cookies.
 - Choose a new notification, or "alterar notificação" to complete a phased
   one.
-- The form is only for art. 33 notifications. Its detailed fields were not
-  captured in this draft; template A covers the art. 33(3) content.
+- The form is only for art. 33 notifications. Template A prepares every
+  art. 33(3) answer the form asks for.
 - Save the submission receipt in the register.
 
 ### Step 6. Communicate to data subjects (if high risk)
@@ -201,9 +233,13 @@ notice.**
 - **Police / Ministério Público** for criminal attacks.
 - **Card networks via Stripe** if payment data is affected.
 - **Vendors** under their DPAs.
-- **Insurers** `[[FOUNDER INPUT: cyber insurance policy, if any]]`.
-- **CNCS** (Centro Nacional de Cibersegurança): only if Eleva is in scope of
-  the NIS2 transposition. Not assessed in this pack; see Points for review.
+- **Insurers:** any insurer under a policy in force at the time, as its terms
+  require (policy register in the ops vault).
+- **CNCS** (Centro Nacional de Cibersegurança): if Eleva falls within the
+  Portuguese NIS2 transposition, send the CNCS early warning within 24 hours
+  and the notification within 72 hours, in parallel with the CNPD. At adoption
+  Eleva is a microenterprise; the incident lead re-checks scope at each
+  review.
 
 ### Step 8. Close (within 30 days)
 
@@ -243,7 +279,7 @@ E1 and E2 do **not** apply to:
 **Worked examples, adapted from EDPB Guidelines 01/2021:**
 
 - **Ransomware with good backups and no exfiltration** (case 03, hospital):
-  notify the SA. Tell patients who are affected by delays.
+  notify the SA. Tell the people whose care is affected by delays.
 - **Stolen log book with health data** (case 12): notify the SA and the data
   subjects.
 - **Health data, minor nature** (¶115, lactose intolerance): low risk only if
@@ -257,8 +293,8 @@ Submitted through the online form. This text prepares the answers.
 
 ```text
 1. Controller: BÚZIOS E TARTARUGAS - LDA (Eleva.care), NIPC 515001708, Rua Gil Vicente 2,
-   2775-198 Parede. Contact point: [DPO name once appointed, otherwise the interim data
-   protection contact], privacy@eleva.care, [phone].
+   2775-198 Parede. Contact point: Rodrigo Barona, founder, interim data protection
+   contact (or the appointed DPO), privacy@eleva.care, mobile from the ops vault.
    Role in this breach: controller [and/or processor on behalf of N health professionals].
 2. Timeline: occurred [date/time or window]; detected [date/time] via [source];
    aware [date/time]; contained [date/time]. [If >72h: reasons for delay.]
@@ -305,85 +341,153 @@ Any short check of your own should start at once. If the risk to your members is
 must also inform them. We have prepared a draft notice and member message for your approval
 and can file or send them on your written instruction.
 
-Contact: our data protection contact [DPO name once appointed, otherwise the interim
-contact], privacy@eleva.care, [phone]. We will update you by [date/time].
+Contact: our data protection contact, Rodrigo Barona (founder), privacy@eleva.care.
+We will update you by [date/time].
 ```
 
 ### C. Notice to members (art. 34)
 
-Translate into PT and ES. Keep the clinical detail out.
+Send in the member's language (EN, PT or ES), by email and as an in-app notice.
+Keep clinical detail out. Fill every bracket from the register before sending.
+
+**English**
 
 ```text
 Subject: Important: a security incident involving your Eleva account
 
 Hello [first name],
 
-On [date] we found that [plain description, e.g. "an unauthorised person was able to
-access some files stored with your bookings"]. We are telling you because this may affect
-you.
+We are writing because we found a security incident that may affect you, and we want
+you to hear it from us straight away.
 
-What information was involved: [e.g. your name, email and the date of a session with
-[expert]; documents you or your expert uploaded]. [Your payment card details were not
-involved.]
+What happened: on [date] we found that [plain description, for example "someone who
+should not have had access was able to open some files stored with your bookings"].
 
-What we have done: [e.g. closed the access, reset sign-in links, informed the data
-protection authority (CNPD) and your expert].
+What information was involved: [for example your name, email and the date of a session
+with [expert]; documents you or your expert uploaded]. [Your payment card details were
+not involved.]
 
-What you can do: [e.g. be careful with emails that ask for your password; sign in and
-review your account; contact your expert if you have questions about your care].
+What we have done: [for example closed the access, reset sign-in links, informed the
+Portuguese data protection authority (CNPD) and your expert].
 
-If you have questions, write to our data protection contact at privacy@eleva.care or reply to
-this email. You also have the right to complain to the CNPD (www.cnpd.pt).
+What you can do: [for example be careful with emails that ask for your password; sign in
+and review your account; contact your expert if you have questions about your care].
 
+We are sorry this happened. If you have any questions, reply to this email or write to
+our data protection contact at privacy@eleva.care. You also have the right to complain
+to the CNPD (www.cnpd.pt).
+
+Rodrigo Barona, founder
 Eleva.care — BÚZIOS E TARTARUGAS - LDA
 ```
 
-## 7. Commitments to align with
+**Português**
+
+```text
+Assunto: Importante: um incidente de segurança que envolve a sua conta Eleva
+
+Olá [nome próprio],
+
+Escrevemos-lhe porque detetámos um incidente de segurança que o pode afetar e queremos
+que saiba por nós, sem demora.
+
+O que aconteceu: em [data] verificámos que [descrição simples, por exemplo "uma pessoa
+sem autorização conseguiu abrir alguns ficheiros guardados com as suas marcações"].
+
+Que informação estava envolvida: [por exemplo o seu nome, e-mail e a data de uma sessão
+com [especialista]; documentos enviados por si ou pelo seu especialista]. [Os dados do
+seu cartão de pagamento não foram afetados.]
+
+O que já fizemos: [por exemplo fechámos o acesso, renovámos as ligações de entrada,
+informámos a Comissão Nacional de Proteção de Dados (CNPD) e o seu especialista].
+
+O que pode fazer: [por exemplo desconfiar de e-mails que lhe peçam a palavra-passe;
+entrar na sua conta e rever a atividade; contactar o seu especialista se tiver dúvidas
+sobre os seus cuidados].
+
+Lamentamos que isto tenha acontecido. Se tiver alguma dúvida, responda a este e-mail ou
+escreva ao nosso contacto de proteção de dados em privacy@eleva.care. Tem também o
+direito de apresentar reclamação à CNPD (www.cnpd.pt).
+
+Rodrigo Barona, fundador
+Eleva.care — BÚZIOS E TARTARUGAS - LDA
+```
+
+**Español**
+
+```text
+Asunto: Importante: un incidente de seguridad relacionado con su cuenta de Eleva
+
+Hola, [nombre]:
+
+Le escribimos porque hemos detectado un incidente de seguridad que puede afectarle y
+queremos que lo sepa por nosotros, sin demora.
+
+Qué ha pasado: el [fecha] comprobamos que [descripción sencilla, por ejemplo "una persona
+sin autorización pudo abrir algunos archivos guardados con sus reservas"].
+
+Qué información se ha visto afectada: [por ejemplo su nombre, su correo y la fecha de una
+sesión con [especialista]; documentos subidos por usted o por su especialista]. [Los datos
+de su tarjeta de pago no se han visto afectados.]
+
+Qué hemos hecho: [por ejemplo cerrar el acceso, renovar los enlaces de acceso, informar a
+la autoridad portuguesa de protección de datos (CNPD) y a su especialista].
+
+Qué puede hacer: [por ejemplo desconfiar de correos que le pidan su contraseña; entrar en
+su cuenta y revisar la actividad; contactar con su especialista si tiene dudas sobre su
+atención].
+
+Sentimos mucho lo ocurrido. Si tiene cualquier pregunta, responda a este correo o escriba
+a nuestro contacto de protección de datos en privacy@eleva.care. También tiene derecho a
+presentar una reclamación ante la CNPD (www.cnpd.pt).
+
+Rodrigo Barona, fundador
+Eleva.care — BÚZIOS E TARTARUGAS - LDA
+```
+
+## 7. Commitments to keep
 
 - **`/trust/dpa` §4 promises a 24-hour notice to controllers for clinical
-  data.** Keep it achievable. The DPO should confirm the SLA, or change the
-  DPA wording to "without undue delay and in any case within 24 hours of
-  confirmation".
+  data.** Step 4 meets it: experts are notified within 24 hours of Eleva
+  becoming aware.
 - **Vendor DPAs.** Keep each vendor's breach-notice clause, security contact
   and Eleva's receiving address in the ops vault. Vendor notices must go to a
   company mailbox, not a personal one.
 
 ## 8. Breach register (art. 33(5))
 
-Keep it as a restricted spreadsheet or table in the compliance folder, not in
-this repo. Columns:
+The register is a restricted spreadsheet in the company's compliance folder,
+outside this repository, owned by the incident lead. It is created on
+adoption of this procedure (2026-11-07) and holds every breach, notified or
+not. Columns:
 
 | ID  | Aware (date/time) | New facts found (date/time) | Reported by | Description | Data categories | Data subjects (number) | Role (C/P) | Severity | Risk reasoning | CNPD notified (date, receipt) | Reasons for any delay | Subjects told (date, channel) / exception | Experts told (date/time) | Containment and remedy | Root cause | Closed |
 | --- | ----------------- | --------------------------- | ----------- | ----------- | --------------- | ---------------------- | ---------- | -------- | -------------- | ----------------------------- | --------------------- | ----------------------------------------- | ------------------------ | ---------------------- | ---------- | ------ |
 
-Retention: **5 years** after closure. This is a proposal, not a statutory
-period: art. 33(5) sets none. The register evidences accountability (art.
-5(2)). Lei 58/2019 art. 21(3) allows data needed to prove compliance to be kept
-until the limitation period for the corresponding rights has expired; it does
-not fix five years. Counsel must name the limitation period or other legal
-basis that supports the proposal.
+Retention: **5 years** after closure. Art. 33(5) sets no period; Eleva keeps
+the register to evidence accountability (art. 5(2)) and relies on Lei 58/2019
+art. 21(3), which allows data needed to prove compliance to be kept while the
+related rights can still be claimed. Entries contain no clinical content.
 
-## Points for lawyer/DPO review
+## 9. Tabletop exercises
 
-1. **Default classification of health-data incidents as high risk**, and the
-   two low-risk exceptions (E1 ciphertext with keys safe; E2 contained
-   disclosure to a trusted recipient). Confirm the evidence required, and that
-   one exception may decide both the art. 33 and the art. 34 question.
-2. **The 24-hour processor SLA** in the public DPA. Keep it or reword it?
-3. **NIS2 / CNCS.** Is Eleva in scope of the Portuguese NIS2 transposition
-   (health sector, digital providers, size thresholds)? Eleva is probably
-   below the size thresholds. If it is in scope, parallel CNCS reporting
-   deadlines apply (24h early warning, 72h notification).
-4. **Templates.** Approve the PT and ES versions of template C, and the
-   wording on CNPD complaints.
-5. **Who files for the expert.** EDPB 9/2022 ¶48 allows a processor to notify
-   for a controller with proper contractual authorisation, and the controller
-   stays legally responsible. Confirm the clause for the expert terms, and
-   whether the CNPD form accepts such a filing.
-6. **Register retention.** Name the limitation period or other legal basis for
-   the 5-year proposal. Lei 58/2019 art. 21(3) sets no number.
-7. **Authority in processor-role incidents.** Which authority each
-   expert-controller must notify, and whether that affects template B.
+Run a tabletop exercise within 30 days of adoption, then every 12 months and
+after any change to the alert routing. Suggested scenarios: a leaked
+`ELEVA_KEK_V<n>`; a confirmation email with intake text sent to the wrong
+address; a vendor breach notice from Daily; ransomware on the database with
+restore from point-in-time.
+
+| Date | Scenario | Participants | Time to classify | Time to CNPD draft | Gaps found | Actions (owner, due) |
+| ---- | -------- | ------------ | ---------------- | ------------------ | ---------- | -------------------- |
+
+## 10. Adoption
+
+| Role                 | Name                                          | Decision              | Date       |
+| -------------------- | --------------------------------------------- | --------------------- | ---------- |
+| Controller (founder) | Rodrigo Barona, for BÚZIOS E TARTARUGAS - LDA | Adopts this procedure | 2026-11-07 |
+
+When the external DPO is appointed, they review this procedure, the severity
+matrix and exceptions E1 and E2, and their advice is recorded here.
 
 ## Sources
 

@@ -1,12 +1,18 @@
 # Record of processing activities (RoPA)
 
-> **Draft for review by a Portuguese lawyer and the external DPO. Not legal advice and not yet a signed art. 30 record.**
+> **Adopted by the controller on 2026-11-07.** Version 1.0. This is Eleva's
+> record under GDPR art. 30. It is kept up to date as processing changes and is
+> produced to the CNPD on request (art. 30(4)).
 
 - Controller: BÚZIOS E TARTARUGAS - LDA (Eleva.care), NIPC 515001708, Rua Gil
   Vicente 2, 2775-198 Parede, Portugal. Contact `privacy@eleva.care`.
-- Data protection officer: external DPO service. The decision to appoint one was taken
-  on 2026-10-29 and the provider is not yet named: `[[FOUNDER INPUT: DPO provider name, contact address and appointment date]]`.
-  See [`dpo-appointment.md`](./dpo-appointment.md).
+- Data protection contact: Rodrigo Barona, founder, `privacy@eleva.care`
+  (interim contact and owner of this record, adopted 2026-11-07).
+- Data protection officer: Eleva decided on 2026-10-29 to appoint an external
+  DPO service (art. 37(1)(c)). Until the appointment takes effect, the founder
+  is the contact point and `privacy@eleva.care` routes to the DPO once
+  appointed. On appointment, add the DPO's name, contact and start date here
+  and notify the CNPD. See [`dpo-appointment.md`](./dpo-appointment.md).
 - Representative (art. 27): not applicable, because the controller is established in the EU.
 - Legal basis for keeping this record: Regulation (EU) 2016/679 (GDPR) art. 30(1)
   as controller and art. 30(2) as processor. Art. 30(5) does not exempt Eleva. It
@@ -15,9 +21,9 @@
 - Facts SSOT: [`fact-sheet.md`](./fact-sheet.md). Sub-processors, regions,
   transfer mechanisms and retention periods below are copied from it. When the
   fact sheet changes, update this record in the same PR.
-- Version: draft 2026-10-29. Next review: on DPO appointment, then every
-  12 months or whenever a processing activity, vendor or retention period
-  changes.
+- Version: 1.0, adopted 2026-11-07 (working version 2026-10-29). Next
+  review: 2027-05-07, on DPO appointment if sooner, and whenever a processing
+  activity, vendor or retention period changes.
 
 ## How to read this record
 
@@ -32,7 +38,7 @@ Eleva has two GDPR roles (founder decision 2026-10-29; fact sheet §1):
   drafts, session documents and the expert's CRM. Each expert, or each clinic
   organisation, is the controller.
 
-Abbreviations: **M** = member (consumer or patient), **E** = expert (independent
+Abbreviations: **M** = member (an adult who books care), **E** = expert (independent
 regulated health professional), **C** = clinic staff, **G** = guest (a member
 who booked without an account), **V** = website visitor.
 
@@ -46,10 +52,10 @@ described per vendor in [§4](#4-transfers-to-third-countries-chapter-v).
 | --- | ------------------------------------------ | ---------------- | ---------------- | --------------------------------------- |
 | C1  | Accounts and identity                      | Controller       | 6(1)(b), 6(1)(f) | —                                       |
 | C2  | Expert onboarding and licence verification | Controller       | 6(1)(b), 6(1)(f) | —                                       |
-| C3  | Booking and scheduling                     | Controller       | 6(1)(b)          | 9(2)(h)+(3) / 9(2)(a) — see note        |
-| C4  | Payments, refunds, disputes and payouts    | Controller       | 6(1)(b), 6(1)(c) | As C3, to confirm — see note            |
+| C3  | Booking and scheduling                     | Controller       | 6(1)(b)          | 9(2)(h)+(3) and 9(2)(a) — see note      |
+| C4  | Payments, refunds, disputes and payouts    | Controller       | 6(1)(b), 6(1)(c) | 9(2)(h)+(3) as C3; 9(2)(f) for disputes |
 | C5  | Invoicing, accounting and DAC7 reporting   | Controller       | 6(1)(c)          | —                                       |
-| C6  | Transactional notifications (email, SMS)   | Controller       | 6(1)(b)          | As C3, to confirm — see note            |
+| C6  | Transactional notifications (email, SMS)   | Controller       | 6(1)(b)          | 9(2)(h)+(3) as C3                       |
 | C7  | Video session delivery and attendance      | Controller (+P6) | 6(1)(b), 6(1)(f) | 9(2)(h)+(3) (care is the expert's)      |
 | C8  | Customer support and complaints            | Controller       | 6(1)(b), 6(1)(c) | 9(2)(f) only if the member raises it    |
 | C9  | Security, audit and error logs             | Controller       | 6(1)(c), 6(1)(f) | —                                       |
@@ -64,21 +70,34 @@ described per vendor in [§4](#4-transfers-to-third-countries-chapter-v).
 | P5  | Expert CRM (contacts, tags, follow-ups)    | Processor        | Expert's basis   | Expert: 9(2)(h)+(3) where health-linked |
 | P6  | Real-time video stream (transient)         | Processor        | Expert's basis   | Expert: 9(2)(h)+(3)                     |
 
-**Note on C3, the art. 9 condition for booking data.** A booking with a
-psychologist or physiotherapist reveals health information about the member,
-so it is art. 9 data even before any intake is written. Eleva records an
-explicit `health_data_processing` consent in the booking funnel (consent kind
-in `packages/db/src/schema/main/bookings.ts`).
+**Note on C3, the art. 9 condition for booking data (adopted 2026-11-07).** A
+booking with a psychologist or physiotherapist reveals health information about
+the member, so it is art. 9 data even before any intake is written. Eleva
+relies on two conditions, as published in the privacy notice §4:
 
-We propose that the **primary** condition be art. 9(2)(h) read with art. 9(3)
-and Lei 58/2019 art. 29. Processing is necessary for health care under a
-contract with a health professional. It is carried out under the secrecy duty
-that Lei 58/2019 art. 29(4) extends to service providers.
+1. **Art. 9(2)(h) read with art. 9(3) and Lei 58/2019 art. 29** for booking,
+   payment, attendance and notification data that reveal care with a health
+   professional. Processing is necessary to arrange and deliver care under a
+   contract with a professional bound by secrecy, and Lei 58/2019 art. 29(4)
+   extends that secrecy duty to Eleva and its staff. This condition carries
+   every booking and its legal records.
+2. **Explicit consent, art. 9(2)(a)**, recorded as the funnel consent
+   `health_data_processing` (`FUNNEL_CONSENT_KINDS`, `packages/compliance/src/consents.ts`),
+   for the health information Eleva handles as intermediary: the booking itself
+   and the text the member writes before the session (intake) that Eleva passes
+   to the expert. The member can withdraw it in Privacy settings; withdrawal is
+   refused while a confirmed future booking exists (`HEALTH_DATA_CONSENT_IN_USE`),
+   so the member cancels that booking first. Condition 1 continues to carry the
+   records Eleva must keep.
 
-Explicit consent would remain only for optional processing (P3, P4). Consent
-that is a condition of the service is unlikely to be "freely given" under
-art. 7(4) and recital 43. **Eleva must decide this point on the DPO's advice.**
-See Points for review.
+Because condition 1 carries the booking, the service does not depend on the
+consent alone, which keeps the consent meaningful under art. 7(4). Optional
+processing (P3, P4) relies on the separate `ai_processing` consent.
+
+**Adults only (adopted 2026-11-07).** Members must be 18 or over and book for
+themselves. Each booking stores the `adult_confirmation` funnel item ("I am 18
+or older and I am booking this session for myself, as set out in the booking
+terms"), versioned and linked to the terms. See DPIA R13.
 
 ---
 
@@ -90,11 +109,15 @@ See Points for review.
   - create and secure user accounts for members, experts and clinic staff;
   - sign-in (email, Google, Microsoft, magic link, password, passkey,
     optional 2FA);
-  - personal "Spaces" and work organisations;
+  - personal "Spaces" and work organisations, including the unverified
+    member account and Space created after a guest booking;
   - memberships and roles;
   - language and theme preferences.
-- **Data subjects:** M, E, C, G. A guest gets an unverified account after a
-  booking is confirmed (`guest-activation`).
+- **Data subjects:** M, E, C, G. A guest gets an unverified account and a
+  personal Space after a booking is confirmed (`guest-activation`). No
+  separate sign-in email is sent; the guest can claim the account by email
+  link or Google with the same address. This is disclosed in privacy notice
+  §3 and terms §4.
 - **Data categories:**
   - name and email;
   - phone, if given;
@@ -126,6 +149,13 @@ See Points for review.
   - After a deletion request, a 14-day grace period
     (`ACCOUNT_DELETION_GRACE_DAYS`), then erasure or pseudonymisation under
     D-12. See [`retention-schedule.md`](./retention-schedule.md).
+  - Guest accounts never used (unverified, no session ever): deleted 12
+    months after the last booking reaches a terminal state, through the same
+    erasure path as account deletion (published in privacy notice §7;
+    `sweepUnclaimedGuestAccounts`, engineering). Booking and payment rows stay
+    for their own period without a login attached.
+  - Session records (sign-in sessions, IP address, user agent): the session
+    expires 30 days after last use.
 - **Security:** [SEC-ACCESS], [SEC-ENC-TRANSIT], [SEC-AUTH], [SEC-RATE],
   [SEC-AUDIT].
 
@@ -143,7 +173,7 @@ See Points for review.
   - name and professional title;
   - Ordem and cédula profissional (licence) number;
   - licence verification result and date;
-  - proposed: ERS registration number (see
+  - ERS registration number (`ers_registration_number`; see
     [`ers-position.md`](./ers-position.md));
   - public profile content (bio, photo, services, prices, languages,
     locations);
@@ -166,12 +196,29 @@ See Points for review.
 - **Retention:**
   - Profile: while the expert account is active.
   - Licence verification evidence: for the duration of the relationship, then
-    the limitation period for claims (proposal: 5 years after the account
-    closes, see the retention schedule).
+    the limitation period for claims: 5 years after the account closes
+    (retention schedule §3.2).
 - **Security:** [SEC-ACCESS], [SEC-AUDIT].
-- **Gap:** the method for licence verification (manual check on the Ordem's
-  public register, or an API) is not documented:
-  `[[FOUNDER INPUT: licence verification procedure, who performs it, evidence kept, re-check frequency]]`.
+- **Licence verification procedure (adopted 2026-11-07):**
+  - **Who:** an Eleva staff member with the `applications:review` capability
+    (today the founder). Nobody reviews their own application
+    (`403 SELF_REVIEW`).
+  - **How:** in `apps/admin` `/partners`, the reviewer opens the expert's
+    application, searches the licence number and name on the public register
+    of the Ordem named by the expert (official sites in
+    `@eleva/config/professional-bodies`), and confirms the ERS registration
+    number with the ERS. Approval requires every item of
+    `LICENCE_CHECKLIST_ITEMS`: `register_checked`, `name_matches`,
+    `ers_checked`. A database CHECK refuses an approval without reviewer,
+    date and the full checklist.
+  - **Evidence kept:** the `become_partner_applications` row (reviewer,
+    `reviewed_at`, checklist results, decision and reason) and the audited
+    decision event. Licence numbers are copied to the profile on approval.
+  - **Outcome:** only `active` profiles with an approved application are
+    listed. Needs changes and reject require a reason and email the expert.
+  - **Re-check:** every listed expert yearly, and at once when Eleva learns of
+    a change in registration status. If the registration can no longer be
+    confirmed, the profile stops accepting bookings (terms §3).
 
 ### C3 — Booking and scheduling
 
@@ -191,16 +238,17 @@ See Points for review.
   - date and time;
   - cancellation policy version;
   - booking status;
-  - consent rows (kind, version, timestamp);
+  - consent rows (kind, version, timestamp), including the per-booking
+    `adult_confirmation`;
   - expert calendar busy times (no event content);
   - the fact of a booking with a given profession. **This is art. 9 data
     because it reveals health information.**
 - **Lawful basis:**
   - art. 6(1)(b), the contract with the member and with the expert;
-  - art. 9(2)(h) read with art. 9(3) and Lei 58/2019 art. 29 (proposed
-    primary);
-  - explicit consent `health_data_processing` under art. 9(2)(a), recorded
-    today. See the note under the summary table.
+  - art. 6(1)(f) and art. 6(1)(b) for the adult self-declaration;
+  - art. 9(2)(h) read with art. 9(3) and Lei 58/2019 art. 29;
+  - explicit consent `health_data_processing` under art. 9(2)(a). See the
+    note under the summary table.
 - **Recipients:**
   - the booked expert (or clinic);
   - Neon, Vercel, Upstash (holds and queues);
@@ -210,8 +258,8 @@ See Points for review.
 - **Retention:**
   - Booking metadata: 10 years, because it is the source document for
     payments and invoices (CIRC art. 123(4); CIVA art. 52(1)).
-  - Booking-scope consents: pseudonymised on account deletion and kept for
-    the clinical-record period (D-12).
+  - Booking-scope consents, including `adult_confirmation`: pseudonymised on
+    account deletion and kept for the clinical-record period (D-12).
 - **Security:** [SEC-ACCESS], [SEC-RLS], [SEC-AUDIT], [SEC-RATE], [SEC-BOT].
 
 ### C4 — Payments, refunds, disputes and payouts
@@ -239,8 +287,8 @@ See Points for review.
   - art. 6(1)(c) for accounting (CIRC art. 123; CIVA art. 52);
   - art. 6(1)(f) for fraud prevention and defending chargebacks (art. 17(3)(e)
     applies to retention).
-  - the art. 9 condition recorded for C3 where a record reveals a booking with
-    a health professional, to be confirmed (review point 1).
+  - art. 9(2)(h)+(3) as C3 where a record reveals a booking with a health
+    professional; art. 9(2)(f) for disputes and chargebacks.
 - **Recipients:**
   - Stripe Payments Europe, Ltd. and Stripe, LLC. Stripe is a processor for
     payment processing and an independent controller for its own AML, KYC
@@ -278,14 +326,19 @@ See Points for review.
   DAC7 transposition).
 - **Recipients:**
   - TOConline (Ordem dos Contabilistas Certificados), as processor;
-  - the certified accountant, as processor or independent professional `[[FOUNDER INPUT: accountant's firm name and whether a DPA is signed]]`;
+  - the company's certified accountant (contabilista certificado), acting as
+    an independent professional bound by the secrecy duty of the Estatuto da
+    Ordem dos Contabilistas Certificados, under the engagement letter kept in
+    the company records. Only Eleva's own fiscal documents and DAC7 data are
+    shared; no health data;
   - Autoridade Tributária, as recipient by law.
 - **Transfers:** none (EEA).
 - **Retention:**
   - Invoices and books: 10 years (CIRC art. 123(4); CIVA art. 52(1); Código
     Comercial art. 40).
-  - DAC7 records: the period in the Portuguese transposition. Not verified
-    yet; the Directive requires 5 to 10 years. See the retention schedule.
+  - DAC7 records: 10 years after the end of the reporting period, aligned
+    with the tax records and within the 5-to-10-year range of Directive (EU)
+    2021/514.
 - **Security:** [SEC-ACCESS], [SEC-AUDIT]. TOConline OAuth tokens are
   encrypted with `@eleva/encryption`.
 
@@ -312,8 +365,8 @@ See Points for review.
     information, so this is minimised rather than eliminated.
 - **Lawful basis:**
   - art. 6(1)(b). Account security mail is also art. 6(1)(f);
-  - the art. 9 condition recorded for C3 where a message reveals a booking with
-    a health professional, to be confirmed (review point 1).
+  - art. 9(2)(h)+(3) as C3 where a message reveals a booking with a health
+    professional.
 - **Recipients:**
   - Resend (sending domain `notifications.eleva.care` in `eu-west-1`);
   - Twilio (US1 today; IE1 required before any EU-residency claim);
@@ -386,11 +439,16 @@ See Points for review.
   - Otherwise, staff are instructed not to request health data. Clinical
     questions are redirected to the expert.
 - **Recipients:**
-  - the mailbox provider `[[FOUNDER INPUT: email/helpdesk provider for support@, privacy@, legal@ and its region/DPA]]`;
+  - the mailbox provider for `support@`, `privacy@` and `legal@`: Apple
+    iCloud Mail with the eleva.care custom domain (MX
+    `mx01.mail.icloud.com`, `mx02.mail.icloud.com`; checked 2026-11-07),
+    provided in the EU by Apple Distribution International Ltd (Ireland);
   - the expert concerned, where the complaint is about the session.
-- **Transfers:** depends on the mailbox provider.
-- **Retention:** proposal: 3 years after the ticket closes (Código Civil
-  art. 498(1) tort limitation). Longer if a dispute is open.
+- **Transfers:** Apple may process mail in the United States; Apple Inc. is
+  on the EU-US DPF, and Apple's standard terms include SCCs. Staff do not ask
+  for health data by email and redirect clinical questions to the expert.
+- **Retention:** 3 years after the matter closes (Código Civil art. 498(1)),
+  longer while a dispute is open. Published in privacy notice §7.
 - **Security:** [SEC-ACCESS]; secrecy duty of staff (Lei 58/2019 art. 29(4)).
 
 ### C9 — Security, audit and error logs
@@ -416,11 +474,12 @@ See Points for review.
 - **Recipients:** Neon (main and audit projects); Sentry (EU, `ingest.de.sentry.io`); Vercel; Upstash.
 - **Transfers:** §4.
 - **Retention:**
-  - Audit events: 10 years (`compliance-data-governance.md`).
+  - Audit events: 10 years, redacted allowlist only.
   - Shipped outbox rows: 90 days.
   - Sentry and operational logs: 90 days (vendor setting).
-  - Security logs: up to 1 year (fact sheet).
-  - These figures do not all agree; the retention schedule reconciles them.
+  - Security logs (rate-limit and auth events): up to 12 months, as published
+    in privacy notice §7.
+  - These are the periods of [`retention-schedule.md`](./retention-schedule.md) §3.2.
 - **Security:**
   - [SEC-AUDIT], [SEC-LOGS].
   - The audit stream is append-only and no runtime role has UPDATE or DELETE.
@@ -446,15 +505,21 @@ See Points for review.
 - **Transfers:** §4 (Vercel, Cloudflare).
 - **Retention:**
   - Export zip: deleted when the request expires.
-  - Request log: proposal: 3 years after closure, to evidence compliance
-    (Lei 58/2019 art. 21(3)). See the retention schedule.
+  - Request log: 3 years after closure, to evidence compliance (Lei 58/2019
+    art. 21(3)). Published in privacy notice §7.
+- **Procedure for requests by email (including guests):** intake at
+  `privacy@eleva.care`; identity confirmed by a reply from, or a link sent to,
+  the email on the booking or account; reply within one month (art. 12(3));
+  requests about clinical content forwarded to the expert-controller within 5
+  working days, with Eleva's help to answer.
 - **Security:** HMAC-signed download, private store, [SEC-AUDIT].
 
 ### C11 — Marketing newsletter
 
 - **Purpose:** Eleva's own newsletter and product news (Lane 2 marketing
   contacts). The editorial newsletter is Femme Focus on Beehiiv. Its embed is
-  consent-gated and **not live**; Beehiiv is added to the sub-processor list
+  consent-gated (marketing) and loads only when `ELEVA_NEWSLETTER_EMBED_URL`
+  is set; Beehiiv is added to the sub-processor list
   only when it ships (fact sheet §2).
 - **Data subjects:** M, E, V who opt in.
 - **Data categories:** email, name (optional), locale, consent record,
@@ -463,7 +528,7 @@ See Points for review.
   - art. 6(1)(a), consent (Lei 41/2004 art. 13-A, unsolicited communications);
   - existing-customer soft opt-in under art. 13-A(3) only for similar Eleva
     services, with an opt-out in every message.
-- **Recipients:** Resend (audiences/broadcasts, if used); Beehiiv (planned).
+- **Recipients:** Resend (audiences/broadcasts, if used); Beehiiv, once the embed is live.
 - **Transfers:** §4. Beehiiv is not on the DPF list, so SCCs are needed before
   launch.
 - **Retention:** until consent is withdrawn. Then the address goes on the
@@ -473,10 +538,14 @@ See Points for review.
 ### C12 — Cookies and consent records
 
 - **Purpose:**
-  - strictly necessary cookies (session, locale, theme, last workspace,
-    sidebar, Stripe fraud prevention);
-  - store the visitor's cookie choices through c15t / Inth;
-  - no analytics or advertising cookies today (fact sheet §3).
+  - strictly necessary cookies (session, locale, theme, last Space or
+    practice, sidebar, Stripe fraud prevention), listed by name in the public
+    [cookie policy](/legal/cookies);
+  - store the visitor's cookie choices through c15t / Inth (`c15t` cookie and
+    local-storage copy, 12 months). The consent banner is **live** on web,
+    docs, app, expert, team, academy and account;
+  - optional category in use: marketing, for the Beehiiv newsletter embed;
+  - no analytics or advertising cookies.
 - **Data subjects:** V, M, E.
 - **Data categories:** cookie identifiers, consent choice, consent version,
   timestamp, pseudonymous subject id.
@@ -485,12 +554,12 @@ See Points for review.
     art. 5(2));
   - optional categories require consent under art. 5(1), art. 6(1)(a);
   - keeping proof of consent is art. 6(1)(c) (art. 7(1)).
-- **Recipients:** Inth (c15t), **not live yet** (DPA to be signed in the
-  company's name); Stripe for its own cookies.
+- **Recipients:** Inth (c15t), live, with its DPA in the company's name as
+  part of DPIA follow-up 2; Stripe for its own cookies.
 - **Transfers:** none (Inth is EEA-only).
-- **Retention:** consent records are kept as long as the consent is relied on,
-  plus the limitation period (fact sheet §4). Cookie durations are in fact
-  sheet §3.
+- **Retention:** the cookie choice lasts 12 months, then the visitor is asked
+  again; proof of the choice is kept 3 years. Cookie durations are in the
+  public cookie policy and fact sheet §3.
 - **Security:** pre-consent mode is strict; no optional request runs before
   opt-in.
 
@@ -550,7 +619,7 @@ against art. 28(3) are listed in
   could reach ciphertext but not the keys.
 - **Retention:**
   - Controller's instruction.
-  - Platform default proposed in
+  - Platform default set in
     [`retention-schedule.md`](./retention-schedule.md): 7 years after the
     last session with that expert.
   - On member account deletion:
@@ -670,24 +739,31 @@ against art. 28(3) are listed in
   - Author-only policies on `records` (D-11).
   - CI test: insert as org A, select as org B returns zero rows.
 - **[SEC-ACCESS]** Capability-based RBAC in code (`permissions.ts`, ADR-021).
-  Least privilege on vendor consoles:
-  `[[FOUNDER INPUT: list of people with production console access (Vercel, Neon, Stripe, Daily, Resend, Sentry) and whether MFA is enforced on each]]`.
+  Least privilege on vendor consoles: production console access to Vercel,
+  Neon, Stripe, Daily, Resend, Sentry, Cloudflare, Upstash and Twilio is held
+  by the founder, Rodrigo Barona, with MFA required on each console. Anyone
+  else is added only by the founder, after signing a secrecy undertaking, and
+  is recorded in the secrets inventory of the
+  [backup runbook](../operator-tasks/backup-restore-kek-escrow.md) §6.
+  Preview deployments use their own database branch, KEK and auth secret
+  (decision log 2026-11-07).
 - **[SEC-AUTH]** Better Auth:
   - session cookies are `Secure`, `HttpOnly`, `SameSite=Lax`;
   - 2FA and passkeys are available;
   - from Phase 12 the admin host uses a host-only cookie.
 - **[SEC-RATE]** Upstash rate limits on every non-internal route
   (`RATE_LIMITS.public` 10/min).
-- **[SEC-BOT]** Vercel BotID on public mutating routes (staged; production
-  off, AUD-017).
+- **[SEC-BOT]** Vercel BotID `deepAnalysis` on `bookings/reserve`,
+  `bookings/confirm`, `payments/checkout-session` and `payments/intent`
+  (`apps/web/src/instrumentation-client.ts`; production enforcement AUD-017).
 - **[SEC-AUDIT]** `withAudit` writes an outbox row in the same transaction as
   the domain write.
   - A drainer ships rows to the append-only `audit_events` in a separate Neon
     project.
   - The payload allowlist excludes free text and PHI.
 - **[SEC-LOGS]** `pnpm check:no-phi-logs` CI grep; Sentry and JWT redaction
-  (`packages/observability`). Production logs are **not yet proven** PHI-free
-  (security checklist).
+  (`packages/observability`). A staging log review confirms this in
+  production conditions (DPIA R9 follow-up).
 - **[SEC-VIDEO]**
   - Join through Eleva pages only.
   - Signed per-person grants.
@@ -701,73 +777,79 @@ against art. 28(3) are listed in
   - Consent check.
   - Human review before publication.
   - AI Act art. 50 labelling.
-- **Backups and availability:** Neon point-in-time restore
-  `[[FOUNDER INPUT: Neon PITR window on the production plan]]`. KEK custody
-  and rotation runbook (ADR-020 §3) is due in the Phase 13 compliance pack.
+- **Backups and availability:** Neon point-in-time restore. The configured
+  restore window on 2026-11-07 is 6 hours; the operator raises it to at least
+  7 days for the main project and 30 days for the audit project before
+  members outside the team book. KEK escrow (two sealed offline copies,
+  founder custody), restore drill before beta and then quarterly, and the
+  R2 private-bucket restore path are set out in
+  [`backup-restore-kek-escrow.md`](../operator-tasks/backup-restore-kek-escrow.md).
 - **Organisational:**
   - secrecy undertakings for anyone with production access (Lei 58/2019
     art. 29(4));
-  - the breach procedure ([`breach-response.md`](./breach-response.md));
-  - the DPO.
+  - the breach procedure, adopted 2026-11-07, with the founder as incident
+    lead ([`breach-response.md`](./breach-response.md));
+  - the interim data protection contact (founder) until the DPO is
+    appointed.
 
 ## 4. Transfers to third countries (chapter V)
 
 All primary storage is in the EEA (Frankfurt, Ireland, Lisbon). Transfers arise
 from US-based vendors, their control planes and their support staff:
 
-| Vendor              | What may leave the EEA                              | Mechanism (art. 45 / 46)                            |
-| ------------------- | --------------------------------------------------- | --------------------------------------------------- |
-| Vercel Inc.         | Edge network, control plane, build logs, support    | EU-US DPF (adequacy decision 2023/1795) + SCCs      |
-| Cloudflare, Inc.    | Support and network access; objects stay in the EU  | SCCs (DPF not verified)                             |
-| Neon (Databricks)   | Support and operations access                       | DPF + SCCs                                          |
-| Upstash             | Support and operations access                       | DPF + SCCs                                          |
-| Stripe              | Payment data replicated to the US                   | DPF (Stripe, LLC) + SCCs                            |
-| Daily.co            | Account and usage metadata                          | DPF (**recheck 2026-11-16**) + SCCs                 |
-| Resend              | Primary processing in the US                        | DPF (re-certification under review) + SCCs Module 2 |
-| Sentry              | Support access; data stored in Germany              | DPF + SCCs                                          |
-| Twilio              | SMS processed in US1                                | DPF + SCCs                                          |
-| OpenAI (via Vercel) | Prompt content where EU zone or ZDR is not enforced | Vercel DPA; **OpenAI not on DPF** — SCCs to confirm |
-| Google, Microsoft   | Sign-in and calendar sync (independent controllers) | DPF; their SCCs                                     |
-| Beehiiv (planned)   | Newsletter subscribers                              | **Not on DPF** — SCCs required before launch        |
+| Vendor              | What may leave the EEA                                 | Mechanism (art. 45 / 46)                                 |
+| ------------------- | ------------------------------------------------------ | -------------------------------------------------------- |
+| Vercel Inc.         | Edge network, control plane, build logs, support       | EU-US DPF (adequacy decision 2023/1795) + SCCs           |
+| Cloudflare, Inc.    | Support and network access; objects stay in the EU     | SCCs (DPF not verified)                                  |
+| Neon (Databricks)   | Support and operations access                          | DPF + SCCs                                               |
+| Upstash             | Support and operations access                          | DPF + SCCs                                               |
+| Stripe              | Payment data replicated to the US                      | DPF (Stripe, LLC) + SCCs                                 |
+| Daily.co            | Account and usage metadata                             | DPF (**recheck 2026-11-16**) + SCCs                      |
+| Resend              | Primary processing in the US                           | DPF (re-certification under review) + SCCs Module 2      |
+| Sentry              | Support access; data stored in Germany                 | DPF + SCCs                                               |
+| Twilio              | SMS processed in US1                                   | DPF + SCCs                                               |
+| OpenAI (via Vercel) | Prompt content where EU zone or ZDR is not enforced    | Vercel DPA; SCCs; TIA before AI drafts go live           |
+| Google, Microsoft   | Sign-in and calendar sync (independent controllers)    | DPF; their SCCs                                          |
+| Beehiiv             | Newsletter subscribers (embed after marketing consent) | **Not on DPF** — SCCs and TIA before the embed goes live |
+| Apple (iCloud Mail) | Support, privacy and legal mailboxes                   | DPF (Apple Inc.) + SCCs in Apple's terms                 |
 
-A transfer impact assessment is still required for each SCC-only transfer,
-under EDPB Recommendations 01/2020 on supplementary measures. In practice this
-means OpenAI and Beehiiv. See Points for review.
+A transfer impact assessment is carried out for each SCC-only transfer under
+EDPB Recommendations 01/2020 before that transfer starts: OpenAI before AI
+drafts are turned on, Beehiiv before the newsletter embed goes live.
 
-## Points for lawyer/DPO review
+## 5. Decisions recorded in this version (2026-11-07)
 
-1. **Art. 9 condition for booking data (C3, and C4 and C6 where they reveal a
-   booking).** Confirm 9(2)(h)+(3) with Lei 58/2019 art. 29 as the primary
-   condition. Payment records and booking messages carry the expert's name and
-   profession even with clinical content kept out, so they need the same answer. Decide whether the mandatory
-   `health_data_processing` consent should stay, be reframed as information,
-   or be kept as a belt-and-braces record. A mandatory consent risks failing
-   art. 7(4).
-2. **Video stream (P6) vs attendance (C7) role split.** Confirm that Eleva is
-   processor for the live stream and controller for attendance metadata used
-   in refunds and chargebacks.
-3. **Transcription consent (P3, P4).** Consent is collected by Eleva for the
-   expert-controller. Confirm the wording makes clear who the controller is.
-   Confirm that withdrawal does not oblige deletion of an existing transcript
-   that is now part of the clinical record. Art. 7(3) withdrawal does not
-   affect lawfulness before withdrawal.
-4. **Access notification under Lei 58/2019 art. 29(6)–(7).** The data
-   subject "deve ser notificado de qualquer acesso" to their health data.
-   Eleva samples owning-expert reads at 1%. Decide what the expert-controller
-   needs from Eleva as processor to comply.
-5. **Retention conflicts.** Retention figures differ between this record, the
-   fact sheet and `compliance-data-governance.md`: 7 vs 10 years for notes;
-   transcripts 2 years; logs 90 days vs 1 year. Advise on the reconciled
-   schedule before Eleva adopts it.
-6. **TIAs** for OpenAI (when the AI drafts flag is turned on) and Beehiiv
-   (before the newsletter embed ships). **Re-verify Daily's DPF status on or
-   after 2026-11-16.**
-7. **Contracting entity.** Several vendor accounts are held in a personal name
-   on free or Hobby tiers (fact sheet §1). Art. 28 terms must bind the
-   company. Twilio stays US1 until IE1 is set up.
-8. **DAC7 retention period** in Lei 36/2023 / DL 61/2013 (not verified).
-9. **Art. 30(4)** availability: confirm the format in which this record would
-   be produced to the CNPD on request.
+1. **Art. 9 condition for booking data:** 9(2)(h)+(3) with Lei 58/2019
+   art. 29, plus explicit `health_data_processing` consent for what Eleva
+   handles as intermediary (note under the summary table; privacy notice §4).
+2. **Adults only:** per-booking `adult_confirmation` (C3; DPIA R13).
+3. **Guest accounts:** disclosed, retained until claimed or 12 months after
+   the last booking ends (C1).
+4. **Licence verification procedure:** C2.
+5. **Interim data protection contact and breach owner:** the founder.
+6. **Backups and KEK escrow:** §3 and the backup runbook.
+7. **Video stream (P6) vs attendance (C7):** Eleva is processor for the live
+   stream and controller for attendance metadata used in refunds and
+   chargebacks.
+8. **Transcription consent (P3):** collected by Eleva for the
+   expert-controller; withdrawal stops future transcription and does not delete
+   a transcript already in the clinical record (art. 7(3)).
+
+## 6. Follow-up actions
+
+| #   | Action                                                                                       | Owner       | Due                                        |
+| --- | -------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------ |
+| 1   | Move vendor accounts and DPAs into the company's name; Twilio to IE1                         | Founder     | Before members outside the team book       |
+| 2   | Move the support, privacy and legal mailboxes to a business mail service with an art. 28 DPA | Founder     | Before members outside the team book       |
+| 3   | Raise Neon restore windows; KEK escrow; first restore drill                                  | Founder     | Before members outside the team book       |
+| 4   | Recheck Daily on the DPF list                                                                | Founder     | On or after 2026-11-16                     |
+| 5   | Full owning-expert access log (P1; DPIA R12)                                                 | Engineering | Next review                                |
+| 6   | `sweepUnclaimedGuestAccounts` (C1)                                                           | Engineering | Before the first account reaches 12 months |
+| 7   | Record the DPO appointment here and notify the CNPD                                          | Founder     | On appointment                             |
+
+The record is produced to the CNPD on request (art. 30(4)) as this document
+exported to PDF, together with the list of active expert and clinic
+organisations from the production database (§2).
 
 ## Sources
 
