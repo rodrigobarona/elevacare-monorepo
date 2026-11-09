@@ -111,4 +111,38 @@ describe("admin queries", () => {
       )
     })
   })
+
+  describe("_ensureExpertProfileForOrgDetailed", () => {
+    it("targets the partial user/org index, predicate included", async () => {
+      const insertChain = chain([{ id: "profile-1" }])
+      mockTx.insert.mockReturnValueOnce(insertChain)
+      const { _ensureExpertProfileForOrgDetailed } = await import("./admin")
+      const { PgDialect } = await import("drizzle-orm/pg-core")
+      const main = await import("../schema/main")
+
+      const result = await _ensureExpertProfileForOrgDetailed(
+        {
+          userId: "user-1",
+          orgId: "org-1",
+          orgSlug: "patimota",
+          displayName: "Patricia Mota",
+        },
+        mockTx as never
+      )
+
+      expect(result.created).toBe(true)
+      const config = (
+        insertChain.onConflictDoNothing as ReturnType<typeof vi.fn>
+      ).mock.calls[0]?.[0]
+      expect(config.target).toEqual([
+        main.expertProfiles.userId,
+        main.expertProfiles.orgId,
+      ])
+      // Without this, Postgres rejects the insert (42P10): the unique
+      // index is `WHERE deleted_at IS NULL`.
+      expect(new PgDialect().sqlToQuery(config.where).sql).toBe(
+        '"expert_profiles"."deleted_at" is null'
+      )
+    })
+  })
 })

@@ -125,8 +125,12 @@ export async function _ensureExpertProfileForOrgDetailed(
       serviceCountries: ["PT"],
       status: "approved",
     })
+    // `expert_profiles_user_org_idx` is partial (`WHERE deleted_at IS NULL`);
+    // Postgres only infers a partial index when the conflict target repeats
+    // its predicate (42P10 otherwise).
     .onConflictDoNothing({
       target: [main.expertProfiles.userId, main.expertProfiles.orgId],
+      where: isNull(main.expertProfiles.deletedAt),
     })
     .returning()
 
