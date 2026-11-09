@@ -1,9 +1,9 @@
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import type { Metadata } from "next"
 import {
-  MarketingDraftPage,
+  MarketingPage,
   type MarketingIconId,
-} from "@/components/marketing-draft-page"
+} from "@/components/marketing-page"
 import { hreflangLanguages, localePath } from "@/lib/hreflang"
 
 type Props = {
@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: t("title"),
     description: t("description"),
-    robots: { index: false, follow: false },
+    robots: { index: true, follow: true },
     alternates: {
       canonical: localePath(locale, "/for-clinics"),
       languages: hreflangLanguages("/for-clinics"),
@@ -30,8 +30,7 @@ export default async function ForClinicsPage({ params }: Props) {
   const t = await getTranslations({ locale, namespace: "forClinics" })
 
   return (
-    <MarketingDraftPage
-      draftBanner={t("draftBanner")}
+    <MarketingPage
       eyebrow={t("eyebrow")}
       heading={t("heading")}
       headingTestId="for-clinics-heading"

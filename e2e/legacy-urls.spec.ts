@@ -42,32 +42,30 @@ test.describe("D-10 public-site parity", () => {
     }
   })
 
-  test("keeps legal documents and draft contact/trust pages", async ({
-    page,
-  }) => {
+  test("keeps legal documents, contact and trust pages", async ({ page }) => {
     for (const slug of LEGAL_SLUGS) {
       const legal = await page.goto(`/legal/${slug}`)
       expect(legal?.status(), slug).toBe(200)
-      await expect(page.getByTestId("longform-version")).toBeVisible()
       await expect(page.getByTestId("longform-last-updated")).toBeVisible()
       await expect(page.getByTestId("legal-draft-banner")).toHaveCount(0)
     }
 
     const contact = await page.goto("/contact")
     expect(contact?.status()).toBe(200)
-    await expect(page.getByTestId("legal-draft-banner")).toBeVisible()
+    await expect(page.getByTestId("legal-draft-banner")).toHaveCount(0)
     await expect(page.getByTestId("contact-heading")).toBeVisible()
+    await expect(page.getByTestId("contact-channels")).toBeVisible()
 
     for (const slug of ["security", "ers", "dpa", "sub-processors"] as const) {
       const trust = await page.goto(`/trust/${slug}`)
       expect(trust?.status(), slug).toBe(200)
-      await expect(page.getByTestId("longform-version")).toBeVisible()
+      await expect(page.getByTestId("longform-last-updated")).toBeVisible()
       await expect(page.getByTestId("legal-draft-banner")).toHaveCount(0)
     }
 
     const evidence = await page.goto("/evidence-based-care")
     expect(evidence?.status()).toBe(200)
-    await expect(page.getByTestId("longform-version")).toBeVisible()
+    await expect(page.getByTestId("longform-last-updated")).toBeVisible()
   })
 
   test("serves editorial pillar pages and footer community links", async ({

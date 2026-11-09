@@ -1,5 +1,4 @@
 import type { ReactNode } from "react"
-import { CONSENT_DOCUMENT_VERSION } from "@eleva/compliance"
 import { LEGAL_SLUGS, type LegalSlug } from "@eleva/config/legal-slugs"
 import { defaultLocale, isLocale, type Locale } from "@eleva/config/i18n"
 import { COMMUNITY_EXTERNAL_LINKS } from "@eleva/config/public-site-parity"
@@ -167,9 +166,6 @@ export function PublicSiteFooter({ locale: rawLocale }: { locale: string }) {
         </div>
         <div className="flex flex-col gap-2 border-t pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <p>{t.rights(year)}</p>
-          <p className="max-w-xl sm:text-right">
-            {t.versionNote(CONSENT_DOCUMENT_VERSION)}
-          </p>
         </div>
       </div>
     </footer>

@@ -10,7 +10,6 @@ type Body = ComponentType<{ components?: MDXComponents }>
 export function LongformLayout({
   title,
   description,
-  versionLabel,
   lastUpdatedLabel,
   tocTitle,
   Body,
@@ -19,7 +18,6 @@ export function LongformLayout({
 }: {
   title: string
   description?: string
-  versionLabel: string
   lastUpdatedLabel: string
   tocTitle: string
   Body?: Body
@@ -32,19 +30,7 @@ export function LongformLayout({
   return (
     <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[minmax(0,1fr)_220px]">
       <article className="max-w-3xl min-w-0 lg:max-w-none">
-        <p
-          data-testid="longform-version"
-          className="text-sm text-muted-foreground"
-        >
-          {versionLabel}
-        </p>
-        <p
-          data-testid="longform-last-updated"
-          className="mt-1 text-sm text-muted-foreground"
-        >
-          {lastUpdatedLabel}
-        </p>
-        <h1 className="mt-4 text-3xl font-bold tracking-tight text-balance">
+        <h1 className="text-3xl font-bold tracking-tight text-balance">
           {title}
         </h1>
         {description ? (
@@ -52,6 +38,12 @@ export function LongformLayout({
             {description}
           </p>
         ) : null}
+        <p
+          data-testid="longform-last-updated"
+          className="mt-4 text-sm text-muted-foreground"
+        >
+          {lastUpdatedLabel}
+        </p>
         <div className="longform-prose mt-8 text-base text-foreground/90">
           {Body ? <Body components={components} /> : children}
         </div>

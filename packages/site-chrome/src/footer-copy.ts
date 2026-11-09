@@ -29,7 +29,6 @@ export type FooterCopy = {
   instagram: string
   linkedin: string
   rights: (year: string) => string
-  versionNote: (version: string) => string
 }
 
 const en: FooterCopy = {
@@ -62,7 +61,6 @@ const en: FooterCopy = {
   instagram: "Instagram",
   linkedin: "LinkedIn",
   rights: (year) => `© ${year} Eleva.care. All rights reserved.`,
-  versionNote: (version) => `Document version ${version}`,
 }
 
 const pt: FooterCopy = {
@@ -95,7 +93,6 @@ const pt: FooterCopy = {
   instagram: "Instagram",
   linkedin: "LinkedIn",
   rights: (year) => `© ${year} Eleva.care. Todos os direitos reservados.`,
-  versionNote: (version) => `Versão do documento ${version}`,
 }
 
 const es: FooterCopy = {
@@ -128,7 +125,6 @@ const es: FooterCopy = {
   instagram: "Instagram",
   linkedin: "LinkedIn",
   rights: (year) => `© ${year} Eleva.care. Todos los derechos reservados.`,
-  versionNote: (version) => `Versión del documento ${version}`,
 }
 
 export const FOOTER_COPY: Record<Locale, FooterCopy> = { en, pt, es }

@@ -6,7 +6,6 @@ import {
   ChartBarIcon,
   EnvelopeIcon,
   WalletIcon,
-  InfoIcon,
   ShieldCheckIcon,
   StethoscopeIcon,
   UsersIcon,
@@ -48,8 +47,15 @@ const MARKETING_ICONS: Record<MarketingIconId, Icon> = {
 
 type CardItem = { icon: MarketingIconId; title: string; body: string }
 
+/** A way to reach the team: a mailbox with what it is for. */
+export type ContactChannel = {
+  icon: MarketingIconId
+  title: string
+  body: string
+  email: string
+}
+
 type Props = {
-  draftBanner: string
   eyebrow: string
   heading: string
   headingTestId: string
@@ -70,11 +76,12 @@ type Props = {
   finalHeading?: string
   finalBody?: string
   finalCta?: { href: string; label: string }
+  contactsHeading?: string
+  contacts?: ContactChannel[]
 }
 
-/** Public pages whose terms are still pre-launch drafts (become expert, clinics, contact). */
-export async function MarketingDraftPage({
-  draftBanner,
+/** Public landing pages for professionals and clinics, and the contact page. */
+export async function MarketingPage({
   eyebrow,
   heading,
   headingTestId,
@@ -90,6 +97,8 @@ export async function MarketingDraftPage({
   finalHeading,
   finalBody,
   finalCta,
+  contactsHeading,
+  contacts = [],
 }: Props) {
   const requestLocale = await getLocale()
   const locale: Locale = isLocale(requestLocale) ? requestLocale : defaultLocale
@@ -132,13 +141,6 @@ export async function MarketingDraftPage({
                   <ArrowRightIcon data-icon="inline-end" />
                 </a>
               ) : null}
-              <p
-                data-testid="legal-draft-banner"
-                className="flex max-w-xl gap-2 rounded-xl border border-warning/30 bg-warning-subtle px-4 py-3 text-sm text-warning"
-              >
-                <InfoIcon className="mt-0.5 size-4 shrink-0" aria-hidden />
-                {draftBanner}
-              </p>
             </div>
             {imageSlug ? (
               <div className="relative aspect-4/5 overflow-hidden rounded-4xl shadow-2">
@@ -154,6 +156,46 @@ export async function MarketingDraftPage({
             ) : null}
           </Container>
         </Section>
+
+        {contacts.length > 0 ? (
+          <Section tone="muted">
+            <Container className="flex flex-col gap-10">
+              {contactsHeading ? (
+                <SectionHeader title={contactsHeading} />
+              ) : null}
+              <ul
+                data-testid="contact-channels"
+                className="grid gap-4 sm:grid-cols-2"
+              >
+                {contacts.map((channel) => {
+                  const IconComponent = MARKETING_ICONS[channel.icon]
+                  return (
+                    <li
+                      key={channel.email}
+                      className="flex flex-col gap-3 rounded-3xl border border-border bg-card p-6"
+                    >
+                      <span className="flex size-10 items-center justify-center rounded-full bg-accent text-accent-foreground">
+                        <IconComponent weight="duotone" aria-hidden />
+                      </span>
+                      <p className="font-medium text-foreground">
+                        {channel.title}
+                      </p>
+                      <p className="text-sm text-pretty text-muted-foreground">
+                        {channel.body}
+                      </p>
+                      <a
+                        href={`mailto:${channel.email}`}
+                        className="mt-auto w-fit text-sm font-medium text-primary underline-offset-4 hover:underline"
+                      >
+                        {channel.email}
+                      </a>
+                    </li>
+                  )
+                })}
+              </ul>
+            </Container>
+          </Section>
+        ) : null}
 
         {benefits.length > 0 ? (
           <Section tone="muted">

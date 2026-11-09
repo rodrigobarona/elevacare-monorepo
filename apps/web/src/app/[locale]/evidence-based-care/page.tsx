@@ -1,11 +1,11 @@
 import { isContentLocale } from "@eleva/content/locales"
-import { CONSENT_DOCUMENT_VERSION } from "@eleva/compliance"
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { LongformLayout } from "@/components/longform-layout"
+import { formatLastUpdated } from "@/lib/last-updated"
 import { hreflangLanguages, localePath } from "@/lib/hreflang"
 import { getPageMdxDocument } from "@/lib/pages-source"
 
@@ -58,11 +58,8 @@ export default async function EvidenceBasedCarePage({ params }: Props) {
         <LongformLayout
           title={doc.frontmatter.title}
           description={doc.frontmatter.summary ?? doc.frontmatter.description}
-          versionLabel={tLongform("versionLabel", {
-            version: CONSENT_DOCUMENT_VERSION,
-          })}
           lastUpdatedLabel={tLongform("lastUpdatedLabel", {
-            date: doc.frontmatter.lastUpdated,
+            date: formatLastUpdated(locale, doc.frontmatter.lastUpdated),
           })}
           tocTitle={tLongform("tocTitle")}
           Body={doc.Body}
