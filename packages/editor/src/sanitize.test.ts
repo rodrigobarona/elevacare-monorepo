@@ -60,6 +60,38 @@ describe("toSanitizedHtml", () => {
     const dirty = "<p><strong>Bold</strong> and <em>italic</em></p>"
     expect(toSanitizedHtml(dirty)).toBe(dirty)
   })
+
+  it("keeps safe links and drops attributes outside the allow-list", () => {
+    const clean = toSanitizedHtml(
+      '<p class="x" style="color:red"><a href="https://eleva.care" target="_blank" rel="noopener" onclick="x()">site</a></p>'
+    )
+    expect(clean).toBe(
+      '<p><a href="https://eleva.care" target="_blank" rel="noopener">site</a></p>'
+    )
+  })
+
+  it("drops protocol-relative and data: links", () => {
+    expect(toSanitizedHtml('<a href="//evil.example">x</a>')).not.toMatch(
+      /evil/
+    )
+    expect(
+      toSanitizedHtml('<a href="data:text/html;base64,PHNjcmlwdD4=">x</a>')
+    ).not.toMatch(/data:/)
+  })
+
+  it("removes the content of script and style, not just the tags", () => {
+    const clean = toSanitizedHtml(
+      "<p>hi</p><style>p{}</style><script>steal()</script>"
+    )
+    expect(clean).toBe("<p>hi</p>")
+  })
+
+  it("never loads a DOM implementation", async () => {
+    const source = await import("node:fs").then((fs) =>
+      fs.readFileSync(new URL("./sanitize.ts", import.meta.url), "utf8")
+    )
+    expect(source).not.toMatch(/from ["'][^"']*(jsdom|dompurify)/i)
+  })
 })
 
 describe("toSanitizedHtmlFromValue", () => {
