@@ -26,6 +26,7 @@
   },
   "exports": {
     ".": "./src/index.ts",
+    "./config": "./src/define-consent-config.ts",
     "./next": "./src/next.ts",
     "./chrome": "./src/consent-chrome.tsx",
     "./shell": "./src/consent-shell.tsx",

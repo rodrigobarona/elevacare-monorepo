@@ -1,4 +1,7 @@
-import { DEFAULT_C15T_BACKEND_URL, defineConsentConfig } from "@eleva/consent"
+import {
+  DEFAULT_C15T_BACKEND_URL,
+  defineConsentConfig,
+} from "@eleva/consent/config"
 
 export default defineConsentConfig({
   backendURL:
