@@ -81,6 +81,7 @@ import {
   mapConfirmError,
   mapReserveError,
   previousFunnelStep,
+  reconcileSlotWindow,
   type FunnelStep,
 } from "@/lib/funnel-state"
 import { pickLocalizedText, type LocalizedText } from "@/lib/localized-text"
@@ -198,8 +199,13 @@ export function BookingFunnel({
   const [earliest, setEarliest] = useState<PublicSlot | null>(null)
   const earliestRef = useRef<PublicSlot | null>(null)
   const seekingEarliest = useRef(true)
-  // After a time-zone change, keep the chosen time if it is still open.
-  const keepSlotIfOpen = useRef(false)
+  // Mirrors `slot` for the slots effect, which must not re-run on a pick.
+  const slotRef = useRef<PublicSlot | null>(slot)
+  useEffect(() => {
+    slotRef.current = slot
+  }, [slot])
+  // The chosen time stopped being open: the time step says so.
+  const [slotGone, setSlotGone] = useState(false)
   const dateLocale = intlLocale(locale)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
@@ -282,10 +288,11 @@ export function BookingFunnel({
 
   useEffect(() => {
     if (!selectedMode) return
-    // A day either side of the window covers every UTC offset; the picker
-    // shows only days from `fromKey` in the member's zone.
-    const from = new Date(`${addDaysToKey(fromKey, -1)}T12:00:00Z`)
-    const to = new Date(`${addDaysToKey(fromKey, WINDOW_DAYS)}T12:00:00Z`)
+    // Midnight UTC a day either side of the window covers every offset
+    // from UTC-12 to UTC+14 (30 days, inside the API's 31). The picker shows
+    // only days from `fromKey` in the member's zone.
+    const from = new Date(`${addDaysToKey(fromKey, -1)}T00:00:00Z`)
+    const to = new Date(`${addDaysToKey(fromKey, WINDOW_DAYS + 1)}T00:00:00Z`)
     const api = createPublicApiClient()
     const key = `${selectedMode.id}:${fromKey}:${timeZone}`
     let cancelled = false
@@ -310,34 +317,28 @@ export function BookingFunnel({
           return
         }
         windowsToAutoSkip.current = 0
-        // "Next available" stays true to what the API just said: it is set
-        // by the first window that has a time (even one reached later with
-        // "Later dates"), and replaced when a fresh load of its window no
-        // longer lists it.
-        const known = earliestRef.current
-        const knownDay = known ? dateKeyInZone(known.start, timeZone) : null
-        const windowEnd = addDaysToKey(fromKey, WINDOW_DAYS)
-        const knownGone =
-          known != null &&
-          knownDay != null &&
-          knownDay >= fromKey &&
-          knownDay < windowEnd &&
-          !result.slots.some((item) => item.start === known.start)
-        if ((seekingEarliest.current || knownGone) && inWindow[0]) {
-          seekingEarliest.current = false
-          earliestRef.current = inWindow[0]
-          setEarliest(inWindow[0])
-        } else if (knownGone) {
-          earliestRef.current = null
-          setEarliest(null)
+        // Anything this window covers but the API no longer lists is stale:
+        // "Next available" is replaced (or the search resumes) and a chosen
+        // time that was booked meanwhile is cleared, with a message.
+        const next = reconcileSlotWindow({
+          state: {
+            earliest: earliestRef.current,
+            seeking: seekingEarliest.current,
+            selected: slotRef.current,
+          },
+          slots: result.slots,
+          fromKey,
+          windowEnd: addDaysToKey(fromKey, WINDOW_DAYS),
+          dayOf: (item) => dateKeyInZone(item.start, timeZone),
+        })
+        seekingEarliest.current = next.seeking
+        if (next.earliest !== earliestRef.current) {
+          earliestRef.current = next.earliest
+          setEarliest(next.earliest)
         }
-        if (keepSlotIfOpen.current) {
-          keepSlotIfOpen.current = false
-          setSlot((current) =>
-            current && result.slots.some((item) => item.start === current.start)
-              ? current
-              : null
-          )
+        if (next.selectionGone) {
+          setSlot(null)
+          setSlotGone(true)
         }
         setSlots(result.slots)
         setSlotsRequest({ key, error: false })
@@ -532,6 +533,7 @@ export function BookingFunnel({
     // The chosen time is gone (for example after a time-zone change):
     // send the member back to pick another rather than doing nothing.
     if (!slot) {
+      setSlotGone(true)
       setStep("when")
       return
     }
@@ -886,7 +888,6 @@ export function BookingFunnel({
             <TimeZoneLine
               value={timeZone}
               onChange={(next) => {
-                keepSlotIfOpen.current = true
                 setTimeZone(next)
               }}
               labels={{
@@ -906,6 +907,15 @@ export function BookingFunnel({
                 {t("when.loading")}
               </p>
             ) : null}
+            {slotGone ? (
+              <p
+                role="alert"
+                data-testid="booking-slot-gone"
+                className="rounded-2xl bg-destructive/8 px-4 py-3 text-sm text-destructive"
+              >
+                {t("errors.slotTaken")}
+              </p>
+            ) : null}
             {slotsError ? (
               <p
                 role="alert"
@@ -923,6 +933,7 @@ export function BookingFunnel({
               isLoading={slotsLoading}
               selectedStart={slot?.start ?? null}
               onSelect={(next) => {
+                setSlotGone(false)
                 const match = slots.find((item) => item.start === next.start)
                 setSlot(
                   match ?? {
