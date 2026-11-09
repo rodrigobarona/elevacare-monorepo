@@ -366,6 +366,11 @@
       "inPersonIn": "Presencial em {places}",
       "countries": "Membros em {countries}"
     },
+    "registration": {
+      "licence": "Cédula profissional n.º {number}",
+      "ers": "Registo na ERS n.º {number}",
+      "bodyLink": "{body}, registo público (abre num novo separador)"
+    },
     "services": {
       "heading": "Como posso ajudar",
       "included": "O que está incluído",

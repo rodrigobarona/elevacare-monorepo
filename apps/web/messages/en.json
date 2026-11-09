@@ -366,6 +366,11 @@
       "inPersonIn": "In person in {places}",
       "countries": "Members in {countries}"
     },
+    "registration": {
+      "licence": "Licence no. {number}",
+      "ers": "ERS registration no. {number}",
+      "bodyLink": "{body}, public register (opens in a new tab)"
+    },
     "services": {
       "heading": "How I can help",
       "included": "What's included",

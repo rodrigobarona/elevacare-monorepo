@@ -138,6 +138,14 @@ describe("public queries", () => {
         categoryId: { name: "categoryId" },
         sortOrder: { name: "sortOrder" },
       },
+      becomePartnerApplications: {
+        expertProfileId: { name: "applicationExpertProfileId" },
+        status: { name: "applicationStatus" },
+        professionalBody: { name: "professionalBody" },
+        licenceNumber: { name: "licenceNumber" },
+        ersRegistrationNumber: { name: "ersRegistrationNumber" },
+        reviewedAt: { name: "reviewedAt" },
+      },
     }))
     vi.doMock("./public-listing", () => ({
       licenceVerified: () => ({ licenceVerified: true }),
@@ -218,13 +226,35 @@ describe("public queries", () => {
     const { mod } = await loadModule([
       [expertRow],
       [{ slug: "pelvic-health" }, { slug: "wellness" }],
+      [
+        {
+          professionalBody: "ordem_fisioterapeutas",
+          licenceNumber: " 12345 ",
+          ersRegistrationNumber: "",
+        },
+      ],
     ])
     const result = await mod.findExpertByUsername("Ana-Silva")
     expect(result).toMatchObject({
       id: "expert-1",
       username: "ana-silva",
       categorySlugs: ["pelvic-health", "wellness"],
+      registration: {
+        professionalBody: "ordem_fisioterapeutas",
+        licenceNumber: "12345",
+        ersRegistrationNumber: null,
+      },
     })
+  })
+
+  it("findExpertByUsername has no registration without an approved application", async () => {
+    const { mod } = await loadModule([
+      [{ id: "expert-1", username: "ana-silva" }],
+      [],
+      [],
+    ])
+    const result = await mod.findExpertByUsername("ana-silva")
+    expect(result?.registration).toBeNull()
   })
 
   it("findClinicBySlug rejects reserved slugs without hitting the db", async () => {
