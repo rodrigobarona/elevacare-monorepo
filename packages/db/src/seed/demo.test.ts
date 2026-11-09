@@ -107,6 +107,16 @@ describe("seedDemo", () => {
     expect(insert).toHaveBeenCalledTimes(11)
     // The expert fixture is public only with an approved licence row.
     expect(ensureFixtureLicenceApproved).toHaveBeenCalledTimes(1)
+    // patimota carries her public Ordem dos Fisioterapeutas cédula.
+    expect(ensureFixtureLicenceApproved).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        licence: {
+          professionalBody: "ordem_fisioterapeutas",
+          licenceNumber: "9115",
+        },
+      })
+    )
   })
 
   it("is idempotent when all rows already exist", async () => {
