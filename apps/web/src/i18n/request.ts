@@ -1,5 +1,6 @@
 import { getRequestConfig } from "next-intl/server"
 import { hasLocale } from "next-intl"
+import { getDashboardMessages } from "@eleva/dashboard/messages"
 import { routing } from "./routing"
 
 export default getRequestConfig(async ({ requestLocale }) => {
@@ -8,9 +9,16 @@ export default getRequestConfig(async ({ requestLocale }) => {
     ? requested
     : routing.defaultLocale
 
-  const messages = (
-    await import(`../../messages/${locale}.json`, { with: { type: "json" } })
-  ).default as Record<string, unknown>
+  const [siteMessages, dashboardMessages] = await Promise.all([
+    import(`../../messages/${locale}.json`, { with: { type: "json" } }).then(
+      (mod) => mod.default as Record<string, unknown>
+    ),
+    getDashboardMessages(locale),
+  ])
 
-  return { locale, messages }
+  // The avatar menu is shared with the signed-in apps; its copy lives there.
+  return {
+    locale,
+    messages: { ...siteMessages, accountMenu: dashboardMessages.accountMenu },
+  }
 })

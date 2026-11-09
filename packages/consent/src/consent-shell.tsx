@@ -6,6 +6,7 @@ import type { ReactNode } from "react"
 import { ConsentChrome } from "./consent-chrome"
 import { elevaConsentTheme } from "./eleva-theme"
 import { ConsentRoot, resolveConsent } from "./next"
+import { ConsentAvailableProvider } from "./open-cookie-settings"
 
 /** Wrap root layout children + mount banner/dialog (server component). */
 export async function ConsentShell({ children }: { children: ReactNode }) {
@@ -27,7 +28,7 @@ export async function ConsentShell({ children }: { children: ReactNode }) {
           ...(testCountry ? { country: testCountry } : {}),
         })}
       >
-        {children}
+        <ConsentAvailableProvider>{children}</ConsentAvailableProvider>
         <ConsentChrome />
       </ConsentRoot>
     </>

@@ -76,5 +76,12 @@
         "failed": "No se ha podido completar. Inténtalo de nuevo."
       }
     }
+  },
+  "staffEntry": {
+    "title": "Entrar en la consola del equipo",
+    "body": "Aquí ves datos de miembros y expertos de toda Eleva. Los cambios que hagas quedan registrados en el registro de auditoría.",
+    "enter": "Entrar en la consola del equipo",
+    "back": "Volver a Eleva",
+    "error": "No hemos podido abrir la consola del equipo. Inténtalo de nuevo en un momento."
   }
 }

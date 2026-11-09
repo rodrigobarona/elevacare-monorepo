@@ -1094,6 +1094,9 @@ importers:
       '@eleva/content':
         specifier: workspace:*
         version: link:../../packages/content
+      '@eleva/dashboard':
+        specifier: workspace:*
+        version: link:../../packages/dashboard
       '@eleva/editor':
         specifier: workspace:*
         version: link:../../packages/editor

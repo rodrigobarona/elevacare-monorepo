@@ -85,6 +85,7 @@ const nextConfig = {
     "@eleva/calendar",
     "@eleva/config",
     "@eleva/content",
+    "@eleva/dashboard",
     "@eleva/db",
     "@eleva/editor",
     "@eleva/media",

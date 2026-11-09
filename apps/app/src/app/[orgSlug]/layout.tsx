@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
 import { buildDashboardConfig } from "@eleva/dashboard/config-helpers"
 import { resolveProductHomeUrl } from "@eleva/dashboard/resolve-product-home-url"
-import { listUserOrganizations } from "@eleva/auth/organizations"
+import { loadUserWorkspaces } from "@eleva/dashboard/account-menu-server"
 import { guardSessionForOrg } from "@eleva/auth"
 
 export default async function OrgSlugLayout({
@@ -22,10 +22,7 @@ export default async function OrgSlugLayout({
 
   const [t, organizations] = await Promise.all([
     getTranslations("nav"),
-    listUserOrganizations({
-      userId: session.user.id,
-      currentOrgId: session.orgId,
-    }).catch(() => []),
+    loadUserWorkspaces(session.user.id, session.orgId).catch(() => []),
   ])
 
   const onlyPersonalSpace =

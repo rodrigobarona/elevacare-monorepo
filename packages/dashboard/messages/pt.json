@@ -1,14 +1,8 @@
 {
   "shell": {
     "back": "Voltar",
-    "profile": "Perfil",
-    "settings": "Definições",
-    "homepage": "Visitar Página Inicial",
-    "cookieSettings": "Definições de cookies",
-    "signOut": "Terminar sessão",
     "orgSwitcher": "Seletor de organização",
     "orgSwitchError": "Erro ao mudar de organização",
-    "theme": "Tema",
     "themeLabel": "Aparência",
     "themeLight": "Claro",
     "themeDark": "Escuro",
@@ -84,5 +78,26 @@
     "notFoundTitle": "Página não encontrada",
     "notFoundDescription": "Esta página não existe ou já não tem acesso a ela.",
     "goToDashboard": "Ir para o painel"
+  },
+  "accountMenu": {
+    "yourAccount": "A sua conta",
+    "workspacesGroup": "As suas áreas de trabalho",
+    "settingsGroup": "Definições e ajuda",
+    "yourSpace": "O seu Espaço",
+    "switchWorkspace": "Mudar de área de trabalho",
+    "kind": {
+      "expert": "Prática",
+      "team": "Clínica",
+      "academy": "Academia"
+    },
+    "offerSessions": "Ofereça sessões na Eleva",
+    "offerSessionsHint": "Prepare a sua prática em poucos passos",
+    "staff": "Equipa Eleva",
+    "staffHint": "Abre num novo separador",
+    "accountSettings": "Definições da conta",
+    "cookiePreferences": "Preferências de cookies",
+    "help": "Centro de ajuda",
+    "homePage": "Página inicial da Eleva",
+    "signOut": "Terminar sessão"
   }
 }

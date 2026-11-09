@@ -13,7 +13,8 @@ export interface ProductHomeSession {
 
 const GATEWAY_URL = resolveGatewayUrl()
 
-function resolveAdminUrl(): string {
+/** Staff console origin (admin.eleva.care in production). */
+export function resolveAdminUrl(): string {
   return (
     process.env.ADMIN_URL ??
     process.env.NEXT_PUBLIC_ADMIN_URL ??

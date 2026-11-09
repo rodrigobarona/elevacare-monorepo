@@ -25,7 +25,7 @@ const THEME_OPTIONS: {
   { value: "system", icon: MonitorIcon, labelKey: "themeSystem" },
 ]
 
-export function NavThemeMenu() {
+export function NavThemeMenu({ className }: { className?: string }) {
   const t = useTranslations("shell")
   const { theme, setTheme } = useTheme()
 
@@ -38,9 +38,9 @@ export function NavThemeMenu() {
 
   return (
     <DropdownMenuSub>
-      <DropdownMenuSubTrigger className="gap-2 py-1" textValue={t("theme")}>
-        <SunIcon className="size-4" />
-        {t("theme")}
+      <DropdownMenuSubTrigger className={className} textValue={t("themeLabel")}>
+        <SunIcon className="size-4 text-muted-foreground" />
+        {t("themeLabel")}
       </DropdownMenuSubTrigger>
       <DropdownMenuSubContent className="min-w-36">
         {THEME_OPTIONS.map(({ value, icon: Icon, labelKey }) => (
@@ -48,7 +48,6 @@ export function NavThemeMenu() {
             key={value}
             id={value}
             textValue={t(labelKey)}
-            className="py-1"
             onAction={() => {
               if (!isThemePreference(value)) return
               selectTheme(value)

@@ -32,6 +32,7 @@
     "./shell": "./src/consent-shell.tsx",
     "./c15t-transpile-packages": "./c15t-transpile-packages.mjs",
     "./cookie-settings-link": "./src/cookie-settings-link.tsx",
+    "./open-cookie-settings": "./src/open-cookie-settings.tsx",
     "./with-consent-manifest": "./with-consent-manifest.mjs",
     "./env": "./src/env.ts"
   }

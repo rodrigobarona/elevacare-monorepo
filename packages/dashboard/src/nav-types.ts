@@ -1,5 +1,6 @@
 import type { NavIconName } from "@eleva/icons"
 import type { OrgType, ProductLabel } from "@eleva/auth/types"
+import type { AccountMenuModel } from "./account-menu-model"
 
 export interface NavItem {
   title: string
@@ -45,14 +46,8 @@ export interface DashboardConfig {
   capabilities?: readonly string[]
   /** Organizations for the workspace switcher */
   organizations?: OrgSwitcherItem[]
-  /** Account settings URL */
-  accountUrl?: string
-  /** Settings page URL (falls back to parent path of accountUrl) */
-  settingsUrl?: string
-  /** Public homepage URL (shows "Visit Homepage" in user menu when set) */
-  homepageUrl?: string
-  /** Logout URL */
-  logoutUrl?: string
+  /** Avatar menu rows, built on the server from the person's memberships */
+  accountMenu: AccountMenuModel
   /** Inbox page URL — shows NavBell when set with apiBaseUrl */
   inboxUrl?: string
   /** Public API origin for NavBell SWR (NEXT_PUBLIC_API_URL) */

@@ -1,7 +1,11 @@
 import { getAuthUser } from "@eleva/auth/server"
 import { captureException } from "@eleva/observability"
 import { getTranslations } from "next-intl/server"
-import { UserMenu } from "./user-menu"
+import { AccountMenu } from "@eleva/dashboard/account-menu"
+import {
+  accountMenuFor,
+  loadUserWorkspaces,
+} from "@eleva/dashboard/account-menu-server"
 import { SignedOutButtons } from "./signed-out-buttons"
 
 /**
@@ -12,12 +16,7 @@ import { SignedOutButtons } from "./signed-out-buttons"
 export async function SiteHeaderAuthSlot() {
   const t = await getTranslations("nav")
 
-  let user: {
-    firstName: string | null
-    lastName: string | null
-    email: string
-    avatarUrl: string | null
-  } | null = null
+  let user: Awaited<ReturnType<typeof getAuthUser>> = null
   try {
     user = await getAuthUser()
   } catch (err) {
@@ -35,24 +34,20 @@ export async function SiteHeaderAuthSlot() {
     )
   }
 
-  const initials =
-    [user.firstName?.[0], user.lastName?.[0]]
-      .filter(Boolean)
-      .join("")
-      .toUpperCase() ||
-    user.email[0]?.toUpperCase() ||
-    "?"
+  // The public site has no active workspace, so every workspace is a
+  // shortcut and Help opens the help centre's front page.
+  const workspaces = await loadUserWorkspaces(user.id, null)
 
   return (
-    <UserMenu
-      initials={initials}
-      firstName={user.firstName}
-      email={user.email}
-      avatarUrl={user.avatarUrl}
-      dashboardLabel={t("dashboard")}
-      signOutLabel={t("signout")}
-      dashboardUrl="/dashboard"
-      signOutUrl="/logout"
+    <AccountMenu
+      surface="site"
+      user={{
+        displayName:
+          [user.firstName, user.lastName].filter(Boolean).join(" ") || null,
+        email: user.email,
+        avatarUrl: user.avatarUrl,
+      }}
+      menu={accountMenuFor(workspaces)}
     />
   )
 }

@@ -9,11 +9,13 @@ import { LOGIN_PATH } from "@eleva/auth"
 import { resolveGatewayUrl } from "@eleva/config/env"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
 import { buildDashboardConfig } from "@eleva/dashboard/config-helpers"
+import { loadUserWorkspaces } from "@eleva/dashboard/account-menu-server"
 import { DashboardProviders } from "@eleva/dashboard/dashboard-providers"
 import {
   getServerAppearance,
   getServerThemePreference,
 } from "@eleva/dashboard/server-theme"
+import { StaffEntry } from "@/components/staff-entry"
 
 const GATEWAY_URL = resolveGatewayUrl()
 const APP_URL = GATEWAY_URL
@@ -34,7 +36,15 @@ export default async function AdminRootLayout({
     redirect(`${GATEWAY_URL}${LOGIN_PATH}`)
   }
 
-  if (!session.capabilities.includes("audit:view_all")) {
+  // Staff rights come from the active workspace. Someone who holds a staff
+  // membership but is working elsewhere confirms before switching to it.
+  const isStaff = session.capabilities.includes("audit:view_all")
+  const staffWorkspace = isStaff
+    ? null
+    : (await loadUserWorkspaces(session.user.id, session.orgId)).find(
+        (workspace) => workspace.orgType === "staff"
+      )
+  if (!isStaff && !staffWorkspace) {
     redirect(`${APP_URL}/${session.orgSlug}`)
   }
 
@@ -46,19 +56,28 @@ export default async function AdminRootLayout({
     getServerThemePreference(),
   ])
 
-  const dashboardConfig = await buildDashboardConfig(
-    session,
-    [
-      {
-        items: [
-          { title: t("overview"), url: "/", icon: "SquaresFourIcon" },
-          { title: t("partners"), url: "/partners", icon: "ShieldIcon" },
+  const content = staffWorkspace ? (
+    <StaffEntry
+      staffOrgId={staffWorkspace.orgId}
+      backHref={`${GATEWAY_URL}/dashboard`}
+    />
+  ) : (
+    <DashboardShell
+      config={await buildDashboardConfig(
+        session,
+        [
+          {
+            items: [
+              { title: t("overview"), url: "/", icon: "SquaresFourIcon" },
+              { title: t("partners"), url: "/partners", icon: "ShieldIcon" },
+            ],
+          },
         ],
-      },
-    ],
-    {
-      enableOrgSwitcher: false,
-    }
+        { enableOrgSwitcher: false }
+      )}
+    >
+      {children}
+    </DashboardShell>
   )
 
   return (
@@ -70,7 +89,7 @@ export default async function AdminRootLayout({
       <body className="font-sans antialiased" suppressHydrationWarning>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <DashboardProviders initialTheme={initialTheme}>
-            <DashboardShell config={dashboardConfig}>{children}</DashboardShell>
+            {content}
           </DashboardProviders>
         </NextIntlClientProvider>
       </body>

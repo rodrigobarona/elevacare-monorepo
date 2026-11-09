@@ -24,6 +24,7 @@
     "@eleva/config": "workspace:^",
     "@eleva/consent": "workspace:*",
     "@eleva/content": "workspace:*",
+    "@eleva/dashboard": "workspace:*",
     "@eleva/editor": "workspace:*",
     "@eleva/icons": "workspace:*",
     "@eleva/media": "workspace:*",
