@@ -1,11 +1,10 @@
 import { headers } from "next/headers"
 import { createApiClient } from "@eleva/api-client"
-import { ELEVA_PATHNAME_HEADER } from "@eleva/auth/proxy"
 import {
+  addressWorkspaceSlug,
   buildApiSessionHeaders,
   requireSession,
   requireSessionForOrg,
-  workspaceSlugFromPath,
 } from "@eleva/auth/server"
 import type { ElevaSession } from "@eleva/auth/types"
 
@@ -17,11 +16,6 @@ export function getApiBaseUrl(): string {
     )
   }
   return url
-}
-
-/** The practice this request is for: `/{slug}/…` in its address. */
-async function addressWorkspaceSlug(): Promise<string | null> {
-  return workspaceSlugFromPath((await headers()).get(ELEVA_PATHNAME_HEADER))
 }
 
 /**

@@ -6,6 +6,7 @@ import {
   persistLocaleCookie,
   resolveLocaleForRequest,
 } from "@eleva/observability/proxy-locale"
+import { ELEVA_PATHNAME_HEADER } from "./workspace-slug"
 import { LOGIN_PATH } from "./guards"
 import {
   expiredSessionCookies,
@@ -33,8 +34,7 @@ export const DEFAULT_UNAUTHENTICATED_PATHS = [
   "/two-factor",
 ] as const
 
-/** Request header so org layouts can preserve the current path on login. */
-export const ELEVA_PATHNAME_HEADER = "x-eleva-pathname"
+export { ELEVA_PATHNAME_HEADER }
 
 export type RedirectStrategy = { kind: "gateway"; baseUrl: string }
 export type OptimisticSessionState = "signed-in" | "signed-out" | "ambiguous"
