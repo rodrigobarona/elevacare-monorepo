@@ -57,17 +57,17 @@ export async function POST(request: Request) {
   // Use the workspace the caller names, not the session's active one: right
   // after a workspace switch the active one can still be the previous
   // workspace, and the profile must never land in a member's Space.
-  const workspace = (
-    await listAuthOrganizations(session.user.id, session.orgId)
-  ).find((item) => item.orgSlug === body.data.orgSlug)
-  if (!workspace || workspace.productLabel !== "expert") {
-    return secureJson(
-      { error: "forbidden", code: "NOT_AN_EXPERT_WORKSPACE" },
-      { status: 403, headers }
-    )
-  }
-
   try {
+    const workspace = (
+      await listAuthOrganizations(session.user.id, session.orgId)
+    ).find((item) => item.orgSlug === body.data.orgSlug)
+    if (!workspace || workspace.productLabel !== "expert") {
+      return secureJson(
+        { error: "forbidden", code: "NOT_AN_EXPERT_WORKSPACE" },
+        { status: 403, headers }
+      )
+    }
+
     const { profile } = await ensureExpertProfileForOrg({
       userId: session.user.id,
       orgId: workspace.orgId,
