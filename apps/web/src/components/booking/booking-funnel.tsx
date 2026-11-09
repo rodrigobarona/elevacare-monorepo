@@ -196,6 +196,7 @@ export function BookingFunnel({
   const windowsToAutoSkip = useRef(MAX_AUTO_SKIPPED_WINDOWS)
   // "Next available": the first open time found when the calendar opens.
   const [earliest, setEarliest] = useState<PublicSlot | null>(null)
+  const earliestRef = useRef<PublicSlot | null>(null)
   const seekingEarliest = useRef(true)
   // After a time-zone change, keep the chosen time if it is still open.
   const keepSlotIfOpen = useRef(false)
@@ -309,9 +310,26 @@ export function BookingFunnel({
           return
         }
         windowsToAutoSkip.current = 0
-        if (seekingEarliest.current) {
+        // "Next available" stays true to what the API just said: it is set
+        // by the first window that has a time (even one reached later with
+        // "Later dates"), and replaced when a fresh load of its window no
+        // longer lists it.
+        const known = earliestRef.current
+        const knownDay = known ? dateKeyInZone(known.start, timeZone) : null
+        const windowEnd = addDaysToKey(fromKey, WINDOW_DAYS)
+        const knownGone =
+          known != null &&
+          knownDay != null &&
+          knownDay >= fromKey &&
+          knownDay < windowEnd &&
+          !result.slots.some((item) => item.start === known.start)
+        if ((seekingEarliest.current || knownGone) && inWindow[0]) {
           seekingEarliest.current = false
-          setEarliest(inWindow[0] ?? null)
+          earliestRef.current = inWindow[0]
+          setEarliest(inWindow[0])
+        } else if (knownGone) {
+          earliestRef.current = null
+          setEarliest(null)
         }
         if (keepSlotIfOpen.current) {
           keepSlotIfOpen.current = false
@@ -510,7 +528,13 @@ export function BookingFunnel({
   }
 
   async function holdAndPay() {
-    if (!selectedMode || !slot) return
+    if (!selectedMode) return
+    // The chosen time is gone (for example after a time-zone change):
+    // send the member back to pick another rather than doing nothing.
+    if (!slot) {
+      setStep("when")
+      return
+    }
     const typedPhone = phone.trim().length > 0
     const e164 = typedPhone ? toE164(phone, country) : undefined
     if ((selectedMode.mode === "phone" || typedPhone) && !e164) {
@@ -826,6 +850,7 @@ export function BookingFunnel({
               onSelectionChange={(id) => {
                 windowsToAutoSkip.current = MAX_AUTO_SKIPPED_WINDOWS
                 seekingEarliest.current = true
+                earliestRef.current = null
                 setEarliest(null)
                 setModeId(id)
                 setSlot(null)

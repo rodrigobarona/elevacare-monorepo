@@ -138,6 +138,8 @@ function ZoneComboBox({
       // Starts empty so the member types a city straight away.
       defaultInputValue=""
       menuTrigger="focus"
+      // Keep the list open on a search with no match so it can say so.
+      allowsEmptyCollection
       defaultFilter={(text, input) => contains(text, input)}
       onSelectionChange={(key) => {
         if (typeof key === "string") onPick(key)
