@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { authClient } from "@eleva/auth/client"
+import { signOutAndLeave } from "@eleva/auth/sign-out"
 import { Button } from "@eleva/ui/components/button"
 
 /**
@@ -24,19 +25,14 @@ export function SignOutButton({
   async function signOut() {
     setIsPending(true)
     setFailed(false)
-    try {
-      const { error } = await authClient.signOut()
-      if (error && error.status !== 401) {
-        setFailed(true)
-        setIsPending(false)
-        return
-      }
-    } catch {
+    const outcome = await signOutAndLeave({
+      signOut: () => authClient.signOut(),
+      leave: () => window.location.assign(gatewayUrl),
+    })
+    if (outcome === "failed") {
       setFailed(true)
       setIsPending(false)
-      return
     }
-    window.location.assign(gatewayUrl)
   }
 
   return (

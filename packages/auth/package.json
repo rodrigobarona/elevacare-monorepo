@@ -20,6 +20,7 @@
     "./org-routing": "./src/org-routing.ts",
     "./permissions": "./src/permissions.ts",
     "./client": "./src/client.ts",
+    "./sign-out": "./src/sign-out.ts",
     "./credentials": "./src/server/credentials.ts",
     "./server/auth": "./src/server/auth.ts",
     "./api-auth": "./src/server/api-auth.ts",
