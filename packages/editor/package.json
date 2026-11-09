@@ -13,10 +13,10 @@
     "@eleva/icons": "workspace:*",
     "@eleva/ui": "workspace:*",
     "@platejs/basic-nodes": "catalog:",
-    "isomorphic-dompurify": "catalog:",
     "platejs": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "sanitize-html": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
@@ -24,6 +24,7 @@
     "@eleva/typescript-config": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "@types/sanitize-html": "catalog:",
     "eslint": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
