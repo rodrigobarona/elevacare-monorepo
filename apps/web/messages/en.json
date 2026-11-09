@@ -277,15 +277,14 @@
     "categoryTitle": "{category} experts — Eleva.care",
     "description": "Browse independent women's health experts, their offers and upcoming availability in your language and country.",
     "eyebrow": "Find your expert",
-    "heading": "Women's health experts, close to you",
+    "heading": "Find the right women's health expert for you",
     "categoryHeading": "{category}",
-    "intro": "Browse by area of care, filter by language, and choose how you want to meet: online, by phone or in person.",
+    "intro": "Real people with real training. Pick someone whose work fits you, then meet by video, by phone or in person.",
     "empty": "No experts match these filters yet.",
     "filterError": "Those filters are not valid. Reset and try again.",
     "resetFilters": "Reset filters",
     "loadError": "The expert directory is unavailable right now. Please try again shortly.",
     "fromPrice": "From {price}",
-    "priceOnRequest": "Price on request",
     "topExpert": "Top Expert · paid plan",
     "categories": {
       "psychology": "Psychology",
@@ -323,35 +322,116 @@
       "lead": "Set your own schedule, rates and policies. We provide the technology; you provide the care.",
       "cta": "Become an expert"
     },
-    "free": "Free",
     "rankingNote": "Top Expert is a paid plan for experts. When you choose “Top Expert first”, those experts appear before the others.",
     "rankingLink": "How we order experts",
-    "rankingAnchor": "8-how-we-rank-experts"
+    "rankingAnchor": "8-how-we-rank-experts",
+    "trustLine": "Before a profile goes live, our team checks the expert's professional registration.",
+    "emptyCategory": "No experts in this area yet.",
+    "seeAll": "See all experts",
+    "freeSession": "Free session available",
+    "speaksLanguage": "Speaks {language}",
+    "removeLanguageFilter": "Remove filter: speaks {language}",
+    "sortedBy": "Sorted by: {sort}",
+    "removeSort": "Remove sorting: {sort}"
   },
   "profile": {
     "title": "{name} — Eleva.care",
-    "description": "See offers and upcoming availability for {name} on Eleva.care.",
-    "upcoming": "Upcoming availability",
-    "noSlots": "No upcoming slots in the next two weeks.",
+    "description": "Meet {name} on Eleva.care: services, training and the next open times.",
     "rateLimited": "Too many requests just now. Wait a minute and try again.",
-    "offers": "Services",
-    "book": "Choose a time",
-    "bookSlot": "Book {offer} at {when}",
-    "cancellationPolicy": "Cancellation policy: {name}",
-    "languages": "Languages",
-    "countries": "Sees members from",
-    "seeAvailability": "See availability",
-    "viewOffers": "View services",
-    "about": "About {name}",
-    "duration": "{duration} min",
+    "free": "Free",
     "fromPrice": "From {price}",
-    "timeZoneNote": "Pick a time to start booking. Times are shown in {timeZone}.",
+    "seeTimes": "See times",
+    "notBooking": "{name} isn't taking bookings here yet. See their work below.",
+    "about": "About me",
+    "readMore": "Read more",
+    "readLess": "Show less",
+    "credentials": "Training and credentials",
+    "social": {
+      "website": "{name}'s website",
+      "instagram": "{name} on Instagram",
+      "linkedin": "{name} on LinkedIn",
+      "youtube": "{name} on YouTube",
+      "tiktok": "{name} on TikTok",
+      "facebook": "{name} on Facebook"
+    },
+    "share": {
+      "label": "Share this page",
+      "accessible": "Share this page: {name}",
+      "copied": "Link copied",
+      "copyFailed": "Copy this link to share the page:"
+    },
+    "facts": {
+      "languages": "Speaks {languages}",
+      "video": "Video",
+      "phone": "Phone",
+      "inPerson": "In person",
+      "inPersonIn": "In person in {places}",
+      "countries": "Members in {countries}"
+    },
+    "services": {
+      "heading": "How I can help",
+      "included": "What's included",
+      "seeAllIncluded": "See all {count} included",
+      "whatToExpect": "What to expect",
+      "questions": "Questions I can help with",
+      "requestNote": "{name} confirms each request within 24 hours, or before the session if sooner.",
+      "eyebrowMixed": "{minutes}-min session",
+      "eyebrow": {
+        "online": "{minutes}-min video call",
+        "phone": "{minutes}-min phone call",
+        "in_person": "{minutes}-min in person"
+      }
+    },
+    "freeCancelHours": "Free cancellation up to {hours} hours before",
+    "freeCancelDays": "Free cancellation up to {days} days before",
     "modeChips": {
       "online": "Video call",
       "in_person": "In person",
       "phone": "Phone"
     },
-    "free": "Free"
+    "bookSlot": "Book {offer} on {when}, {mode}",
+    "card": {
+      "heading": "Book a session",
+      "chooseService": "Choose a service",
+      "timesIn": "Times in {zone}",
+      "full": "The next two weeks are full.",
+      "laterDates": "See later dates",
+      "seeAll": "See all times",
+      "noAccount": "No account needed",
+      "meta": "{minutes} min · {price} total",
+      "metaFrom": "{minutes} min · from {price} total",
+      "metaFree": "{minutes} min · Free",
+      "metaFreeOption": "{minutes} min · free option available",
+      "loadFailed": "We couldn't load times just now."
+    },
+    "withEleva": {
+      "heading": "Booking with Eleva",
+      "howItWorks": {
+        "q": "How does booking work?",
+        "a": "Choose a service and a time, add your name and email, then pay securely or confirm a free session. Your confirmation email has everything you need."
+      },
+      "account": {
+        "q": "Do I need an account?",
+        "a": "No. You can book with just your name and email. You can create a free Space afterwards to keep your sessions in one place."
+      },
+      "join": {
+        "q": "How do I join a video session?",
+        "a": "Use the link in your confirmation email. It opens 15 minutes before the start, in your browser, with no app or account needed."
+      },
+      "cancel": {
+        "q": "Can I cancel?",
+        "a": "Yes. Each service shows when you can cancel for free. To cancel, sign in with the email you booked with and open your session."
+      },
+      "care": {
+        "q": "Who provides my care?",
+        "a": "{name} provides your care. Eleva hosts the booking and the video call."
+      },
+      "checks": {
+        "q": "What does Eleva check?",
+        "a": "Before a profile goes live, our team checks the expert's professional registration. Experts describe their own training and experience."
+      }
+    },
+    "freeOption": "Free option available"
   },
   "booking": {
     "meta": {

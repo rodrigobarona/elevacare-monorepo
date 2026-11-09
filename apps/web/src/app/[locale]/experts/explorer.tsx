@@ -1,15 +1,17 @@
 import type { ReactNode } from "react"
 import { getTranslations } from "next-intl/server"
-import { ApiClientError } from "@eleva/api-client"
+import {
+  ApiClientError,
+  type ListPublicExpertsResponse,
+} from "@eleva/api-client"
 import { defaultLocale, isLocale } from "@eleva/config/i18n"
-import { ArrowRightIcon, CaretDownIcon } from "@eleva/icons"
+import { ArrowRightIcon, CaretDownIcon, XIcon } from "@eleva/icons"
 import { ElevaImage } from "@eleva/media/image"
 import { CtaBand } from "@eleva/ui/blocks/cta-band"
 import { ExpertCard } from "@eleva/ui/blocks/expert-card"
 import { Container, Section, SectionHeader } from "@eleva/ui/blocks/section"
 import { buttonVariants } from "@eleva/ui/components/button-variants"
 import { EmptyState } from "@eleva/ui/components/empty-state"
-import { displayLanguageLabel } from "@eleva/ui/lib/booking/display-names"
 import { cn } from "@eleva/ui/lib/utils"
 import { ExpertPortrait } from "@eleva/ui/blocks/expert-portrait"
 import { SiteFooter } from "@/components/site-footer"
@@ -32,6 +34,12 @@ export type ExplorerSearch = {
 const LANGUAGES = ["pt", "en", "es"] as const
 const SORTS = ["relevance", "price", "rating"] as const
 
+/**
+ * Below this many listed experts the directory is a short, curated list:
+ * no language or sort controls (spec rev 2.2 §1). Deep links keep working.
+ */
+const DIRECTORY_FILTERS_MIN_EXPERTS = 12
+
 const SELECT_CLASS =
   "h-10 w-full appearance-none rounded-full border border-input-border bg-background py-2 pr-9 pl-4 text-sm shadow-1 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
 
@@ -50,22 +58,32 @@ export async function Explorer({
   // Server render: forward the visitor IP so each visitor gets their own
   // rate-limit bucket instead of sharing the server egress IP.
   const api = await createServerPublicApiClient()
+  const isNarrowed = Boolean(category || language || search.cursor)
 
-  let experts: Awaited<ReturnType<typeof api.public.listExperts>>["experts"] =
-    []
+  let experts: ListPublicExpertsResponse["experts"] = []
   let nextCursor: string | null = null
   let loadError = false
   let filterError = false
+  // The unfiltered first page decides which areas get a chip and whether
+  // the directory is large enough for filters. Null when it could not be
+  // loaded: the page then offers every control rather than guessing from a
+  // filtered result.
+  let directory: ListPublicExpertsResponse | null = null
 
   try {
-    const result = await api.public.listExperts({
-      ...(category ? { category } : {}),
-      ...(language ? { language } : {}),
-      ...(sort ? { sort } : {}),
-      ...(search.cursor ? { cursor: search.cursor } : {}),
-    })
+    const [result, everyone] = await Promise.all([
+      api.public.listExperts({
+        ...(category ? { category } : {}),
+        ...(language ? { language } : {}),
+        ...(sort ? { sort } : {}),
+        ...(search.cursor ? { cursor: search.cursor } : {}),
+      }),
+      // Only shapes the chips and filters; never fails the page.
+      isNarrowed ? api.public.listExperts({}).catch(() => null) : null,
+    ])
     experts = result.experts
     nextCursor = result.nextCursor
+    directory = isNarrowed ? everyone : result
   } catch (error) {
     if (error instanceof ApiClientError && error.status === 422) {
       filterError = true
@@ -88,6 +106,25 @@ export async function Explorer({
   const categoryLabel = (slug: string) =>
     isMarketplaceCategory(slug) ? t(`categories.${slug}`) : null
 
+  // A directory that spans several pages (or could not be loaded) is not a
+  // short curated list: every control and every area chip is offered, since
+  // one page cannot tell which areas have experts.
+  const isLargeOrUnknown =
+    !loadError &&
+    !filterError &&
+    (directory == null ||
+      directory.nextCursor != null ||
+      directory.experts.length >= DIRECTORY_FILTERS_MIN_EXPERTS)
+  const showFilters = isLargeOrUnknown
+  const listedAreas = new Set(
+    (directory?.experts ?? []).flatMap((expert) => expert.categorySlugs)
+  )
+  const areaSlugs = MARKETPLACE_CATEGORY_SLUGS.filter(
+    (slug) => isLargeOrUnknown || listedAreas.has(slug) || slug === category
+  )
+  const sortLabel = sort && sort !== "relevance" ? t(`sort.${sort}`) : null
+  const showAreas = areaSlugs.length >= 2 || category != null
+
   return (
     <div className="flex min-h-dvh flex-col">
       <SiteHeader />
@@ -107,83 +144,100 @@ export async function Explorer({
               lead={t("intro")}
             />
 
-            <nav aria-label={t("categoriesLabel")}>
-              <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
-                <li>
-                  <CategoryChip href="/experts" isActive={!category}>
-                    {t("allCategories")}
-                  </CategoryChip>
-                </li>
-                {MARKETPLACE_CATEGORY_SLUGS.map((slug) => (
-                  <li key={slug}>
-                    <CategoryChip
-                      href={`/experts/${slug}`}
-                      isActive={category === slug}
-                    >
-                      {t(`categories.${slug}`)}
+            {showAreas ? (
+              <nav aria-label={t("categoriesLabel")}>
+                <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
+                  <li>
+                    <CategoryChip href="/experts" isActive={!category}>
+                      {t("allCategories")}
                     </CategoryChip>
                   </li>
-                ))}
-              </ul>
-            </nav>
+                  {areaSlugs.map((slug) => (
+                    <li key={slug}>
+                      <CategoryChip
+                        href={`/experts/${slug}`}
+                        isActive={category === slug}
+                      >
+                        {t(`categories.${slug}`)}
+                      </CategoryChip>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            ) : null}
 
-            <form
-              className="flex flex-wrap items-end gap-3 rounded-3xl border bg-muted/50 p-4"
-              action={localePath(locale, basePath)}
-            >
-              <FilterSelect
-                label={t("filters.language")}
-                name="language"
-                defaultValue={language ?? ""}
+            {showFilters ? (
+              <form
+                className="flex flex-wrap items-end gap-3 rounded-3xl border bg-muted/50 p-4"
+                action={localePath(locale, basePath)}
               >
-                <option value="">{t("filters.anyLanguage")}</option>
-                {LANGUAGES.map((item) => (
-                  <option key={item} value={item}>
-                    {t(`languages.${item}`)}
-                  </option>
-                ))}
-              </FilterSelect>
-              <FilterSelect
-                label={t("filters.sort")}
-                name="sort"
-                defaultValue={sort ?? "relevance"}
-              >
-                {SORTS.map((item) => (
-                  <option key={item} value={item}>
-                    {t(`sort.${item}`)}
-                  </option>
-                ))}
-              </FilterSelect>
-              <button
-                type="submit"
-                className={buttonVariants({ className: "rounded-full" })}
-              >
-                {t("filters.apply")}
-              </button>
-              {language || sort ? (
-                <Link
-                  href={basePath}
-                  className={buttonVariants({
-                    variant: "ghost",
-                    className: "rounded-full",
-                  })}
+                <FilterSelect
+                  label={t("filters.language")}
+                  name="language"
+                  defaultValue={language ?? ""}
                 >
-                  {t("resetFilters")}
-                </Link>
-              ) : null}
-            </form>
-            <p
-              className="mt-3 text-sm text-muted-foreground"
-              data-testid="experts-ranking-note"
-            >
-              {t("rankingNote")}{" "}
-              <Link
-                href={`/legal/terms#${t("rankingAnchor")}`}
-                className="underline underline-offset-4 hover:text-foreground"
-              >
-                {t("rankingLink")}
-              </Link>
-            </p>
+                  <option value="">{t("filters.anyLanguage")}</option>
+                  {LANGUAGES.map((item) => (
+                    <option key={item} value={item}>
+                      {t(`languages.${item}`)}
+                    </option>
+                  ))}
+                </FilterSelect>
+                <FilterSelect
+                  label={t("filters.sort")}
+                  name="sort"
+                  defaultValue={sort ?? "relevance"}
+                >
+                  {SORTS.map((item) => (
+                    <option key={item} value={item}>
+                      {t(`sort.${item}`)}
+                    </option>
+                  ))}
+                </FilterSelect>
+                <button
+                  type="submit"
+                  className={buttonVariants({ className: "rounded-full" })}
+                >
+                  {t("filters.apply")}
+                </button>
+                {language || sort ? (
+                  <Link
+                    href={basePath}
+                    className={buttonVariants({
+                      variant: "ghost",
+                      className: "rounded-full",
+                    })}
+                  >
+                    {t("resetFilters")}
+                  </Link>
+                ) : null}
+              </form>
+            ) : language || sortLabel ? (
+              // Short list: a deep link's filter or sort shows as a chip
+              // that removes only itself.
+              <div className="flex flex-wrap gap-2">
+                {language ? (
+                  <RemovableChip
+                    href={filterHref({ language: "" })}
+                    label={t("removeLanguageFilter", {
+                      language: t(`languages.${language}`),
+                    })}
+                  >
+                    {t("speaksLanguage", {
+                      language: t(`languages.${language}`),
+                    })}
+                  </RemovableChip>
+                ) : null}
+                {sortLabel ? (
+                  <RemovableChip
+                    href={filterHref({ sort: "" })}
+                    label={t("removeSort", { sort: sortLabel })}
+                  >
+                    {t("sortedBy", { sort: sortLabel })}
+                  </RemovableChip>
+                ) : null}
+              </div>
+            ) : null}
           </Container>
         </Section>
 
@@ -214,17 +268,17 @@ export async function Explorer({
             {!loadError && !filterError && experts.length === 0 ? (
               <EmptyState
                 variant="no-results"
-                title={t("empty")}
+                title={category && !language ? t("emptyCategory") : t("empty")}
                 action={
-                  language || sort ? (
+                  category || language || sort ? (
                     <Link
-                      href={basePath}
+                      href="/experts"
                       className={buttonVariants({
                         variant: "outline",
                         size: "sm",
                       })}
                     >
-                      {t("resetFilters")}
+                      {t("seeAll")}
                     </Link>
                   ) : undefined
                 }
@@ -232,45 +286,47 @@ export async function Explorer({
             ) : null}
 
             {experts.length > 0 ? (
-              <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {experts.map((expert) => (
-                  <li key={expert.username}>
-                    <ExpertCard
-                      data-testid="expert-card"
-                      data-username={expert.username}
-                      href={`/${expert.username}`}
-                      linkAs={Link}
-                      media={
-                        <ExpertPortrait
-                          displayName={expert.displayName}
-                          username={expert.username}
-                          avatarUrl={expert.avatarUrl}
-                        />
-                      }
-                      name={expert.displayName}
-                      headline={expert.headline}
-                      badge={
-                        expert.topExpertActive ? t("topExpert") : undefined
-                      }
-                      tags={expert.categorySlugs
-                        .map(categoryLabel)
-                        .filter((label) => label !== null)
-                        .slice(0, 3)}
-                      meta={expert.languages
-                        .map((code) => displayLanguageLabel(code, locale))
-                        .join(" · ")}
-                      price={
-                        expert.minPriceCents == null
-                          ? t("priceOnRequest")
-                          : expert.minPriceCents === 0
-                            ? t("free")
-                            : t("fromPrice", {
-                                price: formatEur(expert.minPriceCents, locale),
-                              })
-                      }
-                    />
-                  </li>
-                ))}
+              <ul className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+                {experts.map((expert) => {
+                  const areas = expert.categorySlugs
+                    .map(categoryLabel)
+                    .filter((label) => label !== null)
+                    .slice(0, 2)
+                  return (
+                    <li key={expert.username}>
+                      <ExpertCard
+                        data-testid="expert-card"
+                        data-username={expert.username}
+                        href={`/${expert.username}`}
+                        linkAs={Link}
+                        media={
+                          <ExpertPortrait
+                            displayName={expert.displayName}
+                            avatarUrl={expert.avatarUrl}
+                          />
+                        }
+                        name={expert.displayName}
+                        headline={expert.headline}
+                        badge={
+                          expert.topExpertActive ? t("topExpert") : undefined
+                        }
+                        meta={areas.length > 0 ? areas.join(" · ") : undefined}
+                        price={
+                          expert.minPriceCents == null
+                            ? undefined
+                            : expert.minPriceCents === 0
+                              ? t("freeSession")
+                              : t("fromPrice", {
+                                  price: formatEur(
+                                    expert.minPriceCents,
+                                    locale
+                                  ),
+                                })
+                        }
+                      />
+                    </li>
+                  )
+                })}
               </ul>
             ) : null}
 
@@ -287,6 +343,21 @@ export async function Explorer({
                   <ArrowRightIcon data-icon="inline-end" />
                 </Link>
               </div>
+            ) : null}
+
+            {experts.length > 0 ? (
+              <p
+                className="mt-10 max-w-2xl text-sm text-pretty text-muted-foreground"
+                data-testid="experts-ranking-note"
+              >
+                {t("trustLine")} {showFilters ? `${t("rankingNote")} ` : null}
+                <Link
+                  href={`/legal/terms#${t("rankingAnchor")}`}
+                  className="underline underline-offset-4 hover:text-foreground"
+                >
+                  {t("rankingLink")}
+                </Link>
+              </p>
             ) : null}
           </Container>
         </Section>
@@ -344,6 +415,28 @@ function CategoryChip({
       )}
     >
       {children}
+    </Link>
+  )
+}
+
+function RemovableChip({
+  href,
+  label,
+  children,
+}: {
+  href: string
+  /** Names what pressing it removes. */
+  label: string
+  children: ReactNode
+}) {
+  return (
+    <Link
+      href={href}
+      aria-label={label}
+      className="inline-flex min-h-11 items-center gap-2 rounded-full border bg-background px-4 text-sm transition-colors hover:bg-muted"
+    >
+      {children}
+      <XIcon aria-hidden className="size-4" />
     </Link>
   )
 }

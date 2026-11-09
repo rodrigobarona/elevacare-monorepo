@@ -66,6 +66,7 @@ export {
   PlusIcon,
   RocketLaunchIcon,
   SealCheckIcon,
+  ShareNetworkIcon,
   ShieldCheckIcon,
   ShieldIcon,
   SidebarIcon,
