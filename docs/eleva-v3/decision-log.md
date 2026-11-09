@@ -32,6 +32,29 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-09: Booking slice 2 "Pick a time" built as a days strip (active)
+
+- Founder review of the first build (React Aria month calendar above a
+  times list): the expert dropped out of view and picking took two steps.
+  Hands-on comparison of intro.co, Cal.com and Doctolib (screenshots in the
+  session); founder chose "expert + days strip".
+- Built: the expert panel on every step (left on desktop, compact card on
+  phones) with "About {name}" back to the profile; a strip of open days with
+  their times (one tap), "+N more", four weeks per load and "Later dates";
+  "Choose a date" calendar popover; "Next available" only after jumping
+  past it; "Times in {city} time · Change time zone" with a searchable list
+  that keeps the chosen time; "Continue with {day, time}" under the strip
+  and sticky on phones (WCAG 2.4.11 scroll padding); 24-hour clock and EU
+  date formats everywhere (`intlLocales` in `@eleva/config/i18n`).
+- Removed from the earlier spec: the month calendar as the main picker,
+  Morning / Afternoon / Evening groups, and the browser hour cycle.
+- Evidence: local recordings (desktop and phone) on the seeded `fisiomota`
+  offer, 2026-11-09. Not proven: a screen-reader pass and the e2e booking
+  suite against the strip (selectors kept: `booking-slot-day`,
+  `booking-slot-time` + `data-start`, `booking-slot-next` = Later dates,
+  `booking-continue-when`).
+- Not built: slice 3 (Confirm page, merged consent row).
+
 ### 2026-11-07: Expert profile, directory and booking UX revision 2.2 (active; two items needs-review)
 
 - Owner: founder. Spec: `expert-profile-booking-ux-spec.md` revision 2.2,

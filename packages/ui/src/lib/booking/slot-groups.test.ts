@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest"
 import {
-  calendarDays,
+  addDaysToKey,
   dateKeyInZone,
   groupSlotsByDay,
-  startOfMonth,
+  zoneCity,
+  zoneOffsetLabel,
 } from "./slot-groups"
 
 describe("dateKeyInZone", () => {
@@ -41,12 +42,26 @@ describe("groupSlotsByDay", () => {
   })
 })
 
-describe("calendarDays", () => {
-  it("returns a Monday-first 42-day grid", () => {
-    const days = calendarDays(
-      startOfMonth(new Date("2026-09-01T00:00:00.000Z"))
-    )
-    expect(days).toHaveLength(42)
-    expect(days[0]?.getUTCDay()).toBe(1)
+describe("zone labels", () => {
+  it("names the city of a zone", () => {
+    expect(zoneCity("Europe/Lisbon")).toBe("Lisbon")
+    expect(zoneCity("America/Sao_Paulo")).toBe("Sao Paulo")
+    expect(zoneCity("UTC")).toBe("UTC")
+  })
+
+  it("gives the UTC offset at an instant", () => {
+    const winter = new Date("2026-01-15T12:00:00.000Z")
+    const summer = new Date("2026-07-15T12:00:00.000Z")
+    expect(zoneOffsetLabel("Europe/Lisbon", winter)).toBe("UTC+00:00")
+    expect(zoneOffsetLabel("Europe/Lisbon", summer)).toBe("UTC+01:00")
+    expect(zoneOffsetLabel("Europe/Madrid", winter)).toBe("UTC+01:00")
+  })
+})
+
+describe("addDaysToKey", () => {
+  it("crosses month and year ends", () => {
+    expect(addDaysToKey("2026-11-30", 2)).toBe("2026-12-02")
+    expect(addDaysToKey("2026-12-31", 1)).toBe("2027-01-01")
+    expect(addDaysToKey("2026-03-01", -1)).toBe("2026-02-28")
   })
 })

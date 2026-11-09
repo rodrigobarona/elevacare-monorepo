@@ -250,47 +250,51 @@ time** → **Confirm**.
 
 ### Pick a time
 
+Revised 2026-11-09 after a founder review ("I lose the expert context") and
+hands-on comparison with intro.co, Cal.com and Doctolib: the expert stays in
+view and a time is one tap from a strip of open days.
+
 ```
- STEP 1 OF 2 · PICK A TIME
- Pick a time                                   ┌ summary card ────────┐
- First visit · 60 min · Video · €60            │ (FM) Fisio Mota      │
-                                               │ First visit          │
- Times in Lisbon time · Change time zone       │ Video · 60 min       │
- [📅 Next available: Mon 9 Nov, 09:00]         │ Pick a time          │
-                                               │ €60 total            │
-  ←  November 2026  →                          │ Free cancellation    │
-  Mo Tu We Th Fr Sa Su                         │ up to 24 h before    │
-  (9) 10 11 12 13  ·  ·                        └──────────────────────┘
-   •  •  •  •  •
- Monday, 9 November
- MORNING     [09:00] [09:30] [10:00] [10:30] [11:00] [11:30]
- AFTERNOON   [12:00] [12:30] [13:00 ✓]
-             [ Continue with Mon 9 Nov, 13:00 → ]   (full-width row)
+ ┌ expert panel ─────────┐  STEP 1 OF 3 · WHEN
+ │ (FM) Fisio Mota       │  Pick a time
+ │ Physiotherapist       │  Times in Lisbon time · Change time zone
+ │ About Fisio Mota →    │
+ │ First visit           │  Open times        [📅 Choose a date] ‹ ›
+ │ 60 min · Video        │   Today  Tomorrow  Wed     Thu     Fri
+ │ When  Tue 10 Nov 10:00│   9 Nov  10 Nov    11 Nov  12 Nov  13 Nov
+ │ Price €60.00          │  [15:00] [09:00]  [09:00] [09:00] [09:00]
+ │ Flexible cancellation │  [15:30] [09:30]  [09:30] [09:30] [09:30]
+ └───────────────────────┘  [16:00] [10:00✓] [10:00] [10:00] [10:00]
+                                    +11 more  +11 more …  [Later dates]
+                            [ Continue with Tue, 10 Nov, 10:00 ]
 ```
 
-- **Calendar = React Aria `Calendar`** with `isDateUnavailable`: one tab
-  stop, arrow keys (unavailable days take focus but cannot be selected),
-  PageUp/PageDown for months, week start from the locale, available days bold
-  with a dot, no counts, `gap-0` so 7 × 44 px fits a 328 px column. The
-  Month/Week toggle is removed. It opens on the first day with open times,
-  with that day's times showing; pressing a day selects the day only, never a
-  time.
+- **Expert panel** (`BookingSummary`) on every step: photo, name, headline,
+  "About {name}" back to the profile, the session (duration and how they
+  meet), when and price. Left of the steps on desktop (sticky); a compact
+  card above them on phones (price joins the session line).
+- **Days strip**: only days with open times, each a column (Today / Tomorrow
+  / weekday, then "9 Nov") with its first four times and "+N more". The
+  strip scrolls sideways (snap; ‹ › on desktop, swipe on phones); four weeks
+  load at a time and "Later dates" loads the next four. Empty windows are
+  skipped twice while looking for the first open time.
+- **Choose a date** opens a React Aria `Calendar` in a popover (week start
+  from the locale, from today on); the strip then starts at that day, and
+  "Next available: Mon 9 Nov, 15:00" appears to jump back.
 - **Time zone**: one line "Times in {city} time · Change time zone"
   (accessible name "Change time zone, currently Lisbon"). Change reveals a
   searchable `ComboBox` (city and UTC offset), focus moves into it and
   returns to the trigger on close. Changing zone keeps the chosen time when
   it still exists.
-- **Next available** (calendar icon, no urgency styling) selects the earliest
-  slot, moves focus to that time and announces "Monday 9 November, 13:00
-  selected". This is the one focus move: the member asked for it.
-- **Times** are grouped Morning / Afternoon / Evening, 44 px tall with a
-  visible edge, in the member's clock: the hour cycle comes from `Intl`
-  for the browser locale when it shares the UI language, else 24 h (EU
-  default). After a day press on phones, the times scroll into view.
-- **Continue** appears as its own full-width row right after the row holding
-  the selected time (desktop) and as a sticky bottom action bar (phones). It
-  keeps `booking-continue-when`. Selecting a time never moves focus; a polite
-  live region announces the selection. Enter/Space only select.
+- **Times** are 44 px with a visible edge, on a 24-hour clock everywhere
+  (the browser's hour cycle showed "2:30 p.m." in the funnel and "14:30" on
+  the profile card for the same slot). Dates use the EU locales in
+  `@eleva/config/i18n` (`intlLocales`). Each time is labelled "Book Tuesday
+  10 November, 10:00".
+- **Continue with {day, time}** sits under the strip on desktop and is a
+  sticky bottom bar on phones with scroll padding (WCAG 2.4.11). It keeps
+  `booking-continue-when`. Selecting a time never moves focus; a polite live
+  region announces it. "Next available" is the one focus move.
 
 ### Confirm (details + payment on one page)
 

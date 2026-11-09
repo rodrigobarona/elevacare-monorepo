@@ -90,3 +90,61 @@ export function mapConfirmError(code: string | undefined): string {
       return "confirmFailed"
   }
 }
+
+type WindowSlot = { start: string }
+
+export type SlotWindowState<T extends WindowSlot> = {
+  /** The cached "Next available" time. */
+  earliest: T | null
+  /** Still looking for the first open time. */
+  seeking: boolean
+  /** The member's chosen time. */
+  selected: T | null
+}
+
+/**
+ * Reconcile the funnel with a fresh load of open times for one window of
+ * civil days `[fromKey, windowEnd)`. `dayOf` maps a time to its civil day in
+ * the member's zone. Anything the window covers but the API no longer lists
+ * is stale: a stale "Next available" is replaced by the window's first time
+ * (or the search resumes), and a stale choice is cleared and reported.
+ */
+export function reconcileSlotWindow<T extends WindowSlot>(input: {
+  state: SlotWindowState<T>
+  /** Open times returned by the API for this load. */
+  slots: readonly T[]
+  fromKey: string
+  windowEnd: string
+  dayOf: (slot: T) => string
+}): SlotWindowState<T> & { selectionGone: boolean } {
+  const { state, slots, fromKey, windowEnd, dayOf } = input
+  const covers = (slot: T) => {
+    const day = dayOf(slot)
+    return day >= fromKey && day < windowEnd
+  }
+  const listed = (slot: T) => slots.some((item) => item.start === slot.start)
+  const first =
+    [...slots]
+      .filter((slot) => dayOf(slot) >= fromKey)
+      .sort((a, b) => a.start.localeCompare(b.start))[0] ?? null
+
+  let { earliest, seeking } = state
+  const earliestGone = earliest != null && covers(earliest) && !listed(earliest)
+  if (earliestGone) {
+    earliest = null
+    seeking = true
+  }
+  if (seeking && first) {
+    earliest = first
+    seeking = false
+  }
+
+  const selectionGone =
+    state.selected != null && covers(state.selected) && !listed(state.selected)
+  return {
+    earliest,
+    seeking,
+    selected: selectionGone ? null : state.selected,
+    selectionGone,
+  }
+}

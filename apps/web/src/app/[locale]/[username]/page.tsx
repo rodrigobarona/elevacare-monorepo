@@ -7,7 +7,7 @@ import type {
   PublicEventType,
   PublicExpertProfile,
 } from "@eleva/api-client"
-import type { Locale } from "@eleva/config/i18n"
+import { intlLocales, type Locale } from "@eleva/config/i18n"
 import {
   CANCELLATION_POLICY_TIERS,
   type CancellationPolicy,
@@ -63,13 +63,6 @@ type ProfileT = Awaited<ReturnType<typeof getTranslations<"profile">>>
 /** Bios longer than this start clipped with "Read more" (decided here). */
 const BIO_REVEAL_MIN_CHARS = 700
 const DAY_MS = 24 * 60 * 60 * 1000
-
-/** EU clocks: 24 h everywhere, including English (en-IE). */
-const INTL_LOCALES: Record<Locale, string> = {
-  en: "en-IE",
-  pt: "pt-PT",
-  es: "es-ES",
-}
 
 type Props = {
   params: Promise<{ locale: string; username: string }>
@@ -634,7 +627,7 @@ async function ProfileBookingCard({
     )
   }
 
-  const intlLocale = INTL_LOCALES[locale]
+  const intlLocale = intlLocales[locale]
   const dayKey = new Intl.DateTimeFormat("en-CA", {
     timeZone,
     year: "numeric",
@@ -892,7 +885,7 @@ function profileFacts(
 }
 
 function listFormat(items: string[], locale: Locale): string {
-  return new Intl.ListFormat(INTL_LOCALES[locale], {
+  return new Intl.ListFormat(intlLocales[locale], {
     style: "long",
     type: "conjunction",
   }).format(items)

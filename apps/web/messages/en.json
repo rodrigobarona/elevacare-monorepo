@@ -457,7 +457,8 @@
       "when": "When",
       "price": "Price",
       "chooseTime": "Pick a time to continue",
-      "policy": "{policy} cancellation policy"
+      "policy": "{policy} cancellation policy",
+      "profile": "About {name}"
     },
     "modes": {
       "online": {
@@ -490,27 +491,31 @@
     },
     "when": {
       "heading": "Pick a time",
-      "sub": "Times are shown in your timezone.",
-      "timezone": "Your timezone",
-      "month": "Month",
-      "week": "Week",
+      "sub": "Pick a time that suits you.",
+      "timesIn": "Times in {city} time",
+      "changeZone": "Change time zone",
+      "changeZoneAccessible": "Change time zone, currently {city}",
+      "zoneField": "Time zone",
+      "zoneEmpty": "No time zone matches that search.",
+      "strip": "Open times",
+      "earlierDays": "Earlier days",
+      "laterDays": "More days",
       "previous": "Previous month",
       "next": "Next month",
-      "empty": "No times this day. Try another date.",
-      "day": "{date}, {count, plural, =0 {no times} one {# time available} other {# times available}}",
-      "timesFor": "Times on {date}",
+      "today": "Today",
+      "tomorrow": "Tomorrow",
+      "more": "+{count} more",
+      "less": "Fewer times",
+      "laterDates": "Later dates",
+      "chooseDate": "Choose a date",
+      "calendar": "Choose a date to see times from then",
+      "empty": "No open times in these weeks. Try later dates.",
+      "nextAvailable": "Next available: {when}",
+      "timeAccessible": "Book {when}",
+      "selected": "{when} selected",
       "loading": "Finding times…",
       "loadError": "We could not load times. Please try again.",
-      "continue": "Continue",
-      "weekdays": {
-        "mon": "Mon",
-        "tue": "Tue",
-        "wed": "Wed",
-        "thu": "Thu",
-        "fri": "Fri",
-        "sat": "Sat",
-        "sun": "Sun"
-      }
+      "continueWith": "Continue with {when}"
     },
     "details": {
       "heading": "A few details",

@@ -21,7 +21,7 @@ import {
   describeCancellationPolicy,
   type CancellationPolicy,
 } from "@eleva/config/cancellation-policy"
-import type { Locale } from "@eleva/config/i18n"
+import { intlLocale, type Locale } from "@eleva/config/i18n"
 import { BookingCheckoutPayment } from "@eleva/billing/client"
 import { Button } from "@eleva/ui/components/button"
 import { Field, FieldError, FieldLabel } from "@eleva/ui/components/field"
@@ -38,7 +38,7 @@ import {
 } from "@eleva/ui/components/booking/mode-cards"
 import { SlotPicker } from "@eleva/ui/components/booking/slot-picker"
 import {
-  TimezoneSelect,
+  TimeZoneLine,
   resolvedTimeZone,
 } from "@eleva/ui/components/booking/timezone-select"
 import { formatBookingPrice } from "@eleva/ui/components/booking/price-tag"
@@ -51,11 +51,7 @@ import { displayLanguage } from "@eleva/ui/lib/booking/display-names"
 import { toE164 } from "@eleva/ui/lib/booking/e164"
 import { maskPhone } from "@eleva/config/phone"
 import { slotRequiresApproval } from "@eleva/config/booking-settings"
-import {
-  addMonths,
-  groupSlotsByDay,
-  startOfMonth,
-} from "@eleva/ui/lib/booking/slot-groups"
+import { addDaysToKey, dateKeyInZone } from "@eleva/ui/lib/booking/slot-groups"
 import { createPublicApiClient } from "@/lib/public-api"
 import { downloadBookingIcs } from "@eleva/calendar/ics-download"
 import {
@@ -65,6 +61,7 @@ import {
 } from "@/components/booking/booking-chrome"
 import { BookingDone } from "@/components/booking/booking-done"
 import { ExpertAvatar } from "@/components/expert-avatar"
+import { Link } from "@/i18n/navigation"
 import type { FunnelConsentDoc } from "@/lib/booking-consents"
 import {
   bookingReturnUrl,
@@ -84,6 +81,7 @@ import {
   mapConfirmError,
   mapReserveError,
   previousFunnelStep,
+  reconcileSlotWindow,
   type FunnelStep,
 } from "@/lib/funnel-state"
 import { pickLocalizedText, type LocalizedText } from "@/lib/localized-text"
@@ -103,14 +101,17 @@ type Payment = {
   publishableKey: string
 }
 
-/** How far the calendar looks ahead for the first month with open times. */
-const MAX_AUTO_SKIPPED_MONTHS = 2
+/** Days of open times loaded at once (the slots API allows up to 31). */
+const WINDOW_DAYS = 28
+/** Empty windows skipped while looking for the first open time (~3 months). */
+const MAX_AUTO_SKIPPED_WINDOWS = 2
 
 /** Warn this long before a booking hold ends (WCAG 2.2.1 needs >= 20 s). */
 const HOLD_WARNING_MS = 60_000
 export function BookingFunnel({
   locale,
   expertName,
+  expertHeadline = null,
   expertAvatarUrl = null,
   username,
   eventSlug,
@@ -132,6 +133,8 @@ export function BookingFunnel({
 }: {
   locale: Locale
   expertName: string
+  /** e.g. "Physiotherapist · Lisbon", shown under the expert's name. */
+  expertHeadline?: string | null
   expertAvatarUrl?: string | null
   username: string
   eventSlug: string
@@ -184,11 +187,26 @@ export function BookingFunnel({
     key: string
     error: boolean
   }>({ key: "", error: false })
-  const [month, setMonth] = useState(() =>
-    startOfMonth(initialSlot ? new Date(initialSlot.start) : new Date())
+  // First civil day of the loaded window of open times.
+  const [fromKey, setFromKey] = useState(() =>
+    dateKeyInZone(
+      initialSlot?.start ?? new Date().toISOString(),
+      resolvedTimeZone(geoTimeZone)
+    )
   )
-  const [view, setView] = useState<"month" | "week">("month")
-  const monthsToAutoSkip = useRef(MAX_AUTO_SKIPPED_MONTHS)
+  const windowsToAutoSkip = useRef(MAX_AUTO_SKIPPED_WINDOWS)
+  // "Next available": the first open time found when the calendar opens.
+  const [earliest, setEarliest] = useState<PublicSlot | null>(null)
+  const earliestRef = useRef<PublicSlot | null>(null)
+  const seekingEarliest = useRef(true)
+  // Mirrors `slot` for the slots effect, which must not re-run on a pick.
+  const slotRef = useRef<PublicSlot | null>(slot)
+  useEffect(() => {
+    slotRef.current = slot
+  }, [slot])
+  // The chosen time stopped being open: the time step says so.
+  const [slotGone, setSlotGone] = useState(false)
+  const dateLocale = intlLocale(locale)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
@@ -263,19 +281,20 @@ export function BookingFunnel({
       (mode) => mode.id === (modeId ?? pinnedModeId ?? inferredMode?.id)
     ) ?? null
   const slotsKey = selectedMode
-    ? `${selectedMode.id}:${month.toISOString()}:${timeZone}`
+    ? `${selectedMode.id}:${fromKey}:${timeZone}`
     : ""
   const slotsLoading = Boolean(selectedMode) && slotsRequest.key !== slotsKey
   const slotsError = slotsRequest.key === slotsKey && slotsRequest.error
 
   useEffect(() => {
     if (!selectedMode) return
-    const from = startOfMonth(month)
-    const nextMonthPlusDay = addMonths(month, 1).getTime() + 24 * 60 * 60 * 1000
-    const maxRange = from.getTime() + 31 * 24 * 60 * 60 * 1000
-    const to = new Date(Math.min(nextMonthPlusDay, maxRange))
+    // Midnight UTC a day either side of the window covers every offset
+    // from UTC-12 to UTC+14 (30 days, inside the API's 31). The picker shows
+    // only days from `fromKey` in the member's zone.
+    const from = new Date(`${addDaysToKey(fromKey, -1)}T00:00:00Z`)
+    const to = new Date(`${addDaysToKey(fromKey, WINDOW_DAYS + 1)}T00:00:00Z`)
     const api = createPublicApiClient()
-    const key = `${selectedMode.id}:${month.toISOString()}:${timeZone}`
+    const key = `${selectedMode.id}:${fromKey}:${timeZone}`
     let cancelled = false
     api.public
       .getSlots(username, eventSlug, {
@@ -287,19 +306,40 @@ export function BookingFunnel({
       })
       .then((result) => {
         if (cancelled) return
-        // A calendar with every day disabled reads as "unavailable" when the
-        // next open time is only days away, as it often is at month end.
-        // The request runs a day past month end; only this month's days show.
-        const monthKey = month.toISOString().slice(0, 7)
-        const monthHasOpenTime = groupSlotsByDay(result.slots, timeZone).some(
-          (group) => group.dateKey.startsWith(monthKey)
-        )
-        if (!monthHasOpenTime && monthsToAutoSkip.current > 0) {
-          monthsToAutoSkip.current -= 1
-          setMonth(addMonths(month, 1))
+        const inWindow = result.slots
+          .filter((item) => dateKeyInZone(item.start, timeZone) >= fromKey)
+          .sort((a, b) => a.start.localeCompare(b.start))
+        // An empty strip reads as "unavailable" when the next open time is
+        // only weeks away: look further before showing it.
+        if (inWindow.length === 0 && windowsToAutoSkip.current > 0) {
+          windowsToAutoSkip.current -= 1
+          setFromKey(addDaysToKey(fromKey, WINDOW_DAYS))
           return
         }
-        monthsToAutoSkip.current = 0
+        windowsToAutoSkip.current = 0
+        // Anything this window covers but the API no longer lists is stale:
+        // "Next available" is replaced (or the search resumes) and a chosen
+        // time that was booked meanwhile is cleared, with a message.
+        const next = reconcileSlotWindow({
+          state: {
+            earliest: earliestRef.current,
+            seeking: seekingEarliest.current,
+            selected: slotRef.current,
+          },
+          slots: result.slots,
+          fromKey,
+          windowEnd: addDaysToKey(fromKey, WINDOW_DAYS),
+          dayOf: (item) => dateKeyInZone(item.start, timeZone),
+        })
+        seekingEarliest.current = next.seeking
+        if (next.earliest !== earliestRef.current) {
+          earliestRef.current = next.earliest
+          setEarliest(next.earliest)
+        }
+        if (next.selectionGone) {
+          setSlot(null)
+          setSlotGone(true)
+        }
         setSlots(result.slots)
         setSlotsRequest({ key, error: false })
       })
@@ -311,7 +351,7 @@ export function BookingFunnel({
     return () => {
       cancelled = true
     }
-  }, [eventSlug, linkToken, month, selectedMode, timeZone, username])
+  }, [eventSlug, fromKey, linkToken, selectedMode, timeZone, username])
 
   const confirmPaidHold = useCallback(
     async (hold: Reservation, paid: Payment) => {
@@ -452,7 +492,7 @@ export function BookingFunnel({
   }))
 
   const whenLabel = slot
-    ? new Intl.DateTimeFormat(locale, {
+    ? new Intl.DateTimeFormat(dateLocale, {
         dateStyle: "full",
         timeStyle: "short",
         timeZone,
@@ -460,7 +500,7 @@ export function BookingFunnel({
     : t("summary.chooseTime")
 
   const policyCopy = describeCancellationPolicy(cancellationPolicy, locale)
-  const deadlineFormat = new Intl.DateTimeFormat(locale, {
+  const deadlineFormat = new Intl.DateTimeFormat(dateLocale, {
     dateStyle: "medium",
     timeStyle: "short",
     timeZone,
@@ -489,7 +529,14 @@ export function BookingFunnel({
   }
 
   async function holdAndPay() {
-    if (!selectedMode || !slot) return
+    if (!selectedMode) return
+    // The chosen time is gone (for example after a time-zone change):
+    // send the member back to pick another rather than doing nothing.
+    if (!slot) {
+      setSlotGone(true)
+      setStep("when")
+      return
+    }
     const typedPhone = phone.trim().length > 0
     const e164 = typedPhone ? toE164(phone, country) : undefined
     if ((selectedMode.mode === "phone" || typedPhone) && !e164) {
@@ -705,8 +752,49 @@ export function BookingFunnel({
   }
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-14">
-      <section>
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[20rem_minmax(0,1fr)] lg:gap-12">
+      {/* Who they are booking comes first: above the steps on phones,
+          beside them on desktop. */}
+      <BookingSummary
+        expertName={expertName}
+        expertHeadline={expertHeadline}
+        profileLink={
+          <Link
+            href={`/${username}`}
+            className="font-medium text-primary underline underline-offset-4"
+          >
+            {t("summary.profile", { name: expertName })}
+          </Link>
+        }
+        offerTitle={offerTitle}
+        meta={
+          selectedMode
+            ? [
+                t("meet.duration", { minutes: selectedMode.durationMinutes }),
+                locationCopy ?? t(`modes.${selectedMode.mode}.title`),
+              ].join(" · ")
+            : undefined
+        }
+        when={whenLabel}
+        whenLabel={t("summary.when")}
+        priceLabel={t("summary.price")}
+        priceCents={priceCents}
+        locale={locale}
+        specialPrice={specialPriceCents != null}
+        specialPriceLabel={t("link.specialPrice")}
+        holdLabel={
+          onPay && reservation && !holdExpired
+            ? t("pay.hold", {
+                time: formatCountdown(
+                  Math.max(0, new Date(reservation.expiresAt).getTime() - nowMs)
+                ),
+              })
+            : undefined
+        }
+        media={expertMedia}
+        footer={t("summary.policy", { policy: policyCopy.name })}
+      />
+      <section className="min-w-0">
         {stepIndex >= 0 ? (
           <FunnelStepper
             label={`${t("stepOf", { current: stepIndex + 1, total: flowSteps.length })} · ${t(`steps.${step}`)}`}
@@ -762,7 +850,10 @@ export function BookingFunnel({
               modes={cards}
               selectedKey={modeId}
               onSelectionChange={(id) => {
-                monthsToAutoSkip.current = MAX_AUTO_SKIPPED_MONTHS
+                windowsToAutoSkip.current = MAX_AUTO_SKIPPED_WINDOWS
+                seekingEarliest.current = true
+                earliestRef.current = null
+                setEarliest(null)
                 setModeId(id)
                 setSlot(null)
               }}
@@ -794,13 +885,19 @@ export function BookingFunnel({
               testId="booking-when-heading"
               headingRef={stepHeadingRef}
             />
-            <TimezoneSelect
+            <TimeZoneLine
               value={timeZone}
               onChange={(next) => {
                 setTimeZone(next)
-                setSlot(null)
               }}
-              label={t("when.timezone")}
+              labels={{
+                timesIn: (city) => t("when.timesIn", { city }),
+                change: t("when.changeZone"),
+                changeAccessible: (city) =>
+                  t("when.changeZoneAccessible", { city }),
+                field: t("when.zoneField"),
+                empty: t("when.zoneEmpty"),
+              }}
             />
             {slotsLoading ? (
               <p
@@ -808,6 +905,15 @@ export function BookingFunnel({
                 className="text-sm text-muted-foreground"
               >
                 {t("when.loading")}
+              </p>
+            ) : null}
+            {slotGone ? (
+              <p
+                role="alert"
+                data-testid="booking-slot-gone"
+                className="rounded-2xl bg-destructive/8 px-4 py-3 text-sm text-destructive"
+              >
+                {t("errors.slotTaken")}
               </p>
             ) : null}
             {slotsError ? (
@@ -822,9 +928,12 @@ export function BookingFunnel({
             <SlotPicker
               slots={slots}
               timeZone={timeZone}
-              locale={locale}
+              locale={dateLocale}
+              fromKey={fromKey}
+              isLoading={slotsLoading}
               selectedStart={slot?.start ?? null}
               onSelect={(next) => {
+                setSlotGone(false)
                 const match = slots.find((item) => item.start === next.start)
                 setSlot(
                   match ?? {
@@ -835,47 +944,56 @@ export function BookingFunnel({
                   }
                 )
               }}
-              month={month}
-              onMonthChange={(next) => {
-                monthsToAutoSkip.current = 0
-                setMonth(next)
-                setSlot(null)
+              onLaterDates={() => {
+                windowsToAutoSkip.current = 0
+                setFromKey(addDaysToKey(fromKey, WINDOW_DAYS))
               }}
-              view={view}
-              onViewChange={setView}
+              onJumpTo={(key) => {
+                windowsToAutoSkip.current = 0
+                setFromKey(key)
+              }}
+              earliest={earliest}
+              onSelectEarliest={(next) => {
+                windowsToAutoSkip.current = 0
+                setFromKey(dateKeyInZone(next.start, timeZone))
+                setSlot(
+                  earliest && earliest.start === next.start ? earliest : null
+                )
+              }}
+              continueAction={(when) => (
+                <Button
+                  data-testid="booking-continue-when"
+                  size="lg"
+                  className="min-h-11 rounded-full"
+                  onPress={() => setStep("details")}
+                >
+                  {t("when.continueWith", { when })}
+                </Button>
+              )}
               labels={{
-                month: t("when.month"),
-                week: t("when.week"),
+                strip: t("when.strip"),
+                earlierDays: t("when.earlierDays"),
+                laterDays: t("when.laterDays"),
                 previous: t("when.previous"),
                 next: t("when.next"),
+                today: t("when.today"),
+                tomorrow: t("when.tomorrow"),
+                more: (count) => t("when.more", { count }),
+                less: t("when.less"),
+                laterDates: t("when.laterDates"),
+                chooseDate: t("when.chooseDate"),
+                calendar: t("when.calendar"),
                 empty: t("when.empty"),
-                weekday: [
-                  t("when.weekdays.mon"),
-                  t("when.weekdays.tue"),
-                  t("when.weekdays.wed"),
-                  t("when.weekdays.thu"),
-                  t("when.weekdays.fri"),
-                  t("when.weekdays.sat"),
-                  t("when.weekdays.sun"),
-                ],
-                day: (date, count) => t("when.day", { date, count }),
-                timesFor: (date) => t("when.timesFor", { date }),
+                nextAvailable: (when) => t("when.nextAvailable", { when }),
+                timeAccessible: (when) => t("when.timeAccessible", { when }),
+                selected: (when) => t("when.selected", { when }),
               }}
             />
-            <div className="flex gap-3">
-              {previousFunnelStep(step, backInput) ? (
-                <Button variant="ghost" onPress={goBack}>
-                  {t("back")}
-                </Button>
-              ) : null}
-              <Button
-                data-testid="booking-continue-when"
-                isDisabled={!slot}
-                onPress={() => setStep("details")}
-              >
-                {t("when.continue")}
+            {previousFunnelStep(step, backInput) ? (
+              <Button variant="ghost" onPress={goBack}>
+                {t("back")}
               </Button>
-            </div>
+            ) : null}
           </div>
         ) : null}
 
@@ -1149,36 +1267,6 @@ export function BookingFunnel({
           </div>
         ) : null}
       </section>
-
-      <BookingSummary
-        expertName={expertName}
-        offerTitle={offerTitle}
-        when={whenLabel}
-        whenLabel={t("summary.when")}
-        priceLabel={t("summary.price")}
-        modeLabel={t("summary.mode")}
-        modeValue={
-          selectedMode
-            ? t(`modes.${selectedMode.mode}.title`)
-            : t("summary.chooseTime")
-        }
-        location={locationCopy}
-        priceCents={priceCents}
-        locale={locale}
-        specialPrice={specialPriceCents != null}
-        specialPriceLabel={t("link.specialPrice")}
-        holdLabel={
-          onPay && reservation && !holdExpired
-            ? t("pay.hold", {
-                time: formatCountdown(
-                  Math.max(0, new Date(reservation.expiresAt).getTime() - nowMs)
-                ),
-              })
-            : undefined
-        }
-        media={expertMedia}
-        footer={t("summary.policy", { policy: policyCopy.name })}
-      />
     </div>
   )
 }
