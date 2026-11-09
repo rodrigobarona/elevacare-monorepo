@@ -50,6 +50,7 @@ export async function ensureFixtureLicenceApproved(
           main.becomePartnerApplications.expertProfileId,
           args.expertProfileId
         ),
+        eq(main.becomePartnerApplications.orgId, args.orgId),
         eq(main.becomePartnerApplications.status, "approved")
       )
     )
@@ -97,6 +98,13 @@ export async function ensureFixtureLicenceApproved(
         licenceNumber: licence.licenceNumber,
         ersRegistrationNumber: licence.ersRegistrationNumber,
       })
-      .where(eq(main.expertProfiles.id, args.expertProfileId))
+      // Platform-admin context bypasses RLS: scope to the seed's own org so
+      // a profile owned by another organization is never touched.
+      .where(
+        and(
+          eq(main.expertProfiles.id, args.expertProfileId),
+          eq(main.expertProfiles.orgId, args.orgId)
+        )
+      )
   }
 }
