@@ -4,7 +4,7 @@ import { apiAuthFailure, requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { checkBot } from "@/lib/bot-protection"
-import { ensureExpertProfileForOrg } from "@eleva/auth"
+import { ensureExpertProfileForOrg, listAuthOrganizations } from "@eleva/auth"
 import type { RoutePolicy } from "@/lib/route-policy"
 
 export const ROUTE_POLICY = {
@@ -54,11 +54,24 @@ export async function POST(request: Request) {
     )
   }
 
+  // Use the workspace the caller names, not the session's active one: right
+  // after a workspace switch the active one can still be the previous
+  // workspace, and the profile must never land in a member's Space.
+  const workspace = (
+    await listAuthOrganizations(session.user.id, session.orgId)
+  ).find((item) => item.orgSlug === body.data.orgSlug)
+  if (!workspace || workspace.productLabel !== "expert") {
+    return secureJson(
+      { error: "forbidden", code: "NOT_AN_EXPERT_WORKSPACE" },
+      { status: 403, headers }
+    )
+  }
+
   try {
     const { profile } = await ensureExpertProfileForOrg({
       userId: session.user.id,
-      orgId: session.orgId,
-      orgSlug: body.data.orgSlug,
+      orgId: workspace.orgId,
+      orgSlug: workspace.orgSlug,
       displayName: body.data.displayName,
       actorUserId: session.user.id,
     })

@@ -7,7 +7,7 @@ import {
   createApiClient,
   SetActiveOrganizationRequestSchema,
 } from "@eleva/api-client"
-import { requireSession } from "@eleva/auth/server"
+import { clearSessionCache, requireSession } from "@eleva/auth/server"
 import { sanitizeReturnTo } from "@eleva/auth/return-to"
 import { gatewayUrl } from "./gateway-url"
 
@@ -58,6 +58,8 @@ export async function switchOrganization(
     headers: cookieCsrfHeaders(incomingHeaders),
   })
   await api.organizations.setActive({ organizationId: parsed.organizationId })
+  // The browser still holds the session cache with the old workspace.
+  await clearSessionCache()
   revalidatePath("/", "layout")
   redirect(gatewayUrl(resolveReturnPath(returnTo)))
 }

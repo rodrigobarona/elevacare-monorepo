@@ -25,6 +25,8 @@ import { resolveGatewayUrl } from "@eleva/config/env"
 const ABSOLUTE_RETURN_TO_HOSTS = new Set<string>([
   "eleva.care",
   "www.eleva.care",
+  // Staging gateway (today the v3 production deployment).
+  "dev.eleva.care",
   "localhost",
 ])
 

@@ -18,6 +18,9 @@ describe("trustedOrigins", () => {
     expect(origins).toContain("http://localhost:3100")
     expect(origins).toContain("http://127.0.0.1:3102")
     expect(origins).toContain("https://api.eleva.care")
+    // App hosts the gateway rewrites to (server-rendered API calls).
+    expect(origins).toContain("https://expert.eleva.care")
+    expect(origins).toContain("https://app.eleva.care")
   })
 
   it("excludes loopback origins on preview and production, not local vercel pull", () => {
