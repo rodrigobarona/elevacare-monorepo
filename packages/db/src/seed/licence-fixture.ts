@@ -4,11 +4,14 @@ import * as main from "../schema/main"
 export type FixtureLicence = {
   professionalBody: string
   licenceNumber: string
+  /** ERS (Entidade Reguladora da Saúde) registration number. */
+  ersRegistrationNumber: string
 }
 
 const PLACEHOLDER_LICENCE: FixtureLicence = {
   professionalBody: "ordem_fisioterapeutas",
   licenceNumber: "FIXTURE-0000",
+  ersRegistrationNumber: "E000000",
 }
 
 /**
@@ -37,6 +40,8 @@ export async function ensureFixtureLicenceApproved(
       id: main.becomePartnerApplications.id,
       licenceNumber: main.becomePartnerApplications.licenceNumber,
       professionalBody: main.becomePartnerApplications.professionalBody,
+      ersRegistrationNumber:
+        main.becomePartnerApplications.ersRegistrationNumber,
     })
     .from(main.becomePartnerApplications)
     .where(
@@ -57,7 +62,7 @@ export async function ensureFixtureLicenceApproved(
       status: "approved",
       professionalBody: licence.professionalBody,
       licenceNumber: licence.licenceNumber,
-      ersRegistrationNumber: "E000000",
+      ersRegistrationNumber: licence.ersRegistrationNumber,
       reviewerUserId: args.reviewerUserId,
       reviewedAt: new Date(),
       checklist: {
@@ -71,13 +76,15 @@ export async function ensureFixtureLicenceApproved(
     // overwrites a number recorded earlier.
     args.licence &&
     (existing.licenceNumber !== licence.licenceNumber ||
-      existing.professionalBody !== licence.professionalBody)
+      existing.professionalBody !== licence.professionalBody ||
+      existing.ersRegistrationNumber !== licence.ersRegistrationNumber)
   ) {
     await client
       .update(main.becomePartnerApplications)
       .set({
         professionalBody: licence.professionalBody,
         licenceNumber: licence.licenceNumber,
+        ersRegistrationNumber: licence.ersRegistrationNumber,
       })
       .where(eq(main.becomePartnerApplications.id, existing.id))
   }
@@ -88,6 +95,7 @@ export async function ensureFixtureLicenceApproved(
       .set({
         professionalBody: licence.professionalBody,
         licenceNumber: licence.licenceNumber,
+        ersRegistrationNumber: licence.ersRegistrationNumber,
       })
       .where(eq(main.expertProfiles.id, args.expertProfileId))
   }

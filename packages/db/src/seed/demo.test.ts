@@ -114,6 +114,7 @@ describe("seedDemo", () => {
         licence: {
           professionalBody: "ordem_fisioterapeutas",
           licenceNumber: "9115",
+          ersRegistrationNumber: "182844",
         },
       })
     )
