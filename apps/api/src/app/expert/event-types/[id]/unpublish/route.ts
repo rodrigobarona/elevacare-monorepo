@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -82,7 +83,7 @@ export async function POST(request: Request, { params }: Params) {
       }
     )
   } catch (err) {
-    console.error("[event-types] unpublish failed", err)
+    logError("[event-types] unpublish failed", err)
     return secureJson(
       { error: "internal", message: "Internal server error" },
       { status: 500, headers }
@@ -92,8 +93,7 @@ export async function POST(request: Request, { params }: Params) {
   try {
     await enqueueSeatSync(profile.orgId, session.user.id)
   } catch (err) {
-    const message = err instanceof Error ? err.message : "seat sync failed"
-    console.error("[event-types] seat sync pending", message)
+    logError("[event-types] seat sync pending", err)
   }
 
   return secureJson({ ok: true }, { status: 200, headers })

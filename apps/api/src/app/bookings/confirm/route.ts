@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { after } from "next/server"
 import {
   ConfirmBookingRequestSchema,
@@ -42,7 +43,7 @@ async function kickGuestActivationPublisher(): Promise<void> {
       console.error("[bookings/confirm] publisher deliveries failed", result)
     }
   } catch (err) {
-    console.error("[bookings/confirm] publisher kick failed", err)
+    logError("[bookings/confirm] publisher kick failed", err)
   }
 }
 
@@ -116,7 +117,7 @@ export async function POST(request: Request) {
             sessionUserId,
           })
         } catch (err) {
-          console.error("[bookings/confirm] session authorize failed", err)
+          logError("[bookings/confirm] session authorize failed", err)
           return secureJson({ error: "internal" }, { status: 500, headers })
         }
         if (!authorized) {
@@ -128,7 +129,7 @@ export async function POST(request: Request) {
             parsed.data.checkoutSessionId
           )
         } catch (err) {
-          console.error("[bookings/confirm] session retrieve failed", err)
+          logError("[bookings/confirm] session retrieve failed", err)
           return secureJson({ error: "unavailable" }, { status: 503, headers })
         }
         // A session for another reservation is indistinguishable from none.
@@ -151,7 +152,7 @@ export async function POST(request: Request) {
         try {
           intent = await retrieveBookingPaymentIntent(paymentIntentId)
         } catch (err) {
-          console.error("[bookings/confirm] intent retrieve failed", err)
+          logError("[bookings/confirm] intent retrieve failed", err)
           return secureJson({ error: "unavailable" }, { status: 503, headers })
         }
         if (intent.status !== "succeeded") {
@@ -188,7 +189,7 @@ export async function POST(request: Request) {
               sessionUserId,
             })
       } catch (err) {
-        console.error("[bookings/confirm] failed", err)
+        logError("[bookings/confirm] failed", err)
         return secureJson({ error: "internal" }, { status: 500, headers })
       }
 

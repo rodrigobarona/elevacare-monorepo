@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { PatchEventTypeModeRequestSchema } from "@eleva/api-client"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
@@ -373,7 +374,7 @@ export async function PATCH(request: Request, { params }: Params) {
         { status: 409, headers }
       )
     }
-    console.error("[event-type-modes] update failed", err)
+    logError("[event-type-modes] update failed", err)
     return secureJson(
       { error: "internal", message: "Internal server error" },
       { status: 500, headers }
@@ -474,7 +475,7 @@ export async function DELETE(request: Request, { params }: Params) {
         { status: 409, headers }
       )
     }
-    console.error("[event-type-modes] delete failed", err)
+    logError("[event-type-modes] delete failed", err)
     return secureJson(
       { error: "internal", message: "Internal server error" },
       { status: 500, headers }

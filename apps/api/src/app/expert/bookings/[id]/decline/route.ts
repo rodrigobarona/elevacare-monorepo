@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import {
   DeclineExpertBookingRequestSchema,
   DeclineExpertBookingResponseSchema,
@@ -102,7 +103,7 @@ export async function POST(request: Request, { params }: Params) {
         { status: 409, headers }
       )
     }
-    console.error("[expert/bookings/decline] failed", err)
+    logError("[expert/bookings/decline] failed", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }

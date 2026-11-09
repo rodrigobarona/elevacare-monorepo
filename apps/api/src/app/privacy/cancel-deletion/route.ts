@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { CancelDeletionResponseSchema } from "@eleva/api-client"
 import {
   AccountDeletionNotPendingError,
@@ -54,7 +55,7 @@ export async function POST(request: Request) {
     if (err instanceof AccountDeletionNotPendingError) {
       return secureJson({ error: err.code }, { status: 409, headers })
     }
-    console.error("[privacy/cancel-deletion] unexpected error", err)
+    logError("[privacy/cancel-deletion] unexpected error", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }

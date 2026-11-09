@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { DsarRequestStatusResponseSchema } from "@eleva/api-client"
 import {
   dsarDownloadUrlIfReady,
@@ -69,7 +70,7 @@ export async function GET(
       })
       status = "expired"
     } catch (err) {
-      console.error("[privacy/dsar] expiration cleanup failed", err)
+      logError("[privacy/dsar] expiration cleanup failed", err)
       return secureJson({ error: "internal" }, { status: 500, headers })
     }
   }

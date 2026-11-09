@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { InvoicingRequestSchema } from "@eleva/api-client"
 import { saveExpertInvoicingChoice } from "@eleva/auth"
 import { corsHeaders } from "@/lib/cors"
@@ -60,7 +61,7 @@ export async function PUT(request: Request) {
       provider: body.data.provider,
     })
   } catch (err) {
-    console.error("[expert/profile/invoicing] unexpected error", err)
+    logError("[expert/profile/invoicing] unexpected error", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 

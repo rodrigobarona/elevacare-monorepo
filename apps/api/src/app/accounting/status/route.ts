@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { and, eq, isNull } from "drizzle-orm"
 import { NextResponse } from "next/server"
 import {
@@ -133,7 +134,7 @@ export async function GET(request: Request) {
             },
           })
         } catch (err) {
-          console.error("[accounting/status] Adapter status check failed:", err)
+          logError("[accounting/status] Adapter status check failed:", err)
           adapterStatus = {
             status: "error",
             message: "provider_error",

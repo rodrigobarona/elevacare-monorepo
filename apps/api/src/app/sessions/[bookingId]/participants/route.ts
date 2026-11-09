@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import {
   AddSessionParticipantRequestSchema,
   AddSessionParticipantResponseSchema,
@@ -84,7 +85,7 @@ export async function POST(
         { status: PARTICIPANT_STATUS[err.code], headers }
       )
     }
-    console.error("[sessions/participants] unexpected error", err)
+    logError("[sessions/participants] unexpected error", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }

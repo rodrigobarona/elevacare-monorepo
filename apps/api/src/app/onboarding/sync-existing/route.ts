@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import {
   completeOnboarding,
   listAuthOrganizations,
@@ -73,10 +74,7 @@ export async function POST(request: Request): Promise<Response> {
       actorUserId: session.user.id,
     })
   } catch (err) {
-    console.error(
-      "[onboarding/sync-existing] Billing provisioning failed:",
-      err instanceof Error ? err.message : err
-    )
+    logError("[onboarding/sync-existing] Billing provisioning failed", err)
   }
 
   return secureJson(

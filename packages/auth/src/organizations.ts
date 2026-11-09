@@ -113,7 +113,10 @@ export async function setActiveElevaOrganization(input: {
   actorUserId: string
 }): Promise<void> {
   const api = getAuthApi()
-  const current = await api.getSession({ headers: input.headers })
+  const current = await api.getSession({
+    headers: input.headers,
+    query: { disableCookieCache: true },
+  })
   const previousOrganizationId = current?.session.activeOrganizationId ?? null
 
   try {

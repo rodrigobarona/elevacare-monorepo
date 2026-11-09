@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import {
   JoinSessionRequestSchema,
   JoinSessionResponseSchema,
@@ -127,7 +128,7 @@ async function mintJoinResponse(
         { status: JOIN_STATUS[err.code], headers }
       )
     }
-    console.error("[sessions/join] unexpected error", err)
+    logError("[sessions/join] unexpected error", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }

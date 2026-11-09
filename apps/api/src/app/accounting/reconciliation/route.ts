@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import {
   GetAccountingReconciliationQuerySchema,
   GetAccountingReconciliationResponseSchema,
@@ -76,7 +77,7 @@ export async function GET(request: Request) {
         { status: 422, headers }
       )
     }
-    console.error("[accounting/reconciliation] unexpected error", err)
+    logError("[accounting/reconciliation] unexpected error", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }

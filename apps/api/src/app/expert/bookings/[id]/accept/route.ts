@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { AcceptExpertBookingResponseSchema } from "@eleva/api-client"
 import { acceptBookingRequest, BookingRequestError } from "@eleva/scheduling"
 import { getExpertProfileByUserId } from "@eleva/db"
@@ -96,7 +97,7 @@ export async function POST(request: Request, { params }: Params) {
         { status: 409, headers }
       )
     }
-    console.error("[expert/bookings/accept] failed", err)
+    logError("[expert/bookings/accept] failed", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }

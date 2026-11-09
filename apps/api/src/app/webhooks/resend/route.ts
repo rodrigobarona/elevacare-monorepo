@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { corsHeaders } from "@/lib/cors"
 import { handleResendWebhook } from "@eleva/notifications"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -32,7 +33,7 @@ export async function POST(request: Request) {
     const result = await handleResendWebhook(request)
     return secureJson(result.body, { status: result.status, headers })
   } catch (error) {
-    console.error("[webhooks/resend] handler failed", error)
+    logError("[webhooks/resend] handler failed", error)
     return secureJson(
       { ok: false, error: "internal" },
       { status: 500, headers }

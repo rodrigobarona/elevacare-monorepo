@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import {
   CreatePaymentIntentRequestSchema,
   CreatePaymentIntentResponseSchema,
@@ -96,7 +97,7 @@ export async function POST(request: Request) {
         if (err instanceof BookingError) {
           return secureJson({ error: err.code }, { status: 409, headers })
         }
-        console.error("[payments/intent] failed", err)
+        logError("[payments/intent] failed", err)
         return secureJson({ error: "internal" }, { status: 500, headers })
       }
 

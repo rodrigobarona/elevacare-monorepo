@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { CancellationQuoteSchema } from "@eleva/api-client"
 import {
   MemberBookingPolicyError,
@@ -62,7 +63,7 @@ export async function GET(
         { status: MEMBER_BOOKING_POLICY_STATUS[err.code], headers }
       )
     }
-    console.error("[me/bookings/cancellation-quote] unexpected error", err)
+    logError("[me/bookings/cancellation-quote] unexpected error", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }

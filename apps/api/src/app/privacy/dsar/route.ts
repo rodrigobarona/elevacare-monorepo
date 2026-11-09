@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { after } from "next/server"
 import { CreateDsarRequestResponseSchema } from "@eleva/api-client"
 import { createDsarRequest, processDsarExport } from "@eleva/compliance"
@@ -51,7 +52,7 @@ export async function POST(request: Request) {
       userId: session.user.id,
       orgId: session.orgId,
     }).catch((err) => {
-      console.error("[privacy/dsar] export kickoff failed", err)
+      logError("[privacy/dsar] export kickoff failed", err)
     })
   )
 

@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import {
   CreateCheckoutSessionRequestSchema,
   CreateCheckoutSessionResponseSchema,
@@ -110,7 +111,7 @@ export async function POST(request: Request) {
         if (err instanceof BookingError) {
           return secureJson({ error: err.code }, { status: 409, headers })
         }
-        console.error("[payments/checkout-session] failed", err)
+        logError("[payments/checkout-session] failed", err)
         return secureJson({ error: "internal" }, { status: 500, headers })
       }
 

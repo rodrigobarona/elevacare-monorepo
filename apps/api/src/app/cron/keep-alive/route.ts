@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 
 import { pingAuditDb, pingMainDb } from "@eleva/db"
 import { requireCronSecret } from "@eleva/config/env"
-import { heartbeat } from "@eleva/observability"
+import { heartbeat, logError } from "@eleva/observability"
 import { bearerMatches } from "@/lib/internal-auth"
 import type { RoutePolicy } from "@/lib/route-policy"
 
@@ -66,7 +66,7 @@ export async function GET(request: Request): Promise<Response> {
   try {
     secret = requireCronSecret().CRON_SECRET
   } catch (err) {
-    console.error("[cron/keep-alive] CRON_SECRET not configured", err)
+    logError("[cron/keep-alive] CRON_SECRET not configured", err)
     return NextResponse.json(
       { error: "cron-not-configured" },
       { status: 500, headers: { "Cache-Control": "no-store" } }

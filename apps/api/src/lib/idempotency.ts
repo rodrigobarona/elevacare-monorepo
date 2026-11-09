@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { createHash } from "node:crypto"
 import type { Redis } from "@upstash/redis"
 import { getBookingRedis } from "./booking-redis"
@@ -66,7 +67,7 @@ async function release(redis: Redis, storageKey: string): Promise<void> {
   try {
     await redis.del(storageKey)
   } catch (err) {
-    console.error("[idempotency] failed to release key", err)
+    logError("[idempotency] failed to release key", err)
   }
 }
 
@@ -99,7 +100,7 @@ export async function withIdempotency(
       { nx: true, ex: PENDING_TTL_SECONDS }
     )
   } catch (err) {
-    console.error("[idempotency] claim failed, running without it", err)
+    logError("[idempotency] claim failed, running without it", err)
     return run()
   }
 
@@ -147,7 +148,7 @@ export async function withIdempotency(
       { ex: RESULT_TTL_SECONDS }
     )
   } catch (err) {
-    console.error("[idempotency] failed to persist result", err)
+    logError("[idempotency] failed to persist result", err)
   }
   return response
 }
