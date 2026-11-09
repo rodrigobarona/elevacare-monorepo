@@ -143,6 +143,25 @@ export async function getSessionForOrg(
   })
 }
 
+export { workspaceSlugFromPath } from "./workspace-slug"
+
+/**
+ * Like `requireSession`, for pages and actions under `/{slug}/…`: rights are
+ * checked in that workspace, not the session's active one (which can lag
+ * behind a switch or a direct link).
+ */
+export async function requireSessionForOrg(
+  orgSlug: string,
+  capability?: string
+): Promise<ElevaSession> {
+  const session = await getSessionForOrg(orgSlug)
+  if (!session) throw new UnauthorizedError("no-session")
+  if (capability && !session.capabilities.includes(capability)) {
+    throw new UnauthorizedError("missing-capability", `missing: ${capability}`)
+  }
+  return session
+}
+
 /**
  * Auth check for lightweight UI surfaces like the marketing header.
  */

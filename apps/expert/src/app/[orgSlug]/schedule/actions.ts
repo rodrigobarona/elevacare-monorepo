@@ -1,8 +1,7 @@
 "use server"
 
 import { z } from "zod"
-import { requireSession } from "@eleva/auth/server"
-import { getAuthedApiClient } from "@/lib/server-api"
+import { getAuthedApiClient, requireExpertSession } from "@/lib/server-api"
 import { mapExpertApiError } from "@/lib/map-api-error"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
 
@@ -21,7 +20,7 @@ export async function initializeScheduleAction(
   }
 
   try {
-    const session = await requireSession("schedule:manage")
+    const session = await requireExpertSession("schedule:manage")
     const api = await getAuthedApiClient()
     await api.expert.schedule.save({ timezone, rules: [] })
     revalidateExpertWorkspace(session, "schedule")
@@ -92,7 +91,7 @@ export async function saveScheduleAction(params: {
     const parsed = saveScheduleSchema.safeParse(params)
     if (!parsed.success) return { ok: false, error: "validation" }
 
-    const session = await requireSession("schedule:manage")
+    const session = await requireExpertSession("schedule:manage")
     const api = await getAuthedApiClient()
     await api.expert.schedule.save(parsed.data)
 
@@ -111,7 +110,7 @@ export async function addDateOverrideAction(
     const parsed = dateOverrideSchema.safeParse(data)
     if (!parsed.success) return { ok: false, error: "validation" }
 
-    const session = await requireSession("schedule:manage")
+    const session = await requireExpertSession("schedule:manage")
     const api = await getAuthedApiClient()
     await api.expert.schedule.addOverride({
       overrideDate: parsed.data.overrideDate,
@@ -140,7 +139,7 @@ export async function removeDateOverrideAction(
   if (!parsed.success) return { ok: false, error: "validation" }
 
   try {
-    const session = await requireSession("schedule:manage")
+    const session = await requireExpertSession("schedule:manage")
     const api = await getAuthedApiClient()
     await api.expert.schedule.removeOverride(parsed.data)
 

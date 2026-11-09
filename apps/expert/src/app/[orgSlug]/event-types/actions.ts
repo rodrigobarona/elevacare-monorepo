@@ -1,6 +1,5 @@
 "use server"
 
-import { requireSession } from "@eleva/auth/server"
 import {
   CreateEventTypeRequestSchema,
   UpdateEventTypeRequestSchema,
@@ -8,7 +7,7 @@ import {
   type CreateEventTypeRequest,
   type UpdateEventTypeRequest,
 } from "@eleva/api-client"
-import { getAuthedApiClient } from "@/lib/server-api"
+import { getAuthedApiClient, requireExpertSession } from "@/lib/server-api"
 import {
   humanApiMessage,
   mapExpertApiError,
@@ -87,7 +86,7 @@ export async function createEventTypeAction(
   data: EventTypeFormData
 ): Promise<ActionResult> {
   try {
-    const session = await requireSession("events:manage")
+    const session = await requireExpertSession("events:manage")
     const payload = toCreatePayload(data)
     if ((payload.slug ?? "").length < 3) {
       return { ok: false, error: "slug-too-short" }
@@ -123,7 +122,7 @@ export async function updateEventTypeAction(
   data: Partial<EventTypeFormData>
 ): Promise<ActionResult> {
   try {
-    const session = await requireSession("events:manage")
+    const session = await requireExpertSession("events:manage")
     const updates: UpdateEventTypeRequest = {}
 
     if (data.slug !== undefined) {
@@ -218,7 +217,7 @@ export async function updateEventTypeDetailsAction(
     }
   }
   try {
-    const session = await requireSession("events:manage")
+    const session = await requireExpertSession("events:manage")
     const api = await getAuthedApiClient()
     await api.expert.eventTypes.update(eventTypeId, parsed.data)
     revalidateExpertWorkspace(session, "event-types")
@@ -238,7 +237,7 @@ export async function togglePublishAction(
   published: boolean
 ): Promise<ActionResult> {
   try {
-    const session = await requireSession("events:manage")
+    const session = await requireExpertSession("events:manage")
     const api = await getAuthedApiClient()
     if (published) {
       await api.expert.eventTypes.publish(eventTypeId)
@@ -267,7 +266,7 @@ export async function deleteEventTypeAction(
   eventTypeId: string
 ): Promise<ActionResult> {
   try {
-    const session = await requireSession("events:manage")
+    const session = await requireExpertSession("events:manage")
     const api = await getAuthedApiClient()
     await api.expert.eventTypes.remove(eventTypeId)
 

@@ -424,3 +424,69 @@ describe("requireApiUser", () => {
     ).rejects.toMatchObject({ code: "invalid-token" })
   })
 })
+
+describe("requireApiAuth with a named workspace (x-eleva-org)", () => {
+  beforeEach(() => {
+    getSession.mockReset()
+    dbSelect.mockReset()
+    findDefaultOrganizationId.mockReset()
+  })
+
+  function rows(...results: unknown[][]) {
+    for (const result of results) {
+      dbSelect.mockReturnValueOnce({
+        from: () => ({
+          innerJoin: () => ({
+            where: () => ({ limit: async () => result }),
+          }),
+        }),
+      })
+    }
+  }
+
+  it("acts for the named workspace instead of the active one", async () => {
+    getSession.mockResolvedValue({
+      user: { id: "user-1", email: "a@b.c", name: "Ada", image: null },
+      session: { activeOrganizationId: "space-org" },
+    })
+    rows(
+      [{ orgId: "practice-org" }],
+      [
+        {
+          role: "owner",
+          orgType: "expert",
+          orgSlug: "ada-practice",
+          orgId: "practice-org",
+        },
+      ]
+    )
+    const identity = await requireApiAuth(
+      new Request("http://localhost/x", {
+        headers: {
+          cookie: "better-auth.session_token=abc",
+          "x-eleva-org": "ada-practice",
+        },
+      })
+    )
+    expect(identity.orgId).toBe("practice-org")
+    expect(identity.productLabel).toBe("expert")
+  })
+
+  it("refuses a named workspace the person does not belong to", async () => {
+    getSession.mockResolvedValue({
+      user: { id: "user-1", email: "a@b.c", name: "Ada", image: null },
+      session: { activeOrganizationId: "space-org" },
+    })
+    rows([])
+    await expect(
+      requireApiAuth(
+        new Request("http://localhost/x", {
+          headers: {
+            cookie: "better-auth.session_token=abc",
+            "x-eleva-org": "someone-elses-clinic",
+          },
+        })
+      )
+    ).rejects.toMatchObject({ code: "not-a-member" })
+  })
+})

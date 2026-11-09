@@ -11,8 +11,7 @@ import {
   type ExpertInvoice,
   type ExportSaftResponse,
 } from "@eleva/api-client"
-import { requireSession } from "@eleva/auth/server"
-import { getAuthedApiClient } from "@/lib/server-api"
+import { getAuthedApiClient, requireExpertSession } from "@/lib/server-api"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
 
 const BookingIdSchema = z.string().uuid()
@@ -72,7 +71,7 @@ async function withInvoiceAction(
   }
 
   try {
-    const session = await requireSession("expert:invoicing_manage")
+    const session = await requireExpertSession("expert:invoicing_manage")
     const api = await getAuthedApiClient()
     const invoice = ExpertInvoiceActionResponseSchema.parse(await run(api, id))
     revalidateExpertWorkspace(session, "finance/invoices")
@@ -112,7 +111,7 @@ export async function exportSaftAction(
   }
 
   try {
-    await requireSession("expert:invoicing_manage")
+    await requireExpertSession("expert:invoicing_manage")
     const api = await getAuthedApiClient()
     const result = ExportSaftResponseSchema.parse(
       await api.invoicing.exportSaft({ month: parsedMonth })
@@ -140,7 +139,7 @@ export async function listMoreExpertInvoicesAction(cursor: string): Promise<
   }
 
   try {
-    await requireSession("expert:invoicing_manage")
+    await requireExpertSession("expert:invoicing_manage")
     const api = await getAuthedApiClient()
     const result = await api.invoicing.listExpert({ cursor: parsedCursor })
     return { ok: true, ...result }

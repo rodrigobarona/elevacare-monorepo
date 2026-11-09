@@ -153,6 +153,13 @@ export const APP_ROOT_SEGMENTS = APP_FIXED_SEGMENTS
 export const LAST_ACTIVE_ORG_COOKIE = "eleva-last-org"
 
 /**
+ * Request header naming the workspace (org slug) a page acts for, taken from
+ * its address. The API uses it instead of the session's active workspace,
+ * and only when the person is a member of that workspace.
+ */
+export const ELEVA_ORG_HEADER = "x-eleva-org"
+
+/**
  * Shape check for a candidate org slug pulled from a URL segment.
  *
  * Mirrors the format rules enforced by validateUsername() in

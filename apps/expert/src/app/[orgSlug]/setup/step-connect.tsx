@@ -9,9 +9,9 @@ import {
   ElevaConnectProvider,
   ConnectAccountOnboarding,
 } from "@eleva/billing/embedded"
-import { createApiClient } from "@eleva/api-client"
 import { markStepComplete } from "./actions"
 import type { OnboardingProfile } from "./onboarding-wizard"
+import { practiceApiClient, usePracticeSlug } from "@/lib/practice-api-client"
 
 interface Props {
   profile: OnboardingProfile
@@ -42,24 +42,25 @@ export function StepConnect({
   stripePublishableKey,
   onDone,
 }: Props) {
+  const orgSlug = usePracticeSlug()
   const t = useTranslations("onboarding")
   const router = useRouter()
   const [error, setError] = React.useState<string | null>(null)
   const [provisioning, setProvisioning] = React.useState(false)
 
   const fetchClientSecret = React.useCallback(async () => {
-    const api = createApiClient({ baseUrl: apiBaseUrl })
+    const api = practiceApiClient(apiBaseUrl, orgSlug)
     const data = await api.stripe.accountSession.create({
       components: ["account_onboarding"],
     })
     return data.clientSecret
-  }, [apiBaseUrl])
+  }, [apiBaseUrl, orgSlug])
 
   async function handleProvision() {
     setProvisioning(true)
     setError(null)
     try {
-      const api = createApiClient({ baseUrl: apiBaseUrl })
+      const api = practiceApiClient(apiBaseUrl, orgSlug)
       await api.stripe.connectAccount.create({})
       router.refresh()
     } catch (err) {

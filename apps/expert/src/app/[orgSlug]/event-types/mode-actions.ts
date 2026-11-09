@@ -1,7 +1,6 @@
 "use server"
 
 import { z } from "zod"
-import { requireSession } from "@eleva/auth/server"
 import {
   CreateEventTypeModeRequestSchema,
   PatchEventTypeModeRequestSchema,
@@ -10,7 +9,7 @@ import {
   type CreateEventTypeModeRequest,
   type PatchEventTypeModeRequest,
 } from "@eleva/api-client"
-import { getAuthedApiClient } from "@/lib/server-api"
+import { getAuthedApiClient, requireExpertSession } from "@/lib/server-api"
 import {
   humanApiMessage,
   mapExpertApiError,
@@ -35,7 +34,7 @@ export async function createEventTypeModeAction(
   data: CreateEventTypeModeRequest
 ): Promise<ActionResult> {
   try {
-    const session = await requireSession("events:manage")
+    const session = await requireExpertSession("events:manage")
     if (!IdSchema.safeParse(eventTypeId).success) {
       return { ok: false, error: "invalid-input" }
     }
@@ -79,7 +78,7 @@ export async function patchEventTypeModeAction(
   data: PatchEventTypeModeRequest
 ): Promise<ActionResult> {
   try {
-    const session = await requireSession("events:manage")
+    const session = await requireExpertSession("events:manage")
     if (
       !IdSchema.safeParse(eventTypeId).success ||
       !IdSchema.safeParse(modeId).success
@@ -131,7 +130,7 @@ export async function createNamedScheduleAction(input: {
   timezone: string
 }): Promise<CreateResourceResult> {
   try {
-    const session = await requireSession("schedule:manage")
+    const session = await requireExpertSession("schedule:manage")
     const parsed = CreateNamedScheduleRequestSchema.safeParse(input)
     if (!parsed.success) {
       return {
@@ -174,7 +173,7 @@ export async function createInlineLocationAction(input: {
   timezone?: string
 }): Promise<CreateResourceResult> {
   try {
-    const session = await requireSession("schedule:manage")
+    const session = await requireExpertSession("schedule:manage")
     const parsed = CreatePracticeLocationRequestSchema.safeParse(input)
     if (!parsed.success) {
       return {

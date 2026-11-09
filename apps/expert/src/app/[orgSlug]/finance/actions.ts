@@ -2,8 +2,7 @@
 
 import { z } from "zod"
 import { guardSessionForOrg } from "@eleva/auth"
-import { requireSession } from "@eleva/auth/server"
-import { getAuthedApiClient } from "@/lib/server-api"
+import { getAuthedApiClient, requireExpertSession } from "@/lib/server-api"
 
 const ExportFinanceCsvSchema = z.object({
   orgSlug: z.string().min(1).max(80),
@@ -32,7 +31,7 @@ export async function exportFinanceCsv(orgSlug: string): Promise<
     ) {
       return { ok: false, error: "forbidden" }
     }
-    const cookieSession = await requireSession()
+    const cookieSession = await requireExpertSession()
     if (cookieSession.orgId !== scoped.orgId) {
       return { ok: false, error: "org-mismatch" }
     }
