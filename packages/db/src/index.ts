@@ -28,6 +28,7 @@ export {
   findExistingOrgSlugs,
   type PublicExpertCard,
   type PublicExpertProfile,
+  type PublicExpertRegistration,
   type PublicClinicProfile,
   type PublicCategory,
   type ListExpertsFilters,

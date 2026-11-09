@@ -84,6 +84,15 @@ export interface PublicExpertProfile extends PublicExpertCard {
   bioRich: main.LocalizedRichText | null
   socialLinks: main.ExpertSocialLink[]
   credentials: main.ExpertCredential[]
+  /** The registration Eleva staff approved; shown on the public profile. */
+  registration: PublicExpertRegistration | null
+}
+
+export interface PublicExpertRegistration {
+  /** `@eleva/config/professional-bodies` id. */
+  professionalBody: string
+  licenceNumber: string
+  ersRegistrationNumber: string | null
 }
 
 export interface PublicClinicProfile {
@@ -191,9 +200,34 @@ export async function findExpertByUsername(
       .where(eq(main.expertListings.expertProfileId, expert.id))
       .orderBy(asc(main.expertListings.sortOrder))
 
+    const [approved] = await tx
+      .select({
+        professionalBody: main.becomePartnerApplications.professionalBody,
+        licenceNumber: main.becomePartnerApplications.licenceNumber,
+        ersRegistrationNumber:
+          main.becomePartnerApplications.ersRegistrationNumber,
+      })
+      .from(main.becomePartnerApplications)
+      .where(
+        and(
+          eq(main.becomePartnerApplications.expertProfileId, expert.id),
+          eq(main.becomePartnerApplications.status, "approved")
+        )
+      )
+      .orderBy(desc(main.becomePartnerApplications.reviewedAt))
+      .limit(1)
+
     return {
       ...expert,
       categorySlugs: listings.map((l) => l.slug),
+      registration: approved
+        ? {
+            professionalBody: approved.professionalBody,
+            licenceNumber: approved.licenceNumber.trim(),
+            ersRegistrationNumber:
+              approved.ersRegistrationNumber.trim() || null,
+          }
+        : null,
     }
   })
 }

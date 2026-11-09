@@ -1,9 +1,11 @@
 import { PublicExpertProfileSchema } from "@eleva/api-client"
+import { isProfessionalBodyId } from "@eleva/config/professional-bodies"
 import {
   findExpertByUsername,
   listPublicEventTypeModes,
   listPublicEventTypes,
   type LocalizedRichText,
+  type PublicExpertRegistration,
 } from "@eleva/db"
 import {
   handlePublicGet,
@@ -36,6 +38,17 @@ function toPublicRichText(
   return Object.keys(result).length > 0 ? result : null
 }
 
+/** Only a known professional body is published; anything else stays private. */
+function publicRegistration(value: PublicExpertRegistration | null) {
+  if (!value || !isProfessionalBodyId(value.professionalBody)) return null
+  if (!value.licenceNumber) return null
+  return {
+    professionalBody: value.professionalBody,
+    licenceNumber: value.licenceNumber,
+    ersRegistrationNumber: value.ersRegistrationNumber,
+  }
+}
+
 export async function GET(
   request: Request,
   context: { params: Promise<{ username: string }> }
@@ -62,6 +75,7 @@ export async function GET(
         avatarUrl: expert.avatarUrl,
         socialLinks: expert.socialLinks,
         credentials: expert.credentials,
+        registration: publicRegistration(expert.registration),
         languages: expert.languages,
         serviceCountries: expert.serviceCountries,
         categorySlugs: expert.categorySlugs,

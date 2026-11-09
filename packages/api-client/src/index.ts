@@ -2278,6 +2278,14 @@ export const PublicExpertProfileSchema = z.object({
     z.object({ kind: SocialLinkKindSchema, url: z.string() })
   ),
   credentials: z.array(ExpertCredentialSchema),
+  /** Professional registration Eleva staff checked before the profile went live. */
+  registration: z
+    .object({
+      professionalBody: ProfessionalBodySchema,
+      licenceNumber: z.string(),
+      ersRegistrationNumber: z.string().nullable(),
+    })
+    .nullable(),
   languages: z.array(z.string()),
   serviceCountries: z.array(z.string()),
   categorySlugs: z.array(z.string()),

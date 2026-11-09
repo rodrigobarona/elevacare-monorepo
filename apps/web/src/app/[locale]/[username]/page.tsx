@@ -13,6 +13,7 @@ import {
   type CancellationPolicy,
 } from "@eleva/config/cancellation-policy"
 import { resolveGatewayUrl } from "@eleva/config/env"
+import { professionalBodyById } from "@eleva/config/professional-bodies"
 import { isReserved } from "@eleva/config/reserved-usernames"
 import { RichTextViewer } from "@eleva/editor/rich-text-viewer"
 import { CheckIcon, SOCIAL_LINK_ICONS } from "@eleva/icons"
@@ -209,6 +210,12 @@ export default async function ExpertProfilePage({ params }: Props) {
                   {facts.join(" · ")}
                 </p>
               ) : null}
+              <RegistrationLine
+                registration={expert.registration}
+                licenceLabel={(number) => t("registration.licence", { number })}
+                ersLabel={(number) => t("registration.ers", { number })}
+                bodyLinkLabel={(body) => t("registration.bodyLink", { body })}
+              />
               <div className="flex flex-wrap items-center gap-3">
                 {expert.socialLinks.length > 0 ? (
                   <ul className="flex flex-wrap gap-1">
@@ -821,6 +828,50 @@ function pickRichBio(
 function pickBio(expert: PublicExpertProfile, locale: Locale): string | null {
   const text = pickRichBio(expert, locale)?.text ?? expert.bio
   return text && text.trim().length > 0 ? text : null
+}
+
+/**
+ * The registration Eleva staff checked: professional body (linked to its
+ * public register), licence number and ERS number. Plain facts, no badge
+ * (expert-profile-booking-ux-spec: "only real proof").
+ */
+function RegistrationLine({
+  registration,
+  licenceLabel,
+  ersLabel,
+  bodyLinkLabel,
+}: {
+  registration: PublicExpertProfile["registration"]
+  licenceLabel: (number: string) => string
+  ersLabel: (number: string) => string
+  bodyLinkLabel: (body: string) => string
+}) {
+  const body = professionalBodyById(registration?.professionalBody)
+  if (!registration || !body) return null
+  return (
+    <p
+      data-testid="expert-registration"
+      className="max-w-2xl text-sm text-pretty text-muted-foreground"
+    >
+      <a
+        href={body.website}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={bodyLinkLabel(body.name)}
+        className="underline decoration-border underline-offset-4 hover:text-foreground hover:decoration-foreground"
+      >
+        {body.name}
+      </a>
+      {" · "}
+      {licenceLabel(registration.licenceNumber)}
+      {registration.ersRegistrationNumber ? (
+        <>
+          {" · "}
+          {ersLabel(registration.ersRegistrationNumber)}
+        </>
+      ) : null}
+    </p>
+  )
 }
 
 /** First credential, unless the headline already says it. */

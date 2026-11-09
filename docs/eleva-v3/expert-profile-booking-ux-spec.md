@@ -174,7 +174,11 @@ Each slice is re-scored against its build before merge.
   Without a photo: the soft monogram frame from the directory. The headline
   is the expert's own one-liner; under it, the first credential (title,
   institution) when there is one and the headline does not already say it. Facts are **one quiet line**, written in
-  full words (languages, how they meet with city, countries). Social links
+  full words (languages, how they meet with city, countries). Under it, the
+  **registration line** Eleva staff approved: the Ordem (linked to its public
+  register), the licence number (cédula) and, when given, the ERS number.
+  Plain text, no badge or check mark (ERS Regulation 1058/2016 identification;
+  Expert agreement §3). Social links
   are 44 px icon buttons with names ("Patrícia Mota on Instagram"). The hero
   has **one action, "Share this page"**: Web Share API (feature-detected
   after hydration; `AbortError` ignored), else copy link + toast "Link
