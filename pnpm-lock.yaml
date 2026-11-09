@@ -2252,9 +2252,6 @@ importers:
 
   packages/site-chrome:
     dependencies:
-      '@eleva/compliance':
-        specifier: workspace:*
-        version: link:../compliance
       '@eleva/config':
         specifier: workspace:*
         version: link:../config

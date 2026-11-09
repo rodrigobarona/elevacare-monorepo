@@ -651,7 +651,6 @@
     "complaintsBook": "Libro de reclamaciones electrónico",
     "trustSecurity": "Seguridad",
     "evidenceBasedCare": "Atención basada en evidencia",
-    "versionNote": "Versión del documento {version}",
     "solutions": "Unirse a Eleva",
     "becomeExpert": "Hazte especialista",
     "forClinics": "Para clínicas",
@@ -666,103 +665,12 @@
     "story": "Nuestra historia"
   },
   "longform": {
-    "versionLabel": "Versión del documento {version}",
     "lastUpdatedLabel": "Última actualización {date}",
     "tocTitle": "En esta página"
-  },
-  "legal": {
-    "versionLabel": "Versión {version}",
-    "documents": {
-      "terms": {
-        "title": "Términos de uso — Eleva.care",
-        "description": "Borrador de los términos de uso de la plataforma digital de salud Eleva.care.",
-        "heading": "Términos de uso",
-        "paragraphs": {
-          "p1": "Eleva.care es una plataforma digital de salud que permite la prestación de servicios de salud remotos (teleconsultas / telemedicina) por profesionales independientes y licenciados. Eleva no presta atención clínica.",
-          "p2": "Al crear una cuenta o reservar una sesión, los miembros aceptan usar la plataforma de forma lícita, dar información correcta y tratar a especialistas y a otros miembros con respeto.",
-          "p3": "Los especialistas siguen siendo responsables de su práctica, licencias y juicio clínico. Una reserva en Eleva es un contrato por el servicio de ese especialista, facilitado por la plataforma.",
-          "p4": "Estos términos pueden cambiar antes del lanzamiento. La versión mostrada al reservar es la versión registrada con su consentimiento. Una reserva posterior puede usar una versión más reciente.",
-          "p5": "Si no está de acuerdo con este borrador, no reserve. Los términos de producción sustituirán este texto tras la revisión legal y del DPO."
-        }
-      },
-      "privacy": {
-        "title": "Aviso de privacidad — Eleva.care",
-        "description": "Borrador del aviso de privacidad para miembros de la plataforma digital de salud Eleva.care.",
-        "heading": "Aviso de privacidad",
-        "paragraphs": {
-          "p1": "Eleva.care trata datos personales para operar la plataforma digital de salud: datos de cuenta, datos de reserva y — cuando reserva una sesión de salud — información de salud necesaria para esa sesión.",
-          "p2": "Tratamos datos conforme al RGPD. Los datos de salud son de categoría especial. La base jurídica y los plazos de conservación los confirmará el DPO antes del go-live. Este borrador no sustituye esa revisión.",
-          "p3": "Compartimos datos con el especialista que usted reserva, con procesadores de pago (Stripe) en el checkout y con proveedores de infraestructura necesarios para la plataforma. No vendemos datos de miembros.",
-          "p4": "Puede pedir acceso, rectificación, supresión o una copia portable de sus datos, sin perjuicio de la conservación legal que aplica a las historias clínicas elaboradas por el especialista.",
-          "p5": "Escriba a privacy@eleva.care sobre este borrador. El aviso de producción nombrará al responsable, al DPO y a los encargados tras la revisión legal."
-        }
-      },
-      "health-data": {
-        "title": "Tratamiento de datos de salud — Eleva.care",
-        "description": "Borrador del aviso de tratamiento de datos de salud cuando reserva una sesión.",
-        "heading": "Tratamiento de datos de salud",
-        "paragraphs": {
-          "p1": "Cuando reserva una sesión, Eleva y el especialista pueden tratar información de salud que usted aporte (motivo de la visita, historia que elija compartir y notas de sesión redactadas por el especialista).",
-          "p2": "Este tratamiento es necesario para prestar la sesión reservada y para que el especialista conserve los registros que la ley le exige. El personal de Eleva no lee historias clínicas en texto claro.",
-          "p3": "Puede rechazar este tratamiento, pero entonces no podemos completar una reserva de sesión de salud. El uso solo de cuenta de la plataforma no exige este consentimiento.",
-          "p4": "La versión de este aviso en el momento de la reserva queda asociada a su reserva. Una versión obsoleta se rechaza para no registrar un consentimiento sobre un texto que no vio.",
-          "p5": "Este es un borrador de desarrollo. Legal y el DPO emitirán el aviso de producción antes del go-live."
-        }
-      },
-      "ai-processing": {
-        "title": "Tratamiento por IA — Eleva.care",
-        "description": "Borrador del aviso para transcripción en directo opcional e informes de sesión asistidos por IA.",
-        "heading": "Tratamiento por IA",
-        "paragraphs": {
-          "p1": "Si opta por activarlo, Eleva puede tratar el audio de su sesión de vídeo online para producir una transcripción en directo para el especialista que impartió esa sesión. La transcripción pasa por nuestro proveedor de vídeo (Daily), con grabación en la nube desactivada.",
-          "p2": "La transcripción y las notas de sesión del especialista pueden enviarse más tarde a un modelo de IA para que el especialista redacte un informe de sesión. El modelo está configurado con retención cero: no debe guardar copia de sus datos para entrenamiento ni reutilización. El especialista revisa cada borrador antes de compartirlo con usted.",
-          "p3": "La redacción asistida por IA aún no está activa en el producto. Cuando esté disponible, irá detrás de un flag de producto separado y del mismo consentimiento. Hasta entonces, solo aplica la transcripción en directo (cuando opte).",
-          "p4": "Puede desactivarlo en los ajustes de Privacidad o no marcar la casilla opcional en la reserva. La retirada detiene la transcripción a partir de su próxima llamada y cierra los opt-in asociados a la reserva. No borra transcripciones o informes ya guardados en el registro cifrado de la sesión.",
-          "p5": "Este es un borrador de desarrollo (versión alineada con los demás avisos legales de Eleva). Legal y el DPO sustituirán este texto antes del go-live."
-        }
-      },
-      "cookies": {
-        "title": "Política de cookies — Eleva.care",
-        "description": "Borrador de la política de cookies de la plataforma digital de salud Eleva.care.",
-        "heading": "Política de cookies",
-        "paragraphs": {
-          "p1": "Eleva usa cookies estrictamente necesarias para mantenerle autenticado y recordar el idioma y el tema. Las cookies de sesión siguen el modelo CSRF y de subdominio de la plataforma.",
-          "p2": "Las cookies opcionales de marketing y analítica solo se cargan después de elegirlas en el banner de cookies de Eleva (c15t, alojado en Inth en la UE). Hasta que aceptes una categoría, esos scripts y embeds no se ejecutan.",
-          "p3": "Las cookies esenciales no requieren consentimiento bajo ePrivacy cuando se limitan a prestar el servicio que usted pidió (inicio de sesión, idioma, seguridad).",
-          "p4": "Puede borrar cookies en el navegador o reabrir la configuración de cookies en el pie de página para cambiar sus elecciones. Cerrar sesión limpia la cookie de sesión en .eleva.care y en el host.",
-          "p5": "Este texto de respaldo sirve a los idiomas sin MDX; la política de cookies publicada está en /legal/cookies."
-        }
-      },
-      "payments": {
-        "title": "Política de pagos — Eleva.care",
-        "description": "Borrador de la política de pagos para reservas en Eleva.care.",
-        "heading": "Política de pagos",
-        "paragraphs": {
-          "p1": "Las reservas de lanzamiento se cobran solo en EUR. El precio que ve en una oferta es el importe autorizado en el checkout.",
-          "p2": "Métodos de checkout en el lanzamiento: tarjeta (incluidos Apple Pay y Google Pay), Link y MB WAY. Multibanco, adeudo SEPA y Klarna están desactivados para reservas únicas.",
-          "p3": "El pago lo procesa Stripe en la cuenta de plataforma de Eleva. El especialista cobra después a través del motor de payouts; este borrador no describe plazos de producción.",
-          "p4": "Las reglas de reembolso y no-show son una decisión financiera posterior. Hasta entonces, trate los reembolsos como manuales y no garantizados por esta página.",
-          "p5": "Finanzas volverá a firmar esta política antes del go-live. Las tarjetas de prueba no deben usarse nunca en producción."
-        }
-      },
-      "expert-agreement": {
-        "title": "Acuerdo de especialistas — Eleva.care",
-        "description": "Borrador del acuerdo para profesionales independientes en Eleva.care.",
-        "heading": "Acuerdo de especialistas",
-        "paragraphs": {
-          "p1": "Los especialistas en Eleva.care son profesionales independientes y licenciados. No son empleados de Eleva. Siguen siendo responsables de sus licencias, seguros e historias clínicas.",
-          "p2": "Los especialistas se comprometen a ofrecer solo servicios para los que están cualificados, a mantener la disponibilidad correcta y a tratar a los miembros con cuidado profesional.",
-          "p3": "Comisión, IVA y términos de payout son decisiones financieras de trabajo y se confirmarán antes de producción.",
-          "p4": "Eleva puede suspender un perfil que incumpla estos términos o la ley aplicable. Eso no sustituye la decisión de un regulador o de un tribunal.",
-          "p5": "Este es un borrador de desarrollo. Legal emitirá el acuerdo de producción antes del go-live."
-        }
-      }
-    }
   },
   "becomeExpert": {
     "title": "Hazte especialista — Eleva.care",
     "description": "Únete a Eleva.care como profesional independiente y licenciado en una plataforma digital de salud.",
-    "draftBanner": "Borrador previo al lanzamiento. Comisión, plazos de payout y términos legales no son finales. Finanzas y el DPO volverán a firmar antes del go-live.",
     "heading": "Ejercer en Eleva.care",
     "body": "Eleva.care es una plataforma digital de salud para profesionales independientes y licenciados. Mantienes total autonomía clínica. Eleva opera la tecnología de agenda, reserva y pago, para que los miembros puedan reservar sesiones contigo online, por teléfono o en persona.",
     "cta": "Crear tu cuenta",
@@ -839,13 +747,12 @@
       }
     ],
     "finalHeading": "¿Listo para abrir tu consulta?",
-    "finalBody": "Crea tu cuenta, empieza en el plan comunidad y cambia de plan cuando encaje. Comisión y términos legales se volverán a firmar antes del lanzamiento público.",
+    "finalBody": "Crea tu cuenta, empieza en el plan comunidad y cambia de plan cuando encaje.",
     "finalCta": "Crear tu cuenta"
   },
   "forClinics": {
     "title": "Para clínicas — Eleva.care",
     "description": "Gestiona un Team de clínica en Eleva.care, una plataforma digital de salud para profesionales independientes.",
-    "draftBanner": "Borrador previo al lanzamiento. Precios por plaza y términos de colaboración no son finales. Finanzas y el DPO volverán a firmar antes del go-live.",
     "heading": "Clínicas y Teams",
     "body": "Las clínicas usan Eleva.care como Team: varios especialistas licenciados en una organización, en la misma plataforma digital de salud que los miembros ya usan para reservar. Eleva opera la tecnología de agenda, reservas y pagos para que tu equipo se centre en el cuidado.",
     "cta": "Crear tu cuenta",
@@ -957,11 +864,32 @@
   },
   "contact": {
     "title": "Contacto — Eleva.care",
-    "description": "Página de contacto en borrador. El formulario público espera la aprobación legal y del DPO.",
-    "draftBanner": "Borrador previo al lanzamiento. Esta página aún no recoge mensajes. Legal y el DPO aprobarán el formulario antes de que Eleva.care entre en producción.",
-    "heading": "Contacto",
-    "body": "El formulario público de contacto estará aquí cuando Legal y el DPO aprueben el texto y las reglas de retención. Hasta entonces esta página no envía ni guarda mensajes.",
-    "eyebrow": "Contacto"
+    "description": "Escribe al equipo de Eleva.care sobre una reserva, tu cuenta, tu privacidad, una colaboración o un problema de seguridad.",
+    "eyebrow": "Contacto",
+    "heading": "Estamos aquí para ayudarte",
+    "body": "Escribe al equipo que mejor puede ayudarte. Leemos todos los mensajes y respondemos en español, inglés o portugués.",
+    "channelsHeading": "A quién escribir",
+    "channels": {
+      "support": {
+        "title": "Reservas y tu cuenta",
+        "body": "Una sesión, un pago, un reembolso o el inicio de sesión."
+      },
+      "privacy": {
+        "title": "Privacidad y tus datos",
+        "body": "Tus datos de salud, las cookies o el ejercicio de tus derechos según el RGPD."
+      },
+      "legal": {
+        "title": "Términos y colaboraciones",
+        "body": "Nuestros términos y acuerdos, y colaboraciones con clínicas."
+      },
+      "security": {
+        "title": "Seguridad",
+        "body": "¿Has encontrado un problema de seguridad? Cuéntanoslo en privado y lo revisaremos."
+      }
+    },
+    "helpHeading": "¿Buscas una respuesta rápida?",
+    "helpBody": "El centro de ayuda explica las reservas, los pagos, cómo entrar en una sesión y cómo cuidamos tus datos.",
+    "helpCta": "Abrir el centro de ayuda"
   },
   "trust": {
     "pages": {

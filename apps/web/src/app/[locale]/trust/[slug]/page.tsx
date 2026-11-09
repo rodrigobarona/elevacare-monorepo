@@ -1,11 +1,15 @@
 import { isContentLocale } from "@eleva/content/locales"
-import { CONSENT_DOCUMENT_VERSION } from "@eleva/compliance"
-import { getTranslations, setRequestLocale } from "next-intl/server"
+import {
+  getFormatter,
+  getTranslations,
+  setRequestLocale,
+} from "next-intl/server"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { LongformLayout } from "@/components/longform-layout"
+import { formatLastUpdated } from "@/lib/last-updated"
 import { hreflangLanguages, localePath } from "@/lib/hreflang"
 import { getTrustMdxDocument } from "@/lib/trust-source"
 import { isTrustSlug, TRUST_SLUGS } from "@/lib/trust-slugs"
@@ -63,6 +67,7 @@ export default async function TrustPage({ params }: Props) {
   setRequestLocale(locale)
   const t = await getTranslations({ locale, namespace: "trust" })
   const tLongform = await getTranslations({ locale, namespace: "longform" })
+  const format = await getFormatter({ locale })
 
   if (isContentLocale(locale)) {
     const doc = getTrustMdxDocument(slug, locale)
@@ -76,11 +81,8 @@ export default async function TrustPage({ params }: Props) {
               description={
                 doc.frontmatter.summary ?? doc.frontmatter.description
               }
-              versionLabel={tLongform("versionLabel", {
-                version: CONSENT_DOCUMENT_VERSION,
-              })}
               lastUpdatedLabel={tLongform("lastUpdatedLabel", {
-                date: doc.frontmatter.lastUpdated,
+                date: formatLastUpdated(format, doc.frontmatter.lastUpdated),
               })}
               tocTitle={tLongform("tocTitle")}
               Body={doc.Body}

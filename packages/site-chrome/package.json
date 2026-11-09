@@ -8,7 +8,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@eleva/compliance": "workspace:*",
     "@eleva/config": "workspace:*",
     "@eleva/consent": "workspace:*",
     "@eleva/icons": "workspace:*",
