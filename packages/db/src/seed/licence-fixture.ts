@@ -67,8 +67,11 @@ export async function ensureFixtureLicenceApproved(
       },
     })
   } else if (
-    existing.licenceNumber !== licence.licenceNumber ||
-    existing.professionalBody !== licence.professionalBody
+    // Only a real register entry updates a row; the placeholder never
+    // overwrites a number recorded earlier.
+    args.licence &&
+    (existing.licenceNumber !== licence.licenceNumber ||
+      existing.professionalBody !== licence.professionalBody)
   ) {
     await client
       .update(main.becomePartnerApplications)
