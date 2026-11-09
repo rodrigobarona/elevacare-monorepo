@@ -13,6 +13,7 @@ import {
   SESSION_CACHE_COOKIE_NAMES,
 } from "./server/credentials"
 import { crossSubDomainCookieConfig } from "./server/cookie-domain"
+import { ELEVA_PATHNAME_HEADER, workspaceSlugFromPath } from "./workspace-slug"
 
 export interface AuthUser {
   id: string
@@ -144,6 +145,14 @@ export async function getSessionForOrg(
 }
 
 export { workspaceSlugFromPath } from "./workspace-slug"
+
+/**
+ * The workspace this request is for: `/{slug}/…` in its address, from the
+ * path the auth proxy forwards. Null on routes that name no workspace.
+ */
+export async function addressWorkspaceSlug(): Promise<string | null> {
+  return workspaceSlugFromPath((await headers()).get(ELEVA_PATHNAME_HEADER))
+}
 
 /**
  * Like `requireSession`, for pages and actions under `/{slug}/…`: rights are

@@ -2,7 +2,12 @@ import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { createApiClient } from "@eleva/api-client"
 import { guardSessionForOrg, type ElevaSession } from "@eleva/auth"
-import { buildApiSessionHeaders, requireSession } from "@eleva/auth/server"
+import {
+  addressWorkspaceSlug,
+  buildApiSessionHeaders,
+  requireSession,
+  requireSessionForOrg,
+} from "@eleva/auth/server"
 import { resolveProductHomeUrl } from "@eleva/dashboard/resolve-product-home-url"
 
 const LOCAL_API_HOSTS = new Set(["localhost", "127.0.0.1", "::1"])
@@ -31,12 +36,19 @@ export function getApiBaseUrl(): string {
   )
 }
 
+/**
+ * API client that acts for the Space in the address (`/{slug}/…`). The
+ * session's active workspace can be the person's practice after a switch,
+ * and member routes refuse it.
+ */
 export async function getAuthedApiClient() {
-  await requireSession()
+  const slug = await addressWorkspaceSlug()
+  if (slug) await requireSessionForOrg(slug)
+  else await requireSession()
   const incomingHeaders = await headers()
   return createApiClient({
     baseUrl: getApiBaseUrl(),
-    headers: buildApiSessionHeaders(incomingHeaders),
+    headers: buildApiSessionHeaders(incomingHeaders, { orgSlug: slug }),
   })
 }
 
