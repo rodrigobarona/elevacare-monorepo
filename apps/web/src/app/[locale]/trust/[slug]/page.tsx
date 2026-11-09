@@ -1,9 +1,5 @@
 import { isContentLocale } from "@eleva/content/locales"
-import {
-  getFormatter,
-  getTranslations,
-  setRequestLocale,
-} from "next-intl/server"
+import { getTranslations, setRequestLocale } from "next-intl/server"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { SiteFooter } from "@/components/site-footer"
@@ -67,7 +63,6 @@ export default async function TrustPage({ params }: Props) {
   setRequestLocale(locale)
   const t = await getTranslations({ locale, namespace: "trust" })
   const tLongform = await getTranslations({ locale, namespace: "longform" })
-  const format = await getFormatter({ locale })
 
   if (isContentLocale(locale)) {
     const doc = getTrustMdxDocument(slug, locale)
@@ -82,7 +77,7 @@ export default async function TrustPage({ params }: Props) {
                 doc.frontmatter.summary ?? doc.frontmatter.description
               }
               lastUpdatedLabel={tLongform("lastUpdatedLabel", {
-                date: formatLastUpdated(format, doc.frontmatter.lastUpdated),
+                date: formatLastUpdated(locale, doc.frontmatter.lastUpdated),
               })}
               tocTitle={tLongform("tocTitle")}
               Body={doc.Body}

@@ -1,9 +1,5 @@
 import { isContentLocale } from "@eleva/content/locales"
-import {
-  getFormatter,
-  getTranslations,
-  setRequestLocale,
-} from "next-intl/server"
+import { getTranslations, setRequestLocale } from "next-intl/server"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { SiteFooter } from "@/components/site-footer"
@@ -51,10 +47,7 @@ export default async function LegalDocumentPage({ params }: Props) {
   const doc = loadDocument(locale, slug)
   if (!doc) notFound()
   setRequestLocale(locale)
-  const [tLongform, format] = await Promise.all([
-    getTranslations({ locale, namespace: "longform" }),
-    getFormatter({ locale }),
-  ])
+  const tLongform = await getTranslations({ locale, namespace: "longform" })
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -64,7 +57,7 @@ export default async function LegalDocumentPage({ params }: Props) {
           title={doc.frontmatter.title}
           description={doc.frontmatter.summary ?? doc.frontmatter.description}
           lastUpdatedLabel={tLongform("lastUpdatedLabel", {
-            date: formatLastUpdated(format, doc.frontmatter.lastUpdated),
+            date: formatLastUpdated(locale, doc.frontmatter.lastUpdated),
           })}
           tocTitle={tLongform("tocTitle")}
           Body={doc.Body}
