@@ -1,13 +1,11 @@
 ---
 title: Acuerdo de tratamiento de datos — Eleva.care
 description: Términos de encargado cuando Eleva trata datos bajo instrucciones de un experto.
-lastUpdated: 2026-10-31
+lastUpdated: 2026-11-09
 summary: Roles, subencargados, transferencias y medidas de seguridad.
 ---
 
 # Acuerdo de Tratamiento de Datos (DPA)
-
-_Fecha de vigencia: 31 de diciembre de 2025_
 
 > **Resumen Rápido**
 >
@@ -42,6 +40,14 @@ Eleva.care es un marketplace de intermediación que conecta a los miembros con p
 - Actuamos solo con instrucciones documentadas, ciframos datos (en tránsito y en reposo), y mantenemos RBAC y logs de auditoría.
 - Los registros de sesión se guardan en Neon (Fráncfort) y los documentos de sesión subidos en Cloudflare R2 (jurisdicción UE). La sección 12 indica todos los subencargados que pueden tratarlos. Avisamos antes de cualquier cambio.
 
+### Qué trata Eleva por cuenta de usted (artículo 28, apartado 3, del RGPD)
+
+- **Objeto:** conservar y transmitir los registros de sesión que usted crea para los miembros que atiende en Eleva.
+- **Duración:** mientras este acuerdo esté en vigor y, después, durante el plazo de conservación de la sección 6, salvo que usted ordene una eliminación anticipada cuando la ley lo permita.
+- **Naturaleza y finalidad:** conservación cifrada, presentación a usted y al miembro con quien la comparte, exportación, transcripción en directo y borradores con IA cuando el miembro consiente, y eliminación.
+- **Tipos de datos personales:** datos de identificación y contacto, datos de la reserva y datos de salud (respuestas al cuestionario inicial, notas de sesión, transcripciones, informes y archivos subidos para una sesión).
+- **Categorías de interesados:** los miembros que usted atiende en Eleva.
+
 ## 4) Seguridad en breve
 
 - TLS 1.3 en tránsito; AES‑256‑GCM en reposo (datos clínicos)
@@ -55,7 +61,8 @@ Eleva.care es un marketplace de intermediación que conecta a los miembros con p
 ## 6) Conservación y eliminación
 
 - Datos de plataforma: solo el tiempo necesario o exigido por ley
-- Registros de sesión (datos clínicos): se conservan por defecto durante 7 años después de la última sesión. Al terminar o por instrucción, exportamos y eliminamos tras un breve período de gracia y ventana de backups.
+- Registros de sesión (datos clínicos): se conservan durante 7 años después de la última sesión, para que usted cumpla su deber de conservación y los miembros mantengan el acceso a los informes ya compartidos.
+- Cuando este acuerdo termina, los conservamos por instrucción documentada de usted durante el resto de ese plazo. Puede pedir una exportación en cualquier momento. Al final del plazo, o antes por instrucción de usted cuando la ley lo permita, los eliminamos, y las copias en backups cifrados se sobrescriben a medida que los backups rotan.
 
 ## 7) Derechos de titulares
 

@@ -32,6 +32,41 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-09: Legal redlines before experts sign (active)
+
+- Owner: founder + engineering; lawyer-judge review 2026-11-09 (7.5/10).
+  Working pre-launch copy, not DPO or external legal sign-off.
+- Expert agreement: §1 clinic clause (the clinic provides the care,
+  invoices, is paid and is controller; it answers for the expert); §5 free
+  non-exclusive licence to host, display, translate and format profile
+  content while live; §6 Top Expert €29/month at 8% instead of 15%
+  (matches `TOP_EXPERT_COMMISSION_BPS`), 15% again from the end of the
+  paid month; §11 label "Top Expert first" (same as the directory sort);
+  §13 session records kept 7 years after the last session on the expert's
+  documented instruction, export at any time; §14 second P2B mediator
+  (Centro de Arbitragem Comercial, Lisbon) next to CEDR.
+- Terms §6: paying Eleva discharges the member's debt to the expert.
+  Terms §12: the same profile licence.
+- Payments: expert cancellation or no-show refunds "everything you paid"
+  (members pay no Eleva fee); illness or another serious reason the
+  member can show earns one free move when the expert has another time
+  (handled by support, not self-service yet).
+- Health data notice rewritten in plain words in EN/PT/ES, dated the
+  same, retention aligned with the Privacy notice (session records 7
+  years, bookings and payments 10 years, security logs up to 1 year).
+- DPA: Article 28(3) particulars added (subject matter, duration, nature
+  and purpose, data types, data subjects); retention after termination
+  stated; the stale "Effective Date" line removed.
+- Become an expert: registration in the Ordem checked before going live,
+  the payout timing from the agreement, no internal jargon, and the
+  15-day change notice.
+- Out of scope, still open before members book publicly (lawyer issues 1,
+  11, 12, 13): booking health-data consent no longer tied to the booking
+  (needs the booking checkbox and Privacy §4 changed together), per-feature
+  AI retention wording, the "Eleva team cannot read it" claim checked
+  against key management, and the DPO appointment. Commission invoices
+  still wait for `issueInvoice()` (AUD-007 waiver).
+
 ### 2026-11-09: One fixed address per mode; one Eleva Academy (active)
 
 - Owner: founder (product) + engineering
