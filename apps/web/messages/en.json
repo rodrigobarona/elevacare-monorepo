@@ -704,7 +704,7 @@
       {
         "icon": "currency",
         "title": "Your rates and policies",
-        "body": "Set prices and Flexible, Moderate or Strict cancellation rules per service. Payouts run through Stripe Connect after sessions complete."
+        "body": "Set your prices and a Flexible, Moderate or Strict cancellation policy for each service. Your share is paid out through Stripe on the later of 7 days after payment or 24 hours after the session."
       },
       {
         "icon": "calendar",
@@ -714,7 +714,7 @@
       {
         "icon": "video",
         "title": "Secure sessions",
-        "body": "Video rooms, reminders and join links are built in. Recording stays off on the standard plan we use today."
+        "body": "Video rooms, reminders and join links are built in. Sessions are not recorded."
       },
       {
         "icon": "users",
@@ -730,12 +730,12 @@
     "requirementsHeading": "Who can join",
     "requirements": [
       {
-        "title": "Licensed professional",
-        "body": "You hold the licence or registration required to deliver the services you publish in your jurisdiction."
+        "title": "Registered health professional",
+        "body": "You work in a regulated health profession with active registration in your professional body (in Portugal, your Ordem). We check your registration before your profile goes live."
       },
       {
-        "title": "Evidence-based communication",
-        "body": "Profiles and member-facing copy follow Eleva's ERS-safe framing: no guarantees, no unproven statistics, and no claim that Eleva provides clinical care."
+        "title": "Honest, evidence-based words",
+        "body": "Your profile and services promise no results, quote no unproven figures, and make clear that you, not Eleva, provide the care."
       },
       {
         "title": "Languages you publish",
@@ -747,7 +747,7 @@
       }
     ],
     "finalHeading": "Ready to open your practice?",
-    "finalBody": "Create your account, start on the community tier, and upgrade when it fits your practice.",
+    "finalBody": "Create your account, start on the community tier, and upgrade when it fits your practice. Your terms are the Expert agreement you accept when you register. If we change it, we email you at least 15 days before, and you can leave before the change applies.",
     "finalCta": "Create your account"
   },
   "forClinics": {

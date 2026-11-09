@@ -704,7 +704,7 @@
       {
         "icon": "currency",
         "title": "Os seus preços e políticas",
-        "body": "Defina preços e políticas de cancelamento Flexível, Moderada ou Rigorosa por serviço. Os pagamentos passam pela Stripe Connect após a sessão."
+        "body": "Defina os seus preços e uma política de cancelamento Flexível, Moderada ou Rigorosa para cada serviço. A sua parte é paga pela Stripe na data mais tardia entre 7 dias após o pagamento e 24 horas após a sessão."
       },
       {
         "icon": "calendar",
@@ -714,7 +714,7 @@
       {
         "icon": "video",
         "title": "Sessões seguras",
-        "body": "Salas de vídeo, lembretes e links de entrada estão integrados. A gravação permanece desligada no plano standard que usamos hoje."
+        "body": "Salas de vídeo, lembretes e links de entrada estão integrados. As sessões não são gravadas."
       },
       {
         "icon": "users",
@@ -730,12 +730,12 @@
     "requirementsHeading": "Quem pode aderir",
     "requirements": [
       {
-        "title": "Profissional licenciado",
-        "body": "Tem a licença ou registo exigido para prestar os serviços que publica na sua jurisdição."
+        "title": "Profissional de saúde registado",
+        "body": "Exerce uma profissão de saúde regulada, com inscrição ativa na sua Ordem profissional. Verificamos a sua cédula profissional antes de o seu perfil ficar visível."
       },
       {
-        "title": "Comunicação baseada em evidência",
-        "body": "Perfis e textos para membros seguem o enquadramento ERS da Eleva: sem garantias, sem estatísticas não comprovadas e sem sugerir que a Eleva presta cuidados clínicos."
+        "title": "Palavras honestas, baseadas em evidência",
+        "body": "O seu perfil e os seus serviços não prometem resultados, não citam números sem prova e deixam claro que é você, e não a Eleva, quem presta os cuidados."
       },
       {
         "title": "Idiomas que publica",
@@ -747,7 +747,7 @@
       }
     ],
     "finalHeading": "Pronto para abrir a sua prática?",
-    "finalBody": "Crie a sua conta, comece no plano comunidade e mude de plano quando fizer sentido.",
+    "finalBody": "Crie a sua conta, comece no plano comunidade e mude de plano quando fizer sentido. Os seus termos são o Acordo do especialista que aceita ao registar-se. Se o alterarmos, avisamos por email com pelo menos 15 dias de antecedência, e pode sair antes de a alteração se aplicar.",
     "finalCta": "Criar a sua conta"
   },
   "forClinics": {
