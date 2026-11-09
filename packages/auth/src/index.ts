@@ -5,7 +5,6 @@ export {
   type ApiAuthMode,
   UnauthorizedError,
 } from "./types"
-export { isAlreadySignedOut } from "./server/already-signed-out"
 export {
   deriveProductLabel,
   capabilitiesFor,

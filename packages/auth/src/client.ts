@@ -31,6 +31,8 @@ interface AuthClientError {
 }
 
 export interface ElevaAuthClient {
+  /** Ends the session on the auth server (`apps/api`) and clears its cookie. */
+  signOut: () => Promise<{ error?: AuthClientError | null }>
   signIn: {
     email: (body: {
       email: string
