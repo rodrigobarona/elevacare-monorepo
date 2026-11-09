@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import { getLocale, getTranslations } from "next-intl/server"
 import { LOGIN_PATH } from "@eleva/auth"
-import { getSession } from "@eleva/auth/server"
+import { getAuthUser } from "@eleva/auth/server"
 import { normalizeLocale } from "@eleva/config/i18n"
 import { checkExistingMembership } from "./actions"
 import { AuthHeading } from "@/components/auth-ui"
@@ -14,8 +14,10 @@ export const dynamic = "force-dynamic"
  * but don't yet have an organization/membership in the DB.
  */
 export default async function OnboardingPage() {
-  const session = await getSession()
-  if (!session) {
+  // Signed in is enough here: the people this page is for have no
+  // membership yet, which is exactly when getSession() returns null.
+  const user = await getAuthUser()
+  if (!user) {
     redirect(LOGIN_PATH)
   }
   const locale = normalizeLocale(await getLocale()) ?? "en"
@@ -25,9 +27,9 @@ export default async function OnboardingPage() {
     redirect("/dashboard")
   }
 
-  const displayName = session.user.displayName || session.user.email
-  const firstName =
-    session.user.displayName?.split(/\s+/)[0] || session.user.email
+  const displayName =
+    [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email
+  const firstName = user.firstName || user.email
 
   const t = await getTranslations("onboarding")
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"
