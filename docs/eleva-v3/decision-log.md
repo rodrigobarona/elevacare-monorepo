@@ -32,6 +32,44 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-09: One fixed address per mode; one Eleva Academy (active)
+
+- Owner: founder (product) + engineering
+- Founder review of Airbnb's guest/host model (fixed `/hosting` address,
+  "Switch to hosting" in the top bar, a type picker for new listings, an
+  invitation card instead of a header button for guests). Refines the
+  shell entry below; the sidebar workspace switcher stays only for people
+  with several work workspaces.
+- Addresses, each found from who is signed in, not from a name:
+  - `eleva.care/space` – your own care: sessions, payments, reports,
+    privacy, and the courses you are enrolled in. Replaces `/space-…`
+    addresses, which stay as redirects.
+  - `eleva.care/practice` – your own practice (was `/{name}/team`).
+  - `eleva.care/lecture` – your teaching: courses, learning paths,
+    learners, earnings.
+  - `eleva.care/clinic/{name}` – the only named workspace, because a
+    clinic is shared with other people (was `/{name}/admin`).
+  - `eleva.care/academy` – the one public Eleva Academy catalog, like the
+    expert directory. There are no per-organization academies.
+  - `eleva.care/{name}` – public expert profiles only.
+- Top bar: once someone has more than their Space, a text switch between
+  modes ("Switch to your practice", "Switch to your care"; a short list
+  when there are three or more). Members see "Offer sessions on Eleva" as
+  an invitation card in the avatar menu only, never in the top bar, since
+  most members are not clinicians.
+- Practice: four main destinations (Today, Calendar, Services, Members),
+  "Today" as home with setup steps when empty; the practice menu opens with
+  this month's earnings, the next session and one notice. "Add a
+  workspace" is a type picker: Practice, Clinic, Lecture.
+- App hosts are internal. A browser that visits `app.`, `account.`,
+  `expert.`, `team.` or `academy.eleva.care` directly is redirected to the
+  same path on `eleva.care`; requests the gateway forwards keep working.
+  The "Select a workspace" pickers at those hosts' roots go away (founder
+  found `expert.eleva.care/` showing one, 2026-11-09).
+- Not built yet. Today's code still has an `academy` organization type with
+  per-organization academies at `/{name}/academy`; that changes when the
+  lecture slice is built.
+
 ### 2026-11-09: One app shell for every signed-in app; workspace switcher model (active)
 
 - Owner: founder (product) + engineering

@@ -13,6 +13,20 @@ It should guide:
 - monorepo planning
 - identity and organization reuse
 
+## Product Model (founder, 2026-11-09)
+
+- There is one Eleva Academy, run like the expert marketplace: a public
+  catalog at `eleva.care/academy` with courses and learning paths from many
+  lecturers. There are no per-organization academies.
+- Lecturers teach from their own workspace at `eleva.care/lecture`
+  (courses, learning paths, learners, earnings), the way experts work from
+  `eleva.care/practice`.
+- Learners follow their courses and lessons in their own Space at
+  `eleva.care/space`; enrolling does not create another workspace.
+- See the decision log entry "One fixed address per mode; one Eleva
+  Academy". The `academy` organization type and `/{name}/academy` routes in
+  today's code predate this and change with the lecture slice.
+
 ## Core Decision
 
 Eleva Academy should begin as a domain and package boundary, not as a separate app from day one.
@@ -106,7 +120,8 @@ This strengthens the case for shared content infrastructure rather than an isola
 
 ## Open Questions
 
-- whether Academy is customer-facing only or also organization-facing
+- ~~whether Academy is customer-facing only or also organization-facing~~
+  Settled 2026-11-09: one marketplace-style academy (see Product Model).
 - whether Academy includes live cohorts, async content, or both
 - when Academy becomes important enough to justify dedicated app boundaries
 
