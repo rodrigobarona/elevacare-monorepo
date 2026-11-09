@@ -15,6 +15,7 @@ import {
 import { getAuthApi } from "./auth"
 import {
   bearerToken,
+  ELEVA_ORG_HEADER,
   hasDuplicateSessionCookie,
   isJwtBearer,
   listCredentialSources,
@@ -172,10 +173,16 @@ async function sessionFromCookieOrBearer(
     throw new UnauthorizedError("invalid-token")
   }
 
-  const orgId =
+  const activeOrgId =
     typeof result.session.activeOrganizationId === "string"
       ? result.session.activeOrganizationId
       : null
+  // A page that names its workspace (the org slug in its address) wins over
+  // the session's active workspace, which can lag behind a switch.
+  const namedSlug = request.headers.get(ELEVA_ORG_HEADER)?.trim() || null
+  const orgId = namedSlug
+    ? await membershipOrgIdBySlug(result.user.id, namedSlug)
+    : activeOrgId
 
   return buildIdentity({
     userId: result.user.id,
@@ -185,6 +192,31 @@ async function sessionFromCookieOrBearer(
     orgId,
     authMode,
   })
+}
+
+/** The org the person belongs to under this slug, or `not-a-member`. */
+async function membershipOrgIdBySlug(
+  userId: string,
+  slug: string
+): Promise<string> {
+  const [row] = await db()
+    .select({ orgId: authTables.organization.id })
+    .from(authTables.member)
+    .innerJoin(
+      authTables.organization,
+      eq(authTables.member.organizationId, authTables.organization.id)
+    )
+    .where(
+      and(
+        eq(authTables.member.userId, userId),
+        eq(authTables.organization.slug, slug)
+      )
+    )
+    .limit(1)
+  if (!row) {
+    throw new UnauthorizedError("not-a-member", "membership not found")
+  }
+  return row.orgId
 }
 
 async function sessionFromJwt(token: string): Promise<ApiIdentity> {

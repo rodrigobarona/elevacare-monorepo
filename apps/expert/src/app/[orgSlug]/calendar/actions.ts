@@ -1,11 +1,10 @@
 "use server"
 
-import { requireSession } from "@eleva/auth/server"
 import {
   DeclineExpertBookingRequestSchema,
   ListExpertBookingsQuerySchema,
 } from "@eleva/api-client"
-import { getAuthedApiClient } from "@/lib/server-api"
+import { getAuthedApiClient, requireExpertSession } from "@/lib/server-api"
 import { mapExpertApiError } from "@/lib/map-api-error"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
 
@@ -43,7 +42,7 @@ export async function listCalendarBookingsAction(
   }
 
   try {
-    await requireSession("events:manage")
+    await requireExpertSession("events:manage")
     const api = await getAuthedApiClient()
     const data = await api.expert.bookings.list(parsed.data)
     return {
@@ -68,7 +67,7 @@ export async function acceptCalendarBookingAction(
   bookingId: string
 ): Promise<ActionResult<{ bookingId: string }>> {
   try {
-    const session = await requireSession("events:manage")
+    const session = await requireExpertSession("events:manage")
     const api = await getAuthedApiClient()
     const result = await api.expert.bookings.accept(bookingId)
     revalidateExpertWorkspace(session, "calendar")
@@ -95,7 +94,7 @@ export async function declineCalendarBookingAction(
     return { ok: false, error: "validation" }
   }
   try {
-    const session = await requireSession("events:manage")
+    const session = await requireExpertSession("events:manage")
     const api = await getAuthedApiClient()
     const result = await api.expert.bookings.decline(bookingId, parsed.data)
     revalidateExpertWorkspace(session, "calendar")
@@ -116,7 +115,7 @@ export async function rotateFeedTokenAction(): Promise<
   ActionResult<{ token: string; feedUrl: string; createdAt: string }>
 > {
   try {
-    const session = await requireSession("events:manage")
+    const session = await requireExpertSession("events:manage")
     const api = await getAuthedApiClient()
     const result = await api.expert.calendar.rotateFeedToken()
     const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"
@@ -143,7 +142,7 @@ export async function revokeFeedTokenAction(): Promise<
   ActionResult<{ ok: true }>
 > {
   try {
-    const session = await requireSession("events:manage")
+    const session = await requireExpertSession("events:manage")
     const api = await getAuthedApiClient()
     await api.expert.calendar.revokeFeedToken()
     revalidateExpertWorkspace(session, "calendar")

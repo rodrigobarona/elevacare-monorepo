@@ -5,7 +5,7 @@ import {
   ElevaConnectProvider,
   ConnectNotificationBanner,
 } from "@eleva/billing/embedded"
-import { createApiClient } from "@eleva/api-client"
+import { practiceApiClient, usePracticeSlug } from "@/lib/practice-api-client"
 
 interface Props {
   apiBaseUrl: string
@@ -18,8 +18,9 @@ export function ExpertConnectShell({
   stripePublishableKey,
   children,
 }: Props) {
+  const orgSlug = usePracticeSlug()
   const fetchClientSecret = React.useCallback(async () => {
-    const api = createApiClient({ baseUrl: apiBaseUrl })
+    const api = practiceApiClient(apiBaseUrl, orgSlug)
     const data = await api.stripe.accountSession.create({
       components: [
         "notification_banner",
@@ -31,7 +32,7 @@ export function ExpertConnectShell({
       ],
     })
     return data.clientSecret
-  }, [apiBaseUrl])
+  }, [apiBaseUrl, orgSlug])
 
   return (
     <ElevaConnectProvider

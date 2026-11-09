@@ -5,6 +5,8 @@ import {
 
 export type CredentialSource = "cookie" | "authorization" | "api-key"
 
+export { ELEVA_ORG_HEADER } from "@eleva/config/routing"
+
 export const SESSION_COOKIE_NAMES = [
   "better-auth.session_token",
   "__Secure-better-auth.session_token",

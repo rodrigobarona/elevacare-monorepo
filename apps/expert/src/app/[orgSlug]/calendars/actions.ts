@@ -1,9 +1,8 @@
 "use server"
 
 import { z } from "zod"
-import { requireSession } from "@eleva/auth/server"
 import { BusySourcesRequestSchema } from "@eleva/api-client"
-import { getAuthedApiClient } from "@/lib/server-api"
+import { getAuthedApiClient, requireExpertSession } from "@/lib/server-api"
 import { mapExpertApiError } from "@/lib/map-api-error"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
 
@@ -23,7 +22,7 @@ export async function disconnectCalendarAction(
   }
 
   try {
-    const session = await requireSession("events:manage")
+    const session = await requireExpertSession("events:manage")
     const api = await getAuthedApiClient()
     await api.expert.integrations.disconnect(parsedIntegrationId)
 
@@ -62,7 +61,7 @@ export async function loadSubCalendars(integrationId: string): Promise<
   }
 
   try {
-    await requireSession("events:manage")
+    await requireExpertSession("events:manage")
     const api = await getAuthedApiClient()
     const result =
       await api.expert.integrations.listCalendars(parsedIntegrationId)
@@ -94,7 +93,7 @@ export async function saveBusySources(
   }
 
   try {
-    const session = await requireSession("events:manage")
+    const session = await requireExpertSession("events:manage")
     const api = await getAuthedApiClient()
     await api.expert.integrations.setBusySources(parsedIntegrationId, {
       sources: parsedSources,
@@ -129,7 +128,7 @@ export async function saveDestinationCalendar(
   }
 
   try {
-    const session = await requireSession("events:manage")
+    const session = await requireExpertSession("events:manage")
     const api = await getAuthedApiClient()
     await api.expert.integrations.setDestination(parsedIntegrationId, {
       externalCalendarId: parsedExternalCalendarId,

@@ -1,9 +1,8 @@
 "use server"
 
 import { mintUploadToken } from "@eleva/auth/upload-token"
-import { requireSession } from "@eleva/auth/server"
 import { PatchExpertProfileRequestSchema } from "@eleva/api-client"
-import { getAuthedApiClient } from "@/lib/server-api"
+import { getAuthedApiClient, requireExpertSession } from "@/lib/server-api"
 import { humanApiMessage, mapExpertApiError } from "@/lib/map-api-error"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
 
@@ -24,7 +23,7 @@ export async function getPortraitUploadToken(): Promise<{
   token: string
   ownerId: string
 }> {
-  const session = await requireSession("expert:onboard")
+  const session = await requireExpertSession("expert:onboard")
   return {
     token: await mintUploadToken(session.user.id),
     ownerId: session.user.id,
@@ -44,7 +43,7 @@ export async function savePublicProfile(
   }
 
   try {
-    const session = await requireSession("expert:onboard")
+    const session = await requireExpertSession("expert:onboard")
     const api = await getAuthedApiClient()
     await api.expert.profile.patch(parsed.data)
     revalidateExpertWorkspace(session, "profile")

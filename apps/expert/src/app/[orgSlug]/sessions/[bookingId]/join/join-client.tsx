@@ -2,11 +2,7 @@
 
 import { useCallback, useMemo } from "react"
 import { useLocale, useTranslations } from "next-intl"
-import {
-  ApiClientError,
-  createApiClient,
-  RecordTemplatePhiErrorSchema,
-} from "@eleva/api-client"
+import { ApiClientError, RecordTemplatePhiErrorSchema } from "@eleva/api-client"
 import {
   JoinSession,
   elevaCallLabels,
@@ -16,6 +12,7 @@ import {
   type NoteTemplates,
   type SessionRecordBundle,
 } from "@eleva/video/client"
+import { practiceApiClient, usePracticeSlug } from "@/lib/practice-api-client"
 
 const TEMPLATE_LOCALES = ["en", "pt", "es"] as const
 
@@ -30,12 +27,13 @@ export function JoinClient({
   backHref: string
   templatesHref: string
 }) {
+  const orgSlug = usePracticeSlug()
   const t = useTranslations("sessions.call")
   const uiLocale = useLocale()
   const labels = useMemo((): ElevaCallLabels => elevaCallLabels(t), [t])
   const api = useMemo(
-    () => createApiClient({ baseUrl: apiBaseUrl }),
-    [apiBaseUrl]
+    () => practiceApiClient(apiBaseUrl, orgSlug),
+    [apiBaseUrl, orgSlug]
   )
 
   const join = useCallback(() => {

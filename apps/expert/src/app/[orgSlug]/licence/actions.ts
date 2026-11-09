@@ -1,8 +1,7 @@
 "use server"
 
 import { ApiClientError, ExpertLicenceSchema } from "@eleva/api-client"
-import { requireSession } from "@eleva/auth/server"
-import { getAuthedApiClient } from "@/lib/server-api"
+import { getAuthedApiClient, requireExpertSession } from "@/lib/server-api"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
 
 export type SubmitLicenceError =
@@ -20,7 +19,7 @@ export async function submitLicence(input: {
   if (!parsed.success) return { ok: false, error: "validation" }
 
   try {
-    const session = await requireSession("expert:onboard")
+    const session = await requireExpertSession("expert:onboard")
     const api = await getAuthedApiClient()
     await api.expert.profile.submitLicence(parsed.data)
     revalidateExpertWorkspace(session, "licence")

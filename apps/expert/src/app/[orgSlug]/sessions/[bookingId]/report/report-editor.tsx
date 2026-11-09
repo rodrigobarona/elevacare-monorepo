@@ -5,7 +5,6 @@ import { useLocale, useTranslations } from "next-intl"
 import { toast } from "sonner"
 import {
   ApiClientError,
-  createApiClient,
   RecordTemplatePhiErrorSchema,
   type BookingRecord,
   type RecordTemplate,
@@ -22,6 +21,7 @@ import {
 import { StatusPill } from "@eleva/ui/components/status-pill"
 import { Textarea } from "@eleva/ui/components/textarea"
 import { PhiHighlight } from "../../../templates/phi-highlight"
+import { practiceApiClient, usePracticeSlug } from "@/lib/practice-api-client"
 
 const REPORT_MAX = 100_000
 const TEMPLATE_LOCALES = ["en", "pt", "es"] as const
@@ -39,12 +39,13 @@ export function ReportEditor({
   templatesHref: string
   aiReportsBeta: boolean
 }) {
+  const orgSlug = usePracticeSlug()
   const t = useTranslations("sessions.report")
   const uiLocale = useLocale()
   const templateLocale = TEMPLATE_LOCALES.find((l) => l === uiLocale) ?? "en"
   const api = useMemo(
-    () => createApiClient({ baseUrl: apiBaseUrl }),
-    [apiBaseUrl]
+    () => practiceApiClient(apiBaseUrl, orgSlug),
+    [apiBaseUrl, orgSlug]
   )
   const [record, setRecord] = useState<BookingRecord | null>(null)
   const [body, setBody] = useState("")

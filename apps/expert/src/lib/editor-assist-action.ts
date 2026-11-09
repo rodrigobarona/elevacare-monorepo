@@ -4,8 +4,7 @@ import {
   EditorAssistRequestSchema,
   type EditorAssistCommand,
 } from "@eleva/api-client"
-import { requireSession } from "@eleva/auth/server"
-import { getAuthedApiClient } from "@/lib/server-api"
+import { getAuthedApiClient, requireExpertSession } from "@/lib/server-api"
 import { humanApiMessage, mapExpertApiError } from "@/lib/map-api-error"
 
 export type EditorAssistActionResult =
@@ -25,7 +24,7 @@ export async function editorAssistAction(input: {
   resourceId: string
 }): Promise<EditorAssistActionResult> {
   try {
-    await requireSession("events:manage")
+    await requireExpertSession("events:manage")
     const parsed = EditorAssistRequestSchema.safeParse({
       ...input,
       context: "marketing",

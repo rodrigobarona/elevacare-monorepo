@@ -1,3 +1,4 @@
+import { ELEVA_ORG_HEADER } from "./credentials"
 /**
  * Headers for server-side proxies that call `apps/api` with the browser
  * session cookie. Server Actions / RSC fetch() do not automatically forward
@@ -5,9 +6,14 @@
  * trusted origin from the incoming request host.
  */
 export function buildApiSessionHeaders(
-  incoming: Headers
+  incoming: Headers,
+  options?: {
+    /** The workspace the page is for (slug from its address); see ELEVA_ORG_HEADER. */
+    orgSlug?: string | null
+  }
 ): Record<string, string> | undefined {
   const headers: Record<string, string> = {}
+  if (options?.orgSlug) headers[ELEVA_ORG_HEADER] = options.orgSlug
   const cookie = incoming.get("cookie")
   if (cookie) headers.cookie = cookie
 

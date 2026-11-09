@@ -5,7 +5,6 @@ import { useLocale, useTranslations } from "next-intl"
 import { toast } from "sonner"
 import {
   ApiClientError,
-  createApiClient,
   RecordTemplatePhiErrorSchema,
   type RecordTemplate,
   type RecordTemplateKind,
@@ -29,6 +28,7 @@ import { StatusPill } from "@eleva/ui/components/status-pill"
 import { Tabs, TabsList, TabsTrigger } from "@eleva/ui/components/tabs"
 import { Textarea } from "@eleva/ui/components/textarea"
 import { PhiHighlight } from "./phi-highlight"
+import { practiceApiClient, usePracticeSlug } from "@/lib/practice-api-client"
 
 const KINDS: readonly RecordTemplateKind[] = [
   "note",
@@ -52,11 +52,12 @@ function toLocale(value: string): TemplateLocale {
 }
 
 export function TemplateLibrary({ apiBaseUrl }: { apiBaseUrl: string }) {
+  const orgSlug = usePracticeSlug()
   const t = useTranslations("templates")
   const uiLocale = toLocale(useLocale())
   const api = useMemo(
-    () => createApiClient({ baseUrl: apiBaseUrl }),
-    [apiBaseUrl]
+    () => practiceApiClient(apiBaseUrl, orgSlug),
+    [apiBaseUrl, orgSlug]
   )
   const [templates, setTemplates] = useState<RecordTemplate[]>([])
   const [starters, setStarters] = useState<StarterRecordTemplate[]>([])

@@ -1,13 +1,12 @@
 "use server"
 
 import { z } from "zod"
-import { requireSession } from "@eleva/auth/server"
 import {
   CreateBookingLinkRequestSchema,
   type BookingLinkListItem,
   type CreateBookingLinkRequest,
 } from "@eleva/api-client"
-import { getAuthedApiClient } from "@/lib/server-api"
+import { getAuthedApiClient, requireExpertSession } from "@/lib/server-api"
 import { mapExpertApiError } from "@/lib/map-api-error"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
 
@@ -26,7 +25,7 @@ export async function createBookingLinkAction(
   data: CreateBookingLinkRequest
 ): Promise<ActionResult> {
   try {
-    const session = await requireSession("events:manage")
+    const session = await requireExpertSession("events:manage")
     const parsed = CreateBookingLinkRequestSchema.safeParse(data)
     if (!parsed.success) {
       return {
@@ -61,7 +60,7 @@ export async function revokeBookingLinkAction(
   linkId: string
 ): Promise<ActionResult> {
   try {
-    const session = await requireSession("events:manage")
+    const session = await requireExpertSession("events:manage")
     if (!IdSchema.safeParse(linkId).success) {
       return { ok: false, error: "invalid-input" }
     }

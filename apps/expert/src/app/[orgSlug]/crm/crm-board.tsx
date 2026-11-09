@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState, useTransition } from "react"
 import { useFormatter, useTranslations } from "next-intl"
 import { toast } from "sonner"
 import {
-  createApiClient,
   type CrmContactListItem,
   type CrmFollowUp,
   type CrmFollowUpKind,
@@ -25,6 +24,7 @@ import {
 import { StatusPill } from "@eleva/ui/components/status-pill"
 import { Tabs, TabsList, TabsTrigger } from "@eleva/ui/components/tabs"
 import { Textarea } from "@eleva/ui/components/textarea"
+import { practiceApiClient, usePracticeSlug } from "@/lib/practice-api-client"
 
 const STAGES: readonly CrmLifecycleStage[] = [
   "lead",
@@ -66,11 +66,12 @@ export function CrmBoard({
   apiBaseUrl: string
   membersPath: string
 }) {
+  const orgSlug = usePracticeSlug()
   const t = useTranslations("crm")
   const format = useFormatter()
   const api = useMemo(
-    () => createApiClient({ baseUrl: apiBaseUrl }),
-    [apiBaseUrl]
+    () => practiceApiClient(apiBaseUrl, orgSlug),
+    [apiBaseUrl, orgSlug]
   )
   const [contacts, setContacts] = useState<CrmContactListItem[]>([])
   const [followUps, setFollowUps] = useState<CrmFollowUp[]>([])

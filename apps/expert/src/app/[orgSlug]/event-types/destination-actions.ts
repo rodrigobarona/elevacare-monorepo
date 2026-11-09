@@ -1,12 +1,11 @@
 "use server"
 
 import { z } from "zod"
-import { requireSession } from "@eleva/auth/server"
 import {
   EventTypeDestinationOverrideSchema,
   type EventTypeDestinationOverride,
 } from "@eleva/api-client"
-import { getAuthedApiClient } from "@/lib/server-api"
+import { getAuthedApiClient, requireExpertSession } from "@/lib/server-api"
 import { mapExpertApiError } from "@/lib/map-api-error"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
 
@@ -19,7 +18,7 @@ export async function setEventTypeDestinationAction(
   data: EventTypeDestinationOverride
 ): Promise<ActionResult> {
   try {
-    const session = await requireSession("events:manage")
+    const session = await requireExpertSession("events:manage")
     if (!IdSchema.safeParse(eventTypeId).success) {
       return { ok: false, error: "invalid-input" }
     }
@@ -52,7 +51,7 @@ export async function setEventTypeModeDestinationAction(
   data: EventTypeDestinationOverride
 ): Promise<ActionResult> {
   try {
-    const session = await requireSession("events:manage")
+    const session = await requireExpertSession("events:manage")
     if (
       !IdSchema.safeParse(eventTypeId).success ||
       !IdSchema.safeParse(modeId).success

@@ -7,10 +7,10 @@ import { SealCheckIcon } from "@eleva/icons"
 import { Button } from "@eleva/ui/components/button"
 import { Alert, AlertDescription } from "@eleva/ui/components/alert"
 import { StatusPill } from "@eleva/ui/components/status-pill"
-import { createApiClient } from "@eleva/api-client"
 import { markStepComplete } from "./actions"
 import { setupErrorMessage } from "./setup-errors"
 import type { OnboardingProfile } from "./onboarding-wizard"
+import { practiceApiClient, usePracticeSlug } from "@/lib/practice-api-client"
 
 interface Props {
   profile: OnboardingProfile
@@ -25,6 +25,7 @@ export function StepIdentity({
   stripePublishableKey,
   onDone,
 }: Props) {
+  const orgSlug = usePracticeSlug()
   const t = useTranslations("onboarding")
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
@@ -52,7 +53,7 @@ export function StepIdentity({
   }
 
   async function startVerification() {
-    const api = createApiClient({ baseUrl: apiBaseUrl })
+    const api = practiceApiClient(apiBaseUrl, orgSlug)
     const { clientSecret } = await api.stripe.identity.createSession()
     const result = await verifyElevaIdentity({
       publishableKey: stripePublishableKey,

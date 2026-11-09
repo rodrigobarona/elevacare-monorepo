@@ -1,6 +1,5 @@
 "use server"
 
-import { requireSession } from "@eleva/auth/server"
 import {
   InvoicingRequestSchema,
   PatchExpertProfileRequestSchema,
@@ -8,7 +7,7 @@ import {
   ConnectAccountingProviderSchema,
   ApiClientError,
 } from "@eleva/api-client"
-import { getAuthedApiClient } from "@/lib/server-api"
+import { getAuthedApiClient, requireExpertSession } from "@/lib/server-api"
 import { mapExpertApiError } from "@/lib/map-api-error"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
 import { isOnboardingStepName } from "@/app/[orgSlug]/setup/onboarding-steps"
@@ -44,7 +43,7 @@ export async function saveProfileStep(
   }
 
   try {
-    const session = await requireSession("expert:onboard")
+    const session = await requireExpertSession("expert:onboard")
     const api = await getAuthedApiClient()
     await api.expert.profile.patch({
       ...payload,
@@ -95,7 +94,7 @@ export async function savePracticeStep(
   }
 
   try {
-    const session = await requireSession("expert:onboard")
+    const session = await requireExpertSession("expert:onboard")
     const api = await getAuthedApiClient()
     await api.expert.practice.patch(payload)
     await api.expert.profile.completeStep("practice")
@@ -122,7 +121,7 @@ export async function markStepComplete(
   }
 
   try {
-    const session = await requireSession("expert:onboard")
+    const session = await requireExpertSession("expert:onboard")
     const api = await getAuthedApiClient()
     await api.expert.profile.completeStep(stepName)
 
@@ -153,7 +152,7 @@ export async function saveInvoicingChoice(
   }
 
   try {
-    const session = await requireSession("expert:onboard")
+    const session = await requireExpertSession("expert:onboard")
     const api = await getAuthedApiClient()
     await api.expert.profile.setInvoicing(payload)
 
@@ -180,7 +179,7 @@ export async function startToconlineOAuth(): Promise<
   }
 
   try {
-    await requireSession("expert:invoicing_manage")
+    await requireExpertSession("expert:invoicing_manage")
     const api = await getAuthedApiClient()
     const result = await api.accounting.connect(provider)
     return { ok: true, url: result.url }

@@ -3,13 +3,14 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { createApiClient } from "@eleva/api-client"
 import { WalletIcon } from "@eleva/icons"
 import { Button } from "@eleva/ui/components/button"
 import { EmptyState } from "@eleva/ui/components/empty-state"
 import { toast } from "sonner"
+import { practiceApiClient, usePracticeSlug } from "@/lib/practice-api-client"
 
 export function FinanceConnectPrompt({ apiBaseUrl }: { apiBaseUrl: string }) {
+  const orgSlug = usePracticeSlug()
   const t = useTranslations("finance.connect")
   const router = useRouter()
   const [isStarting, setIsStarting] = React.useState(false)
@@ -17,7 +18,7 @@ export function FinanceConnectPrompt({ apiBaseUrl }: { apiBaseUrl: string }) {
   async function handleStart() {
     setIsStarting(true)
     try {
-      const api = createApiClient({ baseUrl: apiBaseUrl })
+      const api = practiceApiClient(apiBaseUrl, orgSlug)
       await api.stripe.connectAccount.create({})
       router.refresh()
     } catch {
