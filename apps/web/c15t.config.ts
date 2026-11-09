@@ -1,4 +1,7 @@
-import { DEFAULT_C15T_BACKEND_URL, defineConsentConfig } from "@eleva/consent"
+import {
+  DEFAULT_C15T_BACKEND_URL,
+  defineConsentConfig,
+} from "@eleva/consent/config"
 
 /** Script integrations (PostHog, GTM, …) register here — not in layout loaders. */
 export default defineConsentConfig({
