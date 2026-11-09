@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "TURBO_TASKS_FORCE_WATCH_MODE=nonrecursive next dev --turbopack --port 3000",
+    "dev": "next dev --turbopack --port 3000",
     "prebuild": "fumadocs-mdx",
     "predev": "fumadocs-mdx",
     "build": "next build",
