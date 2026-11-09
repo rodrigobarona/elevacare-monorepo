@@ -3,7 +3,6 @@ description: Object storage rules — Cloudflare R2 with two EU buckets (public 
 globs:
   - packages/storage/**
   - apps/api/src/app/storage/**
-  - infra/storage/**
   - "**/*upload*"
 alwaysApply: false
 ---
