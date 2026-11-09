@@ -24,6 +24,21 @@ export const localeNames: Record<Locale, string> = {
   es: "Español",
 }
 
+/**
+ * `Intl` locale for dates, times, lists and numbers. EU formats everywhere:
+ * day before month and a 24-hour clock, including English (en-IE).
+ */
+export const intlLocales: Record<Locale, string> = {
+  en: "en-IE",
+  pt: "pt-PT",
+  es: "es-ES",
+}
+
+/** `intlLocales` for a UI locale; anything else passes through. */
+export function intlLocale(locale: string): string {
+  return isLocale(locale) ? intlLocales[locale] : locale
+}
+
 export const cookieName = "ELEVA_LOCALE"
 
 const COOKIE_MAX_AGE = 31536000 // 1 year

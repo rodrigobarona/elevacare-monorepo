@@ -8,6 +8,13 @@ export type DaySlots = {
   slots: FunnelSlot[]
 }
 
+export type DayPart = "morning" | "afternoon" | "evening"
+
+export type DayPartSlots = {
+  part: DayPart
+  slots: FunnelSlot[]
+}
+
 export function dateKeyInZone(iso: string, timeZone: string): string {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone,
@@ -43,6 +50,39 @@ export function groupSlotsByDay(
     }))
 }
 
+/** Before 12:00 is morning, before 17:00 afternoon, then evening. */
+export function dayPartInZone(iso: string, timeZone: string): DayPart {
+  const hour = Number(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone,
+      hour: "2-digit",
+      hourCycle: "h23",
+    }).format(new Date(iso))
+  )
+  if (hour < 12) return "morning"
+  if (hour < 17) return "afternoon"
+  return "evening"
+}
+
+/** One day's times split into Morning / Afternoon / Evening, in order. */
+export function groupSlotsByDayPart(
+  slots: readonly FunnelSlot[],
+  timeZone: string
+): DayPartSlots[] {
+  const order: DayPart[] = ["morning", "afternoon", "evening"]
+  const byPart = new Map<DayPart, FunnelSlot[]>()
+  for (const slot of [...slots].sort((a, b) =>
+    a.start.localeCompare(b.start)
+  )) {
+    const part = dayPartInZone(slot.start, timeZone)
+    byPart.set(part, [...(byPart.get(part) ?? []), slot])
+  }
+  return order.flatMap((part) => {
+    const partSlots = byPart.get(part)
+    return partSlots ? [{ part, slots: partSlots }] : []
+  })
+}
+
 export function startOfMonth(date: Date): Date {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1))
 }
@@ -53,32 +93,27 @@ export function addMonths(date: Date, delta: number): Date {
   )
 }
 
-export function calendarDays(month: Date): Date[] {
-  const first = startOfMonth(month)
-  const weekday = first.getUTCDay()
-  const lead = weekday === 0 ? 6 : weekday - 1
-  const days: Date[] = []
-  for (let i = -lead; i < 42 - lead; i++) {
-    days.push(
-      new Date(
-        Date.UTC(
-          first.getUTCFullYear(),
-          first.getUTCMonth(),
-          first.getUTCDate() + i
-        )
-      )
-    )
-  }
-  return days
+/** The UTC month start holding a civil date key such as "2026-11-09". */
+export function monthOfDateKey(dateKey: string): Date {
+  const [year, month] = dateKey.split("-").map(Number)
+  return new Date(Date.UTC(year ?? 1970, (month ?? 1) - 1, 1))
 }
 
-export function sameUtcMonth(a: Date, b: Date): boolean {
-  return (
-    a.getUTCFullYear() === b.getUTCFullYear() &&
-    a.getUTCMonth() === b.getUTCMonth()
-  )
+/** "Europe/Lisbon" → "Lisbon", "America/Sao_Paulo" → "Sao Paulo". */
+export function zoneCity(timeZone: string): string {
+  const last = timeZone.split("/").pop() ?? timeZone
+  return last.replaceAll("_", " ")
 }
 
-export function utcDateKey(date: Date): string {
-  return date.toISOString().slice(0, 10)
+/** "UTC+01:00" style offset of a zone at a given instant. */
+export function zoneOffsetLabel(timeZone: string, at: Date): string {
+  const name =
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone,
+      timeZoneName: "longOffset",
+    })
+      .formatToParts(at)
+      .find((part) => part.type === "timeZoneName")?.value ?? "GMT"
+  // "GMT" alone means +00:00.
+  return name === "GMT" ? "UTC+00:00" : name.replace("GMT", "UTC")
 }

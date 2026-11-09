@@ -284,9 +284,11 @@ time** → **Confirm**.
   slot, moves focus to that time and announces "Monday 9 November, 13:00
   selected". This is the one focus move: the member asked for it.
 - **Times** are grouped Morning / Afternoon / Evening, 44 px tall with a
-  visible edge, in the member's clock: the hour cycle comes from `Intl`
-  for the browser locale when it shares the UI language, else 24 h (EU
-  default). After a day press on phones, the times scroll into view.
+  visible edge, on a 24-hour clock everywhere (revised 2026-11-09: the
+  browser's hour cycle showed "2:30 p.m." in the funnel and "14:30" on the
+  profile card for the same slot). Dates use the EU locales in
+  `@eleva/config/i18n` (`intlLocales`). After a day press on phones, the
+  times scroll into view.
 - **Continue** appears as its own full-width row right after the row holding
   the selected time (desktop) and as a sticky bottom action bar (phones). It
   keeps `booking-continue-when`. Selecting a time never moves focus; a polite

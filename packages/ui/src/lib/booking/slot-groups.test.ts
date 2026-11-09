@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest"
 import {
-  calendarDays,
   dateKeyInZone,
+  dayPartInZone,
   groupSlotsByDay,
-  startOfMonth,
+  groupSlotsByDayPart,
+  monthOfDateKey,
+  zoneCity,
+  zoneOffsetLabel,
 } from "./slot-groups"
 
 describe("dateKeyInZone", () => {
@@ -41,12 +44,60 @@ describe("groupSlotsByDay", () => {
   })
 })
 
-describe("calendarDays", () => {
-  it("returns a Monday-first 42-day grid", () => {
-    const days = calendarDays(
-      startOfMonth(new Date("2026-09-01T00:00:00.000Z"))
+describe("groupSlotsByDayPart", () => {
+  it("splits a Lisbon day into morning, afternoon and evening", () => {
+    const slot = (start: string) => ({ start, end: start })
+    const groups = groupSlotsByDayPart(
+      [
+        slot("2026-11-09T18:00:00.000Z"),
+        slot("2026-11-09T09:00:00.000Z"),
+        slot("2026-11-09T12:00:00.000Z"),
+        slot("2026-11-09T11:30:00.000Z"),
+      ],
+      "Europe/Lisbon"
     )
-    expect(days).toHaveLength(42)
-    expect(days[0]?.getUTCDay()).toBe(1)
+    expect(groups.map((group) => group.part)).toEqual([
+      "morning",
+      "afternoon",
+      "evening",
+    ])
+    expect(groups[0]?.slots.map((item) => item.start)).toEqual([
+      "2026-11-09T09:00:00.000Z",
+      "2026-11-09T11:30:00.000Z",
+    ])
+  })
+
+  it("uses the member's zone, not UTC", () => {
+    // 16:30 UTC is 17:30 in Madrid (evening) but 16:30 in Lisbon.
+    expect(dayPartInZone("2026-11-09T16:30:00.000Z", "Europe/Madrid")).toBe(
+      "evening"
+    )
+    expect(dayPartInZone("2026-11-09T16:30:00.000Z", "Europe/Lisbon")).toBe(
+      "afternoon"
+    )
+  })
+})
+
+describe("zone labels", () => {
+  it("names the city of a zone", () => {
+    expect(zoneCity("Europe/Lisbon")).toBe("Lisbon")
+    expect(zoneCity("America/Sao_Paulo")).toBe("Sao Paulo")
+    expect(zoneCity("UTC")).toBe("UTC")
+  })
+
+  it("gives the UTC offset at an instant", () => {
+    const winter = new Date("2026-01-15T12:00:00.000Z")
+    const summer = new Date("2026-07-15T12:00:00.000Z")
+    expect(zoneOffsetLabel("Europe/Lisbon", winter)).toBe("UTC+00:00")
+    expect(zoneOffsetLabel("Europe/Lisbon", summer)).toBe("UTC+01:00")
+    expect(zoneOffsetLabel("Europe/Madrid", winter)).toBe("UTC+01:00")
+  })
+})
+
+describe("monthOfDateKey", () => {
+  it("returns the UTC start of the date's month", () => {
+    expect(monthOfDateKey("2026-12-31").toISOString()).toBe(
+      "2026-12-01T00:00:00.000Z"
+    )
   })
 })

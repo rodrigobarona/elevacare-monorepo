@@ -1,20 +1,37 @@
 "use client"
 
-import { ToggleButton } from "react-aria-components"
-import { Button } from "@eleva/ui/components/button"
-import { buttonVariants } from "@eleva/ui/components/button-variants"
+import { useEffect, useId, useRef, useState, type ReactNode } from "react"
 import {
-  addMonths,
-  calendarDays,
+  Calendar,
+  CalendarCell,
+  CalendarGrid,
+  CalendarGridBody,
+  CalendarGridHeader,
+  CalendarHeaderCell,
+  Heading,
+  I18nProvider,
+  ToggleButton,
+} from "react-aria-components"
+import { parseDate, today, type CalendarDate } from "@internationalized/date"
+import { Button } from "@eleva/ui/components/button"
+import {
+  dateKeyInZone,
   groupSlotsByDay,
-  sameUtcMonth,
-  startOfMonth,
-  utcDateKey,
+  groupSlotsByDayPart,
+  monthOfDateKey,
+  type DayPart,
   type FunnelSlot,
 } from "@eleva/ui/lib/booking/slot-groups"
 import { cn } from "@eleva/ui/lib/utils"
-import { ArrowLeftIcon, ArrowRightIcon } from "@eleva/icons"
+import { ArrowLeftIcon, ArrowRightIcon, CalendarDotsIcon } from "@eleva/icons"
 
+/**
+ * Pick a time: a React Aria calendar (one tab stop, arrow keys, PageUp /
+ * PageDown for months, week start from the locale) beside the chosen day's
+ * times, grouped Morning / Afternoon / Evening. Pressing a day shows its
+ * times and never picks one. The continue action sits right after the
+ * group holding the selected time, and is a sticky bar on phones.
+ */
 export function SlotPicker({
   slots,
   timeZone,
@@ -23,208 +40,313 @@ export function SlotPicker({
   onSelect,
   month,
   onMonthChange,
-  view,
-  onViewChange,
+  earliest,
+  onSelectEarliest,
+  continueAction,
   labels,
   className,
 }: {
   slots: readonly FunnelSlot[]
   timeZone: string
+  /** `Intl` locale, e.g. "en-IE". */
   locale: string
   selectedStart: string | null
-  onSelect: (slot: FunnelSlot) => void
+  /** `null` clears the time, e.g. when another day is pressed. */
+  onSelect: (slot: FunnelSlot | null) => void
+  /** UTC start of the visible month. */
   month: Date
   onMonthChange: (next: Date) => void
-  view: "month" | "week"
-  onViewChange: (view: "month" | "week") => void
+  /** Earliest open time for this booking, from any month. */
+  earliest: FunnelSlot | null
+  onSelectEarliest: (slot: FunnelSlot) => void
+  /**
+   * Rendered after the selected time's group, e.g. the Continue button;
+   * receives the selection as "Mon 9 Nov, 13:00".
+   */
+  continueAction: (when: string) => ReactNode
   labels: {
-    month: string
-    week: string
+    /** Accessible name of the calendar, e.g. "Choose a day". */
+    calendar: string
     previous: string
     next: string
     empty: string
-    weekday: string[]
-    /** Accessible name for a day cell, e.g. "Monday 10 November, 4 times". */
-    day: (date: string, count: number) => string
-    /** Heading over the time list, e.g. "Times on Monday 10 November". */
+    /** "Times on Monday 9 November". */
     timesFor: (date: string) => string
+    dayParts: Record<DayPart, string>
+    /** "Next available: Mon 9 Nov, 09:00". */
+    nextAvailable: (when: string) => string
+    /** "Monday 9 November, 13:00 selected". */
+    selected: (when: string) => string
   }
   className?: string
 }) {
+  const rootRef = useRef<HTMLDivElement>(null)
+  const timesRef = useRef<HTMLDivElement>(null)
+  const timesHeadingId = useId()
+  const [pickedDay, setPickedDay] = useState<string | null>(null)
+  const [focused, setFocused] = useState<CalendarDate | null>(null)
+  const [focusStart, setFocusStart] = useState<string | null>(null)
+  const [scrollToTimes, setScrollToTimes] = useState(0)
+
+  const monthKey = month.toISOString().slice(0, 7)
   const groups = groupSlotsByDay(slots, timeZone)
   const byDay = new Map(groups.map((group) => [group.dateKey, group.slots]))
-  const monthStart = startOfMonth(month)
-  const days = calendarDays(monthStart)
-  const monthKeys = new Set(
-    days.filter((day) => sameUtcMonth(day, monthStart)).map(utcDateKey)
-  )
-  const monthGroups = groups.filter((group) => monthKeys.has(group.dateKey))
-  const selectedDay =
-    selectedStart != null
-      ? groups.find((group) =>
-          group.slots.some((slot) => slot.start === selectedStart)
-        )?.dateKey
-      : undefined
+  const monthDays = groups
+    .map((group) => group.dateKey)
+    .filter((key) => key.startsWith(monthKey))
+  const selectedDay = selectedStart
+    ? dateKeyInZone(selectedStart, timeZone)
+    : null
   const activeDay =
-    selectedDay != null && monthKeys.has(selectedDay)
+    selectedDay && byDay.has(selectedDay)
       ? selectedDay
-      : monthGroups[0]?.dateKey
-  const visibleDays = view === "week" ? weekContaining(days, activeDay) : days
+      : pickedDay && byDay.has(pickedDay) && pickedDay.startsWith(monthKey)
+        ? pickedDay
+        : (monthDays[0] ?? null)
   const daySlots = activeDay ? (byDay.get(activeDay) ?? []) : []
+  const parts = groupSlotsByDayPart(daySlots, timeZone)
 
-  const monthLabel = new Intl.DateTimeFormat(locale, {
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(startOfMonth(month))
-  const dayFormat = new Intl.DateTimeFormat(locale, {
+  const activeDate = activeDay ? parseDate(activeDay) : null
+  const focusedValue =
+    focused && focused.toString().startsWith(monthKey)
+      ? focused
+      : (activeDate ?? parseDate(`${monthKey}-01`))
+
+  const longDay = new Intl.DateTimeFormat(locale, {
     weekday: "long",
     day: "numeric",
     month: "long",
-    timeZone: "UTC",
+    timeZone,
   })
-  const activeDayLabel = activeDay
-    ? dayFormat.format(new Date(`${activeDay}T00:00:00Z`))
-    : null
+  const shortDay = new Intl.DateTimeFormat(locale, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    timeZone,
+  })
+  // 24 h like the profile and every email, so a time reads the same
+  // everywhere the member sees it.
+  const timeFormat = new Intl.DateTimeFormat(locale, {
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    timeZone,
+  })
+  const describe = (iso: string, format: Intl.DateTimeFormat) =>
+    `${format.format(new Date(iso))}, ${timeFormat.format(new Date(iso))}`
+
+  // "Next available" is the one place focus moves: the member asked for it.
+  useEffect(() => {
+    if (!focusStart) return
+    const target = rootRef.current?.querySelector<HTMLElement>(
+      `[data-start="${CSS.escape(focusStart)}"]`
+    )
+    if (!target) return
+    target.focus({ preventScroll: true })
+    target.scrollIntoView({ block: "center" })
+    setFocusStart(null)
+  })
+
+  // While the phone action bar shows, keep focused content clear of it
+  // (WCAG 2.4.11).
+  useEffect(() => {
+    if (!selectedStart) return
+    const root = document.documentElement
+    const phone = window.matchMedia("(max-width: 639px)")
+    const update = () => {
+      root.style.scrollPaddingBottom = phone.matches ? "6rem" : ""
+    }
+    update()
+    phone.addEventListener("change", update)
+    return () => {
+      phone.removeEventListener("change", update)
+      root.style.scrollPaddingBottom = ""
+    }
+  }, [selectedStart])
+
+  // On phones the times sit under the calendar: bring them into view.
+  useEffect(() => {
+    if (scrollToTimes === 0) return
+    if (!window.matchMedia("(max-width: 639px)").matches) return
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)")
+    timesRef.current?.scrollIntoView({
+      block: "start",
+      behavior: reduce.matches ? "auto" : "smooth",
+    })
+  }, [scrollToTimes])
+
+  function pressDay(key: string) {
+    setPickedDay(key)
+    if (selectedDay !== key) onSelect(null)
+    setScrollToTimes((count) => count + 1)
+  }
 
   return (
     <div
+      ref={rootRef}
       data-slot="slot-picker"
-      className={cn("flex flex-col gap-5", className)}
+      className={cn("flex flex-col gap-6", className)}
     >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label={labels.previous}
-            onPress={() => onMonthChange(addMonths(month, -1))}
-          >
-            <ArrowLeftIcon className="size-4" />
-          </Button>
-          <p
-            aria-live="polite"
-            className="min-w-40 text-center font-medium first-letter:uppercase"
-          >
-            {monthLabel}
-          </p>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            data-testid="booking-slot-next"
-            aria-label={labels.next}
-            onPress={() => onMonthChange(addMonths(month, 1))}
-          >
-            <ArrowRightIcon className="size-4" />
-          </Button>
-        </div>
-        <div className="flex rounded-full bg-muted p-1">
-          {(["month", "week"] as const).map((option) => (
-            <ToggleButton
-              key={option}
-              isSelected={view === option}
-              onChange={() => onViewChange(option)}
-              className={buttonVariants({
-                variant: view === option ? "secondary" : "ghost",
-                size: "sm",
-              })}
-            >
-              {labels[option]}
-            </ToggleButton>
-          ))}
-        </div>
-      </div>
+      {earliest ? (
+        <Button
+          variant="outline"
+          className="min-h-11 self-start rounded-full"
+          data-testid="booking-next-available"
+          onPress={() => {
+            setPickedDay(null)
+            onSelectEarliest(earliest)
+            setFocusStart(earliest.start)
+          }}
+        >
+          <CalendarDotsIcon data-icon="inline-start" />
+          {labels.nextAvailable(describe(earliest.start, shortDay))}
+        </Button>
+      ) : null}
 
-      <div className="grid grid-cols-7 gap-1">
-        {labels.weekday.map((day) => (
-          <p
-            key={day}
-            aria-hidden
-            className="pb-1 text-center text-xs font-medium text-muted-foreground"
-          >
-            {day}
-          </p>
-        ))}
-        {visibleDays.map((day) => {
-          const key = utcDateKey(day)
-          const inMonth = sameUtcMonth(day, startOfMonth(month))
-          const count = inMonth ? (byDay.get(key)?.length ?? 0) : 0
-          return (
-            <button
-              key={key}
-              type="button"
-              disabled={count === 0}
-              aria-label={labels.day(dayFormat.format(day), count)}
-              aria-pressed={count > 0 ? activeDay === key : undefined}
-              data-testid={count > 0 ? "booking-slot-day" : undefined}
-              onClick={() => {
-                const first = byDay.get(key)?.[0]
-                if (first) onSelect(first)
-              }}
-              className={cn(
-                "flex min-h-11 flex-col items-center justify-center rounded-2xl text-sm",
-                inMonth ? "text-foreground" : "text-muted-foreground/50",
-                count > 0 && "hover:bg-muted",
-                count === 0 && "cursor-not-allowed opacity-40",
-                activeDay === key &&
-                  "bg-primary text-primary-foreground hover:bg-primary"
+      <I18nProvider locale={locale}>
+        <Calendar
+          aria-label={labels.calendar}
+          value={activeDate}
+          onChange={(date) => pressDay(date.toString())}
+          focusedValue={focusedValue}
+          onFocusChange={(date) => {
+            setFocused(date)
+            const key = date.toString().slice(0, 7)
+            if (key !== monthKey) {
+              setPickedDay(null)
+              onMonthChange(monthOfDateKey(date.toString()))
+            }
+          }}
+          minValue={today(timeZone)}
+          isDateUnavailable={(date) => !byDay.has(date.toString())}
+          className="w-full max-w-sm"
+        >
+          <header className="mb-2 flex items-center justify-between">
+            <Button
+              slot="previous"
+              variant="ghost"
+              size="icon"
+              aria-label={labels.previous}
+              className="size-11 rounded-full"
+            >
+              <ArrowLeftIcon className="size-4" />
+            </Button>
+            <Heading className="font-medium first-letter:uppercase" />
+            <Button
+              slot="next"
+              variant="ghost"
+              size="icon"
+              aria-label={labels.next}
+              data-testid="booking-slot-next"
+              className="size-11 rounded-full"
+            >
+              <ArrowRightIcon className="size-4" />
+            </Button>
+          </header>
+          <CalendarGrid className="w-full border-collapse">
+            <CalendarGridHeader>
+              {(day) => (
+                <CalendarHeaderCell className="pb-1 text-xs font-medium text-muted-foreground">
+                  {day}
+                </CalendarHeaderCell>
               )}
-            >
-              {day.getUTCDate()}
-              {count > 0 ? (
-                <span
-                  aria-hidden
-                  className="text-[10px] tabular-nums opacity-80"
-                >
-                  {count}
-                </span>
-              ) : null}
-            </button>
-          )
-        })}
-      </div>
+            </CalendarGridHeader>
+            <CalendarGridBody>
+              {(date) => {
+                const isOpen =
+                  byDay.has(date.toString()) &&
+                  date.toString().startsWith(monthKey)
+                return (
+                  <CalendarCell
+                    date={date}
+                    data-testid={isOpen ? "booking-slot-day" : undefined}
+                    className={({
+                      isSelected,
+                      isUnavailable,
+                      isOutsideMonth,
+                      isFocusVisible,
+                      isDisabled,
+                    }) =>
+                      cn(
+                        "relative mx-auto flex size-11 flex-col items-center justify-center rounded-full text-sm tabular-nums outline-none select-none",
+                        isOutsideMonth && "invisible",
+                        isUnavailable || isDisabled
+                          ? "cursor-default text-muted-foreground"
+                          : "cursor-pointer font-semibold after:absolute after:bottom-1.5 after:size-1 after:rounded-full after:bg-primary hover:bg-muted",
+                        isSelected &&
+                          "bg-primary text-primary-foreground after:bg-primary-foreground hover:bg-primary",
+                        isFocusVisible && "ring-3 ring-ring/50"
+                      )
+                    }
+                  />
+                )
+              }}
+            </CalendarGridBody>
+          </CalendarGrid>
+        </Calendar>
+      </I18nProvider>
 
-      <div className="flex flex-col gap-3">
-        <p aria-live="polite" className="text-sm font-medium">
-          {daySlots.length > 0 && activeDayLabel
-            ? labels.timesFor(activeDayLabel)
+      <div
+        ref={timesRef}
+        className="flex scroll-mt-20 flex-col gap-4"
+        role="group"
+        aria-labelledby={timesHeadingId}
+      >
+        <p id={timesHeadingId} className="text-sm font-medium">
+          {activeDay && daySlots.length > 0
+            ? labels.timesFor(
+                longDay.format(new Date(`${activeDay}T12:00:00Z`))
+              )
             : labels.empty}
         </p>
-        {daySlots.length > 0 ? (
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {daySlots.map((slot) => {
-              const time = new Intl.DateTimeFormat(locale, {
-                hour: "2-digit",
-                minute: "2-digit",
-                timeZone,
-              }).format(new Date(slot.start))
-              const isSelected = selectedStart === slot.start
-              return (
-                <ToggleButton
-                  key={slot.start}
-                  data-testid="booking-slot-time"
-                  data-start={slot.start}
-                  isSelected={isSelected}
-                  onChange={() => onSelect(slot)}
-                  className={buttonVariants({
-                    variant: isSelected ? "default" : "outline",
-                  })}
-                >
-                  {time}
-                </ToggleButton>
-              )
-            })}
-          </div>
-        ) : null}
+        {parts.map((part) => {
+          const holdsSelection = part.slots.some(
+            (slot) => slot.start === selectedStart
+          )
+          return (
+            <div key={part.part} className="flex flex-col gap-2">
+              <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                {labels.dayParts[part.part]}
+              </p>
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                {part.slots.map((slot) => {
+                  const isSelected = selectedStart === slot.start
+                  return (
+                    <ToggleButton
+                      key={slot.start}
+                      data-testid="booking-slot-time"
+                      data-start={slot.start}
+                      isSelected={isSelected}
+                      onChange={() => onSelect(slot)}
+                      className={cn(
+                        "flex min-h-11 items-center justify-center rounded-full border text-sm font-medium tabular-nums transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                        isSelected
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-input-border bg-background hover:border-primary hover:bg-teal-50 dark:hover:bg-teal-950"
+                      )}
+                    >
+                      {timeFormat.format(new Date(slot.start))}
+                    </ToggleButton>
+                  )
+                })}
+              </div>
+              {holdsSelection ? (
+                <div className="max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 max-sm:z-40 max-sm:border-t max-sm:bg-background/95 max-sm:px-4 max-sm:pt-3 max-sm:pb-[max(0.75rem,env(safe-area-inset-bottom))] max-sm:shadow-3 max-sm:backdrop-blur sm:pt-2 [&>*]:w-full">
+                  {selectedStart
+                    ? continueAction(describe(selectedStart, shortDay))
+                    : null}
+                </div>
+              ) : null}
+            </div>
+          )
+        })}
+        {/* Keeps the last times clear of the phone action bar (WCAG 2.4.11). */}
+        {selectedStart ? <div aria-hidden className="h-20 sm:hidden" /> : null}
       </div>
+
+      <p role="status" className="sr-only">
+        {selectedStart ? labels.selected(describe(selectedStart, longDay)) : ""}
+      </p>
     </div>
   )
-}
-
-function weekContaining(grid: Date[], dateKey?: string): Date[] {
-  if (!dateKey) return grid.slice(0, 7)
-  const index = grid.findIndex((day) => utcDateKey(day) === dateKey)
-  if (index < 0) return grid.slice(0, 7)
-  const start = index - (index % 7)
-  return grid.slice(start, start + 7)
 }

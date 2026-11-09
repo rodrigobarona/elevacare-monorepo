@@ -21,7 +21,7 @@ import {
   describeCancellationPolicy,
   type CancellationPolicy,
 } from "@eleva/config/cancellation-policy"
-import type { Locale } from "@eleva/config/i18n"
+import { intlLocale, type Locale } from "@eleva/config/i18n"
 import { BookingCheckoutPayment } from "@eleva/billing/client"
 import { Button } from "@eleva/ui/components/button"
 import { Field, FieldError, FieldLabel } from "@eleva/ui/components/field"
@@ -38,7 +38,7 @@ import {
 } from "@eleva/ui/components/booking/mode-cards"
 import { SlotPicker } from "@eleva/ui/components/booking/slot-picker"
 import {
-  TimezoneSelect,
+  TimeZoneLine,
   resolvedTimeZone,
 } from "@eleva/ui/components/booking/timezone-select"
 import { formatBookingPrice } from "@eleva/ui/components/booking/price-tag"
@@ -53,7 +53,9 @@ import { maskPhone } from "@eleva/config/phone"
 import { slotRequiresApproval } from "@eleva/config/booking-settings"
 import {
   addMonths,
+  dateKeyInZone,
   groupSlotsByDay,
+  monthOfDateKey,
   startOfMonth,
 } from "@eleva/ui/lib/booking/slot-groups"
 import { createPublicApiClient } from "@/lib/public-api"
@@ -187,8 +189,13 @@ export function BookingFunnel({
   const [month, setMonth] = useState(() =>
     startOfMonth(initialSlot ? new Date(initialSlot.start) : new Date())
   )
-  const [view, setView] = useState<"month" | "week">("month")
   const monthsToAutoSkip = useRef(MAX_AUTO_SKIPPED_MONTHS)
+  // "Next available": the first open time found when the calendar opens.
+  const [earliest, setEarliest] = useState<PublicSlot | null>(null)
+  const seekingEarliest = useRef(true)
+  // After a time-zone change, keep the chosen time if it is still open.
+  const keepSlotIfOpen = useRef(false)
+  const dateLocale = intlLocale(locale)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
@@ -300,6 +307,23 @@ export function BookingFunnel({
           return
         }
         monthsToAutoSkip.current = 0
+        if (seekingEarliest.current) {
+          seekingEarliest.current = false
+          const first = result.slots
+            .filter((item) =>
+              dateKeyInZone(item.start, timeZone).startsWith(monthKey)
+            )
+            .sort((a, b) => a.start.localeCompare(b.start))[0]
+          setEarliest(first ?? null)
+        }
+        if (keepSlotIfOpen.current) {
+          keepSlotIfOpen.current = false
+          setSlot((current) =>
+            current && result.slots.some((item) => item.start === current.start)
+              ? current
+              : null
+          )
+        }
         setSlots(result.slots)
         setSlotsRequest({ key, error: false })
       })
@@ -452,7 +476,7 @@ export function BookingFunnel({
   }))
 
   const whenLabel = slot
-    ? new Intl.DateTimeFormat(locale, {
+    ? new Intl.DateTimeFormat(dateLocale, {
         dateStyle: "full",
         timeStyle: "short",
         timeZone,
@@ -460,7 +484,7 @@ export function BookingFunnel({
     : t("summary.chooseTime")
 
   const policyCopy = describeCancellationPolicy(cancellationPolicy, locale)
-  const deadlineFormat = new Intl.DateTimeFormat(locale, {
+  const deadlineFormat = new Intl.DateTimeFormat(dateLocale, {
     dateStyle: "medium",
     timeStyle: "short",
     timeZone,
@@ -763,6 +787,8 @@ export function BookingFunnel({
               selectedKey={modeId}
               onSelectionChange={(id) => {
                 monthsToAutoSkip.current = MAX_AUTO_SKIPPED_MONTHS
+                seekingEarliest.current = true
+                setEarliest(null)
                 setModeId(id)
                 setSlot(null)
               }}
@@ -794,13 +820,20 @@ export function BookingFunnel({
               testId="booking-when-heading"
               headingRef={stepHeadingRef}
             />
-            <TimezoneSelect
+            <TimeZoneLine
               value={timeZone}
               onChange={(next) => {
+                keepSlotIfOpen.current = true
                 setTimeZone(next)
-                setSlot(null)
               }}
-              label={t("when.timezone")}
+              labels={{
+                timesIn: (city) => t("when.timesIn", { city }),
+                change: t("when.changeZone"),
+                changeAccessible: (city) =>
+                  t("when.changeZoneAccessible", { city }),
+                field: t("when.zoneField"),
+                empty: t("when.zoneEmpty"),
+              }}
             />
             {slotsLoading ? (
               <p
@@ -822,9 +855,13 @@ export function BookingFunnel({
             <SlotPicker
               slots={slots}
               timeZone={timeZone}
-              locale={locale}
+              locale={dateLocale}
               selectedStart={slot?.start ?? null}
               onSelect={(next) => {
+                if (!next) {
+                  setSlot(null)
+                  return
+                }
                 const match = slots.find((item) => item.start === next.start)
                 setSlot(
                   match ?? {
@@ -841,41 +878,49 @@ export function BookingFunnel({
                 setMonth(next)
                 setSlot(null)
               }}
-              view={view}
-              onViewChange={setView}
+              earliest={earliest}
+              onSelectEarliest={(next) => {
+                const target = monthOfDateKey(
+                  dateKeyInZone(next.start, timeZone)
+                )
+                if (target.getTime() !== month.getTime()) {
+                  monthsToAutoSkip.current = 0
+                  setMonth(target)
+                }
+                setSlot(
+                  earliest && earliest.start === next.start ? earliest : null
+                )
+              }}
+              continueAction={(when) => (
+                <Button
+                  data-testid="booking-continue-when"
+                  size="lg"
+                  className="min-h-11 rounded-full"
+                  onPress={() => setStep("details")}
+                >
+                  {t("when.continueWith", { when })}
+                </Button>
+              )}
               labels={{
-                month: t("when.month"),
-                week: t("when.week"),
+                calendar: t("when.calendar"),
                 previous: t("when.previous"),
                 next: t("when.next"),
                 empty: t("when.empty"),
-                weekday: [
-                  t("when.weekdays.mon"),
-                  t("when.weekdays.tue"),
-                  t("when.weekdays.wed"),
-                  t("when.weekdays.thu"),
-                  t("when.weekdays.fri"),
-                  t("when.weekdays.sat"),
-                  t("when.weekdays.sun"),
-                ],
-                day: (date, count) => t("when.day", { date, count }),
                 timesFor: (date) => t("when.timesFor", { date }),
+                dayParts: {
+                  morning: t("when.morning"),
+                  afternoon: t("when.afternoon"),
+                  evening: t("when.evening"),
+                },
+                nextAvailable: (when) => t("when.nextAvailable", { when }),
+                selected: (when) => t("when.selected", { when }),
               }}
             />
-            <div className="flex gap-3">
-              {previousFunnelStep(step, backInput) ? (
-                <Button variant="ghost" onPress={goBack}>
-                  {t("back")}
-                </Button>
-              ) : null}
-              <Button
-                data-testid="booking-continue-when"
-                isDisabled={!slot}
-                onPress={() => setStep("details")}
-              >
-                {t("when.continue")}
+            {previousFunnelStep(step, backInput) ? (
+              <Button variant="ghost" onPress={goBack}>
+                {t("back")}
               </Button>
-            </div>
+            ) : null}
           </div>
         ) : null}
 

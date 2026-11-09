@@ -32,6 +32,25 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-09: Booking slice 2 "Pick a time" built (active)
+
+- Built: React Aria `Calendar` (one tab stop, arrow keys, PageUp/PageDown,
+  week start from the locale, open days bold with a dot, no counts); the
+  Month/Week toggle is gone; pressing a day shows its times and never picks
+  one; times grouped Morning / Afternoon / Evening; "Next available" picks
+  the earliest time and moves focus to it; "Times in {city} time · Change
+  time zone" opens a searchable list (city and UTC offset), keeps the
+  chosen time when it still exists and returns focus to the trigger;
+  "Continue with {day, time}" sits after the selected time's group on
+  desktop and is a sticky bar on phones with scroll padding (WCAG 2.4.11).
+- Changed from the spec: one 24-hour clock everywhere instead of the
+  browser's hour cycle, so the funnel and the profile card show the same
+  time. `intlLocales` moved to `@eleva/config/i18n` (one map for web).
+- Evidence: local browser recordings (desktop and phone) on the seeded
+  `fisiomota` offer, 2026-11-09. Not proven: a screen-reader pass and the
+  e2e booking suite against the new picker (selectors unchanged).
+- Not built: slice 3 (Confirm page, merged consent row).
+
 ### 2026-11-07: Expert profile, directory and booking UX revision 2.2 (active; two items needs-review)
 
 - Owner: founder. Spec: `expert-profile-booking-ux-spec.md` revision 2.2,

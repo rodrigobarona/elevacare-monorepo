@@ -1,8 +1,4 @@
-const DATE_LOCALES: Record<string, string> = {
-  pt: "pt-PT",
-  es: "es-ES",
-  en: "en-IE",
-}
+import { intlLocale as toIntlLocale } from "@eleva/config/i18n"
 
 /**
  * Format a slot instant for display.
@@ -16,7 +12,7 @@ export function formatSlotDateTime(
   timeZone: string
 ): string {
   const date = new Date(iso)
-  const intlLocale = DATE_LOCALES[locale] ?? locale
+  const intlLocale = toIntlLocale(locale)
   const dateTime = new Intl.DateTimeFormat(intlLocale, {
     dateStyle: "medium",
     timeStyle: "short",
