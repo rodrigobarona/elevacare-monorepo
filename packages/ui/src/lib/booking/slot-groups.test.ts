@@ -1,10 +1,8 @@
 import { describe, expect, it } from "vitest"
 import {
+  addDaysToKey,
   dateKeyInZone,
-  dayPartInZone,
   groupSlotsByDay,
-  groupSlotsByDayPart,
-  monthOfDateKey,
   zoneCity,
   zoneOffsetLabel,
 } from "./slot-groups"
@@ -44,40 +42,6 @@ describe("groupSlotsByDay", () => {
   })
 })
 
-describe("groupSlotsByDayPart", () => {
-  it("splits a Lisbon day into morning, afternoon and evening", () => {
-    const slot = (start: string) => ({ start, end: start })
-    const groups = groupSlotsByDayPart(
-      [
-        slot("2026-11-09T18:00:00.000Z"),
-        slot("2026-11-09T09:00:00.000Z"),
-        slot("2026-11-09T12:00:00.000Z"),
-        slot("2026-11-09T11:30:00.000Z"),
-      ],
-      "Europe/Lisbon"
-    )
-    expect(groups.map((group) => group.part)).toEqual([
-      "morning",
-      "afternoon",
-      "evening",
-    ])
-    expect(groups[0]?.slots.map((item) => item.start)).toEqual([
-      "2026-11-09T09:00:00.000Z",
-      "2026-11-09T11:30:00.000Z",
-    ])
-  })
-
-  it("uses the member's zone, not UTC", () => {
-    // 16:30 UTC is 17:30 in Madrid (evening) but 16:30 in Lisbon.
-    expect(dayPartInZone("2026-11-09T16:30:00.000Z", "Europe/Madrid")).toBe(
-      "evening"
-    )
-    expect(dayPartInZone("2026-11-09T16:30:00.000Z", "Europe/Lisbon")).toBe(
-      "afternoon"
-    )
-  })
-})
-
 describe("zone labels", () => {
   it("names the city of a zone", () => {
     expect(zoneCity("Europe/Lisbon")).toBe("Lisbon")
@@ -94,10 +58,10 @@ describe("zone labels", () => {
   })
 })
 
-describe("monthOfDateKey", () => {
-  it("returns the UTC start of the date's month", () => {
-    expect(monthOfDateKey("2026-12-31").toISOString()).toBe(
-      "2026-12-01T00:00:00.000Z"
-    )
+describe("addDaysToKey", () => {
+  it("crosses month and year ends", () => {
+    expect(addDaysToKey("2026-11-30", 2)).toBe("2026-12-02")
+    expect(addDaysToKey("2026-12-31", 1)).toBe("2027-01-01")
+    expect(addDaysToKey("2026-03-01", -1)).toBe("2026-02-28")
   })
 })

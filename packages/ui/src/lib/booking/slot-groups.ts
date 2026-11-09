@@ -8,13 +8,6 @@ export type DaySlots = {
   slots: FunnelSlot[]
 }
 
-export type DayPart = "morning" | "afternoon" | "evening"
-
-export type DayPartSlots = {
-  part: DayPart
-  slots: FunnelSlot[]
-}
-
 export function dateKeyInZone(iso: string, timeZone: string): string {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone,
@@ -50,53 +43,12 @@ export function groupSlotsByDay(
     }))
 }
 
-/** Before 12:00 is morning, before 17:00 afternoon, then evening. */
-export function dayPartInZone(iso: string, timeZone: string): DayPart {
-  const hour = Number(
-    new Intl.DateTimeFormat("en-GB", {
-      timeZone,
-      hour: "2-digit",
-      hourCycle: "h23",
-    }).format(new Date(iso))
-  )
-  if (hour < 12) return "morning"
-  if (hour < 17) return "afternoon"
-  return "evening"
-}
-
-/** One day's times split into Morning / Afternoon / Evening, in order. */
-export function groupSlotsByDayPart(
-  slots: readonly FunnelSlot[],
-  timeZone: string
-): DayPartSlots[] {
-  const order: DayPart[] = ["morning", "afternoon", "evening"]
-  const byPart = new Map<DayPart, FunnelSlot[]>()
-  for (const slot of [...slots].sort((a, b) =>
-    a.start.localeCompare(b.start)
-  )) {
-    const part = dayPartInZone(slot.start, timeZone)
-    byPart.set(part, [...(byPart.get(part) ?? []), slot])
-  }
-  return order.flatMap((part) => {
-    const partSlots = byPart.get(part)
-    return partSlots ? [{ part, slots: partSlots }] : []
-  })
-}
-
-export function startOfMonth(date: Date): Date {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1))
-}
-
-export function addMonths(date: Date, delta: number): Date {
-  return new Date(
-    Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + delta, 1)
-  )
-}
-
-/** The UTC month start holding a civil date key such as "2026-11-09". */
-export function monthOfDateKey(dateKey: string): Date {
-  const [year, month] = dateKey.split("-").map(Number)
-  return new Date(Date.UTC(year ?? 1970, (month ?? 1) - 1, 1))
+/** "2026-11-30" + 2 → "2026-12-02" (civil dates, no time zone). */
+export function addDaysToKey(dateKey: string, days: number): string {
+  const [year, month, day] = dateKey.split("-").map(Number)
+  return new Date(Date.UTC(year ?? 1970, (month ?? 1) - 1, (day ?? 1) + days))
+    .toISOString()
+    .slice(0, 10)
 }
 
 /** "Europe/Lisbon" → "Lisbon", "America/Sao_Paulo" → "Sao Paulo". */

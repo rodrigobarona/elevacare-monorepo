@@ -113,6 +113,7 @@ export default async function PublicBookingPage({
       <BookingFunnel
         locale={locale}
         expertName={expert.displayName}
+        expertHeadline={expert.headline}
         expertAvatarUrl={expert.avatarUrl}
         username={expert.username}
         eventSlug={eventType.slug}

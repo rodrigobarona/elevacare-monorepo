@@ -32,23 +32,27 @@ Each entry should include:
 
 ## Current Entries
 
-### 2026-11-09: Booking slice 2 "Pick a time" built (active)
+### 2026-11-09: Booking slice 2 "Pick a time" built as a days strip (active)
 
-- Built: React Aria `Calendar` (one tab stop, arrow keys, PageUp/PageDown,
-  week start from the locale, open days bold with a dot, no counts); the
-  Month/Week toggle is gone; pressing a day shows its times and never picks
-  one; times grouped Morning / Afternoon / Evening; "Next available" picks
-  the earliest time and moves focus to it; "Times in {city} time · Change
-  time zone" opens a searchable list (city and UTC offset), keeps the
-  chosen time when it still exists and returns focus to the trigger;
-  "Continue with {day, time}" sits after the selected time's group on
-  desktop and is a sticky bar on phones with scroll padding (WCAG 2.4.11).
-- Changed from the spec: one 24-hour clock everywhere instead of the
-  browser's hour cycle, so the funnel and the profile card show the same
-  time. `intlLocales` moved to `@eleva/config/i18n` (one map for web).
-- Evidence: local browser recordings (desktop and phone) on the seeded
-  `fisiomota` offer, 2026-11-09. Not proven: a screen-reader pass and the
-  e2e booking suite against the new picker (selectors unchanged).
+- Founder review of the first build (React Aria month calendar above a
+  times list): the expert dropped out of view and picking took two steps.
+  Hands-on comparison of intro.co, Cal.com and Doctolib (screenshots in the
+  session); founder chose "expert + days strip".
+- Built: the expert panel on every step (left on desktop, compact card on
+  phones) with "About {name}" back to the profile; a strip of open days with
+  their times (one tap), "+N more", four weeks per load and "Later dates";
+  "Choose a date" calendar popover; "Next available" only after jumping
+  past it; "Times in {city} time · Change time zone" with a searchable list
+  that keeps the chosen time; "Continue with {day, time}" under the strip
+  and sticky on phones (WCAG 2.4.11 scroll padding); 24-hour clock and EU
+  date formats everywhere (`intlLocales` in `@eleva/config/i18n`).
+- Removed from the earlier spec: the month calendar as the main picker,
+  Morning / Afternoon / Evening groups, and the browser hour cycle.
+- Evidence: local recordings (desktop and phone) on the seeded `fisiomota`
+  offer, 2026-11-09. Not proven: a screen-reader pass and the e2e booking
+  suite against the strip (selectors kept: `booking-slot-day`,
+  `booking-slot-time` + `data-start`, `booking-slot-next` = Later dates,
+  `booking-continue-when`).
 - Not built: slice 3 (Confirm page, merged consent row).
 
 ### 2026-11-07: Expert profile, directory and booking UX revision 2.2 (active; two items needs-review)

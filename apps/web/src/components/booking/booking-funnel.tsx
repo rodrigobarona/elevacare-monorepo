@@ -51,13 +51,7 @@ import { displayLanguage } from "@eleva/ui/lib/booking/display-names"
 import { toE164 } from "@eleva/ui/lib/booking/e164"
 import { maskPhone } from "@eleva/config/phone"
 import { slotRequiresApproval } from "@eleva/config/booking-settings"
-import {
-  addMonths,
-  dateKeyInZone,
-  groupSlotsByDay,
-  monthOfDateKey,
-  startOfMonth,
-} from "@eleva/ui/lib/booking/slot-groups"
+import { addDaysToKey, dateKeyInZone } from "@eleva/ui/lib/booking/slot-groups"
 import { createPublicApiClient } from "@/lib/public-api"
 import { downloadBookingIcs } from "@eleva/calendar/ics-download"
 import {
@@ -67,6 +61,7 @@ import {
 } from "@/components/booking/booking-chrome"
 import { BookingDone } from "@/components/booking/booking-done"
 import { ExpertAvatar } from "@/components/expert-avatar"
+import { Link } from "@/i18n/navigation"
 import type { FunnelConsentDoc } from "@/lib/booking-consents"
 import {
   bookingReturnUrl,
@@ -105,14 +100,17 @@ type Payment = {
   publishableKey: string
 }
 
-/** How far the calendar looks ahead for the first month with open times. */
-const MAX_AUTO_SKIPPED_MONTHS = 2
+/** Days of open times loaded at once (the slots API allows up to 31). */
+const WINDOW_DAYS = 28
+/** Empty windows skipped while looking for the first open time (~3 months). */
+const MAX_AUTO_SKIPPED_WINDOWS = 2
 
 /** Warn this long before a booking hold ends (WCAG 2.2.1 needs >= 20 s). */
 const HOLD_WARNING_MS = 60_000
 export function BookingFunnel({
   locale,
   expertName,
+  expertHeadline = null,
   expertAvatarUrl = null,
   username,
   eventSlug,
@@ -134,6 +132,8 @@ export function BookingFunnel({
 }: {
   locale: Locale
   expertName: string
+  /** e.g. "Physiotherapist · Lisbon", shown under the expert's name. */
+  expertHeadline?: string | null
   expertAvatarUrl?: string | null
   username: string
   eventSlug: string
@@ -186,10 +186,14 @@ export function BookingFunnel({
     key: string
     error: boolean
   }>({ key: "", error: false })
-  const [month, setMonth] = useState(() =>
-    startOfMonth(initialSlot ? new Date(initialSlot.start) : new Date())
+  // First civil day of the loaded window of open times.
+  const [fromKey, setFromKey] = useState(() =>
+    dateKeyInZone(
+      initialSlot?.start ?? new Date().toISOString(),
+      resolvedTimeZone(geoTimeZone)
+    )
   )
-  const monthsToAutoSkip = useRef(MAX_AUTO_SKIPPED_MONTHS)
+  const windowsToAutoSkip = useRef(MAX_AUTO_SKIPPED_WINDOWS)
   // "Next available": the first open time found when the calendar opens.
   const [earliest, setEarliest] = useState<PublicSlot | null>(null)
   const seekingEarliest = useRef(true)
@@ -270,19 +274,19 @@ export function BookingFunnel({
       (mode) => mode.id === (modeId ?? pinnedModeId ?? inferredMode?.id)
     ) ?? null
   const slotsKey = selectedMode
-    ? `${selectedMode.id}:${month.toISOString()}:${timeZone}`
+    ? `${selectedMode.id}:${fromKey}:${timeZone}`
     : ""
   const slotsLoading = Boolean(selectedMode) && slotsRequest.key !== slotsKey
   const slotsError = slotsRequest.key === slotsKey && slotsRequest.error
 
   useEffect(() => {
     if (!selectedMode) return
-    const from = startOfMonth(month)
-    const nextMonthPlusDay = addMonths(month, 1).getTime() + 24 * 60 * 60 * 1000
-    const maxRange = from.getTime() + 31 * 24 * 60 * 60 * 1000
-    const to = new Date(Math.min(nextMonthPlusDay, maxRange))
+    // A day either side of the window covers every UTC offset; the picker
+    // shows only days from `fromKey` in the member's zone.
+    const from = new Date(`${addDaysToKey(fromKey, -1)}T12:00:00Z`)
+    const to = new Date(`${addDaysToKey(fromKey, WINDOW_DAYS)}T12:00:00Z`)
     const api = createPublicApiClient()
-    const key = `${selectedMode.id}:${month.toISOString()}:${timeZone}`
+    const key = `${selectedMode.id}:${fromKey}:${timeZone}`
     let cancelled = false
     api.public
       .getSlots(username, eventSlug, {
@@ -294,27 +298,20 @@ export function BookingFunnel({
       })
       .then((result) => {
         if (cancelled) return
-        // A calendar with every day disabled reads as "unavailable" when the
-        // next open time is only days away, as it often is at month end.
-        // The request runs a day past month end; only this month's days show.
-        const monthKey = month.toISOString().slice(0, 7)
-        const monthHasOpenTime = groupSlotsByDay(result.slots, timeZone).some(
-          (group) => group.dateKey.startsWith(monthKey)
-        )
-        if (!monthHasOpenTime && monthsToAutoSkip.current > 0) {
-          monthsToAutoSkip.current -= 1
-          setMonth(addMonths(month, 1))
+        const inWindow = result.slots
+          .filter((item) => dateKeyInZone(item.start, timeZone) >= fromKey)
+          .sort((a, b) => a.start.localeCompare(b.start))
+        // An empty strip reads as "unavailable" when the next open time is
+        // only weeks away: look further before showing it.
+        if (inWindow.length === 0 && windowsToAutoSkip.current > 0) {
+          windowsToAutoSkip.current -= 1
+          setFromKey(addDaysToKey(fromKey, WINDOW_DAYS))
           return
         }
-        monthsToAutoSkip.current = 0
+        windowsToAutoSkip.current = 0
         if (seekingEarliest.current) {
           seekingEarliest.current = false
-          const first = result.slots
-            .filter((item) =>
-              dateKeyInZone(item.start, timeZone).startsWith(monthKey)
-            )
-            .sort((a, b) => a.start.localeCompare(b.start))[0]
-          setEarliest(first ?? null)
+          setEarliest(inWindow[0] ?? null)
         }
         if (keepSlotIfOpen.current) {
           keepSlotIfOpen.current = false
@@ -335,7 +332,7 @@ export function BookingFunnel({
     return () => {
       cancelled = true
     }
-  }, [eventSlug, linkToken, month, selectedMode, timeZone, username])
+  }, [eventSlug, fromKey, linkToken, selectedMode, timeZone, username])
 
   const confirmPaidHold = useCallback(
     async (hold: Reservation, paid: Payment) => {
@@ -729,8 +726,49 @@ export function BookingFunnel({
   }
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-14">
-      <section>
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[20rem_minmax(0,1fr)] lg:gap-12">
+      {/* Who they are booking comes first: above the steps on phones,
+          beside them on desktop. */}
+      <BookingSummary
+        expertName={expertName}
+        expertHeadline={expertHeadline}
+        profileLink={
+          <Link
+            href={`/${username}`}
+            className="font-medium text-primary underline underline-offset-4"
+          >
+            {t("summary.profile", { name: expertName })}
+          </Link>
+        }
+        offerTitle={offerTitle}
+        meta={
+          selectedMode
+            ? [
+                t("meet.duration", { minutes: selectedMode.durationMinutes }),
+                locationCopy ?? t(`modes.${selectedMode.mode}.title`),
+              ].join(" · ")
+            : undefined
+        }
+        when={whenLabel}
+        whenLabel={t("summary.when")}
+        priceLabel={t("summary.price")}
+        priceCents={priceCents}
+        locale={locale}
+        specialPrice={specialPriceCents != null}
+        specialPriceLabel={t("link.specialPrice")}
+        holdLabel={
+          onPay && reservation && !holdExpired
+            ? t("pay.hold", {
+                time: formatCountdown(
+                  Math.max(0, new Date(reservation.expiresAt).getTime() - nowMs)
+                ),
+              })
+            : undefined
+        }
+        media={expertMedia}
+        footer={t("summary.policy", { policy: policyCopy.name })}
+      />
+      <section className="min-w-0">
         {stepIndex >= 0 ? (
           <FunnelStepper
             label={`${t("stepOf", { current: stepIndex + 1, total: flowSteps.length })} · ${t(`steps.${step}`)}`}
@@ -786,7 +824,7 @@ export function BookingFunnel({
               modes={cards}
               selectedKey={modeId}
               onSelectionChange={(id) => {
-                monthsToAutoSkip.current = MAX_AUTO_SKIPPED_MONTHS
+                windowsToAutoSkip.current = MAX_AUTO_SKIPPED_WINDOWS
                 seekingEarliest.current = true
                 setEarliest(null)
                 setModeId(id)
@@ -856,12 +894,10 @@ export function BookingFunnel({
               slots={slots}
               timeZone={timeZone}
               locale={dateLocale}
+              fromKey={fromKey}
+              isLoading={slotsLoading}
               selectedStart={slot?.start ?? null}
               onSelect={(next) => {
-                if (!next) {
-                  setSlot(null)
-                  return
-                }
                 const match = slots.find((item) => item.start === next.start)
                 setSlot(
                   match ?? {
@@ -872,21 +908,18 @@ export function BookingFunnel({
                   }
                 )
               }}
-              month={month}
-              onMonthChange={(next) => {
-                monthsToAutoSkip.current = 0
-                setMonth(next)
-                setSlot(null)
+              onLaterDates={() => {
+                windowsToAutoSkip.current = 0
+                setFromKey(addDaysToKey(fromKey, WINDOW_DAYS))
+              }}
+              onJumpTo={(key) => {
+                windowsToAutoSkip.current = 0
+                setFromKey(key)
               }}
               earliest={earliest}
               onSelectEarliest={(next) => {
-                const target = monthOfDateKey(
-                  dateKeyInZone(next.start, timeZone)
-                )
-                if (target.getTime() !== month.getTime()) {
-                  monthsToAutoSkip.current = 0
-                  setMonth(target)
-                }
+                windowsToAutoSkip.current = 0
+                setFromKey(dateKeyInZone(next.start, timeZone))
                 setSlot(
                   earliest && earliest.start === next.start ? earliest : null
                 )
@@ -902,17 +935,21 @@ export function BookingFunnel({
                 </Button>
               )}
               labels={{
-                calendar: t("when.calendar"),
+                strip: t("when.strip"),
+                earlierDays: t("when.earlierDays"),
+                laterDays: t("when.laterDays"),
                 previous: t("when.previous"),
                 next: t("when.next"),
+                today: t("when.today"),
+                tomorrow: t("when.tomorrow"),
+                more: (count) => t("when.more", { count }),
+                less: t("when.less"),
+                laterDates: t("when.laterDates"),
+                chooseDate: t("when.chooseDate"),
+                calendar: t("when.calendar"),
                 empty: t("when.empty"),
-                timesFor: (date) => t("when.timesFor", { date }),
-                dayParts: {
-                  morning: t("when.morning"),
-                  afternoon: t("when.afternoon"),
-                  evening: t("when.evening"),
-                },
                 nextAvailable: (when) => t("when.nextAvailable", { when }),
+                timeAccessible: (when) => t("when.timeAccessible", { when }),
                 selected: (when) => t("when.selected", { when }),
               }}
             />
@@ -1194,36 +1231,6 @@ export function BookingFunnel({
           </div>
         ) : null}
       </section>
-
-      <BookingSummary
-        expertName={expertName}
-        offerTitle={offerTitle}
-        when={whenLabel}
-        whenLabel={t("summary.when")}
-        priceLabel={t("summary.price")}
-        modeLabel={t("summary.mode")}
-        modeValue={
-          selectedMode
-            ? t(`modes.${selectedMode.mode}.title`)
-            : t("summary.chooseTime")
-        }
-        location={locationCopy}
-        priceCents={priceCents}
-        locale={locale}
-        specialPrice={specialPriceCents != null}
-        specialPriceLabel={t("link.specialPrice")}
-        holdLabel={
-          onPay && reservation && !holdExpired
-            ? t("pay.hold", {
-                time: formatCountdown(
-                  Math.max(0, new Date(reservation.expiresAt).getTime() - nowMs)
-                ),
-              })
-            : undefined
-        }
-        media={expertMedia}
-        footer={t("summary.policy", { policy: policyCopy.name })}
-      />
     </div>
   )
 }
