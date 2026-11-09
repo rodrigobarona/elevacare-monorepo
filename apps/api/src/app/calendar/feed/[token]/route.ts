@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import {
   generateIcsFeed,
   hashCalendarFeedToken,
@@ -152,7 +153,7 @@ export async function GET(
       },
     })
   } catch (err) {
-    console.error("calendar feed failure", err)
+    logError("calendar feed failure", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }

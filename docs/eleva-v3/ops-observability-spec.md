@@ -81,6 +81,11 @@ Record and document code follows these rules, enforced in code rather than by co
 - Record and document routes log only through `recordLogger` (`@eleva/records`). Its payload is an
   allow-list of scalar IDs, `status`, `modelId`, `tokenCount` and `durationMs`. Other keys are
   dropped at runtime. Errors are logged as class name and code, never as their message.
+- Every other API route logs caught errors with `logError(event, err)` from
+  `@eleva/observability`, never `console.error(event, err)`. It prints the class names and codes
+  along the cause chain (for example `DrizzleQueryError <- error:42P10`), because database errors
+  carry bound query parameters (names, emails) in their message, and sends the full error to
+  Sentry through the redacting `beforeSend`.
 - Sentry `beforeSend` and `beforeSendTransaction` walk the whole event, redact record keys
   (`body`, `title`, `notes`, `transcript`, `summary`, `observations`, `recommendations`) and
   `Decrypted` values, scrub registered PHI from every string, and drop unknown top-level event keys.

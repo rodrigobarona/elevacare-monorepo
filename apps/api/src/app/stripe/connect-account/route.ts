@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import {
   CreateConnectAccountRequestSchema,
   type CreateConnectAccountResponse,
@@ -119,8 +120,7 @@ export async function POST(request: Request) {
       { headers }
     )
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    console.error("[stripe/connect-account] provision failed:", message)
+    logError("[stripe/connect-account] provision failed", err)
     return secureJson(
       {
         error: "stripe_error",

@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { ExportSaftFileQuerySchema } from "@eleva/api-client"
 import { verifySaftDownloadToken } from "@eleva/accounting"
 import { getPrivateDocument } from "@eleva/storage"
@@ -65,7 +66,7 @@ export async function GET(request: Request) {
   try {
     blob = await getPrivateDocument(query.data.pathname)
   } catch (err) {
-    console.error("[invoicing/exports/saft/file] storage error", err)
+    logError("[invoicing/exports/saft/file] storage error", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
   if (!blob?.stream) {

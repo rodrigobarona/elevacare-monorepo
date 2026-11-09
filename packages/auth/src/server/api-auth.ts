@@ -26,6 +26,13 @@ import { verifyBetterAuthJwt } from "./jwt-verify"
 export type { ApiAuthMode }
 export { expiredSessionCookies } from "./credentials"
 
+/**
+ * The API reads the session from the server-side store on every request,
+ * never from the 5-minute cookie cache, so sign-out, revocation and bans
+ * take effect at once. Frontends may keep the cache for page renders.
+ */
+const AUTHORITATIVE_SESSION = { disableCookieCache: true } as const
+
 export interface ApiIdentity extends ElevaSession {
   authMode: ApiAuthMode
 }
@@ -129,7 +136,10 @@ export async function requireApiUser(
     )
   }
 
-  const result = await getAuthApi().getSession({ headers: request.headers })
+  const result = await getAuthApi().getSession({
+    headers: request.headers,
+    query: AUTHORITATIVE_SESSION,
+  })
   if (!result?.session || !result.user) {
     throw new UnauthorizedError("invalid-token")
   }
@@ -168,6 +178,7 @@ async function sessionFromCookieOrBearer(
 ): Promise<ApiIdentity> {
   const result = await getAuthApi().getSession({
     headers: request.headers,
+    query: AUTHORITATIVE_SESSION,
   })
   if (!result?.session || !result.user) {
     throw new UnauthorizedError("invalid-token")

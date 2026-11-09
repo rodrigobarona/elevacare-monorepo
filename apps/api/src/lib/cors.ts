@@ -21,7 +21,28 @@ export function corsHeaders(
   return headers
 }
 
-export function matchAllowedOrigin(origin: string): string | null {
+/**
+ * First-party hosts that may call the API from a browser with credentials.
+ * `dev.eleva.care` and its admin host serve the production deployment today
+ * (environment matrix, 2026-11-07), so they stay on the list.
+ */
+const FIRST_PARTY_HOSTS = new Set([
+  "eleva.care",
+  "dev.eleva.care",
+  "app.eleva.care",
+  "account.eleva.care",
+  "admin.eleva.care",
+  "admin.dev.eleva.care",
+  "expert.eleva.care",
+  "api.eleva.care",
+])
+
+const PREVIEW_HOST_SUFFIX = ".preview.eleva.care"
+
+export function matchAllowedOrigin(
+  origin: string,
+  vercelEnv: string | undefined = process.env.VERCEL_ENV
+): string | null {
   if (!origin) return null
 
   const e = env()
@@ -38,14 +59,14 @@ export function matchAllowedOrigin(origin: string): string | null {
     return origin
   }
 
-  if (url.hostname === "eleva.care") return origin
-  if (url.hostname === "dev.eleva.care") return origin
-  if (url.hostname.endsWith(".preview.eleva.care")) return origin
-  if (url.hostname === "app.eleva.care") return origin
-  if (url.hostname === "account.eleva.care") return origin
-  if (url.hostname === "admin.eleva.care") return origin
-  if (url.hostname === "expert.eleva.care") return origin
-  if (url.hostname === "api.eleva.care") return origin
+  // Credentialed cross-origin calls only over HTTPS.
+  if (url.protocol !== "https:") return null
+
+  if (FIRST_PARTY_HOSTS.has(url.hostname)) return origin
+  // Preview deployments run their own API, database and secrets; the
+  // production API never trusts them.
+  if (vercelEnv !== "production" && url.hostname.endsWith(PREVIEW_HOST_SUFFIX))
+    return origin
 
   return null
 }

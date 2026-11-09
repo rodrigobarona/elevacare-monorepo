@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { z } from "zod"
 import {
   ExpertInvoiceActionRequestSchema,
@@ -107,7 +108,7 @@ export async function handleExpertInvoiceAction(
         { status: err.status, headers }
       )
     }
-    console.error("[invoicing/expert] unexpected error", err)
+    logError("[invoicing/expert] unexpected error", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }

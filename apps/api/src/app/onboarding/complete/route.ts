@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { z } from "zod"
 import { completeOnboarding, createElevaOrganization } from "@eleva/auth"
 import { provisionOrgBilling } from "@eleva/billing/server"
@@ -74,9 +75,9 @@ export async function POST(request: Request) {
       email: session.user.email,
     })
   } catch (err) {
-    console.error(
-      "[onboarding/complete] Billing provisioning failed (non-blocking):",
-      err instanceof Error ? err.message : err
+    logError(
+      "[onboarding/complete] Billing provisioning failed (non-blocking)",
+      err
     )
   }
 

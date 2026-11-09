@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import {
   ReserveBookingRequestSchema,
   ReserveBookingResponseSchema,
@@ -169,7 +170,7 @@ export async function POST(request: Request) {
             { status: 503, headers: { ...headers, "Retry-After": "30" } }
           )
         }
-        console.error("[bookings/reserve] reservation failed", err)
+        logError("[bookings/reserve] reservation failed", err)
         return secureJson({ error: "internal" }, { status: 500, headers })
       }
 

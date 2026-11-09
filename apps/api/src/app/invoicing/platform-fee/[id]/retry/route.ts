@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { z } from "zod"
 import { IssuePlatformFeeInvoiceResponseSchema } from "@eleva/api-client"
 import {
@@ -80,7 +81,7 @@ export async function POST(
         { status: err.status, headers }
       )
     }
-    console.error("[invoicing/platform-fee/retry] unexpected error", err)
+    logError("[invoicing/platform-fee/retry] unexpected error", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }

@@ -44,14 +44,8 @@ export function pickRecordLogFields(fields: unknown): RecordLogFields {
   return out
 }
 
-/** Error class name and code only; messages can embed record content. */
-export function describeError(err: unknown): string {
-  if (!(err instanceof Error)) return typeof err
-  const code = (err as { code?: unknown }).code
-  return typeof code === "string" || typeof code === "number"
-    ? `${err.name}:${code}`
-    : err.name
-}
+/** Error class names and codes only; messages can embed record content. */
+export { describeError } from "@eleva/observability"
 
 type Level = "info" | "warn" | "error"
 

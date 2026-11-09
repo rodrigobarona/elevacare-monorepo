@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { corsHeaders } from "@/lib/cors"
 import {
   applyRateLimit,
@@ -29,7 +30,7 @@ export async function handlePublicGet(
   try {
     return timing.apply(await handler(headers, timing))
   } catch (err) {
-    console.error("public route failure", err)
+    logError("public route failure", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }

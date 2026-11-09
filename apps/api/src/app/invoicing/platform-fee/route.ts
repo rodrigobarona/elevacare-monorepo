@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import {
   IssuePlatformFeeInvoiceRequestSchema,
   IssuePlatformFeeInvoiceResponseSchema,
@@ -79,7 +80,7 @@ export async function GET(request: Request) {
         { status: 422, headers }
       )
     }
-    console.error("[invoicing/platform-fee] unexpected error", err)
+    logError("[invoicing/platform-fee] unexpected error", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }
@@ -132,7 +133,7 @@ export async function POST(request: Request) {
       headers,
     })
   } catch (err) {
-    console.error("[invoicing/platform-fee] issue unexpected error", err)
+    logError("[invoicing/platform-fee] issue unexpected error", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }

@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { and, eq, sql } from "drizzle-orm"
 import { NextResponse } from "next/server"
 import { getSession, LOGIN_PATH } from "@eleva/auth"
@@ -92,7 +93,7 @@ export async function GET(request: Request) {
   const error = url.searchParams.get("error")
 
   if (error) {
-    console.error("[accounting/callback] Provider error:", error)
+    logError("[accounting/callback] Provider error:", error)
     return NextResponse.redirect(
       onboardingUrl(
         "invoicing_error=provider_denied",
@@ -301,9 +302,9 @@ export async function GET(request: Request) {
       try {
         await adapter.disconnect({ vaultRef: result.vaultRef })
       } catch (disconnectErr) {
-        console.error(
+        logError(
           "[accounting/callback] Vault cleanup failed after DB error",
-          { vaultRef: result.vaultRef, error: disconnectErr }
+          disconnectErr
         )
       }
       throw dbErr
@@ -313,7 +314,7 @@ export async function GET(request: Request) {
       onboardingUrl("invoicing_connected=true", expert.orgSlug, expert.orgType)
     )
   } catch (err) {
-    console.error("[accounting/callback] Connect failed:", err)
+    logError("[accounting/callback] Connect failed:", err)
     return NextResponse.redirect(
       onboardingUrl(
         "invoicing_error=connect_failed",

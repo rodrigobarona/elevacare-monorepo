@@ -1,6 +1,6 @@
 import { createPaymentIntentForReservation } from "@eleva/billing/server"
 import { env, requireCronSecret } from "@eleva/config/env"
-import { heartbeat, reportProbeFailure } from "@eleva/observability"
+import { heartbeat, logError, reportProbeFailure } from "@eleva/observability"
 import {
   BOOKING_PROBE_FAKE_RESERVATION_ID,
   BOOKING_PROBE_FAKE_TOKEN,
@@ -53,7 +53,7 @@ export async function GET(request: Request): Promise<Response> {
   try {
     secret = requireCronSecret().CRON_SECRET
   } catch (err) {
-    console.error("[cron/booking-probes] CRON_SECRET not configured", err)
+    logError("[cron/booking-probes] CRON_SECRET not configured", err)
     return secureJson(
       { error: "cron-not-configured" },
       { status: 500, headers }

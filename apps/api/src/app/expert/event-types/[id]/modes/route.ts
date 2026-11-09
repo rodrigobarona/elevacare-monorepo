@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { CreateEventTypeModeRequestSchema } from "@eleva/api-client"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
@@ -264,7 +265,7 @@ export async function POST(request: Request, { params }: Params) {
         { status: 409, headers }
       )
     }
-    console.error("[event-type-modes] create failed", err)
+    logError("[event-type-modes] create failed", err)
     return secureJson(
       { error: "internal", message: "Internal server error" },
       { status: 500, headers }

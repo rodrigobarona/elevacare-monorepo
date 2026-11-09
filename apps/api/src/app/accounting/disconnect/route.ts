@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { DisconnectAccountingResponseSchema } from "@eleva/api-client"
 import { disconnectExpertInvoicing } from "@eleva/accounting"
 import { corsHeaders } from "@/lib/cors"
@@ -73,7 +74,7 @@ export async function POST(request: Request) {
       headers,
     })
   } catch (err) {
-    console.error("[accounting/disconnect] unexpected error", err)
+    logError("[accounting/disconnect] unexpected error", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }

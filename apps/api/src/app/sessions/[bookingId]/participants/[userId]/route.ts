@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { RemoveSessionParticipantResponseSchema } from "@eleva/api-client"
 import { z } from "zod"
 import {
@@ -88,7 +89,7 @@ export async function DELETE(
         { status: PARTICIPANT_STATUS[err.code], headers }
       )
     }
-    console.error("[sessions/participants/delete] unexpected error", err)
+    logError("[sessions/participants/delete] unexpected error", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }

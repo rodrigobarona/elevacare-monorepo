@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { DeleteAccountResponseSchema } from "@eleva/api-client"
 import { cancelCancelablePaymentIntents } from "@eleva/billing/server"
 import {
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
     if (err instanceof AccountDeletionConflictError) {
       return secureJson({ error: err.code }, { status: 409, headers })
     }
-    console.error("[privacy/delete-account] unexpected error", err)
+    logError("[privacy/delete-account] unexpected error", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 

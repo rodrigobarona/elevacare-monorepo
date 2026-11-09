@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import {
   getProviderAccessToken,
   markCalendarIntegrationExpired,
@@ -184,7 +185,7 @@ export async function loadExternalBusy(input: {
           observedConnectedAt: target.connectedAt,
         })
       } catch (err) {
-        console.error("[calendar-busy] could not flag integration", err)
+        logError("[calendar-busy] could not flag integration", err)
       }
     }
   }

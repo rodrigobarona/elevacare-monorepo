@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireMemberApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -105,7 +106,7 @@ export async function PUT(request: Request) {
           orgId: session.orgId,
         })
       } catch (err) {
-        console.error("[me/consents] marketing contact sync failed", err)
+        logError("[me/consents] marketing contact sync failed", err)
         return secureJson(
           { error: "marketing_sync_failed" },
           { status: 502, headers }

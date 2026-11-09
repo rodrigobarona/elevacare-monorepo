@@ -22,6 +22,7 @@ export {
 } from "./phi"
 export { SENTRY_EVENT_KEYS, sanitizeSentryEvent } from "./sentry-event"
 export { initSentry, captureException, type SentryInitOptions } from "./sentry"
+export { describeError, logError } from "./error-log"
 export { heartbeat } from "./heartbeat"
 export { reportProbeFailure } from "./probes"
 export { buildCspHeader, CSP_ALLOWLIST } from "./csp"

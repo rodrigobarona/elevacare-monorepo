@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import {
   ListExpertInvoicesQuerySchema,
   ListExpertInvoicesResponseSchema,
@@ -61,7 +62,7 @@ export async function GET(request: Request) {
       headers,
     })
   } catch (err) {
-    console.error("[invoicing/expert] unexpected error", err)
+    logError("[invoicing/expert] unexpected error", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }

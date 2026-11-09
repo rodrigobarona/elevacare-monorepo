@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { DailyWebhookResponseSchema } from "@eleva/api-client"
 import {
   dailyWebhookHeaders,
@@ -53,7 +54,7 @@ export async function POST(request: Request) {
         { status: 401, headers }
       )
     }
-    console.error("[webhooks/daily] handler failed", err)
+    logError("[webhooks/daily] handler failed", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }

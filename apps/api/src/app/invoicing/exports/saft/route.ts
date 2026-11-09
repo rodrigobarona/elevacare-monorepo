@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import {
   ExportSaftQuerySchema,
   ExportSaftResponseSchema,
@@ -129,7 +130,7 @@ export async function GET(request: Request) {
         { status: err.status, headers }
       )
     }
-    console.error("[invoicing/exports/saft] unexpected error", err)
+    logError("[invoicing/exports/saft] unexpected error", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }

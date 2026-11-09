@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import type { CreateIdentitySessionResponse } from "@eleva/api-client"
 import { createIdentityVerificationSession } from "@eleva/billing/server"
 import { getExpertProfileByUserId } from "@eleva/db"
@@ -99,10 +100,7 @@ export async function POST(request: Request): Promise<Response> {
     )
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    console.error(
-      "[stripe/identity] Verification session creation failed:",
-      message
-    )
+    logError("[stripe/identity] Verification session creation failed", err)
     return secureJson(
       { error: "stripe_error", message },
       { status: 502, headers }

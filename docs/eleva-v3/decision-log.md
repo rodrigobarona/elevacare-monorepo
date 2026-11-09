@@ -32,6 +32,26 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-09: Security quick wins before internal experts (active)
+
+- Owner: engineering; security-judge review 2026-11-09 (7.6/10).
+- The API reads sessions with `disableCookieCache`, so sign-out,
+  revocation and bans apply at once instead of after up to 5 minutes.
+  Frontends keep the cookie cache for page renders.
+- Password reset signs out every other session
+  (`revokeSessionsOnPasswordReset`).
+- API CORS: HTTPS only (localhost in development), an explicit
+  first-party host list, and `*.preview.eleva.care` never trusted by the
+  production deployment. `dev.eleva.care` and `admin.dev.eleva.care` stay
+  trusted because they serve the production deployment today.
+- Caught errors in API routes are logged with `logError()` (names and codes
+  only) and sent to Sentry through its redaction hook.
+- Still open: per-environment cookie scope (H1 second step: host-only
+  production cookie or a separate staging domain), two-factor for staff
+  roles, a breached-password check, `disabledPaths` for Better Auth's
+  organization endpoints (audit), a nonce-based CSP, and onboarding Space
+  limits.
+
 ### 2026-11-09: Legal redlines before experts sign (active)
 
 - Owner: founder + engineering; lawyer-judge review 2026-11-09 (7.5/10).

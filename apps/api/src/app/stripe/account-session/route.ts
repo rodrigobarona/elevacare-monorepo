@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import {
   CreateAccountSessionRequestSchema,
   type CreateAccountSessionResponse,
@@ -127,10 +128,7 @@ export async function POST(request: Request) {
     )
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    console.error(
-      "[stripe/account-session] AccountSession creation failed:",
-      message
-    )
+    logError("[stripe/account-session] AccountSession creation failed", err)
     return secureJson(
       { error: "stripe_error", message },
       { status: 502, headers }

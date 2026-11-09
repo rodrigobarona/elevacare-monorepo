@@ -126,6 +126,9 @@ function createAuth() {
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: true,
+      // A reset is often the answer to a stolen password: sign out every
+      // other device too.
+      revokeSessionsOnPasswordReset: true,
       sendResetPassword: async ({
         user,
         url,
@@ -402,7 +405,10 @@ function createAuth() {
 }
 
 export interface AuthApi {
-  getSession: (opts: { headers: Headers }) => Promise<{
+  getSession: (opts: {
+    headers: Headers
+    query?: { disableCookieCache?: boolean }
+  }) => Promise<{
     session: {
       id: string
       userId: string

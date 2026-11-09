@@ -14,6 +14,7 @@
  * CORS: browsers on eleva.care / *.preview.eleva.care are allowed.
  */
 
+import { logError } from "@eleva/observability"
 import {
   CreateStorageUploadRequestSchema,
   CreateStorageUploadResponseSchema,
@@ -142,7 +143,7 @@ export async function POST(request: Request): Promise<Response> {
         { status: 422, headers }
       )
     }
-    console.error("[storage/upload] presign failed", err)
+    logError("[storage/upload] presign failed", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }
