@@ -44,7 +44,7 @@ vi.mock("@eleva/db", () => ({
   },
 }))
 
-import { requireApiAuth } from "./api-auth"
+import { requireApiAuth, requireApiUser } from "./api-auth"
 
 function jwtToken() {
   const header = Buffer.from(
@@ -343,5 +343,84 @@ describe("requireApiAuth", () => {
       })
     )
     expect(identity.authMode).toBe("cookie")
+  })
+})
+
+describe("requireApiUser", () => {
+  beforeEach(() => {
+    getSession.mockReset()
+    verifyApiKey.mockReset()
+    dbSelect.mockReset()
+    findDefaultOrganizationId.mockReset()
+  })
+
+  it("resolves a signed-in person who has no membership yet", async () => {
+    getSession.mockResolvedValue({
+      user: { id: "user-1", email: "a@b.c", name: "Ada", image: null },
+      session: { activeOrganizationId: null },
+    })
+    const identity = await requireApiUser(
+      new Request("http://localhost/x", {
+        headers: { cookie: "better-auth.session_token=abc" },
+      })
+    )
+    expect(identity).toEqual({
+      user: {
+        id: "user-1",
+        email: "a@b.c",
+        displayName: "Ada",
+        avatarUrl: null,
+      },
+      activeOrgId: null,
+      authMode: "cookie",
+    })
+    expect(dbSelect).not.toHaveBeenCalled()
+  })
+
+  it("rejects a JWT bearer", async () => {
+    await expect(
+      requireApiUser(
+        new Request("http://localhost/x", {
+          headers: { authorization: `Bearer ${jwtToken()}` },
+        })
+      )
+    ).rejects.toMatchObject({ code: "jwt-not-revocable" })
+  })
+
+  it("rejects an API key", async () => {
+    await expect(
+      requireApiUser(
+        new Request("http://localhost/x", {
+          headers: { "x-api-key": "key_abc" },
+        })
+      )
+    ).rejects.toMatchObject({ code: "missing-capability" })
+    expect(verifyApiKey).not.toHaveBeenCalled()
+  })
+
+  it("rejects a cross-site cookie POST", async () => {
+    await expect(
+      requireApiUser(
+        new Request("http://localhost/x", {
+          method: "POST",
+          headers: {
+            cookie: "better-auth.session_token=abc",
+            origin: "https://evil.example",
+          },
+        })
+      )
+    ).rejects.toBeInstanceOf(UnauthorizedError)
+    expect(getSession).not.toHaveBeenCalled()
+  })
+
+  it("rejects an expired session", async () => {
+    getSession.mockResolvedValue(null)
+    await expect(
+      requireApiUser(
+        new Request("http://localhost/x", {
+          headers: { cookie: "better-auth.session_token=abc" },
+        })
+      )
+    ).rejects.toMatchObject({ code: "invalid-token" })
   })
 })

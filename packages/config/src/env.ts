@@ -568,18 +568,25 @@ export function resolveGatewayUrl(hostHeader?: string | null): string {
   const fromEnv = process.env.NEXT_PUBLIC_APP_URL
   if (fromEnv) return fromEnv
 
-  if (hostHeader) {
-    const host = hostHeader.split(":")[0]!
+  // Host headers can be forged; accept only a bare eleva.care host (or
+  // localhost) with an optional numeric port, so nothing like
+  // "a.eleva.care:@evil.example" can turn into another authority.
+  const match = hostHeader
+    ?.trim()
+    .toLowerCase()
+    .match(/^([a-z0-9-]+(?:\.[a-z0-9-]+)*)(?::(\d{1,5}))?$/)
+  if (match) {
+    const host = match[1]!
+    const port = match[2] ? Number(match[2]) : null
+    const portOk = port === null || (port > 0 && port <= 65535)
     if (
-      host === "eleva.care" ||
-      host.endsWith(".eleva.care") ||
-      host === "localhost"
+      portOk &&
+      (host === "eleva.care" ||
+        host.endsWith(".eleva.care") ||
+        host === "localhost")
     ) {
       const proto = host === "localhost" ? "http" : "https"
-      const port = hostHeader.includes(":")
-        ? `:${hostHeader.split(":")[1]}`
-        : ""
-      return `${proto}://${host}${port}`
+      return `${proto}://${host}${port === null ? "" : `:${port}`}`
     }
   }
 

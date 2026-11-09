@@ -4,7 +4,7 @@ import { provisionOrgBilling } from "@eleva/billing/server"
 import { LAST_ACTIVE_ORG_COOKIE } from "@eleva/config/routing"
 import { LocaleSchema } from "@eleva/config/i18n"
 import { corsHeaders } from "@/lib/cors"
-import { apiAuthFailure, requirePrivilegedApiAuth } from "@/lib/auth"
+import { apiAuthFailure, requireApiUser } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { checkBot } from "@/lib/bot-protection"
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
 
   let session
   try {
-    session = await requirePrivilegedApiAuth(request)
+    session = await requireApiUser(request)
   } catch (err) {
     const failure = apiAuthFailure(err, headers)
     if (failure) return failure
