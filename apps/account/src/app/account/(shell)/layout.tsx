@@ -34,7 +34,7 @@ export default async function SettingsLayout({
     ],
     {
       enableOrgSwitcher: false,
-      accountUrl: "/account/settings",
+      accountHref: "/account/settings",
     }
   )
 

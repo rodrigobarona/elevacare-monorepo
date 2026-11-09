@@ -76,5 +76,12 @@
         "failed": "That did not work. Please try again."
       }
     }
+  },
+  "staffEntry": {
+    "title": "Enter the staff console",
+    "body": "Here you can see members' and experts' data across Eleva. Changes you make are recorded in the audit log.",
+    "enter": "Enter the staff console",
+    "back": "Back to Eleva",
+    "error": "We couldn't open the staff console. Try again in a moment."
   }
 }

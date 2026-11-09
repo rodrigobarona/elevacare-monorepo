@@ -32,6 +32,39 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-09: One app shell for every signed-in app; workspace switcher model (active)
+
+- Owner: founder (product) + engineering
+- Founder review after Patrícia's first sign-in on dev.eleva.care: the avatar
+  menu looked broken, the sidebar "Back" in a Space went nowhere, and nothing
+  led from a member's Space to the expert app. Industry comparison (Airbnb,
+  Doctolib, Vercel, Linear, Slack, Stripe, Upwork, Calendly) and five
+  wireframed approaches; founder chose **B: one workspace switcher at the
+  top of the sidebar**, plus an avatar-menu shortcut, for every app.
+- Rules: the switcher shows a menu only with two or more workspaces, one row
+  per workspace (role tags, not one row per role), grouped by what you do
+  there. Eleva staff is never in the switcher: a staff-only avatar-menu line
+  opens admin.eleva.care, which asks you to confirm before switching into the
+  staff workspace. Members see "Offer sessions on Eleva" until they have a
+  work workspace. A bottom-of-sidebar card (setup, status, what's new, tips;
+  one at a time, dismissed per account; care help only for members) and
+  "Home" everywhere are part of the same plan.
+- Founder also rejects the `/{slug}/team` (expert) and `/{slug}/admin`
+  (clinic) path names; they get renamed with redirects in a later slice.
+- Built in slice 1: one `AccountMenu` in `@eleva/dashboard` for every
+  signed-in app and the public site (rows from the person's memberships,
+  44px touch rows, cookie preferences as a real menu item, no duplicate
+  Profile/Settings), solid menus and select lists in `@eleva/ui`, and the
+  staff entry page.
+- Not built yet: the switcher changes, Back naming, menu groups and
+  "Home" naming, page name in the header, the sidebar card, the staff look,
+  waiting dots, the path renames, and a Language row in the avatar menu.
+- Phase 12: once admin.eleva.care uses its host-only cookie (ADR-017), the
+  staff row still links there, but the person signs in on that host; the
+  confirm-and-switch step then runs on the staff session.
+- Reference: ADR-017, [`identity-rbac-spec.md`](./identity-rbac-spec.md),
+  [`organization-and-clinic-model.md`](./organization-and-clinic-model.md)
+
 ### 2026-11-09: Booking slice 2 "Pick a time" built as a days strip (active)
 
 - Founder review of the first build (React Aria month calendar above a

@@ -2,15 +2,13 @@ import { LogoMark } from "@eleva/ui/components/brand"
 import { Separator } from "@eleva/ui/components/separator"
 import { SidebarTrigger } from "@eleva/ui/components/sidebar"
 import { NavBell } from "./nav-bell"
-import { NavUser } from "./nav-user"
+import { AccountMenu } from "./account-menu"
+import type { AccountMenuModel } from "./account-menu-model"
 import type { DashboardUser } from "./nav-types"
 
 interface DashboardHeaderProps {
   user: DashboardUser
-  accountUrl?: string
-  settingsUrl?: string
-  homepageUrl?: string
-  logoutUrl?: string
+  accountMenu: AccountMenuModel
   inboxUrl?: string
   apiBaseUrl?: string
   children?: React.ReactNode
@@ -18,10 +16,7 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({
   user,
-  accountUrl,
-  settingsUrl,
-  homepageUrl,
-  logoutUrl,
+  accountMenu,
   inboxUrl,
   apiBaseUrl,
   children,
@@ -40,13 +35,7 @@ export function DashboardHeader({
         {inboxUrl && apiBaseUrl ? (
           <NavBell inboxUrl={inboxUrl} apiBaseUrl={apiBaseUrl} />
         ) : null}
-        <NavUser
-          user={user}
-          accountUrl={accountUrl}
-          settingsUrl={settingsUrl}
-          homepageUrl={homepageUrl}
-          logoutUrl={logoutUrl}
-        />
+        <AccountMenu user={user} menu={accountMenu} />
       </div>
     </header>
   )

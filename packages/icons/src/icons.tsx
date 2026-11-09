@@ -10,6 +10,7 @@ export {
   ArrowRightIcon,
   ArrowSquareOutIcon,
   ArrowUpRightIcon,
+  ArrowsLeftRightIcon,
   ArrowsClockwiseIcon,
   BellIcon,
   BookOpenIcon,
@@ -30,6 +31,7 @@ export {
   CircleIcon,
   CircleNotchIcon,
   ClockIcon,
+  CookieIcon,
   CreditCardIcon,
   DeviceMobileIcon,
   DownloadSimpleIcon,
@@ -64,6 +66,7 @@ export {
   MoonIcon,
   PlugIcon,
   PlusIcon,
+  QuestionIcon,
   RocketLaunchIcon,
   SealCheckIcon,
   ShareNetworkIcon,
@@ -95,9 +98,6 @@ export {
   YoutubeLogoIcon,
 } from "@phosphor-icons/react/ssr"
 
-/** @deprecated Use SquaresFourIcon — Lucide migration alias */
-export { SquaresFourIcon as LayoutDashboard } from "@phosphor-icons/react/ssr"
-
 /** @deprecated Use CalendarDotsIcon */
 export { CalendarDotsIcon as CalendarDays } from "@phosphor-icons/react/ssr"
 
@@ -109,9 +109,6 @@ export { BuildingsIcon as Building2 } from "@phosphor-icons/react/ssr"
 
 /** @deprecated Use GearIcon */
 export { GearIcon as Settings } from "@phosphor-icons/react/ssr"
-
-/** @deprecated Use SignOutIcon */
-export { SignOutIcon as LogOut } from "@phosphor-icons/react/ssr"
 
 /** @deprecated Use TrashIcon */
 export { TrashIcon as Trash2 } from "@phosphor-icons/react/ssr"

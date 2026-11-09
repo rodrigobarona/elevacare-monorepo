@@ -1,16 +1,17 @@
 "use server"
 
-import { listUserOrganizations } from "@eleva/auth/organizations"
-import { UnauthorizedError, type ProductLabel } from "@eleva/auth/types"
-import { resolveGatewayUrl } from "@eleva/config/env"
-import type { DashboardConfig, NavGroup, OrgSwitcherItem } from "./nav-types"
+import type { ProductLabel } from "@eleva/auth/types"
+import { accountMenuFor, loadUserWorkspaces } from "./account-menu-server"
+import type { DashboardConfig, NavGroup } from "./nav-types"
 import { resolveProductHomeUrl } from "./resolve-product-home-url"
 
 type BuildDashboardConfigOverrides = Partial<
-  Omit<DashboardConfig, "navGroups" | "user">
+  Omit<DashboardConfig, "navGroups" | "user" | "accountMenu">
 > & {
-  /** When false, skip org switcher token fetch and show sidebar Back link instead */
+  /** When false, hide the sidebar org switcher and show the Back link instead */
   enableOrgSwitcher?: boolean
+  /** Account settings link, for the account app that serves it itself */
+  accountHref?: string
 }
 
 interface SessionLike {
@@ -26,8 +27,6 @@ interface SessionLike {
   capabilities?: readonly string[]
 }
 
-const GATEWAY_URL = resolveGatewayUrl()
-
 /**
  * Build a complete DashboardConfig from a session and app-specific nav groups.
  *
@@ -39,20 +38,22 @@ export async function buildDashboardConfig(
   navGroups: NavGroup[],
   overrides?: BuildDashboardConfigOverrides
 ): Promise<DashboardConfig> {
-  const { enableOrgSwitcher = true, ...configOverrides } = overrides ?? {}
-  const fetchOrganizations = enableOrgSwitcher && session.orgSlug != null
-  const organizations: OrgSwitcherItem[] = fetchOrganizations
-    ? await listUserOrganizations({
-        userId: session.user.id,
-        currentOrgId: session.orgId ?? null,
-      }).catch((err) => {
-        if (!(err instanceof UnauthorizedError)) {
-          console.error("Unexpected error loading organizations", err)
-          throw err
-        }
-        return []
-      })
-    : []
+  const {
+    enableOrgSwitcher = true,
+    accountHref,
+    ...configOverrides
+  } = overrides ?? {}
+  // Every membership, for the avatar menu; the switcher shows them too.
+  const workspaces = await loadUserWorkspaces(
+    session.user.id,
+    session.orgId ?? null
+  ).catch((err) => {
+    // The page still renders; the menu just has no workspace rows.
+    console.error("[buildDashboardConfig] workspace lookup failed", err)
+    return []
+  })
+  const organizations =
+    enableOrgSwitcher && session.orgSlug != null ? workspaces : []
 
   const homeUrl =
     configOverrides.homeUrl ??
@@ -68,9 +69,7 @@ export async function buildDashboardConfig(
     orgSlug: session.orgSlug,
     capabilities: session.capabilities,
     organizations,
-    accountUrl: `${GATEWAY_URL}/account/settings`,
-    homepageUrl: `${GATEWAY_URL}/home`,
-    logoutUrl: `${GATEWAY_URL}/logout`,
+    accountMenu: accountMenuFor(workspaces, { accountHref }),
     apiBaseUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002",
     ...(homeUrl ? { homeUrl } : {}),
     ...configOverrides,

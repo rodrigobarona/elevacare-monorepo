@@ -29,10 +29,7 @@ export function DashboardShell({
       <SidebarInset>
         <DashboardHeader
           user={config.user}
-          accountUrl={config.accountUrl}
-          settingsUrl={config.settingsUrl}
-          homepageUrl={config.homepageUrl}
-          logoutUrl={config.logoutUrl}
+          accountMenu={config.accountMenu}
           inboxUrl={config.inboxUrl}
           apiBaseUrl={config.apiBaseUrl}
         >
