@@ -13,11 +13,11 @@
   },
   "dependencies": {
     "@eleva/email": "workspace:*",
-    "@react-email/ui": "6.1.4",
+    "@react-email/ui": "catalog:",
     "next": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-email": "6.1.4"
+    "react-email": "catalog:"
   },
   "devDependencies": {
     "@eleva/eslint-config": "workspace:*",
