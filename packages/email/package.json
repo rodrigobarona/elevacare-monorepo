@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@eleva/config": "workspace:*",
-    "react-email": "^6.1.4",
+    "react-email": "catalog:",
     "react": "catalog:"
   },
   "devDependencies": {
