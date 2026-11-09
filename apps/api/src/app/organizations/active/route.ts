@@ -4,7 +4,7 @@ import {
   setActiveElevaOrganization,
 } from "@eleva/auth"
 import { corsHeaders } from "@/lib/cors"
-import { apiAuthFailure, requirePrivilegedApiAuth } from "@/lib/auth"
+import { apiAuthFailure, requireApiUser } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -21,9 +21,12 @@ export const runtime = "nodejs"
 export async function POST(request: Request) {
   const headers = corsHeaders(request, "POST, OPTIONS")
 
+  // Only who you are, not your current workspace: someone whose active
+  // workspace is gone (removed from a clinic, workspace deleted) must still be
+  // able to switch away. Better Auth checks membership of the target.
   let session
   try {
-    session = await requirePrivilegedApiAuth(request)
+    session = await requireApiUser(request)
   } catch (err) {
     const failure = apiAuthFailure(err, headers)
     if (failure) return failure
