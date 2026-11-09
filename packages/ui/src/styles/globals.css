@@ -355,8 +355,50 @@
  * Keyboard focus indicator, at least 3:1 against the page (WCAG 1.4.11, 2.4.7).
  * Unlayered so it outranks the primitives' `outline-none` utilities. On dark
  * or tinted surfaces, set `--focus-ring` locally instead of removing it.
+ * Skipped, because they draw their own indicator in their own shape:
+ * - menus and list boxes: focus moves to their rows, which highlight; the
+ *   container's ring was clipped by the popover's rounded edge into a frame;
+ * - kit text fields (and fields inside an input group): text fields match
+ *   :focus-visible on every click, and the offset square outline sat around
+ *   the inner input instead of the rounded field. They get the rule below.
  */
-:where(:focus-visible, [data-focus-visible]):not([tabindex="-1"]) {
+:where(:focus-visible, [data-focus-visible]):not(
+  [tabindex="-1"],
+  [role="menu"],
+  [role="listbox"],
+  [data-slot="input"],
+  [data-slot="textarea"],
+  [data-slot="select-trigger"],
+  [data-slot="input-group"] :is(input, textarea)
+) {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
+}
+
+/*
+ * Menu and list rows: the ring sits inside the row's rounded edge. `:is`
+ * (not `:where`) so this outranks the rule above, whose `:not()` list counts.
+ */
+:is(
+  [role="menuitem"],
+  [role="menuitemradio"],
+  [role="menuitemcheckbox"],
+  [role="option"]
+):is(:focus-visible, [data-focus-visible]) {
+  outline-offset: -2px;
+}
+
+/*
+ * Text fields: the border turns `--focus-ring` (the 3:1 indicator) with a soft
+ * halo, following the field's own rounded shape. An input group (search pill,
+ * field with an icon) lights up as a whole when the input inside has focus.
+ */
+:where(
+    [data-slot="input"],
+    [data-slot="textarea"],
+    [data-slot="select-trigger"]
+  ):not([data-slot="input-group"] *):is(:focus-visible, [data-focus-visible]),
+:where([data-slot="input-group"]):has(:is(input, textarea):focus-visible) {
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--focus-ring) 22%, transparent);
 }
