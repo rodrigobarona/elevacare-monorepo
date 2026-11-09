@@ -75,6 +75,78 @@ export async function requireApiAuth(request: Request): Promise<ApiIdentity> {
   return resolveApiAuth(request)
 }
 
+export interface ApiUserIdentity {
+  user: ElevaSession["user"]
+  /** The session's active organization, if any; may be stale. */
+  activeOrgId: string | null
+  authMode: "cookie" | "bearer"
+}
+
+/**
+ * A signed-in person, with or without an organization membership. Only for
+ * onboarding, where someone without a Space yet must be able to create one;
+ * every other route needs `requireApiAuth`. Accepts revocable credentials
+ * only (session cookie or opaque bearer), never a JWT or an API key.
+ */
+export async function requireApiUser(
+  request: Request
+): Promise<ApiUserIdentity> {
+  if (hasDuplicateSessionCookie(request.headers.get("cookie"))) {
+    throw new UnauthorizedError(
+      "session-cookie-ambiguous",
+      "SESSION_COOKIE_AMBIGUOUS"
+    )
+  }
+  const sources = listCredentialSources(request)
+  if (sources.length > 1) {
+    throw new UnauthorizedError(
+      "ambiguous-credentials",
+      "AMBIGUOUS_CREDENTIALS"
+    )
+  }
+  const source = sources[0]
+  if (!source) throw new UnauthorizedError("no-session")
+
+  let authMode: ApiUserIdentity["authMode"]
+  if (source === "cookie") {
+    assertCookieCsrf(request)
+    authMode = "cookie"
+  } else if (source === "authorization") {
+    const token = bearerToken(request)
+    if (!token) throw new UnauthorizedError("no-session")
+    if (isJwtBearer(token)) {
+      throw new UnauthorizedError(
+        "jwt-not-revocable",
+        "Onboarding requires a cookie or opaque bearer session"
+      )
+    }
+    authMode = "bearer"
+  } else {
+    throw new UnauthorizedError(
+      "missing-capability",
+      "Onboarding requires a person's session, not an API key"
+    )
+  }
+
+  const result = await getAuthApi().getSession({ headers: request.headers })
+  if (!result?.session || !result.user) {
+    throw new UnauthorizedError("invalid-token")
+  }
+  return {
+    user: {
+      id: result.user.id,
+      email: result.user.email,
+      displayName: result.user.name,
+      avatarUrl: result.user.image ?? null,
+    },
+    activeOrgId:
+      typeof result.session.activeOrganizationId === "string"
+        ? result.session.activeOrganizationId
+        : null,
+    authMode,
+  }
+}
+
 /** Privileged mutations must not accept a non-revocable JWT. */
 export async function requireRevocableApiAuth(
   request: Request

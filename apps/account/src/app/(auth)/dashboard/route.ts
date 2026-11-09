@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { LOGIN_PATH } from "@eleva/auth"
 import { applyExpiredSessionCookies } from "@eleva/auth/proxy"
-import { getSession, getSessionForOrg } from "@eleva/auth/server"
+import { getAuthUser, getSession, getSessionForOrg } from "@eleva/auth/server"
 import { sanitizeReturnTo } from "@eleva/auth/return-to"
 import { resolveGatewayUrl } from "@eleva/config/env"
 import { resolveProductHomeUrl } from "@eleva/dashboard/resolve-product-home-url"
@@ -29,33 +29,45 @@ export async function GET(request: NextRequest) {
       ? lastSlug
       : undefined
 
-  const session = preferredSlug
-    ? await getSessionForOrg(preferredSlug)
-    : await getSession()
+  // Redirects go to the public gateway (dev.eleva.care / eleva.care), not
+  // the account app's own host behind the rewrite.
+  const gateway = resolveGatewayUrl(
+    request.headers.get("x-forwarded-host") ?? request.headers.get("host")
+  )
+
+  // The last-org cookie is per browser, not per account: after someone else
+  // signs in on the same browser it can name an org they are not in. Fall
+  // back to their own session instead of treating them as signed out.
+  const session =
+    (preferredSlug ? await getSessionForOrg(preferredSlug) : null) ??
+    (await getSession())
 
   if (!session) {
-    const response = NextResponse.redirect(new URL(LOGIN_PATH, request.url))
+    // Signed in but no Space or membership yet: onboarding sets one up.
+    // Only a missing sign-in goes back to the login page.
+    if (await getAuthUser()) {
+      const response = NextResponse.redirect(new URL("/onboarding", gateway))
+      if (lastSlug) response.cookies.delete(LAST_ACTIVE_ORG_COOKIE)
+      return response
+    }
+    const response = NextResponse.redirect(new URL(LOGIN_PATH, gateway))
     applyExpiredSessionCookies(response)
     if (lastSlug) response.cookies.delete(LAST_ACTIVE_ORG_COOKIE)
     return response
   }
 
   if (!session.orgSlug) {
-    const response = NextResponse.redirect(new URL("/onboarding", request.url))
+    const response = NextResponse.redirect(new URL("/onboarding", gateway))
     if (lastSlug) response.cookies.delete(LAST_ACTIVE_ORG_COOKIE)
     return response
   }
 
   const slug = session.orgSlug
   if (RESERVED_SLUGS.has(slug) || !isOrgSlugShape(slug)) {
-    const response = NextResponse.redirect(new URL("/onboarding", request.url))
+    const response = NextResponse.redirect(new URL("/onboarding", gateway))
     response.cookies.delete(LAST_ACTIVE_ORG_COOKIE)
     return response
   }
-
-  const gateway = resolveGatewayUrl(
-    request.headers.get("x-forwarded-host") ?? request.headers.get("host")
-  )
 
   const home = new URL(resolveProductHomeUrl(session))
   const destination = returnTo

@@ -5,6 +5,7 @@ import {
   expertProfileUrl,
   marketplaceExpertsUrl,
   resetEnvCache,
+  resolveGatewayUrl,
   requireAuthEnv,
   requireCronSecret,
   requireDailyEnv,
@@ -355,5 +356,37 @@ describe("assertPreviewDatabaseIsolated", () => {
       })
     ).not.toThrow()
     expect(() => assertPreviewDatabaseIsolated(prod, guard)).not.toThrow()
+  })
+})
+
+describe("resolveGatewayUrl", () => {
+  const original = process.env.NEXT_PUBLIC_APP_URL
+  beforeEach(() => {
+    delete process.env.NEXT_PUBLIC_APP_URL
+  })
+  afterEach(() => {
+    if (original === undefined) delete process.env.NEXT_PUBLIC_APP_URL
+    else process.env.NEXT_PUBLIC_APP_URL = original
+  })
+
+  it("prefers NEXT_PUBLIC_APP_URL over the host header", () => {
+    process.env.NEXT_PUBLIC_APP_URL = "https://dev.eleva.care"
+    expect(resolveGatewayUrl("evil.example")).toBe("https://dev.eleva.care")
+  })
+
+  it("keeps an eleva.care host and localhost with a port", () => {
+    expect(resolveGatewayUrl("dev.eleva.care")).toBe("https://dev.eleva.care")
+    expect(resolveGatewayUrl("localhost:3000")).toBe("http://localhost:3000")
+  })
+
+  it.each([
+    "a.eleva.care:@evil.example",
+    "evil.example@a.eleva.care",
+    "a.eleva.care:443/evil",
+    "a.eleva.care:99999",
+    "evil.example",
+    "eleva.care.evil.example",
+  ])("falls back to eleva.care for %s", (host) => {
+    expect(resolveGatewayUrl(host)).toBe("https://eleva.care")
   })
 })

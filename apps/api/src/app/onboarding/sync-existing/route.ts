@@ -6,7 +6,7 @@ import {
 import { provisionOrgBilling } from "@eleva/billing/server"
 import { z } from "zod"
 import { corsHeaders } from "@/lib/cors"
-import { requireApiAuth } from "@/lib/auth"
+import { requireApiUser } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -27,7 +27,7 @@ export async function POST(request: Request): Promise<Response> {
 
   let session
   try {
-    session = await requireApiAuth(request)
+    session = await requireApiUser(request)
   } catch (err) {
     if (err instanceof UnauthorizedError) {
       return secureJson({ error: "unauthorized" }, { status: 401, headers })
@@ -51,9 +51,10 @@ export async function POST(request: Request): Promise<Response> {
 
   const memberships = await listAuthOrganizations(
     session.user.id,
-    session.orgId
+    session.activeOrgId
   )
-  const membership = memberships[0]
+  const membership =
+    memberships.find((item) => item.isCurrent) ?? memberships[0]
   if (!membership) {
     return secureJson({ hasMembership: false }, { headers })
   }

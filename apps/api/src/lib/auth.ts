@@ -1,7 +1,9 @@
 import {
   requireApiAuth as requireBetterAuth,
+  requireApiUser as requireBetterAuthUser,
   requireRevocableApiAuth,
   type ApiIdentity,
+  type ApiUserIdentity,
 } from "@eleva/auth/api-auth"
 import { expiredSessionCookies } from "@eleva/auth/api-auth"
 import {
@@ -36,6 +38,16 @@ export async function resolveApiAuth(request: Request): Promise<ApiAuthResult> {
 
 export async function requireApiAuth(request: Request): Promise<ElevaSession> {
   return requireBetterAuth(request)
+}
+
+/**
+ * Onboarding only: a signed-in person who may not have a Space yet.
+ * Revocable credentials only; never use for org-scoped routes.
+ */
+export async function requireApiUser(
+  request: Request
+): Promise<ApiUserIdentity> {
+  return requireBetterAuthUser(request)
 }
 
 /** Member-app `/me` routes: session plus personal-Space product label. */
