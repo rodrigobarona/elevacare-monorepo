@@ -2,8 +2,23 @@ import { and, eq } from "drizzle-orm"
 import { db } from "../client"
 import { withPlatformAdminContext } from "../context"
 import * as main from "../schema/main"
-import { ensureFixtureLicenceApproved } from "./licence-fixture"
+import {
+  ensureFixtureLicenceApproved,
+  type FixtureLicence,
+} from "./licence-fixture"
 import * as auth from "../schema/auth"
+
+/**
+ * Patrícia Mota's entry in the public register of the Ordem dos
+ * Fisioterapeutas ("Encontre um Fisioterapeuta"): cédula 9115, professional
+ * name "Patrícia Fernandes da Mota", Lisboa, active. Checked 2026-11-09 from
+ * the founder's screenshot of the register. Public record; the ERS number
+ * on the seeded application is still a placeholder.
+ */
+const PATIMOTA_REGISTER: FixtureLicence = {
+  professionalBody: "ordem_fisioterapeutas",
+  licenceNumber: "9115",
+}
 
 /**
  * Demo seed: one member (member.demo@example.test), one solo expert
@@ -193,6 +208,7 @@ export async function seedDemo() {
         orgId: solo.orgId,
         expertProfileId: profileId,
         reviewerUserId: solo.userId,
+        licence: PATIMOTA_REGISTER,
       })
     )
   }

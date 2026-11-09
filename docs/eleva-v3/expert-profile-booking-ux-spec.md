@@ -483,7 +483,9 @@ time** → **Confirm**.
    professional registration shown as a plain fact when the expert opts in
    ("Registered with Ordem dos Fisioterapeutas · nº 12345"), "Where you may
    know me from" (publications, teaching, talks, media as links), years in
-   practice; `patimota` seed with her public record.
+   practice; `patimota` seed with her public record (Ordem dos
+   Fisioterapeutas cédula 9115, professional name "Patrícia Fernandes da
+   Mota", Lisboa, active; the cédula is already on her seeded licence row).
 5. **Share kit**: dynamic OG image, QR, "Book with me" button in the expert
    app.
 6. **Guest self-service and availability**: a signed manage link for guests
