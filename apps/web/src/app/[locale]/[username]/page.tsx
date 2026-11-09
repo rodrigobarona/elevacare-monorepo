@@ -243,6 +243,7 @@ export default async function ExpertProfilePage({ params }: Props) {
                   label={t("share.label")}
                   accessibleLabel={t("share.accessible", { name })}
                   copiedLabel={t("share.copied")}
+                  copyFailedLabel={t("share.copyFailed")}
                 />
               </div>
             </div>
@@ -622,12 +623,14 @@ async function ProfileBookingCard({
       )
     )
 
-  // A service "failed" when every way to meet failed to load.
+  // A service is incomplete when any way to meet failed to load. The card
+  // still lists the times that did load; with none, it says loading failed
+  // instead of claiming the calendar is full.
   const serviceFailed = new Map<string, boolean>()
   for (const mode of modeSlots) {
     serviceFailed.set(
       mode.eventSlug,
-      (serviceFailed.get(mode.eventSlug) ?? true) && mode.failed
+      (serviceFailed.get(mode.eventSlug) ?? false) || mode.failed
     )
   }
 
@@ -667,6 +670,14 @@ async function ProfileBookingCard({
     const title = pickLocalizedText(eventType.title, locale)
     const price = servicePrice(eventType)
     const slots = pickServiceSlots(modeSlots, eventType.slug)
+    // Two places can offer the same time: name the place on each time so
+    // the buttons are told apart by sight, not only by screen readers.
+    const places = eventType.modes.flatMap((mode) =>
+      mode.mode === "in_person" && mode.location
+        ? [[mode.id, mode.location.name] as const]
+        : []
+    )
+    const placeByMode = places.length > 1 ? new Map(places) : null
     const days = new Map<string, BookingCardService["days"][number]>()
     for (const slot of slots) {
       const date = new Date(slot.start)
@@ -685,6 +696,7 @@ async function ProfileBookingCard({
         }),
         time,
         mode: slot.mode,
+        place: placeByMode?.get(slot.modeId) ?? null,
         start: slot.start,
         ariaLabel: t("bookSlot", {
           offer: title,
@@ -795,8 +807,13 @@ function freeCancellationLine(
     : t("freeCancelHours", { hours })
 }
 
+/** The reader's language, then English, then any language that has items. */
 function pickList(list: LocalizedList, locale: Locale): string[] {
-  return list[locale] ?? list.en ?? []
+  for (const key of [locale, "en", "pt", "es"] as const) {
+    const items = list[key]
+    if (items && items.length > 0) return items
+  }
+  return []
 }
 
 function pickRichBio(

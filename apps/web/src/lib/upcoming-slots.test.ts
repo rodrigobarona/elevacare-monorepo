@@ -41,6 +41,38 @@ describe("pickServiceSlots", () => {
     expect(slots[0]?.locationLabel).toBe("Lisbon")
   })
 
+  it("keeps one time per way to meet when two start together", () => {
+    const start = "2026-11-09T09:00:00Z"
+    const slots = pickServiceSlots(
+      [
+        { ...base, eventSlug: "a", modeId: "video", starts: [start] },
+        {
+          ...base,
+          eventSlug: "a",
+          modeId: "lisbon",
+          mode: "in_person",
+          locationLabel: "Lisbon",
+          starts: [start],
+        },
+        {
+          ...base,
+          eventSlug: "a",
+          modeId: "porto",
+          mode: "in_person",
+          locationLabel: "Porto",
+          starts: [start],
+        },
+      ],
+      "a"
+    )
+    expect(slots.map((slot) => slot.modeId).sort()).toEqual([
+      "lisbon",
+      "porto",
+      "video",
+    ])
+    expect(slots.every((slot) => slot.start === start)).toBe(true)
+  })
+
   it("caps the list", () => {
     const starts = Array.from(
       { length: 10 },

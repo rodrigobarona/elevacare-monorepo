@@ -8,6 +8,7 @@ import {
   VideoCameraIcon,
 } from "@eleva/icons"
 import { ChoiceRows } from "@eleva/ui/components/booking/choice-rows"
+import { cn } from "@eleva/ui/lib/utils"
 import { Link } from "@/i18n/navigation"
 import type { SessionMode } from "@/lib/upcoming-slots"
 
@@ -23,6 +24,8 @@ export type BookingCardSlot = {
   /** "Book First visit on Monday 9 November at 09:00, video call". */
   ariaLabel: string
   mode: SessionMode
+  /** Place name, set only when the service is offered in several places. */
+  place: string | null
   start: string
 }
 
@@ -37,7 +40,10 @@ export type BookingCardService = {
   days: { key: string; label: string; slots: BookingCardSlot[] }[]
   /** Several ways to meet: each time shows its mode icon. */
   showModes: boolean
-  /** Times could not be loaded (not the same as a full calendar). */
+  /**
+   * Some times could not be loaded. With no times shown, the card says so
+   * instead of saying the calendar is full.
+   */
   loadFailed: boolean
 }
 
@@ -120,12 +126,25 @@ export function BookingCard({
                         data-testid="profile-upcoming-slot"
                         data-event-slug={service.slug}
                         aria-label={slot.ariaLabel}
-                        className="flex min-h-11 items-center justify-center gap-1.5 rounded-full border border-input-border bg-background px-2 text-sm font-medium tabular-nums transition-colors hover:border-primary hover:bg-teal-50 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none dark:hover:bg-teal-950"
+                        className={cn(
+                          "flex min-h-11 flex-col items-center justify-center border border-input-border bg-background px-2 text-sm font-medium tabular-nums transition-colors hover:border-primary hover:bg-teal-50 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none dark:hover:bg-teal-950",
+                          slot.place ? "rounded-2xl py-1" : "rounded-full"
+                        )}
                       >
-                        {service.showModes ? (
-                          <Icon aria-hidden className="size-3.5 shrink-0" />
+                        <span className="flex items-center gap-1.5">
+                          {service.showModes ? (
+                            <Icon aria-hidden className="size-3.5 shrink-0" />
+                          ) : null}
+                          {slot.time}
+                        </span>
+                        {slot.place ? (
+                          <span
+                            aria-hidden
+                            className="max-w-full truncate text-xs font-normal text-muted-foreground"
+                          >
+                            {slot.place}
+                          </span>
                         ) : null}
-                        {slot.time}
                       </Link>
                     </li>
                   )

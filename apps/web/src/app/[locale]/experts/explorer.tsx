@@ -65,7 +65,9 @@ export async function Explorer({
   let loadError = false
   let filterError = false
   // The unfiltered first page decides which areas get a chip and whether
-  // the directory is large enough for filters.
+  // the directory is large enough for filters. Null when it could not be
+  // loaded: the page then offers every control rather than guessing from a
+  // filtered result.
   let directory: ListPublicExpertsResponse | null = null
 
   try {
@@ -81,7 +83,7 @@ export async function Explorer({
     ])
     experts = result.experts
     nextCursor = result.nextCursor
-    directory = everyone ?? result
+    directory = isNarrowed ? everyone : result
   } catch (error) {
     if (error instanceof ApiClientError && error.status === 422) {
       filterError = true
@@ -104,16 +106,23 @@ export async function Explorer({
   const categoryLabel = (slug: string) =>
     isMarketplaceCategory(slug) ? t(`categories.${slug}`) : null
 
-  const showFilters =
-    directory != null &&
-    (directory.nextCursor != null ||
+  // A directory that spans several pages (or could not be loaded) is not a
+  // short curated list: every control and every area chip is offered, since
+  // one page cannot tell which areas have experts.
+  const isLargeOrUnknown =
+    !loadError &&
+    !filterError &&
+    (directory == null ||
+      directory.nextCursor != null ||
       directory.experts.length >= DIRECTORY_FILTERS_MIN_EXPERTS)
+  const showFilters = isLargeOrUnknown
   const listedAreas = new Set(
     (directory?.experts ?? []).flatMap((expert) => expert.categorySlugs)
   )
   const areaSlugs = MARKETPLACE_CATEGORY_SLUGS.filter(
-    (slug) => listedAreas.has(slug) || slug === category
+    (slug) => isLargeOrUnknown || listedAreas.has(slug) || slug === category
   )
+  const sortLabel = sort && sort !== "relevance" ? t(`sort.${sort}`) : null
   const showAreas = areaSlugs.length >= 2 || category != null
 
   return (
@@ -203,20 +212,30 @@ export async function Explorer({
                   </Link>
                 ) : null}
               </form>
-            ) : language ? (
-              <div>
-                <Link
-                  href={filterHref({ language: "" })}
-                  aria-label={t("removeLanguageFilter", {
-                    language: t(`languages.${language}`),
-                  })}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-full border bg-background px-4 text-sm transition-colors hover:bg-muted"
-                >
-                  {t("speaksLanguage", {
-                    language: t(`languages.${language}`),
-                  })}
-                  <XIcon aria-hidden className="size-4" />
-                </Link>
+            ) : language || sortLabel ? (
+              // Short list: a deep link's filter or sort shows as a chip
+              // that removes only itself.
+              <div className="flex flex-wrap gap-2">
+                {language ? (
+                  <RemovableChip
+                    href={filterHref({ language: "" })}
+                    label={t("removeLanguageFilter", {
+                      language: t(`languages.${language}`),
+                    })}
+                  >
+                    {t("speaksLanguage", {
+                      language: t(`languages.${language}`),
+                    })}
+                  </RemovableChip>
+                ) : null}
+                {sortLabel ? (
+                  <RemovableChip
+                    href={filterHref({ sort: "" })}
+                    label={t("removeSort", { sort: sortLabel })}
+                  >
+                    {t("sortedBy", { sort: sortLabel })}
+                  </RemovableChip>
+                ) : null}
               </div>
             ) : null}
           </Container>
@@ -249,7 +268,7 @@ export async function Explorer({
             {!loadError && !filterError && experts.length === 0 ? (
               <EmptyState
                 variant="no-results"
-                title={category ? t("emptyCategory") : t("empty")}
+                title={category && !language ? t("emptyCategory") : t("empty")}
                 action={
                   category || language || sort ? (
                     <Link
@@ -396,6 +415,28 @@ function CategoryChip({
       )}
     >
       {children}
+    </Link>
+  )
+}
+
+function RemovableChip({
+  href,
+  label,
+  children,
+}: {
+  href: string
+  /** Names what pressing it removes. */
+  label: string
+  children: ReactNode
+}) {
+  return (
+    <Link
+      href={href}
+      aria-label={label}
+      className="inline-flex min-h-11 items-center gap-2 rounded-full border bg-background px-4 text-sm transition-colors hover:bg-muted"
+    >
+      {children}
+      <XIcon aria-hidden className="size-4" />
     </Link>
   )
 }

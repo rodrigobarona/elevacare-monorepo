@@ -33,15 +33,23 @@ export function MobileBookBar({
     return () => observer.disconnect()
   }, [targetId])
 
+  // Recomputed when the bar shows or hides, the viewport crosses the phone
+  // breakpoint, or the bar changes height (text zoom, rotation).
   useEffect(() => {
     const root = document.documentElement
-    const isPhone = window.matchMedia("(max-width: 1023px)").matches
-    if (isHidden || !isPhone || !barRef.current) {
-      root.style.scrollPaddingBottom = ""
-      return
+    const bar = barRef.current
+    const phone = window.matchMedia("(max-width: 1023px)")
+    const update = () => {
+      root.style.scrollPaddingBottom =
+        !isHidden && phone.matches && bar ? `${bar.offsetHeight + 16}px` : ""
     }
-    root.style.scrollPaddingBottom = `${barRef.current.offsetHeight + 16}px`
+    update()
+    phone.addEventListener("change", update)
+    const resize = bar ? new ResizeObserver(update) : null
+    if (bar) resize?.observe(bar)
     return () => {
+      phone.removeEventListener("change", update)
+      resize?.disconnect()
       root.style.scrollPaddingBottom = ""
     }
   }, [isHidden])

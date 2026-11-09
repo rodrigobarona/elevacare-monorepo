@@ -93,9 +93,9 @@ function ExpertCard({
               </span>
             ) : null}
             {price ? (
-              <span className="font-medium whitespace-nowrap text-foreground">
-                {price}
-              </span>
+              // May wrap on narrow phone cards; formatted amounts keep their
+              // no-break space, so "€ 60" itself never splits.
+              <span className="font-medium text-foreground">{price}</span>
             ) : null}
           </p>
         ) : null}

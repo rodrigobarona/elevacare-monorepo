@@ -24,6 +24,9 @@ export function BioReveal({
     <div className="flex flex-col items-start gap-3">
       <div
         id={contentId}
+        // A keyboard user tabbing into a link under the fade opens the bio,
+        // so focus never lands on a hidden or masked link (WCAG 2.4.11).
+        onFocus={() => setIsOpen(true)}
         className={cn(
           "relative w-full",
           !isOpen &&

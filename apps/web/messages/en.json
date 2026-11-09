@@ -330,7 +330,9 @@
     "seeAll": "See all experts",
     "freeSession": "Free session available",
     "speaksLanguage": "Speaks {language}",
-    "removeLanguageFilter": "Remove filter: speaks {language}"
+    "removeLanguageFilter": "Remove filter: speaks {language}",
+    "sortedBy": "Sorted by: {sort}",
+    "removeSort": "Remove sorting: {sort}"
   },
   "profile": {
     "title": "{name} — Eleva.care",
@@ -355,7 +357,8 @@
     "share": {
       "label": "Share this page",
       "accessible": "Share this page: {name}",
-      "copied": "Link copied"
+      "copied": "Link copied",
+      "copyFailed": "Copy this link to share the page:"
     },
     "facts": {
       "languages": "Speaks {languages}",

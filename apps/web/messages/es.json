@@ -330,7 +330,9 @@
     "seeAll": "Ver todos los perfiles",
     "freeSession": "Sesión gratuita disponible",
     "speaksLanguage": "Habla {language}",
-    "removeLanguageFilter": "Quitar filtro: habla {language}"
+    "removeLanguageFilter": "Quitar filtro: habla {language}",
+    "sortedBy": "Ordenado por: {sort}",
+    "removeSort": "Quitar orden: {sort}"
   },
   "profile": {
     "title": "{name} — Eleva.care",
@@ -355,7 +357,8 @@
     "share": {
       "label": "Compartir esta página",
       "accessible": "Compartir esta página: {name}",
-      "copied": "Enlace copiado"
+      "copied": "Enlace copiado",
+      "copyFailed": "Copia este enlace para compartir la página:"
     },
     "facts": {
       "languages": "Habla {languages}",
