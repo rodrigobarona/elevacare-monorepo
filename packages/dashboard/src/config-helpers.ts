@@ -47,7 +47,11 @@ export async function buildDashboardConfig(
   const workspaces = await loadUserWorkspaces(
     session.user.id,
     session.orgId ?? null
-  )
+  ).catch((err) => {
+    // The page still renders; the menu just has no workspace rows.
+    console.error("[buildDashboardConfig] workspace lookup failed", err)
+    return []
+  })
   const organizations =
     enableOrgSwitcher && session.orgSlug != null ? workspaces : []
 

@@ -36,7 +36,12 @@ export async function SiteHeaderAuthSlot() {
 
   // The public site has no active workspace, so every workspace is a
   // shortcut and Help opens the help centre's front page.
-  const workspaces = await loadUserWorkspaces(user.id, null)
+  // A failed lookup must not take down the public header: show the menu
+  // without workspace rows and report it.
+  const workspaces = await loadUserWorkspaces(user.id, null).catch((err) => {
+    captureException(err, { component: "SiteHeaderAuthSlot" })
+    return []
+  })
 
   return (
     <AccountMenu

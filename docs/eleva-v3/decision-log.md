@@ -34,6 +34,7 @@ Each entry should include:
 
 ### 2026-11-09: One app shell for every signed-in app; workspace switcher model (active)
 
+- Owner: founder (product) + engineering
 - Founder review after Patrícia's first sign-in on dev.eleva.care: the avatar
   menu looked broken, the sidebar "Back" in a Space went nowhere, and nothing
   led from a member's Space to the expert app. Industry comparison (Airbnb,
@@ -58,6 +59,11 @@ Each entry should include:
 - Not built yet: the switcher changes, Back naming, menu groups and
   "Home" naming, page name in the header, the sidebar card, the staff look,
   waiting dots, the path renames, and a Language row in the avatar menu.
+- Phase 12: once admin.eleva.care uses its host-only cookie (ADR-017), the
+  staff row still links there, but the person signs in on that host; the
+  confirm-and-switch step then runs on the staff session.
+- Reference: ADR-017, [`identity-rbac-spec.md`](./identity-rbac-spec.md),
+  [`organization-and-clinic-model.md`](./organization-and-clinic-model.md)
 
 ### 2026-11-09: Booking slice 2 "Pick a time" built as a days strip (active)
 
