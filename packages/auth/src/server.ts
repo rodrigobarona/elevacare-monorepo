@@ -8,7 +8,11 @@ import {
   listAuthOrganizations,
   type UserOrganizationItem,
 } from "./organizations"
-import { hasDuplicateSessionCookie } from "./server/credentials"
+import {
+  hasDuplicateSessionCookie,
+  SESSION_CACHE_COOKIE_NAMES,
+} from "./server/credentials"
+import { crossSubDomainCookieConfig } from "./server/cookie-domain"
 
 export interface AuthUser {
   id: string
@@ -77,6 +81,28 @@ export const getAuthenticatedLocale = cache(
  */
 export async function refreshSessionEntitlements(): Promise<void> {
   return
+}
+
+/**
+ * Call from a Server Action after changing the active workspace through the
+ * API. That API response's refreshed cache cookie never reaches the browser,
+ * so for up to five minutes every request would still carry the old
+ * workspace. Expiring the cache makes the next read come from the session
+ * store. Same domain rules Better Auth uses to set it.
+ */
+export async function clearSessionCache(): Promise<void> {
+  const jar = await cookies()
+  const domainConfig = crossSubDomainCookieConfig()
+  for (const name of SESSION_CACHE_COOKIE_NAMES) {
+    jar.set(name, "", {
+      maxAge: 0,
+      path: "/",
+      httpOnly: true,
+      sameSite: "lax",
+      secure: name.startsWith("__Secure-"),
+      ...(domainConfig.enabled ? { domain: domainConfig.domain } : {}),
+    })
+  }
 }
 
 /**

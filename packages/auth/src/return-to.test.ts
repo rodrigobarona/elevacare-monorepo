@@ -84,6 +84,12 @@ describe("sanitizeReturnTo", () => {
       expect(sanitizeReturnTo("https://www.eleva.care/about")).toBe("/about")
     })
 
+    it("accepts the staging gateway, so switching workspaces lands there", () => {
+      expect(
+        sanitizeReturnTo("https://dev.eleva.care/patricia-mota-pt/team")
+      ).toBe("/patricia-mota-pt/team")
+    })
+
     it("accepts localhost for dev", () => {
       expect(sanitizeReturnTo("http://localhost:3000/dashboard")).toBe(
         "/dashboard"

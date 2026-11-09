@@ -10,6 +10,16 @@ export const SESSION_COOKIE_NAMES = [
   "__Secure-better-auth.session_token",
 ] as const
 
+/**
+ * Better Auth's signed session cache (`session.cookieCache`, ADR-017). It
+ * carries `activeOrganizationId`, so it goes stale when the active
+ * workspace changes from a server; see `clearSessionCache`.
+ */
+export const SESSION_CACHE_COOKIE_NAMES = [
+  "better-auth.session_data",
+  "__Secure-better-auth.session_data",
+] as const
+
 export function hasDuplicateSessionCookie(
   cookieHeader: string | null
 ): boolean {

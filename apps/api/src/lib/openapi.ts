@@ -742,7 +742,9 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       "/expert/profile/ensure": {
         post: {
           operationId: "ensureExpertProfile",
-          summary: "Create expert profile if missing for the active org",
+          summary: "Create the expert profile for a practice if missing",
+          description:
+            "Uses the practice named by `orgSlug` (the caller must be an expert there), not the session's active workspace. 403 `NOT_AN_EXPERT_WORKSPACE` otherwise.",
           tags: ["Expert Profile"],
           requestBody: {
             required: true,
@@ -777,6 +779,11 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
                   }),
                 },
               },
+            },
+            "403": {
+              description:
+                "Not an expert in that workspace (NOT_AN_EXPERT_WORKSPACE), or the request failed the cross-site check",
+              content: { "application/json": { schema: ErrorSchema } },
             },
             ...stdWithNotFound,
           },

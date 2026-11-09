@@ -12,6 +12,14 @@ const DEFAULT_TRUSTED_ORIGINS = [
   "https://api.dev.eleva.care",
   "https://admin.eleva.care",
   "https://admin.dev.eleva.care",
+  // The gateway rewrites to these app hosts. Their Server Components call the
+  // API with no browser Origin, so the forwarded Origin is the app's own host
+  // and cookie mutations (CSRF check) are refused unless it is listed.
+  "https://app.eleva.care",
+  "https://account.eleva.care",
+  "https://expert.eleva.care",
+  "https://team.eleva.care",
+  "https://academy.eleva.care",
 ]
 
 type OriginEnv = {
