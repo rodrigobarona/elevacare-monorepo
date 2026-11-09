@@ -312,8 +312,10 @@ Each entry should include:
 - Not proven: a real browser upload on a deployed site, in both the public and private flows.
 - Open items:
   - D-08 keeps its decision, but its "private Blob store" wording must be revisited before 16.8.
-  - Workers Paid is needed before launch, and media moves off `rbarona.workers.dev` once a domain
-    is bought.
+  - Workers Paid is needed before launch. Media moves off `rbarona.workers.dev` only after a
+    domain is bought and set up as a zone in the same Cloudflare account as the bucket (ADR-025,
+    "Media host"). The move then changes `R2_PUBLIC_BASE_URL` and `NEXT_PUBLIC_MEDIA_BASE_URL`
+    and rewrites the stored avatar and logo URLs.
   - Cloudflare's DPA (v6.3) must be accepted in the company's name. A DPF listing is not claimed
     because it was not verified.
   - The sub-processor change was written into the trust pages with `lastUpdated: 2026-10-31`.
