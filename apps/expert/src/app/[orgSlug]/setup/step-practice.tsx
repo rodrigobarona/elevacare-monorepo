@@ -1,9 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { Button } from "@eleva/ui/components/button"
-import { Input } from "@eleva/ui/components/input"
 import { Label } from "@eleva/ui/components/label"
 import { CheckboxField } from "@eleva/ui/components/checkbox-field"
 import { Alert, AlertDescription } from "@eleva/ui/components/alert"
@@ -43,8 +42,58 @@ const LANGUAGE_OPTIONS = [
   { value: "es", labelKey: "languageLabels.es" as const },
 ]
 
-const ISO_COUNTRY = /^[A-Za-z]{2}$/
-const BCP47_LANG = /^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$/
+/** More countries an expert can add, shown by name in their language. */
+const EXTRA_COUNTRY_CODES = [
+  ...EU_SERVICE_COUNTRIES,
+  "GB",
+  "CH",
+  "NO",
+  "IS",
+  "LI",
+  "AO",
+  "MZ",
+  "CV",
+  "GW",
+  "ST",
+  "TL",
+  "US",
+  "CA",
+]
+
+/** More languages an expert can add, shown by name in their language. */
+const EXTRA_LANGUAGE_CODES = [
+  "fr",
+  "de",
+  "it",
+  "nl",
+  "ca",
+  "gl",
+  "eu",
+  "ro",
+  "pl",
+  "uk",
+  "ru",
+  "ar",
+  "zh",
+  "hi",
+  "sv",
+  "da",
+  "fi",
+  "el",
+  "cs",
+  "hu",
+  "bg",
+  "hr",
+  "tr",
+]
+
+function displayName(names: Intl.DisplayNames, code: string): string {
+  try {
+    return names.of(code) ?? code
+  } catch {
+    return code
+  }
+}
 
 export interface PracticeStepProfile {
   practiceCountry: string
@@ -111,8 +160,27 @@ export function StepPractice({ profile, onDone }: Props) {
   const [worldwideRemote, setWorldwideRemote] = React.useState(
     profile.worldwideRemote
   )
-  const [extraCountry, setExtraCountry] = React.useState("")
-  const [extraLanguage, setExtraLanguage] = React.useState("")
+  const locale = useLocale()
+  const regionNames = React.useMemo(
+    () => new Intl.DisplayNames([locale], { type: "region" }),
+    [locale]
+  )
+  const languageNames = React.useMemo(
+    () => new Intl.DisplayNames([locale], { type: "language" }),
+    [locale]
+  )
+  const byName = (names: Intl.DisplayNames) => (a: string, b: string) =>
+    displayName(names, a).localeCompare(displayName(names, b), locale)
+  const countryChoices = [...new Set(EXTRA_COUNTRY_CODES)]
+    .filter(
+      (code) =>
+        !serviceCountries.includes(code) &&
+        !PRACTICE_COUNTRY_OPTIONS.some((opt) => opt.value === code)
+    )
+    .sort(byName(regionNames))
+  const languageChoices = EXTRA_LANGUAGE_CODES.filter(
+    (code) => !languages.includes(code)
+  ).sort(byName(languageNames))
 
   const beyondPractice =
     practiceCountry.length > 0 &&
@@ -150,28 +218,16 @@ export function StepPractice({ profile, onDone }: Props) {
     })
   }
 
-  function addExtraCountry() {
-    const code = extraCountry.trim().toUpperCase()
-    if (!ISO_COUNTRY.test(code)) {
-      setError(t("errors.invalidCountry"))
-      return
-    }
+  function addExtraCountry(code: string) {
     setServiceCountries((prev) =>
       prev.includes(code) ? prev : [...prev, code]
     )
     setExplicitServiceCountries((prev) => new Set(prev).add(code))
-    setExtraCountry("")
     setError(null)
   }
 
-  function addExtraLanguage() {
-    const code = extraLanguage.trim().toLowerCase()
-    if (!BCP47_LANG.test(code)) {
-      setError(t("errors.invalidLanguage"))
-      return
-    }
+  function addExtraLanguage(code: string) {
     setLanguages((prev) => (prev.includes(code) ? prev : [...prev, code]))
-    setExtraLanguage("")
     setError(null)
   }
 
@@ -237,8 +293,6 @@ export function StepPractice({ profile, onDone }: Props) {
           "save-failed",
           "offer-invariant",
           "practice-incomplete",
-          "invalidCountry",
-          "invalidLanguage",
           "licence-locked",
         ])
         const key = known.has(result.error) ? result.error : "save-failed"
@@ -321,6 +375,9 @@ export function StepPractice({ profile, onDone }: Props) {
                 type="button"
                 size="sm"
                 variant="outline"
+                aria-label={t("removeItem", {
+                  name: displayName(regionNames, code),
+                })}
                 onPress={() => {
                   setServiceCountries((prev) => prev.filter((c) => c !== code))
                   setExplicitServiceCountries((prev) => {
@@ -330,7 +387,7 @@ export function StepPractice({ profile, onDone }: Props) {
                   })
                 }}
               >
-                {code} ×
+                {displayName(regionNames, code)} ×
               </Button>
             ))}
           </div>
@@ -338,23 +395,30 @@ export function StepPractice({ profile, onDone }: Props) {
         <div className="flex flex-wrap items-end gap-2">
           <div className="space-y-1.5">
             <Label htmlFor="extra-country">{t("addCountry")}</Label>
-            <Input
-              id="extra-country"
-              value={extraCountry}
-              onChange={(e) => setExtraCountry(e.target.value)}
-              placeholder="FR"
-              maxLength={2}
-              className="w-24 uppercase"
-            />
+            <Select
+              selectedKey={null}
+              placeholder={t("addCountryPlaceholder")}
+              onSelectionChange={(key) => {
+                if (typeof key === "string") addExtraCountry(key)
+              }}
+              aria-label={t("addCountry")}
+            >
+              <SelectTrigger id="extra-country" className="w-56">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {countryChoices.map((code) => (
+                  <SelectItem
+                    key={code}
+                    id={code}
+                    textValue={displayName(regionNames, code)}
+                  >
+                    {displayName(regionNames, code)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onPress={addExtraCountry}
-          >
-            {t("add")}
-          </Button>
           <Button
             type="button"
             size="sm"
@@ -398,32 +462,41 @@ export function StepPractice({ profile, onDone }: Props) {
               type="button"
               size="sm"
               variant="outline"
+              aria-label={t("removeItem", {
+                name: displayName(languageNames, code),
+              })}
               onPress={() =>
                 setLanguages((prev) => prev.filter((l) => l !== code))
               }
             >
-              {code} ×
+              {displayName(languageNames, code)} ×
             </Button>
           ))}
-        <div className="flex flex-wrap items-end gap-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="extra-language">{t("addLanguage")}</Label>
-            <Input
-              id="extra-language"
-              value={extraLanguage}
-              onChange={(e) => setExtraLanguage(e.target.value)}
-              placeholder="fr"
-              className="w-28"
-            />
-          </div>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onPress={addExtraLanguage}
+        <div className="space-y-1.5">
+          <Label htmlFor="extra-language">{t("addLanguage")}</Label>
+          <Select
+            selectedKey={null}
+            placeholder={t("addLanguagePlaceholder")}
+            onSelectionChange={(key) => {
+              if (typeof key === "string") addExtraLanguage(key)
+            }}
+            aria-label={t("addLanguage")}
           >
-            {t("add")}
-          </Button>
+            <SelectTrigger id="extra-language" className="w-56">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {languageChoices.map((code) => (
+                <SelectItem
+                  key={code}
+                  id={code}
+                  textValue={displayName(languageNames, code)}
+                >
+                  {displayName(languageNames, code)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </fieldset>
 
