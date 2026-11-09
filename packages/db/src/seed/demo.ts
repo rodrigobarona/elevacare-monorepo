@@ -9,15 +9,16 @@ import {
 import * as auth from "../schema/auth"
 
 /**
- * Patrícia Mota's entry in the public register of the Ordem dos
- * Fisioterapeutas ("Encontre um Fisioterapeuta"): cédula 9115, professional
- * name "Patrícia Fernandes da Mota", Lisboa, active. Checked 2026-11-09 from
- * the founder's screenshot of the register. Public record; the ERS number
- * on the seeded application is still a placeholder.
+ * Patrícia Mota's public register entries, checked 2026-11-09 from the
+ * founder's screenshots: Ordem dos Fisioterapeutas cédula 9115 ("Patrícia
+ * Fernandes da Mota", Lisboa, active) and ERS establishment registration
+ * 182844 (Clínica Santa Teresa, Cascais, registered; she is the technical
+ * lead).
  */
 const PATIMOTA_REGISTER: FixtureLicence = {
   professionalBody: "ordem_fisioterapeutas",
   licenceNumber: "9115",
+  ersRegistrationNumber: "182844",
 }
 
 /**
