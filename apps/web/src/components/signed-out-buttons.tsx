@@ -1,5 +1,5 @@
 /**
- * "Log in" is a plain anchor to /login — intentionally not the i18n
+ * "Sign in" is a plain anchor to /login — intentionally not the i18n
  * `<Link>` so the browser does a full navigation and lets the gateway
  * proxy rewrite to the account zone. Internal SPA navigation would bypass
  * the cross-zone rewrite and hit a 404. The main action is "Find an
