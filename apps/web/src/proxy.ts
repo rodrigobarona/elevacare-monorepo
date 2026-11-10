@@ -15,7 +15,14 @@ export default withHeaders(
 // Custom matcher: the gateway also fronts a /trpc path on this app
 // (handled by Next's filesystem, not this proxy), so we exclude it.
 // Satellite apps use STANDARD_APP_MATCHER from @eleva/observability/proxy.
+//
+// The help center (basePath /docs) serves its own files under /docs:
+// /docs/_next/… CSS and JS, /docs/help-search-index.json, /docs/llms.txt.
+// The first pattern skips paths with a dot, so the second sends every
+// /docs path to the proxy, which rewrites it to the docs zone.
 export const config = {
-  matcher:
+  matcher: [
     "/((?!api|trpc|_next|_vercel|icon|apple-icon|opengraph-image|twitter-image|manifest|robots|sitemap|.*\\..*).*)",
+    "/docs/:path*",
+  ],
 }
