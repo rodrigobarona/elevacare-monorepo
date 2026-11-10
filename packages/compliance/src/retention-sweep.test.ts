@@ -5,7 +5,16 @@ const { withPlatformAdminContext, withPlatformAudit } = vi.hoisted(() => ({
   withPlatformAudit: vi.fn(),
 }))
 
-vi.mock("@eleva/db", () => ({ withPlatformAdminContext }))
+vi.mock("@eleva/db", () => ({
+  withPlatformAdminContext,
+  auth: {
+    session: {
+      id: "id",
+      expiresAt: "expires_at",
+      updatedAt: "updated_at",
+    },
+  },
+}))
 vi.mock("@eleva/audit", () => ({ withPlatformAudit }))
 vi.mock("@eleva/storage", () => ({
   deletePrivateDocument: vi.fn(),
@@ -44,6 +53,7 @@ import {
   eraseMemberClinicalRecords,
   subjectPseudonymForUser,
   sweepExpiredAiDrafts,
+  sweepExpiredAuthSessions,
   sweepExpiredNotificationDeliveries,
   sweepExpiredSessionDocuments,
 } from "./retention"
@@ -129,6 +139,7 @@ describe("sweepExpiredAiDrafts", () => {
       sessionDocumentsDeleted: 0,
       sessionDocumentsBlobFailures: 0,
       notificationDeliveriesDeleted: 0,
+      authSessionsDeleted: 0,
       orgs: 0,
       hasMore: false,
     })
@@ -175,6 +186,7 @@ describe("sweepExpiredAiDrafts", () => {
       sessionDocumentsDeleted: 0,
       sessionDocumentsBlobFailures: 0,
       notificationDeliveriesDeleted: 0,
+      authSessionsDeleted: 0,
       orgs: 2,
       hasMore: false,
     })
@@ -343,5 +355,49 @@ describe("sweepExpiredNotificationDeliveries", () => {
         scope: "delivery_log",
       },
     })
+  })
+})
+
+describe("sweepExpiredAuthSessions", () => {
+  it("deletes ended sessions last used over a year ago", async () => {
+    const del = vi.fn(() => ({
+      where: () => ({
+        returning: async () => [{ id: "s1" }, { id: "s2" }],
+      }),
+    }))
+    withPlatformAdminContext.mockImplementation(async (fn) =>
+      fn({
+        select: () => ({
+          from: () => ({
+            where: () => ({
+              limit: async () => [{ id: "s1" }, { id: "s2" }],
+            }),
+          }),
+        }),
+        delete: del,
+      })
+    )
+
+    const result = await sweepExpiredAuthSessions(new Date("2026-11-10"))
+
+    expect(result).toEqual({ deleted: 2, hasMore: false })
+    expect(del).toHaveBeenCalledTimes(1)
+  })
+
+  it("does nothing when no session is old enough", async () => {
+    const del = vi.fn()
+    withPlatformAdminContext.mockImplementation(async (fn) =>
+      fn({
+        select: () => ({
+          from: () => ({ where: () => ({ limit: async () => [] }) }),
+        }),
+        delete: del,
+      })
+    )
+
+    const result = await sweepExpiredAuthSessions(new Date("2026-11-10"))
+
+    expect(result).toEqual({ deleted: 0, hasMore: false })
+    expect(del).not.toHaveBeenCalled()
   })
 })

@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { stripe } from "./client"
 
 const CANCELABLE_STATUSES = new Set([
@@ -181,7 +182,7 @@ export async function cancelCancelablePaymentIntents(
         outcomes.push({ id, status: "skipped", reason: code })
         continue
       }
-      console.error("[billing] cancel PaymentIntent failed", { id, err })
+      logError(`[billing] cancel PaymentIntent ${id} failed`, err)
       outcomes.push({
         id,
         status: "failed",

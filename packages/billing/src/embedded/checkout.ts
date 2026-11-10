@@ -1,6 +1,6 @@
 "use client"
 
-import { loadStripe } from "@stripe/stripe-js"
+import { loadStripe } from "@stripe/stripe-js/pure"
 
 export interface EmbeddedCheckout {
   mount: (element: HTMLElement) => void

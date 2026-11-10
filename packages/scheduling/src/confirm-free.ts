@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { randomUUID } from "node:crypto"
 import { and, eq } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
@@ -32,7 +33,7 @@ export async function confirmFreeReservation(input: {
   try {
     loaded = await loadFreeConfirmTarget(input.reservationId)
   } catch (err) {
-    console.error("[bookings/confirm-free] load failed", err)
+    logError("[bookings/confirm-free] load failed", err)
     return { ok: false, error: "db_error" }
   }
   if (!loaded) return { ok: false, error: "not_found" }
@@ -210,7 +211,7 @@ export async function confirmFreeReservation(input: {
         })
       }
     }
-    console.error("[bookings/confirm-free] confirm failed", err)
+    logError("[bookings/confirm-free] confirm failed", err)
     return { ok: false, error: "db_error" }
   }
 

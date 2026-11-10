@@ -6,7 +6,10 @@ import {
   PaymentElement,
   useCheckoutElements,
 } from "@stripe/react-stripe-js/checkout"
-import { loadStripe, type Stripe } from "@stripe/stripe-js"
+import type { Stripe } from "@stripe/stripe-js"
+// The pure entry adds the Stripe script only when loadStripe() runs, at
+// the payment step, not when a booking page imports this module.
+import { loadStripe } from "@stripe/stripe-js/pure"
 import { elevaPaymentElementAppearance } from "./appearance"
 
 const stripePromises = new Map<string, Promise<Stripe | null>>()

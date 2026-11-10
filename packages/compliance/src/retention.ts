@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto"
 import { and, eq, inArray, isNotNull, isNull, lt, or, sql } from "drizzle-orm"
 import { withPlatformAudit } from "@eleva/audit"
-import { withPlatformAdminContext, type Tx } from "@eleva/db"
+import { auth, withPlatformAdminContext, type Tx } from "@eleva/db"
 import {
   consents,
   notificationDeliveries,
@@ -24,6 +24,9 @@ export const SESSION_DOCUMENT_RETENTION_DAYS = 365 * 7
 
 /** Delivery log rows older than this are purged (Phase 10 plan: 1y). */
 export const NOTIFICATION_DELIVERY_RETENTION_DAYS = 365
+
+/** Sign-in sessions (IP address, browser): the privacy notice keeps security logs up to 1 year. */
+export const AUTH_SESSION_RETENTION_DAYS = 365
 
 /** Stop retrying object deletes after this many sweep failures. */
 export const SESSION_DOCUMENT_RETENTION_MAX_ATTEMPTS = 3
@@ -116,6 +119,7 @@ export type RetentionSweepResult = {
   sessionDocumentsDeleted: number
   sessionDocumentsBlobFailures: number
   notificationDeliveriesDeleted: number
+  authSessionsDeleted: number
   orgs: number
   hasMore: boolean
 }
@@ -185,6 +189,7 @@ export async function sweepExpiredAiDrafts(
     sessionDocumentsDeleted: 0,
     sessionDocumentsBlobFailures: 0,
     notificationDeliveriesDeleted: 0,
+    authSessionsDeleted: 0,
     orgs: byOrg.size,
     hasMore: expired.length === RETENTION_SWEEP_BATCH,
   }
@@ -365,9 +370,52 @@ export async function sweepExpiredNotificationDeliveries(
   }
 }
 
+export type AuthSessionSweepResult = {
+  deleted: number
+  hasMore: boolean
+}
+
 /**
- * Daily retention sweep: AI drafts, session documents (object + row), and
- * notification delivery logs. Batched; `hasMore` means schedule another run.
+ * Purge sign-in session rows (IP address, browser) that ended and were
+ * last used more than a year ago. Active sessions are never touched.
+ * Sessions belong to a person, not an organisation, so there is no org
+ * audit row; the count is returned to the workflow log.
+ */
+export async function sweepExpiredAuthSessions(
+  now: Date = new Date()
+): Promise<AuthSessionSweepResult> {
+  const cutoff = new Date(
+    now.getTime() - AUTH_SESSION_RETENTION_DAYS * 24 * 60 * 60 * 1000
+  )
+  return withPlatformAdminContext(async (tx) => {
+    const expired = await tx
+      .select({ id: auth.session.id })
+      .from(auth.session)
+      .where(
+        and(lt(auth.session.expiresAt, now), lt(auth.session.updatedAt, cutoff))
+      )
+      .limit(RETENTION_SWEEP_BATCH)
+    if (expired.length === 0) return { deleted: 0, hasMore: false }
+    const removed = await tx
+      .delete(auth.session)
+      .where(
+        inArray(
+          auth.session.id,
+          expired.map((row) => row.id)
+        )
+      )
+      .returning({ id: auth.session.id })
+    return {
+      deleted: removed.length,
+      hasMore: expired.length === RETENTION_SWEEP_BATCH,
+    }
+  })
+}
+
+/**
+ * Daily retention sweep: AI drafts, session documents (object + row),
+ * notification delivery logs and old sign-in sessions. Batched; `hasMore`
+ * means schedule another run.
  */
 export async function runRetentionSweep(
   now: Date = new Date()
@@ -375,13 +423,19 @@ export async function runRetentionSweep(
   const aiDrafts = await sweepExpiredAiDrafts(now)
   const documents = await sweepExpiredSessionDocuments(now)
   const deliveries = await sweepExpiredNotificationDeliveries(now)
+  const authSessions = await sweepExpiredAuthSessions(now)
 
   return {
     aiDraftsDeleted: aiDrafts.aiDraftsDeleted,
     sessionDocumentsDeleted: documents.deleted,
     sessionDocumentsBlobFailures: documents.blobFailures,
     notificationDeliveriesDeleted: deliveries.deleted,
+    authSessionsDeleted: authSessions.deleted,
     orgs: aiDrafts.orgs,
-    hasMore: aiDrafts.hasMore || documents.hasMore || deliveries.hasMore,
+    hasMore:
+      aiDrafts.hasMore ||
+      documents.hasMore ||
+      deliveries.hasMore ||
+      authSessions.hasMore,
   }
 }

@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { and, eq, isNull } from "drizzle-orm"
 import { withPlatformAudit } from "@eleva/audit"
 import { main, withPlatformAdminContext } from "@eleva/db"
@@ -164,7 +165,7 @@ export async function retryFailedExpertInvoices(
         result.skipped += 1
         continue
       }
-      console.error("[invoicing-retry] unexpected error", invoice.id, err)
+      logError(`[invoicing-retry] unexpected error for ${invoice.id}`, err)
       result.errors += 1
     }
   }
