@@ -1,6 +1,6 @@
 {
   "nav": {
-    "dashboard": "Panel",
+    "today": "Hoy",
     "eventTypes": "Servicios",
     "schedule": "Horario",
     "calendar": "Calendario",
@@ -10,7 +10,11 @@
     "publicProfile": "Perfil público",
     "members": "Miembros",
     "templates": "Plantillas",
-    "crm": "Relaciones"
+    "crm": "Relaciones",
+    "groups": {
+      "practice": "Consulta",
+      "settings": "Ajustes"
+    }
   },
   "dashboard": {
     "expert": {
