@@ -378,6 +378,7 @@
       "seeAllIncluded": "Ver los {count} incluidos",
       "whatToExpect": "Qué esperar",
       "questions": "Preguntas en las que puedo ayudarte",
+      "where": "Dónde",
       "requestNote": "{name} confirma cada solicitud en 24 horas, o antes de la sesión si es antes.",
       "eyebrowMixed": "Sesión de {minutes} min",
       "eyebrow": {

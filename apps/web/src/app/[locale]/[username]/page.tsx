@@ -16,7 +16,7 @@ import { resolveGatewayUrl } from "@eleva/config/env"
 import { professionalBodyById } from "@eleva/config/professional-bodies"
 import { isReserved } from "@eleva/config/reserved-usernames"
 import { RichTextViewer } from "@eleva/editor/rich-text-viewer"
-import { CheckIcon, SOCIAL_LINK_ICONS } from "@eleva/icons"
+import { CheckIcon, MapPinIcon, SOCIAL_LINK_ICONS } from "@eleva/icons"
 import {
   ExpertMonogram,
   ExpertPortrait,
@@ -470,6 +470,7 @@ function ServiceCard({
   const cancellation = freeCancellationLine(eventType.cancellationPolicy, t)
   const visibleIncluded = included.slice(0, 3)
   const moreIncluded = included.slice(3)
+  const places = inPersonPlaces(eventType)
 
   return (
     <li
@@ -495,6 +496,28 @@ function ServiceCard({
       </div>
       {description ? (
         <p className="text-pretty text-muted-foreground">{description}</p>
+      ) : null}
+      {places.length > 0 ? (
+        <ul
+          aria-label={t("services.where")}
+          data-testid="service-places"
+          className="flex flex-col gap-1.5 text-sm"
+        >
+          {places.map((place) => (
+            <li key={place.id} className="flex gap-2.5">
+              <MapPinIcon
+                aria-hidden
+                className="mt-0.5 size-4 shrink-0 text-primary"
+              />
+              <span>
+                <span className="font-medium">{place.name}</span>
+                {place.line ? (
+                  <span className="text-muted-foreground"> · {place.line}</span>
+                ) : null}
+              </span>
+            </li>
+          ))}
+        </ul>
       ) : null}
       {visibleIncluded.length > 0 ? (
         <ul
@@ -756,6 +779,34 @@ async function ProfileBookingCard({
       }}
     />
   )
+}
+
+/**
+ * Where each in-person session takes place: the practice name and its
+ * street address (ERS Regulation 1058/2016 asks health advertising to say
+ * where care is given). One line per place.
+ */
+function inPersonPlaces(
+  eventType: PublicEventType
+): { id: string; name: string; line: string }[] {
+  const seen = new Map<string, { id: string; name: string; line: string }>()
+  for (const mode of eventType.modes) {
+    const location = mode.mode === "in_person" ? mode.location : null
+    if (!location || seen.has(location.id)) continue
+    const street = [location.address, location.line2]
+      .map((part) => part?.trim())
+      .filter(Boolean)
+      .join(", ")
+    const town = [location.postalCode?.trim(), location.city]
+      .filter(Boolean)
+      .join(" ")
+    seen.set(location.id, {
+      id: location.id,
+      name: location.name,
+      line: [street, town].filter(Boolean).join(", "),
+    })
+  }
+  return [...seen.values()]
 }
 
 function publicPlaceLabel(
