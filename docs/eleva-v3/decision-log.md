@@ -32,6 +32,25 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-10: Apex is not trusted until it serves v3 (active)
+
+- Owner: engineering; security-judge re-review 2026-11-10 (8.0/10, High).
+- `eleva.care` still serves the previous app. v3 no longer trusts it for
+  credentialed CORS, the CSRF origin check or Server Actions;
+  `ELEVA_APEX_IS_V3=true` turns that trust on at the cutover (set it in
+  every v3 project). `@eleva/config/apex` is the single helper;
+  `next-dev.mjs` mirrors it for Server Actions.
+- Stripe webhook failures log and return only the error name and code;
+  the full message stays in the internal events row and Sentry.
+- Sanitized links always carry `rel="noopener noreferrer nofollow ugc"`.
+- Server code forwards session cookies only to an HTTPS API
+  (`@eleva/config/api-url`), loopback excepted in development.
+- Payments, booking confirmation and workflow subscribers log errors with
+  `logError` (names and codes only).
+- Still open: the production cookie domain (`.eleva.care` also reaches the
+  previous app and staging), staff two-factor sign-in, breached-password
+  check, Better Auth organization endpoints, nonce CSP.
+
 ### 2026-11-10: Night UX pass after the judge panel (active)
 
 - Owner: engineering; design/UX judge review 2026-11-09 (6.8 and 6.9/10).

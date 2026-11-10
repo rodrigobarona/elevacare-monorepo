@@ -1,3 +1,4 @@
+import { describeError } from "@eleva/observability"
 import { betterAuthOpenApiDocument } from "@eleva/auth/server/auth"
 import { generateOpenApiSpec } from "@/lib/openapi"
 import { corsHeaders } from "@/lib/cors"
@@ -50,7 +51,10 @@ export async function GET(request: Request) {
         spec.paths = { ...spec.paths, ...prefixAuthPaths(ba.paths) }
       }
     } catch (err) {
-      console.warn("[openapi] Better Auth spec merge skipped", err)
+      console.warn(
+        "[openapi] Better Auth spec merge skipped",
+        describeError(err)
+      )
     }
     cachedSpec = spec
   }

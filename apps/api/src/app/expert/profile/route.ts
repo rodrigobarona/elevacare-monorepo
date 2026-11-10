@@ -1,3 +1,4 @@
+import { describeError } from "@eleva/observability"
 import { PatchExpertProfileRequestSchema } from "@eleva/api-client"
 import {
   EXPERT_PORTRAIT_UPLOAD,
@@ -189,7 +190,10 @@ export async function PATCH(request: Request) {
     try {
       await deletePublicObject(previousPortrait)
     } catch (err) {
-      console.warn("[expert/profile] failed to delete old portrait", err)
+      console.warn(
+        "[expert/profile] failed to delete old portrait",
+        describeError(err)
+      )
     }
   }
 

@@ -35,6 +35,14 @@ const OPTIONS: sanitizeHtml.IOptions = {
   disallowedTagsMode: "discard",
   // Drop the contents of these, not just the tags.
   nonTextTags: ["script", "style", "textarea", "option", "noscript"],
+  // Every link gets a safe rel, so a new tab never gets `window.opener`
+  // and links in expert-written text pass no ranking.
+  transformTags: {
+    a: (tagName, attribs) => ({
+      tagName,
+      attribs: { ...attribs, rel: "noopener noreferrer nofollow ugc" },
+    }),
+  },
 }
 
 export function toSanitizedHtml(dirtyHtml: string): string {

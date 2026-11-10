@@ -66,8 +66,14 @@ describe("toSanitizedHtml", () => {
       '<p class="x" style="color:red"><a href="https://eleva.care" target="_blank" rel="noopener" onclick="x()">site</a></p>'
     )
     expect(clean).toBe(
-      '<p><a href="https://eleva.care" target="_blank" rel="noopener">site</a></p>'
+      '<p><a href="https://eleva.care" target="_blank" rel="noopener noreferrer nofollow ugc">site</a></p>'
     )
+  })
+
+  it("forces a safe rel on every link", () => {
+    expect(
+      toSanitizedHtml('<a href="https://x.example" target="_blank">x</a>')
+    ).toContain('rel="noopener noreferrer nofollow ugc"')
   })
 
   it("drops protocol-relative and data: links", () => {

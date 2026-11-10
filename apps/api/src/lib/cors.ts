@@ -1,3 +1,4 @@
+import { apexAllowed } from "@eleva/config/apex"
 import { env } from "@eleva/config/env"
 
 export function corsHeaders(
@@ -24,10 +25,12 @@ export function corsHeaders(
 /**
  * First-party hosts that may call the API from a browser with credentials.
  * `dev.eleva.care` and its admin host serve the production deployment today
- * (environment matrix, 2026-11-07), so they stay on the list.
+ * (environment matrix, 2026-11-07), so they stay on the list. The apex
+ * hosts count only once `ELEVA_APEX_IS_V3=true` (`@eleva/config/apex`).
  */
 const FIRST_PARTY_HOSTS = new Set([
   "eleva.care",
+  "www.eleva.care",
   "dev.eleva.care",
   "app.eleva.care",
   "account.eleva.care",
@@ -44,6 +47,8 @@ export function matchAllowedOrigin(
   vercelEnv: string | undefined = process.env.VERCEL_ENV
 ): string | null {
   if (!origin) return null
+  // The apex still serves the previous app: never trusted until cutover.
+  if (!apexAllowed(origin)) return null
 
   const e = env()
   const explicit = (e.APP_URL ?? "").replace(/\/$/, "")

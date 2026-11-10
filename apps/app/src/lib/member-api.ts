@@ -8,32 +8,12 @@ import {
   requireSession,
   requireSessionForOrg,
 } from "@eleva/auth/server"
+import { secureApiBaseUrl } from "@eleva/config/api-url"
 import { resolveProductHomeUrl } from "@eleva/dashboard/resolve-product-home-url"
 
-const LOCAL_API_HOSTS = new Set(["localhost", "127.0.0.1", "::1"])
-
-function isLocalHttpApiUrl(parsed: URL): boolean {
-  return parsed.protocol === "http:" && LOCAL_API_HOSTS.has(parsed.hostname)
-}
-
+/** HTTPS API origin for forwarded session cookies (`@eleva/config/api-url`). */
 export function getApiBaseUrl(): string {
-  const url = process.env.NEXT_PUBLIC_API_URL
-  if (!url) {
-    throw new Error(
-      "NEXT_PUBLIC_API_URL environment variable is required but not set"
-    )
-  }
-  let parsed: URL
-  try {
-    parsed = new URL(url)
-  } catch {
-    throw new Error("NEXT_PUBLIC_API_URL must be a valid absolute URL")
-  }
-  if (parsed.protocol === "https:") return url
-  if (isLocalHttpApiUrl(parsed)) return url
-  throw new Error(
-    "NEXT_PUBLIC_API_URL must use HTTPS outside local development"
-  )
+  return secureApiBaseUrl()
 }
 
 /**
