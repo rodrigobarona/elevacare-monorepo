@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { and, eq, isNull } from "drizzle-orm"
 import { hashGuestEmail } from "@eleva/compliance"
 import { provisionPersonalSpace } from "@eleva/auth"
@@ -84,7 +85,7 @@ export async function activateGuestBooking(
   try {
     await ensureSessionRoom(payload.bookingId)
   } catch (err) {
-    console.error("[guest-activation] ensureSessionRoom failed", err)
+    logError("[guest-activation] ensureSessionRoom failed", err)
   }
 }
 

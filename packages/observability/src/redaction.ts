@@ -66,8 +66,9 @@ export const REDACTED_KEYS = new Set<string>([
 
 /** Regex patterns applied to string values that survive field-name scrubbing. */
 export const REDACTED_VALUE_PATTERNS: RegExp[] = [
-  // Raw credit-card numbers (PAN, 12-19 digits with optional separators).
-  /\b(?:\d[ -]?){12,19}\b/,
+  // Raw credit-card numbers (PAN, 12-19 digits with optional separators),
+  // but not the last block of a UUID ("…-a716-446655440000").
+  /(?<![0-9A-Fa-f]-)\b(?:\d[ -]?){12,19}\b/,
   // Bearer tokens / api keys of common shapes.
   /sk_(?:live|test)_[A-Za-z0-9_]{16,}/,
   /pk_(?:live|test)_[A-Za-z0-9_]{16,}/,
@@ -76,16 +77,41 @@ export const REDACTED_VALUE_PATTERNS: RegExp[] = [
 
 const REDACTED_PLACEHOLDER = "[redacted]"
 
+/**
+ * Personal data that can sit inside an otherwise useful message (a
+ * database error that echoes a row, a validation message): masked in
+ * place so the rest of the message still helps debugging.
+ */
+export const MASKED_VALUE_PATTERNS: RegExp[] = [
+  // Email addresses.
+  /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi,
+  // International phone numbers (+351 912 345 678, +351912345678).
+  /\+\d[\d\s-]{7,15}\d/g,
+  // Portuguese NIF / other 9-digit tax IDs standing alone.
+  /\b\d{9}\b/g,
+]
+
+/**
+ * Query errors (Drizzle "Failed query: … params: …") list the bound
+ * values, which can be names, emails or health text. Keep the SQL, drop
+ * the values.
+ */
+const QUERY_PARAMS = /(\bparams:)[\s\S]*$/i
+
 export function shouldRedactKey(key: string): boolean {
   return REDACTED_KEYS.has(key.toLowerCase().replace(/[-_.]/g, ""))
 }
 
 export function redactString(value: string): string {
   if (typeof value !== "string") return value
-  for (const re of REDACTED_VALUE_PATTERNS) {
-    if (re.test(value)) return REDACTED_PLACEHOLDER
+  let out = value.replace(QUERY_PARAMS, `$1 ${REDACTED_PLACEHOLDER}`)
+  for (const re of MASKED_VALUE_PATTERNS) {
+    out = out.replace(re, REDACTED_PLACEHOLDER)
   }
-  return scrubRegisteredPhi(value)
+  for (const re of REDACTED_VALUE_PATTERNS) {
+    if (re.test(out)) return REDACTED_PLACEHOLDER
+  }
+  return scrubRegisteredPhi(out)
 }
 
 /**

@@ -1,3 +1,4 @@
+import { describeError } from "@eleva/observability"
 import {
   CreateOrganizationRequestSchema,
   CreateWorkspaceRequestSchema,
@@ -79,7 +80,8 @@ export async function POST(request: Request) {
       })
     } catch (err) {
       console.warn(
-        `[organizations] provisionOrgBilling failed for ${result.orgId}: ${err instanceof Error ? err.message : String(err)}`
+        `[organizations] provisionOrgBilling failed for ${result.orgId}`,
+        describeError(err)
       )
     }
   }

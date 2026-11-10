@@ -1550,7 +1550,10 @@ async function handlePaymentIntentEvent(
         bookingPaymentId: paymentId,
       })
     } catch (err) {
-      console.error("[billing] platform-fee invoice dispatch failed", err)
+      console.error(
+        "[billing] platform-fee invoice dispatch failed",
+        describeError(err)
+      )
       void captureException(err, {
         bookingPaymentId: paymentId,
         orgId,
@@ -1563,7 +1566,10 @@ async function handlePaymentIntentEvent(
         orgId,
       })
     } catch (err) {
-      console.error("[billing] expert invoice dispatch failed", err)
+      console.error(
+        "[billing] expert invoice dispatch failed",
+        describeError(err)
+      )
       void captureException(err, {
         bookingPaymentId: paymentId,
         orgId,

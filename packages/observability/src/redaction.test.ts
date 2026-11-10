@@ -45,9 +45,38 @@ describe("redactString", () => {
     expect(redactString(jwt)).toBe("[redacted]")
   })
 
+  it("drops the bound values of a failed query and keeps the SQL", () => {
+    const out = redactString(
+      'Failed query: insert into "member" ("name","email") values ($1, $2)\nparams: Ana Silva,ana@example.com'
+    )
+    expect(out).toContain('insert into "member"')
+    expect(out).toContain("params: [redacted]")
+    expect(out).not.toContain("Ana Silva")
+    expect(out).not.toContain("ana@example.com")
+  })
+
+  it("masks emails, phone numbers and NIFs inside a message", () => {
+    const out = redactString(
+      "duplicate key for ana.silva@example.pt, phone +351 912 345 678, NIF 123456789"
+    )
+    expect(out).toBe(
+      "duplicate key for [redacted], phone [redacted], NIF [redacted]"
+    )
+  })
+
+  it("keeps ids and short numbers readable", () => {
+    expect(
+      redactString(
+        "booking 550e8400-e29b-41d4-a716-446655440000 failed after 3 tries (code 23505)"
+      )
+    ).toBe(
+      "booking 550e8400-e29b-41d4-a716-446655440000 failed after 3 tries (code 23505)"
+    )
+  })
+
   it("leaves benign strings untouched", () => {
     expect(redactString("hello world")).toBe("hello world")
-    expect(redactString("user@example.test")).toBe("user@example.test")
+    expect(redactString("user@example.test")).toBe("[redacted]")
   })
 })
 
