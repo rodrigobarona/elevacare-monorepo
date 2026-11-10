@@ -227,9 +227,11 @@ export function suggestsEnglishOnly(
  * so callers can always `.catch()`.
  */
 export function runDailyMethod(method: () => unknown): Promise<void> {
-  return Promise.resolve()
-    .then(method)
-    .then(() => undefined)
+  try {
+    return Promise.resolve(method()).then(() => undefined)
+  } catch (error) {
+    return Promise.reject(error)
+  }
 }
 
 /** Daily refuses a second start while a transcript is already running. */

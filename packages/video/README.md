@@ -44,10 +44,16 @@ truth for the model and language:
   the switch; the expert decides.
 - With `includeRawResponse`, each line carries Deepgram's detected
   `languages`; the call shows the recent dominant one.
-- Speaker names come from Daily's `participantId`. Each start appends a
-  bracketed line such as `[Live transcript · language detected
-automatically · medical vocabulary]`, so the encrypted record shows what
-  produced the lines that follow.
+- Speaker names come from Daily's `participantId`. Before the first line
+  of each start, a bracketed line such as `[Live transcript · language
+detected automatically · medical vocabulary]` records what produced the
+  lines that follow, inside the encrypted record.
+- Fallbacks live in `client/transcription-controller.ts` (plain TypeScript,
+  unit-tested with a fake Daily): a model that never produced a line steps
+  down a tier on a Daily error; one that has produced lines retries itself
+  (up to 2 times between lines) before stepping down.
+- Real time only: nothing is recorded. Transcribing a recording after the
+  call is a later founder/DPO decision (decision log 2026-11-10).
 - Daily 0.93 `startTranscription` / `stopTranscription` return
   `undefined`; call them through `runDailyMethod()`.
 
