@@ -684,7 +684,7 @@
     "steps": [
       {
         "title": "Create your account",
-        "body": "Sign up and open your expert practice from your account. You start on the community tier and can upgrade later."
+        "body": "Sign up and open your expert practice from your account. You start on the standard plan: a 15% fee per booking, nothing else."
       },
       {
         "title": "Set up your practice",
@@ -710,7 +710,7 @@
       {
         "icon": "currency",
         "title": "Your rates and policies",
-        "body": "Set your prices and a Flexible, Moderate or Strict cancellation policy for each service. Your share is paid out through Stripe on the later of 7 days after payment or 24 hours after the session."
+        "body": "Set your prices and a Flexible, Moderate or Strict cancellation policy for each service. Eleva keeps 15% of each booking, with no other deductions. Your share reaches your Stripe account on the later of 7 days after payment or 24 hours after the session; Stripe then pays it to your bank."
       },
       {
         "icon": "calendar",
@@ -753,7 +753,7 @@
       }
     ],
     "finalHeading": "Ready to open your practice?",
-    "finalBody": "Create your account, start on the community tier, and upgrade when it fits your practice. Your terms are the Expert agreement you accept when you register. If we change it, we email you at least 15 days before, and you can leave before the change applies."
+    "finalBody": "Create your account and start on the standard plan. Your terms are the Expert agreement you accept when you register. If we change it, we email you at least 15 days before, and you can leave before the change applies."
   },
   "forClinics": {
     "title": "For clinics — Eleva.care",
