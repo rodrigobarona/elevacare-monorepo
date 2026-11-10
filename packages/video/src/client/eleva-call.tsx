@@ -28,6 +28,13 @@ import {
 import { Badge } from "@eleva/ui/components/badge"
 import { Button, LinkButton } from "@eleva/ui/components/button"
 import { Input } from "@eleva/ui/components/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@eleva/ui/components/select"
 import { Textarea } from "@eleva/ui/components/textarea"
 import { callDisplayName, localCallDisplayName } from "./call-display-name"
 import type { ElevaCallLabels } from "./labels"
@@ -44,8 +51,14 @@ import {
 } from "./screen-share-errors"
 import {
   appendTranscriptLine,
-  parseTranscriptionMessage,
+  appendTranscriptMarker,
+  type TranscriptionLine,
 } from "./transcription-message"
+import type { TranscriptLanguageMode } from "./transcription-settings"
+import {
+  useLiveTranscription,
+  type LiveTranscription,
+} from "./use-live-transcription"
 
 export type { ElevaCallLabels, ElevaCallErrorCode } from "./labels"
 
@@ -76,6 +89,8 @@ export type ElevaCallProps = {
   callWindow?: CallWindow
   /** Member's active ai_processing consent, decided by the join API. */
   transcriptionAllowed?: boolean
+  /** Language the session was booked in; seeds the live transcript. */
+  sessionLanguage?: string | null
 }
 
 type ChatMessage = {
@@ -85,17 +100,6 @@ type ChatMessage = {
   text: string
 }
 
-type DailyTranscriptionCall = {
-  startTranscription?: (options?: {
-    transcription_geo?: "global" | "eu"
-  }) => Promise<unknown>
-  stopTranscription?: () => Promise<unknown>
-  on: (event: string, handler: (ev: unknown) => void) => void
-  off: (event: string, handler: (ev: unknown) => void) => void
-}
-
-/** Deepgram (via Daily) transcribes inside the EU. */
-const LIVE_TRANSCRIPTION_OPTIONS = { transcription_geo: "eu" } as const
 /** Keeps `unsafe-eval` out of the CSP; the bundle loads through a script tag. */
 const DAILY_CONFIG = { avoidEval: true } as const
 
@@ -109,6 +113,7 @@ export function ElevaCall({
   backHref,
   callWindow,
   transcriptionAllowed = false,
+  sessionLanguage = null,
 }: ElevaCallProps) {
   return (
     <DailyProvider url={roomUrl} token={token} dailyConfig={DAILY_CONFIG}>
@@ -120,6 +125,7 @@ export function ElevaCall({
         backHref={backHref}
         callWindow={callWindow}
         transcriptionAllowed={transcriptionAllowed}
+        sessionLanguage={sessionLanguage}
       />
     </DailyProvider>
   )
@@ -133,6 +139,7 @@ function CallShell({
   backHref,
   callWindow,
   transcriptionAllowed,
+  sessionLanguage = null,
 }: Omit<ElevaCallProps, "roomUrl" | "token">) {
   const daily = useDaily()
   const meetingState = useMeetingState()
@@ -402,24 +409,20 @@ function CallShell({
   const joining = meetingState === "joining-meeting"
   const left = meetingState === "left-meeting"
 
-  useEffect(() => {
-    if (!showNotesSlot || !joined || !daily || !transcriptionAllowed) return
-    const call = daily as unknown as DailyTranscriptionCall
-    if (typeof call.startTranscription === "function") {
-      void call.startTranscription(LIVE_TRANSCRIPTION_OPTIONS).catch(() => {
-        /* live transcript is best-effort; notes still persist */
-      })
-    }
-    const onMessage = (event: unknown) => {
-      const line = parseTranscriptionMessage(event)
-      if (!line?.isFinal) return
-      setTranscript((curr) => appendTranscriptLine(curr, line))
-    }
-    call.on("transcription-message", onMessage)
-    return () => {
-      call.off("transcription-message", onMessage)
-    }
-  }, [daily, joined, showNotesSlot, transcriptionAllowed])
+  const handleTranscriptLine = useCallback((line: TranscriptionLine) => {
+    setTranscript((curr) => appendTranscriptLine(curr, line))
+  }, [])
+  const handleTranscriptMarker = useCallback((note: string) => {
+    setTranscript((curr) => appendTranscriptMarker(curr, note))
+  }, [])
+  const liveTranscript = useLiveTranscription({
+    daily,
+    enabled: Boolean(showNotesSlot && joined && transcriptionAllowed),
+    sessionLanguage,
+    labels,
+    onLine: handleTranscriptLine,
+    onMarker: handleTranscriptMarker,
+  })
 
   const handleLeft = useCallback(() => {
     onLeft?.()
@@ -440,14 +443,7 @@ function CallShell({
   }
 
   async function handleLeave() {
-    if (daily) {
-      const call = daily as unknown as DailyTranscriptionCall
-      if (typeof call.stopTranscription === "function") {
-        await call.stopTranscription().catch(() => {
-          /* room teardown */
-        })
-      }
-    }
+    await liveTranscript.stop()
     if (records && showNotesSlot && recordsLoadedRef.current) {
       if (transcriptSavePromiseRef.current) {
         await transcriptSavePromiseRef.current
@@ -626,6 +622,9 @@ function CallShell({
           note={note}
           transcript={transcript}
           transcriptionAllowed={Boolean(transcriptionAllowed)}
+          liveTranscript={
+            joined && transcriptionAllowed ? liveTranscript : null
+          }
           internalReport={internalReport}
           saveFailed={saveFailed}
           noteTemplates={records?.noteTemplates}
@@ -836,6 +835,7 @@ function SessionNotesPanel({
   note,
   transcript,
   transcriptionAllowed,
+  liveTranscript,
   internalReport,
   saveFailed,
   noteTemplates,
@@ -847,6 +847,7 @@ function SessionNotesPanel({
   note: string
   transcript: string
   transcriptionAllowed: boolean
+  liveTranscript: LiveTranscription | null
   internalReport: InternalReportDraft
   saveFailed: boolean
   noteTemplates?: NoteTemplates
@@ -920,7 +921,17 @@ function SessionNotesPanel({
         />
       </div>
       <div>
-        <p className="font-medium text-foreground">{labels.transcriptTitle}</p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="font-medium text-foreground">
+            {labels.transcriptTitle}
+          </p>
+          {liveTranscript ? (
+            <TranscriptLanguageSelect labels={labels} live={liveTranscript} />
+          ) : null}
+        </div>
+        {liveTranscript ? (
+          <TranscriptLanguageStatus labels={labels} live={liveTranscript} />
+        ) : null}
         {transcript ? (
           <pre className="mt-2 max-h-48 overflow-y-auto rounded-2xl bg-muted p-3 text-xs whitespace-pre-wrap">
             {transcript}
@@ -934,5 +945,93 @@ function SessionNotesPanel({
         )}
       </div>
     </aside>
+  )
+}
+
+function TranscriptLanguageSelect({
+  labels,
+  live,
+}: {
+  labels: ElevaCallLabels
+  live: LiveTranscription
+}) {
+  // The older fallback model transcribes one fixed language, so with an
+  // English booking both choices would be the same.
+  if (live.tier === "legacy" && live.expectedLanguage === "en") return null
+  const autoLabel =
+    live.tier === "legacy"
+      ? labels.languageName(live.expectedLanguage ?? "pt")
+      : labels.transcriptLanguageAuto
+  return (
+    <Select
+      aria-label={labels.transcriptLanguage}
+      selectedKey={live.mode}
+      onSelectionChange={(key) => {
+        if (key === "auto" || key === "english") {
+          live.setMode(key satisfies TranscriptLanguageMode)
+        }
+      }}
+    >
+      <SelectTrigger size="sm" className="w-auto min-w-44">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem id="auto">{autoLabel}</SelectItem>
+        <SelectItem id="english">{labels.transcriptLanguageEnglish}</SelectItem>
+      </SelectContent>
+    </Select>
+  )
+}
+
+function TranscriptLanguageStatus({
+  labels,
+  live,
+}: {
+  labels: ElevaCallLabels
+  live: LiveTranscription
+}) {
+  const language = live.detectedLanguage ?? live.expectedLanguage
+  const status = live.detecting
+    ? live.detectedLanguage
+      ? labels.transcriptDetected(labels.languageName(live.detectedLanguage))
+      : language
+        ? labels.transcriptExpected(labels.languageName(language))
+        : ""
+    : ""
+  return (
+    <div className="mt-1 grid gap-2">
+      {status ? (
+        <p
+          className="text-xs text-muted-foreground"
+          data-testid="transcript-language-status"
+        >
+          {status}
+        </p>
+      ) : null}
+      {live.failed ? (
+        <p className="text-xs text-destructive" role="status">
+          {labels.transcriptUnavailable}
+        </p>
+      ) : null}
+      {live.suggestEnglishOnly ? (
+        <div
+          className="grid gap-2 rounded-2xl bg-muted p-3 text-xs"
+          data-testid="transcript-english-suggestion"
+        >
+          <p>{labels.transcriptSuggestEnglish}</p>
+          <div className="flex flex-wrap gap-2">
+            <Button size="xs" onPress={() => live.setMode("english")}>
+              {labels.transcriptSuggestEnglishAction}
+            </Button>
+            <Button size="xs" variant="ghost" onPress={live.dismissSuggestion}>
+              {labels.transcriptSuggestDismiss}
+            </Button>
+          </div>
+        </div>
+      ) : null}
+      <p className="sr-only" role="status" aria-live="polite">
+        {live.notice}
+      </p>
+    </div>
   )
 }

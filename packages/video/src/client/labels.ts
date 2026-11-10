@@ -38,6 +38,23 @@ export type ElevaCallLabels = {
   transcriptEmpty: string
   transcriptOff: string
   transcriptionOnNotice: string
+  transcriptLanguage: string
+  transcriptLanguageAuto: string
+  transcriptLanguageEnglish: string
+  transcriptDetected: (language: string) => string
+  transcriptExpected: (language: string) => string
+  transcriptNowAuto: string
+  transcriptNowEnglish: string
+  transcriptSuggestEnglish: string
+  transcriptSuggestEnglishAction: string
+  transcriptSuggestDismiss: string
+  transcriptUnavailable: string
+  transcriptMarker: (setting: string, vocabulary: string) => string
+  transcriptMarkerAuto: string
+  transcriptVocabularyMedical: string
+  transcriptVocabularyStandard: string
+  /** Display name of a language code in the viewer's UI locale. */
+  languageName: (code: string) => string
   notesSaved: string
   notesSaveFailed: string
   notesTemplates: string
@@ -66,8 +83,21 @@ export type ElevaCallLabels = {
   errors: Record<ElevaCallErrorCode, string>
 }
 
+export function languageDisplayName(code: string, locale?: string): string {
+  try {
+    return (
+      new Intl.DisplayNames(locale ? [locale] : undefined, {
+        type: "language",
+      }).of(code) ?? code
+    )
+  } catch {
+    return code
+  }
+}
+
 export function elevaCallLabels(
-  t: (key: string, values?: Record<string, string | number>) => string
+  t: (key: string, values?: Record<string, string | number>) => string,
+  options: { locale?: string } = {}
 ): ElevaCallLabels {
   return {
     callPrivacy: t("callPrivacy"),
@@ -101,6 +131,23 @@ export function elevaCallLabels(
     transcriptEmpty: t("transcriptEmpty"),
     transcriptOff: t("transcriptOff"),
     transcriptionOnNotice: t("transcriptionOnNotice"),
+    transcriptLanguage: t("transcriptLanguage"),
+    transcriptLanguageAuto: t("transcriptLanguageAuto"),
+    transcriptLanguageEnglish: t("transcriptLanguageEnglish"),
+    transcriptDetected: (language) => t("transcriptDetected", { language }),
+    transcriptExpected: (language) => t("transcriptExpected", { language }),
+    transcriptNowAuto: t("transcriptNowAuto"),
+    transcriptNowEnglish: t("transcriptNowEnglish"),
+    transcriptSuggestEnglish: t("transcriptSuggestEnglish"),
+    transcriptSuggestEnglishAction: t("transcriptSuggestEnglishAction"),
+    transcriptSuggestDismiss: t("transcriptSuggestDismiss"),
+    transcriptUnavailable: t("transcriptUnavailable"),
+    transcriptMarker: (setting, vocabulary) =>
+      t("transcriptMarker", { setting, vocabulary }),
+    transcriptMarkerAuto: t("transcriptMarkerAuto"),
+    transcriptVocabularyMedical: t("transcriptVocabularyMedical"),
+    transcriptVocabularyStandard: t("transcriptVocabularyStandard"),
+    languageName: (code) => languageDisplayName(code, options.locale),
     notesSaved: t("notesSaved"),
     notesSaveFailed: t("notesSaveFailed"),
     notesTemplates: t("notesTemplates"),

@@ -19,6 +19,44 @@ Never put a Daily room URL or meeting token in email.
 Rooms set `enforce_unique_user_ids`: a second join with the same token
 `user_id` ejects the earlier copy (Daily last-join-wins).
 
+## Live transcript
+
+Only on the expert's call, and only when the member has an active
+`ai_processing` consent (the join API returns `transcriptionAllowed`).
+Daily runs Deepgram inside the EU (`transcription_geo: "eu"`); recording
+stays off. `client/transcription-settings.ts` is the single source of
+truth for the model and language:
+
+| Tier      | Deepgram call                                        | When                                                               |
+| --------- | ---------------------------------------------------- | ------------------------------------------------------------------ |
+| `medical` | `nova-3-medical` + `language=multi`                  | Default for en, es, fr, de, hi, ru, pt, ja, it, nl                 |
+| `general` | `nova-3` + `language=multi` + `language_hint=<lang>` | Other booked languages; first fallback when Daily reports an error |
+| `legacy`  | `nova-2` + one fixed language (`pt` → `pt-PT`)       | Last fallback                                                      |
+
+- The booked language (`bookings.language`, returned as `sessionLanguage`)
+  picks the starting tier and the hint. Deepgram documents `language_hint`
+  for `nova-3` only, so the medical model gets none; hints outside
+  Deepgram's list would reject the stream, so only listed codes are sent.
+- The expert can switch between **Detect automatically** and **English
+  only** (`nova-3-medical` + `en`, Deepgram's advice for English-only
+  audio). Daily cannot change a running transcript, so a switch stops it
+  and starts again. After a run of English-only lines the call suggests
+  the switch; the expert decides.
+- With `includeRawResponse`, each line carries Deepgram's detected
+  `languages`; the call shows the recent dominant one.
+- Speaker names come from Daily's `participantId`. Before the first line
+  of each start, a bracketed line such as `[Live transcript · language
+detected automatically · medical vocabulary]` records what produced the
+  lines that follow, inside the encrypted record.
+- Fallbacks live in `client/transcription-controller.ts` (plain TypeScript,
+  unit-tested with a fake Daily): a model that never produced a line steps
+  down a tier on a Daily error; one that has produced lines retries itself
+  (up to 2 times between lines) before stepping down.
+- Real time only: nothing is recorded. Transcribing a recording after the
+  call is a later founder/DPO decision (decision log 2026-11-10).
+- Daily 0.93 `startTranscription` / `stopTranscription` return
+  `undefined`; call them through `runDailyMethod()`.
+
 `payment.failed` and a **full** `refund.succeeded` before `startAt` cancel
 the session and delete the room. Partial refunds and the same events after
 `startAt` leave the session row intact.

@@ -623,6 +623,8 @@ export const JoinSessionResponseSchema = z.object({
   endsAt: z.string().datetime(),
   /** Live transcription needs the member's active ai_processing consent. */
   transcriptionAllowed: z.boolean(),
+  /** Language the session was booked in (BCP 47); seeds the live transcript. */
+  sessionLanguage: z.string().max(16).nullable(),
 })
 
 export const JoinSessionErrorSchema = z.object({

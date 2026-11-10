@@ -30,7 +30,10 @@ export function JoinClient({
   const orgSlug = usePracticeSlug()
   const t = useTranslations("sessions.call")
   const uiLocale = useLocale()
-  const labels = useMemo((): ElevaCallLabels => elevaCallLabels(t), [t])
+  const labels = useMemo(
+    (): ElevaCallLabels => elevaCallLabels(t, { locale: uiLocale }),
+    [t, uiLocale]
+  )
   const api = useMemo(
     () => practiceApiClient(apiBaseUrl, orgSlug),
     [apiBaseUrl, orgSlug]

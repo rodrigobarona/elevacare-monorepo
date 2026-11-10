@@ -32,6 +32,40 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-10: Live transcript on Deepgram's medical model (active)
+
+- Owner: founder (Rodrigo Barona); engineering.
+- Stay on Daily's built-in transcription (Deepgram, EU) rather than adding
+  Speechmatics or a Pipecat bot. Deepgram announced on 2026-10-29 that it
+  is acquiring Daily (Pipecat stays open source), so video and
+  speech-to-text now come from one company; Deepgram (through Daily)
+  remains the sub-processor already listed.
+- Until now the call started transcription with no model or language, so
+  Daily used English and an unnamed default model. Live transcripts now
+  use `nova-3-medical` with `language=multi` (detects and follows en, pt,
+  es and 7 more languages). The booked language seeds the setting; other
+  languages use `nova-3` with `language_hint`; Daily errors step down to
+  `nova-3`, then `nova-2`. The expert can switch to English only in the
+  call. SSOT: `packages/video/src/client/transcription-settings.ts`.
+- Fixed in the same change: Daily 0.93 `startTranscription` and
+  `stopTranscription` return `undefined`, and the call chained `.catch()`
+  on them, so **Leave** threw before saving notes or leaving the room
+  (since 2026-10-13), and the expert's call errored right after joining
+  when transcription was allowed. Neither e2e test pressed Leave or turned
+  transcription on.
+- Not verified yet: that Daily accepts `nova-3-medical` and `multi` and
+  forwards `languages` in `rawResponse` (check on staging with a consented
+  booking; the fallback chain keeps a transcript if it does not).
+- Founder 2026-11-10: the transcript stays **real time** (streamed during
+  the call, no audio stored). Whether to add an after-call review from a
+  recorded session is a later decision: it means recording health
+  consultations (Phase 16.8 / D-08) and needs DPO sign-off and new legal
+  copy.
+- Still open: per-language and per-specialty `keyterm` lists; a
+  role-played accuracy test in European Portuguese, Spanish and English
+  (medical-term recall) before any vendor change or after-call review;
+  transcripts store the setting as a marker line, not per-line language.
+
 ### 2026-11-10: Third judge round, legal wording (active)
 
 - Owner: engineering; lawyer judge 8.2, EU compliance 8.0, security 8.2,

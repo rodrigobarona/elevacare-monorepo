@@ -64,4 +64,27 @@ describe("elevaCallLabels", () => {
     })
     expect(labels.overtimeBody("11:30")).toBe("closes at 11:30")
   })
+
+  it("formats live transcript language copy", () => {
+    const labels = elevaCallLabels((key, values) => {
+      if (key === "transcriptDetected") {
+        return `Detected: ${String(values?.language)}`
+      }
+      if (key === "transcriptMarker") {
+        return `Live transcript · ${String(values?.setting)} · ${String(values?.vocabulary)}`
+      }
+      return key
+    })
+    expect(labels.transcriptDetected("Portuguese")).toBe("Detected: Portuguese")
+    expect(labels.transcriptMarker("English only", "medical vocabulary")).toBe(
+      "Live transcript · English only · medical vocabulary"
+    )
+  })
+
+  it("names languages in the viewer's locale", () => {
+    const en = elevaCallLabels((key) => key, { locale: "en" })
+    const pt = elevaCallLabels((key) => key, { locale: "pt-PT" })
+    expect(en.languageName("pt")).toBe("Portuguese")
+    expect(pt.languageName("es")).toBe("espanhol")
+  })
 })
