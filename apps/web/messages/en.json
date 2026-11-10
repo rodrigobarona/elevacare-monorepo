@@ -538,7 +538,7 @@
       "promoHint": "Have a code? Apply it here and you'll see the new total before you pay.",
       "consentsIntro": "To book a health session on this digital health platform, please confirm:",
       "aiConsent": {
-        "label": "Optional: allow live transcription and AI-assisted notes for this session. Your expert still writes the report; you can withdraw any time in Privacy settings. See the",
+        "label": "Optional: allow live transcription in your video sessions and, if your expert uses it, AI help with drafting their notes. Your expert still writes and checks the report. You can turn this off any time in Privacy settings. See the",
         "link": "AI processing notice"
       },
       "hold": "Continue to payment",

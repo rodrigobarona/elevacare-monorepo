@@ -4,6 +4,13 @@ import { consentI18n } from "./consent-i18n"
 import { elevaConsentActions, elevaConsentComponents } from "./eleva-theme"
 import { getC15tBackendUrl } from "./env"
 
+/**
+ * The only optional cookies Eleva uses are marketing, for the Beehiiv
+ * newsletter form (cookie policy). The dialog offers just these, not the
+ * policy's full default scope (analytics, experience, functionality).
+ */
+export const ELEVA_CONSENT_CATEGORIES = ["necessary", "marketing"] as const
+
 /** Public Inth hosted runtime (org `eleva`, project `eleva-care`). */
 export const DEFAULT_C15T_BACKEND_URL = "https://eleva-care-eleva.inth.app"
 
@@ -17,6 +24,7 @@ export function defineConsentConfig(config: C15tConfig = {}) {
     ...config,
     backendURL,
     options: {
+      consentCategories: [...ELEVA_CONSENT_CATEGORIES],
       ...config.options,
       theme: {
         consentActions: elevaConsentActions,
