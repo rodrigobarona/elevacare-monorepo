@@ -1,6 +1,7 @@
 import { defineConsentConfig as c15tDefineConsentConfig } from "c15t/next"
 
 import { consentI18n } from "./consent-i18n"
+import { elevaConsentActions, elevaConsentComponents } from "./eleva-theme"
 import { getC15tBackendUrl } from "./env"
 
 /** Public Inth hosted runtime (org `eleva`, project `eleva-care`). */
@@ -17,6 +18,14 @@ export function defineConsentConfig(config: C15tConfig = {}) {
     backendURL,
     options: {
       ...config.options,
+      theme: {
+        consentActions: elevaConsentActions,
+        ...config.options?.theme,
+      },
+      components: {
+        ...elevaConsentComponents,
+        ...config.options?.components,
+      },
       i18n: {
         ...consentI18n,
         ...config.options?.i18n,
