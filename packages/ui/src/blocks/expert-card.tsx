@@ -11,7 +11,8 @@ type LinkComponent = React.ElementType<{
  * Portrait-led marketplace card. The name anchor stretches over the card, so
  * the whole card is one link and one tab stop. Phones get a horizontal card
  * (small portrait beside the text) so a short list does not take eight
- * screens; from `sm` up the portrait sits on top.
+ * screens; from `sm` up a 5:4 photo sits on top, framed on the upper third
+ * where faces are, so a row of cards stays compact.
  */
 function ExpertCard({
   media,
@@ -48,7 +49,7 @@ function ExpertCard({
       )}
       {...props}
     >
-      <div className="relative aspect-[4/5] w-24 shrink-0 overflow-hidden rounded-2xl bg-muted sm:w-full sm:rounded-none [&_img]:object-cover [&_img]:transition-transform [&_img]:duration-(--duration-slower) [&_img]:ease-out motion-safe:group-hover:[&_img]:scale-[1.03]">
+      <div className="relative aspect-[4/5] w-24 shrink-0 overflow-hidden rounded-2xl bg-muted sm:aspect-[5/4] sm:w-full sm:rounded-none [&_img]:object-cover [&_img]:object-[center_25%] [&_img]:transition-transform [&_img]:duration-(--duration-slower) [&_img]:ease-out motion-safe:group-hover:[&_img]:scale-[1.03]">
         {media}
         {badge ? (
           <span className="absolute top-3 left-3 hidden rounded-full bg-background/90 px-3 py-1 text-xs font-medium text-primary shadow-1 backdrop-blur sm:inline">
