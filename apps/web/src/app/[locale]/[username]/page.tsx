@@ -17,7 +17,10 @@ import { professionalBodyById } from "@eleva/config/professional-bodies"
 import { isReserved } from "@eleva/config/reserved-usernames"
 import { RichTextViewer } from "@eleva/editor/rich-text-viewer"
 import { CheckIcon, SOCIAL_LINK_ICONS } from "@eleva/icons"
-import { ExpertPortrait } from "@eleva/ui/blocks/expert-portrait"
+import {
+  ExpertMonogram,
+  ExpertPortrait,
+} from "@eleva/ui/blocks/expert-portrait"
 import { Container, Section } from "@eleva/ui/blocks/section"
 import {
   Accordion,
@@ -164,14 +167,26 @@ export default async function ExpertProfilePage({ params }: Props) {
           spacing="compact"
           className="bg-linear-to-b from-sand-50 to-background pt-10 sm:pt-14 dark:from-teal-950/40"
         >
-          <Container className="grid items-center gap-8 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)] lg:gap-16">
-            <div className="relative mx-auto aspect-[4/5] max-h-[50svh] w-full max-w-sm overflow-hidden rounded-4xl bg-muted shadow-2 lg:max-h-none lg:max-w-none">
-              <ExpertPortrait
-                displayName={name}
-                avatarUrl={expert.avatarUrl}
-                isPriority
-              />
-            </div>
+          <Container
+            className={
+              expert.avatarUrl
+                ? "grid items-center gap-8 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)] lg:gap-16"
+                : "grid gap-6 sm:grid-cols-[7rem_minmax(0,1fr)] sm:items-start sm:gap-8"
+            }
+          >
+            {/* A photo is the hero's largest element; without one, a small
+                monogram sits beside the name instead of an empty frame. */}
+            {expert.avatarUrl ? (
+              <div className="relative mx-auto aspect-[4/5] max-h-[50svh] w-full max-w-sm overflow-hidden rounded-4xl bg-muted shadow-2 lg:max-h-none lg:max-w-none">
+                <ExpertPortrait
+                  displayName={name}
+                  avatarUrl={expert.avatarUrl}
+                  isPriority
+                />
+              </div>
+            ) : (
+              <ExpertMonogram displayName={name} />
+            )}
             <div className="flex flex-col gap-5">
               {categories.length > 0 ? (
                 <ul className="flex flex-wrap gap-x-4 gap-y-1">

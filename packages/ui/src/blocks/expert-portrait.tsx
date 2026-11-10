@@ -37,3 +37,27 @@ export function ExpertPortrait({
     />
   )
 }
+
+/**
+ * A round monogram for an expert with no photo, sized by its parent's
+ * class (the profile hero uses 112 px). Replaces a full-size empty frame.
+ */
+export function ExpertMonogram({
+  displayName,
+  className,
+}: {
+  displayName: string
+  className?: string
+}) {
+  return (
+    <div
+      aria-hidden
+      className={cn(
+        "flex size-28 shrink-0 items-center justify-center rounded-full border border-teal-200 bg-linear-to-br from-sand-50 via-sand-100 to-teal-50 font-display text-4xl text-teal-800 shadow-2 dark:border-teal-800 dark:from-teal-950 dark:via-neutral-900 dark:to-teal-950 dark:text-teal-200",
+        className
+      )}
+    >
+      {getAvatarInitials(displayName)}
+    </div>
+  )
+}
