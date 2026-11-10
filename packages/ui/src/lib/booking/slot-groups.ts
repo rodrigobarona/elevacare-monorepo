@@ -52,7 +52,25 @@ export function addDaysToKey(dateKey: string, days: number): string {
 }
 
 /** "Europe/Lisbon" → "Lisbon", "America/Sao_Paulo" → "Sao Paulo". */
-export function zoneCity(timeZone: string): string {
+/** City names that differ from the IANA spelling, by language. */
+const LOCAL_CITY_NAMES: Record<string, Partial<Record<string, string>>> = {
+  "Europe/Lisbon": { pt: "Lisboa", es: "Lisboa" },
+  "Atlantic/Azores": { pt: "Açores", es: "Azores" },
+  "Atlantic/Canary": { pt: "Canárias", es: "Canarias" },
+  "Europe/London": { pt: "Londres", es: "Londres" },
+  "Europe/Paris": { es: "París" },
+  "Europe/Berlin": { pt: "Berlim", es: "Berlín" },
+  "Europe/Brussels": { pt: "Bruxelas", es: "Bruselas" },
+  "Europe/Rome": { pt: "Roma", es: "Roma" },
+  "Europe/Zurich": { pt: "Zurique", es: "Zúrich" },
+  "America/Sao_Paulo": { pt: "São Paulo", es: "São Paulo" },
+}
+
+/** "Lisbon" (or "Lisboa" in Portuguese) from "Europe/Lisbon". */
+export function zoneCity(timeZone: string, locale?: string): string {
+  const language = locale?.split("-")[0]
+  const local = language ? LOCAL_CITY_NAMES[timeZone]?.[language] : undefined
+  if (local) return local
   const last = timeZone.split("/").pop() ?? timeZone
   return last.replaceAll("_", " ")
 }

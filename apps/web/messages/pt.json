@@ -362,9 +362,9 @@
     "facts": {
       "languages": "Fala {languages}",
       "video": "Vídeo",
-      "phone": "Telefone",
-      "inPerson": "Presencial",
-      "inPersonIn": "Presencial em {places}",
+      "phone": "telefone",
+      "inPerson": "presencial",
+      "inPersonIn": "presencial em {places}",
       "countries": "Membros em {countries}"
     },
     "registration": {
@@ -397,7 +397,7 @@
     "card": {
       "heading": "Marcar uma sessão",
       "chooseService": "Escolha um serviço",
-      "timesIn": "Horários em {zone}",
+      "timesIn": "Horários na hora de {city}",
       "full": "As próximas duas semanas estão completas.",
       "laterDates": "Ver datas posteriores",
       "seeAll": "Ver todos os horários",
@@ -435,7 +435,10 @@
         "a": "Antes de um perfil ficar visível, a nossa equipa verifica a inscrição profissional. A formação e a experiência são descritas por cada especialista."
       }
     },
-    "freeOption": "Opção gratuita disponível"
+    "freeOption": "Opção gratuita disponível",
+    "socialShort": {
+      "website": "Site"
+    }
   },
   "booking": {
     "meta": {
@@ -461,7 +464,6 @@
       "when": "Quando",
       "price": "Preço",
       "chooseTime": "Escolha um horário para continuar",
-      "policy": "Política de cancelamento {policy}",
       "profile": "Sobre {name}"
     },
     "modes": {

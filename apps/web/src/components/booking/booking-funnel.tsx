@@ -682,11 +682,7 @@ export function BookingFunnel({
   ]
   const stepIndex = flowSteps.indexOf(step)
   const expertMedia = (
-    <ExpertAvatar
-      displayName={expertName}
-      username={username}
-      avatarUrl={expertAvatarUrl}
-    />
+    <ExpertAvatar displayName={expertName} avatarUrl={expertAvatarUrl} />
   )
   const signupHref = `/signup?${new URLSearchParams({
     name,
@@ -792,7 +788,7 @@ export function BookingFunnel({
             : undefined
         }
         media={expertMedia}
-        footer={t("summary.policy", { policy: policyCopy.name })}
+        footer={policyCopy.lines[0]}
       />
       <section className="min-w-0">
         {stepIndex >= 0 ? (
@@ -886,6 +882,7 @@ export function BookingFunnel({
             />
             <TimeZoneLine
               value={timeZone}
+              locale={locale}
               onChange={(next) => {
                 setTimeZone(next)
               }}

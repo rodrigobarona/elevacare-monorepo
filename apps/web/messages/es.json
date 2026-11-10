@@ -362,9 +362,9 @@
     "facts": {
       "languages": "Habla {languages}",
       "video": "Vídeo",
-      "phone": "Teléfono",
-      "inPerson": "En persona",
-      "inPersonIn": "En persona en {places}",
+      "phone": "teléfono",
+      "inPerson": "en persona",
+      "inPersonIn": "en persona en {places}",
       "countries": "Miembros en {countries}"
     },
     "registration": {
@@ -397,7 +397,7 @@
     "card": {
       "heading": "Reservar una sesión",
       "chooseService": "Elige un servicio",
-      "timesIn": "Horarios en {zone}",
+      "timesIn": "Horarios en hora de {city}",
       "full": "Las próximas dos semanas están completas.",
       "laterDates": "Ver fechas posteriores",
       "seeAll": "Ver todos los horarios",
@@ -435,7 +435,10 @@
         "a": "Antes de que un perfil se publique, nuestro equipo comprueba la colegiación profesional. Cada especialista describe su propia formación y experiencia."
       }
     },
-    "freeOption": "Opción gratuita disponible"
+    "freeOption": "Opción gratuita disponible",
+    "socialShort": {
+      "website": "Web"
+    }
   },
   "booking": {
     "meta": {
@@ -461,7 +464,6 @@
       "when": "Cuándo",
       "price": "Precio",
       "chooseTime": "Elige una hora para continuar",
-      "policy": "Política de cancelación {policy}",
       "profile": "Sobre {name}"
     },
     "modes": {

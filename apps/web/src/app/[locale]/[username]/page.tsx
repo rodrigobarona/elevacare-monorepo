@@ -22,6 +22,7 @@ import {
   ExpertPortrait,
 } from "@eleva/ui/blocks/expert-portrait"
 import { Container, Section } from "@eleva/ui/blocks/section"
+import { zoneCity } from "@eleva/ui/lib/booking/slot-groups"
 import {
   Accordion,
   AccordionContent,
@@ -236,6 +237,9 @@ export default async function ExpertProfilePage({ params }: Props) {
                   <ul className="flex flex-wrap gap-1">
                     {expert.socialLinks.map((link) => {
                       const Icon = SOCIAL_LINK_ICONS[link.kind]
+                      // A globe alone does not say "website": that one link
+                      // shows its word; brand icons speak for themselves.
+                      const isWebsite = link.kind === "website"
                       return (
                         <li key={link.url}>
                           <a
@@ -243,9 +247,18 @@ export default async function ExpertProfilePage({ params }: Props) {
                             target="_blank"
                             rel="noopener noreferrer me"
                             aria-label={t(`social.${link.kind}`, { name })}
-                            className="flex size-11 items-center justify-center rounded-full text-foreground/70 transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                            className={
+                              isWebsite
+                                ? "flex h-11 items-center gap-2 rounded-full px-3 text-sm text-foreground/80 transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                                : "flex size-11 items-center justify-center rounded-full text-foreground/70 transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                            }
                           >
                             <Icon aria-hidden className="size-5" />
+                            {isWebsite ? (
+                              <span aria-hidden>
+                                {t("socialShort.website")}
+                              </span>
+                            ) : null}
                           </a>
                         </li>
                       )
@@ -673,13 +686,7 @@ async function ProfileBookingCard({
     hour: "2-digit",
     minute: "2-digit",
   })
-  const zoneName =
-    new Intl.DateTimeFormat(intlLocale, {
-      timeZone,
-      timeZoneName: "longGeneric",
-    })
-      .formatToParts(from)
-      .find((part) => part.type === "timeZoneName")?.value ?? timeZone
+  const zoneName = zoneCity(timeZone, locale)
 
   const services: BookingCardService[] = eventTypes.map((eventType) => {
     const title = pickLocalizedText(eventType.title, locale)
@@ -747,7 +754,7 @@ async function ProfileBookingCard({
       labels={{
         heading: t("card.heading"),
         chooseService: t("card.chooseService"),
-        timesIn: t("card.timesIn", { zone: zoneName }),
+        timesIn: t("card.timesIn", { city: zoneName }),
         full: t("card.full"),
         loadFailed: t("card.loadFailed"),
         laterDates: t("card.laterDates"),
@@ -938,7 +945,9 @@ function profileFacts(
         : t("facts.inPerson")
     )
   }
-  if (ways.length > 0) facts.push(listFormat(ways, locale))
+  // "Video or in person in Lisboa, Porto and Madrid": one way to meet
+  // per visit, so "or"; only the first word is capitalised.
+  if (ways.length > 0) facts.push(capitalise(listFormat(ways, locale, "or")))
   const countries = expert.serviceCountries.map((code) =>
     displayRegion(code, locale)
   )
@@ -950,11 +959,19 @@ function profileFacts(
   return facts
 }
 
-function listFormat(items: string[], locale: Locale): string {
+function listFormat(
+  items: string[],
+  locale: Locale,
+  kind: "and" | "or" = "and"
+): string {
   return new Intl.ListFormat(intlLocales[locale], {
     style: "long",
-    type: "conjunction",
+    type: kind === "or" ? "disjunction" : "conjunction",
   }).format(items)
+}
+
+function capitalise(text: string): string {
+  return text.charAt(0).toLocaleUpperCase() + text.slice(1)
 }
 
 function personJsonLd(expert: PublicExpertProfile, url: string) {
