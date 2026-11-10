@@ -23,12 +23,13 @@
   "orgSwitcher": {
     "findWorkspace": "Buscar área de trabajo…",
     "createWorkspace": "Crear área de trabajo",
-    "createWorkspaceDescription": "Área de experto, equipo o academia",
+    "createWorkspaceDescription": "Una consulta, clínica o academia",
+    "openMenu": "Cambiar de área de trabajo",
     "close": "Cerrar",
     "noResults": "No se encontraron áreas de trabajo",
-    "badgePersonal": "Personal",
-    "badgeExpert": "Experto",
-    "badgeTeam": "Team",
+    "badgePersonal": "Espacio",
+    "badgeExpert": "Consulta",
+    "badgeTeam": "Clínica",
     "badgeAcademy": "Academia",
     "badgeStaff": "Staff"
   },

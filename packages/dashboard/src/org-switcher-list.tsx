@@ -12,7 +12,7 @@ import {
   CommandList,
 } from "@eleva/ui/components/command"
 import { CheckIcon, PlusIcon } from "@eleva/icons"
-import { getOrgTypeBadgeLabel, OrgTypeBadge } from "./org-type-badge"
+import { getOrgTypeBadgeLabel } from "./org-type-badge"
 import type { OrgSwitcherItem } from "./nav-types"
 
 function orgInitials(name: string): string {
@@ -78,10 +78,9 @@ export function OrgSwitcherList({
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-medium">{org.name}</div>
                   <div className="truncate text-xs text-muted-foreground">
-                    {org.orgSlug}
+                    {badgeLabel}
                   </div>
                 </div>
-                <OrgTypeBadge orgType={org.orgType} />
                 {org.isCurrent ? (
                   <CheckIcon className="size-4 shrink-0 text-foreground" />
                 ) : null}
