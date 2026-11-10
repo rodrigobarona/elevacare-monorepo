@@ -25,6 +25,7 @@ import {
 } from "@eleva/ui/lib/booking/slot-groups"
 import { cn } from "@eleva/ui/lib/utils"
 import { ArrowLeftIcon, ArrowRightIcon, CalendarDotsIcon } from "@eleva/icons"
+import { Skeleton } from "@eleva/ui/components/skeleton"
 
 /** Times shown per day before "+N more". */
 const TIMES_PER_DAY = 4
@@ -300,6 +301,7 @@ export function SlotPicker({
         ref={stripRef}
         role="group"
         aria-labelledby={stripId}
+        aria-busy={isLoading || undefined}
         // No scroll anchoring: days load in front of "Later dates" and the
         // strip must stay at its first day.
         className="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto px-1 pb-2 [overflow-anchor:none]"
@@ -309,7 +311,10 @@ export function SlotPicker({
             {labels.empty}
           </p>
         ) : null}
-        {days.map((day) => {
+        {/* While a window loads, placeholders replace the previous days so
+            stale times are never offered. */}
+        {isLoading ? <StripSkeleton /> : null}
+        {(isLoading ? [] : days).map((day) => {
           const holdsSelection = day.dateKey === selectedDay
           const selectedIndex = day.slots.findIndex(
             (slot) => slot.start === selectedStart
@@ -484,5 +489,27 @@ function JumpCalendar({
         </CalendarGrid>
       </Calendar>
     </I18nProvider>
+  )
+}
+
+/** Four day columns of time-chip placeholders while times load. */
+function StripSkeleton() {
+  return (
+    <>
+      {[0, 1, 2, 3].map((day) => (
+        <div
+          key={day}
+          aria-hidden
+          data-testid="booking-slots-skeleton"
+          className="flex w-28 shrink-0 flex-col gap-2"
+        >
+          <Skeleton className="h-4 w-16 rounded-full" />
+          <Skeleton className="mb-1 h-3 w-10 rounded-full" />
+          {[0, 1, 2].map((time) => (
+            <Skeleton key={time} className="h-11 w-full rounded-full" />
+          ))}
+        </div>
+      ))}
+    </>
   )
 }

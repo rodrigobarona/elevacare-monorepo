@@ -881,7 +881,6 @@ export function BookingFunnel({
           <div className="mt-8 space-y-6">
             <StepHeader
               title={t("when.heading")}
-              sub={t("when.sub")}
               testId="booking-when-heading"
               headingRef={stepHeadingRef}
             />
@@ -899,14 +898,15 @@ export function BookingFunnel({
                 empty: t("when.zoneEmpty"),
               }}
             />
-            {slotsLoading ? (
-              <p
-                data-testid="booking-slots-loading"
-                className="text-sm text-muted-foreground"
-              >
-                {t("when.loading")}
-              </p>
-            ) : null}
+            {/* Sighted visitors see the picker's skeleton; screen readers
+                hear that times are loading. */}
+            <p role="status" className="sr-only">
+              {slotsLoading ? (
+                <span data-testid="booking-slots-loading">
+                  {t("when.loading")}
+                </span>
+              ) : null}
+            </p>
             {slotGone ? (
               <p
                 role="alert"

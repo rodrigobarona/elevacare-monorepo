@@ -495,7 +495,6 @@
     },
     "when": {
       "heading": "Escolha um horário",
-      "sub": "Escolha uma hora que lhe dê jeito.",
       "timesIn": "Horas em {city}",
       "changeZone": "Mudar fuso horário",
       "changeZoneAccessible": "Mudar fuso horário, atualmente {city}",

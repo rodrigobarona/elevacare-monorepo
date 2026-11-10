@@ -37,7 +37,7 @@ export function StepHeader({
   children,
 }: {
   title: string
-  sub: string
+  sub?: string
   testId?: string
   /** Receives focus when the funnel moves to this step. */
   headingRef?: Ref<HTMLHeadingElement>
@@ -53,7 +53,7 @@ export function StepHeader({
       >
         {title}
       </h1>
-      <p className="text-muted-foreground">{sub}</p>
+      {sub ? <p className="text-muted-foreground">{sub}</p> : null}
       {children}
     </header>
   )
