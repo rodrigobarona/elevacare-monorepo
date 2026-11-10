@@ -26,12 +26,15 @@ export function LongformLayout({
   children?: ReactNode
 }) {
   const components = getMdxComponents()
+  // Frontmatter titles carry the brand for the browser tab; the page
+  // heading does not repeat it.
+  const heading = title.replace(/\s+[—–-]\s+Eleva(?:\.care| Care)$/, "")
 
   return (
     <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[minmax(0,1fr)_220px]">
       <article className="max-w-3xl min-w-0 lg:max-w-none">
-        <h1 className="text-3xl font-bold tracking-tight text-balance">
-          {title}
+        <h1 className="font-display text-4xl leading-tight font-normal tracking-tight text-balance sm:text-5xl">
+          {heading}
         </h1>
         {description ? (
           <p className="mt-3 text-lg text-pretty text-muted-foreground">
