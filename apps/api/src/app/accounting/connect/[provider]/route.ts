@@ -9,7 +9,7 @@ import {
 } from "@eleva/accounting"
 import { withAudit } from "@eleva/audit"
 import { getFlag } from "@eleva/flags"
-import { getExpertProfileByUserId, main } from "@eleva/db"
+import { getExpertProfileForOrg, main } from "@eleva/db"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireRevocableApiCapability } from "@/lib/auth"
 import { checkBot } from "@/lib/bot-protection"
@@ -98,7 +98,7 @@ export async function POST(
     )
   }
 
-  const profile = await getExpertProfileByUserId(session.user.id)
+  const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (!profile) {
     return secureJson(
       { error: "not_found", message: "no expert profile" },

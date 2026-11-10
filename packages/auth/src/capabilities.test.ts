@@ -5,6 +5,7 @@ import {
   CAPABILITY_BUNDLES,
   deriveProductLabel,
   hasCapability,
+  isClinicClinician,
   normalizeMembershipRole,
   toMembershipSeniority,
 } from "./capabilities"
@@ -48,6 +49,25 @@ describe("deriveProductLabel", () => {
     expect(normalizeMembershipRole("owner")).toBe("admin")
     expect(normalizeMembershipRole("admin")).toBe("admin")
     expect(normalizeMembershipRole("member")).toBe("member")
+  })
+})
+
+describe("isClinicClinician", () => {
+  it("is a plain member of a team org", () => {
+    expect(
+      isClinicClinician({ orgType: "team", membershipRole: "member" })
+    ).toBe(true)
+  })
+  it("excludes clinic admins and independent experts", () => {
+    expect(
+      isClinicClinician({ orgType: "team", membershipRole: "admin" })
+    ).toBe(false)
+    expect(
+      isClinicClinician({ orgType: "expert", membershipRole: "admin" })
+    ).toBe(false)
+    expect(
+      isClinicClinician({ orgType: "personal", membershipRole: "admin" })
+    ).toBe(false)
   })
 })
 

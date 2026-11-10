@@ -91,7 +91,7 @@ Server Actions are thin proxies. They MUST:
 
 ## No direct DB writes in frontend apps
 
-- `@eleva/db` query helpers (e.g. `getExpertProfileByUserId()`) are OK for reads in Server Components.
+- `@eleva/db` query helpers (e.g. `getExpertProfileForOrg()`) are OK for reads in Server Components.
 - Raw `db()` + `main.*` imports in frontend apps are forbidden for new code.
 - Writes go through domain package functions or `apps/api` endpoints.
 

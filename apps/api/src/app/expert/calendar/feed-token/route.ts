@@ -3,7 +3,7 @@ import { withAudit } from "@eleva/audit"
 import { hashCalendarFeedToken } from "@eleva/calendar/ics-feed"
 import {
   getActiveCalendarFeedToken,
-  getExpertProfileByUserId,
+  getExpertProfileForOrg,
   rotateCalendarFeedToken,
   revokeCalendarFeedToken,
 } from "@eleva/db"
@@ -41,7 +41,7 @@ export async function GET(request: Request) {
   )
   if (rateLimited) return rateLimited
 
-  const profile = await getExpertProfileByUserId(session.user.id)
+  const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (!profile) {
     return secureJson(
       { error: "not found", message: "no expert profile" },
@@ -80,7 +80,7 @@ export async function POST(request: Request) {
   const unexpectedBody = await rejectUnexpectedBody(request, headers)
   if (unexpectedBody) return unexpectedBody
 
-  const profile = await getExpertProfileByUserId(session.user.id)
+  const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (!profile) {
     return secureJson(
       { error: "not found", message: "no expert profile" },
@@ -137,7 +137,7 @@ export async function DELETE(request: Request) {
   )
   if (rateLimited) return rateLimited
 
-  const profile = await getExpertProfileByUserId(session.user.id)
+  const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (!profile) {
     return secureJson(
       { error: "not found", message: "no expert profile" },

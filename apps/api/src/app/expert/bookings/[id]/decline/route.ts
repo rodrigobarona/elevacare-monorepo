@@ -4,7 +4,7 @@ import {
   DeclineExpertBookingResponseSchema,
 } from "@eleva/api-client"
 import { BookingRequestError, declineBookingRequest } from "@eleva/scheduling"
-import { getExpertProfileByUserId } from "@eleva/db"
+import { getExpertProfileForOrg } from "@eleva/db"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -62,7 +62,7 @@ export async function POST(request: Request, { params }: Params) {
     )
   }
 
-  const profile = await getExpertProfileByUserId(session.user.id)
+  const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (!profile) {
     return secureJson(
       { error: "not found", message: "no expert profile" },

@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto"
-import { and, asc, eq, sql } from "drizzle-orm"
+import { and, asc, eq, inArray, sql } from "drizzle-orm"
 import { main, withOrgContext } from "@eleva/db"
 import type { ExpertInvoiceStatus } from "./invoice-ops"
 
@@ -300,6 +300,8 @@ ${input.truncated ? `      <!-- truncated: export hit ${SAFT_EXPORT_MAX_ROWS}-ro
 export async function listSaftExportRows(input: {
   orgId: string
   month: string
+  /** A clinic clinician exports only invoices for their own bookings. */
+  expertProfileId?: string
 }): Promise<{
   range: SaftMonthRange
   rows: SaftInvoiceRow[]
@@ -327,7 +329,18 @@ export async function listSaftExportRows(input: {
           // pending/failed rows so the skeleton never invents invoices.
           eq(main.expertInvoices.expertOrgId, input.orgId),
           sql`${occurredAt} >= ${range.start}`,
-          sql`${occurredAt} < ${range.end}`
+          sql`${occurredAt} < ${range.end}`,
+          input.expertProfileId
+            ? inArray(
+                main.expertInvoices.bookingId,
+                tx
+                  .select({ id: main.bookings.id })
+                  .from(main.bookings)
+                  .where(
+                    eq(main.bookings.expertProfileId, input.expertProfileId)
+                  )
+              )
+            : undefined
         )
       )
       .orderBy(asc(occurredAt), asc(main.expertInvoices.id))
@@ -352,33 +365,44 @@ function saftSigningSecret(): string {
   return secret
 }
 
+/**
+ * Signs who the link is for as well as what it opens: `expertProfileId` is
+ * set for a clinic clinician's own export and absent for an org-wide one,
+ * so a link only verifies for a caller with the same scope.
+ */
 export function signSaftDownloadToken(input: {
   orgId: string
   month: string
   pathname: string
   exp: number
+  expertProfileId?: string
 }): string {
+  const scope = input.expertProfileId
+    ? `expert:${input.expertProfileId}`
+    : "org"
   return createHmac("sha256", saftSigningSecret())
     .update(
-      `saft-download\n${input.orgId}\n${input.month}\n${input.pathname}\n${input.exp}`
+      `saft-download\n${input.orgId}\n${input.month}\n${input.pathname}\n${input.exp}\n${scope}`
     )
     .digest("base64url")
 }
 
+/** `expertProfileId` is the caller's scope (`resolveFinanceScope`). */
 export function verifySaftDownloadToken(input: {
   orgId: string
   month: string
   pathname: string
   exp: number
   signature: string
+  expertProfileId?: string
 }): boolean {
   if (!Number.isFinite(input.exp) || input.exp * 1000 < Date.now()) {
     return false
   }
-  if (
-    input.pathname.includes("..") ||
-    !input.pathname.startsWith(`invoicing-exports/${input.orgId}/`)
-  ) {
+  const prefix = input.expertProfileId
+    ? saftExpertPrefix(input.orgId, input.expertProfileId)
+    : `invoicing-exports/${input.orgId}/`
+  if (input.pathname.includes("..") || !input.pathname.startsWith(prefix)) {
     return false
   }
   const expected = Buffer.from(signSaftDownloadToken(input))
@@ -393,6 +417,7 @@ export function buildSaftDownloadUrl(input: {
   month: string
   pathname: string
   expiresAt: Date
+  expertProfileId?: string
 }): string {
   const exp = Math.floor(input.expiresAt.getTime() / 1000)
   const sig = signSaftDownloadToken({
@@ -400,6 +425,7 @@ export function buildSaftDownloadUrl(input: {
     month: input.month,
     pathname: input.pathname,
     exp,
+    expertProfileId: input.expertProfileId,
   })
   const base = input.apiBaseUrl.replace(/\/+$/, "")
   const params = new URLSearchParams({
@@ -411,13 +437,25 @@ export function buildSaftDownloadUrl(input: {
   return `${base}/invoicing/exports/saft/file?${params.toString()}`
 }
 
+/** Where one clinic clinician's own exports live, apart from the clinic's. */
+export function saftExpertPrefix(
+  orgId: string,
+  expertProfileId: string
+): string {
+  return `invoicing-exports/${orgId}/experts/${expertProfileId}/`
+}
+
 export function saftStorageKey(
   orgId: string,
   month: string,
-  contentHash?: string
+  contentHash?: string,
+  expertProfileId?: string
 ): string {
+  const prefix = expertProfileId
+    ? saftExpertPrefix(orgId, expertProfileId)
+    : `invoicing-exports/${orgId}/`
   if (contentHash) {
-    return `invoicing-exports/${orgId}/saft-${month}-${contentHash}.zip`
+    return `${prefix}saft-${month}-${contentHash}.zip`
   }
-  return `invoicing-exports/${orgId}/saft-${month}.zip`
+  return `${prefix}saft-${month}.zip`
 }

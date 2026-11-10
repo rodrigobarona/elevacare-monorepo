@@ -1,6 +1,6 @@
 import { and, desc, eq, inArray, lt, or, sql } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
-import { main, withOrgContext } from "@eleva/db"
+import { main, withOrgContext, type Tx } from "@eleva/db"
 import { getFlag } from "@eleva/flags"
 import { issueExpertServiceInvoice } from "./dispatch"
 import type { InvoicingProviderSlug } from "./types"
@@ -157,13 +157,31 @@ const invoiceSelect = {
 
 export const EXPERT_INVOICE_PAGE_SIZE = 100
 
+/**
+ * A clinic clinician sees and acts only on invoices for bookings where they
+ * are the expert. `undefined` keeps the whole org (own practice, clinic admin).
+ */
+function ownBookingsFilter(tx: Tx, expertProfileId: string | undefined) {
+  if (!expertProfileId) return undefined
+  return inArray(
+    main.expertInvoices.bookingId,
+    tx
+      .select({ id: main.bookings.id })
+      .from(main.bookings)
+      .where(eq(main.bookings.expertProfileId, expertProfileId))
+  )
+}
+
 export async function listExpertInvoices(input: {
   orgId: string
   status?: ExpertInvoiceStatus
   cursor?: string
+  expertProfileId?: string
 }): Promise<{ invoices: PublicExpertInvoice[]; nextCursor: string | null }> {
   return withOrgContext(input.orgId, async (tx) => {
     const filters = [eq(main.expertInvoices.expertOrgId, input.orgId)]
+    const own = ownBookingsFilter(tx, input.expertProfileId)
+    if (own) filters.push(own)
     if (input.status) {
       filters.push(eq(main.expertInvoices.status, input.status))
     }
@@ -177,7 +195,9 @@ export async function listExpertInvoices(input: {
         .where(
           and(
             eq(main.expertInvoices.id, input.cursor),
-            eq(main.expertInvoices.expertOrgId, input.orgId)
+            eq(main.expertInvoices.expertOrgId, input.orgId),
+            // A colleague's invoice id is not a valid cursor for a clinician.
+            ownBookingsFilter(tx, input.expertProfileId)
           )
         )
         .limit(1)
@@ -224,6 +244,7 @@ export async function retryExpertInvoice(input: {
   bookingId: string
   orgId: string
   actorUserId: string | null
+  expertProfileId?: string
 }): Promise<PublicExpertInvoice> {
   const appsEnabled = await getFlag("ff.expert_invoicing_apps_enabled")
   if (!appsEnabled) {
@@ -328,6 +349,7 @@ export async function markExpertInvoiceManual(input: {
   bookingId: string
   orgId: string
   actorUserId: string
+  expertProfileId?: string
 }): Promise<PublicExpertInvoice> {
   const snapshot = await loadInvoiceSnapshot(input)
   if (!snapshot) {
@@ -445,6 +467,7 @@ async function restoreFailedAfterSkippedDispatch(input: {
 async function loadInvoiceSnapshot(input: {
   bookingId: string
   orgId: string
+  expertProfileId?: string
 }) {
   return withOrgContext(input.orgId, async (tx) => {
     const [invoice] = await tx
@@ -453,7 +476,8 @@ async function loadInvoiceSnapshot(input: {
       .where(
         and(
           eq(main.expertInvoices.bookingId, input.bookingId),
-          eq(main.expertInvoices.expertOrgId, input.orgId)
+          eq(main.expertInvoices.expertOrgId, input.orgId),
+          ownBookingsFilter(tx, input.expertProfileId)
         )
       )
       .limit(1)

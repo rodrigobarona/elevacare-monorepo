@@ -2,6 +2,7 @@ import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm"
 import { withAudit, type AuditCtx } from "@eleva/audit"
 import {
   hasActiveAiProcessingConsent,
+  isActiveBookingExpert,
   withOrgAndUserContext,
   withOrgContext,
   withPlatformAdminContext,
@@ -354,7 +355,7 @@ export async function requireAssignedExpert(input: {
 }): Promise<BookingRow> {
   const booking = await loadBooking(input.bookingId)
   if (!booking) throw new SessionRecordError("NOT_FOUND")
-  if (input.actorUserId !== booking.expertUserId) {
+  if (!(await isActiveBookingExpert(booking, input.actorUserId))) {
     throw new SessionRecordError("FORBIDDEN")
   }
   return booking
@@ -367,7 +368,7 @@ export async function listSessionRecords(input: {
   const booking = await loadBooking(input.bookingId)
   if (!booking) throw new SessionRecordError("NOT_FOUND")
 
-  if (input.actorUserId === booking.expertUserId) {
+  if (await isActiveBookingExpert(booking, input.actorUserId)) {
     const listed = await withOrgAndUserContext(
       booking.orgId,
       input.actorUserId,
@@ -423,7 +424,7 @@ export async function upsertSessionRecord(input: {
   const kind: WritableSessionRecordKind = input.kind
   const booking = await loadBooking(input.bookingId)
   if (!booking) throw new SessionRecordError("NOT_FOUND")
-  if (input.actorUserId !== booking.expertUserId) {
+  if (!(await isActiveBookingExpert(booking, input.actorUserId))) {
     throw new SessionRecordError("FORBIDDEN")
   }
   if (

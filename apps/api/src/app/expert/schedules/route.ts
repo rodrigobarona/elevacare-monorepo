@@ -6,7 +6,7 @@ import { secureJson } from "@/lib/security-headers"
 import { withAudit } from "@eleva/audit"
 import {
   createSchedule,
-  getExpertProfileByUserId,
+  getExpertProfileForOrg,
   listSchedules,
 } from "@eleva/db"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -48,7 +48,7 @@ export async function GET(request: Request) {
   )
   if (rateLimited) return rateLimited
 
-  const profile = await getExpertProfileByUserId(session.user.id)
+  const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (!profile) {
     return secureJson(
       { error: "not found", message: "no expert profile" },
@@ -88,7 +88,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const profile = await getExpertProfileByUserId(session.user.id)
+  const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (!profile) {
     return secureJson(
       { error: "not found", message: "no expert profile" },

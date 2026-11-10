@@ -7,7 +7,7 @@ import { withAudit } from "@eleva/audit"
 import {
   archivePracticeLocation,
   countModesUsingLocation,
-  getExpertProfileByUserId,
+  getExpertProfileForOrg,
   getPracticeLocation,
   listModeNamesUsingLocation,
   listPublishedActiveModesForExpert,
@@ -80,7 +80,7 @@ export async function GET(request: Request, { params }: Params) {
   )
   if (rateLimited) return rateLimited
 
-  const profile = await getExpertProfileByUserId(session.user.id)
+  const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (!profile) {
     return secureJson(
       { error: "not found", message: "no expert profile" },
@@ -128,7 +128,7 @@ export async function PATCH(request: Request, { params }: Params) {
     )
   }
 
-  const profile = await getExpertProfileByUserId(session.user.id)
+  const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (!profile) {
     return secureJson(
       { error: "not found", message: "no expert profile" },
@@ -291,7 +291,7 @@ export async function DELETE(request: Request, { params }: Params) {
   )
   if (rateLimited) return rateLimited
 
-  const profile = await getExpertProfileByUserId(session.user.id)
+  const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (!profile) {
     return secureJson(
       { error: "not found", message: "no expert profile" },

@@ -6,6 +6,7 @@ const { state, disconnect } = vi.hoisted(() => ({
     deleted: [] as Array<Record<string, unknown>>,
     profileUpdate: null as null | Record<string, unknown>,
     emits: [] as Array<Record<string, unknown>>,
+    lookups: [] as Array<{ userId: string; orgId: string }>,
   },
   disconnect: vi.fn(async () => undefined),
 }))
@@ -18,16 +19,10 @@ vi.mock("@eleva/db", () => ({
     expertProfiles: {},
     expertIntegrations: {},
   },
-  withPlatformAdminContext: async (fn: (tx: unknown) => unknown) =>
-    fn({
-      select: () => ({
-        from: () => ({
-          where: () => ({
-            limit: async () => (state.profile ? [state.profile] : []),
-          }),
-        }),
-      }),
-    }),
+  getExpertProfileForOrg: async (userId: string, orgId: string) => {
+    state.lookups.push({ userId, orgId })
+    return state.profile
+  },
 }))
 vi.mock("@eleva/audit", () => ({
   withAudit: async (
@@ -78,20 +73,22 @@ describe("disconnectExpertInvoicing", () => {
     state.deleted = []
     state.profileUpdate = null
     state.emits = []
+    state.lookups = []
     disconnect.mockClear()
   })
 
-  it("returns null without an expert profile", async () => {
-    await expect(disconnectExpertInvoicing({ userId: "u-1" })).resolves.toBe(
-      null
-    )
+  it("returns null without an expert profile in that org", async () => {
+    await expect(
+      disconnectExpertInvoicing({ userId: "u-1", orgId: "o-1" })
+    ).resolves.toBe(null)
+    expect(state.lookups).toEqual([{ userId: "u-1", orgId: "o-1" }])
   })
 
   it("is a no-op when no provider is set", async () => {
     state.profile = { id: "p-1", orgId: "o-1", invoicingProvider: null }
-    await expect(disconnectExpertInvoicing({ userId: "u-1" })).resolves.toEqual(
-      { disconnected: false, provider: null }
-    )
+    await expect(
+      disconnectExpertInvoicing({ userId: "u-1", orgId: "o-1" })
+    ).resolves.toEqual({ disconnected: false, provider: null })
     expect(state.emits).toHaveLength(0)
   })
 
@@ -99,9 +96,9 @@ describe("disconnectExpertInvoicing", () => {
     state.profile = { id: "p-1", orgId: "o-1", invoicingProvider: "toconline" }
     state.deleted = [{ id: "int-1", slug: "toconline", vaultRef: "vault-1" }]
 
-    await expect(disconnectExpertInvoicing({ userId: "u-1" })).resolves.toEqual(
-      { disconnected: true, provider: "toconline" }
-    )
+    await expect(
+      disconnectExpertInvoicing({ userId: "u-1", orgId: "o-1" })
+    ).resolves.toEqual({ disconnected: true, provider: "toconline" })
 
     expect(state.profileUpdate).toMatchObject({
       invoicingProvider: null,

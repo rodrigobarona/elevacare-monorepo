@@ -13,7 +13,7 @@ import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { isVerifiedPublicUpload } from "@/lib/verify-public-upload"
 import { withAudit } from "@eleva/audit"
-import { getExpertProfileByUserId, updateExpertProfile } from "@eleva/db"
+import { getExpertProfileForOrg, updateExpertProfile } from "@eleva/db"
 import type { RoutePolicy } from "@/lib/route-policy"
 
 export const ROUTE_POLICY = {
@@ -77,7 +77,7 @@ export async function PATCH(request: Request) {
     )
   }
 
-  const profile = await getExpertProfileByUserId(session.user.id)
+  const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (!profile) {
     return secureJson(
       { error: "not found", message: "no expert profile" },

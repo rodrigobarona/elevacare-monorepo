@@ -6,9 +6,9 @@ import {
   type InvoicingProviderSlug,
 } from "@eleva/accounting"
 import {
+  getExpertProfileForOrg,
   main,
   withOrgContext,
-  withPlatformAdminContext,
   type Tx,
 } from "@eleva/db"
 import { corsHeaders } from "@/lib/cors"
@@ -59,19 +59,7 @@ export async function GET(request: Request) {
   )
   if (rateLimited) return rateLimited
 
-  const expert = await withPlatformAdminContext(async (tx: Tx) => {
-    const [row] = await tx
-      .select({
-        id: main.expertProfiles.id,
-        orgId: main.expertProfiles.orgId,
-        invoicingProvider: main.expertProfiles.invoicingProvider,
-        invoicingSetupStatus: main.expertProfiles.invoicingSetupStatus,
-      })
-      .from(main.expertProfiles)
-      .where(eq(main.expertProfiles.userId, session.user.id))
-      .limit(1)
-    return row ?? null
-  })
+  const expert = await getExpertProfileForOrg(session.user.id, session.orgId)
 
   if (!expert) {
     return NextResponse.json(

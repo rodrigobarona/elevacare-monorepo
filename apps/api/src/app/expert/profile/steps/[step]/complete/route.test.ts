@@ -31,7 +31,7 @@ function baseProfile(overrides: Record<string, unknown> = {}) {
 }
 
 vi.mock("@eleva/db", () => ({
-  getExpertProfileByUserId: vi.fn(async () => profile),
+  getExpertProfileForOrg: vi.fn(async () => profile),
   getOrCreateDefaultSchedule: vi.fn(async () => undefined),
   updateExpertProfile: (...args: unknown[]) => updateExpertProfile(...args),
   main: {

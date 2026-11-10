@@ -12,7 +12,7 @@ import {
 } from "@eleva/ai"
 import {
   getEventType,
-  getExpertProfileByUserId,
+  getExpertProfileForOrg,
   getPracticeLocation,
 } from "@eleva/db"
 import { corsHeaders } from "@/lib/cors"
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const profile = await getExpertProfileByUserId(session.user.id)
+  const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (!profile) {
     return secureJson(
       { error: "not found", message: "no expert profile" },

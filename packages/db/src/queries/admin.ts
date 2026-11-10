@@ -30,31 +30,6 @@ export async function getOrganizationBySlug(
   })
 }
 
-/**
- * Fetch an expert profile by user ID (used after approval to check
- * onboarding state).
- *
- * @deprecated Prefer {@link getExpertProfileForOrg} in org-scoped routes —
- * a user may have profiles in multiple orgs.
- */
-export async function getExpertProfileByUserId(
-  userId: string
-): Promise<main.ExpertProfile | null> {
-  return withPlatformAdminContext(async (tx) => {
-    const rows = await tx
-      .select()
-      .from(main.expertProfiles)
-      .where(
-        and(
-          eq(main.expertProfiles.userId, userId),
-          isNull(main.expertProfiles.deletedAt)
-        )
-      )
-      .limit(1)
-    return rows[0] ?? null
-  })
-}
-
 /** Org-scoped expert profile lookup for multi-org users. */
 export async function getExpertProfileForOrg(
   userId: string,

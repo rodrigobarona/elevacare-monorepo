@@ -9,6 +9,10 @@ const { withPlatformAdminContext, withAudit, hasActiveAiProcessingConsent } =
 
 vi.mock("@eleva/db", () => ({
   hasActiveAiProcessingConsent,
+  isActiveBookingExpert: vi.fn(
+    async (booking: { expertUserId: string }, userId: string) =>
+      userId === booking.expertUserId
+  ),
   withPlatformAdminContext,
   withOrgAndUserContext: vi.fn(),
   withOrgContext: vi.fn(),

@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm"
+import { and, eq } from "drizzle-orm"
 import { withPlatformAdminContext, type Tx } from "../context"
-import { user } from "../schema/auth"
+import { member, user } from "../schema/auth"
 
 function assertSelfAvatarAccess(userId: string, actorUserId: string): void {
   if (actorUserId !== userId) {
@@ -41,6 +41,42 @@ export async function getAuthUserRole(userId: string): Promise<string | null> {
       .limit(1)
     return row?.role ?? null
   })
+}
+
+/**
+ * Whether the person is still a member of the org. Someone removed from a
+ * clinic keeps their user row and past bookings, but no longer the clinic's
+ * access, so expert-side checks pair the booking's expert with this.
+ */
+export async function isOrgMember(
+  userId: string,
+  orgId: string
+): Promise<boolean> {
+  return withPlatformAdminContext(async (tx) => {
+    const [row] = await tx
+      .select({ id: member.id })
+      .from(member)
+      .where(and(eq(member.userId, userId), eq(member.organizationId, orgId)))
+      .limit(1)
+    return Boolean(row)
+  })
+}
+
+/**
+ * The rule for expert-side access to one booking: the person is the
+ * booking's expert AND still a member of the booking's org. Someone removed
+ * from a clinic keeps their user row and past bookings, but loses that
+ * clinic's records, documents and calls. SSOT for `@eleva/records` and the
+ * video workflows; member and guest access never goes through it.
+ */
+export async function isActiveBookingExpert(
+  booking: { orgId: string; expertUserId: string | null },
+  userId: string | null | undefined
+): Promise<boolean> {
+  if (!userId || !booking.expertUserId || userId !== booking.expertUserId) {
+    return false
+  }
+  return isOrgMember(userId, booking.orgId)
 }
 
 export async function updateUserAvatarUrl(

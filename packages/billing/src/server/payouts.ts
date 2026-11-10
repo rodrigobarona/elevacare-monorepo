@@ -922,15 +922,37 @@ export async function listTransferIdsForStripePayout(
   return [...ids]
 }
 
+/** Booking payments for bookings where `expertProfileId` is the expert. */
+function paymentIdsForExpert(tx: Tx, expertProfileId: string) {
+  return tx
+    .select({ id: main.bookingPayments.id })
+    .from(main.bookingPayments)
+    .innerJoin(
+      main.bookings,
+      eq(main.bookings.id, main.bookingPayments.bookingId)
+    )
+    .where(eq(main.bookings.expertProfileId, expertProfileId))
+}
+
 export async function listPayouts(input: {
   orgId?: string
   status?: PayoutStatus
   platformAdmin: boolean
+  /** A clinic clinician sees only payouts for their own bookings. */
+  expertProfileId?: string
 }): Promise<PayoutRow[]> {
   const run = async (tx: Tx) => {
     const filters = []
     if (input.orgId) filters.push(eq(main.payoutStates.orgId, input.orgId))
     if (input.status) filters.push(eq(main.payoutStates.status, input.status))
+    if (input.expertProfileId) {
+      filters.push(
+        inArray(
+          main.payoutStates.bookingPaymentId,
+          paymentIdsForExpert(tx, input.expertProfileId)
+        )
+      )
+    }
     return tx
       .select()
       .from(main.payoutStates)
@@ -945,7 +967,11 @@ export async function listPayouts(input: {
   return withOrgContext(input.orgId, run)
 }
 
-export async function financeSummary(orgId: string): Promise<{
+export async function financeSummary(
+  orgId: string,
+  /** A clinic clinician sees only their own bookings. */
+  scope?: { expertProfileId?: string }
+): Promise<{
   grossCents: number
   feesCents: number
   netCents: number
@@ -953,6 +979,7 @@ export async function financeSummary(orgId: string): Promise<{
   paidCents: number
 }> {
   return withOrgContext(orgId, async (tx) => {
+    const expertProfileId = scope?.expertProfileId
     const payments = await tx
       .select({
         amountCents: main.bookingPayments.amountCents,
@@ -967,7 +994,13 @@ export async function financeSummary(orgId: string): Promise<{
             "succeeded",
             "refunded",
             "refund_pending",
-          ])
+          ]),
+          expertProfileId
+            ? inArray(
+                main.bookingPayments.id,
+                paymentIdsForExpert(tx, expertProfileId)
+              )
+            : undefined
         )
       )
     const payouts = await tx
@@ -977,7 +1010,17 @@ export async function financeSummary(orgId: string): Promise<{
         status: main.payoutStates.status,
       })
       .from(main.payoutStates)
-      .where(eq(main.payoutStates.orgId, orgId))
+      .where(
+        and(
+          eq(main.payoutStates.orgId, orgId),
+          expertProfileId
+            ? inArray(
+                main.payoutStates.bookingPaymentId,
+                paymentIdsForExpert(tx, expertProfileId)
+              )
+            : undefined
+        )
+      )
 
     let grossCents = 0
     let feesCents = 0
@@ -1011,7 +1054,11 @@ export async function financeSummary(orgId: string): Promise<{
   })
 }
 
-export async function listFinanceBookings(orgId: string): Promise<
+export async function listFinanceBookings(
+  orgId: string,
+  /** A clinic clinician sees only their own bookings. */
+  scope?: { expertProfileId?: string }
+): Promise<
   Array<{
     bookingId: string
     bookingPaymentId: string
@@ -1045,7 +1092,13 @@ export async function listFinanceBookings(orgId: string): Promise<
             "succeeded",
             "refunded",
             "refund_pending",
-          ])
+          ]),
+          scope?.expertProfileId
+            ? inArray(
+                main.bookingPayments.id,
+                paymentIdsForExpert(tx, scope.expertProfileId)
+              )
+            : undefined
         )
       )
     return rows.map((row) => ({

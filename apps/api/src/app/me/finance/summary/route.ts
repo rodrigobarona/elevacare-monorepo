@@ -2,6 +2,7 @@ import { FinanceSummaryResponseSchema } from "@eleva/api-client"
 import { financeSummary, listFinanceBookings } from "@eleva/billing/server"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
+import { resolveFinanceScope } from "@eleva/auth/finance-scope"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -34,9 +35,18 @@ export async function GET(request: Request) {
   )
   if (rateLimited) return rateLimited
 
+  // A clinic clinician sees only their own bookings, not the clinic's books.
+  const scope = await resolveFinanceScope(session)
+  if (!scope) {
+    return secureJson(
+      { error: "forbidden", code: "missing-expert-profile" },
+      { status: 403, headers }
+    )
+  }
+
   const [summary, bookings] = await Promise.all([
-    financeSummary(session.orgId),
-    listFinanceBookings(session.orgId),
+    financeSummary(session.orgId, scope),
+    listFinanceBookings(session.orgId, scope),
   ])
 
   return secureJson(FinanceSummaryResponseSchema.parse({ summary, bookings }), {

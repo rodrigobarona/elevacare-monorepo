@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
-import { main, withPlatformAdminContext } from "@eleva/db"
+import { getExpertProfileForOrg, main } from "@eleva/db"
 import { getAdapter } from "./registry"
 import { InvoicingProviderSlug } from "./types"
 
@@ -14,23 +14,14 @@ export type DisconnectExpertInvoicingResult = {
  * `expert_integrations` row shreds the envelope ciphertext (tokens are
  * never stored elsewhere) and the profile returns to `not_started`, so the
  * expert must choose a provider or manual invoicing again. Already issued
- * documents and invoice rows are untouched. Returns null without a profile.
+ * documents and invoice rows are untouched. Returns null without a profile
+ * in `orgId` (a person can be an expert in several orgs).
  */
 export async function disconnectExpertInvoicing(input: {
   userId: string
+  orgId: string
 }): Promise<DisconnectExpertInvoicingResult | null> {
-  const profile = await withPlatformAdminContext(async (tx) => {
-    const [row] = await tx
-      .select({
-        id: main.expertProfiles.id,
-        orgId: main.expertProfiles.orgId,
-        invoicingProvider: main.expertProfiles.invoicingProvider,
-      })
-      .from(main.expertProfiles)
-      .where(eq(main.expertProfiles.userId, input.userId))
-      .limit(1)
-    return row ?? null
-  })
+  const profile = await getExpertProfileForOrg(input.userId, input.orgId)
   if (!profile) return null
 
   const provider = parseProvider(profile.invoicingProvider)

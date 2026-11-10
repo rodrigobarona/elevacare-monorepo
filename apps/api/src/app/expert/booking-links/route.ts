@@ -6,7 +6,7 @@ import {
   createBookingLink,
   getEventType,
   getEventTypeMode,
-  getExpertProfileByUserId,
+  getExpertProfileForOrg,
   getSchedule,
   listBookingLinksForEventType,
   toBookingLinkListItem,
@@ -56,7 +56,7 @@ export async function GET(request: Request) {
     )
   }
 
-  const profile = await getExpertProfileByUserId(session.user.id)
+  const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (!profile) {
     return secureJson(
       { error: "not found", message: "no expert profile" },
@@ -112,7 +112,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const profile = await getExpertProfileByUserId(session.user.id)
+  const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (!profile) {
     return secureJson(
       { error: "not found", message: "no expert profile" },

@@ -2,7 +2,7 @@ import { z } from "zod"
 import { withAudit } from "@eleva/audit"
 import {
   getBookingLinkForExpert,
-  getExpertProfileByUserId,
+  getExpertProfileForOrg,
   revokeBookingLink,
   toBookingLinkListItem,
 } from "@eleva/db"
@@ -55,7 +55,7 @@ export async function POST(request: Request, { params }: Params) {
   const unexpectedBody = await rejectUnexpectedBody(request, headers)
   if (unexpectedBody) return unexpectedBody
 
-  const profile = await getExpertProfileByUserId(session.user.id)
+  const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (!profile) {
     return secureJson(
       { error: "not found", message: "no expert profile" },

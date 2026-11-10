@@ -1,6 +1,11 @@
 import { eq } from "drizzle-orm"
 import { withPlatformAudit } from "@eleva/audit"
-import { main, withPlatformAdminContext, type Tx } from "@eleva/db"
+import {
+  isActiveBookingExpert,
+  main,
+  withPlatformAdminContext,
+  type Tx,
+} from "@eleva/db"
 import {
   isDailyWebhookHandshake,
   parseDailyWebhookEvent,
@@ -166,6 +171,11 @@ export async function handleDailyWebhook(input: {
   const incoming = eventTimeFromDaily(parsed.event_ts, now)
 
   const auditAction = webhookAuditAction(parsed.type)
+  // The history names someone "expert" only while they are the booking's
+  // expert and still in its org, the same rule as joins and records.
+  const participantIsExpert =
+    !auditAction &&
+    (await isActiveBookingExpert(session, userIdFromPayload(parsed.payload)))
   const applied = auditAction
     ? await applyLifecycleWebhook({
         eventId: parsed.id,
@@ -184,7 +194,7 @@ export async function handleDailyWebhook(input: {
         type: parsed.type,
         incoming,
         payload: parsed.payload,
-        expertUserId: session.expertUserId,
+        expertUserId: participantIsExpert ? session.expertUserId : null,
         memberUserId: session.memberUserId,
       })
 

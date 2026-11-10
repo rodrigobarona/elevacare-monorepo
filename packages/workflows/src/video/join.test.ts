@@ -55,7 +55,7 @@ describe("classifyJoinCaller", () => {
     expect(
       classifyJoinCaller({
         userId: "expert-1",
-        expertUserId: "expert-1",
+        isActiveExpert: true,
         memberUserId: "member-1",
         hasActiveDelegate: false,
       })
@@ -63,18 +63,29 @@ describe("classifyJoinCaller", () => {
     expect(
       classifyJoinCaller({
         userId: "member-1",
-        expertUserId: "expert-1",
+        isActiveExpert: false,
         memberUserId: "member-1",
         hasActiveDelegate: false,
       })
     ).toEqual({ role: "member" })
   })
 
+  it("rejects the booked expert once removed from the booking's org", () => {
+    expect(
+      classifyJoinCaller({
+        userId: "expert-1",
+        isActiveExpert: false,
+        memberUserId: "member-1",
+        hasActiveDelegate: false,
+      })
+    ).toEqual({ error: "NOT_A_PARTICIPANT" })
+  })
+
   it("rejects another expert of the same org", () => {
     expect(
       classifyJoinCaller({
         userId: "other-expert",
-        expertUserId: "expert-1",
+        isActiveExpert: false,
         memberUserId: "member-1",
         hasActiveDelegate: false,
       })
@@ -85,7 +96,7 @@ describe("classifyJoinCaller", () => {
     expect(
       classifyJoinCaller({
         userId: "delegate-1",
-        expertUserId: "expert-1",
+        isActiveExpert: false,
         memberUserId: "member-1",
         hasActiveDelegate: true,
       })
@@ -93,7 +104,7 @@ describe("classifyJoinCaller", () => {
     expect(
       classifyJoinCaller({
         userId: "delegate-1",
-        expertUserId: "expert-1",
+        isActiveExpert: false,
         memberUserId: "member-1",
         hasActiveDelegate: false,
       })

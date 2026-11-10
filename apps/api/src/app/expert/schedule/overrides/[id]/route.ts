@@ -4,7 +4,7 @@ import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { eq } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
-import { getExpertProfileByUserId, deleteDateOverride, main } from "@eleva/db"
+import { getExpertProfileForOrg, deleteDateOverride, main } from "@eleva/db"
 import type { RoutePolicy } from "@/lib/route-policy"
 
 export const ROUTE_POLICY = {
@@ -37,7 +37,7 @@ export async function DELETE(
   )
   if (rateLimited) return rateLimited
 
-  const profile = await getExpertProfileByUserId(session.user.id)
+  const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (!profile) {
     return secureJson(
       { error: "not found", message: "no expert profile" },

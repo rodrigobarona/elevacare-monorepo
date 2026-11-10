@@ -62,7 +62,10 @@ export async function POST(request: Request) {
   if (unexpectedBody) return unexpectedBody
 
   try {
-    const result = await disconnectExpertInvoicing({ userId: session.user.id })
+    const result = await disconnectExpertInvoicing({
+      userId: session.user.id,
+      orgId: session.orgId,
+    })
     if (!result) {
       return secureJson(
         { error: "not_found", message: "no expert profile" },

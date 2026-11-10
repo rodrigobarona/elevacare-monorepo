@@ -1,6 +1,10 @@
 import { and, eq, isNull } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
-import { withOrgAndUserContext, withPlatformAdminContext } from "@eleva/db"
+import {
+  isActiveBookingExpert,
+  withOrgAndUserContext,
+  withPlatformAdminContext,
+} from "@eleva/db"
 import { bookings, sessionDocuments } from "@eleva/db/schema"
 import { decryptRecordFields, encryptRecordFields } from "@eleva/encryption"
 import {
@@ -93,11 +97,15 @@ async function loadBooking(bookingId: string): Promise<BookingRow | null> {
   return row ?? null
 }
 
-function actorRole(
+/**
+ * Expert access follows `isActiveBookingExpert` (someone removed from a
+ * clinic loses its documents). Member access is unchanged.
+ */
+async function actorRole(
   booking: BookingRow,
   actorUserId: string
-): "expert" | "member" {
-  if (actorUserId === booking.expertUserId) return "expert"
+): Promise<"expert" | "member"> {
+  if (await isActiveBookingExpert(booking, actorUserId)) return "expert"
   if (booking.memberUserId && actorUserId === booking.memberUserId) {
     return "member"
   }
@@ -164,7 +172,7 @@ export async function requireDocumentUploader(input: {
 }): Promise<BookingRow> {
   const booking = await loadBooking(input.bookingId)
   if (!booking) throw new SessionDocumentError("NOT_FOUND")
-  actorRole(booking, input.actorUserId)
+  await actorRole(booking, input.actorUserId)
   return booking
 }
 
@@ -174,7 +182,7 @@ export async function listSessionDocuments(input: {
 }): Promise<SessionDocumentView[]> {
   const booking = await loadBooking(input.bookingId)
   if (!booking) throw new SessionDocumentError("NOT_FOUND")
-  const role = actorRole(booking, input.actorUserId)
+  const role = await actorRole(booking, input.actorUserId)
   const rows = await withOrgAndUserContext(
     booking.orgId,
     input.actorUserId,
@@ -210,7 +218,7 @@ export async function completeSessionDocument(input: {
 }): Promise<SessionDocumentView> {
   const booking = await loadBooking(input.bookingId)
   if (!booking) throw new SessionDocumentError("NOT_FOUND")
-  const role = actorRole(booking, input.actorUserId)
+  const role = await actorRole(booking, input.actorUserId)
   if (!isScope(input.scope)) throw new SessionDocumentError("SCOPE_FORBIDDEN")
   const scope = input.scope
   if (role === "member" && scope !== "shared") {
@@ -298,7 +306,7 @@ export async function mintSessionDocumentUrl(input: {
 }): Promise<SessionDocumentDownload> {
   const booking = await loadBooking(input.bookingId)
   if (!booking) throw new SessionDocumentError("NOT_FOUND")
-  const role = actorRole(booking, input.actorUserId)
+  const role = await actorRole(booking, input.actorUserId)
   const [row] = await withOrgAndUserContext(
     booking.orgId,
     input.actorUserId,
@@ -360,7 +368,7 @@ export async function loadSessionDocumentForDownload(input: {
 }> {
   const booking = await loadBooking(input.bookingId)
   if (!booking) throw new SessionDocumentError("NOT_FOUND")
-  const role = actorRole(booking, input.actorUserId)
+  const role = await actorRole(booking, input.actorUserId)
   const [row] = await withOrgAndUserContext(
     booking.orgId,
     input.actorUserId,
@@ -397,7 +405,7 @@ export async function deleteSessionDocument(input: {
 }): Promise<{ blobUrl: string }> {
   const booking = await loadBooking(input.bookingId)
   if (!booking) throw new SessionDocumentError("NOT_FOUND")
-  actorRole(booking, input.actorUserId)
+  await actorRole(booking, input.actorUserId)
   const [row] = await withOrgAndUserContext(
     booking.orgId,
     input.actorUserId,
@@ -429,7 +437,7 @@ export async function markSessionDocumentDeleted(input: {
 }): Promise<void> {
   const booking = await loadBooking(input.bookingId)
   if (!booking) throw new SessionDocumentError("NOT_FOUND")
-  actorRole(booking, input.actorUserId)
+  await actorRole(booking, input.actorUserId)
   await withAudit(
     { orgId: booking.orgId, actorUserId: input.actorUserId },
     async (tx, ctx) => {

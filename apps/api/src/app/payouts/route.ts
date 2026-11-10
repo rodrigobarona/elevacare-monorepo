@@ -9,6 +9,7 @@ import {
 } from "@eleva/billing/server"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiAuth } from "@/lib/auth"
+import { resolveFinanceScope } from "@eleva/auth/finance-scope"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -69,6 +70,7 @@ export async function GET(request: Request) {
     )
   }
 
+  let expertProfileId: string | undefined
   if (!staffRead) {
     if (query.data.orgId && query.data.orgId !== session.orgId) {
       return secureJson(
@@ -76,6 +78,15 @@ export async function GET(request: Request) {
         { status: 403, headers }
       )
     }
+    // A clinic clinician sees only payouts for their own bookings.
+    const scope = await resolveFinanceScope(session)
+    if (!scope) {
+      return secureJson(
+        { error: "forbidden", code: "missing-expert-profile" },
+        { status: 403, headers }
+      )
+    }
+    expertProfileId = scope.expertProfileId
   }
 
   try {
@@ -83,6 +94,7 @@ export async function GET(request: Request) {
       orgId: staffRead ? query.data.orgId : session.orgId,
       status: query.data.status as PayoutStatus | undefined,
       platformAdmin: staffRead,
+      expertProfileId,
     })
     return secureJson(
       ListPayoutsResponseSchema.parse({
