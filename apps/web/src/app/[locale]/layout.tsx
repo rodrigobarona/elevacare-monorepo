@@ -1,5 +1,5 @@
 import { hasLocale } from "next-intl"
-import { setRequestLocale } from "next-intl/server"
+import { getTranslations, setRequestLocale } from "next-intl/server"
 import { NextIntlClientProvider } from "next-intl"
 import { getMessages } from "next-intl/server"
 import { notFound } from "next/navigation"
@@ -12,11 +12,22 @@ type Props = {
   params: Promise<{ locale: string }>
 }
 
-export const metadata: Metadata = {
-  metadataBase: new URL(resolveGatewayUrl()),
-  title: "Eleva.care — Women's Health, Elevated",
-  description:
-    "Connect with verified women's health experts for personalised, evidence-based care — 100% online.",
+/** Default title and description in the visitor's language; pages override. */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  const t = await getTranslations({
+    locale: hasLocale(routing.locales, locale) ? locale : routing.defaultLocale,
+    namespace: "meta",
+  })
+  return {
+    metadataBase: new URL(resolveGatewayUrl()),
+    title: t("title"),
+    description: t("description"),
+  }
 }
 
 export function generateStaticParams() {

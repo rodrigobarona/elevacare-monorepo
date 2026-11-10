@@ -326,6 +326,11 @@
     "rankingAnchor": "8-como-ordenamos-os-especialistas",
     "trustLine": "Antes de um perfil ficar visível, a nossa equipa verifica a inscrição profissional de cada especialista.",
     "emptyCategory": "Ainda não há especialistas nesta área.",
+    "openingTitle": "Os nossos primeiros especialistas estão a abrir as suas práticas",
+    "openingBody": "Verificamos a inscrição profissional de cada especialista antes de o perfil ser publicado. Entretanto, a newsletter Femme Focus leva saúde da mulher baseada em evidência à sua caixa de correio.",
+    "openingNewsletter": "Receber a newsletter",
+    "openingHelp": "Como funciona a Eleva",
+    "openingExpert": "É especialista?",
     "seeAll": "Ver todos os perfis",
     "freeSession": "Sessão gratuita disponível",
     "speaksLanguage": "Fala {language}",
@@ -531,7 +536,7 @@
       "phone": "Telemóvel",
       "phoneHint": "Necessário para uma sessão por telefone. Pode incluir o indicativo do país.",
       "taxId": "NIF / IVA (opcional)",
-      "taxIdHint": "NIF português ou IVA da UE, para faturação quando a emissão abrir.",
+      "taxIdHint": "O seu NIF português ou número de IVA da UE, para o especialista emitir a fatura em seu nome.",
       "intakeNotes": "Algo que queira que o especialista saiba (opcional)",
       "intakeNotesHint": "Uma pré-agenda breve. O especialista vê isto no registo da sessão.",
       "promo": "Código promocional (opcional)",
@@ -777,7 +782,7 @@
       },
       {
         "title": "Coordene marcações e pagamentos",
-        "body": "Os membros marcam na Eleva; a Stripe Connect encaminha os pagamentos segundo as políticas da clínica."
+        "body": "Os membros marcam pela Eleva, e os pagamentos das marcações da clínica vão para a sua clínica."
       },
       {
         "title": "Acompanhe a equipa",
@@ -788,7 +793,7 @@
     "benefits": [
       {
         "icon": "buildings",
-        "title": "Um espaço Team",
+        "title": "Um espaço para a clínica",
         "body": "Convide especialistas habilitados numa organização de clínica com marca partilhada e agenda coordenada."
       },
       {
@@ -799,7 +804,7 @@
       {
         "icon": "currency",
         "title": "Pagamentos transparentes",
-        "body": "A Stripe Connect encaminha fundos conforme a configuração da clínica. Preços por lugar e termos de parceria continuam em rascunho pré-lançamento."
+        "body": "Os pagamentos das marcações da clínica vão diretamente para a sua clínica. Partilhamos consigo os preços por lugar e as condições de parceria antes do lançamento."
       },
       {
         "icon": "chart",
@@ -832,11 +837,11 @@
         "body": "Um administrador da clínica coordena convites, marca e serviços publicados aos membros."
       },
       {
-        "title": "Termos pré-lançamento",
-        "body": "Parceria e preços por lugar permanecem rascunhos até finanças e jurídico assinarem."
+        "title": "Condições antes do lançamento",
+        "body": "Partilhamos consigo as condições de parceria e os preços por lugar antes do lançamento."
       }
     ],
-    "finalHeading": "Comece a sua clínica Team",
+    "finalHeading": "Comece a sua clínica",
     "finalBody": "Crie a organização, convide especialistas e configure locais e serviços. Publicaremos termos finais de clínica antes do lançamento.",
     "finalCta": "Criar a sua conta"
   },
