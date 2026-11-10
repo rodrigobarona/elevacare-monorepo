@@ -684,7 +684,7 @@
     "steps": [
       {
         "title": "Crea tu cuenta",
-        "body": "Regístrate y abre tu consulta de experto desde tu cuenta. Empiezas en el plan comunidad y puedes cambiar de plan más adelante."
+        "body": "Regístrate y abre tu consulta de experto desde tu cuenta. Empiezas en el plan base: una tarifa del 15% por reserva, y nada más."
       },
       {
         "title": "Configura tu consulta",
@@ -710,7 +710,7 @@
       {
         "icon": "currency",
         "title": "Tus tarifas y políticas",
-        "body": "Define tus precios y una política de cancelación Flexible, Moderada o Estricta para cada servicio. Tu parte se paga a través de Stripe en la fecha más tardía entre 7 días después del pago y 24 horas después de la sesión."
+        "body": "Define tus precios y una política de cancelación Flexible, Moderada o Estricta para cada servicio. Eleva se queda con el 15% de cada reserva, sin otras deducciones. Tu parte llega a tu cuenta de Stripe en la fecha más tardía entre 7 días después del pago y 24 horas después de la sesión; después, Stripe la transfiere a tu banco."
       },
       {
         "icon": "calendar",
@@ -753,7 +753,7 @@
       }
     ],
     "finalHeading": "¿Listo para abrir tu consulta?",
-    "finalBody": "Crea tu cuenta, empieza en el plan comunidad y cambia de plan cuando encaje. Tus condiciones son el Acuerdo del especialista que aceptas al registrarte. Si lo cambiamos, te avisamos por email con al menos 15 días de antelación, y puedes irte antes de que el cambio se aplique."
+    "finalBody": "Crea tu cuenta y empieza en el plan base. Tus condiciones son el Acuerdo del especialista que aceptas al registrarte. Si lo cambiamos, te avisamos por email con al menos 15 días de antelación, y puedes irte antes de que el cambio se aplique."
   },
   "forClinics": {
     "title": "Para clínicas — Eleva.care",

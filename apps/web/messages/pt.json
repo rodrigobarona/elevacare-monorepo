@@ -684,7 +684,7 @@
     "steps": [
       {
         "title": "Crie a sua conta",
-        "body": "Registe-se e abra a sua prática de especialista a partir da sua conta. Começa no plano comunidade e pode mudar de plano mais tarde."
+        "body": "Registe-se e abra a sua prática de especialista a partir da sua conta. Começa no plano base: uma taxa de 15% por marcação, e mais nada."
       },
       {
         "title": "Configure a sua prática",
@@ -710,7 +710,7 @@
       {
         "icon": "currency",
         "title": "Os seus preços e políticas",
-        "body": "Defina os seus preços e uma política de cancelamento Flexível, Moderada ou Rigorosa para cada serviço. A sua parte é paga pela Stripe na data mais tardia entre 7 dias após o pagamento e 24 horas após a sessão."
+        "body": "Defina os seus preços e uma política de cancelamento Flexível, Moderada ou Rigorosa para cada serviço. A Eleva fica com 15% de cada marcação, sem outras deduções. A sua parte chega à sua conta Stripe na data mais tardia entre 7 dias após o pagamento e 24 horas após a sessão; depois, a Stripe transfere-a para o seu banco."
       },
       {
         "icon": "calendar",
@@ -753,7 +753,7 @@
       }
     ],
     "finalHeading": "Pronto para abrir a sua prática?",
-    "finalBody": "Crie a sua conta, comece no plano comunidade e mude de plano quando fizer sentido. Os seus termos são o Acordo do especialista que aceita ao registar-se. Se o alterarmos, avisamos por email com pelo menos 15 dias de antecedência, e pode sair antes de a alteração se aplicar."
+    "finalBody": "Crie a sua conta e comece no plano base. Os seus termos são o Acordo do especialista que aceita ao registar-se. Se o alterarmos, avisamos por email com pelo menos 15 dias de antecedência, e pode sair antes de a alteração se aplicar."
   },
   "forClinics": {
     "title": "Para clínicas — Eleva.care",
