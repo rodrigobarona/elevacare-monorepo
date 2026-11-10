@@ -1,7 +1,7 @@
 ---
 title: Payments and refunds — Eleva.care
 description: How bookings are paid, who issues the invoice, and how refunds, no-shows and payment disputes work.
-lastUpdated: 2026-11-09
+lastUpdated: 2026-11-10
 summary: "How you pay, how refunds work under each cancellation policy, and how experts are paid."
 ---
 
@@ -9,20 +9,21 @@ summary: "How you pay, how refunds work under each cancellation policy, and how 
 
 - You pay the **session price set by the expert**, in euros. The price shown is final: there are no extra charges after confirmation.
 - The session is provided by the expert, who is an independent professional. Eleva is the intermediary that **collects the payment on the expert's behalf** and transfers the expert's share to them.
-- From the price, Eleva keeps a **service fee of 15%, including VAT where due**, charged to the expert. Example: for a €100 session, the expert receives €85 and Eleva €15. Eleva pays the payment processing fees.
+- From the price, Eleva keeps a **service fee of 15% (8% for experts on the paid Top Expert plan), including VAT where due**, charged to the expert. Example at 15%: for a €100 session, the expert receives €85 and Eleva €15. Eleva pays the payment processing fees.
 - There is no per-booking fee on bookings made through a clinic: the clinic pays Eleva a subscription.
 
 ## 2. How you pay
 
 - Payment is made through **Stripe Checkout**. We accept card (including Apple Pay and Google Pay), Link and MB WAY.
 - While you pay, the time slot is held for 5 minutes, or 10 minutes while an MB WAY payment is being processed. If the payment is not completed within that time, the booking is not confirmed and the slot is released.
+- For a service where the expert must accept your booking (request to book), you pay when you send the request. If the expert declines it, or does not answer in time (within 24 hours, or before the session if sooner), the request expires and we refund 100% of what you paid.
 - Where the law requires it, your bank asks for strong customer authentication (3D Secure). If authentication fails, you can try another card or method.
 - Eleva does not store card numbers. Payment data is handled by Stripe, which is PCI DSS certified.
 
 ## 3. Invoices and NIF
 
-- **The expert issues the invoice for the session**, using their own certified invoicing software. Eleva does not invoice the session and does not charge VAT on it.
-- At payment, you may choose to give your **NIF**. Eleva collects it and sends it to the expert, with the booking details, so that the invoice is issued in your name.
+- **The expert, or the clinic when you book through a clinic, issues you the invoice for the session**, using their own certified invoicing software. Eleva does not invoice the session and does not charge VAT on it.
+- At payment, you may choose to give your **NIF**. Eleva collects it and sends it to the expert (or the clinic), with the booking details, so that the invoice is issued in your name.
 - Eleva's service fee is invoiced by Eleva to the expert, not to you.
 
 ## 4. Promo codes
