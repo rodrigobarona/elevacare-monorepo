@@ -1,224 +1,129 @@
 ---
-title: Creating Services
-description: Define your consultation offerings with clear descriptions and appropriate pricing.
+title: Crea tus servicios
+description: Crea un servicio paso a paso, desde el precio y las políticas hasta cómo te encuentras con los miembros.
 ---
 
-# Creating Services
+Un servicio es algo que los miembros pueden reservar, como "Consulta inicial". Cada uno tiene un precio, una duración, una política de cancelación y al menos una forma de encuentro: vídeo, teléfono o presencial.
 
-Services are the consultations you offer to members. Each service has its own description, duration, and price.
-
-## Service Components
-
-<Tabs items={['Required', 'Optional']}>
-  <Tab value="Required">
-    **Required Fields**
-
-    | Field | Description |
-    |-------|-------------|
-    | Title | Clear, descriptive name (e.g., "Initial Pelvic Health Consultation") |
-    | Description | What members can expect from this service |
-    | Duration | Consultation length (30, 45, 60, or 90 minutes) |
-    | Price | Your fee for this service |
-    | Category | Primary service category |
-
-  </Tab>
-  <Tab value="Optional">
-    **Optional Fields**
-
-    - Preparation instructions for members
-    - Follow-up information
-    - Required materials or forms
-    - Video vs. in-person availability
-
-  </Tab>
-</Tabs>
-
-## Types of Services
-
-<Accordions>
-  <Accordion title="Initial Consultations">
-    First-time appointments for new members:
-
-    - Longer duration (typically 60-90 minutes)
-    - Comprehensive assessment
-    - Treatment planning
-    - Higher price point
-
-    **Example:**
-    > **Initial Pelvic Floor Assessment**
-    > 60 minutes | €120
-    >
-    > Comprehensive evaluation including health history, symptom assessment, and personalized treatment recommendations.
-
-  </Accordion>
-  <Accordion title="Follow-Up Sessions">
-    Ongoing appointments for established members:
-
-    - Shorter duration (30-45 minutes)
-    - Progress review
-    - Treatment continuation
-    - Lower price point
-
-    **Example:**
-    > **Follow-Up Pelvic Floor Session**
-    > 45 minutes | €80
-    >
-    > Continue your treatment plan with exercises, progress assessment, and adjustments as needed.
-
-  </Accordion>
-  <Accordion title="Specialized Services">
-    Targeted services for specific needs:
-
-    - Pregnancy preparation session
-    - Postpartum recovery assessment
-    - Menopause symptom consultation
-    - Pre-surgical preparation
-
-  </Accordion>
-</Accordions>
-
-## Creating Your First Service
+## Crea un servicio
 
 <Steps>
   <Step>
-    ### Navigate to Services
+    ### Empieza
 
-    Go to **Expert Dashboard** → **Services** → **Create Service**.
-
-  </Step>
-  <Step>
-    ### Basic Information
-
-    Enter a clear, descriptive title, select the primary category, choose duration, and set your price.
+    Abre **Servicios** y elige **Nuevo servicio**.
 
   </Step>
   <Step>
-    ### Write Description
+    ### Rellena el formulario
 
-    Answer: What happens during this consultation? Who is it for? What outcomes can members expect? What should they prepare?
-
-  </Step>
-  <Step>
-    ### Configure Options
-
-    Enable video consultation, in-person options, buffer time, and advance notice requirements.
+    - **Título** y **Descripción**, con una pestaña por idioma. El título en inglés es obligatorio; añade también el portugués y el español para los idiomas que ofreces.
+    - **Enlace de reserva**: el final de la dirección web del servicio, por ejemplo `consulta-inicial`.
+    - **Duración (min)**, **Precio** y los **Idiomas** de la sesión.
+    - Las reglas de reserva y las políticas, que te explicamos más abajo.
 
   </Step>
   <Step>
-    ### Publish
+    ### Guarda
 
-    Click **Save & Publish** to make your service available for booking.
+    Elige **Crear servicio**. El servicio se abre con pestañas: **Básicos**, **Detalles**, **Tipo**, **Políticas**, **Modos de entrega** y **Enlaces privados**.
+
+  </Step>
+  <Step>
+    ### Añade una forma de encuentro y publica
+
+    Añade al menos un modo de entrega y después publica el servicio desde **Servicios**.
 
   </Step>
 </Steps>
 
-<Callout type="info">
-  Use bullet points in your description to make it scannable. members often skim
-  before booking.
+Después de guardar, **Mejorar**, **Acortar** y **Corregir gramática**, en la pestaña **Básicos**, te ayudan a pulir la descripción. Revisa el resultado antes de guardar.
+
+## Detalles: qué reciben los miembros
+
+En la tarjeta del servicio y en la página de reserva aparecen tres listas breves, en cada idioma que ofreces:
+
+- **Qué esperar**: cómo transcurre la sesión, paso a paso.
+- **Qué incluye**: lo que reciben los miembros. Indica solo lo que realmente ofreces.
+- **Preguntas en las que puedes ayudar**: preguntas reales que traen los miembros, para que sepan si la sesión es para ellos.
+
+Las listas vacías no se muestran en tu página pública.
+
+## Tipo y visibilidad
+
+- **Clínico**: atención regulada. Cada forma de encuentro debe quedar dentro de los países donde tienes colegiación.
+- **No clínico**: coaching, educación o bienestar.
+
+Después elige quién puede encontrar el servicio:
+
+- **Público**: visible en tu perfil y en las búsquedas.
+- **No listado**: solo se puede reservar con su enlace directo.
+- **Privado**: solo accesible con un enlace privado.
+
+## Políticas
+
+### Política de cancelación
+
+Los miembros ven la política antes de pagar. Si la cambias, la nueva política se aplica a las reservas nuevas; las reservas existentes mantienen la que tenían al reservar.
+
+| Política | Reembolso total      | Reembolso del 50%             | Sin reembolso           |
+| -------- | -------------------- | ----------------------------- | ----------------------- |
+| Flexible | 24 horas o más antes | —                             | Menos de 24 horas antes |
+| Moderada | 48 horas o más antes | Entre 24 y 48 horas antes     | Menos de 24 horas antes |
+| Estricta | 7 días o más antes   | Entre 48 horas y 7 días antes | Menos de 48 horas antes |
+
+En cualquier política, un miembro que cancela en las 24 horas siguientes a la reserva recibe el reembolso total, siempre que falten al menos 48 horas para la sesión.
+
+### Cómo reservan los miembros
+
+- **Reserva instantánea**: el miembro paga y queda reservado al momento. Es lo mejor para sesiones online que puedes atender sin una revisión previa.
+- **Solicitar reserva**: el miembro paga ahora y tú aceptas o rechazas en 24 horas, o antes de la sesión si es antes. Si rechazas o no respondes a tiempo, el miembro recibe el reembolso total y el hueco vuelve a quedar libre.
+
+Con la reserva instantánea también puedes activar **Pedir confirmación para reservas de última hora**. Las reservas que empiezan dentro del plazo que elijas (2, 12, 24 o 48 horas) esperan entonces a que las aceptes. Es útil para las sesiones presenciales.
+
+### Reglas de reserva
+
+- **Ventana de reserva (días de antelación)**: con cuánta antelación pueden reservar los miembros. Déjala vacía para no poner límite.
+- **Antelación mínima (min)**: el tiempo mínimo entre la reserva y la sesión.
+- **Margen antes (min)** y **Margen después (min)**: tiempo libre alrededor de cada sesión.
+- **Ventana de reprogramación (horas)**: los miembros pueden cambiar una reserva por su cuenta mientras cancelarla les daría todavía el reembolso total. Define una ventana para impedir cambios demasiado cerca de la sesión.
+
+## Modos de entrega: cómo te encuentras con los miembros
+
+Elige **Añadir forma de encuentro** y define:
+
+- **Tipo de encuentro**: Vídeo, Teléfono o Presencial. El tipo queda fijado al guardar; para cambiarlo, desactiva el modo y añade uno nuevo.
+- **Horario**: las horas en las que se puede reservar este modo.
+- **Ubicación**, para las sesiones presenciales. Elige **Añadir un lugar** para añadir la dirección.
+- **Países** e **Idiomas** de este modo. Tienes atajos: **Todos mis países**, **Solo Portugal** o **UE**.
+- **Precio alternativo (€)**: déjalo vacío para usar el precio del servicio.
+
+## Enlaces privados
+
+Invita a una persona concreta, por ejemplo cuando tu agenda pública está cerrada. Elige **Crear enlace privado**, selecciona el modo de entrega y, si quieres, añade un email de destinatario, un precio, una fecha de caducidad, un número máximo de usos y una nota para el miembro.
+
+Copia el enlace en ese momento: por tu seguridad, solo se muestra una vez. Puedes **Revocar** un enlace cuando quieras.
+
+## Publica
+
+En **Servicios**, abre el menú del servicio y elige **Publicar**. Un servicio de pago necesita que antes hayas configurado tus cobros; puedes hacerlo desde **Finanzas**. Para dejar de recibir reservas nuevas, elige **Despublicar**.
+
+<Callout>
+  El precio que fijas es el precio final que pagan los miembros, en euros. Eleva
+  se queda con el 15%, IVA incluido cuando proceda. [Ver precios y
+  tarifas](/experts/earnings/pricing)
 </Callout>
-
-## Pricing Your Services
-
-### Factors to Consider
-
-| Factor             | Description                           |
-| ------------------ | ------------------------------------- |
-| Expertise          | Your credentials and experience level |
-| Market             | Local rates and competitor pricing    |
-| Duration           | Session length and complexity         |
-| Tarifa de servicio | 15 % del precio de la reserva         |
-
-### Pricing Guidelines
-
-| Service Type                  | Typical Range |
-| ----------------------------- | ------------- |
-| Initial Consultation (60 min) | €80 - €150    |
-| Follow-Up (45 min)            | €60 - €100    |
-| Specialized Session (60 min)  | €100 - €180   |
-| Quick Check-In (30 min)       | €40 - €70     |
-
-### Tarifa de servicio
-
-Eleva cobra una tarifa de servicio del 15 % del precio de la reserva, IVA incluido cuando proceda. No hay otras deducciones.
-
-**Ejemplo**: Si cobra 100 €, la tarifa es de 15 € y usted recibe 85 €.
-
-## Managing Services
-
-<Accordions>
-  <Accordion title="Editing Services">
-    1. Go to **Services**
-    2. Click on the service
-    3. Click **Edit**
-    4. Make changes and **Save**
-
-    <Callout type="warning">
-      Changes to existing services don't affect already-booked appointments.
-    </Callout>
-
-  </Accordion>
-  <Accordion title="Deactivating Services">
-    To temporarily hide a service:
-
-    1. Go to the service
-    2. Toggle **Active** off
-    3. Service won't appear for new bookings
-
-  </Accordion>
-  <Accordion title="Deleting Services">
-    To permanently remove a service:
-
-    1. Ensure no pending appointments
-    2. Click **Delete Service**
-    3. Confirm deletion
-
-  </Accordion>
-</Accordions>
-
-## Best Practices
-
-<Tabs items={['Naming', 'Descriptions', 'Pricing']}>
-  <Tab value="Naming">
-    **Clear Naming**
-
-    **Good:**
-    - "Initial Pelvic Floor Consultation"
-    - "Postpartum Recovery Assessment"
-    - "Menopause Symptom Management"
-
-    **Avoid:**
-    - "Consultation 1"
-    - "Session"
-    - "Meeting"
-
-  </Tab>
-  <Tab value="Descriptions">
-    **Detailed Descriptions**
-
-    Include:
-    - What you'll cover
-    - Who should book this
-    - What to expect
-    - Preparation needed
-
-  </Tab>
-  <Tab value="Pricing">
-    **Competitive Pricing**
-
-    - Research similar experts
-    - Consider your experience level
-    - Start moderate, adjust based on demand
-
-  </Tab>
-</Tabs>
 
 ---
 
 <Cards>
-  <Card title="Set Availability" href="/experts/getting-started/availability">
-    Configure when you're available for bookings
+  <Card
+    title="Horario y calendarios"
+    href="/experts/getting-started/availability"
+  >
+    Define cuándo pueden reservar contigo
   </Card>
-  <Card title="Understand Earnings" href="/experts/earnings/payouts">
-    Learn about fees and payment processing
+  <Card title="Reservas y solicitudes" href="/experts/sessions/bookings">
+    Responde a solicitudes y gestiona cambios
   </Card>
 </Cards>

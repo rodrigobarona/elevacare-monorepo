@@ -1,227 +1,129 @@
 ---
-title: Criar Serviços
-description: Defina as suas ofertas de consulta com descrições claras e preços apropriados.
+title: Crie os seus serviços
+description: Construa um serviço passo a passo, do preço e das políticas à forma como os membros se encontram consigo.
 ---
 
-# Criar Serviços
+Um serviço é algo que os membros podem marcar, como "Consulta inicial". Cada serviço tem um preço, uma duração, uma política de cancelamento e pelo menos uma forma de encontro: vídeo, telefone ou presencial.
 
-Serviços são as consultas que oferece aos membros. Cada serviço tem a sua própria descrição, duração e preço.
-
-## Componentes do Serviço
-
-<Tabs items={['Obrigatório', 'Opcional']}>
-  <Tab value="Obrigatório">
-    **Campos Obrigatórios**
-
-    | Campo | Descrição |
-    |-------|-----------|
-    | Título | Nome claro e descritivo (ex: "Consulta Inicial de Saúde Pélvica") |
-    | Descrição | O que os membros podem esperar deste serviço |
-    | Duração | Duração da consulta (30, 45, 60 ou 90 minutos) |
-    | Preço | A sua tarifa para este serviço |
-    | Categoria | Categoria principal do serviço |
-
-  </Tab>
-  <Tab value="Opcional">
-    **Campos Opcionais**
-
-    - Instruções de preparação para membros
-    - Informação de seguimento
-    - Materiais ou formulários necessários
-    - Disponibilidade vídeo vs. presencial
-
-  </Tab>
-</Tabs>
-
-## Tipos de Serviços
-
-<Accordions>
-  <Accordion title="Consultas Iniciais">
-    Primeiras marcações para novos membros:
-
-    - Duração mais longa (tipicamente 60-90 minutos)
-    - Avaliação completa
-    - Planeamento de tratamento
-    - Preço mais elevado
-
-    **Exemplo:**
-    > **Avaliação Inicial de Pavimento Pélvico**
-    > 60 minutos | €120
-    >
-    > Avaliação completa incluindo histórico de saúde, avaliação de sintomas e recomendações personalizadas de tratamento.
-
-  </Accordion>
-  <Accordion title="Sessões de Seguimento">
-    Marcações contínuas para membros habituais:
-
-    - Duração mais curta (30-45 minutos)
-    - Revisão de progresso
-    - Continuação do tratamento
-    - Preço mais baixo
-
-    **Exemplo:**
-    > **Sessão de Seguimento Pavimento Pélvico**
-    > 45 minutos | €80
-    >
-    > Continue o seu plano de tratamento com exercícios, avaliação de progresso e ajustes conforme necessário.
-
-  </Accordion>
-  <Accordion title="Serviços Especializados">
-    Serviços direcionados para necessidades específicas:
-
-    - Sessão de preparação para gravidez
-    - Avaliação de recuperação pós-parto
-    - Consulta de sintomas de menopausa
-    - Preparação pré-cirúrgica
-
-  </Accordion>
-</Accordions>
-
-## Criar o Seu Primeiro Serviço
+## Criar um serviço
 
 <Steps>
   <Step>
-    ### Navegar para Serviços
+    ### Comece
 
-    Vá a **Dashboard de Especialista** → **Serviços** → **Criar Serviço**.
-
-  </Step>
-  <Step>
-    ### Informação Básica
-
-    Introduza um título claro e descritivo, selecione a categoria principal, escolha a duração e defina o preço.
+    Abra **Serviços** e escolha **Novo serviço**.
 
   </Step>
   <Step>
-    ### Escrever Descrição
+    ### Preencha o formulário
 
-    Responda: O que acontece durante esta consulta? Para quem é? Que resultados podem os membros esperar? O que devem preparar?
-
-  </Step>
-  <Step>
-    ### Configurar Opções
-
-    Ative consulta por vídeo, opções presenciais, tempo de buffer e requisitos de aviso prévio.
+    - **Título** e **Descrição**, com um separador para cada língua. O título em inglês é obrigatório; acrescente português e espanhol nas línguas em que oferece o serviço.
+    - **Link de reserva**: o fim do endereço web do serviço, por exemplo `consulta-inicial`.
+    - **Duração (min)**, **Preço** e os **Idiomas** da sessão.
+    - Regras de reserva e políticas, explicadas abaixo.
 
   </Step>
   <Step>
-    ### Publicar
+    ### Guarde
 
-    Clique em **Guardar e Publicar** para tornar o seu serviço disponível para marcação.
+    Escolha **Criar serviço**. O serviço abre com separadores: **Básicos**, **Detalhes**, **Tipo**, **Políticas**, **Modos de entrega** e **Links privados**.
+
+  </Step>
+  <Step>
+    ### Adicione uma forma de encontro e publique
+
+    Adicione pelo menos um modo de entrega e depois publique o serviço em **Serviços**.
 
   </Step>
 </Steps>
 
-<Callout type="info">
-  Use pontos na sua descrição para a tornar fácil de ler. Os membros
-  frequentemente passam os olhos antes de marcar.
+Depois de guardar, **Melhorar**, **Encurtar** e **Corrigir gramática**, no separador **Básicos**, ajudam a afinar a descrição. Reveja o resultado antes de guardar.
+
+## Detalhes: o que os membros recebem
+
+Três listas curtas aparecem no cartão do serviço e na página de marcação, em cada língua em que o oferece:
+
+- **O que esperar**: como decorre a sessão, passo a passo.
+- **O que está incluído**: o que os membros recebem. Indique apenas o que realmente entrega.
+- **Perguntas em que pode ajudar**: perguntas reais que os membros trazem, para perceberem se a sessão é a certa para si.
+
+As listas vazias não aparecem na sua página pública.
+
+## Tipo e visibilidade
+
+- **Clínico**: cuidados regulados. Cada forma de encontro tem de ficar dentro dos países onde tem cédula.
+- **Não clínico**: coaching, educação ou bem-estar.
+
+Depois, escolha quem pode encontrar o serviço:
+
+- **Público**: aparece no seu perfil e na pesquisa.
+- **Não listado**: só se marca através do link direto.
+- **Privado**: só acessível através de um link privado.
+
+## Políticas
+
+### Política de cancelamento
+
+Os membros veem a política antes de pagar. Se a alterar, a nova política aplica-se às novas marcações; as marcações existentes mantêm a política com que foram feitas.
+
+| Política | Reembolso total        | Reembolso de 50%              | Sem reembolso           |
+| -------- | ---------------------- | ----------------------------- | ----------------------- |
+| Flexível | 24 horas ou mais antes | —                             | Menos de 24 horas antes |
+| Moderada | 48 horas ou mais antes | Entre 24 e 48 horas antes     | Menos de 24 horas antes |
+| Rigorosa | 7 dias ou mais antes   | Entre 48 horas e 7 dias antes | Menos de 48 horas antes |
+
+Em qualquer política, um membro que cancele nas 24 horas seguintes à marcação recebe o reembolso total, desde que a sessão seja daqui a pelo menos 48 horas.
+
+### Como os membros marcam
+
+- **Reserva imediata**: o membro paga e fica logo marcado. Ideal para sessões online que pode aceitar sem verificação prévia.
+- **Pedido de reserva**: o membro paga já, e você aceita ou recusa em 24 horas, ou antes da sessão se for mais cedo. Se recusar ou não responder a tempo, o membro recebe o reembolso total e o horário fica de novo livre.
+
+Com a Reserva imediata, pode ainda ativar **Pedir confirmação para marcações de última hora**. As marcações que comecem dentro do prazo que escolher (2, 12, 24 ou 48 horas) ficam à espera que as aceite. É útil para sessões presenciais.
+
+### Regras de reserva
+
+- **Janela de reserva (dias de antecedência)**: com quanto tempo de antecedência os membros podem marcar. Deixe vazio para não ter limite.
+- **Antecedência mínima (min)**: o tempo mínimo entre a marcação e a sessão.
+- **Intervalo antes (min)** e **Intervalo depois (min)**: tempo livre à volta de cada sessão.
+- **Janela de reagendamento (horas)**: os membros podem mudar uma marcação sozinhos enquanto um cancelamento ainda lhes daria o reembolso total. Defina uma janela para impedir alterações mais perto da sessão.
+
+## Modos de entrega: como os membros se encontram consigo
+
+Escolha **Adicionar forma de encontro** e defina:
+
+- **Tipo de encontro**: Vídeo, Telefone ou Presencial. O tipo fica fixo depois de guardado; para o mudar, desative o modo e adicione um novo.
+- **Horário**: as horas em que este modo pode ser marcado.
+- **Local**, para sessões presenciais. Escolha **Adicionar um local** para indicar a morada.
+- **Países** e **Idiomas** deste modo. Há atalhos para ajudar: **Todos os meus países**, **Só Portugal** ou **UE**.
+- **Preço alternativo (€)**: deixe em branco para usar o preço do serviço.
+
+## Links privados
+
+Convide uma pessoa específica, por exemplo quando a sua agenda pública está fechada. Escolha **Criar link privado**, escolha o modo de entrega e, se quiser, acrescente o email do destinatário, um preço, uma data de validade, um número máximo de utilizações e uma nota para o membro.
+
+Copie o link logo: por segurança, só é mostrado uma vez. Pode **Revogar** um link a qualquer momento.
+
+## Publicar
+
+Em **Serviços**, abra o menu do serviço e escolha **Publicar**. Um serviço pago precisa primeiro dos seus pagamentos configurados, o que pode fazer em **Finanças**. Para deixar de receber novas marcações, escolha **Despublicar**.
+
+<Callout>
+  O preço que define é o preço final que os membros pagam, em euros. A Eleva
+  fica com 15%, IVA incluído quando devido. [Ver preços e
+  taxas](/experts/earnings/pricing)
 </Callout>
-
-## Definir Preços dos Serviços
-
-### Fatores a Considerar
-
-| Fator           | Descrição                                  |
-| --------------- | ------------------------------------------ |
-| Expertise       | As suas credenciais e nível de experiência |
-| Mercado         | Tarifas locais e preços da concorrência    |
-| Duração         | Duração e complexidade da sessão           |
-| Taxa de Serviço | 15 % do preço da marcação                  |
-
-### Orientações de Preços
-
-| Tipo de Serviço               | Intervalo Típico |
-| ----------------------------- | ---------------- |
-| Consulta Inicial (60 min)     | €80 - €150       |
-| Seguimento (45 min)           | €60 - €100       |
-| Sessão Especializada (60 min) | €100 - €180      |
-| Check-In Rápido (30 min)      | €40 - €70        |
-
-### Taxa de Serviço
-
-A Eleva cobra uma taxa de serviço de 15 % do preço da marcação, com IVA incluído quando devido. Não há outras deduções.
-
-**Exemplo**: Se cobra €100, a taxa é de €15 e você recebe €85.
-
-## Gerir Serviços
-
-<Accordions>
-  <Accordion title="Editar Serviços">
-    1. Vá a **Serviços**
-    2. Clique no serviço
-    3. Clique em **Editar**
-    4. Faça alterações e **Guarde**
-
-    <Callout type="warning">
-      Alterações a serviços existentes não afetam marcações já feitas.
-    </Callout>
-
-  </Accordion>
-  <Accordion title="Desativar Serviços">
-    Para ocultar temporariamente um serviço:
-
-    1. Vá ao serviço
-    2. Desative **Ativo**
-    3. O serviço não aparecerá para novas marcações
-
-  </Accordion>
-  <Accordion title="Eliminar Serviços">
-    Para remover permanentemente um serviço:
-
-    1. Assegure que não há marcações pendentes
-    2. Clique em **Eliminar Serviço**
-    3. Confirme a eliminação
-
-  </Accordion>
-</Accordions>
-
-## Boas Práticas
-
-<Tabs items={['Nomenclatura', 'Descrições', 'Preços']}>
-  <Tab value="Nomenclatura">
-    **Nomenclatura Clara**
-
-    **Bom:**
-    - "Consulta Inicial de Pavimento Pélvico"
-    - "Avaliação de Recuperação Pós-Parto"
-    - "Gestão de Sintomas de Menopausa"
-
-    **Evitar:**
-    - "Consulta 1"
-    - "Sessão"
-    - "Reunião"
-
-  </Tab>
-  <Tab value="Descrições">
-    **Descrições Detalhadas**
-
-    Inclua:
-    - O que vai cobrir
-    - Quem deve marcar isto
-    - O que esperar
-    - Preparação necessária
-
-  </Tab>
-  <Tab value="Preços">
-    **Preços Competitivos**
-
-    - Pesquise especialistas semelhantes
-    - Considere o seu nível de experiência
-    - Comece moderado, ajuste baseado na procura
-
-  </Tab>
-</Tabs>
 
 ---
 
 <Cards>
   <Card
-    title="Definir Disponibilidade"
+    title="Horário e calendários"
     href="/experts/getting-started/availability"
   >
-    Configure quando está disponível para marcações
+    Defina quando os membros podem marcar consigo
   </Card>
-  <Card title="Compreender Ganhos" href="/experts/earnings/payouts">
-    Saiba sobre taxas e processamento de pagamentos
+  <Card title="Marcações e pedidos" href="/experts/sessions/bookings">
+    Responda a pedidos e trate de alterações
   </Card>
 </Cards>

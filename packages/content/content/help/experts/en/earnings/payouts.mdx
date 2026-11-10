@@ -1,254 +1,93 @@
 ---
-title: Payouts & Earnings
-description: Understand how you get paid, the service fee, and managing your earnings.
+title: Payouts
+description: Set up payouts with Stripe, see when your share reaches your bank, and follow each payment in Finance.
 ---
 
-# Payouts & Earnings
+Members pay when they book. Eleva collects the payment for you through Stripe, our payments partner, and transfers your share to your Stripe account. Stripe then pays it out to your bank.
 
-Eleva Care uses Stripe Connect for secure, automated payouts. This guide explains how earnings work and how to maximize your income.
-
-## How Payments Work
+## Set up payouts
 
 <Steps>
   <Step>
-    ### member Books
+    ### Start
 
-    Payment is collected at the time of booking.
-
-  </Step>
-  <Step>
-    ### Funds Held
-
-    Eleva holds the payment through Stripe until your share is due.
+    In setup, choose **Start Payments setup** at the **Payouts** step. If you skipped it, open **Finance** and choose **Set up payouts**.
 
   </Step>
   <Step>
-    ### Appointment Completes
+    ### Complete Stripe's form
 
-    Your share becomes available on the later of 7 days after payment and 24 hours after the session ends. It's released at the next 04:00 Lisbon time.
+    It opens on the page, without leaving Eleva. Stripe asks you to verify your identity with a photo ID, add a bank account, add a few details about your practice and accept Stripe's terms.
 
   </Step>
   <Step>
-    ### Payout Processed
+    ### Finish anything still needed
 
-    Stripe then pays it out to your bank account on your account's payout schedule.
+    If something is missing, you'll see a **Still needed** list. Complete it before you publish a paid service.
 
   </Step>
 </Steps>
 
-<Callout type="info">
-  This wait leaves time to resolve any disputes or issues. Eleva may hold a
-  transfer while a dispute or refund is open.
-</Callout>
+## When you get paid
 
-## Service Fee
-
-Eleva charges a service fee of **15% of the booking price**, VAT included where due. There are no other deductions. Eleva pays payment processing fees out of its fee.
-
-### Example Calculation
-
-| Booking Price | Service Fee (15%) | You Receive |
-| ------------- | ----------------- | ----------- |
-| €100          | €15               | €85         |
-
-### Clinic Bookings
-
-There is no per-booking fee on bookings made through a clinic. The clinic pays a per-seat subscription, under the terms of its plan.
-
-### Paid Subscriptions
-
-If you join a paid Eleva subscription that changes your fee, the terms shown when you join apply.
-
-## Setting Up Payouts
-
-<Steps>
-  <Step>
-    ### Start Setup
-
-    Go to **Expert Dashboard** → **Earnings** → **Set Up Payouts**.
-
-  </Step>
-  <Step>
-    ### Complete Verification
-
-    Complete Stripe's identity verification process.
-
-  </Step>
-  <Step>
-    ### Add Bank Account
-
-    Provide your bank account details for receiving payments.
-
-  </Step>
-  <Step>
-    ### Await Approval
-
-    Verification typically takes 1-2 business days.
-
-  </Step>
-</Steps>
-
-### Required Information
-
-- Government-issued ID
-- Bank account details
-- Tax identification number
-- Business information (if applicable)
-
-<Callout type="warning">
-  You cannot receive payouts until Stripe verification is complete. Start this
-  process early.
-</Callout>
-
-## Payout Schedule
-
-Your share of a booking becomes available on the later of these two dates:
+Your share of each booking becomes available on the later of these two dates:
 
 - 7 days after the member paid
 - 24 hours after the session ends
 
-It's released at the next 04:00 Lisbon time. Stripe then pays it out to your bank account on your account's payout schedule.
+It is released at the next 04:00, Lisbon time. Stripe then pays it to your bank on your account's payout schedule.
 
-**Example**: A member pays on 1 March at 14:00 for a session that ends on 3 March at 10:00. Seven days after payment is 8 March at 14:00, which is the later date. Your share is released at 04:00 on 9 March.
+**Example**: a member pays on 1 March at 14:00 for a session that ends on 3 March at 10:00. Seven days after payment, 8 March at 14:00, is the later date, so your share is released at 04:00 on 9 March.
 
-<Callout type="info">
-  Eleva staff review the first payout to your account before it's released, so
-  it can take a little longer.
+<Callout>
+  Eleva checks the first transfer to your account, and unusually large ones,
+  before release, so they can take a little longer.
 </Callout>
 
-## Understanding Your Earnings
+Eleva may also hold a transfer while a payment dispute or refund is open, or while details Eleva or Stripe needs are missing.
 
-### Dashboard Overview
+## Follow your earnings in Finance
 
-Your earnings dashboard shows:
+At the top of **Finance**:
 
-| Status     | Description                    |
-| ---------- | ------------------------------ |
-| Pending    | Appointments not yet completed |
-| Available  | Ready for payout               |
-| In Transit | Being transferred to your bank |
-| Paid Out   | Successfully deposited         |
+- **Net**: what you've earned, after Eleva's fees and any refunds.
+- **Pending**: earned, not yet sent to your bank.
+- **Paid out**: already sent to your bank.
 
-### Transaction Details
+**Session payments** lists every paid session with its **Gross**, **Fees**, **Net**, **Payout state** and the date it becomes **Eligible**. Use **Export CSV** for your records.
 
-Each transaction displays:
+| Payout state     | What it means                                       |
+| ---------------- | --------------------------------------------------- |
+| Pending          | Waiting for its release date                        |
+| Scheduled        | Release date reached; the transfer is on its way    |
+| Needs approval   | Eleva is checking it before release                 |
+| Transferred      | In your Stripe account                              |
+| Paid out         | Paid to your bank                                   |
+| On hold          | Held while a dispute or another issue is resolved   |
+| Failed           | The transfer didn't go through; write to support    |
+| Reversal pending | A refund is taking back all or part of the transfer |
+| Reversed         | A refund took back the transfer                     |
 
-- Booking ID
-- Service provided
-- Gross amount
-- Service fee
-- Net amount (your earnings)
+Under **Payouts and account**, Stripe's panels show your **Balance**, **Payouts**, **Account Details** and **Tax Settings**. Update your bank details there.
 
-## Taxes & Reporting
+## Taxes
 
-<Accordions>
-  <Accordion title="Tax Responsibility">
-    As an independent professional, you're responsible for:
+You declare your earnings and pay your own taxes and social security. Under EU rules (DAC7), Eleva reports what experts earn on the platform to the Portuguese Tax Authority (AT) by 31 January each year, and sends you the information it reported about you by the same date.
 
-    - Declaring your earnings
-    - Paying applicable taxes
-    - Maintaining records
+## If a payout hasn't arrived
 
-    Eleva Care does not withhold taxes. Consult a tax professional for your situation.
-
-  </Accordion>
-  <Accordion title="Documentation Provided">
-    Eleva Care provides:
-
-    - Monthly earnings statements
-    - Annual summary for tax filing
-    - Transaction history export
-
-  </Accordion>
-</Accordions>
-
-## Refunds & Cancellations
-
-### member Cancellations
-
-You choose a cancellation policy for each service: Flexible, Moderate or Strict. The policy shown at the time of booking applies to that booking.
-
-| Policy   | 100% Refund             | 50% Refund                         | No Refund                 |
-| -------- | ----------------------- | ---------------------------------- | ------------------------- |
-| Flexible | 24 hours or more before | —                                  | Less than 24 hours before |
-| Moderate | 48 hours or more before | Between 24 and 48 hours before     | Less than 24 hours before |
-| Strict   | 7 days or more before   | Between 48 hours and 7 days before | Less than 48 hours before |
-
-Under every policy, a member gets a full refund if they cancel within 24 hours of booking and the session is at least 48 hours away.
-
-The amount kept is split between you and Eleva in the same proportions as the booking. On a €100 booking:
-
-| Member Refund | Member Gets Back | You Receive | Eleva Keeps |
-| ------------- | ---------------- | ----------- | ----------- |
-| 100%          | €100             | €0          | €0          |
-| 50%           | €50              | €42.50      | €7.50       |
-| None          | €0               | €85         | €15         |
-
-If a member doesn't attend and hasn't cancelled, it counts as a cancellation at the session start time. The member gets no refund and you receive your share.
-
-### Your Cancellations
-
-If you have to cancel, or you don't attend:
-
-- Tell Eleva at [support@eleva.care](mailto:support@eleva.care) as early as possible. Don't ask the member to cancel for you.
-- The member receives 100% of the amount paid, including Eleva's fee, and Eleva offers them a new booking.
-- You receive nothing for that booking. If the transfer was already made, the amount comes off your next transfers.
-
-<Callout type="warning">
-  The Eleva team handles these refunds. They aren't automatic. Repeated
-  cancellations or no-shows may lead to your account being restricted or
-  suspended.
-</Callout>
-
-## Maximizing Earnings
-
-<Accordions>
-  <Accordion title="Optimize Pricing">
-    - Research competitor rates
-    - Consider your experience and credentials
-    - Adjust based on demand
-  </Accordion>
-  <Accordion title="Reduce Cancellations">
-    - Send appointment reminders
-    - Respond promptly to inquiries
-    - Maintain accurate availability
-  </Accordion>
-</Accordions>
-
-## Troubleshooting
-
-<Accordions>
-  <Accordion title="Payout Not Received">
-    1. Check Stripe Connect status
-    2. Verify bank account details
-    3. Check the payout schedule above. Eleva staff review your first payout before it's released
-    4. Contact support if still missing
-  </Accordion>
-  <Accordion title="Incorrect Amount">
-    Review transaction breakdown:
-
-    - Verify gross amount
-    - Check the 15% service fee
-    - Confirm any refunds applied
-
-  </Accordion>
-  <Accordion title="Stripe Issues">
-    For Stripe-specific problems:
-
-    - Log into Stripe Express dashboard
-    - Check for verification requirements
-    - Update banking information if needed
-
-  </Accordion>
-</Accordions>
+1. Check its **Payout state** in **Finance** and the release rule above.
+2. In **Payouts and account**, check whether Stripe needs anything from you.
+3. Check your bank details.
+4. Still stuck? Write to [support@eleva.care](mailto:support@eleva.care).
 
 ---
 
 <Cards>
-  <Card title="Pricing Strategy" href="/experts/earnings/pricing">
-    Optimize your consultation pricing
+  <Card title="Invoicing your members" href="/experts/earnings/invoicing">
+    Issue and track invoices for your sessions
   </Card>
-  <Card title="Set Up Your Profile" href="/experts/getting-started/profile">
-    Create a compelling professional profile
+  <Card title="Prices and fees" href="/experts/earnings/pricing">
+    What Eleva keeps from each booking
   </Card>
 </Cards>

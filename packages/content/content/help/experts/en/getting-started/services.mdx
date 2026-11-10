@@ -1,224 +1,128 @@
 ---
-title: Creating Services
-description: Define your consultation offerings with clear descriptions and appropriate pricing.
+title: Create your services
+description: Build a service step by step, from price and policies to how members meet you.
 ---
 
-# Creating Services
+A service is something members can book, such as "Initial consultation". Each one has a price, a duration, a cancellation policy and at least one way to meet: video, phone or in person.
 
-Services are the consultations you offer to members. Each service has its own description, duration, and price.
-
-## Service Components
-
-<Tabs items={['Required', 'Optional']}>
-  <Tab value="Required">
-    **Required Fields**
-
-    | Field | Description |
-    |-------|-------------|
-    | Title | Clear, descriptive name (e.g., "Initial Pelvic Health Consultation") |
-    | Description | What members can expect from this service |
-    | Duration | Consultation length (30, 45, 60, or 90 minutes) |
-    | Price | Your fee for this service |
-    | Category | Primary service category |
-
-  </Tab>
-  <Tab value="Optional">
-    **Optional Fields**
-
-    - Preparation instructions for members
-    - Follow-up information
-    - Required materials or forms
-    - Video vs. in-person availability
-
-  </Tab>
-</Tabs>
-
-## Types of Services
-
-<Accordions>
-  <Accordion title="Initial Consultations">
-    First-time appointments for new members:
-
-    - Longer duration (typically 60-90 minutes)
-    - Comprehensive assessment
-    - Treatment planning
-    - Higher price point
-
-    **Example:**
-    > **Initial Pelvic Floor Assessment**
-    > 60 minutes | €120
-    >
-    > Comprehensive evaluation including health history, symptom assessment, and personalized treatment recommendations.
-
-  </Accordion>
-  <Accordion title="Follow-Up Sessions">
-    Ongoing appointments for established members:
-
-    - Shorter duration (30-45 minutes)
-    - Progress review
-    - Treatment continuation
-    - Lower price point
-
-    **Example:**
-    > **Follow-Up Pelvic Floor Session**
-    > 45 minutes | €80
-    >
-    > Continue your treatment plan with exercises, progress assessment, and adjustments as needed.
-
-  </Accordion>
-  <Accordion title="Specialized Services">
-    Targeted services for specific needs:
-
-    - Pregnancy preparation session
-    - Postpartum recovery assessment
-    - Menopause symptom consultation
-    - Pre-surgical preparation
-
-  </Accordion>
-</Accordions>
-
-## Creating Your First Service
+## Create a service
 
 <Steps>
   <Step>
-    ### Navigate to Services
+    ### Start
 
-    Go to **Expert Dashboard** → **Services** → **Create Service**.
-
-  </Step>
-  <Step>
-    ### Basic Information
-
-    Enter a clear, descriptive title, select the primary category, choose duration, and set your price.
+    Open **Services** and choose **New service**.
 
   </Step>
   <Step>
-    ### Write Description
+    ### Fill in the form
 
-    Answer: What happens during this consultation? Who is it for? What outcomes can members expect? What should they prepare?
-
-  </Step>
-  <Step>
-    ### Configure Options
-
-    Enable video consultation, in-person options, buffer time, and advance notice requirements.
+    - **Title** and **Description**, with a tab for each language. The English title is required; add Portuguese and Spanish for the languages you offer.
+    - **Booking link**: the end of the service's web address, for example `initial-consultation`.
+    - **Duration (min)**, **Price** and the **Languages** of the session.
+    - Booking rules and policies, explained below.
 
   </Step>
   <Step>
-    ### Publish
+    ### Save
 
-    Click **Save & Publish** to make your service available for booking.
+    Choose **Create service**. The service opens with tabs: **Basics**, **Details**, **Kind**, **Policies**, **Delivery modes** and **Private links**.
+
+  </Step>
+  <Step>
+    ### Add a way to meet, then publish
+
+    Add at least one delivery mode, then publish the service from **Services**.
 
   </Step>
 </Steps>
 
-<Callout type="info">
-  Use bullet points in your description to make it scannable. members often skim
-  before booking.
+After you save, **Improve**, **Shorten** and **Fix grammar** on the **Basics** tab can help polish your description. Check the result before you save.
+
+## Details: what members get
+
+Three short lists appear on your service card and booking page, in each language you offer:
+
+- **What to expect**: how the session goes, step by step.
+- **What's included**: what members get. List only what you actually deliver.
+- **Questions you can help with**: real questions members bring, so they can tell if the session is right for them.
+
+Empty lists are hidden on your public page.
+
+## Kind and visibility
+
+- **Clinical**: regulated care. Each way to meet must stay inside the countries where you are licensed.
+- **Non-clinical**: coaching, education or wellness.
+
+Then choose who can find the service:
+
+- **Public**: listed on your profile and in search.
+- **Unlisted**: bookable through its direct link only.
+- **Private**: reachable only through a private link.
+
+## Policies
+
+### Cancellation policy
+
+Members see the policy before they pay. If you change it, the new policy applies to new bookings; existing bookings keep the one they were booked under.
+
+| Policy   | Full refund             | 50% refund                         | No refund                 |
+| -------- | ----------------------- | ---------------------------------- | ------------------------- |
+| Flexible | 24 hours or more before | —                                  | Less than 24 hours before |
+| Moderate | 48 hours or more before | Between 24 and 48 hours before     | Less than 24 hours before |
+| Strict   | 7 days or more before   | Between 48 hours and 7 days before | Less than 48 hours before |
+
+Under every policy, a member who cancels within 24 hours of booking gets a full refund, as long as the session is at least 48 hours away.
+
+### How members book
+
+- **Instant Book**: the member pays and is booked straight away. Best for online sessions you can take without a prior check.
+- **Request to book**: the member pays now, and you accept or decline within 24 hours, or before the session if that is sooner. If you decline or don't answer in time, the member gets a full refund and the time is free again.
+
+With Instant Book, you can also set **Ask me to confirm last-minute bookings**. Bookings that start within the time you choose (2, 12, 24 or 48 hours) then wait for you to accept. This helps with in-person sessions.
+
+### Booking rules
+
+- **Booking window (days in advance)**: how far ahead members can book. Leave it empty for no limit.
+- **Minimum notice (min)**: the shortest time between booking and session.
+- **Buffer before (min)** and **Buffer after (min)**: free time around each session.
+- **Reschedule window (hours)**: members can move a booking themselves while cancelling would still refund them in full. Set a window to stop changes closer to the session.
+
+## Delivery modes: how members meet you
+
+Choose **Add a way to meet** and set:
+
+- **Meeting type**: Video, Phone or In person. The type is fixed once saved; to change it, deactivate the mode and add a new one.
+- **Schedule**: the hours when this mode can be booked.
+- **Location**, for in-person sessions. Choose **Add a place** to add the address.
+- **Countries** and **Languages** for this mode. Presets help: **All my countries**, **Portugal only** or **EU**.
+- **Price override (€)**: leave it blank to use the service price.
+
+## Private links
+
+Invite a specific person, for example when your public agenda is closed. Choose **Create private link**, pick the delivery mode, and if you like add a recipient email, a price, an expiry date, a maximum number of uses and a note for the member.
+
+Copy the link straight away: for your security, it is shown only once. You can **Revoke** a link at any time.
+
+## Publish
+
+In **Services**, open the service's menu and choose **Publish**. A paid service needs your payouts set up first; you can do this from **Finance**. To stop new bookings, choose **Unpublish**.
+
+<Callout>
+  The price you set is the final price members pay, in euros. Eleva keeps 15% of
+  it, VAT included where due. [See prices and fees](/experts/earnings/pricing)
 </Callout>
-
-## Pricing Your Services
-
-### Factors to Consider
-
-| Factor      | Description                           |
-| ----------- | ------------------------------------- |
-| Expertise   | Your credentials and experience level |
-| Market      | Local rates and competitor pricing    |
-| Duration    | Session length and complexity         |
-| Service Fee | 15% of the booking price              |
-
-### Pricing Guidelines
-
-| Service Type                  | Typical Range |
-| ----------------------------- | ------------- |
-| Initial Consultation (60 min) | €80 - €150    |
-| Follow-Up (45 min)            | €60 - €100    |
-| Specialized Session (60 min)  | €100 - €180   |
-| Quick Check-In (30 min)       | €40 - €70     |
-
-### Service Fee
-
-Eleva charges a service fee of 15% of the booking price, VAT included where due. There are no other deductions.
-
-**Example**: If you charge €100, the fee is €15 and you receive €85.
-
-## Managing Services
-
-<Accordions>
-  <Accordion title="Editing Services">
-    1. Go to **Services**
-    2. Click on the service
-    3. Click **Edit**
-    4. Make changes and **Save**
-
-    <Callout type="warning">
-      Changes to existing services don't affect already-booked appointments.
-    </Callout>
-
-  </Accordion>
-  <Accordion title="Deactivating Services">
-    To temporarily hide a service:
-
-    1. Go to the service
-    2. Toggle **Active** off
-    3. Service won't appear for new bookings
-
-  </Accordion>
-  <Accordion title="Deleting Services">
-    To permanently remove a service:
-
-    1. Ensure no pending appointments
-    2. Click **Delete Service**
-    3. Confirm deletion
-
-  </Accordion>
-</Accordions>
-
-## Best Practices
-
-<Tabs items={['Naming', 'Descriptions', 'Pricing']}>
-  <Tab value="Naming">
-    **Clear Naming**
-
-    **Good:**
-    - "Initial Pelvic Floor Consultation"
-    - "Postpartum Recovery Assessment"
-    - "Menopause Symptom Management"
-
-    **Avoid:**
-    - "Consultation 1"
-    - "Session"
-    - "Meeting"
-
-  </Tab>
-  <Tab value="Descriptions">
-    **Detailed Descriptions**
-
-    Include:
-    - What you'll cover
-    - Who should book this
-    - What to expect
-    - Preparation needed
-
-  </Tab>
-  <Tab value="Pricing">
-    **Competitive Pricing**
-
-    - Research similar experts
-    - Consider your experience level
-    - Start moderate, adjust based on demand
-
-  </Tab>
-</Tabs>
 
 ---
 
 <Cards>
-  <Card title="Set Availability" href="/experts/getting-started/availability">
-    Configure when you're available for bookings
+  <Card
+    title="Hours and calendars"
+    href="/experts/getting-started/availability"
+  >
+    Set when members can book you
   </Card>
-  <Card title="Understand Earnings" href="/experts/earnings/payouts">
-    Learn about fees and payment processing
+  <Card title="Bookings and requests" href="/experts/sessions/bookings">
+    Answer requests and handle changes
   </Card>
 </Cards>
