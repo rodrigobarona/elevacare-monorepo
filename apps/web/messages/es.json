@@ -538,7 +538,7 @@
       "promoHint": "¿Tienes un código? Aplícalo aquí y verás el nuevo total antes de pagar.",
       "consentsIntro": "Para reservar una sesión de salud en esta plataforma digital de salud, confirma:",
       "aiConsent": {
-        "label": "Opcional: autorizo la transcripción en directo y notas asistidas por IA en esta sesión. Tu experto sigue redactando el informe; puedes retirar la autorización cuando quieras en los ajustes de Privacidad. Consulta el",
+        "label": "Opcional: autorizo la transcripción en directo en mis sesiones por vídeo y, si mi especialista la usa, ayuda de IA para redactar sus notas. Tu especialista sigue escribiendo y revisando el informe; puedes desactivarlo cuando quieras en los ajustes de Privacidad. Consulta el",
         "link": "aviso de tratamiento por IA"
       },
       "hold": "Continuar al pago",
