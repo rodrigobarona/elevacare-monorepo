@@ -11,7 +11,7 @@ import {
   withHeaders,
 } from "./proxy"
 
-const CANONICAL_LITERAL = '["/((?!api|_next|_vercel|.*\\\\..*).*)"]'
+const CANONICAL_LITERAL = '["/((?!api/|_next|_vercel|.*\\\\..*).*)"]'
 
 describe("isVideoJoinPath", () => {
   it("matches member and expert session join routes only", () => {
@@ -52,9 +52,11 @@ describe("joinPermissionsPolicy", () => {
 
 describe("STANDARD_APP_MATCHER / PASSTHROUGH_APP_MATCHER", () => {
   it("exports the canonical regex", () => {
-    expect(STANDARD_APP_MATCHER).toEqual(["/((?!api|_next|_vercel|.*\\..*).*)"])
+    expect(STANDARD_APP_MATCHER).toEqual([
+      "/((?!api/|_next|_vercel|.*\\..*).*)",
+    ])
     expect(PASSTHROUGH_APP_MATCHER).toEqual([
-      "/((?!api|_next|_vercel|.*\\..*).*)",
+      "/((?!api/|_next|_vercel|.*\\..*).*)",
     ])
   })
 

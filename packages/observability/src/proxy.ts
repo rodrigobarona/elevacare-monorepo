@@ -24,10 +24,13 @@ import {
  * exported here for unit tests and documentation only.
  *
  * Canonical literal:
- *   ["/((?!api|_next|_vercel|.*\\..*).*)"]
+ *   ["/((?!api/|_next|_vercel|.*\\..*).*)"]
+ *
+ * `api/` (with the slash) skips only /api routes: a workspace slug that
+ * starts with "api", like `apiana`, still goes through the proxy.
  */
 export const STANDARD_APP_MATCHER: readonly [string] = [
-  "/((?!api|_next|_vercel|.*\\..*).*)",
+  "/((?!api/|_next|_vercel|.*\\..*).*)",
 ]
 
 /**
@@ -38,10 +41,10 @@ export const STANDARD_APP_MATCHER: readonly [string] = [
  * reference/test constant, not an importable matcher.
  *
  * Canonical literal:
- *   ["/((?!api|_next|_vercel|.*\\..*).*)"]
+ *   ["/((?!api/|_next|_vercel|.*\\..*).*)"]
  */
 export const PASSTHROUGH_APP_MATCHER: readonly [string] = [
-  "/((?!api|_next|_vercel|.*\\..*).*)",
+  "/((?!api/|_next|_vercel|.*\\..*).*)",
 ]
 
 export type ProxyHandler = (
