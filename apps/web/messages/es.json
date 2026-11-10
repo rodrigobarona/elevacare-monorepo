@@ -9,7 +9,8 @@
     "expert": "Especialista",
     "home": "Inicio",
     "login": "Iniciar sesión",
-    "getStarted": "Empezar ahora",
+    "findExpert": "Encontrar especialista",
+    "changeLanguage": "Cambiar idioma",
     "becomeExpert": "Hazte especialista",
     "forClinics": "Para clínicas",
     "menu": {
@@ -68,7 +69,7 @@
       "headingAccent": "a tu ritmo.",
       "description": "Reserva especialistas de confianza en embarazo, salud pélvica y cada etapa de la vida. Online, por teléfono o en persona.",
       "cta": "Encontrar especialista",
-      "ctaSecondary": "Ser colaborador",
+      "ctaSecondary": "Hazte especialista",
       "disclaimer": "Eleva te conecta con especialistas de salud independientes, con consulta propia.",
       "aside": {
         "stages": "Cuidados en cada etapa de la vida",

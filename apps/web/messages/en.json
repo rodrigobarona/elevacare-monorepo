@@ -9,7 +9,8 @@
     "expert": "Expert",
     "home": "Home",
     "login": "Log in",
-    "getStarted": "Get started",
+    "findExpert": "Find an expert",
+    "changeLanguage": "Change language",
     "becomeExpert": "Become an expert",
     "forClinics": "For clinics",
     "menu": {
@@ -68,7 +69,7 @@
       "headingAccent": "on your schedule.",
       "description": "Book trusted specialists in pregnancy, pelvic health and every stage of life. Online, by phone or in person.",
       "cta": "Find an expert",
-      "ctaSecondary": "Become a partner",
+      "ctaSecondary": "Become an expert",
       "disclaimer": "Eleva connects you with independent health experts who run their own practice.",
       "aside": {
         "stages": "Care for every stage of life",
