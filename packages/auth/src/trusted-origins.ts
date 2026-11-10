@@ -1,12 +1,15 @@
+import { apexAllowed } from "@eleva/config/apex"
+
 const LOCAL_APP_PORTS = [
   ...Array.from({ length: 10 }, (_, index) => 3000 + index),
   3100,
   3102,
 ]
 
+// The apex (eleva.care, www.eleva.care) is added only once it serves v3.
+const APEX_ORIGINS = ["https://eleva.care", "https://www.eleva.care"]
+
 const DEFAULT_TRUSTED_ORIGINS = [
-  "https://eleva.care",
-  "https://www.eleva.care",
   "https://api.eleva.care",
   "https://dev.eleva.care",
   "https://api.dev.eleva.care",
@@ -23,6 +26,7 @@ const DEFAULT_TRUSTED_ORIGINS = [
 ]
 
 type OriginEnv = {
+  ELEVA_APEX_IS_V3?: string
   VERCEL_ENV?: string
   NODE_ENV?: string
   ELEVA_TRUSTED_ORIGINS?: string
@@ -66,10 +70,11 @@ export function trustedOrigins(env: OriginEnv = process.env): string[] {
   return [
     ...new Set([
       ...DEFAULT_TRUSTED_ORIGINS,
+      ...APEX_ORIGINS,
       ...localAppOrigins(env),
       ...extras,
     ]),
-  ]
+  ].filter((origin) => apexAllowed(origin, env))
 }
 
 export function isTrustedOrigin(origin: string | null): boolean {

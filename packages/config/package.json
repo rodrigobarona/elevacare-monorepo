@@ -17,6 +17,8 @@
     "./country-to-locale": "./src/country-to-locale.ts",
     "./reserved-usernames": "./src/reserved-usernames.ts",
     "./next-dev": "./src/next-dev.mjs",
+    "./apex": "./src/apex.ts",
+    "./api-url": "./src/api-url.ts",
     "./routing": "./src/routing.ts",
     "./dispatch": "./src/dispatch.ts",
     "./slug": "./src/slug.ts",

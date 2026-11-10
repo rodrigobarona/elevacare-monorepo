@@ -1,5 +1,6 @@
 import { headers } from "next/headers"
 import { createApiClient } from "@eleva/api-client"
+import { secureApiBaseUrl } from "@eleva/config/api-url"
 import {
   addressWorkspaceSlug,
   buildApiSessionHeaders,
@@ -8,14 +9,9 @@ import {
 } from "@eleva/auth/server"
 import type { ElevaSession } from "@eleva/auth/types"
 
+/** HTTPS API origin for forwarded session cookies (`@eleva/config/api-url`). */
 export function getApiBaseUrl(): string {
-  const url = process.env.NEXT_PUBLIC_API_URL
-  if (!url) {
-    throw new Error(
-      "NEXT_PUBLIC_API_URL environment variable is required but not set"
-    )
-  }
-  return url
+  return secureApiBaseUrl()
 }
 
 /**

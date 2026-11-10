@@ -27,11 +27,16 @@ function addUrlHosts(target, value) {
   }
 }
 
+// Mirrors `@eleva/config/apex`: the apex still serves the previous app,
+// so Server Actions accept it only once ELEVA_APEX_IS_V3=true.
+const APEX_HOSTS = new Set(["eleva.care", "www.eleva.care"])
+
 export function resolveServerActionAllowedOrigins(env = process.env) {
-  const origins = new Set(["eleva.care"])
+  const apexIsV3 = env.ELEVA_APEX_IS_V3?.trim() === "true"
+  const origins = new Set(apexIsV3 ? ["eleva.care"] : [])
   addUrlHosts(origins, env.APP_URL)
   addUrlHosts(origins, env.NEXT_PUBLIC_APP_URL)
-  return [...origins]
+  return [...origins].filter((host) => apexIsV3 || !APEX_HOSTS.has(host))
 }
 
 function localDevOrigins() {

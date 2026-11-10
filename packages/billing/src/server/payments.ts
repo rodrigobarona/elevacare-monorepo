@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { randomUUID, timingSafeEqual } from "node:crypto"
 import { and, eq, inArray, sql } from "drizzle-orm"
 import type Stripe from "stripe"
@@ -253,7 +254,7 @@ async function preparePayableReservation(input: {
   try {
     loaded = await loadReservationForIntent(input.reservationId)
   } catch (err) {
-    console.error("[payments] reservation load failed", err)
+    logError("[payments] reservation load failed", err)
     return { ok: false, error: "db_error" }
   }
   if (!loaded) return { ok: false, error: "not_found" }
@@ -330,7 +331,7 @@ async function ensurePendingBooking(
       loadBillingSettlementFields(reservation.orgId),
     ])
   } catch (err) {
-    console.error("[payments] booking/entitlements load failed", err)
+    logError("[payments] booking/entitlements load failed", err)
     return { ok: false, error: "db_error" }
   }
   if (!reservation.userId && !funnel.guest?.email && !existing) {
@@ -401,7 +402,7 @@ async function ensurePendingBooking(
       reservation.id
     )
     if (!raced) {
-      console.error("[payments] tx A failed", err)
+      logError("[payments] tx A failed", err)
       return { ok: false, error: "db_error" }
     }
     return { ok: true, bookingId: raced.bookingId, paymentId: raced.paymentId }
@@ -446,7 +447,7 @@ export async function createPaymentIntentForReservation(
       idempotencyKey,
     })
   } catch (err) {
-    console.error("[payments/intent] Stripe create failed", err)
+    logError("[payments/intent] Stripe create failed", err)
     return { ok: false, error: "unavailable" }
   }
 
@@ -472,7 +473,7 @@ export async function createPaymentIntentForReservation(
       }
     )
   } catch (err) {
-    console.error("[payments/intent] tx B failed", err)
+    logError("[payments/intent] tx B failed", err)
     return { ok: false, error: "db_error" }
   }
 
@@ -543,7 +544,7 @@ export async function createCheckoutSessionForReservation(
       if (!promo.ok) return { ok: false, error: "promo_invalid" }
       promotionCodeId = promo.promotionCodeId
     } catch (err) {
-      console.error("[payments/checkout-session] promotion lookup failed", err)
+      logError("[payments/checkout-session] promotion lookup failed", err)
       return { ok: false, error: "unavailable" }
     }
   }
@@ -571,7 +572,7 @@ export async function createCheckoutSessionForReservation(
       funnel
     )
   } catch (err) {
-    console.error("[payments/checkout-session] buyer load failed", err)
+    logError("[payments/checkout-session] buyer load failed", err)
     return { ok: false, error: "db_error" }
   }
   if (!buyer) return { ok: false, error: "unavailable" }
@@ -583,7 +584,7 @@ export async function createCheckoutSessionForReservation(
       ...buyer,
     })
   } catch (err) {
-    console.error("[payments/checkout-session] customer failed", err)
+    logError("[payments/checkout-session] customer failed", err)
     return { ok: false, error: "unavailable" }
   }
 
@@ -650,7 +651,7 @@ async function replaceOrReuseCheckoutSession(input: {
       // Close the old session first so only one can ever be paid.
       await stripe().checkout.sessions.expire(previousId)
     } catch (err) {
-      console.error("[payments/checkout-session] expire previous failed", err)
+      logError("[payments/checkout-session] expire previous failed", err)
       return { ok: false, error: "unavailable" }
     }
   }
@@ -687,7 +688,7 @@ async function createAndBindCheckoutSession(input: {
       funnel.language
     )
   } catch (err) {
-    console.error("[payments/checkout-session] service load failed", err)
+    logError("[payments/checkout-session] service load failed", err)
     return { ok: false, error: "db_error" }
   }
 
@@ -706,7 +707,7 @@ async function createAndBindCheckoutSession(input: {
       promotionCodeId: input.promotionCodeId,
     })
   } catch (err) {
-    console.error("[payments/checkout-session] Stripe create failed", err)
+    logError("[payments/checkout-session] Stripe create failed", err)
     return { ok: false, error: "unavailable" }
   }
   const clientSecret = session.client_secret
@@ -735,7 +736,7 @@ async function createAndBindCheckoutSession(input: {
       }
     )
   } catch (err) {
-    console.error("[payments/checkout-session] tx B failed", err)
+    logError("[payments/checkout-session] tx B failed", err)
     return { ok: false, error: "db_error" }
   }
 

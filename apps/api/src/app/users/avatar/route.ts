@@ -1,3 +1,4 @@
+import { describeError } from "@eleva/observability"
 import { AVATAR_UPLOAD, isAvatarUrl } from "@eleva/config/avatar-upload"
 import { UpdateAvatarRequestSchema } from "@eleva/api-client"
 import { getUserAvatarUrl, updateUserAvatarUrl } from "@eleva/db"
@@ -29,7 +30,10 @@ async function tryDeleteAvatar(url: string | null): Promise<void> {
   try {
     await deletePublicObject(url)
   } catch (err) {
-    console.warn("[users/avatar] failed to delete old avatar, continuing", err)
+    console.warn(
+      "[users/avatar] failed to delete old avatar, continuing",
+      describeError(err)
+    )
   }
 }
 

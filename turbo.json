@@ -3,7 +3,7 @@
   "ui": "tui",
   "concurrency": "15",
   "globalDependencies": ["pnpm-workspace.yaml"],
-  "globalEnv": ["NODE_ENV", "VERCEL", "VERCEL_ENV"],
+  "globalEnv": ["ELEVA_APEX_IS_V3", "NODE_ENV", "VERCEL", "VERCEL_ENV"],
   "globalPassThroughEnv": [
     "DATABASE_URL",
     "DATABASE_URL_UNPOOLED",

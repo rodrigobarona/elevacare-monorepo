@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import type { DomainEventSubscriber } from "../domain-events"
 import { handleCalendarSync } from "./calendar-sync"
 import { activateGuestBooking } from "./guest-activation"
@@ -39,7 +40,7 @@ export function defaultDomainEventSubscribers(): Record<
           ),
         })
       } catch (err) {
-        console.error("[guest-activation] subscriber failed", event.id, err)
+        logError(`[guest-activation] subscriber failed ${event.id}`, err)
         throw err
       }
     },
@@ -47,7 +48,7 @@ export function defaultDomainEventSubscribers(): Record<
       try {
         await handleSendNotification(event)
       } catch (err) {
-        console.error("[send-notification] subscriber failed", event.id, err)
+        logError(`[send-notification] subscriber failed ${event.id}`, err)
         throw err
       }
     },
@@ -55,7 +56,7 @@ export function defaultDomainEventSubscribers(): Record<
       try {
         await handleCalendarSync(event)
       } catch (err) {
-        console.error("[calendar-sync] subscriber failed", event.id, err)
+        logError(`[calendar-sync] subscriber failed ${event.id}`, err)
         throw err
       }
     },
@@ -89,7 +90,7 @@ export function defaultDomainEventSubscribers(): Record<
         }
         await ensureSessionRoom(bookingId)
       } catch (err) {
-        console.error("[ensure-session-room] subscriber failed", event.id, err)
+        logError(`[ensure-session-room] subscriber failed ${event.id}`, err)
         throw err
       }
     },

@@ -23,6 +23,22 @@ describe("trustedOrigins", () => {
     expect(origins).toContain("https://app.eleva.care")
   })
 
+  it("leaves out the apex until it serves v3, even from ELEVA_TRUSTED_ORIGINS", () => {
+    const before = trustedOrigins({
+      VERCEL_ENV: "production",
+      ELEVA_TRUSTED_ORIGINS: "https://eleva.care",
+    })
+    expect(before).not.toContain("https://eleva.care")
+    expect(before).not.toContain("https://www.eleva.care")
+    expect(before).toContain("https://dev.eleva.care")
+    const after = trustedOrigins({
+      VERCEL_ENV: "production",
+      ELEVA_APEX_IS_V3: "true",
+    })
+    expect(after).toContain("https://eleva.care")
+    expect(after).toContain("https://www.eleva.care")
+  })
+
   it("excludes loopback origins on preview and production, not local vercel pull", () => {
     expect(trustedOrigins({ VERCEL_ENV: "production" })).not.toContain(
       "http://localhost:3002"

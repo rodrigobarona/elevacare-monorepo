@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { and, eq, inArray, isNull, ne, or } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
 import {
@@ -183,7 +184,7 @@ export async function confirmBookingPayment(
   try {
     loaded = await loadConfirmTarget(input.reservationId, input.paymentIntentId)
   } catch (err) {
-    console.error("[bookings/confirm] load failed", err)
+    logError("[bookings/confirm] load failed", err)
     return { ok: false, error: "db_error" }
   }
   if (!loaded) return { ok: false, error: "not_found" }
@@ -209,7 +210,7 @@ export async function confirmBookingPayment(
   try {
     intent = await input.retrieveIntent(input.paymentIntentId)
   } catch (err) {
-    console.error("[bookings/confirm] Stripe retrieve failed", err)
+    logError("[bookings/confirm] Stripe retrieve failed", err)
     return { ok: false, error: "unavailable" }
   }
 
@@ -272,7 +273,7 @@ export async function confirmBookingPayment(
         }
       )
     } catch (err) {
-      console.error("[bookings/confirm] mismatch audit failed", err)
+      logError("[bookings/confirm] mismatch audit failed", err)
     }
     return { ok: false, error: "payment_mismatch" }
   }
@@ -396,7 +397,7 @@ export async function confirmBookingPayment(
     if (err instanceof Error && err.message === "PAYMENT_MISMATCH") {
       return { ok: false, error: "payment_mismatch" }
     }
-    console.error("[bookings/confirm] flip failed", err)
+    logError("[bookings/confirm] flip failed", err)
     return { ok: false, error: "db_error" }
   }
 
@@ -538,7 +539,7 @@ export async function markBookingPaymentFailed(input: {
     )
     return { ok: true, bookingId: loaded.booking.id }
   } catch (err) {
-    console.error("[bookings/confirm] payment_failed mark failed", err)
+    logError("[bookings/confirm] payment_failed mark failed", err)
     return { ok: false }
   }
 }

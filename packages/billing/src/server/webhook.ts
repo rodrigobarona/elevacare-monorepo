@@ -7,7 +7,7 @@ import {
 } from "@eleva/accounting"
 import { withAudit } from "@eleva/audit"
 import { main, withPlatformAdminContext, type Tx } from "@eleva/db"
-import { captureException } from "@eleva/observability"
+import { captureException, describeError } from "@eleva/observability"
 import {
   confirmBookingPayment,
   markBookingPaymentFailed,
@@ -220,18 +220,22 @@ export async function processStripeEvent(
       webhookErrorParam: diagnostic.param,
       webhookErrorStatusCode: diagnostic.statusCode,
     }).catch(() => {})
+    // The message can carry a query's bound values (names, emails): it
+    // stays in the internal events row and Sentry, never in logs or the
+    // HTTP response Stripe shows in its dashboard.
+    const summary = describeError(err)
     return terminal
       ? {
           status: "failed_terminal",
           eventId: event.id,
           eventType: event.type,
-          error: message,
+          error: summary,
         }
       : {
           status: "failed",
           eventId: event.id,
           eventType: event.type,
-          error: message,
+          error: summary,
         }
   }
 }

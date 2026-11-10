@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 vi.mock("@eleva/config/env", () => ({
   env: () => ({ NODE_ENV: "production", APP_URL: "https://eleva.care" }),
@@ -6,16 +6,35 @@ vi.mock("@eleva/config/env", () => ({
 
 import { corsHeaders, matchAllowedOrigin } from "./cors"
 
+afterEach(() => {
+  vi.unstubAllEnvs()
+})
+
 describe("matchAllowedOrigin", () => {
   it("allows first-party hosts over HTTPS, including dev.eleva.care", () => {
     for (const origin of [
-      "https://eleva.care",
       "https://dev.eleva.care",
       "https://expert.eleva.care",
       "https://admin.dev.eleva.care",
     ]) {
       expect(matchAllowedOrigin(origin, "production")).toBe(origin)
     }
+  })
+
+  it("never trusts the apex while it serves the previous app", () => {
+    // APP_URL is https://eleva.care in this mock: the explicit match must
+    // not bypass the apex rule either.
+    expect(matchAllowedOrigin("https://eleva.care", "production")).toBeNull()
+    expect(
+      matchAllowedOrigin("https://www.eleva.care", "production")
+    ).toBeNull()
+  })
+
+  it("trusts the apex once it serves v3", () => {
+    vi.stubEnv("ELEVA_APEX_IS_V3", "true")
+    expect(matchAllowedOrigin("https://eleva.care", "production")).toBe(
+      "https://eleva.care"
+    )
   })
 
   it("refuses plain HTTP, even for a first-party host", () => {
@@ -50,7 +69,7 @@ describe("matchAllowedOrigin", () => {
   it("adds credentials only for an allowed origin", () => {
     const allowed = corsHeaders(
       new Request("https://api.eleva.care/x", {
-        headers: { origin: "https://eleva.care" },
+        headers: { origin: "https://dev.eleva.care" },
       })
     )
     expect(allowed["Access-Control-Allow-Credentials"]).toBe("true")
