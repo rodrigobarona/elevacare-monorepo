@@ -680,6 +680,7 @@
     "heading": "Practise on Eleva.care",
     "body": "Eleva.care is a digital health platform for independent, licensed professionals. You keep full clinical autonomy. Eleva runs the scheduling, booking and payment technology, so members can book sessions with you online, by phone or in person.",
     "cta": "Create your account",
+    "ctaSignedIn": "Set up your practice",
     "stepsHeading": "How it works",
     "steps": [
       {
@@ -753,8 +754,7 @@
       }
     ],
     "finalHeading": "Ready to open your practice?",
-    "finalBody": "Create your account, start on the community tier, and upgrade when it fits your practice. Your terms are the Expert agreement you accept when you register. If we change it, we email you at least 15 days before, and you can leave before the change applies.",
-    "finalCta": "Create your account"
+    "finalBody": "Create your account, start on the community tier, and upgrade when it fits your practice. Your terms are the Expert agreement you accept when you register. If we change it, we email you at least 15 days before, and you can leave before the change applies."
   },
   "forClinics": {
     "title": "For clinics — Eleva.care",

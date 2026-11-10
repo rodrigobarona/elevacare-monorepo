@@ -680,6 +680,7 @@
     "heading": "Ejercer en Eleva.care",
     "body": "Eleva.care es una plataforma digital de salud para profesionales independientes y licenciados. Mantienes total autonomía clínica. Eleva opera la tecnología de agenda, reserva y pago, para que los miembros puedan reservar sesiones contigo online, por teléfono o en persona.",
     "cta": "Crear tu cuenta",
+    "ctaSignedIn": "Crear tu consulta",
     "stepsHeading": "Cómo funciona",
     "steps": [
       {
@@ -753,8 +754,7 @@
       }
     ],
     "finalHeading": "¿Listo para abrir tu consulta?",
-    "finalBody": "Crea tu cuenta, empieza en el plan comunidad y cambia de plan cuando encaje. Tus condiciones son el Acuerdo del especialista que aceptas al registrarte. Si lo cambiamos, te avisamos por email con al menos 15 días de antelación, y puedes irte antes de que el cambio se aplique.",
-    "finalCta": "Crear tu cuenta"
+    "finalBody": "Crea tu cuenta, empieza en el plan comunidad y cambia de plan cuando encaje. Tus condiciones son el Acuerdo del especialista que aceptas al registrarte. Si lo cambiamos, te avisamos por email con al menos 15 días de antelación, y puedes irte antes de que el cambio se aplique."
   },
   "forClinics": {
     "title": "Para clínicas — Eleva.care",
