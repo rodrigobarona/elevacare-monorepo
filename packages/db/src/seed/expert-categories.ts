@@ -34,8 +34,8 @@ const CATEGORIES: CategorySeed[] = [
     },
     description: {
       en: "Licensed psychologists for therapy, counseling, and mental wellbeing.",
-      pt: "Psicólogos licenciados para terapia, aconselhamento e bem-estar mental.",
-      es: "Psicólogos licenciados para terapia, asesoramiento y bienestar mental.",
+      pt: "Psicólogos habilitados para terapia, aconselhamento e bem-estar mental.",
+      es: "Psicólogos acreditados para terapia, asesoramiento y bienestar mental.",
     },
     icon: "brain",
     sortOrder: 10,
@@ -49,7 +49,7 @@ const CATEGORIES: CategorySeed[] = [
     },
     description: {
       en: "Registered nutritionists and dietitians for personalized food and lifestyle plans.",
-      pt: "Nutricionistas e dietistas licenciados para planos alimentares e de estilo de vida personalizados.",
+      pt: "Nutricionistas e dietistas habilitados para planos alimentares e de estilo de vida personalizados.",
       es: "Nutricionistas y dietistas registrados para planes personalizados de alimentación y estilo de vida.",
     },
     icon: "salad",

@@ -223,7 +223,7 @@
         },
         "clinical": {
           "title": "Clínico",
-          "body": "Cuidado regulado — os modos de entrega devem ficar dentro dos seus países de serviço licenciados."
+          "body": "Cuidado regulado — os modos de entrega devem ficar dentro dos países onde está habilitado a exercer."
         }
       },
       "visibilityLabel": "Visibilidade",

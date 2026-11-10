@@ -678,9 +678,9 @@
   },
   "becomeExpert": {
     "title": "Hazte especialista — Eleva.care",
-    "description": "Únete a Eleva.care como profesional independiente y licenciado en una plataforma digital de salud.",
+    "description": "Únete a Eleva.care como profesional independiente y acreditado en una plataforma digital de salud.",
     "heading": "Ejercer en Eleva.care",
-    "body": "Eleva.care es una plataforma digital de salud para profesionales independientes y licenciados. Mantienes total autonomía clínica. Eleva opera la tecnología de agenda, reserva y pago, para que los miembros puedan reservar sesiones contigo online, por teléfono o en persona.",
+    "body": "Eleva.care es una plataforma digital de salud para profesionales independientes y acreditados. Mantienes total autonomía clínica. Eleva opera la tecnología de agenda, reserva y pago, para que los miembros puedan reservar sesiones contigo online, por teléfono o en persona.",
     "cta": "Crear tu cuenta",
     "ctaSignedIn": "Crear tu consulta",
     "stepsHeading": "Cómo funciona",
@@ -708,7 +708,7 @@
       {
         "icon": "shield",
         "title": "Autonomía clínica plena",
-        "body": "Sigues siendo un profesional independiente y licenciado. Eleva aporta tecnología de agenda, reserva y pago—tú decides cómo cuidar a cada miembro."
+        "body": "Sigues siendo un profesional independiente y acreditado. Eleva aporta tecnología de agenda, reserva y pago—tú decides cómo cuidar a cada miembro."
       },
       {
         "icon": "currency",
@@ -762,14 +762,14 @@
     "title": "Para clínicas — Eleva.care",
     "description": "Gestiona un Team de clínica en Eleva.care, una plataforma digital de salud para profesionales independientes.",
     "heading": "Clínicas y Teams",
-    "body": "Las clínicas usan Eleva.care como Team: varios especialistas licenciados en una organización, en la misma plataforma digital de salud que los miembros ya usan para reservar. Eleva opera la tecnología de agenda, reservas y pagos para que tu equipo se centre en el cuidado.",
+    "body": "Las clínicas usan Eleva.care como Team: varios especialistas acreditados en una organización, en la misma plataforma digital de salud que los miembros ya usan para reservar. Eleva opera la tecnología de agenda, reservas y pagos para que tu equipo se centre en el cuidado.",
     "cta": "Crear tu cuenta",
     "eyebrow": "Para clínicas",
     "stepsHeading": "Cómo funciona una clínica Team",
     "steps": [
       {
         "title": "Crea tu organización Team",
-        "body": "Registra la clínica e invita a especialistas licenciados al mismo espacio Team con marca compartida."
+        "body": "Registra la clínica e invita a especialistas acreditados al mismo espacio Team con marca compartida."
       },
       {
         "title": "Configura sedes y servicios",
@@ -789,7 +789,7 @@
       {
         "icon": "buildings",
         "title": "Un espacio Team",
-        "body": "Invita a especialistas licenciados en una organización de clínica con marca compartida y agenda coordinada."
+        "body": "Invita a especialistas acreditados en una organización de clínica con marca compartida y agenda coordinada."
       },
       {
         "icon": "calendar",
@@ -821,10 +821,10 @@
     "requirements": [
       {
         "title": "Clínicas y equipos de salud de la mujer",
-        "body": "Fisioterapia, salud pélvica, cuidados obstétricos y especialidades afines con varios especialistas licenciados."
+        "body": "Fisioterapia, salud pélvica, cuidados obstétricos y especialidades afines con varios especialistas acreditados."
       },
       {
-        "title": "Solo especialistas licenciados",
+        "title": "Solo especialistas acreditados",
         "body": "Cada clínico mantiene su licencia, ámbito de práctica y relación con el miembro."
       },
       {

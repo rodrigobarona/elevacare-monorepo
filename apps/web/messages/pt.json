@@ -160,11 +160,11 @@
   },
   "about": {
     "title": "Sobre nós — Eleva.care",
-    "description": "A Eleva Care liga mulheres a especialistas independentes e licenciados em saúde da mulher. Conheça a nossa missão, as nossas convicções e a equipa.",
+    "description": "A Eleva Care liga mulheres a especialistas independentes e habilitados em saúde da mulher. Conheça a nossa missão, as nossas convicções e a equipa.",
     "eyebrow": "Sobre nós",
     "heading": "A transformar a saúde da mulher com compaixão e ",
     "headingAccent": "cuidado baseado em evidência",
-    "intro": "Estamos aqui para tornar mais fácil encontrar a ajuda certa, no momento certo. A Eleva Care liga-a a profissionais licenciados através de uma plataforma segura e de confiança.",
+    "intro": "Estamos aqui para tornar mais fácil encontrar a ajuda certa, no momento certo. A Eleva Care liga-a a profissionais habilitados através de uma plataforma segura e de confiança.",
     "stats": {
       "eyebrow": "A Eleva em resumo",
       "modes": {
@@ -185,7 +185,7 @@
     "mission": {
       "eyebrow": "A nossa missão",
       "heading": "Cuidados em que pode confiar, em cada passo",
-      "p1": "Acreditamos que todas as mulheres merecem cuidados especializados e humanos. A nossa plataforma ajuda-a a encontrar profissionais independentes e licenciados em quem confiar, para que se sinta acompanhada em cada passo.",
+      "p1": "Acreditamos que todas as mulheres merecem cuidados especializados e humanos. A nossa plataforma ajuda-a a encontrar profissionais independentes e habilitados em quem confiar, para que se sinta acompanhada em cada passo.",
       "p2": "Nós fornecemos a tecnologia que facilita o acesso ao cuidado. O profissional que escolhe presta os seus cuidados. Em conjunto, ajudamo-la a avançar com confiança."
     },
     "vision": {
@@ -218,7 +218,7 @@
       "eyebrow": "Conheça a nossa equipa",
       "heading": "Liderados por inovadores e especialistas com empatia",
       "p1": "A Eleva Care nasceu de uma ideia simples: cuidados especializados devem ser mais fáceis de alcançar. Os fundadores e conselheiros viram as lacunas que as mulheres enfrentam e criaram uma forma melhor de a ligar a profissionais de confiança.",
-      "p2": "Hoje, a Eleva Care opera uma plataforma digital segura que liga mulheres a profissionais independentes e licenciados. Nós fornecemos a tecnologia; o profissional que escolhe presta os seus cuidados.",
+      "p2": "Hoje, a Eleva Care opera uma plataforma digital segura que liga mulheres a profissionais independentes e habilitados. Nós fornecemos a tecnologia; o profissional que escolhe presta os seus cuidados.",
       "storyCta": "Leia a nossa história",
       "leadershipHeading": "A nossa liderança",
       "roles": {
@@ -678,9 +678,9 @@
   },
   "becomeExpert": {
     "title": "Tornar-se especialista — Eleva.care",
-    "description": "Junte-se à Eleva.care como profissional independente e licenciado numa plataforma digital de saúde.",
+    "description": "Junte-se à Eleva.care como profissional independente e habilitado numa plataforma digital de saúde.",
     "heading": "Exercer na Eleva.care",
-    "body": "A Eleva.care é uma plataforma digital de saúde para profissionais independentes e licenciados. Mantém total autonomia clínica. A Eleva opera a tecnologia de agenda, reserva e pagamento, para que os membros possam marcar sessões consigo online, por telefone ou presencialmente.",
+    "body": "A Eleva.care é uma plataforma digital de saúde para profissionais independentes e habilitados. Mantém total autonomia clínica. A Eleva opera a tecnologia de agenda, reserva e pagamento, para que os membros possam marcar sessões consigo online, por telefone ou presencialmente.",
     "cta": "Criar a sua conta",
     "ctaSignedIn": "Criar a sua prática",
     "stepsHeading": "Como funciona",
@@ -708,7 +708,7 @@
       {
         "icon": "shield",
         "title": "Autonomia clínica total",
-        "body": "Continua a ser um profissional independente e licenciado. A Eleva fornece tecnologia de agenda, reserva e pagamento—você decide como cuidar de cada membro."
+        "body": "Continua a ser um profissional independente e habilitado. A Eleva fornece tecnologia de agenda, reserva e pagamento—você decide como cuidar de cada membro."
       },
       {
         "icon": "currency",
@@ -762,14 +762,14 @@
     "title": "Para clínicas — Eleva.care",
     "description": "Gira uma Team de clínica na Eleva.care, uma plataforma digital de saúde para profissionais independentes.",
     "heading": "Clínicas e Teams",
-    "body": "As clínicas usam a Eleva.care como Team: vários especialistas licenciados numa organização, na mesma plataforma digital de saúde que os membros já usam para marcar. A Eleva opera a tecnologia de agenda, reservas e pagamentos para a sua equipa se focar nos cuidados.",
+    "body": "As clínicas usam a Eleva.care como Team: vários especialistas habilitados numa organização, na mesma plataforma digital de saúde que os membros já usam para marcar. A Eleva opera a tecnologia de agenda, reservas e pagamentos para a sua equipa se focar nos cuidados.",
     "cta": "Criar a sua conta",
     "eyebrow": "Para clínicas",
     "stepsHeading": "Como funciona uma clínica Team",
     "steps": [
       {
         "title": "Crie a organização Team",
-        "body": "Registe a clínica e convide especialistas licenciados para o mesmo espaço Team com marca partilhada."
+        "body": "Registe a clínica e convide especialistas habilitados para o mesmo espaço Team com marca partilhada."
       },
       {
         "title": "Configure locais e serviços",
@@ -789,7 +789,7 @@
       {
         "icon": "buildings",
         "title": "Um espaço Team",
-        "body": "Convide especialistas licenciados numa organização de clínica com marca partilhada e agenda coordenada."
+        "body": "Convide especialistas habilitados numa organização de clínica com marca partilhada e agenda coordenada."
       },
       {
         "icon": "calendar",
@@ -821,10 +821,10 @@
     "requirements": [
       {
         "title": "Clínicas e equipas de saúde da mulher",
-        "body": "Fisioterapia, saúde pélvica, cuidados obstétricos e especialidades afins com vários especialistas licenciados."
+        "body": "Fisioterapia, saúde pélvica, cuidados obstétricos e especialidades afins com vários especialistas habilitados."
       },
       {
-        "title": "Apenas especialistas licenciados",
+        "title": "Apenas especialistas habilitados",
         "body": "Cada clínico mantém a sua licença, âmbito de prática e relação com o membro."
       },
       {
@@ -973,7 +973,7 @@
         "title": "A nossa missão",
         "paragraphs": [
           "Queremos construir uma ponte entre a ciência mais atual e as pessoas que precisam dela, de uma forma verdadeiramente acessível: cuidados de saúde da mulher de classe mundial, disponíveis quando e onde forem necessários.",
-          "A nossa visão é simples: uma plataforma digital segura que liga qualquer mulher a especialistas independentes e licenciados em saúde feminina, adaptando-se ao seu horário e localização, e não o contrário."
+          "A nossa visão é simples: uma plataforma digital segura que liga qualquer mulher a especialistas independentes e habilitados em saúde feminina, adaptando-se ao seu horário e localização, e não o contrário."
         ]
       },
       {
