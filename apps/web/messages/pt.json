@@ -9,7 +9,8 @@
     "expert": "Especialista",
     "home": "Início",
     "login": "Entrar",
-    "getStarted": "Começar agora",
+    "findExpert": "Encontrar especialista",
+    "changeLanguage": "Mudar de língua",
     "becomeExpert": "Tornar-se especialista",
     "forClinics": "Para clínicas",
     "menu": {
@@ -68,7 +69,7 @@
       "headingAccent": "ao seu ritmo.",
       "description": "Marque especialistas de confiança em gravidez, saúde pélvica e todas as fases da vida. Online, por telefone ou presencialmente.",
       "cta": "Encontrar especialista",
-      "ctaSecondary": "Tornar-me parceiro",
+      "ctaSecondary": "Tornar-me especialista",
       "disclaimer": "A Eleva liga-a a especialistas de saúde independentes, com prática própria.",
       "aside": {
         "stages": "Cuidados em todas as fases da vida",

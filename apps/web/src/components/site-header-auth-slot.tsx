@@ -1,11 +1,12 @@
 import { getAuthUser } from "@eleva/auth/server"
 import { captureException } from "@eleva/observability"
-import { getTranslations } from "next-intl/server"
+import { getLocale, getTranslations } from "next-intl/server"
 import { AccountMenu } from "@eleva/dashboard/account-menu"
 import {
   accountMenuFor,
   loadUserWorkspaces,
 } from "@eleva/dashboard/account-menu-server"
+import { localePath } from "@/lib/hreflang"
 import { SignedOutButtons } from "./signed-out-buttons"
 
 /**
@@ -14,7 +15,7 @@ import { SignedOutButtons } from "./signed-out-buttons"
  * logged-in visitors never flash signed-out buttons while this resolves.
  */
 export async function SiteHeaderAuthSlot() {
-  const t = await getTranslations("nav")
+  const [t, locale] = await Promise.all([getTranslations("nav"), getLocale()])
 
   let user: Awaited<ReturnType<typeof getAuthUser>> = null
   try {
@@ -29,7 +30,8 @@ export async function SiteHeaderAuthSlot() {
     return (
       <SignedOutButtons
         loginLabel={t("login")}
-        getStartedLabel={t("getStarted")}
+        findExpertLabel={t("findExpert")}
+        findExpertHref={localePath(locale, "/experts")}
       />
     )
   }

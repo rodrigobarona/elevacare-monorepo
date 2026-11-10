@@ -1,6 +1,6 @@
 "use client"
 
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { usePathname, useRouter } from "@/i18n/navigation"
 import { locales, localeNames, type Locale } from "@eleva/config/i18n"
 import { Button } from "@eleva/ui/components/button"
@@ -14,6 +14,7 @@ import { useTransition } from "react"
 
 export function LanguageSwitcher() {
   const locale = useLocale()
+  const t = useTranslations("nav")
   const pathname = usePathname()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -29,7 +30,7 @@ export function LanguageSwitcher() {
       <Button
         variant="ghost"
         size="icon-sm"
-        aria-label="Change language"
+        aria-label={t("changeLanguage")}
         isDisabled={isPending}
       >
         <GlobeIcon className="size-4" />

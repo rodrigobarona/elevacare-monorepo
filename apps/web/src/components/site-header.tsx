@@ -12,6 +12,7 @@ import {
   SiteNavMobileGroups,
   SiteNavPanel,
 } from "@eleva/site-chrome/site-nav-panels"
+import { localePath } from "@/lib/hreflang"
 import { PUBLIC_SITE_NAV } from "@/lib/public-site-nav"
 import { AuthHeaderPlaceholder } from "./auth-header-placeholder"
 import { LanguageSwitcher } from "./language-switcher"
@@ -66,7 +67,8 @@ export async function SiteHeader() {
                 ) : (
                   <SignedOutButtons
                     loginLabel={t("login")}
-                    getStartedLabel={t("getStarted")}
+                    findExpertLabel={t("findExpert")}
+                    findExpertHref={localePath(locale, "/experts")}
                   />
                 )
               }
