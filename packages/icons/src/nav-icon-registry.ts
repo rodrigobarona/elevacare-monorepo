@@ -9,6 +9,7 @@ import {
   AddressBookIcon,
   BookOpenIcon,
   BuildingsIcon,
+  CalendarCheckIcon,
   CalendarDotsIcon,
   CalendarIcon,
   ChartBarIcon,
@@ -41,6 +42,7 @@ export const navIconRegistry: Record<NavIconName, Icon> = {
   BookOpenIcon,
   ChartBarIcon,
   AddressBookIcon,
+  CalendarCheckIcon,
 }
 
 export function getNavIcon(name: NavIconName): Icon {

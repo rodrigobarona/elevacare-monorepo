@@ -49,14 +49,17 @@ export default async function ExpertLayout({
   const dashboardConfig = await buildDashboardConfig(
     session,
     [
+      // Four everyday destinations first (decision log 2026-11-09, "One
+      // fixed address per mode"), then what shapes the practice, then
+      // the things set up once.
       {
         items: [
-          { title: t("dashboard"), url: base, icon: "SquaresFourIcon" },
+          { title: t("today"), url: base, icon: "SquaresFourIcon" },
           {
-            title: t("publicProfile"),
-            url: `${base}/profile`,
-            icon: "UserIcon",
-            needs: "expert:onboard",
+            title: t("calendar"),
+            url: `${base}/calendar`,
+            icon: "CalendarIcon",
+            needs: "events:manage",
           },
           {
             title: t("eventTypes"),
@@ -65,22 +68,27 @@ export default async function ExpertLayout({
             needs: "events:manage",
           },
           {
-            title: t("schedule"),
-            url: `${base}/schedule`,
-            icon: "ClockIcon",
-            needs: "schedule:manage",
-          },
-          {
-            title: t("calendar"),
-            url: `${base}/calendar`,
-            icon: "CalendarIcon",
-            needs: "events:manage",
-          },
-          {
             title: t("members"),
             url: `${base}/members`,
             icon: "UsersIcon",
             needs: "events:manage",
+          },
+        ],
+      },
+      {
+        label: t("groups.practice"),
+        items: [
+          {
+            title: t("publicProfile"),
+            url: `${base}/profile`,
+            icon: "UserIcon",
+            needs: "expert:onboard",
+          },
+          {
+            title: t("schedule"),
+            url: `${base}/schedule`,
+            icon: "ClockIcon",
+            needs: "schedule:manage",
           },
           {
             title: t("crm"),
@@ -94,10 +102,21 @@ export default async function ExpertLayout({
             icon: "BookOpenIcon",
             needs: "events:manage",
           },
+        ],
+      },
+      {
+        label: t("groups.settings"),
+        items: [
+          {
+            title: t("finance"),
+            url: `${base}/finance`,
+            icon: "WalletIcon",
+            needs: "payouts:view_own",
+          },
           {
             title: t("calendars"),
             url: `${base}/calendars`,
-            icon: "CalendarDotsIcon",
+            icon: "CalendarCheckIcon",
             needs: "events:manage",
           },
           {
@@ -105,12 +124,6 @@ export default async function ExpertLayout({
             url: `${base}/integrations`,
             icon: "PlugIcon",
             needs: "events:manage",
-          },
-          {
-            title: t("finance"),
-            url: `${base}/finance`,
-            icon: "WalletIcon",
-            needs: "payouts:view_own",
           },
         ],
       },

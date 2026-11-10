@@ -1,6 +1,6 @@
 {
   "nav": {
-    "dashboard": "Dashboard",
+    "today": "Today",
     "eventTypes": "Services",
     "schedule": "Schedule",
     "calendar": "Calendar",
@@ -10,7 +10,11 @@
     "publicProfile": "Public profile",
     "members": "Members",
     "templates": "Templates",
-    "crm": "Relationships"
+    "crm": "Relationships",
+    "groups": {
+      "practice": "Practice",
+      "settings": "Settings"
+    }
   },
   "dashboard": {
     "expert": {

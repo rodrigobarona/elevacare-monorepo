@@ -15,6 +15,7 @@ export const NAV_ICON_NAMES = [
   "BookOpenIcon",
   "ChartBarIcon",
   "AddressBookIcon",
+  "CalendarCheckIcon",
 ] as const
 
 export type NavIconName = (typeof NAV_ICON_NAMES)[number]
