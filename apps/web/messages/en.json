@@ -724,13 +724,13 @@
       },
       {
         "icon": "users",
-        "title": "Reach members",
-        "body": "Members discover experts through Eleva's marketplace and your public profile—without promising specific marketing results."
+        "title": "Members find you",
+        "body": "Members find you in the Eleva directory and on your own profile page, in their language."
       },
       {
         "icon": "chart",
-        "title": "Practice tools",
-        "body": "Booking pages, service builder, cancellation policies and dashboard views help you run day-to-day operations in one place."
+        "title": "Your practice in one place",
+        "body": "Your booking page, services, cancellation policies, calendar and earnings, all in one place."
       }
     ],
     "requirementsHeading": "Who can join",
@@ -748,8 +748,8 @@
         "body": "Write profile and service copy in the languages you actually offer (English, Portuguese or Spanish)."
       },
       {
-        "title": "Stripe verification before payouts",
-        "body": "Identity and payout details are collected through Stripe Connect before paid services go live."
+        "title": "Payouts through Stripe",
+        "body": "Stripe checks your identity and bank details before your paid services go live."
       }
     ],
     "finalHeading": "Ready to open your practice?",
