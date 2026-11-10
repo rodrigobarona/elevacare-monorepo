@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
-import { main, withPlatformAdminContext } from "@eleva/db"
+import { getExpertProfileForOrg, main } from "@eleva/db"
 import { getAdapter } from "./registry"
 import { InvoicingProviderSlug } from "./types"
 
@@ -21,23 +21,7 @@ export async function disconnectExpertInvoicing(input: {
   userId: string
   orgId: string
 }): Promise<DisconnectExpertInvoicingResult | null> {
-  const profile = await withPlatformAdminContext(async (tx) => {
-    const [row] = await tx
-      .select({
-        id: main.expertProfiles.id,
-        orgId: main.expertProfiles.orgId,
-        invoicingProvider: main.expertProfiles.invoicingProvider,
-      })
-      .from(main.expertProfiles)
-      .where(
-        and(
-          eq(main.expertProfiles.userId, input.userId),
-          eq(main.expertProfiles.orgId, input.orgId)
-        )
-      )
-      .limit(1)
-    return row ?? null
-  })
+  const profile = await getExpertProfileForOrg(input.userId, input.orgId)
   if (!profile) return null
 
   const provider = parseProvider(profile.invoicingProvider)

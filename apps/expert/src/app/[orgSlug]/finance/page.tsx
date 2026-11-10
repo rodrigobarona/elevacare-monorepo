@@ -1,11 +1,12 @@
+import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { env } from "@eleva/config/env"
-import { financeSummary, listFinanceBookings } from "@eleva/billing/server"
 import { LinkButton } from "@eleva/ui/components/button"
 import { EmptyState } from "@eleva/ui/components/empty-state"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { expertWorkspacePath } from "@/lib/workspace-paths"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
+import { loadFinanceOverview } from "@/lib/finance-overview"
 import { FinanceConnectPrompt } from "./finance-connect-prompt"
 import { FinanceDashboard } from "./finance-dashboard"
 
@@ -62,10 +63,9 @@ export default async function FinancePage({
     )
   }
 
-  const [summary, bookings] = await Promise.all([
-    financeSummary(session.orgId),
-    listFinanceBookings(session.orgId),
-  ])
+  // Same scope as the API: a clinic clinician sees only their own bookings.
+  const overview = await loadFinanceOverview(session)
+  if (!overview) notFound()
 
   return (
     <div className="space-y-8">
@@ -82,8 +82,8 @@ export default async function FinancePage({
             ? expertWorkspacePath(session, "finance/invoices")
             : null
         }
-        summary={summary}
-        bookings={bookings}
+        summary={overview.summary}
+        bookings={overview.bookings}
         showStripePanels={stripeConfigured}
       />
     </div>

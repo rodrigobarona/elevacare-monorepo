@@ -11,7 +11,7 @@ import {
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { checkBot } from "@/lib/bot-protection"
-import { resolveFinanceScope } from "@/lib/finance-scope"
+import { resolveFinanceScope } from "@eleva/auth/finance-scope"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 

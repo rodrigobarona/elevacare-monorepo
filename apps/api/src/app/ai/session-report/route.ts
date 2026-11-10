@@ -56,6 +56,33 @@ async function requireAiReportsBeta(): Promise<Response | null> {
   )
 }
 
+/**
+ * The caller must be the booking's expert, acting in the booking's own
+ * workspace. The per-org AI bucket and the audit trail then follow the
+ * booking's org, so switching workspace cannot open a fresh bucket for the
+ * same clinic's bookings. Returns the rate-limit response when throttled;
+ * throws `SessionRecordError` when the booking is not the caller's here.
+ */
+async function requireBookingInWorkspace(input: {
+  bookingId: string
+  actorUserId: string
+  orgId: string
+  headers: Record<string, string>
+}): Promise<Response | null> {
+  const booking = await requireAssignedExpert({
+    bookingId: input.bookingId,
+    actorUserId: input.actorUserId,
+  })
+  if (booking.orgId !== input.orgId) {
+    throw new SessionRecordError("FORBIDDEN")
+  }
+  return applyRateLimit(
+    `org:${booking.orgId}`,
+    RATE_LIMITS.sessionReportAi,
+    input.headers
+  )
+}
+
 async function handleGET(request: Request) {
   const headers = corsHeaders(request, "GET, POST, OPTIONS")
   const disabled = await requireAiReportsBeta()
@@ -89,14 +116,14 @@ async function handleGET(request: Request) {
     )
   }
 
-  const rateLimited = await applyRateLimit(
-    `org:${profile.orgId}`,
-    RATE_LIMITS.sessionReportAi,
-    headers
-  )
-  if (rateLimited) return rateLimited
-
   try {
+    const rateLimited = await requireBookingInWorkspace({
+      bookingId: parsedQuery.data.bookingId,
+      actorUserId: session.user.id,
+      orgId: profile.orgId,
+      headers,
+    })
+    if (rateLimited) return rateLimited
     const status = await getSessionReportDraftStatus({
       bookingId: parsedQuery.data.bookingId,
       actorUserId: session.user.id,
@@ -141,13 +168,6 @@ async function handlePOST(request: Request) {
     )
   }
 
-  const rateLimited = await applyRateLimit(
-    `org:${profile.orgId}`,
-    RATE_LIMITS.sessionReportAi,
-    headers
-  )
-  if (rateLimited) return rateLimited
-
   const body = SessionReportDraftRequestSchema.safeParse(
     await request.json().catch(() => ({}))
   )
@@ -159,10 +179,13 @@ async function handlePOST(request: Request) {
   }
 
   try {
-    await requireAssignedExpert({
+    const rateLimited = await requireBookingInWorkspace({
       bookingId: body.data.bookingId,
       actorUserId: session.user.id,
+      orgId: profile.orgId,
+      headers,
     })
+    if (rateLimited) return rateLimited
     const record = await draftSessionReport({
       bookingId: body.data.bookingId,
       actorUserId: session.user.id,

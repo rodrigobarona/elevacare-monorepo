@@ -167,7 +167,7 @@ export {
   getUserAvatarUrl,
   updateUserAvatarUrl,
   getAuthUserRole,
-  isOrgMember,
+  isActiveBookingExpert,
 } from "./queries/users"
 export {
   getMemberProfile,

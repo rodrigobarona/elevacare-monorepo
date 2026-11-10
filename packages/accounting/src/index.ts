@@ -112,7 +112,6 @@ export {
   isSaftExportError,
   listSaftExportRows,
   parseSaftMonth,
-  saftExpertPrefix,
   saftStorageKey,
   saftMonthRange,
   signSaftDownloadToken,

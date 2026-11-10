@@ -8,6 +8,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./capabilities": "./src/capabilities.ts",
+    "./finance-scope": "./src/finance-scope.ts",
     "./types": "./src/types.ts",
     "./proxy": "./src/proxy.ts",
     "./server": "./src/server.ts",

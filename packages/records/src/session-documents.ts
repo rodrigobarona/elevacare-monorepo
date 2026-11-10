@@ -1,7 +1,7 @@
 import { and, eq, isNull } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
 import {
-  isOrgMember,
+  isActiveBookingExpert,
   withOrgAndUserContext,
   withPlatformAdminContext,
 } from "@eleva/db"
@@ -98,20 +98,14 @@ async function loadBooking(bookingId: string): Promise<BookingRow | null> {
 }
 
 /**
- * The booking's expert counts only while still a member of the booking's
- * org (someone removed from a clinic loses its documents). Member access is
- * unchanged.
+ * Expert access follows `isActiveBookingExpert` (someone removed from a
+ * clinic loses its documents). Member access is unchanged.
  */
 async function actorRole(
   booking: BookingRow,
   actorUserId: string
 ): Promise<"expert" | "member"> {
-  if (
-    actorUserId === booking.expertUserId &&
-    (await isOrgMember(actorUserId, booking.orgId))
-  ) {
-    return "expert"
-  }
+  if (await isActiveBookingExpert(booking, actorUserId)) return "expert"
   if (booking.memberUserId && actorUserId === booking.memberUserId) {
     return "member"
   }

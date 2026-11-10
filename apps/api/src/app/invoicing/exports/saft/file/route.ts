@@ -1,10 +1,10 @@
 import { logError } from "@eleva/observability"
 import { ExportSaftFileQuerySchema } from "@eleva/api-client"
-import { saftExpertPrefix, verifySaftDownloadToken } from "@eleva/accounting"
+import { verifySaftDownloadToken } from "@eleva/accounting"
 import { getPrivateDocument } from "@eleva/storage"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
-import { resolveFinanceScope } from "@/lib/finance-scope"
+import { resolveFinanceScope } from "@eleva/auth/finance-scope"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson, withSecurityHeaders } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -51,27 +51,20 @@ export async function GET(request: Request) {
     )
   }
 
+  // The link is signed for one scope: a clinic clinician opens only their
+  // own export, never the clinic-wide file or a colleague's, even holding
+  // a signed link someone else was given.
+  const scope = await resolveFinanceScope(session)
   if (
+    !scope ||
     !verifySaftDownloadToken({
       orgId: session.orgId,
       month: query.data.month,
       pathname: query.data.pathname,
       exp: query.data.exp,
       signature: query.data.sig,
+      expertProfileId: scope.expertProfileId,
     })
-  ) {
-    return secureJson({ error: "not found" }, { status: 404, headers })
-  }
-
-  // A clinic clinician may download only their own exports, never the
-  // clinic-wide file or a colleague's, even holding a signed link.
-  const scope = await resolveFinanceScope(session)
-  if (
-    !scope ||
-    (scope.expertProfileId &&
-      !query.data.pathname.startsWith(
-        saftExpertPrefix(session.orgId, scope.expertProfileId)
-      ))
   ) {
     return secureJson({ error: "not found" }, { status: 404, headers })
   }

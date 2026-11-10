@@ -365,33 +365,44 @@ function saftSigningSecret(): string {
   return secret
 }
 
+/**
+ * Signs who the link is for as well as what it opens: `expertProfileId` is
+ * set for a clinic clinician's own export and absent for an org-wide one,
+ * so a link only verifies for a caller with the same scope.
+ */
 export function signSaftDownloadToken(input: {
   orgId: string
   month: string
   pathname: string
   exp: number
+  expertProfileId?: string
 }): string {
+  const scope = input.expertProfileId
+    ? `expert:${input.expertProfileId}`
+    : "org"
   return createHmac("sha256", saftSigningSecret())
     .update(
-      `saft-download\n${input.orgId}\n${input.month}\n${input.pathname}\n${input.exp}`
+      `saft-download\n${input.orgId}\n${input.month}\n${input.pathname}\n${input.exp}\n${scope}`
     )
     .digest("base64url")
 }
 
+/** `expertProfileId` is the caller's scope (`resolveFinanceScope`). */
 export function verifySaftDownloadToken(input: {
   orgId: string
   month: string
   pathname: string
   exp: number
   signature: string
+  expertProfileId?: string
 }): boolean {
   if (!Number.isFinite(input.exp) || input.exp * 1000 < Date.now()) {
     return false
   }
-  if (
-    input.pathname.includes("..") ||
-    !input.pathname.startsWith(`invoicing-exports/${input.orgId}/`)
-  ) {
+  const prefix = input.expertProfileId
+    ? saftExpertPrefix(input.orgId, input.expertProfileId)
+    : `invoicing-exports/${input.orgId}/`
+  if (input.pathname.includes("..") || !input.pathname.startsWith(prefix)) {
     return false
   }
   const expected = Buffer.from(signSaftDownloadToken(input))
@@ -406,6 +417,7 @@ export function buildSaftDownloadUrl(input: {
   month: string
   pathname: string
   expiresAt: Date
+  expertProfileId?: string
 }): string {
   const exp = Math.floor(input.expiresAt.getTime() / 1000)
   const sig = signSaftDownloadToken({
@@ -413,6 +425,7 @@ export function buildSaftDownloadUrl(input: {
     month: input.month,
     pathname: input.pathname,
     exp,
+    expertProfileId: input.expertProfileId,
   })
   const base = input.apiBaseUrl.replace(/\/+$/, "")
   const params = new URLSearchParams({

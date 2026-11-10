@@ -9,7 +9,7 @@ import {
 } from "@eleva/billing/server"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiAuth } from "@/lib/auth"
-import { resolveFinanceScope } from "@/lib/finance-scope"
+import { resolveFinanceScope } from "@eleva/auth/finance-scope"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"

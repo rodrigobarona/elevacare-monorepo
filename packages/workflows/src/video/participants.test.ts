@@ -45,7 +45,7 @@ describe("delegate join contract", () => {
     expect(
       classifyJoinCaller({
         userId: "delegate-1",
-        expertUserId: "expert-1",
+        isActiveExpert: false,
         memberUserId: "member-1",
         hasActiveDelegate: true,
       })
@@ -53,7 +53,7 @@ describe("delegate join contract", () => {
     expect(
       classifyJoinCaller({
         userId: "delegate-1",
-        expertUserId: "expert-1",
+        isActiveExpert: false,
         memberUserId: "member-1",
         hasActiveDelegate: false,
       })

@@ -1097,6 +1097,8 @@ async function handleIdentityEvent(
   }
 
   if ((!orgId || !expertId) && userId) {
+    // A person can be an expert in several orgs: when the session names its
+    // org, resolve the profile in that org only, never another workspace's.
     const resolved = await withPlatformAdminContext(async (tx) => {
       const rows = await tx
         .select({
@@ -1104,7 +1106,15 @@ async function handleIdentityEvent(
           id: main.expertProfiles.id,
         })
         .from(main.expertProfiles)
-        .where(eq(main.expertProfiles.userId, userId))
+        .where(
+          and(
+            eq(main.expertProfiles.userId, userId),
+            isNull(main.expertProfiles.deletedAt),
+            metadataOrgId
+              ? eq(main.expertProfiles.orgId, metadataOrgId)
+              : undefined
+          )
+        )
         .limit(1)
       return rows[0] ?? null
     })

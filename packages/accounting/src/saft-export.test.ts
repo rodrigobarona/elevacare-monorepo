@@ -139,6 +139,47 @@ describe("SAF-T download token", () => {
     ).toBe(true)
   })
 
+  it("binds the link to the caller's scope", () => {
+    vi.stubEnv("BETTER_AUTH_SECRET", "saft-test-secret")
+    const exp = Math.floor(Date.now() / 1000) + SAFT_SIGNED_URL_TTL_SECONDS
+    const ownPath = saftStorageKey(orgId, "2026-03", "abc123", "profile-1")
+    const own = signSaftDownloadToken({
+      orgId,
+      month: "2026-03",
+      pathname: ownPath,
+      exp,
+      expertProfileId: "profile-1",
+    })
+    const verify = (
+      pathname: string,
+      signature: string,
+      expertProfileId?: string
+    ) =>
+      verifySaftDownloadToken({
+        orgId,
+        month: "2026-03",
+        pathname,
+        exp,
+        signature,
+        expertProfileId,
+      })
+
+    expect(verify(ownPath, own, "profile-1")).toBe(true)
+    // A colleague, or the clinic admin, cannot reuse the clinician's link.
+    expect(verify(ownPath, own, "profile-2")).toBe(false)
+    expect(verify(ownPath, own)).toBe(false)
+
+    // The clinic-wide link does not open for a clinician.
+    const clinic = signSaftDownloadToken({
+      orgId,
+      month: "2026-03",
+      pathname,
+      exp,
+    })
+    expect(verify(pathname, clinic)).toBe(true)
+    expect(verify(pathname, clinic, "profile-1")).toBe(false)
+  })
+
   it("rejects expired tokens and path traversal", () => {
     vi.stubEnv("BETTER_AUTH_SECRET", "saft-test-secret")
     const signature = signSaftDownloadToken({

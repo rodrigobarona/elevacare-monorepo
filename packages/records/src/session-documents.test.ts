@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const { withPlatformAdminContext, isOrgMember } = vi.hoisted(() => ({
+const { withPlatformAdminContext, isActiveBookingExpert } = vi.hoisted(() => ({
   withPlatformAdminContext: vi.fn(),
-  isOrgMember: vi.fn(),
+  isActiveBookingExpert: vi.fn(),
 }))
 
 vi.mock("@eleva/db", () => ({
-  isOrgMember,
+  isActiveBookingExpert,
   withPlatformAdminContext,
   withOrgAndUserContext: vi.fn(),
 }))
@@ -33,26 +33,34 @@ const booking = {
   memberUserId: MEMBER_ID,
 }
 
+/** Mirrors `isActiveBookingExpert`: the expert, while still in the org. */
+function expertStillInOrg(stillMember: boolean) {
+  isActiveBookingExpert.mockImplementation(
+    async (row: { expertUserId: string }, userId: string) =>
+      userId === row.expertUserId && stillMember
+  )
+}
+
 describe("session document access", () => {
   beforeEach(() => {
     withPlatformAdminContext.mockReset()
     withPlatformAdminContext.mockResolvedValue([booking])
-    isOrgMember.mockReset()
+    isActiveBookingExpert.mockReset()
+    expertStillInOrg(true)
   })
 
   it("lets the booked expert in while they belong to the booking's org", async () => {
-    isOrgMember.mockResolvedValue(true)
     await expect(
       requireDocumentUploader({
         bookingId: BOOKING_ID,
         actorUserId: EXPERT_ID,
       })
     ).resolves.toEqual(booking)
-    expect(isOrgMember).toHaveBeenCalledWith(EXPERT_ID, ORG_ID)
+    expect(isActiveBookingExpert).toHaveBeenCalledWith(booking, EXPERT_ID)
   })
 
   it("shuts the booked expert out once removed from the booking's org", async () => {
-    isOrgMember.mockResolvedValue(false)
+    expertStillInOrg(false)
     await expect(
       requireDocumentUploader({
         bookingId: BOOKING_ID,
@@ -61,14 +69,14 @@ describe("session document access", () => {
     ).rejects.toMatchObject({ code: "FORBIDDEN" })
   })
 
-  it("keeps member access without a membership check", async () => {
+  it("keeps member access", async () => {
+    expertStillInOrg(false)
     await expect(
       requireDocumentUploader({
         bookingId: BOOKING_ID,
         actorUserId: MEMBER_ID,
       })
     ).resolves.toEqual(booking)
-    expect(isOrgMember).not.toHaveBeenCalled()
   })
 
   it("rejects anyone else", async () => {

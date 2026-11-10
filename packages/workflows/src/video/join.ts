@@ -3,6 +3,7 @@ import { withPlatformAudit } from "@eleva/audit"
 import {
   auth,
   hasActiveAiProcessingConsent,
+  isActiveBookingExpert,
   main,
   withPlatformAdminContext,
 } from "@eleva/db"
@@ -54,15 +55,14 @@ export function classifyJoinWindow(
 
 export function classifyJoinCaller(input: {
   userId: string
-  expertUserId: string | null
+  /** `isActiveBookingExpert`: the booking's expert, still in its org. */
+  isActiveExpert: boolean
   memberUserId: string | null
   hasActiveDelegate: boolean
 }):
   | { role: "expert" | "member" | "delegate" }
   | { error: "NOT_A_PARTICIPANT" } {
-  if (input.expertUserId && input.userId === input.expertUserId) {
-    return { role: "expert" }
-  }
+  if (input.isActiveExpert) return { role: "expert" }
   if (input.memberUserId && input.userId === input.memberUserId) {
     return { role: "member" }
   }
@@ -246,11 +246,21 @@ export async function joinSession(
 
   if (!row) throw new SessionJoinError("NOT_A_PARTICIPANT")
 
+  // Expert joins, by session or by an emailed expert grant, need the
+  // booking's expert to still belong to its org. Member and guest joins
+  // are unchanged.
+  const isActiveExpert =
+    input.grantRole === "member"
+      ? false
+      : await isActiveBookingExpert(row.session, input.userId)
+  if (input.grantRole === "expert" && !isActiveExpert) {
+    throw new SessionJoinError("NOT_A_PARTICIPANT")
+  }
   const caller = input.grantRole
     ? { role: input.grantRole }
     : classifyJoinCaller({
         userId: input.userId,
-        expertUserId: row.session.expertUserId,
+        isActiveExpert,
         memberUserId: row.session.memberUserId,
         hasActiveDelegate: Boolean(row.delegate && !row.delegate.revokedAt),
       })

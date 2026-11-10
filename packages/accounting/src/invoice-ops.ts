@@ -195,7 +195,9 @@ export async function listExpertInvoices(input: {
         .where(
           and(
             eq(main.expertInvoices.id, input.cursor),
-            eq(main.expertInvoices.expertOrgId, input.orgId)
+            eq(main.expertInvoices.expertOrgId, input.orgId),
+            // A colleague's invoice id is not a valid cursor for a clinician.
+            ownBookingsFilter(tx, input.expertProfileId)
           )
         )
         .limit(1)

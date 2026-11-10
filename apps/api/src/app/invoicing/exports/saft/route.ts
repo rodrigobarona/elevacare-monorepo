@@ -18,7 +18,7 @@ import { uploadPrivateObject } from "@eleva/storage"
 import { createHash } from "node:crypto"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
-import { resolveFinanceScope } from "@/lib/finance-scope"
+import { resolveFinanceScope } from "@eleva/auth/finance-scope"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -128,6 +128,7 @@ export async function GET(request: Request) {
       month: query.data.month,
       pathname: uploaded.pathname,
       expiresAt,
+      expertProfileId: scope.expertProfileId,
     })
 
     return secureJson(

@@ -11,7 +11,11 @@ import {
   sql,
 } from "drizzle-orm"
 import { withAudit, withPlatformAudit } from "@eleva/audit"
-import { main, withPlatformAdminContext } from "@eleva/db"
+import {
+  isActiveBookingExpert,
+  main,
+  withPlatformAdminContext,
+} from "@eleva/db"
 import {
   DailyHttpError,
   buildSessionRoomBody,
@@ -67,9 +71,14 @@ export function shouldRepairRoomCapacity(pendingEjectCount: number) {
   return pendingEjectCount === 0
 }
 
+/**
+ * The session, when the actor may manage its participants: the booking's
+ * expert while still a member of the booking's org (`isActiveBookingExpert`),
+ * so someone removed from a clinic can no longer add or revoke delegates.
+ */
 async function loadAssignedSession(bookingId: string, actorUserId: string) {
-  return withPlatformAdminContext(async (tx) => {
-    const [row] = await tx
+  const row = await withPlatformAdminContext(async (tx) => {
+    const [found] = await tx
       .select({
         orgId: main.sessions.orgId,
         status: main.sessions.status,
@@ -88,15 +97,16 @@ async function loadAssignedSession(bookingId: string, actorUserId: string) {
       .innerJoin(main.bookings, eq(main.bookings.id, main.sessions.bookingId))
       .where(eq(main.sessions.bookingId, bookingId))
       .limit(1)
-    if (!row) return null
-    if (row.expertUserId !== actorUserId) {
-      throw new SessionParticipantError("NOT_ASSIGNED_EXPERT")
-    }
-    if (row.status !== "scheduled" && row.status !== "live") {
-      throw new SessionParticipantError("SESSION_NOT_ACTIVE")
-    }
-    return row
+    return found ?? null
   })
+  if (!row) return null
+  if (!(await isActiveBookingExpert(row, actorUserId))) {
+    throw new SessionParticipantError("NOT_ASSIGNED_EXPERT")
+  }
+  if (row.status !== "scheduled" && row.status !== "live") {
+    throw new SessionParticipantError("SESSION_NOT_ACTIVE")
+  }
+  return row
 }
 
 export async function countPendingEjects(bookingId: string) {

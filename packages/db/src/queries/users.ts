@@ -62,6 +62,23 @@ export async function isOrgMember(
   })
 }
 
+/**
+ * The rule for expert-side access to one booking: the person is the
+ * booking's expert AND still a member of the booking's org. Someone removed
+ * from a clinic keeps their user row and past bookings, but loses that
+ * clinic's records, documents and calls. SSOT for `@eleva/records` and the
+ * video workflows; member and guest access never goes through it.
+ */
+export async function isActiveBookingExpert(
+  booking: { orgId: string; expertUserId: string | null },
+  userId: string | null | undefined
+): Promise<boolean> {
+  if (!userId || !booking.expertUserId || userId !== booking.expertUserId) {
+    return false
+  }
+  return isOrgMember(userId, booking.orgId)
+}
+
 export async function updateUserAvatarUrl(
   userId: string,
   avatarUrl: string | null,

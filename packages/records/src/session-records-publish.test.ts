@@ -4,16 +4,16 @@ const {
   withPlatformAdminContext,
   withAudit,
   decryptRecordFields,
-  isOrgMember,
+  isActiveBookingExpert,
 } = vi.hoisted(() => ({
   withPlatformAdminContext: vi.fn(),
   withAudit: vi.fn(),
   decryptRecordFields: vi.fn(),
-  isOrgMember: vi.fn(),
+  isActiveBookingExpert: vi.fn(),
 }))
 
 vi.mock("@eleva/db", () => ({
-  isOrgMember,
+  isActiveBookingExpert,
   withPlatformAdminContext,
   withOrgAndUserContext: vi.fn(),
   withOrgContext: vi.fn(),
@@ -80,8 +80,11 @@ describe("setSessionRecordPublished", () => {
     withPlatformAdminContext.mockReset()
     withAudit.mockReset()
     emit.mockReset()
-    isOrgMember.mockReset()
-    isOrgMember.mockResolvedValue(true)
+    isActiveBookingExpert.mockReset()
+    isActiveBookingExpert.mockImplementation(
+      async (row: { expertUserId: string }, userId: string) =>
+        userId === row.expertUserId
+    )
     decryptRecordFields.mockResolvedValue({
       reveal: () => ({ title: "Session report", body: "Keep stretching" }),
     })
@@ -104,11 +107,14 @@ describe("setSessionRecordPublished", () => {
 
   it("rejects the booked expert once removed from the booking's org", async () => {
     withPlatformAdminContext.mockResolvedValue([booking(MEMBER_ID)])
-    isOrgMember.mockResolvedValue(false)
+    isActiveBookingExpert.mockResolvedValue(false)
     await expect(setSessionRecordPublished(input)).rejects.toMatchObject({
       code: "FORBIDDEN",
     })
-    expect(isOrgMember).toHaveBeenCalledWith(EXPERT_ID, ORG_ID)
+    expect(isActiveBookingExpert).toHaveBeenCalledWith(
+      expect.objectContaining({ orgId: ORG_ID, expertUserId: EXPERT_ID }),
+      EXPERT_ID
+    )
     expect(withAudit).not.toHaveBeenCalled()
   })
 
