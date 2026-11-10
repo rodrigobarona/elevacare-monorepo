@@ -307,9 +307,15 @@ export async function listPublicEventTypeModes(
         main.eventTypes,
         eq(main.eventTypes.id, main.eventTypeModes.eventTypeId)
       )
+      // An archived place never shows its address, even if a mode still
+      // points at it (archive racing a mode edit): the mode keeps showing
+      // without a place.
       .leftJoin(
         main.expertPracticeLocations,
-        eq(main.expertPracticeLocations.id, main.eventTypeModes.locationId)
+        and(
+          eq(main.expertPracticeLocations.id, main.eventTypeModes.locationId),
+          eq(main.expertPracticeLocations.active, true)
+        )
       )
       .where(
         and(
