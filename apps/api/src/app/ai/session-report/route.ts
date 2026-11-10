@@ -69,6 +69,14 @@ async function requireBookingInWorkspace(input: {
   orgId: string
   headers: Record<string, string>
 }): Promise<Response | null> {
+  // A cheap per-user limit first, so unknown or foreign booking ids are
+  // throttled too (they throw before the per-org AI bucket below).
+  const callerLimited = await applyRateLimit(
+    `user:${input.actorUserId}`,
+    RATE_LIMITS.authenticated,
+    input.headers
+  )
+  if (callerLimited) return callerLimited
   const booking = await requireAssignedExpert({
     bookingId: input.bookingId,
     actorUserId: input.actorUserId,

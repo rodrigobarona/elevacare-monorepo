@@ -249,10 +249,13 @@ export async function joinSession(
   // Expert joins, by session or by an emailed expert grant, need the
   // booking's expert to still belong to its org. Member and guest joins
   // are unchanged.
-  const isActiveExpert =
-    input.grantRole === "member"
-      ? false
-      : await isActiveBookingExpert(row.session, input.userId)
+  // Delegate, supervisor and member grants carry their own role, so only a
+  // session join or an expert grant needs the check (one DB read).
+  const needsExpertCheck =
+    input.grantRole === undefined || input.grantRole === "expert"
+  const isActiveExpert = needsExpertCheck
+    ? await isActiveBookingExpert(row.session, input.userId)
+    : false
   if (input.grantRole === "expert" && !isActiveExpert) {
     throw new SessionJoinError("NOT_A_PARTICIPANT")
   }

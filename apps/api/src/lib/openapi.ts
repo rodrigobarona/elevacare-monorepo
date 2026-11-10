@@ -2779,7 +2779,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "listPayouts",
           summary: "List payout ledger rows",
           description:
-            "Experts see their active org only (`orgId` must match or is implied). A clinic clinician (team member) sees only payouts for bookings where they are the expert. Staff with `admin_payouts:read` may filter by org.",
+            "Experts see their active org only (`orgId` must match or is implied). A clinic clinician (team member) sees only payouts for bookings where they are the expert. Staff with `admin_payouts:read` may filter by org. A clinician without an expert profile in the clinic gets 403 `missing-expert-profile`.",
           tags: ["Payouts"],
           requestParams: {
             query: ListPayoutsQuerySchema,
@@ -4652,7 +4652,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "listExpertInvoices",
           summary: "List expert → member invoices",
           description:
-            "Returns the authenticated expert organization's Tier 2 invoices. Does not include member tax IDs. Automatic TOConline issuance stays closed until fiscal parameters are signed.",
+            "Returns the authenticated expert organization's Tier 2 invoices. Does not include member tax IDs. Automatic TOConline issuance stays closed until fiscal parameters are signed. A clinic clinician (team member) sees only invoices for bookings where they are the expert, and gets 403 `missing-expert-profile` without an expert profile in the clinic.",
           tags: ["Invoicing"],
           requestParams: {
             query: ListExpertInvoicesQuerySchema,
@@ -4679,7 +4679,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "retryExpertInvoice",
           summary: "Retry a failed expert invoice dispatch",
           description:
-            "Re-runs closed-gate adapter dispatch for a failed invoice after an exclusive pending claim. Does not POST TOConline v1 sales documents. Manual invoices cannot be retried — use mark-manual.",
+            "Re-runs closed-gate adapter dispatch for a failed invoice after an exclusive pending claim. Does not POST TOConline v1 sales documents. Manual invoices cannot be retried — use mark-manual. A clinic clinician (team member) may act only on bookings where they are the expert, and gets 403 `missing-expert-profile` without an expert profile in the clinic.",
           tags: ["Invoicing"],
           requestParams: {
             path: z.object({
@@ -4720,7 +4720,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "markExpertInvoiceManual",
           summary: "Mark an expert invoice as issued manually",
           description:
-            "Records that the expert issued a certified invoice to the member outside Eleva. Does not create a TOConline document.",
+            "Records that the expert issued a certified invoice to the member outside Eleva. Does not create a TOConline document. A clinic clinician (team member) may act only on bookings where they are the expert, and gets 403 `missing-expert-profile` without an expert profile in the clinic.",
           tags: ["Invoicing"],
           requestParams: {
             path: z.object({
@@ -4761,7 +4761,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "exportSaft",
           summary: "Build a monthly CSV + SAF-T PT skeleton zip",
           description:
-            "Uploads a private zip of the expert organization's invoices for the Lisbon calendar month. A clinic clinician (team member) gets only invoices for bookings where they are the expert. The XML is a ledger skeleton, not a certified AT file, and is not submitted or Comunicado. Does not POST TOConline sales documents.",
+            "Uploads a private zip of the expert organization's invoices for the Lisbon calendar month. A clinic clinician (team member) gets only invoices for bookings where they are the expert. The XML is a ledger skeleton, not a certified AT file, and is not submitted or Comunicado. Does not POST TOConline sales documents. A clinician without an expert profile in the clinic gets 403 `missing-expert-profile`.",
           tags: ["Invoicing"],
           requestParams: {
             query: ExportSaftQuerySchema,
@@ -4788,7 +4788,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "downloadSaftExport",
           summary: "Download a signed monthly SAF-T zip",
           description:
-            "Streams the private zip created by exportSaft. Requires expert:invoicing_manage and a token bound to the active organization.",
+            "Streams the private zip created by exportSaft. Requires expert:invoicing_manage and a token bound to the active organization and the caller's scope: a clinic clinician's link opens only their own export, and a token used outside its scope returns 404.",
           tags: ["Invoicing"],
           requestParams: {
             query: ExportSaftFileQuerySchema,
