@@ -88,6 +88,8 @@ export type JoinSessionResult = {
   endsAt: string
   /** Live transcription needs the member's active ai_processing consent. */
   transcriptionAllowed: boolean
+  /** Language the session was booked in; seeds the live transcript. */
+  sessionLanguage: string | null
 }
 
 export type JoinSessionDeps = {
@@ -219,12 +221,14 @@ export async function joinSession(
         dailyRoomUrl: main.sessions.dailyRoomUrl,
         memberUserId: main.sessions.memberUserId,
         expertUserId: main.expertProfiles.userId,
+        language: main.bookings.language,
       })
       .from(main.sessions)
       .innerJoin(
         main.expertProfiles,
         eq(main.expertProfiles.id, main.sessions.expertProfileId)
       )
+      .innerJoin(main.bookings, eq(main.bookings.id, main.sessions.bookingId))
       .where(eq(main.sessions.bookingId, input.bookingId))
       .limit(1)
     if (!session) return null
@@ -366,6 +370,7 @@ export async function joinSession(
         expiresAt: new Date(exp * 1000).toISOString(),
         endsAt: row.session.endsAt.toISOString(),
         transcriptionAllowed,
+        sessionLanguage: row.session.language ?? null,
       }
     }
   )

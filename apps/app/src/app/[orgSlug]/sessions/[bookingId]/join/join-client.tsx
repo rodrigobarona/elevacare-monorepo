@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useMemo } from "react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { createApiClient } from "@eleva/api-client"
 import {
   JoinSession,
@@ -21,7 +21,11 @@ export function JoinClient({
   showNotesSlot?: boolean
 }) {
   const t = useTranslations("sessions.call")
-  const labels = useMemo((): ElevaCallLabels => elevaCallLabels(t), [t])
+  const locale = useLocale()
+  const labels = useMemo(
+    (): ElevaCallLabels => elevaCallLabels(t, { locale }),
+    [t, locale]
+  )
 
   const join = useCallback(() => {
     return createApiClient({ baseUrl: apiBaseUrl }).sessions.join(bookingId)
