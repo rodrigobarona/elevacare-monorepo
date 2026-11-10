@@ -5,8 +5,8 @@ import { cn } from "@eleva/ui/lib/utils"
 /**
  * Who the member is booking, on every step: the expert (photo, name,
  * headline, a way back to their page) and the session. Beside the steps on
- * desktop; on phones a compact header above them, so the expert never drops
- * out of view while picking a time.
+ * desktop; on phones a compact header above them (name, session, price,
+ * and the time once picked), so the steps start near the top.
  */
 export function BookingSummary({
   expertName,
@@ -16,6 +16,7 @@ export function BookingSummary({
   meta,
   media,
   when,
+  whenPending = false,
   whenLabel,
   priceLabel,
   priceCents,
@@ -37,6 +38,8 @@ export function BookingSummary({
   /** Expert avatar or portrait shown beside the offer title. */
   media?: ReactNode
   when: string
+  /** No time picked yet: phones skip the "When" row (the step says it). */
+  whenPending?: boolean
   whenLabel: string
   priceLabel: string
   priceCents: number
@@ -51,16 +54,19 @@ export function BookingSummary({
     <aside
       data-slot="booking-summary"
       className={cn(
-        "self-start rounded-4xl bg-card p-5 shadow-md ring-1 ring-foreground/5 lg:sticky lg:top-24 lg:p-6",
+        "self-start rounded-3xl bg-card p-4 shadow-md ring-1 ring-foreground/5 lg:sticky lg:top-24 lg:rounded-4xl lg:p-6",
         className
       )}
     >
-      <div className="flex items-center gap-4">
-        {media ? <div className="shrink-0">{media}</div> : null}
+      <div className="flex items-center gap-3 lg:gap-4">
+        {media ? (
+          <div className="shrink-0 *:size-10 lg:*:size-14">{media}</div>
+        ) : null}
         <div className="min-w-0">
           <p className="truncate font-medium">{expertName}</p>
+          {/* Phones keep the summary to a few lines: name and the way back. */}
           {expertHeadline ? (
-            <p className="line-clamp-2 text-sm text-muted-foreground">
+            <p className="hidden text-sm text-muted-foreground lg:line-clamp-2">
               {expertHeadline}
             </p>
           ) : null}
@@ -69,8 +75,8 @@ export function BookingSummary({
           ) : null}
         </div>
       </div>
-      <div className="mt-4 border-t border-border pt-4">
-        <h2 className="font-display text-xl leading-tight font-medium text-balance">
+      <div className="mt-3 border-t border-border pt-3 lg:mt-4 lg:pt-4">
+        <h2 className="font-display text-lg leading-tight font-medium text-balance lg:text-xl">
           {offerTitle}
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -87,7 +93,12 @@ export function BookingSummary({
           </span>
         </p>
       </div>
-      <dl className="mt-4 divide-y divide-border border-t border-border text-sm">
+      <dl
+        className={cn(
+          "mt-3 divide-y divide-border border-t border-border text-sm lg:mt-4",
+          whenPending && "hidden lg:block"
+        )}
+      >
         <div className="flex justify-between gap-3 pt-3 lg:pb-3">
           <dt className="text-muted-foreground">{whenLabel}</dt>
           <dd className="text-right font-medium">{when}</dd>

@@ -772,6 +772,7 @@ export function BookingFunnel({
             : undefined
         }
         when={whenLabel}
+        whenPending={!slot}
         whenLabel={t("summary.when")}
         priceLabel={t("summary.price")}
         priceCents={priceCents}
