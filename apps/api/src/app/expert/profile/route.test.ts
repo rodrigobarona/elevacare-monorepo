@@ -25,7 +25,7 @@ vi.mock("@eleva/storage/upload-handler", () => {
 })
 
 vi.mock("@eleva/db", () => ({
-  getExpertProfileByUserId: vi.fn(async () => ({
+  getExpertProfileForOrg: vi.fn(async () => ({
     id: "profile-1",
     orgId: "org-1",
     metadata: {},

@@ -4,7 +4,7 @@ import {
   type CreateConnectAccountResponse,
 } from "@eleva/api-client"
 import { provisionConnectAccount } from "@eleva/billing/server"
-import { getExpertProfileByUserId } from "@eleva/db"
+import { getExpertProfileForOrg } from "@eleva/db"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requirePrivilegedApiAuth } from "@/lib/auth"
 import { checkBot } from "@/lib/bot-protection"
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const expert = await getExpertProfileByUserId(session.user.id)
+  const expert = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (!expert) {
     return secureJson({ error: "no_expert_profile" }, { status: 404, headers })
   }

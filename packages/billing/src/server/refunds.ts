@@ -88,6 +88,12 @@ export async function refundBookingPayment(input: {
   actorUserId: string | null
   policy?: RefundPolicyInput
   actingOrgId: string | "platform"
+  /**
+   * A clinic clinician may refund only bookings where they are the expert
+   * (`isClinicClinician` in `@eleva/auth`). Unset for the org's own expert,
+   * clinic admins and platform staff.
+   */
+  actingExpertProfileId?: string
   idempotencyKey?: string
   actorIsStaffReviewer?: boolean
 }): Promise<{ refundId: string; status: "succeeded" | "pending" }> {
@@ -130,6 +136,20 @@ export async function refundBookingPayment(input: {
         "Payment is not in this organization",
         403
       )
+    }
+    if (input.actingExpertProfileId) {
+      const [booking] = await tx
+        .select({ expertProfileId: main.bookings.expertProfileId })
+        .from(main.bookings)
+        .where(eq(main.bookings.id, payment.bookingId))
+        .limit(1)
+      if (booking?.expertProfileId !== input.actingExpertProfileId) {
+        throw new RefundError(
+          "EXPERT_MISMATCH",
+          "Payment is not for one of your bookings",
+          403
+        )
+      }
     }
     const remaining = payment.amountCents - payment.refundedCents
     const amountCents = input.amountCents ?? remaining

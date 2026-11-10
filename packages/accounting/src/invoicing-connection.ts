@@ -14,10 +14,12 @@ export type DisconnectExpertInvoicingResult = {
  * `expert_integrations` row shreds the envelope ciphertext (tokens are
  * never stored elsewhere) and the profile returns to `not_started`, so the
  * expert must choose a provider or manual invoicing again. Already issued
- * documents and invoice rows are untouched. Returns null without a profile.
+ * documents and invoice rows are untouched. Returns null without a profile
+ * in `orgId` (a person can be an expert in several orgs).
  */
 export async function disconnectExpertInvoicing(input: {
   userId: string
+  orgId: string
 }): Promise<DisconnectExpertInvoicingResult | null> {
   const profile = await withPlatformAdminContext(async (tx) => {
     const [row] = await tx
@@ -27,7 +29,12 @@ export async function disconnectExpertInvoicing(input: {
         invoicingProvider: main.expertProfiles.invoicingProvider,
       })
       .from(main.expertProfiles)
-      .where(eq(main.expertProfiles.userId, input.userId))
+      .where(
+        and(
+          eq(main.expertProfiles.userId, input.userId),
+          eq(main.expertProfiles.orgId, input.orgId)
+        )
+      )
       .limit(1)
     return row ?? null
   })

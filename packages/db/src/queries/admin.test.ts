@@ -45,31 +45,26 @@ describe("admin queries", () => {
     vi.restoreAllMocks()
   })
 
-  describe("getExpertProfileByUserId", () => {
-    it("returns null when no profile found", async () => {
+  describe("getExpertProfileForOrg", () => {
+    it("returns null when the user has no profile in that org", async () => {
       mockTx.select.mockReturnValueOnce(chain([]))
 
-      const { getExpertProfileByUserId } = await import("./admin")
-      const result = await getExpertProfileByUserId("nonexistent")
+      const { getExpertProfileForOrg } = await import("./admin")
+      const result = await getExpertProfileForOrg("user-1", "org-2")
 
       expect(result).toBeNull()
     })
 
-    it("returns profile when found", async () => {
-      const fakeProfile = {
-        id: "profile-1",
-        userId: "user-1",
-        orgId: "org-1",
-        username: "drsmith",
-        displayName: "Dr. Smith",
-        status: "draft",
-      }
+    it("runs in the named org's context", async () => {
+      const fakeProfile = { id: "profile-1", userId: "user-1", orgId: "org-1" }
       mockTx.select.mockReturnValueOnce(chain([fakeProfile]))
 
-      const { getExpertProfileByUserId } = await import("./admin")
-      const result = await getExpertProfileByUserId("user-1")
+      const { withOrgContext } = await import("../context")
+      const { getExpertProfileForOrg } = await import("./admin")
+      const result = await getExpertProfileForOrg("user-1", "org-1")
 
       expect(result).toEqual(fakeProfile)
+      expect(withOrgContext).toHaveBeenCalledWith("org-1", expect.any(Function))
     })
   })
 

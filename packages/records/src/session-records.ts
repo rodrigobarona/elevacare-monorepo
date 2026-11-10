@@ -2,6 +2,7 @@ import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm"
 import { withAudit, type AuditCtx } from "@eleva/audit"
 import {
   hasActiveAiProcessingConsent,
+  isOrgMember,
   withOrgAndUserContext,
   withOrgContext,
   withPlatformAdminContext,
@@ -348,13 +349,25 @@ export async function persistBookingIntake(bookingId: string): Promise<void> {
   await hydrateIntake(booking, booking.expertUserId, [], { relist: false })
 }
 
+/**
+ * The booking's expert, while still a member of the booking's org. Someone
+ * removed from a clinic loses that clinic's records.
+ */
+async function isAssignedExpert(
+  booking: BookingRow,
+  actorUserId: string
+): Promise<boolean> {
+  if (actorUserId !== booking.expertUserId) return false
+  return isOrgMember(actorUserId, booking.orgId)
+}
+
 export async function requireAssignedExpert(input: {
   bookingId: string
   actorUserId: string
 }): Promise<BookingRow> {
   const booking = await loadBooking(input.bookingId)
   if (!booking) throw new SessionRecordError("NOT_FOUND")
-  if (input.actorUserId !== booking.expertUserId) {
+  if (!(await isAssignedExpert(booking, input.actorUserId))) {
     throw new SessionRecordError("FORBIDDEN")
   }
   return booking
@@ -367,7 +380,7 @@ export async function listSessionRecords(input: {
   const booking = await loadBooking(input.bookingId)
   if (!booking) throw new SessionRecordError("NOT_FOUND")
 
-  if (input.actorUserId === booking.expertUserId) {
+  if (await isAssignedExpert(booking, input.actorUserId)) {
     const listed = await withOrgAndUserContext(
       booking.orgId,
       input.actorUserId,
@@ -423,7 +436,7 @@ export async function upsertSessionRecord(input: {
   const kind: WritableSessionRecordKind = input.kind
   const booking = await loadBooking(input.bookingId)
   if (!booking) throw new SessionRecordError("NOT_FOUND")
-  if (input.actorUserId !== booking.expertUserId) {
+  if (!(await isAssignedExpert(booking, input.actorUserId))) {
     throw new SessionRecordError("FORBIDDEN")
   }
   if (

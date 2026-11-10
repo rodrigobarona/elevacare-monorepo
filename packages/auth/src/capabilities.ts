@@ -53,6 +53,19 @@ export function deriveProductLabel(
 }
 
 /**
+ * A clinician in a clinic: a plain `member` of a `team` org. They carry the
+ * `expert` bundle, but its money and tax powers (`billing:refund`,
+ * `payouts:view_own`, `expert:invoicing_manage`) reach only bookings where
+ * they are the expert. The clinic's books belong to `team_admin`.
+ */
+export function isClinicClinician(context: {
+  orgType: OrgType
+  membershipRole: MembershipRole
+}): boolean {
+  return context.orgType === "team" && context.membershipRole === "member"
+}
+
+/**
  * RBAC bundle -> capability-slug list. Product labels derived from
  * (org_type, membership role).
  */

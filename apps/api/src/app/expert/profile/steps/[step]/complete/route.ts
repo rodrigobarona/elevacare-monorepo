@@ -9,7 +9,7 @@ import {
 import { withAudit } from "@eleva/audit"
 import { isExpertInvoicingChoiceComplete } from "@eleva/auth"
 import {
-  getExpertProfileByUserId,
+  getExpertProfileForOrg,
   getOrCreateDefaultSchedule,
   main,
   updateExpertProfile,
@@ -86,7 +86,7 @@ export async function POST(
     )
   }
 
-  const profile = await getExpertProfileByUserId(session.user.id)
+  const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (!profile) {
     return secureJson(
       { error: "not found", message: "no expert profile" },

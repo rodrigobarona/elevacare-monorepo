@@ -1,7 +1,7 @@
 import { logError } from "@eleva/observability"
 import type { CreateIdentitySessionResponse } from "@eleva/api-client"
 import { createIdentityVerificationSession } from "@eleva/billing/server"
-import { getExpertProfileByUserId } from "@eleva/db"
+import { getExpertProfileForOrg } from "@eleva/db"
 import { getFlag } from "@eleva/flags"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requirePrivilegedApiAuth } from "@/lib/auth"
@@ -79,7 +79,7 @@ export async function POST(request: Request): Promise<Response> {
     )
   }
 
-  const expert = await getExpertProfileByUserId(session.user.id)
+  const expert = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (!expert) {
     return secureJson({ error: "no_expert_profile" }, { status: 404, headers })
   }

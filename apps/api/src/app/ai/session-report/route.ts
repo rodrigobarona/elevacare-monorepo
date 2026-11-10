@@ -14,7 +14,7 @@ import {
   requireAssignedExpert,
   SessionRecordError,
 } from "@eleva/records"
-import { getExpertProfileByUserId } from "@eleva/db"
+import { getExpertProfileForOrg } from "@eleva/db"
 import { apiAuthFailure, requireApiAuth } from "@/lib/auth"
 import { corsHeaders } from "@/lib/cors"
 import { applyRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
@@ -81,7 +81,7 @@ async function handleGET(request: Request) {
     throw err
   }
 
-  const profile = await getExpertProfileByUserId(session.user.id)
+  const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (!profile) {
     return secureJson(
       { error: "not found", message: "no expert profile" },
@@ -133,7 +133,7 @@ async function handlePOST(request: Request) {
     throw err
   }
 
-  const profile = await getExpertProfileByUserId(session.user.id)
+  const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (!profile) {
     return secureJson(
       { error: "not found", message: "no expert profile" },

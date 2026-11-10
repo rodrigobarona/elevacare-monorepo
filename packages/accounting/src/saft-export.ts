@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto"
-import { and, asc, eq, sql } from "drizzle-orm"
+import { and, asc, eq, inArray, sql } from "drizzle-orm"
 import { main, withOrgContext } from "@eleva/db"
 import type { ExpertInvoiceStatus } from "./invoice-ops"
 
@@ -300,6 +300,8 @@ ${input.truncated ? `      <!-- truncated: export hit ${SAFT_EXPORT_MAX_ROWS}-ro
 export async function listSaftExportRows(input: {
   orgId: string
   month: string
+  /** A clinic clinician exports only invoices for their own bookings. */
+  expertProfileId?: string
 }): Promise<{
   range: SaftMonthRange
   rows: SaftInvoiceRow[]
@@ -327,7 +329,18 @@ export async function listSaftExportRows(input: {
           // pending/failed rows so the skeleton never invents invoices.
           eq(main.expertInvoices.expertOrgId, input.orgId),
           sql`${occurredAt} >= ${range.start}`,
-          sql`${occurredAt} < ${range.end}`
+          sql`${occurredAt} < ${range.end}`,
+          input.expertProfileId
+            ? inArray(
+                main.expertInvoices.bookingId,
+                tx
+                  .select({ id: main.bookings.id })
+                  .from(main.bookings)
+                  .where(
+                    eq(main.bookings.expertProfileId, input.expertProfileId)
+                  )
+              )
+            : undefined
         )
       )
       .orderBy(asc(occurredAt), asc(main.expertInvoices.id))
@@ -411,13 +424,25 @@ export function buildSaftDownloadUrl(input: {
   return `${base}/invoicing/exports/saft/file?${params.toString()}`
 }
 
+/** Where one clinic clinician's own exports live, apart from the clinic's. */
+export function saftExpertPrefix(
+  orgId: string,
+  expertProfileId: string
+): string {
+  return `invoicing-exports/${orgId}/experts/${expertProfileId}/`
+}
+
 export function saftStorageKey(
   orgId: string,
   month: string,
-  contentHash?: string
+  contentHash?: string,
+  expertProfileId?: string
 ): string {
+  const prefix = expertProfileId
+    ? saftExpertPrefix(orgId, expertProfileId)
+    : `invoicing-exports/${orgId}/`
   if (contentHash) {
-    return `invoicing-exports/${orgId}/saft-${month}-${contentHash}.zip`
+    return `${prefix}saft-${month}-${contentHash}.zip`
   }
-  return `invoicing-exports/${orgId}/saft-${month}.zip`
+  return `${prefix}saft-${month}.zip`
 }

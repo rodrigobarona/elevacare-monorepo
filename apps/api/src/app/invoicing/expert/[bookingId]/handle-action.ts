@@ -11,6 +11,7 @@ import {
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { checkBot } from "@/lib/bot-protection"
+import { resolveFinanceScope } from "@/lib/finance-scope"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 
@@ -23,6 +24,7 @@ export async function handleExpertInvoiceAction(
     bookingId: string
     orgId: string
     actorUserId: string
+    expertProfileId?: string
   }) => Promise<PublicExpertInvoice>
 ): Promise<Response> {
   const headers = corsHeaders(request, "POST, OPTIONS")
@@ -91,11 +93,21 @@ export async function handleExpertInvoiceAction(
     )
   }
 
+  // A clinic clinician acts only on invoices for their own bookings.
+  const scope = await resolveFinanceScope(session)
+  if (!scope) {
+    return secureJson(
+      { error: "forbidden", code: "missing-expert-profile" },
+      { status: 403, headers }
+    )
+  }
+
   try {
     const invoice = await op({
       bookingId: bookingId.data,
       orgId: session.orgId,
       actorUserId: session.user.id,
+      expertProfileId: scope.expertProfileId,
     })
     return secureJson(ExpertInvoiceActionResponseSchema.parse(invoice), {
       status: 200,

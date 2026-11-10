@@ -6,6 +6,7 @@ import {
 import { listExpertInvoices } from "@eleva/accounting"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
+import { resolveFinanceScope } from "@/lib/finance-scope"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -50,11 +51,21 @@ export async function GET(request: Request) {
     )
   }
 
+  // A clinic clinician sees only invoices for their own bookings.
+  const scope = await resolveFinanceScope(session)
+  if (!scope) {
+    return secureJson(
+      { error: "forbidden", code: "missing-expert-profile" },
+      { status: 403, headers }
+    )
+  }
+
   try {
     const result = await listExpertInvoices({
       orgId: session.orgId,
       status: query.data.status,
       cursor: query.data.cursor,
+      expertProfileId: scope.expertProfileId,
     })
 
     return secureJson(ListExpertInvoicesResponseSchema.parse(result), {

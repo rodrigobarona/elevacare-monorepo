@@ -10,6 +10,7 @@ import {
   requirePrivilegedApiAuth,
   requireStaffPayoutMutator,
 } from "@/lib/auth"
+import { resolveFinanceScope } from "@/lib/finance-scope"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -59,6 +60,7 @@ export async function POST(
   }
 
   let actingOrgId: string | "platform"
+  let actingExpertProfileId: string | undefined
   if (session.productLabel === "staff" || (staffRefund && !expertRefund)) {
     try {
       await requireStaffPayoutMutator(request, "admin_payouts:refund")
@@ -75,6 +77,15 @@ export async function POST(
     )
   } else {
     actingOrgId = session.orgId
+    // A clinic clinician refunds only their own bookings, never a colleague's.
+    const scope = await resolveFinanceScope(session)
+    if (!scope) {
+      return secureJson(
+        { error: "forbidden", code: "missing-expert-profile" },
+        { status: 403, headers }
+      )
+    }
+    actingExpertProfileId = scope.expertProfileId
   }
 
   const { bookingPaymentId: rawPaymentId } = await params
@@ -102,6 +113,7 @@ export async function POST(
       reason: parsed.data.reason,
       actorUserId: session.user.id,
       actingOrgId,
+      actingExpertProfileId,
       idempotencyKey:
         request.headers.get("Idempotency-Key")?.trim() ||
         parsed.data.idempotencyKey,

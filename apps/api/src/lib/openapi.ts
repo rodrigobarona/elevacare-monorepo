@@ -274,7 +274,8 @@ const stdWithNotFound = {
 const stdRefundErrors = {
   ...stdErrors,
   "403": {
-    description: "Missing refund capability or organization mismatch",
+    description:
+      "Missing refund capability, organization mismatch, or a clinic clinician refunding a colleague's booking",
     content: { "application/json": { schema: ErrorSchema } },
   },
   "404": {
@@ -2748,7 +2749,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "refundBookingPayment",
           summary: "Refund a booking payment (full or partial)",
           description:
-            "Creates a Stripe refund then, when a transfer exists, a transfer reversal. Expert `billing:refund` on the owning org, or staff `admin_payouts:refund`.",
+            "Creates a Stripe refund then, when a transfer exists, a transfer reversal. Expert `billing:refund` on the owning org, or staff `admin_payouts:refund`. A clinic clinician (team member) may refund only bookings where they are the expert (`EXPERT_MISMATCH` otherwise).",
           tags: ["Payments"],
           requestParams: {
             path: z.object({ bookingPaymentId: z.string().uuid() }),
@@ -2778,7 +2779,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "listPayouts",
           summary: "List payout ledger rows",
           description:
-            "Experts see their active org only (`orgId` must match or is implied). Staff with `admin_payouts:read` may filter by org.",
+            "Experts see their active org only (`orgId` must match or is implied). A clinic clinician (team member) sees only payouts for bookings where they are the expert. Staff with `admin_payouts:read` may filter by org.",
           tags: ["Payouts"],
           requestParams: {
             query: ListPayoutsQuerySchema,
@@ -2963,6 +2964,8 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
         get: {
           operationId: "getExpertFinanceSummary",
           summary: "Expert earnings summary and booking payout table",
+          description:
+            "Covers the active org. A clinic clinician (team member) sees only bookings where they are the expert.",
           tags: ["Finance"],
           responses: {
             "200": {
@@ -2973,7 +2976,8 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             ...stdErrors,
             "403": {
-              description: "Missing payouts:view_own",
+              description:
+                "Missing payouts:view_own, or a clinic clinician without an expert profile there",
               content: { "application/json": { schema: ErrorSchema } },
             },
           },
@@ -4757,7 +4761,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "exportSaft",
           summary: "Build a monthly CSV + SAF-T PT skeleton zip",
           description:
-            "Uploads a private zip of the expert organization's invoices for the Lisbon calendar month. The XML is a ledger skeleton, not a certified AT file, and is not submitted or Comunicado. Does not POST TOConline sales documents.",
+            "Uploads a private zip of the expert organization's invoices for the Lisbon calendar month. A clinic clinician (team member) gets only invoices for bookings where they are the expert. The XML is a ledger skeleton, not a certified AT file, and is not submitted or Comunicado. Does not POST TOConline sales documents.",
           tags: ["Invoicing"],
           requestParams: {
             query: ExportSaftQuerySchema,

@@ -39,7 +39,6 @@ export {
 } from "./queries/public"
 export { pingMainDb, pingAuditDb } from "./ping"
 export {
-  getExpertProfileByUserId,
   getExpertProfileForOrg,
   updateExpertProfile,
   getOrganizationBySlug,
@@ -168,6 +167,7 @@ export {
   getUserAvatarUrl,
   updateUserAvatarUrl,
   getAuthUserRole,
+  isOrgMember,
 } from "./queries/users"
 export {
   getMemberProfile,

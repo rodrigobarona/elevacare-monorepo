@@ -6,7 +6,7 @@ import {
 import { withAudit } from "@eleva/audit"
 import type { ElevaSession } from "@eleva/auth"
 import {
-  getExpertProfileByUserId,
+  getExpertProfileForOrg,
   getLatestPartnerApplication,
   updateExpertProfile,
   type main,
@@ -75,7 +75,10 @@ export async function GET(request: Request) {
   const auth = await authorize(request, headers)
   if (auth.response) return auth.response
 
-  const profile = await getExpertProfileByUserId(auth.session.user.id)
+  const profile = await getExpertProfileForOrg(
+    auth.session.user.id,
+    auth.session.orgId
+  )
   if (!profile) {
     return secureJson(
       { error: "not found", message: "no expert profile" },
@@ -111,7 +114,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const profile = await getExpertProfileByUserId(session.user.id)
+  const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (!profile) {
     return secureJson(
       { error: "not found", message: "no expert profile" },

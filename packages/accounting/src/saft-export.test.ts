@@ -5,6 +5,7 @@ import {
   buildSaftDownloadUrl,
   buildSaftXmlSkeleton,
   parseSaftMonth,
+  saftExpertPrefix,
   saftStorageKey,
   saftMonthRange,
   signSaftDownloadToken,
@@ -181,5 +182,18 @@ describe("SAF-T download token", () => {
     expect(saftStorageKey(orgId, "2026-03", "abc123def456")).toBe(
       `invoicing-exports/${orgId}/saft-2026-03-abc123def456.zip`
     )
+  })
+
+  it("keeps a clinic clinician's own exports under their profile", () => {
+    const key = saftStorageKey(orgId, "2026-03", "abc123def456", "profile-1")
+    expect(key).toBe(
+      `invoicing-exports/${orgId}/experts/profile-1/saft-2026-03-abc123def456.zip`
+    )
+    expect(key.startsWith(saftExpertPrefix(orgId, "profile-1"))).toBe(true)
+    expect(
+      saftStorageKey(orgId, "2026-03", "abc123def456").startsWith(
+        saftExpertPrefix(orgId, "profile-1")
+      )
+    ).toBe(false)
   })
 })

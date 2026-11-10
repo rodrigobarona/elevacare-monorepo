@@ -5,7 +5,7 @@ import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { withAudit } from "@eleva/audit"
 import { DEFAULT_CANCELLATION_POLICY } from "@eleva/config"
-import { getExpertProfileByUserId, createEventType } from "@eleva/db"
+import { getExpertProfileForOrg, createEventType } from "@eleva/db"
 import { isUniqueViolation } from "@eleva/scheduling"
 import type { RoutePolicy } from "@/lib/route-policy"
 
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const profile = await getExpertProfileByUserId(session.user.id)
+  const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (!profile) {
     return secureJson(
       { error: "not found", message: "no expert profile" },

@@ -18,6 +18,7 @@ import { uploadPrivateObject } from "@eleva/storage"
 import { createHash } from "node:crypto"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
+import { resolveFinanceScope } from "@/lib/finance-scope"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -69,10 +70,21 @@ export async function GET(request: Request) {
     )
   }
 
+  // A clinic clinician exports only invoices for their own bookings; the
+  // clinic's full ledger (with every member's NIF) stays with its admin.
+  const scope = await resolveFinanceScope(session)
+  if (!scope) {
+    return secureJson(
+      { error: "forbidden", code: "missing-expert-profile" },
+      { status: 403, headers }
+    )
+  }
+
   try {
     const { rows, truncated } = await listSaftExportRows({
       orgId: session.orgId,
       month: query.data.month,
+      expertProfileId: scope.expertProfileId,
     })
     const encoder = new TextEncoder()
     const csv = buildSaftCsv(rows, { truncated })
@@ -99,7 +111,12 @@ export async function GET(request: Request) {
       .digest("hex")
       .slice(0, 16)
     const uploaded = await uploadPrivateObject({
-      pathname: saftStorageKey(session.orgId, query.data.month, contentHash),
+      pathname: saftStorageKey(
+        session.orgId,
+        query.data.month,
+        contentHash,
+        scope.expertProfileId
+      ),
       body: zip,
       contentType: "application/zip",
       overwrite: true,

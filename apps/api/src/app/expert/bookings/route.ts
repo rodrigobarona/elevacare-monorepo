@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { getExpertProfileByUserId, listExpertBookings } from "@eleva/db"
+import { getExpertProfileForOrg, listExpertBookings } from "@eleva/db"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { corsHeaders } from "@/lib/cors"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -64,7 +64,7 @@ export async function GET(request: Request) {
     )
   }
 
-  const profile = await getExpertProfileByUserId(session.user.id)
+  const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (!profile) {
     return secureJson(
       { error: "not found", message: "no expert profile" },

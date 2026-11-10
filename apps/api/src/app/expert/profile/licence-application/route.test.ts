@@ -22,7 +22,7 @@ const APPLICATION = {
 }
 
 vi.mock("@eleva/db", () => ({
-  getExpertProfileByUserId: vi.fn(async () => profile),
+  getExpertProfileForOrg: vi.fn(async () => profile),
   getLatestPartnerApplication: vi.fn(async () => latest),
   updateExpertProfile: (...args: unknown[]) => updateExpertProfile(...args),
 }))

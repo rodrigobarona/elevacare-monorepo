@@ -9,6 +9,7 @@ const { withPlatformAdminContext, withAudit, hasActiveAiProcessingConsent } =
 
 vi.mock("@eleva/db", () => ({
   hasActiveAiProcessingConsent,
+  isOrgMember: vi.fn(async () => true),
   withPlatformAdminContext,
   withOrgAndUserContext: vi.fn(),
   withOrgContext: vi.fn(),

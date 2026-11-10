@@ -2,7 +2,7 @@ import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
-import { getExpertProfileByUserId, listCalendarIntegrations } from "@eleva/db"
+import { getExpertProfileForOrg, listCalendarIntegrations } from "@eleva/db"
 import { getProviderAccessToken } from "@eleva/auth"
 import {
   calendarProviderForSlug,
@@ -44,7 +44,7 @@ export async function GET(
   )
   if (rateLimited) return rateLimited
 
-  const profile = await getExpertProfileByUserId(session.user.id)
+  const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (!profile) {
     return secureJson(
       { error: "not found", message: "no expert profile" },

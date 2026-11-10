@@ -13,6 +13,7 @@ export {
   normalizeMembershipRole,
   toMembershipSeniority,
   canMutateStaffPayouts,
+  isClinicClinician,
   PAYOUT_MUTATION_STAFF_ROLES,
 } from "./capabilities"
 export { requirePermission, withSessionContext } from "./session"

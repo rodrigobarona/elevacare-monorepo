@@ -1,9 +1,10 @@
 import { logError } from "@eleva/observability"
 import { ExportSaftFileQuerySchema } from "@eleva/api-client"
-import { verifySaftDownloadToken } from "@eleva/accounting"
+import { saftExpertPrefix, verifySaftDownloadToken } from "@eleva/accounting"
 import { getPrivateDocument } from "@eleva/storage"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
+import { resolveFinanceScope } from "@/lib/finance-scope"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson, withSecurityHeaders } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -58,6 +59,19 @@ export async function GET(request: Request) {
       exp: query.data.exp,
       signature: query.data.sig,
     })
+  ) {
+    return secureJson({ error: "not found" }, { status: 404, headers })
+  }
+
+  // A clinic clinician may download only their own exports, never the
+  // clinic-wide file or a colleague's, even holding a signed link.
+  const scope = await resolveFinanceScope(session)
+  if (
+    !scope ||
+    (scope.expertProfileId &&
+      !query.data.pathname.startsWith(
+        saftExpertPrefix(session.orgId, scope.expertProfileId)
+      ))
   ) {
     return secureJson({ error: "not found" }, { status: 404, headers })
   }
