@@ -404,7 +404,7 @@ async function MarketingContent() {
             lead={t("experts.lead")}
             media={
               <ElevaImage
-                slug="expert-at-desk"
+                slug="physio-session"
                 locale={locale}
                 fill
                 sizes="(min-width: 1024px) 50vw, 100vw"

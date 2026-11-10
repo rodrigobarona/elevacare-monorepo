@@ -342,7 +342,7 @@ export default async function AboutPage({ params }: Props) {
               lead={t("join.lead")}
               media={
                 <ElevaImage
-                  slug="expert-at-desk"
+                  slug="physio-session"
                   locale={locale}
                   fill
                   sizes="(min-width: 1024px) 40vw, 100vw"

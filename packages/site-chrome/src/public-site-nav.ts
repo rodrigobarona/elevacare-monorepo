@@ -62,7 +62,7 @@ export const PUBLIC_SITE_NAV: readonly SiteNavMenu[] = [
         icon: "buildings",
       },
     ],
-    featured: { href: "/become-expert", imageSlug: "expert-at-desk" },
+    featured: { href: "/become-expert", imageSlug: "physio-session" },
   },
   {
     id: "company",

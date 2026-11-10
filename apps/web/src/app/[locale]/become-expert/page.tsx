@@ -43,7 +43,7 @@ export default async function BecomeExpertPage({ params }: Props) {
       heading={t("heading")}
       headingTestId="become-expert-heading"
       body={t("body")}
-      imageSlug="expert-at-desk"
+      imageSlug="physio-session"
       cta={{ href: "/account/workspaces/create/expert", label: ctaLabel }}
       stepsHeading={t("stepsHeading")}
       steps={t.raw("steps") as { title: string; body: string }[]}
