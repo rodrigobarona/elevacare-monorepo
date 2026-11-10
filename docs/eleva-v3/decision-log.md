@@ -32,6 +32,24 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-10: Third judge round, legal wording (active)
+
+- Owner: engineering; lawyer judge 8.2, EU compliance 8.0, security 8.2,
+  design/UX 7.3 (2026-11-10).
+- Terms, payments and the expert agreement now describe request to book
+  (pay on request; 24 hours or before the session; decline or timeout
+  refunds 100%), the 8% Top Expert fee and which document prevails, the
+  clinic as invoicer, and the sort control only when the directory is
+  large enough. DPA summary limited to what Eleva can show (TLS 1.2+).
+- Still open: session files are deleted 7 years after upload
+  (`sweepExpiredSessionDocuments`) while Privacy and the DPA say 7 years
+  after the last session, so the sweep must count from the last session
+  before any file is 7 years old; live transcription and AI drafts share
+  one consent in the product (split needs the `consent_kind` migration);
+  Beehiiv needs SCCs and a transfer assessment before the newsletter embed
+  goes live; the health-data legal basis at booking (art. 9(2)(h) vs
+  consent) is a founder/DPO decision.
+
 ### 2026-11-10: Help center describes only what v3 does (active)
 
 - Owner: engineering; written for the internal-expert preview.

@@ -9,20 +9,21 @@ summary: "Cómo pagas, cómo funcionan los reembolsos según cada política de c
 
 - Paga el **precio de la sesión definido por el especialista**, en euros. El precio mostrado es final: no hay costes adicionales después de la confirmación.
 - La sesión la presta el especialista, que es un profesional independiente. Eleva es la intermediaria que **cobra el pago por cuenta del especialista** y le transfiere la parte que le corresponde.
-- Del precio, Eleva retiene una **tarifa de servicio del 15%, IVA incluido cuando proceda**, que se cobra al especialista. Ejemplo: en una sesión de 100 €, el especialista recibe 85 € y Eleva 15 €. Las comisiones de procesamiento de pagos corren a cargo de Eleva.
+- Del precio, Eleva retiene una **tarifa de servicio del 15% (8% para especialistas con el plan de pago Top Expert), IVA incluido cuando proceda**, que se cobra al especialista. Ejemplo con el 15%: en una sesión de 100 €, el especialista recibe 85 € y Eleva 15 €. Las comisiones de procesamiento de pagos corren a cargo de Eleva.
 - En las reservas realizadas a través de una clínica no hay tarifa por reserva: la clínica paga una suscripción a Eleva.
 
 ## 2. Cómo paga
 
 - El pago se realiza a través de **Stripe Checkout**. Aceptamos tarjeta (incluidos Apple Pay y Google Pay), Link y MB WAY.
 - Mientras paga, la franja horaria queda reservada durante 5 minutos, o 10 minutos mientras se procesa un pago con MB WAY. Si el pago no se completa en ese plazo, la reserva no se confirma y la franja horaria queda libre.
+- En un servicio en el que el especialista debe aceptar la reserva (solicitud de reserva), paga al enviar la solicitud. Si el especialista la rechaza, o no responde a tiempo (en un plazo de 24 horas o antes del inicio de la sesión, si este llega primero), la solicitud caduca y le reembolsamos el 100% de lo que pagó.
 - Cuando la ley lo exige, el banco solicita autenticación reforzada (3D Secure). Si la autenticación falla, puede intentarlo con otra tarjeta u otro método.
 - Eleva no guarda los números de las tarjetas. Los datos de pago los trata Stripe, certificada PCI DSS.
 
 ## 3. Facturas y NIF
 
-- **Es el especialista quien emite la factura de la sesión**, con su propio programa de facturación certificado. Eleva no factura la sesión y no cobra IVA sobre ella.
-- Al pagar puede indicar, si lo desea, su **NIF**. Eleva lo recoge y lo envía al especialista, junto con los datos de la reserva, para que la factura se emita a su nombre.
+- **Es el especialista, o la clínica cuando reserva a través de una clínica, quien le emite la factura de la sesión**, con su propio programa de facturación certificado. Eleva no factura la sesión y no cobra IVA sobre ella.
+- Al pagar puede indicar, si lo desea, su **NIF**. Eleva lo recoge y lo envía al especialista (o a la clínica), junto con los datos de la reserva, para que la factura se emita a su nombre.
 - La tarifa de servicio de Eleva la factura Eleva al especialista, no a usted.
 
 ## 4. Códigos promocionales
