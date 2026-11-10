@@ -44,10 +44,13 @@ export function TimeZoneLine({
   value,
   onChange,
   labels,
+  locale,
   className,
 }: {
   value: string
   onChange: (timeZone: string) => void
+  /** Shows the city in this language ("Lisboa" in Portuguese). */
+  locale?: string
   labels: {
     /** "Times in {city} time". */
     timesIn: (city: string) => string
@@ -62,7 +65,7 @@ export function TimeZoneLine({
   const [isEditing, setIsEditing] = useState(false)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const returnFocus = useRef(false)
-  const city = zoneCity(value)
+  const city = zoneCity(value, locale)
 
   useEffect(() => {
     if (isEditing || !returnFocus.current) return

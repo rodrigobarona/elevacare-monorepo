@@ -362,9 +362,9 @@
     "facts": {
       "languages": "Speaks {languages}",
       "video": "Video",
-      "phone": "Phone",
-      "inPerson": "In person",
-      "inPersonIn": "In person in {places}",
+      "phone": "phone",
+      "inPerson": "in person",
+      "inPersonIn": "in person in {places}",
       "countries": "Members in {countries}"
     },
     "registration": {
@@ -397,7 +397,7 @@
     "card": {
       "heading": "Book a session",
       "chooseService": "Choose a service",
-      "timesIn": "Times in {zone}",
+      "timesIn": "Times in {city} time",
       "full": "The next two weeks are full.",
       "laterDates": "See later dates",
       "seeAll": "See all times",
@@ -435,7 +435,10 @@
         "a": "Before a profile goes live, our team checks the expert's professional registration. Experts describe their own training and experience."
       }
     },
-    "freeOption": "Free option available"
+    "freeOption": "Free option available",
+    "socialShort": {
+      "website": "Website"
+    }
   },
   "booking": {
     "meta": {
@@ -461,7 +464,6 @@
       "when": "When",
       "price": "Price",
       "chooseTime": "Pick a time to continue",
-      "policy": "{policy} cancellation policy",
       "profile": "About {name}"
     },
     "modes": {
