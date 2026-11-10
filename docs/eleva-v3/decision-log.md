@@ -32,6 +32,34 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-10: Night UX pass after the judge panel (active)
+
+- Owner: engineering; design/UX judge review 2026-11-09 (6.8 and 6.9/10).
+- Public header leads with "Find an expert" (a search icon on phones);
+  sign-up stays one click from Log in and Become an expert. The hero's
+  second button says "Become an expert" like the menu.
+- Become an expert: signed-in visitors see "Set up your practice", not
+  "Create your account".
+- Expert sidebar: Today, Calendar, Services, Members; then "Practice"
+  (public profile, schedule, relationships, templates) and "Settings"
+  (finance, connected calendars, integrations). "Dashboard" is "Today".
+- Practice setup step 2: countries and languages are chosen by name
+  (Intl.DisplayNames), never typed as ISO or BCP-47 codes.
+- Profiles without a photo show a 112 px monogram beside the name instead
+  of a 380×470 empty frame, so the booking card starts above the fold.
+- Cookie banner: Eleva tokens, pill buttons, equal weight for "Reject
+  optional" and "Accept all", floating bottom-right so it never covers
+  the hero action. The "Secured by Inth" tag stays until the founder
+  confirms the Inth plan allows hiding it.
+- Booking time step: placeholders while times load (never the previous
+  window's times); the subtitle that repeated the heading is gone.
+- "For experts" imagery uses the physiotherapy session photo; white coats,
+  stethoscopes and pill blisters stay out (art direction).
+- Production incident the same night: public profiles and `PATCH
+/expert/profile` returned 500 because jsdom (via isomorphic-dompurify)
+  failed to load in Vercel functions. Rich text is now sanitized with
+  sanitize-html; never add a DOM library to server bundles.
+
 ### 2026-11-09: Security quick wins before internal experts (active)
 
 - Owner: engineering; security-judge review 2026-11-09 (7.6/10).
