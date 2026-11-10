@@ -241,7 +241,7 @@ export async function Explorer({
           </Container>
         </Section>
 
-        <Section spacing="compact" className="pt-0">
+        <Section spacing="compact" className="pt-0 sm:pt-0">
           <Container>
             {loadError ? (
               <EmptyState variant="error" title={t("loadError")} />
