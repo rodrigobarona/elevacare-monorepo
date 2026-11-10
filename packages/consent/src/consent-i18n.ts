@@ -14,7 +14,7 @@ export const consentI18n = {
       cookieBanner: {
         title: "Your privacy on Eleva.care",
         description:
-          "We use essential cookies to sign you in and remember your preferences. Optional cookies load only if you allow them.",
+          "Essential cookies keep you signed in and remember your preferences. Optional ones load only if you allow them.",
       },
     },
     pt: {
@@ -27,7 +27,7 @@ export const consentI18n = {
       cookieBanner: {
         title: "A sua privacidade na Eleva.care",
         description:
-          "Usamos cookies essenciais para iniciar sessão e recordar preferências. Cookies opcionais só carregam se os autorizar.",
+          "Os cookies essenciais mantêm a sua sessão e preferências. Os opcionais só carregam se os autorizar.",
       },
     },
     es: {
@@ -40,7 +40,7 @@ export const consentI18n = {
       cookieBanner: {
         title: "Tu privacidad en Eleva.care",
         description:
-          "Usamos cookies esenciales para iniciar sesión y recordar preferencias. Las cookies opcionales solo se cargan si las autorizas.",
+          "Las cookies esenciales guardan tu sesión y preferencias. Las opcionales solo se cargan si las autorizas.",
       },
     },
   },
