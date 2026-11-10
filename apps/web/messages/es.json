@@ -326,6 +326,11 @@
     "rankingAnchor": "8-cómo-ordenamos-a-los-especialistas",
     "trustLine": "Antes de que un perfil se publique, nuestro equipo comprueba la colegiación profesional de cada especialista.",
     "emptyCategory": "Todavía no hay especialistas en esta área.",
+    "openingTitle": "Nuestros primeros especialistas están abriendo sus consultas",
+    "openingBody": "Comprobamos la inscripción profesional de cada especialista antes de publicar su perfil. Mientras tanto, la newsletter Femme Focus te trae salud femenina basada en evidencia a tu correo.",
+    "openingNewsletter": "Recibir la newsletter",
+    "openingHelp": "Cómo funciona Eleva",
+    "openingExpert": "¿Eres especialista?",
     "seeAll": "Ver todos los perfiles",
     "freeSession": "Sesión gratuita disponible",
     "speaksLanguage": "Habla {language}",
@@ -531,7 +536,7 @@
       "phone": "Teléfono",
       "phoneHint": "Necesario para una sesión por teléfono. Puedes incluir el prefijo del país.",
       "taxId": "NIF / IVA (opcional)",
-      "taxIdHint": "NIF portugués o IVA de la UE, para facturas cuando se abra la emisión.",
+      "taxIdHint": "Tu NIF portugués o número de IVA de la UE, para que tu especialista emita la factura a tu nombre.",
       "intakeNotes": "Algo que quieras que sepa el experto (opcional)",
       "intakeNotesHint": "Una preagenda breve. El experto lo ve en el registro de la sesión.",
       "promo": "Código promocional (opcional)",
@@ -777,7 +782,7 @@
       },
       {
         "title": "Coordina reservas y pagos",
-        "body": "Los miembros reservan en Eleva; Stripe Connect enruta los pagos según las políticas de la clínica."
+        "body": "Los miembros reservan a través de Eleva, y los pagos de las reservas de la clínica van a tu clínica."
       },
       {
         "title": "Revisa el rendimiento del equipo",
@@ -788,7 +793,7 @@
     "benefits": [
       {
         "icon": "buildings",
-        "title": "Un espacio Team",
+        "title": "Un espacio para la clínica",
         "body": "Invita a especialistas acreditados en una organización de clínica con marca compartida y agenda coordinada."
       },
       {
@@ -799,7 +804,7 @@
       {
         "icon": "currency",
         "title": "Pagos transparentes",
-        "body": "Stripe Connect enruta fondos según la configuración de la clínica. Precios por plaza y términos de colaboración siguen en borrador previo al lanzamiento."
+        "body": "Los pagos de las reservas de la clínica van directamente a tu clínica. Te compartiremos los precios por plaza y las condiciones de colaboración antes del lanzamiento."
       },
       {
         "icon": "chart",
@@ -832,11 +837,11 @@
         "body": "Un administrador de clínica coordina invitaciones, marca y servicios publicados a miembros."
       },
       {
-        "title": "Términos previos al lanzamiento",
-        "body": "Colaboración y precios por plaza siguen en borrador hasta que finanzas y legal firmen."
+        "title": "Condiciones antes del lanzamiento",
+        "body": "Te compartiremos las condiciones de colaboración y los precios por plaza antes del lanzamiento."
       }
     ],
-    "finalHeading": "Empieza tu clínica Team",
+    "finalHeading": "Empieza tu clínica",
     "finalBody": "Crea la organización, invita especialistas y configura sedes y servicios. Publicaremos términos finales de clínica antes del lanzamiento.",
     "finalCta": "Crear tu cuenta"
   },

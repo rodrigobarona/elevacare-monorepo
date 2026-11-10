@@ -265,22 +265,66 @@ export async function Explorer({
               />
             ) : null}
 
-            {!loadError && !filterError && experts.length === 0 ? (
+            {!loadError &&
+            !filterError &&
+            experts.length === 0 &&
+            !category &&
+            !language &&
+            !sort ? (
+              // Nothing filtered and nobody listed yet: say what is
+              // happening and offer next steps, not a dead end.
               <EmptyState
-                variant="no-results"
-                title={category && !language ? t("emptyCategory") : t("empty")}
+                variant="first-run"
+                title={t("openingTitle")}
+                description={t("openingBody")}
                 action={
-                  category || language || sort ? (
+                  <div className="flex flex-wrap justify-center gap-3">
                     <Link
-                      href="/experts"
+                      href="/newsletter"
+                      className={buttonVariants({ size: "sm" })}
+                    >
+                      {t("openingNewsletter")}
+                    </Link>
+                    <Link
+                      href="/docs/members"
                       className={buttonVariants({
                         variant: "outline",
                         size: "sm",
                       })}
                     >
-                      {t("seeAll")}
+                      {t("openingHelp")}
                     </Link>
-                  ) : undefined
+                    <Link
+                      href="/become-expert"
+                      className={buttonVariants({
+                        variant: "ghost",
+                        size: "sm",
+                      })}
+                    >
+                      {t("openingExpert")}
+                    </Link>
+                  </div>
+                }
+              />
+            ) : null}
+
+            {!loadError &&
+            !filterError &&
+            experts.length === 0 &&
+            (category || language || sort) ? (
+              <EmptyState
+                variant="no-results"
+                title={category && !language ? t("emptyCategory") : t("empty")}
+                action={
+                  <Link
+                    href="/experts"
+                    className={buttonVariants({
+                      variant: "outline",
+                      size: "sm",
+                    })}
+                  >
+                    {t("seeAll")}
+                  </Link>
                 }
               />
             ) : null}

@@ -326,6 +326,11 @@
     "rankingAnchor": "8-how-we-rank-experts",
     "trustLine": "Before a profile goes live, our team checks the expert's professional registration.",
     "emptyCategory": "No experts in this area yet.",
+    "openingTitle": "Our first experts are opening their practices",
+    "openingBody": "We check every expert's professional registration before their profile goes live. Meanwhile, the Femme Focus newsletter brings evidence-based women's health to your inbox.",
+    "openingNewsletter": "Get the newsletter",
+    "openingHelp": "How Eleva works",
+    "openingExpert": "Are you an expert?",
     "seeAll": "See all experts",
     "freeSession": "Free session available",
     "speaksLanguage": "Speaks {language}",
@@ -531,7 +536,7 @@
       "phone": "Phone number",
       "phoneHint": "Needed for a phone session. You can include the country code.",
       "taxId": "NIF / VAT (optional)",
-      "taxIdHint": "Portuguese NIF or EU VAT, for invoices when issuance opens.",
+      "taxIdHint": "Your Portuguese NIF or EU VAT number, so your expert can issue the invoice in your name.",
       "intakeNotes": "Anything you want the expert to know (optional)",
       "intakeNotesHint": "A short pre-agenda. The expert sees this with the session record.",
       "promo": "Promo code (optional)",
@@ -777,7 +782,7 @@
       },
       {
         "title": "Coordinate bookings and payouts",
-        "body": "Members book through Eleva; Stripe Connect routes payouts according to your clinic policies."
+        "body": "Members book through Eleva, and payments for clinic bookings go to your clinic."
       },
       {
         "title": "Review team performance",
@@ -788,7 +793,7 @@
     "benefits": [
       {
         "icon": "buildings",
-        "title": "One Team space",
+        "title": "One clinic space",
         "body": "Invite licensed experts under a clinic organization with shared branding and coordinated scheduling."
       },
       {
@@ -799,7 +804,7 @@
       {
         "icon": "currency",
         "title": "Transparent payouts",
-        "body": "Stripe Connect routes funds according to your clinic setup. Seat pricing and partnership terms are still pre-launch drafts."
+        "body": "Payments for clinic bookings go straight to your clinic. We'll share seat pricing and the partnership terms with you before launch."
       },
       {
         "icon": "chart",
@@ -832,11 +837,11 @@
         "body": "A clinic admin coordinates invites, branding and which services are published to members."
       },
       {
-        "title": "Pre-launch terms",
-        "body": "Partnership and seat pricing remain working drafts until finance and legal re-sign."
+        "title": "Terms before launch",
+        "body": "We'll share the partnership terms and seat pricing with you before launch."
       }
     ],
-    "finalHeading": "Start your clinic Team",
+    "finalHeading": "Start your clinic",
     "finalBody": "Create your organization, invite experts, and configure locations and services. We will publish final clinic terms before launch.",
     "finalCta": "Create your account"
   },
