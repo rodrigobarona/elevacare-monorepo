@@ -1,5 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server"
+import { cookies } from "next/headers"
 import type { Metadata } from "next"
+import { requestHasSessionCookie } from "@eleva/auth/credentials"
 import {
   MarketingPage,
   type MarketingIconId,
@@ -27,7 +29,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function BecomeExpertPage({ params }: Props) {
   const { locale } = await params
   setRequestLocale(locale)
-  const t = await getTranslations({ locale, namespace: "becomeExpert" })
+  const [t, jar] = await Promise.all([
+    getTranslations({ locale, namespace: "becomeExpert" }),
+    cookies(),
+  ])
+  // Signed-in visitors already have an account: the button opens practice
+  // setup instead of asking them to create one.
+  const ctaLabel = requestHasSessionCookie(jar) ? t("ctaSignedIn") : t("cta")
 
   return (
     <MarketingPage
@@ -36,7 +44,7 @@ export default async function BecomeExpertPage({ params }: Props) {
       headingTestId="become-expert-heading"
       body={t("body")}
       imageSlug="expert-at-desk"
-      cta={{ href: "/account/workspaces/create/expert", label: t("cta") }}
+      cta={{ href: "/account/workspaces/create/expert", label: ctaLabel }}
       stepsHeading={t("stepsHeading")}
       steps={t.raw("steps") as { title: string; body: string }[]}
       benefitsHeading={t("benefitsHeading")}
@@ -53,7 +61,7 @@ export default async function BecomeExpertPage({ params }: Props) {
       finalBody={t("finalBody")}
       finalCta={{
         href: "/account/workspaces/create/expert",
-        label: t("finalCta"),
+        label: ctaLabel,
       }}
     />
   )
