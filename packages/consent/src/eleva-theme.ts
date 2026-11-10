@@ -53,15 +53,12 @@ export const elevaConsentActions = {
 
 const PILL = { style: { borderRadius: "9999px" } }
 
-/** Pill buttons like the rest of the site, and a compact card. */
+/** Pill buttons like the rest of the site; the banner is a slim bottom bar. */
 export const elevaConsentComponents = {
   button: { primary: PILL, secondary: PILL },
   banner: {
     card: {
-      style: {
-        maxWidth: "26rem",
-        boxShadow: "0 12px 40px -12px rgb(28 25 23 / 0.18)",
-      },
+      style: { boxShadow: "0 -8px 32px -16px rgb(28 25 23 / 0.18)" },
     },
   },
 }
