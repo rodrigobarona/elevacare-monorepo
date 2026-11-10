@@ -724,13 +724,13 @@
       },
       {
         "icon": "users",
-        "title": "Alcance membros",
-        "body": "Os membros descobrem especialistas no marketplace Eleva e no seu perfil público—sem prometer resultados de marketing específicos."
+        "title": "Os membros encontram-no",
+        "body": "Os membros encontram-no no diretório da Eleva e na sua página de perfil, na língua deles."
       },
       {
         "icon": "chart",
-        "title": "Ferramentas de prática",
-        "body": "Páginas de reserva, construtor de serviços, políticas de cancelamento e painel ajudam no dia a dia num só lugar."
+        "title": "A sua prática num só lugar",
+        "body": "A sua página de marcações, serviços, políticas de cancelamento, calendário e ganhos, tudo num só lugar."
       }
     ],
     "requirementsHeading": "Quem pode aderir",
@@ -748,8 +748,8 @@
         "body": "Escreva perfil e serviços nos idiomas que realmente oferece (inglês, português ou espanhol)."
       },
       {
-        "title": "Verificação Stripe antes dos payouts",
-        "body": "Identidade e dados de pagamento são recolhidos pela Stripe Connect antes de serviços pagos ficarem visíveis."
+        "title": "Pagamentos pela Stripe",
+        "body": "A Stripe confirma a sua identidade e os seus dados bancários antes de os seus serviços pagos ficarem visíveis."
       }
     ],
     "finalHeading": "Pronto para abrir a sua prática?",
