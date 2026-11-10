@@ -67,10 +67,12 @@ export function Card({
   title,
   href,
   children,
+  links,
 }: {
   title: ReactNode
   href?: string
   children?: ReactNode
+  links?: ContentLinkOptions
 }) {
   const body = (
     <>
@@ -96,7 +98,7 @@ export function Card({
     return <div className={className}>{body}</div>
   }
   return (
-    <ContentLink href={href} className={className}>
+    <ContentLink href={href} className={className} links={links}>
       {body}
     </ContentLink>
   )
@@ -142,7 +144,32 @@ function isExternal(href: string): boolean {
   return /^(https?:)?\/\//.test(href) || href.startsWith("mailto:")
 }
 
-function ContentLink({ href = "", className, ...props }: ComponentProps<"a">) {
+/** How a host app maps MDX hrefs (docs adds its locale and site origin). */
+export type ContentLinkOptions = {
+  /** Rewrites an href before it renders, e.g. to add a locale prefix. */
+  resolveHref?: (href: string) => string
+  /** Absolute links on this origin are the same site: same tab, no rel. */
+  siteOrigin?: string
+}
+
+function isSameSite(href: string, siteOrigin?: string): boolean {
+  if (!siteOrigin) return false
+  const origin = siteOrigin.replace(/\/$/, "")
+  if (!href.startsWith(origin)) return false
+  const rest = href.slice(origin.length)
+  return rest === "" || /^[/?#]/.test(rest)
+}
+
+function ContentLink({
+  href: rawHref = "",
+  className,
+  links,
+  ...props
+}: ComponentProps<"a"> & { links?: ContentLinkOptions }) {
+  const href = links?.resolveHref ? links.resolveHref(rawHref) : rawHref
+  if (isSameSite(href, links?.siteOrigin)) {
+    return <a href={href} className={className} {...props} />
+  }
   if (isExternal(href)) {
     const isWeb = !href.startsWith("mailto:")
     return (
@@ -164,7 +191,10 @@ const proseLink =
   "font-medium text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary"
 
 /** Typographic defaults plus the shared MDX blocks. */
-export function getMdxComponents(overrides?: MDXComponents): MDXComponents {
+export function getMdxComponents(
+  overrides?: MDXComponents,
+  links?: ContentLinkOptions
+): MDXComponents {
   return {
     // Page layouts already render the frontmatter title as the single <h1>,
     // so a leading `# Heading` in the MDX body is demoted to <h2>.
@@ -208,7 +238,11 @@ export function getMdxComponents(overrides?: MDXComponents): MDXComponents {
       />
     ),
     a: ({ className, ...props }) => (
-      <ContentLink className={cn(proseLink, className)} {...props} />
+      <ContentLink
+        className={cn(proseLink, className)}
+        links={links}
+        {...props}
+      />
     ),
     ul: ({ className, ...props }) => (
       <ul
@@ -286,7 +320,9 @@ export function getMdxComponents(overrides?: MDXComponents): MDXComponents {
     ),
     Callout,
     Cards,
-    Card,
+    Card: (props: ComponentProps<typeof Card>) => (
+      <Card links={links} {...props} />
+    ),
     Steps,
     Step,
     Tabs,

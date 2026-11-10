@@ -1,4 +1,4 @@
 {
-  "title": "Members",
-  "pages": ["booking", "faq", "index", "payments", "reviews"]
+  "title": "Membros",
+  "pages": ["index", "booking", "sessions", "payments", "account", "faq"]
 }

@@ -1,3 +1,5 @@
+import { resolveGatewayUrl } from "@eleva/config/env"
+import { helpLinkOptions } from "@eleva/content/help-links"
 import { isContentLocale, type ContentLocale } from "@eleva/content/locales"
 import { getMdxComponents } from "@eleva/content/mdx-components"
 import { TableOfContents } from "@eleva/content/toc"
@@ -37,7 +39,10 @@ export async function renderHelpPortalPage({
   const tree = getHelpLoader(portal).getTree(contentLocale)
   const localePrefix = docsLocalePrefix(contentLocale)
   const copy = getDocsChromeCopy(contentLocale)
-  const components = getMdxComponents()
+  const components = getMdxComponents(
+    undefined,
+    helpLinkOptions(localePrefix, resolveGatewayUrl())
+  )
   const Body = doc.Body
 
   return (

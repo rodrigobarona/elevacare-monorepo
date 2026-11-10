@@ -41,7 +41,11 @@ export function DocsChrome({
             >
               {copy.helpCenter}
             </Link>
-            <DocsSearch localePrefix={localePrefix} />
+            <DocsSearch
+              localePrefix={localePrefix}
+              label={copy.searchLabel}
+              placeholder={copy.searchPlaceholder}
+            />
           </div>
           <nav
             aria-label={copy.portalsNavLabel}

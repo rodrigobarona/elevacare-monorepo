@@ -30,6 +30,7 @@
   "exports": {
     "./schemas": "./src/schemas.ts",
     "./loader": "./src/loader.ts",
+    "./help-links": "./src/help-links.ts",
     "./locales": "./src/locales.ts",
     "./mdx-components": "./src/mdx-components.tsx",
     "./toc": "./src/toc.tsx",

@@ -1,224 +1,80 @@
 ---
-title: Managing Availability
-description: Configure your working hours, calendar sync, and appointment settings.
+title: Horario y calendarios
+description: Define tu horario semanal y tus días libres, y conecta tus calendarios de Google o Microsoft para evitar reservas duplicadas.
 ---
 
-# Managing Availability
+Los miembros solo pueden reservar contigo dentro de tu horario, y nunca encima de un evento de un calendario que hayas conectado.
 
-Your availability determines when members can book appointments. Set up your schedule to balance member access with your work-life needs.
-
-## Weekly Schedule
-
-Define your recurring weekly availability:
+## Define tu horario semanal
 
 <Steps>
   <Step>
-    ### Access Availability Settings
+    ### Abre Horario
 
-    Go to **Expert Dashboard** → **Availability**.
-
-  </Step>
-  <Step>
-    ### Set Time Slots
-
-    Click on each day to add available time slots with start and end times.
+    En el menú lateral, dentro de **Consulta**, abre **Horario**. Si aún no hay nada configurado, elige **Configurar horario**.
 
   </Step>
   <Step>
-    ### Save Schedule
+    ### Revisa tu zona horaria
 
-    Save your schedule to make it active.
+    Tu horario sigue la **Zona horaria** que aparece arriba en la página. Los miembros ven tus horas en su propia zona horaria.
+
+  </Step>
+  <Step>
+    ### Añade tus horas
+
+    En **Horario semanal**, elige **Añadir horas** para cada día que trabajas. Un día puede tener más de una franja, por ejemplo de 09:00 a 13:00 y de 14:00 a 18:00.
+
+  </Step>
+  <Step>
+    ### Guarda
+
+    Elige **Guardar horario**.
 
   </Step>
 </Steps>
 
-**Example Schedule:**
+## Días libres y cambios puntuales
 
-| Day       | Availability                |
-| --------- | --------------------------- |
-| Monday    | 9:00 - 13:00, 14:00 - 18:00 |
-| Tuesday   | 9:00 - 13:00                |
-| Wednesday | 14:00 - 20:00               |
-| Thursday  | 9:00 - 13:00, 14:00 - 18:00 |
-| Friday    | 9:00 - 12:00                |
-| Saturday  | Unavailable                 |
-| Sunday    | Unavailable                 |
+En **Excepciones de fecha**, elige **Añadir excepción** y selecciona la fecha. Después elige **Bloquear todo el día**, o define otro horario con **Desde** y **Hasta**. Guarda el horario.
 
-<Callout type="info">
-  members always see appointment times in their local timezone, but your
-  dashboard shows your timezone.
+La antelación mínima, los márgenes y con cuánta antelación pueden reservar los miembros se definen en cada servicio, en su pestaña **Políticas**. [Ver cómo](/experts/getting-started/services)
+
+## Conecta tus calendarios
+
+Conecta Google o Microsoft para que Eleva tenga en cuenta tus eventos y añada las sesiones confirmadas a tu calendario.
+
+1. En el menú lateral, dentro de **Ajustes**, abre **Calendarios conectados**.
+2. Elige **Conectar Google Calendar** o **Conectar Microsoft Calendar** y concede el acceso.
+3. Para cada calendario, elige:
+   - **Comprobar conflictos**: las horas ocupadas en este calendario no se pueden reservar.
+   - **Escribir sesiones aquí**: las sesiones confirmadas se añaden a este calendario.
+
+Si una conexión necesita atención, un aviso te lo indica. Vuelve a conectarla para que la comprobación de conflictos y las sesiones nuevas sigan funcionando.
+
+<Callout>
+  Conectar un calendario es opcional. Eleva es tu calendario: los miembros
+  pueden reservar igualmente y recibes una invitación por email para cada
+  sesión.
 </Callout>
 
-## Calendar Integration
+## Suscríbete desde otra app de calendario
 
-### Google Calendar Sync
+En **Calendario**, busca **Feed ICS** y elige **Crear feed**. Copia el enlace en ese momento, porque solo se muestra una vez, y añádelo a tu app de calendario:
 
-Connect your Google Calendar for two-way sync:
+- **Apple Calendar**: Archivo → Nueva suscripción de calendario
+- **Google Calendar**: Ajustes → Añadir calendario → Desde URL
+- **Outlook**: Añadir calendario → Suscribirse desde la web
 
-<Steps>
-  <Step>
-    ### Connect
-
-    Go to **Integrations** → **Google Calendar** and click **Connect**.
-
-  </Step>
-  <Step>
-    ### Authorize
-
-    Grant Eleva Care access to read your calendar.
-
-  </Step>
-  <Step>
-    ### Select Calendars
-
-    Choose which calendars to sync for availability blocking.
-
-  </Step>
-</Steps>
-
-### How Sync Works
-
-| Direction      | What Syncs                                   |
-| -------------- | -------------------------------------------- |
-| Google → Eleva | Events block your availability automatically |
-| Eleva → Google | New bookings appear in your calendar         |
-
-<Callout type="info">
-  **Privacy Note**: We only read event times and free/busy status. We don't
-  access event details or attendees from your personal calendar.
-</Callout>
-
-## Appointment Settings
-
-<Tabs items={['Minimum Notice', 'Buffer Time', 'Advance Booking']}>
-  <Tab value="Minimum Notice">
-    **How far in advance must members book?**
-
-    | Setting | Use Case |
-    |---------|----------|
-    | 1 hour | Maximum flexibility, last-minute bookings |
-    | 24 hours | Standard — time to prepare |
-    | 48 hours | More preparation time |
-    | 1 week | Complex consultations |
-
-  </Tab>
-  <Tab value="Buffer Time">
-    **Add time between appointments:**
-
-    - **Before**: Time to prepare for the next member
-    - **After**: Time for notes and breaks
-
-    **Recommendation**: 15-minute buffer before and after ensures you're never rushed.
-
-  </Tab>
-  <Tab value="Advance Booking">
-    **How far ahead can members book?**
-
-    | Setting | Best For |
-    |---------|----------|
-    | 1 week | Limited availability |
-    | 2 weeks | Standard setting |
-    | 1 month | Extended availability |
-    | 3 months | Maximum flexibility |
-
-  </Tab>
-</Tabs>
-
-## Date Overrides
-
-<Accordions>
-  <Accordion title="Blocking Specific Dates">
-    For vacations or days off:
-
-    1. Go to **Availability** → **Date Overrides**
-    2. Click **Add Override**
-    3. Select the date(s)
-    4. Mark as **Unavailable**
-    5. Save
-
-  </Accordion>
-  <Accordion title="Adding Extra Availability">
-    For special occasions:
-
-    1. Add a date override
-    2. Set custom hours for that day
-    3. This overrides your weekly schedule for that specific date
-
-  </Accordion>
-</Accordions>
-
-## Managing Existing Bookings
-
-<Tabs items={['Canceling', 'Rescheduling']}>
-  <Tab value="Canceling">
-    **Cuándo tiene que cancelar**
-
-    No puede cancelar una reserva confirmada desde el panel. Escriba a [support@eleva.care](mailto:support@eleva.care) lo antes posible, con la reserva y el motivo. El equipo la cancela y reembolsa al miembro por completo.
-
-    <Callout type="warning">
-      No pida al miembro que cancele en su lugar. Las cancelaciones repetidas pueden dar lugar a la restricción o suspensión de su cuenta.
-    </Callout>
-
-  </Tab>
-  <Tab value="Rescheduling">
-    **To Reschedule**
-
-    1. Contact the member through the platform
-    2. Agree on a new time
-    3. Escriba a [support@eleva.care](mailto:support@eleva.care) con la reserva y la nueva hora
-
-  </Tab>
-</Tabs>
-
-## Best Practices
-
-<Accordions>
-  <Accordion title="Consistency">
-    - Set regular hours members can rely on
-    - Update availability at least 2 weeks in advance
-    - Communicate changes promptly
-  </Accordion>
-  <Accordion title="Realistic Scheduling">
-    - Don't overbook yourself
-    - Include time for breaks and notes
-    - Account for different consultation types
-  </Accordion>
-  <Accordion title="Time Zone Awareness">
-    - Consider your target member base
-    - Offer evening slots for working members
-    - Remember time differences for international members
-  </Accordion>
-</Accordions>
-
-## Troubleshooting
-
-<Accordions>
-  <Accordion title="Appointments Not Showing">
-    - Check calendar sync status
-    - Verify timezone settings
-    - Ensure service is active
-    - Check minimum notice requirements
-  </Accordion>
-  <Accordion title="Double Bookings">
-    - Enable Google Calendar sync
-    - Add buffer time between appointments
-    - Review availability settings
-  </Accordion>
-  <Accordion title="Sync Issues">
-    1. Disconnect Google Calendar
-    2. Reconnect with fresh authorization
-    3. Check sync interval settings
-  </Accordion>
-</Accordions>
+El feed es privado y de solo lectura. Elige **Rotar enlace** para obtener un enlace nuevo, o **Revocar** para desactivarlo.
 
 ---
 
 <Cards>
-  <Card title="Understand Earnings" href="/experts/earnings/payouts">
-    Learn about payment processing
+  <Card title="Crea tus servicios" href="/experts/getting-started/services">
+    Reglas de reserva y formas de encuentro
   </Card>
-  <Card title="Complete su perfil" href="/experts/getting-started/profile">
-    Añada lo que los miembros y Eleva necesitan ver antes de aparecer en el
-    listado
+  <Card title="Reservas y solicitudes" href="/experts/sessions/bookings">
+    Qué pasa cuando los miembros reservan
   </Card>
 </Cards>

@@ -1,5 +1,6 @@
 import { CONTENT_LOCALES } from "@eleva/content/locales"
 import type { Metadata } from "next"
+import { getDocsChromeCopy } from "@/lib/docs-chrome-copy"
 import { getHelpDocument, listHelpSlugs } from "@/lib/help-source"
 import { renderHelpPortalPage } from "@/lib/render-help-portal-page"
 
@@ -44,7 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     )
   if (!doc) return {}
   return {
-    title: `${doc.frontmatter.title} — Eleva help`,
+    title: `${doc.frontmatter.title} — ${getDocsChromeCopy(locale).titleSuffix}`,
     description: doc.frontmatter.description,
   }
 }

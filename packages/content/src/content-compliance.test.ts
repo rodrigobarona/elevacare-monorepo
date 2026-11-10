@@ -192,16 +192,18 @@ describe("content compliance", () => {
           let match: RegExpExecArray | null
           while ((match = linkRe.exec(body)) !== null) {
             const href = match[1] ?? ""
+            const linkPortal = href.split("/")[1] ?? portal
+            const targetDir = path.join(contentRoot, "help", linkPortal, locale)
             const rel = href.replace(/^\/(members|experts|clinics)\/?/, "")
             const target = rel
-              ? path.join(localeDir, `${rel}.mdx`)
-              : path.join(localeDir, "index.mdx")
-            const asIndex = path.join(localeDir, rel, "index.mdx")
+              ? path.join(targetDir, `${rel}.mdx`)
+              : path.join(targetDir, "index.mdx")
+            const asIndex = path.join(targetDir, rel, "index.mdx")
             const exists =
               fs.existsSync(target) ||
               fs.existsSync(asIndex) ||
               fs.existsSync(
-                path.join(localeDir, rel.replace(/\/$/, ""), "index.mdx")
+                path.join(targetDir, rel.replace(/\/$/, ""), "index.mdx")
               )
             expect(exists, `${file} → ${href}`).toBe(true)
           }

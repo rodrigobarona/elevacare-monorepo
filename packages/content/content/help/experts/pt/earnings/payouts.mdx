@@ -1,256 +1,94 @@
 ---
-title: Pagamentos e Ganhos
-description: Compreenda como é pago, a taxa de serviço e a gestão dos seus ganhos.
+title: Recebimentos
+description: Configure os recebimentos com a Stripe, veja quando a sua parte chega ao banco e acompanhe cada pagamento em Finanças.
 ---
 
-# Pagamentos e Ganhos
+Os membros pagam quando marcam. A Eleva recebe o pagamento em seu nome através da Stripe, a nossa parceira de pagamentos, e transfere a sua parte para a sua conta Stripe. Depois, a Stripe paga-a para o seu banco.
 
-A Eleva Care usa o Stripe Connect para pagamentos seguros e automatizados. Este guia explica como funcionam os ganhos e como maximizar os seus rendimentos.
-
-## Como Funcionam os Pagamentos
+## Configurar os recebimentos
 
 <Steps>
   <Step>
-    ### Membro Marca
+    ### Comece
 
-    O pagamento é cobrado no momento da marcação.
-
-  </Step>
-  <Step>
-    ### Fundos Retidos
-
-    A Eleva retém o pagamento através da Stripe até a sua parte estar disponível.
+    Na configuração, escolha **Começar configuração de Pagamentos** no passo **Recebimentos**. Se o saltou, abra **Finanças** e escolha **Configurar pagamentos**.
 
   </Step>
   <Step>
-    ### Consulta Concluída
+    ### Preencha o formulário da Stripe
 
-    A sua parte fica disponível na data mais tardia entre 7 dias após o pagamento e 24 horas após o fim da sessão. É libertada às 04:00 seguintes, hora de Lisboa.
+    Abre na própria página, sem sair da Eleva. A Stripe pede-lhe que verifique a sua identidade com um documento com fotografia, adicione uma conta bancária, indique alguns dados sobre a sua prática e aceite os termos da Stripe.
 
   </Step>
   <Step>
-    ### Pagamento Processado
+    ### Conclua o que ainda faltar
 
-    Depois, a Stripe paga para a sua conta bancária segundo o calendário de pagamentos da sua conta.
+    Se faltar alguma coisa, vê a lista **Ainda em falta**. Complete-a antes de publicar um serviço pago.
 
   </Step>
 </Steps>
 
-<Callout type="info">
-  Esta espera dá tempo para resolver disputas ou problemas. A Eleva pode reter
-  uma transferência enquanto houver uma disputa ou um reembolso em aberto.
+## Quando recebe
+
+A sua parte de cada marcação fica disponível na mais tardia destas duas datas:
+
+- 7 dias depois de o membro pagar
+- 24 horas depois do fim da sessão
+
+É libertada às 04:00 seguintes, hora de Lisboa. Depois, a Stripe paga-a para o seu banco segundo o calendário de pagamentos da sua conta.
+
+**Exemplo**: um membro paga a 1 de março às 14:00 por uma sessão que termina a 3 de março às 10:00. Sete dias depois do pagamento, 8 de março às 14:00, é a data mais tardia, por isso a sua parte é libertada às 04:00 de 9 de março.
+
+<Callout>
+  A Eleva verifica a primeira transferência para a sua conta, e as de valor
+  invulgarmente alto, antes de as libertar, por isso podem demorar um pouco
+  mais.
 </Callout>
 
-## Taxa de Serviço
+A Eleva pode também reter uma transferência enquanto houver uma disputa de pagamento ou um reembolso em aberto, ou enquanto faltarem dados de que a Eleva ou a Stripe precisam.
 
-A Eleva cobra uma taxa de serviço de **15 % do preço da marcação**, com IVA incluído quando devido. Não há outras deduções. A Eleva suporta as taxas de processamento de pagamentos a partir da sua taxa.
+## Acompanhe os seus ganhos em Finanças
 
-### Exemplo de Cálculo
+No topo de **Finanças**:
 
-| Preço da Marcação | Taxa de Serviço (15 %) | Você Recebe |
-| ----------------- | ---------------------- | ----------- |
-| €100              | €15                    | €85         |
+- **Líquido**: o que ganhou, depois das taxas da Eleva e de eventuais reembolsos.
+- **Pendente**: ganho, mas ainda não enviado para o seu banco.
+- **Pago**: já enviado para o seu banco.
 
-### Marcações de Clínicas
+**Pagamentos de sessões** mostra cada sessão paga com o valor **Bruto**, as **Taxas**, o **Líquido**, o **Estado do pagamento** e a data em que fica **Elegível**. Use **Exportar CSV** para os seus registos.
 
-Nas marcações feitas através de uma clínica não há taxa por marcação. A clínica paga uma subscrição por lugares, nas condições do seu plano.
+| Estado do pagamento  | O que significa                                             |
+| -------------------- | ----------------------------------------------------------- |
+| Pendente             | À espera da data de libertação                              |
+| Agendado             | A data chegou; a transferência está a caminho               |
+| Precisa de aprovação | A Eleva está a verificá-la antes de a libertar              |
+| Transferido          | Na sua conta Stripe                                         |
+| Pago                 | Pago para o seu banco                                       |
+| Em retenção          | Retido enquanto se resolve uma disputa ou outra questão     |
+| Falhou               | A transferência não foi concluída; escreva ao apoio         |
+| Reversão pendente    | Um reembolso está a recuperar parte ou toda a transferência |
+| Revertido            | Um reembolso recuperou a transferência                      |
 
-### Subscrições Pagas
+Em **Pagamentos e conta**, os painéis da Stripe mostram o seu **Saldo**, **Pagamentos**, **Dados da conta** e **Definições fiscais**. É aí que atualiza os seus dados bancários.
 
-Se aderir a uma subscrição paga da Eleva que altere a sua taxa, aplicam-se as condições apresentadas no momento da adesão.
+## Impostos
 
-## Configurar Pagamentos
+É você quem declara os seus rendimentos e paga os seus impostos e contribuições para a segurança social. Ao abrigo das regras europeias (DAC7), a Eleva comunica à Autoridade Tributária e Aduaneira (AT), até 31 de janeiro de cada ano, o que os especialistas ganharam na plataforma, e envia-lhe até à mesma data a informação que comunicou sobre si.
 
-<Steps>
-  <Step>
-    ### Iniciar Configuração
+## Se um pagamento não chegou
 
-    Vá a **Dashboard de Especialista** → **Ganhos** → **Configurar Pagamentos**.
-
-  </Step>
-  <Step>
-    ### Completar Verificação
-
-    Complete o processo de verificação de identidade do Stripe.
-
-  </Step>
-  <Step>
-    ### Adicionar Conta Bancária
-
-    Forneça os detalhes da sua conta bancária para receber pagamentos.
-
-  </Step>
-  <Step>
-    ### Aguardar Aprovação
-
-    A verificação tipicamente demora 1-2 dias úteis.
-
-  </Step>
-</Steps>
-
-### Informação Necessária
-
-- Documento de identificação oficial
-- Detalhes da conta bancária
-- Número de identificação fiscal
-- Informação empresarial (se aplicável)
-
-<Callout type="warning">
-  Não pode receber pagamentos até a verificação do Stripe estar completa. Inicie
-  este processo cedo.
-</Callout>
-
-## Calendário de Pagamentos
-
-A sua parte de uma marcação fica disponível na data mais tardia entre estas duas:
-
-- 7 dias após o pagamento do membro
-- 24 horas após o fim da sessão
-
-É libertada às 04:00 seguintes, hora de Lisboa. Depois, a Stripe paga para a sua conta bancária segundo o calendário de pagamentos da sua conta.
-
-**Exemplo**: Um membro paga a 1 de março às 14:00 uma sessão que termina a 3 de março às 10:00. Sete dias após o pagamento é 8 de março às 14:00, que é a data mais tardia. A sua parte é libertada às 04:00 de 9 de março.
-
-<Callout type="info">
-  A equipa da Eleva revê o primeiro pagamento para a sua conta antes de o
-  libertar, por isso pode demorar um pouco mais.
-</Callout>
-
-## Compreender os Seus Ganhos
-
-### Visão Geral do Dashboard
-
-O seu dashboard de ganhos mostra:
-
-| Estado      | Descrição                          |
-| ----------- | ---------------------------------- |
-| Pendente    | Consultas ainda não concluídas     |
-| Disponível  | Pronto para pagamento              |
-| Em Trânsito | A ser transferido para o seu banco |
-| Pago        | Depositado com sucesso             |
-
-### Detalhes da Transação
-
-Cada transação mostra:
-
-- Nome do membro
-- Serviço prestado
-- Montante bruto
-- Taxa de serviço
-- Montante líquido (os seus ganhos)
-
-## Impostos e Relatórios
-
-<Accordions>
-  <Accordion title="Responsabilidade Fiscal">
-    Como profissional independente, é responsável por:
-
-    - Declarar os seus ganhos
-    - Pagar impostos aplicáveis
-    - Manter registos
-
-    A Eleva Care não retém impostos. Consulte um profissional fiscal para a sua situação.
-
-  </Accordion>
-  <Accordion title="Documentação Fornecida">
-    A Eleva Care fornece:
-
-    - Extratos mensais de ganhos
-    - Resumo anual para declaração fiscal
-    - Exportação de histórico de transações
-
-  </Accordion>
-</Accordions>
-
-## Reembolsos e Cancelamentos
-
-### Cancelamentos de Membros
-
-Escolhe uma política de cancelamento para cada serviço: Flexível, Moderada ou Rigorosa. A política apresentada no momento da marcação aplica-se a essa marcação.
-
-| Política | Reembolso de 100 %     | Reembolso de 50 %             | Sem Reembolso           |
-| -------- | ---------------------- | ----------------------------- | ----------------------- |
-| Flexível | 24 horas ou mais antes | —                             | Menos de 24 horas antes |
-| Moderada | 48 horas ou mais antes | Entre 24 e 48 horas antes     | Menos de 24 horas antes |
-| Rigorosa | 7 dias ou mais antes   | Entre 48 horas e 7 dias antes | Menos de 48 horas antes |
-
-Em qualquer política, o membro tem reembolso total se cancelar nas 24 horas seguintes à marcação e a sessão estiver a pelo menos 48 horas de distância.
-
-O valor retido é repartido entre si e a Eleva nas mesmas proporções da marcação. Numa marcação de €100:
-
-| Reembolso ao Membro | Membro Recebe de Volta | Você Recebe | A Eleva Fica Com |
-| ------------------- | ---------------------- | ----------- | ---------------- |
-| 100 %               | €100                   | €0          | €0               |
-| 50 %                | €50                    | €42,50      | €7,50            |
-| Nenhum              | €0                     | €85         | €15              |
-
-Se o membro não comparecer sem ter cancelado, conta como um cancelamento à hora de início da sessão. O membro não tem reembolso e você recebe a sua parte.
-
-### Os Seus Cancelamentos
-
-Se tiver de cancelar, ou se não comparecer:
-
-- Avise a Eleva em [support@eleva.care](mailto:support@eleva.care) o mais cedo possível. Não peça ao membro que cancele em seu lugar.
-- O membro recebe 100 % do valor pago, incluindo a taxa da Eleva, e a Eleva oferece-lhe uma nova marcação.
-- Não recebe nada por essa marcação. Se a transferência já tiver sido feita, o valor é descontado nas transferências seguintes.
-
-<Callout type="warning">
-  A equipa da Eleva trata destes reembolsos. Não são automáticos. Cancelamentos
-  ou faltas repetidos podem levar à restrição ou suspensão da sua conta.
-</Callout>
-
-## Maximizar Ganhos
-
-<Accordions>
-  <Accordion title="Otimizar Preços">
-    - Pesquise tarifas da concorrência
-    - Considere a sua experiência e credenciais
-    - Ajuste baseado na procura
-
-  </Accordion>
-  <Accordion title="Reduzir Cancelamentos">
-    - Envie lembretes de consulta
-    - Responda prontamente a inquéritos
-    - Mantenha disponibilidade precisa
-
-  </Accordion>
-</Accordions>
-
-## Resolução de Problemas
-
-<Accordions>
-  <Accordion title="Pagamento Não Recebido">
-    1. Verifique o estado do Stripe Connect
-    2. Verifique os detalhes da conta bancária
-    3. Consulte o calendário de pagamentos acima. A equipa da Eleva revê o seu primeiro pagamento antes de o libertar
-    4. Contacte o suporte se ainda faltar
-
-  </Accordion>
-  <Accordion title="Montante Incorreto">
-    Reveja o detalhamento da transação:
-
-    - Verifique o montante bruto
-    - Verifique a taxa de serviço de 15 %
-    - Confirme quaisquer reembolsos aplicados
-
-  </Accordion>
-  <Accordion title="Problemas com Stripe">
-    Para problemas específicos do Stripe:
-
-    - Entre no dashboard Stripe Express
-    - Verifique requisitos de verificação
-    - Atualize informação bancária se necessário
-
-  </Accordion>
-</Accordions>
+1. Veja o **Estado do pagamento** em **Finanças** e a regra de libertação acima.
+2. Em **Pagamentos e conta**, veja se a Stripe precisa de alguma coisa sua.
+3. Confirme os seus dados bancários.
+4. Continua sem resposta? Escreva para [support@eleva.care](mailto:support@eleva.care).
 
 ---
 
 <Cards>
-  <Card title="Estratégia de Preços" href="/experts/earnings/pricing">
-    Otimize os preços das suas consultas
+  <Card title="Faturar os seus membros" href="/experts/earnings/invoicing">
+    Emita e acompanhe as faturas das suas sessões
   </Card>
-  <Card title="Configure o Seu Perfil" href="/experts/getting-started/profile">
-    Crie um perfil profissional atrativo
+  <Card title="Preços e taxas" href="/experts/earnings/pricing">
+    Com quanto fica a Eleva em cada marcação
   </Card>
 </Cards>

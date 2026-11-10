@@ -1,224 +1,79 @@
 ---
-title: Gerir Disponibilidade
-description: Configure os seus horários de trabalho, sincronização de calendário e definições de marcação.
+title: Horário e calendários
+description: Defina o seu horário semanal e os dias de folga, e ligue calendários Google ou Microsoft para evitar marcações sobrepostas.
 ---
 
-# Gerir Disponibilidade
+Os membros só podem marcar consigo dentro do seu horário, e nunca por cima de um evento num calendário que tenha ligado.
 
-A sua disponibilidade determina quando os membros podem marcar consultas. Configure a sua agenda para equilibrar o acesso dos membros com as suas necessidades de vida pessoal.
-
-## Agenda Semanal
-
-Defina a sua disponibilidade semanal recorrente:
+## Defina o seu horário semanal
 
 <Steps>
   <Step>
-    ### Aceder a Definições de Disponibilidade
+    ### Abra o Horário
 
-    Vá a **Dashboard de Especialista** → **Disponibilidade**.
-
-  </Step>
-  <Step>
-    ### Definir Horários
-
-    Clique em cada dia para adicionar horários disponíveis com horas de início e fim.
+    Na barra lateral, em **Prática**, abra **Horário**. Se ainda não houver nada definido, escolha **Configurar horário**.
 
   </Step>
   <Step>
-    ### Guardar Agenda
+    ### Confirme o fuso horário
 
-    Guarde a sua agenda para a ativar.
+    As suas horas seguem o **Fuso horário** indicado no topo da página. Os membros veem as suas horas no fuso horário deles.
+
+  </Step>
+  <Step>
+    ### Adicione as suas horas
+
+    Em **Horário semanal**, escolha **Adicionar horas** para cada dia em que trabalha. Um dia pode ter mais do que um intervalo, por exemplo das 09:00 às 13:00 e das 14:00 às 18:00.
+
+  </Step>
+  <Step>
+    ### Guarde
+
+    Escolha **Guardar horário**.
 
   </Step>
 </Steps>
 
-**Exemplo de Agenda:**
+## Dias de folga e alterações pontuais
 
-| Dia     | Disponibilidade             |
-| ------- | --------------------------- |
-| Segunda | 9:00 - 13:00, 14:00 - 18:00 |
-| Terça   | 9:00 - 13:00                |
-| Quarta  | 14:00 - 20:00               |
-| Quinta  | 9:00 - 13:00, 14:00 - 18:00 |
-| Sexta   | 9:00 - 12:00                |
-| Sábado  | Indisponível                |
-| Domingo | Indisponível                |
+Em **Exceções de data**, escolha **Adicionar exceção** e a data. Depois, escolha **Bloquear o dia inteiro**, ou defina outro horário com **De** e **Até**. Guarde o horário.
 
-<Callout type="info">
-  Os membros veem sempre os horários das consultas no seu fuso horário local,
-  mas o seu dashboard mostra o seu fuso horário.
+A antecedência mínima, os intervalos e com quanto tempo de antecedência os membros podem marcar definem-se em cada serviço, no separador **Políticas**. [Veja como](/experts/getting-started/services)
+
+## Ligue os seus calendários
+
+Ligue o Google ou o Microsoft para que a Eleva tenha em conta os seus eventos e acrescente as sessões confirmadas ao seu calendário.
+
+1. Na barra lateral, em **Definições**, abra **Calendários ligados**.
+2. Escolha **Ligar Google Calendar** ou **Ligar Microsoft Calendar** e autorize o acesso.
+3. Para cada calendário, escolha:
+   - **Verificar conflitos**: as horas ocupadas neste calendário não podem ser marcadas.
+   - **Escrever sessões aqui**: as sessões confirmadas são acrescentadas a este calendário.
+
+Se uma ligação precisar de atenção, um aviso informa-o. Volte a ligá-la para manter a verificação de conflitos e o registo de novas sessões.
+
+<Callout>
+  Ligar um calendário é opcional. A Eleva é o seu calendário: os membros podem
+  marcar na mesma, e recebe um convite por email para cada sessão.
 </Callout>
 
-## Integração de Calendário
+## Subscrever noutra aplicação de calendário
 
-### Sincronização Google Calendar
+Em **Calendário**, procure **Feed ICS** e escolha **Criar feed**. Copie o link logo, porque só é mostrado uma vez, e adicione-o à sua aplicação de calendário:
 
-Conecte o seu Google Calendar para sincronização bidirecional:
+- **Apple Calendar**: Ficheiro → Nova subscrição de calendário
+- **Google Calendar**: Definições → Adicionar calendário → Por URL
+- **Outlook**: Adicionar calendário → Subscrever da web
 
-<Steps>
-  <Step>
-    ### Conectar
-
-    Vá a **Integrações** → **Google Calendar** e clique em **Conectar**.
-
-  </Step>
-  <Step>
-    ### Autorizar
-
-    Conceda acesso à Eleva Care para ler o seu calendário.
-
-  </Step>
-  <Step>
-    ### Selecionar Calendários
-
-    Escolha quais calendários sincronizar para bloqueio de disponibilidade.
-
-  </Step>
-</Steps>
-
-### Como Funciona a Sincronização
-
-| Direção        | O Que Sincroniza                                        |
-| -------------- | ------------------------------------------------------- |
-| Google → Eleva | Eventos bloqueiam automaticamente a sua disponibilidade |
-| Eleva → Google | Novas marcações aparecem no seu calendário              |
-
-<Callout type="info">
-  **Nota de Privacidade**: Apenas lemos horários de eventos e estado
-  livre/ocupado. Não acedemos a detalhes de eventos ou participantes do seu
-  calendário pessoal.
-</Callout>
-
-## Definições de Marcação
-
-<Tabs items={['Aviso Mínimo', 'Tempo de Buffer', 'Marcação Antecipada']}>
-  <Tab value="Aviso Mínimo">
-    **Com quanta antecedência devem os membros marcar?**
-
-    | Definição | Caso de Uso |
-    |-----------|-------------|
-    | 1 hora | Flexibilidade máxima, marcações de última hora |
-    | 24 horas | Standard — tempo para preparar |
-    | 48 horas | Mais tempo de preparação |
-    | 1 semana | Consultas complexas |
-
-  </Tab>
-  <Tab value="Tempo de Buffer">
-    **Adicione tempo entre consultas:**
-
-    - **Antes**: Tempo para preparar para o próximo membro
-    - **Depois**: Tempo para notas e pausas
-
-    **Recomendação**: 15 minutos de buffer antes e depois garante que nunca está apressado.
-
-  </Tab>
-  <Tab value="Marcação Antecipada">
-    **Com quanta antecedência podem os membros marcar?**
-
-    | Definição | Melhor Para |
-    |-----------|-------------|
-    | 1 semana | Disponibilidade limitada |
-    | 2 semanas | Definição standard |
-    | 1 mês | Disponibilidade estendida |
-    | 3 meses | Flexibilidade máxima |
-
-  </Tab>
-</Tabs>
-
-## Exceções de Data
-
-<Accordions>
-  <Accordion title="Bloquear Datas Específicas">
-    Para férias ou dias de folga:
-
-    1. Vá a **Disponibilidade** → **Exceções de Data**
-    2. Clique em **Adicionar Exceção**
-    3. Selecione a(s) data(s)
-    4. Marque como **Indisponível**
-    5. Guarde
-
-  </Accordion>
-  <Accordion title="Adicionar Disponibilidade Extra">
-    Para ocasiões especiais:
-
-    1. Adicione uma exceção de data
-    2. Defina horários personalizados para esse dia
-    3. Isto substitui a sua agenda semanal para essa data específica
-
-  </Accordion>
-</Accordions>
-
-## Gerir Marcações Existentes
-
-<Tabs items={['Cancelar', 'Reagendar']}>
-  <Tab value="Cancelar">
-    **Quando Precisa de Cancelar**
-
-    Não pode cancelar uma marcação confirmada no painel. Envie um e-mail para [support@eleva.care](mailto:support@eleva.care) o mais cedo possível, com a marcação e o motivo. A equipa cancela-a e reembolsa o membro na totalidade.
-
-    <Callout type="warning">
-      Não peça ao membro que cancele em seu lugar. Cancelamentos repetidos podem levar à restrição ou suspensão da sua conta.
-    </Callout>
-
-  </Tab>
-  <Tab value="Reagendar">
-    **Para Reagendar**
-
-    1. Contacte o membro através da plataforma
-    2. Acordem um novo horário
-    3. Envie um e-mail para [support@eleva.care](mailto:support@eleva.care) com a marcação e o novo horário
-
-  </Tab>
-</Tabs>
-
-## Boas Práticas
-
-<Accordions>
-  <Accordion title="Consistência">
-    - Defina horários regulares em que os membros possam confiar
-    - Atualize a disponibilidade com pelo menos 2 semanas de antecedência
-    - Comunique alterações prontamente
-  </Accordion>
-  <Accordion title="Agendamento Realista">
-    - Não se sobrecarregue
-    - Inclua tempo para pausas e notas
-    - Considere diferentes tipos de consulta
-  </Accordion>
-  <Accordion title="Consciência de Fuso Horário">
-    - Considere a sua base de membros alvo
-    - Ofereça horários noturnos para membros que trabalham
-    - Lembre-se das diferenças horárias para membros internacionais
-  </Accordion>
-</Accordions>
-
-## Resolução de Problemas
-
-<Accordions>
-  <Accordion title="Marcações Não Aparecem">
-    - Verifique o estado da sincronização do calendário
-    - Verifique as definições de fuso horário
-    - Assegure que o serviço está ativo
-    - Verifique os requisitos de aviso mínimo
-  </Accordion>
-  <Accordion title="Marcações Duplas">
-    - Ative a sincronização Google Calendar
-    - Adicione tempo de buffer entre marcações
-    - Reveja as definições de disponibilidade
-  </Accordion>
-  <Accordion title="Problemas de Sincronização">
-    1. Desconecte o Google Calendar
-    2. Reconecte com nova autorização
-    3. Verifique as definições de intervalo de sincronização
-  </Accordion>
-</Accordions>
+O feed é privado e só de leitura. Escolha **Rodar link** para obter um link novo, ou **Revogar** para o desativar.
 
 ---
 
 <Cards>
-  <Card title="Compreender Ganhos" href="/experts/earnings/payouts">
-    Saiba sobre processamento de pagamentos
+  <Card title="Crie os seus serviços" href="/experts/getting-started/services">
+    Regras de reserva e formas de encontro
   </Card>
-  <Card title="Completar o seu perfil" href="/experts/getting-started/profile">
-    Adicione o que os membros e a Eleva precisam de ver antes de ser listado
+  <Card title="Marcações e pedidos" href="/experts/sessions/bookings">
+    O que acontece quando os membros marcam
   </Card>
 </Cards>

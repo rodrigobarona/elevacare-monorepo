@@ -1,254 +1,93 @@
 ---
-title: Payouts & Earnings
-description: Entienda cómo se le paga, la tarifa de servicio y la gestión de sus ganancias.
+title: Cobros
+description: Configura tus cobros con Stripe, mira cuándo llega tu parte a tu banco y sigue cada pago en Finanzas.
 ---
 
-# Payouts & Earnings
+Los miembros pagan al reservar. Eleva cobra el pago en tu nombre a través de Stripe, nuestro socio de pagos, y transfiere tu parte a tu cuenta de Stripe. Después, Stripe la paga a tu banco.
 
-Eleva Care uses Stripe Connect for secure, automated payouts. This guide explains how earnings work and how to maximize your income.
-
-## How Payments Work
+## Configura tus cobros
 
 <Steps>
   <Step>
-    ### member Books
+    ### Empieza
 
-    Payment is collected at the time of booking.
-
-  </Step>
-  <Step>
-    ### Funds Held
-
-    Eleva retiene el pago a través de Stripe hasta que su parte esté disponible.
+    En la configuración, elige **Empezar configuración de Pagos** en el paso **Cobros**. Si te lo saltaste, abre **Finanzas** y elige **Configurar pagos**.
 
   </Step>
   <Step>
-    ### Appointment Completes
+    ### Completa el formulario de Stripe
 
-    Su parte queda disponible en la fecha más tardía entre 7 días después del pago y 24 horas después del fin de la sesión. Se libera a las 04:00 siguientes, hora de Lisboa.
+    Se abre en la misma página, sin salir de Eleva. Stripe te pide que verifiques tu identidad con un documento con foto, añadas una cuenta bancaria, des algunos datos de tu consulta y aceptes sus condiciones.
 
   </Step>
   <Step>
-    ### Payout Processed
+    ### Termina lo que falte
 
-    Después, Stripe paga a su cuenta bancaria según el calendario de pagos de su cuenta.
+    Si falta algo, verás una lista **Aún pendiente**. Complétala antes de publicar un servicio de pago.
 
   </Step>
 </Steps>
 
-<Callout type="info">
-  Esta espera da tiempo para resolver disputas o problemas. Eleva puede retener
-  una transferencia mientras haya una disputa o un reembolso abierto.
+## Cuándo cobras
+
+Tu parte de cada reserva queda disponible en la fecha más tardía de estas dos:
+
+- 7 días después de que el miembro pagó
+- 24 horas después de que termina la sesión
+
+Se libera a las 04:00 siguientes, hora de Lisboa. Después, Stripe la paga a tu banco según el calendario de pagos de tu cuenta.
+
+**Ejemplo**: un miembro paga el 1 de marzo a las 14:00 una sesión que termina el 3 de marzo a las 10:00. Siete días después del pago, el 8 de marzo a las 14:00, es la fecha más tardía, así que tu parte se libera a las 04:00 del 9 de marzo.
+
+<Callout>
+  Eleva revisa la primera transferencia a tu cuenta, y las que son inusualmente
+  altas, antes de liberarlas, así que pueden tardar un poco más.
 </Callout>
 
-## Tarifa de servicio
+Eleva también puede retener una transferencia mientras haya una disputa de pago o un reembolso abiertos, o mientras falten datos que Eleva o Stripe necesitan.
 
-Eleva cobra una tarifa de servicio del **15 % del precio de la reserva**, IVA incluido cuando proceda. No hay otras deducciones. Eleva paga las comisiones de procesamiento de pagos con su tarifa.
+## Sigue tus ingresos en Finanzas
 
-### Ejemplo de cálculo
+Arriba en **Finanzas**:
 
-| Precio de la reserva | Tarifa de servicio (15 %) | Usted recibe |
-| -------------------- | ------------------------- | ------------ |
-| 100 €                | 15 €                      | 85 €         |
+- **Neto**: lo que has ganado, después de las tarifas de Eleva y de los posibles reembolsos.
+- **Pendiente**: ganado, pero aún no enviado a tu banco.
+- **Pagado**: ya enviado a tu banco.
 
-### Reservas de clínicas
+**Pagos de sesiones** muestra cada sesión pagada con su **Bruto**, **Comisiones**, **Neto**, **Estado del pago** y la fecha en que pasa a ser **Elegible**. Usa **Exportar CSV** para tus registros.
 
-En las reservas realizadas a través de una clínica no hay tarifa por reserva. La clínica paga una suscripción por puestos, en las condiciones de su plan.
+| Estado del pago     | Qué significa                                                  |
+| ------------------- | -------------------------------------------------------------- |
+| Pendiente           | Esperando su fecha de liberación                               |
+| Programado          | Ha llegado la fecha; la transferencia está en camino           |
+| Requiere aprobación | Eleva lo está revisando antes de liberarlo                     |
+| Transferido         | En tu cuenta de Stripe                                         |
+| Pagado              | Pagado a tu banco                                              |
+| En espera           | Retenido mientras se resuelve una disputa u otro asunto        |
+| Fallido             | La transferencia no se completó; escribe a soporte             |
+| Reversión pendiente | Un reembolso está recuperando toda o parte de la transferencia |
+| Revertido           | Un reembolso ha recuperado la transferencia                    |
 
-### Suscripciones de pago
+En **Pagos y cuenta**, los paneles de Stripe muestran tu **Saldo**, tus **Pagos**, los **Datos de la cuenta** y los **Ajustes fiscales**. Actualiza ahí tus datos bancarios.
 
-Si contrata una suscripción de pago de Eleva que modifique su tarifa, se aplican las condiciones presentadas en el momento de la contratación.
+## Impuestos
 
-## Setting Up Payouts
+Tú declaras tus ingresos y pagas tus propios impuestos y cotizaciones a la seguridad social. Según las normas de la UE (DAC7), Eleva comunica a la autoridad tributaria portuguesa (AT) lo que ganan los expertos en la plataforma antes del 31 de enero de cada año, y te envía antes de esa misma fecha la información que comunicó sobre ti.
 
-<Steps>
-  <Step>
-    ### Start Setup
+## Si un cobro no ha llegado
 
-    Go to **Expert Dashboard** → **Earnings** → **Set Up Payouts**.
-
-  </Step>
-  <Step>
-    ### Complete Verification
-
-    Complete Stripe's identity verification process.
-
-  </Step>
-  <Step>
-    ### Add Bank Account
-
-    Provide your bank account details for receiving payments.
-
-  </Step>
-  <Step>
-    ### Await Approval
-
-    Verification typically takes 1-2 business days.
-
-  </Step>
-</Steps>
-
-### Required Information
-
-- Government-issued ID
-- Bank account details
-- Tax identification number
-- Business information (if applicable)
-
-<Callout type="warning">
-  You cannot receive payouts until Stripe verification is complete. Start this
-  process early.
-</Callout>
-
-## Calendario de pagos
-
-Su parte de una reserva queda disponible en la fecha más tardía entre estas dos:
-
-- 7 días después de que pague el miembro
-- 24 horas después del fin de la sesión
-
-Se libera a las 04:00 siguientes, hora de Lisboa. Después, Stripe paga a su cuenta bancaria según el calendario de pagos de su cuenta.
-
-**Ejemplo**: Un miembro paga el 1 de marzo a las 14:00 una sesión que termina el 3 de marzo a las 10:00. Siete días después del pago es el 8 de marzo a las 14:00, que es la fecha más tardía. Su parte se libera a las 04:00 del 9 de marzo.
-
-<Callout type="info">
-  El equipo de Eleva revisa el primer pago a su cuenta antes de liberarlo, así
-  que puede tardar un poco más.
-</Callout>
-
-## Understanding Your Earnings
-
-### Dashboard Overview
-
-Your earnings dashboard shows:
-
-| Status     | Description                    |
-| ---------- | ------------------------------ |
-| Pending    | Appointments not yet completed |
-| Available  | Ready for payout               |
-| In Transit | Being transferred to your bank |
-| Paid Out   | Successfully deposited         |
-
-### Transaction Details
-
-Each transaction displays:
-
-- Booking ID
-- Service provided
-- Gross amount
-- Tarifa de servicio
-- Net amount (your earnings)
-
-## Taxes & Reporting
-
-<Accordions>
-  <Accordion title="Tax Responsibility">
-    As an independent professional, you're responsible for:
-
-    - Declaring your earnings
-    - Paying applicable taxes
-    - Maintaining records
-
-    Eleva Care does not withhold taxes. Consult a tax professional for your situation.
-
-  </Accordion>
-  <Accordion title="Documentation Provided">
-    Eleva Care provides:
-
-    - Monthly earnings statements
-    - Annual summary for tax filing
-    - Transaction history export
-
-  </Accordion>
-</Accordions>
-
-## Refunds & Cancellations
-
-### Cancelaciones de miembros
-
-Usted elige una política de cancelación para cada servicio: Flexible, Moderada o Estricta. La política presentada en el momento de la reserva se aplica a esa reserva.
-
-| Política | Reembolso del 100 %  | Reembolso del 50 %            | Sin reembolso           |
-| -------- | -------------------- | ----------------------------- | ----------------------- |
-| Flexible | 24 horas o más antes | —                             | Menos de 24 horas antes |
-| Moderada | 48 horas o más antes | Entre 24 y 48 horas antes     | Menos de 24 horas antes |
-| Estricta | 7 días o más antes   | Entre 48 horas y 7 días antes | Menos de 48 horas antes |
-
-En cualquier política, el miembro recibe un reembolso total si cancela en las 24 horas siguientes a la reserva y faltan al menos 48 horas para la sesión.
-
-El importe retenido se reparte entre usted y Eleva en las mismas proporciones que la reserva. En una reserva de 100 €:
-
-| Reembolso al miembro | El miembro recupera | Usted recibe | Eleva se queda |
-| -------------------- | ------------------- | ------------ | -------------- |
-| 100 %                | 100 €               | 0 €          | 0 €            |
-| 50 %                 | 50 €                | 42,50 €      | 7,50 €         |
-| Ninguno              | 0 €                 | 85 €         | 15 €           |
-
-Si el miembro no se presenta sin haber cancelado, cuenta como una cancelación a la hora de inicio de la sesión. El miembro no recibe reembolso y usted recibe su parte.
-
-### Sus cancelaciones
-
-Si tiene que cancelar, o si no se presenta:
-
-- Avise a Eleva en [support@eleva.care](mailto:support@eleva.care) lo antes posible. No pida al miembro que cancele en su lugar.
-- El miembro recibe el 100 % del importe pagado, incluida la tarifa de Eleva, y Eleva le ofrece una nueva reserva.
-- Usted no recibe nada por esa reserva. Si la transferencia ya se hubiera realizado, el importe se descuenta de las transferencias siguientes.
-
-<Callout type="warning">
-  El equipo de Eleva gestiona estos reembolsos. No son automáticos. Las
-  cancelaciones o inasistencias repetidas pueden dar lugar a la restricción o
-  suspensión de su cuenta.
-</Callout>
-
-## Maximizing Earnings
-
-<Accordions>
-  <Accordion title="Optimize Pricing">
-    - Research competitor rates
-    - Consider your experience and credentials
-    - Adjust based on demand
-  </Accordion>
-  <Accordion title="Reduce Cancellations">
-    - Send appointment reminders
-    - Respond promptly to inquiries
-    - Maintain accurate availability
-  </Accordion>
-</Accordions>
-
-## Troubleshooting
-
-<Accordions>
-  <Accordion title="Payout Not Received">
-    1. Check Stripe Connect status
-    2. Verify bank account details
-    3. Consulte el calendario de pagos anterior. El equipo de Eleva revisa su primer pago antes de liberarlo
-    4. Contact support if still missing
-  </Accordion>
-  <Accordion title="Incorrect Amount">
-    Review transaction breakdown:
-
-    - Verify gross amount
-    - Compruebe la tarifa de servicio del 15 %
-    - Confirm any refunds applied
-
-  </Accordion>
-  <Accordion title="Stripe Issues">
-    For Stripe-specific problems:
-
-    - Log into Stripe Express dashboard
-    - Check for verification requirements
-    - Update banking information if needed
-
-  </Accordion>
-</Accordions>
+1. Revisa su **Estado del pago** en **Finanzas** y la regla de liberación de arriba.
+2. En **Pagos y cuenta**, comprueba si Stripe necesita algo de ti.
+3. Revisa tus datos bancarios.
+4. ¿Sigue sin llegar? Escribe a [support@eleva.care](mailto:support@eleva.care).
 
 ---
 
 <Cards>
-  <Card title="Pricing Strategy" href="/experts/earnings/pricing">
-    Optimize your consultation pricing
+  <Card title="Facturar a tus miembros" href="/experts/earnings/invoicing">
+    Emite y sigue las facturas de tus sesiones
   </Card>
-  <Card title="Configure su perfil" href="/experts/getting-started/profile">
-    Cree un perfil profesional atractivo
+  <Card title="Precios y tarifas" href="/experts/earnings/pricing">
+    Con qué se queda Eleva de cada reserva
   </Card>
 </Cards>

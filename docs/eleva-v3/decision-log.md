@@ -32,6 +32,22 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-10: Help center describes only what v3 does (active)
+
+- Owner: engineering; written for the internal-expert preview.
+- Members, experts and clinics help is rewritten against the v3 screens
+  and the legal pages, in native EN, PT (Portugal) and ES (Spain). Pages
+  for features v3 does not have were deleted, not marked "coming soon":
+  member reviews; clinic analytics, branding, plans and expert invites.
+- Help links keep the reader's language, and `https://eleva.care/…` links
+  go to the site the deployment serves (`@eleva/content/help-links`), so
+  they reach v3 before the apex cutover.
+- Still open: a native PT/ES read of the help text; clinic expert
+  invitations (the invite email links to `/accept-invitation`, which
+  `apps/account` does not have); the For clinics page still describes
+  planned clinic features (founder decision); docs `<html lang>` is
+  always `en`.
+
 ### 2026-11-10: Apex is not trusted until it serves v3 (active)
 
 - Owner: engineering; security-judge re-review 2026-11-10 (8.0/10, High).

@@ -25,7 +25,15 @@ function scoreEntry(entry: HelpSearchEntry, query: string) {
   return 0
 }
 
-export function DocsSearch({ localePrefix }: { localePrefix: string }) {
+export function DocsSearch({
+  localePrefix,
+  label,
+  placeholder,
+}: {
+  localePrefix: string
+  label: string
+  placeholder: string
+}) {
   const [query, setQuery] = useState("")
   const [entries, setEntries] = useState<HelpSearchEntry[]>([])
   const [loaded, setLoaded] = useState(false)
@@ -69,7 +77,7 @@ export function DocsSearch({ localePrefix }: { localePrefix: string }) {
   return (
     <div className="relative w-full max-w-xs">
       <label className="sr-only" htmlFor="docs-help-search">
-        Search help
+        {label}
       </label>
       <div className="relative">
         <MagnifyingGlassIcon
@@ -79,7 +87,7 @@ export function DocsSearch({ localePrefix }: { localePrefix: string }) {
         <input
           id="docs-help-search"
           type="search"
-          placeholder="Search help…"
+          placeholder={placeholder}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="h-9 w-full rounded-md border border-input-border bg-background py-1 pr-3 pl-9 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"

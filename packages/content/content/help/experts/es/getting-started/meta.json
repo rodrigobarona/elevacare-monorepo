@@ -1,4 +1,4 @@
 {
-  "title": "getting-started",
-  "pages": ["availability", "profile", "services"]
+  "title": "Primeros pasos",
+  "pages": ["setup", "profile", "services", "availability"]
 }
