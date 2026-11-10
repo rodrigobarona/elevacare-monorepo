@@ -23,12 +23,13 @@
   "orgSwitcher": {
     "findWorkspace": "Find workspace…",
     "createWorkspace": "Create workspace",
-    "createWorkspaceDescription": "Expert, team, or academy workspace",
+    "createWorkspaceDescription": "A practice, clinic or academy",
+    "openMenu": "Switch workspace",
     "close": "Close",
     "noResults": "No workspaces found",
-    "badgePersonal": "Personal",
-    "badgeExpert": "Expert",
-    "badgeTeam": "Team",
+    "badgePersonal": "Space",
+    "badgeExpert": "Practice",
+    "badgeTeam": "Clinic",
     "badgeAcademy": "Academy",
     "badgeStaff": "Staff"
   },

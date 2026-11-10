@@ -5,7 +5,8 @@ import { cn } from "@eleva/ui/lib/utils"
 import { Avatar, AvatarFallback } from "@eleva/ui/components/avatar"
 import { Button } from "@eleva/ui/components/button"
 import { CaretDownIcon } from "@eleva/icons"
-import { OrgTypeBadge } from "./org-type-badge"
+import { useTranslations } from "next-intl"
+import { getOrgTypeBadgeLabel } from "./org-type-badge"
 import type { OrgSwitcherItem } from "./nav-types"
 
 function orgInitials(name: string): string {
@@ -33,6 +34,7 @@ export function OrgSwitcherTrigger({
   open,
   className,
 }: OrgSwitcherTriggerProps) {
+  const t = useTranslations("orgSwitcher")
   return (
     <div
       className={cn(
@@ -50,15 +52,19 @@ export function OrgSwitcherTrigger({
             {orgInitials(organization.name)}
           </AvatarFallback>
         </Avatar>
-        <span className="min-w-0 flex-1 truncate text-sm font-medium text-sidebar-foreground">
-          {organization.name}
+        <span className="flex min-w-0 flex-1 flex-col leading-tight">
+          <span className="truncate text-sm font-medium text-sidebar-foreground">
+            {organization.name}
+          </span>
+          <span className="truncate text-xs text-sidebar-foreground/60">
+            {getOrgTypeBadgeLabel(organization.orgType, t)}
+          </span>
         </span>
-        <OrgTypeBadge orgType={organization.orgType} />
       </a>
       <Button
         variant="ghost"
         size="icon-xs"
-        aria-label="Open organization menu"
+        aria-label={t("openMenu")}
         className="shrink-0 rounded-sm text-sidebar-foreground/70 hover:bg-transparent hover:text-sidebar-foreground"
       >
         <CaretDownIcon className="size-4" aria-hidden />
