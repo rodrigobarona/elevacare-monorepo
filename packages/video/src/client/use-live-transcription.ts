@@ -218,6 +218,11 @@ export function useLiveTranscription(input: {
           : labelsRef.current.transcriptNowAuto
       )
       if (!enabled || !daily) return
+      if (pendingRestartRef.current) {
+        // A stop is still in flight: restart with the latest choice only.
+        pendingRestartRef.current = settings
+        return
+      }
       if (!activeRef.current) {
         startRef.current(settings)
         return
