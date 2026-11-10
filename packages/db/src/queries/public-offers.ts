@@ -46,6 +46,10 @@ export type PublicEventTypeMode = {
   location: {
     id: string
     name: string
+    /** Street address, shown on in-person services (ERS: place of care). */
+    address: string
+    line2: string | null
+    postalCode: string | null
     city: string
     country: string
   } | null
@@ -292,6 +296,9 @@ export async function listPublicEventTypeModes(
         eventDuration: main.eventTypes.durationMinutes,
         locationId: main.expertPracticeLocations.id,
         locationName: main.expertPracticeLocations.name,
+        locationAddress: main.expertPracticeLocations.address,
+        locationLine2: main.expertPracticeLocations.line2,
+        locationPostalCode: main.expertPracticeLocations.postalCode,
         locationCity: main.expertPracticeLocations.city,
         locationCountry: main.expertPracticeLocations.country,
       })
@@ -300,9 +307,15 @@ export async function listPublicEventTypeModes(
         main.eventTypes,
         eq(main.eventTypes.id, main.eventTypeModes.eventTypeId)
       )
+      // An archived place never shows its address, even if a mode still
+      // points at it (archive racing a mode edit): the mode keeps showing
+      // without a place.
       .leftJoin(
         main.expertPracticeLocations,
-        eq(main.expertPracticeLocations.id, main.eventTypeModes.locationId)
+        and(
+          eq(main.expertPracticeLocations.id, main.eventTypeModes.locationId),
+          eq(main.expertPracticeLocations.active, true)
+        )
       )
       .where(
         and(
@@ -335,6 +348,9 @@ export async function listPublicEventTypeModes(
             ? {
                 id: row.locationId,
                 name: row.locationName,
+                address: row.locationAddress ?? "",
+                line2: row.locationLine2 ?? null,
+                postalCode: row.locationPostalCode ?? null,
                 city: row.locationCity,
                 country: row.locationCountry,
               }

@@ -378,6 +378,7 @@
       "seeAllIncluded": "See all {count} included",
       "whatToExpect": "What to expect",
       "questions": "Questions I can help with",
+      "where": "Where",
       "requestNote": "{name} confirms each request within 24 hours, or before the session if sooner.",
       "eyebrowMixed": "{minutes}-min session",
       "eyebrow": {

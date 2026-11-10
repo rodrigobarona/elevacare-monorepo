@@ -2231,6 +2231,10 @@ export const PublicEventTypeModeSchema = z.object({
     .object({
       id: z.string().uuid(),
       name: z.string(),
+      /** Street address of the place of care (in-person modes). */
+      address: z.string(),
+      line2: z.string().nullable(),
+      postalCode: z.string().nullable(),
       city: z.string(),
       country: z.string(),
     })
