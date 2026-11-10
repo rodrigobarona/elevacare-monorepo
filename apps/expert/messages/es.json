@@ -223,7 +223,7 @@
         },
         "clinical": {
           "title": "Clínico",
-          "body": "Atención regulada — los modos de entrega deben quedar dentro de tus países de servicio licenciados."
+          "body": "Atención regulada — los modos de entrega deben quedar dentro de los países donde estás habilitado para ejercer."
         }
       },
       "visibilityLabel": "Visibilidad",
