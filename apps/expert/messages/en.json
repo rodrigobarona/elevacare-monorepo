@@ -584,7 +584,7 @@
       "subscribeHint": "Apple: File → New Calendar Subscription. Google: Settings → Add calendar → From URL. Outlook: Add calendar → Subscribe from web."
     },
     "error": {
-      "load-failed": "Could not load bookings.",
+      "load-failed": "We couldn't load your week.",
       "rotate-failed": "Could not create the feed link.",
       "revoke-failed": "Could not revoke the feed.",
       "no-token": "No active feed to revoke.",
@@ -595,7 +595,7 @@
     "modeInPerson": "In person",
     "respondBy": "Respond by",
     "today": "Today",
-    "timezone": "Times are in your time zone ({zone}).",
+    "timezone": "Times are in your time zone: {zone}.",
     "retry": "Try again"
   },
   "calendars": {

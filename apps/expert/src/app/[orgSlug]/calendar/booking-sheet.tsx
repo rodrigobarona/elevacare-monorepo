@@ -81,7 +81,7 @@ export function BookingSheet({
       className={
         isMobile
           ? "max-h-[88dvh] overflow-y-auto rounded-t-3xl"
-          : "w-full overflow-y-auto sm:max-w-md"
+          : "overflow-y-auto"
       }
     >
       <SheetHeader className="gap-2">
@@ -94,7 +94,7 @@ export function BookingSheet({
               {pickLocalized(booking.eventTypeTitle, locale)}
             </SheetTitle>
           </div>
-          <SheetClose variant="ghost" size="sm" className="-mt-1 -mr-2">
+          <SheetClose variant="ghost" className="-mt-1.5 -mr-2">
             {t("closeDrawer")}
           </SheetClose>
         </div>
@@ -108,7 +108,7 @@ export function BookingSheet({
         </SheetDescription>
       </SheetHeader>
 
-      <div className="space-y-4 px-6 pb-6">
+      <div className="space-y-4 px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <dl className="grid gap-3 rounded-2xl bg-sand-50 p-4 sm:grid-cols-2 dark:bg-muted/40">
           <div>
             <dt className="text-xs text-muted-foreground">{t("member")}</dt>
@@ -146,27 +146,30 @@ export function BookingSheet({
             onSettled={(status) => onSettled(booking.id, status)}
           />
         ) : (
-          <JoinCta
-            href={`/${orgSlug}/team/sessions/${booking.id}/join`}
-            sessionMode={booking.sessionMode}
-            status={booking.status}
-            startsAt={booking.startsAt}
-            endsAt={booking.endsAt}
-            joinLabel={t("join")}
-            joinSoonLabel={t("joinSoon")}
-            pending="hint"
-          />
+          <div className="flex flex-col items-start gap-2">
+            <JoinCta
+              className="mt-0"
+              href={`/${orgSlug}/team/sessions/${booking.id}/join`}
+              sessionMode={booking.sessionMode}
+              status={booking.status}
+              startsAt={booking.startsAt}
+              endsAt={booking.endsAt}
+              joinLabel={t("join")}
+              joinSoonLabel={t("joinSoon")}
+              pending="hint"
+            />
+            {booking.status === "confirmed" ||
+            booking.status === "rescheduled" ||
+            booking.status === "completed" ? (
+              <LinkButton
+                variant="outline"
+                href={`/${orgSlug}/team/sessions/${booking.id}/report`}
+              >
+                {tReport("open")}
+              </LinkButton>
+            ) : null}
+          </div>
         )}
-        {booking.status === "confirmed" ||
-        booking.status === "rescheduled" ||
-        booking.status === "completed" ? (
-          <LinkButton
-            variant="outline"
-            href={`/${orgSlug}/team/sessions/${booking.id}/report`}
-          >
-            {tReport("open")}
-          </LinkButton>
-        ) : null}
       </div>
     </Sheet>
   )

@@ -55,7 +55,7 @@ export function RequestActions({
   }
 
   return (
-    <div className="mt-4 space-y-3">
+    <div className="space-y-3">
       <p className="text-sm font-medium">{t("requestPending")}</p>
       <Textarea
         value={note}

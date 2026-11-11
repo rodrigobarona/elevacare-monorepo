@@ -584,7 +584,7 @@
       "subscribeHint": "Apple: Archivo → Nueva suscripción de calendario. Google: Ajustes → Añadir calendario → Desde URL. Outlook: Añadir calendario → Suscribirse desde la web."
     },
     "error": {
-      "load-failed": "No se pudieron cargar las reservas.",
+      "load-failed": "No pudimos cargar tu semana.",
       "rotate-failed": "No se pudo crear el enlace del feed.",
       "revoke-failed": "No se pudo revocar el feed.",
       "no-token": "No hay feed activo para revocar.",
@@ -595,7 +595,7 @@
     "modeInPerson": "Presencial",
     "respondBy": "Responder antes de",
     "today": "Hoy",
-    "timezone": "Las horas están en tu zona horaria ({zone}).",
+    "timezone": "Las horas están en tu zona horaria: {zone}.",
     "retry": "Reintentar"
   },
   "calendars": {

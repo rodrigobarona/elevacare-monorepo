@@ -55,17 +55,32 @@ Each entry should include:
     sessions. The choice follows the room the calendar has, not the
     screen, so the sidebar does not matter.
   - Times are in the device's time zone, 24-hour clock in every
-    language, and the calendar says which zone that is. The week is
-    drawn in the browser, where the zone is known.
+    language, and the calendar names that zone. The week is loaded and
+    drawn in the browser, where the zone is known; the server no longer
+    loads a week it has to guess. A week still loading shows a
+    placeholder, never an empty week.
+  - Every block says who the session is with, and has an icon for its
+    mode (video, phone, in person), so the mode is not told by colour
+    alone. The browser receives only the fields the calendar shows.
   - A session's details open in a sheet (side on a wide screen, bottom
     on a phone) that takes focus and gives it back.
   - "You can join 15 minutes before the session starts" is shown only
     while that is true: not for a session that is over, cancelled or
-    not confirmed. This also applies to the member app, which shares
-    the component.
+    not confirmed. The component is shared with the member app, whose
+    pages use its button form and are not changed by this.
+  - After a request is accepted or declined the sheet closes; a
+    declined request leaves the calendar and focus goes to the week
+    heading. On a phone the list opens at the next day with sessions,
+    and sessions already over are muted.
   - A week that fails to load says so and offers "Try again", instead
     of showing an empty week.
-- Not built: day and month views; a switch between grid and list on a
+- Accepted: on the two nights a year the clocks change, a session
+  inside the changed hour is drawn an hour longer or shorter than it
+  lasts (its start and written times are right). Two short sessions
+  back to back (under 25 minutes) sit side by side, because each is
+  drawn tall enough to read.
+- Not built: day and month views; reloading the open week by itself
+  when a booking arrives (changing week or reloading the page does); a switch between grid and list on a
   wide screen; showing the expert's schedule time zone when it differs
   from the device; busy times from connected calendars on the grid;
   more than about four sessions at the same time are narrow bars

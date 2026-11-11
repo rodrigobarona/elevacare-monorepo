@@ -16,8 +16,11 @@ export type HourRange = {
 /** The working day shown when no session falls outside it. */
 export const DEFAULT_HOURS: HourRange = { start: 7, end: 21 }
 
-/** A block is never drawn shorter than this, so its time stays readable. */
-export const MIN_BLOCK_MINUTES = 20
+/**
+ * A block is never drawn shorter than this, so its time stays readable and
+ * it stays easy to press (about 24 px at 64 px an hour).
+ */
+export const MIN_BLOCK_MINUTES = 25
 
 const DAY_MINUTES = 24 * 60
 
@@ -52,10 +55,16 @@ type Span = { startMin: number; endMin: number }
  * The part of a session that falls on `day`, in minutes from midnight, or
  * `null` when it does not touch that day. A session that crosses midnight
  * gives one span per day.
+ *
+ * Wall-clock minutes, so on the two nights a year the clocks change a
+ * session inside the changed hour is drawn an hour longer or shorter than
+ * it lasts. Its start and the times written on it stay right.
  */
 export function spanOnDay(item: TimedItem, day: Date): Span | null {
   const start = new Date(item.startsAt)
   const end = new Date(item.endsAt)
+  // A session whose times cannot be read is left out, never guessed.
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null
   const dayStart = new Date(day)
   dayStart.setHours(0, 0, 0, 0)
   const dayEnd = addDays(dayStart, 1)
@@ -198,16 +207,21 @@ function startOfDay(day: Date): Date {
   return d
 }
 
-/** Sessions of the week grouped by the day they start, days in order. */
+/**
+ * Sessions of the week as a list: each once, under the first of `days` it
+ * touches (a session that began on the Sunday before is listed on Monday),
+ * days in order, empty days left out.
+ */
 export function agendaDays<T extends TimedItem>(
   items: T[],
   days: Date[]
 ): { day: Date; items: T[] }[] {
+  const firstDay = (item: T) => days.find((day) => spanOnDay(item, day))
   return days
     .map((day) => ({
       day,
       items: items
-        .filter((item) => isSameDay(new Date(item.startsAt), day))
+        .filter((item) => firstDay(item) === day)
         .sort(
           (a, b) =>
             Date.parse(a.startsAt) - Date.parse(b.startsAt) ||

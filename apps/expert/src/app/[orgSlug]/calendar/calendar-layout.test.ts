@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   DEFAULT_HOURS,
+  MIN_BLOCK_MINUTES,
   addDays,
   agendaDays,
   layoutDay,
@@ -83,7 +84,7 @@ describe("visibleHours", () => {
   })
 
   it("leaves room for the drawn height of a short late session", () => {
-    // 20:55 for 5 minutes is drawn 20 minutes tall: until 21:15.
+    // 20:55 for 5 minutes is drawn taller than it lasts: past 21:00.
     expect(visibleHours([session("a", at(4, 20, 55), 5)], week).end).toBe(22)
   })
 
@@ -110,7 +111,7 @@ describe("layoutDay", () => {
 
   it("gives a very short session a readable height", () => {
     const [block] = layoutDay([session("a", at(4, 9), 5)], at(4, 0), hours)
-    expect(block?.drawnMinutes).toBe(20)
+    expect(block?.drawnMinutes).toBe(MIN_BLOCK_MINUTES)
   })
 
   it("sets overlapping sessions side by side", () => {
@@ -175,7 +176,36 @@ describe("layoutDay", () => {
   it("never draws past the end of the grid", () => {
     const [block] = layoutDay([session("a", at(4, 20, 55), 5)], at(4, 0), hours)
     expect((block?.topPct ?? 0) + (block?.heightPct ?? 0)).toBeCloseTo(100)
-    expect(block?.drawnMinutes).toBe(20)
+    expect(block?.drawnMinutes).toBe(MIN_BLOCK_MINUTES)
+  })
+})
+
+describe("times that cannot be trusted", () => {
+  const hours = { start: 7, end: 21 }
+
+  it("shows a session with no length on the day it starts", () => {
+    const [block] = layoutDay([session("a", at(4, 9), 0)], at(4, 0), hours)
+    expect(block?.drawnMinutes).toBe(MIN_BLOCK_MINUTES)
+  })
+
+  it("shows a session that ends before it starts as a short block", () => {
+    const reversed = {
+      id: "a",
+      startsAt: at(4, 10).toISOString(),
+      endsAt: at(4, 9).toISOString(),
+    }
+    const [block] = layoutDay([reversed], at(4, 0), hours)
+    expect(block?.topPct).toBeCloseTo((180 / 840) * 100)
+    expect(block?.drawnMinutes).toBe(MIN_BLOCK_MINUTES)
+    expect(layoutDay([reversed], at(5, 0), hours)).toEqual([])
+  })
+
+  it("leaves out a session whose times cannot be read", () => {
+    const broken = { id: "a", startsAt: "not a date", endsAt: "" }
+    expect(spanOnDay(broken, at(4, 0))).toBeNull()
+    expect(layoutDay([broken], at(4, 0), hours)).toEqual([])
+    expect(visibleHours([broken], week)).toEqual(DEFAULT_HOURS)
+    expect(agendaDays([broken], week)).toEqual([])
   })
 })
 
@@ -191,6 +221,18 @@ describe("agendaDays", () => {
     )
     expect(days.map((d) => d.day.getDate())).toEqual([4, 6])
     expect(days[0]?.items.map((i) => i.id)).toEqual(["early", "late"])
+  })
+
+  it("lists a session from the Sunday before under Monday, once", () => {
+    const overnight = session("a", new Date(2026, 10, 1, 23, 30), 60)
+    const days = agendaDays([overnight], week)
+    expect(days.map((d) => d.day.getDate())).toEqual([2])
+    expect(days[0]?.items).toHaveLength(1)
+  })
+
+  it("lists a session across midnight only on the day it starts", () => {
+    const days = agendaDays([session("a", at(4, 23, 30), 60)], week)
+    expect(days.map((d) => d.day.getDate())).toEqual([4])
   })
 })
 

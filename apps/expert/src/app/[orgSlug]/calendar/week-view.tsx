@@ -4,7 +4,13 @@ import * as React from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { intlLocale } from "@eleva/config/i18n"
 import { pickLocalized } from "@eleva/config/i18n-locales"
-import { CaretLeftIcon, CaretRightIcon } from "@eleva/icons"
+import {
+  CaretLeftIcon,
+  CaretRightIcon,
+  MapPinIcon,
+  PhoneIcon,
+  VideoCameraIcon,
+} from "@eleva/icons"
 import { Button } from "@eleva/ui/components/button"
 import { StatusPill } from "@eleva/ui/components/status-pill"
 import { cn } from "@eleva/ui/lib/utils"
@@ -27,71 +33,67 @@ export type CalendarBooking = {
   status: string
   startsAt: string
   endsAt: string
-  timezone: string
   sessionMode: "online" | "in_person" | "phone"
   memberFirstName: string | null
   approvalDeadlineAt: string | null
   eventTypeTitle: { en: string; pt?: string; es?: string }
-  eventTypeSlug: string
   modeLabel: { en: string; pt?: string; es?: string } | null
   locationName: string | null
   locationCity: string | null
   locationCountry: string | null
-  locationAddress: string | null
 }
 
-type Props = {
-  initialFrom: string
-  initialTo: string
-  initialBookings: CalendarBooking[]
-  orgSlug: string
-}
+type SessionMode = CalendarBooking["sessionMode"]
 
-const MODE_CLASS: Record<CalendarBooking["sessionMode"], string> = {
+const MODE_CLASS: Record<SessionMode, string> = {
   online: "bg-primary text-primary-foreground",
   phone: "bg-info text-status-foreground",
   in_person: "bg-coral-700 text-white dark:bg-coral-400 dark:text-coral-950",
 }
+/** The mode is never told by colour alone: each has its own icon. */
+const MODE_ICON: Record<SessionMode, typeof VideoCameraIcon> = {
+  online: VideoCameraIcon,
+  phone: PhoneIcon,
+  in_person: MapPinIcon,
+}
 /** A request the expert has not answered yet: outlined, not filled. */
 const PENDING_CLASS =
   "border border-dashed border-foreground/60 bg-card text-foreground"
-const LEGEND_MODES: CalendarBooking["sessionMode"][] = [
-  "online",
-  "phone",
-  "in_person",
-]
-/** Below this drawn length a block shows one line: time and title. */
+const LEGEND_MODES: SessionMode[] = ["online", "phone", "in_person"]
+/**
+ * Below this drawn length a block shows one line: time and name. More than
+ * three side by side are bars with no text (their label still names them).
+ */
 const COMPACT_BELOW_MINUTES = 45
 const FOCUS_RING =
   "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background focus-visible:outline-none"
+/** The sheet's closing transition, after which focus can be moved. */
+const SHEET_CLOSE_MS = 250
 
-export function WeekView({
-  initialFrom,
-  initialTo,
-  initialBookings,
-  orgSlug,
-}: Props) {
+export function WeekView({ orgSlug }: { orgSlug: string }) {
   const t = useTranslations("calendar")
   const locale = useLocale()
   // Times are shown in the device's time zone, which the server does not
-  // know: the week is drawn once the page runs in the browser.
+  // know: the week is loaded and drawn in the browser.
   const now = useJoinCtaClock(60_000)
-  const ready = now !== null
   const [weekStart, setWeekStart] = React.useState(() =>
     startOfWeek(new Date())
   )
-  const [fetched, setFetched] = React.useState<{
+  const [loaded, setLoaded] = React.useState<{
     key: string
     bookings: CalendarBooking[]
   } | null>(null)
   const [failedKey, setFailedKey] = React.useState<string | null>(null)
   const [attempt, setAttempt] = React.useState(0)
-  /** Requests answered on this page, until the next load. */
+  /** Requests answered on this page, until the week is loaded again. */
   const [settled, setSettled] = React.useState<
     Record<string, "confirmed" | "cancelled">
   >({})
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
   const [sheetOpen, setSheetOpen] = React.useState(false)
+  const headingRef = React.useRef<HTMLHeadingElement>(null)
+  const upcomingRef = React.useRef<HTMLElement>(null)
+  const scrolledFor = React.useRef<string | null>(null)
 
   const days = React.useMemo(
     () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
@@ -100,10 +102,8 @@ export function WeekView({
   const rangeFromIso = weekStart.toISOString()
   const rangeToIso = addDays(weekStart, 7).toISOString()
   const rangeKey = `${rangeFromIso}|${rangeToIso}`
-  const isInitial = rangeFromIso === initialFrom && rangeToIso === initialTo
 
   React.useEffect(() => {
-    if (isInitial) return
     let cancelled = false
     const key = `${rangeFromIso}|${rangeToIso}`
     void listCalendarBookingsAction(rangeFromIso, rangeToIso)
@@ -114,13 +114,8 @@ export function WeekView({
           return
         }
         setFailedKey(null)
-        setFetched({
-          key,
-          bookings: result.data.bookings.map((booking) => ({
-            ...booking,
-            approvalDeadlineAt: booking.approvalDeadlineAt ?? null,
-          })),
-        })
+        setSettled({})
+        setLoaded({ key, bookings: result.data.bookings })
       })
       .catch(() => {
         if (!cancelled) setFailedKey(key)
@@ -128,43 +123,39 @@ export function WeekView({
     return () => {
       cancelled = true
     }
-  }, [isInitial, rangeFromIso, rangeToIso, attempt])
+  }, [rangeFromIso, rangeToIso, attempt])
 
-  const failed = !isInitial && failedKey === rangeKey
-  const loading = ready && !isInitial && !failed && fetched?.key !== rangeKey
+  const failed = failedKey === rangeKey
+  const loading = !failed && loaded?.key !== rangeKey
   const bookings = React.useMemo(() => {
-    const source = isInitial
-      ? initialBookings
-      : fetched?.key === rangeKey
-        ? fetched.bookings
-        : []
+    const source = loaded?.key === rangeKey ? loaded.bookings : []
     return source
       .filter((b) => settled[b.id] !== "cancelled")
       .map((b) =>
         settled[b.id] === "confirmed" ? { ...b, status: "confirmed" } : b
       )
-  }, [isInitial, initialBookings, fetched, rangeKey, settled])
+  }, [loaded, rangeKey, settled])
 
   const selected = bookings.find((b) => b.id === selectedId) ?? null
   const formatters = React.useMemo(() => {
     const intl = intlLocale(locale)
     return {
       weekday: new Intl.DateTimeFormat(intl, { weekday: "short" }),
+      month: new Intl.DateTimeFormat(intl, { month: "short" }),
       fullDay: new Intl.DateTimeFormat(intl, {
         weekday: "long",
         day: "numeric",
         month: "long",
       }),
-      range: new Intl.DateTimeFormat(intl, {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
+      time: new Intl.DateTimeFormat(intl, {
+        hour: "2-digit",
+        minute: "2-digit",
       }),
-      time: new Intl.DateTimeFormat(intl, { timeStyle: "short" }),
+      zone: new Intl.DateTimeFormat(intl, { timeZoneName: "longGeneric" }),
     }
   }, [locale])
 
-  function modeName(mode: CalendarBooking["sessionMode"]): string {
+  function modeName(mode: SessionMode): string {
     switch (mode) {
       case "online":
         return t("locationOnline")
@@ -187,16 +178,27 @@ export function WeekView({
   const summary = (b: CalendarBooking) =>
     [
       timeRange(b),
-      pickLocalized(b.eventTypeTitle, locale),
       who(b),
+      pickLocalized(b.eventTypeTitle, locale),
       modeName(b.sessionMode),
       isRequest(b) ? t("requestPending") : null,
     ]
       .filter(Boolean)
       .join(", ")
+  /** "26 Oct – 1 Nov 2026", built by hand so every language keeps month names. */
+  const weekLabel = () => {
+    const part = (date: Date) =>
+      `${date.getDate()} ${formatters.month.format(date).replaceAll(".", "")}`
+    const last = addDays(weekStart, 6)
+    return `${part(weekStart)} – ${part(last)} ${last.getFullYear()}`
+  }
   const open = (id: string) => {
     setSelectedId(id)
     setSheetOpen(true)
+  }
+  const goTo = (week: Date) => {
+    setFailedKey(null)
+    setWeekStart(week)
   }
 
   const hours = visibleHours(bookings, days)
@@ -205,22 +207,41 @@ export function WeekView({
     (_, i) => hours.start + i
   )
   const agenda = agendaDays(bookings, days)
-  const timeZone = ready
-    ? Intl.DateTimeFormat().resolvedOptions().timeZone.replaceAll("_", " ")
+  // On a phone the list starts at Monday: bring the next day with sessions
+  // into view once, so the expert does not scroll past days already gone.
+  const upcomingDay = now
+    ? agenda.find(({ day }) => isSameDay(day, now) || day > now)?.day
+    : undefined
+  React.useEffect(() => {
+    if (loading || scrolledFor.current === rangeKey) return
+    scrolledFor.current = rangeKey
+    const section = upcomingRef.current
+    // Only as a list (the grid shows the whole week), and only when there
+    // are earlier days above it.
+    if (!section || section.offsetParent === null) return
+    if (!section.previousElementSibling) return
+    section.scrollIntoView({ block: "start" })
+  }, [loading, rangeKey])
+
+  const timeZone = now
+    ? (formatters.zone
+        .formatToParts(now)
+        .find((part) => part.type === "timeZoneName")?.value ??
+      Intl.DateTimeFormat().resolvedOptions().timeZone)
     : null
 
   return (
     <div className="@container space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
-          className="font-display text-xl font-medium tracking-tight"
+          ref={headingRef}
+          tabIndex={-1}
+          className="font-display text-xl font-medium tracking-tight outline-none"
           aria-live="polite"
         >
-          {ready
-            ? formatters.range.formatRange(weekStart, addDays(weekStart, 6))
-            : " "}
-          {loading ? (
-            <span className="ml-2 text-sm font-normal text-muted-foreground">
+          {now ? weekLabel() : " "}
+          {now && loading ? (
+            <span className="ml-2 font-sans text-sm font-normal text-muted-foreground">
               {t("loading")}
             </span>
           ) : null}
@@ -228,24 +249,23 @@ export function WeekView({
         <div className="flex items-center gap-1.5">
           <Button
             variant="outline"
-            size="icon-sm"
+            size="icon"
             aria-label={t("prevWeek")}
-            onPress={() => setWeekStart((w) => addDays(w, -7))}
+            onPress={() => goTo(addDays(weekStart, -7))}
           >
             <CaretLeftIcon />
           </Button>
           <Button
             variant="outline"
-            size="sm"
-            onPress={() => setWeekStart(startOfWeek(new Date()))}
+            onPress={() => goTo(startOfWeek(new Date()))}
           >
             {t("thisWeek")}
           </Button>
           <Button
             variant="outline"
-            size="icon-sm"
+            size="icon"
             aria-label={t("nextWeek")}
-            onPress={() => setWeekStart((w) => addDays(w, 7))}
+            onPress={() => goTo(addDays(weekStart, 7))}
           >
             <CaretRightIcon />
           </Button>
@@ -254,19 +274,27 @@ export function WeekView({
 
       <div className="space-y-1 text-xs text-muted-foreground">
         <ul className="flex flex-wrap gap-x-4 gap-y-1">
-          {LEGEND_MODES.map((mode) => (
-            <li key={mode} className="flex items-center gap-1.5">
-              <span
-                aria-hidden
-                className={cn("size-2.5 rounded-full", MODE_CLASS[mode])}
-              />
-              {modeName(mode)}
-            </li>
-          ))}
+          {LEGEND_MODES.map((mode) => {
+            const Icon = MODE_ICON[mode]
+            return (
+              <li key={mode} className="flex items-center gap-1.5">
+                <span
+                  aria-hidden
+                  className={cn(
+                    "flex size-4 items-center justify-center rounded-full",
+                    MODE_CLASS[mode]
+                  )}
+                >
+                  <Icon className="size-2.5" />
+                </span>
+                {modeName(mode)}
+              </li>
+            )
+          })}
           <li className="flex items-center gap-1.5">
             <span
               aria-hidden
-              className="size-2.5 rounded-full border border-dashed border-foreground/60"
+              className="size-4 rounded-full border border-dashed border-foreground/60"
             />
             {t("requestPending")}
           </li>
@@ -293,13 +321,21 @@ export function WeekView({
         </div>
       ) : null}
 
-      {now === null ? (
+      {now === null || loading ? (
+        // A week still loading never looks like a free week.
         <div
           aria-hidden
+          data-testid="calendar-loading"
           className="h-96 rounded-3xl border bg-card shadow-1 motion-safe:animate-pulse"
         />
-      ) : (
+      ) : failed ? null : (
         <>
+          {bookings.length === 0 ? (
+            <p className="rounded-3xl border border-dashed border-sand-300 bg-sand-50/70 p-6 text-center text-sm text-muted-foreground dark:border-border dark:bg-card">
+              {t("emptyWeek")}
+            </p>
+          ) : null}
+
           {/* Wide: the week as a grid. */}
           <div className="hidden overflow-x-auto rounded-3xl border bg-card shadow-1 @xl:block">
             <div
@@ -383,7 +419,7 @@ export function WeekView({
                         {blocks.map((block) => (
                           <li
                             key={block.item.id}
-                            className="absolute p-0.5"
+                            className="absolute px-0.5 py-px"
                             style={{
                               top: `${block.topPct}%`,
                               height: `${block.heightPct}%`,
@@ -398,15 +434,11 @@ export function WeekView({
                                 new Date(block.item.startsAt)
                               )}
                               timeRange={timeRange(block.item)}
+                              who={who(block.item)}
                               title={pickLocalized(
                                 block.item.eventTypeTitle,
                                 locale
                               )}
-                              detail={
-                                isRequest(block.item)
-                                  ? t("requestPending")
-                                  : block.item.memberFirstName
-                              }
                               onOpen={() => open(block.item.id)}
                             />
                           </li>
@@ -419,8 +451,8 @@ export function WeekView({
                         className="pointer-events-none absolute inset-x-0 z-10 flex items-center"
                         style={{ top: `${nowPct}%` }}
                       >
-                        <span className="-ml-1 size-2 rounded-full bg-coral-600" />
-                        <span className="h-px flex-1 bg-coral-600" />
+                        <span className="-ml-1 size-2 rounded-full bg-foreground" />
+                        <span className="h-px flex-1 bg-foreground" />
                       </div>
                     ) : null}
                   </div>
@@ -432,8 +464,12 @@ export function WeekView({
           {/* Narrow: the same week as a list, day by day. */}
           <div className="space-y-5 @xl:hidden" data-testid="calendar-agenda">
             {agenda.map(({ day, items }) => (
-              <section key={day.toISOString()}>
-                <h3 className="flex items-baseline gap-2 px-1 text-sm font-medium">
+              <section
+                key={day.toISOString()}
+                ref={day === upcomingDay ? upcomingRef : undefined}
+                className="scroll-mt-20"
+              >
+                <h3 className="flex items-baseline gap-2 px-1 font-medium">
                   <span className="first-letter:uppercase">
                     {formatters.fullDay.format(day)}
                   </span>
@@ -444,65 +480,74 @@ export function WeekView({
                   ) : null}
                 </h3>
                 <ul className="mt-2 divide-y overflow-hidden rounded-2xl border bg-card shadow-1">
-                  {items.map((b) => (
-                    <li key={b.id}>
-                      <button
-                        type="button"
-                        data-testid="calendar-session"
-                        className={cn(
-                          "flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50",
-                          FOCUS_RING,
-                          "focus-visible:ring-inset"
-                        )}
-                        onClick={() => open(b.id)}
-                      >
-                        <span
-                          aria-hidden
+                  {items.map((b) => {
+                    const over = new Date(b.endsAt) < now
+                    return (
+                      <li key={b.id}>
+                        <button
+                          type="button"
+                          data-testid="calendar-session"
                           className={cn(
-                            "h-10 w-1.5 shrink-0 rounded-full",
-                            isRequest(b)
-                              ? "border border-dashed border-foreground/60"
-                              : MODE_CLASS[b.sessionMode]
+                            "flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50",
+                            FOCUS_RING,
+                            "focus-visible:ring-inset"
                           )}
-                        />
-                        <span className="w-12 shrink-0 text-sm tabular-nums">
-                          <span className="block font-medium">
-                            {formatters.time.format(new Date(b.startsAt))}
+                          onClick={() => open(b.id)}
+                        >
+                          <span
+                            aria-hidden
+                            className={cn(
+                              "h-10 w-1.5 shrink-0 rounded-full",
+                              isRequest(b)
+                                ? "border border-dashed border-foreground/60"
+                                : MODE_CLASS[b.sessionMode],
+                              over && "opacity-40"
+                            )}
+                          />
+                          <span className="w-12 shrink-0 text-sm tabular-nums">
+                            <span
+                              className={cn(
+                                "block font-medium",
+                                over && "font-normal text-muted-foreground"
+                              )}
+                            >
+                              {formatters.time.format(new Date(b.startsAt))}
+                            </span>
+                            <span className="block text-xs text-muted-foreground">
+                              {formatters.time.format(new Date(b.endsAt))}
+                            </span>
                           </span>
-                          <span className="block text-xs text-muted-foreground">
-                            {formatters.time.format(new Date(b.endsAt))}
+                          <span className="min-w-0 flex-1">
+                            <span
+                              className={cn(
+                                "block truncate font-medium",
+                                over && "font-normal text-muted-foreground"
+                              )}
+                            >
+                              {who(b)}
+                            </span>
+                            <span className="block truncate text-sm text-muted-foreground">
+                              {pickLocalized(b.eventTypeTitle, locale)} ·{" "}
+                              {modeName(b.sessionMode)}
+                            </span>
                           </span>
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate font-medium">
-                            {pickLocalized(b.eventTypeTitle, locale)}
-                          </span>
-                          <span className="block truncate text-sm text-muted-foreground">
-                            {who(b)} · {modeName(b.sessionMode)}
-                          </span>
-                        </span>
-                        {isRequest(b) ? (
-                          <StatusPill tone="attention">
-                            {t("requestPending")}
-                          </StatusPill>
-                        ) : null}
-                        <CaretRightIcon
-                          aria-hidden
-                          className="size-4 shrink-0 text-muted-foreground"
-                        />
-                      </button>
-                    </li>
-                  ))}
+                          {isRequest(b) ? (
+                            <StatusPill tone="attention">
+                              {t("requestPending")}
+                            </StatusPill>
+                          ) : null}
+                          <CaretRightIcon
+                            aria-hidden
+                            className="size-4 shrink-0 text-muted-foreground"
+                          />
+                        </button>
+                      </li>
+                    )
+                  })}
                 </ul>
               </section>
             ))}
           </div>
-
-          {bookings.length === 0 && !loading && !failed ? (
-            <p className="rounded-3xl border border-dashed border-sand-300 bg-sand-50/70 p-6 text-center text-sm text-muted-foreground dark:border-border dark:bg-card">
-              {t("emptyWeek")}
-            </p>
-          ) : null}
         </>
       )}
 
@@ -513,8 +558,13 @@ export function WeekView({
         orgSlug={orgSlug}
         modeName={modeName}
         onSettled={(bookingId, status) => {
+          // Answered: back to the week. A declined request leaves the
+          // calendar, so focus goes to the week heading instead of nowhere.
+          setSheetOpen(false)
           setSettled((curr) => ({ ...curr, [bookingId]: status }))
-          if (status === "cancelled") setSheetOpen(false)
+          if (status === "cancelled") {
+            window.setTimeout(() => headingRef.current?.focus(), SHEET_CLOSE_MS)
+          }
         }}
       />
     </div>
@@ -526,20 +576,21 @@ function SessionBlock({
   label,
   time,
   timeRange,
+  who,
   title,
-  detail,
   onOpen,
 }: {
   block: DayBlock<CalendarBooking>
   label: string
   time: string
   timeRange: string
+  who: string
   title: string
-  detail: string | null
   onOpen: () => void
 }) {
   const { item } = block
   const compact = block.drawnMinutes < COMPACT_BELOW_MINUTES
+  const Icon = MODE_ICON[item.sessionMode]
   return (
     <button
       type="button"
@@ -549,7 +600,7 @@ function SessionBlock({
       className={cn(
         "block size-full overflow-hidden rounded-lg px-1.5 text-left text-[11px] shadow-1 transition-opacity hover:opacity-90",
         FOCUS_RING,
-        compact ? "py-px leading-[1.2]" : "py-1 leading-tight",
+        compact ? "py-0.5 leading-[1.3]" : "py-1 leading-tight",
         item.status === "awaiting_confirmation"
           ? PENDING_CLASS
           : MODE_CLASS[item.sessionMode],
@@ -558,19 +609,25 @@ function SessionBlock({
       )}
       onClick={onOpen}
     >
-      {compact ? (
-        <span className="block truncate">
-          <span className="tabular-nums opacity-90">{time}</span>{" "}
-          <span className="font-medium">{title}</span>
+      {block.lanes > 3 ? null : compact ? (
+        <span className="flex items-center gap-1">
+          <Icon aria-hidden className="size-3 shrink-0 opacity-90" />
+          <span className="truncate">
+            <span className="tabular-nums opacity-90">{time}</span>{" "}
+            <span className="font-medium">{who}</span>
+          </span>
         </span>
       ) : (
         <>
           <span className="block truncate tabular-nums opacity-90">
             {block.lanes > 1 ? time : timeRange}
           </span>
-          <span className="block truncate font-medium">{title}</span>
-          {detail && block.drawnMinutes >= 60 ? (
-            <span className="block truncate opacity-90">{detail}</span>
+          <span className="flex items-center gap-1">
+            <Icon aria-hidden className="size-3 shrink-0 opacity-90" />
+            <span className="truncate font-medium">{who}</span>
+          </span>
+          {block.drawnMinutes >= 60 ? (
+            <span className="block truncate opacity-90">{title}</span>
           ) : null}
         </>
       )}

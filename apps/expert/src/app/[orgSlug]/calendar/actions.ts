@@ -22,17 +22,14 @@ export async function listCalendarBookingsAction(
       status: string
       startsAt: string
       endsAt: string
-      timezone: string
       sessionMode: "online" | "in_person" | "phone"
       memberFirstName: string | null
       approvalDeadlineAt: string | null
       eventTypeTitle: { en: string; pt?: string; es?: string }
-      eventTypeSlug: string
       modeLabel: { en: string; pt?: string; es?: string } | null
       locationName: string | null
       locationCity: string | null
       locationCountry: string | null
-      locationAddress: string | null
     }[]
   }>
 > {
@@ -48,9 +45,20 @@ export async function listCalendarBookingsAction(
     return {
       ok: true,
       data: {
+        // Only what the calendar shows is sent to the browser.
         bookings: data.bookings.map((booking) => ({
-          ...booking,
+          id: booking.id,
+          status: booking.status,
+          startsAt: booking.startsAt,
+          endsAt: booking.endsAt,
+          sessionMode: booking.sessionMode,
+          memberFirstName: booking.memberFirstName,
           approvalDeadlineAt: booking.approvalDeadlineAt ?? null,
+          eventTypeTitle: booking.eventTypeTitle,
+          modeLabel: booking.modeLabel,
+          locationName: booking.locationName,
+          locationCity: booking.locationCity,
+          locationCountry: booking.locationCountry,
         })),
       },
     }

@@ -584,7 +584,7 @@
       "subscribeHint": "Apple: Ficheiro → Nova subscrição de calendário. Google: Definições → Adicionar calendário → Por URL. Outlook: Adicionar calendário → Subscrever da web."
     },
     "error": {
-      "load-failed": "Não foi possível carregar as marcações.",
+      "load-failed": "Não foi possível carregar a sua semana.",
       "rotate-failed": "Não foi possível criar o link do feed.",
       "revoke-failed": "Não foi possível revogar o feed.",
       "no-token": "Não há feed ativo para revogar.",
@@ -595,7 +595,7 @@
     "modeInPerson": "Presencial",
     "respondBy": "Responder até",
     "today": "Hoje",
-    "timezone": "As horas estão no seu fuso horário ({zone}).",
+    "timezone": "As horas estão no seu fuso horário: {zone}.",
     "retry": "Tentar novamente"
   },
   "calendars": {
