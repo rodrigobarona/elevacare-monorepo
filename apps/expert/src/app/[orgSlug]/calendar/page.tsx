@@ -48,7 +48,7 @@ export default async function CalendarPage({
         title={t("title")}
         description={t("description")}
       />
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]">
         <WeekView
           orgSlug={orgSlug}
           initialFrom={fromIso}

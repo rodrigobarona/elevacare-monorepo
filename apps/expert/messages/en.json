@@ -556,7 +556,6 @@
     "location": "Where",
     "locationOnline": "Online",
     "locationPhone": "Phone",
-    "locationUnknown": "—",
     "join": "Join session",
     "joinSoon": "You can join 15 minutes before the session starts.",
     "requestPending": "Booking request",
@@ -594,7 +593,10 @@
     },
     "eyebrow": "Your week",
     "modeInPerson": "In person",
-    "respondBy": "Respond by"
+    "respondBy": "Respond by",
+    "today": "Today",
+    "timezone": "Times are in your time zone ({zone}).",
+    "retry": "Try again"
   },
   "calendars": {
     "backToIntegrations": "Integrations",

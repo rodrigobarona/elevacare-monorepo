@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react"
 import { Button, buttonVariants } from "@eleva/ui/components/button"
 import { cn } from "@eleva/ui/lib/utils"
-import { isJoinCtaEnabled } from "./join-window"
+import { isJoinCtaEnabled, isJoinStillAhead } from "./join-window"
 
 const JOIN_CTA_TICK_MS = 30_000
 
@@ -68,7 +68,10 @@ export function JoinCta({
   }
 
   if (pending === "hint") {
-    if (sessionMode !== "online") return null
+    // The hint is only true before the session: nothing is said for one
+    // that is over, cancelled or not confirmed yet.
+    if (now === null) return null
+    if (!isJoinStillAhead({ sessionMode, status, startsAt, now })) return null
     return (
       <p className={cn("mt-4 text-xs text-muted-foreground", className)}>
         {joinSoonLabel}

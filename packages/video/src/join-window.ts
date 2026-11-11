@@ -36,3 +36,19 @@ export function isJoinCtaEnabled(input: {
     input.now
   )
 }
+
+/**
+ * Whether "you can join 15 minutes before the session starts" is still
+ * true: an online session that can be joined, whose join window has not
+ * opened yet. Never for a session that is over, cancelled or unconfirmed.
+ */
+export function isJoinStillAhead(input: {
+  sessionMode: string
+  status: string
+  startsAt: Date | string
+  now: Date
+}): boolean {
+  if (input.sessionMode !== "online") return false
+  if (!JOINABLE_STATUSES.has(input.status)) return false
+  return input.now.getTime() < new Date(input.startsAt).getTime() - JOIN_LEAD_MS
+}

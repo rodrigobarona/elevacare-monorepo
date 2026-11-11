@@ -32,6 +32,48 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-11: The expert calendar shows every session of the week (active)
+
+- Owner: engineering. Found in the beta readiness survey of the expert app.
+- Finding: the week grid drew sessions only between 07:00 and 21:00 and
+  cut each block to the hour it started in. A session at 06:30 or 21:30
+  was not on the calendar at all, and an expert whose device is in
+  another time zone (the Azores, Brazil, a trip) could lose a whole day
+  of sessions from view. A 90-minute session looked like 60 minutes. Two
+  sessions in the same hour sat on top of each other. On a phone the
+  grid was 720 px wide inside a 390 px screen. Details opened below the
+  grid, off screen. With the server in UTC, an expert west of it opened
+  the calendar on last week.
+- Decisions:
+  - The grid shows 07:00 to 21:00 and widens to hold every session of
+    the week. Nothing booked is ever off the grid.
+  - A block starts at the session's real start and is as tall as the
+    session lasts (never shorter than 20 minutes, so its time can be
+    read). A session across midnight is drawn on both days. Sessions
+    that overlap sit side by side.
+  - Under 576 px of room the week is a list, day by day, with the same
+    sessions. The choice follows the room the calendar has, not the
+    screen, so the sidebar does not matter.
+  - Times are in the device's time zone, 24-hour clock in every
+    language, and the calendar says which zone that is. The week is
+    drawn in the browser, where the zone is known.
+  - A session's details open in a sheet (side on a wide screen, bottom
+    on a phone) that takes focus and gives it back.
+  - "You can join 15 minutes before the session starts" is shown only
+    while that is true: not for a session that is over, cancelled or
+    not confirmed. This also applies to the member app, which shares
+    the component.
+  - A week that fails to load says so and offers "Try again", instead
+    of showing an empty week.
+- Not built: day and month views; a switch between grid and list on a
+  wide screen; showing the expert's schedule time zone when it differs
+  from the device; busy times from connected calendars on the grid;
+  more than about four sessions at the same time are narrow bars
+  (each still opens its session and names it on hover and to screen
+  readers).
+- Not proven: a real booking request (dashed block) and dark mode were
+  checked in code and tests, not in a screenshot.
+
 ### 2026-11-11: The join page waits for the session and opens it (active)
 
 - Owner: engineering. Follows the founder rule that opening a join link

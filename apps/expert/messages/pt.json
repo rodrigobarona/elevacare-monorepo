@@ -556,7 +556,6 @@
     "location": "Onde",
     "locationOnline": "Online",
     "locationPhone": "Telefone",
-    "locationUnknown": "—",
     "join": "Entrar na sessão",
     "joinSoon": "Pode entrar 15 minutos antes do início da sessão.",
     "requestPending": "Pedido de reserva",
@@ -594,7 +593,10 @@
     },
     "eyebrow": "A sua semana",
     "modeInPerson": "Presencial",
-    "respondBy": "Responder até"
+    "respondBy": "Responder até",
+    "today": "Hoje",
+    "timezone": "As horas estão no seu fuso horário ({zone}).",
+    "retry": "Tentar novamente"
   },
   "calendars": {
     "backToIntegrations": "Integrações",

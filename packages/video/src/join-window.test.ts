@@ -3,6 +3,7 @@ import {
   JOIN_LEAD_MS,
   JOIN_TRAIL_MS,
   isJoinCtaEnabled,
+  isJoinStillAhead,
   isJoinWindowOpen,
   isOvertime,
 } from "./join-window"
@@ -47,6 +48,41 @@ describe("isJoinCtaEnabled", () => {
         now: new Date(START.getTime() - JOIN_LEAD_MS - 1),
       })
     ).toBe(false)
+  })
+})
+
+describe("isJoinStillAhead", () => {
+  const early = new Date(START.getTime() - JOIN_LEAD_MS - 1)
+  const base = {
+    sessionMode: "online",
+    status: "confirmed",
+    startsAt: START,
+    now: early,
+  }
+
+  it("is true only before the join window of a joinable online session", () => {
+    expect(isJoinStillAhead(base)).toBe(true)
+    expect(isJoinStillAhead({ ...base, status: "rescheduled" })).toBe(true)
+    // Open, or over: the hint would no longer be true.
+    expect(
+      isJoinStillAhead({
+        ...base,
+        now: new Date(START.getTime() - JOIN_LEAD_MS),
+      })
+    ).toBe(false)
+    expect(
+      isJoinStillAhead({
+        ...base,
+        now: new Date(END.getTime() + JOIN_TRAIL_MS + 1),
+      })
+    ).toBe(false)
+  })
+
+  it("is false for sessions nobody can join", () => {
+    for (const status of ["completed", "cancelled", "awaiting_confirmation"]) {
+      expect(isJoinStillAhead({ ...base, status })).toBe(false)
+    }
+    expect(isJoinStillAhead({ ...base, sessionMode: "phone" })).toBe(false)
   })
 })
 
