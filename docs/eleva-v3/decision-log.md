@@ -70,29 +70,33 @@ Each entry should include:
     audit action every other cancellation of a session writes.
 - Operator (founder, before the beta opens, after this change is live on
   production: until then the sweep keeps writing new false records).
-  Past rows are corrected by a script, not by hand, so that each
-  correction is written to the audit log (`session attendance_corrected`,
-  from `no_show`/`nobody` to what the booking says). The audit log is
-  append-only: the earlier wrong events stay, and the correction beside
-  them says they were wrong. Each row becomes: `cancelled` if its booking
-  was cancelled; open again at the booking's time if the booking is
-  still ahead (a session the member moved); otherwise `ended` with no
-  attendance. With `DATABASE_URL` in `.env.local` pointing at the
-  production main database (unpooled URL); the script prints the
-  database host before it counts:
+  Past rows are repaired by a script, not by hand, so that each change is
+  written to the audit log. The audit log is append-only: the earlier
+  wrong events stay, and the correction beside them says they were wrong.
+  The script does two things:
+  - Sessions recorded as a false no-show become what their booking says:
+    `cancelled` if the booking was cancelled; open again at the booking's
+    time if the booking is still ahead (a session the member moved);
+    otherwise `ended` with no attendance, at the booking's end. Audit
+    event: `session attendance_corrected`.
+  - Sessions still open that kept an old time after a reschedule take
+    their booking's time. Audit event: `session updated`.
+
+  With `DATABASE_URL` in `.env.local` pointing at the production main
+  database (unpooled URL). The script prints the database host first and
+  changes nothing unless that same host is given back to it:
 
   ```bash
-  pnpm video:correct-nonvideo-attendance            # counts, changes nothing
-  pnpm video:correct-nonvideo-attendance --apply    # corrects and audits
-  pnpm video:correct-nonvideo-attendance            # must now say 0
+  pnpm video:correct-nonvideo-attendance
+  pnpm video:correct-nonvideo-attendance --apply --confirm-host=<host it printed>
+  pnpm video:correct-nonvideo-attendance    # both counts must now be 0
   ```
 
-  It touches only sessions that are not online, `no_show` and `nobody`.
-  Only the sweep ever wrote `no_show`, and only online sessions have a
-  room, so every such row is one of the false records. The end time the
-  sweep stamped on a row that stays ended is left as it is. Put
-  `.env.local` back straight afterwards. Record the date and the count
-  here when it has been run.
+  The first part touches only sessions that are not online, `no_show`
+  and `nobody`. Only the sweep ever wrote `no_show`, and only online
+  sessions have a room, so every such row is one of the false records.
+  Put `.env.local` back straight afterwards. Record the date and the two
+  counts here when it has been run.
 
 - Not built: a way for the expert to mark that a phone or in-person
   session did not take place (a no-show flow for those modes); closing a

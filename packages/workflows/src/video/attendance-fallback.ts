@@ -1,4 +1,14 @@
-import { and, asc, eq, inArray, isNull, lte, ne, notInArray } from "drizzle-orm"
+import {
+  and,
+  asc,
+  eq,
+  inArray,
+  isNull,
+  lte,
+  ne,
+  notInArray,
+  or,
+} from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
 import {
   main,
@@ -290,13 +300,8 @@ export async function correctNonVideoNoShows(options: {
       .select({
         bookingId: main.sessions.bookingId,
         orgId: main.sessions.orgId,
-        sessionMode: main.sessions.sessionMode,
-        bookingStatus: main.bookings.status,
-        bookingStartsAt: main.bookings.startsAt,
-        bookingEndsAt: main.bookings.endsAt,
       })
       .from(main.sessions)
-      .innerJoin(main.bookings, eq(main.bookings.id, main.sessions.bookingId))
       .where(falseNoShow())
       .orderBy(asc(main.sessions.endsAt))
       .limit(options.limit ?? 500)
@@ -305,31 +310,55 @@ export async function correctNonVideoNoShows(options: {
 
   let corrected = 0
   for (const row of rows) {
-    const status = correctionFor({
-      bookingStatus: row.bookingStatus,
-      bookingEndsAt: row.bookingEndsAt,
-      now,
-    })
     await withAudit(
       { orgId: row.orgId, actorUserId: null },
       async (tx, ctx) => {
-        const updated = await tx
-          .update(main.sessions)
-          .set(
-            status === "scheduled"
-              ? {
-                  // Open again, at the time the booking now has.
-                  status,
-                  attendance: null,
-                  endedAt: null,
-                  startsAt: row.bookingStartsAt,
-                  endsAt: row.bookingEndsAt,
-                }
-              : { status, attendance: null }
+        // Read again inside the transaction, with the session row locked:
+        // the correction is decided from what the booking says now.
+        const [current] = await tx
+          .select({
+            sessionMode: main.sessions.sessionMode,
+            bookingStatus: main.bookings.status,
+            bookingStartsAt: main.bookings.startsAt,
+            bookingEndsAt: main.bookings.endsAt,
+          })
+          .from(main.sessions)
+          .innerJoin(
+            main.bookings,
+            eq(main.bookings.id, main.sessions.bookingId)
           )
           .where(and(eq(main.sessions.bookingId, row.bookingId), falseNoShow()))
-          .returning({ id: main.sessions.id })
-        // One emit per audited write; it says when nothing changed.
+          .for("update", { of: main.sessions })
+          .limit(1)
+        if (!current) {
+          // Corrected by another run in the meantime. One emit per
+          // audited write, so it says that nothing changed.
+          await ctx.emit({
+            entity: "session",
+            action: "attendance_corrected",
+            entityId: row.bookingId,
+            payload: { source: "operator_script", changed: false },
+          })
+          return
+        }
+        const status = correctionFor({
+          bookingStatus: current.bookingStatus,
+          bookingEndsAt: current.bookingEndsAt,
+          now,
+        })
+        await tx
+          .update(main.sessions)
+          .set({
+            status,
+            attendance: null,
+            // The session row takes the booking's time in every case: a
+            // session moved before the fix kept its old one.
+            startsAt: current.bookingStartsAt,
+            endsAt: current.bookingEndsAt,
+            ...(status === "scheduled" ? { endedAt: null } : {}),
+            ...(status === "ended" ? { endedAt: current.bookingEndsAt } : {}),
+          })
+          .where(and(eq(main.sessions.bookingId, row.bookingId), falseNoShow()))
         await ctx.emit({
           entity: "session",
           action: "attendance_corrected",
@@ -337,17 +366,115 @@ export async function correctNonVideoNoShows(options: {
           payload: {
             source: "operator_script",
             reason: "not_a_video_session",
-            sessionMode: row.sessionMode,
+            sessionMode: current.sessionMode,
             from: { status: "no_show", attendance: "nobody" },
             to: { status, attendance: null },
-            changed: updated.length > 0,
+            startsAt: current.bookingStartsAt.toISOString(),
+            endsAt: current.bookingEndsAt.toISOString(),
+            changed: true,
           },
         })
-        if (updated.length > 0) corrected += 1
+        corrected += 1
       }
     )
   }
   return { found: rows.length, corrected }
+}
+
+/**
+ * The second part of the same repair: phone and in-person sessions still
+ * open whose times no longer match their booking, because the member moved
+ * the booking before reschedules started moving the session row. The slot
+ * check and the calendar entry read these times. Each row takes its
+ * booking's times, in its own audited transaction. Without `apply` it only
+ * counts.
+ */
+export async function syncNonVideoSessionTimes(options: {
+  apply: boolean
+  limit?: number
+}): Promise<{ found: number; synced: number }> {
+  const stale = () =>
+    and(
+      ne(main.sessions.sessionMode, "online"),
+      inArray(main.sessions.status, [...OPEN_SESSION_STATUSES]),
+      or(
+        ne(main.sessions.startsAt, main.bookings.startsAt),
+        ne(main.sessions.endsAt, main.bookings.endsAt)
+      )
+    )
+  const rows = await withPlatformAdminContext(async (tx) =>
+    tx
+      .select({
+        bookingId: main.sessions.bookingId,
+        orgId: main.sessions.orgId,
+      })
+      .from(main.sessions)
+      .innerJoin(main.bookings, eq(main.bookings.id, main.sessions.bookingId))
+      .where(stale())
+      .orderBy(asc(main.sessions.endsAt))
+      .limit(options.limit ?? 500)
+  )
+  if (!options.apply) return { found: rows.length, synced: 0 }
+
+  let synced = 0
+  for (const row of rows) {
+    await withAudit(
+      { orgId: row.orgId, actorUserId: null },
+      async (tx, ctx) => {
+        const [current] = await tx
+          .select({
+            startsAt: main.sessions.startsAt,
+            endsAt: main.sessions.endsAt,
+            bookingStartsAt: main.bookings.startsAt,
+            bookingEndsAt: main.bookings.endsAt,
+          })
+          .from(main.sessions)
+          .innerJoin(
+            main.bookings,
+            eq(main.bookings.id, main.sessions.bookingId)
+          )
+          .where(and(eq(main.sessions.bookingId, row.bookingId), stale()))
+          .for("update", { of: main.sessions })
+          .limit(1)
+        if (!current) {
+          await ctx.emit({
+            entity: "session",
+            action: "updated",
+            entityId: row.bookingId,
+            payload: { source: "operator_script", changed: false },
+          })
+          return
+        }
+        await tx
+          .update(main.sessions)
+          .set({
+            startsAt: current.bookingStartsAt,
+            endsAt: current.bookingEndsAt,
+          })
+          .where(eq(main.sessions.bookingId, row.bookingId))
+        await ctx.emit({
+          entity: "session",
+          action: "updated",
+          entityId: row.bookingId,
+          payload: {
+            source: "operator_script",
+            reason: "times_follow_booking",
+            from: {
+              startsAt: current.startsAt.toISOString(),
+              endsAt: current.endsAt.toISOString(),
+            },
+            to: {
+              startsAt: current.bookingStartsAt.toISOString(),
+              endsAt: current.bookingEndsAt.toISOString(),
+            },
+            changed: true,
+          },
+        })
+        synced += 1
+      }
+    )
+  }
+  return { found: rows.length, synced }
 }
 
 function falseNoShow() {
