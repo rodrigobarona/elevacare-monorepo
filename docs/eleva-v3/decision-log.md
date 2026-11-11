@@ -119,6 +119,10 @@ Each entry should include:
   where cancellation_reason like 'expert_decline: %';
   ```
 
+  Run on 2026-11-11 on production (after Neon restore branch
+  `restore/pre-operator-fixes-2026-11-11`): the count was 0, so the
+  update was not needed and nothing was changed.
+
 - Not built: a limit on how many requests an expert may decline; the
   cancellation reason and time in the member's data export; one shared
   dialog for "decline" and "cancel session" (they are two copies of the
@@ -201,6 +205,12 @@ Each entry should include:
   sessions have a room, so every such row is one of the false records.
   Put `.env.local` back straight afterwards. Record the date and the two
   counts here when it has been run.
+
+  Run on 2026-11-11 on production, with this change live (deployment of
+  `38f64b9e`): false no-shows 0, open sessions with an old time 0.
+  `--apply` had nothing to change and was not run. (The database URL was
+  given to the script through the environment, not by editing
+  `.env.local`.)
 
 - Not built: a way for the expert to mark that a phone or in-person
   session did not take place (a no-show flow for those modes); closing a
@@ -479,6 +489,14 @@ Each entry should include:
   deploy; it removes the twice-daily QStash schedule for the drainer.
   Until then the job simply also runs twice a day. Add
   `neon-branch-migrate-and-rls` to the required checks on `main`.
+  Done on 2026-11-11: production logs showed the hourly tick answering
+  2xx six hours out of six, the outbox had nothing pending, and only the
+  drainer's QStash schedule was deleted (the four payout and
+  reconciliation schedules were left as they were, so their bearer
+  secret did not change). `neon-branch-migrate-and-rls`, `i18n-parity`
+  and `CodeRabbit` (the CodeRabbit app's check) are now required on
+  `main`; a neutral CodeRabbit result (a skipped review) passes, a
+  cancelled one has to be re-run.
 - Not built: the member's own view of who read their records; an access
   view for experts; per-day grouping of an expert's own reads; reads of
   session files and of the CRM (they have their own paths and are not
@@ -559,7 +577,8 @@ Each entry should include:
   with
   `update sessions set status = 'scheduled', attendance = null, ended_at = null where ends_at > now() and status in ('ended', 'no_show') and ended_at < ends_at`
   and record the number of rows changed here. Past sessions keep the
-  record they were given.
+  record they were given. Run on 2026-11-11 on production: 0 future
+  sessions matched, so the update was not needed and nothing was changed.
 - Not proven: Daily's real timing and ordering of `meeting.ended` and
   `meeting.started` on staging with two browsers (leave early, rejoin,
   finish).
