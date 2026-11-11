@@ -38,35 +38,53 @@ Each entry should include:
   before the 15-minute window shows a waiting room with when joining
   opens.
 - Before: the join page answered an early visit with "Could not join" and
-  a "Try again" button, and said the same after the session was over.
-- Now, for members, guests and experts (one `WaitingRoom` in
-  `@eleva/video`):
-  - before joining opens: "Your session opens at 09:45", the start time
-    in the person's local time, a countdown in the last hour, a line on
-    getting ready, and the call opening by itself. The countdown follows
-    the server's clock, so a wrong device clock cannot open it early or
-    late;
-  - as it opens: up to five quiet tries spread over about 40 seconds
-    (the first one staggered), also while the room is still being made;
-    then a "Try again" button;
-  - after joining closes (30 minutes after the booked end): "This session
-    has ended".
-- `SESSION_NOT_OPEN` from `POST /sessions/{bookingId}/join` now also
-  carries `closesAt` and `now` (server time), next to `startsAt` and
-  `opensAt`. It is still only answered to a participant or a valid join
-  grant.
+  a "Try again" button, and said the same, or "This join link is invalid",
+  after the session was over.
+- Now, for members, guests and experts (one `WaitingRoom` and one
+  `SessionClosed` in `@eleva/video`):
+  - before joining opens: "Your session starts at 10:00", "You can join
+    from 09:45", a countdown in the last hour (also in the tab title), a
+    line on getting ready and what is and is not recorded. More than an
+    hour ahead it says to come back with the same link. The countdown
+    follows the server's clock, so a wrong device clock cannot open it
+    early or late;
+  - as it opens: the camera check shows by itself, only while the page is
+    in view (the camera preview never starts in a tab nobody is looking
+    at), and the person still chooses "Join session". Up to five quiet
+    tries over about 40 seconds, the first one staggered, also through a
+    room that is still being made, a dropped connection or a busy
+    server; then a "Try again" button that stays in place;
+  - once it is over: "This session has ended" with where to write
+    (support@eleva.care) and no "Try again". A cancelled or otherwise
+    inactive session says "This session is not active" the same way.
+- API: `POST /sessions/{bookingId}/join` answers `SESSION_ENDED` (410)
+  when joining has closed, when the session was completed, ended or
+  marked no-show after its booked start, and for a join grant that Eleva
+  signed for this booking but is past its end (the signature is checked
+  first; a forged or older link still gets `INVALID_GRANT` with no
+  detail). `SESSION_NOT_OPEN` now means only "not yet" and also carries
+  `closesAt` and `now` (server time). Both are answered only to a
+  participant or the holder of a genuine grant.
 - Members and guests see the urgent-help note under the waiting room and
   under "Could not join" (PRIV2-03: the join page was the missing
-  surface). Experts do not.
-- Guest join page: it carries the Eleva logo, and its back button says
-  "Go to Eleva" and loads the public home page. It used to say "Back to
-  session" and point at a Space named "home".
-- Not built: a camera and microphone check in the waiting room; showing
-  the expert's name or photo while waiting (the join answer carries no
-  names before the window opens, on purpose); a browser notification when
-  the session opens.
-- Not proven: two real browsers waiting and entering on staging; the
-  screenshots and recording use a mocked API answer.
+  surface). Experts do not, and nobody does once the session has ended.
+- Guest join page: it carries the Eleva logo, linked to the public home
+  page with no referrer (the address holds the join grant), and has no
+  back button while waiting. Elsewhere its back button says "Go to
+  Eleva"; it used to say "Back to session" and point at a Space named
+  "home".
+- Not built: a camera and microphone check inside the waiting room;
+  showing the expert's name or photo while waiting (the join answer
+  carries no names before the window opens, on purpose); a browser
+  notification when the session opens; a way to tell support from the
+  call screen that the other person never arrived (today: the email
+  address on the ended screen, and terms section 7); keying the join rate
+  limit on the booking instead of the visitor's network, so many people
+  behind one network do not share ten requests a minute.
+- Not proven: two real browsers waiting and entering on staging, and a
+  real expired link. `pnpm e2e:waiting-room` proves the page against a
+  mocked API answer (early, opening, failed tries, ended); it is not in
+  CI because CI does not run the member app.
 
 ### 2026-11-11: Every read of a session record is logged, and the log ships every hour (active)
 

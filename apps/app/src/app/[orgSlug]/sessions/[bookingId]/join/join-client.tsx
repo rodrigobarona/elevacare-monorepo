@@ -39,7 +39,7 @@ export function JoinClient({
       labels={labels}
       backHref={backHref}
       showNotesSlot={showNotesSlot}
-      aside={<UrgentHelp />}
+      aside={<UrgentHelp className="rounded-3xl p-6" />}
     />
   )
 }

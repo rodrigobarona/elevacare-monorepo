@@ -62,6 +62,16 @@ describe("readJoinWindow", () => {
     ).toBeNull()
   })
 
+  it("refuses dates no session could have", () => {
+    expect(
+      readJoinWindow({ ...details, startsAt: "+275760-09-13T00:00:00.000Z" }, 0)
+    ).toBeNull()
+    // An absurd server time is ignored: the device clock is used as it is.
+    expect(
+      windowAt(details.now, { now: "1970-01-01T00:00:00.000Z" }).skewMs
+    ).toBe(0)
+  })
+
   it("ignores a close time that is not after the start", () => {
     expect(
       windowAt(details.now, { closesAt: details.opensAt }).closesAt
@@ -103,9 +113,9 @@ describe("minutesUntilOpen", () => {
 
 describe("autoJoinDelay", () => {
   it("spreads the first try and then backs off", () => {
-    expect(autoJoinDelay(0, () => 0)).toBe(500)
-    expect(autoJoinDelay(0, () => 0.999)).toBe(1_998)
-    expect(autoJoinDelay(1)).toBe(3_000)
+    expect(autoJoinDelay(0)).toBe(500)
+    expect(autoJoinDelay(0, 0.999)).toBe(1_998)
+    expect(autoJoinDelay(1, 0.999)).toBe(3_000)
     expect(autoJoinDelay(4)).toBe(20_000)
   })
 

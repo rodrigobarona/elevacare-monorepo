@@ -21,13 +21,16 @@ export type JoinWindow = {
 
 export type WaitingPhase = "early" | "opening" | "ended"
 
-/** setTimeout clamps delays above 2^31-1 ms to 0. */
-export const MAX_TIMEOUT_MS = 2_147_483_647
+/** Times outside this range are treated as a broken answer, not shown. */
+const EARLIEST = Date.UTC(2020, 0, 1)
+const LATEST = Date.UTC(2100, 0, 1)
 
 function parse(value: string | undefined): number | null {
   if (!value) return null
   const time = Date.parse(value)
-  return Number.isFinite(time) ? time : null
+  return Number.isFinite(time) && time >= EARLIEST && time <= LATEST
+    ? time
+    : null
 }
 
 /** Read the `SESSION_NOT_OPEN` details; `null` when they cannot be used. */
@@ -78,20 +81,26 @@ export function minutesUntilOpen(
 }
 
 /**
- * Pauses between automatic tries once joining should be open. The first
- * try is spread over a second and a half so two people (and many sessions
- * on the hour) do not all ask at the same instant. After the last pause
- * the screen offers a button instead of asking again.
+ * Pauses between automatic tries once joining should be open. After the
+ * last one the screen offers a button instead of asking again.
  */
 export const AUTO_JOIN_PAUSES_MS = [500, 3_000, 6_000, 12_000, 20_000] as const
 
-export function autoJoinDelay(
-  attempt: number,
-  random: () => number = Math.random
-): number | null {
+/** The first try is spread over this long, so not everyone asks at once. */
+export const AUTO_JOIN_SPREAD_MS = 1_500
+
+/**
+ * Pause before automatic try number `attempt` (from 0), or `null` when
+ * the tries are used up. `spread` is a number in [0, 1) drawn once per
+ * waiting room: it staggers the first try of the two people in a session,
+ * and of the many sessions that open on the hour.
+ */
+export function autoJoinDelay(attempt: number, spread = 0): number | null {
   const pause = AUTO_JOIN_PAUSES_MS[attempt]
   if (pause === undefined) return null
-  return attempt === 0 ? pause + Math.floor(random() * 1_500) : pause
+  return attempt === 0
+    ? pause + Math.floor(spread * AUTO_JOIN_SPREAD_MS)
+    : pause
 }
 
 /** True when joining opens on a later calendar day in the viewer's zone. */

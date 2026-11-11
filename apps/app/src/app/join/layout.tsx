@@ -15,7 +15,12 @@ export default function PublicJoinLayout({
   return (
     <>
       <header className="mx-auto max-w-4xl px-4 pt-6">
-        <a href={publicHomeUrl()} className="inline-flex rounded-md">
+        <a
+          href={publicHomeUrl()}
+          // The page address carries the join grant: never pass it on.
+          referrerPolicy="no-referrer"
+          className="inline-flex rounded-md"
+        >
           <Logo className="h-6" />
         </a>
       </header>

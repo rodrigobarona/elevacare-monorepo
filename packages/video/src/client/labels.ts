@@ -1,6 +1,7 @@
 export type ElevaCallErrorCode =
   | "SESSION_NOT_OPEN"
   | "SESSION_NOT_ACTIVE"
+  | "SESSION_ENDED"
   | "NOT_A_PARTICIPANT"
   | "ROOM_NOT_READY"
   | "INVALID_GRANT"
@@ -82,17 +83,25 @@ export type ElevaCallLabels = {
   overtimeBody: (closesAt: string) => string
   /** BCP 47 locale for the dates and times these screens show. */
   timeLocale: string | undefined
+  /** Where "write to us" lines point. */
+  supportEmail: string
   waitingRoomTitle: (time: string) => string
   waitingRoomTitleLater: (dateTime: string) => string
-  waitingRoomStarts: (time: string) => string
+  waitingRoomJoinFrom: (time: string) => string
   waitingRoomKeepOpen: string
+  waitingRoomComeBack: string
   waitingRoomCountdown: (minutes: number) => string
   waitingRoomSoon: string
   waitingRoomOpening: string
+  waitingRoomOpened: string
   waitingRoomTip: string
+  waitingRoomPrivacy: string
   waitingRoomManual: string
   endedTitle: string
   endedBody: string
+  notActiveTitle: string
+  notActiveBody: string
+  closedHelp: (email: string) => string
   errors: Record<ElevaCallErrorCode, string>
 }
 
@@ -110,7 +119,7 @@ export function languageDisplayName(code: string, locale?: string): string {
 
 export function elevaCallLabels(
   t: (key: string, values?: Record<string, string | number>) => string,
-  options: { locale?: string } = {}
+  options: { locale?: string; supportEmail?: string } = {}
 ): ElevaCallLabels {
   return {
     callPrivacy: t("callPrivacy"),
@@ -187,21 +196,29 @@ export function elevaCallLabels(
     overtimeTitle: t("overtimeTitle"),
     overtimeBody: (closesAt) => t("overtimeBody", { closesAt }),
     timeLocale: options.locale,
+    supportEmail: options.supportEmail ?? "support@eleva.care",
     waitingRoomTitle: (time) => t("waitingRoomTitle", { time }),
     waitingRoomTitleLater: (dateTime) =>
       t("waitingRoomTitleLater", { dateTime }),
-    waitingRoomStarts: (time) => t("waitingRoomStarts", { time }),
+    waitingRoomJoinFrom: (time) => t("waitingRoomJoinFrom", { time }),
     waitingRoomKeepOpen: t("waitingRoomKeepOpen"),
+    waitingRoomComeBack: t("waitingRoomComeBack"),
     waitingRoomCountdown: (minutes) => t("waitingRoomCountdown", { minutes }),
     waitingRoomSoon: t("waitingRoomSoon"),
     waitingRoomOpening: t("waitingRoomOpening"),
+    waitingRoomOpened: t("waitingRoomOpened"),
     waitingRoomTip: t("waitingRoomTip"),
+    waitingRoomPrivacy: t("waitingRoomPrivacy"),
     waitingRoomManual: t("waitingRoomManual"),
     endedTitle: t("endedTitle"),
     endedBody: t("endedBody"),
+    notActiveTitle: t("notActiveTitle"),
+    notActiveBody: t("notActiveBody"),
+    closedHelp: (email) => t("closedHelp", { email }),
     errors: {
       SESSION_NOT_OPEN: t("errors.SESSION_NOT_OPEN"),
       SESSION_NOT_ACTIVE: t("errors.SESSION_NOT_ACTIVE"),
+      SESSION_ENDED: t("errors.SESSION_ENDED"),
       NOT_A_PARTICIPANT: t("errors.NOT_A_PARTICIPANT"),
       ROOM_NOT_READY: t("errors.ROOM_NOT_READY"),
       INVALID_GRANT: t("errors.INVALID_GRANT"),
@@ -236,6 +253,7 @@ export function joinErrorCode(err: unknown): ElevaCallErrorCode {
     if (
       code === "SESSION_NOT_OPEN" ||
       code === "SESSION_NOT_ACTIVE" ||
+      code === "SESSION_ENDED" ||
       code === "NOT_A_PARTICIPANT" ||
       code === "ROOM_NOT_READY" ||
       code === "INVALID_GRANT"

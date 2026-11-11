@@ -95,7 +95,8 @@ function JoinClient({
       labels={labels}
       backHref={backHref}
       showNotesSlot={false}
-      aside={<UrgentHelp />}
+      aside={<UrgentHelp className="rounded-3xl p-6" />}
+      showBackWhileWaiting={false}
     />
   )
 }

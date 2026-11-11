@@ -14,12 +14,14 @@ import {
   mintMeetingToken,
   tokenExpUnix,
 } from "@eleva/video"
-import { verifyJoinGrant, type JoinGrantRole } from "@eleva/video/join-grant"
+import { checkJoinGrant, type JoinGrantRole } from "@eleva/video/join-grant"
 
 export type SessionJoinErrorCode =
   | "NOT_A_PARTICIPANT"
   | "SESSION_NOT_ACTIVE"
   | "SESSION_NOT_OPEN"
+  /** Held and over: joining has closed, or the session was marked done. */
+  | "SESSION_ENDED"
   | "ROOM_NOT_READY"
   | "INVALID_GRANT"
 
@@ -40,11 +42,22 @@ export class SessionJoinError extends Error {
   }
 }
 
+const FINISHED_STATUSES = new Set(["completed", "ended", "no_show"])
+
 export function classifyJoinStatus(
-  status: string
-): { ok: true } | { error: "SESSION_NOT_ACTIVE" | "ROOM_NOT_READY" } {
+  status: string,
+  /** Whether the booked start has passed; defaults to no. */
+  started = false
+):
+  | { ok: true }
+  | { error: "SESSION_NOT_ACTIVE" | "SESSION_ENDED" | "ROOM_NOT_READY" } {
   if (status === "scheduled" || status === "live") return { ok: true }
   if (status === "room_unresolved") return { error: "ROOM_NOT_READY" }
+  // "Ended" is only said once the booked start has passed, so a status
+  // set too early never tells someone their session is already over.
+  if (started && FINISHED_STATUSES.has(status)) {
+    return { error: "SESSION_ENDED" }
+  }
   return { error: "SESSION_NOT_ACTIVE" }
 }
 
@@ -52,11 +65,12 @@ export function classifyJoinWindow(
   now: Date,
   startsAt: Date,
   endsAt: Date
-): { ok: true } | { error: "SESSION_NOT_OPEN" } {
+): { ok: true } | { error: "SESSION_NOT_OPEN" | "SESSION_ENDED" } {
   const openAt = startsAt.getTime() - JOIN_LEAD_MS
   const closeAt = endsAt.getTime() + JOIN_TRAIL_MS
   const t = now.getTime()
-  if (t < openAt || t > closeAt) return { error: "SESSION_NOT_OPEN" }
+  if (t < openAt) return { error: "SESSION_NOT_OPEN" }
+  if (t > closeAt) return { error: "SESSION_ENDED" }
   return { ok: true }
 }
 
@@ -129,15 +143,22 @@ export async function joinSessionFromGrant(
   },
   deps: JoinSessionDeps = {}
 ): Promise<JoinSessionResult> {
-  const claims = await verifyJoinGrant(input.grant, { now: input.now })
-  if (!claims || claims.bookingId !== input.bookingId) {
+  const check = await checkJoinGrant(input.grant, { now: input.now })
+  if (
+    check.status === "invalid" ||
+    check.claims.bookingId !== input.bookingId
+  ) {
     throw new SessionJoinError("INVALID_GRANT")
   }
+  const { claims } = check
+  // Also refuses a link from before a reschedule (INVALID_GRANT), so only
+  // the latest link of a real booking is ever told "ended".
   const identity = await resolveGrantJoinIdentity(
     input.bookingId,
     claims.role,
     claims.scheduleRevision
   )
+  if (check.status === "expired") throw new SessionJoinError("SESSION_ENDED")
   return joinSession(
     {
       bookingId: input.bookingId,
@@ -294,7 +315,10 @@ export async function joinSession(
       })
   if ("error" in caller) throw new SessionJoinError(caller.error)
 
-  const status = classifyJoinStatus(row.session.status)
+  const status = classifyJoinStatus(
+    row.session.status,
+    now.getTime() >= row.session.startsAt.getTime()
+  )
   if ("error" in status) throw new SessionJoinError(status.error)
 
   const window = classifyJoinWindow(
@@ -304,8 +328,10 @@ export async function joinSession(
   )
   if ("error" in window) {
     throw new SessionJoinError(
-      "SESSION_NOT_OPEN",
-      joinWindowDetails(now, row.session.startsAt, row.session.endsAt)
+      window.error,
+      window.error === "SESSION_NOT_OPEN"
+        ? joinWindowDetails(now, row.session.startsAt, row.session.endsAt)
+        : undefined
     )
   }
 

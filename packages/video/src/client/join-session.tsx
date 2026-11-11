@@ -11,7 +11,7 @@ import {
   type ElevaCallLabels,
 } from "./labels"
 import { readJoinWindow, type JoinWindow } from "../waiting-room"
-import { WaitingRoom, type OpenAttempt } from "./waiting-room"
+import { SessionClosed, WaitingRoom, type OpenAttempt } from "./waiting-room"
 
 export type JoinSessionProps = {
   join: () => Promise<{
@@ -31,6 +31,8 @@ export type JoinSessionProps = {
    * during the call (members: where to get urgent help).
    */
   aside?: ReactNode
+  /** Guests: no back button while waiting; the logo already links home. */
+  showBackWhileWaiting?: boolean
 }
 
 type JoinResult = Awaited<ReturnType<JoinSessionProps["join"]>>
@@ -42,6 +44,7 @@ export function JoinSession({
   showNotesSlot = false,
   records,
   aside,
+  showBackWhileWaiting = true,
 }: JoinSessionProps) {
   const [creds, setCreds] = useState<{
     roomUrl: string
@@ -55,6 +58,9 @@ export function JoinSession({
   const [waiting, setWaiting] = useState<JoinWindow | null>(null)
   const [loading, setLoading] = useState(true)
   const [left, setLeft] = useState(false)
+  /** The call opened from the waiting room: say so and move focus to it. */
+  const [openedFromWaiting, setOpenedFromWaiting] = useState(false)
+  const callRef = useRef<HTMLDivElement>(null)
   const reqId = useRef(0)
 
   const enter = useCallback((result: JoinResult) => {
@@ -74,7 +80,9 @@ export function JoinSession({
   const refuse = useCallback((err: unknown): ElevaCallErrorCode => {
     const code = joinErrorCode(err)
     const details = code === "SESSION_NOT_OPEN" ? joinErrorWindow(err) : {}
-    setWaiting(readJoinWindow(details, Date.now()))
+    setWaiting(
+      code === "SESSION_NOT_OPEN" ? readJoinWindow(details, Date.now()) : null
+    )
     setWindowHint(details.startsAt ? formatJoinStart(details.startsAt) : null)
     setError(code)
     setLoading(false)
@@ -102,12 +110,20 @@ export function JoinSession({
     const id = ++reqId.current
     try {
       const result = await join()
-      if (id === reqId.current) enter(result)
+      if (id === reqId.current) {
+        setOpenedFromWaiting(true)
+        enter(result)
+      }
       return "joined"
     } catch (err) {
       if (id !== reqId.current) return "failed"
-      // The room is made as the session opens; keep waiting and ask again.
-      if (joinErrorCode(err) === "ROOM_NOT_READY") return "not_open"
+      const code = joinErrorCode(err)
+      // Keep waiting and ask again: the room is made as the session opens
+      // (ROOM_NOT_READY), and a dropped connection, a busy server or a
+      // rate limit (internal) usually clears within the next pause.
+      if (code === "ROOM_NOT_READY") return "not_open"
+      if (code === "internal") return "failed"
+      // Anything else is final, or re-times the wait (SESSION_NOT_OPEN).
       return refuse(err) === "SESSION_NOT_OPEN" ? "not_open" : "failed"
     }
   }, [join, enter, refuse])
@@ -121,6 +137,19 @@ export function JoinSession({
   useEffect(() => {
     load()
   }, [load])
+
+  // Someone waiting may be looking elsewhere when the call opens: move
+  // focus to it, and let the tab title say so until they leave the page.
+  const opened = openedFromWaiting && Boolean(creds) && !left
+  useEffect(() => {
+    if (!opened) return
+    callRef.current?.focus()
+    const previous = document.title
+    document.title = labels.waitingRoomOpened
+    return () => {
+      document.title = previous
+    }
+  }, [opened, labels.waitingRoomOpened])
 
   if (left) {
     return (
@@ -147,8 +176,20 @@ export function JoinSession({
         window={waiting}
         labels={labels}
         backHref={backHref}
+        showBack={showBackWhileWaiting}
         onOpen={tryOpen}
         aside={aside}
+      />
+    )
+  }
+
+  // Over or not active: asking again cannot help, so no "try again".
+  if (error === "SESSION_ENDED" || error === "SESSION_NOT_ACTIVE") {
+    return (
+      <SessionClosed
+        kind={error === "SESSION_ENDED" ? "ended" : "not_active"}
+        labels={labels}
+        backHref={backHref}
       />
     )
   }
@@ -178,18 +219,23 @@ export function JoinSession({
   }
 
   return (
-    <ElevaCall
-      roomUrl={creds.roomUrl}
-      token={creds.token}
-      labels={labels}
-      showNotesSlot={showNotesSlot}
-      records={records}
-      backHref={backHref}
-      callWindow={creds.callWindow}
-      transcriptionAllowed={creds.transcriptionAllowed}
-      sessionLanguage={creds.sessionLanguage}
-      onLeft={() => setLeft(true)}
-    />
+    <div ref={callRef} tabIndex={-1} className="outline-none">
+      <p role="status" className="sr-only">
+        {opened ? labels.waitingRoomOpened : null}
+      </p>
+      <ElevaCall
+        roomUrl={creds.roomUrl}
+        token={creds.token}
+        labels={labels}
+        showNotesSlot={showNotesSlot}
+        records={records}
+        backHref={backHref}
+        callWindow={creds.callWindow}
+        transcriptionAllowed={creds.transcriptionAllowed}
+        sessionLanguage={creds.sessionLanguage}
+        onLeft={() => setLeft(true)}
+      />
+    </div>
   )
 }
 
