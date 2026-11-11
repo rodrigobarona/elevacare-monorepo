@@ -6,7 +6,7 @@ import {
 import { cancelBookingByExpert, ExpertCancelError } from "@eleva/scheduling"
 import { getExpertProfileForOrg } from "@eleva/db"
 import { corsHeaders } from "@/lib/cors"
-import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
+import { apiAuthFailure, requireRevocableApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -34,7 +34,9 @@ export async function POST(request: Request, { params }: Params) {
 
   let session
   try {
-    session = await requireApiCapability(request, "events:manage")
+    // It moves money (a full refund): only a session or an API key that
+    // can be revoked may do it, never a short-lived token.
+    session = await requireRevocableApiCapability(request, "events:manage")
   } catch (err) {
     const authFailure = apiAuthFailure(err, headers)
     if (authFailure) return authFailure
@@ -56,9 +58,16 @@ export async function POST(request: Request, { params }: Params) {
     )
   }
 
-  const parsed = CancelExpertBookingRequestSchema.safeParse(
-    await request.json().catch(() => ({}))
-  )
+  // No body is fine. A body that cannot be read is not: nothing is
+  // cancelled on a request we did not understand.
+  const body = await readOptionalJson(request)
+  if (!body.ok) {
+    return secureJson(
+      { error: "validation", message: "body is not valid JSON" },
+      { status: 400, headers }
+    )
+  }
+  const parsed = CancelExpertBookingRequestSchema.safeParse(body.value)
   if (!parsed.success) {
     return secureJson(
       { error: "validation", issues: parsed.error.issues },
@@ -83,12 +92,16 @@ export async function POST(request: Request, { params }: Params) {
       expertProfileId: profile.id,
       bookingId: id,
       reason: parsed.data.reason,
+      expectedStartsAt: parsed.data.expectedStartsAt
+        ? new Date(parsed.data.expectedStartsAt)
+        : undefined,
     })
     return secureJson(
       CancelExpertBookingResponseSchema.parse({
         bookingId: id,
         status: "cancelled",
         refundCents: result.refundCents,
+        alreadyCancelled: result.alreadyCancelled,
       }),
       { status: 200, headers }
     )
@@ -103,6 +116,14 @@ export async function POST(request: Request, { params }: Params) {
         case "TOO_LATE":
           return secureJson(
             { error: "TOO_LATE", message: "the session has already started" },
+            { status: 409, headers }
+          )
+        case "SESSION_CHANGED":
+          return secureJson(
+            {
+              error: "SESSION_CHANGED",
+              message: "the session was moved to another time",
+            },
             { status: 409, headers }
           )
         case "INVALID_STATUS":
@@ -121,6 +142,18 @@ export async function POST(request: Request, { params }: Params) {
     }
     logError("[expert/bookings/cancel] failed", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
+  }
+}
+
+async function readOptionalJson(
+  request: Request
+): Promise<{ ok: true; value: unknown } | { ok: false }> {
+  const text = await request.text()
+  if (text.trim() === "") return { ok: true, value: {} }
+  try {
+    return { ok: true, value: JSON.parse(text) }
+  } catch {
+    return { ok: false }
   }
 }
 

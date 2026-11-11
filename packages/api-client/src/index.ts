@@ -2174,6 +2174,11 @@ export type DeclineExpertBookingResponse = z.infer<
 export const CancelExpertBookingRequestSchema = z.object({
   /** Kept on the booking record; not sent to the member. */
   reason: z.string().trim().max(180).optional(),
+  /**
+   * The start time the caller saw. When given and the session has been
+   * moved since, nothing is cancelled and the answer is 409 SESSION_CHANGED.
+   */
+  expectedStartsAt: z.string().datetime().optional(),
 })
 
 export type CancelExpertBookingRequest = z.infer<
@@ -2185,6 +2190,8 @@ export const CancelExpertBookingResponseSchema = z.object({
   status: z.literal("cancelled"),
   /** What the member is refunded: everything not refunded before. */
   refundCents: z.number().int().nonnegative(),
+  /** True when it was cancelled before this call; nothing was done. */
+  alreadyCancelled: z.boolean(),
 })
 
 export type CancelExpertBookingResponse = z.infer<

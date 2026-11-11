@@ -40,9 +40,11 @@ Each entry should include:
   fell ill could only write to support while the member waited.
 - Decisions:
   - `POST /expert/bookings/{id}/cancel` (session or API key, capability
-    `events:manage`, rate limited, in the OpenAPI document). It cancels
-    a `confirmed` or `rescheduled` booking of the caller's own expert
-    profile that has not started. Another expert's booking answers 404.
+    `events:manage`, rate limited, in the OpenAPI document). Because it
+    moves money, short-lived tokens that cannot be revoked are refused.
+    It cancels a `confirmed` or `rescheduled` booking of the caller's
+    own expert profile that has not started. Another expert's booking
+    answers 404.
   - The member is refunded everything they paid and not yet got back,
     whatever the service's cancellation policy: that policy binds the
     member, not the expert. The refund is made by the existing refund
@@ -51,25 +53,45 @@ Each entry should include:
     in its payload (no new notification kind, no migration), so the
     calendar entry is removed and the video room closed as for any
     cancellation.
-  - Both people are told. The member's email says who cancelled, states
-    the refund, leaves the policy out and has a "Book a new time" button
-    to the expert's public profile. The expert's email confirms what
-    they did.
+  - Both people are told. The member's email says who cancelled in its
+    subject, says sorry, states the refund and when it usually arrives
+    (as the payments page does: the original payment method, usually 5
+    to 10 business days), leaves the policy out and has a "Book a new
+    time" button to the expert's public profile. The expert's email
+    confirms what they did.
   - In the expert calendar the session's sheet has "Cancel session". It
-    asks first, says what happens (the member is told and refunded, it
-    cannot be undone) and takes an optional reason.
+    asks first, names the session, says what happens (the member is
+    told and refunded, it cannot be undone, the time can be booked
+    again) and takes an optional reason.
   - The reason (180 characters) is kept on the booking as
     `expert_cancel: ...` and is not sent to the member. The form asks
     the expert to leave health details out.
-  - A second press, or a retry, answers the same with nothing more to
-    refund. If the member moved or cancelled first, nothing is changed
-    and the expert is told the session changed.
+  - The calendar sends the start time the expert was looking at. If the
+    member has moved the session since, nothing is cancelled (409
+    `SESSION_CHANGED`) and the calendar loads the week again. A booking
+    already cancelled (a second press, or the member cancelled first)
+    answers 200 with `alreadyCancelled`, refunds nothing more, and the
+    expert is told it was already cancelled.
   - Audit: `booking canceled` with reason `expert_cancel`, actor the
-    expert, refund 100%.
+    expert, refund 100% (no percentage for a free session).
 - Not built: cancelling after the start (that is a no-show, a separate
   flow); a confirmation step before declining a request; a count or
-  limit of expert cancellations; telling the member the reason; the
-  same action in the member list or the Today page; a help-center page.
+  limit of expert cancellations, and an alert on a burst of them (the
+  general limit of 60 requests a minute applies); telling the member
+  the reason; a text message at night for a cancellation at short
+  notice (quiet hours apply as for any cancellation); the same action
+  in the member list or the Today page; a help-center page.
+- Follow-ups (engineering, by the Phase 13 hardening pass):
+  - The reason shares the `cancellation_reason` column with the code,
+    unencrypted, as the decline note already does. Nothing reads it
+    yet, and deletion and retention do not clear it. Either fixed
+    choices instead of free text, or a column of its own covered by
+    retention and erasure.
+  - The refund-due and release-the-time block now exists three times
+    (member cancel, request decline, expert cancel). Extract one helper
+    the next time any of them changes.
+  - The kit's destructive button is below 4.5:1 in dark mode (computed
+    from tokens, not seen); it is shared, so it is a kit fix.
 - Not proven: the flow against a real payment (Stripe test mode on
   staging): cancel, refund arriving, both emails delivered, room closed.
   The screenshots stop at the confirmation dialog on purpose, so no

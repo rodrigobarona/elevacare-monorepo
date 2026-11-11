@@ -235,10 +235,16 @@ export async function sendBookingNotification(
     sessionJoinHref(event.type, booking, "member", gateway, mint),
     sessionJoinHref(event.type, booking, "expert", gateway, mint),
   ])
-  const title = titleForKind(event.type, memberView.t.booking)
+  // When the expert cancelled, the first thing the member reads (subject,
+  // push, text message) says who did, not just "cancelled".
+  const title = cancelledByExpert
+    ? memberView.t.booking.cancelledByExpertSubject(expertFirst)
+    : titleForKind(event.type, memberView.t.booking)
   const expertTitle = titleForKind(event.type, expertView.t.booking)
   // Member subjects name the expert: "Booking confirmed · Ana · Monday…".
-  const memberSubject = `${title} · ${expertFirst} · ${memberView.formattedDate}`
+  const memberSubject = cancelledByExpert
+    ? `${title} · ${memberView.formattedDate}`
+    : `${title} · ${expertFirst} · ${memberView.formattedDate}`
   const expertSubject = subjectForKind(
     event.type,
     expertView.t.subject,
@@ -692,7 +698,7 @@ function emailCopyForKind(
         return {
           heading: t.booking.cancelledTitle,
           subheading: isExpert
-            ? t.booking.expertCancelledByYouSubtitle
+            ? t.booking.expertCancelledByYouSubtitle(cancelled.refunded)
             : t.booking.cancelledByExpertSubtitle(
                 cancelled.expertName,
                 cancelled.refunded

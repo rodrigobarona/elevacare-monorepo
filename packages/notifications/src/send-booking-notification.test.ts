@@ -37,7 +37,9 @@ const {
       expertRequestedTitle: "New booking request",
       expertRequestedSubtitle: "A member asked",
       expertCancelledSubtitle: "Expert: cancelled",
-      expertCancelledByYouSubtitle: "Expert: you cancelled",
+      expertCancelledByYouSubtitle: (refunded: boolean) =>
+        `Expert: you cancelled${refunded ? ", refunded" : ""}`,
+      cancelledByExpertSubject: (expert: string) => `${expert} had to cancel`,
       cancelledByExpertSubtitle: (expert: string, refunded: boolean) =>
         `${expert} cancelled${refunded ? ", refunded" : ""}`,
       expertRescheduledSubtitle: "Expert: moved",
@@ -239,7 +241,13 @@ describe("sendBookingNotification", () => {
     // The member can book again from the expert's profile; the expert
     // gets no such button.
     expect(calls[0]?.rebookHref).toBe("https://eleva.care/anamota")
-    expect(calls[1]).toMatchObject({ subheading: "Expert: you cancelled" })
+    expect(calls[1]).toMatchObject({
+      subheading: "Expert: you cancelled, refunded",
+    })
+    // The subject and the short notice say who cancelled.
+    const memberSend = send.mock.calls[0]?.[0].ctx
+    expect(memberSend.title).toBe("Ana had to cancel")
+    expect(memberSend.subject).toMatch(/^Ana had to cancel · /)
     expect(calls[1]?.rebookHref).toBeUndefined()
     for (const call of calls) {
       expect(call.cancellationPolicyName).toBeUndefined()

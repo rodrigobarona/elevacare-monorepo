@@ -1,13 +1,22 @@
 import { and, eq, inArray } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
-import { getExpertBookingForApproval, main } from "@eleva/db"
+import {
+  getExpertBookingForApproval,
+  main,
+  type ExpertBookingApprovalRow,
+} from "@eleva/db"
 import { emitBookingNotificationEvent } from "./emit-domain-event"
 
 /** A session the expert can still cancel: confirmed, and not started. */
 const EXPERT_CANCELLABLE_STATUSES = new Set(["confirmed", "rescheduled"])
 const REASON_MAX_LENGTH = 180
 
-export type ExpertCancelErrorCode = "not_found" | "INVALID_STATUS" | "TOO_LATE"
+export type ExpertCancelErrorCode =
+  | "not_found"
+  | "INVALID_STATUS"
+  | "TOO_LATE"
+  /** The session is no longer at the time the expert was looking at. */
+  | "SESSION_CHANGED"
 
 export class ExpertCancelError extends Error {
   readonly code: ExpertCancelErrorCode
@@ -17,6 +26,13 @@ export class ExpertCancelError extends Error {
     this.name = "ExpertCancelError"
     this.code = code
   }
+}
+
+export type ExpertCancelResult = {
+  /** What the member is refunded by this call. */
+  refundCents: number
+  /** It was cancelled before this call (a second press, or the member did). */
+  alreadyCancelled: boolean
 }
 
 /**
@@ -36,20 +52,36 @@ export async function cancelBookingByExpert(input: {
   bookingId: string
   /** Kept on the booking record; not sent to the member. */
   reason?: string
+  /**
+   * The start the expert saw when they chose to cancel. A calendar left
+   * open can be stale: if the member has moved the session since, it is
+   * not cancelled at its new time behind the expert's back.
+   */
+  expectedStartsAt?: Date
   now?: Date
-}): Promise<{ refundCents: number }> {
+}): Promise<ExpertCancelResult> {
   const now = input.now ?? new Date()
-  const row = await getExpertBookingForApproval({
-    orgId: input.orgId,
-    expertProfileId: input.expertProfileId,
-    bookingId: input.bookingId,
-  })
+  const load = () =>
+    getExpertBookingForApproval({
+      orgId: input.orgId,
+      expertProfileId: input.expertProfileId,
+      bookingId: input.bookingId,
+    })
+  const row = await load()
   if (!row) throw new ExpertCancelError("not_found")
-  // Pressed twice, or two tabs: the second answer is the same, with
-  // nothing more to refund.
-  if (row.status === "cancelled") return { refundCents: 0 }
+  // Pressed twice, two tabs, or the member cancelled first: nothing more
+  // to do or to refund, and the caller is told so.
+  if (row.status === "cancelled") {
+    return { refundCents: 0, alreadyCancelled: true }
+  }
   if (!EXPERT_CANCELLABLE_STATUSES.has(row.status)) {
     throw new ExpertCancelError("INVALID_STATUS")
+  }
+  if (
+    input.expectedStartsAt &&
+    input.expectedStartsAt.getTime() !== row.startsAt.getTime()
+  ) {
+    throw new ExpertCancelError("SESSION_CHANGED")
   }
   if (row.startsAt.getTime() <= now.getTime()) {
     throw new ExpertCancelError("TOO_LATE")
@@ -60,6 +92,42 @@ export async function cancelBookingByExpert(input: {
       ? row.paymentAmountCents - (row.paymentRefundedCents ?? 0)
       : 0
 
+  try {
+    await writeCancellation(row, {
+      actorUserId: input.actorUserId,
+      reason: input.reason,
+      refundCents,
+      now,
+    })
+  } catch (err) {
+    // Lost a race with another press of the same button: same answer.
+    if (err instanceof ExpertCancelError && err.code === "INVALID_STATUS") {
+      const latest = await load()
+      if (latest?.status === "cancelled") {
+        return { refundCents: 0, alreadyCancelled: true }
+      }
+    }
+    throw err
+  }
+  return { refundCents, alreadyCancelled: false }
+}
+
+/**
+ * One transaction: the booking, the refund owed, the freed time, the event
+ * and the audit row are written together or not at all. Each update is
+ * guarded on what was read, so a change made meanwhile (the member moved or
+ * cancelled, a refund started) fails the guard and nothing is written.
+ */
+async function writeCancellation(
+  row: ExpertBookingApprovalRow,
+  input: {
+    actorUserId: string
+    reason?: string
+    refundCents: number
+    now: Date
+  }
+): Promise<void> {
+  const { refundCents, now } = input
   await withAudit(
     { orgId: row.orgId, actorUserId: input.actorUserId },
     async (tx, ctx) => {
@@ -74,12 +142,13 @@ export async function cancelBookingByExpert(input: {
         .where(
           and(
             eq(main.bookings.id, row.id),
+            eq(main.bookings.orgId, row.orgId),
+            eq(main.bookings.expertProfileId, row.expertProfileId),
             eq(main.bookings.status, row.status),
             eq(main.bookings.startsAt, row.startsAt)
           )
         )
         .returning({ id: main.bookings.id })
-      // Moved or cancelled by the member in the meantime.
       if (!updated) throw new ExpertCancelError("INVALID_STATUS")
 
       if (row.paymentId && refundCents > 0) {
@@ -132,14 +201,13 @@ export async function cancelBookingByExpert(input: {
         entityId: row.id,
         payload: {
           reason: "expert_cancel",
-          refundPercent: 100,
+          // Nothing was paid for a free session: no percentage to record.
+          ...(refundCents > 0 ? { refundPercent: 100 } : {}),
           refundCents,
         },
       })
     }
   )
-
-  return { refundCents }
 }
 
 /** `expert_cancel`, with the expert's own words after it when given. */

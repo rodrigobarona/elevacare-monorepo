@@ -70,6 +70,47 @@ describe("booking notification events", () => {
     ])
   })
 
+  it("says who cancelled, so the emails can, and only when it was the expert", async () => {
+    const inserts: Record<string, unknown>[] = []
+    const tx = {
+      insert: () => ({
+        values: (values: Record<string, unknown>) => {
+          inserts.push(values)
+          return {
+            onConflictDoNothing: () => ({
+              returning: async () =>
+                typeof values.type === "string" ? [{ id: "evt-1" }] : [],
+            }),
+          }
+        },
+      }),
+    }
+    const base = {
+      orgId: "00000000-0000-4000-8000-000000000001",
+      type: "booking.cancelled" as const,
+      bookingId: "00000000-0000-4000-8000-000000000002",
+      startsAt: new Date("2026-09-22T10:00:00.000Z"),
+      occurredAt: new Date("2026-09-21T10:00:00.000Z"),
+      refundCents: 6000,
+    }
+
+    await emitBookingNotificationEvent(tx as never, {
+      ...base,
+      cancelledBy: "expert",
+    })
+    expect(inserts[0]?.payload).toEqual({
+      bookingId: base.bookingId,
+      startsAt: "2026-09-22T10:00:00.000Z",
+      occurredAt: "2026-09-21T10:00:00.000Z",
+      refundCents: 6000,
+      cancelledBy: "expert",
+    })
+
+    inserts.length = 0
+    await emitBookingNotificationEvent(tx as never, base)
+    expect(inserts[0]?.payload).not.toHaveProperty("cancelledBy")
+  })
+
   it("stores scheduleRevision on a booking.rescheduled outbox row", async () => {
     const inserts: unknown[] = []
     const tx = {

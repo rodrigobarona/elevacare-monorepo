@@ -6,10 +6,12 @@ const translations = {
       expertCancelledSubtitle:
         "This session was cancelled. The time is free again in your calendar, and the attached invite removes it.",
       bookNewTimeCta: "Book a new time",
-      expertCancelledByYouSubtitle:
-        "You cancelled this session. The member is refunded in full and the time is free again. The attached invite removes it from your calendar.",
+      expertCancelledByYouSubtitle: (refunded: boolean) =>
+        `You cancelled this session.${refunded ? " The member is refunded in full." : ""} The member has been told and the time is free again.`,
+      cancelledByExpertSubject: (expert: string) =>
+        `${expert} had to cancel your session`,
       cancelledByExpertSubtitle: (expert: string, refunded: boolean) =>
-        `${expert} had to cancel this session.${refunded ? " You get a full refund of what you paid." : ""} You can book a new time whenever suits you. The attached invite removes this one from your calendar.`,
+        `${expert} had to cancel this session. We're sorry for the change.${refunded ? " You get a full refund of what you paid. It goes back to the way you paid, usually within 5 to 10 business days." : ""} You can book a new time whenever suits you.`,
       expertRescheduledSubtitle:
         "This session has a new time. The updated invite is attached.",
       expertReminder24hSubtitle: "You have a session in 24 hours.",
@@ -201,10 +203,12 @@ const translations = {
       expertCancelledSubtitle:
         "Esta sessão foi cancelada. O horário volta a estar livre no seu calendário, e o convite em anexo remove-a.",
       bookNewTimeCta: "Marcar novo horário",
-      expertCancelledByYouSubtitle:
-        "Cancelou esta sessão. O membro recebe o reembolso total e o horário volta a estar livre. O convite em anexo remove-a do seu calendário.",
+      expertCancelledByYouSubtitle: (refunded: boolean) =>
+        `Cancelou esta sessão.${refunded ? " O membro recebe o reembolso total." : ""} O membro foi avisado e o horário volta a estar livre.`,
+      cancelledByExpertSubject: (expert: string) =>
+        `${expert} teve de cancelar a sua sessão`,
       cancelledByExpertSubtitle: (expert: string, refunded: boolean) =>
-        `${expert} teve de cancelar esta sessão.${refunded ? " Recebe o reembolso total do que pagou." : ""} Pode marcar um novo horário quando quiser. O convite em anexo remove esta sessão do seu calendário.`,
+        `${expert} teve de cancelar esta sessão. Lamentamos a alteração.${refunded ? " Recebe o reembolso total do que pagou, pelo mesmo meio de pagamento, normalmente em 5 a 10 dias úteis." : ""} Pode marcar um novo horário quando quiser.`,
       expertRescheduledSubtitle:
         "Esta sessão tem um novo horário. O convite atualizado segue em anexo.",
       expertReminder24hSubtitle: "Tem uma sessão daqui a 24 horas.",
@@ -399,10 +403,12 @@ const translations = {
       expertCancelledSubtitle:
         "Esta sesión se ha cancelado. El horario vuelve a estar libre en su calendario, y la invitación adjunta la elimina.",
       bookNewTimeCta: "Reservar nuevo horario",
-      expertCancelledByYouSubtitle:
-        "Ha cancelado esta sesión. El miembro recibe el reembolso íntegro y el horario vuelve a estar libre. La invitación adjunta la elimina de su calendario.",
+      expertCancelledByYouSubtitle: (refunded: boolean) =>
+        `Ha cancelado esta sesión.${refunded ? " El miembro recibe el reembolso íntegro." : ""} Hemos avisado al miembro y el horario vuelve a estar libre.`,
+      cancelledByExpertSubject: (expert: string) =>
+        `${expert} ha tenido que cancelar tu sesión`,
       cancelledByExpertSubtitle: (expert: string, refunded: boolean) =>
-        `${expert} ha tenido que cancelar esta sesión.${refunded ? " Recibes el reembolso íntegro de lo que pagaste." : ""} Puedes reservar un nuevo horario cuando quieras. La invitación adjunta elimina esta sesión de tu calendario.`,
+        `${expert} ha tenido que cancelar esta sesión. Sentimos el cambio.${refunded ? " Recibes el reembolso íntegro de lo que pagaste, por el mismo medio de pago, normalmente en 5 a 10 días hábiles." : ""} Puedes reservar un nuevo horario cuando quieras.`,
       expertRescheduledSubtitle:
         "Esta sesión tiene un nuevo horario. La invitación actualizada va adjunta.",
       expertReminder24hSubtitle: "Tiene una sesión dentro de 24 horas.",
@@ -601,7 +607,8 @@ export interface EmailTranslations {
     greeting: (name: string) => string
     expertCancelledSubtitle: string
     bookNewTimeCta: string
-    expertCancelledByYouSubtitle: string
+    expertCancelledByYouSubtitle: (refunded: boolean) => string
+    cancelledByExpertSubject: (expert: string) => string
     cancelledByExpertSubtitle: (expert: string, refunded: boolean) => string
     expertRescheduledSubtitle: string
     expertReminder24hSubtitle: string

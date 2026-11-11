@@ -2,12 +2,20 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const cancelBookingByExpert = vi.fn()
 const getExpertProfileForOrg = vi.fn()
-const requireApiCapability = vi.fn()
+const requireRevocableApiCapability = vi.fn()
+const apiAuthFailure = vi.fn()
+const applyRateLimit = vi.fn()
 
 // Hoisted with the mocks below, which need the class.
 const { ExpertCancelError } = vi.hoisted(() => ({
   ExpertCancelError: class extends Error {
-    constructor(readonly code: "not_found" | "INVALID_STATUS" | "TOO_LATE") {
+    constructor(
+      readonly code:
+        | "not_found"
+        | "INVALID_STATUS"
+        | "TOO_LATE"
+        | "SESSION_CHANGED"
+    ) {
       super(code)
     }
   },
@@ -26,12 +34,13 @@ vi.mock("@eleva/db", () => ({
 vi.mock("@eleva/observability", () => ({ logError: vi.fn() }))
 
 vi.mock("@/lib/auth", () => ({
-  requireApiCapability: (...args: unknown[]) => requireApiCapability(...args),
-  apiAuthFailure: vi.fn(() => null),
+  requireRevocableApiCapability: (...args: unknown[]) =>
+    requireRevocableApiCapability(...args),
+  apiAuthFailure: (...args: unknown[]) => apiAuthFailure(...args),
 }))
 
 vi.mock("@/lib/rate-limit", () => ({
-  applyRateLimit: vi.fn(async () => null),
+  applyRateLimit: (...args: unknown[]) => applyRateLimit(...args),
   rateLimitKey: () => "cancel",
   RATE_LIMITS: {
     authenticated: { prefix: "auth", maxRequests: 60, windowMs: 60_000 },
@@ -56,15 +65,20 @@ function cancel(id: string, body?: unknown) {
 describe("POST /expert/bookings/{id}/cancel", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    requireApiCapability.mockResolvedValue({
+    requireRevocableApiCapability.mockResolvedValue({
       user: { id: "user-1" },
       orgId: "org-1",
     })
+    apiAuthFailure.mockReturnValue(null)
+    applyRateLimit.mockResolvedValue(null)
     getExpertProfileForOrg.mockResolvedValue({
       id: "profile-1",
       orgId: "org-1",
     })
-    cancelBookingByExpert.mockResolvedValue({ refundCents: 6000 })
+    cancelBookingByExpert.mockResolvedValue({
+      refundCents: 6000,
+      alreadyCancelled: false,
+    })
   })
 
   it("cancels the caller's own session and says what is refunded", async () => {
@@ -74,8 +88,10 @@ describe("POST /expert/bookings/{id}/cancel", () => {
       bookingId: BOOKING_ID,
       status: "cancelled",
       refundCents: 6000,
+      alreadyCancelled: false,
     })
-    expect(requireApiCapability).toHaveBeenCalledWith(
+    // A refund is money: only auth that can be revoked is accepted.
+    expect(requireRevocableApiCapability).toHaveBeenCalledWith(
       expect.anything(),
       "events:manage"
     )
@@ -87,7 +103,62 @@ describe("POST /expert/bookings/{id}/cancel", () => {
       expertProfileId: "profile-1",
       bookingId: BOOKING_ID,
       reason: "I am unwell",
+      expectedStartsAt: undefined,
     })
+  })
+
+  it("passes on the start time the caller saw", async () => {
+    await cancel(BOOKING_ID, { expectedStartsAt: "2026-11-30T09:00:00.000Z" })
+    expect(cancelBookingByExpert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        expectedStartsAt: new Date("2026-11-30T09:00:00.000Z"),
+      })
+    )
+  })
+
+  it("says so when it was already cancelled", async () => {
+    cancelBookingByExpert.mockResolvedValue({
+      refundCents: 0,
+      alreadyCancelled: true,
+    })
+    const response = await cancel(BOOKING_ID)
+    expect(response.status).toBe(200)
+    expect(await response.json()).toMatchObject({
+      refundCents: 0,
+      alreadyCancelled: true,
+    })
+  })
+
+  it("stops at sign-in, before anything is read", async () => {
+    requireRevocableApiCapability.mockRejectedValue(new Error("unauthorized"))
+    apiAuthFailure.mockReturnValue(new Response(null, { status: 401 }))
+    const response = await cancel(BOOKING_ID)
+    expect(response.status).toBe(401)
+    expect(getExpertProfileForOrg).not.toHaveBeenCalled()
+    expect(cancelBookingByExpert).not.toHaveBeenCalled()
+  })
+
+  it("stops when the caller is over the rate limit", async () => {
+    applyRateLimit.mockResolvedValue(new Response(null, { status: 429 }))
+    const response = await cancel(BOOKING_ID)
+    expect(response.status).toBe(429)
+    expect(cancelBookingByExpert).not.toHaveBeenCalled()
+  })
+
+  it("cancels nothing on a body it cannot read", async () => {
+    const response = await POST(
+      new Request(
+        `http://127.0.0.1:3002/expert/bookings/${BOOKING_ID}/cancel`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: "{not json",
+        }
+      ),
+      { params: Promise.resolve({ id: BOOKING_ID }) }
+    )
+    expect(response.status).toBe(400)
+    expect(cancelBookingByExpert).not.toHaveBeenCalled()
   })
 
   it("accepts a call with no body", async () => {
@@ -135,6 +206,13 @@ describe("POST /expert/bookings/{id}/cancel", () => {
     const wrong = await cancel(BOOKING_ID)
     expect(wrong.status).toBe(409)
     expect(await wrong.json()).toMatchObject({ error: "INVALID_STATUS" })
+
+    cancelBookingByExpert.mockRejectedValue(
+      new ExpertCancelError("SESSION_CHANGED")
+    )
+    const moved = await cancel(BOOKING_ID)
+    expect(moved.status).toBe(409)
+    expect(await moved.json()).toMatchObject({ error: "SESSION_CHANGED" })
   })
 
   it("answers 500 without detail when something unexpected fails", async () => {

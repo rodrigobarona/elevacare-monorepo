@@ -606,16 +606,19 @@
     "cancelSession": {
       "open": "Cancelar sessão",
       "title": "Cancelar esta sessão?",
-      "description": "Avisamos {name} de imediato e devolvemos tudo o que pagou. O horário fica livre no seu calendário. Não é possível desfazer.",
+      "description": "Avisamos {name} de imediato e devolvemos tudo o que pagou. Não é possível desfazer.",
       "reasonLabel": "Motivo (opcional)",
-      "reasonHint": "Fica guardado no registo da marcação e não é enviado ao membro. Não inclua dados de saúde.",
+      "reasonHint": "Fica guardado no registo da marcação, para o caso de haver alguma dúvida sobre este cancelamento. Não é enviado ao membro. Não inclua dados de saúde.",
       "keep": "Manter sessão",
       "confirm": "Cancelar sessão",
       "done": "Sessão cancelada. O membro foi avisado.",
       "doneRefunded": "Sessão cancelada. O membro foi avisado e recebe o reembolso total.",
       "tooLate": "Esta sessão já começou, por isso já não pode ser cancelada aqui.",
-      "changed": "Esta sessão mudou entretanto. Carregue a semana de novo para a ver.",
-      "failed": "Não foi possível cancelar esta sessão. Tente de novo."
+      "changed": "Esta sessão mudou entretanto, por isso nada foi cancelado. O seu calendário está agora atualizado.",
+      "failed": "Não foi possível cancelar esta sessão. Tente de novo.",
+      "slotNote": "O horário fica livre, por isso os membros podem voltar a marcá-lo. Bloqueie-o na sua disponibilidade se não estiver disponível.",
+      "confirming": "A cancelar…",
+      "alreadyCancelled": "Esta sessão já tinha sido cancelada. O seu calendário está agora atualizado."
     }
   },
   "calendars": {

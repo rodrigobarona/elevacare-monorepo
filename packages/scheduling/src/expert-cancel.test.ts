@@ -15,6 +15,8 @@ vi.mock("@eleva/db", () => ({
   main: {
     bookings: {
       id: "bookings.id",
+      orgId: "bookings.org_id",
+      expertProfileId: "bookings.expert_profile_id",
       status: "bookings.status",
       startsAt: "bookings.starts_at",
     },
@@ -60,14 +62,28 @@ function row(overrides: Record<string, unknown> = {}) {
   }
 }
 
+/** Every string inside a drizzle condition: the columns it compares. */
+function columnsIn(condition: unknown, seen = new Set<unknown>()): string[] {
+  if (typeof condition === "string") return [condition]
+  if (!condition || typeof condition !== "object" || seen.has(condition)) {
+    return []
+  }
+  seen.add(condition)
+  return Object.values(condition).flatMap((value) => columnsIn(value, seen))
+}
+
 /** Runs the audited write against a fake transaction and records it. */
-function captureTx(options: { bookingUpdated?: boolean } = {}) {
+function captureTx(
+  options: { bookingUpdated?: boolean; paymentUpdated?: boolean } = {}
+) {
   const captured = {
     bookingSets: [] as unknown[],
     paymentSets: [] as unknown[],
     reservationSets: [] as unknown[],
     audits: [] as unknown[],
     auditOptions: [] as unknown[],
+    /** Columns each update is guarded on, by table. */
+    guards: {} as Record<string, string[]>,
   }
   withAudit.mockImplementation(
     async (
@@ -83,11 +99,16 @@ function captureTx(options: { bookingUpdated?: boolean } = {}) {
               if (table.id === "payments.id") captured.paymentSets.push(values)
               if (table.id === "slots.id") captured.reservationSets.push(values)
               const updated =
-                table.id !== "bookings.id" || options.bookingUpdated !== false
+                (table.id !== "bookings.id" ||
+                  options.bookingUpdated !== false) &&
+                (table.id !== "payments.id" || options.paymentUpdated !== false)
               return {
-                where: () => ({
-                  returning: async () => (updated ? [{ id: "row-1" }] : []),
-                }),
+                where: (condition: unknown) => {
+                  captured.guards[table.id] = columnsIn(condition)
+                  return {
+                    returning: async () => (updated ? [{ id: "row-1" }] : []),
+                  }
+                },
               }
             },
           }),
@@ -127,8 +148,25 @@ describe("cancelBookingByExpert", () => {
     getExpertBookingForApproval.mockResolvedValue(row())
     await expect(
       cancelBookingByExpert({ ...input, reason: "  I am unwell  " })
-    ).resolves.toEqual({ refundCents: 6000 })
+    ).resolves.toEqual({ refundCents: 6000, alreadyCancelled: false })
 
+    // Each write only lands on the row as it was read.
+    expect(captured.guards["bookings.id"]).toEqual(
+      expect.arrayContaining([
+        "bookings.id",
+        "bookings.org_id",
+        "bookings.expert_profile_id",
+        "bookings.status",
+        "bookings.starts_at",
+      ])
+    )
+    expect(captured.guards["payments.id"]).toEqual(
+      expect.arrayContaining([
+        "payments.id",
+        "payments.status",
+        "payments.refunded_cents",
+      ])
+    )
     expect(captured.auditOptions).toEqual([
       { orgId: "org-1", actorUserId: "expert-1" },
     ])
@@ -178,6 +216,7 @@ describe("cancelBookingByExpert", () => {
     )
     await expect(cancelBookingByExpert(input)).resolves.toEqual({
       refundCents: 6000,
+      alreadyCancelled: false,
     })
   })
 
@@ -188,6 +227,7 @@ describe("cancelBookingByExpert", () => {
     )
     await expect(cancelBookingByExpert(input)).resolves.toEqual({
       refundCents: 4000,
+      alreadyCancelled: false,
     })
     expect(captured.paymentSets).toEqual([
       { refundDueCents: 6000, status: "refund_pending" },
@@ -206,11 +246,18 @@ describe("cancelBookingByExpert", () => {
     )
     await expect(cancelBookingByExpert(input)).resolves.toEqual({
       refundCents: 0,
+      alreadyCancelled: false,
     })
     expect(captured.paymentSets).toEqual([])
     const [, event] = emitBookingNotificationEvent.mock.calls[0] ?? []
     expect(event).toMatchObject({ cancelledBy: "expert" })
     expect(event).not.toHaveProperty("refundCents")
+    // No percentage is recorded when nothing was paid.
+    expect(captured.audits).toEqual([
+      expect.objectContaining({
+        payload: { reason: "expert_cancel", refundCents: 0 },
+      }),
+    ])
   })
 
   it("also cancels a session that was moved to a new time", async () => {
@@ -220,15 +267,51 @@ describe("cancelBookingByExpert", () => {
     )
     await expect(cancelBookingByExpert(input)).resolves.toEqual({
       refundCents: 6000,
+      alreadyCancelled: false,
     })
   })
 
-  it("answers a second press the same way, with nothing more to refund", async () => {
+  it("says it was already cancelled, with nothing more to refund", async () => {
     getExpertBookingForApproval.mockResolvedValue(row({ status: "cancelled" }))
     await expect(cancelBookingByExpert(input)).resolves.toEqual({
       refundCents: 0,
+      alreadyCancelled: true,
     })
     expect(withAudit).not.toHaveBeenCalled()
+  })
+
+  it("gives two presses at the same moment the same answer", async () => {
+    // The second press read "confirmed", then lost the write to the first.
+    captureTx({ bookingUpdated: false })
+    getExpertBookingForApproval
+      .mockResolvedValueOnce(row())
+      .mockResolvedValueOnce(row({ status: "cancelled" }))
+    await expect(cancelBookingByExpert(input)).resolves.toEqual({
+      refundCents: 0,
+      alreadyCancelled: true,
+    })
+    expect(emitBookingNotificationEvent).not.toHaveBeenCalled()
+  })
+
+  it("does not cancel a session the member has moved since the expert looked", async () => {
+    getExpertBookingForApproval.mockResolvedValue(
+      row({ startsAt: new Date("2026-11-21T15:00:00.000Z") })
+    )
+    await expect(
+      cancelBookingByExpert({
+        ...input,
+        expectedStartsAt: new Date("2026-11-20T10:00:00.000Z"),
+      })
+    ).rejects.toMatchObject({ code: "SESSION_CHANGED" })
+    expect(withAudit).not.toHaveBeenCalled()
+  })
+
+  it("cancels when the session is still where the expert saw it", async () => {
+    captureTx()
+    getExpertBookingForApproval.mockResolvedValue(row())
+    await expect(
+      cancelBookingByExpert({ ...input, expectedStartsAt: row().startsAt })
+    ).resolves.toMatchObject({ alreadyCancelled: false })
   })
 
   it("refuses a booking of another expert or organisation", async () => {
@@ -269,6 +352,19 @@ describe("cancelBookingByExpert", () => {
       code: "TOO_LATE",
     })
     expect(withAudit).not.toHaveBeenCalled()
+  })
+
+  it("changes nothing when a refund started meanwhile", async () => {
+    // The payment is no longer as it was read: the guard fails, the error
+    // leaves the transaction, and the cancellation is rolled back with it.
+    const captured = captureTx({ paymentUpdated: false })
+    getExpertBookingForApproval.mockResolvedValue(row())
+    await expect(cancelBookingByExpert(input)).rejects.toMatchObject({
+      code: "INVALID_STATUS",
+    })
+    expect(captured.reservationSets).toEqual([])
+    expect(emitBookingNotificationEvent).not.toHaveBeenCalled()
+    expect(captured.audits).toEqual([])
   })
 
   it("changes nothing when the member moved or cancelled first", async () => {

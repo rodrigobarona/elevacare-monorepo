@@ -606,16 +606,19 @@
     "cancelSession": {
       "open": "Cancel session",
       "title": "Cancel this session?",
-      "description": "We tell {name} right away and refund everything they paid. The time becomes free in your calendar. This cannot be undone.",
+      "description": "We'll tell {name} right away and refund everything they paid. This cannot be undone.",
       "reasonLabel": "Reason (optional)",
-      "reasonHint": "Kept on the booking record and not sent to the member. Please leave health details out.",
+      "reasonHint": "Kept on the booking record in case there is a question about this cancellation later. It is not sent to the member. Please leave health details out.",
       "keep": "Keep session",
       "confirm": "Cancel session",
       "done": "Session cancelled. The member has been told.",
       "doneRefunded": "Session cancelled. The member has been told and is refunded in full.",
       "tooLate": "This session has already started, so it can no longer be cancelled here.",
-      "changed": "This session changed in the meantime. Load the week again to see it.",
-      "failed": "We couldn't cancel this session. Try again."
+      "changed": "This session changed in the meantime, so nothing was cancelled. Your calendar is up to date now.",
+      "failed": "We couldn't cancel this session. Try again.",
+      "slotNote": "The time becomes free, so members can book it again. Block it in your schedule if you won't be available.",
+      "confirming": "Cancelling…",
+      "alreadyCancelled": "This session was already cancelled. Your calendar is up to date now."
     }
   },
   "calendars": {

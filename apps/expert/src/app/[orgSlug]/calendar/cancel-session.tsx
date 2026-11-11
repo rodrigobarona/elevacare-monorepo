@@ -24,39 +24,64 @@ const REASON_MAX_LENGTH = 180
  */
 export function CancelSession({
   bookingId,
+  startsAt,
+  sessionSummary,
   memberName,
   onCancelled,
+  onChanged,
 }: {
   bookingId: string
+  /** The start shown to the expert; a session moved since is not cancelled. */
+  startsAt: string
+  /** "First visit · Monday 30 November, 09:00–10:00": which session this is. */
+  sessionSummary: string
   /** First name, or the word for a member when there is none. */
   memberName: string
   onCancelled: () => void
+  /** The session is no longer as shown: close and load the week again. */
+  onChanged: () => void
 }) {
   const t = useTranslations("calendar.cancelSession")
   const reasonId = React.useId()
+  const hintId = React.useId()
   const [isOpen, setIsOpen] = React.useState(false)
   const [reason, setReason] = React.useState("")
   const [pending, setPending] = React.useState(false)
+  const [failed, setFailed] = React.useState(false)
 
   async function confirm() {
     setPending(true)
+    setFailed(false)
     // A dropped connection rejects: the buttons must come back either way.
     const result = await cancelCalendarBookingAction(
       bookingId,
+      startsAt,
       reason.trim() ? reason.trim() : undefined
     ).catch(() => ({ ok: false as const, error: "cancelFailed" }))
     setPending(false)
     if (!result.ok) {
-      toast.error(
-        result.error === "cancelTooLate"
-          ? t("tooLate")
-          : result.error === "cancelChanged"
-            ? t("changed")
-            : t("failed")
-      )
+      if (
+        result.error === "cancelTooLate" ||
+        result.error === "cancelChanged"
+      ) {
+        // Trying again cannot help: say why, and show the week as it is now.
+        setIsOpen(false)
+        toast.error(
+          result.error === "cancelTooLate" ? t("tooLate") : t("changed")
+        )
+        onChanged()
+        return
+      }
+      // Worth another try: the reason typed so far stays in the dialog.
+      setFailed(true)
       return
     }
     setIsOpen(false)
+    if (result.data.alreadyCancelled) {
+      toast.info(t("alreadyCancelled"))
+      onChanged()
+      return
+    }
     toast.success(result.data.refundCents > 0 ? t("doneRefunded") : t("done"))
     onCancelled()
   }
@@ -67,7 +92,10 @@ export function CancelSession({
         variant="ghost"
         className="text-destructive hover:text-destructive"
         data-testid="calendar-cancel-session"
-        onPress={() => setIsOpen(true)}
+        onPress={() => {
+          setFailed(false)
+          setIsOpen(true)
+        }}
       >
         {t("open")}
       </Button>
@@ -76,11 +104,18 @@ export function CancelSession({
         onOpenChange={(open) => {
           if (!pending) setIsOpen(open)
         }}
+        className="max-h-[calc(100dvh-2rem)] overflow-y-auto"
       >
         <AlertDialogHeader>
           <AlertDialogTitle>{t("title")}</AlertDialogTitle>
           <AlertDialogDescription>
-            {t("description", { name: memberName })}
+            <span className="block font-medium text-foreground">
+              {sessionSummary}
+            </span>
+            <span className="mt-2 block">
+              {t("description", { name: memberName })}
+            </span>
+            <span className="mt-2 block">{t("slotNote")}</span>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <div className="space-y-1.5">
@@ -89,23 +124,31 @@ export function CancelSession({
           </label>
           <Textarea
             id={reasonId}
+            aria-describedby={hintId}
             value={reason}
             maxLength={REASON_MAX_LENGTH}
             onChange={(event) => setReason(event.target.value)}
           />
-          <p className="text-xs text-muted-foreground">{t("reasonHint")}</p>
+          <p id={hintId} className="text-xs text-muted-foreground">
+            {t("reasonHint")}
+          </p>
         </div>
+        {failed ? (
+          <p role="alert" className="text-sm text-destructive">
+            {t("failed")}
+          </p>
+        ) : null}
         <AlertDialogFooter>
-          <AlertDialogCancel isDisabled={pending}>
+          <AlertDialogCancel autoFocus isDisabled={pending}>
             {t("keep")}
           </AlertDialogCancel>
           <Button
             variant="destructive"
-            isPending={pending}
+            isDisabled={pending}
             data-testid="calendar-cancel-session-confirm"
             onPress={() => void confirm()}
           >
-            {t("confirm")}
+            {pending ? t("confirming") : t("confirm")}
           </Button>
         </AlertDialogFooter>
       </AlertDialog>

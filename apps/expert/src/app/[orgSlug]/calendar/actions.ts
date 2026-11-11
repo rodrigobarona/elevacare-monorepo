@@ -118,11 +118,20 @@ export async function declineCalendarBookingAction(
  */
 export async function cancelCalendarBookingAction(
   bookingId: string,
+  /** The start the expert was looking at: a moved session is not cancelled. */
+  expectedStartsAt: string,
   reason?: string
-): Promise<ActionResult<{ bookingId: string; refundCents: number }>> {
-  const parsed = CancelExpertBookingRequestSchema.safeParse(
-    reason?.trim() ? { reason: reason.trim() } : {}
-  )
+): Promise<
+  ActionResult<{
+    bookingId: string
+    refundCents: number
+    alreadyCancelled: boolean
+  }>
+> {
+  const parsed = CancelExpertBookingRequestSchema.safeParse({
+    expectedStartsAt,
+    ...(reason?.trim() ? { reason: reason.trim() } : {}),
+  })
   if (!parsed.success || !BookingIdSchema.safeParse(bookingId).success) {
     return { ok: false, error: "validation" }
   }
@@ -133,7 +142,11 @@ export async function cancelCalendarBookingAction(
     revalidateExpertWorkspace(session, "calendar")
     return {
       ok: true,
-      data: { bookingId: result.bookingId, refundCents: result.refundCents },
+      data: {
+        bookingId: result.bookingId,
+        refundCents: result.refundCents,
+        alreadyCancelled: result.alreadyCancelled,
+      },
     }
   } catch (err) {
     console.error("cancel-calendar-booking failed", err)

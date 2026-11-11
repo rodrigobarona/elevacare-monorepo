@@ -606,16 +606,19 @@
     "cancelSession": {
       "open": "Cancelar sesión",
       "title": "¿Cancelar esta sesión?",
-      "description": "Avisamos a {name} de inmediato y le devolvemos todo lo que pagó. El horario queda libre en tu calendario. No se puede deshacer.",
+      "description": "Avisamos a {name} de inmediato y le devolvemos todo lo que pagó. No se puede deshacer.",
       "reasonLabel": "Motivo (opcional)",
-      "reasonHint": "Queda guardado en el registro de la reserva y no se envía al miembro. No incluyas datos de salud.",
+      "reasonHint": "Queda guardado en el registro de la reserva, por si surge alguna duda sobre esta cancelación. No se envía al miembro. No incluyas datos de salud.",
       "keep": "Mantener sesión",
       "confirm": "Cancelar sesión",
       "done": "Sesión cancelada. Hemos avisado al miembro.",
       "doneRefunded": "Sesión cancelada. Hemos avisado al miembro y recibe el reembolso íntegro.",
       "tooLate": "Esta sesión ya ha empezado, así que ya no se puede cancelar aquí.",
-      "changed": "Esta sesión ha cambiado entretanto. Carga la semana de nuevo para verla.",
-      "failed": "No pudimos cancelar esta sesión. Inténtalo de nuevo."
+      "changed": "Esta sesión ha cambiado entretanto, así que no se ha cancelado nada. Tu calendario ya está al día.",
+      "failed": "No pudimos cancelar esta sesión. Inténtalo de nuevo.",
+      "slotNote": "El horario queda libre, así que los miembros pueden volver a reservarlo. Bloquéalo en tu disponibilidad si no vas a estar.",
+      "confirming": "Cancelando…",
+      "alreadyCancelled": "Esta sesión ya estaba cancelada. Tu calendario ya está al día."
     }
   },
   "calendars": {

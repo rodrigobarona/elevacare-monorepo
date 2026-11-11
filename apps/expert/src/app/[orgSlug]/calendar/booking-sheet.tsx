@@ -31,6 +31,7 @@ export function BookingSheet({
   orgSlug,
   modeName,
   onSettled,
+  onChanged,
   now,
 }: {
   /** The session selected; the caller keeps it while the sheet closes. */
@@ -40,6 +41,8 @@ export function BookingSheet({
   orgSlug: string
   modeName: (mode: CalendarBooking["sessionMode"]) => string
   onSettled: (bookingId: string, status: "confirmed" | "cancelled") => void
+  /** The session is no longer as shown: close and load the week again. */
+  onChanged: () => void
   /** The page's clock; `null` until the browser has set it. */
   now: Date | null
 }) {
@@ -188,8 +191,11 @@ export function BookingSheet({
             {canCancel ? (
               <CancelSession
                 bookingId={booking.id}
+                startsAt={booking.startsAt}
+                sessionSummary={`${pickLocalized(booking.eventTypeTitle, locale)} · ${dayFormatter.format(start)}, ${timeFormatter.format(start)}–${timeFormatter.format(end)}`}
                 memberName={booking.memberFirstName ?? t("memberUnknown")}
                 onCancelled={() => onSettled(booking.id, "cancelled")}
+                onChanged={onChanged}
               />
             ) : null}
           </div>
