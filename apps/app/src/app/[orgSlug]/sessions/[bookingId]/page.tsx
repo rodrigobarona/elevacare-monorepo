@@ -2,7 +2,8 @@ import type { ReactNode } from "react"
 import { notFound } from "next/navigation"
 import { getLocale, getTranslations } from "next-intl/server"
 import { ApiClientError, type ExpertInvoiceStatus } from "@eleva/api-client"
-import { VideoCameraIcon } from "@eleva/icons"
+import { ArrowsClockwiseIcon, VideoCameraIcon } from "@eleva/icons"
+import { expertProfileUrl } from "@eleva/config/env"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { LinkButton } from "@eleva/ui/components/button"
 import { findMemberBooking } from "@/lib/find-member-booking"
@@ -200,11 +201,23 @@ export default async function SessionDetailPage({
                   icon={<VideoCameraIcon className="size-4" />}
                 />
               )}
-              <IcsDownloadButton
-                booking={booking}
-                memberName={memberName}
-                memberEmail={session.user.email}
-              />
+              {ended ? (
+                // A session that is over has no place in a calendar; the
+                // next step is the same one the list offers.
+                <LinkButton
+                  variant="outline"
+                  href={expertProfileUrl(locale, booking.expert.username)}
+                >
+                  <ArrowsClockwiseIcon className="size-4" />
+                  {t("bookAgain")}
+                </LinkButton>
+              ) : (
+                <IcsDownloadButton
+                  booking={booking}
+                  memberName={memberName}
+                  memberEmail={session.user.email}
+                />
+              )}
             </div>
             {ended ? null : (
               <p className="text-xs text-muted-foreground">
@@ -214,21 +227,43 @@ export default async function SessionDetailPage({
           </div>
         </section>
 
-        <aside className="space-y-3 rounded-3xl border bg-card p-6 text-card-foreground shadow-1">
-          <h2 className="font-display text-lg font-medium tracking-tight">
-            {t("manageTitle")}
-          </h2>
-          <p className="text-sm text-muted-foreground">{t("manageHint")}</p>
-          <SessionActions
-            orgSlug={orgSlug}
-            bookingId={booking.id}
-            startsAt={booking.startsAt}
-            endsAt={booking.endsAt}
-            timezone={booking.timezone}
-            locale={locale}
-            quote={quote}
-          />
-        </aside>
+        {ended ? (
+          // Nothing left to change; say where to turn if it went wrong
+          // (the terms refund a session the expert did not attend).
+          <aside className="space-y-3 rounded-3xl border bg-card p-6 text-card-foreground shadow-1">
+            <h2 className="font-display text-lg font-medium tracking-tight">
+              {t("endedHelpTitle")}
+            </h2>
+            <p className="text-sm text-pretty text-muted-foreground">
+              {t.rich("endedHelp", {
+                email: (chunks) => (
+                  <a
+                    href={`mailto:${chunks}`}
+                    className="font-medium text-foreground underline underline-offset-4"
+                  >
+                    {chunks}
+                  </a>
+                ),
+              })}
+            </p>
+          </aside>
+        ) : (
+          <aside className="space-y-3 rounded-3xl border bg-card p-6 text-card-foreground shadow-1">
+            <h2 className="font-display text-lg font-medium tracking-tight">
+              {t("manageTitle")}
+            </h2>
+            <p className="text-sm text-muted-foreground">{t("manageHint")}</p>
+            <SessionActions
+              orgSlug={orgSlug}
+              bookingId={booking.id}
+              startsAt={booking.startsAt}
+              endsAt={booking.endsAt}
+              timezone={booking.timezone}
+              locale={locale}
+              quote={quote}
+            />
+          </aside>
+        )}
       </div>
 
       {isUpcoming ? <UrgentHelp className="rounded-3xl border p-6" /> : null}

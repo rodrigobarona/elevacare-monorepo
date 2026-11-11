@@ -205,6 +205,8 @@
     "viewReceipt": "Ver recibo",
     "manageTitle": "Gestionar reserva",
     "manageHint": "Reprograma o cancela dentro de la política de cancelación del especialista.",
+    "endedHelpTitle": "¿Necesitas ayuda con esta sesión?",
+    "endedHelp": "Esta sesión ha finalizado. Si algo salió mal, por ejemplo si tu especialista no se conectó, escribe a <email>support@eleva.care</email> y lo revisaremos contigo.",
     "report": "Informe",
     "viewReport": "Leer informe"
   },
