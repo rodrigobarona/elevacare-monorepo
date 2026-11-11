@@ -276,7 +276,7 @@ export function SignupForm({
             isPending={pending}
             data-testid="signup-submit"
           >
-            {claimingGuest ? t("magicLink") : t("createAccount")}
+            {claimingGuest ? t("claimLink") : t("createAccount")}
           </Button>
         </form>
       </AuthStep>

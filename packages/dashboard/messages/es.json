@@ -103,9 +103,8 @@
   },
   "urgentHelp": {
     "title": "¿Necesitas ayuda urgente?",
-    "compactLead": "Puede que el experto no lea tu nota antes de la sesión.",
-    "emergency": "Llama al <emergency></emergency>. Es gratis, de día y de noche, en toda la UE.",
-    "bookedAhead": "Las sesiones en Eleva se reservan con antelación. Para lo que no puede esperar, el {number} te pone en contacto con los servicios de emergencia de inmediato.",
-    "national": "En España, el <linea024></linea024> es la línea gratuita, abierta a cualquier hora, para quien piensa en el suicidio y para las personas de su entorno."
+    "compact": "El experto lee esta nota al preparar la sesión, no de inmediato. Si no puede esperar, llama al <emergency></emergency>: gratis, de día y de noche, en toda la UE.",
+    "full": "Las sesiones en Eleva se reservan con antelación. Para lo que no puede esperar, llama al <emergency></emergency>: gratis, de día y de noche, en toda la UE.",
+    "national": "En España, el <linea024></linea024> es la línea gratuita, abierta a cualquier hora, para quien piensa en el suicidio o está preocupado por alguien. En Portugal, esa línea es el <prevention1411></prevention1411>, y el SNS 24 (<sns24></sns24>) da consejo de salud por teléfono."
   }
 }

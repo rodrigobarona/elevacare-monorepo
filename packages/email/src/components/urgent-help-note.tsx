@@ -24,12 +24,19 @@ export function UrgentHelpNote({
 }) {
   const t = getEmailTranslations(locale)
   return (
-    <EmailBodyText className="mt-[24px] text-[13px] leading-[20px]">
-      {withPhoneLinks(t.booking.urgentHelp)}
+    <>
+      <EmailBodyText className="mt-[24px] text-[14px] leading-[22px]">
+        <span className="text-fg-2 font-semibold">
+          {t.booking.urgentHelpTitle}
+        </span>{" "}
+        {withPhoneLinks(t.booking.urgentHelp)}
+      </EmailBodyText>
       {detail === "full" ? (
-        <> {withPhoneLinks(t.booking.urgentHelpNational)}</>
+        <EmailBodyText className="mt-[8px] text-[14px] leading-[22px]">
+          {withPhoneLinks(t.booking.urgentHelpNational)}
+        </EmailBodyText>
       ) : null}
-    </EmailBodyText>
+    </>
   )
 }
 

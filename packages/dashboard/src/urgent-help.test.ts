@@ -34,25 +34,15 @@ describe("UrgentHelp", () => {
     }
   })
 
-  it("names SNS 24 and 1411 in Portuguese", async () => {
-    const html = await render("pt")
-    expect(hasLink(html, "sns24")).toBe(true)
-    expect(hasLink(html, "prevention1411")).toBe(true)
-    expect(hasLink(html, "linea024")).toBe(false)
-  })
-
-  it("names 024 in Spanish", async () => {
-    const html = await render("es")
-    expect(hasLink(html, "linea024")).toBe(true)
-    expect(hasLink(html, "sns24")).toBe(false)
-  })
-
-  it("names the lines of both countries in English", async () => {
-    const html = await render("en")
-    expect(hasLink(html, "sns24")).toBe(true)
-    expect(hasLink(html, "prevention1411")).toBe(true)
-    expect(hasLink(html, "linea024")).toBe(true)
-  })
+  it.each(locales)(
+    "names the lines of Portugal and Spain in %s",
+    async (locale) => {
+      const html = await render(locale)
+      expect(hasLink(html, "sns24")).toBe(true)
+      expect(hasLink(html, "prevention1411")).toBe(true)
+      expect(hasLink(html, "linea024")).toBe(true)
+    }
+  )
 
   it("keeps the form version to 112", async () => {
     const html = await render("pt", "compact")

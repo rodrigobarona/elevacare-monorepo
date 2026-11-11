@@ -30,14 +30,15 @@ describe("urgent help in member emails (PRIV2-03)", () => {
     expect(html).not.toMatch(/\{(emergency|sns24|prevention1411|linea024)\}/)
   })
 
-  it("confirmation names the national lines of its language", async () => {
-    const pt = await renderBookingConfirmed({ ...base, locale: "pt" })
-    expect(hasLink(pt, "sns24")).toBe(true)
-    expect(hasLink(pt, "prevention1411")).toBe(true)
-    const es = await renderBookingConfirmed({ ...base, locale: "es" })
-    expect(hasLink(es, "linea024")).toBe(true)
-    expect(hasLink(es, "sns24")).toBe(false)
-  })
+  it.each(LOCALES)(
+    "confirmation in %s names the lines of Portugal and Spain",
+    async (locale) => {
+      const html = await renderBookingConfirmed({ ...base, locale })
+      expect(hasLink(html, "sns24")).toBe(true)
+      expect(hasLink(html, "prevention1411")).toBe(true)
+      expect(hasLink(html, "linea024")).toBe(true)
+    }
+  )
 
   it("leaves the note out of the expert's copy", async () => {
     const html = await renderBookingConfirmed({

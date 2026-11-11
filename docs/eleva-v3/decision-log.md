@@ -39,19 +39,20 @@ Each entry should include:
   this is deployed and the join page carries the note.
 - Sessions on Eleva are booked ahead, so anything urgent is sent to 112,
   free in every EU country. National lines are always named with their
-  country: Portuguese copy names SNS 24 (808 24 24 24, health advice by
-  phone) and 1411 (suicide prevention, free, 24 hours); Spanish copy
-  names 024 (suicidal thoughts and those close by, free, 24 hours);
-  English, read across the EU, names all three. Checked on 2026-11-11
-  against sns24.gov.pt, portugal.gov.pt and sanidad.gob.es.
+  country, in every language: for Portugal, SNS 24 (808 24 24 24, health
+  advice by phone) and 1411 (suicide prevention, free, 24 hours); for
+  Spain, 024 (suicidal thoughts and those close by, free, 24 hours).
+  Checked on 2026-11-11 against sns24.gov.pt, portugal.gov.pt and
+  sanidad.gob.es.
 - One source each: numbers and `tel:` links in
   `@eleva/config/urgent-help`, web copy in the shared `urgentHelp`
   messages (`packages/dashboard/messages`), one `UrgentHelp` component in
   `@eleva/dashboard`, one `UrgentHelpNote` for emails. Copy names a line
   by key and never types a number.
 - Shown on:
-  - the booking details step, under the note to the expert, with "Your
-    expert may not read your note before the session" and 112;
+  - the booking details step, under the note to the expert, saying the
+    expert reads the note when preparing, not right away, and to call
+    112 for anything that cannot wait;
   - the booking thank-you page and the member's page for an upcoming
     session (112 and the national lines);
   - member emails: confirmation and cancellation (112 and the national
@@ -70,9 +71,10 @@ Each entry should include:
   waiting room); a line in the help center; choosing lines from the
   reader's country instead of their language; national lines for other
   EU countries.
-- Not signed off: a clinical read of which lines to name and how (founder
-  and Patricia Mota) is still needed before launch. The copy gives no
-  medical advice.
+- Not signed off: a clinical read of which lines to name and how is
+  still needed before launch. Owner: founder (Rodrigo Barona) with
+  Patricia Mota. Next review: before the first member outside the team
+  books, and no later than 2026-12-01. The copy gives no medical advice.
 
 ### 2026-11-10: Live transcript on Deepgram's medical model (active)
 

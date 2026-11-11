@@ -103,9 +103,8 @@
   },
   "urgentHelp": {
     "title": "Need urgent help?",
-    "compactLead": "Your expert may not read your note before the session.",
-    "emergency": "Call <emergency></emergency>. It is free, day and night, anywhere in the EU.",
-    "bookedAhead": "Sessions on Eleva are booked ahead. For anything that cannot wait, {number} reaches emergency services right away.",
-    "national": "In Portugal, SNS 24 (<sns24></sns24>) gives health advice by phone, and <prevention1411></prevention1411> is the free, 24-hour line for anyone thinking about suicide. In Spain, that line is <linea024></linea024>."
+    "compact": "Your expert reads this note when preparing for your session, not right away. If something cannot wait, call <emergency></emergency>: free, day and night, anywhere in the EU.",
+    "full": "Sessions on Eleva are booked ahead. For anything that cannot wait, call <emergency></emergency>: free, day and night, anywhere in the EU.",
+    "national": "In Portugal, SNS 24 (<sns24></sns24>) gives health advice by phone, and <prevention1411></prevention1411> is the free, 24-hour line for anyone thinking about suicide or worried about someone. In Spain, that line is <linea024></linea024>."
   }
 }

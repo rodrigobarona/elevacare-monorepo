@@ -37,7 +37,7 @@ export function UrgentHelp({
       aria-labelledby={titleId}
       data-testid="urgent-help"
       className={cn(
-        "flex gap-3 rounded-2xl bg-muted/60 p-4 text-sm leading-relaxed",
+        "flex gap-3 rounded-2xl bg-muted/60 p-4 text-sm leading-relaxed dark:bg-foreground/5",
         className
       )}
     >
@@ -48,26 +48,21 @@ export function UrgentHelp({
         <PhoneIcon className="size-4" />
       </span>
       <div className="max-w-prose min-w-0 space-y-1 text-pretty">
-        <Title id={titleId} className="font-medium text-foreground">
+        <Title
+          id={titleId}
+          className={cn(
+            "font-medium text-foreground",
+            variant === "full" && "text-base"
+          )}
+        >
           {t("title")}
         </Title>
-        {variant === "compact" ? (
+        <p className="text-muted-foreground">{t.rich(variant, PHONE_LINKS)}</p>
+        {variant === "full" ? (
           <p className="text-muted-foreground">
-            {t("compactLead")} {t.rich("emergency", PHONE_LINKS)}
+            {t.rich("national", PHONE_LINKS)}
           </p>
-        ) : (
-          <>
-            <p className="text-muted-foreground">
-              {t.rich("emergency", PHONE_LINKS)}{" "}
-              {t("bookedAhead", {
-                number: URGENT_HELP_NUMBERS.emergency.display,
-              })}
-            </p>
-            <p className="text-muted-foreground">
-              {t.rich("national", PHONE_LINKS)}
-            </p>
-          </>
-        )}
+        ) : null}
       </div>
     </div>
   )
@@ -83,7 +78,7 @@ function PhoneLink({ line }: { line: UrgentHelpLine }) {
   return (
     <a
       href={href}
-      className="-mx-1 -my-1 inline-block px-1 py-1 font-semibold whitespace-nowrap text-foreground underline decoration-primary decoration-2 underline-offset-4"
+      className="-mx-2 -my-2 inline-block px-2 py-2 font-semibold whitespace-nowrap text-foreground underline decoration-primary decoration-2 underline-offset-4 hover:decoration-foreground"
     >
       {display}
     </a>

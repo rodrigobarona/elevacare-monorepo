@@ -133,6 +133,7 @@
     "signOut": "Sign out",
     "createAccount": "Create account",
     "magicLink": "Email me a sign-in link instead",
+    "claimLink": "Email me my sign-in link",
     "google": "Continue with Google",
     "passkey": "Sign in with a passkey",
     "forgotPassword": "Forgot password?",
