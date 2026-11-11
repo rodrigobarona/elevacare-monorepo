@@ -68,6 +68,11 @@ In:
   `no_show`. Join/leave history is never used for authorization. RLS for expert org +
   buyer org. ~~The delayed QStash `finalizeAttendance` at `ended + 2 min`~~ **Superseded** — never built; do not add it.
 
+**Amended 2026-11-11** (decision log, "A session stays joinable; only a meeting that
+happened ends early"): `meeting.ended` closes a session only after its booked end and when
+expert and member were in the room together; otherwise the session returns to `scheduled`.
+Every no-show is declared by the 09.6.1 sweep. What follows describes the original build.
+
 **Attendance SSOT (2026-10-07):** 09.3 writes attendance on `meeting.ended`; late
 participant events can flip `no_show → ended` (`session.attendance_corrected`). The
 09.6.1 sweep at `endsAt + 30m` covers a missing `meeting.ended`. The delayed

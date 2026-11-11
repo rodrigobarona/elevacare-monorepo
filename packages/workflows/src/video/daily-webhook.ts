@@ -57,6 +57,9 @@ function roomNameFromPayload(payload: Record<string, unknown> | undefined) {
   return typeof room === "string" && room.length > 0 ? room : null
 }
 
+/** Meeting-token user id of a member with no account (`join.ts`). */
+const GUEST_USER_PREFIX = "guest:"
+
 function userIdFromPayload(payload: Record<string, unknown> | undefined) {
   const userId = payload?.user_id
   return typeof userId === "string" && userId.length > 0 ? userId : undefined
@@ -74,6 +77,8 @@ function participantRole(input: {
 }): SessionParticipantHistory["role"] {
   if (input.userId && input.userId === input.expertUserId) return "expert"
   if (input.userId && input.userId === input.memberUserId) return "member"
+  // A member who booked without an account joins as `guest:{bookingId}`.
+  if (input.userId?.startsWith(GUEST_USER_PREFIX)) return "member"
   if (input.owner && input.userId) return "expert"
   return "delegate"
 }
@@ -285,6 +290,7 @@ async function applyLifecycleWebhook(input: {
             startedAt: next.startedAt,
             endedAt: next.endedAt,
             lastEventAt: next.lastEventAt,
+            participants: next.participants,
             ...(next.attendance ? { attendance: next.attendance } : {}),
           })
           .where(eq(main.sessions.bookingId, input.bookingId))
@@ -302,6 +308,7 @@ async function applyLifecycleWebhook(input: {
             roomName: input.roomName,
             status: next.status,
             final: next.attendance !== null,
+            ...(next.attendance ? { attendance: next.attendance } : {}),
           },
         })
       }
@@ -316,7 +323,7 @@ async function applyLifecycleWebhook(input: {
 
 type SessionStatus = (typeof main.sessions.$inferSelect)["status"]
 
-function nextParticipantState(input: {
+export function nextParticipantState(input: {
   status: SessionStatus
   participants: SessionParticipantHistory[]
   payload: Record<string, unknown> | undefined
@@ -394,7 +401,10 @@ async function applyParticipantWebhook(input: {
           .set({
             status: next.status,
             participants: next.participants,
-            ...(next.status === "ended" || next.status === "no_show"
+            // Attendance is written when a session closes. Here only when
+            // this visit corrects a no-show: history arriving late must
+            // not rewrite a closed session's record.
+            ...(next.corrected
               ? { attendance: deriveAttendance(next.participants, booked) }
               : {}),
           })

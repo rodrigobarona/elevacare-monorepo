@@ -40,15 +40,35 @@ function presenceInside(rows: Interval[], booked: BookedTime): number {
   }, 0)
 }
 
+/** Time expert and member spent in the room together (ms). */
+function timeTogether(experts: Interval[], members: Interval[]): number {
+  let total = 0
+  for (const expert of experts) {
+    for (const member of members) {
+      const span =
+        Math.min(expert.to, member.to) - Math.max(expert.from, member.from)
+      if (span > 0) total += span
+    }
+  }
+  return total
+}
+
+/**
+ * How long two people must have been in the room together to have met.
+ * Shorter than this is a look into the room, not a session.
+ */
+export const MET_MIN_TOGETHER_MS = 2 * 60 * 1000
+
 /**
  * Who attended. `both` means the expert and the member were in the room
- * at the same time: two people who each came alone never met, however
- * the record of joins looks.
+ * together for at least two minutes: two people who each came alone, or
+ * an expert who only looked in, did not have a session, however the list
+ * of joins looks.
  *
- * When both came but never together, the one who spent longer in the room
- * during the booked time is the one who attended (an expert who looked in
- * before the start and left does not count against a member who waited).
- * Equal, or neither inside the booked time: `nobody`.
+ * When they did not meet, one side is named only if the other spent no
+ * time in the room during the booked time. If both were there during the
+ * booked time and still missed each other, the record blames no one
+ * (`nobody`): who waited for whom is for support to read from the history.
  */
 export function deriveAttendance(
   history: Presence[],
@@ -59,14 +79,11 @@ export function deriveAttendance(
   if (experts.length === 0 && members.length === 0) return "nobody"
   if (members.length === 0) return "expert_only"
   if (experts.length === 0) return "member_only"
-  const met = experts.some((expert) =>
-    members.some((member) => expert.from < member.to && member.from < expert.to)
-  )
-  if (met) return "both"
+  if (timeTogether(experts, members) >= MET_MIN_TOGETHER_MS) return "both"
   const expertTime = presenceInside(experts, booked)
   const memberTime = presenceInside(members, booked)
-  if (expertTime > memberTime) return "expert_only"
-  if (memberTime > expertTime) return "member_only"
+  if (expertTime > 0 && memberTime === 0) return "expert_only"
+  if (memberTime > 0 && expertTime === 0) return "member_only"
   return "nobody"
 }
 
@@ -76,12 +93,35 @@ export function statusAfterAttendance(
   return attendance === "both" ? "ended" : "no_show"
 }
 
-/** When the last person left, if anyone was ever recorded leaving. */
+/**
+ * When the room last emptied: the latest leave, once nobody is recorded
+ * as still inside. `null` when someone is, or nobody ever left.
+ */
 export function lastLeftAt(history: Presence[]): Date | null {
+  if (history.some((row) => !row.leftAt)) return null
   const times = history
-    .map((row) => (row.leftAt ? Date.parse(row.leftAt) : Number.NaN))
+    .map((row) => Date.parse(row.leftAt ?? ""))
     .filter((time) => Number.isFinite(time))
   return times.length > 0 ? new Date(Math.max(...times)) : null
+}
+
+/**
+ * Daily says the room is empty, so nobody is inside: give every visit
+ * still open this end. A lost "left" event would otherwise leave someone
+ * in the room for ever and make them "meet" whoever comes next.
+ */
+export function closeOpenPresence<Row extends Presence>(
+  history: Row[],
+  at: Date
+): Row[] {
+  if (history.every((row) => row.leftAt)) return history
+  const leftAt = at.toISOString()
+  return history.map((row) =>
+    row.leftAt
+      ? row
+      : // Never before the join: a late-delivered join keeps zero length.
+        { ...row, leftAt: leftAt > row.joinedAt ? leftAt : row.joinedAt }
+  )
 }
 
 /**
@@ -117,12 +157,15 @@ export function afterMeetingEnded<Status extends string>(input: {
 }
 
 /** A session row as far as Daily's lifecycle events are concerned. */
-export type LifecycleSession<Status extends string> = {
+export type LifecycleSession<
+  Status extends string,
+  Row extends Presence = Presence,
+> = {
   status: Status
   startedAt: Date | null
   endedAt: Date | null
   lastEventAt: Date | null
-  participants: Presence[]
+  participants: Row[]
   booked: BookedTime
 }
 
@@ -130,14 +173,18 @@ export type LifecycleSession<Status extends string> = {
  * Apply `meeting.started` or `meeting.ended` to a session. An event older
  * than the last one applied changes nothing (Daily can deliver late).
  */
-export function nextLifecycleState<Status extends string>(
-  session: LifecycleSession<Status>,
+export function nextLifecycleState<
+  Status extends string,
+  Row extends Presence = Presence,
+>(
+  session: LifecycleSession<Status, Row>,
   event: { type: string; at: Date }
 ): {
   status: Status | "live" | "scheduled" | "ended"
   startedAt: Date | null
   endedAt: Date | null
   lastEventAt: Date | null
+  participants: Row[]
   /** Set when this event closed the session. */
   attendance: SessionAttendance | null
 } {
@@ -146,6 +193,7 @@ export function nextLifecycleState<Status extends string>(
     startedAt: session.startedAt,
     endedAt: session.endedAt,
     lastEventAt: session.lastEventAt,
+    participants: session.participants,
     attendance: null,
   }
   if (!shouldApplyEvent(session.lastEventAt, event.at)) return unchanged
@@ -167,20 +215,22 @@ export function nextLifecycleState<Status extends string>(
   }
 
   if (event.type === "meeting.ended") {
+    const participants = closeOpenPresence(session.participants, event.at)
     const next = afterMeetingEnded({
       status: session.status,
-      participants: session.participants,
+      participants,
       at: event.at,
       booked: session.booked,
     })
     return next.final
       ? {
           ...applied,
+          participants,
           status: next.status,
           endedAt: event.at,
           attendance: next.attendance,
         }
-      : { ...applied, status: next.status }
+      : { ...applied, participants, status: next.status }
   }
 
   return applied

@@ -53,15 +53,25 @@ Each entry should include:
   - A no-show is never declared by a webhook. The attendance sweep
     declares it when the join window closes, 30 minutes after the booked
     end, and it also closes any session still open then.
-  - `both` means the two were in the room together. When both came but
-    never together, the one who spent longer in the room during the
-    booked time is recorded as the one who attended; equal, or neither
-    inside the booked time, is `nobody`.
+  - `both` means the two were in the room together for at least two
+    minutes in total: a look into the room is not a session. When they
+    did not meet, one side is named only if the other spent no time in
+    the room during the booked time; if both were there in the booked
+    time and still missed each other, the record blames no one
+    (`nobody`) and support reads the history.
+  - When Daily says the room is empty, every visit still open is given
+    that end, so a lost "left" event cannot make someone "meet" whoever
+    comes next. A member who booked without an account (`guest:` id) is
+    counted as the member.
+  - History that arrives late no longer rewrites the attendance of a
+    session that is already closed, except to correct a no-show when the
+    two were in the room together.
   - The end time of a session closed by the sweep is when the room last
-    emptied, not when the sweep ran.
-  - The audit event for `meeting.ended` now carries `final` and the
-    resulting `status`, so an emptied room and a closed session can be
-    told apart.
+    emptied; if someone is still recorded inside, or nobody came, it is
+    when the sweep ran.
+  - The audit events for `meeting.ended` and for the sweep carry `final`,
+    the resulting `status` and, when closed, the attendance, so an
+    emptied room and a closed session can be told apart.
   - An event time further than five minutes ahead of our clock is
     replaced by the time we received it.
 - Rules in one place: `packages/workflows/src/video/attendance.ts`
@@ -74,16 +84,25 @@ Each entry should include:
   booked end, and a no-show refund is still handled by support.
 - Known limits, not changed here: the sweep closes a call still running
   30 minutes past its booked end; the recorded start can be an early room
-  check, before the booked start; a booking cancelled while someone has
-  the room open before the start does not cancel its session (existing
-  rule, tested as such); the sweep has no heartbeat alert.
-- Existing rows: sessions already marked `ended` or `no_show` before
-  their booked end are not repaired by this change, and a future session
-  in that state stays unjoinable. Operator task (founder, before the
-  first member outside the team books): count them on the production
-  database with
-  `select count(*) from sessions where ended_at < ends_at and status in ('ended', 'no_show')`
-  and reopen any whose `ends_at` is still ahead.
+  check, before the booked start; a failed payment or a full refund
+  before the start does not cancel a session while someone has the room
+  open (existing rule, tested as such), and that session is now joinable
+  again once the room empties; the sweep has no heartbeat alert and no
+  index on status and end time; the sweep also closes phone and in-person
+  sessions, which have no room, as `no_show` with attendance `nobody`
+  (follow-up: skip them); the member help page says a call can be
+  rejoined after a refresh, which is true until the two have met and the
+  room empties after the booked end.
+- Existing rows: sessions already closed before their booked end are not
+  repaired by this change, and a future session in that state stays
+  unjoinable. Until 2026-11-07 every booking on the production database
+  was one of the team's own tests (see "Public listing needs a verified
+  licence"). Operator task (founder, at this deploy and before the first
+  member outside the team books): reopen future sessions closed early
+  with
+  `update sessions set status = 'scheduled', attendance = null, ended_at = null where ends_at > now() and status in ('ended', 'no_show') and ended_at < ends_at`
+  and record the number of rows changed here. Past sessions keep the
+  record they were given.
 - Not proven: Daily's real timing and ordering of `meeting.ended` and
   `meeting.started` on staging with two browsers (leave early, rejoin,
   finish).

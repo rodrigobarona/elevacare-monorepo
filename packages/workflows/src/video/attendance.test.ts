@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   afterMeetingEnded,
   appendParticipantHistory,
+  closeOpenPresence,
   deriveAttendance,
   eventTimeFromDaily,
   lastLeftAt,
@@ -30,11 +31,18 @@ function was(
 const met = [was("expert", "10:00", "10:50"), was("member", "10:02", "10:50")]
 
 describe("deriveAttendance", () => {
-  it("is both only when expert and member were in the room together", () => {
+  it("is both when expert and member were in the room together", () => {
     expect(deriveAttendance(met, booked)).toBe("both")
     // Still in the room counts as there until now.
     expect(
       deriveAttendance([was("expert", "10:00"), was("member", "10:05")], booked)
+    ).toBe("both")
+    // A session held late, in the half hour after the booked end, counts.
+    expect(
+      deriveAttendance(
+        [was("member", "10:00", "11:25"), was("expert", "11:02", "11:25")],
+        booked
+      )
     ).toBe("both")
   })
 
@@ -49,7 +57,28 @@ describe("deriveAttendance", () => {
     expect(deriveAttendance([], booked)).toBe("nobody")
   })
 
-  it("does not call it a meeting when the two were never there together", () => {
+  it("does not call a look into the room a meeting", () => {
+    // The member is already waiting; the expert looks in for a minute.
+    expect(
+      deriveAttendance(
+        [was("member", "09:50", "10:30"), was("expert", "09:52", "09:53")],
+        booked
+      )
+    ).toBe("member_only")
+    // Two short looks add up: together for two minutes is a meeting.
+    expect(
+      deriveAttendance(
+        [
+          was("member", "10:00", "10:30"),
+          was("expert", "10:05", "10:06"),
+          was("expert", "10:10", "10:11"),
+        ],
+        booked
+      )
+    ).toBe("both")
+  })
+
+  it("names one side only when the other was never there in the booked time", () => {
     // The expert checked the room before the start and never came back.
     expect(
       deriveAttendance(
@@ -64,13 +93,16 @@ describe("deriveAttendance", () => {
         booked
       )
     ).toBe("member_only")
-    // The expert waited; the member came once the expert had left.
+  })
+
+  it("blames no one when both came in the booked time and missed each other", () => {
+    // The member waited twenty minutes and gave up; the expert came late.
     expect(
       deriveAttendance(
-        [was("expert", "10:00", "10:30"), was("member", "10:40", "10:45")],
+        [was("member", "10:00", "10:20"), was("expert", "10:25", "10:55")],
         booked
       )
-    ).toBe("expert_only")
+    ).toBe("nobody")
     // Leaving as the other arrives is not meeting.
     expect(
       deriveAttendance(
@@ -86,6 +118,18 @@ describe("deriveAttendance", () => {
       )
     ).toBe("nobody")
   })
+
+  it("gives a visit with an unreadable leave time no time in the room", () => {
+    expect(
+      deriveAttendance(
+        [
+          { role: "expert", joinedAt: T("10:00").toISOString(), leftAt: "?" },
+          was("member", "10:00", "10:30"),
+        ],
+        booked
+      )
+    ).toBe("member_only")
+  })
 })
 
 describe("statusAfterAttendance", () => {
@@ -99,8 +143,38 @@ describe("statusAfterAttendance", () => {
 describe("lastLeftAt", () => {
   it("is when the room last emptied", () => {
     expect(lastLeftAt(met)).toEqual(T("10:50"))
-    expect(lastLeftAt([was("expert", "10:00")])).toBeNull()
     expect(lastLeftAt([])).toBeNull()
+  })
+
+  it("is unknown while someone is still recorded inside", () => {
+    expect(lastLeftAt([was("expert", "10:00")])).toBeNull()
+    expect(
+      lastLeftAt([was("expert", "09:50", "09:52"), was("member", "10:00")])
+    ).toBeNull()
+  })
+})
+
+describe("closeOpenPresence", () => {
+  it("ends every visit still open when the room is empty", () => {
+    expect(
+      closeOpenPresence(
+        [was("expert", "10:00"), was("member", "10:05", "10:30")],
+        T("10:40")
+      )
+    ).toEqual([
+      was("expert", "10:00", "10:40"),
+      was("member", "10:05", "10:30"),
+    ])
+  })
+
+  it("returns the same list when nothing is open", () => {
+    expect(closeOpenPresence(met, T("11:00"))).toBe(met)
+  })
+
+  it("never ends a visit before it began", () => {
+    expect(closeOpenPresence([was("expert", "10:30")], T("10:20"))).toEqual([
+      was("expert", "10:30", "10:30"),
+    ])
   })
 })
 
@@ -271,6 +345,26 @@ describe("nextLifecycleState", () => {
     )
     expect(session.status).toBe("no_show")
     expect(session.endedAt).toEqual(T("11:30"))
+  })
+
+  it("does not let a lost leave event turn an early look into a meeting", () => {
+    // The expert looked in at 09:50; their "left" event never arrived.
+    const { session } = play([
+      { type: "meeting.started", at: T("09:50") },
+      {
+        type: "meeting.ended",
+        at: T("09:52"),
+        participants: [was("expert", "09:50")],
+      },
+    ])
+    expect(session.participants).toEqual([was("expert", "09:50", "09:52")])
+    // The member then waits alone: not a meeting.
+    expect(
+      deriveAttendance(
+        [...session.participants, was("member", "10:00", "10:30")],
+        booked
+      )
+    ).toBe("member_only")
   })
 
   it("closes at the booked end exactly", () => {

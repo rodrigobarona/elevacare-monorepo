@@ -61,10 +61,15 @@ detected automatically · medical vocabulary]` records what produced the
 the session and delete the room. Partial refunds and the same events after
 `startAt` leave the session row intact.
 
-If Daily never sends `meeting.ended`, a sweep after the join window
-closes (`endsAt + 30m`) finalizes `attendance` from participant history
-(empty → `nobody` / `no_show`). No-show policy (refund/keep) is not
-decided here.
+Daily sends `meeting.ended` soon after the last person leaves. That closes
+a session only when it happened: the booked end has passed and expert and
+member were in the room together for at least two minutes (`ended`,
+attendance `both`). Otherwise the room has only emptied: the session goes
+back to `scheduled` and stays joinable. A sweep after the join window
+closes (`endsAt + 30m`) closes whatever is still open from the participant
+history, and it is the only place a `no_show` is declared (empty history →
+`nobody`). No-show policy (refund/keep) is not decided here. Rules:
+`packages/workflows/src/video/attendance.ts`.
 
 Never log `DAILY_API_KEY` or meeting tokens. CI runs `pnpm check:no-phi-logs`
 as a best-effort grep (compact JWT literals, `token` fields on `ctx.emit`

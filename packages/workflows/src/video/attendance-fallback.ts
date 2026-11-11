@@ -91,7 +91,8 @@ export async function finalizeAttendanceFromHistory(
           .set({
             status,
             attendance,
-            // When the room last emptied, not when this sweep ran.
+            // When the room last emptied; when this sweep ran if someone
+            // is still recorded inside, or nobody ever came.
             endedAt: locked.endedAt ?? lastLeftAt(locked.participants) ?? now,
           })
           .where(
@@ -109,7 +110,12 @@ export async function finalizeAttendanceFromHistory(
           entity: "session",
           action: "ended",
           entityId: bookingId,
-          payload: { source: "end_at_fallback", attendance },
+          payload: {
+            source: "end_at_fallback",
+            status,
+            final: true,
+            attendance,
+          },
         })
       }
     )
