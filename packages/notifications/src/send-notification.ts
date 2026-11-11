@@ -73,6 +73,13 @@ type SendBase = {
   ctx: NotificationContent
   idempotencyKey: string
   channelsOverride?: NotificationChannel[]
+  /**
+   * A message the person needs to keep an appointment (their expert
+   * cancelled the session): it is emailed even when they have switched
+   * that category's emails off. Email only; text messages and quiet hours
+   * are not overridden.
+   */
+  essential?: boolean
 }
 
 export type SendNotificationInput =
@@ -180,6 +187,7 @@ type ParsedSend = {
   ctx: NotificationContent
   idempotencyKey: string
   channelsOverride: NotificationChannel[] | undefined
+  essential: boolean
 }
 
 function isNotificationKind(value: string): value is NotificationKind {
@@ -240,6 +248,7 @@ function parseInput(input: SendNotificationInput): ParsedSend {
     ctx: ctx.data,
     idempotencyKey: idempotencyKey.data,
     channelsOverride: input.channelsOverride,
+    essential: input.essential === true,
   }
 }
 
@@ -313,7 +322,8 @@ export async function sendNotification(
               kind: parsed.kind,
               channel,
               preferences,
-            })
+            }) &&
+            !(parsed.essential && channel === "email")
           ) {
             return false
           }

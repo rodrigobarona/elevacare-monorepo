@@ -2093,7 +2093,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "cancelExpertBooking",
           summary: "Cancel a confirmed session as the expert",
           description:
-            "Cancels a confirmed or rescheduled booking that has not started. The member is refunded everything they paid, whatever the service's cancellation policy, and both people are told. The time becomes bookable again. A booking already cancelled (a repeated call, or the member cancelled first) answers 200 with alreadyCancelled true and refundCents 0. Send expectedStartsAt to refuse a session that was moved since the caller read it. Needs a session or an API key; short-lived tokens are refused.",
+            "Cancels a confirmed or rescheduled booking that has not started. The member is refunded everything they paid, whatever the service's cancellation policy, and both people are told. The time becomes bookable again. A booking already cancelled (a repeated call, or the member cancelled first) answers 200 with alreadyCancelled true and refundCents 0. Send expectedStartsAt to refuse a session that was moved since the caller read it; without it the session is cancelled at whatever time it now has. Needs a session or an API key; short-lived tokens are refused.",
           tags: ["Expert Calendar"],
           requestParams: {
             path: z.object({ id: z.string().uuid() }),

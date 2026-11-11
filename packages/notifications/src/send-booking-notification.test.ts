@@ -245,6 +245,10 @@ describe("sendBookingNotification", () => {
       subheading: "Expert: you cancelled, refunded",
     })
     // The subject and the short notice say who cancelled.
+    // The member is emailed even with booking emails switched off; the
+    // expert's own copy follows their preference as usual.
+    expect(send.mock.calls[0]?.[0].essential).toBe(true)
+    expect(send.mock.calls[1]?.[0].essential).toBeUndefined()
     const memberSend = send.mock.calls[0]?.[0].ctx
     expect(memberSend.title).toBe("Ana had to cancel")
     expect(memberSend.subject).toMatch(/^Ana had to cancel · /)

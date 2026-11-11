@@ -210,6 +210,9 @@ describe("cancelBookingByExpert", () => {
         entityId: "booking-1",
         payload: {
           reason: "expert_cancel",
+          reasonCode: "unavailable",
+          startsAt: "2026-11-20T10:00:00.000Z",
+          previousStatus: "confirmed",
           refundPercent: 100,
           refundCents: 6000,
         },
@@ -264,7 +267,12 @@ describe("cancelBookingByExpert", () => {
     // No percentage is recorded when nothing was paid.
     expect(captured.audits).toEqual([
       expect.objectContaining({
-        payload: { reason: "expert_cancel", refundCents: 0 },
+        payload: {
+          reason: "expert_cancel",
+          startsAt: "2026-11-20T10:00:00.000Z",
+          previousStatus: "confirmed",
+          refundCents: 0,
+        },
       }),
     ])
   })

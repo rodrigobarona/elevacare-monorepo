@@ -59,6 +59,12 @@ Each entry should include:
     to 10 business days), leaves the policy out and has a "Book a new
     time" button to the expert's public profile. The expert's email
     confirms what they did.
+  - The member's email is sent even if they switched booking emails
+    off: without it they may travel to, or wait for, a session that
+    will not happen. It is the one booking email that ignores that
+    preference, and only by email (text messages and quiet hours are not
+    overridden). Founder may reverse this; it is one flag
+    (`essential`) on the send.
   - In the expert calendar the session's sheet has "Cancel session". It
     asks first, names the session, says what happens (the member is
     told and refunded, it cannot be undone, the time can be booked

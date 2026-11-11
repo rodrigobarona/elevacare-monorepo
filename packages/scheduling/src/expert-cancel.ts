@@ -217,6 +217,10 @@ async function writeCancellation(
         entityId: row.id,
         payload: {
           reason: "expert_cancel",
+          // What was decided, kept where it cannot be edited later.
+          ...(input.reason ? { reasonCode: input.reason } : {}),
+          startsAt: row.startsAt.toISOString(),
+          previousStatus: row.status,
           // Nothing was paid for a free session: no percentage to record.
           ...(refundCents > 0 ? { refundPercent: 100 } : {}),
           refundCents,
