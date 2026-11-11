@@ -84,6 +84,8 @@
       "leave": "Leave",
       "leftTitle": "You left the session",
       "leftBody": "Thanks for joining. You can close this page.",
+      "leftRejoinHint": "Left by mistake, or nobody there yet? You can come back until {time}.",
+      "rejoin": "Rejoin session",
       "overtimeTitle": "Booked time is over",
       "overtimeBody": "You can keep going — the room closes at {closesAt}.",
       "back": "Back to calendar",

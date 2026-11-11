@@ -145,8 +145,9 @@ The pilot invitation stays blocked until these checks are done.
   Portugal, 024 in Spain) are shown on the booking details step, the
   thank-you page, the member's session page and member emails (decision
   log, "Urgent help is signposted where members book and wait"). The
-  join and waiting page carries it too (decision log, "The join page
-  waits for the session and opens it"). Open until deployed and until the
+  join page carries it too while waiting, when joining failed and once
+  the session is over, not during the call (decision log, "The join
+  page waits for the session and opens it"). Open until deployed and until the
   founder and Patricia Mota have read the choice of lines.
 - PRIV2-04: expert record reads are only sampled at 1%. Lei 58/2019 expects a full access log.
   Status 2026-11-11: every read of a session record is audited, the owning

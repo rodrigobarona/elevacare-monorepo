@@ -62,7 +62,9 @@ export function JoinSession({
   const [windowHint, setWindowHint] = useState<string | null>(null)
   const [waiting, setWaiting] = useState<JoinWindow | null>(null)
   const [loading, setLoading] = useState(true)
-  const [left, setLeft] = useState(false)
+  /** When the person left the call (device clock), or `null`. */
+  const [leftAt, setLeftAt] = useState<number | null>(null)
+  const left = leftAt !== null
   /** The call opened from the waiting room: say so and move focus to it. */
   const [openedFromWaiting, setOpenedFromWaiting] = useState(false)
   const callRef = useRef<HTMLDivElement>(null)
@@ -164,12 +166,39 @@ export function JoinSession({
   }, [opened, labels.waitingRoomOpened])
 
   if (left) {
+    // Joining stays open until the token's end: someone who left by
+    // mistake, or found nobody yet, can come straight back.
+    const closesAt = creds ? Date.parse(creds.callWindow.closesAt) : Number.NaN
+    const canRejoin = Number.isFinite(closesAt) && closesAt > leftAt
     return (
       <div className="mx-auto flex max-w-lg flex-col gap-4 py-12 text-center">
         <h1 className="text-xl font-medium">{labels.leftTitle}</h1>
         <p className="text-sm text-muted-foreground">{labels.leftBody}</p>
+        {canRejoin ? (
+          <p className="text-sm text-muted-foreground" suppressHydrationWarning>
+            {labels.leftRejoinHint(formatClock(closesAt, labels.timeLocale))}
+          </p>
+        ) : null}
         <p className="text-xs text-muted-foreground">{labels.callPrivacy}</p>
-        <LinkButton href={backHref}>{labels.back}</LinkButton>
+        <div className="flex flex-wrap justify-center gap-2">
+          {canRejoin ? (
+            <Button
+              onPress={() => {
+                setLeftAt(null)
+                setOpenedFromWaiting(false)
+                load()
+              }}
+            >
+              {labels.rejoin}
+            </Button>
+          ) : null}
+          <LinkButton
+            variant={canRejoin ? "outline" : "default"}
+            href={backHref}
+          >
+            {labels.back}
+          </LinkButton>
+        </div>
       </div>
     )
   }
@@ -248,7 +277,7 @@ export function JoinSession({
         callWindow={creds.callWindow}
         transcriptionAllowed={creds.transcriptionAllowed}
         sessionLanguage={creds.sessionLanguage}
-        onLeft={() => setLeft(true)}
+        onLeft={() => setLeftAt(Date.now())}
       />
     </div>
   )
@@ -258,6 +287,13 @@ function sessionNotOpenCopy(template: string, start: string | null): string {
   if (!start) return template
   if (template.includes("{start}")) return template.replace("{start}", start)
   return `${template.replace(/\.$/, "")}: ${start}.`
+}
+
+function formatClock(time: number, locale: string | undefined): string {
+  return new Intl.DateTimeFormat(locale, {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(time))
 }
 
 function formatJoinStart(iso: string): string {

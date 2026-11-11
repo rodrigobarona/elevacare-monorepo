@@ -71,6 +71,8 @@
       "leave": "Sair",
       "leftTitle": "Saiu da sessão",
       "leftBody": "Obrigado por participar. Pode fechar esta página.",
+      "leftRejoinHint": "Saiu por engano, ou ainda não estava ninguém? Pode voltar a entrar até às {time}.",
+      "rejoin": "Voltar a entrar",
       "overtimeTitle": "O tempo marcado terminou",
       "overtimeBody": "Pode continuar — a sala fecha às {closesAt}.",
       "back": "Voltar à sessão",

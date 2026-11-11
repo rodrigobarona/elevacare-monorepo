@@ -29,6 +29,8 @@ export type ElevaCallLabels = {
   leave: string
   leftTitle: string
   leftBody: string
+  leftRejoinHint: (time: string) => string
+  rejoin: string
   back: string
   errorTitle: string
   retry: string
@@ -143,6 +145,8 @@ export function elevaCallLabels(
     leave: t("leave"),
     leftTitle: t("leftTitle"),
     leftBody: t("leftBody"),
+    leftRejoinHint: (time) => t("leftRejoinHint", { time }),
+    rejoin: t("rejoin"),
     back: t("back"),
     errorTitle: t("errorTitle"),
     retry: t("retry"),
