@@ -1,4 +1,6 @@
+import { Section } from "react-email"
 import { EmailLayout } from "../components/layout"
+import { EmailButton } from "../components/email-button"
 import { DetailRow } from "../components/detail-row"
 import { EmailCard } from "../components/email-card"
 import { EmailBodyText, EmailHeading } from "../components/email-heading"
@@ -29,6 +31,8 @@ export interface BookingCancelledProps {
   counterpartName?: string
   /** Member copy only: where to turn when something cannot wait. */
   urgentHelp?: UrgentHelpDetail
+  /** Member copy when the expert cancelled: where to book a new time. */
+  rebookHref?: string
 }
 
 export function BookingCancelledEmail({
@@ -47,6 +51,7 @@ export function BookingCancelledEmail({
   counterpartLabel,
   counterpartName,
   urgentHelp,
+  rebookHref,
 }: BookingCancelledProps) {
   const t = getEmailTranslations(locale)
 
@@ -87,6 +92,13 @@ export function BookingCancelledEmail({
         ) : null}
       </EmailCard>
 
+      {rebookHref ? (
+        <Section className="mt-[24px]">
+          <EmailButton href={rebookHref}>
+            {t.booking.bookNewTimeCta}
+          </EmailButton>
+        </Section>
+      ) : null}
       {showIcsHint ? (
         <EmailBodyText className="mt-[24px] text-[13px] leading-[20px]">
           {t.booking.icsHintRemove}

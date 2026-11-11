@@ -27,6 +27,8 @@ import {
   ListExpertBookingsQuerySchema,
   ListExpertBookingsResponseSchema,
   AcceptExpertBookingResponseSchema,
+  CancelExpertBookingRequestSchema,
+  CancelExpertBookingResponseSchema,
   DeclineExpertBookingRequestSchema,
   DeclineExpertBookingResponseSchema,
   CreateOrganizationRequestSchema,
@@ -2080,6 +2082,42 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "409": {
               description: "Not awaiting confirmation",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/expert/bookings/{id}/cancel": {
+        post: {
+          operationId: "cancelExpertBooking",
+          summary: "Cancel a confirmed session as the expert",
+          description:
+            "Cancels a confirmed or rescheduled booking that has not started. The member is refunded everything they paid, whatever the service's cancellation policy, and both people are told. The time becomes bookable again. Repeating the call for a booking already cancelled answers 200 with refundCents 0.",
+          tags: ["Expert Calendar"],
+          requestParams: {
+            path: z.object({ id: z.string().uuid() }),
+          },
+          requestBody: {
+            required: false,
+            content: {
+              "application/json": {
+                schema: CancelExpertBookingRequestSchema,
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Session cancelled",
+              content: {
+                "application/json": {
+                  schema: CancelExpertBookingResponseSchema,
+                },
+              },
+            },
+            "409": {
+              description:
+                "INVALID_STATUS: not a confirmed session (or it changed meanwhile). TOO_LATE: the session has started.",
               content: { "application/json": { schema: ErrorSchema } },
             },
             ...stdWithNotFound,

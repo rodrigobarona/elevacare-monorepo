@@ -32,6 +32,49 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-11: An expert can cancel a confirmed session; the member is refunded in full (active)
+
+- Owner: engineering. Found in the beta readiness survey: the terms
+  (section 7) promise a full refund and a new booking "if the expert
+  cancels", and there was no way for an expert to cancel. An expert who
+  fell ill could only write to support while the member waited.
+- Decisions:
+  - `POST /expert/bookings/{id}/cancel` (session or API key, capability
+    `events:manage`, rate limited, in the OpenAPI document). It cancels
+    a `confirmed` or `rescheduled` booking of the caller's own expert
+    profile that has not started. Another expert's booking answers 404.
+  - The member is refunded everything they paid and not yet got back,
+    whatever the service's cancellation policy: that policy binds the
+    member, not the expert. The refund is made by the existing refund
+    sweep. The time becomes bookable again.
+  - It reuses the `booking.cancelled` event with `cancelledBy: "expert"`
+    in its payload (no new notification kind, no migration), so the
+    calendar entry is removed and the video room closed as for any
+    cancellation.
+  - Both people are told. The member's email says who cancelled, states
+    the refund, leaves the policy out and has a "Book a new time" button
+    to the expert's public profile. The expert's email confirms what
+    they did.
+  - In the expert calendar the session's sheet has "Cancel session". It
+    asks first, says what happens (the member is told and refunded, it
+    cannot be undone) and takes an optional reason.
+  - The reason (180 characters) is kept on the booking as
+    `expert_cancel: ...` and is not sent to the member. The form asks
+    the expert to leave health details out.
+  - A second press, or a retry, answers the same with nothing more to
+    refund. If the member moved or cancelled first, nothing is changed
+    and the expert is told the session changed.
+  - Audit: `booking canceled` with reason `expert_cancel`, actor the
+    expert, refund 100%.
+- Not built: cancelling after the start (that is a no-show, a separate
+  flow); a confirmation step before declining a request; a count or
+  limit of expert cancellations; telling the member the reason; the
+  same action in the member list or the Today page; a help-center page.
+- Not proven: the flow against a real payment (Stripe test mode on
+  staging): cancel, refund arriving, both emails delivered, room closed.
+  The screenshots stop at the confirmation dialog on purpose, so no
+  test booking was cancelled.
+
 ### 2026-11-11: The expert calendar shows every session of the week (active)
 
 - Owner: engineering. Found in the beta readiness survey of the expert app.

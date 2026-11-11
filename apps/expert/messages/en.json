@@ -602,7 +602,21 @@
     "requestShort": "Request",
     "unpaidShort": "Unpaid",
     "awaitingPaymentHint": "The member is finishing payment. This time is held for them and is confirmed once paid.",
-    "weekSummary": "{count, plural, =0 {No sessions this week} one {# session this week} other {# sessions this week}}"
+    "weekSummary": "{count, plural, =0 {No sessions this week} one {# session this week} other {# sessions this week}}",
+    "cancelSession": {
+      "open": "Cancel session",
+      "title": "Cancel this session?",
+      "description": "We tell {name} right away and refund everything they paid. The time becomes free in your calendar. This cannot be undone.",
+      "reasonLabel": "Reason (optional)",
+      "reasonHint": "Kept on the booking record and not sent to the member. Please leave health details out.",
+      "keep": "Keep session",
+      "confirm": "Cancel session",
+      "done": "Session cancelled. The member has been told.",
+      "doneRefunded": "Session cancelled. The member has been told and is refunded in full.",
+      "tooLate": "This session has already started, so it can no longer be cancelled here.",
+      "changed": "This session changed in the meantime. Load the week again to see it.",
+      "failed": "We couldn't cancel this session. Try again."
+    }
   },
   "calendars": {
     "backToIntegrations": "Integrations",

@@ -37,6 +37,9 @@ const {
       expertRequestedTitle: "New booking request",
       expertRequestedSubtitle: "A member asked",
       expertCancelledSubtitle: "Expert: cancelled",
+      expertCancelledByYouSubtitle: "Expert: you cancelled",
+      cancelledByExpertSubtitle: (expert: string, refunded: boolean) =>
+        `${expert} cancelled${refunded ? ", refunded" : ""}`,
       expertRescheduledSubtitle: "Expert: moved",
       expertReminder24hSubtitle: "Expert: 24h",
       expertReminder1hSubtitle: "Expert: 1h",
@@ -84,6 +87,8 @@ vi.mock("@eleva/db", () => ({
 }))
 vi.mock("@eleva/config/env", () => ({
   resolveGatewayUrl: () => "https://eleva.care",
+  expertProfileUrl: (locale: string, username: string) =>
+    `https://eleva.care${locale === "en" ? "" : `/${locale}`}/${username}`,
 }))
 vi.mock("@eleva/video/join-grant", () => ({
   mintJoinGrant: vi.fn(async ({ role }: { role: string }) => `grant-${role}`),
@@ -192,6 +197,74 @@ describe("sendBookingNotification", () => {
         refundAmount: "€30.00",
         showIcsHint: true,
       })
+    )
+    // The member cancelled: no "book a new time" button.
+    for (const [props] of renderBookingCancelled.mock.calls as unknown as [
+      Record<string, unknown>,
+    ][]) {
+      expect(props.rebookHref).toBeUndefined()
+    }
+  })
+
+  it("says the expert cancelled, to both, and leaves the member's policy out", async () => {
+    const send = vi
+      .fn()
+      .mockResolvedValue({ kind: "booking.cancelled", deliveries: [] })
+    await sendBookingNotification(
+      {
+        id: "evt-expert-cancel",
+        type: "booking.cancelled",
+        orgId: ORG_ID,
+        payload: eventPayload({ refundCents: 6000, cancelledBy: "expert" }),
+      },
+      {
+        loadBooking: async () =>
+          booking({
+            status: "cancelled",
+            expertName: "Ana Mota",
+            expertUsername: "anamota",
+          }),
+        send,
+      }
+    )
+    const calls = renderBookingCancelled.mock.calls.map(
+      (call) => (call as unknown[])[0] as Record<string, unknown>
+    )
+    expect(calls).toHaveLength(2)
+    expect(calls[0]).toMatchObject({
+      subheading: "Ana cancelled, refunded",
+      refundAmount: "€60.00",
+      urgentHelp: "full",
+    })
+    // The member can book again from the expert's profile; the expert
+    // gets no such button.
+    expect(calls[0]?.rebookHref).toBe("https://eleva.care/anamota")
+    expect(calls[1]).toMatchObject({ subheading: "Expert: you cancelled" })
+    expect(calls[1]?.rebookHref).toBeUndefined()
+    for (const call of calls) {
+      expect(call.cancellationPolicyName).toBeUndefined()
+    }
+  })
+
+  it("promises no refund when the cancelled session was free", async () => {
+    const send = vi
+      .fn()
+      .mockResolvedValue({ kind: "booking.cancelled", deliveries: [] })
+    await sendBookingNotification(
+      {
+        id: "evt-expert-cancel-free",
+        type: "booking.cancelled",
+        orgId: ORG_ID,
+        payload: eventPayload({ cancelledBy: "expert" }),
+      },
+      {
+        loadBooking: async () =>
+          booking({ status: "cancelled", expertName: "Ana Mota" }),
+        send,
+      }
+    )
+    expect(renderBookingCancelled).toHaveBeenCalledWith(
+      expect.objectContaining({ subheading: "Ana cancelled" })
     )
   })
 

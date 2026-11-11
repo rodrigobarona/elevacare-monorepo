@@ -5,6 +5,11 @@ const translations = {
     booking: {
       expertCancelledSubtitle:
         "This session was cancelled. The time is free again in your calendar, and the attached invite removes it.",
+      bookNewTimeCta: "Book a new time",
+      expertCancelledByYouSubtitle:
+        "You cancelled this session. The member is refunded in full and the time is free again. The attached invite removes it from your calendar.",
+      cancelledByExpertSubtitle: (expert: string, refunded: boolean) =>
+        `${expert} had to cancel this session.${refunded ? " You get a full refund of what you paid." : ""} You can book a new time whenever suits you. The attached invite removes this one from your calendar.`,
       expertRescheduledSubtitle:
         "This session has a new time. The updated invite is attached.",
       expertReminder24hSubtitle: "You have a session in 24 hours.",
@@ -195,6 +200,11 @@ const translations = {
     booking: {
       expertCancelledSubtitle:
         "Esta sessão foi cancelada. O horário volta a estar livre no seu calendário, e o convite em anexo remove-a.",
+      bookNewTimeCta: "Marcar novo horário",
+      expertCancelledByYouSubtitle:
+        "Cancelou esta sessão. O membro recebe o reembolso total e o horário volta a estar livre. O convite em anexo remove-a do seu calendário.",
+      cancelledByExpertSubtitle: (expert: string, refunded: boolean) =>
+        `${expert} teve de cancelar esta sessão.${refunded ? " Recebe o reembolso total do que pagou." : ""} Pode marcar um novo horário quando quiser. O convite em anexo remove esta sessão do seu calendário.`,
       expertRescheduledSubtitle:
         "Esta sessão tem um novo horário. O convite atualizado segue em anexo.",
       expertReminder24hSubtitle: "Tem uma sessão daqui a 24 horas.",
@@ -388,6 +398,11 @@ const translations = {
     booking: {
       expertCancelledSubtitle:
         "Esta sesión se ha cancelado. El horario vuelve a estar libre en su calendario, y la invitación adjunta la elimina.",
+      bookNewTimeCta: "Reservar nuevo horario",
+      expertCancelledByYouSubtitle:
+        "Ha cancelado esta sesión. El miembro recibe el reembolso íntegro y el horario vuelve a estar libre. La invitación adjunta la elimina de su calendario.",
+      cancelledByExpertSubtitle: (expert: string, refunded: boolean) =>
+        `${expert} ha tenido que cancelar esta sesión.${refunded ? " Recibes el reembolso íntegro de lo que pagaste." : ""} Puedes reservar un nuevo horario cuando quieras. La invitación adjunta elimina esta sesión de tu calendario.`,
       expertRescheduledSubtitle:
         "Esta sesión tiene un nuevo horario. La invitación actualizada va adjunta.",
       expertReminder24hSubtitle: "Tiene una sesión dentro de 24 horas.",
@@ -585,6 +600,9 @@ export interface EmailTranslations {
   booking: {
     greeting: (name: string) => string
     expertCancelledSubtitle: string
+    bookNewTimeCta: string
+    expertCancelledByYouSubtitle: string
+    cancelledByExpertSubtitle: (expert: string, refunded: boolean) => string
     expertRescheduledSubtitle: string
     expertReminder24hSubtitle: string
     expertReminder1hSubtitle: string

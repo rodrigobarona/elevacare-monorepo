@@ -2171,6 +2171,26 @@ export type DeclineExpertBookingResponse = z.infer<
   typeof DeclineExpertBookingResponseSchema
 >
 
+export const CancelExpertBookingRequestSchema = z.object({
+  /** Kept on the booking record; not sent to the member. */
+  reason: z.string().trim().max(180).optional(),
+})
+
+export type CancelExpertBookingRequest = z.infer<
+  typeof CancelExpertBookingRequestSchema
+>
+
+export const CancelExpertBookingResponseSchema = z.object({
+  bookingId: z.string().uuid(),
+  status: z.literal("cancelled"),
+  /** What the member is refunded: everything not refunded before. */
+  refundCents: z.number().int().nonnegative(),
+})
+
+export type CancelExpertBookingResponse = z.infer<
+  typeof CancelExpertBookingResponseSchema
+>
+
 export const ListExpertBookingsResponseSchema = z.object({
   bookings: z.array(ExpertBookingSchema),
 })
@@ -3423,6 +3443,13 @@ export function createApiClient(options: ApiClientOptions) {
             `/expert/bookings/${encodeURIComponent(bookingId)}/decline`,
             data
           ).then((raw) => DeclineExpertBookingResponseSchema.parse(raw))
+        },
+        cancel(bookingId: string, data: CancelExpertBookingRequest = {}) {
+          return request<CancelExpertBookingResponse>(
+            "POST",
+            `/expert/bookings/${encodeURIComponent(bookingId)}/cancel`,
+            data
+          ).then((raw) => CancelExpertBookingResponseSchema.parse(raw))
         },
       },
       calendar: {

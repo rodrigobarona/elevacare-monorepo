@@ -602,7 +602,21 @@
     "requestShort": "Pedido",
     "unpaidShort": "Por pagar",
     "awaitingPaymentHint": "O membro está a concluir o pagamento. Este horário fica reservado e é confirmado depois de pago.",
-    "weekSummary": "{count, plural, =0 {Sem sessões esta semana} one {# sessão esta semana} other {# sessões esta semana}}"
+    "weekSummary": "{count, plural, =0 {Sem sessões esta semana} one {# sessão esta semana} other {# sessões esta semana}}",
+    "cancelSession": {
+      "open": "Cancelar sessão",
+      "title": "Cancelar esta sessão?",
+      "description": "Avisamos {name} de imediato e devolvemos tudo o que pagou. O horário fica livre no seu calendário. Não é possível desfazer.",
+      "reasonLabel": "Motivo (opcional)",
+      "reasonHint": "Fica guardado no registo da marcação e não é enviado ao membro. Não inclua dados de saúde.",
+      "keep": "Manter sessão",
+      "confirm": "Cancelar sessão",
+      "done": "Sessão cancelada. O membro foi avisado.",
+      "doneRefunded": "Sessão cancelada. O membro foi avisado e recebe o reembolso total.",
+      "tooLate": "Esta sessão já começou, por isso já não pode ser cancelada aqui.",
+      "changed": "Esta sessão mudou entretanto. Carregue a semana de novo para a ver.",
+      "failed": "Não foi possível cancelar esta sessão. Tente de novo."
+    }
   },
   "calendars": {
     "backToIntegrations": "Integrações",

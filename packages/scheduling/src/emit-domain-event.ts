@@ -26,6 +26,8 @@ export type BookingNotificationPayload = {
   scheduleRevision?: number
   /** Refund this cancellation adds, in the payment currency's minor units. */
   refundCents?: number
+  /** Set when the expert cancelled; absent when the member did. */
+  cancelledBy?: "expert"
 }
 
 export function bookingNotificationIdempotencyKey(input: {
@@ -65,15 +67,23 @@ export type EmitBookingNotificationInput =
     }
   | {
       orgId: string
-      type:
-        | "booking.cancelled"
-        | "booking.request_declined"
-        | "booking.request_expired"
+      type: "booking.request_declined" | "booking.request_expired"
       bookingId: string
       startsAt: Date
       occurredAt: Date
       /** Omitted when nothing was paid. */
       refundCents?: number
+    }
+  | {
+      orgId: string
+      type: "booking.cancelled"
+      bookingId: string
+      startsAt: Date
+      occurredAt: Date
+      /** Omitted when nothing was paid. */
+      refundCents?: number
+      /** The expert cancelled: both emails say so. */
+      cancelledBy?: "expert"
     }
   | {
       orgId: string
@@ -146,6 +156,9 @@ export async function emitBookingNotificationEvent(
       input.type === "booking.request_expired") &&
     input.refundCents !== undefined
       ? { refundCents: input.refundCents }
+      : {}),
+    ...(input.type === "booking.cancelled" && input.cancelledBy
+      ? { cancelledBy: input.cancelledBy }
       : {}),
   }
 

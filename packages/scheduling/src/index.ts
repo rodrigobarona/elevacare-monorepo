@@ -97,6 +97,8 @@ export {
   BookingRequestError,
 } from "./booking-request"
 export type { BookingRequestErrorCode } from "./booking-request"
+export { cancelBookingByExpert, ExpertCancelError } from "./expert-cancel"
+export type { ExpertCancelErrorCode } from "./expert-cancel"
 export { confirmFreeReservation } from "./confirm-free"
 export {
   extendReservationHold,
