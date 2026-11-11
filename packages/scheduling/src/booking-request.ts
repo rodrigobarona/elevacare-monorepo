@@ -1,15 +1,19 @@
-import { and, eq, inArray } from "drizzle-orm"
+import { and, eq } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
+import {
+  EXPERT_DECLINE_REASONS,
+  type ExpertDeclineReason,
+} from "@eleva/config/cancellation-policy"
 import {
   getExpertBookingForApproval,
   listExpiredBookingRequests,
   main,
   type ExpertBookingApprovalRow,
-  type Tx,
 } from "@eleva/db"
 import { emitGuestActivationRequired } from "./confirm-booking"
 import { emitBookingNotificationEvent } from "./emit-domain-event"
 import { ensureSessionRow } from "./ensure-session-row"
+import { markRefundDue, releaseReservation } from "./refund-due"
 
 export type BookingRequestErrorCode =
   | "not_found"
@@ -111,7 +115,8 @@ export async function declineBookingRequest(input: {
   orgId: string
   expertProfileId: string
   bookingId: string
-  note?: string
+  /** One of a fixed list, kept on the booking record; not sent to the member. */
+  reason?: ExpertDeclineReason
   source: "expert" | "expiry"
   now?: Date
 }): Promise<{ refundCents: number }> {
@@ -128,7 +133,7 @@ export async function declineBookingRequest(input: {
   }
   return settleDeclinedRequest(row, {
     actorUserId: input.actorUserId,
-    note: input.note,
+    reason: input.reason,
     source: input.source,
     now,
   })
@@ -171,7 +176,7 @@ async function settleDeclinedRequest(
   row: ExpertBookingApprovalRow,
   input: {
     actorUserId: string | null
-    note?: string
+    reason?: ExpertDeclineReason
     source: "expert" | "expiry"
     now: Date
   }
@@ -183,7 +188,7 @@ async function settleDeclinedRequest(
   const reason =
     input.source === "expiry"
       ? "request_expired"
-      : truncateDeclineNote(input.note)
+      : expertDeclineReason(input.reason)
 
   await withAudit(
     { orgId: row.orgId, actorUserId: input.actorUserId },
@@ -207,35 +212,17 @@ async function settleDeclinedRequest(
         throw new BookingRequestError("INVALID_STATUS")
       }
 
-      if (
-        row.paymentId &&
-        row.paymentStatus === "succeeded" &&
-        refundCents > 0
-      ) {
-        const [payment] = await tx
-          .update(main.bookingPayments)
-          .set({
-            refundDueCents: (row.paymentRefundedCents ?? 0) + refundCents,
-            status: "refund_pending",
-          })
-          .where(
-            and(
-              eq(main.bookingPayments.id, row.paymentId),
-              eq(main.bookingPayments.status, "succeeded"),
-              eq(
-                main.bookingPayments.refundedCents,
-                row.paymentRefundedCents ?? 0
-              )
-            )
-          )
-          .returning({ id: main.bookingPayments.id })
-        if (!payment) {
-          throw new BookingRequestError("INVALID_STATUS")
-        }
+      if (row.paymentId && refundCents > 0) {
+        const marked = await markRefundDue(tx, {
+          paymentId: row.paymentId,
+          refundedCents: row.paymentRefundedCents ?? 0,
+          refundCents,
+        })
+        if (!marked) throw new BookingRequestError("INVALID_STATUS")
       }
 
       if (row.reservationId) {
-        await releaseReservationRow(tx, row.reservationId)
+        await releaseReservation(tx, row.reservationId)
       }
 
       await emitBookingNotificationEvent(tx, {
@@ -256,6 +243,9 @@ async function settleDeclinedRequest(
         payload: {
           reason:
             input.source === "expiry" ? "request_expired" : "expert_decline",
+          ...(input.source === "expert" && input.reason
+            ? { reasonCode: input.reason }
+            : {}),
           refundCents,
         },
       })
@@ -265,20 +255,9 @@ async function settleDeclinedRequest(
   return { refundCents }
 }
 
-async function releaseReservationRow(tx: Tx, reservationId: string) {
-  await tx
-    .update(main.slotReservations)
-    .set({ status: "released" })
-    .where(
-      and(
-        eq(main.slotReservations.id, reservationId),
-        inArray(main.slotReservations.status, ["active", "converted"])
-      )
-    )
-}
-
-function truncateDeclineNote(note?: string): string {
-  const trimmed = note?.trim()
-  if (!trimmed) return "expert_decline"
-  return `expert_decline: ${trimmed.slice(0, 180)}`
+/** `expert_decline`, or `expert_decline:<reason>` for a reason from the list. */
+export function expertDeclineReason(reason?: string): string {
+  return (EXPERT_DECLINE_REASONS as readonly string[]).includes(reason ?? "")
+    ? `expert_decline:${reason}`
+    : "expert_decline"
 }

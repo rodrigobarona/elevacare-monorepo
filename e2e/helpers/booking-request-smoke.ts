@@ -183,7 +183,7 @@ export async function settleRequest(
         `${apiUrl}/expert/bookings/${input.bookingId}/decline`,
         {
           headers: authHeaders(input.expertCookie),
-          data: { note: "Request smoke decline" },
+          data: { reason: "unavailable" },
         }
       )
       expect(res.status(), await res.text()).toBe(200)

@@ -19,6 +19,7 @@ import { canReschedule } from "./booking-rules"
 import { emitBookingNotificationEvent } from "./emit-domain-event"
 import { isExclusionViolation } from "./pg-errors"
 import { resolveOffer } from "./resolve-offer"
+import { markRefundDue, releaseReservation } from "./refund-due"
 import { expireOverlappingHolds } from "./stale-holds"
 
 const CANCELABLE_STATUSES = new Set([
@@ -162,45 +163,20 @@ export async function cancelMemberBooking(input: {
       }
 
       if (row.paymentId && row.paymentStatus === "succeeded") {
-        // refund_due_cents is the cumulative refunded total the payment must
-        // reach; at 0% the payment stays succeeded and the expert is paid.
-        const [payment] = await tx
-          .update(main.bookingPayments)
-          .set({
-            refundDueCents:
-              (row.paymentRefundedCents ?? 0) + refund.refundCents,
-            ...(refund.refundCents > 0
-              ? { status: "refund_pending" as const }
-              : {}),
-          })
-          .where(
-            and(
-              eq(main.bookingPayments.id, row.paymentId),
-              eq(main.bookingPayments.status, "succeeded"),
-              eq(
-                main.bookingPayments.refundedCents,
-                row.paymentRefundedCents ?? 0
-              )
-            )
-          )
-          .returning({ id: main.bookingPayments.id })
-        if (!payment) {
+        // Also at 0%: the payment then stays succeeded and the expert is
+        // paid, but it must still be as it was read.
+        const marked = await markRefundDue(tx, {
+          paymentId: row.paymentId,
+          refundedCents: row.paymentRefundedCents ?? 0,
+          refundCents: refund.refundCents,
+        })
+        if (!marked) {
           throw new MemberBookingPolicyError("INVALID_STATUS")
         }
       }
 
       if (row.reservationId) {
-        // A paid booking's reservation is `converted`, which the overlap
-        // exclusion still enforces; release it so the slot is bookable again.
-        await tx
-          .update(main.slotReservations)
-          .set({ status: "released" })
-          .where(
-            and(
-              eq(main.slotReservations.id, row.reservationId),
-              inArray(main.slotReservations.status, ["active", "converted"])
-            )
-          )
+        await releaseReservation(tx, row.reservationId)
       }
 
       await emitBookingNotificationEvent(tx, {

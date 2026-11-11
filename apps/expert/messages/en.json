@@ -561,7 +561,6 @@
     "requestPending": "Booking request",
     "accept": "Accept",
     "decline": "Decline",
-    "declineNote": "Reason, if you decline (optional)",
     "accepted": "Request accepted.",
     "declined": "Request declined. The member is refunded in full.",
     "requestFailed": "Could not update this request. Try again.",
@@ -626,6 +625,21 @@
         "scheduling": "A scheduling conflict",
         "other": "Another reason"
       }
+    },
+    "declineRequest": {
+      "title": "Decline this request?",
+      "description": "We'll tell {name} right away and refund them in full. The time becomes free in your calendar. This cannot be undone.",
+      "reasonLabel": "Reason (optional)",
+      "reasonPlaceholder": "Choose a reason",
+      "reasonHint": "Kept on the booking record in case there is a question about this request later. It is not sent to the member.",
+      "reasons": {
+        "unavailable": "I can't take that time",
+        "not_my_field": "This isn't my area",
+        "other": "Another reason"
+      },
+      "keep": "Keep request",
+      "confirm": "Decline request",
+      "confirming": "Declining…"
     }
   },
   "calendars": {

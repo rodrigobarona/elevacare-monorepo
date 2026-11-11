@@ -5,7 +5,7 @@ import {
   MemberBookingPolicyError,
 } from "@eleva/scheduling"
 import { corsHeaders } from "@/lib/cors"
-import { apiAuthFailure, requireMemberApiAuth } from "@/lib/auth"
+import { apiAuthFailure, requireRevocableMemberApiAuth } from "@/lib/auth"
 import {
   MEMBER_BOOKING_POLICY_STATUS,
   serializeCancellationQuote,
@@ -33,7 +33,8 @@ export async function POST(
 
   let session
   try {
-    session = await requireMemberApiAuth(request)
+    // Cancelling can refund: only a session that can be revoked may do it.
+    session = await requireRevocableMemberApiAuth(request)
   } catch (err) {
     const failure = apiAuthFailure(err, headers)
     if (failure) return failure

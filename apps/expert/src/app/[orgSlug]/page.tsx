@@ -212,7 +212,10 @@ export default async function ExpertDashboardPage({
                       ) : null}
                     </div>
                   </div>
-                  <DashboardRequestActions bookingId={booking.id} />
+                  <DashboardRequestActions
+                    bookingId={booking.id}
+                    memberName={booking.memberFirstName}
+                  />
                 </li>
               )
             })}

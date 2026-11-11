@@ -561,7 +561,6 @@
     "requestPending": "Pedido de reserva",
     "accept": "Aceitar",
     "decline": "Recusar",
-    "declineNote": "Motivo, se recusar (opcional)",
     "accepted": "Pedido aceite.",
     "declined": "Pedido recusado. O membro recebe o reembolso total.",
     "requestFailed": "Não foi possível atualizar este pedido. Tente novamente.",
@@ -626,6 +625,21 @@
         "scheduling": "Um conflito de agenda",
         "other": "Outro motivo"
       }
+    },
+    "declineRequest": {
+      "title": "Recusar este pedido?",
+      "description": "Avisamos {name} de imediato e devolvemos o valor total. O horário fica livre no seu calendário. Não é possível desfazer.",
+      "reasonLabel": "Motivo (opcional)",
+      "reasonPlaceholder": "Escolha um motivo",
+      "reasonHint": "Fica guardado no registo da marcação, para o caso de haver alguma dúvida sobre este pedido. Não é enviado ao membro.",
+      "reasons": {
+        "unavailable": "Não posso nesse horário",
+        "not_my_field": "Não é a minha área",
+        "other": "Outro motivo"
+      },
+      "keep": "Manter pedido",
+      "confirm": "Recusar pedido",
+      "confirming": "A recusar…"
     }
   },
   "calendars": {

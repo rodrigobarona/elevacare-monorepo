@@ -162,7 +162,11 @@ export function BookingSheet({
         ) : null}
         {isRequest ? (
           <RequestActions
+            // A fresh dialog per request: a reason chosen for one is never
+            // carried to another.
+            key={booking.id}
             bookingId={booking.id}
+            memberName={booking.memberFirstName}
             onSettled={(status) => onSettled(booking.id, status)}
           />
         ) : (

@@ -561,7 +561,6 @@
     "requestPending": "Solicitud de reserva",
     "accept": "Aceptar",
     "decline": "Rechazar",
-    "declineNote": "Motivo, si rechazas (opcional)",
     "accepted": "Solicitud aceptada.",
     "declined": "Solicitud rechazada. El miembro recibe el reembolso completo.",
     "requestFailed": "No se pudo actualizar esta solicitud. Inténtalo de nuevo.",
@@ -626,6 +625,21 @@
         "scheduling": "Un conflicto de agenda",
         "other": "Otro motivo"
       }
+    },
+    "declineRequest": {
+      "title": "¿Rechazar esta solicitud?",
+      "description": "Avisamos a {name} de inmediato y le devolvemos el importe íntegro. El horario queda libre en tu calendario. No se puede deshacer.",
+      "reasonLabel": "Motivo (opcional)",
+      "reasonPlaceholder": "Elige un motivo",
+      "reasonHint": "Queda guardado en el registro de la reserva, por si surge alguna duda sobre esta solicitud. No se envía al miembro.",
+      "reasons": {
+        "unavailable": "No puedo a esa hora",
+        "not_my_field": "No es mi área",
+        "other": "Otro motivo"
+      },
+      "keep": "Mantener solicitud",
+      "confirm": "Rechazar solicitud",
+      "confirming": "Rechazando…"
     }
   },
   "calendars": {

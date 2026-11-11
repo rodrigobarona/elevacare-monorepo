@@ -3,6 +3,7 @@ import {
   BookingRequestError,
   acceptBookingRequest,
   declineBookingRequest,
+  expertDeclineReason,
   expireBookingRequests,
 } from "./booking-request"
 
@@ -219,7 +220,7 @@ describe("declineBookingRequest", () => {
         orgId: "org-1",
         expertProfileId: "ep-1",
         bookingId: "booking-1",
-        note: "Not a match",
+        reason: "not_my_field",
         source: "expert",
         now,
       })
@@ -227,7 +228,7 @@ describe("declineBookingRequest", () => {
     expect(captured.bookingSets).toEqual([
       expect.objectContaining({
         status: "cancelled",
-        cancellationReason: "expert_decline: Not a match",
+        cancellationReason: "expert_decline:not_my_field",
       }),
     ])
     expect(captured.paymentSets).toEqual([
@@ -272,6 +273,20 @@ describe("expireBookingRequests", () => {
     expect(emitBookingNotificationEvent).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({ type: "booking.request_expired" })
+    )
+  })
+})
+
+describe("expertDeclineReason", () => {
+  it("stores a reason from the list, and never free text", () => {
+    expect(expertDeclineReason()).toBe("expert_decline")
+    expect(expertDeclineReason("unavailable")).toBe(
+      "expert_decline:unavailable"
+    )
+    // What a member wrote when asking is health information: an answer
+    // typed about it is dropped, not stored.
+    expect(expertDeclineReason("Not suitable for your back pain")).toBe(
+      "expert_decline"
     )
   })
 })
