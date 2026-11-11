@@ -624,11 +624,12 @@
         "emergency": "Una emergencia",
         "scheduling": "Un conflicto de agenda",
         "other": "Otro motivo"
-      }
+      },
+      "descriptionNoName": "Avisamos al miembro de inmediato y le devolvemos todo lo que pagó. No se puede deshacer."
     },
     "declineRequest": {
       "title": "¿Rechazar esta solicitud?",
-      "description": "Avisamos a {name} de inmediato y le devolvemos el importe íntegro. El horario queda libre en tu calendario. No se puede deshacer.",
+      "description": "Avisamos a {name} de inmediato y le devolvemos lo que haya pagado. El horario queda libre en tu calendario. No se puede deshacer.",
       "reasonLabel": "Motivo (opcional)",
       "reasonPlaceholder": "Elige un motivo",
       "reasonHint": "Queda guardado en el registro de la reserva, por si surge alguna duda sobre esta solicitud. No se envía al miembro.",
@@ -639,7 +640,9 @@
       },
       "keep": "Mantener solicitud",
       "confirm": "Rechazar solicitud",
-      "confirming": "Rechazando…"
+      "confirming": "Rechazando…",
+      "descriptionNoName": "Avisamos al miembro de inmediato y le devolvemos lo que haya pagado. El horario queda libre en tu calendario. No se puede deshacer.",
+      "answered": "Esta solicitud ya estaba respondida. Tu calendario ya está al día."
     }
   },
   "calendars": {

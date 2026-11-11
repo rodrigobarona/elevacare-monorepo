@@ -35,12 +35,18 @@ import {
 export function RequestActions({
   bookingId,
   memberName,
+  sessionSummary,
   onSettled,
+  onChanged,
 }: {
   bookingId: string
   /** The member's first name, when there is one. */
   memberName: string | null
+  /** "First visit · Friday 13 November, 12:00–13:00": which request this is. */
+  sessionSummary: string
   onSettled: (status: "confirmed" | "cancelled") => void
+  /** The request was answered elsewhere: show the page as it is now. */
+  onChanged: () => void
 }) {
   const t = useTranslations("calendar")
   const reasonId = React.useId()
@@ -66,6 +72,7 @@ export function RequestActions({
           ? t("requestExpired")
           : t("requestFailed")
       )
+      if (result.error === "requestExpired") onChanged()
       return
     }
     toast.success(t("accepted"))
@@ -81,6 +88,13 @@ export function RequestActions({
     ).catch(() => ({ ok: false as const, error: "requestFailed" }))
     setPending(null)
     if (!result.ok) {
+      if (result.error === "requestAnswered") {
+        // Trying again cannot help: say so, and show the page as it is now.
+        setDeclineOpen(false)
+        toast.info(t("declineRequest.answered"))
+        onChanged()
+        return
+      }
       // Worth another try: the reason chosen stays in the dialog.
       setDeclineFailed(true)
       return
@@ -118,9 +132,14 @@ export function RequestActions({
         <AlertDialogHeader>
           <AlertDialogTitle>{t("declineRequest.title")}</AlertDialogTitle>
           <AlertDialogDescription>
-            {t("declineRequest.description", {
-              name: memberName ?? t("memberUnknown"),
-            })}
+            <span className="block font-medium text-foreground">
+              {sessionSummary}
+            </span>
+            <span className="mt-2 block">
+              {memberName
+                ? t("declineRequest.description", { name: memberName })
+                : t("declineRequest.descriptionNoName")}
+            </span>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <div className="space-y-1.5">
@@ -130,6 +149,7 @@ export function RequestActions({
           {/* A short list on purpose: what the member wrote when asking is
               health information, and no typed answer about it is stored. */}
           <Select
+            className="w-full"
             aria-labelledby={reasonId}
             aria-describedby={hintId}
             placeholder={t("declineRequest.reasonPlaceholder")}
@@ -139,7 +159,7 @@ export function RequestActions({
               setReason(chosen ?? null)
             }}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

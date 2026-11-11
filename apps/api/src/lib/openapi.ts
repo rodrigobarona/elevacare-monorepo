@@ -4355,7 +4355,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "cancelMeBooking",
           summary: "Cancel a confirmed member booking",
           description:
-            "Allowed until the session starts. Refunds per the booking's cancellation policy snapshot: records refund_due_cents on the payment and, when above 0, marks it refund_pending for the cancellation-refund sweep. Returns the applied quote. Releases the slot. Needs the member's session; short-lived tokens are refused.",
+            "Allowed until the session starts. Refunds per the booking's cancellation policy snapshot: records refund_due_cents on the payment and, when above 0, marks it refund_pending for the cancellation-refund sweep. Returns the applied quote. Releases the slot. Needs the member's session or an API key; short-lived tokens are refused.",
           tags: ["Me"],
           requestParams: {
             path: z.object({ id: z.string().uuid() }),

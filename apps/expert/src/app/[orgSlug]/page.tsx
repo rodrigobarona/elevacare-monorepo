@@ -215,6 +215,7 @@ export default async function ExpertDashboardPage({
                   <DashboardRequestActions
                     bookingId={booking.id}
                     memberName={booking.memberFirstName}
+                    sessionSummary={`${title} · ${parts.longDate}, ${parts.timeRange}`}
                   />
                 </li>
               )

@@ -355,9 +355,13 @@ export async function sendBookingNotification(
         attachments: memberAttachments,
       },
       idempotencyKey,
-      // Their expert cancelled: the member is emailed whatever their
-      // preference, so nobody waits for a session that will not happen.
-      essential: cancelledByExpert,
+      // The session will not happen and it was not the member's choice
+      // (the expert cancelled, declined, or did not answer): they are
+      // emailed whatever their preference, so nobody waits for it.
+      essential:
+        cancelledByExpert ||
+        event.type === "booking.request_declined" ||
+        event.type === "booking.request_expired",
     }),
     send({
       kind: event.type,

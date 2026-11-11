@@ -58,6 +58,7 @@ describe("markRefundDue", () => {
     expect(calls[0]?.guards).toEqual(
       expect.arrayContaining([
         "payments.id",
+        "pay-1",
         "payments.status",
         "succeeded",
         "payments.refunded_cents",
@@ -98,7 +99,13 @@ describe("releaseReservation", () => {
       }),
     ])
     expect(calls[0]?.guards).toEqual(
-      expect.arrayContaining(["slots.id", "slots.status"])
+      expect.arrayContaining([
+        "slots.id",
+        "res-1",
+        "slots.status",
+        "active",
+        "converted",
+      ])
     )
   })
 })

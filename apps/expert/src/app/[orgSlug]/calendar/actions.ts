@@ -107,7 +107,12 @@ export async function declineCalendarBookingAction(
     console.error("decline-calendar-booking failed", err)
     return {
       ok: false,
-      error: mapExpertApiError(err, "requestFailed"),
+      // Already accepted, declined or expired elsewhere: trying again
+      // cannot help.
+      error: mapExpertApiError(err, "requestFailed", {
+        conflict: "requestAnswered",
+        notFound: "requestAnswered",
+      }),
     }
   }
 }

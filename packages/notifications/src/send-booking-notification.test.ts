@@ -260,6 +260,42 @@ describe("sendBookingNotification", () => {
     }
   })
 
+  it("emails the member about a declined or expired request whatever their preference", async () => {
+    for (const type of [
+      "booking.request_declined",
+      "booking.request_expired",
+    ] as const) {
+      const send = vi.fn().mockResolvedValue({ kind: type, deliveries: [] })
+      await sendBookingNotification(
+        {
+          id: `evt-${type}`,
+          type,
+          orgId: ORG_ID,
+          payload: eventPayload({ refundCents: 6000 }),
+        },
+        { loadBooking: async () => booking({ status: "cancelled" }), send }
+      )
+      expect(send.mock.calls[0]?.[0].essential).toBe(true)
+      expect(send.mock.calls[1]?.[0].essential).toBeUndefined()
+    }
+  })
+
+  it("keeps the member's own cancellation under their preference", async () => {
+    const send = vi
+      .fn()
+      .mockResolvedValue({ kind: "booking.cancelled", deliveries: [] })
+    await sendBookingNotification(
+      {
+        id: "evt-member-cancel",
+        type: "booking.cancelled",
+        orgId: ORG_ID,
+        payload: eventPayload({ refundCents: 3000 }),
+      },
+      { loadBooking: async () => booking({ status: "cancelled" }), send }
+    )
+    expect(send.mock.calls[0]?.[0].essential).toBe(false)
+  })
+
   it("promises no refund when the cancelled session was free", async () => {
     const send = vi
       .fn()

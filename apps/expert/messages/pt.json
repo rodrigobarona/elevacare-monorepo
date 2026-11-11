@@ -624,11 +624,12 @@
         "emergency": "Uma emergência",
         "scheduling": "Um conflito de agenda",
         "other": "Outro motivo"
-      }
+      },
+      "descriptionNoName": "Avisamos o membro de imediato e devolvemos tudo o que pagou. Não é possível desfazer."
     },
     "declineRequest": {
       "title": "Recusar este pedido?",
-      "description": "Avisamos {name} de imediato e devolvemos o valor total. O horário fica livre no seu calendário. Não é possível desfazer.",
+      "description": "Avisamos {name} de imediato e devolvemos o que tiver pago. O horário fica livre no seu calendário. Não é possível desfazer.",
       "reasonLabel": "Motivo (opcional)",
       "reasonPlaceholder": "Escolha um motivo",
       "reasonHint": "Fica guardado no registo da marcação, para o caso de haver alguma dúvida sobre este pedido. Não é enviado ao membro.",
@@ -639,7 +640,9 @@
       },
       "keep": "Manter pedido",
       "confirm": "Recusar pedido",
-      "confirming": "A recusar…"
+      "confirming": "A recusar…",
+      "descriptionNoName": "Avisamos o membro de imediato e devolvemos o que tiver pago. O horário fica livre no seu calendário. Não é possível desfazer.",
+      "answered": "Este pedido já tinha sido respondido. O seu calendário está agora atualizado."
     }
   },
   "calendars": {

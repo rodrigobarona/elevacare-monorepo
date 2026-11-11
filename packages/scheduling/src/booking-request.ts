@@ -243,7 +243,11 @@ async function settleDeclinedRequest(
         payload: {
           reason:
             input.source === "expiry" ? "request_expired" : "expert_decline",
-          ...(input.source === "expert" && input.reason
+          // Only a value from the list ever reaches the audit log, which
+          // cannot be edited later.
+          ...(input.source === "expert" &&
+          reason !== "expert_decline" &&
+          input.reason
             ? { reasonCode: input.reason }
             : {}),
           refundCents,

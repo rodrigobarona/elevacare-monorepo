@@ -624,22 +624,25 @@
         "emergency": "An emergency",
         "scheduling": "A scheduling conflict",
         "other": "Another reason"
-      }
+      },
+      "descriptionNoName": "We'll tell the member right away and refund everything they paid. This cannot be undone."
     },
     "declineRequest": {
       "title": "Decline this request?",
-      "description": "We'll tell {name} right away and refund them in full. The time becomes free in your calendar. This cannot be undone.",
+      "description": "We'll tell {name} right away and refund anything they paid. The time becomes free in your calendar. This cannot be undone.",
       "reasonLabel": "Reason (optional)",
       "reasonPlaceholder": "Choose a reason",
       "reasonHint": "Kept on the booking record in case there is a question about this request later. It is not sent to the member.",
       "reasons": {
-        "unavailable": "I can't take that time",
+        "unavailable": "I'm not available then",
         "not_my_field": "This isn't my area",
         "other": "Another reason"
       },
       "keep": "Keep request",
       "confirm": "Decline request",
-      "confirming": "Declining…"
+      "confirming": "Declining…",
+      "descriptionNoName": "We'll tell the member right away and refund anything they paid. The time becomes free in your calendar. This cannot be undone.",
+      "answered": "This request was already answered. Your calendar is up to date now."
     }
   },
   "calendars": {
