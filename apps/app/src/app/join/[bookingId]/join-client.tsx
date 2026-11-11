@@ -1,8 +1,10 @@
 "use client"
 
 import { useCallback, useMemo } from "react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { createApiClient } from "@eleva/api-client"
+import { intlLocale } from "@eleva/config/i18n"
+import { UrgentHelp } from "@eleva/dashboard/urgent-help"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { LinkButton } from "@eleva/ui/components/button"
 import {
@@ -60,7 +62,11 @@ function JoinClient({
   grant: string
 }) {
   const t = useTranslations("sessions.call")
-  const labels = useMemo((): ElevaCallLabels => elevaCallLabels(t), [t])
+  const locale = useLocale()
+  const labels = useMemo(
+    (): ElevaCallLabels => elevaCallLabels(t, { locale: intlLocale(locale) }),
+    [t, locale]
+  )
 
   const api = useMemo(
     () =>
@@ -85,6 +91,7 @@ function JoinClient({
       labels={labels}
       backHref={backHref}
       showNotesSlot={false}
+      aside={<UrgentHelp />}
     />
   )
 }

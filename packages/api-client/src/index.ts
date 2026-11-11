@@ -212,6 +212,8 @@ export const ApiErrorSchema = z.object({
   retryAfter: z.number().optional(),
   startsAt: z.string().datetime().optional(),
   opensAt: z.string().datetime().optional(),
+  closesAt: z.string().datetime().optional(),
+  now: z.string().datetime().optional(),
 })
 
 export type CompleteOnboardingRequest = z.infer<
@@ -631,6 +633,10 @@ export const JoinSessionErrorSchema = z.object({
   error: z.string(),
   startsAt: z.string().datetime().optional(),
   opensAt: z.string().datetime().optional(),
+  /** Joining stops here: 30 minutes after the booked end. */
+  closesAt: z.string().datetime().optional(),
+  /** Server time of this answer. */
+  now: z.string().datetime().optional(),
 })
 
 export const AddSessionParticipantRequestSchema = z.object({

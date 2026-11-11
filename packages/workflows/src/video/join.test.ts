@@ -3,6 +3,7 @@ import {
   classifyJoinCaller,
   classifyJoinStatus,
   classifyJoinWindow,
+  joinWindowDetails,
 } from "./join"
 
 const startsAt = new Date("2026-10-07T10:00:00.000Z")
@@ -47,6 +48,19 @@ describe("classifyJoinWindow", () => {
     expect(
       classifyJoinWindow(new Date("2026-10-07T11:30:01.000Z"), startsAt, endsAt)
     ).toEqual({ error: "SESSION_NOT_OPEN" })
+  })
+})
+
+describe("joinWindowDetails", () => {
+  it("names when joining opens and closes, on the server clock", () => {
+    expect(
+      joinWindowDetails(new Date("2026-10-07T09:30:00.000Z"), startsAt, endsAt)
+    ).toEqual({
+      startsAt: "2026-10-07T10:00:00.000Z",
+      opensAt: "2026-10-07T09:45:00.000Z",
+      closesAt: "2026-10-07T11:30:00.000Z",
+      now: "2026-10-07T09:30:00.000Z",
+    })
   })
 })
 

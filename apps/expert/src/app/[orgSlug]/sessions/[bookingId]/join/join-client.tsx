@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo } from "react"
 import { useLocale, useTranslations } from "next-intl"
+import { intlLocale } from "@eleva/config/i18n"
 import { ApiClientError, RecordTemplatePhiErrorSchema } from "@eleva/api-client"
 import {
   JoinSession,
@@ -31,7 +32,7 @@ export function JoinClient({
   const t = useTranslations("sessions.call")
   const uiLocale = useLocale()
   const labels = useMemo(
-    (): ElevaCallLabels => elevaCallLabels(t, { locale: uiLocale }),
+    (): ElevaCallLabels => elevaCallLabels(t, { locale: intlLocale(uiLocale) }),
     [t, uiLocale]
   )
   const api = useMemo(

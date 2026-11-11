@@ -80,6 +80,19 @@ export type ElevaCallLabels = {
   connecting: string
   overtimeTitle: string
   overtimeBody: (closesAt: string) => string
+  /** BCP 47 locale for the dates and times these screens show. */
+  timeLocale: string | undefined
+  waitingRoomTitle: (time: string) => string
+  waitingRoomTitleLater: (dateTime: string) => string
+  waitingRoomStarts: (time: string) => string
+  waitingRoomKeepOpen: string
+  waitingRoomCountdown: (minutes: number) => string
+  waitingRoomSoon: string
+  waitingRoomOpening: string
+  waitingRoomTip: string
+  waitingRoomManual: string
+  endedTitle: string
+  endedBody: string
   errors: Record<ElevaCallErrorCode, string>
 }
 
@@ -173,6 +186,19 @@ export function elevaCallLabels(
     connecting: t("connecting"),
     overtimeTitle: t("overtimeTitle"),
     overtimeBody: (closesAt) => t("overtimeBody", { closesAt }),
+    timeLocale: options.locale,
+    waitingRoomTitle: (time) => t("waitingRoomTitle", { time }),
+    waitingRoomTitleLater: (dateTime) =>
+      t("waitingRoomTitleLater", { dateTime }),
+    waitingRoomStarts: (time) => t("waitingRoomStarts", { time }),
+    waitingRoomKeepOpen: t("waitingRoomKeepOpen"),
+    waitingRoomCountdown: (minutes) => t("waitingRoomCountdown", { minutes }),
+    waitingRoomSoon: t("waitingRoomSoon"),
+    waitingRoomOpening: t("waitingRoomOpening"),
+    waitingRoomTip: t("waitingRoomTip"),
+    waitingRoomManual: t("waitingRoomManual"),
+    endedTitle: t("endedTitle"),
+    endedBody: t("endedBody"),
     errors: {
       SESSION_NOT_OPEN: t("errors.SESSION_NOT_OPEN"),
       SESSION_NOT_ACTIVE: t("errors.SESSION_NOT_ACTIVE"),
@@ -187,13 +213,20 @@ export function elevaCallLabels(
 export function joinErrorWindow(err: unknown): {
   startsAt?: string
   opensAt?: string
+  closesAt?: string
+  now?: string
 } {
   if (!err || typeof err !== "object" || !("body" in err)) return {}
-  const body = (err as { body?: { startsAt?: unknown; opensAt?: unknown } })
-    .body
+  const body = (err as { body?: Record<string, unknown> }).body
+  const text = (key: string) => {
+    const value = body?.[key]
+    return typeof value === "string" ? value : undefined
+  }
   return {
-    startsAt: typeof body?.startsAt === "string" ? body.startsAt : undefined,
-    opensAt: typeof body?.opensAt === "string" ? body.opensAt : undefined,
+    startsAt: text("startsAt"),
+    opensAt: text("opensAt"),
+    closesAt: text("closesAt"),
+    now: text("now"),
   }
 }
 

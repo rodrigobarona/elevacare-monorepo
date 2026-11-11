@@ -27,7 +27,14 @@ export class SessionJoinError extends Error {
   override readonly name = "SessionJoinError"
   constructor(
     readonly code: SessionJoinErrorCode,
-    readonly details?: { startsAt?: string; opensAt?: string }
+    readonly details?: {
+      startsAt?: string
+      opensAt?: string
+      /** When joining stops: 30 minutes after the booked end. */
+      closesAt?: string
+      /** Server time of this answer, so a waiting room can ignore a wrong device clock. */
+      now?: string
+    }
   ) {
     super(code)
   }
@@ -51,6 +58,20 @@ export function classifyJoinWindow(
   const t = now.getTime()
   if (t < openAt || t > closeAt) return { error: "SESSION_NOT_OPEN" }
   return { ok: true }
+}
+
+/** What a waiting room needs to say when joining opens, or that it closed. */
+export function joinWindowDetails(
+  now: Date,
+  startsAt: Date,
+  endsAt: Date
+): { startsAt: string; opensAt: string; closesAt: string; now: string } {
+  return {
+    startsAt: startsAt.toISOString(),
+    opensAt: new Date(startsAt.getTime() - JOIN_LEAD_MS).toISOString(),
+    closesAt: new Date(endsAt.getTime() + JOIN_TRAIL_MS).toISOString(),
+    now: now.toISOString(),
+  }
 }
 
 export function classifyJoinCaller(input: {
@@ -282,12 +303,10 @@ export async function joinSession(
     row.session.endsAt
   )
   if ("error" in window) {
-    throw new SessionJoinError("SESSION_NOT_OPEN", {
-      startsAt: row.session.startsAt.toISOString(),
-      opensAt: new Date(
-        row.session.startsAt.getTime() - JOIN_LEAD_MS
-      ).toISOString(),
-    })
+    throw new SessionJoinError(
+      "SESSION_NOT_OPEN",
+      joinWindowDetails(now, row.session.startsAt, row.session.endsAt)
+    )
   }
 
   if (!row.session.dailyRoomName || !row.session.dailyRoomUrl) {

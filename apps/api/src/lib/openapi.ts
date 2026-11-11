@@ -3392,7 +3392,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "403": {
               description:
-                "Not a participant, or the join window is closed. SESSION_NOT_OPEN includes startsAt and opensAt so the waiting room can name the session time.",
+                "Not a participant, or the join window is closed. SESSION_NOT_OPEN includes startsAt, opensAt, closesAt and the server time (now), so a waiting room can name the session time, count down on the server clock, and tell a session that has not opened from one that has ended.",
               content: {
                 "application/json": { schema: JoinSessionErrorSchema },
               },
