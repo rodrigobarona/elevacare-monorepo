@@ -3383,7 +3383,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "401": {
               description:
-                "Missing session, or join grant is invalid, expired, or for another schedule revision (INVALID_GRANT)",
+                "Missing session, or the join grant is invalid or for another schedule revision (INVALID_GRANT). A genuine grant past its end answers 410 SESSION_ENDED instead.",
               content: { "application/json": { schema: ErrorSchema } },
             },
             "422": {

@@ -10,8 +10,13 @@ import {
   type ElevaCallErrorCode,
   type ElevaCallLabels,
 } from "./labels"
-import { readJoinWindow, type JoinWindow } from "../waiting-room"
-import { SessionClosed, WaitingRoom, type OpenAttempt } from "./waiting-room"
+import {
+  readJoinWindow,
+  retryableJoinFailure,
+  type JoinWindow,
+  type OpenAttempt,
+} from "../waiting-room"
+import { SessionClosed, WaitingRoom } from "./waiting-room"
 
 export type JoinSessionProps = {
   join: () => Promise<{
@@ -118,12 +123,19 @@ export function JoinSession({
     } catch (err) {
       if (id !== reqId.current) return "failed"
       const code = joinErrorCode(err)
-      // Keep waiting and ask again: the room is made as the session opens
-      // (ROOM_NOT_READY), and a dropped connection, a busy server or a
-      // rate limit (internal) usually clears within the next pause.
+      // The room is made as the session opens: keep waiting and ask again.
       if (code === "ROOM_NOT_READY") return "not_open"
-      if (code === "internal") return "failed"
-      // Anything else is final, or re-times the wait (SESSION_NOT_OPEN).
+      if (code === "internal") {
+        // A dropped connection or a busy server usually clears within the
+        // next pause. Anything else the server said is final.
+        const status = (err as { status?: unknown } | null)?.status
+        const verdict = retryableJoinFailure(
+          typeof status === "number" ? status : undefined
+        )
+        if (verdict === "retry") return "failed"
+        if (verdict === "rate_limited") return "rate_limited"
+      }
+      // Final, or it re-times the wait (SESSION_NOT_OPEN).
       return refuse(err) === "SESSION_NOT_OPEN" ? "not_open" : "failed"
     }
   }, [join, enter, refuse])
@@ -173,6 +185,8 @@ export function JoinSession({
   if (waiting) {
     return (
       <WaitingRoom
+        // A new opening time (a reschedule) starts a fresh wait.
+        key={waiting.opensAt}
         window={waiting}
         labels={labels}
         backHref={backHref}
@@ -190,6 +204,7 @@ export function JoinSession({
         kind={error === "SESSION_ENDED" ? "ended" : "not_active"}
         labels={labels}
         backHref={backHref}
+        aside={aside}
       />
     )
   }

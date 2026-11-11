@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest"
 import {
   AUTO_JOIN_PAUSES_MS,
+  attemptsAfter,
   autoJoinDelay,
   minutesUntilOpen,
   opensAnotherDay,
   readJoinWindow,
+  retryableJoinFailure,
   waitingPhase,
   type JoinWindow,
 } from "./waiting-room"
@@ -123,6 +125,46 @@ describe("autoJoinDelay", () => {
     expect(autoJoinDelay(AUTO_JOIN_PAUSES_MS.length)).toBeNull()
     // At most five automatic requests, well inside the public rate limit.
     expect(AUTO_JOIN_PAUSES_MS.length).toBeLessThanOrEqual(5)
+  })
+})
+
+describe("attemptsAfter", () => {
+  const max = AUTO_JOIN_PAUSES_MS.length
+
+  it("uses one try per failed or early answer, never more than there are", () => {
+    expect(attemptsAfter("not_open", 0)).toBe(1)
+    expect(attemptsAfter("failed", 3)).toBe(4)
+    expect(attemptsAfter("failed", max)).toBe(max)
+  })
+
+  it("stops asking at once when the server says to slow down", () => {
+    expect(attemptsAfter("rate_limited", 0)).toBe(max)
+    expect(autoJoinDelay(attemptsAfter("rate_limited", 0))).toBeNull()
+  })
+
+  it("can never ask more than five times by itself", () => {
+    let attempt = 0
+    let asked = 0
+    while (autoJoinDelay(attempt) !== null) {
+      asked += 1
+      attempt = attemptsAfter("failed", attempt)
+    }
+    expect(asked).toBe(5)
+  })
+})
+
+describe("retryableJoinFailure", () => {
+  it("repeats only what can clear by itself", () => {
+    expect(retryableJoinFailure(undefined)).toBe("retry")
+    expect(retryableJoinFailure(500)).toBe("retry")
+    expect(retryableJoinFailure(503)).toBe("retry")
+    expect(retryableJoinFailure(429)).toBe("rate_limited")
+  })
+
+  it("treats what the server decided as final", () => {
+    for (const status of [400, 401, 403, 404, 410, 422]) {
+      expect(retryableJoinFailure(status)).toBe("final")
+    }
   })
 })
 

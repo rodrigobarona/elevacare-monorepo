@@ -103,6 +103,32 @@ export function autoJoinDelay(attempt: number, spread = 0): number | null {
     : pause
 }
 
+/** What one try found. `rate_limited`: the server asked us to slow down. */
+export type OpenAttempt = "joined" | "not_open" | "failed" | "rate_limited"
+
+/**
+ * How many automatic tries are used up after `result`. A rate limit uses
+ * them all, so the screen stops asking and offers its button.
+ */
+export function attemptsAfter(result: OpenAttempt, attempt: number): number {
+  if (result === "joined") return attempt
+  if (result === "rate_limited") return AUTO_JOIN_PAUSES_MS.length
+  return Math.min(attempt + 1, AUTO_JOIN_PAUSES_MS.length)
+}
+
+/**
+ * Whether a failed try is worth repeating, from the HTTP status of the
+ * answer (`undefined`: no answer, the connection dropped). A server that
+ * is busy or unreachable usually recovers; anything else it said is final.
+ */
+export function retryableJoinFailure(
+  status: number | undefined
+): "retry" | "rate_limited" | "final" {
+  if (status === undefined) return "retry"
+  if (status === 429) return "rate_limited"
+  return status >= 500 ? "retry" : "final"
+}
+
 /** True when joining opens on a later calendar day in the viewer's zone. */
 export function opensAnotherDay(
   window: JoinWindow,

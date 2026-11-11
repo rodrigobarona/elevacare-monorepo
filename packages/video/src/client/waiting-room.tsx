@@ -13,16 +13,15 @@ import { ClockIcon, InfoIcon } from "@eleva/icons"
 import { Button, LinkButton } from "@eleva/ui/components/button"
 import {
   AUTO_JOIN_PAUSES_MS,
+  attemptsAfter,
   autoJoinDelay,
   minutesUntilOpen,
   opensAnotherDay,
   waitingPhase,
   type JoinWindow,
+  type OpenAttempt,
 } from "../waiting-room"
 import type { ElevaCallLabels } from "./labels"
-
-/** What one try found. */
-export type OpenAttempt = "joined" | "not_open" | "failed"
 
 type ClosedLabels = Pick<
   ElevaCallLabels,
@@ -69,54 +68,75 @@ const SPOKEN_MINUTES = new Set([15, 10, 5])
  * example cancelled). No "try again": asking again cannot help. It says
  * where to write instead.
  */
-export function SessionClosed({
-  kind,
+function SupportLine({
   labels,
-  backHref,
+  className,
 }: {
-  kind: "ended" | "not_active"
-  labels: ClosedLabels
-  backHref: string
+  labels: Pick<ElevaCallLabels, "closedHelp" | "supportEmail">
+  className?: string
 }) {
-  const titleId = useId()
-  const ended = kind === "ended"
   const [before, after] = labels
     .closedHelp(labels.supportEmail)
     .split(labels.supportEmail)
   return (
-    <section
-      aria-labelledby={titleId}
-      data-testid="session-closed"
-      data-kind={kind}
-      className={CARD}
-    >
-      <span aria-hidden className={CHIP}>
-        {ended ? (
-          <ClockIcon className="size-5" />
-        ) : (
-          <InfoIcon className="size-5" />
-        )}
-      </span>
-      <h2 id={titleId} className={TITLE}>
-        {ended ? labels.endedTitle : labels.notActiveTitle}
-      </h2>
-      <p className="mt-2 text-pretty text-muted-foreground">
-        {ended ? labels.endedBody : labels.notActiveBody}
-      </p>
-      <p className="mt-4 text-sm text-pretty text-muted-foreground">
-        {before}
-        <a
-          href={`mailto:${labels.supportEmail}`}
-          className="font-medium text-foreground underline decoration-primary decoration-2 underline-offset-4 hover:decoration-foreground"
-        >
-          {labels.supportEmail}
-        </a>
-        {after}
-      </p>
-      <div className="mt-6">
-        <LinkButton href={backHref}>{labels.back}</LinkButton>
-      </div>
-    </section>
+    <p className={className}>
+      {before}
+      <a
+        href={`mailto:${labels.supportEmail}`}
+        className="font-medium text-foreground underline decoration-primary decoration-2 underline-offset-4 hover:decoration-foreground"
+      >
+        {labels.supportEmail}
+      </a>
+      {after}
+    </p>
+  )
+}
+
+export function SessionClosed({
+  kind,
+  labels,
+  backHref,
+  aside,
+}: {
+  kind: "ended" | "not_active"
+  labels: ClosedLabels
+  backHref: string
+  /** Shown under the card (members: where to get urgent help). */
+  aside?: ReactNode
+}) {
+  const titleId = useId()
+  const ended = kind === "ended"
+  return (
+    <div className="flex max-w-lg flex-col gap-6">
+      <section
+        aria-labelledby={titleId}
+        data-testid="session-closed"
+        data-kind={kind}
+        className={CARD}
+      >
+        <span aria-hidden className={CHIP}>
+          {ended ? (
+            <ClockIcon className="size-5" />
+          ) : (
+            <InfoIcon className="size-5" />
+          )}
+        </span>
+        <h2 id={titleId} className={TITLE}>
+          {ended ? labels.endedTitle : labels.notActiveTitle}
+        </h2>
+        <p className="mt-2 text-pretty text-muted-foreground">
+          {ended ? labels.endedBody : labels.notActiveBody}
+        </p>
+        <SupportLine
+          labels={labels}
+          className="mt-4 text-sm text-pretty text-muted-foreground"
+        />
+        <div className="mt-6">
+          <LinkButton href={backHref}>{labels.back}</LinkButton>
+        </div>
+      </section>
+      {aside}
+    </div>
   )
 }
 
@@ -193,12 +213,15 @@ export function WaitingRoom({
     if (askingRef.current) return
     askingRef.current = true
     setAsking(true)
-    void onOpenRef.current().then((result) => {
-      askingRef.current = false
-      if (!mounted.current || result === "joined") return
-      setAttempt((current) => Math.min(current + 1, AUTO_JOIN_PAUSES_MS.length))
-      setAsking(false)
-    })
+    void onOpenRef
+      .current()
+      .catch((): OpenAttempt => "failed")
+      .then((result) => {
+        askingRef.current = false
+        if (!mounted.current || result === "joined") return
+        setAttempt((current) => attemptsAfter(result, current))
+        setAsking(false)
+      })
   }, [])
 
   const opening = phase === "opening"
@@ -254,7 +277,14 @@ export function WaitingRoom({
   }, [tabTitle])
 
   if (phase === "ended") {
-    return <SessionClosed kind="ended" labels={labels} backHref={backHref} />
+    return (
+      <SessionClosed
+        kind="ended"
+        labels={labels}
+        backHref={backHref}
+        aside={aside}
+      />
+    )
   }
 
   const starts = new Date(joinWindow.startsAt)
@@ -305,18 +335,26 @@ export function WaitingRoom({
           {spoken}
         </p>
         {gaveUp ? (
-          <div className="mt-4">
-            <Button onPress={runTry}>{labels.retry}</Button>
-          </div>
+          <>
+            <div className="mt-4">
+              <Button onPress={runTry}>{labels.retry}</Button>
+            </div>
+            <SupportLine
+              labels={labels}
+              className="mt-4 text-sm text-pretty text-muted-foreground"
+            />
+          </>
         ) : null}
         <p className="mt-6 text-sm text-pretty text-muted-foreground">
           {minutes > 60
             ? labels.waitingRoomComeBack
             : labels.waitingRoomKeepOpen}
         </p>
-        <p className="mt-2 text-sm text-pretty text-muted-foreground">
-          {labels.waitingRoomTip}
-        </p>
+        {minutes > 60 ? null : (
+          <p className="mt-2 text-sm text-pretty text-muted-foreground">
+            {labels.waitingRoomTip}
+          </p>
+        )}
         <p className="mt-2 text-xs text-pretty text-muted-foreground">
           {labels.waitingRoomPrivacy}
         </p>
