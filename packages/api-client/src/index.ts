@@ -1,6 +1,9 @@
 import { z } from "zod"
 import { INSTANT_BOOK_LEAD_MINUTES_MAX } from "@eleva/config/booking-settings"
-import { CANCELLATION_POLICY_VALUES } from "@eleva/config/cancellation-policy"
+import {
+  CANCELLATION_POLICY_VALUES,
+  EXPERT_CANCEL_REASONS,
+} from "@eleva/config/cancellation-policy"
 import {
   isAllowedSocialLinkUrl,
   isExpertPortraitUrl,
@@ -2171,6 +2174,33 @@ export type DeclineExpertBookingResponse = z.infer<
   typeof DeclineExpertBookingResponseSchema
 >
 
+export const CancelExpertBookingRequestSchema = z.object({
+  /** One of a fixed list, kept on the booking record; not sent to the member. */
+  reason: z.enum(EXPERT_CANCEL_REASONS).optional(),
+  /**
+   * The start time the caller saw. When given and the session has been
+   * moved since, nothing is cancelled and the answer is 409 SESSION_CHANGED.
+   */
+  expectedStartsAt: z.string().datetime().optional(),
+})
+
+export type CancelExpertBookingRequest = z.infer<
+  typeof CancelExpertBookingRequestSchema
+>
+
+export const CancelExpertBookingResponseSchema = z.object({
+  bookingId: z.string().uuid(),
+  status: z.literal("cancelled"),
+  /** What the member is refunded: everything not refunded before. */
+  refundCents: z.number().int().nonnegative(),
+  /** True when it was cancelled before this call; nothing was done. */
+  alreadyCancelled: z.boolean(),
+})
+
+export type CancelExpertBookingResponse = z.infer<
+  typeof CancelExpertBookingResponseSchema
+>
+
 export const ListExpertBookingsResponseSchema = z.object({
   bookings: z.array(ExpertBookingSchema),
 })
@@ -3423,6 +3453,13 @@ export function createApiClient(options: ApiClientOptions) {
             `/expert/bookings/${encodeURIComponent(bookingId)}/decline`,
             data
           ).then((raw) => DeclineExpertBookingResponseSchema.parse(raw))
+        },
+        cancel(bookingId: string, data: CancelExpertBookingRequest = {}) {
+          return request<CancelExpertBookingResponse>(
+            "POST",
+            `/expert/bookings/${encodeURIComponent(bookingId)}/cancel`,
+            data
+          ).then((raw) => CancelExpertBookingResponseSchema.parse(raw))
         },
       },
       calendar: {

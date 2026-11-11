@@ -196,6 +196,7 @@ function bookingInput(
     ctx: NotificationContent
     idempotencyKey: string
     channelsOverride: NotificationChannel[]
+    essential: boolean
   }> = {}
 ): SendNotificationInput {
   return {
@@ -731,6 +732,28 @@ describe("sendNotification", () => {
     expect(result.deliveries.map((row) => row.channel)).toEqual(["in_app"])
     expect(store.sendCalls).toBe(0)
     expect(store.inbox).toHaveLength(1)
+  })
+
+  it("emails an essential message even when booking emails are off", async () => {
+    // The expert cancelled: a member who is not told may travel to, or wait
+    // for, a session that will not happen.
+    const result = await sendNotification(
+      bookingInput({ kind: "booking.cancelled", essential: true }),
+      {
+        ...store.deps(now),
+        listPreferences: async () => [
+          { channel: "email", category: "booking", enabled: false },
+          { channel: "sms", category: "booking", enabled: false },
+          { channel: "in_app", category: "booking", enabled: true },
+        ],
+      }
+    )
+    // Email only: a text message stays off when the person turned it off.
+    expect(result.deliveries.map((row) => row.channel)).toEqual([
+      "in_app",
+      "email",
+    ])
+    expect(store.sendCalls).toBe(1)
   })
 
   it("does not accept invoice.issued", async () => {

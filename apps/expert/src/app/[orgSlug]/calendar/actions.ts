@@ -2,6 +2,8 @@
 
 import { z } from "zod"
 import {
+  ApiClientError,
+  CancelExpertBookingRequestSchema,
   DeclineExpertBookingRequestSchema,
   ListExpertBookingsQuerySchema,
 } from "@eleva/api-client"
@@ -105,6 +107,59 @@ export async function declineCalendarBookingAction(
     return {
       ok: false,
       error: mapExpertApiError(err, "requestFailed"),
+    }
+  }
+}
+
+/**
+ * The expert cancels a confirmed session before it starts; the member is
+ * refunded in full. Errors: `cancelTooLate` (it has started),
+ * `cancelChanged` (moved or cancelled meanwhile), `cancelFailed`.
+ */
+export async function cancelCalendarBookingAction(
+  bookingId: string,
+  /** The start the expert was looking at: a moved session is not cancelled. */
+  expectedStartsAt: string,
+  /** One of `EXPERT_CANCEL_REASONS`; anything else fails validation. */
+  reason?: string
+): Promise<
+  ActionResult<{
+    bookingId: string
+    refundCents: number
+    alreadyCancelled: boolean
+  }>
+> {
+  const parsed = CancelExpertBookingRequestSchema.safeParse({
+    expectedStartsAt,
+    ...(reason ? { reason } : {}),
+  })
+  if (!parsed.success || !BookingIdSchema.safeParse(bookingId).success) {
+    return { ok: false, error: "validation" }
+  }
+  try {
+    const session = await requireExpertSession("events:manage")
+    const api = await getAuthedApiClient()
+    const result = await api.expert.bookings.cancel(bookingId, parsed.data)
+    revalidateExpertWorkspace(session, "calendar")
+    return {
+      ok: true,
+      data: {
+        bookingId: result.bookingId,
+        refundCents: result.refundCents,
+        alreadyCancelled: result.alreadyCancelled,
+      },
+    }
+  } catch (err) {
+    console.error("cancel-calendar-booking failed", err)
+    if (err instanceof ApiClientError && err.body.error === "TOO_LATE") {
+      return { ok: false, error: "cancelTooLate" }
+    }
+    return {
+      ok: false,
+      error: mapExpertApiError(err, "cancelFailed", {
+        conflict: "cancelChanged",
+        notFound: "cancelChanged",
+      }),
     }
   }
 }

@@ -32,6 +32,91 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-11: An expert can cancel a confirmed session; the member is refunded in full (active)
+
+- Owner: engineering. Found in the beta readiness survey: the terms
+  (section 7) promise a full refund and a new booking "if the expert
+  cancels", and there was no way for an expert to cancel. An expert who
+  fell ill could only write to support while the member waited.
+- Decisions:
+  - `POST /expert/bookings/{id}/cancel` (session or API key, capability
+    `events:manage`, rate limited, in the OpenAPI document). Because it
+    moves money, short-lived tokens that cannot be revoked are refused.
+    It cancels a `confirmed` or `rescheduled` booking of the caller's
+    own expert profile that has not started. Another expert's booking
+    answers 404.
+  - The member is refunded everything they paid and not yet got back,
+    whatever the service's cancellation policy: that policy binds the
+    member, not the expert. The refund is made by the existing refund
+    sweep. The time becomes bookable again.
+  - It reuses the `booking.cancelled` event with `cancelledBy: "expert"`
+    in its payload (no new notification kind, no migration), so the
+    calendar entry is removed and the video room closed as for any
+    cancellation.
+  - Both people are told. The member's email says who cancelled in its
+    subject, says sorry, states the refund and when it usually arrives
+    (as the payments page does: the original payment method, usually 5
+    to 10 business days), leaves the policy out and has a "Book a new
+    time" button to the expert's public profile. The expert's email
+    confirms what they did.
+  - The member's email is sent even if they switched booking emails
+    off: without it they may travel to, or wait for, a session that
+    will not happen. It is the one booking email that ignores that
+    preference, and only by email (text messages and quiet hours are not
+    overridden). Founder may reverse this; it is one flag
+    (`essential`) on the send.
+  - In the expert calendar the session's sheet has "Cancel session". It
+    asks first, names the session, says what happens (the member is
+    told and refunded, it cannot be undone, the time can be booked
+    again) and takes an optional reason.
+  - The reason is optional and one of a fixed list (I can't make it, an
+    emergency, a scheduling conflict, another reason), kept on the
+    booking as `expert_cancel:<reason>` and not sent to the member.
+    There is no free text, so no health detail about the expert or the
+    member is written to the booking. "I can't make it" covers illness
+    without saying so.
+  - The cut-off (not started) is checked again by the database's clock
+    in the write itself, so a session that starts while the request
+    runs is not cancelled.
+  - The calendar sends the start time the expert was looking at. If the
+    member has moved the session since, nothing is cancelled (409
+    `SESSION_CHANGED`) and the calendar loads the week again. A booking
+    already cancelled (a second press, or the member cancelled first)
+    answers 200 with `alreadyCancelled`, refunds nothing more, and the
+    expert is told it was already cancelled.
+  - Audit: `booking canceled` with reason `expert_cancel`, actor the
+    expert, refund 100% (no percentage for a free session).
+- Not built: cancelling after the start (that is a no-show, a separate
+  flow); a confirmation step before declining a request; a count or
+  limit of expert cancellations, and an alert on a burst of them (the
+  general limit of 60 requests a minute applies); telling the member
+  the reason; a text message at night for a cancellation at short
+  notice (quiet hours apply as for any cancellation); the same action
+  in the member list or the Today page; a help-center page.
+- Follow-ups (engineering, by the Phase 13 hardening pass):
+  - The note an expert can type when declining a request is still free
+    text in the unencrypted `cancellation_reason` column, not covered by
+    retention or erasure. Give it the same fixed list.
+  - The refund-due and release-the-time block now exists three times
+    (member cancel, request decline, expert cancel). Extract one helper
+    the next time any of them changes.
+  - The kit's destructive button is below 4.5:1 in dark mode (computed
+    from tokens, not seen); it is shared, so it is a kit fix.
+- Proven on 2026-11-11, locally, against Stripe test mode
+  (`pnpm e2e:expert-cancel-smoke`, opt-in, loopback only): a guest pays
+  for the seeded first visit and the session is confirmed; a caller who
+  is not signed in gets 401; a stale start time gets 409 and cancels
+  nothing; free text as a reason gets 400; the expert cancels and the
+  answer says the whole price is refunded; the booking, the payment, the
+  freed time, the event and the audit row are as described above; a
+  second press says it was already cancelled; the refund sweep returns
+  the whole price through Stripe and makes no transfer; both people's
+  emails go through the notification pipeline with no error.
+- Not proven: the same on staging with the deployed services (the mail
+  provider is skipped for the test addresses used locally, so no real
+  inbox has received the email), and the video room being closed (the
+  test booking has no room yet).
+
 ### 2026-11-11: The expert calendar shows every session of the week (active)
 
 - Owner: engineering. Found in the beta readiness survey of the expert app.
@@ -1052,7 +1137,8 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
     `become_partner_applications` was dropped in migration 0013 and must be recreated (Phase 12
     deliverable, corrected 2026-10-29).
   - Expert cancellation and expert/member no-show handling are not built. They are open work that
-    must follow item 3.
+    must follow item 3. (Expert cancellation was built on 2026-11-11: see "An expert can cancel a
+    confirmed session; the member is refunded in full". No-show handling is still open.)
 - Legal drafting from these decisions is tracked in `docs/eleva-v3/legal/`. It must be reviewed by a
   Portuguese lawyer or the appointed DPO before reliance.
 - Owner: founder. Status: `active`.
@@ -2312,7 +2398,8 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
     at least 48 h away.
   - **Always 100%:** expert cancel, account deletion, hold expiry and staff
     override. Expert cancel does not exist in code yet; when it lands it must
-    refund in full.
+    refund in full. (Built 2026-11-11, refunding in full: see "An expert can
+    cancel a confirmed session; the member is refunded in full".)
 - Mechanics: the booking snapshots the policy and `cancellation_policy_version`
   at booking time, taken from the hold, which records the policy shown to the
   member before payment (same transaction as the funnel consents). A later
@@ -2333,7 +2420,8 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
   `packages/config/src/cancellation-policy.ts`
 - **Out of scope (follow-ups):**
   - Expert-initiated cancel (always a 100% refund to the member; an expert penalty
-    may apply later). No expert cancel path exists yet.
+    may apply later). No expert cancel path exists yet. (Built 2026-11-11;
+    no expert penalty.)
   - No-show policy (Phase 09 records attendance; D-06 then decides refund / keep /
     partial).
   - Discounted non-refundable option and custom policies beyond the three presets.

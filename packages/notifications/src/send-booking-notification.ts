@@ -9,7 +9,7 @@ import {
   describeCancellationPolicy,
   type CancellationPolicy,
 } from "@eleva/config/cancellation-policy"
-import { resolveGatewayUrl } from "@eleva/config/env"
+import { expertProfileUrl, resolveGatewayUrl } from "@eleva/config/env"
 import { guestSignupPath } from "@eleva/config/guest-signup"
 import { maskPhone } from "@eleva/config/phone"
 import { auth, main, withPlatformAdminContext } from "@eleva/db"
@@ -67,6 +67,7 @@ const BookingPayloadSchema = z.object({
   previousStartsAt: z.string().datetime().optional(),
   scheduleRevision: z.number().int().positive().optional(),
   refundCents: z.number().int().nonnegative().optional(),
+  cancelledBy: z.literal("expert").optional(),
 })
 
 export type ParsedBookingNotificationPayload = z.infer<
@@ -139,6 +140,8 @@ export type LoadedBooking = {
   expertUserId: string
   expertEmail: string
   expertName: string
+  /** The expert's public profile address, for "book a new time". */
+  expertUsername?: string | null
   /** Expert's own language and time zone for their copy (UX-3-01/02). */
   expertLocale?: string | null
   expertTimezone?: string | null
@@ -221,6 +224,10 @@ export async function sendBookingNotification(
           : getEmailTranslations(viewLocale).labels.free,
     }
   }
+  // The expert cancelled: the emails say who, and the member's policy
+  // (which binds the member, not the expert) is left out of them.
+  const cancelledByExpert =
+    event.type === "booking.cancelled" && parsed.cancelledBy === "expert"
   const memberView = view(locale, booking.timezone)
   const expertView = view(expertLocale, expertTimezone)
   const gateway = resolveGatewayUrl()
@@ -228,10 +235,16 @@ export async function sendBookingNotification(
     sessionJoinHref(event.type, booking, "member", gateway, mint),
     sessionJoinHref(event.type, booking, "expert", gateway, mint),
   ])
-  const title = titleForKind(event.type, memberView.t.booking)
+  // When the expert cancelled, the first thing the member reads (subject,
+  // push, text message) says who did, not just "cancelled".
+  const title = cancelledByExpert
+    ? memberView.t.booking.cancelledByExpertSubject(expertFirst)
+    : titleForKind(event.type, memberView.t.booking)
   const expertTitle = titleForKind(event.type, expertView.t.booking)
   // Member subjects name the expert: "Booking confirmed · Ana · Monday…".
-  const memberSubject = `${title} · ${expertFirst} · ${memberView.formattedDate}`
+  const memberSubject = cancelledByExpert
+    ? `${title} · ${memberView.formattedDate}`
+    : `${title} · ${expertFirst} · ${memberView.formattedDate}`
   const expertSubject = subjectForKind(
     event.type,
     expertView.t.subject,
@@ -249,6 +262,12 @@ export async function sendBookingNotification(
     locale,
     cancellationPolicyName: memberView.cancellationPolicyName,
     refundAmount: memberView.refundAmount,
+    cancelledByExpert,
+    // The terms offer a new booking when the expert cancels: one tap away.
+    rebookHref:
+      cancelledByExpert && booking.expertUsername
+        ? expertProfileUrl(locale, booking.expertUsername)
+        : undefined,
     audience: "member",
     greetingName: memberFirst,
     expertName: booking.expertName,
@@ -272,6 +291,7 @@ export async function sendBookingNotification(
     locale: expertLocale,
     cancellationPolicyName: expertView.cancellationPolicyName,
     refundAmount: expertView.refundAmount,
+    cancelledByExpert,
     joinHref: expertJoinHref,
     audience: "expert",
     greetingName: expertFirst,
@@ -285,11 +305,11 @@ export async function sendBookingNotification(
     price: expertView.price,
     calendarHref: `${gateway.replace(/\/$/, "")}/${booking.orgSlug}/team/calendar`,
   })
-  const memberBody = memberSessionBody(
-    locale,
-    expertFirst,
-    memberView.formattedDate
-  )
+  // The text message and the in-app notice carry only this line: when the
+  // expert cancelled, it has to say so by itself.
+  const memberBody = cancelledByExpert
+    ? `${title} — ${memberView.formattedDate}`
+    : memberSessionBody(locale, expertFirst, memberView.formattedDate)
   const expertBody = expertSubject
 
   const memberRecipient = booking.memberUserId
@@ -335,6 +355,9 @@ export async function sendBookingNotification(
         attachments: memberAttachments,
       },
       idempotencyKey,
+      // Their expert cancelled: the member is emailed whatever their
+      // preference, so nobody waits for a session that will not happen.
+      essential: cancelledByExpert,
     }),
     send({
       kind: event.type,
@@ -619,7 +642,8 @@ function titleForKind(
 function emailCopyForKind(
   kind: BookingSendKind,
   t: ReturnType<typeof getEmailTranslations>,
-  isExpert: boolean
+  isExpert: boolean,
+  cancelled?: { byExpert: boolean; expertName: string; refunded: boolean }
 ): {
   heading: string
   subheading: string
@@ -673,6 +697,18 @@ function emailCopyForKind(
         preview: t.subject.newBooking,
       }
     case "booking.cancelled":
+      if (cancelled?.byExpert) {
+        return {
+          heading: t.booking.cancelledTitle,
+          subheading: isExpert
+            ? t.booking.expertCancelledByYouSubtitle(cancelled.refunded)
+            : t.booking.cancelledByExpertSubtitle(
+                cancelled.expertName,
+                cancelled.refunded
+              ),
+          preview: t.subject.cancelled,
+        }
+      }
       return {
         heading: t.booking.cancelledTitle,
         subheading: isExpert
@@ -804,6 +840,10 @@ async function renderBookingHtml(input: {
   locale: EmailLocale
   cancellationPolicyName: string
   refundAmount?: string
+  /** `booking.cancelled` only: the expert cancelled, not the member. */
+  cancelledByExpert?: boolean
+  /** Member copy of an expert cancellation: the expert's public profile. */
+  rebookHref?: string
   joinHref?: string
   audience?: "member" | "expert"
   greetingName?: string
@@ -825,7 +865,13 @@ async function renderBookingHtml(input: {
 }): Promise<string> {
   const t = getEmailTranslations(input.locale)
   const isExpert = input.audience === "expert"
-  const copy = emailCopyForKind(input.kind, t, isExpert)
+  const copy = emailCopyForKind(input.kind, t, isExpert, {
+    byExpert: input.cancelledByExpert === true,
+    expertName: input.expertName
+      ? firstName(input.expertName)
+      : t.labels.expert,
+    refunded: input.refundAmount !== undefined,
+  })
   const preview =
     input.previewText ?? copy.preview(input.memberName, input.formattedDate)
   // Who is greeted, and who the "other person" row shows.
@@ -874,8 +920,11 @@ async function renderBookingHtml(input: {
         memberName: input.memberName,
         eventTypeName: input.eventTypeName,
         formattedDate: input.formattedDate,
-        cancellationPolicyName: input.cancellationPolicyName,
+        cancellationPolicyName: input.cancelledByExpert
+          ? undefined
+          : input.cancellationPolicyName,
         refundAmount: input.refundAmount,
+        rebookHref: input.rebookHref,
         locale: input.locale,
         ...people,
         heading: copy.heading,
@@ -1068,6 +1117,7 @@ export async function loadBookingForNotification(
         guestName: main.bookings.guestName,
         guestPhone: main.bookings.guestPhone,
         expertUserId: main.bookings.expertUserId,
+        expertUsername: main.expertProfiles.username,
         eventTypeName: main.eventTypes.title,
         scheduleRevision: main.bookings.scheduleRevision,
         cancellationPolicy: main.bookings.cancellationPolicy,
@@ -1093,6 +1143,10 @@ export async function loadBookingForNotification(
       .innerJoin(
         auth.organization,
         eq(auth.organization.id, main.bookings.orgId)
+      )
+      .leftJoin(
+        main.expertProfiles,
+        eq(main.expertProfiles.id, main.bookings.expertProfileId)
       )
       .leftJoin(
         main.eventTypeModes,

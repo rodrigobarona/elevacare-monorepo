@@ -15,6 +15,7 @@ import {
 import { StatusPill } from "@eleva/ui/components/status-pill"
 import { useIsMobile } from "@eleva/ui/hooks/use-mobile"
 import { JoinCta } from "@eleva/video/join-cta"
+import { CancelSession } from "./cancel-session"
 import { RequestActions } from "./request-actions"
 import { sessionKind, type CalendarBooking } from "./week-data"
 
@@ -30,6 +31,8 @@ export function BookingSheet({
   orgSlug,
   modeName,
   onSettled,
+  onChanged,
+  now,
 }: {
   /** The session selected; the caller keeps it while the sheet closes. */
   booking: CalendarBooking | null
@@ -38,6 +41,10 @@ export function BookingSheet({
   orgSlug: string
   modeName: (mode: CalendarBooking["sessionMode"]) => string
   onSettled: (bookingId: string, status: "confirmed" | "cancelled") => void
+  /** The session is no longer as shown: close and load the week again. */
+  onChanged: () => void
+  /** The page's clock; `null` until the browser has set it. */
+  now: Date | null
 }) {
   const t = useTranslations("calendar")
   const tReport = useTranslations("sessions.report")
@@ -66,6 +73,11 @@ export function BookingSheet({
   const isRequest = kind === "request"
   const start = new Date(booking.startsAt)
   const end = new Date(booking.endsAt)
+  // A confirmed session can be cancelled by the expert until it starts.
+  const canCancel =
+    (booking.status === "confirmed" || booking.status === "rescheduled") &&
+    now !== null &&
+    start > now
   // Online and phone sessions already say so under "Mode".
   const where = booking.locationName
     ? [booking.locationName, booking.locationCity, booking.locationCountry]
@@ -175,6 +187,19 @@ export function BookingSheet({
               >
                 {tReport("open")}
               </LinkButton>
+            ) : null}
+            {canCancel ? (
+              <CancelSession
+                // A fresh dialog per session: a reason chosen for one is
+                // never carried to another.
+                key={booking.id}
+                bookingId={booking.id}
+                startsAt={booking.startsAt}
+                sessionSummary={`${pickLocalized(booking.eventTypeTitle, locale)} · ${dayFormatter.format(start)}, ${timeFormatter.format(start)}–${timeFormatter.format(end)}`}
+                memberName={booking.memberFirstName ?? t("memberUnknown")}
+                onCancelled={() => onSettled(booking.id, "cancelled")}
+                onChanged={onChanged}
+              />
             ) : null}
           </div>
         )}

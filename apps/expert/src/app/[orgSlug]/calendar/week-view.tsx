@@ -622,6 +622,11 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
         onOpenChange={setSheetOpen}
         orgSlug={orgSlug}
         modeName={modeName}
+        now={now}
+        onChanged={() => {
+          setSheetOpen(false)
+          setAttempt((n) => n + 1)
+        }}
         onSettled={(bookingId, status) => {
           // Answered: back to the week. A declined request leaves the
           // calendar, so focus goes to the week heading instead of nowhere.
