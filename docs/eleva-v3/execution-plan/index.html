@@ -6335,8 +6335,9 @@ PR 10.2 — CRM + AI reports beta:
    it still names one; document the break-glass path), pnpm encryption:rotate-kek
    (re-wraps every DEK under the current version in batches, idempotent, never touches
    ciphertext; test with two KEK versions live), refuse to start when the configured version is
-   not unwrap-able, and audit record: decrypted (viewer, purpose) on every decryptForOrg call
-   (every read since 2026-11-11; the original build sampled the owning expert at 1%). Runbook in
+   not unwrap-able, and audit record: decrypted (viewer, purpose) on every read of a session record
+   (every read since 2026-11-11; the original build sampled the owning expert at 1%; reads of
+   session files and of the CRM have their own paths and are not in this log). Runbook in
    integration-runbooks.md + admin-operator-playbooks.md (custody, two-person rule).
    Clinical access model (D-11) — this IS policy A above, stated once: read for the authoring
    expert; for other experts of the same clinic org only when organizations.clinic_shared_records

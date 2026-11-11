@@ -25,6 +25,10 @@ ships the old code with the new environment.
 
 ## 3. Register schedules
 
+First confirm the three Vercel Cron ticks run (the two checks below):
+`pnpm qstash:setup` removes the old QStash tick schedules, and the audit
+log ships from the hourly tick.
+
 ```bash
 API_BASE_URL=https://api.eleva.care pnpm qstash:setup
 pnpm qstash:list

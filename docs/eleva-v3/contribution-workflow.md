@@ -49,12 +49,16 @@ This document defines how the team should contribute changes to Eleva v3 in a wa
   merge.** Reply with a fix, a follow-up issue link, or an explicit
   "not actionable because …" on each comment. Unacknowledged comments
   block merge.
-- The `coderabbit` GitHub status check must be green. It is a required
-  check on the `main` branch-protection rule.
+- The `coderabbit` GitHub status check must be green before merge.
 - CI gates (`lockfile-guard`, `lint`, `typecheck`, `build`, `test`,
   `i18n-parity`, `gitleaks`, `e2e-smoke`, `neon-branch-migrate-and-rls`)
-  are also required checks. Boundary lint (`boundariesConfig`) runs
-  inside the Lint job (`pnpm lint`); it is not a separate status check.
+  must be green too. Checked on 2026-11-11: branch protection on `main`
+  enforces Lint, Typecheck, Build, Test (vitest), e2e-smoke, gitleaks,
+  Dependency audit and Lockfile guard. `neon-branch-migrate-and-rls`,
+  `i18n-parity` and `coderabbit` run on every PR but are not yet
+  enforced there (founder: add them to branch protection). Boundary lint
+  (`boundariesConfig`) runs inside the Lint job (`pnpm lint`); it is not
+  a separate status check.
 - For the monorepo rules applied to every PR — boundary lint, RLS
   isolation, audit-row coverage, no vendor-SDK leakage, no
   `bun install`, no hardcoded `payment_method_types`,

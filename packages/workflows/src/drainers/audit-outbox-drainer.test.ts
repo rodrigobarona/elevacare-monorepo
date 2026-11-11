@@ -268,6 +268,28 @@ describe("drainAuditOutbox", () => {
     expect(updateSetWhere).toHaveBeenCalledTimes(2)
   })
 
+  it("sees an outage that starts at the end of one batch", async () => {
+    // Six refused rows close the first batch and six open the second:
+    // twelve in a row, so none of them loses an attempt.
+    const first = [
+      ...Array.from({ length: 2 }, (_, i) => fakeRow(`ok${i}`)),
+      ...Array.from({ length: 6 }, (_, i) => fakeRow(`downA${i}`)),
+    ]
+    const second = Array.from({ length: 8 }, (_, i) => fakeRow(`downB${i}`))
+    const { drainAuditOutbox, updateSetWhere, heartbeat } = await setup(first, {
+      auditInsertShouldFail: [...first, ...second]
+        .filter((row) => !row.id.startsWith("ok"))
+        .map((row) => row.auditId),
+      laterBatches: [second],
+    })
+    await expect(drainAuditOutbox({ batchSize: 8 })).rejects.toMatchObject({
+      name: "AuditStoreUnavailable",
+    })
+    // The only write marks the two shipped rows.
+    expect(updateSetWhere).toHaveBeenCalledOnce()
+    expect(heartbeat).not.toHaveBeenCalled()
+  })
+
   it("reports a run that ends with failed rows or more waiting", async () => {
     const { drainAuditOutbox, captureException } = await setup(
       [fakeRow("a", 4)],

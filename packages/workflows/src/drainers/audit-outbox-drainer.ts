@@ -57,6 +57,13 @@ const DEFAULT_MAX_ATTEMPTS = 5
 const STORE_DOWN_AFTER = 10
 
 /** The audit database is not accepting rows; the run stopped early. */
+type FailedAudit = {
+  id: string
+  attempts: number
+  lastError: string
+  error: unknown
+}
+
 export class AuditStoreUnavailable extends Error {
   override readonly name = "AuditStoreUnavailable"
 }
@@ -95,8 +102,31 @@ export async function drainAuditOutbox(
   // Rows that failed in this run stay pending for the next one; leaving
   // them out here keeps one bad row from being retried in a loop.
   const triedAndFailed: string[] = []
-  let failuresInARow = 0
+  // Failures since the last success, across batches. They count against
+  // their rows only once a later row ships (or the run ends): an outage
+  // is not the rows' fault, so an outage leaves their attempts alone.
+  let streak: FailedAudit[] = []
   let storeDown = false
+
+  const count = async (failures: FailedAudit[]) => {
+    for (const f of failures) {
+      if (f.attempts >= maxAttempts) result.failed += 1
+      else result.skipped += 1
+      await captureException(f.error, {
+        drainer: "auditOutboxDrainer",
+        outboxRowId: f.id,
+        attempts: f.attempts,
+      })
+      await mainDb
+        .update(main.auditOutbox)
+        .set({
+          attempts: f.attempts,
+          lastError: f.lastError,
+          status: f.attempts >= maxAttempts ? "failed" : "pending",
+        })
+        .where(eq(main.auditOutbox.id, f.id))
+    }
+  }
 
   for (let batch = 0; batch < maxBatches; batch += 1) {
     const pending = await mainDb
@@ -117,12 +147,7 @@ export async function drainAuditOutbox(
     if (pending.length === 0) break
 
     const shippedIds: string[] = []
-    const failedAudits: Array<{
-      id: string
-      attempts: number
-      lastError: string
-      error: unknown
-    }> = []
+    const resolved: FailedAudit[] = []
 
     for (const row of pending) {
       if (storeDown) break
@@ -144,33 +169,19 @@ export async function drainAuditOutbox(
 
         shippedIds.push(row.id)
         result.shipped += 1
-        failuresInARow = 0
+        // The store answers: the failures before this row were their own.
+        resolved.push(...streak)
+        streak = []
       } catch (err) {
-        failedAudits.push({
+        streak.push({
           id: row.id,
           attempts: row.attempts + 1,
           lastError: err instanceof Error ? err.message : String(err),
           error: err,
         })
         triedAndFailed.push(row.id)
-        failuresInARow += 1
-        if (failuresInARow >= STORE_DOWN_AFTER) storeDown = true
+        if (streak.length >= STORE_DOWN_AFTER) storeDown = true
       }
-    }
-
-    // An outage is not the rows' fault: the last run of failures keeps
-    // its attempts, and only failures before it are counted.
-    const counted = storeDown
-      ? failedAudits.slice(0, failedAudits.length - failuresInARow)
-      : failedAudits
-    for (const f of counted) {
-      if (f.attempts >= maxAttempts) result.failed += 1
-      else result.skipped += 1
-      await captureException(f.error, {
-        drainer: "auditOutboxDrainer",
-        outboxRowId: f.id,
-        attempts: f.attempts,
-      })
     }
 
     if (shippedIds.length > 0) {
@@ -180,20 +191,11 @@ export async function drainAuditOutbox(
         .where(inArray(main.auditOutbox.id, shippedIds))
     }
 
-    for (const f of counted) {
-      await mainDb
-        .update(main.auditOutbox)
-        .set({
-          attempts: f.attempts,
-          lastError: f.lastError,
-          status: f.attempts >= maxAttempts ? "failed" : "pending",
-        })
-        .where(eq(main.auditOutbox.id, f.id))
-    }
+    await count(resolved)
 
     if (storeDown) {
       const error = new AuditStoreUnavailable(
-        `audit database refused ${failuresInARow} rows in a row`
+        `audit database refused ${streak.length} rows in a row`
       )
       await captureException(error, { drainer: "auditOutboxDrainer" })
       throw error
@@ -201,6 +203,8 @@ export async function drainAuditOutbox(
     if (pending.length < batchSize) break
     if (batch === maxBatches - 1) result.more = true
   }
+  // The run ended without an outage: what still failed is counted.
+  await count(streak)
 
   if (result.more || result.failed > 0) {
     await captureException(new Error("audit outbox needs attention"), {
