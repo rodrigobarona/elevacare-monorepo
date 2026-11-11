@@ -305,11 +305,11 @@ export async function sendBookingNotification(
     price: expertView.price,
     calendarHref: `${gateway.replace(/\/$/, "")}/${booking.orgSlug}/team/calendar`,
   })
-  const memberBody = memberSessionBody(
-    locale,
-    expertFirst,
-    memberView.formattedDate
-  )
+  // The text message and the in-app notice carry only this line: when the
+  // expert cancelled, it has to say so by itself.
+  const memberBody = cancelledByExpert
+    ? `${title} — ${memberView.formattedDate}`
+    : memberSessionBody(locale, expertFirst, memberView.formattedDate)
   const expertBody = expertSubject
 
   const memberRecipient = booking.memberUserId

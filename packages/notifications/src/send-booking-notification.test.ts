@@ -251,6 +251,8 @@ describe("sendBookingNotification", () => {
     expect(send.mock.calls[1]?.[0].essential).toBeUndefined()
     const memberSend = send.mock.calls[0]?.[0].ctx
     expect(memberSend.title).toBe("Ana had to cancel")
+    // The text message is only the body: it says who cancelled by itself.
+    expect(memberSend.body).toMatch(/^Ana had to cancel — /)
     expect(memberSend.subject).toMatch(/^Ana had to cancel · /)
     expect(calls[1]?.rebookHref).toBeUndefined()
     for (const call of calls) {

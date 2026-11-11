@@ -190,6 +190,9 @@ export function BookingSheet({
             ) : null}
             {canCancel ? (
               <CancelSession
+                // A fresh dialog per session: a reason chosen for one is
+                // never carried to another.
+                key={booking.id}
                 bookingId={booking.id}
                 startsAt={booking.startsAt}
                 sessionSummary={`${pickLocalized(booking.eventTypeTitle, locale)} · ${dayFormatter.format(start)}, ${timeFormatter.format(start)}–${timeFormatter.format(end)}`}
