@@ -283,10 +283,7 @@ export function WaitingRoom({
         <p className="mt-2 text-pretty text-muted-foreground">
           {labels.waitingRoomJoinFrom(
             time.format(new Date(joinWindow.opensAt))
-          )}{" "}
-          {minutes > 60
-            ? labels.waitingRoomComeBack
-            : labels.waitingRoomKeepOpen}
+          )}
         </p>
         {countdown ? (
           <p
@@ -313,6 +310,11 @@ export function WaitingRoom({
           </div>
         ) : null}
         <p className="mt-6 text-sm text-pretty text-muted-foreground">
+          {minutes > 60
+            ? labels.waitingRoomComeBack
+            : labels.waitingRoomKeepOpen}
+        </p>
+        <p className="mt-2 text-sm text-pretty text-muted-foreground">
           {labels.waitingRoomTip}
         </p>
         <p className="mt-2 text-xs text-pretty text-muted-foreground">

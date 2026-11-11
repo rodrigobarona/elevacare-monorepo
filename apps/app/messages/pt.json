@@ -124,7 +124,7 @@
       "connecting": "A ligar…",
       "waitingRoomTitle": "A sua sessão começa às {time}",
       "waitingRoomTitleLater": "A sua sessão começa: {dateTime}",
-      "waitingRoomJoinFrom": "Pode entrar a partir das {time}, 15 minutos antes. As horas estão na sua hora local.",
+      "waitingRoomJoinFrom": "Pode entrar a partir das {time}, 15 minutos antes (na sua hora local).",
       "waitingRoomKeepOpen": "Mantenha esta página aberta. O teste da câmara aparece aqui quando a entrada abrir, e entra quando estiver pronto.",
       "waitingRoomComeBack": "Volte com este mesmo link quando for a hora.",
       "waitingRoomCountdown": "Pode entrar daqui a {minutes} minutos",

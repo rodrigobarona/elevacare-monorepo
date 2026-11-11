@@ -124,7 +124,7 @@
       "connecting": "Connecting…",
       "waitingRoomTitle": "Your session starts at {time}",
       "waitingRoomTitleLater": "Your session starts on {dateTime}",
-      "waitingRoomJoinFrom": "You can join from {time}, 15 minutes before. Times are in your local time.",
+      "waitingRoomJoinFrom": "You can join from {time}, 15 minutes before (your local time).",
       "waitingRoomKeepOpen": "Keep this page open. Your camera check shows here when joining opens, and you join when you are ready.",
       "waitingRoomComeBack": "Come back with this same link when it is time.",
       "waitingRoomCountdown": "You can join in {minutes} minutes",
