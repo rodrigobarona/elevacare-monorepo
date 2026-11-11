@@ -32,6 +32,42 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-11: The join page waits for the session and opens it (active)
+
+- Owner: engineering. Follows the founder rule that opening a join link
+  before the 15-minute window shows a waiting room with when joining
+  opens.
+- Before: the join page answered an early visit with "Could not join" and
+  a "Try again" button, and said the same after the session was over.
+- Now, for members, guests and experts (one `WaitingRoom` in
+  `@eleva/video`):
+  - before joining opens: "Your session opens at 09:45", the start time
+    in the person's local time, a countdown in the last hour, a line on
+    getting ready, and the call opening by itself. The countdown follows
+    the server's clock, so a wrong device clock cannot open it early or
+    late;
+  - as it opens: up to five quiet tries spread over about 40 seconds
+    (the first one staggered), also while the room is still being made;
+    then a "Try again" button;
+  - after joining closes (30 minutes after the booked end): "This session
+    has ended".
+- `SESSION_NOT_OPEN` from `POST /sessions/{bookingId}/join` now also
+  carries `closesAt` and `now` (server time), next to `startsAt` and
+  `opensAt`. It is still only answered to a participant or a valid join
+  grant.
+- Members and guests see the urgent-help note under the waiting room and
+  under "Could not join" (PRIV2-03: the join page was the missing
+  surface). Experts do not.
+- Guest join page: it carries the Eleva logo, and its back button says
+  "Go to Eleva" and loads the public home page. It used to say "Back to
+  session" and point at a Space named "home".
+- Not built: a camera and microphone check in the waiting room; showing
+  the expert's name or photo while waiting (the join answer carries no
+  names before the window opens, on purpose); a browser notification when
+  the session opens.
+- Not proven: two real browsers waiting and entering on staging; the
+  screenshots and recording use a mocked API answer.
+
 ### 2026-11-11: Every read of a session record is logged, and the log ships every hour (active)
 
 - Owner: engineering; closes the engineering part of council findings

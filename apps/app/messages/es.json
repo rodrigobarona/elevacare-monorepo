@@ -74,6 +74,7 @@
       "overtimeTitle": "El tiempo reservado ha terminado",
       "overtimeBody": "Puedes continuar: la sala se cierra a las {closesAt}.",
       "back": "Volver a la sesión",
+      "backHome": "Ir a Eleva",
       "errorTitle": "No se pudo entrar",
       "retry": "Intentar de nuevo",
       "notesTitle": "Notas de la sesión",

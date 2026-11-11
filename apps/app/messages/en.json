@@ -74,6 +74,7 @@
       "overtimeTitle": "Booked time is over",
       "overtimeBody": "You can keep going — the room closes at {closesAt}.",
       "back": "Back to session",
+      "backHome": "Go to Eleva",
       "errorTitle": "Could not join",
       "retry": "Try again",
       "notesTitle": "Session notes",

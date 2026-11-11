@@ -32,7 +32,7 @@ export function PublicJoinPageClient({
     return (
       <div className="mx-auto max-w-lg space-y-6 px-4 py-12">
         <PageHeader title={t("join")} description={t("joinMissingGrant")} />
-        <LinkButton href={backHref}>{t("call.back")}</LinkButton>
+        <LinkButton href={backHref}>{t("call.backHome")}</LinkButton>
       </div>
     )
   }
@@ -63,8 +63,12 @@ function JoinClient({
 }) {
   const t = useTranslations("sessions.call")
   const locale = useLocale()
+  // No account here: "back" leads to Eleva's home, so it says so.
   const labels = useMemo(
-    (): ElevaCallLabels => elevaCallLabels(t, { locale: intlLocale(locale) }),
+    (): ElevaCallLabels => ({
+      ...elevaCallLabels(t, { locale: intlLocale(locale) }),
+      back: t("backHome"),
+    }),
     [t, locale]
   )
 

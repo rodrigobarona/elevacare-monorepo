@@ -115,7 +115,7 @@ export function WaitingRoom({
         aria-labelledby={titleId}
         data-testid="waiting-room"
         data-phase="ended"
-        className="mx-auto max-w-lg rounded-3xl border bg-card p-6 text-card-foreground shadow-1 sm:p-8"
+        className="max-w-lg rounded-3xl border bg-card p-6 text-card-foreground shadow-1 sm:p-8"
       >
         <h2
           id={titleId}
@@ -153,7 +153,7 @@ export function WaitingRoom({
     opening || (minutes > 0 && SPOKEN_MINUTES.has(minutes)) ? countdown : null
 
   return (
-    <div className="mx-auto flex max-w-lg flex-col gap-6">
+    <div className="flex max-w-lg flex-col gap-6">
       <section
         aria-labelledby={titleId}
         data-testid="waiting-room"

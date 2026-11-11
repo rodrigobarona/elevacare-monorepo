@@ -5,6 +5,7 @@ import { PageHeader } from "@eleva/ui/components/page-header"
 import { LinkButton } from "@eleva/ui/components/button"
 import { getApiBaseUrl } from "@/lib/member-api"
 import { parseJoinGrantQuery } from "@/lib/join-grant-query"
+import { publicHomeUrl } from "@/lib/public-home-url"
 import { PublicJoinPageClient } from "./join-client"
 
 export const dynamic = "force-dynamic"
@@ -26,14 +27,16 @@ export default async function PublicJoinPage({
   if (!BookingIdSchema.safeParse(bookingId).success) notFound()
 
   const parsed = parseJoinGrantQuery(query.g)
-  const backHref = "/home"
+  // Eleva's public home lives in another zone: an absolute link, so the
+  // browser loads it instead of this app looking for a Space named "home".
+  const backHref = publicHomeUrl()
   const apiBaseUrl = getApiBaseUrl()
 
   if (parsed.status === "invalid") {
     return (
       <div className="mx-auto max-w-lg space-y-6 px-4 py-12">
         <PageHeader title={t("join")} description={t("joinInvalidGrant")} />
-        <LinkButton href={backHref}>{t("call.back")}</LinkButton>
+        <LinkButton href={backHref}>{t("call.backHome")}</LinkButton>
       </div>
     )
   }

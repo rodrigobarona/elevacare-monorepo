@@ -144,9 +144,10 @@ The pilot invitation stays blocked until these checks are done.
   Status 2026-11-11: 112 and the national lines (SNS 24 and 1411 in
   Portugal, 024 in Spain) are shown on the booking details step, the
   thank-you page, the member's session page and member emails (decision
-  log, "Urgent help is signposted where members book and wait"). Open
-  until deployed, until the join page carries it, and until the founder
-  and Patricia Mota have read the choice of lines.
+  log, "Urgent help is signposted where members book and wait"). The
+  join and waiting page carries it too (decision log, "The join page
+  waits for the session and opens it"). Open until deployed and until the
+  founder and Patricia Mota have read the choice of lines.
 - PRIV2-04: expert record reads are only sampled at 1%. Lei 58/2019 expects a full access log.
   Status 2026-11-11: every read of a session record is audited, the owning
   expert's too (decision log, "Every read of a session record is logged").
