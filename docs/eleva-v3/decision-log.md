@@ -32,6 +32,54 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-11: Every read of a session record is logged, and the log ships every hour (active)
+
+- Owner: engineering; closes the engineering part of council findings
+  PRIV2-04 and PRIV2-05 once deployed.
+- Before: reads of session records were audited at 100% for members and
+  as a 1% sample for the expert who wrote them. Lei 58/2019 art. 29
+  expects a log of who accessed health data and what they accessed,
+  which a sample is not. Separately, the job that ships audit rows to the
+  append-only audit database moved at most 100 rows per run, twice a
+  day, in no order, so the durable log could fall behind without limit,
+  and it kept only the time a row was shipped, not when the event
+  happened.
+- Now:
+  - `auditRecordRead` writes one `record.decrypted` audit row for every
+    read, whoever reads: ids, viewer and purpose, never content. The
+    sampling code and its `sampleRate` field are gone. A read that
+    returns no records writes nothing. A read that cannot be logged
+    fails: the records are not returned.
+  - The drainer runs every hour inside the hourly tick (Vercel Cron,
+    not QStash), oldest row first, batch after batch until nothing is
+    pending (up to 2,000 rows a run; the result says when it stopped at
+    that cap). A row that fails is not retried within the same run.
+    Ten failures in a row mean the audit database is down: the run stops
+    without counting an attempt against those rows, sends no heartbeat
+    and reports once. A run that ends with rows marked failed, or with
+    more waiting at the cap, is reported too.
+  - Every shipped event carries `occurredAt`, the time it was written,
+    so the durable log keeps the date and time of each read and of
+    every other audited action.
+- Cost: one audit row per read of a session's records. A read lists all
+  the records of one booking, so an expert opening a session writes one
+  row, not one per record.
+- CI: the clinic-records and CRM row-level-security suites now run with
+  the other isolation suites on every pull request's database branch.
+- Operator task (founder): run `pnpm qstash:setup` once after this
+  deploy; it removes the twice-daily QStash schedule for the drainer.
+  Until then the job simply also runs twice a day. Add
+  `neon-branch-migrate-and-rls` to the required checks on `main`.
+- Not built: the member's own view of who read their records; an access
+  view for experts; per-day grouping of an expert's own reads; reads of
+  session files and of the CRM (they have their own paths and are not
+  covered by this log); a distinct purpose for the read an AI draft or a
+  template check makes (logged as `session_view`); a test that the read
+  functions call the log (the log function itself is tested); rows
+  already shipped before this change have no `occurredAt`.
+- Not decided: who tells the member about an access (DPIA R12 keeps the
+  position that the expert, as controller, does).
+
 ### 2026-11-11: A session stays joinable; only a meeting that happened ends early (active)
 
 - Owner: engineering. Found by the judge panel on the waiting-room slice;

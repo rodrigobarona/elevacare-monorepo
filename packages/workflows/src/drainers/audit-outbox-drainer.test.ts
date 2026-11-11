@@ -30,7 +30,7 @@ function fakeRow(id: string, attempts = 0) {
     attempts,
     lastError: null,
     shippedAt: null,
-    createdAt: new Date(),
+    createdAt: new Date("2026-11-11T09:30:00.000Z"),
   }
 }
 
@@ -46,15 +46,20 @@ describe("drainAuditOutbox", () => {
     pendingRows: ReturnType<typeof fakeRow>[],
     opts: {
       auditInsertShouldFail?: string[]
+      laterBatches?: ReturnType<typeof fakeRow>[][]
     } = {}
   ) {
     const heartbeat = vi.fn().mockResolvedValue(undefined)
     const captureException = vi.fn().mockResolvedValue(undefined)
+    const batches = [pendingRows, ...(opts.laterBatches ?? [])]
 
     const mainSelectChain = {
       from: vi.fn().mockReturnThis(),
       where: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockResolvedValue(pendingRows),
+      orderBy: vi.fn().mockReturnThis(),
+      // Shipped rows leave the pending set: each call returns the next
+      // batch, then nothing.
+      limit: vi.fn().mockImplementation(async () => batches.shift() ?? []),
     }
     const updateSetWhere = vi.fn().mockResolvedValue(undefined)
     const mainUpdateChain = {
@@ -90,6 +95,7 @@ describe("drainAuditOutbox", () => {
           status: { __: "status" },
           attempts: { __: "attempts" },
           id: { __: "id" },
+          createdAt: { __: "createdAt" },
         },
       },
       audit: {
@@ -112,6 +118,7 @@ describe("drainAuditOutbox", () => {
     const { drainAuditOutbox } = await import("./audit-outbox-drainer.js")
     return {
       drainAuditOutbox,
+      mainSelectChain,
       mainDb,
       audDb,
       heartbeat,
@@ -126,7 +133,13 @@ describe("drainAuditOutbox", () => {
     const { drainAuditOutbox, heartbeat, auditValues, updateSetWhere } =
       await setup(rows)
     const result = await drainAuditOutbox()
-    expect(result).toEqual({ processed: 3, shipped: 3, failed: 0, skipped: 0 })
+    expect(result).toEqual({
+      processed: 3,
+      shipped: 3,
+      failed: 0,
+      skipped: 0,
+      more: false,
+    })
     expect(auditValues).toHaveBeenCalledTimes(3)
     expect(heartbeat).toHaveBeenCalledWith("audit-outbox-drainer")
     // one bulk shipped-update
@@ -163,8 +176,148 @@ describe("drainAuditOutbox", () => {
   it("fires heartbeat even on zero pending rows", async () => {
     const { drainAuditOutbox, heartbeat } = await setup([])
     const result = await drainAuditOutbox()
-    expect(result).toEqual({ processed: 0, shipped: 0, failed: 0, skipped: 0 })
+    expect(result).toEqual({
+      processed: 0,
+      shipped: 0,
+      failed: 0,
+      skipped: 0,
+      more: false,
+    })
     expect(heartbeat).toHaveBeenCalledOnce()
+  })
+
+  it("keeps draining until nothing is pending, oldest first", async () => {
+    const first = [fakeRow("a"), fakeRow("b")]
+    const second = [fakeRow("c"), fakeRow("d")]
+    const third = [fakeRow("e")]
+    const { drainAuditOutbox, mainSelectChain, auditValues } = await setup(
+      first,
+      { laterBatches: [second, third] }
+    )
+    const result = await drainAuditOutbox({ batchSize: 2 })
+    expect(result.shipped).toBe(5)
+    expect(result.more).toBe(false)
+    expect(auditValues).toHaveBeenCalledTimes(5)
+    // A short batch ends the run: no fourth read.
+    expect(mainSelectChain.limit).toHaveBeenCalledTimes(3)
+    expect(mainSelectChain.orderBy).toHaveBeenCalledTimes(3)
+  })
+
+  it("stops at maxBatches and says more is waiting", async () => {
+    const full = () => [
+      fakeRow(crypto.randomUUID()),
+      fakeRow(crypto.randomUUID()),
+    ]
+    const { drainAuditOutbox, mainSelectChain } = await setup(full(), {
+      laterBatches: [full(), full(), full()],
+    })
+    const result = await drainAuditOutbox({ batchSize: 2, maxBatches: 2 })
+    expect(result.shipped).toBe(4)
+    expect(result.more).toBe(true)
+    expect(mainSelectChain.limit).toHaveBeenCalledTimes(2)
+  })
+
+  it("does not retry a failing row within the same run", async () => {
+    const stuck = fakeRow("stuck")
+    // A real database would return the failed row again: it is still pending.
+    const { drainAuditOutbox, captureException } = await setup(
+      [stuck, fakeRow("a")],
+      {
+        auditInsertShouldFail: ["audit-stuck"],
+        laterBatches: [[fakeRow("b"), fakeRow("c")], []],
+      }
+    )
+    const result = await drainAuditOutbox({ batchSize: 2 })
+    expect(result.shipped).toBe(3)
+    expect(result.skipped).toBe(1)
+    expect(captureException).toHaveBeenCalledOnce()
+  })
+
+  it("stops without using up retries when the audit database is down", async () => {
+    const rows = Array.from({ length: 12 }, (_, i) => fakeRow(`r${i}`))
+    const { drainAuditOutbox, heartbeat, updateSetWhere, captureException } =
+      await setup(rows, {
+        auditInsertShouldFail: rows.map((row) => row.auditId),
+      })
+    await expect(drainAuditOutbox()).rejects.toMatchObject({
+      name: "AuditStoreUnavailable",
+    })
+    // No attempt is written against any row, and no heartbeat is sent.
+    expect(updateSetWhere).not.toHaveBeenCalled()
+    expect(heartbeat).not.toHaveBeenCalled()
+    // One report for the outage, not one per row.
+    expect(captureException).toHaveBeenCalledOnce()
+  })
+
+  it("still counts a bad row that failed before an outage", async () => {
+    const rows = [
+      fakeRow("bad"),
+      fakeRow("ok"),
+      ...Array.from({ length: 10 }, (_, i) => fakeRow(`down${i}`)),
+    ]
+    const { drainAuditOutbox, updateSetWhere } = await setup(rows, {
+      auditInsertShouldFail: rows
+        .filter((row) => row.id !== "ok")
+        .map((row) => row.auditId),
+    })
+    await expect(drainAuditOutbox()).rejects.toMatchObject({
+      name: "AuditStoreUnavailable",
+    })
+    // One update ships "ok", one records the attempt on "bad"; the ten
+    // rows refused in a row keep their attempts.
+    expect(updateSetWhere).toHaveBeenCalledTimes(2)
+  })
+
+  it("sees an outage that starts at the end of one batch", async () => {
+    // Six refused rows close the first batch and six open the second:
+    // twelve in a row, so none of them loses an attempt.
+    const first = [
+      ...Array.from({ length: 2 }, (_, i) => fakeRow(`ok${i}`)),
+      ...Array.from({ length: 6 }, (_, i) => fakeRow(`downA${i}`)),
+    ]
+    const second = Array.from({ length: 8 }, (_, i) => fakeRow(`downB${i}`))
+    const { drainAuditOutbox, updateSetWhere, heartbeat } = await setup(first, {
+      auditInsertShouldFail: [...first, ...second]
+        .filter((row) => !row.id.startsWith("ok"))
+        .map((row) => row.auditId),
+      laterBatches: [second],
+    })
+    await expect(drainAuditOutbox({ batchSize: 8 })).rejects.toMatchObject({
+      name: "AuditStoreUnavailable",
+    })
+    // The only write marks the two shipped rows.
+    expect(updateSetWhere).toHaveBeenCalledOnce()
+    expect(heartbeat).not.toHaveBeenCalled()
+  })
+
+  it("reports a run that ends with failed rows or more waiting", async () => {
+    const { drainAuditOutbox, captureException } = await setup(
+      [fakeRow("a", 4)],
+      { auditInsertShouldFail: ["audit-a"] }
+    )
+    const result = await drainAuditOutbox({ maxAttempts: 5 })
+    expect(result.failed).toBe(1)
+    // The row itself, and the run summary.
+    expect(captureException).toHaveBeenCalledTimes(2)
+  })
+
+  it("keeps the time each event happened in the durable log", async () => {
+    const { drainAuditOutbox, auditValues } = await setup([fakeRow("a")])
+    await drainAuditOutbox()
+    expect(auditValues).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload: { email: "a@b.c", occurredAt: "2026-11-11T09:30:00.000Z" },
+      })
+    )
+  })
+
+  it("never overwrites a time the event already carries", async () => {
+    const { withOccurredAt } = await (async () => {
+      await setup([])
+      return import("./audit-outbox-drainer.js")
+    })()
+    const payload = { occurredAt: "2026-01-01T00:00:00.000Z" }
+    expect(withOccurredAt(payload, new Date())).toBe(payload)
   })
 
   it("accepts a custom heartbeat name", async () => {

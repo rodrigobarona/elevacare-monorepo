@@ -11,16 +11,19 @@ export const ROUTE_POLICY = {
 } as const satisfies RoutePolicy
 
 /**
- * HTTP trigger for the audit outbox drainer. Called by:
- *   - QStash schedule (every 30s in staging/prod) — wiring lands with
- *     infra/qstash in S4.
- *   - The operator dashboard "manual drain" button in S6.
- *   - CI integration test.
+ * POST /workflows/audit-outbox-drainer
  *
- * Authz: QStash signature or Bearer `WORKFLOWS_DRAIN_SECRET`.
+ * Ships `audit_outbox` rows to the append-only audit database. Runs every
+ * hour inside the hourly tick (`apps/api/src/lib/workflow-ticks.ts`, Vercel
+ * Cron) and drains until nothing is pending, oldest first. Also callable
+ * by hand.
+ *
+ * Authz: Bearer `WORKFLOWS_DRAIN_SECRET` or a QStash signature.
  */
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
+// A full run ships up to 2,000 rows one by one to a second database.
+export const maxDuration = 300
 
 export async function POST(request: Request) {
   const headers = corsHeaders(request, "POST, OPTIONS")

@@ -58,7 +58,6 @@
     "stripe:verify:entitlements": "pnpm --filter=@eleva/infra-stripe verify:entitlements",
     "qstash:list": "pnpm --filter=@eleva/infra-qstash run list",
     "qstash:setup": "pnpm --filter=@eleva/infra-qstash run setup:all",
-    "qstash:setup:audit-drainer": "pnpm --filter=@eleva/infra-qstash run setup:audit-drainer",
     "qstash:setup:payouts": "pnpm --filter=@eleva/infra-qstash run setup:payouts",
     "qstash:setup:invoicing": "pnpm --filter=@eleva/infra-qstash run setup:invoicing",
     "flags:sync": "pnpm --filter=@eleva/flags flags:sync",

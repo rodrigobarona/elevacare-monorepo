@@ -148,7 +148,14 @@ The pilot invitation stays blocked until these checks are done.
   until deployed, until the join page carries it, and until the founder
   and Patricia Mota have read the choice of lines.
 - PRIV2-04: expert record reads are only sampled at 1%. Lei 58/2019 expects a full access log.
+  Status 2026-11-11: every read of a session record is audited, the owning
+  expert's too (decision log, "Every read of a session record is logged").
+  Open until deployed.
 - PRIV2-05: the clinic and CRM RLS suites are not in CI; correct the AUD-052 stamp.
+  Status 2026-11-11: both suites run in the `neon-branch-migrate-and-rls` job.
+  The AUD-052 stamp in the phases 01-10 audit now says when the suite
+  started running in CI. The job is not yet a required check on `main`
+  (founder: add `neon-branch-migrate-and-rls` to branch protection).
 - PRIV2-06: live transcription relies on an unverified EU-processing claim. Keep it off for
   the pilot or get written confirmation.
 - PRIV3-01: "Rating" sort is paid placement.

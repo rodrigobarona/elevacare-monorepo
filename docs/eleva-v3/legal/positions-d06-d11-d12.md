@@ -229,8 +229,10 @@ the following hold:
    - every staff read is audited;
    - break-glass decryption is a future Phase 12 dual-control action and does
      not exist today.
-5. Reads are audited as `record.decrypted`: 100% for staff and members, **1%
-   sampled for the owning expert**.
+5. Reads are audited as `record.decrypted`: every read, by the member and by
+   the owning expert (the expert's reads were a 1% sample; the full log was
+   merged on 2026-11-11 and applies from its deployment). Staff have no way
+   to read records.
 
 ### Legal analysis
 
@@ -286,8 +288,10 @@ the following hold:
     be notified of any access to their data).
   - Art. 29(7) foresees an electronic log of accesses and of the data
     accessed.
-  - **Sampling the owning expert's reads at 1% does not produce a complete
-    access log.**
+  - Sampling the owning expert's reads at 1% did not produce a complete
+    access log. **Changed 2026-11-11** (in effect from its deployment):
+    every read is logged, one entry per read, with its time. The per-day
+    aggregation and the member's view below are still proposals.
   - Proposal for the DPO:
     - log 100% of reads by anyone other than the author;
     - keep 100% author reads as well, as aggregated per-day entries to limit

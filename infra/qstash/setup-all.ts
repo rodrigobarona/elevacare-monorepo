@@ -44,6 +44,7 @@ const VERCEL_CRON_PATHS = [
   "/workflows/stripe-stuck-events",
   "/workflows/video-room-sweep",
   "/workflows/video-attendance-sweep",
+  "/workflows/audit-outbox-drainer",
   "/workflows/account-deletion-sweep",
   "/workflows/crm-follow-up-due",
   "/workflows/invoicing-retry",
@@ -62,19 +63,6 @@ async function main() {
       `[qstash:setup:all] Removed ${removed} schedules now run by Vercel Cron`
     )
   }
-
-  await registerSchedule(
-    {
-      name: "Audit outbox drainer",
-      path: "/workflows/audit-outbox-drainer",
-      cron: "0 6,18 * * *",
-      retries: 3,
-      requireBearer: true,
-      description:
-        "Ship audit_outbox rows to the audit Neon project (06:00 + 18:00 UTC)",
-    },
-    { dryRun }
-  )
 
   await registerSchedule(
     {
