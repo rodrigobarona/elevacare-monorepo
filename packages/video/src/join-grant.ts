@@ -1,5 +1,5 @@
 import { hkdfSync } from "node:crypto"
-import { SignJWT, jwtVerify } from "jose"
+import { SignJWT, errors, jwtVerify } from "jose"
 import { z } from "zod"
 import { JOIN_TRAIL_MS } from "./join-window"
 
@@ -61,10 +61,22 @@ export async function mintJoinGrant(
     .sign(grantKey(input.secret))
 }
 
-export async function verifyJoinGrant(
+export type JoinGrantCheck =
+  | { status: "valid"; claims: JoinGrantClaims }
+  /** Signed by Eleva for this booking, but past its end. */
+  | { status: "expired"; claims: JoinGrantClaims }
+  | { status: "invalid" }
+
+/**
+ * Check a join grant and say why it fails. `expired` is only reported for
+ * a grant Eleva signed (jose checks the signature before the claims), so
+ * the caller may tell its holder the session is over. Anything else is
+ * `invalid` and gets no detail.
+ */
+export async function checkJoinGrant(
   token: string,
   options?: { secret?: string; now?: Date }
-): Promise<JoinGrantClaims | null> {
+): Promise<JoinGrantCheck> {
   try {
     const { payload } = await jwtVerify(token, grantKey(options?.secret), {
       algorithms: ["HS256"],
@@ -73,10 +85,24 @@ export async function verifyJoinGrant(
       currentDate: options?.now,
     })
     const parsed = joinGrantClaimsSchema.safeParse(payload)
-    return parsed.success ? parsed.data : null
-  } catch {
-    return null
+    return parsed.success
+      ? { status: "valid", claims: parsed.data }
+      : { status: "invalid" }
+  } catch (error) {
+    if (error instanceof errors.JWTExpired) {
+      const parsed = joinGrantClaimsSchema.safeParse(error.payload)
+      if (parsed.success) return { status: "expired", claims: parsed.data }
+    }
+    return { status: "invalid" }
   }
+}
+
+export async function verifyJoinGrant(
+  token: string,
+  options?: { secret?: string; now?: Date }
+): Promise<JoinGrantClaims | null> {
+  const check = await checkJoinGrant(token, options)
+  return check.status === "valid" ? check.claims : null
 }
 
 export function sessionJoinPath(bookingId: string, grant: string): string {

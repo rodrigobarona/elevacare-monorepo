@@ -28,6 +28,7 @@ const JOIN_STATUS: Record<SessionJoinError["code"], number> = {
   NOT_A_PARTICIPANT: 403,
   SESSION_NOT_OPEN: 403,
   SESSION_NOT_ACTIVE: 410,
+  SESSION_ENDED: 410,
   ROOM_NOT_READY: 409,
   INVALID_GRANT: 401,
 }
@@ -80,7 +81,8 @@ export async function POST(
         userId: session.user.id,
         userName: session.user.displayName?.trim() || "Member",
       }),
-    headers
+    headers,
+    bookingId
   )
 }
 
@@ -104,13 +106,15 @@ async function joinWithGrant(
         bookingId,
         grant,
       }),
-    headers
+    headers,
+    bookingId
   )
 }
 
 async function mintJoinResponse(
   mint: () => Promise<unknown>,
-  headers: Record<string, string>
+  headers: Record<string, string>,
+  bookingId: string
 ) {
   try {
     const result = await mint()
@@ -120,6 +124,11 @@ async function mintJoinResponse(
     })
   } catch (err) {
     if (err instanceof SessionJoinError) {
+      if (err.code === "ROOM_NOT_READY") {
+        // Someone entitled to join, inside the join window, found no room.
+        // Keep a trace (booking id only) so support can confirm it later.
+        console.warn("[sessions/join] room not ready", { bookingId })
+      }
       return secureJson(
         {
           error: err.code,

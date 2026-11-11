@@ -3,6 +3,7 @@ import {
   classifyJoinCaller,
   classifyJoinStatus,
   classifyJoinWindow,
+  joinWindowDetails,
 } from "./join"
 
 const startsAt = new Date("2026-10-07T10:00:00.000Z")
@@ -14,19 +15,28 @@ describe("classifyJoinStatus", () => {
     expect(classifyJoinStatus("live")).toEqual({ ok: true })
   })
 
-  it("rejects terminal statuses", () => {
+  it("rejects a cancelled session and a room that is not ready", () => {
     expect(classifyJoinStatus("cancelled")).toEqual({
       error: "SESSION_NOT_ACTIVE",
     })
-    expect(classifyJoinStatus("ended")).toEqual({
-      error: "SESSION_NOT_ACTIVE",
-    })
-    expect(classifyJoinStatus("no_show")).toEqual({
+    expect(classifyJoinStatus("cancelled", true)).toEqual({
       error: "SESSION_NOT_ACTIVE",
     })
     expect(classifyJoinStatus("room_unresolved")).toEqual({
       error: "ROOM_NOT_READY",
     })
+  })
+
+  it("says a finished session has ended, once its start has passed", () => {
+    for (const status of ["ended", "no_show", "completed"]) {
+      expect(classifyJoinStatus(status, true)).toEqual({
+        error: "SESSION_ENDED",
+      })
+      // A status set before the booked start never reads as "ended".
+      expect(classifyJoinStatus(status, false)).toEqual({
+        error: "SESSION_NOT_ACTIVE",
+      })
+    }
   })
 })
 
@@ -40,13 +50,26 @@ describe("classifyJoinWindow", () => {
     ).toEqual({ ok: true })
   })
 
-  it("rejects outside the window", () => {
+  it("is not open before the window and ended after it", () => {
     expect(
       classifyJoinWindow(new Date("2026-10-07T09:44:59.000Z"), startsAt, endsAt)
     ).toEqual({ error: "SESSION_NOT_OPEN" })
     expect(
       classifyJoinWindow(new Date("2026-10-07T11:30:01.000Z"), startsAt, endsAt)
-    ).toEqual({ error: "SESSION_NOT_OPEN" })
+    ).toEqual({ error: "SESSION_ENDED" })
+  })
+})
+
+describe("joinWindowDetails", () => {
+  it("names when joining opens and closes, on the server clock", () => {
+    expect(
+      joinWindowDetails(new Date("2026-10-07T09:30:00.000Z"), startsAt, endsAt)
+    ).toEqual({
+      startsAt: "2026-10-07T10:00:00.000Z",
+      opensAt: "2026-10-07T09:45:00.000Z",
+      closesAt: "2026-10-07T11:30:00.000Z",
+      now: "2026-10-07T09:30:00.000Z",
+    })
   })
 })
 

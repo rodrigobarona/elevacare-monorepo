@@ -1,8 +1,10 @@
 "use client"
 
 import { useCallback, useMemo } from "react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { createApiClient } from "@eleva/api-client"
+import { intlLocale } from "@eleva/config/i18n"
+import { UrgentHelp } from "@eleva/dashboard/urgent-help"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { LinkButton } from "@eleva/ui/components/button"
 import {
@@ -30,7 +32,7 @@ export function PublicJoinPageClient({
     return (
       <div className="mx-auto max-w-lg space-y-6 px-4 py-12">
         <PageHeader title={t("join")} description={t("joinMissingGrant")} />
-        <LinkButton href={backHref}>{t("call.back")}</LinkButton>
+        <LinkButton href={backHref}>{t("call.backHome")}</LinkButton>
       </div>
     )
   }
@@ -60,7 +62,15 @@ function JoinClient({
   grant: string
 }) {
   const t = useTranslations("sessions.call")
-  const labels = useMemo((): ElevaCallLabels => elevaCallLabels(t), [t])
+  const locale = useLocale()
+  // No account here: "back" leads to Eleva's home, so it says so.
+  const labels = useMemo(
+    (): ElevaCallLabels => ({
+      ...elevaCallLabels(t, { locale: intlLocale(locale) }),
+      back: t("backHome"),
+    }),
+    [t, locale]
+  )
 
   const api = useMemo(
     () =>
@@ -85,6 +95,8 @@ function JoinClient({
       labels={labels}
       backHref={backHref}
       showNotesSlot={false}
+      aside={<UrgentHelp className="rounded-3xl p-6" />}
+      showBackWhileWaiting={false}
     />
   )
 }

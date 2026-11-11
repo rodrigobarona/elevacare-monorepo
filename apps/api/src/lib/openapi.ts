@@ -3383,7 +3383,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "401": {
               description:
-                "Missing session, or join grant is invalid, expired, or for another schedule revision (INVALID_GRANT)",
+                "Missing session, or the join grant is invalid or for another schedule revision (INVALID_GRANT). A genuine grant past its end answers 410 SESSION_ENDED instead.",
               content: { "application/json": { schema: ErrorSchema } },
             },
             "422": {
@@ -3392,7 +3392,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "403": {
               description:
-                "Not a participant, or the join window is closed. SESSION_NOT_OPEN includes startsAt and opensAt so the waiting room can name the session time.",
+                "Not a participant (NOT_A_PARTICIPANT), or joining has not opened yet (SESSION_NOT_OPEN). SESSION_NOT_OPEN includes startsAt, opensAt, closesAt and the server time (now), so a waiting room can name the session time and count down on the server clock.",
               content: {
                 "application/json": { schema: JoinSessionErrorSchema },
               },
@@ -3402,7 +3402,8 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               content: { "application/json": { schema: ErrorSchema } },
             },
             "410": {
-              description: "Session is cancelled, ended, or no-show",
+              description:
+                "SESSION_ENDED: joining has closed (30 minutes after the booked end), the session was completed, or the join grant is genuine but past its end. SESSION_NOT_ACTIVE: the session was cancelled or is otherwise not joinable.",
               content: { "application/json": { schema: ErrorSchema } },
             },
           },

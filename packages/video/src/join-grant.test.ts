@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  checkJoinGrant,
   joinGrantExpUnix,
   mintJoinGrant,
   sessionJoinPath,
@@ -65,6 +66,42 @@ describe("join grants", () => {
         now: new Date("2026-10-08T12:31:01.000Z"),
       })
     ).toBeNull()
+  })
+
+  it("tells a genuine grant past its end from a forged one", async () => {
+    const token = await mintJoinGrant({
+      bookingId: BOOKING_ID,
+      role: "member",
+      endsAt: ENDS_AT,
+      scheduleRevision: 2,
+      now: NOW,
+      secret: SECRET,
+    })
+    const afterClose = new Date("2026-10-08T12:31:01.000Z")
+    expect(
+      await checkJoinGrant(token, { secret: SECRET, now: afterClose })
+    ).toEqual({
+      status: "expired",
+      claims: {
+        purpose: "session-join",
+        bookingId: BOOKING_ID,
+        role: "member",
+        scheduleRevision: 2,
+      },
+    })
+    expect(await checkJoinGrant(token, { secret: SECRET, now: NOW })).toEqual(
+      expect.objectContaining({ status: "valid" })
+    )
+    // Expired and signed with another key, or tampered: no detail at all.
+    expect(
+      await checkJoinGrant(token, { secret: "other", now: afterClose })
+    ).toEqual({ status: "invalid" })
+    expect(
+      await checkJoinGrant(`${token}x`, { secret: SECRET, now: afterClose })
+    ).toEqual({ status: "invalid" })
+    expect(await checkJoinGrant("not-a-jwt", { secret: SECRET })).toEqual({
+      status: "invalid",
+    })
   })
 
   it("builds the public join path without a Daily token query", () => {

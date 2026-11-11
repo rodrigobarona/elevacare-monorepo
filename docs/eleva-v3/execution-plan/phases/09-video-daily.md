@@ -185,7 +185,8 @@ transcript records belong to Phase 10.1.
       rooms; phone and in-person bookings never get one (both paths tested).
 - [ ] Expert token is `is_owner: true`; member token is not; token `exp` <= `endAt + 30 min` —
       boundary test: minted at `endAt + 29 min 59 s` expires at exactly `endAt + 30 min`.
-- [ ] Join outside the window -> 403 `SESSION_NOT_OPEN`; non-participant (including another
+- [ ] Join before the window -> 403 `SESSION_NOT_OPEN`, after it -> 410 `SESSION_ENDED`
+      (amended 2026-11-11); non-participant (including another
       expert of the same organization) -> 403 `NOT_A_PARTICIPANT`; delegated participant -> 200.
 - [ ] Two browsers (expert, member) in staging join and see each other; leaving/ending updates
       `sessions.status` via webhooks within 30s.
@@ -359,7 +360,8 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    sessions.status IN ('scheduled','live') else 410 SESSION_NOT_ACTIVE (checked BEFORE the window
    and before any Daily call — a cancelled session never mints even when deleteRoom failed; test:
    cancel with deleteRoom mocked to fail -> join 410, the room-cleanup retry later succeeds); window
-   [startAt-15m, endAt+30m] else 403 SESSION_NOT_OPEN; after the FOR UPDATE auth
+   [startAt-15m, endAt+30m] else 403 SESSION_NOT_OPEN before it and 410 SESSION_ENDED after
+   it (amended 2026-11-11); after the FOR UPDATE auth
    check, signs the meeting token **locally** (no Daily HTTP) with exp = min(now+2h,
    endAt+30m) (boundary test: mint at endAt+29m59s -> token exp = endAt+30m exactly);
    audited session.joined; rate limit 10/min/user) and POST /webhooks/daily (verify)

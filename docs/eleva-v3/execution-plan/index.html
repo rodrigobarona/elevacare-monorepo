@@ -5674,7 +5674,8 @@ the room capacity.</li>
 rooms; phone and in-person bookings never get one (both paths tested).</li>
 <li><input disabled="" type="checkbox"> Expert token is <code>is_owner: true</code>; member token is not; token <code>exp</code> &lt;= <code>endAt + 30 min</code> —
 boundary test: minted at <code>endAt + 29 min 59 s</code> expires at exactly <code>endAt + 30 min</code>.</li>
-<li><input disabled="" type="checkbox"> Join outside the window -&gt; 403 <code>SESSION_NOT_OPEN</code>; non-participant (including another
+<li><input disabled="" type="checkbox"> Join before the window -&gt; 403 <code>SESSION_NOT_OPEN</code>, after it -&gt; 410 <code>SESSION_ENDED</code>
+(amended 2026-11-11); non-participant (including another
 expert of the same organization) -&gt; 403 <code>NOT_A_PARTICIPANT</code>; delegated participant -&gt; 200.</li>
 <li><input disabled="" type="checkbox"> Two browsers (expert, member) in staging join and see each other; leaving/ending updates
 <code>sessions.status</code> via webhooks within 30s.</li>
@@ -5846,7 +5847,8 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    sessions.status IN (&#39;scheduled&#39;,&#39;live&#39;) else 410 SESSION_NOT_ACTIVE (checked BEFORE the window
    and before any Daily call — a cancelled session never mints even when deleteRoom failed; test:
    cancel with deleteRoom mocked to fail -&gt; join 410, the room-cleanup retry later succeeds); window
-   [startAt-15m, endAt+30m] else 403 SESSION_NOT_OPEN; after the FOR UPDATE auth
+   [startAt-15m, endAt+30m] else 403 SESSION_NOT_OPEN before it and 410 SESSION_ENDED after
+   it (amended 2026-11-11); after the FOR UPDATE auth
    check, signs the meeting token **locally** (no Daily HTTP) with exp = min(now+2h,
    endAt+30m) (boundary test: mint at endAt+29m59s -&gt; token exp = endAt+30m exactly);
    audited session.joined; rate limit 10/min/user) and POST /webhooks/daily (verify)

@@ -14,12 +14,14 @@ import {
   mintMeetingToken,
   tokenExpUnix,
 } from "@eleva/video"
-import { verifyJoinGrant, type JoinGrantRole } from "@eleva/video/join-grant"
+import { checkJoinGrant, type JoinGrantRole } from "@eleva/video/join-grant"
 
 export type SessionJoinErrorCode =
   | "NOT_A_PARTICIPANT"
   | "SESSION_NOT_ACTIVE"
   | "SESSION_NOT_OPEN"
+  /** Held and over: joining has closed, or the session was marked done. */
+  | "SESSION_ENDED"
   | "ROOM_NOT_READY"
   | "INVALID_GRANT"
 
@@ -27,17 +29,35 @@ export class SessionJoinError extends Error {
   override readonly name = "SessionJoinError"
   constructor(
     readonly code: SessionJoinErrorCode,
-    readonly details?: { startsAt?: string; opensAt?: string }
+    readonly details?: {
+      startsAt?: string
+      opensAt?: string
+      /** When joining stops: 30 minutes after the booked end. */
+      closesAt?: string
+      /** Server time of this answer, so a waiting room can ignore a wrong device clock. */
+      now?: string
+    }
   ) {
     super(code)
   }
 }
 
+const FINISHED_STATUSES = new Set(["completed", "ended", "no_show"])
+
 export function classifyJoinStatus(
-  status: string
-): { ok: true } | { error: "SESSION_NOT_ACTIVE" | "ROOM_NOT_READY" } {
+  status: string,
+  /** Whether the booked start has passed; defaults to no. */
+  started = false
+):
+  | { ok: true }
+  | { error: "SESSION_NOT_ACTIVE" | "SESSION_ENDED" | "ROOM_NOT_READY" } {
   if (status === "scheduled" || status === "live") return { ok: true }
   if (status === "room_unresolved") return { error: "ROOM_NOT_READY" }
+  // "Ended" is only said once the booked start has passed, so a status
+  // set too early never tells someone their session is already over.
+  if (started && FINISHED_STATUSES.has(status)) {
+    return { error: "SESSION_ENDED" }
+  }
   return { error: "SESSION_NOT_ACTIVE" }
 }
 
@@ -45,12 +65,27 @@ export function classifyJoinWindow(
   now: Date,
   startsAt: Date,
   endsAt: Date
-): { ok: true } | { error: "SESSION_NOT_OPEN" } {
+): { ok: true } | { error: "SESSION_NOT_OPEN" | "SESSION_ENDED" } {
   const openAt = startsAt.getTime() - JOIN_LEAD_MS
   const closeAt = endsAt.getTime() + JOIN_TRAIL_MS
   const t = now.getTime()
-  if (t < openAt || t > closeAt) return { error: "SESSION_NOT_OPEN" }
+  if (t < openAt) return { error: "SESSION_NOT_OPEN" }
+  if (t > closeAt) return { error: "SESSION_ENDED" }
   return { ok: true }
+}
+
+/** What a waiting room needs to say when joining opens, or that it closed. */
+export function joinWindowDetails(
+  now: Date,
+  startsAt: Date,
+  endsAt: Date
+): { startsAt: string; opensAt: string; closesAt: string; now: string } {
+  return {
+    startsAt: startsAt.toISOString(),
+    opensAt: new Date(startsAt.getTime() - JOIN_LEAD_MS).toISOString(),
+    closesAt: new Date(endsAt.getTime() + JOIN_TRAIL_MS).toISOString(),
+    now: now.toISOString(),
+  }
 }
 
 export function classifyJoinCaller(input: {
@@ -108,15 +143,30 @@ export async function joinSessionFromGrant(
   },
   deps: JoinSessionDeps = {}
 ): Promise<JoinSessionResult> {
-  const claims = await verifyJoinGrant(input.grant, { now: input.now })
-  if (!claims || claims.bookingId !== input.bookingId) {
+  const check = await checkJoinGrant(input.grant, { now: input.now })
+  if (
+    check.status === "invalid" ||
+    check.claims.bookingId !== input.bookingId
+  ) {
     throw new SessionJoinError("INVALID_GRANT")
   }
+  const { claims } = check
+  // Also refuses a link from before a reschedule (INVALID_GRANT), so only
+  // the latest link of a real booking is ever told "ended".
   const identity = await resolveGrantJoinIdentity(
     input.bookingId,
     claims.role,
     claims.scheduleRevision
   )
+  if (check.status === "expired") {
+    // A cancelled session did not end: say "not active" for it.
+    const status = classifyJoinStatus(identity.sessionStatus, true)
+    throw new SessionJoinError(
+      "error" in status && status.error === "SESSION_NOT_ACTIVE"
+        ? "SESSION_NOT_ACTIVE"
+        : "SESSION_ENDED"
+    )
+  }
   return joinSession(
     {
       bookingId: input.bookingId,
@@ -138,10 +188,13 @@ async function resolveGrantJoinIdentity(
   userId: string
   userName: string
   actorUserId?: string | null
+  sessionStatus: string
 }> {
+  let sessionStatus = ""
   const identity = await withPlatformAdminContext(async (tx) => {
     const [session] = await tx
       .select({
+        status: main.sessions.status,
         memberUserId: main.sessions.memberUserId,
         expertUserId: main.expertProfiles.userId,
         guestName: main.bookings.guestName,
@@ -159,6 +212,7 @@ async function resolveGrantJoinIdentity(
     if (session.scheduleRevision !== scheduleRevision) {
       throw new SessionJoinError("INVALID_GRANT")
     }
+    sessionStatus = session.status
 
     switch (role) {
       case "expert": {
@@ -202,7 +256,7 @@ async function resolveGrantJoinIdentity(
     }
   })
   if (!identity) throw new SessionJoinError("NOT_A_PARTICIPANT")
-  return identity
+  return { ...identity, sessionStatus }
 }
 
 export async function joinSession(
@@ -273,7 +327,10 @@ export async function joinSession(
       })
   if ("error" in caller) throw new SessionJoinError(caller.error)
 
-  const status = classifyJoinStatus(row.session.status)
+  const status = classifyJoinStatus(
+    row.session.status,
+    now.getTime() >= row.session.startsAt.getTime()
+  )
   if ("error" in status) throw new SessionJoinError(status.error)
 
   const window = classifyJoinWindow(
@@ -282,12 +339,12 @@ export async function joinSession(
     row.session.endsAt
   )
   if ("error" in window) {
-    throw new SessionJoinError("SESSION_NOT_OPEN", {
-      startsAt: row.session.startsAt.toISOString(),
-      opensAt: new Date(
-        row.session.startsAt.getTime() - JOIN_LEAD_MS
-      ).toISOString(),
-    })
+    throw new SessionJoinError(
+      window.error,
+      window.error === "SESSION_NOT_OPEN"
+        ? joinWindowDetails(now, row.session.startsAt, row.session.endsAt)
+        : undefined
+    )
   }
 
   if (!row.session.dailyRoomName || !row.session.dailyRoomUrl) {

@@ -126,6 +126,18 @@ describe("withHeaders", () => {
     expect(res.headers.get("Permissions-Policy")).toContain("camera=()")
   })
 
+  it("never sends a join link, which carries the grant, as a referrer", async () => {
+    const proxy = withHeaders(() => NextResponse.next())
+    const join = await proxy(
+      req("/join/11111111-1111-4111-8111-111111111111?g=grant")
+    )
+    expect(join.headers.get("Referrer-Policy")).toBe("no-referrer")
+    const other = await proxy(req("/pt/legal/privacy"))
+    expect(other.headers.get("Referrer-Policy")).toBe(
+      "strict-origin-when-cross-origin"
+    )
+  })
+
   it("keeps same-origin rewrites in scope", async () => {
     const proxy = withHeaders(
       (r) => NextResponse.rewrite(new URL("/home", r.nextUrl.origin)),
