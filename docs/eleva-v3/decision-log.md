@@ -63,9 +63,15 @@ Each entry should include:
     asks first, names the session, says what happens (the member is
     told and refunded, it cannot be undone, the time can be booked
     again) and takes an optional reason.
-  - The reason (180 characters) is kept on the booking as
-    `expert_cancel: ...` and is not sent to the member. The form asks
-    the expert to leave health details out.
+  - The reason is optional and one of a fixed list (I can't make it, an
+    emergency, a scheduling conflict, another reason), kept on the
+    booking as `expert_cancel:<reason>` and not sent to the member.
+    There is no free text, so no health detail about the expert or the
+    member is written to the booking. "I can't make it" covers illness
+    without saying so.
+  - The cut-off (not started) is checked again by the database's clock
+    in the write itself, so a session that starts while the request
+    runs is not cancelled.
   - The calendar sends the start time the expert was looking at. If the
     member has moved the session since, nothing is cancelled (409
     `SESSION_CHANGED`) and the calendar loads the week again. A booking
@@ -82,11 +88,9 @@ Each entry should include:
   notice (quiet hours apply as for any cancellation); the same action
   in the member list or the Today page; a help-center page.
 - Follow-ups (engineering, by the Phase 13 hardening pass):
-  - The reason shares the `cancellation_reason` column with the code,
-    unencrypted, as the decline note already does. Nothing reads it
-    yet, and deletion and retention do not clear it. Either fixed
-    choices instead of free text, or a column of its own covered by
-    retention and erasure.
+  - The note an expert can type when declining a request is still free
+    text in the unencrypted `cancellation_reason` column, not covered by
+    retention or erasure. Give it the same fixed list.
   - The refund-due and release-the-time block now exists three times
     (member cancel, request decline, expert cancel). Extract one helper
     the next time any of them changes.
@@ -1117,7 +1121,8 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
     `become_partner_applications` was dropped in migration 0013 and must be recreated (Phase 12
     deliverable, corrected 2026-10-29).
   - Expert cancellation and expert/member no-show handling are not built. They are open work that
-    must follow item 3.
+    must follow item 3. (Expert cancellation was built on 2026-11-11: see "An expert can cancel a
+    confirmed session; the member is refunded in full". No-show handling is still open.)
 - Legal drafting from these decisions is tracked in `docs/eleva-v3/legal/`. It must be reviewed by a
   Portuguese lawyer or the appointed DPO before reliance.
 - Owner: founder. Status: `active`.
@@ -2377,7 +2382,8 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
     at least 48 h away.
   - **Always 100%:** expert cancel, account deletion, hold expiry and staff
     override. Expert cancel does not exist in code yet; when it lands it must
-    refund in full.
+    refund in full. (Built 2026-11-11, refunding in full: see "An expert can
+    cancel a confirmed session; the member is refunded in full".)
 - Mechanics: the booking snapshots the policy and `cancellation_policy_version`
   at booking time, taken from the hold, which records the policy shown to the
   member before payment (same transaction as the funnel consents). A later
@@ -2398,7 +2404,8 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
   `packages/config/src/cancellation-policy.ts`
 - **Out of scope (follow-ups):**
   - Expert-initiated cancel (always a 100% refund to the member; an expert penalty
-    may apply later). No expert cancel path exists yet.
+    may apply later). No expert cancel path exists yet. (Built 2026-11-11;
+    no expert penalty.)
   - No-show policy (Phase 09 records attendance; D-06 then decides refund / keep /
     partial).
   - Discounted non-refundable option and custom policies beyond the three presets.

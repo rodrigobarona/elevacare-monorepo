@@ -1,6 +1,9 @@
 import { z } from "zod"
 import { INSTANT_BOOK_LEAD_MINUTES_MAX } from "@eleva/config/booking-settings"
-import { CANCELLATION_POLICY_VALUES } from "@eleva/config/cancellation-policy"
+import {
+  CANCELLATION_POLICY_VALUES,
+  EXPERT_CANCEL_REASONS,
+} from "@eleva/config/cancellation-policy"
 import {
   isAllowedSocialLinkUrl,
   isExpertPortraitUrl,
@@ -2172,8 +2175,8 @@ export type DeclineExpertBookingResponse = z.infer<
 >
 
 export const CancelExpertBookingRequestSchema = z.object({
-  /** Kept on the booking record; not sent to the member. */
-  reason: z.string().trim().max(180).optional(),
+  /** One of a fixed list, kept on the booking record; not sent to the member. */
+  reason: z.enum(EXPERT_CANCEL_REASONS).optional(),
   /**
    * The start time the caller saw. When given and the session has been
    * moved since, nothing is cancelled and the answer is 409 SESSION_CHANGED.

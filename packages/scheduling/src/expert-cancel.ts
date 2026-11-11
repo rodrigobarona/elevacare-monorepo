@@ -1,5 +1,9 @@
-import { and, eq, inArray } from "drizzle-orm"
+import { and, eq, gt, inArray, sql } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
+import {
+  EXPERT_CANCEL_REASONS,
+  type ExpertCancelReason,
+} from "@eleva/config/cancellation-policy"
 import {
   getExpertBookingForApproval,
   main,
@@ -9,7 +13,6 @@ import { emitBookingNotificationEvent } from "./emit-domain-event"
 
 /** A session the expert can still cancel: confirmed, and not started. */
 const EXPERT_CANCELLABLE_STATUSES = new Set(["confirmed", "rescheduled"])
-const REASON_MAX_LENGTH = 180
 
 export type ExpertCancelErrorCode =
   | "not_found"
@@ -50,8 +53,8 @@ export async function cancelBookingByExpert(input: {
   orgId: string
   expertProfileId: string
   bookingId: string
-  /** Kept on the booking record; not sent to the member. */
-  reason?: string
+  /** One of a fixed list, kept on the booking record; not sent to the member. */
+  reason?: ExpertCancelReason
   /**
    * The start the expert saw when they chose to cancel. A calendar left
    * open can be stale: if the member has moved the session since, it is
@@ -100,11 +103,20 @@ export async function cancelBookingByExpert(input: {
       now,
     })
   } catch (err) {
-    // Lost a race with another press of the same button: same answer.
     if (err instanceof ExpertCancelError && err.code === "INVALID_STATUS") {
       const latest = await load()
+      // Lost a race with another press of the same button: same answer.
       if (latest?.status === "cancelled") {
         return { refundCents: 0, alreadyCancelled: true }
+      }
+      // Unchanged, yet the write refused it: it started in the meantime.
+      if (
+        latest &&
+        latest.status === row.status &&
+        latest.startsAt.getTime() === row.startsAt.getTime() &&
+        latest.startsAt.getTime() <= Date.now()
+      ) {
+        throw new ExpertCancelError("TOO_LATE")
       }
     }
     throw err
@@ -122,7 +134,7 @@ async function writeCancellation(
   row: ExpertBookingApprovalRow,
   input: {
     actorUserId: string
-    reason?: string
+    reason?: ExpertCancelReason
     refundCents: number
     now: Date
   }
@@ -145,7 +157,11 @@ async function writeCancellation(
             eq(main.bookings.orgId, row.orgId),
             eq(main.bookings.expertProfileId, row.expertProfileId),
             eq(main.bookings.status, row.status),
-            eq(main.bookings.startsAt, row.startsAt)
+            eq(main.bookings.startsAt, row.startsAt),
+            // The cut-off is checked again by the database's own clock at
+            // the moment of the write: a session that starts while this
+            // runs is not cancelled and refunded.
+            gt(main.bookings.startsAt, sql`now()`)
           )
         )
         .returning({ id: main.bookings.id })
@@ -210,9 +226,9 @@ async function writeCancellation(
   )
 }
 
-/** `expert_cancel`, with the expert's own words after it when given. */
+/** `expert_cancel`, or `expert_cancel:<reason>` for a reason from the list. */
 export function expertCancelReason(reason?: string): string {
-  const trimmed = reason?.trim()
-  if (!trimmed) return "expert_cancel"
-  return `expert_cancel: ${trimmed.slice(0, REASON_MAX_LENGTH)}`
+  return (EXPERT_CANCEL_REASONS as readonly string[]).includes(reason ?? "")
+    ? `expert_cancel:${reason}`
+    : "expert_cancel"
 }

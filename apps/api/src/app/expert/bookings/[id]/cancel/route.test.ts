@@ -82,7 +82,7 @@ describe("POST /expert/bookings/{id}/cancel", () => {
   })
 
   it("cancels the caller's own session and says what is refunded", async () => {
-    const response = await cancel(BOOKING_ID, { reason: "I am unwell" })
+    const response = await cancel(BOOKING_ID, { reason: "unavailable" })
     expect(response.status).toBe(200)
     expect(await response.json()).toEqual({
       bookingId: BOOKING_ID,
@@ -102,7 +102,7 @@ describe("POST /expert/bookings/{id}/cancel", () => {
       orgId: "org-1",
       expertProfileId: "profile-1",
       bookingId: BOOKING_ID,
-      reason: "I am unwell",
+      reason: "unavailable",
       expectedStartsAt: undefined,
     })
   })
@@ -175,8 +175,8 @@ describe("POST /expert/bookings/{id}/cancel", () => {
     expect(cancelBookingByExpert).not.toHaveBeenCalled()
   })
 
-  it("refuses a reason longer than 180 characters", async () => {
-    const response = await cancel(BOOKING_ID, { reason: "x".repeat(181) })
+  it("refuses a reason that is not on the list (no free text)", async () => {
+    const response = await cancel(BOOKING_ID, { reason: "I have the flu" })
     expect(response.status).toBe(400)
     expect(cancelBookingByExpert).not.toHaveBeenCalled()
   })

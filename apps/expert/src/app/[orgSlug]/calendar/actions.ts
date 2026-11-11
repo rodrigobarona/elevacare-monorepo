@@ -120,6 +120,7 @@ export async function cancelCalendarBookingAction(
   bookingId: string,
   /** The start the expert was looking at: a moved session is not cancelled. */
   expectedStartsAt: string,
+  /** One of `EXPERT_CANCEL_REASONS`; anything else fails validation. */
   reason?: string
 ): Promise<
   ActionResult<{
@@ -130,7 +131,7 @@ export async function cancelCalendarBookingAction(
 > {
   const parsed = CancelExpertBookingRequestSchema.safeParse({
     expectedStartsAt,
-    ...(reason?.trim() ? { reason: reason.trim() } : {}),
+    ...(reason ? { reason } : {}),
   })
   if (!parsed.success || !BookingIdSchema.safeParse(bookingId).success) {
     return { ok: false, error: "validation" }

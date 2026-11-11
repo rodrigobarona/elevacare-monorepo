@@ -608,7 +608,7 @@
       "title": "Cancel this session?",
       "description": "We'll tell {name} right away and refund everything they paid. This cannot be undone.",
       "reasonLabel": "Reason (optional)",
-      "reasonHint": "Kept on the booking record in case there is a question about this cancellation later. It is not sent to the member. Please leave health details out.",
+      "reasonHint": "Kept on the booking record in case there is a question about this cancellation later. It is not sent to the member.",
       "keep": "Keep session",
       "confirm": "Cancel session",
       "done": "Session cancelled. The member has been told.",
@@ -618,7 +618,14 @@
       "failed": "We couldn't cancel this session. Try again.",
       "slotNote": "The time becomes free, so members can book it again. Block it in your schedule if you won't be available.",
       "confirming": "Cancelling…",
-      "alreadyCancelled": "This session was already cancelled. Your calendar is up to date now."
+      "alreadyCancelled": "This session was already cancelled. Your calendar is up to date now.",
+      "reasonPlaceholder": "Choose a reason",
+      "reasons": {
+        "unavailable": "I can't make it",
+        "emergency": "An emergency",
+        "scheduling": "A scheduling conflict",
+        "other": "Another reason"
+      }
     }
   },
   "calendars": {

@@ -16,6 +16,20 @@ export type CancellationPolicy = (typeof CANCELLATION_POLICY_VALUES)[number]
 export const DEFAULT_CANCELLATION_POLICY: CancellationPolicy = "flexible"
 
 /**
+ * Why an expert cancelled a confirmed session. Fixed choices on purpose:
+ * no free text, so no health detail about the expert or the member ends
+ * up on the booking record. `unavailable` covers illness without saying so.
+ */
+export const EXPERT_CANCEL_REASONS = [
+  "unavailable",
+  "emergency",
+  "scheduling",
+  "other",
+] as const
+
+export type ExpertCancelReason = (typeof EXPERT_CANCEL_REASONS)[number]
+
+/**
  * Bump when a tier table below changes. Bookings store the version they
  * were sold under so a later edit never changes an existing booking.
  */

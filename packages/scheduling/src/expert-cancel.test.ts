@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import {
   ExpertCancelError,
   cancelBookingByExpert,
@@ -133,6 +133,15 @@ const input = {
 }
 
 describe("cancelBookingByExpert", () => {
+  // The clock is fixed, so these do not depend on the day they are run.
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(now)
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   beforeEach(() => {
     getExpertBookingForApproval.mockReset()
     withAudit.mockReset()
@@ -147,7 +156,7 @@ describe("cancelBookingByExpert", () => {
     const captured = captureTx()
     getExpertBookingForApproval.mockResolvedValue(row())
     await expect(
-      cancelBookingByExpert({ ...input, reason: "  I am unwell  " })
+      cancelBookingByExpert({ ...input, reason: "unavailable" })
     ).resolves.toEqual({ refundCents: 6000, alreadyCancelled: false })
 
     // Each write only lands on the row as it was read.
@@ -173,7 +182,7 @@ describe("cancelBookingByExpert", () => {
     expect(captured.bookingSets).toEqual([
       {
         status: "cancelled",
-        cancellationReason: "expert_cancel: I am unwell",
+        cancellationReason: "expert_cancel:unavailable",
         cancelledAt: now,
         updatedAt: now,
       },
@@ -354,6 +363,20 @@ describe("cancelBookingByExpert", () => {
     expect(withAudit).not.toHaveBeenCalled()
   })
 
+  it("refuses a session that starts while the cancellation is being written", async () => {
+    // Read one second before the start; at the write the database's clock
+    // is past it, so the write changes nothing.
+    captureTx({ bookingUpdated: false })
+    const startsAt = new Date(now.getTime() + 1000)
+    getExpertBookingForApproval.mockResolvedValue(row({ startsAt }))
+    // The call reads `now` from its input; the late check reads the clock.
+    vi.setSystemTime(new Date(startsAt.getTime() + 1000))
+    await expect(cancelBookingByExpert(input)).rejects.toMatchObject({
+      code: "TOO_LATE",
+    })
+    expect(emitBookingNotificationEvent).not.toHaveBeenCalled()
+  })
+
   it("changes nothing when a refund started meanwhile", async () => {
     // The payment is no longer as it was read: the guard fails, the error
     // leaves the transaction, and the cancellation is rolled back with it.
@@ -381,12 +404,12 @@ describe("cancelBookingByExpert", () => {
 })
 
 describe("expertCancelReason", () => {
-  it("keeps the expert's words, trimmed and capped", () => {
+  it("stores a reason from the list, and never free text", () => {
     expect(expertCancelReason()).toBe("expert_cancel")
+    expect(expertCancelReason("emergency")).toBe("expert_cancel:emergency")
+    expect(expertCancelReason("scheduling")).toBe("expert_cancel:scheduling")
+    // Anything else (an older client, typed words) is dropped.
+    expect(expertCancelReason("I have the flu")).toBe("expert_cancel")
     expect(expertCancelReason("   ")).toBe("expert_cancel")
-    expect(expertCancelReason(" unwell ")).toBe("expert_cancel: unwell")
-    expect(expertCancelReason("x".repeat(400))).toHaveLength(
-      "expert_cancel: ".length + 180
-    )
   })
 })

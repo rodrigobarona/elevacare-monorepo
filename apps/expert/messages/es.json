@@ -608,7 +608,7 @@
       "title": "¿Cancelar esta sesión?",
       "description": "Avisamos a {name} de inmediato y le devolvemos todo lo que pagó. No se puede deshacer.",
       "reasonLabel": "Motivo (opcional)",
-      "reasonHint": "Queda guardado en el registro de la reserva, por si surge alguna duda sobre esta cancelación. No se envía al miembro. No incluyas datos de salud.",
+      "reasonHint": "Queda guardado en el registro de la reserva, por si surge alguna duda sobre esta cancelación. No se envía al miembro.",
       "keep": "Mantener sesión",
       "confirm": "Cancelar sesión",
       "done": "Sesión cancelada. Hemos avisado al miembro.",
@@ -618,7 +618,14 @@
       "failed": "No pudimos cancelar esta sesión. Inténtalo de nuevo.",
       "slotNote": "El horario queda libre, así que los miembros pueden volver a reservarlo. Bloquéalo en tu disponibilidad si no vas a estar.",
       "confirming": "Cancelando…",
-      "alreadyCancelled": "Esta sesión ya estaba cancelada. Tu calendario ya está al día."
+      "alreadyCancelled": "Esta sesión ya estaba cancelada. Tu calendario ya está al día.",
+      "reasonPlaceholder": "Elige un motivo",
+      "reasons": {
+        "unavailable": "No puedo asistir",
+        "emergency": "Una emergencia",
+        "scheduling": "Un conflicto de agenda",
+        "other": "Otro motivo"
+      }
     }
   },
   "calendars": {

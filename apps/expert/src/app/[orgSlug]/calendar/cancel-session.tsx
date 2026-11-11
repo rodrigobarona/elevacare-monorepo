@@ -11,11 +11,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@eleva/ui/components/alert-dialog"
+import {
+  EXPERT_CANCEL_REASONS,
+  type ExpertCancelReason,
+} from "@eleva/config/cancellation-policy"
 import { Button } from "@eleva/ui/components/button"
-import { Textarea } from "@eleva/ui/components/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@eleva/ui/components/select"
 import { cancelCalendarBookingAction } from "./actions"
-
-const REASON_MAX_LENGTH = 180
 
 /**
  * The expert cancels a confirmed session that has not started. It asks
@@ -45,7 +53,7 @@ export function CancelSession({
   const reasonId = React.useId()
   const hintId = React.useId()
   const [isOpen, setIsOpen] = React.useState(false)
-  const [reason, setReason] = React.useState("")
+  const [reason, setReason] = React.useState<ExpertCancelReason | null>(null)
   const [pending, setPending] = React.useState(false)
   const [failed, setFailed] = React.useState(false)
 
@@ -56,7 +64,7 @@ export function CancelSession({
     const result = await cancelCalendarBookingAction(
       bookingId,
       startsAt,
-      reason.trim() ? reason.trim() : undefined
+      reason ?? undefined
     ).catch(() => ({ ok: false as const, error: "cancelFailed" }))
     setPending(false)
     if (!result.ok) {
@@ -72,7 +80,7 @@ export function CancelSession({
         onChanged()
         return
       }
-      // Worth another try: the reason typed so far stays in the dialog.
+      // Worth another try: the reason chosen stays in the dialog.
       setFailed(true)
       return
     }
@@ -119,16 +127,32 @@ export function CancelSession({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <div className="space-y-1.5">
-          <label htmlFor={reasonId} className="text-sm font-medium">
+          <span id={reasonId} className="text-sm font-medium">
             {t("reasonLabel")}
-          </label>
-          <Textarea
-            id={reasonId}
+          </span>
+          {/* A short list on purpose: no free text, so no health detail
+              about anyone ends up on the booking record. */}
+          <Select
+            aria-labelledby={reasonId}
             aria-describedby={hintId}
-            value={reason}
-            maxLength={REASON_MAX_LENGTH}
-            onChange={(event) => setReason(event.target.value)}
-          />
+            placeholder={t("reasonPlaceholder")}
+            selectedKey={reason}
+            onSelectionChange={(key) => {
+              const chosen = EXPERT_CANCEL_REASONS.find((r) => r === key)
+              setReason(chosen ?? null)
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {EXPERT_CANCEL_REASONS.map((value) => (
+                <SelectItem key={value} id={value}>
+                  {t(`reasons.${value}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <p id={hintId} className="text-xs text-muted-foreground">
             {t("reasonHint")}
           </p>
