@@ -106,6 +106,9 @@ Each entry should include:
 - Not proven: Daily's real timing and ordering of `meeting.ended` and
   `meeting.started` on staging with two browsers (leave early, rejoin,
   finish).
+- Related: 2026-10-07 "Session attendance finalizes on meeting.ended,
+  then corrects" and 2026-10-08 "Attendance fallback after the join
+  window closes when Daily is silent", both superseded in part.
 
 ### 2026-11-11: Urgent help is signposted where members book and wait (active)
 
@@ -1945,6 +1948,9 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
 
 ### 2026-10-08: Attendance fallback after the join window closes when Daily is silent
 
+- Superseded in part by 2026-11-11 "A session stays joinable; only a
+  meeting that happened ends early".
+
 - Decision: Phase 09.6.1 adds QStash `POST /workflows/video-attendance-sweep`
   (`*/15 * * * *`). Sessions still `scheduled`/`live`/`room_unresolved` with
   null `attendance` whose Eleva join window has closed (`endsAt + 30m`,
@@ -1975,6 +1981,9 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
   rule stays.
 
 ### 2026-10-07: Session attendance finalizes on meeting.ended, then corrects
+
+- Superseded in part by 2026-11-11 "A session stays joinable; only a
+  meeting that happened ends early".
 
 - Decision: Phase 09.3 writes `attendance` and `ended|no_show` on
   `meeting.ended` instead of scheduling `finalizeAttendance` at `ended + 2 min`.

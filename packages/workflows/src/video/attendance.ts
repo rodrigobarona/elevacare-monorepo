@@ -106,22 +106,22 @@ export function lastLeftAt(history: Presence[]): Date | null {
 }
 
 /**
- * Daily says the room is empty, so nobody is inside: give every visit
- * still open this end. A lost "left" event would otherwise leave someone
- * in the room for ever and make them "meet" whoever comes next.
+ * Daily says the room emptied at `at`, so nobody who had joined by then is
+ * inside: give each of those visits still open that end. A lost "left"
+ * event would otherwise leave someone in the room for ever and make them
+ * "meet" whoever comes next. A visit that began after `at` (events can
+ * arrive out of order) is a later one and stays open.
  */
 export function closeOpenPresence<Row extends Presence>(
   history: Row[],
   at: Date
 ): Row[] {
-  if (history.every((row) => row.leftAt)) return history
   const leftAt = at.toISOString()
-  return history.map((row) =>
-    row.leftAt
-      ? row
-      : // Never before the join: a late-delivered join keeps zero length.
-        { ...row, leftAt: leftAt > row.joinedAt ? leftAt : row.joinedAt }
-  )
+  const emptiedAt = at.getTime()
+  const stillOpen = (row: Row) =>
+    !row.leftAt && Date.parse(row.joinedAt) <= emptiedAt
+  if (!history.some(stillOpen)) return history
+  return history.map((row) => (stillOpen(row) ? { ...row, leftAt } : row))
 }
 
 /**

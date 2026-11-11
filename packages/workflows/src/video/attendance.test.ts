@@ -171,10 +171,16 @@ describe("closeOpenPresence", () => {
     expect(closeOpenPresence(met, T("11:00"))).toBe(met)
   })
 
-  it("never ends a visit before it began", () => {
-    expect(closeOpenPresence([was("expert", "10:30")], T("10:20"))).toEqual([
-      was("expert", "10:30", "10:30"),
-    ])
+  it("leaves a visit that began after the room emptied open", () => {
+    // Events out of order: the room emptied at 10:30, this join is 10:31.
+    const later = [was("expert", "10:00", "10:30"), was("member", "10:31")]
+    expect(closeOpenPresence(later, T("10:30"))).toBe(later)
+    expect(
+      closeOpenPresence(
+        [was("expert", "10:00"), was("member", "10:31")],
+        T("10:30")
+      )
+    ).toEqual([was("expert", "10:00", "10:30"), was("member", "10:31")])
   })
 })
 
