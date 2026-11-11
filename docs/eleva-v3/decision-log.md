@@ -102,10 +102,20 @@ Each entry should include:
     the next time any of them changes.
   - The kit's destructive button is below 4.5:1 in dark mode (computed
     from tokens, not seen); it is shared, so it is a kit fix.
-- Not proven: the flow against a real payment (Stripe test mode on
-  staging): cancel, refund arriving, both emails delivered, room closed.
-  The screenshots stop at the confirmation dialog on purpose, so no
-  test booking was cancelled.
+- Proven on 2026-11-11, locally, against Stripe test mode
+  (`pnpm e2e:expert-cancel-smoke`, opt-in, loopback only): a guest pays
+  for the seeded first visit and the session is confirmed; a caller who
+  is not signed in gets 401; a stale start time gets 409 and cancels
+  nothing; free text as a reason gets 400; the expert cancels and the
+  answer says the whole price is refunded; the booking, the payment, the
+  freed time, the event and the audit row are as described above; a
+  second press says it was already cancelled; the refund sweep returns
+  the whole price through Stripe and makes no transfer; both people's
+  emails go through the notification pipeline with no error.
+- Not proven: the same on staging with the deployed services (the mail
+  provider is skipped for the test addresses used locally, so no real
+  inbox has received the email), and the video room being closed (the
+  test booking has no room yet).
 
 ### 2026-11-11: The expert calendar shows every session of the week (active)
 
