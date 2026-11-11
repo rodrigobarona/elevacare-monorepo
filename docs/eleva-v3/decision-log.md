@@ -32,35 +32,61 @@ Each entry should include:
 
 ## Current Entries
 
-### 2026-11-11: A session stays joinable until its booked end (active)
+### 2026-11-11: A session stays joinable; only a meeting that happened ends early (active)
 
 - Owner: engineering. Found by the judge panel on the waiting-room slice;
   the fault predates it.
 - Finding: Daily sends `meeting.ended` shortly after the last person
   leaves a room. The webhook treated that as the end of the session at
   any time. An expert who opened the room ten minutes early to check it
-  and left turned the session into `no_show` before it started: nobody
-  could join any more, and because a `no_show` session no longer blocks
-  its time, the slot became bookable again. Two people who both dropped
-  on a bad connection mid-session were locked out the same way, although
-  the help center tells members to refresh the page and join again.
-- Decision: `meeting.ended` closes a session only from the booked end on.
-  Before that the room has only emptied: the session goes back to
-  `scheduled`, keeps its first start time, and stays joinable. From the
-  booked end on it closes as before (`ended` when both attended,
-  `no_show` otherwise). A session left open is closed by the attendance
-  sweep when the join window closes, 30 minutes after the booked end.
-  Rule in one place: `afterMeetingEnded` in
-  `packages/workflows/src/video/attendance.ts`.
-- Effect to know: when both people finish early and leave, the session
-  shows as scheduled until the sweep closes it (up to about 40 minutes
-  after the booked end), instead of ending at once. Attendance, and so
-  payouts and refunds, are decided from who joined, as before.
-- Not changed: once the booked end has passed and the room empties, the
-  session is over, even inside the 30 minutes that joining stays open.
-- Not proven: Daily's real timing of `meeting.ended` on staging with two
-  browsers (leave early, rejoin, finish). Existing rows already marked
-  `no_show` or `ended` early are not repaired by this change.
+  and left turned the session into `no_show` before it started, and
+  nobody could join any more. Two people who both dropped on a bad
+  connection mid-session were locked out the same way, although the help
+  center tells members to refresh the page and join again. Attendance
+  also counted anyone who ever joined, so two people who each came alone
+  would have been recorded as having met.
+- Decisions:
+  - `meeting.ended` closes a session only when it happened: the booked
+    end has passed and expert and member were in the room at the same
+    time. Otherwise the room has only emptied: the session goes back to
+    `scheduled`, keeps its first start time and stays joinable.
+  - A no-show is never declared by a webhook. The attendance sweep
+    declares it when the join window closes, 30 minutes after the booked
+    end, and it also closes any session still open then.
+  - `both` means the two were in the room together. When both came but
+    never together, the one who spent longer in the room during the
+    booked time is recorded as the one who attended; equal, or neither
+    inside the booked time, is `nobody`.
+  - The end time of a session closed by the sweep is when the room last
+    emptied, not when the sweep ran.
+  - The audit event for `meeting.ended` now carries `final` and the
+    resulting `status`, so an emptied room and a closed session can be
+    told apart.
+  - An event time further than five minutes ahead of our clock is
+    replaced by the time we received it.
+    Rules in one place: `packages/workflows/src/video/attendance.ts`
+    (`deriveAttendance`, `afterMeetingEnded`, `nextLifecycleState`).
+- Effect to know: a session where one person waited alone, or where the
+  room emptied before the booked end, is stored as `scheduled` until the
+  sweep closes it, up to about 40 minutes after the booked end (window
+  plus one 10-minute tick). No screen and no payout reads this status
+  today: lists and buttons use the booking and the time, payouts use the
+  booked end, and a no-show refund is still handled by support.
+- Known limits, not changed here: the sweep closes a call still running
+  30 minutes past its booked end; the recorded start can be an early room
+  check, before the booked start; a booking cancelled while someone has
+  the room open before the start does not cancel its session (existing
+  rule, tested as such); the sweep has no heartbeat alert.
+- Existing rows: sessions already marked `ended` or `no_show` before
+  their booked end are not repaired by this change, and a future session
+  in that state stays unjoinable. Operator task (founder, before the
+  first member outside the team books): count them on the production
+  database with
+  `select count(*) from sessions where ended_at < ends_at and status in ('ended', 'no_show')`
+  and reopen any whose `ends_at` is still ahead.
+- Not proven: Daily's real timing and ordering of `meeting.ended` and
+  `meeting.started` on staging with two browsers (leave early, rejoin,
+  finish).
 
 ### 2026-11-11: Urgent help is signposted where members book and wait (active)
 

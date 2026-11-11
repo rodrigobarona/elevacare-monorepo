@@ -14,10 +14,13 @@ export const ROUTE_POLICY = {
 /**
  * POST /workflows/video-attendance-sweep
  *
- * Every 15 minutes: sessions still `scheduled`/`live`/`room_unresolved`
+ * Every 10 minutes: sessions still `scheduled`/`live`/`room_unresolved`
  * with null attendance whose Eleva join window (`endsAt + 30m`) has
  * closed get `finalizeAttendance` from participant history (empty
- * history → nobody / no_show). Used when Daily sent no `meeting.ended`.
+ * history → nobody / no_show). This is where every no-show is declared,
+ * and where a session whose room emptied before its booked end is closed:
+ * Daily's `meeting.ended` only closes a session that happened, after its
+ * booked end (`afterMeetingEnded`).
  *
  * Authz: Bearer `WORKFLOWS_DRAIN_SECRET`.
  */

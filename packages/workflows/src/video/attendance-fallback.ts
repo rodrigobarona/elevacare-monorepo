@@ -2,7 +2,11 @@ import { and, asc, eq, inArray, isNull, lte, notInArray } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
 import { main, withPlatformAdminContext } from "@eleva/db"
 import { JOIN_TRAIL_MS } from "@eleva/video"
-import { deriveAttendance, statusAfterAttendance } from "./attendance"
+import {
+  deriveAttendance,
+  lastLeftAt,
+  statusAfterAttendance,
+} from "./attendance"
 
 const SWEEP_BATCH = 25
 const SWEEP_MAX_BATCHES = 8
@@ -65,6 +69,7 @@ export async function finalizeAttendanceFromHistory(
           .select({
             status: main.sessions.status,
             attendance: main.sessions.attendance,
+            startsAt: main.sessions.startsAt,
             endsAt: main.sessions.endsAt,
             endedAt: main.sessions.endedAt,
             participants: main.sessions.participants,
@@ -76,14 +81,18 @@ export async function finalizeAttendanceFromHistory(
         if (!locked || !shouldFinalizeAttendanceFallback(locked, now)) {
           throw new AttendanceAlreadyFinalized()
         }
-        const attendance = deriveAttendance(locked.participants)
+        const attendance = deriveAttendance(locked.participants, {
+          start: locked.startsAt,
+          end: locked.endsAt,
+        })
         const status = statusAfterAttendance(attendance)
         const updated = await tx
           .update(main.sessions)
           .set({
             status,
             attendance,
-            endedAt: locked.endedAt ?? now,
+            // When the room last emptied, not when this sweep ran.
+            endedAt: locked.endedAt ?? lastLeftAt(locked.participants) ?? now,
           })
           .where(
             and(

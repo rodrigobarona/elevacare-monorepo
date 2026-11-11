@@ -5312,9 +5312,9 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       }),
       "/workflows/video-attendance-sweep": internalWorkflow({
         operationId: "sweepEndedSessionsWithoutAttendance",
-        summary: "Finalize attendance when Daily sent no meeting.ended",
+        summary: "Close sessions whose join window has closed",
         description:
-          "Sessions still scheduled, live, or room_unresolved with null attendance whose Eleva join window (endsAt + 30m) has closed are finalized from participant history (empty history is nobody / no_show). Attendance only — no refund decision.",
+          "Sessions still scheduled, live, or room_unresolved with null attendance whose Eleva join window (endsAt + 30m) has closed are finalized from participant history: ended when expert and member were in the room together, otherwise no_show. Every no-show is declared here, never by a webhook. Attendance only — no refund decision.",
       }),
       "/health": {
         get: {

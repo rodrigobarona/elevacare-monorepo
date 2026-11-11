@@ -12,12 +12,12 @@ import {
   verifyDailyWebhook,
 } from "@eleva/video/webhooks"
 import {
-  afterMeetingEnded,
   appendParticipantHistory,
   deriveAttendance,
   eventTimeFromDaily,
-  shouldApplyEvent,
+  nextLifecycleState,
   statusAfterAttendance,
+  type BookedTime,
   type SessionParticipantHistory,
 } from "./attendance"
 
@@ -257,6 +257,7 @@ async function applyLifecycleWebhook(input: {
             participants: main.sessions.participants,
             startedAt: main.sessions.startedAt,
             endedAt: main.sessions.endedAt,
+            startsAt: main.sessions.startsAt,
             endsAt: main.sessions.endsAt,
           })
           .from(main.sessions)
@@ -265,43 +266,26 @@ async function applyLifecycleWebhook(input: {
           .limit(1)
         if (!locked) throw new WebhookSessionGone()
 
-        let status = locked.status
-        let startedAt = locked.startedAt
-        let endedAt = locked.endedAt
-        let lastEventAt = locked.lastEventAt
-        const applyStatus = shouldApplyEvent(locked.lastEventAt, input.incoming)
-
-        if (applyStatus && input.type === "meeting.started") {
-          if (status === "scheduled" || status === "room_unresolved") {
-            status = "live"
-            // Keep the first start when people come back to an emptied room.
-            startedAt = locked.startedAt ?? input.incoming
-          }
-        }
-
-        if (applyStatus && input.type === "meeting.ended") {
-          const next = afterMeetingEnded({
-            status,
+        const next = nextLifecycleState(
+          {
+            status: locked.status,
+            startedAt: locked.startedAt,
+            endedAt: locked.endedAt,
+            lastEventAt: locked.lastEventAt,
             participants: locked.participants,
-            at: input.incoming,
-            bookedEnd: locked.endsAt,
-          })
-          status = next.status
-          if (next.final) endedAt = input.incoming
-        }
-
-        if (applyStatus) lastEventAt = input.incoming
+            booked: { start: locked.startsAt, end: locked.endsAt },
+          },
+          { type: input.type, at: input.incoming }
+        )
 
         await tx
           .update(main.sessions)
           .set({
-            status,
-            startedAt,
-            endedAt,
-            lastEventAt,
-            ...(status === "ended" || status === "no_show"
-              ? { attendance: deriveAttendance(locked.participants) }
-              : {}),
+            status: next.status,
+            startedAt: next.startedAt,
+            endedAt: next.endedAt,
+            lastEventAt: next.lastEventAt,
+            ...(next.attendance ? { attendance: next.attendance } : {}),
           })
           .where(eq(main.sessions.bookingId, input.bookingId))
 
@@ -310,7 +294,15 @@ async function applyLifecycleWebhook(input: {
           entity: "session",
           action: input.action,
           entityId: input.bookingId,
-          payload: { type: input.type, roomName: input.roomName },
+          // "ended" is also audited when the room only emptied: `final`
+          // says whether this event closed the session, `status` what it
+          // left behind.
+          payload: {
+            type: input.type,
+            roomName: input.roomName,
+            status: next.status,
+            final: next.attendance !== null,
+          },
         })
       }
     )
@@ -332,6 +324,7 @@ function nextParticipantState(input: {
   type: string
   expertUserId: string | null
   memberUserId: string | null
+  booked: BookedTime
 }) {
   const userId = userIdFromPayload(input.payload)
   const participants = appendParticipantHistory(input.participants, {
@@ -347,7 +340,10 @@ function nextParticipantState(input: {
   })
   let status = input.status
   if (status === "no_show") {
-    const next = statusAfterAttendance(deriveAttendance(participants))
+    // A no-show becomes "ended" only if the two were in the room together.
+    const next = statusAfterAttendance(
+      deriveAttendance(participants, input.booked)
+    )
     if (next === "ended") status = "ended"
   }
   return {
@@ -378,16 +374,20 @@ async function applyParticipantWebhook(input: {
             status: main.sessions.status,
             lastEventAt: main.sessions.lastEventAt,
             participants: main.sessions.participants,
+            startsAt: main.sessions.startsAt,
+            endsAt: main.sessions.endsAt,
           })
           .from(main.sessions)
           .where(eq(main.sessions.bookingId, input.bookingId))
           .for("update")
           .limit(1)
         if (!locked) throw new WebhookSessionGone()
+        const booked = { start: locked.startsAt, end: locked.endsAt }
         const next = nextParticipantState({
           ...input,
           status: locked.status,
           participants: locked.participants,
+          booked,
         })
         await tx
           .update(main.sessions)
@@ -395,7 +395,7 @@ async function applyParticipantWebhook(input: {
             status: next.status,
             participants: next.participants,
             ...(next.status === "ended" || next.status === "no_show"
-              ? { attendance: deriveAttendance(next.participants) }
+              ? { attendance: deriveAttendance(next.participants, booked) }
               : {}),
           })
           .where(eq(main.sessions.bookingId, input.bookingId))
