@@ -21,7 +21,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "seed:join-probe": "tsx --env-file=../../.env.local scripts/seed-join-probe.ts"
+    "seed:join-probe": "tsx --env-file=../../.env.local scripts/seed-join-probe.ts",
+    "correct-nonvideo-attendance": "tsx --env-file=../../.env.local scripts/correct-nonvideo-attendance.ts"
   },
   "dependencies": {
     "@eleva/audit": "workspace:*",

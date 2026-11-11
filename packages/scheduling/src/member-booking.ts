@@ -316,6 +316,15 @@ async function moveMemberBooking(
         throw new MemberBookingPolicyError("INVALID_STATUS")
       }
 
+      // The session row follows its booking, in every mode. (Online
+      // sessions were brought up to date later, with the room; phone and
+      // in-person ones never were, so the calendar entry and the slot
+      // check kept the old time.)
+      await tx
+        .update(main.sessions)
+        .set({ startsAt: input.startsAt, endsAt: input.endsAt })
+        .where(eq(main.sessions.bookingId, row.id))
+
       if (row.reservationId) {
         await expireOverlappingHolds(
           tx,

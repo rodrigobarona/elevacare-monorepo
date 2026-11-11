@@ -17,7 +17,10 @@ export const ROUTE_POLICY = {
  * Every 10 minutes: sessions still `scheduled`/`live`/`room_unresolved`
  * with null attendance whose Eleva join window (`endsAt + 30m`) has
  * closed get `finalizeAttendance` from participant history (empty
- * history → nobody / no_show). This is where every no-show is declared,
+ * history → nobody / no_show). That is for online sessions only: a phone
+ * or in-person session has no room to read and closes as `ended` with no
+ * attendance; the session of a cancelled booking closes as `cancelled`.
+ * This is where every no-show is declared,
  * and where a session whose room emptied before its booked end is closed:
  * Daily's `meeting.ended` only closes a session that happened, after its
  * booked end (`afterMeetingEnded`).

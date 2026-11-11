@@ -32,6 +32,86 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-11: A phone or in-person session is never recorded as a no-show (active)
+
+- Owner: engineering. Noted while fixing early-closed sessions (entry "A
+  session stays joinable; only a meeting that happened ends early") and
+  fixed here.
+- Finding: every booking has a session row, whatever its mode. The
+  attendance sweep closes sessions 30 minutes after their booked end from
+  who was in the video room. A phone or in-person session never has
+  anyone in a room, so each one was recorded as `no_show` with attendance
+  `nobody`, and an audit event said so. That is a false record against
+  both people, for a session Eleva cannot see. Nothing reads it for money
+  today (payouts and refunds do not use session attendance) and no screen
+  shows it, which is why it went unseen.
+- Found by the judge panel on this fix, same root, also fixed:
+  - A session row kept its old times after a reschedule unless it was
+    online (the times were brought up to date together with the room). The
+    sweep read the session row's end, so a rescheduled phone or in-person
+    session was closed at its old time, before it took place. The
+    expert's calendar entry and the check that keeps a time from being
+    booked twice read the same stale times.
+  - A cancellation closes its session in every mode. The paths that do
+    not go through a cancellation (a failed payment, a full refund, an
+    account deletion) close it only when it is online, so a phone or
+    in-person session could stay open until the sweep, which then closed
+    it like any other.
+- Decisions:
+  - Attendance is recorded only for online sessions. The sweep closes a
+    phone or in-person session as `ended` with no attendance (`null`),
+    ended at its booked end. `ended` then means "its time has passed",
+    not "the two met"; the audit event carries the mode so the two can be
+    told apart.
+  - A reschedule now moves the session row with the booking, in the same
+    transaction, in every mode. The sweep also reads when a session is
+    from its booking, the source of truth, so it does not depend on that.
+  - The session of a cancelled booking is closed as `cancelled`, with the
+    audit action every other cancellation of a session writes.
+- Operator (founder, before the beta opens, after this change is live on
+  production: until then the sweep keeps writing new false records).
+  Past rows are repaired by a script, not by hand, so that each change is
+  written to the audit log. The audit log is append-only: the earlier
+  wrong events stay, and the correction beside them says they were wrong.
+  The script does two things:
+  - Sessions recorded as a false no-show become what their booking says:
+    `cancelled` if the booking was cancelled; open again at the booking's
+    time if the booking is still ahead (a session the member moved);
+    otherwise `ended` with no attendance, at the booking's end. Audit
+    event: `session attendance_corrected`.
+  - Sessions still open that kept an old time after a reschedule take
+    their booking's time. Audit event: `session updated`.
+
+  With `DATABASE_URL` in `.env.local` pointing at the production main
+  database (unpooled URL). The script prints the database host first and
+  changes nothing unless that same host is given back to it:
+
+  ```bash
+  pnpm video:correct-nonvideo-attendance
+  pnpm video:correct-nonvideo-attendance --apply --confirm-host=<host it printed>
+  pnpm video:correct-nonvideo-attendance    # both counts must now be 0
+  ```
+
+  The first part touches only sessions that are not online, `no_show`
+  and `nobody`. Only the sweep ever wrote `no_show`, and only online
+  sessions have a room, so every such row is one of the false records.
+  Put `.env.local` back straight afterwards. Record the date and the two
+  counts here when it has been run.
+
+- Not built: a way for the expert to mark that a phone or in-person
+  session did not take place (a no-show flow for those modes); closing a
+  phone or in-person session at once after a failed payment or a full
+  refund (the sweep closes it later); an index for the sweep's query.
+- Proven on 2026-11-11, locally: the sweep of this change ran on the
+  local API against the development database and closed the 23 sessions
+  that were due (all online test sessions with an empty room, closed as
+  no-shows, which is right for them), so the query that joins the
+  booking and locks the session row runs. The repair script counts 0
+  and 0 there, and refuses `--apply` without the host.
+- Not proven: closing a real phone or in-person session, and the repair
+  changing a row (the development database has no such sessions). Those
+  rules are unit tested; no test runs them against a database.
+
 ### 2026-11-11: An expert can cancel a confirmed session; the member is refunded in full (active)
 
 - Owner: engineering. Found in the beta readiness survey: the terms

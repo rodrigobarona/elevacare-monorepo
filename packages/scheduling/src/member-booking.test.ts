@@ -34,6 +34,7 @@ vi.mock("@eleva/db", () => ({
       refundedCents: "payments.refunded_cents",
     },
     slotReservations: { id: "slots.id", status: "slots.status" },
+    sessions: { id: "sessions.id", bookingId: "sessions.booking_id" },
   },
   withOrgContext: vi.fn(),
 }))
@@ -95,6 +96,7 @@ function hoursFromNow(hours: number): Date {
 type Captured = {
   paymentSets: unknown[]
   reservationSets: unknown[]
+  sessionSets: unknown[]
   audits: unknown[]
 }
 
@@ -102,6 +104,7 @@ function captureTx(options: { reservationError?: unknown } = {}): Captured {
   const captured: Captured = {
     paymentSets: [],
     reservationSets: [],
+    sessionSets: [],
     audits: [],
   }
   withAudit.mockImplementation(
@@ -117,6 +120,7 @@ function captureTx(options: { reservationError?: unknown } = {}): Captured {
           update: (table: { id: string }) => ({
             set: (values: unknown) => {
               if (table.id === "payments.id") captured.paymentSets.push(values)
+              if (table.id === "sessions.id") captured.sessionSets.push(values)
               if (table.id === "slots.id") {
                 if (options.reservationError) throw options.reservationError
                 captured.reservationSets.push(values)
@@ -424,6 +428,11 @@ describe("rescheduleMemberBooking", () => {
       now
     )
     expect(captured.reservationSets).toEqual([
+      { startsAt: newStart, endsAt: newEnd },
+    ])
+    // The session row moves too, whatever the mode: the calendar entry
+    // and the slot check read it.
+    expect(captured.sessionSets).toEqual([
       { startsAt: newStart, endsAt: newEnd },
     ])
   })

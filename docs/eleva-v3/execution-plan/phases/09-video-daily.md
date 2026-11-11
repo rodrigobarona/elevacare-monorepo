@@ -72,7 +72,11 @@ In:
 **Amended 2026-11-11** (decision log, "A session stays joinable; only a meeting that
 happened ends early"): `meeting.ended` closes a session only after its booked end and when
 expert and member were in the room together; otherwise the session returns to `scheduled`.
-Every no-show is declared by the 09.6.1 sweep. What follows describes the original build.
+Every no-show is declared by the 09.6.1 sweep, and only for online sessions. A phone or
+in-person session has no room to read attendance from: the sweep closes it as `ended` with no
+attendance, reads its time from the booking, and closes the session of a cancelled booking as
+`cancelled` (decision log, "A phone or in-person session is never recorded as a no-show").
+What follows describes the original build.
 
 **Attendance SSOT (2026-10-07):** 09.3 writes attendance on `meeting.ended`; late
 participant events can flip `no_show → ended` (`session.attendance_corrected`). The
