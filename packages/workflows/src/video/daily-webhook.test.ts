@@ -71,10 +71,29 @@ describe("nextParticipantState", () => {
     expect(next.participants).toHaveLength(2)
   })
 
-  it("corrects a no-show when the two are in the room together", () => {
+  it("does not correct a no-show the moment the other person arrives", () => {
+    // The member is still inside; the expert has only just joined.
     const next = joined(EXPERT, "11:20", [
       { role: "member", userId: MEMBER, joinedAt: T("11:00").toISOString() },
     ])
+    expect(next.status).toBe("no_show")
+    expect(next.corrected).toBe(false)
+  })
+
+  it("corrects a no-show once the two have been in the room together", () => {
+    const next = nextParticipantState({
+      status: "no_show",
+      participants: [
+        { role: "member", userId: MEMBER, joinedAt: T("11:00").toISOString() },
+        { role: "expert", userId: EXPERT, joinedAt: T("11:20").toISOString() },
+      ],
+      payload: { user_id: EXPERT },
+      incoming: T("11:28"),
+      type: "participant.left",
+      expertUserId: EXPERT,
+      memberUserId: MEMBER,
+      booked,
+    })
     expect(next.status).toBe("ended")
     expect(next.corrected).toBe(true)
   })

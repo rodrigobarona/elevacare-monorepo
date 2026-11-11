@@ -81,10 +81,11 @@ export async function finalizeAttendanceFromHistory(
         if (!locked || !shouldFinalizeAttendanceFallback(locked, now)) {
           throw new AttendanceAlreadyFinalized()
         }
-        const attendance = deriveAttendance(locked.participants, {
-          start: locked.startsAt,
-          end: locked.endsAt,
-        })
+        const attendance = deriveAttendance(
+          locked.participants,
+          { start: locked.startsAt, end: locked.endsAt },
+          now
+        )
         const status = statusAfterAttendance(attendance)
         const updated = await tx
           .update(main.sessions)

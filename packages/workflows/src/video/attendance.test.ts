@@ -29,32 +29,38 @@ function was(
 }
 
 const met = [was("expert", "10:00", "10:50"), was("member", "10:02", "10:50")]
+/** The decision is taken when the join window closes, unless a test says. */
+const NOW = T("11:30")
 
 describe("deriveAttendance", () => {
   it("is both when expert and member were in the room together", () => {
-    expect(deriveAttendance(met, booked)).toBe("both")
-    // Still in the room counts as there until now.
-    expect(
-      deriveAttendance([was("expert", "10:00"), was("member", "10:05")], booked)
-    ).toBe("both")
+    expect(deriveAttendance(met, booked, NOW)).toBe("both")
+    // Still in the room counts as there until the moment of the decision.
+    const stillInside = [was("expert", "10:00"), was("member", "10:05")]
+    expect(deriveAttendance(stillInside, booked, T("10:30"))).toBe("both")
+    // Having just come together is not yet a meeting.
+    expect(deriveAttendance(stillInside, booked, T("10:06"))).toBe("nobody")
     // A session held late, in the half hour after the booked end, counts.
     expect(
       deriveAttendance(
         [was("member", "10:00", "11:25"), was("expert", "11:02", "11:25")],
-        booked
+        booked,
+        NOW
       )
     ).toBe("both")
   })
 
   it("names the one who came when the other never did", () => {
-    expect(deriveAttendance([was("expert", "10:00", "10:20")], booked)).toBe(
-      "expert_only"
+    expect(
+      deriveAttendance([was("expert", "10:00", "10:20")], booked, NOW)
+    ).toBe("expert_only")
+    expect(
+      deriveAttendance([was("member", "10:00", "10:20")], booked, NOW)
+    ).toBe("member_only")
+    expect(deriveAttendance([was("delegate", "10:00")], booked, NOW)).toBe(
+      "nobody"
     )
-    expect(deriveAttendance([was("member", "10:00", "10:20")], booked)).toBe(
-      "member_only"
-    )
-    expect(deriveAttendance([was("delegate", "10:00")], booked)).toBe("nobody")
-    expect(deriveAttendance([], booked)).toBe("nobody")
+    expect(deriveAttendance([], booked, NOW)).toBe("nobody")
   })
 
   it("does not call a look into the room a meeting", () => {
@@ -62,7 +68,8 @@ describe("deriveAttendance", () => {
     expect(
       deriveAttendance(
         [was("member", "09:50", "10:30"), was("expert", "09:52", "09:53")],
-        booked
+        booked,
+        NOW
       )
     ).toBe("member_only")
     // Two short looks add up: together for two minutes is a meeting.
@@ -73,7 +80,8 @@ describe("deriveAttendance", () => {
           was("expert", "10:05", "10:06"),
           was("expert", "10:10", "10:11"),
         ],
-        booked
+        booked,
+        NOW
       )
     ).toBe("both")
   })
@@ -83,14 +91,16 @@ describe("deriveAttendance", () => {
     expect(
       deriveAttendance(
         [was("expert", "09:52", "09:55"), was("member", "10:00", "10:25")],
-        booked
+        booked,
+        NOW
       )
     ).toBe("member_only")
     // The member waited the whole hour; the expert opened the room after.
     expect(
       deriveAttendance(
         [was("member", "10:00", "11:02"), was("expert", "11:05", "11:10")],
-        booked
+        booked,
+        NOW
       )
     ).toBe("member_only")
   })
@@ -100,21 +110,24 @@ describe("deriveAttendance", () => {
     expect(
       deriveAttendance(
         [was("member", "10:00", "10:20"), was("expert", "10:25", "10:55")],
-        booked
+        booked,
+        NOW
       )
     ).toBe("nobody")
     // Leaving as the other arrives is not meeting.
     expect(
       deriveAttendance(
         [was("expert", "10:00", "10:10"), was("member", "10:10", "10:20")],
-        booked
+        booked,
+        NOW
       )
     ).toBe("nobody")
     // Neither was there during the booked time.
     expect(
       deriveAttendance(
         [was("expert", "09:40", "09:45"), was("member", "11:10", "11:20")],
-        booked
+        booked,
+        NOW
       )
     ).toBe("nobody")
   })
@@ -126,7 +139,8 @@ describe("deriveAttendance", () => {
           { role: "expert", joinedAt: T("10:00").toISOString(), leftAt: "?" },
           was("member", "10:00", "10:30"),
         ],
-        booked
+        booked,
+        NOW
       )
     ).toBe("member_only")
   })
@@ -368,7 +382,8 @@ describe("nextLifecycleState", () => {
     expect(
       deriveAttendance(
         [...session.participants, was("member", "10:00", "10:30")],
-        booked
+        booked,
+        NOW
       )
     ).toBe("member_only")
   })

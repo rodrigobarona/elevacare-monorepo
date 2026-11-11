@@ -349,7 +349,7 @@ export function nextParticipantState(input: {
   if (status === "no_show") {
     // A no-show becomes "ended" only if the two were in the room together.
     const next = statusAfterAttendance(
-      deriveAttendance(participants, input.booked)
+      deriveAttendance(participants, input.booked, input.incoming)
     )
     if (next === "ended") status = "ended"
   }
@@ -405,7 +405,13 @@ async function applyParticipantWebhook(input: {
             // this visit corrects a no-show: history arriving late must
             // not rewrite a closed session's record.
             ...(next.corrected
-              ? { attendance: deriveAttendance(next.participants, booked) }
+              ? {
+                  attendance: deriveAttendance(
+                    next.participants,
+                    booked,
+                    input.incoming
+                  ),
+                }
               : {}),
           })
           .where(eq(main.sessions.bookingId, input.bookingId))

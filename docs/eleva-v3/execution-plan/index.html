@@ -5545,7 +5545,8 @@ see the state machine below), <code>room_create_attempt_at</code>, <code>room_at
 <code>name: eleva-{bookingId}</code> as the idempotency handle — GET-or-create. Do not allocate
 nbf/exp offsets or reconcile by fingerprint), <code>last_event_at</code>,
 <code>started_at</code>, <code>ended_at</code>, <code>participants jsonb</code>. Transition to <code>no_show</code>: <code>attendance</code> is
-<strong>derived, never written from a single event</strong>. Built flow: <code>meeting.ended</code> writes
+<strong>derived, never written from a single event</strong>. Built flow (amended 2026-11-11, see the
+note below: <code>meeting.ended</code> closes only a session that happened): <code>meeting.ended</code> writes
 attendance from the ordered <code>participants</code> history; if Daily sent nothing, the 09.6.1
 sweep at <code>endsAt + 30m</code> (join window close) finalizes the same way (empty history →
 <code>nobody</code>). Status is then <code>attendance &lt;&gt; &#39;both&#39;</code> → <code>no_show</code>, else <code>ended</code>. A
@@ -5556,6 +5557,10 @@ emits <code>session.attendance_corrected</code>). Out-of-order sequence <code>pa
 <code>no_show</code>. Join/leave history is never used for authorization. RLS for expert org +
 buyer org. <del>The delayed QStash <code>finalizeAttendance</code> at <code>ended + 2 min</code></del> <strong>Superseded</strong> — never built; do not add it.</li>
 </ul>
+<p><strong>Amended 2026-11-11</strong> (decision log, &quot;A session stays joinable; only a meeting that
+happened ends early&quot;): <code>meeting.ended</code> closes a session only after its booked end and when
+expert and member were in the room together; otherwise the session returns to <code>scheduled</code>.
+Every no-show is declared by the 09.6.1 sweep. What follows describes the original build.</p>
 <p><strong>Attendance SSOT (2026-10-07):</strong> 09.3 writes attendance on <code>meeting.ended</code>; late
 participant events can flip <code>no_show → ended</code> (<code>session.attendance_corrected</code>). The
 09.6.1 sweep at <code>endsAt + 30m</code> covers a missing <code>meeting.ended</code>. The delayed
@@ -5633,7 +5638,9 @@ app join page, not the raw room URL).</p>
 <li><p><strong>Payment ↔ session state</strong>: a room is created only for <code>bookings.status = confirmed</code> (paid);
 <code>payment_intent.payment_failed</code> / <code>refund succeeded</code> before <code>startAt</code> set <code>sessions.status = cancelled</code> and delete the room in the same workflow that releases the slot; a refund after the
 session leaves <code>sessions</code> untouched (history) — the state machine is drawn in
-<code>scheduling-booking-spec.md</code> and every transition has a test. No-show: <code>meeting.ended</code> with a
+<code>scheduling-booking-spec.md</code> and every transition has a test. No-show (amended 2026-11-11:
+declared only by the 09.6.1 sweep; an emptied <code>live</code> room returns to <code>scheduled</code>; the rest
+of this sentence is the original build): <code>meeting.ended</code> with a
 single participant (or none) for the whole window marks <code>sessions.attendance = expert_only | member_only | nobody</code> (both present -&gt; <code>both</code>) and the status <code>no_show</code> (see the schema bullet); the no-show <strong>policy</strong> (refund/keep/partial) is a Phase 6 refund-policy
 input decided by finance, this phase only records attendance.</p>
 </li>

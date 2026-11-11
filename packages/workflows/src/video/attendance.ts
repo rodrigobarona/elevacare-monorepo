@@ -18,13 +18,22 @@ export type BookedTime = { start: Date; end: Date }
 
 type Interval = { from: number; to: number }
 
-/** When each `role` was in the room; still there counts as "until now". */
-function intervals(history: Presence[], role: Presence["role"]): Interval[] {
+/**
+ * When each `role` was in the room. A visit with no leave time yet lasts
+ * until `asOf` (the moment of the decision), never longer: two people who
+ * have just come together have not yet been together for two minutes.
+ */
+function intervals(
+  history: Presence[],
+  role: Presence["role"],
+  asOf: Date
+): Interval[] {
+  const until = asOf.getTime()
   return history.flatMap((row) => {
     if (row.role !== role) return []
     const from = Date.parse(row.joinedAt)
     if (!Number.isFinite(from)) return []
-    const to = row.leftAt ? Date.parse(row.leftAt) : Number.POSITIVE_INFINITY
+    const to = row.leftAt ? Date.parse(row.leftAt) : Math.max(from, until)
     // A leave time we cannot read counts as no time in the room.
     return [{ from, to: Number.isNaN(to) ? from : to }]
   })
@@ -72,10 +81,12 @@ export const MET_MIN_TOGETHER_MS = 2 * 60 * 1000
  */
 export function deriveAttendance(
   history: Presence[],
-  booked: BookedTime
+  booked: BookedTime,
+  /** The moment of the decision: visits still open last until then. */
+  asOf: Date
 ): SessionAttendance {
-  const experts = intervals(history, "expert")
-  const members = intervals(history, "member")
+  const experts = intervals(history, "expert", asOf)
+  const members = intervals(history, "member", asOf)
   if (experts.length === 0 && members.length === 0) return "nobody"
   if (members.length === 0) return "expert_only"
   if (experts.length === 0) return "member_only"
@@ -149,7 +160,7 @@ export function afterMeetingEnded<Status extends string>(input: {
   }
   if (
     input.at.getTime() >= input.booked.end.getTime() &&
-    deriveAttendance(input.participants, input.booked) === "both"
+    deriveAttendance(input.participants, input.booked, input.at) === "both"
   ) {
     return { final: true, status: "ended", attendance: "both" }
   }
