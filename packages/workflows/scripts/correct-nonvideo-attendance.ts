@@ -7,14 +7,26 @@
  *   pnpm video:correct-nonvideo-attendance            # count
  *   pnpm video:correct-nonvideo-attendance --apply    # correct, audited
  *
- * It uses the database in `.env.local`. For production, the operator
- * points that at the production main database (unpooled URL) on purpose,
- * after the fix is deployed: until then the sweep keeps writing new ones.
+ * It uses the database in `.env.local` and prints its host first. For
+ * production, the operator points `DATABASE_URL` there at the production
+ * main database (unpooled URL) on purpose, after the fix is deployed (until
+ * then the sweep keeps writing new ones), and puts `.env.local` back
+ * straight after.
  */
 import { correctNonVideoNoShows } from "../src/video/attendance-fallback"
 
+/** The database about to be read or changed: host only, never credentials. */
+function databaseHost(): string {
+  try {
+    return new URL(process.env.DATABASE_URL ?? "").hostname || "unknown"
+  } catch {
+    return "unknown"
+  }
+}
+
 async function main() {
   const apply = process.argv.includes("--apply")
+  console.log(`database: ${databaseHost()}`)
   let total = 0
   for (;;) {
     const result = await correctNonVideoNoShows({ apply })

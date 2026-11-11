@@ -1,6 +1,11 @@
 import { and, asc, eq, inArray, isNull, lte, ne, notInArray } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
-import { main, withPlatformAdminContext, type Tx } from "@eleva/db"
+import {
+  main,
+  withPlatformAdminContext,
+  type SessionMode,
+  type Tx,
+} from "@eleva/db"
 import { JOIN_TRAIL_MS } from "@eleva/video"
 import {
   deriveAttendance,
@@ -18,8 +23,6 @@ class AttendanceAlreadyFinalized extends Error {
 }
 
 const OPEN_SESSION_STATUSES = ["scheduled", "live", "room_unresolved"] as const
-
-type SessionMode = "online" | "phone" | "in_person"
 
 export function attendanceFallbackDueAt(endsAt: Date): Date {
   return new Date(endsAt.getTime() + JOIN_TRAIL_MS)
@@ -167,7 +170,9 @@ export async function finalizeAttendanceFromHistory(
         }
         await ctx.emit({
           entity: "session",
-          action: "ended",
+          // A cancelled booking's session is cancelled, not ended: the
+          // same action every other cancellation of a session writes.
+          action: status === "cancelled" ? "canceled" : "ended",
           entityId: bookingId,
           payload: {
             source: "end_at_fallback",
@@ -177,6 +182,7 @@ export async function finalizeAttendanceFromHistory(
             // known for it, which is different from "nobody came".
             attendance,
             sessionMode: locked.sessionMode,
+            ...(status === "cancelled" ? { reason: "booking_cancelled" } : {}),
           },
         })
       }
@@ -238,14 +244,36 @@ export async function sweepEndedSessionsWithoutAttendance(now = new Date()) {
 }
 
 /**
+ * What a session wrongly recorded as a no-show should be, from its booking.
+ *
+ * - The booking was cancelled: the session is cancelled.
+ * - The booking's join window is still ahead (the member moved it, and the
+ *   old sweep closed it at its old time): the session is open again, at
+ *   the booking's time.
+ * - Otherwise its time has passed: ended, with no attendance.
+ */
+export function correctionFor(input: {
+  bookingStatus: string
+  bookingEndsAt: Date
+  now: Date
+}): "cancelled" | "scheduled" | "ended" {
+  if (input.bookingStatus === "cancelled") return "cancelled"
+  return input.now.getTime() <
+    attendanceFallbackDueAt(input.bookingEndsAt).getTime()
+    ? "scheduled"
+    : "ended"
+}
+
+/**
  * One-off repair, run by the operator
  * (`pnpm video:correct-nonvideo-attendance`).
  *
  * Before 2026-11-11 the sweep closed every phone and in-person session as
  * `no_show` with attendance `nobody`, because nobody was in a video room.
- * This sets those rows to `ended` with no attendance, each in its own
- * audited transaction: the audit log is append-only, so the earlier wrong
- * event stays and a `session attendance_corrected` event says it was wrong.
+ * This sets each of those rows to what its booking says it is
+ * (`correctionFor`), in its own audited transaction: the audit log is
+ * append-only, so the earlier wrong event stays and a
+ * `session attendance_corrected` event beside it says it was wrong.
  *
  * Only the sweep ever wrote `no_show`, and only online sessions have a room,
  * so every row that matches is one of the false records. Without `apply`
@@ -254,15 +282,21 @@ export async function sweepEndedSessionsWithoutAttendance(now = new Date()) {
 export async function correctNonVideoNoShows(options: {
   apply: boolean
   limit?: number
+  now?: Date
 }): Promise<{ found: number; corrected: number }> {
+  const now = options.now ?? new Date()
   const rows = await withPlatformAdminContext(async (tx) =>
     tx
       .select({
         bookingId: main.sessions.bookingId,
         orgId: main.sessions.orgId,
         sessionMode: main.sessions.sessionMode,
+        bookingStatus: main.bookings.status,
+        bookingStartsAt: main.bookings.startsAt,
+        bookingEndsAt: main.bookings.endsAt,
       })
       .from(main.sessions)
+      .innerJoin(main.bookings, eq(main.bookings.id, main.sessions.bookingId))
       .where(falseNoShow())
       .orderBy(asc(main.sessions.endsAt))
       .limit(options.limit ?? 500)
@@ -271,12 +305,28 @@ export async function correctNonVideoNoShows(options: {
 
   let corrected = 0
   for (const row of rows) {
+    const status = correctionFor({
+      bookingStatus: row.bookingStatus,
+      bookingEndsAt: row.bookingEndsAt,
+      now,
+    })
     await withAudit(
       { orgId: row.orgId, actorUserId: null },
       async (tx, ctx) => {
         const updated = await tx
           .update(main.sessions)
-          .set({ status: "ended", attendance: null })
+          .set(
+            status === "scheduled"
+              ? {
+                  // Open again, at the time the booking now has.
+                  status,
+                  attendance: null,
+                  endedAt: null,
+                  startsAt: row.bookingStartsAt,
+                  endsAt: row.bookingEndsAt,
+                }
+              : { status, attendance: null }
+          )
           .where(and(eq(main.sessions.bookingId, row.bookingId), falseNoShow()))
           .returning({ id: main.sessions.id })
         // One emit per audited write; it says when nothing changed.
@@ -285,10 +335,11 @@ export async function correctNonVideoNoShows(options: {
           action: "attendance_corrected",
           entityId: row.bookingId,
           payload: {
+            source: "operator_script",
             reason: "not_a_video_session",
             sessionMode: row.sessionMode,
             from: { status: "no_show", attendance: "nobody" },
-            to: { status: "ended", attendance: null },
+            to: { status, attendance: null },
             changed: updated.length > 0,
           },
         })

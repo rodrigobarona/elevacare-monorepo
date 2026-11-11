@@ -46,29 +46,40 @@ Each entry should include:
   today (payouts and refunds do not use session attendance) and no screen
   shows it, which is why it went unseen.
 - Found by the judge panel on this fix, same root, also fixed:
-  - A session row keeps its old times after a reschedule unless it is
-    online (the times are brought up to date together with the room). The
+  - A session row kept its old times after a reschedule unless it was
+    online (the times were brought up to date together with the room). The
     sweep read the session row's end, so a rescheduled phone or in-person
-    session was closed at its old time, before it took place.
-  - The session of a cancelled phone or in-person booking stayed open
-    until the sweep, which then closed it like any other.
+    session was closed at its old time, before it took place. The
+    expert's calendar entry and the check that keeps a time from being
+    booked twice read the same stale times.
+  - A cancellation closes its session in every mode. The paths that do
+    not go through a cancellation (a failed payment, a full refund, an
+    account deletion) close it only when it is online, so a phone or
+    in-person session could stay open until the sweep, which then closed
+    it like any other.
 - Decisions:
   - Attendance is recorded only for online sessions. The sweep closes a
     phone or in-person session as `ended` with no attendance (`null`),
     ended at its booked end. `ended` then means "its time has passed",
     not "the two met"; the audit event carries the mode so the two can be
     told apart.
-  - The sweep reads when a session is from its booking, the source of
-    truth, for every mode.
-  - The session of a cancelled booking is closed as `cancelled`.
+  - A reschedule now moves the session row with the booking, in the same
+    transaction, in every mode. The sweep also reads when a session is
+    from its booking, the source of truth, so it does not depend on that.
+  - The session of a cancelled booking is closed as `cancelled`, with the
+    audit action every other cancellation of a session writes.
 - Operator (founder, before the beta opens, after this change is live on
   production: until then the sweep keeps writing new false records).
   Past rows are corrected by a script, not by hand, so that each
   correction is written to the audit log (`session attendance_corrected`,
-  from `no_show`/`nobody` to `ended`/no attendance). The audit log is
+  from `no_show`/`nobody` to what the booking says). The audit log is
   append-only: the earlier wrong events stay, and the correction beside
-  them says they were wrong. With `.env.local` pointing at the production
-  main database (unpooled URL):
+  them says they were wrong. Each row becomes: `cancelled` if its booking
+  was cancelled; open again at the booking's time if the booking is
+  still ahead (a session the member moved); otherwise `ended` with no
+  attendance. With `DATABASE_URL` in `.env.local` pointing at the
+  production main database (unpooled URL); the script prints the
+  database host before it counts:
 
   ```bash
   pnpm video:correct-nonvideo-attendance            # counts, changes nothing
@@ -79,17 +90,19 @@ Each entry should include:
   It touches only sessions that are not online, `no_show` and `nobody`.
   Only the sweep ever wrote `no_show`, and only online sessions have a
   room, so every such row is one of the false records. The end time the
-  sweep stamped on them is left as it is. Record the date and the count
+  sweep stamped on a row that stays ended is left as it is. Put
+  `.env.local` back straight afterwards. Record the date and the count
   here when it has been run.
 
 - Not built: a way for the expert to mark that a phone or in-person
-  session did not take place (a no-show flow for those modes); bringing
-  the session row's own times up to date on reschedule for every mode
-  (the sweep no longer depends on them).
+  session did not take place (a no-show flow for those modes); closing a
+  phone or in-person session at once after a failed payment or a full
+  refund (the sweep closes it later); an index for the sweep's query.
 - Not proven: the sweep and the correction have not run against real
   rows. The queries were checked against the development database (the
-  correction counts 0 there; the locked query was planned, not run), and
-  the rules are unit tested.
+  correction counts 0 there; the locked query was planned by the
+  database, not run), and the rules are unit tested. No test runs them
+  against a database.
 
 ### 2026-11-11: An expert can cancel a confirmed session; the member is refunded in full (active)
 

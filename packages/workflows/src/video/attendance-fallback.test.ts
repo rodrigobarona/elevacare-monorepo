@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   attendanceFallbackDueAt,
+  correctionFor,
   fallbackOutcome,
   shouldFinalizeAttendanceFallback,
 } from "./attendance-fallback"
@@ -138,6 +139,46 @@ describe("fallbackOutcome", () => {
       expect(
         fallbackOutcome({ ...base, sessionMode, endedAt: recorded }).endedAt
       ).toEqual(recorded)
+    }
+  })
+})
+
+describe("correctionFor", () => {
+  const bookingEndsAt = new Date("2026-11-20T10:00:00.000Z")
+
+  it("ends a false no-show whose time has passed", () => {
+    expect(
+      correctionFor({
+        bookingStatus: "confirmed",
+        bookingEndsAt,
+        now: new Date("2026-11-20T10:30:00.000Z"),
+      })
+    ).toBe("ended")
+  })
+
+  it("opens again a session the member moved, closed at its old time", () => {
+    // The booking is still ahead: marking it ended would be a new falsehood.
+    expect(
+      correctionFor({
+        bookingStatus: "rescheduled",
+        bookingEndsAt,
+        now: new Date("2026-11-20T10:29:59.000Z"),
+      })
+    ).toBe("scheduled")
+  })
+
+  it("cancels the session of a cancelled booking, past or future", () => {
+    for (const now of [
+      "2026-11-01T00:00:00.000Z",
+      "2026-12-01T00:00:00.000Z",
+    ]) {
+      expect(
+        correctionFor({
+          bookingStatus: "cancelled",
+          bookingEndsAt,
+          now: new Date(now),
+        })
+      ).toBe("cancelled")
     }
   })
 })
