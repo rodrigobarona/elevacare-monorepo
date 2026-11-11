@@ -49,14 +49,21 @@ Each entry should include:
   closes a phone or in-person session as `ended` with no attendance
   (`null`), ended at its booked end. The audit event carries
   `attendance: null`.
-- Operator (founder, before the beta opens; the code cannot repair past
-  rows and I do not change production data): correct sessions already
-  recorded this way.
-  `update sessions set status = 'ended', attendance = null where
-session_mode <> 'online' and status = 'no_show' and attendance =
-'nobody';`
+- Operator (founder, before the beta opens): correct sessions already
+  recorded this way. Code does not repair past rows, and production data
+  is changed only by the operator.
+
+  ```sql
+  update sessions
+  set status = 'ended', attendance = null
+  where session_mode <> 'online'
+    and status = 'no_show'
+    and attendance = 'nobody';
+  ```
+
   The audit log is append-only and keeps the earlier events; this entry
   is the record of why they are wrong.
+
 - Not built: a way for the expert to mark that a phone or in-person
   session did not take place (a no-show flow for those modes).
 
