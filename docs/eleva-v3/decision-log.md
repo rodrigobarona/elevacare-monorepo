@@ -102,11 +102,15 @@ Each entry should include:
   session did not take place (a no-show flow for those modes); closing a
   phone or in-person session at once after a failed payment or a full
   refund (the sweep closes it later); an index for the sweep's query.
-- Not proven: the sweep and the correction have not run against real
-  rows. The queries were checked against the development database (the
-  correction counts 0 there; the locked query was planned by the
-  database, not run), and the rules are unit tested. No test runs them
-  against a database.
+- Proven on 2026-11-11, locally: the sweep of this change ran on the
+  local API against the development database and closed the 23 sessions
+  that were due (all online test sessions with an empty room, closed as
+  no-shows, which is right for them), so the query that joins the
+  booking and locks the session row runs. The repair script counts 0
+  and 0 there, and refuses `--apply` without the host.
+- Not proven: closing a real phone or in-person session, and the repair
+  changing a row (the development database has no such sessions). Those
+  rules are unit tested; no test runs them against a database.
 
 ### 2026-11-11: An expert can cancel a confirmed session; the member is refunded in full (active)
 
