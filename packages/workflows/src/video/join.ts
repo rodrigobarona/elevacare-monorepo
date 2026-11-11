@@ -158,7 +158,15 @@ export async function joinSessionFromGrant(
     claims.role,
     claims.scheduleRevision
   )
-  if (check.status === "expired") throw new SessionJoinError("SESSION_ENDED")
+  if (check.status === "expired") {
+    // A cancelled session did not end: say "not active" for it.
+    const status = classifyJoinStatus(identity.sessionStatus, true)
+    throw new SessionJoinError(
+      "error" in status && status.error === "SESSION_NOT_ACTIVE"
+        ? "SESSION_NOT_ACTIVE"
+        : "SESSION_ENDED"
+    )
+  }
   return joinSession(
     {
       bookingId: input.bookingId,
@@ -180,10 +188,13 @@ async function resolveGrantJoinIdentity(
   userId: string
   userName: string
   actorUserId?: string | null
+  sessionStatus: string
 }> {
+  let sessionStatus = ""
   const identity = await withPlatformAdminContext(async (tx) => {
     const [session] = await tx
       .select({
+        status: main.sessions.status,
         memberUserId: main.sessions.memberUserId,
         expertUserId: main.expertProfiles.userId,
         guestName: main.bookings.guestName,
@@ -201,6 +212,7 @@ async function resolveGrantJoinIdentity(
     if (session.scheduleRevision !== scheduleRevision) {
       throw new SessionJoinError("INVALID_GRANT")
     }
+    sessionStatus = session.status
 
     switch (role) {
       case "expert": {
@@ -244,7 +256,7 @@ async function resolveGrantJoinIdentity(
     }
   })
   if (!identity) throw new SessionJoinError("NOT_A_PARTICIPANT")
-  return identity
+  return { ...identity, sessionStatus }
 }
 
 export async function joinSession(

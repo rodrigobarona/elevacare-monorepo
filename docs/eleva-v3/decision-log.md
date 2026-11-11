@@ -262,8 +262,9 @@ Each entry should include:
   from other sites). Accepted for the beta. Follow-up (engineering, by
   the Phase 13 hardening pass): carry the email only, or a short-lived
   opaque token.
-- Not built: the note on the join and waiting page (next slice, with the
-  waiting room); a line in the help center; choosing lines from the
+- Built since (2026-11-11, "The join page waits for the session and opens
+  it"): the note on the join and waiting page.
+- Not built: a line in the help center; choosing lines from the
   reader's country instead of their language; national lines for other
   EU countries.
 - Not signed off: a clinical read of which lines to name and how is

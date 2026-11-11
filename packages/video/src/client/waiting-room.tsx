@@ -68,7 +68,7 @@ const SPOKEN_MINUTES = new Set([15, 10, 5])
  * example cancelled). No "try again": asking again cannot help. It says
  * where to write instead.
  */
-function SupportLine({
+export function SupportLine({
   labels,
   className,
 }: {
@@ -317,7 +317,7 @@ export function WaitingRoom({
         </p>
         {countdown ? (
           <p
-            role="timer"
+            role={gaveUp ? undefined : "timer"}
             aria-live="off"
             data-testid="waiting-room-countdown"
             className="mt-6 flex items-center gap-2 text-lg font-medium tabular-nums"
@@ -337,7 +337,9 @@ export function WaitingRoom({
         {gaveUp ? (
           <>
             <div className="mt-4">
-              <Button onPress={runTry}>{labels.retry}</Button>
+              <Button onPress={runTry} isPending={asking}>
+                {labels.retry}
+              </Button>
             </div>
             <SupportLine
               labels={labels}

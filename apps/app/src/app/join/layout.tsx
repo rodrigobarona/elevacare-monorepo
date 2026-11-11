@@ -19,7 +19,7 @@ export default function PublicJoinLayout({
           href={publicHomeUrl()}
           // The page address carries the join grant: never pass it on.
           referrerPolicy="no-referrer"
-          className="inline-flex rounded-md"
+          className="-my-2 inline-flex rounded-md py-2"
         >
           <Logo className="h-6" />
         </a>

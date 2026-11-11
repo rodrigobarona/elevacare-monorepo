@@ -16,7 +16,7 @@ import {
   type JoinWindow,
   type OpenAttempt,
 } from "../waiting-room"
-import { SessionClosed, WaitingRoom } from "./waiting-room"
+import { SessionClosed, SupportLine, WaitingRoom } from "./waiting-room"
 
 export type JoinSessionProps = {
   join: () => Promise<{
@@ -67,6 +67,8 @@ export function JoinSession({
   const left = leftAt !== null
   /** The call opened from the waiting room: say so and move focus to it. */
   const [openedFromWaiting, setOpenedFromWaiting] = useState(false)
+  /** The person asked to come back in: focus follows them into the call. */
+  const [rejoined, setRejoined] = useState(false)
   const callRef = useRef<HTMLDivElement>(null)
   const reqId = useRef(0)
 
@@ -155,9 +157,12 @@ export function JoinSession({
   // Someone waiting may be looking elsewhere when the call opens: move
   // focus to it, and let the tab title say so until they leave the page.
   const opened = openedFromWaiting && Boolean(creds) && !left
+  const focusCall = (opened || rejoined) && Boolean(creds) && !left
+  useEffect(() => {
+    if (focusCall) callRef.current?.focus()
+  }, [focusCall])
   useEffect(() => {
     if (!opened) return
-    callRef.current?.focus()
     const previous = document.title
     document.title = labels.waitingRoomOpened
     return () => {
@@ -179,6 +184,10 @@ export function JoinSession({
             {labels.leftRejoinHint(formatClock(closesAt, labels.timeLocale))}
           </p>
         ) : null}
+        <SupportLine
+          labels={labels}
+          className="text-sm text-pretty text-muted-foreground"
+        />
         <p className="text-xs text-muted-foreground">{labels.callPrivacy}</p>
         <div className="flex flex-wrap justify-center gap-2">
           {canRejoin ? (
@@ -186,6 +195,7 @@ export function JoinSession({
               onPress={() => {
                 setLeftAt(null)
                 setOpenedFromWaiting(false)
+                setRejoined(true)
                 load()
               }}
             >
@@ -199,6 +209,7 @@ export function JoinSession({
             {labels.back}
           </LinkButton>
         </div>
+        {aside ? <div className="text-left">{aside}</div> : null}
       </div>
     )
   }
@@ -249,6 +260,10 @@ export function JoinSession({
               error === "SESSION_NOT_OPEN" ? windowHint : null
             )}
           </p>
+          <SupportLine
+            labels={labels}
+            className="text-sm text-pretty text-muted-foreground"
+          />
           <p className="text-xs text-muted-foreground">{labels.callPrivacy}</p>
           <div className="flex flex-wrap gap-2">
             <Button onPress={load}>{labels.retry}</Button>
@@ -263,7 +278,13 @@ export function JoinSession({
   }
 
   return (
-    <div ref={callRef} tabIndex={-1} className="outline-none">
+    <div
+      ref={callRef}
+      tabIndex={-1}
+      role="group"
+      aria-label={opened ? labels.waitingRoomOpened : undefined}
+      className="outline-none"
+    >
       <p role="status" className="sr-only">
         {opened ? labels.waitingRoomOpened : null}
       </p>

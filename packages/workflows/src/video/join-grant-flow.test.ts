@@ -42,7 +42,8 @@ const MINTED_AT = new Date("2026-10-01T09:00:00.000Z")
 const AFTER_CLOSE = new Date("2026-10-07T11:31:01.000Z")
 
 /** What the identity lookup reads for the booking. */
-const booking = (scheduleRevision: number) => ({
+const booking = (scheduleRevision: number, status = "scheduled") => ({
+  status,
   memberUserId: null,
   expertUserId: "33333333-3333-4333-8333-333333333333",
   guestName: "Ada",
@@ -80,6 +81,21 @@ describe("joining with a link past its end", () => {
         { mint }
       )
     ).rejects.toMatchObject({ code: "SESSION_ENDED", details: undefined })
+    expect(mint).not.toHaveBeenCalled()
+  })
+
+  it("says a cancelled session is not active, not that it ended", async () => {
+    rows.queue = [[booking(2, "cancelled")]]
+    await expect(
+      joinSessionFromGrant(
+        {
+          bookingId: BOOKING_ID,
+          grant: await grant(BOOKING_ID, 2),
+          now: AFTER_CLOSE,
+        },
+        { mint }
+      )
+    ).rejects.toMatchObject({ code: "SESSION_NOT_ACTIVE" })
     expect(mint).not.toHaveBeenCalled()
   })
 
