@@ -69,7 +69,9 @@ back to `scheduled` and stays joinable. A sweep after the join window
 closes (`endsAt + 30m`) closes whatever is still open from the participant
 history, and it is the only place a `no_show` is declared (empty history →
 `nobody`). Attendance exists only for online sessions: a phone or in-person
-session is closed as `ended` with no attendance, never as a no-show.
+session is closed as `ended` with no attendance, never as a no-show, and
+the session of a cancelled booking is closed as `cancelled`. The sweep
+reads when a session is from its booking.
 No-show policy (refund/keep) is not decided here. Rules:
 `packages/workflows/src/video/attendance.ts`.
 

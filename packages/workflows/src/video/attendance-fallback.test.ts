@@ -68,11 +68,21 @@ describe("fallbackOutcome", () => {
     end: new Date("2026-10-08T10:00:00.000Z"),
   }
   const now = new Date("2026-10-08T10:30:00.000Z")
+  const base = {
+    bookingStatus: "confirmed",
+    participants: [],
+    booked,
+    endedAt: null,
+    now,
+  }
 
   it("records nobody for a video session whose room stayed empty", () => {
-    expect(
-      fallbackOutcome({ sessionMode: "online", participants: [], booked, now })
-    ).toEqual({ status: "no_show", attendance: "nobody" })
+    expect(fallbackOutcome({ ...base, sessionMode: "online" })).toEqual({
+      status: "no_show",
+      attendance: "nobody",
+      // Nobody came and nobody left: the time of the sweep.
+      endedAt: now,
+    })
   })
 
   it("reads who came from the room for a video session", () => {
@@ -90,21 +100,44 @@ describe("fallbackOutcome", () => {
     ]
     expect(
       fallbackOutcome({
+        ...base,
         sessionMode: "online",
         participants: together,
-        booked,
-        now,
       })
-    ).toEqual({ status: "ended", attendance: "both" })
+    ).toEqual({
+      status: "ended",
+      attendance: "both",
+      // When the room last emptied.
+      endedAt: new Date("2026-10-08T09:50:00.000Z"),
+    })
   })
 
   it("never calls a phone or in-person session a no-show", () => {
     // Nobody is ever in a video room for these: an empty room says nothing
-    // about whether the two met.
-    for (const sessionMode of ["phone", "in_person"]) {
+    // about whether the two met. It ends at its booked end.
+    for (const sessionMode of ["phone", "in_person"] as const) {
+      expect(fallbackOutcome({ ...base, sessionMode })).toEqual({
+        status: "ended",
+        attendance: null,
+        endedAt: booked.end,
+      })
+    }
+  })
+
+  it("closes the session of a cancelled booking as cancelled, in any mode", () => {
+    for (const sessionMode of ["online", "phone", "in_person"] as const) {
       expect(
-        fallbackOutcome({ sessionMode, participants: [], booked, now })
-      ).toEqual({ status: "ended", attendance: null })
+        fallbackOutcome({ ...base, sessionMode, bookingStatus: "cancelled" })
+      ).toEqual({ status: "cancelled", attendance: null, endedAt: now })
+    }
+  })
+
+  it("keeps an end time a webhook already recorded", () => {
+    const recorded = new Date("2026-10-08T09:40:00.000Z")
+    for (const sessionMode of ["online", "phone"] as const) {
+      expect(
+        fallbackOutcome({ ...base, sessionMode, endedAt: recorded }).endedAt
+      ).toEqual(recorded)
     }
   })
 })

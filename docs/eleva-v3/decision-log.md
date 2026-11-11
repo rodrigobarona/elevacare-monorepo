@@ -42,30 +42,54 @@ Each entry should include:
   who was in the video room. A phone or in-person session never has
   anyone in a room, so each one was recorded as `no_show` with attendance
   `nobody`, and an audit event said so. That is a false record against
-  both people for a session that took place. Nothing reads it for money
-  today (payouts and refunds do not use session attendance), which is why
-  it went unseen.
-- Decision: attendance is recorded only for online sessions. The sweep
-  closes a phone or in-person session as `ended` with no attendance
-  (`null`), ended at its booked end. The audit event carries
-  `attendance: null`.
-- Operator (founder, before the beta opens): correct sessions already
-  recorded this way. Code does not repair past rows, and production data
-  is changed only by the operator.
+  both people, for a session Eleva cannot see. Nothing reads it for money
+  today (payouts and refunds do not use session attendance) and no screen
+  shows it, which is why it went unseen.
+- Found by the judge panel on this fix, same root, also fixed:
+  - A session row keeps its old times after a reschedule unless it is
+    online (the times are brought up to date together with the room). The
+    sweep read the session row's end, so a rescheduled phone or in-person
+    session was closed at its old time, before it took place.
+  - The session of a cancelled phone or in-person booking stayed open
+    until the sweep, which then closed it like any other.
+- Decisions:
+  - Attendance is recorded only for online sessions. The sweep closes a
+    phone or in-person session as `ended` with no attendance (`null`),
+    ended at its booked end. `ended` then means "its time has passed",
+    not "the two met"; the audit event carries the mode so the two can be
+    told apart.
+  - The sweep reads when a session is from its booking, the source of
+    truth, for every mode.
+  - The session of a cancelled booking is closed as `cancelled`.
+- Operator (founder, before the beta opens, after this change is live on
+  production: until then the sweep keeps writing new false records).
+  Past rows are corrected by a script, not by hand, so that each
+  correction is written to the audit log (`session attendance_corrected`,
+  from `no_show`/`nobody` to `ended`/no attendance). The audit log is
+  append-only: the earlier wrong events stay, and the correction beside
+  them says they were wrong. With `.env.local` pointing at the production
+  main database (unpooled URL):
 
-  ```sql
-  update sessions
-  set status = 'ended', attendance = null
-  where session_mode <> 'online'
-    and status = 'no_show'
-    and attendance = 'nobody';
+  ```bash
+  pnpm video:correct-nonvideo-attendance            # counts, changes nothing
+  pnpm video:correct-nonvideo-attendance --apply    # corrects and audits
+  pnpm video:correct-nonvideo-attendance            # must now say 0
   ```
 
-  The audit log is append-only and keeps the earlier events; this entry
-  is the record of why they are wrong.
+  It touches only sessions that are not online, `no_show` and `nobody`.
+  Only the sweep ever wrote `no_show`, and only online sessions have a
+  room, so every such row is one of the false records. The end time the
+  sweep stamped on them is left as it is. Record the date and the count
+  here when it has been run.
 
 - Not built: a way for the expert to mark that a phone or in-person
-  session did not take place (a no-show flow for those modes).
+  session did not take place (a no-show flow for those modes); bringing
+  the session row's own times up to date on reschedule for every mode
+  (the sweep no longer depends on them).
+- Not proven: the sweep and the correction have not run against real
+  rows. The queries were checked against the development database (the
+  correction counts 0 there; the locked query was planned, not run), and
+  the rules are unit tested.
 
 ### 2026-11-11: An expert can cancel a confirmed session; the member is refunded in full (active)
 

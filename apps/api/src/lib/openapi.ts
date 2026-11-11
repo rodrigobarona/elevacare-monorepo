@@ -5357,7 +5357,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
         operationId: "sweepEndedSessionsWithoutAttendance",
         summary: "Close sessions whose join window has closed",
         description:
-          "Sessions still scheduled, live, or room_unresolved with null attendance whose Eleva join window (endsAt + 30m) has closed are finalized from participant history: ended when expert and member were in the room together, otherwise no_show. Every no-show is declared here, never by a webhook. Attendance only — no refund decision.",
+          "Sessions still scheduled, live, or room_unresolved with null attendance whose Eleva join window (endsAt + 30m) has closed are closed. Online sessions are finalized from participant history: ended when expert and member were in the room together, otherwise no_show. A phone or in-person session has no room to read: it closes as ended with no attendance, never as a no-show. The session of a cancelled booking closes as cancelled. The booking's own end time decides when a session is due. Every no-show is declared here, never by a webhook. Attendance only — no refund decision.",
       }),
       "/health": {
         get: {
