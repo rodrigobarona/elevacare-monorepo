@@ -3,11 +3,7 @@ export {
   recordLogger,
   type RecordLogFields,
 } from "./record-logger"
-export {
-  RECORD_READ_SAMPLE_RATES,
-  type RecordReadPurpose,
-  type RecordViewer,
-} from "./decrypt-audit"
+export { type RecordReadPurpose, type RecordViewer } from "./decrypt-audit"
 export { decryptHoldIntake, encryptHoldIntake } from "./hold-intake"
 export {
   listMemberReports,

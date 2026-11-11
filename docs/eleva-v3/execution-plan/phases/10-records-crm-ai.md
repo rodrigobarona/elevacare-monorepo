@@ -130,7 +130,8 @@ record_access_optouts(member_user_id, expert_org_id)))` — the two objects this
   data; runbook + test with two KEK versions live at once), DEK rotation per org is available but
   not scheduled at launch, envelope helpers refuse to run when `ENCRYPTION_KEK_VERSION` does not
   match an unwrap-able key, and access to decrypt is audited (`record: decrypted` with viewer +
-  purpose, sampled 100% for staff, 1% for the owning expert). Key custody (who can read the KEK,
+  purpose; every read is audited since 2026-11-11, the owning expert's too, where the
+  original build sampled them at 1%). Key custody (who can read the KEK,
   break-glass procedure, two-person rule) is written into `admin-operator-playbooks.md` and
   reviewed in Phase 13 — Phase 13 verifies, it does not introduce.
 - **Clinical access model (D-11, working decision)**: expert-authored `records` are readable by
@@ -416,7 +417,7 @@ PR 10.2 — CRM + AI reports beta:
    (re-wraps every DEK under the current version in batches, idempotent, never touches
    ciphertext; test with two KEK versions live), refuse to start when the configured version is
    not unwrap-able, and audit record: decrypted (viewer, purpose) on every decryptForOrg call
-   (100% for staff sessions, 1% sampled for the owning expert). Runbook in
+   (every read since 2026-11-11; the original build sampled the owning expert at 1%). Runbook in
    integration-runbooks.md + admin-operator-playbooks.md (custody, two-person rule).
    Clinical access model (D-11) — this IS policy A above, stated once: read for the authoring
    expert; for other experts of the same clinic org only when organizations.clinic_shared_records

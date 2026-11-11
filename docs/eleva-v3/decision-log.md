@@ -32,6 +32,29 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-11: Every read of a session record is logged (active)
+
+- Owner: engineering; closes the engineering part of council findings
+  PRIV2-04 and PRIV2-05 once deployed.
+- Before: reads of session records were audited at 100% for members and
+  staff and as a 1% sample for the expert who wrote them. Lei 58/2019
+  art. 29 expects a log of who accessed health data and what they
+  accessed, which a sample is not.
+- Now: `auditRecordRead` writes one `record.decrypted` audit row for
+  every read, whoever reads: ids, viewer and purpose, never content. The
+  sampling code and its `sampleRate` field are gone. A read that returns
+  no records writes nothing.
+- Cost: one audit row per read of a session's records. A read lists all
+  the records of one booking, so an expert opening a session writes one
+  row, not one per record.
+- CI: the clinic-records and CRM row-level-security suites now run with
+  the other isolation suites on every pull request's database branch.
+- Not built: the member's own view of who read their records; per-day
+  grouping of an expert's own reads; reads of session files and of the
+  CRM (they have their own paths and are not covered by this log).
+- Not decided: who tells the member about an access (DPIA R12 keeps the
+  position that the expert, as controller, does).
+
 ### 2026-11-11: A session stays joinable; only a meeting that happened ends early (active)
 
 - Owner: engineering. Found by the judge panel on the waiting-room slice;
