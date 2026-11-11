@@ -129,8 +129,8 @@ export function retryableJoinFailure(
   return status >= 500 ? "retry" : "final"
 }
 
-/** True when joining opens on a later calendar day in the viewer's zone. */
-export function opensAnotherDay(
+/** True when the session starts on a later calendar day in the viewer's zone. */
+export function startsAnotherDay(
   window: JoinWindow,
   deviceNow: number,
   timeZone?: string
@@ -142,7 +142,7 @@ export function opensAnotherDay(
     day: "2-digit",
   })
   return (
-    day.format(new Date(window.opensAt)) !==
+    day.format(new Date(window.startsAt)) !==
     day.format(new Date(serverTime(window, deviceNow)))
   )
 }

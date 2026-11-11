@@ -4,7 +4,7 @@ import {
   attemptsAfter,
   autoJoinDelay,
   minutesUntilOpen,
-  opensAnotherDay,
+  startsAnotherDay,
   readJoinWindow,
   retryableJoinFailure,
   waitingPhase,
@@ -168,14 +168,27 @@ describe("retryableJoinFailure", () => {
   })
 })
 
-describe("opensAnotherDay", () => {
+describe("startsAnotherDay", () => {
   it("compares calendar days in the viewer's time zone", () => {
     const window = windowAt(details.now)
     expect(
-      opensAnotherDay(window, T("2026-11-16T09:30:00.000Z"), "Europe/Lisbon")
+      startsAnotherDay(window, T("2026-11-16T09:30:00.000Z"), "Europe/Lisbon")
     ).toBe(false)
     expect(
-      opensAnotherDay(window, T("2026-11-15T22:00:00.000Z"), "Europe/Lisbon")
+      startsAnotherDay(window, T("2026-11-15T22:00:00.000Z"), "Europe/Lisbon")
+    ).toBe(true)
+  })
+
+  it("names the day of a session that starts just after midnight", () => {
+    // Joining opens at 23:50 today; the session itself is tomorrow.
+    const window = windowAt("2026-11-16T23:40:00.000Z", {
+      startsAt: "2026-11-17T00:05:00.000Z",
+      opensAt: "2026-11-16T23:50:00.000Z",
+      closesAt: "2026-11-17T01:35:00.000Z",
+      now: "2026-11-16T23:40:00.000Z",
+    })
+    expect(
+      startsAnotherDay(window, T("2026-11-16T23:40:00.000Z"), "Europe/Lisbon")
     ).toBe(true)
   })
 })

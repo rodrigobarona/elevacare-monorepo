@@ -16,7 +16,7 @@ import {
   attemptsAfter,
   autoJoinDelay,
   minutesUntilOpen,
-  opensAnotherDay,
+  startsAnotherDay,
   waitingPhase,
   type JoinWindow,
   type OpenAttempt,
@@ -288,7 +288,7 @@ export function WaitingRoom({
   }
 
   const starts = new Date(joinWindow.startsAt)
-  const anotherDay = opensAnotherDay(joinWindow, now)
+  const anotherDay = startsAnotherDay(joinWindow, now)
   const title = anotherDay
     ? labels.waitingRoomTitleLater(dateTime.format(starts))
     : labels.waitingRoomTitle(time.format(starts))

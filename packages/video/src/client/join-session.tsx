@@ -119,10 +119,12 @@ export function JoinSession({
     const id = ++reqId.current
     try {
       const result = await join()
-      if (id === reqId.current) {
-        setOpenedFromWaiting(true)
-        enter(result)
-      }
+      if (id !== reqId.current) return "joined"
+      // The page was put away while asking: the camera check never opens
+      // unseen. The waiting room asks again when the person is back.
+      if (document.visibilityState === "hidden") return "failed"
+      setOpenedFromWaiting(true)
+      enter(result)
       return "joined"
     } catch (err) {
       if (id !== reqId.current) return "failed"
