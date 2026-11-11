@@ -100,5 +100,11 @@
     "help": "Centro de ajuda",
     "homePage": "Página inicial da Eleva",
     "signOut": "Terminar sessão"
+  },
+  "urgentHelp": {
+    "title": "Precisa de ajuda urgente?",
+    "emergency": "Ligue <call>{number}</call>. É gratuito, de dia e de noite, em toda a UE.",
+    "bookedAhead": "As sessões na Eleva são marcadas com antecedência, por isso o {number} é a forma mais rápida de receber cuidados agora.",
+    "national": "Em Portugal, o SNS 24 (<call>{number}</call>) dá aconselhamento de saúde e apoio psicológico, de dia e de noite."
   }
 }

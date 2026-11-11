@@ -100,5 +100,11 @@
     "help": "Centro de ayuda",
     "homePage": "Página principal de Eleva",
     "signOut": "Cerrar sesión"
+  },
+  "urgentHelp": {
+    "title": "¿Necesitas ayuda urgente?",
+    "emergency": "Llama al <call>{number}</call>. Es gratis, de día y de noche, en toda la UE.",
+    "bookedAhead": "Las sesiones en Eleva se reservan con antelación, así que el {number} es la forma más rápida de recibir atención ahora.",
+    "national": "En España, el <call>{number}</call> atiende, de día y de noche, a quien piensa en el suicidio y a las personas de su entorno."
   }
 }

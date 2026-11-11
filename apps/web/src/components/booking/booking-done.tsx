@@ -9,6 +9,7 @@ import {
   ShieldIcon,
 } from "@eleva/icons"
 import { Button, LinkButton } from "@eleva/ui/components/button"
+import { UrgentHelp } from "@eleva/dashboard/urgent-help"
 import { FieldError } from "@eleva/ui/components/field"
 
 type ConfirmState = "idle" | "pending" | "confirmed" | "failed"
@@ -160,6 +161,8 @@ export function BookingDone({
           ) : null}
         </section>
       </div>
+
+      <UrgentHelp className="mt-6 rounded-4xl p-6" />
     </div>
   )
 }

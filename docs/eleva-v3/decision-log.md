@@ -32,6 +32,31 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-11: Urgent help is signposted where members book and wait (active)
+
+- Owner: engineering; closes the engineering part of council finding
+  PRIV2-03 (no crisis or emergency signposting where members are).
+- Sessions on Eleva are booked ahead, so anything urgent is sent to 112,
+  free in every EU country. Portuguese copy also names SNS 24
+  (808 24 24 24) and Spanish copy names 024; English, read across the EU,
+  names 112 only. Numbers live in `@eleva/config/urgent-help`, the copy in
+  the shared `urgentHelp` messages (`packages/dashboard/messages`), and
+  the note is one component, `UrgentHelp` in `@eleva/dashboard`.
+- Shown on: the booking details step (short form, under the note to the
+  expert), the booking thank-you page, the member's session page, and the
+  member's confirmation, reminder and reschedule emails. Expert emails do
+  not carry it.
+- Same change: the thank-you page's "Create your Eleva account" link now
+  carries `claim=1`, so it finishes the account the booking started (it
+  used to open a plain sign-up). The phone number is no longer put in
+  that link or in the email's sign-up link; the sign-up page never read
+  it.
+- Not built: the note on the join and waiting page (it comes with the
+  waiting-room slice), a line in the help center, and choosing the
+  national line from the reader's country instead of their language.
+- Needs a clinical read before launch: which national lines to name per
+  country (founder and Patricia Mota). The copy gives no medical advice.
+
 ### 2026-11-10: Live transcript on Deepgram's medical model (active)
 
 - Owner: founder (Rodrigo Barona); engineering.

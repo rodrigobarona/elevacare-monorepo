@@ -59,6 +59,7 @@ import {
   FunnelStepper,
   StepHeader,
 } from "@/components/booking/booking-chrome"
+import { UrgentHelp } from "@eleva/dashboard/urgent-help"
 import { BookingDone } from "@/components/booking/booking-done"
 import { ExpertAvatar } from "@/components/expert-avatar"
 import { Link } from "@/i18n/navigation"
@@ -684,10 +685,11 @@ export function BookingFunnel({
   const expertMedia = (
     <ExpertAvatar displayName={expertName} avatarUrl={expertAvatarUrl} />
   )
+  // `claim=1` lets signup finish the account this booking already started.
   const signupHref = `/signup?${new URLSearchParams({
+    claim: "1",
     name,
     email,
-    ...(phone ? { phone } : {}),
   }).toString()}`
 
   if (step === "done" && slot && selectedMode) {
@@ -1101,6 +1103,7 @@ export function BookingFunnel({
                   {t("details.intakeNotesHint")}
                 </p>
               </Field>
+              <UrgentHelp variant="compact" />
             </FormCard>
             <FormCard title={t("details.sections.confirm")}>
               <CancellationPolicySummary

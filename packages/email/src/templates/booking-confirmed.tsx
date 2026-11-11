@@ -6,6 +6,7 @@ import { EmailBodyText, EmailHeading } from "../components/email-heading"
 import { EmailButton } from "../components/email-button"
 import { JoinSessionCta } from "../components/join-session-cta"
 import { SessionAccess, type SessionPlace } from "../components/session-access"
+import { UrgentHelpNote } from "../components/urgent-help-note"
 import { getEmailTranslations, type EmailLocale } from "../i18n"
 import { formatSessionMode } from "../session-mode"
 
@@ -167,6 +168,7 @@ export function BookingConfirmedEmail({
           {t.booking.icsHintAdd}
         </EmailBodyText>
       ) : null}
+      {isExpert ? null : <UrgentHelpNote locale={locale} />}
     </EmailLayout>
   )
 }

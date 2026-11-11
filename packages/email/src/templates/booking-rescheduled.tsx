@@ -4,6 +4,7 @@ import { EmailCard } from "../components/email-card"
 import { EmailBodyText, EmailHeading } from "../components/email-heading"
 import { JoinSessionCta } from "../components/join-session-cta"
 import { SessionAccess, type SessionPlace } from "../components/session-access"
+import { UrgentHelpNote } from "../components/urgent-help-note"
 import { getEmailTranslations, type EmailLocale } from "../i18n"
 import { formatSessionMode } from "../session-mode"
 
@@ -27,6 +28,8 @@ export interface BookingRescheduledProps {
   counterpartName?: string
   subheading?: string
   preview?: string
+  /** Member copy only: where to turn when something cannot wait. */
+  urgentHelp?: boolean
 }
 
 export function BookingRescheduledEmail({
@@ -45,6 +48,7 @@ export function BookingRescheduledEmail({
   counterpartName,
   subheading,
   preview,
+  urgentHelp = false,
 }: BookingRescheduledProps) {
   const t = getEmailTranslations(locale)
 
@@ -97,6 +101,7 @@ export function BookingRescheduledEmail({
       <EmailBodyText className="mt-[24px] text-[13px] leading-[20px]">
         {t.booking.icsHintUpdate}
       </EmailBodyText>
+      {urgentHelp ? <UrgentHelpNote locale={locale} /> : null}
     </EmailLayout>
   )
 }

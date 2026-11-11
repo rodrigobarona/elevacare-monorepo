@@ -896,6 +896,7 @@ async function renderBookingHtml(input: {
         ...people,
         subheading: copy.subheading,
         preview,
+        urgentHelp: !isExpert,
       })
     case "booking.reminder_24h":
       return renderBookingReminder({
@@ -911,6 +912,7 @@ async function renderBookingHtml(input: {
         ...people,
         subheading: copy.subheading,
         preview,
+        urgentHelp: !isExpert,
       })
     case "booking.reminder_1h":
       return renderBookingReminder({
@@ -926,6 +928,7 @@ async function renderBookingHtml(input: {
         ...people,
         subheading: copy.subheading,
         preview,
+        urgentHelp: !isExpert,
       })
     default: {
       const _exhaustive: never = input.kind
@@ -1040,7 +1043,6 @@ function memberActivateHref(
     claim: "1",
     email: booking.guestEmail,
     ...(booking.guestName ? { name: booking.guestName } : {}),
-    ...(booking.guestPhone ? { phone: booking.guestPhone } : {}),
   })
   return `${gateway.replace(/\/$/, "")}/signup?${params.toString()}`
 }

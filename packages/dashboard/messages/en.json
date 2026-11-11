@@ -100,5 +100,11 @@
     "help": "Help center",
     "homePage": "Eleva home page",
     "signOut": "Sign out"
+  },
+  "urgentHelp": {
+    "title": "Need urgent help?",
+    "emergency": "Call <call>{number}</call>. It is free, day and night, anywhere in the EU.",
+    "bookedAhead": "Sessions on Eleva are booked ahead, so {number} is the fastest way to get care right now.",
+    "national": "Your country's health line can also advise you by phone."
   }
 }

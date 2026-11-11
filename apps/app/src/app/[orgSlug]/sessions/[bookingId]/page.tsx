@@ -14,6 +14,7 @@ import {
   isSessionMode,
 } from "@/lib/booking-status"
 import { JoinCta } from "@eleva/video/join-cta"
+import { UrgentHelp } from "@eleva/dashboard/urgent-help"
 import { DateTile } from "@eleva/ui/components/date-tile"
 import { bookingDateParts } from "@eleva/ui/lib/booking/date-parts"
 import { StatusPill } from "../../_components/booking-visuals"
@@ -219,6 +220,8 @@ export default async function SessionDetailPage({
           />
         </aside>
       </div>
+
+      <UrgentHelp />
     </div>
   )
 }

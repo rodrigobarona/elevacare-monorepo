@@ -375,7 +375,7 @@ describe("sendBookingNotification", () => {
       1,
       expect.objectContaining({
         activateHref:
-          "https://eleva.care/signup?claim=1&email=ada%40example.com&name=Ada+Lovelace&phone=%2B351910000000",
+          "https://eleva.care/signup?claim=1&email=ada%40example.com&name=Ada+Lovelace",
         audience: "member",
       })
     )
@@ -529,6 +529,30 @@ describe("sendBookingNotification", () => {
       expect.objectContaining({
         joinHref: `https://eleva.care/join/${BOOKING_ID}?g=grant-expert`,
       })
+    )
+  })
+
+  it("tells members, not experts, where to get urgent help (PRIV2-03)", async () => {
+    const send = vi
+      .fn()
+      .mockResolvedValue({ kind: "booking.reminder_1h", deliveries: [] })
+    renderBookingReminder.mockClear()
+    await sendBookingNotification(
+      {
+        id: "evt-urgent",
+        type: "booking.reminder_1h",
+        orgId: ORG_ID,
+        payload: eventPayload(),
+      },
+      { loadBooking: async () => booking(), send }
+    )
+    expect(renderBookingReminder).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ urgentHelp: true })
+    )
+    expect(renderBookingReminder).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ urgentHelp: false })
     )
   })
 
