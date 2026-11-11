@@ -19,8 +19,10 @@ export const ROUTE_POLICY = {
 /**
  * POST /webhooks/daily
  *
- * Daily HMAC webhook receiver. Idempotent by event id. Status is
- * monotonic scheduled -> live -> ended | no_show.
+ * Daily HMAC webhook receiver. Idempotent by event id. Status moves
+ * scheduled -> live -> ended | no_show. A room that empties before the
+ * booked end goes back to scheduled, so people can rejoin; it is final
+ * only from the booked end on (`afterMeetingEnded`).
  */
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"

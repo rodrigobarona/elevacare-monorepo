@@ -32,6 +32,84 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-11: A session stays joinable; only a meeting that happened ends early (active)
+
+- Owner: engineering. Found by the judge panel on the waiting-room slice;
+  the fault predates it.
+- Finding: Daily sends `meeting.ended` shortly after the last person
+  leaves a room. The webhook treated that as the end of the session at
+  any time. An expert who opened the room ten minutes early to check it
+  and left turned the session into `no_show` before it started, and
+  nobody could join any more. Two people who both dropped on a bad
+  connection mid-session were locked out the same way, although the help
+  center tells members to refresh the page and join again. Attendance
+  also counted anyone who ever joined, so two people who each came alone
+  would have been recorded as having met.
+- Decisions:
+  - `meeting.ended` closes a session only when it happened: the booked
+    end has passed and expert and member were in the room at the same
+    time. Otherwise the room has only emptied: the session goes back to
+    `scheduled`, keeps its first start time and stays joinable.
+  - A no-show is never declared by a webhook. The attendance sweep
+    declares it when the join window closes, 30 minutes after the booked
+    end, and it also closes any session still open then.
+  - `both` means the two were in the room together for at least two
+    minutes in total: a look into the room is not a session. When they
+    did not meet, one side is named only if the other spent no time in
+    the room during the booked time; if both were there in the booked
+    time and still missed each other, the record blames no one
+    (`nobody`) and support reads the history.
+  - When Daily says the room is empty, every visit still open is given
+    that end, so a lost "left" event cannot make someone "meet" whoever
+    comes next. A member who booked without an account (`guest:` id) is
+    counted as the member.
+  - History that arrives late no longer rewrites the attendance of a
+    session that is already closed, except to correct a no-show when the
+    two were in the room together.
+  - The end time of a session closed by the sweep is when the room last
+    emptied; if someone is still recorded inside, or nobody came, it is
+    when the sweep ran.
+  - The audit events for `meeting.ended` and for the sweep carry `final`,
+    the resulting `status` and, when closed, the attendance, so an
+    emptied room and a closed session can be told apart.
+  - An event time further than five minutes ahead of our clock is
+    replaced by the time we received it.
+- Rules in one place: `packages/workflows/src/video/attendance.ts`
+  (`deriveAttendance`, `afterMeetingEnded`, `nextLifecycleState`).
+- Effect to know: a session where one person waited alone, or where the
+  room emptied before the booked end, is stored as `scheduled` until the
+  sweep closes it, up to about 40 minutes after the booked end (window
+  plus one 10-minute tick). No screen and no payout reads this status
+  today: lists and buttons use the booking and the time, payouts use the
+  booked end, and a no-show refund is still handled by support.
+- Known limits, not changed here: the sweep closes a call still running
+  30 minutes past its booked end; the recorded start can be an early room
+  check, before the booked start; a failed payment or a full refund
+  before the start does not cancel a session while someone has the room
+  open (existing rule, tested as such), and that session is now joinable
+  again once the room empties; the sweep has no heartbeat alert and no
+  index on status and end time; the sweep also closes phone and in-person
+  sessions, which have no room, as `no_show` with attendance `nobody`
+  (follow-up: skip them); the member help page says a call can be
+  rejoined after a refresh, which is true until the two have met and the
+  room empties after the booked end.
+- Existing rows: sessions already closed before their booked end are not
+  repaired by this change, and a future session in that state stays
+  unjoinable. Until 2026-11-07 every booking on the production database
+  was one of the team's own tests (see "Public listing needs a verified
+  licence"). Operator task (founder, at this deploy and before the first
+  member outside the team books): reopen future sessions closed early
+  with
+  `update sessions set status = 'scheduled', attendance = null, ended_at = null where ends_at > now() and status in ('ended', 'no_show') and ended_at < ends_at`
+  and record the number of rows changed here. Past sessions keep the
+  record they were given.
+- Not proven: Daily's real timing and ordering of `meeting.ended` and
+  `meeting.started` on staging with two browsers (leave early, rejoin,
+  finish).
+- Related: 2026-10-07 "Session attendance finalizes on meeting.ended,
+  then corrects" and 2026-10-08 "Attendance fallback after the join
+  window closes when Daily is silent", both superseded in part.
+
 ### 2026-11-11: Urgent help is signposted where members book and wait (active)
 
 - Owner: engineering; addresses council finding PRIV2-03 (no crisis or
@@ -1870,6 +1948,9 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
 
 ### 2026-10-08: Attendance fallback after the join window closes when Daily is silent
 
+- Superseded in part by 2026-11-11 "A session stays joinable; only a
+  meeting that happened ends early".
+
 - Decision: Phase 09.6.1 adds QStash `POST /workflows/video-attendance-sweep`
   (`*/15 * * * *`). Sessions still `scheduled`/`live`/`room_unresolved` with
   null `attendance` whose Eleva join window has closed (`endsAt + 30m`,
@@ -1900,6 +1981,9 @@ APPLICATION_CHANGED`) and when staff would decide their own application (`403 SE
   rule stays.
 
 ### 2026-10-07: Session attendance finalizes on meeting.ended, then corrects
+
+- Superseded in part by 2026-11-11 "A session stays joinable; only a
+  meeting that happened ends early".
 
 - Decision: Phase 09.3 writes `attendance` and `ended|no_show` on
   `meeting.ended` instead of scheduling `finalizeAttendance` at `ended + 2 min`.

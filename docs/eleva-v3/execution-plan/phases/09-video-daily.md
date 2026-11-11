@@ -57,7 +57,8 @@ In:
   `name: eleva-{bookingId}` as the idempotency handle — GET-or-create. Do not allocate
   nbf/exp offsets or reconcile by fingerprint), `last_event_at`,
   `started_at`, `ended_at`, `participants jsonb`. Transition to `no_show`: `attendance` is
-  **derived, never written from a single event**. Built flow: `meeting.ended` writes
+  **derived, never written from a single event**. Built flow (amended 2026-11-11, see the
+  note below: `meeting.ended` closes only a session that happened): `meeting.ended` writes
   attendance from the ordered `participants` history; if Daily sent nothing, the 09.6.1
   sweep at `endsAt + 30m` (join window close) finalizes the same way (empty history →
   `nobody`). Status is then `attendance <> 'both'` → `no_show`, else `ended`. A
@@ -67,6 +68,11 @@ In:
   (t=10:02) delivered after `meeting.ended` (t=10:31) → final status `ended`, not
   `no_show`. Join/leave history is never used for authorization. RLS for expert org +
   buyer org. ~~The delayed QStash `finalizeAttendance` at `ended + 2 min`~~ **Superseded** — never built; do not add it.
+
+**Amended 2026-11-11** (decision log, "A session stays joinable; only a meeting that
+happened ends early"): `meeting.ended` closes a session only after its booked end and when
+expert and member were in the room together; otherwise the session returns to `scheduled`.
+Every no-show is declared by the 09.6.1 sweep. What follows describes the original build.
 
 **Attendance SSOT (2026-10-07):** 09.3 writes attendance on `meeting.ended`; late
 participant events can flip `no_show → ended` (`session.attendance_corrected`). The
@@ -142,7 +148,9 @@ token, expiresAt }` (rate-limited, audited `session.joined`); `POST /webhooks/da
   `payment_intent.payment_failed` / `refund succeeded` before `startAt` set `sessions.status =
 cancelled` and delete the room in the same workflow that releases the slot; a refund after the
   session leaves `sessions` untouched (history) — the state machine is drawn in
-  `scheduling-booking-spec.md` and every transition has a test. No-show: `meeting.ended` with a
+  `scheduling-booking-spec.md` and every transition has a test. No-show (amended 2026-11-11:
+  declared only by the 09.6.1 sweep; an emptied `live` room returns to `scheduled`; the rest
+  of this sentence is the original build): `meeting.ended` with a
   single participant (or none) for the whole window marks `sessions.attendance = expert_only |
 member_only | nobody` (both present -> `both`) and the status `no_show` (see the schema bullet); the no-show **policy** (refund/keep/partial) is a Phase 6 refund-policy
   input decided by finance, this phase only records attendance.
