@@ -16,8 +16,7 @@ import { StatusPill } from "@eleva/ui/components/status-pill"
 import { useIsMobile } from "@eleva/ui/hooks/use-mobile"
 import { JoinCta } from "@eleva/video/join-cta"
 import { RequestActions } from "./request-actions"
-import { sessionKind } from "./week-data"
-import type { CalendarBooking } from "./week-view"
+import { sessionKind, type CalendarBooking } from "./week-data"
 
 /**
  * One session's details and what the expert can do with it. Opens from a
@@ -32,7 +31,7 @@ export function BookingSheet({
   modeName,
   onSettled,
 }: {
-  /** The last session selected; kept while the sheet closes. */
+  /** The session selected; the caller keeps it while the sheet closes. */
   booking: CalendarBooking | null
   isOpen: boolean
   onOpenChange: (open: boolean) => void
@@ -144,6 +143,11 @@ export function BookingSheet({
           ) : null}
         </dl>
 
+        {kind === "unpaid" ? (
+          <p className="text-sm text-pretty text-muted-foreground">
+            {t("awaitingPaymentHint")}
+          </p>
+        ) : null}
         {isRequest ? (
           <RequestActions
             bookingId={booking.id}

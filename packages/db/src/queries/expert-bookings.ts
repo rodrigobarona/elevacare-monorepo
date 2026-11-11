@@ -49,7 +49,9 @@ async function selectExpertBookingsInRange(
   tx: Tx,
   expertProfileId: string,
   rangeStart: Date,
-  rangeEnd: Date
+  rangeEnd: Date,
+  /** Whether a member's account name may stand in for a typed name. */
+  names: "typed-or-account" | "typed-only"
 ): Promise<ExpertBookingListItem[]> {
   const rows = await tx
     .select({
@@ -110,7 +112,10 @@ async function selectExpertBookingsInRange(
     endsAt: row.endsAt,
     timezone: row.timezone,
     sessionMode: row.sessionMode,
-    memberFirstName: memberFirstName(row.guestName, row.accountName),
+    memberFirstName: memberFirstName(
+      row.guestName,
+      names === "typed-or-account" ? row.accountName : null
+    ),
     eventTypeTitle: row.eventTypeTitle,
     eventTypeSlug: row.eventTypeSlug,
     modeLabel: row.modeLabel,
@@ -130,7 +135,13 @@ export async function listExpertBookings(
   rangeEnd: Date
 ): Promise<ExpertBookingListItem[]> {
   return withOrgContext(orgId, async (tx: Tx) =>
-    selectExpertBookingsInRange(tx, expertProfileId, rangeStart, rangeEnd)
+    selectExpertBookingsInRange(
+      tx,
+      expertProfileId,
+      rangeStart,
+      rangeEnd,
+      "typed-or-account"
+    )
   )
 }
 
@@ -175,6 +186,14 @@ export async function listExpertBookingsForFeed(
   rangeEnd: Date
 ): Promise<ExpertBookingListItem[]> {
   return withPlatformAdminContext(async (tx: Tx) =>
-    selectExpertBookingsInRange(tx, expertProfileId, rangeStart, rangeEnd)
+    selectExpertBookingsInRange(
+      tx,
+      expertProfileId,
+      rangeStart,
+      rangeEnd,
+      // The feed leaves Eleva for the expert's own calendar app: it carries
+      // what it always has, the name typed at booking, and no account name.
+      "typed-only"
+    )
   )
 }

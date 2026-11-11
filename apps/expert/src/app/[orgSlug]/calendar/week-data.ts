@@ -3,6 +3,22 @@
  * loaded so far. Pure, so the rules are tested without a browser.
  */
 
+/** One booking as the calendar shows it: only these fields reach the browser. */
+export type CalendarBooking = {
+  id: string
+  status: string
+  startsAt: string
+  endsAt: string
+  sessionMode: "online" | "in_person" | "phone"
+  memberFirstName: string | null
+  approvalDeadlineAt: string | null
+  eventTypeTitle: { en: string; pt?: string; es?: string }
+  modeLabel: { en: string; pt?: string; es?: string } | null
+  locationName: string | null
+  locationCity: string | null
+  locationCountry: string | null
+}
+
 export type LoadedWeek<T> = { key: string; bookings: T[] }
 
 /** Requests answered on this page, until the week is loaded again. */
@@ -13,6 +29,11 @@ export type WeekData<T> = {
   failed: boolean
   /** No answer yet for this week: show a placeholder, never an empty week. */
   loading: boolean
+  /**
+   * This week has been loaded at least once. It stays on screen when a
+   * later reload fails (a phone waking before its network is back).
+   */
+  hasWeek: boolean
   bookings: T[]
 }
 
@@ -34,6 +55,7 @@ export function weekData<T extends { id: string; status: string }>(input: {
     failed,
     // A week already on screen stays there while it is loaded again.
     loading: !failed && current === null,
+    hasWeek: current !== null,
     bookings: (current ?? [])
       .filter((booking) => settled[booking.id] !== "cancelled")
       .map((booking) =>

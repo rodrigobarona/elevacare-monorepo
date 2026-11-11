@@ -25,7 +25,11 @@ export function RequestActions({
 
   async function accept() {
     setPending("accept")
-    const result = await acceptCalendarBookingAction(bookingId)
+    // A dropped connection rejects: the buttons must come back either way.
+    const result = await acceptCalendarBookingAction(bookingId).catch(() => ({
+      ok: false as const,
+      error: "requestFailed",
+    }))
     setPending(null)
     if (!result.ok) {
       toast.error(
@@ -44,7 +48,7 @@ export function RequestActions({
     const result = await declineCalendarBookingAction(
       bookingId,
       note.trim() ? note.trim() : undefined
-    )
+    ).catch(() => ({ ok: false as const, error: "requestFailed" }))
     setPending(null)
     if (!result.ok) {
       toast.error(t("requestFailed"))

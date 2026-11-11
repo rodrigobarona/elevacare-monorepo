@@ -8,7 +8,7 @@ import {
 import { getAuthedApiClient, requireExpertSession } from "@/lib/server-api"
 import { mapExpertApiError } from "@/lib/map-api-error"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
-import type { CalendarBooking } from "./week-view"
+import type { CalendarBooking } from "./week-data"
 
 const BookingIdSchema = z.string().uuid()
 

@@ -24,6 +24,7 @@ describe("weekData", () => {
     expect(weekData({ rangeKey: thisWeek, loaded: null, ...none })).toEqual({
       failed: false,
       loading: true,
+      hasWeek: false,
       bookings: [],
     })
   })
@@ -34,7 +35,12 @@ describe("weekData", () => {
       loaded: { key: thisWeek, bookings: [session] },
       ...none,
     })
-    expect(data).toEqual({ failed: false, loading: true, bookings: [] })
+    expect(data).toEqual({
+      failed: false,
+      loading: true,
+      hasWeek: false,
+      bookings: [],
+    })
   })
 
   it("shows the week once loaded, even when it is empty", () => {
@@ -44,7 +50,7 @@ describe("weekData", () => {
         loaded: { key: thisWeek, bookings: [] },
         ...none,
       })
-    ).toEqual({ failed: false, loading: false, bookings: [] })
+    ).toEqual({ failed: false, loading: false, hasWeek: true, bookings: [] })
   })
 
   it("says a failed load failed, and is not loading", () => {
@@ -55,6 +61,21 @@ describe("weekData", () => {
       settled: {},
     })
     expect(data).toMatchObject({ failed: true, loading: false })
+  })
+
+  it("keeps a loaded week on screen when loading it again fails", () => {
+    const data = weekData({
+      rangeKey: thisWeek,
+      loaded: { key: thisWeek, bookings: [session] },
+      failedKey: thisWeek,
+      settled: {},
+    })
+    expect(data).toEqual({
+      failed: true,
+      loading: false,
+      hasWeek: true,
+      bookings: [session],
+    })
   })
 
   it("ignores a failure that belongs to another week", () => {

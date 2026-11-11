@@ -32,25 +32,11 @@ import {
   shouldRefreshOnReturn,
   weekData,
   weekRangeKey,
+  type CalendarBooking,
   type LoadedWeek,
   type SessionKind,
   type Settled,
 } from "./week-data"
-
-export type CalendarBooking = {
-  id: string
-  status: string
-  startsAt: string
-  endsAt: string
-  sessionMode: "online" | "in_person" | "phone"
-  memberFirstName: string | null
-  approvalDeadlineAt: string | null
-  eventTypeTitle: { en: string; pt?: string; es?: string }
-  modeLabel: { en: string; pt?: string; es?: string } | null
-  locationName: string | null
-  locationCity: string | null
-  locationCountry: string | null
-}
 
 type SessionMode = CalendarBooking["sessionMode"]
 
@@ -67,10 +53,10 @@ const MODE_ICON: Record<SessionMode, typeof VideoCameraIcon> = {
 }
 /**
  * Not a confirmed session yet (a request to answer, or a booking still
- * being paid): outlined and tinted, never filled like a session.
+ * being paid): outlined, never filled like a session, and labelled.
  */
 const UNCONFIRMED_CLASS =
-  "border border-dashed border-foreground bg-coral-50 text-foreground dark:bg-coral-950"
+  "border border-dashed border-foreground bg-card text-foreground"
 /** Already over: a tint of its mode with dark text, so it steps back but stays readable. */
 const OVER_CLASS: Record<SessionMode, string> = {
   online: "bg-primary/15 text-foreground",
@@ -87,6 +73,8 @@ const FOCUS_RING =
   "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background focus-visible:outline-none"
 /** The sheet's closing transition, after which focus can be moved. */
 const SHEET_CLOSE_MS = 250
+/** Weeks passed through on the way to another are never requested. */
+const WEEK_LOAD_DELAY_MS = 150
 
 export function WeekView({ orgSlug }: { orgSlug: string }) {
   const t = useTranslations("calendar")
@@ -103,7 +91,11 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
   const [attempt, setAttempt] = React.useState(0)
   const [settled, setSettled] = React.useState<Settled>({})
   const lastLoadedAt = React.useRef<number | null>(null)
-  const [selectedId, setSelectedId] = React.useState<string | null>(null)
+  /** Counts answers given here, so an older load cannot undo one. */
+  const answers = React.useRef(0)
+  const firstLoad = React.useRef(true)
+  /** The session in the sheet; kept after it leaves the week, while the sheet closes. */
+  const [selected, setSelected] = React.useState<CalendarBooking | null>(null)
   const [sheetOpen, setSheetOpen] = React.useState(false)
   const headingRef = React.useRef<HTMLHeadingElement>(null)
   const upcomingRef = React.useRef<HTMLElement>(null)
@@ -120,23 +112,31 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
   React.useEffect(() => {
     let cancelled = false
     const key = weekRangeKey(rangeFromIso, rangeToIso)
-    void listCalendarBookingsAction(rangeFromIso, rangeToIso)
-      .then((result) => {
-        if (cancelled) return
-        if (!result.ok) {
-          setFailedKey(key)
-          return
-        }
-        lastLoadedAt.current = Date.now()
-        setFailedKey(null)
-        setSettled({})
-        setLoaded({ key, bookings: result.data.bookings })
-      })
-      .catch(() => {
-        if (!cancelled) setFailedKey(key)
-      })
+    const load = () => {
+      const answersAtStart = answers.current
+      void listCalendarBookingsAction(rangeFromIso, rangeToIso)
+        .then((result) => {
+          if (cancelled) return
+          if (!result.ok) {
+            setFailedKey(key)
+            return
+          }
+          lastLoadedAt.current = Date.now()
+          setFailedKey(null)
+          // A load that began before an answer does not know about it.
+          if (answersAtStart === answers.current) setSettled({})
+          setLoaded({ key, bookings: result.data.bookings })
+        })
+        .catch(() => {
+          if (!cancelled) setFailedKey(key)
+        })
+    }
+    const delay = firstLoad.current ? 0 : WEEK_LOAD_DELAY_MS
+    firstLoad.current = false
+    const timer = window.setTimeout(load, delay)
     return () => {
       cancelled = true
+      window.clearTimeout(timer)
     }
   }, [rangeFromIso, rangeToIso, attempt])
 
@@ -163,12 +163,13 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
     }
   }, [])
 
-  const { failed, loading, bookings } = React.useMemo(
+  const { failed, loading, hasWeek, bookings } = React.useMemo(
     () => weekData({ rangeKey, loaded, failedKey, settled }),
     [rangeKey, loaded, failedKey, settled]
   )
 
-  const selected = bookings.find((b) => b.id === selectedId) ?? null
+  // The live copy while it is in the week (its status may have changed).
+  const inSheet = bookings.find((b) => b.id === selected?.id) ?? selected
   const formatters = React.useMemo(() => {
     const intl = intlLocale(locale)
     return {
@@ -212,6 +213,13 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
   // Two plain times: a range across midnight would spell out both dates.
   const timeRange = (b: CalendarBooking) =>
     `${formatters.time.format(new Date(b.startsAt))}–${formatters.time.format(new Date(b.endsAt))}`
+  /** The same, short enough for a block in the grid. */
+  const shortKindLabel = (kind: SessionKind): string | null =>
+    kind === "request"
+      ? t("requestShort")
+      : kind === "unpaid"
+        ? t("unpaidShort")
+        : null
   /** Everything a block says, for someone who cannot see it. */
   const summary = (b: CalendarBooking) =>
     [
@@ -230,8 +238,8 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
     const last = addDays(weekStart, 6)
     return `${part(weekStart)} – ${part(last)} ${last.getFullYear()}`
   }
-  const open = (id: string) => {
-    setSelectedId(id)
+  const open = (booking: CalendarBooking) => {
+    setSelected(booking)
     setSheetOpen(true)
   }
   const goTo = (week: Date) => {
@@ -313,7 +321,8 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
       </div>
 
       <div className="space-y-1 text-xs text-muted-foreground">
-        <ul className="flex flex-wrap gap-x-4 gap-y-1">
+        {/* The list spells the mode and state on every row. */}
+        <ul className="hidden flex-wrap gap-x-4 gap-y-1 @xl:flex">
           {LEGEND_MODES.map((mode) => {
             const Icon = MODE_ICON[mode]
             return (
@@ -334,7 +343,7 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
           <li className="flex items-center gap-1.5">
             <span
               aria-hidden
-              className="size-4 rounded-full border border-dashed border-foreground bg-coral-50 dark:bg-coral-950"
+              className="size-4 rounded-full border border-dashed border-foreground bg-card"
             />
             {t("notConfirmed")}
           </li>
@@ -361,6 +370,12 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
         </div>
       ) : null}
 
+      {now && hasWeek ? (
+        <p role="status" className="sr-only">
+          {t("weekSummary", { count: bookings.length })}
+        </p>
+      ) : null}
+
       {now === null || loading ? (
         // A week still loading never looks like a free week.
         <div
@@ -368,7 +383,7 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
           data-testid="calendar-loading"
           className="h-96 rounded-3xl border bg-card shadow-1 motion-safe:animate-pulse @xl:h-[62rem]"
         />
-      ) : failed ? null : (
+      ) : !hasWeek ? null : (
         <>
           {bookings.length === 0 ? (
             <p className="rounded-3xl border border-dashed border-sand-300 bg-sand-50/70 p-6 text-center text-sm text-muted-foreground dark:border-border dark:bg-card">
@@ -479,11 +494,11 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
                                 block.item.eventTypeTitle,
                                 locale
                               )}
-                              kindLabel={kindLabel(
+                              kindLabel={shortKindLabel(
                                 sessionKind(block.item.status)
                               )}
                               over={new Date(block.item.endsAt) < now}
-                              onOpen={() => open(block.item.id)}
+                              onOpen={() => open(block.item)}
                             />
                           </li>
                         ))}
@@ -539,7 +554,7 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
                             FOCUS_RING,
                             "focus-visible:ring-inset"
                           )}
-                          onClick={() => open(b.id)}
+                          onClick={() => open(b)}
                         >
                           <span
                             aria-hidden
@@ -602,14 +617,15 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
       )}
 
       <BookingSheet
-        booking={selected}
-        isOpen={sheetOpen && selected !== null}
+        booking={inSheet}
+        isOpen={sheetOpen && inSheet !== null}
         onOpenChange={setSheetOpen}
         orgSlug={orgSlug}
         modeName={modeName}
         onSettled={(bookingId, status) => {
           // Answered: back to the week. A declined request leaves the
           // calendar, so focus goes to the week heading instead of nowhere.
+          answers.current += 1
           setSheetOpen(false)
           setSettled((curr) => ({ ...curr, [bookingId]: status }))
           if (status === "cancelled") {
@@ -638,7 +654,7 @@ function SessionBlock({
   timeRange: string
   who: string
   title: string
-  /** "Booking request" or "Awaiting payment"; `null` for a session. */
+  /** "Request" or "Unpaid"; `null` for a session. */
   kindLabel: string | null
   over: boolean
   onOpen: () => void

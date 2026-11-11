@@ -561,7 +561,7 @@
     "requestPending": "Booking request",
     "accept": "Accept",
     "decline": "Decline",
-    "declineNote": "Optional note (max 180)",
+    "declineNote": "Reason, if you decline (optional)",
     "accepted": "Request accepted.",
     "declined": "Request declined. The member is refunded in full.",
     "requestFailed": "Could not update this request. Try again.",
@@ -598,7 +598,11 @@
     "timezone": "Times are in your time zone: {zone}.",
     "retry": "Try again",
     "awaitingPayment": "Awaiting payment",
-    "notConfirmed": "Not confirmed yet"
+    "notConfirmed": "Not confirmed yet",
+    "requestShort": "Request",
+    "unpaidShort": "Unpaid",
+    "awaitingPaymentHint": "The member is finishing payment. This time is held for them and is confirmed once paid.",
+    "weekSummary": "{count, plural, =0 {No sessions this week} one {# session this week} other {# sessions this week}}"
   },
   "calendars": {
     "backToIntegrations": "Integrations",

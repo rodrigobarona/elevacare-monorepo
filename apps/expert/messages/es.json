@@ -561,7 +561,7 @@
     "requestPending": "Solicitud de reserva",
     "accept": "Aceptar",
     "decline": "Rechazar",
-    "declineNote": "Nota opcional (máx. 180)",
+    "declineNote": "Motivo, si rechazas (opcional)",
     "accepted": "Solicitud aceptada.",
     "declined": "Solicitud rechazada. El miembro recibe el reembolso completo.",
     "requestFailed": "No se pudo actualizar esta solicitud. Inténtalo de nuevo.",
@@ -598,7 +598,11 @@
     "timezone": "Las horas están en tu zona horaria: {zone}.",
     "retry": "Intentar de nuevo",
     "awaitingPayment": "Pendiente de pago",
-    "notConfirmed": "Aún sin confirmar"
+    "notConfirmed": "Aún sin confirmar",
+    "requestShort": "Solicitud",
+    "unpaidShort": "Sin pagar",
+    "awaitingPaymentHint": "El miembro está completando el pago. Este horario queda reservado y se confirma una vez pagado.",
+    "weekSummary": "{count, plural, =0 {No hay sesiones esta semana} one {# sesión esta semana} other {# sesiones esta semana}}"
   },
   "calendars": {
     "backToIntegrations": "Integraciones",

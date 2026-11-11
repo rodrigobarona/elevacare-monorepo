@@ -83,13 +83,16 @@ Each entry should include:
   in had no name on the calendar, the Today page or the calendar feed,
   because only the name typed by a guest was read. The account's first
   name is now used when no name was typed (first name only, as for
-  guests; the private calendar feed carries it too, as it already did
-  for guests). Without any name the calendar says "Member".
+  guests). The private calendar feed is not changed: it leaves Eleva
+  for the expert's own calendar app, so it still carries only a name
+  typed at booking, until the privacy notice says more. Without any
+  name the calendar says "Member".
 - A booking request and a booking still being paid are outlined and
   say so ("Booking request", "Awaiting payment"); they no longer look
   like confirmed sessions. Sessions already over are muted.
 - The open week loads again when the expert comes back to the page
-  after a minute or more, and when they choose "This week".
+  after a minute or more, and when they choose "This week". If that
+  reload fails, the week already on screen stays, under a notice.
 - Not built: day and month views; a switch between grid and list on a
   wide screen; showing the expert's schedule time zone when it differs
   from the device; busy times from connected calendars on the grid;
