@@ -17,6 +17,7 @@ import { JoinCta } from "@eleva/video/join-cta"
 import { UrgentHelp } from "@eleva/dashboard/urgent-help"
 import { DateTile } from "@eleva/ui/components/date-tile"
 import { bookingDateParts } from "@eleva/ui/lib/booking/date-parts"
+import { shownBookingStatus } from "@eleva/ui/lib/booking/shown-status"
 import { StatusPill } from "../../_components/booking-visuals"
 import { SessionActions } from "../../_components/session-actions"
 import { IcsDownloadButton } from "./ics-download-button"
@@ -81,7 +82,9 @@ export default async function SessionDetailPage({
   const awaiting = isAwaitingConfirmation(booking.status)
   const title = eventTitle(booking.eventType.title, locale)
   const memberName = session.user.displayName ?? session.user.email
-  const status = isBookingStatus(booking.status) ? booking.status : null
+  // A confirmed session that is over reads "Completed", not "Confirmed".
+  const shown = shownBookingStatus(booking.status, booking.endsAt)
+  const status = isBookingStatus(shown) ? shown : null
   // Urgent-help signposting is for sessions still ahead of the member: the
   // API only quotes a cancellation while the session is active and has not
   // started.
@@ -133,7 +136,7 @@ export default async function SessionDetailPage({
             </DetailRow>
             <DetailRow label={t("status")}>
               <StatusPill status={status}>
-                {status ? t(`statusLabel.${status}`) : booking.status}
+                {status ? t(`statusLabel.${status}`) : shown}
               </StatusPill>
             </DetailRow>
             <DetailRow label={t("price")}>

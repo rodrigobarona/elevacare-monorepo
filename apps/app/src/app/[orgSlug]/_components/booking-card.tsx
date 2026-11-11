@@ -23,6 +23,7 @@ import {
 } from "@/lib/booking-status"
 import { DateTile } from "@eleva/ui/components/date-tile"
 import { bookingDateParts } from "@eleva/ui/lib/booking/date-parts"
+import { shownBookingStatus } from "@eleva/ui/lib/booking/shown-status"
 import { StatusPill } from "./booking-visuals"
 
 type MemberBooking = ListMeBookingsResponse["bookings"][number]
@@ -56,7 +57,9 @@ export function BookingCard({
     booking.timezone
   )
   const awaiting = isAwaitingConfirmation(booking.status)
-  const status = isBookingStatus(booking.status) ? booking.status : null
+  // A confirmed session that is over reads "Completed", not "Confirmed".
+  const shown = shownBookingStatus(booking.status, booking.endsAt)
+  const status = isBookingStatus(shown) ? shown : null
   const modeLabel = isSessionMode(booking.sessionMode)
     ? t(`modes.${booking.sessionMode}`)
     : booking.sessionMode
@@ -168,7 +171,7 @@ export function BookingCard({
           </p>
           <div className="flex flex-wrap items-center gap-2 pt-1 text-sm">
             <StatusPill status={status}>
-              {status ? t(`statusLabel.${status}`) : booking.status}
+              {status ? t(`statusLabel.${status}`) : shown}
             </StatusPill>
             <span className="rounded-full border px-2.5 py-0.5 text-xs">
               {modeLabel}

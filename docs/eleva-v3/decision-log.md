@@ -32,6 +32,21 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-11: A confirmed session that is over is shown as completed (active)
+
+- Owner: engineering. Noticed by a judge on the attendance fix.
+- Finding: nothing marks a booking `completed` when its time has passed
+  (only account deletion writes that status). A member's past session
+  kept the label "Confirmed" for ever, as if it were still to come.
+- Decision: the member app shows a `confirmed` or `rescheduled` booking
+  whose booked end has passed as "Completed", in the list and on the
+  session's page. It is display only (`shownBookingStatus` in
+  `@eleva/ui`): the stored status is not changed, and the label does not
+  claim the two people met.
+- Not built: marking bookings completed in the database (it would touch
+  payouts and the no-show policy, which is not decided: D-06); showing
+  a member that a session was missed.
+
 ### 2026-11-11: Actions that refund need a session that can be revoked, and declining asks first (active)
 
 - Owner: engineering. From the judge panel on the expert cancellation
