@@ -375,6 +375,7 @@ export async function listSessionRecords(input: {
       (tx) => listDecrypted(tx, booking)
     )
     const hydrated = await hydrateIntake(booking, input.actorUserId, listed)
+    // Awaited on purpose: a read that cannot be logged is not returned.
     await auditRecordRead({
       orgId: booking.orgId,
       actorUserId: input.actorUserId,

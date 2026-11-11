@@ -627,9 +627,10 @@ against art. 28(3) are listed in
     - expert-authored records are pseudonymised (`subject_pseudonym`) and
       kept under the clinical exception.
 - **Security:** [SEC-ENC-APP], [SEC-RLS], [SEC-AUDIT].
-  - Reads are audited as `record.decrypted`: every read, by members, staff
-    and the owning expert (since 2026-11-11). See the DPIA on Lei 58/2019
-    art. 29(6)–(7).
+  - Reads are audited as `record.decrypted`: every read, by the member and
+    by the owning expert (merged 2026-11-11, in effect from its
+    deployment); staff have no way to read records. See the DPIA on
+    Lei 58/2019 art. 29(6)–(7).
 
 ### P2 — Session documents
 

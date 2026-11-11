@@ -5178,7 +5178,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
         operationId: "drainAuditOutbox",
         summary: "Ship audit outbox rows",
         description:
-          "Moves audit_outbox rows to the append-only audit_events store.",
+          "Moves audit_outbox rows to the append-only audit_events store, oldest first, until nothing is pending (up to 2,000 rows a run). Runs every hour in the hourly tick. Each shipped payload carries occurredAt, the time the event was written.",
       }),
       "/workflows/check-upcoming-payouts": internalWorkflow({
         operationId: "checkUpcomingPayouts",

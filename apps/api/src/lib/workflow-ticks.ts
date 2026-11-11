@@ -4,6 +4,7 @@
  * payout jobs keep their own QStash schedules (infra/qstash).
  */
 import { POST as accountDeletionSweep } from "@/app/workflows/account-deletion-sweep/route"
+import { POST as auditOutboxDrainer } from "@/app/workflows/audit-outbox-drainer/route"
 import { POST as bookingRequestExpiry } from "@/app/workflows/booking-request-expiry/route"
 import { POST as crmFollowUpDue } from "@/app/workflows/crm-follow-up-due/route"
 import { POST as domainEventsPublisher } from "@/app/workflows/domain-events-publisher/route"
@@ -27,6 +28,7 @@ export const WORKFLOW_TICKS = {
     "video-attendance-sweep": videoAttendanceSweep,
   },
   hourly: {
+    "audit-outbox-drainer": auditOutboxDrainer,
     "account-deletion-sweep": accountDeletionSweep,
     "crm-follow-up-due": crmFollowUpDue,
     "invoicing-retry": invoicingRetry,

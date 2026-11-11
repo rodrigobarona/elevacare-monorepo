@@ -153,7 +153,9 @@ The pilot invitation stays blocked until these checks are done.
   Open until deployed.
 - PRIV2-05: the clinic and CRM RLS suites are not in CI; correct the AUD-052 stamp.
   Status 2026-11-11: both suites run in the `neon-branch-migrate-and-rls` job.
-  The AUD-052 stamp is not corrected here.
+  The AUD-052 stamp in the phases 01-10 audit now says when the suite
+  started running in CI. The job is not yet a required check on `main`
+  (founder: add `neon-branch-migrate-and-rls` to branch protection).
 - PRIV2-06: live transcription relies on an unverified EU-processing claim. Keep it off for
   the pilot or get written confirmation.
 - PRIV3-01: "Rating" sort is paid placement.

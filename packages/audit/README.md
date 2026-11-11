@@ -16,7 +16,7 @@ eleva_v3_main (neondb)          eleva_v3_audit
 │  audit_outbox       │────────▶│  (append-only)       │
 └─────────────────────┘         └──────────────────────┘
          ▲                               ▲
-         │ atomic insert                 │ drainer (twice daily)
+         │ atomic insert                 │ drainer (every hour)
          │                               │
     withAudit()                  drainAuditOutbox()
 ```
@@ -29,7 +29,7 @@ flowchart LR
     withAudit --> tx["Single DB transaction"]
     tx --> domainRows["main: domain tables"]
     tx --> outbox["main: audit_outbox (pending)"]
-    outbox -.->|"QStash 06:00 + 18:00 UTC"| drainer["drainAuditOutbox()"]
+    outbox -.->|"hourly tick (Vercel Cron)"| drainer["drainAuditOutbox()"]
     drainer --> auditEvents["audit: audit_events"]
     drainer --> shipped["main: audit_outbox → shipped"]
 ```
@@ -219,19 +219,22 @@ pending outbox rows to the append-only `audit_events` table in the audit DB.
 
 ### Scheduling
 
-A dedicated **QStash schedule** calls `POST /workflows/audit-outbox-drainer`
-twice daily:
+The hourly tick (`/workflows/tick/hourly`, Vercel Cron) calls
+`POST /workflows/audit-outbox-drainer` every hour:
 
-- **Cron:** `0 6,18 * * *` (06:00 and 18:00 UTC)
-- **Auth:** `Authorization: Bearer ${WORKFLOWS_DRAIN_SECRET}`
-- **Budget:** 2 calls/day from 500 QStash daily allowance
+- **Auth:** the tick authenticates with `CRON_SECRET`; a manual call uses
+  `Authorization: Bearer ${WORKFLOWS_DRAIN_SECRET}`.
+- **A run drains** oldest first, 100 rows at a time, until nothing is
+  pending or 2,000 rows have been read. The result's `more` says when it
+  stopped at that cap.
 
-The drainer is a no-op when the outbox is empty (fast `SELECT ... WHERE
-status='pending' LIMIT 100`). Max audit trail staleness: ~12 hours.
+The drainer is a no-op when the outbox is empty. Max audit trail
+staleness: about one hour.
 
 ### Behavior
 
-1. Selects pending rows (batch of 100)
+1. Selects pending rows, oldest first (batch of 100), and repeats until
+   none are left
 2. For each row, inserts into `audit_events` with `ON CONFLICT DO NOTHING`
 3. Marks successfully inserted rows as `shipped`
 4. On failure, increments `attempts`; after 5 attempts marks `failed`
