@@ -543,15 +543,15 @@
   "calendar": {
     "title": "Calendário",
     "description": "A sua semana Eleva — todas as marcações em todos os modos.",
-    "prevWeek": "Anterior",
-    "nextWeek": "Seguinte",
+    "prevWeek": "Semana anterior",
+    "nextWeek": "Semana seguinte",
     "thisWeek": "Esta semana",
     "loading": "A carregar…",
     "emptyWeek": "Sem sessões esta semana.",
     "emptyState": "A Eleva é o seu calendário. Ligue o Google ou a Microsoft só se já viver noutro.",
     "closeDrawer": "Fechar",
     "member": "Membro",
-    "memberUnknown": "Convidado",
+    "memberUnknown": "Membro",
     "mode": "Modo",
     "location": "Onde",
     "locationOnline": "Online",
@@ -596,7 +596,9 @@
     "respondBy": "Responder até",
     "today": "Hoje",
     "timezone": "As horas estão no seu fuso horário: {zone}.",
-    "retry": "Tentar novamente"
+    "retry": "Tentar de novo",
+    "awaitingPayment": "A aguardar pagamento",
+    "notConfirmed": "Ainda por confirmar"
   },
   "calendars": {
     "backToIntegrations": "Integrações",

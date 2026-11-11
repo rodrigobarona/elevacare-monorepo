@@ -27,6 +27,15 @@ import {
   visibleHours,
   type DayBlock,
 } from "./calendar-layout"
+import {
+  sessionKind,
+  shouldRefreshOnReturn,
+  weekData,
+  weekRangeKey,
+  type LoadedWeek,
+  type SessionKind,
+  type Settled,
+} from "./week-data"
 
 export type CalendarBooking = {
   id: string
@@ -56,9 +65,18 @@ const MODE_ICON: Record<SessionMode, typeof VideoCameraIcon> = {
   phone: PhoneIcon,
   in_person: MapPinIcon,
 }
-/** A request the expert has not answered yet: outlined, not filled. */
-const PENDING_CLASS =
-  "border border-dashed border-foreground/60 bg-card text-foreground"
+/**
+ * Not a confirmed session yet (a request to answer, or a booking still
+ * being paid): outlined and tinted, never filled like a session.
+ */
+const UNCONFIRMED_CLASS =
+  "border border-dashed border-foreground bg-coral-50 text-foreground dark:bg-coral-950"
+/** Already over: a tint of its mode with dark text, so it steps back but stays readable. */
+const OVER_CLASS: Record<SessionMode, string> = {
+  online: "bg-primary/15 text-foreground",
+  phone: "bg-info/15 text-foreground",
+  in_person: "bg-coral-700/15 text-foreground dark:bg-coral-400/20",
+}
 const LEGEND_MODES: SessionMode[] = ["online", "phone", "in_person"]
 /**
  * Below this drawn length a block shows one line: time and name. More than
@@ -79,16 +97,12 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
   const [weekStart, setWeekStart] = React.useState(() =>
     startOfWeek(new Date())
   )
-  const [loaded, setLoaded] = React.useState<{
-    key: string
-    bookings: CalendarBooking[]
-  } | null>(null)
+  const [loaded, setLoaded] =
+    React.useState<LoadedWeek<CalendarBooking> | null>(null)
   const [failedKey, setFailedKey] = React.useState<string | null>(null)
   const [attempt, setAttempt] = React.useState(0)
-  /** Requests answered on this page, until the week is loaded again. */
-  const [settled, setSettled] = React.useState<
-    Record<string, "confirmed" | "cancelled">
-  >({})
+  const [settled, setSettled] = React.useState<Settled>({})
+  const lastLoadedAt = React.useRef<number | null>(null)
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
   const [sheetOpen, setSheetOpen] = React.useState(false)
   const headingRef = React.useRef<HTMLHeadingElement>(null)
@@ -101,11 +115,11 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
   )
   const rangeFromIso = weekStart.toISOString()
   const rangeToIso = addDays(weekStart, 7).toISOString()
-  const rangeKey = `${rangeFromIso}|${rangeToIso}`
+  const rangeKey = weekRangeKey(rangeFromIso, rangeToIso)
 
   React.useEffect(() => {
     let cancelled = false
-    const key = `${rangeFromIso}|${rangeToIso}`
+    const key = weekRangeKey(rangeFromIso, rangeToIso)
     void listCalendarBookingsAction(rangeFromIso, rangeToIso)
       .then((result) => {
         if (cancelled) return
@@ -113,6 +127,7 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
           setFailedKey(key)
           return
         }
+        lastLoadedAt.current = Date.now()
         setFailedKey(null)
         setSettled({})
         setLoaded({ key, bookings: result.data.bookings })
@@ -125,16 +140,33 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
     }
   }, [rangeFromIso, rangeToIso, attempt])
 
-  const failed = failedKey === rangeKey
-  const loading = !failed && loaded?.key !== rangeKey
-  const bookings = React.useMemo(() => {
-    const source = loaded?.key === rangeKey ? loaded.bookings : []
-    return source
-      .filter((b) => settled[b.id] !== "cancelled")
-      .map((b) =>
-        settled[b.id] === "confirmed" ? { ...b, status: "confirmed" } : b
-      )
-  }, [loaded, rangeKey, settled])
+  // A calendar left open (a phone between sessions) loads the week again
+  // when the expert comes back to it, so a new request is not missed.
+  React.useEffect(() => {
+    const refresh = () => {
+      if (
+        shouldRefreshOnReturn({
+          visible: document.visibilityState === "visible",
+          lastLoadedAt: lastLoadedAt.current,
+          now: Date.now(),
+        })
+      ) {
+        lastLoadedAt.current = Date.now()
+        setAttempt((n) => n + 1)
+      }
+    }
+    document.addEventListener("visibilitychange", refresh)
+    window.addEventListener("focus", refresh)
+    return () => {
+      document.removeEventListener("visibilitychange", refresh)
+      window.removeEventListener("focus", refresh)
+    }
+  }, [])
+
+  const { failed, loading, bookings } = React.useMemo(
+    () => weekData({ rangeKey, loaded, failedKey, settled }),
+    [rangeKey, loaded, failedKey, settled]
+  )
 
   const selected = bookings.find((b) => b.id === selectedId) ?? null
   const formatters = React.useMemo(() => {
@@ -169,7 +201,13 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
       }
     }
   }
-  const isRequest = (b: CalendarBooking) => b.status === "awaiting_confirmation"
+  /** What to call a booking that is not a confirmed session yet. */
+  const kindLabel = (kind: SessionKind): string | null =>
+    kind === "request"
+      ? t("requestPending")
+      : kind === "unpaid"
+        ? t("awaitingPayment")
+        : null
   const who = (b: CalendarBooking) => b.memberFirstName ?? t("memberUnknown")
   // Two plain times: a range across midnight would spell out both dates.
   const timeRange = (b: CalendarBooking) =>
@@ -181,7 +219,7 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
       who(b),
       pickLocalized(b.eventTypeTitle, locale),
       modeName(b.sessionMode),
-      isRequest(b) ? t("requestPending") : null,
+      kindLabel(sessionKind(b.status)),
     ]
       .filter(Boolean)
       .join(", ")
@@ -198,6 +236,8 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
   }
   const goTo = (week: Date) => {
     setFailedKey(null)
+    // The same week again ("This week" while on it) loads it afresh.
+    if (week.getTime() === weekStart.getTime()) setAttempt((n) => n + 1)
     setWeekStart(week)
   }
 
@@ -213,7 +253,7 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
     ? agenda.find(({ day }) => isSameDay(day, now) || day > now)?.day
     : undefined
   React.useEffect(() => {
-    if (loading || scrolledFor.current === rangeKey) return
+    if (loading || failed || scrolledFor.current === rangeKey) return
     scrolledFor.current = rangeKey
     const section = upcomingRef.current
     // Only as a list (the grid shows the whole week), and only when there
@@ -221,7 +261,7 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
     if (!section || section.offsetParent === null) return
     if (!section.previousElementSibling) return
     section.scrollIntoView({ block: "start" })
-  }, [loading, rangeKey])
+  }, [loading, failed, rangeKey])
 
   const timeZone = now
     ? (formatters.zone
@@ -294,9 +334,9 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
           <li className="flex items-center gap-1.5">
             <span
               aria-hidden
-              className="size-4 rounded-full border border-dashed border-foreground/60"
+              className="size-4 rounded-full border border-dashed border-foreground bg-coral-50 dark:bg-coral-950"
             />
-            {t("requestPending")}
+            {t("notConfirmed")}
           </li>
         </ul>
         {timeZone ? <p>{t("timezone", { zone: timeZone })}</p> : null}
@@ -326,7 +366,7 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
         <div
           aria-hidden
           data-testid="calendar-loading"
-          className="h-96 rounded-3xl border bg-card shadow-1 motion-safe:animate-pulse"
+          className="h-96 rounded-3xl border bg-card shadow-1 motion-safe:animate-pulse @xl:h-[62rem]"
         />
       ) : failed ? null : (
         <>
@@ -439,6 +479,10 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
                                 block.item.eventTypeTitle,
                                 locale
                               )}
+                              kindLabel={kindLabel(
+                                sessionKind(block.item.status)
+                              )}
+                              over={new Date(block.item.endsAt) < now}
                               onOpen={() => open(block.item.id)}
                             />
                           </li>
@@ -482,11 +526,14 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
                 <ul className="mt-2 divide-y overflow-hidden rounded-2xl border bg-card shadow-1">
                   {items.map((b) => {
                     const over = new Date(b.endsAt) < now
+                    const kind = sessionKind(b.status)
+                    const ModeIcon = MODE_ICON[b.sessionMode]
                     return (
                       <li key={b.id}>
                         <button
                           type="button"
                           data-testid="calendar-session"
+                          aria-label={summary(b)}
                           className={cn(
                             "flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50",
                             FOCUS_RING,
@@ -497,13 +544,16 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
                           <span
                             aria-hidden
                             className={cn(
-                              "h-10 w-1.5 shrink-0 rounded-full",
-                              isRequest(b)
-                                ? "border border-dashed border-foreground/60"
-                                : MODE_CLASS[b.sessionMode],
-                              over && "opacity-40"
+                              "flex size-8 shrink-0 items-center justify-center rounded-full",
+                              kind !== "session"
+                                ? UNCONFIRMED_CLASS
+                                : over
+                                  ? OVER_CLASS[b.sessionMode]
+                                  : MODE_CLASS[b.sessionMode]
                             )}
-                          />
+                          >
+                            <ModeIcon className="size-4" />
+                          </span>
                           <span className="w-12 shrink-0 text-sm tabular-nums">
                             <span
                               className={cn(
@@ -530,12 +580,12 @@ export function WeekView({ orgSlug }: { orgSlug: string }) {
                               {pickLocalized(b.eventTypeTitle, locale)} ·{" "}
                               {modeName(b.sessionMode)}
                             </span>
+                            {kind !== "session" ? (
+                              <StatusPill tone="attention" className="mt-1.5">
+                                {kindLabel(kind)}
+                              </StatusPill>
+                            ) : null}
                           </span>
-                          {isRequest(b) ? (
-                            <StatusPill tone="attention">
-                              {t("requestPending")}
-                            </StatusPill>
-                          ) : null}
                           <CaretRightIcon
                             aria-hidden
                             className="size-4 shrink-0 text-muted-foreground"
@@ -578,6 +628,8 @@ function SessionBlock({
   timeRange,
   who,
   title,
+  kindLabel,
+  over,
   onOpen,
 }: {
   block: DayBlock<CalendarBooking>
@@ -586,10 +638,16 @@ function SessionBlock({
   timeRange: string
   who: string
   title: string
+  /** "Booking request" or "Awaiting payment"; `null` for a session. */
+  kindLabel: string | null
+  over: boolean
   onOpen: () => void
 }) {
   const { item } = block
   const compact = block.drawnMinutes < COMPACT_BELOW_MINUTES
+  const bar = block.lanes > 3
+  /** Room for a third line. */
+  const tall = block.drawnMinutes >= 60
   const Icon = MODE_ICON[item.sessionMode]
   return (
     <button
@@ -598,18 +656,21 @@ function SessionBlock({
       aria-label={label}
       title={label}
       className={cn(
-        "block size-full overflow-hidden rounded-lg px-1.5 text-left text-[11px] shadow-1 transition-opacity hover:opacity-90",
+        "block size-full min-w-0 overflow-hidden rounded-lg text-left text-[11px] shadow-1 transition-opacity hover:opacity-90",
         FOCUS_RING,
+        bar ? "px-0" : "px-1.5",
         compact ? "py-0.5 leading-[1.3]" : "py-1 leading-tight",
-        item.status === "awaiting_confirmation"
-          ? PENDING_CLASS
-          : MODE_CLASS[item.sessionMode],
+        kindLabel
+          ? UNCONFIRMED_CLASS
+          : over
+            ? OVER_CLASS[item.sessionMode]
+            : MODE_CLASS[item.sessionMode],
         block.continuesFromBefore && "rounded-t-none",
         block.continuesAfter && "rounded-b-none"
       )}
       onClick={onOpen}
     >
-      {block.lanes > 3 ? null : compact ? (
+      {bar ? null : compact ? (
         <span className="flex items-center gap-1">
           <Icon aria-hidden className="size-3 shrink-0 opacity-90" />
           <span className="truncate">
@@ -620,17 +681,48 @@ function SessionBlock({
       ) : (
         <>
           <span className="block truncate tabular-nums opacity-90">
-            {block.lanes > 1 ? time : timeRange}
+            {kindLabel && !tall ? (
+              <>
+                {time} <UnconfirmedLabel>{kindLabel}</UnconfirmedLabel>
+              </>
+            ) : block.lanes > 1 ? (
+              time
+            ) : (
+              timeRange
+            )}
           </span>
           <span className="flex items-center gap-1">
             <Icon aria-hidden className="size-3 shrink-0 opacity-90" />
             <span className="truncate font-medium">{who}</span>
           </span>
-          {block.drawnMinutes >= 60 ? (
+          {!tall ? null : kindLabel ? (
+            <UnconfirmedLabel className="block truncate">
+              {kindLabel}
+            </UnconfirmedLabel>
+          ) : (
             <span className="block truncate opacity-90">{title}</span>
-          ) : null}
+          )}
         </>
       )}
     </button>
+  )
+}
+
+function UnconfirmedLabel({
+  className,
+  children,
+}: {
+  className?: string
+  children: React.ReactNode
+}) {
+  return (
+    <span
+      className={cn(
+        "font-medium text-coral-800 dark:text-coral-200",
+        className
+      )}
+    >
+      {children}
+    </span>
   )
 }

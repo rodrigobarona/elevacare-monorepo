@@ -48,8 +48,8 @@ Each entry should include:
   - The grid shows 07:00 to 21:00 and widens to hold every session of
     the week. Nothing booked is ever off the grid.
   - A block starts at the session's real start and is as tall as the
-    session lasts (never shorter than 20 minutes, so its time can be
-    read). A session across midnight is drawn on both days. Sessions
+    session lasts (never shorter than 25 minutes, so its time can be
+    read and it is easy to press). A session across midnight is drawn on both days. Sessions
     that overlap sit side by side.
   - Under 576 px of room the week is a list, day by day, with the same
     sessions. The choice follows the room the calendar has, not the
@@ -79,15 +79,29 @@ Each entry should include:
   lasts (its start and written times are right). Two short sessions
   back to back (under 25 minutes) sit side by side, because each is
   drawn tall enough to read.
-- Not built: day and month views; reloading the open week by itself
-  when a booking arrives (changing week or reloading the page does); a switch between grid and list on a
+- Found by the judge panel and fixed here: a member who booked signed
+  in had no name on the calendar, the Today page or the calendar feed,
+  because only the name typed by a guest was read. The account's first
+  name is now used when no name was typed (first name only, as for
+  guests; the private calendar feed carries it too, as it already did
+  for guests). Without any name the calendar says "Member".
+- A booking request and a booking still being paid are outlined and
+  say so ("Booking request", "Awaiting payment"); they no longer look
+  like confirmed sessions. Sessions already over are muted.
+- The open week loads again when the expert comes back to the page
+  after a minute or more, and when they choose "This week".
+- Not built: day and month views; a switch between grid and list on a
   wide screen; showing the expert's schedule time zone when it differs
   from the device; busy times from connected calendars on the grid;
-  more than about four sessions at the same time are narrow bars
-  (each still opens its session and names it on hover and to screen
-  readers).
-- Not proven: a real booking request (dashed block) and dark mode were
-  checked in code and tests, not in a screenshot.
+  live updates while the page stays in view; "nothing booked today" in
+  the phone list; more than three sessions at the same time are bars
+  without text (each still opens its session and names it on hover and
+  to screen readers).
+- Not proven: a booking request, an unpaid booking, a phone or
+  in-person session, today's line and dark mode have no screenshot
+  (the local data has none of them); they rest on reading the code.
+  No test renders the component: the rules for what a week shows are
+  tested as plain functions (`week-data.ts`, `calendar-layout.ts`).
 
 ### 2026-11-11: The join page waits for the session and opens it (active)
 

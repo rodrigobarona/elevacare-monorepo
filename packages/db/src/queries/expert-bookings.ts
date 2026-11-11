@@ -1,5 +1,6 @@
 import { and, asc, eq, gt, lt, notInArray } from "drizzle-orm"
 import { withOrgContext, withPlatformAdminContext, type Tx } from "../context"
+import { user } from "../schema/auth"
 import {
   bookings,
   eventTypeModes,
@@ -29,11 +30,19 @@ export type ExpertBookingListItem = {
   approvalDeadlineAt: Date | null
 }
 
-function firstNameFromGuest(guestName: string | null): string | null {
-  if (!guestName) return null
-  const trimmed = guestName.trim()
-  if (!trimmed) return null
-  return trimmed.split(/\s+/)[0] ?? null
+/**
+ * The first name the expert sees: the one typed at booking, or the
+ * account's name for a member who booked signed in (no name is typed then).
+ */
+export function memberFirstName(
+  guestName: string | null,
+  accountName: string | null
+): string | null {
+  for (const name of [guestName, accountName]) {
+    const first = name?.trim().split(/\s+/)[0]
+    if (first) return first
+  }
+  return null
 }
 
 async function selectExpertBookingsInRange(
@@ -51,6 +60,7 @@ async function selectExpertBookingsInRange(
       timezone: bookings.timezone,
       sessionMode: bookings.sessionMode,
       guestName: bookings.guestName,
+      accountName: user.name,
       eventTypeTitle: eventTypes.title,
       eventTypeSlug: eventTypes.slug,
       modeLabel: eventTypeModes.label,
@@ -68,6 +78,7 @@ async function selectExpertBookingsInRange(
         eq(eventTypes.orgId, bookings.orgId)
       )
     )
+    .leftJoin(user, eq(user.id, bookings.memberUserId))
     .leftJoin(
       eventTypeModes,
       and(
@@ -99,7 +110,7 @@ async function selectExpertBookingsInRange(
     endsAt: row.endsAt,
     timezone: row.timezone,
     sessionMode: row.sessionMode,
-    memberFirstName: firstNameFromGuest(row.guestName),
+    memberFirstName: memberFirstName(row.guestName, row.accountName),
     eventTypeTitle: row.eventTypeTitle,
     eventTypeSlug: row.eventTypeSlug,
     modeLabel: row.modeLabel,

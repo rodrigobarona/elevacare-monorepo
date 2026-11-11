@@ -16,6 +16,7 @@ import { StatusPill } from "@eleva/ui/components/status-pill"
 import { useIsMobile } from "@eleva/ui/hooks/use-mobile"
 import { JoinCta } from "@eleva/video/join-cta"
 import { RequestActions } from "./request-actions"
+import { sessionKind } from "./week-data"
 import type { CalendarBooking } from "./week-view"
 
 /**
@@ -62,7 +63,8 @@ export function BookingSheet({
   )
 
   if (!booking) return null
-  const isRequest = booking.status === "awaiting_confirmation"
+  const kind = sessionKind(booking.status)
+  const isRequest = kind === "request"
   const start = new Date(booking.startsAt)
   const end = new Date(booking.endsAt)
   // Online and phone sessions already say so under "Mode".
@@ -87,8 +89,10 @@ export function BookingSheet({
       <SheetHeader className="gap-2">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 space-y-2">
-            {isRequest ? (
-              <StatusPill tone="attention">{t("requestPending")}</StatusPill>
+            {kind !== "session" ? (
+              <StatusPill tone="attention">
+                {isRequest ? t("requestPending") : t("awaitingPayment")}
+              </StatusPill>
             ) : null}
             <SheetTitle className="font-display text-xl tracking-tight text-balance">
               {pickLocalized(booking.eventTypeTitle, locale)}
@@ -109,7 +113,7 @@ export function BookingSheet({
       </SheetHeader>
 
       <div className="space-y-4 px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-        <dl className="grid gap-3 rounded-2xl bg-sand-50 p-4 sm:grid-cols-2 dark:bg-muted/40">
+        <dl className="grid gap-3 rounded-2xl bg-sand-50 p-4 sm:grid-cols-2 dark:bg-foreground/5">
           <div>
             <dt className="text-xs text-muted-foreground">{t("member")}</dt>
             <dd>{booking.memberFirstName ?? t("memberUnknown")}</dd>

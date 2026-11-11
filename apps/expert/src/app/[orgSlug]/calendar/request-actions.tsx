@@ -56,7 +56,6 @@ export function RequestActions({
 
   return (
     <div className="space-y-3">
-      <p className="text-sm font-medium">{t("requestPending")}</p>
       <Textarea
         value={note}
         maxLength={180}

@@ -543,15 +543,15 @@
   "calendar": {
     "title": "Calendario",
     "description": "Tu semana Eleva — todas las reservas en todos los modos.",
-    "prevWeek": "Anterior",
-    "nextWeek": "Siguiente",
+    "prevWeek": "Semana anterior",
+    "nextWeek": "Semana siguiente",
     "thisWeek": "Esta semana",
     "loading": "Cargando…",
     "emptyWeek": "No hay sesiones esta semana.",
     "emptyState": "Eleva es tu calendario. Conecta Google o Microsoft solo si ya vives en otro.",
     "closeDrawer": "Cerrar",
     "member": "Miembro",
-    "memberUnknown": "Invitado",
+    "memberUnknown": "Miembro",
     "mode": "Modo",
     "location": "Dónde",
     "locationOnline": "En línea",
@@ -596,7 +596,9 @@
     "respondBy": "Responder antes de",
     "today": "Hoy",
     "timezone": "Las horas están en tu zona horaria: {zone}.",
-    "retry": "Reintentar"
+    "retry": "Intentar de nuevo",
+    "awaitingPayment": "Pendiente de pago",
+    "notConfirmed": "Aún sin confirmar"
   },
   "calendars": {
     "backToIntegrations": "Integraciones",
