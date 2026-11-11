@@ -32,20 +32,31 @@ Each entry should include:
 
 ## Current Entries
 
-### 2026-11-11: A confirmed session that is over is shown as completed (active)
+### 2026-11-11: A confirmed session that is over is shown as ended (active)
 
 - Owner: engineering. Noticed by a judge on the attendance fix.
-- Finding: nothing marks a booking `completed` when its time has passed
-  (only account deletion writes that status). A member's past session
-  kept the label "Confirmed" for ever, as if it were still to come.
+- Finding: no code marks a booking as over when its time has passed. A
+  member's past session kept the label "Confirmed" for ever, as if it
+  were still to come.
 - Decision: the member app shows a `confirmed` or `rescheduled` booking
-  whose booked end has passed as "Completed", in the list and on the
+  that is over as "Ended", in a neutral colour, in the list and on the
   session's page. It is display only (`shownBookingStatus` in
-  `@eleva/ui`): the stored status is not changed, and the label does not
-  claim the two people met.
-- Not built: marking bookings completed in the database (it would touch
-  payouts and the no-show policy, which is not decided: D-06); showing
-  a member that a session was missed.
+  `@eleva/ui`); the stored status is not changed.
+  - "Ended", not "Completed": it says the time has passed and nothing
+    more. Nobody records whether the two met at a phone or in-person
+    session, and an online session can have ended with one of them
+    absent; the terms give a refund when the expert does not attend, so
+    the label must not tell that member the service was delivered. (The
+    first version of this change said "Completed"; the judge panel
+    scored it 7.0 on this point and it was changed.)
+  - An online session keeps "Confirmed" until joining closes, 30 minutes
+    after its booked end, so "Ended" never sits beside a working Join
+    button. Once ended, the page no longer shows the Join button or the
+    line about joining 15 minutes before.
+- Not built: marking bookings as over in the database (it would touch
+  payouts and the no-show policy, which is not decided: D-06); telling a
+  member that a session was missed; the list of past sessions is split
+  by start time, so a session in progress sits under "Past".
 
 ### 2026-11-11: Actions that refund need a session that can be revoked, and declining asks first (active)
 

@@ -187,7 +187,8 @@
       "pending_payment": "Pago pendiente",
       "awaiting_confirmation": "Esperando al especialista",
       "completed": "Completada",
-      "no_show": "No se presentó"
+      "no_show": "No se presentó",
+      "ended": "Finalizada"
     },
     "refundFull": "Recibirás un reembolso completo de {amount} según la política de cancelación {policy}.",
     "refundPartial": "Recibirás un reembolso del {percent}% ({amount}) según la política de cancelación {policy}.",

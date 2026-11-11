@@ -12,8 +12,10 @@ function statusTone(status: BookingStatusKey | null): StatusTone {
     case "awaiting_confirmation":
     case "pending_payment":
       return "attention"
+    // "ended" is over, with no claim about how it went.
     case "cancelled":
     case "no_show":
+    case "ended":
     case null:
       return "neutral"
     default: {

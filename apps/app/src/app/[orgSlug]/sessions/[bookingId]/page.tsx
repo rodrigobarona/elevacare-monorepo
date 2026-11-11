@@ -12,12 +12,12 @@ import {
   isAwaitingConfirmation,
   isBookingStatus,
   isSessionMode,
+  shownMemberBookingStatus,
 } from "@/lib/booking-status"
 import { JoinCta } from "@eleva/video/join-cta"
 import { UrgentHelp } from "@eleva/dashboard/urgent-help"
 import { DateTile } from "@eleva/ui/components/date-tile"
 import { bookingDateParts } from "@eleva/ui/lib/booking/date-parts"
-import { shownBookingStatus } from "@eleva/ui/lib/booking/shown-status"
 import { StatusPill } from "../../_components/booking-visuals"
 import { SessionActions } from "../../_components/session-actions"
 import { IcsDownloadButton } from "./ics-download-button"
@@ -82,8 +82,9 @@ export default async function SessionDetailPage({
   const awaiting = isAwaitingConfirmation(booking.status)
   const title = eventTitle(booking.eventType.title, locale)
   const memberName = session.user.displayName ?? session.user.email
-  // A confirmed session that is over reads "Completed", not "Confirmed".
-  const shown = shownBookingStatus(booking.status, booking.endsAt)
+  // A confirmed session that is over reads "Ended", not "Confirmed".
+  const shown = shownMemberBookingStatus(booking)
+  const ended = shown === "ended"
   const status = isBookingStatus(shown) ? shown : null
   // Urgent-help signposting is for sessions still ahead of the member: the
   // API only quotes a cancellation while the session is active and has not
@@ -187,7 +188,7 @@ export default async function SessionDetailPage({
 
           <div className="space-y-3 border-t bg-sand-50/70 px-6 py-5 sm:px-8 dark:bg-muted/40">
             <div className="flex flex-wrap gap-2">
-              {awaiting ? null : (
+              {awaiting || ended ? null : (
                 <JoinCta
                   href={`/${orgSlug}/sessions/${bookingId}/join`}
                   sessionMode={booking.sessionMode}
@@ -205,9 +206,11 @@ export default async function SessionDetailPage({
                 memberEmail={session.user.email}
               />
             </div>
-            <p className="text-xs text-muted-foreground">
-              {awaiting ? t("awaitingConfirmationHint") : t("joinSoon")}
-            </p>
+            {ended ? null : (
+              <p className="text-xs text-muted-foreground">
+                {awaiting ? t("awaitingConfirmationHint") : t("joinSoon")}
+              </p>
+            )}
           </div>
         </section>
 

@@ -187,7 +187,8 @@
       "pending_payment": "Pending payment",
       "awaiting_confirmation": "Waiting for expert",
       "completed": "Completed",
-      "no_show": "No show"
+      "no_show": "No show",
+      "ended": "Ended"
     },
     "refundFull": "You'll get a full refund of {amount} under the {policy} cancellation policy.",
     "refundPartial": "You'll get a {percent}% refund of {amount} under the {policy} cancellation policy.",

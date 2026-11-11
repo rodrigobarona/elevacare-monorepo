@@ -20,10 +20,10 @@ import {
   isAwaitingConfirmation,
   isBookingStatus,
   isSessionMode,
+  shownMemberBookingStatus,
 } from "@/lib/booking-status"
 import { DateTile } from "@eleva/ui/components/date-tile"
 import { bookingDateParts } from "@eleva/ui/lib/booking/date-parts"
-import { shownBookingStatus } from "@eleva/ui/lib/booking/shown-status"
 import { StatusPill } from "./booking-visuals"
 
 type MemberBooking = ListMeBookingsResponse["bookings"][number]
@@ -57,8 +57,8 @@ export function BookingCard({
     booking.timezone
   )
   const awaiting = isAwaitingConfirmation(booking.status)
-  // A confirmed session that is over reads "Completed", not "Confirmed".
-  const shown = shownBookingStatus(booking.status, booking.endsAt)
+  // A confirmed session that is over reads "Ended", not "Confirmed".
+  const shown = shownMemberBookingStatus(booking)
   const status = isBookingStatus(shown) ? shown : null
   const modeLabel = isSessionMode(booking.sessionMode)
     ? t(`modes.${booking.sessionMode}`)
