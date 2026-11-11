@@ -1,5 +1,6 @@
 "use server"
 
+import { z } from "zod"
 import {
   DeclineExpertBookingRequestSchema,
   ListExpertBookingsQuerySchema,
@@ -7,6 +8,9 @@ import {
 import { getAuthedApiClient, requireExpertSession } from "@/lib/server-api"
 import { mapExpertApiError } from "@/lib/map-api-error"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
+import type { CalendarBooking } from "./week-data"
+
+const BookingIdSchema = z.string().uuid()
 
 type ActionResult<T = unknown> =
   | { ok: true; data: T }
@@ -15,27 +19,7 @@ type ActionResult<T = unknown> =
 export async function listCalendarBookingsAction(
   from: string,
   to: string
-): Promise<
-  ActionResult<{
-    bookings: {
-      id: string
-      status: string
-      startsAt: string
-      endsAt: string
-      timezone: string
-      sessionMode: "online" | "in_person" | "phone"
-      memberFirstName: string | null
-      approvalDeadlineAt: string | null
-      eventTypeTitle: { en: string; pt?: string; es?: string }
-      eventTypeSlug: string
-      modeLabel: { en: string; pt?: string; es?: string } | null
-      locationName: string | null
-      locationCity: string | null
-      locationCountry: string | null
-      locationAddress: string | null
-    }[]
-  }>
-> {
+): Promise<ActionResult<{ bookings: CalendarBooking[] }>> {
   const parsed = ListExpertBookingsQuerySchema.safeParse({ from, to })
   if (!parsed.success) {
     return { ok: false, error: "validation" }
@@ -48,9 +32,20 @@ export async function listCalendarBookingsAction(
     return {
       ok: true,
       data: {
+        // Only what the calendar shows is sent to the browser.
         bookings: data.bookings.map((booking) => ({
-          ...booking,
+          id: booking.id,
+          status: booking.status,
+          startsAt: booking.startsAt,
+          endsAt: booking.endsAt,
+          sessionMode: booking.sessionMode,
+          memberFirstName: booking.memberFirstName,
           approvalDeadlineAt: booking.approvalDeadlineAt ?? null,
+          eventTypeTitle: booking.eventTypeTitle,
+          modeLabel: booking.modeLabel,
+          locationName: booking.locationName,
+          locationCity: booking.locationCity,
+          locationCountry: booking.locationCountry,
         })),
       },
     }
@@ -66,6 +61,9 @@ export async function listCalendarBookingsAction(
 export async function acceptCalendarBookingAction(
   bookingId: string
 ): Promise<ActionResult<{ bookingId: string }>> {
+  if (!BookingIdSchema.safeParse(bookingId).success) {
+    return { ok: false, error: "validation" }
+  }
   try {
     const session = await requireExpertSession("events:manage")
     const api = await getAuthedApiClient()
@@ -90,7 +88,7 @@ export async function declineCalendarBookingAction(
   const parsed = DeclineExpertBookingRequestSchema.safeParse(
     note?.trim() ? { note: note.trim() } : {}
   )
-  if (!parsed.success) {
+  if (!parsed.success || !BookingIdSchema.safeParse(bookingId).success) {
     return { ok: false, error: "validation" }
   }
   try {

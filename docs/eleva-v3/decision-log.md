@@ -32,6 +32,80 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-11: The expert calendar shows every session of the week (active)
+
+- Owner: engineering. Found in the beta readiness survey of the expert app.
+- Finding: the week grid drew sessions only between 07:00 and 21:00 and
+  cut each block to the hour it started in. A session at 06:30 or 21:30
+  was not on the calendar at all, and an expert whose device is in
+  another time zone (the Azores, Brazil, a trip) could lose a whole day
+  of sessions from view. A 90-minute session looked like 60 minutes. Two
+  sessions in the same hour sat on top of each other. On a phone the
+  grid was 720 px wide inside a 390 px screen. Details opened below the
+  grid, off screen. With the server in UTC, an expert west of it opened
+  the calendar on last week.
+- Decisions:
+  - The grid shows 07:00 to 21:00 and widens to hold every session of
+    the week. Nothing booked is ever off the grid.
+  - A block starts at the session's real start and is as tall as the
+    session lasts (never shorter than 25 minutes, so its time can be
+    read and it is easy to press). A session across midnight is drawn on both days. Sessions
+    that overlap sit side by side.
+  - Under 576 px of room the week is a list, day by day, with the same
+    sessions. The choice follows the room the calendar has, not the
+    screen, so the sidebar does not matter.
+  - Times are in the device's time zone, 24-hour clock in every
+    language, and the calendar names that zone. The week is loaded and
+    drawn in the browser, where the zone is known; the server no longer
+    loads a week it has to guess. A week still loading shows a
+    placeholder, never an empty week.
+  - Every block says who the session is with, and has an icon for its
+    mode (video, phone, in person), so the mode is not told by colour
+    alone. The browser receives only the fields the calendar shows.
+  - A session's details open in a sheet (side on a wide screen, bottom
+    on a phone) that takes focus and gives it back.
+  - "You can join 15 minutes before the session starts" is shown only
+    while that is true: not for a session that is over, cancelled or
+    not confirmed. The component is shared with the member app, whose
+    pages use its button form and are not changed by this.
+  - After a request is accepted or declined the sheet closes; a
+    declined request leaves the calendar and focus goes to the week
+    heading. On a phone the list opens at the next day with sessions,
+    and sessions already over are muted.
+  - A week that fails to load says so and offers "Try again", instead
+    of showing an empty week.
+- Accepted: on the two nights a year the clocks change, a session
+  inside the changed hour is drawn an hour longer or shorter than it
+  lasts (its start and written times are right). Two short sessions
+  back to back (under 25 minutes) sit side by side, because each is
+  drawn tall enough to read.
+- Found by the judge panel and fixed here: a member who booked signed
+  in had no name on the calendar, the Today page or the calendar feed,
+  because only the name typed by a guest was read. The account's first
+  name is now used when no name was typed (first name only, as for
+  guests). The private calendar feed is not changed: it leaves Eleva
+  for the expert's own calendar app, so it still carries only a name
+  typed at booking, until the privacy notice says more. Without any
+  name the calendar says "Member".
+- A booking request and a booking still being paid are outlined and
+  say so ("Booking request", "Awaiting payment"); they no longer look
+  like confirmed sessions. Sessions already over are muted.
+- The open week loads again when the expert comes back to the page
+  after a minute or more, and when they choose "This week". If that
+  reload fails, the week already on screen stays, under a notice.
+- Not built: day and month views; a switch between grid and list on a
+  wide screen; showing the expert's schedule time zone when it differs
+  from the device; busy times from connected calendars on the grid;
+  live updates while the page stays in view; "nothing booked today" in
+  the phone list; more than three sessions at the same time are bars
+  without text (each still opens its session and names it on hover and
+  to screen readers).
+- Not proven: a booking request, an unpaid booking, a phone or
+  in-person session, today's line and dark mode have no screenshot
+  (the local data has none of them); they rest on reading the code.
+  No test renders the component: the rules for what a week shows are
+  tested as plain functions (`week-data.ts`, `calendar-layout.ts`).
+
 ### 2026-11-11: The join page waits for the session and opens it (active)
 
 - Owner: engineering. Follows the founder rule that opening a join link

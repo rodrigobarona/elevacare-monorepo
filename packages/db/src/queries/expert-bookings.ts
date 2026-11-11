@@ -1,5 +1,6 @@
 import { and, asc, eq, gt, lt, notInArray } from "drizzle-orm"
 import { withOrgContext, withPlatformAdminContext, type Tx } from "../context"
+import { user } from "../schema/auth"
 import {
   bookings,
   eventTypeModes,
@@ -29,18 +30,28 @@ export type ExpertBookingListItem = {
   approvalDeadlineAt: Date | null
 }
 
-function firstNameFromGuest(guestName: string | null): string | null {
-  if (!guestName) return null
-  const trimmed = guestName.trim()
-  if (!trimmed) return null
-  return trimmed.split(/\s+/)[0] ?? null
+/**
+ * The first name the expert sees: the one typed at booking, or the
+ * account's name for a member who booked signed in (no name is typed then).
+ */
+export function memberFirstName(
+  guestName: string | null,
+  accountName: string | null
+): string | null {
+  for (const name of [guestName, accountName]) {
+    const first = name?.trim().split(/\s+/)[0]
+    if (first) return first
+  }
+  return null
 }
 
 async function selectExpertBookingsInRange(
   tx: Tx,
   expertProfileId: string,
   rangeStart: Date,
-  rangeEnd: Date
+  rangeEnd: Date,
+  /** Whether a member's account name may stand in for a typed name. */
+  names: "typed-or-account" | "typed-only"
 ): Promise<ExpertBookingListItem[]> {
   const rows = await tx
     .select({
@@ -51,6 +62,7 @@ async function selectExpertBookingsInRange(
       timezone: bookings.timezone,
       sessionMode: bookings.sessionMode,
       guestName: bookings.guestName,
+      accountName: user.name,
       eventTypeTitle: eventTypes.title,
       eventTypeSlug: eventTypes.slug,
       modeLabel: eventTypeModes.label,
@@ -68,6 +80,7 @@ async function selectExpertBookingsInRange(
         eq(eventTypes.orgId, bookings.orgId)
       )
     )
+    .leftJoin(user, eq(user.id, bookings.memberUserId))
     .leftJoin(
       eventTypeModes,
       and(
@@ -99,7 +112,10 @@ async function selectExpertBookingsInRange(
     endsAt: row.endsAt,
     timezone: row.timezone,
     sessionMode: row.sessionMode,
-    memberFirstName: firstNameFromGuest(row.guestName),
+    memberFirstName: memberFirstName(
+      row.guestName,
+      names === "typed-or-account" ? row.accountName : null
+    ),
     eventTypeTitle: row.eventTypeTitle,
     eventTypeSlug: row.eventTypeSlug,
     modeLabel: row.modeLabel,
@@ -119,7 +135,13 @@ export async function listExpertBookings(
   rangeEnd: Date
 ): Promise<ExpertBookingListItem[]> {
   return withOrgContext(orgId, async (tx: Tx) =>
-    selectExpertBookingsInRange(tx, expertProfileId, rangeStart, rangeEnd)
+    selectExpertBookingsInRange(
+      tx,
+      expertProfileId,
+      rangeStart,
+      rangeEnd,
+      "typed-or-account"
+    )
   )
 }
 
@@ -164,6 +186,14 @@ export async function listExpertBookingsForFeed(
   rangeEnd: Date
 ): Promise<ExpertBookingListItem[]> {
   return withPlatformAdminContext(async (tx: Tx) =>
-    selectExpertBookingsInRange(tx, expertProfileId, rangeStart, rangeEnd)
+    selectExpertBookingsInRange(
+      tx,
+      expertProfileId,
+      rangeStart,
+      rangeEnd,
+      // The feed leaves Eleva for the expert's own calendar app: it carries
+      // what it always has, the name typed at booking, and no account name.
+      "typed-only"
+    )
   )
 }

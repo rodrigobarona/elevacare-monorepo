@@ -2,147 +2,193 @@
 
 import * as React from "react"
 import { useLocale, useTranslations } from "next-intl"
+import { intlLocale } from "@eleva/config/i18n"
 import { pickLocalized } from "@eleva/config/i18n-locales"
-import { CaretLeftIcon, CaretRightIcon } from "@eleva/icons"
-import { Button, LinkButton } from "@eleva/ui/components/button"
+import {
+  CaretLeftIcon,
+  CaretRightIcon,
+  MapPinIcon,
+  PhoneIcon,
+  VideoCameraIcon,
+} from "@eleva/icons"
+import { Button } from "@eleva/ui/components/button"
 import { StatusPill } from "@eleva/ui/components/status-pill"
 import { cn } from "@eleva/ui/lib/utils"
-import { JoinCta } from "@eleva/video/join-cta"
+import { useJoinCtaClock } from "@eleva/video/join-cta"
 import { listCalendarBookingsAction } from "./actions"
-import { RequestActions } from "./request-actions"
+import { BookingSheet } from "./booking-sheet"
+import {
+  addDays,
+  agendaDays,
+  isSameDay,
+  layoutDay,
+  nowLinePct,
+  startOfWeek,
+  visibleHours,
+  type DayBlock,
+} from "./calendar-layout"
+import {
+  sessionKind,
+  shouldRefreshOnReturn,
+  weekData,
+  weekRangeKey,
+  type CalendarBooking,
+  type LoadedWeek,
+  type SessionKind,
+  type Settled,
+} from "./week-data"
 
-export type CalendarBooking = {
-  id: string
-  status: string
-  startsAt: string
-  endsAt: string
-  timezone: string
-  sessionMode: "online" | "in_person" | "phone"
-  memberFirstName: string | null
-  approvalDeadlineAt: string | null
-  eventTypeTitle: { en: string; pt?: string; es?: string }
-  eventTypeSlug: string
-  modeLabel: { en: string; pt?: string; es?: string } | null
-  locationName: string | null
-  locationCity: string | null
-  locationCountry: string | null
-  locationAddress: string | null
-}
+type SessionMode = CalendarBooking["sessionMode"]
 
-type Props = {
-  initialFrom: string
-  initialTo: string
-  initialBookings: CalendarBooking[]
-  orgSlug: string
-}
-
-const HOUR_START = 7
-const HOUR_END = 21
-const HOURS = Array.from(
-  { length: HOUR_END - HOUR_START },
-  (_, i) => HOUR_START + i
-)
-
-const MODE_CLASS: Record<CalendarBooking["sessionMode"], string> = {
+const MODE_CLASS: Record<SessionMode, string> = {
   online: "bg-primary text-primary-foreground",
   phone: "bg-info text-status-foreground",
   in_person: "bg-coral-700 text-white dark:bg-coral-400 dark:text-coral-950",
 }
-
-function startOfWeek(date: Date, weekStartsOn: 0 | 1 = 1): Date {
-  const d = new Date(date)
-  d.setHours(0, 0, 0, 0)
-  const day = d.getDay()
-  const diff = weekStartsOn === 1 ? (day + 6) % 7 : day
-  d.setDate(d.getDate() - diff)
-  return d
+/** The mode is never told by colour alone: each has its own icon. */
+const MODE_ICON: Record<SessionMode, typeof VideoCameraIcon> = {
+  online: VideoCameraIcon,
+  phone: PhoneIcon,
+  in_person: MapPinIcon,
 }
-
-function addDays(date: Date, days: number): Date {
-  const d = new Date(date)
-  d.setDate(d.getDate() + days)
-  return d
+/**
+ * Not a confirmed session yet (a request to answer, or a booking still
+ * being paid): outlined, never filled like a session, and labelled.
+ */
+const UNCONFIRMED_CLASS =
+  "border border-dashed border-foreground bg-card text-foreground"
+/** Already over: a tint of its mode with dark text, so it steps back but stays readable. */
+const OVER_CLASS: Record<SessionMode, string> = {
+  online: "bg-primary/15 text-foreground",
+  phone: "bg-info/15 text-foreground",
+  in_person: "bg-coral-700/15 text-foreground dark:bg-coral-400/20",
 }
+const LEGEND_MODES: SessionMode[] = ["online", "phone", "in_person"]
+/**
+ * Below this drawn length a block shows one line: time and name. More than
+ * three side by side are bars with no text (their label still names them).
+ */
+const COMPACT_BELOW_MINUTES = 45
+const FOCUS_RING =
+  "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background focus-visible:outline-none"
+/** The sheet's closing transition, after which focus can be moved. */
+const SHEET_CLOSE_MS = 250
+/** Weeks passed through on the way to another are never requested. */
+const WEEK_LOAD_DELAY_MS = 150
 
-function isSameDay(a: Date, b: Date): boolean {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  )
-}
-
-function minutesFromMidnight(date: Date): number {
-  return date.getHours() * 60 + date.getMinutes()
-}
-
-export function WeekView({
-  initialFrom,
-  initialTo,
-  initialBookings,
-  orgSlug,
-}: Props) {
+export function WeekView({ orgSlug }: { orgSlug: string }) {
   const t = useTranslations("calendar")
-  const tReport = useTranslations("sessions.report")
   const locale = useLocale()
+  // Times are shown in the device's time zone, which the server does not
+  // know: the week is loaded and drawn in the browser.
+  const now = useJoinCtaClock(60_000)
   const [weekStart, setWeekStart] = React.useState(() =>
-    startOfWeek(new Date(initialFrom))
+    startOfWeek(new Date())
   )
-  const [bookings, setBookings] =
-    React.useState<CalendarBooking[]>(initialBookings)
-  const [selectedId, setSelectedId] = React.useState<string | null>(null)
-  const [loading, setLoading] = React.useState(false)
+  const [loaded, setLoaded] =
+    React.useState<LoadedWeek<CalendarBooking> | null>(null)
+  const [failedKey, setFailedKey] = React.useState<string | null>(null)
+  const [attempt, setAttempt] = React.useState(0)
+  const [settled, setSettled] = React.useState<Settled>({})
+  const lastLoadedAt = React.useRef<number | null>(null)
+  /** Counts answers given here, so an older load cannot undo one. */
+  const answers = React.useRef(0)
+  const firstLoad = React.useRef(true)
+  /** The session in the sheet; kept after it leaves the week, while the sheet closes. */
+  const [selected, setSelected] = React.useState<CalendarBooking | null>(null)
+  const [sheetOpen, setSheetOpen] = React.useState(false)
+  const headingRef = React.useRef<HTMLHeadingElement>(null)
+  const upcomingRef = React.useRef<HTMLElement>(null)
+  const scrolledFor = React.useRef<string | null>(null)
 
   const days = React.useMemo(
     () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
     [weekStart]
   )
-
-  const rangeFrom = weekStart
-  const rangeTo = addDays(weekStart, 7)
-  const rangeFromIso = rangeFrom.toISOString()
-  const rangeToIso = rangeTo.toISOString()
+  const rangeFromIso = weekStart.toISOString()
+  const rangeToIso = addDays(weekStart, 7).toISOString()
+  const rangeKey = weekRangeKey(rangeFromIso, rangeToIso)
 
   React.useEffect(() => {
-    if (rangeFromIso === initialFrom && rangeToIso === initialTo) {
-      setBookings(initialBookings)
-      return
-    }
-
     let cancelled = false
-    setLoading(true)
-    void listCalendarBookingsAction(rangeFromIso, rangeToIso).then((result) => {
-      if (cancelled) return
-      setLoading(false)
-      if (result.ok) {
-        setBookings(
-          result.data.bookings.map((booking) => ({
-            ...booking,
-            approvalDeadlineAt: booking.approvalDeadlineAt ?? null,
-          }))
-        )
-      }
-    })
+    const key = weekRangeKey(rangeFromIso, rangeToIso)
+    const load = () => {
+      const answersAtStart = answers.current
+      void listCalendarBookingsAction(rangeFromIso, rangeToIso)
+        .then((result) => {
+          if (cancelled) return
+          if (!result.ok) {
+            setFailedKey(key)
+            return
+          }
+          lastLoadedAt.current = Date.now()
+          setFailedKey(null)
+          // A load that began before an answer does not know about it.
+          if (answersAtStart === answers.current) setSettled({})
+          setLoaded({ key, bookings: result.data.bookings })
+        })
+        .catch(() => {
+          if (!cancelled) setFailedKey(key)
+        })
+    }
+    const delay = firstLoad.current ? 0 : WEEK_LOAD_DELAY_MS
+    firstLoad.current = false
+    const timer = window.setTimeout(load, delay)
     return () => {
       cancelled = true
+      window.clearTimeout(timer)
     }
-  }, [rangeFromIso, rangeToIso, initialFrom, initialTo, initialBookings])
+  }, [rangeFromIso, rangeToIso, attempt])
 
-  const selected = bookings.find((b) => b.id === selectedId) ?? null
-  const today = new Date()
-  const { weekdayFormatter, rangeFormatter, timeFormatter } = React.useMemo(
-    () => ({
-      weekdayFormatter: new Intl.DateTimeFormat(locale, { weekday: "short" }),
-      rangeFormatter: new Intl.DateTimeFormat(locale, {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      }),
-      timeFormatter: new Intl.DateTimeFormat(locale, { timeStyle: "short" }),
-    }),
-    [locale]
+  // A calendar left open (a phone between sessions) loads the week again
+  // when the expert comes back to it, so a new request is not missed.
+  React.useEffect(() => {
+    const refresh = () => {
+      if (
+        shouldRefreshOnReturn({
+          visible: document.visibilityState === "visible",
+          lastLoadedAt: lastLoadedAt.current,
+          now: Date.now(),
+        })
+      ) {
+        lastLoadedAt.current = Date.now()
+        setAttempt((n) => n + 1)
+      }
+    }
+    document.addEventListener("visibilitychange", refresh)
+    window.addEventListener("focus", refresh)
+    return () => {
+      document.removeEventListener("visibilitychange", refresh)
+      window.removeEventListener("focus", refresh)
+    }
+  }, [])
+
+  const { failed, loading, hasWeek, bookings } = React.useMemo(
+    () => weekData({ rangeKey, loaded, failedKey, settled }),
+    [rangeKey, loaded, failedKey, settled]
   )
-  function modeName(mode: CalendarBooking["sessionMode"]): string {
+
+  // The live copy while it is in the week (its status may have changed).
+  const inSheet = bookings.find((b) => b.id === selected?.id) ?? selected
+  const formatters = React.useMemo(() => {
+    const intl = intlLocale(locale)
+    return {
+      weekday: new Intl.DateTimeFormat(intl, { weekday: "short" }),
+      month: new Intl.DateTimeFormat(intl, { month: "short" }),
+      fullDay: new Intl.DateTimeFormat(intl, {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+      }),
+      time: new Intl.DateTimeFormat(intl, {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      zone: new Intl.DateTimeFormat(intl, { timeZoneName: "longGeneric" }),
+    }
+  }, [locale])
+
+  function modeName(mode: SessionMode): string {
     switch (mode) {
       case "online":
         return t("locationOnline")
@@ -156,22 +202,94 @@ export function WeekView({
       }
     }
   }
-  const legendModes: CalendarBooking["sessionMode"][] = [
-    "online",
-    "phone",
-    "in_person",
-  ]
+  /** What to call a booking that is not a confirmed session yet. */
+  const kindLabel = (kind: SessionKind): string | null =>
+    kind === "request"
+      ? t("requestPending")
+      : kind === "unpaid"
+        ? t("awaitingPayment")
+        : null
+  const who = (b: CalendarBooking) => b.memberFirstName ?? t("memberUnknown")
+  // Two plain times: a range across midnight would spell out both dates.
+  const timeRange = (b: CalendarBooking) =>
+    `${formatters.time.format(new Date(b.startsAt))}–${formatters.time.format(new Date(b.endsAt))}`
+  /** The same, short enough for a block in the grid. */
+  const shortKindLabel = (kind: SessionKind): string | null =>
+    kind === "request"
+      ? t("requestShort")
+      : kind === "unpaid"
+        ? t("unpaidShort")
+        : null
+  /** Everything a block says, for someone who cannot see it. */
+  const summary = (b: CalendarBooking) =>
+    [
+      timeRange(b),
+      who(b),
+      pickLocalized(b.eventTypeTitle, locale),
+      modeName(b.sessionMode),
+      kindLabel(sessionKind(b.status)),
+    ]
+      .filter(Boolean)
+      .join(", ")
+  /** "26 Oct – 1 Nov 2026", built by hand so every language keeps month names. */
+  const weekLabel = () => {
+    const part = (date: Date) =>
+      `${date.getDate()} ${formatters.month.format(date).replaceAll(".", "")}`
+    const last = addDays(weekStart, 6)
+    return `${part(weekStart)} – ${part(last)} ${last.getFullYear()}`
+  }
+  const open = (booking: CalendarBooking) => {
+    setSelected(booking)
+    setSheetOpen(true)
+  }
+  const goTo = (week: Date) => {
+    setFailedKey(null)
+    // The same week again ("This week" while on it) loads it afresh.
+    if (week.getTime() === weekStart.getTime()) setAttempt((n) => n + 1)
+    setWeekStart(week)
+  }
+
+  const hours = visibleHours(bookings, days)
+  const hourList = Array.from(
+    { length: hours.end - hours.start },
+    (_, i) => hours.start + i
+  )
+  const agenda = agendaDays(bookings, days)
+  // On a phone the list starts at Monday: bring the next day with sessions
+  // into view once, so the expert does not scroll past days already gone.
+  const upcomingDay = now
+    ? agenda.find(({ day }) => isSameDay(day, now) || day > now)?.day
+    : undefined
+  React.useEffect(() => {
+    if (loading || failed || scrolledFor.current === rangeKey) return
+    scrolledFor.current = rangeKey
+    const section = upcomingRef.current
+    // Only as a list (the grid shows the whole week), and only when there
+    // are earlier days above it.
+    if (!section || section.offsetParent === null) return
+    if (!section.previousElementSibling) return
+    section.scrollIntoView({ block: "start" })
+  }, [loading, failed, rangeKey])
+
+  const timeZone = now
+    ? (formatters.zone
+        .formatToParts(now)
+        .find((part) => part.type === "timeZoneName")?.value ??
+      Intl.DateTimeFormat().resolvedOptions().timeZone)
+    : null
 
   return (
-    <div className="space-y-4">
+    <div className="@container space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2
-          className="font-display text-xl font-medium tracking-tight"
+          ref={headingRef}
+          tabIndex={-1}
+          className="font-display text-xl font-medium tracking-tight outline-none"
           aria-live="polite"
         >
-          {rangeFormatter.formatRange(rangeFrom, addDays(rangeFrom, 6))}
-          {loading ? (
-            <span className="ml-2 text-sm font-normal text-muted-foreground">
+          {now ? weekLabel() : " "}
+          {now && loading ? (
+            <span className="ml-2 font-sans text-sm font-normal text-muted-foreground">
               {t("loading")}
             </span>
           ) : null}
@@ -179,284 +297,448 @@ export function WeekView({
         <div className="flex items-center gap-1.5">
           <Button
             variant="outline"
-            size="icon-sm"
+            size="icon"
             aria-label={t("prevWeek")}
-            onPress={() => setWeekStart((w) => addDays(w, -7))}
+            onPress={() => goTo(addDays(weekStart, -7))}
           >
             <CaretLeftIcon />
           </Button>
           <Button
             variant="outline"
-            size="sm"
-            onPress={() => setWeekStart(startOfWeek(new Date()))}
+            onPress={() => goTo(startOfWeek(new Date()))}
           >
             {t("thisWeek")}
           </Button>
           <Button
             variant="outline"
-            size="icon-sm"
+            size="icon"
             aria-label={t("nextWeek")}
-            onPress={() => setWeekStart((w) => addDays(w, 7))}
+            onPress={() => goTo(addDays(weekStart, 7))}
           >
             <CaretRightIcon />
           </Button>
         </div>
       </div>
 
-      <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-        {legendModes.map((mode) => (
-          <li key={mode} className="flex items-center gap-1.5">
-            <span
-              aria-hidden
-              className={cn("size-2.5 rounded-full", MODE_CLASS[mode])}
-            />
-            {modeName(mode)}
-          </li>
-        ))}
-        <li className="flex items-center gap-1.5">
-          <span
-            aria-hidden
-            className="size-2.5 rounded-full border border-dashed border-foreground/60"
-          />
-          {t("requestPending")}
-        </li>
-      </ul>
-
-      <div className="overflow-x-auto rounded-3xl border bg-card shadow-1">
-        <div
-          className="grid min-w-[720px]"
-          style={{
-            gridTemplateColumns: `3.5rem repeat(7, minmax(0, 1fr))`,
-          }}
-        >
-          <div className="border-b" />
-          {days.map((day) => {
-            const isToday = isSameDay(day, today)
+      <div className="space-y-1 text-xs text-muted-foreground">
+        {/* The list spells the mode and state on every row. */}
+        <ul className="hidden flex-wrap gap-x-4 gap-y-1 @xl:flex">
+          {LEGEND_MODES.map((mode) => {
+            const Icon = MODE_ICON[mode]
             return (
-              <div
-                key={day.toISOString()}
-                className={cn(
-                  "border-b border-l px-2 py-3 text-center",
-                  isToday && "bg-teal-50/70 dark:bg-teal-950/30"
-                )}
-              >
-                <span className="block eyebrow text-[10px]">
-                  {weekdayFormatter.format(day).replaceAll(".", "")}
-                </span>
+              <li key={mode} className="flex items-center gap-1.5">
                 <span
+                  aria-hidden
                   className={cn(
-                    "mx-auto mt-1 flex size-8 items-center justify-center rounded-full font-display text-lg tabular-nums",
-                    isToday && "bg-primary text-primary-foreground"
+                    "flex size-4 items-center justify-center rounded-full",
+                    MODE_CLASS[mode]
                   )}
-                  aria-current={isToday ? "date" : undefined}
                 >
-                  {day.getDate()}
+                  <Icon className="size-2.5" />
                 </span>
-              </div>
+                {modeName(mode)}
+              </li>
             )
           })}
+          <li className="flex items-center gap-1.5">
+            <span
+              aria-hidden
+              className="size-4 rounded-full border border-dashed border-foreground bg-card"
+            />
+            {t("notConfirmed")}
+          </li>
+        </ul>
+        {timeZone ? <p>{t("timezone", { zone: timeZone })}</p> : null}
+      </div>
 
-          {HOURS.map((hour) => (
-            <React.Fragment key={hour}>
-              <div className="border-b px-2 py-2 text-right text-[10px] text-muted-foreground tabular-nums">
-                {String(hour).padStart(2, "0")}:00
-              </div>
-              {days.map((day) => {
-                const cellStart = new Date(day)
-                cellStart.setHours(hour, 0, 0, 0)
-                const cellEnd = new Date(day)
-                cellEnd.setHours(hour + 1, 0, 0, 0)
-                const cellBookings = bookings.filter((b) => {
-                  const start = new Date(b.startsAt)
-                  return start >= cellStart && start < cellEnd
-                })
+      {failed ? (
+        <div
+          role="alert"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm"
+        >
+          <p>{t("error.load-failed")}</p>
+          <Button
+            variant="outline"
+            size="sm"
+            onPress={() => {
+              setFailedKey(null)
+              setAttempt((n) => n + 1)
+            }}
+          >
+            {t("retry")}
+          </Button>
+        </div>
+      ) : null}
+
+      {now && hasWeek ? (
+        <p role="status" className="sr-only">
+          {t("weekSummary", { count: bookings.length })}
+        </p>
+      ) : null}
+
+      {now === null || loading ? (
+        // A week still loading never looks like a free week.
+        <div
+          aria-hidden
+          data-testid="calendar-loading"
+          className="h-96 rounded-3xl border bg-card shadow-1 motion-safe:animate-pulse @xl:h-[62rem]"
+        />
+      ) : !hasWeek ? null : (
+        <>
+          {bookings.length === 0 ? (
+            <p className="rounded-3xl border border-dashed border-sand-300 bg-sand-50/70 p-6 text-center text-sm text-muted-foreground dark:border-border dark:bg-card">
+              {t("emptyWeek")}
+            </p>
+          ) : null}
+
+          {/* Wide: the week as a grid. */}
+          <div className="hidden overflow-x-auto rounded-3xl border bg-card shadow-1 @xl:block">
+            <div
+              className="grid"
+              style={{
+                gridTemplateColumns: `3.5rem repeat(7, minmax(0, 1fr))`,
+                gridTemplateRows: `auto repeat(${hourList.length}, 4rem)`,
+              }}
+            >
+              <div className="border-b" style={{ gridColumn: 1, gridRow: 1 }} />
+              {days.map((day, col) => {
+                const isToday = isSameDay(day, now)
                 return (
                   <div
-                    key={`${day.toISOString()}-${hour}`}
+                    key={day.toISOString()}
                     className={cn(
-                      "relative min-h-14 border-b border-l p-0.5",
-                      isSameDay(day, today) &&
-                        "bg-teal-50/40 dark:bg-teal-950/20"
+                      "border-b border-l px-2 py-3 text-center",
+                      isToday && "bg-teal-50/70 dark:bg-teal-950/30"
                     )}
+                    style={{ gridColumn: col + 2, gridRow: 1 }}
                   >
-                    {cellBookings.map((b) => {
-                      const start = new Date(b.startsAt)
-                      const end = new Date(b.endsAt)
-                      const durationMin = Math.max(
-                        15,
-                        (end.getTime() - start.getTime()) / 60_000
-                      )
-                      const offsetMin = minutesFromMidnight(start) - hour * 60
-                      const topPct = Math.max(0, (offsetMin / 60) * 100)
-                      const heightPct = Math.min(
-                        100 - topPct,
-                        (durationMin / 60) * 100
-                      )
-                      return (
-                        <button
-                          key={b.id}
-                          type="button"
-                          className={cn(
-                            "absolute inset-x-0.5 overflow-hidden rounded-lg px-1.5 py-1 text-left text-[11px] leading-tight shadow-1 transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-                            MODE_CLASS[b.sessionMode],
-                            b.status === "awaiting_confirmation" &&
-                              "ring-dashed ring-2 ring-background/70"
-                          )}
-                          style={{
-                            top: `${topPct}%`,
-                            height: `${Math.max(heightPct, 18)}%`,
-                          }}
-                          onClick={() => setSelectedId(b.id)}
-                        >
-                          <span className="block tabular-nums opacity-90">
-                            {timeFormatter.format(start)}
-                          </span>
-                          <span className="block truncate font-medium">
-                            {pickLocalized(b.eventTypeTitle, locale)}
-                          </span>
-                          {b.status === "awaiting_confirmation" ? (
-                            <span className="block truncate opacity-90">
-                              {t("requestPending")}
-                            </span>
-                          ) : b.memberFirstName ? (
-                            <span className="block truncate opacity-90">
-                              {b.memberFirstName}
-                            </span>
-                          ) : null}
-                        </button>
-                      )
-                    })}
+                    <span className="block eyebrow text-[10px]">
+                      {formatters.weekday.format(day).replaceAll(".", "")}
+                    </span>
+                    <span
+                      className={cn(
+                        "mx-auto mt-1 flex size-8 items-center justify-center rounded-full font-display text-lg tabular-nums",
+                        isToday && "bg-primary text-primary-foreground"
+                      )}
+                      aria-current={isToday ? "date" : undefined}
+                    >
+                      {day.getDate()}
+                    </span>
                   </div>
                 )
               })}
-            </React.Fragment>
-          ))}
-        </div>
-      </div>
 
-      {selected ? (
-        <div className="rounded-3xl border bg-card p-5 text-sm shadow-2">
-          <div className="flex items-start justify-between gap-3">
-            <div className="space-y-1">
-              {selected.status === "awaiting_confirmation" ? (
-                <StatusPill tone="attention">{t("requestPending")}</StatusPill>
-              ) : null}
-              <p className="font-display text-lg font-medium tracking-tight">
-                {pickLocalized(selected.eventTypeTitle, locale)}
-              </p>
-              <p className="text-muted-foreground">
-                {new Intl.DateTimeFormat(locale, {
-                  dateStyle: "medium",
-                  timeStyle: "short",
-                }).format(new Date(selected.startsAt))}{" "}
-                –{" "}
-                {new Intl.DateTimeFormat(locale, {
-                  timeStyle: "short",
-                }).format(new Date(selected.endsAt))}
-              </p>
+              {hourList.map((hour, row) => (
+                <React.Fragment key={hour}>
+                  <div
+                    aria-hidden
+                    className="border-b px-2 py-1.5 text-right text-[10px] text-muted-foreground tabular-nums"
+                    style={{ gridColumn: 1, gridRow: row + 2 }}
+                  >
+                    {String(hour).padStart(2, "0")}:00
+                  </div>
+                  {days.map((day, col) => (
+                    <div
+                      key={`${day.toISOString()}-${hour}`}
+                      aria-hidden
+                      className={cn(
+                        "border-b border-l",
+                        isSameDay(day, now) &&
+                          "bg-teal-50/40 dark:bg-teal-950/20"
+                      )}
+                      style={{ gridColumn: col + 2, gridRow: row + 2 }}
+                    />
+                  ))}
+                </React.Fragment>
+              ))}
+
+              {days.map((day, col) => {
+                const blocks = layoutDay(bookings, day, hours)
+                const nowPct = isSameDay(day, now)
+                  ? nowLinePct(now, hours)
+                  : null
+                return (
+                  <div
+                    key={`sessions-${day.toISOString()}`}
+                    className="relative"
+                    style={{
+                      gridColumn: col + 2,
+                      gridRow: `2 / span ${hourList.length}`,
+                    }}
+                  >
+                    {blocks.length > 0 ? (
+                      <ul
+                        aria-label={formatters.fullDay.format(day)}
+                        className="absolute inset-0"
+                      >
+                        {blocks.map((block) => (
+                          <li
+                            key={block.item.id}
+                            className="absolute px-0.5 py-px"
+                            style={{
+                              top: `${block.topPct}%`,
+                              height: `${block.heightPct}%`,
+                              left: `${(block.lane / block.lanes) * 100}%`,
+                              width: `${100 / block.lanes}%`,
+                            }}
+                          >
+                            <SessionBlock
+                              block={block}
+                              label={summary(block.item)}
+                              time={formatters.time.format(
+                                new Date(block.item.startsAt)
+                              )}
+                              timeRange={timeRange(block.item)}
+                              who={who(block.item)}
+                              title={pickLocalized(
+                                block.item.eventTypeTitle,
+                                locale
+                              )}
+                              kindLabel={shortKindLabel(
+                                sessionKind(block.item.status)
+                              )}
+                              over={new Date(block.item.endsAt) < now}
+                              onOpen={() => open(block.item)}
+                            />
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    {nowPct !== null ? (
+                      <div
+                        aria-hidden
+                        className="pointer-events-none absolute inset-x-0 z-10 flex items-center"
+                        style={{ top: `${nowPct}%` }}
+                      >
+                        <span className="-ml-1 size-2 rounded-full bg-foreground" />
+                        <span className="h-px flex-1 bg-foreground" />
+                      </div>
+                    ) : null}
+                  </div>
+                )
+              })}
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onPress={() => setSelectedId(null)}
-            >
-              {t("closeDrawer")}
-            </Button>
           </div>
-          <dl className="mt-4 grid gap-3 rounded-2xl bg-sand-50 p-4 sm:grid-cols-2 dark:bg-muted/40">
-            <div>
-              <dt className="text-xs text-muted-foreground">{t("member")}</dt>
-              <dd>{selected.memberFirstName ?? t("memberUnknown")}</dd>
-            </div>
-            <div>
-              <dt className="text-xs text-muted-foreground">{t("mode")}</dt>
-              <dd>
-                {selected.modeLabel
-                  ? pickLocalized(selected.modeLabel, locale)
-                  : modeName(selected.sessionMode)}
-              </dd>
-            </div>
-            {selected.status === "awaiting_confirmation" &&
-            selected.approvalDeadlineAt ? (
-              <div className="sm:col-span-2">
-                <dt className="text-xs text-muted-foreground">
-                  {t("respondBy")}
-                </dt>
-                <dd>
-                  {new Intl.DateTimeFormat(locale, {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  }).format(new Date(selected.approvalDeadlineAt))}
-                </dd>
-              </div>
-            ) : null}
-            <div className="sm:col-span-2">
-              <dt className="text-xs text-muted-foreground">{t("location")}</dt>
-              <dd>
-                {selected.locationName
-                  ? [
-                      selected.locationName,
-                      selected.locationCity,
-                      selected.locationCountry,
-                    ]
-                      .filter(Boolean)
-                      .join(", ")
-                  : selected.sessionMode === "online"
-                    ? t("locationOnline")
-                    : selected.sessionMode === "phone"
-                      ? t("locationPhone")
-                      : t("locationUnknown")}
-              </dd>
-            </div>
-          </dl>
-          {selected.status === "awaiting_confirmation" ? (
-            <RequestActions
-              bookingId={selected.id}
-              onSettled={(status) => {
-                if (status === "confirmed") {
-                  setBookings((curr) =>
-                    curr.map((b) =>
-                      b.id === selected.id ? { ...b, status: "confirmed" } : b
-                    )
-                  )
-                  return
-                }
-                setBookings((curr) => curr.filter((b) => b.id !== selected.id))
-                setSelectedId(null)
-              }}
-            />
-          ) : (
-            <JoinCta
-              className="mt-4"
-              href={`/${orgSlug}/team/sessions/${selected.id}/join`}
-              sessionMode={selected.sessionMode}
-              status={selected.status}
-              startsAt={selected.startsAt}
-              endsAt={selected.endsAt}
-              joinLabel={t("join")}
-              joinSoonLabel={t("joinSoon")}
-              pending="hint"
-            />
-          )}
-          {selected.status === "confirmed" ||
-          selected.status === "rescheduled" ||
-          selected.status === "completed" ? (
-            <LinkButton
-              className="mt-3"
-              variant="outline"
-              href={`/${orgSlug}/team/sessions/${selected.id}/report`}
-            >
-              {tReport("open")}
-            </LinkButton>
-          ) : null}
-        </div>
-      ) : null}
 
-      {bookings.length === 0 && !loading ? (
-        <p className="rounded-3xl border border-dashed border-sand-300 bg-sand-50/70 p-6 text-center text-sm text-muted-foreground dark:border-border dark:bg-card">
-          {t("emptyWeek")}
-        </p>
-      ) : null}
+          {/* Narrow: the same week as a list, day by day. */}
+          <div className="space-y-5 @xl:hidden" data-testid="calendar-agenda">
+            {agenda.map(({ day, items }) => (
+              <section
+                key={day.toISOString()}
+                ref={day === upcomingDay ? upcomingRef : undefined}
+                className="scroll-mt-20"
+              >
+                <h3 className="flex items-baseline gap-2 px-1 font-medium">
+                  <span className="first-letter:uppercase">
+                    {formatters.fullDay.format(day)}
+                  </span>
+                  {isSameDay(day, now) ? (
+                    <span className="eyebrow text-[10px] text-primary">
+                      {t("today")}
+                    </span>
+                  ) : null}
+                </h3>
+                <ul className="mt-2 divide-y overflow-hidden rounded-2xl border bg-card shadow-1">
+                  {items.map((b) => {
+                    const over = new Date(b.endsAt) < now
+                    const kind = sessionKind(b.status)
+                    const ModeIcon = MODE_ICON[b.sessionMode]
+                    return (
+                      <li key={b.id}>
+                        <button
+                          type="button"
+                          data-testid="calendar-session"
+                          aria-label={summary(b)}
+                          className={cn(
+                            "flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50",
+                            FOCUS_RING,
+                            "focus-visible:ring-inset"
+                          )}
+                          onClick={() => open(b)}
+                        >
+                          <span
+                            aria-hidden
+                            className={cn(
+                              "flex size-8 shrink-0 items-center justify-center rounded-full",
+                              kind !== "session"
+                                ? UNCONFIRMED_CLASS
+                                : over
+                                  ? OVER_CLASS[b.sessionMode]
+                                  : MODE_CLASS[b.sessionMode]
+                            )}
+                          >
+                            <ModeIcon className="size-4" />
+                          </span>
+                          <span className="w-12 shrink-0 text-sm tabular-nums">
+                            <span
+                              className={cn(
+                                "block font-medium",
+                                over && "font-normal text-muted-foreground"
+                              )}
+                            >
+                              {formatters.time.format(new Date(b.startsAt))}
+                            </span>
+                            <span className="block text-xs text-muted-foreground">
+                              {formatters.time.format(new Date(b.endsAt))}
+                            </span>
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span
+                              className={cn(
+                                "block truncate font-medium",
+                                over && "font-normal text-muted-foreground"
+                              )}
+                            >
+                              {who(b)}
+                            </span>
+                            <span className="block truncate text-sm text-muted-foreground">
+                              {pickLocalized(b.eventTypeTitle, locale)} ·{" "}
+                              {modeName(b.sessionMode)}
+                            </span>
+                            {kind !== "session" ? (
+                              <StatusPill tone="attention" className="mt-1.5">
+                                {kindLabel(kind)}
+                              </StatusPill>
+                            ) : null}
+                          </span>
+                          <CaretRightIcon
+                            aria-hidden
+                            className="size-4 shrink-0 text-muted-foreground"
+                          />
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </section>
+            ))}
+          </div>
+        </>
+      )}
+
+      <BookingSheet
+        booking={inSheet}
+        isOpen={sheetOpen && inSheet !== null}
+        onOpenChange={setSheetOpen}
+        orgSlug={orgSlug}
+        modeName={modeName}
+        onSettled={(bookingId, status) => {
+          // Answered: back to the week. A declined request leaves the
+          // calendar, so focus goes to the week heading instead of nowhere.
+          answers.current += 1
+          setSheetOpen(false)
+          setSettled((curr) => ({ ...curr, [bookingId]: status }))
+          if (status === "cancelled") {
+            window.setTimeout(() => headingRef.current?.focus(), SHEET_CLOSE_MS)
+          }
+        }}
+      />
     </div>
+  )
+}
+
+function SessionBlock({
+  block,
+  label,
+  time,
+  timeRange,
+  who,
+  title,
+  kindLabel,
+  over,
+  onOpen,
+}: {
+  block: DayBlock<CalendarBooking>
+  label: string
+  time: string
+  timeRange: string
+  who: string
+  title: string
+  /** "Request" or "Unpaid"; `null` for a session. */
+  kindLabel: string | null
+  over: boolean
+  onOpen: () => void
+}) {
+  const { item } = block
+  const compact = block.drawnMinutes < COMPACT_BELOW_MINUTES
+  const bar = block.lanes > 3
+  /** Room for a third line. */
+  const tall = block.drawnMinutes >= 60
+  const Icon = MODE_ICON[item.sessionMode]
+  return (
+    <button
+      type="button"
+      data-testid="calendar-session"
+      aria-label={label}
+      title={label}
+      className={cn(
+        "block size-full min-w-0 overflow-hidden rounded-lg text-left text-[11px] shadow-1 transition-opacity hover:opacity-90",
+        FOCUS_RING,
+        bar ? "px-0" : "px-1.5",
+        compact ? "py-0.5 leading-[1.3]" : "py-1 leading-tight",
+        kindLabel
+          ? UNCONFIRMED_CLASS
+          : over
+            ? OVER_CLASS[item.sessionMode]
+            : MODE_CLASS[item.sessionMode],
+        block.continuesFromBefore && "rounded-t-none",
+        block.continuesAfter && "rounded-b-none"
+      )}
+      onClick={onOpen}
+    >
+      {bar ? null : compact ? (
+        <span className="flex items-center gap-1">
+          <Icon aria-hidden className="size-3 shrink-0 opacity-90" />
+          <span className="truncate">
+            <span className="tabular-nums opacity-90">{time}</span>{" "}
+            <span className="font-medium">{who}</span>
+          </span>
+        </span>
+      ) : (
+        <>
+          <span className="block truncate tabular-nums opacity-90">
+            {kindLabel && !tall ? (
+              <>
+                {time} <UnconfirmedLabel>{kindLabel}</UnconfirmedLabel>
+              </>
+            ) : block.lanes > 1 ? (
+              time
+            ) : (
+              timeRange
+            )}
+          </span>
+          <span className="flex items-center gap-1">
+            <Icon aria-hidden className="size-3 shrink-0 opacity-90" />
+            <span className="truncate font-medium">{who}</span>
+          </span>
+          {!tall ? null : kindLabel ? (
+            <UnconfirmedLabel className="block truncate">
+              {kindLabel}
+            </UnconfirmedLabel>
+          ) : (
+            <span className="block truncate opacity-90">{title}</span>
+          )}
+        </>
+      )}
+    </button>
+  )
+}
+
+function UnconfirmedLabel({
+  className,
+  children,
+}: {
+  className?: string
+  children: React.ReactNode
+}) {
+  return (
+    <span
+      className={cn(
+        "font-medium text-coral-800 dark:text-coral-200",
+        className
+      )}
+    >
+      {children}
+    </span>
   )
 }

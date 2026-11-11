@@ -25,7 +25,11 @@ export function RequestActions({
 
   async function accept() {
     setPending("accept")
-    const result = await acceptCalendarBookingAction(bookingId)
+    // A dropped connection rejects: the buttons must come back either way.
+    const result = await acceptCalendarBookingAction(bookingId).catch(() => ({
+      ok: false as const,
+      error: "requestFailed",
+    }))
     setPending(null)
     if (!result.ok) {
       toast.error(
@@ -44,7 +48,7 @@ export function RequestActions({
     const result = await declineCalendarBookingAction(
       bookingId,
       note.trim() ? note.trim() : undefined
-    )
+    ).catch(() => ({ ok: false as const, error: "requestFailed" }))
     setPending(null)
     if (!result.ok) {
       toast.error(t("requestFailed"))
@@ -55,8 +59,7 @@ export function RequestActions({
   }
 
   return (
-    <div className="mt-4 space-y-3">
-      <p className="text-sm font-medium">{t("requestPending")}</p>
+    <div className="space-y-3">
       <Textarea
         value={note}
         maxLength={180}
