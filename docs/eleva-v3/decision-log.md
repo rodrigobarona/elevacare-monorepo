@@ -64,8 +64,8 @@ Each entry should include:
     told apart.
   - An event time further than five minutes ahead of our clock is
     replaced by the time we received it.
-    Rules in one place: `packages/workflows/src/video/attendance.ts`
-    (`deriveAttendance`, `afterMeetingEnded`, `nextLifecycleState`).
+- Rules in one place: `packages/workflows/src/video/attendance.ts`
+  (`deriveAttendance`, `afterMeetingEnded`, `nextLifecycleState`).
 - Effect to know: a session where one person waited alone, or where the
   room emptied before the booked end, is stored as `scheduled` until the
   sweep closes it, up to about 40 minutes after the booked end (window
