@@ -8,6 +8,23 @@ import {
 import { PhoneIcon } from "@eleva/icons"
 import { cn } from "@eleva/ui/lib/utils"
 
+/** One rich-text tag per line: `<sns24></sns24>` renders its phone link. */
+const PHONE_LINKS = Object.fromEntries(
+  URGENT_HELP_LINES.map((line) => [line, () => <PhoneLink line={line} />])
+) as Record<UrgentHelpLine, () => ReactNode>
+
+function PhoneLink({ line }: { line: UrgentHelpLine }) {
+  const { display, href } = URGENT_HELP_NUMBERS[line]
+  return (
+    <a
+      href={href}
+      className="-mx-2 -my-2 inline-block px-2 py-2 font-semibold whitespace-nowrap text-foreground underline decoration-primary decoration-2 underline-offset-4 hover:decoration-foreground"
+    >
+      {display}
+    </a>
+  )
+}
+
 /**
  * Where to turn when something cannot wait for a booked session: 112, and
  * the national lines the reader's language names. Shown wherever members
@@ -65,22 +82,5 @@ export function UrgentHelp({
         ) : null}
       </div>
     </div>
-  )
-}
-
-/** One rich-text tag per line: `<sns24></sns24>` renders its phone link. */
-const PHONE_LINKS = Object.fromEntries(
-  URGENT_HELP_LINES.map((line) => [line, () => <PhoneLink line={line} />])
-) as Record<UrgentHelpLine, () => ReactNode>
-
-function PhoneLink({ line }: { line: UrgentHelpLine }) {
-  const { display, href } = URGENT_HELP_NUMBERS[line]
-  return (
-    <a
-      href={href}
-      className="-mx-2 -my-2 inline-block px-2 py-2 font-semibold whitespace-nowrap text-foreground underline decoration-primary decoration-2 underline-offset-4 hover:decoration-foreground"
-    >
-      {display}
-    </a>
   )
 }

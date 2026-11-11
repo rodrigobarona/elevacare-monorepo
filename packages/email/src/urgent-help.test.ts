@@ -40,6 +40,37 @@ describe("urgent help in member emails (PRIV2-03)", () => {
     }
   )
 
+  it.each(LOCALES)(
+    "every member email in %s resolves its phone placeholders",
+    async (locale) => {
+      const htmls = await Promise.all([
+        renderBookingConfirmed({ ...base, locale }),
+        renderBookingReminder({
+          ...base,
+          window: "1h",
+          locale,
+          urgentHelp: "full",
+        }),
+        renderBookingRescheduled({
+          ...base,
+          previousDate: base.formattedDate,
+          newDate: "Wednesday 18 November 2026, 14:00",
+          locale,
+          urgentHelp: "full",
+        }),
+        renderBookingCancelled({ ...base, locale, urgentHelp: "full" }),
+      ])
+      for (const html of htmls) {
+        // Markup only: styles and scripts legitimately contain braces.
+        const text = html
+          .replace(/<(style|script)[\s\S]*?<\/\1>/g, "")
+          .replace(/<[^>]+>/g, "")
+        expect(text).not.toMatch(/\{[^}]*\}/)
+        expect(hasLink(html, "emergency")).toBe(true)
+      }
+    }
+  )
+
   it("leaves the note out of the expert's copy", async () => {
     const html = await renderBookingConfirmed({
       ...base,

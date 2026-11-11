@@ -12,6 +12,7 @@ async function render(locale: (typeof locales)[number], variant?: "compact") {
   return renderToStaticMarkup(
     createElement(NextIntlClientProvider, {
       locale,
+      timeZone: "Europe/Lisbon",
       messages: { urgentHelp: messages.urgentHelp },
       children: createElement(UrgentHelp, { variant }),
     })

@@ -65,8 +65,11 @@ Each entry should include:
   completes the account a confirmed booking started, or creates one (with
   the name) when the booking is still a request. The phone number is no
   longer put in that link; the sign-up page never read it. Email and name
-  stay in the query string (accepted for the beta: same-site, and
-  `Referrer-Policy` keeps them from other sites).
+  stay in the query string, so they remain in the browser history and in
+  request logs of the web and account apps (`Referrer-Policy` keeps them
+  from other sites). Accepted for the beta. Follow-up (engineering, by
+  the Phase 13 hardening pass): carry the email only, or a short-lived
+  opaque token.
 - Not built: the note on the join and waiting page (next slice, with the
   waiting room); a line in the help center; choosing lines from the
   reader's country instead of their language; national lines for other
