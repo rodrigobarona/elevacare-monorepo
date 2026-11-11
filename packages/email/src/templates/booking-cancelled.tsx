@@ -2,6 +2,10 @@ import { EmailLayout } from "../components/layout"
 import { DetailRow } from "../components/detail-row"
 import { EmailCard } from "../components/email-card"
 import { EmailBodyText, EmailHeading } from "../components/email-heading"
+import {
+  UrgentHelpNote,
+  type UrgentHelpDetail,
+} from "../components/urgent-help-note"
 import { getEmailTranslations, type EmailLocale } from "../i18n"
 
 export interface BookingCancelledProps {
@@ -23,6 +27,8 @@ export interface BookingCancelledProps {
   /** The other person's row ("Member" for experts, "Expert" for members). */
   counterpartLabel?: string
   counterpartName?: string
+  /** Member copy only: where to turn when something cannot wait. */
+  urgentHelp?: UrgentHelpDetail
 }
 
 export function BookingCancelledEmail({
@@ -40,6 +46,7 @@ export function BookingCancelledEmail({
   greetingName,
   counterpartLabel,
   counterpartName,
+  urgentHelp,
 }: BookingCancelledProps) {
   const t = getEmailTranslations(locale)
 
@@ -84,6 +91,9 @@ export function BookingCancelledEmail({
         <EmailBodyText className="mt-[24px] text-[13px] leading-[20px]">
           {t.booking.icsHintRemove}
         </EmailBodyText>
+      ) : null}
+      {urgentHelp ? (
+        <UrgentHelpNote locale={locale} detail={urgentHelp} />
       ) : null}
     </EmailLayout>
   )

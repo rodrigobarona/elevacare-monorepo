@@ -49,6 +49,7 @@ import {
 import { formatCountdown, isExpired } from "@eleva/ui/lib/booking/countdown"
 import { displayLanguage } from "@eleva/ui/lib/booking/display-names"
 import { toE164 } from "@eleva/ui/lib/booking/e164"
+import { guestSignupPath } from "@eleva/config/guest-signup"
 import { maskPhone } from "@eleva/config/phone"
 import { slotRequiresApproval } from "@eleva/config/booking-settings"
 import { addDaysToKey, dateKeyInZone } from "@eleva/ui/lib/booking/slot-groups"
@@ -59,6 +60,7 @@ import {
   FunnelStepper,
   StepHeader,
 } from "@/components/booking/booking-chrome"
+import { UrgentHelp } from "@eleva/dashboard/urgent-help"
 import { BookingDone } from "@/components/booking/booking-done"
 import { ExpertAvatar } from "@/components/expert-avatar"
 import { Link } from "@/i18n/navigation"
@@ -684,11 +686,7 @@ export function BookingFunnel({
   const expertMedia = (
     <ExpertAvatar displayName={expertName} avatarUrl={expertAvatarUrl} />
   )
-  const signupHref = `/signup?${new URLSearchParams({
-    name,
-    email,
-    ...(phone ? { phone } : {}),
-  }).toString()}`
+  const signupHref = guestSignupPath({ email, name })
 
   if (step === "done" && slot && selectedMode) {
     const accessNote =
@@ -1101,6 +1099,7 @@ export function BookingFunnel({
                   {t("details.intakeNotesHint")}
                 </p>
               </Field>
+              <UrgentHelp variant="compact" />
             </FormCard>
             <FormCard title={t("details.sections.confirm")}>
               <CancellationPolicySummary

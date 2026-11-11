@@ -16,9 +16,14 @@ export default getRequestConfig(async ({ requestLocale }) => {
     getDashboardMessages(locale),
   ])
 
-  // The avatar menu is shared with the signed-in apps; its copy lives there.
+  // The avatar menu and the urgent-help note are shared with the signed-in
+  // apps; their copy lives there.
   return {
     locale,
-    messages: { ...siteMessages, accountMenu: dashboardMessages.accountMenu },
+    messages: {
+      ...siteMessages,
+      accountMenu: dashboardMessages.accountMenu,
+      urgentHelp: dashboardMessages.urgentHelp,
+    },
   }
 })

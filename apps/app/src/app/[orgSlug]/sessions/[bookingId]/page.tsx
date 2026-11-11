@@ -14,6 +14,7 @@ import {
   isSessionMode,
 } from "@/lib/booking-status"
 import { JoinCta } from "@eleva/video/join-cta"
+import { UrgentHelp } from "@eleva/dashboard/urgent-help"
 import { DateTile } from "@eleva/ui/components/date-tile"
 import { bookingDateParts } from "@eleva/ui/lib/booking/date-parts"
 import { StatusPill } from "../../_components/booking-visuals"
@@ -81,6 +82,10 @@ export default async function SessionDetailPage({
   const title = eventTitle(booking.eventType.title, locale)
   const memberName = session.user.displayName ?? session.user.email
   const status = isBookingStatus(booking.status) ? booking.status : null
+  // Urgent-help signposting is for sessions still ahead of the member: the
+  // API only quotes a cancellation while the session is active and has not
+  // started.
+  const isUpcoming = quote !== null
   const parts = bookingDateParts(
     booking.startsAt,
     booking.endsAt,
@@ -219,6 +224,8 @@ export default async function SessionDetailPage({
           />
         </aside>
       </div>
+
+      {isUpcoming ? <UrgentHelp className="rounded-3xl border p-6" /> : null}
     </div>
   )
 }

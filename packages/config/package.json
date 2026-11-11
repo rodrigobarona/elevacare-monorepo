@@ -31,6 +31,8 @@
     "./editorial-pillars": "./src/editorial-pillars.ts",
     "./legal-slugs": "./src/legal-slugs.ts",
     "./phone": "./src/phone.ts",
+    "./urgent-help": "./src/urgent-help.ts",
+    "./guest-signup": "./src/guest-signup.ts",
     "./professional-bodies": "./src/professional-bodies.ts"
   },
   "scripts": {

@@ -375,7 +375,7 @@ describe("sendBookingNotification", () => {
       1,
       expect.objectContaining({
         activateHref:
-          "https://eleva.care/signup?claim=1&email=ada%40example.com&name=Ada+Lovelace&phone=%2B351910000000",
+          "https://eleva.care/signup?claim=1&email=ada%40example.com&name=Ada+Lovelace",
         audience: "member",
       })
     )
@@ -531,6 +531,55 @@ describe("sendBookingNotification", () => {
       })
     )
   })
+
+  it.each([
+    ["booking.reminder_24h", "emergency"],
+    ["booking.reminder_1h", "emergency"],
+    ["booking.rescheduled", "emergency"],
+    ["booking.cancelled", "full"],
+  ] as const)(
+    "tells members, not experts, where to get urgent help on %s (PRIV2-03)",
+    async (type, detail) => {
+      const send = vi.fn().mockResolvedValue({ kind: type, deliveries: [] })
+      const render = {
+        "booking.reminder_24h": renderBookingReminder,
+        "booking.reminder_1h": renderBookingReminder,
+        "booking.rescheduled": renderBookingRescheduled,
+        "booking.cancelled": renderBookingCancelled,
+      }[type]
+      render.mockClear()
+      const BOOKING_STATE = {
+        "booking.reminder_24h": {},
+        "booking.reminder_1h": {},
+        "booking.rescheduled": { status: "rescheduled", scheduleRevision: 1 },
+        "booking.cancelled": { status: "cancelled" },
+      } as const
+      await sendBookingNotification(
+        {
+          id: `evt-urgent-${type}`,
+          type,
+          orgId: ORG_ID,
+          payload: eventPayload(
+            type === "booking.rescheduled"
+              ? { previousStartsAt: PREVIOUS_STARTS_AT, scheduleRevision: 1 }
+              : {}
+          ),
+        },
+        {
+          loadBooking: async () => booking(BOOKING_STATE[type]),
+          send,
+        }
+      )
+      expect(render).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({ urgentHelp: detail })
+      )
+      expect(render).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({ urgentHelp: undefined })
+      )
+    }
+  )
 
   it("attaches a PHI-free calendar invite to both confirmation emails", async () => {
     const send = vi

@@ -142,6 +142,39 @@ test.describe("booking funnel", () => {
     await expect(whenHeading).toBeVisible()
   })
 
+  test("tells members where to get urgent help before they book (PRIV2-03)", async ({
+    page,
+  }) => {
+    const offer = await seededBookableOffer()
+    test.skip(!offer, "needs seeded fisiomota / first-visit from db:seed:demo")
+
+    await mockFunnelApis(page, offer!.username, offer!.slug)
+    const response = await page.goto(`/${offer!.username}/${offer!.slug}`)
+    skipUnlessPageOk(response?.status(), "offer page")
+
+    const continueMeet = page.getByTestId("booking-continue-meet")
+    const whenHeading = page.getByTestId("booking-when-heading")
+    await expect(continueMeet.or(whenHeading)).toBeVisible({ timeout: 10_000 })
+    if (await continueMeet.isVisible()) {
+      await page
+        .getByTestId("booking-mode-option")
+        .and(page.locator(":not([aria-disabled='true'])"))
+        .first()
+        .click()
+      await continueMeet.click()
+    }
+
+    await page.getByTestId("booking-slot-time").first().click()
+    await page.getByTestId("booking-continue-when").first().click()
+
+    const note = page.getByTestId("urgent-help")
+    await expect(note).toBeVisible()
+    await expect(note.getByRole("link", { name: "112" })).toHaveAttribute(
+      "href",
+      "tel:112"
+    )
+  })
+
   test("confirms a paid hold after Stripe redirect", async ({ page }) => {
     const offer = await seededBookableOffer()
     test.skip(!offer, "needs seeded fisiomota / first-visit from db:seed:demo")

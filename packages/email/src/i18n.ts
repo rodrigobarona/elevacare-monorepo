@@ -62,6 +62,11 @@ const translations = {
         `Your expert will call you on ${phone} at the session time.`,
       phoneCallNoticeNoNumber:
         "Your expert will call you on the number you gave when booking.",
+      urgentHelpTitle: "Need urgent help?",
+      urgentHelp:
+        "If something cannot wait, call {emergency}: free, day and night, anywhere in the EU.",
+      urgentHelpNational:
+        "In Portugal, SNS 24 ({sns24}) gives health advice by phone, and {prevention1411} is the free, 24-hour line for anyone thinking about suicide or worried about someone. In Spain, that line is {linea024}.",
       openInMaps: "Open in Maps",
       videoCall: "Video call",
       phoneCall: "Phone call",
@@ -247,6 +252,11 @@ const translations = {
         `O seu especialista vai ligar-lhe para ${phone} à hora da sessão.`,
       phoneCallNoticeNoNumber:
         "O seu especialista vai ligar-lhe para o número que indicou na reserva.",
+      urgentHelpTitle: "Precisa de ajuda urgente?",
+      urgentHelp:
+        "Se não puder esperar, ligue {emergency}: gratuito, de dia e de noite, em toda a UE.",
+      urgentHelpNational:
+        "Em Portugal, o SNS 24 ({sns24}) dá aconselhamento de saúde por telefone, e o {prevention1411} é a linha gratuita, aberta a qualquer hora, para quem pensa em suicídio ou está preocupado com alguém. Em Espanha, essa linha é o {linea024}.",
       openInMaps: "Abrir no Maps",
       videoCall: "Videochamada",
       phoneCall: "Chamada telefónica",
@@ -435,6 +445,11 @@ const translations = {
         `Tu especialista te llamará al ${phone} a la hora de la sesión.`,
       phoneCallNoticeNoNumber:
         "Tu especialista te llamará al número que indicaste al reservar.",
+      urgentHelpTitle: "¿Necesitas ayuda urgente?",
+      urgentHelp:
+        "Si no puede esperar, llama al {emergency}: gratis, de día y de noche, en toda la UE.",
+      urgentHelpNational:
+        "En España, el {linea024} es la línea gratuita, abierta a cualquier hora, para quien piensa en el suicidio o está preocupado por alguien. En Portugal, esa línea es el {prevention1411}, y el SNS 24 ({sns24}) da consejo de salud por teléfono.",
       openInMaps: "Abrir en Maps",
       videoCall: "Videollamada",
       phoneCall: "Llamada telefónica",
@@ -607,6 +622,15 @@ export interface EmailTranslations {
     calendarCta: string
     phoneCallNotice: (phone: string) => string
     phoneCallNoticeNoNumber: string
+    /**
+     * Member emails: where to turn when something cannot wait. `{emergency}`,
+     * `{sns24}` and the other keys of `URGENT_HELP_NUMBERS` become phone
+     * links; the copy never types a number.
+     */
+    urgentHelp: string
+    urgentHelpTitle: string
+    /** The national lines this language names. */
+    urgentHelpNational: string
     openInMaps: string
     videoCall: string
     phoneCall: string

@@ -133,6 +133,7 @@
     "signOut": "Terminar sessão",
     "createAccount": "Criar conta",
     "magicLink": "Enviar-me antes um link de acesso",
+    "claimLink": "Enviar-me o link de acesso",
     "google": "Continuar com o Google",
     "passkey": "Iniciar sessão com chave de acesso",
     "forgotPassword": "Esqueceu a palavra-passe?",

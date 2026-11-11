@@ -10,6 +10,7 @@ import {
   type CancellationPolicy,
 } from "@eleva/config/cancellation-policy"
 import { resolveGatewayUrl } from "@eleva/config/env"
+import { guestSignupPath } from "@eleva/config/guest-signup"
 import { maskPhone } from "@eleva/config/phone"
 import { auth, main, withPlatformAdminContext } from "@eleva/db"
 import {
@@ -881,6 +882,7 @@ async function renderBookingHtml(input: {
         subheading: copy.subheading,
         preview,
         showIcsHint: input.kind === "booking.cancelled",
+        urgentHelp: isExpert ? undefined : "full",
       })
     case "booking.rescheduled":
       return renderBookingRescheduled({
@@ -896,6 +898,7 @@ async function renderBookingHtml(input: {
         ...people,
         subheading: copy.subheading,
         preview,
+        urgentHelp: isExpert ? undefined : "emergency",
       })
     case "booking.reminder_24h":
       return renderBookingReminder({
@@ -911,6 +914,7 @@ async function renderBookingHtml(input: {
         ...people,
         subheading: copy.subheading,
         preview,
+        urgentHelp: isExpert ? undefined : "emergency",
       })
     case "booking.reminder_1h":
       return renderBookingReminder({
@@ -926,6 +930,7 @@ async function renderBookingHtml(input: {
         ...people,
         subheading: copy.subheading,
         preview,
+        urgentHelp: isExpert ? undefined : "emergency",
       })
     default: {
       const _exhaustive: never = input.kind
@@ -1036,13 +1041,11 @@ function memberActivateHref(
   }
   if (!booking.guestEmail) return undefined
   if (booking.memberEmailVerified) return undefined
-  const params = new URLSearchParams({
-    claim: "1",
+  const path = guestSignupPath({
     email: booking.guestEmail,
-    ...(booking.guestName ? { name: booking.guestName } : {}),
-    ...(booking.guestPhone ? { phone: booking.guestPhone } : {}),
+    name: booking.guestName,
   })
-  return `${gateway.replace(/\/$/, "")}/signup?${params.toString()}`
+  return `${gateway.replace(/\/$/, "")}${path}`
 }
 
 export async function loadBookingForNotification(
