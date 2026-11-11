@@ -32,6 +32,74 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-11: Actions that refund need a session that can be revoked, and declining asks first (active)
+
+- Owner: engineering. From the judge panel on the expert cancellation
+  (security and GDPR lenses) and its follow-ups.
+- Findings:
+  - Two routes that start a refund still accepted a short-lived token
+    that cannot be revoked: a member cancelling their booking, and an
+    expert declining a request. The staff refund route and the expert
+    cancellation already refused it.
+  - Declining a request was one press, with no question, next to
+    "Accept". It refunds the member in full and cannot be undone.
+  - The note an expert could type when declining was free text in an
+    unencrypted column, about a request in which the member describes a
+    health need. Nothing read it, and retention and erasure did not
+    cover it.
+  - The code that records a refund as owed and frees the time existed
+    three times (member cancel, request decline, expert cancel).
+- Decisions:
+  - `POST /me/bookings/{id}/cancel` and `POST
+/expert/bookings/{id}/decline` need a session or an API key that can
+    be revoked. The apps send the session, so nothing changes for people
+    using them.
+  - Declining asks first: who is told, that they are refunded in full,
+    that it cannot be undone. The safe button has the focus.
+  - The reason for declining is optional and one of a fixed list (I
+    can't take that time, this isn't my area, another reason), kept as
+    `expert_decline:<reason>`. The `note` field is gone from the API. No
+    new free text is stored.
+  - One helper records a refund as owed and one frees the time
+    (`packages/scheduling/src/refund-due.ts`); the three flows use them.
+  - The member's email about a declined or unanswered request is sent
+    whatever their email preference, as for an expert's cancellation:
+    the session they paid for will not happen, and it was not their
+    choice.
+  - A request answered elsewhere (accepted in another tab, expired)
+    closes the question, says so and shows the page as it is now.
+- Operator (founder, before the beta opens): notes typed before this
+  change are still on their bookings as `expert_decline: <words>`. Count
+  them on production, and if there are any, reduce each to the code. The
+  notes were about requests in which members describe a health need, so
+  they should not stay.
+
+  ```sql
+  select count(*) from bookings
+  where cancellation_reason like 'expert_decline: %';
+
+  update bookings
+  set cancellation_reason = 'expert_decline'
+  where cancellation_reason like 'expert_decline: %';
+  ```
+
+- Not built: a limit on how many requests an expert may decline; the
+  cancellation reason and time in the member's data export; one shared
+  dialog for "decline" and "cancel session" (they are two copies of the
+  same pattern); `accept` and `reschedule` still take a short-lived
+  token (neither starts a refund).
+- Proven on 2026-11-11, locally, against Stripe test mode:
+  `pnpm e2e:request-smoke` (accept; decline with a reason from the list,
+  stored as `expert_decline:unavailable`, refunded in full; expiry) and
+  `pnpm e2e:cancellation-smoke` (a member's cancellation under the three
+  policies, with a session, through the shared helper).
+  A test request was also declined through the screen itself, on a
+  phone (open the request, Decline, choose a reason, confirm): the
+  booking was cancelled with `expert_decline:unavailable` and the whole
+  price recorded as owed back.
+- Not proven: the refusal of a short-lived token against the running
+  API (it is covered by unit tests of the helper and of each route).
+
 ### 2026-11-11: A phone or in-person session is never recorded as a no-show (active)
 
 - Owner: engineering. Noted while fixing early-closed sessions (entry "A

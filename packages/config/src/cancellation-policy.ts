@@ -30,6 +30,19 @@ export const EXPERT_CANCEL_REASONS = [
 export type ExpertCancelReason = (typeof EXPERT_CANCEL_REASONS)[number]
 
 /**
+ * Why an expert declined a request to book. Fixed choices for the same
+ * reason: what a member wrote when asking is health information, and a
+ * free-text answer about it does not belong on the booking record.
+ */
+export const EXPERT_DECLINE_REASONS = [
+  "unavailable",
+  "not_my_field",
+  "other",
+] as const
+
+export type ExpertDeclineReason = (typeof EXPERT_DECLINE_REASONS)[number]
+
+/**
  * Bump when a tier table below changes. Bookings store the version they
  * were sold under so a later edit never changes an existing booking.
  */

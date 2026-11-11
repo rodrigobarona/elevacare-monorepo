@@ -2058,7 +2058,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "declineExpertBookingRequest",
           summary: "Decline a Request to book",
           description:
-            "Cancels an awaiting_confirmation booking, refunds 100%, and releases the slot.",
+            "Cancels an awaiting_confirmation booking, refunds 100%, and releases the slot. The optional reason is one of a fixed list, kept on the booking and not sent to the member. Needs a session or an API key; short-lived tokens are refused.",
           tags: ["Expert Calendar"],
           requestParams: {
             path: z.object({ id: z.string().uuid() }),
@@ -4355,7 +4355,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "cancelMeBooking",
           summary: "Cancel a confirmed member booking",
           description:
-            "Allowed until the session starts. Refunds per the booking's cancellation policy snapshot: records refund_due_cents on the payment and, when above 0, marks it refund_pending for the cancellation-refund sweep. Returns the applied quote. Releases the slot.",
+            "Allowed until the session starts. Refunds per the booking's cancellation policy snapshot: records refund_due_cents on the payment and, when above 0, marks it refund_pending for the cancellation-refund sweep. Returns the applied quote. Releases the slot. Needs the member's session or an API key; short-lived tokens are refused.",
           tags: ["Me"],
           requestParams: {
             path: z.object({ id: z.string().uuid() }),

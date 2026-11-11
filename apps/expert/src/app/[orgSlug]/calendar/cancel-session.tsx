@@ -43,8 +43,8 @@ export function CancelSession({
   startsAt: string
   /** "First visit · Monday 30 November, 09:00–10:00": which session this is. */
   sessionSummary: string
-  /** First name, or the word for a member when there is none. */
-  memberName: string
+  /** The member's first name, when there is one. */
+  memberName: string | null
   onCancelled: () => void
   /** The session is no longer as shown: close and load the week again. */
   onChanged: () => void
@@ -121,7 +121,9 @@ export function CancelSession({
               {sessionSummary}
             </span>
             <span className="mt-2 block">
-              {t("description", { name: memberName })}
+              {memberName
+                ? t("description", { name: memberName })
+                : t("descriptionNoName")}
             </span>
             <span className="mt-2 block">{t("slotNote")}</span>
           </AlertDialogDescription>
@@ -133,6 +135,7 @@ export function CancelSession({
           {/* A short list on purpose: no free text, so no health detail
               about anyone ends up on the booking record. */}
           <Select
+            className="w-full"
             aria-labelledby={reasonId}
             aria-describedby={hintId}
             placeholder={t("reasonPlaceholder")}
@@ -142,7 +145,7 @@ export function CancelSession({
               setReason(chosen ?? null)
             }}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

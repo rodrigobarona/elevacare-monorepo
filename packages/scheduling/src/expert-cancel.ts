@@ -1,4 +1,4 @@
-import { and, eq, gt, inArray, sql } from "drizzle-orm"
+import { and, eq, gt, sql } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
 import {
   EXPERT_CANCEL_REASONS,
@@ -10,6 +10,7 @@ import {
   type ExpertBookingApprovalRow,
 } from "@eleva/db"
 import { emitBookingNotificationEvent } from "./emit-domain-event"
+import { markRefundDue, releaseReservation } from "./refund-due"
 
 /** A session the expert can still cancel: confirmed, and not started. */
 const EXPERT_CANCELLABLE_STATUSES = new Set(["confirmed", "rescheduled"])
@@ -168,38 +169,16 @@ async function writeCancellation(
       if (!updated) throw new ExpertCancelError("INVALID_STATUS")
 
       if (row.paymentId && refundCents > 0) {
-        const [payment] = await tx
-          .update(main.bookingPayments)
-          .set({
-            refundDueCents: (row.paymentRefundedCents ?? 0) + refundCents,
-            status: "refund_pending",
-          })
-          .where(
-            and(
-              eq(main.bookingPayments.id, row.paymentId),
-              eq(main.bookingPayments.status, "succeeded"),
-              eq(
-                main.bookingPayments.refundedCents,
-                row.paymentRefundedCents ?? 0
-              )
-            )
-          )
-          .returning({ id: main.bookingPayments.id })
-        if (!payment) throw new ExpertCancelError("INVALID_STATUS")
+        const marked = await markRefundDue(tx, {
+          paymentId: row.paymentId,
+          refundedCents: row.paymentRefundedCents ?? 0,
+          refundCents,
+        })
+        if (!marked) throw new ExpertCancelError("INVALID_STATUS")
       }
 
       if (row.reservationId) {
-        // A paid booking's reservation is `converted`, which still blocks
-        // the time: release it so the slot can be booked again.
-        await tx
-          .update(main.slotReservations)
-          .set({ status: "released" })
-          .where(
-            and(
-              eq(main.slotReservations.id, row.reservationId),
-              inArray(main.slotReservations.status, ["active", "converted"])
-            )
-          )
+        await releaseReservation(tx, row.reservationId)
       }
 
       await emitBookingNotificationEvent(tx, {

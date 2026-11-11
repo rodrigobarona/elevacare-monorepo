@@ -61,6 +61,21 @@ export async function requireMemberApiAuth(
   return session
 }
 
+/**
+ * Member-app `/me` routes that move money (a cancellation that refunds):
+ * the same as `requireMemberApiAuth`, but a short-lived token that cannot
+ * be revoked is refused.
+ */
+export async function requireRevocableMemberApiAuth(
+  request: Request
+): Promise<ElevaSession> {
+  const session = await requirePrivilegedApiAuth(request)
+  if (session.productLabel !== "member") {
+    throw new UnauthorizedError("missing-capability", "member product required")
+  }
+  return session
+}
+
 export async function requirePrivilegedApiAuth(
   request: Request
 ): Promise<ElevaSession> {

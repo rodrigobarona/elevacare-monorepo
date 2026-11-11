@@ -183,7 +183,7 @@ export async function settleRequest(
         `${apiUrl}/expert/bookings/${input.bookingId}/decline`,
         {
           headers: authHeaders(input.expertCookie),
-          data: { note: "Request smoke decline" },
+          data: { reason: "unavailable" },
         }
       )
       expect(res.status(), await res.text()).toBe(200)
@@ -244,6 +244,9 @@ export async function expectSettled(
   expect(booking?.status).toBe("cancelled")
   if (input.outcome === "expire") {
     expect(booking?.cancellation_reason).toBe("request_expired")
+  } else {
+    // A reason from the list, never free text.
+    expect(booking?.cancellation_reason).toBe("expert_decline:unavailable")
   }
 
   const sweep = await request.post(

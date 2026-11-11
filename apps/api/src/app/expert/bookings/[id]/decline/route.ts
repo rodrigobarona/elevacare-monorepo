@@ -6,7 +6,7 @@ import {
 import { BookingRequestError, declineBookingRequest } from "@eleva/scheduling"
 import { getExpertProfileForOrg } from "@eleva/db"
 import { corsHeaders } from "@/lib/cors"
-import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
+import { apiAuthFailure, requireRevocableApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -30,7 +30,9 @@ export async function POST(request: Request, { params }: Params) {
 
   let session
   try {
-    session = await requireApiCapability(request, "events:manage")
+    // Declining refunds the member: only a session or an API key that can
+    // be revoked may do it, never a short-lived token.
+    session = await requireRevocableApiCapability(request, "events:manage")
   } catch (err) {
     const authFailure = apiAuthFailure(err, headers)
     if (authFailure) return authFailure
@@ -76,7 +78,7 @@ export async function POST(request: Request, { params }: Params) {
       orgId: profile.orgId,
       expertProfileId: profile.id,
       bookingId: id,
-      note: parsed.data.note,
+      reason: parsed.data.reason,
       source: "expert",
     })
     return secureJson(

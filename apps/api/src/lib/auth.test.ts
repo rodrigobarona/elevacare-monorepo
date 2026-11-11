@@ -27,6 +27,7 @@ import {
   apiAuthFailure,
   requireApiCapability,
   requireRevocableApiCapability,
+  requireRevocableMemberApiAuth,
   requireStaffPayoutMutator,
 } from "./auth"
 
@@ -68,6 +69,31 @@ describe("requireRevocableApiCapability", () => {
         "admin_payouts:refund"
       )
     ).resolves.toBe(SESSION)
+  })
+})
+
+describe("requireRevocableMemberApiAuth", () => {
+  const MEMBER = { ...SESSION, productLabel: "member" }
+
+  it("rejects a non-revocable JWT: a cancellation can refund", async () => {
+    requireRevocable.mockRejectedValue(
+      new UnauthorizedError("jwt-not-revocable", "jwt")
+    )
+    await expect(
+      requireRevocableMemberApiAuth(new Request("https://api.test/x"))
+    ).rejects.toMatchObject({ code: "jwt-not-revocable" })
+    expect(requireBetterAuth).not.toHaveBeenCalled()
+  })
+
+  it("accepts a member's revocable session and nobody else's", async () => {
+    requireRevocable.mockResolvedValue(MEMBER)
+    await expect(
+      requireRevocableMemberApiAuth(new Request("https://api.test/x"))
+    ).resolves.toBe(MEMBER)
+    requireRevocable.mockResolvedValue(SESSION)
+    await expect(
+      requireRevocableMemberApiAuth(new Request("https://api.test/x"))
+    ).rejects.toMatchObject({ code: "missing-capability" })
   })
 })
 

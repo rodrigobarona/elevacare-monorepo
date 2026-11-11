@@ -85,10 +85,11 @@ export async function acceptCalendarBookingAction(
 
 export async function declineCalendarBookingAction(
   bookingId: string,
-  note?: string
+  /** One of `EXPERT_DECLINE_REASONS`; anything else fails validation. */
+  reason?: string
 ): Promise<ActionResult<{ bookingId: string; refundCents: number }>> {
   const parsed = DeclineExpertBookingRequestSchema.safeParse(
-    note?.trim() ? { note: note.trim() } : {}
+    reason ? { reason } : {}
   )
   if (!parsed.success || !BookingIdSchema.safeParse(bookingId).success) {
     return { ok: false, error: "validation" }
@@ -106,7 +107,12 @@ export async function declineCalendarBookingAction(
     console.error("decline-calendar-booking failed", err)
     return {
       ok: false,
-      error: mapExpertApiError(err, "requestFailed"),
+      // Already accepted, declined or expired elsewhere: trying again
+      // cannot help.
+      error: mapExpertApiError(err, "requestFailed", {
+        conflict: "requestAnswered",
+        notFound: "requestAnswered",
+      }),
     }
   }
 }

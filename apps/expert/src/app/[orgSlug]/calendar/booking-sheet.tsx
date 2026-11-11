@@ -74,6 +74,8 @@ export function BookingSheet({
   const start = new Date(booking.startsAt)
   const end = new Date(booking.endsAt)
   // A confirmed session can be cancelled by the expert until it starts.
+  /** Which session this is, for the questions asked before it is given up. */
+  const sessionSummary = `${pickLocalized(booking.eventTypeTitle, locale)} · ${dayFormatter.format(start)}, ${timeFormatter.format(start)}–${timeFormatter.format(end)}`
   const canCancel =
     (booking.status === "confirmed" || booking.status === "rescheduled") &&
     now !== null &&
@@ -162,8 +164,14 @@ export function BookingSheet({
         ) : null}
         {isRequest ? (
           <RequestActions
+            // A fresh dialog per request: a reason chosen for one is never
+            // carried to another.
+            key={booking.id}
             bookingId={booking.id}
+            memberName={booking.memberFirstName}
+            sessionSummary={sessionSummary}
             onSettled={(status) => onSettled(booking.id, status)}
+            onChanged={onChanged}
           />
         ) : (
           <div className="flex flex-col items-start gap-2">
@@ -195,8 +203,8 @@ export function BookingSheet({
                 key={booking.id}
                 bookingId={booking.id}
                 startsAt={booking.startsAt}
-                sessionSummary={`${pickLocalized(booking.eventTypeTitle, locale)} · ${dayFormatter.format(start)}, ${timeFormatter.format(start)}–${timeFormatter.format(end)}`}
-                memberName={booking.memberFirstName ?? t("memberUnknown")}
+                sessionSummary={sessionSummary}
+                memberName={booking.memberFirstName}
                 onCancelled={() => onSettled(booking.id, "cancelled")}
                 onChanged={onChanged}
               />

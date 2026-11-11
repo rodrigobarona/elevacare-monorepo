@@ -3,6 +3,7 @@ import { INSTANT_BOOK_LEAD_MINUTES_MAX } from "@eleva/config/booking-settings"
 import {
   CANCELLATION_POLICY_VALUES,
   EXPERT_CANCEL_REASONS,
+  EXPERT_DECLINE_REASONS,
 } from "@eleva/config/cancellation-policy"
 import {
   isAllowedSocialLinkUrl,
@@ -2157,7 +2158,8 @@ export type AcceptExpertBookingResponse = z.infer<
 >
 
 export const DeclineExpertBookingRequestSchema = z.object({
-  note: z.string().trim().max(180).optional(),
+  /** One of a fixed list, kept on the booking record; not sent to the member. */
+  reason: z.enum(EXPERT_DECLINE_REASONS).optional(),
 })
 
 export type DeclineExpertBookingRequest = z.infer<
