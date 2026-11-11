@@ -40,12 +40,11 @@ QStash is shared across environments; schedules differentiate
 themselves by destination URL. Re-run after rotating tokens or
 changing API base URLs.
 
-| Command                           | What it does                                                                                                                                                                                                                                                    | Idempotent? |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| `pnpm qstash:list`                | Print every schedule + cross-check expected paths.                                                                                                                                                                                                              | Yes         |
-| `pnpm qstash:setup`               | Provision every QStash schedule (`setup:all`): daily, monthly and payout jobs. Removes QStash schedules for the cadence ticks (`/workflows/tick/{minutely,10min,hourly}`) and their jobs, which run on Vercel Cron. `--with-retention` only after DPO sign-off. | Yes         |
-| `pnpm qstash:setup:audit-drainer` | (Re)register `/workflows/audit-outbox-drainer` (06:00 + 18:00 UTC).                                                                                                                                                                                             | Yes         |
-| `pnpm qstash:setup:invoicing`     | (Re)register the monthly `/workflows/stripe-toconline-reconciliation`; invoicing retry runs in the hourly tick.                                                                                                                                                 | Yes         |
+| Command                       | What it does                                                                                                                                                                                                                                                    | Idempotent? |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| `pnpm qstash:list`            | Print every schedule + cross-check expected paths.                                                                                                                                                                                                              | Yes         |
+| `pnpm qstash:setup`           | Provision every QStash schedule (`setup:all`): daily, monthly and payout jobs. Removes QStash schedules for the cadence ticks (`/workflows/tick/{minutely,10min,hourly}`) and their jobs, which run on Vercel Cron. `--with-retention` only after DPO sign-off. | Yes         |
+| `pnpm qstash:setup:invoicing` | (Re)register the monthly `/workflows/stripe-toconline-reconciliation`; invoicing retry runs in the hourly tick.                                                                                                                                                 | Yes         |
 
 All QStash setup commands accept `-- --dry-run` for preview-only mode.
 
@@ -92,7 +91,7 @@ swap your `.env.local` to the target environment's values.
 | `STRIPE_CONNECT_CLIENT_ID`               | `stripe:setup:webhooks` (loaded by `@eleva/billing`)                      |
 | `QSTASH_TOKEN`                           | All `qstash:*` commands                                                   |
 | `QSTASH_URL`                             | All `qstash:*` commands (defaults to `https://qstash.upstash.io`)         |
-| `WORKFLOWS_DRAIN_SECRET`                 | `qstash:setup:audit-drainer`, `qstash:setup:invoicing`, `qstash:setup`    |
+| `WORKFLOWS_DRAIN_SECRET`                 | `qstash:setup:invoicing`, `qstash:setup`                                  |
 | `API_BASE_URL`                           | All `qstash:*` setup commands. **Must be a public URL** (no localhost).   |
 | `DATABASE_URL`                           | All `stripe:backfill:*`, `stripe:replay:*`, `db:*` commands               |
 | `AUDIT_DATABASE_URL`                     | `db:*` commands that touch the audit Neon project                         |
@@ -150,7 +149,7 @@ URL. After your prod API is deployed:
 
 ```bash
 API_BASE_URL=https://api.eleva.care pnpm qstash:setup
-pnpm qstash:list   # confirm the five QStash schedules (audit drainer, monthly reconciliation, 3 payouts); ticks are under Vercel Cron Jobs
+pnpm qstash:list   # confirm the four QStash schedules (monthly reconciliation, 3 payouts); ticks, which include the audit drainer, are under Vercel Cron Jobs
 ```
 
 ### DB — apply migrations

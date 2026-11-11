@@ -22,6 +22,8 @@ export const ROUTE_POLICY = {
  */
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
+// A full run ships up to 2,000 rows one by one to a second database.
+export const maxDuration = 300
 
 export async function POST(request: Request) {
   const headers = corsHeaders(request, "POST, OPTIONS")

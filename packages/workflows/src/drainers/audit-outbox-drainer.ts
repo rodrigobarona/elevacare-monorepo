@@ -12,11 +12,16 @@ import { captureException, heartbeat } from "@eleva/observability"
  * - Commits the main-DB update (status='shipped') only AFTER the audit
  *   DB insert returned, so crash between the two leaves the outbox row
  *   'pending' and the next tick will retry.
- * - On persistent failure (>= maxAttempts) marks the row 'failed' and
- *   records the last error; alerts via Sentry captureException +
- *   BetterStack heartbeat is not emitted.
- * - Heartbeat fires once per successful run (even with zero rows
- *   processed) so the status page shows liveness.
+ * - A row that keeps failing (>= maxAttempts) is marked 'failed' with
+ *   its last error, and reported to Sentry.
+ * - When the audit database itself is failing (several rows in a row),
+ *   the run stops and throws without counting an attempt against those
+ *   rows: an outage must not use up their retries. No heartbeat then, so
+ *   the missed beat raises the alert.
+ * - Heartbeat fires once per completed run (even with zero rows
+ *   processed) so the status page shows liveness. A run that ends with
+ *   rows marked failed, or with more still waiting at the cap, is also
+ *   reported to Sentry.
  * - A run drains oldest first, batch after batch, until nothing is
  *   pending or `maxBatches` is reached (`more` then says so). Rows that
  *   fail in a run are not retried within it.
@@ -48,6 +53,13 @@ const DEFAULT_BATCH_SIZE = 100
 /** 2,000 rows a run: an hourly run keeps up with far more than a beta writes. */
 const DEFAULT_MAX_BATCHES = 20
 const DEFAULT_MAX_ATTEMPTS = 5
+/** This many failures in a row means the audit database is down, not the rows. */
+const STORE_DOWN_AFTER = 10
+
+/** The audit database is not accepting rows; the run stopped early. */
+export class AuditStoreUnavailable extends Error {
+  override readonly name = "AuditStoreUnavailable"
+}
 
 /**
  * The durable log has one time column, `received_at`: when the row was
@@ -83,6 +95,8 @@ export async function drainAuditOutbox(
   // Rows that failed in this run stay pending for the next one; leaving
   // them out here keeps one bad row from being retried in a loop.
   const triedAndFailed: string[] = []
+  let failuresInARow = 0
+  let storeDown = false
 
   for (let batch = 0; batch < maxBatches; batch += 1) {
     const pending = await mainDb
@@ -107,9 +121,11 @@ export async function drainAuditOutbox(
       id: string
       attempts: number
       lastError: string
+      error: unknown
     }> = []
 
     for (const row of pending) {
+      if (storeDown) break
       result.processed += 1
       try {
         await audDb
@@ -128,26 +144,33 @@ export async function drainAuditOutbox(
 
         shippedIds.push(row.id)
         result.shipped += 1
+        failuresInARow = 0
       } catch (err) {
-        const message = err instanceof Error ? err.message : String(err)
-        const nextAttempts = row.attempts + 1
         failedAudits.push({
           id: row.id,
-          attempts: nextAttempts,
-          lastError: message,
+          attempts: row.attempts + 1,
+          lastError: err instanceof Error ? err.message : String(err),
+          error: err,
         })
         triedAndFailed.push(row.id)
-        if (nextAttempts >= maxAttempts) {
-          result.failed += 1
-        } else {
-          result.skipped += 1
-        }
-        await captureException(err, {
-          drainer: "auditOutboxDrainer",
-          outboxRowId: row.id,
-          attempts: nextAttempts,
-        })
+        failuresInARow += 1
+        if (failuresInARow >= STORE_DOWN_AFTER) storeDown = true
       }
+    }
+
+    // An outage is not the rows' fault: the last run of failures keeps
+    // its attempts, and only failures before it are counted.
+    const counted = storeDown
+      ? failedAudits.slice(0, failedAudits.length - failuresInARow)
+      : failedAudits
+    for (const f of counted) {
+      if (f.attempts >= maxAttempts) result.failed += 1
+      else result.skipped += 1
+      await captureException(f.error, {
+        drainer: "auditOutboxDrainer",
+        outboxRowId: f.id,
+        attempts: f.attempts,
+      })
     }
 
     if (shippedIds.length > 0) {
@@ -157,7 +180,7 @@ export async function drainAuditOutbox(
         .where(inArray(main.auditOutbox.id, shippedIds))
     }
 
-    for (const f of failedAudits) {
+    for (const f of counted) {
       await mainDb
         .update(main.auditOutbox)
         .set({
@@ -168,8 +191,23 @@ export async function drainAuditOutbox(
         .where(eq(main.auditOutbox.id, f.id))
     }
 
+    if (storeDown) {
+      const error = new AuditStoreUnavailable(
+        `audit database refused ${failuresInARow} rows in a row`
+      )
+      await captureException(error, { drainer: "auditOutboxDrainer" })
+      throw error
+    }
     if (pending.length < batchSize) break
     if (batch === maxBatches - 1) result.more = true
+  }
+
+  if (result.more || result.failed > 0) {
+    await captureException(new Error("audit outbox needs attention"), {
+      drainer: "auditOutboxDrainer",
+      more: result.more,
+      failed: result.failed,
+    })
   }
 
   // Heartbeat on every run (even zero rows) so the status page reflects

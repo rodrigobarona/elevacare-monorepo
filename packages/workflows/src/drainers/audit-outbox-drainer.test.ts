@@ -233,6 +233,52 @@ describe("drainAuditOutbox", () => {
     expect(captureException).toHaveBeenCalledOnce()
   })
 
+  it("stops without using up retries when the audit database is down", async () => {
+    const rows = Array.from({ length: 12 }, (_, i) => fakeRow(`r${i}`))
+    const { drainAuditOutbox, heartbeat, updateSetWhere, captureException } =
+      await setup(rows, {
+        auditInsertShouldFail: rows.map((row) => row.auditId),
+      })
+    await expect(drainAuditOutbox()).rejects.toMatchObject({
+      name: "AuditStoreUnavailable",
+    })
+    // No attempt is written against any row, and no heartbeat is sent.
+    expect(updateSetWhere).not.toHaveBeenCalled()
+    expect(heartbeat).not.toHaveBeenCalled()
+    // One report for the outage, not one per row.
+    expect(captureException).toHaveBeenCalledOnce()
+  })
+
+  it("still counts a bad row that failed before an outage", async () => {
+    const rows = [
+      fakeRow("bad"),
+      fakeRow("ok"),
+      ...Array.from({ length: 10 }, (_, i) => fakeRow(`down${i}`)),
+    ]
+    const { drainAuditOutbox, updateSetWhere } = await setup(rows, {
+      auditInsertShouldFail: rows
+        .filter((row) => row.id !== "ok")
+        .map((row) => row.auditId),
+    })
+    await expect(drainAuditOutbox()).rejects.toMatchObject({
+      name: "AuditStoreUnavailable",
+    })
+    // One update ships "ok", one records the attempt on "bad"; the ten
+    // rows refused in a row keep their attempts.
+    expect(updateSetWhere).toHaveBeenCalledTimes(2)
+  })
+
+  it("reports a run that ends with failed rows or more waiting", async () => {
+    const { drainAuditOutbox, captureException } = await setup(
+      [fakeRow("a", 4)],
+      { auditInsertShouldFail: ["audit-a"] }
+    )
+    const result = await drainAuditOutbox({ maxAttempts: 5 })
+    expect(result.failed).toBe(1)
+    // The row itself, and the run summary.
+    expect(captureException).toHaveBeenCalledTimes(2)
+  })
+
   it("keeps the time each event happened in the durable log", async () => {
     const { drainAuditOutbox, auditValues } = await setup([fakeRow("a")])
     await drainAuditOutbox()

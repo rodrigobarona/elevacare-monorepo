@@ -54,6 +54,10 @@ Each entry should include:
     not QStash), oldest row first, batch after batch until nothing is
     pending (up to 2,000 rows a run; the result says when it stopped at
     that cap). A row that fails is not retried within the same run.
+    Ten failures in a row mean the audit database is down: the run stops
+    without counting an attempt against those rows, sends no heartbeat
+    and reports once. A run that ends with rows marked failed, or with
+    more waiting at the cap, is reported too.
   - Every shipped event carries `occurredAt`, the time it was written,
     so the durable log keeps the date and time of each read and of
     every other audited action.

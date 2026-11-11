@@ -30,7 +30,7 @@ API_BASE_URL=https://api.eleva.care pnpm qstash:setup
 pnpm qstash:list
 ```
 
-Expect 5 schedules: audit drainer, reconciliation, 3 payouts. Leave the retention sweep off until
+Expect 4 schedules: reconciliation, 3 payouts (the audit drainer runs in the hourly tick since 2026-11-11). Leave the retention sweep off until
 DPO sign-off (AUD-028). The minute, 10-minute and hourly ticks run on Vercel Cron (`apps/api/vercel.json`),
 not QStash. `elevacare-api` Production must have `CRON_SECRET`. Check both:
 
