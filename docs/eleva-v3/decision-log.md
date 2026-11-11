@@ -32,6 +32,42 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-11: A confirmed session that is over is shown as ended (active)
+
+- Owner: engineering. Noticed by a judge on the attendance fix.
+- Finding: no code marks a booking as over when its time has passed. A
+  member's past session kept the label "Confirmed" for ever, as if it
+  were still to come.
+- Decision: the member app shows a `confirmed` or `rescheduled` booking
+  that is over as "Ended", in a neutral colour, in the list and on the
+  session's page. It is display only (`shownBookingStatus` in
+  `@eleva/ui`); the stored status is not changed.
+  - "Ended", not "Completed": it says the time has passed and nothing
+    more. Nobody records whether the two met at a phone or in-person
+    session, and an online session can have ended with one of them
+    absent; the terms give a refund when the expert does not attend, so
+    the label must not tell that member the service was delivered. (The
+    first version of this change said "Completed"; the judge panel
+    scored it 7.0 on this point and it was changed.)
+  - An online session keeps "Confirmed" until joining closes, 30 minutes
+    after its booked end, so "Ended" never sits beside a working Join
+    button. Once ended, the page no longer shows the Join button or the
+    line about joining 15 minutes before.
+  - An ended session's page offers "Book again" (as the list does)
+    instead of "Add to calendar", and the manage panel, which had only a
+    disabled Reschedule and a red Cancel, becomes a short line: if
+    something went wrong, for example the expert did not join, write to
+    support@eleva.care.
+- Not built: marking bookings as over in the database (it would touch
+  payouts and the no-show policy, which is not decided: D-06); telling a
+  member that a session was missed; the list of past sessions is split
+  by start time, so a session in progress sits under "Past"; the API
+  still returns `confirmed` for a past session (agents and other clients
+  see the stored status, not "Ended"); the label is worked out when the
+  page loads, so a page left open across the end keeps its old label
+  until it is reloaded; a self-service "report a problem" form for an
+  ended session (today it is the support address).
+
 ### 2026-11-11: Actions that refund need a session that can be revoked, and declining asks first (active)
 
 - Owner: engineering. From the judge panel on the expert cancellation

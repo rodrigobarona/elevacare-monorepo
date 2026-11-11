@@ -187,7 +187,8 @@
       "pending_payment": "Pagamento pendente",
       "awaiting_confirmation": "A aguardar o especialista",
       "completed": "Concluída",
-      "no_show": "Não compareceu"
+      "no_show": "Não compareceu",
+      "ended": "Terminada"
     },
     "refundFull": "Recebe um reembolso total de {amount} segundo a política de cancelamento {policy}.",
     "refundPartial": "Recebe um reembolso de {percent}% ({amount}) segundo a política de cancelamento {policy}.",
@@ -204,6 +205,8 @@
     "viewReceipt": "Ver recibo",
     "manageTitle": "Gerir marcação",
     "manageHint": "Reagende ou cancele dentro da política de cancelamento do especialista.",
+    "endedHelpTitle": "Precisa de ajuda com esta sessão?",
+    "endedHelp": "Esta sessão terminou. Se algo correu mal, por exemplo se o especialista não entrou, escreva para <email>support@eleva.care</email> e vamos analisar consigo.",
     "report": "Relatório",
     "viewReport": "Ler relatório"
   },

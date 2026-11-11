@@ -2,7 +2,8 @@ import type { ReactNode } from "react"
 import { notFound } from "next/navigation"
 import { getLocale, getTranslations } from "next-intl/server"
 import { ApiClientError, type ExpertInvoiceStatus } from "@eleva/api-client"
-import { VideoCameraIcon } from "@eleva/icons"
+import { ArrowsClockwiseIcon, VideoCameraIcon } from "@eleva/icons"
+import { expertProfileUrl } from "@eleva/config/env"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { LinkButton } from "@eleva/ui/components/button"
 import { findMemberBooking } from "@/lib/find-member-booking"
@@ -12,6 +13,7 @@ import {
   isAwaitingConfirmation,
   isBookingStatus,
   isSessionMode,
+  shownMemberBookingStatus,
 } from "@/lib/booking-status"
 import { JoinCta } from "@eleva/video/join-cta"
 import { UrgentHelp } from "@eleva/dashboard/urgent-help"
@@ -81,7 +83,10 @@ export default async function SessionDetailPage({
   const awaiting = isAwaitingConfirmation(booking.status)
   const title = eventTitle(booking.eventType.title, locale)
   const memberName = session.user.displayName ?? session.user.email
-  const status = isBookingStatus(booking.status) ? booking.status : null
+  // A confirmed session that is over reads "Ended", not "Confirmed".
+  const shown = shownMemberBookingStatus(booking)
+  const ended = shown === "ended"
+  const status = isBookingStatus(shown) ? shown : null
   // Urgent-help signposting is for sessions still ahead of the member: the
   // API only quotes a cancellation while the session is active and has not
   // started.
@@ -133,7 +138,7 @@ export default async function SessionDetailPage({
             </DetailRow>
             <DetailRow label={t("status")}>
               <StatusPill status={status}>
-                {status ? t(`statusLabel.${status}`) : booking.status}
+                {status ? t(`statusLabel.${status}`) : shown}
               </StatusPill>
             </DetailRow>
             <DetailRow label={t("price")}>
@@ -184,7 +189,7 @@ export default async function SessionDetailPage({
 
           <div className="space-y-3 border-t bg-sand-50/70 px-6 py-5 sm:px-8 dark:bg-muted/40">
             <div className="flex flex-wrap gap-2">
-              {awaiting ? null : (
+              {awaiting || ended ? null : (
                 <JoinCta
                   href={`/${orgSlug}/sessions/${bookingId}/join`}
                   sessionMode={booking.sessionMode}
@@ -196,33 +201,69 @@ export default async function SessionDetailPage({
                   icon={<VideoCameraIcon className="size-4" />}
                 />
               )}
-              <IcsDownloadButton
-                booking={booking}
-                memberName={memberName}
-                memberEmail={session.user.email}
-              />
+              {ended ? (
+                // A session that is over has no place in a calendar; the
+                // next step is the same one the list offers.
+                <LinkButton
+                  variant="outline"
+                  href={expertProfileUrl(locale, booking.expert.username)}
+                >
+                  <ArrowsClockwiseIcon className="size-4" />
+                  {t("bookAgain")}
+                </LinkButton>
+              ) : (
+                <IcsDownloadButton
+                  booking={booking}
+                  memberName={memberName}
+                  memberEmail={session.user.email}
+                />
+              )}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {awaiting ? t("awaitingConfirmationHint") : t("joinSoon")}
-            </p>
+            {ended ? null : (
+              <p className="text-xs text-muted-foreground">
+                {awaiting ? t("awaitingConfirmationHint") : t("joinSoon")}
+              </p>
+            )}
           </div>
         </section>
 
-        <aside className="space-y-3 rounded-3xl border bg-card p-6 text-card-foreground shadow-1">
-          <h2 className="font-display text-lg font-medium tracking-tight">
-            {t("manageTitle")}
-          </h2>
-          <p className="text-sm text-muted-foreground">{t("manageHint")}</p>
-          <SessionActions
-            orgSlug={orgSlug}
-            bookingId={booking.id}
-            startsAt={booking.startsAt}
-            endsAt={booking.endsAt}
-            timezone={booking.timezone}
-            locale={locale}
-            quote={quote}
-          />
-        </aside>
+        {ended ? (
+          // Nothing left to change; say where to turn if it went wrong
+          // (the terms refund a session the expert did not attend).
+          <aside className="space-y-3 rounded-3xl border bg-card p-6 text-card-foreground shadow-1">
+            <h2 className="font-display text-lg font-medium tracking-tight">
+              {t("endedHelpTitle")}
+            </h2>
+            <p className="text-sm text-pretty text-muted-foreground">
+              {t.rich("endedHelp", {
+                email: (chunks) => (
+                  <a
+                    href={`mailto:${chunks}`}
+                    className="font-medium text-foreground underline underline-offset-4"
+                  >
+                    {chunks}
+                  </a>
+                ),
+              })}
+            </p>
+          </aside>
+        ) : (
+          <aside className="space-y-3 rounded-3xl border bg-card p-6 text-card-foreground shadow-1">
+            <h2 className="font-display text-lg font-medium tracking-tight">
+              {t("manageTitle")}
+            </h2>
+            <p className="text-sm text-muted-foreground">{t("manageHint")}</p>
+            <SessionActions
+              orgSlug={orgSlug}
+              bookingId={booking.id}
+              startsAt={booking.startsAt}
+              endsAt={booking.endsAt}
+              timezone={booking.timezone}
+              locale={locale}
+              quote={quote}
+            />
+          </aside>
+        )}
       </div>
 
       {isUpcoming ? <UrgentHelp className="rounded-3xl border p-6" /> : null}

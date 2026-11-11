@@ -187,7 +187,8 @@
       "pending_payment": "Pending payment",
       "awaiting_confirmation": "Waiting for expert",
       "completed": "Completed",
-      "no_show": "No show"
+      "no_show": "No show",
+      "ended": "Ended"
     },
     "refundFull": "You'll get a full refund of {amount} under the {policy} cancellation policy.",
     "refundPartial": "You'll get a {percent}% refund of {amount} under the {policy} cancellation policy.",
@@ -204,6 +205,8 @@
     "viewReceipt": "View receipt",
     "manageTitle": "Manage booking",
     "manageHint": "Reschedule or cancel within your expert's cancellation policy.",
+    "endedHelpTitle": "Need help with this session?",
+    "endedHelp": "This session has ended. If something went wrong, for example your expert did not join, write to <email>support@eleva.care</email> and we will look into it with you.",
     "report": "Report",
     "viewReport": "Read report"
   },
