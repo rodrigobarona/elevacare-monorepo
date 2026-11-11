@@ -32,6 +32,36 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-11: A session stays joinable until its booked end (active)
+
+- Owner: engineering. Found by the judge panel on the waiting-room slice;
+  the fault predates it.
+- Finding: Daily sends `meeting.ended` shortly after the last person
+  leaves a room. The webhook treated that as the end of the session at
+  any time. An expert who opened the room ten minutes early to check it
+  and left turned the session into `no_show` before it started: nobody
+  could join any more, and because a `no_show` session no longer blocks
+  its time, the slot became bookable again. Two people who both dropped
+  on a bad connection mid-session were locked out the same way, although
+  the help center tells members to refresh the page and join again.
+- Decision: `meeting.ended` closes a session only from the booked end on.
+  Before that the room has only emptied: the session goes back to
+  `scheduled`, keeps its first start time, and stays joinable. From the
+  booked end on it closes as before (`ended` when both attended,
+  `no_show` otherwise). A session left open is closed by the attendance
+  sweep when the join window closes, 30 minutes after the booked end.
+  Rule in one place: `afterMeetingEnded` in
+  `packages/workflows/src/video/attendance.ts`.
+- Effect to know: when both people finish early and leave, the session
+  shows as scheduled until the sweep closes it (up to about 40 minutes
+  after the booked end), instead of ending at once. Attendance, and so
+  payouts and refunds, are decided from who joined, as before.
+- Not changed: once the booked end has passed and the room empties, the
+  session is over, even inside the 30 minutes that joining stays open.
+- Not proven: Daily's real timing of `meeting.ended` on staging with two
+  browsers (leave early, rejoin, finish). Existing rows already marked
+  `no_show` or `ended` early are not repaired by this change.
+
 ### 2026-11-11: Urgent help is signposted where members book and wait (active)
 
 - Owner: engineering; addresses council finding PRIV2-03 (no crisis or

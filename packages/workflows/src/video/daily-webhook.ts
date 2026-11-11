@@ -12,6 +12,7 @@ import {
   verifyDailyWebhook,
 } from "@eleva/video/webhooks"
 import {
+  afterMeetingEnded,
   appendParticipantHistory,
   deriveAttendance,
   eventTimeFromDaily,
@@ -256,6 +257,7 @@ async function applyLifecycleWebhook(input: {
             participants: main.sessions.participants,
             startedAt: main.sessions.startedAt,
             endedAt: main.sessions.endedAt,
+            endsAt: main.sessions.endsAt,
           })
           .from(main.sessions)
           .where(eq(main.sessions.bookingId, input.bookingId))
@@ -272,17 +274,20 @@ async function applyLifecycleWebhook(input: {
         if (applyStatus && input.type === "meeting.started") {
           if (status === "scheduled" || status === "room_unresolved") {
             status = "live"
-            startedAt = input.incoming
+            // Keep the first start when people come back to an emptied room.
+            startedAt = locked.startedAt ?? input.incoming
           }
         }
 
         if (applyStatus && input.type === "meeting.ended") {
-          if (status === "scheduled" || status === "live") {
-            status = statusAfterAttendance(
-              deriveAttendance(locked.participants)
-            )
-            endedAt = input.incoming
-          }
+          const next = afterMeetingEnded({
+            status,
+            participants: locked.participants,
+            at: input.incoming,
+            bookedEnd: locked.endsAt,
+          })
+          status = next.status
+          if (next.final) endedAt = input.incoming
         }
 
         if (applyStatus) lastEventAt = input.incoming

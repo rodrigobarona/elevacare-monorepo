@@ -28,6 +28,42 @@ export function statusAfterAttendance(
   return attendance === "both" ? "ended" : "no_show"
 }
 
+/**
+ * What Daily's `meeting.ended` does to a session. Daily sends it shortly
+ * after the last person leaves the room, whenever that is.
+ *
+ * Before the booked end the room has only emptied: an expert who checked
+ * the room early, or both people dropping on a bad connection, must be
+ * able to come back, so the session returns to `scheduled` and stays
+ * joinable. Calling it `no_show` there would also free the slot for a new
+ * booking. From the booked end on, an empty room means the session is
+ * over and attendance decides `ended` or `no_show`.
+ *
+ * A session left open this way is closed by the attendance sweep when the
+ * join window closes (`attendance-fallback.ts`).
+ */
+export function afterMeetingEnded<Status extends string>(input: {
+  status: Status
+  participants: Pick<SessionParticipantHistory, "role">[]
+  at: Date
+  bookedEnd: Date
+}):
+  | { final: false; status: Status | "scheduled" }
+  | {
+      final: true
+      status: "ended" | "no_show"
+      attendance: SessionAttendance
+    } {
+  if (input.status !== "scheduled" && input.status !== "live") {
+    return { final: false, status: input.status }
+  }
+  if (input.at.getTime() < input.bookedEnd.getTime()) {
+    return { final: false, status: "scheduled" }
+  }
+  const attendance = deriveAttendance(input.participants)
+  return { final: true, status: statusAfterAttendance(attendance), attendance }
+}
+
 export function appendParticipantHistory(
   history: SessionParticipantHistory[],
   event: {
