@@ -1,16 +1,24 @@
 import { useId, type ReactNode } from "react"
-import { useLocale, useTranslations } from "next-intl"
-import { urgentHelpNumbers } from "@eleva/config/urgent-help"
+import { useTranslations } from "next-intl"
+import {
+  URGENT_HELP_LINES,
+  URGENT_HELP_NUMBERS,
+  type UrgentHelpLine,
+} from "@eleva/config/urgent-help"
 import { PhoneIcon } from "@eleva/icons"
 import { cn } from "@eleva/ui/lib/utils"
 
 /**
  * Where to turn when something cannot wait for a booked session: 112, and
- * the national line the reader's language names. Shown wherever members
- * book, wait for or look up a session. Copy lives in the `urgentHelp`
- * messages; the numbers come from `@eleva/config/urgent-help`.
+ * the national lines the reader's language names. Shown wherever members
+ * book, wait for or look up a session.
  *
- * `compact` keeps the title and the 112 line, for use inside a form.
+ * Copy lives in the `urgentHelp` messages and names each line with an
+ * empty tag (`<emergency></emergency>`, `<sns24></sns24>`); the numbers
+ * and their `tel:` links come from `@eleva/config/urgent-help`.
+ *
+ * `compact` is for use inside the booking form, next to the note members
+ * write to their expert.
  */
 export function UrgentHelp({
   variant = "full",
@@ -20,9 +28,8 @@ export function UrgentHelp({
   className?: string
 }) {
   const t = useTranslations("urgentHelp")
-  const locale = useLocale()
   const titleId = useId()
-  const { emergency, national } = urgentHelpNumbers(locale)
+  const Title = variant === "full" ? "h2" : "p"
 
   return (
     <div
@@ -40,47 +47,45 @@ export function UrgentHelp({
       >
         <PhoneIcon className="size-4" />
       </span>
-      <div className="min-w-0 space-y-1 text-pretty">
-        <p id={titleId} className="font-medium text-foreground">
+      <div className="max-w-prose min-w-0 space-y-1 text-pretty">
+        <Title id={titleId} className="font-medium text-foreground">
           {t("title")}
-        </p>
-        <p className="text-muted-foreground">
-          {t.rich("emergency", {
-            number: emergency.display,
-            call: (chunks) => (
-              <PhoneLink href={emergency.href}>{chunks}</PhoneLink>
-            ),
-          })}
-        </p>
-        {variant === "full" ? (
+        </Title>
+        {variant === "compact" ? (
+          <p className="text-muted-foreground">
+            {t("compactLead")} {t.rich("emergency", PHONE_LINKS)}
+          </p>
+        ) : (
           <>
             <p className="text-muted-foreground">
-              {t("bookedAhead", { number: emergency.display })}
+              {t.rich("emergency", PHONE_LINKS)}{" "}
+              {t("bookedAhead", {
+                number: URGENT_HELP_NUMBERS.emergency.display,
+              })}
             </p>
-            {national ? (
-              <p className="text-muted-foreground">
-                {t.rich("national", {
-                  number: national.display,
-                  call: (chunks) => (
-                    <PhoneLink href={national.href}>{chunks}</PhoneLink>
-                  ),
-                })}
-              </p>
-            ) : null}
+            <p className="text-muted-foreground">
+              {t.rich("national", PHONE_LINKS)}
+            </p>
           </>
-        ) : null}
+        )}
       </div>
     </div>
   )
 }
 
-function PhoneLink({ href, children }: { href: string; children: ReactNode }) {
+/** One rich-text tag per line: `<sns24></sns24>` renders its phone link. */
+const PHONE_LINKS = Object.fromEntries(
+  URGENT_HELP_LINES.map((line) => [line, () => <PhoneLink line={line} />])
+) as Record<UrgentHelpLine, () => ReactNode>
+
+function PhoneLink({ line }: { line: UrgentHelpLine }) {
+  const { display, href } = URGENT_HELP_NUMBERS[line]
   return (
     <a
       href={href}
-      className="font-semibold whitespace-nowrap text-foreground underline decoration-primary/60 underline-offset-4 hover:decoration-primary"
+      className="-mx-1 -my-1 inline-block px-1 py-1 font-semibold whitespace-nowrap text-foreground underline decoration-primary decoration-2 underline-offset-4"
     >
-      {children}
+      {display}
     </a>
   )
 }

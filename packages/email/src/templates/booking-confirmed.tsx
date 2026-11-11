@@ -168,7 +168,7 @@ export function BookingConfirmedEmail({
           {t.booking.icsHintAdd}
         </EmailBodyText>
       ) : null}
-      {isExpert ? null : <UrgentHelpNote locale={locale} />}
+      {isExpert ? null : <UrgentHelpNote locale={locale} detail="full" />}
     </EmailLayout>
   )
 }

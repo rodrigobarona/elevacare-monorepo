@@ -4,7 +4,10 @@ import { EmailCard } from "../components/email-card"
 import { EmailBodyText, EmailHeading } from "../components/email-heading"
 import { JoinSessionCta } from "../components/join-session-cta"
 import { SessionAccess, type SessionPlace } from "../components/session-access"
-import { UrgentHelpNote } from "../components/urgent-help-note"
+import {
+  UrgentHelpNote,
+  type UrgentHelpDetail,
+} from "../components/urgent-help-note"
 import { getEmailTranslations, type EmailLocale } from "../i18n"
 import { formatSessionMode } from "../session-mode"
 
@@ -31,7 +34,7 @@ export interface BookingReminderProps {
   subheading?: string
   preview?: string
   /** Member copy only: where to turn when something cannot wait. */
-  urgentHelp?: boolean
+  urgentHelp?: UrgentHelpDetail
 }
 
 export function BookingReminderEmail({
@@ -50,7 +53,7 @@ export function BookingReminderEmail({
   counterpartName,
   subheading,
   preview,
-  urgentHelp = false,
+  urgentHelp,
 }: BookingReminderProps) {
   const t = getEmailTranslations(locale)
   const title =
@@ -95,7 +98,9 @@ export function BookingReminderEmail({
         place={place}
         maskedPhone={maskedPhone}
       />
-      {urgentHelp ? <UrgentHelpNote locale={locale} /> : null}
+      {urgentHelp ? (
+        <UrgentHelpNote locale={locale} detail={urgentHelp} />
+      ) : null}
     </EmailLayout>
   )
 }

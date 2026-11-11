@@ -103,8 +103,9 @@
   },
   "urgentHelp": {
     "title": "¿Necesitas ayuda urgente?",
-    "emergency": "Llama al <call>{number}</call>. Es gratis, de día y de noche, en toda la UE.",
-    "bookedAhead": "Las sesiones en Eleva se reservan con antelación, así que el {number} es la forma más rápida de recibir atención ahora.",
-    "national": "En España, el <call>{number}</call> atiende, de día y de noche, a quien piensa en el suicidio y a las personas de su entorno."
+    "compactLead": "Puede que el experto no lea tu nota antes de la sesión.",
+    "emergency": "Llama al <emergency></emergency>. Es gratis, de día y de noche, en toda la UE.",
+    "bookedAhead": "Las sesiones en Eleva se reservan con antelación. Para lo que no puede esperar, el {number} te pone en contacto con los servicios de emergencia de inmediato.",
+    "national": "En España, el <linea024></linea024> es la línea gratuita, abierta a cualquier hora, para quien piensa en el suicidio y para las personas de su entorno."
   }
 }

@@ -34,28 +34,45 @@ Each entry should include:
 
 ### 2026-11-11: Urgent help is signposted where members book and wait (active)
 
-- Owner: engineering; closes the engineering part of council finding
-  PRIV2-03 (no crisis or emergency signposting where members are).
+- Owner: engineering; addresses council finding PRIV2-03 (no crisis or
+  emergency signposting where members are). The finding stays open until
+  this is deployed and the join page carries the note.
 - Sessions on Eleva are booked ahead, so anything urgent is sent to 112,
-  free in every EU country. Portuguese copy also names SNS 24
-  (808 24 24 24) and Spanish copy names 024; English, read across the EU,
-  names 112 only. Numbers live in `@eleva/config/urgent-help`, the copy in
-  the shared `urgentHelp` messages (`packages/dashboard/messages`), and
-  the note is one component, `UrgentHelp` in `@eleva/dashboard`.
-- Shown on: the booking details step (short form, under the note to the
-  expert), the booking thank-you page, the member's session page, and the
-  member's confirmation, reminder and reschedule emails. Expert emails do
-  not carry it.
-- Same change: the thank-you page's "Create your Eleva account" link now
-  carries `claim=1`, so it finishes the account the booking started (it
-  used to open a plain sign-up). The phone number is no longer put in
-  that link or in the email's sign-up link; the sign-up page never read
-  it.
-- Not built: the note on the join and waiting page (it comes with the
-  waiting-room slice), a line in the help center, and choosing the
-  national line from the reader's country instead of their language.
-- Needs a clinical read before launch: which national lines to name per
-  country (founder and Patricia Mota). The copy gives no medical advice.
+  free in every EU country. National lines are always named with their
+  country: Portuguese copy names SNS 24 (808 24 24 24, health advice by
+  phone) and 1411 (suicide prevention, free, 24 hours); Spanish copy
+  names 024 (suicidal thoughts and those close by, free, 24 hours);
+  English, read across the EU, names all three. Checked on 2026-11-11
+  against sns24.gov.pt, portugal.gov.pt and sanidad.gob.es.
+- One source each: numbers and `tel:` links in
+  `@eleva/config/urgent-help`, web copy in the shared `urgentHelp`
+  messages (`packages/dashboard/messages`), one `UrgentHelp` component in
+  `@eleva/dashboard`, one `UrgentHelpNote` for emails. Copy names a line
+  by key and never types a number.
+- Shown on:
+  - the booking details step, under the note to the expert, with "Your
+    expert may not read your note before the session" and 112;
+  - the booking thank-you page and the member's page for an upcoming
+    session (112 and the national lines);
+  - member emails: confirmation and cancellation (112 and the national
+    lines), reminders and reschedule (112 only). Expert emails never
+    carry it.
+- Same change: the "Create your Eleva account" link on the thank-you page
+  and in the confirmation email is built by one helper
+  (`@eleva/config/guest-signup`). It carries `claim=1`, the email and the
+  name, so sign-up finishes with a sign-in link sent to that inbox: it
+  completes the account a confirmed booking started, or creates one (with
+  the name) when the booking is still a request. The phone number is no
+  longer put in that link; the sign-up page never read it. Email and name
+  stay in the query string (accepted for the beta: same-site, and
+  `Referrer-Policy` keeps them from other sites).
+- Not built: the note on the join and waiting page (next slice, with the
+  waiting room); a line in the help center; choosing lines from the
+  reader's country instead of their language; national lines for other
+  EU countries.
+- Not signed off: a clinical read of which lines to name and how (founder
+  and Patricia Mota) is still needed before launch. The copy gives no
+  medical advice.
 
 ### 2026-11-10: Live transcript on Deepgram's medical model (active)
 

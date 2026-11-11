@@ -141,10 +141,12 @@ The pilot invitation stays blocked until these checks are done.
   expert offboarding; notices that contradict each other and the code.
 - PRIV2-02: profiles that are already listed stay bookable without licence verification.
 - PRIV2-03: no crisis or emergency signposting where members are.
-  Status 2026-11-11: 112 and the national line are shown on the booking
-  details step, the thank-you page, the member's session page and member
-  emails (decision log, "Urgent help is signposted where members book and
-  wait"). Open until deployed, and until the join page carries it.
+  Status 2026-11-11: 112 and the national lines (SNS 24 and 1411 in
+  Portugal, 024 in Spain) are shown on the booking details step, the
+  thank-you page, the member's session page and member emails (decision
+  log, "Urgent help is signposted where members book and wait"). Open
+  until deployed, until the join page carries it, and until the founder
+  and Patricia Mota have read the choice of lines.
 - PRIV2-04: expert record reads are only sampled at 1%. Lei 58/2019 expects a full access log.
 - PRIV2-05: the clinic and CRM RLS suites are not in CI; correct the AUD-052 stamp.
 - PRIV2-06: live transcription relies on an unverified EU-processing claim. Keep it off for

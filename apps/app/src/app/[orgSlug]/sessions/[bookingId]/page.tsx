@@ -82,6 +82,10 @@ export default async function SessionDetailPage({
   const title = eventTitle(booking.eventType.title, locale)
   const memberName = session.user.displayName ?? session.user.email
   const status = isBookingStatus(booking.status) ? booking.status : null
+  // Urgent-help signposting is for sessions still ahead of the member.
+  const isUpcoming =
+    booking.status !== "cancelled" &&
+    new Date(booking.endsAt).getTime() > Date.now()
   const parts = bookingDateParts(
     booking.startsAt,
     booking.endsAt,
@@ -221,7 +225,7 @@ export default async function SessionDetailPage({
         </aside>
       </div>
 
-      <UrgentHelp />
+      {isUpcoming ? <UrgentHelp className="rounded-3xl border p-6" /> : null}
     </div>
   )
 }

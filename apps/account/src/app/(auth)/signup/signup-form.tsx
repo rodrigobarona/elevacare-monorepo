@@ -73,8 +73,11 @@ export function SignupForm({
   }
 
   async function sendMagicLink(): Promise<boolean> {
+    // The name only applies when this link creates the account (a booking
+    // request that is not confirmed yet has not started one).
     const { error: magicError } = await authClient.signIn.magicLink({
       email,
+      ...(name.trim() ? { name: name.trim() } : {}),
       callbackURL: toGatewayCallbackURL("/dashboard"),
     })
     if (magicError) {

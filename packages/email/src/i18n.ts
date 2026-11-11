@@ -62,9 +62,10 @@ const translations = {
         `Your expert will call you on ${phone} at the session time.`,
       phoneCallNoticeNoNumber:
         "Your expert will call you on the number you gave when booking.",
-      urgentHelp: (emergency: string) =>
-        `Need urgent help before your session? Call ${emergency}. It is free, day and night, anywhere in the EU.`,
-      urgentHelpNational: null,
+      urgentHelp:
+        "Need urgent help? Call {emergency}. It is free, day and night, anywhere in the EU.",
+      urgentHelpNational:
+        "In Portugal, SNS 24 ({sns24}) gives health advice by phone, and {prevention1411} is the free, 24-hour line for anyone thinking about suicide. In Spain, that line is {linea024}.",
       openInMaps: "Open in Maps",
       videoCall: "Video call",
       phoneCall: "Phone call",
@@ -250,10 +251,10 @@ const translations = {
         `O seu especialista vai ligar-lhe para ${phone} à hora da sessão.`,
       phoneCallNoticeNoNumber:
         "O seu especialista vai ligar-lhe para o número que indicou na reserva.",
-      urgentHelp: (emergency: string) =>
-        `Precisa de ajuda urgente antes da sessão? Ligue ${emergency}. É gratuito, de dia e de noite, em toda a UE.`,
-      urgentHelpNational: (national: string) =>
-        `Em Portugal, o SNS 24 (${national}) dá aconselhamento de saúde e apoio psicológico, de dia e de noite.`,
+      urgentHelp:
+        "Precisa de ajuda urgente? Ligue {emergency}. É gratuito, de dia e de noite, em toda a UE.",
+      urgentHelpNational:
+        "Em Portugal, o SNS 24 ({sns24}) dá aconselhamento de saúde por telefone, e o {prevention1411} é a linha gratuita, aberta a qualquer hora, para quem pensa em suicídio.",
       openInMaps: "Abrir no Maps",
       videoCall: "Videochamada",
       phoneCall: "Chamada telefónica",
@@ -442,10 +443,10 @@ const translations = {
         `Tu especialista te llamará al ${phone} a la hora de la sesión.`,
       phoneCallNoticeNoNumber:
         "Tu especialista te llamará al número que indicaste al reservar.",
-      urgentHelp: (emergency: string) =>
-        `¿Necesitas ayuda urgente antes de la sesión? Llama al ${emergency}. Es gratis, de día y de noche, en toda la UE.`,
-      urgentHelpNational: (national: string) =>
-        `En España, el ${national} atiende, de día y de noche, a quien piensa en el suicidio y a las personas de su entorno.`,
+      urgentHelp:
+        "¿Necesitas ayuda urgente? Llama al {emergency}. Es gratis, de día y de noche, en toda la UE.",
+      urgentHelpNational:
+        "En España, el {linea024} es la línea gratuita, abierta a cualquier hora, para quien piensa en el suicidio y para las personas de su entorno.",
       openInMaps: "Abrir en Maps",
       videoCall: "Videollamada",
       phoneCall: "Llamada telefónica",
@@ -618,10 +619,14 @@ export interface EmailTranslations {
     calendarCta: string
     phoneCallNotice: (phone: string) => string
     phoneCallNoticeNoNumber: string
-    /** Member emails: where to turn when something cannot wait. */
-    urgentHelp: (emergency: string) => string
-    /** The national line this language names; `null` when it names none. */
-    urgentHelpNational: ((national: string) => string) | null
+    /**
+     * Member emails: where to turn when something cannot wait. `{emergency}`,
+     * `{sns24}` and the other keys of `URGENT_HELP_NUMBERS` become phone
+     * links; the copy never types a number.
+     */
+    urgentHelp: string
+    /** The national lines this language names. */
+    urgentHelpNational: string
     openInMaps: string
     videoCall: string
     phoneCall: string

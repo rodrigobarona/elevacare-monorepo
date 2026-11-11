@@ -1,44 +1,36 @@
 import { describe, expect, it } from "vitest"
-import { locales } from "./i18n-locales"
-import { EU_EMERGENCY_NUMBER, urgentHelpNumbers } from "./urgent-help"
+import {
+  URGENT_HELP_LINES,
+  URGENT_HELP_NUMBERS,
+  isUrgentHelpLine,
+} from "./urgent-help"
 
-describe("urgentHelpNumbers", () => {
-  it("sends every locale to 112", () => {
-    for (const locale of locales) {
-      expect(urgentHelpNumbers(locale).emergency).toEqual({
-        display: "112",
-        href: "tel:112",
-      })
-    }
-    expect(EU_EMERGENCY_NUMBER.display).toBe("112")
-  })
-
-  it("names SNS 24 in Portuguese copy", () => {
-    expect(urgentHelpNumbers("pt").national).toEqual({
-      display: "808 24 24 24",
-      href: "tel:808242424",
-    })
-    expect(urgentHelpNumbers("pt-PT").national?.display).toBe("808 24 24 24")
-  })
-
-  it("names 024 in Spanish copy", () => {
-    expect(urgentHelpNumbers("es").national).toEqual({
-      display: "024",
-      href: "tel:024",
+describe("URGENT_HELP_NUMBERS", () => {
+  it("sends emergencies to 112", () => {
+    expect(URGENT_HELP_NUMBERS.emergency).toEqual({
+      display: "112",
+      href: "tel:112",
     })
   })
 
-  it("names no national line in English, read across the EU", () => {
-    expect(urgentHelpNumbers("en").national).toBeNull()
-    expect(urgentHelpNumbers("en-GB").national).toBeNull()
+  it("carries the national lines the copy names", () => {
+    expect(URGENT_HELP_NUMBERS.sns24.display).toBe("808 24 24 24")
+    expect(URGENT_HELP_NUMBERS.prevention1411.display).toBe("1411")
+    expect(URGENT_HELP_NUMBERS.linea024.display).toBe("024")
   })
 
-  it("only ever links to a phone number", () => {
-    for (const locale of locales) {
-      const { emergency, national } = urgentHelpNumbers(locale)
-      for (const number of [emergency, national]) {
-        if (number) expect(number.href).toMatch(/^tel:\d+$/)
-      }
+  it("only ever links to the phone number it shows", () => {
+    for (const line of URGENT_HELP_LINES) {
+      const { display, href } = URGENT_HELP_NUMBERS[line]
+      expect(href).toBe(`tel:${display.replaceAll(" ", "")}`)
+      expect(href).toMatch(/^tel:\d+$/)
     }
+  })
+
+  it("recognises its own keys only", () => {
+    expect(isUrgentHelpLine("emergency")).toBe(true)
+    expect(isUrgentHelpLine("linea024")).toBe(true)
+    expect(isUrgentHelpLine("toString")).toBe(false)
+    expect(isUrgentHelpLine("javascript")).toBe(false)
   })
 })

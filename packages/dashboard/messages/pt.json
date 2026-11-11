@@ -103,8 +103,9 @@
   },
   "urgentHelp": {
     "title": "Precisa de ajuda urgente?",
-    "emergency": "Ligue <call>{number}</call>. É gratuito, de dia e de noite, em toda a UE.",
-    "bookedAhead": "As sessões na Eleva são marcadas com antecedência, por isso o {number} é a forma mais rápida de receber cuidados agora.",
-    "national": "Em Portugal, o SNS 24 (<call>{number}</call>) dá aconselhamento de saúde e apoio psicológico, de dia e de noite."
+    "compactLead": "O especialista pode não ler a sua nota antes da sessão.",
+    "emergency": "Ligue <emergency></emergency>. É gratuito, de dia e de noite, em toda a UE.",
+    "bookedAhead": "As sessões na Eleva são marcadas com antecedência. Para o que não pode esperar, o {number} dá acesso imediato aos serviços de emergência.",
+    "national": "Em Portugal, o SNS 24 (<sns24></sns24>) dá aconselhamento de saúde por telefone, e o <prevention1411></prevention1411> é a linha gratuita, aberta a qualquer hora, para quem pensa em suicídio."
   }
 }

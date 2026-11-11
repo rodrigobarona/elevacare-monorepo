@@ -49,6 +49,7 @@ import {
 import { formatCountdown, isExpired } from "@eleva/ui/lib/booking/countdown"
 import { displayLanguage } from "@eleva/ui/lib/booking/display-names"
 import { toE164 } from "@eleva/ui/lib/booking/e164"
+import { guestSignupPath } from "@eleva/config/guest-signup"
 import { maskPhone } from "@eleva/config/phone"
 import { slotRequiresApproval } from "@eleva/config/booking-settings"
 import { addDaysToKey, dateKeyInZone } from "@eleva/ui/lib/booking/slot-groups"
@@ -685,12 +686,7 @@ export function BookingFunnel({
   const expertMedia = (
     <ExpertAvatar displayName={expertName} avatarUrl={expertAvatarUrl} />
   )
-  // `claim=1` lets signup finish the account this booking already started.
-  const signupHref = `/signup?${new URLSearchParams({
-    claim: "1",
-    name,
-    email,
-  }).toString()}`
+  const signupHref = guestSignupPath({ email, name })
 
   if (step === "done" && slot && selectedMode) {
     const accessNote =

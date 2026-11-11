@@ -1,22 +1,52 @@
-import { urgentHelpNumbers } from "@eleva/config/urgent-help"
+import { Fragment, type ReactNode } from "react"
+import { Link } from "react-email"
+import {
+  URGENT_HELP_NUMBERS,
+  isUrgentHelpLine,
+} from "@eleva/config/urgent-help"
 import { EmailBodyText } from "./email-heading"
 import { getEmailTranslations, type EmailLocale } from "../i18n"
 
+/** `emergency`: the 112 line only. `full`: 112 and the national lines. */
+export type UrgentHelpDetail = "emergency" | "full"
+
 /**
- * Member emails about an upcoming session: where to turn when something
- * cannot wait. Numbers come from `@eleva/config/urgent-help`.
+ * Member emails about a session: where to turn when something cannot
+ * wait. Numbers and their `tel:` links come from
+ * `@eleva/config/urgent-help`; the copy names each line as `{key}`.
  */
-export function UrgentHelpNote({ locale }: { locale: EmailLocale }) {
+export function UrgentHelpNote({
+  locale,
+  detail,
+}: {
+  locale: EmailLocale
+  detail: UrgentHelpDetail
+}) {
   const t = getEmailTranslations(locale)
-  const { emergency, national } = urgentHelpNumbers(locale)
-  const nationalLine =
-    national && t.booking.urgentHelpNational
-      ? t.booking.urgentHelpNational(national.display)
-      : null
   return (
     <EmailBodyText className="mt-[24px] text-[13px] leading-[20px]">
-      {t.booking.urgentHelp(emergency.display)}
-      {nationalLine ? ` ${nationalLine}` : null}
+      {withPhoneLinks(t.booking.urgentHelp)}
+      {detail === "full" ? (
+        <> {withPhoneLinks(t.booking.urgentHelpNational)}</>
+      ) : null}
     </EmailBodyText>
   )
+}
+
+/** Replace each `{line}` with that line's number as a `tel:` link. */
+function withPhoneLinks(copy: string): ReactNode[] {
+  return copy.split(/(\{[a-z0-9]+\})/i).map((part, index) => {
+    const key = part.startsWith("{") ? part.slice(1, -1) : ""
+    if (!isUrgentHelpLine(key)) return <Fragment key={index}>{part}</Fragment>
+    const { display, href } = URGENT_HELP_NUMBERS[key]
+    return (
+      <Link
+        key={index}
+        href={href}
+        className="text-fg-2 font-semibold whitespace-nowrap underline"
+      >
+        {display}
+      </Link>
+    )
+  })
 }
