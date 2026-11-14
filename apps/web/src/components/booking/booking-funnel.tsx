@@ -1389,7 +1389,7 @@ export function BookingFunnel({
                       <Button
                         variant="outline"
                         size="sm"
-                        className="w-full sm:w-auto"
+                        className="w-full border-warning bg-background sm:w-auto"
                         onPress={extendHold}
                         isDisabled={holdExtend === "pending"}
                       >

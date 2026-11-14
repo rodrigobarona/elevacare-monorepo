@@ -598,7 +598,7 @@
       "discount": "Discount",
       "total": "Total",
       "promoFailed": "We couldn't update the code right now. Try again in a moment.",
-      "holdEnding": "Your hold on this time ends in about a minute. Need more time?",
+      "holdEnding": "We can only hold this time for one more minute. Need more time?",
       "extend": "Keep 5 more minutes",
       "extendLimit": "We can’t hold this time any longer. Finish paying now, or pick a new time.",
       "extendFailed": "We couldn’t add more time. Please try again.",
@@ -609,7 +609,7 @@
       "secureLine": "Your card is processed securely by Stripe. Eleva never sees your full card number.",
       "emailLine": "Your confirmation arrives by email right after you pay.",
       "subRequest": "You’re asking {name} for {when}. You pay now; if {name} declines, you get 100% back.",
-      "extended": "Time extended. Your time is held for 5 more minutes."
+      "extended": "Done. We’re holding this time for 5 more minutes."
     },
     "done": {
       "heading": "Your reservation is confirmed",
