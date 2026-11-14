@@ -503,15 +503,14 @@ test.describe("design capture", () => {
           .click()
         await page.waitForTimeout(800)
         await shoot(page, surface, "03-mobile-nav", kind, { fullPage: false })
-        const sheet = page.getByRole("dialog").last()
-        await sheet.evaluate((element) => {
-          const scroller =
-            [element, ...Array.from(element.querySelectorAll("*"))].find(
-              (node) => node.scrollHeight > node.clientHeight + 4
-            ) ?? element
-          scroller.scrollTop = scroller.scrollHeight
-        })
-        await page.waitForTimeout(400)
+        const lastLink = page
+          .getByRole("dialog")
+          .last()
+          .getByRole("link")
+          .last()
+        await lastLink.scrollIntoViewIfNeeded()
+        await expect(lastLink).toBeInViewport()
+        await page.waitForTimeout(300)
         await shoot(page, surface, "04-mobile-nav-end", kind, {
           fullPage: false,
         })
@@ -574,13 +573,17 @@ test.describe("design capture", () => {
       await page.getByTestId("booking-continue-details").click()
       await fillStripeTestCard(page, { number: DECLINED_TEST_CARD })
       await page.getByTestId("booking-pay-submit").click()
-      await page.waitForTimeout(8_000)
+      await expect(page.getByText(/card has been declined/i)).toBeVisible({
+        timeout: 30_000,
+      })
       await shoot(page, surface, "12-payment-declined", kind)
 
       // Hold ended: jump the page clock past the hold.
       await page.clock.install()
       await page.clock.fastForward("20:00")
-      await page.waitForTimeout(1_500)
+      await expect(
+        page.getByRole("button", { name: /pick a new time/i })
+      ).toBeVisible({ timeout: 15_000 })
       await shoot(page, surface, "11-hold-ended", kind)
       await context.close()
     })
