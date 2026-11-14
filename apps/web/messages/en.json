@@ -618,8 +618,8 @@
       "failedUnknown": "We couldn’t confirm the payment. If it went through, we’ll email you; if not, try again."
     },
     "done": {
-      "pending": "Payment received",
-      "pendingSub": "We’re confirming your session and will email you as soon as it’s ready. Nothing more to do for now.",
+      "pending": "Almost there",
+      "pendingSub": "If your bank or MB WAY asks you to approve, do that now. We’ll email you as soon as your session is confirmed.",
       "videoLocation": "Video session · join link in your confirmation email",
       "phoneLocation": "The expert will call {phone}",
       "ics": "Add to calendar",
@@ -639,10 +639,10 @@
         "reminder": "We send you a reminder 24 hours before.",
         "joinOpens": "Your join link opens. No account needed.",
         "requestSent": "Your request is with {name}. Nothing else to do for now.",
-        "requestReply": "{name} accepts or declines. We email you either way, and if it’s a no, anything you paid comes back in full.",
+        "requestReply": "{name} accepts or declines. We email you either way. If it’s a no, or there’s no reply by then, anything you paid comes back in full.",
         "confirming": "We’re confirming your payment and will email {email} as soon as it’s done.",
         "by": "By {when}",
-        "requestReplyFree": "{name} accepts or declines. We email you either way."
+        "requestReplyFree": "{name} accepts or declines. We email you either way. With no reply by then, the request is cancelled."
       },
       "changeHeading": "Need to change something?",
       "changeHow": "To move or cancel it, sign in or create your Space below with this email.",
@@ -655,8 +655,7 @@
         "cta": "Create your Space",
         "later": "Not now? Your confirmation email has everything you need."
       },
-      "accessRequest": "Your join details come by email once {name} accepts.",
-      "accessInPersonNoPlace": "{name} confirms the address in your confirmation email.",
+      "accessRequest": "Your session details come by email once {name} accepts.",
       "requestChange": "If {name} says yes, your confirmation email explains how to move or cancel.",
       "calendarNote": "Your confirmation email has a calendar invite too. Google and Microsoft only get the session name, time and place if you choose them."
     },

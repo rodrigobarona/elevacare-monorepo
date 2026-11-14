@@ -618,8 +618,8 @@
       "failedUnknown": "Não conseguimos confirmar o pagamento. Se foi concluído, enviamos-lhe um email; se não, tente de novo."
     },
     "done": {
-      "pending": "Pagamento recebido",
-      "pendingSub": "Estamos a confirmar a sua sessão e enviamos-lhe um email assim que estiver pronta. Por agora, não precisa de fazer mais nada.",
+      "pending": "Quase pronto",
+      "pendingSub": "Se o seu banco ou o MB WAY pedirem para aprovar, faça-o agora. Enviamos-lhe um email assim que a sessão estiver confirmada.",
       "videoLocation": "Sessão por vídeo · link para entrar no email de confirmação",
       "phoneLocation": "Chamada para {phone}",
       "ics": "Adicionar ao calendário",
@@ -639,10 +639,10 @@
         "reminder": "Enviamos-lhe um lembrete 24 horas antes.",
         "joinOpens": "O link para entrar abre. Não precisa de conta.",
         "requestSent": "O seu pedido está com {name}. Por agora, não precisa de fazer mais nada.",
-        "requestReply": "{name} aceita ou recusa. Escrevemos-lhe em qualquer caso e, se a resposta for não, o que pagou é devolvido na totalidade.",
+        "requestReply": "{name} aceita ou recusa. Escrevemos-lhe em qualquer caso. Se a resposta for não, ou se não houver resposta até lá, o que pagou é devolvido na totalidade.",
         "confirming": "Estamos a confirmar o pagamento e enviamos um email para {email} assim que estiver concluído.",
         "by": "Até {when}",
-        "requestReplyFree": "{name} aceita ou recusa. Escrevemos-lhe em qualquer caso."
+        "requestReplyFree": "{name} aceita ou recusa. Escrevemos-lhe em qualquer caso. Sem resposta até lá, o pedido é cancelado."
       },
       "changeHeading": "Precisa de mudar alguma coisa?",
       "changeHow": "Para mudar ou cancelar, entre ou crie o seu Espaço abaixo com este email.",
@@ -655,8 +655,7 @@
         "cta": "Criar o seu Espaço",
         "later": "Agora não? O email de confirmação tem tudo o que precisa."
       },
-      "accessRequest": "Os dados para entrar chegam por email assim que {name} aceitar.",
-      "accessInPersonNoPlace": "{name} confirma a morada no email de confirmação.",
+      "accessRequest": "Os detalhes da sessão chegam por email assim que {name} aceitar.",
       "requestChange": "Se {name} aceitar, o email de confirmação explica como mudar ou cancelar.",
       "calendarNote": "O email de confirmação também traz um convite de calendário. A Google e a Microsoft só recebem o nome, a hora e o local da sessão se os escolher."
     },

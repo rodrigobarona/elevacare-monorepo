@@ -806,9 +806,8 @@ export function BookingFunnel({
       : selectedMode.mode === "phone"
         ? t("done.accessPhone", { name: firstName, phone: maskedPhone })
         : selectedMode.mode === "in_person"
-          ? selectedMode.location
-            ? t("done.accessInPerson", { name: firstName, location: placeName })
-            : t("done.accessInPersonNoPlace", { name: firstName })
+          ? // In-person modes always have a location (DB check).
+            t("done.accessInPerson", { name: firstName, location: placeName })
           : t("done.accessOnline")
     const startMs = new Date(slot.start).getTime()
     const stepWhen = new Intl.DateTimeFormat(
@@ -1033,7 +1032,7 @@ export function BookingFunnel({
               </details>
               <p>{t("summary.provider", { name: expertName })}</p>
             </>
-          ) : onDetails ? undefined : isFree ? (
+          ) : onDetails || (onPay && holdExpired) ? undefined : isFree ? (
             // The details step shows the policy itself; free sessions have
             // nothing to refund.
             t("policy.free")

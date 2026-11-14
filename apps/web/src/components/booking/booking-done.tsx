@@ -119,7 +119,8 @@ export function BookingDone({
           {isConfirmed ? (
             <div className="space-y-1">
               <p className="text-lg font-medium text-pretty first-letter:uppercase">
-                {whenLong}{" "}
+                {/* Keep the time range together when the line wraps. */}
+                {whenLong.replace(/\s*–\s*/g, "\u2060–\u2060")}{" "}
                 <span className="whitespace-nowrap text-muted-foreground">
                   · {zoneLabel}
                 </span>
@@ -144,7 +145,7 @@ export function BookingDone({
                 <CalendarPlusIcon aria-hidden data-icon="inline-start" />
                 {t("done.ics")}
               </Button>
-              <DropdownMenu placement="bottom">
+              <DropdownMenu placement="bottom" className="min-w-60">
                 {calendar ? (
                   <>
                     <DropdownMenuItem
@@ -203,7 +204,7 @@ export function BookingDone({
           </div>
         ) : null}
         {isConfirmed && !isRequest ? (
-          <p className="mx-auto max-w-md text-xs text-pretty text-muted-foreground">
+          <p className="mx-auto max-w-md text-sm text-pretty text-muted-foreground">
             {t("done.calendarNote")}
           </p>
         ) : null}
