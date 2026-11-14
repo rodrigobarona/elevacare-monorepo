@@ -586,9 +586,11 @@ export function BookingFunnel({
       setStep("when")
       return
     }
-    const typedPhone = phone.trim().length > 0
-    const e164 = typedPhone ? toE164(phone, country) : undefined
-    if ((selectedMode.mode === "phone" || typedPhone) && !e164) {
+    // The phone field shows only for phone sessions; a number typed for an
+    // earlier phone choice is neither checked nor sent.
+    const needsPhone = selectedMode.mode === "phone"
+    const e164 = needsPhone ? toE164(phone, country) : undefined
+    if (needsPhone && !e164) {
       setFormError("phoneRequired")
       return
     }
@@ -1317,6 +1319,7 @@ export function BookingFunnel({
               <div className="space-y-4">
                 <ConsentCheckbox
                   id="health_data_processing"
+                  errorId={`${fieldId}-details-error`}
                   isInvalid={
                     formError === "consentsRequired" &&
                     !granted.health_data_processing
@@ -1362,6 +1365,7 @@ export function BookingFunnel({
                 />
                 <ConsentCheckbox
                   id="terms"
+                  errorId={`${fieldId}-details-error`}
                   isInvalid={formError === "consentsRequired" && !granted.terms}
                   isSelected={Boolean(granted.terms)}
                   onChange={(selected) =>
@@ -1440,7 +1444,9 @@ export function BookingFunnel({
               ) : null}
             </FormCard>
             {formError ? (
-              <FieldError>{t(`errors.${formError}`)}</FieldError>
+              <FieldError id={`${fieldId}-details-error`}>
+                {t(`errors.${formError}`)}
+              </FieldError>
             ) : null}
             <div className="flex gap-3">
               <Button variant="ghost" onPress={goBack}>

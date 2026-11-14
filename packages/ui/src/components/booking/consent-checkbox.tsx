@@ -17,6 +17,7 @@ export function ConsentCheckbox({
   linkLabel,
   description,
   isInvalid,
+  errorId,
   className,
 }: {
   id: string
@@ -31,6 +32,8 @@ export function ConsentCheckbox({
   description?: ReactNode
   /** Marked when the member tried to continue without this required tick. */
   isInvalid?: boolean
+  /** The visible error that explains an invalid tick, read with it. */
+  errorId?: string
   className?: string
 }) {
   const descriptionId = useId()
@@ -41,7 +44,11 @@ export function ConsentCheckbox({
         isSelected={isSelected}
         onChange={onChange}
         isInvalid={isInvalid}
-        aria-describedby={description ? descriptionId : undefined}
+        aria-describedby={
+          [description ? descriptionId : null, isInvalid ? errorId : null]
+            .filter(Boolean)
+            .join(" ") || undefined
+        }
         // The box sits on the first line of a relaxed 14px label.
         className={cn(
           "items-start [&>[data-slot=checkbox]]:mt-[3px]",

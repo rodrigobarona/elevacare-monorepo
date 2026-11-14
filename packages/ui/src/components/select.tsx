@@ -190,7 +190,7 @@ function SelectInput({
       data-slot="select-input-wrapper"
       className={cn("p-1 pb-0", className)}
     >
-      <InputGroup>
+      <InputGroup className="bg-input/50">
         <InputGroupInput
           data-slot="select-input"
           className="[&::-webkit-search-cancel-button]:hidden"

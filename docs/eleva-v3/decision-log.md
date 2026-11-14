@@ -66,7 +66,8 @@ Each entry should include:
   `#bookings` anchor on `/legal/terms` so "booking terms" lands on its
   section; a `#bookings` anchor on Privacy settings for withdrawal; a
   shorter spoken name for the terms tick (its two links each say "opens in a
-  new tab") and `aria-errormessage` on the ticks.
+  new tab"). A missing tick is now described by the error message
+  (`aria-describedby`).
 - Merging to `main` deploys, so production records the new health statement
   under `2026-11-14` from then on until the founder decides the above.
 - Judges panel: round 1 UI 7.9, UX 8.0, trust 7.6; round 2 UI 8.6, UX 8.2,
