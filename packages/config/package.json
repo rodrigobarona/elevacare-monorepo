@@ -33,6 +33,7 @@
     "./phone": "./src/phone.ts",
     "./urgent-help": "./src/urgent-help.ts",
     "./guest-signup": "./src/guest-signup.ts",
+    "./clinic-verification": "./src/clinic-verification.ts",
     "./professional-bodies": "./src/professional-bodies.ts"
   },
   "scripts": {

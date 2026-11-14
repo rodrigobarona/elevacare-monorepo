@@ -263,6 +263,16 @@ export const bookings = pgTable(
       () => organization.id,
       { onDelete: "set null" }
     ),
+    /**
+     * The clinic a booking came through (Phase 11): set only from the
+     * booking source (the clinic booking route or a signed clinic link),
+     * never inferred from the expert's clinic membership. Drives the 0%
+     * clinic commission.
+     */
+    attributedOrgId: uuid("attributed_org_id").references(
+      () => organization.id,
+      { onDelete: "set null" }
+    ),
     expertUserId: uuid("expert_user_id")
       .notNull()
       .references(() => user.id, { onDelete: "restrict" }),
@@ -368,6 +378,9 @@ export const bookings = pgTable(
     counterpartyIdx: index("bookings_counterparty_org_idx")
       .on(t.counterpartyOrgId)
       .where(sql`counterparty_org_id IS NOT NULL`),
+    attributedIdx: index("bookings_attributed_org_idx")
+      .on(t.attributedOrgId)
+      .where(sql`attributed_org_id IS NOT NULL`),
     reservationKey: unique("bookings_reservation_id_key").on(t.reservationId),
     idOrgKey: unique("bookings_id_org_key").on(t.id, t.orgId),
     priceChk: check("bookings_price_cents", sql`price_cents >= 0`),

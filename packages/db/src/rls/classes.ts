@@ -44,6 +44,7 @@ export type RlsTableAssignment = {
 export const RLS_TABLE_ASSIGNMENTS: readonly RlsTableAssignment[] = [
   { table: "expert_profiles", class: "tenant-owned" },
   { table: "become_partner_applications", class: "tenant-owned" },
+  { table: "clinic_verifications", class: "tenant-owned" },
   { table: "expert_listings", class: "public-read" },
   { table: "clinic_profiles", class: "public-read" },
   { table: "expert_integrations", class: "tenant-owned" },

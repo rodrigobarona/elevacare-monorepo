@@ -1,3 +1,4 @@
+import { CLINIC_CHECKLIST_ITEMS } from "@eleva/config/clinic-verification"
 import { LICENCE_CHECKLIST_ITEMS } from "@eleva/config/professional-bodies"
 import { describe, expect, it } from "vitest"
 import { resolve } from "node:path"
@@ -39,9 +40,19 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0073_adult_confirmation_consent")
+    expect(last?.tag).toBe("0074_clinic_foundation")
     expect(last?.hash).toHaveLength(64)
-    expect(last?.statements.join("\n")).toContain("adult_confirmation")
+    const clinic = last?.statements.join("\n") ?? ""
+    expect(clinic).toContain("clinic_verifications_open_uidx")
+    expect(clinic).toContain("eleva.platform_admin")
+    expect(clinic).toContain("attributed_org_id")
+    for (const item of CLINIC_CHECKLIST_ITEMS) {
+      expect(clinic).toContain(`"${item}": true`)
+    }
+    const adult = migrations.find(
+      (m) => m.tag === "0073_adult_confirmation_consent"
+    )
+    expect(adult?.statements.join("\n")).toContain("adult_confirmation")
     const partnerApplications = migrations.find(
       (m) => m.tag === "0071_become_partner_applications"
     )
