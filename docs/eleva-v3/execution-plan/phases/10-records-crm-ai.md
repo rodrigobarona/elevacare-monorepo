@@ -202,8 +202,11 @@ created|updated|archived`), API `/records/templates` CRUD + `POST /records/templ
       unchanged; decrypt works before, during and after; `record: decrypted` audit rows present.
 - [x] Clinical access matrix: authoring expert reads; clinic colleague reads only with
       `clinic_shared_records` on and no member opt-out; staff never see `body_encrypted`.
-- [ ] No `sessions.recording_*` or Daily cloud recording in this phase (grep
+- [x] No `sessions.recording_*` or Daily cloud recording in this phase (grep
       check in the PR body). Live `transcript` kind is in 10.1; S3 recording stays 16.8.
+      _(2026-11-14: no `recording_\*`columns in`packages/db/src/schema`; no cloud-recording
+  calls in `packages/video`or`apps/api`; `roomMatchesContract`rejects any room with
+ `enable*recording`or`enable_recording_ui` set.)*
 - [x] Retention sweep deletes an expired unpublished AI draft in a
       seeded test; account deletion after grace period shreds keys and rows; DSAR includes published
       records and owned documents.
@@ -212,7 +215,11 @@ created|updated|archived`), API `/records/templates` CRUD + `POST /records/templ
       staging) validates against the Zod schema; publishing requires expert action; audit trail
       complete.
 - [ ] Sentry test event with a record payload arrives redacted. _(unit-level `beforeSend`/breadcrumb redaction proven in `sentry.test.ts`; live DSN delivery pending.)_
-- [ ] CRM follow-up due -> notification kind `crm.follow_up_due` delivered.
+- [x] CRM follow-up due -> notification kind `crm.follow_up_due` delivered.
+      _(2026-11-14, loopback: `E2E_CRM_SMOKE=1` `e2e/crm-smoke.spec.ts` "due follow-up" —
+      one in-app digest to the author, count only, `notified_at` stamped, a second run adds
+      nothing. Before this fix every digest failed `ctx is invalid`: the in-app-only kind sent
+      an empty `html`, which `sendNotification` required for every kind.)_
 
 ## Tests
 

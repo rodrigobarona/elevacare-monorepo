@@ -284,6 +284,30 @@ describe("sendNotification", () => {
     expect(store.sendCalls).toBe(0)
   })
 
+  it("needs html only when the kind sends email", async () => {
+    await expect(
+      sendNotification(
+        bookingInput({ ctx: { ...content, html: "" } }),
+        store.deps(now)
+      )
+    ).rejects.toMatchObject({ code: "VALIDATION" })
+    expect(store.rows.size).toBe(0)
+
+    // In-app only: the hourly CRM digest has no email body.
+    const result = await sendNotification(
+      {
+        kind: "crm.follow_up_due",
+        orgId: ORG_ID,
+        recipient: { userId: USER_ID },
+        ctx: { ...content, html: "" },
+        idempotencyKey: "crm:digest:1",
+      },
+      store.deps(now)
+    )
+    expect(result.deliveries.map((d) => d.channel)).toEqual(["in_app"])
+    expect(result.deliveries[0]?.status).toBe("sent")
+  })
+
   it("rejects channelsOverride that widens the kind", async () => {
     await expect(
       sendNotification(

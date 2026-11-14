@@ -165,7 +165,9 @@ const ContentSchema = z.object({
   title: z.string().min(1),
   body: z.string().min(1),
   subject: z.string().min(1),
-  html: z.string().min(1),
+  // May be empty for kinds that never send email (in-app or SMS only);
+  // checked against the kind's channels in parseInput.
+  html: z.string(),
   href: z.string().nullable().optional(),
   data: z.record(z.string(), z.unknown()).optional(),
   attachments: z
@@ -237,8 +239,12 @@ function parseInput(input: SendNotificationInput): ParsedSend {
       "user-scoped kinds must not include orgId"
     )
   }
-  if (input.channelsOverride) {
-    supportedSendChannels(kind, input.channelsOverride)
+  const channels = supportedSendChannels(kind, input.channelsOverride)
+  if (channels.includes("email") && ctx.data.html.length === 0) {
+    throw new SendNotificationError(
+      "VALIDATION",
+      "ctx.html is required when the kind sends email"
+    )
   }
 
   return {

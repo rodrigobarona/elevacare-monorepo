@@ -6129,8 +6129,11 @@ expires (&lt;= 15 min).</li>
 unchanged; decrypt works before, during and after; <code>record: decrypted</code> audit rows present.</li>
 <li><input checked="" disabled="" type="checkbox"> Clinical access matrix: authoring expert reads; clinic colleague reads only with
 <code>clinic_shared_records</code> on and no member opt-out; staff never see <code>body_encrypted</code>.</li>
-<li><input disabled="" type="checkbox"> No <code>sessions.recording_*</code> or Daily cloud recording in this phase (grep
-check in the PR body). Live <code>transcript</code> kind is in 10.1; S3 recording stays 16.8.</li>
+<li><input checked="" disabled="" type="checkbox"> No <code>sessions.recording_*</code> or Daily cloud recording in this phase (grep
+check in the PR body). Live <code>transcript</code> kind is in 10.1; S3 recording stays 16.8.
+_(2026-11-14: no <code>recording_\*</code>columns in<code>packages/db/src/schema</code>; no cloud-recording
+calls in <code>packages/video</code>or<code>apps/api</code>; <code>roomMatchesContract</code>rejects any room with
+ <code>enable*recording</code>or<code>enable_recording_ui</code> set.)*</li>
 <li><input checked="" disabled="" type="checkbox"> Retention sweep deletes an expired unpublished AI draft in a
 seeded test; account deletion after grace period shreds keys and rows; DSAR includes published
 records and owned documents.</li>
@@ -6139,7 +6142,11 @@ records and owned documents.</li>
 staging) validates against the Zod schema; publishing requires expert action; audit trail
 complete.</li>
 <li><input disabled="" type="checkbox"> Sentry test event with a record payload arrives redacted. <em>(unit-level <code>beforeSend</code>/breadcrumb redaction proven in <code>sentry.test.ts</code>; live DSN delivery pending.)</em></li>
-<li><input disabled="" type="checkbox"> CRM follow-up due -&gt; notification kind <code>crm.follow_up_due</code> delivered.</li>
+<li><input checked="" disabled="" type="checkbox"> CRM follow-up due -&gt; notification kind <code>crm.follow_up_due</code> delivered.
+<em>(2026-11-14, loopback: <code>E2E_CRM_SMOKE=1</code> <code>e2e/crm-smoke.spec.ts</code> &quot;due follow-up&quot; —
+one in-app digest to the author, count only, <code>notified_at</code> stamped, a second run adds
+nothing. Before this fix every digest failed <code>ctx is invalid</code>: the in-app-only kind sent
+an empty <code>html</code>, which <code>sendNotification</code> required for every kind.)</em></li>
 </ul>
 <h2 id="10-records-crm-ai--tests"><a class="anchor" href="#10-records-crm-ai--tests" aria-label="Link to section">#</a>Tests</h2>
 <ul>
