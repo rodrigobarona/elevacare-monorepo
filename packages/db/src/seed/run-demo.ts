@@ -1,4 +1,5 @@
 import { seedDemo } from "./demo"
+import { seedDemoMemberSessions } from "./demo-member-sessions"
 import { seedOfferFixtures } from "./offer-fixtures"
 
 async function main() {
@@ -8,7 +9,11 @@ async function main() {
     console.log(`  ${r.email} -> user=${r.userId} org=${r.orgId}`)
   }
   await seedOfferFixtures()
-  console.log("[seed:demo] offer fixtures ready (anaquick, fisiomota)")
+  console.log(
+    "[seed:demo] offer fixtures ready (anaquick, fisiomota + demo experts)"
+  )
+  await seedDemoMemberSessions()
+  console.log("[seed:demo] demo member sessions ready")
 }
 
 main().catch((err) => {

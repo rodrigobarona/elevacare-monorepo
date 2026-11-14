@@ -57,9 +57,9 @@ const SEEDS: SeedPersona[] = [
   },
   {
     email: "member.demo@example.test",
-    displayName: "Demo Member",
+    displayName: "Leonor Almeida",
     orgType: "personal",
-    orgDisplayName: "Demo Member (personal)",
+    orgDisplayName: "Leonor's Space",
     orgSlug: "member-demo",
     role: "owner",
   },
@@ -75,7 +75,12 @@ async function upsertPersona(persona: SeedPersona) {
     .limit(1)
 
   let userId = existingUser?.id
-  if (!userId) {
+  if (userId) {
+    await client
+      .update(auth.user)
+      .set({ name: persona.displayName })
+      .where(eq(auth.user.id, userId))
+  } else {
     const [inserted] = await client
       .insert(auth.user)
       .values({
@@ -95,7 +100,12 @@ async function upsertPersona(persona: SeedPersona) {
     .limit(1)
 
   let orgId = existingOrg?.id
-  if (!orgId) {
+  if (orgId) {
+    await client
+      .update(auth.organization)
+      .set({ name: persona.orgDisplayName })
+      .where(eq(auth.organization.id, orgId))
+  } else {
     const [inserted] = await client
       .insert(auth.organization)
       .values({

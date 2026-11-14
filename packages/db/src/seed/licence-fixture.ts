@@ -20,9 +20,9 @@ const PLACEHOLDER_LICENCE: FixtureLicence = {
  * `licenceVerified()`). The fixture expert is its own reviewer because
  * seeds have no staff user; real approvals go through the staff queue.
  *
- * Pass `licence` when the persona stands for a real expert whose public
- * register entry was checked; the number is then also kept on the profile
- * and brought up to date on rows seeded earlier.
+ * Pass `licence` to give the persona its own professional body and number
+ * (fictional `DEMO-` numbers for demo personas); it is then also kept on the
+ * profile and brought up to date on rows seeded earlier.
  */
 export async function ensureFixtureLicenceApproved(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
