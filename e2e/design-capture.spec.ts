@@ -131,7 +131,7 @@ async function shoot(
     await page
       .addStyleTag({
         content:
-          'html[data-capture-full-page] [data-testid="booking-pay-bar"]{position:static!important}',
+          'html[data-capture-full-page] :is([data-testid="booking-pay-bar"],[data-testid="booking-when-bar"]){position:static!important}',
       })
       .catch(() => {})
     await page.waitForTimeout(200)
@@ -336,6 +336,23 @@ test.describe("design capture", () => {
       const picker = page.locator("[data-slot='slot-picker']")
       await picker.waitFor({ timeout: 30_000 })
       await shoot(page, surface, "03-paid-step-when", kind)
+      // What fits on the first screen, with the phone's fixed bar in place.
+      await shoot(page, surface, "03a-paid-when-first-screen", kind, {
+        fullPage: false,
+      })
+      // Later weeks offer the earliest time as a one-tap way back.
+      await picker.getByTestId("booking-slot-next").click()
+      await page
+        .getByTestId("booking-next-available")
+        .waitFor({ timeout: 30_000 })
+      await expect(page.getByTestId("booking-slots-skeleton")).toHaveCount(0, {
+        timeout: 30_000,
+      })
+      await shoot(page, surface, "03b-later-dates-next-available", kind, {
+        fullPage: false,
+      })
+      await page.getByTestId("booking-next-available").click()
+      await picker.getByTestId("booking-slot-day").first().waitFor()
       await picker.getByTestId("booking-slot-day").last().click()
       await picker.getByTestId("booking-slot-time").first().click()
       await shoot(page, surface, "04-paid-slot-picked", kind)

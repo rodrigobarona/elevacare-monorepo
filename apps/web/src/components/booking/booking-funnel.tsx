@@ -1005,7 +1005,7 @@ export function BookingFunnel({
         ) : null}
 
         {step === "when" ? (
-          <div className="mt-8 space-y-6">
+          <div className="mt-6 space-y-4 sm:mt-8 sm:space-y-6">
             <StepHeader
               title={t("when.heading")}
               testId="booking-when-heading"
@@ -1092,12 +1092,22 @@ export function BookingFunnel({
                 <Button
                   data-testid="booking-continue-when"
                   size="lg"
-                  className="min-h-11 rounded-full"
+                  className="min-h-12 rounded-full px-6 text-base font-semibold"
+                  isDisabled={!when}
                   onPress={() => setStep("details")}
                 >
-                  {t("when.continueWith", { when })}
+                  {when
+                    ? t("when.continueWith", { when })
+                    : t("when.pickToContinue")}
                 </Button>
               )}
+              backAction={
+                previousFunnelStep(step, backInput) ? (
+                  <Button variant="ghost" size="lg" onPress={goBack}>
+                    {t("back")}
+                  </Button>
+                ) : undefined
+              }
               labels={{
                 strip: t("when.strip"),
                 earlierDays: t("when.earlierDays"),
@@ -1106,8 +1116,10 @@ export function BookingFunnel({
                 next: t("when.next"),
                 today: t("when.today"),
                 tomorrow: t("when.tomorrow"),
-                more: (count) => t("when.more", { count }),
-                less: t("when.less"),
+                morning: t("when.morning"),
+                afternoon: t("when.afternoon"),
+                evening: t("when.evening"),
+                noTimes: (day) => t("when.noTimes", { day }),
                 laterDates: t("when.laterDates"),
                 chooseDate: t("when.chooseDate"),
                 calendar: t("when.calendar"),
@@ -1117,11 +1129,6 @@ export function BookingFunnel({
                 selected: (when) => t("when.selected", { when }),
               }}
             />
-            {previousFunnelStep(step, backInput) ? (
-              <Button variant="ghost" onPress={goBack}>
-                {t("back")}
-              </Button>
-            ) : null}
           </div>
         ) : null}
 
