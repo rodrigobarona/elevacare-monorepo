@@ -97,8 +97,8 @@ export function BookingSummary({
         <p className="mt-1 text-sm text-muted-foreground">
           {meta}
           {/* Phones: the price joins this line instead of its own row,
-              unless the money rows below already show the total. */}
-          {priceRows && priceRows.length > 0 ? null : (
+              unless a total row below already shows it. */}
+          {priceRows?.some((row) => row.isTotal) ? null : (
             <span className="font-medium text-foreground lg:hidden">
               {meta ? " · " : null}
               <PriceTag

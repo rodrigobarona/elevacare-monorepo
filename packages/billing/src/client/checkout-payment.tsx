@@ -264,18 +264,26 @@ function CheckoutForm({
     }
   }
 
+  // The hold (and its last-minute warning) stays visible while Stripe loads
+  // or if it fails to load: she may still need to keep her time.
   if (state.type === "loading") {
     return (
-      <p className="text-sm text-muted-foreground" aria-live="polite">
-        {labels.loading}
-      </p>
+      <div className="flex flex-col gap-3">
+        <p className="text-sm text-muted-foreground" aria-live="polite">
+          {labels.loading}
+        </p>
+        {children}
+      </div>
     )
   }
   if (state.type === "error" || !checkout) {
     return (
-      <p role="alert" className="text-sm text-destructive">
-        {labels.loadFailed}
-      </p>
+      <div className="flex flex-col gap-3">
+        <p role="alert" className="text-sm text-destructive">
+          {labels.loadFailed}
+        </p>
+        {children}
+      </div>
     )
   }
 
