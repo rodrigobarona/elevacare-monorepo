@@ -645,7 +645,11 @@
     "policy": {
       "heading": "Cancellation policy"
     },
-    "stepOf": "Step {current} of {total}"
+    "stepOf": "Step {current} of {total}",
+    "chrome": {
+      "secure": "Secure booking",
+      "help": "Help"
+    }
   },
   "footer": {
     "about": "About",
