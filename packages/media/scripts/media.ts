@@ -26,6 +26,7 @@ const LIBRARY_PATH = fileURLToPath(
 const PEXELS_API = "https://api.pexels.com/v1"
 const TARGET_WIDTH = 2400
 const THUMBS_DIR = "/tmp/eleva-media-candidates"
+const PRODUCTION_PUBLIC_BUCKET = "elevacare-public"
 
 interface PexelsPhoto {
   id: number
@@ -354,6 +355,13 @@ async function importVideo(argv: string[]): Promise<void> {
  * environment whose public bucket the demo seed points at.
  */
 async function demoPortrait(argv: string[]): Promise<void> {
+  // Demo portraits stand for fictional experts: never the production bucket.
+  if (
+    process.env.VERCEL_ENV === "production" ||
+    process.env.R2_PUBLIC_BUCKET === PRODUCTION_PUBLIC_BUCKET
+  ) {
+    throw new Error("demo-portrait must not write to the production bucket")
+  }
   const { positionals } = parseArgs({ args: argv, allowPositionals: true })
   const username = positionals[0]
   const id = positionals[1]

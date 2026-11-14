@@ -265,6 +265,32 @@ export function assertPreviewDatabaseIsolated(
   }
 }
 
+/**
+ * Neon endpoint of the production database. `PRODUCTION_DB_ENDPOINT`
+ * overrides it; the id is not a secret (it is the host name's first label).
+ */
+const PRODUCTION_NEON_ENDPOINT = "ep-plain-voice-alu7buik"
+
+/**
+ * For scripts that write fictional data (the demo seed): refuse to run in a
+ * production deployment or against the production database, whatever env
+ * file the shell loaded.
+ */
+export function assertNotProductionDatabase(
+  url: string,
+  purpose: string,
+  source: NodeJS.ProcessEnv = process.env
+): void {
+  if (source.VERCEL_ENV === "production") {
+    throw new Error(`${purpose} must not run in a production deployment`)
+  }
+  const blocked =
+    source.PRODUCTION_DB_ENDPOINT?.trim() || PRODUCTION_NEON_ENDPOINT
+  if (!url || neonEndpointId(url) === blocked) {
+    throw new Error(`${purpose} must not run against the production database`)
+  }
+}
+
 export function requireDbEnv(): Required<Pick<Env, "DATABASE_URL">> {
   const e = env()
   if (!e.DATABASE_URL) {

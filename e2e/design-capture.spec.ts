@@ -18,7 +18,6 @@ import {
   fillGuestAndConsents,
   uniqueGuestEmail,
 } from "./helpers/booking"
-import { PAID_EXPERT_EMAIL } from "./helpers/booking-request-smoke"
 import { sessionFromMagicLink } from "./helpers/cancellation-policy-smoke"
 import {
   appUrl,
@@ -48,6 +47,16 @@ const outRoot = path.join(
 )
 const expertUrl = process.env.E2E_EXPERT_URL ?? "http://localhost:3003"
 const MEMBER_DEMO_EMAIL = "member.demo@example.test"
+/**
+ * Dashboards are captured as a seeded demo expert that e2e suites never
+ * book, so smoke-test leftovers on fisiomota do not end up in the shots.
+ */
+const DASHBOARD_EXPERT = {
+  email: "marta.sousa@example.test",
+  username: "martasousa",
+}
+/** The capture's own guest; not the name of any seeded expert. */
+const CAPTURE_GUEST = "Beatriz Nunes"
 
 const DESKTOP = { width: 1440, height: 900 }
 const MOBILE = { width: 390, height: 844 }
@@ -238,7 +247,7 @@ test.describe("design capture", () => {
       await page.getByTestId("booking-guest-name").waitFor()
       await shoot(page, surface, "05-paid-step-details", kind)
       await fillGuestAndConsents(page, {
-        name: "Marta Silva",
+        name: CAPTURE_GUEST,
         email: uniqueGuestEmail("design-capture"),
       })
       await shoot(page, surface, "06-paid-details-filled", kind)
@@ -276,7 +285,7 @@ test.describe("design capture", () => {
       await page.getByTestId("booking-continue-when").click()
       await page.getByTestId("booking-guest-name").waitFor()
       await fillGuestAndConsents(page, {
-        name: "Marta Silva",
+        name: CAPTURE_GUEST,
         email: uniqueGuestEmail("design-capture-free"),
       })
       await shoot(page, surface, "08-free-details-filled", kind)
@@ -302,7 +311,7 @@ test.describe("design capture", () => {
       await page.goto(`${accountUrl}/login`)
       await clearBanner(page)
       await shoot(page, auth, "01-login", kind)
-      await page.getByTestId("login-email").fill("marta.silva@example.com")
+      await page.getByTestId("login-email").fill("beatriz.nunes@example.com")
       await page.getByTestId("login-continue").click()
       await shoot(page, auth, "02-login-step-two", kind)
 
@@ -311,7 +320,7 @@ test.describe("design capture", () => {
       await shoot(page, auth, "03-signup", kind)
       await page.getByTestId("signup-email").fill(email)
       await page.getByTestId("signup-continue").click()
-      await page.getByTestId("signup-name").fill("Marta Silva")
+      await page.getByTestId("signup-name").fill(CAPTURE_GUEST)
       await page.getByTestId("signup-password").fill(E2E_PASSWORD)
       await page.getByTestId("signup-consent").click()
       await shoot(page, auth, "04-signup-step-two", kind)
@@ -348,7 +357,7 @@ test.describe("design capture", () => {
       await shoot(page, onboarding, "03-workspace-type-picker", kind)
       await page.goto(`${accountUrl}/account/workspaces/create/expert`)
       await shoot(page, onboarding, "04-create-expert-workspace", kind)
-      await page.locator("#workspace-name").fill("Marta Silva Physio")
+      await page.locator("#workspace-name").fill("Beatriz Nunes Physio")
       await page.locator("form button[type='submit']").click()
       await page
         .waitForURL((url) => !url.pathname.includes("/workspaces/create"), {
@@ -375,10 +384,10 @@ test.describe("design capture", () => {
       request,
     }) => {
       const surface = "07-expert-dashboard"
-      const cookie = await sessionFromMagicLink(request, PAID_EXPERT_EMAIL)
+      const cookie = await sessionFromMagicLink(request, DASHBOARD_EXPERT.email)
       const context = await newContext(browser, kind, { cookie })
       const page = await context.newPage()
-      const base = `${expertUrl}/${PAID_EXPERT}`
+      const base = `${expertUrl}/${DASHBOARD_EXPERT.username}`
       const pages = [
         ["01-home", ""],
         ["02-calendar", "/calendar"],
@@ -396,7 +405,9 @@ test.describe("design capture", () => {
         await shoot(page, surface, name, kind)
       }
       await page.goto(`${base}/event-types`)
-      const firstOffer = page.getByTestId(`event-type-card-${PAID_OFFER}`)
+      const firstOffer = page
+        .locator('[data-testid^="event-type-card-"]')
+        .first()
       if (await firstOffer.isVisible().catch(() => false)) {
         await firstOffer.getByRole("link").first().click()
         await page.waitForURL(/event-types\/[^/]+$/, { timeout: 30_000 })

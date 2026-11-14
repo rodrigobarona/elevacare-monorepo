@@ -121,6 +121,9 @@ async function upsertExpert(
     displayName: input.displayName,
     headline: input.persona.headline,
     bio: input.persona.bio,
+    // A rich or translated bio from an earlier seed or edit would win over
+    // `bio` on the profile; clear it so the persona is what shows.
+    bioRich: null,
     bioSourceLocale: "en",
     credentials: input.persona.credentials,
     avatarUrl: portraitUrl(input.username, input.persona),
@@ -444,7 +447,14 @@ async function upsertLocation(
       )
     )
     .limit(1)
-  if (existing) return existing.id
+  if (existing) {
+    // Fixture addresses are fictional; keep earlier rows in step.
+    await tx
+      .update(main.expertPracticeLocations)
+      .set({ address: input.address, city: input.city, region: input.region })
+      .where(eq(main.expertPracticeLocations.id, existing.id))
+    return existing.id
+  }
   const [inserted] = await tx
     .insert(main.expertPracticeLocations)
     .values({

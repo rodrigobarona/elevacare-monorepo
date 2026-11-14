@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import {
+  assertNotProductionDatabase,
   assertPreviewDatabaseIsolated,
   env,
   expertProfileUrl,
@@ -319,6 +320,38 @@ describe("public gateway URLs", () => {
     expect(expertProfileUrl("fr/../x", "fisiomota")).toBe(
       "https://dev.eleva.care/fisiomota"
     )
+  })
+})
+
+describe("assertNotProductionDatabase", () => {
+  const prod =
+    "postgresql://u:p@ep-plain-voice-alu7buik-pooler.c-3.eu-central-1.aws.neon.tech/neondb"
+  const dev =
+    "postgresql://u:p@ep-flat-thunder-alxd88qk-pooler.c-3.eu-central-1.aws.neon.tech/neondb"
+
+  it("refuses the production endpoint, pooled or direct, with no env set", () => {
+    expect(() => assertNotProductionDatabase(prod, "seed", {})).toThrow(
+      /seed must not run against the production database/
+    )
+    expect(() =>
+      assertNotProductionDatabase(prod.replace("-pooler", ""), "seed", {})
+    ).toThrow()
+  })
+
+  it("refuses a production deployment and a missing URL", () => {
+    expect(() =>
+      assertNotProductionDatabase(dev, "seed", { VERCEL_ENV: "production" })
+    ).toThrow(/production deployment/)
+    expect(() => assertNotProductionDatabase("", "seed", {})).toThrow()
+  })
+
+  it("honours PRODUCTION_DB_ENDPOINT and allows a dev branch", () => {
+    expect(() => assertNotProductionDatabase(dev, "seed", {})).not.toThrow()
+    expect(() =>
+      assertNotProductionDatabase(dev, "seed", {
+        PRODUCTION_DB_ENDPOINT: "ep-flat-thunder-alxd88qk",
+      })
+    ).toThrow()
   })
 })
 

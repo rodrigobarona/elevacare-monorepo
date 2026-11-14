@@ -41,9 +41,11 @@ export type OfferFixtureSchedule = {
 }
 
 /**
- * What a member reads about the expert. Demo personas are fictional; they
- * exist so profile, explorer and dashboard designs are judged on realistic
- * content instead of placeholders.
+ * What a member reads about the expert. Demo personas are fictional, and so
+ * are their institutions and `DEMO-` numbers; they exist so profile,
+ * explorer and dashboard designs are judged on realistic content instead of
+ * placeholders. Portraits are Pexels photos (credit in `portrait`); the seed
+ * never runs against production (`assertDemoSeedTarget`).
  */
 export type OfferFixturePersona = {
   headline: string
@@ -71,8 +73,8 @@ export type OfferFixture = {
     worldwideRemote: boolean
   }
   persona: OfferFixturePersona
-  /** Defaults to the placeholder physiotherapy licence. */
-  licence?: FixtureLicence
+  /** Fictional register entry; numbers carry a `DEMO-` prefix. */
+  licence: FixtureLicence
   schedules: OfferFixtureSchedule[]
   locations: OfferFixtureLocation[]
   eventTypes: OfferFixtureEventType[]
@@ -97,22 +99,28 @@ export const QUICK_CHAT_FIXTURE: OfferFixture = {
     worldwideRemote: true,
   },
   persona: {
-    headline: "Health coach for perimenopause, sleep and energy",
+    headline:
+      "Nutritionist and health coach for perimenopause, sleep and energy",
     bio: "I help women in their forties and fifties make sense of what is changing in their bodies and build habits that last. We start with a short chat about what matters to you, then agree on one or two small changes to try before we talk again. I work alongside your doctor, never instead of them.",
     credentials: [
       {
         title: "Certified health coach",
-        institution: "European Mentoring and Coaching Council",
+        institution: "Academia Lusa de Coaching",
         year: 2019,
       },
       {
         title: "BSc in Human Nutrition",
-        institution: "Universidade do Porto",
+        institution: "Universidade do Tejo",
         year: 2012,
       },
     ],
     categories: ["mental-health-coaching", "wellness"],
     portrait: { pexelsId: "16160809", photographer: "pessoas uem" },
+  },
+  licence: {
+    professionalBody: "ordem_nutricionistas",
+    licenceNumber: "DEMO-2560",
+    ersRegistrationNumber: "DEMO-E07",
   },
   schedules: [
     { name: "Online", timezone: "Europe/Lisbon", isDefault: true },
@@ -167,26 +175,31 @@ export const PHYSIOTHERAPY_FIXTURE: OfferFixture = {
   },
   persona: {
     headline: "Pelvic health physiotherapist",
-    bio: "I am a physiotherapist specialised in pelvic health. I see women in pregnancy, after birth and through menopause for leaking, pain, prolapse and getting back to sport. A first visit is a calm conversation and a clear plan you can follow at home; an internal exam only ever happens if you want it and it helps.",
+    bio: "I am a physiotherapist specialised in pelvic health. I see women in pregnancy, after birth and through menopause for leaking, pain, prolapse and getting back to sport. A first visit is a calm video conversation and a clear plan you can follow at home. In the clinic, any examination is explained first and only happens if you want it.",
     credentials: [
       {
-        title: "MSc in Women's Health Physiotherapy",
-        institution: "Escola Superior de Tecnologia da Saúde de Lisboa",
-        year: 2016,
-      },
-      {
         title: "Postgraduate certificate in pelvic floor rehabilitation",
-        institution: "Universidade de Coimbra",
+        institution: "Instituto Ibérico de Saúde da Mulher",
         year: 2019,
       },
       {
+        title: "MSc in Women's Health Physiotherapy",
+        institution: "Escola Superior de Saúde do Atlântico",
+        year: 2016,
+      },
+      {
         title: "BSc in Physiotherapy",
-        institution: "Escola Superior de Saúde do Porto",
+        institution: "Escola Superior de Saúde do Douro",
         year: 2012,
       },
     ],
     categories: ["pelvic-health", "physiotherapy"],
-    portrait: { pexelsId: "16160869", photographer: "pessoas uem" },
+    portrait: { pexelsId: "14208763", photographer: "Rene Terp" },
+  },
+  licence: {
+    professionalBody: "ordem_fisioterapeutas",
+    licenceNumber: "DEMO-1024",
+    ersRegistrationNumber: "DEMO-E06",
   },
   schedules: [
     { name: "Online", timezone: "Europe/Lisbon", isDefault: true },
@@ -197,7 +210,7 @@ export const PHYSIOTHERAPY_FIXTURE: OfferFixture = {
   locations: [
     {
       name: "Lisboa",
-      address: "Av. da Liberdade 100",
+      address: "Avenida do Demo 100",
       city: "Lisboa",
       region: "Lisboa",
       country: "PT",
@@ -206,7 +219,7 @@ export const PHYSIOTHERAPY_FIXTURE: OfferFixture = {
     },
     {
       name: "Porto",
-      address: "Rua de Santa Catarina 200",
+      address: "Rua do Demo 200",
       city: "Porto",
       region: "Porto",
       country: "PT",
@@ -214,7 +227,7 @@ export const PHYSIOTHERAPY_FIXTURE: OfferFixture = {
     },
     {
       name: "Madrid",
-      address: "Calle de Alcalá 50",
+      address: "Calle Demo 50",
       city: "Madrid",
       region: "Madrid",
       country: "ES",
@@ -231,7 +244,7 @@ export const PHYSIOTHERAPY_FIXTURE: OfferFixture = {
       },
       description: {
         en: "We talk through what is going on and leave with a plan you can start at home.",
-        pt: "Falamos sobre o que se passa e sai com um plano para começar em casa.",
+        pt: "Falamos sobre o que se passa e sai daqui com um plano para começar em casa.",
         es: "Hablamos de lo que te pasa y te llevas un plan para empezar en casa.",
       },
       kind: "clinical",
@@ -251,7 +264,11 @@ export const PHYSIOTHERAPY_FIXTURE: OfferFixture = {
     },
     {
       slug: "follow-up",
-      title: { en: "Follow-up", pt: "Seguimento", es: "Seguimiento" },
+      title: {
+        en: "Follow-up",
+        pt: "Consulta de seguimento",
+        es: "Consulta de seguimiento",
+      },
       description: {
         en: "Hands-on treatment in the clinic and an updated home exercise plan.",
         pt: "Tratamento presencial na clínica e um plano de exercícios atualizado.",
@@ -356,12 +373,12 @@ export const DEMO_EXPERT_FIXTURES: OfferFixture[] = [
       credentials: [
         {
           title: "Specialist nurse in maternal and obstetric health",
-          institution: "Escola Superior de Enfermagem de Lisboa",
+          institution: "Escola Superior de Enfermagem do Tejo",
           year: 2013,
         },
         {
           title: "BSc in Nursing",
-          institution: "Universidade de Lisboa",
+          institution: "Universidade do Tejo",
           year: 2010,
         },
       ],
@@ -371,11 +388,58 @@ export const DEMO_EXPERT_FIXTURES: OfferFixture[] = [
     licence: {
       professionalBody: "ordem_enfermeiros",
       licenceNumber: "DEMO-2048",
-      ersRegistrationNumber: "E000001",
+      ersRegistrationNumber: "DEMO-E01",
     },
-    schedules: [ONLINE_LISBON],
-    locations: [],
+    schedules: [
+      ONLINE_LISBON,
+      { name: "Lisboa practice", timezone: "Europe/Lisbon" },
+    ],
+    locations: [
+      {
+        name: "Lisboa",
+        address: "Rua do Demo 1",
+        city: "Lisboa",
+        region: "Lisboa",
+        country: "PT",
+        timezone: "Europe/Lisbon",
+        isPrimary: true,
+      },
+    ],
     eventTypes: [
+      {
+        slug: "intro-call",
+        title: {
+          en: "Meet your midwife",
+          pt: "Conheça a sua parteira",
+          es: "Conoce a tu matrona",
+        },
+        description: {
+          en: "A free 20-minute introduction, by video or at my Lisbon practice.",
+          pt: "Uma apresentação gratuita de 20 minutos, por vídeo ou no meu consultório em Lisboa.",
+          es: "Una presentación gratuita de 20 minutos, por vídeo o en mi consulta de Lisboa.",
+        },
+        kind: "non_clinical",
+        durationMinutes: 20,
+        priceAmount: 0,
+        languages: ["pt", "en"],
+        modes: [
+          {
+            mode: "online",
+            schedule: "Online",
+            countryScopeType: "list",
+            countryScopeCodes: ["PT"],
+            languages: ["pt", "en"],
+          },
+          {
+            mode: "in_person",
+            schedule: "Lisboa practice",
+            location: "Lisboa",
+            countryScopeType: "list",
+            countryScopeCodes: ["PT"],
+            languages: ["pt", "en"],
+          },
+        ],
+      },
       onlineOffer({
         slug: "pregnancy-consultation",
         title: {
@@ -404,8 +468,8 @@ export const DEMO_EXPERT_FIXTURES: OfferFixture[] = [
         },
         description: {
           en: "We write your birth plan together, in words your team will follow.",
-          pt: "Escrevemos juntas o seu plano de parto, claro para a sua equipa.",
-          es: "Escribimos juntas tu plan de parto, claro para tu equipo.",
+          pt: "Escrevemos juntas o seu plano de parto, numa linguagem que a sua equipa entende.",
+          es: "Escribimos juntas tu plan de parto, en palabras que tu equipo entienda.",
         },
         kind: "non_clinical",
         durationMinutes: 75,
@@ -432,12 +496,12 @@ export const DEMO_EXPERT_FIXTURES: OfferFixture[] = [
       credentials: [
         {
           title: "MSc in Clinical Nutrition",
-          institution: "Universidade do Porto",
+          institution: "Universidade do Douro",
           year: 2017,
         },
         {
           title: "BSc in Nutrition Sciences",
-          institution: "Universidade Nova de Lisboa",
+          institution: "Universidade do Tejo",
           year: 2014,
         },
       ],
@@ -447,7 +511,7 @@ export const DEMO_EXPERT_FIXTURES: OfferFixture[] = [
     licence: {
       professionalBody: "ordem_nutricionistas",
       licenceNumber: "DEMO-3317",
-      ersRegistrationNumber: "E000002",
+      ersRegistrationNumber: "DEMO-E02",
     },
     schedules: [ONLINE_LISBON],
     locations: [],
@@ -472,7 +536,11 @@ export const DEMO_EXPERT_FIXTURES: OfferFixture[] = [
       }),
       onlineOffer({
         slug: "follow-up",
-        title: { en: "Follow-up", pt: "Seguimento", es: "Seguimiento" },
+        title: {
+          en: "Follow-up",
+          pt: "Consulta de seguimento",
+          es: "Consulta de seguimiento",
+        },
         description: {
           en: "We check what worked and adjust the plan.",
           pt: "Vemos o que resultou e ajustamos o plano.",
@@ -502,23 +570,23 @@ export const DEMO_EXPERT_FIXTURES: OfferFixture[] = [
       bio: "I support women through fertility treatment, pregnancy, loss and the months after birth. Sessions are a place to say what you cannot say anywhere else, at your pace. I use cognitive behavioural and compassion-focused approaches.",
       credentials: [
         {
-          title: "MSc in Clinical and Health Psychology",
-          institution: "Universidade de Lisboa",
-          year: 2015,
+          title: "Training in perinatal mental health",
+          institution: "Instituto Ibérico de Saúde da Mulher",
+          year: 2020,
         },
         {
-          title: "Training in perinatal mental health",
-          institution: "Ordem dos Psicólogos Portugueses",
-          year: 2020,
+          title: "MSc in Clinical and Health Psychology",
+          institution: "Universidade do Tejo",
+          year: 2015,
         },
       ],
       categories: ["psychology", "fertility"],
-      portrait: { pexelsId: "14156484", photographer: "Shazard R." },
+      portrait: { pexelsId: "3936894", photographer: "Татьяна Танатова" },
     },
     licence: {
       professionalBody: "ordem_psicologos",
       licenceNumber: "DEMO-4096",
-      ersRegistrationNumber: "E000003",
+      ersRegistrationNumber: "DEMO-E03",
     },
     schedules: [ONLINE_LISBON],
     locations: [],
@@ -556,26 +624,26 @@ export const DEMO_EXPERT_FIXTURES: OfferFixture[] = [
     },
     persona: {
       headline: "Family doctor with a focus on menopause",
-      bio: "I am a family doctor who spends most of her week on perimenopause and menopause. We go through your symptoms, your history and your options, including hormone therapy and what else can help, so you can decide with the full picture.",
+      bio: "I am a family doctor and I spend most of my week on perimenopause and menopause. We go through your symptoms, your history and your options, including hormone therapy and what else can help, so you can decide with the full picture.",
       credentials: [
         {
-          title: "Specialist in General and Family Medicine",
-          institution: "Ordem dos Médicos",
-          year: 2014,
-        },
-        {
-          title: "Menopause care certificate",
-          institution: "European Menopause and Andropause Society",
+          title: "Postgraduate certificate in menopause care",
+          institution: "Instituto Ibérico de Saúde da Mulher",
           year: 2021,
         },
+        {
+          title: "Specialist in General and Family Medicine",
+          institution: null,
+          year: 2014,
+        },
       ],
-      categories: ["wellness", "pelvic-health"],
+      categories: ["wellness"],
       portrait: { pexelsId: "37272329", photographer: "Layth Mushreq" },
     },
     licence: {
       professionalBody: "ordem_medicos",
       licenceNumber: "DEMO-5120",
-      ersRegistrationNumber: "E000004",
+      ersRegistrationNumber: "DEMO-E04",
     },
     schedules: [ONLINE_LISBON],
     locations: [],
@@ -617,7 +685,7 @@ export const DEMO_EXPERT_FIXTURES: OfferFixture[] = [
       credentials: [
         {
           title: "Specialist nurse in maternal and obstetric health",
-          institution: "Escola Superior de Enfermagem do Porto",
+          institution: "Escola Superior de Enfermagem do Douro",
           year: 2011,
         },
       ],
@@ -627,7 +695,7 @@ export const DEMO_EXPERT_FIXTURES: OfferFixture[] = [
     licence: {
       professionalBody: "ordem_enfermeiros",
       licenceNumber: "DEMO-6144",
-      ersRegistrationNumber: "E000005",
+      ersRegistrationNumber: "DEMO-E05",
     },
     schedules: [ONLINE_LISBON],
     locations: [],
