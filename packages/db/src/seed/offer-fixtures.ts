@@ -127,6 +127,8 @@ async function upsertExpert(
     bioSourceLocale: input.persona.bioLocale ?? "en",
     credentials: input.persona.credentials,
     avatarUrl: portraitUrl(input.username, input.persona),
+    // No links: a fictional expert must never point at a real site.
+    socialLinks: [],
   }
   const [existing] = await tx
     .select({ id: main.expertProfiles.id })

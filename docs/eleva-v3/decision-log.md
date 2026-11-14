@@ -52,6 +52,11 @@ Each entry should include:
 - Open: `demo.ts` keeps the real Patrícia Mota register entry for the
   empty-profile demo (`patimota`); confirm she agrees to appear in demo and
   design material.
+- Judges panel (three rounds): UI 8.6, UX and writing 8.6, trust, legal and
+  accessibility 8.7. The new seed makes three app defects visible, now
+  queued for the member and profile slices: phone and in-person sessions
+  show a video "Join session" button, a free session reads "€0.00 · Paid",
+  and an empty profile says "See their work below" with nothing below.
 - Owner: founder (Rodrigo Barona)
 - Status: `active`
 - Related: `packages/db/src/seed/offer-fixture-specs.ts`,

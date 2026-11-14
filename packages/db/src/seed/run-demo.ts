@@ -3,6 +3,11 @@ import { seedDemo } from "./demo"
 import { seedDemoMemberSessions } from "./demo-member-sessions"
 import { seedOfferFixtures } from "./offer-fixtures"
 
+/**
+ * Demo seed for local and dev databases only. It refuses production and any
+ * DATABASE_URL whose Neon endpoint it cannot read (a local Postgres URL
+ * included); point it at a Neon dev branch.
+ */
 async function main() {
   assertNotProductionDatabase(process.env.DATABASE_URL ?? "", "The demo seed")
   const results = await seedDemo()
