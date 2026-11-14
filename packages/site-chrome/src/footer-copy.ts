@@ -19,7 +19,7 @@ export type FooterCopy = {
   accessibility: string
   complaints: string
   complaintsBook: string
-  trustSecurity: string
+  trustHub: string
   evidenceBasedCare: string
   credits: string
   community: string
@@ -51,7 +51,7 @@ const en: FooterCopy = {
   accessibility: "Accessibility",
   complaints: "Complaints",
   complaintsBook: "Electronic complaints book",
-  trustSecurity: "Security",
+  trustHub: "Trust and security",
   evidenceBasedCare: "Evidence-based care",
   credits: "Photo credits",
   community: "Community",
@@ -83,7 +83,7 @@ const pt: FooterCopy = {
   accessibility: "Acessibilidade",
   complaints: "Reclamações",
   complaintsBook: "Livro de reclamações eletrónico",
-  trustSecurity: "Segurança",
+  trustHub: "Confiança e segurança",
   evidenceBasedCare: "Cuidados baseados em evidência",
   credits: "Créditos de fotografia",
   community: "Comunidade",
@@ -115,7 +115,7 @@ const es: FooterCopy = {
   accessibility: "Accesibilidad",
   complaints: "Reclamaciones",
   complaintsBook: "Libro de reclamaciones electrónico",
-  trustSecurity: "Seguridad",
+  trustHub: "Confianza y seguridad",
   evidenceBasedCare: "Atención basada en evidencia",
   credits: "Créditos fotográficos",
   community: "Comunidad",

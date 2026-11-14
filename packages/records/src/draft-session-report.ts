@@ -155,7 +155,9 @@ export async function draftSessionReport(
   let generation
   try {
     generation = await generateSessionReportDraft({
-      locale: "en",
+      // The member reads the published report, so the draft is written
+      // in the language they booked in.
+      locale: booking.bookedLocale ?? "en",
       noteTexts,
       intakeText: intake?.body,
     })

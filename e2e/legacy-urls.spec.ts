@@ -32,7 +32,7 @@ test.describe("D-10 public-site parity", () => {
     }
   })
 
-  test("301s retired quiz, help, and trust aliases", async ({ request }) => {
+  test("301s retired quiz and help aliases", async ({ request }) => {
     for (const row of PUBLIC_SITE_PARITY_REDIRECTS) {
       const res = await request.get(row.path, { maxRedirects: 0 })
       expect(res.status(), row.id).toBe(301)
@@ -56,7 +56,17 @@ test.describe("D-10 public-site parity", () => {
     await expect(page.getByTestId("contact-heading")).toBeVisible()
     await expect(page.getByTestId("contact-channels")).toBeVisible()
 
-    for (const slug of ["security", "ers", "dpa", "sub-processors"] as const) {
+    const trustIndex = await page.goto("/trust")
+    expect(trustIndex?.status()).toBe(200)
+    await expect(page.getByTestId("trust-index-documents")).toBeVisible()
+
+    for (const slug of [
+      "security",
+      "ers",
+      "dpa",
+      "sub-processors",
+      "vulnerability-disclosure",
+    ] as const) {
       const trust = await page.goto(`/trust/${slug}`)
       expect(trust?.status(), slug).toBe(200)
       await expect(page.getByTestId("longform-last-updated")).toBeVisible()

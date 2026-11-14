@@ -71,6 +71,65 @@ Each entry should include:
 - Related: `design-audit/plan.json`, `_context/mobbin/readme.md`,
   `audits/2026-10-ux-inventory.md`, `expert-profile-booking-ux-spec.md`.
 
+### 2026-11-14: Heidi review panel follow-ups: no AI training in the contract, extractive AI drafts, trust index (active)
+
+- Decision: apply the five gaps named by the review panel
+  ([`audits/2026-11-heidi-health-review-panel.md`](audits/2026-11-heidi-health-review-panel.md)).
+  1. **No AI training is a contract term.** DPA §9, the AI notice and expert
+     agreement §12 say session data is never used to train, fine-tune or
+     improve an AI model, by Eleva or a provider, including after it is
+     de-identified or aggregated. `CONSENT_DOCUMENT_VERSION` moves to
+     `2026-11-14` because the AI notice changed.
+  2. **AI report drafts are extractive.** Prompt contract
+     `session-report.v2` restates the expert's notes and has no field for
+     model-originated advice or risk flags; a test fails if one is added. The
+     draft is written in the language the member booked in.
+     `ai-reporting-spec.md` gains an intended-purpose table per AI feature,
+     **proposed, pending device counsel**.
+  3. **Trust documents have a front door.** `/trust` lists every legal and
+     trust document with its last-updated date and replaces the footer's
+     Security link. A vulnerability disclosure page and
+     `/.well-known/security.txt` are published. Sub-processor changes are
+     announced by email to account owners and in a change log on
+     `/trust/sub-processors`.
+  4. **DAC7 clause states what the law requires** (expert agreement §16,
+     EN/PT/ES). Eleva collects every tax number a seller holds, checks the
+     data, and keeps it for 10 years. When details are still missing after
+     two reminders and 60 days, Eleva **holds transfers** (it used to say it
+     "may" act) and may also close the account under §13. For bookings
+     through a clinic, the clinic is the reported seller.
+- Drafted, not adopted or reviewed:
+  - [`legal/payment-services-position.md`](legal/payment-services-position.md):
+    the payment-services (RJSPME / PSD2) question, for the lawyer.
+  - [`operator-tasks/dac7-reporting.md`](operator-tasks/dac7-reporting.md):
+    the DAC7 procedure, with questions for the accountant.
+  - [`operator-tasks/sub-processor-change-notice.md`](operator-tasks/sub-processor-change-notice.md):
+    the notice is an email sent by hand.
+- Not built, not done:
+  - **DAC7 remains unbuilt**: no seller tax profile, no reminders, no yearly
+    export. The fields belong on the expert billing profile (PR 07.3).
+  - The new clauses were written after the 2026-11-10 lawyer redlines and
+    have **not** been read by the lawyer. The safe-harbour wording on the
+    disclosure page needs the same review.
+  - Transcription rests on Daily's default opt-out from Deepgram's model
+    improvement programme, not on a contract term. Written confirmation from
+    Daily is open (`legal/fact-sheet.md`).
+  - AI Gateway routing for report drafts is constrained by zero retention
+    and the EU zone, not by provider name. Pin the provider, or list every
+    eligible one as a sub-processor, before `ff.ai_reports_beta` is switched
+    on (`legal/fact-sheet.md`).
+  - Contract precedence is unchanged: the expert agreement still prevails
+    over the DPA. Recording each expert's acceptance, splitting the
+    `ai_processing` consent, the AI event log, the evaluation set and the
+    publish attestation are still open (panel report §4).
+- Owner: founder (Rodrigo Barona)
+- Status: `active` for items 1–4; the memo and both runbooks are drafts.
+- Related: ADR-009, `ai-reporting-spec.md`, `legal/fact-sheet.md`,
+  `packages/ai/src/prompts/session-report.v2.ts`,
+  `packages/content/content/trust/*`.
+- Next review: 2026-11-16, with the Daily recheck already on the fact
+  sheet's calendar.
+
 ### 2026-11-11: A confirmed session that is over is shown as ended (active)
 
 - Owner: engineering. Noticed by a judge on the attendance fix.

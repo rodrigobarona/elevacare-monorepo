@@ -97,12 +97,28 @@ Beehiiv is added only when the newsletter embed ships, with its DPA and SCCs.
 SOC 2 reports are confidential to the customer. Keep them out of the repo;
 the trust pages may say a vendor holds a SOC 2 Type II report, not quote it.
 
+### AI training and retention: evidence behind the published promise
+
+The DPA (§9) and the AI notice say session data is never used to train,
+fine-tune or improve an AI model, by Eleva or by a provider. What supports
+that for each provider, as read on 2026-11-14:
+
+| Path                                               | Evidence                                                                                                                                                                                                                                                                | Still open                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Session-report drafts (Vercel AI Gateway → OpenAI) | Enforced in code: a draft is sent only to an allow-listed model with zero data retention in the EU zone, and the request fails otherwise (`packages/ai/src/approved-models.ts`, `zero-retention-attestation.ts`).                                                       | The provider may keep content flagged for abuse review under its terms; the DPO reviews those terms with the transfer assessment. **Routing is not pinned to a named provider:** the gateway options require zero retention and the EU zone, so a second provider that met both could receive a draft. Today OpenAI is the only qualifying endpoint for the allow-listed model. Pin the provider in `GATEWAY_PROVIDER_OPTIONS` before `ff.ai_reports_beta` is switched on, or list every eligible provider as a sub-processor. |
+| Live transcription (Daily → Deepgram)              | Daily's changelog of 2025-12-19: "Deepgram model improvement program opt-out is now enabled by default". Deepgram's documentation: opted-out requests are "not retained". Eleva starts transcription with `transcription_geo: "eu"` and no transcript storage at Daily. | **No contract term.** Daily's DPA is available only on request and its sub-processor list gives Deepgram's location as the USA. Ask Daily in writing to confirm the opt-out, EU processing and no retention for Eleva's account.                                                                                                                                                                                                                                                                                               |
+
+Deepgram announced on 2026-10-29 that it is acquiring Daily. Daily says
+nothing changes for customers. Recheck Daily's sub-processor list and DPA when
+the deal closes; a change of processor there is a sub-processor change for
+Eleva ([`../operator-tasks/sub-processor-change-notice.md`](../operator-tasks/sub-processor-change-notice.md)).
+
 ### Recheck calendar
 
 Before publishing and then every January, recheck each vendor on
 <https://www.dataprivacyframework.gov/list>. Dated rechecks:
 
-- 2026-11-16 — Daily.co
+- 2026-11-16 — Daily.co (also ask for the written confirmation above)
 - 2027-03-03 — Resend (re-certification under review)
 - 2027-04-20 — Twilio
 - 2027-04-29 — Upstash, Vercel
@@ -111,6 +127,8 @@ Before publishing and then every January, recheck each vendor on
 - 2027-08-10 — Neon (Databricks)
 - 2027-08-31 — Microsoft
 - 2027-09-13 — Google
+- 2027-10-01 — renew `Expires` in `apps/web/public/.well-known/security.txt`
+  (a test fails from 30 days before it passes)
 
 ## 3. Cookies and similar technologies
 

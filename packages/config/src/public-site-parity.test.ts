@@ -16,6 +16,9 @@ describe("rewriteParityPath", () => {
     expect(rewriteParityPath("/pt/experts")).toBeNull()
     expect(rewriteParityPath("/fisiomota")).toBeNull()
     expect(rewriteParityPath("/legal/cookies")).toBeNull()
+    // `/trust` is the trust index, no longer an alias of `/trust/security`.
+    expect(rewriteParityPath("/trust")).toBeNull()
+    expect(rewriteParityPath("/pt/trust")).toBeNull()
     expect(rewriteParityPath("/trust/security")).toBeNull()
     expect(rewriteParityPath("/trust/dpa")).toBeNull()
     expect(rewriteParityPath("/pt/trust/ers")).toBeNull()

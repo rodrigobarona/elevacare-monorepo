@@ -662,7 +662,7 @@
     "accessibility": "Accessibility",
     "complaints": "Complaints",
     "complaintsBook": "Electronic complaints book",
-    "trustSecurity": "Security",
+    "trustHub": "Trust and security",
     "evidenceBasedCare": "Evidence-based care",
     "solutions": "Join Eleva",
     "becomeExpert": "Become an expert",
@@ -905,6 +905,16 @@
     "helpCta": "Open the help center"
   },
   "trust": {
+    "index": {
+      "title": "Trust and security — Eleva.care",
+      "description": "Every document that explains how Eleva looks after your information, with the date each one last changed.",
+      "eyebrow": "Trust",
+      "heading": "Trust and security",
+      "lead": "Everything that explains how we look after your information, in one place. Each document shows the date it last changed.",
+      "trustGroup": "How we protect your data",
+      "legalGroup": "Terms and policies",
+      "contact": "Questions about your data? Write to <privacy>privacy@eleva.care</privacy>. Found a security issue? Write to <security>security@eleva.care</security>."
+    },
     "pages": {
       "security": {
         "title": "Security — Eleva.care",

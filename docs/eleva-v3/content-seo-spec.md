@@ -212,18 +212,18 @@ Public content must remain aligned with Eleva's approved platform framing and av
 
 Locales: `en` unprefixed, `pt` / `es` prefixed. `pt-BR` is retired (D-01): gateway `301`s `/pt-BR/*` → `/pt/*`.
 
-| MVP / request                                                          | Disposition on 2026-09-10                                                                                                | Evidence                             |
-| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------ |
-| `/[username]`, `/[username]/[eventSlug]`                               | Kept                                                                                                                     | `apps/web` + `public_handles`        |
-| `/become-expert`, `/for-clinics`                                       | Draft pages (ERS-safe; noindex)                                                                                          | `#46` on `main`                      |
-| `/for-organizations`                                                   | Exact-path `301` → `/for-clinics`                                                                                        | `#46`                                |
-| `/legal/{terms,privacy,health-data,cookies,payments,expert-agreement}` | Working `CONSENT_DOCUMENTS` drafts                                                                                       | 04.2a on `main`                      |
-| `/about`                                                               | Marketing page                                                                                                           | `main`                               |
-| `/quiz`, `/health-quiz`, `/questionario`, `/cuestionario`              | `301` → `/experts` (en, unprefixed); `/pt/quiz` → `/pt/experts`; `/es/quiz` → `/es/experts` (same first-segment aliases) | PR `#45` (open)                      |
-| `/help`, `/support`, `/faq`                                            | `301` → `/docs`                                                                                                          | PR `#45` (open)                      |
-| `/trust`, `/trust/dpa`                                                 | `301` → `/trust/security`, `/trust/ers` drafts                                                                           | PR `#45` (open)                      |
-| `/contact`                                                             | Draft page, no form, no API                                                                                              | PR `#45` (open); POST stopped at DPO |
-| `/community`                                                           | No v3 route (404); Instagram + LinkedIn footer only                                                                      | PR `#45` (open)                      |
+| MVP / request                                                          | Disposition on 2026-09-10                                                                                                   | Evidence                             |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| `/[username]`, `/[username]/[eventSlug]`                               | Kept                                                                                                                        | `apps/web` + `public_handles`        |
+| `/become-expert`, `/for-clinics`                                       | Draft pages (ERS-safe; noindex)                                                                                             | `#46` on `main`                      |
+| `/for-organizations`                                                   | Exact-path `301` → `/for-clinics`                                                                                           | `#46`                                |
+| `/legal/{terms,privacy,health-data,cookies,payments,expert-agreement}` | Working `CONSENT_DOCUMENTS` drafts                                                                                          | 04.2a on `main`                      |
+| `/about`                                                               | Marketing page                                                                                                              | `main`                               |
+| `/quiz`, `/health-quiz`, `/questionario`, `/cuestionario`              | `301` → `/experts` (en, unprefixed); `/pt/quiz` → `/pt/experts`; `/es/quiz` → `/es/experts` (same first-segment aliases)    | PR `#45` (open)                      |
+| `/help`, `/support`, `/faq`                                            | `301` → `/docs`                                                                                                             | PR `#45` (open)                      |
+| `/trust`                                                               | Trust index: every legal and trust document with its last-updated date (2026-11-14; replaces the `301` → `/trust/security`) | Decision log 2026-11-14              |
+| `/contact`                                                             | Draft page, no form, no API                                                                                                 | PR `#45` (open); POST stopped at DPO |
+| `/community`                                                           | No v3 route (404); Instagram + LinkedIn footer only                                                                         | PR `#45` (open)                      |
 
 Private booking links (`/book/[token]`) are `robots: noindex`. Contact POST + Resend remain gated.
 

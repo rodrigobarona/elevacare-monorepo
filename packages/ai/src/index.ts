@@ -35,7 +35,7 @@ export {
   buildSessionReportPrompt,
   formatSessionReportDraftBody,
   type SessionReportDraft,
-} from "./prompts/session-report.v1"
+} from "./prompts/session-report.v2"
 
 export {
   generateSessionReportDraft,

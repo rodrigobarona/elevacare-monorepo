@@ -6037,7 +6037,7 @@ failing note rejects the whole request (403, nothing decrypted). Then the <stron
 the member; absent/withdrawn -&gt; 403 <code>AI_CONSENT_REQUIRED</code>, no decryption, no Gateway call;
 captured at booking for phone/in-person sessions, which have no join page). It takes the expert&#39;s encrypted session
 notes (and, optionally, the intake answers the member typed at booking) as the only input, with
-versioned prompt contracts (<code>packages/ai/prompts/session-report.v1.ts</code>) and Zod-validated
+versioned prompt contracts (<code>packages/ai/src/prompts/session-report.v2.ts</code>) and Zod-validated
 structured output -&gt; <code>records.kind = ai_draft</code> (never auto-published) -&gt; expert reviews, edits,
 publishes. PHI stays inside the request to the gateway with <strong>zero data retention verified per
 model</strong> (the <code>APPROVED_MODELS</code> allow-list below), prompts logged without content, model
@@ -6353,8 +6353,9 @@ PR 10.2 — CRM + AI reports beta:
    this phase — live transcription + encrypted transcript records are 10.1; cloud recording/S3
    is Phase 16.8 (see that file for the fencing design already written for it).
 8. @eleva/ai (only AI Gateway; no direct provider SDKs): packages/ai/src/prompts/session-report.
-   v1.ts (system + user template; language from booking locale; output schema Zod { summary,
-   observations[], recommendations[], followUpQuestions[], redFlags[] , disclaimer }), draftSession
+   v2.ts (system + user template; language from booking locale; extractive output schema Zod
+   { summary, observations[], planNoted[], followUpsNoted[], disclaimer } — no field for
+   model-originated advice or risk flags), draftSession
    Report({ bookingId, noteRecordIds }) (the one signature — BEFORE any decryption: validate
    that every note is kind = note, belongs to bookingId, to the caller&#39;s org AND has
    created_by = caller (D-11 clinic read-sharing never authorizes AI submission of a peer&#39;s

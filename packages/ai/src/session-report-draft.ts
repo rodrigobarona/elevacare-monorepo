@@ -15,9 +15,9 @@ import {
   SESSION_REPORT_PROMPT_VERSION,
   SessionReportDraftSchema,
   type SessionReportDraft,
-} from "./prompts/session-report.v1"
+} from "./prompts/session-report.v2"
 
-export { SESSION_REPORT_DRAFT_OUTPUT_KEYS } from "./prompts/session-report.v1"
+export { SESSION_REPORT_DRAFT_OUTPUT_KEYS } from "./prompts/session-report.v2"
 
 export function resolveSessionReportModelId(
   env: NodeJS.ProcessEnv = process.env
@@ -72,7 +72,7 @@ export async function generateSessionReportDraft(
   const draft = SessionReportDraftSchema.parse(result.object)
   return {
     draft,
-    body: formatSessionReportDraftBody(draft),
+    body: formatSessionReportDraftBody(draft, input.locale),
     modelId,
     promptVersion: SESSION_REPORT_PROMPT_VERSION,
     usage: {

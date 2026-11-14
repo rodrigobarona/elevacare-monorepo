@@ -108,8 +108,8 @@ export function PublicSiteFooter({ locale: rawLocale }: { locale: string }) {
             >
               {t.complaintsBook}
             </a>
-            <a href={href("/trust/security")} className={LINK_CLASS}>
-              {t.trustSecurity}
+            <a href={href("/trust")} className={LINK_CLASS}>
+              {t.trustHub}
             </a>
             <a href={href("/evidence-based-care")} className={LINK_CLASS}>
               {t.evidenceBasedCare}
