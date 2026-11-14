@@ -538,7 +538,8 @@
       "pickToContinue": "Escolha um horário para continuar",
       "retry": "Tentar de novo",
       "skippedTo": "O primeiro dia com horários a partir de {from} é {to}.",
-      "loadErrorHelp": "Continua sem funcionar? O nosso <help>centro de ajuda</help> pode ajudar. Ainda não foi feita nenhuma marcação."
+      "loadErrorHelp": "Continua sem funcionar? O nosso <help>centro de ajuda</help> pode ajudar. Ainda não foi feita nenhuma marcação.",
+      "slotTakenNamed": "{when} acabou de ser marcado por outra pessoa. Os seus dados estão guardados: escolha outro horário e continue."
     },
     "details": {
       "heading": "Alguns dados",
@@ -582,10 +583,9 @@
     },
     "pay": {
       "heading": "Confirmar e pagar",
-      "sub": "O horário fica reservado por alguns minutos. Podem aparecer cartão, Apple Pay, Google Pay, Link e MB WAY.",
-      "hold": "A reserva expira em {time}",
-      "expired": "Esta reserva terminou. Escolha um novo horário para continuar.",
-      "restart": "Escolher outro horário",
+      "sub": "O seu horário fica reservado durante alguns minutos enquanto paga.",
+      "expired": "Guardamos um horário durante alguns minutos enquanto paga, e este tempo terminou. Não foi cobrado nada e os seus dados estão guardados.",
+      "restart": "Ver horários livres",
       "requestHint": "{name} aceita ou recusa em 24 horas, ou antes da sessão se for mais cedo. Recebe um email em qualquer dos casos.",
       "pay": "Pagar {price}",
       "processing": "A confirmar o pagamento…",
@@ -611,31 +611,53 @@
       "secureLine": "O seu cartão é processado em segurança pela Stripe. A Eleva nunca vê o número completo do seu cartão.",
       "emailLine": "A confirmação chega por email logo após o pagamento.",
       "subRequest": "Está a pedir {when} a {name}. Paga agora; se {name} recusar, recebe 100% de volta.",
-      "extended": "Tempo prolongado. O seu horário fica guardado mais 5 minutos."
+      "extended": "Tempo prolongado. O seu horário fica guardado mais 5 minutos.",
+      "expiredTitle": "O horário reservado foi libertado",
+      "failedHelp": "Não foi cobrado nada e o seu horário continua reservado. Verifique os dados, experimente outro cartão ou escolha outra forma de pagar.",
+      "declinedTitle": "O pagamento não foi concluído",
+      "failedUnknown": "Não conseguimos confirmar o pagamento. Se foi concluído, enviamos-lhe um email; se não, tente de novo."
     },
     "done": {
-      "heading": "A sua reserva está confirmada",
-      "sub": "Guardámos a sua sessão. O email de confirmação está a caminho.",
-      "requestHeading": "Pedido enviado",
-      "requestSub": "O especialista tem 24 horas, ou até à sessão se for mais cedo, para aceitar. Só recebe o link de entrada depois da aceitação. Uma recusa ou o fim do prazo devolve 100%.",
-      "requestNoJoin": "Os detalhes para entrar só chegam depois de o especialista aceitar.",
-      "pending": "Pagamento recebido",
-      "pendingSub": "Estamos a confirmar a sessão. Recebe um email assim que estiver pronta. A Eleva.care é uma plataforma digital de saúde — quem acompanha continua responsável pelo seu cuidado.",
-      "video": "O link de vídeo chega antes da sessão.",
-      "videoLocation": "Sessão por vídeo — o link chega antes da sessão",
-      "phone": "A chamada será para {phone}.",
+      "pending": "Quase pronto",
+      "pendingSub": "Se o seu banco ou o MB WAY pedirem para aprovar, faça-o agora. Enviamos-lhe um email assim que a sessão estiver confirmada.",
+      "videoLocation": "Sessão por vídeo · link para entrar no email de confirmação",
       "phoneLocation": "Chamada para {phone}",
-      "inPerson": "Encontro em {location}.",
       "ics": "Adicionar ao calendário",
       "retry": "Tentar confirmar de novo",
-      "activate": "Criar a sua conta Eleva",
-      "activateHint": "Guarde esta sessão no seu Space e faça a gestão mais tarde.",
       "nextHeading": "O que acontece a seguir",
-      "next": {
-        "email": "Veja o seu email: a confirmação inclui o convite de calendário e os detalhes da sessão.",
-        "joinOnline": "Entre na videochamada pelo link do email, a partir de 15 minutos antes do início. Não precisa de conta.",
-        "policy": "Alterações e reembolsos seguem a política de cancelamento {policy}."
-      }
+      "heading": "Tem sessão marcada com {name}",
+      "requestHeading": "Pedido enviado a {name}",
+      "sentTo": "Enviámos a confirmação para {email}.",
+      "requestSentTo": "Escrevemos-lhe para {email} assim que {name} responder.",
+      "icsApple": "Calendário Apple ou outro (.ics)",
+      "accessOnline": "O link para entrar está no email de confirmação. Abre 15 minutos antes do início, sem precisar de conta.",
+      "accessPhone": "{name} liga-lhe para {phone}.",
+      "accessInPerson": "Encontre {name} em {location}.",
+      "steps": {
+        "now": "Agora",
+        "inbox": "A confirmação e o convite de calendário estão no seu email. Não chegou em poucos minutos? Veja a pasta de spam.",
+        "reminder": "Enviamos-lhe um lembrete 24 horas antes.",
+        "joinOpens": "O link para entrar abre. Não precisa de conta.",
+        "requestSent": "O seu pedido está com {name}. Por agora, não precisa de fazer mais nada.",
+        "requestReply": "{name} aceita ou recusa. Escrevemos-lhe em qualquer caso. Se a resposta for não, ou se não houver resposta até lá, o que pagou é devolvido na totalidade.",
+        "confirming": "Estamos a confirmar o pagamento e enviamos um email para {email} assim que estiver concluído.",
+        "by": "Até {when}",
+        "requestReplyFree": "{name} aceita ou recusa. Escrevemos-lhe em qualquer caso. Sem resposta até lá, o pedido é cancelado."
+      },
+      "changeHeading": "Precisa de mudar alguma coisa?",
+      "changeHow": "Para mudar ou cancelar, entre ou crie o seu Espaço abaixo com este email.",
+      "space": {
+        "heading": "Tudo num só lugar",
+        "manage": "Veja, mude ou cancele as suas sessões",
+        "rebook": "Marque de novo em poucos toques",
+        "reminders": "Escolha como quer receber lembretes",
+        "prefilled": "O seu nome e email já estão preenchidos.",
+        "cta": "Criar o seu Espaço",
+        "later": "Agora não? O email de confirmação tem tudo o que precisa."
+      },
+      "accessRequest": "Os detalhes da sessão chegam por email assim que {name} aceitar.",
+      "requestChange": "Se {name} aceitar, o email de confirmação explica como mudar ou cancelar.",
+      "calendarNote": "O email de confirmação também traz um convite de calendário. A Google e a Microsoft só recebem o nome, a hora e o local da sessão se os escolher."
     },
     "link": {
       "specialPrice": "Preço especial",
@@ -655,7 +677,7 @@
       "generic": "Não foi possível reservar esse horário. Tente novamente.",
       "rateLimited": "Demasiados pedidos neste momento. Espere um minuto e tente novamente.",
       "policyChanged": "O especialista acabou de atualizar a política de cancelamento. Recarregue a página para a rever antes de marcar.",
-      "paymentFailed": "O pagamento foi recusado ou cancelado, por isso não foi cobrado nada. Escolha de novo um horário para tentar outra vez."
+      "paymentFailed": "O pagamento não foi concluído, por isso não foi cobrado nada. Tente de novo abaixo ou escolha outra forma de pagar."
     },
     "policy": {
       "heading": "Política de cancelamento",

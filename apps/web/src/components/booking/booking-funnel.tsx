@@ -26,6 +26,7 @@ import {
   CalendarCheckIcon,
   ClockIcon,
   EnvelopeIcon,
+  InfoIcon,
   ShieldCheckIcon,
 } from "@eleva/icons"
 import {
@@ -34,11 +35,11 @@ import {
 } from "@eleva/billing/client"
 import { Button } from "@eleva/ui/components/button"
 import { Field, FieldError, FieldLabel } from "@eleva/ui/components/field"
+import { Alert, AlertDescription, AlertTitle } from "@eleva/ui/components/alert"
 import { Input } from "@eleva/ui/components/input"
 import { Textarea } from "@eleva/ui/components/textarea"
 import { BookingSummary } from "@eleva/ui/components/booking/booking-summary"
 import { useBookingChrome } from "./booking-chrome-context"
-import { CancellationPolicySummary } from "@eleva/ui/components/booking/cancellation-policy-summary"
 import { ConsentCheckbox } from "@eleva/ui/components/booking/consent-checkbox"
 import { CountrySelect } from "@eleva/ui/components/booking/country-select"
 import { LanguageChips } from "@eleva/ui/components/booking/language-chips"
@@ -70,6 +71,10 @@ import {
 } from "@eleva/ui/lib/booking/slot-groups"
 import { createPublicApiClient } from "@/lib/public-api"
 import { downloadBookingIcs } from "@eleva/calendar/ics-download"
+import {
+  calendarLinks,
+  type CalendarLinks,
+} from "@eleva/calendar/calendar-links"
 import {
   FormCard,
   FunnelStepper,
@@ -223,6 +228,11 @@ export function BookingFunnel({
   }, [slot])
   // The chosen time stopped being open: the time step says so.
   const [slotGone, setSlotGone] = useState(false)
+  // The time that was just taken, to name it on the time step.
+  const [goneStart, setGoneStart] = useState<string | null>(null)
+  // When a hold ends, focus moves to "See open times": the pay form that
+  // held focus goes away.
+  const seeTimesRef = useRef<HTMLButtonElement>(null)
   const dateLocale = intlLocale(locale)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
@@ -375,6 +385,7 @@ export function BookingFunnel({
           setEarliest(next.earliest)
         }
         if (next.selectionGone) {
+          setGoneStart(slotRef.current?.start ?? null)
           setSlot(null)
           setSlotGone(true)
         }
@@ -508,6 +519,9 @@ export function BookingFunnel({
     reservation != null &&
     !paymentInFlight &&
     isExpired(reservation.expiresAt, nowMs)
+  useEffect(() => {
+    if (holdExpired && step === "pay") seeTimesRef.current?.focus()
+  }, [holdExpired, step])
   const holdActive =
     reservation != null && !isExpired(reservation.expiresAt, nowMs)
   const holdEndingSoon =
@@ -701,7 +715,18 @@ export function BookingFunnel({
       setStep("pay")
     } catch (error) {
       if (error instanceof ApiClientError) {
-        setFormError(mapReserveError(error.body?.error))
+        const code = mapReserveError(error.body?.error)
+        // Someone else took the time: back to the times, naming the one that
+        // went and showing that day's others. Her details stay as typed.
+        if (code === "slotTaken") {
+          setGoneStart(slot.start)
+          setSlot(null)
+          setSlotGone(true)
+          setSlotsAttempt((attempt) => attempt + 1)
+          setStep("when")
+          return
+        }
+        setFormError(code)
       } else {
         setFormError("generic")
       }
@@ -742,7 +767,9 @@ export function BookingFunnel({
     }
   }
 
-  function restart() {
+  // The hold ran out: back to fresh times for the same way of meeting,
+  // with her details kept.
+  function backToTimes() {
     setReservation(null)
     setPayment(null)
     setSlot(null)
@@ -750,12 +777,8 @@ export function BookingFunnel({
     setPaymentInFlight(false)
     setConfirmState("idle")
     confirmInFlight.current = false
-    setStep(
-      initialFunnelStep({
-        pinnedModeId,
-        skipToWhen: skipMeet || Boolean(modeId ?? initialModeId),
-      })
-    )
+    setSlotsAttempt((attempt) => attempt + 1)
+    setStep("when")
   }
 
   const flowSteps: FunnelStep[] = [
@@ -771,16 +794,93 @@ export function BookingFunnel({
   const signupHref = guestSignupPath({ email, name })
 
   if (step === "done" && slot && selectedMode) {
-    const accessNote =
-      selectedMode.mode === "phone"
-        ? t("done.phone", {
-            phone: maskPhone(toE164(phone, country) ?? phone),
-          })
-        : selectedMode.mode === "in_person" && selectedMode.location
-          ? t("done.inPerson", {
-              location: `${selectedMode.location.name}, ${selectedMode.location.city}`,
-            })
-          : t("done.video")
+    const firstName = expertFirstName(expertName)
+    const maskedPhone = maskPhone(toE164(phone, country) ?? phone)
+    const placeName =
+      selectedMode.location != null
+        ? `${selectedMode.location.name}, ${selectedMode.location.city}`
+        : (locationCopy ?? "")
+    // A request has no confirmation or join details until it's accepted.
+    const accessLine = isRequest
+      ? t("done.accessRequest", { name: firstName })
+      : selectedMode.mode === "phone"
+        ? t("done.accessPhone", { name: firstName, phone: maskedPhone })
+        : selectedMode.mode === "in_person"
+          ? // In-person modes always have a location (DB check).
+            t("done.accessInPerson", { name: firstName, location: placeName })
+          : t("done.accessOnline")
+    const startMs = new Date(slot.start).getTime()
+    const stepWhen = new Intl.DateTimeFormat(
+      dateLocale,
+      shortDateTime(timeZone)
+    )
+    // Steps describe what has happened, so they follow the confirm state:
+    // pending says we're confirming; a failed confirm shows only the retry.
+    const replyBy = new Date(Math.min(nowMs + 24 * 60 * 60 * 1000, startMs))
+    const doneSteps =
+      confirmState === "failed"
+        ? []
+        : confirmState !== "confirmed"
+          ? [
+              {
+                when: t("done.steps.now"),
+                text: t("done.steps.confirming", { email }),
+              },
+            ]
+          : isRequest
+            ? [
+                {
+                  when: t("done.steps.now"),
+                  text: t("done.steps.requestSent", { name: firstName }),
+                },
+                {
+                  when: t("done.steps.by", { when: stepWhen.format(replyBy) }),
+                  text: isFree
+                    ? t("done.steps.requestReplyFree", { name: firstName })
+                    : t("done.steps.requestReply", { name: firstName }),
+                },
+              ]
+            : [
+                { when: t("done.steps.now"), text: t("done.steps.inbox") },
+                // The 24-hour reminder only when the session is further away.
+                ...(startMs - nowMs > 25 * 60 * 60 * 1000
+                  ? [
+                      {
+                        when: stepWhen.format(
+                          new Date(startMs - 24 * 60 * 60 * 1000)
+                        ),
+                        text: t("done.steps.reminder"),
+                      },
+                    ]
+                  : []),
+                selectedMode.mode === "online"
+                  ? {
+                      when: stepWhen.format(new Date(startMs - 15 * 60 * 1000)),
+                      text: t("done.steps.joinOpens"),
+                    }
+                  : {
+                      when: stepWhen.format(new Date(startMs)),
+                      text: accessLine,
+                    },
+              ]
+    const calendarLocation =
+      selectedMode.mode === "in_person"
+        ? placeName
+        : selectedMode.mode === "phone"
+          ? t("done.phoneLocation", { phone: maskedPhone })
+          : t("done.videoLocation")
+    let links: CalendarLinks | null = null
+    try {
+      links = calendarLinks({
+        title: `${offerTitle} · ${expertName}`,
+        details: accessLine,
+        location: calendarLocation,
+        start: slot.start,
+        end: slot.end,
+      })
+    } catch {
+      links = null
+    }
     return (
       <BookingDone
         confirmState={confirmState}
@@ -791,39 +891,46 @@ export function BookingFunnel({
             ? () => void confirmPaidHold(reservation, payment)
             : undefined
         }
+        expertFirstName={firstName}
         expertName={expertName}
         offerTitle={offerTitle}
         media={expertMedia}
-        whenLabel={whenLabel}
+        whenLong={new Intl.DateTimeFormat(dateLocale, {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          hour: "2-digit",
+          minute: "2-digit",
+          hourCycle: "h23",
+          timeZone,
+        }).formatRange(new Date(slot.start), new Date(slot.end))}
+        zoneLabel={t("summary.zone", { city: zoneCity(timeZone, locale) })}
         modeLabel={locationCopy ?? t(`modes.${selectedMode.mode}.title`)}
         priceLabel={
           isFree ? t("summary.free") : formatBookingPrice(priceCents, locale)
         }
-        accessNote={accessNote}
-        policyLine={
+        accessLine={accessLine}
+        email={email}
+        steps={doneSteps}
+        changeLines={
           isFree
-            ? t("policy.free")
-            : t("done.next.policy", { policy: policyCopy.name })
+            ? [t("policy.free")]
+            : policyDeadlines && policyDeadlines.length > 0
+              ? policyDeadlines
+              : policyCopy.lines.slice(0, 1)
         }
-        isOnline={selectedMode.mode === "online"}
+        calendar={links}
         signupHref={signupHref}
         headingRef={stepHeadingRef}
-        onAddToCalendar={() =>
+        onDownloadIcs={() =>
           downloadBookingIcs({
             uid: payment?.bookingId ?? reservation?.reservationId ?? eventSlug,
             summary: `${offerTitle} · ${expertName}`,
-            description: accessNote,
+            description: accessLine,
             start: slot.start,
             end: slot.end,
             timeZone,
-            location:
-              selectedMode.mode === "in_person"
-                ? locationCopy
-                : selectedMode.mode === "phone"
-                  ? t("done.phoneLocation", {
-                      phone: maskPhone(toE164(phone, country) ?? phone),
-                    })
-                  : t("done.videoLocation"),
+            location: calendarLocation,
             expertName,
             memberName: name,
             memberEmail: email,
@@ -857,8 +964,9 @@ export function BookingFunnel({
               ].join(" · ")
             : undefined
         }
-        when={whenLabel}
-        whenNote={whenZone}
+        // A released hold no longer holds a time.
+        when={holdExpired && onPay ? t("summary.chooseTime") : whenLabel}
+        whenNote={holdExpired && onPay ? undefined : whenZone}
         whenPending={!slot}
         whenLabel={t("summary.when")}
         priceLabel={t("summary.price")}
@@ -904,7 +1012,7 @@ export function BookingFunnel({
         footerOnPhones={onPay}
         compactOnPhones={step === "when"}
         footer={
-          onPay ? (
+          onPay && !holdExpired ? (
             <>
               {/* The dated deadline for this booking, and who provides it. */}
               <p className="font-medium text-foreground">
@@ -924,7 +1032,7 @@ export function BookingFunnel({
               </details>
               <p>{t("summary.provider", { name: expertName })}</p>
             </>
-          ) : onDetails ? undefined : isFree ? (
+          ) : onDetails || (onPay && holdExpired) ? undefined : isFree ? (
             // The details step shows the policy itself; free sessions have
             // nothing to refund.
             t("policy.free")
@@ -1048,13 +1156,20 @@ export function BookingFunnel({
               ) : null}
             </p>
             {slotGone ? (
-              <p
+              <Alert
+                variant="notice"
                 role="alert"
                 data-testid="booking-slot-gone"
-                className="rounded-2xl bg-destructive/8 px-4 py-3 text-sm text-destructive"
               >
-                {t("errors.slotTaken")}
-              </p>
+                <InfoIcon aria-hidden />
+                <AlertDescription className="text-foreground">
+                  {goneStart
+                    ? t("when.slotTakenNamed", {
+                        when: deadlineFormat.format(new Date(goneStart)),
+                      })
+                    : t("errors.slotTaken")}
+                </AlertDescription>
+              </Alert>
             ) : null}
             <SlotPicker
               slots={slots}
@@ -1062,6 +1177,7 @@ export function BookingFunnel({
               locale={dateLocale}
               fromKey={fromKey}
               windowEndKey={addDaysToKey(fromKey, WINDOW_DAYS - 1)}
+              preferDay={goneStart ? dateKeyInZone(goneStart, timeZone) : null}
               isLoading={slotsLoading}
               isError={slotsError}
               onRetry={() => setSlotsAttempt((attempt) => attempt + 1)}
@@ -1081,6 +1197,7 @@ export function BookingFunnel({
               selectedStart={slot?.start ?? null}
               onSelect={(next) => {
                 setSlotGone(false)
+                setGoneStart(null)
                 const match = slots.find((item) => item.start === next.start)
                 setSlot(
                   match ?? {
@@ -1504,21 +1621,43 @@ export function BookingFunnel({
             <StepHeader
               title={t("pay.heading")}
               sub={
-                !heldWhen
-                  ? t("pay.sub")
-                  : isRequest
-                    ? t("pay.subRequest", { when: heldWhen, name: expertName })
-                    : t("pay.subHeld", { when: heldWhen })
+                // The released hold is explained in its own card below.
+                holdExpired
+                  ? undefined
+                  : !heldWhen
+                    ? t("pay.sub")
+                    : isRequest
+                      ? t("pay.subRequest", {
+                          when: heldWhen,
+                          name: expertName,
+                        })
+                      : t("pay.subHeld", { when: heldWhen })
               }
               headingRef={stepHeadingRef}
             />
-            {formError ? (
+            {/* An ended hold explains itself; a payment error would contradict it. */}
+            {formError && !holdExpired ? (
               <FieldError>{t(`errors.${formError}`)}</FieldError>
             ) : null}
             {holdExpired ? (
               <div className="space-y-3">
-                <p role="alert">{t("pay.expired")}</p>
-                <Button onPress={restart}>{t("pay.restart")}</Button>
+                <Alert
+                  variant="notice"
+                  role="alert"
+                  data-testid="booking-hold-ended"
+                >
+                  <ClockIcon aria-hidden />
+                  <AlertTitle>{t("pay.expiredTitle")}</AlertTitle>
+                  <AlertDescription>{t("pay.expired")}</AlertDescription>
+                </Alert>
+                <Button
+                  ref={seeTimesRef}
+                  size="lg"
+                  className="min-h-12 rounded-full px-6"
+                  onPress={backToTimes}
+                >
+                  {t("pay.restart")}
+                </Button>
               </div>
             ) : (
               <BookingCheckoutPayment
@@ -1563,6 +1702,9 @@ export function BookingFunnel({
                   pay: (total) => t("pay.pay", { price: total }),
                   processing: t("pay.processing"),
                   failed: t("pay.failed"),
+                  declinedTitle: t("pay.declinedTitle"),
+                  failedHelp: t("pay.failedHelp"),
+                  failedUnknown: t("pay.failedUnknown"),
                 }}
                 onProcessingChange={setPaymentInFlight}
                 onTotalsChange={setTotals}
@@ -1670,4 +1812,11 @@ function shortDateTime(timeZone: string): Intl.DateTimeFormatOptions {
     minute: "2-digit",
     timeZone,
   }
+}
+
+/** "Dr. Ana Rocha" → "Ana": the name a member would use. */
+function expertFirstName(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/)
+  const first = parts.find((part) => !part.endsWith(".")) ?? parts[0]
+  return first ?? fullName
 }

@@ -428,6 +428,13 @@ test.describe("design capture", () => {
         .getByTestId("booking-done-heading")
         .waitFor({ timeout: 60_000 })
       await shoot(page, surface, "09-free-thank-you", kind)
+      // The calendar choices, open.
+      await page.getByRole("button", { name: /add to calendar/i }).click()
+      await page.getByRole("menu").waitFor()
+      await shoot(page, surface, "09b-calendar-menu", kind, {
+        fullPage: false,
+      })
+      await page.keyboard.press("Escape")
       await finishVideo(page, context, surface, "free-funnel", kind)
     })
 
@@ -607,7 +614,8 @@ test.describe("design capture", () => {
       await clearBanner(page)
       const picker = page.locator("[data-slot='slot-picker']")
       await picker.waitFor({ timeout: 60_000 })
-      await picker.getByTestId("booking-slot-day").last().click()
+      // The first open day has the most times left to fall back on.
+      await picker.getByTestId("booking-slot-day").first().click()
       const time = picker.getByTestId("booking-slot-time").nth(1)
       await time.click()
       const startsAt = await time.getAttribute("data-start")
@@ -620,8 +628,11 @@ test.describe("design capture", () => {
       expect(startsAt, "slot time has a data-start").toBeTruthy()
       await holdSlotAsAnotherGuest(request, startsAt!)
       await page.getByTestId("booking-continue-details").click()
-      // The details step reports it in place ("That time was just taken").
-      await expect(page.getByText(/just taken/i)).toBeVisible({
+      // Back on the time step, naming the time that went.
+      await expect(page.getByTestId("booking-slot-gone")).toBeVisible({
+        timeout: 30_000,
+      })
+      await expect(page.getByTestId("booking-slots-skeleton")).toHaveCount(0, {
         timeout: 30_000,
       })
       await shoot(page, surface, "10-slot-taken", kind)
@@ -663,14 +674,17 @@ test.describe("design capture", () => {
           { timeout: 45_000 }
         )
         .toBe(true)
+      await page.getByTestId("booking-pay-error").waitFor()
+      // Let the Payment Element finish resizing after the error.
+      await page.waitForTimeout(3_000)
       await shoot(page, surface, "12-payment-declined", kind)
 
       // Hold ended: jump the page clock past the hold.
       await page.clock.install()
       await page.clock.fastForward("20:00")
-      await expect(
-        page.getByRole("button", { name: /pick a new time/i })
-      ).toBeVisible({ timeout: 15_000 })
+      await expect(page.getByTestId("booking-hold-ended")).toBeVisible({
+        timeout: 15_000,
+      })
       await shoot(page, surface, "11-hold-ended", kind)
       await context.close()
     })

@@ -32,6 +32,37 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-14: Thank-you page and booking unhappy paths (D1.5) (active)
+
+- Change (design slice D1.5): the thank-you page names the expert and the
+  time, says where the confirmation went, puts Add to calendar first (Google,
+  Outlook.com, Microsoft 365 links built in the browser, or the `.ics` file),
+  lists dated next steps and every dated cancellation line, and gives the
+  Space invitation its own band. Steps follow the confirm state: pending
+  says we are confirming, a failed confirm shows only the retry. Requests
+  promise nothing that only exists after the expert accepts.
+- Unhappy paths are next steps: a taken time returns to the times naming
+  it (details kept, nearest open day shown); an ended hold says nothing was
+  charged and offers "See open times"; a decline says nothing was charged
+  only when Stripe reports `paymentFailed`, and a thrown confirm says the
+  outcome is unknown.
+- Calendar links send the session name, time and place to Google or
+  Microsoft only when the member picks them; a line under the button says
+  so. No intake notes, member identifiers or join grants go in them.
+- Follow-ups (not shipped):
+  - Confirmation email carries only the policy name; the dated
+    cancellation deadlines belong there too (durable medium, DL 24/2014
+    art. 6). Needs legal review.
+  - Pending and failed thank-you states and request-to-book are not in the
+    design capture (the funnel cannot reach them without mocking confirm).
+  - Summary offer title as an `h2`; ES uses both "email" and "correo".
+  - From D1.4: the sticky "Pick a time to continue" bar covers the last row
+    of times on desktop and is narrower than the column on phones.
+- Judges panel: round 1 UI 8.6, UX 7.8, trust 8.0; round 2 UI 8.8, UX 8.8,
+  trust 8.8.
+- Owner: engineering; legal review: counsel (email deadlines)
+- Status: `active`
+
 ### 2026-11-14: Booking details ask for two ticks (needs legal review)
 
 - Change (design slice D1.3): the details step asks only what the booking
