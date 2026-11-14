@@ -575,7 +575,7 @@ test.describe("design capture", () => {
       // Stripe's optional Link sign-up asks for a phone number once it has
       // an email and blocks the submit without one; give it a test number.
       for (const frame of page.frames()) {
-        const linkPhone = frame.locator('input[type="tel"]').first()
+        const linkPhone = frame.locator('input[name="linkMobilePhone"]').first()
         if (await linkPhone.isVisible().catch(() => false)) {
           await linkPhone.fill("912345678")
         }
