@@ -35,6 +35,7 @@ import {
   ArrowLeftIcon,
   ArrowRightIcon,
   CalendarDotsIcon,
+  InfoIcon,
   MoonIcon,
   SunHorizonIcon,
   SunIcon,
@@ -75,6 +76,7 @@ export function SlotPicker({
   isLoading = false,
   isError = false,
   onRetry,
+  errorHelp,
   selectedStart,
   onSelect,
   onLaterDates,
@@ -97,6 +99,8 @@ export function SlotPicker({
   /** Times could not be loaded: never present that as "no times". */
   isError?: boolean
   onRetry?: () => void
+  /** A way out when retrying keeps failing, e.g. a help link. */
+  errorHelp?: ReactNode
   selectedStart: string | null
   onSelect: (slot: FunnelSlot) => void
   /** Load the weeks after the loaded window. */
@@ -135,6 +139,8 @@ export function SlotPicker({
     empty: string
     loadError: string
     retry: string
+    /** "The first open day from Wed 2 Dec is Fri 4 Dec." */
+    skippedTo: (from: string, to: string) => string
     /** "Next available: Mon 9 Nov, 14:30". */
     nextAvailable: (when: string) => string
     /** "Choose Tuesday 10 November, 10:00". */
@@ -343,7 +349,7 @@ export function SlotPicker({
       <button
         type="button"
         data-testid="booking-next-available"
-        className="inline-flex min-h-6 items-center gap-1.5 rounded-sm text-sm font-medium text-primary underline underline-offset-4 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="inline-flex min-h-6 items-center gap-1.5 rounded-sm text-sm font-medium whitespace-nowrap text-primary underline underline-offset-4 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         onClick={() => {
           onSelectEarliest(earliest)
           setFocusStart(earliest.start)
@@ -358,6 +364,20 @@ export function SlotPicker({
     keyDate(showDays && activeDay ? activeDay : fromKey)
   )
   const isEmpty = showDays && openDays.length === 0
+  // After a jump or "Later dates", say when the first days had nothing.
+  const shortDayOfKey = new Intl.DateTimeFormat(locale, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  })
+  const skippedFrom =
+    showDays && openDays.length > 0 && fromKey > todayKey && firstKey > fromKey
+      ? labels.skippedTo(
+          shortDayOfKey.format(keyDate(fromKey)),
+          shortDayOfKey.format(keyDate(firstKey))
+        )
+      : null
   const dayTitle = activeDay
     ? [relativeName(activeDay), longDayOfKey.format(keyDate(activeDay))]
         .filter(Boolean)
@@ -374,95 +394,113 @@ export function SlotPicker({
         className
       )}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 space-y-1">
+      <div className="space-y-1">
+        <div className="flex items-center justify-between gap-2">
           <p
-            className="font-display text-xl font-medium first-letter:uppercase"
+            className="min-w-0 font-display text-xl font-medium first-letter:uppercase"
             data-testid="booking-slot-month"
           >
             {monthLabel}
           </p>
-          {nextAvailable}
-        </div>
-        <div className="flex shrink-0 items-center gap-1">
-          <DialogTrigger>
+          <div className="flex shrink-0 items-center gap-1">
+            <DialogTrigger>
+              <Button
+                variant="ghost"
+                className="min-h-11 rounded-full px-3 text-sm"
+                data-testid="booking-choose-date"
+              >
+                <CalendarDotsIcon data-icon="inline-start" />
+                {labels.chooseDate}
+              </Button>
+              <Popover
+                placement="bottom end"
+                className="rounded-3xl border bg-popover p-3 text-popover-foreground shadow-lg outline-none"
+              >
+                <Dialog aria-label={labels.calendar} className="outline-none">
+                  {({ close }) => (
+                    <JumpCalendar
+                      locale={locale}
+                      timeZone={timeZone}
+                      label={labels.calendar}
+                      previous={labels.previous}
+                      next={labels.next}
+                      onPick={(key) => {
+                        onJumpTo(key)
+                        close()
+                      }}
+                    />
+                  )}
+                </Dialog>
+              </Popover>
+            </DialogTrigger>
             <Button
               variant="ghost"
-              className="min-h-11 rounded-full px-3 text-sm"
-              data-testid="booking-choose-date"
+              size="icon"
+              aria-label={labels.earlierDays}
+              className={cn(
+                "size-11 rounded-full max-sm:hidden",
+                !showDays && "hidden"
+              )}
+              onPress={() => scrollStrip(-1)}
             >
-              <CalendarDotsIcon data-icon="inline-start" />
-              {labels.chooseDate}
+              <ArrowLeftIcon className="size-4" />
             </Button>
-            <Popover
-              placement="bottom end"
-              className="rounded-3xl border bg-popover p-3 text-popover-foreground shadow-lg outline-none"
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={labels.laterDays}
+              className={cn(
+                "size-11 rounded-full max-sm:hidden",
+                !showDays && "hidden"
+              )}
+              onPress={() => scrollStrip(1)}
             >
-              <Dialog aria-label={labels.calendar} className="outline-none">
-                {({ close }) => (
-                  <JumpCalendar
-                    locale={locale}
-                    timeZone={timeZone}
-                    label={labels.calendar}
-                    previous={labels.previous}
-                    next={labels.next}
-                    onPick={(key) => {
-                      onJumpTo(key)
-                      close()
-                    }}
-                  />
-                )}
-              </Dialog>
-            </Popover>
-          </DialogTrigger>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={labels.earlierDays}
-            className="size-11 rounded-full max-sm:hidden"
-            onPress={() => scrollStrip(-1)}
-          >
-            <ArrowLeftIcon className="size-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={labels.laterDays}
-            className="size-11 rounded-full max-sm:hidden"
-            onPress={() => scrollStrip(1)}
-          >
-            <ArrowRightIcon className="size-4" />
-          </Button>
+              <ArrowRightIcon className="size-4" />
+            </Button>
+          </div>
         </div>
+        {nextAvailable}
       </div>
 
       {isError ? (
         <div
           role="alert"
           data-testid="booking-slots-error"
-          className="space-y-3 rounded-3xl bg-destructive/8 p-5 text-sm text-destructive"
+          className="space-y-3 rounded-3xl bg-muted/60 p-5 text-sm"
         >
-          <p>{labels.loadError}</p>
+          <p className="flex items-start gap-2 font-medium">
+            <InfoIcon aria-hidden className="mt-0.5 size-4 shrink-0" />
+            {labels.loadError}
+          </p>
           {onRetry ? (
             <Button
               variant="outline"
               className="min-h-11 rounded-full"
-              onPress={onRetry}
+              onPress={() => {
+                // The button goes away while times reload: keep focus here.
+                rootRef.current?.focus({ preventScroll: true })
+                onRetry()
+              }}
             >
               {labels.retry}
             </Button>
+          ) : null}
+          {errorHelp ? (
+            <p className="text-muted-foreground">{errorHelp}</p>
           ) : null}
         </div>
       ) : (
         <>
           <div
             ref={stripRef}
-            role="group"
+            // A toolbar: arrow keys move between days.
+            role="toolbar"
+            aria-orientation="horizontal"
             aria-label={labels.strip}
             aria-busy={isLoading || undefined}
             // No scroll anchoring: days load in front of "Later dates" and
             // the row must stay at its first day. Full bleed on phones.
-            className="-mx-1 -my-1 flex snap-x scroll-px-1 [scrollbar-width:none] gap-2 overflow-x-auto px-1 py-1 [overflow-anchor:none] max-sm:-mx-4 max-sm:scroll-px-4 max-sm:px-4 sm:[mask-image:linear-gradient(to_right,black_calc(100%-2.5rem),transparent)] [&::-webkit-scrollbar]:hidden"
+            className="-mx-1 -my-1 flex snap-x scroll-px-1 [scrollbar-width:none] gap-2 overflow-x-auto px-1 py-1 [overflow-anchor:none] max-sm:-mx-4 max-sm:scroll-px-4 max-sm:px-4 sm:[mask-image:linear-gradient(to_right,black_calc(100%-2.5rem),transparent)] sm:pr-10 [&::-webkit-scrollbar]:hidden"
           >
             {isLoading ? (
               <DaySkeleton />
@@ -546,7 +584,7 @@ export function SlotPicker({
             id={panelId}
             aria-labelledby={dayTitle ? `${panelId}-day` : undefined}
             aria-label={dayTitle ? undefined : labels.strip}
-            className="min-h-40"
+            className="min-h-40 sm:min-h-28"
           >
             {isLoading ? (
               <TimesSkeleton />
@@ -564,6 +602,14 @@ export function SlotPicker({
               </div>
             ) : dayTitle ? (
               <div className="space-y-4 sm:space-y-5">
+                {skippedFrom ? (
+                  <p
+                    className="text-sm text-muted-foreground"
+                    data-testid="booking-slot-skipped"
+                  >
+                    {skippedFrom}
+                  </p>
+                ) : null}
                 <h2
                   ref={dayHeadingRef}
                   id={`${panelId}-day`}
@@ -623,7 +669,7 @@ export function SlotPicker({
         </>
       )}
 
-      <div className="flex items-center gap-3 sm:sticky sm:bottom-0 sm:z-10 sm:-mx-2 sm:bg-background sm:px-2 sm:py-3">
+      <div className="flex items-center gap-3 sm:sticky sm:bottom-0 sm:z-10 sm:-mx-2 sm:border-t sm:border-border sm:bg-background sm:px-2 sm:py-3">
         {backAction ? <div className="max-sm:order-2">{backAction}</div> : null}
         <div
           data-testid="booking-when-bar"
@@ -708,7 +754,8 @@ function JumpCalendar({
                     isDisabled
                       ? "text-muted-foreground/60"
                       : "cursor-pointer hover:bg-muted",
-                    isFocusVisible && "ring-3 ring-ring/50"
+                    isFocusVisible &&
+                      "outline-2 outline-offset-2 outline-primary"
                   )
                 }
               />

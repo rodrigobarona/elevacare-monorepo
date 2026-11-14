@@ -527,7 +527,7 @@
       "empty": "Sem horas livres nestas semanas. Veja mais datas.",
       "nextAvailable": "Próximo horário: {when}",
       "timeAccessible": "Escolher {when}",
-      "selected": "{when} selecionada",
+      "selected": "{when} selecionado",
       "loading": "A procurar horários…",
       "loadError": "Não conseguimos carregar os horários agora.",
       "continueWith": "Continuar com {when}",
@@ -536,7 +536,9 @@
       "evening": "À noite",
       "noTimes": "{day}, sem horas livres",
       "pickToContinue": "Escolha um horário para continuar",
-      "retry": "Tentar de novo"
+      "retry": "Tentar de novo",
+      "skippedTo": "O primeiro dia com horários a partir de {from} é {to}.",
+      "loadErrorHelp": "Continua sem funcionar? O nosso <help>centro de ajuda</help> pode orientá-la. Ainda não foi feita nenhuma marcação."
     },
     "details": {
       "heading": "Alguns dados",

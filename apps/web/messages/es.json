@@ -536,7 +536,9 @@
       "evening": "Por la noche",
       "noTimes": "{day}, sin horas libres",
       "pickToContinue": "Elige una hora para continuar",
-      "retry": "Intentar de nuevo"
+      "retry": "Intentar de nuevo",
+      "skippedTo": "El primer día con horas a partir del {from} es el {to}.",
+      "loadErrorHelp": "¿Sigue sin funcionar? Nuestro <help>centro de ayuda</help> puede orientarte. Aún no se ha hecho ninguna reserva."
     },
     "details": {
       "heading": "Algunos datos",

@@ -47,6 +47,7 @@ import {
   type ModeCardItem,
 } from "@eleva/ui/components/booking/mode-cards"
 import { SlotPicker } from "@eleva/ui/components/booking/slot-picker"
+import { gatewayMarketingPath } from "@eleva/site-chrome/gateway-marketing-url"
 import {
   TimeZoneLine,
   resolvedTimeZone,
@@ -1063,6 +1064,19 @@ export function BookingFunnel({
               isLoading={slotsLoading}
               isError={slotsError}
               onRetry={() => setSlotsAttempt((attempt) => attempt + 1)}
+              errorHelp={t.rich("when.loadErrorHelp", {
+                help: (chunks) => (
+                  <a
+                    href={gatewayMarketingPath(locale, "/docs/members")}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-primary underline underline-offset-4"
+                  >
+                    {chunks}
+                    <span className="sr-only"> ({t("chrome.newTab")})</span>
+                  </a>
+                ),
+              })}
               selectedStart={slot?.start ?? null}
               onSelect={(next) => {
                 setSlotGone(false)
@@ -1127,6 +1141,7 @@ export function BookingFunnel({
                 noTimes: (day) => t("when.noTimes", { day }),
                 loadError: t("when.loadError"),
                 retry: t("when.retry"),
+                skippedTo: (from, to) => t("when.skippedTo", { from, to }),
                 laterDates: t("when.laterDates"),
                 chooseDate: t("when.chooseDate"),
                 calendar: t("when.calendar"),
