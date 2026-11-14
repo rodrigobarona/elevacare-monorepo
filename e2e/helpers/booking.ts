@@ -169,7 +169,13 @@ export async function dismissCookieBanner(page: Page): Promise<void> {
   }
 }
 
-export async function fillStripeTestCard(page: Page): Promise<void> {
+/** Stripe test card that is always declined (generic_decline). */
+export const DECLINED_TEST_CARD = "4000000000000002"
+
+export async function fillStripeTestCard(
+  page: Page,
+  options?: { number?: string }
+): Promise<void> {
   await dismissCookieBanner(page)
   await expect(page.getByTestId("booking-pay-submit")).toBeEnabled({
     timeout: STRIPE_LOAD_TIMEOUT_MS,
@@ -201,7 +207,11 @@ export async function fillStripeTestCard(page: Page): Promise<void> {
   }
 
   const frames = page.frames()
-  const filledNumber = await fillFirstVisible(frames, CARD_FIELD, CARD_NUMBER)
+  const filledNumber = await fillFirstVisible(
+    frames,
+    CARD_FIELD,
+    options?.number ?? CARD_NUMBER
+  )
   if (!filledNumber) {
     throw new Error("Stripe card number field not found in any frame")
   }

@@ -1,24 +1,34 @@
 import { mkdirSync, renameSync } from "node:fs"
 import path from "node:path"
 import {
+  expect,
   test,
+  type APIRequestContext,
   type Browser,
   type BrowserContext,
   type Page,
 } from "@playwright/test"
 import {
+  ACCOUNT_ORIGIN,
   accountUrl,
+  apiUrl,
   E2E_PASSWORD,
   uniqueEmail,
   verifyEmail,
   waitForE2eAuthUrl,
 } from "./helpers/auth"
 import {
+  DECLINED_TEST_CARD,
   dismissCookieBanner,
   fillGuestAndConsents,
+  fillStripeTestCard,
   uniqueGuestEmail,
 } from "./helpers/booking"
-import { sessionFromMagicLink } from "./helpers/cancellation-policy-smoke"
+import {
+  CONSENTS,
+  fetchOfferModeId,
+  sessionFromMagicLink,
+} from "./helpers/cancellation-policy-smoke"
 import {
   appUrl,
   isNonLoopbackE2eTarget,
@@ -79,6 +89,19 @@ async function settle(page: Page): Promise<void> {
   await page
     .addStyleTag({ content: "nextjs-portal{display:none!important}" })
     .catch(() => {})
+  // Stripe's test-mode badge floats over the payment form. It is a frame
+  // on <body> with an inline !important style, so only an inline style wins.
+  await page
+    .evaluate(() => {
+      document
+        .querySelectorAll<HTMLIFrameElement>(
+          'body > iframe[src*="elements-inner-easel"]'
+        )
+        .forEach((frame) =>
+          frame.style.setProperty("display", "none", "important")
+        )
+    })
+    .catch(() => {})
   await page.waitForTimeout(400)
 }
 
@@ -96,6 +119,11 @@ async function shoot(
   options?: { fullPage?: boolean }
 ): Promise<void> {
   await settle(page)
+  // A full-page shot of a scrolled page draws the sticky header mid-page.
+  if (options?.fullPage ?? true) {
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await page.waitForTimeout(200)
+  }
   await page.screenshot({
     path: path.join(dir(surface), `${name}.${kind}.jpg`),
     fullPage: options?.fullPage ?? true,
@@ -167,6 +195,57 @@ async function slowScroll(page: Page): Promise<void> {
     await page.waitForTimeout(650)
   }
   await page.evaluate(() => window.scrollTo({ top: 0 }))
+}
+
+/** Another guest takes the time first: reserve it through the API. */
+async function holdSlotAsAnotherGuest(
+  request: APIRequestContext,
+  startsAt: string
+): Promise<void> {
+  const modeId = await fetchOfferModeId(request)
+  const endsAt = new Date(Date.parse(startsAt) + 60 * 60_000).toISOString()
+  const held = await request.post(`${apiUrl}/bookings/reserve`, {
+    headers: { Origin: ACCOUNT_ORIGIN, "Content-Type": "application/json" },
+    data: {
+      username: PAID_EXPERT,
+      eventTypeModeId: modeId,
+      startsAt,
+      endsAt,
+      timezone: "Europe/Lisbon",
+      language: "en",
+      memberCountry: "PT",
+      guest: {
+        name: "Another Guest",
+        email: uniqueGuestEmail("design-capture-other"),
+      },
+      consents: CONSENTS,
+    },
+  })
+  expect(held.status(), await held.text()).toBe(201)
+}
+
+/** The join API says the window is not open yet (as in waiting-room.spec). */
+async function mockJoinNotOpen(page: Page): Promise<void> {
+  // A stable, realistic time: tomorrow at 10:00 UTC (10:00 in Lisbon in winter).
+  const tomorrow = new Date()
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
+  tomorrow.setUTCHours(10, 0, 0, 0)
+  const startsAt = tomorrow.getTime()
+  const opensAt = startsAt - 15 * 60_000
+  await page.route("**/sessions/*/join", (route) =>
+    route.fulfill({
+      status: 403,
+      contentType: "application/json",
+      headers: { "access-control-allow-origin": "*" },
+      body: JSON.stringify({
+        error: "SESSION_NOT_OPEN",
+        startsAt: new Date(startsAt).toISOString(),
+        opensAt: new Date(opensAt).toISOString(),
+        closesAt: new Date(startsAt + 90 * 60_000).toISOString(),
+        now: new Date().toISOString(),
+      }),
+    })
+  )
 }
 
 const PUBLIC_PAGES: Array<{ surface: string; name: string; url: string }> = [
@@ -377,6 +456,202 @@ test.describe("design capture", () => {
         await shoot(page, onboarding, `06-setup-step-${index + 1}`, kind)
       }
       await finishVideo(page, context, onboarding, "signup-to-setup", kind)
+    })
+
+    test(`site chrome states — ${kind}`, async ({ browser }) => {
+      const surface = "11-states"
+      const context = await newContext(browser, kind)
+      const page = await context.newPage()
+      await page.goto(`${webUrl}/home`)
+      await settle(page)
+      // The consent banner mounts after hydration; shoot it before rejecting.
+      const banner = page.getByRole("button", { name: /reject optional/i })
+      await banner.waitFor({ timeout: 15_000 }).catch(() => {})
+      await shoot(page, surface, "01-cookie-banner", kind, { fullPage: false })
+      const customize = page.getByRole("button", { name: /^customi[sz]e$/i })
+      await expect(customize).toBeVisible()
+      await customize.click()
+      await page.waitForTimeout(800)
+      await shoot(page, surface, "02-cookie-preferences", kind, {
+        fullPage: false,
+      })
+      await page.keyboard.press("Escape")
+      await dismissCookieBanner(page).catch(() => {})
+      if (kind === "desktop") {
+        const triggers = page.locator("header button[aria-controls]")
+        const count = await triggers.count()
+        for (let index = 0; index < count; index++) {
+          const trigger = triggers.nth(index)
+          if (!(await trigger.isVisible().catch(() => false))) continue
+          const label = (await trigger.innerText()).trim()
+          await trigger.click()
+          await page.waitForTimeout(600)
+          await shoot(
+            page,
+            surface,
+            `03-mega-menu-${index + 1}-${label.toLowerCase().replace(/[^a-z]+/g, "-")}`,
+            kind,
+            { fullPage: false }
+          )
+          await page.keyboard.press("Escape")
+          await page.waitForTimeout(300)
+        }
+      } else {
+        await page
+          .getByRole("button", { name: /menu|more/i })
+          .first()
+          .click()
+        await page.waitForTimeout(800)
+        await shoot(page, surface, "03-mobile-nav", kind, { fullPage: false })
+        const lastLink = page
+          .getByRole("dialog")
+          .last()
+          .getByRole("link")
+          .last()
+        await lastLink.scrollIntoViewIfNeeded()
+        await expect(lastLink).toBeInViewport()
+        await page.waitForTimeout(300)
+        await shoot(page, surface, "04-mobile-nav-end", kind, {
+          fullPage: false,
+        })
+      }
+      await context.close()
+    })
+
+    test(`booking meet step and unhappy paths — ${kind}`, async ({
+      browser,
+      request,
+    }) => {
+      const surface = "04-booking-checkout"
+      const context = await newContext(browser, kind)
+      const page = await context.newPage()
+
+      // Several ways to meet: the funnel opens on the meet step.
+      await page.goto(`${webUrl}/${PAID_EXPERT}/follow-up`)
+      await clearBanner(page)
+      await page
+        .getByTestId("booking-continue-meet")
+        .waitFor({ timeout: 60_000 })
+      await shoot(page, surface, "00-meet-step", kind)
+
+      // Slot taken: another guest holds the chosen time first.
+      await page.goto(`${webUrl}/${PAID_EXPERT}/${PAID_OFFER}`)
+      await clearBanner(page)
+      const picker = page.locator("[data-slot='slot-picker']")
+      await picker.waitFor({ timeout: 60_000 })
+      await picker.getByTestId("booking-slot-day").last().click()
+      const time = picker.getByTestId("booking-slot-time").nth(1)
+      await time.click()
+      const startsAt = await time.getAttribute("data-start")
+      await page.getByTestId("booking-continue-when").click()
+      await page.getByTestId("booking-guest-name").waitFor()
+      await fillGuestAndConsents(page, {
+        name: CAPTURE_GUEST,
+        email: uniqueGuestEmail("design-capture-taken"),
+      })
+      expect(startsAt, "slot time has a data-start").toBeTruthy()
+      await holdSlotAsAnotherGuest(request, startsAt!)
+      await page.getByTestId("booking-continue-details").click()
+      // The details step reports it in place ("That time was just taken").
+      await expect(page.getByText(/just taken/i)).toBeVisible({
+        timeout: 30_000,
+      })
+      await shoot(page, surface, "10-slot-taken", kind)
+
+      // Payment declined: Stripe's test card that always declines.
+      await page.goto(`${webUrl}/${PAID_EXPERT}/${PAID_OFFER}`)
+      await clearBanner(page)
+      await picker.waitFor({ timeout: 60_000 })
+      await picker.getByTestId("booking-slot-day").last().click()
+      await picker.getByTestId("booking-slot-time").last().click()
+      await page.getByTestId("booking-continue-when").click()
+      await page.getByTestId("booking-guest-name").waitFor()
+      await fillGuestAndConsents(page, {
+        name: CAPTURE_GUEST,
+        email: uniqueGuestEmail("design-capture-declined"),
+      })
+      await page.getByTestId("booking-continue-details").click()
+      await fillStripeTestCard(page, { number: DECLINED_TEST_CARD })
+      // Submit the form itself, as member.spec does: a click can land on
+      // Stripe's optional Link fields and never reach the form.
+      const pay = page.getByTestId("booking-pay-submit")
+      await pay.scrollIntoViewIfNeeded()
+      await pay.evaluate((element: HTMLButtonElement) => {
+        element.closest("form")?.requestSubmit(element)
+      })
+      // The failure shows inside Stripe's frame, on the page, or both.
+      await expect
+        .poll(
+          async () => {
+            for (const frame of page.frames()) {
+              // Stripe's own wording, or ours when Stripe gives none.
+              const declined = frame
+                .getByText(/declined|could not be completed/i)
+                .first()
+              if (await declined.isVisible().catch(() => false)) return true
+            }
+            return false
+          },
+          { timeout: 45_000 }
+        )
+        .toBe(true)
+      await shoot(page, surface, "12-payment-declined", kind)
+
+      // Hold ended: jump the page clock past the hold.
+      await page.clock.install()
+      await page.clock.fastForward("20:00")
+      await expect(
+        page.getByRole("button", { name: /pick a new time/i })
+      ).toBeVisible({ timeout: 15_000 })
+      await shoot(page, surface, "11-hold-ended", kind)
+      await context.close()
+    })
+
+    test(`member session states — ${kind}`, async ({ browser, request }) => {
+      const surface = "10-member-space"
+      const cookie = await sessionFromMagicLink(request, MEMBER_DEMO_EMAIL)
+      const context = await newContext(browser, kind, { cookie })
+      const page = await context.newPage()
+      await page.goto(`${webUrl}/dashboard`)
+      await page
+        .waitForURL((url) => !url.pathname.startsWith("/dashboard"), {
+          timeout: 30_000,
+        })
+        .catch(() => {})
+      const slug = new URL(page.url()).pathname.split("/").filter(Boolean)[0]
+      await clearBanner(page)
+
+      // A booked session's detail page, upcoming and past (seeded ids from
+      // packages/db/src/seed/demo-member-sessions.ts).
+      for (const [name, id] of [
+        ["08-session-detail-upcoming", "5eed0000-0000-4000-8000-000000000001"],
+        ["09-session-detail-past", "5eed0000-0000-4000-8000-000000000003"],
+      ] as const) {
+        await page.goto(`${webUrl}/${slug}/sessions/${id}`)
+        await shoot(page, surface, name, kind)
+      }
+
+      // Delete account asks first; the capture never confirms.
+      await page.goto(`${webUrl}/${slug}/privacy`)
+      await settle(page)
+      const remove = page.getByTestId("member-deletion-request")
+      await expect(remove).toBeVisible()
+      await remove.click()
+      await expect(page.getByTestId("member-deletion-confirm")).toBeVisible()
+      await shoot(page, surface, "10-delete-account-confirm", kind, {
+        fullPage: false,
+      })
+      await page.keyboard.press("Escape")
+
+      // The video waiting room before the join window opens.
+      await mockJoinNotOpen(page)
+      await page.goto(
+        `${webUrl}/join/11111111-1111-4111-8111-111111111111?g=capture`
+      )
+      await settle(page)
+      await page.waitForTimeout(1_500)
+      await shoot(page, surface, "11-waiting-room", kind)
+      await context.close()
     })
 
     test(`expert dashboard (seeded) — ${kind}`, async ({
