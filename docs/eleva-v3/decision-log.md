@@ -53,6 +53,12 @@ Each entry should include:
      `/.well-known/security.txt` are published. Sub-processor changes are
      announced by email to account owners and in a change log on
      `/trust/sub-processors`.
+  4. **DAC7 clause states what the law requires** (expert agreement §16,
+     EN/PT/ES). Eleva collects every tax number a seller holds, checks the
+     data, and keeps it for 10 years. When details are still missing after
+     two reminders and 60 days, Eleva **holds transfers** (it used to say it
+     "may" act) and may also close the account under §13. For bookings
+     through a clinic, the clinic is the reported seller.
 - Drafted, not adopted or reviewed:
   - [`legal/payment-services-position.md`](legal/payment-services-position.md):
     the payment-services (RJSPME / PSD2) question, for the lawyer.
@@ -78,7 +84,7 @@ Each entry should include:
     `ai_processing` consent, the AI event log, the evaluation set and the
     publish attestation are still open (panel report §4).
 - Owner: founder (Rodrigo Barona)
-- Status: `active` for items 1–3; the memo and both runbooks are drafts.
+- Status: `active` for items 1–4; the memo and both runbooks are drafts.
 - Related: ADR-009, `ai-reporting-spec.md`, `legal/fact-sheet.md`,
   `packages/ai/src/prompts/session-report.v2.ts`,
   `packages/content/content/trust/*`.

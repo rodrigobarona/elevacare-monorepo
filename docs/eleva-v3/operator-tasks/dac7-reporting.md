@@ -76,13 +76,16 @@ last digits (§8, question 5).
    Record the date and the result of each check.
 2. If a seller has not given the details, ask. Send a first reminder and a
    second reminder.
-3. After two reminders, and once at least 60 days have passed, Eleva **must**
-   do one of two things: close the seller's account and prevent a new
-   registration, or hold their transfers until the details arrive. The expert
-   agreement §16 says Eleva "may" do so; the law leaves the choice between the
-   two, not the choice to do neither (§8, question 8). The agreement says the
-   60 days run from the first request, which matches the law's wording. The
-   AT's FAQ counts them from the second reminder (§8, question 3).
+3. After two reminders, and once at least 60 days have passed, the law
+   requires one of two things: close the seller's account and prevent a new
+   registration, or hold their transfers until the details arrive. Eleva's
+   rule, stated in the expert agreement §16, is to **hold the transfers**,
+   and to close the account only if the details are still missing. Send the
+   statement of reasons the agreement's §13 requires before or when the hold
+   starts. The agreement counts the 60 days from the first request, which
+   matches the law's wording; the AT's FAQ counts them from the second
+   reminder (§8, question 3). Until a dedicated hold reason exists, record
+   the hold on the payout as `manual` with a note (§7, slice 2).
 4. Log every request, reminder and hold, with dates.
 
 ## 5. The annual report
@@ -143,12 +146,10 @@ says Eleva collects. That is the reason this runbook is not adopted.
 5. Is the account identifier "available" to Eleva when Stripe holds the IBAN
    and shows Eleva only its last digits?
 6. Which schema version will the AT accept for the January filing?
-7. Clinics pay a seat subscription and no booking fee. When members pay a
-   clinic through Eleva, is the clinic a reportable seller in the same way as
-   a solo expert?
-8. For the lawyer: expert agreement §16 says Eleva "may" close the account or
-   hold transfers when details are missing. Should it say Eleva will do one
-   of the two?
+7. A clinic pays a seat subscription and no booking fee, and its Stripe
+   account receives 100% of its members' payments through Eleva
+   (`payments-payouts-spec.md`). The expert agreement therefore treats the
+   clinic, not each professional in it, as the reported seller. Confirm.
 
 ## 9. Penalties, for scale
 
