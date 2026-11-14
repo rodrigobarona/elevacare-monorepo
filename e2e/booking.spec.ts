@@ -167,9 +167,10 @@ test.describe("booking funnel", () => {
     await page.getByTestId("booking-slot-time").first().click()
     await page.getByTestId("booking-continue-when").first().click()
 
-    const note = page.getByTestId("urgent-help")
+    // One line with 112 on the details step; the full list is one tap away.
+    const note = page.getByTestId("booking-urgent-help")
     await expect(note).toBeVisible()
-    await expect(note.getByRole("link", { name: "112" })).toHaveAttribute(
+    await expect(note.getByRole("link", { name: /112/ })).toHaveAttribute(
       "href",
       "tel:112"
     )
