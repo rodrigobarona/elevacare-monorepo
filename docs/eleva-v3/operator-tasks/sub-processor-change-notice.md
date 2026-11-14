@@ -26,7 +26,8 @@ and Microsoft sign-in, Stripe for its own legal duties).
 
 **Urgent changes.** If a change cannot wait 30 days because of security, a
 legal duty or keeping the service running, make it, then send the notice the
-same day and say why it could not wait.
+same day and say why it could not wait. The 30 days to object run from that
+notice (DPA §12).
 
 ## 2. Steps
 

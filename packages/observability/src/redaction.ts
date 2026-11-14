@@ -57,6 +57,12 @@ export const REDACTED_KEYS = new Set<string>([
   "summary",
   "observations",
   "recommendations",
+  // session-report.v1 keys: kept so an old payload or a model that still
+  // answers in the v1 shape is scrubbed too.
+  "followupquestions",
+  "follow_up_questions",
+  "redflags",
+  "red_flags",
   "plannoted",
   "plan_noted",
   "followupsnoted",

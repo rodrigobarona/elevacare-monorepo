@@ -69,11 +69,13 @@ last digits (§8, question 5).
    date and the result.
 2. If a seller has not given the details, ask. Send a first reminder and a
    second reminder.
-3. After two reminders, and once at least 60 days have passed, Eleva may
-   close the seller's account and prevent a new registration, or hold their
-   transfers until the details arrive. The expert agreement §16 says the 60
-   days run from the first request, which matches the law's wording. The AT's
-   FAQ counts them from the second reminder (§8, question 3).
+3. After two reminders, and once at least 60 days have passed, Eleva **must**
+   do one of two things: close the seller's account and prevent a new
+   registration, or hold their transfers until the details arrive. The expert
+   agreement §16 says Eleva "may" do so; the law leaves the choice between the
+   two, not the choice to do neither (§8, question 8). The agreement says the
+   60 days run from the first request, which matches the law's wording. The
+   AT's FAQ counts them from the second reminder (§8, question 3).
 4. Log every request, reminder and hold, with dates.
 
 ## 5. The annual report
@@ -132,9 +134,12 @@ says Eleva collects. That is the reason this runbook is not adopted.
 5. Is the account identifier "available" to Eleva when Stripe holds the IBAN
    and shows Eleva only its last digits?
 6. Which schema version will the AT accept for the January filing?
-7. Clinics pay a seat subscription and receive their members' payments
-   directly to their own Stripe account. Are they reportable sellers in the
-   same way?
+7. Clinics pay a seat subscription and no booking fee. When members pay a
+   clinic through Eleva, is the clinic a reportable seller in the same way as
+   a solo expert?
+8. For the lawyer: expert agreement §16 says Eleva "may" close the account or
+   hold transfers when details are missing. Should it say Eleva will do one
+   of the two?
 
 ## 9. Penalties, for scale
 
