@@ -780,9 +780,15 @@ export function BookingFunnel({
         media={expertMedia}
         whenLabel={whenLabel}
         modeLabel={locationCopy ?? t(`modes.${selectedMode.mode}.title`)}
-        priceLabel={formatBookingPrice(priceCents, locale)}
+        priceLabel={
+          isFree ? t("summary.free") : formatBookingPrice(priceCents, locale)
+        }
         accessNote={accessNote}
-        policyName={policyCopy.name}
+        policyLine={
+          isFree
+            ? t("policy.free")
+            : t("done.next.policy", { policy: policyCopy.name })
+        }
         isOnline={selectedMode.mode === "online"}
         signupHref={signupHref}
         headingRef={stepHeadingRef}
@@ -1304,7 +1310,7 @@ export function BookingFunnel({
               {/* Two ticks: health data on its own (an explicit, separate
                   choice), and terms with the age confirmation. The privacy
                   notice is information, linked in a sentence. Needs legal
-                  review before launch (decision log, 2026-11-14). */}
+                  review before launch (decision log, 2026-11-14, D1.3). */}
               <div className="space-y-4">
                 <ConsentCheckbox
                   id="health_data_processing"
@@ -1325,6 +1331,15 @@ export function BookingFunnel({
                   description={t.rich(
                     "details.consents.health_data_processing.description",
                     {
+                      name: expertName,
+                      mail: (chunks) => (
+                        <a
+                          href="mailto:privacy@eleva.care"
+                          className="font-medium text-primary underline underline-offset-4"
+                        >
+                          {chunks}
+                        </a>
+                      ),
                       link: (chunks) => (
                         <a
                           href={consentHref("health_data_processing")}

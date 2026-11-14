@@ -42,7 +42,11 @@ export function ConsentCheckbox({
         onChange={onChange}
         isInvalid={isInvalid}
         aria-describedby={description ? descriptionId : undefined}
-        className={cn("items-start", className)}
+        // The box sits on the first line of a relaxed 14px label.
+        className={cn(
+          "items-start [&>[data-slot=checkbox]]:mt-[3px]",
+          className
+        )}
         label={
           <span className="text-sm leading-relaxed">
             {label}

@@ -26,7 +26,7 @@ export function BookingDone({
   modeLabel,
   priceLabel,
   accessNote,
-  policyName,
+  policyLine,
   isOnline,
   signupHref,
   onAddToCalendar,
@@ -43,7 +43,8 @@ export function BookingDone({
   modeLabel: string
   priceLabel: string
   accessNote: string
-  policyName: string
+  /** The cancellation line; free sessions get a courtesy line instead. */
+  policyLine: string
   isOnline: boolean
   signupHref: string
   onAddToCalendar: () => void
@@ -140,7 +141,7 @@ export function BookingDone({
                   : accessNote}
             </NextStep>
             <NextStep icon={<ShieldIcon className="size-4" />}>
-              {t("done.next.policy", { policy: policyName })}
+              {policyLine}
             </NextStep>
           </ol>
 
