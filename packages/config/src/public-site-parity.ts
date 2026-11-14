@@ -96,9 +96,6 @@ export function rewriteParityPath(pathname: string): string | null {
   if (legacyHelp) {
     return legacyHelp
   }
-  if (first === "trust" && rest.length === 1) {
-    return `${localePrefix(locale)}/trust/security`
-  }
   if (first === "legal" && rest[1]?.toLowerCase() === "cookie") {
     return `${localePrefix(locale)}/legal/cookies`
   }
@@ -150,7 +147,6 @@ export const PUBLIC_SITE_PARITY_REDIRECTS = [
   },
   { id: "docs-en", path: "/en/docs", locationPath: "/docs" },
   { id: "faq-pt", path: "/pt/faq", locationPath: "/docs" },
-  { id: "trust-index", path: "/trust", locationPath: "/trust/security" },
   {
     id: "legal-cookie",
     path: "/legal/cookie",

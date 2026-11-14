@@ -20,7 +20,13 @@ const LEGAL_SLUGS = [
   "complaints",
 ] as const
 
-const TRUST_SLUGS = ["security", "dpa", "sub-processors", "ers"] as const
+const TRUST_SLUGS = [
+  "security",
+  "dpa",
+  "sub-processors",
+  "ers",
+  "vulnerability-disclosure",
+] as const
 
 /** Vendors named in trust EN sub-processors table (first column). */
 const SUB_PROCESSOR_VENDORS = [

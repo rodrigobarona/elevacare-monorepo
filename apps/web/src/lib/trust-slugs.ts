@@ -1,4 +1,10 @@
-export const TRUST_SLUGS = ["security", "dpa", "sub-processors", "ers"] as const
+export const TRUST_SLUGS = [
+  "security",
+  "dpa",
+  "sub-processors",
+  "ers",
+  "vulnerability-disclosure",
+] as const
 
 export type TrustSlug = (typeof TRUST_SLUGS)[number]
 

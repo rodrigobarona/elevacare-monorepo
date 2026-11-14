@@ -662,7 +662,7 @@
     "accessibility": "Accesibilidad",
     "complaints": "Reclamaciones",
     "complaintsBook": "Libro de reclamaciones electrónico",
-    "trustSecurity": "Seguridad",
+    "trustHub": "Confianza y seguridad",
     "evidenceBasedCare": "Atención basada en evidencia",
     "solutions": "Unirse a Eleva",
     "becomeExpert": "Hazte especialista",
@@ -905,6 +905,16 @@
     "helpCta": "Abrir el centro de ayuda"
   },
   "trust": {
+    "index": {
+      "title": "Confianza y seguridad — Eleva.care",
+      "description": "Todos los documentos que explican cómo Eleva cuida tu información, con la fecha del último cambio de cada uno.",
+      "eyebrow": "Confianza",
+      "heading": "Confianza y seguridad",
+      "lead": "Todo lo que explica cómo cuidamos tu información, en un solo lugar. Cada documento muestra la fecha de su último cambio.",
+      "trustGroup": "Cómo protegemos tus datos",
+      "legalGroup": "Términos y políticas",
+      "contact": "¿Dudas sobre tus datos? Escribe a <privacy>privacy@eleva.care</privacy>. ¿Has encontrado un problema de seguridad? Escribe a <security>security@eleva.care</security>."
+    },
     "pages": {
       "security": {
         "title": "Seguridad — Eleva.care",
