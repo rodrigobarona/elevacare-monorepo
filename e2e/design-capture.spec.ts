@@ -581,12 +581,15 @@ test.describe("design capture", () => {
         }
       }
       await page.getByTestId("booking-pay-submit").click()
-      // Stripe reports the decline inside its own frame, then the page does.
+      // The failure shows inside Stripe's frame, on the page, or both.
       await expect
         .poll(
           async () => {
             for (const frame of page.frames()) {
-              const declined = frame.getByText(/declined/i).first()
+              // Stripe's own wording, or ours when Stripe gives none.
+              const declined = frame
+                .getByText(/declined|could not be completed/i)
+                .first()
               if (await declined.isVisible().catch(() => false)) return true
             }
             return false
