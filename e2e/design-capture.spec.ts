@@ -353,7 +353,10 @@ test.describe("design capture", () => {
         .waitFor({ timeout: 60_000 })
         .catch(() => {})
       // Stripe Elements paint a few seconds after the totals.
-      await page.waitForTimeout(6_000)
+      await expect(
+        page.locator('iframe[src*="elements-inner-payment"]').first()
+      ).toBeVisible({ timeout: 45_000 })
+      await page.waitForTimeout(4_000)
       await shoot(page, surface, "07-paid-step-pay", kind)
       if (kind === "mobile") {
         // What she sees on a phone: the total and Pay stay in reach.

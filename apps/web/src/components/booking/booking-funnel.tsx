@@ -234,6 +234,7 @@ export function BookingFunnel({
   const [reservation, setReservation] = useState<Reservation | null>(null)
   // Stripe's amounts on the pay step, shown in the order summary.
   const [totals, setTotals] = useState<BookingCheckoutTotals | null>(null)
+  const [holdExtendedNotice, setHoldExtendedNotice] = useState(false)
   const [payment, setPayment] = useState<Payment | null>(null)
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null)
   const [nowMs, setNowMs] = useState(() => Date.now())
@@ -552,7 +553,8 @@ export function BookingFunnel({
           startsAt: new Date(slot.start),
         }),
         locale,
-        (date) => deadlineFormat.format(date)
+        // Keep the date on one line ("Mon, 16 Nov, 16:00").
+        (date) => deadlineFormat.format(date).replace(/ /g, "\u00a0")
       )
     : undefined
 
@@ -687,6 +689,16 @@ export function BookingFunnel({
       setReservation({ ...reservation, expiresAt: next.expiresAt })
       setNowMs(Date.now())
       setHoldExtend("idle")
+      // The warning (and its button) goes away: say so, and put focus back
+      // on Pay so keyboard users are not dropped to the top of the page.
+      setHoldExtendedNotice(true)
+      requestAnimationFrame(() => {
+        document
+          .querySelector<HTMLButtonElement>(
+            '[data-testid="booking-pay-submit"]'
+          )
+          ?.focus()
+      })
     } catch (error) {
       setHoldExtend(
         error instanceof ApiClientError &&
@@ -1363,10 +1375,10 @@ export function BookingFunnel({
                     minute, the warning and "keep this time" take its place. */}
                 {holdEndingSoon ? (
                   <div
-                    className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-warning bg-warning-subtle px-3 py-2 text-sm"
+                    className="flex flex-col gap-2 rounded-xl border border-warning bg-warning-subtle px-3 py-2.5 text-sm sm:flex-row sm:items-center sm:gap-3"
                     data-testid="booking-hold-ending"
                   >
-                    <p role="alert" className="min-w-0 flex-1">
+                    <p role="alert" className="sm:min-w-0 sm:flex-1">
                       {holdExtend === "limit"
                         ? t("pay.extendLimit")
                         : holdExtend === "failed"
@@ -1377,6 +1389,7 @@ export function BookingFunnel({
                       <Button
                         variant="outline"
                         size="sm"
+                        className="w-full sm:w-auto"
                         onPress={extendHold}
                         isDisabled={holdExtend === "pending"}
                       >
@@ -1390,6 +1403,9 @@ export function BookingFunnel({
                     data-testid="booking-hold-note"
                   >
                     <ClockIcon aria-hidden className="size-4 shrink-0" />
+                    <span aria-live="polite" className="sr-only">
+                      {holdExtendedNotice ? t("pay.extended") : ""}
+                    </span>
                     {t("pay.holdNote", {
                       time: formatCountdown(
                         Math.max(
