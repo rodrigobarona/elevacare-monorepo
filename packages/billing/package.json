@@ -10,7 +10,8 @@
     "./server": "./src/server/index.ts",
     "./embedded": "./src/embedded/index.ts",
     "./client": "./src/client/index.ts",
-    "./notification-events": "./src/emit-domain-event.ts"
+    "./notification-events": "./src/emit-domain-event.ts",
+    "./sources.css": "./sources.css"
   },
   "scripts": {
     "lint": "eslint .",

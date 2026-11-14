@@ -8,6 +8,7 @@
 export {
   BookingCheckoutPayment,
   type BookingCheckoutLabels,
+  type BookingCheckoutTotals,
   type BookingCheckoutOutcome,
 } from "./checkout-payment"
 export { elevaPaymentElementAppearance } from "./appearance"

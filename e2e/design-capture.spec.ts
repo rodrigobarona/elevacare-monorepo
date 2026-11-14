@@ -120,8 +120,20 @@ async function shoot(
 ): Promise<void> {
   await settle(page)
   // A full-page shot of a scrolled page draws the sticky header mid-page.
-  if (options?.fullPage ?? true) {
-    await page.evaluate(() => window.scrollTo(0, 0))
+  const fullPage = options?.fullPage ?? true
+  if (fullPage) {
+    await page.evaluate(() => {
+      window.scrollTo(0, 0)
+      // A sticky bar is drawn over the page in a full-page shot; show it in
+      // place there (the viewport shots show it sticking).
+      document.documentElement.dataset.captureFullPage = "1"
+    })
+    await page
+      .addStyleTag({
+        content:
+          'html[data-capture-full-page] [data-testid="booking-pay-bar"]{position:static!important}',
+      })
+      .catch(() => {})
     await page.waitForTimeout(200)
   }
   await page.screenshot({
@@ -130,6 +142,11 @@ async function shoot(
     type: "jpeg",
     quality: 82,
   })
+  if (fullPage) {
+    await page.evaluate(() => {
+      delete document.documentElement.dataset.captureFullPage
+    })
+  }
 }
 
 async function newContext(
@@ -338,6 +355,13 @@ test.describe("design capture", () => {
       // Stripe Elements paint a few seconds after the totals.
       await page.waitForTimeout(6_000)
       await shoot(page, surface, "07-paid-step-pay", kind)
+      if (kind === "mobile") {
+        // What she sees on a phone: the total and Pay stay in reach.
+        await page.getByRole("heading", { level: 1 }).scrollIntoViewIfNeeded()
+        await shoot(page, surface, "07b-paid-pay-bar", kind, {
+          fullPage: false,
+        })
+      }
       await finishVideo(page, context, surface, "paid-funnel", kind)
     })
 

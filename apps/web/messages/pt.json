@@ -470,7 +470,10 @@
       "when": "Quando",
       "price": "Preço",
       "chooseTime": "Escolha um horário para continuar",
-      "profile": "Sobre {name}"
+      "profile": "Sobre {name}",
+      "zone": "hora de {city}",
+      "change": "Alterar",
+      "provider": "A sua sessão é com {name}, profissional independente. A Eleva trata da reserva e do pagamento."
     },
     "modes": {
       "online": {
@@ -596,7 +599,13 @@
       "holdEnding": "A reserva deste horário termina daqui a cerca de um minuto. Precisa de mais tempo?",
       "extend": "Manter este horário por mais 5 minutos",
       "extendLimit": "Já não conseguimos manter este horário. Conclua o pagamento agora ou escolha outro horário.",
-      "extendFailed": "Não conseguimos acrescentar tempo. Tente novamente."
+      "extendFailed": "Não conseguimos acrescentar tempo. Tente novamente.",
+      "subHeld": "Estamos a guardar {when} para si. Pague com cartão, MB WAY, Apple Pay ou Google Pay.",
+      "holdNote": "O seu horário fica guardado durante {time}",
+      "totalToday": "Total a pagar hoje",
+      "promoAdd": "Adicionar código promocional",
+      "secureLine": "Os pagamentos são processados pela Stripe. A Eleva nunca vê os dados do seu cartão.",
+      "emailLine": "A confirmação chega por email logo após o pagamento."
     },
     "done": {
       "heading": "A sua reserva está confirmada",

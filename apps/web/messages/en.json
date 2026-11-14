@@ -470,7 +470,10 @@
       "when": "When",
       "price": "Price",
       "chooseTime": "Pick a time to continue",
-      "profile": "About {name}"
+      "profile": "About {name}",
+      "zone": "{city} time",
+      "change": "Change",
+      "provider": "Your session is with {name}, an independent expert. Eleva handles the booking and payment."
     },
     "modes": {
       "online": {
@@ -596,7 +599,13 @@
       "holdEnding": "Your hold on this time ends in about a minute. Need more time?",
       "extend": "Keep this time for 5 more minutes",
       "extendLimit": "We can’t hold this time any longer. Finish paying now, or pick a new time.",
-      "extendFailed": "We couldn’t add more time. Please try again."
+      "extendFailed": "We couldn’t add more time. Please try again.",
+      "subHeld": "We're holding {when} for you. Pay by card, MB WAY, Apple Pay or Google Pay.",
+      "holdNote": "Your time is held for {time}",
+      "totalToday": "Total today",
+      "promoAdd": "Add a promo code",
+      "secureLine": "Payments are handled by Stripe. Eleva never sees your card details.",
+      "emailLine": "Your confirmation arrives by email right after you pay."
     },
     "done": {
       "heading": "Your reservation is confirmed",
