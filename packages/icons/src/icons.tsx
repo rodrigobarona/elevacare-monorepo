@@ -78,6 +78,7 @@ export {
   SpinnerIcon,
   SquaresFourIcon,
   StethoscopeIcon,
+  SunHorizonIcon,
   SunIcon,
   TagIcon,
   TextAlignLeftIcon,

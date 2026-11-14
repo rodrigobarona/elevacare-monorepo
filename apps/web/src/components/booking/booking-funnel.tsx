@@ -47,6 +47,7 @@ import {
   type ModeCardItem,
 } from "@eleva/ui/components/booking/mode-cards"
 import { SlotPicker } from "@eleva/ui/components/booking/slot-picker"
+import { gatewayMarketingPath } from "@eleva/site-chrome/gateway-marketing-url"
 import {
   TimeZoneLine,
   resolvedTimeZone,
@@ -315,8 +316,10 @@ export function BookingFunnel({
     modes.find(
       (mode) => mode.id === (modeId ?? pinnedModeId ?? inferredMode?.id)
     ) ?? null
+  // Bumped by "Try again" so a failed window is fetched once more.
+  const [slotsAttempt, setSlotsAttempt] = useState(0)
   const slotsKey = selectedMode
-    ? `${selectedMode.id}:${fromKey}:${timeZone}`
+    ? `${selectedMode.id}:${fromKey}:${timeZone}:${slotsAttempt}`
     : ""
   const slotsLoading = Boolean(selectedMode) && slotsRequest.key !== slotsKey
   const slotsError = slotsRequest.key === slotsKey && slotsRequest.error
@@ -329,7 +332,7 @@ export function BookingFunnel({
     const from = new Date(`${addDaysToKey(fromKey, -1)}T00:00:00Z`)
     const to = new Date(`${addDaysToKey(fromKey, WINDOW_DAYS + 1)}T00:00:00Z`)
     const api = createPublicApiClient()
-    const key = `${selectedMode.id}:${fromKey}:${timeZone}`
+    const key = `${selectedMode.id}:${fromKey}:${timeZone}:${slotsAttempt}`
     let cancelled = false
     api.public
       .getSlots(username, eventSlug, {
@@ -386,7 +389,15 @@ export function BookingFunnel({
     return () => {
       cancelled = true
     }
-  }, [eventSlug, fromKey, linkToken, selectedMode, timeZone, username])
+  }, [
+    eventSlug,
+    fromKey,
+    linkToken,
+    selectedMode,
+    slotsAttempt,
+    timeZone,
+    username,
+  ])
 
   const confirmPaidHold = useCallback(
     async (hold: Reservation, paid: Payment) => {
@@ -891,6 +902,7 @@ export function BookingFunnel({
         }
         media={expertMedia}
         footerOnPhones={onPay}
+        compactOnPhones={step === "when"}
         footer={
           onPay ? (
             <>
@@ -1005,7 +1017,7 @@ export function BookingFunnel({
         ) : null}
 
         {step === "when" ? (
-          <div className="mt-8 space-y-6">
+          <div className="mt-6 space-y-4 sm:mt-8 sm:space-y-6">
             <StepHeader
               title={t("when.heading")}
               testId="booking-when-heading"
@@ -1044,21 +1056,28 @@ export function BookingFunnel({
                 {t("errors.slotTaken")}
               </p>
             ) : null}
-            {slotsError ? (
-              <p
-                role="alert"
-                data-testid="booking-slots-error"
-                className="text-sm text-destructive"
-              >
-                {t("when.loadError")}
-              </p>
-            ) : null}
             <SlotPicker
               slots={slots}
               timeZone={timeZone}
               locale={dateLocale}
               fromKey={fromKey}
+              windowEndKey={addDaysToKey(fromKey, WINDOW_DAYS - 1)}
               isLoading={slotsLoading}
+              isError={slotsError}
+              onRetry={() => setSlotsAttempt((attempt) => attempt + 1)}
+              errorHelp={t.rich("when.loadErrorHelp", {
+                help: (chunks) => (
+                  <a
+                    href={gatewayMarketingPath(locale, "/docs/members")}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-primary underline underline-offset-4"
+                  >
+                    {chunks}
+                    <span className="sr-only"> ({t("chrome.newTab")})</span>
+                  </a>
+                ),
+              })}
               selectedStart={slot?.start ?? null}
               onSelect={(next) => {
                 setSlotGone(false)
@@ -1092,12 +1111,23 @@ export function BookingFunnel({
                 <Button
                   data-testid="booking-continue-when"
                   size="lg"
-                  className="min-h-11 rounded-full"
+                  // Disabled reads as an instruction, so it stays legible.
+                  className="h-auto min-h-12 rounded-full px-6 py-2.5 text-base font-semibold whitespace-normal disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100 data-disabled:bg-muted data-disabled:text-muted-foreground data-disabled:opacity-100"
+                  isDisabled={!when}
                   onPress={() => setStep("details")}
                 >
-                  {t("when.continueWith", { when })}
+                  {when
+                    ? t("when.continueWith", { when })
+                    : t("when.pickToContinue")}
                 </Button>
               )}
+              backAction={
+                previousFunnelStep(step, backInput) ? (
+                  <Button variant="ghost" size="lg" onPress={goBack}>
+                    {t("back")}
+                  </Button>
+                ) : undefined
+              }
               labels={{
                 strip: t("when.strip"),
                 earlierDays: t("when.earlierDays"),
@@ -1106,8 +1136,13 @@ export function BookingFunnel({
                 next: t("when.next"),
                 today: t("when.today"),
                 tomorrow: t("when.tomorrow"),
-                more: (count) => t("when.more", { count }),
-                less: t("when.less"),
+                morning: t("when.morning"),
+                afternoon: t("when.afternoon"),
+                evening: t("when.evening"),
+                noTimes: (day) => t("when.noTimes", { day }),
+                loadError: t("when.loadError"),
+                retry: t("when.retry"),
+                skippedTo: (from, to) => t("when.skippedTo", { from, to }),
                 laterDates: t("when.laterDates"),
                 chooseDate: t("when.chooseDate"),
                 calendar: t("when.calendar"),
@@ -1117,11 +1152,6 @@ export function BookingFunnel({
                 selected: (when) => t("when.selected", { when }),
               }}
             />
-            {previousFunnelStep(step, backInput) ? (
-              <Button variant="ghost" onPress={goBack}>
-                {t("back")}
-              </Button>
-            ) : null}
           </div>
         ) : null}
 

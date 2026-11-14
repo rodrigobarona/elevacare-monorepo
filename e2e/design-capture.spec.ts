@@ -84,6 +84,8 @@ function dir(surface: string): string {
 
 async function settle(page: Page): Promise<void> {
   await page.waitForLoadState("domcontentloaded")
+  // No hover state from the last click in the shot.
+  await page.mouse.move(0, 0).catch(() => {})
   await page.waitForLoadState("networkidle", { timeout: 8_000 }).catch(() => {})
   // The Next dev overlay covers buttons at phone width.
   await page
@@ -131,7 +133,7 @@ async function shoot(
     await page
       .addStyleTag({
         content:
-          'html[data-capture-full-page] [data-testid="booking-pay-bar"]{position:static!important}',
+          'html[data-capture-full-page] :is([data-testid="booking-pay-bar"],[data-testid="booking-when-bar"]){position:static!important}',
       })
       .catch(() => {})
     await page.waitForTimeout(200)
@@ -336,6 +338,23 @@ test.describe("design capture", () => {
       const picker = page.locator("[data-slot='slot-picker']")
       await picker.waitFor({ timeout: 30_000 })
       await shoot(page, surface, "03-paid-step-when", kind)
+      // What fits on the first screen, with the phone's fixed bar in place.
+      await shoot(page, surface, "03a-paid-when-first-screen", kind, {
+        fullPage: false,
+      })
+      // Later weeks offer the earliest time as a one-tap way back.
+      await picker.getByTestId("booking-slot-next").click()
+      await page
+        .getByTestId("booking-next-available")
+        .waitFor({ timeout: 30_000 })
+      await expect(page.getByTestId("booking-slots-skeleton")).toHaveCount(0, {
+        timeout: 30_000,
+      })
+      await shoot(page, surface, "03b-later-dates-next-available", kind, {
+        fullPage: false,
+      })
+      await page.getByTestId("booking-next-available").click()
+      await picker.getByTestId("booking-slot-day").first().waitFor()
       await picker.getByTestId("booking-slot-day").last().click()
       await picker.getByTestId("booking-slot-time").first().click()
       await shoot(page, surface, "04-paid-slot-picked", kind)
@@ -569,6 +588,19 @@ test.describe("design capture", () => {
         .getByTestId("booking-continue-meet")
         .waitFor({ timeout: 60_000 })
       await shoot(page, surface, "00-meet-step", kind)
+
+      // Times fail to load: say so and offer to try again, never "no times".
+      const failSlots = /\/event-types\/[^/]+\/slots\?/
+      await page.route(failSlots, (route) =>
+        route.fulfill({ status: 503, body: "{}" })
+      )
+      await page.goto(`${webUrl}/${PAID_EXPERT}/${PAID_OFFER}`)
+      await clearBanner(page)
+      await page.getByTestId("booking-slots-error").waitFor({ timeout: 60_000 })
+      await shoot(page, surface, "13-times-load-error", kind, {
+        fullPage: false,
+      })
+      await page.unroute(failSlots)
 
       // Slot taken: another guest holds the chosen time first.
       await page.goto(`${webUrl}/${PAID_EXPERT}/${PAID_OFFER}`)
