@@ -573,9 +573,19 @@ test.describe("design capture", () => {
       await page.getByTestId("booking-continue-details").click()
       await fillStripeTestCard(page, { number: DECLINED_TEST_CARD })
       await page.getByTestId("booking-pay-submit").click()
-      await expect(page.getByText(/declined/i).first()).toBeVisible({
-        timeout: 30_000,
-      })
+      // Stripe reports the decline inside its own frame, then the page does.
+      await expect
+        .poll(
+          async () => {
+            for (const frame of page.frames()) {
+              const declined = frame.getByText(/declined/i).first()
+              if (await declined.isVisible().catch(() => false)) return true
+            }
+            return false
+          },
+          { timeout: 45_000 }
+        )
+        .toBe(true)
       await shoot(page, surface, "12-payment-declined", kind)
 
       // Hold ended: jump the page clock past the hold.
