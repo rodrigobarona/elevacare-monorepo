@@ -648,7 +648,8 @@
     "stepOf": "Step {current} of {total}",
     "chrome": {
       "secure": "Secure booking",
-      "help": "Help"
+      "help": "Help",
+      "newTab": "opens in a new tab"
     }
   },
   "footer": {

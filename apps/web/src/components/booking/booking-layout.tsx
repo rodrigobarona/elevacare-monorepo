@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import { getLocale } from "next-intl/server"
 import { CheckoutSiteFooter } from "@eleva/site-chrome/checkout-site-footer"
+import { BookingChromeProvider } from "./booking-chrome-context"
 import { CheckoutHeader } from "./checkout-header"
 
 /**
@@ -11,12 +12,14 @@ import { CheckoutHeader } from "./checkout-header"
 export async function BookingLayout({ children }: { children: ReactNode }) {
   const locale = await getLocale()
   return (
-    <div className="flex min-h-dvh flex-col bg-background">
-      <CheckoutHeader />
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
-        {children}
-      </main>
-      <CheckoutSiteFooter locale={locale} />
-    </div>
+    <BookingChromeProvider>
+      <div className="flex min-h-dvh flex-col bg-background">
+        <CheckoutHeader />
+        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
+          {children}
+        </main>
+        <CheckoutSiteFooter locale={locale} />
+      </div>
+    </BookingChromeProvider>
   )
 }

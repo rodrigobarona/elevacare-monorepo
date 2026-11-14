@@ -648,7 +648,8 @@
     "stepOf": "Passo {current} de {total}",
     "chrome": {
       "secure": "Reserva segura",
-      "help": "Ajuda"
+      "help": "Ajuda",
+      "newTab": "abre num novo separador"
     }
   },
   "footer": {
