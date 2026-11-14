@@ -16,6 +16,7 @@ export {
   BookOpenIcon,
   BuildingsIcon,
   CalendarCheckIcon,
+  CalendarPlusIcon,
   CalendarDotsIcon,
   CalendarIcon,
   CameraIcon,

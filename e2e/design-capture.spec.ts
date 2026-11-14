@@ -620,8 +620,11 @@ test.describe("design capture", () => {
       expect(startsAt, "slot time has a data-start").toBeTruthy()
       await holdSlotAsAnotherGuest(request, startsAt!)
       await page.getByTestId("booking-continue-details").click()
-      // The details step reports it in place ("That time was just taken").
-      await expect(page.getByText(/just taken/i)).toBeVisible({
+      // Back on the time step, naming the time that went.
+      await expect(page.getByTestId("booking-slot-gone")).toBeVisible({
+        timeout: 30_000,
+      })
+      await expect(page.getByTestId("booking-slots-skeleton")).toHaveCount(0, {
         timeout: 30_000,
       })
       await shoot(page, surface, "10-slot-taken", kind)
@@ -668,9 +671,9 @@ test.describe("design capture", () => {
       // Hold ended: jump the page clock past the hold.
       await page.clock.install()
       await page.clock.fastForward("20:00")
-      await expect(
-        page.getByRole("button", { name: /pick a new time/i })
-      ).toBeVisible({ timeout: 15_000 })
+      await expect(page.getByTestId("booking-hold-ended")).toBeVisible({
+        timeout: 15_000,
+      })
       await shoot(page, surface, "11-hold-ended", kind)
       await context.close()
     })

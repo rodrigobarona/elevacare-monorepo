@@ -61,6 +61,8 @@ export type BookingCheckoutLabels = {
   pay: (total: string) => string
   processing: string
   failed: string
+  /** Under a failed payment: nothing charged, the hold kept, what to try. */
+  failedHelp?: string
 }
 
 /**
@@ -372,9 +374,16 @@ function CheckoutForm({
       )}
 
       {error ? (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
+        <div
+          role="alert"
+          data-testid="booking-pay-error"
+          className="space-y-1 rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm"
+        >
+          <p className="font-medium text-destructive">{error}</p>
+          {labels.failedHelp ? (
+            <p className="text-foreground">{labels.failedHelp}</p>
+          ) : null}
+        </div>
       ) : null}
 
       {/* Below desktop the total and Pay stay in reach at the bottom: one

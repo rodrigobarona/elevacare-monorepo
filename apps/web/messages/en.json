@@ -538,7 +538,8 @@
       "pickToContinue": "Pick a time to continue",
       "retry": "Try again",
       "skippedTo": "The first open day from {from} is {to}.",
-      "loadErrorHelp": "Still not working? <help>Our help centre</help> can point you on. Nothing has been booked yet."
+      "loadErrorHelp": "Still not working? <help>Our help centre</help> can point you on. Nothing has been booked yet.",
+      "slotTakenNamed": "{when} was just booked by someone else. Your details are saved, so pick another time and carry on."
     },
     "details": {
       "heading": "A few details",
@@ -582,10 +583,9 @@
     },
     "pay": {
       "heading": "Confirm and pay",
-      "sub": "Your time is held for a few minutes. Card, Apple Pay, Google Pay, Link, and MB WAY may appear.",
-      "hold": "Hold expires in {time}",
-      "expired": "This hold has ended. Pick a new time to continue.",
-      "restart": "Pick a new time",
+      "sub": "Your time is held for a few minutes while you pay.",
+      "expired": "We hold a time for a few minutes while you pay, and this one ran out. Nothing was charged and your details are saved.",
+      "restart": "See open times",
       "requestHint": "{name} accepts or declines within 24 hours, or before the session if that is sooner. You’ll get an email either way.",
       "pay": "Pay {price}",
       "processing": "Confirming payment…",
@@ -611,30 +611,45 @@
       "secureLine": "Your card is processed securely by Stripe. Eleva never sees your full card number.",
       "emailLine": "Your confirmation arrives by email right after you pay.",
       "subRequest": "You’re asking {name} for {when}. You pay now; if {name} declines, you get 100% back.",
-      "extended": "Done. We’re holding this time for 5 more minutes."
+      "extended": "Done. We’re holding this time for 5 more minutes.",
+      "expiredTitle": "Your held time was released",
+      "failedHelp": "Nothing was charged and your time is still held. Check the details, try another card, or choose another way to pay."
     },
     "done": {
-      "heading": "Your reservation is confirmed",
-      "sub": "We've saved your session. A confirmation email is on its way.",
-      "requestHeading": "Request sent",
-      "requestSub": "The expert has 24 hours, or until the session if sooner, to accept. You will not get a join link until they accept. A decline or timeout refunds 100%.",
-      "requestNoJoin": "Join details arrive only after the expert accepts.",
       "pending": "Payment received",
-      "pendingSub": "We're confirming your session. You'll get an email as soon as it's ready. Eleva.care is a digital health platform — the expert remains responsible for your care.",
-      "video": "Your video link arrives before the session.",
+      "pendingSub": "We’re confirming your session and will email you as soon as it’s ready. Nothing more to do for now.",
       "videoLocation": "Video session — link arrives before the session",
-      "phone": "The expert will call {phone}.",
       "phoneLocation": "The expert will call {phone}",
-      "inPerson": "Meet at {location}.",
       "ics": "Add to calendar",
       "retry": "Try confirming again",
-      "activate": "Create your Eleva account",
-      "activateHint": "Save this session to your Space and manage it later.",
       "nextHeading": "What happens next",
-      "next": {
-        "email": "Check your inbox: the confirmation email includes your calendar invite and session details.",
-        "joinOnline": "Join the video call from the link in your email, from 15 minutes before the start. No account needed.",
-        "policy": "Changes and refunds follow the {policy} cancellation policy."
+      "heading": "You’re booked with {name}",
+      "requestHeading": "Request sent to {name}",
+      "sentTo": "We sent your confirmation to {email}.",
+      "requestSentTo": "We’ll email {email} as soon as {name} replies.",
+      "icsApple": "Apple Calendar or other (.ics)",
+      "accessOnline": "Your join link is in your confirmation email. It opens 15 minutes before the start, with no account needed.",
+      "accessPhone": "{name} will call you on {phone}.",
+      "accessInPerson": "Meet {name} at {location}.",
+      "steps": {
+        "now": "Now",
+        "inbox": "Your confirmation and calendar invite are in your inbox. Not there in a few minutes? Check your spam folder.",
+        "reminder": "We send you a reminder, 24 hours before.",
+        "joinOpens": "Your join link opens. No account needed.",
+        "within24h": "Within 24 hours",
+        "requestSent": "Your request is with {name}. Nothing else to do for now.",
+        "requestReply": "{name} replies within 24 hours, or before the session if that’s sooner. We email you either way, and if it’s a no, anything you paid comes back in full."
+      },
+      "changeHeading": "Need to change something?",
+      "changeHow": "To move or cancel it, create your Space below with this email.",
+      "space": {
+        "heading": "Keep everything in one place",
+        "manage": "See, move or cancel your sessions",
+        "rebook": "Book again in a few taps",
+        "reminders": "Choose how we remind you",
+        "prefilled": "Your name and email are already filled in.",
+        "cta": "Create your Space",
+        "later": "Not now? Your confirmation email has everything you need."
       }
     },
     "link": {
@@ -655,7 +670,7 @@
       "generic": "We could not hold that time. Please try again.",
       "rateLimited": "Too many requests just now. Wait a minute and try again.",
       "policyChanged": "The expert just updated the cancellation policy. Reload the page to review it before booking.",
-      "paymentFailed": "Your payment was declined or cancelled, so nothing was charged. Pick a time again to retry."
+      "paymentFailed": "Your payment didn’t go through, so nothing was charged. Try again below, or choose another way to pay."
     },
     "policy": {
       "heading": "Cancellation policy",

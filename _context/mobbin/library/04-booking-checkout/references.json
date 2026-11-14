@@ -117,7 +117,9 @@
       ],
       "detail": "'Hold expires in 04:42' lives in a pale blue pill inside the side card. On a phone that card is at the top of the page, so the countdown is off screen while the member fills in her card. The wording is about the system's hold, not about her time, and the blue pill is a colour used nowhere else in the funnel. The expired state in the source is a bare sentence and a button.",
       "recommendation": "Say it as a promise and keep it in view: 'We are holding your time for 04:42' directly above the payment methods on desktop and inside the fixed pay bar on phones. Keep it calm (teal on cream) until the last minute, then switch to the existing 'Need more time?' offer. When the hold ends, show a card that names the time that was released, says her details are saved, and offers 'See open times'.",
-      "references": ["04-booking-checkout/01"]
+      "references": [
+        "04-booking-checkout/01"
+      ]
     },
     {
       "id": "BOOK-07",
@@ -148,7 +150,10 @@
       ],
       "detail": "A video session shows a 'Phone number' field with the hint 'Needed for a phone session', not marked optional, so a member booking video wonders if she must fill it. A tax number field ('NIF / VAT') sits in a card called 'Optional details' on every booking, including the free one, where there is no invoice. The note field's helper uses the internal word 'pre-agenda'. Together with the consents this makes a three-card form that runs to more than four phone screens for what is really a name and an email. No reference was found for a tax number field in a health booking; the Fresha and Turo references show the general pattern of optional extras kept behind an 'Add' link in the summary.",
       "recommendation": "Show the phone field only when the session is by phone (or label it 'Phone (optional), for reminders'). Remove the tax number from free bookings. On paid bookings move it to the pay step as a link in the order summary, 'Add your NIF to the invoice', collected through Stripe. Rename the helper to 'Your expert reads this before your session.' With those gone the step is one card: name, email, an optional note, then the agreement.",
-      "references": ["04-booking-checkout/05", "04-booking-checkout/03"]
+      "references": [
+        "04-booking-checkout/05",
+        "04-booking-checkout/03"
+      ]
     },
     {
       "id": "BOOK-09",
@@ -162,7 +167,10 @@
       ],
       "detail": "The details fields are beige-filled pills with a dark hairline, sitting on a white card on a cream page. Filled in beige, they read as inactive. The next step shows Stripe's fields: white, squared, a different font size and label style. Two input systems in two consecutive steps is a visible seam at the point of payment. The primary button on the details step is small and left-aligned beside a text 'Back', and its disabled state is a pale teal that still looks half-clickable.",
       "recommendation": "Use white fields with a clear border and the teal focus ring on the details step, and set the Stripe Payment Element appearance to the same radius, border, label style and DM Sans so both steps look like one form. Make the primary button full width on phones and large on desktop, with Back as a quiet link above the step title or to its left.",
-      "references": ["04-booking-checkout/01", "04-booking-checkout/03"]
+      "references": [
+        "04-booking-checkout/01",
+        "04-booking-checkout/03"
+      ]
     },
     {
       "id": "BOOK-10",
@@ -194,7 +202,10 @@
       ],
       "detail": "Before a time is picked the step has no button at all, so the page gives no sign of what comes next. After a pick, the desktop capture shows 'Continue with Mon, 16 Nov, 10:00' about 640px below the grid, under a blank area. The source places it directly under the grid, so this gap needs checking in a browser, but with a day expanded to fifteen times the button will be below the fold either way. In the phone capture the fixed bar sits over the fourth row of times and the '+7 more' links.",
       "recommendation": "Reserve the button's place from the start, next to Back, with the label 'Pick a time to continue' until a time is chosen. On desktop keep it inside the first screen: under the grid at a fixed position, or in the summary card. On phones keep the fixed bar and add bottom padding to the picker equal to the bar's height so nothing sits under it.",
-      "references": ["04-booking-checkout/07", "04-booking-checkout/08"]
+      "references": [
+        "04-booking-checkout/07",
+        "04-booking-checkout/08"
+      ]
     },
     {
       "id": "BOOK-12",
@@ -244,7 +255,10 @@
       ],
       "detail": "'Create your Eleva account' is the filled button, placed beside 'Add to calendar' inside the next-steps card, with one hint: 'Save this session to your Space and manage it later.' The button says account, the hint says Space, and neither says what she gains or that her details are already filled in. As the strongest button on the page it also competes with the thing she needs first, the calendar entry.",
       "recommendation": "Give the invitation its own band below the confirmation. Title: 'Keep everything in one place'. Two or three benefits in plain words: see and change your sessions, find your expert's notes, book faster next time. Then 'Your name and email are already filled in.' and one button, 'Create your Space', with a quiet line: 'Not now? The email has everything you need.' Use Space throughout, never account.",
-      "references": ["04-booking-checkout/12", "04-booking-checkout/09b"]
+      "references": [
+        "04-booking-checkout/12",
+        "04-booking-checkout/09b"
+      ]
     },
     {
       "id": "BOOK-15",
@@ -271,7 +285,9 @@
       ],
       "detail": "These states were not captured; this is read from the funnel source and its strings. A taken slot shows a red strip above the picker ('That time was just taken. Please pick another.'). An ended hold replaces the payment form with one sentence and a button. A declined payment says 'Pick a time again to retry', which sends the member back two steps. Each of these is the moment a member is most likely to give up, and each is handled as an error message, not as a next step.",
       "recommendation": "Design them as states of the step. Slot taken: stay on the time step, name the time that went, and highlight the nearest open times on the same day. Hold ended: a card that says her details are saved and offers 'See open times'. Payment declined: stay on the pay step with the hold intact where possible, say nothing was charged, and offer another method. Capture all three for the next audit.",
-      "references": ["04-booking-checkout/08"]
+      "references": [
+        "04-booking-checkout/08"
+      ]
     },
     {
       "id": "BOOK-17",
@@ -286,7 +302,10 @@
       ],
       "detail": "Booking, session and reservation are used for the same thing. 'Policy and consent' and 'To book a health session on this digital health platform, please confirm:' sound like a form from an institution. 'Optional details', 'pre-agenda', 'Hold expires' and 'may appear' are internal words. The step label is small monospace capitals ('STEP 1 OF 3 · WHEN'), which reads as technical beside Lora headings.",
       "recommendation": "Use 'session' for the thing and 'booking' only for the act. Rename the card 'Before you continue'. Replace the intro with 'Two quick things before we hold your time.' Set the step label in DM Sans sentence case: 'Step 1 of 3: Pick a time'. Apply the same edits in PT and ES.",
-      "references": ["04-booking-checkout/04", "04-booking-checkout/10"]
+      "references": [
+        "04-booking-checkout/04",
+        "04-booking-checkout/10"
+      ]
     },
     {
       "id": "BOOK-18",
@@ -519,6 +538,42 @@
       "why": "A US clinic booking (kept for its structure). 'When: Apr 30' is a chip that opens a calendar. 'Select a visit time' has a 'Morning' heading with a sun icon above three time cards that also say how you meet ('In-person'). The main button repeats the choice: 'Book 9:10 AM'.",
       "apply": "Part-of-day headings can carry a small icon; the continue button names the chosen time.",
       "query": "appointment booking time picker with times grouped into morning, afternoon and evening"
+    },
+    {
+      "id": "04-booking-checkout/17",
+      "file": "img/17-zendesk-declined-next-steps.jpg",
+      "app": "Zendesk",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/0ec4121f-8012-4330-bf07-3adc44c32454?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A declined card shown inside the payment section, with what to do next",
+      "why": "The card form stays open with what was typed. Above the card fields a boxed message says 'Please address the following errors and try again. Your credit card was declined. Double-check your credit card information and try again or contact your credit card issuer.' The summary, terms and the Complete purchase button stay where they were.",
+      "apply": "Keep the member on the pay step with her hold; say what happened and the two ways forward (check the card, or another method), next to the form, not as a stray line.",
+      "query": "checkout with a payment declined message"
+    },
+    {
+      "id": "04-booking-checkout/18",
+      "file": "img/18-pitch-declined-try-another-method.jpg",
+      "app": "Pitch",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/c3db6d97-b791-486b-b18e-483b37f65d14?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "One sentence for a declined card that names the next step",
+      "why": "A dismissible banner at the top of checkout: 'Your card was declined. Check with your bank or try another payment method.' The order summary with the amount due today stays beside it.",
+      "apply": "One sentence that says what happened and what to do: check with the bank or pick another method (for Eleva, MB WAY).",
+      "query": "checkout with a payment declined message"
+    },
+    {
+      "id": "04-booking-checkout/19",
+      "file": "img/19-tripadvisor-stepped-away-refresh.jpg",
+      "app": "Tripadvisor",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/a79132c6-97e4-4f84-8a1e-407da26c850f?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "An ended hold explained without blame, with one action",
+      "why": "A small dialog over the checkout: 'Refresh your checkout page. You stepped away for a bit, so you'll just need to refresh this page to confirm the price and availability of your bookings.' One button, Refresh. Behind it the summary keeps the dated free-cancellation line and a 'Book with confidence' panel.",
+      "apply": "Name an ended hold in friendly words (no blame, nothing charged), keep what she entered, and offer one action back to open times.",
+      "query": "booking checkout where the reservation hold timer has expired"
     }
   ],
   "judging_criteria": [

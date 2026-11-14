@@ -13,7 +13,7 @@ export function FunnelStepper({
 }) {
   return (
     <div>
-      <p className="eyebrow text-primary">{label}</p>
+      <p className="text-sm font-medium text-primary">{label}</p>
       <ol className="mt-3 flex gap-1.5" aria-hidden>
         {Array.from({ length: total }, (_, index) => (
           <li

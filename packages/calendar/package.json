@@ -9,7 +9,8 @@
     ".": "./src/index.ts",
     "./ics": "./src/ics-generator.ts",
     "./ics-feed": "./src/ics-feed.ts",
-    "./ics-download": "./src/ics-download.ts"
+    "./ics-download": "./src/ics-download.ts",
+    "./calendar-links": "./src/calendar-links.ts"
   },
   "scripts": {
     "lint": "eslint .",
