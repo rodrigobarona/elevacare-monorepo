@@ -1,5 +1,6 @@
 import { assertNotProductionDatabase } from "@eleva/config/env"
 import { seedDemo } from "./demo"
+import { seedExpertCategories } from "./expert-categories"
 import { seedDemoMemberSessions } from "./demo-member-sessions"
 import { seedOfferFixtures } from "./offer-fixtures"
 
@@ -10,6 +11,8 @@ import { seedOfferFixtures } from "./offer-fixtures"
  */
 async function main() {
   assertNotProductionDatabase(process.env.DATABASE_URL ?? "", "The demo seed")
+  // Fixtures list experts under categories, so the taxonomy comes first.
+  await seedExpertCategories()
   const results = await seedDemo()
   console.log("[seed:demo] upserted personas:")
   for (const r of results) {

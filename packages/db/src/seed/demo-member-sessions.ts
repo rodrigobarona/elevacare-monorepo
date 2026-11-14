@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm"
 import { CANCELLATION_POLICY_VERSION } from "@eleva/config/cancellation-policy"
-import { withPlatformAdminContext, type Tx } from "../context"
+import { withOrgContext, withPlatformAdminContext, type Tx } from "../context"
 import * as auth from "../schema/auth"
 import * as main from "../schema/main"
 
@@ -148,8 +148,10 @@ async function loadOffer(
 }
 
 export async function seedDemoMemberSessions(): Promise<void> {
-  await withPlatformAdminContext(async (tx) => {
-    const [member] = await tx
+  // Platform admin only to find the member across tenants; each session is
+  // then written in its expert's organization context, like a real booking.
+  const member = await withPlatformAdminContext(async (tx) => {
+    const [row] = await tx
       .select({ userId: auth.user.id, orgId: auth.member.organizationId })
       .from(auth.user)
       .innerJoin(auth.member, eq(auth.member.userId, auth.user.id))
@@ -164,15 +166,15 @@ export async function seedDemoMemberSessions(): Promise<void> {
         )
       )
       .limit(1)
-    if (!member) throw new Error("demo member Space is missing")
+    return row
+  })
+  if (!member) throw new Error("demo member Space is missing")
 
-    for (const session of SESSIONS) {
-      const offer = await loadOffer(
-        tx,
-        session.username,
-        session.eventSlug,
-        session.mode
-      )
+  for (const session of SESSIONS) {
+    const offer = await withPlatformAdminContext((tx) =>
+      loadOffer(tx, session.username, session.eventSlug, session.mode)
+    )
+    await withOrgContext(offer.orgId, async (tx) => {
       const startsAt = sessionStart(session.dayOffset, session.hour)
       const endsAt = new Date(
         startsAt.getTime() + offer.durationMinutes * 60_000
@@ -250,6 +252,6 @@ export async function seedDemoMemberSessions(): Promise<void> {
           target: main.bookingPayments.id,
           set: payment,
         })
-    }
-  })
+    })
+  }
 }

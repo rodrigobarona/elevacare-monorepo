@@ -201,7 +201,13 @@ async function ensureListings(
         categoryId,
         sortOrder,
       })
-      .onConflictDoNothing()
+      .onConflictDoUpdate({
+        target: [
+          main.expertListings.expertProfileId,
+          main.expertListings.categoryId,
+        ],
+        set: { sortOrder },
+      })
   }
 }
 
