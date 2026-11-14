@@ -25,6 +25,10 @@ export function BookingSummary({
   specialPriceLabel,
   holdLabel,
   footer,
+  footerOnPhones = false,
+  whenAction,
+  whenNote,
+  priceRows,
   className,
 }: {
   expertName: string
@@ -48,6 +52,17 @@ export function BookingSummary({
   specialPriceLabel?: string
   holdLabel?: string
   footer?: ReactNode
+  /** Show the footer on phones too (the pay step's dated refund line). */
+  footerOnPhones?: boolean
+  /** A quiet action beside the time, e.g. "Change". */
+  whenAction?: ReactNode
+  /** A muted line under the time, e.g. "Lisbon time". */
+  whenNote?: string
+  /**
+   * The money, line by line (price, discount, total today). Replaces the
+   * single price row when the amounts are known, on the pay step.
+   */
+  priceRows?: Array<{ label: string; value: string; isTotal?: boolean }>
   className?: string
 }) {
   return (
@@ -81,16 +96,19 @@ export function BookingSummary({
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
           {meta}
-          {/* Phones: the price joins this line instead of its own row. */}
-          <span className="font-medium text-foreground lg:hidden">
-            {meta ? " · " : null}
-            <PriceTag
-              cents={priceCents}
-              locale={locale}
-              special={specialPrice}
-              specialLabel={specialPriceLabel}
-            />
-          </span>
+          {/* Phones: the price joins this line instead of its own row,
+              unless a total row below already shows it. */}
+          {priceRows?.some((row) => row.isTotal) ? null : (
+            <span className="font-medium text-foreground lg:hidden">
+              {meta ? " · " : null}
+              <PriceTag
+                cents={priceCents}
+                locale={locale}
+                special={specialPrice}
+                specialLabel={specialPriceLabel}
+              />
+            </span>
+          )}
         </p>
       </div>
       <dl
@@ -101,20 +119,58 @@ export function BookingSummary({
       >
         <div className="flex justify-between gap-3 pt-3 lg:pb-3">
           <dt className="text-muted-foreground">{whenLabel}</dt>
-          <dd className="text-right font-medium">{when}</dd>
-        </div>
-        {/* Phones show the price in the line above. */}
-        <div className="hidden items-baseline justify-between gap-3 pt-3 lg:flex">
-          <dt className="text-muted-foreground">{priceLabel}</dt>
-          <dd className="text-right text-base font-semibold">
-            <PriceTag
-              cents={priceCents}
-              locale={locale}
-              special={specialPrice}
-              specialLabel={specialPriceLabel}
-            />
+          <dd className="text-right">
+            <span className="font-medium">{when}</span>
+            {whenNote ? (
+              <span className="block text-sm text-muted-foreground">
+                {whenNote}
+              </span>
+            ) : null}
+            {whenAction ? (
+              <span className="block text-sm">{whenAction}</span>
+            ) : null}
           </dd>
         </div>
+        {priceRows && priceRows.length > 0 ? (
+          priceRows.map((row) => (
+            <div
+              key={row.label}
+              className={cn(
+                "flex items-baseline justify-between gap-3 py-3 last:pb-0",
+                !row.isTotal && "hidden lg:flex"
+              )}
+            >
+              <dt
+                className={
+                  row.isTotal ? "font-medium" : "text-muted-foreground"
+                }
+              >
+                {row.label}
+              </dt>
+              <dd
+                className={cn(
+                  "text-right",
+                  row.isTotal ? "text-base font-semibold" : "font-medium"
+                )}
+              >
+                {row.value}
+              </dd>
+            </div>
+          ))
+        ) : (
+          /* Phones show the price in the line above. */
+          <div className="hidden items-baseline justify-between gap-3 pt-3 lg:flex">
+            <dt className="text-muted-foreground">{priceLabel}</dt>
+            <dd className="text-right text-base font-semibold">
+              <PriceTag
+                cents={priceCents}
+                locale={locale}
+                special={specialPrice}
+                specialLabel={specialPriceLabel}
+              />
+            </dd>
+          </div>
+        )}
       </dl>
       {holdLabel ? (
         <p className="mt-5 rounded-2xl bg-primary/8 px-4 py-2.5 text-sm font-medium text-primary">
@@ -122,7 +178,12 @@ export function BookingSummary({
         </p>
       ) : null}
       {footer ? (
-        <div className="mt-5 hidden border-t border-border pt-4 text-sm text-muted-foreground lg:block">
+        <div
+          className={cn(
+            "mt-4 space-y-1.5 border-t border-border pt-3 text-sm text-muted-foreground lg:mt-5 lg:pt-4",
+            footerOnPhones ? "block" : "hidden lg:block"
+          )}
+        >
           {footer}
         </div>
       ) : null}

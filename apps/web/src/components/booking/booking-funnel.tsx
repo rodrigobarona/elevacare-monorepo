@@ -22,7 +22,16 @@ import {
   type CancellationPolicy,
 } from "@eleva/config/cancellation-policy"
 import { intlLocale, type Locale } from "@eleva/config/i18n"
-import { BookingCheckoutPayment } from "@eleva/billing/client"
+import {
+  CalendarCheckIcon,
+  ClockIcon,
+  EnvelopeIcon,
+  ShieldCheckIcon,
+} from "@eleva/icons"
+import {
+  BookingCheckoutPayment,
+  type BookingCheckoutTotals,
+} from "@eleva/billing/client"
 import { Button } from "@eleva/ui/components/button"
 import { Field, FieldError, FieldLabel } from "@eleva/ui/components/field"
 import { Input } from "@eleva/ui/components/input"
@@ -53,7 +62,11 @@ import { toE164 } from "@eleva/ui/lib/booking/e164"
 import { guestSignupPath } from "@eleva/config/guest-signup"
 import { maskPhone } from "@eleva/config/phone"
 import { slotRequiresApproval } from "@eleva/config/booking-settings"
-import { addDaysToKey, dateKeyInZone } from "@eleva/ui/lib/booking/slot-groups"
+import {
+  addDaysToKey,
+  dateKeyInZone,
+  zoneCity,
+} from "@eleva/ui/lib/booking/slot-groups"
 import { createPublicApiClient } from "@/lib/public-api"
 import { downloadBookingIcs } from "@eleva/calendar/ics-download"
 import {
@@ -219,6 +232,9 @@ export function BookingFunnel({
   const [aiOptIn, setAiOptIn] = useState(false)
   const aiProcessingHref = aiProcessingConsent?.href
   const [reservation, setReservation] = useState<Reservation | null>(null)
+  // Stripe's amounts on the pay step, shown in the order summary.
+  const [totals, setTotals] = useState<BookingCheckoutTotals | null>(null)
+  const [holdExtendedNotice, setHoldExtendedNotice] = useState(false)
   const [payment, setPayment] = useState<Payment | null>(null)
   const [appliedPromo, setAppliedPromo] = useState<string | null>(null)
   const [nowMs, setNowMs] = useState(() => Date.now())
@@ -507,20 +523,28 @@ export function BookingFunnel({
     disabledReason: result.ok ? undefined : result.error,
   }))
 
+  // One date format across the step: "Tue, 17 Nov, 10:00–11:00", with the
+  // zone on its own line ("Lisbon time").
   const whenLabel = slot
-    ? new Intl.DateTimeFormat(dateLocale, {
-        dateStyle: "full",
-        timeStyle: "short",
-        timeZone,
-      }).format(new Date(slot.start))
+    ? new Intl.DateTimeFormat(dateLocale, shortDateTime(timeZone)).formatRange(
+        new Date(slot.start),
+        new Date(slot.end)
+      )
     : t("summary.chooseTime")
+  const whenZone = slot
+    ? t("summary.zone", { city: zoneCity(timeZone, locale) })
+    : undefined
+  const heldWhen = slot
+    ? new Intl.DateTimeFormat(dateLocale, shortDateTime(timeZone)).format(
+        new Date(slot.start)
+      )
+    : ""
 
   const policyCopy = describeCancellationPolicy(cancellationPolicy, locale)
-  const deadlineFormat = new Intl.DateTimeFormat(dateLocale, {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone,
-  })
+  const deadlineFormat = new Intl.DateTimeFormat(
+    dateLocale,
+    shortDateTime(timeZone)
+  )
   const policyDeadlines = slot
     ? describeCancellationDeadlines(
         cancellationDeadlines({
@@ -529,7 +553,8 @@ export function BookingFunnel({
           startsAt: new Date(slot.start),
         }),
         locale,
-        (date) => deadlineFormat.format(date)
+        // Keep the date on one line ("Mon, 16 Nov, 16:00").
+        (date) => deadlineFormat.format(date).replace(/ /g, "\u00a0")
       )
     : undefined
 
@@ -664,6 +689,16 @@ export function BookingFunnel({
       setReservation({ ...reservation, expiresAt: next.expiresAt })
       setNowMs(Date.now())
       setHoldExtend("idle")
+      // The warning (and its button) goes away: say so, and put focus back
+      // on Pay so keyboard users are not dropped to the top of the page.
+      setHoldExtendedNotice(true)
+      requestAnimationFrame(() => {
+        document
+          .querySelector<HTMLButtonElement>(
+            '[data-testid="booking-pay-submit"]'
+          )
+          ?.focus()
+      })
     } catch (error) {
       setHoldExtend(
         error instanceof ApiClientError &&
@@ -784,6 +819,7 @@ export function BookingFunnel({
             : undefined
         }
         when={whenLabel}
+        whenNote={whenZone}
         whenPending={!slot}
         whenLabel={t("summary.when")}
         priceLabel={t("summary.price")}
@@ -791,17 +827,66 @@ export function BookingFunnel({
         locale={locale}
         specialPrice={specialPriceCents != null}
         specialPriceLabel={t("link.specialPrice")}
-        holdLabel={
-          onPay && reservation && !holdExpired
-            ? t("pay.hold", {
-                time: formatCountdown(
-                  Math.max(0, new Date(reservation.expiresAt).getTime() - nowMs)
-                ),
-              })
+        whenAction={
+          onDetails && slot ? (
+            <button
+              type="button"
+              onClick={goBack}
+              aria-label={t("summary.changeTime")}
+              className="inline-flex min-h-6 items-center rounded-sm text-primary underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none"
+            >
+              {t("summary.change")}
+            </button>
+          ) : undefined
+        }
+        priceRows={
+          onPay && totals
+            ? [
+                // Price and discount only matter when they differ from the total.
+                ...(totals.discount
+                  ? [
+                      { label: t("pay.subtotal"), value: totals.subtotal },
+                      {
+                        label: `${t("pay.discount")} · ${totals.discount.code}`,
+                        value: `−${totals.discount.amount}`,
+                      },
+                    ]
+                  : []),
+                {
+                  label: t("pay.totalToday"),
+                  value: totals.total,
+                  isTotal: true,
+                },
+              ]
             : undefined
         }
         media={expertMedia}
-        footer={policyCopy.lines[0]}
+        footerOnPhones={onPay}
+        footer={
+          onPay ? (
+            <>
+              {/* The dated deadline for this booking, and who provides it. */}
+              <p className="font-medium text-foreground">
+                {policyDeadlines?.[0] ?? policyCopy.lines[0]}
+              </p>
+              <details>
+                <summary className="inline-flex min-h-6 cursor-pointer items-center rounded-sm text-primary underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none">
+                  {t("summary.fullPolicy")}
+                </summary>
+                <ul className="mt-2 space-y-1">
+                  {[...policyCopy.lines, ...(policyDeadlines ?? [])].map(
+                    (line) => (
+                      <li key={line}>{line}</li>
+                    )
+                  )}
+                </ul>
+              </details>
+              <p>{t("summary.provider", { name: expertName })}</p>
+            </>
+          ) : (
+            policyCopy.lines[0]
+          )
+        }
       />
       <section className="min-w-0">
         {stepIndex >= 0 ? (
@@ -1183,40 +1268,17 @@ export function BookingFunnel({
           <div className="mt-8 space-y-6">
             <StepHeader
               title={t("pay.heading")}
-              sub={t("pay.sub")}
+              sub={
+                !heldWhen
+                  ? t("pay.sub")
+                  : isRequest
+                    ? t("pay.subRequest", { when: heldWhen, name: expertName })
+                    : t("pay.subHeld", { when: heldWhen })
+              }
               headingRef={stepHeadingRef}
-            >
-              {isRequest ? (
-                <p className="text-sm text-muted-foreground">
-                  {t("pay.requestHint")}
-                </p>
-              ) : null}
-            </StepHeader>
+            />
             {formError ? (
               <FieldError>{t(`errors.${formError}`)}</FieldError>
-            ) : null}
-            {holdEndingSoon ? (
-              <div
-                className="space-y-3 rounded-xl border border-warning bg-warning-subtle p-4"
-                data-testid="booking-hold-ending"
-              >
-                <p role="alert">
-                  {holdExtend === "limit"
-                    ? t("pay.extendLimit")
-                    : holdExtend === "failed"
-                      ? t("pay.extendFailed")
-                      : t("pay.holdEnding")}
-                </p>
-                {holdExtend !== "limit" ? (
-                  <Button
-                    variant="outline"
-                    onPress={extendHold}
-                    isDisabled={holdExtend === "pending"}
-                  >
-                    {t("pay.extend")}
-                  </Button>
-                ) : null}
-              </div>
             ) : null}
             {holdExpired ? (
               <div className="space-y-3">
@@ -1259,25 +1321,118 @@ export function BookingFunnel({
                   promoApply: t("pay.promoApply"),
                   promoRemove: t("pay.promoRemove"),
                   promoInvalid: t("pay.promoInvalid"),
+                  promoAdd: t("pay.promoAdd"),
                   subtotal: t("pay.subtotal"),
                   discount: t("pay.discount"),
-                  total: t("pay.total"),
+                  total: t("pay.totalToday"),
                   pay: (total) => t("pay.pay", { price: total }),
                   processing: t("pay.processing"),
                   failed: t("pay.failed"),
                 }}
                 onProcessingChange={setPaymentInFlight}
+                onTotalsChange={setTotals}
+                reassurance={
+                  <ul
+                    className="space-y-2 text-sm text-muted-foreground"
+                    data-testid="booking-pay-reassurance"
+                  >
+                    <li className="flex gap-2.5">
+                      <ShieldCheckIcon
+                        aria-hidden
+                        className="mt-0.5 size-4 shrink-0 text-primary"
+                      />
+                      {t("pay.secureLine")}
+                    </li>
+                    {policyDeadlines?.[0] ? (
+                      // Beside the summary card on desktop it would repeat.
+                      <li className="flex gap-2.5 lg:hidden">
+                        <CalendarCheckIcon
+                          aria-hidden
+                          className="mt-0.5 size-4 shrink-0 text-primary"
+                        />
+                        {policyDeadlines[0]}
+                      </li>
+                    ) : null}
+                    <li className="flex gap-2.5">
+                      <EnvelopeIcon
+                        aria-hidden
+                        className="mt-0.5 size-4 shrink-0 text-primary"
+                      />
+                      {isRequest
+                        ? t("pay.requestHint", { name: expertName })
+                        : t("pay.emailLine")}
+                    </li>
+                  </ul>
+                }
                 onSettled={() => {
                   // The API decides: confirmed, or 409 PAYMENT_PENDING while
                   // the payment settles (the webhook then confirms).
                   setStep("done")
                   void confirmPaidHold(reservation, payment)
                 }}
-              />
+              >
+                {/* The hold as a calm promise right where she pays; in its last
+                    minute, the warning and "keep this time" take its place. */}
+                {holdEndingSoon ? (
+                  <div
+                    className="flex flex-col gap-2 rounded-xl border border-warning bg-warning-subtle px-3 py-2.5 text-sm sm:flex-row sm:items-center sm:gap-3"
+                    data-testid="booking-hold-ending"
+                  >
+                    <p role="alert" className="sm:min-w-0 sm:flex-1">
+                      {holdExtend === "limit"
+                        ? t("pay.extendLimit")
+                        : holdExtend === "failed"
+                          ? t("pay.extendFailed")
+                          : t("pay.holdEnding")}
+                    </p>
+                    {holdExtend !== "limit" ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full border-warning bg-background sm:w-auto"
+                        onPress={extendHold}
+                        isDisabled={holdExtend === "pending"}
+                      >
+                        {t("pay.extend")}
+                      </Button>
+                    ) : null}
+                  </div>
+                ) : (
+                  <p
+                    className="flex items-center gap-1.5 text-sm text-primary"
+                    data-testid="booking-hold-note"
+                  >
+                    <ClockIcon aria-hidden className="size-4 shrink-0" />
+                    <span aria-live="polite" className="sr-only">
+                      {holdExtendedNotice ? t("pay.extended") : ""}
+                    </span>
+                    {t("pay.holdNote", {
+                      time: formatCountdown(
+                        Math.max(
+                          0,
+                          new Date(reservation.expiresAt).getTime() - nowMs
+                        )
+                      ),
+                    })}
+                  </p>
+                )}
+              </BookingCheckoutPayment>
             )}
           </div>
         ) : null}
       </section>
     </div>
   )
+}
+
+/** "Tue, 17 Nov, 10:00": the one date format of the booking steps. */
+function shortDateTime(timeZone: string): Intl.DateTimeFormatOptions {
+  return {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone,
+  }
 }

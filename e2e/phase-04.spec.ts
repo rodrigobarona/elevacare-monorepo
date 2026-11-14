@@ -188,6 +188,8 @@ test.describe("phase 04 live Stripe booking", () => {
       timeout: 45_000,
     })
 
+    // The code field opens from a quiet link under the payment methods.
+    await page.getByTestId("booking-promo-open").click()
     // An unscoped or unknown code is refused inline, total unchanged.
     await page.getByTestId("booking-promo").fill("NOT-A-REAL-CODE")
     await page.getByTestId("booking-promo-apply").click()

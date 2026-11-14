@@ -470,7 +470,12 @@
       "when": "Cuándo",
       "price": "Precio",
       "chooseTime": "Elige una hora para continuar",
-      "profile": "Sobre {name}"
+      "profile": "Sobre {name}",
+      "zone": "hora de {city}",
+      "change": "Cambiar",
+      "provider": "Tu sesión es con {name}, profesional independiente. Eleva gestiona la reserva y el pago.",
+      "changeTime": "Cambiar hora",
+      "fullPolicy": "Ver la política completa"
     },
     "modes": {
       "online": {
@@ -579,7 +584,7 @@
       "hold": "La reserva caduca en {time}",
       "expired": "Esta reserva ha terminado. Elige otra hora para continuar.",
       "restart": "Elegir otra hora",
-      "requestHint": "Pagas ahora. El experto acepta o rechaza en 24 horas, o antes de la sesión si es antes. Un rechazo reembolsa el 100%.",
+      "requestHint": "{name} acepta o rechaza en 24 horas, o antes de la sesión si es antes. Recibirás un email en cualquier caso.",
       "pay": "Pagar {price}",
       "processing": "Confirmando el pago…",
       "failed": "No se pudo completar el pago. Inténtalo de nuevo.",
@@ -593,10 +598,18 @@
       "discount": "Descuento",
       "total": "Total",
       "promoFailed": "No pudimos actualizar el código ahora. Inténtalo de nuevo en un momento.",
-      "holdEnding": "La reserva de este horario termina en un minuto aproximadamente. ¿Necesita más tiempo?",
-      "extend": "Mantener este horario 5 minutos más",
-      "extendLimit": "Ya no podemos mantener este horario. Complete el pago ahora o elija otro horario.",
-      "extendFailed": "No pudimos añadir más tiempo. Inténtelo de nuevo."
+      "holdEnding": "Solo podemos guardarte esta hora un minuto más. ¿Necesitas más tiempo?",
+      "extend": "Guardar 5 minutos más",
+      "extendLimit": "Ya no podemos mantener esta hora. Completa el pago ahora o elige otra hora.",
+      "extendFailed": "No pudimos añadir más tiempo. Inténtalo de nuevo.",
+      "subHeld": "Te guardamos {when}. Paga de forma segura aquí abajo.",
+      "holdNote": "Guardada durante {time}",
+      "totalToday": "Total",
+      "promoAdd": "Añadir código promocional",
+      "secureLine": "Stripe procesa tu tarjeta de forma segura. Eleva nunca ve el número completo de tu tarjeta.",
+      "emailLine": "La confirmación te llega por email justo después de pagar.",
+      "subRequest": "Le pides {when} a {name}. Pagas ahora; si {name} lo rechaza, te devolvemos el 100%.",
+      "extended": "Tiempo ampliado. Te guardamos esta hora 5 minutos más."
     },
     "done": {
       "heading": "Tu reserva está confirmada",

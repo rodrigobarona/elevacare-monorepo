@@ -123,6 +123,8 @@ test.describe("Phase 06 — pay → payout state → Connect transfer", () => {
     await expect(page.getByTestId("booking-pay-submit")).toBeVisible({
       timeout: 45_000,
     })
+    // The code field opens from a quiet link under the payment methods.
+    await page.getByTestId("booking-promo-open").click()
     await page.getByTestId("booking-promo").fill(code!)
     await page.getByTestId("booking-promo").press("Enter")
     await expect(page.getByTestId("booking-promo-remove")).toBeVisible({

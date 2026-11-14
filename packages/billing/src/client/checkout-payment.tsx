@@ -1,6 +1,13 @@
 "use client"
 
-import { useMemo, useState, type FormEvent, type ReactNode } from "react"
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react"
 import {
   CheckoutElementsProvider,
   PaymentElement,
@@ -26,6 +33,14 @@ function stripePromiseFor(
   return next
 }
 
+/** Stripe's formatted amounts, for an order summary shown outside the form. */
+export type BookingCheckoutTotals = {
+  subtotal: string
+  /** Discount amount (e.g. "€6.00") and its code, when one is applied. */
+  discount: { amount: string; code: string } | null
+  total: string
+}
+
 /** `paid`: confirm the booking now. `pending`: MB WAY etc. settle by webhook. */
 export type BookingCheckoutOutcome = { status: "paid" | "pending" }
 
@@ -37,6 +52,8 @@ export type BookingCheckoutLabels = {
   promoApply: string
   promoRemove: string
   promoInvalid: string
+  /** Collapsed promo field's link, e.g. "Add a promo code". */
+  promoAdd: string
   subtotal: string
   discount: string
   total: string
@@ -62,6 +79,8 @@ export function BookingCheckoutPayment({
   appearanceTheme = "light",
   onProcessingChange,
   onSettled,
+  onTotalsChange,
+  reassurance,
   children,
 }: {
   publishableKey: string
@@ -78,6 +97,11 @@ export function BookingCheckoutPayment({
   appearanceTheme?: "light" | "dark"
   onProcessingChange?: (isProcessing: boolean) => void
   onSettled: (outcome: BookingCheckoutOutcome) => void
+  /** Called whenever Stripe's totals change (a code applied or removed). */
+  onTotalsChange?: (totals: BookingCheckoutTotals) => void
+  /** Lines under the pay button: security, refund deadline, what's next. */
+  reassurance?: ReactNode
+  /** Shown just above the pay button (e.g. the hold on the time). */
   children?: ReactNode
 }) {
   const stripePromise = useMemo(
@@ -101,6 +125,8 @@ export function BookingCheckoutPayment({
         labels={labels}
         onProcessingChange={onProcessingChange}
         onSettled={onSettled}
+        onTotalsChange={onTotalsChange}
+        reassurance={reassurance}
       >
         {children}
       </CheckoutForm>
@@ -114,6 +140,8 @@ function CheckoutForm({
   labels,
   onProcessingChange,
   onSettled,
+  onTotalsChange,
+  reassurance,
   children,
 }: {
   appliedPromoCode: string | null
@@ -121,10 +149,38 @@ function CheckoutForm({
   labels: BookingCheckoutLabels
   onProcessingChange?: (isProcessing: boolean) => void
   onSettled: (outcome: BookingCheckoutOutcome) => void
+  onTotalsChange?: (totals: BookingCheckoutTotals) => void
+  reassurance?: ReactNode
   children?: ReactNode
 }) {
   const state = useCheckoutElements()
   const [promo, setPromo] = useState(appliedPromoCode ?? "")
+  // The promo field stays a quiet link until she asks for it.
+  const [promoOpen, setPromoOpen] = useState(Boolean(appliedPromoCode))
+  const barRef = useRef<HTMLDivElement>(null)
+
+  // Below desktop the pay bar sticks to the bottom: keep focused fields
+  // clear of it (WCAG 2.4.11) while the form is on screen.
+  useEffect(() => {
+    const root = document.documentElement
+    const bar = barRef.current
+    if (!bar) return
+    const narrow = window.matchMedia("(max-width: 1023px)")
+    const update = () => {
+      root.style.scrollPaddingBottom = narrow.matches
+        ? `${bar.offsetHeight + 16}px`
+        : ""
+    }
+    update()
+    narrow.addEventListener("change", update)
+    const resize = new ResizeObserver(update)
+    resize.observe(bar)
+    return () => {
+      narrow.removeEventListener("change", update)
+      resize.disconnect()
+      root.style.scrollPaddingBottom = ""
+    }
+  }, [state.type])
   const [promoError, setPromoError] = useState<string | null>(null)
   const [promoBusy, setPromoBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -134,6 +190,27 @@ function CheckoutForm({
   const discount = appliedPromoCode
     ? (checkout?.discountAmounts?.[0] ?? null)
     : null
+
+  const subtotalAmount = checkout?.total.subtotal.amount
+  const discountAmount = discount ? checkout?.total.discount.amount : null
+  const totalAmount = checkout?.total.total.amount
+  useEffect(() => {
+    if (!subtotalAmount || !totalAmount) return
+    onTotalsChange?.({
+      subtotal: subtotalAmount,
+      discount:
+        discountAmount && appliedPromoCode
+          ? { amount: discountAmount, code: appliedPromoCode }
+          : null,
+      total: totalAmount,
+    })
+  }, [
+    subtotalAmount,
+    discountAmount,
+    totalAmount,
+    appliedPromoCode,
+    onTotalsChange,
+  ])
 
   async function changePromo(code: string | null) {
     setPromoBusy(true)
@@ -187,120 +264,153 @@ function CheckoutForm({
     }
   }
 
+  // The hold (and its last-minute warning) stays visible while Stripe loads
+  // or if it fails to load: she may still need to keep her time.
   if (state.type === "loading") {
     return (
-      <p className="text-sm text-muted-foreground" aria-live="polite">
-        {labels.loading}
-      </p>
+      <div className="flex flex-col gap-3">
+        <p className="text-sm text-muted-foreground" aria-live="polite">
+          {labels.loading}
+        </p>
+        {children}
+      </div>
     )
   }
   if (state.type === "error" || !checkout) {
     return (
-      <p role="alert" className="text-sm text-destructive">
-        {labels.loadFailed}
-      </p>
+      <div className="flex flex-col gap-3">
+        <p role="alert" className="text-sm text-destructive">
+          {labels.loadFailed}
+        </p>
+        {children}
+      </div>
     )
   }
 
   const total = checkout.total
-  return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <label
-          htmlFor="booking-promo"
-          className="text-sm font-medium text-foreground"
-        >
-          {labels.promo}
-        </label>
-        <div className="flex gap-2">
-          <input
-            id="booking-promo"
-            data-testid="booking-promo"
-            value={appliedPromoCode ?? promo}
-            onChange={(event) => setPromo(event.target.value)}
-            onKeyDown={(event) => {
-              // Enter inside the code field must apply it, never submit the
-              // payment form (which would charge the card).
-              if (event.key !== "Enter") return
-              event.preventDefault()
-              applyPromo()
-            }}
-            readOnly={Boolean(appliedPromoCode) || promoBusy}
-            aria-invalid={promoError ? true : undefined}
-            aria-describedby="booking-promo-help"
-            autoComplete="off"
-            autoCapitalize="characters"
-            spellCheck={false}
-            className="h-10 flex-1 rounded-xl border border-input-border bg-background px-3 text-sm uppercase"
-          />
-          {appliedPromoCode ? (
-            <button
-              type="button"
-              data-testid="booking-promo-remove"
-              onClick={() => void changePromo(null)}
-              disabled={promoBusy || isProcessing}
-              className="h-10 rounded-4xl border border-input px-4 text-sm font-medium disabled:opacity-50"
-            >
-              {labels.promoRemove}
-            </button>
-          ) : (
-            <button
-              type="button"
-              data-testid="booking-promo-apply"
-              onClick={applyPromo}
-              disabled={promoBusy || isProcessing || promo.trim().length < 2}
-              className="h-10 rounded-4xl border border-input px-4 text-sm font-medium disabled:opacity-50"
-            >
-              {labels.promoApply}
-            </button>
-          )}
-        </div>
-        <p
-          id="booking-promo-help"
-          role={promoError ? "alert" : undefined}
-          className={
-            promoError
-              ? "text-sm text-destructive"
-              : "text-sm text-muted-foreground"
-          }
-        >
-          {promoError ?? labels.promoHint}
-        </p>
-      </div>
-
-      <dl
-        className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm"
-        data-testid="booking-checkout-totals"
+  const promoField = (
+    <div className="flex flex-col gap-2">
+      <label
+        htmlFor="booking-promo"
+        className="text-sm font-medium text-foreground"
       >
-        {discount ? (
-          <>
-            <dt className="text-muted-foreground">{labels.subtotal}</dt>
-            <dd className="text-right">{total.subtotal.amount}</dd>
-            <dt className="text-muted-foreground">
-              {labels.discount} · {appliedPromoCode}
-            </dt>
-            <dd className="text-right">−{total.discount.amount}</dd>
-          </>
-        ) : null}
-        <dt className="font-medium">{labels.total}</dt>
-        <dd className="text-right font-medium">{total.total.amount}</dd>
-      </dl>
+        {labels.promo}
+      </label>
+      <div className="flex gap-2">
+        <input
+          id="booking-promo"
+          data-testid="booking-promo"
+          value={appliedPromoCode ?? promo}
+          onChange={(event) => setPromo(event.target.value)}
+          onKeyDown={(event) => {
+            // Enter inside the code field must apply it, never submit the
+            // payment form (which would charge the card).
+            if (event.key !== "Enter") return
+            event.preventDefault()
+            applyPromo()
+          }}
+          readOnly={Boolean(appliedPromoCode) || promoBusy}
+          aria-invalid={promoError ? true : undefined}
+          aria-describedby="booking-promo-help"
+          autoComplete="off"
+          autoCapitalize="characters"
+          spellCheck={false}
+          autoFocus={!appliedPromoCode}
+          className="h-10 flex-1 rounded-xl border border-input-border bg-background px-3 text-sm uppercase"
+        />
+        {appliedPromoCode ? (
+          <button
+            type="button"
+            data-testid="booking-promo-remove"
+            onClick={() => void changePromo(null)}
+            disabled={promoBusy || isProcessing}
+            className="h-10 rounded-4xl border border-input px-4 text-sm font-medium disabled:opacity-50"
+          >
+            {labels.promoRemove}
+          </button>
+        ) : (
+          <button
+            type="button"
+            data-testid="booking-promo-apply"
+            onClick={applyPromo}
+            disabled={promoBusy || isProcessing || promo.trim().length < 2}
+            className="h-10 rounded-4xl border border-input px-4 text-sm font-medium disabled:opacity-50"
+          >
+            {labels.promoApply}
+          </button>
+        )}
+      </div>
+      <p
+        id="booking-promo-help"
+        role={promoError ? "alert" : undefined}
+        className={
+          promoError
+            ? "text-sm text-destructive"
+            : "text-sm text-muted-foreground"
+        }
+      >
+        {promoError ?? labels.promoHint}
+      </p>
+    </div>
+  )
 
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       <PaymentElement options={{ layout: "tabs" }} />
+
+      {promoOpen || appliedPromoCode ? (
+        promoField
+      ) : (
+        <button
+          type="button"
+          data-testid="booking-promo-open"
+          onClick={() => setPromoOpen(true)}
+          className="inline-flex min-h-6 items-center self-start rounded-sm text-sm font-medium text-primary underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none"
+        >
+          {labels.promoAdd}
+        </button>
+      )}
+
       {error ? (
         <p role="alert" className="text-sm text-destructive">
           {error}
         </p>
       ) : null}
-      {children}
-      <button
-        type="submit"
-        data-testid="booking-pay-submit"
-        disabled={isProcessing || promoBusy}
-        className="inline-flex h-10 items-center justify-center rounded-4xl bg-primary px-4 text-sm font-medium text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
+
+      {/* Below desktop the total and Pay stay in reach at the bottom: one
+          row, opaque, about 100px tall. */}
+      <div
+        ref={barRef}
+        data-testid="booking-pay-bar"
+        className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-2 border-t border-border bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-12px_24px_-16px_rgb(0_0_0/0.25)] sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:gap-3 lg:border-0 lg:p-0 lg:shadow-none"
       >
-        {isProcessing ? labels.processing : labels.pay(total.total.amount)}
-      </button>
+        {children}
+        <div className="flex items-center gap-4">
+          <div
+            className="min-w-0 shrink-0 lg:hidden"
+            data-testid="booking-checkout-totals"
+          >
+            <p className="text-xs text-muted-foreground">{labels.total}</p>
+            <p className="text-lg leading-tight font-semibold">
+              {total.total.amount}
+            </p>
+            {discount ? (
+              <p className="text-xs text-muted-foreground">
+                −{total.discount.amount} · {appliedPromoCode}
+              </p>
+            ) : null}
+          </div>
+          <button
+            type="submit"
+            data-testid="booking-pay-submit"
+            disabled={isProcessing || promoBusy}
+            className="inline-flex h-12 flex-1 items-center justify-center rounded-4xl bg-primary px-6 text-base font-semibold text-primary-foreground focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isProcessing ? labels.processing : labels.pay(total.total.amount)}
+          </button>
+        </div>
+      </div>
+      {reassurance}
     </form>
   )
 }
