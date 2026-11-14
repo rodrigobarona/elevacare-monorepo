@@ -862,6 +862,87 @@ export const CrmContactListItemSchema = z.object({
   openFollowUps: z.number().int().nonnegative(),
 })
 
+// ---------------------------------------------------------------------------
+// Teams (clinics) — Phase 11
+// ---------------------------------------------------------------------------
+
+/** ISO-3166-1 alpha-2, upper case ("PT"). */
+const ClinicCountrySchema = z.string().regex(/^[A-Z]{2}$/)
+
+export const ClinicBillingAddressSchema = z
+  .object({
+    line1: z.string().trim().max(200).optional(),
+    line2: z.string().trim().max(200).optional(),
+    postalCode: z.string().trim().max(20).optional(),
+    city: z.string().trim().max(100).optional(),
+    country: ClinicCountrySchema.optional(),
+  })
+  .strict()
+
+export const ClinicProfileSchema = z.object({
+  orgId: z.string().uuid(),
+  slug: z.string(),
+  displayName: z.string(),
+  description: z.string().nullable(),
+  logoUrl: z.string().nullable(),
+  websiteUrl: z.string().nullable(),
+  countryCode: z.string().nullable(),
+  billingAddress: ClinicBillingAddressSchema,
+  specialties: z.array(z.string()),
+  payoutMode: z.enum(["expert", "clinic"]),
+})
+
+export const ClinicVerificationSchema = z.object({
+  id: z.string().uuid(),
+  status: z.enum(["pending", "approved", "rejected", "needs_changes"]),
+  legalName: z.string(),
+  taxId: z.string(),
+  submittedAt: z.string(),
+  reviewedAt: z.string().nullable(),
+  /** Staff reason on `rejected` / `needs_changes`. */
+  reason: z.string().nullable(),
+})
+
+export const TeamSummarySchema = z.object({
+  profile: ClinicProfileSchema,
+  /** The open filing if any, else the latest decided one. */
+  verification: ClinicVerificationSchema.nullable(),
+  /** Staff approved a filing: the clinic's public surface may go live. */
+  verified: z.boolean(),
+})
+
+export const UpdateTeamProfileRequestSchema = z
+  .object({
+    displayName: z.string().trim().min(2).max(120).optional(),
+    description: z.string().trim().max(2000).nullable().optional(),
+    websiteUrl: z
+      .string()
+      .url()
+      .max(300)
+      .regex(/^https?:\/\//)
+      .nullable()
+      .optional(),
+    countryCode: ClinicCountrySchema.nullable().optional(),
+    billingAddress: ClinicBillingAddressSchema.optional(),
+    /** `@eleva/config` expert-category slugs. */
+    specialties: z
+      .array(z.string().regex(/^[a-z0-9-]{1,64}$/))
+      .max(12)
+      .optional(),
+  })
+  .strict()
+  .refine((patch) => Object.keys(patch).length > 0, {
+    message: "Send at least one field",
+  })
+
+export const FileClinicVerificationRequestSchema = z
+  .object({
+    legalName: z.string().trim().min(2).max(200),
+    /** NIF or EU VAT number; spaces, dots and dashes are ignored. */
+    taxId: z.string().trim().min(8).max(40),
+  })
+  .strict()
+
 export const CrmContactSchema = z.object({
   id: z.string().uuid(),
   source: z.enum(["member", "lead"]),
@@ -1037,6 +1118,13 @@ export type CrmLifecycleStage = z.infer<typeof CrmLifecycleStageSchema>
 export type CrmFollowUpKind = z.infer<typeof CrmFollowUpKindSchema>
 export type CrmContactListItem = z.infer<typeof CrmContactListItemSchema>
 export type CrmContact = z.infer<typeof CrmContactSchema>
+export type TeamSummary = z.infer<typeof TeamSummarySchema>
+export type UpdateTeamProfileRequest = z.infer<
+  typeof UpdateTeamProfileRequestSchema
+>
+export type FileClinicVerificationRequest = z.infer<
+  typeof FileClinicVerificationRequestSchema
+>
 export type CreateCrmContactRequest = z.infer<
   typeof CreateCrmContactRequestSchema
 >
@@ -3985,6 +4073,34 @@ export function createApiClient(options: ApiClientOptions) {
       },
     },
 
+    teams: {
+      async get(teamId: string) {
+        const raw = await request<unknown>(
+          "GET",
+          `/teams/${encodeURIComponent(teamId)}`
+        )
+        return TeamSummarySchema.parse(raw)
+      },
+      async update(teamId: string, data: UpdateTeamProfileRequest) {
+        const raw = await request<unknown>(
+          "PATCH",
+          `/teams/${encodeURIComponent(teamId)}`,
+          data
+        )
+        return TeamSummarySchema.parse(raw)
+      },
+      async fileVerification(
+        teamId: string,
+        data: FileClinicVerificationRequest
+      ) {
+        const raw = await request<unknown>(
+          "POST",
+          `/teams/${encodeURIComponent(teamId)}/verification`,
+          data
+        )
+        return TeamSummarySchema.parse(raw)
+      },
+    },
     crm: {
       async listContacts(query?: { stage?: CrmLifecycleStage }) {
         const qs = query?.stage

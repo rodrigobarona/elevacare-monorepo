@@ -8,6 +8,7 @@ import {
   normalizeMembershipRole,
   toMembershipSeniority,
 } from "./capabilities"
+import { provisionClinicProfile } from "./clinics"
 import { getAuthApi } from "./server/auth"
 import type { MembershipRole, ProductLabel } from "./types"
 
@@ -177,6 +178,16 @@ export async function createElevaOrganization(input: {
       payload: { type: input.type, name: input.name, slug },
     })
   })
+
+  // A team org is a clinic: it gets its profile row at creation.
+  if (input.type === "team") {
+    await provisionClinicProfile({
+      orgId,
+      orgSlug: slug,
+      name: input.name,
+      actorUserId: input.userId,
+    })
+  }
 
   return {
     orgId,

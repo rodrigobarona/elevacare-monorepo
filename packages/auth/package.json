@@ -16,6 +16,7 @@
     "./guards": "./src/guards.ts",
     "./return-to": "./src/return-to.ts",
     "./upload-token": "./src/upload-token.ts",
+    "./clinics": "./src/clinics.ts",
     "./organizations": "./src/organizations.ts",
     "./partner-review": "./src/partner-review.ts",
     "./org-routing": "./src/org-routing.ts",

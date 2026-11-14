@@ -14,6 +14,9 @@ export type AuditEntity =
   | "expert_profile"
   // Licence verification before public listing (2026-10-29).
   | "partner_application"
+  // Clinics (Phase 11): the team org's profile and its verification filings.
+  | "team"
+  | "clinic_verification"
   | "expert_integration_credential"
   | "event_type"
   | "event_type_mode"

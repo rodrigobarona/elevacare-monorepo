@@ -152,6 +152,9 @@ import {
   CreateCrmFollowUpRequestSchema,
   CrmContactSchema,
   CrmFollowUpSchema,
+  FileClinicVerificationRequestSchema,
+  TeamSummarySchema,
+  UpdateTeamProfileRequestSchema,
   ListCrmContactsQuerySchema,
   ListCrmContactsResponseSchema,
   ListCrmFollowUpsQuerySchema,
@@ -3814,6 +3817,85 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "403": {
               description: "Caller is not the booking's assigned expert",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+      },
+      "/teams/{teamId}": {
+        get: {
+          operationId: "getTeam",
+          summary: "Get the clinic's profile and verification state",
+          description:
+            "Requires clinic:manage, and teamId must be the caller's active team org (403 TEAM_NOT_ACTIVE otherwise). Returns the public profile, the open verification filing (or the latest decided one) and whether a filing is approved. The clinic's public surface goes live only once verified.",
+          tags: ["Teams"],
+          requestParams: { path: z.object({ teamId: z.string().uuid() }) },
+          responses: {
+            ...stdWithNotFound,
+            "200": {
+              description: "Team summary",
+              content: { "application/json": { schema: TeamSummarySchema } },
+            },
+            "403": {
+              description: "teamId is not the caller's active team org",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+        patch: {
+          operationId: "updateTeam",
+          summary: "Edit the clinic's public profile",
+          description:
+            "Requires clinic:manage in the active team org. Edits display name, description, website, country, billing address and specialties. The legal name and NIF are not here: they are filed with POST /teams/{teamId}/verification so a profile edit never changes the verified identity. Audited as team.updated.",
+          tags: ["Teams"],
+          requestParams: { path: z.object({ teamId: z.string().uuid() }) },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: UpdateTeamProfileRequestSchema },
+            },
+          },
+          responses: {
+            ...stdWithNotFound,
+            "200": {
+              description: "Updated team summary",
+              content: { "application/json": { schema: TeamSummarySchema } },
+            },
+            "403": {
+              description: "teamId is not the caller's active team org",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+      },
+      "/teams/{teamId}/verification": {
+        post: {
+          operationId: "fileTeamVerification",
+          summary: "File the clinic's legal name and NIF for review",
+          description:
+            "Requires clinic:manage in the active team org. Creates a pending filing, or refiles the open one (pending or needs changes). Eleva staff check the legal entity and the NIF; a clinic already verified stays verified under its approved filing until staff decide. 422 INVALID_TAX_ID for a malformed NIF/VAT. Audited as clinic_verification.submitted.",
+          tags: ["Teams"],
+          requestParams: { path: z.object({ teamId: z.string().uuid() }) },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: FileClinicVerificationRequestSchema,
+              },
+            },
+          },
+          responses: {
+            ...stdWithNotFound,
+            "201": {
+              description: "Team summary with the filing",
+              content: { "application/json": { schema: TeamSummarySchema } },
+            },
+            "403": {
+              description: "teamId is not the caller's active team org",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "409": {
+              description: "The open filing changed while refiling",
               content: { "application/json": { schema: ErrorSchema } },
             },
           },

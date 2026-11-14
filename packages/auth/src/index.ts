@@ -74,6 +74,15 @@ export {
   type CreateOrganizationInput,
   type CreateOrganizationResult,
 } from "./organizations"
+export {
+  ClinicError,
+  fileClinicVerification,
+  getClinicSummary,
+  updateClinicProfile,
+  type ClinicErrorCode,
+  type ClinicProfilePatch,
+  type ClinicSummary,
+} from "./clinics"
 export { getProviderAccessToken } from "./provider-token"
 export {
   markCalendarIntegrationExpired,
