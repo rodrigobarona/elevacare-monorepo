@@ -6,8 +6,8 @@ import * as main from "../schema/main"
 
 /**
  * Seed-only sessions for the demo member, so member and expert dashboards
- * are judged with real content: two coming up (video, phone) and two past
- * (in person, video). They use free offers only and record the same `free`
+ * are judged with real content: two coming up (in person, phone) and two
+ * past (video), each with a different expert. They use free offers only and record the same `free`
  * payment the real free flow writes, so no seeded row ever looks like money
  * that moved: payout, fee, refund and reconciliation jobs have nothing to
  * pick up. Times are relative to the seed run; re-run the seed before a
@@ -34,7 +34,7 @@ const SESSIONS: DemoSession[] = [
     paymentId: "5eed0000-0000-4000-8000-000000000101",
     username: "martasousa",
     eventSlug: "intro-call",
-    mode: "online",
+    mode: "in_person",
     dayOffset: 3,
     hour: 10,
     status: "confirmed",
@@ -52,9 +52,9 @@ const SESSIONS: DemoSession[] = [
   {
     id: "5eed0000-0000-4000-8000-000000000003",
     paymentId: "5eed0000-0000-4000-8000-000000000103",
-    username: "martasousa",
-    eventSlug: "intro-call",
-    mode: "in_person",
+    username: "joanalima",
+    eventSlug: "discovery-call",
+    mode: "online",
     dayOffset: -9,
     hour: 11,
     status: "completed",
@@ -62,8 +62,8 @@ const SESSIONS: DemoSession[] = [
   {
     id: "5eed0000-0000-4000-8000-000000000004",
     paymentId: "5eed0000-0000-4000-8000-000000000104",
-    username: "anaquick",
-    eventSlug: "quick-chat",
+    username: "sofiacosta",
+    eventSlug: "first-call",
     mode: "online",
     dayOffset: -23,
     hour: 15,

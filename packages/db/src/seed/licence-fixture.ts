@@ -10,8 +10,8 @@ export type FixtureLicence = {
 
 const PLACEHOLDER_LICENCE: FixtureLicence = {
   professionalBody: "ordem_fisioterapeutas",
-  licenceNumber: "FIXTURE-0000",
-  ersRegistrationNumber: "E000000",
+  licenceNumber: "DEMO-0000",
+  ersRegistrationNumber: "DEMO-E00",
 }
 
 /**

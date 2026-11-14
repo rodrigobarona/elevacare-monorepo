@@ -353,6 +353,14 @@ describe("assertNotProductionDatabase", () => {
       })
     ).toThrow()
   })
+
+  it("still refuses production when PRODUCTION_DB_ENDPOINT is wrong", () => {
+    expect(() =>
+      assertNotProductionDatabase(prod, "seed", {
+        PRODUCTION_DB_ENDPOINT: "ep-something-else",
+      })
+    ).toThrow()
+  })
 })
 
 describe("assertPreviewDatabaseIsolated", () => {

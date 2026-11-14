@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull } from "drizzle-orm"
+import { and, eq, inArray, isNull, notInArray } from "drizzle-orm"
 import { mediaBaseUrl, mediaUrl } from "@eleva/config/media-host"
 import { db } from "../client"
 import { withOrgContext, withPlatformAdminContext, type Tx } from "../context"
@@ -124,7 +124,7 @@ async function upsertExpert(
     // A rich or translated bio from an earlier seed or edit would win over
     // `bio` on the profile; clear it so the persona is what shows.
     bioRich: null,
-    bioSourceLocale: "en",
+    bioSourceLocale: input.persona.bioLocale ?? "en",
     credentials: input.persona.credentials,
     avatarUrl: portraitUrl(input.username, input.persona),
   }
@@ -161,7 +161,7 @@ async function upsertExpert(
   return inserted!.id
 }
 
-/** List the expert under the persona's categories (missing rows only). */
+/** List the expert under exactly the persona's categories. */
 async function ensureListings(
   tx: Tx,
   input: { orgId: string; expertProfileId: string; categories: string[] }
@@ -175,6 +175,15 @@ async function ensureListings(
     .from(main.expertCategories)
     .where(inArray(main.expertCategories.slug, input.categories))
   const bySlug = new Map(rows.map((row) => [row.slug, row.id]))
+  // Drop links from earlier seeds that the persona no longer lists.
+  await tx
+    .delete(main.expertListings)
+    .where(
+      and(
+        eq(main.expertListings.expertProfileId, input.expertProfileId),
+        notInArray(main.expertListings.categoryId, [...bySlug.values()])
+      )
+    )
   for (const [sortOrder, slug] of input.categories.entries()) {
     const categoryId = bySlug.get(slug)
     if (!categoryId) {

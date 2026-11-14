@@ -42,14 +42,16 @@ export type OfferFixtureSchedule = {
 
 /**
  * What a member reads about the expert. Demo personas are fictional, and so
- * are their institutions and `DEMO-` numbers; they exist so profile,
+ * are their institutions, addresses and `DEMO-` numbers; they exist so profile,
  * explorer and dashboard designs are judged on realistic content instead of
  * placeholders. Portraits are Pexels photos (credit in `portrait`); the seed
- * never runs against production (`assertDemoSeedTarget`).
+ * never runs against production (`assertNotProductionDatabase`).
  */
 export type OfferFixturePersona = {
   headline: string
   bio: string
+  /** Language the bio is written in; English unless set. */
+  bioLocale?: "pt" | "es"
   credentials: ExpertCredential[]
   /** Category slugs from `expert-categories.ts`, most relevant first. */
   categories: string[]
@@ -105,16 +107,16 @@ export const QUICK_CHAT_FIXTURE: OfferFixture = {
     credentials: [
       {
         title: "Certified health coach",
-        institution: "Academia Lusa de Coaching",
+        institution: "Academia Aurora de Coaching",
         year: 2019,
       },
       {
         title: "BSc in Human Nutrition",
-        institution: "Universidade do Tejo",
+        institution: "Universidade Aurora",
         year: 2012,
       },
     ],
-    categories: ["mental-health-coaching", "wellness"],
+    categories: ["nutrition", "wellness"],
     portrait: { pexelsId: "16160809", photographer: "pessoas uem" },
   },
   licence: {
@@ -184,12 +186,12 @@ export const PHYSIOTHERAPY_FIXTURE: OfferFixture = {
       },
       {
         title: "MSc in Women's Health Physiotherapy",
-        institution: "Escola Superior de Saúde do Atlântico",
+        institution: "Escola Superior de Saúde Lumen",
         year: 2016,
       },
       {
         title: "BSc in Physiotherapy",
-        institution: "Escola Superior de Saúde do Douro",
+        institution: "Escola Superior de Saúde Lumen",
         year: 2012,
       },
     ],
@@ -210,7 +212,7 @@ export const PHYSIOTHERAPY_FIXTURE: OfferFixture = {
   locations: [
     {
       name: "Lisboa",
-      address: "Avenida do Demo 100",
+      address: "Travessa das Camélias 18",
       city: "Lisboa",
       region: "Lisboa",
       country: "PT",
@@ -219,7 +221,7 @@ export const PHYSIOTHERAPY_FIXTURE: OfferFixture = {
     },
     {
       name: "Porto",
-      address: "Rua do Demo 200",
+      address: "Rua do Miradouro Azul 40",
       city: "Porto",
       region: "Porto",
       country: "PT",
@@ -227,7 +229,7 @@ export const PHYSIOTHERAPY_FIXTURE: OfferFixture = {
     },
     {
       name: "Madrid",
-      address: "Calle Demo 50",
+      address: "Calle de las Acacias Blancas 9",
       city: "Madrid",
       region: "Madrid",
       country: "ES",
@@ -373,12 +375,12 @@ export const DEMO_EXPERT_FIXTURES: OfferFixture[] = [
       credentials: [
         {
           title: "Specialist nurse in maternal and obstetric health",
-          institution: "Escola Superior de Enfermagem do Tejo",
+          institution: "Escola Superior de Enfermagem Lumen",
           year: 2013,
         },
         {
           title: "BSc in Nursing",
-          institution: "Universidade do Tejo",
+          institution: "Universidade Aurora",
           year: 2010,
         },
       ],
@@ -397,7 +399,7 @@ export const DEMO_EXPERT_FIXTURES: OfferFixture[] = [
     locations: [
       {
         name: "Lisboa",
-        address: "Rua do Demo 1",
+        address: "Rua das Andorinhas 7",
         city: "Lisboa",
         region: "Lisboa",
         country: "PT",
@@ -496,12 +498,12 @@ export const DEMO_EXPERT_FIXTURES: OfferFixture[] = [
       credentials: [
         {
           title: "MSc in Clinical Nutrition",
-          institution: "Universidade do Douro",
+          institution: "Universidade Aurora",
           year: 2017,
         },
         {
           title: "BSc in Nutrition Sciences",
-          institution: "Universidade do Tejo",
+          institution: "Universidade Aurora",
           year: 2014,
         },
       ],
@@ -516,6 +518,24 @@ export const DEMO_EXPERT_FIXTURES: OfferFixture[] = [
     schedules: [ONLINE_LISBON],
     locations: [],
     eventTypes: [
+      onlineOffer({
+        slug: "discovery-call",
+        title: {
+          en: "Free discovery call",
+          pt: "Chamada de apresentação gratuita",
+          es: "Llamada de presentación gratuita",
+        },
+        description: {
+          en: "15 minutes to see whether nutrition support fits what you need.",
+          pt: "15 minutos para perceber se o acompanhamento nutricional é o que precisa.",
+          es: "15 minutos para ver si el acompañamiento nutricional es lo que necesitas.",
+        },
+        kind: "non_clinical",
+        durationMinutes: 15,
+        priceCents: 0,
+        languages: ["pt", "en", "es"],
+        countries: ["PT", "ES"],
+      }),
       onlineOffer({
         slug: "first-consultation",
         title: {
@@ -576,7 +596,7 @@ export const DEMO_EXPERT_FIXTURES: OfferFixture[] = [
         },
         {
           title: "MSc in Clinical and Health Psychology",
-          institution: "Universidade do Tejo",
+          institution: "Universidade Aurora",
           year: 2015,
         },
       ],
@@ -591,6 +611,24 @@ export const DEMO_EXPERT_FIXTURES: OfferFixture[] = [
     schedules: [ONLINE_LISBON],
     locations: [],
     eventTypes: [
+      onlineOffer({
+        slug: "first-call",
+        title: {
+          en: "Free first call",
+          pt: "Primeira conversa gratuita",
+          es: "Primera llamada gratuita",
+        },
+        description: {
+          en: "20 minutes to tell me what is going on and decide the next steps together.",
+          pt: "20 minutos para me contar o que se passa e decidirmos juntas os próximos passos.",
+          es: "20 minutos para contarme qué te pasa y decidir juntas los siguientes pasos.",
+        },
+        kind: "non_clinical",
+        durationMinutes: 20,
+        priceCents: 0,
+        languages: ["pt", "en"],
+        countries: ["PT"],
+      }),
       onlineOffer({
         slug: "therapy-session",
         title: {
@@ -681,11 +719,12 @@ export const DEMO_EXPERT_FIXTURES: OfferFixture[] = [
     },
     persona: {
       headline: "Lactation consultant",
-      bio: "Breastfeeding support for the first days and weeks, by video or phone. We look at latch, feeding positions and how you are feeling, and make a plan for the next few days.",
+      bio: "Apoio à amamentação nos primeiros dias e semanas, por vídeo ou por telefone. Vemos a pega, as posições e como se está a sentir, e fazemos um plano para os próximos dias.",
+      bioLocale: "pt",
       credentials: [
         {
           title: "Specialist nurse in maternal and obstetric health",
-          institution: "Escola Superior de Enfermagem do Douro",
+          institution: "Escola Superior de Enfermagem Lumen",
           year: 2011,
         },
       ],

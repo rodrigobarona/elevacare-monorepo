@@ -266,8 +266,8 @@ export function assertPreviewDatabaseIsolated(
 }
 
 /**
- * Neon endpoint of the production database. `PRODUCTION_DB_ENDPOINT`
- * overrides it; the id is not a secret (it is the host name's first label).
+ * Neon endpoint of the production database, always refused alongside any
+ * `PRODUCTION_DB_ENDPOINT`. The id is not a secret (the host's first label).
  */
 const PRODUCTION_NEON_ENDPOINT = "ep-plain-voice-alu7buik"
 
@@ -284,9 +284,14 @@ export function assertNotProductionDatabase(
   if (source.VERCEL_ENV === "production") {
     throw new Error(`${purpose} must not run in a production deployment`)
   }
-  const blocked =
-    source.PRODUCTION_DB_ENDPOINT?.trim() || PRODUCTION_NEON_ENDPOINT
-  if (!url || neonEndpointId(url) === blocked) {
+  // Both: a wrong PRODUCTION_DB_ENDPOINT must not let production through.
+  const blocked = new Set(
+    [PRODUCTION_NEON_ENDPOINT, source.PRODUCTION_DB_ENDPOINT?.trim()].filter(
+      Boolean
+    )
+  )
+  const endpoint = url ? neonEndpointId(url) : null
+  if (!endpoint || blocked.has(endpoint)) {
     throw new Error(`${purpose} must not run against the production database`)
   }
 }
