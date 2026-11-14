@@ -68,7 +68,7 @@ const en: FooterCopy = {
   linkedin: "LinkedIn",
   rights: (year) => `© ${year} Eleva.care. All rights reserved.`,
   operator:
-    "Eleva.care is operated by BÚZIOS E TARTARUGAS - LDA · NIPC 515001708 · Rua Gil Vicente 2, 2775-198 Parede, Portugal",
+    "Eleva.care is operated by BÚZIOS E TARTARUGAS - LDA · NIPC 515001708 · Rua Gil Vicente 2, 2775-198 Parede, Portugal",
   legalAndHelp: "Legal and help",
   newTab: "opens in a new tab",
 }
@@ -104,7 +104,7 @@ const pt: FooterCopy = {
   linkedin: "LinkedIn",
   rights: (year) => `© ${year} Eleva.care. Todos os direitos reservados.`,
   operator:
-    "A Eleva.care é operada por BÚZIOS E TARTARUGAS - LDA · NIPC 515001708 · Rua Gil Vicente 2, 2775-198 Parede, Portugal",
+    "A Eleva.care é operada por BÚZIOS E TARTARUGAS - LDA · NIPC 515001708 · Rua Gil Vicente 2, 2775-198 Parede, Portugal",
   legalAndHelp: "Informação legal e ajuda",
   newTab: "abre num novo separador",
 }
@@ -140,7 +140,7 @@ const es: FooterCopy = {
   linkedin: "LinkedIn",
   rights: (year) => `© ${year} Eleva.care. Todos los derechos reservados.`,
   operator:
-    "Eleva.care es un servicio de BÚZIOS E TARTARUGAS - LDA · NIPC 515001708 · Rua Gil Vicente 2, 2775-198 Parede, Portugal",
+    "Eleva.care es un servicio de BÚZIOS E TARTARUGAS - LDA · NIPC 515001708 · Rua Gil Vicente 2, 2775-198 Parede, Portugal",
   legalAndHelp: "Información legal y ayuda",
   newTab: "se abre en una pestaña nueva",
 }

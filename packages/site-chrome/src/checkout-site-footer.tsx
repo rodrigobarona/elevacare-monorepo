@@ -27,7 +27,7 @@ export function CheckoutSiteFooter({ locale: rawLocale }: { locale: string }) {
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-4 text-xs text-muted-foreground sm:px-6 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-1">
           <p>{t.rights(year)}</p>
-          <p>{t.operator}</p>
+          <p className="text-balance">{t.operator}</p>
         </div>
         {/* Links open in a new tab: reading the terms must never cost her
             the booking she is in the middle of. */}

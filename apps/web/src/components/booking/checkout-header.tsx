@@ -21,11 +21,11 @@ export async function CheckoutHeader() {
 
   return (
     <header className="border-b border-border/60 bg-background py-3">
-      <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 sm:px-6">
+      <div className="mx-auto grid w-full max-w-5xl grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 sm:px-6">
         <Link
           href="/"
           aria-label="Eleva.care"
-          className="shrink-0 rounded-sm focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none"
+          className="w-fit shrink-0 rounded-sm focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none"
         >
           <LogoMark className="size-7 sm:hidden" />
           <Logo className="hidden h-6 sm:block" />
@@ -34,7 +34,7 @@ export async function CheckoutHeader() {
           <ShieldCheckIcon aria-hidden className="size-4 text-primary" />
           {t("secure")}
         </p>
-        <div className="flex items-center gap-1 sm:gap-2">
+        <div className="flex items-center gap-1 justify-self-end sm:gap-2">
           {/* A new tab, so reading help never costs her booking or hold. */}
           <a
             href={gatewayMarketingPath(locale, "/docs/members")}
@@ -45,7 +45,7 @@ export async function CheckoutHeader() {
             <QuestionIcon aria-hidden className="size-4" />
             <span className="hidden sm:inline">{t("help")}</span>
             <span className="sr-only sm:hidden">{t("help")}</span>
-            <span className="sr-only">{t("newTab")}</span>
+            <span className="sr-only"> ({t("newTab")})</span>
           </a>
           <CheckoutLanguageSwitcher />
         </div>
