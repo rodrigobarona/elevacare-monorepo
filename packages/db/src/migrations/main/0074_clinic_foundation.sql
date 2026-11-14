@@ -1,6 +1,8 @@
 -- Phase 11.1 clinic foundation. Clinic profile fields for invoices and
 -- payouts, the staff-decided clinic verification queue (a clinic's public
--- surface exists only while an approved row exists, like expert licences),
+-- surface exists only while an approved row exists, like expert licences;
+-- the legal name and NIF live only on that queue, so a profile edit can
+-- never change the verified identity),
 -- and bookings.attributed_org_id for the 0% clinic commission, set only
 -- from the booking source.
 DO $$ BEGIN
@@ -8,10 +10,6 @@ DO $$ BEGIN
 EXCEPTION
   WHEN duplicate_object THEN null;
 END $$;
---> statement-breakpoint
-ALTER TABLE "clinic_profiles" ADD COLUMN IF NOT EXISTS "legal_name" text;
---> statement-breakpoint
-ALTER TABLE "clinic_profiles" ADD COLUMN IF NOT EXISTS "tax_id" varchar(32);
 --> statement-breakpoint
 ALTER TABLE "clinic_profiles" ADD COLUMN IF NOT EXISTS "billing_address" jsonb DEFAULT '{}'::jsonb NOT NULL;
 --> statement-breakpoint

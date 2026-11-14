@@ -25,6 +25,10 @@ import { organization, user } from "../auth"
  * row exists — the same pattern as expert licences (`licenceVerified()`),
  * so a clinic can never mark itself verified on its own profile.
  *
+ * The legal name and NIF live only here, never on `clinic_profiles`: the
+ * latest approved row is the identity staff checked and the one SaaS
+ * invoices use. A new identity means a new filing and a new review.
+ *
  * Lifecycle reuses `partner_application_status`. An `approved` row needs a
  * reviewer, `reviewed_at` and every `CLINIC_CHECKLIST_ITEMS` check
  * (`@eleva/config/clinic-verification`) confirmed as JSON `true`.

@@ -8,7 +8,6 @@ import {
   pgTable,
   text,
   uniqueIndex,
-  varchar,
 } from "drizzle-orm/pg-core"
 import {
   createdAt,
@@ -73,10 +72,9 @@ export const clinicProfiles = pgTable(
     /** ISO-3166-1 alpha-2 country code (clinic primary HQ). */
     countryCode: text("country_code"),
 
-    /** Registered company name, for invoices and verification. */
-    legalName: text("legal_name"),
-    /** Company NIF / VAT number. */
-    taxId: varchar("tax_id", { length: 32 }),
+    // The legal name and NIF live only on `clinic_verifications`: the
+    // approved row is the identity Eleva checked and invoices, so editing
+    // the profile can never change who was verified.
     billingAddress: jsonb("billing_address")
       .$type<ClinicBillingAddress>()
       .notNull()

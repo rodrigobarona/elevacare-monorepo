@@ -43,8 +43,12 @@ Each entry should include:
   decisions and deletes are platform-admin only; an approved row needs a
   reviewer, a date and every `CLINIC_CHECKLIST_ITEMS` check). This mirrors
   `licenceVerified()` for experts.
-- Also added: clinic legal name, NIF/VAT, billing address, specialties and
-  `payout_mode` (default `expert`); `bookings.attributed_org_id`, set only
+- The legal name and NIF live only on `clinic_verifications` (not on the
+  profile), so editing the profile can never change who was verified; a
+  new identity is a new filing and review. Invoices use the latest
+  approved row.
+- Also added: billing address, specialties and `payout_mode` (default
+  `expert`); `bookings.attributed_org_id`, set only
   from the booking source (later 11.1 PR).
 - Owner: engineering
 
