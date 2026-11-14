@@ -23,6 +23,7 @@ export function BookingSummary({
   locale,
   specialPrice = false,
   specialPriceLabel,
+  freeLabel,
   holdLabel,
   footer,
   footerOnPhones = false,
@@ -50,6 +51,8 @@ export function BookingSummary({
   locale: string
   specialPrice?: boolean
   specialPriceLabel?: string
+  /** Label for a free session's price, e.g. "Free". */
+  freeLabel?: string
   holdLabel?: string
   footer?: ReactNode
   /** Show the footer on phones too (the pay step's dated refund line). */
@@ -106,6 +109,7 @@ export function BookingSummary({
                 locale={locale}
                 special={specialPrice}
                 specialLabel={specialPriceLabel}
+                freeLabel={freeLabel}
               />
             </span>
           )}
@@ -167,6 +171,7 @@ export function BookingSummary({
                 locale={locale}
                 special={specialPrice}
                 specialLabel={specialPriceLabel}
+                freeLabel={freeLabel}
               />
             </dd>
           </div>

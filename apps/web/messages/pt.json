@@ -475,7 +475,8 @@
       "change": "Alterar",
       "provider": "A sua sessão é com {name}, profissional independente. A Eleva trata da reserva e do pagamento.",
       "changeTime": "Alterar horário",
-      "fullPolicy": "Ver a política completa"
+      "fullPolicy": "Ver a política completa",
+      "free": "Gratuita"
     },
     "modes": {
       "online": {
@@ -542,41 +543,36 @@
       "phoneHint": "Necessário para uma sessão por telefone. Pode incluir o indicativo do país.",
       "taxId": "NIF / IVA (opcional)",
       "taxIdHint": "O seu NIF português ou número de IVA da UE, para o especialista emitir a fatura em seu nome.",
-      "intakeNotes": "Algo que queira que o especialista saiba (opcional)",
-      "intakeNotesHint": "Uma pré-agenda breve. O especialista vê isto no registo da sessão.",
+      "intakeNotes": "Algo que queira que {name} saiba (opcional)",
+      "intakeNotesHint": "{name} lê esta nota antes da sessão.",
       "promo": "Código promocional (opcional)",
       "promoHint": "Tem um código? Aplique-o aqui e veja o novo total antes de pagar.",
-      "consentsIntro": "Para marcar uma sessão de saúde nesta plataforma digital de saúde, confirme:",
       "aiConsent": {
-        "label": "Opcional: autorizo a transcrição em direto nas minhas sessões por vídeo e, se o especialista a usar, ajuda de IA para redigir as notas. O especialista continua a escrever e a rever o relatório; pode desativar isto a qualquer momento nas definições de Privacidade. Consulte o",
-        "link": "aviso de tratamento por IA"
+        "short": "Autorizo a transcrição em direto nas minhas sessões por vídeo e a ajuda de IA nas notas da sessão.",
+        "description": "{name} escreve e revê cada relatório. Pode desativar isto a qualquer momento nas definições de Privacidade. <link>Aviso sobre tratamento por IA</link>"
       },
       "hold": "Continuar para pagamento",
       "confirmFree": "Confirmar marcação",
       "holding": "A reservar o horário…",
       "consents": {
-        "terms": {
-          "label": "Aceito os",
-          "link": "termos de utilização"
-        },
-        "privacy": {
-          "label": "Li o",
-          "link": "aviso de privacidade"
-        },
         "health_data_processing": {
-          "label": "Autorizo o",
-          "link": "tratamento de dados de saúde"
+          "label": "Aceito expressamente que a Eleva use as informações de saúde desta marcação para organizar a minha sessão e partilhe com {name} o que eu escrever.",
+          "description": "Usadas apenas para organizar os seus cuidados com {name}, nunca para publicidade. Para retirar, escreva para <mail>privacy@eleva.care</mail> ou use as definições de Privacidade; se tiver uma sessão marcada, cancele-a primeiro. <link>Como protegemos os dados de saúde</link>"
         },
-        "adult_confirmation": {
-          "label": "Tenho 18 anos ou mais e estou a marcar esta sessão para mim, conforme os",
-          "link": "termos de marcação"
+        "terms": {
+          "combined": "Tenho 18 anos ou mais, estou a marcar esta sessão para mim e aceito os <terms>termos de utilização</terms> e os <booking>termos de marcação</booking>."
         }
       },
       "sections": {
         "contact": "Os seus contactos",
-        "optional": "Detalhes opcionais",
-        "confirm": "Política e consentimento"
-      }
+        "optional": "Para {name}",
+        "confirm": "Antes de continuar"
+      },
+      "urgentLine": "Numa emergência, não espere por resposta: <call>ligue para o 112</call>.",
+      "urgentMore": "Mais linhas de apoio",
+      "taxIdAdd": "Precisa de fatura em seu nome? Adicione o seu NIF",
+      "optionalHeading": "Opcional",
+      "privacyLine": "Usamos os seus dados como descrito no nosso <link>aviso de privacidade</link>."
     },
     "pay": {
       "heading": "Confirmar e pagar",
@@ -646,7 +642,7 @@
       "phoneRequired": "Indique um telemóvel para poderem ligar-lhe.",
       "guestRequired": "Indique o nome e o email para continuar.",
       "consentOutdated": "Reveja os avisos mais recentes e tente novamente.",
-      "consentsRequired": "Confirme as quatro declarações para continuar.",
+      "consentsRequired": "Assinale as duas declarações para continuar.",
       "taxIdInvalid": "Indique um NIF ou IVA válido (só letras e números, 8–32 caracteres).",
       "confirmFailed": "O pagamento passou, mas ainda não confirmámos a sessão. Tente novamente.",
       "confirmMismatch": "Este pagamento não corresponde ao horário reservado. Se foi cobrado, contacte o suporte.",
@@ -656,7 +652,9 @@
       "paymentFailed": "O pagamento foi recusado ou cancelado, por isso não foi cobrado nada. Escolha de novo um horário para tentar outra vez."
     },
     "policy": {
-      "heading": "Política de cancelamento"
+      "heading": "Política de cancelamento",
+      "named": "Política de cancelamento: {name}",
+      "free": "Esta sessão é gratuita. Se não puder ir, cancele para que outra pessoa possa ficar com o horário."
     },
     "stepOf": "Passo {current} de {total}",
     "chrome": {

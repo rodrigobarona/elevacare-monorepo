@@ -318,6 +318,31 @@ describe("sendBookingNotification", () => {
     )
   })
 
+  it("leaves the cancellation policy out of a free session's confirmation", async () => {
+    const send = vi
+      .fn()
+      .mockResolvedValue({ kind: "booking.confirmed", deliveries: [] })
+    await sendBookingNotification(
+      {
+        id: "evt-confirm-free",
+        type: "booking.confirmed",
+        orgId: ORG_ID,
+        payload: eventPayload(),
+      },
+      {
+        loadBooking: async () => booking({ priceCents: 0 }),
+        send,
+      }
+    )
+    expect(renderBookingConfirmed).toHaveBeenCalled()
+    for (const [props] of renderBookingConfirmed.mock.calls as unknown as [
+      { price?: string; cancellationPolicyName?: string },
+    ][]) {
+      expect(props.price).toBe("Free")
+      expect(props.cancellationPolicyName).toBeUndefined()
+    }
+  })
+
   it("hides the .ics hint when a request email has no calendar attachment", async () => {
     const send = vi
       .fn()

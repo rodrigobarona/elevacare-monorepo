@@ -209,10 +209,12 @@ export async function sendBookingNotification(
           )
         : formattedDate,
       eventTypeName: localizedTitle(booking.eventTypeName, viewLocale),
-      cancellationPolicyName: describeCancellationPolicy(
-        booking.cancellationPolicy,
-        viewLocale
-      ).name,
+      // Free sessions have nothing to refund, so no cancellation policy row.
+      cancellationPolicyName:
+        booking.priceCents > 0
+          ? describeCancellationPolicy(booking.cancellationPolicy, viewLocale)
+              .name
+          : undefined,
       place: sessionPlace(booking, viewLocale),
       refundAmount:
         parsed.refundCents === undefined
@@ -842,7 +844,8 @@ async function renderBookingHtml(input: {
   previousDate: string
   sessionMode: string
   locale: EmailLocale
-  cancellationPolicyName: string
+  /** Left out for free sessions: nothing to refund. */
+  cancellationPolicyName?: string
   refundAmount?: string
   /** `booking.cancelled` only: the expert cancelled, not the member. */
   cancelledByExpert?: boolean

@@ -32,6 +32,49 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-14: Booking details ask for two ticks (needs legal review)
+
+- Change (design slice D1.3): the details step asks only what the booking
+  needs (phone only for phone sessions, the tax number behind a link on paid
+  sessions) and replaces four ticks with two:
+  1. **Health data**, on its own: "I explicitly agree that Eleva uses the
+     health information in this booking to arrange my session and shares
+     what I write with {name}", recorded as `health_data_processing`.
+  2. **Terms with the age line**: "I'm 18 or older, I'm booking this session
+     for myself, and I agree to the terms of use and booking terms",
+     recorded as `terms` and `adult_confirmation`.
+     The privacy notice is information, not consent: it is linked in a
+     sentence and `privacy` is still recorded with the booking, with no tick
+     of its own.
+- Free sessions show a courtesy line instead of refund rules on the details
+  step and the thank-you page; the confirmation email drops the
+  cancellation-policy row.
+- Needs legal review before launch, not shipped as signed off:
+  - bundling the terms and age confirmation in one tick;
+  - recording `privacy` without a tick;
+  - health consent as a condition of booking (GDPR art. 7(4)), and whether
+    "cancel any booked session first" fits withdrawal "as easy as giving"
+    (art. 7(3)).
+- Open founder decision before production: `CONSENT_DOCUMENT_VERSION`
+  `2026-11-14` (#388) was first recorded against the old wording ("I consent
+  to health data processing"). The same version now covers the new
+  statement, which weakens proof of what each person saw (art. 7(1)). Either
+  bump the version to the next published date, ship the statement-text hash
+  below, or accept the gap here; check production `consents` rows on
+  `2026-11-14` before launch.
+- Follow-ups: a basis column and a statement-text hash on `consents`; a
+  `#bookings` anchor on `/legal/terms` so "booking terms" lands on its
+  section; a `#bookings` anchor on Privacy settings for withdrawal; a
+  shorter spoken name for the terms tick (its two links each say "opens in a
+  new tab"). A missing tick is now described by the error message
+  (`aria-describedby`).
+- Merging to `main` deploys, so production records the new health statement
+  under `2026-11-14` from then on until the founder decides the above.
+- Judges panel: round 1 UI 7.9, UX 8.0, trust 7.6; round 2 UI 8.6, UX 8.2,
+  trust 8.2; round 3 UX 8.7, trust 8.6 (UI 8.6 from round 2).
+- Owner: engineering; legal review: DPO and counsel
+- Status: `needs-review`
+
 ### 2026-11-14: Onboarding no longer writes cookies while rendering (active)
 
 - Fix (design slice D0.2): `/onboarding` set the last-active-org cookie
@@ -49,6 +92,7 @@ Each entry should include:
   seat).
 - Owner: engineering
 - Status: `active`
+
 ### 2026-11-14: Demo experts for design work are fictional and dev-only (active)
 
 - Decision: the demo seed (`pnpm db:seed:demo`) now has seven fictional

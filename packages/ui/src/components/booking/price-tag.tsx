@@ -33,9 +33,12 @@ export function PriceTag({
   locale,
   special = false,
   specialLabel,
+  freeLabel,
   className,
 }: {
   cents: number
+  /** Shown instead of a zero amount, e.g. "Free". */
+  freeLabel?: string
   locale: string
   special?: boolean
   specialLabel?: string
@@ -49,7 +52,11 @@ export function PriceTag({
         className
       )}
     >
-      <span>{formatBookingPrice(cents, locale)}</span>
+      <span>
+        {cents === 0 && freeLabel
+          ? freeLabel
+          : formatBookingPrice(cents, locale)}
+      </span>
       {special && specialLabel ? (
         <span
           data-testid="booking-special-price"
