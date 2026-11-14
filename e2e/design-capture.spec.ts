@@ -572,15 +572,13 @@ test.describe("design capture", () => {
       })
       await page.getByTestId("booking-continue-details").click()
       await fillStripeTestCard(page, { number: DECLINED_TEST_CARD })
-      // Stripe's optional Link sign-up asks for a phone number once it has
-      // an email and blocks the submit without one; give it a test number.
-      for (const frame of page.frames()) {
-        const linkPhone = frame.locator('input[name="linkMobilePhone"]').first()
-        if (await linkPhone.isVisible().catch(() => false)) {
-          await linkPhone.fill("912345678")
-        }
-      }
-      await page.getByTestId("booking-pay-submit").click()
+      // Submit the form itself, as member.spec does: a click can land on
+      // Stripe's optional Link fields and never reach the form.
+      const pay = page.getByTestId("booking-pay-submit")
+      await pay.scrollIntoViewIfNeeded()
+      await pay.evaluate((element: HTMLButtonElement) => {
+        element.closest("form")?.requestSubmit(element)
+      })
       // The failure shows inside Stripe's frame, on the page, or both.
       await expect
         .poll(
