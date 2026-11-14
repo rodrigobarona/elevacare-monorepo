@@ -187,5 +187,20 @@ test.describe("onboarding with an existing Space", () => {
     expect(response?.status()).toBeLessThan(500)
     await expect(page).toHaveURL(/\/space-[a-z0-9]+/, { timeout: 30_000 })
     await expect(page.getByText(/having trouble/i)).toHaveCount(0)
+
+    // The continue step only remembers a value shaped like an org slug.
+    const crafted = await page.request.get(
+      `${accountUrl}/onboarding/continue?org=${encodeURIComponent("../admin")}`,
+      { maxRedirects: 0 }
+    )
+    expect([302, 303, 307]).toContain(crafted.status())
+    expect(new URL(crafted.headers()["location"]!).pathname).toBe("/dashboard")
+    const setCookies = crafted
+      .headersArray()
+      .filter((header) => header.name.toLowerCase() === "set-cookie")
+      .map((header) => header.value)
+    expect(setCookies.some((value) => value.includes("eleva-last-org"))).toBe(
+      false
+    )
   })
 })
