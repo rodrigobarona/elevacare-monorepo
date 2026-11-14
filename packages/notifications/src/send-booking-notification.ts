@@ -844,7 +844,8 @@ async function renderBookingHtml(input: {
   previousDate: string
   sessionMode: string
   locale: EmailLocale
-  cancellationPolicyName: string
+  /** Left out for free sessions: nothing to refund. */
+  cancellationPolicyName?: string
   refundAmount?: string
   /** `booking.cancelled` only: the expert cancelled, not the member. */
   cancelledByExpert?: boolean

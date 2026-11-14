@@ -605,7 +605,10 @@ export function BookingFunnel({
       )
       return
     }
-    const normalizedTaxId = taxId.replace(/[\s.-]/g, "").toUpperCase()
+    // Free sessions have no invoice, so a tax number typed earlier is dropped.
+    const normalizedTaxId = isFree
+      ? ""
+      : taxId.replace(/[\s.-]/g, "").toUpperCase()
     if (normalizedTaxId && !/^[A-Z0-9]{8,32}$/.test(normalizedTaxId)) {
       setFormError("taxIdInvalid")
       return
