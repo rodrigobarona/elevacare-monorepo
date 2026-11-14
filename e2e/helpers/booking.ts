@@ -99,12 +99,8 @@ export async function fillGuestAndConsents(
 ): Promise<void> {
   await page.getByTestId("booking-guest-name").fill(guest.name)
   await page.getByTestId("booking-guest-email").fill(guest.email)
-  for (const kind of [
-    "terms",
-    "privacy",
-    "health_data_processing",
-    "adult_confirmation",
-  ] as const) {
+  // Two ticks: health data on its own, and terms with the age confirmation.
+  for (const kind of ["health_data_processing", "terms"] as const) {
     // React Aria: the visual box is a <label> that intercepts the hidden input.
     // Do not click the wrapper — the legal <a> would open a new tab.
     await page

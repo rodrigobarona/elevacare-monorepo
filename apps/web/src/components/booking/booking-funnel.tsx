@@ -229,6 +229,9 @@ export function BookingFunnel({
   const [taxId, setTaxId] = useState("")
   const [intakeNotes, setIntakeNotes] = useState("")
   const [granted, setGranted] = useState<Record<string, boolean>>({})
+  const [showTaxId, setShowTaxId] = useState(false)
+  const consentHref = (kind: string) =>
+    consents.find((doc) => doc.kind === kind)?.href ?? "#"
   const [aiOptIn, setAiOptIn] = useState(false)
   const aiProcessingHref = aiProcessingConsent?.href
   const [reservation, setReservation] = useState<Reservation | null>(null)
@@ -584,7 +587,9 @@ export function BookingFunnel({
       setFormError("phoneRequired")
       return
     }
-    if (!consents.every((doc) => granted[doc.kind])) {
+    // Ticking "terms" also confirms age; the privacy notice is shown, not
+    // ticked. All four records are still sent with their versions.
+    if (!granted.health_data_processing || !granted.terms) {
       setFormError("consentsRequired")
       return
     }
@@ -1128,53 +1133,35 @@ export function BookingFunnel({
                   autoComplete="email"
                 />
               </Field>
-              <Field>
-                <FieldLabel htmlFor={`${fieldId}-phone`}>
-                  {t("details.phone")}
-                </FieldLabel>
-                <Input
-                  id={`${fieldId}-phone`}
-                  aria-describedby={`${fieldId}-phone-hint`}
-                  aria-invalid={formError === "phoneRequired" || undefined}
-                  required={selectedMode?.mode === "phone"}
-                  type="tel"
-                  value={phone}
-                  onChange={(event) => setPhone(event.target.value)}
-                  autoComplete="tel"
-                />
-                <p
-                  id={`${fieldId}-phone-hint`}
-                  className="text-sm text-muted-foreground"
-                >
-                  {t("details.phoneHint")}
-                </p>
-              </Field>
+              {/* Only a phone session needs a number. */}
+              {selectedMode?.mode === "phone" ? (
+                <Field>
+                  <FieldLabel htmlFor={`${fieldId}-phone`}>
+                    {t("details.phone")}
+                  </FieldLabel>
+                  <Input
+                    id={`${fieldId}-phone`}
+                    aria-describedby={`${fieldId}-phone-hint`}
+                    aria-invalid={formError === "phoneRequired" || undefined}
+                    required={selectedMode?.mode === "phone"}
+                    type="tel"
+                    value={phone}
+                    onChange={(event) => setPhone(event.target.value)}
+                    autoComplete="tel"
+                  />
+                  <p
+                    id={`${fieldId}-phone-hint`}
+                    className="text-sm text-muted-foreground"
+                  >
+                    {t("details.phoneHint")}
+                  </p>
+                </Field>
+              ) : null}
             </FormCard>
             <FormCard title={t("details.sections.optional")}>
               <Field>
-                <FieldLabel htmlFor={`${fieldId}-tax-id`}>
-                  {t("details.taxId")}
-                </FieldLabel>
-                <Input
-                  id={`${fieldId}-tax-id`}
-                  aria-describedby={`${fieldId}-tax-id-hint`}
-                  aria-invalid={formError === "taxIdInvalid" || undefined}
-                  data-testid="booking-guest-tax-id"
-                  value={taxId}
-                  onChange={(event) => setTaxId(event.target.value)}
-                  autoComplete="off"
-                  inputMode="text"
-                />
-                <p
-                  id={`${fieldId}-tax-id-hint`}
-                  className="text-sm text-muted-foreground"
-                >
-                  {t("details.taxIdHint")}
-                </p>
-              </Field>
-              <Field>
                 <FieldLabel htmlFor={`${fieldId}-intake`}>
-                  {t("details.intakeNotes")}
+                  {t("details.intakeNotes", { name: expertName })}
                 </FieldLabel>
                 <Textarea
                   id={`${fieldId}-intake`}
@@ -1195,50 +1182,210 @@ export function BookingFunnel({
                   id={`${fieldId}-intake-hint`}
                   className="text-sm text-muted-foreground"
                 >
-                  {t("details.intakeNotesHint")}
+                  {t("details.intakeNotesHint", { name: expertName })}
                 </p>
               </Field>
-              <UrgentHelp variant="compact" />
+              {/* Urgent help stays, as one quiet line with the numbers a
+                  tap away (the full block is on the profile and join page). */}
+              <div
+                className="text-sm text-muted-foreground"
+                data-testid="booking-urgent-help"
+              >
+                <p>
+                  {t.rich("details.urgentLine", {
+                    call: (chunks) => (
+                      <a
+                        href="tel:112"
+                        className="font-medium text-foreground underline underline-offset-4"
+                      >
+                        {chunks}
+                      </a>
+                    ),
+                  })}
+                </p>
+                <details className="mt-1">
+                  <summary className="inline-flex min-h-6 cursor-pointer items-center rounded-sm text-primary underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none">
+                    {t("details.urgentMore")}
+                  </summary>
+                  <div className="mt-2">
+                    <UrgentHelp variant="compact" />
+                  </div>
+                </details>
+              </div>
+              {priceCents > 0 ? (
+                showTaxId || taxId ? (
+                  <Field>
+                    <FieldLabel htmlFor={`${fieldId}-tax-id`}>
+                      {t("details.taxId")}
+                    </FieldLabel>
+                    <Input
+                      id={`${fieldId}-tax-id`}
+                      aria-describedby={`${fieldId}-tax-id-hint`}
+                      aria-invalid={formError === "taxIdInvalid" || undefined}
+                      data-testid="booking-guest-tax-id"
+                      value={taxId}
+                      onChange={(event) => setTaxId(event.target.value)}
+                      autoComplete="off"
+                      inputMode="text"
+                      autoFocus={!taxId}
+                    />
+                    <p
+                      id={`${fieldId}-tax-id-hint`}
+                      className="text-sm text-muted-foreground"
+                    >
+                      {t("details.taxIdHint")}
+                    </p>
+                  </Field>
+                ) : (
+                  <button
+                    type="button"
+                    data-testid="booking-tax-id-open"
+                    onClick={() => setShowTaxId(true)}
+                    className="inline-flex min-h-6 items-center self-start rounded-sm text-sm font-medium text-primary underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none"
+                  >
+                    {t("details.taxIdAdd")}
+                  </button>
+                )
+              ) : null}
             </FormCard>
             <FormCard title={t("details.sections.confirm")}>
-              <CancellationPolicySummary
-                heading={t("policy.heading")}
-                name={policyCopy.name}
-                lines={policyCopy.lines}
-                deadlines={policyDeadlines}
-                className="rounded-2xl bg-muted/60 p-4"
-              />
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  {t("details.consentsIntro")}
+              {/* The policy once, as dated deadlines for this time. */}
+              <div
+                className="space-y-1 rounded-2xl bg-muted/60 p-4 text-sm"
+                data-testid="booking-policy-dates"
+              >
+                <p className="font-medium">
+                  {t("policy.named", { name: policyCopy.name })}
                 </p>
-                {consents.map((doc) => (
-                  <ConsentCheckbox
-                    key={doc.kind}
-                    id={doc.kind}
-                    isSelected={Boolean(granted[doc.kind])}
-                    onChange={(selected) =>
-                      setGranted((current) => ({
-                        ...current,
-                        [doc.kind]: selected,
-                      }))
-                    }
-                    label={t(`details.consents.${doc.kind}.label`)}
-                    href={doc.href}
-                    linkLabel={t(`details.consents.${doc.kind}.link`)}
-                  />
+                {(policyDeadlines ?? policyCopy.lines).map((line) => (
+                  <p key={line} className="text-muted-foreground">
+                    {line}
+                  </p>
                 ))}
-                {aiProcessingHref ? (
+                <details>
+                  <summary className="inline-flex min-h-6 cursor-pointer items-center rounded-sm text-primary underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none">
+                    {t("summary.fullPolicy")}
+                  </summary>
+                  <ul className="mt-2 space-y-1 text-muted-foreground">
+                    {policyCopy.lines.map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
+                </details>
+              </div>
+              {/* Two ticks: health data on its own (an explicit, separate
+                  choice), and terms with the age confirmation. The privacy
+                  notice is information, linked in a sentence. Needs legal
+                  review before launch (decision log, 2026-11-14). */}
+              <div className="space-y-4">
+                <ConsentCheckbox
+                  id="health_data_processing"
+                  isSelected={Boolean(granted.health_data_processing)}
+                  onChange={(selected) =>
+                    setGranted((current) => ({
+                      ...current,
+                      health_data_processing: selected,
+                    }))
+                  }
+                  label={t("details.consents.health_data_processing.label", {
+                    name: expertName,
+                  })}
+                  description={t.rich(
+                    "details.consents.health_data_processing.description",
+                    {
+                      link: (chunks) => (
+                        <a
+                          href={consentHref("health_data_processing")}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium text-primary underline-offset-4 hover:underline"
+                        >
+                          {chunks}
+                          <span className="sr-only">
+                            {" "}
+                            ({t("chrome.newTab")})
+                          </span>
+                        </a>
+                      ),
+                    }
+                  )}
+                />
+                <ConsentCheckbox
+                  id="terms"
+                  isSelected={Boolean(granted.terms)}
+                  onChange={(selected) =>
+                    setGranted((current) => ({ ...current, terms: selected }))
+                  }
+                  label={t.rich("details.consents.terms.combined", {
+                    terms: (chunks) => (
+                      <a
+                        href={consentHref("terms")}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium text-primary underline-offset-4 hover:underline"
+                      >
+                        {chunks}
+                        <span className="sr-only"> ({t("chrome.newTab")})</span>
+                      </a>
+                    ),
+                    booking: (chunks) => (
+                      <a
+                        href={consentHref("adult_confirmation")}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium text-primary underline-offset-4 hover:underline"
+                      >
+                        {chunks}
+                        <span className="sr-only"> ({t("chrome.newTab")})</span>
+                      </a>
+                    ),
+                  })}
+                />
+                <p className="text-sm text-muted-foreground">
+                  {t.rich("details.privacyLine", {
+                    link: (chunks) => (
+                      <a
+                        href={consentHref("privacy")}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium text-primary underline-offset-4 hover:underline"
+                      >
+                        {chunks}
+                        <span className="sr-only"> ({t("chrome.newTab")})</span>
+                      </a>
+                    ),
+                  })}
+                </p>
+              </div>
+              {aiProcessingHref ? (
+                <div className="space-y-2 border-t border-border pt-4">
+                  <p className="text-sm font-medium">
+                    {t("details.optionalHeading")}
+                  </p>
                   <ConsentCheckbox
                     id="ai_processing"
                     isSelected={aiOptIn}
                     onChange={setAiOptIn}
-                    label={t("details.aiConsent.label")}
-                    href={aiProcessingHref}
-                    linkLabel={t("details.aiConsent.link")}
+                    label={t("details.aiConsent.short")}
+                    description={t.rich("details.aiConsent.description", {
+                      link: (chunks) => (
+                        <a
+                          href={aiProcessingHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium text-primary underline-offset-4 hover:underline"
+                        >
+                          {chunks}
+                          <span className="sr-only">
+                            {" "}
+                            ({t("chrome.newTab")})
+                          </span>
+                        </a>
+                      ),
+                    })}
                   />
-                ) : null}
-              </div>
+                </div>
+              ) : null}
             </FormCard>
             {formError ? (
               <FieldError>{t(`errors.${formError}`)}</FieldError>

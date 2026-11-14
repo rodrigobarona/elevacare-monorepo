@@ -542,14 +542,16 @@
       "phoneHint": "Needed for a phone session. You can include the country code.",
       "taxId": "NIF / VAT (optional)",
       "taxIdHint": "Your Portuguese NIF or EU VAT number, so your expert can issue the invoice in your name.",
-      "intakeNotes": "Anything you want the expert to know (optional)",
-      "intakeNotesHint": "A short pre-agenda. The expert sees this with the session record.",
+      "intakeNotes": "Anything you want {name} to know (optional)",
+      "intakeNotesHint": "{name} reads this before your session.",
       "promo": "Promo code (optional)",
       "promoHint": "Have a code? Apply it here and you'll see the new total before you pay.",
       "consentsIntro": "To book a health session on this digital health platform, please confirm:",
       "aiConsent": {
         "label": "Optional: allow live transcription in your video sessions and, if your expert uses it, AI help with drafting their notes. Your expert still writes and checks the report. You can turn this off any time in Privacy settings. See the",
-        "link": "AI processing notice"
+        "link": "AI processing notice",
+        "short": "Allow live transcription in your video sessions and AI help with your expert’s notes.",
+        "description": "Your expert writes and checks every report. You can turn this off any time in Privacy settings. <link>AI processing notice</link>"
       },
       "hold": "Continue to payment",
       "confirmFree": "Confirm booking",
@@ -557,15 +559,17 @@
       "consents": {
         "terms": {
           "label": "I agree to the",
-          "link": "terms of use"
+          "link": "terms of use",
+          "combined": "I’m 18 or older, I’m booking this session for myself, and I agree to the <terms>terms of use</terms> and <booking>booking terms</booking>."
         },
         "privacy": {
           "label": "I have read the",
           "link": "privacy notice"
         },
         "health_data_processing": {
-          "label": "I consent to",
-          "link": "health data processing"
+          "label": "I agree that Eleva and {name} use the health information I share to provide this session.",
+          "link": "health data processing",
+          "description": "Only for your care, never for marketing, and you can withdraw it any time. <link>How we protect health data</link>"
         },
         "adult_confirmation": {
           "label": "I am 18 or older and I am booking this session for myself, as set out in the",
@@ -574,9 +578,14 @@
       },
       "sections": {
         "contact": "Your contact details",
-        "optional": "Optional details",
-        "confirm": "Policy and consent"
-      }
+        "optional": "Before your session",
+        "confirm": "Before you continue"
+      },
+      "urgentLine": "In an emergency, don’t wait for a reply: <call>call 112</call>.",
+      "urgentMore": "More helplines",
+      "taxIdAdd": "Need an invoice in your name? Add your tax number",
+      "optionalHeading": "Optional",
+      "privacyLine": "We use your details as described in our <link>privacy notice</link>."
     },
     "pay": {
       "heading": "Confirm and pay",
@@ -646,7 +655,7 @@
       "phoneRequired": "Add a phone number so the expert can call you.",
       "guestRequired": "Please add your name and email to continue.",
       "consentOutdated": "Please review the latest notices and try again.",
-      "consentsRequired": "Please confirm all four statements to continue.",
+      "consentsRequired": "Please tick both statements to continue.",
       "taxIdInvalid": "Enter a valid NIF or VAT (letters and numbers only, 8–32 characters).",
       "confirmFailed": "Payment went through, but we could not confirm the session yet. Please try again.",
       "confirmMismatch": "This payment does not match the held time. Contact support if you were charged.",
@@ -656,7 +665,8 @@
       "paymentFailed": "Your payment was declined or cancelled, so nothing was charged. Pick a time again to retry."
     },
     "policy": {
-      "heading": "Cancellation policy"
+      "heading": "Cancellation policy",
+      "named": "Cancellation policy: {name}"
     },
     "stepOf": "Step {current} of {total}",
     "chrome": {
