@@ -573,11 +573,11 @@ test.describe("design capture", () => {
       await page.getByTestId("booking-continue-details").click()
       await fillStripeTestCard(page, { number: DECLINED_TEST_CARD })
       // Stripe's optional Link sign-up asks for a phone number once it has
-      // an email, which blocks the submit; clear its email so it stays off.
+      // an email and blocks the submit without one; give it a test number.
       for (const frame of page.frames()) {
-        const linkEmail = frame.locator('input[type="email"]').first()
-        if (await linkEmail.isVisible().catch(() => false)) {
-          await linkEmail.fill("")
+        const linkPhone = frame.locator('input[type="tel"]').first()
+        if (await linkPhone.isVisible().catch(() => false)) {
+          await linkPhone.fill("912345678")
         }
       }
       await page.getByTestId("booking-pay-submit").click()
