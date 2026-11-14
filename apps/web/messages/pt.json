@@ -613,12 +613,14 @@
       "subRequest": "Está a pedir {when} a {name}. Paga agora; se {name} recusar, recebe 100% de volta.",
       "extended": "Tempo prolongado. O seu horário fica guardado mais 5 minutos.",
       "expiredTitle": "O horário reservado foi libertado",
-      "failedHelp": "Não foi cobrado nada e o seu horário continua reservado. Verifique os dados, experimente outro cartão ou escolha outra forma de pagar."
+      "failedHelp": "Não foi cobrado nada e o seu horário continua reservado. Verifique os dados, experimente outro cartão ou escolha outra forma de pagar.",
+      "declinedTitle": "O pagamento não foi concluído",
+      "failedUnknown": "Não conseguimos confirmar o pagamento. Se foi concluído, enviamos-lhe um email; se não, tente de novo."
     },
     "done": {
       "pending": "Pagamento recebido",
       "pendingSub": "Estamos a confirmar a sua sessão e enviamos-lhe um email assim que estiver pronta. Por agora, não precisa de fazer mais nada.",
-      "videoLocation": "Sessão por vídeo — o link chega antes da sessão",
+      "videoLocation": "Sessão por vídeo · link para entrar no email de confirmação",
       "phoneLocation": "Chamada para {phone}",
       "ics": "Adicionar ao calendário",
       "retry": "Tentar confirmar de novo",
@@ -634,23 +636,29 @@
       "steps": {
         "now": "Agora",
         "inbox": "A confirmação e o convite de calendário estão no seu email. Não chegou em poucos minutos? Veja a pasta de spam.",
-        "reminder": "Enviamos-lhe um lembrete, 24 horas antes.",
+        "reminder": "Enviamos-lhe um lembrete 24 horas antes.",
         "joinOpens": "O link para entrar abre. Não precisa de conta.",
-        "within24h": "Nas próximas 24 horas",
         "requestSent": "O seu pedido está com {name}. Por agora, não precisa de fazer mais nada.",
-        "requestReply": "{name} responde em 24 horas, ou antes da sessão se for mais cedo. Escrevemos-lhe em qualquer caso e, se a resposta for não, o que pagou é devolvido na totalidade."
+        "requestReply": "{name} aceita ou recusa. Escrevemos-lhe em qualquer caso e, se a resposta for não, o que pagou é devolvido na totalidade.",
+        "confirming": "Estamos a confirmar o pagamento e enviamos um email para {email} assim que estiver concluído.",
+        "by": "Até {when}",
+        "requestReplyFree": "{name} aceita ou recusa. Escrevemos-lhe em qualquer caso."
       },
       "changeHeading": "Precisa de mudar alguma coisa?",
-      "changeHow": "Para mudar ou cancelar, crie o seu Espaço abaixo com este email.",
+      "changeHow": "Para mudar ou cancelar, entre ou crie o seu Espaço abaixo com este email.",
       "space": {
         "heading": "Tudo num só lugar",
         "manage": "Veja, mude ou cancele as suas sessões",
         "rebook": "Marque de novo em poucos toques",
-        "reminders": "Escolha como lhe lembramos",
+        "reminders": "Escolha como quer receber lembretes",
         "prefilled": "O seu nome e email já estão preenchidos.",
         "cta": "Criar o seu Espaço",
         "later": "Agora não? O email de confirmação tem tudo o que precisa."
-      }
+      },
+      "accessRequest": "Os dados para entrar chegam por email assim que {name} aceitar.",
+      "accessInPersonNoPlace": "{name} confirma a morada no email de confirmação.",
+      "requestChange": "Se {name} aceitar, o email de confirmação explica como mudar ou cancelar.",
+      "calendarNote": "O email de confirmação também traz um convite de calendário. A Google e a Microsoft só recebem o nome, a hora e o local da sessão se os escolher."
     },
     "link": {
       "specialPrice": "Preço especial",

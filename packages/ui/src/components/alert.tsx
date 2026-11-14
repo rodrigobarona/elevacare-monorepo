@@ -10,6 +10,9 @@ const alertVariants = cva(
         default: "bg-card text-card-foreground",
         destructive:
           "bg-card text-destructive *:data-[slot=alert-description]:text-destructive/90 *:[svg]:text-current",
+        // eleva: a calm next step (time taken, hold ended): muted, no border.
+        notice:
+          "border-transparent bg-muted/60 text-foreground *:[svg]:text-primary",
       },
     },
     defaultVariants: {

@@ -428,6 +428,13 @@ test.describe("design capture", () => {
         .getByTestId("booking-done-heading")
         .waitFor({ timeout: 60_000 })
       await shoot(page, surface, "09-free-thank-you", kind)
+      // The calendar choices, open.
+      await page.getByRole("button", { name: /add to calendar/i }).click()
+      await page.getByRole("menu").waitFor()
+      await shoot(page, surface, "09b-calendar-menu", kind, {
+        fullPage: false,
+      })
+      await page.keyboard.press("Escape")
       await finishVideo(page, context, surface, "free-funnel", kind)
     })
 
@@ -607,7 +614,8 @@ test.describe("design capture", () => {
       await clearBanner(page)
       const picker = page.locator("[data-slot='slot-picker']")
       await picker.waitFor({ timeout: 60_000 })
-      await picker.getByTestId("booking-slot-day").last().click()
+      // The first open day has the most times left to fall back on.
+      await picker.getByTestId("booking-slot-day").first().click()
       const time = picker.getByTestId("booking-slot-time").nth(1)
       await time.click()
       const startsAt = await time.getAttribute("data-start")
@@ -666,6 +674,9 @@ test.describe("design capture", () => {
           { timeout: 45_000 }
         )
         .toBe(true)
+      await page.getByTestId("booking-pay-error").waitFor()
+      // Let the Payment Element finish resizing after the error.
+      await page.waitForTimeout(3_000)
       await shoot(page, surface, "12-payment-declined", kind)
 
       // Hold ended: jump the page clock past the hold.

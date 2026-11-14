@@ -10,6 +10,7 @@ import {
   ClockIcon,
   EnvelopeIcon,
   ArrowsClockwiseIcon,
+  ArrowSquareOutIcon,
 } from "@eleva/icons"
 import { Button, LinkButton } from "@eleva/ui/components/button"
 import {
@@ -51,7 +52,7 @@ export function BookingDone({
   accessLine,
   email,
   steps,
-  changeLine,
+  changeLines,
   calendar,
   onDownloadIcs,
   signupHref,
@@ -75,8 +76,8 @@ export function BookingDone({
   accessLine: string
   email: string
   steps: DoneStep[]
-  /** The dated cancellation line, or the free-session courtesy line. */
-  changeLine: string
+  /** Every dated cancellation line, or the free-session courtesy line. */
+  changeLines: string[]
   calendar: CalendarLinks | null
   onDownloadIcs: () => void
   signupHref: string
@@ -96,46 +97,51 @@ export function BookingDone({
 
   return (
     <div className="mx-auto max-w-4xl">
-      <header aria-live="polite" className="space-y-4 text-center">
+      <header className="space-y-4 text-center">
         <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary">
           {isConfirmed && isRequest ? (
-            <ClockIcon className="size-9" weight="fill" />
+            <ClockIcon aria-hidden className="size-9" weight="fill" />
           ) : (
-            <CheckCircleIcon className="size-9" weight="fill" />
+            <CheckCircleIcon aria-hidden className="size-9" weight="fill" />
           )}
         </div>
-        <h1
-          ref={headingRef}
-          tabIndex={-1}
-          className="font-display text-4xl font-medium tracking-tight text-balance outline-none sm:text-5xl"
-          data-testid="booking-done-heading"
-          data-state={confirmState}
-        >
-          {heading}
-        </h1>
-        {isConfirmed ? (
-          <div className="space-y-1">
-            <p className="text-lg font-medium text-pretty first-letter:uppercase">
-              {whenLong}
-              <span className="text-muted-foreground"> · {zoneLabel}</span>
+        {/* Only the heading and the line under it announce state changes. */}
+        <div aria-live="polite" className="space-y-4">
+          <h1
+            ref={headingRef}
+            tabIndex={-1}
+            className="font-display text-4xl font-medium tracking-tight text-balance outline-none sm:text-5xl"
+            data-testid="booking-done-heading"
+            data-state={confirmState}
+          >
+            {heading}
+          </h1>
+          {isConfirmed ? (
+            <div className="space-y-1">
+              <p className="text-lg font-medium text-pretty first-letter:uppercase">
+                {whenLong}{" "}
+                <span className="whitespace-nowrap text-muted-foreground">
+                  · {zoneLabel}
+                </span>
+              </p>
+              <p
+                className="text-pretty text-muted-foreground"
+                data-testid="booking-done-sent-to"
+              >
+                {sentTo}
+              </p>
+            </div>
+          ) : (
+            <p className="mx-auto max-w-xl text-lg text-pretty text-muted-foreground">
+              {t("done.pendingSub")}
             </p>
-            <p
-              className="text-pretty text-muted-foreground"
-              data-testid="booking-done-sent-to"
-            >
-              {sentTo}
-            </p>
-          </div>
-        ) : (
-          <p className="mx-auto max-w-xl text-lg text-pretty text-muted-foreground">
-            {t("done.pendingSub")}
-          </p>
-        )}
+          )}
+        </div>
         {isConfirmed && !isRequest ? (
           <div className="flex justify-center pt-2">
             <DropdownMenuTrigger>
               <Button size="lg" className="min-h-12 rounded-full px-6">
-                <CalendarPlusIcon data-icon="inline-start" />
+                <CalendarPlusIcon aria-hidden data-icon="inline-start" />
                 {t("done.ics")}
               </Button>
               <DropdownMenu placement="bottom">
@@ -149,6 +155,11 @@ export function BookingDone({
                       rel="noopener noreferrer"
                     >
                       Google Calendar
+                      <ArrowSquareOutIcon
+                        aria-hidden
+                        className="ml-auto size-3.5"
+                      />
+                      <span className="sr-only"> ({t("chrome.newTab")})</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       id="outlook"
@@ -158,6 +169,11 @@ export function BookingDone({
                       rel="noopener noreferrer"
                     >
                       Outlook.com
+                      <ArrowSquareOutIcon
+                        aria-hidden
+                        className="ml-auto size-3.5"
+                      />
+                      <span className="sr-only"> ({t("chrome.newTab")})</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       id="office365"
@@ -167,6 +183,11 @@ export function BookingDone({
                       rel="noopener noreferrer"
                     >
                       Microsoft 365
+                      <ArrowSquareOutIcon
+                        aria-hidden
+                        className="ml-auto size-3.5"
+                      />
+                      <span className="sr-only"> ({t("chrome.newTab")})</span>
                     </DropdownMenuItem>
                   </>
                 ) : null}
@@ -180,6 +201,11 @@ export function BookingDone({
               </DropdownMenu>
             </DropdownMenuTrigger>
           </div>
+        ) : null}
+        {isConfirmed && !isRequest ? (
+          <p className="mx-auto max-w-md text-xs text-pretty text-muted-foreground">
+            {t("done.calendarNote")}
+          </p>
         ) : null}
       </header>
 
@@ -224,53 +250,72 @@ export function BookingDone({
               <dd className="text-right font-semibold">{priceLabel}</dd>
             </div>
           </dl>
-          <p className="mt-5 rounded-2xl bg-muted px-4 py-3 text-sm">
-            {accessLine}
-          </p>
+          {confirmState === "confirmed" ? (
+            <p className="mt-5 rounded-2xl bg-muted px-4 py-3 text-sm">
+              {accessLine}
+            </p>
+          ) : null}
         </article>
 
-        <section className="rounded-4xl bg-muted/60 p-6">
-          <h2 className="font-display text-xl font-medium">
-            {t("done.nextHeading")}
-          </h2>
-          <ol className="mt-5 space-y-5 text-sm">
-            {steps.map((step, index) => (
-              <li key={step.when + index} className="flex gap-3">
-                <span
-                  aria-hidden
-                  className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-card text-primary shadow-1"
-                >
-                  {index === 0 ? (
-                    <EnvelopeIcon className="size-4" />
-                  ) : index === steps.length - 1 ? (
-                    <CalendarCheckIcon className="size-4" />
-                  ) : (
-                    <ClockIcon className="size-4" />
-                  )}
-                </span>
-                <span className="pt-0.5 text-pretty">
-                  <span className="block font-medium first-letter:uppercase">
-                    {step.when}
+        {steps.length > 0 || isConfirmed ? (
+          <section className="rounded-4xl bg-muted/60 p-6">
+            <h2 className="font-display text-xl font-medium">
+              {t("done.nextHeading")}
+            </h2>
+            <ol className="mt-5 space-y-5 text-sm">
+              {steps.map((step, index) => (
+                <li key={step.when + index} className="flex gap-3">
+                  <span
+                    aria-hidden
+                    className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-card text-primary shadow-1"
+                  >
+                    {index === 0 ? (
+                      <EnvelopeIcon className="size-4" />
+                    ) : index === steps.length - 1 ? (
+                      <CalendarCheckIcon className="size-4" />
+                    ) : (
+                      <ClockIcon className="size-4" />
+                    )}
                   </span>
-                  <span className="text-muted-foreground">{step.text}</span>
-                </span>
-              </li>
-            ))}
-          </ol>
-          {isConfirmed ? (
-            <div className="mt-6 space-y-1 border-t border-border pt-5 text-sm">
-              <h3 className="flex items-center gap-2 font-medium">
-                <ArrowsClockwiseIcon aria-hidden className="size-4" />
-                {t("done.changeHeading")}
-              </h3>
-              <p className="text-muted-foreground">{changeLine}</p>
-              <p className="text-muted-foreground">{t("done.changeHow")}</p>
-            </div>
-          ) : null}
-        </section>
+                  <span className="pt-0.5 text-pretty">
+                    <span className="block font-medium first-letter:uppercase">
+                      {step.when}
+                    </span>
+                    <span className="text-muted-foreground">{step.text}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+            {isConfirmed ? (
+              <div className="mt-6 space-y-1 border-t border-border pt-5 text-sm">
+                <h3 className="flex items-center gap-2 font-medium">
+                  <ArrowsClockwiseIcon aria-hidden className="size-4" />
+                  {t("done.changeHeading")}
+                </h3>
+                {isRequest ? (
+                  <p className="text-muted-foreground">
+                    {t("done.requestChange", { name: expertFirstName })}
+                  </p>
+                ) : (
+                  <>
+                    {changeLines.map((line) => (
+                      <p key={line} className="text-muted-foreground">
+                        {line}
+                      </p>
+                    ))}
+                    <p className="text-muted-foreground">
+                      {t("done.changeHow")}
+                    </p>
+                  </>
+                )}
+              </div>
+            ) : null}
+          </section>
+        ) : null}
       </div>
 
-      {isConfirmed ? (
+      {/* A request joins her Space only once accepted. */}
+      {isConfirmed && !isRequest ? (
         <section
           aria-labelledby="booking-space-invite"
           className="mt-6 grid gap-6 rounded-4xl bg-card p-6 shadow-1 ring-1 ring-foreground/5 md:grid-cols-[1fr_auto] md:items-center md:p-8"
@@ -314,7 +359,7 @@ export function BookingDone({
         </section>
       ) : null}
 
-      <UrgentHelp variant="compact" className="mt-6 rounded-3xl p-5" />
+      <UrgentHelp className="mt-6 rounded-3xl p-5" />
     </div>
   )
 }

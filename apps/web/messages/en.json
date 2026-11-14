@@ -613,12 +613,14 @@
       "subRequest": "You’re asking {name} for {when}. You pay now; if {name} declines, you get 100% back.",
       "extended": "Done. We’re holding this time for 5 more minutes.",
       "expiredTitle": "Your held time was released",
-      "failedHelp": "Nothing was charged and your time is still held. Check the details, try another card, or choose another way to pay."
+      "failedHelp": "Nothing was charged and your time is still held. Check the details, try another card, or choose another way to pay.",
+      "declinedTitle": "Payment didn’t go through",
+      "failedUnknown": "We couldn’t confirm the payment. If it went through, we’ll email you; if not, try again."
     },
     "done": {
       "pending": "Payment received",
       "pendingSub": "We’re confirming your session and will email you as soon as it’s ready. Nothing more to do for now.",
-      "videoLocation": "Video session — link arrives before the session",
+      "videoLocation": "Video session · join link in your confirmation email",
       "phoneLocation": "The expert will call {phone}",
       "ics": "Add to calendar",
       "retry": "Try confirming again",
@@ -634,14 +636,16 @@
       "steps": {
         "now": "Now",
         "inbox": "Your confirmation and calendar invite are in your inbox. Not there in a few minutes? Check your spam folder.",
-        "reminder": "We send you a reminder, 24 hours before.",
+        "reminder": "We send you a reminder 24 hours before.",
         "joinOpens": "Your join link opens. No account needed.",
-        "within24h": "Within 24 hours",
         "requestSent": "Your request is with {name}. Nothing else to do for now.",
-        "requestReply": "{name} replies within 24 hours, or before the session if that’s sooner. We email you either way, and if it’s a no, anything you paid comes back in full."
+        "requestReply": "{name} accepts or declines. We email you either way, and if it’s a no, anything you paid comes back in full.",
+        "confirming": "We’re confirming your payment and will email {email} as soon as it’s done.",
+        "by": "By {when}",
+        "requestReplyFree": "{name} accepts or declines. We email you either way."
       },
       "changeHeading": "Need to change something?",
-      "changeHow": "To move or cancel it, create your Space below with this email.",
+      "changeHow": "To move or cancel it, sign in or create your Space below with this email.",
       "space": {
         "heading": "Keep everything in one place",
         "manage": "See, move or cancel your sessions",
@@ -650,7 +654,11 @@
         "prefilled": "Your name and email are already filled in.",
         "cta": "Create your Space",
         "later": "Not now? Your confirmation email has everything you need."
-      }
+      },
+      "accessRequest": "Your join details come by email once {name} accepts.",
+      "accessInPersonNoPlace": "{name} confirms the address in your confirmation email.",
+      "requestChange": "If {name} says yes, your confirmation email explains how to move or cancel.",
+      "calendarNote": "Your confirmation email has a calendar invite too. Google and Microsoft only get the session name, time and place if you choose them."
     },
     "link": {
       "specialPrice": "Special price",

@@ -613,12 +613,14 @@
       "subRequest": "Le pides {when} a {name}. Pagas ahora; si {name} lo rechaza, te devolvemos el 100%.",
       "extended": "Tiempo ampliado. Te guardamos esta hora 5 minutos más.",
       "expiredTitle": "Hemos liberado la hora reservada",
-      "failedHelp": "No se ha cobrado nada y tu hora sigue reservada. Revisa los datos, prueba otra tarjeta o elige otra forma de pago."
+      "failedHelp": "No se ha cobrado nada y tu hora sigue reservada. Revisa los datos, prueba otra tarjeta o elige otra forma de pago.",
+      "declinedTitle": "El pago no se completó",
+      "failedUnknown": "No pudimos confirmar el pago. Si se completó, te escribiremos; si no, inténtalo de nuevo."
     },
     "done": {
       "pending": "Pago recibido",
       "pendingSub": "Estamos confirmando tu sesión y te escribiremos en cuanto esté lista. Por ahora no tienes que hacer nada más.",
-      "videoLocation": "Sesión por vídeo — el enlace llega antes de la sesión",
+      "videoLocation": "Sesión por vídeo · enlace para entrar en tu email de confirmación",
       "phoneLocation": "Llamada al {phone}",
       "ics": "Añadir al calendario",
       "retry": "Intentar confirmar de nuevo",
@@ -630,18 +632,20 @@
       "icsApple": "Calendario de Apple u otro (.ics)",
       "accessOnline": "El enlace para entrar está en tu email de confirmación. Se abre 15 minutos antes del inicio, sin necesidad de cuenta.",
       "accessPhone": "{name} te llamará al {phone}.",
-      "accessInPerson": "Encuéntrate con {name} en {location}.",
+      "accessInPerson": "Tu cita con {name} es en {location}.",
       "steps": {
         "now": "Ahora",
         "inbox": "La confirmación y la invitación de calendario están en tu email. ¿No llega en unos minutos? Mira en spam.",
-        "reminder": "Te enviamos un recordatorio, 24 horas antes.",
+        "reminder": "Te enviamos un recordatorio 24 horas antes.",
         "joinOpens": "Se abre tu enlace para entrar. Sin necesidad de cuenta.",
-        "within24h": "En las próximas 24 horas",
         "requestSent": "Tu solicitud está con {name}. Por ahora no tienes que hacer nada más.",
-        "requestReply": "{name} responde en 24 horas, o antes de la sesión si es antes. Te escribimos en cualquier caso y, si la respuesta es no, te devolvemos todo lo que pagaste."
+        "requestReply": "{name} acepta o rechaza. Te escribimos en cualquier caso y, si la respuesta es no, te devolvemos todo lo que pagaste.",
+        "confirming": "Estamos confirmando tu pago y escribiremos a {email} en cuanto esté listo.",
+        "by": "Antes del {when}",
+        "requestReplyFree": "{name} acepta o rechaza. Te escribimos en cualquier caso."
       },
       "changeHeading": "¿Necesitas cambiar algo?",
-      "changeHow": "Para cambiarla o cancelarla, crea tu Espacio abajo con este email.",
+      "changeHow": "Para cambiarla o cancelarla, entra o crea tu Espacio abajo con este email.",
       "space": {
         "heading": "Todo en un solo lugar",
         "manage": "Ve, cambia o cancela tus sesiones",
@@ -650,7 +654,11 @@
         "prefilled": "Tu nombre y email ya están rellenados.",
         "cta": "Crear tu Espacio",
         "later": "¿Ahora no? Tu email de confirmación tiene todo lo que necesitas."
-      }
+      },
+      "accessRequest": "Los datos para entrar llegan por email en cuanto {name} acepte.",
+      "accessInPersonNoPlace": "{name} confirma la dirección en tu email de confirmación.",
+      "requestChange": "Si {name} acepta, tu email de confirmación explica cómo cambiarla o cancelarla.",
+      "calendarNote": "Tu email de confirmación también incluye una invitación de calendario. Google y Microsoft solo reciben el nombre, la hora y el lugar de la sesión si los eliges."
     },
     "link": {
       "specialPrice": "Precio especial",

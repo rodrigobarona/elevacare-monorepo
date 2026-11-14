@@ -61,8 +61,12 @@ export type BookingCheckoutLabels = {
   pay: (total: string) => string
   processing: string
   failed: string
-  /** Under a failed payment: nothing charged, the hold kept, what to try. */
+  /** Title when the bank declined the payment. */
+  declinedTitle?: string
+  /** Under a decline: nothing charged, the hold kept, what to try. */
   failedHelp?: string
+  /** When confirming threw and the outcome is unknown. */
+  failedUnknown?: string
 }
 
 /**
@@ -185,7 +189,10 @@ function CheckoutForm({
   }, [state.type])
   const [promoError, setPromoError] = useState<string | null>(null)
   const [promoBusy, setPromoBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<{
+    message: string
+    kind: "declined" | "form" | "unknown"
+  } | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
 
   const checkout = state.type === "success" ? state.checkout : null
@@ -247,7 +254,12 @@ function CheckoutForm({
     try {
       const result = await checkout.confirm({ redirect: "if_required" })
       if (result.type === "error") {
-        setError(result.error.message || labels.failed)
+        // A decline means nothing was charged; other errors are about the
+        // form itself, which Stripe shows next to the field.
+        setError({
+          message: result.error.message || labels.failed,
+          kind: result.error.code === "paymentFailed" ? "declined" : "form",
+        })
         markProcessing(false)
         return
       }
@@ -261,7 +273,8 @@ function CheckoutForm({
             : "pending",
       })
     } catch {
-      setError(labels.failed)
+      // The outcome is unknown: never promise nothing was charged.
+      setError({ message: labels.failed, kind: "unknown" })
       markProcessing(false)
     }
   }
@@ -374,14 +387,22 @@ function CheckoutForm({
       )}
 
       {error ? (
+        // Same anatomy as the kit's Alert (destructive): title, then help.
         <div
           role="alert"
           data-testid="booking-pay-error"
-          className="space-y-1 rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm"
+          data-kind={error.kind}
+          className="space-y-0.5 rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm"
         >
-          <p className="font-medium text-destructive">{error}</p>
-          {labels.failedHelp ? (
+          <p className="font-medium text-destructive">
+            {error.kind === "declined" && labels.declinedTitle
+              ? labels.declinedTitle
+              : error.message}
+          </p>
+          {error.kind === "declined" && labels.failedHelp ? (
             <p className="text-foreground">{labels.failedHelp}</p>
+          ) : error.kind === "unknown" && labels.failedUnknown ? (
+            <p className="text-foreground">{labels.failedUnknown}</p>
           ) : null}
         </div>
       ) : null}

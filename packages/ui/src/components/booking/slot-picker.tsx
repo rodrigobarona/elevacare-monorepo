@@ -23,6 +23,7 @@ import {
   ToggleButton,
 } from "react-aria-components"
 import { today } from "@internationalized/date"
+import { Alert, AlertDescription } from "@eleva/ui/components/alert"
 import { Button } from "@eleva/ui/components/button"
 import {
   addDaysToKey,
@@ -200,8 +201,11 @@ export function SlotPicker({
       ? chosenDay
       : selectedDay && slotsByDay.has(selectedDay)
         ? selectedDay
-        : preferDay && slotsByDay.has(preferDay)
-          ? preferDay
+        : preferDay
+          ? // That day, or the nearest open day after it.
+            (openDays.find((day) => day.dateKey >= preferDay)?.dateKey ??
+            openDays[0]?.dateKey ??
+            null)
           : (openDays[0]?.dateKey ?? null)
   const activeSlots = activeDay ? (slotsByDay.get(activeDay) ?? []) : []
 
@@ -478,32 +482,28 @@ export function SlotPicker({
       </div>
 
       {isError ? (
-        <div
-          role="alert"
-          data-testid="booking-slots-error"
-          className="space-y-3 rounded-3xl bg-muted/60 p-5 text-sm"
-        >
-          <p className="flex items-start gap-2 font-medium">
-            <InfoIcon aria-hidden className="mt-0.5 size-4 shrink-0" />
-            {labels.loadError}
-          </p>
-          {onRetry ? (
-            <Button
-              variant="outline"
-              className="min-h-11 rounded-full"
-              onPress={() => {
-                // The button goes away while times reload: keep focus here.
-                rootRef.current?.focus({ preventScroll: true })
-                onRetry()
-              }}
-            >
-              {labels.retry}
-            </Button>
-          ) : null}
-          {errorHelp ? (
-            <p className="text-muted-foreground">{errorHelp}</p>
-          ) : null}
-        </div>
+        <Alert variant="notice" role="alert" data-testid="booking-slots-error">
+          <InfoIcon aria-hidden />
+          <AlertDescription className="space-y-3 text-foreground">
+            <p className="font-medium">{labels.loadError}</p>
+            {onRetry ? (
+              <Button
+                variant="outline"
+                className="min-h-11 rounded-full"
+                onPress={() => {
+                  // The button goes away while times reload: keep focus here.
+                  rootRef.current?.focus({ preventScroll: true })
+                  onRetry()
+                }}
+              >
+                {labels.retry}
+              </Button>
+            ) : null}
+            {errorHelp ? (
+              <p className="text-muted-foreground">{errorHelp}</p>
+            ) : null}
+          </AlertDescription>
+        </Alert>
       ) : (
         <>
           <div
