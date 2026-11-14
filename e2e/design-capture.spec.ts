@@ -1,6 +1,7 @@
 import { mkdirSync, renameSync } from "node:fs"
 import path from "node:path"
 import {
+  expect,
   test,
   type APIRequestContext,
   type Browser,
@@ -87,6 +88,19 @@ async function settle(page: Page): Promise<void> {
   // The Next dev overlay covers buttons at phone width.
   await page
     .addStyleTag({ content: "nextjs-portal{display:none!important}" })
+    .catch(() => {})
+  // Stripe's test-mode badge floats over the payment form. It is a frame
+  // on <body> with an inline !important style, so only an inline style wins.
+  await page
+    .evaluate(() => {
+      document
+        .querySelectorAll<HTMLIFrameElement>(
+          'body > iframe[src*="elements-inner-easel"]'
+        )
+        .forEach((frame) =>
+          frame.style.setProperty("display", "none", "important")
+        )
+    })
     .catch(() => {})
   await page.waitForTimeout(400)
 }
@@ -190,7 +204,7 @@ async function holdSlotAsAnotherGuest(
 ): Promise<void> {
   const modeId = await fetchOfferModeId(request)
   const endsAt = new Date(Date.parse(startsAt) + 60 * 60_000).toISOString()
-  await request.post(`${apiUrl}/bookings/reserve`, {
+  const held = await request.post(`${apiUrl}/bookings/reserve`, {
     headers: { Origin: ACCOUNT_ORIGIN, "Content-Type": "application/json" },
     data: {
       username: PAID_EXPERT,
@@ -207,12 +221,17 @@ async function holdSlotAsAnotherGuest(
       consents: CONSENTS,
     },
   })
+  expect(held.status(), await held.text()).toBe(201)
 }
 
 /** The join API says the window is not open yet (as in waiting-room.spec). */
 async function mockJoinNotOpen(page: Page): Promise<void> {
-  const opensAt = Date.now() + 2 * 60 * 60_000
-  const startsAt = opensAt + 15 * 60_000
+  // A stable, realistic time: tomorrow at 10:00 UTC (10:00 in Lisbon in winter).
+  const tomorrow = new Date()
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
+  tomorrow.setUTCHours(10, 0, 0, 0)
+  const startsAt = tomorrow.getTime()
+  const opensAt = startsAt - 15 * 60_000
   await page.route("**/sessions/*/join", (route) =>
     route.fulfill({
       status: 403,
@@ -450,14 +469,13 @@ test.describe("design capture", () => {
       await banner.waitFor({ timeout: 15_000 }).catch(() => {})
       await shoot(page, surface, "01-cookie-banner", kind, { fullPage: false })
       const customize = page.getByRole("button", { name: /^customi[sz]e$/i })
-      if (await customize.isVisible().catch(() => false)) {
-        await customize.click()
-        await page.waitForTimeout(800)
-        await shoot(page, surface, "02-cookie-preferences", kind, {
-          fullPage: false,
-        })
-        await page.keyboard.press("Escape")
-      }
+      await expect(customize).toBeVisible()
+      await customize.click()
+      await page.waitForTimeout(800)
+      await shoot(page, surface, "02-cookie-preferences", kind, {
+        fullPage: false,
+      })
+      await page.keyboard.press("Escape")
       await dismissCookieBanner(page).catch(() => {})
       if (kind === "desktop") {
         const triggers = page.locator("header button[aria-controls]")
@@ -485,6 +503,18 @@ test.describe("design capture", () => {
           .click()
         await page.waitForTimeout(800)
         await shoot(page, surface, "03-mobile-nav", kind, { fullPage: false })
+        const sheet = page.getByRole("dialog").last()
+        await sheet.evaluate((element) => {
+          const scroller =
+            [element, ...Array.from(element.querySelectorAll("*"))].find(
+              (node) => node.scrollHeight > node.clientHeight + 4
+            ) ?? element
+          scroller.scrollTop = scroller.scrollHeight
+        })
+        await page.waitForTimeout(400)
+        await shoot(page, surface, "04-mobile-nav-end", kind, {
+          fullPage: false,
+        })
       }
       await context.close()
     })
@@ -520,12 +550,13 @@ test.describe("design capture", () => {
         name: CAPTURE_GUEST,
         email: uniqueGuestEmail("design-capture-taken"),
       })
-      if (startsAt) await holdSlotAsAnotherGuest(request, startsAt)
+      expect(startsAt, "slot time has a data-start").toBeTruthy()
+      await holdSlotAsAnotherGuest(request, startsAt!)
       await page.getByTestId("booking-continue-details").click()
-      await page
-        .getByTestId("booking-slot-gone")
-        .waitFor({ timeout: 30_000 })
-        .catch(() => {})
+      // The details step reports it in place ("That time was just taken").
+      await expect(page.getByText(/just taken/i)).toBeVisible({
+        timeout: 30_000,
+      })
       await shoot(page, surface, "10-slot-taken", kind)
 
       // Payment declined: Stripe's test card that always declines.
@@ -582,14 +613,13 @@ test.describe("design capture", () => {
       await page.goto(`${webUrl}/${slug}/privacy`)
       await settle(page)
       const remove = page.getByTestId("member-deletion-request")
-      if (await remove.isVisible().catch(() => false)) {
-        await remove.click()
-        await page.waitForTimeout(600)
-        await shoot(page, surface, "10-delete-account-confirm", kind, {
-          fullPage: false,
-        })
-        await page.keyboard.press("Escape")
-      }
+      await expect(remove).toBeVisible()
+      await remove.click()
+      await expect(page.getByTestId("member-deletion-confirm")).toBeVisible()
+      await shoot(page, surface, "10-delete-account-confirm", kind, {
+        fullPage: false,
+      })
+      await page.keyboard.press("Escape")
 
       // The video waiting room before the join window opens.
       await mockJoinNotOpen(page)
