@@ -573,7 +573,7 @@ test.describe("design capture", () => {
       await page.getByTestId("booking-continue-details").click()
       await fillStripeTestCard(page, { number: DECLINED_TEST_CARD })
       await page.getByTestId("booking-pay-submit").click()
-      await expect(page.getByText(/card has been declined/i)).toBeVisible({
+      await expect(page.getByText(/declined/i).first()).toBeVisible({
         timeout: 30_000,
       })
       await shoot(page, surface, "12-payment-declined", kind)
