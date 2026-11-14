@@ -544,6 +544,11 @@ export function BookingFunnel({
     : ""
 
   const policyCopy = describeCancellationPolicy(cancellationPolicy, locale)
+  const isFree =
+    (specialPriceCents ??
+      selectedMode?.priceCents ??
+      modes[0]?.priceCents ??
+      0) === 0
   const deadlineFormat = new Intl.DateTimeFormat(
     dateLocale,
     shortDateTime(timeZone)
@@ -591,6 +596,13 @@ export function BookingFunnel({
     // ticked. All four records are still sent with their versions.
     if (!granted.health_data_processing || !granted.terms) {
       setFormError("consentsRequired")
+      // Take her to the first box still to tick.
+      const firstMissing = !granted.health_data_processing
+        ? "health_data_processing"
+        : "terms"
+      requestAnimationFrame(() =>
+        document.getElementById(firstMissing)?.focus()
+      )
       return
     }
     const normalizedTaxId = taxId.replace(/[\s.-]/g, "").toUpperCase()
@@ -832,6 +844,7 @@ export function BookingFunnel({
         locale={locale}
         specialPrice={specialPriceCents != null}
         specialPriceLabel={t("link.specialPrice")}
+        freeLabel={t("summary.free")}
         whenAction={
           onDetails && slot ? (
             <button
@@ -888,6 +901,10 @@ export function BookingFunnel({
               </details>
               <p>{t("summary.provider", { name: expertName })}</p>
             </>
+          ) : onDetails ? undefined : isFree ? (
+            // The details step shows the policy itself; free sessions have
+            // nothing to refund.
+            t("policy.free")
           ) : (
             policyCopy.lines[0]
           )
@@ -1158,7 +1175,9 @@ export function BookingFunnel({
                 </Field>
               ) : null}
             </FormCard>
-            <FormCard title={t("details.sections.optional")}>
+            <FormCard
+              title={t("details.sections.optional", { name: expertName })}
+            >
               <Field>
                 <FieldLabel htmlFor={`${fieldId}-intake`}>
                   {t("details.intakeNotes", { name: expertName })}
@@ -1241,7 +1260,7 @@ export function BookingFunnel({
                     type="button"
                     data-testid="booking-tax-id-open"
                     onClick={() => setShowTaxId(true)}
-                    className="inline-flex min-h-6 items-center self-start rounded-sm text-sm font-medium text-primary underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none"
+                    className="inline-flex min-h-6 items-center rounded-sm text-left text-sm font-medium text-primary underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none"
                   >
                     {t("details.taxIdAdd")}
                   </button>
@@ -1249,29 +1268,38 @@ export function BookingFunnel({
               ) : null}
             </FormCard>
             <FormCard title={t("details.sections.confirm")}>
-              {/* The policy once, as dated deadlines for this time. */}
+              {/* The policy once, as dated deadlines for this time; a free
+                  session has nothing to refund. */}
               <div
                 className="space-y-1 rounded-2xl bg-muted/60 p-4 text-sm"
                 data-testid="booking-policy-dates"
               >
-                <p className="font-medium">
-                  {t("policy.named", { name: policyCopy.name })}
-                </p>
-                {(policyDeadlines ?? policyCopy.lines).map((line) => (
-                  <p key={line} className="text-muted-foreground">
-                    {line}
-                  </p>
-                ))}
-                <details>
-                  <summary className="inline-flex min-h-6 cursor-pointer items-center rounded-sm text-primary underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none">
-                    {t("summary.fullPolicy")}
-                  </summary>
-                  <ul className="mt-2 space-y-1 text-muted-foreground">
-                    {policyCopy.lines.map((line) => (
-                      <li key={line}>{line}</li>
+                {isFree ? (
+                  <p>{t("policy.free")}</p>
+                ) : (
+                  <>
+                    <p className="font-medium">
+                      {t("policy.named", { name: policyCopy.name })}
+                    </p>
+                    {(policyDeadlines ?? policyCopy.lines).map((line) => (
+                      <p key={line} className="text-muted-foreground">
+                        {line}
+                      </p>
                     ))}
-                  </ul>
-                </details>
+                    {policyDeadlines ? (
+                      <details>
+                        <summary className="inline-flex min-h-6 cursor-pointer items-center rounded-sm text-primary underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none">
+                          {t("summary.fullPolicy")}
+                        </summary>
+                        <ul className="mt-2 space-y-1 text-muted-foreground">
+                          {policyCopy.lines.map((line) => (
+                            <li key={line}>{line}</li>
+                          ))}
+                        </ul>
+                      </details>
+                    ) : null}
+                  </>
+                )}
               </div>
               {/* Two ticks: health data on its own (an explicit, separate
                   choice), and terms with the age confirmation. The privacy
@@ -1280,6 +1308,10 @@ export function BookingFunnel({
               <div className="space-y-4">
                 <ConsentCheckbox
                   id="health_data_processing"
+                  isInvalid={
+                    formError === "consentsRequired" &&
+                    !granted.health_data_processing
+                  }
                   isSelected={Boolean(granted.health_data_processing)}
                   onChange={(selected) =>
                     setGranted((current) => ({
@@ -1298,7 +1330,7 @@ export function BookingFunnel({
                           href={consentHref("health_data_processing")}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="font-medium text-primary underline-offset-4 hover:underline"
+                          className="font-medium text-primary underline underline-offset-4"
                         >
                           {chunks}
                           <span className="sr-only">
@@ -1312,6 +1344,7 @@ export function BookingFunnel({
                 />
                 <ConsentCheckbox
                   id="terms"
+                  isInvalid={formError === "consentsRequired" && !granted.terms}
                   isSelected={Boolean(granted.terms)}
                   onChange={(selected) =>
                     setGranted((current) => ({ ...current, terms: selected }))
@@ -1322,7 +1355,7 @@ export function BookingFunnel({
                         href={consentHref("terms")}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-medium text-primary underline-offset-4 hover:underline"
+                        className="font-medium text-primary underline underline-offset-4"
                       >
                         {chunks}
                         <span className="sr-only"> ({t("chrome.newTab")})</span>
@@ -1333,7 +1366,7 @@ export function BookingFunnel({
                         href={consentHref("adult_confirmation")}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-medium text-primary underline-offset-4 hover:underline"
+                        className="font-medium text-primary underline underline-offset-4"
                       >
                         {chunks}
                         <span className="sr-only"> ({t("chrome.newTab")})</span>
@@ -1348,7 +1381,7 @@ export function BookingFunnel({
                         href={consentHref("privacy")}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-medium text-primary underline-offset-4 hover:underline"
+                        className="font-medium text-primary underline underline-offset-4"
                       >
                         {chunks}
                         <span className="sr-only"> ({t("chrome.newTab")})</span>
@@ -1368,12 +1401,13 @@ export function BookingFunnel({
                     onChange={setAiOptIn}
                     label={t("details.aiConsent.short")}
                     description={t.rich("details.aiConsent.description", {
+                      name: expertName,
                       link: (chunks) => (
                         <a
                           href={aiProcessingHref}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="font-medium text-primary underline-offset-4 hover:underline"
+                          className="font-medium text-primary underline underline-offset-4"
                         >
                           {chunks}
                           <span className="sr-only">

@@ -1,6 +1,6 @@
 "use client"
 
-import type { ReactNode } from "react"
+import { useId, type ReactNode } from "react"
 import { CheckboxField } from "@eleva/ui/components/checkbox-field"
 import { cn } from "@eleva/ui/lib/utils"
 
@@ -16,6 +16,7 @@ export function ConsentCheckbox({
   href,
   linkLabel,
   description,
+  isInvalid,
   className,
 }: {
   id: string
@@ -28,14 +29,19 @@ export function ConsentCheckbox({
   linkLabel?: string
   /** A short, plain line under the statement. */
   description?: ReactNode
+  /** Marked when the member tried to continue without this required tick. */
+  isInvalid?: boolean
   className?: string
 }) {
+  const descriptionId = useId()
   return (
     <div data-testid={`booking-consent-${id}`}>
       <CheckboxField
         id={id}
         isSelected={isSelected}
         onChange={onChange}
+        isInvalid={isInvalid}
+        aria-describedby={description ? descriptionId : undefined}
         className={cn("items-start", className)}
         label={
           <span className="text-sm leading-relaxed">
@@ -47,7 +53,7 @@ export function ConsentCheckbox({
                   href={href}
                   target="_blank"
                   rel="noreferrer"
-                  className="font-medium text-primary underline-offset-4 hover:underline"
+                  className="font-medium text-primary underline underline-offset-4"
                 >
                   {linkLabel}
                 </a>
@@ -57,7 +63,13 @@ export function ConsentCheckbox({
         }
       />
       {description ? (
-        <p className="mt-1 ml-7 text-sm text-muted-foreground">{description}</p>
+        // Aligned with the label: a 16px box plus the 8px field gap.
+        <p
+          id={descriptionId}
+          className="mt-1 ml-6 text-sm text-muted-foreground"
+        >
+          {description}
+        </p>
       ) : null}
     </div>
   )

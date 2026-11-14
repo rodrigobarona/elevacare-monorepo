@@ -475,7 +475,8 @@
       "change": "Change",
       "provider": "Your session is with {name}, an independent expert. Eleva handles the booking and payment.",
       "changeTime": "Change time",
-      "fullPolicy": "See the full policy"
+      "fullPolicy": "See the full policy",
+      "free": "Free"
     },
     "modes": {
       "online": {
@@ -546,39 +547,25 @@
       "intakeNotesHint": "{name} reads this before your session.",
       "promo": "Promo code (optional)",
       "promoHint": "Have a code? Apply it here and you'll see the new total before you pay.",
-      "consentsIntro": "To book a health session on this digital health platform, please confirm:",
       "aiConsent": {
-        "label": "Optional: allow live transcription in your video sessions and, if your expert uses it, AI help with drafting their notes. Your expert still writes and checks the report. You can turn this off any time in Privacy settings. See the",
-        "link": "AI processing notice",
-        "short": "Allow live transcription in your video sessions and AI help with your expert’s notes.",
-        "description": "Your expert writes and checks every report. You can turn this off any time in Privacy settings. <link>AI processing notice</link>"
+        "short": "I allow live transcription in my video sessions and AI help with the session notes.",
+        "description": "{name} writes and checks every report. You can turn this off any time in Privacy settings. <link>AI processing notice</link>"
       },
       "hold": "Continue to payment",
       "confirmFree": "Confirm booking",
       "holding": "Holding your time…",
       "consents": {
-        "terms": {
-          "label": "I agree to the",
-          "link": "terms of use",
-          "combined": "I’m 18 or older, I’m booking this session for myself, and I agree to the <terms>terms of use</terms> and <booking>booking terms</booking>."
-        },
-        "privacy": {
-          "label": "I have read the",
-          "link": "privacy notice"
-        },
         "health_data_processing": {
-          "label": "I agree that Eleva and {name} use the health information I share to provide this session.",
-          "link": "health data processing",
-          "description": "Only for your care, never for marketing, and you can withdraw it any time. <link>How we protect health data</link>"
+          "label": "I give my explicit consent for Eleva, as the intermediary, to process the health information in my booking and pass what I write to {name}.",
+          "description": "Only to arrange your care, never for advertising. You can withdraw it in Privacy settings or by writing to privacy@eleva.care; with a session booked, cancel it first. <link>How we protect health data</link>"
         },
-        "adult_confirmation": {
-          "label": "I am 18 or older and I am booking this session for myself, as set out in the",
-          "link": "booking terms"
+        "terms": {
+          "combined": "I’m 18 or older, I’m booking this session for myself, and I agree to the <terms>terms of use</terms> and <booking>booking terms</booking>."
         }
       },
       "sections": {
         "contact": "Your contact details",
-        "optional": "Before your session",
+        "optional": "For {name}",
         "confirm": "Before you continue"
       },
       "urgentLine": "In an emergency, don’t wait for a reply: <call>call 112</call>.",
@@ -666,7 +653,8 @@
     },
     "policy": {
       "heading": "Cancellation policy",
-      "named": "Cancellation policy: {name}"
+      "named": "Cancellation policy: {name}",
+      "free": "This session is free. If you can’t make it, please cancel so someone else can take the time."
     },
     "stepOf": "Step {current} of {total}",
     "chrome": {

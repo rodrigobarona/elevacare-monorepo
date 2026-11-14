@@ -475,7 +475,8 @@
       "change": "Cambiar",
       "provider": "Tu sesión es con {name}, profesional independiente. Eleva gestiona la reserva y el pago.",
       "changeTime": "Cambiar hora",
-      "fullPolicy": "Ver la política completa"
+      "fullPolicy": "Ver la política completa",
+      "free": "Gratis"
     },
     "modes": {
       "online": {
@@ -546,39 +547,25 @@
       "intakeNotesHint": "{name} lee esta nota antes de la sesión.",
       "promo": "Código promocional (opcional)",
       "promoHint": "¿Tienes un código? Aplícalo aquí y verás el nuevo total antes de pagar.",
-      "consentsIntro": "Para reservar una sesión de salud en esta plataforma digital de salud, confirma:",
       "aiConsent": {
-        "label": "Opcional: autorizo la transcripción en directo en mis sesiones por vídeo y, si mi especialista la usa, ayuda de IA para redactar sus notas. Tu especialista sigue escribiendo y revisando el informe; puedes desactivarlo cuando quieras en los ajustes de Privacidad. Consulta el",
-        "link": "aviso de tratamiento por IA",
-        "short": "Permitir la transcripción en directo en las sesiones por vídeo y la ayuda de IA con las notas de tu profesional.",
-        "description": "Tu profesional escribe y revisa cada informe. Puedes desactivarlo cuando quieras en los ajustes de Privacidad. <link>Aviso sobre el tratamiento con IA</link>"
+        "short": "Autorizo la transcripción en directo en mis sesiones por vídeo y la ayuda de IA con las notas de la sesión.",
+        "description": "{name} escribe y revisa cada informe. Puedes desactivarlo cuando quieras en los ajustes de Privacidad. <link>Aviso sobre el tratamiento con IA</link>"
       },
       "hold": "Continuar al pago",
       "confirmFree": "Confirmar reserva",
       "holding": "Reservando tu hora…",
       "consents": {
-        "terms": {
-          "label": "Acepto los",
-          "link": "términos de uso",
-          "combined": "Tengo 18 años o más, reservo esta sesión para mí y acepto los <terms>términos de uso</terms> y los <booking>términos de reserva</booking>."
-        },
-        "privacy": {
-          "label": "He leído el",
-          "link": "aviso de privacidad"
-        },
         "health_data_processing": {
-          "label": "Acepto que Eleva y {name} usen la información de salud que comparto para prestar esta sesión.",
-          "link": "tratamiento de datos de salud",
-          "description": "Solo para tu atención, nunca para marketing, y puedes retirarlo cuando quieras. <link>Cómo protegemos los datos de salud</link>"
+          "label": "Doy mi consentimiento explícito para que Eleva, como intermediaria, trate la información de salud de mi reserva y transmita a {name} lo que escriba.",
+          "description": "Solo para organizar tu atención, nunca para publicidad. Puedes retirarlo en los ajustes de Privacidad o escribiendo a privacy@eleva.care; con una sesión reservada, cancélala primero. <link>Cómo protegemos los datos de salud</link>"
         },
-        "adult_confirmation": {
-          "label": "Tengo 18 años o más y reservo esta sesión para mí, según los",
-          "link": "términos de reserva"
+        "terms": {
+          "combined": "Tengo 18 años o más, reservo esta sesión para mí y acepto los <terms>términos de uso</terms> y los <booking>términos de reserva</booking>."
         }
       },
       "sections": {
         "contact": "Tus datos de contacto",
-        "optional": "Antes de la sesión",
+        "optional": "Para {name}",
         "confirm": "Antes de continuar"
       },
       "urgentLine": "En una emergencia, no esperes respuesta: <call>llama al 112</call>.",
@@ -666,7 +653,8 @@
     },
     "policy": {
       "heading": "Política de cancelación",
-      "named": "Política de cancelación: {name}"
+      "named": "Política de cancelación: {name}",
+      "free": "Esta sesión es gratuita. Si no puedes ir, cancélala para que otra persona pueda usar la hora."
     },
     "stepOf": "Paso {current} de {total}",
     "chrome": {

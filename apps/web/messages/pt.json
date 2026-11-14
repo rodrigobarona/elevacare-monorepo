@@ -475,7 +475,8 @@
       "change": "Alterar",
       "provider": "A sua sessão é com {name}, profissional independente. A Eleva trata da reserva e do pagamento.",
       "changeTime": "Alterar horário",
-      "fullPolicy": "Ver a política completa"
+      "fullPolicy": "Ver a política completa",
+      "free": "Gratuita"
     },
     "modes": {
       "online": {
@@ -546,42 +547,28 @@
       "intakeNotesHint": "{name} lê esta nota antes da sessão.",
       "promo": "Código promocional (opcional)",
       "promoHint": "Tem um código? Aplique-o aqui e veja o novo total antes de pagar.",
-      "consentsIntro": "Para marcar uma sessão de saúde nesta plataforma digital de saúde, confirme:",
       "aiConsent": {
-        "label": "Opcional: autorizo a transcrição em direto nas minhas sessões por vídeo e, se o especialista a usar, ajuda de IA para redigir as notas. O especialista continua a escrever e a rever o relatório; pode desativar isto a qualquer momento nas definições de Privacidade. Consulte o",
-        "link": "aviso de tratamento por IA",
-        "short": "Permitir a transcrição em direto nas sessões por vídeo e a ajuda de IA nas notas do seu especialista.",
-        "description": "O seu especialista escreve e revê cada relatório. Pode desativar isto a qualquer momento nas definições de Privacidade. <link>Aviso sobre tratamento por IA</link>"
+        "short": "Autorizo a transcrição em direto nas minhas sessões por vídeo e a ajuda de IA nas notas da sessão.",
+        "description": "{name} escreve e revê cada relatório. Pode desativar isto a qualquer momento nas definições de Privacidade. <link>Aviso sobre tratamento por IA</link>"
       },
       "hold": "Continuar para pagamento",
       "confirmFree": "Confirmar marcação",
       "holding": "A reservar o horário…",
       "consents": {
-        "terms": {
-          "label": "Aceito os",
-          "link": "termos de utilização",
-          "combined": "Tenho 18 anos ou mais, estou a marcar esta sessão para mim e aceito os <terms>termos de utilização</terms> e os <booking>termos de marcação</booking>."
-        },
-        "privacy": {
-          "label": "Li o",
-          "link": "aviso de privacidade"
-        },
         "health_data_processing": {
-          "label": "Aceito que a Eleva e {name} usem as informações de saúde que partilho para prestar esta sessão.",
-          "link": "tratamento de dados de saúde",
-          "description": "Apenas para os seus cuidados, nunca para marketing, e pode retirar este consentimento a qualquer momento. <link>Como protegemos os dados de saúde</link>"
+          "label": "Dou o meu consentimento explícito para que a Eleva, como intermediária, trate as informações de saúde da minha marcação e transmita a {name} o que eu escrever.",
+          "description": "Apenas para organizar os seus cuidados, nunca para publicidade. Pode retirar este consentimento nas definições de Privacidade ou escrevendo para privacy@eleva.care; com uma sessão marcada, cancele-a primeiro. <link>Como protegemos os dados de saúde</link>"
         },
-        "adult_confirmation": {
-          "label": "Tenho 18 anos ou mais e estou a marcar esta sessão para mim, conforme os",
-          "link": "termos de marcação"
+        "terms": {
+          "combined": "Tenho 18 anos ou mais, estou a marcar esta sessão para mim e aceito os <terms>termos de utilização</terms> e os <booking>termos de marcação</booking>."
         }
       },
       "sections": {
         "contact": "Os seus contactos",
-        "optional": "Antes da sessão",
+        "optional": "Para {name}",
         "confirm": "Antes de continuar"
       },
-      "urgentLine": "Numa emergência, não espere por resposta: <call>ligue 112</call>.",
+      "urgentLine": "Numa emergência, não espere por resposta: <call>ligue para o 112</call>.",
       "urgentMore": "Mais linhas de apoio",
       "taxIdAdd": "Precisa de fatura em seu nome? Adicione o seu NIF",
       "optionalHeading": "Opcional",
@@ -666,7 +653,8 @@
     },
     "policy": {
       "heading": "Política de cancelamento",
-      "named": "Política de cancelamento: {name}"
+      "named": "Política de cancelamento: {name}",
+      "free": "Esta sessão é gratuita. Se não puder ir, cancele para que outra pessoa possa ficar com o horário."
     },
     "stepOf": "Passo {current} de {total}",
     "chrome": {
