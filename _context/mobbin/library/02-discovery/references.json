@@ -1,0 +1,262 @@
+{
+  "surface": "02-discovery",
+  "title": "Expert explorer (/experts)",
+  "researcher": "Marketplace and profile",
+  "date": "2026-11-14",
+  "summary": "The explorer is a warm heading over a grid of cards that say only a name, one free-text line and a price. A member cannot start from her need, cannot compare two experts without opening both, and sees three blank monogram panels where people should be. The change that matters most is the card: give it a face (or a compact layout when there is none), a profession and focus, languages, how and where sessions happen, the next open time and a checked-registration mark, then put areas of care above the grid as the way in.",
+  "strengths": [
+    "The heading and lead are in the right voice: \"Real people with real training. Pick someone whose work fits you, then meet by video, by phone or in person.\" Keep them.",
+    "On phones the card turns into a compact row (small portrait left, text right), so a short list fits in one screen (01-experts.mobile.jpg).",
+    "Ordering is disclosed. \"How we order experts\" links to the ranking terms, and the source labels the paid plan honestly (\"Top Expert · paid plan\", \"Top Expert first (paid plan)\"). Few marketplaces are this open; make it more visible rather than changing it.",
+    "The trust line has the right content: \"Before a profile goes live, our team checks the expert's professional registration.\"",
+    "The whole card is one link and one tab stop, and the free option is said in plain words (\"Free session available\").",
+    "The source already has a first-run state for an empty directory with three next steps (newsletter, how Eleva works, are you an expert). The pattern is right; it only needs a design pass."
+  ],
+  "findings": [
+    {
+      "id": "DISC-01",
+      "severity": "P1",
+      "lens": "ux",
+      "title": "A member cannot start from her need",
+      "evidence": ["01-experts.desktop.jpg", "01-experts.mobile.jpg"],
+      "detail": "The page opens with a heading and goes straight to people. There is no search field, no areas of care, no mode or language choice. A member arrives with a need (pelvic pain after birth, breastfeeding, anxiety in pregnancy), not with a name. In the source, area chips only appear once two areas have experts, and language and sort only appear from 12 experts, so at launch size the page offers nothing to narrow or even to explain what Eleva covers. The teal search button in the mobile header looks like search but sits in the same slot as the desktop \"Find an expert\" link, which on this page points back to itself.",
+      "recommendation": "Put areas of care above the grid from day one as photo or icon tiles with a count (\"Pelvic health · 3 experts\") and show areas with nobody yet as \"Opening soon\" rather than hiding them, so the page teaches the catalogue. Add one plain search field (\"What do you need help with?\") that matches areas, service names and expert names. Keep two always-on chips next to it: language and how you meet (video, phone, in person). Hide the header \"Find an expert\" button on this page.",
+      "references": ["02-discovery/04", "02-discovery/12", "02-discovery/06", "02-discovery/03"]
+    },
+    {
+      "id": "DISC-02",
+      "severity": "P1",
+      "lens": "trust",
+      "title": "Cards carry too little to choose on",
+      "evidence": ["01-experts.desktop.jpg", "01-experts.mobile.jpg"],
+      "detail": "Each card shows a name, one free-text line and a price. It does not say what the person is (physiotherapist, midwife), what she focuses on, which languages she speaks, whether sessions are by video or in a city, when she is next free, or that her registration was checked. The source can show two areas of care as a quiet line, but only when the expert has picked categories, so a new expert's card falls back to almost nothing. To compare three experts a member has to open three profiles.",
+      "recommendation": "Fix a card content model with required fields: photo, name with a checked-registration mark, profession and up to two focus areas, languages, how you meet (\"Video · In person in Lisboa\"), next open time (\"Next: Mon 16 Nov\") and price from. Make profession and at least one area required before a profile can be listed, so no card depends on a free-text headline. Add a quiet \"View profile\" affordance; keep the whole card as one link.",
+      "references": ["02-discovery/01", "02-discovery/02", "02-discovery/03", "02-discovery/10"]
+    },
+    {
+      "id": "DISC-03",
+      "severity": "P1",
+      "lens": "ui",
+      "title": "The missing-photo placeholder takes over the card",
+      "evidence": ["01-experts.desktop.jpg"],
+      "detail": "On desktop each card gives about 290px of its 420px to a pale gradient panel with a monogram circle (AQ, FM, PM). Three of them in a row read as an unfinished page, and the only photograph on the screen belongs to the expert-recruitment band below. New experts will often have no photo on day one, so this is the default look of the directory, not an edge case.",
+      "recommendation": "Ask for a portrait before a profile can be listed (a publish gate in expert setup, with guidance on a good photo). For any profile that still has none, use the compact layout at every breakpoint: a small avatar beside the text, so the card's weight goes to profession, focus and next time instead of an empty panel. Order profiles with a photo ahead of those without inside the same sort.",
+      "references": ["02-discovery/06", "02-discovery/12", "02-discovery/01"]
+    },
+    {
+      "id": "DISC-04",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "Filters cover two of the things members filter on",
+      "evidence": ["01-experts.desktop.jpg", "01-experts.mobile.jpg"],
+      "detail": "The captures show no controls because the directory is under 12 experts. Read from the source, the full set is a language select, a sort select and an \"Apply filters\" button in a grey box. There is no filter for how you meet, location, price or availability, the native selects need a separate submit, and nothing shows how many experts will match. On a phone a form row above the list pushes the first expert down.",
+      "recommendation": "Use a chip row that applies on tap: area, language, how you meet, city (only when in person is chosen), price, and \"Free first chat\". Show applied filters as removable chips with a result count (\"7 experts\"). On phones open one \"Filters\" bottom sheet with a sticky button that carries the count (\"Show 7 experts\") and a \"Clear all\".",
+      "references": ["02-discovery/05", "02-discovery/07", "02-discovery/03", "02-discovery/01"]
+    },
+    {
+      "id": "DISC-05",
+      "severity": "P2",
+      "lens": "trust",
+      "title": "Checked registration and ordering are a footnote",
+      "evidence": ["01-experts.desktop.jpg", "01-experts.mobile.jpg"],
+      "detail": "The strongest trust statement on the page, that Eleva checks each expert's professional registration before the profile goes live, is one line of small grey text under the grid, next to the \"How we order experts\" link. A member choosing someone for her health reads the cards first and may never reach it. Nothing on a card repeats it, and the current order (name A to Z) is not stated anywhere.",
+      "recommendation": "Move the statement above the grid as a short line with a check icon, and repeat it as a small mark beside each name that opens a one-sentence explanation. State the order next to the count (\"3 experts · sorted A to Z\") with \"How we order experts\" beside it. When Top Expert placement is active, label it on the card itself, as the source already does on desktop, and show the same label on phones (today the badge is hidden below the sm breakpoint).",
+      "references": ["02-discovery/05", "02-discovery/07", "02-discovery/11"]
+    },
+    {
+      "id": "DISC-06",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "An expert who cannot be booked is listed like the others",
+      "evidence": ["01-experts.desktop.jpg", "01-experts.mobile.jpg"],
+      "detail": "The third card (Patricia Mota) has no price row because she has no services yet. It looks like a rendering gap, and tapping it leads to a profile that says she is not taking bookings. In a list of three, one dead end is a third of the experience.",
+      "recommendation": "List an expert only once one service is published. If the founder wants early profiles visible, label the card \"Opening soon\", sort it last, and replace the price row with \"Tell me when bookings open\". For bookable experts fill the same row with the next open time so every card ends on something a member can act on.",
+      "references": ["02-discovery/04", "02-discovery/09"]
+    },
+    {
+      "id": "DISC-07",
+      "severity": "P2",
+      "lens": "ui",
+      "title": "The recruitment band outweighs the directory",
+      "evidence": ["01-experts.desktop.jpg", "01-experts.mobile.jpg"],
+      "detail": "\"Bring your practice to Eleva\" is a 470px dark band with the page's only photograph on desktop, and on phones it is about 690px tall, longer than the list of experts above it (about 470px). A member's page ends on a message for someone else, and the strongest visual on the screen is not an expert she can book.",
+      "recommendation": "End the member's page with help for the member: a short \"Not sure who to choose?\" block that asks what she needs and suggests an area or a free first chat, with a link to how Eleva works. Reduce the expert invitation to one quiet line with a link (\"Are you a women's health professional? Bring your practice to Eleva\").",
+      "references": ["02-discovery/06", "02-discovery/04"]
+    },
+    {
+      "id": "DISC-08",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "Few-results and no-results states stop short",
+      "evidence": ["01-experts.desktop.jpg"],
+      "detail": "With three experts the page is a heading, one row of cards and white space. Nothing says how many experts there are or that the list is growing. Read from the source, a filter that matches nobody shows \"No experts match these filters yet.\" with a single \"See all experts\" button, which throws away every choice the member made instead of helping her loosen one.",
+      "recommendation": "Show a count and frame a short list as chosen (\"3 experts, each with a checked registration\"). When filters leave few or no results, keep the results visible, list the applied filters as removable chips under \"See more experts\", and say which one to drop. When an area has nobody yet, offer \"Tell me when a [area] expert joins\" and the nearest area that does have experts.",
+      "references": ["02-discovery/08", "02-discovery/10", "02-discovery/04"]
+    },
+    {
+      "id": "DISC-09",
+      "severity": "P3",
+      "lens": "copy",
+      "title": "Price and label details",
+      "evidence": ["01-experts.desktop.jpg", "01-experts.mobile.jpg"],
+      "detail": "\"From €45.00\" carries cents that add nothing and make the price look longer than it is. The price has no unit, so a member cannot tell whether it is for 20 or 60 minutes. The eyebrow \"FIND YOUR EXPERT\" repeats the heading directly under it.",
+      "recommendation": "Show whole euros when there are no cents (\"From €45\") and add the shortest session length (\"From €45 · 45 min\"). Replace the eyebrow with something the heading does not say, such as the count (\"3 experts in Portugal and Spain\"), or remove it.",
+      "references": ["02-discovery/01"]
+    }
+  ],
+  "references": [
+    {
+      "id": "02-discovery/01",
+      "file": "img/01-preply-results-filters-cards.jpg",
+      "app": "Preply",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/d8d3585f-2c90-4900-9a08-083708178e76?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Result card with everything needed to choose",
+      "why": "Each tutor row holds a photo, name with a verified mark, \"Professional\" and \"Super Tutor\" tags, what they teach, languages spoken with level, a two-line pitch, a price with its unit (\"$41, 50-min lesson\"), three numbers (reviews, students, lessons) and the booking button. The headline states the count (\"100+ Japanese tutors\") and filters sit in one row above. A messages panel is open over the right side of this capture. Education marketplace, kept for the card structure.",
+      "apply": "The Eleva card content model: photo, name plus checked-registration mark, profession and focus, languages, price with session length, and one action. Whole-number prices with a unit.",
+      "query": "therapist directory search results with filters"
+    },
+    {
+      "id": "02-discovery/02",
+      "file": "img/02-zocdoc-results-availability-card.jpg",
+      "app": "Zocdoc",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/53728922-3e77-4e0e-aef2-3c267714d5ec?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Count, one Filters button, availability inside the card",
+      "why": "The list opens with a shield icon and a count (\"265 In-network providers\") and a single Filters button. Each card gives photo, name with credential, specialty, rating and review count, distance and address, then tabs for in-person and video visits over a strip of days that shows how many appointments each day has.",
+      "apply": "A count with a trust icon at the top of the list, profession directly under the name, and next availability on the card split by how you meet.",
+      "query": "doctor appointment app search results with filters"
+    },
+    {
+      "id": "02-discovery/03",
+      "file": "img/03-alan-pick-therapist-filter-sheet.jpg",
+      "app": "Alan",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/01efa319-d0bc-4999-aa40-96731c8a38ef?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Two filter chips and a bottom sheet for a short list",
+      "why": "A European health product with a small therapist list. Two chips only (Specialty, language). The card behind the sheet shows a photo, name, \"Available on Thursday\", the languages spoken and specialty tags. The sheet lists specialties as checkboxes with one button, \"Show therapists\".",
+      "apply": "For a directory of a few dozen experts, two or three chips are enough: area, language, how you meet. Each opens a sheet with a clear apply button. \"Available on Thursday\" is the tone for Eleva's next-time line.",
+      "query": "doctor appointment app search results with filters"
+    },
+    {
+      "id": "02-discovery/04",
+      "file": "img/04-airbnb-services-category-tiles.jpg",
+      "app": "Airbnb",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/2258df34-4be9-42f5-a410-f2e426d66ee2?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Category tiles with counts and \"Coming soon\"",
+      "why": "A young catalogue shown honestly. A row of photo tiles names each category with \"16 available\", \"5 available\" or \"Coming soon\", and the chosen category's results sit below with price from and rating. Sparse categories still show the breadth of what is offered. Travel marketplace, kept for how it handles a small catalogue.",
+      "apply": "Areas of care as tiles above the grid with counts, and \"Opening soon\" for areas and experts that are not bookable yet, so nothing looks broken and the member learns what Eleva covers.",
+      "query": "wellness booking marketplace search results with available times"
+    },
+    {
+      "id": "02-discovery/05",
+      "file": "img/05-care-com-filters-applied-chips.jpg",
+      "app": "Care.com",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/594fbda3-a2c5-4401-a267-7c19f3635acc?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Applied filters as chips, check badge and match reasons on the card",
+      "why": "A filter panel on the left with a count (\"Filters (7)\") and \"Clear all\"; every applied filter repeats as a removable chip above the results. Each caregiver card shows a \"Background Checked\" tag, a short quoted review, and a line of ticks for the filters this person matches (\"English, 3+ stars, +4 more matches\"). Price sits top right with its unit.",
+      "apply": "Removable chips for applied filters, a checked-registration tag on every card, and a line that says why this expert matches what the member asked for.",
+      "query": "therapist directory search results with filters"
+    },
+    {
+      "id": "02-discovery/06",
+      "file": "img/06-base44-match-prompt-cards.jpg",
+      "app": "Base44",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/a02b2613-3fdb-4284-80c2-9b51840ef360?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "\"Tell us what you need\" prompt above compact cards",
+      "why": "Above the directory a box asks \"Tell us what you need and we'll match you with the right partner\". The cards below use a small avatar beside the name rather than a large image, so a card with a weak photo still looks complete: tier tag, rating, two-line description, location, languages, service tags and a footer with price from and a Contact button. Software marketplace, kept for the structure.",
+      "apply": "A need-led entry point for members who do not know which kind of expert they need, and the compact card layout for profiles that have no portrait.",
+      "query": "therapist directory search results with filters"
+    },
+    {
+      "id": "02-discovery/07",
+      "file": "img/07-fresha-filter-sheet-sort-verified.jpg",
+      "app": "Fresha",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/95f307d6-cfed-4784-b500-b6fa2f81d91b?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Mobile filter sheet with visible sort and a verified toggle",
+      "why": "One sheet holds everything. Sort is three labelled tiles (Best match, Nearest, Top rated) so the current order is always visible, then a max price slider, an \"Only show: Fresha verified\" switch with a line of explanation under it, amenity chips, and a sticky footer with \"Clear all\" and \"Apply\".",
+      "apply": "On phones, one Filters sheet with sort shown as named choices, a plain line explaining any trust filter, and a sticky apply button.",
+      "query": "tutoring marketplace search filters bottom sheet"
+    },
+    {
+      "id": "02-discovery/08",
+      "file": "img/08-preply-get-more-matches.jpg",
+      "app": "Preply",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/ff85e49e-0349-4b21-b685-4092c04cd6ef?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Few results: \"Get more matches\" with removable filters",
+      "why": "The search returns one tutor. Under that card a block titled \"Get more matches\" says \"Try removing some filters to see more tutors\" and lists each applied filter by group (Focus on, Price, Other) as a chip with an x. The member loosens one choice instead of starting again.",
+      "apply": "Eleva's few-results and no-results state: keep what matched, then show the applied filters as chips to remove one at a time, in place of a single \"See all experts\" reset.",
+      "query": "Preply tutor profile page"
+    },
+    {
+      "id": "02-discovery/09",
+      "file": "img/09-fresha-results-next-slots.jpg",
+      "app": "Fresha",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/17fb8942-1a0e-4f07-b540-fd910816244c?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Next bookable times on the result card",
+      "why": "The list states a count (\"21 venues nearby\") beside a Filters button. Each result names the matching service with its length and price, then shows the next three times as buttons (10.00, 10.15, 10.30) and \"See more\", so a member can book from the list.",
+      "apply": "Fill the last row of each Eleva card with the next open time, or two or three times, linked straight into booking, so every card ends on an action.",
+      "query": "wellness booking marketplace search results with available times"
+    },
+    {
+      "id": "02-discovery/10",
+      "file": "img/10-headspace-therapist-card-credentials.jpg",
+      "app": "Headspace",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/6d26d0ea-2cf7-4bf0-b1cf-51e45442bd08?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A list of one that still feels complete",
+      "why": "\"Available therapists (1)\" states the count without apology. The single card shows photo, name, licence type, then four icon rows (in-network, degree, specialties, language) and an appointment time button. Selecting it opens a side panel with Specialties, \"Approach to care\" and \"More about me\".",
+      "apply": "How a very short list should look: an honest count, credential-led cards with icon rows, and a preview of the expert's approach before the member commits to opening the profile.",
+      "query": "therapist directory search results with filters"
+    },
+    {
+      "id": "02-discovery/11",
+      "file": "img/11-etsy-ad-label-sort.jpg",
+      "app": "Etsy",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/434dac72-0dbc-4682-9ffd-faa1a4294bbc?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Paid placement labelled on the card, sort order stated",
+      "why": "Paid listings carry an \"Ad\" label in the seller line of the card itself, and the sort control at the top right names the current order (\"Most relevant\"). Applied filters show as chips. Retail marketplace, kept for the labelling only.",
+      "apply": "Keep \"Top Expert · paid plan\" on the card at every breakpoint and state the current order beside the count, with \"How we order experts\" next to it.",
+      "query": "marketplace search results with sponsored listing label and sort menu"
+    },
+    {
+      "id": "02-discovery/12",
+      "file": "img/12-skillshare-sessions-category-chips.jpg",
+      "app": "Skillshare",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/2e0960f6-9a06-471f-ab44-662997021dc9?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Category chips and a name search over a portrait grid",
+      "why": "\"All 1-on-1 Sessions\" has a search field for teachers and a wrap of category chips with \"All Categories\" selected. The grid is led by portraits with name, a one-line role and a price range. One teacher uses an illustration instead of a photo and the grid still holds because the tile is square and the same size. Education product, kept for the layout.",
+      "apply": "Always-visible area chips plus a name search, and a consistent portrait tile. It also shows why a portrait-led grid needs real photos: the cards work because nearly everyone has one.",
+      "query": "therapist directory search results with filters"
+    }
+  ],
+  "judging_criteria": [
+    "Can a member narrow the list by area of care, language and how she meets without opening a profile, and do areas with nobody yet show as \"Opening soon\" instead of disappearing? (02-discovery/04, 02-discovery/03)",
+    "Does every card state profession, focus, languages, how you meet, price with session length and the next open time? (02-discovery/01, 02-discovery/02, 02-discovery/09)",
+    "Does a card with no portrait still look finished, with no large empty panel? (02-discovery/06)",
+    "Is checked registration visible on each card and explained in one sentence above the grid? (02-discovery/05, 02-discovery/07)",
+    "Is the current order stated next to the result count, and is paid placement labelled on the card on phones as well as desktop? (02-discovery/11, 02-discovery/07)",
+    "When filters leave one or zero experts, can the member remove a single filter from the results area and see what else is close? (02-discovery/08, 02-discovery/10)",
+    "On a phone, do filters open in one sheet with a sticky button that shows how many experts will match? (02-discovery/07, 02-discovery/03)"
+  ]
+}

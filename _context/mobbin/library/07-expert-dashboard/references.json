@@ -1,0 +1,333 @@
+{
+  "surface": "07-expert-dashboard",
+  "title": "Expert practice dashboard",
+  "researcher": "Dashboards",
+  "date": "2026-11-14",
+  "summary": "The expert app is visually calm and on brand, and its editors (schedule, public profile) are clear, but the home page is a counter row plus a list of links that repeat the sidebar. It does not tell an expert what to do today: there is no join action on the next session, no earnings, no share-your-profile prompt, and it stays silent while Finance says payouts are not set up. The one change that matters most is to rebuild Today around a next-session card with Join, a short 'needs you' list (requests, payouts, missing photo) and money at a glance.",
+  "strengths": [
+    "Palette, Lora headings and DM Sans body are applied consistently across all ten screens; the app already feels like Eleva, not a generic admin template.",
+    "The public profile editor teaches while you fill it in: the photo card's 'Works well / Avoid' lists and the 'A bio that helps members choose' guide (05-profile) are the best first-run help in the product and should be the model for other screens.",
+    "The Finance empty state (07-finance) says what to do, why, how long it takes and that it stays on Eleva. Keep this copy.",
+    "Weekly hours (04-schedule) are easy to read: one row per day, a checkbox to switch a day off, 'Unavailable' in words, and a plain helper line.",
+    "The mobile calendar (02-calendar.mobile) switches from a grid to an agenda list with mode icon, time range and service. That is the right mobile pattern.",
+    "The source already has a 'Waiting for your answer' block with a respond-by date and a licence verification notice on home; the page has the right instincts, it just does not show enough of them.",
+    "Service rows show a clear Published or Draft pill, price, duration and languages on one line (03-event-types)."
+  ],
+  "findings": [
+    {
+      "id": "XDASH-01",
+      "severity": "P1",
+      "lens": "ux",
+      "title": "Today does not answer 'what do I need to do today'",
+      "evidence": ["01-home.desktop.jpg", "01-home.mobile.jpg", "08-setup.desktop.jpg"],
+      "detail": "The nav item is called Today, but the page opens with 'Hello, Fisio Mota' and three counters, then 'Next sessions' with rows dated two days ahead. There is no today block, no countdown, and the session rows are static: they are not links and have no Join action (confirmed in apps/expert/src/app/[orgSlug]/page.tsx). Rows show only a first name ('Marta · Online') with no avatar. An expert who opens the app five minutes before a video session has to go to Calendar, find the block and open it to join. This is the core daily path for every expert.",
+      "recommendation": "Lead the page with one next-session card: member name and initials, service, mode, date and time, a countdown ('Starts in 2 h 10 min'), and a Join session button that is visible from the start and becomes active 15 minutes before, with the reason written under it. Add 'Open member' and 'Reschedule' as quiet secondary actions. Under it, an agenda grouped Today, Tomorrow, Later this week, where every row is a link and every online row carries its own Join. When today is empty, say so in one warm line and show the next booked session instead.",
+      "references": ["07-expert-dashboard/02", "07-expert-dashboard/05", "07-expert-dashboard/01"]
+    },
+    {
+      "id": "XDASH-02",
+      "severity": "P1",
+      "lens": "trust",
+      "title": "Home stays silent while payouts are not set up",
+      "evidence": ["01-home.desktop.jpg", "07-finance.desktop.jpg", "07-finance.mobile.jpg"],
+      "detail": "Finance shows 'Set up payouts to get paid', yet the same expert has two published paid services and sessions marked 'Awaiting payment' on home. The single most consequential task for a new expert is hidden under Settings > Finance and the home page gives no sign of it. An expert can take bookings for weeks before learning that her earnings have nowhere to go, which damages trust in the platform at the worst moment.",
+      "recommendation": "Show a persistent attention banner at the top of Today, and the first row of a 'Needs you' list, until payouts are connected: 'Connect your bank account so your earnings can reach you. It takes a few minutes.' with a Set up payouts button. Repeat the same state as a small coral dot on the Finance nav item. Remove the banner the moment setup completes and confirm with a toast.",
+      "references": ["07-expert-dashboard/03", "07-expert-dashboard/01", "07-expert-dashboard/04"]
+    },
+    {
+      "id": "XDASH-03",
+      "severity": "P1",
+      "lens": "ux",
+      "title": "No setup or growth checklist; 'Manage your practice' repeats the sidebar",
+      "evidence": ["01-home.desktop.jpg", "01-home.mobile.jpg", "08-setup.desktop.jpg", "05-profile.desktop.jpg"],
+      "detail": "The lower third of home is four cards (Services, Schedule, Connected calendars, Finance) that link to pages already one click away in the sidebar. They take a full mobile screen and teach nothing. Meanwhile real gaps are visible elsewhere and never surface on home: the profile has no photo and 'No credentials yet' (05-profile), no calendar is connected (09-integrations), payouts are not set up (07-finance). The 08-setup capture resolves to the same home page, so a set-up expert has no view of 'what is next for my practice'.",
+      "recommendation": "Replace the shortcut cards with a 'Next steps for your practice' checklist driven by real state: add your photo, add your training, connect your calendar, set up payouts, share your profile link. Each row has a one-line reason in member terms ('Members book people, not logos'), a time estimate and one action. Completed rows are ticked and struck through, a progress line shows '3 of 5 done', and the block can be hidden once complete. After setup, swap it for growth prompts (share your link, add a second service, open more hours).",
+      "references": ["07-expert-dashboard/04", "07-expert-dashboard/01"]
+    },
+    {
+      "id": "XDASH-04",
+      "severity": "P1",
+      "lens": "ux",
+      "title": "No earnings at a glance and no share-your-profile prompt",
+      "evidence": ["01-home.desktop.jpg", "01-home.mobile.jpg"],
+      "detail": "The three stat cards are 'Sessions this week', 'Requests to review' and 'Published services'. The third is a configuration fact, not something an expert checks daily, and nothing on the page is about money. The only way to the public profile is a 'View public profile' button; there is no link to copy or share, although sharing that link is how a new expert gets her first booking. On mobile the three cards squeeze into narrow columns and the labels wrap to two lines.",
+      "recommendation": "Use four tiles that answer daily questions: Today (sessions today), Waiting for your answer, Earned this month, Next payout (amount and date, or 'Set up payouts'). Each tile links to its page. Add a profile strip under the greeting with the public address (eleva.care/fisiomota), a Copy link button and View. On mobile, lay tiles out two by two.",
+      "references": ["07-expert-dashboard/03", "07-expert-dashboard/01", "07-expert-dashboard/12"]
+    },
+    {
+      "id": "XDASH-05",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "Booking states are ambiguous and time formats are mixed",
+      "evidence": ["01-home.desktop.jpg", "02-calendar.desktop.jpg", "02-calendar.mobile.jpg", "04-schedule.desktop.jpg"],
+      "detail": "Home says 'Requests to review: 0', while the calendar shows five blocks labelled 'Request' on Friday 13, a day that has already passed, drawn in the same style as a live booking. An expert cannot tell whether they still need an answer, have expired or were declined. On home, sessions two days away are 'Awaiting payment' with no hint of what that means for her or whether the time is really held. Home uses 9:00 AM while the calendar and schedule use 09:00.",
+      "recommendation": "Define one status set and use it everywhere, each with its own colour, icon and plain label: Confirmed, Waiting for your answer (with 'Answer by Thu 14:00'), Waiting for payment (with 'Held until 15:30'), Completed, and Expired or Cancelled (muted and struck through). In the calendar legend, show these states rather than only the session mode. Pick one time format per locale (24-hour for PT and ES) and apply it on home, calendar, schedule and emails.",
+      "references": ["07-expert-dashboard/06", "07-expert-dashboard/05"]
+    },
+    {
+      "id": "XDASH-06",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "Desktop calendar is a mostly empty grid with no actions",
+      "evidence": ["02-calendar.desktop.jpg"],
+      "detail": "The week view draws fourteen hours for seven days and every event sits in one column. Blocks show time, 'Request' and the service name but not the member's name. Working hours are not shaded, so free time and closed time look the same. There is no Day, Week or List switch and no way to block time or reach the schedule from here. The right rail, the most valuable space next to the grid, is given to a card titled 'ICS feed', a term most physiotherapists and midwives will not know. The line under it, 'Eleva is your calendar. Connect Google or Microsoft only if you already live in another.', reads awkwardly.",
+      "recommendation": "Put the member's name first in every block. Shade hours outside the weekly schedule. Add a Day / Week / List switch and two header actions: 'Block time' and 'Edit weekly hours'. Use the right rail for the selected session (member, service, status, Join, Open member) or for 'Up next'. Move the calendar subscription to Connected calendars and rename it 'See your Eleva sessions in your own calendar app'.",
+      "references": ["07-expert-dashboard/06", "07-expert-dashboard/05"]
+    },
+    {
+      "id": "XDASH-07",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "Mobile calendar cannot show today or let her move between days",
+      "evidence": ["02-calendar.mobile.jpg", "01-home.mobile.jpg"],
+      "detail": "The mobile agenda lists only days that have bookings. The capture was taken on Saturday 14 and the first thing shown is Friday 13; today is absent, so the screen cannot answer 'am I free today?'. There is no week strip to tap a day, no dots showing which days have sessions, and rows have a chevron but no Join. The subscription card then takes a third of the screen. This is the screen an expert checks between sessions.",
+      "recommendation": "Add a seven-day strip under the date range with today selected by default and a dot on days with sessions. Always render today, with 'Nothing booked today' and the next session when empty. Keep the agenda rows, add the member's name and an inline Join on the active online session. Drop the subscription card from mobile calendar.",
+      "references": ["07-expert-dashboard/07", "07-expert-dashboard/05"]
+    },
+    {
+      "id": "XDASH-08",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "Services list hides the actions an expert uses most",
+      "evidence": ["03-event-types.desktop.jpg", "03-event-types.mobile.jpg"],
+      "detail": "Each row gives its second line to the URL path in monospace ('/fisiomota/follow-up'), then '3 delivery modes' as a count rather than naming them. Everything an expert wants to do with a service (copy its link, preview it, publish or pause it, edit it) is behind a '...' menu. The Draft row does not say what is missing before it can be published. The 'New service' button touches the top edge of the list card on both desktop and mobile.",
+      "recommendation": "Per row: title and status; '60 min · €60 · Online, In person' with the modes named; a visible Copy link button and a preview icon; a publish switch. For drafts, one line: 'Add a description to publish'. Make the whole row open the editor. Give the header 24 to 32 px of space above the list and make 'New service' full width on mobile.",
+      "references": ["07-expert-dashboard/08"]
+    },
+    {
+      "id": "XDASH-09",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "Service editor: six opaque tabs, and they break on mobile",
+      "evidence": ["10-event-type-editor.desktop.jpg", "10-event-type-editor.mobile.jpg"],
+      "detail": "The editor has six horizontal tabs: Basics, Details, Kind, Policies, Delivery modes, Private links. 'Basics' versus 'Details' and 'Kind' do not tell an expert what is inside. Basics contains a 'Session mode' select while a separate 'Delivery modes' tab exists. Language tabs are nested inside the first tab. On mobile the six tabs wrap onto two rows and overlap the card below. There is one 'Save changes' button at the very bottom and no sign of whether it saves every tab or only this one. 'Published' is a small pill far from the title with no way to pause the service. Price is a bare '60' with the currency as separate text.",
+      "recommendation": "On desktop use a left section list in plain words: What members see, Price and length, How you meet, Booking and cancellation, Private links, with a tick or dot showing which sections are complete. On mobile use one scrolling page with collapsible sections. Put the published switch and a Preview link in the header. Add a sticky save bar that appears when there are unsaved changes. Show the price field with a € prefix. Keep the mode choice in one place only.",
+      "references": ["07-expert-dashboard/09"]
+    },
+    {
+      "id": "XDASH-10",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "Schedule editor is clear but slow to fill and long on mobile",
+      "evidence": ["04-schedule.desktop.jpg", "04-schedule.mobile.jpg"],
+      "detail": "Setting the same hours for five days means typing them five times; there is no copy action. Time zone takes a full card at the top although it is set once. Date exceptions use a native dd/mm/yyyy field beside a greyed 'Add exception' button, and the page calls them 'date overrides' in the subtitle and 'Date exceptions' in the card. On mobile every day stacks into three lines and the page runs to about 1,800 px with 'Save schedule' at the very end and no unsaved-changes cue.",
+      "recommendation": "Add 'Copy to other days' on each row. Keep each day on one line on mobile (day initial, start, end, add). Show time zone as an inline link under the heading. Rename the second block 'Days off and special hours', list upcoming entries with a remove action, and open a date picker from an 'Add a date' button. Make the save bar sticky.",
+      "references": ["07-expert-dashboard/10"]
+    },
+    {
+      "id": "XDASH-11",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "Members list is a flat scroll with no search, and mobile drops the useful data",
+      "evidence": ["06-members.desktop.jpg", "06-members.mobile.jpg"],
+      "detail": "Thirty-nine rows with no search, filter, sort, grouping or paging; a busy expert will have hundreds. Rows have no avatar or initials, and the second line is the email address rather than anything about the relationship. On mobile the session count and the next or last date disappear and emails are cut off, leaving a list of names. The sidebar also has both 'Members' and 'Relationships' with no visible difference between them.",
+      "recommendation": "Add search by name or email and three quick filters: Upcoming, Seen recently, New. Add initials avatars. Make the second line about care, not contact: 'Next: Mon 30 Nov · First visit' or 'Last seen 13 Nov · 4 sessions', and keep it on mobile. Merge Members and Relationships into one item. The member page should lead with next and past sessions, notes and reports, and a Book again link.",
+      "references": ["07-expert-dashboard/11"]
+    },
+    {
+      "id": "XDASH-12",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "Finance first-run shows one card and nothing about how money will flow",
+      "evidence": ["07-finance.desktop.jpg", "07-finance.mobile.jpg"],
+      "detail": "The setup card is good, but it is the whole page. The subtitle promises 'What you have earned, what is on its way, and your Stripe payout settings', and none of that is visible, even though sessions are already booked. An 'Invoicing settings' button floats in the header with no explanation of what it is or whether it is required. An expert cannot see how Eleva pays her before she commits her bank details.",
+      "recommendation": "Keep the setup card first. Under it, show the three tiles the page will have, in a zero state with one line each: Earned this month, On its way, Paid out. Add a short 'How you get paid' line with the real payout timing. Explain Invoicing settings in a sentence or move it into a second card. After setup, show incoming and available amounts and a payouts list with date, amount, status and bank.",
+      "references": ["07-expert-dashboard/12", "07-expert-dashboard/03"]
+    },
+    {
+      "id": "XDASH-13",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "Navigation is not grouped the way an expert thinks",
+      "evidence": ["01-home.desktop.jpg", "02-calendar.desktop.jpg", "06-members.desktop.jpg", "09-integrations.desktop.jpg", "01-home.mobile.jpg"],
+      "detail": "Finance, a weekly destination, sits under 'Settings'. 'Connected calendars' and 'Integrations' are two items, and Integrations repeats the calendars. 'Relationships' and 'Templates' do not say what they hold. In most captures no sidebar item is highlighted (home, calendar, services, schedule, profile, members, finance, integrations), while 08-setup and the service editor do show an active item; check whether the active state fails on these routes or only in the capture run. The bell shows a coral '99+' on every page, which reads as an alarm and will be ignored. On mobile all navigation is behind one icon.",
+      "recommendation": "Group as: Today, Calendar, Members; Practice: Services, Schedule, Public profile; Money: Earnings and payouts, Invoices; Settings: Calendars and integrations. Always mark the current page. Pin 'View public profile' and 'Copy profile link' at the bottom of the sidebar. Cap the badge at a real unread count with 'Mark all as read'. On mobile, add a bottom bar with Today, Calendar, Members and More.",
+      "references": ["07-expert-dashboard/05", "07-expert-dashboard/01"]
+    },
+    {
+      "id": "XDASH-14",
+      "severity": "P2",
+      "lens": "ui",
+      "title": "Page header actions collide with the content below",
+      "evidence": ["01-home.desktop.jpg", "01-home.mobile.jpg", "03-event-types.desktop.jpg", "03-event-types.mobile.jpg"],
+      "detail": "On home, 'View public profile' and 'New service' sit on the subtitle's baseline and their bottom edge touches the stat cards. On Services the 'New service' button touches the list card. On mobile the buttons sit directly on top of the cards with no gap. It is a small defect, but it is on the first screen every expert sees and makes the page look unfinished.",
+      "recommendation": "Fix it once in the shared PageHeader: place actions on the title row on desktop, guarantee 24 to 32 px between header and content, and on mobile stack actions under the subtitle with 16 px above and 24 px below.",
+      "references": ["07-expert-dashboard/08"]
+    },
+    {
+      "id": "XDASH-15",
+      "severity": "P3",
+      "lens": "copy",
+      "title": "Internal and accounting jargon in expert-facing copy",
+      "evidence": ["02-calendar.desktop.jpg", "03-event-types.desktop.jpg", "09-integrations.desktop.jpg", "10-event-type-editor.desktop.jpg", "04-schedule.desktop.jpg"],
+      "detail": "'ICS feed', 'delivery modes', 'Kind', 'date overrides', 'Define the bookable services you offer', 'Issue Portuguese fiscal invoices (FT) via TOConline ERP' and 'You acknowledge responsibility for fiscal compliance' are written for engineers and accountants. The three Invoicing cards on Integrations also have no button and no selected state, so the expert cannot tell which applies to her or how to choose. No Mobbin reference was needed for this finding; it is a wording pass.",
+      "recommendation": "Rewrite in the words an expert uses: 'Subscribe from your calendar app', 'How you meet' (Online, Phone, In person), 'Type of service', 'Days off and special hours', 'The sessions members can book with you', 'Send invoices from TOConline, the invoicing tool many Portuguese practices already use', 'I will send my own invoices'. Give every integration card a state (Connected, Not connected, Selected) and one action.",
+      "references": []
+    },
+    {
+      "id": "XDASH-16",
+      "severity": "P3",
+      "lens": "ui",
+      "title": "Profile editor: text-only toolbar and no sense of completeness",
+      "evidence": ["05-profile.desktop.jpg", "05-profile.mobile.jpg"],
+      "detail": "The bio toolbar is ten text buttons (Heading 1, Heading 2, Heading 3, Quote, Bold, Italic, Underline, Improve, Shorten, Fix grammar) that wrap to three rows on mobile and mix formatting with AI help. Four separate Save buttons are shown in a pale teal that looks neither enabled nor disabled. The page has the product's best guidance but no progress cue: the missing photo and 'No credentials yet' are not flagged as the two things holding the profile back.",
+      "recommendation": "Use icons for formatting and move Improve, Shorten and Fix grammar to a separate 'Writing help' row under the editor. Give disabled Save a clearly muted style and enable it on change. Add a small 'Your profile is 3 of 5 complete' line at the top that links to the missing sections, and reuse it in the home checklist.",
+      "references": ["07-expert-dashboard/09", "07-expert-dashboard/04"]
+    }
+  ],
+  "references": [
+    {
+      "id": "07-expert-dashboard/01",
+      "file": "img/01-jobber-home-todo-today.jpg",
+      "app": "Jobber",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/4180c32c-84d6-4126-876a-d4f2894bd47d?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Home as To do + Today's appointments + money rail",
+      "why": "The home page has three parts with clear jobs: a 'To do' list where each task has a one-line benefit and a time estimate ('2 minutes'), 'Today's appointments' with remaining and completed counts and a View Schedule action, and a right rail with Receivables, Upcoming jobs this week and Revenue this month. Field-service software, kept for its structure.",
+      "apply": "The skeleton for Eleva's Today: 'Needs you' (requests, payouts, photo) with time estimates, today's sessions, and a money rail with Earned this month and Next payout.",
+      "query": "marketplace host dashboard home with today's reservations"
+    },
+    {
+      "id": "07-expert-dashboard/02",
+      "file": "img/02-lyssna-next-session-join.jpg",
+      "app": "Lyssna",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/2491d855-da01-47af-bb7e-aff0504f2f93?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Next-session banner with countdown and Join",
+      "why": "A full-width banner reads 'Next session in 2h 21m' with the participant's name, time, length, 'Online meeting' and a Join button. Below, upcoming sessions use date tiles and an Actions menu with 'Request to reschedule' and 'Cancel session'; a helper line says the meeting link is revealed 10 minutes before. Research tool, kept because it is a one-to-one video session host view.",
+      "apply": "Eleva's next-session card: countdown, member, service, mode and one Join button at the top of Today, with reschedule and cancel in a quiet menu.",
+      "query": "therapy app client dashboard home with upcoming session"
+    },
+    {
+      "id": "07-expert-dashboard/03",
+      "file": "img/03-buymeacoffee-home-share-earnings.jpg",
+      "app": "Buy Me a Coffee",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/d39e3c28-e4a6-4144-8e8a-8fa5cc5324bf?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "First-run home: payout banner, share page, earnings at zero",
+      "why": "A top banner says 'Your page is live! Set up a payout method to start receiving support.' with a Setup button. The first card shows the creator's photo, greeting, public address and a 'Share page' button, then Earnings for the last 30 days at $0 with a breakdown. The empty state encourages: 'Your first supporter is closer than you think!' and tells her to share. Creator platform, kept for its first-run structure.",
+      "apply": "The payout banner for XDASH-02, the profile address with Copy link, an earnings tile that is present even at €0, and an encouraging first-booking empty state.",
+      "query": "earnings and payouts dashboard"
+    },
+    {
+      "id": "07-expert-dashboard/04",
+      "file": "img/04-bonsai-setup-checklist.jpg",
+      "app": "Bonsai",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/ccc8a376-05c7-4860-bac6-887410f0bf0f?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Setup checklist on the dashboard home",
+      "why": "Under a dated greeting ('Thursday, February 1st. Good evening, Joe.'), a checklist card lists five steps on the left; finished ones are ticked and struck through, the current one is highlighted, and the right side explains that one step with a primary action and 'Next Step'. A 'Hide' link dismisses it. Freelancer business tool with booking pages, close to a solo practice.",
+      "apply": "Eleva's 'Next steps for your practice' block: real state, one step in focus with its reason and action, done steps struck through, and a way to hide it when complete.",
+      "query": "dashboard home with a setup checklist"
+    },
+    {
+      "id": "07-expert-dashboard/05",
+      "file": "img/05-calcom-bookings-join-row.jpg",
+      "app": "Cal.com",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/567e8f73-5900-4ff3-b436-5806b7b5bc37?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Bookings list with status tabs and Join on every row",
+      "why": "Tabs split bookings into Upcoming, Unconfirmed, Recurring, Past and Canceled. Each row shows date, time range, a 'Join Cal Video' link, the title and who is attending, with Cancel and Edit on the right. The short sidebar ends with 'View public page' and 'Copy public page link'.",
+      "apply": "Join on every online row, the status split for XDASH-05 (Upcoming, Waiting for your answer, Past, Cancelled), a List view for the calendar, and the pinned profile-link actions in the sidebar.",
+      "query": "marketplace host dashboard home with today's reservations"
+    },
+    {
+      "id": "07-expert-dashboard/06",
+      "file": "img/06-honeybook-calendar-legend.jpg",
+      "app": "HoneyBook",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/7c7c3a75-5fa2-4636-adc8-2787bd42812c?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Week calendar with a status legend and view switch",
+      "why": "The left rail holds a 'Connect calendar' link and a legend that separates Booked Projects, Meetings, Payments and Tentative Projects by colour, with tentative items drawn hatched in the grid. A Today button, date range arrows and a Week switch sit in the header. The grid starts at midnight, which Eleva should not copy.",
+      "apply": "Draw 'Waiting for your answer' and 'Waiting for payment' differently from Confirmed (hatched or outlined), put the legend and calendar connection in a side rail, and add a view switch.",
+      "query": "scheduling app appointments calendar week view"
+    },
+    {
+      "id": "07-expert-dashboard/07",
+      "file": "img/07-doordash-dasher-week-strip.jpg",
+      "app": "DoorDash Dasher",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/de3bd81c-98b2-4074-899a-f16ceb8e26e8?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Mobile schedule: week strip, state toggle, one-day timeline",
+      "why": "A seven-day strip with today circled sits under the title, an Available / Scheduled toggle follows, then a count ('1 Dash scheduled') and a single-day timeline with the booked block. Delivery app for workers, kept only for the mobile structure; the provider-side health search returned consumer slot pickers instead.",
+      "apply": "A tappable week strip with today selected on Eleva's mobile calendar, a one-line day summary ('2 sessions today'), and today always rendered even when empty.",
+      "query": "appointment scheduling app for professionals home with today's appointments"
+    },
+    {
+      "id": "07-expert-dashboard/08",
+      "file": "img/08-calendly-event-types-copy-link.jpg",
+      "app": "Calendly",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/d78ac7ff-3fae-4656-a420-5cabfe5b3fac?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Event type row with Copy link and preview",
+      "why": "Each event type is a card with a colour stripe, the name, '30 min · Google Meet · One-on-One' and the hours it can be booked. 'Copy link' and an open-in-new-tab icon are visible on the row; the menu holds the rest. The header keeps 'Manage availability' and 'Create' on the title row with clear space before the list, and 'View landing page' sits above the list.",
+      "apply": "Eleva's service row: modes named in words, Copy link and Preview visible, header actions on the title row with space below.",
+      "query": "scheduling app event types list"
+    },
+    {
+      "id": "07-expert-dashboard/09",
+      "file": "img/09-wix-service-editor-sections.jpg",
+      "app": "Wix",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/0aec83ab-ee27-437c-9d45-67088b19d4ed?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Service editor with a left section list and header save",
+      "why": "A bookable service is edited with a vertical section list (Service details, Pricing & payment, Add-ons & Discounts, Staff & availability, Locations, Images, Booking preferences) and a 'Visible on your site and app' switch under it. Cancel and Save stay in the header. Each section has a title and one-line purpose; fields show character counts and an inline 'Generate AI Description' link.",
+      "apply": "Replace Eleva's six horizontal tabs with a named section list, a visibility switch, header or sticky save, and AI writing help as a quiet link under the field.",
+      "query": "booking app edit service page with price and duration"
+    },
+    {
+      "id": "07-expert-dashboard/10",
+      "file": "img/10-calendly-availability-weekly.jpg",
+      "app": "Calendly",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/9da0fbd3-b4f3-46d1-a56b-3c3f54ff4ec3?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Weekly hours with copy action beside date-specific hours",
+      "why": "Each day is one compact row: a day initial, start and end time, then remove, add-interval and copy icons. Days off read 'Unavailable'. 'Date-specific hours' sits in a second column with a '+ Hours' button and a list of saved dates and their times. Time zone is a small link under the week, and a List / Calendar switch offers a visual view.",
+      "apply": "Copy-to-other-days, one-line day rows on mobile, time zone as an inline link, and 'Days off and special hours' as a listed side block with an add button.",
+      "query": "scheduling app weekly availability editor"
+    },
+    {
+      "id": "07-expert-dashboard/11",
+      "file": "img/11-fresha-client-detail.jpg",
+      "app": "Fresha",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/ac73bf46-1171-42da-8223-2a1fc39a7c3e?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Client search and client profile with history at a glance",
+      "why": "Search by name, mobile or email leads to a client panel with initials avatar, contact details, 'Book now' and an Actions menu. A section list (Overview, Appointments, Sales, Client details, Documents, Reviews) sits beside summary tiles for total sales, appointments, cancelled and no-show counts, and the upcoming appointment card. Salon and wellness booking product.",
+      "apply": "Search on the Members list, initials avatars, and a member page that leads with the next session, session count and history rather than an email address.",
+      "query": "client detail page with appointment history"
+    },
+    {
+      "id": "07-expert-dashboard/12",
+      "file": "img/12-stripe-balances-payouts.jpg",
+      "app": "Stripe",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/8375a60f-4607-462a-b188-0916a0cfa94b?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Balance split into incoming and available, with payouts list",
+      "why": "The balance is one number at the top, then a bar and table split into Incoming (with its expected date) and Available. 'Recent activity' lists payouts with amount, a status pill (Paid, Withdrawn), bank and last four digits, and arrival date. A side card prompts 'Set up automatic payouts'.",
+      "apply": "Eleva's Finance after setup: Earned, On its way (with date) and Paid out, plus a payouts list with status and bank. In first run, show the same tiles at zero under the setup card.",
+      "query": "earnings and payouts dashboard"
+    }
+  ],
+  "judging_criteria": [
+    "Within the first screen of Today, on desktop and mobile, can the expert see her next session and join it with one tap, with a countdown and the join window explained? (07-expert-dashboard/02, 07-expert-dashboard/05)",
+    "Does Today list what needs her (requests waiting, payouts not connected, profile gaps) from real state, each with a reason, a time estimate and one action, and does it disappear when done? (07-expert-dashboard/01, 07-expert-dashboard/04)",
+    "Is money visible on Today even at €0 (earned this month, next payout), and is an unconnected payout account impossible to miss? (07-expert-dashboard/03, 07-expert-dashboard/12)",
+    "Can she copy and share her public profile link from Today and from each service row without opening a menu? (07-expert-dashboard/03, 07-expert-dashboard/08)",
+    "Does every booking use one status vocabulary with a distinct look per state across Today, Calendar and Members, and one time format per locale? (07-expert-dashboard/06, 07-expert-dashboard/05)",
+    "On mobile, does the calendar always show today, let her move day by day with a week strip, and keep each schedule day on one line? (07-expert-dashboard/07, 07-expert-dashboard/10)",
+    "Is the service editor organised in named sections an expert understands, with visibility and save always reachable and no wrapped tabs on a 390 px screen? (07-expert-dashboard/09)"
+  ]
+}

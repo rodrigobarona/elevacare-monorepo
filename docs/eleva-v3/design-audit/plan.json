@@ -1,0 +1,398 @@
+{
+  "title": "Eleva design audit and plan",
+  "date": "2026-11-14",
+  "baseline": "2026-11-14-before",
+  "status": "Audit and plan only. Nothing in this plan is built yet.",
+  "topMoves": [
+    {
+      "title": "Rebuild the pay step as a confirm-and-pay page, in a quiet checkout frame",
+      "why": "The money moment is the thinnest screen in the product: no price breakdown, nothing reassuring beside the button, and the whole funnel sits inside the marketing header and a forty-link footer.",
+      "findings": ["BOOK-01", "BOOK-02", "BOOK-03", "TRUST-03", "TRUST-06"]
+    },
+    {
+      "title": "Turn the checked registration into visible proof, on the profile and on every expert card",
+      "why": "It is the one fact Eleva verifies about an expert, and today it reads as grey small print.",
+      "findings": ["PROF-01", "TRUST-04", "DISC-05"]
+    },
+    {
+      "title": "Give every profile a person: photo rule, profession line, approach, first session",
+      "why": "A member is choosing someone to trust with her health. Without a photo and a structured story the page is a monogram and a price.",
+      "findings": ["PROF-02", "PROF-03", "DISC-02", "DISC-03"]
+    },
+    {
+      "title": "Put real, bookable experts and a need-first entry on the homepage and the explorer",
+      "why": "The homepage never shows an expert a member can book, and neither page lets her start from what she needs.",
+      "findings": ["HOME-01", "HOME-02", "HOME-03", "DISC-01"]
+    },
+    {
+      "title": "Give experts a door, then rebuild setup as one focused, profile-first journey",
+      "why": "A professional who signs up lands on a member Space with no way in. Setup then opens with a tax number and never shows her the profile she is building.",
+      "findings": ["AUTH-01", "ONB-01", "ONB-02", "ONB-03", "ONB-05"]
+    },
+    {
+      "title": "Make the two home pages answer a question",
+      "why": "Expert Today should say what needs her today and whether she can be paid. Member home should feel like a companion, not an empty admin panel.",
+      "findings": ["XDASH-01", "XDASH-02", "XDASH-04", "MEM-01"]
+    },
+    {
+      "title": "Explain each trust moment in one plain sentence, where it is asked",
+      "why": "The legal substance is complete, but the health-data consent is a bare link and the privacy page is five identical Grant buttons.",
+      "findings": ["TRUST-01", "TRUST-02", "MEM-02", "BOOK-04"]
+    }
+  ],
+  "phases": [
+    {
+      "id": "0",
+      "title": "Foundations",
+      "goal": "Make the next phases judgeable: real-looking content, no broken first-run path, and a complete baseline.",
+      "slices": [
+        {
+          "id": "D0.1",
+          "title": "Realistic demo seed",
+          "scope": "Seeded experts get portraits, a profession line, real bios and services; the demo member gets one upcoming and one past session with a report. Without this every profile and dashboard design is judged on placeholders.",
+          "findings": ["MEM-03"],
+          "effort": "S"
+        },
+        {
+          "id": "D0.2",
+          "title": "Fix the /onboarding error for accounts that already have a Space",
+          "scope": "Found while capturing: /onboarding sets a cookie during render and shows \"Eleva is having trouble\" for a signed-in person who already has a membership, which is the invited-member path. Move the cookie write to a Route Handler or the proxy.",
+          "findings": [],
+          "effort": "S"
+        },
+        {
+          "id": "D0.3",
+          "title": "Close the capture gaps",
+          "scope": "Extend the capture spec with what the panel could not see: cookie banner and preferences, open mega menus, the choose-how-to-meet step, slot-taken / hold-ended / payment-failed states, a booked member's home and session detail, the delete-account confirmation, and the video waiting room.",
+          "findings": ["TRUST-16"],
+          "effort": "S"
+        }
+      ]
+    },
+    {
+      "id": "1",
+      "title": "From profile to paid booking",
+      "goal": "The path that earns revenue. A member always sees what she is booking, and the pay step feels safe.",
+      "slices": [
+        {
+          "id": "D1.1",
+          "title": "Quiet checkout frame",
+          "scope": "Replace the marketing header and footer in the funnel with logo, language, help and a secure-booking mark. One shared layout for every funnel step.",
+          "findings": ["BOOK-01", "BOOK-18"],
+          "effort": "S"
+        },
+        {
+          "id": "D1.2",
+          "title": "Confirm and pay",
+          "scope": "One order summary (who, what, when with time zone, price, discount, total today, dated cancellation line, who provides the session). Hold timer and three reassurance lines beside the pay button. Promo code and tax number become links inside the summary. Fixed total-and-pay bar on phones. Still Stripe Checkout Sessions with the Payment Element.",
+          "findings": [
+            "BOOK-02",
+            "BOOK-03",
+            "BOOK-06",
+            "BOOK-07",
+            "BOOK-12",
+            "TRUST-03",
+            "TRUST-06"
+          ],
+          "effort": "M"
+        },
+        {
+          "id": "D1.3",
+          "title": "Details step and lighter consents",
+          "scope": "Explain the health-data consent in one plain line where it is asked, keep it as its own unticked choice, and reduce the weight of the rest. Say the cancellation policy once. Move the optional AI and transcription choice out of the booking gate. Match sign-up wording.",
+          "findings": [
+            "BOOK-04",
+            "BOOK-05",
+            "BOOK-08",
+            "BOOK-09",
+            "TRUST-01",
+            "TRUST-09",
+            "TRUST-12"
+          ],
+          "effort": "M",
+          "legalReview": true
+        },
+        {
+          "id": "D1.4",
+          "title": "Time picker",
+          "scope": "Scannable days and times on a phone, the continue action in place from the start, clear time zone.",
+          "findings": ["BOOK-10", "BOOK-11"],
+          "effort": "S"
+        },
+        {
+          "id": "D1.5",
+          "title": "Thank-you as an arrival, and the unhappy paths",
+          "scope": "What happens next, add to calendar, how to join, the dated cancellation deadline, and a clear Space invitation. Free sessions read as free. Designed states for slot taken, hold ended and payment failed.",
+          "findings": [
+            "BOOK-13",
+            "BOOK-14",
+            "BOOK-15",
+            "BOOK-16",
+            "BOOK-17",
+            "TRUST-15"
+          ],
+          "effort": "M"
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "title": "Trust in the person",
+      "goal": "A member can choose an expert with confidence from the card and the profile.",
+      "slices": [
+        {
+          "id": "D2.1",
+          "title": "Checked-registration proof",
+          "scope": "A proof block beside the expert's name (who checked, what, when) with a one-tap explanation, the same mark on explorer cards, and how experts are ordered made visible.",
+          "findings": ["PROF-01", "TRUST-04", "DISC-05", "TRUST-13"],
+          "effort": "S"
+        },
+        {
+          "id": "D2.2",
+          "title": "Profile header and spine",
+          "scope": "Header that holds up without a photo, facts as scannable items, a structured about (profession, focus, approach, training, your first session), reassurance moved up from the FAQ, and an empty profile that offers a next step.",
+          "findings": [
+            "PROF-02",
+            "PROF-03",
+            "PROF-04",
+            "PROF-08",
+            "PROF-09",
+            "PROF-10"
+          ],
+          "effort": "M"
+        },
+        {
+          "id": "D2.3",
+          "title": "Services and booking on the profile",
+          "scope": "Even service cards with one action each, a clearer availability card, and on phones a sticky bar that opens the picker with the next open time.",
+          "findings": ["PROF-05", "PROF-06", "PROF-07"],
+          "effort": "M"
+        },
+        {
+          "id": "D2.4",
+          "title": "Expert card and need-first explorer",
+          "scope": "Card with face or compact no-photo layout, profession and focus, languages, how you meet, next open time and price. Areas of care above the grid, fuller filters, honest few-results and no-results states, unbookable experts handled apart.",
+          "findings": [
+            "DISC-01",
+            "DISC-02",
+            "DISC-03",
+            "DISC-04",
+            "DISC-06",
+            "DISC-07",
+            "DISC-08",
+            "DISC-09"
+          ],
+          "effort": "M"
+        },
+        {
+          "id": "D2.5",
+          "title": "Report a concern",
+          "scope": "A visible, calm way to report a problem with an expert or a session, from the profile and the session page.",
+          "findings": ["TRUST-10"],
+          "effort": "S",
+          "legalReview": true
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "title": "Homepage and marketing",
+      "goal": "A first-time visitor knows in ten seconds what Eleva is, sees real experts, and has a way in.",
+      "slices": [
+        {
+          "id": "D3.1",
+          "title": "Homepage first two screens",
+          "scope": "Need chips or search in the hero, a row of real bookable experts straight under it, tighter hero copy. Reuses the D2.4 card.",
+          "findings": ["HOME-01", "HOME-02", "HOME-07", "HOME-11"],
+          "effort": "M"
+        },
+        {
+          "id": "D3.2",
+          "title": "Homepage proof and rhythm",
+          "scope": "Proof that is proof (how experts are checked, member voice and numbers when true), advisors merged into one band lower down, one way to browse, how-it-works shown with the product, a closing action for members with questions answered, shorter phone page, footer with a way back into care and who is behind Eleva.",
+          "findings": [
+            "HOME-03",
+            "HOME-04",
+            "HOME-05",
+            "HOME-06",
+            "HOME-08",
+            "HOME-09",
+            "HOME-10",
+            "TRUST-11",
+            "TRUST-14"
+          ],
+          "effort": "M"
+        },
+        {
+          "id": "D3.3",
+          "title": "Become an expert",
+          "scope": "Lead with the offer, the fee as its own block with a worked example (finance confirms the numbers), real product screens, a peer, and the questions experts ask next.",
+          "findings": [
+            "MKT-01",
+            "MKT-02",
+            "MKT-03",
+            "MKT-05",
+            "MKT-06",
+            "MKT-07",
+            "MKT-08"
+          ],
+          "effort": "M"
+        },
+        {
+          "id": "D3.4",
+          "title": "For clinics and About",
+          "scope": "Clinics: a conversation as the main action, said once. About: the founders' story told once, shorter on phones, ending on members.",
+          "findings": ["MKT-04", "MKT-09", "MKT-10", "MKT-11", "MKT-12"],
+          "effort": "S"
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "title": "Expert activation",
+      "goal": "A health professional gets from sign-up to a profile sent for review without wondering where she is.",
+      "slices": [
+        {
+          "id": "D4.1",
+          "title": "The expert door",
+          "scope": "An expert sign-up variant that carries intent into setup, a visible \"Offer care on Eleva\" entry on the member Space, a type picker and name step that speak care, and one step counter.",
+          "findings": [
+            "AUTH-01",
+            "ONB-01",
+            "ONB-08",
+            "ONB-09",
+            "ONB-10",
+            "ONB-14"
+          ],
+          "effort": "M"
+        },
+        {
+          "id": "D4.2",
+          "title": "Setup, rebuilt",
+          "scope": "Full screen, one question per screen, profile-first order (about you, how you see members, first service, licence, payouts, invoices), a live profile preview, save and exit. Builds on the O1 to O10 prototypes in the PoC lab.",
+          "findings": [
+            "ONB-02",
+            "ONB-03",
+            "ONB-04",
+            "ONB-05",
+            "ONB-13",
+            "ONB-15"
+          ],
+          "effort": "L"
+        },
+        {
+          "id": "D4.3",
+          "title": "Money, licence and the finish",
+          "scope": "Payouts step that names Stripe, what she needs and when she is paid. Invoicing without greyed-out options. Licence as its own step with an example and a timeline. A finish that celebrates and links to real next steps.",
+          "findings": ["ONB-06", "ONB-07", "ONB-11", "ONB-12"],
+          "effort": "M"
+        },
+        {
+          "id": "D4.4",
+          "title": "Sign-in and sign-up polish",
+          "scope": "A trust line on phones, people in the brand panel, check-your-email screens with something to do, language, help and legal links, lighter fields.",
+          "findings": [
+            "AUTH-02",
+            "AUTH-03",
+            "AUTH-04",
+            "AUTH-05",
+            "AUTH-06",
+            "AUTH-07",
+            "AUTH-08",
+            "AUTH-09",
+            "AUTH-10"
+          ],
+          "effort": "M"
+        }
+      ]
+    },
+    {
+      "id": "5",
+      "title": "Dashboards",
+      "goal": "Each home page answers its question; the rest is consistent and works on a phone.",
+      "slices": [
+        {
+          "id": "D5.1",
+          "title": "Expert Today",
+          "scope": "Next-session card with Join, a \"Needs you\" list from real state (requests, payouts not set up, missing photo), money at a glance, share your profile, a setup and growth checklist.",
+          "findings": [
+            "XDASH-01",
+            "XDASH-02",
+            "XDASH-03",
+            "XDASH-04",
+            "XDASH-05"
+          ],
+          "effort": "M"
+        },
+        {
+          "id": "D5.2",
+          "title": "Member home and sessions",
+          "scope": "With a booking: her expert, Join, what to prepare. Without: a guided way to find the right expert and how a session works. Empty states that teach. Clear navigation with an inbox and a phone bar.",
+          "findings": ["MEM-01", "MEM-04", "MEM-05", "MEM-06", "MEM-09"],
+          "effort": "M"
+        },
+        {
+          "id": "D5.3",
+          "title": "Privacy and data controls",
+          "scope": "What she agreed to (dated) apart from optional choices (switches). Download and delete explained in plain words, with status and visible safeguards.",
+          "findings": ["MEM-02", "MEM-08", "TRUST-02", "TRUST-08"],
+          "effort": "M",
+          "legalReview": true
+        },
+        {
+          "id": "D5.4",
+          "title": "Expert calendar and services",
+          "scope": "A calendar that shows today and has actions, usable on a phone. Services list with the actions experts use most. A service editor that is not six opaque tabs.",
+          "findings": [
+            "XDASH-06",
+            "XDASH-07",
+            "XDASH-08",
+            "XDASH-09",
+            "XDASH-10"
+          ],
+          "effort": "L"
+        },
+        {
+          "id": "D5.5",
+          "title": "Expert consistency pass",
+          "scope": "Members list with search, finance first-run that explains how money flows, navigation grouped the way an expert thinks, headers that do not collide, plain words instead of jargon, a profile editor with a sense of completeness. Member settings and notifications on phones.",
+          "findings": [
+            "XDASH-11",
+            "XDASH-12",
+            "XDASH-13",
+            "XDASH-14",
+            "XDASH-15",
+            "XDASH-16",
+            "MEM-07",
+            "MEM-10"
+          ],
+          "effort": "M"
+        }
+      ]
+    },
+    {
+      "id": "6",
+      "title": "Trust centre and legal pages",
+      "goal": "Trust facts are scannable, and a policy can be read and acted on from a phone.",
+      "slices": [
+        {
+          "id": "D6.1",
+          "title": "Trust centre and policy layout",
+          "scope": "Trust centre opens with fact tiles before the documents. Legal pages get a plain-language summary, contents on phones, last updated, and a way to act on a right.",
+          "findings": ["TRUST-05", "TRUST-07"],
+          "effort": "M",
+          "legalReview": true
+        }
+      ]
+    }
+  ],
+  "notCovered": [
+    "Video call room and waiting room, emails, the help centre (apps/docs), admin, team and academy apps were not audited in this pass.",
+    "Open mega menus, the cookie banner and its preferences dialog, the choose-how-to-meet step, and error states (slot taken, hold ended, payment failed) were not captured; D0.3 adds them.",
+    "The demo member has no bookings, so a booked member's home, session detail and report were judged from source, not screens; D0.1 fixes that.",
+    "Dark mode and PT/ES layouts were not captured. Captures are English, light theme.",
+    "No accessibility tooling (axe, screen reader) was run; a11y notes come from looking at the captures.",
+    "Findings marked for legal review are design proposals. The panel did not give legal advice.",
+    "Mobbin had no women's-health marketplace and no clinician licence check; those references come from other domains and are used for structure only."
+  ]
+}

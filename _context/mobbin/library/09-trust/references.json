@@ -1,0 +1,400 @@
+{
+  "surface": "09-trust",
+  "title": "Trust, legal and governance (cross-cutting)",
+  "researcher": "Trust, legal and governance",
+  "date": "2026-11-14",
+  "summary": "The legal substance is unusually complete for a pre-launch product: consents are separate and unticked, every policy is dated, the controller is named, and export and deletion are in the product. The design does not yet let a member feel that. Trust facts sit in grey fine print, in documents and in FAQ accordions, while the moments that carry the most weight (the health-data consent, the pay step, the privacy controls) are the least explained. The one change that matters most: explain each trust moment in one plain sentence at the place where it is asked, starting with the health-data consent and the cancellation deadline next to the Pay button.",
+  "strengths": [
+    "Checkout consents are four separate, unticked checkboxes, and the AI and transcription choice is marked Optional and left off (04-booking-checkout/05-paid-step-details). Keep the separation; improve the explanation.",
+    "The details step turns the cancellation policy into dated facts for this booking: \"Full refund if you cancel before 15 Nov 2026, 10:00\" (04-booking-checkout/06-paid-details-filled). This is the best trust line in the funnel.",
+    "Every card on the trust index has a one-line plain description and a last-updated date, and the page ends with privacy@ and security@ contacts plus a vulnerability disclosure page (09-trust/01-trust).",
+    "The privacy notice has a last-updated date, numbered sections, a sticky contents list on desktop, a purposes and legal bases table, the controller's legal name, NIPC and address, and the route to complain to the CNPD (09-trust/02-legal-privacy).",
+    "Consents, data export and account deletion live on one Privacy page in the member sidebar, deletion has a 14-day waiting period, and marketing notifications are off by default (10-member-space/05-privacy, 10-member-space/06-settings).",
+    "The \"Need urgent help?\" block with 112, SNS 24 and the crisis lines appears where a health note is typed and again on the thank-you page (04-booking-checkout/09-free-thank-you). It reads as care, not as a disclaimer.",
+    "The product already says who provides care: the hero line \"Eleva connects you with independent health experts who run their own practice\", the profile questions \"Who provides my care?\" and \"What does Eleva check?\", and the registration-check line on the experts page.",
+    "The profile shows the professional body, licence number and ERS registration number, and the footer links the electronic complaints book and reopens cookie settings."
+  ],
+  "findings": [
+    {
+      "id": "TRUST-01",
+      "severity": "P1",
+      "lens": "trust",
+      "title": "The health-data consent is a bare link at the moment it is asked",
+      "evidence": [
+        "04-booking-checkout/05-paid-step-details.desktop.jpg",
+        "04-booking-checkout/05-paid-step-details.mobile.jpg",
+        "04-booking-checkout/06-paid-details-filled.mobile.jpg"
+      ],
+      "detail": "The most sensitive choice in the product reads \"I consent to health data processing\", one of four identical grey rows under the heading \"Policy and consent\" and the intro \"To book a health session on this digital health platform, please confirm:\". Nothing on the screen says what health data means here, who sees it, or that the member can withdraw. The member has to leave a filled form and read a policy to find out. A woman booking pelvic health or fertility care wants that answer before she ticks. Consent that is given without understanding is also weaker consent: whether the label alone is specific and informed enough needs legal review. The note field \"Anything you want the expert to know\" sits a full card above the consent it depends on.",
+      "recommendation": "Keep four separate unticked boxes. Rename the card \"Before you book\" and open it with a short promise in Lora, for example \"Your health details stay between you and your expert\", followed by two plain lines: who sees what you write (the expert you book), and that you can withdraw in Privacy settings. Give each checkbox a bold short label and one grey line of explanation: \"Health information. I agree that Eleva handles the health details in this booking so my expert can prepare. Read the health data notice.\" Open each notice in a sheet or dialog so the form is never lost. Move the consent card directly under the note field on mobile so cause and consent are read together. Final wording needs legal review.",
+      "references": ["09-trust/01", "09-trust/02"]
+    },
+    {
+      "id": "TRUST-02",
+      "severity": "P1",
+      "lens": "ux",
+      "title": "The Privacy page shows five teal \"Grant\" buttons and no record of what the member agreed to",
+      "evidence": [
+        "10-member-space/05-privacy.desktop.jpg",
+        "10-member-space/05-privacy.mobile.jpg"
+      ],
+      "detail": "The Consents card promises \"See what you agreed to\" but shows no status, no date and no on or off state. Each row (Terms of use, Privacy notice, Health data processing, Marketing messages, AI help) has the same primary \"Grant\" button and a raw \"Version 2026-11-14\". A member cannot tell whether health-data consent is active, cannot see how to withdraw it, and is nudged by a primary button to opt in to marketing. Terms of use and the privacy notice appear as things to grant, which mixes a contract and a notice with real consents; whether they belong in this list needs legal review. On mobile the five full-width buttons fill two screens before export and delete appear.",
+      "recommendation": "Turn the card into a status list in two groups. \"Needed to use Eleva\": Terms of use and Privacy notice as read-only rows with \"Accepted 14 November 2026\" and a \"Read\" link. \"Your choices\": Health information, Marketing messages, Live transcription, AI help with session reports, each with a switch, a one-line plain description, the date it was last changed, and the consequence of turning it off (\"Turning this off cancels nothing you have booked. To stop a booked session, cancel it first.\"). Show the version as a date in words. A withdrawal uses the same single control as the grant.",
+      "references": ["09-trust/08", "09-trust/10"]
+    },
+    {
+      "id": "TRUST-03",
+      "severity": "P1",
+      "lens": "trust",
+      "title": "The cancellation deadline disappears at the pay step on mobile and is generic on desktop",
+      "evidence": [
+        "04-booking-checkout/07-paid-step-pay.mobile.jpg",
+        "04-booking-checkout/07-paid-step-pay.desktop.jpg",
+        "04-booking-checkout/06-paid-details-filled.desktop.jpg"
+      ],
+      "detail": "The details step states the exact refund deadline. One step later, where the member pays, the mobile summary card shows only the service, time and hold timer: no cancellation terms at all. Desktop keeps one grey line, \"Full refund if you cancel at least 24 hours before the session\", without the date. The member commits money on the screen with the least information about getting it back. Showing the main terms, including cancellation, directly before the payment action is also a consumer-law expectation; the exact wording, and whether a withdrawal-right statement is required for a dated health service, needs legal review.",
+      "recommendation": "Carry the dated line into the summary card on both breakpoints, with an icon and normal text colour: \"Free cancellation until Sun 15 Nov, 10:00. After that, no refund.\" with a \"Cancellation policy\" link that opens the full Flexible rules in a sheet. Repeat one short line directly under the Pay button: \"By paying you confirm this booking and its cancellation policy.\" Use the same component on the thank-you page and in the confirmation email so the member reads one sentence three times.",
+      "references": ["09-trust/03"]
+    },
+    {
+      "id": "TRUST-04",
+      "severity": "P1",
+      "lens": "trust",
+      "title": "Credentials read as fine print and the explanation of what Eleva checks is at the bottom of the page",
+      "evidence": [
+        "03-profile/01-profile-paid.desktop.jpg",
+        "03-profile/01-profile-paid.mobile.jpg",
+        "02-discovery/01-experts.desktop.jpg",
+        "02-discovery/01-experts.mobile.jpg"
+      ],
+      "detail": "The strongest proof on a profile, \"Ordem dos Fisioterapeutas · Licence no. … · ERS registration no. …\", is one small grey line with no icon, no statement that Eleva checked it, and no date. The answer to \"What does Eleva check?\" is the sixth and last accordion, far below the booking card on mobile. Listing cards show no profession or registration at all, so with a missing photo a card is a monogram and a name. For a new marketplace with no reviews yet, verified registration is the main reason to trust a stranger with a health problem, and it is styled like a caption.",
+      "recommendation": "Add a \"Registration checked\" row in the header and repeat it in the booking card above the CTA: a shield-check icon, \"Physiotherapist · Ordem dos Fisioterapeutas no. 12345\", \"Checked by Eleva in November 2026\", and a \"What we check\" link opening a short popover (identity, professional body registration, ERS where it applies, how often it is rechecked). Link the number to the public register where the professional body offers one. On listing cards add the profession and a small checked mark under the name. Only claim what the verification process does; the label wording (\"checked\" versus \"verified\") needs legal review.",
+      "references": ["09-trust/05"]
+    },
+    {
+      "id": "TRUST-05",
+      "severity": "P2",
+      "lens": "ui",
+      "title": "The trust centre is an index of thirteen documents with equal weight",
+      "evidence": [
+        "09-trust/01-trust.desktop.jpg",
+        "09-trust/01-trust.mobile.jpg"
+      ],
+      "detail": "The page is two grids of identical white cards. A member who wants to know \"is my health information safe here?\" has to choose between Security, Data processing agreement, Sub-processors and Health data notice and then read a policy. The first card a member meets after Security is a contract written for experts and clinics. There are no facts on the page itself, no icons, no grouping by reader, and no word on who is behind Eleva. On mobile it is thirteen stacked cards, about 4,300 px, before the contact line.",
+      "recommendation": "Lead with proof, then documents. Under the heading add five or six fact tiles, each an icon, a specific claim and a link: who can read your session notes, where data is stored, how session records are encrypted, how expert registration is checked, how payments are handled, that sessions are not recorded. Then group the documents by reader with a short label each: \"For members\", \"For experts and clinics\", \"Security researchers\". Add a \"Who runs Eleva\" block (legal name, NIPC, address, regulator registration, privacy and security contacts) and a \"Report a concern\" entry. Keep the dated cards; they are good.",
+      "references": ["09-trust/06"]
+    },
+    {
+      "id": "TRUST-06",
+      "severity": "P2",
+      "lens": "trust",
+      "title": "The pay step does not say who provides the session, who is paid, or whether the price is final",
+      "evidence": [
+        "04-booking-checkout/07-paid-step-pay.desktop.jpg",
+        "04-booking-checkout/07-paid-step-pay.mobile.jpg"
+      ],
+      "detail": "The summary names \"Fisio Mota\" and a price, and the page is branded Eleva. Nothing at the point of contract says the session is delivered by an independent expert, that Eleva arranges booking and payment, or who issues the invoice. \"Total\" sits alone on a line with the amount on the next line and no tax note. The subheading \"Card, Apple Pay, Google Pay, Link, and MB WAY may appear\" sounds unsure. There is no line saying the card details go to Stripe. Platform transparency and total-price rules both point at this screen; the exact statements need legal review.",
+      "recommendation": "Add a provider line to the summary card: \"Your session is with Fisio Mota, an independent physiotherapist. Eleva takes care of booking and payment, and your expert sends the invoice.\" Set the total as one row, label left and amount right, with \"Taxes included\" or the correct VAT wording beneath (needs legal review). Replace the subheading with \"We hold your time while you pay.\" and add a lock line under the button: \"Paid securely through Stripe. Eleva never sees your card number.\" All of this is copy around the Payment Element, not a change to it.",
+      "references": ["09-trust/04", "09-trust/03"]
+    },
+    {
+      "id": "TRUST-07",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "Legal pages have no plain-language layer, no contents on mobile, and no way to act on a right",
+      "evidence": [
+        "09-trust/02-legal-privacy.desktop.jpg",
+        "09-trust/02-legal-privacy.mobile.jpg"
+      ],
+      "detail": "The privacy notice is well written but opens straight into \"1. Who the controller is\". There is no short summary for a member who will read thirty seconds. On mobile the page runs about 11,700 px with no contents list or jump links, and the two-column legal bases table squeezes into narrow columns. Section 8 tells members to write an email to use their rights, although export and deletion already exist in Privacy settings. Section 10 joins \"Artificial intelligence and cookies\", two unrelated topics. The DPO bullet describes an appointment still to come, which reads as something missing; how to state the current contact needs legal review.",
+      "recommendation": "Add an \"In short\" box under the title with five bullets (what we collect, who sees health information, where it is stored, how long, your choices) and the note that the full text below is what applies. On mobile add a collapsible \"On this page\" under the date and a back-to-top control; stack the table as purpose-then-basis cards. In \"Your rights\" add two buttons, \"Download your data\" and \"Delete your account\", that go to Privacy settings, plus a short request form for people who booked as guests. Split AI and cookies into two sections. State the data protection contact positively as the one address that reaches the right person. Apply the same template to every policy.",
+      "references": ["09-trust/07"]
+    },
+    {
+      "id": "TRUST-08",
+      "severity": "P2",
+      "lens": "copy",
+      "title": "Delete account is explained in internal terms and its safeguards are not visible",
+      "evidence": [
+        "10-member-space/05-privacy.desktop.jpg",
+        "10-member-space/05-privacy.mobile.jpg"
+      ],
+      "detail": "The explanation uses \"Account-scope data\", \"Booking-scope consents\", \"de-identified\", \"retain-then-destroy rule\" and \"This cannot be shortened from this screen\". A member cannot tell from this whether her session notes are deleted. The reassuring fact, a 14-day window to change her mind, is the last line. The button is a pale pink pill that looks disabled. The page does not suggest downloading data first, and the capture set has no confirmation step, so its design could not be judged. \"Download your data\" has no state for a request in progress or a past export.",
+      "recommendation": "Rewrite as two short lists. \"What we delete\": your profile, your sign-in, your notification and marketing choices. \"What we keep, and why\": session records, with your name removed, for the period Portuguese health-record rules require; payment records for tax law. Lead with \"You have 14 days to change your mind\". Offer \"Download your data first\" inside the delete card. Make the confirmation a dialog that repeats the consequences in one sentence, links the privacy notice, and uses an explicit button label such as \"Delete my account\". After a request, show a dated status row for export and for deletion with a \"Cancel deletion\" action. Retention statements need legal review.",
+      "references": ["09-trust/09", "09-trust/10"]
+    },
+    {
+      "id": "TRUST-09",
+      "severity": "P2",
+      "lens": "copy",
+      "title": "The optional AI choice bundles transcription and AI drafting in one long sentence",
+      "evidence": [
+        "04-booking-checkout/05-paid-step-details.desktop.jpg",
+        "04-booking-checkout/05-paid-step-details.mobile.jpg",
+        "10-member-space/05-privacy.desktop.jpg"
+      ],
+      "detail": "At checkout the fifth checkbox is a 45-word sentence covering two different things: live transcription of the call, and AI help with the expert's notes. It sits in the same list as the required boxes with only the word \"Optional:\" to set it apart, and on mobile it wraps to seven lines. In Privacy settings the same choice is a seven-line paragraph that ends with \"AI drafting is not switched on yet\", which tells the member about something Eleva does not do. A member cannot accept transcription and decline AI drafting. Whether one consent can cover both purposes needs legal review.",
+      "recommendation": "Lift it out of the required list into its own tinted block titled \"Optional: a written record of your session\". Use a switch, two short bullets (what is transcribed and who reads it; that your expert writes and checks the report), and the line \"You can change this any time in Privacy settings.\" If the two purposes can run independently, offer two switches. Describe only what happens today. Add a visible notice in the call itself whenever transcription is on, with the same wording.",
+      "references": ["09-trust/02", "09-trust/08"]
+    },
+    {
+      "id": "TRUST-10",
+      "severity": "P2",
+      "lens": "trust",
+      "title": "There is no visible way to report a concern about an expert or a session",
+      "evidence": [
+        "03-profile/01-profile-paid.desktop.jpg",
+        "03-profile/01-profile-paid.mobile.jpg",
+        "04-booking-checkout/09-free-thank-you.desktop.jpg",
+        "09-trust/01-trust.desktop.jpg"
+      ],
+      "detail": "The profile has \"Website\" and \"Share this page\" but no \"Report\". The thank-you page has no \"Something wrong?\" route. The only path is the footer link to the complaints policy, which is a document, not an action. For a health marketplace, a member who sees a wrong credential or has a bad session needs a short, safe way to say so, and seeing that route exists is itself a trust signal. A notice route for listings is also expected of online platforms; scope needs legal review.",
+      "recommendation": "Add a quiet \"Report a concern\" link at the foot of every profile and on each session in the member Space. Open a two-step dialog: pick a reason (registration or identity, conduct in a session, payment or refund, something else), add details. State \"Your expert will not see who sent this\" where that is true, confirm with a reference number and the time to a reply, and link the complaints policy and the electronic complaints book. List the same route on the trust centre.",
+      "references": ["09-trust/11"]
+    },
+    {
+      "id": "TRUST-11",
+      "severity": "P2",
+      "lens": "ui",
+      "title": "The footer lists fourteen legal links and does not say who is behind Eleva",
+      "evidence": [
+        "01-homepage/01-home.desktop.jpg",
+        "01-homepage/01-home.mobile.jpg",
+        "09-trust/01-trust.desktop.jpg"
+      ],
+      "detail": "The Legal column runs from Terms to Cookie settings in one undifferentiated list, mixing member essentials with Expert agreement, Photo credits and Evidence-based care. The complaints book, which Portuguese members look for, is tenth. The bottom line reads \"© 2026 Eleva.care. All rights reserved.\" with no legal name, registration number or address, so a visitor has to open the privacy notice to learn which company holds her data. On mobile the footer is longer than a screen and a half.",
+      "recommendation": "Split into two shorter columns: \"Legal\" (Terms, Privacy, Cookies, Payments and refunds, Complaints, Electronic complaints book) and \"Trust\" (Trust and security, Health data, AI, Accessibility, Cookie settings). Move Expert agreement under the professionals column and Photo credits to the bottom bar. Replace the copyright line with an identity line: legal name, NIPC, registered address, and the regulator registration where one applies. Show the official complaints-book mark if its use is required or permitted (needs legal review).",
+      "references": ["09-trust/12"]
+    },
+    {
+      "id": "TRUST-12",
+      "severity": "P2",
+      "lens": "copy",
+      "title": "Sign-up and checkout ask for the same agreements in different words",
+      "evidence": [
+        "05-auth/03-signup.desktop.jpg",
+        "05-auth/04-signup-step-two.desktop.jpg",
+        "05-auth/04-signup-step-two.mobile.jpg",
+        "04-booking-checkout/05-paid-step-details.desktop.jpg"
+      ],
+      "detail": "Sign-up with email uses one checkbox, \"I agree to the Terms and Privacy Policy\". Sign-up with Google uses a passive line, \"By continuing with Google, you agree to…\". Checkout uses two boxes, \"I agree to the terms of use\" and \"I have read the privacy notice\". The same documents have three names (Terms, terms of use, booking terms; Privacy Policy, privacy notice) and three mechanisms. A careful reader wonders whether these are different documents. Asking someone to \"agree\" to a privacy notice, and accepting by a tick on one path and by continuing on another, needs legal review.",
+      "recommendation": "Create one shared consent component in the UI package with fixed document names (\"Terms of use\", \"Privacy notice\") and fixed verbs (agree to the terms, have read the notice). Use it on email sign-up, Google sign-up and checkout. When a signed-in member who already accepted the current versions books, show a single quiet line, \"You accepted the Terms of use and Privacy notice on 14 November 2026\", and ask only for what is new: the health information consent and the adult confirmation.",
+      "references": ["09-trust/01"]
+    },
+    {
+      "id": "TRUST-13",
+      "severity": "P2",
+      "lens": "trust",
+      "title": "How experts are ordered is a small grey link under the results",
+      "evidence": [
+        "02-discovery/01-experts.desktop.jpg",
+        "02-discovery/01-experts.mobile.jpg"
+      ],
+      "detail": "\"Before a profile goes live, our team checks the expert's professional registration. How we order experts\" is one caption-sized grey sentence below the grid. Two different promises share it: verification, which is a selling point, and ranking transparency, which platform rules expect to be easy to find next to the ranked results. A member reads the cards first and will never reach it on mobile once there are more than three experts. Placement and content of the ranking explanation need legal review.",
+      "recommendation": "Split the two. Put the verification promise above the grid as a short line with a shield icon, linked to \"What we check\". Put \"How we order experts\" next to the results count or sort control at the top of the list, opening a popover that names the main factors in plain words and says whether payment affects order.",
+      "references": ["09-trust/05", "09-trust/04"]
+    },
+    {
+      "id": "TRUST-14",
+      "severity": "P3",
+      "lens": "trust",
+      "title": "The homepage trust strip lists benefits, not proof",
+      "evidence": [
+        "01-homepage/01-home.desktop.jpg",
+        "01-homepage/01-home.mobile.jpg"
+      ],
+      "detail": "\"Independent experts · Online or in person · In your language · Clear prices\" are four labels with icons and no link. None is a checkable fact. The two facts that would reassure a first-time visitor, that every expert's registration is checked and that health information is protected, live only on inner pages.",
+      "recommendation": "Make two of the four items proof with a destination: \"Registration checked for every expert\" linking to what Eleva checks, and \"Your health information stays private\" linking to the trust centre. Keep \"Clear prices\" and \"Online or in person\".",
+      "references": ["09-trust/06"]
+    },
+    {
+      "id": "TRUST-15",
+      "severity": "P3",
+      "lens": "copy",
+      "title": "The thank-you page names the cancellation policy but not the deadline or how to cancel",
+      "evidence": [
+        "04-booking-checkout/09-free-thank-you.desktop.jpg",
+        "04-booking-checkout/09-free-thank-you.mobile.jpg"
+      ],
+      "detail": "\"Changes and refunds follow the Flexible cancellation policy\" uses the internal tier name and gives no date and no action. A guest with no account does not know where she would cancel.",
+      "recommendation": "Reuse the dated line from checkout: \"Free to change or cancel until Thu 10 Dec, 16:00\" with \"How to cancel\" pointing to the link in the confirmation email.",
+      "references": ["09-trust/03"]
+    },
+    {
+      "id": "TRUST-16",
+      "severity": "P3",
+      "lens": "ux",
+      "title": "The cookie banner and preferences dialog are missing from the capture set",
+      "evidence": [
+        "01-homepage/01-home.desktop.jpg",
+        "01-homepage/01-home.mobile.jpg"
+      ],
+      "detail": "No capture shows the consent banner, so its design could not be judged. The source (packages/consent/src/consent-chrome.tsx) describes a compact bottom bar with both choices in one row and \"Customize\" as a text link on phones, which is the right shape. Equal visual weight for accept and reject, and the wording, still need a visual check and legal review.",
+      "recommendation": "Add first-visit captures of the banner and the preferences dialog on desktop and mobile. Check that accept and reject are the same size and style, that necessary cookies are labelled \"Always on\" and optional groups start off, and that the dialog can be confirmed with one button.",
+      "references": ["09-trust/08"]
+    }
+  ],
+  "references": [
+    {
+      "id": "09-trust/01",
+      "file": "img/01-flo-health-data-consent.jpg",
+      "app": "Flo",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/9524933d-5f9c-415f-9c2b-fb95b4ee5693?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Separate health-data consents under a human promise",
+      "why": "A women's health app asks for three separate consents on one screen. It opens with \"Your body. Your data\" and a one-sentence promise about sharing and deletion, then each tick states its purpose in the label (\"processing of my personal health data for providing me Flo app functions\") with the policy link inline. The health consent is its own box, apart from terms.",
+      "apply": "Open the checkout consent card with a short promise, keep each consent separate, and write the purpose into each label so the health-data box explains itself. The same component serves sign-up and checkout with one set of document names.",
+      "query": "therapy app consent to process sensitive health information screen"
+    },
+    {
+      "id": "09-trust/02",
+      "file": "img/02-perplexity-health-consent-promises.jpg",
+      "app": "Perplexity",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/4597c7ea-99cf-40b1-81fa-9b0546b885db?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Three plain promises before \"I consent\", including the AI disclosure",
+      "why": "A bottom sheet for health data: a shield mark, the headline \"Private by design\", then three icon rows in everyday words: where queries go and that AI providers may not train on them, that data is encrypted and never sold, and that you can disconnect or delete at any time. Only then the \"I consent\" button and the policy link. Not a health marketplace; kept for how it explains health data and AI use in three lines.",
+      "apply": "Use the three-row format above the health consent (who sees it, how it is protected, how to withdraw) and inside the optional AI block (what is transcribed, that the expert writes the report, how to turn it off).",
+      "query": "therapy app consent to process sensitive health information screen"
+    },
+    {
+      "id": "09-trust/03",
+      "file": "img/03-airbnb-confirm-pay-cancellation-deadline.jpg",
+      "app": "Airbnb",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/3ca7c32d-ae98-4d86-b410-78524da5648a?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Dated cancellation deadline in the order summary at \"Confirm and pay\"",
+      "why": "On the pay step the summary card leads with \"Free cancellation. Cancel before Jul 14, 8:00 AM (WITA) for full refund\", above date, guests and price details, with the total as one row. The agreement line with links to booking terms sits directly above the pay button.",
+      "apply": "Carry Eleva's dated refund line into the pay-step summary on mobile and desktop, place the short agreement line by the Pay button, and reuse the same dated line on the thank-you page.",
+      "query": "marketplace booking checkout with cancellation policy"
+    },
+    {
+      "id": "09-trust/04",
+      "file": "img/04-kayak-review-who-you-book-with.jpg",
+      "app": "KAYAK",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/47e7420e-ad6b-4d91-a274-8f3446650168?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "The platform names who you are actually booking with, beside the total",
+      "why": "The review step has a small card under the price summary: \"KAYAK has partnered with CarRentals.com… You are booking directly with\" followed by the provider's logo. The consent line above the button names both parties' terms. Price details list taxes and fees before the total. A travel product, kept for how it states the platform's role at the point of contract.",
+      "apply": "Add a provider line to the pay-step summary that says the session is with the named independent expert and that Eleva handles booking and payment, and show the total with its tax note as one row.",
+      "query": "marketplace booking checkout with cancellation policy"
+    },
+    {
+      "id": "09-trust/05",
+      "file": "img/05-care-com-profile-verification-explained.jpg",
+      "app": "Care.com",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/41f22041-1b75-4dd1-a336-01069df559cc?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A check badge by the name and a plain line next to the CTA saying what the check covers",
+      "why": "The carer's name carries a small shield badge. Directly above the contact button a shield row explains the check the platform requires for every carer, with \"Learn more\". A separate \"Credentials\" block states precisely what the platform does and does not confirm, so the badge claims no more than the process behind it.",
+      "apply": "Put a \"Registration checked\" row with professional body and number next to the expert's name and in the booking card, with a \"What we check\" popover, and keep the claim exactly as wide as Eleva's verification.",
+      "query": "healthcare marketplace provider profile with verified credentials"
+    },
+    {
+      "id": "09-trust/06",
+      "file": "img/06-wise-trust-proof-tiles.jpg",
+      "app": "Wise",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/86884925-0fbf-422b-a4cb-0b05900378af?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Proof tiles: one icon, one specific claim, one short explanation",
+      "why": "Under \"Protecting you and your money\" each tile makes a single checkable statement (safeguarded with leading banks, licensed, audited regularly) with two lines of explanation and a link to the detail. A reader gets the facts without opening a document. A finance product, kept for the structure.",
+      "apply": "Open the trust centre with five or six fact tiles about health information, storage, encryption, expert checks and payments, then list the dated documents grouped by reader. Use two of the same facts in the homepage trust strip.",
+      "query": "trust and safety section on a marketplace site"
+    },
+    {
+      "id": "09-trust/07",
+      "file": "img/07-masterclass-privacy-policy-contents-request.jpg",
+      "app": "MasterClass",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/59ce80a7-3445-40cc-a1d5-5f32d8125987?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Policy page with persistent contents and privacy-request actions at the top",
+      "why": "The privacy policy keeps a full contents list in a fixed left rail and puts two buttons at the top right of the document: \"View Past Requests\" and \"Make a Privacy Request\". The effective date sits under the title. A reader can act on a right from the page that describes it.",
+      "apply": "Add \"Download your data\" and \"Delete your account\" actions to the \"Your rights\" section and the top of the privacy notice, give mobile a collapsible contents list, and add an \"In short\" summary under the date.",
+      "query": "privacy policy page with table of contents"
+    },
+    {
+      "id": "09-trust/08",
+      "file": "img/08-mercor-consent-preferences-reject-all.jpg",
+      "app": "Mercor",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/13bb934d-26a4-4286-81d4-12dafb1d6da3?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Preference centre with equal \"Reject All\" and \"Accept All\", per-purpose switches and \"Always Active\"",
+      "why": "The dialog puts \"Reject All\" and \"Accept All\" side by side at the same size. Each purpose is an expandable row with a switch and a plain description, the essential group is labelled \"Always Active\" instead of offering a fake choice, and one \"Confirm\" saves. A hiring marketplace, kept for the consent structure.",
+      "apply": "Use this row model for the member Privacy page (required items shown as fixed, optional ones as switches with state) and check Eleva's cookie banner and dialog against it for equal accept and reject.",
+      "query": "cookie consent banner with reject button"
+    },
+    {
+      "id": "09-trust/09",
+      "file": "img/09-dropbox-privacy-request-history.jpg",
+      "app": "Dropbox",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/4887d44c-b7ce-4fe9-82b7-252ae799c7ab?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Privacy tab with access and deletion requests, each with a dated status history",
+      "why": "One Privacy tab holds Cookies, \"Access your data\" and \"Delete your data\". After a request a banner confirms it and says how long it may take, and a history table shows the request date, whether the report is ready, and until when it can be downloaded. Deletion has its own status table. A storage product, kept for the request states.",
+      "apply": "Give \"Download your data\" and \"Delete account\" a status row each: requested on, ready or scheduled for, link expires on, with \"Cancel deletion\" during the 14 days. Add a link to cookie settings on the same page.",
+      "query": "privacy settings page with data export and delete account"
+    },
+    {
+      "id": "09-trust/10",
+      "file": "img/10a-flo-manage-my-data-menu.jpg",
+      "files": [
+        "img/10a-flo-manage-my-data-menu.jpg",
+        "img/10b-flo-delete-account-confirm.jpg"
+      ],
+      "app": "Flo",
+      "platform": "ios",
+      "type": "flow",
+      "mobbin_url": "https://mobbin.com/flows/cf18d334-2bab-4dcb-83ea-758b5031c073?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "\"Manage my data\" as four plain rights, then a delete confirmation that names the consequences",
+      "why": "A women's health app turns data rights into a four-row menu, each with an icon and one sentence: Request information, Change account details, App consents, Delete my account (\"including cycle and health-related data\"). The delete alert says what is deleted, that you will be logged out, that it cannot be undone, and offers the privacy policy beside the destructive action and Cancel.",
+      "apply": "Describe each privacy control in one member-facing sentence, state that deletion covers health information and what is kept, and give the delete confirmation an explicit label, the consequence in one sentence and a link to the notice.",
+      "query": "deleting an account in a health app"
+    },
+    {
+      "id": "09-trust/11",
+      "file": "img/11a-fiverr-report-reason-anonymous.jpg",
+      "files": [
+        "img/11a-fiverr-report-reason-anonymous.jpg",
+        "img/11b-fiverr-report-received-id.jpg"
+      ],
+      "app": "Fiverr",
+      "platform": "web",
+      "type": "flow",
+      "mobbin_url": "https://mobbin.com/flows/9e6c27c0-9676-49e9-80cc-0b3d5e5969b3?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Report a listing: short reason list, anonymity line, then a reference number and who reviews it",
+      "why": "The report dialog asks for one reason from four radio options and says under the title \"Your report will be kept anonymous\". The last step gives a report ID, says the Trust and Safety team will review it, and points to support for follow-up. A freelance marketplace, kept for the flow.",
+      "apply": "Add \"Report a concern\" to expert profiles and sessions with health-appropriate reasons, a confidentiality line, a reference number and a reply time, linked to the complaints policy and the electronic complaints book.",
+      "query": "reporting a profile in a marketplace app"
+    },
+    {
+      "id": "09-trust/12",
+      "file": "img/12-complex-law-footer-company-identity.jpg",
+      "app": "Complex Law",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/d33c835f-2d6e-4ce1-b827-23703ef3a607?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Footer that states who the company is, where it is registered and who regulates it",
+      "why": "Beside the logo the footer gives the registered office, the line \"Authorised and regulated by…\", and regulator and certification marks. The bottom bar carries the registration and VAT numbers. Policies are a short column of three: Complaints, Privacy Policy, Terms. A law firm, kept for the identity block of a regulated service.",
+      "apply": "Add an identity line to Eleva's footer (legal name, NIPC, registered address, regulator registration where it applies), shorten the legal column, and give the complaints book a clear place.",
+      "query": "footer with company legal details"
+    }
+  ],
+  "judging_criteria": [
+    "Does the health-information consent explain, on the same screen and in one or two plain sentences, what is processed, who sees it and how to withdraw, while staying a separate unticked choice? (09-trust/01, 09-trust/02)",
+    "On the screen with the Pay button, at phone width, can you read the dated cancellation deadline, the total as one row, and a line agreeing to the terms, without scrolling away from the button? (09-trust/03)",
+    "Does the pay step name the independent expert as the provider of the session and state Eleva's role in booking and payment? (09-trust/04)",
+    "Does the expert profile show the professional body and registration number as a checked fact next to the name or the booking CTA, with a one-tap explanation of what Eleva checks? (09-trust/05)",
+    "Does the trust centre state at least five specific facts on the page itself before listing any document, and say who runs Eleva? (09-trust/06, 09-trust/12)",
+    "Can a member see the current state and date of every consent, change each optional one with a single switch, and follow an export or deletion request through a dated status, with a delete confirmation that names what is erased and what is kept? (09-trust/08, 09-trust/09, 09-trust/10)",
+    "Can a reader of any policy page get a short summary, jump between sections on a phone, start a data request from the rights section, and report a concern about an expert in two steps with a reference number? (09-trust/07, 09-trust/11)"
+  ]
+}

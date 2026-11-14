@@ -1,0 +1,272 @@
+{
+  "surface": "10-member-space",
+  "title": "Member Space",
+  "researcher": "Dashboards",
+  "date": "2026-11-14",
+  "summary": "The member Space is tidy and on brand, and its privacy controls are complete, but on first run it reads as an empty admin panel: home, sessions, reports, payments and inbox are each a dashed box saying nothing is here yet. Nothing welcomes a new member, helps her choose an expert, or explains how a session works. The one change that matters most is to turn home into a companion page: a next-session card with her expert, Join and what to prepare when something is booked, and a guided way to find the right expert when nothing is.",
+  "strengths": [
+    "The visual language is calm and consistent with the rest of Eleva: Lora headings, generous cards, one teal primary action per block.",
+    "Every empty state on home and Sessions offers 'Find an expert', so there is always a way forward.",
+    "Privacy is complete and honest: consents, data download and account deletion are on one page, and deletion explains the 14-day waiting period and that it can be cancelled.",
+    "The join rule is already written in plain words in the product copy ('You can join video sessions from 15 minutes before the start. Sessions are not recorded.'); it deserves a more prominent place.",
+    "Settings covers what a member needs in one place: name, time zone, language, theme, notification channels and quiet hours.",
+    "The sidebar is short (six items) and uses words a member understands: Sessions, Payments, Reports, Privacy."
+  ],
+  "findings": [
+    {
+      "id": "MEM-01",
+      "severity": "P1",
+      "lens": "ux",
+      "title": "First-run home is an empty admin panel, not a welcome",
+      "evidence": ["01-home.desktop.jpg", "01-home.mobile.jpg"],
+      "detail": "A new member sees 'Welcome, Demo', a subtitle that lists admin nouns ('Your sessions, payments, and privacy settings live in this Space') and two dashed boxes: 'You have no upcoming sessions.' and 'You have no past sessions yet.' The second box tells someone who has just arrived, a second time, that there is nothing here. 'Find an expert' appears twice within one screen and both send her away to the public directory with no guidance. Nothing explains what Eleva will do for her or how a session works. For a woman who may be anxious about a health concern, this is the first private page she sees, and it feels like a filing cabinet.",
+      "recommendation": "Design a first-run home with one job: help her take the first step. Greeting by first name with a warm line ('Let's find the right expert for you'). A search field and need-based shortcuts in her words (Pregnancy, After birth, Pelvic floor, Breastfeeding, Nutrition, Emotional wellbeing) that open the directory already filtered. Two or three suggested experts with photo, speciality and next available time. A three-step 'How a session works' strip: book a time, get your link by email, join from here or from the email. Do not show 'Past sessions' until one exists.",
+      "references": ["10-member-space/02", "10-member-space/04", "10-member-space/03"]
+    },
+    {
+      "id": "MEM-02",
+      "severity": "P1",
+      "lens": "trust",
+      "title": "Consents page uses one 'Grant' button for everything and shows no state",
+      "evidence": ["05-privacy.desktop.jpg", "05-privacy.mobile.jpg"],
+      "detail": "Terms of use, Privacy notice, Health data processing, Marketing messages and AI help with session reports are listed the same way, each with a teal 'Grant' button and 'Version 2026-11-14'. Documents a member must accept to use Eleva look identical to optional choices, and the page does not show in words whether each is on or off. 'Grant' is legal language. On mobile this becomes five full-width primary buttons in a row. Only the AI item links to its text; the others cannot be read from here. The AI paragraph is seven lines of dense copy. On a health product, this is the page where a member decides whether she trusts Eleva with her data.",
+      "recommendation": "Split into two blocks. 'What you agreed to': Terms of use, Privacy notice and Health data processing, each with 'Accepted on 14 Nov 2026', a 'Read' link, and no button (with a quiet 'Withdraw' link only where the law allows it and a sentence on what happens next). 'Your choices': Marketing messages and AI help with session reports as switches that show On or Off, each with one line on what changes. Rewrite the AI text as three short points: what it does, who sees it, how to turn it off. Replace 'Version 2026-11-14' with 'Updated 14 Nov 2026'.",
+      "references": ["10-member-space/08", "10-member-space/09"]
+    },
+    {
+      "id": "MEM-03",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "The booked-session home could not be judged; define it as the page's main moment",
+      "evidence": ["01-home.desktop.jpg", "02-sessions.desktop.jpg"],
+      "detail": "The demo member has no bookings, so the captures show only empty states. The source (apps/app/src/app/[orgSlug]/page.tsx) renders a featured booking card with a Join action and one small grey line about the 15-minute join window. That moment, the day before or the hour before a session, is when a member most needs reassurance: who she is meeting, when in her own time zone, how to join, and what to prepare. It should be captured with seeded data and reviewed against the references before the redesign is called done.",
+      "recommendation": "Make the next session the hero of home: expert photo, name and speciality; service; date and time with time zone; mode; a countdown; a Join session button that is always visible and shows when it opens ('Opens at 09:45'); Add to calendar; Reschedule and Cancel with the cancellation policy summarised in one line. Under it, 'Before your session': fill in your intake notes, test your camera and microphone, find a quiet place. After the session, the same card becomes 'Your report from Ana is ready' or 'Book your follow-up'.",
+      "references": ["10-member-space/01", "10-member-space/03", "10-member-space/06", "10-member-space/02"]
+    },
+    {
+      "id": "MEM-04",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "Sessions repeats home with two more empty boxes",
+      "evidence": ["02-sessions.desktop.jpg", "02-sessions.mobile.jpg", "01-home.desktop.jpg"],
+      "detail": "Sessions shows the same Upcoming and Past sections as home, with the same icons and nearly the same words, so two of six nav items lead to the same nothing. The empty heading packs two thoughts into one serif line ('No upcoming sessions. Find an expert to book your next visit.'). The subtitle, 'Review upcoming and past sessions with Eleva experts', describes the page rather than helping. The session detail page was not captured and could not be judged.",
+      "recommendation": "Use one list with Upcoming and Past tabs, so only one empty state shows at a time. Each session row: expert photo and name, service, date tile, mode, status in words and the right action for its state (Join, Add to calendar, View report, Book again). The detail page should lead with the date in the title, then who, what and where, the join button with its opening time, and Reschedule and Cancel as clear but secondary actions.",
+      "references": ["10-member-space/05", "10-member-space/06", "10-member-space/07"]
+    },
+    {
+      "id": "MEM-05",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "Empty states are thin and inconsistent",
+      "evidence": ["03-reports.desktop.jpg", "04-payments.desktop.jpg", "07-notifications.desktop.jpg", "03-reports.mobile.jpg", "07-notifications.mobile.jpg"],
+      "detail": "Payments says only 'No payments yet.' with no explanation of what will appear or why she would come back. Reports explains itself but offers no next step. Inbox is a single grey line, 'No notifications yet', with no card, icon or action, so it looks like a page that failed to load. Headings differ in punctuation and voice ('You have no upcoming sessions.', 'No reports yet', 'No payments yet.'). Each page fills less than a third of the screen and leaves the rest blank.",
+      "recommendation": "Use one empty-state pattern everywhere: what will appear here, when, and one action. Payments: 'Your receipts will appear here after you book. You can download each one for your records.' Reports: 'After a session, your expert may share a written summary with you. We will email you when it is ready.' Inbox: 'You are all caught up. Booking updates and messages about your sessions arrive here.' Give each a relevant action (Find an expert, or Notification settings on Inbox). When Payments has data, each row should open a receipt with a clear breakdown and an 'Email receipt' action.",
+      "references": ["10-member-space/11", "10-member-space/04", "10-member-space/12"]
+    },
+    {
+      "id": "MEM-06",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "Navigation: unlabeled 'Back', a hidden Inbox and no mobile bar",
+      "evidence": ["01-home.desktop.jpg", "07-notifications.desktop.jpg", "01-home.mobile.jpg", "06-settings.desktop.jpg"],
+      "detail": "The sidebar starts with '← Back' and no destination, and nothing names the Space or the member, so she cannot tell where she is or where Back goes. The Inbox page is reached only from the bell, is titled 'Inbox' while the bell suggests notifications, and the sidebar highlights Home while she is on it. Reports, the most personal content, sits below Payments. There is no link to find an expert or get help. On mobile all six destinations are behind one icon, although a member mostly needs two: her next session and her reports.",
+      "recommendation": "Replace Back with the Space name ('Demo's Space') and a labelled link such as 'Back to Eleva' or 'Find an expert'. Order the nav by care, then admin: Home, Sessions, Reports, Payments, then Settings and Privacy grouped under Account. Give Inbox its own active state and call the page 'Notifications' or the bell 'Inbox', not both. On mobile add a bottom bar: Home, Sessions, Reports, Account, with a badge on Sessions when one is coming up. Add Help at the bottom of the sidebar.",
+      "references": ["10-member-space/02", "10-member-space/01"]
+    },
+    {
+      "id": "MEM-07",
+      "severity": "P2",
+      "lens": "a11y",
+      "title": "Notification settings lose a column on mobile and are hard to tap",
+      "evidence": ["06-settings.mobile.jpg", "06-settings.desktop.jpg"],
+      "detail": "On desktop the notification grid has Email, SMS and In-app columns. On mobile only Email and SMS are visible and the capture is wider than the 390 px screen, so the page scrolls sideways and the third column is cut off. The grid uses small checkboxes with wide gaps on desktop and tight targets on mobile. Essential messages (session confirmations, reminders) can apparently be switched off entirely like marketing, with no sign of which are needed to attend a session. SMS can be ticked but the profile has no phone number field.",
+      "recommendation": "On mobile, stack by category: a heading and one-line description (Sessions: 'Confirmations, changes and your join link'), then one switch per channel. Mark essential session emails as 'Always on'. Keep the grid on desktop but with switches and row descriptions. Ask for a phone number when SMS is first switched on. Fix the horizontal overflow.",
+      "references": ["10-member-space/10"]
+    },
+    {
+      "id": "MEM-08",
+      "severity": "P2",
+      "lens": "copy",
+      "title": "Data download and account deletion read like a policy, with no status",
+      "evidence": ["05-privacy.desktop.jpg", "05-privacy.mobile.jpg"],
+      "detail": "The deletion text uses internal terms: 'Account-scope data is erased', 'Booking-scope consents — the ones that authorised a session — are de-identified', 'retain-then-destroy rule', 'This cannot be shortened from this screen'. A member has to read it twice to learn what happens to her session notes. 'Request export' gives no sign of how long it takes, how she will be told, or whether an earlier request is still being prepared. The page subtitle, 'Consents, data export, and account deletion for this Space', is a list of features.",
+      "recommendation": "Rewrite deletion as two short lists, 'What we erase' and 'What we keep, and why', in second person: 'We keep the record of your sessions for the time Portuguese law requires, with your name removed, and then destroy it.' Keep the 14-day waiting period and the cancel option as the last line before the button. For download, say 'We will email you a link when your file is ready. The link works for 24 hours.' and show a small history: requested on, status, download. New subtitle: 'See what you agreed to, get a copy of your data, or close your account.'",
+      "references": ["10-member-space/09", "10-member-space/08"]
+    },
+    {
+      "id": "MEM-09",
+      "severity": "P2",
+      "lens": "copy",
+      "title": "Copy describes what is not switched on, and uses internal words",
+      "evidence": ["05-privacy.desktop.jpg", "06-settings.desktop.jpg", "07-notifications.desktop.jpg"],
+      "detail": "Two lines tell the member what Eleva is not doing yet: 'AI drafting is not switched on yet.' (Privacy) and 'These preferences are used when we start sending notifications.' (Settings). Both break the voice rule and make the product feel unfinished. Other internal words: 'organization alerts' (Inbox), 'This is your avatar. Click the photo to upload a custom image from your files.', 'Optional. Both start and end are required when enabled.', a raw 'Europe/Lisbon' time zone, and 'Manage your member profile, language, theme, and notifications.' No Mobbin reference was needed for this finding; it is a wording pass.",
+      "recommendation": "Remove both 'not yet' sentences and say what is true today: 'We use these choices for every message we send you.' Inbox subtitle: 'Updates about your bookings, payments and reports.' Photo: 'Add a photo so your expert recognises you. Tap to choose one.' Quiet hours: 'Pause non-urgent messages at night. Choose a start and end time.' Show the time zone as 'Lisbon (GMT+0)'. Settings subtitle: 'Your name, language and how we reach you.'",
+      "references": []
+    },
+    {
+      "id": "MEM-10",
+      "severity": "P3",
+      "lens": "ui",
+      "title": "Settings: uneven save behaviour and a photo control that does not look tappable",
+      "evidence": ["06-settings.desktop.jpg", "06-settings.mobile.jpg"],
+      "detail": "Profile, Language and Notifications each have their own Save button; Theme has none, so it is unclear whether it saved. The profile photo card puts the round initials on the far right with no edit affordance; the only hint is the sentence telling her to click it. Card footers mix helper text and a Save button with inconsistent weight. No dedicated Mobbin reference was searched for this polish item.",
+      "recommendation": "Pick one rule: either every card saves on change with a toast, or every card has Save. Put a small camera or 'Change' label on the avatar and move it to the left of its text. Keep footer helper text on the left and the action on the right in every card.",
+      "references": []
+    }
+  ],
+  "references": [
+    {
+      "id": "10-member-space/01",
+      "file": "img/01-preply-home-next-lesson-prep.jpg",
+      "app": "Preply",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/337a34eb-8727-45f0-9625-5337db9527e7?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Home built around the next session and what to do before it",
+      "why": "The page opens with 'Let's get you ready for your trial lesson'. One card shows the tutor's photo, the date and time, and a 'Join in 28 days' button that is present but not yet active. Under it, 'Before your lesson' lists two steps, 'Test your classroom' and 'Share your learning needs', with the done one ticked. 'Up next' follows as a timeline. Tutoring marketplace, kept because it is one-to-one video sessions with an independent professional.",
+      "apply": "Eleva's booked-state home: expert photo, time, a Join button that shows when it opens, and a 'Before your session' checklist (intake notes, camera and microphone test).",
+      "query": "therapy app client dashboard home with upcoming session"
+    },
+    {
+      "id": "10-member-space/02",
+      "file": "img/02-zocdoc-home-up-next.jpg",
+      "app": "Zocdoc",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/20a3461b-b970-489a-a6fe-09109272e261?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Health home: greeting, search by need, 'Up next' card, bottom tabs",
+      "why": "'Hi Alex', then a 'Search specialty' field and shortcut chips (Primary care, OB-GYN). 'Up next' shows the appointment date and time, the doctor's name and photo, the reason for the visit, 'View appointment details' and quick actions for call, calendar and directions. A bottom bar has Home, Appointments (with a badge), Insurance and My health.",
+      "apply": "Need-based shortcuts and search on Eleva's first-run home, the 'Up next' card with quick actions, and a four-item bottom bar with a badge on Sessions for mobile.",
+      "query": "telehealth app home with upcoming appointment"
+    },
+    {
+      "id": "10-member-space/03",
+      "file": "img/03-future-home-coach-call.jpg",
+      "app": "Future Pro",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/2b5839c4-0519-4df7-9341-bd7fd3a0f60b?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A warm first-week home centred on the person you will meet",
+      "why": "'Afternoon, Alex' in a serif-like display face, then a 'Kickoff Call' card with the coach's portrait, '30 minutes · FaceTime', 'Kickoff Call with Lee', the date, and two actions: Add to Calendar and Reschedule. Below, 'Welcome to Future. Finish these quick steps so your coach can get you started' begins a short checklist that starts with 'Say Hello to Lee'.",
+      "apply": "Lead with the expert as a person (photo, first name), keep Add to calendar and Reschedule on the card, and give new members a short welcome checklist instead of empty boxes.",
+      "query": "telehealth app home with upcoming appointment"
+    },
+    {
+      "id": "10-member-space/04",
+      "file": "img/04-cvs-no-upcoming-visits.jpg",
+      "app": "CVS Health",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/24514895-13ae-4cb1-8e3a-e66e1b1a5482?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Empty visits state that offers ways in",
+      "why": "The heading says 'You don't have any upcoming visits' in plain words, and instead of a blank box the screen offers two tappable cards, 'Browse MinuteClinic services' with a one-line description and 'Browse pharmacy services', plus one button home.",
+      "apply": "Eleva's empty states should offer specific doors (browse by need, see experts available this week) rather than a single generic 'Find an expert'.",
+      "query": "health app appointments list with no appointments"
+    },
+    {
+      "id": "10-member-space/05",
+      "file": "img/05-luma-upcoming-past-tabs.jpg",
+      "app": "Luma",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/9f06708e-8653-47de-85b9-c6ec855beaf1?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Upcoming / Past switch with a single empty state",
+      "why": "A segmented control switches between Upcoming and Past, so only one list and one empty state are on screen. The empty state sits over faint placeholder rows that hint at what a filled list will look like. Events app, kept for its list structure.",
+      "apply": "Replace the two stacked empty boxes on Sessions (and Past on home) with one tabbed list; show the shape of a session row behind the empty message.",
+      "query": "health app appointments list with no appointments"
+    },
+    {
+      "id": "10-member-space/06",
+      "file": "img/06-lyssna-session-join-window.jpg",
+      "app": "Lyssna",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/5810e0bd-f366-45b8-aed8-f4baffd3ae9e?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Session page with a visible join button and its opening rule",
+      "why": "The participant's page says 'Your session is in about 2 hours' and 'Please ensure a stable internet connection'. It lists name, date and time with time zone, and host. The 'Join call' button is shown but inactive, with a tooltip: 'You will be able to join the call 10 minutes before the session begins'. Reschedule and Cancel are text links with the 24-hour rule under them. Research tool, kept because it is a guest joining a one-to-one video call.",
+      "apply": "Eleva's session detail and waiting room: relative time headline, Join always visible with 'Opens 15 minutes before', and reschedule and cancel next to the policy in one sentence.",
+      "query": "appointment detail page with join video call button"
+    },
+    {
+      "id": "10-member-space/07",
+      "file": "img/07-cvs-visit-detail.jpg",
+      "app": "CVS Health",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/a9b94271-b970-4c42-a89b-de1c14088a51?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Visit detail as who, what, provider, where",
+      "why": "The title is the visit itself, 'Sam's visit on April 23'. 'Visit details' lists the person, What (the reason for the visit) and Provider, each with an icon; 'Date and location' follows. 'Reschedule visit' and 'Cancel visit' stay fixed at the bottom of the screen.",
+      "apply": "Structure Eleva's session detail the same way on mobile: date in the title, labelled who / what / with whom / how you will meet, and actions fixed at the bottom with Join as the primary.",
+      "query": "telehealth app home with upcoming appointment"
+    },
+    {
+      "id": "10-member-space/08",
+      "file": "img/08-wetransfer-health-data-consent.jpg",
+      "app": "WeTransfer",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/f2c5831e-57e0-47f1-95b9-2db7be565291?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Optional data-processing consents as stateful controls",
+      "why": "Under 'Data Processing', each optional consent is a labelled control whose state is visible at a glance: 'Research purpose' and 'Health-related data', the second with a 'Read more about it' link and one sentence on exactly what is consented to. Account deletion follows with a plain paragraph on what is lost and how long it takes. European file-transfer product, kept because it handles a health-data consent in settings.",
+      "apply": "Show Marketing messages and AI help as switches with visible state, one sentence each and a 'Read more' link; keep accepted documents in a separate block.",
+      "query": "account settings consent preferences with withdraw option"
+    },
+    {
+      "id": "10-member-space/09",
+      "file": "img/09-dropbox-data-request-history.jpg",
+      "app": "Dropbox",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/4887d44c-b7ce-4fe9-82b7-252ae799c7ab?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Data request with confirmation and history",
+      "why": "After a request, a banner confirms: 'You've submitted your request successfully. We'll email you when it's ready, which may take up to 30 days.' 'Access your data' and 'Delete your data' each have a one-line description, an action on the right, and a small history table with request date and status ('Pending').",
+      "apply": "After 'Download your data', confirm how she will be told and show the request with its status and, when ready, the download link and its expiry.",
+      "query": "privacy settings page with data export and account deletion"
+    },
+    {
+      "id": "10-member-space/10",
+      "file": "img/10-tabby-notification-preferences.jpg",
+      "app": "Tabby",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/9a6c728b-eb31-441d-8f57-23bc238a2d36?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Notification preferences stacked by category, essentials locked on",
+      "why": "Each category has an icon, a name and a one-line benefit. 'Payments' is marked with a locked 'On' pill, so essential messages cannot be switched off by mistake. 'Deals & offers' lists SMS, WhatsApp, Push and Email as separate switches. A card at the top prompts to allow push. Payments app, kept for its structure.",
+      "apply": "Eleva's mobile notification settings: category blocks with descriptions, one switch per channel, and session essentials shown as 'Always on'.",
+      "query": "notification settings with email, SMS and push toggles per category"
+    },
+    {
+      "id": "10-member-space/11",
+      "file": "img/11-kiwi-inbox-empty.jpg",
+      "app": "Kiwi.com",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/73bc1211-e055-46e0-afd6-d0eeb6f81f5f?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Empty inbox that says what will arrive and offers a next step",
+      "why": "The inbox empty state has an illustration, 'No notifications', the line 'You'll find all your booking updates here.' and a 'Find inspiration' button. Tabs separate Notifications from Support. Travel booking product, kept for its empty-state structure.",
+      "apply": "Give Eleva's Inbox, Payments and Reports the same three parts: what appears here, when, and one action.",
+      "query": "notifications inbox with no notifications"
+    },
+    {
+      "id": "10-member-space/12",
+      "file": "img/12-navan-receipt.jpg",
+      "app": "Navan",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/060a2e38-2a45-44c3-acc5-003dc32dddf0?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Receipt with a clear breakdown and one action",
+      "why": "The receipt names what was booked with a photo, then lists booking ID, dates, payment method, transaction date, rate, taxes and fees, and total paid in aligned rows, with one 'Email Receipt' button and a share icon. Travel booking app, kept for the receipt layout.",
+      "apply": "Each payment in the Space should open a receipt like this: expert and service at the top, session date, method, amount, any refund, and 'Email receipt' or 'Download'.",
+      "query": "booking app payment history with receipts"
+    }
+  ],
+  "judging_criteria": [
+    "With nothing booked, does home welcome her by name and offer at least two specific ways to find the right expert (by need, suggested experts), instead of empty boxes? (10-member-space/02, 10-member-space/04)",
+    "With a session booked, does home lead with one card showing her expert's photo and name, the time in her time zone, and a Join button that states when it opens? (10-member-space/01, 10-member-space/06)",
+    "Does that card tell her what to do before the session and let her add it to her calendar or reschedule without leaving home? (10-member-space/01, 10-member-space/03)",
+    "Does Sessions show one list with Upcoming and Past tabs, and does the session detail put who, what, how to meet and the cancel rule on one screen? (10-member-space/05, 10-member-space/07)",
+    "Does every empty state say what will appear, when, and offer one action? (10-member-space/11, 10-member-space/04)",
+    "On Privacy, can she tell at a glance what she agreed to and which optional choices are on or off, and does a data request show its status? (10-member-space/08, 10-member-space/09)",
+    "On a 390 px screen, do notification settings fit without sideways scrolling, with essential session messages marked as always on? (10-member-space/10)"
+  ]
+}
