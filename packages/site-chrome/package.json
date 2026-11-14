@@ -34,6 +34,7 @@
     "./gateway-marketing-url": "./src/gateway-marketing-url.ts",
     "./docs-marketing-strip": "./src/docs-marketing-strip.tsx",
     "./public-site-footer": "./src/public-site-footer.tsx",
+    "./checkout-site-footer": "./src/checkout-site-footer.tsx",
     "./footer-copy": "./src/footer-copy.ts",
     "./sources.css": "./sources.css"
   }

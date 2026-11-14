@@ -645,7 +645,12 @@
     "policy": {
       "heading": "Política de cancelación"
     },
-    "stepOf": "Paso {current} de {total}"
+    "stepOf": "Paso {current} de {total}",
+    "chrome": {
+      "secure": "Reserva segura",
+      "help": "Ayuda",
+      "newTab": "se abre en una pestaña nueva"
+    }
   },
   "footer": {
     "about": "Acerca de",

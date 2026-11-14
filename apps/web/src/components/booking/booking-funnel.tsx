@@ -28,6 +28,7 @@ import { Field, FieldError, FieldLabel } from "@eleva/ui/components/field"
 import { Input } from "@eleva/ui/components/input"
 import { Textarea } from "@eleva/ui/components/textarea"
 import { BookingSummary } from "@eleva/ui/components/booking/booking-summary"
+import { useBookingChrome } from "./booking-chrome-context"
 import { CancellationPolicySummary } from "@eleva/ui/components/booking/cancellation-policy-summary"
 import { ConsentCheckbox } from "@eleva/ui/components/booking/consent-checkbox"
 import { CountrySelect } from "@eleva/ui/components/booking/country-select"
@@ -264,6 +265,19 @@ export function BookingFunnel({
       skipToDetails,
     })
   )
+  const { setLanguageLocked } = useBookingChrome()
+  // A language switch reloads the page: once she has typed details or holds
+  // a time (even after stepping back), it would lose them.
+  const hasStateToKeep =
+    step === "details" ||
+    step === "pay" ||
+    step === "done" ||
+    reservation != null ||
+    name.trim() !== "" ||
+    email.trim() !== ""
+  useEffect(() => {
+    setLanguageLocked(hasStateToKeep)
+  }, [hasStateToKeep, setLanguageLocked])
 
   const fieldId = useId()
   const stepHeadingRef = useRef<HTMLHeadingElement>(null)

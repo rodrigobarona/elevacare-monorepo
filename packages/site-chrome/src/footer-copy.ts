@@ -29,6 +29,12 @@ export type FooterCopy = {
   instagram: string
   linkedin: string
   rights: (year: string) => string
+  /** Legal entity line for checkout, where the member is about to pay. */
+  operator: string
+  /** Label of the checkout footer's links. */
+  legalAndHelp: string
+  /** Screen-reader note on links that open in a new tab. */
+  newTab: string
 }
 
 const en: FooterCopy = {
@@ -61,6 +67,10 @@ const en: FooterCopy = {
   instagram: "Instagram",
   linkedin: "LinkedIn",
   rights: (year) => `© ${year} Eleva.care. All rights reserved.`,
+  operator:
+    "Eleva.care is operated by BÚZIOS E TARTARUGAS - LDA · NIPC 515001708 · Rua Gil Vicente 2, 2775-198 Parede, Portugal",
+  legalAndHelp: "Legal and help",
+  newTab: "opens in a new tab",
 }
 
 const pt: FooterCopy = {
@@ -93,6 +103,10 @@ const pt: FooterCopy = {
   instagram: "Instagram",
   linkedin: "LinkedIn",
   rights: (year) => `© ${year} Eleva.care. Todos os direitos reservados.`,
+  operator:
+    "A Eleva.care é operada por BÚZIOS E TARTARUGAS - LDA · NIPC 515001708 · Rua Gil Vicente 2, 2775-198 Parede, Portugal",
+  legalAndHelp: "Informação legal e ajuda",
+  newTab: "abre num novo separador",
 }
 
 const es: FooterCopy = {
@@ -125,6 +139,10 @@ const es: FooterCopy = {
   instagram: "Instagram",
   linkedin: "LinkedIn",
   rights: (year) => `© ${year} Eleva.care. Todos los derechos reservados.`,
+  operator:
+    "Eleva.care es un servicio de BÚZIOS E TARTARUGAS - LDA · NIPC 515001708 · Rua Gil Vicente 2, 2775-198 Parede, Portugal",
+  legalAndHelp: "Información legal y ayuda",
+  newTab: "se abre en una pestaña nueva",
 }
 
 export const FOOTER_COPY: Record<Locale, FooterCopy> = { en, pt, es }

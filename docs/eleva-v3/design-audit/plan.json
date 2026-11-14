@@ -78,7 +78,7 @@
           "id": "D1.1",
           "title": "Quiet checkout frame",
           "scope": "Replace the marketing header and footer in the funnel with logo, language, help and a secure-booking mark. One shared layout for every funnel step.",
-          "findings": ["BOOK-01", "BOOK-18"],
+          "findings": ["BOOK-01"],
           "effort": "S"
         },
         {
@@ -99,12 +99,13 @@
         {
           "id": "D1.3",
           "title": "Details step and lighter consents",
-          "scope": "Explain the health-data consent in one plain line where it is asked, keep it as its own unticked choice, and reduce the weight of the rest. Say the cancellation policy once. Move the optional AI and transcription choice out of the booking gate. Match sign-up wording.",
+          "scope": "Explain the health-data consent in one plain line where it is asked, keep it as its own unticked choice, and reduce the weight of the rest. Say the cancellation policy once. Move the optional AI and transcription choice out of the booking gate. Match sign-up wording. Urgent help becomes one quiet line under the note field and on the thank-you page.",
           "findings": [
             "BOOK-04",
             "BOOK-05",
             "BOOK-08",
             "BOOK-09",
+            "BOOK-18",
             "TRUST-01",
             "TRUST-09",
             "TRUST-12"
