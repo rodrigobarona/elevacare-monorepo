@@ -27,6 +27,7 @@ export function BookingSummary({
   footer,
   footerOnPhones = false,
   whenAction,
+  whenNote,
   priceRows,
   className,
 }: {
@@ -55,6 +56,8 @@ export function BookingSummary({
   footerOnPhones?: boolean
   /** A quiet action beside the time, e.g. "Change". */
   whenAction?: ReactNode
+  /** A muted line under the time, e.g. "Lisbon time". */
+  whenNote?: string
   /**
    * The money, line by line (price, discount, total today). Replaces the
    * single price row when the amounts are known, on the pay step.
@@ -118,6 +121,11 @@ export function BookingSummary({
           <dt className="text-muted-foreground">{whenLabel}</dt>
           <dd className="text-right">
             <span className="font-medium">{when}</span>
+            {whenNote ? (
+              <span className="block text-sm text-muted-foreground">
+                {whenNote}
+              </span>
+            ) : null}
             {whenAction ? (
               <span className="block text-sm">{whenAction}</span>
             ) : null}
@@ -128,7 +136,7 @@ export function BookingSummary({
             <div
               key={row.label}
               className={cn(
-                "flex items-baseline justify-between gap-3 py-3 last:pb-0 lg:last:pb-3",
+                "flex items-baseline justify-between gap-3 py-3 last:pb-0",
                 !row.isTotal && "hidden lg:flex"
               )}
             >

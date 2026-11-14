@@ -473,7 +473,9 @@
       "profile": "About {name}",
       "zone": "{city} time",
       "change": "Change",
-      "provider": "Your session is with {name}, an independent expert. Eleva handles the booking and payment."
+      "provider": "Your session is with {name}, an independent expert. Eleva handles the booking.",
+      "changeTime": "Change time",
+      "fullPolicy": "See the full policy"
     },
     "modes": {
       "online": {
@@ -582,7 +584,7 @@
       "hold": "Hold expires in {time}",
       "expired": "This hold has ended. Pick a new time to continue.",
       "restart": "Pick a new time",
-      "requestHint": "You pay now. The expert accepts or declines within 24 hours, or before the session if that is sooner. A decline refunds 100%.",
+      "requestHint": "{name} accepts or declines within 24 hours, or before the session if that is sooner. If {name} declines, you get 100% back.",
       "pay": "Pay {price}",
       "processing": "Confirming payment…",
       "failed": "Payment could not be completed. Please try again.",
@@ -600,12 +602,13 @@
       "extend": "Keep this time for 5 more minutes",
       "extendLimit": "We can’t hold this time any longer. Finish paying now, or pick a new time.",
       "extendFailed": "We couldn’t add more time. Please try again.",
-      "subHeld": "We're holding {when} for you. Pay by card, MB WAY, Apple Pay or Google Pay.",
-      "holdNote": "Your time is held for {time}",
-      "totalToday": "Total today",
+      "subHeld": "We’re holding {when} for you. Pay securely below.",
+      "holdNote": "We’re holding this time for {time}",
+      "totalToday": "Total",
       "promoAdd": "Add a promo code",
-      "secureLine": "Payments are handled by Stripe. Eleva never sees your card details.",
-      "emailLine": "Your confirmation arrives by email right after you pay."
+      "secureLine": "Payments are handled by Stripe. Eleva never sees your full card number.",
+      "emailLine": "Your confirmation arrives by email right after you pay.",
+      "subRequest": "You’re asking {name} for {when}. You pay now; if {name} declines, you get 100% back."
     },
     "done": {
       "heading": "Your reservation is confirmed",

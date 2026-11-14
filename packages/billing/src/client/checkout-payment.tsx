@@ -3,6 +3,7 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
   type FormEvent,
   type ReactNode,
@@ -156,6 +157,30 @@ function CheckoutForm({
   const [promo, setPromo] = useState(appliedPromoCode ?? "")
   // The promo field stays a quiet link until she asks for it.
   const [promoOpen, setPromoOpen] = useState(Boolean(appliedPromoCode))
+  const barRef = useRef<HTMLDivElement>(null)
+
+  // Below desktop the pay bar sticks to the bottom: keep focused fields
+  // clear of it (WCAG 2.4.11) while the form is on screen.
+  useEffect(() => {
+    const root = document.documentElement
+    const bar = barRef.current
+    if (!bar) return
+    const narrow = window.matchMedia("(max-width: 1023px)")
+    const update = () => {
+      root.style.scrollPaddingBottom = narrow.matches
+        ? `${bar.offsetHeight + 16}px`
+        : ""
+    }
+    update()
+    narrow.addEventListener("change", update)
+    const resize = new ResizeObserver(update)
+    resize.observe(bar)
+    return () => {
+      narrow.removeEventListener("change", update)
+      resize.disconnect()
+      root.style.scrollPaddingBottom = ""
+    }
+  }, [state.type])
   const [promoError, setPromoError] = useState<string | null>(null)
   const [promoBusy, setPromoBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -332,7 +357,7 @@ function CheckoutForm({
           type="button"
           data-testid="booking-promo-open"
           onClick={() => setPromoOpen(true)}
-          className="self-start rounded-sm text-sm font-medium text-primary underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none"
+          className="inline-flex min-h-6 items-center self-start rounded-sm text-sm font-medium text-primary underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none"
         >
           {labels.promoAdd}
         </button>
@@ -344,27 +369,38 @@ function CheckoutForm({
         </p>
       ) : null}
 
-      {/* On phones the total and the button stay in reach at the bottom. */}
+      {/* Below desktop the total and Pay stay in reach at the bottom: one
+          row, opaque, about 100px tall. */}
       <div
+        ref={barRef}
         data-testid="booking-pay-bar"
-        className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-3 border-t border-border bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:static sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none"
+        className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-2 border-t border-border bg-background px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-12px_24px_-16px_rgb(0_0_0/0.25)] sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:gap-3 lg:border-0 lg:p-0 lg:shadow-none"
       >
         {children}
-        <div
-          className="flex items-baseline justify-between gap-3 text-sm sm:hidden"
-          data-testid="booking-checkout-totals"
-        >
-          <span className="font-medium">{labels.total}</span>
-          <span className="text-base font-semibold">{total.total.amount}</span>
+        <div className="flex items-center gap-4">
+          <div
+            className="min-w-0 shrink-0 lg:hidden"
+            data-testid="booking-checkout-totals"
+          >
+            <p className="text-xs text-muted-foreground">{labels.total}</p>
+            <p className="text-lg leading-tight font-semibold">
+              {total.total.amount}
+            </p>
+            {discount ? (
+              <p className="text-xs text-muted-foreground">
+                −{total.discount.amount} · {appliedPromoCode}
+              </p>
+            ) : null}
+          </div>
+          <button
+            type="submit"
+            data-testid="booking-pay-submit"
+            disabled={isProcessing || promoBusy}
+            className="inline-flex h-12 flex-1 items-center justify-center rounded-4xl bg-primary px-6 text-base font-semibold text-primary-foreground focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isProcessing ? labels.processing : labels.pay(total.total.amount)}
+          </button>
         </div>
-        <button
-          type="submit"
-          data-testid="booking-pay-submit"
-          disabled={isProcessing || promoBusy}
-          className="inline-flex h-11 items-center justify-center rounded-4xl bg-primary px-4 text-sm font-medium text-primary-foreground focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {isProcessing ? labels.processing : labels.pay(total.total.amount)}
-        </button>
       </div>
       {reassurance}
     </form>

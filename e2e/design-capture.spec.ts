@@ -362,6 +362,15 @@ test.describe("design capture", () => {
           fullPage: false,
         })
       }
+      // The hold's last minute: the warning and "keep this time" sit in the
+      // pay bar.
+      await page.clock.install()
+      await page.clock.fastForward("04:20")
+      await expect(page.getByTestId("booking-hold-ending")).toBeVisible({
+        timeout: 15_000,
+      })
+      await page.getByTestId("booking-pay-submit").scrollIntoViewIfNeeded()
+      await shoot(page, surface, "07c-hold-ending", kind, { fullPage: false })
       await finishVideo(page, context, surface, "paid-funnel", kind)
     })
 
