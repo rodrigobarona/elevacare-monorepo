@@ -266,11 +266,18 @@ export function BookingFunnel({
     })
   )
   const { setLanguageLocked } = useBookingChrome()
+  // A language switch reloads the page: once she has typed details or holds
+  // a time (even after stepping back), it would lose them.
+  const hasStateToKeep =
+    step === "details" ||
+    step === "pay" ||
+    step === "done" ||
+    reservation != null ||
+    name.trim() !== "" ||
+    email.trim() !== ""
   useEffect(() => {
-    // From the details step on, a language switch would reload the page and
-    // lose what she typed and her hold.
-    setLanguageLocked(step === "details" || step === "pay" || step === "done")
-  }, [step, setLanguageLocked])
+    setLanguageLocked(hasStateToKeep)
+  }, [hasStateToKeep, setLanguageLocked])
 
   const fieldId = useId()
   const stepHeadingRef = useRef<HTMLHeadingElement>(null)

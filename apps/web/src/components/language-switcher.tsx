@@ -1,7 +1,6 @@
 "use client"
 
 import { useLocale, useTranslations } from "next-intl"
-import { useSearchParams } from "next/navigation"
 import { usePathname, useRouter } from "@/i18n/navigation"
 import { locales, localeNames, type Locale } from "@eleva/config/i18n"
 import { Button } from "@eleva/ui/components/button"
@@ -14,25 +13,26 @@ import { GlobeIcon, CheckIcon } from "@eleva/icons"
 import { useTransition } from "react"
 
 export function LanguageSwitcher({
-  keepQuery = false,
+  query,
   showCode = false,
 }: {
-  /** Keep the query string (e.g. the booking funnel's mode and time). */
-  keepQuery?: boolean
+  /**
+   * Query string to keep (e.g. the booking funnel's mode and time). Read by
+   * the caller, so pages that don't need it never call useSearchParams.
+   */
+  query?: string
   /** Show the current language code next to the globe. */
   showCode?: boolean
 } = {}) {
   const locale = useLocale()
   const t = useTranslations("nav")
   const pathname = usePathname()
-  const searchParams = useSearchParams()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
   function handleSelect(nextLocale: Locale) {
-    const query = searchParams.toString()
     startTransition(() => {
-      router.replace(keepQuery && query ? `${pathname}?${query}` : pathname, {
+      router.replace(query ? `${pathname}?${query}` : pathname, {
         locale: nextLocale,
       })
     })
