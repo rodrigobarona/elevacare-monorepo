@@ -84,6 +84,8 @@ function dir(surface: string): string {
 
 async function settle(page: Page): Promise<void> {
   await page.waitForLoadState("domcontentloaded")
+  // No hover state from the last click in the shot.
+  await page.mouse.move(0, 0).catch(() => {})
   await page.waitForLoadState("networkidle", { timeout: 8_000 }).catch(() => {})
   // The Next dev overlay covers buttons at phone width.
   await page
@@ -586,6 +588,19 @@ test.describe("design capture", () => {
         .getByTestId("booking-continue-meet")
         .waitFor({ timeout: 60_000 })
       await shoot(page, surface, "00-meet-step", kind)
+
+      // Times fail to load: say so and offer to try again, never "no times".
+      const failSlots = /\/event-types\/[^/]+\/slots\?/
+      await page.route(failSlots, (route) =>
+        route.fulfill({ status: 503, body: "{}" })
+      )
+      await page.goto(`${webUrl}/${PAID_EXPERT}/${PAID_OFFER}`)
+      await clearBanner(page)
+      await page.getByTestId("booking-slots-error").waitFor({ timeout: 60_000 })
+      await shoot(page, surface, "13-times-load-error", kind, {
+        fullPage: false,
+      })
+      await page.unroute(failSlots)
 
       // Slot taken: another guest holds the chosen time first.
       await page.goto(`${webUrl}/${PAID_EXPERT}/${PAID_OFFER}`)

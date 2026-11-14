@@ -315,8 +315,10 @@ export function BookingFunnel({
     modes.find(
       (mode) => mode.id === (modeId ?? pinnedModeId ?? inferredMode?.id)
     ) ?? null
+  // Bumped by "Try again" so a failed window is fetched once more.
+  const [slotsAttempt, setSlotsAttempt] = useState(0)
   const slotsKey = selectedMode
-    ? `${selectedMode.id}:${fromKey}:${timeZone}`
+    ? `${selectedMode.id}:${fromKey}:${timeZone}:${slotsAttempt}`
     : ""
   const slotsLoading = Boolean(selectedMode) && slotsRequest.key !== slotsKey
   const slotsError = slotsRequest.key === slotsKey && slotsRequest.error
@@ -329,7 +331,7 @@ export function BookingFunnel({
     const from = new Date(`${addDaysToKey(fromKey, -1)}T00:00:00Z`)
     const to = new Date(`${addDaysToKey(fromKey, WINDOW_DAYS + 1)}T00:00:00Z`)
     const api = createPublicApiClient()
-    const key = `${selectedMode.id}:${fromKey}:${timeZone}`
+    const key = `${selectedMode.id}:${fromKey}:${timeZone}:${slotsAttempt}`
     let cancelled = false
     api.public
       .getSlots(username, eventSlug, {
@@ -386,7 +388,15 @@ export function BookingFunnel({
     return () => {
       cancelled = true
     }
-  }, [eventSlug, fromKey, linkToken, selectedMode, timeZone, username])
+  }, [
+    eventSlug,
+    fromKey,
+    linkToken,
+    selectedMode,
+    slotsAttempt,
+    timeZone,
+    username,
+  ])
 
   const confirmPaidHold = useCallback(
     async (hold: Reservation, paid: Payment) => {
@@ -891,6 +901,7 @@ export function BookingFunnel({
         }
         media={expertMedia}
         footerOnPhones={onPay}
+        compactOnPhones={step === "when"}
         footer={
           onPay ? (
             <>
@@ -1044,21 +1055,14 @@ export function BookingFunnel({
                 {t("errors.slotTaken")}
               </p>
             ) : null}
-            {slotsError ? (
-              <p
-                role="alert"
-                data-testid="booking-slots-error"
-                className="text-sm text-destructive"
-              >
-                {t("when.loadError")}
-              </p>
-            ) : null}
             <SlotPicker
               slots={slots}
               timeZone={timeZone}
               locale={dateLocale}
               fromKey={fromKey}
               isLoading={slotsLoading}
+              isError={slotsError}
+              onRetry={() => setSlotsAttempt((attempt) => attempt + 1)}
               selectedStart={slot?.start ?? null}
               onSelect={(next) => {
                 setSlotGone(false)
@@ -1092,7 +1096,8 @@ export function BookingFunnel({
                 <Button
                   data-testid="booking-continue-when"
                   size="lg"
-                  className="min-h-12 rounded-full px-6 text-base font-semibold"
+                  // Disabled reads as an instruction, so it stays legible.
+                  className="h-auto min-h-12 rounded-full px-6 py-2.5 text-base font-semibold whitespace-normal disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100 data-disabled:bg-muted data-disabled:text-muted-foreground data-disabled:opacity-100"
                   isDisabled={!when}
                   onPress={() => setStep("details")}
                 >
@@ -1120,6 +1125,8 @@ export function BookingFunnel({
                 afternoon: t("when.afternoon"),
                 evening: t("when.evening"),
                 noTimes: (day) => t("when.noTimes", { day }),
+                loadError: t("when.loadError"),
+                retry: t("when.retry"),
                 laterDates: t("when.laterDates"),
                 chooseDate: t("when.chooseDate"),
                 calendar: t("when.calendar"),
