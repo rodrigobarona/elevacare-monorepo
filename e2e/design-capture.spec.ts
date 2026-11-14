@@ -572,6 +572,14 @@ test.describe("design capture", () => {
       })
       await page.getByTestId("booking-continue-details").click()
       await fillStripeTestCard(page, { number: DECLINED_TEST_CARD })
+      // Stripe's optional Link sign-up asks for a phone number once it has
+      // an email, which blocks the submit; clear its email so it stays off.
+      for (const frame of page.frames()) {
+        const linkEmail = frame.locator('input[type="email"]').first()
+        if (await linkEmail.isVisible().catch(() => false)) {
+          await linkEmail.fill("")
+        }
+      }
       await page.getByTestId("booking-pay-submit").click()
       // Stripe reports the decline inside its own frame, then the page does.
       await expect
