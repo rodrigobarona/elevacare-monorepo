@@ -69,6 +69,10 @@ Each entry should include:
   - Transcription rests on Daily's default opt-out from Deepgram's model
     improvement programme, not on a contract term. Written confirmation from
     Daily is open (`legal/fact-sheet.md`).
+  - AI Gateway routing for report drafts is constrained by zero retention
+    and the EU zone, not by provider name. Pin the provider, or list every
+    eligible one as a sub-processor, before `ff.ai_reports_beta` is switched
+    on (`legal/fact-sheet.md`).
   - Contract precedence is unchanged: the expert agreement still prevails
     over the DPA. Recording each expert's acceptance, splitting the
     `ai_processing` consent, the AI event log, the evaluation set and the

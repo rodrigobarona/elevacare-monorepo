@@ -2,8 +2,9 @@
 
 **Question.** After Web Summit Lisbon the founder commissioned a 21-page public-evidence
 audit of Heidi Health, an AI clinical scribe company, with a blueprint for "a Portugal-first,
-EU-ready health marketplace"
-([`_context/HeadiHealth/Heidi Health Audit Report.pdf`](../../../_context/HeadiHealth/Heidi%20Health%20Audit%20Report.pdf)).
+EU-ready health marketplace". The audit is a PDF the founder holds
+("Heidi Health Audit Report", research cut-off 12 November 2026). It is not
+committed to this repository; ask the founder for a copy.
 Does it make sense for Eleva, and what should Eleva take from it?
 
 **Answer.** The audit makes sense as a general framework, and its description of Heidi's

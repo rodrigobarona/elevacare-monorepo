@@ -121,7 +121,7 @@ reached Parliament on 5 November 2026, with a plenary vote forecast for
 December 2026. The April 2026 compromise text applies the PSR 21 months after
 it enters into force. Its art. 2(2)(b) keeps the commercial-agent exclusion
 only where the agent acts for "only the payer or only the payee, but not
-both", with "a real scope to negotiate", **regardless of whether it holds
+both", with real scope to negotiate or conclude the sale, **regardless of whether it holds
 funds**. The final wording may differ.
 
 ### 3.6 Banco de Portugal
@@ -163,8 +163,11 @@ mandate from the member to pay.
    question for counsel. The expert agreement says no agency relationship is
    created except for collection.
 3. **Debt settlement is not enough** (Q&A 2020_5354).
-4. **The PSR text** would require "a real scope to negotiate". Eleva sets no
-   prices and negotiates nothing.
+4. **The PSR text** would require real scope to negotiate or conclude the
+   sale. Eleva sets no prices and negotiates nothing, so the first limb does
+   not help. The second turns on point 2: whether concluding an Instant Book
+   booking on the expert's terms gives Eleva real scope to conclude the sale.
+   Counsel should read the exact wording of the adopted text.
 
 ### 4.3 How this sits with the ERS memo
 

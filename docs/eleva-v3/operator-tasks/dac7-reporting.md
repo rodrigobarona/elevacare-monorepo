@@ -41,8 +41,11 @@ customer is invoicing entity, not Identity" (the expert billing profile, PR
 | For 10 years after the end of each reported year  | Keep the records.                                                                                                      | Annex II art. 14                      |
 
 Sellers already registered when Eleva first becomes a reporting operator have
-until 31 December of the second year. Collected details can be relied on for
-36 months.
+until 31 December of the second year. Details can be relied on for 36 months
+only if they were collected and checked, or confirmed by the seller, within
+that time, and Eleva has no reason to think they have become unreliable or
+wrong. A seller who tells Eleva of a new address or tax number is checked
+again.
 
 ## 3. What to collect from each seller
 
@@ -50,7 +53,7 @@ until 31 December of the second year. Collected details can be relied on for
 | ---------------------------------------------------------- | ------------------------------------------------------------ |
 | First and last name                                        | Legal name                                                   |
 | Primary address                                            | Primary address                                              |
-| Tax number (NIF or foreign) and the country that issued it | Tax number and the country that issued it                    |
+| **Every** tax number issued to them, each with its country | **Every** tax number issued to it, each with its country     |
 | Place of birth, only when there is no tax number           | Commercial registration number                               |
 | VAT number, if any                                         | VAT number, if any                                           |
 | Date of birth                                              | Any permanent establishment in the EU through which it sells |
@@ -64,9 +67,13 @@ last digits (§8, question 5).
 
 ## 4. Checking the details and chasing missing ones
 
-1. Check the tax number and the VAT number against the free official tools:
-   the AT's NIF check for Portugal, and VIES for EU VAT numbers. Record the
-   date and the result.
+1. Check that the details are reliable, using everything Eleva already holds
+   about the seller: the identity and address verified by Stripe, the
+   professional register entry checked at approval, and the name on the
+   payout account. A valid tax number does not make a name or an address
+   right. Check each tax number and the VAT number against the free official
+   tools: the AT's NIF check for Portugal, and VIES for EU VAT numbers.
+   Record the date and the result of each check.
 2. If a seller has not given the details, ask. Send a first reminder and a
    second reminder.
 3. After two reminders, and once at least 60 days have passed, Eleva **must**
@@ -106,7 +113,9 @@ copy and the date sent.
 
 This is planned work, not shipped work. Each item is its own slice.
 
-1. **Seller tax profile.** The fields in §3 belong on the expert billing
+1. **Seller tax profile.** A seller can hold tax numbers from more than one
+   country, so the profile stores a list of numbers with their countries, not
+   a single field. The fields in §3 belong on the expert billing
    profile planned as PR 07.3 (personal versus company identity). Do not add
    them to `expert_profiles`: the decision log (2026-10-12) says the single
    `expert_profiles.nif` is not that model. Clinics

@@ -33,8 +33,11 @@ notice (DPA §12).
 
 1. **Decide and record.** Add the vendor to [`fact-sheet.md`](../legal/fact-sheet.md)
    §2 with its region, transfer basis and DPA. Sign the vendor's DPA first.
-2. **Set the date.** The change takes effect no earlier than 30 days after
-   the email in step 4.
+2. **Set two dates.** The change takes effect no earlier than 30 days after
+   the email in step 4. The objection deadline is 30 days after that email.
+   For a planned change the two dates are the same. For an urgent change the
+   effective date is earlier, and the objection deadline still runs its full
+   30 days.
 3. **Update the pages, in one PR, in EN, PT and ES.**
    - `trust/*/sub-processors.mdx`: the vendor table, a new row at the top of
      the change log with the date the change takes effect, and `lastUpdated`.
@@ -51,13 +54,16 @@ notice (DPA §12).
    order by o.name;
    ```
 
+   `team` is the organisation type for a clinic; there is no separate
+   `clinic` type (`packages/db/src/schema/main/org-types.ts`).
+
    Send from `privacy@eleva.care`, one recipient per message or in blind copy.
    Use the text in §3.
 
-5. **Log it** in §4: the date, the vendor, how many accounts were emailed and
-   the date the change takes effect.
-6. **Wait for objections** until that date. Handle each one under §5.
-7. **Make the change** on or after the date.
+5. **Log it** in §4: the date, the vendor, how many accounts were emailed,
+   the date the change takes effect and the objection deadline.
+6. **Take objections** until the objection deadline. Handle each one under §5.
+7. **Make the change** on or after the effective date.
 
 ## 3. Email text
 
@@ -72,9 +78,10 @@ Subject: A change to the companies that help us run Eleva
 > You do not need to do anything. The full list is always at
 > eleva.care/trust/sub-processors.
 >
-> If you object to this change, reply to this email before **[date]** and
-> tell us why. We will work with you to find a solution, and if we cannot,
-> you can stop using the affected feature or end your agreement at no cost.
+> If you object to this change, reply to this email before \*\*[objection
+>
+> > deadline]\*\* and tell us why. We will work with you to find a solution, and if we cannot,
+> > you can stop using the affected feature or end your agreement at no cost.
 >
 > Thank you for trusting us with your practice.
 > The Eleva team
@@ -84,9 +91,9 @@ language.
 
 ## 4. Log
 
-| Date sent | Vendor and change  | Accounts emailed | Takes effect | Objections | By  |
-| --------- | ------------------ | ---------------- | ------------ | ---------- | --- |
-| —         | No notice sent yet | —                | —            | —          | —   |
+| Date sent | Vendor and change  | Accounts emailed | Takes effect | Objection deadline | Objections | By  |
+| --------- | ------------------ | ---------------- | ------------ | ------------------ | ---------- | --- |
+| —         | No notice sent yet | —                | —            | —                  | —          | —   |
 
 The 2026-10-31 move from Vercel Blob to Cloudflare R2 is in the public change
 log. No notice was sent because no expert or clinic had accepted the DPA.
@@ -96,6 +103,6 @@ log. No notice was sent because no expert or clinic had accepted the DPA.
 1. Acknowledge within 2 working days.
 2. Ask what the concern is and whether a safeguard would resolve it (a
    different region, a feature switched off for their account).
-3. If it cannot be resolved before the change takes effect, the expert or
+3. If it cannot be resolved by the objection deadline, the expert or
    clinic may stop using the affected processing or end the agreement without
    penalty (DPA §12). Record the outcome in §4.
