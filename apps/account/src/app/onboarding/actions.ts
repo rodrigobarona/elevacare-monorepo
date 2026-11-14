@@ -1,10 +1,8 @@
 "use server"
 
 import { headers } from "next/headers"
-import { cookies } from "next/headers"
 import { createApiClient } from "@eleva/api-client"
 import { buildApiSessionHeaders } from "@eleva/auth/server"
-import { LAST_ACTIVE_ORG_COOKIE } from "@eleva/config/routing"
 
 function getApiBaseUrl(): string {
   return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"
@@ -12,12 +10,13 @@ function getApiBaseUrl(): string {
 
 /**
  * Checks if the current user already has an organization membership
- * (e.g. they were invited). If so, confirms the local rows and skips
- * the space creation step.
+ * (e.g. they were invited). If so, confirms the local rows and returns the
+ * org slug so the page can hand over to the continue route, which records
+ * it as the last active org: a page render must not write cookies.
  */
-export async function checkExistingMembership(_locale?: string): Promise<{
-  hasMembership: boolean
-}> {
+export async function checkExistingMembership(
+  _locale?: string
+): Promise<{ hasMembership: true; slug: string } | { hasMembership: false }> {
   const incomingHeaders = await headers()
   const api = createApiClient({
     baseUrl: getApiBaseUrl(),
@@ -25,16 +24,7 @@ export async function checkExistingMembership(_locale?: string): Promise<{
   })
 
   const result = await api.onboarding.syncExisting()
-  if (result.hasMembership) {
-    const jar = await cookies()
-    jar.set(LAST_ACTIVE_ORG_COOKIE, result.slug, {
-      path: "/",
-      maxAge: 31536000,
-      sameSite: "lax",
-      httpOnly: true,
-    })
-    return { hasMembership: true }
-  }
-
-  return { hasMembership: false }
+  return result.hasMembership
+    ? { hasMembership: true, slug: result.slug }
+    : { hasMembership: false }
 }

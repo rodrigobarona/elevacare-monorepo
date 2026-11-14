@@ -282,6 +282,8 @@ if (existsSync(authenticatedExpertsDir)) {
 const FRONTEND_ROUTE_EXCEPTIONS = new Set([
   "apps/account/src/app/(auth)/dashboard/route.ts",
   "apps/account/src/app/account/(shell)/billing/return/route.ts",
+  // Records the org onboarding found, then redirects to /dashboard.
+  "apps/account/src/app/onboarding/continue/route.ts",
 ])
 const appsDir = path.join(ROOT, "apps")
 const frontendRoutes = []

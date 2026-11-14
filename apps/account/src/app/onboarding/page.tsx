@@ -22,9 +22,9 @@ export default async function OnboardingPage() {
   }
   const locale = normalizeLocale(await getLocale()) ?? "en"
 
-  const { hasMembership } = await checkExistingMembership(locale)
-  if (hasMembership) {
-    redirect("/dashboard")
+  const existing = await checkExistingMembership(locale)
+  if (existing.hasMembership) {
+    redirect(`/onboarding/continue?org=${encodeURIComponent(existing.slug)}`)
   }
 
   const displayName =

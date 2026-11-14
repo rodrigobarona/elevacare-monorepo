@@ -1,10 +1,8 @@
 import { notFound } from "next/navigation"
-import { cookies } from "next/headers"
 import { getTranslations } from "next-intl/server"
 import { guardSessionForOrg } from "@eleva/auth"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
 import { buildDashboardConfig } from "@eleva/dashboard/config-helpers"
-import { LAST_ACTIVE_ORG_COOKIE } from "@eleva/config/routing"
 
 export default async function AcademyLayout({
   children,
@@ -19,14 +17,6 @@ export default async function AcademyLayout({
   if (session.orgSlug !== orgSlug) {
     notFound()
   }
-
-  const jar = await cookies()
-  jar.set(LAST_ACTIVE_ORG_COOKIE, orgSlug, {
-    path: "/",
-    maxAge: 31536000,
-    sameSite: "lax",
-    httpOnly: true,
-  })
 
   const t = await getTranslations("nav")
 

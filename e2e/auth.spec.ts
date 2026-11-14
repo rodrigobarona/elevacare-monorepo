@@ -157,3 +157,50 @@ test.describe("auth journey", () => {
     })
   })
 })
+
+test.describe("onboarding with an existing Space", () => {
+  test.skip(!runAuthJourney, "Set E2E_AUTH=1 with account + API running")
+  test.skip(
+    isNonLoopbackE2eTarget(),
+    "auth e2e must not run against non-loopback hosts"
+  )
+
+  // Regression: /onboarding wrote the last-org cookie while rendering, which
+  // Next.js forbids, so anyone who already had a membership (an invited
+  // member, or someone opening /onboarding again) got the error page.
+  test("sends a person who already has a Space on to it", async ({ page }) => {
+    const email = uniqueEmail("onboarding-again")
+    const signup = await page.request.post(`${apiUrl}/auth/sign-up/email`, {
+      headers: { Origin: ACCOUNT_ORIGIN, "Content-Type": "application/json" },
+      data: { name: "Onboarding Again", email, password: E2E_PASSWORD },
+    })
+    expect(signup.status()).toBe(200)
+    await verifyEmail(page.request, email)
+    const signIn = await page.request.post(`${apiUrl}/auth/sign-in/email`, {
+      headers: { Origin: ACCOUNT_ORIGIN, "Content-Type": "application/json" },
+      data: { email, password: E2E_PASSWORD },
+    })
+    expect(signIn.status()).toBe(200)
+
+    // Sign-up already made her Space, so onboarding forwards to it.
+    const response = await page.goto(`${accountUrl}/onboarding`)
+    expect(response?.status()).toBeLessThan(500)
+    await expect(page).toHaveURL(/\/space-[a-z0-9]+/, { timeout: 30_000 })
+    await expect(page.getByText(/having trouble/i)).toHaveCount(0)
+
+    // The continue step only remembers a value shaped like an org slug.
+    const crafted = await page.request.get(
+      `${accountUrl}/onboarding/continue?org=${encodeURIComponent("../admin")}`,
+      { maxRedirects: 0 }
+    )
+    expect([302, 303, 307]).toContain(crafted.status())
+    expect(new URL(crafted.headers()["location"]!).pathname).toBe("/dashboard")
+    const setCookies = crafted
+      .headersArray()
+      .filter((header) => header.name.toLowerCase() === "set-cookie")
+      .map((header) => header.value)
+    expect(setCookies.some((value) => value.includes("eleva-last-org"))).toBe(
+      false
+    )
+  })
+})

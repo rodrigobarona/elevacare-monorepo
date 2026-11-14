@@ -32,6 +32,23 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-14: Onboarding no longer writes cookies while rendering (active)
+
+- Fix (design slice D0.2): `/onboarding` set the last-active-org cookie
+  during a Server Component render, which Next.js 16 forbids, so anyone who
+  already had a membership got the error page. It now redirects to
+  `/onboarding/continue`, a route handler that records the org (only a
+  valid, unreserved slug) and sends the person to `/dashboard`, which checks
+  it against their memberships. The academy layout had the same write and
+  drops it.
+- Known gap: visiting an academy no longer records it as the last org;
+  only the member app's proxy (`trackLastActiveOrg`) does. Moving that
+  helper into a shared package and calling it from the academy proxy is a
+  follow-up.
+- Judges panel: UX 8.7, trust and security 8.7 (no visual change, so no UI
+  seat).
+- Owner: engineering
+- Status: `active`
 ### 2026-11-14: Demo experts for design work are fictional and dev-only (active)
 
 - Decision: the demo seed (`pnpm db:seed:demo`) now has seven fictional
