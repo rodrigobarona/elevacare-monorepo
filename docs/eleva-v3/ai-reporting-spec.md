@@ -29,7 +29,7 @@ The main AI use cases are:
 - transcript summarization
 - draft report generation
 - structured note extraction
-- follow-up suggestion drafting
+- listing the follow-ups an expert noted
 - customer-facing summary drafting where explicitly allowed
 
 ## AI Principles
@@ -39,6 +39,40 @@ The main AI use cases are:
 - Prompt and model usage should be observable and auditable.
 - Sensitive data handling must be explicit.
 - AI should be tied to clear product jobs, not added as vague magic.
+
+## Intended purpose per feature
+
+Eleva's AI features help an expert write. They do not assess a member, and they give no
+information for a diagnostic or therapeutic decision. Each feature has one stated purpose,
+and the product and its copy stay inside it.
+
+**Status: proposed, pending device counsel.** Whether a feature is medical-device software
+under Regulation (EU) 2017/745 depends on its function and on what Eleva says about it, not
+on a disclaimer. Counsel confirms this table before `ff.ai_reports_beta` is switched on.
+
+| Feature                 | Status               | Intended purpose                                                                              |
+| ----------------------- | -------------------- | --------------------------------------------------------------------------------------------- |
+| Editor assist           | Built                | Helps an expert word and translate their own public profile text                              |
+| Live transcription      | Built, consent-gated | Turns what is said in a video session into text for the expert's written record               |
+| Session-report draft    | Built, flag off      | Reorganises the expert's own notes into a draft the expert edits; it adds no clinical content |
+| Summary from transcript | Specified            | Summarises what was said, for the expert to correct                                           |
+| Member-facing summary   | Specified            | Restates the expert's approved report in plain words                                          |
+| Follow-ups noted        | Specified            | Lists follow-ups the expert already wrote down                                                |
+| Structured extraction   | Specified            | Pulls out action items and themes the expert wrote                                            |
+
+Rules that keep each feature inside its purpose:
+
+- **Extractive output.** A draft restates the input. The prompt contract has no field for
+  model-originated advice, warnings or risk flags (`packages/ai/src/prompts/session-report.v2.ts`;
+  a test fails if one is added).
+- **Copy.** Never say that Eleva's AI "detects", "recommends", "assesses", "flags" or gives
+  "clinical insights". Say that it drafts, organises, summarises or translates what the
+  expert wrote or said.
+- **The expert decides.** No draft reaches a member until the expert has edited, saved and
+  published it as their own report.
+- **New feature, new row.** A feature that would infer anything about a member's health
+  (symptom tracking, triage, risk scoring, suggested treatment) is not added to this table
+  without a device-qualification decision first.
 
 ## Primary Inputs
 
@@ -60,21 +94,21 @@ Represents a report draft generated from approved inputs.
 
 Represents a customer-facing summary that still requires review if policy demands it.
 
-### Draft follow-up suggestions
+### Follow-ups the expert noted
 
-Examples:
-
-- likely follow-up topics
-- suggested reminder timing
-- suggested next appointment
+Lists the follow-ups the expert already wrote in their notes, so they are easy to act on.
+The model does not propose follow-up topics, reminder timing or a next appointment of its
+own.
 
 ### Structured extraction
 
 Examples:
 
-- action items
+- action items the expert wrote down
 - themes
-- tracked symptoms or improvement notes
+
+Symptom tracking and any model-inferred clinical field are out of scope (see "Intended
+purpose per feature").
 
 ## Workflow Model
 

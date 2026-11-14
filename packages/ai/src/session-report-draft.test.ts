@@ -41,9 +41,8 @@ describe("generateSessionReportDraft", () => {
       object: {
         summary: "Summary",
         observations: ["One"],
-        recommendations: ["Rest"],
-        followUpQuestions: [],
-        redFlags: [],
+        planNoted: ["Rest"],
+        followUpsNoted: [],
         disclaimer: "Draft only.",
       },
       usage: { inputTokens: 10, outputTokens: 20 },
@@ -54,8 +53,8 @@ describe("generateSessionReportDraft", () => {
       { generateObject, attestZeroRetention: async () => undefined }
     )
 
-    expect(result.body).toContain("## Recommendations")
-    expect(result.promptVersion).toBe("session-report.v1")
+    expect(result.body).toContain("## Plan you noted")
+    expect(result.promptVersion).toBe("session-report.v2")
     expect(generateObject).toHaveBeenCalledOnce()
   })
 

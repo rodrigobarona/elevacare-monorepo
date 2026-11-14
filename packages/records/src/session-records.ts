@@ -43,6 +43,7 @@ type BookingRow = {
   orgId: string
   expertUserId: string
   memberUserId: string | null
+  bookedLocale: string | null
 }
 
 function isSessionKind(kind: string): kind is SessionRecordKind {
@@ -57,6 +58,7 @@ async function loadBooking(bookingId: string): Promise<BookingRow | null> {
         orgId: bookings.orgId,
         expertUserId: bookings.expertUserId,
         memberUserId: bookings.memberUserId,
+        bookedLocale: bookings.bookedLocale,
       })
       .from(bookings)
       .where(eq(bookings.id, bookingId))
