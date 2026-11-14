@@ -1061,6 +1061,7 @@ export function BookingFunnel({
               timeZone={timeZone}
               locale={dateLocale}
               fromKey={fromKey}
+              windowEndKey={addDaysToKey(fromKey, WINDOW_DAYS - 1)}
               isLoading={slotsLoading}
               isError={slotsError}
               onRetry={() => setSlotsAttempt((attempt) => attempt + 1)}

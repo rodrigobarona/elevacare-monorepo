@@ -73,6 +73,7 @@ export function SlotPicker({
   timeZone,
   locale,
   fromKey,
+  windowEndKey,
   isLoading = false,
   isError = false,
   onRetry,
@@ -94,6 +95,8 @@ export function SlotPicker({
   locale: string
   /** First civil day of the loaded window, e.g. "2026-11-09". */
   fromKey: string
+  /** Last civil day the loaded window covers: no day past it is greyed. */
+  windowEndKey?: string
   /** Times for this window are still loading: say nothing about gaps yet. */
   isLoading?: boolean
   /** Times could not be loaded: never present that as "no times". */
@@ -171,7 +174,13 @@ export function SlotPicker({
   const firstKey = openDays[0]?.dateKey ?? fromKey
   const lastOpen = openDays.at(-1)?.dateKey ?? firstKey
   const minLast = addDaysToKey(firstKey, MIN_DAYS - 1)
-  const lastKey = lastOpen > minLast ? lastOpen : minLast
+  const padded = lastOpen > minLast ? lastOpen : minLast
+  const lastKey =
+    windowEndKey && padded > windowEndKey
+      ? lastOpen > windowEndKey
+        ? lastOpen
+        : windowEndKey
+      : padded
   const dayKeys: string[] = []
   if (openDays.length > 0) {
     for (let key = firstKey; key <= lastKey; key = addDaysToKey(key, 1)) {
@@ -349,8 +358,9 @@ export function SlotPicker({
       <button
         type="button"
         data-testid="booking-next-available"
-        className="inline-flex min-h-6 items-center gap-1.5 rounded-sm text-sm font-medium whitespace-nowrap text-primary underline underline-offset-4 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="inline-flex min-h-6 items-center gap-1.5 rounded-sm text-left text-sm font-medium text-pretty text-primary underline underline-offset-4"
         onClick={() => {
+          setChosen(null)
           onSelectEarliest(earliest)
           setFocusStart(earliest.start)
         }}
@@ -531,7 +541,7 @@ export function SlotPicker({
                     onClick={() => setChosen({ fromKey, day: key })}
                     onKeyDown={(event) => onDayKeyDown(event, key)}
                     className={cn(
-                      "relative flex min-h-16 w-14 shrink-0 snap-start flex-col items-center justify-center gap-0.5 rounded-2xl border text-center transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:min-h-[4.5rem] sm:w-16",
+                      "relative flex min-h-16 w-14 shrink-0 snap-start flex-col items-center justify-center gap-0.5 rounded-2xl border text-center transition-colors sm:min-h-[4.5rem] sm:w-16",
                       isActive
                         ? "border-primary bg-primary/10 text-primary ring-1 ring-primary"
                         : isOpenDay
@@ -572,7 +582,7 @@ export function SlotPicker({
                 type="button"
                 data-testid="booking-slot-next"
                 onClick={onLaterDates}
-                className="flex min-h-16 w-24 shrink-0 snap-start flex-col items-center justify-center gap-1 rounded-2xl border border-border bg-card px-2 text-center text-sm font-medium text-primary transition-colors outline-none hover:border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:min-h-[4.5rem]"
+                className="flex min-h-16 w-24 shrink-0 snap-start flex-col items-center justify-center gap-1 rounded-2xl border border-border bg-card px-2 text-center text-sm font-medium text-primary transition-colors hover:border-primary sm:min-h-[4.5rem]"
               >
                 {labels.laterDates}
                 <ArrowRightIcon aria-hidden className="size-4" />
@@ -649,7 +659,7 @@ export function SlotPicker({
                               isSelected={isSelected}
                               onChange={() => onSelect(slot)}
                               className={cn(
-                                "flex min-h-12 items-center justify-center rounded-full border text-base font-medium tabular-nums transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+                                "flex min-h-12 items-center justify-center rounded-full border text-base font-medium tabular-nums transition-colors",
                                 isSelected
                                   ? "border-primary bg-primary text-primary-foreground"
                                   : "border-border bg-card hover:border-primary hover:text-primary"
@@ -682,7 +692,9 @@ export function SlotPicker({
       </div>
 
       <p role="status" className="sr-only">
-        {selectedStart ? labels.selected(describe(selectedStart, longDay)) : ""}
+        {selectedStart
+          ? labels.selected(describe(selectedStart, longDay))
+          : (skippedFrom ?? "")}
       </p>
     </div>
   )
@@ -747,15 +759,14 @@ function JumpCalendar({
             {(date) => (
               <CalendarCell
                 date={date}
-                className={({ isOutsideMonth, isDisabled, isFocusVisible }) =>
+                // Focus uses the kit's global :focus-visible outline.
+                className={({ isOutsideMonth, isDisabled }) =>
                   cn(
-                    "mx-auto flex size-10 items-center justify-center rounded-full text-sm tabular-nums outline-none select-none",
+                    "mx-auto flex size-10 items-center justify-center rounded-full text-sm tabular-nums select-none",
                     isOutsideMonth && "invisible",
                     isDisabled
                       ? "text-muted-foreground/60"
-                      : "cursor-pointer hover:bg-muted",
-                    isFocusVisible &&
-                      "outline-2 outline-offset-2 outline-primary"
+                      : "cursor-pointer hover:bg-muted"
                   )
                 }
               />

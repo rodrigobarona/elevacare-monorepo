@@ -538,7 +538,7 @@
       "pickToContinue": "Escolha um horário para continuar",
       "retry": "Tentar de novo",
       "skippedTo": "O primeiro dia com horários a partir de {from} é {to}.",
-      "loadErrorHelp": "Continua sem funcionar? O nosso <help>centro de ajuda</help> pode orientá-la. Ainda não foi feita nenhuma marcação."
+      "loadErrorHelp": "Continua sem funcionar? O nosso <help>centro de ajuda</help> pode ajudar. Ainda não foi feita nenhuma marcação."
     },
     "details": {
       "heading": "Alguns dados",

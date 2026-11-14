@@ -101,10 +101,17 @@ export function BookingSummary({
               <span className="font-medium">{expertName}</span>
               <span className="text-muted-foreground"> · {offerTitle}</span>
             </p>
-            <p className="truncate text-muted-foreground">
-              {meta}
-              {meta ? " · " : null}
-              <span className="font-medium text-foreground">{price}</span>
+            {/* A long line truncates its details, never the price. */}
+            <p className="flex min-w-0 gap-1 text-muted-foreground">
+              {meta ? (
+                <>
+                  <span className="truncate">{meta}</span>
+                  <span aria-hidden>·</span>
+                </>
+              ) : null}
+              <span className="shrink-0 font-medium text-foreground">
+                {price}
+              </span>
             </p>
           </div>
         </div>
