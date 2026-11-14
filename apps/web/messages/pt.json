@@ -556,8 +556,8 @@
       "holding": "A reservar o horário…",
       "consents": {
         "health_data_processing": {
-          "label": "Concordo expressamente que a Eleva use as informações de saúde desta marcação para organizar a minha sessão e partilhe com {name} o que eu escrever.",
-          "description": "A Eleva só faz a ligação a {name}, para organizar os seus cuidados e nunca para publicidade. Para retirar, escreva para <mail>privacy@eleva.care</mail> ou use as definições de Privacidade (cancele antes qualquer sessão marcada). <link>Como protegemos os dados de saúde</link>"
+          "label": "Aceito expressamente que a Eleva use as informações de saúde desta marcação para organizar a minha sessão e partilhe com {name} o que eu escrever.",
+          "description": "Usadas apenas para organizar os seus cuidados com {name}, nunca para publicidade. Para retirar, escreva para <mail>privacy@eleva.care</mail> ou use as definições de Privacidade; se tiver uma sessão marcada, cancele-a primeiro. <link>Como protegemos os dados de saúde</link>"
         },
         "terms": {
           "combined": "Tenho 18 anos ou mais, estou a marcar esta sessão para mim e aceito os <terms>termos de utilização</terms> e os <booking>termos de marcação</booking>."

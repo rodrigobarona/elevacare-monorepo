@@ -557,7 +557,7 @@
       "consents": {
         "health_data_processing": {
           "label": "Acepto expresamente que Eleva use la información de salud de esta reserva para organizar mi sesión y comparta con {name} lo que escriba.",
-          "description": "Eleva solo hace de puente con {name}, para organizar tu atención y nunca para publicidad. Para retirarlo, escribe a <mail>privacy@eleva.care</mail> o usa los ajustes de Privacidad (cancela antes cualquier sesión reservada). <link>Cómo protegemos los datos de salud</link>"
+          "description": "Se usa solo para organizar tu atención con {name}, nunca para publicidad. Para retirarlo, escribe a <mail>privacy@eleva.care</mail> o usa los ajustes de Privacidad; si tienes una sesión reservada, cancélala primero. <link>Cómo protegemos los datos de salud</link>"
         },
         "terms": {
           "combined": "Tengo 18 años o más, reservo esta sesión para mí y acepto los <terms>términos de uso</terms> y los <booking>términos de reserva</booking>."

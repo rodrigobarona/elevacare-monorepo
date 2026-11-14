@@ -557,7 +557,7 @@
       "consents": {
         "health_data_processing": {
           "label": "I explicitly agree that Eleva uses the health information in this booking to arrange my session and shares what I write with {name}.",
-          "description": "Eleva only connects you with {name}, to arrange your care and never for advertising. To withdraw, email <mail>privacy@eleva.care</mail> or use Privacy settings (cancel any booked session first). <link>How we protect health data</link>"
+          "description": "Used only to arrange your care with {name}, never for advertising. To withdraw, email <mail>privacy@eleva.care</mail> or use Privacy settings; if you have a session booked, cancel it first. <link>How we protect health data</link>"
         },
         "terms": {
           "combined": "I’m 18 or older, I’m booking this session for myself, and I agree to the <terms>terms of use</terms> and <booking>booking terms</booking>."

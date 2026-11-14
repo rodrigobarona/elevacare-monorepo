@@ -46,8 +46,9 @@ Each entry should include:
      The privacy notice is information, not consent: it is linked in a
      sentence and `privacy` is still recorded with the booking, with no tick
      of its own.
-- Free sessions show a courtesy line instead of refund rules, on the
-  details step, the thank-you page and the confirmation email.
+- Free sessions show a courtesy line instead of refund rules on the details
+  step and the thank-you page; the confirmation email drops the
+  cancellation-policy row.
 - Needs legal review before launch, not shipped as signed off:
   - bundling the terms and age confirmation in one tick;
   - recording `privacy` without a tick;
@@ -61,10 +62,15 @@ Each entry should include:
   bump the version to the next published date, ship the statement-text hash
   below, or accept the gap here; check production `consents` rows on
   `2026-11-14` before launch.
-- Follow-ups: a basis column and a statement-text hash on `consents`, and a
-  `#bookings` anchor on Privacy settings for withdrawal.
+- Follow-ups: a basis column and a statement-text hash on `consents`; a
+  `#bookings` anchor on `/legal/terms` so "booking terms" lands on its
+  section; a `#bookings` anchor on Privacy settings for withdrawal; a
+  shorter spoken name for the terms tick (its two links each say "opens in a
+  new tab") and `aria-errormessage` on the ticks.
+- Merging to `main` deploys, so production records the new health statement
+  under `2026-11-14` from then on until the founder decides the above.
 - Judges panel: round 1 UI 7.9, UX 8.0, trust 7.6; round 2 UI 8.6, UX 8.2,
-  trust 8.2 (scores after round 3 in the PR).
+  trust 8.2; round 3 UX 8.7, trust 8.6 (UI 8.6 from round 2).
 - Owner: engineering; legal review: DPO and counsel
 - Status: `needs-review`
 
