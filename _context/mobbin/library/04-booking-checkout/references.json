@@ -1,0 +1,504 @@
+{
+  "surface": "04-booking-checkout",
+  "title": "Public booking funnel and checkout",
+  "researcher": "Booking and checkout",
+  "date": "2026-11-14",
+  "summary": "The funnel is short, honest and already carries a summary card, a time zone line, a dated cancellation deadline and a hold on the slot, so the bones are right. It feels weak because the money moment is thin: the pay step has no real order summary, no reassurance beside the button and a hold timer that scrolls away on a phone, while the step before it asks for five ticks and the whole thing sits inside the marketing header and a forty-link footer. The one change that matters most is to rebuild the pay step as a confirm-and-pay page: one order summary (who, what, when, price, dated cancellation), the hold and the reassurance next to the button, promo and tax number tucked into the summary, in a quiet checkout chrome. Note: capture 01-paid-funnel-entry shows the time step, because the seeded paid service has one way to meet and the funnel skips the meet step, so the meet step was not audited.",
+  "strengths": [
+    "A summary card travels with every step and already holds expert, service, duration, way of meeting, chosen time, price and one cancellation line (01-paid-funnel-entry.desktop.jpg, 07-paid-step-pay.desktop.jpg). Keep it and make it work harder.",
+    "The funnel is short: three steps for a paid session, and the meet step is skipped when there is only one way to meet. 'Step 1 of 3' plus a segmented bar is clear without being loud.",
+    "The time step shows several days at once, says which time zone the times are in with a 'Change time zone' link, and the continue button repeats the choice: 'Continue with Mon, 16 Nov, 10:00' (04-paid-slot-picked.desktop.jpg). On phones that button is a fixed bar.",
+    "The cancellation policy is turned into real dates for this booking: 'Full refund if you cancel before 15 Nov 2026, 10:00' (05-paid-step-details.desktop.jpg). That sentence is the best line in the funnel.",
+    "Guests are never asked to create an account before booking, and the thank-you page says 'No account needed' for joining the call (09-free-thank-you.desktop.jpg).",
+    "The pay button names the amount ('Pay €60.00'), MB WAY sits beside card for Portuguese members, and the source already has a 'Keep this time for 5 more minutes' offer when the hold is about to end.",
+    "The thank-you page appears with a 'What happens next' list, an add-to-calendar button and the account invitation together, with no delay.",
+    "The free path skips payment and renames the button to 'Confirm booking'.",
+    "Headings are warm and plain ('Pick a time', 'A few details'), and the urgent-help note is a responsible thing for a health product to carry."
+  ],
+  "findings": [
+    {
+      "id": "BOOK-01",
+      "severity": "P1",
+      "lens": "ux",
+      "title": "Checkout runs inside the full marketing site",
+      "evidence": [
+        "03-paid-step-when.desktop.jpg",
+        "05-paid-step-details.mobile.jpg",
+        "07-paid-step-pay.desktop.jpg",
+        "07-paid-step-pay.mobile.jpg"
+      ],
+      "detail": "Every step keeps the marketing header (four mega menus, Sign in, a filled 'Find an expert' button) and the full footer with about forty links. On the time step the footer is taller than the step itself, and on a phone the pay button is followed by a screen and a half of footer links. A member who is about to pay is shown a dozen ways to leave, and 'Find an expert' is the strongest button on the page while she is already booking one. It also makes the page read as a website form rather than a checkout.",
+      "recommendation": "Give the funnel its own quiet chrome from the first step to the thank-you page: the Eleva logo (returns to the expert's profile), the language switch, a 'Help' link and a small lock with 'Secure booking'. Replace the footer with one line: Terms, Privacy, Cookie settings and the company name. Keep the real header and footer on the profile page before the funnel and on the pages after it.",
+      "references": [
+        "04-booking-checkout/01",
+        "04-booking-checkout/02a",
+        "04-booking-checkout/09a"
+      ]
+    },
+    {
+      "id": "BOOK-02",
+      "severity": "P1",
+      "lens": "ui",
+      "title": "The pay step has no order summary or price breakdown",
+      "evidence": [
+        "07-paid-step-pay.desktop.jpg",
+        "07-paid-step-pay.mobile.jpg"
+      ],
+      "detail": "On the pay step the price is shown twice with no relation between the two: 'Price €60.00' in the side card and a small 'Total' label with '€60.00' floating on the next line at the far right of the form. There is no line that says what the €60 buys, no 'you pay today', no tax note, and a discount has no visible home until a code is applied. On a phone the side card sits above the form and is gone by the time the card fields are on screen, so the member types her card number with nothing on screen that says what she is paying for. This is the main reason the checkout reads as weak.",
+      "recommendation": "Make the side card the order summary and the only place the money is shown. Lines: 'First visit, 60 minutes, video with Fisio Mota'; 'Mon 16 Nov, 10:00 to 11:00 (Lisbon time)' with a Change link; a price line; a discount line when a code is applied; 'Total you pay today'; and the dated cancellation sentence. Remove the loose Total row from the form. On phones keep a fixed bottom bar with 'Total €60.00' and the pay button, and let the total open the full summary.",
+      "references": [
+        "04-booking-checkout/02a",
+        "04-booking-checkout/03",
+        "04-booking-checkout/04",
+        "04-booking-checkout/05"
+      ]
+    },
+    {
+      "id": "BOOK-03",
+      "severity": "P1",
+      "lens": "trust",
+      "title": "Nothing reassures the member next to the pay button",
+      "evidence": [
+        "07-paid-step-pay.desktop.jpg",
+        "07-paid-step-pay.mobile.jpg"
+      ],
+      "detail": "Between the last field and 'Pay €60.00' the only text is Stripe's Link terms. There is no line about payment security, no reminder that she can cancel for a full refund until a named date, and nothing about what happens the moment she pays. The intro sentence hedges: 'Card, Apple Pay, Google Pay, Link, and MB WAY may appear' reads like a note to a developer. At the point of most doubt the page is silent.",
+      "recommendation": "Rewrite the intro: 'We are holding Monday 16 November at 10:00 for you. Pay by card, Apple Pay, Google Pay or MB WAY.' Directly under the pay button add three short lines with small icons: 'Secure payment. Your card details go straight to Stripe, our payment partner.' (wording to confirm), 'Full refund if you cancel before Sun 15 Nov, 10:00.' and 'Your confirmation and join link arrive by email right away.' For request-to-book services, put the existing 'the expert accepts within 24 hours, a decline refunds 100%' sentence here too.",
+      "references": [
+        "04-booking-checkout/01",
+        "04-booking-checkout/04",
+        "04-booking-checkout/03"
+      ]
+    },
+    {
+      "id": "BOOK-04",
+      "severity": "P1",
+      "lens": "ux",
+      "title": "Five ticks and a policy box stand between the member and payment",
+      "evidence": [
+        "05-paid-step-details.desktop.jpg",
+        "05-paid-step-details.mobile.jpg",
+        "06-paid-details-filled.mobile.jpg"
+      ],
+      "detail": "The 'Policy and consent' card stacks a five-line cancellation box, an institutional intro ('To book a health session on this digital health platform, please confirm:'), four required checkboxes of equal weight and a fifth, optional one that is a four-line paragraph about transcription and AI notes. On a phone this is a full screen of small text and five tap targets about 16px wide. The optional AI choice is the longest item and looks like one more thing she must read to book. The continue button stays washed out until all four are ticked and nothing says why.",
+      "recommendation": "Keep it lawful and lighter, with legal review before it ships (the consent version and the 'confirm all four statements' error change with it). (1) Keep consent to health data processing as its own unticked checkbox, because it must be an explicit, separate act, and word it by purpose: 'I agree that Eleva and my expert use the health information I share to provide this session.' (2) Fold terms, privacy notice and the 18-or-older, booking-for-myself confirmation into one sentence directly above the button with links, or at most one second checkbox. (3) Move the optional transcription and AI choice out of the booking gate: ask it in the waiting room before the call, or show it as a clearly separate 'Optional' switch with a one-line label and a 'Learn more' link. (4) Make checkbox rows full-width tap targets, 44px tall. (5) Leave the button active and, on press, point at the item that is missing.",
+      "references": [
+        "04-booking-checkout/09a",
+        "04-booking-checkout/03",
+        "04-booking-checkout/02a"
+      ]
+    },
+    {
+      "id": "BOOK-05",
+      "severity": "P2",
+      "lens": "copy",
+      "title": "The cancellation policy is said three times, and the clearest version is last",
+      "evidence": [
+        "05-paid-step-details.desktop.jpg",
+        "07-paid-step-pay.desktop.jpg",
+        "05-paid-step-details.mobile.jpg"
+      ],
+      "detail": "The side card says 'Full refund if you cancel at least 24 hours before the session.' The policy box then gives three generic rules and two dated ones that repeat the first two. The member reads five lines to learn one fact. On phones the side card drops the cancellation line altogether, and on the pay step, where it matters most, the dated version is not shown at all.",
+      "recommendation": "Lead with the dated sentence everywhere: 'Free cancellation until Sun 15 Nov, 10:00 (Lisbon time). After that, the session is not refunded.' Put it in the summary card on every step (phones included) and under the pay button. Move the generic rules, the 24-hour grace period and the policy name behind a 'Full policy' link that opens in place.",
+      "references": [
+        "04-booking-checkout/02a",
+        "04-booking-checkout/01",
+        "04-booking-checkout/04"
+      ]
+    },
+    {
+      "id": "BOOK-06",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "The hold timer is out of sight when it matters and sounds like a system",
+      "evidence": [
+        "07-paid-step-pay.desktop.jpg",
+        "07-paid-step-pay.mobile.jpg"
+      ],
+      "detail": "'Hold expires in 04:42' lives in a pale blue pill inside the side card. On a phone that card is at the top of the page, so the countdown is off screen while the member fills in her card. The wording is about the system's hold, not about her time, and the blue pill is a colour used nowhere else in the funnel. The expired state in the source is a bare sentence and a button.",
+      "recommendation": "Say it as a promise and keep it in view: 'We are holding your time for 04:42' directly above the payment methods on desktop and inside the fixed pay bar on phones. Keep it calm (teal on cream) until the last minute, then switch to the existing 'Need more time?' offer. When the hold ends, show a card that names the time that was released, says her details are saved, and offers 'See open times'.",
+      "references": [
+        "04-booking-checkout/01"
+      ]
+    },
+    {
+      "id": "BOOK-07",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "An open promo code box is the first thing on the pay step",
+      "evidence": [
+        "07-paid-step-pay.desktop.jpg",
+        "07-paid-step-pay.mobile.jpg"
+      ],
+      "detail": "The pay step opens with a full-width 'Promo code (optional)' field, an Apply button and a helper sentence, all above the total and the payment methods. Most members have no code. An empty code box at the top of a checkout tells them they may be overpaying and sends some of them away to look for one.",
+      "recommendation": "Collapse it to a quiet 'Add a promo code' link inside the order summary, under the price line. On click it opens a field and Apply in place. An applied code becomes a named discount line with a Remove link, and an invalid code shows its message under the field. Codes still go through Stripe as today.",
+      "references": [
+        "04-booking-checkout/03",
+        "04-booking-checkout/05",
+        "04-booking-checkout/01"
+      ]
+    },
+    {
+      "id": "BOOK-08",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "The details step asks for things this booking does not need",
+      "evidence": [
+        "05-paid-step-details.desktop.jpg",
+        "08-free-details-filled.desktop.jpg",
+        "05-paid-step-details.mobile.jpg"
+      ],
+      "detail": "A video session shows a 'Phone number' field with the hint 'Needed for a phone session', not marked optional, so a member booking video wonders if she must fill it. A tax number field ('NIF / VAT') sits in a card called 'Optional details' on every booking, including the free one, where there is no invoice. The note field's helper uses the internal word 'pre-agenda'. Together with the consents this makes a three-card form that runs to more than four phone screens for what is really a name and an email. No reference was found for a tax number field in a health booking; the Fresha and Turo references show the general pattern of optional extras kept behind an 'Add' link in the summary.",
+      "recommendation": "Show the phone field only when the session is by phone (or label it 'Phone (optional), for reminders'). Remove the tax number from free bookings. On paid bookings move it to the pay step as a link in the order summary, 'Add your NIF to the invoice', collected through Stripe. Rename the helper to 'Your expert reads this before your session.' With those gone the step is one card: name, email, an optional note, then the agreement.",
+      "references": [
+        "04-booking-checkout/05",
+        "04-booking-checkout/03"
+      ]
+    },
+    {
+      "id": "BOOK-09",
+      "severity": "P2",
+      "lens": "ui",
+      "title": "Fields look disabled and the two form steps do not match",
+      "evidence": [
+        "05-paid-step-details.desktop.jpg",
+        "06-paid-details-filled.desktop.jpg",
+        "07-paid-step-pay.desktop.jpg"
+      ],
+      "detail": "The details fields are beige-filled pills with a dark hairline, sitting on a white card on a cream page. Filled in beige, they read as inactive. The next step shows Stripe's fields: white, squared, a different font size and label style. Two input systems in two consecutive steps is a visible seam at the point of payment. The primary button on the details step is small and left-aligned beside a text 'Back', and its disabled state is a pale teal that still looks half-clickable.",
+      "recommendation": "Use white fields with a clear border and the teal focus ring on the details step, and set the Stripe Payment Element appearance to the same radius, border, label style and DM Sans so both steps look like one form. Make the primary button full width on phones and large on desktop, with Back as a quiet link above the step title or to its left.",
+      "references": [
+        "04-booking-checkout/01",
+        "04-booking-checkout/03"
+      ]
+    },
+    {
+      "id": "BOOK-10",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "The time picker is hard to scan, most of all on a phone",
+      "evidence": [
+        "03-paid-step-when.desktop.jpg",
+        "03-paid-step-when.mobile.jpg",
+        "04-paid-slot-picked.mobile.jpg"
+      ],
+      "detail": "Each day column starts at its own first open time, so a row reads 10:00, 09:00, 09:00 and the eye cannot run across to compare days. Only four times show per day, then '+11 more', so most of the day is hidden behind fifteen separate links. There is no morning or afternoon grouping, no end time, and no month. The cue that more days exist is a clipped sixth column. On a phone the summary card, step label, title and time zone line push the first time to the bottom of the first screen, only three days fit, and the day arrows are gone. The source has 'Next available' and empty-week copy, but neither state is in the captures.",
+      "recommendation": "On phones switch to a row of day chips (empty days greyed and not tappable, the month named above) with the chosen day's times below in a two or three column grid grouped Morning, Afternoon, Evening. On desktop keep the week columns but align rows by time and write 'No times' in an empty day. Put a 'Next available: Mon 16 Nov, 10:00' shortcut above the picker. Show the time as a range or keep the duration beside the title. Move the summary card below the picker on phones, or collapse it to one line.",
+      "references": [
+        "04-booking-checkout/06",
+        "04-booking-checkout/07",
+        "04-booking-checkout/08"
+      ]
+    },
+    {
+      "id": "BOOK-11",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "The continue button arrives late and far from the choice",
+      "evidence": [
+        "03-paid-step-when.desktop.jpg",
+        "04-paid-slot-picked.desktop.jpg",
+        "04-paid-slot-picked.mobile.jpg"
+      ],
+      "detail": "Before a time is picked the step has no button at all, so the page gives no sign of what comes next. After a pick, the desktop capture shows 'Continue with Mon, 16 Nov, 10:00' about 640px below the grid, under a blank area. The source places it directly under the grid, so this gap needs checking in a browser, but with a day expanded to fifteen times the button will be below the fold either way. In the phone capture the fixed bar sits over the fourth row of times and the '+7 more' links.",
+      "recommendation": "Reserve the button's place from the start, next to Back, with the label 'Pick a time to continue' until a time is chosen. On desktop keep it inside the first screen: under the grid at a fixed position, or in the summary card. On phones keep the fixed bar and add bottom padding to the picker equal to the bar's height so nothing sits under it.",
+      "references": [
+        "04-booking-checkout/07",
+        "04-booking-checkout/08"
+      ]
+    },
+    {
+      "id": "BOOK-12",
+      "severity": "P2",
+      "lens": "trust",
+      "title": "The summary card is impersonal and cannot be edited",
+      "evidence": [
+        "03-paid-step-when.desktop.jpg",
+        "04-paid-slot-picked.desktop.jpg",
+        "05-paid-step-details.mobile.jpg"
+      ],
+      "detail": "With no photo the expert is a pale initials circle, and the card carries no profession or credential line, so at the moment of paying the member sees a name and two letters. New experts will look like this. The chosen time has no Change link; she must use Back. The date wraps as 'Monday 16 November 2026 at / 10:00' with no end time or time zone. 'About Fisio Mota' leads out of the funnel. On phones the card repeats at full height above every step, about 200px, and loses the cancellation line.",
+      "recommendation": "Give the card a larger photo, or a warmer fallback in brand colours when there is none, with the profession and the same verified line the profile shows. Add 'Change' beside the time and the way of meeting. Write the time as 'Mon 16 Nov, 10:00 to 11:00 (Lisbon time)'. Open the profile link in a sheet or a new tab. On phones collapse the card to a one-line bar ('First visit, Mon 16 Nov 10:00, €60') that expands on tap.",
+      "references": [
+        "04-booking-checkout/02a",
+        "04-booking-checkout/04",
+        "04-booking-checkout/05",
+        "04-booking-checkout/01"
+      ]
+    },
+    {
+      "id": "BOOK-13",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "The thank-you page confirms but does not feel like an arrival",
+      "evidence": [
+        "09-free-thank-you.desktop.jpg",
+        "09-free-thank-you.mobile.jpg"
+      ],
+      "detail": "'Your reservation is confirmed' is generic and introduces a third word for the same thing (the funnel says booking and session). The headline does not name the expert or the time. The email address the confirmation went to is not shown, so a typo goes unnoticed. The booking card has dead space at the bottom, the time has no duration or time zone, and 'Your video link arrives before the session' contradicts 'Join the video call from the link in your email' beside it. 'Add to calendar' is a small outline button that downloads one file, there is no link to change or cancel, and the urgent-help block is as large as the confirmation itself.",
+      "recommendation": "Lead with the person and the moment: 'You are booked with Ana' and 'Friday 11 December, 16:00 to 16:20 (Lisbon time)'. Follow with 'We sent your confirmation and join link to marta@example.com.' Make 'Add to calendar' the main action with Google, Apple and Outlook choices. Turn 'What happens next' into three dated steps: now (check your inbox), before the session (add anything you want your expert to know), 15 minutes before (your join link opens, no account needed). Add 'Need to change something? Reschedule or cancel' with the dated deadline. Use one access sentence: 'Your join link is in the email and opens 15 minutes before.'",
+      "references": [
+        "04-booking-checkout/09b",
+        "04-booking-checkout/10",
+        "04-booking-checkout/11",
+        "04-booking-checkout/02b"
+      ]
+    },
+    {
+      "id": "BOOK-14",
+      "severity": "P2",
+      "lens": "copy",
+      "title": "The account invitation is undersold and uses two names",
+      "evidence": [
+        "09-free-thank-you.desktop.jpg",
+        "09-free-thank-you.mobile.jpg"
+      ],
+      "detail": "'Create your Eleva account' is the filled button, placed beside 'Add to calendar' inside the next-steps card, with one hint: 'Save this session to your Space and manage it later.' The button says account, the hint says Space, and neither says what she gains or that her details are already filled in. As the strongest button on the page it also competes with the thing she needs first, the calendar entry.",
+      "recommendation": "Give the invitation its own band below the confirmation. Title: 'Keep everything in one place'. Two or three benefits in plain words: see and change your sessions, find your expert's notes, book faster next time. Then 'Your name and email are already filled in.' and one button, 'Create your Space', with a quiet line: 'Not now? The email has everything you need.' Use Space throughout, never account.",
+      "references": [
+        "04-booking-checkout/12",
+        "04-booking-checkout/09b"
+      ]
+    },
+    {
+      "id": "BOOK-15",
+      "severity": "P2",
+      "lens": "copy",
+      "title": "A free session is dressed as a paid one",
+      "evidence": [
+        "08-free-details-filled.desktop.jpg",
+        "09-free-thank-you.desktop.jpg",
+        "08-free-details-filled.mobile.jpg"
+      ],
+      "detail": "The free quick chat shows 'Price €0.00', a refund policy ('Full refund if you cancel at least 24 hours before', 'No refund if you cancel after 10 Dec') and a tax number field for an invoice that will never exist. The thank-you page repeats 'Price €0.00' and 'Changes and refunds follow the Flexible cancellation policy.' Refund language on a free session is confusing and makes the page look unfinished. No reference was kept for this one; during the search a Selfridges appointment flow labelled its free booking 'Complimentary' in the summary, which is the same idea.",
+      "recommendation": "Show 'Free' in place of €0.00. Replace the refund rules with a courtesy line: 'Plans changed? Cancel or move your session any time before it starts, so someone else can take the time.' Hide the tax number field. On the thank-you page drop the refund sentence and keep the change link.",
+      "references": []
+    },
+    {
+      "id": "BOOK-16",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "Slot-taken, hold-ended and payment-failed states are plain text",
+      "evidence": [
+        "04-paid-slot-picked.desktop.jpg",
+        "07-paid-step-pay.desktop.jpg"
+      ],
+      "detail": "These states were not captured; this is read from the funnel source and its strings. A taken slot shows a red strip above the picker ('That time was just taken. Please pick another.'). An ended hold replaces the payment form with one sentence and a button. A declined payment says 'Pick a time again to retry', which sends the member back two steps. Each of these is the moment a member is most likely to give up, and each is handled as an error message, not as a next step.",
+      "recommendation": "Design them as states of the step. Slot taken: stay on the time step, name the time that went, and highlight the nearest open times on the same day. Hold ended: a card that says her details are saved and offers 'See open times'. Payment declined: stay on the pay step with the hold intact where possible, say nothing was charged, and offer another method. Capture all three for the next audit.",
+      "references": [
+        "04-booking-checkout/08"
+      ]
+    },
+    {
+      "id": "BOOK-17",
+      "severity": "P3",
+      "lens": "copy",
+      "title": "Small wording and tone slips across the funnel",
+      "evidence": [
+        "03-paid-step-when.desktop.jpg",
+        "05-paid-step-details.desktop.jpg",
+        "07-paid-step-pay.desktop.jpg",
+        "09-free-thank-you.desktop.jpg"
+      ],
+      "detail": "Booking, session and reservation are used for the same thing. 'Policy and consent' and 'To book a health session on this digital health platform, please confirm:' sound like a form from an institution. 'Optional details', 'pre-agenda', 'Hold expires' and 'may appear' are internal words. The step label is small monospace capitals ('STEP 1 OF 3 · WHEN'), which reads as technical beside Lora headings.",
+      "recommendation": "Use 'session' for the thing and 'booking' only for the act. Rename the card 'Before you continue'. Replace the intro with 'Two quick things before we hold your time.' Set the step label in DM Sans sentence case: 'Step 1 of 3: Pick a time'. Apply the same edits in PT and ES.",
+      "references": [
+        "04-booking-checkout/04",
+        "04-booking-checkout/10"
+      ]
+    },
+    {
+      "id": "BOOK-18",
+      "severity": "P3",
+      "lens": "ui",
+      "title": "Urgent help is right to include but weighs too much",
+      "evidence": [
+        "05-paid-step-details.desktop.jpg",
+        "09-free-thank-you.desktop.jpg",
+        "09-free-thank-you.mobile.jpg"
+      ],
+      "detail": "On the details step the urgent-help note sits inside the 'Optional details' card as a boxed panel. On the thank-you page it is a full-width block with four phone numbers, as tall as the confirmation card on a phone. The information should stay; at this size it changes the mood of a page meant to feel like good news. No reference was found for this pattern.",
+      "recommendation": "Keep it, quieter. On the details step, one line under the note field: 'This note is read before your session, not right away. In an emergency call 112.' On the thank-you page, one line at the bottom, 'Need urgent help? Call 112', with 'More numbers' opening the SNS 24 and crisis lines.",
+      "references": []
+    }
+  ],
+  "references": [
+    {
+      "id": "04-booking-checkout/01",
+      "file": "img/01-getyourguide-hold-timer-order-summary.jpg",
+      "app": "GetYourGuide",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/625a63f1-cfd7-4a98-9ad3-016d19900cbf?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Guest checkout with a hold timer, reassurance and an order summary that holds the promo code",
+      "why": "The page has only a logo and a two-step bar (Contact, Payment). Above the title a pill says 'We'll hold your spot for 08:48 minutes', and under the title a lock line says 'Checkout is fast and secure'. The order summary on the right carries the product with its photo, the date and time, a 'Change date or participants' link, 'Free cancellation until 10:00 AM on July 19', the promo field with its inline error, and the total with 'All taxes and fees included'. Under the button two ticked lines repeat what is safe: 'Pay nothing today' and 'Free cancellation'. A travel product, kept for its structure.",
+      "apply": "Quiet checkout chrome; the hold written as a promise and placed above the form; a dated cancellation line in the summary; the promo code inside the summary; two or three reassurance lines under the main button.",
+      "query": "booking marketplace checkout page with price breakdown and promo code field"
+    },
+    {
+      "id": "04-booking-checkout/02a",
+      "file": "img/02a-airbnb-confirm-pay-review.jpg",
+      "app": "Airbnb",
+      "platform": "web",
+      "type": "flow",
+      "mobbin_url": "https://mobbin.com/flows/be988574-2b30-4b82-a5a3-30352abbf1a2?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Confirm and pay: numbered sections with a persistent summary card",
+      "why": "Three numbered sections ('Choose when to pay', 'Add a payment method', 'Review your reservation') collapse to one line with a 'Change' button once done. The summary card beside them never moves: photo, name and rating, 'Free cancellation. Cancel within 48 hours for a full refund. Full policy', trip dates with 'Change', price details, total and a 'Price breakdown' link. Agreement is one line above the button: 'By selecting the button, I agree to the booking terms.' The page has no site navigation, only a back arrow and a three-link footer.",
+      "apply": "The model for Eleva's pay step: one summary card with Change links, the cancellation promise in one sentence with a 'Full policy' link, agreement to terms as a sentence at the button, and no site navigation.",
+      "query": "Airbnb reserving a stay confirm and pay"
+    },
+    {
+      "id": "04-booking-checkout/02b",
+      "file": "img/02b-airbnb-confirmation-card.jpg",
+      "app": "Airbnb",
+      "platform": "web",
+      "type": "flow",
+      "mobbin_url": "https://mobbin.com/flows/be988574-2b30-4b82-a5a3-30352abbf1a2?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Post-payment arrival screen built around one card",
+      "why": "After paying, the whole screen is one large card (photo, place, dates, guests, total, a status badge) beside a short headline, two sentences on what happens next and when the email arrives, and one button. Nothing else is on the page. This capture shows the pending state ('Your stay is pending'); the confirmed state was not in the results.",
+      "apply": "Give the thank-you page one hero card for the session and one clear statement beside it. The same layout serves Eleva's 'Request sent' state for request-to-book services.",
+      "query": "Airbnb reserving a stay confirm and pay"
+    },
+    {
+      "id": "04-booking-checkout/03",
+      "file": "img/03-turo-payment-summary-single-consent.jpg",
+      "app": "Turo",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/7ea11a81-3b1e-454a-bf3b-b6525bdbd671?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Embedded card form beside a summary, promo as a link, one agreement checkbox",
+      "why": "The payment form uses the same field layout Eleva gets from Stripe (card number, expiry, security code, country, other methods as rows) under a lock line, 'Your information will be stored securely.' The summary card lists the item with its photo and rating, dates, place, subtotal, tax and a bold total, and ends with a quiet 'Promo code' link. Agreement is one checkbox: 'I agree to pay the total shown and to the Turo terms of service, cancellation policy and I acknowledge the privacy policy'. The marketing opt-in is a separate, clearly optional box. A car rental product, kept for its structure.",
+      "apply": "Promo code as a link in the summary; a lock line above the payment methods; several documents accepted in one sentence with links; optional choices visibly apart from required ones.",
+      "query": "booking marketplace checkout page with price breakdown and promo code field"
+    },
+    {
+      "id": "04-booking-checkout/04",
+      "file": "img/04-alan-appointment-pay-summary.jpg",
+      "app": "Alan",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/9d51db29-b746-455b-837b-e85767403b33?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Health appointment pay screen reduced to four facts",
+      "why": "A European health product. The screen is titled 'Your appointment' and shows four things: the psychologist's photo, name and profession; 'Thursday 23 April 2026 from 20:00 to 20:45'; '€70'; and 'Free cancellation up to 48 hours in advance.' A short note above the button sets the expectation ('By confirming this appointment, you commit to attending') and the button names amount and method: 'Pay €70 by card'.",
+      "apply": "The content and order of Eleva's phone summary: person with profession, time as a range, price, cancellation in one sentence, then a note and a button that names the amount.",
+      "query": "appointment booking review and pay screen with sticky pay button"
+    },
+    {
+      "id": "04-booking-checkout/05",
+      "file": "img/05-fresha-review-sticky-total.jpg",
+      "app": "Fresha",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/18644903-663c-467c-9d55-10afae6c79f4?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Phone review step with an order card and a fixed total bar",
+      "why": "'Review and continue' shows one card: the business with photo and rating, the date, the time with duration ('1.45 to 2.00 pm (15 mins duration)'), the service line with its price, a fee line, the total, and 'Discounts and benefits' with an 'Add' button. A bar fixed to the bottom keeps 'Total US$15,45' and 'Continue' in view however far the page scrolls.",
+      "apply": "A fixed bottom bar with the total and the pay button on phones; promo code and tax number as 'Add' rows in the order card; time written with its duration.",
+      "query": "appointment booking review and pay screen with sticky pay button"
+    },
+    {
+      "id": "04-booking-checkout/06",
+      "file": "img/06-zoom-week-slot-picker.jpg",
+      "app": "Zoom",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/c77a8c31-632c-4e30-8450-16dfc49b876e?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Week-column time picker with time zone, month calendar and empty days",
+      "why": "The same layout as Eleva's desktop picker, with the gaps filled. Day columns list every open time, an empty day says 'No availability' in its column, and the time zone is a menu at the top left of the grid ('(GMT+07:00) Western Indonesia Time, Jakarta') with a 24-hour switch. A month calendar on the left marks the days that have times, and the host, session name, length and way of meeting stay beside it. A scheduling tool, kept for its structure.",
+      "apply": "Say 'No times' in an empty day; mark which days have times in the date picker; keep the time zone on the picker itself; show the whole day or group it, not four times and '+11 more'.",
+      "query": "appointment booking date and time slot picker with time zone"
+    },
+    {
+      "id": "04-booking-checkout/07",
+      "file": "img/07-future-pro-mobile-slot-picker.jpg",
+      "app": "Future Pro",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/56a56b7d-7c3b-4137-8113-d729758477b6?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Phone time picker: day chips, two-column times, a button that repeats the choice",
+      "why": "A coaching product. The title names the person ('Book your kickoff call with Lee.') and says why the call matters. A row of day chips sits above a two-column grid of times with large tap targets. The bottom of the screen keeps 'Back' and a filled button that repeats the choice, 'Book Thu, Jul 2 at 12:00...', and there is a way out when nothing fits: 'None of these times work for me'.",
+      "apply": "Eleva's phone layout for the time step: day chips, one day's times at a time in two or three columns, the button's place reserved from the start, and an escape when no time fits (a later-dates link or a message to the expert).",
+      "query": "health app appointment date and time slot picker"
+    },
+    {
+      "id": "04-booking-checkout/08",
+      "file": "img/08-fresha-fully-booked-next-available.jpg",
+      "app": "Fresha",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/2d59480f-6238-48cd-a235-a03d498894f4?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A day with no times, handled as a next step",
+      "why": "On a fully booked day the picker says so in a sentence with the professional's name ('Denise is fully booked on this date'), gives the next date with times ('Available from Wed, 14 Aug') and offers two buttons, 'Go to next available date' and 'Check all professionals', plus a waitlist link. Days with no times are struck through in the date row. The summary card on the right keeps the business, service, price and a Continue button that stays disabled until a time is chosen.",
+      "apply": "Empty and slot-taken states that name what happened and offer the nearest open time as a button; unavailable days greyed in the date row; the continue button visible from the start inside the summary.",
+      "query": "booking checkout error that the selected time is no longer available"
+    },
+    {
+      "id": "04-booking-checkout/09a",
+      "file": "img/09a-headspace-confirm-policies.jpg",
+      "app": "Headspace",
+      "platform": "web",
+      "type": "flow",
+      "mobbin_url": "https://mobbin.com/flows/b46dac23-c0f1-4b3f-b506-ef8fea7c14d7?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Therapy booking: policies as readable rows, one act of agreement",
+      "why": "A therapy booking. 'Confirm your appointment' keeps the clinician's photo, name, credential, date, time with time zone and place in an 'Appointment details' card on the left. On the right, each document (rescheduling and cancellation policy, disclosure statement, clinical informed consent) is a row with a title, a one-sentence summary and an arrow to read it in full. Agreement happens once, at the bottom, with one checkbox. The chrome is a three-step bar and a close button.",
+      "apply": "Present each notice as a named row with a one-line plain summary and a way to read it, and ask for as few separate ticks as the law allows. Eleva keeps one explicit tick for health data and folds the rest into a sentence. The expert's photo and credential stay visible while agreeing.",
+      "query": "telehealth app appointment booking"
+    },
+    {
+      "id": "04-booking-checkout/09b",
+      "file": "img/09b-headspace-session-scheduled.jpg",
+      "app": "Headspace",
+      "platform": "web",
+      "type": "flow",
+      "mobbin_url": "https://mobbin.com/flows/b46dac23-c0f1-4b3f-b506-ef8fea7c14d7?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Therapy booking confirmation that feels like an arrival",
+      "why": "The page changes colour for the final step and greets the member by name: 'You're all set, Alex! Your session is scheduled. We're looking forward to seeing you.' It says when the email arrives. The card repeats the clinician with photo and credential, the date, the time and the place, then lists 'Next Steps' as three numbered actions, one of which is to complete a pre-appointment assessment 'to help your therapist prepare'.",
+      "apply": "A headline with the member's name and a warm sentence; the expert's face on the confirmation; next steps as numbered actions that include preparing for the session. Eleva keeps its own palette and does not need the QR code.",
+      "query": "telehealth app appointment booking"
+    },
+    {
+      "id": "04-booking-checkout/10",
+      "file": "img/10-warby-parker-confirmed-next-actions.jpg",
+      "app": "Warby Parker",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/49e69531-025b-4dee-b457-397896728321?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Confirmation headline that states the appointment, with ranked next actions",
+      "why": "An eye exam booking. The headline is the appointment itself: 'See you Wednesday at 9:45 a.m. at Burlingame Ave.!' One sentence confirms it and says an email is coming. Three actions follow in clear order of weight: a filled 'Start digital intake form', an outlined 'Add appointment to calendar' and a text link 'Book another appointment'.",
+      "apply": "Write Eleva's thank-you headline as the session ('See you Friday 11 December at 16:00') and rank the actions: calendar first, then anything that prepares the session, then the Space invitation.",
+      "query": "appointment confirmed screen with add to calendar"
+    },
+    {
+      "id": "04-booking-checkout/11",
+      "file": "img/11-calcom-confirmation-add-to-calendar.jpg",
+      "app": "Cal.com",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/89fb725d-05c6-4acd-9091-66c50f16e4ec?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Booking confirmation as a receipt: what, when, who, where, change, calendar",
+      "why": "The confirmation says the email and calendar invitation have been sent, then lists What, When (date, time range and time zone), Who (both people with their email addresses), Where (the video link) and the notes the booker wrote. Below that: 'Need to make a change? Cancel', and 'Add to calendar' with one icon per calendar service. A scheduling tool, kept for its structure.",
+      "apply": "Show the email address the confirmation went to, the time as a range with its zone, and the note she wrote; put the change link on the page; offer Google, Apple and Outlook calendar choices in place of one file download.",
+      "query": "appointment booking confirmation page with add to calendar buttons"
+    },
+    {
+      "id": "04-booking-checkout/12",
+      "file": "img/12-oyster-account-invitation.jpg",
+      "app": "Oyster",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/3106bd0a-31eb-4294-92f4-6083aea05d8b?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Account invitation as a separate band after a guest finishes a task",
+      "why": "Mobbin files this under Oyster; the screen is a DocuSign completion page reached from an Oyster flow. A guest has just finished signing. The top of the card is only about what she did ('You've finished signing!' and when the copy arrives by email). The invitation sits in its own tinted band below: one sentence of benefit ('Access, track and store all your documents'), the reassurance ('No obligation, no credit card required') and one button. A document product, kept for its structure.",
+      "apply": "Separate the Space invitation from the confirmation and from the calendar button. One band, one benefit sentence, one reassurance ('Your name and email are already filled in'), one button: 'Create your Space'.",
+      "query": "order confirmation page inviting a guest to create an account"
+    }
+  ],
+  "judging_criteria": [
+    "On every step, on desktop and on a phone, can the member see who she is booking, the service, the time with its zone, the price and one dated cancellation sentence without scrolling back? (Airbnb 04-booking-checkout/02a, Alan 04-booking-checkout/04)",
+    "Is the funnel free of site navigation and a marketing footer from the first step to the thank-you page, with only logo, language, help and a secure-booking mark? (GetYourGuide 04-booking-checkout/01, Airbnb 04-booking-checkout/02a)",
+    "Does the pay step show one order summary with a price line, any discount, the total paid today, and promo code and tax number as links inside it, and on phones a fixed bar with the total and the pay button? (Turo 04-booking-checkout/03, Fresha 04-booking-checkout/05)",
+    "Within one thumb's reach of the pay button, is there a security line, the dated refund promise and what happens right after paying, and is the hold shown there as a calm promise? (GetYourGuide 04-booking-checkout/01, Alan 04-booking-checkout/04)",
+    "Does the member make at most two ticks to book, with health data consent as its own explicit tick, the other notices as a linked sentence or readable rows, and optional choices clearly apart from required ones? (Headspace 04-booking-checkout/09a, Turo 04-booking-checkout/03)",
+    "On a phone, does the time step show day chips and at least six times for the chosen day on the first screen, grey out days with no times, and offer the next available time when a day or week is empty? (Future Pro 04-booking-checkout/07, Fresha 04-booking-checkout/08, Zoom 04-booking-checkout/06)",
+    "Does the thank-you page name the expert and the time in its headline, show the email address used, put add-to-calendar first with a choice of calendars, list dated next steps, and keep the Space invitation in its own band with a benefit and 'details already filled in'? (Headspace 04-booking-checkout/09b, Warby Parker 04-booking-checkout/10, Cal.com 04-booking-checkout/11, Oyster 04-booking-checkout/12)"
+  ]
+}

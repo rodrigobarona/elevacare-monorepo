@@ -32,6 +32,45 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-14: Design work starts on Mobbin and is judged against it (active)
+
+- Decision: every design challenge, UX problem or UI improvement follows one
+  loop. Search Mobbin for how shipped products solve it, save the references
+  in `_context/mobbin/library/{surface}/`, capture the screen before, build
+  one slice, capture it after, and have the review panel score the result
+  against that surface's judging criteria with the references open. Three
+  judges score each slice out of 10: UI and visual design; UX and UX writing;
+  trust, legal, compliance and accessibility. A slice ships only when every
+  judge scores 8.5 or more (founder, 2026-11-14) and its P1 findings are
+  closed; otherwise it is revised and judged again. Mobbin shows patterns, not
+  templates: the logo, palette, type and voice stay.
+- What exists (audit and plan only; no design change is built):
+  - Baseline `2026-11-14-before`: 100 screenshots and 8 videos, desktop and
+    phone, of ten surfaces, taken on loopback with
+    `e2e/design-capture.spec.ts` (opt-in, `E2E_DESIGN_CAPTURE=1`).
+  - A six-seat panel (marketing, marketplace and profile, booking and
+    checkout, onboarding, dashboards, trust/legal/governance) filed 127
+    findings (37 P1, 73 P2, 17 P3) and saved 119 Mobbin references.
+  - The plan, with before captures, findings, references and a roadmap of
+    small slices: [`design-audit/index.html`](design-audit/index.html),
+    built by `design-audit/build.mjs` from `references.json` and
+    `design-audit/plan.json`.
+- Out of scope for this pass, not audited: video call and waiting room,
+  emails, `apps/docs`, admin, team and academy; open mega menus, the cookie
+  banner, the choose-how-to-meet step and error states; dark mode and PT/ES
+  layouts; accessibility tooling. The demo data has no photos and the demo
+  member has no bookings, so profile and member-home designs were judged on
+  placeholders (slice D0.1 fixes that).
+- Found while capturing, not fixed: `/onboarding` in `apps/account` sets a
+  cookie during render and returns the error page for a signed-in person who
+  already has a membership (slice D0.2).
+- Slices marked "Legal review first" (consents at booking, privacy controls,
+  report a concern, policy layout) are design proposals, not legal advice.
+- Owner: founder (Rodrigo Barona)
+- Status: `active` for the loop; every slice in the roadmap is `proposed`.
+- Related: `design-audit/plan.json`, `_context/mobbin/readme.md`,
+  `audits/2026-10-ux-inventory.md`, `expert-profile-booking-ux-spec.md`.
+
 ### 2026-11-14: Heidi review panel follow-ups: no AI training in the contract, extractive AI drafts, trust index (active)
 
 - Decision: apply the five gaps named by the review panel
