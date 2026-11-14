@@ -1,4 +1,5 @@
-import { and, eq, isNull } from "drizzle-orm"
+import { and, eq, inArray, isNull, notInArray } from "drizzle-orm"
+import { mediaBaseUrl, mediaUrl } from "@eleva/config/media-host"
 import { db } from "../client"
 import { withOrgContext, withPlatformAdminContext, type Tx } from "../context"
 import * as auth from "../schema/auth"
@@ -13,12 +14,14 @@ import {
   hashDemoBookingLinkToken,
 } from "./demo-booking-links"
 import {
+  DEMO_EXPERT_FIXTURES,
   OFFER_FIXTURE_DAY_END,
   OFFER_FIXTURE_DAY_START,
   OFFER_FIXTURE_WEEKDAYS,
   PHYSIOTHERAPY_FIXTURE,
   QUICK_CHAT_FIXTURE,
   type OfferFixture,
+  type OfferFixturePersona,
 } from "./offer-fixture-specs"
 
 async function upsertUser(email: string, name: string): Promise<string> {
@@ -28,7 +31,13 @@ async function upsertUser(email: string, name: string): Promise<string> {
     .from(auth.user)
     .where(eq(auth.user.email, email))
     .limit(1)
-  if (existing) return existing.id
+  if (existing) {
+    await client
+      .update(auth.user)
+      .set({ name })
+      .where(eq(auth.user.id, existing.id))
+    return existing.id
+  }
   const [inserted] = await client
     .insert(auth.user)
     .values({
@@ -48,7 +57,13 @@ async function upsertOrg(slug: string, name: string): Promise<string> {
     .from(auth.organization)
     .where(eq(auth.organization.slug, slug))
     .limit(1)
-  if (existing) return existing.id
+  if (existing) {
+    await client
+      .update(auth.organization)
+      .set({ name })
+      .where(eq(auth.organization.id, existing.id))
+    return existing.id
+  }
   const [inserted] = await client
     .insert(auth.organization)
     .values({
@@ -79,6 +94,15 @@ async function ensureMembership(userId: string, orgId: string) {
   })
 }
 
+/** Portrait URL on this environment's media host, or null without one. */
+function portraitUrl(
+  username: string,
+  persona: OfferFixturePersona
+): string | null {
+  if (!persona.portrait || !mediaBaseUrl()) return null
+  return mediaUrl(`demo/experts/${username}.jpg`)
+}
+
 async function upsertExpert(
   tx: Tx,
   input: {
@@ -90,14 +114,33 @@ async function upsertExpert(
     practiceCountry: string
     serviceCountries: string[]
     worldwideRemote: boolean
+    persona: OfferFixturePersona
   }
 ): Promise<string> {
+  const content = {
+    displayName: input.displayName,
+    headline: input.persona.headline,
+    bio: input.persona.bio,
+    // A rich or translated bio from an earlier seed or edit would win over
+    // `bio` on the profile; clear it so the persona is what shows.
+    bioRich: null,
+    bioSourceLocale: input.persona.bioLocale ?? "en",
+    credentials: input.persona.credentials,
+    avatarUrl: portraitUrl(input.username, input.persona),
+    // No links: a fictional expert must never point at a real site.
+    socialLinks: [],
+  }
   const [existing] = await tx
     .select({ id: main.expertProfiles.id })
     .from(main.expertProfiles)
     .where(eq(main.expertProfiles.username, input.username))
     .limit(1)
   if (existing) {
+    // Keep seeded profiles current when the persona changes.
+    await tx
+      .update(main.expertProfiles)
+      .set(content)
+      .where(eq(main.expertProfiles.id, existing.id))
     return existing.id
   }
   const [inserted] = await tx
@@ -106,8 +149,7 @@ async function upsertExpert(
       orgId: input.orgId,
       userId: input.userId,
       username: input.username,
-      displayName: input.displayName,
-      headline: "Reference offer fixture.",
+      ...content,
       languages: input.languages,
       practiceCountry: input.practiceCountry,
       practiceCountries: [input.practiceCountry],
@@ -119,6 +161,54 @@ async function upsertExpert(
     })
     .returning({ id: main.expertProfiles.id })
   return inserted!.id
+}
+
+/** List the expert under exactly the persona's categories. */
+async function ensureListings(
+  tx: Tx,
+  input: { orgId: string; expertProfileId: string; categories: string[] }
+) {
+  if (input.categories.length === 0) return
+  const rows = await tx
+    .select({
+      id: main.expertCategories.id,
+      slug: main.expertCategories.slug,
+    })
+    .from(main.expertCategories)
+    .where(inArray(main.expertCategories.slug, input.categories))
+  const bySlug = new Map(rows.map((row) => [row.slug, row.id]))
+  // Drop links from earlier seeds that the persona no longer lists.
+  await tx
+    .delete(main.expertListings)
+    .where(
+      and(
+        eq(main.expertListings.expertProfileId, input.expertProfileId),
+        notInArray(main.expertListings.categoryId, [...bySlug.values()])
+      )
+    )
+  for (const [sortOrder, slug] of input.categories.entries()) {
+    const categoryId = bySlug.get(slug)
+    if (!categoryId) {
+      throw new Error(
+        `category "${slug}" missing: run pnpm db:seed:categories first`
+      )
+    }
+    await tx
+      .insert(main.expertListings)
+      .values({
+        orgId: input.orgId,
+        expertProfileId: input.expertProfileId,
+        categoryId,
+        sortOrder,
+      })
+      .onConflictDoUpdate({
+        target: [
+          main.expertListings.expertProfileId,
+          main.expertListings.categoryId,
+        ],
+        set: { sortOrder },
+      })
+  }
 }
 
 async function ensureHandle(handle: string, ownerId: string) {
@@ -200,6 +290,7 @@ async function upsertEventType(
     expertProfileId: string
     slug: string
     title: main.LocalizedText
+    description?: main.LocalizedText
     kind: "clinical" | "non_clinical"
     durationMinutes: number
     priceAmount: number
@@ -218,12 +309,16 @@ async function upsertEventType(
     )
     .limit(1)
   if (existing) {
-    if (input.published !== undefined) {
-      await tx
-        .update(main.eventTypes)
-        .set({ published: input.published })
-        .where(eq(main.eventTypes.id, existing.id))
-    }
+    await tx
+      .update(main.eventTypes)
+      .set({
+        title: input.title,
+        ...(input.description ? { description: input.description } : {}),
+        ...(input.published !== undefined
+          ? { published: input.published }
+          : {}),
+      })
+      .where(eq(main.eventTypes.id, existing.id))
     return existing.id
   }
   const [inserted] = await tx
@@ -233,6 +328,7 @@ async function upsertEventType(
       expertProfileId: input.expertProfileId,
       slug: input.slug,
       title: input.title,
+      description: input.description,
       kind: input.kind,
       visibility: "public",
       durationMinutes: input.durationMinutes,
@@ -368,7 +464,14 @@ async function upsertLocation(
       )
     )
     .limit(1)
-  if (existing) return existing.id
+  if (existing) {
+    // Fixture addresses are fictional; keep earlier rows in step.
+    await tx
+      .update(main.expertPracticeLocations)
+      .set({ address: input.address, city: input.city, region: input.region })
+      .where(eq(main.expertPracticeLocations.id, existing.id))
+    return existing.id
+  }
   const [inserted] = await tx
     .insert(main.expertPracticeLocations)
     .values({
@@ -406,6 +509,12 @@ async function seedFixture(
       userId,
       orgId,
       ...fixture.profile,
+      persona: fixture.persona,
+    })
+    await ensureListings(tx, {
+      orgId,
+      expertProfileId: profileId,
+      categories: fixture.persona.categories,
     })
     const scheduleIds = new Map<string, string>()
     for (const schedule of fixture.schedules) {
@@ -461,6 +570,7 @@ async function seedFixture(
       orgId,
       expertProfileId: expertId,
       reviewerUserId: userId,
+      licence: fixture.licence,
     })
   )
   await ensureHandle(fixture.profile.username, expertId)
@@ -527,4 +637,7 @@ async function seedPrivateInvite(tx: Tx, seeded: SeededFixture) {
 export async function seedOfferFixtures() {
   await seedFixture(QUICK_CHAT_FIXTURE)
   await seedFixture(PHYSIOTHERAPY_FIXTURE, seedPrivateInvite)
+  for (const fixture of DEMO_EXPERT_FIXTURES) {
+    await seedFixture(fixture)
+  }
 }

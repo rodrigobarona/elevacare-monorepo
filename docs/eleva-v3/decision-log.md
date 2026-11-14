@@ -32,6 +32,36 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-14: Demo experts for design work are fictional and dev-only (active)
+
+- Decision: the demo seed (`pnpm db:seed:demo`) now has seven fictional
+  experts with portraits, bios, fictional institutions and `DEMO-` register
+  numbers, and a demo member (Leonor Almeida) with four free sessions, so
+  design slices are judged on realistic content (slice D0.1 of
+  [`design-audit/plan.json`](design-audit/plan.json)).
+- Guard: the seed refuses a production deployment and the production Neon
+  endpoint (`assertNotProductionDatabase` in `@eleva/config/env`), and
+  `media:demo-portrait` writes only to a dev public bucket. Seeded sessions
+  use free offers and write the same `free` payment row as the real free
+  flow, so no payout, fee, refund or reconciliation job sees fake money.
+- **Needs legal review:** the portraits are Pexels photos of real,
+  identifiable people shown as named, licensed clinicians (one as "Dr.").
+  They stay dev-only. Design captures that show them
+  (`design-audit/captures/*`) must not be reused in marketing, sales or
+  investor material until legal clears it or the portraits are replaced.
+- Open: `demo.ts` keeps the real Patrícia Mota register entry for the
+  empty-profile demo (`patimota`); confirm she agrees to appear in demo and
+  design material.
+- Judges panel (three rounds): UI 8.6, UX and writing 8.6, trust, legal and
+  accessibility 8.7. The new seed makes three app defects visible, now
+  queued for the member and profile slices: phone and in-person sessions
+  show a video "Join session" button, a free session reads "€0.00 · Paid",
+  and an empty profile says "See their work below" with nothing below.
+- Owner: founder (Rodrigo Barona)
+- Status: `active`
+- Related: `packages/db/src/seed/offer-fixture-specs.ts`,
+  `packages/db/src/seed/demo-member-sessions.ts`.
+
 ### 2026-11-14: Design work starts on Mobbin and is judged against it (active)
 
 - Decision: every design challenge, UX problem or UI improvement follows one

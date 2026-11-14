@@ -51,15 +51,15 @@ const SEEDS: SeedPersona[] = [
     email: "clinic.admin@example.test",
     displayName: "Clinic Admin",
     orgType: "team",
-    orgDisplayName: "Clinica Mota",
+    orgDisplayName: "Clínica Mota",
     orgSlug: "clinicamota",
     role: "owner",
   },
   {
     email: "member.demo@example.test",
-    displayName: "Demo Member",
+    displayName: "Leonor Almeida",
     orgType: "personal",
-    orgDisplayName: "Demo Member (personal)",
+    orgDisplayName: "Leonor's Space",
     orgSlug: "member-demo",
     role: "owner",
   },
@@ -75,7 +75,12 @@ async function upsertPersona(persona: SeedPersona) {
     .limit(1)
 
   let userId = existingUser?.id
-  if (!userId) {
+  if (userId) {
+    await client
+      .update(auth.user)
+      .set({ name: persona.displayName })
+      .where(eq(auth.user.id, userId))
+  } else {
     const [inserted] = await client
       .insert(auth.user)
       .values({
@@ -95,7 +100,12 @@ async function upsertPersona(persona: SeedPersona) {
     .limit(1)
 
   let orgId = existingOrg?.id
-  if (!orgId) {
+  if (orgId) {
+    await client
+      .update(auth.organization)
+      .set({ name: persona.orgDisplayName })
+      .where(eq(auth.organization.id, orgId))
+  } else {
     const [inserted] = await client
       .insert(auth.organization)
       .values({
@@ -128,6 +138,8 @@ async function upsertPersona(persona: SeedPersona) {
   return { userId, orgId }
 }
 
+const LEGACY_PLACEHOLDER_HEADLINE = "Available for consultations on Eleva."
+
 async function upsertExpertProfile(args: {
   userId: string
   orgId: string
@@ -140,7 +152,19 @@ async function upsertExpertProfile(args: {
     .from(main.expertProfiles)
     .where(eq(main.expertProfiles.username, args.username))
     .limit(1)
-  if (existing) return existing.id
+  if (existing) {
+    // Earlier seeds wrote developer placeholder text that members could see.
+    await client
+      .update(main.expertProfiles)
+      .set({ headline: null, bio: null })
+      .where(
+        and(
+          eq(main.expertProfiles.id, existing.id),
+          eq(main.expertProfiles.headline, LEGACY_PLACEHOLDER_HEADLINE)
+        )
+      )
+    return existing.id
+  }
 
   const [inserted] = await client
     .insert(main.expertProfiles)
@@ -149,8 +173,7 @@ async function upsertExpertProfile(args: {
       userId: args.userId,
       username: args.username,
       displayName: args.displayName,
-      headline: "Available for consultations on Eleva.",
-      bio: "Demo seed profile. Replace with real bio in production.",
+      // The empty-profile demo: no headline, no bio, no services.
       languages: ["en", "pt"],
       practiceCountry: "PT",
       practiceCountries: ["PT"],
@@ -181,8 +204,7 @@ async function upsertClinicProfile(args: {
       orgId: args.orgId,
       slug: args.slug,
       displayName: args.displayName,
-      description:
-        "Demo seed clinic. Replace with real description in production.",
+      description: null,
       countryCode: "PT",
     })
     .returning({ id: main.clinicProfiles.id })
@@ -219,7 +241,7 @@ export async function seedDemo() {
     await upsertClinicProfile({
       orgId: clinic.orgId,
       slug: "clinicamota",
-      displayName: "Clinica Mota",
+      displayName: "Clínica Mota",
     })
   }
 

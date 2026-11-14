@@ -1,5 +1,6 @@
 import { EU_PHONE_COUNTRIES } from "@eleva/config"
-import type { LocalizedText } from "../schema/main"
+import type { ExpertCredential, LocalizedText } from "../schema/main"
+import type { FixtureLicence } from "./licence-fixture"
 
 export type OfferFixtureMode = {
   mode: "online" | "phone" | "in_person"
@@ -14,6 +15,8 @@ export type OfferFixtureMode = {
 export type OfferFixtureEventType = {
   slug: string
   title: LocalizedText
+  /** One sentence shown on the service card. */
+  description?: LocalizedText
   kind: "clinical" | "non_clinical"
   durationMinutes: number
   priceAmount: number
@@ -37,6 +40,29 @@ export type OfferFixtureSchedule = {
   isDefault?: boolean
 }
 
+/**
+ * What a member reads about the expert. Demo personas are fictional, and so
+ * are their institutions, addresses and `DEMO-` numbers; they exist so profile,
+ * explorer and dashboard designs are judged on realistic content instead of
+ * placeholders. Portraits are Pexels photos (credit in `portrait`); the seed
+ * never runs against production (`assertNotProductionDatabase`).
+ */
+export type OfferFixturePersona = {
+  headline: string
+  bio: string
+  /** Language the bio is written in; English unless set. */
+  bioLocale?: "pt" | "es"
+  credentials: ExpertCredential[]
+  /** Category slugs from `expert-categories.ts`, most relevant first. */
+  categories: string[]
+  /**
+   * Square portrait at `demo/experts/{username}.jpg` in the public bucket,
+   * uploaded with `pnpm --filter @eleva/media media:demo-portrait`. `null`
+   * keeps an expert without a photo, a state real profiles also have.
+   */
+  portrait: { pexelsId: string; photographer: string } | null
+}
+
 export type OfferFixture = {
   user: { email: string; name: string }
   org: { slug: string; name: string }
@@ -48,6 +74,9 @@ export type OfferFixture = {
     serviceCountries: string[]
     worldwideRemote: boolean
   }
+  persona: OfferFixturePersona
+  /** Fictional register entry; numbers carry a `DEMO-` prefix. */
+  licence: FixtureLicence
   schedules: OfferFixtureSchedule[]
   locations: OfferFixtureLocation[]
   eventTypes: OfferFixtureEventType[]
@@ -61,15 +90,39 @@ export const OFFER_FIXTURE_DAY_END = "17:00:00"
 const QUICK_CHAT_LANGUAGES = ["pt", "en", "es", "fr"]
 
 export const QUICK_CHAT_FIXTURE: OfferFixture = {
-  user: { email: "coach.quick@example.test", name: "Ana Quick" },
-  org: { slug: "anaquick", name: "Ana Quick (solo)" },
+  user: { email: "coach.quick@example.test", name: "Ana Rocha" },
+  org: { slug: "anaquick", name: "Ana Rocha" },
   profile: {
     username: "anaquick",
-    displayName: "Ana Quick",
+    displayName: "Ana Rocha",
     languages: QUICK_CHAT_LANGUAGES,
     practiceCountry: "PT",
     serviceCountries: [...EU_PHONE_COUNTRIES],
     worldwideRemote: true,
+  },
+  persona: {
+    headline:
+      "Nutritionist and health coach for perimenopause, sleep and energy",
+    bio: "I help women in their forties and fifties make sense of what is changing in their bodies and build habits that last. We start with a short chat about what matters to you, then agree on one or two small changes to try before we talk again. I work alongside your doctor, never instead of them.",
+    credentials: [
+      {
+        title: "Certified health coach",
+        institution: "Academia Aurora de Coaching",
+        year: 2019,
+      },
+      {
+        title: "BSc in Human Nutrition",
+        institution: "Universidade Aurora",
+        year: 2012,
+      },
+    ],
+    categories: ["nutrition", "wellness"],
+    portrait: { pexelsId: "16160809", photographer: "pessoas uem" },
+  },
+  licence: {
+    professionalBody: "ordem_nutricionistas",
+    licenceNumber: "DEMO-2560",
+    ersRegistrationNumber: "DEMO-E07",
   },
   schedules: [
     { name: "Online", timezone: "Europe/Lisbon", isDefault: true },
@@ -80,6 +133,11 @@ export const QUICK_CHAT_FIXTURE: OfferFixture = {
     {
       slug: "quick-chat",
       title: { en: "Quick chat", pt: "Conversa rápida", es: "Charla rápida" },
+      description: {
+        en: "A free 20-minute call to see whether coaching is right for you.",
+        pt: "Uma chamada gratuita de 20 minutos para perceber se o coaching é para si.",
+        es: "Una llamada gratuita de 20 minutos para ver si el coaching es para ti.",
+      },
       kind: "non_clinical",
       durationMinutes: 20,
       priceAmount: 0,
@@ -107,15 +165,43 @@ export const QUICK_CHAT_FIXTURE: OfferFixture = {
 const PHYSIO_LANGUAGES = ["pt", "en", "es"]
 
 export const PHYSIOTHERAPY_FIXTURE: OfferFixture = {
-  user: { email: "fisio.mota@example.test", name: "Fisio Mota" },
-  org: { slug: "fisiomota", name: "Fisio Mota (solo)" },
+  user: { email: "fisio.mota@example.test", name: "Inês Mota" },
+  org: { slug: "fisiomota", name: "Inês Mota" },
   profile: {
     username: "fisiomota",
-    displayName: "Fisio Mota",
+    displayName: "Inês Mota",
     languages: PHYSIO_LANGUAGES,
     practiceCountry: "PT",
     serviceCountries: ["PT", "ES"],
     worldwideRemote: false,
+  },
+  persona: {
+    headline: "Pelvic health physiotherapist",
+    bio: "I am a physiotherapist specialised in pelvic health. I see women in pregnancy, after birth and through menopause for leaking, pain, prolapse and getting back to sport. A first visit is a calm video conversation and a clear plan you can follow at home. In the clinic, any examination is explained first and only happens if you want it.",
+    credentials: [
+      {
+        title: "Postgraduate certificate in pelvic floor rehabilitation",
+        institution: "Instituto Ibérico de Saúde da Mulher",
+        year: 2019,
+      },
+      {
+        title: "MSc in Women's Health Physiotherapy",
+        institution: "Escola Superior de Saúde Lumen",
+        year: 2016,
+      },
+      {
+        title: "BSc in Physiotherapy",
+        institution: "Escola Superior de Saúde Lumen",
+        year: 2012,
+      },
+    ],
+    categories: ["pelvic-health", "physiotherapy"],
+    portrait: { pexelsId: "14208763", photographer: "Rene Terp" },
+  },
+  licence: {
+    professionalBody: "ordem_fisioterapeutas",
+    licenceNumber: "DEMO-1024",
+    ersRegistrationNumber: "DEMO-E06",
   },
   schedules: [
     { name: "Online", timezone: "Europe/Lisbon", isDefault: true },
@@ -126,7 +212,7 @@ export const PHYSIOTHERAPY_FIXTURE: OfferFixture = {
   locations: [
     {
       name: "Lisboa",
-      address: "Av. da Liberdade 100",
+      address: "Travessa das Camélias 18",
       city: "Lisboa",
       region: "Lisboa",
       country: "PT",
@@ -135,7 +221,7 @@ export const PHYSIOTHERAPY_FIXTURE: OfferFixture = {
     },
     {
       name: "Porto",
-      address: "Rua de Santa Catarina 200",
+      address: "Rua do Miradouro Azul 40",
       city: "Porto",
       region: "Porto",
       country: "PT",
@@ -143,7 +229,7 @@ export const PHYSIOTHERAPY_FIXTURE: OfferFixture = {
     },
     {
       name: "Madrid",
-      address: "Calle de Alcalá 50",
+      address: "Calle de las Acacias Blancas 9",
       city: "Madrid",
       region: "Madrid",
       country: "ES",
@@ -157,6 +243,11 @@ export const PHYSIOTHERAPY_FIXTURE: OfferFixture = {
         en: "First visit",
         pt: "Primeira consulta",
         es: "Primera visita",
+      },
+      description: {
+        en: "We talk through what is going on and leave with a plan you can start at home.",
+        pt: "Falamos sobre o que se passa e sai daqui com um plano para começar em casa.",
+        es: "Hablamos de lo que te pasa y te llevas un plan para empezar en casa.",
       },
       kind: "clinical",
       durationMinutes: 60,
@@ -175,7 +266,16 @@ export const PHYSIOTHERAPY_FIXTURE: OfferFixture = {
     },
     {
       slug: "follow-up",
-      title: { en: "Follow-up", pt: "Seguimento", es: "Seguimiento" },
+      title: {
+        en: "Follow-up",
+        pt: "Consulta de seguimento",
+        es: "Consulta de seguimiento",
+      },
+      description: {
+        en: "Hands-on treatment in the clinic and an updated home exercise plan.",
+        pt: "Tratamento presencial na clínica e um plano de exercícios atualizado.",
+        es: "Tratamiento presencial en la clínica y un plan de ejercicios actualizado.",
+      },
       kind: "clinical",
       durationMinutes: 45,
       priceAmount: 4500,
@@ -212,3 +312,452 @@ export const PHYSIOTHERAPY_FIXTURE: OfferFixture = {
     },
   ],
 }
+
+const ONLINE_LISBON: OfferFixtureSchedule = {
+  name: "Online",
+  timezone: "Europe/Lisbon",
+  isDefault: true,
+}
+
+function onlineOffer(input: {
+  slug: string
+  title: LocalizedText
+  description: LocalizedText
+  kind: "clinical" | "non_clinical"
+  durationMinutes: number
+  priceCents: number
+  languages: string[]
+  countries: string[]
+  phone?: boolean
+}): OfferFixtureEventType {
+  const scope = {
+    countryScopeType: "list" as const,
+    countryScopeCodes: input.countries,
+    languages: input.languages,
+    priceCents: input.priceCents,
+  }
+  return {
+    slug: input.slug,
+    title: input.title,
+    description: input.description,
+    kind: input.kind,
+    durationMinutes: input.durationMinutes,
+    priceAmount: input.priceCents,
+    languages: input.languages,
+    modes: [
+      { mode: "online", schedule: "Online", ...scope },
+      ...(input.phone
+        ? [{ mode: "phone" as const, schedule: "Online", ...scope }]
+        : []),
+    ],
+  }
+}
+
+/**
+ * More fictional experts so the explorer, homepage and filters have
+ * something to show. One of them (Clara Neves) has no photo on purpose.
+ */
+export const DEMO_EXPERT_FIXTURES: OfferFixture[] = [
+  {
+    user: { email: "marta.sousa@example.test", name: "Marta Sousa" },
+    org: { slug: "martasousa", name: "Marta Sousa" },
+    profile: {
+      username: "martasousa",
+      displayName: "Marta Sousa",
+      languages: ["pt", "en"],
+      practiceCountry: "PT",
+      serviceCountries: ["PT"],
+      worldwideRemote: false,
+    },
+    persona: {
+      headline: "Midwife for pregnancy, birth plans and the first weeks home",
+      bio: "I have been a midwife for twelve years, first in a Lisbon maternity ward and now on my own. I help you prepare for birth, write a birth plan you actually understand, and find your feet in the first weeks at home. Bring every question, including the ones that feel small.",
+      credentials: [
+        {
+          title: "Specialist nurse in maternal and obstetric health",
+          institution: "Escola Superior de Enfermagem Lumen",
+          year: 2013,
+        },
+        {
+          title: "BSc in Nursing",
+          institution: "Universidade Aurora",
+          year: 2010,
+        },
+      ],
+      categories: ["midwifery", "lactation"],
+      portrait: { pexelsId: "29995629", photographer: "Tran Nhu Tuan" },
+    },
+    licence: {
+      professionalBody: "ordem_enfermeiros",
+      licenceNumber: "DEMO-2048",
+      ersRegistrationNumber: "DEMO-E01",
+    },
+    schedules: [
+      ONLINE_LISBON,
+      { name: "Lisboa practice", timezone: "Europe/Lisbon" },
+    ],
+    locations: [
+      {
+        name: "Lisboa",
+        address: "Rua das Andorinhas 7",
+        city: "Lisboa",
+        region: "Lisboa",
+        country: "PT",
+        timezone: "Europe/Lisbon",
+        isPrimary: true,
+      },
+    ],
+    eventTypes: [
+      {
+        slug: "intro-call",
+        title: {
+          en: "Meet your midwife",
+          pt: "Conheça a sua parteira",
+          es: "Conoce a tu matrona",
+        },
+        description: {
+          en: "A free 20-minute introduction, by video or at my Lisbon practice.",
+          pt: "Uma apresentação gratuita de 20 minutos, por vídeo ou no meu consultório em Lisboa.",
+          es: "Una presentación gratuita de 20 minutos, por vídeo o en mi consulta de Lisboa.",
+        },
+        kind: "non_clinical",
+        durationMinutes: 20,
+        priceAmount: 0,
+        languages: ["pt", "en"],
+        modes: [
+          {
+            mode: "online",
+            schedule: "Online",
+            countryScopeType: "list",
+            countryScopeCodes: ["PT"],
+            languages: ["pt", "en"],
+          },
+          {
+            mode: "in_person",
+            schedule: "Lisboa practice",
+            location: "Lisboa",
+            countryScopeType: "list",
+            countryScopeCodes: ["PT"],
+            languages: ["pt", "en"],
+          },
+        ],
+      },
+      onlineOffer({
+        slug: "pregnancy-consultation",
+        title: {
+          en: "Pregnancy consultation",
+          pt: "Consulta de gravidez",
+          es: "Consulta de embarazo",
+        },
+        description: {
+          en: "Your questions answered, and a plan for the weeks ahead.",
+          pt: "Respostas às suas perguntas e um plano para as próximas semanas.",
+          es: "Respuestas a tus preguntas y un plan para las próximas semanas.",
+        },
+        kind: "clinical",
+        durationMinutes: 50,
+        priceCents: 5500,
+        languages: ["pt", "en"],
+        countries: ["PT"],
+        phone: true,
+      }),
+      onlineOffer({
+        slug: "birth-plan",
+        title: {
+          en: "Birth plan session",
+          pt: "Sessão de plano de parto",
+          es: "Sesión de plan de parto",
+        },
+        description: {
+          en: "We write your birth plan together, in words your team will follow.",
+          pt: "Escrevemos juntas o seu plano de parto, numa linguagem que a sua equipa entende.",
+          es: "Escribimos juntas tu plan de parto, en palabras que tu equipo entienda.",
+        },
+        kind: "non_clinical",
+        durationMinutes: 75,
+        priceCents: 7000,
+        languages: ["pt", "en"],
+        countries: ["PT"],
+      }),
+    ],
+  },
+  {
+    user: { email: "joana.lima@example.test", name: "Joana Lima" },
+    org: { slug: "joanalima", name: "Joana Lima" },
+    profile: {
+      username: "joanalima",
+      displayName: "Joana Lima",
+      languages: ["pt", "en", "es"],
+      practiceCountry: "PT",
+      serviceCountries: ["PT", "ES"],
+      worldwideRemote: false,
+    },
+    persona: {
+      headline: "Nutritionist for fertility, PCOS and pregnancy",
+      bio: "I help women eat well for fertility, PCOS and pregnancy without strict diets or long lists of banned foods. We look at your routine, your test results if you have them, and what you enjoy eating, then build a plan around your real week.",
+      credentials: [
+        {
+          title: "MSc in Clinical Nutrition",
+          institution: "Universidade Aurora",
+          year: 2017,
+        },
+        {
+          title: "BSc in Nutrition Sciences",
+          institution: "Universidade Aurora",
+          year: 2014,
+        },
+      ],
+      categories: ["nutrition", "fertility"],
+      portrait: { pexelsId: "14566062", photographer: "Luthfi Ramaditya" },
+    },
+    licence: {
+      professionalBody: "ordem_nutricionistas",
+      licenceNumber: "DEMO-3317",
+      ersRegistrationNumber: "DEMO-E02",
+    },
+    schedules: [ONLINE_LISBON],
+    locations: [],
+    eventTypes: [
+      onlineOffer({
+        slug: "discovery-call",
+        title: {
+          en: "Free discovery call",
+          pt: "Chamada de apresentação gratuita",
+          es: "Llamada de presentación gratuita",
+        },
+        description: {
+          en: "15 minutes to see whether nutrition support fits what you need.",
+          pt: "15 minutos para perceber se o acompanhamento nutricional é o que precisa.",
+          es: "15 minutos para ver si el acompañamiento nutricional es lo que necesitas.",
+        },
+        kind: "non_clinical",
+        durationMinutes: 15,
+        priceCents: 0,
+        languages: ["pt", "en", "es"],
+        countries: ["PT", "ES"],
+      }),
+      onlineOffer({
+        slug: "first-consultation",
+        title: {
+          en: "First nutrition consultation",
+          pt: "Primeira consulta de nutrição",
+          es: "Primera consulta de nutrición",
+        },
+        description: {
+          en: "A full look at your routine and a plan built around your week.",
+          pt: "Uma análise completa da sua rotina e um plano feito para a sua semana.",
+          es: "Un repaso completo de tu rutina y un plan hecho para tu semana.",
+        },
+        kind: "clinical",
+        durationMinutes: 60,
+        priceCents: 6500,
+        languages: ["pt", "en", "es"],
+        countries: ["PT", "ES"],
+      }),
+      onlineOffer({
+        slug: "follow-up",
+        title: {
+          en: "Follow-up",
+          pt: "Consulta de seguimento",
+          es: "Consulta de seguimiento",
+        },
+        description: {
+          en: "We check what worked and adjust the plan.",
+          pt: "Vemos o que resultou e ajustamos o plano.",
+          es: "Vemos qué ha funcionado y ajustamos el plan.",
+        },
+        kind: "clinical",
+        durationMinutes: 30,
+        priceCents: 4000,
+        languages: ["pt", "en", "es"],
+        countries: ["PT", "ES"],
+      }),
+    ],
+  },
+  {
+    user: { email: "sofia.costa@example.test", name: "Sofia Costa" },
+    org: { slug: "sofiacosta", name: "Sofia Costa" },
+    profile: {
+      username: "sofiacosta",
+      displayName: "Sofia Costa",
+      languages: ["pt", "en"],
+      practiceCountry: "PT",
+      serviceCountries: ["PT"],
+      worldwideRemote: false,
+    },
+    persona: {
+      headline: "Perinatal psychologist",
+      bio: "I support women through fertility treatment, pregnancy, loss and the months after birth. Sessions are a place to say what you cannot say anywhere else, at your pace. I use cognitive behavioural and compassion-focused approaches.",
+      credentials: [
+        {
+          title: "Training in perinatal mental health",
+          institution: "Instituto Ibérico de Saúde da Mulher",
+          year: 2020,
+        },
+        {
+          title: "MSc in Clinical and Health Psychology",
+          institution: "Universidade Aurora",
+          year: 2015,
+        },
+      ],
+      categories: ["psychology", "fertility"],
+      portrait: { pexelsId: "3936894", photographer: "Татьяна Танатова" },
+    },
+    licence: {
+      professionalBody: "ordem_psicologos",
+      licenceNumber: "DEMO-4096",
+      ersRegistrationNumber: "DEMO-E03",
+    },
+    schedules: [ONLINE_LISBON],
+    locations: [],
+    eventTypes: [
+      onlineOffer({
+        slug: "first-call",
+        title: {
+          en: "Free first call",
+          pt: "Primeira conversa gratuita",
+          es: "Primera llamada gratuita",
+        },
+        description: {
+          en: "20 minutes to tell me what is going on and decide the next steps together.",
+          pt: "20 minutos para me contar o que se passa e decidirmos juntas os próximos passos.",
+          es: "20 minutos para contarme qué te pasa y decidir juntas los siguientes pasos.",
+        },
+        kind: "non_clinical",
+        durationMinutes: 20,
+        priceCents: 0,
+        languages: ["pt", "en"],
+        countries: ["PT"],
+      }),
+      onlineOffer({
+        slug: "therapy-session",
+        title: {
+          en: "Therapy session",
+          pt: "Sessão de psicoterapia",
+          es: "Sesión de terapia",
+        },
+        description: {
+          en: "A 50-minute session by video, at the same time each week if you like.",
+          pt: "Uma sessão de 50 minutos por vídeo, à mesma hora todas as semanas se quiser.",
+          es: "Una sesión de 50 minutos por vídeo, a la misma hora cada semana si quieres.",
+        },
+        kind: "clinical",
+        durationMinutes: 50,
+        priceCents: 6000,
+        languages: ["pt", "en"],
+        countries: ["PT"],
+      }),
+    ],
+  },
+  {
+    user: { email: "yasmin.haddad@example.test", name: "Yasmin Haddad" },
+    org: { slug: "yasminhaddad", name: "Yasmin Haddad" },
+    profile: {
+      username: "yasminhaddad",
+      displayName: "Dr. Yasmin Haddad",
+      languages: ["en", "es", "pt"],
+      practiceCountry: "PT",
+      serviceCountries: ["PT", "ES"],
+      worldwideRemote: false,
+    },
+    persona: {
+      headline: "Family doctor with a focus on menopause",
+      bio: "I am a family doctor and I spend most of my week on perimenopause and menopause. We go through your symptoms, your history and your options, including hormone therapy and what else can help, so you can decide with the full picture.",
+      credentials: [
+        {
+          title: "Postgraduate certificate in menopause care",
+          institution: "Instituto Ibérico de Saúde da Mulher",
+          year: 2021,
+        },
+        {
+          title: "Specialist in General and Family Medicine",
+          institution: null,
+          year: 2014,
+        },
+      ],
+      categories: ["wellness"],
+      portrait: { pexelsId: "37272329", photographer: "Layth Mushreq" },
+    },
+    licence: {
+      professionalBody: "ordem_medicos",
+      licenceNumber: "DEMO-5120",
+      ersRegistrationNumber: "DEMO-E04",
+    },
+    schedules: [ONLINE_LISBON],
+    locations: [],
+    eventTypes: [
+      onlineOffer({
+        slug: "menopause-consultation",
+        title: {
+          en: "Menopause consultation",
+          pt: "Consulta de menopausa",
+          es: "Consulta de menopausia",
+        },
+        description: {
+          en: "Your symptoms and options, explained, with a written summary after.",
+          pt: "Os seus sintomas e opções, explicados, com um resumo escrito no fim.",
+          es: "Tus síntomas y opciones, explicados, con un resumen escrito al final.",
+        },
+        kind: "clinical",
+        durationMinutes: 45,
+        priceCents: 8000,
+        languages: ["en", "es", "pt"],
+        countries: ["PT", "ES"],
+      }),
+    ],
+  },
+  {
+    user: { email: "clara.neves@example.test", name: "Clara Neves" },
+    org: { slug: "claraneves", name: "Clara Neves" },
+    profile: {
+      username: "claraneves",
+      displayName: "Clara Neves",
+      languages: ["pt"],
+      practiceCountry: "PT",
+      serviceCountries: ["PT"],
+      worldwideRemote: false,
+    },
+    persona: {
+      headline: "Lactation consultant",
+      bio: "Apoio à amamentação nos primeiros dias e semanas, por vídeo ou por telefone. Vemos a pega, as posições e como se está a sentir, e fazemos um plano para os próximos dias.",
+      bioLocale: "pt",
+      credentials: [
+        {
+          title: "Specialist nurse in maternal and obstetric health",
+          institution: "Escola Superior de Enfermagem Lumen",
+          year: 2011,
+        },
+      ],
+      categories: ["lactation"],
+      portrait: null,
+    },
+    licence: {
+      professionalBody: "ordem_enfermeiros",
+      licenceNumber: "DEMO-6144",
+      ersRegistrationNumber: "DEMO-E05",
+    },
+    schedules: [ONLINE_LISBON],
+    locations: [],
+    eventTypes: [
+      onlineOffer({
+        slug: "breastfeeding-support",
+        title: {
+          en: "Breastfeeding support",
+          pt: "Apoio à amamentação",
+          es: "Apoyo a la lactancia",
+        },
+        description: {
+          en: "Help with latch, positions and a plan for the next few days.",
+          pt: "Ajuda com a pega, as posições e um plano para os próximos dias.",
+          es: "Ayuda con el agarre, las posturas y un plan para los próximos días.",
+        },
+        kind: "clinical",
+        durationMinutes: 45,
+        priceCents: 4500,
+        languages: ["pt"],
+        countries: ["PT"],
+        phone: true,
+      }),
+    ],
+  },
+]

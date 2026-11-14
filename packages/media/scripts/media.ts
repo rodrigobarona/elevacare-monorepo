@@ -5,6 +5,7 @@
  *   pnpm --filter @eleva/media media:import <slug> <pexelsId> --alt-en "…" --alt-pt "…" --alt-es "…" [--tags a,b]
  *   pnpm --filter @eleva/media media:import-local <slug> <path> --alt-en "…" --alt-pt "…" --alt-es "…" [--tags a,b]
  *   pnpm --filter @eleva/media media:import-video <slug> <mp4> --poster <image> --alt-en "…" --alt-pt "…" --alt-es "…" [--tags a,b] [--width N] [--height N] [--blur path] [--webm path]
+ *   pnpm --filter @eleva/media media:demo-portrait <username> <pexelsId>
  *
  * Reads PEXELS_API_KEY and the R2_PUBLIC_* vars from the repo `.env.local`.
  * Public bucket only: never import member, health or session imagery.
@@ -346,16 +347,59 @@ async function importVideo(argv: string[]): Promise<void> {
   console.log(`poster → ${posterUpload.url}`)
 }
 
+/**
+ * Seed-only expert portrait: a square Pexels crop at
+ * `demo/experts/{username}.jpg` (overwritten in place), read by the demo seed
+ * in `@eleva/db`. Not part of the marketing library. Run it once per
+ * environment whose public bucket the demo seed points at.
+ */
+async function demoPortrait(argv: string[]): Promise<void> {
+  // Demo portraits stand for fictional experts: dev buckets only.
+  const bucket = process.env.R2_PUBLIC_BUCKET ?? ""
+  if (process.env.VERCEL_ENV === "production" || !bucket.includes("-dev-")) {
+    throw new Error(
+      `demo-portrait writes only to a dev public bucket (got "${bucket}")`
+    )
+  }
+  const { positionals } = parseArgs({ args: argv, allowPositionals: true })
+  const username = positionals[0]
+  const id = positionals[1]
+  if (!username || !/^[a-z0-9]+$/.test(username)) {
+    throw new Error("demo-portrait needs a lowercase username")
+  }
+  if (!id || !/^\d+$/.test(id))
+    throw new Error("demo-portrait needs a Pexels id")
+  const photo = await pexels<PexelsPhoto>(`/photos/${id}`)
+  const crop = new URL(photo.src.original)
+  crop.searchParams.set("auto", "compress")
+  crop.searchParams.set("cs", "tinysrgb")
+  crop.searchParams.set("fit", "crop")
+  crop.searchParams.set("w", "640")
+  crop.searchParams.set("h", "640")
+  const { url } = await uploadPublicObject({
+    pathname: `demo/experts/${username}.jpg`,
+    body: await download(crop.toString()),
+    contentType: "image/jpeg",
+    overwrite: true,
+  })
+  console.log(
+    `${username} → ${url} (Pexels ${photo.id}, ${photo.photographer})`
+  )
+}
+
 const [command, ...rest] = process.argv.slice(2)
 const commands: Record<string, (argv: string[]) => Promise<void>> = {
   search,
   import: importPexels,
   "import-local": importLocal,
   "import-video": importVideo,
+  "demo-portrait": demoPortrait,
 }
 const run = command ? commands[command] : undefined
 if (!run) {
-  console.error("usage: media.ts <search|import|import-local|import-video> …")
+  console.error(
+    "usage: media.ts <search|import|import-local|import-video|demo-portrait> …"
+  )
   process.exit(1)
 }
 await run(rest)

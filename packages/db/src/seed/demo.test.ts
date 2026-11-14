@@ -59,8 +59,14 @@ describe("seedDemo", () => {
       return chain
     })
 
+    // Existing rows get their names refreshed and legacy placeholder text
+    // cleared: update().set().where() resolves.
+    const updateWhere = vi.fn().mockResolvedValue(undefined)
+    const update = vi.fn().mockImplementation(() => ({
+      set: vi.fn().mockReturnValue({ where: updateWhere }),
+    }))
     vi.doMock("../client", () => ({
-      db: () => ({ insert, select, update: vi.fn() }),
+      db: () => ({ insert, select, update }),
     }))
     vi.doMock("../schema/auth", () => ({
       user: { id: {}, email: {}, name: {}, emailVerified: {} },
@@ -74,6 +80,7 @@ describe("seedDemo", () => {
         userId: {},
         orgId: {},
         displayName: {},
+        headline: {},
         status: {},
       },
       clinicProfiles: { id: {}, slug: {}, orgId: {}, displayName: {} },
