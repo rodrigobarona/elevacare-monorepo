@@ -430,7 +430,7 @@
       },
       "cancel": {
         "q": "¿Puedo cancelar?",
-        "a": "Sí. Cada servicio indica hasta cuándo puedes cancelar sin coste. Para cancelar, entra con el email con el que reservaste y abre tu sesión."
+        "a": "Sí. Los servicios de pago indican hasta cuándo puedes cancelar sin coste. Para cancelar, entra con el email con el que reservaste y abre tu sesión."
       },
       "care": {
         "q": "¿Quién me atiende?",
@@ -450,7 +450,7 @@
       },
       "book": {
         "title": "Reserva con seguridad",
-        "body": "Paga online con seguridad o confirma una sesión gratuita sin pagar. Ves las condiciones de cancelación antes de confirmar."
+        "body": "Paga online o confirma una sesión gratuita sin pagar. Ves las condiciones de cancelación antes de confirmar."
       },
       "join": {
         "title": "Todo está en tu email",

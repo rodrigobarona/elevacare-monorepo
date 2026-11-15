@@ -205,7 +205,13 @@ export default async function ExpertProfilePage({ params }: Props) {
                     "bg-linear-to-t from-black/80 via-black/55 to-transparent"
                 )}
               >
-                <p className="font-display text-[2.5rem] leading-[1.05] font-medium tracking-tight text-balance [text-shadow:0_1px_12px_rgb(0_0_0/0.5)]">
+                <p
+                  className={cn(
+                    "font-display text-[2.5rem] leading-[1.05] font-medium tracking-tight text-balance",
+                    expert.avatarUrl &&
+                      "[text-shadow:0_1px_12px_rgb(0_0_0/0.5)]"
+                  )}
+                >
                   {name}
                 </p>
                 {expert.headline ? (

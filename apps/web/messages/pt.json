@@ -430,7 +430,7 @@
       },
       "cancel": {
         "q": "Posso cancelar?",
-        "a": "Sim. Cada serviço indica até quando pode cancelar sem custos. Para cancelar, entre com o email com que marcou e abra a sua sessão."
+        "a": "Sim. Os serviços pagos indicam até quando pode cancelar sem custos. Para cancelar, entre com o email com que marcou e abra a sua sessão."
       },
       "care": {
         "q": "Quem presta os cuidados?",
@@ -450,7 +450,7 @@
       },
       "book": {
         "title": "Marque com segurança",
-        "body": "Pague online com segurança ou confirme uma sessão gratuita sem pagamento. Vê as condições de cancelamento antes de confirmar."
+        "body": "Pague online ou confirme uma sessão gratuita sem pagamento. Vê as condições de cancelamento antes de confirmar."
       },
       "join": {
         "title": "Tem tudo no seu email",

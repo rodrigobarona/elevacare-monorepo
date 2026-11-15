@@ -430,7 +430,7 @@
       },
       "cancel": {
         "q": "Can I cancel?",
-        "a": "Yes. Each service shows when you can cancel for free. To cancel, sign in with the email you booked with and open your session."
+        "a": "Yes. Paid services show when you can cancel for free. To cancel, sign in with the email you booked with and open your session."
       },
       "care": {
         "q": "Who provides my care?",
@@ -450,7 +450,7 @@
       },
       "book": {
         "title": "Book securely",
-        "body": "Pay securely online, or confirm a free session with no payment. You see the cancellation terms before you confirm."
+        "body": "Pay online, or confirm a free session with no payment. You see the cancellation terms before you confirm."
       },
       "join": {
         "title": "Everything is in your email",

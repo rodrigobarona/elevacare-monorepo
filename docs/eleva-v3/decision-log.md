@@ -56,7 +56,9 @@ Each entry should include:
   "My approach", "Your first session" and a two-line header bio (PROF-02,
   from setup data, D4); "New on Eleva"; reviews; the next free time in the
   hero; whole-euro prices (D2.3).
-- Judges panel: round 1 UI 7.8, UX 7.5, trust 8.0; round 2 pending.
+- Judges panel: round 1 UI 7.8, UX 7.5, trust 8.0; round 2 UI 8.6, UX 8.7,
+  trust 8.8. Open nits: the no-photo hero and the small-tile initials use
+  two styles on one page; long in-person service labels wrap on phones.
 - Owner: engineering
 - Status: `active`
 
