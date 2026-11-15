@@ -347,7 +347,6 @@
     "free": "Gratuito",
     "fromPrice": "Desde {price}",
     "seeTimes": "Ver horários",
-    "notBooking": "{name} ainda não tem marcações abertas aqui. Conheça abaixo o trabalho de {name}.",
     "about": "Sobre mim",
     "readMore": "Ler mais",
     "readLess": "Mostrar menos",
@@ -372,7 +371,8 @@
       "phone": "telefone",
       "inPerson": "presencial",
       "inPersonIn": "presencial em {places}",
-      "countries": "Membros em {countries}"
+      "countries": "Membros em {countries}",
+      "countriesMore": "Membros em {countries} e mais {count} países"
     },
     "registration": {
       "licence": "Cédula profissional n.º <number>{value}</number>",
@@ -446,6 +446,28 @@
     "freeOption": "Opção gratuita disponível",
     "socialShort": {
       "website": "Site"
+    },
+    "how": {
+      "heading": "Como funciona a marcação",
+      "step": "Passo {number}",
+      "choose": {
+        "title": "Escolha um horário",
+        "body": "Escolha um serviço e um horário que lhe convenha, no seu fuso horário."
+      },
+      "book": {
+        "title": "Marque com segurança",
+        "body": "Pague por cartão ou MB WAY, ou marque sessões gratuitas sem pagamento. Vê as condições de cancelamento antes de confirmar."
+      },
+      "join": {
+        "title": "Entre a partir do email",
+        "body": "A confirmação traz o link para entrar ou a morada. Não precisa de app nem de conta."
+      }
+    },
+    "notBookable": {
+      "heading": "{name} está a preparar o perfil na Eleva",
+      "body": "As marcações abrem quando {name} adicionar um serviço. Até lá, pode marcar com outra especialista da mesma área.",
+      "others": "Especialistas disponíveis para marcar",
+      "browse": "Ver todos os especialistas"
     }
   },
   "booking": {

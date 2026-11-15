@@ -331,6 +331,78 @@
       "why": "On a freelancer profile, below the intro: 'Identity Verified' with a shield icon and one line under it explaining what it means, then 'Quick Responder' with its own line. A design tool, kept for the row-with-explanation structure.",
       "apply": "Each trust mark gets one plain sentence that says what it means, not just a badge.",
       "query": "health provider profile with verified licence badge and what we check explanation"
+    },
+    {
+      "id": "03-profile/16",
+      "file": "img/16-mindvalley-full-bleed-portrait-name.jpg",
+      "app": "Mindvalley",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/24483181-eaf9-4eb9-9ac0-47e07aad3b6d?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Full-bleed portrait with the name set over it",
+      "why": "The phone screen opens on the person: a full-width portrait to the top edge, the name in large type over the bottom of the photo and the role under it ('Founder and CEO of Mindvalley'). The bio follows, then 'Expert in:' as icon chips.",
+      "apply": "On phones, let the portrait run edge to edge as the first thing, with the name and profession set over a soft gradient at its foot; areas of care follow as chips.",
+      "query": "therapist or coach profile with a full-width portrait photo at the top"
+    },
+    {
+      "id": "03-profile/17",
+      "file": "img/17-futurepro-portrait-card-continue.jpg",
+      "app": "Future Pro",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/836e114a-c251-45bb-a991-a5f23b623e69?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A big portrait card that sells the person, with one action",
+      "why": "Choosing a coach: a tall rounded portrait card fills the screen; name, 'Past experience' and two lines sit on the photo; 'More About Matt' opens the rest. Under it one primary button, 'Continue with Matt'.",
+      "apply": "Make the portrait the largest element and pair it with one clear action ('See times with Inês'); details open from the card, not before it.",
+      "query": "therapist or coach profile with a full-width portrait photo at the top"
+    },
+    {
+      "id": "03-profile/18",
+      "file": "img/18-places-portrait-hero-facts-line.jpg",
+      "app": "Places",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/2d6e3fca-00b0-4139-b0ae-846199a13d6a?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Portrait hero with a facts line in small caps",
+      "why": "A full-width portrait with the name in a signature-like type and one facts line underneath ('62 PLACES · MEXICO CITY · NEW YORK · LOS ANGELES'); 'About' and credentials as dated rows follow.",
+      "apply": "Keep one short facts line on the portrait; move the rest of the facts into rows below.",
+      "query": "therapist or coach profile with a full-width portrait photo at the top"
+    },
+    {
+      "id": "03-profile/19",
+      "file": "img/19-insighttimer-large-portrait-then-name.jpg",
+      "app": "Insight Timer",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/f3f64856-2a4f-4054-a1ce-ab5cf4bbaefd?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Large rounded portrait, then name, place and one action",
+      "why": "'About the Teacher': a large rounded-corner portrait almost the screen's width, then the name, city, a follower count, a short bio and one full-width primary button.",
+      "apply": "A calmer alternative to full bleed: a large rounded portrait inside the page margin, name and profession under it.",
+      "query": "therapist or coach profile with a full-width portrait photo at the top"
+    },
+    {
+      "id": "03-profile/20",
+      "file": "img/20-airbnb-qualifications-rows.jpg",
+      "app": "Airbnb",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/a3b51edb-e3b8-4e1d-bf88-ce2d79b28a64?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Qualifications as three icon rows with a line each",
+      "why": "An Airbnb Experiences host: 'My qualifications' lists '10 years of experience', 'Founded Pranasanti yoga' and 'Learned Jero techniques', each with an icon and one plain sentence, beside a card with the host's photo and role.",
+      "apply": "Turn facts and credentials into a few icon rows, each with a short sentence, instead of one grey line.",
+      "query": "health professional profile page with a large portrait photo and book button"
+    },
+    {
+      "id": "03-profile/21",
+      "file": "img/21-carecom-other-caregivers.jpg",
+      "app": "Care.com",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/2f1359ff-70c3-4c4f-88e9-0446b815c301?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Other people to book, at the end of a profile",
+      "why": "Under the availability calendar: 'Other great caregivers' as a row of portrait cards with name, place, rate and years of experience.",
+      "apply": "When an expert cannot be booked yet, offer two or three bookable experts in the same area.",
+      "query": "health professional profile page with a large portrait photo and book button"
     }
   ],
   "judging_criteria": [

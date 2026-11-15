@@ -347,7 +347,6 @@
     "free": "Free",
     "fromPrice": "From {price}",
     "seeTimes": "See times",
-    "notBooking": "{name} isn't taking bookings here yet. See their work below.",
     "about": "About me",
     "readMore": "Read more",
     "readLess": "Show less",
@@ -372,7 +371,8 @@
       "phone": "phone",
       "inPerson": "in person",
       "inPersonIn": "in person in {places}",
-      "countries": "Members in {countries}"
+      "countries": "Members in {countries}",
+      "countriesMore": "Members in {countries} and {count} more countries"
     },
     "registration": {
       "licence": "Licence no. <number>{value}</number>",
@@ -446,6 +446,28 @@
     "freeOption": "Free option available",
     "socialShort": {
       "website": "Website"
+    },
+    "how": {
+      "heading": "How booking works",
+      "step": "Step {number}",
+      "choose": {
+        "title": "Choose a time",
+        "body": "Pick a service and a time that suits you, in your own time zone."
+      },
+      "book": {
+        "title": "Book securely",
+        "body": "Pay by card or MB WAY, or book free sessions with no payment. You see the cancellation terms before you confirm."
+      },
+      "join": {
+        "title": "Meet from your email",
+        "body": "Your confirmation has the join link or the address. No app or account needed."
+      }
+    },
+    "notBookable": {
+      "heading": "{name} is setting up on Eleva",
+      "body": "Bookings open once {name} adds a service. Until then, you can book another expert who works in the same area.",
+      "others": "Experts you can book now",
+      "browse": "See all experts"
     }
   },
   "booking": {

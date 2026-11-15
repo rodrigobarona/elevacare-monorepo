@@ -347,7 +347,6 @@
     "free": "Gratis",
     "fromPrice": "Desde {price}",
     "seeTimes": "Ver horarios",
-    "notBooking": "{name} todavía no acepta reservas aquí. Conoce abajo el trabajo de {name}.",
     "about": "Sobre mí",
     "readMore": "Leer más",
     "readLess": "Mostrar menos",
@@ -372,7 +371,8 @@
       "phone": "teléfono",
       "inPerson": "en persona",
       "inPersonIn": "en persona en {places}",
-      "countries": "Miembros en {countries}"
+      "countries": "Miembros en {countries}",
+      "countriesMore": "Miembros en {countries} y {count} países más"
     },
     "registration": {
       "licence": "N.º de colegiado/a <number>{value}</number>",
@@ -446,6 +446,28 @@
     "freeOption": "Opción gratuita disponible",
     "socialShort": {
       "website": "Web"
+    },
+    "how": {
+      "heading": "Cómo funciona la reserva",
+      "step": "Paso {number}",
+      "choose": {
+        "title": "Elige una hora",
+        "body": "Elige un servicio y una hora que te venga bien, en tu zona horaria."
+      },
+      "book": {
+        "title": "Reserva con seguridad",
+        "body": "Paga con tarjeta o MB WAY, o reserva sesiones gratuitas sin pagar. Ves las condiciones de cancelación antes de confirmar."
+      },
+      "join": {
+        "title": "Entra desde tu email",
+        "body": "Tu confirmación incluye el enlace para entrar o la dirección. Sin app ni cuenta."
+      }
+    },
+    "notBookable": {
+      "heading": "{name} está preparando su perfil en Eleva",
+      "body": "Las reservas se abren cuando {name} añada un servicio. Hasta entonces, puedes reservar con otra especialista de la misma área.",
+      "others": "Especialistas que puedes reservar ahora",
+      "browse": "Ver todos los especialistas"
     }
   },
   "booking": {
