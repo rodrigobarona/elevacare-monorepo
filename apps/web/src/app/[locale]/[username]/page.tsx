@@ -184,22 +184,27 @@ export default async function ExpertProfilePage({ params }: Props) {
           className="bg-linear-to-b from-sand-50 to-background pt-0 max-sm:px-0 sm:pt-14 dark:from-teal-950/40"
         >
           <Container className="grid gap-6 sm:gap-10 lg:grid-cols-[minmax(0,500px)_minmax(0,1fr)] lg:items-center lg:gap-16 xl:grid-cols-[minmax(0,540px)_minmax(0,1fr)]">
-            <div className="relative aspect-[4/5] w-full overflow-hidden bg-muted max-sm:aspect-[6/7] max-sm:max-h-[64svh] sm:mx-auto sm:max-w-md sm:rounded-4xl sm:shadow-2 lg:max-w-none">
-              {expert.avatarUrl ? (
-                <ExpertPortrait
-                  displayName={name}
-                  avatarUrl={expert.avatarUrl}
-                  isPriority
-                />
-              ) : (
-                <ExpertPortraitFallback displayName={name} />
-              )}
+            {/* Phones: the photo is capped (6:7, at most 64svh) but the
+                name and headline sit in flow, so a long headline grows the
+                frame instead of being clipped. */}
+            <div className="relative flex w-full flex-col justify-end overflow-hidden bg-muted max-sm:min-h-[min(116.667vw,64svh)] sm:mx-auto sm:aspect-[4/5] sm:max-w-md sm:rounded-4xl sm:shadow-2 lg:max-w-none">
+              <div className="absolute inset-0">
+                {expert.avatarUrl ? (
+                  <ExpertPortrait
+                    displayName={name}
+                    avatarUrl={expert.avatarUrl}
+                    isPriority
+                  />
+                ) : (
+                  <ExpertPortraitFallback displayName={name} />
+                )}
+              </div>
               {/* Phones: who she is, set on the portrait. The h1 below
                   carries the same name for assistive tech. */}
               <div
                 aria-hidden
                 className={cn(
-                  "absolute inset-x-0 bottom-0 px-4 pt-28 pb-5 text-white sm:hidden",
+                  "relative px-4 pt-28 pb-5 text-white sm:hidden",
                   // The teal field needs no scrim; a photo does.
                   expert.avatarUrl &&
                     "bg-linear-to-t from-black/80 via-black/55 to-transparent"
