@@ -32,6 +32,28 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-15: Correct licence details while verification is pending (active)
+
+- Change (references `_context/mobbin/library/06-expert-onboarding` 13–15):
+  the pending licence card keeps the summary of what was sent, a "Sent on
+  {date}" line and a quiet "Edit details" button. Editing swaps the card to
+  the form (the next-steps list and "why we ask" note are hidden), says
+  that sending starts the check again, refuses to resend unchanged details,
+  and returns focus to the button on cancel or send. A correction updates
+  the open application in place (no second review row) and the audit
+  payload lists the changed field names, not values.
+- Unchanged: a verified licence stays locked (support only), because the
+  numbers appear on the public profile; public profiles read only the
+  approved application, so a pending edit never reaches members.
+- Captures: `docs/eleva-v3/design-audit/captures/2026-11-15-before-licence-edit/`
+  and `2026-11-15-after-licence-edit/` (seeded demo expert, Spanish).
+- Judges panel: round 1 UI 8.0, UX 8.0, trust 7.5; round 2 UI 8.7, UX 8.8,
+  trust 8.6. Open nits: the shared outline button reads faint on a white
+  card; a listed expert might like "your profile stays visible" in the edit
+  note; manual VoiceOver/NVDA pass not done.
+- Owner: engineering
+- Status: `active`
+
 ### 2026-11-15: Portrait-led expert profile header (D2.2) (active)
 
 - Change (design slice D2.2, references `_context/mobbin/library/03-profile`

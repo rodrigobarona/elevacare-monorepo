@@ -44,7 +44,12 @@ export async function _submitPartnerApplication(
     expertProfileId: string
     licence: PartnerApplicationLicence
   }
-): Promise<{ application: main.BecomePartnerApplication; refreshed: boolean }> {
+): Promise<{
+  application: main.BecomePartnerApplication
+  refreshed: boolean
+  /** The open application's licence as read under the lock, if any. */
+  previous: PartnerApplicationLicence | null
+}> {
   const t = main.becomePartnerApplications
   // Serialise submissions per profile, including the first one (no open row
   // to lock yet), so concurrent calls never race the open-application index.
@@ -55,7 +60,12 @@ export async function _submitPartnerApplication(
     .limit(1)
     .for("update")
   const [open] = await tx
-    .select({ id: t.id })
+    .select({
+      id: t.id,
+      professionalBody: t.professionalBody,
+      licenceNumber: t.licenceNumber,
+      ersRegistrationNumber: t.ersRegistrationNumber,
+    })
     .from(t)
     .where(
       and(
@@ -81,7 +91,15 @@ export async function _submitPartnerApplication(
       })
       .where(eq(t.id, open.id))
       .returning()
-    return { application: application!, refreshed: true }
+    return {
+      application: application!,
+      refreshed: true,
+      previous: {
+        professionalBody: open.professionalBody,
+        licenceNumber: open.licenceNumber,
+        ersRegistrationNumber: open.ersRegistrationNumber,
+      },
+    }
   }
 
   const [application] = await tx
@@ -94,7 +112,7 @@ export async function _submitPartnerApplication(
       submittedAt: now,
     })
     .returning()
-  return { application: application!, refreshed: false }
+  return { application: application!, refreshed: false, previous: null }
 }
 
 /** Where a profile stands in the staff licence review. */

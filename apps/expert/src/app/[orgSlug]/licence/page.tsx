@@ -14,6 +14,7 @@ import { loadExpertWorkspace } from "@/lib/expert-workspace"
 import { licenceVerificationState } from "@/lib/licence-verification"
 import { expertWorkspacePath } from "@/lib/workspace-paths"
 import { LicenceForm } from "./licence-form"
+import { LicencePendingEdit } from "./licence-pending-edit"
 
 export const dynamic = "force-dynamic"
 
@@ -57,6 +58,29 @@ export default async function LicencePage({
   const bodyName =
     professionalBodyById(details.professionalBody)?.name ??
     details.professionalBody
+  const licenceValue = {
+    professionalBody: details.professionalBody,
+    licenceNumber: details.licenceNumber,
+    ersRegistrationNumber: details.ersRegistrationNumber,
+  }
+  const detailsList = (
+    <dl className="grid gap-3 text-sm sm:grid-cols-3">
+      <div className="space-y-0.5">
+        <dt className="text-muted-foreground">{tFields("body")}</dt>
+        <dd className="font-medium">{bodyName}</dd>
+      </div>
+      <div className="space-y-0.5">
+        <dt className="text-muted-foreground">{tFields("licenceNumber")}</dt>
+        <dd className="font-medium tabular-nums">{details.licenceNumber}</dd>
+      </div>
+      <div className="space-y-0.5">
+        <dt className="text-muted-foreground">{tFields("ersNumber")}</dt>
+        <dd className="font-medium tabular-nums">
+          {details.ersRegistrationNumber}
+        </dd>
+      </div>
+    </dl>
+  )
   const canSubmit =
     state === "needs_changes" || state === "rejected" || state === "unsubmitted"
 
@@ -95,20 +119,6 @@ export default async function LicencePage({
           </p>
         </div>
 
-        {state === "pending" ? (
-          <div className="space-y-3">
-            <h3 className="text-sm font-medium">{t("pending.nextTitle")}</h3>
-            <ol className="list-decimal space-y-1 ps-5 text-sm text-pretty">
-              {(t.raw("pending.next") as string[]).map((step) => (
-                <li key={step}>{step}</li>
-              ))}
-            </ol>
-            <p className="text-sm text-pretty text-muted-foreground">
-              {listed ? t("pending.meanwhileListed") : t("pending.meanwhile")}
-            </p>
-          </div>
-        ) : null}
-
         {(state === "needs_changes" || state === "rejected") &&
         application?.reason ? (
           <Alert>
@@ -119,38 +129,49 @@ export default async function LicencePage({
           </Alert>
         ) : null}
 
-        {state === "pending" || state === "verified" ? (
-          <dl className="grid gap-3 border-t pt-4 text-sm sm:grid-cols-3">
-            <div className="space-y-0.5">
-              <dt className="text-muted-foreground">{tFields("body")}</dt>
-              <dd className="font-medium">{bodyName}</dd>
-            </div>
-            <div className="space-y-0.5">
-              <dt className="text-muted-foreground">
-                {tFields("licenceNumber")}
-              </dt>
-              <dd className="font-medium tabular-nums">
-                {details.licenceNumber}
-              </dd>
-            </div>
-            <div className="space-y-0.5">
-              <dt className="text-muted-foreground">{tFields("ersNumber")}</dt>
-              <dd className="font-medium tabular-nums">
-                {details.ersRegistrationNumber}
-              </dd>
-            </div>
-          </dl>
+        {state === "pending" ? (
+          <LicencePendingEdit
+            initial={licenceValue}
+            nextSteps={
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium">
+                  {t("pending.nextTitle")}
+                </h3>
+                <ol className="list-decimal space-y-1 ps-5 text-sm text-pretty">
+                  {(t.raw("pending.next") as string[]).map((step) => (
+                    <li key={step}>{step}</li>
+                  ))}
+                </ol>
+                <p className="text-sm text-pretty text-muted-foreground">
+                  {listed
+                    ? t("pending.meanwhileListed")
+                    : t("pending.meanwhile")}
+                </p>
+              </div>
+            }
+          >
+            {detailsList}
+            {application?.submittedAt ? (
+              <p className="text-xs text-muted-foreground">
+                {t("pending.sentOn", {
+                  date: format.dateTime(application.submittedAt, {
+                    dateStyle: "long",
+                  }),
+                })}
+              </p>
+            ) : null}
+          </LicencePendingEdit>
+        ) : null}
+
+        {state === "verified" ? (
+          <div className="border-t pt-4">{detailsList}</div>
         ) : null}
       </section>
 
       {canSubmit ? (
         <section className="rounded-2xl border border-border bg-card p-6 shadow-1">
           <LicenceForm
-            initial={{
-              professionalBody: details.professionalBody,
-              licenceNumber: details.licenceNumber,
-              ersRegistrationNumber: details.ersRegistrationNumber,
-            }}
+            initial={licenceValue}
             submitLabel={state === "unsubmitted" ? t("submit") : t("resubmit")}
           />
         </section>

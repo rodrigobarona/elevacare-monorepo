@@ -1301,6 +1301,7 @@
       "pending": {
         "title": "Your licence is being verified",
         "body": "Thanks. We're checking your details with {body}.",
+        "sentOn": "Sent on {date}.",
         "nextTitle": "What happens next",
         "next": [
           "We look up your licence number on the Ordem's public register.",
@@ -1329,6 +1330,13 @@
       "reasonLabel": "Note from Eleva",
       "submit": "Send for verification",
       "resubmit": "Send again",
+      "edit": {
+        "cta": "Edit details",
+        "note": "Spotted a mistake? Correct it here. Sending it starts the check again.",
+        "submit": "Send corrected details",
+        "sent": "Corrected details sent. We've started the check again."
+      },
+      "cancel": "Cancel",
       "submitting": "Sending…",
       "submitted": "Sent. We'll email you when your licence is verified.",
       "support": "Questions? Write to <link>support@eleva.care</link>.",
@@ -1336,7 +1344,8 @@
         "validation": "Check the highlighted fields and try again.",
         "locked": "Your licence is already verified. To change it, write to support@eleva.care.",
         "not-eligible": "Finish setup before sending your licence.",
-        "failed": "We couldn't send your details. Please try again."
+        "failed": "We couldn't send your details. Please try again.",
+        "unchanged": "Nothing has changed yet. Correct a field, or cancel to keep the current check going."
       }
     },
     "notice": {

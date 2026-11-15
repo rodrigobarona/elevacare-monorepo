@@ -62,6 +62,7 @@ export {
   MinusIcon,
   MonitorIcon,
   PaperPlaneTiltIcon,
+  PencilSimpleIcon,
   PhoneDisconnectIcon,
   PhoneIcon,
   MoonIcon,
