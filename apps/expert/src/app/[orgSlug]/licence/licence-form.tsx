@@ -31,7 +31,8 @@ interface Props {
   successMessage?: string
   /** Shown as a quiet secondary action next to submit. */
   onCancel?: () => void
-  onSubmitted?: () => void
+  /** Called with the details that were sent. */
+  onSubmitted?: (sent: LicenceValue) => void
 }
 
 type FormError = SubmitLicenceError | "unchanged"
@@ -95,7 +96,7 @@ export function LicenceForm({
       return
     }
     toast.success(successMessage ?? t("submitted"))
-    onSubmitted?.()
+    onSubmitted?.(next)
     router.refresh()
   }
 
@@ -112,6 +113,7 @@ export function LicenceForm({
         idPrefix="licence"
         intro={intro}
         showWhy={showWhy}
+        isDisabled={pending}
         value={value}
         errors={errors}
         onChange={(next) => {

@@ -25,6 +25,18 @@ export function LicencePendingEdit({
 }) {
   const t = useTranslations("licence.page")
   const [isEditing, setIsEditing] = React.useState(false)
+  // The editor starts from the last details sent, not from the server
+  // props: after a correction, `initial` only updates once the refresh
+  // lands, and reopening before then must not offer the old details.
+  const [baseline, setBaseline] = React.useState(initial)
+  // Once refreshed props arrive, they become the baseline (adjusting state
+  // during render when a prop changes, not in an effect).
+  const initialKey = `${initial.professionalBody}|${initial.licenceNumber}|${initial.ersRegistrationNumber}`
+  const [seenKey, setSeenKey] = React.useState(initialKey)
+  if (seenKey !== initialKey) {
+    setSeenKey(initialKey)
+    setBaseline(initial)
+  }
   const formRef = React.useRef<HTMLDivElement>(null)
   const editRef = React.useRef<HTMLButtonElement>(null)
   const opened = React.useRef(false)
@@ -65,14 +77,17 @@ export function LicencePendingEdit({
   return (
     <div ref={formRef} className="border-t pt-4">
       <LicenceForm
-        initial={initial}
+        initial={baseline}
         intro={t("edit.note")}
         showWhy={false}
         requireChange
         submitLabel={t("edit.submit")}
         successMessage={t("edit.sent")}
         onCancel={() => setIsEditing(false)}
-        onSubmitted={() => setIsEditing(false)}
+        onSubmitted={(sent) => {
+          setBaseline(sent)
+          setIsEditing(false)
+        }}
       />
     </div>
   )

@@ -164,11 +164,15 @@ export async function POST(request: Request) {
     { orgId: profile.orgId, actorUserId: session.user.id },
     async (tx, ctx) => {
       await updateExpertProfile(profile.id, profile.orgId, body.data, tx)
-      const { application, refreshed } = await _submitPartnerApplication(tx, {
-        orgId: profile.orgId,
-        expertProfileId: profile.id,
-        licence: body.data,
-      })
+      const { application, refreshed, previous } =
+        await _submitPartnerApplication(tx, {
+          orgId: profile.orgId,
+          expertProfileId: profile.id,
+          licence: body.data,
+        })
+      // Compare with the open application read under the submission lock;
+      // a closed one (rejected) cannot change, so the earlier read stands.
+      const before = previous ?? latest
       await ctx.emit({
         entity: "partner_application",
         action: "submitted",
@@ -179,8 +183,8 @@ export async function POST(request: Request) {
           profileStatus: profile.status,
           refreshed,
           // Field names only: lets a reviewer see a mid-review correction.
-          changedFields: latest
-            ? LICENCE_FIELDS.filter((f) => latest[f] !== body.data[f])
+          changedFields: before
+            ? LICENCE_FIELDS.filter((f) => before[f] !== body.data[f])
             : [],
           surface: "licence",
         },

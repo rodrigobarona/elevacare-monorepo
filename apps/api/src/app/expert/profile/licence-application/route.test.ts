@@ -74,6 +74,7 @@ describe("/expert/profile/licence-application", () => {
     submitPartnerApplication.mockResolvedValue({
       application: APPLICATION,
       refreshed: false,
+      previous: null,
     })
     profile = {
       id: "profile-1",
@@ -122,8 +123,28 @@ describe("/expert/profile/licence-application", () => {
     expect(response.status).toBe(201)
   })
 
-  it("corrects a pending licence and audits which fields changed", async () => {
-    latest = { ...APPLICATION, ...LICENCE, licenceNumber: "FT-0024" }
+  it("audits changed fields against the application read under the lock", async () => {
+    // The pre-lock read is stale: another submission changed ERS since.
+    latest = { ...APPLICATION, licenceNumber: "FT-0024" }
+    submitPartnerApplication.mockResolvedValue({
+      application: APPLICATION,
+      refreshed: true,
+      previous: { ...LICENCE, ersRegistrationNumber: "E11111" },
+    })
+    const response = await submit(LICENCE)
+
+    expect(response.status).toBe(201)
+    expect(emit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload: expect.objectContaining({
+          changedFields: ["ersRegistrationNumber"],
+        }),
+      })
+    )
+  })
+
+  it("audits changed fields against a closed application", async () => {
+    latest = { ...APPLICATION, status: "rejected", licenceNumber: "FT-0024" }
     const response = await submit(LICENCE)
 
     expect(response.status).toBe(201)

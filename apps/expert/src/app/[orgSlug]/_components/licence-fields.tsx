@@ -75,6 +75,8 @@ interface Props {
   intro?: string
   /** The "why we ask" note; off where the expert has already read it. */
   showWhy?: boolean
+  /** Locks the fields while a send is in flight. */
+  isDisabled?: boolean
 }
 
 export function LicenceFields({
@@ -84,6 +86,7 @@ export function LicenceFields({
   onChange,
   intro,
   showWhy = true,
+  isDisabled = false,
 }: Props) {
   const t = useTranslations("licence.fields")
   const id = (field: string) => `${idPrefix}-${field}`
@@ -109,6 +112,7 @@ export function LicenceFields({
           selectedKey={value.professionalBody || null}
           placeholder={t("bodyPlaceholder")}
           isInvalid={Boolean(errors.professionalBody)}
+          isDisabled={isDisabled}
           onSelectionChange={(key) => {
             if (typeof key === "string") {
               onChange({ ...value, professionalBody: key })
@@ -150,6 +154,7 @@ export function LicenceFields({
           }
           maxLength={LICENCE_NUMBER_MAX_LENGTH}
           autoComplete="off"
+          disabled={isDisabled}
           aria-invalid={Boolean(errors.licenceNumber)}
           aria-describedby={describedBy("licenceNumber", "licence")}
         />
@@ -171,6 +176,7 @@ export function LicenceFields({
           }
           maxLength={ERS_REGISTRATION_NUMBER_MAX_LENGTH}
           autoComplete="off"
+          disabled={isDisabled}
           aria-invalid={Boolean(errors.ersRegistrationNumber)}
           aria-describedby={describedBy("ersRegistrationNumber", "ers")}
         />
