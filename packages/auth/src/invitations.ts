@@ -5,14 +5,28 @@ import { withAudit } from "@eleva/audit"
  * to its workspace, so both answers are audited. Called from Better Auth's
  * organization `after*Invitation` hooks, after Better Auth's own write.
  */
-export async function recordInvitationResponse(input: {
+export async function recordInvitationResponse(
+  input: InvitationResponse
+): Promise<void> {
+  // The membership is already written (Better Auth's own transaction), so
+  // a transient audit failure gets one retry before it is reported.
+  try {
+    await writeInvitationAudit(input)
+  } catch {
+    await writeInvitationAudit(input)
+  }
+}
+
+type InvitationResponse = {
   orgId: string
   userId: string
   invitationId: string
   role: string
   outcome: "accepted" | "rejected"
   memberId?: string
-}): Promise<void> {
+}
+
+async function writeInvitationAudit(input: InvitationResponse): Promise<void> {
   await withAudit(
     { orgId: input.orgId, actorUserId: input.userId },
     async (_tx, ctx) => {

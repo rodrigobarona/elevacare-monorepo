@@ -22,7 +22,9 @@ export default async function AcceptInvitationPage({
   }
   return (
     <Suspense>
+      {/* Keyed by id: a different invitation starts from a clean state. */}
       <AcceptInvitation
+        key={id ?? "none"}
         invitationId={id ?? null}
         signedInEmail={session.user.email}
       />

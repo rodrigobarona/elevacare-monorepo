@@ -190,17 +190,22 @@ test.describe("Phase 11.1c — accept a clinic invitation", () => {
 
     const sql = neon(process.env.DATABASE_URL!)
     const members = (await sql`
-      SELECT m.role FROM auth.member m
+      SELECT m.id, m.role FROM auth.member m
       JOIN auth."user" u ON u.id = m.user_id
       WHERE m.organization_id = ${teamId}::uuid AND lower(u.email) = ${MEMBER_EMAIL}
-    `) as { role: string }[]
+    `) as { id: string; role: string }[]
     expect(members.map((m) => m.role)).toEqual(["member"])
 
     // Both answers are audited (the outbox drains to audit_events).
+    // Scoped to the invited member's row and her two invitations, so the
+    // clinic creator's own events cannot satisfy it.
     const audit = (await sql`
       SELECT action FROM audit_outbox
       WHERE org_id = ${teamId}::uuid
-        AND action IN ('membership.created', 'invitation.rejected')
+        AND (
+          (action = 'membership.created' AND entity_id = ${members[0]!.id})
+          OR (action = 'invitation.rejected' AND entity_id = ${invitationId})
+        )
     `) as { action: string }[]
     expect(audit.map((row) => row.action).sort()).toEqual([
       "invitation.rejected",
