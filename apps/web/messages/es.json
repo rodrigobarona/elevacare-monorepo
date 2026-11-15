@@ -347,7 +347,6 @@
     "free": "Gratis",
     "fromPrice": "Desde {price}",
     "seeTimes": "Ver horarios",
-    "notBooking": "{name} todavía no acepta reservas aquí. Conoce abajo el trabajo de {name}.",
     "about": "Sobre mí",
     "readMore": "Leer más",
     "readLess": "Mostrar menos",
@@ -372,7 +371,10 @@
       "phone": "teléfono",
       "inPerson": "en persona",
       "inPersonIn": "en persona en {places}",
-      "countries": "Miembros en {countries}"
+      "countries": "Atiende a miembros en {countries}",
+      "countriesMore": "Atiende a miembros en {countries} y {count} países más",
+      "countriesEu": "Atiende a miembros en toda la UE",
+      "countriesEuAnd": "Atiende a miembros en toda la UE y en {countries}"
     },
     "registration": {
       "licence": "N.º de colegiado/a <number>{value}</number>",
@@ -422,21 +424,13 @@
     },
     "withEleva": {
       "heading": "Reservar con Eleva",
-      "howItWorks": {
-        "q": "¿Cómo funciona la reserva?",
-        "a": "Elige un servicio y un horario, añade tu nombre y email y paga de forma segura o confirma una sesión gratuita. El email de confirmación tiene todo lo que necesitas."
-      },
       "account": {
         "q": "¿Necesito una cuenta?",
         "a": "No. Puedes reservar solo con tu nombre y email. Después puedes crear un Espacio gratuito para tener tus sesiones en un solo lugar."
       },
-      "join": {
-        "q": "¿Cómo me uno a una sesión por vídeo?",
-        "a": "Usa el enlace del email de confirmación. Se abre 15 minutos antes del inicio, en tu navegador, sin app ni cuenta."
-      },
       "cancel": {
         "q": "¿Puedo cancelar?",
-        "a": "Sí. Cada servicio indica hasta cuándo puedes cancelar sin coste. Para cancelar, entra con el email con el que reservaste y abre tu sesión."
+        "a": "Sí. Los servicios de pago indican hasta cuándo puedes cancelar sin coste. Para cancelar, entra con el email con el que reservaste y abre tu sesión."
       },
       "care": {
         "q": "¿Quién me atiende?",
@@ -446,6 +440,29 @@
     "freeOption": "Opción gratuita disponible",
     "socialShort": {
       "website": "Web"
+    },
+    "how": {
+      "heading": "Cómo funciona la reserva",
+      "step": "Paso {number}",
+      "choose": {
+        "title": "Elige una hora",
+        "body": "Elige un servicio y una hora que te venga bien, en tu zona horaria."
+      },
+      "book": {
+        "title": "Reserva con seguridad",
+        "body": "Paga online o confirma una sesión gratuita sin pagar. Ves las condiciones de cancelación antes de confirmar."
+      },
+      "join": {
+        "title": "Todo está en tu email",
+        "body": "Tu confirmación incluye el enlace de la videollamada, que se abre 15 minutos antes, o la dirección o los datos de la llamada. Sin app ni cuenta."
+      }
+    },
+    "notBookable": {
+      "heading": "{name} está preparando su perfil en Eleva",
+      "body": "Las reservas se abren cuando haya un servicio disponible. Mientras tanto, puedes reservar con otros especialistas de la misma área.",
+      "others": "Especialistas que puedes reservar ahora",
+      "browse": "Ver todos los especialistas",
+      "bodyAny": "Las reservas se abren cuando haya un servicio disponible. Mientras tanto, puedes reservar con otros especialistas en Eleva."
     }
   },
   "booking": {

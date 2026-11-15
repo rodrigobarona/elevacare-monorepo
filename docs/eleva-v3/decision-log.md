@@ -32,6 +32,36 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-15: Portrait-led expert profile header (D2.2) (active)
+
+- Change (design slice D2.2, references `_context/mobbin/library/03-profile`
+  16–21): the profile opens with a large 4:5 portrait (edge to edge on
+  phones, the name and headline set on it); without a photo the same frame
+  holds a teal field with her initials. Under the name: the registration
+  proof, then fact rows with icons (languages, how and where you meet,
+  where she sees members; the whole EU reads "across the EU"), then area
+  chips, her links and an icon-only share. Training is not repeated in the
+  header (it has its own section).
+- Body: a three-step "How booking works" (choose, book, everything is in
+  your email) replaces the FAQ items that said the same; the FAQ keeps
+  account, cancel and who provides care. Free sessions show no "free
+  cancellation" line. A profile with nothing bookable says bookings open
+  once a service is added and offers bookable experts in the same area (or
+  on Eleva, when she has no area), never a dead end.
+- Payment copy names no method ("pay securely online"): methods come from
+  the Stripe payment-method configuration and vary by country.
+- Follow-ups (not shipped): "Tell me when bookings open" email on an empty
+  profile (PROF-08, needs a consented notify list); a profession line when
+  the headline is empty (setup should require the headline, Phase D4);
+  "My approach", "Your first session" and a two-line header bio (PROF-02,
+  from setup data, D4); "New on Eleva"; reviews; the next free time in the
+  hero; whole-euro prices (D2.3).
+- Judges panel: round 1 UI 7.8, UX 7.5, trust 8.0; round 2 UI 8.6, UX 8.7,
+  trust 8.8. Open nits: the no-photo hero and the small-tile initials use
+  two styles on one page; long in-person service labels wrap on phones.
+- Owner: engineering
+- Status: `active`
+
 ### 2026-11-15: Accepting a clinic invitation (11.1c) (active)
 
 - Change (Phase 11.1c): invitation emails link to `/accept-invitation`

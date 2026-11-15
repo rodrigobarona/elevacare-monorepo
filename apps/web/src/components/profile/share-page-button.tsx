@@ -17,6 +17,7 @@ export function SharePageButton({
   accessibleLabel,
   copiedLabel,
   copyFailedLabel,
+  iconOnly = false,
 }: {
   url: string
   title: string
@@ -26,6 +27,8 @@ export function SharePageButton({
   copiedLabel: string
   /** "Copy this link to share the page:" */
   copyFailedLabel: string
+  /** A quiet icon button; the accessible label still names the page. */
+  iconOnly?: boolean
 }) {
   const [copied, setCopied] = useState(false)
   const [showLink, setShowLink] = useState(false)
@@ -71,18 +74,22 @@ export function SharePageButton({
   return (
     <>
       <Button
-        variant="outline"
-        size="lg"
-        className="min-h-11 rounded-full"
+        variant={iconOnly ? "ghost" : "outline"}
+        size={iconOnly ? "icon" : "lg"}
+        className={
+          iconOnly
+            ? "size-11 rounded-full text-foreground/70 hover:text-foreground"
+            : "min-h-11 rounded-full"
+        }
         aria-label={copied ? copiedLabel : accessibleLabel}
         onPress={() => void share()}
       >
         {copied ? (
-          <CheckIcon data-icon="inline-start" />
+          <CheckIcon data-icon={iconOnly ? undefined : "inline-start"} />
         ) : (
-          <ShareNetworkIcon data-icon="inline-start" />
+          <ShareNetworkIcon data-icon={iconOnly ? undefined : "inline-start"} />
         )}
-        {copied ? copiedLabel : label}
+        {iconOnly ? null : copied ? copiedLabel : label}
       </Button>
       <span role="status" className="sr-only">
         {copied ? copiedLabel : ""}

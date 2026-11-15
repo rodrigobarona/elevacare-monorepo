@@ -347,7 +347,6 @@
     "free": "Gratuito",
     "fromPrice": "Desde {price}",
     "seeTimes": "Ver horários",
-    "notBooking": "{name} ainda não tem marcações abertas aqui. Conheça abaixo o trabalho de {name}.",
     "about": "Sobre mim",
     "readMore": "Ler mais",
     "readLess": "Mostrar menos",
@@ -372,7 +371,10 @@
       "phone": "telefone",
       "inPerson": "presencial",
       "inPersonIn": "presencial em {places}",
-      "countries": "Membros em {countries}"
+      "countries": "Atende membros em {countries}",
+      "countriesMore": "Atende membros em {countries} e mais {count} países",
+      "countriesEu": "Atende membros em toda a UE",
+      "countriesEuAnd": "Atende membros em toda a UE e em {countries}"
     },
     "registration": {
       "licence": "Cédula profissional n.º <number>{value}</number>",
@@ -422,21 +424,13 @@
     },
     "withEleva": {
       "heading": "Marcar com a Eleva",
-      "howItWorks": {
-        "q": "Como funciona a marcação?",
-        "a": "Escolha um serviço e um horário, indique o seu nome e email e pague de forma segura ou confirme uma sessão gratuita. O email de confirmação tem tudo o que precisa."
-      },
       "account": {
         "q": "Preciso de uma conta?",
         "a": "Não. Pode marcar só com o seu nome e email. Depois, pode criar um Espaço gratuito para guardar as suas sessões num só lugar."
       },
-      "join": {
-        "q": "Como entro numa sessão por vídeo?",
-        "a": "Use o link do email de confirmação. Abre 15 minutos antes do início, no seu navegador, sem app nem conta."
-      },
       "cancel": {
         "q": "Posso cancelar?",
-        "a": "Sim. Cada serviço indica até quando pode cancelar sem custos. Para cancelar, entre com o email com que marcou e abra a sua sessão."
+        "a": "Sim. Os serviços pagos indicam até quando pode cancelar sem custos. Para cancelar, entre com o email com que marcou e abra a sua sessão."
       },
       "care": {
         "q": "Quem presta os cuidados?",
@@ -446,6 +440,29 @@
     "freeOption": "Opção gratuita disponível",
     "socialShort": {
       "website": "Site"
+    },
+    "how": {
+      "heading": "Como funciona a marcação",
+      "step": "Passo {number}",
+      "choose": {
+        "title": "Escolha um horário",
+        "body": "Escolha um serviço e um horário que lhe convenha, no seu fuso horário."
+      },
+      "book": {
+        "title": "Marque com segurança",
+        "body": "Pague online ou confirme uma sessão gratuita sem pagamento. Vê as condições de cancelamento antes de confirmar."
+      },
+      "join": {
+        "title": "Tem tudo no seu email",
+        "body": "A confirmação traz o link da videochamada, que abre 15 minutos antes, ou a morada ou os dados da chamada. Não precisa de app nem de conta."
+      }
+    },
+    "notBookable": {
+      "heading": "{name} está a preparar o perfil na Eleva",
+      "body": "As marcações abrem quando houver um serviço disponível. Até lá, pode marcar com outros especialistas da mesma área.",
+      "others": "Especialistas disponíveis para marcar",
+      "browse": "Ver todos os especialistas",
+      "bodyAny": "As marcações abrem quando houver um serviço disponível. Até lá, pode marcar com outros especialistas na Eleva."
     }
   },
   "booking": {

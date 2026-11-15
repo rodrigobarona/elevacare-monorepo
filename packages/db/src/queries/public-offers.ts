@@ -1,4 +1,14 @@
-import { and, asc, desc, eq, exists, inArray, isNull, sql } from "drizzle-orm"
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  exists,
+  inArray,
+  isNotNull,
+  isNull,
+  sql,
+} from "drizzle-orm"
 import { withOrgContext, withPlatformAdminContext } from "../context"
 import * as main from "../schema/main"
 import { licenceVerified } from "./public-listing"
@@ -146,7 +156,11 @@ export async function listPublicMarketplaceExperts(
     }
 
     if (input.minPrice != null || input.maxPrice != null) {
-      const priceConditions = [publishedEventType()]
+      // Only services with an active way to meet can be booked.
+      const priceConditions = [
+        publishedEventType(),
+        isNotNull(main.eventTypeModes.eventTypeId),
+      ]
       if (input.minPrice != null) {
         priceConditions.push(sql`${modePrice} >= ${input.minPrice}`)
       }
@@ -188,7 +202,9 @@ export async function listPublicMarketplaceExperts(
         and(
           eq(main.eventTypes.active, true),
           eq(main.eventTypes.published, true),
-          isNull(main.eventTypes.deletedAt)
+          isNull(main.eventTypes.deletedAt),
+          // A service with no active mode cannot be booked: no price.
+          isNotNull(main.eventTypeModes.eventTypeId)
         )
       )
       .groupBy(main.eventTypes.expertProfileId)
