@@ -324,10 +324,10 @@
     "rankingNote": "O Top Expert é um plano pago para especialistas. Quando escolhe “Top Expert primeiro”, esses especialistas aparecem antes dos restantes.",
     "rankingLink": "Como ordenamos os especialistas",
     "rankingAnchor": "8-como-ordenamos-os-especialistas",
-    "trustLine": "Antes de um perfil ficar visível, a nossa equipa verifica a inscrição profissional de cada especialista.",
+    "trustLine": "Antes de um perfil ficar visível, a nossa equipa confirma a inscrição profissional de cada especialista.",
     "emptyCategory": "Ainda não há especialistas nesta área.",
     "openingTitle": "Os nossos primeiros especialistas estão a abrir as suas práticas",
-    "openingBody": "Verificamos a inscrição profissional de cada especialista antes de o perfil ser publicado. Entretanto, a newsletter Femme Focus leva saúde da mulher baseada em evidência à sua caixa de correio.",
+    "openingBody": "Confirmamos a inscrição profissional de cada especialista antes de o perfil ser publicado. Entretanto, a newsletter Femme Focus leva saúde da mulher baseada em evidência à sua caixa de correio.",
     "openingNewsletter": "Receber a newsletter",
     "openingHelp": "Como funciona a Eleva",
     "openingExpert": "É especialista?",
@@ -336,7 +336,9 @@
     "speaksLanguage": "Fala {language}",
     "removeLanguageFilter": "Remover filtro: fala {language}",
     "sortedBy": "Ordenado por: {sort}",
-    "removeSort": "Remover ordenação: {sort}"
+    "removeSort": "Remover ordenação: {sort}",
+    "checkedMark": "Inscrição confirmada pela Eleva",
+    "orderedBy": "Ordenado por: {sort}."
   },
   "profile": {
     "title": "{name} — Eleva.care",
@@ -373,9 +375,13 @@
       "countries": "Membros em {countries}"
     },
     "registration": {
-      "licence": "Cédula profissional n.º {number}",
-      "ers": "Registo na ERS n.º {number}",
-      "bodyLink": "{body}, registo público (abre num novo separador)"
+      "licence": "Cédula profissional n.º <number>{value}</number>",
+      "bodyLink": "Site da {body} (abre num novo separador)",
+      "checked": "Inscrição confirmada pela Eleva em {month}",
+      "checkedShort": "Inscrição confirmada pela Eleva",
+      "ersFull": "Entidade Reguladora da Saúde (ERS) n.º <number>{value}</number>",
+      "whatWeCheck": "O que confirmamos",
+      "whatWeCheckBody": "Antes de um perfil ficar visível, a nossa equipa procura a cédula profissional no registo público da respetiva Ordem, confirma que a inscrição está ativa e que o nome corresponde ao do perfil, e confirma o registo na Entidade Reguladora da Saúde (ERS). Isto diz respeito à inscrição; não avalia os cuidados prestados. A formação e a experiência são descritas pelo próprio especialista."
     },
     "services": {
       "heading": "Como posso ajudar",
@@ -435,10 +441,6 @@
       "care": {
         "q": "Quem presta os cuidados?",
         "a": "{name} presta os seus cuidados. A Eleva gere a marcação e a videochamada."
-      },
-      "checks": {
-        "q": "O que é que a Eleva verifica?",
-        "a": "Antes de um perfil ficar visível, a nossa equipa verifica a inscrição profissional. A formação e a experiência são descritas por cada especialista."
       }
     },
     "freeOption": "Opção gratuita disponível",

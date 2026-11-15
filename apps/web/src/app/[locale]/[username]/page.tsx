@@ -1,4 +1,4 @@
-import { Suspense } from "react"
+import { Suspense, type ReactNode } from "react"
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
@@ -16,7 +16,13 @@ import { resolveGatewayUrl } from "@eleva/config/env"
 import { professionalBodyById } from "@eleva/config/professional-bodies"
 import { isReserved } from "@eleva/config/reserved-usernames"
 import { RichTextViewer } from "@eleva/editor/rich-text-viewer"
-import { CheckIcon, MapPinIcon, SOCIAL_LINK_ICONS } from "@eleva/icons"
+import {
+  CaretDownIcon,
+  CheckIcon,
+  MapPinIcon,
+  ShieldCheckIcon,
+  SOCIAL_LINK_ICONS,
+} from "@eleva/icons"
 import {
   ExpertMonogram,
   ExpertPortrait,
@@ -215,6 +221,13 @@ export default async function ExpertProfilePage({ params }: Props) {
                     {expert.headline}
                   </p>
                 ) : null}
+                {/* Proof sits right under who she is, above the fold on
+                    phones (PROF-01). */}
+                <RegistrationProof
+                  registration={expert.registration}
+                  locale={locale}
+                  t={t}
+                />
                 {credential ? (
                   <p className="text-base text-muted-foreground">
                     {credential}
@@ -226,12 +239,6 @@ export default async function ExpertProfilePage({ params }: Props) {
                   {facts.join(" · ")}
                 </p>
               ) : null}
-              <RegistrationLine
-                registration={expert.registration}
-                licenceLabel={(number) => t("registration.licence", { number })}
-                ersLabel={(number) => t("registration.ers", { number })}
-                bodyLinkLabel={(body) => t("registration.bodyLink", { body })}
-              />
               <div className="flex flex-wrap items-center gap-3">
                 {expert.socialLinks.length > 0 ? (
                   <ul className="flex flex-wrap gap-1">
@@ -323,6 +330,11 @@ export default async function ExpertProfilePage({ params }: Props) {
                     username={expert.username}
                     eventTypes={bookable}
                     timeZone={geo.timeZone}
+                    checked={
+                      professionalBodyById(
+                        expert.registration?.professionalBody
+                      ) != null
+                    }
                     t={t}
                   />
                 </Suspense>
@@ -432,7 +444,6 @@ const WITH_ELEVA_ITEMS = [
   "join",
   "cancel",
   "care",
-  "checks",
 ] as const
 
 function BioBody({
@@ -632,12 +643,15 @@ async function ProfileBookingCard({
   username,
   eventTypes,
   timeZone,
+  checked,
   t,
 }: {
   locale: Locale
   username: string
   eventTypes: PublicEventType[]
   timeZone: string
+  /** Eleva checked the expert's registration: repeated beside booking. */
+  checked: boolean
   t: ProfileT
 }) {
   // Hour-aligned so the API's calendar busy cache key repeats across renders.
@@ -783,6 +797,7 @@ async function ProfileBookingCard({
         laterDates: t("card.laterDates"),
         seeAll: t("card.seeAll"),
         noAccount: t("card.noAccount"),
+        checked: checked ? t("registration.checkedShort") : undefined,
       }}
     />
   )
@@ -904,46 +919,88 @@ function pickBio(expert: PublicExpertProfile, locale: Locale): string | null {
 }
 
 /**
- * The registration Eleva staff checked: professional body (linked to its
- * public register), licence number and ERS number. Plain facts, no badge
- * (expert-profile-booking-ux-spec: "only real proof").
+ * The registration Eleva staff checked, as proof under the name (Care.com,
+ * Headspace): who checked, when, what (professional body and licence, the
+ * health regulator's number written out) and a plain "What we check".
+ * The wording ("checked", not "verified") needs legal review.
  */
-function RegistrationLine({
+function RegistrationProof({
   registration,
-  licenceLabel,
-  ersLabel,
-  bodyLinkLabel,
+  locale,
+  t,
 }: {
   registration: PublicExpertProfile["registration"]
-  licenceLabel: (number: string) => string
-  ersLabel: (number: string) => string
-  bodyLinkLabel: (body: string) => string
+  locale: Locale
+  t: ProfileT
 }) {
   const body = professionalBodyById(registration?.professionalBody)
   if (!registration || !body) return null
+  const month = registration.checkedAt
+    ? new Intl.DateTimeFormat(intlLocales[locale], {
+        month: "long",
+        year: "numeric",
+        // "YYYY-MM" parses as UTC midnight on the 1st: keep it in UTC.
+        timeZone: "UTC",
+      }).format(new Date(registration.checkedAt))
+    : null
+  // Numbers never break: they are what a member types into the register.
+  const number = (chunks: ReactNode) => (
+    <span className="whitespace-nowrap">{chunks}</span>
+  )
   return (
-    <p
+    <div
       data-testid="expert-registration"
-      className="max-w-2xl text-sm text-pretty text-muted-foreground"
+      className="max-w-xl rounded-2xl border bg-card/70 px-4 py-3"
     >
-      <a
-        href={body.website}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label={bodyLinkLabel(body.name)}
-        className="underline decoration-border underline-offset-4 hover:text-foreground hover:decoration-foreground"
-      >
-        {body.name}
-      </a>
-      {" · "}
-      {licenceLabel(registration.licenceNumber)}
-      {registration.ersRegistrationNumber ? (
-        <>
+      <h2 className="flex items-center gap-2 text-[0.9375rem] font-medium">
+        <ShieldCheckIcon
+          aria-hidden
+          className="size-5 shrink-0 text-primary"
+          weight="fill"
+        />
+        {month
+          ? t("registration.checked", { month })
+          : t("registration.checkedShort")}
+      </h2>
+      <ul className="mt-1.5 space-y-0.5 pl-7 text-sm text-muted-foreground">
+        <li>
+          <a
+            href={body.website}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={t("registration.bodyLink", { body: body.name })}
+            className="rounded-sm text-foreground/80 underline decoration-foreground/40 underline-offset-4 hover:text-foreground hover:decoration-foreground focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none"
+          >
+            {body.name}
+          </a>
           {" · "}
-          {ersLabel(registration.ersRegistrationNumber)}
-        </>
-      ) : null}
-    </p>
+          {t.rich("registration.licence", {
+            number,
+            value: registration.licenceNumber,
+          })}
+        </li>
+        {registration.ersRegistrationNumber ? (
+          <li>
+            {t.rich("registration.ersFull", {
+              number,
+              value: registration.ersRegistrationNumber,
+            })}
+          </li>
+        ) : null}
+      </ul>
+      <details className="group mt-1.5 pl-7 text-sm">
+        <summary className="inline-flex min-h-6 cursor-pointer list-none items-center gap-1 rounded-sm font-medium text-primary underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none [&::-webkit-details-marker]:hidden">
+          {t("registration.whatWeCheck")}
+          <CaretDownIcon
+            aria-hidden
+            className="size-3.5 transition-transform group-open:rotate-180"
+          />
+        </summary>
+        <p className="mt-1.5 text-pretty text-muted-foreground">
+          {t("registration.whatWeCheckBody")}
+        </p>
+      </details>
+    </div>
   )
 }
 

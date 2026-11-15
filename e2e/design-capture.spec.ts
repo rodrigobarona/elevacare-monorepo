@@ -296,6 +296,15 @@ test.describe("design capture", () => {
         // Public API budget is 10 req/min for direct callers.
         await page.waitForTimeout(2_500)
       }
+      // The registration proof with "What we check" open.
+      await page.goto(`${webUrl}/${PAID_EXPERT}`)
+      await clearBanner(page)
+      const proof = page.getByTestId("expert-registration")
+      await proof.locator("summary").click()
+      await proof.scrollIntoViewIfNeeded()
+      await shoot(page, "03-profile", "04-profile-what-we-check", kind, {
+        fullPage: false,
+      })
       await context.close()
     })
 

@@ -5,7 +5,12 @@ import {
   type ListPublicExpertsResponse,
 } from "@eleva/api-client"
 import { defaultLocale, isLocale } from "@eleva/config/i18n"
-import { ArrowRightIcon, CaretDownIcon, XIcon } from "@eleva/icons"
+import {
+  ArrowRightIcon,
+  CaretDownIcon,
+  ShieldCheckIcon,
+  XIcon,
+} from "@eleva/icons"
 import { ElevaImage } from "@eleva/media/image"
 import { CtaBand } from "@eleva/ui/blocks/cta-band"
 import { ExpertCard } from "@eleva/ui/blocks/expert-card"
@@ -330,6 +335,40 @@ export async function Explorer({
             ) : null}
 
             {experts.length > 0 ? (
+              // What every card shares, and how the list is ordered, sit
+              // above the results (TRUST-13, DISC-05).
+              <div
+                className="mb-6 flex flex-col gap-2 text-sm text-pretty text-muted-foreground sm:mb-8 lg:flex-row lg:items-start lg:justify-between lg:gap-8"
+                data-testid="experts-ranking-note"
+              >
+                <p className="flex items-start gap-2">
+                  <ShieldCheckIcon
+                    aria-hidden
+                    className="mt-0.5 size-4 shrink-0 text-primary"
+                    weight="fill"
+                  />
+                  {t("trustLine")}
+                </p>
+                <p className="lg:max-w-md">
+                  {/* The sort chip above already says the sort on a short
+                      deep-linked list. */}
+                  {!showFilters && sortLabel
+                    ? null
+                    : `${t("orderedBy", {
+                        sort: sortLabel ?? t("sort.relevance"),
+                      })} `}
+                  {showFilters ? `${t("rankingNote")} ` : null}
+                  <Link
+                    href={`/legal/terms#${t("rankingAnchor")}`}
+                    className="underline underline-offset-4 hover:text-foreground"
+                  >
+                    {t("rankingLink")}
+                  </Link>
+                </p>
+              </div>
+            ) : null}
+
+            {experts.length > 0 ? (
               <ul className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
                 {experts.map((expert) => {
                   const areas = expert.categorySlugs
@@ -354,6 +393,8 @@ export async function Explorer({
                         badge={
                           expert.topExpertActive ? t("topExpert") : undefined
                         }
+                        // Every listed expert passed the registration check.
+                        checkedLabel={t("checkedMark")}
                         meta={areas.length > 0 ? areas.join(" · ") : undefined}
                         price={
                           expert.minPriceCents == null
@@ -387,21 +428,6 @@ export async function Explorer({
                   <ArrowRightIcon data-icon="inline-end" />
                 </Link>
               </div>
-            ) : null}
-
-            {experts.length > 0 ? (
-              <p
-                className="mt-10 max-w-2xl text-sm text-pretty text-muted-foreground"
-                data-testid="experts-ranking-note"
-              >
-                {t("trustLine")} {showFilters ? `${t("rankingNote")} ` : null}
-                <Link
-                  href={`/legal/terms#${t("rankingAnchor")}`}
-                  className="underline underline-offset-4 hover:text-foreground"
-                >
-                  {t("rankingLink")}
-                </Link>
-              </p>
             ) : null}
           </Container>
         </Section>

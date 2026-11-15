@@ -2416,6 +2416,8 @@ export const PublicExpertProfileSchema = z.object({
       professionalBody: ProfessionalBodySchema,
       licenceNumber: z.string(),
       ersRegistrationNumber: z.string().nullable(),
+      /** Month Eleva staff approved the registration, "YYYY-MM". */
+      checkedAt: z.string().nullable(),
     })
     .nullable(),
   languages: z.array(z.string()),

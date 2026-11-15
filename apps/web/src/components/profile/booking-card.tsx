@@ -5,6 +5,7 @@ import {
   ArrowRightIcon,
   MapPinIcon,
   PhoneIcon,
+  ShieldCheckIcon,
   VideoCameraIcon,
 } from "@eleva/icons"
 import { ChoiceRows } from "@eleva/ui/components/booking/choice-rows"
@@ -65,6 +66,8 @@ export function BookingCard({
     laterDates: string
     seeAll: string
     noAccount: string
+    /** "Registration checked by Eleva", when it was. */
+    checked?: string
   }
 }) {
   const [selected, setSelected] = useState(services[0]?.slug ?? "")
@@ -171,6 +174,16 @@ export function BookingCard({
         <li className="font-medium text-foreground">{service.meta}</li>
         <li>{labels.noAccount}</li>
         {service.policy ? <li>{service.policy}</li> : null}
+        {labels.checked ? (
+          <li className="flex items-center gap-1.5">
+            <ShieldCheckIcon
+              aria-hidden
+              className="size-4 shrink-0 text-primary"
+              weight="fill"
+            />
+            {labels.checked}
+          </li>
+        ) : null}
       </ul>
     </section>
   )

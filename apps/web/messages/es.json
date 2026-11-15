@@ -336,7 +336,9 @@
     "speaksLanguage": "Habla {language}",
     "removeLanguageFilter": "Quitar filtro: habla {language}",
     "sortedBy": "Ordenado por: {sort}",
-    "removeSort": "Quitar orden: {sort}"
+    "removeSort": "Quitar orden: {sort}",
+    "checkedMark": "Colegiación comprobada por Eleva",
+    "orderedBy": "Ordenado por: {sort}."
   },
   "profile": {
     "title": "{name} — Eleva.care",
@@ -373,9 +375,13 @@
       "countries": "Miembros en {countries}"
     },
     "registration": {
-      "licence": "Cédula profesional n.º {number}",
-      "ers": "Registro en la ERS n.º {number}",
-      "bodyLink": "{body}, registro público (se abre en una pestaña nueva)"
+      "licence": "N.º de colegiado/a <number>{value}</number>",
+      "bodyLink": "Web de la {body} (se abre en una pestaña nueva)",
+      "checked": "Colegiación comprobada por Eleva en {month}",
+      "checkedShort": "Colegiación comprobada por Eleva",
+      "ersFull": "Entidad Reguladora de la Salud de Portugal (ERS) n.º <number>{value}</number>",
+      "whatWeCheck": "Qué comprobamos",
+      "whatWeCheckBody": "Antes de que un perfil sea visible, nuestro equipo busca el número de colegiado del especialista en el registro público de su colegio profesional, comprueba que la colegiación está activa y que el nombre coincide con el del perfil, y confirma su registro en la Entidad Reguladora de la Salud de Portugal (ERS). Esto confirma la colegiación; no evalúa la atención en sí. La formación y la experiencia las describe el propio especialista."
     },
     "services": {
       "heading": "Cómo puedo ayudarte",
@@ -435,10 +441,6 @@
       "care": {
         "q": "¿Quién me atiende?",
         "a": "{name} te atiende. Eleva gestiona la reserva y la videollamada."
-      },
-      "checks": {
-        "q": "¿Qué comprueba Eleva?",
-        "a": "Antes de que un perfil se publique, nuestro equipo comprueba la colegiación profesional. Cada especialista describe su propia formación y experiencia."
       }
     },
     "freeOption": "Opción gratuita disponible",

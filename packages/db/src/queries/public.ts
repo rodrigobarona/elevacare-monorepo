@@ -93,6 +93,8 @@ export interface PublicExpertRegistration {
   professionalBody: string
   licenceNumber: string
   ersRegistrationNumber: string | null
+  /** When Eleva staff approved it (the application's `reviewed_at`). */
+  checkedAt: Date | null
 }
 
 export interface PublicClinicProfile {
@@ -206,6 +208,7 @@ export async function findExpertByUsername(
         licenceNumber: main.becomePartnerApplications.licenceNumber,
         ersRegistrationNumber:
           main.becomePartnerApplications.ersRegistrationNumber,
+        reviewedAt: main.becomePartnerApplications.reviewedAt,
       })
       .from(main.becomePartnerApplications)
       .where(
@@ -226,6 +229,7 @@ export async function findExpertByUsername(
             licenceNumber: approved.licenceNumber.trim(),
             ersRegistrationNumber:
               approved.ersRegistrationNumber.trim() || null,
+            checkedAt: approved.reviewedAt,
           }
         : null,
     }
