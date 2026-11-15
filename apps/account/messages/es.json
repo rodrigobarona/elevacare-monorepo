@@ -224,5 +224,33 @@
     "spaceHint": "Estos controles están en tu Space.",
     "noSpace": "Necesitas un Space personal para gestionar estos controles.",
     "openControls": "Abrir controles de privacidad"
+  },
+  "invitation": {
+    "loading": "Abriendo tu invitación…",
+    "heading": "Te han invitado a unirte",
+    "invitedBy": "Invitación de {inviter}, como {role}",
+    "roleMember": "especialista",
+    "roleAdmin": "administrador/a",
+    "sentTo": "Esta invitación se envió a {email}.",
+    "whatJoining": "Al unirte puedes ofrecer sesiones como parte de esta consulta; tu Space y tu propia consulta siguen siendo tuyos.",
+    "accept": "Unirme a {org}",
+    "joining": "Uniéndote…",
+    "decline": "Ahora no",
+    "signedInAs": "Has iniciado sesión como {email}.",
+    "notYou": "¿No eres tú?",
+    "limitReached": "{org} no tiene plazas libres ahora mismo. Pídeles que hagan sitio y vuelve a intentarlo.",
+    "joinedHeading": "Te has unido a {org}",
+    "joinedBody": "Ahora es tu espacio de trabajo activo. Puedes cambiar entre tus espacios cuando quieras.",
+    "open": "Abrir {org}",
+    "declinedHeading": "Invitación rechazada",
+    "declinedBody": "Se lo hemos dicho a {org}. Si cambias de idea, pídeles una nueva invitación.",
+    "wrongAccountHeading": "Esta invitación es para otro email",
+    "wrongAccountBody": "Has iniciado sesión como {email}. Cierra sesión, abre de nuevo el enlace de la invitación y entra con el email al que se envió.",
+    "verifyHeading": "Confirma primero tu email",
+    "verifyBody": "Abre el enlace de confirmación que te enviamos y vuelve a esta invitación.",
+    "unavailableHeading": "Esta invitación ya no está disponible",
+    "unavailableBody": "Puede que haya caducado, se haya cancelado o ya se haya usado. Pide a la consulta que te envíe una nueva.",
+    "switchAccount": "Cerrar sesión y cambiar",
+    "goToEleva": "Ir a Eleva"
   }
 }

@@ -94,6 +94,7 @@ describe("resolveDispatch - account zone", () => {
       "/verify-email",
       "/reset-password",
       "/two-factor",
+      "/accept-invitation",
     ]) {
       expect(resolveDispatch(path, false, origins)).toEqual({
         kind: "rewrite",

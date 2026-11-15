@@ -1,0 +1,63 @@
+{
+  "surface": "11-team",
+  "title": "Clinic (team) admin and membership",
+  "researcher": "Activation",
+  "date": "2026-11-15",
+  "summary": "Invitation acceptance, the first team surface built (Phase 11.1c). References show the clinic as a card, one clear question, which email the invite was sent to, and a confirmed state with one next step.",
+  "references": [
+    {
+      "id": "11-team/01",
+      "file": "img/01-attio-accept-invite-almost-there.jpg",
+      "app": "Attio",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/cc9ec9af-d3e9-4a89-af5e-0e7ddaf46779?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Accept page: the workspace as a card, one question, two buttons",
+      "why": "A quiet centred page: 'Almost there!', the workspace as a small card (logo, name, URL), 'Do you want to accept your invite to this workspace?' with the terms line under it, then 'Yes, take me there' (primary) and 'Not yet' (secondary). Footer with privacy, support and sign out.",
+      "apply": "Name the clinic and show it as a card; ask one question; offer accept and a gentle 'Not now' (decline) of equal clarity; keep legal lines small under the question.",
+      "query": "accept an invitation to join a team workspace"
+    },
+    {
+      "id": "11-team/02",
+      "file": "img/02-slack-join-invited-workspace.jpg",
+      "app": "Slack",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/aadc3502-05ad-470b-b3f9-d9db11fcb92a?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Join page that says which email the invitation was sent to",
+      "why": "'Join ASMobbin on Slack' as the headline, a line on what it is, who has already joined, then 'You're accepting an invitation sent to samlee@…' above the form, so the person knows which address the invite belongs to.",
+      "apply": "Say which email the invitation was sent to; if the signed-in account is different, say so and offer to switch account.",
+      "query": "accept an invitation to join a team workspace"
+    },
+    {
+      "id": "11-team/03",
+      "file": "img/03-hilos-you-are-invited-card.jpg",
+      "app": "hilos",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/509e8fe1-9d4e-4e84-a8a8-f83cf2478348?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Invitation card with sender, address and 'Not you?'",
+      "why": "A single card: illustration, eyebrow 'You're invited', 'Join alexsmith's Workspace', 'This invitation was sent to j•••@gmail.com', one button, and 'Signed in as … Not you?' at the bottom.",
+      "apply": "Mask the invited address, show who is signed in, and give 'Not you?' to switch.",
+      "query": "accept an invitation to join a team workspace"
+    },
+    {
+      "id": "11-team/04",
+      "file": "img/04-craft-invited-joined-state.jpg",
+      "app": "Craft",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/42661382-7e20-4ccb-8383-485465f039c2?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Invited → joined, with the next step in the same card",
+      "why": "'You've been invited to join' with the team card (name, 'invited by Alex Smith'); after accepting, the same card shows a check, 'You joined Alex's Family with jdoe@…' and 'Visit Team'.",
+      "apply": "After accepting, confirm in place with who and where, and give one button to the clinic dashboard.",
+      "query": "accept an invitation to join a team workspace"
+    }
+  ],
+  "judging_criteria": [
+    "Does the page name the clinic and who invited her, and show which email the invitation was sent to? (Attio 11-team/01, Slack 11-team/02, hilos 11-team/03)",
+    "Is there one clear accept action and an equally clear way to decline or not now, with what happens next said in plain words? (Attio 11-team/01, Craft 11-team/04)",
+    "If the signed-in account does not match the invitation, does the page say so and offer to switch, instead of failing? (hilos 11-team/03, Slack 11-team/02)",
+    "Do expired, cancelled and already-used invitations each say what happened and what to do? "
+  ]
+}

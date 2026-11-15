@@ -224,5 +224,33 @@
     "spaceHint": "Estes controlos estão no seu Space.",
     "noSpace": "Precisa de um Space pessoal para gerir estes controlos.",
     "openControls": "Abrir controlos de privacidade"
+  },
+  "invitation": {
+    "loading": "A abrir o seu convite…",
+    "heading": "Foi convidado para se juntar",
+    "invitedBy": "Convite de {inviter}, como {role}",
+    "roleMember": "especialista",
+    "roleAdmin": "administrador",
+    "sentTo": "Este convite foi enviado para {email}.",
+    "whatJoining": "Ao juntar-se, pode oferecer sessões como parte desta prática; o seu Space e a sua própria prática continuam a ser seus.",
+    "accept": "Juntar-me a {org}",
+    "joining": "A juntar…",
+    "decline": "Agora não",
+    "signedInAs": "Sessão iniciada como {email}.",
+    "notYou": "Não é você?",
+    "limitReached": "{org} não tem vagas neste momento. Peça que libertem um lugar e tente de novo.",
+    "joinedHeading": "Juntou-se a {org}",
+    "joinedBody": "É agora o seu espaço de trabalho ativo. Pode alternar entre os seus espaços a qualquer momento.",
+    "open": "Abrir {org}",
+    "declinedHeading": "Convite recusado",
+    "declinedBody": "Avisámos {org}. Se mudar de ideias, peça que lhe enviem um novo convite.",
+    "wrongAccountHeading": "Este convite é para outro email",
+    "wrongAccountBody": "Tem sessão iniciada como {email}. Termine a sessão, abra de novo o link do convite e entre com o email para onde foi enviado.",
+    "verifyHeading": "Confirme primeiro o seu email",
+    "verifyBody": "Abra o link de confirmação que lhe enviámos e depois volte a este convite.",
+    "unavailableHeading": "Este convite já não está disponível",
+    "unavailableBody": "Pode ter expirado, sido cancelado ou já ter sido usado. Peça à prática que lhe envie um novo.",
+    "switchAccount": "Terminar sessão e trocar",
+    "goToEleva": "Ir para a Eleva"
   }
 }

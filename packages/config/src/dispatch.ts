@@ -55,7 +55,8 @@ const localeSet = new Set<string>(locales)
  *  4. Platform admin (/admin/*) -> admin subdomain redirect
  *  5. Fixed account segments (/onboarding, /account/*) -> account zone
  *  6. Account standalone (/dashboard, /login, /callback, /logout,
- *     /signup, /verify-email, /reset-password, /two-factor) at depth 1
+ *     /signup, /verify-email, /reset-password, /two-factor,
+ *     /accept-invitation) at depth 1
  *     -> account zone
  *  7. App standalone at depth 1 -> app zone
  *  8. Org-scoped second segment (/:slug/team|admin|academy|settings|privacy|

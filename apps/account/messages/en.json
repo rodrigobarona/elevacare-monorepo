@@ -224,5 +224,33 @@
     "spaceHint": "These controls live in your Space.",
     "noSpace": "You need a personal Space to manage these controls.",
     "openControls": "Open privacy controls"
+  },
+  "invitation": {
+    "loading": "Opening your invitation…",
+    "heading": "You're invited to join",
+    "invitedBy": "Invited by {inviter}, as {role}",
+    "roleMember": "an expert",
+    "roleAdmin": "an admin",
+    "sentTo": "This invitation was sent to {email}.",
+    "whatJoining": "Joining lets you offer sessions as part of this practice; your own Space and practice stay yours.",
+    "accept": "Join {org}",
+    "joining": "Joining…",
+    "decline": "Not now",
+    "signedInAs": "Signed in as {email}.",
+    "notYou": "Not you?",
+    "limitReached": "{org} has no free places right now. Ask them to make room, then try again.",
+    "joinedHeading": "You've joined {org}",
+    "joinedBody": "It's now your active workspace. You can switch between your workspaces at any time.",
+    "open": "Open {org}",
+    "declinedHeading": "Invitation declined",
+    "declinedBody": "We've let {org} know. If you change your mind, ask them to send a new invitation.",
+    "wrongAccountHeading": "This invitation is for another email",
+    "wrongAccountBody": "You're signed in as {email}. Sign out, then open the invitation link again and sign in with the email it was sent to.",
+    "verifyHeading": "Confirm your email first",
+    "verifyBody": "Open the confirmation link we sent you, then come back to this invitation.",
+    "unavailableHeading": "This invitation is no longer open",
+    "unavailableBody": "It may have expired, been cancelled or already been used. Ask the practice to send you a new one.",
+    "switchAccount": "Sign out and switch",
+    "goToEleva": "Go to Eleva"
   }
 }
