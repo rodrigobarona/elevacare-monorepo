@@ -85,7 +85,7 @@ Each entry should include:
 - Owner: engineering
 - Status: `active`
 
-### 2026-11-15: Checked-registration proof on profiles and cards (D2.1) (needs legal review)
+### 2026-11-15: Checked-registration proof on profiles and cards (D2.1) (active)
 
 - Change (design slice D2.1): under the expert's name, a proof block says
   Eleva checked the registration and in which month (the approval's
@@ -96,20 +96,19 @@ Each entry should include:
   repeats in the booking card and on every explorer card (every listed
   expert passed it: `licenceVerified()`); how the list is ordered sits above
   the results.
-- Needs legal review, not signed off: the wording "checked" (EN),
-  "confirmada" (PT) and "comprobada" (ES) for a seal-like mark (DL 238/2015,
-  ERS Regulation 1058/2016). The legal terms (`content/legal/*/terms.mdx`
-  clauses 1, 3 and 8) still say "verified / verificada": counsel should
-  settle one word for product and contract. Terms and privacy notice should
-  say the check month is published.
+- Legal wording approved by the founder on 2026-11-15 (checked and
+  correct as shipped): "checked" (EN), "confirmada" (PT) and "comprobada"
+  (ES) for the mark (DL 238/2015, ERS Regulation 1058/2016). The legal
+  terms (`content/legal/*/terms.mdx` clauses 1, 3 and 8) keep "verified /
+  verificada"; the founder accepted both words as they stand.
 - Follow-ups (not shipped): the body name links to its website, not a
   public-register search (add `registerSearchUrl` per body where one
   exists); no recheck cadence exists, so the mark shows the month of the
   last check only; the explorer's trust line has no "What we check" target
   yet; a Top Expert card is not in the design capture (no seeded Top
   Expert).
-- Owner: engineering; legal review: counsel
-- Status: `needs-review`
+- Owner: engineering; legal wording: founder (approved 2026-11-15)
+- Status: `active`
 
 ### 2026-11-14: A clinic is verified by an approved staff check, not a profile flag (active)
 
@@ -129,6 +128,10 @@ Each entry should include:
 - Also added: billing address, specialties and `payout_mode` (default
   `expert`); `bookings.attributed_org_id`, set only
   from the booking source (later 11.1 PR).
+- Production database: migrations 0074 and 0075 applied to the production
+  Neon `main` branch on 2026-11-15 at the founder's request, after restore
+  branch `restore/pre-0074-0075-2026-11-15`. Nothing is pending there; the
+  new clinic columns and `clinic_verifications` exist.
 - Owner: engineering
 
 ### 2026-11-14: Thank-you page and booking unhappy paths (D1.5) (active)
