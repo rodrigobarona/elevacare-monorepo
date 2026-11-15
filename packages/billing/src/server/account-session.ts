@@ -50,6 +50,18 @@ export async function createAccountSession(
  * workspace; payments-payouts-spec.md tracks which permissions each
  * embedded component needs.
  */
+/**
+ * Stripe rejects an AccountSession when `balances` and `payouts` are
+ * requested together with different payout features ("The
+ * `features[edit_payout_schedule]` property specified by `payouts` and
+ * `balances` must be the same"). Both read from this one object.
+ */
+const PAYOUT_FEATURES = {
+  instant_payouts: false,
+  standard_payouts: true,
+  edit_payout_schedule: true,
+} as const
+
 function buildComponentMap(
   components: ConnectComponentName[]
 ): Record<string, { enabled: boolean; features?: Record<string, unknown> }> {
@@ -76,20 +88,10 @@ function buildComponentMap(
         }
         break
       case "balances":
-        out.balances = {
-          enabled: true,
-          features: { instant_payouts: false, standard_payouts: true },
-        }
+        out.balances = { enabled: true, features: { ...PAYOUT_FEATURES } }
         break
       case "payouts":
-        out.payouts = {
-          enabled: true,
-          features: {
-            instant_payouts: false,
-            standard_payouts: true,
-            edit_payout_schedule: true,
-          },
-        }
+        out.payouts = { enabled: true, features: { ...PAYOUT_FEATURES } }
         break
       case "payments":
         out.payments = {
