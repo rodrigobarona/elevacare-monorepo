@@ -58,6 +58,7 @@ export function AcceptInvitation({
   )
   const [busy, setBusy] = useState<"accept" | "decline" | "switch" | null>(null)
   const [limitReached, setLimitReached] = useState(false)
+  const [switchFailed, setSwitchFailed] = useState(false)
   const headingRef = useRef<HTMLHeadingElement>(null)
 
   useEffect(() => {
@@ -128,7 +129,16 @@ export function AcceptInvitation({
   /** Sign out, then sign in again and come straight back here. */
   async function switchAccount() {
     setBusy("switch")
-    await authClient.signOut().catch(() => undefined)
+    setSwitchFailed(false)
+    const { error } = await authClient
+      .signOut()
+      .catch(() => ({ error: { code: "SIGN_OUT_FAILED" } }))
+    if (error) {
+      // Still signed in: going to /login would loop back here.
+      setBusy(null)
+      setSwitchFailed(true)
+      return
+    }
     const back = `/accept-invitation?id=${encodeURIComponent(invitationId ?? "")}`
     window.location.assign(`/login?returnTo=${encodeURIComponent(back)}`)
   }
@@ -247,14 +257,20 @@ export function AcceptInvitation({
             </div>
             <p className="text-sm text-muted-foreground">
               {t("signedInAs", { email: signedInEmail })}{" "}
-              <button
-                type="button"
-                onClick={() => void switchAccount()}
-                className="inline-flex min-h-6 items-center rounded-sm font-medium text-primary underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none"
+              <Button
+                variant="link"
+                className="h-auto min-h-6 p-0 font-medium underline underline-offset-4"
+                isPending={busy === "switch"}
+                onPress={() => void switchAccount()}
               >
                 {t("notYou")}
-              </button>
+              </Button>
             </p>
+            {switchFailed ? (
+              <p role="alert" className="text-sm text-destructive">
+                {t("switchFailed")}
+              </p>
+            ) : null}
           </>
         )}
       </AuthStep>
@@ -289,6 +305,11 @@ export function AcceptInvitation({
           >
             {t("switchAccount")}
           </Button>
+        ) : null}
+        {switchFailed ? (
+          <p role="alert" className="w-full text-sm text-destructive">
+            {t("switchFailed")}
+          </p>
         ) : null}
         <LinkButton
           href="/dashboard"

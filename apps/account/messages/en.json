@@ -232,7 +232,7 @@
     "roleMember": "As an expert",
     "roleAdmin": "As a clinic admin",
     "sentTo": "This invitation was sent to {email}.",
-    "whatJoining": "Joining lets you offer sessions with {org}, and bookings made through {org} show there. Your own Space, your practice and your members' records stay yours.",
+    "whatJoining": "Joining lets you offer sessions as part of {org}. Your own Space, your practice and your members' records stay yours.",
     "accept": "Join {org}",
     "joining": "Joining…",
     "decline": "Decline",
@@ -254,6 +254,7 @@
     "goToEleva": "Go to Eleva",
     "decideLater": "Decide later",
     "joinedWith": "You joined with {email}",
-    "joinedBodyNoSwitch": "Open it from your workspaces whenever you're ready."
+    "joinedBodyNoSwitch": "Open it from your workspaces whenever you're ready.",
+    "switchFailed": "We couldn't sign you out. Please try again."
   }
 }

@@ -31,6 +31,7 @@ import {
 } from "../send-auth-email"
 import { isTrustedOrigin, trustedOrigins } from "../trusted-origins"
 import { authRateLimitEnabled } from "../e2e-auth-url"
+import { logError } from "@eleva/observability"
 import { recordInvitationResponse } from "../invitations"
 import { invitationAcceptUrl } from "../invitation-accept-url"
 import {
@@ -349,10 +350,8 @@ function createAuth() {
               memberId: member.id,
               outcome: "accepted",
             }).catch((err: unknown) => {
-              console.error(
-                "[auth] invitation accept audit failed",
-                err instanceof Error ? err.message : "unknown"
-              )
+              // Not atomic with Better Auth's write: surface the gap.
+              logError("[auth] invitation accept audit failed", err)
             })
           },
           afterRejectInvitation: async ({
@@ -371,10 +370,8 @@ function createAuth() {
               role: invitation.role,
               outcome: "rejected",
             }).catch((err: unknown) => {
-              console.error(
-                "[auth] invitation decline audit failed",
-                err instanceof Error ? err.message : "unknown"
-              )
+              // Not atomic with Better Auth's write: surface the gap.
+              logError("[auth] invitation decline audit failed", err)
             })
           },
         },

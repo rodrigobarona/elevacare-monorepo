@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, type ReactNode, type Ref } from "react"
+import { useEffect, useId, useState, type ReactNode, type Ref } from "react"
 import { useTranslations } from "next-intl"
 import { ArrowSquareOutIcon, PaperPlaneTiltIcon } from "@eleva/icons"
 import { Button } from "@eleva/ui/components/button"
@@ -48,6 +48,7 @@ export function AuthHeading({
   headingRef?: Ref<HTMLHeadingElement>
   headingProps?: { "data-testid"?: string; "data-state"?: string }
 }) {
+  const descriptionId = useId()
   return (
     <header className={cn("flex flex-col gap-2", className)}>
       {icon ? (
@@ -58,13 +59,18 @@ export function AuthHeading({
       <h1
         ref={headingRef}
         tabIndex={headingRef ? -1 : undefined}
+        // When focus moves here, the explanation is read with the title.
+        aria-describedby={headingRef && description ? descriptionId : undefined}
         {...headingProps}
         className="font-display text-3xl leading-tight font-normal tracking-tight text-balance text-foreground outline-none sm:text-4xl"
       >
         {title}
       </h1>
       {description ? (
-        <p className="text-base text-pretty text-muted-foreground">
+        <p
+          id={descriptionId}
+          className="text-base text-pretty text-muted-foreground"
+        >
           {description}
         </p>
       ) : null}

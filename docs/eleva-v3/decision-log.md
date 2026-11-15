@@ -32,6 +32,29 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-15: Accepting a clinic invitation (11.1c) (active)
+
+- Change (Phase 11.1c): invitation emails link to `/accept-invitation`
+  (account app), which now exists. It names the clinic, who invited her and
+  to which email, and offers Join, Decline (final) and Decide later.
+  Wrong account, unavailable and unverified-email states each say what to
+  do; switching account signs out and returns to the invitation.
+- Accepting and declining are audited from Better Auth's
+  `after*Invitation` hooks (`membership.created`, `invitation.rejected`);
+  a failed audit is reported to the error monitor. Invitations require a
+  verified email (`requireEmailVerificationOnInvitation`). Account-app
+  paths are reserved usernames, with a test keeping them in sync.
+- Follow-ups (not shipped): accept through an `apps/api` route so the
+  membership and its audit row commit atomically; Better Auth invitation
+  endpoints in `/openapi.json`; the inviter's display name instead of
+  email; a resend button on the verify state; auditing invitation sending
+  (team UI slice). When the clinic shared-records toggle ships, the
+  invitation must say records of clinic bookings may be shared among its
+  experts.
+- Judges panel: round 1 UI/UX 7.6, trust 7.4; round 2 UI/UX 8.8, trust 8.8.
+- Owner: engineering
+- Status: `active`
+
 ### 2026-11-15: Checked-registration proof on profiles and cards (D2.1) (needs legal review)
 
 - Change (design slice D2.1): under the expert's name, a proof block says

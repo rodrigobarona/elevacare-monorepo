@@ -232,7 +232,7 @@
     "roleMember": "Como especialista",
     "roleAdmin": "En la administración de la clínica",
     "sentTo": "Esta invitación se envió a {email}.",
-    "whatJoining": "Al unirte puedes ofrecer sesiones con {org}, y las reservas hechas a través de {org} aparecen allí. Tu Space, tu consulta y los registros de tus miembros siguen siendo tuyos.",
+    "whatJoining": "Al unirte puedes ofrecer sesiones como parte de {org}. Tu Space, tu consulta y los registros de tus miembros siguen siendo tuyos.",
     "accept": "Unirme a {org}",
     "joining": "Uniéndote…",
     "decline": "Rechazar",
@@ -254,6 +254,7 @@
     "goToEleva": "Ir a Eleva",
     "decideLater": "Decidir más tarde",
     "joinedWith": "Te uniste con {email}",
-    "joinedBodyNoSwitch": "Ábrela desde tus espacios de trabajo cuando quieras."
+    "joinedBodyNoSwitch": "Ábrela desde tus espacios de trabajo cuando quieras.",
+    "switchFailed": "No pudimos cerrar tu sesión. Inténtalo de nuevo."
   }
 }
