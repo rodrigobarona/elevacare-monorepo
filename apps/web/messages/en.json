@@ -371,8 +371,10 @@
       "phone": "phone",
       "inPerson": "in person",
       "inPersonIn": "in person in {places}",
-      "countries": "Members in {countries}",
-      "countriesMore": "Members in {countries} and {count} more countries"
+      "countries": "Sees members in {countries}",
+      "countriesMore": "Sees members in {countries} and {count} more countries",
+      "countriesEu": "Sees members across the EU",
+      "countriesEuAnd": "Sees members across the EU and in {countries}"
     },
     "registration": {
       "licence": "Licence no. <number>{value}</number>",
@@ -422,17 +424,9 @@
     },
     "withEleva": {
       "heading": "Booking with Eleva",
-      "howItWorks": {
-        "q": "How does booking work?",
-        "a": "Choose a service and a time, add your name and email, then pay securely or confirm a free session. Your confirmation email has everything you need."
-      },
       "account": {
         "q": "Do I need an account?",
         "a": "No. You can book with just your name and email. You can create a free Space afterwards to keep your sessions in one place."
-      },
-      "join": {
-        "q": "How do I join a video session?",
-        "a": "Use the link in your confirmation email. It opens 15 minutes before the start, in your browser, with no app or account needed."
       },
       "cancel": {
         "q": "Can I cancel?",
@@ -456,18 +450,19 @@
       },
       "book": {
         "title": "Book securely",
-        "body": "Pay by card or MB WAY, or book free sessions with no payment. You see the cancellation terms before you confirm."
+        "body": "Pay securely online, or confirm a free session with no payment. You see the cancellation terms before you confirm."
       },
       "join": {
-        "title": "Meet from your email",
-        "body": "Your confirmation has the join link or the address. No app or account needed."
+        "title": "Everything is in your email",
+        "body": "Your confirmation has your video link, which opens 15 minutes before, or the address or phone details. No app or account needed."
       }
     },
     "notBookable": {
       "heading": "{name} is setting up on Eleva",
-      "body": "Bookings open once {name} adds a service. Until then, you can book another expert who works in the same area.",
+      "body": "Bookings open once a service is added. Until then, you can book other experts in the same area.",
       "others": "Experts you can book now",
-      "browse": "See all experts"
+      "browse": "See all experts",
+      "bodyAny": "Bookings open once a service is added. Until then, you can book other experts on Eleva."
     }
   },
   "booking": {

@@ -55,7 +55,7 @@ export function ExpertPortraitFallback({
     <div
       aria-hidden
       className={cn(
-        "relative flex size-full items-center justify-center overflow-hidden bg-linear-to-br from-teal-700 via-teal-800 to-teal-950 text-sand-50",
+        "relative flex size-full items-center justify-center overflow-hidden bg-linear-to-br from-teal-600 via-teal-700 to-teal-800 text-sand-50",
         className
       )}
     >

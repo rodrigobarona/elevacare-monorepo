@@ -13,6 +13,7 @@ import {
   type CancellationPolicy,
 } from "@eleva/config/cancellation-policy"
 import { resolveGatewayUrl } from "@eleva/config/env"
+import { EU_SERVICE_COUNTRIES } from "@eleva/config"
 import { professionalBodyById } from "@eleva/config/professional-bodies"
 import { isReserved } from "@eleva/config/reserved-usernames"
 import { RichTextViewer } from "@eleva/editor/rich-text-viewer"
@@ -22,7 +23,6 @@ import {
   CheckIcon,
   EnvelopeIcon,
   GlobeIcon,
-  GraduationCapIcon,
   MapPinIcon,
   ShieldCheckIcon,
   SOCIAL_LINK_ICONS,
@@ -43,6 +43,7 @@ import {
 } from "@eleva/ui/components/accordion"
 import { buttonVariants } from "@eleva/ui/components/button-variants"
 import { Heading } from "@eleva/ui/components/typography"
+import { cn } from "@eleva/ui/lib/utils"
 import {
   displayLanguageLabel,
   displayRegion,
@@ -148,13 +149,7 @@ export default async function ExpertProfilePage({ params }: Props) {
     (eventType) => eventType.modes.length > 0
   )
   const categories = expert.categorySlugs.filter(isMarketplaceCategory)
-  const facts = profileFacts(
-    expert,
-    bookable,
-    locale,
-    t,
-    heroCredential(expert)
-  )
+  const facts = profileFacts(expert, bookable, locale, t)
   const bio = pickBio(expert, locale)
   const minPrice = lowestPrice(bookable)
   const allFree = bookable.every((eventType) => {
@@ -188,8 +183,8 @@ export default async function ExpertProfilePage({ params }: Props) {
           spacing="compact"
           className="bg-linear-to-b from-sand-50 to-background pt-0 max-sm:px-0 sm:pt-14 dark:from-teal-950/40"
         >
-          <Container className="grid gap-6 sm:gap-10 lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)] lg:items-center lg:gap-16">
-            <div className="relative aspect-[4/5] w-full overflow-hidden bg-muted max-sm:max-h-[78svh] sm:mx-auto sm:max-w-md sm:rounded-4xl sm:shadow-2 lg:max-w-none">
+          <Container className="grid gap-6 sm:gap-10 lg:grid-cols-[minmax(0,500px)_minmax(0,1fr)] lg:items-center lg:gap-16 xl:grid-cols-[minmax(0,540px)_minmax(0,1fr)]">
+            <div className="relative aspect-[4/5] w-full overflow-hidden bg-muted max-sm:aspect-[6/7] max-sm:max-h-[64svh] sm:mx-auto sm:max-w-md sm:rounded-4xl sm:shadow-2 lg:max-w-none">
               {expert.avatarUrl ? (
                 <ExpertPortrait
                   displayName={name}
@@ -203,9 +198,14 @@ export default async function ExpertProfilePage({ params }: Props) {
                   carries the same name for assistive tech. */}
               <div
                 aria-hidden
-                className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/75 via-black/35 to-transparent px-4 pt-28 pb-5 text-white sm:hidden"
+                className={cn(
+                  "absolute inset-x-0 bottom-0 px-4 pt-28 pb-5 text-white sm:hidden",
+                  // The teal field needs no scrim; a photo does.
+                  expert.avatarUrl &&
+                    "bg-linear-to-t from-black/80 via-black/55 to-transparent"
+                )}
               >
-                <p className="font-display text-[2.5rem] leading-[1.05] font-medium tracking-tight text-balance">
+                <p className="font-display text-[2.5rem] leading-[1.05] font-medium tracking-tight text-balance [text-shadow:0_1px_12px_rgb(0_0_0/0.5)]">
                   {name}
                 </p>
                 {expert.headline ? (
@@ -216,20 +216,6 @@ export default async function ExpertProfilePage({ params }: Props) {
               </div>
             </div>
             <div className="flex flex-col gap-5 max-sm:px-4">
-              {categories.length > 0 ? (
-                <ul className="flex flex-wrap gap-2">
-                  {categories.map((slug) => (
-                    <li key={slug}>
-                      <Link
-                        href={`/experts/${slug}`}
-                        className="inline-flex min-h-9 items-center rounded-full border border-teal-200 bg-card px-3 text-sm font-medium text-teal-800 transition-colors hover:border-primary hover:bg-teal-50 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none dark:border-teal-800 dark:text-teal-200 dark:hover:bg-teal-950"
-                      >
-                        {tExperts(`categories.${slug}`)}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
               <div className="flex flex-col gap-3">
                 <h1
                   data-testid="expert-profile-heading"
@@ -268,7 +254,21 @@ export default async function ExpertProfilePage({ params }: Props) {
                   })}
                 </ul>
               ) : null}
-              <div className="flex flex-wrap items-center gap-1">
+              <div className="flex flex-wrap items-center gap-x-1 gap-y-2">
+                {categories.length > 0 ? (
+                  <ul className="mr-2 flex flex-wrap gap-2">
+                    {categories.map((slug) => (
+                      <li key={slug}>
+                        <Link
+                          href={`/experts/${slug}`}
+                          className="inline-flex min-h-11 items-center rounded-full border border-teal-200 bg-card px-3.5 text-sm font-medium text-teal-800 transition-colors hover:border-primary hover:bg-teal-50 focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none dark:border-teal-800 dark:text-teal-200 dark:hover:bg-teal-950"
+                        >
+                          {tExperts(`categories.${slug}`)}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
                 {expert.socialLinks.length > 0 ? (
                   <ul className="flex flex-wrap gap-1">
                     {expert.socialLinks.map((link) => {
@@ -285,8 +285,8 @@ export default async function ExpertProfilePage({ params }: Props) {
                             aria-label={t(`social.${link.kind}`, { name })}
                             className={
                               isWebsite
-                                ? "flex h-11 items-center gap-2 rounded-full px-3 text-sm text-foreground/80 transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-                                : "flex size-11 items-center justify-center rounded-full text-foreground/70 transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+                                ? "flex h-11 items-center gap-2 rounded-full px-3 text-sm text-foreground/80 transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
+                                : "flex size-11 items-center justify-center rounded-full text-foreground/70 transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
                             }
                           >
                             <Icon aria-hidden className="size-5" />
@@ -319,7 +319,12 @@ export default async function ExpertProfilePage({ params }: Props) {
         <Section spacing="compact" className="pb-20">
           {/* One booking card: after the services on phones, a sticky
               side column from lg. */}
-          <Container className="grid gap-x-16 gap-y-14 lg:grid-cols-[minmax(0,1fr)_380px]">
+          <Container
+            className={cn(
+              "grid gap-x-16 gap-y-14",
+              bookable.length > 0 && "lg:grid-cols-[minmax(0,1fr)_380px]"
+            )}
+          >
             <div className="flex min-w-0 flex-col gap-14 lg:col-start-1 lg:row-start-1">
               {bookable.length > 0 ? (
                 <section
@@ -434,7 +439,7 @@ export default async function ExpertProfilePage({ params }: Props) {
                   className="flex flex-col gap-5"
                   data-testid="how-booking-works"
                 >
-                  <Heading id="how-heading" as="h2" size="subtitle">
+                  <Heading id="how-heading" as="h2" size="title">
                     {t("how.heading")}
                   </Heading>
                   <ol className="grid gap-4 sm:grid-cols-3">
@@ -443,7 +448,7 @@ export default async function ExpertProfilePage({ params }: Props) {
                       return (
                         <li
                           key={step.key}
-                          className="flex flex-col gap-2 rounded-3xl bg-muted/50 p-5"
+                          className="flex flex-col gap-2 rounded-3xl border bg-card p-5 shadow-1"
                         >
                           <span className="flex items-center gap-2 text-sm font-medium text-primary">
                             <Icon aria-hidden className="size-5" />
@@ -452,7 +457,7 @@ export default async function ExpertProfilePage({ params }: Props) {
                           <span className="font-medium">
                             {t(`how.${step.key}.title`)}
                           </span>
-                          <span className="text-sm text-pretty text-muted-foreground">
+                          <span className="text-[0.9375rem] text-pretty text-foreground/75">
                             {t(`how.${step.key}.body`)}
                           </span>
                         </li>
@@ -468,7 +473,7 @@ export default async function ExpertProfilePage({ params }: Props) {
                   aria-labelledby="with-eleva-heading"
                   className="flex flex-col gap-4"
                 >
-                  <Heading id="with-eleva-heading" as="h2" size="subtitle">
+                  <Heading id="with-eleva-heading" as="h2" size="title">
                     {t("withEleva.heading")}
                   </Heading>
                   <Accordion allowsMultipleExpanded className="bg-card">
@@ -516,13 +521,8 @@ const HOW_STEPS = [
   { key: "join", icon: EnvelopeIcon },
 ] as const
 
-const WITH_ELEVA_ITEMS = [
-  "howItWorks",
-  "account",
-  "join",
-  "cancel",
-  "care",
-] as const
+/** The steps already answer how booking and joining work. */
+const WITH_ELEVA_ITEMS = ["account", "cancel", "care"] as const
 
 function BioBody({
   expert,
@@ -569,7 +569,11 @@ function ServiceCard({
   const expect = pickList(eventType.whatToExpect, locale)
   const questions = pickList(eventType.exampleQuestions, locale)
   const eyebrow = formatEyebrow(eventType, locale, t)
-  const cancellation = freeCancellationLine(eventType.cancellationPolicy, t)
+  // A free session costs nothing to cancel: no policy line.
+  const cancellation =
+    price.min === 0 && !price.varies
+      ? null
+      : freeCancellationLine(eventType.cancellationPolicy, t)
   const visibleIncluded = included.slice(0, 3)
   const moreIncluded = included.slice(3)
   const places = inPersonPlaces(eventType)
@@ -855,7 +859,10 @@ async function ProfileBookingCard({
                 minutes: eventType.durationMinutes,
                 price: formatEur(price.min, locale),
               }),
-      policy: freeCancellationLine(eventType.cancellationPolicy, t),
+      policy:
+        price.min === 0 && !price.varies
+          ? null
+          : freeCancellationLine(eventType.cancellationPolicy, t),
       loadFailed: serviceFailed.get(eventType.slug) === true,
       seeAllHref: `/${username}/${eventType.slug}`,
       days: [...days.values()],
@@ -1081,25 +1088,12 @@ function RegistrationProof({
   )
 }
 
-/** First credential, unless the headline already says it. */
-function heroCredential(expert: PublicExpertProfile): string | null {
-  const first = expert.credentials[0]
-  if (!first) return null
-  if (expert.headline?.toLowerCase().includes(first.title.toLowerCase())) {
-    return null
-  }
-  return first.institution
-    ? `${first.title}, ${first.institution}`
-    : first.title
-}
-
 type ProfileFact = {
-  kind: "training" | "languages" | "meet" | "countries"
+  kind: "languages" | "meet" | "countries"
   text: string
 }
 
 const FACT_ICONS = {
-  training: GraduationCapIcon,
   languages: TranslateIcon,
   meet: VideoCameraIcon,
   countries: GlobeIcon,
@@ -1110,18 +1104,16 @@ const COUNTRIES_SHOWN = 3
 
 /**
  * The facts a member scans for first, one row each with an icon
- * (PROF-04): training, languages, how and where you meet, and where
- * members can be.
+ * (PROF-04): languages, how and where you meet, and where members can
+ * be. Training has its own section just below, so it is not repeated.
  */
 function profileFacts(
   expert: PublicExpertProfile,
   bookable: PublicEventType[],
   locale: Locale,
-  t: ProfileT,
-  credential: string | null
+  t: ProfileT
 ): ProfileFact[] {
   const facts: ProfileFact[] = []
-  if (credential) facts.push({ kind: "training", text: credential })
   const languages = expert.languages.map((code) =>
     displayLanguageLabel(code, locale)
   )
@@ -1161,10 +1153,26 @@ function profileFacts(
       text: capitalise(listFormat(ways, locale, "or")),
     })
   }
-  const countries = expert.serviceCountries.map((code) =>
-    displayRegion(code, locale)
-  )
-  if (countries.length > COUNTRIES_SHOWN + 1) {
+  const served = new Set(expert.serviceCountries)
+  const coversEu = EU_SERVICE_COUNTRIES.every((code) => served.has(code))
+  const countries = (
+    coversEu
+      ? expert.serviceCountries.filter(
+          (code) => !(EU_SERVICE_COUNTRIES as readonly string[]).includes(code)
+        )
+      : expert.serviceCountries
+  ).map((code) => displayRegion(code, locale))
+  if (coversEu) {
+    facts.push({
+      kind: "countries",
+      text:
+        countries.length > 0
+          ? t("facts.countriesEuAnd", {
+              countries: listFormat(countries, locale),
+            })
+          : t("facts.countriesEu"),
+    })
+  } else if (countries.length > COUNTRIES_SHOWN + 1) {
     facts.push({
       kind: "countries",
       text: t("facts.countriesMore", {
@@ -1240,7 +1248,7 @@ async function NotBookableYet({
   return (
     <section
       aria-labelledby="not-bookable-heading"
-      className="flex flex-col gap-5 rounded-4xl bg-muted/50 p-6 sm:p-8"
+      className="flex max-w-4xl flex-col gap-5 rounded-4xl bg-muted/50 p-6 sm:p-8"
       data-testid="not-bookable"
     >
       <div className="flex flex-col gap-2">
@@ -1248,7 +1256,7 @@ async function NotBookableYet({
           {t("notBookable.heading", { name })}
         </Heading>
         <p className="text-pretty text-muted-foreground">
-          {t("notBookable.body", { name })}
+          {t(category ? "notBookable.body" : "notBookable.bodyAny")}
         </p>
       </div>
       {others.length > 0 ? (
@@ -1259,7 +1267,7 @@ async function NotBookableYet({
               <li key={other.username}>
                 <Link
                   href={`/${other.username}`}
-                  className="group flex items-center gap-3 rounded-3xl bg-card p-3 shadow-1 transition-shadow hover:shadow-2 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none sm:flex-col sm:items-start"
+                  className="group flex items-center gap-3 rounded-3xl bg-card p-3 shadow-1 transition-shadow hover:shadow-2 focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none sm:flex-col sm:items-start"
                 >
                   <span className="relative block size-16 shrink-0 overflow-hidden rounded-2xl bg-muted sm:aspect-[4/5] sm:h-auto sm:w-full">
                     <ExpertPortrait
