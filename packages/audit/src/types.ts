@@ -17,6 +17,8 @@ export type AuditEntity =
   // Clinics (Phase 11): the team org's profile and its verification filings.
   | "team"
   | "clinic_verification"
+  // Organization invitations (accepted is audited as membership.created).
+  | "invitation"
   | "expert_integration_credential"
   | "event_type"
   | "event_type_mode"

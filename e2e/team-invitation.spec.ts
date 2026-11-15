@@ -127,6 +127,13 @@ test.describe("Phase 11.1c — accept a clinic invitation", () => {
         "wrong-account",
         { timeout: 30_000 }
       )
+      // Nothing about the invitation leaks to another account.
+      await expect(wrong.getByTestId("invitation")).not.toContainText(
+        "Clínica Lumen"
+      )
+      await expect(wrong.getByTestId("invitation")).not.toContainText(
+        MEMBER_EMAIL
+      )
       await shot(wrong, `03-wrong-account.${mobile ? "mobile" : "desktop"}`)
       await wrong.context().close()
 
@@ -188,5 +195,16 @@ test.describe("Phase 11.1c — accept a clinic invitation", () => {
       WHERE m.organization_id = ${teamId}::uuid AND lower(u.email) = ${MEMBER_EMAIL}
     `) as { role: string }[]
     expect(members.map((m) => m.role)).toEqual(["member"])
+
+    // Both answers are audited (the outbox drains to audit_events).
+    const audit = (await sql`
+      SELECT action FROM audit_outbox
+      WHERE org_id = ${teamId}::uuid
+        AND action IN ('membership.created', 'invitation.rejected')
+    `) as { action: string }[]
+    expect(audit.map((row) => row.action).sort()).toEqual([
+      "invitation.rejected",
+      "membership.created",
+    ])
   })
 })

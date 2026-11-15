@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, type ReactNode } from "react"
+import { useEffect, useState, type ReactNode, type Ref } from "react"
 import { useTranslations } from "next-intl"
 import { ArrowSquareOutIcon, PaperPlaneTiltIcon } from "@eleva/icons"
 import { Button } from "@eleva/ui/components/button"
@@ -37,11 +37,16 @@ export function AuthHeading({
   description,
   icon,
   className,
+  headingRef,
+  headingProps,
 }: {
   title: ReactNode
   description?: ReactNode
   icon?: ReactNode
   className?: string
+  /** Receives focus when a step changes in place (e.g. an invitation). */
+  headingRef?: Ref<HTMLHeadingElement>
+  headingProps?: { "data-testid"?: string; "data-state"?: string }
 }) {
   return (
     <header className={cn("flex flex-col gap-2", className)}>
@@ -50,7 +55,12 @@ export function AuthHeading({
           {icon}
         </span>
       ) : null}
-      <h1 className="font-display text-3xl leading-tight font-normal tracking-tight text-balance text-foreground sm:text-4xl">
+      <h1
+        ref={headingRef}
+        tabIndex={headingRef ? -1 : undefined}
+        {...headingProps}
+        className="font-display text-3xl leading-tight font-normal tracking-tight text-balance text-foreground outline-none sm:text-4xl"
+      >
         {title}
       </h1>
       {description ? (
