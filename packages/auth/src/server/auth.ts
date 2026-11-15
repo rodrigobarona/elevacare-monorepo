@@ -31,6 +31,8 @@ import {
 } from "../send-auth-email"
 import { isTrustedOrigin, trustedOrigins } from "../trusted-origins"
 import { authRateLimitEnabled } from "../e2e-auth-url"
+import { logError } from "@eleva/observability"
+import { recordInvitationResponse } from "../invitations"
 import { invitationAcceptUrl } from "../invitation-accept-url"
 import {
   guardAccountLink,
@@ -272,6 +274,9 @@ function createAuth() {
         allowUserToCreateOrganization: true,
         creatorRole: "owner",
         membershipLimit: 200,
+        // Defence in depth: only a verified email may read or answer an
+        // invitation (sessions are already refused when unverified).
+        requireEmailVerificationOnInvitation: true,
         schema: {
           organization: {
             additionalFields: {
@@ -327,10 +332,47 @@ function createAuth() {
           },
           afterAcceptInvitation: async ({
             organization,
+            invitation,
+            member,
+            user,
           }: {
             organization: { id: string }
+            invitation: { id: string; role: string }
+            member: { id: string }
+            user: { id: string }
           }) => {
             enqueueTeamSeatSync(organization.id)
+            await recordInvitationResponse({
+              orgId: organization.id,
+              userId: user.id,
+              invitationId: invitation.id,
+              role: invitation.role,
+              memberId: member.id,
+              outcome: "accepted",
+            }).catch((err: unknown) => {
+              // Not atomic with Better Auth's write: surface the gap.
+              logError("[auth] invitation accept audit failed", err)
+            })
+          },
+          afterRejectInvitation: async ({
+            organization,
+            invitation,
+            user,
+          }: {
+            organization: { id: string }
+            invitation: { id: string; role: string }
+            user: { id: string }
+          }) => {
+            await recordInvitationResponse({
+              orgId: organization.id,
+              userId: user.id,
+              invitationId: invitation.id,
+              role: invitation.role,
+              outcome: "rejected",
+            }).catch((err: unknown) => {
+              // Not atomic with Better Auth's write: surface the gap.
+              logError("[auth] invitation decline audit failed", err)
+            })
           },
         },
       }),

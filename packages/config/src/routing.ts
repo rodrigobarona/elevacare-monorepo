@@ -19,6 +19,8 @@ export const ACCOUNT_STANDALONE_PATHS = [
   "verify-email",
   "reset-password",
   "two-factor",
+  // Organization invitations (the email links here; Phase 11).
+  "accept-invitation",
 ] as const
 
 /** All first-level paths that the account app claims. */

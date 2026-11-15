@@ -37,6 +37,7 @@ const GATEWAY_AUTH_PATHS = [
   "/two-factor",
   "/login",
   "/signup",
+  "/accept-invitation",
 ] as const
 
 function isGatewayAuthPath(path: string): boolean {

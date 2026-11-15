@@ -4,8 +4,15 @@ import {
   RESERVED_USERNAMES,
   validateUsername,
 } from "./reserved-usernames"
+import { ACCOUNT_REWRITE_PATHS } from "./routing"
 
 describe("reserved usernames", () => {
+  it("reserves every account-app path at the gateway root", () => {
+    for (const path of ACCOUNT_REWRITE_PATHS) {
+      expect(RESERVED_USERNAMES.has(path), path).toBe(true)
+    }
+  })
+
   it("covers every gateway first-segment path", () => {
     for (const slug of [
       "dashboard",

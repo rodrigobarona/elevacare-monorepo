@@ -75,6 +75,12 @@ export const RESERVED_USERNAMES: ReadonlySet<string> = new Set([
   "account",
   "onboarding",
   "setup",
+  // Account-app paths at the gateway root: a username here would sit at
+  // an address that looks like an Eleva sign-in or invitation link.
+  "verify-email",
+  "reset-password",
+  "two-factor",
+  "accept-invitation",
 
   // Infra
   "_next",

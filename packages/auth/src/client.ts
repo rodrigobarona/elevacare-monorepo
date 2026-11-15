@@ -118,6 +118,35 @@ export interface ElevaAuthClient {
   revokeSession: (body: {
     token: string
   }) => Promise<{ error?: AuthClientError | null }>
+  /** Organization invitations (Better Auth organization plugin). */
+  organization: {
+    getInvitation: (input: { query: { id: string } }) => Promise<{
+      data?: OrganizationInvitation | null
+      error?: AuthClientError | null
+    }>
+    acceptInvitation: (body: {
+      invitationId: string
+    }) => Promise<{ error?: AuthClientError | null }>
+    rejectInvitation: (body: {
+      invitationId: string
+    }) => Promise<{ error?: AuthClientError | null }>
+    setActive: (body: {
+      organizationId: string
+    }) => Promise<{ error?: AuthClientError | null }>
+  }
+}
+
+/** What `getInvitation` returns: the invitation plus who and where. */
+export type OrganizationInvitation = {
+  id: string
+  organizationId: string
+  organizationName: string
+  organizationSlug: string
+  inviterEmail: string
+  email: string
+  role: string
+  status: string
+  expiresAt: string | Date
 }
 
 export const authClient = createAuthClient({
