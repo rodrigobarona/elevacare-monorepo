@@ -32,6 +32,26 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-14: A clinic is verified by an approved staff check, not a profile flag (active)
+
+- Decision (Phase 11.1): the phase spec gates the clinic public surface on
+  `clinic_profiles.verification_status = 'verified'`. `clinic_profiles` is
+  tenant-writable, so a status column there would let a clinic mark itself
+  verified. Instead, a clinic is verified while an `approved` row exists in
+  `clinic_verifications`, a staff-decided queue with the same RLS shape as
+  `become_partner_applications` (the clinic files or refiles a pending row;
+  decisions and deletes are platform-admin only; an approved row needs a
+  reviewer, a date and every `CLINIC_CHECKLIST_ITEMS` check). This mirrors
+  `licenceVerified()` for experts.
+- The legal name and NIF live only on `clinic_verifications` (not on the
+  profile), so editing the profile can never change who was verified; a
+  new identity is a new filing and review. Invoices use the latest
+  approved row.
+- Also added: billing address, specialties and `payout_mode` (default
+  `expert`); `bookings.attributed_org_id`, set only
+  from the booking source (later 11.1 PR).
+- Owner: engineering
+
 ### 2026-11-14: Thank-you page and booking unhappy paths (D1.5) (active)
 
 - Change (design slice D1.5): the thank-you page names the expert and the

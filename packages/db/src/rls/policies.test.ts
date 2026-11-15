@@ -140,6 +140,22 @@ describe("buildMainRlsStatements", () => {
     ])
   })
 
+  it("gives clinic verifications the same file, refile and staff-decide shape", () => {
+    expect(TENANT_TABLES).not.toContain("clinic_verifications")
+    const policies = stmts.filter((s) =>
+      s.startsWith("CREATE POLICY clinic_verifications_")
+    )
+    expect(policies).toHaveLength(4)
+    const insert = policies.find((s) => s.includes("FOR INSERT"))
+    expect(insert).toContain(
+      "status = 'pending' AND reviewer_user_id IS NULL AND reviewed_at IS NULL"
+    )
+    const staff = policies.find((s) => !s.includes(" FOR "))
+    expect(staff).toContain(
+      "clinic_verifications_staff_write ON clinic_verifications USING (current_setting('eleva.platform_admin', true) = 'true')"
+    )
+  })
+
   it("includes platform_admin bypass for expert_invoices", () => {
     const policy = stmts.find((s) =>
       s.startsWith("CREATE POLICY expert_invoices_tenant_isolation")

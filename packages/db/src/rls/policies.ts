@@ -101,6 +101,9 @@ export type RecordOptoutTable = (typeof RECORD_OPTOUT_TABLES)[number]
  */
 export const PARTNER_APPLICATION_TABLES = [
   "become_partner_applications",
+  // Clinic registration checks (Phase 11): same file / refile / staff
+  // decision shape.
+  "clinic_verifications",
 ] as const
 
 export type PartnerApplicationTable =
