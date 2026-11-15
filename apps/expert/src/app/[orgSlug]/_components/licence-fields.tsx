@@ -71,18 +71,37 @@ interface Props {
   value: LicenceValue
   errors: LicenceErrors
   onChange: (next: LicenceValue) => void
+  /** Replaces the default intro under the legend. */
+  intro?: string
+  /** The "why we ask" note; off where the expert has already read it. */
+  showWhy?: boolean
 }
 
-export function LicenceFields({ idPrefix, value, errors, onChange }: Props) {
+export function LicenceFields({
+  idPrefix,
+  value,
+  errors,
+  onChange,
+  intro,
+  showWhy = true,
+}: Props) {
   const t = useTranslations("licence.fields")
   const id = (field: string) => `${idPrefix}-${field}`
   const message = (field: keyof LicenceValue) =>
     errors[field] ? t(`errors.${errors[field]}`) : null
+  // Help text always, plus the error while there is one, so screen
+  // readers announce why a field is invalid when it gets focus.
+  const describedBy = (field: keyof LicenceValue, key: string) =>
+    errors[field]
+      ? `${id(`${key}-help`)} ${id(`${key}-error`)}`
+      : id(`${key}-help`)
 
   return (
     <fieldset className="space-y-4">
       <legend className="text-sm font-medium">{t("legend")}</legend>
-      <p className="text-sm text-muted-foreground">{t("intro")}</p>
+      <p className="text-sm text-pretty text-muted-foreground">
+        {intro ?? t("intro")}
+      </p>
 
       <div className="space-y-1.5">
         <Label htmlFor={id("body")}>{t("body")}</Label>
@@ -100,7 +119,8 @@ export function LicenceFields({ idPrefix, value, errors, onChange }: Props) {
           <SelectTrigger
             id={id("body")}
             className="w-full"
-            aria-describedby={id("body-help")}
+            aria-describedby={describedBy("professionalBody", "body")}
+            aria-invalid={Boolean(errors.professionalBody)}
           >
             <SelectValue />
           </SelectTrigger>
@@ -115,7 +135,9 @@ export function LicenceFields({ idPrefix, value, errors, onChange }: Props) {
         <FieldDescription id={id("body-help")} className="text-xs">
           {t("bodyHelp")}
         </FieldDescription>
-        <FieldError>{message("professionalBody")}</FieldError>
+        <FieldError id={id("body-error")}>
+          {message("professionalBody")}
+        </FieldError>
       </div>
 
       <div className="space-y-1.5">
@@ -129,12 +151,14 @@ export function LicenceFields({ idPrefix, value, errors, onChange }: Props) {
           maxLength={LICENCE_NUMBER_MAX_LENGTH}
           autoComplete="off"
           aria-invalid={Boolean(errors.licenceNumber)}
-          aria-describedby={id("licence-help")}
+          aria-describedby={describedBy("licenceNumber", "licence")}
         />
         <FieldDescription id={id("licence-help")} className="text-xs">
           {t("licenceNumberHelp")}
         </FieldDescription>
-        <FieldError>{message("licenceNumber")}</FieldError>
+        <FieldError id={id("licence-error")}>
+          {message("licenceNumber")}
+        </FieldError>
       </div>
 
       <div className="space-y-1.5">
@@ -148,20 +172,24 @@ export function LicenceFields({ idPrefix, value, errors, onChange }: Props) {
           maxLength={ERS_REGISTRATION_NUMBER_MAX_LENGTH}
           autoComplete="off"
           aria-invalid={Boolean(errors.ersRegistrationNumber)}
-          aria-describedby={id("ers-help")}
+          aria-describedby={describedBy("ersRegistrationNumber", "ers")}
         />
         <FieldDescription id={id("ers-help")} className="text-xs">
           {t("ersNumberHelp")}
         </FieldDescription>
-        <FieldError>{message("ersRegistrationNumber")}</FieldError>
+        <FieldError id={id("ers-error")}>
+          {message("ersRegistrationNumber")}
+        </FieldError>
       </div>
 
-      <Accordion>
-        <AccordionItem id={id("why")}>
-          <AccordionTrigger>{t("whyTitle")}</AccordionTrigger>
-          <AccordionContent>{t("whyBody")}</AccordionContent>
-        </AccordionItem>
-      </Accordion>
+      {showWhy ? (
+        <Accordion>
+          <AccordionItem id={id("why")}>
+            <AccordionTrigger>{t("whyTitle")}</AccordionTrigger>
+            <AccordionContent>{t("whyBody")}</AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      ) : null}
     </fieldset>
   )
 }

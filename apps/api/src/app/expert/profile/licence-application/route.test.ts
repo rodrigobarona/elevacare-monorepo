@@ -122,6 +122,18 @@ describe("/expert/profile/licence-application", () => {
     expect(response.status).toBe(201)
   })
 
+  it("corrects a pending licence and audits which fields changed", async () => {
+    latest = { ...APPLICATION, ...LICENCE, licenceNumber: "FT-0024" }
+    const response = await submit(LICENCE)
+
+    expect(response.status).toBe(201)
+    expect(emit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        payload: expect.objectContaining({ changedFields: ["licenceNumber"] }),
+      })
+    )
+  })
+
   it("locks a verified licence", async () => {
     latest = { ...APPLICATION, status: "approved" }
     const response = await submit(LICENCE)

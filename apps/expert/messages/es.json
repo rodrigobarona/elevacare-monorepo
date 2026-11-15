@@ -1301,6 +1301,7 @@
       "pending": {
         "title": "Estamos verificando tu colegiación",
         "body": "Gracias. Estamos comprobando tus datos con la {body}.",
+        "sentOn": "Enviado el {date}.",
         "nextTitle": "Qué pasa ahora",
         "next": [
           "Buscamos tu número de colegiado en el registro público de la Ordem.",
@@ -1329,6 +1330,13 @@
       "reasonLabel": "Nota de Eleva",
       "submit": "Enviar a verificación",
       "resubmit": "Volver a enviar",
+      "edit": {
+        "cta": "Editar datos",
+        "note": "¿Ves algún error? Corrígelo aquí. Al enviarlo, la comprobación empieza de nuevo.",
+        "submit": "Enviar datos corregidos",
+        "sent": "Datos corregidos enviados. La comprobación ha empezado de nuevo."
+      },
+      "cancel": "Cancelar",
       "submitting": "Enviando…",
       "submitted": "Enviado. Te avisaremos por email cuando tu colegiación esté verificada.",
       "support": "¿Dudas? Escribe a <link>support@eleva.care</link>.",
@@ -1336,7 +1344,8 @@
         "validation": "Revisa los campos marcados e inténtalo de nuevo.",
         "locked": "Tu colegiación ya está verificada. Para cambiarla, escribe a support@eleva.care.",
         "not-eligible": "Termina la configuración antes de enviar tu colegiación.",
-        "failed": "No hemos podido enviar tus datos. Inténtalo de nuevo."
+        "failed": "No hemos podido enviar tus datos. Inténtalo de nuevo.",
+        "unchanged": "Todavía no has cambiado nada. Corrige un campo o cancela para seguir con la comprobación actual."
       }
     },
     "notice": {

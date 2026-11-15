@@ -98,6 +98,12 @@ export async function GET(request: Request) {
  * or an `active` profile that was never verified. The profile status does
  * not change here; only staff approval lists or keeps it listed.
  */
+const LICENCE_FIELDS = [
+  "professionalBody",
+  "licenceNumber",
+  "ersRegistrationNumber",
+] as const
+
 export async function POST(request: Request) {
   const headers = corsHeaders(request, METHODS)
   const auth = await authorize(request, headers)
@@ -172,6 +178,10 @@ export async function POST(request: Request) {
           professionalBody: application.professionalBody,
           profileStatus: profile.status,
           refreshed,
+          // Field names only: lets a reviewer see a mid-review correction.
+          changedFields: latest
+            ? LICENCE_FIELDS.filter((f) => latest[f] !== body.data[f])
+            : [],
           surface: "licence",
         },
       })

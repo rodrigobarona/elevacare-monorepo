@@ -1301,6 +1301,7 @@
       "pending": {
         "title": "Estamos a verificar a sua cédula",
         "body": "Obrigado. Estamos a confirmar os seus dados junto da {body}.",
+        "sentOn": "Enviado a {date}.",
         "nextTitle": "O que acontece a seguir",
         "next": [
           "Procuramos o número da sua cédula no registo público da Ordem.",
@@ -1329,6 +1330,13 @@
       "reasonLabel": "Nota da Eleva",
       "submit": "Enviar para verificação",
       "resubmit": "Voltar a enviar",
+      "edit": {
+        "cta": "Editar dados",
+        "note": "Encontrou um erro? Corrija-o aqui. Ao enviar, a verificação recomeça.",
+        "submit": "Enviar dados corrigidos",
+        "sent": "Dados corrigidos enviados. A verificação recomeçou."
+      },
+      "cancel": "Cancelar",
       "submitting": "A enviar…",
       "submitted": "Enviado. Avisamos por email quando a cédula estiver verificada.",
       "support": "Dúvidas? Escreva para <link>support@eleva.care</link>.",
@@ -1336,7 +1344,8 @@
         "validation": "Reveja os campos assinalados e tente novamente.",
         "locked": "A sua cédula já está verificada. Para a alterar, escreva para support@eleva.care.",
         "not-eligible": "Conclua a configuração antes de enviar a cédula.",
-        "failed": "Não foi possível enviar os seus dados. Tente novamente."
+        "failed": "Não foi possível enviar os seus dados. Tente novamente.",
+        "unchanged": "Ainda não alterou nada. Corrija um campo ou cancele para manter a verificação em curso."
       }
     },
     "notice": {

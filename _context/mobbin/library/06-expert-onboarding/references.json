@@ -327,6 +327,46 @@
       "why": "12a: from the buyer app a sheet asks 'Interested in Selling?' with three benefit lines, 'FAQ' and 'Get Started'. 12b: 'Ready to earn? Here's what to know before you get started' lists the fee and the rules in five short rows before any form. 12c: one question per screen ('How big is your team?') with a line on why it is asked, a thin progress bar and a thumb-reach 'Next'. 12d: 'Get Ready to Go Live' is a celebration followed by an ordered checklist and a time-boxed incentive. A live-shopping marketplace, kept for its mobile structure.",
       "apply": "On mobile: a benefits sheet from the member Space, a what-to-know screen with Eleva's fee and requirements, one question per screen with a bottom button, and a finish screen that turns into an ordered first-week checklist.",
       "query": "marketplace seller onboarding"
+    },
+    {
+      "id": "06-expert-onboarding/13",
+      "file": "img/13-turo-stripe-verifying-edit.jpg",
+      "files": ["img/13-turo-stripe-verifying-edit.jpg"],
+      "app": "Turo (Stripe Connect)",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/ff3d2617-de89-45be-a776-deefc0fca029?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A 'Verifying' pill and a secondary Edit button on the same card as the submitted details",
+      "why": "While personal details are being verified, the card still shows what was sent, a 'Verifying' pill with an info icon, and a plain 'Edit' button beside it. Nothing about the waiting state takes the right to correct away.",
+      "apply": "On the licence page's pending card, keep the summary of Ordem, cédula and ERS, and put a small outline 'Edit details' button next to it.",
+      "query": "verification under review status screen with an edit details option"
+    },
+    {
+      "id": "06-expert-onboarding/14",
+      "file": "img/14-airwallex-verifying-pencil.jpg",
+      "files": ["img/14-airwallex-verifying-pencil.jpg"],
+      "app": "Airwallex",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/49dd7426-2703-40e6-bea1-42819d9489bb?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Per-item 'Verifying' tag with a pencil to correct it, plus a banner saying you can carry on",
+      "why": "'Verification in progress, you can continue…' sits above the list; the item under review has a 'Verifying' tag and a pencil button, the verified one only a view icon. Editing is offered exactly where verification is still open, not once it is done.",
+      "apply": "Offer editing while pending, never once verified (verified stays support-only), and keep the 'meanwhile you can set up your services' line.",
+      "query": "verification under review status screen with an edit details option"
+    },
+    {
+      "id": "06-expert-onboarding/15",
+      "file": "img/15a-planetscale-update-email.jpg",
+      "files": ["img/15a-planetscale-update-email.jpg", "img/15b-stripe-change-your-email.jpg"],
+      "app": "PlanetScale, Stripe",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/b118fbad-2c7b-4d15-8957-2d7c42e3fea7?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "mobbin_urls": ["https://mobbin.com/screens/b118fbad-2c7b-4d15-8957-2d7c42e3fea7?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp", "https://mobbin.com/screens/b6feefd3-3f3d-40d9-96c6-a508a15d53b7?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp"],
+      "pattern": "A waiting screen whose secondary action fixes the thing being waited on",
+      "why": "15a: 'Please verify your email' names the address and offers 'Update email' next to 'Resend email'. 15b: Stripe's 'Verify your email' says 'You can also change your email if you need to.' The fix for a typo lives on the waiting screen itself, as the quieter action.",
+      "apply": "The correction is a secondary action on the pending card, with one line saying sending again restarts the check, so the expert knows the cost before she presses it.",
+      "query": "verification under review status screen with an edit details option"
     }
   ],
   "judging_criteria": [
@@ -336,6 +376,7 @@
     "Do the first three steps build the public profile (who she is, how she sees members, a first service), with tax, payouts and invoices after them? (06-expert-onboarding/01, 06-expert-onboarding/05)",
     "Can she see her profile card update while she answers, and preview the full profile before sending it? (06-expert-onboarding/04, 06-expert-onboarding/09)",
     "Before any bank or identity form, does the screen name Stripe, list what she needs, and say when and how much she is paid, with a way to do it later? (06-expert-onboarding/05, 06-expert-onboarding/12)",
-    "After she sends her licence, does she see a status with an expected wait, and a Today page whose next steps are real links tied to an outcome? (06-expert-onboarding/08, 06-expert-onboarding/10, 06-expert-onboarding/11)"
+    "After she sends her licence, does she see a status with an expected wait, and a Today page whose next steps are real links tied to an outcome? (06-expert-onboarding/08, 06-expert-onboarding/10, 06-expert-onboarding/11)",
+    "While her licence is being checked, can she correct a typo from the status card in one step, and does the page say the check restarts? (06-expert-onboarding/13, 06-expert-onboarding/14, 06-expert-onboarding/15)"
   ]
 }
