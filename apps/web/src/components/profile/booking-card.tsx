@@ -172,6 +172,8 @@ export function BookingCard({
 
       <ul className="flex flex-col gap-1 border-t pt-4 text-sm text-muted-foreground">
         <li className="font-medium text-foreground">{service.meta}</li>
+        <li>{labels.noAccount}</li>
+        {service.policy ? <li>{service.policy}</li> : null}
         {labels.checked ? (
           <li className="flex items-center gap-1.5">
             <ShieldCheckIcon
@@ -182,8 +184,6 @@ export function BookingCard({
             {labels.checked}
           </li>
         ) : null}
-        <li>{labels.noAccount}</li>
-        {service.policy ? <li>{service.policy}</li> : null}
       </ul>
     </section>
   )

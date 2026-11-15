@@ -338,7 +338,7 @@ export async function Explorer({
               // What every card shares, and how the list is ordered, sit
               // above the results (TRUST-13, DISC-05).
               <div
-                className="flex flex-col gap-2 text-sm text-pretty text-muted-foreground sm:flex-row sm:items-start sm:justify-between sm:gap-6"
+                className="mb-6 flex flex-col gap-2 text-sm text-pretty text-muted-foreground sm:mb-8 lg:flex-row lg:items-start lg:justify-between lg:gap-8"
                 data-testid="experts-ranking-note"
               >
                 <p className="flex items-start gap-2">
@@ -349,10 +349,14 @@ export async function Explorer({
                   />
                   {t("trustLine")}
                 </p>
-                <p className="shrink-0">
-                  {t("orderedBy", {
-                    sort: sortLabel ?? t("sort.relevance"),
-                  })}{" "}
+                <p className="lg:max-w-md">
+                  {/* The sort chip above already says the sort on a short
+                      deep-linked list. */}
+                  {!showFilters && sortLabel
+                    ? null
+                    : `${t("orderedBy", {
+                        sort: sortLabel ?? t("sort.relevance"),
+                      })} `}
                   {showFilters ? `${t("rankingNote")} ` : null}
                   <Link
                     href={`/legal/terms#${t("rankingAnchor")}`}

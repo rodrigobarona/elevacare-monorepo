@@ -46,7 +46,8 @@ function publicRegistration(value: PublicExpertRegistration | null) {
     professionalBody: value.professionalBody,
     licenceNumber: value.licenceNumber,
     ersRegistrationNumber: value.ersRegistrationNumber,
-    checkedAt: value.checkedAt?.toISOString() ?? null,
+    // Month precision: the profile shows only the month.
+    checkedAt: value.checkedAt?.toISOString().slice(0, 7) ?? null,
   }
 }
 

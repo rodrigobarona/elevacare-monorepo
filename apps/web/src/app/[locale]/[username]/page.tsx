@@ -1,4 +1,4 @@
-import { Suspense } from "react"
+import { Suspense, type ReactNode } from "react"
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
@@ -17,6 +17,7 @@ import { professionalBodyById } from "@eleva/config/professional-bodies"
 import { isReserved } from "@eleva/config/reserved-usernames"
 import { RichTextViewer } from "@eleva/editor/rich-text-viewer"
 import {
+  CaretDownIcon,
   CheckIcon,
   MapPinIcon,
   ShieldCheckIcon,
@@ -220,6 +221,13 @@ export default async function ExpertProfilePage({ params }: Props) {
                     {expert.headline}
                   </p>
                 ) : null}
+                {/* Proof sits right under who she is, above the fold on
+                    phones (PROF-01). */}
+                <RegistrationProof
+                  registration={expert.registration}
+                  locale={locale}
+                  t={t}
+                />
                 {credential ? (
                   <p className="text-base text-muted-foreground">
                     {credential}
@@ -231,11 +239,6 @@ export default async function ExpertProfilePage({ params }: Props) {
                   {facts.join(" · ")}
                 </p>
               ) : null}
-              <RegistrationProof
-                registration={expert.registration}
-                locale={locale}
-                t={t}
-              />
               <div className="flex flex-wrap items-center gap-3">
                 {expert.socialLinks.length > 0 ? (
                   <ul className="flex flex-wrap gap-1">
@@ -327,7 +330,11 @@ export default async function ExpertProfilePage({ params }: Props) {
                     username={expert.username}
                     eventTypes={bookable}
                     timeZone={geo.timeZone}
-                    checked={expert.registration != null}
+                    checked={
+                      professionalBodyById(
+                        expert.registration?.professionalBody
+                      ) != null
+                    }
                     t={t}
                   />
                 </Suspense>
@@ -936,16 +943,16 @@ function RegistrationProof({
         year: "numeric",
       }).format(new Date(registration.checkedAt))
     : null
+  // Numbers never break: they are what a member types into the register.
+  const number = (chunks: ReactNode) => (
+    <span className="whitespace-nowrap">{chunks}</span>
+  )
   return (
-    <section
+    <div
       data-testid="expert-registration"
-      aria-labelledby="expert-registration-heading"
-      className="max-w-2xl rounded-2xl border bg-card/70 px-4 py-3"
+      className="max-w-xl rounded-2xl border bg-card/70 px-4 py-3"
     >
-      <h2
-        id="expert-registration-heading"
-        className="flex items-center gap-2 text-sm font-medium"
-      >
+      <h2 className="flex items-center gap-2 text-[0.9375rem] font-medium">
         <ShieldCheckIcon
           aria-hidden
           className="size-5 shrink-0 text-primary"
@@ -962,30 +969,38 @@ function RegistrationProof({
             target="_blank"
             rel="noopener noreferrer"
             aria-label={t("registration.bodyLink", { body: body.name })}
-            className="underline decoration-border underline-offset-4 hover:text-foreground hover:decoration-foreground"
+            className="rounded-sm text-foreground/80 underline decoration-foreground/40 underline-offset-4 hover:text-foreground hover:decoration-foreground focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none"
           >
             {body.name}
           </a>
           {" · "}
-          {t("registration.licence", { number: registration.licenceNumber })}
+          {t.rich("registration.licence", {
+            number,
+            value: registration.licenceNumber,
+          })}
         </li>
         {registration.ersRegistrationNumber ? (
           <li>
-            {t("registration.ersFull", {
-              number: registration.ersRegistrationNumber,
+            {t.rich("registration.ersFull", {
+              number,
+              value: registration.ersRegistrationNumber,
             })}
           </li>
         ) : null}
       </ul>
-      <details className="mt-1.5 pl-7 text-sm">
-        <summary className="inline-flex min-h-6 cursor-pointer items-center rounded-sm font-medium text-primary underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none">
+      <details className="group mt-1.5 pl-7 text-sm">
+        <summary className="inline-flex min-h-6 cursor-pointer list-none items-center gap-1 rounded-sm font-medium text-primary underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none [&::-webkit-details-marker]:hidden">
           {t("registration.whatWeCheck")}
+          <CaretDownIcon
+            aria-hidden
+            className="size-3.5 transition-transform group-open:rotate-180"
+          />
         </summary>
         <p className="mt-1.5 text-pretty text-muted-foreground">
           {t("registration.whatWeCheckBody")}
         </p>
       </details>
-    </section>
+    </div>
   )
 }
 

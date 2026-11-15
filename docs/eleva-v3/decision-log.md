@@ -32,6 +32,30 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-15: Checked-registration proof on profiles and cards (D2.1) (needs legal review)
+
+- Change (design slice D2.1): under the expert's name, a proof block says
+  Eleva checked the registration and in which month (the approval's
+  `reviewed_at`, published at month precision), names the professional body
+  and licence and the ERS number, and explains "What we check" in line with
+  the staff checklist (register entry active, name matches, ERS confirmed)
+  and its limit (registration, not an assessment of the care). The check
+  repeats in the booking card and on every explorer card (every listed
+  expert passed it: `licenceVerified()`); how the list is ordered sits above
+  the results.
+- Needs legal review, not signed off: the wording "checked" (EN),
+  "conferida" (PT) and "comprobada" (ES) for a seal-like mark (DL 238/2015,
+  ERS Regulation 1058/2016); terms and privacy notice should say the check
+  month is published.
+- Follow-ups (not shipped): the body name links to its website, not a
+  public-register search (add `registerSearchUrl` per body where one
+  exists); no recheck cadence exists, so the mark shows the month of the
+  last check only; the explorer's trust line has no "What we check" target
+  yet; a Top Expert card is not in the design capture (no seeded Top
+  Expert).
+- Owner: engineering; legal review: counsel
+- Status: `needs-review`
+
 ### 2026-11-14: A clinic is verified by an approved staff check, not a profile flag (active)
 
 - Decision (Phase 11.1): the phase spec gates the clinic public surface on

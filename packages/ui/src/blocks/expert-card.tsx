@@ -83,19 +83,27 @@ function ExpertCard({
           </LinkAs>
         </h3>
         {checkedLabel || badge ? (
-          <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-medium text-primary">
+          <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground">
             {checkedLabel ? (
               <span className="inline-flex items-center gap-1">
                 <ShieldCheckIcon
                   aria-hidden
-                  className="size-3.5 shrink-0"
+                  className="size-4 shrink-0 text-primary"
                   weight="fill"
                 />
                 {checkedLabel}
               </span>
             ) : null}
-            {/* On phones the photo is small: the paid placement shows here. */}
-            {badge ? <span className="sm:hidden">{badge}</span> : null}
+            {/* On phones the photo is small: the paid placement shows here,
+                styled apart so it never reads as part of the check. */}
+            {badge ? (
+              <span className="inline-flex items-center gap-1.5 sm:hidden">
+                {checkedLabel ? <span aria-hidden>·</span> : null}
+                <span className="rounded-full border px-2 py-0.5 text-[0.6875rem] font-medium text-foreground">
+                  {badge}
+                </span>
+              </span>
+            ) : null}
           </p>
         ) : null}
         {headline ? (
@@ -119,9 +127,6 @@ function ExpertCard({
               <span className="font-medium text-foreground">{price}</span>
             ) : null}
           </p>
-        ) : null}
-        {badge ? (
-          <p className="text-xs font-medium text-primary sm:hidden">{badge}</p>
         ) : null}
       </div>
     </article>
