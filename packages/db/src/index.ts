@@ -214,3 +214,4 @@ export type {
   LocalizedRichTextEntry,
   LocalizedText,
 } from "./schema/main/shared"
+export { isUniqueViolation } from "./errors"

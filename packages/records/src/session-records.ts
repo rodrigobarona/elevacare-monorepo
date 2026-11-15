@@ -1,6 +1,7 @@
 import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm"
 import { withAudit, type AuditCtx } from "@eleva/audit"
 import {
+  isUniqueViolation,
   hasActiveAiProcessingConsent,
   isActiveBookingExpert,
   withOrgAndUserContext,
@@ -88,18 +89,6 @@ async function decryptRow(
     updatedAt: row.updatedAt.toISOString(),
     publishedAt: row.publishedAt?.toISOString() ?? null,
   }
-}
-
-function isUniqueViolation(err: unknown): boolean {
-  let current: unknown = err
-  for (let i = 0; i < 4; i++) {
-    if (!current || typeof current !== "object") return false
-    if ("code" in current && (current as { code: unknown }).code === "23505") {
-      return true
-    }
-    current = "cause" in current ? (current as { cause: unknown }).cause : null
-  }
-  return false
 }
 
 function encryptionFailed(): never {

@@ -1,6 +1,7 @@
 import { and, eq, isNull } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
 import {
+  isUniqueViolation,
   isActiveBookingExpert,
   withOrgAndUserContext,
   withPlatformAdminContext,
@@ -64,18 +65,6 @@ export const SESSION_DOCUMENT_UPLOAD = {
   contentTypes: ALLOWED_MIME,
   maxBytes: MAX_BYTES,
 } as const
-
-function isUniqueViolation(err: unknown): boolean {
-  let current: unknown = err
-  for (let i = 0; i < 4; i++) {
-    if (!current || typeof current !== "object") return false
-    if ("code" in current && (current as { code: unknown }).code === "23505") {
-      return true
-    }
-    current = "cause" in current ? (current as { cause: unknown }).cause : null
-  }
-  return false
-}
 
 function isScope(value: string): value is SessionDocumentScope {
   return (SESSION_DOCUMENT_SCOPES as readonly string[]).includes(value)

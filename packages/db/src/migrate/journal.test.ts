@@ -40,9 +40,13 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0074_clinic_foundation")
-    expect(last?.hash).toHaveLength(64)
-    const clinic = last?.statements.join("\n") ?? ""
+    expect(last?.tag).toBe("0075_clinic_profile_per_org")
+    expect(last?.statements.join("\n")).toContain("clinic_profiles_org_uidx")
+    const foundation = migrations.find(
+      (m) => m.tag === "0074_clinic_foundation"
+    )
+    expect(foundation?.hash).toHaveLength(64)
+    const clinic = foundation?.statements.join("\n") ?? ""
     expect(clinic).toContain("clinic_verifications_open_uidx")
     expect(clinic).toContain("eleva.platform_admin")
     expect(clinic).toContain("attributed_org_id")

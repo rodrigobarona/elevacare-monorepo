@@ -14,6 +14,7 @@ describe("clinicSlugFor", () => {
     expect(long.length).toBeGreaterThan(30)
     expect(clinicSlugFor(long, ORG_ID)).toBe("clinic-3ecf81178b32")
     expect(clinicSlugFor("ab", ORG_ID)).toBe("clinic-3ecf81178b32")
+    expect(clinicSlugFor("a", ORG_ID)).toBe("clinic-3ecf81178b32")
     expect(clinicSlugFor("a--b-clinic", ORG_ID)).toBe("clinic-3ecf81178b32")
   })
 })

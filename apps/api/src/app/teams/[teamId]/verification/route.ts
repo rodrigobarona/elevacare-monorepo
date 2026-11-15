@@ -9,6 +9,8 @@ import {
   teamResponse,
 } from "@/lib/teams-http"
 
+// No BotID: an authenticated clinic-admin route that agents call with a
+// bearer key (AGENTS.md: BotID is for public, unauthenticated POSTs).
 export const ROUTE_POLICY = {
   auth: "session",
   rateLimit: true,
@@ -32,7 +34,8 @@ export async function POST(request: Request, context: Context) {
   const caller = await requireTeamCaller(
     request,
     headers,
-    (await context.params).teamId
+    (await context.params).teamId,
+    { mutation: true }
   )
   if (caller instanceof Response) return caller
   const parsed = FileClinicVerificationRequestSchema.safeParse(
@@ -40,7 +43,7 @@ export async function POST(request: Request, context: Context) {
   )
   if (!parsed.success) {
     return secureJson(
-      { error: "invalid_body", issues: parsed.error.issues },
+      { error: "validation", issues: parsed.error.issues },
       { status: 422, headers }
     )
   }

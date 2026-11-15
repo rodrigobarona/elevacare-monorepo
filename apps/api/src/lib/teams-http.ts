@@ -2,7 +2,11 @@ import { z } from "zod"
 import { ClinicError, type ClinicSummary } from "@eleva/auth"
 import { TeamSummarySchema } from "@eleva/api-client"
 import { describeError } from "@eleva/observability"
-import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
+import {
+  apiAuthFailure,
+  requireApiCapability,
+  requireRevocableApiCapability,
+} from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 
@@ -22,18 +26,22 @@ export type TeamCaller = { orgId: string; userId: string }
 export async function requireTeamCaller(
   request: Request,
   headers: Record<string, string>,
-  rawTeamId: string
+  rawTeamId: string,
+  /** Writes need a revocable session or key (no bare JWT). */
+  options: { mutation?: boolean } = {}
 ): Promise<TeamCaller | Response> {
   const teamId = z.string().uuid().safeParse(rawTeamId)
   if (!teamId.success) {
     return secureJson(
-      { error: "invalid_params", issues: teamId.error.issues },
+      { error: "validation", issues: teamId.error.issues },
       { status: 422, headers }
     )
   }
   let session
   try {
-    session = await requireApiCapability(request, "clinic:manage")
+    session = options.mutation
+      ? await requireRevocableApiCapability(request, "clinic:manage")
+      : await requireApiCapability(request, "clinic:manage")
   } catch (err) {
     const failure = apiAuthFailure(err, headers)
     if (failure) return failure

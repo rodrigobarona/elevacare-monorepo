@@ -179,14 +179,23 @@ export async function createElevaOrganization(input: {
     })
   })
 
-  // A team org is a clinic: it gets its profile row at creation.
+  // A team org is a clinic: it gets its profile row at creation. A failure
+  // here never fails the org (it exists already); the first GET
+  // /teams/{teamId} repairs a missing profile.
   if (input.type === "team") {
-    await provisionClinicProfile({
-      orgId,
-      orgSlug: slug,
-      name: input.name,
-      actorUserId: input.userId,
-    })
+    try {
+      await provisionClinicProfile({
+        orgId,
+        orgSlug: slug,
+        name: input.name,
+        actorUserId: input.userId,
+      })
+    } catch (err) {
+      console.warn(
+        `[organizations] clinic profile provisioning failed for ${orgId}`,
+        err instanceof Error ? err.message : "unknown"
+      )
+    }
   }
 
   return {

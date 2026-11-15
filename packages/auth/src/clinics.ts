@@ -1,6 +1,13 @@
 import { and, desc, eq, inArray } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
-import { main, withOrgContext, type Tx } from "@eleva/db"
+import {
+  auth,
+  isUniqueViolation,
+  main,
+  withOrgContext,
+  withPlatformAdminContext,
+  type Tx,
+} from "@eleva/db"
 import type {
   ClinicBillingAddress,
   ClinicProfile,
@@ -27,7 +34,8 @@ export class ClinicError extends Error {
   }
 }
 
-const CLINIC_SLUG = /^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$/
+/** 3–30 lowercase letters, digits and single hyphens. */
+const CLINIC_SLUG = /^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$/
 
 /**
  * The clinic's public slug: the org slug when it fits the clinic slug rule
@@ -48,33 +56,98 @@ export function normalizeClinicTaxId(raw: string): string {
   return value
 }
 
-/** Creates the clinic's profile row for a new team org. Idempotent. */
-export async function provisionClinicProfile(input: {
+async function hasProfile(orgId: string): Promise<boolean> {
+  const rows = await withOrgContext(orgId, (tx) =>
+    tx
+      .select({ id: main.clinicProfiles.id })
+      .from(main.clinicProfiles)
+      .where(eq(main.clinicProfiles.orgId, orgId))
+      .limit(1)
+  )
+  return rows.length > 0
+}
+
+async function insertProfile(input: {
   orgId: string
-  orgSlug: string
+  slug: string
   name: string
   actorUserId: string
 }): Promise<void> {
   await withAudit(
     { orgId: input.orgId, actorUserId: input.actorUserId },
     async (tx, ctx) => {
-      const inserted = await tx
-        .insert(main.clinicProfiles)
-        .values({
-          orgId: input.orgId,
-          slug: clinicSlugFor(input.orgSlug, input.orgId),
-          displayName: input.name,
-        })
-        .onConflictDoNothing()
-        .returning({ id: main.clinicProfiles.id })
+      await tx.insert(main.clinicProfiles).values({
+        orgId: input.orgId,
+        slug: input.slug,
+        displayName: input.name,
+      })
       await ctx.emit({
         entity: "team",
         action: "created",
         entityId: input.orgId,
-        payload: { profileCreated: inserted.length > 0 },
+        payload: { slug: input.slug },
       })
     }
   )
+}
+
+/**
+ * Creates the clinic's profile row for a team org. Idempotent: one profile
+ * per org (unique `org_id`). When the org slug is already another clinic's
+ * public slug, it falls back to the id-based slug.
+ */
+export async function provisionClinicProfile(input: {
+  orgId: string
+  orgSlug: string
+  name: string
+  actorUserId: string
+}): Promise<void> {
+  if (await hasProfile(input.orgId)) return
+  const preferred = clinicSlugFor(input.orgSlug, input.orgId)
+  const fallback = clinicSlugFor("", input.orgId)
+  for (const slug of preferred === fallback
+    ? [preferred]
+    : [preferred, fallback]) {
+    try {
+      await insertProfile({ ...input, slug })
+      return
+    } catch (err) {
+      if (!isUniqueViolation(err)) throw err
+      // Created meanwhile for this org (unique org_id): done.
+      if (await hasProfile(input.orgId)) return
+      // Otherwise the slug belongs to another clinic: try the fallback.
+    }
+  }
+  throw new ClinicError("CLINIC_NOT_FOUND")
+}
+
+/**
+ * A team org whose profile creation failed (or predates Phase 11) gets it
+ * on first read, so the clinic admin is never stuck.
+ */
+async function repairMissingProfile(
+  orgId: string,
+  actorUserId: string
+): Promise<boolean> {
+  const [org] = await withPlatformAdminContext((tx) =>
+    tx
+      .select({
+        slug: auth.organization.slug,
+        name: auth.organization.name,
+        type: auth.organization.type,
+      })
+      .from(auth.organization)
+      .where(eq(auth.organization.id, orgId))
+      .limit(1)
+  )
+  if (!org || org.type !== "team") return false
+  await provisionClinicProfile({
+    orgId,
+    orgSlug: org.slug,
+    name: org.name,
+    actorUserId,
+  })
+  return true
 }
 
 export type ClinicProfilePatch = {
@@ -135,12 +208,25 @@ async function loadVerification(
   }
 }
 
-export async function getClinicSummary(orgId: string): Promise<ClinicSummary> {
-  return withOrgContext(orgId, async (tx) => {
-    const profile = await loadProfile(tx, orgId)
-    const { current, verified } = await loadVerification(tx, orgId)
-    return { profile, verification: current, verified }
-  })
+export async function getClinicSummary(
+  orgId: string,
+  actorUserId: string
+): Promise<ClinicSummary> {
+  const read = () =>
+    withOrgContext(orgId, async (tx) => {
+      const profile = await loadProfile(tx, orgId)
+      const { current, verified } = await loadVerification(tx, orgId)
+      return { profile, verification: current, verified }
+    })
+  try {
+    return await read()
+  } catch (err) {
+    if (!(err instanceof ClinicError) || err.code !== "CLINIC_NOT_FOUND") {
+      throw err
+    }
+    if (!(await repairMissingProfile(orgId, actorUserId))) throw err
+    return read()
+  }
 }
 
 export async function updateClinicProfile(input: {
@@ -219,10 +305,18 @@ export async function fileClinicVerification(input: {
         if (!row) throw new ClinicError("VERIFICATION_LOCKED")
         id = row.id
       } else {
+        // Two filings at once: the one-open-row-per-org index lets one win;
+        // the other gets VERIFICATION_LOCKED (409) and can refile.
         const [row] = await tx
           .insert(main.clinicVerifications)
           .values({ orgId: input.orgId, legalName, taxId })
           .returning({ id: main.clinicVerifications.id })
+          .catch((err: unknown) => {
+            if (isUniqueViolation(err)) {
+              throw new ClinicError("VERIFICATION_LOCKED")
+            }
+            throw err
+          })
         id = row!.id
       }
       await ctx.emit({

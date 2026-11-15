@@ -32,7 +32,10 @@ export async function GET(request: Request, context: Context) {
   )
   if (caller instanceof Response) return caller
   try {
-    return teamResponse(await getClinicSummary(caller.orgId), headers)
+    return teamResponse(
+      await getClinicSummary(caller.orgId, caller.userId),
+      headers
+    )
   } catch (err) {
     return teamErrorResponse(err, headers, "get")
   }
@@ -44,7 +47,8 @@ export async function PATCH(request: Request, context: Context) {
   const caller = await requireTeamCaller(
     request,
     headers,
-    (await context.params).teamId
+    (await context.params).teamId,
+    { mutation: true }
   )
   if (caller instanceof Response) return caller
   const parsed = UpdateTeamProfileRequestSchema.safeParse(
@@ -52,7 +56,7 @@ export async function PATCH(request: Request, context: Context) {
   )
   if (!parsed.success) {
     return secureJson(
-      { error: "invalid_body", issues: parsed.error.issues },
+      { error: "validation", issues: parsed.error.issues },
       { status: 422, headers }
     )
   }
