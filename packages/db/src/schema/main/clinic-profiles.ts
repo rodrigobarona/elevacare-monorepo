@@ -1,7 +1,6 @@
 import { sql } from "drizzle-orm"
 import {
   check,
-  index,
   jsonb,
   pgEnum,
   pgPolicy,
@@ -89,7 +88,8 @@ export const clinicProfiles = pgTable(
   },
   (t) => ({
     slugIdx: uniqueIndex("clinic_profiles_slug_idx").on(t.slug),
-    orgIdx: index("clinic_profiles_org_idx").on(t.orgId),
+    /** One profile per team org (provisioning is idempotent). */
+    orgUidx: uniqueIndex("clinic_profiles_org_uidx").on(t.orgId),
     slugFormatChk: check(
       "clinic_profiles_slug_format",
       sql`slug ~ '^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$' AND slug NOT LIKE '%--%'`

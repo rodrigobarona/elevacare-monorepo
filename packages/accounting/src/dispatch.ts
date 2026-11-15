@@ -1,7 +1,7 @@
 import { and, eq, sql } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
 import { requireToconlineEnv } from "@eleva/config/env"
-import { main, withOrgContext } from "@eleva/db"
+import { isUniqueViolation, main, withOrgContext } from "@eleva/db"
 import { getFlag } from "@eleva/flags"
 import { AdapterError } from "./types"
 import type { IssueInvoiceInput, InvoicingProviderSlug } from "./types"
@@ -27,24 +27,7 @@ export type IssueExpertServiceInvoiceResult =
       error: string | null
     }
 
-export function isUniqueViolation(err: unknown): boolean {
-  let current: unknown = err
-  for (let depth = 0; depth < 4 && current; depth += 1) {
-    if (
-      typeof current === "object" &&
-      current !== null &&
-      "code" in current &&
-      (current as { code: unknown }).code === "23505"
-    ) {
-      return true
-    }
-    current =
-      typeof current === "object" && current !== null && "cause" in current
-        ? (current as { cause: unknown }).cause
-        : undefined
-  }
-  return false
-}
+export { isUniqueViolation }
 
 export function invoiceStatusFromAdapterError(err: unknown): {
   status: "failed"

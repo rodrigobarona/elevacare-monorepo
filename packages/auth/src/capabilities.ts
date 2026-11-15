@@ -98,6 +98,8 @@ export const CAPABILITY_BUNDLES: Record<ProductLabel, readonly string[]> = {
     "expert:profile_edit",
     "expert:invoicing_manage",
     "members:manage",
+    // The clinic's public profile and its verification filing (Phase 11).
+    "clinic:manage",
     "billing:manage_org",
     "subscriptions:manage_org",
   ],

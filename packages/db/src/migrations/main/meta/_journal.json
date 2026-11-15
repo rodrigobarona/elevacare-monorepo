@@ -526,6 +526,13 @@
       "when": 1783000000000,
       "tag": "0074_clinic_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1783100000000,
+      "tag": "0075_clinic_profile_per_org",
+      "breakpoints": true
     }
   ]
 }
