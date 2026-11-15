@@ -375,7 +375,7 @@
       "countries": "Miembros en {countries}"
     },
     "registration": {
-      "licence": "N.º de colegiado <number>{value}</number>",
+      "licence": "N.º de colegiado/a <number>{value}</number>",
       "bodyLink": "Web de la {body} (se abre en una pestaña nueva)",
       "checked": "Colegiación comprobada por Eleva en {month}",
       "checkedShort": "Colegiación comprobada por Eleva",

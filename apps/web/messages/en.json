@@ -381,7 +381,7 @@
       "checkedShort": "Registration checked by Eleva",
       "ersFull": "Portugal's Health Regulation Authority (ERS) no. <number>{value}</number>",
       "whatWeCheck": "What we check",
-      "whatWeCheckBody": "Before a profile goes live, our team looks up the expert's licence on their professional body's public register, checks that it is active and that the name on it matches the profile, and confirms their registration with Portugal's Health Regulation Authority (ERS). This confirms registration; it is not an assessment of the care itself. Experts describe their own training and experience."
+      "whatWeCheckBody": "Before a profile goes live, our team looks up the expert's licence on their professional body's public register, checks that it is active and that the name on it matches the profile, and confirms their registration with Portugal's Health Regulation Authority (ERS). This checks registration only; it doesn't assess the care itself. Experts describe their own training and experience."
     },
     "services": {
       "heading": "How I can help",

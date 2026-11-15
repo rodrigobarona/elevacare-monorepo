@@ -444,8 +444,6 @@ const WITH_ELEVA_ITEMS = [
   "join",
   "cancel",
   "care",
-  // "What does Eleva check?" now sits in the registration proof under the
-  // name (D2.1), not at the bottom of the page.
 ] as const
 
 function BioBody({
@@ -941,6 +939,8 @@ function RegistrationProof({
     ? new Intl.DateTimeFormat(intlLocales[locale], {
         month: "long",
         year: "numeric",
+        // "YYYY-MM" parses as UTC midnight on the 1st: keep it in UTC.
+        timeZone: "UTC",
       }).format(new Date(registration.checkedAt))
     : null
   // Numbers never break: they are what a member types into the register.

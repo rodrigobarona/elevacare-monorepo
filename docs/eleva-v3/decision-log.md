@@ -44,9 +44,11 @@ Each entry should include:
   expert passed it: `licenceVerified()`); how the list is ordered sits above
   the results.
 - Needs legal review, not signed off: the wording "checked" (EN),
-  "conferida" (PT) and "comprobada" (ES) for a seal-like mark (DL 238/2015,
-  ERS Regulation 1058/2016); terms and privacy notice should say the check
-  month is published.
+  "confirmada" (PT) and "comprobada" (ES) for a seal-like mark (DL 238/2015,
+  ERS Regulation 1058/2016). The legal terms (`content/legal/*/terms.mdx`
+  clauses 1, 3 and 8) still say "verified / verificada": counsel should
+  settle one word for product and contract. Terms and privacy notice should
+  say the check month is published.
 - Follow-ups (not shipped): the body name links to its website, not a
   public-register search (add `registerSearchUrl` per body where one
   exists); no recheck cadence exists, so the mark shows the month of the

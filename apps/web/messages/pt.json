@@ -324,10 +324,10 @@
     "rankingNote": "O Top Expert é um plano pago para especialistas. Quando escolhe “Top Expert primeiro”, esses especialistas aparecem antes dos restantes.",
     "rankingLink": "Como ordenamos os especialistas",
     "rankingAnchor": "8-como-ordenamos-os-especialistas",
-    "trustLine": "Antes de um perfil ficar visível, a nossa equipa confere a inscrição profissional de cada especialista.",
+    "trustLine": "Antes de um perfil ficar visível, a nossa equipa confirma a inscrição profissional de cada especialista.",
     "emptyCategory": "Ainda não há especialistas nesta área.",
     "openingTitle": "Os nossos primeiros especialistas estão a abrir as suas práticas",
-    "openingBody": "Verificamos a inscrição profissional de cada especialista antes de o perfil ser publicado. Entretanto, a newsletter Femme Focus leva saúde da mulher baseada em evidência à sua caixa de correio.",
+    "openingBody": "Confirmamos a inscrição profissional de cada especialista antes de o perfil ser publicado. Entretanto, a newsletter Femme Focus leva saúde da mulher baseada em evidência à sua caixa de correio.",
     "openingNewsletter": "Receber a newsletter",
     "openingHelp": "Como funciona a Eleva",
     "openingExpert": "É especialista?",
@@ -337,7 +337,7 @@
     "removeLanguageFilter": "Remover filtro: fala {language}",
     "sortedBy": "Ordenado por: {sort}",
     "removeSort": "Remover ordenação: {sort}",
-    "checkedMark": "Inscrição conferida pela Eleva",
+    "checkedMark": "Inscrição confirmada pela Eleva",
     "orderedBy": "Ordenado por: {sort}."
   },
   "profile": {
@@ -377,11 +377,11 @@
     "registration": {
       "licence": "Cédula profissional n.º <number>{value}</number>",
       "bodyLink": "Site da {body} (abre num novo separador)",
-      "checked": "Inscrição conferida pela Eleva em {month}",
-      "checkedShort": "Inscrição conferida pela Eleva",
+      "checked": "Inscrição confirmada pela Eleva em {month}",
+      "checkedShort": "Inscrição confirmada pela Eleva",
       "ersFull": "Entidade Reguladora da Saúde (ERS) n.º <number>{value}</number>",
-      "whatWeCheck": "O que verificamos",
-      "whatWeCheckBody": "Antes de um perfil ficar visível, a nossa equipa procura a cédula profissional no registo público da respetiva Ordem, confirma que a inscrição está ativa e que o nome corresponde ao do perfil, e confirma o registo na Entidade Reguladora da Saúde (ERS). Isto confirma a inscrição; não avalia os cuidados prestados. A formação e a experiência são descritas pelo próprio especialista."
+      "whatWeCheck": "O que confirmamos",
+      "whatWeCheckBody": "Antes de um perfil ficar visível, a nossa equipa procura a cédula profissional no registo público da respetiva Ordem, confirma que a inscrição está ativa e que o nome corresponde ao do perfil, e confirma o registo na Entidade Reguladora da Saúde (ERS). Isto diz respeito à inscrição; não avalia os cuidados prestados. A formação e a experiência são descritas pelo próprio especialista."
     },
     "services": {
       "heading": "Como posso ajudar",
