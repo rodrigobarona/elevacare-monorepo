@@ -336,7 +336,9 @@
     "speaksLanguage": "Fala {language}",
     "removeLanguageFilter": "Remover filtro: fala {language}",
     "sortedBy": "Ordenado por: {sort}",
-    "removeSort": "Remover ordenação: {sort}"
+    "removeSort": "Remover ordenação: {sort}",
+    "checkedMark": "Registo verificado",
+    "orderedBy": "Ordenado por: {sort}."
   },
   "profile": {
     "title": "{name} — Eleva.care",
@@ -374,8 +376,12 @@
     },
     "registration": {
       "licence": "Cédula profissional n.º {number}",
-      "ers": "Registo na ERS n.º {number}",
-      "bodyLink": "{body}, registo público (abre num novo separador)"
+      "bodyLink": "Site da {body} (abre num novo separador)",
+      "checked": "Registo verificado pela Eleva · {month}",
+      "checkedShort": "Registo verificado pela Eleva",
+      "ersFull": "Entidade Reguladora da Saúde (ERS) n.º {number}",
+      "whatWeCheck": "O que verificamos",
+      "whatWeCheckBody": "Antes de um perfil ficar visível, a equipa da Eleva encontra o registo do especialista na respetiva ordem profissional, confirma que o nome corresponde e confirma o registo na Entidade Reguladora da Saúde (ERS). A formação e a experiência são descritas pelo próprio especialista."
     },
     "services": {
       "heading": "Como posso ajudar",
@@ -435,10 +441,6 @@
       "care": {
         "q": "Quem presta os cuidados?",
         "a": "{name} presta os seus cuidados. A Eleva gere a marcação e a videochamada."
-      },
-      "checks": {
-        "q": "O que é que a Eleva verifica?",
-        "a": "Antes de um perfil ficar visível, a nossa equipa verifica a inscrição profissional. A formação e a experiência são descritas por cada especialista."
       }
     },
     "freeOption": "Opção gratuita disponível",

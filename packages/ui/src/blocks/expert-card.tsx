@@ -1,4 +1,5 @@
 import type * as React from "react"
+import { ShieldCheckIcon } from "@eleva/icons"
 import { cn } from "@eleva/ui/lib/utils"
 
 type LinkComponent = React.ElementType<{
@@ -19,6 +20,7 @@ function ExpertCard({
   name,
   headline,
   badge,
+  checkedLabel,
   tags,
   meta,
   price,
@@ -32,6 +34,8 @@ function ExpertCard({
   headline?: React.ReactNode
   /** Short highlight shown over the portrait, e.g. "Top Expert". */
   badge?: React.ReactNode
+  /** "Registration checked": Eleva checked this expert's registration. */
+  checkedLabel?: React.ReactNode
   tags?: readonly React.ReactNode[]
   /** One quiet line under the headline, e.g. areas of care. */
   meta?: React.ReactNode
@@ -78,6 +82,22 @@ function ExpertCard({
             {name}
           </LinkAs>
         </h3>
+        {checkedLabel || badge ? (
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs font-medium text-primary">
+            {checkedLabel ? (
+              <span className="inline-flex items-center gap-1">
+                <ShieldCheckIcon
+                  aria-hidden
+                  className="size-3.5 shrink-0"
+                  weight="fill"
+                />
+                {checkedLabel}
+              </span>
+            ) : null}
+            {/* On phones the photo is small: the paid placement shows here. */}
+            {badge ? <span className="sm:hidden">{badge}</span> : null}
+          </p>
+        ) : null}
         {headline ? (
           <p className="line-clamp-2 text-sm text-pretty text-muted-foreground">
             {headline}

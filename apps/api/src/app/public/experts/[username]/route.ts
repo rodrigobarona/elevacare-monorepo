@@ -46,6 +46,7 @@ function publicRegistration(value: PublicExpertRegistration | null) {
     professionalBody: value.professionalBody,
     licenceNumber: value.licenceNumber,
     ersRegistrationNumber: value.ersRegistrationNumber,
+    checkedAt: value.checkedAt?.toISOString() ?? null,
   }
 }
 

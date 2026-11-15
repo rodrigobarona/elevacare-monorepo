@@ -16,7 +16,12 @@ import { resolveGatewayUrl } from "@eleva/config/env"
 import { professionalBodyById } from "@eleva/config/professional-bodies"
 import { isReserved } from "@eleva/config/reserved-usernames"
 import { RichTextViewer } from "@eleva/editor/rich-text-viewer"
-import { CheckIcon, MapPinIcon, SOCIAL_LINK_ICONS } from "@eleva/icons"
+import {
+  CheckIcon,
+  MapPinIcon,
+  ShieldCheckIcon,
+  SOCIAL_LINK_ICONS,
+} from "@eleva/icons"
 import {
   ExpertMonogram,
   ExpertPortrait,
@@ -226,11 +231,10 @@ export default async function ExpertProfilePage({ params }: Props) {
                   {facts.join(" · ")}
                 </p>
               ) : null}
-              <RegistrationLine
+              <RegistrationProof
                 registration={expert.registration}
-                licenceLabel={(number) => t("registration.licence", { number })}
-                ersLabel={(number) => t("registration.ers", { number })}
-                bodyLinkLabel={(body) => t("registration.bodyLink", { body })}
+                locale={locale}
+                t={t}
               />
               <div className="flex flex-wrap items-center gap-3">
                 {expert.socialLinks.length > 0 ? (
@@ -323,6 +327,7 @@ export default async function ExpertProfilePage({ params }: Props) {
                     username={expert.username}
                     eventTypes={bookable}
                     timeZone={geo.timeZone}
+                    checked={expert.registration != null}
                     t={t}
                   />
                 </Suspense>
@@ -432,7 +437,8 @@ const WITH_ELEVA_ITEMS = [
   "join",
   "cancel",
   "care",
-  "checks",
+  // "What does Eleva check?" now sits in the registration proof under the
+  // name (D2.1), not at the bottom of the page.
 ] as const
 
 function BioBody({
@@ -632,12 +638,15 @@ async function ProfileBookingCard({
   username,
   eventTypes,
   timeZone,
+  checked,
   t,
 }: {
   locale: Locale
   username: string
   eventTypes: PublicEventType[]
   timeZone: string
+  /** Eleva checked the expert's registration: repeated beside booking. */
+  checked: boolean
   t: ProfileT
 }) {
   // Hour-aligned so the API's calendar busy cache key repeats across renders.
@@ -783,6 +792,7 @@ async function ProfileBookingCard({
         laterDates: t("card.laterDates"),
         seeAll: t("card.seeAll"),
         noAccount: t("card.noAccount"),
+        checked: checked ? t("registration.checkedShort") : undefined,
       }}
     />
   )
@@ -904,46 +914,78 @@ function pickBio(expert: PublicExpertProfile, locale: Locale): string | null {
 }
 
 /**
- * The registration Eleva staff checked: professional body (linked to its
- * public register), licence number and ERS number. Plain facts, no badge
- * (expert-profile-booking-ux-spec: "only real proof").
+ * The registration Eleva staff checked, as proof under the name (Care.com,
+ * Headspace): who checked, when, what (professional body and licence, the
+ * health regulator's number written out) and a plain "What we check".
+ * The wording ("checked", not "verified") needs legal review.
  */
-function RegistrationLine({
+function RegistrationProof({
   registration,
-  licenceLabel,
-  ersLabel,
-  bodyLinkLabel,
+  locale,
+  t,
 }: {
   registration: PublicExpertProfile["registration"]
-  licenceLabel: (number: string) => string
-  ersLabel: (number: string) => string
-  bodyLinkLabel: (body: string) => string
+  locale: Locale
+  t: ProfileT
 }) {
   const body = professionalBodyById(registration?.professionalBody)
   if (!registration || !body) return null
+  const month = registration.checkedAt
+    ? new Intl.DateTimeFormat(intlLocales[locale], {
+        month: "long",
+        year: "numeric",
+      }).format(new Date(registration.checkedAt))
+    : null
   return (
-    <p
+    <section
       data-testid="expert-registration"
-      className="max-w-2xl text-sm text-pretty text-muted-foreground"
+      aria-labelledby="expert-registration-heading"
+      className="max-w-2xl rounded-2xl border bg-card/70 px-4 py-3"
     >
-      <a
-        href={body.website}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label={bodyLinkLabel(body.name)}
-        className="underline decoration-border underline-offset-4 hover:text-foreground hover:decoration-foreground"
+      <h2
+        id="expert-registration-heading"
+        className="flex items-center gap-2 text-sm font-medium"
       >
-        {body.name}
-      </a>
-      {" · "}
-      {licenceLabel(registration.licenceNumber)}
-      {registration.ersRegistrationNumber ? (
-        <>
+        <ShieldCheckIcon
+          aria-hidden
+          className="size-5 shrink-0 text-primary"
+          weight="fill"
+        />
+        {month
+          ? t("registration.checked", { month })
+          : t("registration.checkedShort")}
+      </h2>
+      <ul className="mt-1.5 space-y-0.5 pl-7 text-sm text-muted-foreground">
+        <li>
+          <a
+            href={body.website}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={t("registration.bodyLink", { body: body.name })}
+            className="underline decoration-border underline-offset-4 hover:text-foreground hover:decoration-foreground"
+          >
+            {body.name}
+          </a>
           {" · "}
-          {ersLabel(registration.ersRegistrationNumber)}
-        </>
-      ) : null}
-    </p>
+          {t("registration.licence", { number: registration.licenceNumber })}
+        </li>
+        {registration.ersRegistrationNumber ? (
+          <li>
+            {t("registration.ersFull", {
+              number: registration.ersRegistrationNumber,
+            })}
+          </li>
+        ) : null}
+      </ul>
+      <details className="mt-1.5 pl-7 text-sm">
+        <summary className="inline-flex min-h-6 cursor-pointer items-center rounded-sm font-medium text-primary underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none">
+          {t("registration.whatWeCheck")}
+        </summary>
+        <p className="mt-1.5 text-pretty text-muted-foreground">
+          {t("registration.whatWeCheckBody")}
+        </p>
+      </details>
+    </section>
   )
 }
 

@@ -336,7 +336,9 @@
     "speaksLanguage": "Habla {language}",
     "removeLanguageFilter": "Quitar filtro: habla {language}",
     "sortedBy": "Ordenado por: {sort}",
-    "removeSort": "Quitar orden: {sort}"
+    "removeSort": "Quitar orden: {sort}",
+    "checkedMark": "Registro comprobado",
+    "orderedBy": "Ordenado por: {sort}."
   },
   "profile": {
     "title": "{name} — Eleva.care",
@@ -374,8 +376,12 @@
     },
     "registration": {
       "licence": "Cédula profesional n.º {number}",
-      "ers": "Registro en la ERS n.º {number}",
-      "bodyLink": "{body}, registro público (se abre en una pestaña nueva)"
+      "bodyLink": "Web de {body} (se abre en una pestaña nueva)",
+      "checked": "Registro comprobado por Eleva · {month}",
+      "checkedShort": "Registro comprobado por Eleva",
+      "ersFull": "Entidad Reguladora de la Salud de Portugal (ERS) n.º {number}",
+      "whatWeCheck": "Qué comprobamos",
+      "whatWeCheckBody": "Antes de que un perfil sea visible, el equipo de Eleva busca el registro del experto en su colegio profesional, comprueba que el nombre coincide y confirma su registro en la Entidad Reguladora de la Salud de Portugal (ERS). La formación y la experiencia las describe el propio experto."
     },
     "services": {
       "heading": "Cómo puedo ayudarte",
@@ -435,10 +441,6 @@
       "care": {
         "q": "¿Quién me atiende?",
         "a": "{name} te atiende. Eleva gestiona la reserva y la videollamada."
-      },
-      "checks": {
-        "q": "¿Qué comprueba Eleva?",
-        "a": "Antes de que un perfil se publique, nuestro equipo comprueba la colegiación profesional. Cada especialista describe su propia formación y experiencia."
       }
     },
     "freeOption": "Opción gratuita disponible",

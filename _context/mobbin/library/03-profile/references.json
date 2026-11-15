@@ -19,27 +19,50 @@
       "severity": "P1",
       "lens": "trust",
       "title": "The checked registration reads as small print",
-      "evidence": ["01-profile-paid.desktop.jpg", "01-profile-paid.mobile.jpg", "03-profile-empty.desktop.jpg"],
+      "evidence": [
+        "01-profile-paid.desktop.jpg",
+        "01-profile-paid.mobile.jpg",
+        "03-profile-empty.desktop.jpg"
+      ],
       "detail": "\"Ordem dos Fisioterapeutas · Licence no. 9115 · ERS registration no. 182844\" is one line of 14px grey text between the facts and the share button. Nothing says Eleva checked it, when, or what the numbers mean. \"ERS\" is unexplained and the body's name is in Portuguese on an English page. The explanation exists, but as the sixth closed item of the FAQ at the bottom (\"What does Eleva check?\"). A member deciding whether to trust this person with her health has no visible signal that anyone verified anything.",
       "recommendation": "Make it a proof block directly under the name: a check icon, \"Registration checked by Eleva\" with the month it was checked, then the body in plain words (\"Registered physiotherapist, Ordem dos Fisioterapeutas, no. 9115\") with \"View on the public register\", and the health regulator registration on its own line with its name written out. Add a small \"What we check\" link that opens one honest paragraph: Eleva checks the professional registration before a profile goes live; experts describe their own training and experience. Put the same check mark beside the name on the explorer card.",
-      "references": ["03-profile/07", "03-profile/04", "03-profile/05", "03-profile/06"]
+      "references": [
+        "03-profile/07",
+        "03-profile/04",
+        "03-profile/05",
+        "03-profile/06"
+      ]
     },
     {
       "id": "PROF-02",
       "severity": "P1",
       "lens": "trust",
       "title": "There is little proof of the person beyond a name",
-      "evidence": ["01-profile-paid.desktop.jpg", "01-profile-paid.mobile.jpg", "02-profile-free.desktop.jpg"],
+      "evidence": [
+        "01-profile-paid.desktop.jpg",
+        "01-profile-paid.mobile.jpg",
+        "02-profile-free.desktop.jpg"
+      ],
       "detail": "With a two-sentence bio the profile has no years in practice, no focus areas, no approach, no training, no description of a first session and no voice from other members. \"About me\" sits below every service card, and on phones below the booking card too, about 2,100px down. \"What to expect\" exists only as a closed accordion inside one service. The free profile has no \"About me\" at all, so the page goes from one service straight to a booking FAQ. The source has a \"Training and credentials\" timeline, but an expert who skips it leaves nothing behind.",
       "recommendation": "Give the profile a fixed spine that expert setup fills step by step: (1) an at-a-glance row under the header (profession, years in practice, focus areas); (2) \"My approach\", three or four sentences prompted in setup; (3) \"Your first session\", three numbered steps the expert edits from a default for her profession; (4) \"Training and credentials\"; (5) \"What members say\", shown once an expert has a few reviews from members who completed a session, and a quiet \"New on Eleva\" tag until then rather than empty stars. Move a two-line version of the bio into the header so it is read before the prices. Ask for approach and at least one training entry before a profile can be published.",
-      "references": ["03-profile/03", "03-profile/06", "03-profile/08", "03-profile/11", "03-profile/12"]
+      "references": [
+        "03-profile/03",
+        "03-profile/06",
+        "03-profile/08",
+        "03-profile/11",
+        "03-profile/12"
+      ]
     },
     {
       "id": "PROF-03",
       "severity": "P1",
       "lens": "ui",
       "title": "Without a photo the header loses the person",
-      "evidence": ["01-profile-paid.desktop.jpg", "02-profile-free.mobile.jpg", "03-profile-empty.desktop.jpg"],
+      "evidence": [
+        "01-profile-paid.desktop.jpg",
+        "02-profile-free.mobile.jpg",
+        "03-profile-empty.desktop.jpg"
+      ],
       "detail": "The header pairs a 110px monogram circle with a 60px serif name. The monogram looks like an account avatar from a dashboard, not someone you would book. The source shows a 4:5 portrait as the largest element when a photo exists, so a profile with and without one are two different pages, and new experts get the weaker one. Nothing under the name says what she is: the only hint of a profession is the name of the regulatory body in the small print.",
       "recommendation": "Ask for a portrait before a profile can be published, with a short guide in setup (face, daylight, plain background) and a crop tool. Add a profession line as the first thing under the name (\"Physiotherapist · Pelvic health\"), required, taken from the areas of care. For the rare profile still without a photo, keep the full-size 4:5 frame with a branded Eleva illustration and the initials, so the layout and the page's weight stay the same.",
       "references": ["03-profile/01", "03-profile/06", "03-profile/09"]
@@ -49,7 +72,11 @@
       "severity": "P2",
       "lens": "ui",
       "title": "Header facts run together as one grey sentence",
-      "evidence": ["02-profile-free.desktop.jpg", "02-profile-free.mobile.jpg", "01-profile-paid.mobile.jpg"],
+      "evidence": [
+        "02-profile-free.desktop.jpg",
+        "02-profile-free.mobile.jpg",
+        "01-profile-paid.mobile.jpg"
+      ],
       "detail": "Languages, how you meet, cities and countries served are joined with dots into one paragraph of small grey text. On the free profile the country list names 27 countries and runs four lines on desktop and six on a phone, pushing the first service to about 720px on mobile, below the first screen. The facts a member scans for first (does she speak my language, can I see her in my city) are the hardest to pick out.",
       "recommendation": "Break the facts into three short rows with icons: languages, how you meet (\"Video, phone\" or \"Video, in person in Lisboa, Porto and Madrid\"), and where members can be. Collapse long country lists (\"Members across the EU\", with the list behind \"See countries\"). On phones keep the whole header within one screen so the first service or the first times are visible without scrolling.",
       "references": ["03-profile/06", "03-profile/09"]
@@ -69,7 +96,10 @@
       "severity": "P2",
       "lens": "ux",
       "title": "The availability card packs place and mode into the time chip",
-      "evidence": ["01-profile-paid.desktop.jpg", "02-profile-free.desktop.jpg"],
+      "evidence": [
+        "01-profile-paid.desktop.jpg",
+        "02-profile-free.desktop.jpg"
+      ],
       "detail": "For an expert with three locations the first day shows \"08:00 Madrid, 12:00 Lisboa, 12:00 Porto, 12:00 Madrid, 12:30 Lisboa, 12:30 Porto\". The same hour appears three times and the city, the bigger decision, is the smallest text in the chip. On the free profile each time appears twice, told apart only by a small video or phone icon with no label. Only one day and six times are shown, and the way to other days is a text link.",
       "recommendation": "Ask in order: service, then how and where (a segmented choice: Video, Lisboa, Porto, Madrid), then a strip of the next seven days with unavailable days greyed, then the times for the chosen day. Label modes in words. Keep the summary lines at the foot of the card (length and price, \"No account needed\", cancellation window); they are good.",
       "references": ["03-profile/01", "03-profile/10"]
@@ -89,7 +119,10 @@
       "severity": "P2",
       "lens": "ux",
       "title": "The empty profile is a dead end",
-      "evidence": ["03-profile-empty.desktop.jpg", "03-profile-empty.mobile.jpg"],
+      "evidence": [
+        "03-profile-empty.desktop.jpg",
+        "03-profile-empty.mobile.jpg"
+      ],
       "detail": "A profile with no services shows \"Patricia Mota isn't taking bookings here yet. See their work below.\" Below there is a one-line bio and a six-question FAQ about booking, which does not apply. The headline above says \"Available for consultations on Eleva.\", which contradicts the notice. The right-hand column is empty and the member is offered nothing to do next.",
       "recommendation": "Replace the notice with a proper state in the booking column: \"[Name] is setting up on Eleva\", a \"Tell me when bookings open\" email field, and two or three experts in the same area who can be booked now. Hide the booking FAQ on this state and keep the proof block and About. Remove the default headline; show the profession line instead. Best of all, hold publication until one service is live.",
       "references": ["03-profile/02", "03-profile/12"]
@@ -109,7 +142,10 @@
       "severity": "P3",
       "lens": "copy",
       "title": "Wording details",
-      "evidence": ["01-profile-paid.desktop.jpg", "03-profile-empty.desktop.jpg"],
+      "evidence": [
+        "01-profile-paid.desktop.jpg",
+        "03-profile-empty.desktop.jpg"
+      ],
       "detail": "\"Times in Lisbon time\" repeats itself. \"45 min · from €45.00 total\" joins \"from\" and \"total\", which pull in opposite directions. \"ERS registration no.\" assumes the member knows the regulator. \"See their work below\" points at content that is not there. \"Share this page\" has the same visual weight as the only link to the expert's own website. No Mobbin reference was needed for these; they are copy fixes.",
       "recommendation": "\"Times shown in Lisbon time\" or \"Lisbon time (WET)\". \"45 min · from €45\". \"Health regulator (ERS) registration\". On the empty state, name what is there (\"Read more about Patricia below\") or drop the sentence. Reduce share to an icon button with a label for screen readers.",
       "references": []
@@ -259,6 +295,42 @@
       "why": "A profile with no history: photo, name, city and join date, then a \"Verified info\" list where each item has its own tick, then languages and work. The About text sits on the right with \"More\", and the reviews area keeps its place with a quiet one-line note. The page is sparse but ordered, because every block has a label and a fixed position. Car sharing marketplace, kept for the new-profile state.",
       "apply": "A new expert's page keeps every section in place with short content. Eleva frames it as \"New on Eleva\" and lets the checked registration carry the trust until reviews exist.",
       "query": "caregiver marketplace profile page with background check badge and reviews"
+    },
+    {
+      "id": "03-profile/13",
+      "file": "img/13-carecom-dated-background-check.jpg",
+      "app": "Care.com",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/f0bad74d-9aa6-4eab-8162-acf9da99d082?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A dated check row with a link to what the check covers",
+      "why": "A 'Safety' card on a caregiver profile. The first row is 'Care.com Background Check · Completed 07/31/25' with a shield icon and a green check. Above the rows: 'Learn more about what's included in background checks on our Safety Center' (linked). Checks that were not done read 'Not on file'. A 'Report Aura' link sits under the card.",
+      "apply": "Show the registration check as a row: what was checked, by Eleva, and the month; link 'What we check' to an honest explanation; never imply checks that were not done.",
+      "query": "health provider profile with verified licence badge and what we check explanation"
+    },
+    {
+      "id": "03-profile/14",
+      "file": "img/14-headspace-clinician-card-credential.jpg",
+      "app": "Headspace",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/6d26d0ea-2cf7-4bf0-b1cf-51e45442bd08?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Clinician card with credential beside the name and checked facts as rows",
+      "why": "A therapist result card: photo, name, credential ('LCSW') under the name, then rows with icons: 'In-network' with a check, 'Master's Degree in Social Work', specialties, language, and the first open time. The side panel repeats name and credential above 'Specialties', 'Approach to care' and 'More about me'.",
+      "apply": "Put the profession and checked registration directly under the expert's name on cards and the profile, as short rows with icons, before the bio.",
+      "query": "health provider profile with verified licence badge and what we check explanation"
+    },
+    {
+      "id": "03-profile/15",
+      "file": "img/15-contra-identity-verified-row.jpg",
+      "app": "Contra",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/0b1b3b8c-d0d6-4350-a74b-5ebd16601b71?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A verification row with a plain explanation underneath",
+      "why": "On a freelancer profile, below the intro: 'Identity Verified' with a shield icon and one line under it explaining what it means, then 'Quick Responder' with its own line. A design tool, kept for the row-with-explanation structure.",
+      "apply": "Each trust mark gets one plain sentence that says what it means, not just a badge.",
+      "query": "health provider profile with verified licence badge and what we check explanation"
     }
   ],
   "judging_criteria": [
