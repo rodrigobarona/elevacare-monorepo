@@ -837,6 +837,10 @@
       "unavailableTitle": "Os pagamentos ainda não estão disponíveis",
       "unavailable": "Os pagamentos não estão configurados neste ambiente. Contacte o suporte."
     },
+    "finishSetup": {
+      "title": "Termine a configuração dos pagamentos",
+      "description": "O Stripe, o nosso parceiro de pagamentos, precisa de alguns dados para que os seus ganhos cheguem ao seu banco. Demora poucos minutos e pode parar e voltar quando quiser."
+    },
     "invoicing": {
       "link": "Definições de faturação",
       "eyebrow": "Finanças",

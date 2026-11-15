@@ -837,6 +837,10 @@
       "unavailableTitle": "Payouts are not available yet",
       "unavailable": "Payments are not configured on this environment. Please contact support."
     },
+    "finishSetup": {
+      "title": "Finish setting up payouts",
+      "description": "Stripe, our payments partner, needs a few details before your earnings can reach your bank. It takes a few minutes, and you can stop and come back anytime."
+    },
     "invoicing": {
       "link": "Invoicing settings",
       "eyebrow": "Finance",

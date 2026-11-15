@@ -837,6 +837,10 @@
       "unavailableTitle": "Los pagos aún no están disponibles",
       "unavailable": "Los pagos no están configurados en este entorno. Contacta con soporte."
     },
+    "finishSetup": {
+      "title": "Termina de configurar tus cobros",
+      "description": "Stripe, nuestro socio de pagos, necesita unos datos para que tus ganancias lleguen a tu banco. Son unos minutos y puedes parar y volver cuando quieras."
+    },
     "invoicing": {
       "link": "Ajustes de facturación",
       "eyebrow": "Finanzas",
