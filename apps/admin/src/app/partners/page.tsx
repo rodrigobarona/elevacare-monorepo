@@ -13,7 +13,6 @@ import {
   TableHeader,
   TableRow,
 } from "@eleva/ui/components/table"
-import Link from "next/link"
 import { getAuthedApiClient } from "@/lib/server-api"
 import { REVIEW_STATE_TONES } from "./review-state-tones"
 
@@ -51,14 +50,16 @@ export default async function PartnersPage() {
             </TableHeader>
             <TableBody>
               {items.map((item) => (
-                <TableRow key={item.expertProfileId} id={item.expertProfileId}>
+                <TableRow
+                  key={item.expertProfileId}
+                  id={item.expertProfileId}
+                  href={`/partners/${item.expertProfileId}`}
+                  className="group cursor-pointer"
+                >
                   <TableCell>
-                    <Link
-                      href={`/partners/${item.expertProfileId}`}
-                      className="font-medium underline-offset-4 hover:underline"
-                    >
+                    <span className="font-medium text-primary underline-offset-4 group-hover:underline">
                       {item.displayName}
-                    </Link>
+                    </span>
                     <p className="text-sm text-muted-foreground">
                       @{item.username}
                     </p>
