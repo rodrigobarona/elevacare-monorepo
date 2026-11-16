@@ -1,6 +1,7 @@
 "use server"
 
 import type { ProductLabel } from "@eleva/auth/types"
+import { resolveGatewayUrl } from "@eleva/config/env"
 import { accountMenuFor, loadUserWorkspaces } from "./account-menu-server"
 import type { DashboardConfig, NavGroup } from "./nav-types"
 import { resolveProductHomeUrl } from "./resolve-product-home-url"
@@ -57,7 +58,14 @@ export async function buildDashboardConfig(
 
   // Each workspace's own home (ADR-026: /space, /expert/{slug}, …). Never
   // `/{slug}`: that is the public profile.
-  const homeUrl = configOverrides.homeUrl ?? resolveProductHomeUrl(session)
+  const homeUrl =
+    configOverrides.homeUrl ??
+    (session.productLabel
+      ? resolveProductHomeUrl({
+          ...session,
+          productLabel: session.productLabel,
+        })
+      : `${resolveGatewayUrl()}/dashboard`)
 
   return {
     navGroups,

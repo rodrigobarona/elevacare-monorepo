@@ -8,7 +8,7 @@ import { SPACE_BASE } from "@eleva/config/routing"
 
 export interface ProductHomeSession {
   orgSlug?: string | null
-  productLabel?: ProductLabel
+  productLabel: ProductLabel
   orgType?: OrgType | string | null
 }
 
