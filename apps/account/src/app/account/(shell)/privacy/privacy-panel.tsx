@@ -28,6 +28,12 @@ import {
   SettingsFieldsetTitle,
   SettingsRow,
 } from "@eleva/ui/components/settings-fieldset"
+import {
+  Dialog,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@eleva/ui/components/dialog"
 import { Switch } from "@eleva/ui/components/switch"
 import {
   cancelDeletion,
@@ -59,6 +65,13 @@ const DATA_COPY_STATUSES = [
   "failed",
 ] as const
 type DataCopyStatus = (typeof DATA_COPY_STATUSES)[number]
+
+/** Choices with more to say than one line: shown in a "Details" dialog. */
+type DetailedChoice = "health_data_processing" | "ai_processing"
+
+function isDetailed(kind: ConsentKind): kind is DetailedChoice {
+  return kind === "health_data_processing" || kind === "ai_processing"
+}
 
 /** What a Server Action call that never reached the server resolves to. */
 const UNREACHED = { ok: false, error: "generic" } as const
@@ -234,9 +247,10 @@ function AgreementsCard({
 }
 
 /**
- * Consents a person can give and take back at any time. Everything she is
- * agreeing to is on the page (never only in a popover), and each switch is
- * described by that text for screen readers.
+ * Consents a person can give and take back. Each row states the purpose,
+ * what it covers and what turning it on means; the rest is in a Details
+ * dialog that links to the full notice (a layered notice). Each switch is
+ * described by that line for screen readers.
  */
 function ChoicesCard({
   byKind,
@@ -283,16 +297,19 @@ function ChoicesCard({
     }
   }
 
-  const notice = (href: string, label: string) => (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener"
-      className="text-foreground underline underline-offset-4"
-    >
-      {label}
-    </a>
-  )
+  // Layered notice: each row says what the choice is for and what turning
+  // it on means; the rest is one tap away in "Details", before the switch.
+  const [details, setDetails] = useState<DetailedChoice | null>(null)
+  // Kept while the dialog fades out, so it never shows an empty box.
+  const [shown, setShown] = useState<DetailedChoice>("health_data_processing")
+  const openDetails = (kind: DetailedChoice) => {
+    setShown(kind)
+    setDetails(kind)
+  }
+  const noticeUrl: Record<DetailedChoice, string> = {
+    health_data_processing: documentUrls.health_data_processing,
+    ai_processing: documentUrls.ai_processing,
+  }
 
   return (
     <SettingsFieldset>
@@ -321,35 +338,25 @@ function ChoicesCard({
                   <span id={`choice-${kind}`}>{t(`kinds.${kind}.title`)}</span>
                 }
                 description={
-                  <div id={descriptionId} className="space-y-2">
-                    {kind === "ai_processing" ? (
-                      <p>{t("kinds.ai_processing.description")}</p>
+                  <span className="block space-y-1">
+                    <span id={descriptionId} className="block">
+                      {t(`kinds.${kind}.description`)}
+                    </span>
+                    {isDetailed(kind) ? (
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="h-auto min-h-6 px-0 text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                        aria-label={t("detailsLabel", {
+                          title: t(`kinds.${kind}.title`),
+                        })}
+                        onPress={() => openDetails(kind)}
+                        data-testid={`member-consent-details-${kind}`}
+                      >
+                        {t("details")}
+                      </Button>
                     ) : null}
-                    {kind === "ai_processing" ? (
-                      <ul className="list-disc space-y-1 pl-5">
-                        {(t.raw("kinds.ai_processing.info") as string[]).map(
-                          (line) => (
-                            <li key={line}>{line}</li>
-                          )
-                        )}
-                      </ul>
-                    ) : null}
-                    {kind === "ai_processing" ? null : (
-                      <p>{t(`kinds.${kind}.description`)}</p>
-                    )}
-                    {kind === "health_data_processing"
-                      ? notice(
-                          documentUrls.health_data_processing,
-                          t("kinds.health_data_processing.noticeLink")
-                        )
-                      : null}
-                    {kind === "ai_processing"
-                      ? notice(
-                          documentUrls.ai_processing,
-                          t("kinds.ai_processing.noticeLink")
-                        )
-                      : null}
-                  </div>
+                  </span>
                 }
                 meta={since}
                 data-testid={`member-consent-${kind}`}
@@ -368,6 +375,37 @@ function ChoicesCard({
           })}
         </div>
       </SettingsFieldsetContent>
+      <Dialog
+        showCloseButton={false}
+        isOpen={details !== null}
+        onOpenChange={(open) => {
+          if (!open) setDetails(null)
+        }}
+      >
+        <div className="grid gap-6" data-testid="member-consent-details">
+          <DialogHeader>
+            <DialogTitle>{t(`kinds.${shown}.title`)}</DialogTitle>
+          </DialogHeader>
+          <ul className="list-disc space-y-2 pl-5 text-sm">
+            {(t.raw(`kinds.${shown}.details`) as string[]).map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+          <DialogFooter>
+            <LinkButton
+              href={noticeUrl[shown]}
+              target="_blank"
+              rel="noopener"
+              variant="outline"
+              className="sm:mr-auto"
+            >
+              {t(`kinds.${shown}.noticeLink`)}
+              <ArrowSquareOutIcon aria-hidden data-icon="inline-end" />
+            </LinkButton>
+            <Button onPress={() => setDetails(null)}>{t("close")}</Button>
+          </DialogFooter>
+        </div>
+      </Dialog>
     </SettingsFieldset>
   )
 }

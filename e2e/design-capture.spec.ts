@@ -945,6 +945,16 @@ test.describe("design capture", () => {
       }
       await page.goto(`${webUrl}/account/privacy`)
       await clearBanner(page)
+      // Each consent shows one line; the rest opens in "Details".
+      const aiDetails = page.getByTestId("member-consent-details-ai_processing")
+      if (await aiDetails.isVisible().catch(() => false)) {
+        await aiDetails.click()
+        await expect(page.getByTestId("member-consent-details")).toBeVisible()
+        await shoot(page, surface, "15-consent-details", kind, {
+          fullPage: false,
+        })
+        await page.keyboard.press("Escape")
+      }
       const remove = page.getByTestId("member-deletion-request")
       if (await remove.isVisible().catch(() => false)) {
         await remove.click()

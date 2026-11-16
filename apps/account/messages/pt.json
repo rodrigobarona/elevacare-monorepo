@@ -372,28 +372,36 @@
     },
     "choices": {
       "title": "As suas escolhas",
-      "description": "Pode mudá-las a qualquer momento. Guardamos cada alteração de imediato.",
+      "description": "Guardamos cada alteração de imediato.",
       "onSince": "Ativo desde {date}",
       "granted": "Guardado. Está ativo.",
       "withdrawn": "Guardado. Está desativado.",
-      "healthDataBlocked": "Fica ativo enquanto tiver uma sessão marcada. Pode desativá-lo depois da última sessão.",
+      "healthDataBlocked": "Fica ativa enquanto tiver uma sessão marcada. Pode desativá-la depois da última sessão.",
+      "details": "Detalhes",
+      "detailsLabel": "Detalhes: {title}",
+      "close": "Fechar",
       "kinds": {
         "health_data_processing": {
           "title": "Informação de saúde para o seu acompanhamento",
-          "description": "Permite que os seus especialistas usem informação sobre a sua saúde, como as respostas ao questionário, as notas das sessões e os documentos, para cuidar de si. Precisa de ter esta opção ativa para marcar.",
+          "description": "Os especialistas com quem marca usam a sua informação de saúde (respostas ao questionário, notas das sessões e documentos) para cuidar de si. Precisa desta opção ativa para marcar e enquanto tiver uma sessão marcada.",
+          "details": [
+            "Abrange as respostas ao questionário, as notas que o especialista guarda das sessões e os documentos partilhados para o seu acompanhamento.",
+            "Os especialistas com quem marca usam-na para cuidar de si. Algumas clínicas partilham registos entre os seus especialistas, e pode recusar em cada clínica.",
+            "Pode desativá-la depois da última sessão."
+          ],
           "noticeLink": "Ler o aviso sobre dados de saúde"
         },
         "marketing": {
           "title": "Novidades da Eleva",
-          "description": "Emails sobre novos especialistas, eventos e ofertas."
+          "description": "E-mails sobre novos especialistas, eventos e ofertas."
         },
         "ai_processing": {
-          "title": "Ajuda de IA nos relatórios de sessão",
-          "description": "Fica desligado até o ativar. Pode desativar a qualquer momento.",
-          "info": [
+          "title": "Transcrição das sessões e ajuda de IA",
+          "description": "Transcrição em direto das suas sessões de vídeo, para o registo do especialista. Fica desligada até a ativar.",
+          "details": [
             "As suas sessões de vídeo são transcritas em direto, para o especialista ficar com um registo escrito.",
-            "O especialista pode preparar relatórios de sessão a partir das próprias notas com um modelo de IA que não guarda cópia dos seus dados, e revê cada rascunho antes de lho mostrar. A redação com IA ainda não está ativa.",
-            "Ao desativar, a transcrição para a partir da próxima chamada."
+            "Mais tarde, o especialista poderá preparar relatórios de sessão a partir das próprias notas com IA que corre na UE e nunca é treinada com os seus dados. Revê cada rascunho antes de lho mostrar.",
+            "Ao desativar, a transcrição deixa de ser feita a partir da próxima chamada. As transcrições já guardadas ficam no registo da sessão."
           ],
           "noticeLink": "Ler o aviso sobre o tratamento por IA"
         }

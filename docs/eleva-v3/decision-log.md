@@ -121,6 +121,33 @@ Each entry should include:
 - Reference: `apps/expert/src/app/expert/[orgSlug]/calendars/`,
   `apps/api/src/app/expert/calendar/reminder/route.ts`,
   `packages/calendar/src/adapters/`, `design-audit/plan.json` (D5.7)
+
+### 2026-11-16: Calm consent: one line and Details on Privacy (design slice D5.9) (active)
+
+- Founder feedback: the inline consent text on `/account/privacy` was
+  cluttered and stressful; the earlier popover version felt calmer.
+- Change: a layered notice (EDPB transparency guidance). Each consent row
+  shows its title and one visible line with the purpose, what it covers and
+  what turning it on means. Health data names "your health information",
+  who uses it (the experts you book with) and that it is needed to book and
+  while a session is booked. Health data and AI open a **Details** dialog
+  with the bullets and a link to the full notice; news needs no Details.
+  The consent text is never only in a popover
+  (`docs/eleva-v3/brand-book/messaging-framework.md`).
+- AI copy now matches `legal/*/ai-processing.mdx`: the title is "Session
+  transcripts and AI help" (what the switch does today), drafting is
+  described as later, "runs in the EU and is never trained on your data",
+  and withdrawal keeps transcripts already saved.
+- Proof: account typecheck and lint, en/pt/es key parity, captures in
+  `design-audit/captures/2026-11-16-consent-{before,after}/`; Mobbin
+  `12-account-settings` 11–12 (Claude, Airbnb), finding ACC-07, criterion
+  added. Judges round 1: UI 8.0, UX 7.5, trust 7.5; round 2: UI 9.0,
+  UX 8.7, trust 8.6.
+- Follow-ups (not done): DPO to confirm the notice version alone is enough
+  evidence of the wording a member saw (no separate text revision is
+  recorded); legal view on locking health-data withdrawal while a session is
+  booked (Art. 7(3)); legal review of the rewritten copy (D5.3).
+
 ### 2026-11-16: One account home: settings and privacy live only in /account (design slice D5.8) (active)
 
 - Decision (founder, 2026-11-16: "I do not want to have double routes for
