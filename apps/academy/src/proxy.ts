@@ -11,7 +11,8 @@ export default withHeaders(
   createAuthProxy({
     redirect: { kind: "gateway", baseUrl: resolveGatewayUrl() },
     unauthenticatedPaths: [],
-  })
+  }),
+  { noindex: true }
 )
 
 // Matcher must be inlined (Next.js static-analyzer requirement).

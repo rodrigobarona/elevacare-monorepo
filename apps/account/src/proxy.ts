@@ -13,7 +13,8 @@ export default withHeaders(
       "/two-factor",
     ],
     unauthenticatedPaths: [],
-  })
+  }),
+  { noindex: true }
 )
 
 export const config = { matcher: ["/((?!api/|_next|_vercel|.*\\..*).*)"] }

@@ -84,9 +84,13 @@ fallback if a public catalogue later needs `/academy`.
    workspace slug from `/expert/{slug}` (and later `/team/{slug}`, `/academy/{slug}`); every zone's
    auth proxy writes it. `/dashboard` checks it against the person's memberships before
    redirecting and falls back to their own session.
-8. **Dashboards are never indexed.** The gateway sends `X-Robots-Tag: noindex` and a strict
-   referrer policy on every signed-in namespace, `/join`, `/account` and `/onboarding`. No PHI and
-   no booking subject ever goes into a URL.
+8. **Dashboards are never indexed.** Every signed-in app (member, expert, team, academy, account,
+   admin) sends `X-Robots-Tag: noindex, nofollow` on every page through the shared `withHeaders`
+   (`noindex: true`); the gateway passes the zone's headers through its rewrites. robots.txt keeps
+   allowing these paths so crawlers can read the header. Referrers stay
+   `strict-origin-when-cross-origin` (no path, so no booking id, ever leaves eleva.care) and video
+   join pages send none; `same-origin` was not adopted because Stripe and Google sign-in flows can
+   rely on the origin. No PHI and no booking subject ever goes into a URL.
 9. **One expert practice per person.** A practice carries several specialties and services, each
    tied to its own verified licence. A separate legal entity or NIF is a Team with a company
    billing profile, not a second practice. Delegates and clinic invitations are memberships in
@@ -100,6 +104,11 @@ fallback if a public catalogue later needs `/academy`.
       the Stripe Connect account, the audit trail and encrypted session records for their retention
       periods. Members keep access to their own records.
     - The username is held, never handed to another person while retention runs.
+    - Visitors to the closed practice's public address see a short "Practice closed" page (this
+      practice no longer takes bookings, with a link to find other experts), served as HTTP 410 so
+      search engines drop it (founder, 2026-11-16).
+    - The owner can reopen the practice while the username is held: same username and history,
+      and the profile goes back up after the usual publish checks (founder, 2026-11-16).
     - Erasure happens later, by schedule, after retention ends.
 
 ## Delivery (short sequential PRs)
@@ -113,7 +122,9 @@ fallback if a public catalogue later needs `/academy`.
    namespace `/academy/{slug}` (lecturers; was `/{slug}/academy`). The gateway routes both on the
    first segment, the `/{slug}/…` dashboard rules and the legacy slug fallback are gone, and the
    academy layout answers 404 for any workspace that is not an academy.
-4. noindex + referrer headers on signed-in namespaces; migrate stored notification hrefs.
+4. **Shipped.** `X-Robots-Tag: noindex, nofollow` from every signed-in app, and migration `0076`
+   rewrites stored in-app notification links (`/{slug}/team/…`, `/{slug}/admin/…`,
+   `/{slug}/academy/…`, `/space-{hex}/…`) to the namespaced addresses.
 5. **Shipped.** One practice per person: Better Auth hook + `POST /organizations` 409
    `EXPERT_PRACTICE_EXISTS`; the picker opens the existing practice.
 6. Expert settings page and the closure API.
