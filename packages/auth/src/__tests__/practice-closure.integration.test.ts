@@ -16,6 +16,7 @@ import {
   getPracticeClosureState,
   PracticeClosureError,
   reopenExpertPractice,
+  sweepClosedPractice,
 } from "../practice-closure"
 
 /**
@@ -224,6 +225,25 @@ describe.skipIf(!enabled || !databaseUrl)(
         )
       ).toBe(false)
       expect(await closedPracticeViolation(orgId)).toMatch(/closed/)
+
+      // A join that raced the closure lands after it: the sweep (run from
+      // Better Auth's after-hooks and after every closure) evicts it.
+      await db()
+        .insert(auth.member)
+        .values({ organizationId: orgId, userId: delegate, role: "admin" })
+      expect(await sweepClosedPractice(orgId, owner)).toEqual({
+        removedMembers: 1,
+        cancelledInvitations: 0,
+      })
+      const afterSweep = await db()
+        .select({ userId: auth.member.userId })
+        .from(auth.member)
+        .where(eq(auth.member.organizationId, orgId))
+      expect(afterSweep.map((m) => m.userId)).toEqual([owner])
+      expect(await sweepClosedPractice(orgId, owner)).toEqual({
+        removedMembers: 0,
+        cancelledInvitations: 0,
+      })
 
       const audit = await db()
         .select({ action: main.auditOutbox.action })

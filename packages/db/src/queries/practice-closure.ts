@@ -1,4 +1,4 @@
-import { and, count, eq, gt, inArray, notInArray } from "drizzle-orm"
+import { and, count, eq, gt, inArray, notInArray, sql } from "drizzle-orm"
 import {
   PRACTICE_CLOSURE_BLOCKER_CODES,
   type PracticeClosureBlocker,
@@ -58,29 +58,32 @@ export async function countPracticeClosureBlockers(
   orgId: string,
   now: Date = new Date()
 ): Promise<PracticeClosureCounts> {
-  const bookings = await countRows(
-    tx
-      .select({ value: count() })
-      .from(main.bookings)
-      .where(
-        and(
+  // Bookings and live holds in ONE statement, so both counts share one
+  // snapshot: a hold being confirmed into a booking is seen as one or the
+  // other, never as neither.
+  const [scheduled] = await tx
+    .select({
+      bookings: sql<number>`(
+        select count(*)::int from ${main.bookings}
+        where ${and(
           eq(main.bookings.orgId, orgId),
           gt(main.bookings.startsAt, now),
           notInArray(main.bookings.status, [...FINISHED_BOOKING_STATUSES])
-        )
-      )
-  )
-  const holds = await countRows(
-    tx
-      .select({ value: count() })
-      .from(main.slotReservations)
-      .where(
-        and(
+        )}
+      )`,
+      holds: sql<number>`(
+        select count(*)::int from ${main.slotReservations}
+        where ${and(
           eq(main.slotReservations.orgId, orgId),
           inArray(main.slotReservations.status, [...LIVE_HOLD_STATUSES])
-        )
-      )
-  )
+        )}
+      )`,
+    })
+    .from(main.expertProfiles)
+    .where(eq(main.expertProfiles.orgId, orgId))
+    .limit(1)
+  const bookings = Number(scheduled?.bookings ?? 0)
+  const holds = Number(scheduled?.holds ?? 0)
   const refunds = await countRows(
     tx
       .select({ value: count() })

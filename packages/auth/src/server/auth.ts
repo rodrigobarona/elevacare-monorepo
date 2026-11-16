@@ -48,7 +48,10 @@ import {
   secondExpertPracticeViolation,
 } from "../expert-practice"
 import { PRACTICE_CLOSED } from "@eleva/config/practice-closure"
-import { closedPracticeViolation } from "../practice-closure"
+import {
+  closedPracticeViolation,
+  sweepClosedPractice,
+} from "../practice-closure"
 import { passkeyOrigins } from "./passkey-origin"
 import {
   AUTH_IP_ADDRESS_HEADERS,
@@ -354,6 +357,8 @@ function createAuth() {
             organization: { id: string }
           }) => {
             enqueueTeamSeatSync(organization.id)
+            // A join that raced a closure is evicted (ADR-026).
+            await sweepClosedPractice(organization.id)
           },
           afterRemoveMember: async ({
             organization,
@@ -385,6 +390,8 @@ function createAuth() {
               // Not atomic with Better Auth's write: surface the gap.
               logError("[auth] invitation accept audit failed", err)
             })
+            // An acceptance that raced a closure is evicted (ADR-026).
+            await sweepClosedPractice(organization.id)
           },
           afterRejectInvitation: async ({
             organization,

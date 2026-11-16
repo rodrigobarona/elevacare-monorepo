@@ -39,9 +39,20 @@ export async function POST(request: Request) {
   )
   if (rateLimited) return rateLimited
 
-  const body = ReopenExpertPracticeRequestSchema.safeParse(
-    await request.json().catch(() => ({}))
-  )
+  // No body is fine; a body that is not JSON is refused, not read as {}.
+  const text = await request.text()
+  let json: unknown = {}
+  if (text.trim().length > 0) {
+    try {
+      json = JSON.parse(text)
+    } catch {
+      return secureJson(
+        { error: "validation", code: "INVALID_JSON" },
+        { status: 422, headers }
+      )
+    }
+  }
+  const body = ReopenExpertPracticeRequestSchema.safeParse(json)
   if (!body.success) {
     return secureJson(
       { error: "validation", issues: body.error.issues },

@@ -57,7 +57,14 @@ Each entry should include:
   working too.
 - Nobody joins a closed practice: Better Auth's `beforeCreateInvitation`,
   `beforeAddMember` and `beforeAcceptInvitation` refuse with
-  `PRACTICE_CLOSED`, so removed delegates cannot come back.
+  `PRACTICE_CLOSED`, so removed delegates cannot come back. Those hooks
+  run before Better Auth writes, so a join racing the closure could land
+  just after it: `afterAddMember` and `afterAcceptInvitation` re-check and
+  evict, and every closure runs one more audited sweep after it commits.
+- Bookings and live holds are counted in one statement (one snapshot), so a
+  hold being confirmed into a booking is never counted as neither. Session
+  renewal never moves `authenticatedAt` (Better Auth renews only
+  `expiresAt`/`updatedAt`).
 - Blockers: future bookings and live holds; pending refunds (including transfer
   reversals); open disputes; payouts still owed (`pending`, `scheduled`,
   `approval_required`, `held`, `failed`, `reversal_pending`; `transferred`

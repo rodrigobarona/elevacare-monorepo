@@ -154,6 +154,18 @@ describe("POST /expert/closure/reopen", () => {
     })
   })
 
+  it("refuses a body that is not JSON", async () => {
+    const res = await reopen(
+      new Request("http://127.0.0.1:3002/expert/closure/reopen", {
+        method: "POST",
+        body: "{not json",
+      })
+    )
+    expect(res.status).toBe(422)
+    expect(await res.json()).toMatchObject({ code: "INVALID_JSON" })
+    expect(reopenExpertPractice).not.toHaveBeenCalled()
+  })
+
   it("answers PRACTICE_NOT_CLOSED with 409", async () => {
     reopenExpertPractice.mockRejectedValue(
       new PracticeClosureError("PRACTICE_NOT_CLOSED", "open")

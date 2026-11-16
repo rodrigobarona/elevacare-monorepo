@@ -4,7 +4,13 @@ import type {
   PracticeClosureBlocker,
   PracticeClosureErrorCode,
 } from "@eleva/config/practice-closure"
-import { auth, db, main, withOrgContext } from "@eleva/db"
+import {
+  auth,
+  main,
+  withOrgContext,
+  withPlatformAdminContext,
+  type Tx,
+} from "@eleva/db"
 import {
   countPracticeClosureBlockers,
   practiceClosureBlockers,
@@ -47,26 +53,32 @@ interface PracticeRow {
   closedAt: Date | null
 }
 
+/**
+ * Profile reads run as platform admin so row-level security never hides an
+ * existing practice (which would read as "missing" or "open").
+ */
 async function findPractice(orgId: string): Promise<PracticeRow> {
-  const [row] = await db()
-    .select({
-      profileId: main.expertProfiles.id,
-      slug: auth.organization.slug,
-      closedAt: main.expertProfiles.closedAt,
-    })
-    .from(main.expertProfiles)
-    .innerJoin(
-      auth.organization,
-      eq(auth.organization.id, main.expertProfiles.orgId)
-    )
-    .where(
-      and(
-        eq(main.expertProfiles.orgId, orgId),
-        eq(auth.organization.type, "expert"),
-        isNull(main.expertProfiles.deletedAt)
+  const [row] = await withPlatformAdminContext((tx) =>
+    tx
+      .select({
+        profileId: main.expertProfiles.id,
+        slug: auth.organization.slug,
+        closedAt: main.expertProfiles.closedAt,
+      })
+      .from(main.expertProfiles)
+      .innerJoin(
+        auth.organization,
+        eq(auth.organization.id, main.expertProfiles.orgId)
       )
-    )
-    .limit(1)
+      .where(
+        and(
+          eq(main.expertProfiles.orgId, orgId),
+          eq(auth.organization.type, "expert"),
+          isNull(main.expertProfiles.deletedAt)
+        )
+      )
+      .limit(1)
+  )
   if (!row) {
     throw new PracticeClosureError(
       "PRACTICE_NOT_FOUND",
@@ -95,20 +107,104 @@ async function assertOwner(orgId: string, actorUserId: string) {
 export async function closedPracticeViolation(
   organizationId: string
 ): Promise<string | null> {
-  const [row] = await db()
-    .select({ id: main.expertProfiles.id })
-    .from(main.expertProfiles)
-    .where(
-      and(
-        eq(main.expertProfiles.orgId, organizationId),
-        isNotNull(main.expertProfiles.closedAt),
-        isNull(main.expertProfiles.deletedAt)
+  const [row] = await withPlatformAdminContext((tx) =>
+    tx
+      .select({ id: main.expertProfiles.id })
+      .from(main.expertProfiles)
+      .where(
+        and(
+          eq(main.expertProfiles.orgId, organizationId),
+          isNotNull(main.expertProfiles.closedAt),
+          isNull(main.expertProfiles.deletedAt)
+        )
       )
-    )
-    .limit(1)
+      .limit(1)
+  )
   return row
     ? "This practice is closed. Reopen it before inviting anyone."
     : null
+}
+
+interface DelegateCleanup {
+  removedMembers: number
+  cancelledInvitations: number
+}
+
+/** Remove everyone but the owner and cancel pending invitations. */
+async function removeDelegates(
+  tx: Tx,
+  orgId: string
+): Promise<DelegateCleanup> {
+  const members = await tx
+    .select({ id: auth.member.id, role: auth.member.role })
+    .from(auth.member)
+    .where(eq(auth.member.organizationId, orgId))
+  const delegateIds = members
+    .filter((m) => toMembershipSeniority(m.role) !== "owner")
+    .map((m) => m.id)
+  for (const id of delegateIds) {
+    await tx.delete(auth.member).where(eq(auth.member.id, id))
+  }
+  const cancelled = await tx
+    .update(auth.invitation)
+    .set({ status: "canceled" })
+    .where(
+      and(
+        eq(auth.invitation.organizationId, orgId),
+        eq(auth.invitation.status, "pending")
+      )
+    )
+    .returning({ id: auth.invitation.id })
+  return {
+    removedMembers: delegateIds.length,
+    cancelledInvitations: cancelled.length,
+  }
+}
+
+/**
+ * Evict anyone who joined a closed practice. Better Auth checks the
+ * member and invitation hooks before it writes, so a join that raced a
+ * closure could land just after it. Called after every member add or
+ * invitation acceptance and once more after a closure commits, it closes
+ * that window from both sides. A no-op for an open practice.
+ */
+export async function sweepClosedPractice(
+  orgId: string,
+  actorUserId: string | null = null
+): Promise<DelegateCleanup> {
+  const none = { removedMembers: 0, cancelledInvitations: 0 }
+  if (!(await closedPracticeViolation(orgId))) return none
+  const pending = await withPlatformAdminContext(async (tx) => {
+    const members = await tx
+      .select({ role: auth.member.role })
+      .from(auth.member)
+      .where(eq(auth.member.organizationId, orgId))
+    const invitations = await tx
+      .select({ id: auth.invitation.id })
+      .from(auth.invitation)
+      .where(
+        and(
+          eq(auth.invitation.organizationId, orgId),
+          eq(auth.invitation.status, "pending")
+        )
+      )
+      .limit(1)
+    return (
+      members.some((m) => toMembershipSeniority(m.role) !== "owner") ||
+      invitations.length > 0
+    )
+  })
+  if (!pending) return none
+  return withAudit({ orgId, actorUserId }, async (tx, ctx) => {
+    const cleanup = await removeDelegates(tx, orgId)
+    await ctx.emit({
+      entity: "membership",
+      action: "removed",
+      entityId: orgId,
+      payload: { reason: "practice_closed", ...cleanup },
+    })
+    return cleanup
+  })
 }
 
 /** The closure dry run: current state plus everything still blocking it. */
@@ -168,7 +264,7 @@ export async function closeExpertPractice(
     )
   }
 
-  return withAudit(
+  const closed = await withAudit(
     { orgId: input.orgId, actorUserId: input.actorUserId },
     async (tx, ctx) => {
       // Close first, then re-check inside the same transaction, so a
@@ -201,26 +297,7 @@ export async function closeExpertPractice(
       }
 
       // Delegate access ends: everyone but the owner leaves the practice.
-      const members = await tx
-        .select({ id: auth.member.id, role: auth.member.role })
-        .from(auth.member)
-        .where(eq(auth.member.organizationId, input.orgId))
-      const delegateIds = members
-        .filter((m) => toMembershipSeniority(m.role) !== "owner")
-        .map((m) => m.id)
-      for (const id of delegateIds) {
-        await tx.delete(auth.member).where(eq(auth.member.id, id))
-      }
-      const cancelled = await tx
-        .update(auth.invitation)
-        .set({ status: "canceled" })
-        .where(
-          and(
-            eq(auth.invitation.organizationId, input.orgId),
-            eq(auth.invitation.status, "pending")
-          )
-        )
-        .returning({ id: auth.invitation.id })
+      const cleanup = await removeDelegates(tx, input.orgId)
 
       await ctx.emit({
         entity: "expert_profile",
@@ -229,19 +306,24 @@ export async function closeExpertPractice(
         payload: {
           slug: practice.slug,
           closedAt: now.toISOString(),
-          removedMembers: delegateIds.length,
-          cancelledInvitations: cancelled.length,
+          ...cleanup,
         },
       })
-      return {
-        orgId: input.orgId,
-        slug: practice.slug,
-        closedAt: now,
-        removedMembers: delegateIds.length,
-        cancelledInvitations: cancelled.length,
-      }
+      return cleanup
     }
   )
+
+  // One more pass now that the closure is visible to everyone: removes a
+  // delegate whose join raced the closure (see sweepClosedPractice).
+  const late = await sweepClosedPractice(input.orgId, input.actorUserId)
+  return {
+    orgId: input.orgId,
+    slug: practice.slug,
+    closedAt: now,
+    removedMembers: closed.removedMembers + late.removedMembers,
+    cancelledInvitations:
+      closed.cancelledInvitations + late.cancelledInvitations,
+  }
 }
 
 export interface ReopenExpertPracticeInput {
