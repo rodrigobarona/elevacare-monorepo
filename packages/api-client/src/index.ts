@@ -1837,6 +1837,9 @@ export const CloseExpertPracticeResponseSchema = z.object({
   }),
 })
 
+/** Reopening takes no options; an empty JSON object (or no body). */
+export const ReopenExpertPracticeRequestSchema = z.object({}).strict()
+
 export const ReopenExpertPracticeResponseSchema = z.object({
   practice: z.object({ slug: z.string(), closedAt: z.null() }),
 })

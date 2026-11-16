@@ -7,8 +7,11 @@ import {
   findExpertByUsername,
   isClosedPublicPractice,
   main,
+  withOrgContext,
 } from "@eleva/db"
+import { lockOpenExpertProfile } from "@eleva/db/queries/practice-closure"
 import {
+  closedPracticeViolation,
   closeExpertPractice,
   getPracticeClosureState,
   PracticeClosureError,
@@ -213,6 +216,15 @@ describe.skipIf(!enabled || !databaseUrl)(
       expect(await findExpertByUsername(slug)).toBeNull()
       expect(await isClosedPublicPractice(slug)).toBe(true)
 
+      // New holds are refused under the shared lock, and nobody can be
+      // invited or added back while closed.
+      expect(
+        await withOrgContext(orgId, (tx) =>
+          lockOpenExpertProfile(tx, profileId)
+        )
+      ).toBe(false)
+      expect(await closedPracticeViolation(orgId)).toMatch(/closed/)
+
       const audit = await db()
         .select({ action: main.auditOutbox.action })
         .from(main.auditOutbox)
@@ -242,6 +254,12 @@ describe.skipIf(!enabled || !databaseUrl)(
       expect(await closedAt()).toBeNull()
       expect(await findExpertByUsername(slug)).not.toBeNull()
       expect(await isClosedPublicPractice(slug)).toBe(false)
+      expect(
+        await withOrgContext(orgId, (tx) =>
+          lockOpenExpertProfile(tx, profileId)
+        )
+      ).toBe(true)
+      expect(await closedPracticeViolation(orgId)).toBeNull()
       expect(
         (await refusal(reopenExpertPractice({ orgId, actorUserId: owner })))
           .code

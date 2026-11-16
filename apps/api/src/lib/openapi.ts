@@ -168,6 +168,7 @@ import {
   CloseExpertPracticeResponseSchema,
   PracticeClosureErrorSchema,
   PracticeClosureStateResponseSchema,
+  ReopenExpertPracticeRequestSchema,
   ReopenExpertPracticeResponseSchema,
 } from "@eleva/api-client"
 
@@ -1138,6 +1139,14 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           description:
             "Owner only. The profile shows again only if it still passes the public checks; delegates must be invited again.",
           tags: ["Expert Practice"],
+          requestBody: {
+            required: false,
+            content: {
+              "application/json": {
+                schema: ReopenExpertPracticeRequestSchema,
+              },
+            },
+          },
           responses: {
             "200": {
               description: "Practice reopened",

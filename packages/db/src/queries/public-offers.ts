@@ -439,7 +439,9 @@ export async function findUsableBookingLink(
         main.expertProfiles,
         and(
           eq(main.expertProfiles.id, main.eventTypes.expertProfileId),
-          eq(main.expertProfiles.orgId, main.bookingLinks.orgId)
+          eq(main.expertProfiles.orgId, main.bookingLinks.orgId),
+          // A closed practice's private links stop working too (ADR-026).
+          isNull(main.expertProfiles.closedAt)
         )
       )
       .where(

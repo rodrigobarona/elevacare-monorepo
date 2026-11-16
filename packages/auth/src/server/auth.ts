@@ -47,6 +47,8 @@ import {
   EXPERT_PRACTICE_EXISTS,
   secondExpertPracticeViolation,
 } from "../expert-practice"
+import { PRACTICE_CLOSED } from "@eleva/config/practice-closure"
+import { closedPracticeViolation } from "../practice-closure"
 import { passkeyOrigins } from "./passkey-origin"
 import {
   AUTH_IP_ADDRESS_HEADERS,
@@ -335,6 +337,17 @@ function createAuth() {
             const message = orgUpdateViolation(organization)
             if (message) throw new APIError("FORBIDDEN", { message })
           },
+          // Nobody joins a closed practice (ADR-026): delegates removed at
+          // closure cannot come back by any invitation or member path.
+          beforeCreateInvitation: async ({ invitation }) => {
+            await refuseClosedPractice(invitation.organizationId)
+          },
+          beforeAddMember: async ({ member }) => {
+            await refuseClosedPractice(member.organizationId)
+          },
+          beforeAcceptInvitation: async ({ invitation }) => {
+            await refuseClosedPractice(invitation.organizationId)
+          },
           afterAddMember: async ({
             organization,
           }: {
@@ -518,6 +531,13 @@ export interface AuthApi {
     body: { email: string; callbackURL: string }
     headers?: Headers
   }) => Promise<unknown>
+}
+
+async function refuseClosedPractice(organizationId: string): Promise<void> {
+  const message = await closedPracticeViolation(organizationId)
+  if (message) {
+    throw new APIError("FORBIDDEN", { message, code: PRACTICE_CLOSED })
+  }
 }
 
 function enqueueTeamSeatSync(orgId: string): void {

@@ -49,7 +49,16 @@ Each entry should include:
   `POST /expert/closure/reopen` (owner only) clears it; the profile shows
   again only if it still passes the public checks. Audit: `expert_profile`
   `closed` / `reactivated`.
-- Blockers: future bookings; pending refunds (including transfer
+- No booking can land after closure: a reservation takes a shared lock on
+  the expert profile row and is refused when the practice is closed, and
+  closing updates that row, so the two serialize. Live holds (`active`,
+  `reserved`) count as future bookings, so a hold being confirmed always
+  blocks the closure. Private booking links of a closed practice stop
+  working too.
+- Nobody joins a closed practice: Better Auth's `beforeCreateInvitation`,
+  `beforeAddMember` and `beforeAcceptInvitation` refuse with
+  `PRACTICE_CLOSED`, so removed delegates cannot come back.
+- Blockers: future bookings and live holds; pending refunds (including transfer
   reversals); open disputes; payouts still owed (`pending`, `scheduled`,
   `approval_required`, `held`, `failed`, `reversal_pending`; `transferred`
   counts as settled because the money is in the expert's own Stripe account,

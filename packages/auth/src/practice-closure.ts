@@ -87,6 +87,30 @@ async function assertOwner(orgId: string, actorUserId: string) {
   }
 }
 
+/**
+ * Guard for Better Auth's member and invitation hooks: nobody joins a
+ * closed practice (ADR-026), so delegates removed at closure cannot come
+ * back through a fresh invitation. Null when joining is allowed.
+ */
+export async function closedPracticeViolation(
+  organizationId: string
+): Promise<string | null> {
+  const [row] = await db()
+    .select({ id: main.expertProfiles.id })
+    .from(main.expertProfiles)
+    .where(
+      and(
+        eq(main.expertProfiles.orgId, organizationId),
+        isNotNull(main.expertProfiles.closedAt),
+        isNull(main.expertProfiles.deletedAt)
+      )
+    )
+    .limit(1)
+  return row
+    ? "This practice is closed. Reopen it before inviting anyone."
+    : null
+}
+
 /** The closure dry run: current state plus everything still blocking it. */
 export async function getPracticeClosureState(
   orgId: string,

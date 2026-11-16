@@ -75,7 +75,12 @@ export type ReserveSlotResult =
   | { success: true; reservationId: string; reservationToken: string }
   | {
       success: false
-      error: "slot_taken" | "conflict" | "db_error" | "link_unusable"
+      error:
+        | "slot_taken"
+        | "conflict"
+        | "db_error"
+        | "link_unusable"
+        | "practice_closed"
     }
 
 export interface BookingRuleCheck {

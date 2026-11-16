@@ -1,3 +1,4 @@
+import { ReopenExpertPracticeRequestSchema } from "@eleva/api-client"
 import { reopenExpertPractice } from "@eleva/auth"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireRevocableApiCapability } from "@/lib/auth"
@@ -37,6 +38,16 @@ export async function POST(request: Request) {
     RATE_LIMITS.authenticated
   )
   if (rateLimited) return rateLimited
+
+  const body = ReopenExpertPracticeRequestSchema.safeParse(
+    await request.json().catch(() => ({}))
+  )
+  if (!body.success) {
+    return secureJson(
+      { error: "validation", issues: body.error.issues },
+      { status: 422, headers }
+    )
+  }
 
   try {
     const reopened = await reopenExpertPractice({
