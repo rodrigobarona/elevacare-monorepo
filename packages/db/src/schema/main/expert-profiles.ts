@@ -9,6 +9,7 @@ import {
   pgPolicy,
   pgTable,
   text,
+  timestamp,
   uniqueIndex,
   uuid,
   varchar,
@@ -234,6 +235,14 @@ export const expertProfiles = pgTable(
     ),
 
     status: expertStatusEnum("status").notNull().default("draft"),
+    /**
+     * Set when the owner closes the practice (ADR-026): the profile, its
+     * services and new bookings leave every public surface, while invoices,
+     * payouts, the audit trail and session records stay for their retention
+     * periods. The username stays held. Cleared when the owner reopens; the
+     * profile then shows again only if it still passes the public checks.
+     */
+    closedAt: timestamp("closed_at", { withTimezone: true, mode: "date" }),
 
     createdAt: createdAt(),
     updatedAt: updatedAt(),

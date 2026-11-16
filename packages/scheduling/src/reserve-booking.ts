@@ -400,7 +400,12 @@ export async function reserveBooking(
   }
 
   if (!reserved.success) {
-    if (reserved.error === "link_unusable") {
+    // A practice closed while this request ran is gone, like any other
+    // expert that is not public (ADR-026).
+    if (
+      reserved.error === "link_unusable" ||
+      reserved.error === "practice_closed"
+    ) {
       return { ok: false, error: "not_found" }
     }
     if (reserved.error === "slot_taken" || reserved.error === "conflict") {

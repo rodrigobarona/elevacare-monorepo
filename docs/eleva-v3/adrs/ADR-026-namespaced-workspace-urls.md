@@ -97,9 +97,12 @@ fallback if a public catalogue later needs `/academy`.
    someone else's organization and never create a practice. A person may belong to any number of
    teams.
 10. **An expert closes a practice; nobody self-deletes one.** Settings offer "Close your practice":
-    - `GET /expert/closure/readiness` returns blockers with fixed codes (future bookings, pending
-      refunds, open disputes, unsettled payouts, unpaid platform fees).
-    - `POST /expert/closure` (idempotency key, step-up auth, typed slug confirmation, `withAudit`)
+    - `GET /expert/closure/readiness` returns blockers with fixed codes: `FUTURE_BOOKINGS`,
+      `PENDING_REFUNDS`, `OPEN_DISPUTES`, `UNSETTLED_PAYOUTS`, `UNPAID_SUBSCRIPTION`. Eleva's
+      platform fee is taken from each payment, so "unpaid platform fees" means an unpaid Eleva
+      subscription.
+    - `POST /expert/closure` (optional `Idempotency-Key`; step-up: a session signed in within the
+      last 15 minutes, so API keys and JWTs never pass; typed slug confirmation; `withAudit`)
       unpublishes the profile, stops new bookings and delegate access, and keeps invoices (10 years),
       the Stripe Connect account, the audit trail and encrypted session records for their retention
       periods. Members keep access to their own records.
@@ -127,7 +130,13 @@ fallback if a public catalogue later needs `/academy`.
    `/{slug}/academy/…`, `/space-{hex}/…`) to the namespaced addresses.
 5. **Shipped.** One practice per person: Better Auth hook + `POST /organizations` 409
    `EXPERT_PRACTICE_EXISTS`; the picker opens the existing practice.
-6. Expert settings page and the closure API.
+6. **6a shipped: the closure API.** `expert_profiles.closed_at` (migration `0077`), one public
+   visibility rule (`publiclyVisibleExpert`) for profile, services, listings and booking,
+   `GET /expert/closure/readiness`, `POST /expert/closure`, `POST /expert/closure/reopen`, and
+   `410 PRACTICE_CLOSED` on the public profile of a closed practice. Better Auth's organization
+   delete is disabled and an org's slug can no longer change, so no path frees a username.
+   **6b next:** the expert settings page, "Close your practice", and the "Practice closed"
+   public page (Mobbin research, captures and the judges' panel apply).
 
 ## Consequences
 

@@ -50,6 +50,11 @@ vi.mock("@eleva/db/schema", () => ({
   sessions: { id: "id" },
 }))
 
+const practiceOpen = vi.hoisted(() => ({ value: true }))
+vi.mock("@eleva/db/queries/practice-closure", () => ({
+  lockOpenExpertProfile: vi.fn(async () => practiceOpen.value),
+}))
+
 function createMockRedis(): Redis {
   return {
     set: vi.fn(async () => "OK"),
@@ -60,6 +65,24 @@ function createMockRedis(): Redis {
 describe("reserveSlot — exclusion constraint", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    practiceOpen.value = true
+  })
+
+  it("refuses a hold once the practice is closed (ADR-026)", async () => {
+    practiceOpen.value = false
+    const { reserveSlot } = await import("../src/reserve-slot")
+    const result = await reserveSlot(createMockRedis(), {
+      eventTypeId: "evt-type-1",
+      expertProfileId: "expert-1",
+      expertUserId: "user-1",
+      orgId: "org-1",
+      startsAt: new Date("2026-06-15T10:00:00Z"),
+      endsAt: new Date("2026-06-15T11:00:00Z"),
+      holdToken: "token-1",
+      ttlSeconds: 300,
+    })
+
+    expect(result).toEqual({ success: false, error: "practice_closed" })
   })
 
   it("maps PostgreSQL 23P01 to conflict", async () => {

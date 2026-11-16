@@ -32,6 +32,61 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-16: An expert can close and reopen a practice through the API (ADR-026 slice 6a) (active)
+
+- `expert_profiles.closed_at` (migration `0077`) marks a practice its owner
+  closed. Every public read (profile, services, marketplace listings, the
+  booking funnel) now uses one rule, `publiclyVisibleExpert`: active, licence
+  verified, not deleted, not closed. The public profile of a closed practice
+  answers `410 PRACTICE_CLOSED`, but only when it would otherwise be public,
+  so drafts and unverified profiles stay unknown.
+- `GET /expert/closure/readiness` is the dry run. `POST /expert/closure`
+  closes: owner only, a session signed in within the last 15 minutes (API
+  keys and JWTs never pass), the practice's username typed to confirm, and
+  an optional `Idempotency-Key`. In one audited transaction it sets
+  `closed_at`, re-checks the blockers (a booking made a moment earlier rolls
+  it back), removes every non-owner member and cancels pending invitations.
+  `POST /expert/closure/reopen` (owner only) clears it; the profile shows
+  again only if it still passes the public checks. Audit: `expert_profile`
+  `closed` / `reactivated`.
+- No booking can land after closure: a reservation takes a shared lock on
+  the expert profile row and is refused when the practice is closed, and
+  closing updates that row, so the two serialize. Live holds (`active`,
+  `reserved`) count as future bookings, so a hold being confirmed always
+  blocks the closure. Private booking links of a closed practice stop
+  working too.
+- Nobody joins a closed practice: Better Auth's `beforeCreateInvitation`,
+  `beforeAddMember` and `beforeAcceptInvitation` refuse with
+  `PRACTICE_CLOSED`, so removed delegates cannot come back. Those hooks
+  run before Better Auth writes, so a join racing the closure could land
+  just after it: `afterAddMember` and `afterAcceptInvitation` re-check and
+  evict, and every closure runs one more audited sweep after it commits.
+- Bookings and live holds are counted in one statement (one snapshot), so a
+  hold being confirmed into a booking is never counted as neither. Session
+  renewal never moves `authenticatedAt` (Better Auth renews only
+  `expiresAt`/`updatedAt`).
+- Blockers: future bookings and live holds; pending refunds (including transfer
+  reversals); open disputes; payouts still owed (`pending`, `scheduled`,
+  `approval_required`, `held`, `failed`, `reversal_pending`; `transferred`
+  counts as settled because the money is in the expert's own Stripe account,
+  which is kept); an unpaid Eleva subscription.
+- Closed the paths that could free a username: Better Auth's organization
+  delete is disabled (`disableOrganizationDeletion`), and an org's slug can no
+  longer change through Better Auth's update. Nothing in Eleva called either.
+- API identities now carry `authenticatedAt` (when the session was signed
+  in; null for JWTs and API keys) for step-up checks.
+- Proof: unit and route tests; a database-backed test (blockers refuse and
+  roll back, owner-only, delegates and invitations end, hidden from public
+  reads, 410 helper, audit row, reopen) that passes on the local dev branch
+  and runs in CI as "Domain integration (app role)".
+- Until 6b, the web profile shows a closed practice as not found.
+- Follow-ups, not in this slice: the expert settings page, "Close your
+  practice" and the "Practice closed" public page (6b); the practice's
+  "accepting bookings" switch is saved but never checked when a booking is
+  made; clinics (team orgs) have no closure flow yet.
+- Owner: engineering
+- Status: `active`
+
 ### 2026-11-16: Dashboards are hidden from search engines; old inbox links migrated (ADR-026 slice 4) (active)
 
 - Every signed-in app (member, expert, team, academy, account, admin) now

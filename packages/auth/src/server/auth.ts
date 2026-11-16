@@ -47,6 +47,11 @@ import {
   EXPERT_PRACTICE_EXISTS,
   secondExpertPracticeViolation,
 } from "../expert-practice"
+import { PRACTICE_CLOSED } from "@eleva/config/practice-closure"
+import {
+  closedPracticeViolation,
+  sweepClosedPractice,
+} from "../practice-closure"
 import { passkeyOrigins } from "./passkey-origin"
 import {
   AUTH_IP_ADDRESS_HEADERS,
@@ -278,6 +283,10 @@ function createAuth() {
         allowUserToCreateOrganization: true,
         creatorRole: "owner",
         membershipLimit: 200,
+        // Nobody deletes an organization through the API (ADR-026): invoices
+        // are kept 10 years and session records have their own retention.
+        // An expert closes a practice instead (POST /expert/closure).
+        disableOrganizationDeletion: true,
         // Defence in depth: only a verified email may read or answer an
         // invitation (sessions are already refused when unverified).
         requireEmailVerificationOnInvitation: true,
@@ -331,12 +340,25 @@ function createAuth() {
             const message = orgUpdateViolation(organization)
             if (message) throw new APIError("FORBIDDEN", { message })
           },
+          // Nobody joins a closed practice (ADR-026): delegates removed at
+          // closure cannot come back by any invitation or member path.
+          beforeCreateInvitation: async ({ invitation }) => {
+            await refuseClosedPractice(invitation.organizationId)
+          },
+          beforeAddMember: async ({ member }) => {
+            await refuseClosedPractice(member.organizationId)
+          },
+          beforeAcceptInvitation: async ({ invitation }) => {
+            await refuseClosedPractice(invitation.organizationId)
+          },
           afterAddMember: async ({
             organization,
           }: {
             organization: { id: string }
           }) => {
             enqueueTeamSeatSync(organization.id)
+            // A join that raced a closure is evicted (ADR-026).
+            await sweepClosedPractice(organization.id)
           },
           afterRemoveMember: async ({
             organization,
@@ -368,6 +390,8 @@ function createAuth() {
               // Not atomic with Better Auth's write: surface the gap.
               logError("[auth] invitation accept audit failed", err)
             })
+            // An acceptance that raced a closure is evicted (ADR-026).
+            await sweepClosedPractice(organization.id)
           },
           afterRejectInvitation: async ({
             organization,
@@ -471,6 +495,8 @@ export interface AuthApi {
       userId: string
       token: string
       activeOrganizationId?: string | null
+      /** When the person signed in for this session. */
+      createdAt: Date
     }
     user: {
       id: string
@@ -512,6 +538,13 @@ export interface AuthApi {
     body: { email: string; callbackURL: string }
     headers?: Headers
   }) => Promise<unknown>
+}
+
+async function refuseClosedPractice(organizationId: string): Promise<void> {
+  const message = await closedPracticeViolation(organizationId)
+  if (message) {
+    throw new APIError("FORBIDDEN", { message, code: PRACTICE_CLOSED })
+  }
 }
 
 function enqueueTeamSeatSync(orgId: string): void {

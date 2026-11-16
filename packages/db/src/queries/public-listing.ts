@@ -1,4 +1,4 @@
-import { sql, type SQL } from "drizzle-orm"
+import { and, eq, isNotNull, isNull, sql, type SQL } from "drizzle-orm"
 import * as main from "../schema/main"
 
 /**
@@ -14,4 +14,30 @@ export function licenceVerified(): SQL {
     where ${main.becomePartnerApplications.expertProfileId} = ${main.expertProfiles.id}
       and ${main.becomePartnerApplications.status} = 'approved'
   )`
+}
+
+/** Active, licence verified and not deleted: public unless closed. */
+function publicBeforeClosure(): SQL {
+  return and(
+    eq(main.expertProfiles.status, "active"),
+    licenceVerified(),
+    isNull(main.expertProfiles.deletedAt)
+  )!
+}
+
+/**
+ * The one rule for showing an expert anywhere public (profile, services,
+ * listings, booking): active, licence verified, not deleted, and not closed
+ * by the owner (ADR-026). Every public query uses this, not its parts.
+ */
+export function publiclyVisibleExpert(): SQL {
+  return and(publicBeforeClosure(), isNull(main.expertProfiles.closedAt))!
+}
+
+/**
+ * A practice that would be public but its owner closed it. Only these
+ * answer "practice closed"; drafts and unverified profiles stay unknown.
+ */
+export function closedPublicExpert(): SQL {
+  return and(publicBeforeClosure(), isNotNull(main.expertProfiles.closedAt))!
 }

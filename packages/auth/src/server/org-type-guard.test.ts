@@ -24,6 +24,12 @@ describe("orgUpdateViolation", () => {
     expect(orgUpdateViolation({ type: "expert" })).not.toBeNull()
   })
 
+  it("rejects any update that carries a slug (the held username)", () => {
+    expect(orgUpdateViolation({ slug: "new-name" })).toMatch(
+      /address cannot be changed/
+    )
+  })
+
   it("allows updates without a type", () => {
     expect(orgUpdateViolation({ name: "Clinic" })).toBeNull()
   })
