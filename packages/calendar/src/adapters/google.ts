@@ -15,10 +15,12 @@ import {
 const GOOGLE_CALENDAR_API = "https://www.googleapis.com/calendar/v3"
 
 /**
- * Per-calendar freeBusy errors that will not go away on retry: the calendar
- * does not exist for this user or this grant may not read it.
+ * Per-calendar freeBusy errors that are safe to skip: the calendar does not
+ * exist for this user, so there are no busy times to miss. Anything else
+ * (including `forbidden`, which could hide real events) fails the lookup so
+ * booking holds stay fail-closed.
  */
-const PERMANENT_FREEBUSY_REASONS = new Set(["notFound", "forbidden"])
+const PERMANENT_FREEBUSY_REASONS = new Set(["notFound"])
 const FETCH_TIMEOUT_MS = 10_000
 
 /**
@@ -132,9 +134,9 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
   ): Promise<FreeBusyInterval[]> {
     const CHUNK_SIZE = 50
     const intervals: FreeBusyInterval[] = []
-    // A calendar Google will never answer for (a subscribed public calendar
-    // such as national holidays, or one the user lost access to) must not
-    // wipe out the busy times of the others, so those are skipped. Any other
+    // A calendar Google reports as not found (for example a subscribed public
+    // calendar this grant cannot resolve) must not wipe out the busy times of
+    // the others, so it is skipped. Any other
     // per-calendar error may be temporary: fail the whole lookup so a booking
     // is never confirmed against a calendar that went unchecked.
     let readable = 0

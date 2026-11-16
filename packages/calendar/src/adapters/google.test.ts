@@ -155,6 +155,21 @@ describe("Google busy times", () => {
     ])
   })
 
+  it("fails when a calendar is forbidden, since it could hide events", async () => {
+    freeBusy({
+      primary: { busy: [] },
+      shared: { busy: [], errors: [{ domain: "global", reason: "forbidden" }] },
+    })
+    await expect(
+      new GoogleCalendarAdapter().getFreeBusy(
+        "token",
+        ["primary", "shared"],
+        from,
+        to
+      )
+    ).rejects.toBeInstanceOf(CalendarAdapterError)
+  })
+
   it("fails on a temporary error so no calendar goes unchecked", async () => {
     freeBusy({
       primary: {
