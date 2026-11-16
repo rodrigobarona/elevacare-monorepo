@@ -3,6 +3,7 @@ import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { withAudit } from "@eleva/audit"
+import { releaseCalendarAccount, revokeProviderGrant } from "@eleva/auth"
 import {
   getExpertProfileForOrg,
   listCalendarIntegrations,
@@ -15,6 +16,11 @@ export const ROUTE_POLICY = {
   rateLimit: true,
   botId: false,
 } as const satisfies RoutePolicy
+
+const PROVIDER_FOR_SLUG: Record<string, string> = {
+  "google-calendar": "google",
+  "microsoft-calendar": "microsoft",
+}
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -59,15 +65,35 @@ export async function DELETE(
     )
   }
 
+  // Withdraw Eleva's grant at Google first (best effort; it needs the
+  // stored token), then delete the tokens and calendar permissions with
+  // the disconnect, so the account is not relinked on the next visit.
+  const authAccountId = integration.authAccountId
+  const providerId = PROVIDER_FOR_SLUG[integration.slug]
+  const revokedAtProvider =
+    authAccountId && providerId
+      ? await revokeProviderGrant({
+          providerId,
+          accountId: authAccountId,
+          userId: session.user.id,
+        })
+      : false
+
   await withAudit(
     { orgId: profile.orgId, actorUserId: session.user.id },
     async (tx, ctx) => {
       await disconnectIntegration(profile.orgId, id, profile.id, tx)
+      const tokensCleared = authAccountId
+        ? await releaseCalendarAccount(tx, {
+            accountId: authAccountId,
+            userId: session.user.id,
+          })
+        : false
       await ctx.emit({
         entity: "expert_integration_credential",
         action: "disconnected",
         entityId: id,
-        payload: { slug: integration.slug },
+        payload: { slug: integration.slug, tokensCleared, revokedAtProvider },
       })
     }
   )

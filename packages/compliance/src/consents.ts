@@ -35,7 +35,7 @@ export const FUNNEL_CONSENT_KINDS = [
 
 export type FunnelConsentKind = (typeof FUNNEL_CONSENT_KINDS)[number]
 
-export const CONSENT_DOCUMENT_VERSION = "2026-11-14"
+export const CONSENT_DOCUMENT_VERSION = "2026-11-16"
 
 const DRAFT_CONSENT_VERSION_PREFIX = "dev-"
 
@@ -106,8 +106,10 @@ function documentFor(kind: FunnelConsentKind): ConsentDocument {
 /**
  * Published consent document versions (D-10). Founder-approved
  * publication 2026-10-29, revised 2026-11-07 for the adults-only beta,
- * 2026-11-10 for the lawyer redlines and 2026-11-14 for the no-AI-training
- * commitment in the AI notice (`CONSENT_DOCUMENT_VERSION`). It must
+ * 2026-11-10 for the lawyer redlines, 2026-11-14 for the no-AI-training
+ * commitment in the AI notice and 2026-11-16 for connected calendars and
+ * Google's Limited Use statement in the privacy notice
+ * (`CONSENT_DOCUMENT_VERSION`). It must
  * never be older than the documents it names; a test checks the dates.
  */
 export const CONSENT_DOCUMENTS: Record<FunnelConsentKind, ConsentDocument> = {
