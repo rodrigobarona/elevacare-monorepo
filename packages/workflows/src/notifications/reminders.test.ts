@@ -198,7 +198,40 @@ describe("publishReminderJob", () => {
     }
   })
 
-  it("throws when a deployed environment is missing API_URL", async () => {
+  it("skips a missing API_URL on Vercel preview", async () => {
+    const previous = {
+      token: process.env.QSTASH_TOKEN,
+      secret: process.env.WORKFLOWS_DRAIN_SECRET,
+      apiUrl: process.env.API_URL,
+      vercelEnv: process.env.VERCEL_ENV,
+    }
+    delete process.env.API_URL
+    process.env.VERCEL_ENV = "preview"
+    process.env.QSTASH_TOKEN = "qstash-token"
+    process.env.WORKFLOWS_DRAIN_SECRET = "workflow-secret"
+    try {
+      await expect(
+        publishReminderJob({
+          kind: "booking.reminder_24h",
+          notBeforeUnix: 1_800_000_000,
+          deduplicationId: "dedupe",
+          body: {
+            bookingId: BOOKING_ID,
+            orgId: ORG_ID,
+            kind: "booking.reminder_24h",
+            startsAt: STARTS_AT.toISOString(),
+          },
+        })
+      ).resolves.toBe("skipped")
+    } finally {
+      restoreEnv("QSTASH_TOKEN", previous.token)
+      restoreEnv("WORKFLOWS_DRAIN_SECRET", previous.secret)
+      restoreEnv("API_URL", previous.apiUrl)
+      restoreEnv("VERCEL_ENV", previous.vercelEnv)
+    }
+  })
+
+  it("throws when Vercel production is missing API_URL", async () => {
     const previous = {
       token: process.env.QSTASH_TOKEN,
       secret: process.env.WORKFLOWS_DRAIN_SECRET,

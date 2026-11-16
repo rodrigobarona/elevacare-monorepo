@@ -6,6 +6,7 @@ import {
   createBillingPortalSession,
   getBillingCustomerForOrg,
 } from "@eleva/billing/server"
+import { appBaseUrl } from "@/lib/app-base-url"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requirePrivilegedApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -21,14 +22,6 @@ export const ROUTE_POLICY = {
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
-
-function defaultReturnUrl(): string {
-  const base =
-    process.env.NEXT_PUBLIC_APP_URL ??
-    process.env.APP_URL ??
-    "https://eleva.care"
-  return `${base.replace(/\/$/, "")}/account/billing`
-}
 
 export async function POST(request: Request): Promise<Response> {
   const headers = corsHeaders(request, "POST, OPTIONS")
@@ -92,7 +85,7 @@ export async function POST(request: Request): Promise<Response> {
       customerId: customer.stripeCustomerId,
       orgId: session.orgId,
       actorUserId: session.user.id,
-      returnUrl: parsed.data.returnUrl ?? defaultReturnUrl(),
+      returnUrl: parsed.data.returnUrl ?? `${appBaseUrl()}/account/billing`,
       configurationId: process.env.STRIPE_BILLING_PORTAL_CONFIGURATION_ID,
     })
 

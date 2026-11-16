@@ -21,6 +21,9 @@ export async function register(): Promise<void> {
       assertE2eBypassNotInProduction()
       const { initSentry } = await import("@eleva/observability/sentry")
       await initSentry({ app: "api" })
+      await reportMissingProductionEnv().catch((error: unknown) => {
+        console.error("[api instrumentation] env report failed", error)
+      })
       const { setAuthTransactionalMailer } =
         await import("@eleva/auth/server/auth")
       const { createAuthMailer } = await import("@eleva/notifications")
@@ -30,6 +33,23 @@ export async function register(): Promise<void> {
       throw error
     }
   }
+}
+
+/**
+ * Report Vercel Production variables the API needs but does not have.
+ * Reports names only, never values, and never blocks boot: most features
+ * still work, and a crash loop would take the whole API down.
+ */
+async function reportMissingProductionEnv(): Promise<void> {
+  if (process.env.VERCEL_ENV !== "production") return
+  const { missingApiProductionEnv } =
+    await import("@eleva/config/production-env")
+  const missing = missingApiProductionEnv()
+  if (missing.length === 0) return
+  const message = `[api] Vercel Production is missing env: ${missing.join(", ")}`
+  console.error(message)
+  const { captureException } = await import("@eleva/observability/sentry")
+  await captureException(new Error(message), { missing })
 }
 
 export async function onRequestError(

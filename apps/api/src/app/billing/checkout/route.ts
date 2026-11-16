@@ -6,6 +6,7 @@ import {
   createSubscriptionCheckoutSession,
   getBillingCustomerForOrg,
 } from "@eleva/billing/server"
+import { appBaseUrl } from "@/lib/app-base-url"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requirePrivilegedApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -21,14 +22,6 @@ export const ROUTE_POLICY = {
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
-
-function defaultReturnUrl(): string {
-  const base =
-    process.env.NEXT_PUBLIC_APP_URL ??
-    process.env.APP_URL ??
-    "https://eleva.care"
-  return `${base.replace(/\/$/, "")}/account/billing/return?checkout_session_id={CHECKOUT_SESSION_ID}`
-}
 
 export async function POST(request: Request): Promise<Response> {
   const headers = corsHeaders(request, "POST, OPTIONS")
@@ -94,7 +87,9 @@ export async function POST(request: Request): Promise<Response> {
       actorUserId: session.user.id,
       tier: parsed.data.tier,
       quantity: parsed.data.quantity,
-      returnUrl: parsed.data.returnUrl ?? defaultReturnUrl(),
+      returnUrl:
+        parsed.data.returnUrl ??
+        `${appBaseUrl()}/account/billing/return?checkout_session_id={CHECKOUT_SESSION_ID}`,
     })
 
     return secureJson(
