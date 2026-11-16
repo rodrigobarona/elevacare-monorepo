@@ -14,13 +14,6 @@ import {
 
 const GOOGLE_CALENDAR_API = "https://www.googleapis.com/calendar/v3"
 
-/**
- * Per-calendar freeBusy errors that are safe to skip: the calendar does not
- * exist for this user, so there are no busy times to miss. Anything else
- * (including `forbidden`, which could hide real events) fails the lookup so
- * booking holds stay fail-closed.
- */
-const PERMANENT_FREEBUSY_REASONS = new Set(["notFound"])
 const FETCH_TIMEOUT_MS = 10_000
 
 /**
@@ -130,15 +123,15 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
     accessToken: string,
     calendarIds: string[],
     timeMin: Date,
-    timeMax: Date
+    timeMax: Date,
+    options: { allowPartial?: boolean } = {}
   ): Promise<FreeBusyInterval[]> {
     const CHUNK_SIZE = 50
     const intervals: FreeBusyInterval[] = []
-    // A calendar Google reports as not found (for example a subscribed public
-    // calendar this grant cannot resolve) must not wipe out the busy times of
-    // the others, so it is skipped. Any other
-    // per-calendar error may be temporary: fail the whole lookup so a booking
-    // is never confirmed against a calendar that went unchecked.
+    // Google answers per calendar. A calendar it cannot read (for example a
+    // subscribed public holiday calendar) fails the whole lookup by default,
+    // so a booking hold is never confirmed against an unchecked calendar.
+    // Slot display passes `allowPartial` to keep the readable calendars.
     let readable = 0
     const reasons = new Set<string>()
 
@@ -170,7 +163,7 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
       for (const cal of Object.values(data.calendars)) {
         if (cal.errors?.length) {
           const calReasons = cal.errors.map((e) => e.reason)
-          if (!calReasons.every((r) => PERMANENT_FREEBUSY_REASONS.has(r))) {
+          if (!options.allowPartial) {
             throw new CalendarAdapterError({
               provider: "google",
               operation: "freeBusy",

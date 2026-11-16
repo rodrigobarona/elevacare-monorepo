@@ -117,6 +117,7 @@ describe("Google session reminder", () => {
 describe("Google busy times", () => {
   const from = new Date("2026-11-17T00:00:00Z")
   const to = new Date("2026-11-18T00:00:00Z")
+  const holiday = "pt.portuguese#holiday@group.v.calendar.google.com"
 
   function freeBusy(calendars: Record<string, unknown>) {
     vi.stubGlobal(
@@ -130,22 +131,37 @@ describe("Google busy times", () => {
     )
   }
 
-  it("keeps busy times when one calendar can't be read", async () => {
+  const oneUnreadable = {
+    primary: {
+      busy: [{ start: "2026-11-17T10:00:00Z", end: "2026-11-17T11:00:00Z" }],
+    },
+    [holiday]: {
+      busy: [],
+      errors: [{ domain: "global", reason: "notFound" }],
+    },
+  }
+
+  it("fails by default when any calendar can't be read (booking holds)", async () => {
+    freeBusy(oneUnreadable)
+    await expect(
+      new GoogleCalendarAdapter().getFreeBusy(
+        "token",
+        ["primary", holiday],
+        from,
+        to
+      )
+    ).rejects.toBeInstanceOf(CalendarAdapterError)
+  })
+
+  it("keeps the readable calendars for slot display", async () => {
     vi.spyOn(console, "warn").mockImplementation(() => {})
-    freeBusy({
-      primary: {
-        busy: [{ start: "2026-11-17T10:00:00Z", end: "2026-11-17T11:00:00Z" }],
-      },
-      "pt.portuguese#holiday@group.v.calendar.google.com": {
-        busy: [],
-        errors: [{ domain: "global", reason: "notFound" }],
-      },
-    })
+    freeBusy(oneUnreadable)
     const busy = await new GoogleCalendarAdapter().getFreeBusy(
       "token",
-      ["primary", "pt.portuguese#holiday@group.v.calendar.google.com"],
+      ["primary", holiday],
       from,
-      to
+      to,
+      { allowPartial: true }
     )
     expect(busy).toEqual([
       {
@@ -155,47 +171,14 @@ describe("Google busy times", () => {
     ])
   })
 
-  it("fails when a calendar is forbidden, since it could hide events", async () => {
-    freeBusy({
-      primary: { busy: [] },
-      shared: { busy: [], errors: [{ domain: "global", reason: "forbidden" }] },
-    })
-    await expect(
-      new GoogleCalendarAdapter().getFreeBusy(
-        "token",
-        ["primary", "shared"],
-        from,
-        to
-      )
-    ).rejects.toBeInstanceOf(CalendarAdapterError)
-  })
-
-  it("fails on a temporary error so no calendar goes unchecked", async () => {
-    freeBusy({
-      primary: {
-        busy: [{ start: "2026-11-17T10:00:00Z", end: "2026-11-17T11:00:00Z" }],
-      },
-      work: {
-        busy: [],
-        errors: [{ domain: "global", reason: "backendError" }],
-      },
-    })
-    await expect(
-      new GoogleCalendarAdapter().getFreeBusy(
-        "token",
-        ["primary", "work"],
-        from,
-        to
-      )
-    ).rejects.toBeInstanceOf(CalendarAdapterError)
-  })
-
-  it("fails when no calendar can be read", async () => {
+  it("fails even for display when no calendar can be read", async () => {
     freeBusy({
       primary: { busy: [], errors: [{ domain: "global", reason: "notFound" }] },
     })
     await expect(
-      new GoogleCalendarAdapter().getFreeBusy("token", ["primary"], from, to)
+      new GoogleCalendarAdapter().getFreeBusy("token", ["primary"], from, to, {
+        allowPartial: true,
+      })
     ).rejects.toBeInstanceOf(CalendarAdapterError)
   })
 })

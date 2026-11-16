@@ -60,11 +60,18 @@ export interface CalendarAdapter {
   readonly provider: CalendarProvider
 
   listCalendars(accessToken: string): Promise<CalendarListItem[]>
+  /**
+   * Busy intervals across `calendarIds`. By default any calendar the provider
+   * cannot read fails the whole call (booking holds must fail closed). With
+   * `allowPartial`, unreadable calendars are skipped and the rest returned,
+   * for slot display only; it still fails when no calendar could be read.
+   */
   getFreeBusy(
     accessToken: string,
     calendarIds: string[],
     timeMin: Date,
-    timeMax: Date
+    timeMax: Date,
+    options?: { allowPartial?: boolean }
   ): Promise<FreeBusyInterval[]>
 
   createEvent(

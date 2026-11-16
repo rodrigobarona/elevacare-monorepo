@@ -102,11 +102,14 @@ async function fetchIntegrationBusy(
     target.provider,
     requireAuthAccountId(target.authAccountId)
   )
+  // Slot display may skip a calendar the provider cannot read; the hold-time
+  // recheck (fresh) stays strict so a booking never passes an unchecked one.
   const busy = await getAdapter(target.provider).getFreeBusy(
     accessToken,
     target.calendarIds,
     from,
-    to
+    to,
+    { allowPartial: !fresh }
   )
   await writeCache(key, busy)
   return busy

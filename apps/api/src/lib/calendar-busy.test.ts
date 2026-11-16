@@ -110,8 +110,13 @@ describe("loadExternalBusy", () => {
 
     expect(result).toEqual({ busy: [slotA, slotB], degradedSources: [] })
     expect(googleBusy).toHaveBeenCalledTimes(1)
-    expect(googleBusy).toHaveBeenCalledWith("token", ["primary"], from, to)
-    expect(microsoftBusy).toHaveBeenCalledWith("token", ["ms-cal"], from, to)
+    // Slot display (not fresh) lets an unreadable calendar degrade alone.
+    expect(googleBusy).toHaveBeenCalledWith("token", ["primary"], from, to, {
+      allowPartial: true,
+    })
+    expect(microsoftBusy).toHaveBeenCalledWith("token", ["ms-cal"], from, to, {
+      allowPartial: true,
+    })
   })
 
   it("keeps other providers when one token is revoked and flags that integration", async () => {
@@ -212,6 +217,8 @@ describe("busy time providers", () => {
     const live = await holdCalendarBusyTimeProvider.getBusy(input)
     expect(live).toEqual([liveSlot])
     expect(googleBusy).toHaveBeenCalledTimes(1)
+    // The hold recheck is strict: no calendar may be skipped.
+    expect(googleBusy.mock.calls[0]?.[4]).toEqual({ allowPartial: false })
     expect(redisSet).toHaveBeenCalledTimes(1)
   })
 
