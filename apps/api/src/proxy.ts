@@ -1,15 +1,22 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createPassthroughProxy } from "@eleva/observability/proxy"
 import { resolveGatewayUrl } from "@eleva/config/env"
-import { isOrgSlugShape } from "@eleva/config/routing"
+import { isOrgSlugShape, WORKSPACE_NAMESPACES } from "@eleva/config/routing"
 
 const passthrough = createPassthroughProxy()
 
 /**
- * Better Auth magic-link verify lives on this origin. A relative
- * `callbackURL` then 404s here (`/expert/rbarona/...`, `/join/...`).
+ * Better Auth magic-link verify and OAuth callbacks live on this origin.
+ * A relative `callbackURL` then 404s here (`/space/...`, `/join/...`).
  * Bounce those document GETs to the gateway.
+ *
+ * `/expert/*` is not bounced: the API serves its own `/expert/...`
+ * routes, so expert pages must always pass an absolute `callbackURL`.
  */
+const GATEWAY_ONLY_NAMESPACES: ReadonlySet<string> = new Set(
+  WORKSPACE_NAMESPACES.filter((ns) => ns !== "expert")
+)
+
 function isMisroutedProductPath(pathname: string): boolean {
   const segments = pathname.split("/").filter(Boolean)
   const first = segments[0]
@@ -17,7 +24,8 @@ function isMisroutedProductPath(pathname: string): boolean {
     first === "join" ||
     first === "dashboard" ||
     first === "login" ||
-    first === "callback"
+    first === "callback" ||
+    (typeof first === "string" && GATEWAY_ONLY_NAMESPACES.has(first))
   ) {
     return true
   }

@@ -62,6 +62,8 @@ interface SubCalendar {
   email?: string
 }
 
+const LINK_FAILED_PARAM = "calendarLink"
+
 interface Props {
   integrations: CalendarIntegration[]
   callbackURL: string
@@ -175,12 +177,30 @@ export function CalendarManager({
     toast.error(t(`error.${key}` as Parameters<typeof t>[0]))
   }
 
+  // Back from a provider that refused or failed the link: say so once,
+  // then drop the marker so a refresh does not repeat the toast.
+  React.useEffect(() => {
+    const url = new URL(window.location.href)
+    if (!url.searchParams.has(LINK_FAILED_PARAM)) return
+    url.searchParams.delete(LINK_FAILED_PARAM)
+    url.searchParams.delete("error")
+    router.replace(`${url.pathname}${url.search}`)
+    toast.error(t("error.connect-failed"))
+  }, [router, t])
+
   async function handleConnect(provider: "google" | "microsoft") {
     setPending(provider)
     try {
+      // Better Auth redirects here from api.eleva.care after Google or
+      // Microsoft, so the return address must be absolute — a relative
+      // path resolves against the API host and 404s.
+      const back = new URL(callbackURL, window.location.origin)
+      const failed = new URL(back)
+      failed.searchParams.set(LINK_FAILED_PARAM, "failed")
       const result = await authClient.linkSocial({
         provider,
-        callbackURL,
+        callbackURL: back.toString(),
+        errorCallbackURL: failed.toString(),
         scopes: [...CALENDAR_OAUTH_SCOPES[provider]],
       })
       if (result.error) {

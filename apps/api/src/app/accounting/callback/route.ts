@@ -1,7 +1,7 @@
 import { logError } from "@eleva/observability"
 import { and, eq, sql } from "drizzle-orm"
 import { NextResponse } from "next/server"
-import { getSession, LOGIN_PATH } from "@eleva/auth"
+import { LOGIN_PATH, UnauthorizedError, type ElevaSession } from "@eleva/auth"
 import { resolveExpertWorkspaceBase } from "@eleva/auth/org-routing"
 import {
   getAdapter,
@@ -13,6 +13,7 @@ import {
 import { auth, main, withPlatformAdminContext, type Tx } from "@eleva/db"
 import { withAudit } from "@eleva/audit"
 import { env, resolveGatewayUrl } from "@eleva/config/env"
+import { resolveApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import type { RoutePolicy } from "@/lib/route-policy"
 
@@ -69,10 +70,24 @@ function withInvoicingStep(
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
+/** The provider redirects a browser here, so only a cookie session counts. */
+async function browserSession(request: Request): Promise<ElevaSession | null> {
+  try {
+    const result = await resolveApiAuth(request)
+    return result.type === "session" ? result.session : null
+  } catch (err) {
+    if (err instanceof UnauthorizedError) return null
+    throw err
+  }
+}
+
 export async function GET(request: Request) {
   const appUrl = env().APP_URL || request.url
 
-  const session = await getSession()
+  // Read the session cookie in-process. `getSession()` from
+  // `@eleva/auth` fetches this API over HTTP, which falls back to
+  // localhost when API_URL is unset and fails in production.
+  const session = await browserSession(request)
   if (!session) {
     return NextResponse.redirect(new URL(LOGIN_PATH, appUrl))
   }
