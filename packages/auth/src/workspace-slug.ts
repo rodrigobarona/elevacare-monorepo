@@ -2,6 +2,7 @@ import {
   isOrgSlugShape,
   RESERVED_SLUGS,
   SLUGGED_WORKSPACE_NAMESPACES,
+  SPACE_BASE,
 } from "@eleva/config/routing"
 
 const sluggedNamespaces = new Set<string>(SLUGGED_WORKSPACE_NAMESPACES)
@@ -31,4 +32,10 @@ export function workspaceSlugFromPath(
     return asWorkspaceSlug(segments[1])
   }
   return asWorkspaceSlug(first)
+}
+
+/** True for `/space` and anything under it (the person's own Space). */
+export function isSpacePath(path: string | null | undefined): boolean {
+  const pathname = path?.split("?")[0] ?? ""
+  return pathname === SPACE_BASE || pathname.startsWith(`${SPACE_BASE}/`)
 }

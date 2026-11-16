@@ -3,25 +3,6 @@ import { NextRequest, NextResponse } from "next/server"
 import type { GatewayOrigins } from "@eleva/config/dispatch"
 import { createGatewayProxy } from "./lib/create-gateway-proxy"
 
-vi.mock("@eleva/auth/org-routing", () => ({
-  getOrgTypeBySlug: vi.fn(async (slug: string) => {
-    if (slug === "barona-expert") return "expert"
-    if (slug === "clinica-mota") return "team"
-    return null
-  }),
-  orgSlugNeedingTypeLookup: vi.fn((pathname: string) => {
-    const segments = pathname.split("/").filter(Boolean)
-    const first = segments[0] ?? ""
-    const second = segments[1] ?? ""
-    if (!first || first === "login" || first === "admin") return null
-    if (first === "expert") return null
-    if (second === "admin" || second === "academy") {
-      return null
-    }
-    return first
-  }),
-}))
-
 const testOrigins: GatewayOrigins = {
   app: "http://localhost:3001",
   expert: "http://localhost:3003",
@@ -295,7 +276,7 @@ describe("createGatewayProxy integration", () => {
     )
   })
 
-  it("rewrites /:orgSlug/reports to app zone in production", async () => {
+  it("rewrites /space/reports to app zone in production", async () => {
     vi.stubEnv("NODE_ENV", "production")
     const proxy = createGatewayProxy({
       origins: {
@@ -304,10 +285,10 @@ describe("createGatewayProxy integration", () => {
       },
       intlMiddleware: marketingIntl,
     })
-    const res = await proxy(makeRequest("/space-3d4f155f88c8/reports"))
+    const res = await proxy(makeRequest("/space/reports"))
     expect(res.status).toBe(200)
     expect(res.headers.get("x-middleware-rewrite")).toBe(
-      "https://app.eleva.care/space-3d4f155f88c8/reports"
+      "https://app.eleva.care/space/reports"
     )
   })
 
@@ -367,21 +348,19 @@ describe("createGatewayProxy integration", () => {
     expect(intl).toHaveBeenCalledOnce()
   })
 
-  it("redirects authenticated team org slug to member app in development", async () => {
-    vi.stubEnv("NODE_ENV", "development")
+  it("keeps a signed-in /:slug on marketing (no dashboard at the root)", async () => {
+    const intl = vi.fn(marketingIntl)
     const proxy = createGatewayProxy({
       origins: testOrigins,
-      intlMiddleware: marketingIntl,
+      intlMiddleware: intl,
     })
     const res = await proxy(
       makeRequest("/clinica-mota", {
         cookieNames: ["better-auth.session_token"],
       })
     )
-    expect(res.status).toBe(307)
-    expect(res.headers.get("location")).toBe(
-      "http://localhost:3001/clinica-mota"
-    )
+    expect(res.status).toBe(200)
+    expect(intl).toHaveBeenCalledOnce()
   })
 
   it("keeps a signed-in /:username on the public profile, not the expert app", async () => {

@@ -42,27 +42,28 @@ function cookieHeaderFromPage(
   return cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join("; ")
 }
 
-const SPACE_PATH_RE = /\/space-[a-z0-9]+/
+const SPACE_PATH_RE = /^\/space(\/|$)/
 
 /**
  * After sign-in / magic-link, the app may already redirect to the personal
  * Space. A second goto(/dashboard) then races and throws net::ERR_ABORTED.
  */
-async function landOnPersonalSpace(page: Page): Promise<string> {
+async function landOnPersonalSpace(page: Page): Promise<void> {
   const onSpace = () => SPACE_PATH_RE.test(new URL(page.url()).pathname)
   if (!onSpace()) {
     try {
-      await page.waitForURL(SPACE_PATH_RE, { timeout: 3_000 })
+      await page.waitForURL((url) => SPACE_PATH_RE.test(url.pathname), {
+        timeout: 3_000,
+      })
     } catch {
       await page
         .goto(`${webUrl}/dashboard`, { waitUntil: "domcontentloaded" })
         .catch(() => undefined)
     }
   }
-  await expect(page).toHaveURL(SPACE_PATH_RE, { timeout: 20_000 })
-  const spaceSlug = new URL(page.url()).pathname.split("/").filter(Boolean)[0]
-  expect(spaceSlug).toMatch(/^space-/)
-  return spaceSlug
+  await expect
+    .poll(() => new URL(page.url()).pathname, { timeout: 20_000 })
+    .toMatch(SPACE_PATH_RE)
 }
 
 test.describe("member e2e target", () => {
@@ -190,7 +191,7 @@ test.describe("member Space journey", () => {
       }
 
       await page.goto(magicUrl)
-      const spaceSlug = await landOnPersonalSpace(page)
+      await landOnPersonalSpace(page)
 
       const bookingCard = page.getByTestId("member-booking-card")
       await expect(bookingCard.first()).toBeVisible({ timeout: 15_000 })
@@ -200,11 +201,11 @@ test.describe("member Space journey", () => {
       )
       await expect(page.getByText(/€\s?60|60,00\s?€|€60/)).toBeVisible()
 
-      await persistMarketingPreference(page, request, spaceSlug)
-      await assertMemberConsentsApi(page, request, spaceSlug)
-      await requestDsarWithMockedStorage(page, request, spaceSlug)
+      await persistMarketingPreference(page, request)
+      await assertMemberConsentsApi(page, request)
+      await requestDsarWithMockedStorage(page, request)
 
-      await page.goto(`/${spaceSlug}`)
+      await page.goto("/space")
       const detail = page.getByTestId("member-booking-detail").first()
       await expect(detail).toBeVisible({ timeout: 15_000 })
       // LinkButton client-routes via AppRouterProvider on the rewritten app
@@ -217,7 +218,7 @@ test.describe("member Space journey", () => {
         : `${webUrl}${detailHref}`
       await page.goto(detailUrl)
       await assertHealthConsentBlockedWhileBooked(page, request)
-      await assertPaymentsListShowsBooking(page, request, spaceSlug, bookingId!)
+      await assertPaymentsListShowsBooking(page, request, bookingId!)
       await page.goto(detailUrl)
       const cancel = page.getByTestId("member-cancel-session")
       await expect(cancel).toBeVisible({ timeout: 20_000 })
@@ -229,7 +230,7 @@ test.describe("member Space journey", () => {
       })
       // Soft router.push under the gateway rewrite can leave Playwright on
       // the detail page; hard-load the sessions list to assert outcome.
-      await page.goto(`${webUrl}/${spaceSlug}/sessions`)
+      await page.goto(`${webUrl}/space/sessions`)
       await expect(
         page
           .locator(
@@ -293,12 +294,12 @@ test.describe("member Space without live Stripe", () => {
     await page.getByTestId("login-submit").click()
     await signedIn
 
-    const spaceSlug = await landOnPersonalSpace(page)
+    await landOnPersonalSpace(page)
 
-    await persistMarketingPreference(page, request, spaceSlug)
-    await assertMemberConsentsApi(page, request, spaceSlug)
-    await requestDsarWithMockedStorage(page, request, spaceSlug)
-    await assertDeleteAccountBlocksReserve(page, request, spaceSlug)
+    await persistMarketingPreference(page, request)
+    await assertMemberConsentsApi(page, request)
+    await requestDsarWithMockedStorage(page, request)
+    await assertDeleteAccountBlocksReserve(page, request)
   })
 
   test("magic-link activation lands on a Space (session handoff)", async ({
@@ -342,7 +343,7 @@ test.describe("member Space without live Stripe", () => {
     )
 
     await page.goto(magicUrl!)
-    const spaceSlug = await landOnPersonalSpace(page)
+    await landOnPersonalSpace(page)
 
     // Cookie minting (Playwright page.request shares the browser jar).
     const me = await page.request.get(`${apiUrl}/me`, {
@@ -356,7 +357,7 @@ test.describe("member Space without live Stripe", () => {
     // Authenticated Space render — RSC must forward the session to the API.
     // Sessions without activeOrganizationId used to 401 here; keep the
     // assertion so the suite cannot go green without the handoff.
-    await page.goto(`${webUrl}/${spaceSlug}`)
+    await page.goto(`${webUrl}/space`)
     await expect(page.getByTestId("member-space-home")).toBeVisible({
       timeout: 20_000,
     })
@@ -365,10 +366,9 @@ test.describe("member Space without live Stripe", () => {
 
 async function persistMarketingPreference(
   page: Page,
-  request: APIRequestContext,
-  spaceSlug: string
+  request: APIRequestContext
 ): Promise<void> {
-  await page.goto(`/${spaceSlug}/settings`)
+  await page.goto(`/space/settings`)
   const marketingEmail = page
     .getByTestId("notify-email-marketing")
     .locator('[data-slot="checkbox"]')
@@ -407,13 +407,12 @@ async function persistMarketingPreference(
 
 async function requestDsarWithMockedStorage(
   page: Page,
-  request: APIRequestContext,
-  spaceSlug: string
+  request: APIRequestContext
 ): Promise<void> {
   // Private storage is mocked in `@eleva/storage` when E2E_AUTH_CAPTURE=1
   // or E2E_MOCK_PRIVATE_STORAGE=1 (server process). Playwright cannot
   // intercept the server-side S3 client.
-  await page.goto(`/${spaceSlug}/privacy`)
+  await page.goto(`/space/privacy`)
   await page.getByTestId("member-dsar-request").click()
   const status = page.getByTestId("member-dsar-status")
   await expect(status).toHaveAttribute("data-status", "ready", {
@@ -441,8 +440,7 @@ async function sessionAuthHeaders(page: Page): Promise<Record<string, string>> {
 
 async function assertMemberConsentsApi(
   page: Page,
-  request: APIRequestContext,
-  spaceSlug: string
+  request: APIRequestContext
 ): Promise<void> {
   const headers = await sessionAuthHeaders(page)
   const listed = await request.get(`${apiUrl}/me/consents`, { headers })
@@ -481,7 +479,7 @@ async function assertMemberConsentsApi(
   const withdrawn = after.consents.find((row) => row.kind === "marketing")
   expect(withdrawn?.withdrawnAt).toBeTruthy()
 
-  await page.goto(`${webUrl}/${spaceSlug}/privacy`)
+  await page.goto(`${webUrl}/space/privacy`)
   await expect(page.getByTestId("member-consent-marketing")).toHaveAttribute(
     "data-granted",
     "false",
@@ -506,7 +504,6 @@ async function assertHealthConsentBlockedWhileBooked(
 async function assertPaymentsListShowsBooking(
   page: Page,
   request: APIRequestContext,
-  spaceSlug: string,
   bookingId: string
 ): Promise<void> {
   const headers = await sessionAuthHeaders(page)
@@ -546,7 +543,7 @@ async function assertPaymentsListShowsBooking(
   expect(["succeeded", "refund_pending", "refunded"]).toContain(match!.status)
   expect(match!.receiptUrl).toMatch(/^https:\/\//)
 
-  await page.goto(`${webUrl}/${spaceSlug}/payments`)
+  await page.goto(`${webUrl}/space/payments`)
   const row = page
     .locator(`[data-testid="member-payment-row"][data-booking="${bookingId}"]`)
     .first()
@@ -559,8 +556,7 @@ async function assertPaymentsListShowsBooking(
 
 async function assertDeleteAccountBlocksReserve(
   page: Page,
-  request: APIRequestContext,
-  spaceSlug: string
+  request: APIRequestContext
 ): Promise<void> {
   const headers = await sessionAuthHeaders(page)
   const offer = await request.get(
@@ -602,7 +598,7 @@ async function assertDeleteAccountBlocksReserve(
     ],
   }
 
-  await page.goto(`${webUrl}/${spaceSlug}/privacy`)
+  await page.goto(`${webUrl}/space/privacy`)
   let deletionRequested = false
   try {
     await page.getByTestId("member-deletion-request").click()

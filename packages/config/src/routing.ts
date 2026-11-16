@@ -9,9 +9,9 @@
 /**
  * Signed-in surfaces live under a fixed first segment (ADR-026). The
  * namespace names the tool, so the gateway routes on the first segment
- * alone. `/expert/{slug}` (expert tools — an expert's own practice or a
- * clinician seat in a clinic) is live; `/space`, `/team/{slug}` and
- * `/academy/{slug}` follow in the next slices and are reserved already.
+ * alone. Live: `/space` (the person's own Space, no slug) and `/expert/{slug}`
+ * (expert tools — an expert's own practice or a clinician seat in a clinic).
+ * `/team/{slug}` and `/academy/{slug}` follow and are reserved already.
  */
 export const WORKSPACE_NAMESPACES = [
   "space",
@@ -28,6 +28,15 @@ export const SLUGGED_WORKSPACE_NAMESPACES = [
   "team",
   "academy",
 ] as const
+
+/** The person's own Space: `/space` (one per person, no slug). */
+export const SPACE_BASE = "/space"
+
+/** A page in the person's own Space, e.g. `spacePath("sessions")`. */
+export function spacePath(segment = ""): string {
+  const rest = segment.replace(/^\//, "")
+  return rest ? `${SPACE_BASE}/${rest}` : SPACE_BASE
+}
 
 /** Expert tools for a workspace: `/expert/{slug}`. */
 export function expertWorkspaceBase(orgSlug: string): string {
@@ -57,34 +66,21 @@ export const ACCOUNT_REWRITE_PATHS = [
   ...ACCOUNT_STANDALONE_PATHS,
 ] as const
 
-/** First-level segments owned by the member app (org-slug routes use /[orgSlug]/*). */
-export const APP_FIXED_SEGMENTS = ["join"] as const
+/** First-level segments owned by the member app: the person's Space and guest join. */
+export const APP_FIXED_SEGMENTS = ["space", "join"] as const
 
 /** Auth-related standalone paths (no session needed). */
 export const APP_STANDALONE_PATHS = [] as const
 
 /**
- * Second-level segments that appear under /[orgSlug]/*. Used by
- * the web proxy to detect org-slug-prefixed app routes.
- *
- * Member Space chrome (`settings` / `privacy` / `sessions` / `payments` /
- * `notifications` / `reports`) must rewrite to the member app even at
- * depth 2 — otherwise the gateway treats them as public booking event
- * slugs and serves a marketing 404.
+ * Second-level segments under `/{slug}/…`: the clinic admin and academy
+ * zones (until they move to `/team` and `/academy`, ADR-026). The rest were
+ * the member Space's pages before it moved to `/space`; they stay reserved
+ * so no username can collide with a dashboard word.
  */
 export const ORG_SCOPED_SEGMENTS = [
   "admin",
   "academy",
-  "settings",
-  "privacy",
-  "sessions",
-  "payments",
-  "notifications",
-  "reports",
-] as const
-
-/** Member-app second segments under /[orgSlug]/* (subset of ORG_SCOPED). */
-export const MEMBER_ORG_SEGMENTS = [
   "settings",
   "privacy",
   "sessions",
@@ -172,11 +168,6 @@ export const RESERVED_SLUGS: ReadonlySet<string> = new Set([
 ])
 
 /**
- * @deprecated Use APP_FIXED_SEGMENTS + ACCOUNT_FIXED_SEGMENTS instead.
- */
-export const APP_ROOT_SEGMENTS = APP_FIXED_SEGMENTS
-
-/**
  * Cookie used by the gateway and member app to remember the last org
  * a user was active in. Allows /dashboard and bare-/ to short-circuit
  * to /[orgSlug] without round-tripping to the DB.
@@ -184,6 +175,27 @@ export const APP_ROOT_SEGMENTS = APP_FIXED_SEGMENTS
  * Set as httpOnly by app/proxy (server reads only).
  */
 export const LAST_ACTIVE_ORG_COOKIE = "eleva-last-org"
+
+/**
+ * What `eleva-last-org` remembers for an address (ADR-026): `space` for the
+ * person's own Space, the slug in `/expert/{slug}` (and the other slugged
+ * namespaces), or null for addresses that name no workspace. `/dashboard`
+ * checks the value against the person's memberships before using it.
+ */
+export function lastActiveWorkspaceFromPath(pathname: string): string | null {
+  const [first, second] = pathname.split("?")[0]!.split("/").filter(Boolean)
+  if (first === "space") return "space"
+  if (
+    first &&
+    (SLUGGED_WORKSPACE_NAMESPACES as readonly string[]).includes(first) &&
+    second &&
+    !RESERVED_SLUGS.has(second) &&
+    isOrgSlugShape(second)
+  ) {
+    return second
+  }
+  return null
+}
 
 /**
  * Request header naming the workspace (org slug) a page acts for, taken from

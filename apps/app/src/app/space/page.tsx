@@ -4,18 +4,14 @@ import { LinkButton } from "@eleva/ui/components/button"
 import { EmptyState } from "@eleva/ui/components/empty-state"
 import { PageHeader, Section } from "@eleva/ui/components/page-header"
 import { marketplaceExpertsUrl } from "@eleva/config/env"
-import { getAuthedApiClient, requireMemberOrg } from "@/lib/member-api"
+import { getAuthedApiClient, requireMemberSpace } from "@/lib/member-api"
 import { BookingCard, FindExpertButton } from "./_components/booking-card"
+import { SPACE_BASE } from "@eleva/config/routing"
 
 export const dynamic = "force-dynamic"
 
-export default async function OrgHomePage({
-  params,
-}: {
-  params: Promise<{ orgSlug: string }>
-}) {
-  const { orgSlug } = await params
-  const session = await requireMemberOrg(orgSlug)
+export default async function OrgHomePage() {
+  const session = await requireMemberSpace()
   const [t, ts, locale, api] = await Promise.all([
     getTranslations("home"),
     getTranslations("sessions"),
@@ -43,7 +39,7 @@ export default async function OrgHomePage({
       <Section
         title={t("upcomingTitle")}
         actions={
-          <LinkButton variant="ghost" size="sm" href={`/${orgSlug}/sessions`}>
+          <LinkButton variant="ghost" size="sm" href={`${SPACE_BASE}/sessions`}>
             {t("viewAll")}
           </LinkButton>
         }
@@ -52,7 +48,6 @@ export default async function OrgHomePage({
           <div className="grid gap-3">
             <BookingCard
               booking={next}
-              orgSlug={orgSlug}
               memberName={memberName}
               memberEmail={session.user.email}
               featured
@@ -61,7 +56,6 @@ export default async function OrgHomePage({
               <BookingCard
                 key={booking.id}
                 booking={booking}
-                orgSlug={orgSlug}
                 memberName={memberName}
                 memberEmail={session.user.email}
               />
@@ -91,7 +85,6 @@ export default async function OrgHomePage({
               <BookingCard
                 key={booking.id}
                 booking={booking}
-                orgSlug={orgSlug}
                 memberName={memberName}
                 memberEmail={session.user.email}
                 showJoin={false}

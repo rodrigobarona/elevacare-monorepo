@@ -34,7 +34,6 @@ import {
 } from "../actions"
 
 interface AvatarUploadProps {
-  orgSlug: string
   currentAvatarUrl: string | null
   displayName: string
   email: string
@@ -44,7 +43,6 @@ interface AvatarUploadProps {
 const ACCEPTED_TYPES: readonly string[] = AVATAR_UPLOAD.contentTypes
 
 export function AvatarUpload({
-  orgSlug,
   currentAvatarUrl,
   displayName,
   email,
@@ -85,7 +83,7 @@ export function AvatarUpload({
         headers: { Authorization: `Bearer ${uploadToken}` },
       })
 
-      const saved = await updateAvatarAction(orgSlug, result.url)
+      const saved = await updateAvatarAction(result.url)
       if (!saved.ok) {
         toast.error(t("avatar.saveFailed"))
         return
@@ -104,7 +102,7 @@ export function AvatarUpload({
   async function handleRemove() {
     setRemoving(true)
     try {
-      const result = await removeAvatarAction(orgSlug)
+      const result = await removeAvatarAction()
       if (!result.ok) {
         toast.error(t("avatar.removeFailed"))
         return

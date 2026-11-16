@@ -4,8 +4,9 @@ import { ArrowsClockwiseIcon, CreditCardIcon } from "@eleva/icons"
 import { LinkButton } from "@eleva/ui/components/button"
 import { cn } from "@eleva/ui/lib/utils"
 import { EmptyState } from "@eleva/ui/components/empty-state"
-import { getAuthedApiClient, requireMemberOrg } from "@/lib/member-api"
+import { getAuthedApiClient, requireMemberSpace } from "@/lib/member-api"
 import { formatMoney } from "@/lib/member-format"
+import { SPACE_BASE } from "@eleva/config/routing"
 
 export const dynamic = "force-dynamic"
 
@@ -44,13 +45,8 @@ function paymentTone(status: PaymentStatusKey | null): string {
   }
 }
 
-export default async function PaymentsPage({
-  params,
-}: {
-  params: Promise<{ orgSlug: string }>
-}) {
-  const { orgSlug } = await params
-  await requireMemberOrg(orgSlug)
+export default async function PaymentsPage() {
+  await requireMemberSpace()
   const [t, locale, api] = await Promise.all([
     getTranslations("payments"),
     getLocale(),
@@ -136,7 +132,7 @@ export default async function PaymentsPage({
                   <LinkButton
                     variant="ghost"
                     size="sm"
-                    href={`/${orgSlug}/sessions/${payment.bookingId}`}
+                    href={`${SPACE_BASE}/sessions/${payment.bookingId}`}
                     data-testid="member-payment-session"
                   >
                     {t("session")}

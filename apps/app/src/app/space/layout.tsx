@@ -1,24 +1,17 @@
-import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
 import { buildDashboardConfig } from "@eleva/dashboard/config-helpers"
-import { resolveProductHomeUrl } from "@eleva/dashboard/resolve-product-home-url"
 import { loadUserWorkspaces } from "@eleva/dashboard/account-menu-server"
-import { guardSessionForOrg } from "@eleva/auth"
+import { spacePath } from "@eleva/config/routing"
+import { requireMemberSpace } from "@/lib/member-api"
 
-export default async function OrgSlugLayout({
+/** The person's own Space at `/space` (ADR-026): one per person, no slug. */
+export default async function SpaceLayout({
   children,
-  params,
 }: {
   children: React.ReactNode
-  params: Promise<{ orgSlug: string }>
 }) {
-  const { orgSlug } = await params
-  const session = await guardSessionForOrg(orgSlug)
-
-  if (session.orgSlug !== orgSlug) {
-    redirect(resolveProductHomeUrl(session))
-  }
+  const session = await requireMemberSpace()
 
   const [t, organizations] = await Promise.all([
     getTranslations("nav"),
@@ -36,32 +29,32 @@ export default async function OrgSlugLayout({
         items: [
           {
             title: t("home"),
-            url: `/${orgSlug}`,
+            url: spacePath(),
             icon: "SquaresFourIcon",
           },
           {
             title: t("sessions"),
-            url: `/${orgSlug}/sessions`,
+            url: spacePath("sessions"),
             icon: "CalendarDotsIcon",
           },
           {
             title: t("payments"),
-            url: `/${orgSlug}/payments`,
+            url: spacePath("payments"),
             icon: "CreditCardIcon",
           },
           {
             title: t("reports"),
-            url: `/${orgSlug}/reports`,
+            url: spacePath("reports"),
             icon: "BookOpenIcon",
           },
           {
             title: t("settings"),
-            url: `/${orgSlug}/settings`,
+            url: spacePath("settings"),
             icon: "GearIcon",
           },
           {
             title: t("privacy"),
-            url: `/${orgSlug}/privacy`,
+            url: spacePath("privacy"),
             icon: "ShieldIcon",
           },
         ],
@@ -70,7 +63,7 @@ export default async function OrgSlugLayout({
     {
       enableOrgSwitcher: false,
       organizations: onlyPersonalSpace ? [] : organizations,
-      inboxUrl: `/${orgSlug}/notifications`,
+      inboxUrl: spacePath("notifications"),
     }
   )
 

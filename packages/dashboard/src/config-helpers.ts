@@ -1,6 +1,7 @@
 "use server"
 
 import type { ProductLabel } from "@eleva/auth/types"
+import { resolveGatewayUrl } from "@eleva/config/env"
 import { accountMenuFor, loadUserWorkspaces } from "./account-menu-server"
 import type { DashboardConfig, NavGroup } from "./nav-types"
 import { resolveProductHomeUrl } from "./resolve-product-home-url"
@@ -55,9 +56,16 @@ export async function buildDashboardConfig(
   const organizations =
     enableOrgSwitcher && session.orgSlug != null ? workspaces : []
 
+  // Each workspace's own home (ADR-026: /space, /expert/{slug}, …). Never
+  // `/{slug}`: that is the public profile.
   const homeUrl =
     configOverrides.homeUrl ??
-    (!enableOrgSwitcher ? resolveProductHomeUrl(session) : undefined)
+    (session.productLabel
+      ? resolveProductHomeUrl({
+          ...session,
+          productLabel: session.productLabel,
+        })
+      : `${resolveGatewayUrl()}/dashboard`)
 
   return {
     navGroups,
@@ -71,7 +79,7 @@ export async function buildDashboardConfig(
     organizations,
     accountMenu: accountMenuFor(workspaces, { accountHref }),
     apiBaseUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002",
-    ...(homeUrl ? { homeUrl } : {}),
+    homeUrl,
     ...configOverrides,
   }
 }

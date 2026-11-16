@@ -13,16 +13,13 @@ const origins: GatewayOrigins = {
 describe("resolveDispatch - locale + marketing", () => {
   it("treats /pt, /es, /en as marketing", () => {
     for (const loc of ["/pt", "/es", "/en"]) {
-      expect(resolveDispatch(loc, false, origins)).toEqual({
-        kind: "marketing",
-      })
-      expect(resolveDispatch(loc, true, origins)).toEqual({
+      expect(resolveDispatch(loc, origins)).toEqual({
         kind: "marketing",
       })
     }
   })
 
-  it("treats marketing paths as marketing regardless of session", () => {
+  it("treats marketing paths as marketing", () => {
     for (const path of [
       "/about",
       "/pricing",
@@ -38,49 +35,45 @@ describe("resolveDispatch - locale + marketing", () => {
       "/trust/security",
       "/community",
     ]) {
-      expect(resolveDispatch(path, false, origins)).toEqual({
-        kind: "marketing",
-      })
-      expect(resolveDispatch(path, true, origins)).toEqual({
+      expect(resolveDispatch(path, origins)).toEqual({
         kind: "marketing",
       })
     }
   })
 
   it("treats root as marketing", () => {
-    expect(resolveDispatch("/", false, origins)).toEqual({ kind: "marketing" })
-    expect(resolveDispatch("/", true, origins)).toEqual({ kind: "marketing" })
+    expect(resolveDispatch("/", origins)).toEqual({ kind: "marketing" })
   })
 })
 
 describe("resolveDispatch - account zone", () => {
   it("rewrites /onboarding and /account/* to account origin (prefix match)", () => {
-    expect(resolveDispatch("/onboarding", true, origins)).toEqual({
+    expect(resolveDispatch("/onboarding", origins)).toEqual({
       kind: "rewrite",
       origin: "http://account",
     })
-    expect(resolveDispatch("/onboarding/step-2", true, origins)).toEqual({
+    expect(resolveDispatch("/onboarding/step-2", origins)).toEqual({
       kind: "rewrite",
       origin: "http://account",
     })
-    expect(resolveDispatch("/account", true, origins)).toEqual({
+    expect(resolveDispatch("/account", origins)).toEqual({
       kind: "rewrite",
       origin: "http://account",
     })
-    expect(resolveDispatch("/account/settings", true, origins)).toEqual({
+    expect(resolveDispatch("/account/settings", origins)).toEqual({
       kind: "rewrite",
       origin: "http://account",
     })
   })
 
   it("rewrites standalone /dashboard exactly, NOT /dashboard/foo", () => {
-    expect(resolveDispatch("/dashboard", true, origins)).toEqual({
+    expect(resolveDispatch("/dashboard", origins)).toEqual({
       kind: "rewrite",
       origin: "http://account",
     })
     // /dashboard/foo falls through to org-slug logic: "dashboard" is in
     // RESERVED_SLUGS so it cannot be an org slug -> marketing.
-    expect(resolveDispatch("/dashboard/foo", true, origins)).toEqual({
+    expect(resolveDispatch("/dashboard/foo", origins)).toEqual({
       kind: "marketing",
     })
   })
@@ -96,11 +89,7 @@ describe("resolveDispatch - account zone", () => {
       "/two-factor",
       "/accept-invitation",
     ]) {
-      expect(resolveDispatch(path, false, origins)).toEqual({
-        kind: "rewrite",
-        origin: "http://account",
-      })
-      expect(resolveDispatch(path, true, origins)).toEqual({
+      expect(resolveDispatch(path, origins)).toEqual({
         kind: "rewrite",
         origin: "http://account",
       })
@@ -110,11 +99,11 @@ describe("resolveDispatch - account zone", () => {
 
 describe("resolveDispatch - docs zone", () => {
   it("rewrites /docs and /docs/* to docs origin (prefix match)", () => {
-    expect(resolveDispatch("/docs", false, origins)).toEqual({
+    expect(resolveDispatch("/docs", origins)).toEqual({
       kind: "rewrite",
       origin: "http://docs",
     })
-    expect(resolveDispatch("/docs/guides/foo", true, origins)).toEqual({
+    expect(resolveDispatch("/docs/guides/foo", origins)).toEqual({
       kind: "rewrite",
       origin: "http://docs",
     })
@@ -123,23 +112,19 @@ describe("resolveDispatch - docs zone", () => {
 
 describe("resolveDispatch - admin redirect", () => {
   it("returns admin-redirect for /admin and /admin/*", () => {
-    expect(resolveDispatch("/admin", true, origins)).toEqual({
+    expect(resolveDispatch("/admin", origins)).toEqual({
       kind: "admin-redirect",
     })
-    expect(resolveDispatch("/admin/payments", false, origins)).toEqual({
+    expect(resolveDispatch("/admin/payments", origins)).toEqual({
       kind: "admin-redirect",
     })
   })
 })
 
 describe("resolveDispatch - public join grant path", () => {
-  it("rewrites /join/{bookingId} to the member app with or without a session", () => {
+  it("rewrites /join/{bookingId} to the member app", () => {
     const path = "/join/23fb39a9-71db-41c2-900e-ae422fd1b458"
-    expect(resolveDispatch(path, false, origins)).toEqual({
-      kind: "rewrite",
-      origin: "http://app",
-    })
-    expect(resolveDispatch(path, true, origins)).toEqual({
+    expect(resolveDispatch(path, origins)).toEqual({
       kind: "rewrite",
       origin: "http://app",
     })
@@ -147,125 +132,79 @@ describe("resolveDispatch - public join grant path", () => {
 })
 
 describe("resolveDispatch - workspace namespaces (ADR-026)", () => {
-  it("dispatches /expert/* to the expert zone, signed in or not", () => {
+  it("dispatches /expert/* to the expert zone", () => {
     for (const path of [
       "/expert/patricia-mota-pt",
       "/expert/clinica-mota/calendar",
       "/expert/patricia-mota-pt/sessions/b1/join",
     ]) {
-      for (const hasSession of [true, false]) {
-        expect(resolveDispatch(path, hasSession, origins), path).toEqual({
-          kind: "rewrite",
-          origin: "http://expert",
-        })
-      }
+      expect(resolveDispatch(path, origins), path).toEqual({
+        kind: "rewrite",
+        origin: "http://expert",
+      })
     }
   })
 
-  it("no longer treats /:slug/team as the expert dashboard", () => {
-    expect(resolveDispatch("/clinica-mota/team", true, origins)).toEqual({
-      kind: "marketing",
-    })
+  it("dispatches /space and its pages to the member app", () => {
+    for (const path of [
+      "/space",
+      "/space/sessions",
+      "/space/sessions/b1/join",
+      "/space/reports/r1",
+      "/space/settings",
+    ]) {
+      expect(resolveDispatch(path, origins), path).toEqual({
+        kind: "rewrite",
+        origin: "http://app",
+      })
+    }
+  })
+
+  it("no longer serves dashboards under /:slug", () => {
+    for (const path of [
+      "/clinica-mota/team",
+      "/space-3d4f155f88c8/sessions",
+      "/clinica-mota/settings",
+      "/clinica-mota/members/123",
+    ]) {
+      expect(resolveDispatch(path, origins), path).toEqual({
+        kind: "marketing",
+      })
+    }
   })
 })
 
 describe("resolveDispatch - org-scoped second segment", () => {
   it("dispatches /:slug/admin to team origin (clinic managers)", () => {
-    expect(resolveDispatch("/clinica-mota/admin", true, origins)).toEqual({
+    expect(resolveDispatch("/clinica-mota/admin", origins)).toEqual({
       kind: "rewrite",
       origin: "http://team",
     })
   })
 
   it("dispatches /:slug/academy to academy origin", () => {
-    expect(
-      resolveDispatch("/clinica-mota/academy/courses", true, origins)
-    ).toEqual({ kind: "rewrite", origin: "http://academy" })
-  })
-
-  it("dispatches /:slug/settings to app origin", () => {
-    expect(resolveDispatch("/clinica-mota/settings", true, origins)).toEqual({
+    expect(resolveDispatch("/clinica-mota/academy/courses", origins)).toEqual({
       kind: "rewrite",
-      origin: "http://app",
+      origin: "http://academy",
     })
-  })
-
-  it("dispatches member Space chrome segments to app origin", () => {
-    for (const segment of [
-      "privacy",
-      "sessions",
-      "payments",
-      "notifications",
-      "reports",
-    ] as const) {
-      expect(
-        resolveDispatch(`/space-abc123/${segment}`, false, origins)
-      ).toEqual({ kind: "rewrite", origin: "http://app" })
-      expect(
-        resolveDispatch(`/space-abc123/${segment}`, true, origins)
-      ).toEqual({ kind: "rewrite", origin: "http://app" })
-    }
   })
 })
 
-describe("resolveDispatch - bare org slug", () => {
-  it("rewrites /[orgSlug] to app origin when session present", () => {
-    expect(resolveDispatch("/clinica-mota", true, origins)).toEqual({
-      kind: "rewrite",
-      origin: "http://app",
-    })
+describe("resolveDispatch - public profiles", () => {
+  it("keeps /[username] and /[username]/[service] on marketing", () => {
+    for (const path of ["/patimota", "/clinica-mota", "/anaquick/quick-chat"]) {
+      expect(resolveDispatch(path, origins), path).toEqual({
+        kind: "marketing",
+      })
+    }
   })
 
-  it("keeps /[username] on marketing without a session (public profile)", () => {
-    expect(resolveDispatch("/clinica-mota", false, origins)).toEqual({
-      kind: "marketing",
-    })
-  })
-
-  it("keeps /[username]/[eventSlug] on marketing for guests and signed-in members", () => {
-    expect(resolveDispatch("/anaquick/quick-chat", false, origins)).toEqual({
-      kind: "marketing",
-    })
-    expect(resolveDispatch("/anaquick/quick-chat", true, origins)).toEqual({
-      kind: "marketing",
-    })
-  })
-
-  it("rewrites deeper /[orgSlug]/[non-scoped]/[...] to app when authenticated", () => {
-    expect(resolveDispatch("/clinica-mota/members/123", true, origins)).toEqual(
-      { kind: "rewrite", origin: "http://app" }
-    )
-  })
-
-  it("returns unauth-slug for deeper /[orgSlug]/[non-scoped]/[...] without session", () => {
-    expect(
-      resolveDispatch("/clinica-mota/members/123", false, origins)
-    ).toEqual({ kind: "unauth-slug", slug: "clinica-mota" })
-  })
-
-  it("does NOT redirect typos that fail slug shape (too short)", () => {
-    expect(resolveDispatch("/ab", false, origins)).toEqual({
-      kind: "marketing",
-    })
-  })
-
-  it("does NOT redirect typos that fail slug shape (invalid chars)", () => {
-    expect(resolveDispatch("/Foo-Bar", false, origins)).toEqual({
-      kind: "marketing",
-    })
-    expect(resolveDispatch("/foo_bar", false, origins)).toEqual({
-      kind: "marketing",
-    })
-  })
-
-  it("does NOT redirect reserved slugs", () => {
-    // "members" is not actually reserved, but "icon" and "robots" are.
-    expect(resolveDispatch("/icon", false, origins)).toEqual({
-      kind: "marketing",
-    })
-    expect(resolveDispatch("/robots", false, origins)).toEqual({
-      kind: "marketing",
-    })
+  it("sends typos and reserved words to marketing", () => {
+    for (const path of ["/ab", "/Foo-Bar", "/foo_bar", "/icon", "/robots"]) {
+      expect(resolveDispatch(path, origins), path).toEqual({
+        kind: "marketing",
+      })
+    }
   })
 })
 

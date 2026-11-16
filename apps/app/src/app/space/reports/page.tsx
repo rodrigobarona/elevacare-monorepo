@@ -3,17 +3,13 @@ import { getFormatter, getTranslations } from "next-intl/server"
 import { BookOpenIcon, CaretRightIcon } from "@eleva/icons"
 import { EmptyState } from "@eleva/ui/components/empty-state"
 import { PageHeader } from "@eleva/ui/components/page-header"
-import { getAuthedApiClient, requireMemberOrg } from "@/lib/member-api"
+import { getAuthedApiClient, requireMemberSpace } from "@/lib/member-api"
+import { SPACE_BASE } from "@eleva/config/routing"
 
 export const dynamic = "force-dynamic"
 
-export default async function ReportsPage({
-  params,
-}: {
-  params: Promise<{ orgSlug: string }>
-}) {
-  const { orgSlug } = await params
-  await requireMemberOrg(orgSlug)
+export default async function ReportsPage() {
+  await requireMemberSpace()
   const [t, format, api] = await Promise.all([
     getTranslations("reports"),
     getFormatter(),
@@ -36,7 +32,7 @@ export default async function ReportsPage({
           {reports.map((report) => (
             <li key={report.id}>
               <Link
-                href={`/${orgSlug}/reports/${report.id}`}
+                href={`${SPACE_BASE}/reports/${report.id}`}
                 className="flex items-center gap-4 p-4 transition-colors hover:bg-muted/50 sm:px-6"
                 data-testid="member-report-row"
               >

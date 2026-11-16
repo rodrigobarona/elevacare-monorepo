@@ -36,6 +36,7 @@ import {
   fromDatetimeLocalValue,
   toDatetimeLocalValue,
 } from "@/lib/member-format"
+import { SPACE_BASE } from "@eleva/config/routing"
 
 const ERROR_KEYS = [
   "generic",
@@ -53,7 +54,6 @@ function isErrorKey(value: string): value is ErrorKey {
 }
 
 interface SessionActionsProps {
-  orgSlug: string
   bookingId: string
   startsAt: string
   endsAt: string
@@ -64,7 +64,6 @@ interface SessionActionsProps {
 }
 
 export function SessionActions({
-  orgSlug,
   bookingId,
   startsAt,
   endsAt,
@@ -125,7 +124,7 @@ export function SessionActions({
 
   /** Fresh quote from the API; undefined when it could not be loaded. */
   async function refreshQuote(): Promise<CancellationQuote | null | undefined> {
-    const result = await getCancellationQuoteAction(orgSlug, bookingId)
+    const result = await getCancellationQuoteAction(bookingId)
     if (!result.ok) {
       toast.error(errorMessage(result.error))
       return undefined
@@ -178,7 +177,7 @@ export function SessionActions({
         toast.info(t("refundChanged"))
         return
       }
-      const result = await cancelBookingAction(orgSlug, bookingId)
+      const result = await cancelBookingAction(bookingId)
       if (!result.ok) {
         toast.error(errorMessage(result.error))
         return
@@ -195,7 +194,7 @@ export function SessionActions({
           : t("cancelled")
       )
       setCancelOpen(false)
-      router.push(`/${orgSlug}/sessions`)
+      router.push(`${SPACE_BASE}/sessions`)
       router.refresh()
     } finally {
       setPending(false)
@@ -210,7 +209,7 @@ export function SessionActions({
       const nextEnd = new Date(
         new Date(nextStart).getTime() + duration
       ).toISOString()
-      const result = await rescheduleBookingAction(orgSlug, bookingId, {
+      const result = await rescheduleBookingAction(bookingId, {
         startsAt: nextStart,
         endsAt: nextEnd,
       })

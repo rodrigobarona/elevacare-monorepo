@@ -1,6 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { getSessionCookie } from "better-auth/cookies"
 import { resolveGatewayUrl } from "@eleva/config/env"
+import {
+  LAST_ACTIVE_ORG_COOKIE,
+  lastActiveWorkspaceFromPath,
+} from "@eleva/config/routing"
 import { matchesPath, type ProxyHandler } from "@eleva/observability/proxy"
 import {
   persistLocaleCookie,
@@ -79,6 +83,25 @@ function buildGatewayRedirect(req: NextRequest, baseUrl: string): NextResponse {
   return NextResponse.redirect(`${baseUrl}${LOGIN_PATH}?returnTo=${returnTo}`)
 }
 
+/**
+ * Remember the workspace a signed-in person is in (`space` or an expert
+ * slug) so `/dashboard` and sign-in bring them back to it.
+ */
+export function trackLastActiveWorkspace(
+  req: NextRequest,
+  response: NextResponse
+): void {
+  const workspace = lastActiveWorkspaceFromPath(req.nextUrl.pathname)
+  if (!workspace) return
+  if (req.cookies.get(LAST_ACTIVE_ORG_COOKIE)?.value === workspace) return
+  response.cookies.set(LAST_ACTIVE_ORG_COOKIE, workspace, {
+    path: "/",
+    maxAge: 31536000,
+    sameSite: "lax",
+    httpOnly: true,
+  })
+}
+
 export function createAuthProxy(options: AuthProxyOptions = {}): ProxyHandler {
   const unauthenticatedPaths =
     options.unauthenticatedPaths ?? DEFAULT_UNAUTHENTICATED_PATHS
@@ -116,8 +139,9 @@ export function createAuthProxy(options: AuthProxyOptions = {}): ProxyHandler {
 
     if (sessionState === "ambiguous") applyExpiredSessionCookies(response)
 
-    if (signedIn && onAuthenticated) {
-      onAuthenticated(req, response)
+    if (signedIn) {
+      trackLastActiveWorkspace(req, response)
+      onAuthenticated?.(req, response)
     }
 
     return response

@@ -2,17 +2,18 @@ import { notFound } from "next/navigation"
 import { getFormatter, getTranslations } from "next-intl/server"
 import { LinkButton } from "@eleva/ui/components/button"
 import { PageHeader } from "@eleva/ui/components/page-header"
-import { getAuthedApiClient, requireMemberOrg } from "@/lib/member-api"
+import { getAuthedApiClient, requireMemberSpace } from "@/lib/member-api"
+import { SPACE_BASE } from "@eleva/config/routing"
 
 export const dynamic = "force-dynamic"
 
 export default async function ReportDetailPage({
   params,
 }: {
-  params: Promise<{ orgSlug: string; reportId: string }>
+  params: Promise<{ reportId: string }>
 }) {
-  const { orgSlug, reportId } = await params
-  await requireMemberOrg(orgSlug)
+  const { reportId } = await params
+  await requireMemberSpace()
   const [t, format, api] = await Promise.all([
     getTranslations("reports"),
     getFormatter(),
@@ -50,7 +51,7 @@ export default async function ReportDetailPage({
           </p>
         ) : null}
       </article>
-      <LinkButton variant="outline" href={`/${orgSlug}/reports`}>
+      <LinkButton variant="outline" href={`${SPACE_BASE}/reports`}>
         {t("back")}
       </LinkButton>
     </div>
