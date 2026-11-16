@@ -169,6 +169,29 @@ test.describe("onboarding with an existing Space", () => {
     "auth e2e must not run against non-loopback hosts"
   )
 
+  // The confirmation link signs a person in (`autoSignInAfterVerification`)
+  // and lands on /verify-email: a signed-in visit goes on to the Space.
+  test("verify-email sends a signed-in person to their Space", async ({
+    page,
+  }) => {
+    const email = uniqueEmail("verified-landing")
+    const signup = await page.request.post(`${apiUrl}/auth/sign-up/email`, {
+      headers: { Origin: ACCOUNT_ORIGIN, "Content-Type": "application/json" },
+      data: { name: "Verified Landing", email, password: E2E_PASSWORD },
+    })
+    expect(signup.status()).toBe(200)
+    await verifyEmail(page.request, email)
+    const signIn = await page.request.post(`${apiUrl}/auth/sign-in/email`, {
+      headers: { Origin: ACCOUNT_ORIGIN, "Content-Type": "application/json" },
+      data: { email, password: E2E_PASSWORD },
+    })
+    expect(signIn.status()).toBe(200)
+
+    await page.goto(`${accountUrl}/verify-email`)
+    await expect(page).toHaveURL(/\/space(\/|$|\?)/, { timeout: 30_000 })
+    await expect(page.getByTestId("verify-email")).toHaveCount(0)
+  })
+
   // Regression: /onboarding wrote the last-org cookie while rendering, which
   // Next.js forbids, so anyone who already had a membership (an invited
   // member, or someone opening /onboarding again) got the error page.
