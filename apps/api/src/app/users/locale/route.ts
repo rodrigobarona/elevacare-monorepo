@@ -36,7 +36,8 @@ export async function PUT(request: Request) {
 
   const rateLimited = await applyRateLimit(
     rateLimitKey(request, session.user.id),
-    RATE_LIMITS.authenticated
+    RATE_LIMITS.authenticated,
+    headers
   )
   if (rateLimited) return rateLimited
 

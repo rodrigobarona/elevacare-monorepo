@@ -96,7 +96,8 @@ async function sendPaymentKind(
   if (!booking || booking.orgId !== event.orgId) {
     throw new Error("send-notification: booking not found for event org")
   }
-  const locale = toEmailLocale(booking.bookedLocale)
+  // The member's saved language, else the one they booked in.
+  const locale = toEmailLocale(booking.memberLocale ?? booking.bookedLocale)
   const amountFormatted = formatAmount(
     parsed.data.amountCents,
     parsed.data.currency,
@@ -212,6 +213,8 @@ type PaymentBooking = {
   bookedLocale: string | null
   memberUserId: string | null
   memberName: string | null
+  /** `user.locale`: set only when the member picked a language. */
+  memberLocale?: string | null
   guestEmail: string | null
   guestName: string | null
 }
@@ -241,15 +244,17 @@ async function loadPaymentBooking(
       .limit(1)
     if (!row) return null
     let memberName: string | null = null
+    let memberLocale: string | null = null
     if (row.memberUserId) {
       const [member] = await tx
-        .select({ name: auth.user.name })
+        .select({ name: auth.user.name, locale: auth.user.locale })
         .from(auth.user)
         .where(eq(auth.user.id, row.memberUserId))
         .limit(1)
       memberName = member?.name ?? null
+      memberLocale = member?.locale ?? null
     }
-    return { ...row, memberName }
+    return { ...row, memberName, memberLocale }
   })
 }
 
