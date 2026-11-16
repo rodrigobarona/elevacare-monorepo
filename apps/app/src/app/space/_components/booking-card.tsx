@@ -25,12 +25,12 @@ import {
 import { DateTile } from "@eleva/ui/components/date-tile"
 import { bookingDateParts } from "@eleva/ui/lib/booking/date-parts"
 import { StatusPill } from "./booking-visuals"
+import { SPACE_BASE } from "@eleva/config/routing"
 
 type MemberBooking = ListMeBookingsResponse["bookings"][number]
 
 interface BookingCardProps {
   booking: MemberBooking
-  orgSlug: string
   memberName: string
   memberEmail: string
   /** Upcoming sessions show Join and Add to calendar; past ones show Book again. */
@@ -41,7 +41,6 @@ interface BookingCardProps {
 
 export function BookingCard({
   booking,
-  orgSlug,
   memberName,
   memberEmail,
   showJoin = true,
@@ -86,7 +85,7 @@ export function BookingCard({
     <>
       {showJoin && !awaiting ? (
         <JoinCta
-          href={`/${orgSlug}/sessions/${booking.id}/join`}
+          href={`${SPACE_BASE}/sessions/${booking.id}/join`}
           sessionMode={booking.sessionMode}
           status={booking.status}
           startsAt={booking.startsAt}
@@ -112,7 +111,7 @@ export function BookingCard({
       )}
       <LinkButton
         variant={featured ? "ghost" : "outline"}
-        href={`/${orgSlug}/sessions/${booking.id}`}
+        href={`${SPACE_BASE}/sessions/${booking.id}`}
         data-testid="member-booking-detail"
       >
         {t("detailTitle")}

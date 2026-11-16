@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server"
 import { redirectToGatewayLogin } from "@eleva/auth/guards"
 import { getUserOrganizations } from "@eleva/auth/server"
 import { resolveGatewayUrl } from "@eleva/config/env"
+import { spacePath } from "@eleva/config/routing"
 import {
   DownloadSimpleIcon,
   ShieldCheckIcon,
@@ -28,7 +29,7 @@ export default async function PrivacyPage() {
 
   const space = organizations.find((org) => org.orgType === "personal")
   const controlsUrl = space
-    ? `${resolveGatewayUrl()}/${space.orgSlug}/privacy`
+    ? `${resolveGatewayUrl()}${spacePath("privacy")}`
     : null
 
   return (

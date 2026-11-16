@@ -1,9 +1,4 @@
 import { NextResponse, type NextRequest } from "next/server"
-import { requestHasSessionCookie } from "@eleva/auth/credentials"
-import {
-  getOrgTypeBySlug,
-  orgSlugNeedingTypeLookup,
-} from "@eleva/auth/org-routing"
 import { resolveDispatch, type GatewayOrigins } from "@eleva/config/dispatch"
 import {
   defaultLocale,
@@ -16,7 +11,6 @@ import { rewriteParityPath } from "@eleva/config/public-site-parity"
 import { persistLocaleCookie } from "@eleva/observability/proxy-locale"
 import {
   buildAdminRedirect,
-  buildLoginRedirect,
   buildRewriteUrl,
   resolveOriginsFromEnv,
 } from "./gateway-dispatch"
@@ -131,38 +125,12 @@ export function createGatewayProxy(options: GatewayProxyOptions) {
       return NextResponse.redirect(destination, 301)
     }
 
-    const hasSession = requestHasSessionCookie(request.cookies)
-
-    let decision = resolveDispatch(pathname, hasSession, origins)
-
-    if (
-      hasSession &&
-      decision.kind === "rewrite" &&
-      decision.origin === origins.app
-    ) {
-      const slug = orgSlugNeedingTypeLookup(pathname)
-      if (slug) {
-        try {
-          const orgType = await getOrgTypeBySlug(slug)
-          const isBareSlug = pathname.split("/").filter(Boolean).length === 1
-          // Bare /:username is the public marketplace profile — guests and
-          // signed-in visitors, including Better Auth anonymous. Expert
-          // tools live under /expert/:slug (ADR-026), not here.
-          if (isBareSlug && (orgType === "expert" || orgType === null)) {
-            decision = { kind: "marketing" }
-          }
-        } catch (err) {
-          console.error("[gateway] org type lookup failed", { slug, err })
-        }
-      }
-    }
+    // Routing reads the address only (ADR-026): no session cookie check and
+    // no database lookup. `/:username` is always the public profile.
+    const decision = resolveDispatch(pathname, origins)
 
     if (decision.kind === "rewrite") {
       return rewriteToOrigin(request, decision.origin)
-    }
-
-    if (decision.kind === "unauth-slug") {
-      return buildLoginRedirect(request)
     }
 
     if (decision.kind === "admin-redirect") {

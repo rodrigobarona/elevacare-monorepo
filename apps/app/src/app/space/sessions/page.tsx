@@ -3,18 +3,13 @@ import { CalendarDotsIcon, ClockIcon } from "@eleva/icons"
 import { EmptyState } from "@eleva/ui/components/empty-state"
 import { PageHeader, Section } from "@eleva/ui/components/page-header"
 import { marketplaceExpertsUrl } from "@eleva/config/env"
-import { getAuthedApiClient, requireMemberOrg } from "@/lib/member-api"
+import { getAuthedApiClient, requireMemberSpace } from "@/lib/member-api"
 import { BookingCard, FindExpertButton } from "../_components/booking-card"
 
 export const dynamic = "force-dynamic"
 
-export default async function SessionsPage({
-  params,
-}: {
-  params: Promise<{ orgSlug: string }>
-}) {
-  const { orgSlug } = await params
-  const session = await requireMemberOrg(orgSlug)
+export default async function SessionsPage() {
+  const session = await requireMemberSpace()
   const [t, locale, api] = await Promise.all([
     getTranslations("sessions"),
     getLocale(),
@@ -43,7 +38,6 @@ export default async function SessionsPage({
               <BookingCard
                 key={booking.id}
                 booking={booking}
-                orgSlug={orgSlug}
                 memberName={memberName}
                 memberEmail={session.user.email}
               />
@@ -61,7 +55,6 @@ export default async function SessionsPage({
               <BookingCard
                 key={booking.id}
                 booking={booking}
-                orgSlug={orgSlug}
                 memberName={memberName}
                 memberEmail={session.user.email}
                 showJoin={false}

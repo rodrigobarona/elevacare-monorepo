@@ -3,7 +3,6 @@ import {
   ACCOUNT_STANDALONE_PATHS,
   APP_FIXED_SEGMENTS,
   APP_STANDALONE_PATHS,
-  MEMBER_ORG_SEGMENTS,
   WEB_MARKETING_PATHS,
   RESERVED_SLUGS,
   isOrgSlugShape,
@@ -33,7 +32,6 @@ export interface GatewayOrigins {
 export type Dispatch =
   | { kind: "marketing" }
   | { kind: "rewrite"; origin: string }
-  | { kind: "unauth-slug"; slug: string }
   | { kind: "admin-redirect" }
 
 const accountPrefixSegments = new Set<string>(ACCOUNT_FIXED_SEGMENTS)
@@ -41,42 +39,30 @@ const appPrefixSegments = new Set<string>(APP_FIXED_SEGMENTS)
 const accountStandalone = new Set<string>(ACCOUNT_STANDALONE_PATHS)
 const appStandalone = new Set<string>(APP_STANDALONE_PATHS)
 const marketingPaths = new Set<string>(WEB_MARKETING_PATHS)
-const memberOrgSegments = new Set<string>(MEMBER_ORG_SEGMENTS)
 const localeSet = new Set<string>(locales)
 
 /**
- * Decide how to dispatch a request based on its pathname and session
- * state.
+ * Decide how to dispatch a request from its pathname alone.
  *
  * Routing priority:
  *  1. Locale-prefixed (/pt, /es, /en) -> marketing
  *  2. Marketing first-segments (/about, /pricing, ...) -> marketing
  *  3. Docs (/docs/*) -> docs zone
  *  4. Platform admin (/admin/*) -> admin subdomain redirect
- *  4b. Workspace namespaces (ADR-026): /expert/* -> expert zone
- *  5. Fixed account segments (/onboarding, /account/*) -> account zone
- *  6. Account standalone (/dashboard, /login, /callback, /logout,
+ *  5. Workspace namespaces (ADR-026): /expert/* -> expert zone;
+ *     /space/* (the person's own Space) and /join/* -> member app
+ *  6. Fixed account segments (/onboarding, /account/*) -> account zone
+ *  7. Account standalone (/dashboard, /login, /callback, /logout,
  *     /signup, /verify-email, /reset-password, /two-factor,
- *     /accept-invitation) at depth 1
- *     -> account zone
- *  7. App standalone at depth 1 -> app zone
- *  8. Org-scoped second segment (/:slug/admin|academy|settings|privacy|
- *     sessions|payments|notifications|reports) -> respective satellite /
- *     member app (clinic managers → /admin; member Space chrome → app)
- *  9. Public marketplace (Phase 04):
- *       /:username            without session -> marketing (public profile)
- *       /:username/:eventSlug                 -> marketing (booking funnel)
- *       Signed-in bare /:username for expert orgs is forced back to
- *       marketing in the gateway proxy (public profile; dashboards use
- *       /expert/:slug).
- * 10. Deeper /:slug with valid shape:
- *       hasSession -> app zone (member app handles org check)
- *       !hasSession -> unauth-slug (caller redirects to /login)
- * 11. Anything else -> marketing
+ *     /accept-invitation) at depth 1 -> account zone
+ *  8. Org-scoped second segment (/:slug/admin, /:slug/academy) -> team /
+ *     academy zones (until they move to /team and /academy)
+ *  9. Everything else, signed in or not, -> marketing: /:username is the
+ *     public profile and /:username/:service the booking funnel. Routing
+ *     never depends on the session or a database lookup.
  */
 export function resolveDispatch(
   pathname: string,
-  hasSession: boolean,
   origins: GatewayOrigins
 ): Dispatch {
   const segments = pathname.split("/").filter(Boolean)
@@ -119,20 +105,6 @@ export function resolveDispatch(
     return { kind: "rewrite", origin: origins.team }
   if (isSlug && second === "academy")
     return { kind: "rewrite", origin: origins.academy }
-  if (isSlug && memberOrgSegments.has(second))
-    return { kind: "rewrite", origin: origins.app }
-
-  if (isSlug) {
-    // Public profile and booking funnel stay on web. Authenticated bare
-    // /:slug still goes to the member/expert app (org home / last-org hop).
-    if (depth === 2 || (depth === 1 && !hasSession)) {
-      return { kind: "marketing" }
-    }
-    if (hasSession) {
-      return { kind: "rewrite", origin: origins.app }
-    }
-    return { kind: "unauth-slug", slug: first }
-  }
 
   return { kind: "marketing" }
 }

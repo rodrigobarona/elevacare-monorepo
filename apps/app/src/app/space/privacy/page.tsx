@@ -5,22 +5,17 @@ import {
 } from "@eleva/compliance"
 import { isLocale } from "@eleva/config/i18n"
 import { PageHeader } from "@eleva/ui/components/page-header"
-import { getAuthedApiClient, requireMemberOrg } from "@/lib/member-api"
+import { getAuthedApiClient, requireMemberSpace } from "@/lib/member-api"
 import { PrivacyPanel } from "../_components/privacy-panel"
 
 export const dynamic = "force-dynamic"
 
-export default async function PrivacyPage({
-  params,
-}: {
-  params: Promise<{ orgSlug: string }>
-}) {
-  const { orgSlug } = await params
+export default async function PrivacyPage() {
   const locale = await getLocale()
   const aiProcessingNoticeHref = isLocale(locale)
     ? AI_PROCESSING_CONSENT_DOCUMENT.urls[locale]
     : AI_PROCESSING_CONSENT_DOCUMENT.urls.en
-  const session = await requireMemberOrg(orgSlug)
+  const session = await requireMemberSpace()
   const apiPromise = getAuthedApiClient()
   const consentsPromise = apiPromise.then((api) => api.me.listConsents())
   const recordAccessPromise = apiPromise.then((api) =>
@@ -38,7 +33,6 @@ export default async function PrivacyPage({
     <div className="space-y-8">
       <PageHeader title={t("title")} description={t("subtitle")} />
       <PrivacyPanel
-        orgSlug={orgSlug}
         consents={consents}
         scheduledFor={pendingDeletion?.scheduledFor.toISOString() ?? null}
         aiProcessingNoticeHref={aiProcessingNoticeHref}

@@ -4,6 +4,7 @@ import {
   resolveTeamAdminBase,
 } from "@eleva/auth/org-routing"
 import { resolveGatewayUrl } from "@eleva/config/env"
+import { SPACE_BASE } from "@eleva/config/routing"
 
 export interface ProductHomeSession {
   orgSlug?: string | null
@@ -40,6 +41,6 @@ export function resolveProductHomeUrl(session: ProductHomeSession): string {
       return resolveAdminUrl()
     case "member":
     default:
-      return `${GATEWAY_URL}/${slug}`
+      return `${GATEWAY_URL}${SPACE_BASE}`
   }
 }

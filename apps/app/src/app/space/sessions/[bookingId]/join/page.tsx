@@ -6,19 +6,20 @@ import { findMemberBooking } from "@/lib/find-member-booking"
 import {
   getApiBaseUrl,
   getAuthedApiClient,
-  requireMemberOrg,
+  requireMemberSpace,
 } from "@/lib/member-api"
 import { JoinClient } from "./join-client"
+import { SPACE_BASE } from "@eleva/config/routing"
 
 export const dynamic = "force-dynamic"
 
 export default async function MemberJoinPage({
   params,
 }: {
-  params: Promise<{ orgSlug: string; bookingId: string }>
+  params: Promise<{ bookingId: string }>
 }) {
-  const { orgSlug, bookingId } = await params
-  await requireMemberOrg(orgSlug)
+  const { bookingId } = await params
+  await requireMemberSpace()
   const [t, api] = await Promise.all([
     getTranslations("sessions"),
     getAuthedApiClient(),
@@ -26,7 +27,7 @@ export default async function MemberJoinPage({
   const booking = await findMemberBooking(api, bookingId)
   if (!booking) notFound()
 
-  const backHref = `/${orgSlug}/sessions/${bookingId}`
+  const backHref = `${SPACE_BASE}/sessions/${bookingId}`
   const apiBaseUrl = getApiBaseUrl()
 
   if (booking.sessionMode !== "online") {

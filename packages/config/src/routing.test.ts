@@ -6,6 +6,8 @@ import {
   RESERVED_SLUGS,
   WORKSPACE_NAMESPACES,
   expertWorkspaceBase,
+  lastActiveWorkspaceFromPath,
+  spacePath,
 } from "./routing"
 
 describe("isOrgSlugShape", () => {
@@ -61,6 +63,24 @@ describe("workspace namespaces (ADR-026)", () => {
       expect(RESERVED_SLUGS.has(ns), ns).toBe(true)
       expect(RESERVED_USERNAMES.has(ns), ns).toBe(true)
     }
+  })
+
+  it("builds the person's Space under /space with no slug", () => {
+    expect(spacePath()).toBe("/space")
+    expect(spacePath("sessions")).toBe("/space/sessions")
+    expect(spacePath("/reports/r1")).toBe("/space/reports/r1")
+  })
+
+  it("remembers the Space or an expert slug as the last workspace", () => {
+    expect(lastActiveWorkspaceFromPath("/space")).toBe("space")
+    expect(lastActiveWorkspaceFromPath("/space/sessions/b1")).toBe("space")
+    expect(lastActiveWorkspaceFromPath("/expert/patimota/calendar")).toBe(
+      "patimota"
+    )
+    expect(lastActiveWorkspaceFromPath("/expert")).toBeNull()
+    expect(lastActiveWorkspaceFromPath("/expert/settings")).toBeNull()
+    expect(lastActiveWorkspaceFromPath("/join/b1")).toBeNull()
+    expect(lastActiveWorkspaceFromPath("/patimota")).toBeNull()
   })
 
   it("builds expert tools under /expert/{slug}", () => {

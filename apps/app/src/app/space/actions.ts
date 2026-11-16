@@ -16,6 +16,7 @@ import {
 import { requireSession } from "@eleva/auth/server"
 import { mintUploadToken } from "@eleva/auth/upload-token"
 import { isAvatarUrl } from "@eleva/config/avatar-upload"
+import { spacePath } from "@eleva/config/routing"
 import { deletePublicObject } from "@eleva/storage"
 import {
   cookieName,
@@ -23,13 +24,12 @@ import {
   isLocale,
   type Locale,
 } from "@eleva/config/i18n"
-import { getAuthedApiClient, requireMemberOrg } from "@/lib/member-api"
+import { getAuthedApiClient, requireMemberSpace } from "@/lib/member-api"
 
 export type ActionResult<T = void> = T extends void
   ? { ok: true } | { ok: false; error: string }
   : ({ ok: true } & T) | { ok: false; error: string }
 
-const OrgSlugSchema = z.string().min(1).max(80)
 const UuidSchema = z.string().uuid()
 
 function extraCode(err: ApiClientError): string | undefined {
@@ -64,12 +64,12 @@ function mapGenericError(err: unknown): string {
   return "generic"
 }
 
-function revalidateMember(orgSlug: string) {
-  revalidatePath(`/${orgSlug}`)
-  revalidatePath(`/${orgSlug}/sessions`)
-  revalidatePath(`/${orgSlug}/payments`)
-  revalidatePath(`/${orgSlug}/settings`)
-  revalidatePath(`/${orgSlug}/privacy`)
+function revalidateMember() {
+  revalidatePath(spacePath())
+  revalidatePath(spacePath("sessions"))
+  revalidatePath(spacePath("payments"))
+  revalidatePath(spacePath("settings"))
+  revalidatePath(spacePath("privacy"))
 }
 
 async function discardOrphanPublicAvatar(url: string): Promise<void> {
@@ -82,17 +82,15 @@ async function discardOrphanPublicAvatar(url: string): Promise<void> {
 }
 
 export async function updateProfileAction(
-  orgSlug: string,
   input: unknown
 ): Promise<ActionResult> {
-  const slug = OrgSlugSchema.safeParse(orgSlug)
   const body = PatchMeRequestSchema.safeParse(input)
-  if (!slug.success || !body.success) return { ok: false, error: "validation" }
+  if (!body.success) return { ok: false, error: "validation" }
   try {
-    await requireMemberOrg(slug.data)
+    await requireMemberSpace()
     const api = await getAuthedApiClient()
     await api.me.patch(body.data)
-    revalidateMember(slug.data)
+    revalidateMember()
     return { ok: true }
   } catch (err) {
     console.error("updateProfileAction failed", err)
@@ -101,16 +99,14 @@ export async function updateProfileAction(
 }
 
 export async function updateLanguageAction(
-  orgSlug: string,
   localeRaw: unknown
 ): Promise<ActionResult> {
-  const slug = OrgSlugSchema.safeParse(orgSlug)
-  if (!slug.success || typeof localeRaw !== "string" || !isLocale(localeRaw)) {
+  if (typeof localeRaw !== "string" || !isLocale(localeRaw)) {
     return { ok: false, error: "validation" }
   }
   const locale: Locale = localeRaw
   try {
-    await requireMemberOrg(slug.data)
+    await requireMemberSpace()
     const api = await getAuthedApiClient()
     await api.me.patch({ locale })
     const [jar, hdrs] = await Promise.all([cookies(), headers()])
@@ -121,7 +117,7 @@ export async function updateLanguageAction(
       getLocaleCookieOptions(host, { httpOnly: false })
     )
     revalidatePath("/", "layout")
-    revalidateMember(slug.data)
+    revalidateMember()
     return { ok: true }
   } catch (err) {
     console.error("updateLanguageAction failed", err)
@@ -130,17 +126,15 @@ export async function updateLanguageAction(
 }
 
 export async function updateNotificationPreferencesAction(
-  orgSlug: string,
   input: unknown
 ): Promise<ActionResult> {
-  const slug = OrgSlugSchema.safeParse(orgSlug)
   const body = PutNotificationPreferencesRequestSchema.safeParse(input)
-  if (!slug.success || !body.success) return { ok: false, error: "validation" }
+  if (!body.success) return { ok: false, error: "validation" }
   try {
-    await requireMemberOrg(slug.data)
+    await requireMemberSpace()
     const api = await getAuthedApiClient()
     await api.me.putNotificationPreferences(body.data)
-    revalidateMember(slug.data)
+    revalidateMember()
     return { ok: true }
   } catch (err) {
     console.error("updateNotificationPreferencesAction failed", err)
@@ -149,17 +143,15 @@ export async function updateNotificationPreferencesAction(
 }
 
 export async function updateRecordAccessOptoutAction(
-  orgSlug: string,
   input: unknown
 ): Promise<ActionResult> {
-  const slug = OrgSlugSchema.safeParse(orgSlug)
   const body = PutMeRecordAccessOptoutRequestSchema.safeParse(input)
-  if (!slug.success || !body.success) return { ok: false, error: "validation" }
+  if (!body.success) return { ok: false, error: "validation" }
   try {
-    await requireMemberOrg(slug.data)
+    await requireMemberSpace()
     const api = await getAuthedApiClient()
     await api.me.putRecordAccessOptout(body.data)
-    revalidateMember(slug.data)
+    revalidateMember()
     return { ok: true }
   } catch (err) {
     console.error("updateRecordAccessOptoutAction failed", err)
@@ -168,17 +160,15 @@ export async function updateRecordAccessOptoutAction(
 }
 
 export async function updateConsentAction(
-  orgSlug: string,
   input: unknown
 ): Promise<ActionResult> {
-  const slug = OrgSlugSchema.safeParse(orgSlug)
   const body = PutMeConsentRequestSchema.safeParse(input)
-  if (!slug.success || !body.success) return { ok: false, error: "validation" }
+  if (!body.success) return { ok: false, error: "validation" }
   try {
-    await requireMemberOrg(slug.data)
+    await requireMemberSpace()
     const api = await getAuthedApiClient()
     await api.me.putConsent(body.data)
-    revalidateMember(slug.data)
+    revalidateMember()
     return { ok: true }
   } catch (err) {
     console.error("updateConsentAction failed", err)
@@ -187,14 +177,12 @@ export async function updateConsentAction(
 }
 
 export async function getCancellationQuoteAction(
-  orgSlug: string,
   bookingId: string
 ): Promise<ActionResult<{ quote: CancellationQuote | null }>> {
-  const slug = OrgSlugSchema.safeParse(orgSlug)
   const id = UuidSchema.safeParse(bookingId)
-  if (!slug.success || !id.success) return { ok: false, error: "validation" }
+  if (!id.success) return { ok: false, error: "validation" }
   try {
-    await requireMemberOrg(slug.data)
+    await requireMemberSpace()
     const api = await getAuthedApiClient()
     const quote = await api.me.cancellationQuote(id.data)
     return { ok: true, quote }
@@ -208,17 +196,15 @@ export async function getCancellationQuoteAction(
 }
 
 export async function cancelBookingAction(
-  orgSlug: string,
   bookingId: string
 ): Promise<ActionResult<{ refund: CancellationQuote }>> {
-  const slug = OrgSlugSchema.safeParse(orgSlug)
   const id = UuidSchema.safeParse(bookingId)
-  if (!slug.success || !id.success) return { ok: false, error: "validation" }
+  if (!id.success) return { ok: false, error: "validation" }
   try {
-    await requireMemberOrg(slug.data)
+    await requireMemberSpace()
     const api = await getAuthedApiClient()
     const { refund } = await api.me.cancelBooking(id.data)
-    revalidateMember(slug.data)
+    revalidateMember()
     return { ok: true, refund }
   } catch (err) {
     console.error("cancelBookingAction failed", err)
@@ -227,21 +213,19 @@ export async function cancelBookingAction(
 }
 
 export async function rescheduleBookingAction(
-  orgSlug: string,
   bookingId: string,
   input: unknown
 ): Promise<ActionResult> {
-  const slug = OrgSlugSchema.safeParse(orgSlug)
   const id = UuidSchema.safeParse(bookingId)
   const body = RescheduleMeBookingRequestSchema.safeParse(input)
-  if (!slug.success || !id.success || !body.success) {
+  if (!id.success || !body.success) {
     return { ok: false, error: "validation" }
   }
   try {
-    await requireMemberOrg(slug.data)
+    await requireMemberSpace()
     const api = await getAuthedApiClient()
     await api.me.rescheduleBooking(id.data, body.data)
-    revalidateMember(slug.data)
+    revalidateMember()
     return { ok: true }
   } catch (err) {
     console.error("rescheduleBookingAction failed", err)
@@ -315,21 +299,13 @@ export async function getAvatarUploadToken(): Promise<string> {
   return mintUploadToken(session.user.id)
 }
 
-export async function updateAvatarAction(
-  orgSlug: string,
-  url: string
-): Promise<ActionResult> {
-  const slug = OrgSlugSchema.safeParse(orgSlug)
+export async function updateAvatarAction(url: string): Promise<ActionResult> {
   const body = UpdateAvatarRequestSchema.safeParse({ url })
   if (!body.success) return { ok: false, error: "validation" }
-  if (!slug.success) {
-    await discardOrphanPublicAvatar(body.data.url)
-    return { ok: false, error: "validation" }
-  }
   try {
     const api = await getAuthedApiClient()
     await api.users.avatar.update(body.data)
-    revalidateMember(slug.data)
+    revalidateMember()
     return { ok: true }
   } catch (err) {
     await discardOrphanPublicAvatar(body.data.url)
@@ -338,15 +314,11 @@ export async function updateAvatarAction(
   }
 }
 
-export async function removeAvatarAction(
-  orgSlug: string
-): Promise<ActionResult> {
-  const slug = OrgSlugSchema.safeParse(orgSlug)
-  if (!slug.success) return { ok: false, error: "validation" }
+export async function removeAvatarAction(): Promise<ActionResult> {
   try {
     const api = await getAuthedApiClient()
     await api.users.avatar.remove()
-    revalidateMember(slug.data)
+    revalidateMember()
     return { ok: true }
   } catch (err) {
     console.error("removeAvatarAction failed", err)

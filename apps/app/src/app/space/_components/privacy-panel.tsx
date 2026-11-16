@@ -60,7 +60,6 @@ function isDsarStatus(value: string): value is DsarStatus {
 }
 
 interface PrivacyPanelProps {
-  orgSlug: string
   consents: MemberConsent[]
   scheduledFor: string | null
   aiProcessingNoticeHref: string
@@ -68,7 +67,6 @@ interface PrivacyPanelProps {
 }
 
 export function PrivacyPanel({
-  orgSlug,
   consents,
   scheduledFor: initialScheduledFor,
   aiProcessingNoticeHref,
@@ -125,7 +123,7 @@ export function PrivacyPanel({
   async function handleConsent(kind: ConsentKind, granted: boolean) {
     setConsentPending(kind)
     try {
-      const result = await updateConsentAction(orgSlug, { kind, granted })
+      const result = await updateConsentAction({ kind, granted })
       if (!result.ok) {
         toast.error(
           result.error === "healthData"
@@ -205,7 +203,7 @@ export function PrivacyPanel({
   async function handleRecordAccessOptout(orgId: string, optedOut: boolean) {
     setRecordAccessPending(orgId)
     try {
-      const result = await updateRecordAccessOptoutAction(orgSlug, {
+      const result = await updateRecordAccessOptoutAction({
         orgId,
         optedOut,
       })

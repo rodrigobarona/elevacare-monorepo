@@ -185,7 +185,7 @@ test.describe("onboarding with an existing Space", () => {
     // Sign-up already made her Space, so onboarding forwards to it.
     const response = await page.goto(`${accountUrl}/onboarding`)
     expect(response?.status()).toBeLessThan(500)
-    await expect(page).toHaveURL(/\/space-[a-z0-9]+/, { timeout: 30_000 })
+    await expect(page).toHaveURL(/\/space(\/|$|\?)/, { timeout: 30_000 })
     await expect(page.getByText(/having trouble/i)).toHaveCount(0)
 
     // The continue step only remembers a value shaped like an org slug.

@@ -1,7 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { LOGIN_PATH } from "@eleva/auth"
 import { applyExpiredSessionCookies } from "@eleva/auth/proxy"
-import { getAuthUser, getSession, getSessionForOrg } from "@eleva/auth/server"
+import {
+  getAuthUser,
+  getSession,
+  getSessionForOrg,
+  getSpaceSession,
+} from "@eleva/auth/server"
 import { sanitizeReturnTo } from "@eleva/auth/return-to"
 import { resolveGatewayUrl } from "@eleva/config/env"
 import { resolveProductHomeUrl } from "@eleva/dashboard/resolve-product-home-url"
@@ -38,9 +43,14 @@ export async function GET(request: NextRequest) {
   // The last-org cookie is per browser, not per account: after someone else
   // signs in on the same browser it can name an org they are not in. Fall
   // back to their own session instead of treating them as signed out.
+  // `space` means the person's own Space (ADR-026), which has no slug in
+  // its address.
   const session =
-    (preferredSlug ? await getSessionForOrg(preferredSlug) : null) ??
-    (await getSession())
+    (lastSlug === "space"
+      ? await getSpaceSession()
+      : preferredSlug
+        ? await getSessionForOrg(preferredSlug)
+        : null) ?? (await getSession())
 
   if (!session) {
     // Signed in but no Space or membership yet: onboarding sets one up.
@@ -75,8 +85,9 @@ export async function GET(request: NextRequest) {
     : new URL(`${home.pathname}${home.search}`, gateway)
 
   const response = NextResponse.redirect(destination)
-  if (lastSlug !== slug) {
-    response.cookies.set(LAST_ACTIVE_ORG_COOKIE, slug, {
+  const remembered = session.productLabel === "member" ? "space" : slug
+  if (lastSlug !== remembered) {
+    response.cookies.set(LAST_ACTIVE_ORG_COOKIE, remembered, {
       path: "/",
       maxAge: 31536000,
       sameSite: "lax",

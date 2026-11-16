@@ -1,8 +1,10 @@
+import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { resolveGatewayUrl } from "@eleva/config/env"
 import { sanitizeReturnTo } from "./return-to"
 import { getSession, getSessionForOrg } from "./server"
 import type { ElevaSession } from "./types"
+import { ELEVA_PATHNAME_HEADER } from "./workspace-slug"
 
 export const LOGIN_PATH = "/login" as const
 
@@ -35,12 +37,16 @@ export async function guardSession(): Promise<ElevaSession> {
 /**
  * Org-scoped variant of `guardSession`. Resolves the session using the
  * org slug from URL params so multi-org users land in the correct org
- * context. Redirects to the login page when unauthenticated.
+ * context. Redirects to the login page when unauthenticated, then back to
+ * the page they asked for (`/{slug}` alone would be a public profile).
  */
 export async function guardSessionForOrg(
   orgSlug: string
 ): Promise<ElevaSession> {
   const session = await getSessionForOrg(orgSlug)
-  if (!session) redirectToGatewayLogin(`/${orgSlug}`)
+  if (!session) {
+    const pathname = (await headers()).get(ELEVA_PATHNAME_HEADER)
+    redirectToGatewayLogin(pathname ?? "/dashboard")
+  }
   return session
 }

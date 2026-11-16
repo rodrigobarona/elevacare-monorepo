@@ -114,7 +114,7 @@ test.describe("AUD-027 — member reads a published report", () => {
       const published = await memberReports(request, memberCookie)
       expect(published.find((r) => r.id === recordId)?.body).toBe(body)
 
-      const spaceSlug = await memberSpaceSlug(booking.bookingId)
+      await memberSpaceSlug(booking.bookingId)
       await context.addCookies(
         memberCookie.split("; ").map((pair) => {
           const index = pair.indexOf("=")
@@ -125,7 +125,7 @@ test.describe("AUD-027 — member reads a published report", () => {
           }
         })
       )
-      await page.goto(`${appUrl}/${spaceSlug}/reports`)
+      await page.goto(`${appUrl}/space/reports`)
       const row = page.getByTestId("member-report-row")
       await expect(row).toHaveCount(1, { timeout: 30_000 })
       await row.click()
@@ -142,7 +142,7 @@ test.describe("AUD-027 — member reads a published report", () => {
         (await memberReports(request, memberCookie)).map((r) => r.id)
       ).not.toContain(recordId)
       // Streamed render: notFound() after the shell keeps HTTP 200.
-      await page.goto(`${appUrl}/${spaceSlug}/reports/${recordId}`)
+      await page.goto(`${appUrl}/space/reports/${recordId}`)
       await expect(page.getByText(/not found|404/i).first()).toBeVisible({
         timeout: 30_000,
       })

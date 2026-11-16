@@ -32,6 +32,33 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-16: The member Space lives at /space, with no name in the link (ADR-026 slice 2) (active)
+
+- Change: the member hub moved from `/space-{12 hex}` to `/space`
+  (`/space/sessions`, `/space/reports/{id}`, …). Each person has one Space,
+  found from the session; the personal org slug stays in the database as an
+  internal id. No production data was edited (founder chose the code path
+  over renaming the pilot member's slug).
+- Gateway routing reads the address only: `/space` and `/join` go to the
+  member app, `/expert/*` to the expert app, everything else at the root is
+  public. The per-request org-type database lookup is gone.
+- The last active workspace (`eleva-last-org`) is written by every zone's
+  auth proxy (`space` or the expert slug); `/dashboard` checks it against the
+  person's memberships and falls back to their own session.
+- Dashboard logos and "Back" now always go to the workspace home, never to
+  `/{slug}` (the public profile).
+- Proof: unit suites; local check with the demo member — `/space` and its
+  five pages 200, gateway `/space/sessions` → member app, old
+  `/space-3d4f155f88c8` → 404, `/dashboard` → `/space` from either cookie,
+  and a settings Server Action saved and persisted under `/space/settings`.
+  The full `e2e/member.spec.ts` sign-up journey did not finish locally: a cold
+  account dev server reloads `/signup` in a loop on an existing
+  `packages/observability` Edge instrumentation warning, not on this change.
+- Not yet: `/team/{slug}`, `/academy/{slug}`, noindex headers, stored CRM
+  inbox links, the one-practice guard, expert settings and closure.
+- Owner: engineering
+- Status: `active`
+
 ### 2026-11-16: Every workspace lives under a fixed namespace (ADR-026) (active)
 
 - Decision ([ADR-026](./adrs/ADR-026-namespaced-workspace-urls.md)): public

@@ -55,9 +55,9 @@ export async function buildDashboardConfig(
   const organizations =
     enableOrgSwitcher && session.orgSlug != null ? workspaces : []
 
-  const homeUrl =
-    configOverrides.homeUrl ??
-    (!enableOrgSwitcher ? resolveProductHomeUrl(session) : undefined)
+  // Each workspace's own home (ADR-026: /space, /expert/{slug}, …). Never
+  // `/{slug}`: that is the public profile.
+  const homeUrl = configOverrides.homeUrl ?? resolveProductHomeUrl(session)
 
   return {
     navGroups,
@@ -71,7 +71,7 @@ export async function buildDashboardConfig(
     organizations,
     accountMenu: accountMenuFor(workspaces, { accountHref }),
     apiBaseUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002",
-    ...(homeUrl ? { homeUrl } : {}),
+    homeUrl,
     ...configOverrides,
   }
 }

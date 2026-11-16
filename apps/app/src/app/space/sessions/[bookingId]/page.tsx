@@ -7,7 +7,7 @@ import { expertProfileUrl } from "@eleva/config/env"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { LinkButton } from "@eleva/ui/components/button"
 import { findMemberBooking } from "@/lib/find-member-booking"
-import { getAuthedApiClient, requireMemberOrg } from "@/lib/member-api"
+import { getAuthedApiClient, requireMemberSpace } from "@/lib/member-api"
 import { eventTitle, formatMoney } from "@/lib/member-format"
 import {
   isAwaitingConfirmation,
@@ -22,6 +22,7 @@ import { bookingDateParts } from "@eleva/ui/lib/booking/date-parts"
 import { StatusPill } from "../../_components/booking-visuals"
 import { SessionActions } from "../../_components/session-actions"
 import { IcsDownloadButton } from "./ics-download-button"
+import { SPACE_BASE } from "@eleva/config/routing"
 
 export const dynamic = "force-dynamic"
 
@@ -58,10 +59,10 @@ function DetailRow({
 export default async function SessionDetailPage({
   params,
 }: {
-  params: Promise<{ orgSlug: string; bookingId: string }>
+  params: Promise<{ bookingId: string }>
 }) {
-  const { orgSlug, bookingId } = await params
-  const session = await requireMemberOrg(orgSlug)
+  const { bookingId } = await params
+  const session = await requireMemberSpace()
   const [t, locale, api] = await Promise.all([
     getTranslations("sessions"),
     getLocale(),
@@ -178,7 +179,7 @@ export default async function SessionDetailPage({
                 <LinkButton
                   variant="link"
                   size="sm"
-                  href={`/${orgSlug}/reports/${report.id}`}
+                  href={`${SPACE_BASE}/reports/${report.id}`}
                   className="h-auto p-0"
                 >
                   {t("viewReport")}
@@ -191,7 +192,7 @@ export default async function SessionDetailPage({
             <div className="flex flex-wrap gap-2">
               {awaiting || ended ? null : (
                 <JoinCta
-                  href={`/${orgSlug}/sessions/${bookingId}/join`}
+                  href={`${SPACE_BASE}/sessions/${bookingId}/join`}
                   sessionMode={booking.sessionMode}
                   status={booking.status}
                   startsAt={booking.startsAt}
@@ -254,7 +255,6 @@ export default async function SessionDetailPage({
             </h2>
             <p className="text-sm text-muted-foreground">{t("manageHint")}</p>
             <SessionActions
-              orgSlug={orgSlug}
               bookingId={booking.id}
               startsAt={booking.startsAt}
               endsAt={booking.endsAt}

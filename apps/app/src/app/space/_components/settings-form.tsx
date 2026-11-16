@@ -66,7 +66,6 @@ function listTimeZones(current: string | null): string[] {
 }
 
 interface SettingsFormProps {
-  orgSlug: string
   profile: MeProfile
   apiBaseUrl: string
   preferredLocale: Locale | null
@@ -74,7 +73,6 @@ interface SettingsFormProps {
 }
 
 export function SettingsForm({
-  orgSlug,
   profile,
   apiBaseUrl,
   preferredLocale,
@@ -128,7 +126,7 @@ export function SettingsForm({
   async function saveProfile() {
     setProfilePending(true)
     try {
-      const result = await updateProfileAction(orgSlug, {
+      const result = await updateProfileAction({
         name: name.trim(),
         timezone,
       })
@@ -146,7 +144,7 @@ export function SettingsForm({
   async function saveLanguage() {
     setLanguagePending(true)
     try {
-      const result = await updateLanguageAction(orgSlug, locale)
+      const result = await updateLanguageAction(locale)
       if (!result.ok) {
         toast.error(t("language.error"))
         return
@@ -174,7 +172,7 @@ export function SettingsForm({
           enabled: enabled.get(prefKey(channel, category)) ?? false,
         }))
       )
-      const result = await updateNotificationPreferencesAction(orgSlug, {
+      const result = await updateNotificationPreferencesAction({
         timezone,
         quietHoursStart: quietEnabled ? quietStart : null,
         quietHoursEnd: quietEnabled ? quietEnd : null,
@@ -196,7 +194,6 @@ export function SettingsForm({
   return (
     <div className="space-y-6">
       <AvatarUpload
-        orgSlug={orgSlug}
         currentAvatarUrl={profile.avatarUrl}
         displayName={profile.name}
         email={profile.email}

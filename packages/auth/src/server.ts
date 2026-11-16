@@ -13,7 +13,11 @@ import {
   SESSION_CACHE_COOKIE_NAMES,
 } from "./server/credentials"
 import { crossSubDomainCookieConfig } from "./server/cookie-domain"
-import { ELEVA_PATHNAME_HEADER, workspaceSlugFromPath } from "./workspace-slug"
+import {
+  ELEVA_PATHNAME_HEADER,
+  isSpacePath,
+  workspaceSlugFromPath,
+} from "./workspace-slug"
 
 export interface AuthUser {
   id: string
@@ -147,11 +151,31 @@ export async function getSessionForOrg(
 export { workspaceSlugFromPath } from "./workspace-slug"
 
 /**
- * The workspace this request is for: `/{slug}/…` in its address, from the
- * path the auth proxy forwards. Null on routes that name no workspace.
+ * The signed-in person's own Space (personal org) slug. `/space` names no
+ * slug (ADR-026): each person has one Space, found from the session.
+ */
+export const getSpaceSlug = cache(async (): Promise<string | null> => {
+  const payload = await loadBetterAuthPayload()
+  if (!payload?.user) return null
+  const orgs = await listAuthOrganizations(payload.user.id, null)
+  return orgs.find((org) => org.orgType === "personal")?.orgSlug ?? null
+})
+
+/** Session in the person's own Space, for pages and actions under `/space`. */
+export const getSpaceSession = cache(async (): Promise<ElevaSession | null> => {
+  const slug = await getSpaceSlug()
+  return slug ? getSessionForOrg(slug) : null
+})
+
+/**
+ * The workspace this request is for, from the path the auth proxy forwards:
+ * the person's own Space under `/space`, else the slug in `/expert/{slug}/…`
+ * (or a legacy `/{slug}/…`). Null on routes that name no workspace.
  */
 export async function addressWorkspaceSlug(): Promise<string | null> {
-  return workspaceSlugFromPath((await headers()).get(ELEVA_PATHNAME_HEADER))
+  const path = (await headers()).get(ELEVA_PATHNAME_HEADER)
+  if (isSpacePath(path)) return getSpaceSlug()
+  return workspaceSlugFromPath(path)
 }
 
 /**

@@ -30,7 +30,6 @@ import {
   sessionFromMagicLink,
 } from "./helpers/cancellation-policy-smoke"
 import {
-  appUrl,
   isNonLoopbackE2eTarget,
   PAID_EXPERT,
   PAID_OFFER,
@@ -709,7 +708,6 @@ test.describe("design capture", () => {
           timeout: 30_000,
         })
         .catch(() => {})
-      const slug = new URL(page.url()).pathname.split("/").filter(Boolean)[0]
       await clearBanner(page)
 
       // A booked session's detail page, upcoming and past (seeded ids from
@@ -718,12 +716,12 @@ test.describe("design capture", () => {
         ["08-session-detail-upcoming", "5eed0000-0000-4000-8000-000000000001"],
         ["09-session-detail-past", "5eed0000-0000-4000-8000-000000000003"],
       ] as const) {
-        await page.goto(`${webUrl}/${slug}/sessions/${id}`)
+        await page.goto(`${webUrl}/space/sessions/${id}`)
         await shoot(page, surface, name, kind)
       }
 
       // Delete account asks first; the capture never confirms.
-      await page.goto(`${webUrl}/${slug}/privacy`)
+      await page.goto(`${webUrl}/space/privacy`)
       await settle(page)
       const remove = page.getByTestId("member-deletion-request")
       await expect(remove).toBeVisible()
@@ -793,8 +791,7 @@ test.describe("design capture", () => {
           timeout: 30_000,
         })
         .catch(() => {})
-      const slug = new URL(page.url()).pathname.split("/").filter(Boolean)[0]
-      const base = `${slug?.startsWith("space-") ? webUrl : appUrl}/${slug}`
+      const base = `${webUrl}/space`
       const pages = [
         ["01-home", ""],
         ["02-sessions", "/sessions"],

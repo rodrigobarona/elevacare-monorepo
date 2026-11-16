@@ -36,14 +36,6 @@ export function buildRewriteUrl(req: NextRequest, origin: string): URL {
   return new URL(req.nextUrl.pathname + req.nextUrl.search, origin)
 }
 
-export function buildLoginRedirect(req: NextRequest): NextResponse {
-  const url = req.nextUrl.clone()
-  const returnTo = req.nextUrl.pathname + req.nextUrl.search
-  url.pathname = "/login"
-  url.search = `?returnTo=${encodeURIComponent(returnTo)}`
-  return NextResponse.redirect(url)
-}
-
 /**
  * Platform admin lives on admin.eleva.care (apps/admin). Root-domain
  * /admin/* requests redirect to the admin origin with the /admin prefix

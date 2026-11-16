@@ -80,8 +80,10 @@ fallback if a public catalogue later needs `/academy`.
    Settings live at `/{namespace}/{slug}/settings`.
 6. **The org header comes from the second segment.** `x-eleva-org` is read from `/{namespace}/{slug}`;
    the API checks membership and that the org type matches the namespace, and answers 404 (not 403) on a mismatch so slugs cannot be probed. `/space` sends no header.
-7. **Last active workspace.** `eleva-last-org` stores `{namespace}:{slug}`. `/dashboard` checks it
-   against the person's memberships before redirecting and falls back to `/space`.
+7. **Last active workspace.** `eleva-last-org` stores `space` for the person's own Space or the
+   workspace slug from `/expert/{slug}` (and later `/team/{slug}`, `/academy/{slug}`); every zone's
+   auth proxy writes it. `/dashboard` checks it against the person's memberships before
+   redirecting and falls back to their own session.
 8. **Dashboards are never indexed.** The gateway sends `X-Robots-Tag: noindex` and a strict
    referrer policy on every signed-in namespace, `/join`, `/account` and `/onboarding`. No PHI and
    no booking subject ever goes into a URL.
@@ -102,12 +104,13 @@ fallback if a public catalogue later needs `/academy`.
 
 ## Delivery (short sequential PRs)
 
-1. ADR + expert namespace: `/expert/{slug}`, delete the `[orgSlug]/team` duplicate tree, fix the
-   two broken links found in the inventory (partner-decision email, expert "org home" redirect).
-2. Team namespace `/team/{slug}` and academy namespace `/academy/{slug}`.
-3. Member hub `/space` without a slug; personal org slug becomes internal.
-4. Static dispatch: drop the org-type lookup, namespace-aware `x-eleva-org`, last-org cookie as
-   `{namespace}:{slug}`, noindex + referrer headers, migrate stored notification hrefs.
+1. **Shipped (#407).** ADR + expert namespace: `/expert/{slug}`, delete the `[orgSlug]/team`
+   duplicate tree, fix the broken partner-decision and "no access" links.
+2. **Shipped.** Member hub `/space` without a slug (the personal org slug is internal), static
+   dispatch with no org-type lookup, `/space` resolved from the session for `x-eleva-org`, and the
+   last-org cookie remembering `space` or the expert slug in every zone.
+3. Team namespace `/team/{slug}` and academy namespace `/academy/{slug}`.
+4. noindex + referrer headers on signed-in namespaces; migrate stored notification hrefs.
 5. One practice per person (API guard + unique index).
 6. Expert settings page and the closure API.
 
