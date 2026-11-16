@@ -32,6 +32,37 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-16: One expert practice per person (ADR-026) (active)
+
+- Rule: a person owns at most one expert practice; it holds several
+  specialties and services. A separate company or NIF is a Team (clinic).
+  Only the `owner` membership counts: an admin helping in someone else's
+  practice, delegates and clinic seats never block their own practice. The
+  picker reads the same server rule (`loadExistingPractice`), so UI and API
+  never disagree.
+- Enforced on every creation path: Better Auth `beforeCreateOrganization`
+  refuses a second `expert` org (409 `EXPERT_PRACTICE_EXISTS`), and
+  `POST /organizations` answers 409 with the practice's `slug` and `path`
+  (documented in OpenAPI) so a person or agent can go there instead.
+- UI: the workspace picker (switcher modal and `/account/workspaces/new`)
+  shows the Expert card as the practice the person already has, with "Open
+  your practice"; `/account/workspaces/create/expert` redirects there.
+  Pattern reference: Mobbin, Qatalog "Select your account" (open what you
+  have before creating another).
+- Data: the pilot expert's test practice `sdasdas` was removed from
+  production on founder request (Stripe test subscription cancelled and
+  customer deleted first; audit row `organization.deleted`; restore branch
+  `restore/pre-sdasdas-delete-2026-11-16`).
+- Owner detection parses Better Auth role lists (`owner,admin`) with
+  `toMembershipSeniority`, not an exact string match.
+- When the hook refuses a request that raced another, `POST /organizations`
+  still answers the documented 409. Known gap: two requests that both pass
+  the check before either commits can still both create a practice (no
+  database constraint across `member` and `organization`); acceptable
+  pre-launch, revisit with the expert closure API.
+- Not judged by the full design panel (small state change on an existing
+  card); EN/PT/ES copy written natively.
+
 ### 2026-11-16: Clinics live at /team/{slug} and academies at /academy/{slug} (ADR-026 slice 3) (active)
 
 - Change: clinic management moved from `/{slug}/admin` to `/team/{slug}`

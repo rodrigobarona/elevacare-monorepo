@@ -24,6 +24,7 @@ export function DashboardShell({
         navGroups={config.navGroups}
         capabilities={config.capabilities}
         organizations={config.organizations}
+        existingPractice={config.existingPractice}
       />
       <SidebarInset>
         <DashboardHeader

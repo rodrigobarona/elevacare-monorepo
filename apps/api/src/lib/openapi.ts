@@ -179,6 +179,14 @@ const ConnectIncompleteErrorSchema = z.object({
   message: z.string(),
 })
 
+const ExpertPracticeExistsErrorSchema = z.object({
+  error: z.literal("EXPERT_PRACTICE_EXISTS"),
+  code: z.literal("EXPERT_PRACTICE_EXISTS"),
+  message: z.string(),
+  slug: z.string(),
+  path: z.string(),
+})
+
 const IdentityDisabledErrorSchema = z.object({
   error: z.literal("IDENTITY_DISABLED"),
   code: z.literal("IDENTITY_DISABLED"),
@@ -569,6 +577,15 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               description: "Unauthorized",
               content: {
                 "application/json": { schema: ErrorSchema },
+              },
+            },
+            "409": {
+              description:
+                "EXPERT_PRACTICE_EXISTS: the person already has an expert practice (one per person). The body names its slug and path.",
+              content: {
+                "application/json": {
+                  schema: ExpertPracticeExistsErrorSchema,
+                },
               },
             },
             "422": {

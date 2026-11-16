@@ -5,6 +5,7 @@ import { resolveGatewayUrl } from "@eleva/config/env"
 import { accountMenuFor, loadUserWorkspaces } from "./account-menu-server"
 import type { DashboardConfig, NavGroup } from "./nav-types"
 import { resolveProductHomeUrl } from "./resolve-product-home-url"
+import { loadExistingPractice } from "./existing-practice"
 
 type BuildDashboardConfigOverrides = Partial<
   Omit<DashboardConfig, "navGroups" | "user" | "accountMenu">
@@ -45,14 +46,18 @@ export async function buildDashboardConfig(
     ...configOverrides
   } = overrides ?? {}
   // Every membership, for the avatar menu; the switcher shows them too.
-  const workspaces = await loadUserWorkspaces(
-    session.user.id,
-    session.orgId ?? null
-  ).catch((err) => {
-    // The page still renders; the menu just has no workspace rows.
-    console.error("[buildDashboardConfig] workspace lookup failed", err)
-    return []
-  })
+  // The person's own practice lets "Create" open it instead of a second one.
+  const [workspaces, existingPractice] = await Promise.all([
+    loadUserWorkspaces(session.user.id, session.orgId ?? null).catch((err) => {
+      // The page still renders; the menu just has no workspace rows.
+      console.error("[buildDashboardConfig] workspace lookup failed", err)
+      return []
+    }),
+    loadExistingPractice(session.user.id).catch((err) => {
+      console.error("[buildDashboardConfig] practice lookup failed", err)
+      return null
+    }),
+  ])
   const organizations =
     enableOrgSwitcher && session.orgSlug != null ? workspaces : []
 
@@ -77,6 +82,7 @@ export async function buildDashboardConfig(
     orgSlug: session.orgSlug,
     capabilities: session.capabilities,
     organizations,
+    existingPractice,
     accountMenu: accountMenuFor(workspaces, { accountHref }),
     apiBaseUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002",
     homeUrl,

@@ -52,7 +52,9 @@
         "title": "Especialista",
         "description": "Gira a sua prática independente na Eleva.",
         "wizardTitle": "Nome da sua área de especialista",
-        "wizardDescription": "É assim que a sua área de trabalho aparecerá na Eleva."
+        "wizardDescription": "É assim que a sua área de trabalho aparecerá na Eleva.",
+        "existingDescription": "A sua área de especialista, {name}, já está criada. Adicione lá novas especialidades e serviços.",
+        "open": "Abrir a sua área de especialista"
       },
       "team": {
         "title": "Equipa",

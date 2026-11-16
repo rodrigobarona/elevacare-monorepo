@@ -3,7 +3,12 @@ import {
   CreateOrganizationRequestSchema,
   CreateWorkspaceRequestSchema,
 } from "@eleva/api-client"
-import { createElevaOrganization } from "@eleva/auth"
+import {
+  createElevaOrganization,
+  EXPERT_PRACTICE_EXISTS,
+  findOwnedExpertPractice,
+} from "@eleva/auth"
+import { expertWorkspaceBase } from "@eleva/config/routing"
 import { provisionOrgBilling } from "@eleva/billing/server"
 import { getOrganizationBySlug } from "@eleva/db"
 import { corsHeaders } from "@/lib/cors"
@@ -26,6 +31,25 @@ export const ROUTE_POLICY = {
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
+
+function isPracticeConflict(err: unknown): boolean {
+  const body = (err as { body?: { code?: unknown } } | null)?.body
+  return body?.code === EXPERT_PRACTICE_EXISTS
+}
+
+function practiceExists(slug: string, headers: HeadersInit) {
+  return secureJson(
+    {
+      error: EXPERT_PRACTICE_EXISTS,
+      code: EXPERT_PRACTICE_EXISTS,
+      message:
+        "You already have an expert practice. Add specialties and services there instead of creating another one.",
+      slug,
+      path: expertWorkspaceBase(slug),
+    },
+    { status: 409, headers }
+  )
+}
 
 export async function POST(request: Request) {
   const headers = corsHeaders(request, "POST, GET, OPTIONS")
@@ -63,11 +87,30 @@ export async function POST(request: Request) {
     )
   }
 
-  const result = await createElevaOrganization({
-    userId: session.user.id,
-    name: body.data.name,
-    type: body.data.type,
-  })
+  // One expert practice per person (ADR-026). Better Auth's
+  // beforeCreateOrganization hook enforces it too; this answer names the
+  // practice so a person or agent can go there instead.
+  if (body.data.type === "expert") {
+    const practice = await findOwnedExpertPractice(session.user.id)
+    if (practice) return practiceExists(practice.slug, headers)
+  }
+
+  let result
+  try {
+    result = await createElevaOrganization({
+      userId: session.user.id,
+      name: body.data.name,
+      type: body.data.type,
+    })
+  } catch (err) {
+    // A request that raced this one created the practice after the check
+    // above; the hook refused this one. Answer with the same 409.
+    if (body.data.type === "expert" && isPracticeConflict(err)) {
+      const practice = await findOwnedExpertPractice(session.user.id)
+      if (practice) return practiceExists(practice.slug, headers)
+    }
+    throw err
+  }
 
   if (result.created) {
     try {

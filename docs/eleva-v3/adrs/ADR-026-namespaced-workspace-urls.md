@@ -114,7 +114,8 @@ fallback if a public catalogue later needs `/academy`.
    first segment, the `/{slug}/…` dashboard rules and the legacy slug fallback are gone, and the
    academy layout answers 404 for any workspace that is not an academy.
 4. noindex + referrer headers on signed-in namespaces; migrate stored notification hrefs.
-5. One practice per person (API guard + unique index).
+5. **Shipped.** One practice per person: Better Auth hook + `POST /organizations` 409
+   `EXPERT_PRACTICE_EXISTS`; the picker opens the existing practice.
 6. Expert settings page and the closure API.
 
 ## Consequences

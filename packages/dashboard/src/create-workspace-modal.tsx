@@ -8,16 +8,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@eleva/ui/components/dialog"
+import type { ExistingPractice } from "./nav-types"
 import { WorkspaceTypePicker } from "./workspace-type-picker"
 
 interface CreateWorkspaceModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  existingPractice?: ExistingPractice | null
 }
 
 export function CreateWorkspaceModal({
   open,
   onOpenChange,
+  existingPractice,
 }: CreateWorkspaceModalProps) {
   const t = useTranslations("createWorkspace")
 
@@ -33,13 +36,17 @@ export function CreateWorkspaceModal({
           {t("pickerDescription")}
         </DialogDescription>
       </DialogHeader>
-      <WorkspaceTypePicker mode="modal" />
+      <WorkspaceTypePicker mode="modal" existingPractice={existingPractice} />
     </Dialog>
   )
 }
 
 /** Account app intercept route — same UI, dismiss via router.back(). */
-export function CreateWorkspaceInterceptModal() {
+export function CreateWorkspaceInterceptModal({
+  existingPractice,
+}: {
+  existingPractice?: ExistingPractice | null
+}) {
   const router = useRouter()
   const t = useTranslations("createWorkspace")
 
@@ -57,7 +64,7 @@ export function CreateWorkspaceInterceptModal() {
           {t("pickerDescription")}
         </DialogDescription>
       </DialogHeader>
-      <WorkspaceTypePicker mode="modal" />
+      <WorkspaceTypePicker mode="modal" existingPractice={existingPractice} />
     </Dialog>
   )
 }

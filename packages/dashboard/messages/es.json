@@ -52,7 +52,9 @@
         "title": "Experto",
         "description": "Gestiona tu consulta independiente en Eleva.",
         "wizardTitle": "Nombre de tu área de experto",
-        "wizardDescription": "Así aparecerá tu área de trabajo en Eleva."
+        "wizardDescription": "Así aparecerá tu área de trabajo en Eleva.",
+        "existingDescription": "Tu consulta, {name}, ya está creada. Añade allí nuevas especialidades y servicios.",
+        "open": "Abrir tu consulta"
       },
       "team": {
         "title": "Equipo",
