@@ -87,12 +87,13 @@ describe("persistLocaleCookie", () => {
     expect(shouldPersistLocaleCookie(req)).toBe(true)
   })
 
-  it("expires a host-only duplicate and keeps the shared cookie on the newest value", () => {
-    // The browser holds an old host-only es and the shared en it just saved.
+  it("expires a host-only duplicate and leaves the shared cookie untouched", () => {
+    // The browser holds an old host-only es and the shared en it just saved;
+    // the header cannot say which is which, so only the expiry is sent.
     const req = new NextRequest("https://dev.eleva.care/space", {
       headers: {
         host: "dev.eleva.care",
-        cookie: "ELEVA_LOCALE=es; ELEVA_LOCALE=en",
+        cookie: "ELEVA_LOCALE=en; ELEVA_LOCALE=es",
         "sec-fetch-dest": "document",
       },
     })
@@ -102,10 +103,9 @@ describe("persistLocaleCookie", () => {
     persistLocaleCookie(req, res, resolveLocaleForRequest(req))
     const setCookie = res.headers.getSetCookie?.() ?? []
     const locale = setCookie.filter((c) => c.startsWith("ELEVA_LOCALE="))
-    expect(locale).toHaveLength(2)
-    expect(locale[0]).toMatch(/^ELEVA_LOCALE=en;.*Domain=\.eleva\.care/i)
-    expect(locale[1]).toMatch(/^ELEVA_LOCALE=;.*Max-Age=0/)
-    expect(locale[1]).not.toMatch(/Domain=/i)
+    expect(locale).toHaveLength(1)
+    expect(locale[0]).toMatch(/^ELEVA_LOCALE=;.*Max-Age=0/)
+    expect(locale[0]).not.toMatch(/Domain=/i)
     expect(setCookie.some((c) => c.startsWith("eleva_last_workspace="))).toBe(
       true
     )

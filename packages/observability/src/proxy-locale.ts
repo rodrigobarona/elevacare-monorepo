@@ -70,11 +70,16 @@ export function persistLocaleCookie(
   const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host")
   const options = getLocaleCookieOptions(host)
   const sent = localeCookieValues(req.headers.get("cookie"))
-  if (sent.at(-1) === locale && sent.length < 2 && !options.domain) return
-  response.cookies.set(cookieName, locale, options)
   if (options.domain && sent.length > 1) {
+    // Cookie order follows first creation, not the last save, so neither
+    // copy can be trusted as the newer one. Every writer now sets only the
+    // shared cookie, which holds the saved choice: leave it untouched and
+    // drop the host-only copy, so the next request sees one cookie.
     response.headers.append("Set-Cookie", expireHostOnlyLocaleCookie())
+    return
   }
+  if (sent.at(-1) === locale && !options.domain) return
+  response.cookies.set(cookieName, locale, options)
 }
 
 /**
