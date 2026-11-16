@@ -1,5 +1,6 @@
 "use server"
 
+import { PatchExpertProfileRequestSchema } from "@eleva/api-client"
 import { getAuthedApiClient, requireExpertSession } from "@/lib/server-api"
 import { mapExpertApiError } from "@/lib/map-api-error"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
@@ -16,5 +17,24 @@ export async function disconnectInvoicing(): Promise<ActionResult> {
   } catch (err) {
     console.error("[finance/invoicing] disconnect failed", err)
     return { ok: false, error: mapExpertApiError(err, "disconnect-failed") }
+  }
+}
+
+const NifSchema = PatchExpertProfileRequestSchema.pick({ nif: true })
+
+/** The expert's own tax number, printed on the invoices Eleva issues them. */
+export async function saveNif(input: unknown): Promise<ActionResult> {
+  const parsed = NifSchema.safeParse(input)
+  if (!parsed.success) return { ok: false, error: "validation" }
+
+  try {
+    const session = await requireExpertSession("expert:invoicing_manage")
+    const api = await getAuthedApiClient()
+    await api.expert.profile.patch({ nif: parsed.data.nif?.trim() || null })
+    revalidateExpertWorkspace(session, "finance/invoicing")
+    return { ok: true }
+  } catch (err) {
+    console.error("[finance/invoicing] saveNif failed", err)
+    return { ok: false, error: mapExpertApiError(err, "save-failed") }
   }
 }

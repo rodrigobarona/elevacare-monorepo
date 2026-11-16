@@ -32,6 +32,37 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-16: Change setup answers after setup (active)
+
+- Change (references `_context/mobbin/library/07-expert-dashboard` 13–16):
+  Perfil público gains "Where you practise" (practice country, countries
+  served, languages, worldwide remote) and "How you meet members" (online,
+  in person, phone); Finance › Invoicing gains "Tax number for your
+  invoices". They reuse the setup fields (`_components/practice-fields`,
+  `session-modes-field`, `practice-value`), so setup and settings save the
+  same thing. Licence fields stay on the licence page.
+- Rules (API): `PATCH /expert/practice` refuses a new practice country
+  once the licence is filed or listed (`PRACTICE_COUNTRY_LOCKED`; the
+  country follows the licence, changes go through support).
+  `PATCH /expert/profile` refuses dropping a way of meeting that a
+  published service offers (`SESSION_MODE_IN_USE`) and checks the NIF per
+  practice country (`INVALID_TAX_ID`; PT NIF/NIPC, ES DNI/NIE/CIF, BR
+  CPF/CNPJ via `@eleva/config/tax-id`), storing it normalised. Refusals
+  name the services in the reader's language (the published-modes query
+  now returns localised titles).
+- Captures: `docs/eleva-v3/design-audit/captures/2026-11-16-before-practice-settings/`
+  and `2026-11-16-after-practice-settings/` (seeded demo expert, Spanish).
+- Judges panel: round 1 UI 7.5, UX 7.0, trust 6.5; round 2 UI 8.5, UX
+  8.5, trust 8.5.
+- Follow-ups (not shipped): a note before saving that lists what published
+  services use; keep the refusal visible until that conflict is resolved
+  rather than on any edit; support address as a link in the locked-country
+  note; the legacy `languages` / `practiceCountries` / `worldwideMode`
+  fields on `PATCH /expert/profile` still skip the published-service
+  checks and should be removed or routed through `/expert/practice`.
+- Owner: engineering
+- Status: `active`
+
 ### 2026-11-16: Dashboards are hidden from search engines; old inbox links migrated (ADR-026 slice 4) (active)
 
 - Every signed-in app (member, expert, team, academy, account, admin) now

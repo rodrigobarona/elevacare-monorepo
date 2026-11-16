@@ -319,6 +319,58 @@
       "why": "The balance is one number at the top, then a bar and table split into Incoming (with its expected date) and Available. 'Recent activity' lists payouts with amount, a status pill (Paid, Withdrawn), bank and last four digits, and arrival date. A side card prompts 'Set up automatic payouts'.",
       "apply": "Eleva's Finance after setup: Earned, On its way (with date) and Paid out, plus a payouts list with status and bank. In first run, show the same tiles at zero under the setup card.",
       "query": "earnings and payouts dashboard"
+    },
+    {
+      "id": "07-expert-dashboard/13",
+      "file": "img/13-docusign-section-update.jpg",
+      "files": ["img/13-docusign-section-update.jpg"],
+      "app": "Docusign",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/e9a5ed93-85c2-443e-b747-2f4a9031d413?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Settings grouped in titled cards, each with its own Update action",
+      "why": "'Language' and 'Region settings' are separate cards showing the current values with an 'Update' button on each, so changing one group never touches another.",
+      "apply": "Practice details, ways of meeting and the tax number are separate cards with their own Save, like the rest of the public-profile page.",
+      "query": "host or provider settings to edit languages spoken and service area"
+    },
+    {
+      "id": "07-expert-dashboard/14",
+      "file": "img/14-canva-profile-rows-edit.jpg",
+      "files": ["img/14-canva-profile-rows-edit.jpg"],
+      "app": "Canva",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/f6bdb971-2ed2-4383-95a3-a78c543450ba?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Onboarding answers ('What will you be using Canva for?') stay editable in the profile settings",
+      "why": "An answer given at sign-up appears as a plain row in 'Your profile' with a selector, so nothing chosen during onboarding is frozen.",
+      "apply": "Everything asked in expert setup (country, countries served, languages, ways of meeting, NIF) has a home after setup.",
+      "query": "business profile settings page with sections each having an edit button"
+    },
+    {
+      "id": "07-expert-dashboard/15",
+      "file": "img/15-wix-consequence-note.jpg",
+      "files": ["img/15-wix-consequence-note.jpg"],
+      "app": "Wix",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/9f667260-c7da-4f49-ac2d-af1b7eaec94a?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A note beside a risky setting says what else it affects",
+      "why": "Under 'Currency' an amber note says changing it may affect shipping rates and points to where to review them, before the user saves.",
+      "apply": "Say why the practice country is locked (it follows the licence) and, when a change is refused, name the services it affects with a link to them.",
+      "query": "host or provider settings to edit languages spoken and service area"
+    },
+    {
+      "id": "07-expert-dashboard/16",
+      "file": "img/16-fiverr-languages-on-profile.jpg",
+      "files": ["img/16-fiverr-languages-on-profile.jpg"],
+      "app": "Fiverr",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/ec47097a-95a6-44e8-9ee4-1bfb562e5de4?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A seller's languages are a profile section with an add action",
+      "why": "'Languages' sits with Description, Skills and Education on the seller profile, each with 'Add New' or 'Edit', because buyers choose sellers by them.",
+      "apply": "Languages live on the public-profile settings page, because members find experts by them.",
+      "query": "host or provider settings to edit languages spoken and service area"
     }
   ],
   "judging_criteria": [
@@ -328,6 +380,7 @@
     "Can she copy and share her public profile link from Today and from each service row without opening a menu? (07-expert-dashboard/03, 07-expert-dashboard/08)",
     "Does every booking use one status vocabulary with a distinct look per state across Today, Calendar and Members, and one time format per locale? (07-expert-dashboard/06, 07-expert-dashboard/05)",
     "On mobile, does the calendar always show today, let her move day by day with a week strip, and keep each schedule day on one line? (07-expert-dashboard/07, 07-expert-dashboard/10)",
-    "Is the service editor organised in named sections an expert understands, with visibility and save always reachable and no wrapped tabs on a 390 px screen? (07-expert-dashboard/09)"
+    "Is the service editor organised in named sections an expert understands, with visibility and save always reachable and no wrapped tabs on a 390 px screen? (07-expert-dashboard/09)",
+    "After setup, can an expert change every answer from setup (except the licence) on a settings page, and does a refused change say which services it affects and where to fix them? (07-expert-dashboard/13, 07-expert-dashboard/14, 07-expert-dashboard/15)"
   ]
 }

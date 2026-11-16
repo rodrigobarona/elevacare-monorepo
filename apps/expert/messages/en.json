@@ -881,7 +881,21 @@
       "disconnectedToast": "{provider} disconnected.",
       "disconnectFailed": "Could not disconnect. Please try again.",
       "reconnectFailed": "Could not start the connection. Please try again.",
-      "changedToast": "Invoicing method cleared. Pick a new one."
+      "changedToast": "Invoicing method cleared. Pick a new one.",
+      "nif": {
+        "title": "Tax number for your invoices",
+        "description": "Eleva puts it on the invoices it issues you for its service fee. If you bill through a company, use the company's number.",
+        "label": "Tax number",
+        "hintPT": "Your NIF or your company's NIPC, 9 digits.",
+        "hintES": "Your DNI or NIE with its letter, or your company's CIF.",
+        "hintBR": "Your CPF or your company's CNPJ.",
+        "hint": "The tax number you use on your invoices.",
+        "invalid": "This doesn't look like a valid tax number. Check it and try again.",
+        "save": "Save",
+        "saving": "Saving…",
+        "saved": "Tax number saved.",
+        "failed": "We couldn't save your tax number. Please try again."
+      }
     }
   },
   "onboarding": {
@@ -897,9 +911,9 @@
     },
     "practice": {
       "intro": "Tell us where you are licensed to work and which languages you use with members. This shapes what you can offer publicly.",
-      "practiceCountry": "Where is your practice based?",
+      "practiceCountry": "Practice country",
       "practiceCountryPlaceholder": "Select a country",
-      "serviceCountries": "Where are you allowed to work?",
+      "serviceCountries": "Countries where you see members",
       "serviceCountriesHelp": "Choose every country where your licence lets you see members. Your practice country is always included.",
       "addCountry": "Add another country",
       "addCountryPlaceholder": "Choose a country",
@@ -907,12 +921,12 @@
       "addLanguagePlaceholder": "Choose a language",
       "removeItem": "Remove {name}",
       "euPreset": "Add EU countries",
-      "legalHelper": "For clinical work, you need a valid licence in every country you chose.",
+      "legalHelper": "For clinical work, you need to be licensed in every country you choose.",
       "whyWeAskTitle": "Why we ask",
       "whyWeAskBody": "Health regulation is national: a licence in one country does not automatically cover another. Worldwide remote is only for non-clinical work (coaching, mentoring).",
       "languagesLabel": "Languages you use with members",
       "worldwideRemote": "Worldwide remote (non-clinical only)",
-      "worldwideRemoteHelp": "Lets you offer non-clinical sessions without a country limit. Clinical modes still follow the countries above.",
+      "worldwideRemoteHelp": "Lets you offer non-clinical sessions without a country limit. Clinical sessions still follow the countries above.",
       "saving": "Saving…",
       "continue": "Save & continue",
       "countries": {
@@ -932,7 +946,8 @@
         "offer-invariant": "This change would break a published offer. Update those modes first.",
         "practice-incomplete": "Complete practice country and languages first.",
         "licence-locked": "Your licence is verified. To change it, write to support@eleva.care."
-      }
+      },
+      "alwaysIncluded": "(always included)"
     },
     "payments": {
       "intro": "Complete Payments setup to receive payouts. This stays on this page — no redirects.",
@@ -1115,6 +1130,29 @@
       "translateFrom": "Translate from {language}",
       "cleared": "Bio removed"
     },
+    "practice": {
+      "title": "Where you practise",
+      "description": "Your practice country, the countries where you see members and the languages you speak. Members see these on your profile and use them to find you.",
+      "errors": {
+        "required": "Choose your practice country and at least one language.",
+        "offer-invariant": "A published service still uses a country or language you've removed. Change that service first, then save here.",
+        "validation": "Check the details and try again.",
+        "offer-invariant-named": "{count, plural, one {Your published service {services} still uses} other {Your published services {services} still use}} a country or language you've removed. Change {count, plural, one {it} other {them}} first, then save here.",
+        "offer-invariant-removed": "{count, plural, one {Your published service {services} still uses} other {Your published services {services} still use}} a language or country you've removed: {removed}. Change {count, plural, one {it} other {them}} first, then save here."
+      },
+      "openServices": "Open Services",
+      "countryLocked": "Your practice country is tied to your licence. If you've moved, write to support@eleva.care."
+    },
+    "modes": {
+      "title": "How you meet members",
+      "description": "Members see this on your profile and use it to find experts.",
+      "hint": "Pick all that apply.",
+      "required": "Choose at least one way to meet members.",
+      "errors": {
+        "in-use": "{count, plural, one {Your published service {services} still uses} other {Your published services {services} still use}} a way of meeting you've removed: {removed}. Change {count, plural, one {it} other {them}} first, then save here.",
+        "in-use-generic": "A published service still uses a way of meeting you've removed. Change that service first, then save here."
+      }
+    },
     "social": {
       "title": "Social links",
       "description": "Professional profiles members can check before booking. Links open in a new tab.",
@@ -1153,7 +1191,8 @@
       "year": "Year",
       "remove": "Remove credential",
       "invalid": "Each credential needs a title, and the year must be between 1900 and 2100."
-    }
+    },
+    "newTab": "(opens in a new tab)"
   },
   "richTextEditor": {
     "bold": "Bold",

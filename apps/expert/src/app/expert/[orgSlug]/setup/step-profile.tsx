@@ -2,25 +2,14 @@
 
 import * as React from "react"
 import { useTranslations } from "next-intl"
-import { type Icon, MapPinIcon, PhoneIcon, VideoCameraIcon } from "@eleva/icons"
 import { Button } from "@eleva/ui/components/button"
 import { Input } from "@eleva/ui/components/input"
 import { Label } from "@eleva/ui/components/label"
 import { Alert, AlertDescription } from "@eleva/ui/components/alert"
-import { cn } from "@eleva/ui/lib/utils"
 import { saveProfileStep } from "./actions"
 import { setupErrorMessage } from "./setup-errors"
 import type { OnboardingProfile } from "./onboarding-wizard"
-
-const SESSION_MODE_OPTIONS = [
-  { value: "online", labelKey: "modeOnline", icon: VideoCameraIcon },
-  { value: "in_person", labelKey: "modeInPerson", icon: MapPinIcon },
-  { value: "phone", labelKey: "modePhone", icon: PhoneIcon },
-] as const satisfies ReadonlyArray<{
-  value: string
-  labelKey: string
-  icon: Icon
-}>
+import { SessionModesField } from "../_components/session-modes-field"
 
 interface Props {
   profile: OnboardingProfile
@@ -35,14 +24,6 @@ export function StepProfile({ profile, onDone }: Props) {
   const [sessionModes, setSessionModes] = React.useState<string[]>(
     profile.sessionModes
   )
-
-  function toggleMode(mode: string) {
-    setSessionModes((current) =>
-      current.includes(mode)
-        ? current.filter((v) => v !== mode)
-        : [...current, mode]
-    )
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -86,49 +67,7 @@ export function StepProfile({ profile, onDone }: Props) {
         </p>
       </div>
 
-      <fieldset className="flex flex-col gap-3">
-        <legend className="mb-1 text-sm font-medium">
-          {t("profileStep.modes")}
-        </legend>
-        <p className="text-xs text-muted-foreground">
-          {t("profileStep.modesHint")}
-        </p>
-        <div className="grid gap-3 sm:grid-cols-3">
-          {SESSION_MODE_OPTIONS.map(({ value, labelKey, icon: Icon }) => {
-            const selected = sessionModes.includes(value)
-            return (
-              <label
-                key={value}
-                className={cn(
-                  "flex cursor-pointer items-center gap-3 rounded-2xl border p-4 text-sm font-medium transition-colors has-focus-visible:ring-3 has-focus-visible:ring-ring/50",
-                  selected
-                    ? "border-primary bg-accent text-accent-foreground"
-                    : "hover:bg-muted"
-                )}
-              >
-                <input
-                  type="checkbox"
-                  className="sr-only"
-                  checked={selected}
-                  onChange={() => toggleMode(value)}
-                  data-testid={`profile-session-mode-${value}`}
-                />
-                <span
-                  className={cn(
-                    "flex size-9 items-center justify-center rounded-xl",
-                    selected
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
-                  )}
-                >
-                  <Icon weight="duotone" className="size-5" />
-                </span>
-                {t(`profileStep.${labelKey}`)}
-              </label>
-            )
-          })}
-        </div>
-      </fieldset>
+      <SessionModesField value={sessionModes} onChange={setSessionModes} />
 
       <div>
         <Button type="submit" size="lg" isPending={pending}>

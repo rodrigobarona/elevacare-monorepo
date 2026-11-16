@@ -1,9 +1,18 @@
 "use server"
 
+import { getLocale } from "next-intl/server"
 import { mintUploadToken } from "@eleva/auth/upload-token"
-import { PatchExpertProfileRequestSchema } from "@eleva/api-client"
+import {
+  PatchExpertProfileRequestSchema,
+  PatchPracticeRequestSchema,
+} from "@eleva/api-client"
 import { getAuthedApiClient, requireExpertSession } from "@/lib/server-api"
-import { humanApiMessage, mapExpertApiError } from "@/lib/map-api-error"
+import {
+  humanApiMessage,
+  mapExpertApiError,
+  offerInvariantServiceTitles,
+  sessionModesInUse,
+} from "@/lib/map-api-error"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
 
 const PublicProfileUpdateSchema = PatchExpertProfileRequestSchema.pick({
@@ -13,11 +22,32 @@ const PublicProfileUpdateSchema = PatchExpertProfileRequestSchema.pick({
   avatarUrl: true,
   socialLinks: true,
   credentials: true,
+  sessionModes: true,
 })
+
+/**
+ * Where the expert practises and the languages they speak. The licence
+ * fields are left out on purpose: after setup they change only through
+ * the licence verification flow.
+ */
+const PracticeDetailsSchema = PatchPracticeRequestSchema.pick({
+  practiceCountry: true,
+  serviceCountries: true,
+  languages: true,
+  worldwideRemote: true,
+}).required({ practiceCountry: true, serviceCountries: true, languages: true })
 
 export type PublicProfileActionResult =
   | { ok: true }
-  | { ok: false; error: string; message?: string }
+  | {
+      ok: false
+      error: string
+      message?: string
+      /** Published services that block the change. */
+      services?: string[]
+      /** Ways of meeting those services still offer. */
+      modes?: string[]
+    }
 
 export async function getPortraitUploadToken(): Promise<{
   token: string
@@ -50,12 +80,39 @@ export async function savePublicProfile(
     return { ok: true }
   } catch (err) {
     console.error("[profile] savePublicProfile failed", err)
+    const inUse = sessionModesInUse(err, await getLocale())
     return {
       ok: false,
       error: mapExpertApiError(err, "save-failed", {
         validation: "validation",
       }),
       message: humanApiMessage(err),
+      ...(inUse ?? {}),
+    }
+  }
+}
+
+export async function savePracticeDetails(
+  input: unknown
+): Promise<PublicProfileActionResult> {
+  const parsed = PracticeDetailsSchema.safeParse(input)
+  if (!parsed.success) return { ok: false, error: "validation" }
+
+  try {
+    const session = await requireExpertSession("expert:onboard")
+    const api = await getAuthedApiClient()
+    await api.expert.practice.patch(parsed.data)
+    revalidateExpertWorkspace(session, "profile")
+    return { ok: true }
+  } catch (err) {
+    console.error("[profile] savePracticeDetails failed", err)
+    return {
+      ok: false,
+      error: mapExpertApiError(err, "save-failed", {
+        offerInvariant: "offer-invariant",
+        validation: "validation",
+      }),
+      services: offerInvariantServiceTitles(err, await getLocale()),
     }
   }
 }
