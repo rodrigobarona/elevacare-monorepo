@@ -14,6 +14,7 @@ import {
   organization,
   twoFactor,
 } from "better-auth/plugins"
+import { resolveGatewayUrl } from "@eleva/config/env"
 import { cookieName } from "@eleva/config/i18n"
 import * as authSchema from "@eleva/db/schema/auth"
 import { db } from "@eleva/db"
@@ -47,6 +48,11 @@ import {
   EXPERT_PRACTICE_EXISTS,
   secondExpertPracticeViolation,
 } from "../expert-practice"
+import { PRACTICE_CLOSED } from "@eleva/config/practice-closure"
+import {
+  closedPracticeViolation,
+  sweepClosedPractice,
+} from "../practice-closure"
 import { passkeyOrigins } from "./passkey-origin"
 import {
   AUTH_IP_ADDRESS_HEADERS,
@@ -125,6 +131,10 @@ function createAuth() {
     baseURL: issuer,
     basePath: "/auth",
     secret: requireSecret(),
+    // A sign-in or account link that fails after the provider (an expired
+    // or doubled callback, a refused link) lands on Eleva's own page with
+    // `?error=<code>`, not Better Auth's bare error screen on the API host.
+    onAPIError: { errorURL: `${resolveGatewayUrl()}/callback` },
     database: drizzleAdapter(db(), {
       provider: "pg",
       schema: authSchema,
@@ -189,7 +199,17 @@ function createAuth() {
         // signed in, so takeover-by-email-domain cannot attach Google.
         disableImplicitLinking: false,
         requireLocalEmailVerified: false,
-        trustedProviders: ["google"],
+        // Microsoft is trusted for *linking* so a signed-in expert can connect
+        // Outlook: personal Microsoft accounts carry no email_verified claim,
+        // and Better Auth refuses untrusted, unverified links. Safe because
+        // `guardAccountLink` still refuses any link unless the owner is signed
+        // in (Microsoft is not in its unsigned-claim list) and refuses to
+        // create a user from an unverified provider email.
+        trustedProviders: ["google", "microsoft"],
+        // An expert's work calendar often lives on another address than
+        // their Eleva login (Outlook at the clinic, Gmail at home). Linking
+        // still needs the owner signed in, and never changes the Eleva email.
+        allowDifferentEmails: true,
       },
     },
     session: {
@@ -278,6 +298,10 @@ function createAuth() {
         allowUserToCreateOrganization: true,
         creatorRole: "owner",
         membershipLimit: 200,
+        // Nobody deletes an organization through the API (ADR-026): invoices
+        // are kept 10 years and session records have their own retention.
+        // An expert closes a practice instead (POST /expert/closure).
+        disableOrganizationDeletion: true,
         // Defence in depth: only a verified email may read or answer an
         // invitation (sessions are already refused when unverified).
         requireEmailVerificationOnInvitation: true,
@@ -331,12 +355,25 @@ function createAuth() {
             const message = orgUpdateViolation(organization)
             if (message) throw new APIError("FORBIDDEN", { message })
           },
+          // Nobody joins a closed practice (ADR-026): delegates removed at
+          // closure cannot come back by any invitation or member path.
+          beforeCreateInvitation: async ({ invitation }) => {
+            await refuseClosedPractice(invitation.organizationId)
+          },
+          beforeAddMember: async ({ member }) => {
+            await refuseClosedPractice(member.organizationId)
+          },
+          beforeAcceptInvitation: async ({ invitation }) => {
+            await refuseClosedPractice(invitation.organizationId)
+          },
           afterAddMember: async ({
             organization,
           }: {
             organization: { id: string }
           }) => {
             enqueueTeamSeatSync(organization.id)
+            // A join that raced a closure is evicted (ADR-026).
+            await sweepClosedPractice(organization.id)
           },
           afterRemoveMember: async ({
             organization,
@@ -368,6 +405,8 @@ function createAuth() {
               // Not atomic with Better Auth's write: surface the gap.
               logError("[auth] invitation accept audit failed", err)
             })
+            // An acceptance that raced a closure is evicted (ADR-026).
+            await sweepClosedPractice(organization.id)
           },
           afterRejectInvitation: async ({
             organization,
@@ -471,6 +510,8 @@ export interface AuthApi {
       userId: string
       token: string
       activeOrganizationId?: string | null
+      /** When the person signed in for this session. */
+      createdAt: Date
     }
     user: {
       id: string
@@ -512,6 +553,13 @@ export interface AuthApi {
     body: { email: string; callbackURL: string }
     headers?: Headers
   }) => Promise<unknown>
+}
+
+async function refuseClosedPractice(organizationId: string): Promise<void> {
+  const message = await closedPracticeViolation(organizationId)
+  if (message) {
+    throw new APIError("FORBIDDEN", { message, code: PRACTICE_CLOSED })
+  }
 }
 
 function enqueueTeamSeatSync(orgId: string): void {

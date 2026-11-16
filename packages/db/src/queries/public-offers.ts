@@ -11,7 +11,7 @@ import {
 } from "drizzle-orm"
 import { withOrgContext, withPlatformAdminContext } from "../context"
 import * as main from "../schema/main"
-import { licenceVerified } from "./public-listing"
+import { publiclyVisibleExpert } from "./public-listing"
 import type { LocalizedText } from "../schema/main/shared"
 
 export type MarketplaceSort = "relevance" | "price" | "rating"
@@ -131,11 +131,7 @@ export async function listPublicMarketplaceExperts(
   const sort = input.sort ?? "relevance"
 
   return withPlatformAdminContext(async (tx) => {
-    const conditions = [
-      eq(main.expertProfiles.status, "active"),
-      licenceVerified(),
-      isNull(main.expertProfiles.deletedAt),
-    ]
+    const conditions = [publiclyVisibleExpert()]
 
     if (input.language) {
       conditions.push(
@@ -443,7 +439,9 @@ export async function findUsableBookingLink(
         main.expertProfiles,
         and(
           eq(main.expertProfiles.id, main.eventTypes.expertProfileId),
-          eq(main.expertProfiles.orgId, main.bookingLinks.orgId)
+          eq(main.expertProfiles.orgId, main.bookingLinks.orgId),
+          // A closed practice's private links stop working too (ADR-026).
+          isNull(main.expertProfiles.closedAt)
         )
       )
       .where(

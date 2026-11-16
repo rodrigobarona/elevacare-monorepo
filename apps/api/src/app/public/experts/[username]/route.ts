@@ -2,6 +2,7 @@ import { PublicExpertProfileSchema } from "@eleva/api-client"
 import { isProfessionalBodyId } from "@eleva/config/professional-bodies"
 import {
   findExpertByUsername,
+  isClosedPublicPractice,
   listPublicEventTypeModes,
   listPublicEventTypes,
   type LocalizedRichText,
@@ -10,6 +11,7 @@ import {
 import {
   handlePublicGet,
   PUBLIC_NOT_FOUND,
+  PUBLIC_PRACTICE_CLOSED,
   publicOptions,
 } from "@/lib/public-marketplace"
 import { secureJson } from "@/lib/security-headers"
@@ -59,6 +61,9 @@ export async function GET(
     const { username } = await context.params
     const expert = await findExpertByUsername(username)
     if (!expert) {
+      if (await isClosedPublicPractice(username)) {
+        return secureJson(PUBLIC_PRACTICE_CLOSED, { status: 410, headers })
+      }
       return secureJson(PUBLIC_NOT_FOUND, { status: 404, headers })
     }
 

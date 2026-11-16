@@ -24,6 +24,11 @@ export function isNotFoundApiError(error: unknown): boolean {
   return error instanceof ApiClientError && error.status === 404
 }
 
+/** The expert closed this practice (ADR-026): the API answers 410. */
+export function isPracticeClosedApiError(error: unknown): boolean {
+  return error instanceof ApiClientError && error.status === 410
+}
+
 export function isRateLimitedApiError(error: unknown): boolean {
   return error instanceof ApiClientError && error.status === 429
 }

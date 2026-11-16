@@ -13,7 +13,7 @@ import type { PgColumn } from "drizzle-orm/pg-core"
 import { isReserved } from "@eleva/config/reserved-usernames"
 
 import { withPlatformAdminContext } from "../context"
-import { licenceVerified } from "./public-listing"
+import { closedPublicExpert, publiclyVisibleExpert } from "./public-listing"
 import * as auth from "../schema/auth"
 import * as main from "../schema/main"
 import {
@@ -142,10 +142,33 @@ export interface ListExpertsResult {
 }
 
 /**
+ * True when this username belongs to a practice its owner closed and that
+ * would otherwise be public (ADR-026): its address answers "practice
+ * closed" instead of an unknown name.
+ */
+export async function isClosedPublicPractice(
+  username: string
+): Promise<boolean> {
+  const lowered = username.trim().toLowerCase()
+  if (lowered.length === 0 || isReserved(lowered)) return false
+  return withPlatformAdminContext(async (tx) => {
+    const rows = await tx
+      .select({ id: main.expertProfiles.id })
+      .from(main.expertProfiles)
+      .where(
+        and(eq(main.expertProfiles.username, lowered), closedPublicExpert())
+      )
+      .limit(1)
+    return rows.length > 0
+  })
+}
+
+/**
  * Resolve an expert by their public username. Returns null when:
  * - username does not match the format check (defensive — most filters
  *   rejected before we get here)
- * - no expert profile exists with status='active' for that username
+ * - no expert profile is publicly visible for that username (inactive,
+ *   unverified, deleted or closed: `publiclyVisibleExpert`)
  *
  * Username comparison is case-insensitive (lower(username) = lower($1))
  * but the column is stored already-lowercased per the CHECK constraint.
@@ -180,12 +203,7 @@ export async function findExpertByUsername(
       })
       .from(main.expertProfiles)
       .where(
-        and(
-          eq(main.expertProfiles.username, lowered),
-          eq(main.expertProfiles.status, "active"),
-          licenceVerified(),
-          isNull(main.expertProfiles.deletedAt)
-        )
+        and(eq(main.expertProfiles.username, lowered), publiclyVisibleExpert())
       )
       .limit(1)
 
@@ -273,9 +291,7 @@ export async function findPublicBookableEventType(
       .where(
         and(
           eq(main.expertProfiles.username, lowered),
-          eq(main.expertProfiles.status, "active"),
-          licenceVerified(),
-          isNull(main.expertProfiles.deletedAt),
+          publiclyVisibleExpert(),
           publicEventTypeWhere(slug)
         )
       )
@@ -369,11 +385,7 @@ export async function listExperts(
   const searchTerm = hasSearch ? filters.search!.trim() : ""
 
   return withPlatformAdminContext(async (tx) => {
-    const conditions = [
-      eq(main.expertProfiles.status, "active"),
-      licenceVerified(),
-      isNull(main.expertProfiles.deletedAt),
-    ]
+    const conditions = [publiclyVisibleExpert()]
 
     if (filters.languages && filters.languages.length > 0) {
       conditions.push(

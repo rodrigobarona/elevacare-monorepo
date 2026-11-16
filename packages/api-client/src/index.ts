@@ -1,6 +1,10 @@
 import { z } from "zod"
 import { INSTANT_BOOK_LEAD_MINUTES_MAX } from "@eleva/config/booking-settings"
 import {
+  PRACTICE_CLOSURE_BLOCKER_CODES,
+  PRACTICE_CLOSURE_ERROR_CODES,
+} from "@eleva/config/practice-closure"
+import {
   CANCELLATION_POLICY_VALUES,
   EXPERT_CANCEL_REASONS,
   EXPERT_DECLINE_REASONS,
@@ -297,6 +301,16 @@ export const UpdateAvatarRequestSchema = z.object({
 })
 
 export type UpdateAvatarRequest = z.infer<typeof UpdateAvatarRequestSchema>
+
+// ── Language ────────────────────────────────────────────────────────
+
+export const UpdateUserLocaleRequestSchema = z.object({
+  locale: LocaleSchema,
+})
+
+export type UpdateUserLocaleRequest = z.infer<
+  typeof UpdateUserLocaleRequestSchema
+>
 
 // ── Direct uploads (presigned PUT to R2, ADR-025) ───────────────────
 
@@ -1798,6 +1812,55 @@ export type LicenceDecisionResponse = z.infer<
   typeof LicenceDecisionResponseSchema
 >
 
+/** Closing an expert practice (ADR-026 decision 10). */
+export const PracticeClosureBlockerSchema = z.object({
+  code: z.enum(PRACTICE_CLOSURE_BLOCKER_CODES),
+  count: z.number().int().positive(),
+})
+
+export const PracticeClosureStateResponseSchema = z.object({
+  practice: z.object({
+    slug: z.string(),
+    closedAt: z.string().datetime().nullable(),
+    canClose: z.boolean(),
+    blockers: z.array(PracticeClosureBlockerSchema),
+  }),
+})
+export type PracticeClosureStateResponse = z.infer<
+  typeof PracticeClosureStateResponseSchema
+>
+
+export const CloseExpertPracticeRequestSchema = z.object({
+  /** The practice's username, typed by the person to confirm. */
+  confirmSlug: z.string().trim().min(1).max(64),
+})
+export type CloseExpertPracticeRequest = z.infer<
+  typeof CloseExpertPracticeRequestSchema
+>
+
+export const CloseExpertPracticeResponseSchema = z.object({
+  practice: z.object({
+    slug: z.string(),
+    closedAt: z.string().datetime(),
+    removedMembers: z.number().int().nonnegative(),
+    cancelledInvitations: z.number().int().nonnegative(),
+  }),
+})
+
+/** Reopening takes no options; an empty JSON object (or no body). */
+export const ReopenExpertPracticeRequestSchema = z.object({}).strict()
+
+export const ReopenExpertPracticeResponseSchema = z.object({
+  practice: z.object({ slug: z.string(), closedAt: z.null() }),
+})
+
+export const PracticeClosureErrorSchema = z.object({
+  error: z.enum(PRACTICE_CLOSURE_ERROR_CODES),
+  code: z.enum(PRACTICE_CLOSURE_ERROR_CODES),
+  message: z.string(),
+  blockers: z.array(PracticeClosureBlockerSchema).optional(),
+})
+
 export const PatchPracticeRequestSchema = z.object({
   practiceCountry: CountryCodeSchema.optional(),
   serviceCountries: z.array(CountryCodeSchema).min(1).optional(),
@@ -2931,6 +2994,8 @@ export interface SubCalendar {
   id: string
   name: string
   primary: boolean
+  /** Eleva can add session events to this calendar. */
+  writable: boolean
   email?: string
 }
 
@@ -3183,6 +3248,11 @@ export function createApiClient(options: ApiClientOptions) {
         },
         remove() {
           return request<{ ok: true }>("DELETE", "/users/avatar")
+        },
+      },
+      locale: {
+        update(data: UpdateUserLocaleRequest) {
+          return request<{ ok: true }>("PUT", "/users/locale", data)
         },
       },
     },

@@ -3,6 +3,7 @@ import { eq, and, sql } from "drizzle-orm"
 import type { Redis } from "@upstash/redis"
 import { withAudit } from "@eleva/audit"
 import { withOrgContext, type Tx } from "@eleva/db/context"
+import { lockOpenExpertProfile } from "@eleva/db/queries/practice-closure"
 import {
   slotReservations,
   bookings,
@@ -159,6 +160,11 @@ export async function reserveSlot(
 
   try {
     const writeReservation = async (tx: Tx): Promise<string> => {
+      // Shared lock on the practice: a closure in flight finishes first (and
+      // this is refused) or waits for this hold and then sees it (ADR-026).
+      if (!(await lockOpenExpertProfile(tx, expertProfileId))) {
+        throw new PracticeClosedError()
+      }
       await expireOverlappingHolds(tx, expertUserId, startsAt, endsAt)
       const conflict = await checkConflicts(
         tx,
@@ -229,6 +235,9 @@ export async function reserveSlot(
 
     if (err instanceof LinkClaimError) {
       return { success: false, error: "link_unusable" }
+    }
+    if (err instanceof PracticeClosedError) {
+      return { success: false, error: "practice_closed" }
     }
     if (err instanceof ConflictError || isExclusionViolation(err)) {
       return { success: false, error: "conflict" }
@@ -395,6 +404,13 @@ class ConflictError extends Error {
   constructor() {
     super("slot_conflict")
     this.name = "ConflictError"
+  }
+}
+
+class PracticeClosedError extends Error {
+  constructor() {
+    super("practice_closed")
+    this.name = "PracticeClosedError"
   }
 }
 

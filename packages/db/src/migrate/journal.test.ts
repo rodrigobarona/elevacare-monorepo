@@ -40,12 +40,18 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0076_namespaced_notification_links")
+    expect(last?.tag).toBe("0077_expert_practice_closed_at")
+    expect(last?.statements.join("\n")).toContain(
+      'ADD COLUMN IF NOT EXISTS "closed_at"'
+    )
+    const links = migrations.find(
+      (m) => m.tag === "0076_namespaced_notification_links"
+    )
     // One DO block: the runner sends statements separately, and the
     // platform-admin setting the notifications guard needs must share the
     // updates' transaction.
-    expect(last?.statements).toHaveLength(1)
-    expect(last?.statements[0]).toContain(
+    expect(links?.statements).toHaveLength(1)
+    expect(links?.statements[0]).toContain(
       "set_config('eleva.platform_admin', 'true', true)"
     )
     const clinicProfile = migrations.find(

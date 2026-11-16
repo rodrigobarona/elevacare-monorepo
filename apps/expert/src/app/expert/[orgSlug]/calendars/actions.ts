@@ -48,6 +48,7 @@ export async function loadSubCalendars(integrationId: string): Promise<
         id: string
         name: string
         primary: boolean
+        writable: boolean
         email?: string
       }[]
     }

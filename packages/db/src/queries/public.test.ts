@@ -148,7 +148,8 @@ describe("public queries", () => {
       },
     }))
     vi.doMock("./public-listing", () => ({
-      licenceVerified: () => ({ licenceVerified: true }),
+      publiclyVisibleExpert: () => ({ publiclyVisibleExpert: true }),
+      closedPublicExpert: () => ({ closedPublicExpert: true }),
     }))
     vi.doMock("./event-types", () => ({
       publicEventTypeColumns: { id: { name: "eventTypeId" } },

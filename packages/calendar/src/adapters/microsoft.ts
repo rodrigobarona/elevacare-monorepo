@@ -73,6 +73,7 @@ export class MicrosoftCalendarAdapter implements CalendarAdapter {
       name: c.name,
       primary: c.isDefaultCalendar ?? false,
       accessRole: c.canEdit ? "writer" : "reader",
+      writable: c.canEdit,
       email: c.owner?.address,
     }))
   }

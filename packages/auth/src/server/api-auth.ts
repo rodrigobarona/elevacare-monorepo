@@ -35,6 +35,12 @@ const AUTHORITATIVE_SESSION = { disableCookieCache: true } as const
 
 export interface ApiIdentity extends ElevaSession {
   authMode: ApiAuthMode
+  /**
+   * When the person signed in for this session (cookie or opaque bearer).
+   * Null for JWTs and API keys, which carry no sign-in moment, so they can
+   * never pass a recent-sign-in check.
+   */
+  authenticatedAt: Date | null
 }
 
 export async function resolveApiAuth(request: Request): Promise<ApiIdentity> {
@@ -202,6 +208,7 @@ async function sessionFromCookieOrBearer(
     image: result.user.image ?? null,
     orgId,
     authMode,
+    authenticatedAt: sessionStartedAt(result.session.createdAt),
   })
 }
 
@@ -252,6 +259,7 @@ async function sessionFromJwt(token: string): Promise<ApiIdentity> {
     image: null,
     orgId,
     authMode: "jwt",
+    authenticatedAt: null,
   })
 }
 
@@ -274,7 +282,13 @@ async function sessionFromApiKey(request: Request): Promise<ApiIdentity> {
     image: null,
     orgId,
     authMode: "api-key",
+    authenticatedAt: null,
   })
+}
+
+function sessionStartedAt(value: unknown): Date | null {
+  const date = value instanceof Date ? value : new Date(String(value))
+  return Number.isNaN(date.getTime()) ? null : date
 }
 
 async function buildIdentity(input: {
@@ -284,6 +298,7 @@ async function buildIdentity(input: {
   image: string | null
   orgId: string | null
   authMode: ApiAuthMode
+  authenticatedAt: Date | null
 }): Promise<ApiIdentity> {
   // Match loadElevaSession: when the cookie has no activeOrganizationId
   // (legacy sessions minted before the session.create hook), prefer the
@@ -335,6 +350,7 @@ async function buildIdentity(input: {
     orgType,
     membershipRole,
     authMode: input.authMode,
+    authenticatedAt: input.authenticatedAt,
     capabilities: capabilitiesFor(productLabel),
   }
 }

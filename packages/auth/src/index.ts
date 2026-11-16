@@ -35,6 +35,13 @@ export {
   type OwnedExpertPractice,
 } from "./expert-practice"
 export {
+  PracticeClosureError,
+  closeExpertPractice,
+  getPracticeClosureState,
+  reopenExpertPractice,
+  type PracticeClosureState,
+} from "./practice-closure"
+export {
   isExpertInvoicingChoiceComplete,
   saveExpertInvoicingChoice,
   type ExpertInvoicingProvider,
@@ -48,6 +55,7 @@ export {
   type MemberProfile,
   type MemberNotificationPreference,
 } from "./member"
+export { updateUserLocale } from "./user-locale"
 export {
   createAuthProxy,
   createPassthroughProxy,

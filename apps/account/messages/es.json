@@ -41,7 +41,7 @@
     "language": {
       "title": "Idioma",
       "description": "Elige el idioma de las aplicaciones Eleva para tu cuenta.",
-      "footerHint": "Se aplica a la cuenta, el panel y los emails cuando esté disponible."
+      "footerHint": "Lo usamos en toda Eleva y en los emails que te enviamos."
     },
     "security": {
       "title": "Seguridad",
@@ -201,7 +201,12 @@
       "Online, por teléfono o en persona",
       "En español, inglés y portugués",
       "Sesiones, pagos y privacidad en un solo lugar"
-    ]
+    ],
+    "callbackErrorTitle": "No se pudo completar",
+    "callbackErrorRestart": "Este paso tardó demasiado o se abrió dos veces, así que lo detuvimos para mantener tu cuenta segura. Vuelve a Eleva e inténtalo de nuevo.",
+    "callbackErrorGeneric": "Algo lo interrumpió. Vuelve a Eleva e inténtalo de nuevo.",
+    "callbackErrorDenied": "Elegiste no dar acceso, así que no ha cambiado nada. Puedes volver a intentarlo cuando quieras.",
+    "callbackErrorBack": "Volver a Eleva"
   },
   "privacy": {
     "eyebrow": "Cuenta",

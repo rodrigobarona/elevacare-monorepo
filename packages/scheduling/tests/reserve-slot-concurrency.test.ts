@@ -59,6 +59,11 @@ vi.mock("@eleva/db/context", () => {
   }
 })
 
+// The practice is open; closure is covered in reserve-slot-exclusion.
+vi.mock("@eleva/db/queries/practice-closure", () => ({
+  lockOpenExpertProfile: vi.fn(async () => true),
+}))
+
 vi.mock("@eleva/db/schema", () => ({
   slotReservations: {
     id: "id",

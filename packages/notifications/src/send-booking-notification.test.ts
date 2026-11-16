@@ -1036,6 +1036,37 @@ describe("sendBookingNotification", () => {
     expect(memberCall?.formattedDate).not.toEqual(expertCall?.formattedDate)
   })
 
+  it("writes the member's copy in their saved language over the booking's", async () => {
+    const send = vi.fn().mockResolvedValue({
+      kind: "booking.reminder_24h",
+      deliveries: [],
+    })
+    renderBookingReminder.mockClear()
+    await sendBookingNotification(
+      {
+        id: "evt-reminder-saved-locale",
+        type: "booking.reminder_24h",
+        orgId: ORG_ID,
+        payload: eventPayload(),
+      },
+      {
+        // Booked in Portuguese, later chose English in settings.
+        loadBooking: async () =>
+          booking({
+            bookedLocale: "pt",
+            memberLocale: "en",
+            expertLocale: "pt",
+          }),
+        send,
+      }
+    )
+    const [memberCall, expertCall] = renderBookingReminder.mock.calls.map(
+      (call) => (call as unknown[])[0] as Record<string, unknown>
+    )
+    expect(memberCall).toEqual(expect.objectContaining({ locale: "en" }))
+    expect(expertCall).toEqual(expect.objectContaining({ locale: "pt" }))
+  })
+
   it("still sends reminders after a reschedule when startsAt matches", async () => {
     const send = vi.fn().mockResolvedValue({
       kind: "booking.reminder_1h",

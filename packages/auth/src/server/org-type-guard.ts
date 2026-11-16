@@ -12,10 +12,20 @@ export function orgCreateViolation(
     : null
 }
 
+/**
+ * An org's slug is its public username and address (`/{slug}`,
+ * `/expert/{slug}`, ADR-026). Changing it would break every link and free
+ * the old name for someone else, so it is fixed once created; a closed
+ * practice keeps holding it (ADR-026 decision 10).
+ */
 export function orgUpdateViolation(
   update: Record<string, unknown>
 ): string | null {
-  return Object.hasOwn(update, "type")
-    ? "An organization's type cannot be changed."
-    : null
+  if (Object.hasOwn(update, "type")) {
+    return "An organization's type cannot be changed."
+  }
+  if (Object.hasOwn(update, "slug")) {
+    return "An organization's address cannot be changed."
+  }
+  return null
 }

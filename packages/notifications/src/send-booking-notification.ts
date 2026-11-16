@@ -130,6 +130,11 @@ export type LoadedBooking = {
   timezone: string
   sessionMode: string
   bookedLocale: string | null
+  /**
+   * The member's saved language (`user.locale`): set only when they picked
+   * one in settings, so it wins over the language they booked in.
+   */
+  memberLocale?: string | null
   memberUserId: string | null
   memberEmail: string | null
   memberName: string | null
@@ -186,9 +191,10 @@ export async function sendBookingNotification(
     return
   }
 
-  // Each copy speaks to its reader: the member in the language they
-  // booked in and the time zone they chose; the expert in their own.
-  const locale = toEmailLocale(booking.bookedLocale)
+  // Each copy speaks to its reader: the member in the language they saved
+  // (else the one they booked in) and the time zone they chose; the expert
+  // in their own.
+  const locale = toEmailLocale(booking.memberLocale ?? booking.bookedLocale)
   const expertLocale = toEmailLocale(
     booking.expertLocale ?? booking.bookedLocale
   )
@@ -1184,6 +1190,7 @@ export async function loadBookingForNotification(
     let memberName: string | null = null
     let memberPhone: string | null = null
     let memberEmailVerified = false
+    let memberLocale: string | null = null
     if (row.memberUserId) {
       const [member] = await tx
         .select({
@@ -1191,6 +1198,7 @@ export async function loadBookingForNotification(
           name: auth.user.name,
           phoneE164: auth.user.phoneE164,
           emailVerified: auth.user.emailVerified,
+          locale: auth.user.locale,
         })
         .from(auth.user)
         .where(eq(auth.user.id, row.memberUserId))
@@ -1199,6 +1207,7 @@ export async function loadBookingForNotification(
       memberName = member?.name ?? null
       memberPhone = member?.phoneE164 ?? null
       memberEmailVerified = member?.emailVerified ?? false
+      memberLocale = member?.locale ?? null
     }
 
     const {
@@ -1232,6 +1241,7 @@ export async function loadBookingForNotification(
       memberName,
       memberPhone,
       memberEmailVerified,
+      memberLocale,
       expertEmail: expert.email,
       expertName: expert.name,
       expertLocale: expert.locale ?? null,

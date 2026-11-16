@@ -114,6 +114,7 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
       name: c.summary,
       primary: c.primary ?? false,
       accessRole: c.accessRole,
+      writable: c.accessRole === "owner",
     }))
   }
 

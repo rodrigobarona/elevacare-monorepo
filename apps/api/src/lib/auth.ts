@@ -78,7 +78,7 @@ export async function requireRevocableMemberApiAuth(
 
 export async function requirePrivilegedApiAuth(
   request: Request
-): Promise<ElevaSession> {
+): Promise<ApiIdentity> {
   return requireRevocableApiAuth(request)
 }
 
@@ -101,7 +101,7 @@ export async function requireApiCapability(
 export async function requireRevocableApiCapability(
   request: Request,
   capability: string
-): Promise<ElevaSession> {
+): Promise<ApiIdentity> {
   const session = await requirePrivilegedApiAuth(request)
   assertCapability(session, capability)
   return session
