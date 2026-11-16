@@ -51,8 +51,12 @@ test.describe("auth screens", () => {
     await expect(page.getByTestId("reset-password-form")).toBeVisible()
     await expect(page.getByTestId("reset-email")).toBeVisible()
 
+    // Signed out with no error: the link was already used, so offer sign-in.
     await page.goto(`${accountUrl}/verify-email`)
     await expect(page.getByTestId("verify-email")).toBeVisible()
+    await expect(page.getByTestId("verify-email-sign-in")).toBeVisible()
+    await page.goto(`${accountUrl}/verify-email?error=TOKEN_EXPIRED`)
+    await expect(page.getByTestId("verify-email-failed")).toBeVisible()
 
     await page.goto(`${accountUrl}/two-factor`)
     await expect(page.getByTestId("two-factor-form")).toBeVisible()
