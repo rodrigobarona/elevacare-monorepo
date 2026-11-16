@@ -244,7 +244,7 @@
     "subtitle": "Reports your experts have shared with you after a session.",
     "emptyTitle": "No reports yet",
     "emptyBody": "When an expert publishes a session report, it appears here.",
-    "byExpert": "From {name}",
+    "byExpert": "Report from {name}",
     "sessionOn": "Session on {date}",
     "publishedOn": "Shared {date}",
     "read": "Read",

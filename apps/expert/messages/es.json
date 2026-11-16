@@ -165,7 +165,7 @@
     },
     "report": {
       "title": "Informe de la sesión",
-      "subtitle": "Escribe el informe de esta sesión. El miembro solo lo verá cuando lo publiques.",
+      "subtitle": "De tu sesión del {date}. El miembro solo verá este informe cuando lo publiques.",
       "editorTitle": "Informe",
       "statusDraft": "Borrador",
       "statusPublished": "Publicado",

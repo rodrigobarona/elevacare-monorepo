@@ -32,10 +32,12 @@ export default async function ExpertSessionReportPage({
     <div className="mx-auto max-w-3xl space-y-6">
       <PageHeader
         title={t("title")}
-        description={`${format.dateTime(booking.startsAt, {
-          dateStyle: "medium",
-          timeStyle: "short",
-        })} · ${t("subtitle")}`}
+        description={t("subtitle", {
+          date: format.dateTime(booking.startsAt, {
+            dateStyle: "medium",
+            timeStyle: "short",
+          }),
+        })}
       />
       <ReportEditor
         bookingId={bookingId}

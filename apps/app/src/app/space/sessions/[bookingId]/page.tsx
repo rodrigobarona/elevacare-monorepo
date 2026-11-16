@@ -4,6 +4,7 @@ import { getLocale, getTranslations } from "next-intl/server"
 import { ApiClientError, type ExpertInvoiceStatus } from "@eleva/api-client"
 import { ArrowsClockwiseIcon, VideoCameraIcon } from "@eleva/icons"
 import { expertProfileUrl } from "@eleva/config/env"
+import { BackLink } from "@eleva/dashboard/back-link"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { LinkButton } from "@eleva/ui/components/button"
 import { findMemberBooking } from "@/lib/find-member-booking"
@@ -101,10 +102,13 @@ export default async function SessionDetailPage({
 
   return (
     <div className="space-y-8">
-      <PageHeader
-        title={title}
-        description={t("withExpert", { name: booking.expert.displayName })}
-      />
+      <div className="space-y-4">
+        <BackLink href={`${SPACE_BASE}/sessions`}>{t("title")}</BackLink>
+        <PageHeader
+          title={title}
+          description={t("withExpert", { name: booking.expert.displayName })}
+        />
+      </div>
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <section className="overflow-hidden rounded-3xl border bg-card text-card-foreground shadow-1">

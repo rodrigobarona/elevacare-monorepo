@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation"
-import Link from "next/link"
 import { getLocale, getTranslations } from "next-intl/server"
 import { isLocale } from "@eleva/config"
-import { ArrowLeftIcon } from "@eleva/icons"
+import { BackLink } from "@eleva/dashboard/back-link"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { StatusPill } from "@eleva/ui/components/status-pill"
 import {
@@ -137,13 +136,7 @@ export default async function EditEventTypePage(props: {
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <div className="space-y-4">
-        <Link
-          href={`${base}/event-types`}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeftIcon aria-hidden className="size-4" />
-          {t("backToServices")}
-        </Link>
+        <BackLink href={`${base}/event-types`}>{t("backToServices")}</BackLink>
         <PageHeader
           title={serviceTitle}
           description={t("editDescription")}

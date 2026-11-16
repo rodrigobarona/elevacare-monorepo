@@ -244,7 +244,7 @@
     "subtitle": "Relatórios que os seus especialistas partilharam consigo depois de uma sessão.",
     "emptyTitle": "Ainda sem relatórios",
     "emptyBody": "Quando um especialista publicar o relatório de uma sessão, ele aparece aqui.",
-    "byExpert": "De {name}",
+    "byExpert": "Relatório de {name}",
     "sessionOn": "Sessão de {date}",
     "publishedOn": "Partilhado a {date}",
     "read": "Ler",

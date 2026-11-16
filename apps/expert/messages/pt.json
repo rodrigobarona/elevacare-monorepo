@@ -165,7 +165,7 @@
     },
     "report": {
       "title": "Relatório da sessão",
-      "subtitle": "Escreva o relatório desta sessão. O membro só o vê depois de o publicar.",
+      "subtitle": "Para a sessão de {date}. O membro só vê este relatório depois de o publicar.",
       "editorTitle": "Relatório",
       "statusDraft": "Rascunho",
       "statusPublished": "Publicado",

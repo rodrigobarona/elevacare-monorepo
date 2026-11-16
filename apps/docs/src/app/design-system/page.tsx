@@ -70,7 +70,7 @@ export default function DesignSystemPage() {
     <main className="mx-auto max-w-6xl space-y-16 px-6 py-12">
       <PageHeader
         title="Eleva design system"
-        description="Tokens and components shared by every Eleva app. Source of truth: docs/eleva-v3/brand-book/v3 and @eleva/ui."
+        description="Proposed. Tokens and components shared by every Eleva app. Source of truth: docs/eleva-v3/brand-book/v3 and @eleva/ui."
       />
 
       <Section title="Brand" description="Logo assets inherit currentColor.">

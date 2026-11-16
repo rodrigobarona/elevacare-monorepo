@@ -1,6 +1,5 @@
-import Link from "next/link"
 import { getTranslations } from "next-intl/server"
-import { ArrowLeftIcon } from "@eleva/icons"
+import { BackLink } from "@eleva/dashboard/back-link"
 import { PageHeader, Section } from "@eleva/ui/components/page-header"
 import { expertWorkspacePath } from "@/lib/workspace-paths"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
@@ -30,13 +29,9 @@ export default async function ExpertInvoicesPage({
   return (
     <div className="mx-auto max-w-5xl space-y-10">
       <div className="space-y-4">
-        <Link
-          href={expertWorkspacePath(session, "finance")}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeftIcon aria-hidden className="size-4" />
+        <BackLink href={expertWorkspacePath(session, "finance")}>
           {t("backToFinance")}
-        </Link>
+        </BackLink>
         <PageHeader title={t("title")} description={t("description")} />
       </div>
       <Section title={t("listTitle")} description={t("listHint")}>

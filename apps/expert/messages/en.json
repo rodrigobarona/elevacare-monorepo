@@ -165,7 +165,7 @@
     },
     "report": {
       "title": "Session report",
-      "subtitle": "Write the report for this session. Your member only sees it after you publish.",
+      "subtitle": "For your session on {date}. Your member only sees this report after you publish.",
       "editorTitle": "Report",
       "statusDraft": "Draft",
       "statusPublished": "Published",

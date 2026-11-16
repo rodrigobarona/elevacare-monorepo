@@ -791,6 +791,21 @@ test.describe("design capture", () => {
         await clearBanner(page)
         await shoot(page, surface, name, kind)
       }
+      // A member's detail page, reached from the members list.
+      await page.goto(`${base}/members`)
+      const memberHref = await page
+        .locator("a[href]")
+        .evaluateAll(
+          (links) =>
+            links
+              .map((link) => link.getAttribute("href") ?? "")
+              .find((value) => /\/members\/[^/]+$/.test(value)) ?? null
+        )
+      if (memberHref) {
+        await page.goto(new URL(memberHref, page.url()).toString())
+        await clearBanner(page)
+        await shoot(page, surface, "13-member-detail", kind)
+      }
       // The calendar connect step, where the page has one (it explains access
       // before leaving for Google; older pages went straight to Google).
       await page.goto(`${base}/calendars`)
@@ -840,6 +855,27 @@ test.describe("design capture", () => {
       ] as const
       for (const [name, suffix] of pages) {
         await page.goto(`${base}${suffix}`)
+        await clearBanner(page)
+        await shoot(page, surface, name, kind)
+      }
+      // Detail pages: a session and a report, reached from their lists.
+      const details = [
+        ["08-session-detail", "/sessions", /\/space\/sessions\/[^/]+$/],
+        ["09-report-detail", "/reports", /\/space\/reports\/[^/]+$/],
+      ] as const
+      for (const [name, list, pattern] of details) {
+        await page.goto(`${base}${list}`)
+        const href = await page
+          .locator("a[href]")
+          .evaluateAll(
+            (links, source) =>
+              links
+                .map((link) => link.getAttribute("href") ?? "")
+                .find((value) => new RegExp(source).test(value)) ?? null,
+            pattern.source
+          )
+        if (!href) continue
+        await page.goto(new URL(href, page.url()).toString())
         await clearBanner(page)
         await shoot(page, surface, name, kind)
       }
