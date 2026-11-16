@@ -32,6 +32,25 @@ export const ROUTE_POLICY = {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
+function isPracticeConflict(err: unknown): boolean {
+  const body = (err as { body?: { code?: unknown } } | null)?.body
+  return body?.code === EXPERT_PRACTICE_EXISTS
+}
+
+function practiceExists(slug: string, headers: HeadersInit) {
+  return secureJson(
+    {
+      error: EXPERT_PRACTICE_EXISTS,
+      code: EXPERT_PRACTICE_EXISTS,
+      message:
+        "You already have an expert practice. Add specialties and services there instead of creating another one.",
+      slug,
+      path: expertWorkspaceBase(slug),
+    },
+    { status: 409, headers }
+  )
+}
+
 export async function POST(request: Request) {
   const headers = corsHeaders(request, "POST, GET, OPTIONS")
 
@@ -73,26 +92,25 @@ export async function POST(request: Request) {
   // practice so a person or agent can go there instead.
   if (body.data.type === "expert") {
     const practice = await findOwnedExpertPractice(session.user.id)
-    if (practice) {
-      return secureJson(
-        {
-          error: EXPERT_PRACTICE_EXISTS,
-          code: EXPERT_PRACTICE_EXISTS,
-          message:
-            "You already have an expert practice. Add specialties and services there instead of creating another one.",
-          slug: practice.slug,
-          path: expertWorkspaceBase(practice.slug),
-        },
-        { status: 409, headers }
-      )
-    }
+    if (practice) return practiceExists(practice.slug, headers)
   }
 
-  const result = await createElevaOrganization({
-    userId: session.user.id,
-    name: body.data.name,
-    type: body.data.type,
-  })
+  let result
+  try {
+    result = await createElevaOrganization({
+      userId: session.user.id,
+      name: body.data.name,
+      type: body.data.type,
+    })
+  } catch (err) {
+    // A request that raced this one created the practice after the check
+    // above; the hook refused this one. Answer with the same 409.
+    if (body.data.type === "expert" && isPracticeConflict(err)) {
+      const practice = await findOwnedExpertPractice(session.user.id)
+      if (practice) return practiceExists(practice.slug, headers)
+    }
+    throw err
+  }
 
   if (result.created) {
     try {

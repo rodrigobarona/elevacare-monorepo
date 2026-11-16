@@ -1,5 +1,6 @@
 import { and, asc, eq } from "drizzle-orm"
 import { auth, db } from "@eleva/db"
+import { toMembershipSeniority } from "./capabilities"
 
 /**
  * One expert practice per person (ADR-026). A practice holds several
@@ -15,13 +16,14 @@ export interface OwnedExpertPractice {
   name: string
 }
 
-/** Query for the expert practice this person owns (owner role only). */
-export function ownedExpertPracticeQuery(userId: string) {
+/** This person's memberships in expert organizations, oldest first. */
+export function expertMembershipsQuery(userId: string) {
   return db()
     .select({
       orgId: auth.organization.id,
       slug: auth.organization.slug,
       name: auth.organization.name,
+      role: auth.member.role,
     })
     .from(auth.member)
     .innerJoin(
@@ -29,24 +31,30 @@ export function ownedExpertPracticeQuery(userId: string) {
       eq(auth.member.organizationId, auth.organization.id)
     )
     .where(
-      and(
-        eq(auth.member.userId, userId),
-        eq(auth.organization.type, "expert"),
-        // The owner only: an admin may be someone helping in another
-        // person's practice, which is not their own.
-        eq(auth.member.role, "owner")
-      )
+      and(eq(auth.member.userId, userId), eq(auth.organization.type, "expert"))
     )
     .orderBy(asc(auth.organization.createdAt))
-    .limit(1)
+}
+
+/**
+ * The practice the person owns among those memberships. Only the owner
+ * counts (Better Auth may store a role list such as `owner,admin`): an admin
+ * may be someone helping in another person's practice, which is not theirs.
+ */
+export function pickOwnedPractice(
+  rows: readonly (OwnedExpertPractice & { role: string })[]
+): OwnedExpertPractice | null {
+  const owned = rows.find((row) => toMembershipSeniority(row.role) === "owner")
+  return owned
+    ? { orgId: owned.orgId, slug: owned.slug, name: owned.name }
+    : null
 }
 
 /** The expert practice this person owns, if any. */
 export async function findOwnedExpertPractice(
   userId: string
 ): Promise<OwnedExpertPractice | null> {
-  const [row] = await ownedExpertPracticeQuery(userId)
-  return row ?? null
+  return pickOwnedPractice(await expertMembershipsQuery(userId))
 }
 
 /** Message when a second practice is requested; null when it is allowed. */

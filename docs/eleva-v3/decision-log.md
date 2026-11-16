@@ -53,8 +53,12 @@ Each entry should include:
   production on founder request (Stripe test subscription cancelled and
   customer deleted first; audit row `organization.deleted`; restore branch
   `restore/pre-sdasdas-delete-2026-11-16`).
-- Known gap: two simultaneous creation requests could both pass the check
-  (no database constraint across `member` and `organization`); acceptable
+- Owner detection parses Better Auth role lists (`owner,admin`) with
+  `toMembershipSeniority`, not an exact string match.
+- When the hook refuses a request that raced another, `POST /organizations`
+  still answers the documented 409. Known gap: two requests that both pass
+  the check before either commits can still both create a practice (no
+  database constraint across `member` and `organization`); acceptable
   pre-launch, revisit with the expert closure API.
 - Not judged by the full design panel (small state change on an existing
   card); EN/PT/ES copy written natively.

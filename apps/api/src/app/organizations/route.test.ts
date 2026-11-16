@@ -87,6 +87,30 @@ describe("POST /organizations — one expert practice per person", () => {
     )
   })
 
+  it("answers the same 409 when a racing request created the practice first", async () => {
+    // Free at the check, then the Better Auth hook refuses the create.
+    findOwnedExpertPractice
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(practice)
+    createElevaOrganization.mockRejectedValueOnce(
+      Object.assign(new Error("conflict"), {
+        body: { code: "EXPERT_PRACTICE_EXISTS" },
+      })
+    )
+    const response = await create("expert")
+    expect(response.status).toBe(409)
+    expect(await response.json()).toMatchObject({
+      code: "EXPERT_PRACTICE_EXISTS",
+      path: "/expert/patricia-mota-pt",
+    })
+  })
+
+  it("does not hide other creation failures", async () => {
+    findOwnedExpertPractice.mockResolvedValue(null)
+    createElevaOrganization.mockRejectedValueOnce(new Error("database down"))
+    await expect(create("expert")).rejects.toThrow("database down")
+  })
+
   it("still lets an expert create a team or an academy", async () => {
     findOwnedExpertPractice.mockResolvedValue(practice)
     for (const type of ["team", "academy"] as const) {

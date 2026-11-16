@@ -9,7 +9,8 @@ vi.mock("@eleva/db", async () => {
 
 import {
   expertPracticeViolation,
-  ownedExpertPracticeQuery,
+  expertMembershipsQuery,
+  pickOwnedPractice,
   secondExpertPracticeViolation,
 } from "./expert-practice"
 
@@ -19,15 +20,33 @@ const practice = {
   name: "Patricia Mota PT",
 }
 
-describe("ownedExpertPracticeQuery", () => {
-  it("counts only an expert organization the person owns", () => {
-    const { sql, params } = ownedExpertPracticeQuery("user-1").toSQL()
-    expect(params).toEqual(
-      expect.arrayContaining(["user-1", "expert", "owner"])
+describe("expertMembershipsQuery", () => {
+  it("reads only this person's expert organizations", () => {
+    const { params } = expertMembershipsQuery("user-1").toSQL()
+    expect(params).toEqual(expect.arrayContaining(["user-1", "expert"]))
+  })
+})
+
+describe("pickOwnedPractice", () => {
+  const row = (role: string, slug = "patricia-mota-pt") => ({
+    orgId: `org-${slug}`,
+    slug,
+    name: slug,
+    role,
+  })
+
+  it("counts the practice the person owns, including role lists", () => {
+    expect(pickOwnedPractice([row("owner")])?.slug).toBe("patricia-mota-pt")
+    expect(pickOwnedPractice([row("owner,admin")])?.slug).toBe(
+      "patricia-mota-pt"
     )
-    // An admin or delegate in someone else's practice is not their practice.
-    expect(params).not.toContain("admin")
-    expect(sql).toMatch(/"member"\."role" = \$\d/)
+  })
+
+  it("ignores an admin or member seat in someone else's practice", () => {
+    expect(pickOwnedPractice([row("admin"), row("member", "other")])).toBeNull()
+    expect(
+      pickOwnedPractice([row("admin", "helping"), row("owner", "mine")])?.slug
+    ).toBe("mine")
   })
 })
 
