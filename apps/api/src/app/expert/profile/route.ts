@@ -118,10 +118,17 @@ export async function PATCH(request: Request) {
 
   // The NIF goes on the service-fee invoices Eleva issues the expert, so a
   // malformed one is refused here rather than on an invoice.
+  // Setup asks for the NIF before the practice country, and new profiles
+  // start on a default country, so the per-country check applies only once
+  // the expert has declared where they practise.
+  const taxCountry = (profile.metadata as Record<string, unknown> | null)
+    ?.practiceDeclaredAt
+    ? profile.practiceCountry
+    : null
   let nif: string | null | undefined = undefined
   if (data.nif !== undefined) {
     const raw = data.nif?.trim() ?? ""
-    if (raw && !isValidTaxId(raw, profile.practiceCountry)) {
+    if (raw && !isValidTaxId(raw, taxCountry)) {
       return secureJson(
         {
           error: "validation",
@@ -137,7 +144,7 @@ export async function PATCH(request: Request) {
         { status: 422, headers }
       )
     }
-    nif = raw ? normalizeTaxId(raw, profile.practiceCountry) : null
+    nif = raw ? normalizeTaxId(raw, taxCountry) : null
   }
 
   // Members find experts by how they meet, so a way of meeting that a

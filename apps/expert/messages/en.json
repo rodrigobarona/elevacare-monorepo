@@ -1114,7 +1114,8 @@
       "invoicing-required": "Choose how invoices are issued first.",
       "identity-required": "Start the identity check first.",
       "invalid-step": "Something went wrong. Refresh and try again.",
-      "licence-required": "Add your professional body, licence number and ERS registration number in the Practice step."
+      "licence-required": "Add your professional body, licence number and ERS registration number in the Practice step.",
+      "invalid-tax-id": "This doesn't look like a valid tax number. Check it and try again, or leave it empty and add it later."
     }
   },
   "publicProfile": {

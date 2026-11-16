@@ -54,7 +54,8 @@ export function NifSection({
         return
       }
       toast.success(t("saved"))
-      setNif(next)
+      // Show the stored form unless the expert typed something new while saving.
+      setNif((current) => (current.trim() === trimmed ? next : current))
       setSaved(next)
     })
   }

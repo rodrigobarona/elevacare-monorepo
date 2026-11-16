@@ -1114,7 +1114,8 @@
       "invoicing-required": "Escolha primeiro como são emitidas as faturas.",
       "identity-required": "Inicie primeiro a verificação de identidade.",
       "invalid-step": "Algo correu mal. Atualize a página e tente novamente.",
-      "licence-required": "Indique a sua Ordem, o número da cédula profissional e o número de registo na ERS no passo Onde exerce."
+      "licence-required": "Indique a sua Ordem, o número da cédula profissional e o número de registo na ERS no passo Onde exerce.",
+      "invalid-tax-id": "Este número fiscal não parece válido. Verifique-o e tente novamente, ou deixe-o vazio e adicione-o mais tarde."
     }
   },
   "publicProfile": {

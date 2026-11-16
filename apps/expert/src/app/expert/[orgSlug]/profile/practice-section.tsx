@@ -93,7 +93,8 @@ export function PracticeSection({
       }
       setBlocked(null)
       toast.success(t("saved"))
-      setValue(next)
+      // Only the baseline moves: anything typed while saving stays in the
+      // form and keeps it marked as changed.
       setSaved(next)
     })
   }

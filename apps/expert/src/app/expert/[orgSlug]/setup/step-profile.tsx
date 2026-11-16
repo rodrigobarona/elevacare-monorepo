@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 import { Button } from "@eleva/ui/components/button"
 import { Input } from "@eleva/ui/components/input"
 import { Label } from "@eleva/ui/components/label"
+import { FieldError } from "@eleva/ui/components/field"
 import { Alert, AlertDescription } from "@eleva/ui/components/alert"
 import { saveProfileStep } from "./actions"
 import { setupErrorMessage } from "./setup-errors"
@@ -20,6 +21,8 @@ export function StepProfile({ profile, onDone }: Props) {
   const t = useTranslations("onboarding")
   const [pending, setPending] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  // A bad tax number is shown beside the field: retrying cannot fix it.
+  const [nifInvalid, setNifInvalid] = React.useState(false)
   const [nif, setNif] = React.useState(profile.nif ?? "")
   const [sessionModes, setSessionModes] = React.useState<string[]>(
     profile.sessionModes
@@ -29,12 +32,14 @@ export function StepProfile({ profile, onDone }: Props) {
     e.preventDefault()
     setPending(true)
     setError(null)
+    setNifInvalid(false)
     try {
       const result = await saveProfileStep({
         nif: nif.trim() || undefined,
         sessionModes,
       })
       if (result.ok) onDone()
+      else if (result.error === "invalid-tax-id") setNifInvalid(true)
       else setError(setupErrorMessage(t, result.error))
     } catch {
       setError(setupErrorMessage(t, "save-failed"))
@@ -56,15 +61,22 @@ export function StepProfile({ profile, onDone }: Props) {
         <Input
           id="nif"
           value={nif}
-          onChange={(e) => setNif(e.target.value)}
-          inputMode="numeric"
+          onChange={(e) => {
+            setNif(e.target.value)
+            setNifInvalid(false)
+          }}
           autoComplete="off"
-          placeholder="123456789"
-          aria-describedby="nif-hint"
+          autoCapitalize="characters"
+          spellCheck={false}
+          aria-invalid={nifInvalid}
+          aria-describedby={nifInvalid ? "nif-hint nif-error" : "nif-hint"}
         />
         <p id="nif-hint" className="text-xs text-muted-foreground">
           {t("profileStep.nifHint")}
         </p>
+        <FieldError id="nif-error">
+          {nifInvalid ? setupErrorMessage(t, "invalid-tax-id") : null}
+        </FieldError>
       </div>
 
       <SessionModesField value={sessionModes} onChange={setSessionModes} />

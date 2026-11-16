@@ -11,6 +11,7 @@ const OLD_PORTRAIT = `${PORTRAITS}/user-1/old.jpg`
 const NEW_PORTRAIT = `${PORTRAITS}/user-1/new.jpg`
 const FOREIGN_PORTRAIT = `${PORTRAITS}/user-2/theirs.jpg`
 let storedAvatarUrl: string | null = OLD_PORTRAIT
+let practiceDeclared = true
 let publishedModes: Array<{
   mode: string
   eventTypeId?: string
@@ -34,7 +35,7 @@ vi.mock("@eleva/db", () => ({
   getExpertProfileForOrg: vi.fn(async () => ({
     id: "profile-1",
     orgId: "org-1",
-    metadata: {},
+    metadata: practiceDeclared ? { practiceDeclaredAt: "2026-11-01" } : {},
     avatarUrl: storedAvatarUrl,
     practiceCountry: "PT",
   })),
@@ -88,6 +89,7 @@ describe("PATCH /expert/profile content", () => {
     vi.stubEnv("NEXT_PUBLIC_MEDIA_BASE_URL", MEDIA_BASE_URL)
     storedAvatarUrl = OLD_PORTRAIT
     publishedModes = []
+    practiceDeclared = true
   })
 
   afterEach(() => {
@@ -298,6 +300,13 @@ describe("PATCH /expert/profile content", () => {
     expect(response.status).toBe(422)
     expect(await response.json()).toMatchObject({ code: "INVALID_TAX_ID" })
     expect(updateExpertProfile).not.toHaveBeenCalled()
+  })
+
+  it("does not apply the default country's NIF rules before the expert declares a country", async () => {
+    practiceDeclared = false
+    const response = await patch({ nif: "12345678Z" })
+    expect(response.status).toBe(200)
+    expect(updatedFields().nif).toBe("12345678Z")
   })
 
   it("clears the NIF when it is emptied", async () => {
