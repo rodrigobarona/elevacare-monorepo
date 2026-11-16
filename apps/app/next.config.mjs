@@ -34,7 +34,6 @@ const nextConfig = {
     "@eleva/encryption",
     "@eleva/flags",
     "@eleva/observability",
-    "@eleva/storage",
     "@eleva/ui",
     "@eleva/workflows",
     ...C15T_TRANSPILE_PACKAGES,

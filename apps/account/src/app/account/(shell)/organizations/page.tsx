@@ -38,13 +38,15 @@ export default async function OrganizationsPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-10">
       <PageHeader
-        eyebrow={t("eyebrow")}
         title={t("title")}
         description={t("description")}
         actions={
-          <LinkButton href="/account/workspaces/new" size="sm">
-            {t("createWorkspace")}
-          </LinkButton>
+          // With no workspace yet, the empty state below carries the action.
+          workspaces.length > 0 ? (
+            <LinkButton href="/account/workspaces/new" size="sm">
+              {t("createWorkspace")}
+            </LinkButton>
+          ) : undefined
         }
       />
       {spaces.length > 0 ? (

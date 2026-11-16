@@ -133,6 +133,57 @@ function SettingsFieldsetAsideSlot({
   )
 }
 
+type SettingsRowProps = Omit<React.ComponentProps<"div">, "title"> & {
+  /** What the setting is, in a few words. */
+  title: React.ReactNode
+  /** One line on what it changes for the person. */
+  description?: React.ReactNode
+  /** Small extra line under the description (a date, a state). */
+  meta?: React.ReactNode
+  /** Put a wide control (several switches) under the text on phones. */
+  stack?: boolean
+}
+
+/**
+ * One setting in a list: what it is on the left, its control on the right,
+ * on the same line at every width (`stack` puts a wide control under the
+ * text on phones). Rows are separated by a hairline.
+ */
+function SettingsRow({
+  title,
+  description,
+  meta,
+  stack = false,
+  children,
+  className,
+  ...props
+}: SettingsRowProps) {
+  return (
+    <div
+      data-slot="settings-row"
+      className={cn(
+        "flex items-start justify-between gap-4 border-t border-border/70 py-4 first:border-t-0 first:pt-0 last:pb-0 sm:gap-6",
+        stack && "flex-col sm:flex-row",
+        className
+      )}
+      {...props}
+    >
+      <div className="min-w-0 space-y-0.5">
+        <div className="text-sm font-medium">{title}</div>
+        {description ? (
+          <div className="text-sm text-muted-foreground">{description}</div>
+        ) : null}
+        {meta ? (
+          <div className="text-xs text-muted-foreground">{meta}</div>
+        ) : null}
+      </div>
+      {children ? (
+        <div className="flex shrink-0 items-center gap-2">{children}</div>
+      ) : null}
+    </div>
+  )
+}
+
 function SettingsFieldsetAvatarSlot({
   className,
   ...props
@@ -150,4 +201,5 @@ export {
   SettingsFieldsetFooter,
   SettingsFieldsetStatus,
   SettingsFieldsetTitle,
+  SettingsRow,
 }

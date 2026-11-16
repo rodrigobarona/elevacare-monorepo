@@ -1,82 +1,211 @@
 {
   "nav": {
     "account": "Account",
-    "settings": "Settings",
+    "profile": "Profile",
+    "notifications": "Notifications",
+    "security": "Security",
+    "privacy": "Privacy",
     "billing": "Billing",
-    "organizations": "Workspaces",
-    "privacy": "Privacy"
+    "organizations": "Workspaces"
   },
-  "settings": {
-    "title": "Account settings",
-    "pageDescription": "Manage your profile, security, and preferences for your Eleva account.",
-    "profile": {
-      "title": "Profile",
-      "description": "Update your name and account details.",
-      "footerHint": "Email and identity changes may require verification.",
-      "email": "Email",
+  "profile": {
+    "title": "Profile",
+    "subtitle": "Your photo and name, your language and time zone, and how Eleva looks.",
+    "details": {
+      "title": "Your details",
+      "description": "Experts see your photo and name when you book with them.",
+      "photo": "Photo",
+      "photoHint": "JPG, PNG or WebP, up to 2 MB.",
+      "uploadPhoto": "Upload a photo",
+      "changePhoto": "Change photo",
+      "removePhoto": "Remove",
       "name": "Name",
-      "language": "Language",
+      "email": "Email",
+      "emailHint": "You sign in with this email.",
       "save": "Save",
-      "saving": "Saving...",
-      "profileSaved": "Profile updated.",
-      "profileError": "Could not update profile. Try again.",
-      "languageSaved": "Language preference updated.",
-      "languageError": "Could not update language. Please try again."
+      "saving": "Saving…",
+      "saved": "Your details are saved.",
+      "error": "We couldn't save your details. Please try again."
     },
     "avatar": {
-      "title": "Profile photo",
-      "description": "This is your avatar. Click the photo to upload a custom image from your files.",
-      "changePhoto": "Change profile photo",
-      "upload": "Upload photo",
+      "tooLarge": "That photo is over 2 MB. Choose a smaller one.",
+      "invalidType": "Use a JPG, PNG or WebP photo.",
+      "uploadFailed": "We couldn't upload your photo. Please try again.",
+      "saveFailed": "We couldn't save your photo. Please try again.",
+      "removeFailed": "We couldn't remove your photo. Please try again.",
+      "uploaded": "Your photo is updated.",
+      "removed": "Your photo is removed."
+    },
+    "region": {
+      "title": "Language and time zone",
+      "description": "How Eleva writes to you and shows the time of your sessions.",
+      "language": "Language",
+      "languageHint": "Used across Eleva and in the emails we send you.",
+      "timezone": "Time zone",
+      "timezoneHint": "Session times are shown in this time zone.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Your language and time zone are saved.",
+      "error": "We couldn't save your language and time zone. Please try again."
+    },
+    "appearance": {
+      "title": "Appearance",
+      "description": "Choose light, dark, or follow your device.",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "Match my device",
+      "footer": "Saved straight away in this browser and used across Eleva."
+    }
+  },
+  "notificationSettings": {
+    "title": "Notifications",
+    "subtitle": "Choose how Eleva keeps you posted about your sessions.",
+    "card": {
+      "title": "What we send you",
+      "description": "Turn each kind of message on or off. We save each change straight away."
+    },
+    "channel": {
+      "email": "Email",
+      "in_app": "In Eleva"
+    },
+    "channelInfoLabel": "Where “In Eleva” messages appear",
+    "channelInfo": "They appear under the bell at the top of Eleva, the next time you open it.",
+    "alwaysOn": "Always on",
+    "categories": {
+      "booking": {
+        "title": "Sessions",
+        "description": "Confirmations, changes and your link to join.",
+        "emailOff": "You won't get your join link by email. Find it in your Space before each session."
+      },
+      "reminder": {
+        "title": "Reminders",
+        "description": "A reminder before each session."
+      },
+      "payment": {
+        "title": "Payments",
+        "description": "Receipts and failed payments."
+      },
+      "system": {
+        "title": "Account and security",
+        "description": "Sign-in links and codes, password resets and invitations."
+      }
+    },
+    "saved": "Saved.",
+    "error": "We couldn't save that change. Please try again.",
+    "newsHint": "Want news from Eleva? Choose it on your Privacy page.",
+    "newsLink": "Go to Privacy",
+    "channelInfoTitle": "In Eleva"
+  },
+  "security": {
+    "title": "Security",
+    "subtitle": "How you sign in, and where you're signed in right now.",
+    "error": "Something went wrong. Please try again.",
+    "password": {
+      "title": "Password",
+      "description": "Sign in with your email and a password.",
+      "current": "Current password",
+      "new": "New password",
+      "newHint": "At least 8 characters.",
+      "submit": "Change password",
+      "saving": "Changing…",
+      "saved": "Your password is changed.",
+      "none": "You sign in with Google or with a link we email you, so you don't need a password.",
+      "signOutOthers": "Changing your password signs you out on your other devices."
+    },
+    "twoStep": {
+      "title": "Two-step verification",
+      "description": "After your password, Eleva asks for a code from an app on your phone.",
+      "infoLabel": "About two-step verification",
+      "info": "Even if someone learns your password, they can't sign in without your phone. It works with apps such as Google Authenticator, Microsoft Authenticator and 1Password.",
+      "on": "On",
+      "off": "Off",
+      "turnOn": "Turn on",
+      "turnOff": "Turn off",
+      "passwordStep": {
+        "title": "Confirm it's you",
+        "description": "Enter your password to start setting up two-step verification.",
+        "password": "Password",
+        "continue": "Continue"
+      },
+      "turnOffStep": {
+        "title": "Turn off two-step verification?",
+        "description": "You'll sign in with your password only. Enter it to confirm.",
+        "confirm": "Turn off"
+      },
+      "enabled": "Two-step verification is on.",
+      "disabled": "Two-step verification is off.",
+      "cancel": "Cancel",
+      "stepCount": "Step {current} of {total}",
+      "back": "Back",
+      "next": "Next",
+      "scanStep": {
+        "title": "Scan the code",
+        "description": "Open your authenticator app, add an account and scan this code.",
+        "qrLabel": "QR code to add Eleva to your authenticator app",
+        "cantScan": "Can't scan the code?",
+        "keyHint": "Enter this key in your app instead.",
+        "copy": "Copy key",
+        "copied": "Key copied.",
+        "openInApp": "Open in authenticator app"
+      },
+      "codeStep": {
+        "title": "Enter the code from your app",
+        "description": "Type the 6-digit code your app shows for Eleva.",
+        "code": "6-digit code",
+        "verify": "Turn on"
+      },
+      "backupStep": {
+        "title": "Save your backup codes",
+        "description": "If you lose your phone, each code signs you in once. Keep them somewhere safe, such as your password manager.",
+        "copyCodes": "Copy codes",
+        "codesCopied": "Codes copied.",
+        "savedCodes": "I've saved my backup codes",
+        "done": "Done"
+      }
+    },
+    "passkeys": {
+      "title": "Passkeys",
+      "description": "Sign in with your fingerprint, face or device PIN instead of a password.",
+      "infoLabel": "About passkeys",
+      "info": "A passkey is saved on your device or in your password manager. It can't be guessed or stolen by a fake website, and there's nothing to remember.",
+      "add": "Add a passkey",
+      "empty": "You haven't added a passkey yet.",
+      "added": "Passkey added.",
       "remove": "Remove",
-      "hint": "JPG, PNG or WebP. Max 2 MB.",
-      "tooLarge": "File is too large. Maximum size is 2 MB.",
-      "invalidType": "Unsupported file type. Use JPG, PNG, or WebP.",
-      "uploadFailed": "Upload failed. Please try again.",
-      "saveFailed": "Could not save avatar. Please try again.",
-      "removeFailed": "Could not remove avatar. Please try again.",
-      "uploaded": "Profile photo updated.",
-      "removed": "Profile photo removed."
+      "removed": "Passkey removed.",
+      "unnamed": "Passkey",
+      "addedOn": "Added {date}",
+      "removeTitle": "Remove this passkey?",
+      "removeBody": "You won't be able to sign in with it any more. You can add it again later.",
+      "cancel": "Cancel"
     },
-    "language": {
-      "title": "Language",
-      "description": "Choose the language used across Eleva apps for your account.",
-      "footerHint": "We use it across Eleva and in the emails we send you."
+    "google": {
+      "title": "Google",
+      "description": "Sign in with your Google account.",
+      "connected": "Connected",
+      "connect": "Connect Google",
+      "linkFailed": "We couldn't connect Google. Please try again.",
+      "linkEmailMismatch": "We couldn't connect Google. Use the Google account with the same email as your Eleva account, then try again.",
+      "linkTaken": "That Google account is already connected to another Eleva account."
     },
-    "security": {
-      "title": "Security",
-      "description": "Manage passwords, multi-factor authentication, and sign-in methods.",
-      "currentPassword": "Current password",
-      "newPassword": "New password",
-      "updatePassword": "Update password",
-      "passwordUpdated": "Password updated.",
-      "twoFactor": "Two-factor authentication",
-      "enableTwoFactor": "Enable authenticator",
-      "twoFactorEnabled": "Two-factor authentication enabled.",
-      "totpCode": "Authenticator code",
-      "verify": "Verify",
-      "passkeys": "Passkeys",
-      "addPasskey": "Add passkey",
-      "passkeyAdded": "Passkey added.",
-      "remove": "Remove",
-      "google": "Google sign-in",
-      "googleHint": "Connect Google to sign in with it. You can only connect Google while you are signed in to Eleva.",
-      "googleLinked": "Google is connected.",
-      "connectGoogle": "Connect Google",
-      "googleLinkFailed": "Google could not be connected. Please try again.",
-      "googleLinkEmailMismatch": "Google could not be connected. Use the Google account with the same email as your Eleva account, then try again.",
-      "googleLinkTaken": "That Google account is already connected to another Eleva account.",
-      "sessionsTitle": "Sessions",
-      "sessionsDescription": "Review devices and browsers where you are currently signed in.",
-      "revoke": "Revoke",
-      "error": "Could not update security settings. Try again."
+    "devices": {
+      "title": "Where you're signed in",
+      "description": "If you see a device you don't recognise, sign it out and change your password.",
+      "thisDevice": "This device",
+      "name": "{browser} on {os}",
+      "unknown": "Unknown device",
+      "lastActive": "Last active {date}",
+      "signOut": "Sign out",
+      "signOutOthers": "Sign out of all other devices",
+      "signedOut": "That device is signed out.",
+      "signedOutOthers": "All other devices are signed out.",
+      "showAll": "Show all {count}",
+      "showFewer": "Show fewer"
     },
-    "sessions": {
-      "title": "Sessions",
-      "description": "Review devices and browsers where you are currently signed in.",
-      "footerHint": "Revoke sessions you do not recognize."
-    },
-    "eyebrow": "Account"
+    "errors": {
+      "password": "That password isn't right. Please try again.",
+      "code": "That code didn't work. Enter the newest code from your app."
+    }
   },
   "onboarding": {
     "title": "Welcome to Eleva",
@@ -93,7 +222,6 @@
     "errorGeneric": "We couldn't complete onboarding. Please try again."
   },
   "organizations": {
-    "eyebrow": "Account",
     "title": "Workspaces",
     "description": "Your Space and the workspaces you belong to. Open one to switch to it.",
     "createWorkspace": "Create workspace",
@@ -118,7 +246,11 @@
     "description": "Manage your personal subscription and payment methods.",
     "subscriptionTitle": "Subscription",
     "subscriptionDescription": "Choose a plan and manage checkout or your billing portal.",
-    "eyebrow": "Account"
+    "noWorkspace": {
+      "title": "Nothing to pay here",
+      "description": "Billing is for expert practices and clinics. Your session receipts are in your Space.",
+      "action": "Open payments"
+    }
   },
   "auth": {
     "loginTitle": "Welcome back",
@@ -162,7 +294,7 @@
     "logoutTitle": "Sign out",
     "logoutDescription": "End this session on this device.",
     "errorGeneric": "Something went wrong. Please try again.",
-    "accountNotLinked": "This email already has an Eleva account. Sign in with a sign-in link, your password or a passkey, then connect Google in Settings → Security.",
+    "accountNotLinked": "This email already has an Eleva account. Sign in with a sign-in link, your password or a passkey, then connect Google in Account → Security.",
     "providerEmailNotVerified": "Google hasn't confirmed this email address yet. Sign in with a link instead: we'll email it to you, and one tap gets you in.",
     "passwordStepDescription": "Enter your password, or get a sign-in link by email.",
     "continue": "Continue",
@@ -209,26 +341,107 @@
     "callbackErrorBack": "Back to Eleva"
   },
   "privacy": {
-    "eyebrow": "Account",
-    "title": "Privacy & data",
-    "description": "Your consents, data export and account deletion.",
-    "controls": {
-      "consents": {
-        "title": "Consents",
-        "body": "See and change what you agreed to, including marketing and health-data processing."
+    "title": "Privacy",
+    "subtitle": "See what you agreed to, choose how we use your data, get a copy of it or delete your account.",
+    "error": "Something went wrong. Please try again.",
+    "agreements": {
+      "title": "Terms and privacy notice",
+      "description": "These apply while you use Eleva.",
+      "agreedOn": "Agreed on {date}",
+      "updated": "Updated {date}",
+      "read": "Read",
+      "kinds": {
+        "terms": "Terms of use",
+        "privacy": "Privacy notice"
       },
-      "export": {
-        "title": "Export your data",
-        "body": "Request a copy of the data Eleva holds about you."
-      },
-      "deletion": {
-        "title": "Delete your account",
-        "body": "Schedule deletion with a 14-day waiting period. Records tied to a session are de-identified and kept for the legal minimum."
+      "agree": "Agree",
+      "agreeNew": "Agree to this version",
+      "agreedOld": "You agreed to the {date} version",
+      "saved": "Saved. Thank you.",
+      "readLabel": "Read the {document} (opens in a new tab)"
+    },
+    "choices": {
+      "title": "Your choices",
+      "description": "Change these at any time. We save each change straight away.",
+      "onSince": "On since {date}",
+      "granted": "Saved. This is now on.",
+      "withdrawn": "Saved. This is now off.",
+      "healthDataBlocked": "This stays on while you have a session booked. You can turn it off after your last session.",
+      "kinds": {
+        "health_data_processing": {
+          "title": "Health information for your care",
+          "description": "Lets your experts use information about your health, such as your intake answers, session notes and documents, to care for you. You need this on to book.",
+          "noticeLink": "Read the health data notice"
+        },
+        "marketing": {
+          "title": "News from Eleva",
+          "description": "Emails about new experts, events and offers."
+        },
+        "ai_processing": {
+          "title": "AI help with session reports",
+          "description": "Off unless you turn it on. You can turn it off at any time.",
+          "info": [
+            "Your video sessions are transcribed live, so your expert keeps a written record.",
+            "Your expert can draft session reports from their own notes with an AI model that keeps no copy of your data, and reviews every draft before you see it. AI drafting is not switched on yet.",
+            "When you turn this off, transcription stops from your next call."
+          ],
+          "noticeLink": "Read the AI processing notice"
+        }
       }
     },
-    "spaceHint": "These controls live in your Space.",
-    "noSpace": "You need a personal Space to manage these controls.",
-    "openControls": "Open privacy controls"
+    "recordAccess": {
+      "title": "Shared records at clinics",
+      "description": "Some clinics let their experts read each other's session records, so your care stays joined up. You can say no for each clinic.",
+      "optOut": "Don't share my session records with other experts at {clinic}",
+      "sharedOn": "{clinic} shares records between its experts.",
+      "sharedOff": "{clinic} doesn't share records between its experts today.",
+      "optOutSaved": "Saved. Other experts at this clinic can't read your session records.",
+      "optInSaved": "Saved. Other experts at this clinic can read your session records again."
+    },
+    "dsar": {
+      "title": "Get a copy of your data",
+      "description": "We prepare a file with the data Eleva holds about you. It usually takes a few minutes.",
+      "request": "Request a copy",
+      "requesting": "Requesting…",
+      "requested": "We're preparing your file.",
+      "download": "Download (.zip)",
+      "downloadHint": "The download link works for 24 hours.",
+      "error": "We couldn't request your copy. Please try again.",
+      "status": {
+        "pending": "Waiting to start…",
+        "processing": "Preparing your file…",
+        "ready": "Your file is ready.",
+        "expired": "The link has expired. Request a new copy.",
+        "failed": "Something went wrong. Please request a new copy."
+      },
+      "leaveHint": "You can leave this page. Come back here to download it."
+    },
+    "deletion": {
+      "title": "Delete your account",
+      "description": "Your upcoming sessions are cancelled and new bookings stop as soon as you confirm. We delete your account 14 days later.",
+      "button": "Delete account",
+      "confirmTitle": "Delete your account?",
+      "eraseTitle": "What we erase",
+      "erase": [
+        "Your profile, photo and settings.",
+        "What you wrote for your sessions, such as your intake answers.",
+        "Choices that aren't tied to a session, such as news from Eleva."
+      ],
+      "keepTitle": "What we keep, and why",
+      "keep": "We keep your experts' session notes, the consents behind your sessions and your payment records for the time the law requires. In session notes and consents, we replace your name and account with a code. Payment records keep the details tax law requires.",
+      "sessionsTitle": "Your upcoming sessions",
+      "sessions": "Upcoming sessions are cancelled when you confirm. If you paid for one, we start your refund. Keeping your account later doesn't bring cancelled sessions back.",
+      "grace": "Your account is deleted 14 days after you confirm. Until then, you can keep it from this page.",
+      "confirm": "Delete my account",
+      "scheduling": "Scheduling…",
+      "scheduled": "Your account will be deleted on {date}. You can cancel until then.",
+      "alreadyScheduled": "Your account is already scheduled for deletion.",
+      "cancel": "Keep my account",
+      "cancelling": "Cancelling…",
+      "cancelled": "Your account stays open. You can book new sessions again.",
+      "keepOpen": "Keep my account",
+      "error": "Something went wrong. Please try again."
+    }
   },
   "invitation": {
     "loading": "Opening your invitation…",

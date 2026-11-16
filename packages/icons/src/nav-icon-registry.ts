@@ -7,6 +7,7 @@ import type { NavIconName } from "./nav-icon-names"
  */
 import {
   AddressBookIcon,
+  BellIcon,
   BookOpenIcon,
   BuildingsIcon,
   CalendarCheckIcon,
@@ -16,6 +17,7 @@ import {
   ClockIcon,
   CreditCardIcon,
   GearIcon,
+  LockSimpleIcon,
   PlugIcon,
   ShieldIcon,
   SquaresFourIcon,
@@ -43,6 +45,8 @@ export const navIconRegistry: Record<NavIconName, Icon> = {
   ChartBarIcon,
   AddressBookIcon,
   CalendarCheckIcon,
+  BellIcon,
+  LockSimpleIcon,
 }
 
 export function getNavIcon(name: NavIconName): Icon {

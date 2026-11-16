@@ -2,53 +2,60 @@
 
 import { cookies, headers } from "next/headers"
 import { revalidatePath } from "next/cache"
-import { buildApiSessionHeaders, requireSession } from "@eleva/auth/server"
-import { mintUploadToken } from "@eleva/auth/upload-token"
+import { unstable_rethrow } from "next/navigation"
+import { z } from "zod"
 import {
-  createApiClient,
+  isIanaTimeZone,
+  PatchMeRequestSchema,
   UpdateAvatarRequestSchema,
   UpdateUserLocaleRequestSchema,
 } from "@eleva/api-client"
+import { requireSession } from "@eleva/auth/server"
+import { mintUploadToken } from "@eleva/auth/upload-token"
+import { isAvatarUrl } from "@eleva/config/avatar-upload"
 import { cookieName, getLocaleCookieOptions } from "@eleva/config/i18n"
+import { deletePublicObject } from "@eleva/storage"
+import { getPersonalApiClient } from "@/lib/personal-api"
 
-function getApiBaseUrl(): string {
-  const url = process.env.NEXT_PUBLIC_API_URL
-  if (!url) {
-    throw new Error(
-      "NEXT_PUBLIC_API_URL environment variable is required but not set"
-    )
+type Result = { ok: true } | { ok: false }
+
+const PROFILE_PATH = "/account/settings"
+
+// ── Your details ────────────────────────────────────────────────────
+
+export async function updateDetails(input: unknown): Promise<Result> {
+  const parsed = PatchMeRequestSchema.safeParse(input)
+  if (!parsed.success || !parsed.data.name) return { ok: false }
+  try {
+    const api = await getPersonalApiClient()
+    await api.me.patch({ name: parsed.data.name })
+    revalidatePath(PROFILE_PATH)
+    return { ok: true }
+  } catch (err) {
+    unstable_rethrow(err)
+    console.error("updateDetails failed", err)
+    return { ok: false }
   }
-  return url
 }
 
-async function getAuthedApiClient() {
-  await requireSession()
-  const incomingHeaders = await headers()
-  return createApiClient({
-    baseUrl: getApiBaseUrl(),
-    headers: buildApiSessionHeaders(incomingHeaders),
-  })
-}
+// ── Language and time zone ──────────────────────────────────────────
 
-// ── Language preference ─────────────────────────────────────────────
+const RegionSchema = z.object({
+  locale: UpdateUserLocaleRequestSchema.shape.locale,
+  timezone: z.string().min(1).max(64).refine(isIanaTimeZone),
+})
 
-type LanguageState = { ok: true; saved?: boolean } | { ok: false }
-
-export async function updateLanguagePreference(
-  _prev: LanguageState,
-  formData: FormData
-): Promise<LanguageState> {
-  const parsed = UpdateUserLocaleRequestSchema.safeParse({
-    locale: formData.get("locale"),
-  })
+export async function updateRegion(input: unknown): Promise<Result> {
+  const parsed = RegionSchema.safeParse(input)
   if (!parsed.success) return { ok: false }
-  const { locale } = parsed.data
-
+  const { locale, timezone } = parsed.data
   try {
     // Save on the user (emails read it), then the cookie (the interface).
-    const api = await getAuthedApiClient()
-    await api.users.locale.update({ locale })
-
+    const api = await getPersonalApiClient()
+    await Promise.all([
+      api.users.locale.update({ locale }),
+      api.me.patch({ timezone }),
+    ])
     const [jar, hdrs] = await Promise.all([cookies(), headers()])
     const host = hdrs.get("x-forwarded-host") ?? hdrs.get("host")
     jar.set(
@@ -56,44 +63,57 @@ export async function updateLanguagePreference(
       locale,
       getLocaleCookieOptions(host, { httpOnly: false })
     )
-
     revalidatePath("/", "layout")
-    revalidatePath("/account/settings")
-    return { ok: true, saved: true }
+    return { ok: true }
   } catch (err) {
-    console.error("updateLanguagePreference failed", err)
+    unstable_rethrow(err)
+    console.error("updateRegion failed", err)
     return { ok: false }
   }
 }
 
-// ── Avatar ──────────────────────────────────────────────────────────
+// ── Photo ───────────────────────────────────────────────────────────
 
 export async function getAvatarUploadToken(): Promise<string> {
   const session = await requireSession()
   return mintUploadToken(session.user.id)
 }
 
-export async function updateAvatar(url: unknown): Promise<{ ok: boolean }> {
+/** An uploaded photo that could not be saved is deleted, not left behind. */
+async function discardOrphanAvatar(url: string): Promise<void> {
+  try {
+    const session = await requireSession()
+    if (isAvatarUrl(url, session.user.id)) await deletePublicObject(url)
+  } catch (err) {
+    unstable_rethrow(err)
+    console.warn("discardOrphanAvatar failed", err)
+  }
+}
+
+export async function updateAvatar(url: unknown): Promise<Result> {
   const parsed = UpdateAvatarRequestSchema.safeParse({ url })
   if (!parsed.success) return { ok: false }
   try {
-    const api = await getAuthedApiClient()
+    const api = await getPersonalApiClient()
     await api.users.avatar.update(parsed.data)
-    revalidatePath("/account/settings")
+    revalidatePath(PROFILE_PATH)
     return { ok: true }
   } catch (err) {
+    unstable_rethrow(err)
+    await discardOrphanAvatar(parsed.data.url)
     console.error("updateAvatar failed", err)
     return { ok: false }
   }
 }
 
-export async function removeAvatar(): Promise<{ ok: boolean }> {
+export async function removeAvatar(): Promise<Result> {
   try {
-    const api = await getAuthedApiClient()
+    const api = await getPersonalApiClient()
     await api.users.avatar.remove()
-    revalidatePath("/account/settings")
+    revalidatePath(PROFILE_PATH)
     return { ok: true }
   } catch (err) {
+    unstable_rethrow(err)
     console.error("removeAvatar failed", err)
     return { ok: false }
   }

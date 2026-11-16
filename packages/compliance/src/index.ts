@@ -87,6 +87,7 @@ export {
   getDsarRequestById,
   markDsarExpired,
   dsarDownloadUrlIfReady,
+  getLatestDsarRequestForUser,
   processDsarExport,
   DSAR_PROCESSING_LEASE_MS,
   type DsarRequestView,

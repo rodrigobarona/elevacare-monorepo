@@ -336,7 +336,7 @@
           "id": "D5.3",
           "title": "Privacy and data controls",
           "scope": "What she agreed to (dated) apart from optional choices (switches). Download and delete explained in plain words, with status and visible safeguards.",
-          "findings": ["MEM-02", "MEM-08", "TRUST-02", "TRUST-08"],
+          "findings": ["MEM-02", "MEM-08", "TRUST-02", "TRUST-08", "ACC-03"],
           "effort": "M",
           "legalReview": true
         },
@@ -393,6 +393,13 @@
           "scope": "Provider as the card title and the email once below it, 'Main calendar' instead of the email, every calendar listed, the destination switch shown on, subscribed feeds named by host, and a 'Reminder in your calendar' select beside where sessions go (stored with the destination, sent to Google and Outlook).",
           "findings": ["XDASH-27", "XDASH-28", "XDASH-29", "XDASH-30"],
           "effort": "S"
+        },
+        {
+          "id": "D5.8",
+          "title": "One account home",
+          "scope": "Everything about the person in /account: Profile, Notifications, Security, Privacy, Workspaces, and Billing for practices only. Space settings and privacy redirect there. Notifications show only real choices. A settings hierarchy: headline, title, hint, popover.",
+          "findings": ["ACC-01", "ACC-02", "ACC-04", "ACC-05", "ACC-06"],
+          "effort": "M"
         }
       ]
     },
