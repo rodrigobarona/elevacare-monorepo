@@ -39,9 +39,13 @@ Each entry should include:
   found from the session; the personal org slug stays in the database as an
   internal id. No production data was edited (founder chose the code path
   over renaming the pilot member's slug).
-- Gateway routing reads the address only: `/space` and `/join` go to the
-  member app, `/expert/*` to the expert app, everything else at the root is
-  public. The per-request org-type database lookup is gone.
+- Gateway routing reads the address only (ADR-026): `/space` and `/join` go
+  to the member app, `/expert/*` to the expert app, `/account/*`,
+  `/onboarding` and the sign-in routes to the account app, `/{slug}/admin`
+  and `/{slug}/academy` to the clinic and academy apps (until `/team` and
+  `/academy` ship), and `/docs` to the help center. Any other root address is
+  public: `/{username}` is the profile and `/{username}/{service}` the booking
+  funnel. The per-request org-type database lookup is gone.
 - The last active workspace (`eleva-last-org`) is written by every zone's
   auth proxy (`space` or the expert slug); `/dashboard` checks it against the
   person's memberships and falls back to their own session.
