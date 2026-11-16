@@ -415,6 +415,14 @@ Added in Phase 1; leftover identity-provider env vars are deleted in Phase 03.2.
 Revoke any leftover identity-provider credentials in Vercel after merge.
 Keep `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, and `ELEVA_KEK_V1`.
 
+What `elevacare-api` needs in Vercel Production lives in
+`@eleva/config/production-env` (`API_PRODUCTION_ENV`). The API checks it at
+startup and reports any missing names to Sentry ("Vercel Production is
+missing env"), without blocking boot. When you add a variable the API cannot
+run a feature without, add it there too. Preview deployments skip booking
+reminders when `API_URL` is unset: QStash cannot reach SSO-protected
+previews, and the `api.*` hosts serve Production.
+
 | Variable                                                                      | Owner                                                                      | Notes                                                                                                                                                                                                                                                 |
 | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `BETTER_AUTH_SECRET`                                                          | `@eleva/auth`                                                              | 32+ bytes; rotating it invalidates sessions                                                                                                                                                                                                           |

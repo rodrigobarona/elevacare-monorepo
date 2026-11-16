@@ -19,6 +19,7 @@
     "./next-dev": "./src/next-dev.mjs",
     "./apex": "./src/apex.ts",
     "./api-url": "./src/api-url.ts",
+    "./production-env": "./src/production-env.ts",
     "./routing": "./src/routing.ts",
     "./dispatch": "./src/dispatch.ts",
     "./slug": "./src/slug.ts",

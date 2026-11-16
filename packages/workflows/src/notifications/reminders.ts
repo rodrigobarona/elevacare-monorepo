@@ -138,6 +138,12 @@ export async function publishReminderJob(
   if (!deployed && (!apiBase || isLocalReminderApiBase(apiBase))) {
     return "skipped"
   }
+  // Preview deployments sit behind Vercel SSO, so QStash cannot call them
+  // back, and the api.* hosts serve Production on the production database.
+  // Without an explicit API_URL there is nowhere safe to deliver, so skip.
+  if (!apiBase && process.env.VERCEL_ENV === "preview") {
+    return "skipped"
+  }
   if (!apiBase) {
     throw new Error("booking-reminder: API_URL is required")
   }
