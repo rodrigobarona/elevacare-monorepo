@@ -116,6 +116,7 @@ export async function getDestinationCalendar(
   expertIntegrationId: string
   externalCalendarId: string
   displayName: string
+  reminderMinutes: number | null
 } | null> {
   return withOrgContext(orgId, async (tx: Tx) => {
     const [row] = await tx
@@ -123,6 +124,7 @@ export async function getDestinationCalendar(
         expertIntegrationId: calendarDestinations.expertIntegrationId,
         externalCalendarId: calendarDestinations.externalCalendarId,
         displayName: calendarDestinations.displayName,
+        reminderMinutes: calendarDestinations.reminderMinutes,
       })
       .from(calendarDestinations)
       .where(eq(calendarDestinations.expertProfileId, expertProfileId))
@@ -192,17 +194,47 @@ export async function replaceDestinationCalendar(
 
     if (!owner) throw new Error("unauthorized-calendar")
 
+    // One row per expert. Upsert so the reminder survives a calendar change.
     await tx
-      .delete(calendarDestinations)
-      .where(eq(calendarDestinations.expertProfileId, expertProfileId))
-
-    await tx.insert(calendarDestinations).values({
-      orgId,
-      expertProfileId,
-      expertIntegrationId: integrationId,
-      externalCalendarId,
-      displayName,
-    })
+      .insert(calendarDestinations)
+      .values({
+        orgId,
+        expertProfileId,
+        expertIntegrationId: integrationId,
+        externalCalendarId,
+        displayName,
+      })
+      .onConflictDoUpdate({
+        target: calendarDestinations.expertProfileId,
+        set: {
+          expertIntegrationId: integrationId,
+          externalCalendarId,
+          displayName,
+          updatedAt: new Date(),
+        },
+      })
   }
   await (txOpt ? run(txOpt) : withOrgContext(orgId, run))
+}
+
+/**
+ * Set the reminder on sessions Eleva adds to the expert's calendar. `null`
+ * means the calendar's usual reminder. Returns false when the expert has no
+ * destination calendar yet, because the reminder lives with it.
+ */
+export async function setCalendarReminder(
+  orgId: string,
+  expertProfileId: string,
+  reminderMinutes: number | null,
+  txOpt?: Tx
+): Promise<boolean> {
+  const run = async (tx: Tx) => {
+    const updated = await tx
+      .update(calendarDestinations)
+      .set({ reminderMinutes, updatedAt: new Date() })
+      .where(eq(calendarDestinations.expertProfileId, expertProfileId))
+      .returning({ id: calendarDestinations.id })
+    return updated.length > 0
+  }
+  return txOpt ? run(txOpt) : withOrgContext(orgId, run)
 }

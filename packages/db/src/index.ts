@@ -130,6 +130,7 @@ export {
   disconnectIntegration,
   replaceBusySources,
   replaceDestinationCalendar,
+  setCalendarReminder,
 } from "./queries/calendars"
 export {
   assertExpertOwnsCalendarIntegration,

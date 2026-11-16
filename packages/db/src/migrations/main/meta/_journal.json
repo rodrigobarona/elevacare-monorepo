@@ -547,6 +547,13 @@
       "when": 1794842377238,
       "tag": "0077_expert_practice_closed_at",
       "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1794848418736,
+      "tag": "0078_calendar_reminder_minutes",
+      "breakpoints": true
     }
   ]
 }

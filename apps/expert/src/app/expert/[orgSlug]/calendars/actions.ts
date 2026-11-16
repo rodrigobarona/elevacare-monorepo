@@ -1,7 +1,10 @@
 "use server"
 
 import { z } from "zod"
-import { BusySourcesRequestSchema } from "@eleva/api-client"
+import {
+  BusySourcesRequestSchema,
+  CalendarReminderRequestSchema,
+} from "@eleva/api-client"
 import { getAuthedApiClient, requireExpertSession } from "@/lib/server-api"
 import { mapExpertApiError } from "@/lib/map-api-error"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
@@ -144,6 +147,35 @@ export async function saveDestinationCalendar(
       error: mapExpertApiError(err, "save-failed", {
         notFound: "unauthorized-calendar",
         forbidden: "unauthorized-calendar",
+      }),
+    }
+  }
+}
+
+/** `null` keeps the calendar's usual reminder. */
+export async function saveCalendarReminder(
+  reminderMinutes: number | null
+): Promise<ActionResult> {
+  let parsed: z.infer<typeof CalendarReminderRequestSchema>
+  try {
+    parsed = CalendarReminderRequestSchema.parse({ reminderMinutes })
+  } catch {
+    return { ok: false, error: "validation" }
+  }
+
+  try {
+    const session = await requireExpertSession("events:manage")
+    const api = await getAuthedApiClient()
+    await api.expert.calendar.setReminder(parsed)
+
+    revalidateExpertWorkspace(session, "calendars")
+    return { ok: true }
+  } catch (err) {
+    console.error("save-calendar-reminder failed", err)
+    return {
+      ok: false,
+      error: mapExpertApiError(err, "save-failed", {
+        conflict: "destination-required",
       }),
     }
   }

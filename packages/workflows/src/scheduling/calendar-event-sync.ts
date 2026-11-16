@@ -142,6 +142,7 @@ export async function calendarEventCreate(params: {
       startTime: session.startsAt,
       endTime: session.endsAt,
       timezone: session.bookingTimezone ?? "UTC",
+      reminderMinutes: destination.reminderMinutes,
       idempotencyId: bookingId,
     }
 

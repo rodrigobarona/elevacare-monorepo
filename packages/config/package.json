@@ -24,6 +24,7 @@
     "./slug": "./src/slug.ts",
     "./cancellation-policy": "./src/cancellation-policy.ts",
     "./booking-settings": "./src/booking-settings.ts",
+    "./calendar-reminder": "./src/calendar-reminder.ts",
     "./avatar-upload": "./src/avatar-upload.ts",
     "./expert-profile-content": "./src/expert-profile-content.ts",
     "./media-host": "./src/media-host.mjs",

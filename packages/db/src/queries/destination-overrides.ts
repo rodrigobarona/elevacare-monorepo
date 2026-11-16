@@ -16,7 +16,10 @@ export type DestinationOverridePatch = {
   destinationExternalCalendarId: string | null
 }
 
-export type ResolvedDestination = CalendarDestinationRef
+export type ResolvedDestination = CalendarDestinationRef & {
+  /** The expert's calendar reminder (null: the calendar's usual one). */
+  reminderMinutes: number | null
+}
 
 /**
  * Ensure the integration is a connected calendar owned by this expert.
@@ -186,6 +189,7 @@ export async function resolveBookingDestination(
       .select({
         expertIntegrationId: calendarDestinations.expertIntegrationId,
         externalCalendarId: calendarDestinations.externalCalendarId,
+        reminderMinutes: calendarDestinations.reminderMinutes,
       })
       .from(calendarDestinations)
       .where(eq(calendarDestinations.expertProfileId, expertProfileId))
@@ -204,11 +208,20 @@ export async function resolveBookingDestination(
       tx
     )
 
-    return resolveCalendarDestination({
+    const resolved = resolveCalendarDestination({
       modeOverride: usableMode,
       eventTypeOverride: usableEventType,
-      expertDefault: expertDefault ?? null,
+      expertDefault: expertDefault
+        ? {
+            expertIntegrationId: expertDefault.expertIntegrationId,
+            externalCalendarId: expertDefault.externalCalendarId,
+          }
+        : null,
     })
+    // The reminder is the expert's, so it applies to overrides too.
+    return resolved
+      ? { ...resolved, reminderMinutes: expertDefault?.reminderMinutes ?? null }
+      : null
   }
   return txOpt ? run(txOpt) : withOrgContext(orgId, run)
 }
