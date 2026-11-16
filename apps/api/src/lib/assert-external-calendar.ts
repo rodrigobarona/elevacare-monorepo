@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { getProviderAccessToken } from "@eleva/auth"
 import {
   calendarProviderForSlug,
@@ -40,7 +41,8 @@ export async function assertExternalCalendarOwned(input: {
     const calendars = await adapter.listCalendars(accessToken)
     const matched = calendars.find((c) => c.id === input.externalCalendarId)
     return matched ? "ok" : "forbidden"
-  } catch {
+  } catch (err) {
+    logError("calendar.assert_owned_list_failed", err)
     return "provider_error"
   }
 }

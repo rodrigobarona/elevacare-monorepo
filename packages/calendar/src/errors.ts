@@ -22,12 +22,18 @@ export class CalendarAdapterError extends Error {
   readonly provider: CalendarProvider
   readonly operation: string
   readonly statusCode?: number
+  /**
+   * Log-safe summary such as `403:accessNotConfigured`: the HTTP status
+   * and the provider's error reason, never the message body.
+   */
+  readonly code?: string
 
   constructor(opts: {
     provider: CalendarProvider
     operation: string
     message: string
     statusCode?: number
+    code?: string
     cause?: unknown
   }) {
     super(opts.message, { cause: opts.cause })
@@ -35,6 +41,9 @@ export class CalendarAdapterError extends Error {
     this.provider = opts.provider
     this.operation = opts.operation
     this.statusCode = opts.statusCode
+    this.code =
+      opts.code ??
+      (opts.statusCode !== undefined ? String(opts.statusCode) : undefined)
   }
 }
 

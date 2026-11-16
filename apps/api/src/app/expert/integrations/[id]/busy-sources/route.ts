@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { z } from "zod"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
@@ -106,7 +107,8 @@ export async function PUT(
     )
     const adapter = getAdapter(provider)
     providerCalendars = await adapter.listCalendars(accessToken)
-  } catch {
+  } catch (err) {
+    logError("calendar.busy_sources_list_failed", err)
     return secureJson(
       {
         error: "provider_error",

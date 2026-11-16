@@ -1,3 +1,4 @@
+import { logError } from "@eleva/observability"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -91,7 +92,8 @@ export async function GET(
       },
       { status: 200, headers }
     )
-  } catch {
+  } catch (err) {
+    logError("calendar.list_calendars_failed", err)
     return secureJson(
       {
         error: "provider_error",

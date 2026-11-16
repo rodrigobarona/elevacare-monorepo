@@ -15,11 +15,38 @@ import {
 const GOOGLE_CALENDAR_API = "https://www.googleapis.com/calendar/v3"
 const FETCH_TIMEOUT_MS = 10_000
 
+/**
+ * 403 reasons that are about the Google Cloud project or quota, not the
+ * person's grant. Reconnecting does not fix them, so they must not read
+ * as `needs_reauthorization` (a disabled Calendar API looked like an
+ * expired login).
+ */
+const PROJECT_LEVEL_403_REASONS = new Set([
+  "accessNotConfigured",
+  "SERVICE_DISABLED",
+  "rateLimitExceeded",
+  "userRateLimitExceeded",
+  "quotaExceeded",
+  "dailyLimitExceeded",
+])
+
+/** The first `errors[].reason` (or `status`) from a Google error body. */
+export function googleErrorReason(body: string): string | undefined {
+  try {
+    const parsed = JSON.parse(body) as {
+      error?: { errors?: { reason?: string }[]; status?: string }
+    }
+    return parsed.error?.errors?.[0]?.reason ?? parsed.error?.status
+  } catch {
+    return undefined
+  }
+}
+
 async function throwGoogleError(
   operation: string,
   res: Response
 ): Promise<never> {
-  if (res.status === 401 || res.status === 403) {
+  if (res.status === 401) {
     throw new CalendarTokenError("needs_reauthorization")
   }
   let body: string
@@ -27,6 +54,13 @@ async function throwGoogleError(
     body = await res.text()
   } catch {
     body = "(unreadable)"
+  }
+  const reason = googleErrorReason(body)
+  if (
+    res.status === 403 &&
+    !(reason && PROJECT_LEVEL_403_REASONS.has(reason))
+  ) {
+    throw new CalendarTokenError("needs_reauthorization")
   }
   if (res.status === 404) {
     throw new CalendarNotFoundError("google", operation, body)
@@ -36,6 +70,7 @@ async function throwGoogleError(
     operation,
     message: `Google ${operation}: ${res.status} — ${body}`,
     statusCode: res.status,
+    code: reason ? `${res.status}:${reason}` : String(res.status),
   })
 }
 
