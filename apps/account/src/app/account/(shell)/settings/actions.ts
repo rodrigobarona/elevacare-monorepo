@@ -93,16 +93,20 @@ async function discardOrphanAvatar(url: string): Promise<void> {
 export async function updateAvatar(url: unknown): Promise<Result> {
   const parsed = UpdateAvatarRequestSchema.safeParse({ url })
   if (!parsed.success) return { ok: false }
+  // Only a photo the API never accepted is deleted: once the save has
+  // gone through, a later failure must not remove the person's photo.
+  let saved = false
   try {
     const api = await getPersonalApiClient()
     await api.users.avatar.update(parsed.data)
+    saved = true
     revalidatePath(PROFILE_PATH)
     return { ok: true }
   } catch (err) {
     unstable_rethrow(err)
-    await discardOrphanAvatar(parsed.data.url)
+    if (!saved) await discardOrphanAvatar(parsed.data.url)
     console.error("updateAvatar failed", err)
-    return { ok: false }
+    return { ok: saved }
   }
 }
 

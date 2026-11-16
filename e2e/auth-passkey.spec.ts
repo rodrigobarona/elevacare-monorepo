@@ -61,11 +61,9 @@ test.describe("passkey sign-in", () => {
 
     await page.goto(`${accountUrl}/account/security`)
     await page.getByTestId("settings-add-passkey").click()
-    await expect(
-      page
-        .getByTestId("settings-passkeys")
-        .locator('[data-slot="settings-row"]')
-    ).toHaveCount(1, { timeout: 20_000 })
+    await expect(page.getByTestId("passkey-row")).toHaveCount(1, {
+      timeout: 20_000,
+    })
 
     await context.clearCookies()
     await page.goto(`${accountUrl}/login`)

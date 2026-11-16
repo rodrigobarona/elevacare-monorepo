@@ -67,7 +67,7 @@ export function SecurityPanel() {
   const [providers, setProviders] = useState<string[] | null>(null)
   const [currentToken, setCurrentToken] = useState<string | null>(null)
   const [twoStepOn, setTwoStepOn] = useState(false)
-  const [passkeys, setPasskeys] = useState<PasskeyRow[]>([])
+  const [passkeys, setPasskeys] = useState<PasskeyRow[] | null>(null)
   const [sessions, setSessions] = useState<SessionRow[]>([])
 
   useEffect(() => {
@@ -89,12 +89,19 @@ export function SecurityPanel() {
     ])
       .then(([accounts, current, passkeyList, sessionList]) => {
         if (cancelled) return
-        if (accounts.error) toast.error(t("error"))
-        setProviders(accounts.data?.map((account) => account.providerId) ?? [])
-        setCurrentToken(current.data?.session.token ?? null)
-        setTwoStepOn(Boolean(current.data?.user.twoFactorEnabled))
-        setPasskeys((passkeyList.data as PasskeyRow[] | undefined) ?? [])
-        setSessions((sessionList.data as SessionRow[] | undefined) ?? [])
+        // A failed read is reported, never shown as "off" or "none".
+        if (accounts.error || current.error || !current.data) {
+          toast.error(t("error"))
+        }
+        if (accounts.data) {
+          setProviders(accounts.data.map((account) => account.providerId))
+        }
+        if (current.data) {
+          setCurrentToken(current.data.session.token)
+          setTwoStepOn(Boolean(current.data.user.twoFactorEnabled))
+        }
+        if (passkeyList.data) setPasskeys(passkeyList.data as PasskeyRow[])
+        if (sessionList.data) setSessions(sessionList.data as SessionRow[])
       })
       .catch(() => toast.error(t("error")))
     return () => {
@@ -106,7 +113,16 @@ export function SecurityPanel() {
 
   return (
     <div className="space-y-6">
-      <PasswordCard loading={providers === null} hasPassword={hasPassword} />
+      <PasswordCard
+        loading={providers === null}
+        hasPassword={hasPassword}
+        onChanged={() => {
+          // Other devices were signed out with the change.
+          void authClient.listSessions().then((result) => {
+            if (result.data) setSessions(result.data as SessionRow[])
+          })
+        }}
+      />
       {/* Two-step verification adds a code after a password; without one
           (Google or email link sign-in) there is nothing to add it to. */}
       {hasPassword ? (
@@ -129,9 +145,11 @@ export function SecurityPanel() {
 function PasswordCard({
   loading,
   hasPassword,
+  onChanged,
 }: {
   loading: boolean
   hasPassword: boolean
+  onChanged: () => void
 }) {
   const t = useTranslations("security")
   const [current, setCurrent] = useState("")
@@ -155,6 +173,7 @@ function PasswordCard({
       }
       setCurrent("")
       setNext("")
+      onChanged()
       toast.success(t("password.saved"))
     } finally {
       setSaving(false)
@@ -285,7 +304,8 @@ function PasskeysCard({
   passkeys,
   onChange,
 }: {
-  passkeys: PasskeyRow[]
+  /** Null until the first read lands; adding waits for it. */
+  passkeys: PasskeyRow[] | null
   onChange: (rows: PasskeyRow[]) => void
 }) {
   const t = useTranslations("security.passkeys")
@@ -322,7 +342,7 @@ function PasskeysCard({
         toast.error(tSecurity("error"))
         return
       }
-      onChange(passkeys.filter((row) => row.id !== id))
+      onChange((passkeys ?? []).filter((row) => row.id !== id))
       setRemoving(null)
       toast.success(t("removed"))
     } finally {
@@ -343,12 +363,13 @@ function PasskeysCard({
           {t("description")}
         </SettingsFieldsetDescription>
         <div className="mt-6" data-testid="settings-passkeys">
-          {passkeys.length === 0 ? (
+          {passkeys === null ? null : passkeys.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t("empty")}</p>
           ) : (
             passkeys.map((passkey) => (
               <SettingsRow
                 key={passkey.id}
+                data-testid="passkey-row"
                 className="items-center"
                 title={passkey.name || t("unnamed")}
                 meta={
@@ -380,7 +401,7 @@ function PasskeysCard({
           <Button
             size="sm"
             variant="outline"
-            isDisabled={busy}
+            isDisabled={busy || passkeys === null}
             onPress={() => void onAdd()}
             data-testid="settings-add-passkey"
           >

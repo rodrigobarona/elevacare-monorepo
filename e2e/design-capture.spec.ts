@@ -882,11 +882,16 @@ test.describe("design capture", () => {
       await page.locator("#two-step-password").fill(E2E_PASSWORD)
       await page.getByRole("button", { name: /continue/i }).click()
       const dialog = page.getByRole("dialog")
-      await expect(dialog.getByRole("img")).toBeVisible({ timeout: 15_000 })
+      await expect(dialog.getByRole("img", { name: /QR code/i })).toBeVisible({
+        timeout: 15_000,
+      })
       await shoot(page, surface, "11-two-step-scan", kind, { fullPage: false })
-      await dialog.getByRole("button", { name: /can't scan/i }).click()
-      const key = (await dialog.locator("code").innerText()).replace(/\s/g, "")
-      await shoot(page, surface, "12-two-step-key", kind, { fullPage: false })
+      // The key comes from the QR link, as the authenticator app reads it.
+      // Hidden on desktop (phones only), so read it from the DOM.
+      const uri = await dialog
+        .locator('a[href^="otpauth://"]')
+        .getAttribute("href")
+      const key = new URL(uri!).searchParams.get("secret")!
       await dialog.getByRole("button", { name: /^next$/i }).click()
       await page.locator("#two-step-code").fill(totp(key))
       await shoot(page, surface, "13-two-step-code", kind, { fullPage: false })
@@ -929,7 +934,9 @@ test.describe("design capture", () => {
       // Background help opens in a popover; the delete rules in the dialog.
       await page.goto(`${webUrl}/account/notifications`)
       await clearBanner(page)
-      const help = page.locator('[data-slot="info-popover-trigger"]').first()
+      const help = page.getByRole("button", {
+        name: "Where “In Eleva” messages appear",
+      })
       if (await help.isVisible().catch(() => false)) {
         await help.click()
         await shoot(page, surface, "09-notifications-help", kind, {

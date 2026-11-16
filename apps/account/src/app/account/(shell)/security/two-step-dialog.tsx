@@ -5,9 +5,8 @@ import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { encode } from "uqr"
 import { authClient } from "@eleva/auth/client"
-import { ArrowLeftIcon } from "@eleva/icons"
+import { ArrowLeftIcon, DownloadSimpleIcon } from "@eleva/icons"
 import { Button, LinkButton } from "@eleva/ui/components/button"
-import { CheckboxField } from "@eleva/ui/components/checkbox-field"
 import {
   Dialog,
   DialogDescription,
@@ -28,11 +27,6 @@ interface Setup {
   uri: string
   secret: string
   backupCodes: string[]
-}
-
-/** "JBSWY3DPEHPK3PXP" → ["JBSW", "Y3DP", "EHPK", "3PXP"], easier to type. */
-function keyGroups(secret: string): string[] {
-  return secret.match(/.{1,4}/g) ?? [secret]
 }
 
 function setupFrom(data: unknown): Setup | null {
@@ -76,8 +70,9 @@ function QrCode({ value, label }: { value: string; label: string }) {
 /**
  * Turning two-step verification on takes four short steps, one goal each
  * (pattern: Deel, Braintrust in `_context/mobbin/library/12-account-settings`):
- * confirm the password, scan the code (the key only on request), enter the
- * code, then save the backup codes, shown once setup has worked. Turning it
+ * confirm the password, scan the code (or copy the key; on a phone, open
+ * the app), enter the code, then download or copy the backup codes, shown
+ * once setup has worked; Done unlocks after they are saved. Turning it
  * off asks for the password only. The parent remounts it per opening
  * (`key`), so each opening starts empty.
  */
@@ -95,7 +90,6 @@ export function TwoStepDialog({
   const [step, setStep] = useState<Step>("password")
   const [password, setPassword] = useState("")
   const [setup, setSetup] = useState<Setup | null>(null)
-  const [showKey, setShowKey] = useState(false)
   const [code, setCode] = useState("")
   const [savedCodes, setSavedCodes] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -155,13 +149,32 @@ export function TwoStepDialog({
     }
   }
 
-  async function copy(text: string, done: string) {
+  async function copy(text: string, done: string): Promise<boolean> {
     try {
       await navigator.clipboard.writeText(text)
       toast.success(done)
+      return true
     } catch {
       toast.error(tSecurity("error"))
+      return false
     }
+  }
+
+  /** A plain text file she can keep in her password manager or print. */
+  function downloadCodes(current: Setup) {
+    const text = [
+      t("backupStep.fileHeader"),
+      "",
+      ...current.backupCodes,
+      "",
+    ].join("\n")
+    const url = URL.createObjectURL(new Blob([text], { type: "text/plain" }))
+    const link = document.createElement("a")
+    link.href = url
+    link.download = "eleva-backup-codes.txt"
+    link.click()
+    URL.revokeObjectURL(url)
+    setSavedCodes(true)
   }
 
   const stepCount =
@@ -172,7 +185,12 @@ export function TwoStepDialog({
     ) : null
 
   const backButton = (to: Step) => (
-    <Button type="button" variant="outline" onPress={() => setStep(to)}>
+    <Button
+      type="button"
+      variant="outline"
+      isDisabled={busy}
+      onPress={() => setStep(to)}
+    >
       <ArrowLeftIcon aria-hidden data-icon="inline-start" />
       {t("back")}
     </Button>
@@ -185,8 +203,8 @@ export function TwoStepDialog({
         if (!open) onClose()
       }}
       // Once two-step is on, the codes must not be lost to a stray click.
-      isDismissable={step !== "backup"}
-      showCloseButton={step !== "backup"}
+      isDismissable={step !== "backup" && !busy}
+      showCloseButton={step !== "backup" && !busy}
     >
       {step === "password" ? (
         <form onSubmit={onPassword} className="grid gap-6">
@@ -241,45 +259,24 @@ export function TwoStepDialog({
           </DialogHeader>
           <div className="flex flex-col items-center gap-3">
             <QrCode value={setup.uri} label={t("scanStep.qrLabel")} />
-            {showKey ? (
-              <div className="flex w-full flex-col items-center gap-3 text-center">
-                <p className="text-sm text-muted-foreground">
-                  {t("scanStep.keyHint")}
-                </p>
-                <code className="flex flex-wrap justify-center gap-x-2 rounded-xl bg-muted px-3 py-2 font-mono text-sm tracking-wide">
-                  {keyGroups(setup.secret).map((group, index) => (
-                    <span key={index} className="whitespace-nowrap">
-                      {group}
-                    </span>
-                  ))}
-                </code>
-                <div className="flex flex-wrap justify-center gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onPress={() =>
-                      void copy(setup.secret, t("scanStep.copied"))
-                    }
-                  >
-                    {t("scanStep.copy")}
-                  </Button>
-                  {/* On a phone, the otpauth link opens the authenticator app. */}
-                  <LinkButton href={setup.uri} size="sm" variant="outline">
-                    {t("scanStep.openInApp")}
-                  </LinkButton>
-                </div>
-              </div>
-            ) : (
-              <Button
-                type="button"
-                variant="link"
-                size="sm"
-                onPress={() => setShowKey(true)}
-              >
-                {t("scanStep.cantScan")}
-              </Button>
-            )}
+            <Button
+              type="button"
+              variant="link"
+              size="sm"
+              onPress={() => void copy(setup.secret, t("scanStep.copied"))}
+            >
+              {t("scanStep.copyKey")}
+            </Button>
+            {/* A phone cannot scan its own screen: the otpauth link opens
+                the authenticator app there instead. */}
+            <LinkButton
+              href={setup.uri}
+              size="sm"
+              variant="outline"
+              className="sm:hidden"
+            >
+              {t("scanStep.openInApp")}
+            </LinkButton>
           </div>
           <DialogFooter>
             {stepCount}
@@ -330,35 +327,41 @@ export function TwoStepDialog({
             <DialogTitle>{t("backupStep.title")}</DialogTitle>
             <DialogDescription>{t("backupStep.description")}</DialogDescription>
           </DialogHeader>
-          <div className="space-y-3">
-            <ul className="grid grid-cols-2 gap-x-6 gap-y-1 rounded-xl bg-muted p-4 font-mono text-sm">
-              {setup.backupCodes.map((backup) => (
-                <li key={backup}>{backup}</li>
-              ))}
-            </ul>
+          <ul className="grid grid-cols-2 gap-x-6 gap-y-1 rounded-xl bg-muted p-4 font-mono text-sm">
+            {setup.backupCodes.map((backup) => (
+              <li key={backup}>{backup}</li>
+            ))}
+          </ul>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" onPress={() => downloadCodes(setup)}>
+              <DownloadSimpleIcon aria-hidden data-icon="inline-start" />
+              {t("backupStep.download")}
+            </Button>
             <Button
               type="button"
-              size="sm"
               variant="outline"
-              onPress={() =>
-                void copy(
+              onPress={async () => {
+                const copied = await copy(
                   setup.backupCodes.join("\n"),
                   t("backupStep.codesCopied")
                 )
-              }
+                if (copied) setSavedCodes(true)
+              }}
             >
               {t("backupStep.copyCodes")}
             </Button>
           </div>
-          <CheckboxField
-            label={t("backupStep.savedCodes")}
-            isSelected={savedCodes}
-            onChange={setSavedCodes}
-          />
           <DialogFooter>
-            {stepCount}
+            {savedCodes ? (
+              stepCount
+            ) : (
+              <p className="text-xs text-muted-foreground sm:mr-auto sm:self-center">
+                {t("backupStep.saveFirst")}
+              </p>
+            )}
             <Button
               type="button"
+              variant={savedCodes ? "default" : "outline"}
               isDisabled={!savedCodes}
               onPress={() => {
                 toast.success(t("enabled"))

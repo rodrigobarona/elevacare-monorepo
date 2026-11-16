@@ -388,7 +388,7 @@ function RecordAccessCard({
             >
               <CheckboxField
                 isSelected={choice.optedOut}
-                isDisabled={pending === choice.orgId}
+                isDisabled={pending !== null}
                 onChange={(selected) => void onChange(choice.orgId, selected)}
                 label={t("optOut", { clinic: choice.orgName })}
               />
@@ -428,13 +428,12 @@ function DataCopyCard({
       setDownloadUrl(result.downloadUrl)
     }
     void refresh()
-    if (status !== null && status !== "pending" && status !== "processing") {
-      return
-    }
-    const timer = setInterval(() => void refresh(), 4000)
+    const polling =
+      status === null || status === "pending" || status === "processing"
+    const timer = polling ? setInterval(() => void refresh(), 4000) : null
     return () => {
       cancelled = true
-      clearInterval(timer)
+      if (timer) clearInterval(timer)
     }
   }, [id, status])
 

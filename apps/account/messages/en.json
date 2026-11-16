@@ -142,10 +142,8 @@
         "title": "Scan the code",
         "description": "Open your authenticator app, add an account and scan this code.",
         "qrLabel": "QR code to add Eleva to your authenticator app",
-        "cantScan": "Can't scan the code?",
-        "keyHint": "Enter this key in your app instead.",
-        "copy": "Copy key",
-        "copied": "Key copied.",
+        "copyKey": "Copy setup key instead",
+        "copied": "Setup key copied.",
         "openInApp": "Open in authenticator app"
       },
       "codeStep": {
@@ -157,9 +155,11 @@
       "backupStep": {
         "title": "Save your backup codes",
         "description": "If you lose your phone, each code signs you in once. Keep them somewhere safe, such as your password manager.",
-        "copyCodes": "Copy codes",
+        "download": "Download (.txt)",
+        "copyCodes": "Copy",
         "codesCopied": "Codes copied.",
-        "savedCodes": "I've saved my backup codes",
+        "saveFirst": "Download or copy your codes to finish.",
+        "fileHeader": "Eleva backup codes for two-step verification. Each code signs you in once.",
         "done": "Done"
       }
     },

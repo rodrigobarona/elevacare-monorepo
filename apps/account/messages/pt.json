@@ -142,10 +142,8 @@
         "title": "Leia o código",
         "description": "Abra a sua app de autenticação, adicione uma conta e leia este código.",
         "qrLabel": "Código QR para adicionar a Eleva à sua app de autenticação",
-        "cantScan": "Não consegue ler o código?",
-        "keyHint": "Introduza esta chave na app.",
-        "copy": "Copiar chave",
-        "copied": "Chave copiada.",
+        "copyKey": "Copiar a chave de configuração",
+        "copied": "Chave de configuração copiada.",
         "openInApp": "Abrir na app de autenticação"
       },
       "codeStep": {
@@ -157,9 +155,11 @@
       "backupStep": {
         "title": "Guarde os códigos de recuperação",
         "description": "Se perder o telemóvel, cada código permite entrar uma vez. Guarde-os num sítio seguro, como o seu gestor de palavras-passe.",
-        "copyCodes": "Copiar códigos",
+        "download": "Descarregar (.txt)",
+        "copyCodes": "Copiar",
         "codesCopied": "Códigos copiados.",
-        "savedCodes": "Guardei os meus códigos de recuperação",
+        "saveFirst": "Descarregue ou copie os códigos para concluir.",
+        "fileHeader": "Códigos de recuperação da Eleva para a verificação em dois passos. Cada código permite entrar uma vez.",
         "done": "Concluir"
       }
     },
