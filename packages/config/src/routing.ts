@@ -9,9 +9,9 @@
 /**
  * Signed-in surfaces live under a fixed first segment (ADR-026). The
  * namespace names the tool, so the gateway routes on the first segment
- * alone. Live: `/space` (the person's own Space, no slug) and `/expert/{slug}`
- * (expert tools — an expert's own practice or a clinician seat in a clinic).
- * `/team/{slug}` and `/academy/{slug}` follow and are reserved already.
+ * alone: `/space` (the person's own Space, no slug), `/expert/{slug}` (expert
+ * tools — an expert's own practice or a clinician seat in a clinic),
+ * `/team/{slug}` (running a clinic) and `/academy/{slug}` (lecturers).
  */
 export const WORKSPACE_NAMESPACES = [
   "space",
@@ -41,6 +41,16 @@ export function spacePath(segment = ""): string {
 /** Expert tools for a workspace: `/expert/{slug}`. */
 export function expertWorkspaceBase(orgSlug: string): string {
   return `/expert/${orgSlug}`
+}
+
+/** Clinic management for a team workspace: `/team/{slug}`. */
+export function teamWorkspaceBase(orgSlug: string): string {
+  return `/team/${orgSlug}`
+}
+
+/** Lecturer tools for an academy workspace: `/academy/{slug}`. */
+export function academyWorkspaceBase(orgSlug: string): string {
+  return `/academy/${orgSlug}`
 }
 
 /** First-level segments owned by the account app (auth, onboarding, settings). */
@@ -73,10 +83,9 @@ export const APP_FIXED_SEGMENTS = ["space", "join"] as const
 export const APP_STANDALONE_PATHS = [] as const
 
 /**
- * Second-level segments under `/{slug}/…`: the clinic admin and academy
- * zones (until they move to `/team` and `/academy`, ADR-026). The rest were
- * the member Space's pages before it moved to `/space`; they stay reserved
- * so no username can collide with a dashboard word.
+ * Words that were second-level dashboard segments under `/{slug}/…` before
+ * every signed-in surface moved under a namespace (ADR-026). They stay
+ * reserved so no username can collide with a dashboard word.
  */
 export const ORG_SCOPED_SEGMENTS = [
   "admin",

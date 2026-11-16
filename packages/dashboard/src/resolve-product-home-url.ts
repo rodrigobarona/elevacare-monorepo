@@ -1,7 +1,8 @@
 import type { ProductLabel, OrgType } from "@eleva/auth/types"
 import {
+  resolveAcademyWorkspaceBase,
   resolveExpertWorkspaceBase,
-  resolveTeamAdminBase,
+  resolveTeamWorkspaceBase,
 } from "@eleva/auth/org-routing"
 import { resolveGatewayUrl } from "@eleva/config/env"
 import { SPACE_BASE } from "@eleva/config/routing"
@@ -34,9 +35,9 @@ export function resolveProductHomeUrl(session: ProductHomeSession): string {
     case "expert":
       return `${GATEWAY_URL}${resolveExpertWorkspaceBase(slug)}`
     case "team_admin":
-      return `${GATEWAY_URL}${resolveTeamAdminBase(slug)}`
+      return `${GATEWAY_URL}${resolveTeamWorkspaceBase(slug)}`
     case "lecturer":
-      return `${GATEWAY_URL}/${slug}/academy`
+      return `${GATEWAY_URL}${resolveAcademyWorkspaceBase(slug)}`
     case "staff":
       return resolveAdminUrl()
     case "member":

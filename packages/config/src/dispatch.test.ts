@@ -174,19 +174,37 @@ describe("resolveDispatch - workspace namespaces (ADR-026)", () => {
   })
 })
 
-describe("resolveDispatch - org-scoped second segment", () => {
-  it("dispatches /:slug/admin to team origin (clinic managers)", () => {
-    expect(resolveDispatch("/clinica-mota/admin", origins)).toEqual({
-      kind: "rewrite",
-      origin: "http://team",
-    })
+describe("resolveDispatch - team and academy namespaces", () => {
+  it("dispatches /team/* to the team origin (clinic managers)", () => {
+    for (const path of [
+      "/team/clinica-mota",
+      "/team/clinica-mota/notifications",
+    ]) {
+      expect(resolveDispatch(path, origins), path).toEqual({
+        kind: "rewrite",
+        origin: "http://team",
+      })
+    }
   })
 
-  it("dispatches /:slug/academy to academy origin", () => {
-    expect(resolveDispatch("/clinica-mota/academy/courses", origins)).toEqual({
-      kind: "rewrite",
-      origin: "http://academy",
-    })
+  it("dispatches /academy/* to the academy origin", () => {
+    for (const path of ["/academy/pati-mota", "/academy/pati-mota/courses"]) {
+      expect(resolveDispatch(path, origins), path).toEqual({
+        kind: "rewrite",
+        origin: "http://academy",
+      })
+    }
+  })
+
+  it("no longer serves the clinic or academy under /:slug", () => {
+    for (const path of [
+      "/clinica-mota/admin",
+      "/clinica-mota/academy/courses",
+    ]) {
+      expect(resolveDispatch(path, origins), path).toEqual({
+        kind: "marketing",
+      })
+    }
   })
 })
 

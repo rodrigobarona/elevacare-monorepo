@@ -19,19 +19,17 @@ function asWorkspaceSlug(segment: string | undefined): string | null {
 
 /**
  * The workspace a page belongs to, from its address: the second segment of
- * `/expert/{slug}/…` (and the other slugged namespaces, ADR-026), else the
- * first segment of a legacy `/{slug}/…` address, when it has slug shape and
- * is not a reserved route.
+ * `/expert/{slug}/…`, `/team/{slug}/…` or `/academy/{slug}/…` (ADR-026), when
+ * it has slug shape and is not a reserved route. A bare `/{username}` is the
+ * public profile and names no workspace.
  */
 export function workspaceSlugFromPath(
   path: string | null | undefined
 ): string | null {
   const segments = path?.split("?")[0]?.split("/").filter(Boolean) ?? []
   const first = segments[0]
-  if (first && sluggedNamespaces.has(first)) {
-    return asWorkspaceSlug(segments[1])
-  }
-  return asWorkspaceSlug(first)
+  if (!first || !sluggedNamespaces.has(first)) return null
+  return asWorkspaceSlug(segments[1])
 }
 
 /** True for `/space` and anything under it (the person's own Space). */

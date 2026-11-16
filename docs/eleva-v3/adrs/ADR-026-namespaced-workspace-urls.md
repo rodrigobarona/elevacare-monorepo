@@ -109,7 +109,10 @@ fallback if a public catalogue later needs `/academy`.
 2. **Shipped.** Member hub `/space` without a slug (the personal org slug is internal), static
    dispatch with no org-type lookup, `/space` resolved from the session for `x-eleva-org`, and the
    last-org cookie remembering `space` or the expert slug in every zone.
-3. Team namespace `/team/{slug}` and academy namespace `/academy/{slug}`.
+3. **Shipped.** Team namespace `/team/{slug}` (clinic managers; was `/{slug}/admin`) and academy
+   namespace `/academy/{slug}` (lecturers; was `/{slug}/academy`). The gateway routes both on the
+   first segment, the `/{slug}/…` dashboard rules and the legacy slug fallback are gone, and the
+   academy layout answers 404 for any workspace that is not an academy.
 4. noindex + referrer headers on signed-in namespaces; migrate stored notification hrefs.
 5. One practice per person (API guard + unique index).
 6. Expert settings page and the closure API.

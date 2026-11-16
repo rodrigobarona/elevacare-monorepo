@@ -32,6 +32,34 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-16: Clinics live at /team/{slug} and academies at /academy/{slug} (ADR-026 slice 3) (active)
+
+- Change: clinic management moved from `/{slug}/admin` to `/team/{slug}`
+  (`/team/{slug}/notifications`), and lecturer tools from `/{slug}/academy` to
+  `/academy/{slug}`. Clinicians keep using `/expert/{clinic}`; a clinic manager
+  who opens it is sent to `/team/{clinic}`.
+- Gateway routing now has no `/{slug}/…` dashboard rules: every signed-in
+  surface is chosen by its first segment (`/space`, `/expert`, `/team`,
+  `/academy`, `/account`), and any other root address is public.
+  `workspaceSlugFromPath` reads only namespaced addresses, so a public
+  `/{username}` never names a workspace for Server Actions or `x-eleva-org`.
+- `/academy/{slug}` now answers 404 unless the workspace is an academy, the
+  same type check the expert and team layouts already make.
+- The last active workspace cookie also remembers team and academy slugs (the
+  shared auth proxy already handled every slugged namespace).
+- Fixed on the way: a clinic manager opening `/expert/{clinic}` was redirected
+  with a relative path, which stayed on the expert app's own host in local dev
+  and ended on a 404; the hop now goes through the gateway URL.
+- Proof: unit suites (config, auth, dashboard, gateway), typecheck and lint;
+  local check with the seeded clinic manager — `/team/clinicamota` and its
+  inbox 200 and set `eleva-last-org=clinicamota`, `/expert/clinicamota` →
+  `/team/clinicamota` 200, `/clinicamota/admin` and `/academy/clinicamota` 404.
+  No seeded lecturer exists, so `/academy/{slug}` was not opened signed in.
+- Not yet: noindex headers, stored CRM inbox links, the one-practice guard,
+  expert settings and closure.
+- Owner: engineering
+- Status: `active`
+
 ### 2026-11-16: The member Space lives at /space, with no name in the link (ADR-026 slice 2) (active)
 
 - Change: the member hub moved from `/space-{12 hex}` to `/space`

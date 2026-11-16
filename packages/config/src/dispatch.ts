@@ -4,8 +4,6 @@ import {
   APP_FIXED_SEGMENTS,
   APP_STANDALONE_PATHS,
   WEB_MARKETING_PATHS,
-  RESERVED_SLUGS,
-  isOrgSlugShape,
 } from "./routing"
 import { locales } from "./i18n"
 
@@ -49,15 +47,14 @@ const localeSet = new Set<string>(locales)
  *  2. Marketing first-segments (/about, /pricing, ...) -> marketing
  *  3. Docs (/docs/*) -> docs zone
  *  4. Platform admin (/admin/*) -> admin subdomain redirect
- *  5. Workspace namespaces (ADR-026): /expert/* -> expert zone;
+ *  5. Workspace namespaces (ADR-026): /expert/* -> expert zone,
+ *     /team/* -> team zone, /academy/* -> academy zone;
  *     /space/* (the person's own Space) and /join/* -> member app
  *  6. Fixed account segments (/onboarding, /account/*) -> account zone
  *  7. Account standalone (/dashboard, /login, /callback, /logout,
  *     /signup, /verify-email, /reset-password, /two-factor,
  *     /accept-invitation) at depth 1 -> account zone
- *  8. Org-scoped second segment (/:slug/admin, /:slug/academy) -> team /
- *     academy zones (until they move to /team and /academy)
- *  9. Everything else, signed in or not, -> marketing: /:username is the
+ *  8. Everything else, signed in or not, -> marketing: /:username is the
  *     public profile and /:username/:service the booking funnel. Routing
  *     never depends on the session or a database lookup.
  */
@@ -67,7 +64,6 @@ export function resolveDispatch(
 ): Dispatch {
   const segments = pathname.split("/").filter(Boolean)
   const first = segments[0] ?? ""
-  const second = segments[1] ?? ""
   const depth = segments.length
 
   if (!first) return { kind: "marketing" }
@@ -84,6 +80,12 @@ export function resolveDispatch(
   if (first === "expert") {
     return { kind: "rewrite", origin: origins.expert }
   }
+  if (first === "team") {
+    return { kind: "rewrite", origin: origins.team }
+  }
+  if (first === "academy") {
+    return { kind: "rewrite", origin: origins.academy }
+  }
 
   if (accountPrefixSegments.has(first)) {
     return { kind: "rewrite", origin: origins.account }
@@ -98,13 +100,6 @@ export function resolveDispatch(
   if (depth === 1 && appStandalone.has(first)) {
     return { kind: "rewrite", origin: origins.app }
   }
-
-  const isSlug = !RESERVED_SLUGS.has(first) && isOrgSlugShape(first)
-
-  if (isSlug && second === "admin")
-    return { kind: "rewrite", origin: origins.team }
-  if (isSlug && second === "academy")
-    return { kind: "rewrite", origin: origins.academy }
 
   return { kind: "marketing" }
 }

@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server"
+import { resolveTeamWorkspaceBase } from "@eleva/auth/org-routing"
 import { UsersIcon } from "@eleva/icons"
 import { LinkButton } from "@eleva/ui/components/button"
 import { EmptyState } from "@eleva/ui/components/empty-state"
@@ -25,7 +26,7 @@ export default async function TeamAdminDashboardPage({
         description={t("emptyBody")}
         action={
           <LinkButton
-            href={`/${orgSlug}/admin/notifications`}
+            href={`${resolveTeamWorkspaceBase(orgSlug)}/notifications`}
             variant="outline"
             size="sm"
           >

@@ -169,8 +169,9 @@ export const getSpaceSession = cache(async (): Promise<ElevaSession | null> => {
 
 /**
  * The workspace this request is for, from the path the auth proxy forwards:
- * the person's own Space under `/space`, else the slug in `/expert/{slug}/…`
- * (or a legacy `/{slug}/…`). Null on routes that name no workspace.
+ * the person's own Space under `/space`, else the slug in `/expert/{slug}/…`,
+ * `/team/{slug}/…` or `/academy/{slug}/…`. Null on routes that name no
+ * workspace.
  */
 export async function addressWorkspaceSlug(): Promise<string | null> {
   const path = (await headers()).get(ELEVA_PATHNAME_HEADER)

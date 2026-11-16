@@ -1,4 +1,8 @@
-import { expertWorkspaceBase } from "@eleva/config/routing"
+import {
+  academyWorkspaceBase,
+  expertWorkspaceBase,
+  teamWorkspaceBase,
+} from "@eleva/config/routing"
 
 /**
  * Expert tools base path: `/expert/:slug` (ADR-026), for an expert's own
@@ -9,7 +13,12 @@ export function resolveExpertWorkspaceBase(orgSlug: string): string {
   return expertWorkspaceBase(orgSlug)
 }
 
-/** Clinic manager/staff workspace base path. */
-export function resolveTeamAdminBase(orgSlug: string): string {
-  return `/${orgSlug}/admin`
+/** Clinic management base path for managers and staff: `/team/:slug`. */
+export function resolveTeamWorkspaceBase(orgSlug: string): string {
+  return teamWorkspaceBase(orgSlug)
+}
+
+/** Lecturer tools base path: `/academy/:slug`. */
+export function resolveAcademyWorkspaceBase(orgSlug: string): string {
+  return academyWorkspaceBase(orgSlug)
 }
