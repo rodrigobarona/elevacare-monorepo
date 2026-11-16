@@ -43,9 +43,9 @@ Each entry should include:
   own event.
 - Storage and API: `calendar_destinations.reminder_minutes` (migration
   `0078`, nullable, 0–1440 check). It lives with the expert's default
-  destination, so `GET/PUT /expert/calendar/reminder` answers 409
-  `destination_required` until one is chosen (the picker is disabled until
-  then). Changing the destination keeps it: `replaceDestinationCalendar` is
+  destination. Until one is chosen, `GET /expert/calendar/reminder` answers
+  200 with `reminderMinutes: null` and `hasDestination: false`, and `PUT`
+  answers 409 `destination_required` (the picker is disabled until then). Changing the destination keeps it: `replaceDestinationCalendar` is
   now an upsert. The reminder also applies when a service or mode overrides
   the destination. Writes are audited (`expert_profile.updated`,
   `field: calendar_reminder_minutes`) and the endpoint is in OpenAPI and
