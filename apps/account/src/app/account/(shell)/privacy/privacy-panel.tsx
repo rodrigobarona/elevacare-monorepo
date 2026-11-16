@@ -511,13 +511,26 @@ function DataCopyCard({
         </SettingsFieldsetStatus>
         <SettingsFieldsetActions>
           {downloadUrl ? (
-            <LinkButton
-              size="sm"
-              href={downloadUrl}
-              data-testid="member-dsar-download"
-            >
-              {t("download")}
-            </LinkButton>
+            <>
+              {/* The link expires after 24 hours: a page left open must
+                  still offer a fresh copy. */}
+              <Button
+                size="sm"
+                variant="ghost"
+                isDisabled={pending}
+                onPress={() => void onRequest()}
+                data-testid="member-dsar-request-new"
+              >
+                {t("requestNew")}
+              </Button>
+              <LinkButton
+                size="sm"
+                href={downloadUrl}
+                data-testid="member-dsar-download"
+              >
+                {t("download")}
+              </LinkButton>
+            </>
           ) : (
             <Button
               size="sm"

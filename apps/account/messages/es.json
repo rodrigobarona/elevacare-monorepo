@@ -410,6 +410,7 @@
       "description": "Preparamos un archivo con los datos que Eleva tiene sobre ti. Suele tardar unos minutos.",
       "request": "Pedir una copia",
       "requesting": "Pidiendo…",
+      "requestNew": "Pedir una copia nueva",
       "requested": "Estamos preparando tu archivo.",
       "download": "Descargar (.zip)",
       "downloadHint": "El enlace de descarga funciona durante 24 horas.",
