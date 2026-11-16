@@ -48,6 +48,7 @@ export {
   type MemberProfile,
   type MemberNotificationPreference,
 } from "./member"
+export { updateUserLocale } from "./user-locale"
 export {
   createAuthProxy,
   createPassthroughProxy,

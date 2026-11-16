@@ -139,6 +139,7 @@ import {
   CreateStorageUploadRequestSchema,
   CreateStorageUploadResponseSchema,
   UpdateAvatarRequestSchema,
+  UpdateUserLocaleRequestSchema,
   SessionDocumentUrlResponseSchema,
   ListRecordTemplatesResponseSchema,
   CreateRecordTemplateRequestSchema,
@@ -734,6 +735,30 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           responses: {
             "200": {
               description: "Avatar removed",
+              content: { "application/json": { schema: OkSchema } },
+            },
+            ...stdErrors,
+          },
+        },
+      },
+      "/users/locale": {
+        put: {
+          operationId: "updateUserLocale",
+          summary: "Set the signed-in person's language",
+          description:
+            "Saves the language on the user, for any workspace (member, expert, clinic). Emails and notifications use it. Browser apps also set the ELEVA_LOCALE cookie for the interface. PATCH /me takes a locale too but is member-only.",
+          tags: ["Users"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: UpdateUserLocaleRequestSchema,
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Language saved",
               content: { "application/json": { schema: OkSchema } },
             },
             ...stdErrors,
