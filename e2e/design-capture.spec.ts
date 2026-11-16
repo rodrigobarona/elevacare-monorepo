@@ -793,16 +793,10 @@ test.describe("design capture", () => {
       }
       // A member's detail page, reached from the members list.
       await page.goto(`${base}/members`)
-      const memberHref = await page
-        .locator("a[href]")
-        .evaluateAll(
-          (links) =>
-            links
-              .map((link) => link.getAttribute("href") ?? "")
-              .find((value) => /\/members\/[^/]+$/.test(value)) ?? null
-        )
-      if (memberHref) {
-        await page.goto(new URL(memberHref, page.url()).toString())
+      const memberLink = page.getByTestId("expert-member-link").first()
+      if ((await memberLink.count()) > 0) {
+        const href = await memberLink.getAttribute("href")
+        await page.goto(new URL(href!, page.url()).toString())
         await clearBanner(page)
         await shoot(page, surface, "13-member-detail", kind)
       }
@@ -860,22 +854,16 @@ test.describe("design capture", () => {
       }
       // Detail pages: a session and a report, reached from their lists.
       const details = [
-        ["08-session-detail", "/sessions", /\/space\/sessions\/[^/]+$/],
-        ["09-report-detail", "/reports", /\/space\/reports\/[^/]+$/],
+        ["08-session-detail", "/sessions", "member-booking-detail"],
+        ["09-report-detail", "/reports", "member-report-row"],
       ] as const
-      for (const [name, list, pattern] of details) {
+      for (const [name, list, testId] of details) {
         await page.goto(`${base}${list}`)
-        const href = await page
-          .locator("a[href]")
-          .evaluateAll(
-            (links, source) =>
-              links
-                .map((link) => link.getAttribute("href") ?? "")
-                .find((value) => new RegExp(source).test(value)) ?? null,
-            pattern.source
-          )
-        if (!href) continue
-        await page.goto(new URL(href, page.url()).toString())
+        const link = page.getByTestId(testId).first()
+        // The demo member may have no report yet: nothing to open then.
+        if ((await link.count()) === 0) continue
+        const href = await link.getAttribute("href")
+        await page.goto(new URL(href!, page.url()).toString())
         await clearBanner(page)
         await shoot(page, surface, name, kind)
       }

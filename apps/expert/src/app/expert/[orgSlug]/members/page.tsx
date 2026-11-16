@@ -76,6 +76,7 @@ export default async function ExpertMembersPage({
                       `members/${member.memberUserId}`
                     )}
                     className="flex items-center gap-4 p-4 transition-colors hover:bg-muted/50 sm:px-6"
+                    data-testid="expert-member-link"
                   >
                     {body}
                     <CaretRightIcon aria-hidden className="size-4" />
