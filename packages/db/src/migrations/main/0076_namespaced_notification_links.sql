@@ -12,10 +12,19 @@
 -- this system rewrite runs as platform admin, set for this transaction only.
 -- One DO block keeps the setting and all four updates in one statement (the
 -- runner sends each statement separately) and makes the rewrite atomic.
+--
+-- notifications has FORCE ROW LEVEL SECURITY and its only UPDATE policy needs
+-- the row owner's context, so the rewrite reaches every owner's rows only as
+-- a role that bypasses RLS (neondb_owner on every Neon branch). Fail loudly
+-- rather than silently skip rows under any other role.
 DO $$
 DECLARE
   fixed_routes text[] := ARRAY['space', 'expert', 'team', 'academy', 'account', 'join', 'onboarding', 'admin', 'docs'];
 BEGIN
+  IF NOT (SELECT rolbypassrls FROM pg_roles WHERE rolname = current_user) THEN
+    RAISE EXCEPTION '0076 must run as a role that bypasses row-level security (got %)', current_user;
+  END IF;
+
   PERFORM set_config('eleva.platform_admin', 'true', true);
 
   UPDATE "notifications"
