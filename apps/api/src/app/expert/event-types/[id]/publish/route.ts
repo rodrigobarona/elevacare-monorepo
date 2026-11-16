@@ -1,14 +1,15 @@
 import { logError } from "@eleva/observability"
-import { eq } from "drizzle-orm"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { withAudit } from "@eleva/audit"
 import {
+  assertConnectReadyForPayments,
+  ConnectIncompleteError,
   enqueueSeatSync,
-  isConnectPublishReady,
   markSeatSyncPending,
+  offerTakesPayment,
 } from "@eleva/billing/server"
 import { getFlag } from "@eleva/flags"
 import {
@@ -16,7 +17,6 @@ import {
   getExpertProfileForOrg,
   listEventTypeModesWithLocation,
   lockEventTypeForUpdate,
-  main,
   updateEventType,
 } from "@eleva/db"
 import { publishEventType, type PublishViolation } from "@eleva/scheduling"
@@ -31,13 +31,6 @@ export const ROUTE_POLICY = {
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
-
-class ConnectIncompleteError extends Error {
-  constructor() {
-    super("Complete Payments onboarding before publishing an event type")
-    this.name = "ConnectIncompleteError"
-  }
-}
 
 class EventTypeNotFoundError extends Error {
   constructor() {
@@ -138,26 +131,14 @@ export async function POST(request: Request, { params }: Params) {
           throw new OfferInvariantPublishError(gate.violations)
         }
 
-        const [connect] = await tx
-          .select({
-            detailsSubmitted: main.billingCustomers.detailsSubmitted,
-            payoutsEnabled: main.billingCustomers.payoutsEnabled,
-            connectCapabilities: main.billingCustomers.connectCapabilities,
-            identityStatus: main.billingCustomers.identityStatus,
+        // Free services move no money, so they can go live before Payments
+        // setup; anything with a price needs a ready Connect account.
+        if (offerTakesPayment({ priceAmount: locked.priceAmount, modes })) {
+          await assertConnectReadyForPayments(tx, profile.orgId, {
+            identityRequired,
+            fallbackIdentityStatus: profile.stripeIdentityStatus,
           })
-          .from(main.billingCustomers)
-          .where(eq(main.billingCustomers.orgId, profile.orgId))
-          .limit(1)
-          .for("update")
-        const ready = isConnectPublishReady({
-          detailsSubmitted: connect?.detailsSubmitted ?? false,
-          payoutsEnabled: connect?.payoutsEnabled ?? false,
-          transfersStatus: connect?.connectCapabilities?.transfers,
-          identityRequired,
-          identityStatus:
-            connect?.identityStatus ?? profile.stripeIdentityStatus ?? null,
-        })
-        if (!ready) throw new ConnectIncompleteError()
+        }
 
         await updateEventType(
           profile.orgId,

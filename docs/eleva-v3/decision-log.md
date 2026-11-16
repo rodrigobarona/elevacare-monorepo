@@ -32,6 +32,28 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-16: Free services publish without Payments setup (active)
+
+- Founder decision (2026-11-16): a service that moves no money can go live
+  before the expert finishes Payments (Stripe Connect) onboarding. Paid
+  services keep the rule.
+- "Takes payment" (`offerTakesPayment` in `@eleva/billing/server`): the
+  service price is above zero, or any **active** delivery mode has its own
+  price above zero. Inactive modes do not count.
+- `POST /expert/event-types/{id}/publish` checks Connect readiness
+  (`assertConnectReadyForPayments`, same rule as before: details submitted,
+  payouts enabled, transfers active, Identity verified when the flag is on)
+  only for paid services.
+- A published free service cannot turn paid behind the gate: raising its
+  price (`PATCH /expert/event-types/{id}`), adding an active paid mode
+  (`POST …/modes`) or making a mode paid or active again
+  (`PATCH …/modes/{modeId}`) answers the same 409 `CONNECT_INCOMPLETE` until
+  Payments is ready (`apps/api/src/lib/paid-offer-guard.ts`).
+- Why: free first sessions and demos should not wait on bank details; found
+  while preparing the Google OAuth verification demo.
+- Out of scope: the expert services page does not yet say up front that a
+  free service can publish without Payments.
+
 ### 2026-11-16: Session reminder and clearer connected calendars (design slice D5.7) (active)
 
 - Change: on `/expert/{slug}/calendars`, "Where new sessions go" now has a

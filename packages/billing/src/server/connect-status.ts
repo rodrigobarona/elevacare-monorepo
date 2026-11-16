@@ -57,6 +57,58 @@ export function isConnectPublishReady(input: {
   return true
 }
 
+/**
+ * A service takes money when its own price, or the price of any active way to
+ * meet (delivery mode), is above zero. A free service never moves money, so it
+ * can go live before the expert finishes Payments setup.
+ */
+export function offerTakesPayment(input: {
+  priceAmount: number
+  modes: ReadonlyArray<{ active: boolean; priceCents: number | null }>
+}): boolean {
+  if (input.priceAmount > 0) return true
+  return input.modes.some((mode) => mode.active && (mode.priceCents ?? 0) > 0)
+}
+
+export class ConnectIncompleteError extends Error {
+  readonly code = "CONNECT_INCOMPLETE"
+  constructor() {
+    super("Complete Payments onboarding before publishing a paid service")
+    this.name = "ConnectIncompleteError"
+  }
+}
+
+/**
+ * Throws ConnectIncompleteError unless the practice can take payments. Locks
+ * the billing row so a concurrent Connect webhook cannot race the check.
+ */
+export async function assertConnectReadyForPayments(
+  tx: Tx,
+  orgId: string,
+  input: { identityRequired: boolean; fallbackIdentityStatus?: string | null }
+): Promise<void> {
+  const [connect] = await tx
+    .select({
+      detailsSubmitted: main.billingCustomers.detailsSubmitted,
+      payoutsEnabled: main.billingCustomers.payoutsEnabled,
+      connectCapabilities: main.billingCustomers.connectCapabilities,
+      identityStatus: main.billingCustomers.identityStatus,
+    })
+    .from(main.billingCustomers)
+    .where(eq(main.billingCustomers.orgId, orgId))
+    .limit(1)
+    .for("update")
+  const ready = isConnectPublishReady({
+    detailsSubmitted: connect?.detailsSubmitted ?? false,
+    payoutsEnabled: connect?.payoutsEnabled ?? false,
+    transfersStatus: connect?.connectCapabilities?.transfers,
+    identityRequired: input.identityRequired,
+    identityStatus:
+      connect?.identityStatus ?? input.fallbackIdentityStatus ?? null,
+  })
+  if (!ready) throw new ConnectIncompleteError()
+}
+
 export async function persistConnectStatus(
   tx: Tx,
   orgId: string,

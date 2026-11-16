@@ -13,7 +13,10 @@ export {
   getConnectOnboardingState,
 } from "./connect"
 export {
+  assertConnectReadyForPayments,
+  ConnectIncompleteError,
   isConnectPublishReady,
+  offerTakesPayment,
   persistConnectStatus,
   persistIdentityStatus,
   snapshotFromAccount,
