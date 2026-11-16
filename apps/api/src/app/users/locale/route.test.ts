@@ -15,6 +15,8 @@ vi.mock("@/lib/auth", () => ({
   ),
 }))
 
+vi.mock("@eleva/observability", () => ({ logError: vi.fn() }))
+
 vi.mock("@/lib/rate-limit", () => ({
   applyRateLimit: vi.fn(async () => null),
   rateLimitKey: () => "locale",
@@ -69,5 +71,12 @@ describe("PUT /users/locale", () => {
     const response = await put({ locale: "en" })
     expect(response.status).toBe(401)
     expect(updateUserLocale).not.toHaveBeenCalled()
+  })
+
+  it("answers a structured 500 when the save fails", async () => {
+    updateUserLocale.mockRejectedValue(new Error("db down"))
+    const response = await put({ locale: "en" })
+    expect(response.status).toBe(500)
+    expect(await response.json()).toEqual({ error: "internal" })
   })
 })

@@ -1,5 +1,6 @@
 import { UpdateUserLocaleRequestSchema } from "@eleva/api-client"
 import { updateUserLocale } from "@eleva/auth"
+import { logError } from "@eleva/observability"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -49,11 +50,16 @@ export async function PUT(request: Request) {
     )
   }
 
-  await updateUserLocale({
-    userId: session.user.id,
-    orgId: session.orgId,
-    locale: body.data.locale,
-  })
+  try {
+    await updateUserLocale({
+      userId: session.user.id,
+      orgId: session.orgId,
+      locale: body.data.locale,
+    })
+  } catch (err) {
+    logError("[users/locale] update failed", err)
+    return secureJson({ error: "internal" }, { status: 500, headers })
+  }
   return secureJson({ ok: true }, { status: 200, headers })
 }
 
