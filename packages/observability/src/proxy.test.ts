@@ -6,6 +6,7 @@ import {
   isCrossOriginRewrite,
   isVideoJoinPath,
   joinPermissionsPolicy,
+  NOINDEX_ROBOTS_TAG,
   PASSTHROUGH_APP_MATCHER,
   STANDARD_APP_MATCHER,
   withHeaders,
@@ -137,6 +138,26 @@ describe("withHeaders", () => {
       "strict-origin-when-cross-origin"
     )
   })
+
+  it("hides signed-in surfaces from search engines when asked", async () => {
+    const privateProxy = withHeaders(() => NextResponse.next(), {
+      noindex: true,
+    })
+    const res = await privateProxy(req("/expert/patimota/calendar"))
+    expect(res.headers.get("X-Robots-Tag")).toBe(NOINDEX_ROBOTS_TAG)
+
+    const publicProxy = withHeaders(() => NextResponse.next())
+    const pub = await publicProxy(req("/patimota"))
+    expect(pub.headers.get("X-Robots-Tag")).toBeNull()
+  })
+
+  for (const name of ["app", "expert", "team", "academy", "account", "admin"]) {
+    it(`apps/${name} marks every page noindex (ADR-026)`, () => {
+      const path = resolve(__dirname, "../../../apps", name, "src", "proxy.ts")
+      const src = readFileSync(path, "utf8")
+      expect(src).toMatch(/noindex:\s*true/)
+    })
+  }
 
   it("keeps same-origin rewrites in scope", async () => {
     const proxy = withHeaders(

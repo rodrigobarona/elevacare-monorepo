@@ -12,7 +12,8 @@ export default withHeaders(
   createAuthProxy({
     redirect: { kind: "gateway", baseUrl: resolveGatewayUrl() },
     unauthenticatedPaths: MEMBER_APP_UNAUTHENTICATED_PATHS,
-  })
+  }),
+  { noindex: true }
 )
 
 export const config = { matcher: ["/((?!_next|_vercel|.*\\..*).*)"] }

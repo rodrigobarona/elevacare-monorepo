@@ -132,7 +132,16 @@ export interface WithHeadersOptions {
    * so stamping the gateway's CSP on top would stack two policies.
    */
   skipCrossOriginRewrites?: boolean
+  /**
+   * Signed-in surfaces (ADR-026): tell search engines never to index or
+   * follow these pages (`X-Robots-Tag: noindex, nofollow`). robots.txt keeps
+   * allowing them, so crawlers can read this header.
+   */
+  noindex?: boolean
 }
+
+/** Robots header for signed-in surfaces (ADR-026). */
+export const NOINDEX_ROBOTS_TAG = "noindex, nofollow"
 
 /** True when the proxy response rewrites the request to a different origin. */
 export function isCrossOriginRewrite(req: NextRequest, res: Response): boolean {
@@ -181,6 +190,9 @@ export function withHeaders(
     )
     if (isJoin) {
       nextRes.headers.set("Referrer-Policy", "no-referrer")
+    }
+    if (options.noindex) {
+      nextRes.headers.set("X-Robots-Tag", NOINDEX_ROBOTS_TAG)
     }
     const skipCsp = process.env.NODE_ENV === "development"
     if (options.emitCsp !== false && !skipCsp) {

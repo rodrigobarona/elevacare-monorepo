@@ -32,6 +32,32 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-16: Dashboards are hidden from search engines; old inbox links migrated (ADR-026 slice 4) (active)
+
+- Every signed-in app (member, expert, team, academy, account, admin) now
+  sends `X-Robots-Tag: noindex, nofollow` on every page, through a `noindex`
+  option on the shared `withHeaders`. A unit guard fails if any of those
+  apps drops it. robots.txt still allows the paths so crawlers can read the
+  header.
+- Referrers stay `strict-origin-when-cross-origin` (paths, and so booking
+  ids, never leave eleva.care; video join pages send none). A stricter
+  `same-origin` was not adopted because Stripe and Google sign-in flows can
+  rely on the origin.
+- Migration `0076_namespaced_notification_links` rewrites stored in-app
+  notification links to the new addresses: `/{slug}/team/…` →
+  `/expert/{slug}/…` (the CRM follow-up digest wrote these before #407),
+  `/{slug}/admin/…` → `/team/{slug}/…`, `/{slug}/academy/…` →
+  `/academy/{slug}/…`, `/space-{hex}/…` → `/space/…`. Links already in the
+  new shape, fixed routes and public profiles are untouched; re-running it
+  changes nothing. CI migrates preview branches only: production needs
+  `0076` applied explicitly.
+- Founder decisions for the closure slice (recorded in ADR-026): a closed
+  practice's public address shows a "Practice closed" page served as 410, and
+  the owner can reopen the practice while the username is held.
+- Not yet: expert settings and "Close your practice" (slice 6).
+- Owner: engineering
+- Status: `active`
+
 ### 2026-11-16: One expert practice per person (ADR-026) (active)
 
 - Rule: a person owns at most one expert practice; it holds several
