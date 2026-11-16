@@ -1663,7 +1663,9 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               description:
                 "CONNECT_INCOMPLETE — a paid service (base price or any active mode price above zero) needs Payments onboarding ready (details submitted, payouts enabled, transfers active, and Identity verified when required). Free services publish without it.",
               content: {
-                "application/json": { schema: ConnectIncompleteErrorSchema },
+                "application/json": {
+                  schema: z.union([ErrorSchema, ConnectIncompleteErrorSchema]),
+                },
               },
             },
             ...stdWithNotFound,
@@ -1778,9 +1780,11 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "409": {
               description:
-                "CONNECT_INCOMPLETE — a published service gains a paid mode before Payments onboarding is ready",
+                "conflict — this way to meet already exists on the service; or CONNECT_INCOMPLETE — a published service gains an active paid mode before Payments onboarding is ready",
               content: {
-                "application/json": { schema: ConnectIncompleteErrorSchema },
+                "application/json": {
+                  schema: z.union([ErrorSchema, ConnectIncompleteErrorSchema]),
+                },
               },
             },
             ...stdWithNotFound,
@@ -1855,9 +1859,11 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "409": {
               description:
-                "CONNECT_INCOMPLETE — a published service gains a paid mode before Payments onboarding is ready",
+                "conflict — the change duplicates another way to meet, or deactivates the last active mode of a published service; or CONNECT_INCOMPLETE — a mode on a published service becomes paid or a paid mode is reactivated before Payments onboarding is ready",
               content: {
-                "application/json": { schema: ConnectIncompleteErrorSchema },
+                "application/json": {
+                  schema: z.union([ErrorSchema, ConnectIncompleteErrorSchema]),
+                },
               },
             },
             ...stdWithNotFound,

@@ -27,6 +27,7 @@ import type { RoutePolicy } from "@/lib/route-policy"
 import {
   assertPaymentsReadyForPaidChange,
   connectIncompleteResponse,
+  modeBecomesPaid,
 } from "@/lib/paid-offer-guard"
 
 export const ROUTE_POLICY = {
@@ -298,12 +299,14 @@ export async function PATCH(request: Request, { params }: Params) {
           if (invariant) throw new ModeOfferInvariantError(invariant)
         }
 
-        const nextActive = data.active ?? current.active
-        const wasPaid = current.active && (current.priceCents ?? 0) > 0
         await assertPaymentsReadyForPaidChange(tx, {
           orgId: profile.orgId,
           published: locked.published,
-          takesPayment: !wasPaid && nextActive && (nextPriceCents ?? 0) > 0,
+          takesPayment: modeBecomesPaid({
+            current,
+            nextActive: data.active ?? current.active,
+            nextPriceCents,
+          }),
           stripeIdentityStatus: profile.stripeIdentityStatus,
         })
 

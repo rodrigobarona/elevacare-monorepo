@@ -24,6 +24,7 @@ import type { RoutePolicy } from "@/lib/route-policy"
 import {
   assertPaymentsReadyForPaidChange,
   connectIncompleteResponse,
+  modeBecomesPaid,
 } from "@/lib/paid-offer-guard"
 
 class ModeCreateNotFoundError extends Error {
@@ -208,7 +209,11 @@ export async function POST(request: Request, { params }: Params) {
         await assertPaymentsReadyForPaidChange(tx, {
           orgId: profile.orgId,
           published: locked.published,
-          takesPayment: (data.active ?? true) && (data.priceCents ?? 0) > 0,
+          takesPayment: modeBecomesPaid({
+            current: null,
+            nextActive: data.active ?? true,
+            nextPriceCents: data.priceCents,
+          }),
           stripeIdentityStatus: profile.stripeIdentityStatus,
         })
 

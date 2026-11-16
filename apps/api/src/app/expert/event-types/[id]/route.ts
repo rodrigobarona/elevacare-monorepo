@@ -23,6 +23,7 @@ import type { RoutePolicy } from "@/lib/route-policy"
 import {
   assertPaymentsReadyForPaidChange,
   connectIncompleteResponse,
+  servicePriceBecomesPaid,
 } from "@/lib/paid-offer-guard"
 
 class KindOfferInvariantError extends Error {
@@ -207,10 +208,10 @@ export async function PATCH(
         await assertPaymentsReadyForPaidChange(tx, {
           orgId: profile.orgId,
           published: locked.published,
-          takesPayment:
-            data.priceAmount !== undefined &&
-            data.priceAmount > 0 &&
-            locked.priceAmount === 0,
+          takesPayment: servicePriceBecomesPaid({
+            currentPriceAmount: locked.priceAmount,
+            nextPriceAmount: data.priceAmount,
+          }),
           stripeIdentityStatus: profile.stripeIdentityStatus,
         })
 

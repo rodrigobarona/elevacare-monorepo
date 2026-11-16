@@ -6,6 +6,35 @@ import type { Tx } from "@eleva/db"
 import { getFlag } from "@eleva/flags"
 import { secureJson } from "@/lib/security-headers"
 
+/** A free service gets a price above zero. */
+export function servicePriceBecomesPaid(input: {
+  currentPriceAmount: number
+  nextPriceAmount: number | undefined
+}): boolean {
+  return (
+    input.nextPriceAmount !== undefined &&
+    input.nextPriceAmount > 0 &&
+    input.currentPriceAmount === 0
+  )
+}
+
+/**
+ * A delivery mode starts charging: it ends up active with its own price above
+ * zero, and it was not already an active paid mode. `current` is null for a
+ * new mode.
+ */
+export function modeBecomesPaid(input: {
+  current: { active: boolean; priceCents: number | null } | null
+  nextActive: boolean
+  nextPriceCents: number | null | undefined
+}): boolean {
+  const wasPaid =
+    input.current !== null &&
+    input.current.active &&
+    (input.current.priceCents ?? 0) > 0
+  return !wasPaid && input.nextActive && (input.nextPriceCents ?? 0) > 0
+}
+
 /**
  * A published service that starts taking money (a price above zero, or a paid
  * way to meet) needs a ready Payments (Connect) account, the same rule publish
