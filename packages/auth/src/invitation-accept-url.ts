@@ -11,8 +11,8 @@ export function invitationAcceptUrl(
   }
 ): string {
   const base = (
-    env.ACCOUNT_URL ||
-    env.NEXT_PUBLIC_ACCOUNT_URL ||
+    env.ACCOUNT_URL?.trim() ||
+    env.NEXT_PUBLIC_ACCOUNT_URL?.trim() ||
     "http://localhost:3006"
   ).replace(/\/$/, "")
   return `${base}/accept-invitation?id=${encodeURIComponent(invitationId)}`

@@ -10,6 +10,15 @@ describe("invitationAcceptUrl", () => {
     ).toBe("https://account.eleva.care/accept-invitation?id=inv-1")
   })
 
+  it("falls through a blank ACCOUNT_URL to NEXT_PUBLIC_ACCOUNT_URL", () => {
+    expect(
+      invitationAcceptUrl("inv-1", {
+        ACCOUNT_URL: "  ",
+        NEXT_PUBLIC_ACCOUNT_URL: "https://dev.eleva.care",
+      })
+    ).toBe("https://dev.eleva.care/accept-invitation?id=inv-1")
+  })
+
   it("encodes the invitation id", () => {
     expect(
       invitationAcceptUrl("a b", { ACCOUNT_URL: "https://account.eleva.care" })
