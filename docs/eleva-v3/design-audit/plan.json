@@ -400,6 +400,13 @@
           "scope": "Everything about the person in /account: Profile, Notifications, Security, Privacy, Workspaces, and Billing for practices only. Space settings and privacy redirect there. Notifications show only real choices. A settings hierarchy: headline, title, hint, popover.",
           "findings": ["ACC-01", "ACC-02", "ACC-04", "ACC-05", "ACC-06"],
           "effort": "M"
+        },
+        {
+          "id": "D5.9",
+          "title": "Calm consent: one line and Details",
+          "scope": "Each consent on Privacy shows its purpose and consequence in one line; health data and AI open a Details dialog with the bullets and the notice link.",
+          "findings": ["ACC-07"],
+          "effort": "S"
         }
       ]
     },

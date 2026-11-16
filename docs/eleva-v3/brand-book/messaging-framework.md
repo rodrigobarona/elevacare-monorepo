@@ -87,6 +87,12 @@ A switch that saves at once says so in the card line ("We save each change
 straight away") and has no Save button. Show only choices that change what
 Eleva does; when Eleva always does something, say "Always on".
 
+Consent switches use a layered notice. The visible line under the title
+says what the choice is for, what it covers and what turning it on means
+(health data names "health information" and who uses it). Anything more
+goes in a "Details" dialog with a link to the full notice, never only in a
+popover. A simple choice (news emails) needs no Details.
+
 ## Related
 
 - [Main handbook — Verbal identity](./README.md#2-verbal-identity)

@@ -89,6 +89,16 @@
       "detail": "A member with no practice sees Expert Community, Top Expert (pre-selected), Clinic Starter and Clinic Growth, and 'Start an embedded Stripe Checkout session'. Plan names and descriptions are hard-coded in English.",
       "recommendation": "Show Billing only to people with an expert practice or a clinic; a member who opens the address sees that receipts live in her Space with a link to Payments. Plan copy, translations and moving plans into practice settings follow in the expert consistency pass.",
       "references": []
+    },
+    {
+      "id": "ACC-07",
+      "severity": "P2",
+      "lens": "copy",
+      "title": "Consent switches carry the whole notice inline",
+      "evidence": ["04-privacy.desktop.jpg"],
+      "detail": "Health data, news and AI each showed long paragraphs and a bullet list under the switch, so the Privacy page read as a legal wall.",
+      "recommendation": "Layered notice: each row shows the purpose, what it covers and what turning it on means in one line (health data names 'health information' and who uses it); a 'Details' dialog holds the bullets and the link to the full notice. News needs no Details.",
+      "references": ["12-account-settings/11", "12-account-settings/12"]
     }
   ],
   "references": [
@@ -211,6 +221,30 @@
       "why": "The scan step shows only the QR code, a 'Can't scan QR code?' link and the 6-digit field. Once the app is on, the page offers 'Generate' for backup codes as a separate action. Developer tool, kept for its structure.",
       "apply": "Show the key only when someone asks for it, and show backup codes after the code is accepted, as the last step.",
       "query": "setting up two-factor authentication with an authenticator app"
+    },
+    {
+      "id": "12-account-settings/11",
+      "file": "img/11-claude-privacy-learn-more.jpg",
+      "app": "Claude",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/cbdae8ff-ad61-4e7d-8ba6-767a5337c317?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Each privacy switch has a title and one line, with 'Learn more' for the rest",
+      "why": "The page stays short: one sentence says what the switch does, and the detail is one click away.",
+      "apply": "Consent rows show the purpose and what turning it on means in one line; a 'Details' dialog holds the bullets and the notice link.",
+      "query": "privacy settings with consent toggles and a learn more link that opens details"
+    },
+    {
+      "id": "12-account-settings/12",
+      "file": "img/12-airbnb-privacy-learn-more.jpg",
+      "app": "Airbnb",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/fb98988d-3bfe-48e3-8c33-0a41db9e4afc?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Short consequence line under each switch, 'Learn more' inline",
+      "why": "Every switch says what changes for you in a few words; nothing explains the mechanics on the page.",
+      "apply": "Keep the visible line to the consequence ('You need this on to book', 'Off unless you turn it on'); no Details for simple choices like news.",
+      "query": "privacy settings with consent toggles and a learn more link that opens details"
     }
   ],
   "judging_criteria": [
@@ -220,6 +254,7 @@
     "Does every notification switch change what Eleva sends, with 'Always on' where it cannot? (12-account-settings/01)",
     "Can she tell at a glance what she agreed to (dated, readable) apart from the choices she can switch on and off? (10-member-space/08)",
     "Does the devices list name devices in plain words, mark this device, and let her sign out of the others in one step? (12-account-settings/05, 12-account-settings/06)",
-    "On a 390 px screen, does every page fit without sideways scrolling, with actions on the same line as the row they belong to? (12-account-settings/01)"
+    "On a 390 px screen, does every page fit without sideways scrolling, with actions on the same line as the row they belong to? (12-account-settings/01)",
+    "Does each consent switch say, in one visible line, what it is for and what turning it on means, with the rest one tap away in Details and the full notice linked? (12-account-settings/11, 12-account-settings/12)"
   ]
 }

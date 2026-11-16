@@ -371,29 +371,37 @@
       "readLabel": "Leer {document} (se abre en una pestaña nueva)"
     },
     "choices": {
-      "title": "Tus elecciones",
-      "description": "Cámbialas cuando quieras. Guardamos cada cambio al momento.",
+      "title": "Tus preferencias",
+      "description": "Guardamos cada cambio al momento.",
       "onSince": "Activo desde el {date}",
       "granted": "Guardado. Está activado.",
       "withdrawn": "Guardado. Está desactivado.",
       "healthDataBlocked": "Sigue activo mientras tengas una sesión reservada. Puedes desactivarlo después de tu última sesión.",
+      "details": "Detalles",
+      "detailsLabel": "Detalles: {title}",
+      "close": "Cerrar",
       "kinds": {
         "health_data_processing": {
           "title": "Información de salud para tu atención",
-          "description": "Permite que tus especialistas usen información sobre tu salud, como tus respuestas al cuestionario, las notas de las sesiones y los documentos, para atenderte. Necesitas tenerlo activado para reservar.",
+          "description": "Los especialistas con los que reservas usan tu información de salud (respuestas al cuestionario, notas de las sesiones y documentos) para atenderte. Necesitas tenerlo activado para reservar y mientras tengas una sesión reservada.",
+          "details": [
+            "Incluye tus respuestas al cuestionario, las notas que tu especialista guarda de las sesiones y los documentos compartidos para tu atención.",
+            "Los especialistas con los que reservas la usan para atenderte. Algunas clínicas comparten registros entre sus especialistas, y puedes decir que no para cada clínica.",
+            "Puedes desactivarlo después de tu última sesión."
+          ],
           "noticeLink": "Leer el aviso sobre datos de salud"
         },
         "marketing": {
           "title": "Novedades de Eleva",
-          "description": "Emails sobre nuevos especialistas, eventos y ofertas."
+          "description": "Correos sobre nuevos especialistas, eventos y ofertas."
         },
         "ai_processing": {
-          "title": "Ayuda de IA en los informes de sesión",
-          "description": "Está desactivado hasta que lo actives. Puedes desactivarlo cuando quieras.",
-          "info": [
+          "title": "Transcripción de sesiones y ayuda de IA",
+          "description": "Transcripción en directo de tus sesiones de vídeo, para el registro de tu especialista. Está desactivada hasta que la actives.",
+          "details": [
             "Tus sesiones de vídeo se transcriben en directo, para que tu especialista conserve un registro escrito.",
-            "Tu especialista puede preparar informes de sesión a partir de sus propias notas con un modelo de IA que no guarda copia de tus datos, y revisa cada borrador antes de que lo veas. La redacción con IA aún no está activa.",
-            "Cuando lo desactivas, la transcripción se detiene desde tu próxima llamada."
+            "Más adelante, tu especialista podrá preparar informes de sesión a partir de sus propias notas con IA que funciona en la UE y nunca se entrena con tus datos. Revisa cada borrador antes de que lo veas.",
+            "Si la desactivas, la transcripción se detiene desde tu próxima llamada. Las transcripciones ya guardadas se quedan en el registro de la sesión."
           ],
           "noticeLink": "Leer el aviso sobre el tratamiento con IA"
         }

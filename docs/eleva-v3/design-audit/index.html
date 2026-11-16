@@ -97,11 +97,11 @@ footer{padding:36px 0;color:var(--muted);font-size:.85rem}
   <h1>Where the design is weak, <em>and what to build instead</em></h1>
   <p>Every key screen was captured on desktop and phone, reviewed by a six-seat panel, and matched to patterns from shipped products on Mobbin. Audit and plan only. Nothing in this plan is built yet.</p>
   <div class="stats">
-    <div class="stat"><b>147</b><span>findings</span></div>
+    <div class="stat"><b>148</b><span>findings</span></div>
     <div class="stat"><b>44</b><span>P1, core path</span></div>
-    <div class="stat"><b>83</b><span>P2, quality</span></div>
+    <div class="stat"><b>84</b><span>P2, quality</span></div>
     <div class="stat"><b>20</b><span>P3, polish</span></div>
-    <div class="stat"><b>171</b><span>Mobbin references</span></div>
+    <div class="stat"><b>173</b><span>Mobbin references</span></div>
     <div class="stat"><b>100</b><span>before screenshots</span></div>
     <div class="stat"><b>8</b><span>before videos</span></div>
   </div>
@@ -313,6 +313,11 @@ footer{padding:36px 0;color:var(--muted);font-size:.85rem}
       <td>Everything about the person in /account: Profile, Notifications, Security, Privacy, Workspaces, and Billing for practices only. Space settings and privacy redirect there. Notifications show only real choices. A settings hierarchy: headline, title, hint, popover.</td>
       <td>M</td>
       <td class="chips"><a class="chip" href="#ACC-01">ACC-01</a><a class="chip" href="#ACC-02">ACC-02</a><a class="chip" href="#ACC-04">ACC-04</a><a class="chip" href="#ACC-05">ACC-05</a><a class="chip" href="#ACC-06">ACC-06</a></td>
+    </tr><tr id="D5.9">
+      <td><code>D5.9</code><br><b>Calm consent: one line and Details</b></td>
+      <td>Each consent on Privacy shows its purpose and consequence in one line; health data and AI open a Details dialog with the bullets and the notice link.</td>
+      <td>S</td>
+      <td class="chips"><a class="chip" href="#ACC-07">ACC-07</a></td>
     </tr></tbody>
   </table></div>
 </div>
@@ -3094,7 +3099,7 @@ footer{padding:36px 0;color:var(--muted);font-size:.85rem}
     <p class="eyebrow">12-account-settings · Dashboards</p>
     <h2>Account settings</h2>
     <p class="lede">A person had two settings pages and two privacy pages. /space/settings and /account/settings both edited the same photo, name and language on the user record, but each held only some controls: time zone, theme and notifications were only in the Space, and password, two-step verification, passkeys and devices only in /account. /account/privacy was a signpost to /space/privacy. The fix is one home for everything about the person, /account, in short pages (Profile, Notifications, Security, Privacy, Workspaces, Billing for practices), with a strict hierarchy: one headline and one line per page, one title and one line per card, a hint only where it prevents a mistake or says who sees a value, and background explanation in an (i) popover.</p>
-    <p class="counts"><span class="sev P1">3 P1</span><span class="sev P2">3 P2</span><span class="sev P3">0 P3</span><span class="pill">10 Mobbin references</span><span class="pill ">After: not built yet</span></p>
+    <p class="counts"><span class="sev P1">3 P1</span><span class="sev P2">4 P2</span><span class="sev P3">0 P3</span><span class="pill">12 Mobbin references</span><span class="pill ">After: not built yet</span></p>
   </header>
   <h3>Before</h3>
   <p class="meta">This seat reviewed captures from other surfaces; see the evidence links in each finding.</p>
@@ -3153,6 +3158,15 @@ footer{padding:36px 0;color:var(--muted);font-size:.85rem}
     <p><b>Do instead.</b> Show Billing only to people with an expert practice or a clinic; a member who opens the address sees that receipts live in her Space with a link to Payments. Plan copy, translations and moving plans into practice settings follow in the expert consistency pass.</p>
     <p class="meta">Evidence: <button class="evidence" data-full="captures/2026-11-14-before/12-account-settings/05-billing.desktop.jpg" data-caption="12-account-settings/05-billing.desktop.jpg">05-billing.desktop.jpg</button></p>
     
+  </div>
+</details>
+<details class="finding" id="ACC-07" data-sev="P2">
+  <summary><span class="sev P2">P2</span><code>ACC-07</code><span class="lens">copy</span><strong>Consent switches carry the whole notice inline</strong><a class="chip slice" href="#D5.9">D5.9</a></summary>
+  <div class="body">
+    <p><b>What is weak.</b> Health data, news and AI each showed long paragraphs and a bullet list under the switch, so the Privacy page read as a legal wall.</p>
+    <p><b>Do instead.</b> Layered notice: each row shows the purpose, what it covers and what turning it on means in one line (health data names 'health information' and who uses it); a 'Details' dialog holds the bullets and the link to the full notice. News needs no Details.</p>
+    <p class="meta">Evidence: <button class="evidence" data-full="captures/2026-11-14-before/12-account-settings/04-privacy.desktop.jpg" data-caption="12-account-settings/04-privacy.desktop.jpg">04-privacy.desktop.jpg</button></p>
+    <p class="meta">Mobbin references: <a class="chip ref" href="#ref-12-account-settings-11">12-account-settings/11</a><a class="chip ref" href="#ref-12-account-settings-12">12-account-settings/12</a></p>
   </div>
 </details>
   <h3>Mobbin references</h3>
@@ -3235,10 +3249,26 @@ footer{padding:36px 0;color:var(--muted);font-size:.85rem}
   <p>The scan step shows only the QR code, a 'Can't scan QR code?' link and the 6-digit field. Once the app is on, the page offers 'Generate' for backup codes as a separate action. Developer tool, kept for its structure.</p>
   <p><b>Eleva takes:</b> Show the key only when someone asks for it, and show backup codes after the code is accepted, as the last step.</p>
   <p class="meta"><a href="https://mobbin.com/flows/e7c9eacd-5388-4e3d-a25d-092da52b1131?utm_source=claude-code&amp;utm_medium=ai-assistant&amp;utm_source_platform=mcp" target="_blank" rel="noreferrer">Open on Mobbin</a></p>
+</article>
+<article class="reference" id="ref-12-account-settings-11">
+  <div class="ref-images"><button class="frame ref" data-full="../../../_context/mobbin/library/12-account-settings/img/11-claude-privacy-learn-more.jpg" data-caption="Claude · Each privacy switch has a title and one line, with 'Learn more' for the rest" data-mobbin="https://mobbin.com/screens/cbdae8ff-ad61-4e7d-8ba6-767a5337c317?utm_source=claude-code&amp;utm_medium=ai-assistant&amp;utm_source_platform=mcp"><img loading="lazy" src="../../../_context/mobbin/library/12-account-settings/img/11-claude-privacy-learn-more.jpg" alt="Claude · Each privacy switch has a title and one line, with 'Learn more' for the rest"></button></div>
+  <p class="ref-head"><code>12-account-settings/11</code> <b>Claude</b> <span class="lens">web · screen</span></p>
+  <h5>Each privacy switch has a title and one line, with 'Learn more' for the rest</h5>
+  <p>The page stays short: one sentence says what the switch does, and the detail is one click away.</p>
+  <p><b>Eleva takes:</b> Consent rows show the purpose and what turning it on means in one line; a 'Details' dialog holds the bullets and the notice link.</p>
+  <p class="meta"><a href="https://mobbin.com/screens/cbdae8ff-ad61-4e7d-8ba6-767a5337c317?utm_source=claude-code&amp;utm_medium=ai-assistant&amp;utm_source_platform=mcp" target="_blank" rel="noreferrer">Open on Mobbin</a></p>
+</article>
+<article class="reference" id="ref-12-account-settings-12">
+  <div class="ref-images"><button class="frame ref" data-full="../../../_context/mobbin/library/12-account-settings/img/12-airbnb-privacy-learn-more.jpg" data-caption="Airbnb · Short consequence line under each switch, 'Learn more' inline" data-mobbin="https://mobbin.com/screens/fb98988d-3bfe-48e3-8c33-0a41db9e4afc?utm_source=claude-code&amp;utm_medium=ai-assistant&amp;utm_source_platform=mcp"><img loading="lazy" src="../../../_context/mobbin/library/12-account-settings/img/12-airbnb-privacy-learn-more.jpg" alt="Airbnb · Short consequence line under each switch, 'Learn more' inline"></button></div>
+  <p class="ref-head"><code>12-account-settings/12</code> <b>Airbnb</b> <span class="lens">web · screen</span></p>
+  <h5>Short consequence line under each switch, 'Learn more' inline</h5>
+  <p>Every switch says what changes for you in a few words; nothing explains the mechanics on the page.</p>
+  <p><b>Eleva takes:</b> Keep the visible line to the consequence ('You need this on to book', 'Off unless you turn it on'); no Details for simple choices like news.</p>
+  <p class="meta"><a href="https://mobbin.com/screens/fb98988d-3bfe-48e3-8c33-0a41db9e4afc?utm_source=claude-code&amp;utm_medium=ai-assistant&amp;utm_source_platform=mcp" target="_blank" rel="noreferrer">Open on Mobbin</a></p>
 </article></div>
   <h3>Judging criteria</h3>
-  <p class="meta">The review panel scores the "after" captures against these, with the references above open. <span class="score" data-total="7">0 / 7</span></p>
-  <ol class="criteria"><li><label><input type="checkbox"> <span>Is there exactly one place to change each personal setting, and do old Space addresses land there? (12-account-settings/02)</span></label></li><li><label><input type="checkbox"> <span>Does every page have one headline and one line, every card one title and one line, and does each hint either prevent a mistake or say who sees a value? (12-account-settings/03, 12-account-settings/04)</span></label></li><li><label><input type="checkbox"> <span>Is background help in an (i) popover with an accessible name, while what a member must know before deleting her account stays in the dialog she confirms? (12-account-settings/07, 12-account-settings/08)</span></label></li><li><label><input type="checkbox"> <span>Does every notification switch change what Eleva sends, with 'Always on' where it cannot? (12-account-settings/01)</span></label></li><li><label><input type="checkbox"> <span>Can she tell at a glance what she agreed to (dated, readable) apart from the choices she can switch on and off? (10-member-space/08)</span></label></li><li><label><input type="checkbox"> <span>Does the devices list name devices in plain words, mark this device, and let her sign out of the others in one step? (12-account-settings/05, 12-account-settings/06)</span></label></li><li><label><input type="checkbox"> <span>On a 390 px screen, does every page fit without sideways scrolling, with actions on the same line as the row they belong to? (12-account-settings/01)</span></label></li></ol>
+  <p class="meta">The review panel scores the "after" captures against these, with the references above open. <span class="score" data-total="8">0 / 8</span></p>
+  <ol class="criteria"><li><label><input type="checkbox"> <span>Is there exactly one place to change each personal setting, and do old Space addresses land there? (12-account-settings/02)</span></label></li><li><label><input type="checkbox"> <span>Does every page have one headline and one line, every card one title and one line, and does each hint either prevent a mistake or say who sees a value? (12-account-settings/03, 12-account-settings/04)</span></label></li><li><label><input type="checkbox"> <span>Is background help in an (i) popover with an accessible name, while what a member must know before deleting her account stays in the dialog she confirms? (12-account-settings/07, 12-account-settings/08)</span></label></li><li><label><input type="checkbox"> <span>Does every notification switch change what Eleva sends, with 'Always on' where it cannot? (12-account-settings/01)</span></label></li><li><label><input type="checkbox"> <span>Can she tell at a glance what she agreed to (dated, readable) apart from the choices she can switch on and off? (10-member-space/08)</span></label></li><li><label><input type="checkbox"> <span>Does the devices list name devices in plain words, mark this device, and let her sign out of the others in one step? (12-account-settings/05, 12-account-settings/06)</span></label></li><li><label><input type="checkbox"> <span>On a 390 px screen, does every page fit without sideways scrolling, with actions on the same line as the row they belong to? (12-account-settings/01)</span></label></li><li><label><input type="checkbox"> <span>Does each consent switch say, in one visible line, what it is for and what turning it on means, with the rest one tap away in Details and the full notice linked? (12-account-settings/11, 12-account-settings/12)</span></label></li></ol>
 </div></section>
 <section id="gaps"><div class="wrap">
   <p class="eyebrow">Honest limits</p>

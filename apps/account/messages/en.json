@@ -372,15 +372,23 @@
     },
     "choices": {
       "title": "Your choices",
-      "description": "Change these at any time. We save each change straight away.",
+      "description": "We save each change straight away.",
       "onSince": "On since {date}",
       "granted": "Saved. This is now on.",
       "withdrawn": "Saved. This is now off.",
       "healthDataBlocked": "This stays on while you have a session booked. You can turn it off after your last session.",
+      "details": "Details",
+      "detailsLabel": "Details: {title}",
+      "close": "Close",
       "kinds": {
         "health_data_processing": {
           "title": "Health information for your care",
-          "description": "Lets your experts use information about your health, such as your intake answers, session notes and documents, to care for you. You need this on to book.",
+          "description": "The experts you book with use your health information (intake answers, session notes and documents) to care for you. You need this on to book and while you have a session booked.",
+          "details": [
+            "It covers your intake answers, the notes your expert keeps from your sessions, and documents shared for your care.",
+            "The experts you book with use it to care for you. Some clinics share records between their experts, and you can say no for each clinic.",
+            "You can turn it off after your last session."
+          ],
           "noticeLink": "Read the health data notice"
         },
         "marketing": {
@@ -388,12 +396,12 @@
           "description": "Emails about new experts, events and offers."
         },
         "ai_processing": {
-          "title": "AI help with session reports",
-          "description": "Off unless you turn it on. You can turn it off at any time.",
-          "info": [
+          "title": "Session transcripts and AI help",
+          "description": "Live transcripts of your video sessions, for your expert’s record. Off unless you turn it on.",
+          "details": [
             "Your video sessions are transcribed live, so your expert keeps a written record.",
-            "Your expert can draft session reports from their own notes with an AI model that keeps no copy of your data, and reviews every draft before you see it. AI drafting is not switched on yet.",
-            "When you turn this off, transcription stops from your next call."
+            "Later, your expert will be able to draft session reports from their own notes with AI that runs in the EU and is never trained on your data. They review every draft before you see it.",
+            "When you turn this off, transcription stops from your next call. Transcripts already saved stay in your session record."
           ],
           "noticeLink": "Read the AI processing notice"
         }
