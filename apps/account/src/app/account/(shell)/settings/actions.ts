@@ -79,11 +79,20 @@ export async function getAvatarUploadToken(): Promise<string> {
   return mintUploadToken(session.user.id)
 }
 
-/** An uploaded photo that could not be saved is deleted, not left behind. */
+/**
+ * An uploaded photo that could not be saved is deleted, not left behind.
+ * A failed save may still have committed (the response was lost), so the
+ * profile is read first: the object is deleted only when the profile holds
+ * a different photo, and kept when that read fails. A leftover upload is
+ * safer than a deleted profile photo.
+ */
 async function discardOrphanAvatar(url: string): Promise<void> {
   try {
     const session = await requireSession()
-    if (isAvatarUrl(url, session.user.id)) await deletePublicObject(url)
+    if (!isAvatarUrl(url, session.user.id)) return
+    const api = await getPersonalApiClient()
+    const profile = await api.me.get()
+    if (profile.avatarUrl !== url) await deletePublicObject(url)
   } catch (err) {
     unstable_rethrow(err)
     console.warn("discardOrphanAvatar failed", err)

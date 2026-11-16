@@ -12,7 +12,7 @@ import {
   SettingsFieldsetDescription,
   SettingsFieldsetTitle,
 } from "@eleva/ui/components/settings-fieldset"
-import { hasBillableWorkspace } from "./billable"
+import { hasBillableWorkspace, isActiveWorkspaceBillable } from "./billable"
 import { BillingClient } from "./billing-client"
 
 export default async function BillingPage() {
@@ -41,6 +41,30 @@ export default async function BillingPage() {
               size="sm"
             >
               {t("noWorkspace.action")}
+            </LinkButton>
+          }
+        />
+      </div>
+    )
+  }
+
+  if (!isActiveWorkspaceBillable(organizations)) {
+    // Plans belong to a practice or clinic, and billing acts on the active
+    // workspace: switch to it first, or checkout would target the Space.
+    return (
+      <div className="mx-auto max-w-3xl space-y-8">
+        <PageHeader title={t("title")} description={t("description")} />
+        <EmptyState
+          icon={<CreditCardIcon aria-hidden />}
+          title={t("pickWorkspace.title")}
+          description={t("pickWorkspace.description")}
+          action={
+            <LinkButton
+              href="/account/organizations"
+              variant="outline"
+              size="sm"
+            >
+              {t("pickWorkspace.action")}
             </LinkButton>
           }
         />

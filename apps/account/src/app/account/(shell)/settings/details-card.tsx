@@ -88,7 +88,7 @@ export function DetailsCard({
         apiUploadUrl: `${apiBaseUrl}/storage/upload`,
         headers: { Authorization: `Bearer ${uploadToken}` },
       })
-      const { ok } = await updateAvatar(result.url)
+      const { ok } = await updateAvatar(result.url).catch(() => ({ ok: false }))
       if (!ok) {
         toast.error(t("avatar.saveFailed"))
         return
@@ -107,7 +107,7 @@ export function DetailsCard({
   async function onRemovePhoto() {
     setRemoving(true)
     try {
-      const { ok } = await removeAvatar()
+      const { ok } = await removeAvatar().catch(() => ({ ok: false }))
       if (!ok) {
         toast.error(t("avatar.removeFailed"))
         return
@@ -124,7 +124,9 @@ export function DetailsCard({
     event.preventDefault()
     setSaving(true)
     try {
-      const { ok } = await updateDetails({ name: name.trim() })
+      const { ok } = await updateDetails({ name: name.trim() }).catch(() => ({
+        ok: false,
+      }))
       if (!ok) {
         toast.error(t("details.error"))
         return

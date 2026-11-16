@@ -51,6 +51,7 @@ function QrCode({ value, label }: { value: string; label: string }) {
   return (
     <svg
       role="img"
+      data-testid="two-step-qr"
       aria-label={label}
       viewBox={`0 0 ${size} ${size}`}
       className="size-52 rounded-2xl border border-border bg-white p-2"
@@ -96,6 +97,9 @@ export function TwoStepDialog({
   const hasBackupCodes = (setup?.backupCodes.length ?? 0) > 0
   const steps = hasBackupCodes ? STEPS : STEPS.slice(0, 3)
   const stepNumber = steps.indexOf(step) + 1
+  // Once two-step is on, the codes must not be lost to a stray click or
+  // Escape; and a pending request must finish before the dialog closes.
+  const canClose = step !== "backup" && !busy
 
   async function onPassword(event: React.FormEvent) {
     event.preventDefault()
@@ -200,11 +204,11 @@ export function TwoStepDialog({
     <Dialog
       isOpen={mode !== null}
       onOpenChange={(open) => {
-        if (!open) onClose()
+        if (!open && canClose) onClose()
       }}
-      // Once two-step is on, the codes must not be lost to a stray click.
-      isDismissable={step !== "backup" && !busy}
-      showCloseButton={step !== "backup" && !busy}
+      isDismissable={canClose}
+      isKeyboardDismissDisabled={!canClose}
+      showCloseButton={canClose}
     >
       {step === "password" ? (
         <form onSubmit={onPassword} className="grid gap-6">
@@ -226,6 +230,7 @@ export function TwoStepDialog({
             </FieldLabel>
             <Input
               id="two-step-password"
+              data-testid="two-step-password"
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
@@ -235,13 +240,19 @@ export function TwoStepDialog({
           </Field>
           <DialogFooter>
             {stepCount}
-            <Button type="button" variant="outline" onPress={onClose}>
+            <Button
+              type="button"
+              variant="outline"
+              isDisabled={busy}
+              onPress={onClose}
+            >
               {t("cancel")}
             </Button>
             <Button
               type="submit"
               variant={mode === "off" ? "destructive" : "default"}
               isDisabled={busy || !password}
+              data-testid="two-step-continue"
             >
               {mode === "off"
                 ? t("turnOffStep.confirm")
@@ -274,6 +285,7 @@ export function TwoStepDialog({
               size="sm"
               variant="outline"
               className="sm:hidden"
+              data-testid="two-step-open-app"
             >
               {t("scanStep.openInApp")}
             </LinkButton>
@@ -281,7 +293,11 @@ export function TwoStepDialog({
           <DialogFooter>
             {stepCount}
             {backButton("password")}
-            <Button type="button" onPress={() => setStep("code")}>
+            <Button
+              type="button"
+              onPress={() => setStep("code")}
+              data-testid="two-step-next"
+            >
               {t("next")}
             </Button>
           </DialogFooter>
@@ -300,6 +316,7 @@ export function TwoStepDialog({
             </FieldLabel>
             <Input
               id="two-step-code"
+              data-testid="two-step-code"
               value={code}
               onChange={(event) => setCode(event.target.value)}
               inputMode="numeric"
@@ -314,7 +331,11 @@ export function TwoStepDialog({
           <DialogFooter>
             {stepCount}
             {backButton("scan")}
-            <Button type="submit" isDisabled={busy || code.trim().length !== 6}>
+            <Button
+              type="submit"
+              isDisabled={busy || code.trim().length !== 6}
+              data-testid="two-step-verify"
+            >
               {t("codeStep.verify")}
             </Button>
           </DialogFooter>
@@ -327,7 +348,10 @@ export function TwoStepDialog({
             <DialogTitle>{t("backupStep.title")}</DialogTitle>
             <DialogDescription>{t("backupStep.description")}</DialogDescription>
           </DialogHeader>
-          <ul className="grid grid-cols-2 gap-x-6 gap-y-1 rounded-xl bg-muted p-4 font-mono text-sm">
+          <ul
+            data-testid="two-step-backup-codes"
+            className="grid grid-cols-2 gap-x-6 gap-y-1 rounded-xl bg-muted p-4 font-mono text-sm"
+          >
             {setup.backupCodes.map((backup) => (
               <li key={backup}>{backup}</li>
             ))}

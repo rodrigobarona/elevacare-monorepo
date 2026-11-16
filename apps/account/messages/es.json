@@ -100,6 +100,8 @@
     "title": "Seguridad",
     "subtitle": "Cómo inicias sesión y dónde tienes la sesión iniciada ahora mismo.",
     "error": "Algo ha salido mal. Inténtalo de nuevo.",
+    "loadFailed": "No hemos podido cargar esta parte de la página.",
+    "retry": "Intentar de nuevo",
     "password": {
       "title": "Contraseña",
       "description": "Inicia sesión con tu email y una contraseña.",
@@ -250,6 +252,11 @@
       "title": "Nada que pagar aquí",
       "description": "La facturación es para consultas de especialistas y clínicas. Los recibos de tus sesiones están en tu Espacio.",
       "action": "Abrir pagos"
+    },
+    "pickWorkspace": {
+      "title": "Abre primero tu consulta",
+      "description": "Los planes pertenecen a una consulta o a una clínica. Cámbiate a ella en Espacios de trabajo y vuelve a Facturación.",
+      "action": "Abrir espacios de trabajo"
     }
   },
   "auth": {

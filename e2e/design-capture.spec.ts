@@ -875,30 +875,29 @@ test.describe("design capture", () => {
         timeout: 20_000,
       })
       await shoot(page, surface, "03b-security-with-password", kind)
-      await page
-        .getByTestId("security-two-step")
-        .getByRole("button", { name: /turn on/i })
-        .click()
-      await page.locator("#two-step-password").fill(E2E_PASSWORD)
-      await page.getByRole("button", { name: /continue/i }).click()
+      await page.getByTestId("two-step-toggle").click()
+      await page.getByTestId("two-step-password").fill(E2E_PASSWORD)
+      await page.getByTestId("two-step-continue").click()
       const dialog = page.getByRole("dialog")
-      await expect(dialog.getByRole("img", { name: /QR code/i })).toBeVisible({
+      await expect(dialog.getByTestId("two-step-qr")).toBeVisible({
         timeout: 15_000,
       })
+      // The QR code keeps an accessible name.
+      await expect(dialog.getByRole("img", { name: /QR code/i })).toBeVisible()
       await shoot(page, surface, "11-two-step-scan", kind, { fullPage: false })
       // The key comes from the QR link, as the authenticator app reads it.
       // Hidden on desktop (phones only), so read it from the DOM.
       const uri = await dialog
-        .locator('a[href^="otpauth://"]')
+        .getByTestId("two-step-open-app")
         .getAttribute("href")
       const key = new URL(uri!).searchParams.get("secret")!
-      await dialog.getByRole("button", { name: /^next$/i }).click()
-      await page.locator("#two-step-code").fill(totp(key))
+      await dialog.getByTestId("two-step-next").click()
+      await page.getByTestId("two-step-code").fill(totp(key))
       await shoot(page, surface, "13-two-step-code", kind, { fullPage: false })
-      await dialog.getByRole("button", { name: /turn on/i }).click()
-      await expect(
-        dialog.getByRole("heading", { name: /backup codes/i })
-      ).toBeVisible({ timeout: 15_000 })
+      await dialog.getByTestId("two-step-verify").click()
+      await expect(dialog.getByTestId("two-step-backup-codes")).toBeVisible({
+        timeout: 15_000,
+      })
       await shoot(page, surface, "14-two-step-backup-codes", kind, {
         fullPage: false,
       })

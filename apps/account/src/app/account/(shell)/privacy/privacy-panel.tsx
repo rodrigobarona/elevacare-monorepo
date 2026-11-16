@@ -60,6 +60,9 @@ const DATA_COPY_STATUSES = [
 ] as const
 type DataCopyStatus = (typeof DATA_COPY_STATUSES)[number]
 
+/** What a Server Action call that never reached the server resolves to. */
+const UNREACHED = { ok: false, error: "generic" } as const
+
 function isDataCopyStatus(value: string): value is DataCopyStatus {
   return (DATA_COPY_STATUSES as readonly string[]).includes(value)
 }
@@ -86,6 +89,15 @@ export function PrivacyPanel({
   documentUrls,
 }: PrivacyPanelProps) {
   const byKind = new Map(consents.map((row) => [row.kind, row]))
+  // Cards keep local state for instant feedback; when a refresh brings
+  // different server data (say, another tab changed it), they remount
+  // from it instead of showing what this tab last knew.
+  const consentKey = consents
+    .map((row) => `${row.kind}:${row.grantedAt ?? ""}:${row.withdrawnAt ?? ""}`)
+    .join("|")
+  const recordAccessKey = recordAccessChoices
+    .map((choice) => `${choice.orgId}:${choice.optedOut}`)
+    .join("|")
   return (
     <div className="space-y-6">
       <AgreementsCard
@@ -93,12 +105,25 @@ export function PrivacyPanel({
         currentVersion={currentVersion}
         documentUrls={documentUrls}
       />
-      <ChoicesCard byKind={byKind} documentUrls={documentUrls} />
+      <ChoicesCard
+        key={consentKey}
+        byKind={byKind}
+        documentUrls={documentUrls}
+      />
       {recordAccessChoices.length > 0 ? (
-        <RecordAccessCard initialChoices={recordAccessChoices} />
+        <RecordAccessCard
+          key={recordAccessKey}
+          initialChoices={recordAccessChoices}
+        />
       ) : null}
-      <DataCopyCard initial={latestDataCopy} />
-      <DeletionCard initialScheduledFor={scheduledFor} />
+      <DataCopyCard
+        key={latestDataCopy?.id ?? "none"}
+        initial={latestDataCopy}
+      />
+      <DeletionCard
+        key={scheduledFor ?? "none"}
+        initialScheduledFor={scheduledFor}
+      />
     </div>
   )
 }
@@ -136,7 +161,9 @@ function AgreementsCard({
   async function onAgree(kind: (typeof AGREEMENTS)[number]) {
     setPending(kind)
     try {
-      const result = await updateConsent({ kind, granted: true })
+      const result = await updateConsent({ kind, granted: true }).catch(
+        () => UNREACHED
+      )
       if (!result.ok) {
         toast.error(tPrivacy("error"))
         return
@@ -237,7 +264,9 @@ function ChoicesCard({
     setPending(kind)
     setState((current) => new Map(current).set(kind, granted))
     try {
-      const result = await updateConsent({ kind, granted })
+      const result = await updateConsent({ kind, granted }).catch(
+        () => UNREACHED
+      )
       if (!result.ok) {
         setState((current) => new Map(current).set(kind, !granted))
         toast.error(
@@ -356,7 +385,9 @@ function RecordAccessCard({
   async function onChange(orgId: string, optedOut: boolean) {
     setPending(orgId)
     try {
-      const result = await updateRecordAccess({ orgId, optedOut })
+      const result = await updateRecordAccess({ orgId, optedOut }).catch(
+        () => UNREACHED
+      )
       if (!result.ok) {
         toast.error(tPrivacy("error"))
         return
@@ -422,7 +453,7 @@ function DataCopyCard({
     const requestId = id
     let cancelled = false
     async function refresh() {
-      const result = await getDataCopy(requestId)
+      const result = await getDataCopy(requestId).catch(() => UNREACHED)
       if (cancelled || !result.ok) return
       setStatus(result.status)
       setDownloadUrl(result.downloadUrl)
@@ -440,7 +471,7 @@ function DataCopyCard({
   async function onRequest() {
     setPending(true)
     try {
-      const result = await requestDataCopy()
+      const result = await requestDataCopy().catch(() => UNREACHED)
       if (!result.ok) {
         toast.error(t("error"))
         return
@@ -522,7 +553,7 @@ function DeletionCard({
   async function onConfirm() {
     setPending(true)
     try {
-      const result = await scheduleDeletion()
+      const result = await scheduleDeletion().catch(() => UNREACHED)
       if (!result.ok) {
         toast.error(
           result.error === "alreadyScheduled"
@@ -548,7 +579,7 @@ function DeletionCard({
   async function onCancel() {
     setPending(true)
     try {
-      const result = await cancelDeletion()
+      const result = await cancelDeletion().catch(() => UNREACHED)
       if (!result.ok) {
         toast.error(t("error"))
         return

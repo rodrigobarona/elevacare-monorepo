@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useFormatter, useTranslations } from "next-intl"
 import { toast } from "sonner"
@@ -61,14 +61,78 @@ function googleLinkErrorKey(code: string | null) {
   return "linkFailed"
 }
 
+interface Identity {
+  token: string
+  twoStepOn: boolean
+}
+
+interface Devices {
+  identity: Identity
+  sessions: SessionRow[]
+}
+
+/**
+ * The current session and the device list, read together: Better Auth
+ * replaces this session when the password or two-step changes, so both
+ * are re-read after those (or "This device" would get a Sign out button).
+ * Null when either read fails.
+ */
+async function fetchDevices(): Promise<Devices | null> {
+  const [current, sessionList] = await Promise.all([
+    authClient.getSession(),
+    authClient.listSessions(),
+  ])
+  if (!current.data || !sessionList.data) return null
+  return {
+    identity: {
+      token: current.data.session.token,
+      twoStepOn: Boolean(current.data.user.twoFactorEnabled),
+    },
+    sessions: sessionList.data as SessionRow[],
+  }
+}
+
+/** The passkey list, or null when the read fails. */
+async function fetchPasskeys(): Promise<PasskeyRow[] | null> {
+  const listed = await authClient.passkey.listUserPasskeys()
+  return (listed.data as PasskeyRow[] | undefined) ?? null
+}
+
 export function SecurityPanel() {
   const t = useTranslations("security")
   const searchParams = useSearchParams()
   const [providers, setProviders] = useState<string[] | null>(null)
-  const [currentToken, setCurrentToken] = useState<string | null>(null)
-  const [twoStepOn, setTwoStepOn] = useState(false)
+  // Null while loading or after a failed read: never shown as "off" or "none".
+  const [identity, setIdentity] = useState<Identity | null>(null)
   const [passkeys, setPasskeys] = useState<PasskeyRow[] | null>(null)
-  const [sessions, setSessions] = useState<SessionRow[]>([])
+  const [sessions, setSessions] = useState<SessionRow[] | null>(null)
+  const [failed, setFailed] = useState({ passkeys: false, devices: false })
+
+  const applyDevices = useCallback((devices: Devices | null) => {
+    if (devices) {
+      setIdentity(devices.identity)
+      setSessions(devices.sessions)
+    }
+    setFailed((value) => ({ ...value, devices: !devices }))
+  }, [])
+
+  const applyPasskeys = useCallback((rows: PasskeyRow[] | null) => {
+    if (rows) setPasskeys(rows)
+    setFailed((value) => ({ ...value, passkeys: !rows }))
+  }, [])
+
+  const reloadDevices = useCallback(async () => {
+    const devices = await fetchDevices().catch(() => null)
+    applyDevices(devices)
+    if (!devices) toast.error(t("error"))
+  }, [applyDevices, t])
+
+  /** Re-reads passkeys; false (known rows kept) when the read fails. */
+  const reloadPasskeys = useCallback(async (): Promise<boolean> => {
+    const rows = await fetchPasskeys().catch(() => null)
+    applyPasskeys(rows)
+    return rows !== null
+  }, [applyPasskeys])
 
   useEffect(() => {
     // A failed Google link comes back here with ?google=failed&error=…
@@ -81,33 +145,23 @@ export function SecurityPanel() {
       window.history.replaceState(window.history.state, "", url)
     }
     let cancelled = false
-    Promise.all([
-      authClient.listAccounts(),
-      authClient.getSession(),
-      authClient.passkey.listUserPasskeys(),
-      authClient.listSessions(),
-    ])
-      .then(([accounts, current, passkeyList, sessionList]) => {
-        if (cancelled) return
-        // A failed read is reported, never shown as "off" or "none".
-        if (accounts.error || current.error || !current.data) {
-          toast.error(t("error"))
-        }
-        if (accounts.data) {
-          setProviders(accounts.data.map((account) => account.providerId))
-        }
-        if (current.data) {
-          setCurrentToken(current.data.session.token)
-          setTwoStepOn(Boolean(current.data.user.twoFactorEnabled))
-        }
-        if (passkeyList.data) setPasskeys(passkeyList.data as PasskeyRow[])
-        if (sessionList.data) setSessions(sessionList.data as SessionRow[])
-      })
-      .catch(() => toast.error(t("error")))
+    void Promise.all([
+      authClient.listAccounts().catch(() => null),
+      fetchPasskeys().catch(() => null),
+      fetchDevices().catch(() => null),
+    ]).then(([accounts, rows, devices]) => {
+      if (cancelled) return
+      if (accounts?.data) {
+        setProviders(accounts.data.map((account) => account.providerId))
+      }
+      applyPasskeys(rows)
+      applyDevices(devices)
+      if (!accounts?.data || !rows || !devices) toast.error(t("error"))
+    })
     return () => {
       cancelled = true
     }
-  }, [searchParams, t])
+  }, [applyDevices, applyPasskeys, searchParams, t])
 
   const hasPassword = providers?.includes("credential") ?? false
 
@@ -116,28 +170,55 @@ export function SecurityPanel() {
       <PasswordCard
         loading={providers === null}
         hasPassword={hasPassword}
-        onChanged={() => {
-          // Other devices were signed out with the change.
-          void authClient.listSessions().then((result) => {
-            if (result.data) setSessions(result.data as SessionRow[])
-          })
-        }}
+        // Other devices were signed out and this session was replaced.
+        onChanged={() => void reloadDevices()}
       />
       {/* Two-step verification adds a code after a password; without one
           (Google or email link sign-in) there is nothing to add it to. */}
-      {hasPassword ? (
-        <TwoStepCard isOn={twoStepOn} onChange={setTwoStepOn} />
+      {hasPassword && identity ? (
+        <TwoStepCard
+          isOn={identity.twoStepOn}
+          onChange={(on) => {
+            setIdentity({ ...identity, twoStepOn: on })
+            void reloadDevices()
+          }}
+        />
       ) : null}
-      <PasskeysCard passkeys={passkeys} onChange={setPasskeys} />
+      <PasskeysCard
+        passkeys={passkeys}
+        failed={failed.passkeys}
+        onRetry={() => {
+          void reloadPasskeys().then((ok) => {
+            if (!ok) toast.error(t("error"))
+          })
+        }}
+        onChange={setPasskeys}
+        onRefresh={reloadPasskeys}
+      />
       <GoogleCard
         loading={providers === null}
         connected={providers?.includes("google") ?? false}
       />
       <DevicesCard
-        sessions={sessions}
-        currentToken={currentToken}
+        sessions={identity ? sessions : null}
+        currentToken={identity?.token ?? null}
+        failed={failed.devices}
+        onRetry={() => void reloadDevices()}
         onChange={setSessions}
       />
+    </div>
+  )
+}
+
+/** A read that failed: say so and offer to try again. */
+function LoadFailed({ onRetry }: { onRetry: () => void }) {
+  const t = useTranslations("security")
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+      <p>{t("loadFailed")}</p>
+      <Button variant="link" size="sm" className="px-0" onPress={onRetry}>
+        {t("retry")}
+      </Button>
     </div>
   )
 }
@@ -282,6 +363,7 @@ function TwoStepCard({
             size="sm"
             variant="outline"
             onPress={() => setDialog(isOn ? "off" : "on")}
+            data-testid="two-step-toggle"
           >
             {isOn ? t("turnOff") : t("turnOn")}
           </Button>
@@ -302,11 +384,18 @@ function TwoStepCard({
 
 function PasskeysCard({
   passkeys,
+  failed,
+  onRetry,
   onChange,
+  onRefresh,
 }: {
   /** Null until the first read lands; adding waits for it. */
   passkeys: PasskeyRow[] | null
+  failed: boolean
+  onRetry: () => void
   onChange: (rows: PasskeyRow[]) => void
+  /** Re-reads the list; false keeps the known rows. */
+  onRefresh: () => Promise<boolean>
 }) {
   const t = useTranslations("security.passkeys")
   const tSecurity = useTranslations("security")
@@ -324,9 +413,11 @@ function PasskeysCard({
         }
         return
       }
-      const listed = await authClient.passkey.listUserPasskeys()
-      onChange((listed.data as PasskeyRow[] | undefined) ?? [])
       toast.success(t("added"))
+      // The passkey is saved; if the list cannot be re-read, keep the
+      // known rows and say so rather than show an empty list.
+      const refreshed = await onRefresh().catch(() => false)
+      if (!refreshed) toast.error(tSecurity("error"))
     } finally {
       setBusy(false)
     }
@@ -363,7 +454,11 @@ function PasskeysCard({
           {t("description")}
         </SettingsFieldsetDescription>
         <div className="mt-6" data-testid="settings-passkeys">
-          {passkeys === null ? null : passkeys.length === 0 ? (
+          {passkeys === null ? (
+            failed ? (
+              <LoadFailed onRetry={onRetry} />
+            ) : null
+          ) : passkeys.length === 0 ? (
             <p className="text-sm text-muted-foreground">{t("empty")}</p>
           ) : (
             passkeys.map((passkey) => (
@@ -496,12 +591,17 @@ function GoogleCard({
 }
 
 function DevicesCard({
-  sessions,
+  sessions: loaded,
   currentToken,
+  failed,
+  onRetry,
   onChange,
 }: {
-  sessions: SessionRow[]
+  /** Null until both this session and the list are read. */
+  sessions: SessionRow[] | null
   currentToken: string | null
+  failed: boolean
+  onRetry: () => void
   onChange: (rows: SessionRow[]) => void
 }) {
   const t = useTranslations("security.devices")
@@ -509,6 +609,7 @@ function DevicesCard({
   const format = useFormatter()
   const [busy, setBusy] = useState(false)
   const [showAll, setShowAll] = useState(false)
+  const sessions = loaded ?? []
 
   // This device first, then the most recently active.
   const sorted = [...sessions].sort((a, b) => {
@@ -565,6 +666,7 @@ function DevicesCard({
           {t("description")}
         </SettingsFieldsetDescription>
         <div className="mt-6">
+          {loaded === null && failed ? <LoadFailed onRetry={onRetry} /> : null}
           {shown.map((row) => {
             const isCurrent = row.token === currentToken
             const { kind } = describeUserAgent(row.userAgent)

@@ -10,3 +10,15 @@ export function hasBillableWorkspace(
     BILLABLE_ORG_TYPES.has(org.orgType)
   )
 }
+
+/**
+ * Checkout and the billing portal act on the active workspace, so plans
+ * show only while a practice or clinic is the active one.
+ */
+export function isActiveWorkspaceBillable(
+  organizations: UserOrganization[] | null
+): boolean {
+  return (organizations ?? []).some(
+    (org) => org.isCurrent && BILLABLE_ORG_TYPES.has(org.orgType)
+  )
+}

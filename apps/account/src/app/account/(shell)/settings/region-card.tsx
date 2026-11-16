@@ -94,9 +94,14 @@ export function RegionCard({
   async function onSave() {
     setSaving(true)
     try {
-      const { ok } = await updateRegion({ locale, timezone })
+      const { ok } = await updateRegion({ locale, timezone }).catch(() => ({
+        ok: false,
+      }))
       if (!ok) {
         toast.error(t("error"))
+        // One of the two writes may have gone through: re-read what is
+        // saved so the baseline (and the Save button) match it.
+        router.refresh()
         return
       }
       toast.success(t("saved"))

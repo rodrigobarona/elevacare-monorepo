@@ -100,6 +100,8 @@
     "title": "Security",
     "subtitle": "How you sign in, and where you're signed in right now.",
     "error": "Something went wrong. Please try again.",
+    "loadFailed": "We couldn't load this part of the page.",
+    "retry": "Try again",
     "password": {
       "title": "Password",
       "description": "Sign in with your email and a password.",
@@ -250,6 +252,11 @@
       "title": "Nothing to pay here",
       "description": "Billing is for expert practices and clinics. Your session receipts are in your Space.",
       "action": "Open payments"
+    },
+    "pickWorkspace": {
+      "title": "Open your practice first",
+      "description": "Plans belong to a practice or clinic. Switch to it in Workspaces, then come back to Billing.",
+      "action": "Open workspaces"
     }
   },
   "auth": {

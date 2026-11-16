@@ -81,7 +81,7 @@ export function NotificationSettings({
             enabled: next.get(key(ch, cat)) ?? true,
           }))
         ),
-      })
+      }).catch(() => ({ ok: false }))
       if (!ok) {
         setEnabled(previous)
         toast.error(t("error"))
