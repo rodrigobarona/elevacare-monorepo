@@ -20,6 +20,8 @@ function Switch({
       data-slot="switch"
       data-size={size}
       className={cn(
+        // eleva: the off track keeps a `border-input-border` outline (shadcn
+        // ships it transparent) so the off state meets WCAG 1.4.11 (3:1).
         "peer group/switch relative inline-flex shrink-0 items-center rounded-full border-2 transition-all outline-none not-data-selected:border-input-border not-data-selected:bg-input/90 group-has-[:focus-visible]/field-label:ring-0 after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-focus-visible:border-ring data-focus-visible:ring-3 data-focus-visible:ring-ring/30 data-invalid:border-destructive data-invalid:ring-3 data-invalid:ring-destructive/20 data-[size=default]:h-5 data-[size=default]:w-11 data-[size=sm]:h-4 data-[size=sm]:w-7 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 dark:data-invalid:border-destructive/50 dark:data-invalid:ring-destructive/40 data-checked:border-primary data-checked:bg-primary group-has-[:focus-visible]/field-label:data-checked:border-primary data-unchecked:border-input-border data-unchecked:bg-input/90 group-has-[:focus-visible]/field-label:data-unchecked:border-transparent data-selected:border-primary data-selected:bg-primary data-disabled:cursor-not-allowed data-disabled:opacity-50",
         className
       )}

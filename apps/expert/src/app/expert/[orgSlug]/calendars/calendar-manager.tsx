@@ -225,6 +225,15 @@ export function CalendarManager({
   const [reminderMinutes, setReminderMinutes] = React.useState<number | null>(
     initialReminderMinutes
   )
+  // A refresh keeps client state: take the server's value when it changes
+  // (another tab saved), unless a save from this tab is still in flight.
+  const [serverReminder, setServerReminder] = React.useState(
+    initialReminderMinutes
+  )
+  if (initialReminderMinutes !== serverReminder) {
+    setServerReminder(initialReminderMinutes)
+    if (pending !== "reminder") setReminderMinutes(initialReminderMinutes)
+  }
   const [subCalendars, setSubCalendars] = React.useState<
     Record<string, SubCalendar[]>
   >({})
