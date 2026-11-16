@@ -1608,8 +1608,13 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               content: { "application/json": { schema: OkSchema } },
             },
             "409": {
-              description: "Slug conflict",
-              content: { "application/json": { schema: ErrorSchema } },
+              description:
+                "Slug conflict, or CONNECT_INCOMPLETE when a published free service gets a price before Payments onboarding is ready",
+              content: {
+                "application/json": {
+                  schema: z.union([ErrorSchema, ConnectIncompleteErrorSchema]),
+                },
+              },
             },
             ...stdWithNotFound,
           },
@@ -1656,7 +1661,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "409": {
               description:
-                "CONNECT_INCOMPLETE — Payments onboarding not ready (details submitted, payouts enabled, transfers active, and Identity verified when required)",
+                "CONNECT_INCOMPLETE — a paid service (base price or any active mode price above zero) needs Payments onboarding ready (details submitted, payouts enabled, transfers active, and Identity verified when required). Free services publish without it.",
               content: {
                 "application/json": { schema: ConnectIncompleteErrorSchema },
               },
@@ -1771,6 +1776,13 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
                 },
               },
             },
+            "409": {
+              description:
+                "CONNECT_INCOMPLETE — a published service gains a paid mode before Payments onboarding is ready",
+              content: {
+                "application/json": { schema: ConnectIncompleteErrorSchema },
+              },
+            },
             ...stdWithNotFound,
           },
         },
@@ -1839,6 +1851,13 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
                 "application/json": {
                   schema: z.object({ mode: z.unknown() }),
                 },
+              },
+            },
+            "409": {
+              description:
+                "CONNECT_INCOMPLETE — a published service gains a paid mode before Payments onboarding is ready",
+              content: {
+                "application/json": { schema: ConnectIncompleteErrorSchema },
               },
             },
             ...stdWithNotFound,

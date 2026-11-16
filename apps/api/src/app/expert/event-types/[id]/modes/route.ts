@@ -21,6 +21,10 @@ import {
   type OfferInvariantError,
 } from "@eleva/scheduling"
 import type { RoutePolicy } from "@/lib/route-policy"
+import {
+  assertPaymentsReadyForPaidChange,
+  connectIncompleteResponse,
+} from "@/lib/paid-offer-guard"
 
 class ModeCreateNotFoundError extends Error {
   constructor() {
@@ -201,6 +205,13 @@ export async function POST(request: Request, { params }: Params) {
         })
         if (invariant) throw new ModeCreateOfferInvariantError(invariant)
 
+        await assertPaymentsReadyForPaidChange(tx, {
+          orgId: profile.orgId,
+          published: locked.published,
+          takesPayment: (data.active ?? true) && (data.priceCents ?? 0) > 0,
+          stripeIdentityStatus: profile.stripeIdentityStatus,
+        })
+
         const created = await createEventTypeMode(
           profile.orgId,
           {
@@ -234,6 +245,8 @@ export async function POST(request: Request, { params }: Params) {
       }
     )
   } catch (err) {
+    const connectIncomplete = connectIncompleteResponse(err, headers)
+    if (connectIncomplete) return connectIncomplete
     if (err instanceof ModeCreateNotFoundError) {
       return secureJson(
         { error: "not found", message: err.message },

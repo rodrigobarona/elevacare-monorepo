@@ -3,6 +3,7 @@ import type Stripe from "stripe"
 import {
   isConnectPublishReady,
   isMissingBillingCustomerError,
+  offerTakesPayment,
   requireUpdatedBillingCustomer,
   snapshotFromAccount,
 } from "./connect-status"
@@ -104,5 +105,41 @@ describe("snapshotFromAccount", () => {
     expect(snapshot.detailsSubmitted).toBe(false)
     expect(snapshot.requirementsCurrentlyDue).toEqual([])
     expect(snapshot.connectCapabilities.transfers).toBeUndefined()
+  })
+})
+
+describe("offerTakesPayment", () => {
+  it("treats a zero-price service with free modes as free", () => {
+    expect(
+      offerTakesPayment({
+        priceAmount: 0,
+        modes: [
+          { active: true, priceCents: null },
+          { active: true, priceCents: 0 },
+        ],
+      })
+    ).toBe(false)
+  })
+
+  it("is paid when the service has a price", () => {
+    expect(offerTakesPayment({ priceAmount: 6000, modes: [] })).toBe(true)
+  })
+
+  it("is paid when an active mode has its own price", () => {
+    expect(
+      offerTakesPayment({
+        priceAmount: 0,
+        modes: [{ active: true, priceCents: 4000 }],
+      })
+    ).toBe(true)
+  })
+
+  it("ignores the price on an inactive mode", () => {
+    expect(
+      offerTakesPayment({
+        priceAmount: 0,
+        modes: [{ active: false, priceCents: 4000 }],
+      })
+    ).toBe(false)
   })
 })

@@ -20,6 +20,10 @@ import {
   type OfferInvariantError,
 } from "@eleva/scheduling"
 import type { RoutePolicy } from "@/lib/route-policy"
+import {
+  assertPaymentsReadyForPaidChange,
+  connectIncompleteResponse,
+} from "@/lib/paid-offer-guard"
 
 class KindOfferInvariantError extends Error {
   code: OfferInvariantError
@@ -200,6 +204,16 @@ export async function PATCH(
           }
         }
 
+        await assertPaymentsReadyForPaidChange(tx, {
+          orgId: profile.orgId,
+          published: locked.published,
+          takesPayment:
+            data.priceAmount !== undefined &&
+            data.priceAmount > 0 &&
+            locked.priceAmount === 0,
+          stripeIdentityStatus: profile.stripeIdentityStatus,
+        })
+
         await updateEventType(
           profile.orgId,
           id,
@@ -223,6 +237,8 @@ export async function PATCH(
         { status: 404, headers }
       )
     }
+    const connectIncomplete = connectIncompleteResponse(err, headers)
+    if (connectIncomplete) return connectIncomplete
     if (err instanceof KindOfferInvariantError) {
       return secureJson(
         {

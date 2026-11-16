@@ -24,6 +24,10 @@ import {
   type OfferInvariantError,
 } from "@eleva/scheduling"
 import type { RoutePolicy } from "@/lib/route-policy"
+import {
+  assertPaymentsReadyForPaidChange,
+  connectIncompleteResponse,
+} from "@/lib/paid-offer-guard"
 
 export const ROUTE_POLICY = {
   auth: "session",
@@ -294,6 +298,15 @@ export async function PATCH(request: Request, { params }: Params) {
           if (invariant) throw new ModeOfferInvariantError(invariant)
         }
 
+        const nextActive = data.active ?? current.active
+        const wasPaid = current.active && (current.priceCents ?? 0) > 0
+        await assertPaymentsReadyForPaidChange(tx, {
+          orgId: profile.orgId,
+          published: locked.published,
+          takesPayment: !wasPaid && nextActive && (nextPriceCents ?? 0) > 0,
+          stripeIdentityStatus: profile.stripeIdentityStatus,
+        })
+
         const updated = await updateEventTypeMode(
           profile.orgId,
           modeId,
@@ -337,6 +350,8 @@ export async function PATCH(request: Request, { params }: Params) {
       }
     )
   } catch (err) {
+    const connectIncomplete = connectIncompleteResponse(err, headers)
+    if (connectIncomplete) return connectIncomplete
     if (err instanceof ModeNotFoundError) {
       return secureJson(
         { error: "not found", message: err.message },
