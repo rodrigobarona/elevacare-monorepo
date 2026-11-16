@@ -143,6 +143,27 @@ export function getLocaleCookieOptions(
 }
 
 /**
+ * Every ELEVA_LOCALE value in a Cookie header, in the order the browser sent
+ * them. A browser can hold two: the shared `Domain=.eleva.care` cookie and an
+ * older host-only one (for example `dev.eleva.care`). Next.js `cookies()`
+ * keeps the last of a repeated name, so every reader here uses `.at(-1)`
+ * too; when proxies and Server Components picked different copies, a saved
+ * language showed on one page and the proxy wrote the other back on the next.
+ */
+export function localeCookieValues(cookieHeader?: string | null): string[] {
+  if (!cookieHeader) return []
+  const values: string[] = []
+  for (const pair of cookieHeader.split(/;\s*/)) {
+    const splitAt = pair.indexOf("=")
+    if (splitAt === -1 || pair.slice(0, splitAt).trim() !== cookieName) {
+      continue
+    }
+    values.push(pair.slice(splitAt + 1))
+  }
+  return values
+}
+
+/**
  * Pure locale discovery utility. Authenticated dashboard requests
  * prefer the ELEVA_LOCALE cookie first, then use this chain.
  *
@@ -157,13 +178,10 @@ export function resolveLocaleFromHeaders(headers: {
   acceptLanguage?: string | null
   country?: string | null
 }): Locale {
-  if (headers.cookie) {
-    const match = headers.cookie.match(
-      new RegExp(`(?:^|;\\s*)${cookieName}=([^;]+)`)
-    )
-    const locale = normalizeLocale(match?.[1])
-    if (locale) return locale
-  }
+  const cookieLocale = normalizeLocale(
+    localeCookieValues(headers.cookie).at(-1)
+  )
+  if (cookieLocale) return cookieLocale
 
   if (headers.acceptLanguage) {
     for (const part of headers.acceptLanguage.split(",")) {

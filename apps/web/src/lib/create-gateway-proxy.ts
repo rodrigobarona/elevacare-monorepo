@@ -8,7 +8,10 @@ import {
   type Locale,
 } from "@eleva/config/i18n"
 import { rewriteParityPath } from "@eleva/config/public-site-parity"
-import { persistLocaleCookie } from "@eleva/observability/proxy-locale"
+import {
+  persistLocaleCookie,
+  shareIntlLocaleCookie,
+} from "@eleva/observability/proxy-locale"
 import {
   buildAdminRedirect,
   buildRewriteUrl,
@@ -127,6 +130,9 @@ export function createGatewayProxy(options: GatewayProxyOptions) {
         ? intlResponse
         : new NextResponse(intlResponse.body, intlResponse)
 
+    // next-intl's own locale cookie is host-only; share it on Eleva hosts,
+    // then persist on page loads (last: it may append a raw Set-Cookie).
+    shareIntlLocaleCookie(request, response)
     persistLocaleCookie(
       request,
       response,

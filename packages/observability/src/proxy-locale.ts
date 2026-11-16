@@ -2,6 +2,7 @@ import type { NextRequest, NextResponse } from "next/server"
 import {
   cookieName,
   getLocaleCookieOptions,
+  localeCookieValues,
   resolveLocaleFromHeaders,
   type Locale,
 } from "@eleva/config/i18n"
@@ -52,6 +53,13 @@ export function shouldPersistLocaleCookie(req: NextRequest): boolean {
  * On `*.eleva.care`, a matching value still gets Set-Cookie with
  * `Domain=.eleva.care`: Cookie headers do not expose Domain, so the proxy
  * cannot tell whether the browser already holds the shared-domain cookie.
+ *
+ * When the browser sent ELEVA_LOCALE twice, the extra one is a host-only
+ * leftover (only the shared cookie is written now). It is expired so the
+ * shared cookie is the only copy left. Call this after every other
+ * `response.cookies.set` in the proxy: that API rewrites all Set-Cookie
+ * headers from a by-name map, which would drop the raw expiry below (it has
+ * the same name as the cookie set here).
  */
 export function persistLocaleCookie(
   req: NextRequest,
@@ -61,7 +69,33 @@ export function persistLocaleCookie(
   if (!shouldPersistLocaleCookie(req)) return
   const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host")
   const options = getLocaleCookieOptions(host)
-  const existingCookie = req.cookies.get(cookieName)?.value
-  if (existingCookie === locale && !options.domain) return
+  const sent = localeCookieValues(req.headers.get("cookie"))
+  if (sent.at(-1) === locale && sent.length < 2 && !options.domain) return
   response.cookies.set(cookieName, locale, options)
+  if (options.domain && sent.length > 1) {
+    response.headers.append("Set-Cookie", expireHostOnlyLocaleCookie())
+  }
+}
+
+/**
+ * next-intl writes ELEVA_LOCALE itself when a visitor switches language by
+ * URL (`/es/…`), including on client-side (RSC) navigations, and always
+ * host-only. On `*.eleva.care` that created the second, host-only cookie.
+ * Re-issue whatever next-intl set with the shared options, on any request.
+ */
+export function shareIntlLocaleCookie(
+  req: NextRequest,
+  response: NextResponse
+): void {
+  const value = response.cookies.get(cookieName)?.value
+  if (!value) return
+  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host")
+  const options = getLocaleCookieOptions(host)
+  if (!options.domain) return
+  response.cookies.set(cookieName, value, options)
+}
+
+/** Set-Cookie that removes only the host-only ELEVA_LOCALE (no Domain). */
+export function expireHostOnlyLocaleCookie(): string {
+  return `${cookieName}=; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`
 }

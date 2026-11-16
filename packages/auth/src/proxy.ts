@@ -135,14 +135,16 @@ export function createAuthProxy(options: AuthProxyOptions = {}): ProxyHandler {
     requestHeaders.set("x-eleva-locale", locale)
     requestHeaders.set(ELEVA_PATHNAME_HEADER, requestPathname(req))
     const response = NextResponse.next({ request: { headers: requestHeaders } })
-    persistLocaleCookie(req, response, locale)
-
-    if (sessionState === "ambiguous") applyExpiredSessionCookies(response)
 
     if (signedIn) {
       trackLastActiveWorkspace(req, response)
       onAuthenticated?.(req, response)
     }
+
+    // Raw Set-Cookie headers go after every `response.cookies.set`, which
+    // rewrites Set-Cookie from its own by-name map and would drop them.
+    persistLocaleCookie(req, response, locale)
+    if (sessionState === "ambiguous") applyExpiredSessionCookies(response)
 
     return response
   }

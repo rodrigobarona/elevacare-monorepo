@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest"
 import { NextRequest, NextResponse } from "next/server"
-import { persistLocaleCookie, shouldPersistLocaleCookie } from "./proxy-locale"
+import {
+  persistLocaleCookie,
+  resolveLocaleForRequest,
+  shareIntlLocaleCookie,
+  shouldPersistLocaleCookie,
+} from "./proxy-locale"
 
 function requestWithCookie(host: string, cookie?: string): NextRequest {
   const headers = new Headers({ host })
@@ -80,5 +85,71 @@ describe("persistLocaleCookie", () => {
       },
     })
     expect(shouldPersistLocaleCookie(req)).toBe(true)
+  })
+
+  it("expires a host-only duplicate and keeps the shared cookie on the newest value", () => {
+    // The browser holds an old host-only es and the shared en it just saved.
+    const req = new NextRequest("https://dev.eleva.care/space", {
+      headers: {
+        host: "dev.eleva.care",
+        cookie: "ELEVA_LOCALE=es; ELEVA_LOCALE=en",
+        "sec-fetch-dest": "document",
+      },
+    })
+    const res = NextResponse.next()
+    // Other cookies set first, as the auth proxy does, must not drop the expiry.
+    res.cookies.set("eleva_last_workspace", "space")
+    persistLocaleCookie(req, res, resolveLocaleForRequest(req))
+    const setCookie = res.headers.getSetCookie?.() ?? []
+    const locale = setCookie.filter((c) => c.startsWith("ELEVA_LOCALE="))
+    expect(locale).toHaveLength(2)
+    expect(locale[0]).toMatch(/^ELEVA_LOCALE=en;.*Domain=\.eleva\.care/i)
+    expect(locale[1]).toMatch(/^ELEVA_LOCALE=;.*Max-Age=0/)
+    expect(locale[1]).not.toMatch(/Domain=/i)
+    expect(setCookie.some((c) => c.startsWith("eleva_last_workspace="))).toBe(
+      true
+    )
+  })
+
+  it("does not expire anything when only one cookie was sent", () => {
+    const req = new NextRequest("https://dev.eleva.care/space", {
+      headers: {
+        host: "dev.eleva.care",
+        cookie: "ELEVA_LOCALE=en",
+        "sec-fetch-dest": "document",
+      },
+    })
+    const res = NextResponse.next()
+    persistLocaleCookie(req, res, "en")
+    const locale = (res.headers.getSetCookie?.() ?? []).filter((c) =>
+      c.startsWith("ELEVA_LOCALE=")
+    )
+    expect(locale).toHaveLength(1)
+  })
+})
+
+describe("shareIntlLocaleCookie", () => {
+  it("re-issues next-intl's host-only cookie on the shared domain, even on RSC", () => {
+    const req = new NextRequest("https://dev.eleva.care/es", {
+      headers: { host: "dev.eleva.care", rsc: "1" },
+    })
+    const res = NextResponse.next()
+    res.cookies.set("ELEVA_LOCALE", "es", { path: "/", sameSite: "lax" })
+    shareIntlLocaleCookie(req, res)
+    const locale = (res.headers.getSetCookie?.() ?? []).filter((c) =>
+      c.startsWith("ELEVA_LOCALE=")
+    )
+    expect(locale).toHaveLength(1)
+    expect(locale[0]).toMatch(/^ELEVA_LOCALE=es;.*Domain=\.eleva\.care/i)
+  })
+
+  it("leaves localhost host-only", () => {
+    const req = new NextRequest("http://localhost:3000/es", {
+      headers: { host: "localhost:3000" },
+    })
+    const res = NextResponse.next()
+    res.cookies.set("ELEVA_LOCALE", "es", { path: "/" })
+    shareIntlLocaleCookie(req, res)
+    expect(res.headers.getSetCookie?.()[0]).not.toMatch(/Domain=/i)
   })
 })

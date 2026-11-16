@@ -12,6 +12,7 @@ import {
   normalizeLocale,
   rewriteRetiredLocalePath,
   resolveLocaleFromHeaders,
+  localeCookieValues,
 } from "./i18n"
 
 describe("i18n config", () => {
@@ -124,6 +125,15 @@ describe("resolveLocaleFromHeaders", () => {
     ).toBe("en")
   })
 
+  it("uses the last ELEVA_LOCALE when the browser sends two, as Next.js cookies() does", () => {
+    expect(
+      resolveLocaleFromHeaders({
+        cookie: "ELEVA_LOCALE=es; theme=x; ELEVA_LOCALE=en",
+        acceptLanguage: "es-ES,es;q=0.9",
+      })
+    ).toBe("en")
+  })
+
   it("cookie takes priority over Accept-Language and geo", () => {
     expect(
       resolveLocaleFromHeaders({
@@ -132,5 +142,20 @@ describe("resolveLocaleFromHeaders", () => {
         country: "PT",
       })
     ).toBe("es")
+  })
+})
+
+describe("localeCookieValues", () => {
+  it("lists every ELEVA_LOCALE in order and ignores look-alike names", () => {
+    expect(
+      localeCookieValues(
+        "X_ELEVA_LOCALE=pt; ELEVA_LOCALE=es; ELEVA_LOCALE_OLD=pt; ELEVA_LOCALE=en"
+      )
+    ).toEqual(["es", "en"])
+  })
+
+  it("returns nothing for a missing header", () => {
+    expect(localeCookieValues(null)).toEqual([])
+    expect(localeCookieValues("")).toEqual([])
   })
 })
