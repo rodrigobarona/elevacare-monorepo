@@ -130,13 +130,17 @@ export function createGatewayProxy(options: GatewayProxyOptions) {
         ? intlResponse
         : new NextResponse(intlResponse.body, intlResponse)
 
-    // next-intl's own locale cookie is host-only; share it on Eleva hosts,
-    // then persist on page loads (last: it may append a raw Set-Cookie).
+    // next-intl's own locale cookie is host-only and also set on prefetches:
+    // share it on Eleva hosts (dropped on prefetches), then persist on page
+    // loads (last: it may append a raw Set-Cookie). An address locale
+    // (`/es/…`) is the visitor's explicit choice.
     shareIntlLocaleCookie(request, response)
+    const first = pathname.split("/").filter(Boolean)[0]
     persistLocaleCookie(
       request,
       response,
-      resolveMarketingLocale(pathname, response)
+      resolveMarketingLocale(pathname, response),
+      { explicit: first !== undefined && isLocale(first) }
     )
     return response
   }

@@ -128,7 +128,47 @@ describe("persistLocaleCookie", () => {
   })
 })
 
+describe("persistLocaleCookie with an address locale", () => {
+  it("saves an explicit /es on the shared cookie while expiring the duplicate", () => {
+    const req = new NextRequest("https://dev.eleva.care/es", {
+      headers: {
+        host: "dev.eleva.care",
+        cookie: "ELEVA_LOCALE=en; ELEVA_LOCALE=es",
+        "sec-fetch-dest": "document",
+      },
+    })
+    const res = NextResponse.next()
+    persistLocaleCookie(req, res, "es", { explicit: true })
+    const locale = (res.headers.getSetCookie?.() ?? []).filter((c) =>
+      c.startsWith("ELEVA_LOCALE=")
+    )
+    expect(locale).toHaveLength(2)
+    expect(locale[0]).toMatch(/^ELEVA_LOCALE=es;.*Domain=\.eleva\.care/i)
+    expect(locale[1]).toMatch(/^ELEVA_LOCALE=;.*Max-Age=0/)
+    expect(locale[1]).not.toMatch(/Domain=/i)
+  })
+})
+
 describe("shareIntlLocaleCookie", () => {
+  it("drops next-intl's cookie on a prefetch and keeps the others", () => {
+    // The language switcher's /es link is prefetched while in view.
+    const req = new NextRequest("https://dev.eleva.care/es/experts", {
+      headers: {
+        host: "dev.eleva.care",
+        cookie: "ELEVA_LOCALE=en",
+        rsc: "1",
+        "next-router-prefetch": "1",
+      },
+    })
+    const res = NextResponse.next()
+    res.cookies.set("other", "kept")
+    res.cookies.set("ELEVA_LOCALE", "es", { path: "/" })
+    shareIntlLocaleCookie(req, res)
+    const setCookie = res.headers.getSetCookie?.() ?? []
+    expect(setCookie.some((c) => c.startsWith("ELEVA_LOCALE="))).toBe(false)
+    expect(setCookie.some((c) => c.startsWith("other=kept"))).toBe(true)
+  })
+
   it("re-issues next-intl's host-only cookie on the shared domain, even on RSC", () => {
     const req = new NextRequest("https://dev.eleva.care/es", {
       headers: { host: "dev.eleva.care", rsc: "1" },

@@ -23,6 +23,17 @@ export function resolveLocaleForRequest(req: NextRequest): Locale {
 }
 
 /**
+ * A router prefetch: the browser fetching a page the visitor has not opened
+ * (a link in view, such as the language switcher's `/es` link).
+ */
+export function isPrefetchRequest(req: NextRequest): boolean {
+  if (req.headers.get("next-router-prefetch") === "1") return true
+  if (req.headers.has("next-router-segment-prefetch")) return true
+  if (req.headers.get("purpose") === "prefetch") return true
+  return req.headers.get("sec-purpose")?.includes("prefetch") ?? false
+}
+
+/**
  * Only page loads may write ELEVA_LOCALE. A Server Action POST, an RSC
  * payload, a router prefetch or any other background fetch carries the
  * cookie the browser had *before* the request, so writing it back would
@@ -33,9 +44,7 @@ export function shouldPersistLocaleCookie(req: NextRequest): boolean {
   if (req.method !== "GET" && req.method !== "HEAD") return false
   if (req.headers.has("next-action")) return false
   if (req.headers.get("rsc") === "1") return false
-  if (req.headers.get("next-router-prefetch") === "1") return false
-  if (req.headers.get("purpose") === "prefetch") return false
-  if (req.headers.get("sec-purpose")?.includes("prefetch")) return false
+  if (isPrefetchRequest(req)) return false
 
   const dest = req.headers.get("sec-fetch-dest")
   // When the browser sends Sec-Fetch-Dest, require a document navigation.
@@ -56,7 +65,10 @@ export function shouldPersistLocaleCookie(req: NextRequest): boolean {
  *
  * When the browser sent ELEVA_LOCALE twice, the extra one is a host-only
  * leftover (only the shared cookie is written now). It is expired so the
- * shared cookie is the only copy left. Call this after every other
+ * shared cookie is the only copy left. The shared cookie is then left as is,
+ * unless `explicit` says the locale came from the address (`/es/…`), which
+ * is the visitor's choice rather than a guess between the two copies.
+ * Call this after every other
  * `response.cookies.set` in the proxy: that API rewrites all Set-Cookie
  * headers from a by-name map, which would drop the raw expiry below (it has
  * the same name as the cookie set here).
@@ -64,7 +76,8 @@ export function shouldPersistLocaleCookie(req: NextRequest): boolean {
 export function persistLocaleCookie(
   req: NextRequest,
   response: NextResponse,
-  locale: Locale
+  locale: Locale,
+  { explicit = false }: { explicit?: boolean } = {}
 ): void {
   if (!shouldPersistLocaleCookie(req)) return
   const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host")
@@ -74,7 +87,9 @@ export function persistLocaleCookie(
     // Cookie order follows first creation, not the last save, so neither
     // copy can be trusted as the newer one. Every writer now sets only the
     // shared cookie, which holds the saved choice: leave it untouched and
-    // drop the host-only copy, so the next request sees one cookie.
+    // drop the host-only copy, so the next request sees one cookie. An
+    // address locale is a choice, not a guess: save it on the shared one.
+    if (explicit) response.cookies.set(cookieName, locale, options)
     response.headers.append("Set-Cookie", expireHostOnlyLocaleCookie())
     return
   }
@@ -83,10 +98,17 @@ export function persistLocaleCookie(
 }
 
 /**
- * next-intl writes ELEVA_LOCALE itself when a visitor switches language by
- * URL (`/es/…`), including on client-side (RSC) navigations, and always
- * host-only. On `*.eleva.care` that created the second, host-only cookie.
- * Re-issue whatever next-intl set with the shared options, on any request.
+ * next-intl writes ELEVA_LOCALE itself whenever a request's address locale
+ * (`/es/…`) differs from the cookie, always host-only, and also on router
+ * prefetches. On `*.eleva.care` that created the second, host-only cookie.
+ *
+ * - Prefetch: the visitor did not open that page (the language switcher's
+ *   links are prefetched while in view), so next-intl's cookie is removed
+ *   from the response. No expiry is sent; the browser keeps what it has.
+ *   Run this after other `response.cookies.set` calls, which would rebuild
+ *   Set-Cookie from a map that still holds next-intl's value.
+ * - Any other request, including a client-side (RSC) language switch:
+ *   re-issued with the shared options.
  */
 export function shareIntlLocaleCookie(
   req: NextRequest,
@@ -94,6 +116,14 @@ export function shareIntlLocaleCookie(
 ): void {
   const value = response.cookies.get(cookieName)?.value
   if (!value) return
+  if (isPrefetchRequest(req)) {
+    const kept = response.headers
+      .getSetCookie()
+      .filter((cookie) => !cookie.startsWith(`${cookieName}=`))
+    response.headers.delete("Set-Cookie")
+    for (const cookie of kept) response.headers.append("Set-Cookie", cookie)
+    return
+  }
   const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host")
   const options = getLocaleCookieOptions(host)
   if (!options.domain) return
