@@ -2,7 +2,7 @@ import { redirect, notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { getSessionForOrg } from "@eleva/auth/server"
 import { LOGIN_PATH } from "@eleva/auth"
-import { resolveTeamAdminBase } from "@eleva/auth/org-routing"
+import { resolveTeamWorkspaceBase } from "@eleva/auth/org-routing"
 import { resolveGatewayUrl } from "@eleva/config/env"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
 import { buildDashboardConfig } from "@eleva/dashboard/config-helpers"
@@ -19,7 +19,7 @@ export default async function TeamAdminLayout({
   const { orgSlug } = await params
   const session = await getSessionForOrg(orgSlug)
 
-  const base = resolveTeamAdminBase(orgSlug)
+  const base = resolveTeamWorkspaceBase(orgSlug)
 
   if (!session) {
     redirect(`${GATEWAY_URL}${LOGIN_PATH}?returnTo=${encodeURIComponent(base)}`)

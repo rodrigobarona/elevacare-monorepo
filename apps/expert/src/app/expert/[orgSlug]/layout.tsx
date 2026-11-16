@@ -1,5 +1,5 @@
 import { headers } from "next/headers"
-import { env } from "@eleva/config/env"
+import { env, resolveGatewayUrl } from "@eleva/config/env"
 import { redirect, notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { getSessionForOrg } from "@eleva/auth/server"
@@ -10,7 +10,7 @@ import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
 import { buildDashboardConfig } from "@eleva/dashboard/config-helpers"
 import {
   resolveExpertWorkspaceBase,
-  resolveTeamAdminBase,
+  resolveTeamWorkspaceBase,
 } from "@eleva/auth/org-routing"
 import { expertWorkspaceBase } from "@/lib/workspace-paths"
 import { ExpertConnectShell } from "./expert-connect-shell"
@@ -36,9 +36,10 @@ export default async function ExpertLayout({
     notFound()
   }
 
-  // A clinic manager who opens /expert/{clinic} manages it under /{clinic}/admin.
+  // A clinic manager who opens /expert/{clinic} manages it under /team/{clinic},
+  // another zone: hop through the gateway, not this app's own host.
   if (session.productLabel === "team_admin") {
-    redirect(resolveTeamAdminBase(orgSlug))
+    redirect(`${resolveGatewayUrl()}${resolveTeamWorkspaceBase(orgSlug)}`)
   }
 
   if (session.productLabel !== "expert") {

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { guardSessionForOrg } from "@eleva/auth"
+import { resolveAcademyWorkspaceBase } from "@eleva/auth/org-routing"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
 import { buildDashboardConfig } from "@eleva/dashboard/config-helpers"
 
@@ -18,9 +19,14 @@ export default async function AcademyLayout({
     notFound()
   }
 
+  // `/academy/{slug}` only serves academy workspaces (ADR-026).
+  if (session.productLabel !== "lecturer") {
+    notFound()
+  }
+
   const t = await getTranslations("nav")
 
-  const base = `/${orgSlug}/academy`
+  const base = resolveAcademyWorkspaceBase(orgSlug)
   const dashboardConfig = await buildDashboardConfig(session, [
     {
       items: [{ title: t("dashboard"), url: base, icon: "SquaresFourIcon" }],

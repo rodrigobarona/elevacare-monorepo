@@ -5,7 +5,9 @@ import {
   LAST_ACTIVE_ORG_COOKIE,
   RESERVED_SLUGS,
   WORKSPACE_NAMESPACES,
+  academyWorkspaceBase,
   expertWorkspaceBase,
+  teamWorkspaceBase,
   lastActiveWorkspaceFromPath,
   spacePath,
 } from "./routing"
@@ -71,22 +73,28 @@ describe("workspace namespaces (ADR-026)", () => {
     expect(spacePath("/reports/r1")).toBe("/space/reports/r1")
   })
 
-  it("remembers the Space or an expert slug as the last workspace", () => {
+  it("remembers the Space or a workspace slug as the last workspace", () => {
     expect(lastActiveWorkspaceFromPath("/space")).toBe("space")
     expect(lastActiveWorkspaceFromPath("/space/sessions/b1")).toBe("space")
     expect(lastActiveWorkspaceFromPath("/expert/patimota/calendar")).toBe(
       "patimota"
     )
+    expect(lastActiveWorkspaceFromPath("/team/clinica-mota")).toBe(
+      "clinica-mota"
+    )
+    expect(lastActiveWorkspaceFromPath("/academy/pati-mota")).toBe("pati-mota")
     expect(lastActiveWorkspaceFromPath("/expert")).toBeNull()
     expect(lastActiveWorkspaceFromPath("/expert/settings")).toBeNull()
     expect(lastActiveWorkspaceFromPath("/join/b1")).toBeNull()
     expect(lastActiveWorkspaceFromPath("/patimota")).toBeNull()
   })
 
-  it("builds expert tools under /expert/{slug}", () => {
+  it("builds each workspace under its namespace", () => {
     expect(expertWorkspaceBase("patricia-mota-pt")).toBe(
       "/expert/patricia-mota-pt"
     )
+    expect(teamWorkspaceBase("clinica-mota")).toBe("/team/clinica-mota")
+    expect(academyWorkspaceBase("pati-mota")).toBe("/academy/pati-mota")
   })
 })
 

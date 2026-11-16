@@ -7,6 +7,16 @@ describe("workspaceSlugFromPath", () => {
       "patricia-mota-pt"
     )
     expect(workspaceSlugFromPath("/expert/clinica-mota")).toBe("clinica-mota")
+    expect(workspaceSlugFromPath("/team/clinica-mota/notifications")).toBe(
+      "clinica-mota"
+    )
+    expect(workspaceSlugFromPath("/academy/pati-mota")).toBe("pati-mota")
+  })
+
+  it("reads no workspace from a public profile or an old address", () => {
+    expect(workspaceSlugFromPath("/patimota")).toBeNull()
+    expect(workspaceSlugFromPath("/anaquick/quick-chat")).toBeNull()
+    expect(workspaceSlugFromPath("/clinica-mota/admin")).toBeNull()
   })
 
   it("ignores reserved routes and empty paths", () => {

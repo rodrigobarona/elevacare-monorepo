@@ -429,7 +429,7 @@ describe("createGatewayProxy integration", () => {
     )
   })
 
-  it("rewrites clinic admin route to team zone in production", async () => {
+  it("rewrites the clinic namespace to the team zone in production", async () => {
     vi.stubEnv("NODE_ENV", "production")
     const proxy = createGatewayProxy({
       origins: {
@@ -439,12 +439,12 @@ describe("createGatewayProxy integration", () => {
       intlMiddleware: marketingIntl,
     })
     const res = await proxy(
-      makeRequest("/clinica-mota/admin", {
+      makeRequest("/team/clinica-mota", {
         cookieNames: ["better-auth.session_token"],
       })
     )
     expect(res.headers.get("x-middleware-rewrite")).toBe(
-      "https://team.eleva.care/clinica-mota/admin"
+      "https://team.eleva.care/team/clinica-mota"
     )
   })
 
