@@ -696,7 +696,7 @@
     "disconnect": "Desconectar",
     "disconnectTitle": "¿Desconectar {account}?",
     "disconnectBody": "Eleva dejará de comprobar conflictos en estos calendarios y de añadirles nuevas sesiones. Puedes volver a conectar cuando quieras.",
-    "disconnectWithdraws": "Eleva también retira al momento su acceso en tu cuenta de {company}.",
+    "disconnectWithdraws": "Eleva también pide a Google que retire su acceso. Puedes comprobarlo en tu cuenta de {company}.",
     "disconnectRevoke": "Para quitar por completo el acceso de Eleva, quítalo también en tu cuenta de {company}.",
     "disconnectRevokeLink": "Abrir tu cuenta de {company}",
     "disconnectRevokePersonalLink": "Cuenta personal",

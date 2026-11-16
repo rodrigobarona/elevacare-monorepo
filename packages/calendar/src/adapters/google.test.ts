@@ -16,6 +16,7 @@ async function listWith(res: Response) {
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  vi.restoreAllMocks()
 })
 
 describe("Google calendar errors", () => {
@@ -152,6 +153,26 @@ describe("Google busy times", () => {
         end: new Date("2026-11-17T11:00:00Z"),
       },
     ])
+  })
+
+  it("fails on a temporary error so no calendar goes unchecked", async () => {
+    freeBusy({
+      primary: {
+        busy: [{ start: "2026-11-17T10:00:00Z", end: "2026-11-17T11:00:00Z" }],
+      },
+      work: {
+        busy: [],
+        errors: [{ domain: "global", reason: "backendError" }],
+      },
+    })
+    await expect(
+      new GoogleCalendarAdapter().getFreeBusy(
+        "token",
+        ["primary", "work"],
+        from,
+        to
+      )
+    ).rejects.toBeInstanceOf(CalendarAdapterError)
   })
 
   it("fails when no calendar can be read", async () => {

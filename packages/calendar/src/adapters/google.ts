@@ -13,6 +13,12 @@ import {
 } from "../errors"
 
 const GOOGLE_CALENDAR_API = "https://www.googleapis.com/calendar/v3"
+
+/**
+ * Per-calendar freeBusy errors that will not go away on retry: the calendar
+ * does not exist for this user or this grant may not read it.
+ */
+const PERMANENT_FREEBUSY_REASONS = new Set(["notFound", "forbidden"])
 const FETCH_TIMEOUT_MS = 10_000
 
 /**
@@ -126,9 +132,11 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
   ): Promise<FreeBusyInterval[]> {
     const CHUNK_SIZE = 50
     const intervals: FreeBusyInterval[] = []
-    // A calendar Google can't answer for (a subscribed public calendar such
-    // as national holidays, or one the user lost access to) must not wipe
-    // out the busy times of the others. Only fail when none could be read.
+    // A calendar Google will never answer for (a subscribed public calendar
+    // such as national holidays, or one the user lost access to) must not
+    // wipe out the busy times of the others, so those are skipped. Any other
+    // per-calendar error may be temporary: fail the whole lookup so a booking
+    // is never confirmed against a calendar that went unchecked.
     let readable = 0
     const reasons = new Set<string>()
 
@@ -159,7 +167,16 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
       }
       for (const cal of Object.values(data.calendars)) {
         if (cal.errors?.length) {
-          for (const e of cal.errors) reasons.add(e.reason)
+          const calReasons = cal.errors.map((e) => e.reason)
+          if (!calReasons.every((r) => PERMANENT_FREEBUSY_REASONS.has(r))) {
+            throw new CalendarAdapterError({
+              provider: "google",
+              operation: "freeBusy",
+              message: `freeBusy: a calendar could not be read (${calReasons.join(", ")})`,
+              code: `freeBusy:${calReasons.join(",")}`,
+            })
+          }
+          for (const r of calReasons) reasons.add(r)
           continue
         }
         readable += 1
