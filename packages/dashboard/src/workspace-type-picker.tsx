@@ -6,7 +6,7 @@ import { cn } from "@eleva/ui/lib/utils"
 import { Button, LinkButton } from "@eleva/ui/components/button"
 import { BookOpenIcon, UserIcon, UsersIcon } from "@eleva/icons"
 import { ElevaIcon } from "@eleva/icons/client"
-import type { ExistingPractice } from "./existing-practice"
+import type { ExistingPractice } from "./nav-types"
 import { gatewayUrl } from "./gateway-url"
 
 const workspaceTypes = [

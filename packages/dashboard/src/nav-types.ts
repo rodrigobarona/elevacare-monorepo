@@ -33,6 +33,12 @@ export interface OrgSwitcherItem {
   isCurrent: boolean
 }
 
+/** The expert practice the person owns (one per person, ADR-026). */
+export interface ExistingPractice {
+  name: string
+  href: string
+}
+
 export interface DashboardConfig {
   /** Navigation groups rendered in the sidebar */
   navGroups: NavGroup[]
@@ -46,6 +52,8 @@ export interface DashboardConfig {
   capabilities?: readonly string[]
   /** Organizations for the workspace switcher */
   organizations?: OrgSwitcherItem[]
+  /** The person's own expert practice, so "Create" opens it instead */
+  existingPractice?: ExistingPractice | null
   /** Avatar menu rows, built on the server from the person's memberships */
   accountMenu: AccountMenuModel
   /** Inbox page URL — shows NavBell when set with apiBaseUrl */

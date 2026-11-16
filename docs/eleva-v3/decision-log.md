@@ -34,10 +34,12 @@ Each entry should include:
 
 ### 2026-11-16: One expert practice per person (ADR-026) (active)
 
-- Rule: a person runs at most one expert practice; it holds several
+- Rule: a person owns at most one expert practice; it holds several
   specialties and services. A separate company or NIF is a Team (clinic).
-  Delegates and clinic seats are memberships in someone else's organization
-  and never count.
+  Only the `owner` membership counts: an admin helping in someone else's
+  practice, delegates and clinic seats never block their own practice. The
+  picker reads the same server rule (`loadExistingPractice`), so UI and API
+  never disagree.
 - Enforced on every creation path: Better Auth `beforeCreateOrganization`
   refuses a second `expert` org (409 `EXPERT_PRACTICE_EXISTS`), and
   `POST /organizations` answers 409 with the practice's `slug` and `path`

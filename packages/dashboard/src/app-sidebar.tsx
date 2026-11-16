@@ -12,13 +12,14 @@ import {
 import { gatewayUrl } from "./gateway-url"
 import { OrgSwitcher } from "./org-switcher"
 import { NavMain } from "./nav-main"
-import type { NavGroup, OrgSwitcherItem } from "./nav-types"
+import type { ExistingPractice, NavGroup, OrgSwitcherItem } from "./nav-types"
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   homeUrl?: string
   navGroups: NavGroup[]
   capabilities?: readonly string[]
   organizations?: OrgSwitcherItem[]
+  existingPractice?: ExistingPractice | null
 }
 
 export function AppSidebar({
@@ -26,6 +27,7 @@ export function AppSidebar({
   navGroups,
   capabilities,
   organizations,
+  existingPractice,
   ...props
 }: AppSidebarProps) {
   const t = useTranslations("shell")
@@ -34,7 +36,10 @@ export function AppSidebar({
     <Sidebar {...props}>
       <SidebarHeader className="h-14 justify-center border-b border-sidebar-border p-2">
         {organizations && organizations.length > 0 ? (
-          <OrgSwitcher organizations={organizations} />
+          <OrgSwitcher
+            organizations={organizations}
+            existingPractice={existingPractice}
+          />
         ) : (
           <a
             href={homeUrl}

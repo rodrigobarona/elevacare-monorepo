@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray } from "drizzle-orm"
+import { and, asc, eq } from "drizzle-orm"
 import { auth, db } from "@eleva/db"
 
 /**
@@ -15,7 +15,7 @@ export interface OwnedExpertPractice {
   name: string
 }
 
-/** The expert practice this person owns or runs, if any. */
+/** The expert practice this person owns, if any. */
 export async function findOwnedExpertPractice(
   userId: string
 ): Promise<OwnedExpertPractice | null> {
@@ -34,7 +34,9 @@ export async function findOwnedExpertPractice(
       and(
         eq(auth.member.userId, userId),
         eq(auth.organization.type, "expert"),
-        inArray(auth.member.role, ["owner", "admin"])
+        // The owner only: an admin may be someone helping in another
+        // person's practice, which is not their own.
+        eq(auth.member.role, "owner")
       )
     )
     .orderBy(asc(auth.organization.createdAt))

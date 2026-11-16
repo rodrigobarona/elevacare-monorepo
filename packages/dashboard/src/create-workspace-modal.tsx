@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@eleva/ui/components/dialog"
-import type { ExistingPractice } from "./existing-practice"
+import type { ExistingPractice } from "./nav-types"
 import { WorkspaceTypePicker } from "./workspace-type-picker"
 
 interface CreateWorkspaceModalProps {

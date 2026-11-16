@@ -1,12 +1,9 @@
 import { CreateWorkspaceInterceptModal } from "@eleva/dashboard/create-workspace-modal"
-import { findExistingPractice } from "@eleva/dashboard/existing-practice"
-import { getUserOrganizations } from "@eleva/auth/server"
+import { loadExistingPractice } from "@eleva/dashboard/existing-practice"
+import { getAuthUser } from "@eleva/auth/server"
 
 export default async function NewWorkspaceModalPage() {
-  const organizations = (await getUserOrganizations()) ?? []
-  return (
-    <CreateWorkspaceInterceptModal
-      existingPractice={findExistingPractice(organizations)}
-    />
-  )
+  const user = await getAuthUser()
+  const existingPractice = user ? await loadExistingPractice(user.id) : null
+  return <CreateWorkspaceInterceptModal existingPractice={existingPractice} />
 }

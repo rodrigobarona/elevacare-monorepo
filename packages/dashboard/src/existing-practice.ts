@@ -1,41 +1,22 @@
-import type { OrgType, ProductLabel } from "@eleva/auth/types"
-import { resolveOrgHomeUrl } from "./resolve-org-home-url"
+import { findOwnedExpertPractice } from "@eleva/auth"
+import { resolveGatewayUrl } from "@eleva/config/env"
+import { expertWorkspaceBase } from "@eleva/config/routing"
+import type { ExistingPractice } from "./nav-types"
 
-/** The expert practice the person already has (one per person, ADR-026). */
-export interface ExistingPractice {
-  name: string
-  href: string
-}
-
-interface WorkspaceLike {
-  orgSlug: string
-  orgType: OrgType | string
-  name: string
-  productLabel: ProductLabel
-  membershipRole: string
-}
+export type { ExistingPractice } from "./nav-types"
 
 /**
- * The practice the person runs, from their workspace list: an `expert`
- * organization where they are the owner or an admin. Clinic seats are `team`
- * organizations and never count.
+ * The expert practice this person owns (one per person, ADR-026), for the
+ * workspace picker: it offers "Open your practice" instead of a second
+ * setup. Same rule the API enforces, so the two never disagree.
  */
-export function findExistingPractice(
-  workspaces: readonly WorkspaceLike[]
-): ExistingPractice | null {
-  const practice = workspaces.find(
-    (w) =>
-      w.orgType === "expert" &&
-      w.productLabel === "expert" &&
-      (w.membershipRole === "admin" || w.membershipRole === "owner")
-  )
+export async function loadExistingPractice(
+  userId: string
+): Promise<ExistingPractice | null> {
+  const practice = await findOwnedExpertPractice(userId)
   if (!practice) return null
   return {
     name: practice.name,
-    href: resolveOrgHomeUrl({
-      orgSlug: practice.orgSlug,
-      productLabel: practice.productLabel,
-      orgType: practice.orgType as OrgType,
-    }),
+    href: `${resolveGatewayUrl()}${expertWorkspaceBase(practice.slug)}`,
   }
 }

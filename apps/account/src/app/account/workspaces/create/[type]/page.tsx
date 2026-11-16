@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation"
-import { getUserOrganizations } from "@eleva/auth/server"
-import { findExistingPractice } from "@eleva/dashboard/existing-practice"
+import { getAuthUser } from "@eleva/auth/server"
+import { loadExistingPractice } from "@eleva/dashboard/existing-practice"
 import { getTranslations } from "next-intl/server"
 import { SetupShell } from "@/components/setup-shell"
 import { CreateWorkspaceForm } from "./create-workspace-form"
@@ -23,7 +23,8 @@ export default async function CreateWorkspacePage({
 
   // One expert practice per person (ADR-026): open the one they have.
   if (type === "expert") {
-    const practice = findExistingPractice((await getUserOrganizations()) ?? [])
+    const user = await getAuthUser()
+    const practice = user ? await loadExistingPractice(user.id) : null
     if (practice) redirect(practice.href)
   }
 

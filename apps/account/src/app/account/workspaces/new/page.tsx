@@ -1,14 +1,15 @@
 import { getTranslations } from "next-intl/server"
 import { WorkspaceTypePicker } from "@eleva/dashboard/workspace-type-picker"
-import { findExistingPractice } from "@eleva/dashboard/existing-practice"
-import { getUserOrganizations } from "@eleva/auth/server"
+import { loadExistingPractice } from "@eleva/dashboard/existing-practice"
+import { getAuthUser } from "@eleva/auth/server"
 import { AuthHeading } from "@/components/auth-ui"
 
 export default async function NewWorkspacePage() {
-  const [t, organizations] = await Promise.all([
+  const [t, user] = await Promise.all([
     getTranslations("createWorkspace"),
-    getUserOrganizations(),
+    getAuthUser(),
   ])
+  const existingPractice = user ? await loadExistingPractice(user.id) : null
 
   return (
     <main
@@ -22,10 +23,7 @@ export default async function NewWorkspacePage() {
             description={t("pickerDescription")}
           />
         </div>
-        <WorkspaceTypePicker
-          mode="page"
-          existingPractice={findExistingPractice(organizations ?? [])}
-        />
+        <WorkspaceTypePicker mode="page" existingPractice={existingPractice} />
       </div>
     </main>
   )

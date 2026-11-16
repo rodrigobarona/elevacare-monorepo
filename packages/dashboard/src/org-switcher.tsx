@@ -5,18 +5,21 @@ import { isRedirectError } from "next/dist/client/components/redirect-error"
 import { useTranslations } from "next-intl"
 import { Popover, PopoverTrigger } from "@eleva/ui/components/popover"
 import { CreateWorkspaceModal } from "./create-workspace-modal"
-import { findExistingPractice } from "./existing-practice"
 import { OrgSwitcherList } from "./org-switcher-list"
 import { OrgSwitcherTrigger } from "./org-switcher-trigger"
 import { resolveOrgHomeUrl } from "./resolve-org-home-url"
 import { switchOrganization } from "./switch-org-action"
-import type { OrgSwitcherItem } from "./nav-types"
+import type { ExistingPractice, OrgSwitcherItem } from "./nav-types"
 
 interface OrgSwitcherProps {
   organizations: OrgSwitcherItem[]
+  existingPractice?: ExistingPractice | null
 }
 
-export function OrgSwitcher({ organizations }: OrgSwitcherProps) {
+export function OrgSwitcher({
+  organizations,
+  existingPractice,
+}: OrgSwitcherProps) {
   const t = useTranslations("shell")
   const [open, setOpen] = React.useState(false)
   const [createWorkspaceOpen, setCreateWorkspaceOpen] = React.useState(false)
@@ -87,7 +90,7 @@ export function OrgSwitcher({ organizations }: OrgSwitcherProps) {
       <CreateWorkspaceModal
         open={createWorkspaceOpen}
         onOpenChange={setCreateWorkspaceOpen}
-        existingPractice={findExistingPractice(organizations)}
+        existingPractice={existingPractice}
       />
     </>
   )
