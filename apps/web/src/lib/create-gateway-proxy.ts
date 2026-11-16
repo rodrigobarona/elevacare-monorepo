@@ -35,25 +35,6 @@ function resolveMarketingLocale(
   )
 }
 
-/**
- * Match next-intl-style cookie sync: only document navigations persist
- * ELEVA_LOCALE. Skip RSC payloads, router prefetches, and other
- * background fetches so they do not thrash Set-Cookie.
- */
-function shouldPersistMarketingLocaleCookie(request: NextRequest): boolean {
-  if (request.headers.get("next-router-prefetch") === "1") return false
-  if (request.headers.get("purpose") === "prefetch") return false
-  if (request.headers.get("sec-purpose") === "prefetch") return false
-  if (request.headers.get("rsc") === "1") return false
-
-  const dest = request.headers.get("sec-fetch-dest")
-  // When the browser sends Sec-Fetch-Dest, require a document navigation.
-  // When absent (tests, curl, older clients), still persist so marketing →
-  // auth locale handoff works.
-  if (dest !== null && dest !== "document") return false
-  return true
-}
-
 function rewriteForOrganizationsPath(pathname: string): string | null {
   const segments = pathname.split("/").filter(Boolean)
   if (segments.length === 0) return null
@@ -146,10 +127,11 @@ export function createGatewayProxy(options: GatewayProxyOptions) {
         ? intlResponse
         : new NextResponse(intlResponse.body, intlResponse)
 
-    if (shouldPersistMarketingLocaleCookie(request)) {
-      const locale = resolveMarketingLocale(pathname, response)
-      persistLocaleCookie(request, response, locale)
-    }
+    persistLocaleCookie(
+      request,
+      response,
+      resolveMarketingLocale(pathname, response)
+    )
     return response
   }
 }
