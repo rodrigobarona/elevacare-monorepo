@@ -122,10 +122,12 @@ test.describe("expert offer — builder UI fixtures", () => {
   test("event-types list loads for the seeded expert workspace", async ({
     page,
   }) => {
-    const listUrl = `${expertUrl}/${expertOrgSlug}/event-types`
+    const listUrl = `${expertUrl}/expert/${expertOrgSlug}/event-types`
     const response = await page.goto(listUrl)
     expect(response?.status()).toBe(200)
-    await expect(page).toHaveURL(new RegExp(`/${expertOrgSlug}/event-types`))
+    await expect(page).toHaveURL(
+      new RegExp(`/expert/${expertOrgSlug}/event-types`)
+    )
     await expect(page.getByTestId(`event-type-card-${PAID_OFFER}`)).toBeVisible(
       { timeout: 15_000 }
     )
@@ -135,7 +137,7 @@ test.describe("expert offer — builder UI fixtures", () => {
   test("modes panel exposes schedule, location, and country presets for fixtures", async ({
     page,
   }) => {
-    const editUrl = `${expertUrl}/${expertOrgSlug}/event-types`
+    const editUrl = `${expertUrl}/expert/${expertOrgSlug}/event-types`
     const list = await page.goto(editUrl)
     expect(list?.status()).toBe(200)
 
@@ -194,7 +196,7 @@ test.describe("expert offer — builder UI fixtures", () => {
 })
 
 async function openModesForm(page: Page) {
-  const editUrl = `${expertUrl}/${expertOrgSlug}/event-types`
+  const editUrl = `${expertUrl}/expert/${expertOrgSlug}/event-types`
   const list = await page.goto(editUrl)
   expect(list?.status()).toBe(200)
   const card = page.getByTestId(`event-type-card-${PAID_OFFER}`)

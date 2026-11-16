@@ -6,7 +6,7 @@ import { getFlag } from "@eleva/flags"
 import { requiresExpertOnboarding } from "@/lib/expert-profile-guards"
 import { resolveOrCreateExpertProfileForSession } from "@/lib/resolve-expert-profile"
 import { expertWorkspaceBase, expertWorkspacePath } from "@/lib/workspace-paths"
-import { redirectToMemberOrg } from "@/lib/gateway-redirects"
+import { redirectToDashboard } from "@/lib/gateway-redirects"
 import { OnboardingWizard } from "./onboarding-wizard"
 import { ONBOARDING_STEPS } from "./onboarding-steps"
 
@@ -25,7 +25,7 @@ export default async function OnboardingPage({
   const [{ orgSlug }, query] = await Promise.all([params, searchParams])
   const session = await guardSessionForOrg(orgSlug)
   if (!session.capabilities.includes("expert:onboard")) {
-    redirectToMemberOrg(orgSlug)
+    redirectToDashboard()
   }
 
   const profile = await resolveOrCreateExpertProfileForSession(session, orgSlug)

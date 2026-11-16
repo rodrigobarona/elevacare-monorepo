@@ -1,6 +1,7 @@
 import {
   ORG_SCOPED_SEGMENTS,
   RESERVED_SLUGS,
+  expertWorkspaceBase,
   isOrgSlugShape,
 } from "@eleva/config/routing"
 import { getOrganizationBySlug } from "@eleva/db"
@@ -58,14 +59,12 @@ export function orgSlugNeedingTypeLookup(pathname: string): string | null {
 }
 
 /**
- * Expert workspace base path. Always `/:slug/team` so `/:slug` stays the
- * public marketplace profile (guest + signed-in + anonymous).
+ * Expert tools base path: `/expert/:slug` (ADR-026), for an expert's own
+ * practice and for a clinician seat in a clinic. `/:slug` stays the public
+ * marketplace profile.
  */
-export function resolveExpertWorkspaceBase(
-  orgSlug: string,
-  _orgType?: OrgType | string | null
-): string {
-  return `/${orgSlug}/team`
+export function resolveExpertWorkspaceBase(orgSlug: string): string {
+  return expertWorkspaceBase(orgSlug)
 }
 
 /** Clinic manager/staff workspace base path. */

@@ -14,7 +14,8 @@ vi.mock("@eleva/auth/org-routing", () => ({
     const first = segments[0] ?? ""
     const second = segments[1] ?? ""
     if (!first || first === "login" || first === "admin") return null
-    if (second === "team" || second === "admin" || second === "academy") {
+    if (first === "expert") return null
+    if (second === "admin" || second === "academy") {
       return null
     }
     return first
@@ -413,24 +414,24 @@ describe("createGatewayProxy integration", () => {
     expect(intl).toHaveBeenCalledOnce()
   })
 
-  it("rewrites authenticated expert /:slug/team to the expert app", async () => {
+  it("rewrites /expert/:slug to the expert app", async () => {
     vi.stubEnv("NODE_ENV", "development")
     const proxy = createGatewayProxy({
       origins: testOrigins,
       intlMiddleware: marketingIntl,
     })
     const res = await proxy(
-      makeRequest("/barona-expert/team", {
+      makeRequest("/expert/barona-expert", {
         cookieNames: ["better-auth.session_token"],
       })
     )
     expect(res.status).toBe(307)
     expect(res.headers.get("location")).toBe(
-      "http://localhost:3003/barona-expert/team"
+      "http://localhost:3003/expert/barona-expert"
     )
   })
 
-  it("rewrites clinic expert /team route to expert zone in production", async () => {
+  it("rewrites a clinician seat /expert/:clinic/* to expert zone in production", async () => {
     vi.stubEnv("NODE_ENV", "production")
     const proxy = createGatewayProxy({
       origins: {
@@ -440,12 +441,12 @@ describe("createGatewayProxy integration", () => {
       intlMiddleware: marketingIntl,
     })
     const res = await proxy(
-      makeRequest("/clinica-mota/team/schedule", {
+      makeRequest("/expert/clinica-mota/schedule", {
         cookieNames: ["better-auth.session_token"],
       })
     )
     expect(res.headers.get("x-middleware-rewrite")).toBe(
-      "https://expert.eleva.care/clinica-mota/team/schedule"
+      "https://expert.eleva.care/expert/clinica-mota/schedule"
     )
   })
 

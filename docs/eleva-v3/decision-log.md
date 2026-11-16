@@ -32,6 +32,32 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-16: Every workspace lives under a fixed namespace (ADR-026) (active)
+
+- Decision ([ADR-026](./adrs/ADR-026-namespaced-workspace-urls.md)): public
+  profiles stay at `/{username}`; signed-in tools move to `/space` (member hub,
+  no slug), `/expert/{slug}`, `/team/{slug}` and `/academy/{slug}`;
+  `/account/settings` is unchanged. One expert practice per person (many
+  specialties and services); an expert closes a practice, never self-deletes it.
+- Research: Mobbin (Instagram professional account, Upwork specialized
+  profiles, Whereby personal account, Deputy/Sketch businesses), LinkedIn,
+  GitHub, Airbnb, Udemy and Doctolib URL patterns, Next.js multi-zones guide.
+  Context7 was not connected in that session; the Next.js guide was read from
+  the published docs.
+- Panel (UX/IA, UX writing EN/PT/ES, trust/legal/a11y, platform): `space` 4/4
+  with no slug 4/4, `expert` 4/4, `team` 4/4, `academy` 2 of 4 (`teach` and
+  `instructor` 1 each; `teach` had the best total score and is held).
+- Shipped in slice 1: `/expert/{slug}` for an expert's own practice and a
+  clinician seat in a clinic; the duplicate `[orgSlug]/team` tree is gone; the
+  partner-decision email and the "no access" redirect no longer land on the
+  public profile.
+- Not yet shipped (next slices): `/team/{slug}`, `/academy/{slug}`, `/space`,
+  dropping the gateway's org-type lookup, the last-org cookie as
+  `{namespace}:{slug}`, noindex headers, migrating stored CRM inbox links,
+  the one-practice guard, expert settings and the closure API.
+- Owner: engineering
+- Status: `active`
+
 ### 2026-11-15: Correct licence details while verification is pending (active)
 
 - Change (references `_context/mobbin/library/06-expert-onboarding` 13–15):

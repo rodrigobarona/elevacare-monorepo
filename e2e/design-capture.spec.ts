@@ -753,7 +753,7 @@ test.describe("design capture", () => {
       const cookie = await sessionFromMagicLink(request, DASHBOARD_EXPERT.email)
       const context = await newContext(browser, kind, { cookie })
       const page = await context.newPage()
-      const base = `${expertUrl}/${DASHBOARD_EXPERT.username}`
+      const base = `${expertUrl}/expert/${DASHBOARD_EXPERT.username}`
       const pages = [
         ["01-home", ""],
         ["02-calendar", "/calendar"],

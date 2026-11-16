@@ -3,7 +3,7 @@
 import { Button } from "@eleva/ui/components/button"
 import { Badge } from "@eleva/ui/components/badge"
 import { useTranslations } from "next-intl"
-import { InvoicingProviderPicker } from "@/app/[orgSlug]/_components/invoicing-provider-picker"
+import { InvoicingProviderPicker } from "@/app/expert/[orgSlug]/_components/invoicing-provider-picker"
 import type { OnboardingProfile } from "./onboarding-wizard"
 
 interface Props {

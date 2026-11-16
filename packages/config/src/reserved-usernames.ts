@@ -107,10 +107,15 @@ export const RESERVED_USERNAMES: ReadonlySet<string> = new Set([
   "static",
   "icons",
 
-  // Future surfaces kept for phase-2 (never let a user grab these)
+  // Signed-in namespaces (ADR-026) and their held fallbacks
+  "space",
   "academy",
-  "courses",
   "team",
+  "teach",
+  "instructor",
+
+  // Future surfaces kept for phase-2 (never let a user grab these)
+  "courses",
   "teams",
 
   // Branded subresources / subdomains (collide with email/dns hygiene)

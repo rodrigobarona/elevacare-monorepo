@@ -16,8 +16,8 @@ import {
 } from "@eleva/ui/components/alert-dialog"
 import { StatusPill } from "@eleva/ui/components/status-pill"
 import type { StatusTone } from "@eleva/ui/components/status-pill"
-import { InvoicingProviderPicker } from "@/app/[orgSlug]/_components/invoicing-provider-picker"
-import { startToconlineOAuth } from "@/app/[orgSlug]/setup/actions"
+import { InvoicingProviderPicker } from "@/app/expert/[orgSlug]/_components/invoicing-provider-picker"
+import { startToconlineOAuth } from "@/app/expert/[orgSlug]/setup/actions"
 import { disconnectInvoicing } from "./actions"
 
 type Health = "connected" | "manual" | "attention"

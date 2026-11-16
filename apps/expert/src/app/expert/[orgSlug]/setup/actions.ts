@@ -10,7 +10,7 @@ import {
 import { getAuthedApiClient, requireExpertSession } from "@/lib/server-api"
 import { mapExpertApiError } from "@/lib/map-api-error"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
-import { isOnboardingStepName } from "@/app/[orgSlug]/setup/onboarding-steps"
+import { isOnboardingStepName } from "@/app/expert/[orgSlug]/setup/onboarding-steps"
 
 interface ProfileFormData {
   nif?: string

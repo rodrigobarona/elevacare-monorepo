@@ -4,6 +4,7 @@ import * as React from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { intlLocale } from "@eleva/config/i18n"
 import { pickLocalized } from "@eleva/config/i18n-locales"
+import { expertWorkspaceBase } from "@eleva/config/routing"
 import { LinkButton } from "@eleva/ui/components/button"
 import {
   Sheet,
@@ -177,7 +178,7 @@ export function BookingSheet({
           <div className="flex flex-col items-start gap-2">
             <JoinCta
               className="mt-0"
-              href={`/${orgSlug}/team/sessions/${booking.id}/join`}
+              href={`${expertWorkspaceBase(orgSlug)}/sessions/${booking.id}/join`}
               sessionMode={booking.sessionMode}
               status={booking.status}
               startsAt={booking.startsAt}
@@ -191,7 +192,7 @@ export function BookingSheet({
             booking.status === "completed" ? (
               <LinkButton
                 variant="outline"
-                href={`/${orgSlug}/team/sessions/${booking.id}/report`}
+                href={`${expertWorkspaceBase(orgSlug)}/sessions/${booking.id}/report`}
               >
                 {tReport("open")}
               </LinkButton>

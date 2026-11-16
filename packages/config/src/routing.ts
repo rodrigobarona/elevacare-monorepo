@@ -6,6 +6,34 @@
  * /[orgSlug]/*. Only a few first-level segments remain fixed.
  */
 
+/**
+ * Signed-in surfaces live under a fixed first segment (ADR-026). The
+ * namespace names the tool, so the gateway routes on the first segment
+ * alone. `/expert/{slug}` (expert tools — an expert's own practice or a
+ * clinician seat in a clinic) is live; `/space`, `/team/{slug}` and
+ * `/academy/{slug}` follow in the next slices and are reserved already.
+ */
+export const WORKSPACE_NAMESPACES = [
+  "space",
+  "expert",
+  "team",
+  "academy",
+] as const
+
+export type WorkspaceNamespace = (typeof WORKSPACE_NAMESPACES)[number]
+
+/** Namespaces whose second segment is the workspace (org) slug. */
+export const SLUGGED_WORKSPACE_NAMESPACES = [
+  "expert",
+  "team",
+  "academy",
+] as const
+
+/** Expert tools for a workspace: `/expert/{slug}`. */
+export function expertWorkspaceBase(orgSlug: string): string {
+  return `/expert/${orgSlug}`
+}
+
 /** First-level segments owned by the account app (auth, onboarding, settings). */
 export const ACCOUNT_FIXED_SEGMENTS = ["onboarding", "account"] as const
 
@@ -45,7 +73,6 @@ export const APP_STANDALONE_PATHS = [] as const
  * slugs and serves a marketing 404.
  */
 export const ORG_SCOPED_SEGMENTS = [
-  "team",
   "admin",
   "academy",
   "settings",
@@ -116,6 +143,10 @@ export const RESERVED_SLUGS: ReadonlySet<string> = new Set([
   ...APP_FIXED_SEGMENTS,
   ...WEB_MARKETING_PATHS,
   ...ORG_SCOPED_SEGMENTS,
+  ...WORKSPACE_NAMESPACES,
+  // Held for an academy catalogue or dashboard (ADR-026 fallbacks)
+  "teach",
+  "instructor",
   // Gateway-fixed segments (not org slugs)
   "admin",
   "docs",
