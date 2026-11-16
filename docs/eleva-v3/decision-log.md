@@ -32,6 +32,35 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-16: Calendar data in the privacy notice; disconnect withdraws access (Google verification prep) (active)
+
+- Decision (founder, 2026-11-16): Google's OAuth verification reviews
+  `dev.eleva.care` and `dev.eleva.care/legal/privacy` (the apex still serves
+  the old app). At the eleva.care cutover the consent screen links move to
+  the apex, which needs a short brand re-check.
+- Privacy notice (EN/PT/ES, `lastUpdated` and `CONSENT_DOCUMENT_VERSION`
+  2026-11-16): a "Connected calendars (experts)" data item, a purpose row,
+  Google and Microsoft named as independent controllers for calendar
+  connections, a retention row, and Google's Limited Use statement ("Data
+  from Google"). The text matches the code: busy times are cached for up to
+  5 minutes (start and end only), events carry the service name and time
+  only, and Eleva changes only the events it added.
+- Disconnect now withdraws the access instead of only hiding it:
+  - Google: the grant is revoked at Google (best effort).
+  - Both providers: the stored tokens are deleted, and the account's calendar
+    permissions are removed.
+  - Signing in with the same account still works.
+  - Fixes a bug where the calendars page relinked a disconnected account on
+    the next visit.
+- Not yet: consent screen scopes and justifications, demo video and
+  submission (Google); Partner Center and publisher verification
+  (Microsoft); "Sign in with Microsoft" with full sign-up (founder chose full
+  sign-up, built in its own slice).
+- Owner: founder (legal text) + engineering
+- Reference: `packages/content/content/legal/*/privacy.mdx`,
+  `packages/auth/src/calendar-accounts.ts` (`releaseCalendarAccount`),
+  `packages/auth/src/provider-token.ts` (`revokeProviderGrant`)
+
 ### 2026-11-16: A new member's Space shows the workspace switcher; "Create workspace" replaces "Offer sessions" (active)
 
 - Owner: founder (product) + engineering

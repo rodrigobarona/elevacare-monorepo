@@ -97,10 +97,12 @@ export {
   type ClinicProfilePatch,
   type ClinicSummary,
 } from "./clinics"
-export { getProviderAccessToken } from "./provider-token"
+export { getProviderAccessToken, revokeProviderGrant } from "./provider-token"
 export {
   markCalendarIntegrationExpired,
+  releaseCalendarAccount,
   syncExpertCalendarAccounts,
+  withoutCalendarScopes,
 } from "./calendar-accounts"
 export {
   LOGIN_PATH,

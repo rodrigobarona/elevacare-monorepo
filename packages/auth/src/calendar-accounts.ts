@@ -1,6 +1,6 @@
 import { and, eq, inArray, isNull } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
-import { auth, db, main } from "@eleva/db"
+import { auth, db, main, type Tx } from "@eleva/db"
 
 const PROVIDER_TO_SLUG = {
   google: "google-calendar",
@@ -171,6 +171,66 @@ export async function syncExpertCalendarAccounts(input: {
       })
     }
   )
+}
+
+function isCalendarScope(providerId: string, scope: string): boolean {
+  if (providerId === "google") {
+    return scope.includes("googleapis.com/auth/calendar")
+  }
+  if (providerId === "microsoft") return /^calendars\./i.test(scope)
+  return false
+}
+
+/**
+ * The stored scope list without its calendar permissions. Better Auth
+ * joins scopes with commas; spaces are accepted too.
+ */
+export function withoutCalendarScopes(
+  providerId: string,
+  scope: string | null
+): string | null {
+  if (!scope) return scope
+  const kept = scope
+    .split(/[\s,]+/)
+    .filter((s) => s && !isCalendarScope(providerId, s))
+  return kept.length > 0 ? kept.join(",") : null
+}
+
+/**
+ * Disconnecting a calendar: deletes the tokens Eleva holds for the account
+ * and drops its calendar permissions, inside the caller's audited
+ * transaction. Without the permissions `syncExpertCalendarAccounts` no
+ * longer relinks the account; connecting again restores both. Signing in
+ * with the same Google or Microsoft account still works: each sign-in
+ * stores fresh tokens.
+ */
+export async function releaseCalendarAccount(
+  tx: Tx,
+  input: { accountId: string; userId: string }
+): Promise<boolean> {
+  const [row] = await tx
+    .select({ providerId: auth.account.providerId, scope: auth.account.scope })
+    .from(auth.account)
+    .where(
+      and(
+        eq(auth.account.id, input.accountId),
+        eq(auth.account.userId, input.userId)
+      )
+    )
+    .limit(1)
+  if (!row) return false
+  await tx
+    .update(auth.account)
+    .set({
+      accessToken: null,
+      refreshToken: null,
+      accessTokenExpiresAt: null,
+      refreshTokenExpiresAt: null,
+      scope: withoutCalendarScopes(row.providerId, row.scope),
+      updatedAt: new Date(),
+    })
+    .where(eq(auth.account.id, input.accountId))
+  return true
 }
 
 /**

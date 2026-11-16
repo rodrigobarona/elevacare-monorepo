@@ -25,3 +25,30 @@ export async function getProviderAccessToken(
   }
   return token
 }
+
+const GOOGLE_REVOKE_URL = "https://oauth2.googleapis.com/revoke"
+
+/**
+ * Best effort: asks Google to withdraw the grant Eleva holds for this
+ * account, so disconnecting a calendar also removes Eleva from the
+ * person's Google account. Revoking the access token revokes its refresh
+ * token too. Microsoft has no per-app revoke for personal accounts; the
+ * stored tokens are deleted instead (`releaseCalendarAccount`).
+ */
+export async function revokeProviderGrant(
+  input: ProviderAccessTokenInput
+): Promise<boolean> {
+  if (input.providerId !== "google") return false
+  try {
+    const token = await getProviderAccessToken(input)
+    const res = await fetch(GOOGLE_REVOKE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ token }),
+      signal: AbortSignal.timeout(5_000),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
