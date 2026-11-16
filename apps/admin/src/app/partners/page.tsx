@@ -42,18 +42,16 @@ export default async function PartnersPage() {
         />
       ) : (
         <DataTableShell>
-          <Table>
+          <Table aria-label={t("title")}>
             <TableHeader>
-              <TableRow>
-                <TableHead>{t("columns.expert")}</TableHead>
-                <TableHead>{t("columns.body")}</TableHead>
-                <TableHead>{t("columns.state")}</TableHead>
-                <TableHead>{t("columns.waiting")}</TableHead>
-              </TableRow>
+              <TableHead isRowHeader>{t("columns.expert")}</TableHead>
+              <TableHead>{t("columns.body")}</TableHead>
+              <TableHead>{t("columns.state")}</TableHead>
+              <TableHead>{t("columns.waiting")}</TableHead>
             </TableHeader>
             <TableBody>
               {items.map((item) => (
-                <TableRow key={item.expertProfileId}>
+                <TableRow key={item.expertProfileId} id={item.expertProfileId}>
                   <TableCell>
                     <Link
                       href={`/partners/${item.expertProfileId}`}
