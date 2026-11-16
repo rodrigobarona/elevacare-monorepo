@@ -696,6 +696,7 @@
     "disconnect": "Desligar",
     "disconnectTitle": "Desligar {account}?",
     "disconnectBody": "A Eleva deixa de verificar conflitos nestes calendários e de lhes juntar novas sessões. Pode voltar a ligar quando quiser.",
+    "disconnectWithdraws": "A Eleva também retira de imediato o acesso na sua conta {company}.",
     "disconnectRevoke": "Para remover totalmente o acesso da Eleva, remova-o também na sua conta {company}.",
     "disconnectRevokeLink": "Abrir a sua conta {company}",
     "disconnectRevokePersonalLink": "Conta pessoal",

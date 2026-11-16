@@ -126,6 +126,11 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
   ): Promise<FreeBusyInterval[]> {
     const CHUNK_SIZE = 50
     const intervals: FreeBusyInterval[] = []
+    // A calendar Google can't answer for (a subscribed public calendar such
+    // as national holidays, or one the user lost access to) must not wipe
+    // out the busy times of the others. Only fail when none could be read.
+    let readable = 0
+    const reasons = new Set<string>()
 
     for (let i = 0; i < calendarIds.length; i += CHUNK_SIZE) {
       const chunk = calendarIds.slice(i, i + CHUNK_SIZE)
@@ -152,18 +157,34 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
           }
         >
       }
-      for (const [calId, cal] of Object.entries(data.calendars)) {
+      for (const cal of Object.values(data.calendars)) {
         if (cal.errors?.length) {
-          throw new CalendarAdapterError({
-            provider: "google",
-            operation: "freeBusy",
-            message: `freeBusy error for calendar ${calId}: ${JSON.stringify(cal.errors)}`,
-          })
+          for (const e of cal.errors) reasons.add(e.reason)
+          continue
         }
-        for (const b of cal.busy) {
+        readable += 1
+        for (const b of cal.busy ?? []) {
           intervals.push({ start: new Date(b.start), end: new Date(b.end) })
         }
       }
+    }
+
+    if (readable === 0 && reasons.size > 0) {
+      throw new CalendarAdapterError({
+        provider: "google",
+        operation: "freeBusy",
+        message: `freeBusy: no calendar could be read (${[...reasons].join(", ")})`,
+        code: `freeBusy:${[...reasons].join(",")}`,
+      })
+    }
+    if (reasons.size > 0) {
+      console.warn(
+        "[calendar] freeBusy skipped calendars Google could not read",
+        {
+          provider: "google",
+          reasons: [...reasons],
+        }
+      )
     }
 
     return intervals

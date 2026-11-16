@@ -172,6 +172,10 @@ export async function loadExternalBusy(input: {
       integrationId: target.integrationId,
       provider: target.provider,
       error: reason instanceof Error ? reason.name : "unknown",
+      code:
+        reason && typeof reason === "object" && "code" in reason
+          ? String((reason as { code?: unknown }).code)
+          : undefined,
     })
     if (
       reason instanceof CalendarTokenError &&

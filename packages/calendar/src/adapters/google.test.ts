@@ -112,3 +112,54 @@ describe("Google session reminder", () => {
     expect(sentBody(fetchMock)).not.toHaveProperty("reminders")
   })
 })
+
+describe("Google busy times", () => {
+  const from = new Date("2026-11-17T00:00:00Z")
+  const to = new Date("2026-11-18T00:00:00Z")
+
+  function freeBusy(calendars: Record<string, unknown>) {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ calendars }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        })
+      )
+    )
+  }
+
+  it("keeps busy times when one calendar can't be read", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    freeBusy({
+      primary: {
+        busy: [{ start: "2026-11-17T10:00:00Z", end: "2026-11-17T11:00:00Z" }],
+      },
+      "pt.portuguese#holiday@group.v.calendar.google.com": {
+        busy: [],
+        errors: [{ domain: "global", reason: "notFound" }],
+      },
+    })
+    const busy = await new GoogleCalendarAdapter().getFreeBusy(
+      "token",
+      ["primary", "pt.portuguese#holiday@group.v.calendar.google.com"],
+      from,
+      to
+    )
+    expect(busy).toEqual([
+      {
+        start: new Date("2026-11-17T10:00:00Z"),
+        end: new Date("2026-11-17T11:00:00Z"),
+      },
+    ])
+  })
+
+  it("fails when no calendar can be read", async () => {
+    freeBusy({
+      primary: { busy: [], errors: [{ domain: "global", reason: "notFound" }] },
+    })
+    await expect(
+      new GoogleCalendarAdapter().getFreeBusy("token", ["primary"], from, to)
+    ).rejects.toBeInstanceOf(CalendarAdapterError)
+  })
+})

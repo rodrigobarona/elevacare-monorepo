@@ -696,6 +696,7 @@
     "disconnect": "Disconnect",
     "disconnectTitle": "Disconnect {account}?",
     "disconnectBody": "Eleva will stop checking these calendars for conflicts and stop adding new sessions to them. You can connect again at any time.",
+    "disconnectWithdraws": "Eleva also withdraws its access in your {company} account straight away.",
     "disconnectRevoke": "To remove Eleva's access completely, also remove it in your {company} account.",
     "disconnectRevokeLink": "Open your {company} account",
     "disconnectRevokePersonalLink": "Personal account",
