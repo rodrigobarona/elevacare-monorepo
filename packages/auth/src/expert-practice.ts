@@ -15,11 +15,9 @@ export interface OwnedExpertPractice {
   name: string
 }
 
-/** The expert practice this person owns, if any. */
-export async function findOwnedExpertPractice(
-  userId: string
-): Promise<OwnedExpertPractice | null> {
-  const [row] = await db()
+/** Query for the expert practice this person owns (owner role only). */
+export function ownedExpertPracticeQuery(userId: string) {
+  return db()
     .select({
       orgId: auth.organization.id,
       slug: auth.organization.slug,
@@ -41,6 +39,13 @@ export async function findOwnedExpertPractice(
     )
     .orderBy(asc(auth.organization.createdAt))
     .limit(1)
+}
+
+/** The expert practice this person owns, if any. */
+export async function findOwnedExpertPractice(
+  userId: string
+): Promise<OwnedExpertPractice | null> {
+  const [row] = await ownedExpertPracticeQuery(userId)
   return row ?? null
 }
 
@@ -51,4 +56,19 @@ export function expertPracticeViolation(
 ): string | null {
   if (type !== "expert" || !existing) return null
   return `You already have an expert practice (${existing.slug}). Add specialties and services there instead of creating another one.`
+}
+
+/**
+ * Guard for Better Auth's `beforeCreateOrganization`: the message when this
+ * person may not create the organization, null when they may.
+ */
+export async function secondExpertPracticeViolation(
+  organization: Record<string, unknown>,
+  userId: string,
+  find: (
+    userId: string
+  ) => Promise<OwnedExpertPractice | null> = findOwnedExpertPractice
+): Promise<string | null> {
+  if (organization.type !== "expert") return null
+  return expertPracticeViolation(organization.type, await find(userId))
 }
