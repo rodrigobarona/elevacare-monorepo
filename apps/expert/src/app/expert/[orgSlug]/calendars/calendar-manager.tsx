@@ -811,9 +811,12 @@ export function CalendarManager({
         </AlertDialogHeader>
         {disconnectingProvider ? (
           <p className="text-sm text-muted-foreground">
-            {t("disconnectRevoke", {
-              company: t(`company.${disconnectingProvider}`),
-            })}{" "}
+            {t(
+              disconnectingProvider === "google"
+                ? "disconnectWithdraws"
+                : "disconnectRevoke",
+              { company: t(`company.${disconnectingProvider}`) }
+            )}{" "}
             {ACCESS_SETTINGS[disconnectingProvider].map(({ key, href }, i) => (
               <React.Fragment key={key}>
                 {i > 0 ? " · " : null}

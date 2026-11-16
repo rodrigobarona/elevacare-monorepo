@@ -16,6 +16,7 @@ async function listWith(res: Response) {
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  vi.restoreAllMocks()
 })
 
 describe("Google calendar errors", () => {
@@ -110,5 +111,74 @@ describe("Google session reminder", () => {
       reminderMinutes: null,
     })
     expect(sentBody(fetchMock)).not.toHaveProperty("reminders")
+  })
+})
+
+describe("Google busy times", () => {
+  const from = new Date("2026-11-17T00:00:00Z")
+  const to = new Date("2026-11-18T00:00:00Z")
+  const holiday = "pt.portuguese#holiday@group.v.calendar.google.com"
+
+  function freeBusy(calendars: Record<string, unknown>) {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ calendars }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        })
+      )
+    )
+  }
+
+  const oneUnreadable = {
+    primary: {
+      busy: [{ start: "2026-11-17T10:00:00Z", end: "2026-11-17T11:00:00Z" }],
+    },
+    [holiday]: {
+      busy: [],
+      errors: [{ domain: "global", reason: "notFound" }],
+    },
+  }
+
+  it("fails by default when any calendar can't be read (booking holds)", async () => {
+    freeBusy(oneUnreadable)
+    await expect(
+      new GoogleCalendarAdapter().getFreeBusy(
+        "token",
+        ["primary", holiday],
+        from,
+        to
+      )
+    ).rejects.toBeInstanceOf(CalendarAdapterError)
+  })
+
+  it("keeps the readable calendars for slot display", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    freeBusy(oneUnreadable)
+    const busy = await new GoogleCalendarAdapter().getFreeBusy(
+      "token",
+      ["primary", holiday],
+      from,
+      to,
+      { allowPartial: true }
+    )
+    expect(busy).toEqual([
+      {
+        start: new Date("2026-11-17T10:00:00Z"),
+        end: new Date("2026-11-17T11:00:00Z"),
+      },
+    ])
+  })
+
+  it("fails even for display when no calendar can be read", async () => {
+    freeBusy({
+      primary: { busy: [], errors: [{ domain: "global", reason: "notFound" }] },
+    })
+    await expect(
+      new GoogleCalendarAdapter().getFreeBusy("token", ["primary"], from, to, {
+        allowPartial: true,
+      })
+    ).rejects.toBeInstanceOf(CalendarAdapterError)
   })
 })
