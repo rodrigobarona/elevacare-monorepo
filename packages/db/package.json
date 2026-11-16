@@ -15,6 +15,7 @@
     "./rls": "./src/rls/index.ts",
     "./queries/admin": "./src/queries/admin.ts",
     "./queries/partner-applications": "./src/queries/partner-applications.ts",
+    "./queries/practice-closure": "./src/queries/practice-closure.ts",
     "./seed/offer-fixture-specs": "./src/seed/offer-fixture-specs.ts"
   },
   "scripts": {

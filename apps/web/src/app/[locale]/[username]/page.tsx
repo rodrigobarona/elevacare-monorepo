@@ -65,7 +65,11 @@ import { formatEur } from "@/lib/format-eur"
 import { hreflangLanguages, localePath } from "@/lib/hreflang"
 import { isSupportedLocale, pickLocalizedText } from "@/lib/localized-text"
 import { isMarketplaceCategory } from "@/lib/marketplace-categories"
-import { isNotFoundApiError, isRateLimitedApiError } from "@/lib/public-api"
+import {
+  isNotFoundApiError,
+  isPracticeClosedApiError,
+  isRateLimitedApiError,
+} from "@/lib/public-api"
 import {
   createServerPublicApiClient,
   getPublicExpert,
@@ -134,7 +138,9 @@ export default async function ExpertProfilePage({ params }: Props) {
   try {
     expert = await getPublicExpert(username)
   } catch (error) {
-    if (isNotFoundApiError(error)) {
+    // A closed practice (410) shows as unknown until the "Practice closed"
+    // page ships with the expert settings slice (ADR-026, 6b).
+    if (isNotFoundApiError(error) || isPracticeClosedApiError(error)) {
       notFound()
     }
     if (isRateLimitedApiError(error)) {

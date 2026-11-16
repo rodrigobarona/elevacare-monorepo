@@ -6,10 +6,17 @@ import {
   RATE_LIMITS,
   trustedSsrClientIp,
 } from "@/lib/rate-limit"
+import { PRACTICE_CLOSED } from "@eleva/config/practice-closure"
 import { secureJson } from "@/lib/security-headers"
 import { createServerTiming, type ServerTiming } from "@/lib/server-timing"
 
 export const PUBLIC_NOT_FOUND = { error: "not_found" } as const
+
+/** A practice its owner closed (ADR-026): gone for good, so 410. */
+export const PUBLIC_PRACTICE_CLOSED = {
+  error: "practice_closed",
+  code: PRACTICE_CLOSED,
+} as const
 
 export async function handlePublicGet(
   request: Request,

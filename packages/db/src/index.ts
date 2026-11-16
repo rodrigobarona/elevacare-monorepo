@@ -21,6 +21,7 @@ export type {
 export type { ExpertIntegration } from "./schema/main/expert-integrations"
 export {
   findExpertByUsername,
+  isClosedPublicPractice,
   findClinicBySlug,
   listCategories,
   listExperts,

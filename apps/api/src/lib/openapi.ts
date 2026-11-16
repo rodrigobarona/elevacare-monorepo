@@ -164,6 +164,11 @@ import {
   ExpertLicenceSchema,
   PatchPracticeRequestSchema,
   PracticeResponseSchema,
+  CloseExpertPracticeRequestSchema,
+  CloseExpertPracticeResponseSchema,
+  PracticeClosureErrorSchema,
+  PracticeClosureStateResponseSchema,
+  ReopenExpertPracticeResponseSchema,
 } from "@eleva/api-client"
 
 const ErrorSchema = z.object({
@@ -1048,6 +1053,111 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             "409": {
               description:
                 "OFFER_INVARIANT_VIOLATION (published modes would break) or LICENCE_LOCKED (licence on an active profile)",
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/expert/closure/readiness": {
+        get: {
+          operationId: "getExpertPracticeClosureReadiness",
+          summary:
+            "Closure dry run: can this practice close, and what blocks it",
+          description:
+            "For the expert practice in the session's workspace. Blocker codes: FUTURE_BOOKINGS, PENDING_REFUNDS, OPEN_DISPUTES, UNSETTLED_PAYOUTS, UNPAID_SUBSCRIPTION. Nothing is changed.",
+          tags: ["Expert Practice"],
+          responses: {
+            "200": {
+              description: "Closure state and open blockers",
+              content: {
+                "application/json": {
+                  schema: PracticeClosureStateResponseSchema,
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/expert/closure": {
+        post: {
+          operationId: "closeExpertPractice",
+          summary: "Close the expert practice",
+          description:
+            "Owner only, with a session signed in within the last 15 minutes (cookie or opaque bearer; API keys and JWTs are refused). Hides the profile, services and new bookings, ends delegate access and cancels pending invitations; invoices, payouts, the audit trail and session records are kept and the username stays held. Refused with the open blockers while anything must finish.",
+          tags: ["Expert Practice"],
+          requestParams: { header: IdempotencyKeyHeaderSchema },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: CloseExpertPracticeRequestSchema,
+              },
+            },
+          },
+          responses: {
+            ...stdWithNotFound,
+            "200": {
+              description: "Practice closed",
+              content: {
+                "application/json": {
+                  schema: CloseExpertPracticeResponseSchema,
+                },
+              },
+            },
+            "403": {
+              description:
+                "PRACTICE_OWNER_REQUIRED, or STEP_UP_REQUIRED (sign in again)",
+              content: {
+                "application/json": { schema: PracticeClosureErrorSchema },
+              },
+            },
+            "409": {
+              description:
+                "PRACTICE_CLOSURE_BLOCKED (with `blockers`), PRACTICE_ALREADY_CLOSED or IDEMPOTENCY_IN_PROGRESS",
+              content: {
+                "application/json": { schema: PracticeClosureErrorSchema },
+              },
+            },
+            "422": {
+              description:
+                "CLOSURE_CONFIRMATION_MISMATCH (username typed wrong), validation, or an invalid Idempotency-Key",
+              content: {
+                "application/json": {
+                  schema: z.union([PracticeClosureErrorSchema, ErrorSchema]),
+                },
+              },
+            },
+          },
+        },
+      },
+      "/expert/closure/reopen": {
+        post: {
+          operationId: "reopenExpertPractice",
+          summary: "Reopen a closed expert practice",
+          description:
+            "Owner only. The profile shows again only if it still passes the public checks; delegates must be invited again.",
+          tags: ["Expert Practice"],
+          responses: {
+            "200": {
+              description: "Practice reopened",
+              content: {
+                "application/json": {
+                  schema: ReopenExpertPracticeResponseSchema,
+                },
+              },
+            },
+            "403": {
+              description: "PRACTICE_OWNER_REQUIRED",
+              content: {
+                "application/json": { schema: PracticeClosureErrorSchema },
+              },
+            },
+            "409": {
+              description: "PRACTICE_NOT_CLOSED",
+              content: {
+                "application/json": { schema: PracticeClosureErrorSchema },
+              },
             },
             ...stdWithNotFound,
           },
@@ -2604,6 +2714,18 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               description: "Public expert profile with bookable event types",
               content: {
                 "application/json": { schema: PublicExpertProfileSchema },
+              },
+            },
+            "410": {
+              description:
+                "PRACTICE_CLOSED: the expert closed this practice; the username stays held",
+              content: {
+                "application/json": {
+                  schema: z.object({
+                    error: z.literal("practice_closed"),
+                    code: z.literal("PRACTICE_CLOSED"),
+                  }),
+                },
               },
             },
             ...stdPublicWithNotFound,

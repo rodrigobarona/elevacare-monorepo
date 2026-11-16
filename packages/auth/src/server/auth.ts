@@ -278,6 +278,10 @@ function createAuth() {
         allowUserToCreateOrganization: true,
         creatorRole: "owner",
         membershipLimit: 200,
+        // Nobody deletes an organization through the API (ADR-026): invoices
+        // are kept 10 years and session records have their own retention.
+        // An expert closes a practice instead (POST /expert/closure).
+        disableOrganizationDeletion: true,
         // Defence in depth: only a verified email may read or answer an
         // invitation (sessions are already refused when unverified).
         requireEmailVerificationOnInvitation: true,
@@ -471,6 +475,8 @@ export interface AuthApi {
       userId: string
       token: string
       activeOrganizationId?: string | null
+      /** When the person signed in for this session. */
+      createdAt: Date
     }
     user: {
       id: string

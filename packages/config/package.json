@@ -34,6 +34,7 @@
     "./urgent-help": "./src/urgent-help.ts",
     "./guest-signup": "./src/guest-signup.ts",
     "./clinic-verification": "./src/clinic-verification.ts",
+    "./practice-closure": "./src/practice-closure.ts",
     "./professional-bodies": "./src/professional-bodies.ts"
   },
   "scripts": {

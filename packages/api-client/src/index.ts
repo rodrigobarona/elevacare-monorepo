@@ -1,6 +1,10 @@
 import { z } from "zod"
 import { INSTANT_BOOK_LEAD_MINUTES_MAX } from "@eleva/config/booking-settings"
 import {
+  PRACTICE_CLOSURE_BLOCKER_CODES,
+  PRACTICE_CLOSURE_ERROR_CODES,
+} from "@eleva/config/practice-closure"
+import {
   CANCELLATION_POLICY_VALUES,
   EXPERT_CANCEL_REASONS,
   EXPERT_DECLINE_REASONS,
@@ -1797,6 +1801,52 @@ export const LicenceDecisionResponseSchema = z.object({
 export type LicenceDecisionResponse = z.infer<
   typeof LicenceDecisionResponseSchema
 >
+
+/** Closing an expert practice (ADR-026 decision 10). */
+export const PracticeClosureBlockerSchema = z.object({
+  code: z.enum(PRACTICE_CLOSURE_BLOCKER_CODES),
+  count: z.number().int().positive(),
+})
+
+export const PracticeClosureStateResponseSchema = z.object({
+  practice: z.object({
+    slug: z.string(),
+    closedAt: z.string().datetime().nullable(),
+    canClose: z.boolean(),
+    blockers: z.array(PracticeClosureBlockerSchema),
+  }),
+})
+export type PracticeClosureStateResponse = z.infer<
+  typeof PracticeClosureStateResponseSchema
+>
+
+export const CloseExpertPracticeRequestSchema = z.object({
+  /** The practice's username, typed by the person to confirm. */
+  confirmSlug: z.string().trim().min(1).max(64),
+})
+export type CloseExpertPracticeRequest = z.infer<
+  typeof CloseExpertPracticeRequestSchema
+>
+
+export const CloseExpertPracticeResponseSchema = z.object({
+  practice: z.object({
+    slug: z.string(),
+    closedAt: z.string().datetime(),
+    removedMembers: z.number().int().nonnegative(),
+    cancelledInvitations: z.number().int().nonnegative(),
+  }),
+})
+
+export const ReopenExpertPracticeResponseSchema = z.object({
+  practice: z.object({ slug: z.string(), closedAt: z.null() }),
+})
+
+export const PracticeClosureErrorSchema = z.object({
+  error: z.enum(PRACTICE_CLOSURE_ERROR_CODES),
+  code: z.enum(PRACTICE_CLOSURE_ERROR_CODES),
+  message: z.string(),
+  blockers: z.array(PracticeClosureBlockerSchema).optional(),
+})
 
 export const PatchPracticeRequestSchema = z.object({
   practiceCountry: CountryCodeSchema.optional(),
