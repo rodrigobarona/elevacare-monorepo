@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useTranslations } from "next-intl"
 import {
   useConsentAvailable,
@@ -13,8 +14,8 @@ import {
   GearIcon,
   GlobeIcon,
   GraduationCapIcon,
-  HandHeartIcon,
   HouseIcon,
+  PlusIcon,
   QuestionIcon,
   ShieldCheckIcon,
   SignOutIcon,
@@ -40,12 +41,12 @@ import {
   getAvatarInitials,
   getAvatarSeed,
 } from "@eleva/ui/lib/avatar-utils"
-import { cn } from "@eleva/ui/lib/utils"
 import type {
   AccountMenuModel,
   AccountMenuShortcut,
   WorkspaceKind,
 } from "./account-menu-model"
+import { CreateWorkspaceModal } from "./create-workspace-modal"
 import type { DashboardUser } from "./nav-types"
 import { NavThemeMenu } from "./nav-theme-menu"
 
@@ -82,7 +83,14 @@ function RowText({ title, hint }: { title: string; hint?: string }) {
   )
 }
 
-function ShortcutItem({ shortcut }: { shortcut: AccountMenuShortcut }) {
+function ShortcutItem({
+  shortcut,
+  onCreateWorkspace,
+}: {
+  shortcut: AccountMenuShortcut
+  /** Opens the same picker as the sidebar switcher; without it, the row links to the picker page. */
+  onCreateWorkspace?: () => void
+}) {
   const t = useTranslations("accountMenu")
   switch (shortcut.kind) {
     case "space":
@@ -129,16 +137,21 @@ function ShortcutItem({ shortcut }: { shortcut: AccountMenuShortcut }) {
           </span>
         </DropdownMenuItem>
       )
-    case "offer":
+    case "create":
       return (
         <DropdownMenuItem
-          id="offer"
-          href={shortcut.href}
-          textValue={t("offerSessions")}
-          className={cn(ROW, "bg-accent/60 text-accent-foreground")}
+          id="create-workspace"
+          {...(onCreateWorkspace
+            ? { onAction: onCreateWorkspace }
+            : { href: shortcut.href })}
+          textValue={t("createWorkspace")}
+          className={ROW}
         >
-          <HandHeartIcon className="size-4 text-primary" />
-          <RowText title={t("offerSessions")} hint={t("offerSessionsHint")} />
+          <PlusIcon className={ICON} />
+          <RowText
+            title={t("createWorkspace")}
+            hint={t("createWorkspaceHint")}
+          />
         </DropdownMenuItem>
       )
   }
@@ -177,137 +190,156 @@ export function AccountMenu({
   const avatarSeed = getAvatarSeed(user.email, displayName)
   const initials = getAvatarInitials(displayName, user.email)
   const fallbackStyle = getAvatarFallbackStyle(avatarSeed)
+  // In the apps, "Create workspace" opens the sidebar switcher's picker.
+  // The public website links to the picker page instead.
+  const [createWorkspaceOpen, setCreateWorkspaceOpen] = React.useState(false)
+  const onCreateWorkspace =
+    surface === "dashboard" ? () => setCreateWorkspaceOpen(true) : undefined
 
   return (
-    <DropdownMenuTrigger>
-      <Button
-        variant="ghost"
-        size="icon"
-        aria-label={t("yourAccount")}
-        className="rounded-full"
-        data-testid="account-menu-trigger"
-      >
-        <Avatar key={user.avatarUrl ?? "fallback"} className="size-8">
-          {user.avatarUrl ? <AvatarImage src={user.avatarUrl} alt="" /> : null}
-          <AvatarFallback
-            className="text-xs font-semibold text-white"
-            style={fallbackStyle}
-          >
-            {initials}
-          </AvatarFallback>
-        </Avatar>
-      </Button>
-      <DropdownMenu
-        className="w-72 p-1.5"
-        placement="bottom end"
-        data-testid="account-menu"
-      >
-        <DropdownMenuLabel className="p-0 font-normal">
-          <div className="flex items-center gap-3 px-2.5 py-2">
-            <Avatar key={user.avatarUrl ?? "fallback-menu"} className="size-9">
-              {user.avatarUrl ? (
-                <AvatarImage src={user.avatarUrl} alt="" />
-              ) : null}
-              <AvatarFallback
-                className="text-xs font-semibold text-white"
-                style={fallbackStyle}
-              >
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            <div className="grid min-w-0 flex-1 text-sm leading-tight">
-              <span className="truncate font-medium text-foreground">
-                {displayName}
-              </span>
-              <span className="truncate text-xs text-muted-foreground">
-                {user.email}
-              </span>
-            </div>
-          </div>
-        </DropdownMenuLabel>
-
-        {menu.shortcuts.length > 0 ? (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup aria-label={t("workspacesGroup")}>
-              {menu.shortcuts.map((shortcut) => (
-                <ShortcutItem
-                  key={
-                    shortcut.kind === "workspace"
-                      ? shortcut.href
-                      : shortcut.kind
-                  }
-                  shortcut={shortcut}
-                />
-              ))}
-            </DropdownMenuGroup>
-          </>
-        ) : null}
-
-        {menu.staffHref ? (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              id="staff"
-              href={menu.staffHref}
-              target="_blank"
-              rel="noopener"
-              textValue={t("staff")}
-              className={ROW}
-            >
-              <ShieldCheckIcon className={ICON} />
-              <RowText title={t("staff")} hint={t("staffHint")} />
-              <ArrowSquareOutIcon className={ICON} />
-            </DropdownMenuItem>
-          </>
-        ) : null}
-
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup aria-label={t("settingsGroup")}>
-          <DropdownMenuItem
-            id="account"
-            href={menu.accountHref}
-            textValue={t("accountSettings")}
-            className={ROW}
-          >
-            <GearIcon className={ICON} />
-            {t("accountSettings")}
-          </DropdownMenuItem>
-          {surface === "dashboard" ? <NavThemeMenu className={ROW} /> : null}
-          {consentAvailable ? <CookiePreferencesItem /> : null}
-          <DropdownMenuItem
-            id="help"
-            href={menu.helpHref}
-            textValue={t("help")}
-            className={ROW}
-          >
-            <QuestionIcon className={ICON} />
-            {t("help")}
-          </DropdownMenuItem>
-          {surface === "dashboard" ? (
-            <DropdownMenuItem
-              id="home"
-              href={menu.homeHref}
-              textValue={t("homePage")}
-              className={ROW}
-            >
-              <GlobeIcon className={ICON} />
-              {t("homePage")}
-            </DropdownMenuItem>
-          ) : null}
-        </DropdownMenuGroup>
-
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          id="sign-out"
-          href={menu.logoutHref}
-          textValue={t("signOut")}
-          className={ROW}
+    <>
+      <DropdownMenuTrigger>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={t("yourAccount")}
+          className="rounded-full"
+          data-testid="account-menu-trigger"
         >
-          <SignOutIcon className={ICON} />
-          {t("signOut")}
-        </DropdownMenuItem>
-      </DropdownMenu>
-    </DropdownMenuTrigger>
+          <Avatar key={user.avatarUrl ?? "fallback"} className="size-8">
+            {user.avatarUrl ? (
+              <AvatarImage src={user.avatarUrl} alt="" />
+            ) : null}
+            <AvatarFallback
+              className="text-xs font-semibold text-white"
+              style={fallbackStyle}
+            >
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+        </Button>
+        <DropdownMenu
+          className="w-72 p-1.5"
+          placement="bottom end"
+          data-testid="account-menu"
+        >
+          <DropdownMenuLabel className="p-0 font-normal">
+            <div className="flex items-center gap-3 px-2.5 py-2">
+              <Avatar
+                key={user.avatarUrl ?? "fallback-menu"}
+                className="size-9"
+              >
+                {user.avatarUrl ? (
+                  <AvatarImage src={user.avatarUrl} alt="" />
+                ) : null}
+                <AvatarFallback
+                  className="text-xs font-semibold text-white"
+                  style={fallbackStyle}
+                >
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              <div className="grid min-w-0 flex-1 text-sm leading-tight">
+                <span className="truncate font-medium text-foreground">
+                  {displayName}
+                </span>
+                <span className="truncate text-xs text-muted-foreground">
+                  {user.email}
+                </span>
+              </div>
+            </div>
+          </DropdownMenuLabel>
+
+          {menu.shortcuts.length > 0 ? (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup aria-label={t("workspacesGroup")}>
+                {menu.shortcuts.map((shortcut) => (
+                  <ShortcutItem
+                    key={
+                      shortcut.kind === "workspace"
+                        ? shortcut.href
+                        : shortcut.kind
+                    }
+                    shortcut={shortcut}
+                    onCreateWorkspace={onCreateWorkspace}
+                  />
+                ))}
+              </DropdownMenuGroup>
+            </>
+          ) : null}
+
+          {menu.staffHref ? (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                id="staff"
+                href={menu.staffHref}
+                target="_blank"
+                rel="noopener"
+                textValue={t("staff")}
+                className={ROW}
+              >
+                <ShieldCheckIcon className={ICON} />
+                <RowText title={t("staff")} hint={t("staffHint")} />
+                <ArrowSquareOutIcon className={ICON} />
+              </DropdownMenuItem>
+            </>
+          ) : null}
+
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup aria-label={t("settingsGroup")}>
+            <DropdownMenuItem
+              id="account"
+              href={menu.accountHref}
+              textValue={t("accountSettings")}
+              className={ROW}
+            >
+              <GearIcon className={ICON} />
+              {t("accountSettings")}
+            </DropdownMenuItem>
+            {surface === "dashboard" ? <NavThemeMenu className={ROW} /> : null}
+            {consentAvailable ? <CookiePreferencesItem /> : null}
+            <DropdownMenuItem
+              id="help"
+              href={menu.helpHref}
+              textValue={t("help")}
+              className={ROW}
+            >
+              <QuestionIcon className={ICON} />
+              {t("help")}
+            </DropdownMenuItem>
+            {surface === "dashboard" ? (
+              <DropdownMenuItem
+                id="home"
+                href={menu.homeHref}
+                textValue={t("homePage")}
+                className={ROW}
+              >
+                <GlobeIcon className={ICON} />
+                {t("homePage")}
+              </DropdownMenuItem>
+            ) : null}
+          </DropdownMenuGroup>
+
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            id="sign-out"
+            href={menu.logoutHref}
+            textValue={t("signOut")}
+            className={ROW}
+          >
+            <SignOutIcon className={ICON} />
+            {t("signOut")}
+          </DropdownMenuItem>
+        </DropdownMenu>
+      </DropdownMenuTrigger>
+      {onCreateWorkspace ? (
+        <CreateWorkspaceModal
+          open={createWorkspaceOpen}
+          onOpenChange={setCreateWorkspaceOpen}
+        />
+      ) : null}
+    </>
   )
 }

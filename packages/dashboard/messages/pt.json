@@ -93,8 +93,8 @@
       "team": "Clínica",
       "academy": "Academia"
     },
-    "offerSessions": "Ofereça sessões na Eleva",
-    "offerSessionsHint": "Prepare a sua prática em poucos passos",
+    "createWorkspace": "Criar área de trabalho",
+    "createWorkspaceHint": "Uma prática, clínica ou academia",
     "staff": "Equipa Eleva",
     "staffHint": "Abre num novo separador",
     "accountSettings": "Definições da conta",
