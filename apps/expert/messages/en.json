@@ -651,12 +651,22 @@
     "title": "Connected calendars",
     "description": "Connect your Google or Outlook calendar. Eleva then offers members only the times you're free, and adds each session to your calendar.",
     "destination": {
-      "title": "Where new sessions go",
-      "description": "Eleva adds each confirmed session to this calendar, so it sits next to the rest of your day.",
+      "title": "Sessions in your calendar",
+      "description": "Eleva adds each confirmed session to the calendar you choose, with the reminder you prefer, and always checks that calendar for conflicts.",
+      "calendarLabel": "Add sessions to",
       "placeholder": "Choose a calendar",
       "none": "Connect a calendar you own to choose where sessions go.",
       "missing": "Choose a calendar, so confirmed sessions also show up in your own calendar.",
-      "locked": "Always checked, because new sessions go here."
+      "locked": "Always on, because new sessions go here."
+    },
+    "reminder": {
+      "label": "Reminder in your calendar",
+      "help": "Your calendar reminds you before each new session. Eleva sends members their own reminders.",
+      "default": "Your calendar's usual reminder",
+      "atStart": "When it starts",
+      "minutes": "{count, plural, one {# minute before} other {# minutes before}}",
+      "hour": "1 hour before",
+      "needsDestination": "Choose a calendar first."
     },
     "conflicts": {
       "title": "Check for conflicts",
@@ -674,6 +684,8 @@
     },
     "checkingCount": "{count, plural, =0 {not checking any calendar yet} one {checking # calendar} other {checking # calendars}}",
     "main": "Main calendar",
+    "imported": "{host} · imported calendar",
+    "importedUnknown": "Imported calendar",
     "sessionsHere": "Sessions go here",
     "noneChecked": "No calendar here is checked yet, so members could book over your plans.",
     "checkMain": "Check {calendar}",
@@ -689,7 +701,7 @@
     "disconnectRevokePersonalLink": "Personal account",
     "disconnectRevokeWorkLink": "Work or school account",
     "cancel": "Cancel",
-    "accessTitle": "What Eleva can access",
+    "accessTitle": "What Eleva can see and do",
     "access": {
       "google": {
         "list": "See the list of your calendars, so you choose which ones count.",
@@ -731,13 +743,15 @@
     "noSubCalendars": "We couldn't find any calendars in this account.",
     "busySaved": "Saved. Your free times are up to date.",
     "destinationSaved": "Saved. New sessions go to this calendar.",
+    "reminderSaved": "Saved. New sessions get this reminder; sessions already in your calendar don't change.",
     "error": {
       "connect-failed": "We couldn't reach Google or Microsoft just now. Please try again in a moment.",
       "disconnect-failed": "We couldn't disconnect this calendar. Please try again.",
       "load-failed": "We couldn't load this account's calendars. Refresh the page, or reconnect if it keeps happening.",
       "save-failed": "We couldn't save that change. Please try again.",
       "validation": "Something didn't look right. Refresh the page and try again.",
-      "unauthorized-calendar": "This calendar isn't linked to your practice, so you can't change it here."
+      "unauthorized-calendar": "This calendar isn't linked to your practice, so you can't change it here.",
+      "destination-required": "Choose where new sessions go first."
     }
   },
   "integrations": {

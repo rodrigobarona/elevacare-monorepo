@@ -14,11 +14,6 @@ import { CalendarManager } from "./calendar-manager"
 
 export const dynamic = "force-dynamic"
 
-const SLUG_LABEL: Record<string, string> = {
-  "google-calendar": "Google Calendar",
-  "microsoft-calendar": "Outlook Calendar",
-}
-
 export default async function CalendarsPage({
   params,
 }: {
@@ -44,17 +39,23 @@ export default async function CalendarsPage({
     getDestinationCalendar(profile.orgId, profile.id),
   ])
 
+  const t = await getTranslations("calendars")
+  const providerLabel = (slug: string) =>
+    slug === "google-calendar"
+      ? t("provider.google")
+      : slug === "microsoft-calendar"
+        ? t("provider.microsoft")
+        : slug
+
   const integrations = rawIntegrations
     .filter((i) => i.deletedAt == null && i.status !== "disconnected")
     .map((i) => ({
       id: i.id,
       slug: i.slug,
-      providerLabel: SLUG_LABEL[i.slug] ?? i.slug,
+      providerLabel: providerLabel(i.slug),
       accountIdentifier: i.accountIdentifier,
       status: i.status,
     }))
-
-  const t = await getTranslations("calendars")
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
@@ -80,7 +81,16 @@ export default async function CalendarsPage({
           externalCalendarId: s.externalCalendarId,
           displayName: s.displayName,
         }))}
-        initialDestination={destination}
+        initialDestination={
+          destination
+            ? {
+                expertIntegrationId: destination.expertIntegrationId,
+                externalCalendarId: destination.externalCalendarId,
+                displayName: destination.displayName,
+              }
+            : null
+        }
+        initialReminderMinutes={destination?.reminderMinutes ?? null}
       />
     </div>
   )

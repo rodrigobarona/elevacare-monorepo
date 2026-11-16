@@ -171,6 +171,8 @@ import {
   PracticeClosureStateResponseSchema,
   ReopenExpertPracticeRequestSchema,
   ReopenExpertPracticeResponseSchema,
+  CalendarReminderRequestSchema,
+  CalendarReminderResponseSchema,
 } from "@eleva/api-client"
 
 const ErrorSchema = z.object({
@@ -2299,6 +2301,49 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             "409": {
               description:
                 "INVALID_STATUS: not a confirmed session (or it changed meanwhile). SESSION_CHANGED: it is no longer at expectedStartsAt. TOO_LATE: the session has started.",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/expert/calendar/reminder": {
+        get: {
+          operationId: "getCalendarReminder",
+          summary: "Reminder on sessions added to the expert's own calendar",
+          tags: ["Expert Calendars"],
+          responses: {
+            "200": {
+              description:
+                "Minutes before a session (null: the calendar's usual reminder)",
+              content: {
+                "application/json": { schema: CalendarReminderResponseSchema },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+        put: {
+          operationId: "setCalendarReminder",
+          summary:
+            "Set the reminder on sessions added to the expert's calendar",
+          description:
+            "Applies to new sessions Eleva writes to Google or Outlook. Members are reminded by Eleva separately. Needs a destination calendar first.",
+          tags: ["Expert Calendars"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: CalendarReminderRequestSchema },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Reminder saved",
+              content: { "application/json": { schema: OkSchema } },
+            },
+            "409": {
+              description:
+                "No destination calendar yet (error: destination_required)",
               content: { "application/json": { schema: ErrorSchema } },
             },
             ...stdWithNotFound,

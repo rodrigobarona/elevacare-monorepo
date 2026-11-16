@@ -29,6 +29,12 @@ export interface CalendarEventInput {
   attendees?: { email: string; displayName?: string }[]
   location?: string
   /**
+   * Pop-up reminder this many minutes before the start, on the expert's own
+   * event. Undefined or null: send nothing, so the calendar app's usual
+   * reminder applies.
+   */
+  reminderMinutes?: number | null
+  /**
    * Client-supplied ID for idempotent creation. The provider adapter
    * uses this as the event ID so retries produce a 409 conflict
    * instead of a duplicate event.

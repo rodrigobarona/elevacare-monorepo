@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { authClient, CALENDAR_OAUTH_SCOPES } from "@eleva/auth/client"
+import { CALENDAR_REMINDER_MINUTES } from "@eleva/config/calendar-reminder"
 import {
   ArrowSquareOutIcon,
   CalendarCheckIcon,
   CalendarDotsIcon,
   EyeSlashIcon,
-  LockSimpleIcon,
   PlusIcon,
   ShieldCheckIcon,
   WarningIcon,
@@ -45,14 +45,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@eleva/ui/components/select"
+import { Label } from "@eleva/ui/components/label"
 import { Skeleton } from "@eleva/ui/components/skeleton"
 import { Switch } from "@eleva/ui/components/switch"
 import {
   disconnectCalendarAction,
   loadSubCalendars,
   saveBusySources,
+  saveCalendarReminder,
   saveDestinationCalendar,
 } from "./actions"
+import { calendarDisplayName } from "./calendar-names"
 
 type Provider = "google" | "microsoft"
 
@@ -103,8 +106,16 @@ const ACCESS_SETTINGS: Record<
 /** Back from Google or Microsoft: `connected` or `failed`. */
 const LINK_PARAM = "calendarLink"
 
-/** Long calendar lists fold behind "Show N more" past this many rows. */
-const VISIBLE_WHEN_FOLDED = 1
+/**
+ * Every calendar shows, so the expert sees what is checked without opening
+ * anything. Only an unusually long list folds, keeping the main calendar,
+ * the ones in use and the first few others.
+ */
+const FOLD_ABOVE = 20
+const VISIBLE_WHEN_FOLDED = 8
+
+/** Select key for "the calendar's usual reminder" (no override sent). */
+const REMINDER_DEFAULT_KEY = "default"
 
 interface CalendarIntegration {
   id: string
@@ -139,6 +150,7 @@ interface Props {
   callbackURL: string
   initialBusySources: BusySource[]
   initialDestination: Destination | null
+  initialReminderMinutes: number | null
 }
 
 function destinationKey(
@@ -191,11 +203,12 @@ function accountLabel(
 /** Main calendar first, then the ones in use, then the rest by name. */
 function sortCalendars(
   calendars: SubCalendar[],
-  inUse: (id: string) => boolean
+  inUse: (id: string) => boolean,
+  nameOf: (calendar: SubCalendar) => string
 ): SubCalendar[] {
   const rank = (c: SubCalendar) => (c.primary ? 0 : inUse(c.id) ? 1 : 2)
   return [...calendars].sort(
-    (a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name)
+    (a, b) => rank(a) - rank(b) || nameOf(a).localeCompare(nameOf(b))
   )
 }
 
@@ -204,10 +217,14 @@ export function CalendarManager({
   callbackURL,
   initialBusySources,
   initialDestination,
+  initialReminderMinutes,
 }: Props) {
   const router = useRouter()
   const t = useTranslations("calendars")
   const [pending, setPending] = React.useState<string | null>(null)
+  const [reminderMinutes, setReminderMinutes] = React.useState<number | null>(
+    initialReminderMinutes
+  )
   const [subCalendars, setSubCalendars] = React.useState<
     Record<string, SubCalendar[]>
   >({})
@@ -383,11 +400,11 @@ export function CalendarManager({
         if (destination === null && main.writable) {
           const destOk = await persistDestination(fresh, main.id)
           if (destOk) {
-            toast.success(t("defaultsApplied", { calendar: main.name }))
+            toast.success(t("defaultsApplied", { calendar: nameOf(main) }))
             return
           }
         }
-        toast.success(t("defaultsAppliedBusy", { calendar: main.name }))
+        toast.success(t("defaultsAppliedBusy", { calendar: nameOf(main) }))
       } finally {
         setPending(null)
       }
@@ -490,6 +507,34 @@ export function CalendarManager({
     }
   }
 
+  async function handleReminderChange(key: string) {
+    const next = key === REMINDER_DEFAULT_KEY ? null : Number(key)
+    if (next === reminderMinutes) return
+    const previous = reminderMinutes
+    setReminderMinutes(next)
+    setPending("reminder")
+    try {
+      const result = await saveCalendarReminder(next)
+      if (result.ok) {
+        toast.success(t("reminderSaved"))
+        return
+      }
+      showError(result.error)
+    } catch {
+      showError("save-failed")
+    } finally {
+      setPending(null)
+    }
+    setReminderMinutes(previous)
+  }
+
+  const nameOf = (calendar: { name: string; primary: boolean }) =>
+    calendarDisplayName(calendar, {
+      main: t("main"),
+      imported: (host) => t("imported", { host }),
+      importedUnknown: t("importedUnknown"),
+    })
+
   const isBusy = pending !== null
   const parsedDestination = destination
     ? parseDestinationKey(destination)
@@ -501,7 +546,8 @@ export function CalendarManager({
       integration,
       calendars: sortCalendars(
         (subCalendars[integration.id] ?? []).filter((c) => c.writable),
-        () => false
+        () => false,
+        nameOf
       ),
     }))
     .filter((group) => group.calendars.length > 0)
@@ -543,75 +589,135 @@ export function CalendarManager({
             {t("destination.description")}
           </p>
         </div>
-        <div className="space-y-3 rounded-3xl border bg-card p-5 shadow-1">
-          {destinationGroups.length > 0 ? (
-            <Select
-              aria-label={t("destination.title")}
-              placeholder={t("destination.placeholder")}
-              selectedKey={destination}
-              isDisabled={isBusy}
-              onSelectionChange={(key) => {
-                if (typeof key === "string") void handleDestinationChange(key)
-              }}
-              className="w-full"
-            >
-              <SelectTrigger className="h-auto min-h-9 w-full py-1.5 sm:max-w-md">
-                <SelectValue className="min-w-0" />
-              </SelectTrigger>
-              <SelectContent>
-                {destinationGroups.map(({ integration, calendars }) => {
-                  const account = accountLabel(
-                    integration,
-                    subCalendars[integration.id]
-                  )
-                  const provider = providerForSlug(integration.slug)
-                  return (
-                    <SelectGroup key={integration.id}>
-                      <SelectLabel>{account}</SelectLabel>
-                      {calendars.map((calendar) => (
-                        <SelectItem
-                          key={calendar.id}
-                          id={destinationKey(integration.id, calendar.id)}
-                          textValue={`${calendar.name} · ${account}`}
-                        >
-                          {/* Shown in the trigger too: the logo and account
+        {/* What happens to a session Eleva writes: where it goes, and when
+            the expert's calendar reminds them (cal.com pattern). */}
+        <div className="grid gap-5 rounded-3xl border bg-card p-5 shadow-1 sm:grid-cols-2">
+          <div className="min-w-0 space-y-2">
+            {destinationGroups.length > 0 ? (
+              <Select
+                placeholder={t("destination.placeholder")}
+                selectedKey={destination}
+                isDisabled={isBusy}
+                onSelectionChange={(key) => {
+                  if (typeof key === "string") void handleDestinationChange(key)
+                }}
+                className="w-full space-y-2"
+              >
+                <Label>{t("destination.calendarLabel")}</Label>
+                <SelectTrigger className="h-auto min-h-9 w-full py-1.5">
+                  <SelectValue className="min-w-0" />
+                </SelectTrigger>
+                <SelectContent>
+                  {destinationGroups.map(({ integration, calendars }) => {
+                    const account = accountLabel(
+                      integration,
+                      subCalendars[integration.id]
+                    )
+                    const provider = providerForSlug(integration.slug)
+                    return (
+                      <SelectGroup key={integration.id}>
+                        <SelectLabel>{account}</SelectLabel>
+                        {calendars.map((calendar) => (
+                          <SelectItem
+                            key={calendar.id}
+                            id={destinationKey(integration.id, calendar.id)}
+                            textValue={`${nameOf(calendar)} · ${account}`}
+                          >
+                            {/* Shown in the trigger too: the logo and account
                               say where sessions go when a name is just
                               "Calendar". */}
-                          <span className="flex min-w-0 items-center gap-2.5">
-                            <ProviderLogo
-                              provider={provider}
-                              className="size-4 shrink-0"
-                            />
-                            <span className="flex min-w-0 flex-col text-left leading-tight">
-                              <span className="truncate">{calendar.name}</span>
-                              <span className="truncate text-xs font-normal text-muted-foreground">
-                                {account}
+                            <span className="flex min-w-0 items-center gap-2.5">
+                              <ProviderLogo
+                                provider={provider}
+                                className="size-4 shrink-0"
+                              />
+                              <span className="flex min-w-0 flex-col text-left leading-tight">
+                                <span className="truncate">
+                                  {nameOf(calendar)}
+                                </span>
+                                <span className="truncate text-xs font-normal text-muted-foreground">
+                                  {account}
+                                </span>
                               </span>
                             </span>
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    )
+                  })}
+                </SelectContent>
+              </Select>
+            ) : destinationsLoading ? (
+              <div role="status" aria-busy="true" className="space-y-2">
+                <span className="sr-only">{t("loadingCalendars")}</span>
+                <p aria-hidden className="text-sm font-medium">
+                  {t("destination.calendarLabel")}
+                </p>
+                <Skeleton className="h-9 w-full rounded-full" />
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                {t("destination.none")}
+              </p>
+            )}
+            {destinationGroups.length > 0 && destination === null ? (
+              <p className="flex items-start gap-2 text-sm text-coral-900 dark:text-coral-100">
+                <WarningIcon aria-hidden className="mt-0.5 size-4 shrink-0" />
+                {t("destination.missing")}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="min-w-0 space-y-2">
+            <Select
+              selectedKey={
+                reminderMinutes === null
+                  ? REMINDER_DEFAULT_KEY
+                  : String(reminderMinutes)
+              }
+              isDisabled={isBusy || destination === null}
+              onSelectionChange={(key) => {
+                if (typeof key === "string") void handleReminderChange(key)
+              }}
+              aria-describedby="reminder-help"
+              className="w-full space-y-2"
+            >
+              <Label>{t("reminder.label")}</Label>
+              <SelectTrigger className="h-auto min-h-9 w-full py-1.5">
+                <SelectValue className="min-w-0 truncate" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  id={REMINDER_DEFAULT_KEY}
+                  textValue={t("reminder.default")}
+                >
+                  {t("reminder.default")}
+                </SelectItem>
+                {CALENDAR_REMINDER_MINUTES.map((minutes) => {
+                  const label =
+                    minutes === 0
+                      ? t("reminder.atStart")
+                      : minutes === 60
+                        ? t("reminder.hour")
+                        : t("reminder.minutes", { count: minutes })
+                  return (
+                    <SelectItem
+                      key={minutes}
+                      id={String(minutes)}
+                      textValue={label}
+                    >
+                      {label}
+                    </SelectItem>
                   )
                 })}
               </SelectContent>
             </Select>
-          ) : destinationsLoading ? (
-            <div role="status" aria-busy="true">
-              <span className="sr-only">{t("loadingCalendars")}</span>
-              <Skeleton className="h-9 w-full rounded-full sm:max-w-md" />
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              {t("destination.none")}
+            <p id="reminder-help" className="text-xs text-muted-foreground">
+              {destination === null
+                ? t("reminder.needsDestination")
+                : t("reminder.help")}
             </p>
-          )}
-          {destinationGroups.length > 0 && destination === null ? (
-            <p className="flex items-start gap-2 text-sm text-coral-900 dark:text-coral-100">
-              <WarningIcon aria-hidden className="mt-0.5 size-4 shrink-0" />
-              {t("destination.missing")}
-            </p>
-          ) : null}
+          </div>
         </div>
       </section>
 
@@ -766,16 +872,27 @@ function AccountCard({
   const isConnected = integration.status === "connected"
   const label = accountLabel(integration, calendars)
 
+  const nameOf = (calendar: SubCalendar) =>
+    calendarDisplayName(calendar, {
+      main: t("main"),
+      imported: (host) => t("imported", { host }),
+      importedUnknown: t("importedUnknown"),
+    })
   const inUse = (id: string) => busyIds.has(id) || id === destinationId
-  const sorted = sortCalendars(calendars ?? [], inUse)
-  const folded = sorted.filter((c, index) =>
-    index < VISIBLE_WHEN_FOLDED ? true : inUse(c.id)
-  )
+  const sorted = sortCalendars(calendars ?? [], inUse, nameOf)
+  const folded =
+    sorted.length > FOLD_ABOVE
+      ? sorted.filter((c, index) =>
+          index < VISIBLE_WHEN_FOLDED ? true : inUse(c.id)
+        )
+      : sorted
   const visible = isExpanded ? sorted : folded
   const hiddenCount = sorted.length - folded.length
   const nameCounts = new Map<string, number>()
-  for (const c of sorted)
-    nameCounts.set(c.name, (nameCounts.get(c.name) ?? 0) + 1)
+  for (const c of sorted) {
+    const name = nameOf(c)
+    nameCounts.set(name, (nameCounts.get(name) ?? 0) + 1)
+  }
   const main = sorted.find((c) => c.primary)
   const checkedCount = sorted.filter((c) => inUse(c.id)).length
 
@@ -790,20 +907,37 @@ function AccountCard({
           >
             <ProviderLogo provider={provider} className="size-5" />
           </span>
+          {/* Provider first, account second (cal.com): the email is said
+              once here, so the rows below can just say "Main calendar". */}
           <div className="min-w-0">
-            <p className="truncate font-medium">{label}</p>
-            <p className="text-xs text-muted-foreground">
-              {integration.providerLabel}
-              {isConnected && loaded && !failed
-                ? ` · ${t("checkingCount", { count: checkedCount })}`
-                : null}
+            <p className="truncate font-medium">{integration.providerLabel}</p>
+            {/* Two lines on phones, one on wider screens, so the checking
+                count is never cut off by a long email. */}
+            <p className="flex flex-col text-sm text-muted-foreground sm:flex-row sm:gap-1">
+              {label === integration.providerLabel ? null : (
+                // Wraps instead of truncating: the email is how the expert
+                // tells two accounts apart.
+                <span className="break-words">{label}</span>
+              )}
+              {isConnected && loaded && !failed ? (
+                <span className="whitespace-nowrap">
+                  {label === integration.providerLabel ? null : (
+                    <span aria-hidden className="hidden sm:inline">
+                      ·{" "}
+                    </span>
+                  )}
+                  {t("checkingCount", { count: checkedCount })}
+                </span>
+              ) : null}
             </p>
           </div>
         </div>
+        {/* On phones Disconnect sits at the foot of the card, so the email
+            keeps the full width. */}
         <Button
           variant="ghost"
           size="sm"
-          className="shrink-0"
+          className="hidden shrink-0 sm:inline-flex"
           onPress={onDisconnect}
           isDisabled={isBusy}
         >
@@ -855,14 +989,15 @@ function AccountCard({
                   onPress={() => onToggleBusy(main.id, true)}
                   isDisabled={isBusy}
                 >
-                  {t("checkMain", { calendar: main.name })}
+                  {t("checkMain", { calendar: nameOf(main) })}
                 </Button>
               </div>
             ) : null}
             <ul className="divide-y rounded-2xl bg-sand-50 dark:bg-muted/40">
               {visible.map((calendar) => {
                 const isDestination = calendar.id === destinationId
-                const duplicate = (nameCounts.get(calendar.name) ?? 0) > 1
+                const name = nameOf(calendar)
+                const duplicate = (nameCounts.get(name) ?? 0) > 1
                 const detail = duplicate
                   ? (calendar.email ?? calendar.id)
                   : null
@@ -871,10 +1006,13 @@ function AccountCard({
                     {/* The switch is the track only; the name sits beside it
                         and labels it, so long names never squeeze the toggle. */}
                     <div className="flex items-start gap-3">
+                      {/* Where sessions go always counts as busy: shown on
+                          (read-only, full colour), not greyed out. */}
                       <Switch
                         size="sm"
                         isSelected={isDestination || busyIds.has(calendar.id)}
-                        isDisabled={isBusy || isDestination}
+                        isReadOnly={isDestination}
+                        isDisabled={isBusy && !isDestination}
                         onChange={(selected) =>
                           onToggleBusy(calendar.id, selected)
                         }
@@ -882,29 +1020,26 @@ function AccountCard({
                         aria-describedby={
                           isDestination ? `locked-${integration.id}` : undefined
                         }
-                        className="mt-0.5 data-disabled:cursor-default"
+                        className="mt-0.5 data-readonly:cursor-default data-disabled:cursor-default"
                       />
                       <span
                         id={`cal-${integration.id}-${calendar.id}`}
                         className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1"
                       >
                         <span className="truncate text-sm font-medium">
-                          {calendar.name}
+                          {name}
                         </span>
-                        {/* The destination badge says enough; dropping
-                            "Main calendar" keeps the row on one line. */}
-                        {calendar.primary && !isDestination ? (
-                          <span className="text-xs text-muted-foreground">
-                            {t("main")}
-                          </span>
-                        ) : null}
                         {isDestination ? (
                           <Badge
                             variant="outline"
                             className="border-teal-200 bg-teal-50 text-teal-900 dark:border-teal-800 dark:bg-teal-950/50 dark:text-teal-100"
                           >
                             <CalendarCheckIcon aria-hidden />
-                            {t("sessionsHere")}
+                            {/* Icon only on phones, so the row stays one
+                                line; screen readers still hear the words. */}
+                            <span className="sr-only sm:not-sr-only">
+                              {t("sessionsHere")}
+                            </span>
                           </Badge>
                         ) : null}
                         {detail ? (
@@ -915,13 +1050,9 @@ function AccountCard({
                       </span>
                     </div>
                     {isDestination ? (
-                      <p
-                        id={`locked-${integration.id}`}
-                        className="mt-1 flex items-center gap-1.5 pl-10 text-xs text-muted-foreground"
-                      >
-                        <LockSimpleIcon aria-hidden className="size-3.5" />
+                      <span id={`locked-${integration.id}`} className="sr-only">
                         {t("destination.locked")}
-                      </p>
+                      </span>
                     ) : null}
                   </li>
                 )
@@ -947,6 +1078,15 @@ function AccountCard({
           <AccessList provider={provider} className="mt-3 pl-6" />
         </details>
       ) : null}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="-ml-3 sm:hidden"
+        onPress={onDisconnect}
+        isDisabled={isBusy}
+      >
+        {t("disconnect")}
+      </Button>
     </li>
   )
 }

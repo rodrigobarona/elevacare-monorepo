@@ -22,6 +22,7 @@ export const apiFirstActionsConfig = [
                 "disconnectIntegration",
                 "replaceBusySources",
                 "replaceDestinationCalendar",
+                "setCalendarReminder",
               ],
               message:
                 "Server Actions must not write via @eleva/db. Call apps/api through @eleva/api-client instead.",

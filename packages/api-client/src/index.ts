@@ -1,6 +1,10 @@
 import { z } from "zod"
 import { INSTANT_BOOK_LEAD_MINUTES_MAX } from "@eleva/config/booking-settings"
 import {
+  CALENDAR_REMINDER_MINUTES,
+  isCalendarReminderMinutes,
+} from "@eleva/config/calendar-reminder"
+import {
   PRACTICE_CLOSURE_BLOCKER_CODES,
   PRACTICE_CLOSURE_ERROR_CODES,
 } from "@eleva/config/practice-closure"
@@ -2211,6 +2215,43 @@ export const DestinationCalendarRequestSchema = z.object({
   externalCalendarId: z.string(),
 })
 
+/**
+ * Reminder on sessions Eleva adds to the expert's calendar: minutes before
+ * the start, or null for the calendar app's usual reminder.
+ */
+export const CalendarReminderMinutesSchema = z
+  .union([
+    z
+      .number()
+      .int()
+      .refine(isCalendarReminderMinutes, {
+        message: `Must be one of ${CALENDAR_REMINDER_MINUTES.join(", ")}`,
+      }),
+    z.null(),
+  ])
+  .describe(
+    "Minutes before a session that the expert's calendar shows a reminder. null keeps the calendar's usual reminder."
+  )
+
+export const CalendarReminderRequestSchema = z.object({
+  reminderMinutes: CalendarReminderMinutesSchema,
+})
+
+export type CalendarReminderRequest = z.infer<
+  typeof CalendarReminderRequestSchema
+>
+
+export const CalendarReminderResponseSchema = z.object({
+  reminderMinutes: CalendarReminderMinutesSchema,
+  hasDestination: z
+    .boolean()
+    .describe("False until the expert chooses where new sessions go."),
+})
+
+export type CalendarReminderResponse = z.infer<
+  typeof CalendarReminderResponseSchema
+>
+
 export type DestinationCalendarRequest = z.infer<
   typeof DestinationCalendarRequestSchema
 >
@@ -3639,6 +3680,15 @@ export function createApiClient(options: ApiClientOptions) {
         },
         revokeFeedToken() {
           return request<{ ok: true }>("DELETE", "/expert/calendar/feed-token")
+        },
+        getReminder() {
+          return request<CalendarReminderResponse>(
+            "GET",
+            "/expert/calendar/reminder"
+          ).then((raw) => CalendarReminderResponseSchema.parse(raw))
+        },
+        setReminder(data: CalendarReminderRequest) {
+          return request<{ ok: true }>("PUT", "/expert/calendar/reminder", data)
         },
       },
 

@@ -19,27 +19,48 @@
       "severity": "P1",
       "lens": "ux",
       "title": "Today does not answer 'what do I need to do today'",
-      "evidence": ["01-home.desktop.jpg", "01-home.mobile.jpg", "08-setup.desktop.jpg"],
+      "evidence": [
+        "01-home.desktop.jpg",
+        "01-home.mobile.jpg",
+        "08-setup.desktop.jpg"
+      ],
       "detail": "The nav item is called Today, but the page opens with 'Hello, Fisio Mota' and three counters, then 'Next sessions' with rows dated two days ahead. There is no today block, no countdown, and the session rows are static: they are not links and have no Join action (confirmed in apps/expert/src/app/[orgSlug]/page.tsx). Rows show only a first name ('Marta · Online') with no avatar. An expert who opens the app five minutes before a video session has to go to Calendar, find the block and open it to join. This is the core daily path for every expert.",
       "recommendation": "Lead the page with one next-session card: member name and initials, service, mode, date and time, a countdown ('Starts in 2 h 10 min'), and a Join session button that is visible from the start and becomes active 15 minutes before, with the reason written under it. Add 'Open member' and 'Reschedule' as quiet secondary actions. Under it, an agenda grouped Today, Tomorrow, Later this week, where every row is a link and every online row carries its own Join. When today is empty, say so in one warm line and show the next booked session instead.",
-      "references": ["07-expert-dashboard/02", "07-expert-dashboard/05", "07-expert-dashboard/01"]
+      "references": [
+        "07-expert-dashboard/02",
+        "07-expert-dashboard/05",
+        "07-expert-dashboard/01"
+      ]
     },
     {
       "id": "XDASH-02",
       "severity": "P1",
       "lens": "trust",
       "title": "Home stays silent while payouts are not set up",
-      "evidence": ["01-home.desktop.jpg", "07-finance.desktop.jpg", "07-finance.mobile.jpg"],
+      "evidence": [
+        "01-home.desktop.jpg",
+        "07-finance.desktop.jpg",
+        "07-finance.mobile.jpg"
+      ],
       "detail": "Finance shows 'Set up payouts to get paid', yet the same expert has two published paid services and sessions marked 'Awaiting payment' on home. The single most consequential task for a new expert is hidden under Settings > Finance and the home page gives no sign of it. An expert can take bookings for weeks before learning that her earnings have nowhere to go, which damages trust in the platform at the worst moment.",
       "recommendation": "Show a persistent attention banner at the top of Today, and the first row of a 'Needs you' list, until payouts are connected: 'Connect your bank account so your earnings can reach you. It takes a few minutes.' with a Set up payouts button. Repeat the same state as a small coral dot on the Finance nav item. Remove the banner the moment setup completes and confirm with a toast.",
-      "references": ["07-expert-dashboard/03", "07-expert-dashboard/01", "07-expert-dashboard/04"]
+      "references": [
+        "07-expert-dashboard/03",
+        "07-expert-dashboard/01",
+        "07-expert-dashboard/04"
+      ]
     },
     {
       "id": "XDASH-03",
       "severity": "P1",
       "lens": "ux",
       "title": "No setup or growth checklist; 'Manage your practice' repeats the sidebar",
-      "evidence": ["01-home.desktop.jpg", "01-home.mobile.jpg", "08-setup.desktop.jpg", "05-profile.desktop.jpg"],
+      "evidence": [
+        "01-home.desktop.jpg",
+        "01-home.mobile.jpg",
+        "08-setup.desktop.jpg",
+        "05-profile.desktop.jpg"
+      ],
       "detail": "The lower third of home is four cards (Services, Schedule, Connected calendars, Finance) that link to pages already one click away in the sidebar. They take a full mobile screen and teach nothing. Meanwhile real gaps are visible elsewhere and never surface on home: the profile has no photo and 'No credentials yet' (05-profile), no calendar is connected (09-integrations), payouts are not set up (07-finance). The 08-setup capture resolves to the same home page, so a set-up expert has no view of 'what is next for my practice'.",
       "recommendation": "Replace the shortcut cards with a 'Next steps for your practice' checklist driven by real state: add your photo, add your training, connect your calendar, set up payouts, share your profile link. Each row has a one-line reason in member terms ('Members book people, not logos'), a time estimate and one action. Completed rows are ticked and struck through, a progress line shows '3 of 5 done', and the block can be hidden once complete. After setup, swap it for growth prompts (share your link, add a second service, open more hours).",
       "references": ["07-expert-dashboard/04", "07-expert-dashboard/01"]
@@ -52,14 +73,23 @@
       "evidence": ["01-home.desktop.jpg", "01-home.mobile.jpg"],
       "detail": "The three stat cards are 'Sessions this week', 'Requests to review' and 'Published services'. The third is a configuration fact, not something an expert checks daily, and nothing on the page is about money. The only way to the public profile is a 'View public profile' button; there is no link to copy or share, although sharing that link is how a new expert gets her first booking. On mobile the three cards squeeze into narrow columns and the labels wrap to two lines.",
       "recommendation": "Use four tiles that answer daily questions: Today (sessions today), Waiting for your answer, Earned this month, Next payout (amount and date, or 'Set up payouts'). Each tile links to its page. Add a profile strip under the greeting with the public address (eleva.care/fisiomota), a Copy link button and View. On mobile, lay tiles out two by two.",
-      "references": ["07-expert-dashboard/03", "07-expert-dashboard/01", "07-expert-dashboard/12"]
+      "references": [
+        "07-expert-dashboard/03",
+        "07-expert-dashboard/01",
+        "07-expert-dashboard/12"
+      ]
     },
     {
       "id": "XDASH-05",
       "severity": "P2",
       "lens": "ux",
       "title": "Booking states are ambiguous and time formats are mixed",
-      "evidence": ["01-home.desktop.jpg", "02-calendar.desktop.jpg", "02-calendar.mobile.jpg", "04-schedule.desktop.jpg"],
+      "evidence": [
+        "01-home.desktop.jpg",
+        "02-calendar.desktop.jpg",
+        "02-calendar.mobile.jpg",
+        "04-schedule.desktop.jpg"
+      ],
       "detail": "Home says 'Requests to review: 0', while the calendar shows five blocks labelled 'Request' on Friday 13, a day that has already passed, drawn in the same style as a live booking. An expert cannot tell whether they still need an answer, have expired or were declined. On home, sessions two days away are 'Awaiting payment' with no hint of what that means for her or whether the time is really held. Home uses 9:00 AM while the calendar and schedule use 09:00.",
       "recommendation": "Define one status set and use it everywhere, each with its own colour, icon and plain label: Confirmed, Waiting for your answer (with 'Answer by Thu 14:00'), Waiting for payment (with 'Held until 15:30'), Completed, and Expired or Cancelled (muted and struck through). In the calendar legend, show these states rather than only the session mode. Pick one time format per locale (24-hour for PT and ES) and apply it on home, calendar, schedule and emails.",
       "references": ["07-expert-dashboard/06", "07-expert-dashboard/05"]
@@ -99,7 +129,10 @@
       "severity": "P2",
       "lens": "ux",
       "title": "Service editor: six opaque tabs, and they break on mobile",
-      "evidence": ["10-event-type-editor.desktop.jpg", "10-event-type-editor.mobile.jpg"],
+      "evidence": [
+        "10-event-type-editor.desktop.jpg",
+        "10-event-type-editor.mobile.jpg"
+      ],
       "detail": "The editor has six horizontal tabs: Basics, Details, Kind, Policies, Delivery modes, Private links. 'Basics' versus 'Details' and 'Kind' do not tell an expert what is inside. Basics contains a 'Session mode' select while a separate 'Delivery modes' tab exists. Language tabs are nested inside the first tab. On mobile the six tabs wrap onto two rows and overlap the card below. There is one 'Save changes' button at the very bottom and no sign of whether it saves every tab or only this one. 'Published' is a small pill far from the title with no way to pause the service. Price is a bare '60' with the currency as separate text.",
       "recommendation": "On desktop use a left section list in plain words: What members see, Price and length, How you meet, Booking and cancellation, Private links, with a tick or dot showing which sections are complete. On mobile use one scrolling page with collapsible sections. Put the published switch and a Preview link in the header. Add a sticky save bar that appears when there are unsaved changes. Show the price field with a € prefix. Keep the mode choice in one place only.",
       "references": ["07-expert-dashboard/09"]
@@ -139,7 +172,13 @@
       "severity": "P2",
       "lens": "ux",
       "title": "Navigation is not grouped the way an expert thinks",
-      "evidence": ["01-home.desktop.jpg", "02-calendar.desktop.jpg", "06-members.desktop.jpg", "09-integrations.desktop.jpg", "01-home.mobile.jpg"],
+      "evidence": [
+        "01-home.desktop.jpg",
+        "02-calendar.desktop.jpg",
+        "06-members.desktop.jpg",
+        "09-integrations.desktop.jpg",
+        "01-home.mobile.jpg"
+      ],
       "detail": "Finance, a weekly destination, sits under 'Settings'. 'Connected calendars' and 'Integrations' are two items, and Integrations repeats the calendars. 'Relationships' and 'Templates' do not say what they hold. In most captures no sidebar item is highlighted (home, calendar, services, schedule, profile, members, finance, integrations), while 08-setup and the service editor do show an active item; check whether the active state fails on these routes or only in the capture run. The bell shows a coral '99+' on every page, which reads as an alarm and will be ignored. On mobile all navigation is behind one icon.",
       "recommendation": "Group as: Today, Calendar, Members; Practice: Services, Schedule, Public profile; Money: Earnings and payouts, Invoices; Settings: Calendars and integrations. Always mark the current page. Pin 'View public profile' and 'Copy profile link' at the bottom of the sidebar. Cap the badge at a real unread count with 'Mark all as read'. On mobile, add a bottom bar with Today, Calendar, Members and More.",
       "references": ["07-expert-dashboard/05", "07-expert-dashboard/01"]
@@ -149,7 +188,12 @@
       "severity": "P2",
       "lens": "ui",
       "title": "Page header actions collide with the content below",
-      "evidence": ["01-home.desktop.jpg", "01-home.mobile.jpg", "03-event-types.desktop.jpg", "03-event-types.mobile.jpg"],
+      "evidence": [
+        "01-home.desktop.jpg",
+        "01-home.mobile.jpg",
+        "03-event-types.desktop.jpg",
+        "03-event-types.mobile.jpg"
+      ],
       "detail": "On home, 'View public profile' and 'New service' sit on the subtitle's baseline and their bottom edge touches the stat cards. On Services the 'New service' button touches the list card. On mobile the buttons sit directly on top of the cards with no gap. It is a small defect, but it is on the first screen every expert sees and makes the page look unfinished.",
       "recommendation": "Fix it once in the shared PageHeader: place actions on the title row on desktop, guarantee 24 to 32 px between header and content, and on mobile stack actions under the subtitle with 16 px above and 24 px below.",
       "references": ["07-expert-dashboard/08"]
@@ -159,7 +203,13 @@
       "severity": "P3",
       "lens": "copy",
       "title": "Internal and accounting jargon in expert-facing copy",
-      "evidence": ["02-calendar.desktop.jpg", "03-event-types.desktop.jpg", "09-integrations.desktop.jpg", "10-event-type-editor.desktop.jpg", "04-schedule.desktop.jpg"],
+      "evidence": [
+        "02-calendar.desktop.jpg",
+        "03-event-types.desktop.jpg",
+        "09-integrations.desktop.jpg",
+        "10-event-type-editor.desktop.jpg",
+        "04-schedule.desktop.jpg"
+      ],
       "detail": "'ICS feed', 'delivery modes', 'Kind', 'date overrides', 'Define the bookable services you offer', 'Issue Portuguese fiscal invoices (FT) via TOConline ERP' and 'You acknowledge responsibility for fiscal compliance' are written for engineers and accountants. The three Invoicing cards on Integrations also have no button and no selected state, so the expert cannot tell which applies to her or how to choose. No Mobbin reference was needed for this finding; it is a wording pass.",
       "recommendation": "Rewrite in the words an expert uses: 'Subscribe from your calendar app', 'How you meet' (Online, Phone, In person), 'Type of service', 'Days off and special hours', 'The sessions members can book with you', 'Send invoices from TOConline, the invoicing tool many Portuguese practices already use', 'I will send my own invoices'. Give every integration card a state (Connected, Not connected, Selected) and one action.",
       "references": []
@@ -182,7 +232,12 @@
       "evidence": [],
       "detail": "Each sub-calendar row has both a 'Check for conflicts' checkbox and a 'Write sessions here' radio. The two jobs answer different questions (which calendars block my time, and which one gets new sessions) but they are mixed in one flat list across all accounts. The single answer to 'where do my sessions go?' is a radio button somewhere in that list, with no summary at the top.",
       "recommendation": "Split the page into two sections. First 'Where new sessions go': one select of calendars Eleva can write to, grouped by account, with the account email under each name. Then 'Check for conflicts': one card per account with a switch per calendar. Mark the destination in its card with a 'Sessions go here' badge and keep its switch on.",
-      "references": ["07-expert-dashboard/13", "07-expert-dashboard/14", "07-expert-dashboard/15", "07-expert-dashboard/17"]
+      "references": [
+        "07-expert-dashboard/13",
+        "07-expert-dashboard/14",
+        "07-expert-dashboard/15",
+        "07-expert-dashboard/17"
+      ]
     },
     {
       "id": "XDASH-18",
@@ -192,7 +247,11 @@
       "evidence": [],
       "detail": "After an expert connects Google or Microsoft, no calendar is checked for conflicts and no destination is chosen. Members can book times she is already busy until she finds the page and ticks boxes herself. Most experts will assume that connecting was enough.",
       "recommendation": "On connect, switch on conflict checking for the account's primary calendar and set it as the destination when none is set. Confirm with a toast that says what was done ('Connected. We will check your main calendar and add new sessions to it.'). Keep the destination calendar's conflict switch locked on.",
-      "references": ["07-expert-dashboard/15", "07-expert-dashboard/18", "07-expert-dashboard/16"]
+      "references": [
+        "07-expert-dashboard/15",
+        "07-expert-dashboard/18",
+        "07-expert-dashboard/16"
+      ]
     },
     {
       "id": "XDASH-19",
@@ -202,7 +261,11 @@
       "evidence": [],
       "detail": "Each connected account card is titled by provider with the account's numeric Google ID under it. An expert with a personal and a work account cannot tell which card is which, and the number looks like an error.",
       "recommendation": "Show the provider logo and the account email on every card, in the destination select and in confirmations. Store the email at connect time (from the provider profile) and fall back to the provider name only if it is missing; never show the numeric ID.",
-      "references": ["07-expert-dashboard/21", "07-expert-dashboard/13", "07-expert-dashboard/14"]
+      "references": [
+        "07-expert-dashboard/21",
+        "07-expert-dashboard/13",
+        "07-expert-dashboard/14"
+      ]
     },
     {
       "id": "XDASH-20",
@@ -222,7 +285,11 @@
       "evidence": [],
       "detail": "Sub-calendars are listed in provider order, so the expert's own calendar can sit below Birthdays or a national holidays calendar. Subscribed and holiday calendars get the same weight as the calendars she actually books into.",
       "recommendation": "Order each account as: primary first, then her other own calendars, then shared, then subscribed and holiday calendars in a quieter style and behind 'Show N more' when there are more than four. Holiday and birthday calendars start switched off.",
-      "references": ["07-expert-dashboard/16", "07-expert-dashboard/17", "07-expert-dashboard/14"]
+      "references": [
+        "07-expert-dashboard/16",
+        "07-expert-dashboard/17",
+        "07-expert-dashboard/14"
+      ]
     },
     {
       "id": "XDASH-22",
@@ -242,7 +309,11 @@
       "evidence": [],
       "detail": "Two accounts often each have a calendar named after the person or 'Work'. In the flat list there is no account grouping, colour or email next to the name, so duplicates look identical.",
       "recommendation": "Group calendars under their account card, show the provider's colour dot before each name, and in the destination select show the account email as a second line under every calendar name.",
-      "references": ["07-expert-dashboard/16", "07-expert-dashboard/14", "07-expert-dashboard/17"]
+      "references": [
+        "07-expert-dashboard/16",
+        "07-expert-dashboard/14",
+        "07-expert-dashboard/17"
+      ]
     },
     {
       "id": "XDASH-24",
@@ -252,7 +323,11 @@
       "evidence": [],
       "detail": "A 'Connect a calendar' card with Google and Microsoft rows stays at the top even after accounts are connected, and shows Reconnect on providers that work. A Reconnect button on a healthy account suggests something is wrong.",
       "recommendation": "Replace the card with one '+ Add calendar' button on the 'Check for conflicts' header that opens the provider choice and the pre-connect sheet. Show Reconnect only on an account that needs it, inside that card, with one line on what stopped working and what it means for her bookings. Keep the account's calendars visible but disabled until fixed.",
-      "references": ["07-expert-dashboard/13", "07-expert-dashboard/22", "07-expert-dashboard/23"]
+      "references": [
+        "07-expert-dashboard/13",
+        "07-expert-dashboard/22",
+        "07-expert-dashboard/23"
+      ]
     },
     {
       "id": "XDASH-25",
@@ -262,7 +337,11 @@
       "evidence": [],
       "detail": "Apart from a status pill, the account card does not say how many calendars are being checked or whether the connection is working right now. An expert cannot tell that Eleva is protecting her time.",
       "recommendation": "Give each account card a second line under the email such as 'Checking 2 calendars · Updated 5 min ago', and a 'What Eleva can access' disclosure with the same plain points as the pre-connect sheet. Move Disconnect into a menu with a confirm that says what stops working.",
-      "references": ["07-expert-dashboard/21", "07-expert-dashboard/14", "07-expert-dashboard/20"]
+      "references": [
+        "07-expert-dashboard/21",
+        "07-expert-dashboard/14",
+        "07-expert-dashboard/20"
+      ]
     },
     {
       "id": "XDASH-26",
@@ -273,6 +352,50 @@
       "detail": "With no calendar connected, the page shows provider rows and Connect buttons but does not say why an expert should connect or what changes for her and her members.",
       "recommendation": "Lead the empty state with one warm line ('Connect your calendar so members only see times you are free'), Google and Microsoft buttons, and two small cards for the two jobs: 'Avoid double bookings' and 'Get sessions in your calendar'. Both buttons open the pre-connect sheet.",
       "references": ["07-expert-dashboard/24", "07-expert-dashboard/19"]
+    },
+    {
+      "id": "XDASH-27",
+      "severity": "P2",
+      "lens": "ui",
+      "title": "Calendars: the account email repeats on every line",
+      "evidence": [],
+      "detail": "With a Google account, the email is the picker title and subtitle, the account card title and the main calendar's name, so the same address shows four times and the provider is the smallest text on the card.",
+      "recommendation": "Title the card with the provider ('Google Calendar') and put the email once underneath with the checking count. Call the main calendar 'Main calendar' everywhere, including the picker.",
+      "references": ["07-expert-dashboard/13", "07-expert-dashboard/31"]
+    },
+    {
+      "id": "XDASH-28",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "Calendars: most calendars hide behind 'Show N more', and the locked switch looks off",
+      "evidence": [],
+      "detail": "Only the main calendar and switched-on ones show, so an expert cannot see what is checked without expanding. The calendar sessions go to has a greyed (disabled) switch that reads as off, and needs an extra line to explain itself.",
+      "recommendation": "List every calendar of an account (fold only very long lists). Show the destination switch on in full colour (read-only) with its badge, and move the 'always checked' explanation to the destination help text and the screen-reader description.",
+      "references": ["07-expert-dashboard/13", "07-expert-dashboard/31"]
+    },
+    {
+      "id": "XDASH-29",
+      "severity": "P3",
+      "lens": "ux",
+      "title": "Calendars: no say over the reminder on sessions in the expert's own calendar",
+      "evidence": [],
+      "detail": "Eleva writes sessions without reminder settings, so the expert gets whatever her calendar app does by default and cannot choose. The destination card has one select and empty space beside it.",
+      "recommendation": "Add 'Reminder in your calendar' next to the destination select: the calendar's usual reminder by default, then when it starts, 5, 10, 15, 30 minutes or 1 hour before. Say that members get their own reminders from Eleva.",
+      "references": [
+        "07-expert-dashboard/29",
+        "07-expert-dashboard/30",
+        "07-expert-dashboard/31"
+      ]
+    },
+    {
+      "id": "XDASH-30",
+      "severity": "P3",
+      "lens": "trust",
+      "title": "Calendars: a subscribed feed shows its private URL as the name",
+      "evidence": [],
+      "detail": "A subscribed iCal calendar (for example an Airbnb feed) is named after its URL, which includes a private token, so the page shows the token in full.",
+      "recommendation": "Show only the host, for example 'airbnb.pt · imported calendar'.",
+      "references": ["07-expert-dashboard/13"]
     }
   ],
   "references": [
@@ -615,6 +738,42 @@
       "why": "'Languages' sits with Description, Skills and Education on the seller profile, each with 'Add New' or 'Edit', because buyers choose sellers by them.",
       "apply": "Languages live on the public-profile settings page, because members find experts by them.",
       "query": "host or provider settings to edit languages spoken and service area"
+    },
+    {
+      "id": "07-expert-dashboard/29",
+      "file": "img/29-clockwise-google-calendar-default-reminders.jpg",
+      "app": "Clockwise",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/480a6d6e-f63f-4b58-ac84-051f7a4fe3c8?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Quiet reminder line under the setting: \"Notify using Google Calendar defaults\"",
+      "why": "The reminder is a small inline choice that defaults to the calendar app's own reminder, so nothing changes unless the person picks something else.",
+      "apply": "Default the session reminder to \"Your calendar's usual reminder\" (no override sent to Google or Microsoft). Only send an override when the expert picks a time.",
+      "query": "scheduling app calendar settings with default event reminder dropdown"
+    },
+    {
+      "id": "07-expert-dashboard/30",
+      "file": "img/30-zoho-crm-reminder-select.jpg",
+      "app": "Zoho CRM",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/cef672aa-8a2a-465a-9d5b-7be60dbb3ac2?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Reminders block: one labelled select per event kind (\"15 minutes before\")",
+      "why": "The time is said the way people say it (\"15 minutes before\"), in a single select next to its label.",
+      "apply": "One select labelled \"Reminder in your calendar\" next to the destination select, with plain options (When it starts, 5/10/15/30 minutes before, 1 hour before).",
+      "query": "scheduling app calendar settings with default event reminder dropdown"
+    },
+    {
+      "id": "07-expert-dashboard/31",
+      "file": "img/31-calcom-default-reminder-options.png",
+      "app": "Cal.com",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": null,
+      "pattern": "\"Add events to\" and \"Default reminder\" side by side, with help text under each",
+      "why": "Founder screenshot (2026-11-16). Groups everything about the written event in one block; the reminder options start with the calendar's own defaults.",
+      "apply": "Put the reminder beside \"Where new sessions go\" on desktop and under it on phones, with one help line that says the reminder is only in the expert's calendar (members get Eleva's own reminders).",
+      "query": "founder screenshot"
     }
   ],
   "judging_criteria": [
@@ -633,6 +792,8 @@
     "Does Reconnect appear only on an account that needs it, with one line on what stopped working and what it means for her bookings? (07-expert-dashboard/22, 07-expert-dashboard/23)",
     "With no calendar connected, does the page explain the two things a connection does and offer one clear way to add one? (07-expert-dashboard/24, 07-expert-dashboard/19)",
     "On a 390 px screen, is every calendar one line (name, badge, switch), with the destination select above the account cards and no sideways scroll? (07-expert-dashboard/17)",
-    "After setup, can an expert change every answer from setup (except the licence) on a settings page, and does a refused change say which services it affects and where to fix them? (07-expert-dashboard/25, 07-expert-dashboard/26, 07-expert-dashboard/27)"
+    "After setup, can an expert change every answer from setup (except the licence) on a settings page, and does a refused change say which services it affects and where to fix them? (07-expert-dashboard/25, 07-expert-dashboard/26, 07-expert-dashboard/27)",
+    "Can the expert set when her calendar reminds her of a session, next to where sessions go, with her calendar app's usual reminder as the default and a line that says members are reminded separately? (07-expert-dashboard/29, 07-expert-dashboard/30, 07-expert-dashboard/31)",
+    "Can she see every calendar of an account and which ones are checked without opening anything, with the calendar sessions go to clearly switched on? (07-expert-dashboard/13, 07-expert-dashboard/31)"
   ]
 }

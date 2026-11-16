@@ -150,6 +150,12 @@ export class MicrosoftCalendarAdapter implements CalendarAdapter {
       })),
       location: event.location ? { displayName: event.location } : undefined,
       transactionId: event.idempotencyId,
+      ...(typeof event.reminderMinutes === "number"
+        ? {
+            isReminderOn: true,
+            reminderMinutesBeforeStart: event.reminderMinutes,
+          }
+        : {}),
     }
     const res = await fetch(
       `${GRAPH_API}/me/calendars/${encodeURIComponent(event.calendarId)}/events`,

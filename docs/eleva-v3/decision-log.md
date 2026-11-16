@@ -32,6 +32,74 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-16: Session reminder and clearer connected calendars (design slice D5.7) (active)
+
+- Change: on `/expert/{slug}/calendars`, "Where new sessions go" now has a
+  second field, **Reminder in your calendar** (cal.com "Default reminder"
+  pattern). The default is the calendar's usual reminder: Eleva sends no
+  reminder settings. Other choices: when it starts, 5, 10, 15 or 30 minutes,
+  or 1 hour before (`@eleva/config/calendar-reminder`). The help line says
+  members get their own reminders from Eleva; this only changes the expert's
+  own event.
+- Storage and API: `calendar_destinations.reminder_minutes` (migration
+  `0078`, nullable, 0–1440 check). It lives with the expert's default
+  destination, so `GET/PUT /expert/calendar/reminder` answers 409
+  `destination_required` until one is chosen (the picker is disabled until
+  then). Changing the destination keeps it: `replaceDestinationCalendar` is
+  now an upsert. The reminder also applies when a service or mode overrides
+  the destination. Writes are audited (`expert_profile.updated`,
+  `field: calendar_reminder_minutes`) and the endpoint is in OpenAPI and
+  `@eleva/api-client`.
+- Calendar writes: Google gets `reminders: { useDefault: false, overrides:
+[{ method: "popup", minutes }] }`; Outlook gets `isReminderOn` and
+  `reminderMinutesBeforeStart`. Only new sessions get it; sessions already
+  in the calendar keep the reminder they had.
+- Page hierarchy (founder feedback against cal.com): the account card title
+  is the provider ("Google Calendar") with the email once under it; the main
+  calendar reads "Main calendar" everywhere instead of the account email (or
+  Outlook's "Calendar"); every calendar is listed (only lists over 20 fold);
+  the calendar sessions go to shows a switched-on, read-only switch instead
+  of a greyed one, and the "always checked" line moved to the section help
+  and the screen-reader description; a subscribed feed shows its host
+  ("airbnb.pt · imported calendar"), never the feed URL with its private
+  token. On phones the email and the checking count sit on two lines.
+- Proof:
+  - unit suites: calendar adapters (Google/Outlook reminder bodies), the
+    reminder route (validation, 409, audit, auth), calendar names, config,
+    db journal; api 207, expert 41, db 105, calendar 29, workflows 160,
+    config 202 pass; typecheck, lint, route guards, PHI-log, i18n parity and
+    API-first checks pass.
+  - migration `0078` applied to the dev Neon branch (`dev-local-v3-redesign`).
+  - Before and after captures with the same fictional accounts (a local,
+    uncommitted fixture, no database writes) are in
+    `design-audit/captures/2026-11-16-calendars-reminder-{before,after}/`.
+    Mobbin references `07-expert-dashboard` 29–31, criteria 17–18.
+- Judges panel: round 1 UI 8.5, UX 8.0, trust 8.0; round 2 UI 9.0, UX 9.0,
+  trust 9.0. Round 1 asked for: off-switch contrast (WCAG 1.4.11; the shared
+  `Switch` off track now has a `border-input-border` outline, app-wide), a
+  section title that covers both settings ("Sessions in your calendar",
+  "Add sessions to"), one word for reminder in ES, calendar names in toasts,
+  translated provider names, "What Eleva can see and do", gender-neutral ES
+  and PT busy lines, and a mobile card where the email shows in full
+  (Disconnect moves to the card foot; the destination badge is icon-only
+  with screen-reader text).
+- Not yet:
+  - Production Neon migration of `0078` must run before (or with) the
+    deploy, or production reads of `calendar_destinations` fail with 42703.
+  - Not proven against a live Google or Outlook account: a booked session
+    showing the chosen reminder in the expert's calendar.
+  - The reminder is not offered per service or per mode.
+  - Judges' follow-ups, not built: tapping a calendar's name toggles it (only
+    the switch does today); a quieter style or "Other calendars" group for
+    subscribed, holiday and birthday calendars; a "last checked" time on the
+    account line.
+  - The connect toast, pre-connect sheet, reconnect and empty states were
+    judged from code; their captures are still the D5.6 ones.
+- Owner: engineering
+- Reference: `apps/expert/src/app/expert/[orgSlug]/calendars/`,
+  `apps/api/src/app/expert/calendar/reminder/route.ts`,
+  `packages/calendar/src/adapters/`, `design-audit/plan.json` (D5.7)
+
 ### 2026-11-16: Calendar data in the privacy notice; disconnect withdraws access (Google verification prep) (active)
 
 - Decision (founder, 2026-11-16): Google's OAuth verification reviews

@@ -4,6 +4,7 @@ import {
   check,
   foreignKey,
   index,
+  integer,
   jsonb,
   pgEnum,
   pgPolicy,
@@ -202,6 +203,12 @@ export const calendarDestinations = pgTable(
 
     externalCalendarId: text("external_calendar_id").notNull(),
     displayName: text("display_name").notNull(),
+    /**
+     * Minutes before a session that the expert's calendar reminds them
+     * (`@eleva/config/calendar-reminder`). Null: the calendar's usual
+     * reminder. Kept when the destination calendar changes.
+     */
+    reminderMinutes: integer("reminder_minutes"),
 
     createdAt: createdAt(),
     updatedAt: updatedAt(),
@@ -210,6 +217,10 @@ export const calendarDestinations = pgTable(
     orgIdx: index("calendar_destinations_org_idx").on(t.orgId),
     expertIdx: uniqueIndex("calendar_destinations_expert_idx").on(
       t.expertProfileId
+    ),
+    reminderRange: check(
+      "calendar_destinations_reminder_minutes_range",
+      sql`${t.reminderMinutes} IS NULL OR ${t.reminderMinutes} BETWEEN 0 AND 1440`
     ),
     integrationFk: foreignKey({
       name: "cal_dest_integration_fk",

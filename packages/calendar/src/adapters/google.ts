@@ -197,6 +197,12 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
       })),
       location: event.location,
     }
+    if (typeof event.reminderMinutes === "number") {
+      body.reminders = {
+        useDefault: false,
+        overrides: [{ method: "popup", minutes: event.reminderMinutes }],
+      }
+    }
     const res = await fetch(
       `${GOOGLE_CALENDAR_API}/calendars/${encodeURIComponent(event.calendarId)}/events`,
       {

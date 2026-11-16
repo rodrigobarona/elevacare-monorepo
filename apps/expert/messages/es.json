@@ -651,12 +651,22 @@
     "title": "Calendarios conectados",
     "description": "Conecta tu calendario de Google u Outlook. Eleva mostrará a los miembros solo las horas en que estás libre y añadirá cada sesión a tu calendario.",
     "destination": {
-      "title": "Dónde van las nuevas sesiones",
-      "description": "Eleva añade cada sesión confirmada a este calendario, junto al resto de tu día.",
+      "title": "Tus sesiones en tu calendario",
+      "description": "Eleva añade cada sesión confirmada al calendario que elijas, con el recordatorio que prefieras, y siempre lo comprueba para evitar conflictos.",
+      "calendarLabel": "Añadir sesiones a",
       "placeholder": "Elige un calendario",
       "none": "Conecta un calendario tuyo para elegir dónde van las sesiones.",
       "missing": "Elige un calendario para que las sesiones confirmadas también aparezcan en tu calendario.",
-      "locked": "Siempre marcado, porque las nuevas sesiones van aquí."
+      "locked": "Siempre activado, porque las sesiones nuevas van aquí."
+    },
+    "reminder": {
+      "label": "Recordatorio en tu calendario",
+      "help": "Tu calendario te recuerda cada sesión nueva antes de que empiece. Eleva envía a los miembros sus propios recordatorios.",
+      "default": "El recordatorio habitual de tu calendario",
+      "atStart": "Al empezar",
+      "minutes": "{count, plural, one {# minuto antes} other {# minutos antes}}",
+      "hour": "1 hora antes",
+      "needsDestination": "Elige primero un calendario."
     },
     "conflicts": {
       "title": "Comprobar conflictos",
@@ -674,12 +684,14 @@
     },
     "checkingCount": "{count, plural, =0 {aún sin calendarios comprobados} one {comprobando # calendario} other {comprobando # calendarios}}",
     "main": "Calendario principal",
+    "imported": "{host} · calendario importado",
+    "importedUnknown": "Calendario importado",
     "sessionsHere": "Las sesiones van aquí",
     "noneChecked": "Aún no hay ningún calendario comprobado aquí, así que los miembros podrían reservar encima de tus planes.",
     "checkMain": "Comprobar {calendar}",
     "showMore": "{count, plural, one {Mostrar # calendario más} other {Mostrar # calendarios más}}",
     "showFewer": "Mostrar menos",
-    "needsAttention": "Esta conexión necesita que vuelvas a iniciar sesión. Hasta entonces, Eleva no puede ver cuándo estás ocupado aquí ni añadir nuevas sesiones a estos calendarios.",
+    "needsAttention": "Esta conexión necesita que vuelvas a iniciar sesión. Hasta entonces, Eleva no puede ver tus horas ocupadas aquí ni añadir nuevas sesiones a estos calendarios.",
     "reconnect": "Volver a conectar",
     "disconnect": "Desconectar",
     "disconnectTitle": "¿Desconectar {account}?",
@@ -689,16 +701,16 @@
     "disconnectRevokePersonalLink": "Cuenta personal",
     "disconnectRevokeWorkLink": "Cuenta de trabajo o centro educativo",
     "cancel": "Cancelar",
-    "accessTitle": "Qué puede ver Eleva",
+    "accessTitle": "Qué puede ver y hacer Eleva",
     "access": {
       "google": {
         "list": "Ver la lista de tus calendarios, para que elijas cuáles cuentan.",
-        "busy": "Ver cuándo estás ocupado. Eleva solo ve los horarios ocupados, no de qué tratan tus citas.",
+        "busy": "Ver tus horas ocupadas. Eleva solo ve cuándo tienes algo, no de qué trata.",
         "sessions": "Añadir, actualizar y eliminar las sesiones reservadas contigo. Eleva no cambia ningún otro evento."
       },
       "microsoft": {
         "list": "Ver la lista de tus calendarios, para que elijas cuáles cuentan.",
-        "busy": "Ver cuándo estás ocupado. Eleva solo ve los horarios ocupados, no de qué tratan tus citas.",
+        "busy": "Ver tus horas ocupadas. Eleva solo ve cuándo tienes algo, no de qué trata.",
         "sessions": "Añadir, actualizar y eliminar las sesiones reservadas contigo. Eleva no cambia ningún otro evento."
       },
       "control": "Eleva también ve tu nombre y tu email, para que sepas qué cuenta está conectada. Puedes desconectarla en cualquier momento, y Eleva deja de usarla al instante."
@@ -720,7 +732,7 @@
       "title": "Trae tu calendario a Eleva",
       "body": "Los miembros ya pueden reservar contigo. Conectar tu calendario añade dos cosas:",
       "busyTitle": "Sin reservas duplicadas",
-      "busyBody": "Eleva comprueba cuándo estás ocupado y muestra a los miembros solo tus horas libres.",
+      "busyBody": "Eleva comprueba tus horas ocupadas y muestra a los miembros solo tus horas libres.",
       "sessionsTitle": "Sesiones en tu calendario",
       "sessionsBody": "Cada sesión confirmada se añade automáticamente a tu calendario."
     },
@@ -731,13 +743,15 @@
     "noSubCalendars": "No encontramos calendarios en esta cuenta.",
     "busySaved": "Guardado. Tus horas libres están al día.",
     "destinationSaved": "Guardado. Las nuevas sesiones van a este calendario.",
+    "reminderSaved": "Guardado. Las sesiones nuevas tendrán este recordatorio; las que ya tienes no cambian.",
     "error": {
       "connect-failed": "No hemos podido contactar con Google o Microsoft ahora mismo. Inténtalo de nuevo en un momento.",
       "disconnect-failed": "No hemos podido desconectar este calendario. Inténtalo de nuevo.",
       "load-failed": "No hemos podido cargar los calendarios de esta cuenta. Actualiza la página o vuelve a conectarla si sigue pasando.",
       "save-failed": "No hemos podido guardar ese cambio. Inténtalo de nuevo.",
       "validation": "Algo no ha ido bien. Actualiza la página e inténtalo de nuevo.",
-      "unauthorized-calendar": "Este calendario no está vinculado a tu consulta, así que no puedes cambiarlo aquí."
+      "unauthorized-calendar": "Este calendario no está vinculado a tu consulta, así que no puedes cambiarlo aquí.",
+      "destination-required": "Primero elige dónde van las nuevas sesiones."
     }
   },
   "integrations": {

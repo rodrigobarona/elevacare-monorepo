@@ -40,9 +40,9 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0077_expert_practice_closed_at")
+    expect(last?.tag).toBe("0078_calendar_reminder_minutes")
     expect(last?.statements.join("\n")).toContain(
-      'ADD COLUMN IF NOT EXISTS "closed_at"'
+      'ADD COLUMN IF NOT EXISTS "reminder_minutes"'
     )
     const links = migrations.find(
       (m) => m.tag === "0076_namespaced_notification_links"
