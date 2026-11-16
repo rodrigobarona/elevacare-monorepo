@@ -8,6 +8,7 @@ const PROVIDER_TO_SLUG = {
 } as const
 
 const CALENDAR_SCOPE_HINTS: Record<keyof typeof PROVIDER_TO_SLUG, string[]> = {
+  // `calendar.events` also matches the narrower `calendar.events.owned`.
   google: ["calendar.readonly", "calendar.events"],
   microsoft: ["Calendars.ReadWrite"],
 }
@@ -24,6 +25,30 @@ function hasCalendarScope(providerId: string, scope: string | null): boolean {
   return CALENDAR_SCOPE_HINTS[providerId].some((hint) => granted.includes(hint))
 }
 
+/**
+ * The address the person signed in with, read from the provider's ID token
+ * (stored unencrypted by Better Auth; only access and refresh tokens are).
+ * The calendar card shows it instead of the provider's numeric account ID.
+ * Microsoft accounts made with another provider's email report an internal
+ * `outlook_…@outlook.com` mailbox elsewhere, so the token is the reliable
+ * source. Not verified here: the token came from Eleva's own callback.
+ */
+export function emailFromIdToken(idToken: string | null): string | null {
+  const payload = idToken?.split(".")[1]
+  if (!payload) return null
+  try {
+    const claims = JSON.parse(
+      Buffer.from(payload, "base64url").toString("utf8")
+    ) as { email?: unknown; preferred_username?: unknown }
+    for (const value of [claims.email, claims.preferred_username]) {
+      if (typeof value === "string" && value.includes("@")) return value
+    }
+  } catch {
+    // Not a JWT; fall back to the account ID.
+  }
+  return null
+}
+
 export async function syncExpertCalendarAccounts(input: {
   orgId: string
   expertProfileId: string
@@ -36,6 +61,7 @@ export async function syncExpertCalendarAccounts(input: {
       providerId: auth.account.providerId,
       accountId: auth.account.accountId,
       scope: auth.account.scope,
+      idToken: auth.account.idToken,
     })
     .from(auth.account)
     .where(
@@ -62,6 +88,8 @@ export async function syncExpertCalendarAccounts(input: {
       for (const account of linkable) {
         if (!isCalendarProvider(account.providerId)) continue
         const slug = PROVIDER_TO_SLUG[account.providerId]
+        const identifier =
+          emailFromIdToken(account.idToken) ?? account.accountId
         const [existing] = await tx
           .select({
             id: main.expertIntegrations.id,
@@ -85,7 +113,7 @@ export async function syncExpertCalendarAccounts(input: {
         if (
           existing &&
           existing.authAccountId === account.id &&
-          existing.accountIdentifier === account.accountId &&
+          existing.accountIdentifier === identifier &&
           existing.status === "connected"
         ) {
           continue
@@ -96,7 +124,7 @@ export async function syncExpertCalendarAccounts(input: {
             .update(main.expertIntegrations)
             .set({
               authAccountId: account.id,
-              accountIdentifier: account.accountId,
+              accountIdentifier: identifier,
               status: "connected",
               lastErrorCode: null,
               connectedAt: new Date(),
@@ -120,7 +148,7 @@ export async function syncExpertCalendarAccounts(input: {
             slug,
             connectType: "pipes",
             authAccountId: account.id,
-            accountIdentifier: account.accountId,
+            accountIdentifier: identifier,
             status: "connected",
             connectedAt: new Date(),
           })

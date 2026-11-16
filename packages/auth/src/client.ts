@@ -175,10 +175,17 @@ export const authClient = createAuthClient({
   ],
 }) as unknown as ElevaAuthClient
 
+/**
+ * The narrowest Google scopes that cover what Eleva does: list the
+ * calendars, read busy times only (never what is inside an event), and
+ * manage the session events on calendars the expert owns. The first two
+ * are non-sensitive; `calendar.events.owned` is the one Google reviews.
+ */
 export const CALENDAR_OAUTH_SCOPES = {
   google: [
-    "https://www.googleapis.com/auth/calendar.readonly",
-    "https://www.googleapis.com/auth/calendar.events",
+    "https://www.googleapis.com/auth/calendar.calendarlist.readonly",
+    "https://www.googleapis.com/auth/calendar.events.freebusy",
+    "https://www.googleapis.com/auth/calendar.events.owned",
   ],
   microsoft: ["Calendars.ReadWrite", "offline_access"],
 } as const

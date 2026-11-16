@@ -173,6 +173,106 @@
       "detail": "The bio toolbar is ten text buttons (Heading 1, Heading 2, Heading 3, Quote, Bold, Italic, Underline, Improve, Shorten, Fix grammar) that wrap to three rows on mobile and mix formatting with AI help. Four separate Save buttons are shown in a pale teal that looks neither enabled nor disabled. The page has the product's best guidance but no progress cue: the missing photo and 'No credentials yet' are not flagged as the two things holding the profile back.",
       "recommendation": "Use icons for formatting and move Improve, Shorten and Fix grammar to a separate 'Writing help' row under the editor. Give disabled Save a clearly muted style and enable it on change. Add a small 'Your profile is 3 of 5 complete' line at the top that links to the missing sections, and reuse it in the home checklist.",
       "references": ["07-expert-dashboard/09", "07-expert-dashboard/04"]
+    },
+    {
+      "id": "XDASH-17",
+      "severity": "P1",
+      "lens": "ux",
+      "title": "Calendars: two jobs on every row, and where sessions go is hard to find",
+      "evidence": [],
+      "detail": "Each sub-calendar row has both a 'Check for conflicts' checkbox and a 'Write sessions here' radio. The two jobs answer different questions (which calendars block my time, and which one gets new sessions) but they are mixed in one flat list across all accounts. The single answer to 'where do my sessions go?' is a radio button somewhere in that list, with no summary at the top.",
+      "recommendation": "Split the page into two sections. First 'Where new sessions go': one select of calendars Eleva can write to, grouped by account, with the account email under each name. Then 'Check for conflicts': one card per account with a switch per calendar. Mark the destination in its card with a 'Sessions go here' badge and keep its switch on.",
+      "references": ["07-expert-dashboard/13", "07-expert-dashboard/14", "07-expert-dashboard/15", "07-expert-dashboard/17"]
+    },
+    {
+      "id": "XDASH-18",
+      "severity": "P1",
+      "lens": "trust",
+      "title": "Calendars: nothing is checked after connecting, so double bookings can happen",
+      "evidence": [],
+      "detail": "After an expert connects Google or Microsoft, no calendar is checked for conflicts and no destination is chosen. Members can book times she is already busy until she finds the page and ticks boxes herself. Most experts will assume that connecting was enough.",
+      "recommendation": "On connect, switch on conflict checking for the account's primary calendar and set it as the destination when none is set. Confirm with a toast that says what was done ('Connected. We will check your main calendar and add new sessions to it.'). Keep the destination calendar's conflict switch locked on.",
+      "references": ["07-expert-dashboard/15", "07-expert-dashboard/18", "07-expert-dashboard/16"]
+    },
+    {
+      "id": "XDASH-19",
+      "severity": "P1",
+      "lens": "ux",
+      "title": "Calendars: accounts are shown by a numeric ID instead of the email",
+      "evidence": [],
+      "detail": "Each connected account card is titled by provider with the account's numeric Google ID under it. An expert with a personal and a work account cannot tell which card is which, and the number looks like an error.",
+      "recommendation": "Show the provider logo and the account email on every card, in the destination select and in confirmations. Store the email at connect time (from the provider profile) and fall back to the provider name only if it is missing; never show the numeric ID.",
+      "references": ["07-expert-dashboard/21", "07-expert-dashboard/13", "07-expert-dashboard/14"]
+    },
+    {
+      "id": "XDASH-20",
+      "severity": "P1",
+      "lens": "trust",
+      "title": "Calendars: no plain explanation of access before leaving for Google or Microsoft",
+      "evidence": [],
+      "detail": "Connect sends the expert straight to the provider's consent screen, which lists technical scopes ('See, edit, share and permanently delete all the calendars...'). Eleva never says in its own words what it will see and do, so the provider's wording is the only one she reads, at the moment she is deciding whether to trust Eleva with her diary.",
+      "recommendation": "Open a short sheet before redirecting: Eleva and provider logos, then three plain points ('You will sign in on Google's page', 'Eleva sees when you are busy, to avoid double bookings', 'Eleva adds confirmed sessions to the calendar you choose'), a short 'Eleva does not' list that the code guarantees, and one 'Continue to Google' button. Repeat the same text in a 'What Eleva can access' disclosure on each account card.",
+      "references": ["07-expert-dashboard/19", "07-expert-dashboard/20"]
+    },
+    {
+      "id": "XDASH-21",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "Calendars: primary calendar is not first, and holidays look as important as work",
+      "evidence": [],
+      "detail": "Sub-calendars are listed in provider order, so the expert's own calendar can sit below Birthdays or a national holidays calendar. Subscribed and holiday calendars get the same weight as the calendars she actually books into.",
+      "recommendation": "Order each account as: primary first, then her other own calendars, then shared, then subscribed and holiday calendars in a quieter style and behind 'Show N more' when there are more than four. Holiday and birthday calendars start switched off.",
+      "references": ["07-expert-dashboard/16", "07-expert-dashboard/17", "07-expert-dashboard/14"]
+    },
+    {
+      "id": "XDASH-22",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "Calendars: read-only calendars are offered as places to write sessions",
+      "evidence": [],
+      "detail": "Holiday, birthday and other read-only calendars show a 'Write sessions here' radio. Picking one would make the session write fail, and she would not find out until a session is missing from her calendar.",
+      "recommendation": "Only list calendars the provider reports as writable (Google accessRole owner or writer, Microsoft canEdit) in the destination select. Read-only calendars still appear in 'Check for conflicts'.",
+      "references": ["07-expert-dashboard/13", "07-expert-dashboard/14"]
+    },
+    {
+      "id": "XDASH-23",
+      "severity": "P2",
+      "lens": "ui",
+      "title": "Calendars: calendars with the same name cannot be told apart",
+      "evidence": [],
+      "detail": "Two accounts often each have a calendar named after the person or 'Work'. In the flat list there is no account grouping, colour or email next to the name, so duplicates look identical.",
+      "recommendation": "Group calendars under their account card, show the provider's colour dot before each name, and in the destination select show the account email as a second line under every calendar name.",
+      "references": ["07-expert-dashboard/16", "07-expert-dashboard/14", "07-expert-dashboard/17"]
+    },
+    {
+      "id": "XDASH-24",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "Calendars: connect card repeats, and Reconnect is always visible",
+      "evidence": [],
+      "detail": "A 'Connect a calendar' card with Google and Microsoft rows stays at the top even after accounts are connected, and shows Reconnect on providers that work. A Reconnect button on a healthy account suggests something is wrong.",
+      "recommendation": "Replace the card with one '+ Add calendar' button on the 'Check for conflicts' header that opens the provider choice and the pre-connect sheet. Show Reconnect only on an account that needs it, inside that card, with one line on what stopped working and what it means for her bookings. Keep the account's calendars visible but disabled until fixed.",
+      "references": ["07-expert-dashboard/13", "07-expert-dashboard/22", "07-expert-dashboard/23"]
+    },
+    {
+      "id": "XDASH-25",
+      "severity": "P2",
+      "lens": "trust",
+      "title": "Calendars: account card does not say what it is doing or when it last checked",
+      "evidence": [],
+      "detail": "Apart from a status pill, the account card does not say how many calendars are being checked or whether the connection is working right now. An expert cannot tell that Eleva is protecting her time.",
+      "recommendation": "Give each account card a second line under the email such as 'Checking 2 calendars · Updated 5 min ago', and a 'What Eleva can access' disclosure with the same plain points as the pre-connect sheet. Move Disconnect into a menu with a confirm that says what stops working.",
+      "references": ["07-expert-dashboard/21", "07-expert-dashboard/14", "07-expert-dashboard/20"]
+    },
+    {
+      "id": "XDASH-26",
+      "severity": "P3",
+      "lens": "writing",
+      "title": "Calendars: empty state does not explain what a connection does",
+      "evidence": [],
+      "detail": "With no calendar connected, the page shows provider rows and Connect buttons but does not say why an expert should connect or what changes for her and her members.",
+      "recommendation": "Lead the empty state with one warm line ('Connect your calendar so members only see times you are free'), Google and Microsoft buttons, and two small cards for the two jobs: 'Avoid double bookings' and 'Get sessions in your calendar'. Both buttons open the pre-connect sheet.",
+      "references": ["07-expert-dashboard/24", "07-expert-dashboard/19"]
     }
   ],
   "references": [
@@ -319,6 +419,150 @@
       "why": "The balance is one number at the top, then a bar and table split into Incoming (with its expected date) and Available. 'Recent activity' lists payouts with amount, a status pill (Paid, Withdrawn), bank and last four digits, and arrival date. A side card prompts 'Set up automatic payouts'.",
       "apply": "Eleva's Finance after setup: Earned, On its way (with date) and Paid out, plus a payouts list with status and bank. In first run, show the same tiles at zero under the setup card.",
       "query": "earnings and payouts dashboard"
+    },
+    {
+      "id": "07-expert-dashboard/13",
+      "file": "img/13-calcom-add-to-calendar-conflicts.jpg",
+      "app": "Cal.com",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/40b4cbf4-c82f-4c28-83d9-62ea48194b95?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Two sections: one 'Add events to' select, then 'Check for conflicts' cards per account",
+      "why": "The page answers two questions in two places. 'Add to calendar' is a single select at the top with a one-line note that each event type can override it. 'Check for conflicts' is a card per account with the provider logo, the email, a delete icon, and a switch per calendar. The primary calendar is the only one on. One '+ Add' button sits on the section header.",
+      "apply": "Base layout for Eleva's page: 'Where new sessions go' as one select at the top, then 'Check for conflicts' with one card per account and switches. Keep the single Add action on the section header. Write the helper lines in Eleva's voice ('So members never book a time you are already busy').",
+      "query": "scheduling app calendar connections settings with conflict calendars and destination calendar"
+    },
+    {
+      "id": "07-expert-dashboard/14",
+      "file": "img/14-calendly-conflicts-and-destination.jpg",
+      "app": "Calendly",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/3627e9c9-b42f-49f2-88c9-295fe8ab6217?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Account card with a 'Checking 1 calendar' summary, and a separate 'Calendar to add events to' select",
+      "why": "Each account card is short: logo, name, email and a link that says how many calendars are checked ('Checking 1 calendar'). The long list of calendars stays behind that link. The destination is its own select with the provider logo and the email under the calendar name, so two calendars with the same name stay distinct.",
+      "apply": "When an account has many calendars, show the primary and any switched-on calendars, and put the rest behind 'Show 6 more calendars'. In the destination select, show the account email under each calendar name.",
+      "query": "scheduling app calendar connections settings with conflict calendars and destination calendar"
+    },
+    {
+      "id": "07-expert-dashboard/15",
+      "file": "img/15-preply-lessons-calendar-conflicts.jpg",
+      "app": "Preply",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/faf4349d-894f-4477-9780-e3dbbb51459d?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Destination select first, conflict checklist second, main calendar ticked and locked",
+      "why": "A tutoring marketplace, close to Eleva's case. The connected account and 'Disconnect Google Calendar' sit at the top. 'Add lessons to calendar' explains in one line why it matters, then 'Check calendars for conflict' lists calendars with the main one ticked and greyed out so it cannot be switched off. Holidays and On-call start unticked.",
+      "apply": "Lock conflict checking on for the calendar sessions are written to, with a short 'Sessions go here' badge, so an expert can never turn off the one calendar that must block time. Use the same plain 'what this does' line under each section heading.",
+      "query": "scheduling app calendar connections settings with conflict calendars and destination calendar"
+    },
+    {
+      "id": "07-expert-dashboard/16",
+      "file": "img/16-rise-calendar-availability-table.jpg",
+      "app": "Rise",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/cf9ee127-93ae-486e-ba09-dd07980706f6?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Per-account table with an availability switch per calendar; primary on, Birthdays and Holidays off",
+      "why": "Each account is a block headed by the Google logo and the email, with one switch column ('Influences availability'). The account's own calendar comes first and is on; Birthdays and Holidays are off by default. A coloured dot before each name helps tell calendars apart. The destination select ('Primary calendar: destination for events others create') sits at the bottom, far from the list, which makes it easy to miss.",
+      "apply": "Copy the defaults (primary first and on, holidays and birthdays off) and the colour dot from the provider. Do not copy the placement: Eleva's destination belongs at the top of the page, not under the list.",
+      "query": "scheduling app calendar connections settings with conflict calendars and destination calendar"
+    },
+    {
+      "id": "07-expert-dashboard/17",
+      "file": "img/17-amie-default-calendar-visibility.jpg",
+      "app": "Amie",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/266da663-eb86-40ce-81c9-d8615a142612?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Mobile: 'Default calendar' block on top, switches grouped under the account email below",
+      "why": "On a phone the two jobs stay apart: 'Default calendar' with a one-line explanation ('New events ... will be scheduled in this calendar'), then a list of switches under the account's email as a group label. The default calendar's switch is on and locked. Every row fits on one line.",
+      "apply": "Reference for the 390 px layout: destination block first, then one card per account with the email as its label and one switch per row. Each calendar row is a single line with name, optional badge and switch.",
+      "query": "calendar sync settings choosing which calendar to add appointments to"
+    },
+    {
+      "id": "07-expert-dashboard/18",
+      "file": "img/18-motion-calendars-that-belong-to-you.jpg",
+      "app": "Motion",
+      "platform": "web",
+      "type": "flow",
+      "mobbin_url": "https://mobbin.com/flows/afb6188a-6313-41c8-a2b6-c19e7f876c8d?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Connect flow that sets the defaults: pick the main calendar, then confirm the calendars that are yours",
+      "why": "After the Google step, Motion asks one thing per screen: 'Select main calendar' (used as the default when creating events), then 'Select calendars that belong to you' with the account's own calendar already ticked and locked. The button says what the person is confirming ('I've selected all calendars that belong to me').",
+      "apply": "On return from Google or Microsoft, land on the calendars page with the primary calendar already checked for conflicts and set as the destination, and a toast that says so ('Connected. We will check your main calendar and add new sessions to it.'). Offer a short 'Check these are yours' prompt only when the account has more than one writable calendar.",
+      "query": "connecting Google Calendar in a scheduling app"
+    },
+    {
+      "id": "07-expert-dashboard/19",
+      "file": "img/19-dropbox-dash-pre-connect-sheet.jpg",
+      "app": "Dropbox Dash",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/fd0a4d8b-1de9-4fe8-a0cd-984fe5d4624c?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Pre-connect sheet: both logos, three plain points with icons, one Connect button",
+      "why": "Before handing off to Google, a small modal shows the two logos joined, then three short points, each with an icon, a bold line and one sentence: 'You'll sign into Google Workspace on their page', what the app will and will not change, and how the data is used. One full-width Connect button. Nothing to read twice.",
+      "apply": "Model for Eleva's 'Before you connect' sheet: Eleva and Google (or Microsoft) logos, then three points: 'You will sign in on Google's page', 'Eleva sees when you are busy, to avoid double bookings', 'Eleva adds confirmed sessions to the calendar you choose', and one 'Continue to Google' button.",
+      "query": "integration connect screen explaining what the app will be able to access before authorizing"
+    },
+    {
+      "id": "07-expert-dashboard/20",
+      "file": "img/20-trello-will-and-will-not.jpg",
+      "app": "Trello",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/14dc3849-7cdf-489c-bde7-c9b807ba8f9c?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Permission screen with a 'will be able to' list and a separate 'will not be able to' list",
+      "why": "The list of what the app can do is followed by a short list of what it cannot do ('Read your email address', 'See your password'). The second list does more for trust than the first, because it answers the worry directly.",
+      "apply": "In the pre-connect sheet and in each account's 'What Eleva can access' disclosure, add a short 'Eleva does not' list in plain words, for example 'Read your email' and 'Change or delete events Eleva did not create'. Only include lines the code guarantees, and check them against the adapter before writing them.",
+      "query": "integration connect screen explaining what the app will be able to access before authorizing"
+    },
+    {
+      "id": "07-expert-dashboard/21",
+      "file": "img/21-folk-connected-account-card.jpg",
+      "app": "folk",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/502fe34b-4f83-442f-96fb-aded9dbd621a?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Connected account row: logo, email, what syncs, last sync time, Connected pill, overflow menu",
+      "why": "The account is named by its email, with a second line that says what is synced and when the last event arrived ('Contacts, emails, and events · Last event received 5 min ago'). A green Connected pill and a three-dot menu hold the rare actions. A footnote under the list explains how Google data is used.",
+      "apply": "Eleva's account card header: provider logo, email, a second line such as 'Checking 2 calendars · Updated 5 min ago', a status pill, and Disconnect inside a menu. Put a 'What Eleva can access' link in the card, not a separate page.",
+      "query": "connected accounts settings with a connection that needs to be reconnected"
+    },
+    {
+      "id": "07-expert-dashboard/22",
+      "file": "img/22-rocket-money-connection-issue.jpg",
+      "app": "Rocket Money",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/0cb74dc8-c8d0-48ed-9874-f3a7020d59a6?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Warning inside the account card that says what broke and what it means",
+      "why": "When a connection fails, the warning sits inside that account's card, not as a page banner. It says what stopped working, what the person will see as a result, and what they can do. Healthy accounts show no warning and no fix button.",
+      "apply": "When an account needs to be reconnected, put a short warning inside its card ('We can't see this calendar right now, so members could book times you are busy.') with one Reconnect button. Show no Reconnect on healthy accounts.",
+      "query": "connected accounts settings with a connection that needs to be reconnected"
+    },
+    {
+      "id": "07-expert-dashboard/23",
+      "file": "img/23-meetup-disconnected-reconnect.jpg",
+      "app": "Meetup",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/9a6077fe-c60a-4d32-8ce4-743766568e57?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Disconnected status pill with Reconnect, and settings below greyed out until it is fixed",
+      "why": "A red 'Disconnected' pill sits next to a single Reconnect button. The settings that depend on the connection stay visible but disabled, so the person sees what they will get back. A 'How it works' box at the top explains the integration in three sentences.",
+      "apply": "In the broken state, keep the account's calendars listed but disabled under the warning, so the expert sees which checks are paused. Reconnect replaces the menu as the card's main action until fixed.",
+      "query": "connected accounts settings with a connection that needs to be reconnected"
+    },
+    {
+      "id": "07-expert-dashboard/24",
+      "file": "img/24-todoist-calendars-empty-state.jpg",
+      "app": "Todoist",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/176d35c4-3b1b-4afe-9f36-b1aedcd2de1b?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Empty state with two connect buttons and a 'What you can do' pair of illustrated cards",
+      "why": "With nothing connected, the page leads with 'Connect Google Calendar' and 'Connect Outlook Calendar', then 'What you can do' explains the two jobs of a connection as two cards with a picture and one sentence each: see your events here, and send your tasks to your calendar.",
+      "apply": "Eleva's empty state: one line on why ('Connect your calendar so members only see times you are free'), Google and Microsoft buttons, then two small cards for the two jobs: 'Avoid double bookings' and 'Get sessions in your calendar'. Both buttons open the pre-connect sheet first.",
+      "query": "scheduling app calendar connections settings with conflict calendars and destination calendar"
     }
   ],
   "judging_criteria": [
@@ -328,6 +572,14 @@
     "Can she copy and share her public profile link from Today and from each service row without opening a menu? (07-expert-dashboard/03, 07-expert-dashboard/08)",
     "Does every booking use one status vocabulary with a distinct look per state across Today, Calendar and Members, and one time format per locale? (07-expert-dashboard/06, 07-expert-dashboard/05)",
     "On mobile, does the calendar always show today, let her move day by day with a week strip, and keep each schedule day on one line? (07-expert-dashboard/07, 07-expert-dashboard/10)",
-    "Is the service editor organised in named sections an expert understands, with visibility and save always reachable and no wrapped tabs on a 390 px screen? (07-expert-dashboard/09)"
+    "Is the service editor organised in named sections an expert understands, with visibility and save always reachable and no wrapped tabs on a 390 px screen? (07-expert-dashboard/09)",
+    "Within 5 seconds, can an expert say which calendar new sessions go to, without scrolling? (07-expert-dashboard/13, 07-expert-dashboard/14)",
+    "After connecting, is the primary calendar already checked for conflicts and set as the destination without any action, and does a message say so? (07-expert-dashboard/15, 07-expert-dashboard/18)",
+    "Before leaving Eleva for Google or Microsoft, does the expert read in plain words what Eleva will see and do, and what it will not do? (07-expert-dashboard/19, 07-expert-dashboard/20)",
+    "Is every account shown by its email and provider logo, and can she tell two calendars with the same name apart? (07-expert-dashboard/21, 07-expert-dashboard/16)",
+    "Does each calendar row do one job, with the destination chosen in one place and only from calendars Eleva can write to? (07-expert-dashboard/13, 07-expert-dashboard/17)",
+    "Does Reconnect appear only on an account that needs it, with one line on what stopped working and what it means for her bookings? (07-expert-dashboard/22, 07-expert-dashboard/23)",
+    "With no calendar connected, does the page explain the two things a connection does and offer one clear way to add one? (07-expert-dashboard/24, 07-expert-dashboard/19)",
+    "On a 390 px screen, is every calendar one line (name, badge, switch), with the destination select above the account cards and no sideways scroll? (07-expert-dashboard/17)"
   ]
 }

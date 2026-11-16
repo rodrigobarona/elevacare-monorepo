@@ -49,6 +49,11 @@ const href = (...parts) =>
 const surfaces = dirs(libraryDir)
   .filter((name) => existsSync(path.join(libraryDir, name, "references.json")))
   .map((name) => ({
+    // A surface may start with references only (e.g. 11-team before its audit).
+    strengths: [],
+    findings: [],
+    references: [],
+    judging_criteria: [],
     ...JSON.parse(
       readFileSync(path.join(libraryDir, name, "references.json"), "utf8")
     ),

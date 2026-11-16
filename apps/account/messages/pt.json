@@ -201,7 +201,12 @@
       "Online, por telefone ou presencial",
       "Em português, inglês e espanhol",
       "Sessões, pagamentos e privacidade num só lugar"
-    ]
+    ],
+    "callbackErrorTitle": "Não foi possível concluir",
+    "callbackErrorRestart": "Este passo demorou demasiado ou foi aberto duas vezes, por isso parámo-lo para manter a sua conta segura. Volte à Eleva e tente novamente.",
+    "callbackErrorGeneric": "Algo interrompeu o processo. Volte à Eleva e tente novamente.",
+    "callbackErrorDenied": "Escolheu não dar acesso, por isso nada mudou. Pode tentar de novo quando quiser.",
+    "callbackErrorBack": "Voltar à Eleva"
   },
   "privacy": {
     "eyebrow": "Conta",

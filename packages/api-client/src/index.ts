@@ -2994,6 +2994,8 @@ export interface SubCalendar {
   id: string
   name: string
   primary: boolean
+  /** Eleva can add session events to this calendar. */
+  writable: boolean
   email?: string
 }
 

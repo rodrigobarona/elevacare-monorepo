@@ -647,45 +647,98 @@
   },
   "calendars": {
     "backToIntegrations": "Integrations",
-    "title": "Connected Calendars",
-    "description": "Connect your Google or Microsoft calendar to avoid double bookings.",
-    "connectTitle": "Connect a calendar",
-    "connectDescription": "Grant Eleva access to check availability and write confirmed sessions.",
-    "connectGoogle": "Connect Google Calendar",
-    "connectMicrosoft": "Connect Microsoft Calendar",
-    "reconnectGoogle": "Reconnect Google Calendar",
-    "reconnectMicrosoft": "Reconnect Microsoft Calendar",
-    "connectedTitle": "Connected accounts",
-    "disconnect": "Disconnect",
-    "configureHint": "Choose which calendars count as busy, and where Eleva writes confirmed sessions.",
-    "useForBusy": "Check for conflicts",
-    "useAsDestination": "Write sessions here",
-    "destinationLabel": "Destination calendar",
-    "primary": "primary",
-    "loadingCalendars": "Loading calendars…",
-    "noSubCalendars": "No calendars found for this account.",
-    "busySaved": "Busy calendars updated.",
-    "destinationSaved": "Destination calendar updated.",
-    "reconnectBanner": "One or more calendar connections need attention. Reconnect to keep conflict checks and session writes working.",
-    "noCalendarFallback": "Eleva is your calendar. Members can still book; you will receive email invites until you connect Google or Microsoft.",
-    "status": {
-      "connecting": "Connecting",
-      "connected": "Connected",
-      "disconnected": "Disconnected",
-      "error": "Error",
-      "expired": "Expired"
-    },
-    "error": {
-      "connect-failed": "Could not start the calendar connection.",
-      "disconnect-failed": "Could not disconnect this calendar.",
-      "load-failed": "Could not load calendars from this account.",
-      "save-failed": "Could not save calendar settings.",
-      "validation": "The request was invalid.",
-      "unauthorized-calendar": "You cannot change this calendar."
-    },
     "eyebrow": "Your calendars",
-    "useForBusyNamed": "Check {calendar} ({account}) for conflicts",
-    "useAsDestinationNamed": "Write sessions to {calendar} ({account})"
+    "title": "Connected calendars",
+    "description": "Connect your Google or Outlook calendar. Eleva then offers members only the times you're free, and adds each session to your calendar.",
+    "destination": {
+      "title": "Where new sessions go",
+      "description": "Eleva adds each confirmed session to this calendar, so it sits next to the rest of your day.",
+      "placeholder": "Choose a calendar",
+      "none": "Connect a calendar you own to choose where sessions go.",
+      "missing": "Choose a calendar, so confirmed sessions also show up in your own calendar.",
+      "locked": "Always checked, because new sessions go here."
+    },
+    "conflicts": {
+      "title": "Check for conflicts",
+      "description": "Members can only book times that are free in the calendars you switch on."
+    },
+    "addCalendar": "Add calendar",
+    "connectProvider": "Connect {provider}",
+    "provider": {
+      "google": "Google Calendar",
+      "microsoft": "Outlook Calendar"
+    },
+    "company": {
+      "google": "Google",
+      "microsoft": "Microsoft"
+    },
+    "checkingCount": "{count, plural, =0 {not checking any calendar yet} one {checking # calendar} other {checking # calendars}}",
+    "main": "Main calendar",
+    "sessionsHere": "Sessions go here",
+    "noneChecked": "No calendar here is checked yet, so members could book over your plans.",
+    "checkMain": "Check {calendar}",
+    "showMore": "{count, plural, one {Show # more calendar} other {Show # more calendars}}",
+    "showFewer": "Show fewer",
+    "needsAttention": "This connection needs you to sign in again. Until then, Eleva can't see when you're busy here or add new sessions to these calendars.",
+    "reconnect": "Reconnect",
+    "disconnect": "Disconnect",
+    "disconnectTitle": "Disconnect {account}?",
+    "disconnectBody": "Eleva will stop checking these calendars for conflicts and stop adding new sessions to them. You can connect again at any time.",
+    "disconnectRevoke": "To remove Eleva's access completely, also remove it in your {company} account.",
+    "disconnectRevokeLink": "Open your {company} account",
+    "disconnectRevokePersonalLink": "Personal account",
+    "disconnectRevokeWorkLink": "Work or school account",
+    "cancel": "Cancel",
+    "accessTitle": "What Eleva can access",
+    "access": {
+      "google": {
+        "list": "See the list of your calendars, so you choose which ones count.",
+        "busy": "See when you're busy. Eleva looks only at busy times, not what your appointments are about.",
+        "sessions": "Add, update and remove the sessions booked with you. Eleva doesn't change any other event."
+      },
+      "microsoft": {
+        "list": "See the list of your calendars, so you choose which ones count.",
+        "busy": "See when you're busy. Eleva looks only at busy times, not what your appointments are about.",
+        "sessions": "Add, update and remove the sessions booked with you. Eleva doesn't change any other event."
+      },
+      "control": "Eleva also sees your name and email, so you know which account is connected. You can disconnect at any time, and Eleva stops using it straight away."
+    },
+    "private": {
+      "title": "What stays yours",
+      "email": "Your inbox stays private: Eleva never reads your emails.",
+      "events": "Events Eleva didn't add stay exactly as they are.",
+      "members": "Members see only your free times, never your calendar."
+    },
+    "connect": {
+      "chooseTitle": "Add a calendar",
+      "chooseDescription": "Where do you keep your calendar?",
+      "title": "Connect {provider}",
+      "intro": "{company} will ask you to allow this. Eleva uses it to:",
+      "continue": "Continue to {company}"
+    },
+    "empty": {
+      "title": "Bring your calendar into Eleva",
+      "body": "Members can already book you. Connecting your calendar adds two things:",
+      "busyTitle": "No double bookings",
+      "busyBody": "Eleva checks when you're busy and offers members only the times you're free.",
+      "sessionsTitle": "Sessions in your calendar",
+      "sessionsBody": "Each confirmed session is added to your calendar automatically."
+    },
+    "defaultsApplied": "Connected. Eleva now checks {calendar} for conflicts and adds new sessions to it. You can change this below.",
+    "defaultsAppliedBusy": "Connected. Eleva now checks {calendar} for conflicts.",
+    "connectCancelled": "Nothing changed. You can connect your calendar whenever you're ready.",
+    "loadingCalendars": "Loading your calendars…",
+    "noSubCalendars": "We couldn't find any calendars in this account.",
+    "busySaved": "Saved. Your free times are up to date.",
+    "destinationSaved": "Saved. New sessions go to this calendar.",
+    "error": {
+      "connect-failed": "We couldn't reach Google or Microsoft just now. Please try again in a moment.",
+      "disconnect-failed": "We couldn't disconnect this calendar. Please try again.",
+      "load-failed": "We couldn't load this account's calendars. Refresh the page, or reconnect if it keeps happening.",
+      "save-failed": "We couldn't save that change. Please try again.",
+      "validation": "Something didn't look right. Refresh the page and try again.",
+      "unauthorized-calendar": "This calendar isn't linked to your practice, so you can't change it here."
+    }
   },
   "integrations": {
     "title": "Integrations",

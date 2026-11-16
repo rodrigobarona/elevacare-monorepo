@@ -40,7 +40,8 @@ export async function assertExternalCalendarOwned(input: {
     const adapter = getAdapter(provider)
     const calendars = await adapter.listCalendars(accessToken)
     const matched = calendars.find((c) => c.id === input.externalCalendarId)
-    return matched ? "ok" : "forbidden"
+    // Sessions are written here, so a read-only calendar does not qualify.
+    return matched?.writable ? "ok" : "forbidden"
   } catch (err) {
     logError("calendar.assert_owned_list_failed", err)
     return "provider_error"
