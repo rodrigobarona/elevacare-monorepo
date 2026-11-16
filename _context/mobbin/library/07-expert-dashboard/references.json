@@ -563,6 +563,58 @@
       "why": "With nothing connected, the page leads with 'Connect Google Calendar' and 'Connect Outlook Calendar', then 'What you can do' explains the two jobs of a connection as two cards with a picture and one sentence each: see your events here, and send your tasks to your calendar.",
       "apply": "Eleva's empty state: one line on why ('Connect your calendar so members only see times you are free'), Google and Microsoft buttons, then two small cards for the two jobs: 'Avoid double bookings' and 'Get sessions in your calendar'. Both buttons open the pre-connect sheet first.",
       "query": "scheduling app calendar connections settings with conflict calendars and destination calendar"
+    },
+    {
+      "id": "07-expert-dashboard/25",
+      "file": "img/25-docusign-section-update.jpg",
+      "files": ["img/25-docusign-section-update.jpg"],
+      "app": "Docusign",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/e9a5ed93-85c2-443e-b747-2f4a9031d413?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Settings grouped in titled cards, each with its own Update action",
+      "why": "'Language' and 'Region settings' are separate cards showing the current values with an 'Update' button on each, so changing one group never touches another.",
+      "apply": "Practice details, ways of meeting and the tax number are separate cards with their own Save, like the rest of the public-profile page.",
+      "query": "host or provider settings to edit languages spoken and service area"
+    },
+    {
+      "id": "07-expert-dashboard/26",
+      "file": "img/26-canva-profile-rows-edit.jpg",
+      "files": ["img/26-canva-profile-rows-edit.jpg"],
+      "app": "Canva",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/f6bdb971-2ed2-4383-95a3-a78c543450ba?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Onboarding answers ('What will you be using Canva for?') stay editable in the profile settings",
+      "why": "An answer given at sign-up appears as a plain row in 'Your profile' with a selector, so nothing chosen during onboarding is frozen.",
+      "apply": "Everything asked in expert setup (country, countries served, languages, ways of meeting, NIF) has a home after setup.",
+      "query": "business profile settings page with sections each having an edit button"
+    },
+    {
+      "id": "07-expert-dashboard/27",
+      "file": "img/27-wix-consequence-note.jpg",
+      "files": ["img/27-wix-consequence-note.jpg"],
+      "app": "Wix",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/9f667260-c7da-4f49-ac2d-af1b7eaec94a?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A note beside a risky setting says what else it affects",
+      "why": "Under 'Currency' an amber note says changing it may affect shipping rates and points to where to review them, before the user saves.",
+      "apply": "Say why the practice country is locked (it follows the licence) and, when a change is refused, name the services it affects with a link to them.",
+      "query": "host or provider settings to edit languages spoken and service area"
+    },
+    {
+      "id": "07-expert-dashboard/28",
+      "file": "img/28-fiverr-languages-on-profile.jpg",
+      "files": ["img/28-fiverr-languages-on-profile.jpg"],
+      "app": "Fiverr",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/ec47097a-95a6-44e8-9ee4-1bfb562e5de4?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A seller's languages are a profile section with an add action",
+      "why": "'Languages' sits with Description, Skills and Education on the seller profile, each with 'Add New' or 'Edit', because buyers choose sellers by them.",
+      "apply": "Languages live on the public-profile settings page, because members find experts by them.",
+      "query": "host or provider settings to edit languages spoken and service area"
     }
   ],
   "judging_criteria": [
@@ -580,6 +632,7 @@
     "Does each calendar row do one job, with the destination chosen in one place and only from calendars Eleva can write to? (07-expert-dashboard/13, 07-expert-dashboard/17)",
     "Does Reconnect appear only on an account that needs it, with one line on what stopped working and what it means for her bookings? (07-expert-dashboard/22, 07-expert-dashboard/23)",
     "With no calendar connected, does the page explain the two things a connection does and offer one clear way to add one? (07-expert-dashboard/24, 07-expert-dashboard/19)",
-    "On a 390 px screen, is every calendar one line (name, badge, switch), with the destination select above the account cards and no sideways scroll? (07-expert-dashboard/17)"
+    "On a 390 px screen, is every calendar one line (name, badge, switch), with the destination select above the account cards and no sideways scroll? (07-expert-dashboard/17)",
+    "After setup, can an expert change every answer from setup (except the licence) on a settings page, and does a refused change say which services it affects and where to fix them? (07-expert-dashboard/25, 07-expert-dashboard/26, 07-expert-dashboard/27)"
   ]
 }

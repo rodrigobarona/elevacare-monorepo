@@ -934,7 +934,21 @@
       "disconnectedToast": "{provider} desligado.",
       "disconnectFailed": "Não foi possível desligar. Tente novamente.",
       "reconnectFailed": "Não foi possível iniciar a ligação. Tente novamente.",
-      "changedToast": "Método de faturação removido. Escolha um novo."
+      "changedToast": "Método de faturação removido. Escolha um novo.",
+      "nif": {
+        "title": "Número fiscal para as suas faturas",
+        "description": "A Eleva inclui-o nas faturas que lhe emite pela sua comissão. Se fatura através de uma empresa, use o número da empresa.",
+        "label": "Número fiscal",
+        "hintPT": "O seu NIF ou o NIPC da sua empresa, 9 dígitos.",
+        "hintES": "O seu DNI ou NIE com a letra, ou o CIF da sua empresa.",
+        "hintBR": "O seu CPF ou o CNPJ da sua empresa.",
+        "hint": "O número fiscal que usa nas suas faturas.",
+        "invalid": "Este número fiscal não parece válido. Verifique o número e tente novamente.",
+        "save": "Guardar",
+        "saving": "A guardar…",
+        "saved": "Número fiscal guardado.",
+        "failed": "Não foi possível guardar o seu número fiscal. Tente novamente."
+      }
     }
   },
   "onboarding": {
@@ -950,22 +964,22 @@
     },
     "practice": {
       "intro": "Indique onde está autorizado a trabalhar e que línguas usa com os membros. Isto define o que pode oferecer publicamente.",
-      "practiceCountry": "Onde está a sua prática?",
+      "practiceCountry": "País onde exerce",
       "practiceCountryPlaceholder": "Selecione um país",
-      "serviceCountries": "Onde está autorizado a trabalhar?",
-      "serviceCountriesHelp": "Escolha todos os países onde a sua licença lhe permite atender membros. O país da sua prática está sempre incluído.",
+      "serviceCountries": "Países onde atende membros",
+      "serviceCountriesHelp": "Escolha todos os países onde a sua cédula lhe permite atender membros. O país onde exerce está sempre incluído.",
       "addCountry": "Adicionar outro país",
       "addCountryPlaceholder": "Escolha um país",
       "addLanguage": "Adicionar outra língua",
       "addLanguagePlaceholder": "Escolha uma língua",
       "removeItem": "Remover {name}",
       "euPreset": "Adicionar países da UE",
-      "legalHelper": "Para trabalho clínico, precisa de uma licença válida em cada país que escolheu.",
+      "legalHelper": "Para trabalho clínico, precisa de estar inscrito na ordem profissional de cada país que escolher.",
       "whyWeAskTitle": "Porque perguntamos",
-      "whyWeAskBody": "A regulação de saúde é nacional: uma licença num país não cobre automaticamente outro. O remoto mundial só se aplica a trabalho não clínico (coaching, mentoring).",
+      "whyWeAskBody": "A regulação da saúde é nacional: estar inscrito na ordem de um país não o habilita automaticamente noutro. O remoto mundial só se aplica a trabalho não clínico (coaching, mentoring).",
       "languagesLabel": "Línguas que usa com os membros",
       "worldwideRemote": "Remoto mundial (apenas não clínico)",
-      "worldwideRemoteHelp": "Permite sessões não clínicas sem limite de país. Os modos clínicos continuam a seguir os países acima.",
+      "worldwideRemoteHelp": "Permite sessões não clínicas sem limite de país. As sessões clínicas continuam a seguir os países acima.",
       "saving": "A guardar…",
       "continue": "Guardar e continuar",
       "countries": {
@@ -985,7 +999,8 @@
         "offer-invariant": "Esta alteração quebraria uma oferta publicada. Atualize esses modos primeiro.",
         "practice-incomplete": "Conclua primeiro o país da prática e as línguas.",
         "licence-locked": "A sua cédula está verificada. Para a alterar, escreva para support@eleva.care."
-      }
+      },
+      "alwaysIncluded": "(sempre incluído)"
     },
     "payments": {
       "intro": "Conclua a configuração de Pagamentos para receber transferências. Tudo acontece nesta página — sem redirecionamentos.",
@@ -1099,7 +1114,8 @@
       "invoicing-required": "Escolha primeiro como são emitidas as faturas.",
       "identity-required": "Inicie primeiro a verificação de identidade.",
       "invalid-step": "Algo correu mal. Atualize a página e tente novamente.",
-      "licence-required": "Indique a sua Ordem, o número da cédula profissional e o número de registo na ERS no passo Onde exerce."
+      "licence-required": "Indique a sua Ordem, o número da cédula profissional e o número de registo na ERS no passo Onde exerce.",
+      "invalid-tax-id": "Este número fiscal não parece válido. Verifique-o e tente novamente, ou deixe-o vazio e adicione-o mais tarde."
     }
   },
   "publicProfile": {
@@ -1168,6 +1184,29 @@
       "translateFrom": "Traduzir de {language}",
       "cleared": "Biografia removida"
     },
+    "practice": {
+      "title": "Onde exerce",
+      "description": "O país onde exerce, os países onde atende membros e as línguas que fala. Os membros veem-nos no seu perfil e usam-nos para o encontrar.",
+      "errors": {
+        "required": "Escolha o país do seu consultório e pelo menos uma língua.",
+        "offer-invariant": "Um serviço publicado ainda usa um país ou uma língua que removeu. Altere primeiro esse serviço e volte a guardar aqui.",
+        "validation": "Verifique os dados e tente novamente.",
+        "offer-invariant-named": "{count, plural, one {O seu serviço publicado {services} ainda usa} other {Os seus serviços publicados {services} ainda usam}} um país ou uma língua que removeu. {count, plural, one {Altere-o} other {Altere-os}} primeiro e volte a guardar aqui.",
+        "offer-invariant-removed": "{count, plural, one {O seu serviço publicado {services} ainda usa} other {Os seus serviços publicados {services} ainda usam}} uma língua ou um país que removeu: {removed}. {count, plural, one {Altere-o} other {Altere-os}} primeiro e volte a guardar aqui."
+      },
+      "openServices": "Abrir Serviços",
+      "countryLocked": "O país onde exerce está ligado à sua cédula. Se mudou de país, escreva para support@eleva.care."
+    },
+    "modes": {
+      "title": "Como atende os membros",
+      "description": "Os membros veem isto no seu perfil e usam-no para encontrar especialistas.",
+      "hint": "Escolha todas as opções que se aplicam.",
+      "required": "Escolha pelo menos uma forma de atender os membros.",
+      "errors": {
+        "in-use": "{count, plural, one {O seu serviço publicado {services} ainda usa} other {Os seus serviços publicados {services} ainda usam}} uma forma de atender que removeu: {removed}. {count, plural, one {Altere-o} other {Altere-os}} primeiro e volte a guardar aqui.",
+        "in-use-generic": "Um serviço publicado ainda usa uma forma de atender que removeu. Altere primeiro esse serviço e volte a guardar aqui."
+      }
+    },
     "social": {
       "title": "Redes sociais",
       "description": "Perfis profissionais que os membros podem consultar antes de marcar. As ligações abrem num novo separador.",
@@ -1206,7 +1245,8 @@
       "year": "Ano",
       "remove": "Remover credencial",
       "invalid": "Cada credencial precisa de um título e o ano tem de estar entre 1900 e 2100."
-    }
+    },
+    "newTab": "(abre num novo separador)"
   },
   "richTextEditor": {
     "bold": "Negrito",

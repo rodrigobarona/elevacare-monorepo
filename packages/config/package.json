@@ -35,7 +35,8 @@
     "./guest-signup": "./src/guest-signup.ts",
     "./clinic-verification": "./src/clinic-verification.ts",
     "./practice-closure": "./src/practice-closure.ts",
-    "./professional-bodies": "./src/professional-bodies.ts"
+    "./professional-bodies": "./src/professional-bodies.ts",
+    "./tax-id": "./src/tax-id.ts"
   },
   "scripts": {
     "lint": "eslint .",

@@ -789,7 +789,15 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               description: "Profile updated",
               content: { "application/json": { schema: OkSchema } },
             },
+            "409": {
+              description:
+                "SESSION_MODE_IN_USE: a published service still offers a way of meeting (online, in person, phone) the request removes. The body names the `modes` and the `services`.",
+            },
             ...stdWithNotFound,
+            "422": {
+              description:
+                "Validation error. `code: INVALID_TAX_ID` when `nif` is not a valid tax number for the practice country (PT NIF, ES DNI/NIE/CIF, BR CPF/CNPJ).",
+            },
           },
         },
       },
@@ -1078,7 +1086,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "409": {
               description:
-                "OFFER_INVARIANT_VIOLATION (published modes would break) or LICENCE_LOCKED (licence on an active profile)",
+                "OFFER_INVARIANT_VIOLATION (published modes would break), LICENCE_LOCKED (licence on a listed or filed profile) or PRACTICE_COUNTRY_LOCKED (the practice country follows a listed or filed licence)",
             },
             ...stdWithNotFound,
           },

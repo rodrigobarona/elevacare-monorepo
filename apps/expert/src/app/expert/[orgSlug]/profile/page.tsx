@@ -10,10 +10,14 @@ import { ArrowSquareOutIcon } from "@eleva/icons"
 import { LinkButton } from "@eleva/ui/components/button"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
+import { expertWorkspacePath } from "@/lib/workspace-paths"
 import { BasicsSection } from "./basics-section"
 import { BioSection } from "./bio-section"
 import { CredentialsSection } from "./credentials-section"
+import { initialPracticeValue } from "../_components/practice-value"
 import { PortraitSection } from "./portrait-section"
+import { PracticeSection } from "./practice-section"
+import { SessionModesSection } from "./session-modes-section"
 import { SocialLinksSection } from "./social-links-section"
 
 export const dynamic = "force-dynamic"
@@ -24,7 +28,7 @@ export default async function PublicProfilePage({
   params: Promise<{ orgSlug: string }>
 }) {
   const { orgSlug } = await params
-  const [{ profile }, uiLocale, t] = await Promise.all([
+  const [{ session, profile }, uiLocale, t] = await Promise.all([
     loadExpertWorkspace(orgSlug, "expert:onboard"),
     getLocale(),
     getTranslations("publicProfile"),
@@ -83,6 +87,14 @@ export default async function PublicProfilePage({
         profileId={profile.id}
         initialSourceLocale={sourceLocale}
         initialValue={bioValue}
+      />
+      <PracticeSection
+        initial={initialPracticeValue(profile)}
+        servicesHref={expertWorkspacePath(session, "event-types")}
+      />
+      <SessionModesSection
+        initial={profile.sessionModes}
+        servicesHref={expertWorkspacePath(session, "event-types")}
       />
       <SocialLinksSection initialLinks={profile.socialLinks} />
       <CredentialsSection initialCredentials={profile.credentials} />

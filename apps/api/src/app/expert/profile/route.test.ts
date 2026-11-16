@@ -11,6 +11,13 @@ const OLD_PORTRAIT = `${PORTRAITS}/user-1/old.jpg`
 const NEW_PORTRAIT = `${PORTRAITS}/user-1/new.jpg`
 const FOREIGN_PORTRAIT = `${PORTRAITS}/user-2/theirs.jpg`
 let storedAvatarUrl: string | null = OLD_PORTRAIT
+let practiceDeclared = true
+let publishedModes: Array<{
+  mode: string
+  eventTypeId?: string
+  eventTypeTitle: string | null
+  eventTypeTitles?: { en: string; es?: string } | null
+}> = []
 
 vi.mock("@eleva/storage", () => ({
   deletePublicObject: (...args: unknown[]) => deletePublicObject(...args),
@@ -28,9 +35,11 @@ vi.mock("@eleva/db", () => ({
   getExpertProfileForOrg: vi.fn(async () => ({
     id: "profile-1",
     orgId: "org-1",
-    metadata: {},
+    metadata: practiceDeclared ? { practiceDeclaredAt: "2026-11-01" } : {},
     avatarUrl: storedAvatarUrl,
+    practiceCountry: "PT",
   })),
+  listPublishedActiveModesForExpert: vi.fn(async () => publishedModes),
   updateExpertProfile: (...args: unknown[]) => updateExpertProfile(...args),
 }))
 
@@ -79,6 +88,8 @@ describe("PATCH /expert/profile content", () => {
     verifyUpload.mockResolvedValue({})
     vi.stubEnv("NEXT_PUBLIC_MEDIA_BASE_URL", MEDIA_BASE_URL)
     storedAvatarUrl = OLD_PORTRAIT
+    publishedModes = []
+    practiceDeclared = true
   })
 
   afterEach(() => {
@@ -276,5 +287,59 @@ describe("PATCH /expert/profile content", () => {
     })
 
     expect(response.status).toBe(422)
+  })
+
+  it("stores a valid NIF without separators", async () => {
+    const response = await patch({ nif: "PT 123 456 789" })
+    expect(response.status).toBe(200)
+    expect(updatedFields().nif).toBe("123456789")
+  })
+
+  it("refuses a NIF that fails the practice country's check digit", async () => {
+    const response = await patch({ nif: "123456780" })
+    expect(response.status).toBe(422)
+    expect(await response.json()).toMatchObject({ code: "INVALID_TAX_ID" })
+    expect(updateExpertProfile).not.toHaveBeenCalled()
+  })
+
+  it("does not apply the default country's NIF rules before the expert declares a country", async () => {
+    practiceDeclared = false
+    const response = await patch({ nif: "12345678Z" })
+    expect(response.status).toBe(200)
+    expect(updatedFields().nif).toBe("12345678Z")
+  })
+
+  it("clears the NIF when it is emptied", async () => {
+    const response = await patch({ nif: "" })
+    expect(response.status).toBe(200)
+    expect(updatedFields().nif).toBeNull()
+  })
+
+  it("keeps a way of meeting that a published service still offers", async () => {
+    publishedModes = [
+      {
+        mode: "in_person",
+        eventTypeId: "et-1",
+        eventTypeTitle: "First visit",
+        eventTypeTitles: { en: "First visit", es: "Primera visita" },
+      },
+      { mode: "online", eventTypeTitle: "Follow-up" },
+    ]
+    const response = await patch({ sessionModes: ["online"] })
+    expect(response.status).toBe(409)
+    expect(await response.json()).toMatchObject({
+      error: "SESSION_MODE_IN_USE",
+      modes: ["in_person"],
+      services: ["First visit"],
+      serviceTitles: [{ en: "First visit", es: "Primera visita" }],
+    })
+    expect(updateExpertProfile).not.toHaveBeenCalled()
+  })
+
+  it("drops a way of meeting no published service uses", async () => {
+    publishedModes = [{ mode: "online", eventTypeTitle: "Follow-up" }]
+    const response = await patch({ sessionModes: ["online"] })
+    expect(response.status).toBe(200)
+    expect(updatedFields().sessionModes).toEqual(["online"])
   })
 })

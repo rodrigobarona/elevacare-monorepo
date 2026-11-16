@@ -14,6 +14,7 @@ export type PublicProfilePatch = Pick<
   | "avatarUrl"
   | "socialLinks"
   | "credentials"
+  | "sessionModes"
 >
 
 /** Saves one section of the public profile and reports it with a toast. */

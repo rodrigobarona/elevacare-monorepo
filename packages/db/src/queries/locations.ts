@@ -190,6 +190,19 @@ export async function listModeNamesUsingLocation(
   })
 }
 
+function localizedTitles(
+  value: unknown
+): { en: string; pt?: string; es?: string } | null {
+  if (!value || typeof value !== "object") return null
+  const title = value as Record<string, unknown>
+  if (typeof title.en !== "string") return null
+  return {
+    en: title.en,
+    ...(typeof title.pt === "string" && { pt: title.pt }),
+    ...(typeof title.es === "string" && { es: title.es }),
+  }
+}
+
 export async function listPublishedActiveModesForExpert(
   orgId: string,
   expertProfileId: string
@@ -198,6 +211,8 @@ export async function listPublishedActiveModesForExpert(
     modeId: string
     eventTypeId: string
     eventTypeTitle: string | null
+    /** The title in every language it was written in (en always present). */
+    eventTypeTitles: { en: string; pt?: string; es?: string } | null
     kind: "clinical" | "non_clinical"
     mode: "online" | "phone" | "in_person"
     countryScopeType: "worldwide" | "list"
@@ -248,6 +263,7 @@ export async function listPublishedActiveModesForExpert(
         "en" in row.eventTypeTitle
           ? ((row.eventTypeTitle as { en?: string }).en ?? null)
           : null,
+      eventTypeTitles: localizedTitles(row.eventTypeTitle),
       kind: row.kind,
       mode: row.mode,
       countryScopeType: row.countryScopeType,

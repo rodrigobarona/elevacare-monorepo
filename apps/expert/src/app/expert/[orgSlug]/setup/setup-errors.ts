@@ -6,6 +6,7 @@ const SETUP_ERROR_CODES = [
   "identity-required",
   "licence-required",
   "invalid-step",
+  "invalid-tax-id",
 ] as const
 
 type SetupErrorCode = (typeof SETUP_ERROR_CODES)[number]

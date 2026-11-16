@@ -13,7 +13,12 @@ import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { isVerifiedPublicUpload } from "@/lib/verify-public-upload"
 import { withAudit } from "@eleva/audit"
-import { getExpertProfileForOrg, updateExpertProfile } from "@eleva/db"
+import { isValidTaxId, normalizeTaxId } from "@eleva/config/tax-id"
+import {
+  getExpertProfileForOrg,
+  listPublishedActiveModesForExpert,
+  updateExpertProfile,
+} from "@eleva/db"
 import type { RoutePolicy } from "@/lib/route-policy"
 
 export const ROUTE_POLICY = {
@@ -111,6 +116,75 @@ export async function PATCH(request: Request) {
     )
   }
 
+  // The NIF goes on the service-fee invoices Eleva issues the expert, so a
+  // malformed one is refused here rather than on an invoice.
+  // Setup asks for the NIF before the practice country, and new profiles
+  // start on a default country, so the per-country check applies only once
+  // the expert has declared where they practise.
+  const taxCountry = (profile.metadata as Record<string, unknown> | null)
+    ?.practiceDeclaredAt
+    ? profile.practiceCountry
+    : null
+  let nif: string | null | undefined = undefined
+  if (data.nif !== undefined) {
+    const raw = data.nif?.trim() ?? ""
+    if (raw && !isValidTaxId(raw, taxCountry)) {
+      return secureJson(
+        {
+          error: "validation",
+          code: "INVALID_TAX_ID",
+          issues: [
+            {
+              code: "custom",
+              path: ["nif"],
+              message: "Not a valid tax number for your practice country",
+            },
+          ],
+        },
+        { status: 422, headers }
+      )
+    }
+    nif = raw ? normalizeTaxId(raw, taxCountry) : null
+  }
+
+  // Members find experts by how they meet, so a way of meeting that a
+  // published service still offers cannot be dropped from the profile.
+  if (data.sessionModes) {
+    const nextModes: string[] =
+      data.sessionModes.length > 0 ? data.sessionModes : ["online"]
+    const published = await listPublishedActiveModesForExpert(
+      profile.orgId,
+      profile.id
+    )
+    const inUse = published.filter((mode) => !nextModes.includes(mode.mode))
+    if (inUse.length > 0) {
+      return secureJson(
+        {
+          error: "SESSION_MODE_IN_USE",
+          message:
+            "A published service still offers a way of meeting you removed",
+          modes: [...new Set(inUse.map((mode) => mode.mode))],
+          services: [
+            ...new Set(
+              inUse
+                .map((mode) => mode.eventTypeTitle)
+                .filter((title): title is string => Boolean(title))
+            ),
+          ],
+          // The same services with their title in every language.
+          serviceTitles: [
+            ...new Map(
+              inUse
+                .filter((mode) => mode.eventTypeTitles)
+                .map((mode) => [mode.eventTypeId, mode.eventTypeTitles])
+            ).values(),
+          ],
+        },
+        { status: 409, headers }
+      )
+    }
+  }
+
   let bioUpdate: BioUpdate | null = null
   if (data.bioRich !== undefined) {
     const resolved = resolveRichBio(data.bioRich)
@@ -138,7 +212,7 @@ export async function PATCH(request: Request) {
           profile.id,
           profile.orgId,
           {
-            ...(data.nif !== undefined && { nif: data.nif ?? null }),
+            ...(nif !== undefined && { nif }),
             ...(data.licenseScope !== undefined && {
               licenseScope: data.licenseScope ?? null,
             }),

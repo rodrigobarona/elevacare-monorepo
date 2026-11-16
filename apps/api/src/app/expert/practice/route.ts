@@ -154,6 +154,23 @@ export async function PATCH(request: Request) {
       hasFinishedExpertSetup(
         profile.metadata as Record<string, unknown> | null
       ))
+  // The practice country follows the verified (or filed) licence: moving it
+  // would show members a country the Ordem never checked.
+  if (
+    licenceLocked &&
+    data.practiceCountry !== undefined &&
+    data.practiceCountry.toUpperCase() !==
+      (profile.practiceCountry ?? "").toUpperCase()
+  ) {
+    return secureJson(
+      {
+        error: "PRACTICE_COUNTRY_LOCKED",
+        message:
+          "Your practice country follows your licence. Contact support@eleva.care to change it.",
+      },
+      { status: 409, headers }
+    )
+  }
   if (licenceChanged && licenceLocked) {
     return secureJson(
       {
@@ -197,10 +214,17 @@ export async function PATCH(request: Request) {
   })
 
   if (violations.length > 0) {
+    // Titles in every language, so the expert sees them in their own.
+    const titles = new Map(
+      publishedModes.map((mode) => [mode.eventTypeId, mode.eventTypeTitles])
+    )
     return secureJson(
       {
         error: "OFFER_INVARIANT_VIOLATION",
-        violations,
+        violations: violations.map((violation) => ({
+          ...violation,
+          eventTypeTitles: titles.get(violation.eventTypeId) ?? null,
+        })),
       },
       { status: 409, headers }
     )

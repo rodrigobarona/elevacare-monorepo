@@ -7,6 +7,7 @@ import { PageHeader, Section } from "@eleva/ui/components/page-header"
 import { expertWorkspacePath } from "@/lib/workspace-paths"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
 import { InvoicingSettings } from "./invoicing-settings"
+import { NifSection } from "./nif-section"
 
 export const dynamic = "force-dynamic"
 
@@ -68,6 +69,10 @@ export default async function InvoicingSettingsPage({
           )}
         />
       </Section>
+      <NifSection
+        initial={profile.nif ?? ""}
+        country={profile.practiceCountry}
+      />
     </div>
   )
 }
