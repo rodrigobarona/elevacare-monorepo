@@ -1,31 +1,39 @@
 import { getTranslations } from "next-intl/server"
+import { getAuthenticatedLocale } from "@eleva/auth/server"
+import { getServerThemePreference } from "@eleva/dashboard/server-theme"
 import { PageHeader } from "@eleva/ui/components/page-header"
-import { getSession, getAuthenticatedLocale } from "@eleva/auth/server"
-import { SettingsWidgets } from "./settings-widgets"
+import { getPersonalApiClient } from "@/lib/personal-api"
+import { AppearanceCard } from "./appearance-card"
+import { DetailsCard } from "./details-card"
+import { RegionCard } from "./region-card"
 
-export default async function SettingsPage() {
-  const t = await getTranslations()
-  const [session, preferredLocale] = await Promise.all([
-    getSession(),
+export const dynamic = "force-dynamic"
+
+/** Profile: everything about the person, shared by all their workspaces. */
+export default async function ProfilePage() {
+  const [t, api, preferredLocale, initialTheme] = await Promise.all([
+    getTranslations("profile"),
+    getPersonalApiClient(),
     getAuthenticatedLocale(),
+    getServerThemePreference(),
   ])
-  const avatarUrl = session?.user.avatarUrl ?? null
+  const profile = await api.me.get()
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
-      <PageHeader
-        eyebrow={t("settings.eyebrow")}
-        title={t("settings.title")}
-        description={t("settings.pageDescription")}
-      />
-      <SettingsWidgets
-        avatarUrl={avatarUrl}
-        displayName={session?.user.displayName ?? session?.user.email ?? ""}
-        email={session?.user.email ?? ""}
+      <PageHeader title={t("title")} description={t("subtitle")} />
+      <DetailsCard
+        name={profile.name}
+        email={profile.email}
+        avatarUrl={profile.avatarUrl}
         apiBaseUrl={apiBaseUrl}
-        preferredLocale={preferredLocale}
       />
+      <RegionCard
+        locale={preferredLocale ?? profile.locale ?? "en"}
+        timezone={profile.timezone ?? "Europe/Lisbon"}
+      />
+      <AppearanceCard initialTheme={initialTheme} />
     </div>
   )
 }

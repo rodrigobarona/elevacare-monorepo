@@ -5,7 +5,8 @@
     "payments": "Pagos",
     "settings": "Ajustes",
     "privacy": "Privacidad",
-    "reports": "Informes"
+    "reports": "Informes",
+    "account": "Cuenta"
   },
   "common": {
     "save": "Guardar",
@@ -227,145 +228,6 @@
       "failed": "Fallido",
       "refunded": "Reembolsado",
       "refund_pending": "Reembolso pendiente"
-    }
-  },
-  "settings": {
-    "title": "Ajustes",
-    "subtitle": "Gestiona tu perfil de miembro, idioma, tema y notificaciones.",
-    "profile": {
-      "title": "Perfil",
-      "description": "Actualiza el nombre que ven los especialistas en este Espacio.",
-      "email": "Correo",
-      "name": "Nombre",
-      "timezone": "Zona horaria",
-      "save": "Guardar",
-      "saving": "Guardando…",
-      "saved": "Perfil actualizado.",
-      "error": "No se pudo actualizar el perfil. Inténtalo de nuevo.",
-      "footerHint": "El correo se usa para iniciar sesión y no se puede cambiar aquí."
-    },
-    "avatar": {
-      "title": "Foto de perfil",
-      "description": "Este es tu avatar. Haz clic en la foto para subir una imagen de tus archivos.",
-      "changePhoto": "Cambiar foto de perfil",
-      "remove": "Eliminar",
-      "hint": "JPG, PNG o WebP. Máximo 2 MB.",
-      "tooLarge": "El archivo es demasiado grande. El máximo es 2 MB.",
-      "invalidType": "Tipo de archivo no compatible. Usa JPG, PNG o WebP.",
-      "uploadFailed": "La subida falló. Inténtalo de nuevo.",
-      "saveFailed": "No se pudo guardar el avatar. Inténtalo de nuevo.",
-      "removeFailed": "No se pudo eliminar el avatar. Inténtalo de nuevo.",
-      "uploaded": "Foto de perfil actualizada.",
-      "removed": "Foto de perfil eliminada."
-    },
-    "language": {
-      "title": "Idioma",
-      "description": "Elige el idioma usado en Eleva para tu cuenta.",
-      "footerHint": "Se aplica en toda Eleva en tu próxima visita.",
-      "saved": "Preferencia de idioma actualizada.",
-      "error": "No se pudo actualizar el idioma. Inténtalo de nuevo."
-    },
-    "theme": {
-      "title": "Tema",
-      "description": "Elige claro, oscuro o el del dispositivo.",
-      "footerHint": "Compartido en todas las apps de Eleva.",
-      "light": "Claro",
-      "dark": "Oscuro",
-      "system": "Sistema",
-      "saved": "Tema actualizado."
-    },
-    "notifications": {
-      "title": "Notificaciones",
-      "description": "Elige cómo Eleva puede contactarte. Las horas de silencio pausan los mensajes no urgentes.",
-      "footerHint": "Estas preferencias se usarán cuando empecemos a enviar notificaciones.",
-      "saved": "Preferencias de notificación guardadas.",
-      "error": "No se pudieron guardar las preferencias de notificación.",
-      "quietHours": "Horas de silencio",
-      "quietHoursHint": "Opcional. La hora de inicio y de fin son obligatorias cuando está activo.",
-      "quietStart": "Inicio",
-      "quietEnd": "Fin",
-      "enableQuietHours": "Activar horas de silencio",
-      "channel": {
-        "email": "Correo",
-        "sms": "SMS",
-        "in_app": "En la app"
-      },
-      "category": {
-        "booking": "Sesiones",
-        "reminder": "Recordatorios",
-        "payment": "Pagos",
-        "marketing": "Marketing",
-        "system": "Sistema"
-      }
-    }
-  },
-  "privacy": {
-    "title": "Privacidad",
-    "subtitle": "Consentimientos, exportación de datos y eliminación de la cuenta en este Espacio.",
-    "consents": {
-      "title": "Consentimientos",
-      "description": "Consulta lo que aceptaste y retira el marketing o el tratamiento de datos de salud cuando esté permitido.",
-      "granted": "Concedido {date}",
-      "withdrawn": "Retirado {date}",
-      "notGranted": "No concedido",
-      "version": "Versión {version}",
-      "grant": "Conceder",
-      "withdraw": "Retirar",
-      "grantedToast": "Consentimiento actualizado.",
-      "withdrawnToast": "Consentimiento retirado.",
-      "healthDataBlocked": "No puedes retirar el consentimiento de datos de salud mientras exista una sesión futura confirmada.",
-      "kinds": {
-        "terms": "Términos de uso",
-        "privacy": "Aviso de privacidad",
-        "health_data_processing": "Tratamiento de datos de salud",
-        "marketing": "Mensajes de marketing",
-        "ai_processing": "Ayuda de IA en los informes de sesión"
-      },
-      "aiProcessingHint": "Permite transcribir tus sesiones de vídeo en directo para que tu experto conserve un registro escrito, y permite que tu experto prepare informes de sesión a partir de sus propias notas con un modelo de IA que no guarda copia de tus datos. Tu experto revisa cada borrador antes de que lo veas. Está desactivado hasta que lo actives y puedes retirarlo en cualquier momento; al retirarlo, la transcripción se detiene desde tu próxima llamada. La redacción con IA aún no está activa.",
-      "aiProcessingNoticeLink": "Leer el aviso de tratamiento por IA."
-    },
-    "recordAccess": {
-      "title": "Registros de sesión en la clínica",
-      "description": "Cuando una clínica activa registros compartidos, otros especialistas de esa clínica pueden leer registros de sesión para continuidad asistencial. Puede excluirse por clínica.",
-      "optOutLabel": "No permitir acceso compartido en {clinic}",
-      "sharedOn": "Esta clínica tiene registros compartidos activados.",
-      "sharedOff": "Los registros compartidos están desactivados en esta clínica.",
-      "optOutSuccess": "Preferencia de la clínica guardada.",
-      "optInSuccess": "Volvió a permitir el acceso compartido en la clínica."
-    },
-    "dsar": {
-      "title": "Descargar tus datos",
-      "description": "Solicita una copia de los datos que Eleva tiene sobre ti. El archivo se prepara en zip y el enlace caduca a las 24 horas.",
-      "request": "Solicitar exportación",
-      "requesting": "Solicitando…",
-      "requested": "Exportación solicitada. Suele tardar unos minutos.",
-      "status": "Estado: {status}",
-      "download": "Descargar zip",
-      "refresh": "Comprobar estado",
-      "error": "No se pudo solicitar o cargar tu exportación.",
-      "statusLabel": {
-        "pending": "Pendiente",
-        "processing": "Preparando",
-        "ready": "Lista",
-        "expired": "Caducada",
-        "failed": "Fallida"
-      }
-    },
-    "deletion": {
-      "title": "Eliminar cuenta",
-      "description": "Programa la eliminación de esta cuenta de miembro. Las nuevas reservas se bloquean en cuanto confirmas.",
-      "ruleTitle": "Qué se borra y qué se conserva",
-      "ruleBody": "Los datos de ámbito de la cuenta se borran: tu perfil, las preferencias de notificación y los consentimientos que no están ligados a una sesión (por ejemplo, marketing). Los consentimientos de ámbito de la sesión —los que autorizaron una consulta— se desidentifican (se quitan tu nombre y tu cuenta) y se conservan durante el mínimo del historial clínico portugués, y se destruyen después. Las notas clínicas del especialista siguen la misma regla de conservar y luego destruir. Esto no se puede acortar en esta pantalla.",
-      "grace": "Hay un periodo de espera de 14 días antes de la eliminación. Puedes cancelar durante esa ventana.",
-      "confirmTitle": "¿Eliminar tu cuenta?",
-      "confirmBody": "Esto programa la eliminación. Los datos de ámbito de la cuenta se borrarán. Los consentimientos ligados a sesiones se desidentifican y se conservan durante el periodo clínico legal. Las sesiones futuras y sin pagar se cancelan. Las sesiones pagadas quedan marcadas para un reembolso posterior.",
-      "confirm": "Programar eliminación",
-      "scheduling": "Programando…",
-      "scheduled": "Eliminación de la cuenta programada para {date}.",
-      "alreadyScheduled": "La eliminación ya está programada.",
-      "cancelRequest": "Cancelar eliminación",
-      "cancelling": "Cancelando…",
-      "cancelled": "Eliminación de la cuenta cancelada. Ya puedes volver a reservar."
     }
   },
   "errors": {

@@ -1,82 +1,213 @@
 {
   "nav": {
     "account": "Cuenta",
-    "settings": "Ajustes",
+    "profile": "Perfil",
+    "notifications": "Notificaciones",
+    "security": "Seguridad",
+    "privacy": "Privacidad",
     "billing": "Facturación",
-    "organizations": "Espacios de trabajo",
-    "privacy": "Privacidad"
+    "organizations": "Espacios de trabajo"
   },
-  "settings": {
-    "title": "Configuración de la cuenta",
-    "pageDescription": "Gestiona tu perfil, seguridad y preferencias de tu cuenta Eleva.",
-    "profile": {
-      "title": "Perfil",
-      "description": "Actualiza tu nombre y datos de cuenta.",
-      "footerHint": "Los cambios de email o identidad pueden requerir verificación.",
-      "email": "Email",
+  "profile": {
+    "title": "Perfil",
+    "subtitle": "Tu foto y tu nombre, tu idioma y zona horaria, y el aspecto de Eleva.",
+    "details": {
+      "title": "Tus datos",
+      "description": "Los especialistas ven tu foto y tu nombre cuando reservas con ellos.",
+      "photo": "Foto",
+      "photoHint": "JPG, PNG o WebP, hasta 2 MB.",
+      "uploadPhoto": "Subir una foto",
+      "changePhoto": "Cambiar foto",
+      "removePhoto": "Quitar",
       "name": "Nombre",
-      "language": "Idioma",
+      "email": "Email",
+      "emailHint": "Inicias sesión con este email.",
       "save": "Guardar",
-      "saving": "Guardando...",
-      "profileSaved": "Perfil actualizado.",
-      "profileError": "No se pudo actualizar el perfil. Inténtalo de nuevo.",
-      "languageSaved": "Preferencia de idioma actualizada.",
-      "languageError": "No se pudo actualizar el idioma. Inténtalo de nuevo."
+      "saving": "Guardando…",
+      "saved": "Tus datos se han guardado.",
+      "error": "No hemos podido guardar tus datos. Inténtalo de nuevo."
     },
     "avatar": {
-      "title": "Foto de perfil",
-      "description": "Este es tu avatar. Haz clic en la foto para subir una imagen personalizada.",
-      "changePhoto": "Cambiar foto de perfil",
-      "upload": "Subir foto",
-      "remove": "Eliminar",
-      "hint": "JPG, PNG o WebP. Máx 2 MB.",
-      "tooLarge": "El archivo es demasiado grande. El tamaño máximo es 2 MB.",
-      "invalidType": "Tipo de archivo no soportado. Usa JPG, PNG o WebP.",
-      "uploadFailed": "Error al subir. Inténtalo de nuevo.",
-      "saveFailed": "No se pudo guardar el avatar. Inténtalo de nuevo.",
-      "removeFailed": "No se pudo eliminar el avatar. Inténtalo de nuevo.",
-      "uploaded": "Foto de perfil actualizada.",
-      "removed": "Foto de perfil eliminada."
+      "tooLarge": "La foto pesa más de 2 MB. Elige una más pequeña.",
+      "invalidType": "Usa una foto en JPG, PNG o WebP.",
+      "uploadFailed": "No hemos podido subir tu foto. Inténtalo de nuevo.",
+      "saveFailed": "No hemos podido guardar tu foto. Inténtalo de nuevo.",
+      "removeFailed": "No hemos podido quitar tu foto. Inténtalo de nuevo.",
+      "uploaded": "Tu foto se ha actualizado.",
+      "removed": "Tu foto se ha quitado."
     },
-    "language": {
-      "title": "Idioma",
-      "description": "Elige el idioma de las aplicaciones Eleva para tu cuenta.",
-      "footerHint": "Lo usamos en toda Eleva y en los emails que te enviamos."
+    "region": {
+      "title": "Idioma y zona horaria",
+      "description": "Cómo te escribe Eleva y cómo te muestra la hora de tus sesiones.",
+      "language": "Idioma",
+      "languageHint": "Se usa en todo Eleva y en los emails que te enviamos.",
+      "timezone": "Zona horaria",
+      "timezoneHint": "Las horas de las sesiones se muestran en esta zona horaria.",
+      "save": "Guardar",
+      "saving": "Guardando…",
+      "saved": "Tu idioma y tu zona horaria se han guardado.",
+      "error": "No hemos podido guardar tu idioma y tu zona horaria. Inténtalo de nuevo."
     },
-    "security": {
-      "title": "Seguridad",
-      "description": "Gestiona contraseñas, autenticación multifactor y métodos de acceso.",
-      "currentPassword": "Contraseña actual",
-      "newPassword": "Nueva contraseña",
-      "updatePassword": "Actualizar contraseña",
-      "passwordUpdated": "Contraseña actualizada.",
-      "twoFactor": "Autenticación de dos factores",
-      "enableTwoFactor": "Activar autenticador",
-      "twoFactorEnabled": "Autenticación de dos factores activada.",
-      "totpCode": "Código del autenticador",
-      "verify": "Verificar",
-      "passkeys": "Claves de acceso",
-      "addPasskey": "Añadir clave de acceso",
-      "passkeyAdded": "Clave de acceso añadida.",
-      "remove": "Eliminar",
-      "google": "Inicio de sesión con Google",
-      "googleHint": "Conecta Google para iniciar sesión con él. Solo puedes conectar Google con la sesión iniciada en Eleva.",
-      "googleLinked": "Google está conectado.",
-      "connectGoogle": "Conectar Google",
-      "googleLinkFailed": "No se pudo conectar Google. Inténtalo de nuevo.",
-      "googleLinkEmailMismatch": "No se pudo conectar Google. Usa la cuenta de Google con el mismo correo que tu cuenta de Eleva y vuelve a intentarlo.",
-      "googleLinkTaken": "Esa cuenta de Google ya está conectada a otra cuenta de Eleva.",
-      "sessionsTitle": "Sesiones",
-      "sessionsDescription": "Revisa dispositivos y navegadores donde has iniciado sesión.",
-      "revoke": "Revocar",
-      "error": "No se pudo actualizar la seguridad. Inténtalo de nuevo."
+    "appearance": {
+      "title": "Apariencia",
+      "description": "Elige claro, oscuro o igual que tu dispositivo.",
+      "light": "Claro",
+      "dark": "Oscuro",
+      "system": "Igual que mi dispositivo",
+      "footer": "Se guarda al momento en este navegador y se usa en todo Eleva."
+    }
+  },
+  "notificationSettings": {
+    "title": "Notificaciones",
+    "subtitle": "Elige cómo te mantiene Eleva al día de tus sesiones.",
+    "card": {
+      "title": "Lo que te enviamos",
+      "description": "Activa o desactiva cada tipo de mensaje. Guardamos cada cambio al momento."
     },
-    "sessions": {
-      "title": "Sesiones",
-      "description": "Revisa dispositivos y navegadores donde has iniciado sesión.",
-      "footerHint": "Revoca sesiones que no reconozcas."
+    "channel": {
+      "email": "Email",
+      "in_app": "En Eleva"
     },
-    "eyebrow": "Cuenta"
+    "channelInfoLabel": "Dónde aparecen los mensajes “En Eleva”",
+    "channelInfo": "Aparecen en la campana, arriba en Eleva, la próxima vez que lo abras.",
+    "alwaysOn": "Siempre activo",
+    "categories": {
+      "booking": {
+        "title": "Sesiones",
+        "description": "Confirmaciones, cambios y tu enlace para entrar.",
+        "emailOff": "No recibirás tu enlace por email. Lo encontrarás en tu Espacio antes de cada sesión."
+      },
+      "reminder": {
+        "title": "Recordatorios",
+        "description": "Un recordatorio antes de cada sesión."
+      },
+      "payment": {
+        "title": "Pagos",
+        "description": "Recibos y pagos fallidos."
+      },
+      "system": {
+        "title": "Cuenta y seguridad",
+        "description": "Enlaces y códigos de inicio de sesión, cambios de contraseña e invitaciones."
+      }
+    },
+    "saved": "Guardado.",
+    "error": "No hemos podido guardar el cambio. Inténtalo de nuevo.",
+    "newsHint": "¿Quieres novedades de Eleva? Elígelo en la página Privacidad.",
+    "newsLink": "Ir a Privacidad",
+    "channelInfoTitle": "En Eleva"
+  },
+  "security": {
+    "title": "Seguridad",
+    "subtitle": "Cómo inicias sesión y dónde tienes la sesión iniciada ahora mismo.",
+    "error": "Algo ha salido mal. Inténtalo de nuevo.",
+    "loadFailed": "No hemos podido cargar esta parte de la página.",
+    "retry": "Intentar de nuevo",
+    "password": {
+      "title": "Contraseña",
+      "description": "Inicia sesión con tu email y una contraseña.",
+      "current": "Contraseña actual",
+      "new": "Nueva contraseña",
+      "newHint": "Al menos 8 caracteres.",
+      "submit": "Cambiar contraseña",
+      "saving": "Cambiando…",
+      "saved": "Tu contraseña se ha cambiado.",
+      "none": "Inicias sesión con Google o con un enlace que te enviamos por email, así que no necesitas contraseña.",
+      "signOutOthers": "Al cambiar la contraseña, se cierra tu sesión en los demás dispositivos."
+    },
+    "twoStep": {
+      "title": "Verificación en dos pasos",
+      "description": "Después de tu contraseña, Eleva te pide un código de una app de tu móvil.",
+      "infoLabel": "Sobre la verificación en dos pasos",
+      "info": "Aunque alguien sepa tu contraseña, no podrá entrar sin tu móvil. Funciona con apps como Google Authenticator, Microsoft Authenticator y 1Password.",
+      "on": "Activada",
+      "off": "Desactivada",
+      "turnOn": "Activar",
+      "turnOff": "Desactivar",
+      "passwordStep": {
+        "title": "Confirma que eres tú",
+        "description": "Escribe tu contraseña para empezar a configurar la verificación en dos pasos.",
+        "password": "Contraseña",
+        "continue": "Continuar"
+      },
+      "turnOffStep": {
+        "title": "¿Desactivar la verificación en dos pasos?",
+        "description": "Iniciarás sesión solo con tu contraseña. Escríbela para confirmar.",
+        "confirm": "Desactivar"
+      },
+      "enabled": "La verificación en dos pasos está activada.",
+      "disabled": "La verificación en dos pasos está desactivada.",
+      "cancel": "Cancelar",
+      "stepCount": "Paso {current} de {total}",
+      "back": "Atrás",
+      "next": "Siguiente",
+      "scanStep": {
+        "title": "Escanea el código",
+        "description": "Abre tu app de autenticación, añade una cuenta y escanea este código.",
+        "qrLabel": "Código QR para añadir Eleva a tu app de autenticación",
+        "copyKey": "Copiar la clave de configuración",
+        "copied": "Clave de configuración copiada.",
+        "openInApp": "Abrir en la app de autenticación"
+      },
+      "codeStep": {
+        "title": "Escribe el código de tu app",
+        "description": "Escribe el código de 6 dígitos que tu app muestra para Eleva.",
+        "code": "Código de 6 dígitos",
+        "verify": "Activar"
+      },
+      "backupStep": {
+        "title": "Guarda tus códigos de recuperación",
+        "description": "Si pierdes el móvil, cada código te deja entrar una vez. Guárdalos en un lugar seguro, como tu gestor de contraseñas.",
+        "download": "Descargar (.txt)",
+        "copyCodes": "Copiar",
+        "codesCopied": "Códigos copiados.",
+        "saveFirst": "Descarga o copia tus códigos para terminar.",
+        "fileHeader": "Códigos de recuperación de Eleva para la verificación en dos pasos. Cada código te deja entrar una vez.",
+        "done": "Hecho"
+      }
+    },
+    "passkeys": {
+      "title": "Llaves de acceso",
+      "description": "Inicia sesión con tu huella, tu cara o el PIN del dispositivo en lugar de una contraseña.",
+      "infoLabel": "Sobre las llaves de acceso",
+      "info": "Una llave de acceso se guarda en tu dispositivo o en tu gestor de contraseñas. No se puede adivinar ni la puede robar una web falsa, y no tienes que recordar nada.",
+      "add": "Añadir llave de acceso",
+      "empty": "Todavía no has añadido ninguna llave de acceso.",
+      "added": "Llave de acceso añadida.",
+      "remove": "Quitar",
+      "removed": "Llave de acceso quitada.",
+      "unnamed": "Llave de acceso",
+      "addedOn": "Añadida el {date}",
+      "removeTitle": "¿Quitar esta llave de acceso?",
+      "removeBody": "Ya no podrás iniciar sesión con ella. Puedes volver a añadirla más tarde.",
+      "cancel": "Cancelar"
+    },
+    "google": {
+      "title": "Google",
+      "description": "Inicia sesión con tu cuenta de Google.",
+      "connected": "Conectada",
+      "connect": "Conectar Google",
+      "linkFailed": "No hemos podido conectar Google. Inténtalo de nuevo.",
+      "linkEmailMismatch": "No hemos podido conectar Google. Usa la cuenta de Google con el mismo email que tu cuenta de Eleva e inténtalo de nuevo.",
+      "linkTaken": "Esa cuenta de Google ya está conectada a otra cuenta de Eleva."
+    },
+    "devices": {
+      "title": "Dónde tienes la sesión iniciada",
+      "description": "Si ves un dispositivo que no reconoces, cierra su sesión y cambia tu contraseña.",
+      "thisDevice": "Este dispositivo",
+      "name": "{browser} en {os}",
+      "unknown": "Dispositivo desconocido",
+      "lastActive": "Activo por última vez {date}",
+      "signOut": "Cerrar sesión",
+      "signOutOthers": "Cerrar sesión en los demás dispositivos",
+      "signedOut": "Se ha cerrado la sesión en ese dispositivo.",
+      "signedOutOthers": "Se ha cerrado la sesión en todos los demás dispositivos.",
+      "showAll": "Ver todos ({count})",
+      "showFewer": "Ver menos"
+    },
+    "errors": {
+      "password": "La contraseña no es correcta. Inténtalo de nuevo.",
+      "code": "El código no ha funcionado. Escribe el código más reciente de tu app."
+    }
   },
   "onboarding": {
     "title": "Bienvenido a Eleva",
@@ -93,7 +224,6 @@
     "errorGeneric": "No pudimos completar la configuración. Inténtalo de nuevo."
   },
   "organizations": {
-    "eyebrow": "Cuenta",
     "title": "Espacios de trabajo",
     "description": "Tu Space y los espacios de trabajo a los que perteneces. Abre uno para cambiar a él.",
     "createWorkspace": "Crear espacio de trabajo",
@@ -118,7 +248,16 @@
     "description": "Gestiona tu suscripción personal y métodos de pago.",
     "subscriptionTitle": "Suscripción",
     "subscriptionDescription": "Elige un plan y gestiona el pago o el portal de facturación.",
-    "eyebrow": "Cuenta"
+    "noWorkspace": {
+      "title": "Nada que pagar aquí",
+      "description": "La facturación es para consultas de especialistas y clínicas. Los recibos de tus sesiones están en tu Espacio.",
+      "action": "Abrir pagos"
+    },
+    "pickWorkspace": {
+      "title": "Abre primero tu consulta",
+      "description": "Los planes pertenecen a una consulta o a una clínica. Cámbiate a ella en Espacios de trabajo y vuelve a Facturación.",
+      "action": "Abrir espacios de trabajo"
+    }
   },
   "auth": {
     "loginTitle": "Hola de nuevo",
@@ -162,7 +301,7 @@
     "logoutTitle": "Cerrar sesión",
     "logoutDescription": "Cierra esta sesión en este dispositivo.",
     "errorGeneric": "Algo salió mal. Inténtalo de nuevo.",
-    "accountNotLinked": "Este correo ya tiene una cuenta de Eleva. Inicia sesión con un enlace de acceso, tu contraseña o una llave de acceso y luego conecta Google en Configuración → Seguridad.",
+    "accountNotLinked": "Este correo ya tiene una cuenta de Eleva. Inicia sesión con un enlace de acceso, tu contraseña o una llave de acceso y luego conecta Google en Cuenta → Seguridad.",
     "providerEmailNotVerified": "Google aún no ha confirmado esta dirección de correo. Entra con un enlace: te lo enviamos por correo y con un toque ya estás dentro.",
     "passwordStepDescription": "Introduce tu contraseña o recibe un enlace de acceso por email.",
     "continue": "Continuar",
@@ -209,26 +348,108 @@
     "callbackErrorBack": "Volver a Eleva"
   },
   "privacy": {
-    "eyebrow": "Cuenta",
-    "title": "Privacidad y datos",
-    "description": "Tus consentimientos, exportación de datos y eliminación de la cuenta.",
-    "controls": {
-      "consents": {
-        "title": "Consentimientos",
-        "body": "Consulta y cambia lo que aceptaste, incluido el marketing y el tratamiento de datos de salud."
+    "title": "Privacidad",
+    "subtitle": "Mira lo que aceptaste, elige cómo usamos tus datos, pide una copia o elimina tu cuenta.",
+    "error": "Algo ha salido mal. Inténtalo de nuevo.",
+    "agreements": {
+      "title": "Términos y aviso de privacidad",
+      "description": "Se aplican mientras uses Eleva.",
+      "agreedOn": "Aceptado el {date}",
+      "updated": "Actualizado el {date}",
+      "read": "Leer",
+      "kinds": {
+        "terms": "Términos de uso",
+        "privacy": "Aviso de privacidad"
       },
-      "export": {
-        "title": "Exportar tus datos",
-        "body": "Solicita una copia de los datos que Eleva tiene sobre ti."
-      },
-      "deletion": {
-        "title": "Eliminar tu cuenta",
-        "body": "Programa la eliminación con un periodo de espera de 14 días. Los registros vinculados a una sesión se desidentifican y se conservan durante el mínimo legal."
+      "agree": "Aceptar",
+      "agreeNew": "Aceptar esta versión",
+      "agreedOld": "Aceptaste la versión del {date}",
+      "saved": "Guardado. Gracias.",
+      "readLabel": "Leer {document} (se abre en una pestaña nueva)"
+    },
+    "choices": {
+      "title": "Tus elecciones",
+      "description": "Cámbialas cuando quieras. Guardamos cada cambio al momento.",
+      "onSince": "Activo desde el {date}",
+      "granted": "Guardado. Está activado.",
+      "withdrawn": "Guardado. Está desactivado.",
+      "healthDataBlocked": "Sigue activo mientras tengas una sesión reservada. Puedes desactivarlo después de tu última sesión.",
+      "kinds": {
+        "health_data_processing": {
+          "title": "Información de salud para tu atención",
+          "description": "Permite que tus especialistas usen información sobre tu salud, como tus respuestas al cuestionario, las notas de las sesiones y los documentos, para atenderte. Necesitas tenerlo activado para reservar.",
+          "noticeLink": "Leer el aviso sobre datos de salud"
+        },
+        "marketing": {
+          "title": "Novedades de Eleva",
+          "description": "Emails sobre nuevos especialistas, eventos y ofertas."
+        },
+        "ai_processing": {
+          "title": "Ayuda de IA en los informes de sesión",
+          "description": "Está desactivado hasta que lo actives. Puedes desactivarlo cuando quieras.",
+          "info": [
+            "Tus sesiones de vídeo se transcriben en directo, para que tu especialista conserve un registro escrito.",
+            "Tu especialista puede preparar informes de sesión a partir de sus propias notas con un modelo de IA que no guarda copia de tus datos, y revisa cada borrador antes de que lo veas. La redacción con IA aún no está activa.",
+            "Cuando lo desactivas, la transcripción se detiene desde tu próxima llamada."
+          ],
+          "noticeLink": "Leer el aviso sobre el tratamiento con IA"
+        }
       }
     },
-    "spaceHint": "Estos controles están en tu Space.",
-    "noSpace": "Necesitas un Space personal para gestionar estos controles.",
-    "openControls": "Abrir controles de privacidad"
+    "recordAccess": {
+      "title": "Registros compartidos en clínicas",
+      "description": "Algunas clínicas permiten que sus especialistas lean los registros de las sesiones de los demás, para que tu atención sea continua. Puedes decir que no en cada clínica.",
+      "optOut": "No compartir los registros de mis sesiones con otros especialistas de {clinic}",
+      "sharedOn": "{clinic} comparte registros entre sus especialistas.",
+      "sharedOff": "{clinic} no comparte registros entre sus especialistas por ahora.",
+      "optOutSaved": "Guardado. Los demás especialistas de esta clínica no pueden leer los registros de tus sesiones.",
+      "optInSaved": "Guardado. Los demás especialistas de esta clínica pueden volver a leer los registros de tus sesiones."
+    },
+    "dsar": {
+      "title": "Obtener una copia de tus datos",
+      "description": "Preparamos un archivo con los datos que Eleva tiene sobre ti. Suele tardar unos minutos.",
+      "request": "Pedir una copia",
+      "requesting": "Pidiendo…",
+      "requestNew": "Pedir una copia nueva",
+      "requested": "Estamos preparando tu archivo.",
+      "download": "Descargar (.zip)",
+      "downloadHint": "El enlace de descarga funciona durante 24 horas.",
+      "error": "No hemos podido pedir tu copia. Inténtalo de nuevo.",
+      "status": {
+        "pending": "Esperando para empezar…",
+        "processing": "Preparando tu archivo…",
+        "ready": "Tu archivo está listo.",
+        "expired": "El enlace ha caducado. Pide una copia nueva.",
+        "failed": "Algo ha salido mal. Pide una copia nueva."
+      },
+      "leaveHint": "Puedes salir de esta página. Vuelve aquí para descargarlo."
+    },
+    "deletion": {
+      "title": "Eliminar tu cuenta",
+      "description": "Tus próximas sesiones se cancelan y las nuevas reservas se detienen en cuanto confirmas. Eliminamos tu cuenta 14 días después.",
+      "button": "Eliminar cuenta",
+      "confirmTitle": "¿Eliminar tu cuenta?",
+      "eraseTitle": "Lo que borramos",
+      "erase": [
+        "Tu perfil, tu foto y tus ajustes.",
+        "Lo que escribiste para tus sesiones, como tus respuestas al cuestionario.",
+        "Las elecciones que no están ligadas a una sesión, como las novedades de Eleva."
+      ],
+      "keepTitle": "Lo que conservamos, y por qué",
+      "keep": "Conservamos las notas de sesión de tus especialistas, los consentimientos de tus sesiones y tus registros de pago durante el tiempo que exige la ley. En las notas y los consentimientos, cambiamos tu nombre y tu cuenta por un código. Los registros de pago conservan los datos que exige la ley fiscal.",
+      "sessionsTitle": "Tus próximas sesiones",
+      "sessions": "Las próximas sesiones se cancelan cuando confirmas. Si pagaste alguna, iniciamos tu reembolso. Mantener la cuenta después no recupera las sesiones canceladas.",
+      "grace": "Tu cuenta se elimina 14 días después de que confirmes. Hasta entonces, puedes mantenerla desde esta página.",
+      "confirm": "Eliminar mi cuenta",
+      "scheduling": "Programando…",
+      "scheduled": "Tu cuenta se eliminará el {date}. Puedes cancelarlo hasta entonces.",
+      "alreadyScheduled": "La eliminación de tu cuenta ya está programada.",
+      "cancel": "Mantener mi cuenta",
+      "cancelling": "Cancelando…",
+      "cancelled": "Tu cuenta sigue abierta. Puedes volver a reservar sesiones.",
+      "keepOpen": "Mantener mi cuenta",
+      "error": "Algo ha salido mal. Inténtalo de nuevo."
+    }
   },
   "invitation": {
     "loading": "Abriendo tu invitación…",

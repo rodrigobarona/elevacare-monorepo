@@ -15,6 +15,7 @@
     "./react": "./src/react.tsx",
     "./guards": "./src/guards.ts",
     "./return-to": "./src/return-to.ts",
+    "./user-agent": "./src/user-agent.ts",
     "./upload-token": "./src/upload-token.ts",
     "./clinics": "./src/clinics.ts",
     "./organizations": "./src/organizations.ts",

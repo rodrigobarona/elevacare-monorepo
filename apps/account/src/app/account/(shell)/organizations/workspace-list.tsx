@@ -64,9 +64,13 @@ export function WorkspaceList({ rows }: { rows: WorkspaceRow[] }) {
                 <StatusPill tone="positive">{t("current")}</StatusPill>
               ) : null}
             </div>
-            <p className="mt-0.5 truncate text-sm text-muted-foreground">
-              {t(`role.${row.membershipRole}`)} · {row.orgSlug}
-            </p>
+            {/* A Space is yours alone, and its slug is never shown in an
+                address (ADR-026), so only workspaces show role and slug. */}
+            {row.orgType === "personal" ? null : (
+              <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                {t(`role.${row.membershipRole}`)} · {row.orgSlug}
+              </p>
+            )}
           </div>
           <Button
             size="sm"

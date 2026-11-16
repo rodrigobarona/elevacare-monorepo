@@ -1,3 +1,4 @@
+import { createHmac } from "node:crypto"
 import { mkdirSync, renameSync } from "node:fs"
 import path from "node:path"
 import {
@@ -13,6 +14,9 @@ import {
   accountUrl,
   apiUrl,
   E2E_PASSWORD,
+  sessionCookie,
+  signInEmail,
+  signUpEmail,
   uniqueEmail,
   verifyEmail,
   waitForE2eAuthUrl,
@@ -46,6 +50,24 @@ import {
  * Loopback only. Output: docs/eleva-v3/design-audit/captures/{label}/{surface}/.
  * Run it before a design slice and again after (a new label) to get the pair.
  */
+/** RFC 6238 code for a base32 setup key, to walk the two-step dialog. */
+function totp(base32: string, now = Date.now()): string {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
+  let bits = ""
+  for (const char of base32.replace(/=+$/, "").toUpperCase()) {
+    bits += alphabet.indexOf(char).toString(2).padStart(5, "0")
+  }
+  const bytes = Buffer.from(
+    (bits.match(/.{8}/g) ?? []).map((byte) => parseInt(byte, 2))
+  )
+  const counter = Buffer.alloc(8)
+  counter.writeBigUInt64BE(BigInt(Math.floor(now / 30_000)))
+  const hmac = createHmac("sha1", bytes).update(counter).digest()
+  const offset = hmac[hmac.length - 1]! & 0xf
+  const value = (hmac.readUInt32BE(offset) & 0x7fffffff) % 1_000_000
+  return value.toString().padStart(6, "0")
+}
+
 const run = process.env.E2E_DESIGN_CAPTURE === "1"
 const label =
   process.env.DESIGN_CAPTURE_LABEL ?? new Date().toISOString().slice(0, 10)
@@ -721,7 +743,7 @@ test.describe("design capture", () => {
       }
 
       // Delete account asks first; the capture never confirms.
-      await page.goto(`${webUrl}/space/privacy`)
+      await page.goto(`${webUrl}/account/privacy`)
       await settle(page)
       const remove = page.getByTestId("member-deletion-request")
       await expect(remove).toBeVisible()
@@ -814,14 +836,123 @@ test.describe("design capture", () => {
         ["02-sessions", "/sessions"],
         ["03-reports", "/reports"],
         ["04-payments", "/payments"],
-        ["05-privacy", "/privacy"],
-        ["06-settings", "/settings"],
         ["07-notifications", "/notifications"],
       ] as const
       for (const [name, suffix] of pages) {
         await page.goto(`${base}${suffix}`)
         await clearBanner(page)
         await shoot(page, surface, name, kind)
+      }
+      await context.close()
+    })
+
+    test(`account security with a password — ${kind}`, async ({
+      browser,
+      request,
+    }) => {
+      // A fresh password account: the password card and the two-step
+      // setup dialog (QR code, key, backup codes) only show with one.
+      const surface = "12-account-settings"
+      const email = uniqueEmail("design-capture-security")
+      const signUp = await signUpEmail(request, {
+        name: "Beatriz Nunes",
+        email,
+        password: E2E_PASSWORD,
+      })
+      expect(signUp.ok(), await signUp.text()).toBe(true)
+      await verifyEmail(request, email)
+      const signIn = await signInEmail(request, {
+        email,
+        password: E2E_PASSWORD,
+      })
+      const cookie = sessionCookie(signIn)
+      expect(cookie, "sign-in returned a session cookie").toBeTruthy()
+      const context = await newContext(browser, kind, { cookie: cookie! })
+      const page = await context.newPage()
+      await page.goto(`${webUrl}/account/security`)
+      await clearBanner(page)
+      await expect(page.getByTestId("security-two-step")).toBeVisible({
+        timeout: 20_000,
+      })
+      await shoot(page, surface, "03b-security-with-password", kind)
+      await page.getByTestId("two-step-toggle").click()
+      await page.getByTestId("two-step-password").fill(E2E_PASSWORD)
+      await page.getByTestId("two-step-continue").click()
+      const dialog = page.getByRole("dialog")
+      await expect(dialog.getByTestId("two-step-qr")).toBeVisible({
+        timeout: 15_000,
+      })
+      // The QR code keeps an accessible name.
+      await expect(dialog.getByRole("img", { name: /QR code/i })).toBeVisible()
+      await shoot(page, surface, "11-two-step-scan", kind, { fullPage: false })
+      // The key comes from the QR link, as the authenticator app reads it.
+      // Hidden on desktop (phones only), so read it from the DOM.
+      const uri = await dialog
+        .getByTestId("two-step-open-app")
+        .getAttribute("href")
+      const key = new URL(uri!).searchParams.get("secret")!
+      await dialog.getByTestId("two-step-next").click()
+      await page.getByTestId("two-step-code").fill(totp(key))
+      await shoot(page, surface, "13-two-step-code", kind, { fullPage: false })
+      await dialog.getByTestId("two-step-verify").click()
+      await expect(dialog.getByTestId("two-step-backup-codes")).toBeVisible({
+        timeout: 15_000,
+      })
+      await shoot(page, surface, "14-two-step-backup-codes", kind, {
+        fullPage: false,
+      })
+      await context.close()
+    })
+
+    test(`account settings (seeded) — ${kind}`, async ({
+      browser,
+      request,
+    }) => {
+      const surface = "12-account-settings"
+      const cookie = await sessionFromMagicLink(request, MEMBER_DEMO_EMAIL)
+      const context = await newContext(browser, kind, { cookie })
+      const page = await context.newPage()
+      // Old Space addresses are captured too: they should land on /account.
+      const pages = [
+        ["01-profile", "/account/settings"],
+        ["02-notifications", "/account/notifications"],
+        ["03-security", "/account/security"],
+        ["04-privacy", "/account/privacy"],
+        ["05-billing", "/account/billing"],
+        ["06-workspaces", "/account/organizations"],
+        ["07-old-space-settings", "/space/settings"],
+        ["08-old-space-privacy", "/space/privacy"],
+      ] as const
+      for (const [name, url] of pages) {
+        const response = await page.goto(`${webUrl}${url}`)
+        if (response?.status() === 404) continue
+        await clearBanner(page)
+        await shoot(page, surface, name, kind)
+      }
+
+      // Background help opens in a popover; the delete rules in the dialog.
+      await page.goto(`${webUrl}/account/notifications`)
+      await clearBanner(page)
+      const help = page.getByRole("button", {
+        name: "Where “In Eleva” messages appear",
+      })
+      if (await help.isVisible().catch(() => false)) {
+        await help.click()
+        await shoot(page, surface, "09-notifications-help", kind, {
+          fullPage: false,
+        })
+        await page.keyboard.press("Escape")
+      }
+      await page.goto(`${webUrl}/account/privacy`)
+      await clearBanner(page)
+      const remove = page.getByTestId("member-deletion-request")
+      if (await remove.isVisible().catch(() => false)) {
+        await remove.click()
+        await expect(page.getByTestId("member-deletion-confirm")).toBeVisible()
+        await shoot(page, surface, "10-delete-account-confirm", kind, {
+          fullPage: false,
+        })
+        await page.keyboard.press("Escape")
       }
       await context.close()
     })

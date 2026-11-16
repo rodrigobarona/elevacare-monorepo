@@ -201,7 +201,7 @@ test.describe("member Space journey", () => {
       )
       await expect(page.getByText(/€\s?60|60,00\s?€|€60/)).toBeVisible()
 
-      await persistMarketingPreference(page, request)
+      await persistNotificationPreference(page, request)
       await assertMemberConsentsApi(page, request)
       await requestDsarWithMockedStorage(page, request)
 
@@ -296,7 +296,7 @@ test.describe("member Space without live Stripe", () => {
 
     await landOnPersonalSpace(page)
 
-    await persistMarketingPreference(page, request)
+    await persistNotificationPreference(page, request)
     await assertMemberConsentsApi(page, request)
     await requestDsarWithMockedStorage(page, request)
     await assertDeleteAccountBlocksReserve(page, request)
@@ -364,28 +364,24 @@ test.describe("member Space without live Stripe", () => {
   })
 })
 
-async function persistMarketingPreference(
+async function persistNotificationPreference(
   page: Page,
   request: APIRequestContext
 ): Promise<void> {
-  await page.goto(`/space/settings`)
-  const marketingEmail = page
-    .getByTestId("notify-email-marketing")
-    .locator('[data-slot="checkbox"]')
-  await expect(marketingEmail).toBeVisible()
-  // React Aria Checkbox exposes selection via data-selected, not aria-checked.
+  // Each switch saves straight away (no Save button).
+  await page.goto(`/account/notifications`)
+  const reminderEmail = page.getByTestId("notify-email-reminder")
+  await expect(reminderEmail).toBeVisible()
+  // React Aria Switch exposes selection via data-selected, not aria-checked.
   const wasSelected =
-    (await marketingEmail.getAttribute("data-selected")) === "true"
-  await marketingEmail.click()
-  await page.getByTestId("member-notifications-save").click()
-  await expect(page.getByText(/Notification preferences saved/i)).toBeVisible({
-    timeout: 15_000,
-  })
+    (await reminderEmail.getAttribute("data-selected")) === "true"
+  await reminderEmail.click()
+  await expect(page.getByText(/^Saved\.$/)).toBeVisible({ timeout: 15_000 })
   await page.reload()
   if (wasSelected) {
-    await expect(marketingEmail).not.toHaveAttribute("data-selected", "true")
+    await expect(reminderEmail).not.toHaveAttribute("data-selected", "true")
   } else {
-    await expect(marketingEmail).toHaveAttribute("data-selected", "true")
+    await expect(reminderEmail).toHaveAttribute("data-selected", "true")
   }
 
   const me = await request.get(`${apiUrl}/me`, {
@@ -399,10 +395,10 @@ async function persistMarketingPreference(
       enabled: boolean
     }>
   }
-  const marketingPref = profile.preferences?.find(
-    (row) => row.channel === "email" && row.category === "marketing"
+  const reminderPref = profile.preferences?.find(
+    (row) => row.channel === "email" && row.category === "reminder"
   )
-  expect(marketingPref?.enabled).toBe(!wasSelected)
+  expect(reminderPref?.enabled).toBe(!wasSelected)
 }
 
 async function requestDsarWithMockedStorage(
@@ -412,7 +408,7 @@ async function requestDsarWithMockedStorage(
   // Private storage is mocked in `@eleva/storage` when E2E_AUTH_CAPTURE=1
   // or E2E_MOCK_PRIVATE_STORAGE=1 (server process). Playwright cannot
   // intercept the server-side S3 client.
-  await page.goto(`/space/privacy`)
+  await page.goto(`/account/privacy`)
   await page.getByTestId("member-dsar-request").click()
   const status = page.getByTestId("member-dsar-status")
   await expect(status).toHaveAttribute("data-status", "ready", {
@@ -479,7 +475,7 @@ async function assertMemberConsentsApi(
   const withdrawn = after.consents.find((row) => row.kind === "marketing")
   expect(withdrawn?.withdrawnAt).toBeTruthy()
 
-  await page.goto(`${webUrl}/space/privacy`)
+  await page.goto(`${webUrl}/account/privacy`)
   await expect(page.getByTestId("member-consent-marketing")).toHaveAttribute(
     "data-granted",
     "false",
@@ -598,7 +594,7 @@ async function assertDeleteAccountBlocksReserve(
     ],
   }
 
-  await page.goto(`${webUrl}/space/privacy`)
+  await page.goto(`${webUrl}/account/privacy`)
   let deletionRequested = false
   try {
     await page.getByTestId("member-deletion-request").click()

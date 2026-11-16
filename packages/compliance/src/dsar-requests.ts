@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, lt, or } from "drizzle-orm"
+import { and, desc, eq, inArray, isNull, lt, or } from "drizzle-orm"
 import { withAudit, withPlatformAudit } from "@eleva/audit"
 import { main, withPlatformAdminContext } from "@eleva/db"
 import { deletePrivateDocument } from "@eleva/storage"
@@ -77,6 +77,24 @@ export async function getDsarRequestById(
       })
       .from(main.dsarRequests)
       .where(eq(main.dsarRequests.id, dsarId))
+      .limit(1)
+  )
+  return row ?? null
+}
+
+/**
+ * The person's most recent data copy, so the Privacy page can show its
+ * status (and the download while it lasts) when she comes back to it.
+ */
+export async function getLatestDsarRequestForUser(
+  userId: string
+): Promise<Pick<DsarRequestView, "id" | "status"> | null> {
+  const [row] = await withPlatformAdminContext((tx) =>
+    tx
+      .select({ id: main.dsarRequests.id, status: main.dsarRequests.status })
+      .from(main.dsarRequests)
+      .where(eq(main.dsarRequests.userId, userId))
+      .orderBy(desc(main.dsarRequests.requestedAt))
       .limit(1)
   )
   return row ?? null

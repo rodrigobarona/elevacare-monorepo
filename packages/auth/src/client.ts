@@ -74,6 +74,9 @@ export interface ElevaAuthClient {
     verifyBackupCode: (body: {
       code: string
     }) => Promise<{ error?: AuthClientError | null }>
+    disable: (body: {
+      password: string
+    }) => Promise<{ error?: AuthClientError | null }>
   }
   passkey: {
     listUserPasskeys: () => Promise<{ data?: unknown }>
@@ -100,6 +103,7 @@ export interface ElevaAuthClient {
   changePassword: (body: {
     currentPassword: string
     newPassword: string
+    revokeOtherSessions?: boolean
   }) => Promise<{ error?: AuthClientError | null }>
   linkSocial: (body: {
     provider: string
@@ -114,10 +118,19 @@ export interface ElevaAuthClient {
     data?: Array<{ id: string; providerId: string }> | null
     error?: AuthClientError | null
   }>
+  /** The signed-in session (its token marks "this device" in a list). */
+  getSession: () => Promise<{
+    data?: {
+      session: { id: string; token: string }
+      user: { twoFactorEnabled?: boolean | null }
+    } | null
+    error?: AuthClientError | null
+  }>
   listSessions: () => Promise<{ data?: unknown }>
   revokeSession: (body: {
     token: string
   }) => Promise<{ error?: AuthClientError | null }>
+  revokeOtherSessions: () => Promise<{ error?: AuthClientError | null }>
   /** Organization invitations (Better Auth organization plugin). */
   organization: {
     getInvitation: (input: { query: { id: string } }) => Promise<{

@@ -27,7 +27,10 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "sonner": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "@eleva/compliance": "workspace:^",
+    "next-themes": "catalog:",
+    "uqr": "catalog:"
   },
   "devDependencies": {
     "@eleva/eslint-config": "workspace:*",

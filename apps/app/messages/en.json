@@ -5,7 +5,8 @@
     "payments": "Payments",
     "settings": "Settings",
     "privacy": "Privacy",
-    "reports": "Reports"
+    "reports": "Reports",
+    "account": "Account"
   },
   "common": {
     "save": "Save",
@@ -227,145 +228,6 @@
       "failed": "Failed",
       "refunded": "Refunded",
       "refund_pending": "Refund pending"
-    }
-  },
-  "settings": {
-    "title": "Settings",
-    "subtitle": "Manage your member profile, language, theme, and notifications.",
-    "profile": {
-      "title": "Profile",
-      "description": "Update the name shown to experts in this Space.",
-      "email": "Email",
-      "name": "Name",
-      "timezone": "Timezone",
-      "save": "Save",
-      "saving": "Saving…",
-      "saved": "Profile updated.",
-      "error": "Could not update your profile. Try again.",
-      "footerHint": "Your email is used to sign in and cannot be changed here."
-    },
-    "avatar": {
-      "title": "Profile photo",
-      "description": "This is your avatar. Click the photo to upload a custom image from your files.",
-      "changePhoto": "Change profile photo",
-      "remove": "Remove",
-      "hint": "JPG, PNG or WebP. Max 2 MB.",
-      "tooLarge": "File is too large. Maximum size is 2 MB.",
-      "invalidType": "Unsupported file type. Use JPG, PNG, or WebP.",
-      "uploadFailed": "Upload failed. Please try again.",
-      "saveFailed": "Could not save avatar. Please try again.",
-      "removeFailed": "Could not remove avatar. Please try again.",
-      "uploaded": "Profile photo updated.",
-      "removed": "Profile photo removed."
-    },
-    "language": {
-      "title": "Language",
-      "description": "Choose the language used across Eleva for your account.",
-      "footerHint": "Applied across Eleva on your next visit.",
-      "saved": "Language preference updated.",
-      "error": "Could not update language. Please try again."
-    },
-    "theme": {
-      "title": "Theme",
-      "description": "Choose light, dark, or match your device.",
-      "footerHint": "Shared across all Eleva apps.",
-      "light": "Light",
-      "dark": "Dark",
-      "system": "System",
-      "saved": "Theme updated."
-    },
-    "notifications": {
-      "title": "Notifications",
-      "description": "Choose how Eleva can reach you. Quiet hours pause non-urgent messages.",
-      "footerHint": "These preferences are used when we start sending notifications.",
-      "saved": "Notification preferences saved.",
-      "error": "Could not save notification preferences.",
-      "quietHours": "Quiet hours",
-      "quietHoursHint": "Optional. Both start and end are required when enabled.",
-      "quietStart": "Starts",
-      "quietEnd": "Ends",
-      "enableQuietHours": "Enable quiet hours",
-      "channel": {
-        "email": "Email",
-        "sms": "SMS",
-        "in_app": "In-app"
-      },
-      "category": {
-        "booking": "Sessions",
-        "reminder": "Reminders",
-        "payment": "Payments",
-        "marketing": "Marketing",
-        "system": "System"
-      }
-    }
-  },
-  "privacy": {
-    "title": "Privacy",
-    "subtitle": "Consents, data export, and account deletion for this Space.",
-    "consents": {
-      "title": "Consents",
-      "description": "See what you agreed to and withdraw marketing or health-data processing where allowed.",
-      "granted": "Granted {date}",
-      "withdrawn": "Withdrawn {date}",
-      "notGranted": "Not granted",
-      "version": "Version {version}",
-      "grant": "Grant",
-      "withdraw": "Withdraw",
-      "grantedToast": "Consent updated.",
-      "withdrawnToast": "Consent withdrawn.",
-      "healthDataBlocked": "You cannot withdraw health-data consent while a confirmed future session exists.",
-      "kinds": {
-        "terms": "Terms of use",
-        "privacy": "Privacy notice",
-        "health_data_processing": "Health data processing",
-        "marketing": "Marketing messages",
-        "ai_processing": "AI help with session reports"
-      },
-      "aiProcessingHint": "Lets your video sessions be transcribed live so your expert keeps a written record, and lets your expert draft session reports from their own notes with an AI model that keeps no copy of your data. Your expert reviews every draft before you see it. Off unless you turn it on, and you can withdraw at any time; withdrawing stops transcription from your next call. AI drafting is not switched on yet.",
-      "aiProcessingNoticeLink": "Read the AI processing notice."
-    },
-    "recordAccess": {
-      "title": "Clinic session records",
-      "description": "When a clinic enables shared records, other experts in that clinic may read session records for care continuity. You can opt out per clinic.",
-      "optOutLabel": "Do not allow shared access at {clinic}",
-      "sharedOn": "This clinic has shared records turned on.",
-      "sharedOff": "Shared records are off for this clinic today.",
-      "optOutSuccess": "Clinic record-sharing preference saved.",
-      "optInSuccess": "You allow shared clinic access again."
-    },
-    "dsar": {
-      "title": "Download your data",
-      "description": "Request a copy of the data Eleva holds about you. The file is prepared as a zip and the download link expires after 24 hours.",
-      "request": "Request export",
-      "requesting": "Requesting…",
-      "requested": "Export requested. This usually takes a few minutes.",
-      "status": "Status: {status}",
-      "download": "Download zip",
-      "refresh": "Check status",
-      "error": "Could not request or load your export.",
-      "statusLabel": {
-        "pending": "Pending",
-        "processing": "Preparing",
-        "ready": "Ready",
-        "expired": "Expired",
-        "failed": "Failed"
-      }
-    },
-    "deletion": {
-      "title": "Delete account",
-      "description": "Schedule deletion of this member account. New bookings are blocked as soon as you confirm.",
-      "ruleTitle": "What is erased and what is kept",
-      "ruleBody": "Account-scope data is erased: your profile, notification preferences, and consents that are not tied to a session (for example marketing). Booking-scope consents — the ones that authorised a session — are de-identified (your name and account are removed) and kept for the Portuguese clinical-record minimum, then destroyed later. Expert clinical notes follow the same retain-then-destroy rule. This cannot be shortened from this screen.",
-      "grace": "There is a 14-day waiting period before deletion runs. You can cancel during that window.",
-      "confirmTitle": "Delete your account?",
-      "confirmBody": "This schedules deletion. Account-scope data will be erased. Session-linked consents are de-identified and retained for the legal clinical period. Future and unpaid sessions are cancelled. Paid sessions are marked for a later refund.",
-      "confirm": "Schedule deletion",
-      "scheduling": "Scheduling…",
-      "scheduled": "Account deletion scheduled for {date}.",
-      "alreadyScheduled": "Deletion is already scheduled.",
-      "cancelRequest": "Cancel deletion",
-      "cancelling": "Cancelling…",
-      "cancelled": "Account deletion cancelled. You can book again."
     }
   },
   "errors": {

@@ -121,6 +121,76 @@ Each entry should include:
 - Reference: `apps/expert/src/app/expert/[orgSlug]/calendars/`,
   `apps/api/src/app/expert/calendar/reminder/route.ts`,
   `packages/calendar/src/adapters/`, `design-audit/plan.json` (D5.7)
+### 2026-11-16: One account home: settings and privacy live only in /account (design slice D5.8) (active)
+
+- Decision (founder, 2026-11-16: "I do not want to have double routes for
+  the same"): everything about the person lives in `/account`, in short
+  pages: Profile (photo, name, sign-in email, language, time zone,
+  appearance), Notifications, Security, Privacy, Workspaces, and Billing only
+  for people with an expert practice or a clinic. `/space/settings` and
+  `/space/privacy` are permanent redirects to the gateway's `/account/…`; the
+  Space sidebar keeps Settings and Privacy under an "Account" group that
+  opens `/account`. `/expert/{slug}` practice settings stay separate (they
+  are practice settings, not personal ones).
+- Why: both pages already wrote the same user row (`updateMemberProfile`,
+  `/users/locale`, `/users/avatar`); consents, notification preferences, data
+  copies and deletion are keyed by user. The `/me` and `/privacy` routes act
+  for the person's own Space, so the account app now names the Space in its
+  API calls (`apps/account/src/lib/personal-api.ts`); no API change.
+- Notifications show only real choices (backend: `channelEnabled`,
+  `quietHoursSilence` in `@eleva/notifications`): payment and account
+  messages are always sent, so they show as switches that are on and
+  locked, with "Always on"; session and reminder messages (email and
+  in-app) are switches that save at once. Session emails stay a real
+  switch because the backend deliberately honours that preference (only an
+  expert cancel, decline or expiry bypasses it); making them always on is a
+  product call for later. The unused "Marketing" notification row is gone:
+  news emails follow the marketing consent on Privacy. Text messages and
+  quiet hours are not offered: they need a verified phone number that no
+  page collects yet.
+- Privacy splits "What you agreed to" (Terms, Privacy notice: agreed date
+  or the current version's date, a Read link, and an Agree button only when
+  there is no record or it is for an older version) from "Your choices"
+  (health data processing, news, AI help: switches). Every consent's full
+  statement is on the page, never only in a popover; the AI and health-data
+  texts keep their approved meaning and link to their notices. Deletion is
+  rewritten to match `account-deletion.ts`: sessions are cancelled on
+  confirm and are not restored by keeping the account, paid ones are marked
+  for a refund, payment records and expert notes are kept with the name
+  replaced by a code, and what the member wrote is erased; the confirm is a
+  non-dismissable alert dialog. The data-copy card shows the latest request
+  on arrival (`getLatestDsarRequestForUser`). The rewritten copy has
+  **not** had legal review (D5.3 stays `legalReview`).
+- Security: password only for people who have one (changing it signs out
+  other devices); two-step verification as a dialog (password, QR code and
+  setup key, backup codes she confirms she saved, code) and only when a
+  password exists; passkey removal asks first; passkeys list; Google; "Where
+  you're signed in" with device names (`@eleva/auth/user-agent`), "This
+  device", last active, sign out one or all others.
+- Hierarchy rule, now in `docs/eleva-v3/brand-book/messaging-framework.md`:
+  headline and one line per page (no eyebrow), title and one line per card,
+  a hint only when it prevents a mistake or says who sees a value,
+  background in an (i) popover (`@eleva/ui` `InfoPopover`), and what a
+  member must know before an irreversible step in the dialog she confirms.
+- Research: Mobbin library `_context/mobbin/library/12-account-settings/`
+  (Linear, Render, StackAI, Plain, Kiwi.com, Pipedrive, Square, QuickBooks);
+  captures `docs/eleva-v3/design-audit/captures/2026-11-16-account-before/`
+  and `…-account-after/` (`12-account-settings`).
+- Out of scope, follow-ups: sign-up does not record Terms and Privacy
+  acceptance (ACC-03, D5.3, needs legal review); a mobile number with
+  verification, then text messages and quiet hours (D5.5); billing plan
+  copy and translations, and moving plans into practice settings (D5.5);
+  setting a password for people who sign in with Google or an email link;
+  regenerating backup codes; first name and surname as separate fields
+  from sign-up to Profile (founder asked, next slice); a mobile number with
+  verification on Profile (the API `/me/phone/verify-*` and Twilio sending
+  exist; only the page is missing), which brings back the text-message
+  column and quiet hours (next slice, with the name split). DPO review:
+  "You need this on to book" makes health-data consent a condition of
+  booking (GDPR Art. 7(4)); defensible because care needs the data, but it
+  needs the DPO's sign-off alongside ACC-03.
+- Owner: engineering + founder
+- Status: `active`
 
 ### 2026-11-16: Calendar data in the privacy notice; disconnect withdraws access (Google verification prep) (active)
 
