@@ -36,15 +36,15 @@ function ws(
 }
 
 describe("buildAccountMenuModel", () => {
-  it("offers to set up a practice when the person only has a Space", () => {
+  it("offers to create a workspace when the person only has a Space", () => {
     const model = buildAccountMenuModel(
       [ws("personal", "Patricia's Space", { isCurrent: true })],
       urls
     )
     expect(model.shortcuts).toEqual([
       {
-        kind: "offer",
-        href: "https://eleva.care/account/workspaces/create/expert",
+        kind: "create",
+        href: "https://eleva.care/account/workspaces/new",
       },
     ])
     expect(model.staffHref).toBeNull()
@@ -125,12 +125,12 @@ describe("buildAccountMenuModel", () => {
     expect(model.helpHref).toBe("https://eleva.care/docs")
   })
 
-  it("never offers a practice to someone who already works in a clinic", () => {
+  it("drops the create row once someone works in a clinic", () => {
     const model = buildAccountMenuModel(
       [ws("personal", "Space", { isCurrent: true }), ws("team", "Clinic One")],
       urls
     )
-    expect(model.shortcuts.some((s) => s.kind === "offer")).toBe(false)
+    expect(model.shortcuts.some((s) => s.kind === "create")).toBe(false)
   })
 
   it("hides the staff row inside the staff console", () => {
@@ -142,7 +142,7 @@ describe("buildAccountMenuModel", () => {
       urls
     )
     expect(model.staffHref).toBeNull()
-    expect(model.shortcuts.map((s) => s.kind)).toEqual(["space", "offer"])
+    expect(model.shortcuts.map((s) => s.kind)).toEqual(["space", "create"])
   })
 
   it("uses the account app's own settings link when given", () => {

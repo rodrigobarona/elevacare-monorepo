@@ -32,6 +32,27 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-16: A new member's Space shows the workspace switcher; "Create workspace" replaces "Offer sessions" (active)
+
+- Owner: founder (product) + engineering
+- Founder review of a brand-new member's `/space`: the sidebar "Back" link
+  pointed at the page you were on, and the avatar menu's "Offer sessions on
+  Eleva" only led to an expert practice although a clinic or academy can
+  also be created.
+- Mobbin check (Jitter, hilos): the person's own workspace sits at the top
+  of the sidebar with a dropdown even when it is the only one, and that
+  dropdown is where a new workspace is created.
+- Decision: `/space` always shows the sidebar workspace switcher (the Space,
+  plus "Create workspace" at the bottom), even when the Space is the only
+  workspace. This supersedes the 2026-11-09 rule "the switcher shows a menu
+  only with two or more workspaces" for the Space. The avatar menu row
+  becomes "Create workspace – A practice, clinic or academy" (same copy as
+  the switcher). In the apps it opens the same picker pop-up as the
+  sidebar, not the expert form; on the public website, where the pop-up is
+  not mounted, it links to the picker page `/account/workspaces/new`. It
+  still shows only until the person has a work workspace. `/account` and
+  the staff console keep their "Back" link.
+
 ### 2026-11-16: Change setup answers after setup (active)
 
 - Change (references `_context/mobbin/library/07-expert-dashboard` 25–28):

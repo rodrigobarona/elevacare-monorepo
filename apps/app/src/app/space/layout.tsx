@@ -1,26 +1,21 @@
 import { getTranslations } from "next-intl/server"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
 import { buildDashboardConfig } from "@eleva/dashboard/config-helpers"
-import { loadUserWorkspaces } from "@eleva/dashboard/account-menu-server"
 import { spacePath } from "@eleva/config/routing"
 import { requireMemberSpace } from "@/lib/member-api"
 
-/** The person's own Space at `/space` (ADR-026): one per person, no slug. */
+/**
+ * The person's own Space at `/space` (ADR-026): one per person, no slug.
+ * The sidebar always shows the workspace switcher, even when the Space is
+ * the only workspace, so "Create workspace" is one tap away.
+ */
 export default async function SpaceLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   const session = await requireMemberSpace()
-
-  const [t, organizations] = await Promise.all([
-    getTranslations("nav"),
-    loadUserWorkspaces(session.user.id, session.orgId).catch(() => []),
-  ])
-
-  const onlyPersonalSpace =
-    organizations.length === 0 ||
-    (organizations.length === 1 && organizations[0]?.orgType === "personal")
+  const t = await getTranslations("nav")
 
   const dashboardConfig = await buildDashboardConfig(
     session,
@@ -60,11 +55,7 @@ export default async function SpaceLayout({
         ],
       },
     ],
-    {
-      enableOrgSwitcher: false,
-      organizations: onlyPersonalSpace ? [] : organizations,
-      inboxUrl: spacePath("notifications"),
-    }
+    { inboxUrl: spacePath("notifications") }
   )
 
   return <DashboardShell config={dashboardConfig}>{children}</DashboardShell>

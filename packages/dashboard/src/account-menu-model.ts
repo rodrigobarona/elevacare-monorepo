@@ -21,7 +21,7 @@ export type AccountMenuShortcut =
       workspaceKind: WorkspaceKind
     }
   | { kind: "switch"; href: string; count: number }
-  | { kind: "offer"; href: string }
+  | { kind: "create"; href: string }
 
 /** Everything the avatar menu shows besides the person: serializable. */
 export interface AccountMenuModel {
@@ -79,7 +79,8 @@ function helpPath(current: AccountMenuWorkspace | undefined): string {
 /**
  * Decides the avatar menu's workspace rows:
  *
- * - Only a Space: "Your Space" (when elsewhere) plus "Offer sessions on Eleva".
+ * - Only a Space: "Your Space" (when elsewhere) plus "Create workspace", the
+ *   same picker (practice, clinic or academy) as the sidebar switcher.
  * - One or two other workspaces: a direct row for each.
  * - More: "Your Space" (when elsewhere) and one "Switch workspace" row.
  *
@@ -132,8 +133,8 @@ export function buildAccountMenuModel(
 
   if (work.length === 0) {
     shortcuts.push({
-      kind: "offer",
-      href: `${gateway}/account/workspaces/create/expert`,
+      kind: "create",
+      href: `${gateway}/account/workspaces/new`,
     })
   }
 
