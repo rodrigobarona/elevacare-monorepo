@@ -87,6 +87,7 @@ export async function GET(
           id: c.id,
           name: c.name,
           primary: c.primary,
+          writable: c.writable,
           email: c.email,
         })),
       },

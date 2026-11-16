@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic"
 
 const SLUG_LABEL: Record<string, string> = {
   "google-calendar": "Google Calendar",
-  "microsoft-calendar": "Microsoft Calendar",
+  "microsoft-calendar": "Outlook Calendar",
 }
 
 export default async function CalendarsPage({

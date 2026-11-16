@@ -2081,6 +2081,11 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
                         id: z.string(),
                         name: z.string(),
                         primary: z.boolean(),
+                        writable: z
+                          .boolean()
+                          .describe(
+                            "Eleva can add session events to this calendar"
+                          ),
                         email: z.string().optional(),
                       })
                     ),

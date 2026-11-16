@@ -368,6 +368,24 @@
             "MEM-10"
           ],
           "effort": "M"
+        },
+        {
+          "id": "D5.6",
+          "title": "Connected calendars",
+          "scope": "One picker for where sessions go (writable calendars only), a conflicts card per account with switches, the main calendar checked and set by default after connecting, official Google Calendar and Outlook icons, and a plain-language permissions step before leaving for Google or Microsoft.",
+          "findings": [
+            "XDASH-17",
+            "XDASH-18",
+            "XDASH-19",
+            "XDASH-20",
+            "XDASH-21",
+            "XDASH-22",
+            "XDASH-23",
+            "XDASH-24",
+            "XDASH-25",
+            "XDASH-26"
+          ],
+          "effort": "M"
         }
       ]
     },

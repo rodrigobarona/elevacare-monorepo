@@ -5,6 +5,11 @@ export interface CalendarListItem {
   name: string
   primary: boolean
   accessRole: string
+  /**
+   * Eleva may write session events here: a Google calendar the person owns
+   * (the `calendar.events.owned` scope) or a Microsoft calendar they can edit.
+   */
+  writable: boolean
   /** SMTP email address of the calendar owner (Microsoft Graph owner.address). */
   email?: string
 }

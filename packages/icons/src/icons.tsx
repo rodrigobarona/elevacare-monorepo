@@ -55,6 +55,7 @@ export {
   ListBulletsIcon,
   ListIcon,
   ListChecksIcon,
+  LockSimpleIcon,
   MagnifyingGlassIcon,
   MapPinIcon,
   MicrophoneIcon,

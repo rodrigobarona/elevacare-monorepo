@@ -201,7 +201,12 @@
       "Online, by phone or in person",
       "In English, Portuguese and Spanish",
       "Sessions, payments and privacy settings in one place"
-    ]
+    ],
+    "callbackErrorTitle": "That didn't go through",
+    "callbackErrorRestart": "This step took too long or was opened twice, so we stopped it to keep your account safe. Go back to Eleva and try again.",
+    "callbackErrorGeneric": "Something interrupted it. Go back to Eleva and try again.",
+    "callbackErrorDenied": "You chose not to give access, so nothing changed. You can try again whenever you like.",
+    "callbackErrorBack": "Back to Eleva"
   },
   "privacy": {
     "eyebrow": "Account",

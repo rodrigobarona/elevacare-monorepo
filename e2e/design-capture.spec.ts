@@ -762,12 +762,29 @@ test.describe("design capture", () => {
         ["07-finance", "/finance"],
         ["08-setup", "/setup"],
         ["09-integrations", "/integrations"],
+        ["11-calendars", "/calendars"],
       ] as const
       for (const [name, suffix] of pages) {
         await page.goto(`${base}${suffix}`)
         await clearBanner(page)
         await shoot(page, surface, name, kind)
       }
+      // The calendar connect step, where the page has one (it explains access
+      // before leaving for Google; older pages went straight to Google).
+      await page.goto(`${base}/calendars`)
+      await clearBanner(page)
+      const connectGoogle = page
+        .getByTestId("calendars-empty")
+        .getByRole("button", { name: /google/i })
+      if (await connectGoogle.isVisible().catch(() => false)) {
+        await connectGoogle.click()
+        await expect(page.getByRole("dialog")).toBeVisible()
+        await shoot(page, surface, "12-calendars-connect", kind, {
+          fullPage: false,
+        })
+        await page.keyboard.press("Escape")
+      }
+
       await page.goto(`${base}/event-types`)
       const firstOffer = page
         .locator('[data-testid^="event-type-card-"]')

@@ -119,6 +119,15 @@ export async function PUT(
       { status: 403, headers }
     )
   }
+  if (!matched.writable) {
+    return secureJson(
+      {
+        error: "calendar_read_only",
+        message: "Eleva cannot add events to this calendar",
+      },
+      { status: 422, headers }
+    )
+  }
 
   await withAudit(
     { orgId: profile.orgId, actorUserId: session.user.id },

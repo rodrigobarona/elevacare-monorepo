@@ -32,6 +32,83 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-16: Connected calendars redesign, narrower Google access, Outlook linking (design slice D5.6) (active)
+
+- Change: `/expert/{slug}/calendars` now has two sections, in the
+  cal.com / Calendly pattern. **Where new sessions go** is one picker grouped
+  by account, offering only calendars the expert can write to; each option
+  shows the provider logo, the calendar name and the account email.
+  **Check for conflicts** is one card per account, with a switch per
+  calendar. Right after a connection, the main calendar is checked and, if no
+  destination exists yet, set as the destination; a toast says so. The
+  destination calendar is always checked and shown locked.
+- Before leaving for Google or Microsoft, a permissions step lists what Eleva
+  can do, what stays the expert's ("What stays yours"), and that Eleva sees
+  the name and email. The same list sits under each account card.
+  Disconnecting stops Eleva using the connection. The dialog links to the
+  provider's app-access page, where the expert can remove the grant itself.
+  The Better Auth `account` row stays, because the same Google account may be
+  the expert's sign-in.
+- Official Google Calendar and Outlook (2025) icons live in `@eleva/ui`
+  (`provider-logo`). The Google "G" moved there from the sign-in button.
+  `@eleva/ui` gains `Switch` (aria-luma), and `@eleva/icons` gains
+  `LockSimpleIcon`.
+- Google access is narrower: `calendar.calendarlist.readonly` and
+  `calendar.events.freebusy` (non-sensitive), plus `calendar.events.owned`
+  (sensitive) instead of full `calendar`. Calendars report `writable` (Google
+  `accessRole === "owner"`, Microsoft `canEdit`). `PUT …/destination` refuses
+  a read-only calendar with 422 `calendar_read_only`, and
+  `assertExternalCalendar` treats it as forbidden.
+- Outlook linking works: `accountLinking.trustedProviders` adds `microsoft`,
+  and `allowDifferentEmails: true` lets a signed-in expert link a Microsoft
+  account whose email differs from their Eleva one. `guardAccountLink` still
+  refuses any link without a signed-in owner. The account label is the email
+  from the provider's ID token, not Microsoft's internal `outlook_…` alias or
+  a GUID.
+- Failed sign-ins and links land on a friendly `/callback` page in
+  `apps/account` (`onAPIError.errorURL`): expired or doubled steps, "you chose
+  not to give access", and a generic case, each with a way back. Cancelling
+  at Google or Microsoft from the calendar page shows a neutral toast, not an
+  error.
+- Proof:
+  - unit suites (auth incl. `emailFromIdToken`, calendar, api, expert, ui),
+    typecheck, lint and i18n parity;
+  - local run against the dev database with a real Outlook account: link,
+    calendar list, check a calendar, choose the destination, lock and badge,
+    loading skeletons, bogus callback → friendly page.
+  - Before and after captures are in
+    `design-audit/captures/2026-11-16-calendars-{before,after}/`; the
+    Mobbin references are `07-expert-dashboard` 13–24.
+- Judges panel: round 1 UI 8.0, UX 8.0, trust 7.0; round 2 UI 8.6, UX 8.7,
+  trust 8.6. Round 2 asked for: honest access copy that matches the scopes,
+  a "what stays yours" list, a way to remove the grant at the provider, a
+  calmer locked switch, and the account in the destination picker. The two
+  round-2 nits (separate personal and work Microsoft links; one-line rows on
+  phones) are fixed too. The empty-state capture (`11-calendars`) predates
+  the trimmed `empty.body` copy.
+- Not yet:
+  - Google OAuth verification. Declare the three scopes in the consent
+    screen, add Google's Limited Use statement to the privacy policy
+    (founder/legal approval and a `CONSENT_DOCUMENT_VERSION` bump), record
+    the demo video and submit. Until then the app shows "unverified" and is
+    capped at 100 users.
+  - Microsoft publisher verification (Partner Center ID and a DNS-verified
+    domain). Until then work or school accounts may not be able to consent.
+    The Entra client secret expires 2028-11-15.
+  - "Sign in with Microsoft" is not built. New personal Microsoft accounts
+    would fail the verified-email rule at sign-up, so it needs a product
+    decision first.
+  - Production proof on `dev.eleva.care` with a real expert account (Google
+    and Outlook) after deploy.
+  - Disconnect keeps the refresh token on the Better Auth `account` row,
+    because the same account may be the expert's sign-in. For data
+    minimisation, drop the calendar grant (or the token) when that account
+    is not used for sign-in.
+- Owner: engineering
+- Reference: `apps/expert/src/app/expert/[orgSlug]/calendars/`,
+  `packages/auth/src/server/auth.ts`, `packages/auth/src/calendar-accounts.ts`,
+  `design-audit/plan.json` (D5.6)
+
 ### 2026-11-16: An expert can close and reopen a practice through the API (ADR-026 slice 6a) (active)
 
 - `expert_profiles.closed_at` (migration `0077`) marks a practice its owner

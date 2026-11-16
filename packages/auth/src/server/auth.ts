@@ -14,6 +14,7 @@ import {
   organization,
   twoFactor,
 } from "better-auth/plugins"
+import { resolveGatewayUrl } from "@eleva/config/env"
 import { cookieName } from "@eleva/config/i18n"
 import * as authSchema from "@eleva/db/schema/auth"
 import { db } from "@eleva/db"
@@ -130,6 +131,10 @@ function createAuth() {
     baseURL: issuer,
     basePath: "/auth",
     secret: requireSecret(),
+    // A sign-in or account link that fails after the provider (an expired
+    // or doubled callback, a refused link) lands on Eleva's own page with
+    // `?error=<code>`, not Better Auth's bare error screen on the API host.
+    onAPIError: { errorURL: `${resolveGatewayUrl()}/callback` },
     database: drizzleAdapter(db(), {
       provider: "pg",
       schema: authSchema,
@@ -194,7 +199,17 @@ function createAuth() {
         // signed in, so takeover-by-email-domain cannot attach Google.
         disableImplicitLinking: false,
         requireLocalEmailVerified: false,
-        trustedProviders: ["google"],
+        // Microsoft is trusted for *linking* so a signed-in expert can connect
+        // Outlook: personal Microsoft accounts carry no email_verified claim,
+        // and Better Auth refuses untrusted, unverified links. Safe because
+        // `guardAccountLink` still refuses any link unless the owner is signed
+        // in (Microsoft is not in its unsigned-claim list) and refuses to
+        // create a user from an unverified provider email.
+        trustedProviders: ["google", "microsoft"],
+        // An expert's work calendar often lives on another address than
+        // their Eleva login (Outlook at the clinic, Gmail at home). Linking
+        // still needs the owner signed in, and never changes the Eleva email.
+        allowDifferentEmails: true,
       },
     },
     session: {
