@@ -7,7 +7,7 @@ const passthrough = createPassthroughProxy()
 
 /**
  * Better Auth magic-link verify lives on this origin. A relative
- * `callbackURL` then 404s here (`/rbarona/team/...`, `/join/...`).
+ * `callbackURL` then 404s here (`/expert/rbarona/...`, `/join/...`).
  * Bounce those document GETs to the gateway.
  */
 function isMisroutedProductPath(pathname: string): boolean {

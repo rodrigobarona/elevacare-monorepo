@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest"
+import { RESERVED_USERNAMES } from "./reserved-usernames"
 import {
   isOrgSlugShape,
   LAST_ACTIVE_ORG_COOKIE,
   RESERVED_SLUGS,
+  WORKSPACE_NAMESPACES,
+  expertWorkspaceBase,
 } from "./routing"
 
 describe("isOrgSlugShape", () => {
@@ -49,6 +52,21 @@ describe("isOrgSlugShape", () => {
 describe("LAST_ACTIVE_ORG_COOKIE", () => {
   it("exports the stable cookie name", () => {
     expect(LAST_ACTIVE_ORG_COOKIE).toBe("eleva-last-org")
+  })
+})
+
+describe("workspace namespaces (ADR-026)", () => {
+  it("reserves every namespace as a slug and as a username", () => {
+    for (const ns of WORKSPACE_NAMESPACES) {
+      expect(RESERVED_SLUGS.has(ns), ns).toBe(true)
+      expect(RESERVED_USERNAMES.has(ns), ns).toBe(true)
+    }
+  })
+
+  it("builds expert tools under /expert/{slug}", () => {
+    expect(expertWorkspaceBase("patricia-mota-pt")).toBe(
+      "/expert/patricia-mota-pt"
+    )
   })
 })
 

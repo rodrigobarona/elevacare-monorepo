@@ -96,7 +96,7 @@ describe("notifyDueFollowUps", () => {
       ctx: {
         title: "Follow-ups due",
         body: "2 member follow-ups are due. Open Relationships to review them.",
-        href: "/fisiomota/team/crm",
+        href: "/expert/fisiomota/crm",
         data: { count: 2 },
       },
     })

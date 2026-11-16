@@ -60,7 +60,7 @@ describe("sendPartnerDecisionNotification", () => {
       "Precisamos de uma alteração nos dados da sua cédula"
     )
     expect(input.ctx.html).toContain("O número não coincide com o registo.")
-    expect(input.ctx.html).toContain("/fisiomota/licence")
+    expect(input.ctx.html).toContain("/expert/fisiomota/licence")
     expect(input.ctx.html).toContain("Ana")
   })
 

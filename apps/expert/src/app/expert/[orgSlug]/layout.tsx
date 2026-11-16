@@ -8,7 +8,10 @@ import { ELEVA_PATHNAME_HEADER } from "@eleva/auth/proxy"
 import { getExpertProfileForOrg } from "@eleva/db"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
 import { buildDashboardConfig } from "@eleva/dashboard/config-helpers"
-import { resolveExpertWorkspaceBase } from "@eleva/auth/org-routing"
+import {
+  resolveExpertWorkspaceBase,
+  resolveTeamAdminBase,
+} from "@eleva/auth/org-routing"
 import { expertWorkspaceBase } from "@/lib/workspace-paths"
 import { ExpertConnectShell } from "./expert-connect-shell"
 
@@ -31,6 +34,11 @@ export default async function ExpertLayout({
 
   if (session.orgSlug !== orgSlug) {
     notFound()
+  }
+
+  // A clinic manager who opens /expert/{clinic} manages it under /{clinic}/admin.
+  if (session.productLabel === "team_admin") {
+    redirect(resolveTeamAdminBase(orgSlug))
   }
 
   if (session.productLabel !== "expert") {

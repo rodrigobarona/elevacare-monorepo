@@ -16,7 +16,7 @@ import { useTranslations } from "next-intl"
 import {
   saveInvoicingChoice,
   startToconlineOAuth,
-} from "@/app/[orgSlug]/setup/actions"
+} from "@/app/expert/[orgSlug]/setup/actions"
 
 const INVOICING_ERROR_CODES = [
   "flag_disabled",

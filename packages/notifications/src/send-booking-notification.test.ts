@@ -433,7 +433,7 @@ describe("sendBookingNotification", () => {
         audience: "expert",
         greetingName: "Ana",
         memberName: "Ada Lovelace",
-        calendarHref: "https://eleva.care/acme/team/calendar",
+        calendarHref: "https://eleva.care/expert/acme/calendar",
       })
     )
   })

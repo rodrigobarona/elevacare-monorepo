@@ -16,7 +16,7 @@ export function getApiBaseUrl(): string {
 
 /**
  * Session for the practice in the address, with `capability` checked there.
- * Every expert page and action lives under `/{slug}/…`; the session's active
+ * Every expert page and action lives under `/expert/{slug}/…`; the session's active
  * workspace can be the person's Space right after a switch or a direct link.
  */
 export async function requireExpertSession(

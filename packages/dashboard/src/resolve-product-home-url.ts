@@ -31,7 +31,7 @@ export function resolveProductHomeUrl(session: ProductHomeSession): string {
   const slug = session.orgSlug
   switch (session.productLabel) {
     case "expert":
-      return `${GATEWAY_URL}${resolveExpertWorkspaceBase(slug, session.orgType)}`
+      return `${GATEWAY_URL}${resolveExpertWorkspaceBase(slug)}`
     case "team_admin":
       return `${GATEWAY_URL}${resolveTeamAdminBase(slug)}`
     case "lecturer":

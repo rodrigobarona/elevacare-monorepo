@@ -147,11 +147,9 @@ export function createGatewayProxy(options: GatewayProxyOptions) {
           const isBareSlug = pathname.split("/").filter(Boolean).length === 1
           // Bare /:username is the public marketplace profile — guests and
           // signed-in visitors, including Better Auth anonymous. Expert
-          // dashboards live under /:slug/team (or /:slug/~/…), not here.
+          // tools live under /expert/:slug (ADR-026), not here.
           if (isBareSlug && (orgType === "expert" || orgType === null)) {
             decision = { kind: "marketing" }
-          } else if (orgType === "expert") {
-            decision = { kind: "rewrite", origin: origins.expert }
           }
         } catch (err) {
           console.error("[gateway] org type lookup failed", { slug, err })

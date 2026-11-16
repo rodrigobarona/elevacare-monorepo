@@ -146,14 +146,30 @@ describe("resolveDispatch - public join grant path", () => {
   })
 })
 
-describe("resolveDispatch - org-scoped second segment", () => {
-  it("dispatches /:slug/team to expert origin (clinic experts)", () => {
-    expect(resolveDispatch("/clinica-mota/team", true, origins)).toEqual({
-      kind: "rewrite",
-      origin: "http://expert",
-    })
+describe("resolveDispatch - workspace namespaces (ADR-026)", () => {
+  it("dispatches /expert/* to the expert zone, signed in or not", () => {
+    for (const path of [
+      "/expert/patricia-mota-pt",
+      "/expert/clinica-mota/calendar",
+      "/expert/patricia-mota-pt/sessions/b1/join",
+    ]) {
+      for (const hasSession of [true, false]) {
+        expect(resolveDispatch(path, hasSession, origins), path).toEqual({
+          kind: "rewrite",
+          origin: "http://expert",
+        })
+      }
+    }
   })
 
+  it("no longer treats /:slug/team as the expert dashboard", () => {
+    expect(resolveDispatch("/clinica-mota/team", true, origins)).toEqual({
+      kind: "marketing",
+    })
+  })
+})
+
+describe("resolveDispatch - org-scoped second segment", () => {
   it("dispatches /:slug/admin to team origin (clinic managers)", () => {
     expect(resolveDispatch("/clinica-mota/admin", true, origins)).toEqual({
       kind: "rewrite",

@@ -5,7 +5,7 @@ import { resolveExpertWorkspaceBase } from "@eleva/auth/org-routing"
 export function expertWorkspaceBase(session: ElevaSession): string {
   const slug = session.orgSlug
   if (!slug) return "/"
-  return resolveExpertWorkspaceBase(slug, session.orgType)
+  return resolveExpertWorkspaceBase(slug)
 }
 
 export function expertWorkspacePath(

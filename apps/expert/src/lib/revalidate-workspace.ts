@@ -1,6 +1,6 @@
 import { revalidatePath } from "next/cache"
 import type { ElevaSession } from "@eleva/auth"
-import { expertWorkspacePath } from "@/lib/workspace-paths"
+import { expertWorkspaceBase, expertWorkspacePath } from "@/lib/workspace-paths"
 
 export function revalidateExpertWorkspace(
   session: ElevaSession,
@@ -8,6 +8,6 @@ export function revalidateExpertWorkspace(
 ): void {
   revalidatePath(expertWorkspacePath(session, segment))
   if (session.orgSlug) {
-    revalidatePath(`/${session.orgSlug}`, "layout")
+    revalidatePath(expertWorkspaceBase(session), "layout")
   }
 }

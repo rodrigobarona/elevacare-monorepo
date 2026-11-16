@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm"
 import { z } from "zod"
 import { resolveGatewayUrl } from "@eleva/config/env"
+import { expertWorkspaceBase } from "@eleva/config/routing"
 import {
   auth,
   main,
@@ -64,7 +65,7 @@ export async function sendPartnerDecisionNotification(
   const copy = partnerDecisionCopy(getEmailTranslations(locale), event.type)
   const html = await renderPartnerDecision({
     kind: event.type,
-    licenceHref: `${resolveGatewayUrl()}/${expert.orgSlug}/licence`,
+    licenceHref: `${resolveGatewayUrl()}${expertWorkspaceBase(expert.orgSlug)}/licence`,
     reason: parsed.data.reason,
     name: expert.displayName.trim().split(/\s+/)[0],
     locale,

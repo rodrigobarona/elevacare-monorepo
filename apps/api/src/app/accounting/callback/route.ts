@@ -22,14 +22,10 @@ export const ROUTE_POLICY = {
   botId: false,
 } as const satisfies RoutePolicy
 
-function onboardingUrl(
-  query: string,
-  orgSlug: string | null | undefined,
-  orgType: string | null | undefined
-): URL {
+function onboardingUrl(query: string, orgSlug: string | null | undefined): URL {
   const gateway = resolveGatewayUrl()
   if (orgSlug) {
-    const base = resolveExpertWorkspaceBase(orgSlug, orgType)
+    const base = resolveExpertWorkspaceBase(orgSlug)
     return new URL(`${base}/setup?${query}`, gateway)
   }
   return new URL(`/onboarding?${query}`, gateway)
@@ -95,32 +91,20 @@ export async function GET(request: Request) {
   if (error) {
     logError("[accounting/callback] Provider error:", error)
     return NextResponse.redirect(
-      onboardingUrl(
-        "invoicing_error=provider_denied",
-        session.orgSlug,
-        session.orgType
-      )
+      onboardingUrl("invoicing_error=provider_denied", session.orgSlug)
     )
   }
 
   if (!code || !state) {
     return NextResponse.redirect(
-      onboardingUrl(
-        "invoicing_error=missing_params",
-        session.orgSlug,
-        session.orgType
-      )
+      onboardingUrl("invoicing_error=missing_params", session.orgSlug)
     )
   }
 
   const parsedState = parseAccountingOAuthState(state)
   if (!parsedState) {
     return NextResponse.redirect(
-      onboardingUrl(
-        "invoicing_error=invalid_state",
-        session.orgSlug,
-        session.orgType
-      )
+      onboardingUrl("invoicing_error=invalid_state", session.orgSlug)
     )
   }
   const { provider: providerSlug, expertProfileId } = parsedState
@@ -136,7 +120,6 @@ export async function GET(request: Request) {
           userId: main.expertProfiles.userId,
           metadata: main.expertProfiles.metadata,
           orgSlug: auth.organization.slug,
-          orgType: auth.organization.type,
         })
         .from(main.expertProfiles)
         .innerJoin(
@@ -150,11 +133,7 @@ export async function GET(request: Request) {
 
     if (!expert || expert.userId !== session.user.id) {
       return NextResponse.redirect(
-        onboardingUrl(
-          "invoicing_error=not_found",
-          session.orgSlug,
-          session.orgType
-        )
+        onboardingUrl("invoicing_error=not_found", session.orgSlug)
       )
     }
 
@@ -169,11 +148,7 @@ export async function GET(request: Request) {
       })
     ) {
       return NextResponse.redirect(
-        onboardingUrl(
-          "invoicing_error=invalid_state",
-          expert.orgSlug,
-          expert.orgType
-        )
+        onboardingUrl("invoicing_error=invalid_state", expert.orgSlug)
       )
     }
 
@@ -212,11 +187,7 @@ export async function GET(request: Request) {
     } catch (err) {
       if (err instanceof OAuthNonceConsumedError) {
         return NextResponse.redirect(
-          onboardingUrl(
-            "invoicing_error=invalid_state",
-            expert.orgSlug,
-            expert.orgType
-          )
+          onboardingUrl("invoicing_error=invalid_state", expert.orgSlug)
         )
       }
       throw err
@@ -311,16 +282,12 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.redirect(
-      onboardingUrl("invoicing_connected=true", expert.orgSlug, expert.orgType)
+      onboardingUrl("invoicing_connected=true", expert.orgSlug)
     )
   } catch (err) {
     logError("[accounting/callback] Connect failed:", err)
     return NextResponse.redirect(
-      onboardingUrl(
-        "invoicing_error=connect_failed",
-        session.orgSlug,
-        session.orgType
-      )
+      onboardingUrl("invoicing_error=connect_failed", session.orgSlug)
     )
   }
 }

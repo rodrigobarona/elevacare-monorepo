@@ -518,7 +518,9 @@ async function seedTonightJoinProbe() {
   console.log(`Room:   ${room.roomName}`)
   console.log("")
   console.log(`1. Expert (signed in as ${EXPERT_EMAIL}):`)
-  console.log(`   ${gateway}/${expertOrg.slug}/team/sessions/${bookingId}/join`)
+  console.log(
+    `   ${gateway}/expert/${expertOrg.slug}/sessions/${bookingId}/join`
+  )
   console.log("")
   console.log("2. Guest (incognito, no login):")
   console.log(`   ${gateway}${guestPath}`)

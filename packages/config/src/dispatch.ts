@@ -53,21 +53,22 @@ const localeSet = new Set<string>(locales)
  *  2. Marketing first-segments (/about, /pricing, ...) -> marketing
  *  3. Docs (/docs/*) -> docs zone
  *  4. Platform admin (/admin/*) -> admin subdomain redirect
+ *  4b. Workspace namespaces (ADR-026): /expert/* -> expert zone
  *  5. Fixed account segments (/onboarding, /account/*) -> account zone
  *  6. Account standalone (/dashboard, /login, /callback, /logout,
  *     /signup, /verify-email, /reset-password, /two-factor,
  *     /accept-invitation) at depth 1
  *     -> account zone
  *  7. App standalone at depth 1 -> app zone
- *  8. Org-scoped second segment (/:slug/team|admin|academy|settings|privacy|
+ *  8. Org-scoped second segment (/:slug/admin|academy|settings|privacy|
  *     sessions|payments|notifications|reports) -> respective satellite /
- *     member app (team org experts → /team, managers → /admin; member
- *     Space chrome → app)
+ *     member app (clinic managers → /admin; member Space chrome → app)
  *  9. Public marketplace (Phase 04):
  *       /:username            without session -> marketing (public profile)
  *       /:username/:eventSlug                 -> marketing (booking funnel)
  *       Signed-in bare /:username for expert orgs is forced back to
- *       marketing in the gateway proxy (public profile; dashboards use /team).
+ *       marketing in the gateway proxy (public profile; dashboards use
+ *       /expert/:slug).
  * 10. Deeper /:slug with valid shape:
  *       hasSession -> app zone (member app handles org check)
  *       !hasSession -> unauth-slug (caller redirects to /login)
@@ -94,6 +95,9 @@ export function resolveDispatch(
   if (first === "admin") {
     return { kind: "admin-redirect" }
   }
+  if (first === "expert") {
+    return { kind: "rewrite", origin: origins.expert }
+  }
 
   if (accountPrefixSegments.has(first)) {
     return { kind: "rewrite", origin: origins.account }
@@ -111,8 +115,6 @@ export function resolveDispatch(
 
   const isSlug = !RESERVED_SLUGS.has(first) && isOrgSlugShape(first)
 
-  if (isSlug && second === "team")
-    return { kind: "rewrite", origin: origins.expert }
   if (isSlug && second === "admin")
     return { kind: "rewrite", origin: origins.team }
   if (isSlug && second === "academy")

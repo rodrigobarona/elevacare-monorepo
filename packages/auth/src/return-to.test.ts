@@ -22,8 +22,8 @@ describe("sanitizeReturnTo", () => {
   })
 
   it("keeps ordinary paths with query and hash", () => {
-    expect(sanitizeReturnTo("/acme/team/calendar?week=2#today")).toBe(
-      "/acme/team/calendar?week=2#today"
+    expect(sanitizeReturnTo("/expert/acme/calendar?week=2#today")).toBe(
+      "/expert/acme/calendar?week=2#today"
     )
   })
 
@@ -86,8 +86,8 @@ describe("sanitizeReturnTo", () => {
 
     it("accepts the staging gateway, so switching workspaces lands there", () => {
       expect(
-        sanitizeReturnTo("https://dev.eleva.care/patricia-mota-pt/team")
-      ).toBe("/patricia-mota-pt/team")
+        sanitizeReturnTo("https://dev.eleva.care/expert/patricia-mota-pt")
+      ).toBe("/expert/patricia-mota-pt")
     })
 
     it("accepts localhost for dev", () => {
@@ -129,22 +129,22 @@ describe("sanitizeReturnTo", () => {
     it("sends product paths through gateway /dashboard?returnTo=", () => {
       expect(
         toGatewayCallbackURL(
-          "/rbarona/team/sessions/92cbc729-aa25-478b-99a2-c94a37d145ce/join",
+          "/expert/rbarona/sessions/92cbc729-aa25-478b-99a2-c94a37d145ce/join",
           gateway
         )
       ).toBe(
-        "http://localhost:3000/dashboard?returnTo=%2Frbarona%2Fteam%2Fsessions%2F92cbc729-aa25-478b-99a2-c94a37d145ce%2Fjoin"
+        "http://localhost:3000/dashboard?returnTo=%2Fexpert%2Frbarona%2Fsessions%2F92cbc729-aa25-478b-99a2-c94a37d145ce%2Fjoin"
       )
     })
 
     it("extracts the path from a local expert-zone URL", () => {
       expect(
         toGatewayCallbackURL(
-          "http://localhost:3003/rbarona/team/sessions/abc/join",
+          "http://localhost:3003/expert/rbarona/sessions/abc/join",
           gateway
         )
       ).toBe(
-        "http://localhost:3000/dashboard?returnTo=%2Frbarona%2Fteam%2Fsessions%2Fabc%2Fjoin"
+        "http://localhost:3000/dashboard?returnTo=%2Fexpert%2Frbarona%2Fsessions%2Fabc%2Fjoin"
       )
     })
 
@@ -199,11 +199,11 @@ describe("sanitizeReturnTo", () => {
       "http://localhost:3002/auth/magic-link/verify?token=test-token"
 
     it("rewrites a relative join callback onto the gateway dashboard", () => {
-      const input = `${verify}&callbackURL=%2Frbarona%2Fteam%2Fsessions%2Fabc%2Fjoin`
+      const input = `${verify}&callbackURL=%2Fexpert%2Frbarona%2Fsessions%2Fabc%2Fjoin`
       const rewritten = rewriteMagicLinkVerifyUrl(input, gateway)
       const callback = new URL(rewritten).searchParams.get("callbackURL")
       expect(callback).toBe(
-        "http://localhost:3000/dashboard?returnTo=%2Frbarona%2Fteam%2Fsessions%2Fabc%2Fjoin"
+        "http://localhost:3000/dashboard?returnTo=%2Fexpert%2Frbarona%2Fsessions%2Fabc%2Fjoin"
       )
     })
 

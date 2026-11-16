@@ -12,6 +12,7 @@ import {
 import { expertProfileUrl, resolveGatewayUrl } from "@eleva/config/env"
 import { guestSignupPath } from "@eleva/config/guest-signup"
 import { maskPhone } from "@eleva/config/phone"
+import { expertWorkspaceBase } from "@eleva/config/routing"
 import { auth, main, withPlatformAdminContext } from "@eleva/db"
 import {
   joinGrantExpUnix,
@@ -305,7 +306,7 @@ export async function sendBookingNotification(
     language: formatLanguage(booking.language, expertLocale),
     country: formatCountry(booking.memberCountry, expertLocale),
     price: expertView.price,
-    calendarHref: `${gateway.replace(/\/$/, "")}/${booking.orgSlug}/team/calendar`,
+    calendarHref: `${gateway.replace(/\/$/, "")}${expertWorkspaceBase(booking.orgSlug)}/calendar`,
   })
   // The text message and the in-app notice carry only this line: when the
   // expert cancelled, it has to say so by itself.

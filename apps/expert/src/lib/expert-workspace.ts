@@ -6,7 +6,7 @@ import { getExpertProfileForOrg } from "@eleva/db"
 import { requiresExpertOnboarding } from "@/lib/expert-profile-guards"
 import { resolveOrCreateExpertProfileForSession } from "@/lib/resolve-expert-profile"
 import { expertWorkspacePath } from "@/lib/workspace-paths"
-import { redirectToMemberOrg } from "@/lib/gateway-redirects"
+import { redirectToDashboard } from "@/lib/gateway-redirects"
 
 export interface ExpertWorkspaceContext {
   session: ElevaSession
@@ -20,7 +20,7 @@ export async function loadExpertWorkspace(
 ): Promise<ExpertWorkspaceContext> {
   const session = await guardSessionForOrg(orgSlug)
   if (!session.capabilities.includes(capability)) {
-    redirectToMemberOrg(orgSlug)
+    redirectToDashboard()
   }
 
   const profile = await resolveOrCreateExpertProfileForSession(session, orgSlug)
