@@ -41,7 +41,7 @@
     "language": {
       "title": "Language",
       "description": "Choose the language used across Eleva apps for your account.",
-      "footerHint": "Applies to account, dashboard, and email notifications where supported."
+      "footerHint": "We use it across Eleva and in the emails we send you."
     },
     "security": {
       "title": "Security",

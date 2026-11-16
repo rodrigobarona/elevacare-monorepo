@@ -302,6 +302,16 @@ export const UpdateAvatarRequestSchema = z.object({
 
 export type UpdateAvatarRequest = z.infer<typeof UpdateAvatarRequestSchema>
 
+// ── Language ────────────────────────────────────────────────────────
+
+export const UpdateUserLocaleRequestSchema = z.object({
+  locale: LocaleSchema,
+})
+
+export type UpdateUserLocaleRequest = z.infer<
+  typeof UpdateUserLocaleRequestSchema
+>
+
 // ── Direct uploads (presigned PUT to R2, ADR-025) ───────────────────
 
 export const CreateStorageUploadRequestSchema = z.object({
@@ -3236,6 +3246,11 @@ export function createApiClient(options: ApiClientOptions) {
         },
         remove() {
           return request<{ ok: true }>("DELETE", "/users/avatar")
+        },
+      },
+      locale: {
+        update(data: UpdateUserLocaleRequest) {
+          return request<{ ok: true }>("PUT", "/users/locale", data)
         },
       },
     },

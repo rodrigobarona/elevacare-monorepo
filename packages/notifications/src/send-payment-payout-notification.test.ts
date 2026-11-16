@@ -126,6 +126,40 @@ describe("sendPaymentPayoutNotification", () => {
     )
   })
 
+  it("writes a member's receipt in their saved language, not the booking's", async () => {
+    const { renderPaymentPayoutNotice } = await import("@eleva/email")
+    vi.mocked(renderPaymentPayoutNotice).mockClear()
+    const send = vi.fn().mockResolvedValue({ kind: "payment.receipt" })
+    await sendPaymentPayoutNotification(
+      {
+        id: "evt-locale",
+        type: "payment.receipt",
+        orgId: ORG_ID,
+        payload: {
+          paymentId: PAYMENT_ID,
+          bookingId: BOOKING_ID,
+          amountCents: 6000,
+          currency: "EUR",
+        },
+      },
+      {
+        loadPaymentBooking: async () => ({
+          orgId: ORG_ID,
+          bookedLocale: "pt",
+          memberUserId: MEMBER_ID,
+          memberName: "Ada Lovelace",
+          memberLocale: "en",
+          guestEmail: null,
+          guestName: null,
+        }),
+        send,
+      }
+    )
+    expect(renderPaymentPayoutNotice).toHaveBeenCalledWith(
+      expect.objectContaining({ locale: "en" })
+    )
+  })
+
   it("sends payment.receipt to a guest email when there is no member account", async () => {
     const send = vi.fn().mockResolvedValue({ kind: "payment.receipt" })
     await sendPaymentPayoutNotification(

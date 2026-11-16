@@ -4,13 +4,12 @@ import { cookies, headers } from "next/headers"
 import { revalidatePath } from "next/cache"
 import { buildApiSessionHeaders, requireSession } from "@eleva/auth/server"
 import { mintUploadToken } from "@eleva/auth/upload-token"
-import { createApiClient, UpdateAvatarRequestSchema } from "@eleva/api-client"
 import {
-  isLocale,
-  cookieName,
-  getLocaleCookieOptions,
-  type Locale,
-} from "@eleva/config/i18n"
+  createApiClient,
+  UpdateAvatarRequestSchema,
+  UpdateUserLocaleRequestSchema,
+} from "@eleva/api-client"
+import { cookieName, getLocaleCookieOptions } from "@eleva/config/i18n"
 
 function getApiBaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_API_URL
@@ -39,14 +38,16 @@ export async function updateLanguagePreference(
   _prev: LanguageState,
   formData: FormData
 ): Promise<LanguageState> {
-  const raw = formData.get("locale")
-  if (typeof raw !== "string" || !isLocale(raw)) {
-    return { ok: false }
-  }
-  const locale: Locale = raw
+  const parsed = UpdateUserLocaleRequestSchema.safeParse({
+    locale: formData.get("locale"),
+  })
+  if (!parsed.success) return { ok: false }
+  const { locale } = parsed.data
 
   try {
-    await requireSession()
+    // Save on the user (emails read it), then the cookie (the interface).
+    const api = await getAuthedApiClient()
+    await api.users.locale.update({ locale })
 
     const [jar, hdrs] = await Promise.all([cookies(), headers()])
     const host = hdrs.get("x-forwarded-host") ?? hdrs.get("host")
