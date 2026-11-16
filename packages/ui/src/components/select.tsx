@@ -48,7 +48,7 @@ function SelectGroup<T extends object>({
   return (
     <ListBoxSectionPrimitive
       data-slot="select-group"
-      className={cn("scroll-my-1.5 p-1.5", className)}
+      className={cn("scroll-my-1.5", className)}
       {...props}
     />
   )
@@ -168,8 +168,10 @@ function SelectList<T extends object>({
   return (
     <ListBoxPrimitive
       data-slot="select-list"
+      // eleva: inset rows (`p-1.5`, as `DropdownMenu`) so a rounded row never
+      // touches the popover's rounded edge and gets clipped.
       className={cn(
-        "group/select-list max-h-[inherit] overflow-x-hidden overflow-y-auto p-0 outline-hidden",
+        "group/select-list max-h-[inherit] scroll-py-1.5 overflow-x-hidden overflow-y-auto p-1.5 outline-hidden",
         className
       )}
       {...props}
