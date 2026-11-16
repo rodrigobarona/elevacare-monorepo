@@ -30,7 +30,6 @@ export default async function ReportDetailPage({
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <PageHeader
-        eyebrow={t("eyebrow")}
         title={t("byExpert", { name: report.expertDisplayName })}
         description={t("sessionOn", { date: sessionDate })}
       />

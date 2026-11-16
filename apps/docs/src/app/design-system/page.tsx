@@ -69,7 +69,6 @@ export default function DesignSystemPage() {
   return (
     <main className="mx-auto max-w-6xl space-y-16 px-6 py-12">
       <PageHeader
-        eyebrow="Brand v3 · proposed"
         title="Eleva design system"
         description="Tokens and components shared by every Eleva app. Source of truth: docs/eleva-v3/brand-book/v3 and @eleva/ui."
       />

@@ -28,11 +28,7 @@ export default async function PartnersPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
-      <PageHeader
-        eyebrow={t("eyebrow")}
-        title={t("title")}
-        description={t("description")}
-      />
+      <PageHeader title={t("title")} description={t("description")} />
       {items.length === 0 ? (
         <EmptyState
           icon={<ShieldIcon />}

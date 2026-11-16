@@ -102,7 +102,6 @@ export default async function SessionDetailPage({
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow={t("detailTitle")}
         title={title}
         description={t("withExpert", { name: booking.expert.displayName })}
       />

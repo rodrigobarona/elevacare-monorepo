@@ -45,7 +45,6 @@ export default async function FinancePage({
     return (
       <div className="space-y-8">
         <PageHeader
-          eyebrow={t("eyebrow")}
           title={t("title")}
           description={t("description")}
           actions={invoicingSettings}
@@ -82,7 +81,6 @@ export default async function FinancePage({
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow={t("eyebrow")}
         title={t("title")}
         description={t("description")}
         actions={invoicingSettings}

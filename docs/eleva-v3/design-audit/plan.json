@@ -424,6 +424,69 @@
           "legalReview": true
         }
       ]
+    },
+    {
+      "id": "7",
+      "title": "Calm, end to end",
+      "goal": "Every page says one thing at a time: no labels above headlines, no features that are not live, no system words, background behind (i) or Details.",
+      "slices": [
+        {
+          "id": "D7.1",
+          "title": "No labels above headlines",
+          "scope": "Remove the eyebrow from every dashboard PageHeader (Space, practice, clinic, academy, admin) and drop the prop from @eleva/ui.",
+          "findings": ["XDASH-31"],
+          "effort": "S"
+        },
+        {
+          "id": "D7.2",
+          "title": "Public profile, calmer",
+          "scope": "Remove 'How booking works', turn the service eyebrow into a meta line, put 'What we check' behind an (i), keep one 'registration checked' line.",
+          "findings": [],
+          "effort": "M"
+        },
+        {
+          "id": "D7.3",
+          "title": "Checkout and thank-you, calmer",
+          "scope": "Shorter consent lines, the optional AI question at the join step, no mechanics hints, a short Space invite.",
+          "findings": [],
+          "effort": "M"
+        },
+        {
+          "id": "D7.4",
+          "title": "Member Space, calmer",
+          "scope": "Plain payment statuses, one action per session card, the join-window line once, a lighter waiting room.",
+          "findings": [],
+          "effort": "M"
+        },
+        {
+          "id": "D7.5",
+          "title": "Practice: only what is live, in plain words",
+          "scope": "Hide Moloni, 'not active yet' and closed-issuing lines and the useless Retry; rewrite system words (hash, 404, Intent pending, Reversal pending).",
+          "findings": [],
+          "effort": "M"
+        },
+        {
+          "id": "D7.6",
+          "title": "Service editor, each question once",
+          "scope": "Remove the duplicate mode, languages and currency from Basics; merge Kind into Policies.",
+          "findings": [],
+          "effort": "M"
+        },
+        {
+          "id": "D7.7",
+          "title": "Practice menu and home",
+          "scope": "Calendars under Integrations, Relationships into Members, no repeated shortcuts or stats, one licence-status sentence.",
+          "findings": [],
+          "effort": "M"
+        },
+        {
+          "id": "D7.8",
+          "title": "Clinic and Academy without promises",
+          "scope": "Remove 'later release' and 'on the way' promises; 'experts on your team'.",
+          "findings": [],
+          "effort": "S"
+        }
+      ]
     }
   ],
   "notCovered": [

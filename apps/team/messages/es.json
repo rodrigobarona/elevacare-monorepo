@@ -3,7 +3,6 @@
     "dashboard": "Panel"
   },
   "dashboard": {
-    "eyebrow": "Equipo",
     "title": "Espacio del equipo",
     "subtitle": "Miembros, agendas compartidas y facturación de tu clínica.",
     "emptyTitle": "Las herramientas de equipo están en camino",

@@ -50,11 +50,7 @@ export default async function InvoicingSettingsPage({
           <ArrowLeftIcon aria-hidden className="size-4" />
           {t("backToFinance")}
         </Link>
-        <PageHeader
-          eyebrow={t("eyebrow")}
-          title={t("title")}
-          description={t("description")}
-        />
+        <PageHeader title={t("title")} description={t("description")} />
       </div>
       <Section title={t("currentTitle")} description={t("currentHint")}>
         <InvoicingSettings

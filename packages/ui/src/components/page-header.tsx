@@ -1,13 +1,15 @@
 import type { ReactNode } from "react"
 
 import { cn } from "@eleva/ui/lib/utils"
-import { Eyebrow } from "@eleva/ui/components/typography"
 
+/**
+ * A page headline and one line on what you can do there. No eyebrow above
+ * it: the navigation already says where you are
+ * (docs/eleva-v3/brand-book/messaging-framework.md).
+ */
 interface PageHeaderProps {
   title: string
   description?: string
-  /** Short uppercase label above the title (e.g. section or org name). */
-  eyebrow?: string
   actions?: ReactNode
   className?: string
 }
@@ -15,7 +17,6 @@ interface PageHeaderProps {
 export function PageHeader({
   title,
   description,
-  eyebrow,
   actions,
   className,
 }: PageHeaderProps) {
@@ -30,7 +31,6 @@ export function PageHeader({
       )}
     >
       <div className="space-y-3">
-        {eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}
         <h1 className="font-display text-3xl leading-tight font-normal tracking-tight text-balance text-foreground sm:text-4xl">
           {title}
         </h1>

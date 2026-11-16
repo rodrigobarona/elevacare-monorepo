@@ -145,7 +145,6 @@ export default async function EditEventTypePage(props: {
           {t("backToServices")}
         </Link>
         <PageHeader
-          eyebrow={t("editTitle")}
           title={serviceTitle}
           description={t("editDescription")}
           actions={

@@ -33,7 +33,6 @@ export default async function NewEventTypePage({
           {t("backToServices")}
         </Link>
         <PageHeader
-          eyebrow={t("title")}
           title={t("createTitle")}
           description={t("createDescription")}
         />

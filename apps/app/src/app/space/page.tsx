@@ -30,7 +30,6 @@ export default async function OrgHomePage() {
   return (
     <div className="space-y-12" data-testid="member-space-home">
       <PageHeader
-        eyebrow={t("eyebrow")}
         title={firstName ? t("welcome", { name: firstName }) : t("welcomeBack")}
         description={t("subtitle")}
         actions={<FindExpertButton href={expertsUrl} />}

@@ -7,12 +7,10 @@
     "welcome": "Consola do operador Eleva",
     "subtitle": "Aprovações, pagamentos e auditoria.",
     "signedInAs": "Sessão iniciada como {email}",
-    "eyebrow": "Operador",
     "emptyTitle": "As ferramentas de operador estão a caminho",
     "emptyBody": "A revisão de cédulas já está disponível. Os pagamentos e o registo de auditoria chegam com a consola de operador."
   },
   "partners": {
-    "eyebrow": "Operador",
     "title": "Revisão de cédulas",
     "description": "Confirme cada cédula junto da Ordem antes de listar um especialista.",
     "emptyTitle": "Nada para rever",

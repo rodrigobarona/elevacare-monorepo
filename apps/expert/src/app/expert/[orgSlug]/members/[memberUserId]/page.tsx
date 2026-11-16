@@ -41,7 +41,6 @@ export default async function ExpertMemberDetailPage({
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <PageHeader
-        eyebrow={t("detailEyebrow")}
         title={member.name ?? t("unnamed")}
         description={member.email ?? undefined}
       />

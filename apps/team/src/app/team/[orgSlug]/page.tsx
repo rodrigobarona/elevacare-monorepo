@@ -15,11 +15,7 @@ export default async function TeamAdminDashboardPage({
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
-      <PageHeader
-        eyebrow={t("eyebrow")}
-        title={t("title")}
-        description={t("subtitle")}
-      />
+      <PageHeader title={t("title")} description={t("subtitle")} />
       <EmptyState
         icon={<UsersIcon />}
         title={t("emptyTitle")}

@@ -18,7 +18,6 @@
   },
   "dashboard": {
     "expert": {
-      "eyebrow": "Tu consulta",
       "welcome": "Hola, {name}",
       "welcomeBack": "Hola de nuevo",
       "subtitle": "Esto es lo que viene en tu consulta.",
@@ -210,7 +209,6 @@
     "create": "Nuevo servicio",
     "createTitle": "Crear servicio",
     "createDescription": "Crea un nuevo servicio reservable.",
-    "editTitle": "Editar servicio",
     "editDescription": "Actualiza los detalles y las reglas de reserva de este servicio.",
     "empty": "Aún no hay servicios",
     "createFirst": "Crear tu primer servicio",
@@ -590,7 +588,6 @@
       "validation": "Rango de fechas no válido.",
       "copy-failed": "No se pudo copiar la URL."
     },
-    "eyebrow": "Tu semana",
     "modeInPerson": "Presencial",
     "respondBy": "Responder antes de",
     "today": "Hoy",
@@ -647,7 +644,6 @@
   },
   "calendars": {
     "backToIntegrations": "Integraciones",
-    "eyebrow": "Tus calendarios",
     "title": "Calendarios conectados",
     "description": "Conecta tu calendario de Google u Outlook. Eleva mostrará a los miembros solo las horas en que estás libre y añadirá cada sesión a tu calendario.",
     "destination": {
@@ -758,7 +754,6 @@
   "integrations": {
     "title": "Integraciones",
     "description": "Conecta calendarios, facturación y otros servicios a tu práctica Eleva.",
-    "eyebrow": "Herramientas conectadas",
     "category": {
       "calendar": {
         "title": "Calendarios",
@@ -872,7 +867,6 @@
         "conflict": "Esta factura no se puede actualizar en su estado actual.",
         "generic": "Algo salió mal. Inténtalo de nuevo."
       },
-      "eyebrow": "Finanzas",
       "listTitle": "Facturas",
       "listHint": "Una fila por sesión pagada. La emisión automática sigue cerrada hasta completar la configuración fiscal.",
       "exportTitle": "Exportación mensual",
@@ -889,7 +883,6 @@
       "reversalPending": "Reversión pendiente",
       "reversed": "Revertido"
     },
-    "eyebrow": "Tus ingresos",
     "bookingsHint": "Cada sesión pagada, la comisión de Eleva y el estado de la transferencia.",
     "netHint": "De {gross} pagados por los miembros, tras {fees} de comisión de Eleva y posibles reembolsos",
     "pendingHint": "Ganado, aún no enviado a tu banco",
@@ -911,7 +904,6 @@
     },
     "invoicing": {
       "link": "Ajustes de facturación",
-      "eyebrow": "Finanzas",
       "title": "Facturación",
       "description": "Elige cómo se emiten las facturas de tus sesiones y cámbialo cuando quieras.",
       "backToFinance": "Volver a finanzas",
@@ -1078,7 +1070,6 @@
       "next": "Siguiente paso",
       "stepOf": "Paso {number} de {total}"
     },
-    "eyebrow": "Configuración de experto",
     "stepHints": {
       "profile": "Número fiscal y cómo atiendes a los miembros.",
       "practice": "País, idiomas, tu colegiación y dónde atiendes.",
@@ -1134,7 +1125,6 @@
     }
   },
   "publicProfile": {
-    "eyebrow": "Tu página pública",
     "title": "Perfil público",
     "description": "Esto es lo que ven los miembros antes de reservar. Una foto clara, una biografía cercana y tu formación les ayudan a elegirte con confianza.",
     "viewPublic": "Ver página pública",
@@ -1286,7 +1276,6 @@
     "sessionCount": "{count, plural, one {# sesión} other {# sesiones}}",
     "nextSession": "Próxima: {date}",
     "lastSession": "Última: {date}",
-    "detailEyebrow": "Miembro",
     "sessionsTitle": "Sesiones",
     "upcoming": "Próxima",
     "past": "Pasada",

@@ -31,12 +31,11 @@ export default async function ExpertSessionReportPage({
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <PageHeader
-        eyebrow={format.dateTime(booking.startsAt, {
+        title={t("title")}
+        description={`${format.dateTime(booking.startsAt, {
           dateStyle: "medium",
           timeStyle: "short",
-        })}
-        title={t("title")}
-        description={t("subtitle")}
+        })} · ${t("subtitle")}`}
       />
       <ReportEditor
         bookingId={bookingId}

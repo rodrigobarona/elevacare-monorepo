@@ -143,7 +143,6 @@ export default async function ExpertDashboardPage({
         href={`${base}/licence`}
       />
       <PageHeader
-        eyebrow={t("eyebrow")}
         title={
           displayName ? t("welcome", { name: displayName }) : t("welcomeBack")
         }

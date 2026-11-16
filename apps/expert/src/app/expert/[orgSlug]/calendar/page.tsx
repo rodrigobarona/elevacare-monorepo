@@ -22,11 +22,7 @@ export default async function CalendarPage({
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
-      <PageHeader
-        eyebrow={t("eyebrow")}
-        title={t("title")}
-        description={t("description")}
-      />
+      <PageHeader title={t("title")} description={t("description")} />
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]">
         {/* The week is loaded in the browser, in the expert's time zone. */}
         <WeekView orgSlug={orgSlug} />
