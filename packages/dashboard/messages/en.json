@@ -52,7 +52,9 @@
         "title": "Expert",
         "description": "Run your independent practice on Eleva.",
         "wizardTitle": "Name your expert workspace",
-        "wizardDescription": "This is how your workspace will appear in Eleva."
+        "wizardDescription": "This is how your workspace will appear in Eleva.",
+        "existingDescription": "Your practice, {name}, is already set up. Add new specialties and services there.",
+        "open": "Open your practice"
       },
       "team": {
         "title": "Team",

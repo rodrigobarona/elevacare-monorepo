@@ -5,6 +5,7 @@ import { isRedirectError } from "next/dist/client/components/redirect-error"
 import { useTranslations } from "next-intl"
 import { Popover, PopoverTrigger } from "@eleva/ui/components/popover"
 import { CreateWorkspaceModal } from "./create-workspace-modal"
+import { findExistingPractice } from "./existing-practice"
 import { OrgSwitcherList } from "./org-switcher-list"
 import { OrgSwitcherTrigger } from "./org-switcher-trigger"
 import { resolveOrgHomeUrl } from "./resolve-org-home-url"
@@ -86,6 +87,7 @@ export function OrgSwitcher({ organizations }: OrgSwitcherProps) {
       <CreateWorkspaceModal
         open={createWorkspaceOpen}
         onOpenChange={setCreateWorkspaceOpen}
+        existingPractice={findExistingPractice(organizations)}
       />
     </>
   )

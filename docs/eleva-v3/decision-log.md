@@ -32,6 +32,31 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-16: One expert practice per person (ADR-026) (active)
+
+- Rule: a person runs at most one expert practice; it holds several
+  specialties and services. A separate company or NIF is a Team (clinic).
+  Delegates and clinic seats are memberships in someone else's organization
+  and never count.
+- Enforced on every creation path: Better Auth `beforeCreateOrganization`
+  refuses a second `expert` org (409 `EXPERT_PRACTICE_EXISTS`), and
+  `POST /organizations` answers 409 with the practice's `slug` and `path`
+  (documented in OpenAPI) so a person or agent can go there instead.
+- UI: the workspace picker (switcher modal and `/account/workspaces/new`)
+  shows the Expert card as the practice the person already has, with "Open
+  your practice"; `/account/workspaces/create/expert` redirects there.
+  Pattern reference: Mobbin, Qatalog "Select your account" (open what you
+  have before creating another).
+- Data: the pilot expert's test practice `sdasdas` was removed from
+  production on founder request (Stripe test subscription cancelled and
+  customer deleted first; audit row `organization.deleted`; restore branch
+  `restore/pre-sdasdas-delete-2026-11-16`).
+- Known gap: two simultaneous creation requests could both pass the check
+  (no database constraint across `member` and `organization`); acceptable
+  pre-launch, revisit with the expert closure API.
+- Not judged by the full design panel (small state change on an existing
+  card); EN/PT/ES copy written natively.
+
 ### 2026-11-16: Clinics live at /team/{slug} and academies at /academy/{slug} (ADR-026 slice 3) (active)
 
 - Change: clinic management moved from `/{slug}/admin` to `/team/{slug}`

@@ -29,6 +29,12 @@ export {
 } from "./provisioning"
 export { provisionPersonalSpace } from "./provision-personal-space"
 export {
+  EXPERT_PRACTICE_EXISTS,
+  expertPracticeViolation,
+  findOwnedExpertPractice,
+  type OwnedExpertPractice,
+} from "./expert-practice"
+export {
   isExpertInvoicingChoiceComplete,
   saveExpertInvoicingChoice,
   type ExpertInvoicingProvider,

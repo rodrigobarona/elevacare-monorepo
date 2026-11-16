@@ -3,7 +3,12 @@ import {
   CreateOrganizationRequestSchema,
   CreateWorkspaceRequestSchema,
 } from "@eleva/api-client"
-import { createElevaOrganization } from "@eleva/auth"
+import {
+  createElevaOrganization,
+  EXPERT_PRACTICE_EXISTS,
+  findOwnedExpertPractice,
+} from "@eleva/auth"
+import { expertWorkspaceBase } from "@eleva/config/routing"
 import { provisionOrgBilling } from "@eleva/billing/server"
 import { getOrganizationBySlug } from "@eleva/db"
 import { corsHeaders } from "@/lib/cors"
@@ -61,6 +66,26 @@ export async function POST(request: Request) {
       { error: "validation", issues: body.error.issues },
       { status: 422, headers }
     )
+  }
+
+  // One expert practice per person (ADR-026). Better Auth's
+  // beforeCreateOrganization hook enforces it too; this answer names the
+  // practice so a person or agent can go there instead.
+  if (body.data.type === "expert") {
+    const practice = await findOwnedExpertPractice(session.user.id)
+    if (practice) {
+      return secureJson(
+        {
+          error: EXPERT_PRACTICE_EXISTS,
+          code: EXPERT_PRACTICE_EXISTS,
+          message:
+            "You already have an expert practice. Add specialties and services there instead of creating another one.",
+          slug: practice.slug,
+          path: expertWorkspaceBase(practice.slug),
+        },
+        { status: 409, headers }
+      )
+    }
   }
 
   const result = await createElevaOrganization({

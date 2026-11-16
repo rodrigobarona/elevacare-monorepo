@@ -43,6 +43,11 @@ import {
 import { crossSubDomainCookieConfig } from "./cookie-domain"
 import { magicLinkServerHeaders } from "./magic-link-headers"
 import { orgCreateViolation, orgUpdateViolation } from "./org-type-guard"
+import {
+  EXPERT_PRACTICE_EXISTS,
+  expertPracticeViolation,
+  findOwnedExpertPractice,
+} from "../expert-practice"
 import { passkeyOrigins } from "./passkey-origin"
 import {
   AUTH_IP_ADDRESS_HEADERS,
@@ -308,9 +313,22 @@ function createAuth() {
           })
         },
         organizationHooks: {
-          beforeCreateOrganization: async ({ organization }) => {
+          beforeCreateOrganization: async ({ organization, user }) => {
             const message = orgCreateViolation(organization)
             if (message) throw new APIError("FORBIDDEN", { message })
+            // One expert practice per person, on every creation path.
+            if (organization.type === "expert") {
+              const practice = expertPracticeViolation(
+                organization.type,
+                await findOwnedExpertPractice(user.id)
+              )
+              if (practice) {
+                throw new APIError("CONFLICT", {
+                  message: practice,
+                  code: EXPERT_PRACTICE_EXISTS,
+                })
+              }
+            }
           },
           beforeUpdateOrganization: async ({ organization }) => {
             const message = orgUpdateViolation(organization)

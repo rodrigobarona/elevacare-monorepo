@@ -6,6 +6,7 @@ import { cn } from "@eleva/ui/lib/utils"
 import { Button, LinkButton } from "@eleva/ui/components/button"
 import { BookOpenIcon, UserIcon, UsersIcon } from "@eleva/icons"
 import { ElevaIcon } from "@eleva/icons/client"
+import type { ExistingPractice } from "./existing-practice"
 import { gatewayUrl } from "./gateway-url"
 
 const workspaceTypes = [
@@ -18,6 +19,7 @@ type WorkspaceType = (typeof workspaceTypes)[number]["type"]
 
 interface WorkspaceTypePickerProps {
   mode: "page" | "modal"
+  existingPractice?: ExistingPractice | null
 }
 
 function navigateToGatewayPath(path: string) {
@@ -35,7 +37,10 @@ function navigateToGatewayPath(path: string) {
   window.location.assign(href)
 }
 
-export function WorkspaceTypePicker({ mode }: WorkspaceTypePickerProps) {
+export function WorkspaceTypePicker({
+  mode,
+  existingPractice,
+}: WorkspaceTypePickerProps) {
   const t = useTranslations("createWorkspace")
   const [selected, setSelected] = React.useState<WorkspaceType | null>(null)
 
@@ -55,20 +60,64 @@ export function WorkspaceTypePicker({ mode }: WorkspaceTypePickerProps) {
       <div className={cn("grid sm:grid-cols-3", isModal ? "gap-6" : "gap-4")}>
         {workspaceTypes.map(({ type, icon }) => {
           const isSelected = selected === type
+          const practice = type === "expert" ? existingPractice : null
+          const cardClass = cn(
+            "flex flex-col rounded-2xl border transition-colors",
+            isModal
+              ? "items-center gap-6 p-8 text-center"
+              : "items-start gap-4 p-5 text-left",
+            isSelected
+              ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+              : "border-border hover:border-primary/40 hover:bg-accent/40"
+          )
+          // One practice per person: the card opens the one they have
+          // instead of starting a second setup.
+          if (practice) {
+            return (
+              <a
+                key={type}
+                href={practice.href}
+                data-testid="workspace-type-expert-existing"
+                className={cardClass}
+              >
+                {isModal ? (
+                  <ElevaIcon
+                    icon={icon}
+                    weight="duotone"
+                    className="size-20 text-primary"
+                  />
+                ) : (
+                  <span className="inline-flex size-10 items-center justify-center rounded-xl bg-muted">
+                    <ElevaIcon
+                      icon={icon}
+                      weight="duotone"
+                      className="size-6 text-primary"
+                    />
+                  </span>
+                )}
+                <span className={cn("space-y-2", isModal && "max-w-[14rem]")}>
+                  <span className="block text-base font-medium">
+                    {t(`types.${type}.title`)}
+                  </span>
+                  <span className="block text-sm leading-relaxed text-muted-foreground">
+                    {t("types.expert.existingDescription", {
+                      name: practice.name,
+                    })}
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-sm font-medium text-primary">
+                    {t("types.expert.open")}
+                    <span aria-hidden="true">→</span>
+                  </span>
+                </span>
+              </a>
+            )
+          }
           return (
             <button
               key={type}
               type="button"
               onClick={() => setSelected(type)}
-              className={cn(
-                "flex flex-col rounded-2xl border transition-colors",
-                isModal
-                  ? "items-center gap-6 p-8 text-center"
-                  : "items-start gap-4 p-5 text-left",
-                isSelected
-                  ? "border-primary bg-primary/5 ring-2 ring-primary/20"
-                  : "border-border hover:border-primary/40 hover:bg-accent/40"
-              )}
+              className={cardClass}
             >
               {isModal ? (
                 <ElevaIcon

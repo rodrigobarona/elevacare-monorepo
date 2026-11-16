@@ -44,6 +44,7 @@
     "./switch-org-action": "./src/switch-org-action.ts",
     "./workspace-type-picker": "./src/workspace-type-picker.tsx",
     "./create-workspace-modal": "./src/create-workspace-modal.tsx",
+    "./existing-practice": "./src/existing-practice.ts",
     "./sources.css": "./src/sources.css",
     "./dashboard-providers": "./src/dashboard-providers.tsx",
     "./eleva-theme-provider": "./src/eleva-theme-provider.tsx",
