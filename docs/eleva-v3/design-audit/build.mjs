@@ -79,22 +79,49 @@ function afterOf(surface, file) {
   return null
 }
 
+const beforeLabels = dirs(capturesDir).filter((label) =>
+  label.endsWith("-before")
+)
+
+/**
+ * The first capture of a file: the baseline, else the latest slice
+ * "-before" set that has it (a page first captured by a later slice).
+ */
+function beforeOf(surface, file) {
+  if (existsSync(path.join(capturesDir, baseline, surface, file))) {
+    return href("captures", baseline, surface, file)
+  }
+  for (const label of [...beforeLabels].reverse()) {
+    if (existsSync(path.join(capturesDir, label, surface, file))) {
+      return href("captures", label, surface, file)
+    }
+  }
+  return null
+}
+
 function shotsOf(surface) {
   const groups = new Map()
-  for (const file of files(path.join(capturesDir, baseline, surface))) {
+  // Every file any set captured for this surface, not only the baseline's,
+  // so pages first captured by a later slice show up too.
+  const names = new Set(
+    [baseline, ...beforeLabels, ...laterLabels].flatMap((label) =>
+      files(path.join(capturesDir, label, surface))
+    )
+  )
+  for (const file of [...names].sort()) {
     const match = file.match(/^(.*)\.(desktop|mobile)\.(jpg|webm)$/)
     if (!match) continue
     const [, base, viewport, ext] = match
+    const src = beforeOf(surface, file)
+    const after = afterOf(surface, file)
+    // No before at all: the first capture is shown as it is.
+    const entry = src
+      ? { viewport, file, src, after }
+      : { viewport, file, src: after.src, after: null, only: true }
     if (!groups.has(base)) groups.set(base, { base, stills: [], videos: [] })
-    const entry = {
-      viewport,
-      file,
-      src: href("captures", baseline, surface, file),
-      after: afterOf(surface, file),
-    }
     groups.get(base)[ext === "webm" ? "videos" : "stills"].push(entry)
   }
-  return [...groups.values()]
+  return [...groups.values()].sort((a, b) => a.base.localeCompare(b.base))
 }
 
 const sliceOfFinding = new Map()
@@ -206,6 +233,7 @@ const chip = (id) =>
 function still(entry, caption) {
   const frame = (src, tag) =>
     `<button class="frame ${entry.viewport}" data-full="${src}" data-caption="${esc(caption)} · ${entry.viewport} · ${tag}"><img loading="lazy" src="${src}" alt="${esc(caption)}, ${entry.viewport}, ${tag}"><span>${tag}</span></button>`
+  if (entry.only) return frame(entry.src, "after")
   return entry.after
     ? frame(entry.src, "before") + frame(entry.after.src, "after")
     : frame(entry.src, "before")

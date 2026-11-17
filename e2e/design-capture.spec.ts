@@ -321,8 +321,9 @@ test.describe("design capture", () => {
       await page.goto(`${webUrl}/${PAID_EXPERT}`)
       await clearBanner(page)
       const proof = page.getByTestId("expert-registration")
-      await proof.locator("summary").click()
       await proof.scrollIntoViewIfNeeded()
+      await proof.getByRole("button", { name: /registration checks/i }).click()
+      await expect(page.getByRole("dialog")).toBeVisible()
       await shoot(page, "03-profile", "04-profile-what-we-check", kind, {
         fullPage: false,
       })

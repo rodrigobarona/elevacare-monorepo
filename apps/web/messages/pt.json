@@ -383,6 +383,7 @@
       "checkedShort": "Inscrição confirmada pela Eleva",
       "ersFull": "Entidade Reguladora da Saúde (ERS) n.º <number>{value}</number>",
       "whatWeCheck": "O que confirmamos",
+      "whatWeCheckLabel": "Sobre a confirmação da inscrição",
       "whatWeCheckBody": "Antes de um perfil ficar visível, a nossa equipa procura a cédula profissional no registo público da respetiva Ordem, confirma que a inscrição está ativa e que o nome corresponde ao do perfil, e confirma o registo na Entidade Reguladora da Saúde (ERS). Isto diz respeito à inscrição; não avalia os cuidados prestados. A formação e a experiência são descritas pelo próprio especialista."
     },
     "services": {
@@ -393,12 +394,12 @@
       "questions": "Questões em que posso ajudar",
       "where": "Onde",
       "requestNote": "{name} confirma cada pedido em 24 horas, ou antes da sessão se for mais cedo.",
-      "eyebrowMixed": "Sessão de {minutes} min",
-      "eyebrow": {
-        "online": "Videochamada de {minutes} min",
-        "phone": "Chamada de {minutes} min",
-        "in_person": "{minutes} min presencial"
-      }
+      "meta": {
+        "online": "{minutes} min · Videochamada",
+        "phone": "{minutes} min · Chamada",
+        "in_person": "{minutes} min · Presencial"
+      },
+      "metaMixed": "{minutes} min · {modes}"
     },
     "freeCancelHours": "Cancelamento gratuito até {hours} horas antes",
     "freeCancelDays": "Cancelamento gratuito até {days} dias antes",
@@ -428,6 +429,10 @@
         "q": "Preciso de uma conta?",
         "a": "Não. Pode marcar só com o seu nome e email. Depois, pode criar um Espaço gratuito para guardar as suas sessões num só lugar."
       },
+      "join": {
+        "q": "Como entro na sessão?",
+        "a": "Tem tudo no email de confirmação: o link da videochamada, que funciona a partir de 15 minutos antes, ou a morada ou os dados da chamada. Não precisa de instalar nenhuma aplicação."
+      },
       "cancel": {
         "q": "Posso cancelar?",
         "a": "Sim. Os serviços pagos indicam até quando pode cancelar sem custos. Para cancelar, entre com o email com que marcou e abra a sua sessão."
@@ -440,22 +445,6 @@
     "freeOption": "Opção gratuita disponível",
     "socialShort": {
       "website": "Site"
-    },
-    "how": {
-      "heading": "Como funciona a marcação",
-      "step": "Passo {number}",
-      "choose": {
-        "title": "Escolha um horário",
-        "body": "Escolha um serviço e um horário que lhe convenha, no seu fuso horário."
-      },
-      "book": {
-        "title": "Marque com segurança",
-        "body": "Pague online ou confirme uma sessão gratuita sem pagamento. Vê as condições de cancelamento antes de confirmar."
-      },
-      "join": {
-        "title": "Tem tudo no seu email",
-        "body": "A confirmação traz o link da videochamada, que abre 15 minutos antes, ou a morada ou os dados da chamada. Não precisa de app nem de conta."
-      }
     },
     "notBookable": {
       "heading": "{name} está a preparar o perfil na Eleva",

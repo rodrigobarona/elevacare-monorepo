@@ -149,6 +149,46 @@
       "detail": "\"Times in Lisbon time\" repeats itself. \"45 min · from €45.00 total\" joins \"from\" and \"total\", which pull in opposite directions. \"ERS registration no.\" assumes the member knows the regulator. \"See their work below\" points at content that is not there. \"Share this page\" has the same visual weight as the only link to the expert's own website. No Mobbin reference was needed for these; they are copy fixes.",
       "recommendation": "\"Times shown in Lisbon time\" or \"Lisbon time (WET)\". \"45 min · from €45\". \"Health regulator (ERS) registration\". On the empty state, name what is there (\"Read more about Patricia below\") or drop the sentence. Reduce share to an icon button with a label for screen readers.",
       "references": []
+    },
+    {
+      "id": "PROF-11",
+      "severity": "P2",
+      "lens": "ui",
+      "title": "Mono uppercase eyebrow above every service title",
+      "evidence": ["01-profile-paid.desktop.jpg"],
+      "detail": "'60-MIN VIDEO CALL' and '45-MIN IN PERSON · LISBOA, PORTO, MADRID' sit above each service name in a code font.",
+      "recommendation": "Show a quiet meta line under the title ('60 min · Video call') and keep the title first.",
+      "references": ["03-profile/22"]
+    },
+    {
+      "id": "PROF-12",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "Every service card has a solid 'See times' next to a booking card that already shows times",
+      "evidence": ["01-profile-paid.desktop.jpg"],
+      "detail": "Two solid teal buttons compete with the booking card's own primary flow.",
+      "recommendation": "Make the card button outline so the booking card stays the one primary action.",
+      "references": ["03-profile/22", "03-profile/24"]
+    },
+    {
+      "id": "PROF-13",
+      "severity": "P2",
+      "lens": "copy",
+      "title": "'How booking works' repeats the booking card and the FAQ",
+      "evidence": ["01-profile-paid.desktop.jpg"],
+      "detail": "Three step cards explain choosing a time, paying and the email; 'No app or account needed' appears three times on the page.",
+      "recommendation": "Remove 'How booking works'; the booking card line and the FAQ already say it.",
+      "references": ["03-profile/24"]
+    },
+    {
+      "id": "PROF-14",
+      "severity": "P3",
+      "lens": "copy",
+      "title": "'What we check' opens a paragraph inline in the hero, and 'Registration checked' repeats in the booking card",
+      "evidence": ["01-profile-paid.desktop.jpg"],
+      "detail": "About 70 words unfold under the licence lines; the booking card repeats the badge.",
+      "recommendation": "Move 'What we check' into an (i) popover; drop the repeat from the booking card footer, along with the repeated duration and price line.",
+      "references": ["03-profile/23", "03-profile/24"]
     }
   ],
   "references": [
@@ -403,6 +443,42 @@
       "why": "Under the availability calendar: 'Other great caregivers' as a row of portrait cards with name, place, rate and years of experience.",
       "apply": "When an expert cannot be booked yet, offer two or three bookable experts in the same area.",
       "query": "health professional profile page with a large portrait photo and book button"
+    },
+    {
+      "id": "03-profile/22",
+      "file": "img/22-skillshare-session-cards-meta-line.jpg",
+      "app": "Skillshare",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/13c6560d-acfe-403c-b4cb-980ec96268db?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "1-on-1 session cards: title, two lines, a quiet '60min · $150' meta row and an outline 'Book Now'",
+      "why": "The title leads; duration and price sit in small chips under the text, and the button does not shout.",
+      "apply": "Drop the uppercase mono eyebrow above each service title; show '60 min · Video call' as a quiet line under the title and make 'See times' an outline button so the booking card stays the one primary action.",
+      "query": "professional profile page with list of bookable services and a sticky booking card"
+    },
+    {
+      "id": "03-profile/23",
+      "file": "img/23-preply-verified-learn-more.jpg",
+      "app": "Preply",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/28954c6b-49e0-4a22-bf18-bccafd84bedc?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "'Professional Tutor: verified teaching certificate. Learn more' — one line, detail on demand",
+      "why": "The trust signal is one sentence; how it is checked opens only if you ask.",
+      "apply": "Keep the 'Registration checked by Eleva' line with the licence numbers, and move 'What we check' from an inline disclosure into an (i) popover named 'About registration checks'.",
+      "query": "professional profile page with list of bookable services and a sticky booking card"
+    },
+    {
+      "id": "03-profile/24",
+      "file": "img/24-upwork-one-booking-card.jpg",
+      "app": "Upwork",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/a0d15de1-2e80-418d-831a-001aa1667f53?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "One booking card: pick a length, pick a time, Continue; one reassurance line under it",
+      "why": "The card holds the choice and the action; it does not repeat the price or credentials shown elsewhere.",
+      "apply": "Booking card footer keeps only what helps the decision now ('No account needed', the cancellation line); drop the repeated '60 min · €60 total' and 'Registration checked' lines.",
+      "query": "professional profile page with list of bookable services and a sticky booking card"
     }
   ],
   "judging_criteria": [
@@ -410,8 +486,9 @@
     "Does the first phone screen show who she is (photo, name, profession) and when she is next free? (03-profile/01)",
     "Can a member start booking from anywhere on a phone through one sticky action that opens the picker? (03-profile/09, 03-profile/05)",
     "Does each time appear once, with service and how or where chosen before the time, across a strip of days? (03-profile/01, 03-profile/10)",
-    "Does the profile have fixed, labelled sections for approach, training and a three-step first session, in the same place on every profile? (03-profile/03, 03-profile/11)",
+    "Does the profile have fixed, labelled sections for approach and training, in the same place on every profile? (03-profile/03, 03-profile/11)",
     "Does a new expert's page (no reviews, short bio) still look complete and ordered? (03-profile/12, 03-profile/06)",
-    "When an expert cannot be booked, does the booking block explain why and offer a next step? (03-profile/02)"
+    "When an expert cannot be booked, does the booking block explain why and offer a next step? (03-profile/02)",
+    "Is the page calm: one primary booking action, service cards led by their title with a quiet duration and mode line, trust shown once with how it is checked one tap away? (03-profile/22, 03-profile/23, 03-profile/24)"
   ]
 }

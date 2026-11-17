@@ -122,6 +122,32 @@ Each entry should include:
   `apps/api/src/app/expert/calendar/reminder/route.ts`,
   `packages/calendar/src/adapters/`, `design-audit/plan.json` (D5.7)
 
+### 2026-11-17: Calmer public profile (design slice D7.2) (active)
+
+- Part of phase 7, "Calm, end to end". Mobbin `03-profile` 22–24
+  (Skillshare session cards, Preply verified line, Upwork booking card);
+  findings PROF-11 to PROF-14.
+- Service cards lead with the title and a quiet line under it ("60 min ·
+  Video call"; several ways to meet read "20 min · Video or phone"); the
+  uppercase eyebrow and the repeated city list are gone (places stay listed
+  on the card). "See times" on a card is an outline button, so the booking
+  card is the one solid action.
+- "How booking works" (added in D2.2) is removed: the booking card and the
+  FAQ said the same. Its one unique fact became the FAQ item "How do I
+  join?" (everything is in the confirmation email; the video link works
+  from 15 minutes before).
+- "What we check" moved from an inline disclosure into an (i) popover
+  beside "Registration checked by Eleva" (outside the heading, 44 px tap
+  area on phones). It describes Eleva's own check, not a cost or legal
+  duty, so it may sit in a popover; the licence, professional body and ERS
+  numbers stay visible.
+- The booking card footer keeps "No account needed" and the cancellation
+  line; it no longer repeats the duration and price (in the service
+  choice) or "Registration checked" (in the hero).
+- Still visible (ERS Regulation 1058/2016 and booking rules): professional
+  body, licence and ERS numbers, where care is given, price, the
+  cancellation line before picking a time.
+
 ### 2026-11-16: No labels above headlines in the dashboards (design slice D7.1) (active)
 
 - Founder direction (2026-11-16): make the product calm, uncluttered and
