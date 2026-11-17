@@ -253,7 +253,7 @@ function shotCard(shot) {
     .sort((a, b) => a.viewport.localeCompare(b.viewport))
     .map(
       (entry) =>
-        `<figure class="video ${entry.viewport}"><video controls preload="none" src="${entry.src}"></video><figcaption>${entry.viewport} · before${entry.after ? ` · <a href="${entry.after.src}">after (${esc(entry.after.label)})</a>` : ""}</figcaption></figure>`
+        `<figure class="video ${entry.viewport}"><video controls preload="none" src="${entry.src}"></video><figcaption>${entry.viewport} · ${entry.only ? "after" : "before"}${entry.after ? ` · <a href="${entry.after.src}">after (${esc(entry.after.label)})</a>` : ""}</figcaption></figure>`
     )
     .join("")
   return `<div class="shot"><h5>${esc(caption)}${shot.videos.length ? " (video)" : ""}</h5><div class="frames">${stills}${videos}</div></div>`
@@ -307,7 +307,7 @@ function referenceCard(surface, reference) {
 function surfaceSection(surface) {
   const shots = shotsOf(surface.dir)
   const hasAfter = shots.some((shot) =>
-    [...shot.stills, ...shot.videos].some((entry) => entry.after)
+    [...shot.stills, ...shot.videos].some((entry) => entry.after || entry.only)
   )
   const sev = (severity) =>
     surface.findings.filter((finding) => finding.severity === severity).length
