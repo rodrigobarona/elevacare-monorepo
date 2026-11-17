@@ -14,6 +14,8 @@ interface InfoPopoverProps {
   title?: string
   children: ReactNode
   className?: string
+  /** Stable selector for tests, set on the (i) button. */
+  "data-testid"?: string
 }
 
 /**
@@ -23,7 +25,13 @@ interface InfoPopoverProps {
  * hint at most. Never hide what someone must know before acting (cost,
  * consequences, legal effect) in here.
  */
-function InfoPopover({ label, title, children, className }: InfoPopoverProps) {
+function InfoPopover({
+  label,
+  title,
+  children,
+  className,
+  "data-testid": testId,
+}: InfoPopoverProps) {
   return (
     <DialogTrigger>
       <Button
@@ -31,6 +39,7 @@ function InfoPopover({ label, title, children, className }: InfoPopoverProps) {
         size="icon-xs"
         aria-label={label}
         data-slot="info-popover-trigger"
+        data-testid={testId}
         className={cn(
           "-my-1 rounded-full align-middle text-muted-foreground hover:text-foreground",
           className

@@ -1026,6 +1026,7 @@ function RegistrationProof({
           label={t("registration.whatWeCheckLabel")}
           title={t("registration.whatWeCheck")}
           className="-my-2.5 size-11 sm:-my-1 sm:size-8"
+          data-testid="registration-info"
         >
           <p>{t("registration.whatWeCheckBody")}</p>
         </InfoPopover>

@@ -60,18 +60,22 @@ const surfaces = dirs(libraryDir)
     dir: name,
   }))
 
-// A slice's "-before" set is not an after: "2026-11-16-x-before" would
-// otherwise sort after "2026-11-16-x-after" and win.
+/** "2026-11-16-x-before" or "2026-11-15-before-x": a slice's before set. */
+const isBefore = (label) => /(^|-)before(-|$)/.test(label)
+const dateOf = (label) => label.slice(0, 10)
+
 const laterLabels = dirs(capturesDir).filter(
   (label) =>
-    label !== baseline &&
-    !label.endsWith("-before") &&
-    !label.startsWith("scratch")
+    label !== baseline && !isBefore(label) && !label.startsWith("scratch")
 )
 
-/** Latest later capture of the same file, if a slice has been re-captured. */
-function afterOf(surface, file) {
+/**
+ * Latest after capture of the same file that is not older than its before
+ * (an after taken before the before would pair the wrong way round).
+ */
+function afterOf(surface, file, since = "") {
   for (const label of [...laterLabels].reverse()) {
+    if (dateOf(label) < since) continue
     if (existsSync(path.join(capturesDir, label, surface, file))) {
       return { label, src: href("captures", label, surface, file) }
     }
@@ -79,8 +83,8 @@ function afterOf(surface, file) {
   return null
 }
 
-const beforeLabels = dirs(capturesDir).filter((label) =>
-  label.endsWith("-before")
+const beforeLabels = dirs(capturesDir).filter(
+  (label) => label !== baseline && isBefore(label)
 )
 
 /**
@@ -89,11 +93,11 @@ const beforeLabels = dirs(capturesDir).filter((label) =>
  */
 function beforeOf(surface, file) {
   if (existsSync(path.join(capturesDir, baseline, surface, file))) {
-    return href("captures", baseline, surface, file)
+    return { label: baseline, src: href("captures", baseline, surface, file) }
   }
   for (const label of [...beforeLabels].reverse()) {
     if (existsSync(path.join(capturesDir, label, surface, file))) {
-      return href("captures", label, surface, file)
+      return { label, src: href("captures", label, surface, file) }
     }
   }
   return null
@@ -112,11 +116,11 @@ function shotsOf(surface) {
     const match = file.match(/^(.*)\.(desktop|mobile)\.(jpg|webm)$/)
     if (!match) continue
     const [, base, viewport, ext] = match
-    const src = beforeOf(surface, file)
-    const after = afterOf(surface, file)
+    const before = beforeOf(surface, file)
+    const after = afterOf(surface, file, before ? dateOf(before.label) : "")
     // No before at all: the first capture is shown as it is.
-    const entry = src
-      ? { viewport, file, src, after }
+    const entry = before
+      ? { viewport, file, src: before.src, after }
       : { viewport, file, src: after.src, after: null, only: true }
     if (!groups.has(base)) groups.set(base, { base, stills: [], videos: [] })
     groups.get(base)[ext === "webm" ? "videos" : "stills"].push(entry)

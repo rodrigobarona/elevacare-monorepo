@@ -142,6 +142,12 @@ async function shoot(
   options?: { fullPage?: boolean }
 ): Promise<void> {
   await settle(page)
+  // Captures are published in a public repo: never show a usable two-step
+  // secret (QR code) or backup codes, even for a throwaway test account.
+  const secrets = [
+    page.getByTestId("two-step-qr"),
+    page.getByTestId("two-step-backup-codes"),
+  ]
   // A full-page shot of a scrolled page draws the sticky header mid-page.
   const fullPage = options?.fullPage ?? true
   if (fullPage) {
@@ -164,6 +170,7 @@ async function shoot(
     fullPage: options?.fullPage ?? true,
     type: "jpeg",
     quality: 82,
+    mask: secrets,
   })
   if (fullPage) {
     await page.evaluate(() => {
@@ -322,7 +329,7 @@ test.describe("design capture", () => {
       await clearBanner(page)
       const proof = page.getByTestId("expert-registration")
       await proof.scrollIntoViewIfNeeded()
-      await proof.getByRole("button", { name: /registration checks/i }).click()
+      await proof.getByTestId("registration-info").click()
       await expect(page.getByRole("dialog")).toBeVisible()
       await shoot(page, "03-profile", "04-profile-what-we-check", kind, {
         fullPage: false,
