@@ -48,7 +48,6 @@ export type BookingCheckoutLabels = {
   loading: string
   loadFailed: string
   promo: string
-  promoHint: string
   promoApply: string
   promoRemove: string
   promoInvalid: string
@@ -355,16 +354,14 @@ function CheckoutForm({
           </button>
         )}
       </div>
+      {/* Only an error needs a line here: the field and the total say the
+          rest. The element stays so the error is announced in place. */}
       <p
         id="booking-promo-help"
-        role={promoError ? "alert" : undefined}
-        className={
-          promoError
-            ? "text-sm text-destructive"
-            : "text-sm text-muted-foreground"
-        }
+        aria-live="assertive"
+        className="text-sm text-destructive empty:sr-only"
       >
-        {promoError ?? labels.promoHint}
+        {promoError}
       </p>
     </div>
   )

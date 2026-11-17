@@ -301,6 +301,42 @@
       "detail": "On the details step the urgent-help note sits inside the 'Optional details' card as a boxed panel. On the thank-you page it is a full-width block with four phone numbers, as tall as the confirmation card on a phone. The information should stay; at this size it changes the mood of a page meant to feel like good news. No reference was found for this pattern.",
       "recommendation": "Keep it, quieter. On the details step, one line under the note field: 'This note is read before your session, not right away. In an emergency call 112.' On the thank-you page, one line at the bottom, 'Need urgent help? Call 112', with 'More numbers' opening the SNS 24 and crisis lines.",
       "references": []
+    },
+    {
+      "id": "BOOK-19",
+      "severity": "P2",
+      "lens": "copy",
+      "title": "Consent notes under the checkboxes explain how to withdraw",
+      "evidence": [
+        "2026-11-17-checkout-before/04-booking-checkout/06-paid-details-filled.desktop.jpg"
+      ],
+      "detail": "Under the health-data consent: 'To withdraw, email privacy@eleva.care or use Privacy settings; if you have a session booked, cancel it first. How we protect health data'; under the AI opt-in a second paragraph.",
+      "recommendation": "Keep the consent statement and one line on its purpose visible; put how to withdraw and the notice link in a Details dialog (layered notice, as on Privacy).",
+      "references": ["12-account-settings/11"]
+    },
+    {
+      "id": "BOOK-20",
+      "severity": "P2",
+      "lens": "copy",
+      "title": "Thank-you page says the same thing three times",
+      "evidence": [
+        "2026-11-17-checkout-before/04-booking-checkout/09-free-thank-you.desktop.jpg"
+      ],
+      "detail": "The join link and 'no account needed' appear in the summary card, in 'What happens next' and in the hero; a calendar paragraph sits under the button.",
+      "recommendation": "Remove the note in the summary card; move the calendar paragraph behind an (i) next to 'Add to calendar'.",
+      "references": ["04-booking-checkout/20", "04-booking-checkout/21"]
+    },
+    {
+      "id": "BOOK-21",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "Space invite and change section are long",
+      "evidence": [
+        "2026-11-17-checkout-before/04-booking-checkout/09-free-thank-you.desktop.jpg"
+      ],
+      "detail": "The invite has a heading, three bullets, a prefilled line, a button and a 'Not now?' line; 'Need to change something?' has two paragraphs.",
+      "recommendation": "Invite: headline, one line, button. Change: one sentence.",
+      "references": ["04-booking-checkout/22"]
     }
   ],
   "references": [
@@ -555,6 +591,42 @@
       "why": "A small dialog over the checkout: 'Refresh your checkout page. You stepped away for a bit, so you'll just need to refresh this page to confirm the price and availability of your bookings.' One button, Refresh. Behind it the summary keeps the dated free-cancellation line and a 'Book with confidence' panel.",
       "apply": "Name an ended hold in friendly words (no blame, nothing charged), keep what she entered, and offer one action back to open times.",
       "query": "booking checkout where the reservation hold timer has expired"
+    },
+    {
+      "id": "04-booking-checkout/20",
+      "file": "img/20-time2book-calm-confirmation.jpg",
+      "app": "Time2book",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/9db418a8-b527-4c2f-9e24-57e482844c58?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Booking confirmed: one summary card (date, with, free cancellation, total) and one main action; 'Add to calendar' is a quiet link",
+      "why": "Everything the booker needs is in one card; nothing is said twice.",
+      "apply": "Drop the join-link note inside the summary card ('What happens next' already says it) and keep the calendar how-to behind an (i).",
+      "query": "appointment booking confirmation page with what happens next and add to calendar"
+    },
+    {
+      "id": "04-booking-checkout/21",
+      "file": "img/21-calendly-one-line-confirmation.jpg",
+      "app": "Calendly",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/456c3eb2-d9f9-4d08-b419-9776dad6552d?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "'You are scheduled', one line about the invite, one button",
+      "why": "The confirmation is calm because it says one thing per line.",
+      "apply": "Under 'Add to calendar' show no paragraph; what Google and Microsoft receive opens from an (i).",
+      "query": "appointment booking confirmation page with what happens next and add to calendar"
+    },
+    {
+      "id": "04-booking-checkout/22",
+      "file": "img/22-maze-need-changes-one-line.jpg",
+      "app": "Maze",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/dd5c804f-eb14-4836-b6ad-df23308425c6?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "'Need to make changes?' as one line and one button",
+      "why": "Changing a booking is one sentence, not a policy recap.",
+      "apply": "'Need to change something?' says in one sentence how to move or cancel; the Space invite is a headline, one line and a button.",
+      "query": "appointment booking confirmation page with what happens next and add to calendar"
     }
   ],
   "judging_criteria": [
@@ -564,6 +636,7 @@
     "Within one thumb's reach of the pay button, is there a security line, the dated refund promise and what happens right after paying, and is the hold shown there as a calm promise? (GetYourGuide 04-booking-checkout/01, Alan 04-booking-checkout/04)",
     "Does the member make at most two ticks to book, with health data consent as its own explicit tick, the other notices as a linked sentence or readable rows, and optional choices clearly apart from required ones? (Headspace 04-booking-checkout/09a, Turo 04-booking-checkout/03)",
     "On a phone, does the time step show day chips and at least six times for the chosen day on the first screen, grey out days with no times, and offer the next available time when a day or week is empty? (Future Pro 04-booking-checkout/07, Fresha 04-booking-checkout/08, Zoom 04-booking-checkout/06)",
-    "Does the thank-you page name the expert and the time in its headline, show the email address used, put add-to-calendar first with a choice of calendars, list dated next steps, and keep the Space invitation in its own band with a benefit and 'details already filled in'? (Headspace 04-booking-checkout/09b, Warby Parker 04-booking-checkout/10, Cal.com 04-booking-checkout/11, Oyster 04-booking-checkout/12)"
+    "Does the thank-you page name the expert and the time in its headline, show the email address used, put add-to-calendar first with a choice of calendars, list dated next steps, and keep the Space invitation in its own band with a benefit and 'details already filled in'? (Headspace 04-booking-checkout/09b, Warby Parker 04-booking-checkout/10, Cal.com 04-booking-checkout/11, Oyster 04-booking-checkout/12)",
+    "Does checkout keep each consent to its statement and one line, with how to withdraw one tap away, and does the thank-you page say each thing once (join link, calendar, changes, Space invite)? (04-booking-checkout/20, 04-booking-checkout/21, 04-booking-checkout/22)"
   ]
 }

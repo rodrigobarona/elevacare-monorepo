@@ -122,6 +122,34 @@ Each entry should include:
   `apps/api/src/app/expert/calendar/reminder/route.ts`,
   `packages/calendar/src/adapters/`, `design-audit/plan.json` (D5.7)
 
+### 2026-11-17: Calm checkout and thank-you (design slice D7.3) (active)
+
+- Part of phase 7, "Calm, end to end". Mobbin `04-booking-checkout` 20–22
+  (Time2book calm confirmation, Calendly one-line confirmation, Maze
+  one-line "need changes"); findings BOOK-19 to BOOK-21.
+- Consents follow the layered notice (EDPB), as on Privacy (D5.9): the
+  first layer shows what the health information is for, who gets it (the
+  expert), that it is never used for advertising, and the right to
+  withdraw (GDPR Art. 7(3)). "Details" opens a titled dialog with how to
+  withdraw (Privacy settings or privacy@eleva.care) and the health data
+  notice. The optional AI consent has the same shape: one visible line
+  ("{name} checks every report. You can turn this off any time.") and
+  Details with the email route and the AI processing notice. Details are
+  in a dialog, never only in a popover.
+- Removed repeated hints: the country hint, the promo-code hint (the promo
+  line now shows only an error; it stays in the accessibility tree as
+  `sr-only` with `aria-live`, so the error is announced).
+- Thank-you: the calendar note ("what Google or Microsoft receive") moved
+  into an (i) beside "Add to calendar"; the pill stays centred. The access
+  line on the summary card shows only for phone, in-person and request
+  bookings (video join is in "What happens next"). The Space invite is one
+  heading, one line and one button. The join step says the link is in the
+  confirmation email and no account is needed.
+- Judges round 2: UI 8.8, UX + writing 8.7, trust/legal/a11y 8.6. Out of
+  scope: showing the calendar note as a caption
+  inside the calendar menu (judge nice-to-have); consent copy still needs
+  legal review before launch (D1.3).
+
 ### 2026-11-17: Calmer public profile (design slice D7.2) (active)
 
 - Part of phase 7, "Calm, end to end". Mobbin `03-profile` 22–24

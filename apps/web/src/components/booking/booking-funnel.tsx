@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactNode,
 } from "react"
 import { useTranslations } from "next-intl"
 import {
@@ -910,6 +911,7 @@ export function BookingFunnel({
           isFree ? t("summary.free") : formatBookingPrice(priceCents, locale)
         }
         accessLine={accessLine}
+        accessInCard={isRequest || selectedMode.mode !== "online"}
         email={email}
         steps={doneSteps}
         changeLines={
@@ -1076,7 +1078,6 @@ export function BookingFunnel({
               locale={locale}
               extraCodes={extraCountries}
               label={t("meet.countryLabel")}
-              description={t("meet.countryHint")}
             />
             {languageOptions.length > 1 ||
             (languageOptions.length === 1 &&
@@ -1481,34 +1482,58 @@ export function BookingFunnel({
                   label={t("details.consents.health_data_processing.label", {
                     name: expertName,
                   })}
-                  description={t.rich(
+                  description={t(
                     "details.consents.health_data_processing.description",
-                    {
-                      name: expertName,
-                      mail: (chunks) => (
-                        <a
-                          href="mailto:privacy@eleva.care"
-                          className="font-medium text-primary underline underline-offset-4"
-                        >
-                          {chunks}
-                        </a>
-                      ),
-                      link: (chunks) => (
-                        <a
-                          href={consentHref("health_data_processing")}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-medium text-primary underline underline-offset-4"
-                        >
-                          {chunks}
-                          <span className="sr-only">
-                            {" "}
-                            ({t("chrome.newTab")})
-                          </span>
-                        </a>
-                      ),
-                    }
+                    { name: expertName }
                   )}
+                  details={{
+                    trigger: t("details.consentDetails.trigger"),
+                    triggerLabel: t("details.consentDetails.label", {
+                      title: t("details.consents.health_data_processing.title"),
+                    }),
+                    title: t("details.consents.health_data_processing.title"),
+                    close: t("details.consentDetails.close"),
+                    content: (
+                      <>
+                        <p>
+                          {t.rich(
+                            "details.consents.health_data_processing.withdraw",
+                            {
+                              mail: (chunks) => (
+                                <a
+                                  href="mailto:privacy@eleva.care"
+                                  className="font-medium text-primary underline underline-offset-4"
+                                >
+                                  {chunks}
+                                </a>
+                              ),
+                            }
+                          )}
+                        </p>
+                        <p>
+                          {t.rich(
+                            "details.consents.health_data_processing.notice",
+                            {
+                              link: (chunks: ReactNode) => (
+                                <a
+                                  href={consentHref("health_data_processing")}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="font-medium text-primary underline underline-offset-4"
+                                >
+                                  {chunks}
+                                  <span className="sr-only">
+                                    {" "}
+                                    ({t("chrome.newTab")})
+                                  </span>
+                                </a>
+                              ),
+                            }
+                          )}
+                        </p>
+                      </>
+                    ),
+                  }}
                 />
                 <ConsentCheckbox
                   id="terms"
@@ -1569,23 +1594,52 @@ export function BookingFunnel({
                     isSelected={aiOptIn}
                     onChange={setAiOptIn}
                     label={t("details.aiConsent.short")}
-                    description={t.rich("details.aiConsent.description", {
+                    description={t("details.aiConsent.line", {
                       name: expertName,
-                      link: (chunks) => (
-                        <a
-                          href={aiProcessingHref}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-medium text-primary underline underline-offset-4"
-                        >
-                          {chunks}
-                          <span className="sr-only">
-                            {" "}
-                            ({t("chrome.newTab")})
-                          </span>
-                        </a>
-                      ),
                     })}
+                    details={{
+                      trigger: t("details.consentDetails.trigger"),
+                      triggerLabel: t("details.consentDetails.label", {
+                        title: t("details.aiConsent.title"),
+                      }),
+                      title: t("details.aiConsent.title"),
+                      close: t("details.consentDetails.close"),
+                      content: (
+                        <>
+                          <p>
+                            {t.rich("details.aiConsent.description", {
+                              name: expertName,
+                              mail: (chunks) => (
+                                <a
+                                  href="mailto:privacy@eleva.care"
+                                  className="font-medium text-primary underline underline-offset-4"
+                                >
+                                  {chunks}
+                                </a>
+                              ),
+                            })}
+                          </p>
+                          <p>
+                            {t.rich("details.aiConsent.notice", {
+                              link: (chunks: ReactNode) => (
+                                <a
+                                  href={aiProcessingHref}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="font-medium text-primary underline underline-offset-4"
+                                >
+                                  {chunks}
+                                  <span className="sr-only">
+                                    {" "}
+                                    ({t("chrome.newTab")})
+                                  </span>
+                                </a>
+                              ),
+                            })}
+                          </p>
+                        </>
+                      ),
+                    }}
                   />
                 </div>
               ) : null}
@@ -1691,7 +1745,6 @@ export function BookingFunnel({
                   loading: t("pay.loading"),
                   loadFailed: t("pay.loadFailed"),
                   promo: t("details.promo"),
-                  promoHint: t("details.promoHint"),
                   promoApply: t("pay.promoApply"),
                   promoRemove: t("pay.promoRemove"),
                   promoInvalid: t("pay.promoInvalid"),

@@ -6,7 +6,6 @@ import {
   CalendarCheckIcon,
   CalendarPlusIcon,
   CheckCircleIcon,
-  CheckIcon,
   ClockIcon,
   EnvelopeIcon,
   ArrowsClockwiseIcon,
@@ -20,6 +19,7 @@ import {
 } from "@eleva/ui/components/dropdown-menu"
 import { UrgentHelp } from "@eleva/dashboard/urgent-help"
 import { FieldError } from "@eleva/ui/components/field"
+import { InfoPopover } from "@eleva/ui/components/info-popover"
 import type { CalendarLinks } from "@eleva/calendar/calendar-links"
 
 type ConfirmState = "idle" | "pending" | "confirmed" | "failed"
@@ -50,6 +50,7 @@ export function BookingDone({
   modeLabel,
   priceLabel,
   accessLine,
+  accessInCard,
   email,
   steps,
   changeLines,
@@ -74,6 +75,8 @@ export function BookingDone({
   priceLabel: string
   /** One sentence on how to join or where to go. */
   accessLine: string
+  /** Phone and in-person sessions say how and where in the summary card. */
+  accessInCard: boolean
   email: string
   steps: DoneStep[]
   /** Every dated cancellation line, or the free-session courtesy line. */
@@ -140,73 +143,78 @@ export function BookingDone({
         </div>
         {isConfirmed && !isRequest ? (
           <div className="flex justify-center pt-2">
-            <DropdownMenuTrigger>
-              <Button size="lg" className="min-h-12 rounded-full px-6">
-                <CalendarPlusIcon aria-hidden data-icon="inline-start" />
-                {t("done.ics")}
-              </Button>
-              <DropdownMenu placement="bottom" className="min-w-60">
-                {calendar ? (
-                  <>
-                    <DropdownMenuItem
-                      id="google"
-                      textValue="Google Calendar"
-                      href={calendar.google}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Google Calendar
-                      <ArrowSquareOutIcon
-                        aria-hidden
-                        className="ml-auto size-3.5"
-                      />
-                      <span className="sr-only"> ({t("chrome.newTab")})</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      id="outlook"
-                      textValue="Outlook.com"
-                      href={calendar.outlook}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Outlook.com
-                      <ArrowSquareOutIcon
-                        aria-hidden
-                        className="ml-auto size-3.5"
-                      />
-                      <span className="sr-only"> ({t("chrome.newTab")})</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      id="office365"
-                      textValue="Microsoft 365"
-                      href={calendar.office365}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Microsoft 365
-                      <ArrowSquareOutIcon
-                        aria-hidden
-                        className="ml-auto size-3.5"
-                      />
-                      <span className="sr-only"> ({t("chrome.newTab")})</span>
-                    </DropdownMenuItem>
-                  </>
-                ) : null}
-                <DropdownMenuItem
-                  id="ics"
-                  textValue={t("done.icsApple")}
-                  onAction={onDownloadIcs}
-                >
-                  {t("done.icsApple")}
-                </DropdownMenuItem>
-              </DropdownMenu>
-            </DropdownMenuTrigger>
+            {/* The pill stays centred; the (i) hangs beside it. */}
+            <div className="relative">
+              <DropdownMenuTrigger>
+                <Button size="lg" className="min-h-12 rounded-full px-6">
+                  <CalendarPlusIcon aria-hidden data-icon="inline-start" />
+                  {t("done.ics")}
+                </Button>
+                <DropdownMenu placement="bottom" className="min-w-60">
+                  {calendar ? (
+                    <>
+                      <DropdownMenuItem
+                        id="google"
+                        textValue="Google Calendar"
+                        href={calendar.google}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Google Calendar
+                        <ArrowSquareOutIcon
+                          aria-hidden
+                          className="ml-auto size-3.5"
+                        />
+                        <span className="sr-only"> ({t("chrome.newTab")})</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        id="outlook"
+                        textValue="Outlook.com"
+                        href={calendar.outlook}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Outlook.com
+                        <ArrowSquareOutIcon
+                          aria-hidden
+                          className="ml-auto size-3.5"
+                        />
+                        <span className="sr-only"> ({t("chrome.newTab")})</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        id="office365"
+                        textValue="Microsoft 365"
+                        href={calendar.office365}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Microsoft 365
+                        <ArrowSquareOutIcon
+                          aria-hidden
+                          className="ml-auto size-3.5"
+                        />
+                        <span className="sr-only"> ({t("chrome.newTab")})</span>
+                      </DropdownMenuItem>
+                    </>
+                  ) : null}
+                  <DropdownMenuItem
+                    id="ics"
+                    textValue={t("done.icsApple")}
+                    onAction={onDownloadIcs}
+                  >
+                    {t("done.icsApple")}
+                  </DropdownMenuItem>
+                </DropdownMenu>
+              </DropdownMenuTrigger>
+              {/* What a calendar receives is background, not a step. */}
+              <InfoPopover
+                label={t("done.calendarNoteLabel")}
+                className="absolute top-1/2 left-full my-0 ml-1 size-11 -translate-y-1/2 sm:size-8"
+              >
+                <p>{t("done.calendarNote")}</p>
+              </InfoPopover>
+            </div>
           </div>
-        ) : null}
-        {isConfirmed && !isRequest ? (
-          <p className="mx-auto max-w-md text-sm text-pretty text-muted-foreground">
-            {t("done.calendarNote")}
-          </p>
         ) : null}
       </header>
 
@@ -251,7 +259,9 @@ export function BookingDone({
               <dd className="text-right font-semibold">{priceLabel}</dd>
             </div>
           </dl>
-          {confirmState === "confirmed" ? (
+          {/* "What happens next" already says when the video link opens;
+              phone and in-person sessions say here how and where. */}
+          {confirmState === "confirmed" && accessInCard ? (
             <p className="mt-5 rounded-2xl bg-muted px-4 py-3 text-sm">
               {accessLine}
             </p>
@@ -322,41 +332,25 @@ export function BookingDone({
           className="mt-6 grid gap-6 rounded-4xl bg-card p-6 shadow-1 ring-1 ring-foreground/5 md:grid-cols-[1fr_auto] md:items-center md:p-8"
           data-testid="booking-space-invite"
         >
-          <div className="space-y-3">
+          <div className="space-y-2">
             <h2
               id="booking-space-invite"
               className="font-display text-2xl font-medium"
             >
               {t("done.space.heading")}
             </h2>
-            <ul className="space-y-2 text-sm">
-              {(["manage", "rebook", "reminders"] as const).map((key) => (
-                <li key={key} className="flex items-start gap-2">
-                  <CheckIcon
-                    aria-hidden
-                    className="mt-0.5 size-4 shrink-0 text-primary"
-                  />
-                  {t(`done.space.${key}`)}
-                </li>
-              ))}
-            </ul>
-            <p className="text-sm text-muted-foreground">
-              {t("done.space.prefilled")}
+            <p className="text-sm text-pretty text-muted-foreground">
+              {t("done.space.line")}
             </p>
           </div>
-          <div className="space-y-2 md:text-center">
-            <LinkButton
-              href={signupHref}
-              size="lg"
-              variant="outline"
-              className="min-h-12 rounded-full px-6"
-            >
-              {t("done.space.cta")}
-            </LinkButton>
-            <p className="text-sm text-muted-foreground">
-              {t("done.space.later")}
-            </p>
-          </div>
+          <LinkButton
+            href={signupHref}
+            size="lg"
+            variant="outline"
+            className="min-h-12 rounded-full px-6"
+          >
+            {t("done.space.cta")}
+          </LinkButton>
         </section>
       ) : null}
 
