@@ -50,6 +50,7 @@ The expert app is visually calm and on brand, and its editors (schedule, public 
 | XDASH-28 | P2 | ux | Calendars: most calendars hide behind 'Show N more', and the locked switch looks off | List every calendar of an account (fold only very long lists). Show the destination switch on in full colour (read-only) with its badge, and move the 'always checked' explanation to the destination help text and the screen-reader description. | D5.7 |
 | XDASH-29 | P3 | ux | Calendars: no say over the reminder on sessions in the expert's own calendar | Add 'Reminder in your calendar' next to the destination select: the calendar's usual reminder by default, then when it starts, 5, 10, 15, 30 minutes or 1 hour before. Say that members get their own reminders from Eleva. | D5.7 |
 | XDASH-30 | P3 | trust | Calendars: a subscribed feed shows its private URL as the name | Show only the host, for example 'airbnb.pt · imported calendar'. | D5.7 |
+| XDASH-31 | P2 | ui | A small uppercase label sits above most dashboard headlines | Remove the eyebrow from every PageHeader in the app, expert, team, academy and admin apps, and remove the prop from @eleva/ui so it cannot creep back. Where the eyebrow carried information (the date on a session report), move it into the page line. | D7.1 |
 
 ## Mobbin references
 
@@ -86,6 +87,7 @@ The expert app is visually calm and on brand, and its editors (schedule, public 
 | [29](img/29-clockwise-google-calendar-default-reminders.jpg) | Clockwise (web) | Quiet reminder line under the setting: "Notify using Google Calendar defaults" | Default the session reminder to "Your calendar's usual reminder" (no override sent to Google or Microsoft). Only send an override when the expert picks a time. | [open](https://mobbin.com/screens/480a6d6e-f63f-4b58-ac84-051f7a4fe3c8?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp) |
 | [30](img/30-zoho-crm-reminder-select.jpg) | Zoho CRM (web) | Reminders block: one labelled select per event kind ("15 minutes before") | One select labelled "Reminder in your calendar" next to the destination select, with plain options (When it starts, 5/10/15/30 minutes before, 1 hour before). | [open](https://mobbin.com/screens/cef672aa-8a2a-465a-9d5b-7be60dbb3ac2?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp) |
 | [31](img/31-calcom-default-reminder-options.png) | Cal.com (web) | "Add events to" and "Default reminder" side by side, with help text under each | Put the reminder beside "Where new sessions go" on desktop and under it on phones, with one help line that says the reminder is only in the expert's calendar (members get Eleva's own reminders). | [open](null) |
+| [32](img/32-calm-greeting-no-eyebrow.jpg) | Calm (web) | Home opens with a greeting headline and the content; no label above the headline | Remove every eyebrow above PageHeader titles in the Space, practice, clinic, academy and admin apps, and drop the prop so it cannot come back. | [open](https://mobbin.com/screens/f15e937c-70b7-4035-b1d5-359c3c6d4beb?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp) |
 
 ## Judging criteria
 
@@ -109,3 +111,4 @@ A review panel scores a new design for this surface against these, with the refe
 16. After setup, can an expert change every answer from setup (except the licence) on a settings page, and does a refused change say which services it affects and where to fix them? (07-expert-dashboard/25, 07-expert-dashboard/26, 07-expert-dashboard/27)
 17. Can the expert set when her calendar reminds her of a session, next to where sessions go, with her calendar app's usual reminder as the default and a line that says members are reminded separately? (07-expert-dashboard/29, 07-expert-dashboard/30, 07-expert-dashboard/31)
 18. Can she see every calendar of an account and which ones are checked without opening anything, with the calendar sessions go to clearly switched on? (07-expert-dashboard/13, 07-expert-dashboard/31)
+19. Does each page open with its headline (no label above it) and one line on what you can do there? (07-expert-dashboard/32)

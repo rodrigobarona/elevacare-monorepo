@@ -26,7 +26,6 @@
     "pastEmpty": "Ainda não tem sessões anteriores.",
     "findExpert": "Encontrar um especialista",
     "viewAll": "Ver todas as sessões",
-    "eyebrow": "O seu Espaço",
     "welcomeBack": "Bem-vindo(a) de volta",
     "upcomingEmptyHint": "Explore especialistas verificados e marque uma sessão à hora que lhe der jeito.",
     "pastEmptyHint": "As sessões em que participou vão aparecer aqui."
@@ -245,11 +244,10 @@
     "subtitle": "Relatórios que os seus especialistas partilharam consigo depois de uma sessão.",
     "emptyTitle": "Ainda sem relatórios",
     "emptyBody": "Quando um especialista publicar o relatório de uma sessão, ele aparece aqui.",
-    "byExpert": "De {name}",
+    "byExpert": "Relatório de {name}",
     "sessionOn": "Sessão de {date}",
     "publishedOn": "Partilhado a {date}",
     "read": "Ler",
-    "back": "Todos os relatórios",
-    "eyebrow": "Relatório da sessão"
+    "back": "Todos os relatórios"
   }
 }

@@ -143,7 +143,6 @@ export default async function ExpertDashboardPage({
         href={`${base}/licence`}
       />
       <PageHeader
-        eyebrow={t("eyebrow")}
         title={
           displayName ? t("welcome", { name: displayName }) : t("welcomeBack")
         }
@@ -159,7 +158,6 @@ export default async function ExpertDashboardPage({
             </LinkButton>
           </>
         }
-        className="mb-0"
       />
 
       <StatGrid className="grid-cols-3 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-3">

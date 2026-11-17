@@ -3,7 +3,6 @@
     "dashboard": "Dashboard"
   },
   "dashboard": {
-    "eyebrow": "Team",
     "title": "Team workspace",
     "subtitle": "Members, shared schedules and billing for your clinic.",
     "emptyTitle": "Team tools are on the way",

@@ -1,6 +1,5 @@
-import Link from "next/link"
 import { getTranslations } from "next-intl/server"
-import { ArrowLeftIcon } from "@eleva/icons"
+import { BackLink } from "@eleva/dashboard/back-link"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { expertWorkspaceBase } from "@/lib/workspace-paths"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
@@ -25,15 +24,8 @@ export default async function NewEventTypePage({
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <div className="space-y-4">
-        <Link
-          href={`${base}/event-types`}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeftIcon aria-hidden className="size-4" />
-          {t("backToServices")}
-        </Link>
+        <BackLink href={`${base}/event-types`}>{t("backToServices")}</BackLink>
         <PageHeader
-          eyebrow={t("title")}
           title={t("createTitle")}
           description={t("createDescription")}
         />

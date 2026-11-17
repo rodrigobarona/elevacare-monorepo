@@ -122,6 +122,37 @@ Each entry should include:
   `apps/api/src/app/expert/calendar/reminder/route.ts`,
   `packages/calendar/src/adapters/`, `design-audit/plan.json` (D5.7)
 
+### 2026-11-16: No labels above headlines in the dashboards (design slice D7.1) (active)
+
+- Founder direction (2026-11-16): make the product calm, uncluttered and
+  joyful end to end. A read-only audit found about 40 clutter points; they
+  are planned as phase 7, "Calm, end to end" (D7.1–D7.8) in
+  `design-audit/plan.json`.
+- Change: the small uppercase eyebrow above the headline is gone from 19
+  pages in the member Space, the expert practice, clinic, academy and admin
+  apps. `PageHeader` in `@eleva/ui` no longer accepts an `eyebrow`, so it
+  cannot come back; unused `eyebrow` keys were deleted in en/pt/es. On the
+  expert session report the date moved from the eyebrow into the page line.
+  Marketing sections (`Section`/`Eyebrow` blocks on public pages) are not
+  page headlines and keep their labels; the public profile's service-card
+  label is D7.2.
+- Judges round 1 asked to keep what the eyebrows said: the Space report
+  headline is now "Report from {name}"; the session report line is one
+  translated message with `{date}`; detail pages open with a "← Members" /
+  "← Sessions" link (a shared `BackLink` in `@eleva/dashboard/back-link`,
+  replacing seven copies). The expert home header no longer touches the
+  stat cards. Also: the shared `Dialog` caps its height at the screen and
+  scrolls (Greptile on #430).
+- Proof: typecheck for app, expert, team, academy, admin, docs and ui; lint
+  (warnings unchanged from main); i18n parity; before/after captures in
+  `design-audit/captures/2026-11-16-eyebrows-{before,after}/`, including
+  member and session detail and the setup wizard; Mobbin
+  `07-expert-dashboard/32` (Calm), finding XDASH-31, criterion added.
+  Judges round 1: UI 8.0, UX 7.5, trust 8.0; round 2: UI 9.0, UX 8.5,
+  trust 8.5.
+- Not captured: the Space report detail and the expert session report (the
+  seed has no published report); both changes there are copy only.
+
 ### 2026-11-16: Calm consent: one line and Details on Privacy (design slice D5.9) (active)
 
 - Founder feedback: the inline consent text on `/account/privacy` was

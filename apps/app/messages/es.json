@@ -26,7 +26,6 @@
     "pastEmpty": "Todavía no tienes sesiones anteriores.",
     "findExpert": "Encontrar un especialista",
     "viewAll": "Ver todas las sesiones",
-    "eyebrow": "Tu Espacio",
     "welcomeBack": "Bienvenido/a de nuevo",
     "upcomingEmptyHint": "Explora especialistas verificados y reserva una sesión a la hora que mejor te venga.",
     "pastEmptyHint": "Las sesiones a las que has asistido aparecerán aquí."
@@ -245,11 +244,10 @@
     "subtitle": "Informes que tus expertos han compartido contigo después de una sesión.",
     "emptyTitle": "Aún no hay informes",
     "emptyBody": "Cuando un experto publique el informe de una sesión, aparecerá aquí.",
-    "byExpert": "De {name}",
+    "byExpert": "Informe de {name}",
     "sessionOn": "Sesión del {date}",
     "publishedOn": "Compartido el {date}",
     "read": "Leer",
-    "back": "Todos los informes",
-    "eyebrow": "Informe de la sesión"
+    "back": "Todos los informes"
   }
 }

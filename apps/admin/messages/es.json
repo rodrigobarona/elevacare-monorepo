@@ -7,12 +7,10 @@
     "welcome": "Consola del operador Eleva",
     "subtitle": "Aprobaciones, pagos y auditoría.",
     "signedInAs": "Sesión iniciada como {email}",
-    "eyebrow": "Operador",
     "emptyTitle": "Las herramientas de operador están en camino",
     "emptyBody": "La revisión de colegiaciones ya está disponible. Los pagos y el registro de auditoría llegarán con la consola de operador."
   },
   "partners": {
-    "eyebrow": "Operador",
     "title": "Revisión de colegiaciones",
     "description": "Comprueba cada colegiación con la Ordem antes de publicar a un especialista.",
     "emptyTitle": "Nada que revisar",

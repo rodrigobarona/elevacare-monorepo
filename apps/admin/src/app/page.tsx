@@ -12,11 +12,7 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
-      <PageHeader
-        eyebrow={t("eyebrow")}
-        title={t("welcome")}
-        description={t("subtitle")}
-      />
+      <PageHeader title={t("welcome")} description={t("subtitle")} />
       <EmptyState
         icon={<ShieldIcon />}
         title={t("emptyTitle")}

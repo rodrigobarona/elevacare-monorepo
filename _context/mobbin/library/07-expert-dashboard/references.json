@@ -396,6 +396,16 @@
       "detail": "A subscribed iCal calendar (for example an Airbnb feed) is named after its URL, which includes a private token, so the page shows the token in full.",
       "recommendation": "Show only the host, for example 'airbnb.pt · imported calendar'.",
       "references": ["07-expert-dashboard/13"]
+    },
+    {
+      "id": "XDASH-31",
+      "severity": "P2",
+      "lens": "ui",
+      "title": "A small uppercase label sits above most dashboard headlines",
+      "evidence": ["01-home.desktop.jpg"],
+      "detail": "'YOUR PRACTICE' above 'Hello, Marta', 'YOUR SPACE' above the Space home, and similar labels on 19 pages repeat what the sidebar already says.",
+      "recommendation": "Remove the eyebrow from every PageHeader in the app, expert, team, academy and admin apps, and remove the prop from @eleva/ui so it cannot creep back. Where the eyebrow carried information (the date on a session report), move it into the page line.",
+      "references": ["07-expert-dashboard/32"]
     }
   ],
   "references": [
@@ -774,6 +784,18 @@
       "why": "Founder screenshot (2026-11-16). Groups everything about the written event in one block; the reminder options start with the calendar's own defaults.",
       "apply": "Put the reminder beside \"Where new sessions go\" on desktop and under it on phones, with one help line that says the reminder is only in the expert's calendar (members get Eleva's own reminders).",
       "query": "founder screenshot"
+    },
+    {
+      "id": "07-expert-dashboard/32",
+      "file": "img/32-calm-greeting-no-eyebrow.jpg",
+      "app": "Calm",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/f15e937c-70b7-4035-b1d5-359c3c6d4beb?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Home opens with a greeting headline and the content; no label above the headline",
+      "why": "The sidebar already says where you are, so the page starts with the person and what is next.",
+      "apply": "Remove every eyebrow above PageHeader titles in the Space, practice, clinic, academy and admin apps, and drop the prop so it cannot come back.",
+      "query": "calm dashboard home page with a greeting headline and no label above it"
     }
   ],
   "judging_criteria": [
@@ -794,6 +816,7 @@
     "On a 390 px screen, is every calendar one line (name, badge, switch), with the destination select above the account cards and no sideways scroll? (07-expert-dashboard/17)",
     "After setup, can an expert change every answer from setup (except the licence) on a settings page, and does a refused change say which services it affects and where to fix them? (07-expert-dashboard/25, 07-expert-dashboard/26, 07-expert-dashboard/27)",
     "Can the expert set when her calendar reminds her of a session, next to where sessions go, with her calendar app's usual reminder as the default and a line that says members are reminded separately? (07-expert-dashboard/29, 07-expert-dashboard/30, 07-expert-dashboard/31)",
-    "Can she see every calendar of an account and which ones are checked without opening anything, with the calendar sessions go to clearly switched on? (07-expert-dashboard/13, 07-expert-dashboard/31)"
+    "Can she see every calendar of an account and which ones are checked without opening anything, with the calendar sessions go to clearly switched on? (07-expert-dashboard/13, 07-expert-dashboard/31)",
+    "Does each page open with its headline (no label above it) and one line on what you can do there? (07-expert-dashboard/32)"
   ]
 }

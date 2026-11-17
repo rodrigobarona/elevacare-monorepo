@@ -26,7 +26,6 @@
     "pastEmpty": "You have no past sessions yet.",
     "findExpert": "Find an expert",
     "viewAll": "View all sessions",
-    "eyebrow": "Your Space",
     "welcomeBack": "Welcome back",
     "upcomingEmptyHint": "Browse verified experts and book a session at a time that suits you.",
     "pastEmptyHint": "Sessions you have attended will appear here."
@@ -245,11 +244,10 @@
     "subtitle": "Reports your experts have shared with you after a session.",
     "emptyTitle": "No reports yet",
     "emptyBody": "When an expert publishes a session report, it appears here.",
-    "byExpert": "From {name}",
+    "byExpert": "Report from {name}",
     "sessionOn": "Session on {date}",
     "publishedOn": "Shared {date}",
     "read": "Read",
-    "back": "All reports",
-    "eyebrow": "Session report"
+    "back": "All reports"
   }
 }

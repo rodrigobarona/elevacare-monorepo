@@ -1,8 +1,7 @@
-import Link from "next/link"
 import { getTranslations } from "next-intl/server"
-import { ArrowLeftIcon } from "@eleva/icons"
 import { listExpertIntegrations } from "@eleva/db"
 import { getFlag } from "@eleva/flags"
+import { BackLink } from "@eleva/dashboard/back-link"
 import { PageHeader, Section } from "@eleva/ui/components/page-header"
 import { expertWorkspacePath } from "@/lib/workspace-paths"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
@@ -43,18 +42,10 @@ export default async function InvoicingSettingsPage({
   return (
     <div className="mx-auto max-w-3xl space-y-10">
       <div className="space-y-4">
-        <Link
-          href={expertWorkspacePath(session, "finance")}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeftIcon aria-hidden className="size-4" />
+        <BackLink href={expertWorkspacePath(session, "finance")}>
           {t("backToFinance")}
-        </Link>
-        <PageHeader
-          eyebrow={t("eyebrow")}
-          title={t("title")}
-          description={t("description")}
-        />
+        </BackLink>
+        <PageHeader title={t("title")} description={t("description")} />
       </div>
       <Section title={t("currentTitle")} description={t("currentHint")}>
         <InvoicingSettings

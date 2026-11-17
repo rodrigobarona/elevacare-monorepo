@@ -791,6 +791,15 @@ test.describe("design capture", () => {
         await clearBanner(page)
         await shoot(page, surface, name, kind)
       }
+      // A member's detail page, reached from the members list.
+      await page.goto(`${base}/members`)
+      const memberLink = page.getByTestId("expert-member-link").first()
+      if ((await memberLink.count()) > 0) {
+        const href = await memberLink.getAttribute("href")
+        await page.goto(new URL(href!, page.url()).toString())
+        await clearBanner(page)
+        await shoot(page, surface, "13-member-detail", kind)
+      }
       // The calendar connect step, where the page has one (it explains access
       // before leaving for Google; older pages went straight to Google).
       await page.goto(`${base}/calendars`)
@@ -840,6 +849,21 @@ test.describe("design capture", () => {
       ] as const
       for (const [name, suffix] of pages) {
         await page.goto(`${base}${suffix}`)
+        await clearBanner(page)
+        await shoot(page, surface, name, kind)
+      }
+      // Detail pages: a session and a report, reached from their lists.
+      const details = [
+        ["08-session-detail", "/sessions", "member-booking-detail"],
+        ["09-report-detail", "/reports", "member-report-row"],
+      ] as const
+      for (const [name, list, testId] of details) {
+        await page.goto(`${base}${list}`)
+        const link = page.getByTestId(testId).first()
+        // The demo member may have no report yet: nothing to open then.
+        if ((await link.count()) === 0) continue
+        const href = await link.getAttribute("href")
+        await page.goto(new URL(href!, page.url()).toString())
         await clearBanner(page)
         await shoot(page, surface, name, kind)
       }
@@ -947,14 +971,13 @@ test.describe("design capture", () => {
       await clearBanner(page)
       // Each consent shows one line; the rest opens in "Details".
       const aiDetails = page.getByTestId("member-consent-details-ai_processing")
-      if (await aiDetails.isVisible().catch(() => false)) {
-        await aiDetails.click()
-        await expect(page.getByTestId("member-consent-details")).toBeVisible()
-        await shoot(page, surface, "15-consent-details", kind, {
-          fullPage: false,
-        })
-        await page.keyboard.press("Escape")
-      }
+      await expect(aiDetails).toBeVisible()
+      await aiDetails.click()
+      await expect(page.getByTestId("member-consent-details")).toBeVisible()
+      await shoot(page, surface, "15-consent-details", kind, {
+        fullPage: false,
+      })
+      await page.keyboard.press("Escape")
       const remove = page.getByTestId("member-deletion-request")
       if (await remove.isVisible().catch(() => false)) {
         await remove.click()

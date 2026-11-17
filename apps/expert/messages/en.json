@@ -18,7 +18,6 @@
   },
   "dashboard": {
     "expert": {
-      "eyebrow": "Your practice",
       "welcome": "Hello, {name}",
       "welcomeBack": "Welcome back",
       "subtitle": "Here is what is coming up in your practice.",
@@ -166,7 +165,7 @@
     },
     "report": {
       "title": "Session report",
-      "subtitle": "Write the report for this session. Your member only sees it after you publish.",
+      "subtitle": "For your session on {date}. Your member only sees this report after you publish.",
       "editorTitle": "Report",
       "statusDraft": "Draft",
       "statusPublished": "Published",
@@ -210,7 +209,6 @@
     "create": "New service",
     "createTitle": "Create service",
     "createDescription": "Create a new bookable service.",
-    "editTitle": "Edit service",
     "editDescription": "Update this service's details and booking rules.",
     "empty": "No services yet",
     "createFirst": "Create your first service",
@@ -590,7 +588,6 @@
       "validation": "Invalid date range.",
       "copy-failed": "Could not copy the URL."
     },
-    "eyebrow": "Your week",
     "modeInPerson": "In person",
     "respondBy": "Respond by",
     "today": "Today",
@@ -647,7 +644,6 @@
   },
   "calendars": {
     "backToIntegrations": "Integrations",
-    "eyebrow": "Your calendars",
     "title": "Connected calendars",
     "description": "Connect your Google or Outlook calendar. Eleva then offers members only the times you're free, and adds each session to your calendar.",
     "destination": {
@@ -758,7 +754,6 @@
   "integrations": {
     "title": "Integrations",
     "description": "Connect calendars, invoicing tools, and other services to your Eleva practice.",
-    "eyebrow": "Connected tools",
     "category": {
       "calendar": {
         "title": "Calendars",
@@ -872,7 +867,6 @@
         "conflict": "This invoice cannot be updated in its current state.",
         "generic": "Something went wrong. Please try again."
       },
-      "eyebrow": "Finance",
       "listTitle": "Invoices",
       "listHint": "One row per paid session. Automatic issuance stays closed until fiscal setup is complete.",
       "exportTitle": "Monthly export",
@@ -889,7 +883,6 @@
       "reversalPending": "Reversal pending",
       "reversed": "Reversed"
     },
-    "eyebrow": "Your earnings",
     "bookingsHint": "Every paid session, the Eleva fee, and where its payout stands.",
     "netHint": "From {gross} paid by members, after {fees} in Eleva fees and any refunds",
     "pendingHint": "Earned, not yet sent to your bank",
@@ -911,7 +904,6 @@
     },
     "invoicing": {
       "link": "Invoicing settings",
-      "eyebrow": "Finance",
       "title": "Invoicing",
       "description": "Choose how invoices for your sessions are issued, and change it any time.",
       "backToFinance": "Back to finance",
@@ -1078,7 +1070,6 @@
       "next": "Next step",
       "stepOf": "Step {number} of {total}"
     },
-    "eyebrow": "Expert setup",
     "stepHints": {
       "profile": "Tax number and how you meet members.",
       "practice": "Country, languages, your licence and where you see members.",
@@ -1134,7 +1125,6 @@
     }
   },
   "publicProfile": {
-    "eyebrow": "Your public page",
     "title": "Public profile",
     "description": "This is what members see before they book. A clear photo, a warm bio and your training help them feel confident choosing you.",
     "viewPublic": "View public page",
@@ -1286,7 +1276,6 @@
     "sessionCount": "{count, plural, one {# session} other {# sessions}}",
     "nextSession": "Next: {date}",
     "lastSession": "Last: {date}",
-    "detailEyebrow": "Member",
     "sessionsTitle": "Sessions",
     "upcoming": "Upcoming",
     "past": "Past",

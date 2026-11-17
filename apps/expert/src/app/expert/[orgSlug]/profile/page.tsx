@@ -58,7 +58,6 @@ export default async function PublicProfilePage({
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <PageHeader
-        eyebrow={t("eyebrow")}
         title={t("title")}
         description={t("description")}
         actions={

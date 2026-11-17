@@ -60,7 +60,14 @@ const surfaces = dirs(libraryDir)
     dir: name,
   }))
 
-const laterLabels = dirs(capturesDir).filter((label) => label !== baseline)
+// A slice's "-before" set is not an after: "2026-11-16-x-before" would
+// otherwise sort after "2026-11-16-x-after" and win.
+const laterLabels = dirs(capturesDir).filter(
+  (label) =>
+    label !== baseline &&
+    !label.endsWith("-before") &&
+    !label.startsWith("scratch")
+)
 
 /** Latest later capture of the same file, if a slice has been re-captured. */
 function afterOf(surface, file) {

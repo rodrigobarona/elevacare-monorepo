@@ -7,12 +7,10 @@
     "welcome": "Eleva operator console",
     "subtitle": "Approvals, payouts, and audit.",
     "signedInAs": "Signed in as {email}",
-    "eyebrow": "Operator",
     "emptyTitle": "Operator tools are on the way",
     "emptyBody": "Licence reviews are ready. Payouts and the audit trail arrive with the operator console."
   },
   "partners": {
-    "eyebrow": "Operator",
     "title": "Licence reviews",
     "description": "Check each licence against the Ordem before an expert is listed.",
     "emptyTitle": "Nothing to review",

@@ -1,6 +1,5 @@
-import Link from "next/link"
 import { getTranslations } from "next-intl/server"
-import { ArrowLeftIcon } from "@eleva/icons"
+import { BackLink } from "@eleva/dashboard/back-link"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { syncExpertCalendarAccounts } from "@eleva/auth"
 import {
@@ -59,19 +58,11 @@ export default async function CalendarsPage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
-      <Link
-        href={`${base}/integrations`}
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeftIcon aria-hidden className="size-4" />
+      <BackLink href={`${base}/integrations`}>
         {t("backToIntegrations")}
-      </Link>
+      </BackLink>
 
-      <PageHeader
-        eyebrow={t("eyebrow")}
-        title={t("title")}
-        description={t("description")}
-      />
+      <PageHeader title={t("title")} description={t("description")} />
 
       <CalendarManager
         integrations={integrations}

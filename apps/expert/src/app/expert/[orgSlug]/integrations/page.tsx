@@ -28,11 +28,7 @@ export default async function IntegrationsPage({
 
   return (
     <div className="mx-auto max-w-5xl space-y-10">
-      <PageHeader
-        eyebrow={t("eyebrow")}
-        title={t("title")}
-        description={t("description")}
-      />
+      <PageHeader title={t("title")} description={t("description")} />
 
       {listCategories().map((category) => {
         const manifests = listByCategory(category)

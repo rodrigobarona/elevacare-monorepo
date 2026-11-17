@@ -152,7 +152,6 @@ export function OnboardingWizard({
       <aside className="flex flex-col gap-6 lg:sticky lg:top-8 lg:self-start">
         <PageHeader
           className="mb-0"
-          eyebrow={t("eyebrow")}
           title={t("title")}
           description={t("description")}
         />

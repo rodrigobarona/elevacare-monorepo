@@ -4,6 +4,7 @@ import { z } from "zod"
 import { pickLocalized } from "@eleva/config/i18n-locales"
 import { getExpertMember } from "@eleva/db"
 import { LinkButton } from "@eleva/ui/components/button"
+import { BackLink } from "@eleva/dashboard/back-link"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { StatusPill } from "@eleva/ui/components/status-pill"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
@@ -40,8 +41,10 @@ export default async function ExpertMemberDetailPage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
+      <BackLink href={expertWorkspacePath(session, "members")}>
+        {t("back")}
+      </BackLink>
       <PageHeader
-        eyebrow={t("detailEyebrow")}
         title={member.name ?? t("unnamed")}
         description={member.email ?? undefined}
       />
@@ -67,7 +70,10 @@ export default async function ExpertMemberDetailPage({
                     })}
                   </p>
                 </div>
-                <StatusPill tone={upcoming ? "attention" : "neutral"}>
+                <StatusPill
+                  tone={upcoming ? "attention" : "neutral"}
+                  className="self-start"
+                >
                   {upcoming ? t("upcoming") : t("past")}
                 </StatusPill>
                 {REPORTABLE_STATUSES.has(booking.status) ? (
@@ -87,13 +93,6 @@ export default async function ExpertMemberDetailPage({
           })}
         </ul>
       </section>
-
-      <LinkButton
-        variant="ghost"
-        href={expertWorkspacePath(session, "members")}
-      >
-        {t("back")}
-      </LinkButton>
     </div>
   )
 }
