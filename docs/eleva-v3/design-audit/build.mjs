@@ -60,18 +60,42 @@ const surfaces = dirs(libraryDir)
     dir: name,
   }))
 
-// A slice's "-before" set is not an after: "2026-11-16-x-before" would
-// otherwise sort after "2026-11-16-x-after" and win.
+/** "2026-11-16-x-before" or "2026-11-15-before-x": a slice's before set. */
+const isBefore = (label) => /(^|-)before(-|$)/.test(label)
+const dateOf = (label) => label.slice(0, 10)
+
 const laterLabels = dirs(capturesDir).filter(
   (label) =>
-    label !== baseline &&
-    !label.endsWith("-before") &&
-    !label.startsWith("scratch")
+    label !== baseline && !isBefore(label) && !label.startsWith("scratch")
 )
 
-/** Latest later capture of the same file, if a slice has been re-captured. */
-function afterOf(surface, file) {
+/**
+ * Latest after capture of the same file that is not older than its before
+ * (an after taken before the before would pair the wrong way round).
+ */
+function afterOf(surface, file, since = "") {
   for (const label of [...laterLabels].reverse()) {
+    if (dateOf(label) < since) continue
+    if (existsSync(path.join(capturesDir, label, surface, file))) {
+      return { label, src: href("captures", label, surface, file) }
+    }
+  }
+  return null
+}
+
+const beforeLabels = dirs(capturesDir).filter(
+  (label) => label !== baseline && isBefore(label)
+)
+
+/**
+ * The first capture of a file: the baseline, else the latest slice
+ * "-before" set that has it (a page first captured by a later slice).
+ */
+function beforeOf(surface, file) {
+  if (existsSync(path.join(capturesDir, baseline, surface, file))) {
+    return { label: baseline, src: href("captures", baseline, surface, file) }
+  }
+  for (const label of [...beforeLabels].reverse()) {
     if (existsSync(path.join(capturesDir, label, surface, file))) {
       return { label, src: href("captures", label, surface, file) }
     }
@@ -81,20 +105,27 @@ function afterOf(surface, file) {
 
 function shotsOf(surface) {
   const groups = new Map()
-  for (const file of files(path.join(capturesDir, baseline, surface))) {
+  // Every file any set captured for this surface, not only the baseline's,
+  // so pages first captured by a later slice show up too.
+  const names = new Set(
+    [baseline, ...beforeLabels, ...laterLabels].flatMap((label) =>
+      files(path.join(capturesDir, label, surface))
+    )
+  )
+  for (const file of [...names].sort()) {
     const match = file.match(/^(.*)\.(desktop|mobile)\.(jpg|webm)$/)
     if (!match) continue
     const [, base, viewport, ext] = match
+    const before = beforeOf(surface, file)
+    const after = afterOf(surface, file, before ? dateOf(before.label) : "")
+    // No before at all: the first capture is shown as it is.
+    const entry = before
+      ? { viewport, file, src: before.src, after }
+      : { viewport, file, src: after.src, after: null, only: true }
     if (!groups.has(base)) groups.set(base, { base, stills: [], videos: [] })
-    const entry = {
-      viewport,
-      file,
-      src: href("captures", baseline, surface, file),
-      after: afterOf(surface, file),
-    }
     groups.get(base)[ext === "webm" ? "videos" : "stills"].push(entry)
   }
-  return [...groups.values()]
+  return [...groups.values()].sort((a, b) => a.base.localeCompare(b.base))
 }
 
 const sliceOfFinding = new Map()
@@ -206,6 +237,7 @@ const chip = (id) =>
 function still(entry, caption) {
   const frame = (src, tag) =>
     `<button class="frame ${entry.viewport}" data-full="${src}" data-caption="${esc(caption)} · ${entry.viewport} · ${tag}"><img loading="lazy" src="${src}" alt="${esc(caption)}, ${entry.viewport}, ${tag}"><span>${tag}</span></button>`
+  if (entry.only) return frame(entry.src, "after")
   return entry.after
     ? frame(entry.src, "before") + frame(entry.after.src, "after")
     : frame(entry.src, "before")
@@ -221,15 +253,34 @@ function shotCard(shot) {
     .sort((a, b) => a.viewport.localeCompare(b.viewport))
     .map(
       (entry) =>
-        `<figure class="video ${entry.viewport}"><video controls preload="none" src="${entry.src}"></video><figcaption>${entry.viewport} · before${entry.after ? ` · <a href="${entry.after.src}">after (${esc(entry.after.label)})</a>` : ""}</figcaption></figure>`
+        `<figure class="video ${entry.viewport}"><video controls preload="none" src="${entry.src}"></video><figcaption>${entry.viewport} · ${entry.only ? "after" : "before"}${entry.after ? ` · <a href="${entry.after.src}">after (${esc(entry.after.label)})</a>` : ""}</figcaption></figure>`
     )
     .join("")
   return `<div class="shot"><h5>${esc(caption)}${shot.videos.length ? " (video)" : ""}</h5><div class="frames">${stills}${videos}</div></div>`
 }
 
+/**
+ * Where a finding's evidence lives: an explicit capture set
+ * ("2026-11-17-profile-before/03-profile/x.jpg"), else the baseline, else
+ * the latest before set that has the file (a page first captured later).
+ */
+function evidenceSrc(rel) {
+  const [first] = rel.split("/")
+  if (dirs(capturesDir).includes(first)) return href("captures", rel)
+  if (existsSync(path.join(capturesDir, baseline, rel))) {
+    return href("captures", baseline, rel)
+  }
+  for (const label of [...beforeLabels].reverse()) {
+    if (existsSync(path.join(capturesDir, label, rel))) {
+      return href("captures", label, rel)
+    }
+  }
+  return href("captures", baseline, rel)
+}
+
 function evidenceLink(surface, item) {
   const rel = item.includes("/") ? item : `${surface.dir}/${item}`
-  const src = href("captures", baseline, rel)
+  const src = evidenceSrc(rel)
   return item.endsWith(".webm")
     ? `<a class="evidence" href="${src}">${esc(item)}</a>`
     : `<button class="evidence" data-full="${src}" data-caption="${esc(rel)}">${esc(item)}</button>`
@@ -275,7 +326,7 @@ function referenceCard(surface, reference) {
 function surfaceSection(surface) {
   const shots = shotsOf(surface.dir)
   const hasAfter = shots.some((shot) =>
-    [...shot.stills, ...shot.videos].some((entry) => entry.after)
+    [...shot.stills, ...shot.videos].some((entry) => entry.after || entry.only)
   )
   const sev = (severity) =>
     surface.findings.filter((finding) => finding.severity === severity).length
@@ -286,7 +337,7 @@ function surfaceSection(surface) {
     <p class="lede">${esc(surface.summary)}</p>
     <p class="counts"><span class="sev P1">${sev("P1")} P1</span><span class="sev P2">${sev("P2")} P2</span><span class="sev P3">${sev("P3")} P3</span><span class="pill">${surface.references.length} Mobbin references</span><span class="pill ${hasAfter ? "done" : ""}">${hasAfter ? "After captured" : "After: not built yet"}</span></p>
   </header>
-  <h3>Before</h3>
+  <h3>Captures</h3>
   ${shots.length ? `<div class="shots">${shots.map(shotCard).join("")}</div>` : `<p class="meta">This seat reviewed captures from other surfaces; see the evidence links in each finding.</p>`}
   <h3>Keep</h3>
   <ul class="keep">${surface.strengths.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>
@@ -433,8 +484,8 @@ footer{padding:36px 0;color:var(--muted);font-size:.85rem}
     <div class="stat"><b>${count("P2")}</b><span>P2, quality</span></div>
     <div class="stat"><b>${count("P3")}</b><span>P3, polish</span></div>
     <div class="stat"><b>${referenceCount}</b><span>Mobbin references</span></div>
-    <div class="stat"><b>${stillCount}</b><span>before screenshots</span></div>
-    <div class="stat"><b>${videoCount}</b><span>before videos</span></div>
+    <div class="stat"><b>${stillCount}</b><span>screenshots</span></div>
+    <div class="stat"><b>${videoCount}</b><span>videos</span></div>
   </div>
 </div></div>
 <nav class="toc"><div class="wrap"><div class="links">

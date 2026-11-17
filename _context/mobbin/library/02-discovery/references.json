@@ -21,7 +21,12 @@
       "evidence": ["01-experts.desktop.jpg", "01-experts.mobile.jpg"],
       "detail": "The page opens with a heading and goes straight to people. There is no search field, no areas of care, no mode or language choice. A member arrives with a need (pelvic pain after birth, breastfeeding, anxiety in pregnancy), not with a name. In the source, area chips only appear once two areas have experts, and language and sort only appear from 12 experts, so at launch size the page offers nothing to narrow or even to explain what Eleva covers. The teal search button in the mobile header looks like search but sits in the same slot as the desktop \"Find an expert\" link, which on this page points back to itself.",
       "recommendation": "Put areas of care above the grid from day one as photo or icon tiles with a count (\"Pelvic health · 3 experts\") and show areas with nobody yet as \"Opening soon\" rather than hiding them, so the page teaches the catalogue. Add one plain search field (\"What do you need help with?\") that matches areas, service names and expert names. Keep two always-on chips next to it: language and how you meet (video, phone, in person). Hide the header \"Find an expert\" button on this page.",
-      "references": ["02-discovery/04", "02-discovery/12", "02-discovery/06", "02-discovery/03"]
+      "references": [
+        "02-discovery/04",
+        "02-discovery/12",
+        "02-discovery/06",
+        "02-discovery/03"
+      ]
     },
     {
       "id": "DISC-02",
@@ -31,7 +36,12 @@
       "evidence": ["01-experts.desktop.jpg", "01-experts.mobile.jpg"],
       "detail": "Each card shows a name, one free-text line and a price. It does not say what the person is (physiotherapist, midwife), what she focuses on, which languages she speaks, whether sessions are by video or in a city, when she is next free, or that her registration was checked. The source can show two areas of care as a quiet line, but only when the expert has picked categories, so a new expert's card falls back to almost nothing. To compare three experts a member has to open three profiles.",
       "recommendation": "Fix a card content model with required fields: photo, name with a checked-registration mark, profession and up to two focus areas, languages, how you meet (\"Video · In person in Lisboa\"), next open time (\"Next: Mon 16 Nov\") and price from. Make profession and at least one area required before a profile can be listed, so no card depends on a free-text headline. Add a quiet \"View profile\" affordance; keep the whole card as one link.",
-      "references": ["02-discovery/01", "02-discovery/02", "02-discovery/03", "02-discovery/10"]
+      "references": [
+        "02-discovery/01",
+        "02-discovery/02",
+        "02-discovery/03",
+        "02-discovery/10"
+      ]
     },
     {
       "id": "DISC-03",
@@ -51,7 +61,12 @@
       "evidence": ["01-experts.desktop.jpg", "01-experts.mobile.jpg"],
       "detail": "The captures show no controls because the directory is under 12 experts. Read from the source, the full set is a language select, a sort select and an \"Apply filters\" button in a grey box. There is no filter for how you meet, location, price or availability, the native selects need a separate submit, and nothing shows how many experts will match. On a phone a form row above the list pushes the first expert down.",
       "recommendation": "Use a chip row that applies on tap: area, language, how you meet, city (only when in person is chosen), price, and \"Free first chat\". Show applied filters as removable chips with a result count (\"7 experts\"). On phones open one \"Filters\" bottom sheet with a sticky button that carries the count (\"Show 7 experts\") and a \"Clear all\".",
-      "references": ["02-discovery/05", "02-discovery/07", "02-discovery/03", "02-discovery/01"]
+      "references": [
+        "02-discovery/05",
+        "02-discovery/07",
+        "02-discovery/03",
+        "02-discovery/01"
+      ]
     },
     {
       "id": "DISC-05",

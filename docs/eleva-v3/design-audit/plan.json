@@ -441,7 +441,7 @@
           "id": "D7.2",
           "title": "Public profile, calmer",
           "scope": "Remove 'How booking works', turn the service eyebrow into a meta line, put 'What we check' behind an (i), keep one 'registration checked' line.",
-          "findings": [],
+          "findings": ["PROF-11", "PROF-12", "PROF-13", "PROF-14"],
           "effort": "M"
         },
         {

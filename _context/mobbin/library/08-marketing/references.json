@@ -24,9 +24,7 @@
       ],
       "detail": "The headline is 'Practise on Eleva.care' and the lead is a five-line paragraph: 'Eleva.care is a digital health platform for independent, licensed professionals. You keep full clinical autonomy. Eleva runs the scheduling, booking and payment technology...'. It reads like the first clause of an agreement. An expert with ten seconds does not learn what she gains, what it costs or how fast she can start. The homepage band that links here ('Grow your practice with Eleva. Bookings, payments and video sessions in one place, so you can focus on care') is a better pitch than the page itself. On mobile the paragraph runs to eight lines before the button.",
       "recommendation": "Lead with the outcome and three facts. Headline along the lines of 'Your practice, booked and paid in one place'. One line of lead. Then three short proof points under the button: '15% per booking, no monthly fee', 'You set your prices and cancellation policy', 'Paid to your bank through Stripe'. Primary button 'Create your account', secondary 'See how it works'. Move the clinical-independence sentence into the benefits below.",
-      "references": [
-        "08-marketing/01"
-      ]
+      "references": ["08-marketing/01"]
     },
     {
       "id": "MKT-02",
@@ -39,11 +37,7 @@
       ],
       "detail": "'Eleva keeps 15% of each booking, with no other deductions' appears in the middle of a 60-word card called 'Your rates and policies', and again inside step 01. There is no pricing block, no example of what an expert takes home, and payout timing is given as a rule ('the later of 7 days after payment or 24 hours after the session; Stripe then pays it to your bank') that needs reading twice. Price is the first thing a professional looks for; she has to hunt for it.",
       "recommendation": "Add a pricing section right after the benefits: '15% per booking. Nothing else.' as the heading, a checklist of what that includes (booking page, calendar, video sessions, reminders, payments), and a worked example ('A member pays 60 euros. You receive 51 euros.') or a small slider where the expert sets her session price. State payout timing as a short timeline: member pays, session happens, money reaches Stripe, Stripe pays your bank. Use only the figures already on the page and have finance confirm the example.",
-      "references": [
-        "08-marketing/04",
-        "08-marketing/05",
-        "08-marketing/06"
-      ]
+      "references": ["08-marketing/04", "08-marketing/05", "08-marketing/06"]
     },
     {
       "id": "MKT-03",
@@ -58,27 +52,17 @@
       ],
       "detail": "/become-expert and /for-clinics are the same five blocks: text hero with a photo, six cards with identical teal icon circles, four numbered steps, four small text items, a text call to action. There is no screenshot of a public profile, the service builder, the calendar or the earnings view. An expert is asked to move her practice onto software she is never shown, and the two pages are hard to tell apart at a glance. On a phone each page is about 6,000px of text cards.",
       "recommendation": "Replace the six-icon grid with four or five feature tabs or rows, each with a real screen: your public profile and booking page, a service with price and cancellation policy, your week with calendar sync, a video session, your earnings and payouts. One line of benefit per screen. Give the clinics page its own structure (see MKT-04) so the two pages stop mirroring each other.",
-      "references": [
-        "08-marketing/03",
-        "08-marketing/02"
-      ]
+      "references": ["08-marketing/03", "08-marketing/02"]
     },
     {
       "id": "MKT-04",
       "severity": "P1",
       "lens": "ux",
       "title": "The clinics page says three times that terms come later, and still only offers 'Create your account'",
-      "evidence": [
-        "02-for-clinics.desktop.jpg",
-        "02-for-clinics.mobile.jpg"
-      ],
+      "evidence": ["02-for-clinics.desktop.jpg", "02-for-clinics.mobile.jpg"],
       "detail": "'We'll share seat pricing and the partnership terms with you before launch', 'Terms before launch: We'll share the partnership terms and seat pricing with you before launch' and 'We will publish final clinic terms before launch' all appear on one page. A clinic owner cannot learn the price, yet the only button is self-service sign-up. The card 'Partner onboarding: Contact us when you need a walkthrough' has no link, email or form. The page tells the reader what is not ready, which also goes against Eleva's own rule of describing what it does.",
       "recommendation": "Make the primary action a conversation: 'Talk to us about your clinic' opening a short form (name, clinic, number of experts, email, anything else) with three lines beside it on what happens next and who replies. Keep 'Create your account' as the secondary action for clinics that want to start now. Say once, positively, how pricing works today ('We agree terms with each clinic; tell us about your team and we will send them'). Remove the repeated 'before launch' lines.",
-      "references": [
-        "08-marketing/09",
-        "08-marketing/05",
-        "08-marketing/02"
-      ]
+      "references": ["08-marketing/09", "08-marketing/05", "08-marketing/02"]
     },
     {
       "id": "MKT-05",
@@ -91,9 +75,7 @@
       ],
       "detail": "The clinics headline is 'Clinics and Teams', a plan name, not a promise. The page then uses 'as a Team', 'Team organization', 'Team space', 'clinic space', 'modality', 'Operational owner', 'Member-ready experience' and 'seat pricing'. /become-expert uses 'standard plan' without naming any other plan, 'Honest, evidence-based words' and 'Languages you publish'. These are labels from inside the product and the agreement; a clinic manager or physiotherapist has to translate them.",
       "recommendation": "Rewrite in the reader's words. Clinics headline: 'One place for your clinic's bookings, team and payments'. 'Operational owner' becomes 'One person runs the clinic account'. 'Member-ready experience' becomes 'Members book your team the same way they book any Eleva expert'. 'Modality' becomes 'online, by phone or in person'. On /become-expert drop 'standard plan' or explain it in the pricing block, and rename the two rule items 'What we ask of your profile' and 'Write in the languages you work in'.",
-      "references": [
-        "08-marketing/02"
-      ]
+      "references": ["08-marketing/02"]
     },
     {
       "id": "MKT-06",
@@ -106,10 +88,7 @@
       ],
       "detail": "Neither page shows an expert who uses Eleva, a quote, a face, or how many experts and professions are on the platform. Professionals join where their peers already are. Eleva has unusually good material for this and does not use it here: a co-founder who is a physiotherapist with a PhD, and a board of eight clinical advisors.",
       "recommendation": "Add a short 'Built with clinicians' block to /become-expert: a two-line note from the co-founder who practises, the advisor faces in a row, and, as soon as they agree, two early experts with name, profession, city and one concrete sentence about what changed for them. Add honest figures when they exist (experts live, professions).",
-      "references": [
-        "08-marketing/07",
-        "08-marketing/01"
-      ]
+      "references": ["08-marketing/07", "08-marketing/01"]
     },
     {
       "id": "MKT-07",
@@ -122,9 +101,7 @@
       ],
       "detail": "Eligibility sits in four 14px grey paragraphs with no structure, mixing who qualifies (registered professional) with content rules ('promise no results, quote no unproven figures') and payout checks. The verification step is a trust asset but is not shown as a process: what to have ready, how long it takes. There is no FAQ on fees, payouts, invoices, cancellations or leaving.",
       "recommendation": "Turn 'Who can join' into a checklist titled 'What you need to start': your professional registration number, an identity document, your bank details for Stripe, and the languages you work in, with a line on how long the check takes. Follow it with a six-question FAQ: What does it cost? When am I paid? Who sets my prices and cancellation policy? What happens if a member cancels? Can I keep my own clients and calendar? Can I leave?",
-      "references": [
-        "08-marketing/08"
-      ]
+      "references": ["08-marketing/08"]
     },
     {
       "id": "MKT-08",
@@ -138,64 +115,44 @@
       ],
       "detail": "The physiotherapy photo is the /become-expert hero, the homepage expert band and the About closing band: three uses of one image. The clinics hero is an empty waiting room with a tablet on a table, with no people and no product. On both professional pages the content starts at three different left edges (hero and benefits at the page margin, 'Who can join' indented, the final call to action indented further), and the final block is plain text on cream, so each page fades out.",
       "recommendation": "Give each page its own lead visual: a real Eleva screen for /become-expert, a team view (several experts under one clinic, a shared calendar) for clinics. Align every section to the same left edge. End each page with the shared dark teal call-to-action band used on the homepage, with one sentence and one button.",
-      "references": [
-        "08-marketing/02",
-        "08-marketing/03"
-      ]
+      "references": ["08-marketing/02", "08-marketing/03"]
     },
     {
       "id": "MKT-09",
       "severity": "P2",
       "lens": "trust",
       "title": "'Eleva at a glance' counts features as if they were achievements",
-      "evidence": [
-        "03-about.desktop.jpg",
-        "03-about.mobile.jpg"
-      ],
+      "evidence": ["03-about.desktop.jpg", "03-about.mobile.jpg"],
       "detail": "Three cards put large numerals on '3 ways to meet your expert', '3 languages, written natively' and '4 care areas to start with'. A reader expects big numbers to be evidence (members helped, experts, sessions); these are product settings, so the block reads as padding. '4 care areas' also disagrees with the nine categories on the homepage, and on mobile the three cards take about 700px.",
       "recommendation": "Use the block for true evidence, however small: 8 advisors on the board, the number of professions covered, experts whose registration has been checked, the year Eleva started. Pair each number with one line of context or a source. If the figures are not ready, present the three facts as a plain sentence without large numerals.",
-      "references": [
-        "08-marketing/11"
-      ]
+      "references": ["08-marketing/11"]
     },
     {
       "id": "MKT-10",
       "severity": "P2",
       "lens": "copy",
       "title": "About says the same thing four times and never tells the founders' story",
-      "evidence": [
-        "03-about.desktop.jpg",
-        "03-about.mobile.jpg"
-      ],
+      "evidence": ["03-about.desktop.jpg", "03-about.mobile.jpg"],
       "detail": "Mission, vision, 'What we stand for' and the team introduction each restate one idea; 'we provide the technology, your chosen expert provides your care' appears three times. The headline 'Transforming women's health with compassion and proven care' is abstract. The founders appear as two photos with titles and no words of their own, and the real story sits behind a 'Read our story' link. The four belief cards ('Knowledge is power', 'Quality care access') could belong to any health company.",
       "recommendation": "Open with a short first-person note from the founders: what they saw in practice, why they started Eleva, what they promise, signed with name and credential. Merge mission and vision into one short section and state the platform model once. Replace the four belief cards with two or three commitments Eleva actually keeps (every registration checked, sessions not recorded, prices shown before booking), each linked to the trust page.",
-      "references": [
-        "08-marketing/10"
-      ]
+      "references": ["08-marketing/10"]
     },
     {
       "id": "MKT-11",
       "severity": "P2",
       "lens": "ui",
       "title": "About is 12,600px long on a phone, mostly full-width portraits",
-      "evidence": [
-        "03-about.mobile.jpg"
-      ],
+      "evidence": ["03-about.mobile.jpg"],
       "detail": "The eight advisors stack as full-width square portraits, each followed by an italic quote, taking about 5,000px. Two founder portraits add another 900px and the four belief cards 800px. The page's real proof becomes a long scroll that few will finish, and the closing action is far below it.",
       "recommendation": "On mobile show advisors two per row with name and one credential line, or as a horizontal row, and reveal the quote on tap or keep only the lead advisor's quote in view. Put the founders side by side at half width. Aim for under 7,000px. No mobile-specific Mobbin reference was found; the compact advisor row in the homepage library shows the target density.",
-      "references": [
-        "01-homepage/06"
-      ]
+      "references": ["01-homepage/06"]
     },
     {
       "id": "MKT-12",
       "severity": "P3",
       "lens": "ux",
       "title": "About ends with a pitch to experts; members get the secondary link",
-      "evidence": [
-        "03-about.desktop.jpg",
-        "03-about.mobile.jpg"
-      ],
+      "evidence": ["03-about.desktop.jpg", "03-about.mobile.jpg"],
       "detail": "The closing band is 'Transform women's health care with us' with 'Become an expert' as the main button and 'Find an expert' as plain text beside it. Most About readers are members checking whether Eleva can be trusted; their next step is the minor one. No Mobbin reference was searched for this point.",
       "recommendation": "Close About with two equal doors: 'Looking for care? Find an expert' and 'Are you a professional? Practise on Eleva', or put the member action first and the expert band after it, as on the homepage.",
       "references": []

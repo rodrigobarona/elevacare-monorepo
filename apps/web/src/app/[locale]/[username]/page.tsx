@@ -18,10 +18,7 @@ import { professionalBodyById } from "@eleva/config/professional-bodies"
 import { isReserved } from "@eleva/config/reserved-usernames"
 import { RichTextViewer } from "@eleva/editor/rich-text-viewer"
 import {
-  CalendarCheckIcon,
-  CaretDownIcon,
   CheckIcon,
-  EnvelopeIcon,
   GlobeIcon,
   MapPinIcon,
   ShieldCheckIcon,
@@ -41,6 +38,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@eleva/ui/components/accordion"
+import { InfoPopover } from "@eleva/ui/components/info-popover"
 import { buttonVariants } from "@eleva/ui/components/button-variants"
 import { Heading } from "@eleva/ui/components/typography"
 import { cn } from "@eleva/ui/lib/utils"
@@ -386,11 +384,6 @@ export default async function ExpertProfilePage({ params }: Props) {
                     username={expert.username}
                     eventTypes={bookable}
                     timeZone={geo.timeZone}
-                    checked={
-                      professionalBodyById(
-                        expert.registration?.professionalBody
-                      ) != null
-                    }
                     t={t}
                   />
                 </Suspense>
@@ -450,40 +443,6 @@ export default async function ExpertProfilePage({ params }: Props) {
                 </section>
               ) : null}
 
-              {bookable.length > 0 ? (
-                <section
-                  aria-labelledby="how-heading"
-                  className="flex flex-col gap-5"
-                  data-testid="how-booking-works"
-                >
-                  <Heading id="how-heading" as="h2" size="title">
-                    {t("how.heading")}
-                  </Heading>
-                  <ol className="grid gap-4 sm:grid-cols-3">
-                    {HOW_STEPS.map((step, index) => {
-                      const Icon = step.icon
-                      return (
-                        <li
-                          key={step.key}
-                          className="flex flex-col gap-2 rounded-3xl border bg-card p-5 shadow-1"
-                        >
-                          <span className="flex items-center gap-2 text-sm font-medium text-primary">
-                            <Icon aria-hidden className="size-5" />
-                            <span>{t("how.step", { number: index + 1 })}</span>
-                          </span>
-                          <span className="font-medium">
-                            {t(`how.${step.key}.title`)}
-                          </span>
-                          <span className="text-[0.9375rem] text-pretty text-foreground/75">
-                            {t(`how.${step.key}.body`)}
-                          </span>
-                        </li>
-                      )
-                    })}
-                  </ol>
-                </section>
-              ) : null}
-
               {/* Booking questions only apply when she can be booked. */}
               {bookable.length > 0 ? (
                 <section
@@ -531,15 +490,8 @@ export default async function ExpertProfilePage({ params }: Props) {
   )
 }
 
-/** "How booking works": three steps above the booking questions (PROF-09). */
-const HOW_STEPS = [
-  { key: "choose", icon: CalendarCheckIcon },
-  { key: "book", icon: ShieldCheckIcon },
-  { key: "join", icon: EnvelopeIcon },
-] as const
-
-/** The steps already answer how booking and joining work. */
-const WITH_ELEVA_ITEMS = ["account", "cancel", "care"] as const
+/** Booking questions; joining moved here from the removed "How booking works" (D7.2). */
+const WITH_ELEVA_ITEMS = ["account", "join", "cancel", "care"] as const
 
 function BioBody({
   expert,
@@ -585,7 +537,7 @@ function ServiceCard({
   const included = pickList(eventType.whatsIncluded, locale)
   const expect = pickList(eventType.whatToExpect, locale)
   const questions = pickList(eventType.exampleQuestions, locale)
-  const eyebrow = formatEyebrow(eventType, locale, t)
+  const meta = serviceMeta(eventType, locale, t)
   // A free session costs nothing to cancel: no policy line.
   const cancellation =
     price.min === 0 && !price.varies
@@ -601,13 +553,13 @@ function ServiceCard({
       className="flex scroll-mt-24 flex-col gap-4 rounded-4xl border bg-card p-6 shadow-1 sm:p-7"
     >
       <div className="flex items-start justify-between gap-4">
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <p className="eyebrow text-primary">{eyebrow}</p>
+        <div className="flex min-w-0 flex-col gap-1">
           <h3 className="font-display text-2xl leading-tight font-medium tracking-tight text-balance">
             {title}
           </h3>
+          <p className="text-sm text-muted-foreground">{meta}</p>
         </div>
-        <p className="shrink-0 pt-5 text-lg font-medium tabular-nums">
+        <p className="shrink-0 pt-0.5 text-lg font-medium tabular-nums">
           {price.min === 0
             ? price.varies
               ? t("freeOption")
@@ -692,9 +644,12 @@ function ServiceCard({
         </div>
         <Link
           href={`/${username}/${eventType.slug}`}
-          className={buttonVariants({
-            className: "min-h-11 shrink-0 rounded-full",
-          })}
+          // cn, not cva's className: the base `border-transparent` must
+          // lose to a visible border, like the booking card's time buttons.
+          className={cn(
+            buttonVariants({ variant: "outline" }),
+            "min-h-11 shrink-0 rounded-full border-input-border bg-card hover:border-primary"
+          )}
         >
           {t("seeTimes")}
         </Link>
@@ -742,15 +697,12 @@ async function ProfileBookingCard({
   username,
   eventTypes,
   timeZone,
-  checked,
   t,
 }: {
   locale: Locale
   username: string
   eventTypes: PublicEventType[]
   timeZone: string
-  /** Eleva checked the expert's registration: repeated beside booking. */
-  checked: boolean
   t: ProfileT
 }) {
   // Hour-aligned so the API's calendar busy cache key repeats across renders.
@@ -899,7 +851,6 @@ async function ProfileBookingCard({
         laterDates: t("card.laterDates"),
         seeAll: t("card.seeAll"),
         noAccount: t("card.noAccount"),
-        checked: checked ? t("registration.checkedShort") : undefined,
       }}
     />
   )
@@ -956,7 +907,18 @@ function lowestPrice(eventTypes: PublicEventType[]): number | null {
   return prices.length > 0 ? Math.min(...prices) : null
 }
 
-function formatEyebrow(
+/**
+ * "60 min · Video call": a quiet line under the service title. Where an
+ * in-person session takes place is listed on the card, not repeated here.
+ */
+/** The hero's words for each way to meet, reused in the service line. */
+const FACT_WORD = {
+  online: "video",
+  phone: "phone",
+  in_person: "inPerson",
+} as const satisfies Record<SessionMode, string>
+
+function serviceMeta(
   eventType: PublicEventType,
   locale: Locale,
   t: ProfileT
@@ -965,22 +927,16 @@ function formatEyebrow(
     ...new Set(eventType.modes.map((mode) => mode.mode)),
   ]
   const minutes = eventType.durationMinutes
-  if (modes.length !== 1) {
-    return t("services.eyebrowMixed", { minutes })
-  }
-  const mode = modes[0]!
-  const place =
-    mode === "in_person"
-      ? [
-          ...new Set(
-            eventType.modes
-              .map((item) => item.location?.city)
-              .filter((city): city is string => Boolean(city))
-          ),
-        ].join(", ")
-      : ""
-  const base = t(`services.eyebrow.${mode}`, { minutes })
-  return place ? `${base} · ${place}` : base
+  if (modes.length === 1) return t(`services.meta.${modes[0]!}`, { minutes })
+  // "20 min · Video or phone": every way you can meet, in one line.
+  const ways = listFormat(
+    modes.map((mode) =>
+      t(`facts.${FACT_WORD[mode]}`).toLocaleLowerCase(intlLocales[locale])
+    ),
+    locale,
+    "or"
+  )
+  return t("services.metaMixed", { minutes, modes: capitalise(ways) })
 }
 
 function freeCancellationLine(
@@ -1053,16 +1009,28 @@ function RegistrationProof({
     // Borderless, so it reads as part of who she is beside a large
     // portrait rather than as a form field.
     <div data-testid="expert-registration" className="max-w-xl">
-      <h2 className="flex items-center gap-2 text-[0.9375rem] font-medium">
-        <ShieldCheckIcon
-          aria-hidden
-          className="size-5 shrink-0 text-primary"
-          weight="fill"
-        />
-        {month
-          ? t("registration.checked", { month })
-          : t("registration.checkedShort")}
-      </h2>
+      {/* The (i) sits beside the heading, not inside it, so the heading
+          reads as one sentence; its tap area matches the page's buttons. */}
+      <div className="flex items-start gap-1">
+        <h2 className="flex items-center gap-2 text-[0.9375rem] font-medium">
+          <ShieldCheckIcon
+            aria-hidden
+            className="size-5 shrink-0 text-primary"
+            weight="fill"
+          />
+          {month
+            ? t("registration.checked", { month })
+            : t("registration.checkedShort")}
+        </h2>
+        <InfoPopover
+          label={t("registration.whatWeCheckLabel")}
+          title={t("registration.whatWeCheck")}
+          className="-my-2.5 size-11 sm:-my-1 sm:size-8"
+          data-testid="registration-info"
+        >
+          <p>{t("registration.whatWeCheckBody")}</p>
+        </InfoPopover>
+      </div>
       <ul className="mt-1.5 space-y-0.5 pl-7 text-sm text-muted-foreground">
         <li>
           <a
@@ -1089,18 +1057,6 @@ function RegistrationProof({
           </li>
         ) : null}
       </ul>
-      <details className="group mt-1.5 pl-7 text-sm">
-        <summary className="inline-flex min-h-6 cursor-pointer list-none items-center gap-1 rounded-sm font-medium text-primary underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring focus-visible:outline-none [&::-webkit-details-marker]:hidden">
-          {t("registration.whatWeCheck")}
-          <CaretDownIcon
-            aria-hidden
-            className="size-3.5 transition-transform group-open:rotate-180"
-          />
-        </summary>
-        <p className="mt-1.5 text-pretty text-muted-foreground">
-          {t("registration.whatWeCheckBody")}
-        </p>
-      </details>
     </div>
   )
 }

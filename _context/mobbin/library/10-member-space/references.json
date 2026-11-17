@@ -21,7 +21,11 @@
       "evidence": ["01-home.desktop.jpg", "01-home.mobile.jpg"],
       "detail": "A new member sees 'Welcome, Demo', a subtitle that lists admin nouns ('Your sessions, payments, and privacy settings live in this Space') and two dashed boxes: 'You have no upcoming sessions.' and 'You have no past sessions yet.' The second box tells someone who has just arrived, a second time, that there is nothing here. 'Find an expert' appears twice within one screen and both send her away to the public directory with no guidance. Nothing explains what Eleva will do for her or how a session works. For a woman who may be anxious about a health concern, this is the first private page she sees, and it feels like a filing cabinet.",
       "recommendation": "Design a first-run home with one job: help her take the first step. Greeting by first name with a warm line ('Let's find the right expert for you'). A search field and need-based shortcuts in her words (Pregnancy, After birth, Pelvic floor, Breastfeeding, Nutrition, Emotional wellbeing) that open the directory already filtered. Two or three suggested experts with photo, speciality and next available time. A three-step 'How a session works' strip: book a time, get your link by email, join from here or from the email. Do not show 'Past sessions' until one exists.",
-      "references": ["10-member-space/02", "10-member-space/04", "10-member-space/03"]
+      "references": [
+        "10-member-space/02",
+        "10-member-space/04",
+        "10-member-space/03"
+      ]
     },
     {
       "id": "MEM-02",
@@ -41,34 +45,62 @@
       "evidence": ["01-home.desktop.jpg", "02-sessions.desktop.jpg"],
       "detail": "The demo member has no bookings, so the captures show only empty states. The source (apps/app/src/app/[orgSlug]/page.tsx) renders a featured booking card with a Join action and one small grey line about the 15-minute join window. That moment, the day before or the hour before a session, is when a member most needs reassurance: who she is meeting, when in her own time zone, how to join, and what to prepare. It should be captured with seeded data and reviewed against the references before the redesign is called done.",
       "recommendation": "Make the next session the hero of home: expert photo, name and speciality; service; date and time with time zone; mode; a countdown; a Join session button that is always visible and shows when it opens ('Opens at 09:45'); Add to calendar; Reschedule and Cancel with the cancellation policy summarised in one line. Under it, 'Before your session': fill in your intake notes, test your camera and microphone, find a quiet place. After the session, the same card becomes 'Your report from Ana is ready' or 'Book your follow-up'.",
-      "references": ["10-member-space/01", "10-member-space/03", "10-member-space/06", "10-member-space/02"]
+      "references": [
+        "10-member-space/01",
+        "10-member-space/03",
+        "10-member-space/06",
+        "10-member-space/02"
+      ]
     },
     {
       "id": "MEM-04",
       "severity": "P2",
       "lens": "ux",
       "title": "Sessions repeats home with two more empty boxes",
-      "evidence": ["02-sessions.desktop.jpg", "02-sessions.mobile.jpg", "01-home.desktop.jpg"],
+      "evidence": [
+        "02-sessions.desktop.jpg",
+        "02-sessions.mobile.jpg",
+        "01-home.desktop.jpg"
+      ],
       "detail": "Sessions shows the same Upcoming and Past sections as home, with the same icons and nearly the same words, so two of six nav items lead to the same nothing. The empty heading packs two thoughts into one serif line ('No upcoming sessions. Find an expert to book your next visit.'). The subtitle, 'Review upcoming and past sessions with Eleva experts', describes the page rather than helping. The session detail page was not captured and could not be judged.",
       "recommendation": "Use one list with Upcoming and Past tabs, so only one empty state shows at a time. Each session row: expert photo and name, service, date tile, mode, status in words and the right action for its state (Join, Add to calendar, View report, Book again). The detail page should lead with the date in the title, then who, what and where, the join button with its opening time, and Reschedule and Cancel as clear but secondary actions.",
-      "references": ["10-member-space/05", "10-member-space/06", "10-member-space/07"]
+      "references": [
+        "10-member-space/05",
+        "10-member-space/06",
+        "10-member-space/07"
+      ]
     },
     {
       "id": "MEM-05",
       "severity": "P2",
       "lens": "ux",
       "title": "Empty states are thin and inconsistent",
-      "evidence": ["03-reports.desktop.jpg", "04-payments.desktop.jpg", "07-notifications.desktop.jpg", "03-reports.mobile.jpg", "07-notifications.mobile.jpg"],
+      "evidence": [
+        "03-reports.desktop.jpg",
+        "04-payments.desktop.jpg",
+        "07-notifications.desktop.jpg",
+        "03-reports.mobile.jpg",
+        "07-notifications.mobile.jpg"
+      ],
       "detail": "Payments says only 'No payments yet.' with no explanation of what will appear or why she would come back. Reports explains itself but offers no next step. Inbox is a single grey line, 'No notifications yet', with no card, icon or action, so it looks like a page that failed to load. Headings differ in punctuation and voice ('You have no upcoming sessions.', 'No reports yet', 'No payments yet.'). Each page fills less than a third of the screen and leaves the rest blank.",
       "recommendation": "Use one empty-state pattern everywhere: what will appear here, when, and one action. Payments: 'Your receipts will appear here after you book. You can download each one for your records.' Reports: 'After a session, your expert may share a written summary with you. We will email you when it is ready.' Inbox: 'You are all caught up. Booking updates and messages about your sessions arrive here.' Give each a relevant action (Find an expert, or Notification settings on Inbox). When Payments has data, each row should open a receipt with a clear breakdown and an 'Email receipt' action.",
-      "references": ["10-member-space/11", "10-member-space/04", "10-member-space/12"]
+      "references": [
+        "10-member-space/11",
+        "10-member-space/04",
+        "10-member-space/12"
+      ]
     },
     {
       "id": "MEM-06",
       "severity": "P2",
       "lens": "ux",
       "title": "Navigation: unlabeled 'Back', a hidden Inbox and no mobile bar",
-      "evidence": ["01-home.desktop.jpg", "07-notifications.desktop.jpg", "01-home.mobile.jpg", "06-settings.desktop.jpg"],
+      "evidence": [
+        "01-home.desktop.jpg",
+        "07-notifications.desktop.jpg",
+        "01-home.mobile.jpg",
+        "06-settings.desktop.jpg"
+      ],
       "detail": "The sidebar starts with '← Back' and no destination, and nothing names the Space or the member, so she cannot tell where she is or where Back goes. The Inbox page is reached only from the bell, is titled 'Inbox' while the bell suggests notifications, and the sidebar highlights Home while she is on it. Reports, the most personal content, sits below Payments. There is no link to find an expert or get help. On mobile all six destinations are behind one icon, although a member mostly needs two: her next session and her reports.",
       "recommendation": "Replace Back with the Space name ('Demo's Space') and a labelled link such as 'Back to Eleva' or 'Find an expert'. Order the nav by care, then admin: Home, Sessions, Reports, Payments, then Settings and Privacy grouped under Account. Give Inbox its own active state and call the page 'Notifications' or the bell 'Inbox', not both. On mobile add a bottom bar: Home, Sessions, Reports, Account, with a badge on Sessions when one is coming up. Add Help at the bottom of the sidebar.",
       "references": ["10-member-space/02", "10-member-space/01"]
@@ -98,7 +130,11 @@
       "severity": "P2",
       "lens": "copy",
       "title": "Copy describes what is not switched on, and uses internal words",
-      "evidence": ["05-privacy.desktop.jpg", "06-settings.desktop.jpg", "07-notifications.desktop.jpg"],
+      "evidence": [
+        "05-privacy.desktop.jpg",
+        "06-settings.desktop.jpg",
+        "07-notifications.desktop.jpg"
+      ],
       "detail": "Two lines tell the member what Eleva is not doing yet: 'AI drafting is not switched on yet.' (Privacy) and 'These preferences are used when we start sending notifications.' (Settings). Both break the voice rule and make the product feel unfinished. Other internal words: 'organization alerts' (Inbox), 'This is your avatar. Click the photo to upload a custom image from your files.', 'Optional. Both start and end are required when enabled.', a raw 'Europe/Lisbon' time zone, and 'Manage your member profile, language, theme, and notifications.' No Mobbin reference was needed for this finding; it is a wording pass.",
       "recommendation": "Remove both 'not yet' sentences and say what is true today: 'We use these choices for every message we send you.' Inbox subtitle: 'Updates about your bookings, payments and reports.' Photo: 'Add a photo so your expert recognises you. Tap to choose one.' Quiet hours: 'Pause non-urgent messages at night. Choose a start and end time.' Show the time zone as 'Lisbon (GMT+0)'. Settings subtitle: 'Your name, language and how we reach you.'",
       "references": []
