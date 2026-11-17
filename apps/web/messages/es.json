@@ -504,7 +504,6 @@
       "heading": "¿Cómo quieres quedar?",
       "sub": "Elige la forma que te encaje. Puedes cambiarla antes de pagar.",
       "countryLabel": "¿Dónde estás?",
-      "countryHint": "Lo usamos para mostrar sesiones disponibles en tu país. Puedes cambiarlo cuando quieras.",
       "languageLabel": "Idioma de la sesión",
       "duration": "{minutes} minutos",
       "continue": "Ver horarios",
@@ -561,10 +560,12 @@
       "intakeNotes": "Algo que quieras que {name} sepa (opcional)",
       "intakeNotesHint": "{name} lee esta nota antes de la sesión.",
       "promo": "Código promocional (opcional)",
-      "promoHint": "¿Tienes un código? Aplícalo aquí y verás el nuevo total antes de pagar.",
       "aiConsent": {
         "short": "Autorizo la transcripción en directo en mis sesiones por vídeo y la ayuda de IA con las notas de la sesión.",
-        "description": "{name} escribe y revisa cada informe. Puedes desactivarlo cuando quieras en los ajustes de Privacidad. <link>Aviso sobre el tratamiento con IA</link>"
+        "line": "{name} revisa cada informe. Puedes desactivarlo cuando quieras.",
+        "title": "Transcripción y ayuda de IA",
+        "description": "{name} escribe y revisa cada informe. Puedes desactivarlo cuando quieras en los ajustes de Privacidad de tu Espacio, o escribiendo a <mail>privacy@eleva.care</mail>.",
+        "notice": "<link>Aviso sobre el tratamiento con IA</link>"
       },
       "hold": "Continuar al pago",
       "confirmFree": "Confirmar reserva",
@@ -572,7 +573,10 @@
       "consents": {
         "health_data_processing": {
           "label": "Acepto expresamente que Eleva use la información de salud de esta reserva para organizar mi sesión y comparta con {name} lo que escriba.",
-          "description": "Se usa solo para organizar tu atención con {name}, nunca para publicidad. Para retirarlo, escribe a <mail>privacy@eleva.care</mail> o usa los ajustes de Privacidad; si tienes una sesión reservada, cancélala primero. <link>Cómo protegemos los datos de salud</link>"
+          "title": "Tu información de salud",
+          "description": "Se usa solo para organizar tu atención con {name}, nunca para publicidad. Puedes retirar tu consentimiento cuando quieras.",
+          "withdraw": "Puedes retirar tu consentimiento cuando quieras: escribe a <mail>privacy@eleva.care</mail> o usa los ajustes de Privacidad de tu Espacio. Si tienes una sesión reservada, cancélala primero.",
+          "notice": "<link>Cómo protegemos los datos de salud</link>"
         },
         "terms": {
           "combined": "Tengo 18 años o más, reservo esta sesión para mí y acepto los <terms>términos de uso</terms> y los <booking>términos de reserva</booking>."
@@ -587,7 +591,12 @@
       "urgentMore": "Más líneas de ayuda",
       "taxIdAdd": "¿Necesitas factura a tu nombre? Añade tu NIF",
       "optionalHeading": "Opcional",
-      "privacyLine": "Usamos tus datos como se describe en nuestro <link>aviso de privacidad</link>."
+      "privacyLine": "Usamos tus datos como se describe en nuestro <link>aviso de privacidad</link>.",
+      "consentDetails": {
+        "trigger": "Detalles",
+        "label": "Detalles: {title}",
+        "close": "Cerrar"
+      }
     },
     "pay": {
       "heading": "Confirmar y pagar",
@@ -645,7 +654,7 @@
         "now": "Ahora",
         "inbox": "La confirmación y la invitación de calendario están en tu email. ¿No llega en unos minutos? Mira en spam.",
         "reminder": "Te enviamos un recordatorio 24 horas antes.",
-        "joinOpens": "Se abre tu enlace para entrar. Sin necesidad de cuenta.",
+        "joinOpens": "Ya puedes entrar con el enlace de tu email de confirmación, sin necesidad de cuenta.",
         "requestSent": "Tu solicitud está con {name}. Por ahora no tienes que hacer nada más.",
         "requestReply": "{name} acepta o rechaza. Te escribimos en cualquier caso. Si la respuesta es no, o no hay respuesta para entonces, te devolvemos todo lo que pagaste.",
         "confirming": "Estamos confirmando tu pago y escribiremos a {email} en cuanto esté listo.",
@@ -656,16 +665,13 @@
       "changeHow": "Para cambiarla o cancelarla, entra o crea tu Espacio abajo con este email.",
       "space": {
         "heading": "Todo en un solo lugar",
-        "manage": "Ve, cambia o cancela tus sesiones",
-        "rebook": "Reserva de nuevo en pocos toques",
-        "reminders": "Elige cómo te recordamos",
-        "prefilled": "Tu nombre y email ya están rellenados.",
-        "cta": "Crear tu Espacio",
-        "later": "¿Ahora no? Tu email de confirmación tiene todo lo que necesitas."
+        "line": "Consulta, cambia o cancela tus sesiones y vuelve a reservar en pocos toques. Tu nombre y tu email ya están rellenados.",
+        "cta": "Crear tu Espacio"
       },
       "accessRequest": "Los detalles de la sesión llegan por email en cuanto {name} acepte.",
       "requestChange": "Si {name} acepta, tu email de confirmación explica cómo cambiarla o cancelarla.",
-      "calendarNote": "Tu email de confirmación también incluye una invitación de calendario. Google y Microsoft solo reciben el nombre, la hora y el lugar de la sesión si los eliges."
+      "calendarNote": "Tu email de confirmación también incluye una invitación de calendario. Google y Microsoft solo reciben el nombre, la hora y el lugar de la sesión si los eliges.",
+      "calendarNoteLabel": "Sobre las invitaciones de calendario"
     },
     "link": {
       "specialPrice": "Precio especial",

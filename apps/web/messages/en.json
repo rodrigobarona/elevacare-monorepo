@@ -504,7 +504,6 @@
       "heading": "How do you want to meet?",
       "sub": "Choose the way that feels right. You can change this before you pay.",
       "countryLabel": "Where are you?",
-      "countryHint": "We use this to show sessions available in your country. You can change it anytime.",
       "languageLabel": "Session language",
       "duration": "{minutes} minutes",
       "continue": "See available times",
@@ -561,10 +560,12 @@
       "intakeNotes": "Anything you want {name} to know (optional)",
       "intakeNotesHint": "{name} reads this before your session.",
       "promo": "Promo code (optional)",
-      "promoHint": "Have a code? Apply it here and you'll see the new total before you pay.",
       "aiConsent": {
         "short": "I allow live transcription in my video sessions and AI help with the session notes.",
-        "description": "{name} writes and checks every report. You can turn this off any time in Privacy settings. <link>AI processing notice</link>"
+        "line": "{name} checks every report. You can turn this off any time.",
+        "title": "Transcripts and AI help",
+        "description": "{name} writes and checks every report. You can turn this off any time in Privacy settings in your Space, or by emailing <mail>privacy@eleva.care</mail>.",
+        "notice": "<link>AI processing notice</link>"
       },
       "hold": "Continue to payment",
       "confirmFree": "Confirm booking",
@@ -572,7 +573,10 @@
       "consents": {
         "health_data_processing": {
           "label": "I explicitly agree that Eleva uses the health information in this booking to arrange my session and shares what I write with {name}.",
-          "description": "Used only to arrange your care with {name}, never for advertising. To withdraw, email <mail>privacy@eleva.care</mail> or use Privacy settings; if you have a session booked, cancel it first. <link>How we protect health data</link>"
+          "title": "Your health information",
+          "description": "Used only to arrange your care with {name}, never for advertising. You can withdraw any time.",
+          "withdraw": "You can withdraw your consent at any time: email <mail>privacy@eleva.care</mail> or use Privacy settings in your Space. If you have a session booked, cancel it first.",
+          "notice": "<link>How we protect health data</link>"
         },
         "terms": {
           "combined": "I’m 18 or older, I’m booking this session for myself, and I agree to the <terms>terms of use</terms> and <booking>booking terms</booking>."
@@ -587,7 +591,12 @@
       "urgentMore": "More helplines",
       "taxIdAdd": "Need an invoice in your name? Add your tax number",
       "optionalHeading": "Optional",
-      "privacyLine": "We use your details as described in our <link>privacy notice</link>."
+      "privacyLine": "We use your details as described in our <link>privacy notice</link>.",
+      "consentDetails": {
+        "trigger": "Details",
+        "label": "Details: {title}",
+        "close": "Close"
+      }
     },
     "pay": {
       "heading": "Confirm and pay",
@@ -645,7 +654,7 @@
         "now": "Now",
         "inbox": "Your confirmation and calendar invite are in your inbox. Not there in a few minutes? Check your spam folder.",
         "reminder": "We send you a reminder 24 hours before.",
-        "joinOpens": "Your join link opens. No account needed.",
+        "joinOpens": "Your join link opens. It’s in your confirmation email. No account needed.",
         "requestSent": "Your request is with {name}. Nothing else to do for now.",
         "requestReply": "{name} accepts or declines. We email you either way. If it’s a no, or there’s no reply by then, anything you paid comes back in full.",
         "confirming": "We’re confirming your payment and will email {email} as soon as it’s done.",
@@ -656,16 +665,13 @@
       "changeHow": "To move or cancel it, sign in or create your Space below with this email.",
       "space": {
         "heading": "Keep everything in one place",
-        "manage": "See, move or cancel your sessions",
-        "rebook": "Book again in a few taps",
-        "reminders": "Choose how we remind you",
-        "prefilled": "Your name and email are already filled in.",
-        "cta": "Create your Space",
-        "later": "Not now? Your confirmation email has everything you need."
+        "line": "See, move or cancel your sessions, and book again in a few taps. Your name and email are already filled in.",
+        "cta": "Create your Space"
       },
       "accessRequest": "Your session details come by email once {name} accepts.",
       "requestChange": "If {name} says yes, your confirmation email explains how to move or cancel.",
-      "calendarNote": "Your confirmation email has a calendar invite too. Google and Microsoft only get the session name, time and place if you choose them."
+      "calendarNote": "Your confirmation email has a calendar invite too. Google and Microsoft only get the session name, time and place if you choose them.",
+      "calendarNoteLabel": "About calendar invites"
     },
     "link": {
       "specialPrice": "Special price",

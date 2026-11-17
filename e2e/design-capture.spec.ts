@@ -404,6 +404,16 @@ test.describe("design capture", () => {
         email: uniqueGuestEmail("design-capture"),
       })
       await shoot(page, surface, "06-paid-details-filled", kind)
+      // How to withdraw health consent opens from "Details".
+      await page
+        .getByTestId("booking-consent-health_data_processing-details")
+        .click()
+      await expect(page.getByRole("dialog")).toBeVisible()
+      await shoot(page, surface, "06b-consent-details", kind, {
+        fullPage: false,
+      })
+      await page.keyboard.press("Escape")
+      await expect(page.getByRole("dialog")).toBeHidden()
       await page.getByTestId("booking-continue-details").click()
       await page
         .getByTestId("booking-pay-submit")

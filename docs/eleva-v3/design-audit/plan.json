@@ -447,8 +447,8 @@
         {
           "id": "D7.3",
           "title": "Checkout and thank-you, calmer",
-          "scope": "Shorter consent lines, the optional AI question at the join step, no mechanics hints, a short Space invite.",
-          "findings": [],
+          "scope": "Consents keep their statement and one line, with how to withdraw and the notice in a Details dialog; no mechanics hints (country, promo); thank-you page says each thing once (calendar note behind an (i), no duplicate join note, a short Space invite).",
+          "findings": ["BOOK-19", "BOOK-20", "BOOK-21"],
           "effort": "M"
         },
         {
