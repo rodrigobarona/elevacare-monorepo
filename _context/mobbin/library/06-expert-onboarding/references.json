@@ -19,30 +19,52 @@
       "severity": "P1",
       "lens": "ux",
       "title": "A new account that came to offer care lands on a member Space with no way in",
-      "evidence": ["01-first-landing-after-signup.desktop.jpg", "01-first-landing-after-signup.mobile.jpg"],
+      "evidence": [
+        "01-first-landing-after-signup.desktop.jpg",
+        "01-first-landing-after-signup.mobile.jpg"
+      ],
       "detail": "Every sign-up returns to /dashboard and opens the member Space: 'Welcome, Marta', two empty session lists and two 'Find an expert' buttons. Nothing on the page, the sidebar or the mobile header says a health professional can offer care here. The only route is one line inside the avatar menu, or knowing the /account/workspaces URL. A physiotherapist who arrived from /become-expert has just been told she is a member and will reasonably conclude she signed up in the wrong place. This is the gap between 'account created' and 'I am an expert here', and it loses experts before the wizard is ever seen. The repo already holds the fork pattern: _context/mobbin/Apps/web/onboarding/Time2book Web Onboarding/ (Client vs Business) and PoC O6 Path Fork.",
       "recommendation": "Carry intent through sign-up: links from /become-expert and the expert sign-up variant (see AUTH-01) add intent=expert, and after verification that account skips the member Space and opens practice setup. For everyone else, add a quiet, dismissible card on the member Space home ('Are you a health professional? Offer care on Eleva') and a permanent 'Offer care on Eleva' link in the sidebar footer and the mobile menu. The card opens a short benefits sheet (three lines and 'Get started'), not the workspace type picker.",
-      "references": ["06-expert-onboarding/01", "06-expert-onboarding/02", "06-expert-onboarding/12"]
+      "references": [
+        "06-expert-onboarding/01",
+        "06-expert-onboarding/02",
+        "06-expert-onboarding/12"
+      ]
     },
     {
       "id": "ONB-02",
       "severity": "P1",
       "lens": "ux",
       "title": "The wizard sits inside a dashboard the expert is not allowed to use",
-      "evidence": ["05-after-create-landing.desktop.jpg", "06-setup-step-1.desktop.jpg", "06-setup-step-1.mobile.jpg"],
+      "evidence": [
+        "05-after-create-landing.desktop.jpg",
+        "06-setup-step-1.desktop.jpg",
+        "06-setup-step-1.mobile.jpg"
+      ],
       "detail": "The setup form is drawn inside the full practice chrome: Today, Calendar, Services, Members, Public profile, Schedule, Finance and eight more links, with 'Today' highlighted. Until setup is finished every one of them returns to the wizard. The page promises a product and then refuses it twelve times. It also splits attention: a 255 px sidebar, a title column and the form compete on desktop, and on mobile the sidebar toggle opens a menu that goes nowhere. Airbnb, Fresha and Etsy all remove navigation during setup and give it back afterwards.",
       "recommendation": "Run the required steps as a focused full-screen flow: logo, 'Save and exit', 'Questions?', one question area, a segmented progress bar and Back / Continue. No sidebar. When the required steps are sent, open the real dashboard with a setup checklist on Today (ONB-12). If the team prefers to let experts look around first, do the opposite consistently: unlock the dashboard read-only and put the checklist on Today. Either works; the current mix of both does not.",
-      "references": ["06-expert-onboarding/01", "06-expert-onboarding/09", "06-expert-onboarding/10"]
+      "references": [
+        "06-expert-onboarding/01",
+        "06-expert-onboarding/09",
+        "06-expert-onboarding/10"
+      ]
     },
     {
       "id": "ONB-03",
       "severity": "P1",
       "lens": "ux",
       "title": "Setup opens with a tax number and never asks who the expert is",
-      "evidence": ["06-setup-step-1.desktop.jpg", "06-setup-step-5.desktop.jpg"],
+      "evidence": [
+        "06-setup-step-1.desktop.jpg",
+        "06-setup-step-5.desktop.jpg"
+      ],
       "detail": "The first question a new expert meets is 'Tax number (NIF)'. The five steps are tax and meeting mode, country and licence, payouts, invoicing, finish. Not one asks her profession, speciality, photo, a line about how she helps, or her first service and price: the things members will see and the reason she joined. Those are pushed to 'Meanwhile you can' cards at the very end. Admin comes first and motivation never arrives, which is the reverse of the Airbnb order the founder wants (tell us about your place, make it stand out, then finish and publish). Etsy places 'How you'll get paid' and billing after naming and stocking the shop for the same reason.",
       "recommendation": "Reorder to profile first, money last: 1) About you (profession, speciality, photo; name prefilled). 2) How you see members (online, in person, phone; where you are based; languages). 3) Your first service (name, length, price). 4) Your licence. 5) Get paid (Stripe). 6) Invoices (the NIF belongs here, next to the thing it is used for). 7) Review and send. Steps 1 to 3 build something she can see; 4 to 6 are easier to accept once there is a profile worth protecting.",
-      "references": ["06-expert-onboarding/01", "06-expert-onboarding/05", "06-expert-onboarding/09"]
+      "references": [
+        "06-expert-onboarding/01",
+        "06-expert-onboarding/05",
+        "06-expert-onboarding/09"
+      ]
     },
     {
       "id": "ONB-04",
@@ -59,10 +81,18 @@
       "severity": "P1",
       "lens": "ux",
       "title": "The expert never sees her public profile taking shape",
-      "evidence": ["06-setup-step-1.desktop.jpg", "06-setup-step-2.desktop.jpg", "06-setup-step-5.desktop.jpg"],
+      "evidence": [
+        "06-setup-step-1.desktop.jpg",
+        "06-setup-step-2.desktop.jpg",
+        "06-setup-step-5.desktop.jpg"
+      ],
       "detail": "On desktop the left third of every step repeats the same static block: 'Set up your practice', 'A few short steps and you're ready to welcome members', a progress card and the step list. It never changes and shows nothing of the result. There is no preview, no 'this is how members will see you', not even a link to the profile. The step list and the card also say the same thing twice ('Step 1 of 5' and '0 of 5 steps complete'). Setup therefore feels like filing paperwork with Eleva instead of opening a practice. The repo already prototyped the answer in PoC O8 Live Preview (_context/PoCs/expert-onboarding/walkthroughs/onboarding-live-preview/) and classic PoC B.",
       "recommendation": "Replace the static left column with a live profile card that fills in as she answers: photo or initials, name, profession, languages, how she sees members, first service with price, and a 'Verified by Ordem' slot shown as pending. Empty parts show soft placeholders, so a new expert with no photo still looks deliberate. On mobile, put a 'Preview' button in the header that opens the card as a sheet. Show a full preview before she sends for review.",
-      "references": ["06-expert-onboarding/04", "06-expert-onboarding/09", "06-expert-onboarding/11"]
+      "references": [
+        "06-expert-onboarding/04",
+        "06-expert-onboarding/09",
+        "06-expert-onboarding/11"
+      ]
     },
     {
       "id": "ONB-06",
@@ -72,7 +102,11 @@
       "evidence": ["06-setup-step-3.desktop.jpg", "06-setup-step-3.mobile.jpg"],
       "detail": "The whole step is two sentences and a button in an otherwise empty card: 'Complete Payments setup to receive payouts. This stays on this page — no redirects.' and 'Start Payments setup'. It talks about how the page is built, not about her money. It never names Stripe, although the next thing she sees is a Stripe form asking for identity and bank details. It does not say what to have ready (ID document, IBAN), how long it takes, when earnings reach her bank, or what Eleva keeps. The subtitle says 'You can finish this later' but the capture shows no way to do that before starting. Asking for a bank account with this little context is where cautious professionals stop. The repo's PoC S7 (_context/PoCs/expert-onboarding/walkthroughs/setup-stripe-connect/) covers the hand-off mechanics; the missing piece is the framing.",
       "recommendation": "Retitle 'Get paid for your sessions'. Before the Stripe form, show a short frame: who (Eleva sends your earnings through Stripe, the payments company; your bank details go to Stripe, not to Eleva staff), what you need (an identity document and your IBAN, about five minutes), when (how soon after a session money arrives) and what Eleva keeps, stated as a plain number. Two buttons: 'Set up payouts' and 'Do this later'. If she skips, the checklist says 'Add your bank account to receive earnings' and members can still be shown the profile once verified, or not, by product rule; say which.",
-      "references": ["06-expert-onboarding/05", "06-expert-onboarding/09", "06-expert-onboarding/12"]
+      "references": [
+        "06-expert-onboarding/05",
+        "06-expert-onboarding/09",
+        "06-expert-onboarding/12"
+      ]
     },
     {
       "id": "ONB-07",
@@ -89,7 +123,10 @@
       "severity": "P2",
       "lens": "ux",
       "title": "Two step counters back to back: 'Step 2 of 2' with a full bar, then 'Step 1 of 5'",
-      "evidence": ["04-create-expert-workspace.desktop.jpg", "05-after-create-landing.desktop.jpg"],
+      "evidence": [
+        "04-create-expert-workspace.desktop.jpg",
+        "05-after-create-landing.desktop.jpg"
+      ],
       "detail": "Naming the workspace is labelled 'Step 2 of 2' and its progress bar is already 100% full before she has typed anything. She presses 'Create workspace' expecting to be done and lands on 'Step 1 of 5' with '0 of 5 steps complete'. The finish line moved. An expert should always know how far along she is; here the product tells her twice, differently.",
       "recommendation": "Make it one journey with one progress indicator from the type choice to 'send for review'. The practice name becomes an early step of the same flow (or is prefilled and editable inside 'About you'), and the bar only fills for work done. Airbnb's three chapters with a segmented bar and Wise's named stepper, visible from the account-type screen onward, are the models.",
       "references": ["06-expert-onboarding/01", "06-expert-onboarding/03"]
@@ -99,7 +136,10 @@
       "severity": "P2",
       "lens": "copy",
       "title": "The workspace type picker speaks software, not care",
-      "evidence": ["03-workspace-type-picker.desktop.jpg", "03-workspace-type-picker.mobile.jpg"],
+      "evidence": [
+        "03-workspace-type-picker.desktop.jpg",
+        "03-workspace-type-picker.mobile.jpg"
+      ],
       "detail": "'Create a workspace. Choose the type of workspace you want to create.' is a generic SaaS screen. It introduces a third word (workspace) next to Space and practice, gives the three cards equal weight though nearly everyone here is a solo expert, needs two taps (select, then a small 'Continue' that sits below the fold on mobile), and says nothing about what each path involves or whether the choice can be changed. The descriptions are organisational ('Manage multiple experts under one organization') rather than about the person choosing. The repo holds two good forks already: Time2book (Client vs Business) and Hims category cards under _context/mobbin/Apps/web/onboarding/.",
       "recommendation": "Ask a human question: 'How will you offer care on Eleva?' Cards in her words: 'On my own' (I see members under my own name), 'With a team or clinic' (several experts, one practice), 'I teach courses'. Tap a card to continue; no separate button. Mark 'On my own' as the common choice, and add one line of reassurance: 'You can add another later.' Use 'practice' for the expert's place and keep 'Space' for the personal one.",
       "references": ["06-expert-onboarding/03", "06-expert-onboarding/02"]
@@ -109,7 +149,10 @@
       "severity": "P2",
       "lens": "copy",
       "title": "'Workspace name' gives no help with what to type",
-      "evidence": ["04-create-expert-workspace.desktop.jpg", "04-create-expert-workspace.mobile.jpg"],
+      "evidence": [
+        "04-create-expert-workspace.desktop.jpg",
+        "04-create-expert-workspace.mobile.jpg"
+      ],
       "detail": "One empty field with the placeholder 'My workspace' and the helper 'This is how your workspace will appear in Eleva.' A solo midwife does not know whether to type her own name, a brand, or anything at all, or whether members will see it. The field is not prefilled even though Eleva already has her name, and the page is otherwise blank. The repo's Fresha flow handles the same moment well: 'What's your business name? This is the brand name your clients will see. Your billing and legal name can be added later.' Attio (same folder) previews the workspace handle as you type.",
       "recommendation": "Prefill with her name ('Marta Silva'), label it 'Practice name', and say who sees it: 'Members see this on your profile. Most experts use their own name.' Show the public link forming underneath (eleva.care/marta-silva) and the profile card from ONB-05 beside it. Reassure that the invoicing name is separate and comes later.",
       "references": ["06-expert-onboarding/04"]
@@ -119,10 +162,17 @@
       "severity": "P2",
       "lens": "trust",
       "title": "The licence check has no step of its own, no example and no timeline",
-      "evidence": ["06-setup-step-2.desktop.jpg", "06-setup-step-5.desktop.jpg"],
+      "evidence": [
+        "06-setup-step-2.desktop.jpg",
+        "06-setup-step-5.desktop.jpg"
+      ],
       "detail": "Professional body, licence number and ERS registration number are the fields that decide whether she can practise on Eleva, yet they sit two-thirds down a long form with the explanation collapsed behind 'Why we ask for this'. There is no picture or hint of where the cédula number is found beyond one line, no word on who can see these numbers, and no estimate of how long verification takes, on this step or the last. After she sends, the captures show no status. No Mobbin screen for a clinician licence was found; the references are identity and business-proof checks from other domains, used for structure.",
       "recommendation": "Give the licence its own step, 'Your licence'. Open with three short lines in the Etsy pattern: what Eleva checks (your registration with your Ordem), who sees it (members see 'Verified'; the number stays private, or is shown, by product rule), and how long it takes. Add a 'Where do I find this?' example per Ordem. After sending, show a three-stage tracker on Today (Sent, In review, Verified) with the expected wait and 'We'll email you', as Airwallex does.",
-      "references": ["06-expert-onboarding/06", "06-expert-onboarding/07", "06-expert-onboarding/08"]
+      "references": [
+        "06-expert-onboarding/06",
+        "06-expert-onboarding/07",
+        "06-expert-onboarding/08"
+      ]
     },
     {
       "id": "ONB-12",
@@ -132,14 +182,23 @@
       "evidence": ["06-setup-step-5.desktop.jpg", "06-setup-step-5.mobile.jpg"],
       "detail": "The teal banner is the best moment in the flow, but the four cards under it ('Create your first service and set its price', 'Set the weekly hours members can book', 'Connect Google or Microsoft calendars', 'Polish your public profile with a photo and bio') look tappable and are plain text (no links in step-finish.tsx). The things that make a practice bookable are listed as optional reading, with no order, no time estimates and no state. There is no preview of the profile she is sending, no celebration after sending, and the progress card still reads '0 of 5'. A first-week checklist does not exist yet; the repo's PoC S2 Dashboard Quest, S4 Todo Board and S9 Publish Checklist explore it, as does the Shopify setup guide in _context/mobbin/Apps/web/setting up/Shopify Account Setup/.",
       "recommendation": "End setup with 'Review and send': the profile preview, then one button. Follow with a short success screen ('Your practice is in review') showing the tracker from ONB-11. Then make Today the checklist home until the practice is live: 'Welcome, Marta. Members can book you once your licence is verified. Here is how to prepare', with the four tasks as real links that tick off, each with a time estimate, plus 'Share your profile link' once verified. Tie the bar to an outcome ('Complete your profile to appear in search'), not to a count.",
-      "references": ["06-expert-onboarding/10", "06-expert-onboarding/09", "06-expert-onboarding/11", "06-expert-onboarding/12"]
+      "references": [
+        "06-expert-onboarding/10",
+        "06-expert-onboarding/09",
+        "06-expert-onboarding/11",
+        "06-expert-onboarding/12"
+      ]
     },
     {
       "id": "ONB-13",
       "severity": "P2",
       "lens": "ui",
       "title": "On mobile the header block and unlabelled step dots push the question off the first screen",
-      "evidence": ["06-setup-step-1.mobile.jpg", "06-setup-step-2.mobile.jpg", "06-setup-step-4.mobile.jpg"],
+      "evidence": [
+        "06-setup-step-1.mobile.jpg",
+        "06-setup-step-2.mobile.jpg",
+        "06-setup-step-4.mobile.jpg"
+      ],
       "detail": "On a 390 px screen the eyebrow, 'Set up your practice', the subtitle, the progress card and a row of five numbered circles take the first 380 px on every step, so the actual question starts below the fold each time. The circles carry no labels, so the expert cannot tell what steps 3 to 5 are. Buttons are small left-aligned pills at the end of long scrolls ('Save and continue', 'Start Payments setup'), not thumb-width, and the card-inside-card layout on the invoicing step leaves about 250 px of usable text width.",
       "recommendation": "Mobile layout: a thin segmented bar under the header with 'Step 2 of 6 · Your licence', the question as the page heading, one decision per screen, and a full-width 'Continue' fixed to the bottom with Back at top left. Show the title block once, on a welcome screen, not on every step. Drop nested cards on small screens.",
       "references": ["06-expert-onboarding/12", "06-expert-onboarding/02"]
@@ -149,17 +208,29 @@
       "severity": "P2",
       "lens": "ux",
       "title": "Nothing tells her what setup involves before it starts",
-      "evidence": ["03-workspace-type-picker.desktop.jpg", "04-create-expert-workspace.desktop.jpg", "05-after-create-landing.desktop.jpg"],
+      "evidence": [
+        "03-workspace-type-picker.desktop.jpg",
+        "04-create-expert-workspace.desktop.jpg",
+        "05-after-create-landing.desktop.jpg"
+      ],
       "detail": "Between choosing 'Expert' and the first tax field there is no screen that says how long setup takes, what to have at hand (cédula number, IBAN, tax number), what Eleva keeps from each session, or when members can start booking. The expert learns each requirement only by running into it, which is how the licence and bank steps turn into drop-off points. Airbnb spends one screen on 'It's easy to get started' with three numbered chapters; Whatnot lists fees and rules under 'Here's what to know before you get started'; Fresha shows an 'Overview of fees' card first.",
       "recommendation": "Add one welcome screen after the type choice: 'Open your practice on Eleva' with three chapters (About you, Your licence, Getting paid), 'about 10 minutes', a 'Have these ready' line, the fee stated plainly, and 'You can save and come back at any time'. Each chapter then opens with a one-line intro of why it is asked.",
-      "references": ["06-expert-onboarding/01", "06-expert-onboarding/12", "06-expert-onboarding/09"]
+      "references": [
+        "06-expert-onboarding/01",
+        "06-expert-onboarding/12",
+        "06-expert-onboarding/09"
+      ]
     },
     {
       "id": "ONB-15",
       "severity": "P3",
       "lens": "copy",
       "title": "Small wording slips that make the wizard feel unedited",
-      "evidence": ["06-setup-step-1.desktop.jpg", "06-setup-step-2.desktop.jpg", "06-setup-step-3.desktop.jpg"],
+      "evidence": [
+        "06-setup-step-1.desktop.jpg",
+        "06-setup-step-2.desktop.jpg",
+        "06-setup-step-3.desktop.jpg"
+      ],
       "detail": "The primary button is 'Save and continue' on step 1 and 'Save & continue' on step 2. Step 1 is titled 'Your details' but holds a tax number and meeting modes. 'Start Payments setup' capitalises Payments as if it were a product name. 'Pick all that apply. Online is used if you leave this empty.' explains a system default instead of asking. 'Clinical modes' and 'non-clinical only' are internal terms. No Mobbin reference is needed for these; they are editing fixes.",
       "recommendation": "One button label everywhere ('Continue'; saving is implied and can be confirmed with a quiet 'Saved'). Name each step after its question. Write for the expert: 'How do you see members?', 'Get paid for your sessions'. Replace 'clinical modes' with the plain thing it means, or remove it with the field (ONB-04).",
       "references": []
@@ -187,7 +258,10 @@
     {
       "id": "06-expert-onboarding/02",
       "file": "img/02a-fiverr-role-at-entry.jpg",
-      "files": ["img/02a-fiverr-role-at-entry.jpg", "img/02b-fiverr-seller-banner-on-home.jpg"],
+      "files": [
+        "img/02a-fiverr-role-at-entry.jpg",
+        "img/02b-fiverr-seller-banner-on-home.jpg"
+      ],
       "app": "Fiverr",
       "platform": "ios",
       "type": "flow",
@@ -357,12 +431,18 @@
     {
       "id": "06-expert-onboarding/15",
       "file": "img/15a-planetscale-update-email.jpg",
-      "files": ["img/15a-planetscale-update-email.jpg", "img/15b-stripe-change-your-email.jpg"],
+      "files": [
+        "img/15a-planetscale-update-email.jpg",
+        "img/15b-stripe-change-your-email.jpg"
+      ],
       "app": "PlanetScale, Stripe",
       "platform": "web",
       "type": "screen",
       "mobbin_url": "https://mobbin.com/screens/b118fbad-2c7b-4d15-8957-2d7c42e3fea7?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
-      "mobbin_urls": ["https://mobbin.com/screens/b118fbad-2c7b-4d15-8957-2d7c42e3fea7?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp", "https://mobbin.com/screens/b6feefd3-3f3d-40d9-96c6-a508a15d53b7?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp"],
+      "mobbin_urls": [
+        "https://mobbin.com/screens/b118fbad-2c7b-4d15-8957-2d7c42e3fea7?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+        "https://mobbin.com/screens/b6feefd3-3f3d-40d9-96c6-a508a15d53b7?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp"
+      ],
       "pattern": "A waiting screen whose secondary action fixes the thing being waited on",
       "why": "15a: 'Please verify your email' names the address and offers 'Update email' next to 'Resend email'. 15b: Stripe's 'Verify your email' says 'You can also change your email if you need to.' The fix for a typo lives on the waiting screen itself, as the quieter action.",
       "apply": "The correction is a secondary action on the pending card, with one line saying sending again restarts the check, so the expert knows the cost before she presses it.",

@@ -155,7 +155,9 @@
       "severity": "P2",
       "lens": "ui",
       "title": "Mono uppercase eyebrow above every service title",
-      "evidence": ["01-profile-paid.desktop.jpg"],
+      "evidence": [
+        "2026-11-17-profile-before/03-profile/01-profile-paid.desktop.jpg"
+      ],
       "detail": "'60-MIN VIDEO CALL' and '45-MIN IN PERSON · LISBOA, PORTO, MADRID' sit above each service name in a code font.",
       "recommendation": "Show a quiet meta line under the title ('60 min · Video call') and keep the title first.",
       "references": ["03-profile/22"]
@@ -165,7 +167,9 @@
       "severity": "P2",
       "lens": "ux",
       "title": "Every service card has a solid 'See times' next to a booking card that already shows times",
-      "evidence": ["01-profile-paid.desktop.jpg"],
+      "evidence": [
+        "2026-11-17-profile-before/03-profile/01-profile-paid.desktop.jpg"
+      ],
       "detail": "Two solid teal buttons compete with the booking card's own primary flow.",
       "recommendation": "Make the card button outline so the booking card stays the one primary action.",
       "references": ["03-profile/22", "03-profile/24"]
@@ -175,7 +179,9 @@
       "severity": "P2",
       "lens": "copy",
       "title": "'How booking works' repeats the booking card and the FAQ",
-      "evidence": ["01-profile-paid.desktop.jpg"],
+      "evidence": [
+        "2026-11-17-profile-before/03-profile/01-profile-paid.desktop.jpg"
+      ],
       "detail": "Three step cards explain choosing a time, paying and the email; 'No app or account needed' appears three times on the page.",
       "recommendation": "Remove 'How booking works'; the booking card line and the FAQ already say it.",
       "references": ["03-profile/24"]
@@ -185,7 +191,9 @@
       "severity": "P3",
       "lens": "copy",
       "title": "'What we check' opens a paragraph inline in the hero, and 'Registration checked' repeats in the booking card",
-      "evidence": ["01-profile-paid.desktop.jpg"],
+      "evidence": [
+        "2026-11-17-profile-before/03-profile/01-profile-paid.desktop.jpg"
+      ],
       "detail": "About 70 words unfold under the licence lines; the booking card repeats the badge.",
       "recommendation": "Move 'What we check' into an (i) popover; drop the repeat from the booking card footer, along with the repeated duration and price line.",
       "references": ["03-profile/23", "03-profile/24"]

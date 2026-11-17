@@ -95,7 +95,9 @@
       "severity": "P2",
       "lens": "copy",
       "title": "Consent switches carry the whole notice inline",
-      "evidence": ["04-privacy.desktop.jpg"],
+      "evidence": [
+        "2026-11-16-consent-before/12-account-settings/04-privacy.desktop.jpg"
+      ],
       "detail": "Health data, news and AI each showed long paragraphs and a bullet list under the switch, so the Privacy page read as a legal wall.",
       "recommendation": "Layered notice: each row shows the purpose, what it covers and what turning it on means in one line (health data names 'health information' and who uses it); a 'Details' dialog holds the bullets and the link to the full notice. News needs no Details.",
       "references": ["12-account-settings/11", "12-account-settings/12"]

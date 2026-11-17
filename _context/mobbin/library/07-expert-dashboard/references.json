@@ -402,7 +402,9 @@
       "severity": "P2",
       "lens": "ui",
       "title": "A small uppercase label sits above most dashboard headlines",
-      "evidence": ["01-home.desktop.jpg"],
+      "evidence": [
+        "2026-11-16-eyebrows-before/07-expert-dashboard/01-home.desktop.jpg"
+      ],
       "detail": "'YOUR PRACTICE' above 'Hello, Marta', 'YOUR SPACE' above the Space home, and similar labels on 19 pages repeat what the sidebar already says.",
       "recommendation": "Remove the eyebrow from every PageHeader in the app, expert, team, academy and admin apps, and remove the prop from @eleva/ui so it cannot creep back. Where the eyebrow carried information (the date on a session report), move it into the page line.",
       "references": ["07-expert-dashboard/32"]

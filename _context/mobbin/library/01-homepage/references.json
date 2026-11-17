@@ -25,43 +25,27 @@
       ],
       "detail": "The page shows eight advisors by name and face, and zero experts a member can book. A first-time visitor reads the advisor portraits as 'these are the experts', then the lead tells her 'Your care comes from the independent expert you choose', and the page never shows who that could be. Reaching one real person takes Find an expert, then the directory, then a profile. For a marketplace the supply is the product; hiding it makes the page feel like a brochure and is the main reason it reads as weak.",
       "recommendation": "Add a 'Meet our experts' row directly under the value strip: four to six real expert cards with photo, name, profession, languages, how they meet (video, phone, in person), price from, and the next free slot, each linking to the profile, plus 'See all experts'. On a phone make it a horizontal scroll so a card and a half is visible. Design the card for a new expert with no photo and a short bio (initials on a brand tint, profession and languages still carry the card). Rotate by category so every profession gets shown.",
-      "references": [
-        "01-homepage/03",
-        "01-homepage/04"
-      ]
+      "references": ["01-homepage/03", "01-homepage/04"]
     },
     {
       "id": "HOME-02",
       "severity": "P1",
       "lens": "ux",
       "title": "The hero offers one generic button and no way to start from a need",
-      "evidence": [
-        "01-home.desktop.jpg",
-        "01-home.mobile.jpg"
-      ],
+      "evidence": ["01-home.desktop.jpg", "01-home.mobile.jpg"],
       "detail": "A member arrives with a need (pelvic pain after birth, breastfeeding, menopause), but the hero gives her only 'Find an expert'. The category chips sit two screens down on desktop and about four screens down on a phone, after three full-width advisor portraits. The two photo cards beside the hero ('Care for every stage of life', 'Experts who listen') look like navigation but are captions that link to /experts/wellness and /experts, and they disappear on mobile.",
       "recommendation": "Let the member say what she needs inside the hero. Either a single search field ('What do you need help with?') with the nine categories as suggestions, or a row of five or six need chips under the lead line that go straight to the filtered directory. Replace the two caption cards with need tiles that name a real destination (Pregnancy and postpartum, Pelvic health, Menopause). Keep 'Find an expert' as the fallback button.",
-      "references": [
-        "01-homepage/01",
-        "01-homepage/02"
-      ]
+      "references": ["01-homepage/01", "01-homepage/02"]
     },
     {
       "id": "HOME-03",
       "severity": "P1",
       "lens": "trust",
       "title": "Proof is four short labels; no member voice, no numbers, no word on how experts are checked",
-      "evidence": [
-        "01-home.desktop.jpg",
-        "01-home.mobile.jpg"
-      ],
+      "evidence": ["01-home.desktop.jpg", "01-home.mobile.jpg"],
       "detail": "The strip under the hero reads 'Independent experts', 'Online or in person', 'In your language', 'Clear prices'. Each is a claim with nothing behind it, set in small text with wide gaps, so it is easy to miss. The page has no member story, no count of experts or professions, and it never says that Eleva checks each expert's professional registration, which the become-expert page does say. A woman deciding whether to pay a stranger for health care needs exactly that sentence.",
       "recommendation": "Turn the strip into four claims with substance, for example 'Every expert's professional registration is checked before they go live', 'Video, phone or in person', 'Sessions in English, Portuguese and Spanish', 'You see the price before you book'. Add a short 'Who you will meet' block with honest figures (experts live, professions covered, advisors on the board) and link it to the trust page. When members consent, add two or three short stories tagged by need. Use real numbers only; a small true number beats none.",
-      "references": [
-        "01-homepage/05",
-        "01-homepage/08",
-        "01-homepage/02"
-      ]
+      "references": ["01-homepage/05", "01-homepage/08", "01-homepage/02"]
     },
     {
       "id": "HOME-04",
@@ -75,10 +59,7 @@
       ],
       "detail": "The board of advisors is the first section after the hero, ahead of the services, and the same authority returns four sections later as a full-width teal quote from Kari Bø. On a phone the three advisor portraits stack at full width (roughly 1,200px of scrolling) before a member sees what she can book. The advisors are strong proof, but in this position they delay the offer and blur who delivers the care.",
       "recommendation": "Merge the two sections into one compact band placed after the experts and services: the lead advisor's quote with her portrait, a row of the other seven faces with name and one-line credential, the universities or institutions they come from as a logo line, and 'Meet the board'. On mobile show the quote plus a single row of small faces, not three full-width portraits.",
-      "references": [
-        "01-homepage/06",
-        "01-homepage/07"
-      ]
+      "references": ["01-homepage/06", "01-homepage/07"]
     },
     {
       "id": "HOME-05",
@@ -92,85 +73,57 @@
       ],
       "detail": "'Expert-led care, tailored to you' shows nine chips named by profession (Psychology, Midwifery, Lactation...) and under them four stock-photo cards named by life stage (Pregnancy and postpartum, Pelvic health, Through every stage...). They are two taxonomies for the same directory, and neither says what a member will find behind it. The photo cards are the part of the page that looks most like a template, and on a phone they add four tall cards in a column.",
       "recommendation": "Use one grid, 'Start from what you need', with six to eight tiles. Each tile names the need in the member's words, lists two or three example services ('Pelvic floor assessment', 'Return to exercise after birth') and shows how many experts offer it. Keep professions as a filter inside the directory. On mobile lay the tiles out two per row, or as one scrolling row.",
-      "references": [
-        "01-homepage/02"
-      ]
+      "references": ["01-homepage/02"]
     },
     {
       "id": "HOME-06",
       "severity": "P2",
       "lens": "ui",
       "title": "'How it works' explains the product without showing it",
-      "evidence": [
-        "01-home.desktop.jpg",
-        "01-home.mobile.jpg"
-      ],
+      "evidence": ["01-home.desktop.jpg", "01-home.mobile.jpg"],
       "detail": "Three numbered text rows sit beside one stock photo of a woman at a laptop. Nothing shows what booking on Eleva looks like, so the section could belong to any service. The strongest line on the page, 'No waiting lists and no account needed to book', is set as grey lead text.",
       "recommendation": "Give each step a small piece of the real interface: an expert card for 'Find your expert', the date and time picker for 'Book a time', the confirmation email with its Join button for 'Meet your expert'. Promote 'No account needed to book' into the hero or the value strip, and end the section with a 'Find an expert' button.",
-      "references": [
-        "01-homepage/09"
-      ]
+      "references": ["01-homepage/09"]
     },
     {
       "id": "HOME-07",
       "severity": "P2",
       "lens": "copy",
       "title": "The space under the hero headline is spent on a slogan, a hedge and the other audience",
-      "evidence": [
-        "01-home.desktop.jpg",
-        "01-home.mobile.jpg"
-      ],
+      "evidence": ["01-home.desktop.jpg", "01-home.mobile.jpg"],
       "detail": "The eyebrow 'Women's health, elevated' is a slogan that adds no information. The second hero button is 'Become an expert', which gives the most valuable spot on the page to a different audience that already has a nav menu and its own band. The line under the buttons, 'Eleva connects you with independent health experts who run their own practice', reads as a legal hedge where a reassurance should be.",
       "recommendation": "Drop the eyebrow or use it for place and language ('Portugal · English, Portuguese, Spanish'). Replace the second button with 'How it works' or with need chips (see HOME-02) and leave expert recruitment to the header and the band. Rewrite the last line as a benefit that still states the model: 'You choose your expert. They run their own practice; Eleva takes care of booking and payment.'",
-      "references": [
-        "01-homepage/01",
-        "01-homepage/02"
-      ]
+      "references": ["01-homepage/01", "01-homepage/02"]
     },
     {
       "id": "HOME-08",
       "severity": "P2",
       "lens": "ux",
       "title": "On a phone the page is about 27 screens long and the first screen is only the hero",
-      "evidence": [
-        "01-home.mobile.jpg",
-        "home-scroll.mobile.webm"
-      ],
+      "evidence": ["01-home.mobile.jpg", "home-scroll.mobile.webm"],
       "detail": "The mobile capture is 10,566px tall. The hero fills the whole first screen with a dimmed video in which a face sits directly behind the headline, the header carries four unlabelled icons (globe, person, search, menu), and the value strip wraps into an uneven two-by-two block. Advisors, service cards and the how-it-works photo each stack at full width, and the footer alone is about 1,900px.",
       "recommendation": "Shorten the mobile hero so the value strip and the top of the next section show on the first screen, and use a still crop that keeps faces clear of the text. Make the strip a tidy two-column grid. Turn advisors, experts and need tiles into horizontal rows. Target under 6,500px in total. Label or reduce the header icons: logo, 'Find an expert', menu.",
-      "references": [
-        "01-homepage/03"
-      ]
+      "references": ["01-homepage/03"]
     },
     {
       "id": "HOME-09",
       "severity": "P2",
       "lens": "ux",
       "title": "The page ends on the pitch to experts, with no questions answered and no closing action for members",
-      "evidence": [
-        "01-home.desktop.jpg",
-        "01-home.mobile.jpg"
-      ],
+      "evidence": ["01-home.desktop.jpg", "01-home.mobile.jpg"],
       "detail": "The last three blocks are a belief statement ('Women's health is a lifelong journey'), a link to the mission, and 'Grow your practice with Eleva'. A member who has scrolled the whole page still has open questions (what a session costs, how a video session works, whether she can cancel, who the experts are) and the final button she sees is 'Become an expert'.",
       "recommendation": "Add a short FAQ before the expert band with five or six questions in the member's words: What is Eleva? Who are the experts and how are they checked? How much does a session cost? How do online sessions work? Can I cancel or reschedule? Do I need an account? Close with a member call to action ('Find an expert') and keep the expert band as the last, clearly separate block. Fold the belief statement into the About page or into one line above the FAQ.",
-      "references": [
-        "01-homepage/10"
-      ]
+      "references": ["01-homepage/10"]
     },
     {
       "id": "HOME-10",
       "severity": "P3",
       "lens": "ui",
       "title": "The footer is dominated by fourteen legal links and has no way back into care",
-      "evidence": [
-        "01-home.desktop.jpg",
-        "01-home.mobile.jpg"
-      ],
+      "evidence": ["01-home.desktop.jpg", "01-home.mobile.jpg"],
       "detail": "The Legal column lists fourteen links and is twice the height of the others. The first column is titled 'Join Eleva' but holds About and Our story. There is no 'Find care' column with the categories, no contact or help line, and no language switch. On a phone the footer is a single list about 1,900px long.",
       "recommendation": "Regroup into Find care (the categories), For professionals, Company, and Help. Keep four or five legal links visible (Terms, Privacy, Health data, Cookies, Complaints book) and put the rest behind 'All policies'. Add the Femme Focus newsletter sign-up and the language switch. On mobile collapse the columns into accordions.",
-      "references": [
-        "01-homepage/11"
-      ]
+      "references": ["01-homepage/11"]
     },
     {
       "id": "HOME-11",

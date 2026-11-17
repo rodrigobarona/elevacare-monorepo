@@ -259,9 +259,28 @@ function shotCard(shot) {
   return `<div class="shot"><h5>${esc(caption)}${shot.videos.length ? " (video)" : ""}</h5><div class="frames">${stills}${videos}</div></div>`
 }
 
+/**
+ * Where a finding's evidence lives: an explicit capture set
+ * ("2026-11-17-profile-before/03-profile/x.jpg"), else the baseline, else
+ * the latest before set that has the file (a page first captured later).
+ */
+function evidenceSrc(rel) {
+  const [first] = rel.split("/")
+  if (dirs(capturesDir).includes(first)) return href("captures", rel)
+  if (existsSync(path.join(capturesDir, baseline, rel))) {
+    return href("captures", baseline, rel)
+  }
+  for (const label of [...beforeLabels].reverse()) {
+    if (existsSync(path.join(capturesDir, label, rel))) {
+      return href("captures", label, rel)
+    }
+  }
+  return href("captures", baseline, rel)
+}
+
 function evidenceLink(surface, item) {
   const rel = item.includes("/") ? item : `${surface.dir}/${item}`
-  const src = href("captures", baseline, rel)
+  const src = evidenceSrc(rel)
   return item.endsWith(".webm")
     ? `<a class="evidence" href="${src}">${esc(item)}</a>`
     : `<button class="evidence" data-full="${src}" data-caption="${esc(rel)}">${esc(item)}</button>`
@@ -318,7 +337,7 @@ function surfaceSection(surface) {
     <p class="lede">${esc(surface.summary)}</p>
     <p class="counts"><span class="sev P1">${sev("P1")} P1</span><span class="sev P2">${sev("P2")} P2</span><span class="sev P3">${sev("P3")} P3</span><span class="pill">${surface.references.length} Mobbin references</span><span class="pill ${hasAfter ? "done" : ""}">${hasAfter ? "After captured" : "After: not built yet"}</span></p>
   </header>
-  <h3>Before</h3>
+  <h3>Captures</h3>
   ${shots.length ? `<div class="shots">${shots.map(shotCard).join("")}</div>` : `<p class="meta">This seat reviewed captures from other surfaces; see the evidence links in each finding.</p>`}
   <h3>Keep</h3>
   <ul class="keep">${surface.strengths.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>
@@ -465,8 +484,8 @@ footer{padding:36px 0;color:var(--muted);font-size:.85rem}
     <div class="stat"><b>${count("P2")}</b><span>P2, quality</span></div>
     <div class="stat"><b>${count("P3")}</b><span>P3, polish</span></div>
     <div class="stat"><b>${referenceCount}</b><span>Mobbin references</span></div>
-    <div class="stat"><b>${stillCount}</b><span>before screenshots</span></div>
-    <div class="stat"><b>${videoCount}</b><span>before videos</span></div>
+    <div class="stat"><b>${stillCount}</b><span>screenshots</span></div>
+    <div class="stat"><b>${videoCount}</b><span>videos</span></div>
   </div>
 </div></div>
 <nav class="toc"><div class="wrap"><div class="links">
