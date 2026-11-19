@@ -140,7 +140,7 @@
       "waitingRoomTitle": "Your session starts at {time}",
       "waitingRoomTitleLater": "Your session starts on {dateTime}",
       "waitingRoomJoinFrom": "You can join from {time}, your local time.",
-      "waitingRoomJoinFromDay": "You can join from {dayTime}, your local time.",
+      "waitingRoomJoinFromDay": "You can join from {dateTime}, your local time.",
       "waitingRoomKeepOpen": "Keep this page open. Your camera check opens here when it is time.",
       "waitingRoomComeBack": "Come back with this same link when it is time.",
       "waitingRoomCountdown": "You can join in {minutes} minutes",

@@ -236,14 +236,9 @@ export function WaitingRoom({
     // `attempt` restarts the timer when two tries share a pause.
   }, [pause, attempt, runTry])
 
-  const { time, dayTime, dateTime } = useMemo(
+  const { time, dateTime } = useMemo(
     () => ({
       time: new Intl.DateTimeFormat(labels.timeLocale, {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      dayTime: new Intl.DateTimeFormat(labels.timeLocale, {
-        weekday: "long",
         hour: "2-digit",
         minute: "2-digit",
       }),
@@ -294,11 +289,12 @@ export function WaitingRoom({
 
   const starts = new Date(joinWindow.startsAt)
   const opens = new Date(joinWindow.opensAt)
-  // A session just after midnight opens the evening before: name the day.
+  // A session just after midnight opens the evening before: give the full
+  // date, as the title does.
   const joinFrom =
     opens.toDateString() === starts.toDateString()
       ? labels.waitingRoomJoinFrom(time.format(opens))
-      : labels.waitingRoomJoinFromDay(dayTime.format(opens))
+      : labels.waitingRoomJoinFromDay(dateTime.format(opens))
   const anotherDay = startsAnotherDay(joinWindow, now)
   const title = anotherDay
     ? labels.waitingRoomTitleLater(dateTime.format(starts))
