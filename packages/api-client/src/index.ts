@@ -611,6 +611,12 @@ export const CancellationQuoteSchema = z.object({
   reason: z.enum(["grace_period", "policy_tier", "pending_request"]),
   fullRefundUntil: z.string().datetime().nullable(),
   nextChangeAt: z.string().datetime().nullable(),
+  /**
+   * Last moment the member can still reschedule; null when the session can
+   * no longer be moved (the full-refund window or the service's reschedule
+   * window has closed, or the status does not allow it).
+   */
+  rescheduleUntil: z.string().datetime().nullable(),
 })
 
 export const CancelMeBookingResponseSchema = z.object({

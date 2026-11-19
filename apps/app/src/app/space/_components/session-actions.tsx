@@ -80,7 +80,10 @@ export function SessionActions({
   const router = useRouter()
   const [current, setCurrent] = useState(quote)
   const mutable = current !== null
-  const canReschedule = current?.refundPercent === 100
+  // The server says until when the session can be moved; it knows the
+  // refund window and the service's own reschedule window.
+  const rescheduleUntil = current?.rescheduleUntil ?? null
+  const canReschedule = rescheduleUntil !== null
   const [cancelOpen, setCancelOpen] = useState(false)
   const [rescheduleOpen, setRescheduleOpen] = useState(false)
   const [pending, setPending] = useState(false)
@@ -232,13 +235,15 @@ export function SessionActions({
 
   const changeLine = !mutable
     ? t("policyTooLate")
-    : !canReschedule
+    : rescheduleUntil === null
       ? t(paid ? "rescheduleClosedPaid" : "rescheduleClosed")
-      : current?.fullRefundUntil
-        ? t(paid ? "rescheduleUntilPaid" : "rescheduleUntil", {
-            date: formatDateTime(current.fullRefundUntil, locale, timezone),
-          })
-        : null
+      : // The refund is named only when both run to the same moment.
+        t(
+          paid && current?.fullRefundUntil === rescheduleUntil
+            ? "rescheduleUntilPaid"
+            : "rescheduleUntil",
+          { date: formatDateTime(rescheduleUntil, locale, timezone) }
+        )
 
   return (
     <div className="space-y-3">

@@ -155,6 +155,12 @@ Each entry should include:
   work; a paid session's sentence carries the refund ("You can reschedule,
   or cancel for a full refund, until {date}."). A finished session shows
   "Need help with this session?" with the support address instead.
+- The cancellation quote now carries `rescheduleUntil`: the last moment
+  the session can be moved, from the full-refund window and the service's
+  own reschedule window, or null. The Space takes the Reschedule button
+  and its sentence from it, and a reschedule request is decided by the
+  same rule (`@eleva/scheduling` `member-booking.ts`). Before, the button
+  followed the refund alone and could offer a move the server refused.
 - Waiting room: start time, when joining opens, one instruction and "Your
   call is private and is not recorded." The transcript sentence left the
   waiting room; a member who allowed AI processing now sees the transcript
