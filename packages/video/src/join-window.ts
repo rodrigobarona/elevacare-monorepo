@@ -3,6 +3,11 @@ export const JOIN_TRAIL_MS = 30 * 60 * 1000
 
 const JOINABLE_STATUSES = new Set(["confirmed", "rescheduled"])
 
+/** A booking that is on: confirmed, or confirmed again after a reschedule. */
+export function isJoinableStatus(status: string): boolean {
+  return JOINABLE_STATUSES.has(status)
+}
+
 export function isJoinWindowOpen(
   startsAt: Date,
   endsAt: Date,

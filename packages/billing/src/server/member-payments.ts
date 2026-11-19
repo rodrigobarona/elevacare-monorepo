@@ -14,6 +14,7 @@ export async function listMemberPaymentsWithReceipts(input: {
   cursor?: string
   bookingId?: string
   limit?: number
+  charged?: boolean
 }): Promise<MemberListResult<MemberPaymentListItem>> {
   const listed = await listMemberPayments(input)
   const items = await mapPool(listed.items, RECEIPT_CONCURRENCY, (payment) =>

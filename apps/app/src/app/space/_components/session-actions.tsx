@@ -61,6 +61,8 @@ interface SessionActionsProps {
   locale: string
   /** Null when the booking can no longer be changed by the member. */
   quote: CancellationQuote | null
+  /** The member paid for it, so cancelling is about a refund too. */
+  paid: boolean
 }
 
 export function SessionActions({
@@ -70,6 +72,7 @@ export function SessionActions({
   timezone,
   locale,
   quote,
+  paid,
 }: SessionActionsProps) {
   const t = useTranslations("sessions")
   const te = useTranslations("errors")
@@ -77,7 +80,10 @@ export function SessionActions({
   const router = useRouter()
   const [current, setCurrent] = useState(quote)
   const mutable = current !== null
-  const canReschedule = current?.refundPercent === 100
+  // The server says until when the session can be moved; it knows the
+  // refund window and the service's own reschedule window.
+  const rescheduleUntil = current?.rescheduleUntil ?? null
+  const canReschedule = rescheduleUntil !== null
   const [cancelOpen, setCancelOpen] = useState(false)
   const [rescheduleOpen, setRescheduleOpen] = useState(false)
   const [pending, setPending] = useState(false)
@@ -227,32 +233,47 @@ export function SessionActions({
     }
   }
 
+  const changeLine = !mutable
+    ? t("policyTooLate")
+    : rescheduleUntil === null
+      ? t(paid ? "rescheduleClosedPaid" : "rescheduleClosed")
+      : // The refund is named only when both run to the same moment.
+        t(
+          paid && current?.fullRefundUntil === rescheduleUntil
+            ? "rescheduleUntilPaid"
+            : "rescheduleUntil",
+          { date: formatDateTime(rescheduleUntil, locale, timezone) }
+        )
+
   return (
     <div className="space-y-3">
-      {!mutable ? (
-        <p className="text-sm text-muted-foreground">{t("policyTooLate")}</p>
-      ) : !canReschedule ? (
-        <p className="text-sm text-muted-foreground">
-          {t("rescheduleUnavailable")}
+      {/* One sentence, with the date where there is one. */}
+      {changeLine ? (
+        <p className="text-sm text-pretty text-muted-foreground">
+          {changeLine}
         </p>
       ) : null}
-      <div className="flex flex-wrap gap-2">
-        <Button
-          variant="outline"
-          isDisabled={!canReschedule || pending}
-          onPress={openReschedule}
-        >
-          {t("reschedule")}
-        </Button>
-        <Button
-          variant="destructive"
-          isDisabled={!mutable || pending}
-          onPress={openCancel}
-          data-testid="member-cancel-session"
-        >
-          {t("cancel")}
-        </Button>
-      </div>
+      {mutable ? (
+        <div className="flex flex-wrap gap-2">
+          {canReschedule ? (
+            <Button
+              variant="outline"
+              isDisabled={pending}
+              onPress={openReschedule}
+            >
+              {t("reschedule")}
+            </Button>
+          ) : null}
+          <Button
+            variant="destructive"
+            isDisabled={pending}
+            onPress={openCancel}
+            data-testid="member-cancel-session"
+          >
+            {t("cancel")}
+          </Button>
+        </div>
+      ) : null}
 
       <AlertDialog isOpen={cancelOpen} onOpenChange={setCancelOpen}>
         <AlertDialogHeader>

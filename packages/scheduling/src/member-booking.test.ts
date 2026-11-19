@@ -370,6 +370,55 @@ describe("quoteMemberCancellation", () => {
     })
   })
 
+  const quoteOf = (overrides: Record<string, unknown>) => {
+    getMemberBookingForPolicy.mockResolvedValue(booking(overrides))
+    return quoteMemberCancellation({
+      userId: "user-1",
+      orgId: "space-1",
+      bookingId: "booking-1",
+      now,
+    })
+  }
+
+  it("says the session can be moved until the full refund ends", async () => {
+    // Flexible: a full refund until 24 hours before the start.
+    const quote = await quoteOf({ startsAt: hoursFromNow(48) })
+    expect(quote.rescheduleUntil).toEqual(hoursFromNow(24))
+    expect(quote.rescheduleUntil).toEqual(quote.fullRefundUntil)
+  })
+
+  it("uses the service's reschedule window when it closes first", async () => {
+    const quote = await quoteOf({
+      startsAt: hoursFromNow(48),
+      rescheduleWindowHours: 36,
+    })
+    expect(quote.rescheduleUntil).toEqual(hoursFromNow(12))
+    expect(quote.fullRefundUntil).toEqual(hoursFromNow(24))
+  })
+
+  it("says the session cannot be moved once that window has closed", async () => {
+    const quote = await quoteOf({
+      startsAt: hoursFromNow(30),
+      rescheduleWindowHours: 36,
+    })
+    expect(quote.refundPercent).toBe(100)
+    expect(quote.rescheduleUntil).toBeNull()
+  })
+
+  it("says the session cannot be moved once the full refund has ended", async () => {
+    const quote = await quoteOf({
+      cancellationPolicy: "moderate",
+      startsAt: hoursFromNow(30),
+    })
+    expect(quote.rescheduleUntil).toBeNull()
+  })
+
+  it("says a request still waiting for the expert cannot be moved", async () => {
+    const quote = await quoteOf({ status: "awaiting_confirmation" })
+    expect(quote.refundPercent).toBe(100)
+    expect(quote.rescheduleUntil).toBeNull()
+  })
+
   it("404s when the booking is not the member's", async () => {
     getMemberBookingForPolicy.mockResolvedValue(null)
     await expect(

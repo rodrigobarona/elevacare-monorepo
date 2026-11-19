@@ -199,7 +199,6 @@ test.describe("member Space journey", () => {
         "data-expert",
         PAID_EXPERT
       )
-      await expect(page.getByText(/€\s?60|60,00\s?€|€60/)).toBeVisible()
 
       await persistNotificationPreference(page, request)
       await assertMemberConsentsApi(page, request)
@@ -217,6 +216,8 @@ test.describe("member Space journey", () => {
         ? detailHref!
         : `${webUrl}${detailHref}`
       await page.goto(detailUrl)
+      // The price is on the session page (and on Payments), not on the card.
+      await expect(page.getByText(/€\s?60|60,00\s?€|€60/)).toBeVisible()
       await assertHealthConsentBlockedWhileBooked(page, request)
       await assertPaymentsListShowsBooking(page, request, bookingId!)
       await page.goto(detailUrl)

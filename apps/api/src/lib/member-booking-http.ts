@@ -25,5 +25,6 @@ export function serializeCancellationQuote(
     reason: quote.reason,
     fullRefundUntil: quote.fullRefundUntil?.toISOString() ?? null,
     nextChangeAt: quote.nextChangeAt?.toISOString() ?? null,
+    rescheduleUntil: quote.rescheduleUntil?.toISOString() ?? null,
   }
 }

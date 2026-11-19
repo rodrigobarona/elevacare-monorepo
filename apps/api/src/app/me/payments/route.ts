@@ -37,6 +37,7 @@ export async function GET(request: Request) {
   const query = ListMePaymentsQuerySchema.safeParse({
     cursor: url.searchParams.get("cursor") ?? undefined,
     bookingId: url.searchParams.get("bookingId") ?? undefined,
+    charged: url.searchParams.get("charged") ?? undefined,
   })
   if (!query.success) {
     return secureJson(
@@ -49,6 +50,7 @@ export async function GET(request: Request) {
     userId: session.user.id,
     cursor: query.data.cursor,
     bookingId: query.data.bookingId,
+    charged: query.data.charged === "true",
   })
 
   return secureJson(
@@ -65,6 +67,14 @@ export async function GET(request: Request) {
         receiptUrl: payment.receiptUrl,
         stripeChargeId: payment.stripeChargeId,
         invoice: payment.invoice,
+        session: payment.session
+          ? {
+              startsAt: payment.session.startsAt.toISOString(),
+              timezone: payment.session.timezone,
+              expertName: payment.session.expertName,
+              title: payment.session.title,
+            }
+          : null,
       })),
       nextCursor: result.nextCursor,
     },

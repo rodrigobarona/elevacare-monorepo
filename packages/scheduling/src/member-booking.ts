@@ -49,6 +49,35 @@ export type MemberCancellationQuote = CancellationRefundQuote & {
   /** What the member gets back now; 0 for unpaid bookings. */
   refundCents: number
   currency: string
+  /**
+   * Last moment the member can still move this session; null when it can
+   * no longer be moved. The same rule decides a reschedule request.
+   */
+  rescheduleUntil: Date | null
+}
+
+const HOUR_MS = 3_600_000
+
+/**
+ * Moving a session out of its penalty window would dodge the policy, so
+ * members can only reschedule while cancelling would still refund in
+ * full, and within the service's own reschedule window.
+ */
+function rescheduleUntilFor(
+  row: MemberBookingPolicyRow,
+  quote: Pick<CancellationRefundQuote, "refundPercent" | "fullRefundUntil">,
+  now: Date
+): Date | null {
+  if (!RESCHEDULABLE_STATUSES.has(row.status)) return null
+  if (quote.refundPercent < 100) return null
+  if (!canReschedule(row.rescheduleWindowHours, row.startsAt, now)) return null
+  const start = row.startsAt.getTime()
+  const byWindow =
+    row.rescheduleWindowHours == null
+      ? start
+      : start - row.rescheduleWindowHours * HOUR_MS
+  const byRefund = quote.fullRefundUntil?.getTime() ?? start
+  return new Date(Math.min(byWindow, byRefund))
 }
 
 function quoteFor(
@@ -68,6 +97,8 @@ function quoteFor(
       nextChangeAt: null,
       refundCents: refundable,
       currency: row.currency,
+      // A request the expert has not confirmed yet cannot be moved.
+      rescheduleUntil: null,
     }
   }
   const quote = resolveCancellationRefund({
@@ -84,6 +115,7 @@ function quoteFor(
     ...quote,
     refundCents: cancellationRefundCents(refundable, quote.refundPercent),
     currency: row.currency,
+    rescheduleUntil: rescheduleUntilFor(row, quote, now),
   }
 }
 
@@ -205,7 +237,8 @@ export async function cancelMemberBooking(input: {
     }
   )
 
-  return { refund }
+  // Cancelled now: there is nothing left to move.
+  return { refund: { ...refund, rescheduleUntil: null } }
 }
 
 export async function rescheduleMemberBooking(input: {
@@ -221,12 +254,7 @@ export async function rescheduleMemberBooking(input: {
     { ...input, now },
     RESCHEDULABLE_STATUSES
   )
-  // Moving a session out of its penalty window would dodge the policy, so
-  // members can only reschedule while cancelling would still refund in full.
-  if (
-    quoteFor(row, now).refundPercent < 100 ||
-    !canReschedule(row.rescheduleWindowHours, row.startsAt, now)
-  ) {
+  if (quoteFor(row, now).rescheduleUntil === null) {
     throw new MemberBookingPolicyError("POLICY_TOO_LATE")
   }
 

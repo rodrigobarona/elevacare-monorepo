@@ -531,11 +531,29 @@ export const MemberPaymentSchema = z.object({
   receiptUrl: z.string().url().nullable(),
   stripeChargeId: z.string().nullable(),
   invoice: MemberInvoiceSchema.nullable(),
+  /** The session this payment is for; null when it cannot be named. */
+  session: z
+    .object({
+      startsAt: z.string().datetime(),
+      timezone: z.string(),
+      expertName: z.string(),
+      title: z.object({
+        en: z.string(),
+        pt: z.string().optional(),
+        es: z.string().optional(),
+      }),
+    })
+    .nullable(),
 })
 
 export const ListMePaymentsQuerySchema = z.object({
   cursor: z.string().min(1).max(200).optional(),
   bookingId: z.string().uuid().optional(),
+  /**
+   * `true` lists only payments where money moved: paid, or paid and then
+   * refunded. Free sessions and checkouts never completed are left out.
+   */
+  charged: z.literal("true").optional(),
 })
 
 export const ListMePaymentsResponseSchema = z.object({
@@ -593,6 +611,12 @@ export const CancellationQuoteSchema = z.object({
   reason: z.enum(["grace_period", "policy_tier", "pending_request"]),
   fullRefundUntil: z.string().datetime().nullable(),
   nextChangeAt: z.string().datetime().nullable(),
+  /**
+   * Last moment the member can still reschedule; null when the session can
+   * no longer be moved (the full-refund window or the service's reschedule
+   * window has closed, or the status does not allow it).
+   */
+  rescheduleUntil: z.string().datetime().nullable(),
 })
 
 export const CancelMeBookingResponseSchema = z.object({
@@ -3320,6 +3344,7 @@ export function createApiClient(options: ApiClientOptions) {
         const params = new URLSearchParams()
         if (query.cursor) params.set("cursor", query.cursor)
         if (query.bookingId) params.set("bookingId", query.bookingId)
+        if (query.charged) params.set("charged", query.charged)
         const qs = params.toString()
         const raw = await request<unknown>(
           "GET",

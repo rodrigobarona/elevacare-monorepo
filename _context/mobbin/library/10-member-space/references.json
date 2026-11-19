@@ -148,6 +148,92 @@
       "detail": "Profile, Language and Notifications each have their own Save button; Theme has none, so it is unclear whether it saved. The profile photo card puts the round initials on the far right with no edit affordance; the only hint is the sentence telling her to click it. Card footers mix helper text and a Save button with inconsistent weight. No dedicated Mobbin reference was searched for this polish item.",
       "recommendation": "Pick one rule: either every card saves on change with a toast, or every card has Save. Put a small camera or 'Change' label on the avatar and move it to the left of its text. Keep footer helper text on the left and the action on the right in every card.",
       "references": []
+    },
+    {
+      "id": "MEM-11",
+      "severity": "P1",
+      "lens": "ux",
+      "title": "A greyed 'Join session' and a video join line on sessions that are not video calls",
+      "evidence": [
+        "2026-11-19-space-before/10-member-space/01-home.desktop.jpg",
+        "2026-11-19-space-before/10-member-space/02-sessions.desktop.jpg",
+        "2026-11-19-space-before/10-member-space/08-session-detail-upcoming.desktop.jpg"
+      ],
+      "detail": "The demo member's next session is in person and the one after is by phone. Both show a disabled 'Join session' button, and home and the session page add 'You can join video sessions from 15 minutes before the start.' A member reading this waits for a button that will never open. Cancelled sessions also keep the join line and 'Add to calendar'.",
+      "recommendation": "Show Join only for a video session that can still be joined (10-member-space/13). In person and phone sessions show how you meet in words. A cancelled or ended session shows 'Book again'.",
+      "references": ["10-member-space/13"]
+    },
+    {
+      "id": "MEM-12",
+      "severity": "P2",
+      "lens": "ui",
+      "title": "Session cards carry a label, a price, two pills and up to three actions",
+      "evidence": [
+        "2026-11-19-space-before/10-member-space/01-home.desktop.jpg",
+        "2026-11-19-space-before/10-member-space/02-sessions.desktop.jpg",
+        "2026-11-19-space-before/10-member-space/12-home-video-session.desktop.jpg"
+      ],
+      "detail": "The next-session card has 'Your next session' above the title (the last label above a headline left after D7.1), the price, a mode pill beside the status pill, and Join, Add to calendar and View details. List cards repeat the price and both pills and only the small 'View details' link opens the session.",
+      "recommendation": "One status pill; expert, time and how you meet on one line; no price (it is on the session page and on Payments). The title is the link and the whole list card opens the session. One action per list card: Join when it is open, or Book again for a past session (10-member-space/13, 10-member-space/14).",
+      "references": ["10-member-space/13", "10-member-space/14"]
+    },
+    {
+      "id": "MEM-13",
+      "severity": "P2",
+      "lens": "copy",
+      "title": "The join window is explained up to three times on one screen, under page subtitles that describe the page",
+      "evidence": [
+        "2026-11-19-space-before/10-member-space/01-home.desktop.jpg",
+        "2026-11-19-space-before/10-member-space/14-session-detail-video.desktop.jpg",
+        "2026-11-19-space-before/10-member-space/02-sessions.desktop.jpg"
+      ],
+      "detail": "Home has a subtitle ('Your sessions, payments, and privacy settings live in this Space.'), the join line on the card and the same line again under the list. Sessions and Payments have subtitles that restate their titles. The session page says it under the button and again in the waiting-for-expert hint.",
+      "recommendation": "Say when joining opens once, beside the Join button, with the actual time ('You can join from 9:45 AM, 15 minutes before the start.', as in 10-member-space/06). Remove the page subtitles.",
+      "references": ["10-member-space/06", "10-member-space/13"]
+    },
+    {
+      "id": "MEM-14",
+      "severity": "P2",
+      "lens": "copy",
+      "title": "Payments lists free sessions, uses system words for status and does not name the session",
+      "evidence": [
+        "2026-11-19-space-before/10-member-space/04-payments.desktop.jpg",
+        "2026-11-19-space-before/10-member-space/13-payments-paid.desktop.jpg"
+      ],
+      "detail": "Each row leads with the amount and the paid date; which session it paid for is behind a link called 'Session'. Free sessions appear as '€0.00 · Paid', four of them for the demo member. The other statuses read 'Intent pending', 'Requires payment' and 'Refund pending'.",
+      "recommendation": "List only money that moved. Name each row after the session and link it there, with 'With {expert} · {date}', one status in plain words (Paid, Payment needed, Refund on its way, Refunded) and the Receipt button (10-member-space/15, 10-member-space/16).",
+      "references": [
+        "10-member-space/15",
+        "10-member-space/16",
+        "10-member-space/12"
+      ]
+    },
+    {
+      "id": "MEM-15",
+      "severity": "P2",
+      "lens": "copy",
+      "title": "The waiting room has two extra paragraphs under the countdown",
+      "evidence": [
+        "2026-11-19-space-before/10-member-space/11-waiting-room.desktop.jpg",
+        "2026-11-19-space-before/10-member-space/11-waiting-room.mobile.jpg"
+      ],
+      "detail": "Under the start time and the join time, the waiting room adds an instruction, a tip about finding a quiet place in the last hour, and a three-sentence privacy paragraph about recording and live transcription. The transcription notice is shown again in the call, when the transcript starts.",
+      "recommendation": "Keep the start time, when joining opens, the countdown, one instruction and one line: 'Your call is private and is not recorded.' (10-member-space/17). The transcription notice stays where the transcript starts, in the call.",
+      "references": ["10-member-space/17", "10-member-space/06"]
+    },
+    {
+      "id": "MEM-16",
+      "severity": "P3",
+      "lens": "ux",
+      "title": "Session page repeats the expert, shows the time zone as a system name and greys out buttons without saying why",
+      "evidence": [
+        "2026-11-19-space-before/10-member-space/08-session-detail-upcoming.desktop.jpg",
+        "2026-11-19-space-before/10-member-space/09-session-detail-past.desktop.jpg",
+        "2026-11-19-space-before/10-member-space/14-session-detail-video.desktop.jpg"
+      ],
+      "detail": "The expert is in the header and again as an 'Expert' row. The time zone reads 'Europe/Lisbon'. 'Mode: Online' and a €0.00 price are system words for 'Video call' and 'Free'. Manage booking has a general hint, and Reschedule stays visible but disabled once it has closed.",
+      "recommendation": "One mention of the expert; 'Lisbon time'; 'How you'll meet: Video call'; 'Free'. In Manage booking show one line that applies now ('You can reschedule until {date}.' or 'Rescheduling has closed for this session. You can still cancel.') and only the buttons that work (10-member-space/07).",
+      "references": ["10-member-space/07"]
     }
   ],
   "references": [
@@ -294,6 +380,66 @@
       "why": "The receipt names what was booked with a photo, then lists booking ID, dates, payment method, transaction date, rate, taxes and fees, and total paid in aligned rows, with one 'Email Receipt' button and a share icon. Travel booking app, kept for the receipt layout.",
       "apply": "Each payment in the Space should open a receipt like this: expert and service at the top, session date, method, amount, any refund, and 'Email receipt' or 'Download'.",
       "query": "booking app payment history with receipts"
+    },
+    {
+      "id": "10-member-space/13",
+      "file": "img/13-calendly-meetings-join-up-next.jpg",
+      "app": "Calendly",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/48599d7e-cae2-443e-a3a3-c011e535f1d3?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Join shows only on the meeting that can be joined; every other row is just the row",
+      "why": "The meetings list groups rows by day. Only the 'Up next' row has a 'Join meeting' button; the later rows show title, host and time and nothing else. Selecting a row opens its details, where Reschedule and Cancel live. Scheduling product, kept for the list structure.",
+      "apply": "Show Join on a session card only when it is a video session inside its join window. The card itself opens the session; reschedule and cancel stay on the session page.",
+      "query": "telehealth app upcoming appointments list"
+    },
+    {
+      "id": "10-member-space/14",
+      "file": "img/14-getyourguide-upcoming-bookings.jpg",
+      "app": "GetYourGuide",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/24c6e587-7218-42e3-92ce-4c1b0c1523b6?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Booking card: the title is the link, one status in plain words, date and details on one line",
+      "why": "Each upcoming booking is a card with the title as a link, one status line in plain words ('Order confirmed', 'Ticket not available yet'), then the date and who it is for in grey. Actions appear only on the booking that has something to do. Travel product, kept for the card structure.",
+      "apply": "Session cards: title as the link, one status, then expert, time and how you meet on one line. No price and no label above the title.",
+      "query": "telehealth app upcoming appointments list"
+    },
+    {
+      "id": "10-member-space/15",
+      "file": "img/15-meetup-payments-made.jpg",
+      "app": "Meetup",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/437988ce-e257-4e27-bce8-d4dcd8769855?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Payment row named after what was paid for, one plain status, one receipt action",
+      "why": "'Payments made' lists each payment by the event it paid for, as a link to the event, with the date, the amount, a one-word status ('Charged') and a single print icon for the receipt. Community events product, kept for the row structure.",
+      "apply": "Name each payment after its session and link it there; one status in a plain word; one Receipt action.",
+      "query": "payment history list with receipts"
+    },
+    {
+      "id": "10-member-space/16",
+      "file": "img/16-fal-invoices-receipts.jpg",
+      "app": "fal",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/d13091a5-c08e-4f4a-a9fa-d6783b9ccbb2?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Receipts list: date, 'paid', amount and one Receipt button per row",
+      "why": "Each row has the date, a small 'paid' pill, the amount and one 'Receipt' or 'Invoice' button on the right. Nothing else. Developer tool, kept for how little a receipt row needs.",
+      "apply": "A payment row needs four things: what, when, how much and its state, plus the Receipt button. Rows with no money have no place in the list.",
+      "query": "payment history list with receipts"
+    },
+    {
+      "id": "10-member-space/17",
+      "file": "img/17-dribbble-call-prejoin.jpg",
+      "app": "Dribbble",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/c94af76f-31e4-4bbd-bb1d-d65cff8ecc97?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Before a call: who, one button and one line about the call's privacy",
+      "why": "The pre-call screen shows the camera preview, the two names, one 'Join Now' button and two short lines under it: the terms, and what happens with recording. No tips, no second paragraph. Marketplace product, kept for how the recording statement is one line beside the action.",
+      "apply": "Eleva's waiting room: when the session starts, when joining opens, one instruction, and one line saying the call is private and not recorded.",
+      "query": "video call waiting room before the meeting starts"
     }
   ],
   "judging_criteria": [
@@ -303,6 +449,7 @@
     "Does Sessions show one list with Upcoming and Past tabs, and does the session detail put who, what, how to meet and the cancel rule on one screen? (10-member-space/05, 10-member-space/07)",
     "Does every empty state say what will appear, when, and offer one action? (10-member-space/11, 10-member-space/04)",
     "On Privacy, can she tell at a glance what she agreed to and which optional choices are on or off, and does a data request show its status? (10-member-space/08, 10-member-space/09)",
-    "On a 390 px screen, do notification settings fit without sideways scrolling, with essential session messages marked as always on? (10-member-space/10)"
+    "On a 390 px screen, do notification settings fit without sideways scrolling, with essential session messages marked as always on? (10-member-space/10)",
+    "Is the Space calm? One action per session card, with Join only on a video session that can be joined; when joining opens said once, with the time; payments that list only money that moved, named after the session, with a plain status; and a waiting room with the start time, the countdown, one instruction and one privacy line. (10-member-space/13, 10-member-space/14, 10-member-space/15, 10-member-space/16, 10-member-space/17)"
   ]
 }

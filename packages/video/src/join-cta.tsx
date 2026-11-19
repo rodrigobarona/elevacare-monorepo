@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, type ReactNode } from "react"
+import { useEffect, useId, useState, type ReactNode } from "react"
 import { Button, buttonVariants } from "@eleva/ui/components/button"
 import { cn } from "@eleva/ui/lib/utils"
 import { isJoinCtaEnabled, isJoinStillAhead } from "./join-window"
@@ -24,10 +24,21 @@ export type JoinCtaProps = {
   startsAt: Date | string
   endsAt: Date | string
   joinLabel: string
+  /** When joining opens, in words. Describes the waiting button. */
   joinSoonLabel: string
+  /**
+   * Id of visible text that already says when joining opens (see
+   * `JoinPendingHint`). Without it the button carries the sentence itself,
+   * for screen readers only.
+   */
+  describedBy?: string
   className?: string
-  /** Disabled Join button, or muted copy when the window is closed. */
-  pending?: "button" | "hint"
+  /**
+   * Before joining opens: a disabled Join button, muted copy, or nothing.
+   * Only ever for a video session that can still be joined; a session that
+   * is in person, by phone, over, cancelled or unconfirmed shows nothing.
+   */
+  pending?: "button" | "hint" | "none"
   icon?: ReactNode
 }
 
@@ -39,11 +50,13 @@ export function JoinCta({
   endsAt,
   joinLabel,
   joinSoonLabel,
+  describedBy,
   className,
   pending = "button",
   icon,
 }: JoinCtaProps) {
   const now = useJoinCtaClock()
+  const hintId = useId()
   const enabled =
     now !== null &&
     isJoinCtaEnabled({
@@ -67,11 +80,19 @@ export function JoinCta({
     )
   }
 
+  if (pending === "none") return null
+  // Before the first tick the time is not known: hold the button's place
+  // for a session that could be joined, and show nothing for the rest.
+  const ahead = isJoinStillAhead({
+    sessionMode,
+    status,
+    startsAt,
+    now: now ?? new Date(0),
+  })
+  if (!ahead) return null
+
   if (pending === "hint") {
-    // The hint is only true before the session: nothing is said for one
-    // that is over, cancelled or not confirmed yet.
     if (now === null) return null
-    if (!isJoinStillAhead({ sessionMode, status, startsAt, now })) return null
     return (
       <p className={cn("mt-4 text-xs text-muted-foreground", className)}>
         {joinSoonLabel}
@@ -80,9 +101,56 @@ export function JoinCta({
   }
 
   return (
-    <Button isDisabled aria-label={joinSoonLabel} className={className}>
-      {icon}
-      {joinLabel}
-    </Button>
+    <>
+      <Button
+        isDisabled
+        aria-describedby={describedBy ?? hintId}
+        className={className}
+      >
+        {icon}
+        {joinLabel}
+      </Button>
+      {describedBy ? null : (
+        <span id={hintId} className="sr-only">
+          {joinSoonLabel}
+        </span>
+      )}
+    </>
+  )
+}
+
+/**
+ * The line beside a waiting Join button: when joining opens. It is there
+ * only while the button waits, and goes once joining has opened.
+ */
+export function JoinPendingHint({
+  sessionMode,
+  status,
+  startsAt,
+  id,
+  className,
+  children,
+}: {
+  sessionMode: string
+  status: string
+  startsAt: Date | string
+  id?: string
+  className?: string
+  children: ReactNode
+}) {
+  const now = useJoinCtaClock()
+  // Before the first tick the time is not known: keep the line, as the
+  // button keeps its place.
+  const waiting = isJoinStillAhead({
+    sessionMode,
+    status,
+    startsAt,
+    now: now ?? new Date(0),
+  })
+  if (!waiting) return null
+  return (
+    <p id={id} className={className}>
+      {children}
+    </p>
   )
 }

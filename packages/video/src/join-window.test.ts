@@ -4,6 +4,7 @@ import {
   JOIN_TRAIL_MS,
   isJoinCtaEnabled,
   isJoinStillAhead,
+  isJoinableStatus,
   isJoinWindowOpen,
   isOvertime,
 } from "./join-window"
@@ -25,6 +26,22 @@ describe("isJoinWindowOpen", () => {
     expect(
       isJoinWindowOpen(START, END, new Date(END.getTime() + JOIN_TRAIL_MS + 1))
     ).toBe(false)
+  })
+})
+
+describe("isJoinableStatus", () => {
+  it("is true only for a session that is on", () => {
+    expect(isJoinableStatus("confirmed")).toBe(true)
+    expect(isJoinableStatus("rescheduled")).toBe(true)
+    for (const status of [
+      "awaiting_confirmation",
+      "pending_payment",
+      "cancelled",
+      "completed",
+      "no_show",
+    ]) {
+      expect(isJoinableStatus(status)).toBe(false)
+    }
   })
 })
 

@@ -82,6 +82,13 @@ export type MemberPaymentListItem = {
     status: (typeof main.expertInvoiceStatusEnum.enumValues)[number]
     number: string | null
   } | null
+  /** What was paid for, so a payment can be named without a second call. */
+  session: {
+    startsAt: Date
+    timezone: string
+    expertName: string
+    title: LocalizedText
+  } | null
 }
 
 export type MemberListResult<T> = {
@@ -467,19 +474,37 @@ async function loadMemberBookingDetails(
   return detailsById
 }
 
+/** Payment states in which money moved: paid, or paid and then refunded. */
+const CHARGED_PAYMENT_STATUSES = [
+  "succeeded",
+  "refund_pending",
+  "refunded",
+] as const
+
 export async function listMemberPayments(input: {
   userId: string
   cursor?: string
   bookingId?: string
   limit?: number
+  /**
+   * Only payments where money moved. Leaves out free sessions (a payment
+   * of zero) and checkouts that were never completed.
+   */
+  charged?: boolean
 }): Promise<MemberListResult<MemberPaymentListItem>> {
   const limit = clampPageSize(input.limit, MEMBER_PAYMENT_PAGE_SIZE)
   const cursor = decodeMemberCursor(input.cursor)
 
-  return withPlatformAdminContext(async (tx) => {
+  const rows = await withPlatformAdminContext(async (tx) => {
     const conditions = [eq(main.bookings.memberUserId, input.userId)]
     if (input.bookingId) {
       conditions.push(eq(main.bookingPayments.bookingId, input.bookingId))
+    }
+    if (input.charged) {
+      conditions.push(
+        gt(main.bookingPayments.amountCents, 0),
+        inArray(main.bookingPayments.status, CHARGED_PAYMENT_STATUSES)
+      )
     }
     if (cursor) {
       conditions.push(
@@ -493,7 +518,7 @@ export async function listMemberPayments(input: {
       )
     }
 
-    const rows = await tx
+    return tx
       .select({
         id: main.bookingPayments.id,
         orgId: main.bookingPayments.orgId,
@@ -507,6 +532,9 @@ export async function listMemberPayments(input: {
         stripeChargeId: main.bookingPayments.stripeChargeId,
         stripePaymentIntentId: main.bookingPayments.stripePaymentIntentId,
         createdAt: main.bookingPayments.createdAt,
+        bookingOrgId: main.bookings.orgId,
+        startsAt: main.bookings.startsAt,
+        timezone: main.bookings.timezone,
         invoiceStatus: main.expertInvoices.status,
         invoiceNumber: main.expertInvoices.number,
       })
@@ -528,11 +556,18 @@ export async function listMemberPayments(input: {
         desc(main.bookingPayments.id)
       )
       .limit(limit + 1)
+  })
 
-    const page = rows.slice(0, limit)
-    const last = page[page.length - 1]
-    return {
-      items: page.map((row) => ({
+  const page = rows.slice(0, limit)
+  const last = page[page.length - 1]
+  const detailsById = await loadMemberBookingDetails(
+    page.map((row) => ({ id: row.bookingId, orgId: row.bookingOrgId }))
+  )
+  return {
+    items: page.map((row) => {
+      // A payment is still listed when its session cannot be named.
+      const details = detailsById.get(row.bookingId)
+      return {
         id: row.id,
         orgId: row.orgId,
         bookingId: row.bookingId,
@@ -547,13 +582,21 @@ export async function listMemberPayments(input: {
         invoice: row.invoiceStatus
           ? { status: row.invoiceStatus, number: row.invoiceNumber }
           : null,
-      })),
-      nextCursor:
-        rows.length > limit && last
-          ? encodeMemberCursor(last.createdAt, last.id)
+        session: details
+          ? {
+              startsAt: row.startsAt,
+              timezone: row.timezone,
+              expertName: details.displayName,
+              title: details.title,
+            }
           : null,
-    }
-  })
+      }
+    }),
+    nextCursor:
+      rows.length > limit && last
+        ? encodeMemberCursor(last.createdAt, last.id)
+        : null,
+  }
 }
 
 export async function cacheBookingPaymentReceipt(

@@ -41,6 +41,7 @@ export type ElevaCallLabels = {
   transcriptEmpty: string
   transcriptOff: string
   transcriptionOnNotice: string
+  transcriptionPrejoinNotice: string
   transcriptLanguage: string
   transcriptLanguageAuto: string
   transcriptLanguageEnglish: string
@@ -90,14 +91,13 @@ export type ElevaCallLabels = {
   waitingRoomTitle: (time: string) => string
   waitingRoomTitleLater: (dateTime: string) => string
   waitingRoomJoinFrom: (time: string) => string
+  waitingRoomJoinFromDay: (dateTime: string) => string
   waitingRoomKeepOpen: string
   waitingRoomComeBack: string
   waitingRoomCountdown: (minutes: number) => string
   waitingRoomSoon: string
   waitingRoomOpening: string
   waitingRoomOpened: string
-  waitingRoomTip: string
-  waitingRoomPrivacy: string
   waitingRoomManual: string
   endedTitle: string
   endedBody: string
@@ -157,6 +157,7 @@ export function elevaCallLabels(
     transcriptEmpty: t("transcriptEmpty"),
     transcriptOff: t("transcriptOff"),
     transcriptionOnNotice: t("transcriptionOnNotice"),
+    transcriptionPrejoinNotice: t("transcriptionPrejoinNotice"),
     transcriptLanguage: t("transcriptLanguage"),
     transcriptLanguageAuto: t("transcriptLanguageAuto"),
     transcriptLanguageEnglish: t("transcriptLanguageEnglish"),
@@ -205,14 +206,14 @@ export function elevaCallLabels(
     waitingRoomTitleLater: (dateTime) =>
       t("waitingRoomTitleLater", { dateTime }),
     waitingRoomJoinFrom: (time) => t("waitingRoomJoinFrom", { time }),
+    waitingRoomJoinFromDay: (dateTime) =>
+      t("waitingRoomJoinFromDay", { dateTime }),
     waitingRoomKeepOpen: t("waitingRoomKeepOpen"),
     waitingRoomComeBack: t("waitingRoomComeBack"),
     waitingRoomCountdown: (minutes) => t("waitingRoomCountdown", { minutes }),
     waitingRoomSoon: t("waitingRoomSoon"),
     waitingRoomOpening: t("waitingRoomOpening"),
     waitingRoomOpened: t("waitingRoomOpened"),
-    waitingRoomTip: t("waitingRoomTip"),
-    waitingRoomPrivacy: t("waitingRoomPrivacy"),
     waitingRoomManual: t("waitingRoomManual"),
     endedTitle: t("endedTitle"),
     endedBody: t("endedBody"),

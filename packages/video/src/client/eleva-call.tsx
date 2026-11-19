@@ -502,13 +502,17 @@ function CallShell({
       {joined && callWindow ? (
         <OvertimeNotice window={callWindow} labels={labels} />
       ) : null}
-      {joined && !showNotesSlot && transcriptionAllowed ? (
+      {/* Said before joining too, on the camera check, so the member
+          knows about the transcript before it starts. */}
+      {!showNotesSlot && transcriptionAllowed ? (
         <p
           className="rounded-3xl bg-muted px-4 py-3 text-sm text-muted-foreground"
           role="status"
           data-testid="transcription-notice"
         >
-          {labels.transcriptionOnNotice}
+          {joined
+            ? labels.transcriptionOnNotice
+            : labels.transcriptionPrejoinNotice}
         </p>
       ) : null}
 

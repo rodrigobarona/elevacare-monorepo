@@ -37,6 +37,7 @@ vi.mock("@/lib/member-booking-http", () => ({
     reason: "policy_tier",
     fullRefundUntil: null,
     nextChangeAt: null,
+    rescheduleUntil: null,
   }),
 }))
 

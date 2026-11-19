@@ -42,14 +42,14 @@ type WaitingRoomLabels = ClosedLabels &
     | "waitingRoomTitle"
     | "waitingRoomTitleLater"
     | "waitingRoomJoinFrom"
+    | "waitingRoomJoinFromDay"
     | "waitingRoomKeepOpen"
     | "waitingRoomComeBack"
     | "waitingRoomCountdown"
     | "waitingRoomSoon"
     | "waitingRoomOpening"
     | "waitingRoomOpened"
-    | "waitingRoomTip"
-    | "waitingRoomPrivacy"
+    | "callPrivacy"
     | "waitingRoomManual"
   >
 
@@ -288,6 +288,13 @@ export function WaitingRoom({
   }
 
   const starts = new Date(joinWindow.startsAt)
+  const opens = new Date(joinWindow.opensAt)
+  // A session just after midnight opens the evening before: give the full
+  // date, as the title does.
+  const joinFrom =
+    opens.toDateString() === starts.toDateString()
+      ? labels.waitingRoomJoinFrom(time.format(opens))
+      : labels.waitingRoomJoinFromDay(dateTime.format(opens))
   const anotherDay = startsAnotherDay(joinWindow, now)
   const title = anotherDay
     ? labels.waitingRoomTitleLater(dateTime.format(starts))
@@ -310,11 +317,7 @@ export function WaitingRoom({
         <h2 id={titleId} className={TITLE}>
           {title}
         </h2>
-        <p className="mt-2 text-pretty text-muted-foreground">
-          {labels.waitingRoomJoinFrom(
-            time.format(new Date(joinWindow.opensAt))
-          )}
-        </p>
+        <p className="mt-2 text-pretty text-muted-foreground">{joinFrom}</p>
         {countdown ? (
           <p
             role={gaveUp ? undefined : "timer"}
@@ -347,18 +350,14 @@ export function WaitingRoom({
             />
           </>
         ) : null}
+        {/* What to do while waiting, then the one privacy line. */}
         <p className="mt-6 text-sm text-pretty text-muted-foreground">
           {minutes > 60
             ? labels.waitingRoomComeBack
             : labels.waitingRoomKeepOpen}
         </p>
-        {minutes > 60 ? null : (
-          <p className="mt-2 text-sm text-pretty text-muted-foreground">
-            {labels.waitingRoomTip}
-          </p>
-        )}
-        <p className="mt-2 text-xs text-pretty text-muted-foreground">
-          {labels.waitingRoomPrivacy}
+        <p className="mt-2 text-sm text-pretty text-muted-foreground">
+          {labels.callPrivacy}
         </p>
         {showBack ? (
           <div className="mt-6">
