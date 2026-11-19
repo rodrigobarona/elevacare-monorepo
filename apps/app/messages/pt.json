@@ -128,6 +128,7 @@
       "waitingRoomTitle": "A sua sessão começa às {time}",
       "waitingRoomTitleLater": "A sua sessão começa: {dateTime}",
       "waitingRoomJoinFrom": "Pode entrar a partir das {time}, na sua hora local.",
+      "waitingRoomJoinFromDay": "Pode entrar a partir de {dayTime}, na sua hora local.",
       "waitingRoomKeepOpen": "Mantenha esta página aberta. O teste da câmara abre aqui quando for a hora.",
       "waitingRoomComeBack": "Volte com este mesmo link quando for a hora.",
       "waitingRoomCountdown": "Pode entrar daqui a {minutes} minutos",

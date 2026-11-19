@@ -91,6 +91,7 @@ export type ElevaCallLabels = {
   waitingRoomTitle: (time: string) => string
   waitingRoomTitleLater: (dateTime: string) => string
   waitingRoomJoinFrom: (time: string) => string
+  waitingRoomJoinFromDay: (dayTime: string) => string
   waitingRoomKeepOpen: string
   waitingRoomComeBack: string
   waitingRoomCountdown: (minutes: number) => string
@@ -205,6 +206,8 @@ export function elevaCallLabels(
     waitingRoomTitleLater: (dateTime) =>
       t("waitingRoomTitleLater", { dateTime }),
     waitingRoomJoinFrom: (time) => t("waitingRoomJoinFrom", { time }),
+    waitingRoomJoinFromDay: (dayTime) =>
+      t("waitingRoomJoinFromDay", { dayTime }),
     waitingRoomKeepOpen: t("waitingRoomKeepOpen"),
     waitingRoomComeBack: t("waitingRoomComeBack"),
     waitingRoomCountdown: (minutes) => t("waitingRoomCountdown", { minutes }),

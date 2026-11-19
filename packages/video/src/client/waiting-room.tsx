@@ -42,6 +42,7 @@ type WaitingRoomLabels = ClosedLabels &
     | "waitingRoomTitle"
     | "waitingRoomTitleLater"
     | "waitingRoomJoinFrom"
+    | "waitingRoomJoinFromDay"
     | "waitingRoomKeepOpen"
     | "waitingRoomComeBack"
     | "waitingRoomCountdown"
@@ -235,9 +236,14 @@ export function WaitingRoom({
     // `attempt` restarts the timer when two tries share a pause.
   }, [pause, attempt, runTry])
 
-  const { time, dateTime } = useMemo(
+  const { time, dayTime, dateTime } = useMemo(
     () => ({
       time: new Intl.DateTimeFormat(labels.timeLocale, {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      dayTime: new Intl.DateTimeFormat(labels.timeLocale, {
+        weekday: "long",
         hour: "2-digit",
         minute: "2-digit",
       }),
@@ -287,6 +293,12 @@ export function WaitingRoom({
   }
 
   const starts = new Date(joinWindow.startsAt)
+  const opens = new Date(joinWindow.opensAt)
+  // A session just after midnight opens the evening before: name the day.
+  const joinFrom =
+    opens.toDateString() === starts.toDateString()
+      ? labels.waitingRoomJoinFrom(time.format(opens))
+      : labels.waitingRoomJoinFromDay(dayTime.format(opens))
   const anotherDay = startsAnotherDay(joinWindow, now)
   const title = anotherDay
     ? labels.waitingRoomTitleLater(dateTime.format(starts))
@@ -309,11 +321,7 @@ export function WaitingRoom({
         <h2 id={titleId} className={TITLE}>
           {title}
         </h2>
-        <p className="mt-2 text-pretty text-muted-foreground">
-          {labels.waitingRoomJoinFrom(
-            time.format(new Date(joinWindow.opensAt))
-          )}
-        </p>
+        <p className="mt-2 text-pretty text-muted-foreground">{joinFrom}</p>
         {countdown ? (
           <p
             role={gaveUp ? undefined : "timer"}

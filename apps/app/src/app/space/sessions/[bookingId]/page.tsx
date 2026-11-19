@@ -287,6 +287,8 @@ export default async function SessionDetailPage({
               {t("manageTitle")}
             </h2>
             <SessionActions
+              // A rescheduled session starts over with its new quote.
+              key={booking.startsAt}
               bookingId={booking.id}
               startsAt={booking.startsAt}
               endsAt={booking.endsAt}

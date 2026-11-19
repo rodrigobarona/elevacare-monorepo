@@ -16,7 +16,11 @@ import {
   JoinPendingHint,
   useJoinCtaClock,
 } from "@eleva/video/join-cta"
-import { isJoinCtaEnabled, isJoinableStatus } from "@eleva/video/join-window"
+import {
+  JOIN_TRAIL_MS,
+  isJoinCtaEnabled,
+  isJoinableStatus,
+} from "@eleva/video/join-window"
 import type { ListMeBookingsResponse } from "@eleva/api-client"
 import { expertProfileUrl } from "@eleva/config/env"
 import { eventTitle, joinOpensTime } from "@/lib/member-format"
@@ -112,12 +116,19 @@ export function BookingCard({
     />
   )
 
+  // Over: it came from the past list, or the page stayed open until
+  // joining closed (the same end as the join window).
+  const over =
+    past ||
+    (now !== null &&
+      now.getTime() > new Date(booking.endsAt).getTime() + JOIN_TRAIL_MS)
+
   // One action on a list card: Join while it is open, or Book again for a
   // session that is over. On a phone it sits under the text. Until the
   // time is known, a session that might still be joinable shows neither.
   const listAction = joinOpen ? (
     join("none")
-  ) : past && !(canJoin && now === null) ? (
+  ) : over && !(canJoin && now === null) ? (
     <LinkButton
       variant="outline"
       href={expertProfileUrl(locale, booking.expert.username)}
