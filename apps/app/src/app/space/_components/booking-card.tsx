@@ -30,7 +30,7 @@ import { DateTile } from "@eleva/ui/components/date-tile"
 import { bookingDateParts } from "@eleva/ui/lib/booking/date-parts"
 import { StatusPill } from "./booking-visuals"
 import { IcsDownloadButton } from "./ics-download-button"
-import { MetaLine } from "./meta-line"
+import { MetaLine } from "@eleva/ui/components/meta-line"
 import { SPACE_BASE } from "@eleva/config/routing"
 
 type MemberBooking = ListMeBookingsResponse["bookings"][number]
