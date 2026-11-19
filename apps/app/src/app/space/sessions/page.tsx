@@ -23,7 +23,7 @@ export default async function SessionsPage() {
 
   return (
     <div className="space-y-12">
-      <PageHeader title={t("title")} description={t("subtitle")} />
+      <PageHeader title={t("title")} />
 
       <Section title={t("upcomingTitle")}>
         {upcoming.bookings.length === 0 ? (
@@ -57,7 +57,7 @@ export default async function SessionsPage() {
                 booking={booking}
                 memberName={memberName}
                 memberEmail={session.user.email}
-                showJoin={false}
+                past
               />
             ))}
           </div>

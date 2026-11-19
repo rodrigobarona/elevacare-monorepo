@@ -1,21 +1,25 @@
 "use client"
 
+import { useId } from "react"
+import Link from "next/link"
 import { useTranslations, useLocale } from "next-intl"
-import { toast } from "sonner"
 import {
   ArrowsClockwiseIcon,
-  CalendarCheckIcon,
+  CaretRightIcon,
   MagnifyingGlassIcon,
   VideoCameraIcon,
 } from "@eleva/icons"
-import { Button, LinkButton } from "@eleva/ui/components/button"
-import { Eyebrow } from "@eleva/ui/components/typography"
+import { LinkButton } from "@eleva/ui/components/button"
 import { cn } from "@eleva/ui/lib/utils"
-import { JoinCta } from "@eleva/video/join-cta"
+import {
+  JoinCta,
+  JoinPendingHint,
+  useJoinCtaClock,
+} from "@eleva/video/join-cta"
+import { isJoinCtaEnabled, isJoinableStatus } from "@eleva/video/join-window"
 import type { ListMeBookingsResponse } from "@eleva/api-client"
-import { downloadBookingIcs } from "@eleva/calendar/ics-download"
 import { expertProfileUrl } from "@eleva/config/env"
-import { eventTitle, formatMoney } from "@/lib/member-format"
+import { eventTitle, joinOpensTime } from "@/lib/member-format"
 import {
   isAwaitingConfirmation,
   isBookingStatus,
@@ -25,6 +29,8 @@ import {
 import { DateTile } from "@eleva/ui/components/date-tile"
 import { bookingDateParts } from "@eleva/ui/lib/booking/date-parts"
 import { StatusPill } from "./booking-visuals"
+import { IcsDownloadButton } from "./ics-download-button"
+import { MetaLine } from "./meta-line"
 import { SPACE_BASE } from "@eleva/config/routing"
 
 type MemberBooking = ListMeBookingsResponse["bookings"][number]
@@ -33,21 +39,30 @@ interface BookingCardProps {
   booking: MemberBooking
   memberName: string
   memberEmail: string
-  /** Upcoming sessions show Join and Add to calendar; past ones show Book again. */
-  showJoin?: boolean
+  /** A session from the past list: it offers Book again. */
+  past?: boolean
   /** Larger card for the member's next session on Space home. */
   featured?: boolean
 }
 
+/**
+ * One session in a list. The card opens the session; it carries one action
+ * of its own only when there is one to take now (Join while joining is
+ * open, Book again once it is over). The next session on Space home is the
+ * larger card, with Join and Add to calendar under it.
+ */
 export function BookingCard({
   booking,
   memberName,
   memberEmail,
-  showJoin = true,
+  past = false,
   featured = false,
 }: BookingCardProps) {
   const t = useTranslations("sessions")
   const locale = useLocale()
+  const metaId = useId()
+  const joinHintId = useId()
+  const now = useJoinCtaClock()
   const title = eventTitle(booking.eventType.title, locale)
   const parts = bookingDateParts(
     booking.startsAt,
@@ -62,62 +77,56 @@ export function BookingCard({
   const modeLabel = isSessionMode(booking.sessionMode)
     ? t(`modes.${booking.sessionMode}`)
     : booking.sessionMode
+  const detailHref = `${SPACE_BASE}/sessions/${booking.id}`
+  const canJoin =
+    booking.sessionMode === "online" && isJoinableStatus(booking.status)
+  // Joining is open right now. A session that has just started sits in
+  // the past list and can still be joined.
+  const joinOpen =
+    canJoin &&
+    now !== null &&
+    isJoinCtaEnabled({
+      sessionMode: booking.sessionMode,
+      status: booking.status,
+      startsAt: booking.startsAt,
+      endsAt: booking.endsAt,
+      now,
+    })
+  const joinOpens = t("joinOpens", {
+    time: joinOpensTime(booking.startsAt, locale, booking.timezone),
+  })
 
-  function handleIcs() {
-    try {
-      downloadBookingIcs({
-        uid: booking.id,
-        summary: `${title} — ${booking.expert.displayName}`,
-        description: modeLabel,
-        start: booking.startsAt,
-        end: booking.endsAt,
-        timeZone: booking.timezone,
-        expertName: booking.expert.displayName,
-        memberName,
-        memberEmail,
-      })
-    } catch {
-      toast.error(t("icsFailed"))
-    }
-  }
-
-  const actions = (
-    <>
-      {showJoin && !awaiting ? (
-        <JoinCta
-          href={`${SPACE_BASE}/sessions/${booking.id}/join`}
-          sessionMode={booking.sessionMode}
-          status={booking.status}
-          startsAt={booking.startsAt}
-          endsAt={booking.endsAt}
-          joinLabel={t("join")}
-          joinSoonLabel={t("joinSoon")}
-          icon={<VideoCameraIcon className="size-4" />}
-        />
-      ) : null}
-      {showJoin ? (
-        <Button variant="outline" onPress={handleIcs}>
-          <CalendarCheckIcon className="size-4" />
-          {t("addToCalendar")}
-        </Button>
-      ) : (
-        <LinkButton
-          variant="outline"
-          href={expertProfileUrl(locale, booking.expert.username)}
-        >
-          <ArrowsClockwiseIcon className="size-4" />
-          {t("bookAgain")}
-        </LinkButton>
-      )}
-      <LinkButton
-        variant={featured ? "ghost" : "outline"}
-        href={`${SPACE_BASE}/sessions/${booking.id}`}
-        data-testid="member-booking-detail"
-      >
-        {t("detailTitle")}
-      </LinkButton>
-    </>
+  const join = (pending: "button" | "none") => (
+    <JoinCta
+      href={`${detailHref}/join`}
+      sessionMode={booking.sessionMode}
+      status={booking.status}
+      startsAt={booking.startsAt}
+      endsAt={booking.endsAt}
+      joinLabel={t("join")}
+      joinSoonLabel={joinOpens}
+      describedBy={pending === "button" ? joinHintId : undefined}
+      icon={<VideoCameraIcon className="size-4" />}
+      pending={pending}
+      className="relative z-10"
+    />
   )
+
+  // One action on a list card: Join while it is open, or Book again for a
+  // session that is over. On a phone it sits under the text. Until the
+  // time is known, a session that might still be joinable shows neither.
+  const listAction = joinOpen ? (
+    join("none")
+  ) : past && !(canJoin && now === null) ? (
+    <LinkButton
+      variant="outline"
+      href={expertProfileUrl(locale, booking.expert.username)}
+      className="relative z-10"
+    >
+      <ArrowsClockwiseIcon className="size-4" />
+      {t("bookAgain")}
+    </LinkButton>
+  ) : null
 
   return (
     <article
@@ -126,14 +135,18 @@ export function BookingCard({
       data-status={booking.status}
       data-expert={booking.expert.username}
       className={cn(
-        "overflow-hidden border bg-card text-card-foreground",
-        featured ? "rounded-3xl shadow-2" : "rounded-2xl shadow-1"
+        "relative overflow-hidden border bg-card text-card-foreground",
+        featured
+          ? "rounded-3xl shadow-2"
+          : "rounded-2xl shadow-1 transition-shadow hover:shadow-2"
       )}
     >
       <div
         className={cn(
-          "flex flex-col gap-4 sm:flex-row sm:items-center",
-          featured ? "p-6 sm:gap-6 sm:p-8" : "p-4 sm:gap-5 sm:p-5"
+          "flex",
+          featured
+            ? "flex-col gap-4 p-6 sm:flex-row sm:items-center sm:gap-6 sm:p-8"
+            : "flex-wrap items-center gap-x-4 gap-y-3 p-4 sm:flex-nowrap sm:gap-x-5 sm:p-5"
         )}
       >
         <DateTile
@@ -143,41 +156,57 @@ export function BookingCard({
           large={featured}
         />
         <div className="min-w-0 flex-1 space-y-1.5">
-          {featured ? <Eyebrow>{t("nextTitle")}</Eyebrow> : null}
           <h3
             className={cn(
               "font-display leading-snug font-medium tracking-tight",
               featured ? "text-2xl" : "text-lg"
             )}
           >
-            {title}
+            <Link
+              href={detailHref}
+              data-testid="member-booking-detail"
+              aria-describedby={metaId}
+              className={cn(
+                "rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                // The whole card opens the session; its own action sits
+                // above this link.
+                featured ? "hover:underline" : "after:absolute after:inset-0"
+              )}
+            >
+              {title}
+            </Link>
           </h3>
-          <p className="text-sm text-muted-foreground">
-            {booking.expert.displayName}
-            <span aria-hidden> · </span>
-            {featured ? (
-              <span className="first-letter:uppercase">{parts.longDate}</span>
-            ) : (
+          <MetaLine
+            id={metaId}
+            className="text-sm text-muted-foreground"
+            items={[
+              booking.expert.displayName,
               <>
-                <span className="sr-only">{parts.longDate}</span>
-                <span aria-hidden className="first-letter:uppercase">
-                  {parts.weekday}
-                </span>
-              </>
-            )}
-            {", "}
-            {parts.time}
-          </p>
-          <div className="flex flex-wrap items-center gap-2 pt-1 text-sm">
+                {featured ? (
+                  <span className="inline-block first-letter:uppercase">
+                    {parts.longDate}
+                  </span>
+                ) : (
+                  <>
+                    <span className="sr-only">{parts.longDate}</span>
+                    <span
+                      aria-hidden
+                      className="inline-block first-letter:uppercase"
+                    >
+                      {parts.weekday}
+                    </span>
+                  </>
+                )}
+                {", "}
+                {parts.time}
+              </>,
+              modeLabel,
+            ]}
+          />
+          <div className="pt-1">
             <StatusPill status={status}>
               {status ? t(`statusLabel.${status}`) : shown}
             </StatusPill>
-            <span className="rounded-full border px-2.5 py-0.5 text-xs">
-              {modeLabel}
-            </span>
-            <span className="text-muted-foreground tabular-nums">
-              {formatMoney(booking.priceCents, locale, booking.currency)}
-            </span>
           </div>
           {awaiting ? (
             <p className="pt-1 text-sm text-muted-foreground">
@@ -186,12 +215,46 @@ export function BookingCard({
           ) : null}
         </div>
         {featured ? null : (
-          <div className="flex flex-wrap gap-2 sm:justify-end">{actions}</div>
+          <>
+            {listAction ? (
+              // Under the text on a phone, in line with it from `sm`.
+              <div className="order-last basis-full pl-20 sm:order-none sm:basis-auto sm:pl-0">
+                {listAction}
+              </div>
+            ) : null}
+            <CaretRightIcon
+              aria-hidden
+              className="size-4 shrink-0 text-muted-foreground"
+            />
+          </>
         )}
       </div>
       {featured ? (
-        <div className="flex flex-wrap gap-2 border-t bg-sand-50/70 px-6 py-4 sm:px-8 dark:bg-muted/40">
-          {actions}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t bg-sand-50/70 px-6 py-4 sm:px-8 dark:bg-muted/40">
+          {canJoin ? join("button") : null}
+          <IcsDownloadButton
+            booking={booking}
+            memberName={memberName}
+            memberEmail={memberEmail}
+          />
+          {canJoin ? (
+            <JoinPendingHint
+              id={joinHintId}
+              sessionMode={booking.sessionMode}
+              status={booking.status}
+              startsAt={booking.startsAt}
+              className="text-sm text-muted-foreground"
+            >
+              {joinOpens}
+            </JoinPendingHint>
+          ) : null}
+          <LinkButton
+            variant="ghost"
+            href={detailHref}
+            className="-ml-3 sm:ml-auto"
+          >
+            {t("detailTitle")}
+          </LinkButton>
         </div>
       ) : null}
     </article>

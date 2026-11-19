@@ -3456,7 +3456,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "listMePayments",
           summary: "List the authenticated member's booking payments",
           description:
-            "Joins booking_payments. receipt_url is served from cache or retrieved via @eleva/billing and then cached.",
+            "Joins booking_payments. receipt_url is served from cache or retrieved via @eleva/billing and then cached. charged=true lists only payments where money moved (paid, or paid and then refunded). Each payment names its session.",
           tags: ["Me"],
           requestParams: { query: ListMePaymentsQuerySchema },
           responses: {

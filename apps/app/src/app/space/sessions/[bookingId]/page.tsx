@@ -9,23 +9,29 @@ import { PageHeader } from "@eleva/ui/components/page-header"
 import { LinkButton } from "@eleva/ui/components/button"
 import { findMemberBooking } from "@/lib/find-member-booking"
 import { getAuthedApiClient, requireMemberSpace } from "@/lib/member-api"
-import { eventTitle, formatMoney } from "@/lib/member-format"
+import { eventTitle, formatMoney, joinOpensTime } from "@/lib/member-format"
 import {
   isAwaitingConfirmation,
   isBookingStatus,
   isSessionMode,
   shownMemberBookingStatus,
 } from "@/lib/booking-status"
-import { JoinCta } from "@eleva/video/join-cta"
+import { JoinCta, JoinPendingHint } from "@eleva/video/join-cta"
+import { isJoinableStatus } from "@eleva/video/join-window"
 import { UrgentHelp } from "@eleva/dashboard/urgent-help"
 import { DateTile } from "@eleva/ui/components/date-tile"
 import { bookingDateParts } from "@eleva/ui/lib/booking/date-parts"
+import { zoneCity } from "@eleva/ui/lib/booking/slot-groups"
 import { StatusPill } from "../../_components/booking-visuals"
+import { MetaLine } from "../../_components/meta-line"
 import { SessionActions } from "../../_components/session-actions"
-import { IcsDownloadButton } from "./ics-download-button"
+import { IcsDownloadButton } from "../../_components/ics-download-button"
 import { SPACE_BASE } from "@eleva/config/routing"
 
 export const dynamic = "force-dynamic"
+
+/** The line that says when joining opens; the Join button points at it. */
+const JOIN_HINT_ID = "session-join-opens"
 
 function invoiceStatusKey(status: ExpertInvoiceStatus) {
   switch (status) {
@@ -88,11 +94,21 @@ export default async function SessionDetailPage({
   // A confirmed session that is over reads "Ended", not "Confirmed".
   const shown = shownMemberBookingStatus(booking)
   const ended = shown === "ended"
+  // Over: it took place (or its time passed). Nothing is left to change.
+  const over =
+    ended || booking.status === "completed" || booking.status === "no_show"
   const status = isBookingStatus(shown) ? shown : null
   // Urgent-help signposting is for sessions still ahead of the member: the
   // API only quotes a cancellation while the session is active and has not
   // started.
   const isUpcoming = quote !== null
+  // On: the member can still attend it. Anything else (over, cancelled,
+  // not paid) has nothing to join or put in a calendar.
+  const on = !ended && (isJoinableStatus(booking.status) || awaiting)
+  const canJoin = on && !awaiting && booking.sessionMode === "online"
+  const joinOpens = t("joinOpens", {
+    time: joinOpensTime(booking.startsAt, locale, booking.timezone),
+  })
   const parts = bookingDateParts(
     booking.startsAt,
     booking.endsAt,
@@ -123,19 +139,18 @@ export default async function SessionDetailPage({
               <p className="font-display text-2xl leading-snug font-medium tracking-tight first-letter:uppercase">
                 {parts.longDate}
               </p>
-              <p className="text-muted-foreground tabular-nums">
-                {parts.timeRange}
-                <span aria-hidden> · </span>
-                {booking.timezone}
-              </p>
+              <MetaLine
+                className="text-muted-foreground tabular-nums"
+                items={[
+                  parts.timeRange,
+                  t("zone", { city: zoneCity(booking.timezone, locale) }),
+                ]}
+              />
             </div>
           </div>
 
           <dl className="divide-y border-t px-6 sm:px-8">
-            <DetailRow label={t("expert")}>
-              {booking.expert.displayName}
-            </DetailRow>
-            <DetailRow label={t("mode")}>
+            <DetailRow label={on ? t("mode") : t("modePast")}>
               {isSessionMode(booking.sessionMode)
                 ? t(`modes.${booking.sessionMode}`)
                 : booking.sessionMode}
@@ -147,7 +162,9 @@ export default async function SessionDetailPage({
             </DetailRow>
             <DetailRow label={t("price")}>
               <span className="tabular-nums">
-                {formatMoney(booking.priceCents, locale, booking.currency)}
+                {booking.priceCents === 0
+                  ? t("free")
+                  : formatMoney(booking.priceCents, locale, booking.currency)}
               </span>
             </DetailRow>
             {payment?.receiptUrl ? (
@@ -193,7 +210,7 @@ export default async function SessionDetailPage({
 
           <div className="space-y-3 border-t bg-sand-50/70 px-6 py-5 sm:px-8 dark:bg-muted/40">
             <div className="flex flex-wrap gap-2">
-              {awaiting || ended ? null : (
+              {canJoin ? (
                 <JoinCta
                   href={`${SPACE_BASE}/sessions/${bookingId}/join`}
                   sessionMode={booking.sessionMode}
@@ -201,11 +218,18 @@ export default async function SessionDetailPage({
                   startsAt={booking.startsAt}
                   endsAt={booking.endsAt}
                   joinLabel={t("join")}
-                  joinSoonLabel={t("joinSoon")}
+                  joinSoonLabel={joinOpens}
+                  describedBy={JOIN_HINT_ID}
                   icon={<VideoCameraIcon className="size-4" />}
                 />
-              )}
-              {ended ? (
+              ) : null}
+              {on ? (
+                <IcsDownloadButton
+                  booking={booking}
+                  memberName={memberName}
+                  memberEmail={session.user.email}
+                />
+              ) : (
                 // A session that is over has no place in a calendar; the
                 // next step is the same one the list offers.
                 <LinkButton
@@ -215,23 +239,29 @@ export default async function SessionDetailPage({
                   <ArrowsClockwiseIcon className="size-4" />
                   {t("bookAgain")}
                 </LinkButton>
-              ) : (
-                <IcsDownloadButton
-                  booking={booking}
-                  memberName={memberName}
-                  memberEmail={session.user.email}
-                />
               )}
             </div>
-            {ended ? null : (
-              <p className="text-xs text-muted-foreground">
-                {awaiting ? t("awaitingConfirmationHint") : t("joinSoon")}
+            {/* One line, and only when it is true for this session: a
+                request still waiting, or a video call the member can join. */}
+            {!on ? null : awaiting ? (
+              <p className="text-sm text-muted-foreground">
+                {t("awaitingConfirmationHint")}
               </p>
-            )}
+            ) : canJoin ? (
+              <JoinPendingHint
+                id={JOIN_HINT_ID}
+                sessionMode={booking.sessionMode}
+                status={booking.status}
+                startsAt={booking.startsAt}
+                className="text-sm text-muted-foreground"
+              >
+                {joinOpens}
+              </JoinPendingHint>
+            ) : null}
           </div>
         </section>
 
-        {ended ? (
+        {over ? (
           // Nothing left to change; say where to turn if it went wrong
           // (the terms refund a session the expert did not attend).
           <aside className="space-y-3 rounded-3xl border bg-card p-6 text-card-foreground shadow-1">
@@ -251,12 +281,11 @@ export default async function SessionDetailPage({
               })}
             </p>
           </aside>
-        ) : (
+        ) : booking.status === "cancelled" ? null : (
           <aside className="space-y-3 rounded-3xl border bg-card p-6 text-card-foreground shadow-1">
             <h2 className="font-display text-lg font-medium tracking-tight">
               {t("manageTitle")}
             </h2>
-            <p className="text-sm text-muted-foreground">{t("manageHint")}</p>
             <SessionActions
               bookingId={booking.id}
               startsAt={booking.startsAt}
@@ -264,6 +293,7 @@ export default async function SessionDetailPage({
               timezone={booking.timezone}
               locale={locale}
               quote={quote}
+              paid={payment?.status === "succeeded" && payment.amountCents > 0}
             />
           </aside>
         )}

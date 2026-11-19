@@ -11,6 +11,7 @@ Daily.co boundary (ADR-018). Standard Daily domain, recording off. Room names ar
   Meeting tokens stay in memory; never put them in a URL, log, or column.
 - `./join-window` — isomorphic `[start-15m, end+30m]` helpers for Join CTAs.
 - `./join-cta` — client Join button that re-evaluates the window every 30s.
+  It renders only for a video session that can still be joined.
 
 Confirmation and 1h-reminder emails deep-link to Eleva join pages
 (`/{orgSlug}/sessions/{bookingId}/join`, `/expert/sessions/{bookingId}/join`).

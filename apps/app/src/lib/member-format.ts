@@ -1,3 +1,5 @@
+import { JOIN_LEAD_MS } from "@eleva/video/join-window"
+
 export { pickLocalized as eventTitle } from "@eleva/config/i18n-locales"
 
 export function formatMoney(
@@ -20,6 +22,18 @@ export function formatDateTime(
     timeStyle: "short",
     timeZone,
   }).format(new Date(iso))
+}
+
+/** The clock time joining opens for a video session, in the booking's zone. */
+export function joinOpensTime(
+  startsAt: string,
+  locale: string,
+  timeZone: string
+): string {
+  return new Intl.DateTimeFormat(locale, {
+    timeStyle: "short",
+    timeZone,
+  }).format(new Date(new Date(startsAt).getTime() - JOIN_LEAD_MS))
 }
 
 export function toDatetimeLocalValue(iso: string, timeZone: string): string {

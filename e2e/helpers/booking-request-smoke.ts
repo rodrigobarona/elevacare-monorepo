@@ -49,7 +49,8 @@ export async function setFirstVisitRequiresApproval(
 /** Reserve → pay (Stripe TEST card) → confirm the seeded first-visit offer. */
 export async function payFirstVisit(
   request: APIRequestContext,
-  label: string
+  label: string,
+  guestName = "Request Smoke"
 ): Promise<{
   bookingId: string
   guestEmail: string
@@ -74,7 +75,7 @@ export async function payFirstVisit(
         timezone: "Europe/Lisbon",
         language: "en",
         memberCountry: "PT",
-        guest: { name: "Request Smoke", email: guestEmail },
+        guest: { name: guestName, email: guestEmail },
         consents: CONSENTS,
       },
     })

@@ -41,6 +41,7 @@ export type ElevaCallLabels = {
   transcriptEmpty: string
   transcriptOff: string
   transcriptionOnNotice: string
+  transcriptionPrejoinNotice: string
   transcriptLanguage: string
   transcriptLanguageAuto: string
   transcriptLanguageEnglish: string
@@ -96,8 +97,6 @@ export type ElevaCallLabels = {
   waitingRoomSoon: string
   waitingRoomOpening: string
   waitingRoomOpened: string
-  waitingRoomTip: string
-  waitingRoomPrivacy: string
   waitingRoomManual: string
   endedTitle: string
   endedBody: string
@@ -157,6 +156,7 @@ export function elevaCallLabels(
     transcriptEmpty: t("transcriptEmpty"),
     transcriptOff: t("transcriptOff"),
     transcriptionOnNotice: t("transcriptionOnNotice"),
+    transcriptionPrejoinNotice: t("transcriptionPrejoinNotice"),
     transcriptLanguage: t("transcriptLanguage"),
     transcriptLanguageAuto: t("transcriptLanguageAuto"),
     transcriptLanguageEnglish: t("transcriptLanguageEnglish"),
@@ -211,8 +211,6 @@ export function elevaCallLabels(
     waitingRoomSoon: t("waitingRoomSoon"),
     waitingRoomOpening: t("waitingRoomOpening"),
     waitingRoomOpened: t("waitingRoomOpened"),
-    waitingRoomTip: t("waitingRoomTip"),
-    waitingRoomPrivacy: t("waitingRoomPrivacy"),
     waitingRoomManual: t("waitingRoomManual"),
     endedTitle: t("endedTitle"),
     endedBody: t("endedBody"),

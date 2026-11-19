@@ -48,8 +48,7 @@ type WaitingRoomLabels = ClosedLabels &
     | "waitingRoomSoon"
     | "waitingRoomOpening"
     | "waitingRoomOpened"
-    | "waitingRoomTip"
-    | "waitingRoomPrivacy"
+    | "callPrivacy"
     | "waitingRoomManual"
   >
 
@@ -347,18 +346,14 @@ export function WaitingRoom({
             />
           </>
         ) : null}
+        {/* What to do while waiting, then the one privacy line. */}
         <p className="mt-6 text-sm text-pretty text-muted-foreground">
           {minutes > 60
             ? labels.waitingRoomComeBack
             : labels.waitingRoomKeepOpen}
         </p>
-        {minutes > 60 ? null : (
-          <p className="mt-2 text-sm text-pretty text-muted-foreground">
-            {labels.waitingRoomTip}
-          </p>
-        )}
-        <p className="mt-2 text-xs text-pretty text-muted-foreground">
-          {labels.waitingRoomPrivacy}
+        <p className="mt-2 text-sm text-pretty text-muted-foreground">
+          {labels.callPrivacy}
         </p>
         {showBack ? (
           <div className="mt-6">

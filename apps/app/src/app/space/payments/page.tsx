@@ -1,23 +1,20 @@
+import Link from "next/link"
 import { getTranslations, getLocale } from "next-intl/server"
 import { PageHeader } from "@eleva/ui/components/page-header"
-import { ArrowsClockwiseIcon, CreditCardIcon } from "@eleva/icons"
+import { CreditCardIcon } from "@eleva/icons"
 import { LinkButton } from "@eleva/ui/components/button"
-import { cn } from "@eleva/ui/lib/utils"
 import { EmptyState } from "@eleva/ui/components/empty-state"
+import { StatusPill, type StatusTone } from "@eleva/ui/components/status-pill"
+import { marketplaceExpertsUrl } from "@eleva/config/env"
 import { getAuthedApiClient, requireMemberSpace } from "@/lib/member-api"
-import { formatMoney } from "@/lib/member-format"
+import { FindExpertButton } from "../_components/booking-card"
+import { eventTitle, formatMoney } from "@/lib/member-format"
 import { SPACE_BASE } from "@eleva/config/routing"
 
 export const dynamic = "force-dynamic"
 
-const PAYMENT_STATUS_KEYS = [
-  "intent_pending",
-  "requires_payment",
-  "succeeded",
-  "failed",
-  "refunded",
-  "refund_pending",
-] as const
+/** The states of a payment where money moved; the only ones listed. */
+const PAYMENT_STATUS_KEYS = ["succeeded", "refunded", "refund_pending"] as const
 
 type PaymentStatusKey = (typeof PAYMENT_STATUS_KEYS)[number]
 
@@ -25,19 +22,15 @@ function isPaymentStatus(value: string): value is PaymentStatusKey {
   return (PAYMENT_STATUS_KEYS as readonly string[]).includes(value)
 }
 
-function paymentTone(status: PaymentStatusKey | null): string {
+function paymentTone(status: PaymentStatusKey | null): StatusTone {
   switch (status) {
     case "succeeded":
-      return "bg-teal-50 text-teal-800 dark:bg-teal-950 dark:text-teal-200"
-    case "intent_pending":
-    case "requires_payment":
+      return "positive"
     case "refund_pending":
-      return "bg-coral-50 text-coral-800 dark:bg-coral-950 dark:text-coral-200"
-    case "failed":
-      return "bg-destructive/10 text-destructive"
+      return "attention"
     case "refunded":
     case null:
-      return "bg-muted text-muted-foreground"
+      return "neutral"
     default: {
       const unreachable: never = status
       return unreachable
@@ -52,72 +45,96 @@ export default async function PaymentsPage() {
     getLocale(),
     getAuthedApiClient(),
   ])
-  const { payments } = await api.me.listPayments()
+  // Only money that moved. A free session records a payment of zero and
+  // an abandoned checkout records one that never completed; neither is a
+  // payment to show.
+  const { payments } = await api.me.listPayments({ charged: "true" })
+  // Dates read in the session's own time zone, as on the session page.
+  const day = (iso: string, timeZone?: string) =>
+    new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone }).format(
+      new Date(iso)
+    )
 
   return (
     <div className="space-y-8">
-      <PageHeader title={t("title")} description={t("subtitle")} />
+      <PageHeader title={t("title")} />
 
       {payments.length === 0 ? (
-        <EmptyState icon={<CreditCardIcon />} title={t("empty")} />
+        <EmptyState
+          icon={<CreditCardIcon />}
+          title={t("empty")}
+          description={t("emptyHint")}
+          action={<FindExpertButton href={marketplaceExpertsUrl(locale)} />}
+        />
       ) : (
         <ul className="divide-y overflow-hidden rounded-3xl border bg-card text-card-foreground shadow-1">
           {payments.map((payment) => {
             const status = isPaymentStatus(payment.status)
               ? payment.status
               : null
-            const refunded = payment.refundedCents > 0
+            const refund =
+              payment.refundedCents > 0
+                ? formatMoney(payment.refundedCents, locale, payment.currency)
+                : null
+            // The pill names the state; the text beside it adds only what
+            // the pill does not say: when it was paid, or how much came
+            // back.
+            const paidDay = payment.paidAt
+              ? day(payment.paidAt, payment.session?.timezone)
+              : null
+            // A full refund is the row's own amount; it is not said twice.
+            const partRefund =
+              payment.refundedCents < payment.amountCents ? refund : null
+            const facts = (
+              status === "succeeded"
+                ? [paidDay, refund ? t("refunded", { amount: refund }) : null]
+                : [partRefund]
+            )
+              .filter((fact) => fact !== null)
+              .join(" · ")
+            const sessionHref = `${SPACE_BASE}/sessions/${payment.bookingId}`
             return (
               <li
                 key={payment.id}
-                className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:gap-5 sm:px-6"
+                className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-6 sm:px-6 sm:py-5"
                 data-testid="member-payment-row"
                 data-status={payment.status}
                 data-booking={payment.bookingId}
               >
-                <div
-                  aria-hidden
-                  className="flex size-11 shrink-0 items-center justify-center rounded-full bg-sand-100 text-foreground dark:bg-muted"
-                >
-                  {refunded ? (
-                    <ArrowsClockwiseIcon className="size-5" />
-                  ) : (
-                    <CreditCardIcon className="size-5" />
-                  )}
-                </div>
-                <div className="min-w-0 flex-1 space-y-0.5">
-                  <p className="font-display text-xl font-normal tracking-tight tabular-nums">
-                    {formatMoney(payment.amountCents, locale, payment.currency)}
+                <div className="min-w-0 flex-1 space-y-1">
+                  <p className="font-display text-lg leading-snug font-medium tracking-tight">
+                    <Link
+                      href={sessionHref}
+                      data-testid="member-payment-session"
+                      className="rounded-sm underline decoration-foreground/30 underline-offset-4 outline-none hover:decoration-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      {payment.session
+                        ? eventTitle(payment.session.title, locale)
+                        : t("session")}
+                    </Link>
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    {payment.paidAt
-                      ? `${t("paidAt")} ${new Intl.DateTimeFormat(locale, {
-                          dateStyle: "medium",
-                          timeStyle: "short",
-                        }).format(new Date(payment.paidAt))}`
-                      : t("session")}
-                  </p>
-                  {refunded ? (
+                  {payment.session ? (
                     <p className="text-sm text-muted-foreground">
-                      {t("refunded", {
-                        amount: formatMoney(
-                          payment.refundedCents,
-                          locale,
-                          payment.currency
+                      {t("sessionLine", {
+                        name: payment.session.expertName,
+                        date: day(
+                          payment.session.startsAt,
+                          payment.session.timezone
                         ),
                       })}
                     </p>
                   ) : null}
+                  <p className="flex flex-wrap items-center gap-2 pt-1 text-sm text-muted-foreground">
+                    <StatusPill tone={paymentTone(status)}>
+                      {status ? t(`statusLabel.${status}`) : payment.status}
+                    </StatusPill>
+                    {facts ? <span>{facts}</span> : null}
+                  </p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span
-                    className={cn(
-                      "rounded-full px-2.5 py-0.5 text-xs font-medium",
-                      paymentTone(status)
-                    )}
-                  >
-                    {status ? t(`statusLabel.${status}`) : payment.status}
-                  </span>
+                <div className="flex items-center justify-between gap-4 sm:justify-end">
+                  <p className="font-display text-xl font-normal tracking-tight tabular-nums">
+                    {formatMoney(payment.amountCents, locale, payment.currency)}
+                  </p>
                   {payment.receiptUrl ? (
                     <LinkButton
                       variant="outline"
@@ -129,14 +146,6 @@ export default async function PaymentsPage() {
                       {t("receipt")}
                     </LinkButton>
                   ) : null}
-                  <LinkButton
-                    variant="ghost"
-                    size="sm"
-                    href={`${SPACE_BASE}/sessions/${payment.bookingId}`}
-                    data-testid="member-payment-session"
-                  >
-                    {t("session")}
-                  </LinkButton>
                 </div>
               </li>
             )

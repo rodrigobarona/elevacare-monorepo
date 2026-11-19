@@ -10,11 +10,13 @@ import { SPACE_BASE } from "@eleva/config/routing"
 
 export const dynamic = "force-dynamic"
 
+/** Past sessions shown on home; the rest are on Sessions. */
+const PAST_ON_HOME = 5
+
 export default async function OrgHomePage() {
   const session = await requireMemberSpace()
-  const [t, ts, locale, api] = await Promise.all([
+  const [t, locale, api] = await Promise.all([
     getTranslations("home"),
-    getTranslations("sessions"),
     getLocale(),
     getAuthedApiClient(),
   ])
@@ -31,18 +33,10 @@ export default async function OrgHomePage() {
     <div className="space-y-12" data-testid="member-space-home">
       <PageHeader
         title={firstName ? t("welcome", { name: firstName }) : t("welcomeBack")}
-        description={t("subtitle")}
         actions={<FindExpertButton href={expertsUrl} />}
       />
 
-      <Section
-        title={t("upcomingTitle")}
-        actions={
-          <LinkButton variant="ghost" size="sm" href={`${SPACE_BASE}/sessions`}>
-            {t("viewAll")}
-          </LinkButton>
-        }
-      >
+      <Section title={t("upcomingTitle")}>
         {next ? (
           <div className="grid gap-3">
             <BookingCard
@@ -59,7 +53,6 @@ export default async function OrgHomePage() {
                 memberEmail={session.user.email}
               />
             ))}
-            <p className="text-xs text-muted-foreground">{ts("joinSoon")}</p>
           </div>
         ) : (
           <EmptyState
@@ -71,7 +64,20 @@ export default async function OrgHomePage() {
         )}
       </Section>
 
-      <Section title={t("pastTitle")}>
+      <Section
+        title={t("pastTitle")}
+        actions={
+          past.bookings.length > PAST_ON_HOME || past.nextCursor ? (
+            <LinkButton
+              variant="ghost"
+              size="sm"
+              href={`${SPACE_BASE}/sessions`}
+            >
+              {t("viewAll")}
+            </LinkButton>
+          ) : null
+        }
+      >
         {past.bookings.length === 0 ? (
           <EmptyState
             icon={<ClockIcon />}
@@ -80,13 +86,13 @@ export default async function OrgHomePage() {
           />
         ) : (
           <div className="grid gap-3">
-            {past.bookings.slice(0, 5).map((booking) => (
+            {past.bookings.slice(0, PAST_ON_HOME).map((booking) => (
               <BookingCard
                 key={booking.id}
                 booking={booking}
                 memberName={memberName}
                 memberEmail={session.user.email}
-                showJoin={false}
+                past
               />
             ))}
           </div>

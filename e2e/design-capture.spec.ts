@@ -33,6 +33,7 @@ import {
   fetchOfferModeId,
   sessionFromMagicLink,
 } from "./helpers/cancellation-policy-smoke"
+import { payFirstVisit } from "./helpers/booking-request-smoke"
 import {
   isNonLoopbackE2eTarget,
   PAID_EXPERT,
@@ -882,6 +883,41 @@ test.describe("design capture", () => {
         if ((await link.count()) === 0) continue
         const href = await link.getAttribute("href")
         await page.goto(new URL(href!, page.url()).toString())
+        await clearBanner(page)
+        await shoot(page, surface, name, kind)
+      }
+      await context.close()
+    })
+
+    test(`member space with a paid video session — ${kind}`, async ({
+      browser,
+      request,
+    }) => {
+      // The demo member only has free sessions, in person and by phone. A
+      // guest who pays the seeded video offer (Stripe test card) shows
+      // what the seed cannot: Join on the next session, and Payments.
+      const surface = "10-member-space"
+      const paid = await payFirstVisit(
+        request,
+        "design-capture-paid",
+        CAPTURE_GUEST
+      )
+      const cookie = await sessionFromMagicLink(request, paid.guestEmail)
+      const context = await newContext(browser, kind, { cookie })
+      const page = await context.newPage()
+      await page.goto(`${webUrl}/dashboard`)
+      await page
+        .waitForURL((url) => !url.pathname.startsWith("/dashboard"), {
+          timeout: 30_000,
+        })
+        .catch(() => {})
+      const pages = [
+        ["12-home-video-session", ""],
+        ["13-payments-paid", "/payments"],
+        ["14-session-detail-video", `/sessions/${paid.bookingId}`],
+      ] as const
+      for (const [name, suffix] of pages) {
+        await page.goto(`${webUrl}/space${suffix}`)
         await clearBanner(page)
         await shoot(page, surface, name, kind)
       }

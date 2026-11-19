@@ -122,6 +122,63 @@ Each entry should include:
   `apps/api/src/app/expert/calendar/reminder/route.ts`,
   `packages/calendar/src/adapters/`, `design-audit/plan.json` (D5.7)
 
+### 2026-11-19: Calmer member Space (design slice D7.4) (active)
+
+- Part of phase 7, "Calm, end to end". Mobbin `10-member-space` 13–17
+  (Calendly: Join only on the meeting that can be joined; GetYourGuide
+  booking cards; Meetup and fal payment rows; Dribbble pre-call screen);
+  findings MEM-11 to MEM-16.
+- Fixed: "Join session" showed greyed out, with a video join line, on
+  in-person and phone sessions (home, Sessions and the session page), and
+  cancelled sessions kept the join line and "Add to calendar". Join now
+  shows only for a video session that can still be joined
+  (`@eleva/video/join-cta`); a session that is over or cancelled offers
+  "Book again".
+- Session cards: one status, then expert, time and how you meet on one
+  line; no label above the title, no price, no second pill. The card opens
+  the session (the title is the link, stretched over the card) and carries
+  one action of its own: Join while joining is open, or Book again. A
+  session that has just started sits in the past list and shows Join there.
+- When joining opens is said once, beside the waiting Join button, with
+  the time ("You can join from 10:45 AM, 15 minutes before the start."),
+  and goes once joining has opened. Page subtitles on home, Sessions and
+  Payments are removed.
+- Payments lists only money that moved: `GET /me/payments?charged=true`
+  (amount above zero; paid, refund on its way or refunded). Free sessions
+  no longer show as "€0.00 Paid". Each row is named after its session
+  (the response gained `session`: `startsAt`, `timezone`, `expertName`,
+  `title`), with one plain status and the receipt. The data copy (DSAR)
+  still exports every payment row.
+- Session page: "Lisbon time" instead of `Europe/Lisbon`, "How you'll meet:
+  Video call", "Free" instead of €0.00, the expert named once. Manage
+  booking shows one sentence that applies now and only the buttons that
+  work; a paid session's sentence carries the refund ("You can reschedule,
+  or cancel for a full refund, until {date}."). A finished session shows
+  "Need help with this session?" with the support address instead.
+- Waiting room: start time, when joining opens, one instruction and "Your
+  call is private and is not recorded." The transcript sentence left the
+  waiting room; a member who allowed AI processing now sees the transcript
+  notice on the camera check, before joining, and again in the call.
+- Judges round 1: UI 8.3, UX + writing 8.3, trust/legal/a11y 8.7 (a
+  payment row said "Paid" twice; a dot could start a wrapped line on a
+  phone; phone cards gave no sign they open). Round 2, after fixes: UI 8.8,
+  UX + writing 8.9, trust/legal/a11y 9.2. The refunded payment row, the
+  line after the reschedule deadline, Join on a just-started session and
+  the transcript notice on the camera check were judged from code: the
+  captures do not reach those states, and the `charged` filter has no
+  query test yet.
+- Out of scope, for later slices: an in-person session shows no address
+  and a phone session does not say who calls; a session in progress still
+  sits under "Past" (it now offers Join there); the waiting room shows
+  device-local 24-hour times while the Space shows the booking's zone;
+  status words "No show" and "Pending payment", and an unpaid session has
+  no way to finish paying; a cancelled session page has no help line or
+  refund status; home still shows an empty "Past sessions" box (MEM-01).
+- Owner: engineering
+- Reference: `apps/app/src/app/space/`, `packages/video/src/join-cta.tsx`,
+  `packages/video/src/client/waiting-room.tsx`,
+  `packages/db/src/queries/member.ts`, `design-audit/plan.json` (D7.4)
+
 ### 2026-11-17: Calm checkout and thank-you (design slice D7.3) (active)
 
 - Part of phase 7, "Calm, end to end". Mobbin `04-booking-checkout` 20–22

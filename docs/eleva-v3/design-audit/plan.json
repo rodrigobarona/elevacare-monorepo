@@ -454,8 +454,15 @@
         {
           "id": "D7.4",
           "title": "Member Space, calmer",
-          "scope": "Plain payment statuses, one action per session card, the join-window line once, a lighter waiting room.",
-          "findings": [],
+          "scope": "Join shows only on a video session that can be joined (it was greyed out on in-person and phone sessions); one action per session card and the card opens the session; when joining opens is said once, with the time; Payments lists only money that moved, named after the session, with plain statuses; the waiting room keeps one instruction and one privacy line.",
+          "findings": [
+            "MEM-11",
+            "MEM-12",
+            "MEM-13",
+            "MEM-14",
+            "MEM-15",
+            "MEM-16"
+          ],
           "effort": "M"
         },
         {
