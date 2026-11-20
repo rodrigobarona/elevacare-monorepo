@@ -94,9 +94,15 @@ function invoiceStatusDisplay(
 export function InvoiceList({
   invoices,
   nextCursor,
+  timeZone,
 }: {
   invoices: ExpertInvoice[]
   nextCursor: string | null
+  /**
+   * The practice's time zone (the one its schedule uses), so a session has
+   * the same date here as on the expert's calendar.
+   */
+  timeZone: string
 }) {
   const t = useTranslations("finance.invoices")
   const rawLocale = useLocale()
@@ -180,6 +186,7 @@ export function InvoiceList({
                 invoice={invoice}
                 euros={euros}
                 intlLocale={intlLocale}
+                timeZone={timeZone}
                 onUpdated={(updated) => {
                   setPageState((current) => ({
                     ...current,
@@ -212,11 +219,13 @@ function InvoiceRow({
   invoice,
   euros,
   intlLocale,
+  timeZone,
   onUpdated,
 }: {
   invoice: ExpertInvoice
   euros: (cents: number) => string
   intlLocale: string
+  timeZone: string
   onUpdated: (invoice: ExpertInvoice) => void
 }) {
   const router = useRouter()
@@ -230,10 +239,10 @@ function InvoiceRow({
   // expert issues herself has a single next step, marking it.
   const canRetry = invoice.status === "failed" && !toIssue
   const canMarkManual = invoice.status === "failed" || toIssue
-  // The practice's own time, as the Issued on column.
+  // The practice's own time zone, as the Issued on column.
   const sessionDay = invoice.session
     ? new Date(invoice.session.startsAt).toLocaleDateString(intlLocale, {
-        timeZone: "Europe/Lisbon",
+        timeZone,
         dateStyle: "medium",
       })
     : null
@@ -317,7 +326,7 @@ function InvoiceRow({
       <td className="px-3 py-4 text-muted-foreground tabular-nums">
         {invoice.issuedAt
           ? new Date(invoice.issuedAt).toLocaleString(intlLocale, {
-              timeZone: "Europe/Lisbon",
+              timeZone,
               dateStyle: "medium",
               timeStyle: "short",
             })

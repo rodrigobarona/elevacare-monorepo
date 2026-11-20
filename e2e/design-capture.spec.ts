@@ -873,7 +873,7 @@ test.describe("design capture", () => {
         await page.goto(`${base}${suffix}`)
         // A page that is not offered renders the not-found card.
         await settle(page)
-        if (await page.getByText("Page not found").isVisible()) continue
+        if (await page.getByTestId("route-not-found").isVisible()) continue
         await clearBanner(page)
         await shoot(page, surface, name, kind)
       }
