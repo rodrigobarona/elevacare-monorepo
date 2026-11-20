@@ -1,18 +1,84 @@
 {
   "nav": {
-    "dashboard": "Panel"
+    "overview": "Resumen",
+    "team": "Equipo"
   },
   "dashboard": {
-    "title": "Espacio del equipo",
-    "subtitle": "Miembros, agendas compartidas y facturación de tu clínica.",
-    "emptyTitle": "Las herramientas de equipo están en camino",
-    "emptyBody": "Invitar miembros, agendas compartidas y la facturación de la clínica llegan en una próxima versión. Tu bandeja de entrada ya funciona.",
-    "openInbox": "Abrir bandeja de entrada"
+    "title": "Tu clínica",
+    "subtitle": "Empieza por las personas: invita a los especialistas que trabajan contigo.",
+    "emptyTitle": "Invita a tu equipo",
+    "emptyBody": "Cada persona recibe un correo, acepta en su cuenta de Eleva y prepara sus servicios en tu clínica.",
+    "openTeam": "Ir a Equipo"
   },
   "members": {
-    "title": "Miembros del Equipo",
-    "description": "Invita a expertos a unirse a tu clínica.",
-    "invite": "Invitar experto",
-    "placeholder": "Aún no hay miembros en el equipo."
+    "title": "Equipo",
+    "description": "Invita a los especialistas que trabajan en tu clínica y a las personas que te ayudan a gestionarla.",
+    "peopleHeading": "{count, plural, one {# persona} other {# personas}}",
+    "you": "(tú)",
+    "services": "{count, plural, =0 {Aún sin servicios publicados} one {# servicio publicado} other {# servicios publicados}}",
+    "role": {
+      "owner": "Titular",
+      "admin": "Admin",
+      "member": "Especialista"
+    },
+    "ownerNote": "El titular no se puede quitar. Quien tiene el rol Admin gestiona el equipo y el perfil de la clínica. Los especialistas ofrecen servicios y realizan sesiones.",
+    "invitedHeading": "{count, plural, one {# invitación pendiente} other {# invitaciones pendientes}}",
+    "invitation": {
+      "validUntil": "válida hasta el {date}",
+      "expired": "caducó el {date}",
+      "expiredPill": "Caducada",
+      "resend": "Enviar de nuevo",
+      "resendLabel": "Enviar de nuevo la invitación a {email}",
+      "withdraw": "Retirar",
+      "withdrawLabel": "Retirar la invitación a {email}",
+      "working": "Enviando…"
+    },
+    "invite": {
+      "open": "Invitar a alguien",
+      "title": "Invitar a alguien a {clinic}",
+      "description": "Recibirá un correo con un enlace para unirse. La invitación es válida durante 7 días.",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "nombre@ejemplo.com",
+      "role": "Rol",
+      "roleHelp": {
+        "member": "Ofrece servicios y realiza sesiones en esta clínica.",
+        "admin": "Hace todo lo que hace un especialista y además gestiona el equipo y el perfil de la clínica."
+      },
+      "cancel": "Cancelar",
+      "send": "Enviar invitación",
+      "sending": "Enviando…"
+    },
+    "inviteError": {
+      "validation": "Introduce un correo electrónico válido.",
+      "already-member": "Esta persona ya forma parte de tu equipo.",
+      "limit": "Tu equipo ha llegado a 200 personas. Quita a alguien o retira una invitación primero.",
+      "failed": "No hemos podido enviar la invitación. Inténtalo de nuevo."
+    },
+    "remove": {
+      "open": "Quitar",
+      "openLabel": "Quitar a {name} del equipo",
+      "title": "¿Quitar a {name} de {clinic}?",
+      "body": "Pierde el acceso a esta clínica de inmediato y sus servicios aquí dejan de poder reservarse. Su cuenta de Eleva sigue como está.",
+      "cancel": "Mantener en el equipo",
+      "confirm": "Quitar del equipo",
+      "working": "Quitando…",
+      "error": {
+        "upcoming-sessions": "{name} aún tiene {count, plural, one {# sesión} other {# sesiones}} por realizar en esta clínica. Podrás quitar a esta persona cuando {count, plural, one {esté terminada, reprogramada o cancelada} other {estén terminadas, reprogramadas o canceladas}}.",
+        "owner": "El titular no se puede quitar.",
+        "self": "No puedes quitar tu propia cuenta.",
+        "gone": "Esta persona ya no forma parte de tu equipo.",
+        "failed": "No hemos podido quitar a esta persona. Inténtalo de nuevo."
+      }
+    },
+    "toast": {
+      "invited": "Invitación enviada a {email}.",
+      "resent": "Invitación enviada de nuevo a {email}.",
+      "emailNotSent": "La invitación para {email} está guardada, pero no hemos podido enviar el correo. Usa Enviar de nuevo en un momento.",
+      "withdrawn": "Invitación a {email} retirada.",
+      "invitationGone": "Esta invitación ya se había respondido o retirado.",
+      "removed": "{name} ya no forma parte de tu equipo.",
+      "memberGone": "Esta persona ya no forma parte de tu equipo.",
+      "failed": "Algo ha salido mal. Inténtalo de nuevo."
+    }
   }
 }

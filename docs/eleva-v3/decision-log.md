@@ -32,6 +32,56 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-20: The clinic's Team page: invite, send again, withdraw, remove (11.2) (active)
+
+- Change (Phase 11.2): clinic admins manage their people at
+  `/team/{slug}/members` and through the API: `GET /teams/{teamId}/members`,
+  `POST /teams/{teamId}/invitations`,
+  `DELETE /teams/{teamId}/invitations/{invitationId}` and
+  `DELETE /teams/{teamId}/members/{memberId}`. All four need
+  `members:manage` in the active team org; the three writes need a
+  revocable credential.
+- Invitations and removals are written by `@eleva/auth` (`team-members.ts`)
+  in one transaction with their audit row, not through Better Auth's
+  session-only organization endpoints. Reason: every credential the API
+  accepts (cookie, bearer, API key) can manage the team, and sending an
+  invitation is now audited (`invitation.invited`), which the 11.1c entry
+  left open. Accepting and declining stay with Better Auth.
+- An invitation is valid for 7 days (Phase 11 scope). Inviting an address
+  that already has a pending invitation renews that invitation and sends
+  the same link again; there is never a second pending invitation for one
+  address (serialised with an advisory lock on clinic and address).
+  Withdrawing sets it to `canceled` (`invitation.revoked`). The invitation
+  link is only ever emailed to the invited address; the page offers no
+  "copy link".
+- Roles on an invitation are `admin` or `member` (shown as Admin and
+  Expert). Ownership is never invited.
+- Removal rules: the owner is never removed, nobody removes their own
+  account, and a member with sessions still to happen in the clinic (or a
+  slot being paid for) is refused with `MEMBER_HAS_UPCOMING_SESSIONS` and
+  the count, so no member is left with a session nobody can run. The same
+  blockers as closing a practice (ADR-026). On removal the person's
+  services in the clinic are unpublished in the same transaction
+  (`membership.removed`), the seat count is marked for sync in that
+  transaction and Stripe is synced after it.
+- The Team page shows who has a published service but no prices or plan:
+  billing has its own slice.
+- `@eleva/dashboard/workspace-api` now owns the server-side API client for
+  dashboards under a workspace address; `apps/expert` uses it too.
+- Proof: `team-members.integration.test.ts` runs on the PR's Neon branch
+  (8 cases); `e2e/team-members.spec.ts` (opt-in, loopback) drives the page
+  in a browser and checks the audit rows. Captures:
+  `design-audit/captures/2026-11-20-team-members-after/11-team/`. Mobbin
+  `11-team` references 05 to 09.
+- Not in this slice (follow-ups): changing a member's role; a clinic admin
+  cancelling or reassigning a clinician's upcoming sessions (today the
+  clinician does it); an email to the person who was removed; the
+  inviter's name in the invitation email; the Better Auth invitation
+  endpoints in `/openapi.json`; the notification kinds `team.invitation`
+  and `team.member_joined` (invitations still go out as
+  `auth.org_invitation`).
+- Owner: engineering
+
 ### 2026-11-16: Free services publish without Payments setup (active)
 
 - Founder decision (2026-11-16): a service that moves no money can go live

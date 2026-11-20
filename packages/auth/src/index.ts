@@ -97,6 +97,22 @@ export {
   type ClinicProfilePatch,
   type ClinicSummary,
 } from "./clinics"
+export {
+  TEAM_INVITATION_TTL_MS,
+  TEAM_MEMBER_LIMIT,
+  TeamMemberError,
+  cancelTeamInvitation,
+  inviteTeamMember,
+  listTeamMembers,
+  removeTeamMember,
+  type InviteTeamMemberResult,
+  type RemoveTeamMemberResult,
+  type TeamInvitation,
+  type TeamInviteRole,
+  type TeamMember,
+  type TeamMemberErrorCode,
+  type TeamRoster,
+} from "./team-members"
 export { getProviderAccessToken, revokeProviderGrant } from "./provider-token"
 export {
   markCalendarIntegrationExpired,

@@ -22,11 +22,10 @@ export default async function TeamAdminDashboardPage({
         description={t("emptyBody")}
         action={
           <LinkButton
-            href={`${resolveTeamWorkspaceBase(orgSlug)}/notifications`}
-            variant="outline"
+            href={`${resolveTeamWorkspaceBase(orgSlug)}/members`}
             size="sm"
           >
-            {t("openInbox")}
+            {t("openTeam")}
           </LinkButton>
         }
       />

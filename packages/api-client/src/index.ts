@@ -985,6 +985,68 @@ export const FileClinicVerificationRequestSchema = z
   })
   .strict()
 
+export const TeamMemberRoleSchema = z.enum(["owner", "admin", "member"])
+/** Roles an invitation may grant. Ownership is never invited. */
+export const TeamInviteRoleSchema = z.enum(["admin", "member"])
+
+export const TeamMemberSchema = z.object({
+  memberId: z.string().uuid(),
+  userId: z.string().uuid(),
+  name: z.string(),
+  email: z.string(),
+  image: z.string().nullable(),
+  role: TeamMemberRoleSchema,
+  joinedAt: z.string().datetime(),
+  /** Published services in this clinic. One or more is a billable seat. */
+  publishedServices: z.number().int().nonnegative(),
+})
+
+export const TeamInvitationSchema = z.object({
+  id: z.string().uuid(),
+  email: z.string(),
+  role: TeamInviteRoleSchema,
+  invitedAt: z.string().datetime(),
+  expiresAt: z.string().datetime(),
+  /** Past its 7 days: the link no longer works until it is sent again. */
+  expired: z.boolean(),
+  invitedByName: z.string().nullable(),
+})
+
+export const TeamMembersResponseSchema = z.object({
+  members: z.array(TeamMemberSchema),
+  invitations: z.array(TeamInvitationSchema),
+  seats: z.object({
+    /** Members with at least one published service. */
+    billable: z.number().int().nonnegative(),
+  }),
+})
+
+export const InviteTeamMemberRequestSchema = z
+  .object({
+    email: z.string().trim().toLowerCase().email().max(254),
+    role: TeamInviteRoleSchema,
+  })
+  .strict()
+
+export const InviteTeamMemberResponseSchema = z.object({
+  invitation: z.object({
+    id: z.string().uuid(),
+    email: z.string(),
+    role: TeamInviteRoleSchema,
+    expiresAt: z.string().datetime(),
+  }),
+  /** The address already had a pending invitation, which was renewed. */
+  resent: z.boolean(),
+  /** False when the email could not be sent: send the invitation again. */
+  emailSent: z.boolean(),
+})
+
+export const RemoveTeamMemberResponseSchema = z.object({
+  userId: z.string().uuid(),
+  /** Services taken off the clinic's public pages with the removal. */
+  unpublishedServices: z.number().int().nonnegative(),
+})
+
 export const CrmContactSchema = z.object({
   id: z.string().uuid(),
   source: z.enum(["member", "lead"]),
@@ -1166,6 +1228,19 @@ export type UpdateTeamProfileRequest = z.infer<
 >
 export type FileClinicVerificationRequest = z.infer<
   typeof FileClinicVerificationRequestSchema
+>
+export type TeamMember = z.infer<typeof TeamMemberSchema>
+export type TeamInvitation = z.infer<typeof TeamInvitationSchema>
+export type TeamInviteRole = z.infer<typeof TeamInviteRoleSchema>
+export type TeamMembersResponse = z.infer<typeof TeamMembersResponseSchema>
+export type InviteTeamMemberRequest = z.infer<
+  typeof InviteTeamMemberRequestSchema
+>
+export type InviteTeamMemberResponse = z.infer<
+  typeof InviteTeamMemberResponseSchema
+>
+export type RemoveTeamMemberResponse = z.infer<
+  typeof RemoveTeamMemberResponseSchema
 >
 export type CreateCrmContactRequest = z.infer<
   typeof CreateCrmContactRequestSchema
@@ -4246,6 +4321,35 @@ export function createApiClient(options: ApiClientOptions) {
           data
         )
         return TeamSummarySchema.parse(raw)
+      },
+      async listMembers(teamId: string) {
+        const raw = await request<unknown>(
+          "GET",
+          `/teams/${encodeURIComponent(teamId)}/members`
+        )
+        return TeamMembersResponseSchema.parse(raw)
+      },
+      /** Invites by email, or renews the pending invitation for it. */
+      async invite(teamId: string, data: InviteTeamMemberRequest) {
+        const raw = await request<unknown>(
+          "POST",
+          `/teams/${encodeURIComponent(teamId)}/invitations`,
+          data
+        )
+        return InviteTeamMemberResponseSchema.parse(raw)
+      },
+      async cancelInvitation(teamId: string, invitationId: string) {
+        await request<unknown>(
+          "DELETE",
+          `/teams/${encodeURIComponent(teamId)}/invitations/${encodeURIComponent(invitationId)}`
+        )
+      },
+      async removeMember(teamId: string, memberId: string) {
+        const raw = await request<unknown>(
+          "DELETE",
+          `/teams/${encodeURIComponent(teamId)}/members/${encodeURIComponent(memberId)}`
+        )
+        return RemoveTeamMemberResponseSchema.parse(raw)
       },
     },
     crm: {

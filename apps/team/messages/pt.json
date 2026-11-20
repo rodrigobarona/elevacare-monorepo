@@ -1,18 +1,84 @@
 {
   "nav": {
-    "dashboard": "Painel"
+    "overview": "Visão geral",
+    "team": "Equipa"
   },
   "dashboard": {
-    "title": "Espaço da equipa",
-    "subtitle": "Membros, agendas partilhadas e faturação da sua clínica.",
-    "emptyTitle": "As ferramentas de equipa estão a caminho",
-    "emptyBody": "Convidar membros, agendas partilhadas e faturação da clínica chegam numa próxima versão. A sua caixa de entrada já funciona.",
-    "openInbox": "Abrir caixa de entrada"
+    "title": "A sua clínica",
+    "subtitle": "Comece pelas pessoas: convide os especialistas que trabalham consigo.",
+    "emptyTitle": "Convide a sua equipa",
+    "emptyBody": "Cada pessoa recebe um email, aceita na sua conta Eleva e prepara os seus serviços na clínica.",
+    "openTeam": "Ir para Equipa"
   },
   "members": {
-    "title": "Membros da Equipa",
-    "description": "Convide especialistas para se juntarem à sua clínica.",
-    "invite": "Convidar especialista",
-    "placeholder": "Ainda não há membros na equipa."
+    "title": "Equipa",
+    "description": "Convide os especialistas que trabalham na sua clínica e as pessoas que ajudam a geri-la.",
+    "peopleHeading": "{count, plural, one {# pessoa} other {# pessoas}}",
+    "you": "(eu)",
+    "services": "{count, plural, =0 {Ainda sem serviços publicados} one {# serviço publicado} other {# serviços publicados}}",
+    "role": {
+      "owner": "Titular",
+      "admin": "Admin",
+      "member": "Especialista"
+    },
+    "ownerNote": "O titular não pode ser removido. Quem tem o papel Admin gere a equipa e o perfil da clínica. Os especialistas oferecem serviços e realizam sessões.",
+    "invitedHeading": "{count, plural, one {# convite por responder} other {# convites por responder}}",
+    "invitation": {
+      "validUntil": "válido até {date}",
+      "expired": "expirou a {date}",
+      "expiredPill": "Expirado",
+      "resend": "Enviar de novo",
+      "resendLabel": "Enviar de novo o convite para {email}",
+      "withdraw": "Retirar",
+      "withdrawLabel": "Retirar o convite para {email}",
+      "working": "A enviar…"
+    },
+    "invite": {
+      "open": "Convidar alguém",
+      "title": "Convidar alguém para {clinic}",
+      "description": "A pessoa recebe um email com uma ligação para entrar. O convite é válido durante 7 dias.",
+      "email": "Email",
+      "emailPlaceholder": "nome@exemplo.pt",
+      "role": "Papel",
+      "roleHelp": {
+        "member": "Oferece serviços e realiza sessões nesta clínica.",
+        "admin": "Faz tudo o que um especialista faz e também gere a equipa e o perfil da clínica."
+      },
+      "cancel": "Cancelar",
+      "send": "Enviar convite",
+      "sending": "A enviar…"
+    },
+    "inviteError": {
+      "validation": "Introduza um endereço de email válido.",
+      "already-member": "Esta pessoa já faz parte da sua equipa.",
+      "limit": "A sua equipa chegou às 200 pessoas. Remova alguém ou retire um convite primeiro.",
+      "failed": "Não foi possível enviar o convite. Tente de novo."
+    },
+    "remove": {
+      "open": "Remover",
+      "openLabel": "Remover {name} da equipa",
+      "title": "Remover {name} de {clinic}?",
+      "body": "A pessoa perde de imediato o acesso a esta clínica e os serviços dela aqui deixam de poder ser marcados. A conta Eleva dela mantém-se como está.",
+      "cancel": "Manter na equipa",
+      "confirm": "Remover da equipa",
+      "working": "A remover…",
+      "error": {
+        "upcoming-sessions": "{name} ainda tem {count, plural, one {# sessão} other {# sessões}} por realizar nesta clínica. A remoção fica disponível quando {count, plural, one {estiver concluída, reagendada ou cancelada} other {estiverem concluídas, reagendadas ou canceladas}}.",
+        "owner": "O titular não pode ser removido.",
+        "self": "Não pode remover a sua própria conta.",
+        "gone": "Esta pessoa já não faz parte da sua equipa.",
+        "failed": "Não foi possível remover esta pessoa. Tente de novo."
+      }
+    },
+    "toast": {
+      "invited": "Convite enviado para {email}.",
+      "resent": "Convite enviado de novo para {email}.",
+      "emailNotSent": "O convite para {email} ficou guardado, mas não foi possível enviar o email. Use Enviar de novo dentro de momentos.",
+      "withdrawn": "Convite para {email} retirado.",
+      "invitationGone": "Este convite já tinha sido respondido ou retirado.",
+      "removed": "{name} já não faz parte da sua equipa.",
+      "memberGone": "Esta pessoa já não faz parte da sua equipa.",
+      "failed": "Algo correu mal. Tente de novo."
+    }
   }
 }

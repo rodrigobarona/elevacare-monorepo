@@ -1,18 +1,84 @@
 {
   "nav": {
-    "dashboard": "Dashboard"
+    "overview": "Overview",
+    "team": "Team"
   },
   "dashboard": {
-    "title": "Team workspace",
-    "subtitle": "Members, shared schedules and billing for your clinic.",
-    "emptyTitle": "Team tools are on the way",
-    "emptyBody": "Inviting members, shared schedules and clinic billing arrive in a later release. Your inbox already works.",
-    "openInbox": "Open inbox"
+    "title": "Your clinic",
+    "subtitle": "Start with the people: invite the experts who work with you.",
+    "emptyTitle": "Invite your team",
+    "emptyBody": "Each person gets an email, accepts in their Eleva account and sets up their services in your clinic.",
+    "openTeam": "Go to Team"
   },
   "members": {
-    "title": "Team Members",
-    "description": "Invite experts to join your clinic.",
-    "invite": "Invite expert",
-    "placeholder": "No team members yet."
+    "title": "Team",
+    "description": "Invite the experts who work at your clinic, and the people who help you run it.",
+    "peopleHeading": "{count, plural, one {# person} other {# people}}",
+    "you": "(you)",
+    "services": "{count, plural, =0 {No published service yet} one {# published service} other {# published services}}",
+    "role": {
+      "owner": "Owner",
+      "admin": "Admin",
+      "member": "Expert"
+    },
+    "ownerNote": "The owner cannot be removed. Admins manage the team and the clinic profile. Experts offer services and run sessions.",
+    "invitedHeading": "{count, plural, one {# invitation waiting} other {# invitations waiting}}",
+    "invitation": {
+      "validUntil": "valid until {date}",
+      "expired": "expired on {date}",
+      "expiredPill": "Expired",
+      "resend": "Send again",
+      "resendLabel": "Send the invitation to {email} again",
+      "withdraw": "Withdraw",
+      "withdrawLabel": "Withdraw the invitation to {email}",
+      "working": "Sending…"
+    },
+    "invite": {
+      "open": "Invite someone",
+      "title": "Invite someone to {clinic}",
+      "description": "They get an email with a link to join. The invitation is valid for 7 days.",
+      "email": "Email",
+      "emailPlaceholder": "name@example.com",
+      "role": "Role",
+      "roleHelp": {
+        "member": "Offers services and runs sessions in this clinic.",
+        "admin": "Does everything an expert does, and also manages the team and the clinic profile."
+      },
+      "cancel": "Cancel",
+      "send": "Send invitation",
+      "sending": "Sending…"
+    },
+    "inviteError": {
+      "validation": "Enter a valid email address.",
+      "already-member": "This person is already in your team.",
+      "limit": "Your team has reached 200 people. Remove someone or withdraw an invitation first.",
+      "failed": "We could not send the invitation. Please try again."
+    },
+    "remove": {
+      "open": "Remove",
+      "openLabel": "Remove {name} from the team",
+      "title": "Remove {name} from {clinic}?",
+      "body": "They lose access to this clinic right away, and their services here can no longer be booked. Their Eleva account stays as it is.",
+      "cancel": "Keep in team",
+      "confirm": "Remove from team",
+      "working": "Removing…",
+      "error": {
+        "upcoming-sessions": "{name} still has {count, plural, one {# session} other {# sessions}} to run in this clinic. You can remove them once {count, plural, one {it is} other {they are}} done, rescheduled or cancelled.",
+        "owner": "The owner cannot be removed.",
+        "self": "You cannot remove your own account.",
+        "gone": "This person is no longer in your team.",
+        "failed": "We could not remove this person. Please try again."
+      }
+    },
+    "toast": {
+      "invited": "Invitation sent to {email}.",
+      "resent": "Invitation sent again to {email}.",
+      "emailNotSent": "The invitation for {email} is saved, but the email could not be sent. Use Send again in a moment.",
+      "withdrawn": "Invitation to {email} withdrawn.",
+      "invitationGone": "This invitation was already answered or withdrawn.",
+      "removed": "{name} is no longer in your team.",
+      "memberGone": "This person is no longer in your team.",
+      "failed": "Something went wrong. Please try again."
+    }
   }
 }

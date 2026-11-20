@@ -154,6 +154,10 @@ import {
   CrmContactSchema,
   CrmFollowUpSchema,
   FileClinicVerificationRequestSchema,
+  InviteTeamMemberRequestSchema,
+  InviteTeamMemberResponseSchema,
+  RemoveTeamMemberResponseSchema,
+  TeamMembersResponseSchema,
   TeamSummarySchema,
   UpdateTeamProfileRequestSchema,
   ListCrmContactsQuerySchema,
@@ -4152,6 +4156,124 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "409": {
               description: "The open filing changed while refiling",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+      },
+      "/teams/{teamId}/members": {
+        get: {
+          operationId: "listTeamMembers",
+          summary: "List the clinic's members and pending invitations",
+          description:
+            "Requires members:manage, and teamId must be the caller's active team org (403 TEAM_NOT_ACTIVE otherwise). Returns every member with their role and how many services they have published in this clinic, the pending invitations (expired ones are flagged and can be sent again) and seats.billable: the members with at least one published service, which is what the clinic's plan charges for.",
+          tags: ["Teams"],
+          requestParams: { path: z.object({ teamId: z.string().uuid() }) },
+          responses: {
+            ...stdWithNotFound,
+            "200": {
+              description: "Members, invitations and seat count",
+              content: {
+                "application/json": { schema: TeamMembersResponseSchema },
+              },
+            },
+            "403": {
+              description: "teamId is not the caller's active team org",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+      },
+      "/teams/{teamId}/members/{memberId}": {
+        delete: {
+          operationId: "removeTeamMember",
+          summary: "Remove someone from the clinic",
+          description:
+            "Requires members:manage in the active team org and a revocable credential. The person loses access to the clinic and their services in it are unpublished in the same transaction; the Stripe seat count is then synced. 409 CANNOT_REMOVE_OWNER, 409 CANNOT_REMOVE_SELF, and 409 MEMBER_HAS_UPCOMING_SESSIONS (with upcomingSessions) while the member has sessions still to happen or a slot being paid for: finish or cancel those first. Audited as membership.removed.",
+          tags: ["Teams"],
+          requestParams: {
+            path: z.object({
+              teamId: z.string().uuid(),
+              memberId: z.string().uuid(),
+            }),
+          },
+          responses: {
+            ...stdWithNotFound,
+            "200": {
+              description: "Removed",
+              content: {
+                "application/json": { schema: RemoveTeamMemberResponseSchema },
+              },
+            },
+            "403": {
+              description: "teamId is not the caller's active team org",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "409": {
+              description:
+                "CANNOT_REMOVE_OWNER, CANNOT_REMOVE_SELF or MEMBER_HAS_UPCOMING_SESSIONS",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+      },
+      "/teams/{teamId}/invitations": {
+        post: {
+          operationId: "inviteTeamMember",
+          summary: "Invite someone to the clinic by email",
+          description:
+            "Requires members:manage in the active team org and a revocable credential. Creates an invitation valid for 7 days and emails its link; the invited person accepts or declines it from their Eleva account. Role is admin (manages the clinic) or member (an expert working in it); ownership is never invited. Sending to an address that already has a pending invitation renews it (200, resent true) and emails the same link again. emailSent false means the invitation exists but the email could not be sent: call again to resend. 409 ALREADY_MEMBER, 409 MEMBER_LIMIT_REACHED (200 people including pending invitations). Audited as invitation.invited.",
+          tags: ["Teams"],
+          requestParams: { path: z.object({ teamId: z.string().uuid() }) },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: InviteTeamMemberRequestSchema },
+            },
+          },
+          responses: {
+            ...stdWithNotFound,
+            "200": {
+              description: "Pending invitation renewed and sent again",
+              content: {
+                "application/json": { schema: InviteTeamMemberResponseSchema },
+              },
+            },
+            "201": {
+              description: "Invitation created",
+              content: {
+                "application/json": { schema: InviteTeamMemberResponseSchema },
+              },
+            },
+            "403": {
+              description: "teamId is not the caller's active team org",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "409": {
+              description: "ALREADY_MEMBER or MEMBER_LIMIT_REACHED",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+      },
+      "/teams/{teamId}/invitations/{invitationId}": {
+        delete: {
+          operationId: "cancelTeamInvitation",
+          summary: "Withdraw a pending invitation",
+          description:
+            "Requires members:manage in the active team org and a revocable credential. The invitation's link stops working. 404 INVITATION_NOT_FOUND when it is not pending in this clinic (already answered, withdrawn or unknown). Audited as invitation.revoked.",
+          tags: ["Teams"],
+          requestParams: {
+            path: z.object({
+              teamId: z.string().uuid(),
+              invitationId: z.string().uuid(),
+            }),
+          },
+          responses: {
+            ...stdWithNotFound,
+            "204": { description: "Withdrawn" },
+            "403": {
+              description: "teamId is not the caller's active team org",
               content: { "application/json": { schema: ErrorSchema } },
             },
           },
