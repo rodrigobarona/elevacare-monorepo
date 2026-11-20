@@ -122,6 +122,64 @@ Each entry should include:
   `apps/api/src/app/expert/calendar/reminder/route.ts`,
   `packages/calendar/src/adapters/`, `design-audit/plan.json` (D5.7)
 
+### 2026-11-20: Practice finance: only what works today, in plain words (design slice D7.5) (active)
+
+- Part of phase 7, "Calm, end to end". Mobbin `07-expert-dashboard` 33–37
+  (PayPal and Melio invoice rows; Navan "link created"; Acctual linked
+  account; Revolut Business lists only providers that can be connected);
+  findings XDASH-32 to XDASH-36.
+- Invoicing settings, the setup step and Integrations offer only the ways
+  of invoicing an expert can use: Moloni is not shown, and TOConline is
+  shown only while its flags are on. With one option there is no "choose"
+  line and no "Change method". Lines about what is not active are gone;
+  the screens say what the expert does: she issues each invoice in her own
+  invoicing software. The legal sentence and its checkbox are unchanged.
+- Member invoices is offered only while `ff.expert_invoicing_apps_enabled`
+  is on (invoice rows exist only then; it is off in production): the link
+  on Finance is hidden and the page returns not found otherwise. Invoicing
+  settings mentions marking invoices there only while the page exists.
+- Invoice rows are named after their session (the member's first name and
+  the date): `GET /invoicing/expert` returns `session` (`startsAt`,
+  `memberName`) on each invoice, read inside the practice's own context
+  for the invoices the list already returned. One status in plain words
+  ("To issue", "Being prepared", "Issued", "Issued by you", "Didn't go
+  through") and one action: "Mark as issued", whose dialog names the
+  invoice. "Try again" shows only for an invoice that failed on its way,
+  not for one the expert issues herself. The "Method" column is removed.
+- System words removed: private links ("token", "hash", "404"), payouts
+  ("Reversal pending" is "Refund in progress", "Reversed" is "Refunded",
+  "not configured on this environment" is a line with the support
+  address), the calendar feed ("A feed token is active") and the monthly
+  export ("SAF-T skeleton", "truncated"). Portuguese in these screens is
+  in "você" throughout.
+- The invoicing help article (`@eleva/content`, three languages) uses the
+  new labels and no longer sends an expert to a page that is not offered.
+- Judges round 1: UI 8.1, UX + writing 8.1, trust/legal/a11y 8.1 (Member
+  invoices was always empty in production and no longer said who issues;
+  Portuguese mixed "tu" and "você"; the one method card read as fine
+  print). Round 2, after fixes: UI 8.7, UX + writing 8.8, trust/legal/a11y
+  8.8. Not proven on screen: the invoice table with rows, the "Mark as
+  issued" dialog, the confirmed and the linked-account cards and the
+  TOConline card were judged from code. Locally the invoicing flag is off
+  and no Stripe webhook creates rows; capture Member invoices on staging,
+  desktop and 390 px, before the flag goes on in production.
+- Out of scope, for later: with the flag off a self-issuing expert has
+  nowhere in Eleva to see which paid sessions still need an invoice
+  (creating "To issue" rows regardless of the flag is a founder decision);
+  the invoice table needs a stacked layout on phones; an `expertProfileId`
+  filter and a scope test on `listBookingSessionSummaries`; exact wording
+  for the two refund payout states; the Finance earnings table still
+  names rows by an ID fragment; the monthly export includes the member's
+  tax number and a placeholder when it is missing (data-protection and
+  accountant review); vendor words in the linked-account dialog and
+  toasts.
+- Owner: engineering
+- Reference: `apps/expert/src/app/expert/[orgSlug]/finance/`,
+  `apps/expert/src/app/expert/[orgSlug]/_components/invoicing-provider-picker.tsx`,
+  `apps/expert/src/app/expert/[orgSlug]/integrations/`,
+  `packages/db/src/queries/expert-bookings.ts`, `design-audit/plan.json`
+  (D7.5)
+
 ### 2026-11-19: Calmer member Space (design slice D7.4) (active)
 
 - Part of phase 7, "Calm, end to end". Mobbin `10-member-space` 13–17

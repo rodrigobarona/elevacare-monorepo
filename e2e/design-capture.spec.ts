@@ -87,6 +87,11 @@ const DASHBOARD_EXPERT = {
   email: "marta.sousa@example.test",
   username: "martasousa",
 }
+/** The paid seed practice (fisiomota / first-visit / €60). */
+const PAID_PRACTICE = {
+  email: "fisio.mota@example.test",
+  username: "fisiomota",
+}
 /** The capture's own guest; not the name of any seeded expert. */
 const CAPTURE_GUEST = "Beatriz Nunes"
 
@@ -843,6 +848,46 @@ test.describe("design capture", () => {
         await firstOffer.getByRole("link").first().click()
         await page.waitForURL(/event-types\/[^/]+$/, { timeout: 30_000 })
         await shoot(page, surface, "10-event-type-editor", kind)
+      }
+      await context.close()
+    })
+
+    test(`practice invoices and private links — ${kind}`, async ({
+      browser,
+      request,
+    }) => {
+      // The paid seed expert, whose sessions are the ones with money.
+      // Member invoices is offered only while Eleva tracks invoices, so
+      // it is shot only when the page is there.
+      const surface = "07-expert-dashboard"
+      const cookie = await sessionFromMagicLink(request, PAID_PRACTICE.email)
+      const context = await newContext(browser, kind, { cookie })
+      const page = await context.newPage()
+      const base = `${expertUrl}/expert/${PAID_PRACTICE.username}`
+      const pages = [
+        ["14-finance-paid", "/finance"],
+        ["15-finance-invoices", "/finance/invoices"],
+        ["16-finance-invoicing", "/finance/invoicing"],
+      ] as const
+      for (const [name, suffix] of pages) {
+        await page.goto(`${base}${suffix}`)
+        // A page that is not offered renders the not-found card.
+        await settle(page)
+        if (await page.getByText("Page not found").isVisible()) continue
+        await clearBanner(page)
+        await shoot(page, surface, name, kind)
+      }
+      // Private links live on a tab of the service editor.
+      await page.goto(`${base}/event-types`)
+      const firstOffer = page
+        .locator('[data-testid^="event-type-card-"]')
+        .first()
+      if (await firstOffer.isVisible().catch(() => false)) {
+        await firstOffer.getByRole("link").first().click()
+        await page.waitForURL(/event-types\/[^/]+$/, { timeout: 30_000 })
+        await page.goto(`${page.url()}?tab=privateLinks`)
+        await clearBanner(page)
+        await shoot(page, surface, "17-private-links", kind)
       }
       await context.close()
     })

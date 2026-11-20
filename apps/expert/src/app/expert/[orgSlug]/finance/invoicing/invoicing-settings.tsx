@@ -43,6 +43,8 @@ interface Props {
   invoicingError?: string
   justConnected: boolean
   toconlineEnabled: boolean
+  /** Member invoices lists each invoice to mark as issued. */
+  invoicesTracked: boolean
 }
 
 function healthOf(
@@ -65,6 +67,7 @@ export function InvoicingSettings({
   invoicingError,
   justConnected,
   toconlineEnabled,
+  invoicesTracked,
 }: Props) {
   const t = useTranslations("finance.invoicing")
   const tAdapters = useTranslations("onboarding.invoicing.adapters")
@@ -159,7 +162,10 @@ export function InvoicingSettings({
         <div className="min-w-0 flex-1">
           <h3 className="font-medium">{providerName}</h3>
           <p className="text-sm text-muted-foreground">
-            {t(`health.${health}.body`)}
+            {t(`health.${health}.body`, { provider: providerName })}
+            {invoicesTracked && health !== "attention"
+              ? ` ${t("markHint")}`
+              : null}
           </p>
           {since ? (
             <p className="mt-1 text-xs text-muted-foreground">
@@ -167,31 +173,37 @@ export function InvoicingSettings({
             </p>
           ) : null}
         </div>
-        <StatusPill tone={HEALTH_TONE[health]}>
-          {t(`health.${health}.label`)}
-        </StatusPill>
+        {/* Her own invoicing has no state to report: the title says it. */}
+        {health === "manual" ? null : (
+          <StatusPill tone={HEALTH_TONE[health]}>
+            {t(`health.${health}.label`)}
+          </StatusPill>
+        )}
       </div>
 
-      <div className="flex flex-wrap gap-2 border-t pt-4">
-        {health === "attention" && provider === "toconline" ? (
+      {/* Changing is offered only when there is another way to choose. */}
+      {provider !== "manual" || toconlineEnabled ? (
+        <div className="flex flex-wrap gap-2 border-t pt-4">
+          {health === "attention" && provider === "toconline" ? (
+            <Button
+              size="sm"
+              isDisabled={pending || !toconlineEnabled}
+              onPress={() => void handleReconnect()}
+            >
+              {t("reconnect")}
+            </Button>
+          ) : null}
           <Button
             size="sm"
-            isDisabled={pending || !toconlineEnabled}
-            onPress={() => void handleReconnect()}
+            variant="outline"
+            isDisabled={pending}
+            onPress={() => setConfirmOpen(true)}
+            data-testid="invoicing-disconnect"
           >
-            {t("reconnect")}
+            {provider === "manual" ? t("changeMethod") : t("disconnect")}
           </Button>
-        ) : null}
-        <Button
-          size="sm"
-          variant="outline"
-          isDisabled={pending}
-          onPress={() => setConfirmOpen(true)}
-          data-testid="invoicing-disconnect"
-        >
-          {provider === "manual" ? t("changeMethod") : t("disconnect")}
-        </Button>
-      </div>
+        </div>
+      ) : null}
 
       <AlertDialog isOpen={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogHeader>

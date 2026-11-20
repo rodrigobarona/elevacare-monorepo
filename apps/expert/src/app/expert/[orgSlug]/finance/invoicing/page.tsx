@@ -47,7 +47,7 @@ export default async function InvoicingSettingsPage({
         </BackLink>
         <PageHeader title={t("title")} description={t("description")} />
       </div>
-      <Section title={t("currentTitle")} description={t("currentHint")}>
+      <Section title={t("currentTitle")}>
         <InvoicingSettings
           provider={profile.invoicingProvider}
           setupStatus={profile.invoicingSetupStatus}
@@ -58,6 +58,7 @@ export default async function InvoicingSettingsPage({
           toconlineEnabled={Boolean(
             expertInvoicingEnabled && toconlineInvoicingEnabled
           )}
+          invoicesTracked={expertInvoicingEnabled}
         />
       </Section>
       <NifSection

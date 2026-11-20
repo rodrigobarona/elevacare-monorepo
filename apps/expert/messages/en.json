@@ -277,15 +277,15 @@
     },
     "privateLinks": {
       "title": "Private links",
-      "description": "Invite someone when your public agenda is closed. The token is shown once.",
+      "description": "Invite someone to book with a link of their own, even when you are not taking new bookings. You see each link once, when you create it.",
       "create": "Create private link",
       "save": "Create link",
       "saving": "Creating…",
       "cancel": "Cancel",
       "empty": "No private links yet.",
       "needMode": "Add an active delivery mode before creating a private link.",
-      "created": "Private link created. Copy it now — it will not be shown again.",
-      "tokenOnce": "Copy this link now. Eleva only stores a hash; the token cannot be recovered later.",
+      "created": "Private link created.",
+      "tokenOnce": "Copy this link now. For your security, it is shown only once.",
       "copyLink": "Copy link",
       "sendEmail": "Send by e-mail",
       "dismissToken": "Done",
@@ -298,7 +298,7 @@
       "expires": "Expires {date}",
       "revoke": "Revoke",
       "revokeTitle": "Revoke this private link?",
-      "revokeDescription": "Anyone with the link will get a 404. This cannot be undone.",
+      "revokeDescription": "The link stops working for anyone who has it. This cannot be undone.",
       "revokeConfirm": "Revoke link",
       "revoking": "Revoking…",
       "revoked": "Private link revoked.",
@@ -567,7 +567,7 @@
       "title": "ICS feed",
       "description": "Subscribe in Apple Calendar, Google Calendar, or Outlook with a private read-only link.",
       "empty": "No feed yet. Create one to subscribe from another calendar app.",
-      "active": "A feed token is active.",
+      "active": "Your calendar feed is on.",
       "activeSince": "Feed active since {date}.",
       "create": "Create feed",
       "rotate": "Rotate link",
@@ -753,7 +753,7 @@
   },
   "integrations": {
     "title": "Integrations",
-    "description": "Connect calendars, invoicing tools, and other services to your Eleva practice.",
+    "description": "Connect your calendars and set up how you issue invoices.",
     "category": {
       "calendar": {
         "title": "Calendars",
@@ -787,10 +787,12 @@
       "expired": "Expired"
     },
     "names": {
-      "manual": "Manual invoicing"
+      "manual": "I issue my own invoices"
     },
     "connectCalendarNamed": "Connect {name}",
-    "configureCalendarsNamed": "Manage {name}"
+    "configureCalendarsNamed": "Manage {name}",
+    "openInvoicing": "Invoicing settings",
+    "openInvoicingNamed": "{name}: invoicing settings"
   },
   "finance": {
     "title": "Finance",
@@ -815,62 +817,57 @@
     "invoices": {
       "link": "Member invoices",
       "title": "Member invoices",
-      "description": "Track invoices issued to members for paid sessions. Retry a failed automatic dispatch, or mark a session as invoiced outside Eleva.",
+      "description": "Each paid session needs an invoice from you. Issue it in your invoicing software, then mark it as issued here.",
       "backToFinance": "Finance",
       "empty": "No member invoices yet.",
       "booking": "Session",
-      "adapter": "Method",
       "amount": "Amount",
       "statusLabel": "Status",
-      "issuedAt": "Issued",
+      "issuedAt": "Issued on",
       "actionsLabel": "Actions",
-      "retry": "Retry",
-      "retryQueued": "Retry sent. Automatic issuance is still closed until fiscal setup is complete.",
+      "retry": "Try again",
+      "retryQueued": "Trying again now.",
       "loadMore": "Load older invoices",
       "loadingMore": "Loading...",
-      "markManual": "Mark as issued manually",
-      "markManualTitle": "Mark this session as invoiced?",
-      "markManualDescription": "Use this only after you issued a certified invoice to the member outside Eleva. You remain legally responsible for that invoice.",
-      "markedManual": "Session marked as invoiced manually.",
+      "markManual": "Mark as issued",
+      "markManualTitle": "Mark this invoice as issued?",
+      "markManualDescription": "Do this once you have issued a certified invoice to the member in your own invoicing software. You remain legally responsible for that invoice.",
+      "markedManual": "Marked as issued.",
       "marking": "Saving...",
       "cancel": "Cancel",
-      "blocked": "Automatic issuance is not active yet. You can retry later or mark the invoice as issued manually.",
       "exportMonth": "Export month",
       "exportSaft": "Prepare monthly export",
       "exporting": "Preparing export...",
       "exportReady": "Export ready. Open the file to download it.",
       "openExport": "Open download",
-      "exportTruncated": "This month has more invoices than the export limit. The downloaded file is truncated.",
-      "exportHint": "CSV plus a SAF-T skeleton for member invoices in the selected month. This is not a certified tax file.",
+      "exportTruncated": "This month has more invoices than one file can hold, so this file is incomplete.",
+      "exportHint": "A spreadsheet (CSV) and a draft SAF-T file of the month's member invoices, to share with your accountant. Your certified tax file comes from your invoicing software.",
       "invoiceStatus": {
-        "pending": "Pending",
+        "pending": "Being prepared",
         "issued": "Issued",
-        "failed": "Failed",
-        "manualPending": "Manual pending",
-        "manualIssued": "Issued manually"
-      },
-      "adapters": {
-        "toconline": "TOConline",
-        "moloni": "Moloni",
-        "manual": "Manual"
+        "failed": "Didn't go through",
+        "manualPending": "To issue",
+        "manualIssued": "Issued by you"
       },
       "errors": {
-        "flag_disabled": "Automatic invoicing is not enabled yet.",
+        "flag_disabled": "Issue this invoice in your invoicing software, then mark it as issued.",
         "not_found": "That invoice was not found.",
         "already_issued": "This invoice is already issued.",
-        "not_retryable": "This invoice cannot be retried. Mark it as issued manually if you invoiced the member outside Eleva.",
-        "already_manual": "This invoice is already marked as issued manually.",
-        "payment_not_succeeded": "The session payment is not succeeded, so the invoice cannot be retried.",
+        "not_retryable": "Issue this invoice in your invoicing software, then mark it as issued.",
+        "already_manual": "This invoice is already marked as issued.",
+        "payment_not_succeeded": "This session has not been paid, so there is no invoice to issue.",
         "forbidden": "You cannot change this invoice.",
-        "validation": "The request was invalid.",
+        "validation": "Something was missing. Please try again.",
         "blocked": "This request was blocked. Please try again.",
-        "conflict": "This invoice cannot be updated in its current state.",
+        "conflict": "This invoice has changed. Refresh the page and try again.",
         "generic": "Something went wrong. Please try again."
       },
       "listTitle": "Invoices",
-      "listHint": "One row per paid session. Automatic issuance stays closed until fiscal setup is complete.",
       "exportTitle": "Monthly export",
-      "emptyHint": "Invoices appear here after a member pays for a session."
+      "emptyHint": "When a member pays for a session, it shows here for you to issue the invoice.",
+      "markManualNamed": "Mark as issued: {session}",
+      "retryNamed": "Try again: {session}",
+      "failedHint": "Try again, or issue it in your invoicing software and mark it as issued."
     },
     "status": {
       "pending": "Pending",
@@ -880,8 +877,8 @@
       "paidOut": "Paid out",
       "failed": "Failed",
       "held": "On hold",
-      "reversalPending": "Reversal pending",
-      "reversed": "Reversed"
+      "reversalPending": "Refund in progress",
+      "reversed": "Refunded"
     },
     "bookingsHint": "Every paid session, the Eleva fee, and where its payout stands.",
     "netHint": "From {gross} paid by members, after {fees} in Eleva fees and any refunds",
@@ -895,8 +892,8 @@
       "start": "Set up payouts",
       "starting": "Opening payouts…",
       "error": "Could not start payouts setup. Please try again.",
-      "unavailableTitle": "Payouts are not available yet",
-      "unavailable": "Payments are not configured on this environment. Please contact support."
+      "unavailableTitle": "Payouts can't be set up right now",
+      "unavailable": "Please write to support@eleva.care and we will sort it out."
     },
     "finishSetup": {
       "title": "Finish setting up payouts",
@@ -905,19 +902,17 @@
     "invoicing": {
       "link": "Invoicing settings",
       "title": "Invoicing",
-      "description": "Choose how invoices for your sessions are issued, and change it any time.",
+      "description": "How you issue invoices for your sessions.",
       "backToFinance": "Back to finance",
       "currentTitle": "Invoicing method",
-      "currentHint": "The provider or method Eleva records for your sessions.",
       "connectedSince": "Connected on {date}",
       "health": {
         "connected": {
           "label": "Connected",
-          "body": "Your account is linked. Automatic invoice issuance is not active yet."
+          "body": "Your {provider} account is linked. Issue each invoice there."
         },
         "manual": {
-          "label": "Manual",
-          "body": "You issue a certified invoice to each member yourself, outside Eleva."
+          "body": "You issue a certified invoice to each member in your own invoicing software."
         },
         "attention": {
           "label": "Needs attention",
@@ -932,7 +927,7 @@
         "disconnectBody": "Eleva deletes the stored credentials for {provider}. Documents already in {provider} stay there. You can connect again or choose another method afterwards.",
         "disconnectAction": "Disconnect",
         "changeTitle": "Change invoicing method?",
-        "changeBody": "Your manual invoicing choice is cleared so you can pick another method.",
+        "changeBody": "Your current choice is cleared so you can pick another.",
         "changeAction": "Continue",
         "cancel": "Cancel"
       },
@@ -955,7 +950,8 @@
         "saving": "Saving…",
         "saved": "Tax number saved.",
         "failed": "We couldn't save your tax number. Please try again."
-      }
+      },
+      "markHint": "Then mark it as issued under Member invoices."
     }
   },
   "onboarding": {
@@ -1015,42 +1011,40 @@
       "provisioning": "Opening Payments…",
       "later": "I'll finish this later",
       "error": "Could not start Payments setup. Please try again.",
-      "missingStripe": "Stripe configuration is missing. Please contact support."
+      "missingStripe": "Payments can't be set up right now. Please write to support@eleva.care."
     },
     "invoicing": {
-      "intro": "Choose how invoices for members will be issued. You can connect an automated provider or handle invoicing yourself.",
+      "intro": "Choose how you issue invoices to members.",
       "connected": "Connected",
-      "acknowledged": "Acknowledged",
-      "connectedVia": "Invoicing is set up via {provider}.",
+      "acknowledged": "Confirmed",
+      "connectedVia": "Your {provider} account is linked.",
+      "issuesOwn": "You issue your own invoices.",
       "continue": "Continue",
       "connectToconline": "Connect TOConline",
-      "connectProvider": "Connect",
-      "acknowledgeManual": "Acknowledge manual invoicing",
+      "acknowledgeManual": "Confirm",
       "manualLegal": "You remain legally responsible for issuing a certified invoice to each member for sessions paid through Eleva, using your own invoicing software.",
       "manualCheckbox": "I understand and accept this invoicing obligation",
       "adapters": {
         "toconline": {
           "name": "TOConline",
-          "description": "Connect your TOConline account. Automatic invoice issuance is not active yet."
+          "description": "Link your TOConline account. You issue each invoice there, then mark it as issued under Member invoices."
         },
         "moloni": {
-          "name": "Moloni",
-          "description": "Automatic invoicing via Moloni. Coming soon."
+          "name": "Moloni"
         },
         "manual": {
-          "name": "Manual invoicing",
-          "description": "You issue invoices yourself outside Eleva. Acknowledge the legal obligation to proceed."
+          "name": "I issue my own invoices"
         }
       },
       "errors": {
-        "flag_disabled": "Automatic invoicing is not enabled yet. Choose manual invoicing or try again later.",
+        "flag_disabled": "TOConline can't be linked right now. Choose to issue your own invoices, or try again later.",
         "not_found": "We could not find your expert profile. Refresh and try again.",
         "connect_failed": "Could not connect the invoicing provider. Please try again.",
-        "provider_denied": "Access to the invoicing provider was denied. Retry or choose manual invoicing.",
-        "missing_params": "The invoicing callback was incomplete. Please try connecting again.",
-        "invalid_state": "The invoicing callback was invalid. Please try connecting again.",
+        "provider_denied": "TOConline did not give access. Try again, or choose to issue your own invoices.",
+        "missing_params": "The connection did not finish. Please try connecting again.",
+        "invalid_state": "The connection did not finish. Please try connecting again.",
         "invalid_provider": "That invoicing provider is not supported.",
-        "manual_ack_required": "Confirm the invoicing obligation before continuing with manual invoicing."
+        "manual_ack_required": "Tick the box to confirm the invoicing obligation first."
       }
     },
     "requirements": {

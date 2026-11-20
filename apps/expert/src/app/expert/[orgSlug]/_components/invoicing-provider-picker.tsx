@@ -4,15 +4,8 @@ import * as React from "react"
 import { Button } from "@eleva/ui/components/button"
 import { Badge } from "@eleva/ui/components/badge"
 import { Alert, AlertDescription } from "@eleva/ui/components/alert"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@eleva/ui/components/card"
 import { CheckboxField } from "@eleva/ui/components/checkbox-field"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import {
   saveInvoicingChoice,
   startToconlineOAuth,
@@ -39,12 +32,6 @@ const ADAPTERS = [
     slug: "toconline" as const,
     installType: "oauth",
     countries: ["PT"],
-  },
-  {
-    slug: "moloni" as const,
-    installType: "oauth",
-    countries: ["PT"],
-    disabled: true,
   },
   {
     slug: "manual" as const,
@@ -75,8 +62,16 @@ export function InvoicingProviderPicker({
         ? t("errors.connect_failed")
         : null
   const displayError = error ?? callbackError
+  const locale = useLocale()
+  const countryNames = React.useMemo(
+    () => new Intl.DisplayNames(locale, { type: "region" }),
+    [locale]
+  )
+  const adapters = ADAPTERS.filter(
+    (adapter) => adapter.slug !== "toconline" || toconlineEnabled
+  )
 
-  async function handleSelect(slug: "toconline" | "moloni" | "manual") {
+  async function handleSelect(slug: "toconline" | "manual") {
     if (slug === "manual" && !manualAcknowledged) {
       setError(t("errors.manual_ack_required"))
       return
@@ -125,65 +120,59 @@ export function InvoicingProviderPicker({
         </Alert>
       ) : null}
 
-      <p className="text-sm text-muted-foreground">{t("intro")}</p>
+      {/* Only the ways that work today are offered; with one, there is
+          nothing to choose between. */}
+      {adapters.length > 1 ? (
+        <p className="text-sm text-muted-foreground">{t("intro")}</p>
+      ) : null}
 
       <div className="grid gap-3">
-        {ADAPTERS.map((adapter) => {
-          const isDisabled =
-            pending ||
-            adapter.disabled ||
-            (adapter.slug === "toconline" && !toconlineEnabled)
+        {adapters.map((adapter) => {
+          const manual = adapter.slug === "manual"
           return (
-            <Card
+            <div
               key={adapter.slug}
-              className={
-                isDisabled && adapter.slug !== "manual" ? "opacity-50" : ""
-              }
+              className="space-y-3 rounded-3xl border bg-card p-6 text-card-foreground shadow-1"
             >
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm">
-                    {t(`adapters.${adapter.slug}.name`)}
-                  </CardTitle>
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="font-medium">
+                  {t(`adapters.${adapter.slug}.name`)}
+                </h3>
+                {manual ? null : (
                   <Badge variant="secondary">
-                    {adapter.countries.join(", ")}
+                    {adapter.countries
+                      .map((code) => countryNames.of(code) ?? code)
+                      .join(", ")}
                   </Badge>
-                </div>
-                <CardDescription className="text-xs">
+                )}
+              </div>
+              {manual ? (
+                <>
+                  {/* The obligation she accepts: read before the box. */}
+                  <p className="text-sm text-pretty">{t("manualLegal")}</p>
+                  <CheckboxField
+                    isSelected={manualAcknowledged}
+                    onChange={setManualAcknowledged}
+                    isDisabled={pending}
+                    label={t("manualCheckbox")}
+                  />
+                </>
+              ) : (
+                <p className="text-sm text-pretty text-muted-foreground">
                   {t(`adapters.${adapter.slug}.description`)}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {adapter.slug === "manual" ? (
-                  <>
-                    <p className="text-xs text-muted-foreground">
-                      {t("manualLegal")}
-                    </p>
-                    <CheckboxField
-                      isSelected={manualAcknowledged}
-                      onChange={setManualAcknowledged}
-                      isDisabled={pending}
-                      label={t("manualCheckbox")}
-                    />
-                  </>
-                ) : null}
-                <Button
-                  size="sm"
-                  variant={adapter.slug === "manual" ? "outline" : "default"}
-                  isDisabled={
-                    isDisabled ||
-                    (adapter.slug === "manual" && !manualAcknowledged)
-                  }
-                  onPress={() => handleSelect(adapter.slug)}
-                >
-                  {adapter.slug === "manual"
-                    ? t("acknowledgeManual")
-                    : adapter.slug === "toconline"
-                      ? t("connectToconline")
-                      : t("connectProvider")}
-                </Button>
-              </CardContent>
-            </Card>
+                </p>
+              )}
+              <Button
+                size="sm"
+                // The page's one solid action: linking an account when
+                // that is offered, otherwise confirming her own invoicing.
+                variant={manual && adapters.length > 1 ? "outline" : "default"}
+                isDisabled={pending || (manual && !manualAcknowledged)}
+                onPress={() => handleSelect(adapter.slug)}
+              >
+                {manual ? t("acknowledgeManual") : t("connectToconline")}
+              </Button>
+            </div>
           )
         })}
       </div>

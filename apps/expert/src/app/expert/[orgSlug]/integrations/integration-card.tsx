@@ -15,6 +15,7 @@ import type {
 } from "@eleva/integrations"
 import { LinkButton } from "@eleva/ui/components/button"
 import { StatusPill } from "@eleva/ui/components/status-pill"
+import { cn } from "@eleva/ui/lib/utils"
 import type { StatusTone } from "@eleva/ui/components/status-pill"
 
 interface Props {
@@ -74,10 +75,17 @@ export function IntegrationCard({ manifest, status, workspaceBase }: Props) {
   const displayName = t.has(nameKey) ? t(nameKey) : manifest.displayName
   const knownStatus = status && isConnectionStatus(status) ? status : null
   const isCalendar = manifest.category === "calendar"
+  const isInvoicing = manifest.category === "invoicing"
+  const countryNames = new Intl.DisplayNames(locale, { type: "region" })
 
   return (
     <li className="flex flex-col gap-4 rounded-3xl border bg-card p-5 shadow-1">
-      <div className="flex items-start gap-3">
+      <div
+        className={cn(
+          "flex gap-3",
+          manifest.slug === "manual" ? "items-center" : "items-start"
+        )}
+      >
         <span
           aria-hidden
           className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-teal-50 text-teal-700 dark:bg-teal-950 dark:text-teal-200 [&_svg]:size-5"
@@ -86,7 +94,12 @@ export function IntegrationCard({ manifest, status, workspaceBase }: Props) {
         </span>
         <div className="min-w-0 flex-1">
           <h3 className="font-medium">{displayName}</h3>
-          <p className="text-xs text-muted-foreground">{manifest.publisher}</p>
+          {/* Her own invoicing has no publisher to name. */}
+          {manifest.slug === "manual" ? null : (
+            <p className="text-xs text-muted-foreground">
+              {manifest.publisher}
+            </p>
+          )}
         </div>
         {knownStatus ? (
           <StatusPill tone={STATUS_TONE[knownStatus]}>
@@ -100,7 +113,11 @@ export function IntegrationCard({ manifest, status, workspaceBase }: Props) {
       <div className="flex flex-wrap items-center justify-between gap-2">
         {manifest.countries.length > 0 ? (
           <p className="text-xs text-muted-foreground">
-            {t("availableIn", { countries: manifest.countries.join(", ") })}
+            {t("availableIn", {
+              countries: manifest.countries
+                .map((code) => countryNames.of(code) ?? code)
+                .join(", "),
+            })}
           </p>
         ) : (
           <span />
@@ -119,6 +136,16 @@ export function IntegrationCard({ manifest, status, workspaceBase }: Props) {
             {knownStatus === "connected"
               ? t("configureCalendars")
               : t("connectCalendar")}
+          </LinkButton>
+        ) : isInvoicing ? (
+          // How invoices are issued is chosen in one place.
+          <LinkButton
+            href={`${workspaceBase}/finance/invoicing`}
+            variant="outline"
+            size="sm"
+            aria-label={t("openInvoicingNamed", { name: displayName })}
+          >
+            {t("openInvoicing")}
           </LinkButton>
         ) : null}
       </div>
