@@ -25,6 +25,11 @@ describe("clinic decision email", () => {
     )
     expect(html).toContain(base.verificationHref)
     expect(html).toContain("Open Verification")
+    // Says why this person got it, in place of the generic account line.
+    expect(html).toContain(
+      "You received this email because you are an owner or admin of Clínica Lumen on Eleva Care."
+    )
+    expect(html).not.toContain("you have an active account")
   })
 
   it("shows a reason as text, never as markup", async () => {
@@ -36,6 +41,18 @@ describe("clinic decision email", () => {
     })
     expect(html).not.toContain('<a href="https://example.test">')
     expect(html).toContain("&lt;a href=")
+  })
+
+  it("never turns a clinic's name into a link", async () => {
+    const html = await renderClinicDecision({
+      ...base,
+      clinicName: "Pay now at https://evil.example or evil.example",
+      kind: "clinic.verified",
+      locale: "en",
+    })
+    expect(html).not.toContain("https://evil.example")
+    expect(html).not.toContain("evil.example")
+    expect(html).toContain("evil example")
   })
 
   it("is written in Portuguese and Spanish too", async () => {
