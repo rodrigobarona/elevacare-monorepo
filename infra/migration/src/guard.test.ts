@@ -37,10 +37,17 @@ const ENDPOINTS: Record<string, NeonEndpointInfo> = {
 }
 ENDPOINTS[REHEARSAL_POOLED] = ENDPOINTS[REHEARSAL_HOST]!
 
+/** Neon's answer for the rehearsal host only; the MVP host stays unknown. */
+const forTarget =
+  (answer: NeonEndpointInfo) =>
+  async (host: string): Promise<NeonEndpointInfo | null> =>
+    host === REHEARSAL_HOST ? answer : null
+
 function deps(overrides: Partial<MigrationGuardDeps> = {}): MigrationGuardDeps {
   return {
     resolveEndpoint: vi.fn(async (host: string) => ENDPOINTS[host] ?? null),
     prompt: vi.fn(async () => PROJECT),
+    isInteractive: () => true,
     now: () => NOW,
     ...overrides,
   }
@@ -86,6 +93,8 @@ describe("rehearsal (--target branch)", () => {
         projectId: PROJECT,
         branchId: "br-rehearsal",
         branchName: "rehearsal-2026-11-21",
+        targetUrl: `postgresql://app:pw@${REHEARSAL_HOST}/eleva`,
+        sourceUrl: MVP_URL,
       })
     }
     expect(d.prompt).not.toHaveBeenCalled()
@@ -142,7 +151,7 @@ describe("rehearsal (--target branch)", () => {
       assertMigrationTarget(
         { target: "branch", mode: "dry-run", env: env() },
         deps({
-          resolveEndpoint: async () => ({
+          resolveEndpoint: forTarget({
             ...ENDPOINTS[REHEARSAL_HOST]!,
             projectId: "staging-project-999",
           }),
@@ -177,7 +186,7 @@ describe("rehearsal (--target branch)", () => {
       assertMigrationTarget(
         { target: "branch", mode: "apply", env: env() },
         deps({
-          resolveEndpoint: async () => ({
+          resolveEndpoint: forTarget({
             ...ENDPOINTS[REHEARSAL_HOST]!,
             isReadWrite: false,
           }),
@@ -189,15 +198,122 @@ describe("rehearsal (--target branch)", () => {
       assertMigrationTarget(
         { target: "branch", mode: "apply", env: env() },
         deps({
-          resolveEndpoint: async () =>
-            ({
-              ...ENDPOINTS[REHEARSAL_HOST]!,
-              isDefaultBranch: undefined,
-            }) as unknown as NeonEndpointInfo,
+          resolveEndpoint: forTarget({
+            ...ENDPOINTS[REHEARSAL_HOST]!,
+            isDefaultBranch: undefined,
+          } as unknown as NeonEndpointInfo),
         })
       )
     )
     expect(unknown.code).toBe("BRANCH_UNKNOWN")
+  })
+})
+
+describe("the connection a run may use", () => {
+  it.each([
+    ["host", PRODUCTION_HOST],
+    ["hostaddr", "203.0.113.7"],
+    ["port", "6543"],
+    ["options", "endpoint=ep-prod-z9y8x7w6"],
+    ["target_session_attrs", "any"],
+    ["application_name", "migration"],
+  ])(
+    "refuses a %s parameter that could move the connection",
+    async (key, value) => {
+      for (const variable of [
+        "TARGET_DATABASE_URL",
+        "MVP_DATABASE_URL",
+      ] as const) {
+        const base = env()[variable]!
+        const d = deps()
+        const err = await refusal(
+          assertMigrationTarget(
+            {
+              target: "branch",
+              mode: "apply",
+              env: env({
+                [variable]: `${base}?sslmode=require&${key}=${encodeURIComponent(value)}`,
+              }),
+            },
+            d
+          )
+        )
+        expect(err.code).toBe("URL_PARAMETER_NOT_ALLOWED")
+        expect(err.message).toContain(`"${key}"`)
+        expect(d.resolveEndpoint).not.toHaveBeenCalled()
+      }
+    }
+  )
+
+  it.each([
+    `postgresql://app:pw@${REHEARSAL_HOST}:6543/eleva`,
+    `postgresql://app:pw@${REHEARSAL_HOST},${PRODUCTION_HOST}/eleva`,
+    `postgresql://app:pw@[2001:db8::1]/eleva`,
+    `postgresql://app:pw@${REHEARSAL_HOST}/eleva#${PRODUCTION_HOST}`,
+  ])("refuses %s", async (url) => {
+    const err = await refusal(
+      assertMigrationTarget(
+        {
+          target: "branch",
+          mode: "apply",
+          env: env({ TARGET_DATABASE_URL: url }),
+        },
+        deps()
+      )
+    )
+    expect(["TARGET_URL_INVALID", "TARGET_NOT_NEON"]).toContain(err.code)
+  })
+
+  it("hands back connection strings rebuilt from what it checked", async () => {
+    const approved = await assertMigrationTarget(
+      {
+        target: "branch",
+        mode: "apply",
+        env: env({
+          TARGET_DATABASE_URL: `postgres://app:p%40ss@${REHEARSAL_POOLED.toUpperCase()}:5432/eleva?sslmode=require&channel_binding=require`,
+        }),
+      },
+      deps({
+        resolveEndpoint: async (host) => ENDPOINTS[host] ?? null,
+      })
+    )
+    expect(approved.targetUrl).toBe(
+      `postgresql://app:p%40ss@${REHEARSAL_POOLED}/eleva?sslmode=require&channel_binding=require`
+    )
+    expect(approved.sourceUrl).toBe(MVP_URL)
+    // The host the driver will use is the host that was approved.
+    expect(new URL(approved.targetUrl).hostname).toBe(approved.host)
+  })
+
+  it("refuses a source that is a database of the v3 project", async () => {
+    const err = await refusal(
+      assertMigrationTarget(
+        {
+          target: "branch",
+          mode: "apply",
+          env: env({
+            MVP_DATABASE_URL: `postgresql://reader:pw@${PRODUCTION_HOST}/eleva`,
+          }),
+        },
+        deps()
+      )
+    )
+    expect(err.code).toBe("SOURCE_IN_TARGET_PROJECT")
+  })
+
+  it("refuses, with exit 2, when Neon cannot be asked", async () => {
+    const err = await refusal(
+      assertMigrationTarget(
+        { target: "branch", mode: "apply", env: env() },
+        deps({
+          resolveEndpoint: async () => {
+            throw new Error("Neon API answered 401 for /projects/x/endpoints")
+          },
+        })
+      )
+    )
+    expect(err.code).toBe("NEON_LOOKUP_FAILED")
+    expect(err.exitCode).toBe(2)
   })
 })
 
@@ -271,6 +387,18 @@ describe("cutover (--target production)", () => {
       branchName: "main",
     })
     expect(d.prompt).toHaveBeenCalledTimes(1)
+  })
+
+  it("refuses when nobody is at the terminal", async () => {
+    const d = deps({ isInteractive: () => false })
+    const err = await refusal(
+      assertMigrationTarget(
+        { target: "production", mode: "apply", env: production() },
+        d
+      )
+    )
+    expect(err.code).toBe("PRODUCTION_NOT_INTERACTIVE")
+    expect(d.prompt).not.toHaveBeenCalled()
   })
 
   it("refuses a rehearsal branch", async () => {

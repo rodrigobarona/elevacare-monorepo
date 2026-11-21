@@ -45,9 +45,16 @@ branch|production`, `--since`, `--report`) and the target guard
   production Neon project on a branch that is not the default one, listed
   in `MIGRATION_ALLOWED_TARGET_HOSTS`. The cutover (`--target production`)
   needs the default branch, `MIGRATION_CONFIRM_PRODUCTION` equal to today's
-  date in UTC, and the operator typing the Neon project id. Source and
-  target must be different databases. A host of another project, a read
-  replica or an unclear answer from the Neon API is refused (exit 2).
+  date in UTC, and a person at the terminal typing the Neon project id.
+  Source and target must be different databases, and the source is never a
+  database of the v3 project. A host of another project, a read replica or
+  an unclear answer from the Neon API is refused (exit 2).
+- A connection URL may carry `sslmode` and `channel_binding` only. A
+  driver also follows `host`, `hostaddr`, `port` and `options` given as
+  parameters, which would send it to a different database than the one
+  that was checked, so every other parameter is refused. The guard returns
+  the two connection strings rebuilt from what it checked, and a run
+  connects with those and nothing else.
 - Stricter than the phase file in one place: a dry run against production
   asks for the same confirmation as a write, because it reads production
   data.
