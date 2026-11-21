@@ -18,6 +18,7 @@
     "services": "{count, plural, =0 {Ainda sem serviços publicados} one {# serviço publicado} other {# serviços publicados}}",
     "seats": "{used} de {cap} lugares ocupados. Um lugar fica ocupado quando um especialista tem um serviço publicado.",
     "seatsFull": "Os {cap} lugares estão ocupados. Outro especialista pode publicar um serviço quando houver um lugar livre.",
+    "seatsOver": "{used} especialistas têm um serviço publicado e o seu plano inclui {cap}. Mantêm os seus lugares. Um lugar que fique livre só pode voltar a ser ocupado quando houver menos de {cap} em uso.",
     "role": {
       "owner": "Titular",
       "admin": "Admin",
