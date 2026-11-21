@@ -13,8 +13,10 @@
  * a failure, never a skip. The list is checked both ways, so an entry for a
  * route that is no longer a public mutation without BotID fails too.
  */
+import { realpathSync } from "node:fs"
 import { readFile } from "node:fs/promises"
 import path from "node:path"
+import { pathToFileURL } from "node:url"
 import {
   exportedMethods,
   extractPolicy,
@@ -101,4 +103,11 @@ async function main() {
   )
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) await main()
+// Run when called as a script, however the path was written (a symlink, a
+// space in the checkout path): a guard must never pass by not running.
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
+) {
+  await main()
+}

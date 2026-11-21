@@ -2,8 +2,10 @@
 /**
  * CI guard for apps/api route handlers.
  *
- * 1. Every route.ts exports a literal ROUTE_POLICY (auth, rateLimit, botId).
- * 2. The policy is enforced, not just documented: `rateLimit: true` requires a
+ * 1. Every route handler is a route.ts that exports a literal ROUTE_POLICY
+ *    (auth, rateLimit, botId).
+ * 2. The policy is enforced, not just documented: `auth` other than
+ *    "public" requires a reachable call that enforces it, `rateLimit: true` a
  *    reachable `applyRateLimit(` call, `botId: true` a reachable `checkBot(`,
  *    and a mutating public/session route a reachable Zod parse or audit
  *    wrapper. "Reachable" = the route file or a local module it imports
@@ -13,7 +15,11 @@ import { existsSync } from "node:fs"
 import { readdir, readFile } from "node:fs/promises"
 import path from "node:path"
 import ts from "typescript"
-import { extractPolicy, walkRoutes } from "./lib/route-policy.mjs"
+import {
+  exportedMethods,
+  extractPolicy,
+  walkRoutes,
+} from "./lib/route-policy.mjs"
 
 const ROOT = path.resolve(import.meta.dirname, "..")
 const APP_DIR = path.join(ROOT, "apps/api/src/app")
@@ -29,10 +35,32 @@ function isValidPolicy(policy) {
   )
 }
 
+// What enforces each declared auth model. `public` needs none. A webhook
+// route may hand the raw request to its domain handler (`handle…Webhook`),
+// which verifies the signature inside the package: this check sees the
+// hand-over, not the verification itself.
+const AUTH_CALLS = {
+  session:
+    /\b(?:require[A-Z]\w*|resolveApiAuth|getSession|verifyApiKey)\(|\bauth\.api\./,
+  signature:
+    /\b\w*(?:[Vv]erify|constructEvent|[Ss]ignature)\w*\(|\bhandle\w*Webhook\(/,
+  internal: /\b\w*(?:[Ii]nternal|[Ww]orkflow|[Cc]ron|[Ss]ecret)\w*\(/,
+}
+
 // Routes whose request validation is owned by a vendor handler.
 const VALIDATION_EXEMPT = new Set(["apps/api/src/app/auth/[...all]/route.ts"])
-const MUTATING_EXPORT =
-  /export\s+(?:async\s+function|const)\s+(?:POST|PUT|PATCH|DELETE)\b/
+const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"])
+// Receivers whose `.parse(` reads something other than a request body.
+const NOT_A_SCHEMA = new Set([
+  "JSON",
+  "Date",
+  "Number",
+  "URL",
+  "url",
+  "path",
+  "qs",
+  "querystring",
+])
 const AUDIT_OR_HELPER_CALL =
   /\bwithAudit\(|\bwithPlatformAudit\(|\bparseJson\(|\breadJson\(/
 // `Schema.parse(` / `.safeParse(` count only for request-side schemas: JSON
@@ -43,7 +71,7 @@ function validatesRequest(source) {
   if (AUDIT_OR_HELPER_CALL.test(source)) return true
   for (const match of source.matchAll(SCHEMA_PARSE_CALL)) {
     const receiver = match[1]
-    if (receiver !== "JSON" && !/Response/.test(receiver)) return true
+    if (!NOT_A_SCHEMA.has(receiver) && !/Response/.test(receiver)) return true
   }
   return false
 }
@@ -140,11 +168,26 @@ const unenforced = []
 for (const file of routes) {
   const content = await codeOf(file)
   const relative = path.relative(ROOT, file)
+  if (path.basename(file) !== "route.ts") {
+    unenforced.push(
+      `${relative}: route handlers are named route.ts (this file is served by Next.js but written another way)`
+    )
+    continue
+  }
   const policy = extractPolicy(content)
   if (!isValidPolicy(policy)) {
     missing.push(relative)
     continue
   }
+  // Read from the syntax tree, so every way of exporting a method counts.
+  const { methods, opaque } = exportedMethods(content)
+  if (opaque) {
+    unenforced.push(
+      `${relative}: "export *" hides which methods the route exports. Export each method by name.`
+    )
+    continue
+  }
+  const mutates = methods.some((method) => MUTATING_METHODS.has(method))
   if (
     policy.rateLimit &&
     !(await reachesCall(file, (src) => /\bapplyRateLimit\(/.test(src)))
@@ -157,8 +200,18 @@ for (const file of routes) {
   ) {
     unenforced.push(`${relative}: botId:true but no checkBot() call`)
   }
+  // The declared auth model is held to a call that enforces it.
+  const enforcesAuth = AUTH_CALLS[policy.auth]
   if (
-    MUTATING_EXPORT.test(content) &&
+    enforcesAuth &&
+    !(await reachesCall(file, (src) => enforcesAuth.test(src)))
+  ) {
+    unenforced.push(
+      `${relative}: auth:"${policy.auth}" but no call that enforces it`
+    )
+  }
+  if (
+    mutates &&
     (policy.auth === "public" || policy.auth === "session") &&
     !VALIDATION_EXEMPT.has(relative) &&
     !(await reachesCall(file, validatesRequest))

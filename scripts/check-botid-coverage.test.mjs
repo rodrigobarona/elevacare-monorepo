@@ -1,7 +1,15 @@
 import assert from "node:assert/strict"
+import { execFileSync } from "node:child_process"
+import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import path from "node:path"
 import { test } from "node:test"
 import { findBotIdProblems } from "./check-botid-coverage.mjs"
-import { exportedMethods, extractPolicy } from "./lib/route-policy.mjs"
+import {
+  exportedMethods,
+  extractPolicy,
+  walkRoutes,
+} from "./lib/route-policy.mjs"
 
 const policy = (fields, wrapper = "as const satisfies RoutePolicy") =>
   `export const ROUTE_POLICY = { ${fields} } ${wrapper}\n`
@@ -99,4 +107,29 @@ test("extractPolicy returns literal fields only", () => {
     botId: true,
   })
   assert.equal(extractPolicy(`const ROUTE_POLICY = { auth: "public" }`), null)
+})
+
+test("the script runs when called through a symlink or a path with a space", () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "botid guard "))
+  const link = path.join(dir, "check.mjs")
+  symlinkSync(path.join(import.meta.dirname, "check-botid-coverage.mjs"), link)
+  const output = execFileSync(process.execPath, [link], { encoding: "utf8" })
+  assert.match(output, /BotID coverage check passed/)
+})
+
+test("a route handler is found whatever its extension", async () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "routes-"))
+  for (const name of [
+    "a/route.ts",
+    "b/route.tsx",
+    "c/route.js",
+    "d/page.tsx",
+  ]) {
+    mkdirSync(path.join(dir, path.dirname(name)), { recursive: true })
+    writeFileSync(path.join(dir, name), "")
+  }
+  const found = (await walkRoutes(dir))
+    .map((file) => path.relative(dir, file))
+    .sort()
+  assert.deepEqual(found, ["a/route.ts", "b/route.tsx", "c/route.js"])
 })

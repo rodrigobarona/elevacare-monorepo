@@ -18,7 +18,14 @@ export const HTTP_METHODS = [
   "DELETE",
 ]
 
-/** Every `route.ts` under `dir`. */
+/**
+ * A file Next.js serves as a route handler. Only `route.ts` is allowed in
+ * this repo, but every extension is walked so the guards can refuse the
+ * others instead of never seeing them.
+ */
+const ROUTE_FILE = /^route\.(?:ts|tsx|js|jsx|mjs|cjs)$/
+
+/** Every route handler file under `dir`, whatever its extension. */
 export async function walkRoutes(dir) {
   const entries = await readdir(dir, { withFileTypes: true })
   const files = []
@@ -27,7 +34,7 @@ export async function walkRoutes(dir) {
     if (entry.isDirectory()) {
       if (entry.name === "node_modules" || entry.name === ".next") continue
       files.push(...(await walkRoutes(full)))
-    } else if (entry.name === "route.ts") {
+    } else if (ROUTE_FILE.test(entry.name)) {
       files.push(full)
     }
   }
