@@ -14,7 +14,7 @@
       "open": "Ir a Verificación",
       "not-sent": {
         "title": "Envía los datos legales de tu clínica",
-        "body": "Eleva los comprueba en el registro público, para que las personas sepan quién está detrás de la clínica. Solo tienes que hacerlo una vez."
+        "body": "Los comprobamos en el registro público, para que las personas sepan quién está detrás de tu clínica. Solo tienes que hacerlo una vez."
       },
       "change-needed": {
         "title": "Los datos de tu clínica necesitan un cambio",
@@ -22,7 +22,7 @@
       },
       "verified-change-needed": {
         "title": "Los nuevos datos necesitan un cambio",
-        "body": "La clínica sigue verificada. Lee lo que hemos encontrado y envía de nuevo los nuevos datos."
+        "body": "La clínica sigue verificada. Lee lo que hemos encontrado y vuelve a enviar los nuevos datos."
       },
       "not-verified": {
         "title": "No hemos podido verificar tu clínica con estos datos",
@@ -30,7 +30,7 @@
       },
       "verified-new-rejected": {
         "title": "No hemos podido confirmar los nuevos datos",
-        "body": "La clínica sigue verificada. Lee lo que hemos encontrado."
+        "body": "La clínica sigue verificada. Lee lo que hemos encontrado; si los datos han cambiado, corrígelos y envíalos de nuevo."
       }
     }
   },

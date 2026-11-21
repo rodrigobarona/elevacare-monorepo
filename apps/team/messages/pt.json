@@ -14,7 +14,7 @@
       "open": "Ir para Verificação",
       "not-sent": {
         "title": "Envie os dados legais da sua clínica",
-        "body": "A Eleva confirma-os no registo público, para que as pessoas saibam quem está por trás da clínica. Só precisa de o fazer uma vez."
+        "body": "Confirmamos os dados no registo público, para que as pessoas saibam quem está por trás da sua clínica. Só precisa de o fazer uma vez."
       },
       "change-needed": {
         "title": "Os dados da sua clínica precisam de uma alteração",
@@ -30,7 +30,7 @@
       },
       "verified-new-rejected": {
         "title": "Não conseguimos confirmar os novos dados",
-        "body": "A clínica continua verificada. Leia o que encontrámos."
+        "body": "A clínica continua verificada. Leia o que encontrámos; se os dados mudaram, corrija-os e envie-os de novo."
       }
     }
   },

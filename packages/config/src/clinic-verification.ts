@@ -75,9 +75,10 @@ export function clinicStanding(
 
 /**
  * How each standing is shown, wherever it is shown (the Verification page,
- * the Overview card): "positive" once verified, "attention" while Eleva or
- * the clinic has a step open, "neutral" otherwise. The names are the
- * `StatusPill` tones of `@eleva/ui`.
+ * the Overview card): "positive" once verified, "attention" while a check
+ * is running or a change was asked, "neutral" before anything was sent
+ * and after a refusal. The names are the `StatusPill` tones of
+ * `@eleva/ui`.
  */
 export const CLINIC_STANDING_TONES = {
   "not-sent": "neutral",

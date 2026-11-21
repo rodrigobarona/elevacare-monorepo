@@ -14,7 +14,7 @@
       "open": "Go to Verification",
       "not-sent": {
         "title": "Send your clinic's legal details",
-        "body": "Eleva checks them in the public register, so people know who is behind the clinic. You do this once."
+        "body": "We check them in the public register, so people know who is behind your clinic. You do this once."
       },
       "change-needed": {
         "title": "Your clinic's details need a change",
@@ -30,7 +30,7 @@
       },
       "verified-new-rejected": {
         "title": "We could not confirm your new details",
-        "body": "Your clinic stays verified. Read what we found."
+        "body": "Your clinic stays verified. Read what we found; if your details have changed, correct them and send them again."
       }
     }
   },
