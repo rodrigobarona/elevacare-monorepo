@@ -117,7 +117,7 @@
       "approve": "Aprobar",
       "approving": "Aprobando...",
       "reasonLabel": "Motivo",
-      "reasonHelp": "Hace falta para pedir cambios o rechazar. Se guarda con el envío. Escribe sobre la empresa, sin nombres, correos ni teléfonos. Eleva todavía no avisa a la clínica: escribe a quien es titular, al correo de arriba.",
+      "reasonHelp": "Hace falta para pedir cambios o rechazar. La clínica lo lee en su página de Verificación, así que escríbelo para la clínica: sobre la empresa, sin nombres, correos ni teléfonos. Eleva todavía no envía correo a la clínica: escribe a quien es titular para que sepa que debe consultarla.",
       "needsChanges": "Pedir cambios",
       "reject": "Rechazar",
       "saving": "Guardando...",

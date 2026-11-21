@@ -1,7 +1,8 @@
 {
   "nav": {
     "overview": "Visão geral",
-    "team": "Equipa"
+    "team": "Equipa",
+    "verification": "Verificação"
   },
   "dashboard": {
     "title": "A sua clínica",
@@ -85,6 +86,81 @@
       "removed": "{name} já não faz parte da sua equipa.",
       "memberGone": "Esta pessoa já não faz parte da sua equipa.",
       "failed": "Algo correu mal. Tente de novo."
+    }
+  },
+  "verification": {
+    "title": "Verificação",
+    "description": "A Eleva confirma a denominação social e o NIF da sua clínica no registo público, para que as pessoas saibam quem está por trás da clínica.",
+    "standing": {
+      "not-sent": {
+        "pill": "Por enviar",
+        "title": "Envie os dados legais da sua clínica",
+        "body": "Confirmamos os dados no registo comercial público. Faz isto uma vez, e de novo só se mudarem."
+      },
+      "checking": {
+        "pill": "Em verificação",
+        "title": "Estamos a verificar os seus dados",
+        "body": "Não precisa de fazer nada. Esta página mostra o resultado assim que a verificação terminar."
+      },
+      "change-needed": {
+        "pill": "Precisa de uma alteração",
+        "title": "Precisamos de uma alteração antes de verificar a sua clínica",
+        "body": "Leia abaixo o que encontrámos, corrija os dados e envie de novo."
+      },
+      "verified": {
+        "pill": "Verificada",
+        "title": "A sua clínica está verificada",
+        "body": "Encontrámos a denominação social e o NIF da sua clínica no registo público."
+      },
+      "verified-checking": {
+        "pill": "Verificada",
+        "title": "A sua clínica está verificada e estamos a verificar os novos dados",
+        "body": "A clínica continua verificada com os dados que confirmámos antes. Não precisa de fazer nada."
+      },
+      "verified-change-needed": {
+        "pill": "Verificada",
+        "title": "A sua clínica está verificada e os novos dados precisam de uma alteração",
+        "body": "A clínica continua verificada com os dados que confirmámos antes. Leia abaixo o que encontrámos e envie os novos dados outra vez."
+      },
+      "verified-new-rejected": {
+        "pill": "Verificada",
+        "title": "A sua clínica está verificada, mas não conseguimos confirmar os novos dados",
+        "body": "A clínica continua verificada com os dados que confirmámos antes. Leia abaixo o que encontrámos."
+      },
+      "not-verified": {
+        "pill": "Não verificada",
+        "title": "Não conseguimos verificar a sua clínica com estes dados",
+        "body": "Leia abaixo o que encontrámos. Pode corrigir os dados e enviar de novo."
+      }
+    },
+    "reasonTitle": "O que encontrámos",
+    "sent": {
+      "legalName": "Denominação social",
+      "taxId": "NIF ou número de IVA",
+      "sentOn": "Enviado em",
+      "verifiedOn": "Verificada em"
+    },
+    "form": {
+      "heading": "Os dados legais da sua clínica",
+      "headingCorrect": "Encontrou um erro?",
+      "correctHelp": "Pode corrigir o que enviou enquanto verificamos.",
+      "headingChanged": "A denominação social ou o NIF mudaram?",
+      "changedHelp": "Envie os novos dados. A clínica continua verificada enquanto os confirmamos.",
+      "legalName": "Denominação social",
+      "taxId": "NIF ou número de IVA",
+      "taxIdHelp": "Como aparece nas suas faturas, por exemplo PT515001708.",
+      "send": "Enviar para verificação",
+      "sendAgain": "Enviar de novo",
+      "sending": "A enviar…",
+      "use": "Usamos estes dados para confirmar a identidade legal da sua clínica.",
+      "sent": "Dados enviados. Estamos a verificá-los.",
+      "errors": {
+        "legal-name": "Introduza a denominação social da sua clínica.",
+        "invalid-tax-id": "Introduza um NIF ou número de IVA válido: 8 a 32 letras e algarismos, por exemplo PT515001708.",
+        "validation": "Verifique os dois campos e tente novamente.",
+        "changed": "Os seus dados foram atualizados enquanto enviava. Recarregue a página e tente novamente.",
+        "failed": "Não foi possível enviar os dados. Tente novamente."
+      }
     }
   }
 }

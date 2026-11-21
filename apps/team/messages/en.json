@@ -1,7 +1,8 @@
 {
   "nav": {
     "overview": "Overview",
-    "team": "Team"
+    "team": "Team",
+    "verification": "Verification"
   },
   "dashboard": {
     "title": "Your clinic",
@@ -85,6 +86,81 @@
       "removed": "{name} is no longer in your team.",
       "memberGone": "This person is no longer in your team.",
       "failed": "Something went wrong. Please try again."
+    }
+  },
+  "verification": {
+    "title": "Verification",
+    "description": "Eleva checks your clinic's legal name and tax number in the public register, so people can trust who is behind the clinic.",
+    "standing": {
+      "not-sent": {
+        "pill": "Not sent yet",
+        "title": "Send your clinic's legal details",
+        "body": "We check them in the public company register. You do this once, and again only if they change."
+      },
+      "checking": {
+        "pill": "Being checked",
+        "title": "We are checking your details",
+        "body": "You do not need to do anything. This page shows the result as soon as the check is done."
+      },
+      "change-needed": {
+        "pill": "Needs a change",
+        "title": "We need a change before we can verify your clinic",
+        "body": "Read what we found below, correct your details and send them again."
+      },
+      "verified": {
+        "pill": "Verified",
+        "title": "Your clinic is verified",
+        "body": "We found your clinic's legal name and tax number in the public register."
+      },
+      "verified-checking": {
+        "pill": "Verified",
+        "title": "Your clinic is verified, and we are checking your new details",
+        "body": "Your clinic stays verified with the details we checked before. You do not need to do anything."
+      },
+      "verified-change-needed": {
+        "pill": "Verified",
+        "title": "Your clinic is verified, and your new details need a change",
+        "body": "Your clinic stays verified with the details we checked before. Read what we found below and send the new details again."
+      },
+      "verified-new-rejected": {
+        "pill": "Verified",
+        "title": "Your clinic is verified, but we could not confirm your new details",
+        "body": "Your clinic stays verified with the details we checked before. Read what we found below."
+      },
+      "not-verified": {
+        "pill": "Not verified",
+        "title": "We could not verify your clinic with these details",
+        "body": "Read what we found below. You can correct your details and send them again."
+      }
+    },
+    "reasonTitle": "What we found",
+    "sent": {
+      "legalName": "Legal name",
+      "taxId": "NIF or VAT number",
+      "sentOn": "Sent on",
+      "verifiedOn": "Verified on"
+    },
+    "form": {
+      "heading": "Your clinic's legal details",
+      "headingCorrect": "Spotted a mistake?",
+      "correctHelp": "You can correct what you sent while we are checking it.",
+      "headingChanged": "Has your legal name or tax number changed?",
+      "changedHelp": "Send the new details. Your clinic stays verified while we check them.",
+      "legalName": "Legal name",
+      "taxId": "NIF or VAT number",
+      "taxIdHelp": "As it appears on your invoices, for example PT515001708.",
+      "send": "Send for checking",
+      "sendAgain": "Send again",
+      "sending": "Sending…",
+      "use": "We use these details to check your clinic's legal identity.",
+      "sent": "Details sent. We are checking them.",
+      "errors": {
+        "legal-name": "Enter your clinic's legal name.",
+        "invalid-tax-id": "Enter a valid NIF or VAT number: 8 to 32 letters and digits, for example PT515001708.",
+        "validation": "Check both fields and try again.",
+        "changed": "Your details were updated while you were sending. Reload the page and try again.",
+        "failed": "We could not send your details. Please try again."
+      }
     }
   }
 }
