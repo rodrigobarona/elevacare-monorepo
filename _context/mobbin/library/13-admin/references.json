@@ -193,9 +193,9 @@
     "After a decision, does the page say what happened and what happens next, and does a refusal (already decided, new details, your own clinic) say what to do?",
     "On a user's page, can staff see the account state in words and every active session, and sign out one device or all of them, or suspend the account, each with a confirmation that says what will happen? (1Password 13-admin/04, Homerun 13-admin/06)",
     "Does 'View as' ask for a reason before it starts, and does a bar that names the person and offers 'Stop viewing' stay on every page while it lasts? (Clerk 13-admin/07, Base44 13-admin/08)",
-    "Is it clear at the composer that a note is for Eleva staff only, and does each note show who wrote it and when? (Shopify 13-admin/09, Zendesk 13-admin/10)",
-    "For an action that needs two people, can the second person see what is asked, by whom, when and why, and approve or reject it, while the first sees that it is waiting and for how many approvals? (Airwallex 13-admin/11, Acctual 13-admin/12)",
+    "Is it clear at the composer that a note is for Eleva staff only, does each note show who wrote it and when, and is the note absent from everything the member, the expert or the clinic can open (their activity, exports and emails)? (Shopify 13-admin/09, Zendesk 13-admin/10)",
+    "For an action that needs two people, can the second person see what is asked, by whom, when and why, and approve or reject it, while the first sees that it is waiting and for how many approvals, and is the person who asked unable to approve their own request? (Airwallex 13-admin/11, Acctual 13-admin/12)",
     "Can staff answer who did what, to which record and when from the audit log, by filtering on person, action, record and date, with each row readable as a sentence? (Front 13-admin/13, Customer.io 13-admin/14)",
-    "Can staff find the webhook events that failed, see why each one failed and how many times it was tried, and run one or several again? (Resend 13-admin/15, Customer.io 13-admin/16)"
+    "Can staff find the webhook events that failed, see why each one failed and how many times it was tried, run one or several again, and then see the result of each one, not only that a retry was asked? (Resend 13-admin/15, Customer.io 13-admin/16)"
   ]
 }

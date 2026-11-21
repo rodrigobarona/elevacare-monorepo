@@ -25123,10 +25123,12 @@
                 two-step line on top says where she is.
               </p>
               <p>
-                <b>Eleva takes:</b> Show the clinic's two plans as two cards
-                with the price per clinician seat; let the admin set the number
-                of seats and watch the monthly total and first charge date
-                change before she continues to payment.
+                <b>Eleva takes:</b> Show the clinic's two plans as two cards,
+                each with its price and how many expert seats it includes
+                (Starter 5, Growth 20), and a summary of the first charge before
+                she continues to payment. Do not copy the seat stepper: at Eleva
+                nobody types a number of seats; a seat is taken when an expert
+                in the clinic publishes a first service.
               </p>
               <p class="meta">
                 <a
@@ -25169,9 +25171,11 @@
               </p>
               <p>
                 <b>Eleva takes:</b> Before the clinic subscribes or changes
-                plan, show one summary: plan, seats times price, tax, what is
-                charged today and what renews on which date, then one button
-                that names the action.
+                plan, show one summary: the plan, the seats in use today times
+                the price, tax, what is charged today and what renews on which
+                date, then one button that names the action. The seat count
+                shown is read from the clinic's experts with a published
+                service, never typed in.
               </p>
               <p class="meta">
                 <a
@@ -25305,11 +25309,14 @@
                 more members.' Two buttons: Cancel and Upgrade.
               </p>
               <p>
-                <b>Eleva takes:</b> When a clinic admin invites past the plan's
-                seats, say how many seats the plan has and that all are in use,
-                then what the larger plan gives (how many seats, at what price
-                per seat), with 'See plans' and 'Not now'. Navattic names the
-                limit but not what upgrading gives; Eleva says both.
+                <b>Eleva takes:</b> Use the wording, not the place. At Eleva
+                inviting is never stopped by seats: the limit is met when an
+                expert publishes a first service. So this prompt belongs in the
+                expert's &quot;no seat left&quot; message and on the Team page's
+                seat line: say how many seats the plan has and that all are in
+                use, then what the larger plan gives (how many seats, at what
+                price per seat), with 'See plans' and 'Not now'. Navattic names
+                the limit but not what upgrading gives; Eleva says both.
               </p>
               <p class="meta">
                 <a
@@ -25728,10 +25735,11 @@
               <label
                 ><input type="checkbox" />
                 <span
-                  >Can a clinic admin compare the two plans side by side with
-                  the price per seat, set the number of seats and see the total
-                  and the first charge date before she pays? (Sketch 11-team/14,
-                  Attio 11-team/15)</span
+                  >Can a clinic admin compare the two plans side by side, each
+                  with its price and the number of expert seats it includes, and
+                  see the seats in use today, the total and the first charge
+                  date before she pays, without typing a number of seats?
+                  (Sketch 11-team/14, Attio 11-team/15)</span
                 ></label
               >
             </li>
@@ -25750,10 +25758,11 @@
               <label
                 ><input type="checkbox" />
                 <span
-                  >When the clinic is at its seat limit, does the prompt say
-                  what the limit is, that it is reached and what the larger plan
-                  gives, with one way to continue and one way to close?
-                  (Navattic 11-team/18)</span
+                  >When an expert cannot publish because the clinic is at its
+                  seat limit, do the expert's message and the Team page say what
+                  the limit is, that it is reached and what the larger plan
+                  gives, with one way to continue, and is inviting still
+                  possible? (Navattic 11-team/18)</span
                 ></label
               >
             </li>
@@ -28165,7 +28174,9 @@
                 ><input type="checkbox" />
                 <span
                   >Is it clear at the composer that a note is for Eleva staff
-                  only, and does each note show who wrote it and when? (Shopify
+                  only, does each note show who wrote it and when, and is the
+                  note absent from everything the member, the expert or the
+                  clinic can open (their activity, exports and emails)? (Shopify
                   13-admin/09, Zendesk 13-admin/10)</span
                 ></label
               >
@@ -28177,7 +28188,8 @@
                   >For an action that needs two people, can the second person
                   see what is asked, by whom, when and why, and approve or
                   reject it, while the first sees that it is waiting and for how
-                  many approvals? (Airwallex 13-admin/11, Acctual
+                  many approvals, and is the person who asked unable to approve
+                  their own request? (Airwallex 13-admin/11, Acctual
                   13-admin/12)</span
                 ></label
               >
@@ -28198,8 +28210,9 @@
                 ><input type="checkbox" />
                 <span
                   >Can staff find the webhook events that failed, see why each
-                  one failed and how many times it was tried, and run one or
-                  several again? (Resend 13-admin/15, Customer.io
+                  one failed and how many times it was tried, run one or several
+                  again, and then see the result of each one, not only that a
+                  retry was asked? (Resend 13-admin/15, Customer.io
                   13-admin/16)</span
                 ></label
               >

@@ -170,7 +170,7 @@
       "mobbin_url": "https://mobbin.com/screens/70354ca1-3fbb-4c0c-8b89-d387aaed5e14?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
       "pattern": "Two plans as two cards priced per seat, with a seat stepper and a running bill summary on the same screen",
       "why": "'Choose a Plan' shows Standard and Business as two cards, each with its price 'Monthly / per Editor', under a yearly or monthly choice. Beside them an 'Add Editors' stepper and a 'Bill Summary' give the total per month and the date of the first charge, with one button: 'Continue to Billing Details'. A two-step line on top says where she is.",
-      "apply": "Show the clinic's two plans as two cards with the price per clinician seat; let the admin set the number of seats and watch the monthly total and first charge date change before she continues to payment.",
+      "apply": "Show the clinic's two plans as two cards, each with its price and how many expert seats it includes (Starter 5, Growth 20), and a summary of the first charge before she continues to payment. Do not copy the seat stepper: at Eleva nobody types a number of seats; a seat is taken when an expert in the clinic publishes a first service.",
       "query": "workspace plans page comparing two paid plans with price per member"
     },
     {
@@ -182,7 +182,7 @@
       "mobbin_url": "https://mobbin.com/screens/76c3d525-7357-4001-b655-5af05b1c1dee?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
       "pattern": "Change summary before paying: plan, billing period and seats on the left, what is due today and at renewal on the right",
       "why": "'Upgrade to Pro' is one dialog: the billing period with the price per user per month, a seats stepper, and on the right '3 seat x Pro', subtotal, tax, 'Total at renewal' and 'Adjustment due today'. A note says the card is not charged until the trial ends. One button: 'Confirm and upgrade'.",
-      "apply": "Before the clinic subscribes or changes plan, show one summary: plan, seats times price, tax, what is charged today and what renews on which date, then one button that names the action.",
+      "apply": "Before the clinic subscribes or changes plan, show one summary: the plan, the seats in use today times the price, tax, what is charged today and what renews on which date, then one button that names the action. The seat count shown is read from the clinic's experts with a published service, never typed in.",
       "query": "choose a team plan screen with plans priced per seat"
     },
     {
@@ -218,7 +218,7 @@
       "mobbin_url": "https://mobbin.com/screens/aec544a8-1ada-4fda-afc0-6b7f68dd6780?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
       "pattern": "At the seat limit, the invite dialog says the limit and offers the upgrade in place",
       "why": "Pressing invite at the limit opens 'Invite member to SL Mobbin' with one sentence: 'You have reached the maximum number of members for your workspace (1). Upgrade your workspace to add more members.' Two buttons: Cancel and Upgrade.",
-      "apply": "When a clinic admin invites past the plan's seats, say how many seats the plan has and that all are in use, then what the larger plan gives (how many seats, at what price per seat), with 'See plans' and 'Not now'. Navattic names the limit but not what upgrading gives; Eleva says both.",
+      "apply": "Use the wording, not the place. At Eleva inviting is never stopped by seats: the limit is met when an expert publishes a first service. So this prompt belongs in the expert's \"no seat left\" message and on the Team page's seat line: say how many seats the plan has and that all are in use, then what the larger plan gives (how many seats, at what price per seat), with 'See plans' and 'Not now'. Navattic names the limit but not what upgrading gives; Eleva says both.",
       "query": "upgrade prompt when a team reaches its seat limit"
     },
     {
@@ -307,9 +307,9 @@
     "When Eleva asks for a change or cannot verify, does the page show the reason in Eleva's own words and put the form to send new details right below it, filled with what was sent? (Stripe 11-team/11)",
     "Does the form ask only for the legal name and the tax number, say what Eleva does with them, and refuse a malformed number with a sentence that says what a valid one looks like?",
     "When verification needs the clinic, does the Overview say so in one card with one action, and stay quiet when it does not? (Square 11-team/13)",
-    "Can a clinic admin compare the two plans side by side with the price per seat, set the number of seats and see the total and the first charge date before she pays? (Sketch 11-team/14, Attio 11-team/15)",
+    "Can a clinic admin compare the two plans side by side, each with its price and the number of expert seats it includes, and see the seats in use today, the total and the first charge date before she pays, without typing a number of seats? (Sketch 11-team/14, Attio 11-team/15)",
     "Does the Billing page show the plan, seats in use out of seats included in words and numbers, the next invoice date and amount, past invoices and one clear way to change the plan? (Attio 11-team/16, Runway 11-team/17)",
-    "When the clinic is at its seat limit, does the prompt say what the limit is, that it is reached and what the larger plan gives, with one way to continue and one way to close? (Navattic 11-team/18)",
+    "When an expert cannot publish because the clinic is at its seat limit, do the expert's message and the Team page say what the limit is, that it is reached and what the larger plan gives, with one way to continue, and is inviting still possible? (Navattic 11-team/18)",
     "Can a clinic admin see every clinician's sessions in one list and narrow it by clinician and by date, with the filters in use always visible and each status in words? (Fresha 11-team/19, Wix 11-team/20)",
     "Does the schedule show several clinicians side by side for a day and as rows for a week, with non-working time marked and every block labelled in text? (Fresha 11-team/21, Workable 11-team/22)",
     "Before shared session records are turned on, does the clinic admin read who will see what, give a written reason and confirm explicitly, and does the setting then show who turned it on and when? (Productboard 11-team/23, Height 11-team/24)"
