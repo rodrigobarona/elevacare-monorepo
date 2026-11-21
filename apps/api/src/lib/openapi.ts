@@ -4341,14 +4341,15 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               content: { "application/json": { schema: ErrorSchema } },
             },
             "409": {
-              description: "ALREADY_MEMBER or MEMBER_LIMIT_REACHED",
+              description:
+                "ALREADY_MEMBER, MEMBER_LIMIT_REACHED, or INVITATION_DECLINED (this person declined the clinic's invitation in the last 30 days)",
               content: {
                 "application/json": { schema: TeamMemberErrorSchema },
               },
             },
             "429": {
               description:
-                "INVITATION_RECENTLY_SENT (this address was emailed less than a minute ago), or the caller's own request rate limit",
+                "INVITATION_RECENTLY_SENT (this address was emailed less than a minute ago), INVITATION_DAILY_LIMIT (the clinic invited 50 addresses in the last 24 hours), or the caller's own request rate limit",
               content: {
                 "application/json": {
                   schema: z.union([

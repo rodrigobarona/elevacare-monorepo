@@ -284,7 +284,7 @@ export function TeamRoster({
             className={
               seatStanding === "open"
                 ? "text-muted-foreground"
-                : "font-medium text-foreground"
+                : "text-foreground"
             }
           >
             {seatStanding === "over"

@@ -17,6 +17,19 @@ export const TEAM_MEMBER_LIMIT = 200
 export const TEAM_INVITATION_RESEND_COOLDOWN_MS = 60 * 1000
 
 /**
+ * After someone declines a clinic's invitation, that clinic does not invite
+ * the same address again for this long: declining has to mean something to
+ * a person who may not even have an account to manage it from.
+ */
+export const TEAM_INVITATION_DECLINE_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000
+
+/**
+ * Addresses one clinic invites in 24 hours. Inviting and withdrawing does
+ * not get around it: every invitation sent counts, whatever became of it.
+ */
+export const TEAM_INVITATIONS_PER_DAY = 50
+
+/**
  * Error code when Better Auth's own invite, cancel, remove or role
  * endpoint is called for a clinic: use `/teams/{teamId}/…` instead.
  */

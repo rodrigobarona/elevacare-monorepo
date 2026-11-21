@@ -19,7 +19,7 @@
     "seats": "{used} de {cap} plazas ocupadas. Una plaza se ocupa cuando un especialista tiene un servicio publicado.",
     "seatsFull": "Las {cap} plazas están ocupadas. Una plaza queda libre cuando un especialista deja de tener servicios publicados o sale del equipo; entonces otro especialista puede publicar.",
     "seatsFullPill": "Todas las plazas ocupadas",
-    "seatsOver": "{used} especialistas tienen un servicio publicado; tu plan incluye {cap} plazas. Quien ya tiene servicios publicados los conserva. Otro especialista podrá publicar cuando haya menos de {cap} plazas ocupadas.",
+    "seatsOver": "{used} especialistas tienen un servicio publicado; tu plan incluye {cap} plazas. Quien ya tiene servicios publicados los conserva. Una plaza queda libre cuando un especialista deja de tener servicios publicados o sale del equipo; otro especialista podrá publicar cuando haya menos de {cap} plazas ocupadas.",
     "role": {
       "owner": "Titular",
       "admin": "Admin",
@@ -58,6 +58,8 @@
       "limit": "Tu equipo ha llegado a 200 personas. Quita a alguien o retira una invitación primero.",
       "owner-required": "Solo quien es titular puede invitar con el rol Admin o cambiar una invitación para ese rol. Pídeselo a quien es titular.",
       "recently-sent": "Podrás enviar esta invitación de nuevo dentro de un minuto.",
+      "declined": "Esta persona rechazó la invitación de tu clínica. Para respetarlo, puedes volver a invitarla pasados 30 días.",
+      "daily-limit": "Tu clínica ya ha invitado al máximo de personas por día. Podrás invitar a más mañana.",
       "failed": "No hemos podido enviar la invitación. Inténtalo de nuevo."
     },
     "remove": {

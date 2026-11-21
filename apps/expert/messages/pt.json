@@ -221,7 +221,7 @@
       "toggle-failed": "Não foi possível atualizar o tipo de evento. Tente novamente.",
       "delete-failed": "Não foi possível eliminar o tipo de evento. Tente novamente.",
       "connect-incomplete": "Conclua a configuração de Pagamentos antes de publicar. A Stripe ainda precisa de dados de pagamento.",
-      "seat-limit-reached": "Os lugares da sua clínica estão todos ocupados, por isso este serviço ainda não pode ser publicado. Cada especialista com um serviço publicado ocupa um lugar. Fale com quem é titular ou administra a clínica: a página Equipa mostra quem ocupa cada lugar.",
+      "seat-limit-reached": "Os lugares da sua clínica estão todos ocupados, por isso este serviço ainda não pode ser publicado. Cada especialista com um serviço publicado ocupa um lugar. Peça a quem é titular ou administra a clínica que liberte um lugar. A página Equipa mostra quem ocupa cada lugar.",
       "offer-invariant": "Esta oferta ainda não pode ser publicada. Adicione um modo de entrega válido e corrija países ou idiomas.",
       "generic": "Algo correu mal. Tente novamente."
     },

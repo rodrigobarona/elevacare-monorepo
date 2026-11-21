@@ -251,10 +251,21 @@ branch|production`, `--since`, `--report`) and the target guard
   source, `@eleva/config/legal-entity`, which the public footer uses too;
   it used to say "Lisbon, Portugal". The invitation, which can reach
   someone with no account, also points to the privacy notice. For counsel:
-  whether the company particulars on emails are complete. Not built: a
-  daily cap on invitations a clinic can send (the cooldown is per address,
-  so inviting and withdrawing many addresses is not limited), and stopping
-  re-invitations after a decline.
+  whether the company particulars on emails are complete (share capital
+  and the registry office are in the terms, not in the email line).
+- Second follow-up (judges, round 2, 2026-11-21): an invited person can
+  make the invitations stop. After a decline, the same clinic cannot invite
+  that address for 30 days (409 `INVITATION_DECLINED`), and a clinic
+  invites at most 50 addresses in 24 hours, withdrawn ones included (429
+  `INVITATION_DAILY_LIMIT`). The per-address minute between emails stays.
+  The expert's "no seat left" message is an alert under the service, the
+  over-limit line says what frees a seat, and the public footer named in
+  the first follow-up is the checkout footer (`checkout-site-footer.tsx`);
+  the main site footer shows the copyright line only. Not built: a real
+  link (with the locale) to the privacy notice in the invitation, which
+  today is the address as text; the privacy notice itself does not yet
+  mention invited people (for the DPO, text proposed in the retention
+  matrix).
 - Owner: engineering
 
 ### 2026-11-20: The clinic's Team page: invite, send again, withdraw, remove (11.2) (active)

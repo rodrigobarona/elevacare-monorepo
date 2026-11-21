@@ -30,6 +30,8 @@ export type InviteError =
   | "limit"
   | "owner-required"
   | "recently-sent"
+  | "declined"
+  | "daily-limit"
   | "failed"
 
 export type InviteResult =
@@ -41,6 +43,8 @@ const INVITE_ERRORS: Partial<Record<string, InviteError>> = {
   MEMBER_LIMIT_REACHED: "limit",
   OWNER_REQUIRED: "owner-required",
   INVITATION_RECENTLY_SENT: "recently-sent",
+  INVITATION_DECLINED: "declined",
+  INVITATION_DAILY_LIMIT: "daily-limit",
 }
 
 /** Invite by email, or send a pending invitation again. */

@@ -1,4 +1,14 @@
-import { and, asc, eq, gt, inArray, isNull, notInArray, sql } from "drizzle-orm"
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gt,
+  inArray,
+  isNull,
+  notInArray,
+  sql,
+} from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
 import { auth, main, withOrgContext, type Tx } from "@eleva/db"
 import {
@@ -10,8 +20,10 @@ import { toMembershipSeniority } from "./capabilities"
 import { invitationAcceptUrl } from "./invitation-accept-url"
 import { sendOrgInvitationEmail } from "./send-auth-email"
 import {
+  TEAM_INVITATION_DECLINE_COOLDOWN_MS,
   TEAM_INVITATION_RESEND_COOLDOWN_MS,
   TEAM_INVITATION_TTL_MS,
+  TEAM_INVITATIONS_PER_DAY,
   TEAM_MEMBER_LIMIT,
   TEAM_SESSION_TRAIL_MS,
 } from "./team-limits"
@@ -34,6 +46,8 @@ export type TeamMemberErrorCode =
   | "MEMBER_NOT_FOUND"
   | "INVITATION_NOT_FOUND"
   | "INVITATION_RECENTLY_SENT"
+  | "INVITATION_DECLINED"
+  | "INVITATION_DAILY_LIMIT"
   | "OWNER_REQUIRED"
   | "MANAGER_REQUIRED"
   | "CANNOT_REMOVE_OWNER"
@@ -58,8 +72,10 @@ export class TeamMemberError extends Error {
 }
 
 export {
+  TEAM_INVITATION_DECLINE_COOLDOWN_MS,
   TEAM_INVITATION_RESEND_COOLDOWN_MS,
   TEAM_INVITATION_TTL_MS,
+  TEAM_INVITATIONS_PER_DAY,
   TEAM_MEMBER_LIMIT,
 }
 
@@ -280,7 +296,7 @@ async function assertTeamHasRoom(
  * send sets the expiry seven days out, so the last send is the latest
  * expiry minus seven days. A stored time in the future counts as just sent.
  */
-async function assertNotJustSent(
+async function assertMayInvite(
   tx: Tx,
   orgId: string,
   email: string,
@@ -295,15 +311,64 @@ async function assertNotJustSent(
         sql`lower(${auth.invitation.email}) = ${email}`
       )
     )
-  if (!latest?.expiresAt) return
-  const lastSent = new Date(latest.expiresAt).getTime() - TEAM_INVITATION_TTL_MS
-  const sinceLastSend = now.getTime() - lastSent
-  if (sinceLastSend < TEAM_INVITATION_RESEND_COOLDOWN_MS) {
-    throw new TeamMemberError("INVITATION_RECENTLY_SENT", {
-      retryAfterSeconds: Math.ceil(
-        (TEAM_INVITATION_RESEND_COOLDOWN_MS - sinceLastSend) / 1000
-      ),
+  if (latest?.expiresAt) {
+    const lastSent =
+      new Date(latest.expiresAt).getTime() - TEAM_INVITATION_TTL_MS
+    const sinceLastSend = now.getTime() - lastSent
+    if (sinceLastSend < TEAM_INVITATION_RESEND_COOLDOWN_MS) {
+      throw new TeamMemberError("INVITATION_RECENTLY_SENT", {
+        retryAfterSeconds: Math.ceil(
+          (TEAM_INVITATION_RESEND_COOLDOWN_MS - sinceLastSend) / 1000
+        ),
+      })
+    }
+  }
+
+  // The person said no: this clinic leaves them alone for a while.
+  const [newest] = await tx
+    .select({
+      status: auth.invitation.status,
+      expiresAt: auth.invitation.expiresAt,
     })
+    .from(auth.invitation)
+    .where(
+      and(
+        eq(auth.invitation.organizationId, orgId),
+        sql`lower(${auth.invitation.email}) = ${email}`
+      )
+    )
+    .orderBy(desc(auth.invitation.expiresAt))
+    .limit(1)
+  if (newest?.status === "rejected") {
+    const sinceDeclined =
+      now.getTime() - (newest.expiresAt.getTime() - TEAM_INVITATION_TTL_MS)
+    if (sinceDeclined < TEAM_INVITATION_DECLINE_COOLDOWN_MS) {
+      throw new TeamMemberError("INVITATION_DECLINED", {
+        retryAfterSeconds: Math.ceil(
+          (TEAM_INVITATION_DECLINE_COOLDOWN_MS - sinceDeclined) / 1000
+        ),
+      })
+    }
+  }
+
+  // Every invitation this clinic sent in the last day, whatever became of
+  // it (accepted, withdrawn, declined, expired).
+  const dayAgo = new Date(
+    now.getTime() + TEAM_INVITATION_TTL_MS - 24 * 60 * 60 * 1000
+  )
+  const [today] = await tx
+    .select({ sent: sql<number>`count(*)::int` })
+    .from(auth.invitation)
+    .where(
+      and(
+        eq(auth.invitation.organizationId, orgId),
+        gt(auth.invitation.expiresAt, dayAgo),
+        // Sending this one again is not another address.
+        sql`lower(${auth.invitation.email}) <> ${email}`
+      )
+    )
+  if ((today?.sent ?? 0) >= TEAM_INVITATIONS_PER_DAY) {
+    throw new TeamMemberError("INVITATION_DAILY_LIMIT")
   }
 }
 
@@ -407,7 +472,7 @@ export async function inviteTeamMember(input: {
       ) {
         throw new TeamMemberError("OWNER_REQUIRED")
       }
-      await assertNotJustSent(tx, input.orgId, email, now)
+      await assertMayInvite(tx, input.orgId, email, now)
 
       if (pending) {
         // A lapsed invitation gave its place back: renewing takes one again.
