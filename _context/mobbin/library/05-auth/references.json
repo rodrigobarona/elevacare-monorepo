@@ -3,7 +3,7 @@
   "title": "Sign in and sign up",
   "researcher": "Onboarding and activation",
   "date": "2026-11-14",
-  "summary": "The identifier-first flow is clean, short and on brand on desktop, and should be kept. Its weak points are at the edges: sign-up speaks only to members so a health professional sees no door, the phone layout drops every reassurance the desktop panel carries, and the two 'check your email' screens leave people waiting with nothing to do. The change that matters most is an expert variant of sign-up that carries intent into setup, with a compact trust line on mobile.",
+  "summary": "The identifier-first flow is clean, short and on brand on desktop, and should be kept. Its weak points are at the edges: sign-up speaks only to members so a health professional sees no door, the phone layout drops every reassurance the desktop panel carries, and the two 'check your email' screens leave people waiting with nothing to do. The change that matters most is an expert variant of sign-up that carries intent into setup, with a compact trust line on mobile. References 12 and 13 (2026-11-21) prepare the return of people who had an account before the move: setting a new password with the account named, and a disconnected calendar with one button to reconnect.",
   "strengths": [
     "Identifier-first is done properly: one email field or Google first, then a second step that shows the address as a chip with 'Change' (02-login-step-two, 04-signup-step-two). Keep this structure.",
     "The desktop brand panel has real presence: deep teal, the Lora headline with a rotating care area, and concrete points such as 'Online, by phone or in person'.",
@@ -278,6 +278,30 @@
       "why": "A women's health app. Its sign-in sheet keeps the brand line visible above, then says 'If you are returning, please use the sign in method you have used in the past' over the Apple, Google and email options, with terms and privacy linked under the button.",
       "apply": "Add a one-line hint for returning members on Eleva's first step (or mark the last-used method), and keep Terms and Privacy linked on the mobile sign-in.",
       "query": "telehealth app sign in screen"
+    },
+    {
+      "id": "05-auth/12",
+      "file": "img/12-nordvpn-new-password-signed-out.jpg",
+      "app": "NordVPN",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/de31887a-76ad-492a-93fa-47f970d6c5a4?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "New password screen that names the account and says what else will happen",
+      "why": "'Enter new password' shows the account's email in a chip above the field, the password rule in one sentence under a strength bar, a plain error when the password is a common one, and one line before the button: 'You'll be logged out on all devices.'",
+      "apply": "For someone coming back after Eleva's move: show which account she is setting a password for, the rule in one sentence and one line on what happens next. Add one sentence above it on why she is asked; no Mobbin result showed a 'we have moved' message, so that line is Eleva's own.",
+      "query": "set a new password screen for an existing account after a required password reset"
+    },
+    {
+      "id": "05-auth/13",
+      "file": "img/13-meetup-disconnected-reconnect.jpg",
+      "app": "Meetup",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/9a6077fe-c60a-4d32-8ce4-743766568e57?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A connection that stopped working: 'Disconnected' in words, one Reconnect button, the steps that depend on it switched off",
+      "why": "'Mailchimp sync' explains how it works in a short box. Under 'Connect account' a 'Disconnected' tag with an icon sits on the same line as a 'Reconnect' button. The steps that need the connection are greyed out below.",
+      "apply": "After the move, an expert's calendar row reads 'Disconnected' with one line on why and what it affects (her busy times are not blocked), and 'Reconnect' on the same row. Repeat it as one card on her Overview until it is done.",
+      "query": "integrations settings with a connection that expired and needs to be reconnected"
     }
   ],
   "judging_criteria": [
@@ -287,6 +311,7 @@
     "On every 'check your email' screen, is the address on its own line with a way to change it, and is the primary action a button that opens the inbox? (05-auth/07, 05-auth/09)",
     "Does the waiting screen say who the email is from and what to do if it does not arrive, with a link to help? (05-auth/08)",
     "Can a new member create an account without inventing a password, and does a returning member see which method she used last? (05-auth/09, 05-auth/06)",
-    "Are a language menu (EN, PT, ES), a help link and Terms and Privacy reachable from every auth screen, on desktop and mobile? (05-auth/06, 05-auth/05)"
+    "Are a language menu (EN, PT, ES), a help link and Terms and Privacy reachable from every auth screen, on desktop and mobile? (05-auth/06, 05-auth/05)",
+    "Does a person returning after the move see why she is asked to set a new password, which account it is for and what happens next, and is a calendar that was disconnected shown as 'Disconnected' with one button to reconnect? (05-auth/12, 05-auth/13)"
   ]
 }
