@@ -229,11 +229,18 @@ branch|production`, `--since`, `--report`) and the target guard
   and a clinic without a current clinic subscription is held to Starter. Practices that are not clinics are never limited.
 - Deleting a service now marks and syncs the clinic's seat count, like
   unpublishing.
-- The Team page says how many seats are in use; the service editor tells
-  an expert to ask a clinic admin when no seat is free. The page still
-  shows no prices: choosing and paying for a plan is the billing slice.
-- Proof: `seat-cap.integration.test.ts` on the PR's Neon branch (5 cases,
-  including two members racing for the last seat).
+- The Team page says how many seats are in use; when a clinic has more
+  seated experts than its plan includes (after a plan change) it says they
+  keep their seats and that a seat given up cannot be taken again until
+  the clinic is under its limit. The service editor tells an expert to ask
+  a clinic admin to free a seat; it does not offer a plan change, which
+  has no page yet. The page still shows no prices: choosing and paying for
+  a plan is the billing slice, and the plan limits belong in the published
+  terms with it.
+- Proof: `seat-cap.integration.test.ts` on the PR's Neon branch (6 cases,
+  including two members racing for the last seat and an ended plan) and
+  `publish/route.test.ts` (the check runs in the publish transaction
+  before the write; the 409 body).
 - Not in this slice: the billing page (plan, checkout, portal), an
   Enterprise plan, and `hasFeature`.
 - Owner: engineering

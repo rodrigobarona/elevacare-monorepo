@@ -270,10 +270,18 @@ export function TeamRoster({
           })}
         </ul>
         <p
-          className="max-w-prose text-sm text-muted-foreground"
+          className={
+            seats.used >= seats.cap
+              ? "max-w-prose text-sm font-medium text-foreground"
+              : "max-w-prose text-sm text-muted-foreground"
+          }
           data-testid="team-seats"
         >
-          {seats.used >= seats.cap ? t("seatsFull", seats) : t("seats", seats)}
+          {seats.used > seats.cap
+            ? t("seatsOver", seats)
+            : seats.used === seats.cap
+              ? t("seatsFull", seats)
+              : t("seats", seats)}
         </p>
         <p className="max-w-prose text-sm text-muted-foreground">
           {t("ownerNote")}
