@@ -26,6 +26,7 @@ tying our deploy automation to the layout of any single app.
 | `/workflows/video-room-sweep`                | `*/15 * * * *`                                   | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/video`      |
 | `/workflows/video-eject-retry`               | `* * * * *`                                      | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/video`      |
 | `/workflows/video-attendance-sweep`          | `*/15 * * * *`                                   | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/video`      |
+| `/workflows/seat-sync-sweep`                 | `*/10 * * * *` (Vercel Cron tick)                | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/billing`    |
 
 When you add a new schedule:
 

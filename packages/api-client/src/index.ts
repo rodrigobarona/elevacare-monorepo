@@ -1051,11 +1051,12 @@ export const TeamMemberErrorSchema = z.object({
     "INVITATION_NOT_FOUND",
     "INVITATION_RECENTLY_SENT",
     "OWNER_REQUIRED",
+    "MANAGER_REQUIRED",
     "CANNOT_REMOVE_OWNER",
     "CANNOT_REMOVE_SELF",
     "MEMBER_HAS_UPCOMING_SESSIONS",
   ]),
-  /** MEMBER_HAS_UPCOMING_SESSIONS: sessions booked in the clinic. */
+  /** MEMBER_HAS_UPCOMING_SESSIONS: sessions booked or running in the clinic. */
   upcomingSessions: z.number().int().nonnegative().optional(),
   /**
    * MEMBER_HAS_UPCOMING_SESSIONS: slots someone is paying for right now.

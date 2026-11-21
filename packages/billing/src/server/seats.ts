@@ -1,11 +1,12 @@
 import { Redis } from "@upstash/redis"
-import { and, eq, sql } from "drizzle-orm"
+import { and, eq, lt, sql } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
 import {
   countBillableSeats,
   db,
   main,
   withOrgContext,
+  withPlatformAdminContext,
   type Tx,
 } from "@eleva/db"
 import { organization } from "@eleva/db/schema/auth"
@@ -248,4 +249,52 @@ export async function enqueueSeatSync(
   const result = await syncSeatQuantityAudited(orgId, actorUserId)
   await clearSeatSyncPending(orgId, generation)
   return result
+}
+
+export interface SeatSyncSweepResult {
+  /** Clinics whose seat count was waiting for Stripe. */
+  pending: number
+  synced: number
+  failed: number
+}
+
+/** A sync still marked pending after this long was not finished. */
+const SEAT_SYNC_STALE_MS = 2 * 60 * 1000
+
+/**
+ * Finishes seat syncs that were marked but never reached Stripe (the API
+ * answered before Stripe did, or Stripe was unreachable). Runs every ten
+ * minutes; each clinic is recounted and synced like a fresh request, so a
+ * failure simply waits for the next run.
+ */
+export async function sweepPendingSeatSyncs(
+  options: { limit?: number; now?: Date } = {}
+): Promise<SeatSyncSweepResult> {
+  const staleBefore = new Date(
+    (options.now ?? new Date()).getTime() - SEAT_SYNC_STALE_MS
+  )
+  const rows = await withPlatformAdminContext((tx) =>
+    tx
+      .selectDistinct({ orgId: main.billingSubscriptions.orgId })
+      .from(main.billingSubscriptions)
+      .where(
+        and(
+          sql`${main.billingSubscriptions.metadata}->>'seatSyncPending' = 'true'`,
+          lt(main.billingSubscriptions.updatedAt, staleBefore)
+        )
+      )
+      .limit(options.limit ?? 50)
+  )
+  let synced = 0
+  let failed = 0
+  for (const { orgId } of rows) {
+    try {
+      await enqueueSeatSync(orgId, null)
+      synced += 1
+    } catch {
+      // Audited as billing_subscription.failed; the mark stays for next run.
+      failed += 1
+    }
+  }
+  return { pending: rows.length, synced, failed }
 }

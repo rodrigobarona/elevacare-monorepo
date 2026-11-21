@@ -511,6 +511,8 @@ function InviteDialog({
                 if (error) setError(null)
               }}
               placeholder={t("invite.emailPlaceholder")}
+              // The answer is about the address that was sent: keep it.
+              readOnly={pending}
               aria-invalid={fieldError ? true : undefined}
               aria-describedby={fieldError ? errorId : undefined}
               data-testid="team-invite-email"

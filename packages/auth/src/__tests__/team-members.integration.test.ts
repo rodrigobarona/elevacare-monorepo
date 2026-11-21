@@ -62,6 +62,9 @@ describe.skipIf(!enabled || !databaseUrl)(
     const slug = `team-${orgId.slice(0, 8)}`
     const inviteeEmail = `team-invitee-${orgId}@example.test`
     const sent: SentInvitation[] = []
+    /** One fixed clock for the invitation steps, however slow the run. */
+    const clock = new Date()
+    const later = (ms: number) => new Date(clock.getTime() + ms)
     /** What the mail provider does with the next invitation. */
     let mail: "sent" | "held" | "throws" = "sent"
 
@@ -138,7 +141,8 @@ describe.skipIf(!enabled || !databaseUrl)(
           { organizationId: orgId, userId: admin, role: "admin" },
           { organizationId: orgId, userId: secondAdmin, role: "admin" },
           { organizationId: orgId, userId: clinician, role: "member" },
-          { organizationId: otherOrgId, userId: guest, role: "member" },
+          // She runs another clinic: no rights in this one.
+          { organizationId: otherOrgId, userId: guest, role: "owner" },
         ])
       await db().insert(main.expertProfiles).values({
         id: profileId,
@@ -209,11 +213,13 @@ describe.skipIf(!enabled || !databaseUrl)(
 
     it("lists members with their published services and seats", async () => {
       const roster = await listTeamMembers(orgId)
-      expect(roster.members.map((m) => m.role)).toEqual([
-        "owner",
+      // The owner leads; everyone else joined at the same moment here.
+      expect(roster.members[0]?.userId).toBe(owner)
+      expect(roster.members.map((m) => m.role).sort()).toEqual([
         "admin",
         "admin",
         "member",
+        "owner",
       ])
       expect(
         roster.members.find((m) => m.userId === clinician)?.publishedServices
@@ -223,7 +229,7 @@ describe.skipIf(!enabled || !databaseUrl)(
     })
 
     it("invites by email for seven days and names who invites", async () => {
-      const now = new Date()
+      const now = clock
       const result = await inviteTeamMember({
         orgId,
         actorUserId: admin,
@@ -260,6 +266,7 @@ describe.skipIf(!enabled || !databaseUrl)(
           actorUserId: admin,
           email: inviteeEmail,
           role: "member",
+          now: later(10_000),
         })
       )
       expect(err.code).toBe("INVITATION_RECENTLY_SENT")
@@ -269,13 +276,12 @@ describe.skipIf(!enabled || !databaseUrl)(
     })
 
     it("renews the pending invitation as a new email, not a second row", async () => {
-      const later = new Date(Date.now() + TEAM_INVITATION_RESEND_COOLDOWN_MS)
       const again = await inviteTeamMember({
         orgId,
         actorUserId: owner,
         email: inviteeEmail,
         role: "member",
-        now: later,
+        now: later(TEAM_INVITATION_RESEND_COOLDOWN_MS),
       })
       const roster = await listTeamMembers(orgId)
       expect(again.resent).toBe(true)
@@ -299,6 +305,7 @@ describe.skipIf(!enabled || !databaseUrl)(
         actorUserId: owner,
         email,
         role: "member",
+        now: clock,
       })
       expect(held.emailSent).toBe(false)
       mail = "throws"
@@ -307,7 +314,7 @@ describe.skipIf(!enabled || !databaseUrl)(
         actorUserId: owner,
         email,
         role: "member",
-        now: new Date(Date.now() + TEAM_INVITATION_RESEND_COOLDOWN_MS),
+        now: later(TEAM_INVITATION_RESEND_COOLDOWN_MS),
       })
       mail = "sent"
       // The invitation is kept either way, so it can be sent again.
@@ -424,6 +431,7 @@ describe.skipIf(!enabled || !databaseUrl)(
         actorUserId: owner,
         email,
         role: "member",
+        now: clock,
       })
       await cancelTeamInvitation({
         orgId,
@@ -432,7 +440,13 @@ describe.skipIf(!enabled || !databaseUrl)(
       })
       const before = sent.length
       const err = await refusal(
-        inviteTeamMember({ orgId, actorUserId: owner, email, role: "member" })
+        inviteTeamMember({
+          orgId,
+          actorUserId: owner,
+          email,
+          role: "member",
+          now: later(10_000),
+        })
       )
       expect(err.code).toBe("INVITATION_RECENTLY_SENT")
       expect(sent).toHaveLength(before)
@@ -442,7 +456,7 @@ describe.skipIf(!enabled || !databaseUrl)(
         actorUserId: owner,
         email,
         role: "member",
-        now: new Date(Date.now() + TEAM_INVITATION_RESEND_COOLDOWN_MS),
+        now: later(TEAM_INVITATION_RESEND_COOLDOWN_MS),
       })
       expect(second.resent).toBe(false)
       expect(second.invitationId).not.toBe(first.invitationId)
@@ -489,6 +503,20 @@ describe.skipIf(!enabled || !databaseUrl)(
       expect(both.code).toBe("MEMBER_HAS_UPCOMING_SESSIONS")
       expect(both.detail).toEqual({ upcomingSessions: 1, pendingBookings: 1 })
 
+      // A session that started and may still be running blocks too: the
+      // call can go on for 30 minutes past its booked end.
+      await db()
+        .update(main.bookings)
+        .set({
+          startsAt: new Date(Date.now() - 80 * 60_000),
+          endsAt: new Date(Date.now() - 20 * 60_000),
+        })
+        .where(eq(main.bookings.id, bookingId))
+      const running = await refusal(
+        removeTeamMember({ orgId, actorUserId: owner, memberId: target })
+      )
+      expect(running.detail.upcomingSessions).toBe(1)
+
       await db()
         .update(main.bookings)
         .set({ status: "completed" })
@@ -513,10 +541,11 @@ describe.skipIf(!enabled || !databaseUrl)(
         .set({ status: "expired" })
         .where(eq(main.slotReservations.id, holdId))
       let ranInTransaction = false
+      const clinicianMemberId = await memberId(clinician)
       const removed = await removeTeamMember({
         orgId,
         actorUserId: owner,
-        memberId: await memberId(clinician),
+        memberId: clinicianMemberId,
         afterRemove: async () => {
           ranInTransaction = true
         },
@@ -530,7 +559,44 @@ describe.skipIf(!enabled || !databaseUrl)(
       const roster = await listTeamMembers(orgId)
       expect(roster.billableSeats).toBe(0)
       expect(roster.members.map((m) => m.userId)).toEqual([owner, admin])
-      expect(await auditActions()).toContain("membership.removed")
+      // The audit row is this clinician's, not the admin removed earlier.
+      const audit = await db()
+        .select({ id: main.auditOutbox.id })
+        .from(main.auditOutbox)
+        .where(
+          and(
+            eq(main.auditOutbox.orgId, orgId),
+            eq(main.auditOutbox.action, "membership.removed"),
+            eq(main.auditOutbox.entityId, clinicianMemberId)
+          )
+        )
+      expect(audit).toHaveLength(1)
+    })
+
+    it("stops a caller who no longer manages the clinic", async () => {
+      // The clinician was removed; an ordinary member never could.
+      for (const actorUserId of [clinician, guest]) {
+        const err = await refusal(
+          inviteTeamMember({
+            orgId,
+            actorUserId,
+            email: `team-late-${orgId}@example.test`,
+            role: "member",
+          })
+        )
+        expect(err.code).toBe("MANAGER_REQUIRED")
+      }
+      expect(
+        (
+          await refusal(
+            removeTeamMember({
+              orgId,
+              actorUserId: clinician,
+              memberId: await memberId(admin),
+            })
+          )
+        ).code
+      ).toBe("MANAGER_REQUIRED")
     })
   }
 )

@@ -21,3 +21,10 @@ export const TEAM_INVITATION_RESEND_COOLDOWN_MS = 60 * 1000
  * endpoint is called for a clinic: use `/teams/{teamId}/…` instead.
  */
 export const TEAM_MEMBERS_API_REQUIRED = "TEAM_MEMBERS_API_REQUIRED"
+
+/**
+ * A session can run on after its booked end (the join link works for 30
+ * minutes more, `@eleva/video` `JOIN_TRAIL_MS`). A clinician is not removed
+ * from a clinic while one of their sessions may still be running.
+ */
+export const TEAM_SESSION_TRAIL_MS = 30 * 60 * 1000

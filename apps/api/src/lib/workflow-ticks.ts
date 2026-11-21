@@ -9,6 +9,7 @@ import { POST as bookingRequestExpiry } from "@/app/workflows/booking-request-ex
 import { POST as crmFollowUpDue } from "@/app/workflows/crm-follow-up-due/route"
 import { POST as domainEventsPublisher } from "@/app/workflows/domain-events-publisher/route"
 import { POST as invoicingRetry } from "@/app/workflows/invoicing-retry/route"
+import { POST as seatSyncSweep } from "@/app/workflows/seat-sync-sweep/route"
 import { POST as slotReservationExpiry } from "@/app/workflows/slot-reservation-expiry/route"
 import { POST as stripeStuckEvents } from "@/app/workflows/stripe-stuck-events/route"
 import { POST as videoAttendanceSweep } from "@/app/workflows/video-attendance-sweep/route"
@@ -26,6 +27,7 @@ export const WORKFLOW_TICKS = {
     "stripe-stuck-events": stripeStuckEvents,
     "video-room-sweep": videoRoomSweep,
     "video-attendance-sweep": videoAttendanceSweep,
+    "seat-sync-sweep": seatSyncSweep,
   },
   hourly: {
     "audit-outbox-drainer": auditOutboxDrainer,

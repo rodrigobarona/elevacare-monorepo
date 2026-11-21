@@ -4260,9 +4260,14 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "429": {
               description:
-                "INVITATION_RECENTLY_SENT: this address was emailed less than a minute ago",
+                "INVITATION_RECENTLY_SENT (this address was emailed less than a minute ago), or the caller's own request rate limit",
               content: {
-                "application/json": { schema: TeamMemberErrorSchema },
+                "application/json": {
+                  schema: z.union([
+                    TeamMemberErrorSchema,
+                    RateLimitErrorSchema,
+                  ]),
+                },
               },
             },
           },
@@ -5793,6 +5798,12 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
         summary: "Expire lapsed slot holds",
         description:
           "Expires lapsed holds, cancelling still-cancelable PaymentIntents first and keeping holds whose payment can still settle.",
+      }),
+      "/workflows/seat-sync-sweep": internalWorkflow({
+        operationId: "sweepPendingSeatSyncs",
+        summary: "Finish clinic seat syncs left pending",
+        description:
+          "Recounts and syncs to Stripe the seat quantity of clinics whose last change (publish, unpublish, deleted service, removed member) was marked but never reached Stripe. Returns pending, synced and failed counts.",
       }),
       "/workflows/booking-request-expiry": internalWorkflow({
         operationId: "expireBookingRequests",

@@ -43,10 +43,14 @@ Each entry should include:
   revocable credential.
 - Invitations and removals are written by `@eleva/auth` (`team-members.ts`)
   in one transaction with their audit row, not through Better Auth's
-  session-only organization endpoints. Reason: every credential the API
-  accepts (cookie, bearer, API key) can manage the team, and sending an
-  invitation is now audited (`invitation.invited`), which the 11.1c entry
-  left open. Accepting and declining stay with Better Auth.
+  session-only organization endpoints. Reason: a session cookie, a
+  session bearer token and an API key can all manage the team (a bearer
+  JWT can read the roster but not write: the writes need a credential that
+  can be revoked), and sending an invitation is now audited
+  (`invitation.invited`), which the 11.1c entry left open. Each write
+  re-reads the caller's role inside its own transaction
+  (403 `MANAGER_REQUIRED` when they no longer manage the clinic).
+  Accepting and declining stay with Better Auth.
 - Better Auth's own invite, cancel-invitation, remove-member and
   update-member-role endpoints answer 403 `TEAM_MEMBERS_API_REQUIRED` for a
   team org, so the rules below cannot be walked around.
@@ -79,8 +83,9 @@ Each entry should include:
   (403 `OWNER_REQUIRED`). Admins manage experts. Ownership is never
   invited.
 - Removal rules: the owner is never removed, nobody removes their own
-  account, and a member with sessions booked in the clinic (or a slot being
-  paid for) is refused with `MEMBER_HAS_UPCOMING_SESSIONS` and the count,
+  account, and a member with sessions booked or running in the clinic (up
+  to 30 minutes past the booked end, as long as the call can go on), or a
+  slot being paid for, is refused with `MEMBER_HAS_UPCOMING_SESSIONS` and the count,
   so no member is left with a session nobody can run: the same blockers as
   closing a practice (ADR-026). The refusal says which it is: sessions
   booked (`upcomingSessions`) or a slot someone is paying for right now
@@ -91,7 +96,9 @@ Each entry should include:
   reservations for someone who is no longer a member of the team org. The
   person's services in the clinic are unpublished in the same transaction
   (`membership.removed`), the seat count is marked for sync in that
-  transaction and Stripe is synced after it.
+  transaction and Stripe is synced after it. A sync that did not reach
+  Stripe is finished by `/workflows/seat-sync-sweep` (every ten minutes),
+  which also covers publish, unpublish and a deleted service.
 - The Team page shows who has a published service but no prices or plan:
   billing has its own slice.
 - `@eleva/dashboard/workspace-api` now owns the server-side API client for
@@ -130,9 +137,7 @@ Each entry should include:
   notification kinds `team.invitation` and `team.member_joined`
   (invitations still go out as `auth.org_invitation`); the Better Auth
   accept and decline endpoints in `/openapi.json`; the retention sweep for
-  old invitations (Phase 13); a sweep that retries a seat sync left
-  pending when Stripe was unreachable (with billing, 11.3: publish has the
-  same gap today); captures of the page as an admin who is not the owner
+  old invitations (Phase 13); captures of the page as an admin who is not the owner
   and in dark mode; a hard lock on the member row for a clinician who has
   no profile yet (theoretical: nothing can be booked without a profile).
 - Withdrawing an invitation has no confirmation step on purpose: nothing

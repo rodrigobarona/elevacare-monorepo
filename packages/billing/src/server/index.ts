@@ -43,10 +43,11 @@ export { provisionOrgBilling } from "./provisioning"
 export {
   enqueueSeatSync,
   markSeatSyncPending,
+  sweepPendingSeatSyncs,
   syncSeatQuantity,
   syncSeatQuantityAudited,
 } from "./seats"
-export type { SyncSeatQuantityResult } from "./seats"
+export type { SeatSyncSweepResult, SyncSeatQuantityResult } from "./seats"
 export type {
   ProvisionBillingInput,
   ProvisionBillingResult,

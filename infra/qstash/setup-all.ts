@@ -44,6 +44,7 @@ const VERCEL_CRON_PATHS = [
   "/workflows/stripe-stuck-events",
   "/workflows/video-room-sweep",
   "/workflows/video-attendance-sweep",
+  "/workflows/seat-sync-sweep",
   "/workflows/audit-outbox-drainer",
   "/workflows/account-deletion-sweep",
   "/workflows/crm-follow-up-due",

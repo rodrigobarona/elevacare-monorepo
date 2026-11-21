@@ -13,6 +13,7 @@ import {
   TEAM_INVITATION_RESEND_COOLDOWN_MS,
   TEAM_INVITATION_TTL_MS,
   TEAM_MEMBER_LIMIT,
+  TEAM_SESSION_TRAIL_MS,
 } from "./team-limits"
 
 /**
@@ -34,6 +35,7 @@ export type TeamMemberErrorCode =
   | "INVITATION_NOT_FOUND"
   | "INVITATION_RECENTLY_SENT"
   | "OWNER_REQUIRED"
+  | "MANAGER_REQUIRED"
   | "CANNOT_REMOVE_OWNER"
   | "CANNOT_REMOVE_SELF"
   | "MEMBER_HAS_UPCOMING_SESSIONS"
@@ -42,7 +44,7 @@ export class TeamMemberError extends Error {
   constructor(
     readonly code: TeamMemberErrorCode,
     readonly detail: {
-      /** Sessions booked that block a removal. */
+      /** Sessions booked or running that block a removal. */
       upcomingSessions?: number
       /** Slots someone is paying for right now, which block it briefly. */
       pendingBookings?: number
@@ -171,6 +173,15 @@ export async function listTeamMembers(
       joinedAt: row.joinedAt,
       publishedServices: servicesByUser.get(row.userId) ?? 0,
     }))
+    // The owner first, then by joining date; names settle ties.
+    const ownerFirst = (role: string) => (role === "owner" ? 0 : 1)
+    members.sort(
+      (a, b) =>
+        ownerFirst(a.role) - ownerFirst(b.role) ||
+        a.joinedAt.getTime() - b.joinedAt.getTime() ||
+        a.name.localeCompare(b.name) ||
+        a.userId.localeCompare(b.userId)
+    )
     return {
       members,
       invitations: invitationRows.map((row) => ({
@@ -188,14 +199,17 @@ export async function listTeamMembers(
 }
 
 /**
- * The caller's role in the clinic. Changing who administers a clinic
+ * The caller's role in the clinic, read inside the write's own transaction
+ * and held (shared lock) until it ends: someone removed or demoted after
+ * the route checked them cannot finish the change. Throws when the caller
+ * no longer manages the clinic. Changing who administers a clinic
  * (inviting, removing or un-inviting an admin) is the owner's call.
  */
-async function isOwner(
+async function requireManager(
   tx: Tx,
   orgId: string,
   userId: string
-): Promise<boolean> {
+): Promise<"owner" | "admin"> {
   const [row] = await tx
     .select({ role: auth.member.role })
     .from(auth.member)
@@ -203,7 +217,12 @@ async function isOwner(
       and(eq(auth.member.organizationId, orgId), eq(auth.member.userId, userId))
     )
     .limit(1)
-  return row !== undefined && toMembershipSeniority(row.role) === "owner"
+    .for("share")
+  const role = row ? toMembershipSeniority(row.role) : null
+  if (role !== "owner" && role !== "admin") {
+    throw new TeamMemberError("MANAGER_REQUIRED")
+  }
+  return role
 }
 
 export interface InviteTeamMemberResult {
@@ -213,7 +232,7 @@ export interface InviteTeamMemberResult {
   expiresAt: Date
   /** The address already had a pending invitation: it was renewed. */
   resent: boolean
-  /** False when the email could not be handed to the mail provider. */
+  /** False when no email left (suppressed address or provider failure). */
   emailSent: boolean
 }
 
@@ -346,10 +365,8 @@ export async function inviteTeamMember(input: {
       // not judge the cooldown with a time from before the wait.
       const now = input.now ?? new Date()
       const expiresAt = new Date(now.getTime() + TEAM_INVITATION_TTL_MS)
-      if (
-        input.role === "admin" &&
-        !(await isOwner(tx, input.orgId, input.actorUserId))
-      ) {
+      const actor = await requireManager(tx, input.orgId, input.actorUserId)
+      if (input.role === "admin" && actor !== "owner") {
         throw new TeamMemberError("OWNER_REQUIRED")
       }
 
@@ -386,7 +403,7 @@ export async function inviteTeamMember(input: {
       if (
         pending &&
         inviteRole(pending.role) === "admin" &&
-        !(await isOwner(tx, input.orgId, input.actorUserId))
+        actor !== "owner"
       ) {
         throw new TeamMemberError("OWNER_REQUIRED")
       }
@@ -495,6 +512,7 @@ export async function cancelTeamInvitation(input: {
   await withAudit(
     { orgId: input.orgId, actorUserId: input.actorUserId },
     async (tx, ctx) => {
+      const actor = await requireManager(tx, input.orgId, input.actorUserId)
       const [pending] = await tx
         .select({ id: auth.invitation.id, role: auth.invitation.role })
         .from(auth.invitation)
@@ -507,10 +525,7 @@ export async function cancelTeamInvitation(input: {
         )
         .for("update")
       if (!pending) throw new TeamMemberError("INVITATION_NOT_FOUND")
-      if (
-        inviteRole(pending.role) === "admin" &&
-        !(await isOwner(tx, input.orgId, input.actorUserId))
-      ) {
+      if (inviteRole(pending.role) === "admin" && actor !== "owner") {
         throw new TeamMemberError("OWNER_REQUIRED")
       }
       const [cancelled] = await tx
@@ -562,6 +577,7 @@ export async function removeTeamMember(input: {
   return withAudit(
     { orgId: input.orgId, actorUserId: input.actorUserId },
     async (tx, ctx) => {
+      const actor = await requireManager(tx, input.orgId, input.actorUserId)
       const [target] = await tx
         .select({
           id: auth.member.id,
@@ -582,10 +598,7 @@ export async function removeTeamMember(input: {
       if (target.userId === input.actorUserId) {
         throw new TeamMemberError("CANNOT_REMOVE_SELF")
       }
-      if (
-        role === "admin" &&
-        !(await isOwner(tx, input.orgId, input.actorUserId))
-      ) {
+      if (role === "admin" && actor !== "owner") {
         throw new TeamMemberError("OWNER_REQUIRED")
       }
 
@@ -597,6 +610,7 @@ export async function removeTeamMember(input: {
         target.userId
       )
 
+      const stillRunningSince = new Date(now.getTime() - TEAM_SESSION_TRAIL_MS)
       let unpublishedServices = 0
       if (profileIds.length > 0) {
         // Bookings and live holds in one statement (one snapshot): a hold
@@ -611,7 +625,9 @@ export async function removeTeamMember(input: {
                 notInArray(main.bookings.status, [
                   ...FINISHED_BOOKING_STATUSES,
                 ]),
-                gt(main.bookings.startsAt, now)
+                // Still to happen, running, or within the time a call may
+                // run on after its booked end.
+                gt(main.bookings.endsAt, stillRunningSince)
               )}
             )`,
             holds: sql<number>`(
