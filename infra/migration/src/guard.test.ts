@@ -239,7 +239,10 @@ describe("the connection a run may use", () => {
           )
         )
         expect(err.code).toBe("URL_PARAMETER_NOT_ALLOWED")
-        expect(err.message).toContain(`"${key}"`)
+        expect(err.message).toContain(variable)
+        // Neither the name nor the value is echoed: an unencoded "?" in a
+        // password would make part of it a "parameter".
+        expect(err.message).not.toContain(value)
         expect(d.resolveEndpoint).not.toHaveBeenCalled()
       }
     }
@@ -262,6 +265,95 @@ describe("the connection a run may use", () => {
       )
     )
     expect(["TARGET_URL_INVALID", "TARGET_NOT_NEON"]).toContain(err.code)
+  })
+
+  it.each([
+    "sslmode=disable",
+    "sslmode=no-verify",
+    "sslmode=prefer",
+    "sslmode=require&sslmode=disable",
+    "sslmode=disable&sslmode=require",
+    "channel_binding=disable",
+    "sslmode=REQUIRE",
+  ])("refuses %s: the connection stays encrypted", async (query) => {
+    for (const variable of [
+      "TARGET_DATABASE_URL",
+      "MVP_DATABASE_URL",
+    ] as const) {
+      const base = env()[variable]!.split("?")[0]
+      const d = deps()
+      const err = await refusal(
+        assertMigrationTarget(
+          {
+            target: "branch",
+            mode: "apply",
+            env: env({ [variable]: `${base}?${query}` }),
+          },
+          d
+        )
+      )
+      expect(err.code).toBe("URL_PARAMETER_VALUE_NOT_ALLOWED")
+      expect(d.resolveEndpoint).not.toHaveBeenCalled()
+    }
+  })
+
+  it.each([
+    "endpoint=ep-prod-z9y8x7w6;s3cret",
+    "project%3Dep-prod-z9y8x7w6%24pw",
+  ])("refuses a password that names the endpoint (%s)", async (password) => {
+    const d = deps()
+    const err = await refusal(
+      assertMigrationTarget(
+        {
+          target: "branch",
+          mode: "apply",
+          env: env({
+            TARGET_DATABASE_URL: `postgresql://app:${password}@${REHEARSAL_HOST}/eleva?sslmode=require`,
+          }),
+        },
+        d
+      )
+    )
+    expect(err.code).toBe("URL_PASSWORD_NAMES_ENDPOINT")
+    expect(err.message).not.toContain("s3cret")
+    expect(d.resolveEndpoint).not.toHaveBeenCalled()
+  })
+
+  it("names the source, not the target, when the MVP URL is malformed", async () => {
+    for (const url of ["not a url", "https://example.com/db"]) {
+      const err = await refusal(
+        assertMigrationTarget(
+          {
+            target: "branch",
+            mode: "apply",
+            env: env({ MVP_DATABASE_URL: url }),
+          },
+          deps()
+        )
+      )
+      expect(err.code).toBe("SOURCE_URL_INVALID")
+      expect(err.message).toContain("MVP_DATABASE_URL")
+    }
+  })
+
+  it("never prints a password that an unencoded character moved into the host or the query", async () => {
+    for (const url of [
+      `postgresql://app?s3cret-pw@${REHEARSAL_HOST}/eleva`,
+      `postgresql://app:s3cret-pw#x@${REHEARSAL_HOST}/eleva`,
+      `postgresql://s3cret-pw_host/eleva`,
+    ]) {
+      const err = await refusal(
+        assertMigrationTarget(
+          {
+            target: "branch",
+            mode: "apply",
+            env: env({ TARGET_DATABASE_URL: url }),
+          },
+          deps()
+        )
+      )
+      expect(err.message).not.toContain("s3cret-pw")
+    }
   })
 
   it("hands back connection strings rebuilt from what it checked", async () => {
