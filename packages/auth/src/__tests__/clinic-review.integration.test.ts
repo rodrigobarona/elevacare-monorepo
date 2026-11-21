@@ -68,6 +68,24 @@ describe.skipIf(!enabled || !databaseUrl)(
       return rows.map((row) => row.action)
     }
 
+    /** The notices queued for the clinic, each with its delivery. */
+    async function notices() {
+      return db()
+        .select({
+          type: main.domainEventsOutbox.type,
+          payload: main.domainEventsOutbox.payload,
+          subscriberId: main.domainEventDeliveries.subscriberId,
+          deliveryStatus: main.domainEventDeliveries.status,
+        })
+        .from(main.domainEventsOutbox)
+        .innerJoin(
+          main.domainEventDeliveries,
+          eq(main.domainEventDeliveries.eventId, main.domainEventsOutbox.id)
+        )
+        .where(eq(main.domainEventsOutbox.orgId, clinicId))
+        .orderBy(main.domainEventsOutbox.createdAt)
+    }
+
     beforeAll(async () => {
       await db()
         .insert(auth.user)
@@ -251,6 +269,20 @@ describe.skipIf(!enabled || !databaseUrl)(
       expect(await auditActions()).toContain(
         "clinic_verification.changes_requested"
       )
+      // The notice to the clinic is queued with the decision, once: the
+      // refused second decision queued nothing.
+      expect(await notices()).toEqual([
+        {
+          type: "clinic.needs_changes",
+          payload: {
+            verificationId: filing!.id,
+            reason: "The legal name does not match the register.",
+            verified: false,
+          },
+          subscriberId: "send-notification",
+          deliveryStatus: "pending",
+        },
+      ])
     })
 
     it("approves the refiled identity: the clinic is verified", async () => {
@@ -289,6 +321,10 @@ describe.skipIf(!enabled || !databaseUrl)(
       expect(row).toMatchObject({ reviewerUserId: staff, checklist: CHECKS })
       expect(row!.reviewedAt).toBeInstanceOf(Date)
       expect(await auditActions()).toContain("clinic_verification.approved")
+      expect((await notices()).at(-1)).toMatchObject({
+        type: "clinic.verified",
+        payload: { verificationId: refiled.id, reason: null, verified: true },
+      })
       // Decided filings leave the queue.
       const queue = await listClinicVerificationQueue()
       expect(queue.find((row) => row.orgId === clinicId)).toBeUndefined()
@@ -315,6 +351,11 @@ describe.skipIf(!enabled || !databaseUrl)(
         "approved",
       ])
       expect(await auditActions()).toContain("clinic_verification.rejected")
+      // The notice says the clinic stays verified.
+      expect((await notices()).at(-1)).toMatchObject({
+        type: "clinic.rejected",
+        payload: { reason: "Not the registered name.", verified: true },
+      })
       // Seen from the approved filing, the later one is not "earlier".
       const [approved] = await db()
         .select({ id: main.clinicVerifications.id })

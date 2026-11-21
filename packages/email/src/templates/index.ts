@@ -26,6 +26,12 @@ export {
   type InvoiceClosedGateStatus,
 } from "./invoice-closed-gate"
 export {
+  ClinicDecisionEmail,
+  clinicDecisionCopy,
+  type ClinicDecisionKind,
+  type ClinicDecisionProps,
+} from "./clinic-decision"
+export {
   PartnerDecisionEmail,
   partnerDecisionCopy,
   type PartnerDecisionKind,

@@ -55,6 +55,11 @@ export {
   isPartnerDecisionKind,
   type PartnerDecisionEvent,
 } from "./send-partner-decision"
+export {
+  sendClinicDecisionNotification,
+  isClinicDecisionKind,
+  type ClinicDecisionEvent,
+} from "./send-clinic-decision"
 export { SendNotificationError } from "./errors"
 export { LEASE_TTL_MS, RESEND_IDEMPOTENCY_WINDOW_MS } from "./claim-delivery"
 export { createAuthMailer, type AuthTransactionalMailer } from "./auth-mailer"

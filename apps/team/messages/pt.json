@@ -100,7 +100,7 @@
       "checking": {
         "pill": "Em verificação",
         "title": "Estamos a verificar os seus dados",
-        "body": "Não precisa de fazer nada. Esta página mostra o resultado assim que a verificação terminar."
+        "body": "Não precisa de fazer nada. Quando a verificação terminar, enviamos um email a quem é titular ou administra a clínica, e esta página mostra o resultado."
       },
       "change-needed": {
         "pill": "Precisa de uma alteração",
@@ -115,7 +115,7 @@
       "verified-checking": {
         "pill": "Verificada",
         "title": "A sua clínica está verificada e estamos a confirmar os novos dados",
-        "body": "A clínica continua verificada com os dados que confirmámos antes. Não precisa de fazer nada."
+        "body": "A clínica continua verificada com os dados que confirmámos antes. Não precisa de fazer nada: quando a verificação terminar, enviamos um email a quem é titular ou administra a clínica."
       },
       "verified-change-needed": {
         "pill": "Verificada",
