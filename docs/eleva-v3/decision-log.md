@@ -32,6 +32,41 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-21: Judges panel on the night's slices (11.3 to 11.6, 12.1, 12.2, 13.1, 14.1) (active)
+
+- What ran: reviewer agents holding the seats of the panel (UI, UX and
+  writing, GDPR, legal, compliance and accessibility, security by design,
+  engineering). They read code, records and screenshots; they are not the
+  founder, a DPO or counsel, and a score is not a sign-off.
+- The bar used that night was 8.0 per seat (the founder's instruction for
+  the session). The standing bar in `AGENTS.md` is 8.5. Most seats are
+  between 8.0 and 8.6: these slices do not meet 8.5 across the board.
+- Last score each seat gave, by slice (a dash where a seat does not
+  apply):
+
+  | Slice                   | UI  | UX, writing | GDPR | Legal | Compliance, a11y | Security | Engineering |
+  | ----------------------- | --- | ----------- | ---- | ----- | ---------------- | -------- | ----------- |
+  | 11.2/11.3 people, seats | 8.3 | 8.1         | 8.3  | 8.1   | 8.4              | 8.5      | 8.5         |
+  | 11.4 Verification page  | 8.3 | 8.2         | 8.3  | 8.6   | 8.1              | 8.5      | 8.6         |
+  | 11.5 decision notice    | 8.1 | 8.4         | 8.4  | 8.2   | 8.3              | 8.5      | 8.4         |
+  | 11.6 Overview card      | 8.3 | 8.1         | -    | -     | 8.1              | -        | -           |
+  | 12.1 staff verification | 8.3 | 8.3         | 8.0  | 8.0   | 8.1              | 8.6      | 8.6         |
+  | 12.2 read audit         | -   | -           | 8.2  | -     | 8.3              | 8.4      | 8.2         |
+  | 13.1 CI guards          | -   | -           | 8.3  | -     | 8.3              | 8.2      | 8.4         |
+  | 14.1 migration guard    | -   | 8.1         | 8.3  | -     | 8.3              | 8.6      | 8.5         |
+
+- How to read it: first-round scores were between 6.6 and 8.6. Seats
+  under 8.0 were fixed and scored again, up to five rounds for one seat.
+  A seat already at 8.0 or above was not always scored again after later
+  changes to the same slice, so some numbers describe the code a few
+  commits before the merge. 11.6 had no legal, GDPR, security or
+  engineering seat.
+- What the reviewers could not check, and said so: real emails arriving,
+  the pages in Portuguese and Spanish on screen, screen-reader output,
+  the auth guard against the running auth server, the Neon API live, and
+  several states with no screenshot.
+- Owner: engineering
+
 ### 2026-11-21: The clinic's Overview says when verification needs it (11.6) (active)
 
 - Change (Phase 11.6): the clinic's Overview shows one card when
