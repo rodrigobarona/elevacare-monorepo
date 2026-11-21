@@ -1,0 +1,227 @@
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+const mocks = vi.hoisted(() => {
+  class ClinicReviewError extends Error {
+    constructor(
+      readonly code: string,
+      readonly status: number
+    ) {
+      super(code)
+    }
+  }
+  return {
+    ClinicReviewError,
+    readAuth: vi.fn(),
+    writeAuth: vi.fn(),
+    listQueue: vi.fn(),
+    getReview: vi.fn(),
+    decide: vi.fn(),
+  }
+})
+
+vi.mock("@eleva/auth/clinic-review", () => ({
+  ClinicReviewError: mocks.ClinicReviewError,
+  listClinicVerificationQueue: () => mocks.listQueue(),
+  getClinicVerificationReview: (...args: unknown[]) => mocks.getReview(...args),
+  decideClinicVerification: (...args: unknown[]) => mocks.decide(...args),
+}))
+
+vi.mock("@/lib/auth", () => ({
+  requireApiCapability: (...args: unknown[]) => mocks.readAuth(...args),
+  requireRevocableApiCapability: (...args: unknown[]) =>
+    mocks.writeAuth(...args),
+  apiAuthFailure: (err: Error) =>
+    err.message === "forbidden"
+      ? Response.json({ error: "forbidden" }, { status: 403 })
+      : null,
+}))
+
+vi.mock("@/lib/rate-limit", () => ({
+  applyRateLimit: vi.fn(async () => null),
+  rateLimitKey: () => "clinics",
+  RATE_LIMITS: {
+    authenticated: { prefix: "auth", maxRequests: 60, windowMs: 60_000 },
+  },
+}))
+
+import { POST as decide } from "./[verificationId]/decision/route"
+import { GET as getOne } from "./[verificationId]/route"
+import { GET as getQueue } from "./route"
+
+const ID = "00000000-0000-4000-8000-000000000001"
+const ORG_ID = "00000000-0000-4000-8000-000000000002"
+const URL = "http://127.0.0.1:3002/admin/clinics"
+const SUBMITTED_AT = "2026-11-20T10:00:00.000Z"
+
+const filing = {
+  id: ID,
+  status: "pending",
+  legalName: "Clínica Lumen, Lda",
+  taxId: "PT515001708",
+  submittedAt: new Date(SUBMITTED_AT),
+  reviewedAt: null,
+  reason: null,
+}
+
+function detail(id = ID) {
+  return getOne(new Request(`${URL}/${id}`), {
+    params: Promise.resolve({ verificationId: id }),
+  })
+}
+
+function post(body: unknown, id = ID) {
+  return decide(
+    new Request(`${URL}/${id}/decision`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+    { params: Promise.resolve({ verificationId: id }) }
+  )
+}
+
+const approve = {
+  decision: "approve",
+  submittedAt: SUBMITTED_AT,
+  checklist: { legal_entity_checked: true, tax_id_checked: true },
+}
+
+describe("/admin/clinics", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.readAuth.mockResolvedValue({ user: { id: "staff-1" } })
+    mocks.writeAuth.mockResolvedValue({ user: { id: "staff-1" } })
+  })
+
+  it("refuses everyone without applications:review", async () => {
+    mocks.readAuth.mockRejectedValue(new Error("forbidden"))
+    mocks.writeAuth.mockRejectedValue(new Error("forbidden"))
+    expect((await getQueue(new Request(URL))).status).toBe(403)
+    expect((await detail()).status).toBe(403)
+    expect((await post(approve)).status).toBe(403)
+    expect(mocks.readAuth).toHaveBeenCalledWith(
+      expect.anything(),
+      "applications:review"
+    )
+    // A decision needs a credential that can be revoked.
+    expect(mocks.writeAuth).toHaveBeenCalledWith(
+      expect.anything(),
+      "applications:review"
+    )
+    expect(mocks.listQueue).not.toHaveBeenCalled()
+    expect(mocks.getReview).not.toHaveBeenCalled()
+    expect(mocks.decide).not.toHaveBeenCalled()
+  })
+
+  it("lists the queue", async () => {
+    mocks.listQueue.mockResolvedValue([
+      {
+        verificationId: ID,
+        orgId: ORG_ID,
+        clinicName: "Clínica Lumen",
+        legalName: "Clínica Lumen, Lda",
+        countryCode: "PT",
+        status: "pending",
+        verified: false,
+        waitingSince: new Date(SUBMITTED_AT),
+      },
+    ])
+    const res = await getQueue(new Request(URL))
+    expect(res.status).toBe(200)
+    await expect(res.json()).resolves.toEqual({
+      items: [
+        {
+          verificationId: ID,
+          orgId: ORG_ID,
+          clinicName: "Clínica Lumen",
+          legalName: "Clínica Lumen, Lda",
+          countryCode: "PT",
+          status: "pending",
+          verified: false,
+          waitingSince: SUBMITTED_AT,
+        },
+      ],
+    })
+  })
+
+  it("returns one filing, or 404 and 422", async () => {
+    mocks.getReview.mockResolvedValueOnce({
+      verification: filing,
+      clinic: {
+        orgId: ORG_ID,
+        displayName: "Clínica Lumen",
+        slug: "clinica-lumen",
+        websiteUrl: null,
+        countryCode: "PT",
+        billingAddress: { city: "Lisboa", country: "PT" },
+      },
+      owner: { name: "Ana Mota", email: "ana@example.test" },
+      people: 3,
+      verified: false,
+      history: [],
+    })
+    const res = await detail()
+    expect(res.status).toBe(200)
+    await expect(res.json()).resolves.toMatchObject({
+      verification: { submittedAt: SUBMITTED_AT, reviewedAt: null },
+      owner: { name: "Ana Mota" },
+      people: 3,
+    })
+    mocks.getReview.mockResolvedValueOnce(null)
+    expect((await detail()).status).toBe(404)
+    expect((await detail("not-a-uuid")).status).toBe(422)
+  })
+
+  it("records a decision as the staff member", async () => {
+    mocks.decide.mockResolvedValue({ status: "approved", verified: true })
+    const res = await post(approve)
+    expect(res.status).toBe(200)
+    await expect(res.json()).resolves.toEqual({
+      status: "approved",
+      verified: true,
+    })
+    expect(mocks.decide).toHaveBeenCalledWith({
+      verificationId: ID,
+      submittedAt: new Date(SUBMITTED_AT),
+      actorUserId: "staff-1",
+      decision: { decision: "approve", checklist: approve.checklist },
+    })
+  })
+
+  it.each([
+    [{ ...approve, checklist: { legal_entity_checked: true } }],
+    [
+      {
+        ...approve,
+        checklist: { legal_entity_checked: true, tax_id_checked: false },
+      },
+    ],
+    [{ decision: "reject", submittedAt: SUBMITTED_AT }],
+    [{ decision: "needs_changes", submittedAt: SUBMITTED_AT, reason: "  " }],
+    [{ decision: "approve", checklist: approve.checklist }],
+    [{ decision: "verify", submittedAt: SUBMITTED_AT }],
+  ])("refuses the body %j", async (body) => {
+    expect((await post(body)).status).toBe(422)
+    expect(mocks.decide).not.toHaveBeenCalled()
+  })
+
+  it("maps each refusal to its status", async () => {
+    const cases = [
+      ["VERIFICATION_NOT_FOUND", 404],
+      ["VERIFICATION_ALREADY_DECIDED", 409],
+      ["VERIFICATION_CHANGED", 409],
+      ["SELF_REVIEW", 403],
+    ] as const
+    for (const [code, status] of cases) {
+      mocks.decide.mockRejectedValueOnce(
+        new mocks.ClinicReviewError(code, status)
+      )
+      const res = await post({
+        decision: "reject",
+        submittedAt: SUBMITTED_AT,
+        reason: "Not the registered name.",
+      })
+      expect(res.status).toBe(status)
+      await expect(res.json()).resolves.toMatchObject({ code })
+    }
+  })
+})

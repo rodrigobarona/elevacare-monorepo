@@ -64,6 +64,29 @@ Use this document to answer:
   the invitation. We keep it until you answer or the invitation expires,
   and for [period] afterwards, with the record that the email was sent."
 
+### Clinic verification filings
+
+- Data type: a clinic's legal name and tax number, the staff decision, who
+  decided and when, and the reason on a filing that was sent back or
+  rejected (`clinic_verifications`). Staff also read, without storing a
+  copy, the clinic's billing address and website and the name and email of
+  its owner
+- Sensitivity: business data, plus personal data of the owner (name, email)
+  and of the reviewer (staff user id)
+- Export: yes for the clinic (`GET /teams/{teamId}` returns its filing, the
+  state and the reason)
+- Deletion: an approved filing is the clinic's verification record and is
+  kept while the clinic exists (its reviewer cannot be deleted from under
+  it). **For the DPO to decide:** how long rejected and superseded filings
+  and their reasons are kept; nothing deletes them today
+- Audit access: yes for every decision (`clinic_verification.approved`,
+  `.changes_requested`, `.rejected`), with the reason in the audit payload;
+  staff opening a filing is not audited yet
+- Transparency: **proposed privacy-notice line, for the DPO to word and
+  publish:** "Clinics: we check the legal name, tax number and billing
+  address of the clinic, and the name and email of the person who manages
+  it, to verify the clinic's legal identity before its page is listed."
+
 ### Booking and session metadata
 
 - Data type: bookings, schedule selections, timestamps, session mode, status

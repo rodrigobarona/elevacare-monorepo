@@ -1966,6 +1966,113 @@ export type LicenceDecisionResponse = z.infer<
   typeof LicenceDecisionResponseSchema
 >
 
+const ClinicVerificationStatusSchema = z.enum([
+  "pending",
+  "approved",
+  "rejected",
+  "needs_changes",
+])
+
+/** A clinic's filing of its legal name and NIF, as staff see it. */
+export const AdminClinicFilingSchema = z.object({
+  id: z.string().uuid(),
+  status: ClinicVerificationStatusSchema,
+  legalName: z.string(),
+  taxId: z.string(),
+  submittedAt: z.string().datetime(),
+  reviewedAt: z.string().datetime().nullable(),
+  /** Staff reason on `rejected` / `needs_changes`. */
+  reason: z.string().nullable(),
+})
+
+/** Staff clinic verification queue: filings to decide first, oldest first. */
+export const AdminClinicQueueResponseSchema = z.object({
+  items: z.array(
+    z.object({
+      verificationId: z.string().uuid(),
+      orgId: z.string().uuid(),
+      clinicName: z.string(),
+      legalName: z.string(),
+      countryCode: z.string().nullable(),
+      /** `pending` waits on staff; `needs_changes` waits on the clinic. */
+      status: z.enum(["pending", "needs_changes"]),
+      /** Another filing of this clinic is already approved. */
+      verified: z.boolean(),
+      waitingSince: z.string().datetime(),
+    })
+  ),
+})
+export type AdminClinicQueueResponse = z.infer<
+  typeof AdminClinicQueueResponseSchema
+>
+
+export const AdminClinicReviewResponseSchema = z.object({
+  verification: AdminClinicFilingSchema,
+  clinic: z.object({
+    orgId: z.string().uuid(),
+    displayName: z.string(),
+    slug: z.string(),
+    websiteUrl: z.string().nullable(),
+    countryCode: z.string().nullable(),
+    billingAddress: ClinicBillingAddressSchema,
+  }),
+  /** The clinic's owner, the person staff write to. */
+  owner: z.object({ name: z.string(), email: z.string() }).nullable(),
+  people: z.number().int().nonnegative(),
+  /** An approved filing exists (this one or another one). */
+  verified: z.boolean(),
+  /** Filings of the same clinic sent before this one, newest first. */
+  history: z.array(AdminClinicFilingSchema),
+})
+export type AdminClinicReviewResponse = z.infer<
+  typeof AdminClinicReviewResponseSchema
+>
+
+/**
+ * Kept with the filing and in the audit log, which is never edited: it is
+ * about the company, so an email address is refused.
+ */
+const ClinicDecisionReasonSchema = LicenceDecisionReasonSchema.refine(
+  (reason) => !/[^\s@]+@[^\s@]+\.[^\s@]+/.test(reason),
+  { message: "Leave email addresses out of the reason" }
+)
+
+const ClinicDecisionTargetSchema = z.object({
+  /** The filing staff reviewed; a refile since then refuses with 409. */
+  submittedAt: z.string().datetime({ offset: true }),
+})
+
+export const ClinicDecisionRequestSchema = z.discriminatedUnion("decision", [
+  ClinicDecisionTargetSchema.extend({
+    decision: z.literal("approve"),
+    /** Both checks, confirmed. */
+    checklist: z
+      .object({
+        legal_entity_checked: z.literal(true),
+        tax_id_checked: z.literal(true),
+      })
+      .strict(),
+  }),
+  ClinicDecisionTargetSchema.extend({
+    decision: z.literal("needs_changes"),
+    reason: ClinicDecisionReasonSchema,
+  }),
+  ClinicDecisionTargetSchema.extend({
+    decision: z.literal("reject"),
+    reason: ClinicDecisionReasonSchema,
+  }),
+])
+export type ClinicDecisionRequest = z.infer<typeof ClinicDecisionRequestSchema>
+
+export const ClinicDecisionResponseSchema = z.object({
+  status: ClinicVerificationStatusSchema,
+  /** The clinic has an approved filing after this decision. */
+  verified: z.boolean(),
+})
+export type ClinicDecisionResponse = z.infer<
+  typeof ClinicDecisionResponseSchema
+>
+
 /** Closing an expert practice (ADR-026 decision 10). */
 export const PracticeClosureBlockerSchema = z.object({
   code: z.enum(PRACTICE_CLOSURE_BLOCKER_CODES),
@@ -4049,6 +4156,27 @@ export function createApiClient(options: ApiClientOptions) {
             data
           )
           return LicenceDecisionResponseSchema.parse(raw)
+        },
+      },
+      clinics: {
+        async list() {
+          const raw = await request<unknown>("GET", "/admin/clinics")
+          return AdminClinicQueueResponseSchema.parse(raw)
+        },
+        async get(verificationId: string) {
+          const raw = await request<unknown>(
+            "GET",
+            `/admin/clinics/${encodeURIComponent(verificationId)}`
+          )
+          return AdminClinicReviewResponseSchema.parse(raw)
+        },
+        async decide(verificationId: string, data: ClinicDecisionRequest) {
+          const raw = await request<unknown>(
+            "POST",
+            `/admin/clinics/${encodeURIComponent(verificationId)}/decision`,
+            data
+          )
+          return ClinicDecisionResponseSchema.parse(raw)
         },
       },
     },

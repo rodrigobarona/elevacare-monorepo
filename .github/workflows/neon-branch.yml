@@ -130,7 +130,7 @@ jobs:
           AUDIT_DATABASE_URL: ${{ steps.audit-url.outputs.db_url }}
           AUDIT_DATABASE_URL_UNPOOLED: ${{ steps.audit-url.outputs.db_url }}
           ELEVA_RLS_INTEGRATION: "1"
-        run: pnpm --filter=@eleva/db exec vitest run --no-file-parallelism src/__tests__/rls-isolation.test.ts src/__tests__/rls-classes.test.ts src/__tests__/rls-notifications.test.ts src/__tests__/rls-session-records.test.ts src/__tests__/rls-money.test.ts src/__tests__/rls-partner-applications.test.ts src/__tests__/rls-clinic-records.test.ts src/__tests__/rls-crm.test.ts src/__tests__/notification-links-0076.test.ts
+        run: pnpm --filter=@eleva/db exec vitest run --no-file-parallelism src/__tests__/rls-isolation.test.ts src/__tests__/rls-classes.test.ts src/__tests__/rls-notifications.test.ts src/__tests__/rls-session-records.test.ts src/__tests__/rls-money.test.ts src/__tests__/rls-partner-applications.test.ts src/__tests__/rls-clinic-records.test.ts src/__tests__/rls-clinic-verifications.test.ts src/__tests__/rls-crm.test.ts src/__tests__/notification-links-0076.test.ts
 
       # Domain flows that also write Better Auth tables, as the app's own
       # database role (like production), not the restricted RLS test role.
@@ -143,7 +143,7 @@ jobs:
           AUDIT_DATABASE_URL_UNPOOLED: ${{ steps.audit-url.outputs.db_url }}
           ELEVA_DB_INTEGRATION: "1"
         run: |
-          pnpm --filter=@eleva/auth exec vitest run --no-file-parallelism src/__tests__/practice-closure.integration.test.ts src/__tests__/team-members.integration.test.ts
+          pnpm --filter=@eleva/auth exec vitest run --no-file-parallelism src/__tests__/practice-closure.integration.test.ts src/__tests__/team-members.integration.test.ts src/__tests__/clinic-review.integration.test.ts
           pnpm --filter=@eleva/billing exec vitest run --no-file-parallelism src/server/__tests__/seat-cap.integration.test.ts
 
   delete-branch:

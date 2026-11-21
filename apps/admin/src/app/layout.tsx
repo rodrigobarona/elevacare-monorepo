@@ -70,6 +70,7 @@ export default async function AdminRootLayout({
             items: [
               { title: t("overview"), url: "/", icon: "SquaresFourIcon" },
               { title: t("partners"), url: "/partners", icon: "ShieldIcon" },
+              { title: t("clinics"), url: "/clinics", icon: "BuildingsIcon" },
             ],
           },
         ],

@@ -1,0 +1,51 @@
+{
+  "surface": "13-admin",
+  "title": "Staff console: verification queues",
+  "researcher": "Trust and operations",
+  "date": "2026-11-21",
+  "summary": "The clinic verification queue (Phase 12). References show the details to check grouped under plain labels, a short checklist where each item has its own state, and a status said in words on every row. The screens follow the licence review already shipped, so staff learn one pattern.",
+  "references": [
+    {
+      "id": "13-admin/01",
+      "file": "img/01-stripe-review-grouped-details.jpg",
+      "app": "Stripe",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/d8b29b26-595c-487b-af8c-04b9762468ef?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "What was sent, grouped under plain labels, each value on its own line",
+      "why": "'Review and submit' lists the business details in small cards: a quiet label, then the value, with the website as a link that opens in a new tab.",
+      "apply": "Show the filing as label and value pairs (legal name, NIF, billing address, website); numbers in a monospace face; the register links right under the value they check.",
+      "query": "back office review page to approve or reject a business verification request with checklist and reason"
+    },
+    {
+      "id": "13-admin/02",
+      "file": "img/02-klaviyo-review-checklist-states.jpg",
+      "app": "Klaviyo",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/02359910-64f7-4f23-8280-f1bf18c8e95f?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A short checklist where every item is one sentence and the action stays off until all pass",
+      "why": "'Review submission' is a list of requirements, each one sentence with its own state, and Submit stays disabled until every item passes; a line above says what happens after submitting.",
+      "apply": "Two checks as full sentences; Approve stays disabled until both are ticked; one line says what to do to approve.",
+      "query": "back office review page to approve or reject a business verification request with checklist and reason"
+    },
+    {
+      "id": "13-admin/03",
+      "file": "img/03-revolut-verify-status-in-words.jpg",
+      "app": "Revolut Business",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/f0b8e9cd-a445-496f-8752-b6ed7a6d3728?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Status in words on every row, and who has to act",
+      "why": "'Verify details' lists each request with its state in words (Verifying, Verified, Requires action), so it is clear which ones wait on the reader.",
+      "apply": "Queue states say who acts next: 'To check' (staff) and 'Waiting on the clinic'; decided filings read 'Verified' or 'Rejected'.",
+      "query": "back office review page to approve or reject a business verification request with checklist and reason"
+    }
+  ],
+  "judging_criteria": [
+    "In the queue, can staff see which filings wait on them and which wait on the clinic, oldest first, with the clinic and its legal name on the row? (Revolut Business 13-admin/03)",
+    "On a filing, is everything staff must compare (legal name, NIF, billing address, website, owner) on one screen, with the public register one click from the value it checks? (Stripe 13-admin/01)",
+    "Is approving impossible until both checks are confirmed, and are sending back and rejecting impossible without a reason the clinic can read? (Klaviyo 13-admin/02)",
+    "After a decision, does the page say what happened and what happens next, and does a refusal (already decided, new details, your own clinic) say what to do?"
+  ]
+}
