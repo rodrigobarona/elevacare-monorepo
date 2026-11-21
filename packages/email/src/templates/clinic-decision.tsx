@@ -1,4 +1,4 @@
-import { Section } from "react-email"
+import { Section, Text } from "react-email"
 import { DetailRow } from "../components/detail-row"
 import { EmailButton } from "../components/email-button"
 import { EmailCard } from "../components/email-card"
@@ -36,13 +36,14 @@ export function clinicDecisionCopy(
   t: EmailTranslations,
   kind: ClinicDecisionKind,
   verified = false
-): { title: string; subtitle: string; subject: string } {
+): { title: string; subtitle: string; subject: string; cta: string } {
   switch (kind) {
     case "clinic.verified":
       return {
         title: t.clinic.verifiedTitle,
         subtitle: t.clinic.verifiedSubtitle,
         subject: t.subject.clinicVerified,
+        cta: t.clinic.ctaSee,
       }
     case "clinic.needs_changes":
       return {
@@ -51,6 +52,7 @@ export function clinicDecisionCopy(
           ? t.clinic.needsChangesStillVerifiedSubtitle
           : t.clinic.needsChangesSubtitle,
         subject: t.subject.clinicNeedsChanges,
+        cta: t.clinic.ctaCorrect,
       }
     case "clinic.rejected":
       // Never tell a verified clinic it "could not be verified".
@@ -59,11 +61,13 @@ export function clinicDecisionCopy(
             title: t.clinic.rejectedStillVerifiedTitle,
             subtitle: t.clinic.rejectedStillVerifiedSubtitle,
             subject: t.subject.clinicRejectedStillVerified,
+            cta: t.clinic.ctaSee,
           }
         : {
             title: t.clinic.rejectedTitle,
             subtitle: t.clinic.rejectedSubtitle,
             subject: t.subject.clinicRejected,
+            cta: t.clinic.ctaCorrect,
           }
     default: {
       const _exhaustive: never = kind
@@ -88,7 +92,7 @@ export function ClinicDecisionEmail({
   const greetingName = emailSafeName(name)
 
   return (
-    <EmailLayout preview={copy.subject} locale={locale} accountFooter={false}>
+    <EmailLayout preview={copy.subtitle} locale={locale} accountFooter={false}>
       <EmailHeading>{copy.title}</EmailHeading>
       {greetingName ? (
         <EmailBodyText className="mb-[8px]">
@@ -102,12 +106,21 @@ export function ClinicDecisionEmail({
             <DetailRow label={t.clinic.clinicLabel} value={clinic} />
           ) : null}
           {reason ? (
-            <DetailRow label={t.clinic.reasonLabel} value={reason} />
+            // What staff found is why this email exists: the full width,
+            // with its line breaks, not a narrow column.
+            <>
+              <Text className="text-fg-3 m-0 mt-[8px] text-[13px] leading-[20px]">
+                {t.clinic.reasonLabel}
+              </Text>
+              <Text className="text-fg m-0 text-[15px] leading-[24px] whitespace-pre-line">
+                {reason}
+              </Text>
+            </>
           ) : null}
         </EmailCard>
       ) : null}
       <Section className="mt-[24px]">
-        <EmailButton href={verificationHref}>{t.clinic.cta}</EmailButton>
+        <EmailButton href={verificationHref}>{copy.cta}</EmailButton>
       </Section>
       {/* Why this person: they manage the clinic. */}
       <EmailBodyText className="mt-[24px] mb-0 text-[13px] leading-[20px]">

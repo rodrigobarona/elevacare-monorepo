@@ -135,7 +135,7 @@
         "failed": "No se ha podido completar. Inténtalo de nuevo."
       },
       "notes": {
-        "approved": "Este envío está aprobado: la clínica está verificada.",
+        "approved": "Este envío está aprobado: la clínica está verificada. Eleva avisa por correo a quien es titular o administra la clínica.",
         "needs_changes": "Has pedido cambios. Eleva avisa por correo a quien es titular o administra la clínica, con el motivo que has escrito. Cuando la clínica envíe sus datos de nuevo, este envío vuelve a «Por verificar».",
         "rejected": "Este envío fue rechazado. Eleva avisa por correo a quien es titular o administra la clínica, con el motivo que has escrito. La clínica puede enviar sus datos de nuevo."
       },

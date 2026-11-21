@@ -11,11 +11,12 @@ import {
 } from "@eleva/db"
 import {
   clinicDecisionCopy,
+  emailSafeName,
   getEmailTranslations,
   renderClinicDecision,
 } from "@eleva/email"
 import { sendNotification } from "./send-notification"
-import { toEmailLocale } from "./send-closed-gate-invoice"
+import { isOrgOperator, toEmailLocale } from "./send-closed-gate-invoice"
 
 const CLINIC_DECISION_TYPES = new Set<string>(CLINIC_DECISION_EVENT_TYPES)
 
@@ -62,6 +63,7 @@ export async function sendClinicDecisionNotification(
   if (!isClinicDecisionKind(event.type)) {
     throw new Error(`send-notification: unsupported event type ${event.type}`)
   }
+  const kind = event.type
   const parsed = PayloadSchema.safeParse(event.payload)
   if (!parsed.success) {
     throw new Error("send-notification: clinic payload is invalid")
@@ -70,39 +72,65 @@ export async function sendClinicDecisionNotification(
   if (!clinic) {
     throw new Error("send-notification: clinic not found for event org")
   }
-  const href = `${resolveGatewayUrl()}${teamWorkspaceBase(clinic.orgSlug)}/verification`
+  // The inbox keeps a path (it is read inside the product); the email
+  // needs the whole address.
+  const path = `${teamWorkspaceBase(clinic.orgSlug)}/verification`
+  const verificationHref = `${resolveGatewayUrl()}${path}`
   const send = deps.send ?? sendNotification
-
-  for (const manager of clinic.managers) {
-    const locale = toEmailLocale(manager.locale)
-    const copy = clinicDecisionCopy(
-      getEmailTranslations(locale),
-      event.type,
-      parsed.data.verified
+  if (clinic.managers.length === 0) {
+    // Nobody to tell: worth knowing, never worth a retry.
+    console.warn(
+      "[notifications] clinic decision has no owner or admin to tell",
+      { orgId: event.orgId, eventId: event.id }
     )
-    const html = await renderClinicDecision({
-      kind: event.type,
-      verificationHref: href,
-      clinicName: clinic.clinicName,
-      reason: parsed.data.reason,
-      verified: parsed.data.verified,
-      name: manager.name.trim().split(/\s+/)[0],
-      locale,
+    return
+  }
+
+  // Each person is told on their own: one address that fails never keeps
+  // the notice from the others. A retry skips those already told.
+  const results = await Promise.allSettled(
+    clinic.managers.map(async (manager) => {
+      const locale = toEmailLocale(manager.locale)
+      const copy = clinicDecisionCopy(
+        getEmailTranslations(locale),
+        kind,
+        parsed.data.verified
+      )
+      const html = await renderClinicDecision({
+        kind: kind,
+        verificationHref,
+        clinicName: clinic.clinicName,
+        reason: parsed.data.reason,
+        verified: parsed.data.verified,
+        name: manager.name.trim().split(/\s+/)[0],
+        locale,
+      })
+      // Someone who manages two clinics sees which one this is about.
+      const clinicName = emailSafeName(clinic.clinicName)
+      await send({
+        kind: kind,
+        orgId: event.orgId,
+        recipient: { userId: manager.userId },
+        ctx: {
+          title: copy.title,
+          body: clinicName ? `${clinicName}: ${copy.subtitle}` : copy.subtitle,
+          subject: copy.subject,
+          html,
+          href: path,
+        },
+        // One notice per person; a retry of the event never sends it twice.
+        idempotencyKey: `clinic:${event.id}:${manager.userId}`,
+      })
     })
-    await send({
-      kind: event.type,
-      orgId: event.orgId,
-      recipient: { userId: manager.userId },
-      ctx: {
-        title: copy.title,
-        body: copy.subtitle,
-        subject: copy.subject,
-        html,
-        href,
-      },
-      // One notice per person; a retry of the event never sends it twice.
-      idempotencyKey: `clinic:${event.id}:${manager.userId}`,
-    })
+  )
+  const failures = results.filter(
+    (result): result is PromiseRejectedResult => result.status === "rejected"
+  )
+  if (failures.length > 0) {
+    throw new AggregateError(
+      failures.map((failure) => failure.reason),
+      "clinic decision notification delivery failed"
+    )
   }
 }
 
@@ -134,16 +162,12 @@ async function loadClinic(orgId: string): Promise<ClinicToNotify | null> {
       .from(auth.member)
       .innerJoin(auth.user, eq(auth.user.id, auth.member.userId))
       .where(eq(auth.member.organizationId, orgId))
+      .orderBy(auth.member.createdAt, auth.member.userId)
     return {
       orgSlug: org.slug,
       clinicName: org.clinicName ?? org.name,
       managers: members
-        .filter((member) =>
-          member.role.split(",").some((role) => {
-            const slug = role.trim().toLowerCase()
-            return slug === "owner" || slug === "admin"
-          })
-        )
+        .filter((member) => isOrgOperator(member.role))
         .map(({ userId, name, locale }) => ({ userId, name, locale })),
     }
   })

@@ -4,16 +4,24 @@ const {
   sendClosedGateInvoiceNotification,
   sendBookingNotification,
   sendPaymentPayoutNotification,
+  sendPartnerDecisionNotification,
+  sendClinicDecisionNotification,
 } = vi.hoisted(() => ({
   sendClosedGateInvoiceNotification: vi.fn().mockResolvedValue(undefined),
   sendBookingNotification: vi.fn().mockResolvedValue(undefined),
   sendPaymentPayoutNotification: vi.fn().mockResolvedValue(undefined),
+  sendPartnerDecisionNotification: vi.fn().mockResolvedValue(undefined),
+  sendClinicDecisionNotification: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock("@eleva/notifications", () => ({
   sendClosedGateInvoiceNotification,
   sendBookingNotification,
   sendPaymentPayoutNotification,
+  sendPartnerDecisionNotification,
+  sendClinicDecisionNotification,
+  isPartnerDecisionKind: (type: string) => type.startsWith("partner."),
+  isClinicDecisionKind: (type: string) => type.startsWith("clinic."),
   parseBookingNotificationPayload: (
     type: string,
     payload: Record<string, unknown>
@@ -218,5 +226,32 @@ describe("handleSendNotification", () => {
       payload: { paymentId: "pay-1" },
     })
     expect(sendBookingNotification).not.toHaveBeenCalled()
+  })
+
+  it.each(["clinic.verified", "clinic.needs_changes", "clinic.rejected"])(
+    "forwards %s to sendClinicDecisionNotification",
+    async (type) => {
+      sendClinicDecisionNotification.mockClear()
+      const event = {
+        id: "evt-4",
+        type,
+        orgId: "org-1",
+        payload: { verificationId: "v-1", reason: null, verified: true },
+      }
+      await handleSendNotification(event as never)
+      expect(sendClinicDecisionNotification).toHaveBeenCalledWith(event)
+      expect(sendPartnerDecisionNotification).not.toHaveBeenCalled()
+    }
+  )
+
+  it("refuses an event type no sender claims", async () => {
+    await expect(
+      handleSendNotification({
+        id: "evt-5",
+        type: "unknown.kind",
+        orgId: "org-1",
+        payload: {},
+      } as never)
+    ).rejects.toThrow("unsupported event type unknown.kind")
   })
 })

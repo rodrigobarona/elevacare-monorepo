@@ -135,7 +135,7 @@
         "failed": "That did not work. Please try again."
       },
       "notes": {
-        "approved": "This filing is approved: the clinic is verified.",
+        "approved": "This filing is approved: the clinic is verified. Eleva tells the clinic's owner and admins by email.",
         "needs_changes": "You asked for changes. Eleva tells the clinic's owner and admins by email, with your reason. When the clinic sends its details again, this filing comes back as “To check”.",
         "rejected": "This filing was rejected. Eleva tells the clinic's owner and admins by email, with your reason. The clinic can send its details again."
       },

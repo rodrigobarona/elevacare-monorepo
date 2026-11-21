@@ -253,10 +253,15 @@ emails also still send via `sendClosedGateInvoiceNotification`):
 issuance (`issueInvoice()` remains closed). Closed-gate emails never include
 a document number or PDF.
 
-Later phases append kinds in their own PR: Phase 10 `crm.follow_up_due`;
-Phase 11 `team.invitation`, `team.member_joined`, `clinic.verified`,
-`clinic.rejected`; Phase 12 `partner.approved` / `rejected` / `needs_changes`;
-Phase 14 `calendar.reconnect_required`, `migration.welcome`.
+Appended since: Phase 10 `crm.follow_up_due`; Phase 12 `partner.approved` /
+`needs_changes` / `rejected` (email to the expert); Phase 11.5
+`clinic.verified` / `needs_changes` / `rejected` (email and inbox notice to
+the clinic's owner and admins; the reason is in the email only, never in
+the subject or the inbox line).
+
+Still to be appended by their phase, in their own PR: Phase 11
+`team.invitation`, `team.member_joined`; Phase 14
+`calendar.reconnect_required`, `migration.welcome`.
 
 **Not in Lane 1**: anything Multibanco-voucher-related (feature excluded).
 

@@ -59,8 +59,21 @@ Each entry should include:
   `notifications_kind` and `notification_deliveries_kind` checks. CI
   applies it to preview branches only. **Operator step:** apply it to the
   production Neon primary (unpooled URL) before this code is deployed
-  there; without it the notice fails on insert and retries, and the
-  decision itself still succeeds.
+  there. Without it the decision itself still succeeds, and the notice
+  fails on insert before any email leaves: it is retried ten times over
+  about 45 minutes and then marked `dead`. Nothing requeues a dead
+  delivery today; setting its row in `domain_event_deliveries` back to
+  `pending` with `attempts = 0` sends it.
+- One person's failed notice never keeps it from the others: each is sent
+  on its own and the event is retried for those who failed; people already
+  told are skipped by their idempotency key. The inbox notice names the
+  clinic and links with a path, the email with the full address. The
+  button reads "Correct your details" or "See your clinic's verification"
+  by outcome, and the reason has the email's full width with its line
+  breaks.
+- Known, shared with every notice sender: a delivery the provider leaves
+  `held` counts as sent for the event, and no sweep picks up a delivery
+  stuck in `queued`.
 - Proof: unit tests for the sender (recipients, languages, reason kept off
   subject and inbox, the stays-verified wording), the email (reason shown
   as text, three languages), the kind and SQL check lockstep, and the
@@ -71,7 +84,11 @@ Each entry should include:
   payload, which nothing deletes today (the same as a licence decision).
   Recorded in the retention matrix.
 - Not in this slice: a notice to the reviewer; telling clinicians; a
-  notice when a clinic sends details (staff find them in the queue); SMS.
+  notice when a clinic sends details (staff find them in the queue); SMS;
+  keeping the clinic's name as it was at the decision (the name is read
+  when the notice is sent, shown as one plain line of at most 80
+  characters, never a link); removing the reason from the event payload
+  once the notice is delivered.
 - Owner: engineering
 
 ### 2026-11-21: A clinic sends its legal details and follows the check (11.4) (active)
