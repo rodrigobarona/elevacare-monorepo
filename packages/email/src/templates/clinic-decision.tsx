@@ -1,8 +1,10 @@
+import { Section } from "react-email"
 import { DetailRow } from "../components/detail-row"
 import { EmailButton } from "../components/email-button"
 import { EmailCard } from "../components/email-card"
 import { EmailBodyText, EmailHeading } from "../components/email-heading"
 import { EmailLayout } from "../components/layout"
+import { emailSafeName } from "../safe-name"
 import {
   getEmailTranslations,
   type EmailLocale,
@@ -81,23 +83,36 @@ export function ClinicDecisionEmail({
 }: ClinicDecisionProps) {
   const t = getEmailTranslations(locale)
   const copy = clinicDecisionCopy(t, kind, verified)
+  // The clinic names itself: shown as one plain line, never as a link.
+  const clinic = emailSafeName(clinicName)
+  const greetingName = emailSafeName(name)
 
   return (
-    <EmailLayout preview={copy.subject} locale={locale}>
+    <EmailLayout preview={copy.subject} locale={locale} accountFooter={false}>
       <EmailHeading>{copy.title}</EmailHeading>
-      {name ? (
+      {greetingName ? (
         <EmailBodyText className="mb-[8px]">
-          {t.invoice.greeting(name)}
+          {t.invoice.greeting(greetingName)}
         </EmailBodyText>
       ) : null}
       <EmailBodyText className="mb-[24px]">{copy.subtitle}</EmailBodyText>
-      <EmailCard>
-        <DetailRow label={t.clinic.clinicLabel} value={clinicName} />
-        {reason ? (
-          <DetailRow label={t.clinic.reasonLabel} value={reason} />
-        ) : null}
-      </EmailCard>
-      <EmailButton href={verificationHref}>{t.clinic.cta}</EmailButton>
+      {clinic || reason ? (
+        <EmailCard>
+          {clinic ? (
+            <DetailRow label={t.clinic.clinicLabel} value={clinic} />
+          ) : null}
+          {reason ? (
+            <DetailRow label={t.clinic.reasonLabel} value={reason} />
+          ) : null}
+        </EmailCard>
+      ) : null}
+      <Section className="mt-[24px]">
+        <EmailButton href={verificationHref}>{t.clinic.cta}</EmailButton>
+      </Section>
+      {/* Why this person: they manage the clinic. */}
+      <EmailBodyText className="mt-[24px] mb-0 text-[13px] leading-[20px]">
+        {t.clinic.why(clinic ?? t.clinic.yourClinic)}
+      </EmailBodyText>
     </EmailLayout>
   )
 }

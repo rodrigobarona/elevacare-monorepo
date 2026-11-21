@@ -1,3 +1,4 @@
+import { Section } from "react-email"
 import { DetailRow } from "../components/detail-row"
 import { EmailButton } from "../components/email-button"
 import { EmailCard } from "../components/email-card"
@@ -77,7 +78,9 @@ export function PartnerDecisionEmail({
           <DetailRow label={t.partner.reasonLabel} value={reason} />
         </EmailCard>
       ) : null}
-      <EmailButton href={licenceHref}>{t.partner.cta}</EmailButton>
+      <Section className="mt-[24px]">
+        <EmailButton href={licenceHref}>{t.partner.cta}</EmailButton>
+      </Section>
     </EmailLayout>
   )
 }

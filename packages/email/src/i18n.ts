@@ -138,6 +138,9 @@ const translations = {
       rejectedStillVerifiedSubtitle:
         "We checked the new details you sent and could not confirm them. Your clinic stays verified with the details we checked before.",
       cta: "Open Verification",
+      yourClinic: "your clinic",
+      why: (clinic: string) =>
+        `You received this email because you are an owner or admin of ${clinic} on Eleva Care.`,
     },
     payout: {
       paidTitle: "Payout sent",
@@ -363,6 +366,9 @@ const translations = {
       rejectedStillVerifiedSubtitle:
         "Verificámos os novos dados que enviou e não os conseguimos confirmar. A sua clínica continua verificada com os dados que confirmámos antes.",
       cta: "Abrir a Verificação",
+      yourClinic: "a sua clínica",
+      why: (clinic: string) =>
+        `Recebeu este email porque é titular ou administra ${clinic} na Eleva Care.`,
     },
     payout: {
       paidTitle: "Pagamento enviado",
@@ -590,6 +596,9 @@ const translations = {
       rejectedStillVerifiedSubtitle:
         "Hemos revisado los nuevos datos que enviaste y no hemos podido confirmarlos. Tu clínica sigue verificada con los datos que comprobamos antes.",
       cta: "Abrir Verificación",
+      yourClinic: "tu clínica",
+      why: (clinic: string) =>
+        `Has recibido este correo porque eres titular o administras ${clinic} en Eleva Care.`,
     },
     payout: {
       paidTitle: "Pago enviado",
@@ -786,6 +795,8 @@ export interface EmailTranslations {
     clinicLabel: string
     reasonLabel: string
     cta: string
+    yourClinic: string
+    why: (clinic: string) => string
   }
   payout: {
     paidTitle: string
