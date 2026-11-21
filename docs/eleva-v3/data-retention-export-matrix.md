@@ -67,6 +67,30 @@ Use this document to answer:
   the invitation. We keep it until you answer or the invitation expires,
   and for [period] afterwards, with the record that the email was sent."
 
+### Expert licence applications
+
+- Data type: an expert's professional body, licence number and regulator
+  (ERS) registration number, the staff decision, who decided and when, and
+  the reason on an application that was sent back or rejected
+  (`become_partner_applications`). Staff also read, without storing a
+  copy, the expert's name and email
+- Sensitivity: personal data of the expert (professional identifiers) and
+  of the reviewer (staff user id)
+- Export: yes for the expert (`GET /expert/profile/licence-application`
+  returns their own application, its state and the reason)
+- Deletion: as the record of processing states for licence verification
+  evidence (`legal/ropa.md`, activity C2): for the duration of the
+  relationship, then 5 years after the account closes (retention schedule
+  §3.2). This matrix adds no period of its own
+- Audit access: yes for every decision, and for every time staff open a
+  review (`partner_application.opened`, with the review's state, never the
+  numbers or the email). The queue, which lists experts by name and
+  professional body, is not recorded per row. **For the DPO to decide:**
+  how long `partner_application.opened` rows are kept (nothing deletes
+  them today), and whether an expert may learn who at Eleva opened their
+  review: the audit stream's row-level rule lets an organization read its
+  own rows, staff user id included, and no screen shows them yet
+
 ### Clinic verification filings
 
 - Data type: a clinic's legal name and tax number, the staff decision, who

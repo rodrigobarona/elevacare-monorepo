@@ -52,9 +52,25 @@ Each entry should include:
   against a database: there is no integration test for the licence review
   read, and the staff console's licence page was not opened in a browser
   after this change.
-- Not scored by the judges panel.
+- Stated limits, the same as 12.2: every load counts, a reload included,
+  and the page reloads after a decision; an unknown profile leaves no
+  trace; the staff rate limit is 60 a minute and lets requests through
+  when its store is down; the read accepts a credential that cannot be
+  revoked before it expires. The plain read is kept out of apps by
+  convention (the `_` prefix), not by a lint rule.
+- For the DPO: how long these access rows are kept (nothing deletes them
+  today); whether an expert may learn who at Eleva opened their review
+  (the audit stream lets an organization read its own rows, and no screen
+  shows them yet); the access log is not yet named in the record of
+  processing (`legal/ropa.md`, activity C2, "Evidence kept"). The
+  retention matrix now has a section for licence applications.
+- Judges, first round: GDPR 7.7, compliance 7.9, security 8.3,
+  engineering 8.0. The must-fix items were applied (the retention
+  section, this hand-off, tests that assert who is on the record); not
+  scored again.
 - Not in this slice: the two staff queues, which list people and clinics
-  by name; the sign-in check from 12.1 for licence decisions.
+  by name; the sign-in check from 12.1 for licence decisions; a database
+  test for this read.
 - Owner: engineering
 
 ### 2026-11-21: Judges panel on the night's slices (11.3 to 11.6, 12.1, 12.2, 13.1, 14.1) (active)

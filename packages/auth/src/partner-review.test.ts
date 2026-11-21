@@ -39,11 +39,15 @@ vi.mock("@eleva/db/queries/partner-applications", () => ({
   _emitPartnerDecisionEvent: (...args: unknown[]) => emitEvent(...args),
   _readLicenceReview: (...args: unknown[]) => readReview(...args),
 }))
+const auditOptions = vi.fn()
 vi.mock("@eleva/audit", () => ({
   withPlatformAudit: async (
-    _options: unknown,
+    options: unknown,
     fn: (t: typeof tx, ctx: { emit: typeof emit }) => unknown
-  ) => fn(tx, { emit }),
+  ) => {
+    auditOptions(options)
+    return fn(tx, { emit })
+  },
 }))
 vi.mock("drizzle-orm", () => ({
   and: vi.fn(),
@@ -277,6 +281,11 @@ describe("openLicenceReview", () => {
     await expect(
       openLicenceReview("profile-1", { actorUserId: "staff-1" })
     ).resolves.toBe(REVIEW)
+    // On the record: the staff member who opened it, in the expert's org.
+    expect(auditOptions).toHaveBeenCalledWith({
+      orgId: "org-1",
+      actorUserId: "staff-1",
+    })
     // Read inside the audited transaction.
     expect(readReview).toHaveBeenCalledWith(tx, "profile-1")
     expect(emit).toHaveBeenCalledTimes(1)

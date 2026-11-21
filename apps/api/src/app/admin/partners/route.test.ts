@@ -111,7 +111,7 @@ describe("GET /admin/partners", () => {
     expect(res.status).toBe(200)
     // The read is recorded for the staff member who opened the review.
     expect(getReview).toHaveBeenCalledWith(PROFILE_ID, {
-      actorUserId: expect.any(String),
+      actorUserId: "staff-1",
     })
     await expect(res.json()).resolves.toMatchObject({
       reviewState: "pending",
