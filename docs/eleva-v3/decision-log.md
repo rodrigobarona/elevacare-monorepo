@@ -46,12 +46,14 @@ Each entry should include:
   from `@eleva/db`: the only read of a licence review is the audited one.
 - A profile that never filed has no application to name: the record's
   entity id is empty and the profile id is in the payload.
-- Proof: unit tests (the record's content, no email or number in it, an
-  unknown profile, a profile gone between the two reads, a record that
-  cannot be written) and the route test (the reader is passed). Not run
-  against a database: there is no integration test for the licence review
-  read, and the staff console's licence page was not opened in a browser
-  after this change.
+- Proof: `partner-review.integration.test.ts` on the dev Neon branch (3
+  cases, in CI's Neon job from this PR on): the row has the reader, the
+  expert's organization and the state, an application is named once there
+  is one, the numbers and the email are never in it, and an unknown
+  profile records nothing. Unit tests cover a profile gone between the two
+  reads and a record that cannot be written; the route test, that the
+  signed-in staff member is the reader. The staff console's licence page
+  was not opened in a browser after this change.
 - Stated limits, the same as 12.2: every load counts, a reload included,
   and the page reloads after a decision; an unknown profile leaves no
   trace; the staff rate limit is 60 a minute and lets requests through
@@ -69,8 +71,7 @@ Each entry should include:
   hand-off, tests that assert who is on the record), second round GDPR
   8.1 and compliance 8.3.
 - Not in this slice: the two staff queues, which list people and clinics
-  by name; the sign-in check from 12.1 for licence decisions; a database
-  test for this read.
+  by name; the sign-in check from 12.1 for licence decisions.
 - Owner: engineering
 
 ### 2026-11-21: Judges panel on the night's slices (11.3 to 11.6, 12.1 to 12.3, 13.1, 14.1) (active)
