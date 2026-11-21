@@ -17,7 +17,9 @@
     "you": "(eu)",
     "services": "{count, plural, =0 {Ainda sem serviços publicados} one {# serviço publicado} other {# serviços publicados}}",
     "seats": "{used} de {cap} lugares ocupados. Um lugar fica ocupado quando um especialista tem um serviço publicado.",
-    "seatsFull": "Os {cap} lugares estão ocupados. Outro especialista pode publicar um serviço quando houver um lugar livre.",
+    "seatsFull": "Os {cap} lugares estão ocupados. Um lugar fica livre quando um especialista deixa de ter serviços publicados ou sai da equipa; nessa altura, outro especialista pode publicar.",
+    "seatsFullPill": "Todos os lugares ocupados",
+    "seatsOver": "{used} especialistas têm um serviço publicado; o seu plano inclui {cap} lugares. Quem já tem serviços publicados mantém-nos. Um lugar fica livre quando um especialista deixa de ter serviços publicados ou sai da equipa; outro especialista pode publicar quando houver menos de {cap} lugares ocupados.",
     "role": {
       "owner": "Titular",
       "admin": "Admin",
@@ -55,7 +57,9 @@
       "already-member": "Esta pessoa já faz parte da sua equipa. Encontra-a na lista de pessoas.",
       "limit": "A sua equipa chegou às 200 pessoas. Remova alguém ou retire um convite primeiro.",
       "owner-required": "Só quem é titular pode convidar para a função Admin ou alterar um convite para essa função. Peça a quem é titular.",
-      "recently-sent": "Pode enviar este convite de novo dentro de um minuto.",
+      "recently-sent": "Esta pessoa recebeu um convite há menos de 8 horas. Pode enviá-lo de novo depois disso.",
+      "declined": "Esta pessoa recusou o convite da sua clínica. Para respeitar essa decisão, pode voltar a convidá-la daqui a cerca de um mês.",
+      "daily-limit": "A sua clínica já convidou o número máximo de pessoas por dia. Pode convidar mais amanhã.",
       "failed": "Não foi possível enviar o convite. Tente de novo."
     },
     "remove": {

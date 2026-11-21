@@ -73,7 +73,7 @@ export default async function EventTypesPage({
               <li
                 key={et.id}
                 data-testid={`event-type-card-${et.slug}`}
-                className="relative flex items-start gap-4 p-5 transition-colors focus-within:bg-sand-50/70 hover:bg-sand-50/70 sm:px-6 dark:focus-within:bg-muted/40 dark:hover:bg-muted/40"
+                className="relative flex flex-wrap items-start gap-4 p-5 transition-colors focus-within:bg-sand-50/70 hover:bg-sand-50/70 sm:px-6 dark:focus-within:bg-muted/40 dark:hover:bg-muted/40"
               >
                 <div className="min-w-0 flex-1 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
@@ -108,13 +108,12 @@ export default async function EventTypesPage({
                     </span>
                   </p>
                 </div>
-                <div className="relative z-10 shrink-0">
-                  <EventTypeActions
-                    eventTypeId={et.id}
-                    published={et.published}
-                    workspaceBase={base}
-                  />
-                </div>
+                {/* The menu, and under the row an error when one is shown. */}
+                <EventTypeActions
+                  eventTypeId={et.id}
+                  published={et.published}
+                  workspaceBase={base}
+                />
               </li>
             )
           })}

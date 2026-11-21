@@ -95,6 +95,8 @@ export function TeamRoster({
   invitations: RosterInvitation[]
 }) {
   const t = useTranslations("members")
+  const seatStanding =
+    seats.used > seats.cap ? "over" : seats.used === seats.cap ? "full" : "open"
   const format = useFormatter()
   const [inviteOpen, setInviteOpen] = React.useState(false)
   const [removing, setRemoving] = React.useState<RosterMember | null>(null)
@@ -269,12 +271,29 @@ export function TeamRoster({
             )
           })}
         </ul>
-        <p
-          className="max-w-prose text-sm text-muted-foreground"
+        {/* Full or over is a status, said in words and not by colour alone. */}
+        <div
+          className="max-w-prose space-y-2 text-sm"
           data-testid="team-seats"
+          data-seats={seatStanding}
         >
-          {seats.used >= seats.cap ? t("seatsFull", seats) : t("seats", seats)}
-        </p>
+          {seatStanding === "open" ? null : (
+            <StatusPill tone="attention">{t("seatsFullPill")}</StatusPill>
+          )}
+          <p
+            className={
+              seatStanding === "open"
+                ? "text-muted-foreground"
+                : "text-foreground"
+            }
+          >
+            {seatStanding === "over"
+              ? t("seatsOver", seats)
+              : seatStanding === "full"
+                ? t("seatsFull", seats)
+                : t("seats", seats)}
+          </p>
+        </div>
         <p className="max-w-prose text-sm text-muted-foreground">
           {t("ownerNote")}
         </p>

@@ -4,6 +4,7 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { DotsThreeIcon } from "@eleva/icons"
+import { Alert, AlertDescription } from "@eleva/ui/components/alert"
 import { Button } from "@eleva/ui/components/button"
 import {
   DropdownMenu,
@@ -106,49 +107,58 @@ export function EventTypeActions({
 
   return (
     <>
+      <div className="relative z-10 shrink-0">
+        <DropdownMenuTrigger>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            isDisabled={pending}
+            aria-label={t("actions.ariaLabel")}
+          >
+            <DotsThreeIcon aria-hidden weight="bold" />
+          </Button>
+          <DropdownMenu placement="bottom end">
+            <DropdownMenuItem
+              id="edit"
+              textValue={t("actions.edit")}
+              onAction={() =>
+                router.push(`${workspaceBase}/event-types/${eventTypeId}`)
+              }
+            >
+              {t("actions.edit")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              id="toggle-publish"
+              textValue={
+                published ? t("actions.unpublish") : t("actions.publish")
+              }
+              onAction={handleTogglePublish}
+            >
+              {published ? t("actions.unpublish") : t("actions.publish")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              id="delete"
+              variant="destructive"
+              textValue={t("actions.delete")}
+              onAction={() => setDeleteOpen(true)}
+            >
+              {t("actions.delete")}
+            </DropdownMenuItem>
+          </DropdownMenu>
+        </DropdownMenuTrigger>
+      </div>
       {error && (
-        <p className="text-sm text-destructive" role="alert">
-          {error}
-        </p>
-      )}
-      <DropdownMenuTrigger>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          isDisabled={pending}
-          aria-label={t("actions.ariaLabel")}
+        // A sentence or three (a full clinic, a missing payout setup): it
+        // takes the row's full width under the service, not a corner of it.
+        <Alert
+          variant="destructive"
+          role="alert"
+          className="relative z-10 basis-full"
+          data-testid="event-type-error"
         >
-          <DotsThreeIcon aria-hidden weight="bold" />
-        </Button>
-        <DropdownMenu placement="bottom end">
-          <DropdownMenuItem
-            id="edit"
-            textValue={t("actions.edit")}
-            onAction={() =>
-              router.push(`${workspaceBase}/event-types/${eventTypeId}`)
-            }
-          >
-            {t("actions.edit")}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            id="toggle-publish"
-            textValue={
-              published ? t("actions.unpublish") : t("actions.publish")
-            }
-            onAction={handleTogglePublish}
-          >
-            {published ? t("actions.unpublish") : t("actions.publish")}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            id="delete"
-            variant="destructive"
-            textValue={t("actions.delete")}
-            onAction={() => setDeleteOpen(true)}
-          >
-            {t("actions.delete")}
-          </DropdownMenuItem>
-        </DropdownMenu>
-      </DropdownMenuTrigger>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
       <AlertDialog isOpen={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogHeader>

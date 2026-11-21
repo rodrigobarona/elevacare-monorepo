@@ -25,6 +25,15 @@ describe("organization invitation email", () => {
     )
     // The person may have no account: no "you have an active account" line.
     expect(email.html).not.toContain("active account")
+    // Someone with no account is told who is writing and where the privacy
+    // notice is.
+    expect(email.html).toContain("eleva.care/legal/privacy")
+    // And how to make this clinic's invitations stop.
+    expect(email.html).toContain(
+      "To stop invitations from Clínica Lumen, open the invitation and decline it, or write to support@eleva.care."
+    )
+    expect(email.html).toContain("NIPC 515001708")
+    expect(email.html).toContain("support@eleva.care")
   })
 
   it("is written in Portuguese and Spanish too", async () => {

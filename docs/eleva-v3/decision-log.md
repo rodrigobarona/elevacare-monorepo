@@ -229,13 +229,55 @@ branch|production`, `--since`, `--report`) and the target guard
   and a clinic without a current clinic subscription is held to Starter. Practices that are not clinics are never limited.
 - Deleting a service now marks and syncs the clinic's seat count, like
   unpublishing.
-- The Team page says how many seats are in use; the service editor tells
-  an expert to ask a clinic admin when no seat is free. The page still
-  shows no prices: choosing and paying for a plan is the billing slice.
-- Proof: `seat-cap.integration.test.ts` on the PR's Neon branch (5 cases,
-  including two members racing for the last seat).
+- The Team page says how many seats are in use; when a clinic has more
+  seated experts than its plan includes (after a plan change) it says they
+  keep their seats and that a seat given up cannot be taken again until
+  the clinic is under its limit. The service editor tells an expert to ask
+  a clinic admin to free a seat; it does not offer a plan change, which
+  has no page yet. The page still shows no prices: choosing and paying for
+  a plan is the billing slice, and the plan limits belong in the published
+  terms with it.
+- Proof: `seat-cap.integration.test.ts` on the PR's Neon branch (6 cases,
+  including two members racing for the last seat and an ended plan) and
+  `publish/route.test.ts` (the check runs in the publish transaction
+  before the write; the 409 body).
 - Not in this slice: the billing page (plan, checkout, portal), an
   Enterprise plan, and `hasFeature`.
+- Follow-up (judges, 2026-11-21): the seat line now says how a seat
+  becomes free and shows an "All seats in use" status when the clinic is
+  at or over its limit; the expert who cannot publish is told what a seat
+  is and whom to ask. Every email footer now names the company that
+  operates Eleva (name, NIPC, registered office, support address) from one
+  source, `@eleva/config/legal-entity`, which the public footer uses too;
+  it used to say "Lisbon, Portugal". The invitation, which can reach
+  someone with no account, also points to the privacy notice. For counsel:
+  whether the company particulars on emails are complete (share capital
+  and the registry office are in the terms, not in the email line).
+- Second follow-up (judges, round 2, 2026-11-21): an invited person can
+  make the invitations stop. After a decline, the same clinic cannot invite
+  that address for at least 30 days (409 `INVITATION_DECLINED`; counted
+  from when the invitation would have expired, because the moment of a
+  decline is not stored, so up to 37 days), and a clinic invites at most
+  50 different addresses in 24 hours, withdrawn ones included (429
+  `INVITATION_DAILY_LIMIT`). One address gets at most one email in eight
+  hours from a clinic (three a day; it was one a minute), and the
+  invitation says how to stop them: decline it, or write to support.
+  Stated limits: declining needs an account with a verified email, so a
+  person with no account can only ignore the email or write to support,
+  and support has no tool yet to stop one clinic's invitations to an
+  address; an address written another way (plus-addressing, dots) and a
+  second clinic run by the same people are each a new address or a new
+  clinic to these rules; invitations to an expert practice go through
+  Better Auth and have none of these limits. For the DPO: whether someone
+  with no account needs a way to object without signing up.
+  The expert's "no seat left" message is an alert under the service, the
+  over-limit line says what frees a seat, and the public footer named in
+  the first follow-up is the checkout footer (`checkout-site-footer.tsx`);
+  the main site footer shows the copyright line only. Not built: a real
+  link (with the locale) to the privacy notice in the invitation, which
+  today is the address as text; the privacy notice itself does not yet
+  mention invited people (for the DPO, text proposed in the retention
+  matrix).
 - Owner: engineering
 
 ### 2026-11-20: The clinic's Team page: invite, send again, withdraw, remove (11.2) (active)
