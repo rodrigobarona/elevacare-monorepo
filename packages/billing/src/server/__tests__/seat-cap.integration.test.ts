@@ -167,7 +167,26 @@ describe.skipIf(!enabled || !databaseUrl)(
       )
     })
 
+    it("ignores a plan that has ended", async () => {
+      // An old Growth subscription, canceled: the clinic is still on Starter.
+      await db()
+        .insert(main.billingSubscriptions)
+        .values({
+          orgId: clinicId,
+          stripeSubscriptionId: `sub_seat_old_${suffix}`,
+          stripeCustomerId: `cus_seat_${suffix}`,
+          status: "canceled",
+          tier: "clinic_growth",
+        })
+      const spare = clinicians[STARTER + 1]!
+      expect(await refused(publish(spare))).toMatchObject({
+        cap: STARTER,
+        plan: "clinic_starter",
+      })
+    })
+
     it("follows the plan: Growth has room for more", async () => {
+      // The current plan wins whatever row was touched last.
       await db()
         .insert(main.billingSubscriptions)
         .values({
@@ -177,6 +196,15 @@ describe.skipIf(!enabled || !databaseUrl)(
           status: "active",
           tier: "clinic_growth",
         })
+      await db()
+        .update(main.billingSubscriptions)
+        .set({ updatedAt: new Date() })
+        .where(
+          eq(
+            main.billingSubscriptions.stripeSubscriptionId,
+            `sub_seat_old_${suffix}`
+          )
+        )
       const waiting = clinicians.filter((userId) => userId !== clinicians[0])
       for (const userId of waiting) {
         expect(await refused(publish(userId))).toBeNull()
@@ -187,7 +215,12 @@ describe.skipIf(!enabled || !databaseUrl)(
       await db()
         .update(main.billingSubscriptions)
         .set({ tier: "clinic_starter" })
-        .where(eq(main.billingSubscriptions.orgId, clinicId))
+        .where(
+          eq(
+            main.billingSubscriptions.stripeSubscriptionId,
+            `sub_seat_${suffix}`
+          )
+        )
       // Seven seated on a plan of five: nobody new gets in.
       const newcomer = randomUUID()
       await db()

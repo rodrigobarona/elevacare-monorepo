@@ -1,4 +1,4 @@
-import { desc, eq, sql } from "drizzle-orm"
+import { and, eq, inArray, sql } from "drizzle-orm"
 import {
   listBillableSeatUserIds,
   main,
@@ -30,14 +30,39 @@ export function clinicPlanTier(
     : DEFAULT_CLINIC_TIER
 }
 
+/** A subscription in one of these states is the clinic's current plan. */
+const CURRENT_SUBSCRIPTION_STATUSES = [
+  "active",
+  "trialing",
+  "past_due",
+] as const
+
+/**
+ * The plan the clinic is on now: its current clinic subscription. Ended
+ * subscriptions never count, and when a plan change leaves two current
+ * rows for a moment the larger plan wins. No current clinic subscription
+ * means Starter.
+ */
 async function clinicPlan(tx: Tx, orgId: string): Promise<ClinicPlanTier> {
-  const [subscription] = await tx
+  const rows = await tx
     .select({ tier: main.billingSubscriptions.tier })
     .from(main.billingSubscriptions)
-    .where(eq(main.billingSubscriptions.orgId, orgId))
-    .orderBy(desc(main.billingSubscriptions.updatedAt))
-    .limit(1)
-  return clinicPlanTier(subscription?.tier)
+    .where(
+      and(
+        eq(main.billingSubscriptions.orgId, orgId),
+        inArray(main.billingSubscriptions.status, [
+          ...CURRENT_SUBSCRIPTION_STATUSES,
+        ]),
+        inArray(main.billingSubscriptions.tier, Object.keys(CLINIC_SEAT_CAPS))
+      )
+    )
+  return rows
+    .map((row) => clinicPlanTier(row.tier))
+    .reduce<ClinicPlanTier>(
+      (best, plan) =>
+        CLINIC_SEAT_CAPS[plan] > CLINIC_SEAT_CAPS[best] ? plan : best,
+      DEFAULT_CLINIC_TIER
+    )
 }
 
 /** The clinic's plan and how many seats it includes. */

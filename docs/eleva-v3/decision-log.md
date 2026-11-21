@@ -45,8 +45,9 @@ Each entry should include:
   subscription row is missing.
 - A member who already holds a seat can always publish another service,
   also in a clinic that is over its limit after a plan change. Invitations
-  are never capped by the plan. A clinic whose plan is unknown is held to
-  Starter. Practices that are not clinics are never limited.
+  are never capped by the plan. The plan is the clinic's current
+  subscription (active, trialing or past due); an ended one never counts,
+  and a clinic without a current clinic subscription is held to Starter. Practices that are not clinics are never limited.
 - Deleting a service now marks and syncs the clinic's seat count, like
   unpublishing.
 - The Team page says how many seats are in use; the service editor tells
