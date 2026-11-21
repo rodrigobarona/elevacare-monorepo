@@ -53,6 +53,7 @@ export {
   SeatLimitReachedError,
   assertSeatAvailable,
   clinicPlanTier,
+  getClinicSeatAllowance,
   type ClinicPlanTier,
 } from "./seat-cap"
 export type {

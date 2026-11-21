@@ -4172,7 +4172,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "listTeamMembers",
           summary: "List the clinic's members and pending invitations",
           description:
-            "Requires members:manage, and teamId must be the caller's active team org (403 TEAM_NOT_ACTIVE otherwise). Returns every member with their role and how many services they have published in this clinic, the pending invitations (expired ones are flagged and can be sent again) and seats.billable: the members with at least one published service, which is what the clinic's plan charges for.",
+            "Requires members:manage, and teamId must be the caller's active team org (403 TEAM_NOT_ACTIVE otherwise). Returns every member with their role and how many services they have published in this clinic, the pending invitations (expired ones are flagged and can be sent again) and seats: billable is the members with at least one published service (what the clinic's plan charges for), cap is how many the plan includes (Starter 5, Growth 20; publishing answers 409 SEAT_LIMIT_REACHED beyond it).",
           tags: ["Teams"],
           requestParams: { path: z.object({ teamId: z.string().uuid() }) },
           responses: {

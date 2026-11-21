@@ -16,6 +16,8 @@
     "peopleHeading": "{count, plural, one {# persona} other {# personas}}",
     "you": "(tú)",
     "services": "{count, plural, =0 {Aún sin servicios publicados} one {# servicio publicado} other {# servicios publicados}}",
+    "seats": "{used} de {cap} plazas ocupadas. Una plaza se ocupa cuando un especialista tiene un servicio publicado.",
+    "seatsFull": "Las {cap} plazas están ocupadas. Otro especialista podrá publicar un servicio cuando quede una plaza libre.",
     "role": {
       "owner": "Titular",
       "admin": "Admin",

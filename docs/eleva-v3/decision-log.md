@@ -32,6 +32,32 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-21: A clinic's plan limits how many experts publish (11.3) (active)
+
+- Change (Phase 11.3): in a clinic, a member's first published service
+  takes a seat. The plan decides how many there are: Starter 5, Growth 20
+  (`CLINIC_SEAT_CAPS` in `@eleva/billing`). Publishing answers
+  409 `SEAT_LIMIT_REACHED` with `cap` and `plan` when none is left.
+- Publishes for one clinic are taken one at a time (advisory lock inside
+  the publish transaction, then the count), so two members cannot both take
+  the last seat. The phase file names a row lock on `billing_subscriptions`;
+  the advisory lock does the same job and also works for a clinic whose
+  subscription row is missing.
+- A member who already holds a seat can always publish another service,
+  also in a clinic that is over its limit after a plan change. Invitations
+  are never capped by the plan. A clinic whose plan is unknown is held to
+  Starter. Practices that are not clinics are never limited.
+- Deleting a service now marks and syncs the clinic's seat count, like
+  unpublishing.
+- The Team page says how many seats are in use; the service editor tells
+  an expert to ask a clinic admin when no seat is free. The page still
+  shows no prices: choosing and paying for a plan is the billing slice.
+- Proof: `seat-cap.integration.test.ts` on the PR's Neon branch (5 cases,
+  including two members racing for the last seat).
+- Not in this slice: the billing page (plan, checkout, portal), an
+  Enterprise plan, and `hasFeature`.
+- Owner: engineering
+
 ### 2026-11-20: The clinic's Team page: invite, send again, withdraw, remove (11.2) (active)
 
 - Change (Phase 11.2): clinic admins manage their people at

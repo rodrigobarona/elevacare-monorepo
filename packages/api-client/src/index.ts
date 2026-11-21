@@ -1018,6 +1018,9 @@ export const TeamMembersResponseSchema = z.object({
   seats: z.object({
     /** Members with at least one published service. */
     billable: z.number().int().nonnegative(),
+    /** Seats the clinic's plan includes (Starter 5, Growth 20). */
+    cap: z.number().int().positive(),
+    plan: z.enum(["clinic_starter", "clinic_growth"]),
   }),
 })
 
