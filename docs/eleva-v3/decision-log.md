@@ -64,8 +64,14 @@ Each entry should include:
 /admin/partners/{expertProfileId}` shows a person's email, licence
   number and regulator number to staff with no trace. Owner: engineering,
   next Phase 12 slice.
-- For the DPO: how long these access rows are kept (nothing deletes them
-  today), and how staff are told that opening a filing is recorded.
+- For the DPO: how long these access rows are kept, in the outbox and in
+  the audit stream (nothing deletes them today); how staff are told that
+  opening a filing is recorded; whether a clinic's owner can learn who at
+  Eleva opened their filing, and whether the trail is part of an access
+  request's answer; and the entry for clinic verification and its staff
+  access log in the record of processing and the impact assessment
+  (`legal/ropa.md`, `legal/dpia.md` have none yet). The breach-response
+  plan said staff reads were "100% audited"; it now lists which are.
 - Not in this slice: auditing the queue, which lists clinics by name and
   legal name; a view of this trail in the console.
 - Owner: engineering
