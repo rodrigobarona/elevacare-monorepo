@@ -49,11 +49,23 @@ Each entry should include:
 - Proof: `e2e/team-verification.spec.ts` (opt-in, loopback, run
   2026-11-21): the card shows for not sent, is gone while checking, and
   shows again when a change is asked; its button opens Verification.
-  Captures `19-overview-verification-*` in
+  Captures `19-overview-verification-*` (desktop, and 360px wide) in
   `design-audit/captures/2026-11-21-team-verification-after/11-team/`.
-- Not scored by the judges panel.
-- Not in this slice: the same card on a phone-width capture; a count on
-  the navigation item; a notice for clinicians.
+- While the card shows, its button is the page's main action and "Go to
+  Team" steps back to an outline; the page subtitle no longer says to
+  start with the people. One tone per standing, shared with the
+  Verification page (`CLINIC_STANDING_TONES`). If the standing cannot be
+  read, the Overview opens without the card.
+- Stated limits: the Overview reads the clinic's whole filing to work out
+  the standing (legal name and number included, never sent to the page),
+  where a narrower read would do; and, as on the Verification page,
+  opening it can create a missing clinic profile row (audited).
+- Judges, first round: UI 7.3, UX and writing 7.1, compliance and
+  accessibility 8.1. The must-fix items were applied (button weight, the
+  phone layout, the subtitle and the change-needed wording); not scored
+  again.
+- Not in this slice: captures of the three other standings and of pt and
+  es; a count on the navigation item; a notice for clinicians.
 - Owner: engineering
 
 ### 2026-11-21: Staff opening a clinic's filing is on record (12.2) (active)

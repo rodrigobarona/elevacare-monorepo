@@ -194,9 +194,18 @@ test.describe("Phase 11.4 — the clinic's Verification page", () => {
     await expect(notice).toHaveAttribute("data-standing", "change-needed", {
       timeout: 60_000,
     })
-    await expect(notice).toContainText("Your verification needs a change")
+    await expect(notice).toContainText("Your clinic's details need a change")
     await shot(overview, "19-overview-verification-change-needed.desktop")
     await overview.context().close()
+    // On a phone the icon stays beside the text and the button goes under.
+    const overviewPhone = await pageWithSession(browser, cookie, true)
+    await overviewPhone.setViewportSize({ width: 360, height: 780 })
+    await overviewPhone.goto(overviewUrl)
+    await expect(
+      overviewPhone.getByTestId("overview-verification")
+    ).toHaveAttribute("data-standing", "change-needed", { timeout: 60_000 })
+    await shot(overviewPhone, "19-overview-verification-change-needed.mobile")
+    await overviewPhone.context().close()
 
     const phone = await pageWithSession(browser, cookie, true)
     await phone.goto(url)
