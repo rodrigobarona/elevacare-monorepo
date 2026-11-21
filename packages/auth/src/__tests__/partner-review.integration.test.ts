@@ -96,13 +96,17 @@ describe.skipIf(!enabled || !databaseUrl)(
     })
 
     it("records a profile that never filed, with no application to name", async () => {
+      const before = (await openings()).length
       const review = await openLicenceReview(profileId, { actorUserId: staff })
       expect(review).toMatchObject({
         email: `licence-${suffix}@example.test`,
         reviewState: "not_submitted",
         application: null,
       })
-      expect((await openings()).at(-1)).toEqual({
+      // Exactly one record for one opening.
+      const rows = await openings()
+      expect(rows).toHaveLength(before + 1)
+      expect(rows.at(-1)).toEqual({
         action: "partner_application.opened",
         entityId: null,
         actorUserId: staff,
