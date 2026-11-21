@@ -71,8 +71,13 @@ describe("sendClinicDecisionNotification", () => {
     )
     expect(owner.ctx.html).toContain("Clínica Lumen")
     expect(owner.ctx.html).toContain("Ana")
-    expect(owner.ctx.href).toMatch(/\/team\/clinica-lumen\/verification$/)
-    expect(owner.ctx.html).toContain("/team/clinica-lumen/verification")
+    // The inbox keeps a path; the email carries the whole address.
+    expect(owner.ctx.href).toBe("/team/clinica-lumen/verification")
+    expect(owner.ctx.html).toMatch(
+      /https?:\/\/[^"]+\/team\/clinica-lumen\/verification/
+    )
+    // Someone who manages two clinics sees which one this is about.
+    expect(owner.ctx.body.startsWith("Clínica Lumen: ")).toBe(true)
 
     expect(admin.recipient).toEqual({ userId: ADMIN })
     expect(admin.idempotencyKey).toBe(`clinic:evt-1:${ADMIN}`)
@@ -142,6 +147,34 @@ describe("sendClinicDecisionNotification", () => {
     const { ctx } = send.mock.calls[0]![0]
     expect(ctx.subject).toBe("Your clinic is verified")
     expect(ctx.html).not.toContain("What we found")
+  })
+
+  it("tells the others when one person's notice fails, and asks for a retry", async () => {
+    const send = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("address refused"))
+      .mockResolvedValue({})
+    await expect(
+      sendClinicDecisionNotification(event("clinic.verified"), {
+        send,
+        loadClinic: vi.fn(async () => clinic),
+      })
+    ).rejects.toThrow("clinic decision notification delivery failed")
+    // The second person was still told.
+    expect(send).toHaveBeenCalledTimes(2)
+    expect(send.mock.calls[1]![0].recipient).toEqual({ userId: ADMIN })
+  })
+
+  it("sends nothing, and does not fail, when the clinic has nobody to tell", async () => {
+    const send = vi.fn()
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {})
+    await sendClinicDecisionNotification(event("clinic.verified"), {
+      send,
+      loadClinic: vi.fn(async () => ({ ...clinic, managers: [] })),
+    })
+    expect(send).not.toHaveBeenCalled()
+    expect(warn).toHaveBeenCalledTimes(1)
+    warn.mockRestore()
   })
 
   it("fails when the clinic is gone or the payload is not a decision", async () => {

@@ -136,8 +136,9 @@ const translations = {
       rejectedStillVerifiedTitle:
         "We could not confirm your clinic's new details",
       rejectedStillVerifiedSubtitle:
-        "We checked the new details you sent and could not confirm them. Your clinic stays verified with the details we checked before.",
-      cta: "Open Verification",
+        "We checked the new details you sent and could not confirm them. Your clinic stays verified with the details we checked before. If your legal details really have changed, send them again from the Verification page.",
+      ctaCorrect: "Correct your details",
+      ctaSee: "See your clinic's verification",
       yourClinic: "your clinic",
       why: (clinic: string) =>
         `You received this email because you are an owner or admin of ${clinic} on Eleva Care.`,
@@ -364,8 +365,9 @@ const translations = {
       rejectedStillVerifiedTitle:
         "Não conseguimos confirmar os novos dados da sua clínica",
       rejectedStillVerifiedSubtitle:
-        "Verificámos os novos dados que enviou e não os conseguimos confirmar. A sua clínica continua verificada com os dados que confirmámos antes.",
-      cta: "Abrir a Verificação",
+        "Verificámos os novos dados que enviou e não os conseguimos confirmar. A sua clínica continua verificada com os dados que confirmámos antes. Se os dados legais mudaram mesmo, envie-os de novo na página Verificação.",
+      ctaCorrect: "Corrigir os dados",
+      ctaSee: "Ver a verificação da clínica",
       yourClinic: "a sua clínica",
       why: (clinic: string) =>
         `Recebeu este email porque é titular ou administra ${clinic} na Eleva Care.`,
@@ -594,8 +596,9 @@ const translations = {
       rejectedStillVerifiedTitle:
         "No hemos podido confirmar los nuevos datos de tu clínica",
       rejectedStillVerifiedSubtitle:
-        "Hemos revisado los nuevos datos que enviaste y no hemos podido confirmarlos. Tu clínica sigue verificada con los datos que comprobamos antes.",
-      cta: "Abrir Verificación",
+        "Hemos revisado los nuevos datos que enviaste y no hemos podido confirmarlos. Tu clínica sigue verificada con los datos que comprobamos antes. Si los datos legales han cambiado de verdad, envíalos de nuevo desde la página Verificación.",
+      ctaCorrect: "Corregir los datos",
+      ctaSee: "Ver la verificación de la clínica",
       yourClinic: "tu clínica",
       why: (clinic: string) =>
         `Has recibido este correo porque eres titular o administras ${clinic} en Eleva Care.`,
@@ -794,7 +797,8 @@ export interface EmailTranslations {
     rejectedStillVerifiedSubtitle: string
     clinicLabel: string
     reasonLabel: string
-    cta: string
+    ctaCorrect: string
+    ctaSee: string
     yourClinic: string
     why: (clinic: string) => string
   }
