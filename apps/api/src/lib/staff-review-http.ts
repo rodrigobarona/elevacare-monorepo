@@ -22,7 +22,9 @@ export async function requireStaffReviewer(
   options: { decision?: boolean } = {}
 ): Promise<{ userId: string } | Response> {
   let session
-  // When the browser session started; null for an API key.
+  // A decision from anything but an API key is held to a recent sign-in. A
+  // session whose start cannot be read is treated as old, never as a key.
+  let mustBeRecent = false
   let authenticatedAt: Date | null = null
   try {
     if (options.decision) {
@@ -30,6 +32,7 @@ export async function requireStaffReviewer(
         request,
         "applications:review"
       )
+      mustBeRecent = identity.authMode !== "api-key"
       authenticatedAt = identity.authenticatedAt ?? null
       session = identity
     } else {
@@ -47,7 +50,7 @@ export async function requireStaffReviewer(
   )
   if (rateLimited) return rateLimited
   if (
-    authenticatedAt &&
+    mustBeRecent &&
     !isRecentSignIn(
       authenticatedAt,
       new Date(),

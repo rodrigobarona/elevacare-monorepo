@@ -295,7 +295,13 @@ branch|production`, `--since`, `--report`) and the target guard
     console left open for days, or a cookie taken from it, cannot verify a
     clinic. Reading the queue has no such limit. An API key has no sign-in
     moment and is still accepted: it is issued on purpose and revocable.
-    Licence decisions do not have this check yet.
+    So that an old staff session cannot make itself a new way in, staff
+    need a session from today to link a sign-in account, create an API key
+    or add a passkey (`staff-fresh-session.ts`, in the auth server's
+    request hook); nobody else is asked. This is a limit on the age of a
+    session. It stands in for, and is weaker than, the phase file's
+    enrolled second factor re-verified within 10 minutes, which is not
+    built. Licence decisions do not have this check yet.
   - Rejecting is confirmed in a dialog that shows the reason as the clinic
     will read it.
   - Staff see the owner by name only. The email was shown as "the person
@@ -315,6 +321,9 @@ branch|production`, `--since`, `--report`) and the target guard
     and never sent again.
   - Approving asks for the two checks, not for a written reason (the phase
     file wants a reason on every staff action).
+  - To build before the first real clinic files: taking back an approval,
+    and the founder's decision on which staff roles may verify. Until then
+    one staff member decides alone and an approval stands.
   - A decision cannot be withdrawn: only a pending filing is decided.
     There is no supported way yet to take back an approval made by
     mistake (rejecting a later filing does not undo it); it needs a

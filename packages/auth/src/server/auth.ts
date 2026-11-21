@@ -3,7 +3,11 @@ import { drizzleAdapter } from "@better-auth/drizzle-adapter"
 import { i18n, locales } from "@better-auth/i18n"
 import { passkey } from "@better-auth/passkey"
 import { betterAuth } from "better-auth"
-import { APIError, createAuthMiddleware } from "better-auth/api"
+import {
+  APIError,
+  createAuthMiddleware,
+  getSessionFromCtx,
+} from "better-auth/api"
 import { nextCookies, toNextJsHandler } from "better-auth/next-js"
 import {
   admin,
@@ -60,6 +64,10 @@ import {
   sweepClosedPractice,
 } from "../practice-closure"
 import { passkeyOrigins } from "./passkey-origin"
+import {
+  NEW_CREDENTIAL_PATHS,
+  staffMustSignInAgain,
+} from "./staff-fresh-session"
 import {
   AUTH_IP_ADDRESS_HEADERS,
   createSecondaryStorage,
@@ -314,6 +322,26 @@ function createAuth() {
               "Sending an invitation again is not available here. Clinics use POST /teams/{teamId}/invitations.",
             code: TEAM_MEMBERS_API_REQUIRED,
           })
+        }
+        // A staff decision needs a session from today. Linking a sign-in
+        // account, creating an API key or adding a passkey would let an
+        // old staff session make itself a new way in, so staff do those on
+        // a session from today too.
+        if (NEW_CREDENTIAL_PATHS.has(ctx.path)) {
+          const current = await getSessionFromCtx(ctx)
+          if (
+            current &&
+            (await staffMustSignInAgain({
+              path: ctx.path,
+              userId: current.user.id,
+              sessionCreatedAt: current.session.createdAt,
+            }))
+          ) {
+            throw new APIError("FORBIDDEN", {
+              message: "Sign in again to do this.",
+              code: "STEP_UP_REQUIRED",
+            })
+          }
         }
       }),
     },

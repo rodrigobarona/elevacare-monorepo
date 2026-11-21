@@ -89,7 +89,12 @@ describe("/admin/clinics", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.readAuth.mockResolvedValue({ user: { id: "staff-1" } })
-    mocks.writeAuth.mockResolvedValue({ user: { id: "staff-1" } })
+    // A console session that started a moment ago.
+    mocks.writeAuth.mockResolvedValue({
+      user: { id: "staff-1" },
+      authMode: "cookie",
+      authenticatedAt: new Date(),
+    })
   })
 
   it("refuses everyone without applications:review", async () => {
@@ -120,6 +125,7 @@ describe("/admin/clinics", () => {
     // Left open since yesterday: no decision, whatever the capability.
     mocks.writeAuth.mockResolvedValue({
       user: { id: "staff-1" },
+      authMode: "cookie",
       authenticatedAt: hoursAgo(13),
     })
     const stale = await post(approve)
@@ -132,13 +138,23 @@ describe("/admin/clinics", () => {
     // Signed in this morning: decides.
     mocks.writeAuth.mockResolvedValue({
       user: { id: "staff-1" },
+      authMode: "cookie",
       authenticatedAt: hoursAgo(3),
     })
     expect((await post(approve)).status).toBe(200)
 
+    // A session whose start cannot be read is old, not an API key.
+    mocks.writeAuth.mockResolvedValue({
+      user: { id: "staff-1" },
+      authMode: "bearer",
+      authenticatedAt: null,
+    })
+    expect((await post(approve)).status).toBe(403)
+
     // An API key has no sign-in moment; it is revocable and issued on purpose.
     mocks.writeAuth.mockResolvedValue({
       user: { id: "staff-1" },
+      authMode: "api-key",
       authenticatedAt: null,
     })
     expect((await post(approve)).status).toBe(200)
