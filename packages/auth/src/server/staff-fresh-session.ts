@@ -89,3 +89,44 @@ export async function staffMustSignInAgain(
   }
   return (deps.isStaff ?? isStaff)(input.userId)
 }
+
+/** What the auth server answers when a staff member must sign in again. */
+export const STEP_UP_REQUIRED = "STEP_UP_REQUIRED"
+
+/**
+ * The whole decision the request hook makes, in one place so it can be
+ * tested without an auth server: for a path that hands out a new
+ * credential, every session the request carries is asked, and one old
+ * staff session is enough to refuse.
+ */
+export async function mustRefuseForStaleStaffSession<
+  S extends { user: { id: string }; session: { createdAt: Date | string } },
+>(
+  input: {
+    path: string
+    fromCookie: () => Promise<S | null | undefined>
+    headers: Headers | undefined
+    fromHeaders: (headers: Headers) => Promise<S | null | undefined>
+    now?: Date
+  },
+  deps: { isStaff?: (userId: string) => Promise<boolean> } = {}
+): Promise<boolean> {
+  if (!NEW_CREDENTIAL_PATHS.has(input.path)) return false
+  const sessions = await sessionsForRequestHook(input)
+  for (const current of sessions) {
+    if (
+      await staffMustSignInAgain(
+        {
+          path: input.path,
+          userId: current.user.id,
+          sessionCreatedAt: current.session.createdAt,
+          now: input.now,
+        },
+        deps
+      )
+    ) {
+      return true
+    }
+  }
+  return false
+}

@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest"
 vi.mock("@eleva/db", () => ({ auth: {}, db: vi.fn() }))
 
 import {
+  mustRefuseForStaleStaffSession,
   NEW_CREDENTIAL_PATHS,
   sessionsForRequestHook,
   staffMustSignInAgain,
@@ -133,5 +134,100 @@ describe("sessionsForRequestHook", () => {
         fromHeaders: vi.fn(),
       })
     ).resolves.toEqual([])
+  })
+})
+
+describe("mustRefuseForStaleStaffSession", () => {
+  const session = (id: string, hours: number) => ({
+    user: { id },
+    session: { createdAt: hoursAgo(hours) },
+  })
+  const onlyStaff = { isStaff: async (id: string) => id === "staff" }
+  const bearer = new Headers({ authorization: "Bearer old-staff-session" })
+
+  it("refuses when an old staff token rides behind a fresh cookie from another account", async () => {
+    await expect(
+      mustRefuseForStaleStaffSession(
+        {
+          path: "/link-social",
+          fromCookie: async () => session("throwaway", 0),
+          headers: bearer,
+          fromHeaders: async () => session("staff", 48),
+          now: NOW,
+        },
+        onlyStaff
+      )
+    ).resolves.toBe(true)
+  })
+
+  it("refuses an old staff cookie, and an old staff bearer token alone", async () => {
+    await expect(
+      mustRefuseForStaleStaffSession(
+        {
+          path: "/api-key/create",
+          fromCookie: async () => session("staff", 13),
+          headers: new Headers(),
+          fromHeaders: async () => null,
+          now: NOW,
+        },
+        onlyStaff
+      )
+    ).resolves.toBe(true)
+    await expect(
+      mustRefuseForStaleStaffSession(
+        {
+          path: "/passkey/verify-registration",
+          fromCookie: async () => null,
+          headers: bearer,
+          fromHeaders: async () => session("staff", 13),
+          now: NOW,
+        },
+        onlyStaff
+      )
+    ).resolves.toBe(true)
+  })
+
+  it("lets staff through on a session from today, and never asks anyone else", async () => {
+    await expect(
+      mustRefuseForStaleStaffSession(
+        {
+          path: "/link-social",
+          fromCookie: async () => session("staff", 2),
+          headers: new Headers(),
+          fromHeaders: async () => null,
+          now: NOW,
+        },
+        onlyStaff
+      )
+    ).resolves.toBe(false)
+    await expect(
+      mustRefuseForStaleStaffSession(
+        {
+          path: "/link-social",
+          fromCookie: async () => session("expert", 24 * 30),
+          headers: new Headers(),
+          fromHeaders: async () => null,
+          now: NOW,
+        },
+        onlyStaff
+      )
+    ).resolves.toBe(false)
+  })
+
+  it("reads no session at all for a path that hands out nothing", async () => {
+    const fromCookie = vi.fn()
+    await expect(
+      mustRefuseForStaleStaffSession(
+        {
+          path: "/get-session",
+          fromCookie,
+          headers: bearer,
+          fromHeaders: vi.fn(),
+          now: NOW,
+        },
+        onlyStaff
+      )
+    ).resolves.toBe(false)
+    expect(fromCookie).not.toHaveBeenCalled()
   })
 })

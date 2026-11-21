@@ -65,9 +65,8 @@ import {
 } from "../practice-closure"
 import { passkeyOrigins } from "./passkey-origin"
 import {
-  NEW_CREDENTIAL_PATHS,
-  sessionsForRequestHook,
-  staffMustSignInAgain,
+  mustRefuseForStaleStaffSession,
+  STEP_UP_REQUIRED,
 } from "./staff-fresh-session"
 import {
   AUTH_IP_ADDRESS_HEADERS,
@@ -328,26 +327,18 @@ function createAuth() {
         // account, creating an API key or adding a passkey would let an
         // old staff session make itself a new way in, so staff do those on
         // a session from today too.
-        if (NEW_CREDENTIAL_PATHS.has(ctx.path)) {
-          const sessions = await sessionsForRequestHook({
+        if (
+          await mustRefuseForStaleStaffSession({
+            path: ctx.path,
             fromCookie: () => getSessionFromCtx(ctx),
             headers: ctx.headers,
             fromHeaders: (headers) => getAuth().api.getSession({ headers }),
           })
-          for (const current of sessions) {
-            if (
-              await staffMustSignInAgain({
-                path: ctx.path,
-                userId: current.user.id,
-                sessionCreatedAt: current.session.createdAt,
-              })
-            ) {
-              throw new APIError("FORBIDDEN", {
-                message: "Sign in again to do this.",
-                code: "STEP_UP_REQUIRED",
-              })
-            }
-          }
+        ) {
+          throw new APIError("FORBIDDEN", {
+            message: "Sign in again to do this.",
+            code: STEP_UP_REQUIRED,
+          })
         }
       }),
     },
