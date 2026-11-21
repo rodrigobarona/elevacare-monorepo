@@ -48,6 +48,13 @@ export {
   syncSeatQuantityAudited,
 } from "./seats"
 export type { SeatSyncSweepResult, SyncSeatQuantityResult } from "./seats"
+export {
+  CLINIC_SEAT_CAPS,
+  SeatLimitReachedError,
+  assertSeatAvailable,
+  clinicPlanTier,
+  type ClinicPlanTier,
+} from "./seat-cap"
 export type {
   ProvisionBillingInput,
   ProvisionBillingResult,

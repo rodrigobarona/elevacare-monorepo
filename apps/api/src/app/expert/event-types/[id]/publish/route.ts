@@ -6,10 +6,12 @@ import { secureJson } from "@/lib/security-headers"
 import { withAudit } from "@eleva/audit"
 import {
   assertConnectReadyForPayments,
+  assertSeatAvailable,
   ConnectIncompleteError,
   enqueueSeatSync,
   markSeatSyncPending,
   offerTakesPayment,
+  SeatLimitReachedError,
 } from "@eleva/billing/server"
 import { getFlag } from "@eleva/flags"
 import {
@@ -140,6 +142,12 @@ export async function POST(request: Request, { params }: Params) {
           })
         }
 
+        // In a clinic, a member's first published service takes a seat.
+        await assertSeatAvailable(tx, {
+          orgId: profile.orgId,
+          userId: session.user.id,
+        })
+
         await updateEventType(
           profile.orgId,
           id,
@@ -172,6 +180,18 @@ export async function POST(request: Request, { params }: Params) {
           violations: err.violations,
         },
         { status: 422, headers }
+      )
+    }
+    if (err instanceof SeatLimitReachedError) {
+      return secureJson(
+        {
+          error: "SEAT_LIMIT_REACHED",
+          code: "SEAT_LIMIT_REACHED",
+          message: `This clinic's plan includes ${err.cap} experts with published services.`,
+          cap: err.cap,
+          plan: err.plan,
+        },
+        { status: 409, headers }
       )
     }
     if (err instanceof ConnectIncompleteError) {
