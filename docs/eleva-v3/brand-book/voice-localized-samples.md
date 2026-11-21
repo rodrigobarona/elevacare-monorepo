@@ -7,26 +7,26 @@ Canonical hero, tagline, disclaimer, and expert-framing lines — the shortest w
 
 ## Hero
 
-| Locale | Title | Subtitle |
-| --- | --- | --- |
-| **EN** | World-Class Women's Health Experts, *on-demand.* | Book Leading Women's Health Specialists - On Your Schedule. |
-| **ES** | Expertos en Salud Femenina de Clase Mundial, *cuando lo necesites.* | Reserva con las Principales Especialistas en Salud de la Mujer - A Tu Ritmo. |
-| **PT** | Especialistas em Saúde Feminina, *quando precisar.* | Marque uma consulta com Especialistas em Saúde da Mulher - À Sua Conveniência. |
+| Locale | Title                                                               | Subtitle                                                                       |
+| ------ | ------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| **EN** | World-Class Women's Health Experts, _on-demand._                    | Book Leading Women's Health Specialists - On Your Schedule.                    |
+| **ES** | Expertos en Salud Femenina de Clase Mundial, _cuando lo necesites._ | Reserva con las Principales Especialistas en Salud de la Mujer - A Tu Ritmo.   |
+| **PT** | Especialistas em Saúde Feminina, _quando precisar._                 | Marque uma consulta com Especialistas em Saúde da Mulher - À Sua Conveniência. |
 
 ## Platform disclaimer (under hero)
 
-| Locale | Line | Link label |
-| --- | --- | --- |
-| EN | We connect you with independent, licensed health experts. | Learn more |
-| ES | Te conectamos con expertas de salud independientes y con licencia. | Saber más |
-| PT | Conectamos com especialistas de saúde independentes e licenciados. | Saiba mais |
+| Locale | Line                                                               | Link label |
+| ------ | ------------------------------------------------------------------ | ---------- |
+| EN     | We connect you with independent, licensed health experts.          | Learn more |
+| ES     | Te conectamos con expertas de salud independientes y con licencia. | Saber más  |
+| PT     | Conectamos com especialistas de saúde independentes e licenciados. | Saiba mais |
 
 ## Footer tagline
 
-| Locale | Line |
-| --- | --- |
-| EN | Empowering women's health through expert care and innovation. |
-| PT | Capacitando a saúde das mulheres através de cuidados especializados e inovação. |
+| Locale | Line                                                                            |
+| ------ | ------------------------------------------------------------------------------- |
+| EN     | Empowering women's health through expert care and innovation.                   |
+| PT     | Capacitando a saúde das mulheres através de cuidados especializados e inovação. |
 
 ## Expert disclaimer (trust framing)
 
@@ -35,11 +35,11 @@ Canonical hero, tagline, disclaimer, and expert-framing lines — the shortest w
 
 ## How to use these
 
-- Treat the **EN hero and subtitle** as the brand line; translate future campaigns in the same spirit (benefit + specificity + control).  
-- Preserve the **“independent, licensed”** phrasing and the **expert vs platform** split in every language — it is a core trust line, not a marketing flourish.  
+- Treat the **EN hero and subtitle** as the brand line; translate future campaigns in the same spirit (benefit + specificity + control).
+- Preserve the **“independent, licensed”** phrasing and the **expert vs platform** split in every language — it is a core trust line, not a marketing flourish.
 - When adding new locales, align formality to healthcare norms (e.g. `usted` in ES, `você`/formal in PT-BR) and keep conversational warmth.
 
 ## Related
 
-- [Messaging framework](./messaging-framework.md)  
+- [Messaging framework](./messaging-framework.md)
 - [Main handbook — Verbal identity](./README.md#2-verbal-identity)

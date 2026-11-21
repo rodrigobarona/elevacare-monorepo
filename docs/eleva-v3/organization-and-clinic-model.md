@@ -151,11 +151,11 @@ Grounded in [Doctolib's EU health-marketplace precedent](https://businessmodelca
 
 Three tiers (Stripe Subscriptions + Stripe Tax PT/NIF, TOConline series `ELEVA-SAAS-{YYYY}`):
 
-| Tier | Base | Per-seat | Seat range |
-|---|---|---|---|
-| Clinic Starter | €99/mo | €39/mo | 1–5 |
-| Clinic Growth | €199/mo | €29/mo | 6–20 |
-| Clinic Enterprise | custom | custom | 20+ |
+| Tier              | Base    | Per-seat | Seat range |
+| ----------------- | ------- | -------- | ---------- |
+| Clinic Starter    | €99/mo  | €39/mo   | 1–5        |
+| Clinic Growth     | €199/mo | €29/mo   | 6–20       |
+| Clinic Enterprise | custom  | custom   | 20+        |
 
 Rules:
 

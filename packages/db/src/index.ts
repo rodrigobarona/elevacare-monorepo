@@ -199,7 +199,6 @@ export {
 export { countBillableSeats, listBillableSeatUserIds } from "./queries/seats"
 export {
   getLatestPartnerApplication,
-  getLicenceReview,
   licenceReviewState,
   listLicenceReviewQueue,
   PARTNER_DECISION_EVENT_TYPES,

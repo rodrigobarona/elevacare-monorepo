@@ -205,8 +205,8 @@ created|updated|archived`), API `/records/templates` CRUD + `POST /records/templ
 - [x] No `sessions.recording_*` or Daily cloud recording in this phase (grep
       check in the PR body). Live `transcript` kind is in 10.1; S3 recording stays 16.8.
       _(2026-11-14: no `recording_\*`columns in`packages/db/src/schema`; no cloud-recording
-  calls in `packages/video`or`apps/api`; `roomMatchesContract`rejects any room with
- `enable*recording`or`enable_recording_ui` set.)*
+ calls in `packages/video`or`apps/api`; `roomMatchesContract`rejects any room with
+`enable*recording`or`enable_recording_ui` set.)*
 - [x] Retention sweep deletes an expired unpublished AI draft in a
       seeded test; account deletion after grace period shreds keys and rows; DSAR includes published
       records and owned documents.

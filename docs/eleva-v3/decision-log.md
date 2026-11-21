@@ -32,6 +32,31 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-21: Staff opening a licence review is on record (12.3) (active)
+
+- Change (Phase 12.3): `GET /admin/partners/{expertProfileId}` records
+  `partner_application.opened` each time a staff member opens an expert's
+  licence review: who opened it, whose review, and the state it was in.
+  The page shows a person's email, licence number and regulator number;
+  until now that left no trace (recorded as a gap in 12.2). The record
+  never holds the numbers or the email.
+- How: `openLicenceReview` in `@eleva/auth/partner-review` reads inside
+  `withPlatformAudit`, as 12.2 does for clinics, so nothing is shown when
+  the record cannot be written. The plain query is no longer exported
+  from `@eleva/db`: the only read of a licence review is the audited one.
+- A profile that never filed has no application to name: the record's
+  entity id is empty and the profile id is in the payload.
+- Proof: unit tests (the record's content, no email or number in it, an
+  unknown profile, a profile gone between the two reads, a record that
+  cannot be written) and the route test (the reader is passed). Not run
+  against a database: there is no integration test for the licence review
+  read, and the staff console's licence page was not opened in a browser
+  after this change.
+- Not scored by the judges panel.
+- Not in this slice: the two staff queues, which list people and clinics
+  by name; the sign-in check from 12.1 for licence decisions.
+- Owner: engineering
+
 ### 2026-11-21: Judges panel on the night's slices (11.3 to 11.6, 12.1, 12.2, 13.1, 14.1) (active)
 
 - What ran: reviewer agents holding the seats of the panel (UI, UX and
@@ -130,11 +155,9 @@ Each entry should include:
   through when its store is down, so one staff credential can write many
   of these rows; reads accept a credential that cannot be revoked before
   it expires (decisions do not).
-- Not built, and it should be before the first real expert files a
-  licence: the licence review has no such record. `GET
-/admin/partners/{expertProfileId}` shows a person's email, licence
-  number and regulator number to staff with no trace. Owner: engineering,
-  next Phase 12 slice.
+- Built since (12.3): the licence review has the same record. When this
+  entry was written, the licence review showed a person's email, licence
+  number and regulator number to staff with no trace.
 - For the DPO: how long these access rows are kept, in the outbox and in
   the audit stream (nothing deletes them today); how staff are told that
   opening a filing is recorded; whether a clinic's owner can learn who at

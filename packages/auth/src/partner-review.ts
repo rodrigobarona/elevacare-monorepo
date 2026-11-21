@@ -1,8 +1,12 @@
-import { and, eq, inArray } from "drizzle-orm"
+import { and, eq, inArray, isNull } from "drizzle-orm"
 import { withPlatformAudit } from "@eleva/audit"
 import type { LicenceChecklistItem } from "@eleva/config/professional-bodies"
 import { main, withPlatformAdminContext } from "@eleva/db"
-import { _emitPartnerDecisionEvent } from "@eleva/db/queries/partner-applications"
+import {
+  _emitPartnerDecisionEvent,
+  _readLicenceReview,
+  type LicenceReview,
+} from "@eleva/db/queries/partner-applications"
 
 export type LicenceDecision =
   | { decision: "approve"; checklist: Record<LicenceChecklistItem, true> }
@@ -186,4 +190,53 @@ export async function decideLicenceApplication(input: {
       return { status: outcome.status, profileStatus }
     }
   )
+}
+
+/**
+ * One profile's licence review, for staff. Null when the profile is unknown.
+ *
+ * It shows a person's email, licence number and regulator number, so each
+ * opening is recorded (`partner_application.opened`) in the same
+ * transaction as the read: who looked, at whose licence, in which state.
+ * The record never holds the numbers themselves.
+ */
+export async function openLicenceReview(
+  expertProfileId: string,
+  viewer: { actorUserId: string }
+): Promise<LicenceReview | null> {
+  const p = main.expertProfiles
+  const [probe] = await withPlatformAdminContext((tx) =>
+    tx
+      .select({ orgId: p.orgId })
+      .from(p)
+      .where(and(eq(p.id, expertProfileId), isNull(p.deletedAt)))
+      .limit(1)
+  )
+  if (!probe) return null
+  try {
+    return await withPlatformAudit(
+      { orgId: probe.orgId, actorUserId: viewer.actorUserId },
+      async (tx, ctx) => {
+        const review = await _readLicenceReview(tx, expertProfileId)
+        // Gone between the two reads: nothing was shown, nothing to record.
+        if (!review) throw new PartnerReviewError("APPLICATION_NOT_FOUND")
+        await ctx.emit({
+          entity: "partner_application",
+          action: "opened",
+          // A profile with no filing yet has no application to name.
+          entityId: review.application?.id ?? null,
+          payload: { expertProfileId, reviewState: review.reviewState },
+        })
+        return review
+      }
+    )
+  } catch (err) {
+    if (
+      err instanceof PartnerReviewError &&
+      err.code === "APPLICATION_NOT_FOUND"
+    ) {
+      return null
+    }
+    throw err
+  }
 }

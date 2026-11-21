@@ -4,16 +4,16 @@ Files under [`../assets/logos/`](../assets/logos/) and [`../assets/marks/`](../a
 
 ## Full wordmark (PNG)
 
-| Color | Black | White |
-| --- | --- | --- |
+| Color                                                   | Black                                                   | White                                                   |
+| ------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------- |
 | ![Color wordmark](../assets/logos/eleva-logo-color.png) | ![Black wordmark](../assets/logos/eleva-logo-black.png) | ![White wordmark](../assets/logos/eleva-logo-white.png) |
 
-*White variant: use on dark, teal, or photo backgrounds with enough contrast.*
+_White variant: use on dark, teal, or photo backgrounds with enough contrast._
 
 ## Symbol only (PNG)
 
-| Color | Black | White |
-| --- | --- | --- |
+| Color                                               | Black                                               | White                                               |
+| --------------------------------------------------- | --------------------------------------------------- | --------------------------------------------------- |
 | ![Color mark](../assets/marks/eleva-mark-color.png) | ![Black mark](../assets/marks/eleva-mark-black.png) | ![White mark](../assets/marks/eleva-mark-white.png) |
 
 ## Derived full lockup (SVG)
@@ -28,4 +28,4 @@ Files under [`../assets/logos/`](../assets/logos/) and [`../assets/marks/`](../a
 
 ![512 app icon](../assets/favicons/android-chrome-512x512.png)
 
-*Full set: [`../assets/favicons/`](../assets/favicons/).*
+_Full set: [`../assets/favicons/`](../assets/favicons/)._

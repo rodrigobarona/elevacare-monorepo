@@ -6,7 +6,9 @@ const getReview = vi.fn()
 
 vi.mock("@eleva/db", () => ({
   listLicenceReviewQueue: () => listQueue(),
-  getLicenceReview: (...args: unknown[]) => getReview(...args),
+}))
+vi.mock("@eleva/auth/partner-review", () => ({
+  openLicenceReview: (...args: unknown[]) => getReview(...args),
 }))
 
 vi.mock("@/lib/auth", () => ({
@@ -107,6 +109,10 @@ describe("GET /admin/partners", () => {
     })
     const res = await detail()
     expect(res.status).toBe(200)
+    // The read is recorded for the staff member who opened the review.
+    expect(getReview).toHaveBeenCalledWith(PROFILE_ID, {
+      actorUserId: expect.any(String),
+    })
     await expect(res.json()).resolves.toMatchObject({
       reviewState: "pending",
       application: { licenceNumber: "FT-0042" },

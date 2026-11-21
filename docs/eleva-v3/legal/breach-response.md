@@ -86,10 +86,10 @@ proof.
 - **Upstash rate-limit counters**: credential stuffing and enumeration.
 - **Audit stream** (`audit_events` in the audit Neon project):
   - unusual `record.decrypted` volume;
-  - staff reads that are audited: session records (`record.decrypted`)
-    and clinic verification filings (`clinic_verification.opened`). Not
-    yet in the stream: licence reviews and the staff queues (decision log,
-    2026-11-21, 12.2);
+  - staff reads that are audited: session records (`record.decrypted`),
+    clinic verification filings (`clinic_verification.opened`) and licence
+    reviews (`partner_application.opened`). Not yet in the stream: the two
+    staff queues (decision log, 2026-11-21, 12.2 and 12.3);
   - `org_data_key` events (`rotated`, `shredded`);
   - membership and role changes;
   - refunds above the dual-control threshold.
