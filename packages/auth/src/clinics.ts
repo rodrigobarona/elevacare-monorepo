@@ -1,5 +1,6 @@
 import { and, desc, eq, inArray } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
+import { normalizeClinicTaxId as normalizeClinicTaxIdOrNull } from "@eleva/config/clinic-verification"
 import {
   auth,
   isUniqueViolation,
@@ -25,6 +26,7 @@ import type {
 export type ClinicErrorCode =
   | "CLINIC_NOT_FOUND"
   | "VERIFICATION_LOCKED"
+  | "VERIFICATION_UNCHANGED"
   | "INVALID_TAX_ID"
 
 export class ClinicError extends Error {
@@ -49,10 +51,8 @@ export function clinicSlugFor(orgSlug: string, orgId: string): string {
 
 /** "PT 515 001 708" → "PT515001708". Throws INVALID_TAX_ID when malformed. */
 export function normalizeClinicTaxId(raw: string): string {
-  const value = raw.replace(/[\s.-]/g, "").toUpperCase()
-  if (!/^[A-Z0-9]{8,32}$/.test(value)) {
-    throw new ClinicError("INVALID_TAX_ID")
-  }
+  const value = normalizeClinicTaxIdOrNull(raw)
+  if (value === null) throw new ClinicError("INVALID_TAX_ID")
   return value
 }
 
@@ -276,6 +276,8 @@ export async function fileClinicVerification(input: {
         .select({
           id: main.clinicVerifications.id,
           status: main.clinicVerifications.status,
+          legalName: main.clinicVerifications.legalName,
+          taxId: main.clinicVerifications.taxId,
         })
         .from(main.clinicVerifications)
         .where(
@@ -290,6 +292,19 @@ export async function fileClinicVerification(input: {
         .limit(1)
       let id: string
       if (open) {
+        // While staff are checking, the same details again change nothing
+        // for them, and would only send the filing to the back of the queue
+        // (it is checked oldest first) and make a decision in progress
+        // answer "changed". Once staff asked for a change, the same details
+        // can be sent again: what they asked for may be outside these two
+        // fields (the billing address, a register that was not yet updated).
+        if (
+          open.status === "pending" &&
+          open.legalName === legalName &&
+          open.taxId === taxId
+        ) {
+          throw new ClinicError("VERIFICATION_UNCHANGED")
+        }
         const [row] = await tx
           .update(main.clinicVerifications)
           .set({

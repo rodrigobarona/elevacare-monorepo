@@ -117,7 +117,7 @@
       "approve": "Approve",
       "approving": "Approving...",
       "reasonLabel": "Reason",
-      "reasonHelp": "Needed to ask for changes or reject. Saved with the filing. Write about the company, without names, emails or phone numbers. Eleva does not tell the clinic yet: write to the owner at the email above.",
+      "reasonHelp": "Needed to ask for changes or reject. The clinic reads it on its Verification page, so write it for the clinic: about the company, without names, emails or phone numbers. Eleva does not email the clinic yet: write to the owner so they know to look.",
       "needsChanges": "Ask for changes",
       "reject": "Reject",
       "saving": "Saving...",

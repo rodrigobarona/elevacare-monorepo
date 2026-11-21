@@ -8,7 +8,7 @@ import {
   getClinicVerificationReview,
   listClinicVerificationQueue,
 } from "../clinic-review"
-import { fileClinicVerification } from "../clinics"
+import { ClinicError, fileClinicVerification } from "../clinics"
 
 /**
  * Staff review of a clinic's legal identity on the PR's Neon branch
@@ -143,6 +143,31 @@ describe.skipIf(!enabled || !databaseUrl)(
       expect(await getClinicVerificationReview(randomUUID())).toBeNull()
     })
 
+    it("refuses the same details again, so the filing keeps its place", async () => {
+      const read = async () => {
+        const [row] = await db()
+          .select({ submittedAt: main.clinicVerifications.submittedAt })
+          .from(main.clinicVerifications)
+          .where(eq(main.clinicVerifications.orgId, clinicId))
+        return row!.submittedAt.getTime()
+      }
+      const before = await read()
+      // Written another way, the same legal name and number.
+      const again = await file(" Review Clinic, Lda ", "pt515.001.708").catch(
+        (err: unknown) => err
+      )
+      expect(again).toBeInstanceOf(ClinicError)
+      expect((again as ClinicError).code).toBe("VERIFICATION_UNCHANGED")
+      // Staff check the oldest filing first: it did not move, and nothing
+      // was written.
+      expect(await read()).toBe(before)
+      expect(
+        (await auditActions()).filter(
+          (action) => action === "clinic_verification.submitted"
+        )
+      ).toHaveLength(1)
+    })
+
     it("refuses a member of the clinic, a stale view and an unknown filing", async () => {
       const [filing] = await db()
         .select({
@@ -226,6 +251,17 @@ describe.skipIf(!enabled || !databaseUrl)(
       expect(await auditActions()).toContain(
         "clinic_verification.changes_requested"
       )
+    })
+
+    it("lets the clinic send the same details again once staff asked for a change", async () => {
+      // What staff asked for may be outside the two fields: the same legal
+      // name and number are accepted, and the filing is undecided again.
+      const again = await file("Review Clinic, Lda", "PT 515 001 708")
+      const [row] = await db()
+        .select({ status: main.clinicVerifications.status })
+        .from(main.clinicVerifications)
+        .where(eq(main.clinicVerifications.id, again.id))
+      expect(row?.status).toBe("pending")
     })
 
     it("approves the refiled identity: the clinic is verified", async () => {

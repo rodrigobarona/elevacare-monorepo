@@ -1,7 +1,8 @@
 {
   "nav": {
     "overview": "Visão geral",
-    "team": "Equipa"
+    "team": "Equipa",
+    "verification": "Verificação"
   },
   "dashboard": {
     "title": "A sua clínica",
@@ -87,6 +88,89 @@
       "removed": "{name} já não faz parte da sua equipa.",
       "memberGone": "Esta pessoa já não faz parte da sua equipa.",
       "failed": "Algo correu mal. Tente de novo."
+    }
+  },
+  "verification": {
+    "title": "Verificação",
+    "description": "A Eleva confirma a denominação social e o NIF da sua clínica no registo público, para que as pessoas saibam quem está por trás da clínica.",
+    "standing": {
+      "not-sent": {
+        "pill": "Por enviar",
+        "title": "Envie os dados legais da sua clínica",
+        "body": "Confirmamos os dados no registo comercial público. Faz isto uma vez, e de novo só se mudarem."
+      },
+      "checking": {
+        "pill": "Em análise",
+        "title": "Estamos a confirmar os seus dados",
+        "body": "Não precisa de fazer nada. Esta página mostra o resultado assim que a verificação terminar."
+      },
+      "change-needed": {
+        "pill": "Precisa de uma alteração",
+        "title": "Precisamos de uma alteração antes de verificar a sua clínica",
+        "body": "Leia abaixo o que encontrámos, corrija os dados e envie de novo."
+      },
+      "verified": {
+        "pill": "Verificada",
+        "title": "A sua clínica está verificada",
+        "body": "Encontrámos a denominação social e o NIF da sua clínica no registo público."
+      },
+      "verified-checking": {
+        "pill": "Verificada",
+        "title": "A sua clínica está verificada e estamos a confirmar os novos dados",
+        "body": "A clínica continua verificada com os dados que confirmámos antes. Não precisa de fazer nada."
+      },
+      "verified-change-needed": {
+        "pill": "Verificada",
+        "title": "A sua clínica está verificada e os novos dados precisam de uma alteração",
+        "body": "A clínica continua verificada com os dados que confirmámos antes. Leia abaixo o que encontrámos e envie os novos dados outra vez."
+      },
+      "verified-new-rejected": {
+        "pill": "Verificada",
+        "title": "A sua clínica está verificada, mas não conseguimos confirmar os novos dados",
+        "body": "A clínica continua verificada com os dados que confirmámos antes. Leia abaixo o que encontrámos. Se os dados mudaram, corrija-os e envie de novo."
+      },
+      "not-verified": {
+        "pill": "Não verificada",
+        "title": "Não conseguimos verificar a sua clínica com estes dados",
+        "body": "Leia abaixo o que encontrámos. Pode corrigir os dados e enviar de novo."
+      }
+    },
+    "reasonTitle": "O que encontrámos",
+    "sent": {
+      "legalName": "Denominação social",
+      "taxId": "NIF ou número de IVA",
+      "sentOn": "Enviado em",
+      "verifiedOn": "Verificada em",
+      "caption": "O que enviou",
+      "captionNew": "Os novos dados que enviou",
+      "captionVerified": "Os dados que confirmámos"
+    },
+    "form": {
+      "heading": "Os dados legais da sua clínica",
+      "headingCorrect": "Encontrou um erro?",
+      "correctHelp": "Pode corrigir o que enviou enquanto confirmamos.",
+      "headingChanged": "A denominação social ou o NIF mudaram?",
+      "changedHelp": "Envie os novos dados. A clínica continua verificada enquanto os confirmamos.",
+      "legalName": "Denominação social",
+      "taxId": "NIF ou número de IVA",
+      "taxIdHelp": "Como aparece nas suas faturas, por exemplo PT123456789.",
+      "send": "Enviar para confirmação",
+      "sending": "A enviar…",
+      "use": "Usamos estes dados para confirmar a identidade legal da sua clínica.",
+      "sent": "Dados enviados. Estamos a confirmá-los.",
+      "errors": {
+        "legal-name": "Introduza a denominação social da sua clínica.",
+        "invalid-tax-id": "Introduza um NIF ou número de IVA válido: 8 a 32 letras e algarismos.",
+        "validation": "Verifique os dois campos e tente novamente.",
+        "changed": "Algo mudou enquanto enviava: podemos ter acabado de concluir a verificação, ou outra pessoa da clínica enviou dados. Recarregue a página para ver o ponto da situação.",
+        "failed": "Não foi possível enviar os dados. Tente novamente.",
+        "unchanged": "Estes são os dados que já temos. Altere um dado para o enviar."
+      },
+      "sendCorrection": "Enviar a correção",
+      "sendNew": "Enviar os novos dados",
+      "unchanged": "Altere um dado para o enviar.",
+      "headingRefused": "Quer enviar os novos dados outra vez?",
+      "refusedHelp": "Corrija o que não conseguimos confirmar e envie. A clínica continua verificada enquanto confirmamos."
     }
   }
 }

@@ -47,6 +47,12 @@ export default async function TeamAdminLayout({
             icon: "UsersIcon",
             needs: "members:manage",
           },
+          {
+            title: t("verification"),
+            url: `${base}/verification`,
+            icon: "ShieldIcon",
+            needs: "clinic:manage",
+          },
         ],
       },
     ],

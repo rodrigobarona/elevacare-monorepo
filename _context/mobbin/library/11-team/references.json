@@ -3,7 +3,7 @@
   "title": "Clinic (team) admin and membership",
   "researcher": "Activation",
   "date": "2026-11-20",
-  "summary": "Invitation acceptance (Phase 11.1c) and the clinic's Team page (Phase 11.2). References show the clinic as a card, one clear question, which email the invite was sent to and a confirmed state with one next step; then one list of people with their role, pending invitations kept apart with Send again and Withdraw, and an invite dialog that says what each role can do and how long the invitation lasts.",
+  "summary": "Invitation acceptance (Phase 11.1c) and the clinic's Team page (Phase 11.2). References show the clinic as a card, one clear question, which email the invite was sent to and a confirmed state with one next step; then one list of people with their role, pending invitations kept apart with Send again and Withdraw, and an invite dialog that says what each role can do and how long the invitation lasts. The Verification page (Phase 11.4) says where the check stands in one sentence, shows the reason when a change is needed, and keeps the form next to it.",
   "references": [
     {
       "id": "11-team/01",
@@ -112,6 +112,42 @@
       "why": "'Invite Teammates' with the workspace logo, a line that says invitations 'will be valid for 14 days', an email field with the role beside it and one 'Send invite' button.",
       "apply": "Say in the dialog what the person receives and that the invitation is valid for 7 days; show the last valid day on the pending row.",
       "query": "invite team member dialog with email and role selection"
+    },
+    {
+      "id": "11-team/10",
+      "file": "img/10-airwallex-reviewing-your-details.jpg",
+      "app": "Airwallex",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/5b2e67a8-ded8-496b-80f0-d2aa8ab4ae03?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "One card that says where the check stands, in a full sentence",
+      "why": "'We are reviewing your details' as the card title, one sentence under it on what happens, and one way back to the dashboard. Nothing else competes with it.",
+      "apply": "The Verification page leads with one card: the state as a sentence ('We are checking your details') and one line on what the clinic has to do, which is usually nothing.",
+      "query": "business verification status page showing details under review and what happens next"
+    },
+    {
+      "id": "11-team/11",
+      "file": "img/11-stripe-what-happened-what-to-do.jpg",
+      "app": "Stripe",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/b24bf79e-1acc-4d99-9f38-b81aa68daaf8?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "When something is needed: what happened, then what to do now",
+      "why": "The account status page answers 'What happened and what do I need to do now?' in two sentences, next to a status and a short progress list (submitted, in review, completed).",
+      "apply": "When staff ask for a change, show their reason under 'What to change' and put the form right below it, already filled with what was sent.",
+      "query": "business verification status page showing details under review and what happens next"
+    },
+    {
+      "id": "11-team/12",
+      "file": "img/12-mercury-no-action-needed.jpg",
+      "app": "Mercury",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/2a7de612-6f88-42d7-bce5-1d8fe2219314?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "'No action is needed on your end' while someone else has the next step",
+      "why": "'We're reviewing your application' with a line that says no action is needed, and a small timeline with dates on the side.",
+      "apply": "While Eleva checks, say plainly that the clinic does not need to do anything, and show what was sent and when.",
+      "query": "business verification status page showing details under review and what happens next"
     }
   ],
   "judging_criteria": [
@@ -122,6 +158,9 @@
     "On the Team page, can a clinic admin see within 5 seconds who is in the clinic, each person's role and who has a published service, with one clear way to invite? (Bonsai 11-team/05, Attio 11-team/06)",
     "Are pending invitations kept apart from people, each with its last valid day (or that it expired) and with Send again and Withdraw on the row? (Krea 11-team/07, Attio 11-team/06)",
     "Does the invite dialog ask only for email and role, say in plain words what the role can do and how long the invitation is valid, and refuse a bad address or an existing member with a sentence that says what to do? (Productboard 11-team/08, Dub 11-team/09)",
-    "Before someone is removed, does the confirmation name the person and the clinic and say what happens to their access, their services and their account, and does a refusal (sessions still to run, the owner, yourself) say why and what to do first?"
+    "Before someone is removed, does the confirmation name the person and the clinic and say what happens to their access, their services and their account, and does a refusal (sessions still to run, the owner, yourself) say why and what to do first?",
+    "On the Verification page, can a clinic admin tell in one sentence where the check stands and whether anything is needed from them? (Airwallex 11-team/10, Mercury 11-team/12)",
+    "When Eleva asks for a change or cannot verify, does the page show the reason in Eleva's own words and put the form to send new details right below it, filled with what was sent? (Stripe 11-team/11)",
+    "Does the form ask only for the legal name and the tax number, say what Eleva does with them, and refuse a malformed number with a sentence that says what a valid one looks like?"
   ]
 }

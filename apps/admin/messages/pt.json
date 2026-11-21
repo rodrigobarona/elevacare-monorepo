@@ -117,7 +117,7 @@
       "approve": "Aprovar",
       "approving": "A aprovar...",
       "reasonLabel": "Motivo",
-      "reasonHelp": "Necessário para pedir alterações ou rejeitar. Fica guardado com o envio. Escreva sobre a empresa, sem nomes, emails ou números de telefone. A Eleva ainda não avisa a clínica: escreva a quem é titular, para o email acima.",
+      "reasonHelp": "Necessário para pedir alterações ou rejeitar. A clínica lê-o na sua página de Verificação, por isso escreva para a clínica: sobre a empresa, sem nomes, emails ou números de telefone. A Eleva ainda não envia email à clínica: escreva a quem é titular para que saiba que deve consultar a página.",
       "needsChanges": "Pedir alterações",
       "reject": "Rejeitar",
       "saving": "A guardar...",
