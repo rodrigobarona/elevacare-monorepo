@@ -1,5 +1,10 @@
 import { desc, eq, sql } from "drizzle-orm"
-import { listBillableSeatUserIds, main, type Tx } from "@eleva/db"
+import {
+  listBillableSeatUserIds,
+  main,
+  withOrgContext,
+  type Tx,
+} from "@eleva/db"
 import { organization } from "@eleva/db/schema/auth"
 
 /**
@@ -23,6 +28,24 @@ export function clinicPlanTier(
   return tier !== null && tier !== undefined && tier in CLINIC_SEAT_CAPS
     ? (tier as ClinicPlanTier)
     : DEFAULT_CLINIC_TIER
+}
+
+async function clinicPlan(tx: Tx, orgId: string): Promise<ClinicPlanTier> {
+  const [subscription] = await tx
+    .select({ tier: main.billingSubscriptions.tier })
+    .from(main.billingSubscriptions)
+    .where(eq(main.billingSubscriptions.orgId, orgId))
+    .orderBy(desc(main.billingSubscriptions.updatedAt))
+    .limit(1)
+  return clinicPlanTier(subscription?.tier)
+}
+
+/** The clinic's plan and how many seats it includes. */
+export async function getClinicSeatAllowance(
+  orgId: string
+): Promise<{ plan: ClinicPlanTier; cap: number }> {
+  const plan = await withOrgContext(orgId, (tx) => clinicPlan(tx, orgId))
+  return { plan, cap: CLINIC_SEAT_CAPS[plan] }
 }
 
 /** The clinic's plan has no seat left for one more publishing member. */
@@ -61,13 +84,7 @@ export async function assertSeatAvailable(
   const seats = await listBillableSeatUserIds(tx, input.orgId)
   if (seats.includes(input.userId)) return
 
-  const [subscription] = await tx
-    .select({ tier: main.billingSubscriptions.tier })
-    .from(main.billingSubscriptions)
-    .where(eq(main.billingSubscriptions.orgId, input.orgId))
-    .orderBy(desc(main.billingSubscriptions.updatedAt))
-    .limit(1)
-  const plan = clinicPlanTier(subscription?.tier)
+  const plan = await clinicPlan(tx, input.orgId)
   const cap = CLINIC_SEAT_CAPS[plan]
   if (seats.length + 1 > cap) throw new SeatLimitReachedError(cap, plan)
 }
