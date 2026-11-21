@@ -138,11 +138,17 @@ test.describe("Phase 11.4 — the clinic's Verification page", () => {
     await shot(page, "13-verification-invalid-number.desktop")
 
     // Spaces and dots are fine; the number is stored without them.
-    await page.getByTestId("verification-tax-id").fill("PT 515.001.708")
+    await page.getByTestId("verification-tax-id").fill("PT 123.456.789")
     await page.getByTestId("verification-send").click()
     await expectStanding("checking")
     await expect(standing).toContainText("We are checking your details")
-    await expect(standing).toContainText("PT515001708")
+    await expect(standing).toContainText("PT123456789")
+    // Focus lands on the new standing, not at the top of the page.
+    await expect(page.locator("#verification-standing-title")).toBeFocused()
+    // The same details cannot be sent again: that would only move the
+    // clinic to the back of the queue.
+    await expect(page.getByTestId("verification-send")).toBeDisabled()
+    await expect(page.getByTestId("verification-unchanged")).toBeVisible()
     await shot(page, "14-verification-checking.desktop")
 
     // Staff ask for a change (their queue is covered by admin-clinics).
@@ -173,9 +179,14 @@ test.describe("Phase 11.4 — the clinic's Verification page", () => {
     await shot(phone, "15-verification-change-needed.mobile")
     await phone.context().close()
 
+    // Asked to change something: the button waits for a change.
+    await expect(page.getByTestId("verification-send")).toBeDisabled()
     await page
       .getByTestId("verification-legal-name")
       .fill("Clínica Lumen, Unipessoal Lda")
+    await expect(page.getByTestId("verification-send")).toHaveText(
+      "Send the correction"
+    )
     await page.getByTestId("verification-send").click()
     await expectStanding("checking")
     await expect(page.getByTestId("verification-reason")).toHaveCount(0)
@@ -206,8 +217,38 @@ test.describe("Phase 11.4 — the clinic's Verification page", () => {
     await page.reload()
     await expectStanding("verified")
     await expect(standing).toContainText("Your clinic is verified")
+    await expect(standing).toContainText("The details we checked")
     await expect(standing).toContainText("Clínica Lumen, Unipessoal Lda")
+    // Nothing to correct: empty fields for a new legal identity.
+    await expect(page.getByTestId("verification-legal-name")).toHaveValue("")
+    await expect(page.getByTestId("verification-send")).toHaveText(
+      "Send new details"
+    )
     await shot(page, "16-verification-verified.desktop")
+
+    // New details for a verified clinic, then refused: the page says the
+    // clinic stays verified and which details are the new ones.
+    await page.getByTestId("verification-legal-name").fill("Lumen Saúde, Lda")
+    await page.getByTestId("verification-tax-id").fill("PT987654321")
+    await page.getByTestId("verification-send").click()
+    await expectStanding("verified-checking")
+    await expect(standing).toContainText("The new details you sent")
+    await shot(page, "17-verification-verified-checking.desktop")
+    await sql`
+      UPDATE clinic_verifications
+      SET status = 'rejected', reason = ${REASON},
+          reviewer_user_id = ${reviewer!.id}::uuid, reviewed_at = now()
+      WHERE org_id = ${teamId}::uuid AND status = 'pending'
+    `
+    await page.reload()
+    await expectStanding("verified-new-rejected")
+    await expect(standing).toContainText("Your clinic is verified")
+    await expect(page.getByTestId("verification-reason")).toHaveText(REASON)
+    // What was refused is there to correct.
+    await expect(page.getByTestId("verification-legal-name")).toHaveValue(
+      "Lumen Saúde, Lda"
+    )
+    await shot(page, "18-verification-verified-new-rejected.desktop")
     await page.context().close()
   })
 })

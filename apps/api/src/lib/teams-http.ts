@@ -18,6 +18,7 @@ import { secureJson } from "@/lib/security-headers"
 const CLINIC_STATUS: Record<ClinicError["code"], number> = {
   CLINIC_NOT_FOUND: 404,
   VERIFICATION_LOCKED: 409,
+  VERIFICATION_UNCHANGED: 409,
   INVALID_TAX_ID: 422,
 }
 

@@ -140,7 +140,10 @@
       "legalName": "Razón social",
       "taxId": "NIF o número de IVA",
       "sentOn": "Enviado el",
-      "verifiedOn": "Verificada el"
+      "verifiedOn": "Verificada el",
+      "caption": "Lo que enviaste",
+      "captionNew": "Los nuevos datos que enviaste",
+      "captionVerified": "Los datos que comprobamos"
     },
     "form": {
       "heading": "Los datos legales de tu clínica",
@@ -150,19 +153,22 @@
       "changedHelp": "Envía los nuevos datos. La clínica sigue verificada mientras los comprobamos.",
       "legalName": "Razón social",
       "taxId": "NIF o número de IVA",
-      "taxIdHelp": "Como aparece en tus facturas, por ejemplo PT515001708.",
+      "taxIdHelp": "Como aparece en tus facturas, por ejemplo ESB12345678.",
       "send": "Enviar para comprobar",
-      "sendAgain": "Enviar de nuevo",
       "sending": "Enviando…",
       "use": "Usamos estos datos para comprobar la identidad legal de tu clínica.",
       "sent": "Datos enviados. Los estamos comprobando.",
       "errors": {
         "legal-name": "Introduce la razón social de tu clínica.",
-        "invalid-tax-id": "Introduce un NIF o número de IVA válido: de 8 a 32 letras y cifras, por ejemplo PT515001708.",
+        "invalid-tax-id": "Introduce un NIF o número de IVA válido: de 8 a 32 letras y cifras.",
         "validation": "Revisa los dos campos e inténtalo de nuevo.",
-        "changed": "Tus datos se actualizaron mientras enviabas. Recarga la página e inténtalo de nuevo.",
-        "failed": "No hemos podido enviar tus datos. Inténtalo de nuevo."
-      }
+        "changed": "Algo ha cambiado mientras enviabas los datos: puede que hayamos terminado la comprobación o que otra persona de la clínica haya enviado datos. Recarga la página para ver cómo está todo.",
+        "failed": "No hemos podido enviar tus datos. Inténtalo de nuevo.",
+        "unchanged": "Estos son los datos que ya tenemos. Cambia un dato para enviarlo."
+      },
+      "sendCorrection": "Enviar la corrección",
+      "sendNew": "Enviar los nuevos datos",
+      "unchanged": "Cambia un dato para enviarlo."
     }
   }
 }

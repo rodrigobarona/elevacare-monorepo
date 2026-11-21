@@ -8,7 +8,7 @@ import {
   getClinicVerificationReview,
   listClinicVerificationQueue,
 } from "../clinic-review"
-import { fileClinicVerification } from "../clinics"
+import { ClinicError, fileClinicVerification } from "../clinics"
 
 /**
  * Staff review of a clinic's legal identity on the PR's Neon branch
@@ -141,6 +141,31 @@ describe.skipIf(!enabled || !databaseUrl)(
         history: [],
       })
       expect(await getClinicVerificationReview(randomUUID())).toBeNull()
+    })
+
+    it("refuses the same details again, so the filing keeps its place", async () => {
+      const read = async () => {
+        const [row] = await db()
+          .select({ submittedAt: main.clinicVerifications.submittedAt })
+          .from(main.clinicVerifications)
+          .where(eq(main.clinicVerifications.orgId, clinicId))
+        return row!.submittedAt.getTime()
+      }
+      const before = await read()
+      // Written another way, the same legal name and number.
+      const again = await file(" Review Clinic, Lda ", "pt515.001.708").catch(
+        (err: unknown) => err
+      )
+      expect(again).toBeInstanceOf(ClinicError)
+      expect((again as ClinicError).code).toBe("VERIFICATION_UNCHANGED")
+      // Staff check the oldest filing first: it did not move, and nothing
+      // was written.
+      expect(await read()).toBe(before)
+      expect(
+        (await auditActions()).filter(
+          (action) => action === "clinic_verification.submitted"
+        )
+      ).toHaveLength(1)
     })
 
     it("refuses a member of the clinic, a stale view and an unknown filing", async () => {

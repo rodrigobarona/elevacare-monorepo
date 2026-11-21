@@ -41,19 +41,34 @@ Each entry should include:
   sends corrected details from the same page. It uses the API from 11.1b
   (`GET /teams/{teamId}`, `POST /teams/{teamId}/verification`); no new
   endpoint.
-- The page words seven standings: not sent, being checked, needs a change,
+- The page words eight standings: not sent, being checked, needs a change,
   verified, verified with new details being checked, verified with new
   details needing a change, verified with new details refused, and not
   verified. A verified clinic is always told it stays verified.
 - A malformed number is refused next to the field with what a valid one
   looks like; spaces, dots and dashes are accepted and dropped.
+- The same details cannot be sent twice. The button waits for a change,
+  and the API answers 409 `VERIFICATION_UNCHANGED` without writing, so a
+  filing keeps its place in the staff queue (oldest first) and a decision
+  in progress is not made stale. The button reads "Send for checking",
+  "Send the correction" or "Send new details" by standing, and is the main
+  action only when sending is the next step.
+- Under a "Verified" pill the details are captioned: "The details we
+  checked", or "The new details you sent" when newer ones are open or were
+  refused. After sending, focus moves to the new standing. The example
+  number is a made-up one (it was Eleva's own).
+- One rule for the number and one for the standing, in
+  `@eleva/config/clinic-verification`, read by the form, the page and the
+  domain, with unit tests for all eight standings.
 - The staff reason is shown to the clinic as "What we found", so the staff
   form now asks reviewers to write it for the clinic. Eleva still sends no
   email about a decision: the staff form says so.
 - The page promises no waiting time and no email.
-- Proof: `e2e/team-verification.spec.ts` (opt-in, loopback): send, a
-  refused number, a change asked with its reason, corrected and sent
-  again, verified. Captures:
+- Proof: `e2e/team-verification.spec.ts` (opt-in, loopback, run
+  2026-11-21): send, a refused number, the disabled resend, a change asked
+  with its reason, corrected and sent again, verified, then new details
+  sent and refused with the clinic still verified. The integration test
+  covers the unchanged refile. Captures:
   `design-audit/captures/2026-11-21-team-verification-after/11-team/`.
   Mobbin `11-team` references 10 to 12.
 - Not in this slice: an email or inbox notice when staff decide; a hint on
