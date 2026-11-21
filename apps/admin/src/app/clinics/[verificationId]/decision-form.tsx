@@ -119,6 +119,7 @@ export function DecisionForm({
           <Label htmlFor="clinic-decision-reason">{t("reasonLabel")}</Label>
           <Textarea
             id="clinic-decision-reason"
+            data-testid="clinic-decision-reason"
             value={reason}
             maxLength={1000}
             rows={3}
@@ -175,7 +176,10 @@ export function DecisionForm({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel isDisabled={pending !== null}>
+            <AlertDialogCancel
+              isDisabled={pending !== null}
+              data-testid="clinic-reject-cancel"
+            >
               {t("rejectConfirm.cancel")}
             </AlertDialogCancel>
             <Button

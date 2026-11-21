@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm"
 import { withPlatformAudit } from "@eleva/audit"
 import type { ClinicChecklistItem } from "@eleva/config/clinic-verification"
-import { auth, main, withPlatformAdminContext } from "@eleva/db"
+import { auth, main, withPlatformAdminContext, type Tx } from "@eleva/db"
 import { _emitClinicDecisionEvent } from "@eleva/db/queries/clinic-verifications"
 import type { ClinicBillingAddress } from "@eleva/db/schema"
 
@@ -146,81 +146,128 @@ const FILING_COLUMNS = {
   reason: main.clinicVerifications.reason,
 }
 
-/** One filing with what staff need to check it. Null when unknown. */
+/**
+ * One filing with what staff need to check it. Null when unknown.
+ *
+ * Opening a filing shows a staff member a clinic's legal details, its
+ * billing address and its owner's name, so each opening is recorded
+ * (`clinic_verification.opened`) in the same transaction as the read: who
+ * looked, at which filing, and when.
+ */
 export async function getClinicVerificationReview(
+  verificationId: string,
+  viewer: { actorUserId: string }
+): Promise<ClinicVerificationReview | null> {
+  const v = main.clinicVerifications
+  const [probe] = await withPlatformAdminContext((tx) =>
+    tx
+      .select({ orgId: v.orgId })
+      .from(v)
+      .where(eq(v.id, verificationId))
+      .limit(1)
+  )
+  if (!probe) return null
+  try {
+    return await withPlatformAudit(
+      { orgId: probe.orgId, actorUserId: viewer.actorUserId },
+      async (tx, ctx) => {
+        const review = await readClinicVerificationReview(tx, verificationId)
+        // Gone between the two reads: nothing was shown, nothing to record.
+        if (!review) throw new ClinicReviewError("VERIFICATION_NOT_FOUND")
+        await ctx.emit({
+          entity: "clinic_verification",
+          action: "opened",
+          entityId: verificationId,
+          // The state it was in when read; never the details themselves.
+          payload: { status: review.verification.status },
+        })
+        return review
+      }
+    )
+  } catch (err) {
+    if (
+      err instanceof ClinicReviewError &&
+      err.code === "VERIFICATION_NOT_FOUND"
+    ) {
+      return null
+    }
+    throw err
+  }
+}
+
+async function readClinicVerificationReview(
+  tx: Tx,
   verificationId: string
 ): Promise<ClinicVerificationReview | null> {
   const v = main.clinicVerifications
   const c = main.clinicProfiles
-  return withPlatformAdminContext(async (tx) => {
-    const [row] = await tx
-      .select({
-        ...FILING_COLUMNS,
-        orgId: v.orgId,
-        displayName: c.displayName,
-        slug: c.slug,
-        websiteUrl: c.websiteUrl,
-        countryCode: c.countryCode,
-        billingAddress: c.billingAddress,
-      })
-      .from(v)
-      .innerJoin(c, eq(c.orgId, v.orgId))
-      .where(eq(v.id, verificationId))
-      .limit(1)
-    if (!row) return null
+  const [row] = await tx
+    .select({
+      ...FILING_COLUMNS,
+      orgId: v.orgId,
+      displayName: c.displayName,
+      slug: c.slug,
+      websiteUrl: c.websiteUrl,
+      countryCode: c.countryCode,
+      billingAddress: c.billingAddress,
+    })
+    .from(v)
+    .innerJoin(c, eq(c.orgId, v.orgId))
+    .where(eq(v.id, verificationId))
+    .limit(1)
+  if (!row) return null
 
-    const filings = await tx
-      .select(FILING_COLUMNS)
-      .from(v)
-      .where(eq(v.orgId, row.orgId))
-      .orderBy(desc(v.submittedAt))
-    // Only the owner's name is read; everyone else is a count. With two
-    // owners, the one who joined first, so staff see the same name each time.
-    const members = await tx
-      .select({ userId: auth.member.userId, role: auth.member.role })
-      .from(auth.member)
-      .where(eq(auth.member.organizationId, row.orgId))
-      .orderBy(auth.member.createdAt, auth.member.userId)
-    const ownerId = members.find((m) =>
-      m.role.split(",").includes("owner")
-    )?.userId
-    const [owner] = ownerId
-      ? await tx
-          .select({ name: auth.user.name })
-          .from(auth.user)
-          .where(eq(auth.user.id, ownerId))
-          .limit(1)
-      : []
+  const filings = await tx
+    .select(FILING_COLUMNS)
+    .from(v)
+    .where(eq(v.orgId, row.orgId))
+    .orderBy(desc(v.submittedAt))
+  // Only the owner's name is read; everyone else is a count. With two
+  // owners, the one who joined first, so staff see the same name each time.
+  const members = await tx
+    .select({ userId: auth.member.userId, role: auth.member.role })
+    .from(auth.member)
+    .where(eq(auth.member.organizationId, row.orgId))
+    .orderBy(auth.member.createdAt, auth.member.userId)
+  const ownerId = members.find((m) =>
+    m.role.split(",").includes("owner")
+  )?.userId
+  const [owner] = ownerId
+    ? await tx
+        .select({ name: auth.user.name })
+        .from(auth.user)
+        .where(eq(auth.user.id, ownerId))
+        .limit(1)
+    : []
 
-    const {
+  const {
+    orgId,
+    displayName,
+    slug,
+    websiteUrl,
+    countryCode,
+    billingAddress,
+    ...verification
+  } = row
+  return {
+    verification,
+    clinic: {
       orgId,
       displayName,
       slug,
       websiteUrl,
       countryCode,
       billingAddress,
-      ...verification
-    } = row
-    return {
-      verification,
-      clinic: {
-        orgId,
-        displayName,
-        slug,
-        websiteUrl,
-        countryCode,
-        billingAddress,
-      },
-      owner: owner ? { name: owner.name } : null,
-      people: members.length,
-      verified: filings.some((filing) => filing.status === "approved"),
-      history: filings.filter(
-        (filing) =>
-          filing.id !== verificationId &&
-          filing.submittedAt.getTime() < verification.submittedAt.getTime()
-      ),
-    }
-  })
+    },
+    owner: owner ? { name: owner.name } : null,
+    people: members.length,
+    verified: filings.some((filing) => filing.status === "approved"),
+    history: filings.filter(
+      (filing) =>
+        filing.id !== verificationId &&
+        filing.submittedAt.getTime() < verification.submittedAt.getTime()
+    ),
+  }
 }
 
 /**

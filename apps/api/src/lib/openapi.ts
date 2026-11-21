@@ -3137,7 +3137,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "getClinicVerification",
           summary: "Get one clinic filing for review",
           description:
-            "Staff-only (`applications:review`). The filing (legal name, NIF), the clinic's public profile and billing address, its owner, how many people it has, and its earlier filings.",
+            "Staff-only (`applications:review`). The filing (legal name, NIF), the clinic's public profile and billing address, its owner's name, how many people it has, and its earlier filings. Each read is audited as clinic_verification.opened with the reader.",
           tags: ["Admin"],
           requestParams: {
             path: z.object({ verificationId: z.string().uuid() }),

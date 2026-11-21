@@ -32,6 +32,50 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-21: Staff opening a clinic's filing is on record (12.2) (active)
+
+- Change (Phase 12.2): `GET /admin/clinics/{verificationId}` records
+  `clinic_verification.opened` each time a staff member opens a filing,
+  with who opened it, which filing, and the state it was in. The audit row
+  is written in the same transaction as the read (`withPlatformAudit`), so
+  a filing is never shown without its record. The payload holds the state
+  only, never the legal name, the number or the address.
+- Why: the page shows a clinic's legal details, its billing address and
+  its owner's name to any member of the staff workspace. 12.1 audited
+  decisions only and recorded the reads as to build before the first real
+  clinic files.
+- Every load counts, a reload included, and the page reloads after a
+  decision: the trail shows more openings than a person would count. The
+  queue (`GET /admin/clinics`) lists clinics by name and legal name and is
+  not audited per row.
+- Proof: the integration test asserts the row (reader, filing, state) and
+  that an unknown filing records nothing; the route test asserts the
+  reader is passed; `e2e/admin-clinics.spec.ts` (opt-in) asserts the rows
+  exist for one reader.
+- The audit row is atomic with the read by construction
+  (`withPlatformAudit`); the integration test asserts the row, not the
+  atomicity.
+- Stated limits: the staff rate limit is 60 a minute and lets requests
+  through when its store is down, so one staff credential can write many
+  of these rows; reads accept a credential that cannot be revoked before
+  it expires (decisions do not).
+- Not built, and it should be before the first real expert files a
+  licence: the licence review has no such record. `GET
+/admin/partners/{expertProfileId}` shows a person's email, licence
+  number and regulator number to staff with no trace. Owner: engineering,
+  next Phase 12 slice.
+- For the DPO: how long these access rows are kept, in the outbox and in
+  the audit stream (nothing deletes them today); how staff are told that
+  opening a filing is recorded; whether a clinic's owner can learn who at
+  Eleva opened their filing, and whether the trail is part of an access
+  request's answer; and the entry for clinic verification and its staff
+  access log in the record of processing and the impact assessment
+  (`legal/ropa.md`, `legal/dpia.md` have none yet). The breach-response
+  plan said staff reads were "100% audited"; it now lists which are.
+- Not in this slice: auditing the queue, which lists clinics by name and
+  legal name; a view of this trail in the console.
+- Owner: engineering
+
 ### 2026-11-21: A clinic is told when staff decide its verification (11.5) (active)
 
 - Change (Phase 11.5): when staff approve, ask for a change or refuse a
@@ -336,8 +380,7 @@ branch|production`, `--since`, `--report`) and the target guard
     There is no supported way yet to take back an approval made by
     mistake (rejecting a later filing does not undo it); it needs a
     "withdraw verification" action.
-  - Staff opening a filing is not audited (only decisions are). To build
-    before the first real clinic files.
+  - Built since (12.2): staff opening a filing is audited.
   - Self-review is refused by current membership. A filing does not record
     who sent it, so a staff member who filed and then left the clinic is
     not caught; recording the filer needs a column.

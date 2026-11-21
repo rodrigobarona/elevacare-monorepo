@@ -260,7 +260,7 @@ test.describe("Phase 12 — staff verify a clinic", () => {
     // A reason is needed before either button is offered.
     await expect(page.getByTestId("clinic-needs-changes")).toBeDisabled()
     await page
-      .getByLabel("Reason")
+      .getByTestId("clinic-decision-reason")
       .fill("The NIF belongs to another company in the register.")
     await page.getByTestId("clinic-needs-changes").click()
     await expect(page.getByTestId("clinic-filing-note")).toContainText(
@@ -281,14 +281,16 @@ test.describe("Phase 12 — staff verify a clinic", () => {
     await expect(page.getByTestId("clinic-reject")).toBeDisabled({
       timeout: 60_000,
     })
-    await page.getByLabel("Reason").fill("This company is not in the register.")
+    await page
+      .getByTestId("clinic-decision-reason")
+      .fill("This company is not in the register.")
     await page.getByTestId("clinic-reject").click()
     await expect(page.getByTestId("clinic-reject-reason")).toHaveText(
       "This company is not in the register."
     )
     await shot(page, "05-clinic-reject-confirm.desktop")
     // Backing out decides nothing.
-    await page.getByRole("button", { name: "Keep reviewing" }).click()
+    await page.getByTestId("clinic-reject-cancel").click()
     await expect(page.getByTestId("clinic-reject-confirm")).toHaveCount(0)
     await page.getByTestId("clinic-reject").click()
     await page.getByTestId("clinic-reject-confirm").click()
@@ -315,6 +317,7 @@ test.describe("Phase 12 — staff verify a clinic", () => {
     const audit = (await sql`
       SELECT action FROM audit_outbox
       WHERE org_id = ${clinicId}::uuid AND action LIKE 'clinic_verification.%'
+        AND action <> 'clinic_verification.opened'
       ORDER BY action
     `) as { action: string }[]
     expect(audit.map((r) => r.action)).toEqual([
@@ -322,6 +325,14 @@ test.describe("Phase 12 — staff verify a clinic", () => {
       "clinic_verification.changes_requested",
       "clinic_verification.rejected",
     ])
+    // Every time staff opened a filing is on record, with who opened it.
+    const [opened] = (await sql`
+      SELECT count(*)::int AS times, count(DISTINCT actor_user_id)::int AS readers
+      FROM audit_outbox
+      WHERE org_id = ${clinicId}::uuid AND action = 'clinic_verification.opened'
+    `) as { times: number; readers: number }[]
+    expect(opened!.times).toBeGreaterThanOrEqual(2)
+    expect(opened!.readers).toBe(1)
     // Each decision queued its notice to the clinic, and a clinic that was
     // already verified is told it stays verified.
     const notices = (await sql`
