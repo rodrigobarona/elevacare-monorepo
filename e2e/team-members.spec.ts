@@ -172,7 +172,7 @@ test.describe("Phase 11.2 — the clinic's Team page", () => {
     ).toBeVisible({ timeout: 30_000 })
 
     // Later, sending again renews the same invitation instead of adding one.
-    await ageInvitation(first!.id, 2)
+    await ageInvitation(first!.id, 8 * 60 + 1)
     await resend.click()
     await expect(
       page.getByText(`Invitation sent again to ${MEMBER_EMAIL}.`)
