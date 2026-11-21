@@ -96,20 +96,22 @@ describe.skipIf(!enabled || !databaseUrl)(
     })
 
     it("records a profile that never filed, with no application to name", async () => {
+      const before = (await openings()).length
       const review = await openLicenceReview(profileId, { actorUserId: staff })
       expect(review).toMatchObject({
         email: `licence-${suffix}@example.test`,
         reviewState: "not_submitted",
         application: null,
       })
-      expect(await openings()).toEqual([
-        {
-          action: "partner_application.opened",
-          entityId: null,
-          actorUserId: staff,
-          payload: { expertProfileId: profileId, reviewState: "not_submitted" },
-        },
-      ])
+      // Exactly one record for one opening.
+      const rows = await openings()
+      expect(rows).toHaveLength(before + 1)
+      expect(rows.at(-1)).toEqual({
+        action: "partner_application.opened",
+        entityId: null,
+        actorUserId: staff,
+        payload: { expertProfileId: profileId, reviewState: "not_submitted" },
+      })
     })
 
     it("names the application once there is one, and never its numbers", async () => {
@@ -124,11 +126,13 @@ describe.skipIf(!enabled || !databaseUrl)(
           ersRegistrationNumber: "TEST-E42",
         })
         .returning({ id: main.becomePartnerApplications.id })
+      // Each case counts from what it found, so it can run on its own.
+      const before = (await openings()).length
       const review = await openLicenceReview(profileId, { actorUserId: staff })
       expect(review?.application?.licenceNumber).toBe("TEST-4242")
       const rows = await openings()
-      expect(rows).toHaveLength(2)
-      expect(rows[1]).toEqual({
+      expect(rows).toHaveLength(before + 1)
+      expect(rows.at(-1)).toEqual({
         action: "partner_application.opened",
         entityId: application!.id,
         actorUserId: staff,
@@ -140,10 +144,11 @@ describe.skipIf(!enabled || !databaseUrl)(
     })
 
     it("answers null for an unknown profile and records nothing", async () => {
+      const before = (await openings()).length
       expect(
         await openLicenceReview(randomUUID(), { actorUserId: staff })
       ).toBeNull()
-      expect(await openings()).toHaveLength(2)
+      expect(await openings()).toHaveLength(before)
     })
   }
 )

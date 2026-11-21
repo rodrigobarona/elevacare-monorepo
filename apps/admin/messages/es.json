@@ -72,7 +72,8 @@
         "decided": "Alguien ya ha decidido esta solicitud.",
         "self": "No puedes revisar tu propia solicitud.",
         "forbidden": "No tienes acceso a esta revisión.",
-        "failed": "No se ha podido completar. Inténtalo de nuevo."
+        "failed": "No se ha podido completar. Inténtalo de nuevo.",
+        "step-up": "Iniciaste sesión hace más de 12 horas. Cierra sesión y vuelve a iniciarla para decidir. Si escribiste un motivo, cópialo antes: esta página no lo guarda."
       }
     }
   },
@@ -133,7 +134,7 @@
         "self": "No puedes revisar una clínica de la que formas parte. Pídeselo a otra persona del equipo.",
         "forbidden": "No tienes acceso a esta revisión.",
         "failed": "No se ha podido completar. Inténtalo de nuevo.",
-        "step-up": "Inicia sesión de nuevo para decidir. Una decisión necesita una sesión iniciada en las últimas 12 horas."
+        "step-up": "Iniciaste sesión hace más de 12 horas. Cierra sesión y vuelve a iniciarla para decidir. Si escribiste un motivo, cópialo antes: esta página no lo guarda."
       },
       "notes": {
         "approved": "Este envío está aprobado: la clínica está verificada. Eleva avisa por correo a quien es titular o administra la clínica.",

@@ -8,10 +8,9 @@ import {
   PartnerReviewError,
 } from "@eleva/auth/partner-review"
 import { corsHeaders } from "@/lib/cors"
-import { apiAuthFailure, requireRevocableApiCapability } from "@/lib/auth"
-import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
+import { requireStaffReviewer } from "@/lib/staff-review-http"
 
 const ExpertProfileIdSchema = z.string().uuid()
 
@@ -31,24 +30,12 @@ export async function POST(
 ) {
   const headers = corsHeaders(request, "POST, OPTIONS")
 
-  let session
-  try {
-    session = await requireRevocableApiCapability(
-      request,
-      "applications:review"
-    )
-  } catch (err) {
-    const failure = apiAuthFailure(err, headers)
-    if (failure) return failure
-    throw err
-  }
-
-  const rateLimited = await applyRateLimit(
-    rateLimitKey(request, session.user.id),
-    RATE_LIMITS.authenticated,
-    headers
-  )
-  if (rateLimited) return rateLimited
+  // The same door as a clinic decision: a revocable credential, the
+  // staff rate limit, and from a browser a session that started today.
+  const staff = await requireStaffReviewer(request, headers, {
+    decision: true,
+  })
+  if (staff instanceof Response) return staff
 
   const { expertProfileId } = await params
   const id = ExpertProfileIdSchema.safeParse(expertProfileId)
@@ -71,7 +58,7 @@ export async function POST(
       expertProfileId: id.data,
       applicationId,
       submittedAt: new Date(submittedAt),
-      actorUserId: session.user.id,
+      actorUserId: staff.userId,
       decision,
     })
     return secureJson(LicenceDecisionResponseSchema.parse(result), {

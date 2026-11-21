@@ -17,8 +17,9 @@ export const COMPANY_REGISTER_URL = "https://publicacoes.mj.pt/Pesquisa.aspx"
 export const VIES_URL = "https://ec.europa.eu/taxation_customs/vies/"
 
 /**
- * A staff decision on a clinic's identity needs a browser session that
- * started within this window: a session left open for days cannot decide.
+ * A staff decision (a clinic's identity, an expert's licence) needs a
+ * browser session that started within this window, and so does a staff
+ * member adding a new way in: a session left open for days cannot decide.
  * A working day, so a reviewer signs in once in the morning.
  */
 export const STAFF_DECISION_SIGN_IN_MAX_AGE_MS = 12 * 60 * 60 * 1000

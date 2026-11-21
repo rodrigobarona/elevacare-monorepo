@@ -9,11 +9,12 @@ import { STAFF_DECISION_SIGN_IN_MAX_AGE_MS } from "@eleva/config/clinic-verifica
 import { isRecentSignIn } from "@eleva/config/practice-closure"
 
 /**
- * Staff auth shared by the clinic review routes: `applications:review`,
+ * Staff auth shared by the review routes (a clinic's legal identity, an
+ * expert's licence): `applications:review`,
  * rate limited per staff member. A decision needs a credential that can be
  * revoked (no bare JWT), and from a browser, a session that started today
  * (403 STEP_UP_REQUIRED otherwise): a console left open for days, or a
- * cookie taken from it, cannot verify a clinic. An API key has no sign-in
+ * cookie taken from it, cannot verify a clinic or a licence. An API key has no sign-in
  * moment; it is issued on purpose and can be revoked.
  */
 export async function requireStaffReviewer(
@@ -57,6 +58,11 @@ export async function requireStaffReviewer(
       STAFF_DECISION_SIGN_IN_MAX_AGE_MS
     )
   ) {
+    // Worth a line: an old session trying to decide is what a taken
+    // cookie looks like. The staff member's id only.
+    console.warn("[staff-review] decision refused: session not recent", {
+      userId: session.user.id,
+    })
     return secureJson(
       {
         error: "STEP_UP_REQUIRED",
