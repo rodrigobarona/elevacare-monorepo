@@ -72,10 +72,10 @@ export async function sendClinicDecisionNotification(
   if (!clinic) {
     throw new Error("send-notification: clinic not found for event org")
   }
-  // The inbox keeps a path (it is read inside the product); the email
-  // needs the whole address.
-  const path = `${teamWorkspaceBase(clinic.orgSlug)}/verification`
-  const verificationHref = `${resolveGatewayUrl()}${path}`
+  // The whole address, for the email and for the inbox: a notice is read
+  // from any workspace (Space, a practice, the clinic), and a link into
+  // another one has to leave the page it is on.
+  const verificationHref = `${resolveGatewayUrl()}${teamWorkspaceBase(clinic.orgSlug)}/verification`
   const send = deps.send ?? sendNotification
   if (clinic.managers.length === 0) {
     // Nobody to tell: worth knowing, never worth a retry.
@@ -116,7 +116,7 @@ export async function sendClinicDecisionNotification(
           body: clinicName ? `${clinicName}: ${copy.subtitle}` : copy.subtitle,
           subject: copy.subject,
           html,
-          href: path,
+          href: verificationHref,
         },
         // One notice per person; a retry of the event never sends it twice.
         idempotencyKey: `clinic:${event.id}:${manager.userId}`,
@@ -127,9 +127,19 @@ export async function sendClinicDecisionNotification(
     (result): result is PromiseRejectedResult => result.status === "rejected"
   )
   if (failures.length > 0) {
+    // Why, for whoever reads a failed delivery: the message is all the
+    // publisher keeps.
+    const reasons = failures
+      .map((failure) =>
+        failure.reason instanceof Error
+          ? failure.reason.message
+          : String(failure.reason)
+      )
+      .join("; ")
+      .slice(0, 400)
     throw new AggregateError(
       failures.map((failure) => failure.reason),
-      "clinic decision notification delivery failed"
+      `clinic decision notification delivery failed for ${failures.length} of ${results.length}: ${reasons}`
     )
   }
 }

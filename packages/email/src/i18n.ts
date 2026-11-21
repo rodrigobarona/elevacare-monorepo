@@ -136,7 +136,7 @@ const translations = {
       rejectedStillVerifiedTitle:
         "We could not confirm your clinic's new details",
       rejectedStillVerifiedSubtitle:
-        "We checked the new details you sent and could not confirm them. Your clinic stays verified with the details we checked before. If your legal details really have changed, send them again from the Verification page.",
+        "We checked the new details you sent and could not confirm them. Your clinic stays verified with the details we checked before. If your legal details have changed, send the new ones from the Verification page.",
       ctaCorrect: "Correct your details",
       ctaSee: "See your clinic's verification",
       yourClinic: "your clinic",
@@ -365,7 +365,7 @@ const translations = {
       rejectedStillVerifiedTitle:
         "Não conseguimos confirmar os novos dados da sua clínica",
       rejectedStillVerifiedSubtitle:
-        "Verificámos os novos dados que enviou e não os conseguimos confirmar. A sua clínica continua verificada com os dados que confirmámos antes. Se os dados legais mudaram mesmo, envie-os de novo na página Verificação.",
+        "Verificámos os novos dados que enviou e não os conseguimos confirmar. A sua clínica continua verificada com os dados que confirmámos antes. Se os dados legais mudaram, envie os novos na página Verificação.",
       ctaCorrect: "Corrigir os dados",
       ctaSee: "Ver a verificação da clínica",
       yourClinic: "a sua clínica",
@@ -588,7 +588,7 @@ const translations = {
         "No hemos podido terminar de comprobar tu clínica. Corrige los datos y envíalos de nuevo.",
       rejectedTitle: "No hemos podido verificar tu clínica",
       rejectedSubtitle:
-        "Hemos revisado los datos que enviaste y no hemos podido confirmarlos. Si algo no está bien, corrígelos y envíalos de nuevo.",
+        "Hemos comprobado los datos que enviaste y no hemos podido confirmarlos. Si algo no está bien, corrígelos y envíalos de nuevo.",
       clinicLabel: "Clínica",
       reasonLabel: "Lo que hemos encontrado",
       needsChangesStillVerifiedSubtitle:
@@ -596,7 +596,7 @@ const translations = {
       rejectedStillVerifiedTitle:
         "No hemos podido confirmar los nuevos datos de tu clínica",
       rejectedStillVerifiedSubtitle:
-        "Hemos revisado los nuevos datos que enviaste y no hemos podido confirmarlos. Tu clínica sigue verificada con los datos que comprobamos antes. Si los datos legales han cambiado de verdad, envíalos de nuevo desde la página Verificación.",
+        "Hemos comprobado los nuevos datos que enviaste y no hemos podido confirmarlos. Tu clínica sigue verificada con los datos que comprobamos antes. Si los datos legales han cambiado, envía los nuevos desde la página Verificación.",
       ctaCorrect: "Corregir los datos",
       ctaSee: "Ver la verificación de la clínica",
       yourClinic: "tu clínica",

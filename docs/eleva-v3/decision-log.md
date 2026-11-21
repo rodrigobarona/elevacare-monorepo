@@ -66,8 +66,10 @@ Each entry should include:
   `pending` with `attempts = 0` sends it.
 - One person's failed notice never keeps it from the others: each is sent
   on its own and the event is retried for those who failed; people already
-  told are skipped by their idempotency key. The inbox notice names the
-  clinic and links with a path, the email with the full address. The
+  told are skipped by their idempotency key; the failure message names
+  how many failed and why. The inbox notice names the clinic. Both it and
+  the email link with the full address, because a notice is read from any
+  workspace and a link into another one must leave the page. The
   button reads "Correct your details" or "See your clinic's verification"
   by outcome, and the reason has the email's full width with its line
   breaks.

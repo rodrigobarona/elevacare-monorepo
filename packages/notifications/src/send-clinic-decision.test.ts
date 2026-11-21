@@ -71,8 +71,10 @@ describe("sendClinicDecisionNotification", () => {
     )
     expect(owner.ctx.html).toContain("Clínica Lumen")
     expect(owner.ctx.html).toContain("Ana")
-    // The inbox keeps a path; the email carries the whole address.
-    expect(owner.ctx.href).toBe("/team/clinica-lumen/verification")
+    // The whole address in both: a notice is read from any workspace.
+    expect(owner.ctx.href).toMatch(
+      /^https?:\/\/[^/]+\/team\/clinica-lumen\/verification$/
+    )
     expect(owner.ctx.html).toMatch(
       /https?:\/\/[^"]+\/team\/clinica-lumen\/verification/
     )
@@ -159,7 +161,9 @@ describe("sendClinicDecisionNotification", () => {
         send,
         loadClinic: vi.fn(async () => clinic),
       })
-    ).rejects.toThrow("clinic decision notification delivery failed")
+    ).rejects.toThrow(
+      "clinic decision notification delivery failed for 1 of 2: address refused"
+    )
     // The second person was still told.
     expect(send).toHaveBeenCalledTimes(2)
     expect(send.mock.calls[1]![0].recipient).toEqual({ userId: ADMIN })
