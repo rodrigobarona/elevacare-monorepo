@@ -12,6 +12,9 @@ import { auth, db } from "@eleva/db"
 export const NEW_CREDENTIAL_PATHS: ReadonlySet<string> = new Set([
   "/link-social",
   "/api-key/create",
+  "/api-key/update",
+  // Setting a password for an account (an admin action) is a way in too.
+  "/admin/set-user-password",
   "/passkey/generate-register-options",
   "/passkey/verify-registration",
   // Inviting someone into a workspace gives them a way in as well: an old
