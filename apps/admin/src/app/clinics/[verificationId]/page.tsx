@@ -2,16 +2,16 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getFormatter, getTranslations } from "next-intl/server"
 import { ApiClientError } from "@eleva/api-client"
-import { Alert, AlertDescription } from "@eleva/ui/components/alert"
+import {
+  COMPANY_REGISTER_URL,
+  VIES_URL,
+} from "@eleva/config/clinic-verification"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { StatusPill } from "@eleva/ui/components/status-pill"
 import { getAuthedApiClient } from "@/lib/server-api"
-import {
-  COMPANY_REGISTER_URL,
-  FILING_STATUS_TONES,
-  VIES_URL,
-} from "../filing-status-tones"
+import { FILING_STATUS_TONES } from "../filing-status-tones"
 import { DecisionForm } from "./decision-form"
+import { FilingNote } from "./filing-note"
 
 export const dynamic = "force-dynamic"
 
@@ -64,18 +64,19 @@ export default async function ClinicReviewPage({
       >
         {t("detail.back")}
       </Link>
-      <PageHeader
-        title={clinic.displayName}
-        description={
-          owner
-            ? t("detail.description", {
-                owner: owner.name,
-                email: owner.email,
-                people: review.people,
-              })
-            : t("detail.descriptionNoOwner", { people: review.people })
-        }
-      />
+      <div>
+        <PageHeader title={clinic.displayName} className="mb-3" />
+        {/* Separate items, so a narrow screen wraps between them. */}
+        <ul className="flex flex-wrap gap-x-4 gap-y-1 text-base text-muted-foreground">
+          {owner ? (
+            <>
+              <li>{owner.name}</li>
+              <li className="break-all">{owner.email}</li>
+            </>
+          ) : null}
+          <li>{t("detail.people", { people: review.people })}</li>
+        </ul>
+      </div>
       <div className="flex flex-wrap items-center gap-3">
         <StatusPill tone={FILING_STATUS_TONES[verification.status]}>
           {t(`states.${verification.status}`)}
@@ -106,29 +107,37 @@ export default async function ClinicReviewPage({
             <dt className="text-sm text-muted-foreground">
               {t("detail.legalName")}
             </dt>
-            <dd className="font-medium">{verification.legalName}</dd>
-            <a
-              href={COMPANY_REGISTER_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="text-sm underline underline-offset-4"
-            >
-              {t("detail.openRegister")}
-            </a>
+            <dd>
+              <span className="block font-medium">
+                {verification.legalName}
+              </span>
+              <a
+                href={COMPANY_REGISTER_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="text-sm underline underline-offset-4"
+              >
+                {t("detail.openRegister")}
+                <span className="sr-only"> {t("detail.newTab")}</span>
+              </a>
+            </dd>
           </div>
           <div>
             <dt className="text-sm text-muted-foreground">
               {t("detail.taxId")}
             </dt>
-            <dd className="font-mono">{verification.taxId}</dd>
-            <a
-              href={VIES_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="text-sm underline underline-offset-4"
-            >
-              {t("detail.openVies")}
-            </a>
+            <dd>
+              <span className="block font-mono">{verification.taxId}</span>
+              <a
+                href={VIES_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="text-sm underline underline-offset-4"
+              >
+                {t("detail.openVies")}
+                <span className="sr-only"> {t("detail.newTab")}</span>
+              </a>
+            </dd>
           </div>
           <div>
             <dt className="text-sm text-muted-foreground">
@@ -151,6 +160,7 @@ export default async function ClinicReviewPage({
                   className="break-all underline underline-offset-4"
                 >
                   {clinic.websiteUrl}
+                  <span className="sr-only"> {t("detail.newTab")}</span>
                 </a>
               ) : (
                 t("detail.notGiven")
@@ -180,11 +190,9 @@ export default async function ClinicReviewPage({
           />
         </section>
       ) : (
-        <Alert>
-          <AlertDescription data-testid="clinic-filing-note">
-            {t(`detail.notes.${verification.status}`)}
-          </AlertDescription>
-        </Alert>
+        <FilingNote verificationId={verification.id}>
+          {t(`detail.notes.${verification.status}`)}
+        </FilingNote>
       )}
 
       {history.length > 0 ? (

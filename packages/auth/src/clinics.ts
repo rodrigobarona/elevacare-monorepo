@@ -297,10 +297,24 @@ export async function fileClinicVerification(input: {
             legalName,
             taxId,
             reason: null,
+            // A filing sent back was stamped by staff: it is undecided again.
+            reviewerUserId: null,
+            reviewedAt: null,
+            checklist: {},
             submittedAt: new Date(),
             updatedAt: new Date(),
           })
-          .where(eq(main.clinicVerifications.id, open.id))
+          // Still open: a staff decision that landed meanwhile is never
+          // overwritten (the clinic gets VERIFICATION_LOCKED and files anew).
+          .where(
+            and(
+              eq(main.clinicVerifications.id, open.id),
+              inArray(main.clinicVerifications.status, [
+                "pending",
+                "needs_changes",
+              ])
+            )
+          )
           .returning({ id: main.clinicVerifications.id })
         if (!row) throw new ClinicError("VERIFICATION_LOCKED")
         id = row.id

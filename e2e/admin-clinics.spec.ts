@@ -61,7 +61,7 @@ async function pageWithSession(
   return context.newPage()
 }
 
-async function shot(page: Page, name: string): Promise<void> {
+async function shot(page: Page, name: string, fullPage = false): Promise<void> {
   if (!CAPTURE_DIR) return
   mkdirSync(CAPTURE_DIR, { recursive: true })
   // Never capture the loading skeleton: the page streams in under it.
@@ -69,7 +69,11 @@ async function shot(page: Page, name: string): Promise<void> {
   const reject = page.getByRole("button", { name: /reject optional/i })
   if (await reject.isVisible().catch(() => false)) await reject.click()
   await page.addStyleTag({ content: "nextjs-portal{display:none!important}" })
-  await page.screenshot({ path: `${CAPTURE_DIR}/${name}.jpg`, quality: 85 })
+  await page.screenshot({
+    path: `${CAPTURE_DIR}/${name}.jpg`,
+    quality: 85,
+    fullPage,
+  })
 }
 
 test.describe("Phase 12 — staff verify a clinic", () => {
@@ -208,7 +212,8 @@ test.describe("Phase 12 — staff verify a clinic", () => {
       CLINIC_NAME,
       { timeout: 60_000 }
     )
-    await shot(phone, "02-clinic-filing.mobile")
+    // The whole page, so the decision form is in the capture.
+    await shot(phone, "02-clinic-filing.mobile", true)
     await phone.context().close()
 
     await page.getByText("Legal name found in the public register").click()
@@ -246,7 +251,7 @@ test.describe("Phase 12 — staff verify a clinic", () => {
       timeout: 60_000,
     })
     await expect(
-      page.getByText("This clinic is verified under an earlier filing")
+      page.getByText("This clinic is verified under another filing")
     ).toBeVisible()
     // A reason is needed before either button is offered.
     await expect(page.getByTestId("clinic-needs-changes")).toBeDisabled()

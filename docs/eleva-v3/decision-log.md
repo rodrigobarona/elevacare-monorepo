@@ -60,12 +60,44 @@ Each entry should include:
   `e2e/admin-clinics.spec.ts` (opt-in, loopback: a staff workspace opens
   the queue, approves one filing and sends another back). Captures:
   `design-audit/captures/2026-11-21-admin-clinics-after/13-admin/`.
-- Not in this slice: telling the clinic about the decision (the kinds
-  `clinic.verified` and `clinic.rejected` need a migration of the
-  notification kinds; today the clinic reads the state and the reason from
-  `GET /teams/{teamId}`); a page in the clinic's own dashboard to file and
-  follow its verification; the Phase 12 staff access model (step-up, dual
-  control, the host-only admin cookie) and the other admin areas.
+- Refiling a filing that was sent back clears the staff stamp (reviewer,
+  date, checks), so it is undecided again and passes the tenant row-level
+  rule; `rls-clinic-verifications.test.ts` holds that rule.
+- The reason is kept with the filing and in the audit log, which is never
+  edited. It is about the company: the form says so and an email address
+  in it is refused.
+- Stated limits of this slice:
+  - Eleva does not tell the clinic about a decision yet. The staff page
+    says so and asks the reviewer to write to the owner. The kinds
+    `clinic.verified` and `clinic.rejected` need a migration of the
+    notification kinds; the state and the reason are in
+    `GET /teams/{teamId}`.
+  - The clinic's own dashboard has no page to file or follow its
+    verification (API only, from 11.1b).
+  - Any member of a staff workspace holds `applications:review`, as for
+    licence reviews. The phase file's stricter model (staff roles, step-up,
+    dual control, the host-only admin cookie) is not built.
+  - Approving asks for the two checks, not for a written reason (the phase
+    file wants a reason on every staff action).
+  - A decision cannot be withdrawn: only a pending filing is decided. To
+    undo an approval made by mistake, the clinic files again and staff
+    reject that filing; the earlier approval still counts until a
+    "withdraw verification" action exists.
+  - Staff opening a filing is not audited (only decisions are).
+  - Self-review is refused by current membership. A filing does not record
+    who sent it, so a staff member who filed and then left the clinic is
+    not caught; recording the filer needs a column.
+- For the DPO and counsel (prepared, not decided here):
+  - a line in the privacy notice for clinics: Eleva checks a clinic's
+    legal name, tax number and billing address, and the name and email of
+    the person who manages it, to verify the clinic's legal identity
+    before its page is listed (proposed text in
+    `data-retention-export-matrix.md`);
+  - how long rejected and superseded filings and their reasons are kept;
+  - what "Verified" may claim for a clinic. Proposed for the terms: "For
+    clinics, Eleva checks the legal name and tax number against the public
+    register. It is not an assessment of licensing or quality of care."
+- Not in this slice: the other Phase 12 admin areas.
 - Owner: engineering
 
 ### 2026-11-21: A clinic's plan limits how many experts publish (11.3) (active)

@@ -11,3 +11,7 @@ export const CLINIC_CHECKLIST_ITEMS = [
 ] as const
 
 export type ClinicChecklistItem = (typeof CLINIC_CHECKLIST_ITEMS)[number]
+
+/** Public registers staff use to check a clinic's legal name and NIF. */
+export const COMPANY_REGISTER_URL = "https://publicacoes.mj.pt/Pesquisa.aspx"
+export const VIES_URL = "https://ec.europa.eu/taxation_customs/vies/"

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto"
-import { eq, inArray } from "drizzle-orm"
+import { and, eq, inArray } from "drizzle-orm"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { auth, db, main } from "@eleva/db"
 import {
@@ -230,6 +230,22 @@ describe.skipIf(!enabled || !databaseUrl)(
 
     it("approves the refiled identity: the clinic is verified", async () => {
       const refiled = await file("Review Clinic Unipessoal, Lda", "515001708")
+      // Refiling makes it undecided again: the earlier staff stamp is gone.
+      const [undecided] = await db()
+        .select({
+          status: main.clinicVerifications.status,
+          reviewerUserId: main.clinicVerifications.reviewerUserId,
+          reviewedAt: main.clinicVerifications.reviewedAt,
+          reason: main.clinicVerifications.reason,
+        })
+        .from(main.clinicVerifications)
+        .where(eq(main.clinicVerifications.id, refiled.id))
+      expect(undecided).toEqual({
+        status: "pending",
+        reviewerUserId: null,
+        reviewedAt: null,
+        reason: null,
+      })
       const result = await decideClinicVerification({
         verificationId: refiled.id,
         submittedAt: refiled.submittedAt,
@@ -274,6 +290,37 @@ describe.skipIf(!enabled || !databaseUrl)(
         "approved",
       ])
       expect(await auditActions()).toContain("clinic_verification.rejected")
+      // Seen from the approved filing, the later one is not "earlier".
+      const [approved] = await db()
+        .select({ id: main.clinicVerifications.id })
+        .from(main.clinicVerifications)
+        .where(
+          and(
+            eq(main.clinicVerifications.orgId, clinicId),
+            eq(main.clinicVerifications.status, "approved")
+          )
+        )
+      const first = await getClinicVerificationReview(approved!.id)
+      expect(first?.history).toEqual([])
+    })
+
+    it("never lets a refile overwrite a decision that landed meanwhile", async () => {
+      // The open filing is approved while the clinic is sending new details.
+      const open = await file("Yet Another Name, Lda", "PT515001708")
+      await decideClinicVerification({
+        verificationId: open.id,
+        submittedAt: open.submittedAt,
+        actorUserId: staff,
+        decision: { decision: "approve", checklist: CHECKS },
+      })
+      // A new filing is a new row; the approved one keeps its state.
+      const next = await file("Fourth Name, Lda", "PT515001708")
+      expect(next.id).not.toBe(open.id)
+      const [kept] = await db()
+        .select({ status: main.clinicVerifications.status })
+        .from(main.clinicVerifications)
+        .where(eq(main.clinicVerifications.id, open.id))
+      expect(kept?.status).toBe("approved")
     })
   }
 )

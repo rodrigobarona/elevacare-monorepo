@@ -85,23 +85,21 @@
       "clinic": "Clínica",
       "legalName": "Denominação social",
       "state": "Estado",
-      "waiting": "À espera desde"
+      "waiting": "A aguardar desde"
     },
-    "alreadyVerified": "Verificada com um envio anterior",
+    "alreadyVerified": "Verificada com outro envio",
     "states": {
       "pending": "Por verificar",
       "needs_changes": "À espera da clínica",
       "approved": "Verificada",
-      "rejected": "Rejeitado"
+      "rejected": "Rejeitada"
     },
     "detail": {
       "back": "Todas as verificações de clínicas",
-      "description": "{owner} · {email} · {people, plural, one {# pessoa} other {# pessoas}}",
-      "descriptionNoOwner": "{people, plural, one {# pessoa} other {# pessoas}}",
-      "verifiedNote": "Esta clínica está verificada com um envio anterior e continua verificada, seja qual for a decisão aqui.",
+      "verifiedNote": "Esta clínica está verificada com outro envio e continua verificada, aconteça o que acontecer com este.",
       "snapshotTitle": "O que a clínica enviou",
-      "sentAt": "Enviado a {date}",
-      "reviewedAt": "Revisto a {date}",
+      "sentAt": "Enviado em {date}",
+      "reviewedAt": "Revisto em {date}",
       "legalName": "Denominação social",
       "taxId": "NIF ou número de IVA",
       "address": "Morada de faturação",
@@ -119,7 +117,7 @@
       "approve": "Aprovar",
       "approving": "A aprovar...",
       "reasonLabel": "Motivo",
-      "reasonHelp": "Fica guardado com o envio. A clínica lê-o quando consulta a sua verificação.",
+      "reasonHelp": "Necessário para pedir alterações ou rejeitar. Fica guardado com o envio. Escreva sobre a empresa, sem nomes, emails ou números de telefone. A Eleva ainda não avisa a clínica: escreva a quem é titular, para o email acima.",
       "needsChanges": "Pedir alterações",
       "reject": "Rejeitar",
       "saving": "A guardar...",
@@ -129,19 +127,21 @@
         "reject": "Envio rejeitado"
       },
       "errors": {
-        "validation": "Verifique o formulário e tente de novo.",
+        "validation": "Verifique o formulário e tente novamente. O motivo não pode ter um endereço de email.",
         "changed": "A clínica enviou novos dados. Recarregue para os ver.",
-        "decided": "Alguém já decidiu este envio.",
-        "self": "Não pode rever uma clínica de que faz parte.",
+        "decided": "Alguém já decidiu este envio. Recarregue para ver a decisão.",
+        "self": "Não pode rever uma clínica de que faz parte. Peça a outra pessoa da equipa.",
         "forbidden": "Não tem acesso a esta revisão.",
-        "failed": "Não funcionou. Tente de novo."
+        "failed": "Não foi possível concluir. Tente novamente."
       },
       "notes": {
         "approved": "Este envio está aprovado: a clínica está verificada.",
-        "needs_changes": "Pediu alterações. A clínica envia os dados de novo e o novo envio aparece na fila.",
-        "rejected": "Este envio foi rejeitado. A clínica pode enviar os dados de novo."
+        "needs_changes": "Pediu alterações. Escreva à clínica para a avisar. Quando enviar os dados de novo, este envio volta a «Por verificar».",
+        "rejected": "Este envio foi rejeitado. Escreva à clínica a explicar o motivo. A clínica pode enviar os dados de novo."
       },
-      "historyTitle": "Envios anteriores"
+      "historyTitle": "Envios anteriores",
+      "people": "{people, plural, one {# pessoa na clínica} other {# pessoas na clínica}}",
+      "newTab": "(abre num novo separador)"
     }
   },
   "staffEntry": {

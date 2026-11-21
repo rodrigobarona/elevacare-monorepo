@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm"
 import { withPlatformAudit } from "@eleva/audit"
+import type { ClinicChecklistItem } from "@eleva/config/clinic-verification"
 import { auth, main, withPlatformAdminContext } from "@eleva/db"
 import type { ClinicBillingAddress } from "@eleva/db/schema"
 
@@ -9,13 +10,6 @@ import type { ClinicBillingAddress } from "@eleva/db/schema"
  * checked against the public register before the clinic can be shown as
  * verified. A clinic is verified while an approved filing exists.
  */
-
-/** Both checks staff confirm before approving (the table's CHECK). */
-export const CLINIC_CHECKLIST_ITEMS = [
-  "legal_entity_checked",
-  "tax_id_checked",
-] as const
-export type ClinicChecklistItem = (typeof CLINIC_CHECKLIST_ITEMS)[number]
 
 export type ClinicDecision =
   | { decision: "approve"; checklist: Record<ClinicChecklistItem, true> }
@@ -120,9 +114,9 @@ export interface ClinicVerificationReview {
   /** The clinic's owner, the person staff write to. */
   owner: { name: string; email: string } | null
   people: number
-  /** An approved filing exists (this one or an earlier one). */
+  /** An approved filing exists (this one or another one). */
   verified: boolean
-  /** Earlier filings of the same clinic, newest first. */
+  /** Filings of the same clinic sent before this one, newest first. */
   history: ClinicVerificationFiling[]
 }
 
@@ -164,16 +158,21 @@ export async function getClinicVerificationReview(
       .from(v)
       .where(eq(v.orgId, row.orgId))
       .orderBy(desc(v.submittedAt))
+    // Only the owner's name and address are read; everyone else is a count.
     const members = await tx
-      .select({
-        role: auth.member.role,
-        name: auth.user.name,
-        email: auth.user.email,
-      })
+      .select({ userId: auth.member.userId, role: auth.member.role })
       .from(auth.member)
-      .innerJoin(auth.user, eq(auth.user.id, auth.member.userId))
       .where(eq(auth.member.organizationId, row.orgId))
-    const owner = members.find((m) => m.role.split(",").includes("owner"))
+    const ownerId = members.find((m) =>
+      m.role.split(",").includes("owner")
+    )?.userId
+    const [owner] = ownerId
+      ? await tx
+          .select({ name: auth.user.name, email: auth.user.email })
+          .from(auth.user)
+          .where(eq(auth.user.id, ownerId))
+          .limit(1)
+      : []
 
     const {
       orgId,
@@ -197,7 +196,11 @@ export async function getClinicVerificationReview(
       owner: owner ? { name: owner.name, email: owner.email } : null,
       people: members.length,
       verified: filings.some((filing) => filing.status === "approved"),
-      history: filings.filter((filing) => filing.id !== verificationId),
+      history: filings.filter(
+        (filing) =>
+          filing.id !== verificationId &&
+          filing.submittedAt.getTime() < verification.submittedAt.getTime()
+      ),
     }
   })
 }

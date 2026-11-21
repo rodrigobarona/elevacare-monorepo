@@ -5,15 +5,18 @@ import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import type { ClinicDecisionRequest } from "@eleva/api-client"
+import {
+  CLINIC_CHECKLIST_ITEMS,
+  type ClinicChecklistItem,
+} from "@eleva/config/clinic-verification"
 import { Alert, AlertDescription } from "@eleva/ui/components/alert"
 import { Button } from "@eleva/ui/components/button"
 import { CheckboxField } from "@eleva/ui/components/checkbox-field"
 import { Label } from "@eleva/ui/components/label"
 import { Textarea } from "@eleva/ui/components/textarea"
 import { decideClinic, type DecideClinicError } from "./actions"
+import { DECIDED_KEY } from "./filing-note"
 
-const CHECKS = ["legal_entity_checked", "tax_id_checked"] as const
-type Check = (typeof CHECKS)[number]
 type Decision = ClinicDecisionRequest["decision"]
 
 export function DecisionForm({
@@ -25,14 +28,18 @@ export function DecisionForm({
 }) {
   const t = useTranslations("clinics.detail")
   const router = useRouter()
-  const [checked, setChecked] = React.useState<Partial<Record<Check, boolean>>>(
-    {}
-  )
+  const [checked, setChecked] = React.useState<
+    Partial<Record<ClinicChecklistItem, boolean>>
+  >({})
   const [reason, setReason] = React.useState("")
   const [pending, setPending] = React.useState<Decision | null>(null)
-  const [error, setError] = React.useState<DecideClinicError | null>(null)
+  // The refusal is shown beside the button that was pressed.
+  const [error, setError] = React.useState<{
+    decision: Decision
+    code: DecideClinicError
+  } | null>(null)
 
-  const allChecked = CHECKS.every((item) => checked[item])
+  const allChecked = CLINIC_CHECKLIST_ITEMS.every((item) => checked[item])
   const hasReason = reason.trim().length > 0
 
   async function decide(decision: Decision) {
@@ -46,24 +53,34 @@ export function DecisionForm({
     )
     setPending(null)
     if (!result.ok) {
-      setError(result.error)
+      setError({ decision, code: result.error })
       return
+    }
+    try {
+      sessionStorage.setItem(DECIDED_KEY, verificationId)
+    } catch {
+      // Focus simply stays where the browser puts it.
     }
     toast.success(t(`toasts.${decision}`))
     router.refresh()
   }
 
+  function refusal(shown: boolean) {
+    if (!error || !shown) return null
+    return (
+      <Alert variant="destructive" role="alert">
+        <AlertDescription data-testid="clinic-decision-error">
+          {t(`errors.${error.code}`)}
+        </AlertDescription>
+      </Alert>
+    )
+  }
+
   return (
     <div className="space-y-6">
-      {error ? (
-        <Alert variant="destructive" role="alert">
-          <AlertDescription>{t(`errors.${error}`)}</AlertDescription>
-        </Alert>
-      ) : null}
-
       <div className="space-y-3">
         <p className="text-sm text-muted-foreground">{t("checklistHelp")}</p>
-        {CHECKS.map((item) => (
+        {CLINIC_CHECKLIST_ITEMS.map((item) => (
           <CheckboxField
             key={item}
             label={t(`checklist.${item}`)}
@@ -73,6 +90,7 @@ export function DecisionForm({
             }
           />
         ))}
+        {refusal(error?.decision === "approve")}
         <Button
           isDisabled={!allChecked || pending !== null}
           isPending={pending === "approve"}
@@ -101,6 +119,7 @@ export function DecisionForm({
             {t("reasonHelp")}
           </p>
         </div>
+        {refusal(error !== null && error.decision !== "approve")}
         <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"

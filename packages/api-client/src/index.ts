@@ -1996,7 +1996,7 @@ export const AdminClinicQueueResponseSchema = z.object({
       countryCode: z.string().nullable(),
       /** `pending` waits on staff; `needs_changes` waits on the clinic. */
       status: z.enum(["pending", "needs_changes"]),
-      /** An earlier filing of this clinic is already approved. */
+      /** Another filing of this clinic is already approved. */
       verified: z.boolean(),
       waitingSince: z.string().datetime(),
     })
@@ -2019,14 +2019,23 @@ export const AdminClinicReviewResponseSchema = z.object({
   /** The clinic's owner, the person staff write to. */
   owner: z.object({ name: z.string(), email: z.string() }).nullable(),
   people: z.number().int().nonnegative(),
-  /** An approved filing exists (this one or an earlier one). */
+  /** An approved filing exists (this one or another one). */
   verified: z.boolean(),
-  /** Earlier filings of the same clinic, newest first. */
+  /** Filings of the same clinic sent before this one, newest first. */
   history: z.array(AdminClinicFilingSchema),
 })
 export type AdminClinicReviewResponse = z.infer<
   typeof AdminClinicReviewResponseSchema
 >
+
+/**
+ * Kept with the filing and in the audit log, which is never edited: it is
+ * about the company, so an email address is refused.
+ */
+const ClinicDecisionReasonSchema = LicenceDecisionReasonSchema.refine(
+  (reason) => !/[^\s@]+@[^\s@]+\.[^\s@]+/.test(reason),
+  { message: "Leave email addresses out of the reason" }
+)
 
 const ClinicDecisionTargetSchema = z.object({
   /** The filing staff reviewed; a refile since then refuses with 409. */
@@ -2046,11 +2055,11 @@ export const ClinicDecisionRequestSchema = z.discriminatedUnion("decision", [
   }),
   ClinicDecisionTargetSchema.extend({
     decision: z.literal("needs_changes"),
-    reason: LicenceDecisionReasonSchema,
+    reason: ClinicDecisionReasonSchema,
   }),
   ClinicDecisionTargetSchema.extend({
     decision: z.literal("reject"),
-    reason: LicenceDecisionReasonSchema,
+    reason: ClinicDecisionReasonSchema,
   }),
 ])
 export type ClinicDecisionRequest = z.infer<typeof ClinicDecisionRequestSchema>

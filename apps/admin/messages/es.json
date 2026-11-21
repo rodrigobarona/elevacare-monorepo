@@ -87,18 +87,16 @@
       "state": "Estado",
       "waiting": "En espera desde"
     },
-    "alreadyVerified": "Verificada con un envío anterior",
+    "alreadyVerified": "Verificada con otro envío",
     "states": {
       "pending": "Por verificar",
       "needs_changes": "A la espera de la clínica",
       "approved": "Verificada",
-      "rejected": "Rechazado"
+      "rejected": "Rechazada"
     },
     "detail": {
       "back": "Todas las verificaciones de clínicas",
-      "description": "{owner} · {email} · {people, plural, one {# persona} other {# personas}}",
-      "descriptionNoOwner": "{people, plural, one {# persona} other {# personas}}",
-      "verifiedNote": "Esta clínica está verificada con un envío anterior y sigue verificada decidas lo que decidas aquí.",
+      "verifiedNote": "Esta clínica está verificada con otro envío y sigue verificada pase lo que pase con este.",
       "snapshotTitle": "Lo que envió la clínica",
       "sentAt": "Enviado el {date}",
       "reviewedAt": "Revisado el {date}",
@@ -119,7 +117,7 @@
       "approve": "Aprobar",
       "approving": "Aprobando...",
       "reasonLabel": "Motivo",
-      "reasonHelp": "Se guarda con el envío. La clínica lo lee cuando consulta su verificación.",
+      "reasonHelp": "Hace falta para pedir cambios o rechazar. Se guarda con el envío. Escribe sobre la empresa, sin nombres, correos ni teléfonos. Eleva todavía no avisa a la clínica: escribe a quien es titular, al correo de arriba.",
       "needsChanges": "Pedir cambios",
       "reject": "Rechazar",
       "saving": "Guardando...",
@@ -129,19 +127,21 @@
         "reject": "Envío rechazado"
       },
       "errors": {
-        "validation": "Revisa el formulario e inténtalo de nuevo.",
-        "changed": "La clínica ha enviado datos nuevos. Recarga para verlos.",
-        "decided": "Alguien ya ha decidido este envío.",
-        "self": "No puedes revisar una clínica de la que formas parte.",
+        "validation": "Revisa el formulario e inténtalo de nuevo. El motivo no puede llevar una dirección de correo.",
+        "changed": "La clínica envió nuevos datos. Recarga para verlos.",
+        "decided": "Alguien ya ha decidido este envío. Recarga para ver la decisión.",
+        "self": "No puedes revisar una clínica de la que formas parte. Pídeselo a otra persona del equipo.",
         "forbidden": "No tienes acceso a esta revisión.",
-        "failed": "No ha funcionado. Inténtalo de nuevo."
+        "failed": "No se ha podido completar. Inténtalo de nuevo."
       },
       "notes": {
         "approved": "Este envío está aprobado: la clínica está verificada.",
-        "needs_changes": "Has pedido cambios. La clínica envía sus datos de nuevo y el nuevo envío aparece en la cola.",
-        "rejected": "Este envío fue rechazado. La clínica puede enviar sus datos de nuevo."
+        "needs_changes": "Has pedido cambios. Escribe a la clínica para avisarla. Cuando envíe sus datos de nuevo, este envío vuelve a «Por verificar».",
+        "rejected": "Este envío fue rechazado. Escribe a la clínica para explicarle el motivo. Puede enviar sus datos de nuevo."
       },
-      "historyTitle": "Envíos anteriores"
+      "historyTitle": "Envíos anteriores",
+      "people": "{people, plural, one {# persona en la clínica} other {# personas en la clínica}}",
+      "newTab": "(se abre en una pestaña nueva)"
     }
   },
   "staffEntry": {
