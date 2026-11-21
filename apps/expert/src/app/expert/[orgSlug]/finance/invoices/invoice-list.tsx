@@ -7,6 +7,7 @@ import type { ExpertInvoice, ExpertInvoiceStatus } from "@eleva/api-client"
 import { WalletIcon } from "@eleva/icons"
 import { Button } from "@eleva/ui/components/button"
 import { EmptyState } from "@eleva/ui/components/empty-state"
+import { MetaLine } from "@eleva/ui/components/meta-line"
 import { StatusPill, type StatusTone } from "@eleva/ui/components/status-pill"
 import {
   AlertDialog,
@@ -49,10 +50,29 @@ function formatEuros(cents: number, locale: string): string {
   }).format(cents / 100)
 }
 
+/**
+ * Issuing through the provider is closed for this invoice: the expert
+ * issues it in her own software. Sending it again would end the same way.
+ */
+const ISSUE_YOURSELF_ERROR = "toconline_v1_auto_finalize_blocked"
+
+/** An invoice the expert issues herself and then marks here. */
+function isToIssue(invoice: ExpertInvoice): boolean {
+  return (
+    invoice.status === "manual_pending" ||
+    (invoice.status === "failed" && invoice.error === ISSUE_YOURSELF_ERROR)
+  )
+}
+
 function invoiceStatusDisplay(
-  status: ExpertInvoiceStatus,
+  invoice: ExpertInvoice,
   t: (key: string) => string
 ): { label: string; tone: StatusTone } {
+  // A to-do, not a failure: quiet, so a real failure stands out.
+  if (isToIssue(invoice)) {
+    return { label: t("invoiceStatus.manualPending"), tone: "neutral" }
+  }
+  const status: ExpertInvoiceStatus = invoice.status
   switch (status) {
     case "pending":
       return { label: t("invoiceStatus.pending"), tone: "neutral" }
@@ -71,30 +91,18 @@ function invoiceStatusDisplay(
   }
 }
 
-function adapterLabel(
-  adapter: ExpertInvoice["adapter"],
-  t: (key: string) => string
-): string {
-  switch (adapter) {
-    case "toconline":
-      return t("adapters.toconline")
-    case "moloni":
-      return t("adapters.moloni")
-    case "manual":
-      return t("adapters.manual")
-    default: {
-      const _exhaustive: never = adapter
-      return _exhaustive
-    }
-  }
-}
-
 export function InvoiceList({
   invoices,
   nextCursor,
+  timeZone,
 }: {
   invoices: ExpertInvoice[]
   nextCursor: string | null
+  /**
+   * The practice's time zone (the one its schedule uses), so a session has
+   * the same date here as on the expert's calendar.
+   */
+  timeZone: string
 }) {
   const t = useTranslations("finance.invoices")
   const rawLocale = useLocale()
@@ -154,14 +162,19 @@ export function InvoiceList({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b text-left text-xs text-muted-foreground">
-              <th className="px-5 py-3 font-medium">{t("booking")}</th>
-              <th className="px-3 py-3 font-medium">{t("adapter")}</th>
-              <th className="px-3 py-3 text-right font-medium">
+              <th scope="col" className="px-5 py-3 font-medium">
+                {t("booking")}
+              </th>
+              <th scope="col" className="px-3 py-3 text-right font-medium">
                 {t("amount")}
               </th>
-              <th className="px-3 py-3 font-medium">{t("statusLabel")}</th>
-              <th className="px-3 py-3 font-medium">{t("issuedAt")}</th>
-              <th className="px-5 py-3 font-medium">
+              <th scope="col" className="px-3 py-3 font-medium">
+                {t("statusLabel")}
+              </th>
+              <th scope="col" className="px-3 py-3 font-medium">
+                {t("issuedAt")}
+              </th>
+              <th scope="col" className="px-5 py-3 font-medium">
                 <span className="sr-only">{t("actionsLabel")}</span>
               </th>
             </tr>
@@ -173,6 +186,7 @@ export function InvoiceList({
                 invoice={invoice}
                 euros={euros}
                 intlLocale={intlLocale}
+                timeZone={timeZone}
                 onUpdated={(updated) => {
                   setPageState((current) => ({
                     ...current,
@@ -205,11 +219,13 @@ function InvoiceRow({
   invoice,
   euros,
   intlLocale,
+  timeZone,
   onUpdated,
 }: {
   invoice: ExpertInvoice
   euros: (cents: number) => string
   intlLocale: string
+  timeZone: string
   onUpdated: (invoice: ExpertInvoice) => void
 }) {
   const router = useRouter()
@@ -217,10 +233,23 @@ function InvoiceRow({
   const [pending, setPending] = React.useState(false)
   const [markOpen, setMarkOpen] = React.useState(false)
 
-  const status = invoiceStatusDisplay(invoice.status, t)
-  const canRetry = invoice.status === "failed"
-  const canMarkManual =
-    invoice.status === "failed" || invoice.status === "manual_pending"
+  const status = invoiceStatusDisplay(invoice, t)
+  const toIssue = isToIssue(invoice)
+  // Sending again only helps an invoice that failed on its way; one the
+  // expert issues herself has a single next step, marking it.
+  const canRetry = invoice.status === "failed" && !toIssue
+  const canMarkManual = invoice.status === "failed" || toIssue
+  // The practice's own time zone, as the Issued on column.
+  const sessionDay = invoice.session
+    ? new Date(invoice.session.startsAt).toLocaleDateString(intlLocale, {
+        timeZone,
+        dateStyle: "medium",
+      })
+    : null
+  // Who and when, to tell one row's buttons and dialog from another's.
+  const sessionName = sessionDay
+    ? [invoice.session?.memberName, sessionDay].filter(Boolean).join(", ")
+    : t("booking")
 
   function friendlyError(code: string): string {
     if ((ERROR_KEYS as readonly string[]).includes(code)) {
@@ -238,7 +267,7 @@ function InvoiceRow({
         return
       }
       toast.success(t("retryQueued"))
-      onUpdated(result.invoice)
+      onUpdated({ ...result.invoice, session: invoice.session })
       router.refresh()
     } finally {
       setPending(false)
@@ -255,7 +284,7 @@ function InvoiceRow({
       }
       toast.success(t("markedManual"))
       setMarkOpen(false)
-      onUpdated(result.invoice)
+      onUpdated({ ...result.invoice, session: invoice.session })
       router.refresh()
     } finally {
       setPending(false)
@@ -263,30 +292,41 @@ function InvoiceRow({
   }
 
   return (
-    <tr className="align-top">
-      <td className="px-5 py-4 font-mono text-xs">
-        {invoice.bookingId.slice(0, 8)}
-      </td>
-      <td className="px-3 py-4">{adapterLabel(invoice.adapter, t)}</td>
+    <tr className="align-middle">
+      <th scope="row" className="px-5 py-4 text-left font-normal">
+        {/* Named after the session: who it was with and when. */}
+        {sessionDay ? (
+          <MetaLine
+            items={
+              invoice.session?.memberName
+                ? [
+                    <span key="name" className="font-medium">
+                      {invoice.session.memberName}
+                    </span>,
+                    sessionDay,
+                  ]
+                : [sessionDay]
+            }
+          />
+        ) : (
+          t("booking")
+        )}
+      </th>
       <td className="px-3 py-4 text-right tabular-nums">
         {euros(invoice.amountCents)}
       </td>
       <td className="px-3 py-4">
         <StatusPill tone={status.tone}>{status.label}</StatusPill>
-        {invoice.error === "toconline_v1_auto_finalize_blocked" ? (
+        {invoice.error && !toIssue ? (
           <p className="mt-1.5 max-w-60 text-xs text-muted-foreground">
-            {t("blocked")}
-          </p>
-        ) : invoice.error ? (
-          <p className="mt-1.5 max-w-60 text-xs text-muted-foreground">
-            {t("errors.generic")}
+            {t("failedHint")}
           </p>
         ) : null}
       </td>
       <td className="px-3 py-4 text-muted-foreground tabular-nums">
         {invoice.issuedAt
           ? new Date(invoice.issuedAt).toLocaleString(intlLocale, {
-              timeZone: "Europe/Lisbon",
+              timeZone,
               dateStyle: "medium",
               timeStyle: "short",
             })
@@ -299,6 +339,7 @@ function InvoiceRow({
               size="sm"
               variant="outline"
               isDisabled={pending}
+              aria-label={t("retryNamed", { session: sessionName })}
               onPress={() => {
                 void handleRetry()
               }}
@@ -311,6 +352,7 @@ function InvoiceRow({
               size="sm"
               variant="outline"
               isDisabled={pending}
+              aria-label={t("markManualNamed", { session: sessionName })}
               onPress={() => setMarkOpen(true)}
             >
               {t("markManual")}
@@ -321,6 +363,12 @@ function InvoiceRow({
           <AlertDialogHeader>
             <AlertDialogTitle>{t("markManualTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
+              {/* Which invoice: marking it cannot be undone here. */}
+              <span className="mb-2 block font-medium text-foreground">
+                {sessionName}
+                {" · "}
+                {euros(invoice.amountCents)}
+              </span>
               {t("markManualDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>

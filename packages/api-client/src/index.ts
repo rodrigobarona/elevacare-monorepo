@@ -1474,6 +1474,17 @@ export const ExpertInvoiceSchema = z.object({
   error: z.string().nullable(),
   attempts: z.number().int().nonnegative(),
   pdfUrl: z.string().nullable(),
+  /**
+   * The session the invoice is for: when it takes place and the member's
+   * first name. Sent by the list; absent on a single-invoice response.
+   */
+  session: z
+    .object({
+      startsAt: z.string().datetime(),
+      memberName: z.string().nullable(),
+    })
+    .nullable()
+    .optional(),
 })
 export type ExpertInvoice = z.infer<typeof ExpertInvoiceSchema>
 

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { env } from "@eleva/config/env"
+import { getFlag } from "@eleva/flags"
 import { getConnectOnboardingState } from "@eleva/billing/server"
 import { LinkButton } from "@eleva/ui/components/button"
 import { EmptyState } from "@eleva/ui/components/empty-state"
@@ -24,7 +25,11 @@ export default async function FinancePage({
     orgSlug,
     "payouts:view_own"
   )
-  const t = await getTranslations("finance")
+  const [t, invoicesTracked] = await Promise.all([
+    getTranslations("finance"),
+    // Member invoices lists rows only while Eleva tracks them.
+    getFlag("ff.expert_invoicing_apps_enabled"),
+  ])
 
   const stripePublishableKey = env().STRIPE_PUBLISHABLE_KEY ?? ""
   const stripeConfigured = Boolean(stripePublishableKey)
@@ -94,6 +99,7 @@ export default async function FinancePage({
       <FinanceDashboard
         orgSlug={orgSlug}
         invoicesHref={
+          invoicesTracked &&
           session.capabilities.includes("expert:invoicing_manage")
             ? expertWorkspacePath(session, "finance/invoices")
             : null

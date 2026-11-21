@@ -1,4 +1,6 @@
+import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
+import { getFlag } from "@eleva/flags"
 import { BackLink } from "@eleva/dashboard/back-link"
 import { PageHeader, Section } from "@eleva/ui/components/page-header"
 import { expertWorkspacePath } from "@/lib/workspace-paths"
@@ -15,10 +17,14 @@ export default async function ExpertInvoicesPage({
   params: Promise<{ orgSlug: string }>
 }) {
   const { orgSlug } = await params
-  const { session } = await loadExpertWorkspace(
+  const { session, profile } = await loadExpertWorkspace(
     orgSlug,
     "expert:invoicing_manage"
   )
+
+  // Rows exist only while Eleva tracks member invoices; without them the
+  // page has nothing true to show, so it is not offered.
+  if (!(await getFlag("ff.expert_invoicing_apps_enabled"))) notFound()
 
   const [t, api] = await Promise.all([
     getTranslations("finance.invoices"),
@@ -34,8 +40,12 @@ export default async function ExpertInvoicesPage({
         </BackLink>
         <PageHeader title={t("title")} description={t("description")} />
       </div>
-      <Section title={t("listTitle")} description={t("listHint")}>
-        <InvoiceList invoices={invoices} nextCursor={nextCursor} />
+      <Section title={t("listTitle")}>
+        <InvoiceList
+          invoices={invoices}
+          nextCursor={nextCursor}
+          timeZone={profile.timezone ?? "Europe/Lisbon"}
+        />
       </Section>
       <Section title={t("exportTitle")} description={t("exportHint")}>
         <MonthlyExport />

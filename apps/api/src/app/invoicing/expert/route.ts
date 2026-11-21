@@ -4,6 +4,7 @@ import {
   ListExpertInvoicesResponseSchema,
 } from "@eleva/api-client"
 import { listExpertInvoices } from "@eleva/accounting"
+import { listBookingSessionSummaries } from "@eleva/db"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { resolveFinanceScope } from "@eleva/auth/finance-scope"
@@ -68,10 +69,32 @@ export async function GET(request: Request) {
       expertProfileId: scope.expertProfileId,
     })
 
-    return secureJson(ListExpertInvoicesResponseSchema.parse(result), {
-      status: 200,
-      headers,
+    // Each row is named after its session, so the list carries when it
+    // takes place and who it is with.
+    const sessions = await listBookingSessionSummaries(
+      session.orgId,
+      result.invoices.map((invoice) => invoice.bookingId)
+    )
+    const invoices = result.invoices.map((invoice) => {
+      const summary = sessions.get(invoice.bookingId)
+      return {
+        ...invoice,
+        session: summary
+          ? {
+              startsAt: summary.startsAt.toISOString(),
+              memberName: summary.memberName,
+            }
+          : null,
+      }
     })
+
+    return secureJson(
+      ListExpertInvoicesResponseSchema.parse({
+        invoices,
+        nextCursor: result.nextCursor,
+      }),
+      { status: 200, headers }
+    )
   } catch (err) {
     logError("[invoicing/expert] unexpected error", err)
     return secureJson({ error: "internal" }, { status: 500, headers })

@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server"
 import { PageHeader, Section } from "@eleva/ui/components/page-header"
 import { listExpertIntegrations } from "@eleva/db"
+import { getFlag } from "@eleva/flags"
 import { listByCategory, listCategories } from "@eleva/integrations"
 import { expertWorkspaceBase } from "@/lib/workspace-paths"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
@@ -20,10 +21,17 @@ export default async function IntegrationsPage({
   )
   const base = expertWorkspaceBase(session)
 
-  const [connected, t] = await Promise.all([
+  const [connected, t, invoicingApps, toconline] = await Promise.all([
     listExpertIntegrations(profile.orgId, profile.id),
     getTranslations("integrations"),
+    getFlag("ff.expert_invoicing_apps_enabled"),
+    getFlag("ff.invoicing.toconline"),
   ])
+  // Only what an expert can use today is listed. Issuing her own invoices
+  // always is; an invoicing app is listed once it can be linked.
+  const usableInvoicing = new Set(
+    invoicingApps && toconline ? ["manual", "toconline"] : ["manual"]
+  )
   const connectedBySlug = new Map(connected.map((c) => [c.slug, c]))
 
   return (
@@ -31,7 +39,11 @@ export default async function IntegrationsPage({
       <PageHeader title={t("title")} description={t("description")} />
 
       {listCategories().map((category) => {
-        const manifests = listByCategory(category)
+        const manifests = listByCategory(category).filter(
+          (manifest) =>
+            manifest.category !== "invoicing" ||
+            usableInvoicing.has(manifest.slug)
+        )
         if (manifests.length === 0) return null
 
         return (

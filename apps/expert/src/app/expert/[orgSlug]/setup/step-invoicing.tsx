@@ -37,9 +37,10 @@ export function StepInvoicing({
               : t("connected")}
           </Badge>
           <span className="text-sm text-muted-foreground">
-            {t("connectedVia", {
-              provider: profile.invoicingProvider ?? "",
-            })}
+            {/* In words, never the stored value. */}
+            {profile.invoicingProvider === "manual"
+              ? t("issuesOwn")
+              : t("connectedVia", { provider: "TOConline" })}
           </span>
         </div>
         <Button size="sm" onPress={onDone}>
