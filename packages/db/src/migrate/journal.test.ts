@@ -40,8 +40,21 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0078_calendar_reminder_minutes")
-    expect(last?.statements.join("\n")).toContain(
+    expect(last?.tag).toBe("0079_clinic_decision_kinds")
+    // Two checks, each dropped and added again: four statements, and the
+    // three clinic kinds are in both.
+    expect(last?.statements).toHaveLength(4)
+    expect(
+      last?.statements.filter((statement) =>
+        ["clinic.verified", "clinic.needs_changes", "clinic.rejected"].every(
+          (kind) => statement.includes(`'${kind}'`)
+        )
+      )
+    ).toHaveLength(2)
+    const reminders = migrations.find(
+      (m) => m.tag === "0078_calendar_reminder_minutes"
+    )
+    expect(reminders?.statements.join("\n")).toContain(
       'ADD COLUMN IF NOT EXISTS "reminder_minutes"'
     )
     const links = migrations.find(
