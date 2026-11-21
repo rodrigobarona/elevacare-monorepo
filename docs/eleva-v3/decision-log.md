@@ -233,6 +233,18 @@ branch|production`, `--since`, `--report`) and the target guard
   before the write; the 409 body).
 - Not in this slice: the billing page (plan, checkout, portal), an
   Enterprise plan, and `hasFeature`.
+- Follow-up (judges, 2026-11-21): the seat line now says how a seat
+  becomes free and shows an "All seats in use" status when the clinic is
+  at or over its limit; the expert who cannot publish is told what a seat
+  is and whom to ask. Every email footer now names the company that
+  operates Eleva (name, NIPC, registered office, support address) from one
+  source, `@eleva/config/legal-entity`, which the public footer uses too;
+  it used to say "Lisbon, Portugal". The invitation, which can reach
+  someone with no account, also points to the privacy notice. For counsel:
+  whether the company particulars on emails are complete. Not built: a
+  daily cap on invitations a clinic can send (the cooldown is per address,
+  so inviting and withdrawing many addresses is not limited), and stopping
+  re-invitations after a decline.
 - Owner: engineering
 
 ### 2026-11-20: The clinic's Team page: invite, send again, withdraw, remove (11.2) (active)

@@ -221,7 +221,7 @@
       "toggle-failed": "Could not update the event type. Please try again.",
       "delete-failed": "Could not delete the event type. Please try again.",
       "connect-incomplete": "Complete Payments setup before publishing. Stripe still needs payout details.",
-      "seat-limit-reached": "All of your clinic's seats are in use. Ask a clinic admin to free one.",
+      "seat-limit-reached": "Your clinic's seats are all in use, so this service cannot be published yet. Each expert with a published service uses one seat. Ask the clinic's owner or an admin: the Team page shows who holds a seat.",
       "offer-invariant": "This offer cannot be published yet. Add a valid delivery mode and fix any country or language issues.",
       "generic": "Something went wrong. Please try again."
     },

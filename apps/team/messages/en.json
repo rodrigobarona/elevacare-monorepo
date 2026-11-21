@@ -17,8 +17,9 @@
     "you": "(you)",
     "services": "{count, plural, =0 {No published services yet} one {# published service} other {# published services}}",
     "seats": "{used} of {cap} seats in use. A seat is in use when an expert has a published service.",
-    "seatsFull": "All {cap} seats are in use. Another expert can publish a service once a seat is free.",
-    "seatsOver": "{used} experts have a published service and your plan includes {cap}. They keep their seats. A seat that is given up cannot be taken again until fewer than {cap} are in use.",
+    "seatsFull": "All {cap} seats are in use. A seat frees up when an expert unpublishes their last service or leaves the team; then another expert can publish.",
+    "seatsFullPill": "All seats in use",
+    "seatsOver": "{used} experts have a published service; your plan includes {cap} seats. Everyone who is published stays published. Another expert can publish once fewer than {cap} seats are in use.",
     "role": {
       "owner": "Owner",
       "admin": "Admin",

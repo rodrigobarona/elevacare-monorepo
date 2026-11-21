@@ -17,8 +17,9 @@
     "you": "(tú)",
     "services": "{count, plural, =0 {Aún sin servicios publicados} one {# servicio publicado} other {# servicios publicados}}",
     "seats": "{used} de {cap} plazas ocupadas. Una plaza se ocupa cuando un especialista tiene un servicio publicado.",
-    "seatsFull": "Las {cap} plazas están ocupadas. Otro especialista podrá publicar un servicio cuando quede una plaza libre.",
-    "seatsOver": "{used} especialistas tienen un servicio publicado y tu plan incluye {cap}. Conservan sus plazas. Una plaza que quede libre no se puede volver a ocupar hasta que haya menos de {cap} en uso.",
+    "seatsFull": "Las {cap} plazas están ocupadas. Una plaza queda libre cuando un especialista deja de tener servicios publicados o sale del equipo; entonces otro especialista puede publicar.",
+    "seatsFullPill": "Todas las plazas ocupadas",
+    "seatsOver": "{used} especialistas tienen un servicio publicado; tu plan incluye {cap} plazas. Quien ya tiene servicios publicados los conserva. Otro especialista podrá publicar cuando haya menos de {cap} plazas ocupadas.",
     "role": {
       "owner": "Titular",
       "admin": "Admin",

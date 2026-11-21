@@ -1,3 +1,5 @@
+import { LEGAL_ENTITY, LEGAL_ENTITY_LINE } from "@eleva/config/legal-entity"
+
 export type EmailLocale = "en" | "pt" | "es"
 
 const translations = {
@@ -193,7 +195,7 @@ const translations = {
     },
     layout: {
       tagline: "Care, clearly organized",
-      location: "Eleva Care · Lisbon, Portugal",
+      location: `Eleva Care is operated by ${LEGAL_ENTITY_LINE} · ${LEGAL_ENTITY.supportEmail}`,
       footer:
         "You received this email because you have an active account on Eleva Care.",
     },
@@ -394,7 +396,7 @@ const translations = {
     },
     layout: {
       tagline: "Cuidado, organizado com clareza",
-      location: "Eleva Care · Lisboa, Portugal",
+      location: `A Eleva Care é operada por ${LEGAL_ENTITY_LINE} · ${LEGAL_ENTITY.supportEmail}`,
       footer: "Recebeu este email porque tem uma conta ativa na Eleva Care.",
     },
   },
@@ -595,7 +597,7 @@ const translations = {
     },
     layout: {
       tagline: "Cuidado, organizado con claridad",
-      location: "Eleva Care · Lisboa, Portugal",
+      location: `Eleva Care es un servicio de ${LEGAL_ENTITY_LINE} · ${LEGAL_ENTITY.supportEmail}`,
       footer:
         "Has recibido este correo porque tienes una cuenta activa en Eleva Care.",
     },
