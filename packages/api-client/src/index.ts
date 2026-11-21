@@ -1018,6 +1018,9 @@ export const TeamMembersResponseSchema = z.object({
   seats: z.object({
     /** Members with at least one published service. */
     billable: z.number().int().nonnegative(),
+    /** Seats the clinic's plan includes (Starter 5, Growth 20). */
+    cap: z.number().int().positive(),
+    plan: z.enum(["clinic_starter", "clinic_growth"]),
   }),
 })
 
@@ -1039,6 +1042,16 @@ export const InviteTeamMemberResponseSchema = z.object({
   resent: z.boolean(),
   /** False when the email could not be sent: send the invitation again. */
   emailSent: z.boolean(),
+})
+
+/** A clinic's plan has no seat left for one more publishing member. */
+export const SeatLimitReachedErrorSchema = z.object({
+  error: z.literal("SEAT_LIMIT_REACHED"),
+  code: z.literal("SEAT_LIMIT_REACHED"),
+  message: z.string(),
+  /** Members with a published service the plan includes. */
+  cap: z.number().int().positive(),
+  plan: z.enum(["clinic_starter", "clinic_growth"]),
 })
 
 /** Why a team change was refused (403, 404, 409, 429). */

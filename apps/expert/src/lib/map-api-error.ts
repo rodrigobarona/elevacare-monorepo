@@ -44,6 +44,9 @@ export function mapExpertApiError(
     if (readBodyRecord(err)?.code === "INVALID_TAX_ID") {
       return "invalid-tax-id"
     }
+    if (err.body.error === "SEAT_LIMIT_REACHED") {
+      return "seat-limit-reached"
+    }
     if (err.status === 409 || err.body.error === "conflict") {
       if (err.body.error === "CONNECT_INCOMPLETE") {
         return codes?.connectIncomplete ?? "connect-incomplete"

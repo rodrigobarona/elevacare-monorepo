@@ -39,6 +39,7 @@ vi.mock("@eleva/auth", () => ({
 }))
 
 vi.mock("@eleva/billing/server", () => ({
+  getClinicSeatAllowance: async () => ({ plan: "clinic_starter", cap: 5 }),
   markSeatSyncPending: (...args: unknown[]) =>
     mocks.markSeatSyncPending(...args),
   enqueueSeatSync: (...args: unknown[]) => mocks.enqueueSeatSync(...args),
@@ -237,7 +238,7 @@ describe("/teams/{teamId} members and invitations", () => {
       await expect(res.json()).resolves.toMatchObject({
         members: [{ role: "owner", joinedAt: "2026-11-01T09:00:00.000Z" }],
         invitations: [{ expiresAt: "2026-11-27T09:00:00.000Z" }],
-        seats: { billable: 1 },
+        seats: { billable: 1, cap: 5, plan: "clinic_starter" },
       })
       expect(mocks.listTeamMembers).toHaveBeenCalledWith(TEAM_ID)
     })

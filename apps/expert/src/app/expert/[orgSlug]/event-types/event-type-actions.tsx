@@ -33,6 +33,7 @@ const ERROR_KEYS = [
   "delete-failed",
   "connect-incomplete",
   "offer-invariant",
+  "seat-limit-reached",
 ] as const
 
 export function EventTypeActions({

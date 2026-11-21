@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { getClinicSummary, listTeamMembers } from "@eleva/auth"
 import { getSessionForOrg } from "@eleva/auth/server"
+import { getClinicSeatAllowance } from "@eleva/billing/server"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { TeamRoster } from "./team-roster"
 
@@ -15,9 +16,10 @@ export default async function TeamMembersPage({
   if (!session || !session.capabilities.includes("members:manage")) notFound()
 
   const t = await getTranslations("members")
-  const [roster, clinic] = await Promise.all([
+  const [roster, clinic, allowance] = await Promise.all([
     listTeamMembers(session.orgId),
     getClinicSummary(session.orgId, session.user.id),
+    getClinicSeatAllowance(session.orgId),
   ])
 
   return (
@@ -26,6 +28,7 @@ export default async function TeamMembersPage({
       <TeamRoster
         clinicName={clinic.profile.displayName}
         currentUserId={session.user.id}
+        seats={{ used: roster.billableSeats, cap: allowance.cap }}
         members={roster.members.map((member) => ({
           memberId: member.memberId,
           userId: member.userId,

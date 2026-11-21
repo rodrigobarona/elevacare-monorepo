@@ -1,5 +1,6 @@
 import { TeamMembersResponseSchema } from "@eleva/api-client"
 import { listTeamMembers } from "@eleva/auth"
+import { getClinicSeatAllowance } from "@eleva/billing/server"
 import { corsHeaders } from "@/lib/cors"
 import type { RoutePolicy } from "@/lib/route-policy"
 import { secureJson } from "@/lib/security-headers"
@@ -32,7 +33,10 @@ export async function GET(request: Request, context: Context) {
   )
   if (caller instanceof Response) return caller
   try {
-    const roster = await listTeamMembers(caller.orgId)
+    const [roster, allowance] = await Promise.all([
+      listTeamMembers(caller.orgId),
+      getClinicSeatAllowance(caller.orgId),
+    ])
     return secureJson(
       TeamMembersResponseSchema.parse({
         members: roster.members.map((member) => ({
@@ -44,7 +48,7 @@ export async function GET(request: Request, context: Context) {
           invitedAt: invitation.invitedAt.toISOString(),
           expiresAt: invitation.expiresAt.toISOString(),
         })),
-        seats: { billable: roster.billableSeats },
+        seats: { billable: roster.billableSeats, ...allowance },
       }),
       { status: 200, headers }
     )

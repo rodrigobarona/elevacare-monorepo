@@ -157,6 +157,7 @@ import {
   InviteTeamMemberRequestSchema,
   InviteTeamMemberResponseSchema,
   RemoveTeamMemberResponseSchema,
+  SeatLimitReachedErrorSchema,
   TeamMemberErrorSchema,
   TeamMembersResponseSchema,
   TeamSummarySchema,
@@ -1666,10 +1667,14 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "409": {
               description:
-                "CONNECT_INCOMPLETE — a paid service (base price or any active mode price above zero) needs Payments onboarding ready (details submitted, payouts enabled, transfers active, and Identity verified when required). Free services publish without it.",
+                "CONNECT_INCOMPLETE — a paid service (base price or any active mode price above zero) needs Payments onboarding ready (details submitted, payouts enabled, transfers active, and Identity verified when required). Free services publish without it. SEAT_LIMIT_REACHED — in a clinic, a member's first published service takes a seat and the plan has none left (Starter 5, Growth 20; cap and plan are in the body). Publishing another service for a member who already has one never takes a seat.",
               content: {
                 "application/json": {
-                  schema: z.union([ErrorSchema, ConnectIncompleteErrorSchema]),
+                  schema: z.union([
+                    ErrorSchema,
+                    ConnectIncompleteErrorSchema,
+                    SeatLimitReachedErrorSchema,
+                  ]),
                 },
               },
             },
@@ -4167,7 +4172,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "listTeamMembers",
           summary: "List the clinic's members and pending invitations",
           description:
-            "Requires members:manage, and teamId must be the caller's active team org (403 TEAM_NOT_ACTIVE otherwise). Returns every member with their role and how many services they have published in this clinic, the pending invitations (expired ones are flagged and can be sent again) and seats.billable: the members with at least one published service, which is what the clinic's plan charges for.",
+            "Requires members:manage, and teamId must be the caller's active team org (403 TEAM_NOT_ACTIVE otherwise). Returns every member with their role and how many services they have published in this clinic, the pending invitations (expired ones are flagged and can be sent again) and seats: billable is the members with at least one published service (what the clinic's plan charges for), cap is how many the plan includes (Starter 5, Growth 20; publishing answers 409 SEAT_LIMIT_REACHED beyond it).",
           tags: ["Teams"],
           requestParams: { path: z.object({ teamId: z.string().uuid() }) },
           responses: {

@@ -83,11 +83,14 @@ const ROW_BUTTON = "max-sm:h-10 max-sm:px-4"
 export function TeamRoster({
   clinicName,
   currentUserId,
+  seats,
   members,
   invitations,
 }: {
   clinicName: string
   currentUserId: string
+  /** Members with a published service, against what the plan includes. */
+  seats: { used: number; cap: number }
   members: RosterMember[]
   invitations: RosterInvitation[]
 }) {
@@ -266,6 +269,12 @@ export function TeamRoster({
             )
           })}
         </ul>
+        <p
+          className="max-w-prose text-sm text-muted-foreground"
+          data-testid="team-seats"
+        >
+          {seats.used >= seats.cap ? t("seatsFull", seats) : t("seats", seats)}
+        </p>
         <p className="max-w-prose text-sm text-muted-foreground">
           {t("ownerNote")}
         </p>

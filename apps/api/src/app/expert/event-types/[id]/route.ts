@@ -4,6 +4,8 @@ import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { withAudit } from "@eleva/audit"
+import { enqueueSeatSync, markSeatSyncPending } from "@eleva/billing/server"
+import { logError } from "@eleva/observability"
 import {
   getEventType,
   getExpertProfileForOrg,
@@ -302,11 +304,19 @@ export async function DELETE(
           entityId: id,
           payload: {},
         })
+        // A deleted service is no longer published: a clinic seat may free.
+        await markSeatSyncPending(profile.orgId, tx)
       }
     )
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal server error"
     return secureJson({ error: "internal", message }, { status: 500, headers })
+  }
+
+  try {
+    await enqueueSeatSync(profile.orgId, session.user.id)
+  } catch (err) {
+    logError("[event-types] seat sync pending after delete", err)
   }
 
   return secureJson({ ok: true }, { status: 200, headers })

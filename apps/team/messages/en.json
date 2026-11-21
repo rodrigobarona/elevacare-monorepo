@@ -16,6 +16,8 @@
     "peopleHeading": "{count, plural, one {# person} other {# people}}",
     "you": "(you)",
     "services": "{count, plural, =0 {No published services yet} one {# published service} other {# published services}}",
+    "seats": "{used} of {cap} seats in use. A seat is in use when an expert has a published service.",
+    "seatsFull": "All {cap} seats are in use. Another expert can publish a service once a seat is free.",
     "role": {
       "owner": "Owner",
       "admin": "Admin",
