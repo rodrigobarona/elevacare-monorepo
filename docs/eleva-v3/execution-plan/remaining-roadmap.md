@@ -16,7 +16,7 @@ How it was made, so you know how far to trust it:
 - **Current docs.** The SDK facts in section 11 come from Context7 on 2026-11-21, with the
   library id beside each. Context7 had Better Auth at 1.7.15 (the repo runs 1.7.18) and
   described Drizzle v1 and Sentry v11, both ahead of what is installed.
-- **Design references.** Thirty Mobbin references were saved for the screens still to build
+- **Design references.** Twenty-nine Mobbin references were saved for the screens still to build
   (section 10). Mobbin shows patterns, not templates.
 - **Not a sign-off.** The founder, the DPO, counsel and the accountant decide what section 4
   asks them. Sizes are estimates: S is under a day, M one to two days, L more.
@@ -258,7 +258,7 @@ as safe as the door in front of them.
 | 12.16 | Large refunds and held payouts need two people                 | Wire both to 12.14.                                                                                                                       | 12.14, A-04   | M    | No     | One test per kind                            |
 | 12.17 | Payouts screens                                                | Over the API that exists.                                                                                                                 | 12.9          | M    | Yes    | Seeded e2e                                   |
 | 12.18 | Search the audit trail                                         | By reference, person and record; staff access records included.                                                                           | 12.12         | M    | Yes    | Integration test. Refs `13-admin/13`, `14`   |
-| 12.19 | Find a person; suspend, restore, sign out everywhere           | Search, detail, sessions, and the three actions with a reason.                                                                            | 12.9, 12.12   | M    | Yes    | Route tests, e2e. Refs `13-admin/04` to `06` |
+| 12.19 | Find a person; suspend, restore, sign out everywhere           | Search, detail, sessions, and the three actions with a reason.                                                                            | 12.9, 12.12   | M    | Yes    | Route tests, e2e. Refs `13-admin/04`, `06`   |
 | 12.20 | Suspend and restore an expert's listing                        | With a reason and a notice to the expert.                                                                                                 | 12.14         | M    | Yes    | Route tests                                  |
 | 12.21 | Payment events and failed jobs: see and send again             | Stripe events, failed deliveries, the dead-letter queue.                                                                                  | 12.9          | M    | Yes    | Idempotency test. Refs `13-admin/15`, `16`   |
 | 12.22 | Find a booking; cancel as staff                                | Search, detail, cancel with refund rules.                                                                                                 | 12.16         | M    | Yes    | Route tests                                  |
@@ -412,7 +412,7 @@ References saved on 2026-11-21 for the screens of sections 6 to 8. Each surface'
 | Experts side by side in a schedule    | 11.14          | `11-team/21`, `22`    |                                               |
 | A sensitive setting, confirmed        | Shared records | `11-team/23`, `24`    | A written reason before turning it on         |
 | The clinic's public page              | 11.17          | `03-profile/25`, `26` |                                               |
-| A person: state, sessions, sign out   | 12.19          | `13-admin/04` to `06` |                                               |
+| A person: state, sessions, sign out   | 12.19          | `13-admin/04`, `06`   |                                               |
 | Acting as someone else                | F-04           | `13-admin/07`, `08`   | A start that asks for a reason                |
 | Notes only staff see                  | Phase 12       | `13-admin/09`, `10`   |                                               |
 | A request waiting for a second person | 12.15          | `13-admin/11`, `12`   |                                               |

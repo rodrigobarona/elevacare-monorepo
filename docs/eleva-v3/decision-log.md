@@ -44,7 +44,7 @@ Each entry should include:
   them.
 - How: four reviewer agents read phases 11 to 14 item by item against the code; current SDK
   docs came from Context7 through its command-line tool (its MCP server was not connected in the
-  session); thirty Mobbin references were saved for the screens still to build (pull request
+  session); twenty-nine Mobbin references were saved for the screens still to build (pull request
   #454). Six findings were checked again by hand before being written down. Nothing was run
   against a database, a browser or a vendor account.
 - Found, and now slices: API-key sign-in reads a field the installed Better Auth plugin no
