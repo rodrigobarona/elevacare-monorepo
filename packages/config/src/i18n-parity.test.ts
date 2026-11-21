@@ -118,4 +118,112 @@ describe("checkI18nParity", () => {
     const result = await checkI18nParity(appsRoot)
     expect(result.ok).toBe(true)
   })
+
+  it("fails on an empty value or a note left in place of copy", async () => {
+    const appsRoot = await mkdtemp(path.join(tmpdir(), "i18n-parity-"))
+    dirs.push(appsRoot)
+    await writeAppMessages(appsRoot, "web", {
+      pt: { title: "Olá", body: "TODO traduzir", cta: " " },
+      en: { title: "Hello", body: "Lorem ipsum dolor", cta: "Book" },
+      es: { title: "Hola", body: "Todo el equipo", cta: "Reservar" },
+    })
+    const result = await checkI18nParity(appsRoot)
+    const messages = result.issues.map((issue) => issue.message)
+    expect(messages).toEqual([
+      'key "body" in pt.json is empty or a placeholder (TODO, TBD, FIXME, lorem ipsum)',
+      'key "cta" in pt.json is empty or a placeholder (TODO, TBD, FIXME, lorem ipsum)',
+      'key "body" in en.json is empty or a placeholder (TODO, TBD, FIXME, lorem ipsum)',
+    ])
+  })
+
+  it("holds a locale an app ships but does not require to the same rules", async () => {
+    const appsRoot = await mkdtemp(path.join(tmpdir(), "i18n-parity-"))
+    dirs.push(appsRoot)
+    // The admin console requires pt and en, and also ships es.
+    await writeAppMessages(appsRoot, "admin", {
+      pt: { title: "Olá", body: "Texto" },
+      en: { title: "Hello", body: "Copy" },
+      es: { title: "TODO" },
+    })
+    const result = await checkI18nParity(appsRoot)
+    const messages = result.issues.map((issue) => issue.message)
+    expect(messages).toContain(
+      'key "title" in es.json is empty or a placeholder (TODO, TBD, FIXME, lorem ipsum)'
+    )
+    expect(
+      messages.some(
+        (message) => /es\.json/.test(message) && /body/.test(message)
+      )
+    ).toBe(true)
+  })
+
+  it("accepts the everyday word todo in Portuguese and Spanish", async () => {
+    const appsRoot = await mkdtemp(path.join(tmpdir(), "i18n-parity-"))
+    dirs.push(appsRoot)
+    await writeAppMessages(appsRoot, "web", {
+      pt: { all: "Todo o dia", heading: "TODO O DIA", list: "Fazer todo: sim" },
+      en: { all: "All day", heading: "ALL DAY", list: "Do it all: yes" },
+      es: { all: "Todo el día", heading: "TODO EL DÍA", list: "Por todo" },
+    })
+    // "todo:" reads as a note even inside a sentence: the one accepted miss.
+    const result = await checkI18nParity(appsRoot)
+    expect(result.issues.map((issue) => issue.message)).toEqual([
+      'key "list" in pt.json is empty or a placeholder (TODO, TBD, FIXME, lorem ipsum)',
+    ])
+  })
+
+  it("catches the usual shapes of a note, also inside a list", async () => {
+    const appsRoot = await mkdtemp(path.join(tmpdir(), "i18n-parity-"))
+    dirs.push(appsRoot)
+    const messagesDir = path.join(appsRoot, "web", "messages")
+    await mkdir(messagesDir, { recursive: true })
+    const notes = {
+      a: "tbd",
+      b: "Todo: write this",
+      c: "TODO_copy",
+      d: "XXX",
+      e: "Needs a FIXME here",
+      steps: ["First step", "TODO second step"],
+    }
+    const real = {
+      a: "ok",
+      b: "ok",
+      c: "ok",
+      d: "ok",
+      e: "ok",
+      steps: ["One", "Two"],
+    }
+    for (const [locale, messages] of Object.entries({
+      pt: notes,
+      en: real,
+      es: real,
+    })) {
+      await writeFile(
+        path.join(messagesDir, `${locale}.json`),
+        JSON.stringify(messages)
+      )
+    }
+    const flagged = (await checkI18nParity(appsRoot)).issues
+      .map(
+        (issue) =>
+          issue.message.match(/key "([^"]+)" in pt\.json is empty/)?.[1]
+      )
+      .filter(Boolean)
+    expect(flagged).toEqual(["a", "b", "c", "d", "e", "steps.1"])
+  })
+
+  it("names the retired pt-BR locale when a file for it appears", async () => {
+    const appsRoot = await mkdtemp(path.join(tmpdir(), "i18n-parity-"))
+    dirs.push(appsRoot)
+    await writeAppMessages(appsRoot, "web", {
+      pt: { hello: "olá" },
+      en: { hello: "hello" },
+      es: { hello: "hola" },
+      "pt-BR": { hello: "oi" },
+    })
+    const result = await checkI18nParity(appsRoot)
+    expect(result.issues.map((issue) => issue.message)).toEqual([
+      "locale file pt-BR.json: pt-BR is retired (D-01); Portuguese lives in pt.json",
+    ])
+  })
 })

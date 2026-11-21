@@ -32,6 +32,49 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-21: Two CI guards from Phase 13: BotID coverage and real copy (13.1) (active)
+
+- Change (Phase 13, tasks 2 and 6, the parts that need no staging run):
+  - `pnpm check:botid-coverage` (CI, lint job): every route in `apps/api`
+    that is `auth: "public"` and exports POST, PUT, PATCH or DELETE must
+    declare `botId: true`, or be listed in the script with the reason it
+    cannot. Today: 8 public mutations, 6 behind BotID, 2 exempt (Better
+    Auth's catch-all, which owns its own throttling, and the E2E-only
+    verify-email route, which is not mounted in production). The list is
+    checked both ways, so a stale exemption fails too. `check:route-guards`
+    already holds `botId: true` to a reachable `checkBot(` call. Both
+    guards read the policy and the exported methods with one TypeScript
+    parser (`scripts/lib/route-policy.mjs`), and both fail closed: a policy
+    or an export they cannot read is a failure, not a skip
+    (`pnpm test:scripts`, 10 cases).
+  - `check:route-guards` is held to the same reading. It used a regular
+    expression that saw only `export async function` and `export const`, so
+    routes written `export function POST` were never checked for request
+    validation; it now sees every way of exporting a method. It also
+    refuses a route handler named anything but `route.ts` (a `route.tsx` or
+    `route.js` is served by Next.js and was invisible to both guards), no
+    longer counts `Date.parse(` or `url.parse(` as request validation, and
+    holds the declared `auth` to a call that enforces it. Stated limit: for
+    a webhook that hands the request to its domain handler
+    (`handle…Webhook`), the guard sees the hand-over, not the signature
+    check inside the package; and a call counts when it is reachable within
+    two imports, not when it is proven to run before the write.
+  - `pnpm check:i18n-parity` now also fails on a value that is empty or a
+    note in place of copy (`TODO`, `TBD`, `FIXME`, `XXX`, lorem ipsum, also
+    inside lists). The rules are narrow so that the Portuguese and Spanish
+    word "todo" passes ("Todo o dia", "TODO O DIA"); the one accepted miss
+    is "todo:" inside a real sentence. The check also names the retired
+    `pt-BR` locale when a file for it appears (D-01), covers message files
+    in shared packages (`packages/*/messages`), which were not checked
+    before, and holds every locale an app ships to the same rules as a
+    required one (the admin console requires pt and en and also ships es).
+- Not in this slice (still Phase 13): CSP nonces and report-only mode, the
+  rate-limit classes, analytics and its consent kind, Sentry release tags,
+  Lighthouse budgets, the remaining e2e suites, runbooks and the security
+  traceability check. The DPIA, the pen test and the PITR drill are owner
+  tasks.
+- Owner: engineering
+
 ### 2026-11-21: Staff verify a clinic's legal identity (12.1) (active)
 
 - Change (Phase 12, first slice beyond licence review): staff decide the
