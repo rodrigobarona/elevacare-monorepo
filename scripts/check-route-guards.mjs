@@ -13,95 +13,12 @@ import { existsSync } from "node:fs"
 import { readdir, readFile } from "node:fs/promises"
 import path from "node:path"
 import ts from "typescript"
+import { extractPolicy, walkRoutes } from "./lib/route-policy.mjs"
 
 const ROOT = path.resolve(import.meta.dirname, "..")
 const APP_DIR = path.join(ROOT, "apps/api/src/app")
 const SRC_DIR = path.join(ROOT, "apps/api/src")
 const AUTH_MODES = new Set(["public", "session", "signature", "internal"])
-
-async function walk(dir) {
-  const entries = await readdir(dir, { withFileTypes: true })
-  const files = []
-  for (const entry of entries) {
-    const full = path.join(dir, entry.name)
-    if (entry.isDirectory()) {
-      if (entry.name === "node_modules" || entry.name === ".next") continue
-      files.push(...(await walk(full)))
-    } else if (entry.name === "route.ts") {
-      files.push(full)
-    }
-  }
-  return files
-}
-
-function unwrap(node) {
-  let current = node
-  while (
-    ts.isAsExpression(current) ||
-    ts.isSatisfiesExpression(current) ||
-    ts.isParenthesizedExpression(current)
-  ) {
-    current = current.expression
-  }
-  return current
-}
-
-function readLiteral(node) {
-  if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
-    return node.text
-  }
-  if (node.kind === ts.SyntaxKind.TrueKeyword) return true
-  if (node.kind === ts.SyntaxKind.FalseKeyword) return false
-  return undefined
-}
-
-function extractPolicy(source) {
-  const sf = ts.createSourceFile(
-    "route.ts",
-    source,
-    ts.ScriptTarget.Latest,
-    true,
-    ts.ScriptKind.TS
-  )
-  let policy = null
-
-  function visit(node) {
-    if (ts.isVariableStatement(node)) {
-      const exported = node.modifiers?.some(
-        (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword
-      )
-      if (exported) {
-        for (const decl of node.declarationList.declarations) {
-          if (
-            !ts.isIdentifier(decl.name) ||
-            decl.name.text !== "ROUTE_POLICY"
-          ) {
-            continue
-          }
-          if (!decl.initializer) continue
-          const init = unwrap(decl.initializer)
-          if (!ts.isObjectLiteralExpression(init)) continue
-          const fields = {}
-          for (const prop of init.properties) {
-            if (ts.isSpreadAssignment(prop)) {
-              policy = null
-              return
-            }
-            if (!ts.isPropertyAssignment(prop) || !ts.isIdentifier(prop.name)) {
-              continue
-            }
-            fields[prop.name.text] = readLiteral(unwrap(prop.initializer))
-          }
-          policy = fields
-        }
-      }
-    }
-    ts.forEachChild(node, visit)
-  }
-
-  visit(sf)
-  return policy
-}
 
 function isValidPolicy(policy) {
   return (
@@ -216,7 +133,7 @@ async function reachesCall(file, matches) {
   return false
 }
 
-const routes = await walk(APP_DIR)
+const routes = await walkRoutes(APP_DIR)
 const missing = []
 const unenforced = []
 
@@ -293,7 +210,7 @@ for (const entry of await readdir(appsDir, { withFileTypes: true })) {
   }
   const appDir = path.join(appsDir, entry.name, "src/app")
   if (!existsSync(appDir)) continue
-  for (const file of await walk(appDir)) {
+  for (const file of await walkRoutes(appDir)) {
     const relative = path.relative(ROOT, file)
     if (!FRONTEND_ROUTE_EXCEPTIONS.has(relative)) frontendRoutes.push(relative)
   }

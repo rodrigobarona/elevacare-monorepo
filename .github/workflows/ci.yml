@@ -86,6 +86,7 @@ jobs:
       - run: pnpm check:api-first-actions
       - run: pnpm check:route-guards
       - run: pnpm check:botid-coverage
+      - run: pnpm test:scripts
       - run: pnpm check:no-phi-logs
 
   typecheck:

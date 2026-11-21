@@ -42,10 +42,16 @@ Each entry should include:
     Auth's catch-all, which owns its own throttling, and the E2E-only
     verify-email route, which is not mounted in production). The list is
     checked both ways, so a stale exemption fails too. `check:route-guards`
-    already holds `botId: true` to a reachable `checkBot(` call.
+    already holds `botId: true` to a reachable `checkBot(` call. Both
+    guards read the policy and the exported methods with one TypeScript
+    parser (`scripts/lib/route-policy.mjs`), and the new one fails closed:
+    a policy or an export it cannot read is a failure, not a skip
+    (`pnpm test:scripts`, 8 cases).
   - `pnpm check:i18n-parity` now also fails on a value that is empty or a
-    note in place of copy (`TODO`, `TBD`, `FIXME`, lorem ipsum; the check
-    is case-sensitive, so the Portuguese and Spanish word "todo" passes),
+    note in place of copy (`TODO`, `TBD`, `FIXME`, `XXX`, lorem ipsum, also
+    inside lists). The rules are narrow so that the Portuguese and Spanish
+    word "todo" passes ("Todo o dia", "TODO O DIA"); the one accepted miss
+    is "todo:" inside a real sentence,
     names the retired `pt-BR` locale when a file for it appears (D-01), and
     covers message files in shared packages (`packages/*/messages`), which
     were not checked before.

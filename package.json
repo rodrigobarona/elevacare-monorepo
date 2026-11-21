@@ -14,6 +14,7 @@
     "check:api-first-actions": "node scripts/check-api-first-actions.mjs",
     "check:route-guards": "node scripts/check-route-guards.mjs",
     "check:botid-coverage": "node scripts/check-botid-coverage.mjs",
+    "test:scripts": "node --test scripts/*.test.mjs",
     "check:no-phi-logs": "node scripts/check-no-phi-logs.mjs",
     "check:google-oauth": "node scripts/check-google-oauth.mjs",
     "clear:better-auth-rate-limits": "node scripts/clear-better-auth-rate-limits.mjs",

@@ -30,22 +30,32 @@ function flattenKeys(value: unknown, prefix = ""): string[] {
 }
 
 /**
- * A value that is not real copy yet: empty, or a note to self. Checked
- * case-sensitively, so the Portuguese and Spanish word "todo" is fine.
+ * A value that is not real copy yet: empty, or a note to self. The rules
+ * are narrow on purpose, because "todo" is an everyday word in Portuguese
+ * and Spanish ("Todo o dia", "TODO O DIA"):
+ * - the whole value is TODO, TBD, FIXME or XXX (any case);
+ * - one of those words followed by a colon ("todo: translate");
+ * - TODO, TBD or FIXME in capitals followed by an underscore, a dash or a
+ *   lower-case word ("TODO_copy", "TODO traduzir");
+ * - FIXME in capitals anywhere, or lorem ipsum.
  */
-const PLACEHOLDER = /\b(TODO|TBD|FIXME)\b|lorem ipsum/
+const PLACEHOLDER_RULES = [
+  /^(todo|tbd|fixme|xxx)$/i,
+  /\b(todo|tbd|fixme|xxx)\s*:/i,
+  /\b(TODO|TBD|FIXME)(?:[_-]|\s+\p{Ll})/u,
+  /\bFIXME\b/,
+  /lorem ipsum/i,
+]
+
+function isPlaceholder(value: string): boolean {
+  const text = value.trim()
+  return text === "" || PLACEHOLDER_RULES.some((rule) => rule.test(text))
+}
 
 function placeholderKeys(value: unknown, prefix = ""): string[] {
-  if (typeof value === "string") {
-    return value.trim() === "" ||
-      PLACEHOLDER.test(value) ||
-      /lorem ipsum/i.test(value)
-      ? [prefix]
-      : []
-  }
-  if (value === null || typeof value !== "object" || Array.isArray(value)) {
-    return []
-  }
+  if (typeof value === "string") return isPlaceholder(value) ? [prefix] : []
+  if (value === null || typeof value !== "object") return []
+  // Lists of strings are copy too (bullet points, steps).
   return Object.entries(value as Record<string, unknown>).flatMap(
     ([key, nested]) =>
       placeholderKeys(nested, prefix ? `${prefix}.${key}` : key)

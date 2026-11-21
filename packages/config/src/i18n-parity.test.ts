@@ -140,11 +140,55 @@ describe("checkI18nParity", () => {
     const appsRoot = await mkdtemp(path.join(tmpdir(), "i18n-parity-"))
     dirs.push(appsRoot)
     await writeAppMessages(appsRoot, "web", {
-      pt: { all: "Todo o dia" },
-      en: { all: "All day" },
-      es: { all: "Todo el día" },
+      pt: { all: "Todo o dia", heading: "TODO O DIA", list: "Fazer todo: sim" },
+      en: { all: "All day", heading: "ALL DAY", list: "Do it all: yes" },
+      es: { all: "Todo el día", heading: "TODO EL DÍA", list: "Por todo" },
     })
-    expect((await checkI18nParity(appsRoot)).ok).toBe(true)
+    // "todo:" reads as a note even inside a sentence: the one accepted miss.
+    const result = await checkI18nParity(appsRoot)
+    expect(result.issues.map((issue) => issue.message)).toEqual([
+      'key "list" in pt.json is empty or a placeholder (TODO, TBD, FIXME, lorem ipsum)',
+    ])
+  })
+
+  it("catches the usual shapes of a note, also inside a list", async () => {
+    const appsRoot = await mkdtemp(path.join(tmpdir(), "i18n-parity-"))
+    dirs.push(appsRoot)
+    const messagesDir = path.join(appsRoot, "web", "messages")
+    await mkdir(messagesDir, { recursive: true })
+    const notes = {
+      a: "tbd",
+      b: "Todo: write this",
+      c: "TODO_copy",
+      d: "XXX",
+      e: "Needs a FIXME here",
+      steps: ["First step", "TODO second step"],
+    }
+    const real = {
+      a: "ok",
+      b: "ok",
+      c: "ok",
+      d: "ok",
+      e: "ok",
+      steps: ["One", "Two"],
+    }
+    for (const [locale, messages] of Object.entries({
+      pt: notes,
+      en: real,
+      es: real,
+    })) {
+      await writeFile(
+        path.join(messagesDir, `${locale}.json`),
+        JSON.stringify(messages)
+      )
+    }
+    const flagged = (await checkI18nParity(appsRoot)).issues
+      .map(
+        (issue) =>
+          issue.message.match(/key "([^"]+)" in pt\.json is empty/)?.[1]
+      )
+      .filter(Boolean)
+    expect(flagged).toEqual(["a", "b", "c", "d", "e", "steps.1"])
   })
 
   it("names the retired pt-BR locale when a file for it appears", async () => {
