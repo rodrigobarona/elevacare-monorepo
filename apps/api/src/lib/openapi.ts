@@ -4222,7 +4222,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "fileTeamVerification",
           summary: "File the clinic's legal name and NIF for review",
           description:
-            "Requires clinic:manage in the active team org. Creates a pending filing, or refiles the open one (pending or needs changes). Eleva staff check the legal entity and the NIF; a clinic already verified stays verified under its approved filing until staff decide. 422 INVALID_TAX_ID for a malformed NIF/VAT. 409 VERIFICATION_UNCHANGED when the open filing already holds these details: nothing is written, so the filing keeps its place in the staff queue. Audited as clinic_verification.submitted.",
+            "Requires clinic:manage in the active team org. Creates a pending filing, or refiles the open one (pending or needs changes). Eleva staff check the legal entity and the NIF; a clinic already verified stays verified under its approved filing until staff decide. 422 INVALID_TAX_ID for a malformed NIF/VAT. 409 VERIFICATION_UNCHANGED while the open filing is pending and already holds these details: nothing is written, so the filing keeps its place in the staff queue. After needs changes, or after a rejection, the same details are accepted. Audited as clinic_verification.submitted.",
           tags: ["Teams"],
           requestParams: { path: z.object({ teamId: z.string().uuid() }) },
           requestBody: {
@@ -4245,7 +4245,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "409": {
               description:
-                "VERIFICATION_LOCKED: the open filing changed while refiling. VERIFICATION_UNCHANGED: the open filing already holds these details.",
+                "VERIFICATION_LOCKED: the open filing changed while refiling. VERIFICATION_UNCHANGED: the open filing is pending and already holds these details.",
               content: { "application/json": { schema: ErrorSchema } },
             },
           },
