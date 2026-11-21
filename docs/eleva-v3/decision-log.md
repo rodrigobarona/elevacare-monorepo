@@ -32,6 +32,30 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-21: Two CI guards from Phase 13: BotID coverage and real copy (13.1) (active)
+
+- Change (Phase 13, tasks 2 and 6, the parts that need no staging run):
+  - `pnpm check:botid-coverage` (CI, lint job): every route in `apps/api`
+    that is `auth: "public"` and exports POST, PUT, PATCH or DELETE must
+    declare `botId: true`, or be listed in the script with the reason it
+    cannot. Today: 8 public mutations, 6 behind BotID, 2 exempt (Better
+    Auth's catch-all, which owns its own throttling, and the E2E-only
+    verify-email route, which is not mounted in production). The list is
+    checked both ways, so a stale exemption fails too. `check:route-guards`
+    already holds `botId: true` to a reachable `checkBot(` call.
+  - `pnpm check:i18n-parity` now also fails on a value that is empty or a
+    note in place of copy (`TODO`, `TBD`, `FIXME`, lorem ipsum; the check
+    is case-sensitive, so the Portuguese and Spanish word "todo" passes),
+    names the retired `pt-BR` locale when a file for it appears (D-01), and
+    covers message files in shared packages (`packages/*/messages`), which
+    were not checked before.
+- Not in this slice (still Phase 13): CSP nonces and report-only mode, the
+  rate-limit classes, analytics and its consent kind, Sentry release tags,
+  Lighthouse budgets, the remaining e2e suites, runbooks and the security
+  traceability check. The DPIA, the pen test and the PITR drill are owner
+  tasks.
+- Owner: engineering
+
 ### 2026-11-21: Staff verify a clinic's legal identity (12.1) (active)
 
 - Change (Phase 12, first slice beyond licence review): staff decide the

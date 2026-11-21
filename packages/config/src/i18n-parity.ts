@@ -29,6 +29,29 @@ function flattenKeys(value: unknown, prefix = ""): string[] {
   return keys
 }
 
+/**
+ * A value that is not real copy yet: empty, or a note to self. Checked
+ * case-sensitively, so the Portuguese and Spanish word "todo" is fine.
+ */
+const PLACEHOLDER = /\b(TODO|TBD|FIXME)\b|lorem ipsum/
+
+function placeholderKeys(value: unknown, prefix = ""): string[] {
+  if (typeof value === "string") {
+    return value.trim() === "" ||
+      PLACEHOLDER.test(value) ||
+      /lorem ipsum/i.test(value)
+      ? [prefix]
+      : []
+  }
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    return []
+  }
+  return Object.entries(value as Record<string, unknown>).flatMap(
+    ([key, nested]) =>
+      placeholderKeys(nested, prefix ? `${prefix}.${key}` : key)
+  )
+}
+
 function parseJsonObject(
   filePath: string,
   raw: string
@@ -71,7 +94,10 @@ export async function checkI18nParity(
       if (!LOCALE_UNION.has(locale)) {
         issues.push({
           app: entry.name,
-          message: `locale file ${file} is outside the Locale union (${locales.join("|")})`,
+          message:
+            locale.toLowerCase() === "pt-br"
+              ? `locale file ${file}: pt-BR is retired (D-01); Portuguese lives in pt.json`
+              : `locale file ${file} is outside the Locale union (${locales.join("|")})`,
         })
         continue
       }
@@ -91,8 +117,15 @@ export async function checkI18nParity(
       }
       try {
         const raw = await readFile(filePath, "utf8")
-        const keys = new Set(flattenKeys(parseJsonObject(filePath, raw)))
+        const messages = parseJsonObject(filePath, raw)
+        const keys = new Set(flattenKeys(messages))
         keySets.push({ locale, keys })
+        for (const key of placeholderKeys(messages)) {
+          issues.push({
+            app: entry.name,
+            message: `key "${key}" in ${locale}.json is empty or a placeholder (TODO, TBD, FIXME, lorem ipsum)`,
+          })
+        }
       } catch (error) {
         issues.push({
           app: entry.name,
@@ -128,13 +161,16 @@ export async function checkI18nParity(
 }
 
 export async function runI18nParityCli(
-  appsRoot = path.resolve(import.meta.dirname, "../../../apps")
+  appsRoot = path.resolve(import.meta.dirname, "../../../apps"),
+  /** Shared packages that ship their own messages (e.g. `@eleva/dashboard`). */
+  packagesRoot = path.resolve(import.meta.dirname, "../..")
 ): Promise<number> {
-  const [parity, drafts] = await Promise.all([
+  const [parity, packages, drafts] = await Promise.all([
     checkI18nParity(appsRoot),
+    checkI18nParity(packagesRoot),
     checkI18nDraftAges(appsRoot),
   ])
-  const issues = [...parity.issues, ...drafts.issues]
+  const issues = [...parity.issues, ...packages.issues, ...drafts.issues]
   if (issues.length === 0) {
     console.log("i18n parity: ok")
     return 0

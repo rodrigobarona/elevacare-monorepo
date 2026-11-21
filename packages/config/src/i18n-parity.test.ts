@@ -118,4 +118,47 @@ describe("checkI18nParity", () => {
     const result = await checkI18nParity(appsRoot)
     expect(result.ok).toBe(true)
   })
+
+  it("fails on an empty value or a note left in place of copy", async () => {
+    const appsRoot = await mkdtemp(path.join(tmpdir(), "i18n-parity-"))
+    dirs.push(appsRoot)
+    await writeAppMessages(appsRoot, "web", {
+      pt: { title: "Olá", body: "TODO traduzir", cta: " " },
+      en: { title: "Hello", body: "Lorem ipsum dolor", cta: "Book" },
+      es: { title: "Hola", body: "Todo el equipo", cta: "Reservar" },
+    })
+    const result = await checkI18nParity(appsRoot)
+    const messages = result.issues.map((issue) => issue.message)
+    expect(messages).toEqual([
+      'key "body" in pt.json is empty or a placeholder (TODO, TBD, FIXME, lorem ipsum)',
+      'key "cta" in pt.json is empty or a placeholder (TODO, TBD, FIXME, lorem ipsum)',
+      'key "body" in en.json is empty or a placeholder (TODO, TBD, FIXME, lorem ipsum)',
+    ])
+  })
+
+  it("accepts the everyday word todo in Portuguese and Spanish", async () => {
+    const appsRoot = await mkdtemp(path.join(tmpdir(), "i18n-parity-"))
+    dirs.push(appsRoot)
+    await writeAppMessages(appsRoot, "web", {
+      pt: { all: "Todo o dia" },
+      en: { all: "All day" },
+      es: { all: "Todo el día" },
+    })
+    expect((await checkI18nParity(appsRoot)).ok).toBe(true)
+  })
+
+  it("names the retired pt-BR locale when a file for it appears", async () => {
+    const appsRoot = await mkdtemp(path.join(tmpdir(), "i18n-parity-"))
+    dirs.push(appsRoot)
+    await writeAppMessages(appsRoot, "web", {
+      pt: { hello: "olá" },
+      en: { hello: "hello" },
+      es: { hello: "hola" },
+      "pt-BR": { hello: "oi" },
+    })
+    const result = await checkI18nParity(appsRoot)
+    expect(result.issues.map((issue) => issue.message)).toEqual([
+      "locale file pt-BR.json: pt-BR is retired (D-01); Portuguese lives in pt.json",
+    ])
+  })
 })
