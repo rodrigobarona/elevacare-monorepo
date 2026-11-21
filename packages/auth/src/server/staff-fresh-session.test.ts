@@ -4,6 +4,7 @@ vi.mock("@eleva/db", () => ({ auth: {}, db: vi.fn() }))
 
 import {
   NEW_CREDENTIAL_PATHS,
+  sessionForRequestHook,
   staffMustSignInAgain,
 } from "./staff-fresh-session"
 
@@ -70,7 +71,7 @@ describe("staffMustSignInAgain", () => {
     await expect(
       staffMustSignInAgain(
         {
-          path: "/organization/invite-member",
+          path: "/organization/set-active",
           userId: "u1",
           sessionCreatedAt: hoursAgo(100),
           now: NOW,
@@ -79,5 +80,48 @@ describe("staffMustSignInAgain", () => {
       )
     ).resolves.toBe(false)
     expect(deps.isStaff).not.toHaveBeenCalled()
+  })
+})
+
+describe("sessionForRequestHook", () => {
+  const session = { user: { id: "u1" } }
+
+  it("uses the cookie session when there is one", async () => {
+    const fromHeaders = vi.fn()
+    await expect(
+      sessionForRequestHook({
+        fromCookie: async () => session,
+        headers: new Headers({ authorization: "Bearer other" }),
+        fromHeaders,
+      })
+    ).resolves.toBe(session)
+    expect(fromHeaders).not.toHaveBeenCalled()
+  })
+
+  it("finds a session sent as a bearer token, which the cookie read misses", async () => {
+    // The same session value, sent as a header with no cookie: the guard
+    // must still see who is asking.
+    const headers = new Headers({ authorization: "Bearer old-staff-session" })
+    const fromHeaders = vi.fn(async () => session)
+    await expect(
+      sessionForRequestHook({
+        fromCookie: async () => null,
+        headers,
+        fromHeaders,
+      })
+    ).resolves.toBe(session)
+    expect(fromHeaders).toHaveBeenCalledWith(headers)
+  })
+
+  it("answers nobody when the request carries no credentials", async () => {
+    const fromHeaders = vi.fn()
+    await expect(
+      sessionForRequestHook({
+        fromCookie: async () => null,
+        headers: new Headers(),
+        fromHeaders,
+      })
+    ).resolves.toBeNull()
+    expect(fromHeaders).not.toHaveBeenCalled()
   })
 })

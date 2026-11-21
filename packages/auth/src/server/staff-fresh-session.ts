@@ -14,7 +14,29 @@ export const NEW_CREDENTIAL_PATHS: ReadonlySet<string> = new Set([
   "/api-key/create",
   "/passkey/generate-register-options",
   "/passkey/verify-registration",
+  // Inviting someone into a workspace gives them a way in as well: an old
+  // staff session must not bring an outsider into the staff workspace.
+  "/organization/invite-member",
 ])
+
+/**
+ * The session a request carries, as the auth server's request hook must see
+ * it. A session sent as `Authorization: Bearer` is only turned into a cookie
+ * by a plugin that runs after the hook, so reading the cookie alone would
+ * find nothing and wave the request through: the headers are asked too.
+ */
+export async function sessionForRequestHook<S>(input: {
+  fromCookie: () => Promise<S | null | undefined>
+  headers: Headers | undefined
+  fromHeaders: (headers: Headers) => Promise<S | null | undefined>
+}): Promise<S | null> {
+  const viaCookie = await input.fromCookie()
+  if (viaCookie) return viaCookie
+  if (input.headers?.get("authorization")) {
+    return (await input.fromHeaders(input.headers)) ?? null
+  }
+  return null
+}
 
 async function isStaff(userId: string): Promise<boolean> {
   const [row] = await db()

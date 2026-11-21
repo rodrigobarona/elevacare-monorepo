@@ -296,9 +296,15 @@ branch|production`, `--since`, `--report`) and the target guard
     clinic. Reading the queue has no such limit. An API key has no sign-in
     moment and is still accepted: it is issued on purpose and revocable.
     So that an old staff session cannot make itself a new way in, staff
-    need a session from today to link a sign-in account, create an API key
-    or add a passkey (`staff-fresh-session.ts`, in the auth server's
-    request hook); nobody else is asked. This is a limit on the age of a
+    need a session from today to link a sign-in account, create an API key,
+    add a passkey or invite someone into a workspace
+    (`staff-fresh-session.ts`, in the auth server's request hook); nobody
+    else is asked. The hook also resolves a session sent as a bearer token,
+    which a cookie-only read would miss. Proven by unit tests of the two
+    functions; the hook itself has not been driven against a running auth
+    server, and whether an API key can reach `applications:review` at all
+    is unproven (the key plugin's field names may not match what
+    `api-auth.ts` reads; if so keys are refused, which is the safe side). This is a limit on the age of a
     session. It stands in for, and is weaker than, the phase file's
     enrolled second factor re-verified within 10 minutes, which is not
     built. Licence decisions do not have this check yet.

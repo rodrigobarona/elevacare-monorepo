@@ -66,6 +66,7 @@ import {
 import { passkeyOrigins } from "./passkey-origin"
 import {
   NEW_CREDENTIAL_PATHS,
+  sessionForRequestHook,
   staffMustSignInAgain,
 } from "./staff-fresh-session"
 import {
@@ -328,7 +329,11 @@ function createAuth() {
         // old staff session make itself a new way in, so staff do those on
         // a session from today too.
         if (NEW_CREDENTIAL_PATHS.has(ctx.path)) {
-          const current = await getSessionFromCtx(ctx)
+          const current = await sessionForRequestHook({
+            fromCookie: () => getSessionFromCtx(ctx),
+            headers: ctx.headers,
+            fromHeaders: (headers) => getAuth().api.getSession({ headers }),
+          })
           if (
             current &&
             (await staffMustSignInAgain({
