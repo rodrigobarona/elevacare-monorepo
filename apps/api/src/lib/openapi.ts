@@ -67,6 +67,10 @@ import {
   ListPayoutsResponseSchema,
   PayoutActionRequestSchema,
   PayoutActionResponseSchema,
+  AdminClinicQueueResponseSchema,
+  AdminClinicReviewResponseSchema,
+  ClinicDecisionRequestSchema,
+  ClinicDecisionResponseSchema,
   AdminPartnerQueueResponseSchema,
   AdminPartnerReviewResponseSchema,
   LicenceDecisionRequestSchema,
@@ -3105,6 +3109,85 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             ...stdWithNotFound,
             "403": {
               description: "Missing payouts:view_own or admin_payouts:read",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+      },
+      "/admin/clinics": {
+        get: {
+          operationId: "listClinicVerifications",
+          summary: "List the staff clinic verification queue",
+          description:
+            "Staff-only (`applications:review`). Filings of a clinic's legal name and NIF: `pending` first, oldest first (they wait on staff), then `needs_changes` (they wait on the clinic). `verified` says an earlier filing of the same clinic is already approved.",
+          tags: ["Admin"],
+          responses: {
+            "200": {
+              description: "Clinic verification queue",
+              content: {
+                "application/json": { schema: AdminClinicQueueResponseSchema },
+              },
+            },
+            ...stdStaffReview,
+          },
+        },
+      },
+      "/admin/clinics/{verificationId}": {
+        get: {
+          operationId: "getClinicVerification",
+          summary: "Get one clinic filing for review",
+          description:
+            "Staff-only (`applications:review`). The filing (legal name, NIF), the clinic's public profile and billing address, its owner, how many people it has, and its earlier filings.",
+          tags: ["Admin"],
+          requestParams: {
+            path: z.object({ verificationId: z.string().uuid() }),
+          },
+          responses: {
+            "200": {
+              description: "Clinic filing",
+              content: {
+                "application/json": { schema: AdminClinicReviewResponseSchema },
+              },
+            },
+            ...stdStaffReview,
+            "404": {
+              description: "VERIFICATION_NOT_FOUND",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+      },
+      "/admin/clinics/{verificationId}/decision": {
+        post: {
+          operationId: "decideClinicVerification",
+          summary: "Decide a pending clinic filing",
+          description:
+            "Staff-only (`applications:review`, revocable credential). `approve` needs both checks (legal entity and NIF found in the public register) and is the clinic's verification record. `needs_changes` and `reject` need a reason the clinic reads; after `needs_changes` the clinic files again. `submittedAt` is the filing staff reviewed: a refile since then answers 409 VERIFICATION_CHANGED. 409 VERIFICATION_ALREADY_DECIDED when the filing is not pending. 403 SELF_REVIEW for a member of that clinic. A clinic already verified under an earlier filing stays verified. Audited as clinic_verification.approved, .changes_requested or .rejected.",
+          tags: ["Admin"],
+          requestParams: {
+            path: z.object({ verificationId: z.string().uuid() }),
+          },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: ClinicDecisionRequestSchema },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Decision recorded",
+              content: {
+                "application/json": { schema: ClinicDecisionResponseSchema },
+              },
+            },
+            ...stdStaffReview,
+            "404": {
+              description: "VERIFICATION_NOT_FOUND",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "409": {
+              description:
+                "VERIFICATION_ALREADY_DECIDED or VERIFICATION_CHANGED",
               content: { "application/json": { schema: ErrorSchema } },
             },
           },

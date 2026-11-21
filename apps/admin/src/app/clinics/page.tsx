@@ -1,0 +1,83 @@
+import { getFormatter, getTranslations } from "next-intl/server"
+import { BuildingsIcon } from "@eleva/icons"
+import { DataTableShell } from "@eleva/ui/components/data-table-shell"
+import { EmptyState } from "@eleva/ui/components/empty-state"
+import { PageHeader } from "@eleva/ui/components/page-header"
+import { StatusPill } from "@eleva/ui/components/status-pill"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@eleva/ui/components/table"
+import { getAuthedApiClient } from "@/lib/server-api"
+import { FILING_STATUS_TONES } from "./filing-status-tones"
+
+export const dynamic = "force-dynamic"
+
+export default async function ClinicsPage() {
+  const api = await getAuthedApiClient()
+  const [{ items }, t, format] = await Promise.all([
+    api.admin.clinics.list(),
+    getTranslations("clinics"),
+    getFormatter(),
+  ])
+
+  return (
+    <div className="mx-auto max-w-5xl space-y-8">
+      <PageHeader title={t("title")} description={t("description")} />
+      {items.length === 0 ? (
+        <EmptyState
+          icon={<BuildingsIcon />}
+          title={t("emptyTitle")}
+          description={t("emptyBody")}
+        />
+      ) : (
+        <DataTableShell>
+          <Table aria-label={t("title")}>
+            <TableHeader>
+              <TableHead isRowHeader>{t("columns.clinic")}</TableHead>
+              <TableHead>{t("columns.legalName")}</TableHead>
+              <TableHead>{t("columns.state")}</TableHead>
+              <TableHead>{t("columns.waiting")}</TableHead>
+            </TableHeader>
+            <TableBody>
+              {items.map((item) => (
+                <TableRow
+                  key={item.verificationId}
+                  id={item.verificationId}
+                  href={`/clinics/${item.verificationId}`}
+                  className="group cursor-pointer"
+                >
+                  <TableCell>
+                    <span className="font-medium text-primary underline-offset-4 group-hover:underline">
+                      {item.clinicName}
+                    </span>
+                    {item.verified ? (
+                      <p className="text-sm text-muted-foreground">
+                        {t("alreadyVerified")}
+                      </p>
+                    ) : null}
+                  </TableCell>
+                  <TableCell>{item.legalName}</TableCell>
+                  <TableCell>
+                    <StatusPill tone={FILING_STATUS_TONES[item.status]}>
+                      {t(`states.${item.status}`)}
+                    </StatusPill>
+                  </TableCell>
+                  <TableCell>
+                    {format.dateTime(new Date(item.waitingSince), {
+                      dateStyle: "medium",
+                    })}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </DataTableShell>
+      )}
+    </div>
+  )
+}

@@ -1,7 +1,8 @@
 {
   "nav": {
     "overview": "Overview",
-    "partners": "Licence reviews"
+    "partners": "Licence reviews",
+    "clinics": "Clinic verifications"
   },
   "dashboard": {
     "welcome": "Eleva operator console",
@@ -73,6 +74,74 @@
         "forbidden": "You do not have access to this review.",
         "failed": "That did not work. Please try again."
       }
+    }
+  },
+  "clinics": {
+    "title": "Clinic verifications",
+    "description": "Check each clinic's legal name and NIF against the public register before it is shown as verified.",
+    "emptyTitle": "Nothing to verify",
+    "emptyBody": "When a clinic sends its legal name and NIF, it shows up here.",
+    "columns": {
+      "clinic": "Clinic",
+      "legalName": "Legal name",
+      "state": "State",
+      "waiting": "Waiting since"
+    },
+    "alreadyVerified": "Verified under an earlier filing",
+    "states": {
+      "pending": "To check",
+      "needs_changes": "Waiting on the clinic",
+      "approved": "Verified",
+      "rejected": "Rejected"
+    },
+    "detail": {
+      "back": "All clinic verifications",
+      "description": "{owner} · {email} · {people, plural, one {# person} other {# people}}",
+      "descriptionNoOwner": "{people, plural, one {# person} other {# people}}",
+      "verifiedNote": "This clinic is verified under an earlier filing and stays verified whatever you decide here.",
+      "snapshotTitle": "What the clinic sent",
+      "sentAt": "Sent {date}",
+      "reviewedAt": "Reviewed {date}",
+      "legalName": "Legal name",
+      "taxId": "NIF or VAT number",
+      "address": "Billing address",
+      "website": "Website",
+      "notGiven": "Not given",
+      "openRegister": "Open the company register",
+      "openVies": "Open VIES (EU VAT check)",
+      "lastReason": "Reason given",
+      "decisionTitle": "Your decision",
+      "checklistHelp": "Confirm both checks to approve.",
+      "checklist": {
+        "legal_entity_checked": "Legal name found in the public register, and the company is active",
+        "tax_id_checked": "NIF or VAT number belongs to that company"
+      },
+      "approve": "Approve",
+      "approving": "Approving...",
+      "reasonLabel": "Reason",
+      "reasonHelp": "Saved with the filing. The clinic reads it when it checks its verification.",
+      "needsChanges": "Ask for changes",
+      "reject": "Reject",
+      "saving": "Saving...",
+      "toasts": {
+        "approve": "Clinic verified",
+        "needs_changes": "Changes requested",
+        "reject": "Filing rejected"
+      },
+      "errors": {
+        "validation": "Check the form and try again.",
+        "changed": "The clinic sent new details. Reload to see them.",
+        "decided": "Someone already decided this filing.",
+        "self": "You cannot review a clinic you belong to.",
+        "forbidden": "You do not have access to this review.",
+        "failed": "That did not work. Please try again."
+      },
+      "notes": {
+        "approved": "This filing is approved: the clinic is verified.",
+        "needs_changes": "You asked for changes. The clinic sends its details again, and the new filing shows up in the queue.",
+        "rejected": "This filing was rejected. The clinic can send its details again."
+      },
+      "historyTitle": "Earlier filings"
     }
   },
   "staffEntry": {

@@ -32,6 +32,42 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-21: Staff verify a clinic's legal identity (12.1) (active)
+
+- Change (Phase 12, first slice beyond licence review): staff decide the
+  filings clinics send with `POST /teams/{teamId}/verification` (Phase
+  11.1). API: `GET /admin/clinics` (queue), `GET /admin/clinics/{verificationId}`
+  (one filing with the clinic's profile, billing address, owner and earlier
+  filings) and `POST /admin/clinics/{verificationId}/decision`. All need
+  `applications:review`; the decision needs a revocable credential. Admin
+  console: Clinic verifications (queue and filing page), in EN, PT and ES.
+- Decisions: `approve` needs both checks (legal name found in the public
+  register with the company active; the NIF belongs to that company) and is
+  the clinic's verification record, with who checked and when.
+  `needs_changes` and `reject` need a reason. Only a `pending` filing is
+  decided; after `needs_changes` the clinic files again. Staff decide what
+  they saw (`submittedAt`; a refile answers 409 `VERIFICATION_CHANGED`) and
+  never decide for a clinic they belong to (403 `SELF_REVIEW`).
+- A clinic already verified under an earlier filing stays verified whatever
+  is decided on a later one (decision log 2026-11-14: verified while an
+  approved filing exists).
+- Audited through `withPlatformAudit` as `clinic_verification.approved`,
+  `.changes_requested` and `.rejected`, in the clinic's org.
+- The queue follows the licence review screens on purpose, so staff learn
+  one pattern. Mobbin `13-admin` references 01 to 03.
+- Proof: `clinic-review.integration.test.ts` on the PR's Neon branch
+  (5 cases), `admin/clinics/route.test.ts` (11 cases), and
+  `e2e/admin-clinics.spec.ts` (opt-in, loopback: a staff workspace opens
+  the queue, approves one filing and sends another back). Captures:
+  `design-audit/captures/2026-11-21-admin-clinics-after/13-admin/`.
+- Not in this slice: telling the clinic about the decision (the kinds
+  `clinic.verified` and `clinic.rejected` need a migration of the
+  notification kinds; today the clinic reads the state and the reason from
+  `GET /teams/{teamId}`); a page in the clinic's own dashboard to file and
+  follow its verification; the Phase 12 staff access model (step-up, dual
+  control, the host-only admin cookie) and the other admin areas.
+- Owner: engineering
+
 ### 2026-11-21: A clinic's plan limits how many experts publish (11.3) (active)
 
 - Change (Phase 11.3): in a clinic, a member's first published service

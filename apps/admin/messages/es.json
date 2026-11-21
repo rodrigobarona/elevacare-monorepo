@@ -1,7 +1,8 @@
 {
   "nav": {
     "overview": "Vista General",
-    "partners": "Revisión de colegiaciones"
+    "partners": "Revisión de colegiaciones",
+    "clinics": "Verificación de clínicas"
   },
   "dashboard": {
     "welcome": "Consola del operador Eleva",
@@ -73,6 +74,74 @@
         "forbidden": "No tienes acceso a esta revisión.",
         "failed": "No se ha podido completar. Inténtalo de nuevo."
       }
+    }
+  },
+  "clinics": {
+    "title": "Verificación de clínicas",
+    "description": "Comprueba la razón social y el NIF de cada clínica en el registro público antes de mostrarla como verificada.",
+    "emptyTitle": "Nada que verificar",
+    "emptyBody": "Cuando una clínica envíe su razón social y su NIF, aparecerá aquí.",
+    "columns": {
+      "clinic": "Clínica",
+      "legalName": "Razón social",
+      "state": "Estado",
+      "waiting": "En espera desde"
+    },
+    "alreadyVerified": "Verificada con un envío anterior",
+    "states": {
+      "pending": "Por verificar",
+      "needs_changes": "A la espera de la clínica",
+      "approved": "Verificada",
+      "rejected": "Rechazado"
+    },
+    "detail": {
+      "back": "Todas las verificaciones de clínicas",
+      "description": "{owner} · {email} · {people, plural, one {# persona} other {# personas}}",
+      "descriptionNoOwner": "{people, plural, one {# persona} other {# personas}}",
+      "verifiedNote": "Esta clínica está verificada con un envío anterior y sigue verificada decidas lo que decidas aquí.",
+      "snapshotTitle": "Lo que envió la clínica",
+      "sentAt": "Enviado el {date}",
+      "reviewedAt": "Revisado el {date}",
+      "legalName": "Razón social",
+      "taxId": "NIF o número de IVA",
+      "address": "Dirección de facturación",
+      "website": "Sitio web",
+      "notGiven": "No indicado",
+      "openRegister": "Abrir el registro mercantil",
+      "openVies": "Abrir VIES (comprobación de IVA de la UE)",
+      "lastReason": "Motivo indicado",
+      "decisionTitle": "Tu decisión",
+      "checklistHelp": "Confirma las dos comprobaciones para aprobar.",
+      "checklist": {
+        "legal_entity_checked": "Razón social encontrada en el registro público, con la empresa activa",
+        "tax_id_checked": "El NIF o número de IVA pertenece a esa empresa"
+      },
+      "approve": "Aprobar",
+      "approving": "Aprobando...",
+      "reasonLabel": "Motivo",
+      "reasonHelp": "Se guarda con el envío. La clínica lo lee cuando consulta su verificación.",
+      "needsChanges": "Pedir cambios",
+      "reject": "Rechazar",
+      "saving": "Guardando...",
+      "toasts": {
+        "approve": "Clínica verificada",
+        "needs_changes": "Cambios solicitados",
+        "reject": "Envío rechazado"
+      },
+      "errors": {
+        "validation": "Revisa el formulario e inténtalo de nuevo.",
+        "changed": "La clínica ha enviado datos nuevos. Recarga para verlos.",
+        "decided": "Alguien ya ha decidido este envío.",
+        "self": "No puedes revisar una clínica de la que formas parte.",
+        "forbidden": "No tienes acceso a esta revisión.",
+        "failed": "No ha funcionado. Inténtalo de nuevo."
+      },
+      "notes": {
+        "approved": "Este envío está aprobado: la clínica está verificada.",
+        "needs_changes": "Has pedido cambios. La clínica envía sus datos de nuevo y el nuevo envío aparece en la cola.",
+        "rejected": "Este envío fue rechazado. La clínica puede enviar sus datos de nuevo."
+      },
+      "historyTitle": "Envíos anteriores"
     }
   },
   "staffEntry": {
