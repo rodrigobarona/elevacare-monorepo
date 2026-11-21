@@ -87,6 +87,7 @@ jobs:
       - run: pnpm check:route-guards
       - run: pnpm check:botid-coverage
       - run: pnpm test:scripts
+      - run: pnpm check:no-migration-imports
       - run: pnpm check:no-phi-logs
 
   typecheck:

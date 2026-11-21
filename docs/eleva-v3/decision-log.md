@@ -32,6 +32,41 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-21: The migration tools start with the guard (14.1) (active)
+
+- Change (Phase 14, task 1, the part with no data in it): the temporary
+  package `infra/migration` (`@eleva/infra-migration`) exists with the
+  command line (`--dry-run` by default, `--apply`, `--target
+branch|production`, `--since`, `--report`) and the target guard
+  (`assertMigrationTarget`). It has no mapper, opens no database and
+  writes nothing yet.
+- The guard decides before any connection is opened. A rehearsal
+  (`--target branch`, the default) needs a read-write endpoint of the v3
+  production Neon project on a branch that is not the default one, listed
+  in `MIGRATION_ALLOWED_TARGET_HOSTS`. The cutover (`--target production`)
+  needs the default branch, `MIGRATION_CONFIRM_PRODUCTION` equal to today's
+  date in UTC, and the operator typing the Neon project id. Source and
+  target must be different databases. A host of another project, a read
+  replica or an unclear answer from the Neon API is refused (exit 2).
+- Stricter than the phase file in one place: a dry run against production
+  asks for the same confirmation as a write, because it reads production
+  data.
+- `pnpm check:no-migration-imports` (CI, lint job) fails when a file or a
+  `package.json` under `apps/**` or `packages/**` depends on the package,
+  so removing it after cutover cannot break the product.
+- The Neon response fields the reader uses (`endpoints[].host`, `hosts.*`,
+  `project_id`, `branch_id`, `type`; `branch.default`, `branch.primary`)
+  were checked against Neon's API reference on 2026-11-21, not against a
+  live call: the first rehearsal is the live check.
+- Not in this slice (the rest of Phase 14): the `migration` schema tables,
+  the mappers and the consent mapping, checksums, verify and report, the
+  welcome campaign, the redirect map, reverse export and the three
+  rehearsals. The identity export and the vault read need the previous
+  provider to be live; the rehearsals need a dump of the MVP production
+  database; the consent mapping needs the DPO and the grandfathering table
+  needs finance.
+- Owner: engineering
+
 ### 2026-11-21: Two CI guards from Phase 13: BotID coverage and real copy (13.1) (active)
 
 - Change (Phase 13, tasks 2 and 6, the parts that need no staging run):

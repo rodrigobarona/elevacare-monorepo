@@ -15,6 +15,7 @@
     "check:route-guards": "node scripts/check-route-guards.mjs",
     "check:botid-coverage": "node scripts/check-botid-coverage.mjs",
     "test:scripts": "node --test scripts/*.test.mjs",
+    "check:no-migration-imports": "node scripts/check-no-migration-imports.mjs",
     "check:no-phi-logs": "node scripts/check-no-phi-logs.mjs",
     "check:google-oauth": "node scripts/check-google-oauth.mjs",
     "clear:better-auth-rate-limits": "node scripts/clear-better-auth-rate-limits.mjs",
