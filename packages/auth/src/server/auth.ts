@@ -66,7 +66,7 @@ import {
 import { passkeyOrigins } from "./passkey-origin"
 import {
   NEW_CREDENTIAL_PATHS,
-  sessionForRequestHook,
+  sessionsForRequestHook,
   staffMustSignInAgain,
 } from "./staff-fresh-session"
 import {
@@ -329,23 +329,24 @@ function createAuth() {
         // old staff session make itself a new way in, so staff do those on
         // a session from today too.
         if (NEW_CREDENTIAL_PATHS.has(ctx.path)) {
-          const current = await sessionForRequestHook({
+          const sessions = await sessionsForRequestHook({
             fromCookie: () => getSessionFromCtx(ctx),
             headers: ctx.headers,
             fromHeaders: (headers) => getAuth().api.getSession({ headers }),
           })
-          if (
-            current &&
-            (await staffMustSignInAgain({
-              path: ctx.path,
-              userId: current.user.id,
-              sessionCreatedAt: current.session.createdAt,
-            }))
-          ) {
-            throw new APIError("FORBIDDEN", {
-              message: "Sign in again to do this.",
-              code: "STEP_UP_REQUIRED",
-            })
+          for (const current of sessions) {
+            if (
+              await staffMustSignInAgain({
+                path: ctx.path,
+                userId: current.user.id,
+                sessionCreatedAt: current.session.createdAt,
+              })
+            ) {
+              throw new APIError("FORBIDDEN", {
+                message: "Sign in again to do this.",
+                code: "STEP_UP_REQUIRED",
+              })
+            }
           }
         }
       }),
@@ -422,9 +423,19 @@ function createAuth() {
           },
           // Nobody joins a closed practice (ADR-026): delegates removed at
           // closure cannot come back by any invitation or member path.
-          beforeCreateInvitation: async ({ invitation, organization }) => {
+          // Nobody is invited through Better Auth's own endpoint. A clinic
+          // invites through /teams/{teamId}/invitations, which keeps the
+          // rules that protect the person invited (a decline is respected,
+          // three emails a day at most, 50 addresses a day) and the audit
+          // rows. No other kind of organization invites yet; when one
+          // does, it gets an endpoint with the same rules.
+          beforeCreateInvitation: async ({ organization }) => {
             await refuseTeamOrg(organization)
-            await refuseClosedPractice(invitation.organizationId)
+            throw new APIError("FORBIDDEN", {
+              message:
+                "Invitations are sent by clinics, through POST /teams/{teamId}/invitations.",
+              code: TEAM_MEMBERS_API_REQUIRED,
+            })
           },
           // A clinic's people change only through /teams/{teamId}/…, which
           // carries the removal guards and the audit rows.

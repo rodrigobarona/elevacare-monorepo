@@ -20,22 +20,25 @@ export const NEW_CREDENTIAL_PATHS: ReadonlySet<string> = new Set([
 ])
 
 /**
- * The session a request carries, as the auth server's request hook must see
- * it. A session sent as `Authorization: Bearer` is only turned into a cookie
- * by a plugin that runs after the hook, so reading the cookie alone would
- * find nothing and wave the request through: the headers are asked too.
+ * Every session a request carries, as the auth server's request hook must
+ * see them. A session sent as `Authorization: Bearer` is only turned into a
+ * cookie by a plugin that runs after the hook, and it then replaces the
+ * cookie the hook saw. So a request can carry two sessions, and the
+ * endpoint may act for either: the guard is asked about both, never just
+ * the first one it finds.
  */
-export async function sessionForRequestHook<S>(input: {
+export async function sessionsForRequestHook<S>(input: {
   fromCookie: () => Promise<S | null | undefined>
   headers: Headers | undefined
   fromHeaders: (headers: Headers) => Promise<S | null | undefined>
-}): Promise<S | null> {
+}): Promise<S[]> {
+  const viaHeader = input.headers?.get("authorization")
+    ? await input.fromHeaders(input.headers)
+    : null
   const viaCookie = await input.fromCookie()
-  if (viaCookie) return viaCookie
-  if (input.headers?.get("authorization")) {
-    return (await input.fromHeaders(input.headers)) ?? null
-  }
-  return null
+  return [viaHeader, viaCookie].filter(
+    (session): session is NonNullable<typeof session> => Boolean(session)
+  ) as S[]
 }
 
 async function isStaff(userId: string): Promise<boolean> {

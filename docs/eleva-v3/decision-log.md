@@ -299,8 +299,10 @@ branch|production`, `--since`, `--report`) and the target guard
     need a session from today to link a sign-in account, create an API key,
     add a passkey or invite someone into a workspace
     (`staff-fresh-session.ts`, in the auth server's request hook); nobody
-    else is asked. The hook also resolves a session sent as a bearer token,
-    which a cookie-only read would miss. Proven by unit tests of the two
+    else is asked. A request can carry two sessions, one in a cookie and
+    one as a bearer token, and the endpoint may act for either: the hook
+    asks about both, so an old staff token cannot ride behind a fresh
+    cookie from another account. Proven by unit tests of the two
     functions; the hook itself has not been driven against a running auth
     server, and whether an API key can reach `applications:review` at all
     is unproven (the key plugin's field names may not match what
@@ -423,8 +425,16 @@ branch|production`, `--since`, `--report`) and the target guard
   and support has no tool yet to stop one clinic's invitations to an
   address; an address written another way (plus-addressing, dots) and a
   second clinic run by the same people are each a new address or a new
-  clinic to these rules; invitations to an expert practice go through
-  Better Auth and have none of these limits. For the DPO: whether someone
+  clinic to these rules. Better Auth's own invite endpoint, which had
+  none of these limits and sends the same email, now refuses every kind
+  of organization (403 `TEAM_MEMBERS_API_REQUIRED`): nothing in the
+  product called it, and the email's promise that declining stops a
+  clinic's invitations would not have held there. When a practice or an
+  academy invites people, it gets an endpoint with the same rules. A
+  decline lapses after 30 to 37 days, and only while the declined
+  invitation's row exists: its retention must stay above 37 days (the
+  proposal is 90). For the DPO: whether an objection may lapse at all, and
+  who answers a request to stop sent to support, and by when. For the DPO: whether someone
   with no account needs a way to object without signing up.
   The expert's "no seat left" message is an alert under the service, the
   over-limit line says what frees a seat, and the public footer named in
