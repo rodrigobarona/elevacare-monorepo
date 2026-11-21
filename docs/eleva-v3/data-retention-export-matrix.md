@@ -79,6 +79,12 @@ Use this document to answer:
   kept while the clinic exists (its reviewer cannot be deleted from under
   it). **For the DPO to decide:** how long rejected and superseded filings
   and their reasons are kept; nothing deletes them today
+- Notices: each decision is sent to the clinic's owner and admins by email
+  and inbox notice (11.5). The email carries the reason; the delivery log
+  follows the notification delivery period below (365 days) and stores no
+  email body. The reason is also held in the decision's
+  `domain_events_outbox` payload. **For the DPO to decide:** how long
+  published events are kept; nothing deletes them today
 - Audit access: yes for every decision (`clinic_verification.approved`,
   `.changes_requested`, `.rejected`), with the reason in the audit payload;
   staff opening a filing is not audited yet

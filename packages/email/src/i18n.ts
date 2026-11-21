@@ -119,6 +119,26 @@ const translations = {
       reasonLabel: "What we found",
       cta: "Review your licence",
     },
+    clinic: {
+      verifiedTitle: "Your clinic is verified",
+      verifiedSubtitle:
+        "Thank you. We found your clinic's legal name and tax number in the public register.",
+      needsChangesTitle: "We need a change to your clinic's legal details",
+      needsChangesSubtitle:
+        "We could not finish checking your clinic. Please correct the details and send them again.",
+      rejectedTitle: "We could not verify your clinic",
+      rejectedSubtitle:
+        "We checked the details you sent and could not confirm them. If something looks wrong, correct them and send them again.",
+      clinicLabel: "Clinic",
+      reasonLabel: "What we found",
+      needsChangesStillVerifiedSubtitle:
+        "We could not finish checking the new details you sent. Please correct them and send them again. Your clinic stays verified with the details we checked before.",
+      rejectedStillVerifiedTitle:
+        "We could not confirm your clinic's new details",
+      rejectedStillVerifiedSubtitle:
+        "We checked the new details you sent and could not confirm them. Your clinic stays verified with the details we checked before.",
+      cta: "Open Verification",
+    },
     payout: {
       paidTitle: "Payout sent",
       paidSubtitle: "Your payout is on the way to your bank account.",
@@ -159,6 +179,11 @@ const translations = {
       price: "Price",
     },
     subject: {
+      clinicVerified: "Your clinic is verified",
+      clinicNeedsChanges: "We need a change to your clinic's legal details",
+      clinicRejected: "We could not verify your clinic",
+      clinicRejectedStillVerified:
+        "We could not confirm your clinic's new details",
       partnerApproved: "Your licence is verified",
       partnerNeedsChanges: "We need a change to your licence details",
       partnerRejected: "We could not verify your licence",
@@ -318,6 +343,27 @@ const translations = {
       reasonLabel: "O que encontrámos",
       cta: "Rever a sua cédula",
     },
+    clinic: {
+      verifiedTitle: "A sua clínica está verificada",
+      verifiedSubtitle:
+        "Obrigado. Encontrámos a denominação social e o NIF da sua clínica no registo público.",
+      needsChangesTitle:
+        "Precisamos de uma alteração nos dados legais da sua clínica",
+      needsChangesSubtitle:
+        "Não conseguimos concluir a verificação da sua clínica. Corrija os dados e envie-os novamente.",
+      rejectedTitle: "Não conseguimos verificar a sua clínica",
+      rejectedSubtitle:
+        "Verificámos os dados que enviou e não os conseguimos confirmar. Se algo não estiver certo, corrija-os e envie-os novamente.",
+      clinicLabel: "Clínica",
+      reasonLabel: "O que encontrámos",
+      needsChangesStillVerifiedSubtitle:
+        "Não conseguimos concluir a verificação dos novos dados que enviou. Corrija-os e envie-os novamente. A sua clínica continua verificada com os dados que confirmámos antes.",
+      rejectedStillVerifiedTitle:
+        "Não conseguimos confirmar os novos dados da sua clínica",
+      rejectedStillVerifiedSubtitle:
+        "Verificámos os novos dados que enviou e não os conseguimos confirmar. A sua clínica continua verificada com os dados que confirmámos antes.",
+      cta: "Abrir a Verificação",
+    },
     payout: {
       paidTitle: "Pagamento enviado",
       paidSubtitle: "O seu payout está a caminho da conta bancária.",
@@ -358,6 +404,12 @@ const translations = {
       price: "Preço",
     },
     subject: {
+      clinicVerified: "A sua clínica está verificada",
+      clinicNeedsChanges:
+        "Precisamos de uma alteração nos dados legais da sua clínica",
+      clinicRejected: "Não conseguimos verificar a sua clínica",
+      clinicRejectedStillVerified:
+        "Não conseguimos confirmar os novos dados da sua clínica",
       partnerApproved: "A sua cédula está verificada",
       partnerNeedsChanges:
         "Precisamos de uma alteração nos dados da sua cédula",
@@ -518,6 +570,27 @@ const translations = {
       reasonLabel: "Lo que hemos encontrado",
       cta: "Revisar tu colegiación",
     },
+    clinic: {
+      verifiedTitle: "Tu clínica está verificada",
+      verifiedSubtitle:
+        "Gracias. Hemos encontrado la razón social y el NIF de tu clínica en el registro público.",
+      needsChangesTitle:
+        "Necesitamos un cambio en los datos legales de tu clínica",
+      needsChangesSubtitle:
+        "No hemos podido terminar de comprobar tu clínica. Corrige los datos y envíalos de nuevo.",
+      rejectedTitle: "No hemos podido verificar tu clínica",
+      rejectedSubtitle:
+        "Hemos revisado los datos que enviaste y no hemos podido confirmarlos. Si algo no está bien, corrígelos y envíalos de nuevo.",
+      clinicLabel: "Clínica",
+      reasonLabel: "Lo que hemos encontrado",
+      needsChangesStillVerifiedSubtitle:
+        "No hemos podido terminar de comprobar los nuevos datos que enviaste. Corrígelos y envíalos de nuevo. Tu clínica sigue verificada con los datos que comprobamos antes.",
+      rejectedStillVerifiedTitle:
+        "No hemos podido confirmar los nuevos datos de tu clínica",
+      rejectedStillVerifiedSubtitle:
+        "Hemos revisado los nuevos datos que enviaste y no hemos podido confirmarlos. Tu clínica sigue verificada con los datos que comprobamos antes.",
+      cta: "Abrir Verificación",
+    },
     payout: {
       paidTitle: "Pago enviado",
       paidSubtitle: "Tu payout está en camino a tu cuenta bancaria.",
@@ -558,6 +631,12 @@ const translations = {
       price: "Precio",
     },
     subject: {
+      clinicVerified: "Tu clínica está verificada",
+      clinicNeedsChanges:
+        "Necesitamos un cambio en los datos legales de tu clínica",
+      clinicRejected: "No hemos podido verificar tu clínica",
+      clinicRejectedStillVerified:
+        "No hemos podido confirmar los nuevos datos de tu clínica",
       partnerApproved: "Tu colegiación está verificada",
       partnerNeedsChanges:
         "Necesitamos un cambio en los datos de tu colegiación",
@@ -694,6 +773,20 @@ export interface EmailTranslations {
     reasonLabel: string
     cta: string
   }
+  clinic: {
+    verifiedTitle: string
+    verifiedSubtitle: string
+    needsChangesTitle: string
+    needsChangesSubtitle: string
+    rejectedTitle: string
+    rejectedSubtitle: string
+    needsChangesStillVerifiedSubtitle: string
+    rejectedStillVerifiedTitle: string
+    rejectedStillVerifiedSubtitle: string
+    clinicLabel: string
+    reasonLabel: string
+    cta: string
+  }
   payout: {
     paidTitle: string
     paidSubtitle: string
@@ -730,6 +823,10 @@ export interface EmailTranslations {
     price: string
   }
   subject: {
+    clinicVerified: string
+    clinicNeedsChanges: string
+    clinicRejected: string
+    clinicRejectedStillVerified: string
     partnerApproved: string
     partnerNeedsChanges: string
     partnerRejected: string

@@ -102,7 +102,7 @@
       "checking": {
         "pill": "Being checked",
         "title": "We are checking your details",
-        "body": "You do not need to do anything. This page shows the result as soon as the check is done."
+        "body": "You do not need to do anything. We email the clinic's owner and admins when the check is done, and this page shows the result."
       },
       "change-needed": {
         "pill": "Needs a change",
@@ -117,7 +117,7 @@
       "verified-checking": {
         "pill": "Verified",
         "title": "Your clinic is verified, and we are checking your new details",
-        "body": "Your clinic stays verified with the details we checked before. You do not need to do anything."
+        "body": "Your clinic stays verified with the details we checked before. You do not need to do anything: we email the clinic's owner and admins when the check is done."
       },
       "verified-change-needed": {
         "pill": "Verified",

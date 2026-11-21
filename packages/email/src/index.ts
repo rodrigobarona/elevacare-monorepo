@@ -5,6 +5,7 @@ export {
   renderBookingCancelled,
   renderBookingReminder,
   renderInvoiceClosedGate,
+  renderClinicDecision,
   renderPartnerDecision,
   renderPaymentPayoutNotice,
   type AuthEmailContent,
@@ -28,5 +29,7 @@ export type {
 } from "./templates"
 export { partnerDecisionCopy } from "./templates"
 export type { PartnerDecisionKind, PartnerDecisionProps } from "./templates"
+export { clinicDecisionCopy } from "./templates"
+export type { ClinicDecisionKind, ClinicDecisionProps } from "./templates"
 export type { EmailLocale } from "./i18n"
 export { getEmailTranslations } from "./i18n"

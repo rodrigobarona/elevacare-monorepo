@@ -102,7 +102,7 @@
       "checking": {
         "pill": "En comprobación",
         "title": "Estamos comprobando tus datos",
-        "body": "No tienes que hacer nada. Esta página mostrará el resultado en cuanto termine la comprobación."
+        "body": "No tienes que hacer nada. Cuando termine la comprobación, enviamos un correo a quien es titular o administra la clínica, y esta página muestra el resultado."
       },
       "change-needed": {
         "pill": "Necesita un cambio",
@@ -117,7 +117,7 @@
       "verified-checking": {
         "pill": "Verificada",
         "title": "Tu clínica está verificada y estamos comprobando los nuevos datos",
-        "body": "La clínica sigue verificada con los datos que comprobamos antes. No tienes que hacer nada."
+        "body": "La clínica sigue verificada con los datos que comprobamos antes. No tienes que hacer nada: cuando termine la comprobación, enviamos un correo a quien es titular o administra la clínica."
       },
       "verified-change-needed": {
         "pill": "Verificada",

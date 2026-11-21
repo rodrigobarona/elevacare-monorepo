@@ -1,10 +1,12 @@
 import {
   isBookingNotificationKind,
+  isClinicDecisionKind,
   isClosedGateKind,
   isPartnerDecisionKind,
   isPaymentPayoutNotificationKind,
   parseBookingNotificationPayload,
   sendBookingNotification,
+  sendClinicDecisionNotification,
   sendClosedGateInvoiceNotification,
   sendPartnerDecisionNotification,
   sendPaymentPayoutNotification,
@@ -73,6 +75,15 @@ export const handleSendNotification: DomainEventSubscriber = async (event) => {
   }
   if (isPartnerDecisionKind(event.type)) {
     await sendPartnerDecisionNotification({
+      id: event.id,
+      type: event.type,
+      orgId: event.orgId,
+      payload: event.payload,
+    })
+    return
+  }
+  if (isClinicDecisionKind(event.type)) {
+    await sendClinicDecisionNotification({
       id: event.id,
       type: event.type,
       orgId: event.orgId,

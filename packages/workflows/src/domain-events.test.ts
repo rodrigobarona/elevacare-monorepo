@@ -56,6 +56,11 @@ vi.mock("@eleva/db", () => ({
     "partner.needs_changes",
     "partner.rejected",
   ],
+  CLINIC_DECISION_EVENT_TYPES: [
+    "clinic.verified",
+    "clinic.needs_changes",
+    "clinic.rejected",
+  ],
   main: {
     domainEventDeliveries: {
       id: "id",

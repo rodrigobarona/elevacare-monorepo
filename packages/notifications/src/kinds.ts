@@ -147,6 +147,27 @@ export const NOTIFICATION_KINDS = {
     category: "system",
     templateId: "partner.rejected",
   },
+  "clinic.verified": {
+    channels: ["email", "in_app"],
+    urgency: "normal",
+    scope: "org",
+    category: "system",
+    templateId: "clinic.verified",
+  },
+  "clinic.needs_changes": {
+    channels: ["email", "in_app"],
+    urgency: "normal",
+    scope: "org",
+    category: "system",
+    templateId: "clinic.needs_changes",
+  },
+  "clinic.rejected": {
+    channels: ["email", "in_app"],
+    urgency: "normal",
+    scope: "org",
+    category: "system",
+    templateId: "clinic.rejected",
+  },
   "auth.magic_link": {
     channels: ["email"],
     urgency: "urgent",

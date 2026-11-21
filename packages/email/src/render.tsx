@@ -10,6 +10,10 @@ import {
   type PartnerDecisionProps,
 } from "./templates/partner-decision"
 import {
+  ClinicDecisionEmail,
+  type ClinicDecisionProps,
+} from "./templates/clinic-decision"
+import {
   BookingConfirmedEmail,
   type BookingConfirmedProps,
 } from "./templates/booking-confirmed"
@@ -100,6 +104,12 @@ export async function renderPartnerDecision(
   props: PartnerDecisionProps
 ): Promise<string> {
   return render(<PartnerDecisionEmail {...props} />)
+}
+
+export async function renderClinicDecision(
+  props: ClinicDecisionProps
+): Promise<string> {
+  return render(<ClinicDecisionEmail {...props} />)
 }
 
 export async function renderPaymentPayoutNotice(
