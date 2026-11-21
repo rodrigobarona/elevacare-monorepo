@@ -32,6 +32,30 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-21: Staff opening a clinic's filing is on record (12.2) (active)
+
+- Change (Phase 12.2): `GET /admin/clinics/{verificationId}` records
+  `clinic_verification.opened` each time a staff member opens a filing,
+  with who opened it, which filing, and the state it was in. The audit row
+  is written in the same transaction as the read (`withPlatformAudit`), so
+  a filing is never shown without its record. The payload holds the state
+  only, never the legal name, the number or the address.
+- Why: the page shows a clinic's legal details, its billing address and
+  its owner's name to any member of the staff workspace. 12.1 audited
+  decisions only and recorded the reads as to build before the first real
+  clinic files.
+- Every load counts, a reload included, and the page reloads after a
+  decision: the trail shows more openings than a person would count. The
+  queue (`GET /admin/clinics`) lists clinics by name and legal name and is
+  not audited per row.
+- Proof: the integration test asserts the row (reader, filing, state) and
+  that an unknown filing records nothing; the route test asserts the
+  reader is passed; `e2e/admin-clinics.spec.ts` (opt-in) asserts the rows
+  exist for one reader.
+- Not in this slice: auditing the queue; the same record for licence
+  reviews, if they do not have it; a view of this trail in the console.
+- Owner: engineering
+
 ### 2026-11-21: A clinic is told when staff decide its verification (11.5) (active)
 
 - Change (Phase 11.5): when staff approve, ask for a change or refuse a
@@ -336,8 +360,7 @@ branch|production`, `--since`, `--report`) and the target guard
     There is no supported way yet to take back an approval made by
     mistake (rejecting a later filing does not undo it); it needs a
     "withdraw verification" action.
-  - Staff opening a filing is not audited (only decisions are). To build
-    before the first real clinic files.
+  - Built since (12.2): staff opening a filing is audited.
   - Self-review is refused by current membership. A filing does not record
     who sent it, so a staff member who filed and then left the clinic is
     not caught; recording the filer needs a column.

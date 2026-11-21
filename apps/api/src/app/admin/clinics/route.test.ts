@@ -219,6 +219,10 @@ describe("/admin/clinics", () => {
     })
     const res = await detail()
     expect(res.status).toBe(200)
+    // The read is recorded for the staff member who opened the filing.
+    expect(mocks.getReview).toHaveBeenCalledWith(ID, {
+      actorUserId: "staff-1",
+    })
     await expect(res.json()).resolves.toMatchObject({
       verification: { submittedAt: SUBMITTED_AT, reviewedAt: null },
       owner: { name: "Ana Mota" },

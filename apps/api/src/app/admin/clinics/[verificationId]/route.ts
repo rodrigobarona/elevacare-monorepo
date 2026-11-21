@@ -45,7 +45,10 @@ export async function GET(
       { status: 422, headers }
     )
   }
-  const review = await getClinicVerificationReview(id.data)
+  // Recorded as clinic_verification.opened, with who opened it.
+  const review = await getClinicVerificationReview(id.data, {
+    actorUserId: staff.userId,
+  })
   if (!review) {
     return secureJson(
       { error: "VERIFICATION_NOT_FOUND", code: "VERIFICATION_NOT_FOUND" },

@@ -149,7 +149,9 @@ describe.skipIf(!enabled || !databaseUrl)(
         status: "pending",
         verified: false,
       })
-      const review = await getClinicVerificationReview(filing.id)
+      const review = await getClinicVerificationReview(filing.id, {
+        actorUserId: staff,
+      })
       expect(review).toMatchObject({
         verification: { taxId: "PT515001708", status: "pending" },
         clinic: { displayName: "Review Clinic", countryCode: "PT" },
@@ -158,7 +160,33 @@ describe.skipIf(!enabled || !databaseUrl)(
         verified: false,
         history: [],
       })
-      expect(await getClinicVerificationReview(randomUUID())).toBeNull()
+      expect(
+        await getClinicVerificationReview(randomUUID(), { actorUserId: staff })
+      ).toBeNull()
+      // Opening the filing is recorded: who looked, at which filing, in
+      // which state. An unknown filing shows nothing and records nothing.
+      const opened = await db()
+        .select({
+          action: main.auditOutbox.action,
+          entityId: main.auditOutbox.entityId,
+          actorUserId: main.auditOutbox.actorUserId,
+          payload: main.auditOutbox.payload,
+        })
+        .from(main.auditOutbox)
+        .where(
+          and(
+            eq(main.auditOutbox.orgId, clinicId),
+            eq(main.auditOutbox.action, "clinic_verification.opened")
+          )
+        )
+      expect(opened).toEqual([
+        {
+          action: "clinic_verification.opened",
+          entityId: filing.id,
+          actorUserId: staff,
+          payload: { status: "pending" },
+        },
+      ])
     })
 
     it("refuses the same details again, so the filing keeps its place", async () => {
@@ -355,7 +383,9 @@ describe.skipIf(!enabled || !databaseUrl)(
         decision: { decision: "reject", reason: "Not the registered name." },
       })
       expect(result).toEqual({ status: "rejected", verified: true })
-      const review = await getClinicVerificationReview(later.id)
+      const review = await getClinicVerificationReview(later.id, {
+        actorUserId: staff,
+      })
       expect(review?.verified).toBe(true)
       expect(review?.verification.reason).toBe("Not the registered name.")
       expect(review?.history.map((filing) => filing.status)).toEqual([
@@ -377,7 +407,9 @@ describe.skipIf(!enabled || !databaseUrl)(
             eq(main.clinicVerifications.status, "approved")
           )
         )
-      const first = await getClinicVerificationReview(approved!.id)
+      const first = await getClinicVerificationReview(approved!.id, {
+        actorUserId: staff,
+      })
       expect(first?.history).toEqual([])
     })
 

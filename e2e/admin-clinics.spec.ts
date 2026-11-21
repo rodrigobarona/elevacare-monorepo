@@ -315,6 +315,7 @@ test.describe("Phase 12 — staff verify a clinic", () => {
     const audit = (await sql`
       SELECT action FROM audit_outbox
       WHERE org_id = ${clinicId}::uuid AND action LIKE 'clinic_verification.%'
+        AND action <> 'clinic_verification.opened'
       ORDER BY action
     `) as { action: string }[]
     expect(audit.map((r) => r.action)).toEqual([
@@ -322,6 +323,14 @@ test.describe("Phase 12 — staff verify a clinic", () => {
       "clinic_verification.changes_requested",
       "clinic_verification.rejected",
     ])
+    // Every time staff opened a filing is on record, with who opened it.
+    const [opened] = (await sql`
+      SELECT count(*)::int AS times, count(DISTINCT actor_user_id)::int AS readers
+      FROM audit_outbox
+      WHERE org_id = ${clinicId}::uuid AND action = 'clinic_verification.opened'
+    `) as { times: number; readers: number }[]
+    expect(opened!.times).toBeGreaterThanOrEqual(2)
+    expect(opened!.readers).toBe(1)
     // Each decision queued its notice to the clinic, and a clinic that was
     // already verified is told it stays verified.
     const notices = (await sql`

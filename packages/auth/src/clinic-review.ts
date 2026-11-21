@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm"
 import { withPlatformAudit } from "@eleva/audit"
 import type { ClinicChecklistItem } from "@eleva/config/clinic-verification"
-import { auth, main, withPlatformAdminContext } from "@eleva/db"
+import { auth, main, withPlatformAdminContext, type Tx } from "@eleva/db"
 import { _emitClinicDecisionEvent } from "@eleva/db/queries/clinic-verifications"
 import type { ClinicBillingAddress } from "@eleva/db/schema"
 
@@ -146,13 +146,62 @@ const FILING_COLUMNS = {
   reason: main.clinicVerifications.reason,
 }
 
-/** One filing with what staff need to check it. Null when unknown. */
+/**
+ * One filing with what staff need to check it. Null when unknown.
+ *
+ * Opening a filing shows a staff member a clinic's legal details, its
+ * billing address and its owner's name, so each opening is recorded
+ * (`clinic_verification.opened`) in the same transaction as the read: who
+ * looked, at which filing, and when.
+ */
 export async function getClinicVerificationReview(
+  verificationId: string,
+  viewer: { actorUserId: string }
+): Promise<ClinicVerificationReview | null> {
+  const v = main.clinicVerifications
+  const [probe] = await withPlatformAdminContext((tx) =>
+    tx
+      .select({ orgId: v.orgId })
+      .from(v)
+      .where(eq(v.id, verificationId))
+      .limit(1)
+  )
+  if (!probe) return null
+  try {
+    return await withPlatformAudit(
+      { orgId: probe.orgId, actorUserId: viewer.actorUserId },
+      async (tx, ctx) => {
+        const review = await readClinicVerificationReview(tx, verificationId)
+        // Gone between the two reads: nothing was shown, nothing to record.
+        if (!review) throw new ClinicReviewError("VERIFICATION_NOT_FOUND")
+        await ctx.emit({
+          entity: "clinic_verification",
+          action: "opened",
+          entityId: verificationId,
+          // The state it was in when read; never the details themselves.
+          payload: { status: review.verification.status },
+        })
+        return review
+      }
+    )
+  } catch (err) {
+    if (
+      err instanceof ClinicReviewError &&
+      err.code === "VERIFICATION_NOT_FOUND"
+    ) {
+      return null
+    }
+    throw err
+  }
+}
+
+async function readClinicVerificationReview(
+  tx: Tx,
   verificationId: string
 ): Promise<ClinicVerificationReview | null> {
   const v = main.clinicVerifications
   const c = main.clinicProfiles
-  return withPlatformAdminContext(async (tx) => {
+  {
     const [row] = await tx
       .select({
         ...FILING_COLUMNS,
@@ -220,7 +269,7 @@ export async function getClinicVerificationReview(
           filing.submittedAt.getTime() < verification.submittedAt.getTime()
       ),
     }
-  })
+  }
 }
 
 /**
