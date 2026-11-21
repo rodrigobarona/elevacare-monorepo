@@ -117,7 +117,7 @@
       "approve": "Aprobar",
       "approving": "Aprobando...",
       "reasonLabel": "Motivo",
-      "reasonHelp": "Hace falta para pedir cambios o rechazar. La clínica lo lee en su página de Verificación, así que escríbelo para la clínica: sobre la empresa, sin nombres, correos ni teléfonos. Eleva todavía no envía correo a la clínica: escribe a quien es titular para que sepa que debe consultarla.",
+      "reasonHelp": "Hace falta para pedir cambios o rechazar. Eleva lo envía por correo a quien es titular o administra la clínica y lo muestra en la página de Verificación de la clínica, así que escríbelo para la clínica: sobre la empresa, sin nombres, correos ni teléfonos.",
       "needsChanges": "Pedir cambios",
       "reject": "Rechazar",
       "saving": "Guardando...",
@@ -135,9 +135,9 @@
         "failed": "No se ha podido completar. Inténtalo de nuevo."
       },
       "notes": {
-        "approved": "Este envío está aprobado: la clínica está verificada.",
-        "needs_changes": "Has pedido cambios. Escribe a la clínica para avisarla. Cuando envíe sus datos de nuevo, este envío vuelve a «Por verificar».",
-        "rejected": "Este envío fue rechazado. Escribe a la clínica para explicarle el motivo. Puede enviar sus datos de nuevo."
+        "approved": "Este envío está aprobado: la clínica está verificada. Eleva avisa por correo a quien es titular o administra la clínica.",
+        "needs_changes": "Has pedido cambios. Eleva avisa por correo a quien es titular o administra la clínica, con el motivo que has escrito. Cuando la clínica envíe sus datos de nuevo, este envío vuelve a «Por verificar».",
+        "rejected": "Este envío fue rechazado. Eleva avisa por correo a quien es titular o administra la clínica, con el motivo que has escrito. La clínica puede enviar sus datos de nuevo."
       },
       "historyTitle": "Envíos anteriores",
       "people": "{people, plural, one {# persona en la clínica} other {# personas en la clínica}}",

@@ -32,6 +32,67 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-21: A clinic is told when staff decide its verification (11.5) (active)
+
+- Change (Phase 11.5): when staff approve, ask for a change or refuse a
+  clinic's legal details, Eleva tells the clinic's owner and admins, each
+  with an email and an inbox notice in their own language. The email names
+  the clinic, shows what staff found (the reason) and links to
+  `/team/{slug}/verification`. The inbox notice and the subject line never
+  carry the reason.
+- A clinic that is already verified is told it stays verified when newer
+  details are sent back or refused; it is never told "we could not verify
+  your clinic".
+- How: `decideClinicVerification` writes a `clinic.verified`,
+  `clinic.needs_changes` or `clinic.rejected` domain event and its
+  `send-notification` delivery in the decision's own transaction, so a
+  decision is never recorded without its notice queued. The minutely
+  publisher sends it; `sendClinicDecisionNotification` sends one notice per
+  person with an idempotency key per event and person, so a retry never
+  sends twice. Kinds are org-scoped, category `system`, channels email and
+  in-app.
+- Who is told: members whose role is owner or admin at the time the notice
+  is sent, not at the time of the decision. Clinicians are not told.
+- Staff and clinic copy now say so: the staff reason help and the notes
+  under a decided filing, and the clinic's "being checked" standings.
+- Migration `0079_clinic_decision_kinds.sql` adds the three kinds to the
+  `notifications_kind` and `notification_deliveries_kind` checks. CI
+  applies it to preview branches only. **Operator step:** apply it to the
+  production Neon primary (unpooled URL) before this code is deployed
+  there. Without it the decision itself still succeeds, and the notice
+  fails on insert before any email leaves: it is retried ten times over
+  about 45 minutes and then marked `dead`. Nothing requeues a dead
+  delivery today; setting its row in `domain_event_deliveries` back to
+  `pending` with `attempts = 0` sends it.
+- One person's failed notice never keeps it from the others: each is sent
+  on its own and the event is retried for those who failed; people already
+  told are skipped by their idempotency key; the failure message names
+  how many failed and why. The inbox notice names the clinic. Both it and
+  the email link with the full address, because a notice is read from any
+  workspace and a link into another one must leave the page. The
+  button reads "Correct your details" or "See your clinic's verification"
+  by outcome, and the reason has the email's full width with its line
+  breaks.
+- Known, shared with every notice sender: a delivery the provider leaves
+  `held` counts as sent for the event, and no sweep picks up a delivery
+  stuck in `queued`.
+- Proof: unit tests for the sender (recipients, languages, reason kept off
+  subject and inbox, the stays-verified wording), the email (reason shown
+  as text, three languages), the kind and SQL check lockstep, and the
+  integration test on the PR's Neon branch, which asserts the queued event
+  and delivery for each decision. Not proven: a real email arriving in an
+  inbox (no end-to-end send was run), and the notice on staging.
+- For the DPO: the reason is also held in the `domain_events_outbox`
+  payload, which nothing deletes today (the same as a licence decision).
+  Recorded in the retention matrix.
+- Not in this slice: a notice to the reviewer; telling clinicians; a
+  notice when a clinic sends details (staff find them in the queue); SMS;
+  keeping the clinic's name as it was at the decision (the name is read
+  when the notice is sent, shown as one plain line of at most 80
+  characters, never a link); removing the reason from the event payload
+  once the notice is delivered.
+- Owner: engineering
+
 ### 2026-11-21: A clinic sends its legal details and follows the check (11.4) (active)
 
 - Change (Phase 11.4): `/team/{slug}/verification` in the clinic's
@@ -67,9 +128,9 @@ Each entry should include:
   `@eleva/config/clinic-verification`, read by the form, the page and the
   domain, with unit tests for all eight standings.
 - The staff reason is shown to the clinic as "What we found", so the staff
-  form now asks reviewers to write it for the clinic. Eleva still sends no
-  email about a decision: the staff form says so.
-- The page promises no waiting time and no email.
+  form now asks reviewers to write it for the clinic. This slice sent no
+  email about a decision; 11.5 (above) sends one.
+- The page promises no waiting time.
 - Proof: `e2e/team-verification.spec.ts` (opt-in, loopback, run
   2026-11-21): send, a refused number, the disabled resend, a change asked
   with its reason, corrected and sent again, verified, then new details
@@ -77,7 +138,8 @@ Each entry should include:
   covers the unchanged refile. Captures:
   `design-audit/captures/2026-11-21-team-verification-after/11-team/`.
   Mobbin `11-team` references 10 to 12.
-- Not in this slice: an email or inbox notice when staff decide; a hint on
+- Not in this slice: an email or inbox notice when staff decide (built in
+  11.5); a hint on
   the clinic's Overview when verification needs the clinic; showing the
   verified legal name when newer details are being checked.
 - Owner: engineering

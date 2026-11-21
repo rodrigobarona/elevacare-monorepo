@@ -10,9 +10,11 @@ import {
   type PaymentPayoutNotificationPayload,
 } from "@eleva/billing/notification-events"
 import {
+  CLINIC_DECISION_EVENT_TYPES,
   main,
   PARTNER_DECISION_EVENT_TYPES,
   withPlatformAdminContext,
+  type ClinicDecisionPayload,
   type PartnerDecisionPayload,
   type Tx,
 } from "@eleva/db"
@@ -33,6 +35,7 @@ export const DOMAIN_EVENT_TYPES = [
   ...PAYMENT_PAYOUT_NOTIFICATION_EVENT_TYPES,
   ...CLOSED_GATE_INVOICE_EVENT_TYPES,
   ...PARTNER_DECISION_EVENT_TYPES,
+  ...CLINIC_DECISION_EVENT_TYPES,
 ] as const
 
 export type DomainEventType = (typeof DOMAIN_EVENT_TYPES)[number]
@@ -85,6 +88,12 @@ export type DomainEvent =
       idempotencyKey: string
       payload: PartnerDecisionPayload
     }
+  | {
+      type: (typeof CLINIC_DECISION_EVENT_TYPES)[number]
+      orgId: string
+      idempotencyKey: string
+      payload: ClinicDecisionPayload
+    }
 
 const BOOKING_NOTIFICATION_SUBSCRIBERS = {
   "booking.confirmed": [SEND_NOTIFICATION_SUBSCRIBER],
@@ -114,6 +123,9 @@ export const DEFAULT_SUBSCRIBERS: Record<DomainEventType, readonly string[]> = {
   "partner.approved": [SEND_NOTIFICATION_SUBSCRIBER],
   "partner.needs_changes": [SEND_NOTIFICATION_SUBSCRIBER],
   "partner.rejected": [SEND_NOTIFICATION_SUBSCRIBER],
+  "clinic.verified": [SEND_NOTIFICATION_SUBSCRIBER],
+  "clinic.needs_changes": [SEND_NOTIFICATION_SUBSCRIBER],
+  "clinic.rejected": [SEND_NOTIFICATION_SUBSCRIBER],
 }
 
 export const OBSERVATIONAL_SUBSCRIBERS = ["logger"] as const

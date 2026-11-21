@@ -210,6 +210,11 @@ export {
   type PartnerDecisionEventType,
   type PartnerDecisionPayload,
 } from "./queries/partner-applications"
+export {
+  CLINIC_DECISION_EVENT_TYPES,
+  type ClinicDecisionEventType,
+  type ClinicDecisionPayload,
+} from "./queries/clinic-verifications"
 export type {
   ExpertCredential,
   ExpertSocialLink,

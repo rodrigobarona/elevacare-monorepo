@@ -117,7 +117,7 @@
       "approve": "Approve",
       "approving": "Approving...",
       "reasonLabel": "Reason",
-      "reasonHelp": "Needed to ask for changes or reject. The clinic reads it on its Verification page, so write it for the clinic: about the company, without names, emails or phone numbers. Eleva does not email the clinic yet: write to the owner so they know to look.",
+      "reasonHelp": "Needed to ask for changes or reject. Eleva emails it to the clinic's owner and admins and shows it on the clinic's Verification page, so write it for the clinic: about the company, without names, emails or phone numbers.",
       "needsChanges": "Ask for changes",
       "reject": "Reject",
       "saving": "Saving...",
@@ -135,9 +135,9 @@
         "failed": "That did not work. Please try again."
       },
       "notes": {
-        "approved": "This filing is approved: the clinic is verified.",
-        "needs_changes": "You asked for changes. Write to the clinic so it knows. When it sends its details again, this filing comes back as “To check”.",
-        "rejected": "This filing was rejected. Write to the clinic so it knows why. It can send its details again."
+        "approved": "This filing is approved: the clinic is verified. Eleva tells the clinic's owner and admins by email.",
+        "needs_changes": "You asked for changes. Eleva tells the clinic's owner and admins by email, with your reason. When the clinic sends its details again, this filing comes back as “To check”.",
+        "rejected": "This filing was rejected. Eleva tells the clinic's owner and admins by email, with your reason. The clinic can send its details again."
       },
       "historyTitle": "Earlier filings",
       "people": "{people, plural, one {# person in the clinic} other {# people in the clinic}}",

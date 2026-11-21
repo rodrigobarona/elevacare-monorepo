@@ -2,6 +2,7 @@ import { and, asc, desc, eq, inArray, sql } from "drizzle-orm"
 import { withPlatformAudit } from "@eleva/audit"
 import type { ClinicChecklistItem } from "@eleva/config/clinic-verification"
 import { auth, main, withPlatformAdminContext } from "@eleva/db"
+import { _emitClinicDecisionEvent } from "@eleva/db/queries/clinic-verifications"
 import type { ClinicBillingAddress } from "@eleva/db/schema"
 
 /**
@@ -40,9 +41,21 @@ export class ClinicReviewError extends Error {
 }
 
 const OUTCOMES = {
-  approve: { status: "approved", auditAction: "approved" },
-  needs_changes: { status: "needs_changes", auditAction: "changes_requested" },
-  reject: { status: "rejected", auditAction: "rejected" },
+  approve: {
+    status: "approved",
+    event: "clinic.verified",
+    auditAction: "approved",
+  },
+  needs_changes: {
+    status: "needs_changes",
+    event: "clinic.needs_changes",
+    auditAction: "changes_requested",
+  },
+  reject: {
+    status: "rejected",
+    event: "clinic.rejected",
+    auditAction: "rejected",
+  },
 } as const
 
 type VerificationStatus = main.ClinicVerification["status"]
@@ -277,6 +290,15 @@ export async function decideClinicVerification(input: {
         .from(v)
         .where(and(eq(v.orgId, orgId), eq(v.status, "approved")))
         .limit(1)
+      // Queued with the decision: the clinic's owner and admins are told.
+      await _emitClinicDecisionEvent(tx, {
+        orgId,
+        type: outcome.event,
+        verificationId: filing.id,
+        reason,
+        verified: Boolean(approved),
+        reviewedAt,
+      })
       await ctx.emit({
         entity: "clinic_verification",
         action: outcome.auditAction,

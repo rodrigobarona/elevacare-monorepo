@@ -5,6 +5,7 @@ import { EmailButton } from "./email-button"
 import { EmailBodyText, EmailHeading } from "./email-heading"
 import { EmailCard } from "./email-card"
 import type { EmailLocale } from "../i18n"
+import { emailSafeName } from "../safe-name"
 
 export type AuthEmailKind =
   | "verify-email"
@@ -26,20 +27,6 @@ export interface AuthTransactionalProps {
 }
 
 type AuthCopy = { title: string; body: string; action: string; ignore: string }
-
-/** Names shown in an email: one line, no links, at most 80 characters. */
-function emailSafeName(value: string | undefined): string | null {
-  const name = (value ?? "")
-    .replace(/https?:\/\/\S*|www\.\S*/gi, "")
-    // Control and invisible formatting characters (bidi overrides too).
-    .replace(/[\p{Cc}\p{Cf}<>]/gu, " ")
-    // "name.tld" would be turned into a link by mail apps: break the dot.
-    .replace(/([\p{L}\d])\.(?=[\p{L}\d])/gu, "$1 ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 80)
-  return name || null
-}
 
 /**
  * The invitation names who invites and where, and says why the person got
