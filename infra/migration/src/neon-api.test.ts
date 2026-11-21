@@ -66,6 +66,36 @@ describe("createNeonEndpointResolver", () => {
     )
   })
 
+  it("finds a pooled host when the API lists only the direct one", async () => {
+    // `hosts` is optional in the answer. Without this, a pooled host of the
+    // project would look like a host of another project.
+    const bare = {
+      endpoints: endpoints.endpoints.map(({ hosts: _hosts, ...rest }) => rest),
+    }
+    const fetchFn = vi.fn(async (url: string | URL | Request) => {
+      const body = String(url).includes("/branches/")
+        ? {
+            branch: {
+              id: "br-young-forest-a5b6c7d8",
+              name: "dev",
+              default: false,
+            },
+          }
+        : bare
+      return new Response(JSON.stringify(body))
+    }) as unknown as typeof fetch
+    await expect(resolver(fetchFn)(POOLED)).resolves.toMatchObject({
+      endpointId: "ep-cool-darkness-a5b6c7d8",
+      isReadWrite: true,
+    })
+    // A read replica found the same way is still not writable.
+    await expect(
+      resolver(fetchFn)(
+        READ_ONLY.replace("ep-replica-b1b2c3d4", "ep-replica-b1b2c3d4-pooler")
+      )
+    ).resolves.toMatchObject({ isReadWrite: false })
+  })
+
   it("says when the branch is the default one, and when the host is a replica", async () => {
     const fetchFn = api({ default: true, primary: true })
     await expect(resolver(fetchFn)(HOST)).resolves.toMatchObject({

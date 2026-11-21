@@ -56,6 +56,7 @@ for (const top of SCANNED) {
     }
     for (const field of [
       "dependencies",
+      "optionalDependencies",
       "devDependencies",
       "peerDependencies",
     ]) {

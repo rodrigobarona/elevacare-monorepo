@@ -36,10 +36,11 @@ Each entry should include:
 
 - Change (Phase 14, task 1, the part with no data in it): the temporary
   package `infra/migration` (`@eleva/infra-migration`) exists with the
-  command line (`--dry-run` by default, `--apply`, `--target
+  argument parser (`--dry-run` by default, `--apply`, `--target
 branch|production`, `--since`, `--report`) and the target guard
-  (`assertMigrationTarget`). It has no mapper, opens no database and
-  writes nothing yet.
+  (`assertMigrationTarget`), both covered by tests (74 cases). There is no
+  command to run yet: nothing calls the two, no mapper exists, no database
+  is opened and nothing is written.
 - The guard decides before any connection is opened. A rehearsal
   (`--target branch`, the default) needs a read-write endpoint of the v3
   production Neon project on a branch that is not the default one, listed
@@ -48,13 +49,28 @@ branch|production`, `--since`, `--report`) and the target guard
   date in UTC, and a person at the terminal typing the Neon project id.
   Source and target must be different databases, and the source is never a
   database of the v3 project. A host of another project, a read replica or
-  an unclear answer from the Neon API is refused (exit 2).
-- A connection URL may carry `sslmode` and `channel_binding` only. A
+  an unclear answer from the Neon API is refused. A pooled host and its
+  direct host are matched as one endpoint, so a pooled v3 host given as
+  the source is refused even when Neon lists only the direct host.
+- A connection URL may carry `sslmode` (`require` or `verify-full`) and
+  `channel_binding` (`require` or `prefer`) only, each once: a value that
+  turns encryption off is refused, and so is a password that starts with
+  `endpoint=` or `project=`, which Neon reads as the endpoint to connect
+  to. A
   driver also follows `host`, `hostaddr`, `port` and `options` given as
   parameters, which would send it to a different database than the one
   that was checked, so every other parameter is refused. The guard returns
   the two connection strings rebuilt from what it checked, and a run
   connects with those and nothing else.
+- Each refusal says what to do next, and none prints a URL parameter or a
+  host it could not validate (an unencoded character in a password would
+  put part of it there). The README lists every refusal code.
+- For the first tool that connects: one `connect(approved)` that alone
+  imports the driver, a lint rule against reading `*DATABASE_URL` from the
+  environment anywhere else in the package, the Neon project id pinned in
+  code, and who may run a rehearsal and when its branch and dump are
+  deleted (a rehearsal branch is a full copy of production personal data;
+  for the DPO).
 - Stricter than the phase file in one place: a dry run against production
   asks for the same confirmation as a write, because it reads production
   data.

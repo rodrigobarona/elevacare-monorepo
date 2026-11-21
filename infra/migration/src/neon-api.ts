@@ -1,5 +1,5 @@
 import { z } from "zod"
-import type { NeonEndpointInfo } from "./guard"
+import { directHost, type NeonEndpointInfo } from "./guard"
 
 /**
  * Reads the Neon API (v2) for the migration guard: which endpoint of the
@@ -71,9 +71,12 @@ export function createNeonEndpointResolver(
     const { endpoints } = EndpointsSchema.parse(
       await get(`/projects/${project}/endpoints`)
     )
+    // A pooled host and its direct host are one endpoint. They are matched
+    // as one, so a pooled host is found even when the API lists only the
+    // direct one (`hosts` is optional in the answer).
     const endpoint = endpoints.find((candidate) =>
       [candidate.host, ...Object.values(candidate.hosts ?? {})].some(
-        (name) => name?.toLowerCase() === wanted
+        (name) => name && directHost(name) === directHost(wanted)
       )
     )
     if (!endpoint) return null
@@ -101,7 +104,7 @@ export function createNeonEndpointResolver(
           endpoint.host,
           endpoint.hosts?.read_write_host,
           endpoint.hosts?.read_write_pooled_host,
-        ].some((name) => name?.toLowerCase() === wanted),
+        ].some((name) => name && directHost(name) === directHost(wanted)),
     }
   }
 }
