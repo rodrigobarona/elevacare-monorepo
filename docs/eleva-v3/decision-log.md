@@ -32,6 +32,40 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-21: The rest of the roadmap, reviewed and re-planned (proposed)
+
+- What: a review of phases 11 to 15 against the code on `main` at `58816804`, and a plan for
+  what is left, in
+  [`execution-plan/remaining-roadmap.md`](./execution-plan/remaining-roadmap.md). The plan's
+  README section 3 and the five phase files carry a dated status and a list of where each file
+  no longer matches the code.
+- Status is `proposed`: the order of slices and waves is a proposal. The questions in its
+  section 4 (founder, DPO, counsel, accountant, operator) are open, and nothing in it decides
+  them.
+- How: four reviewer agents read phases 11 to 14 item by item against the code; current SDK
+  docs came from Context7 through its command-line tool (its MCP server was not connected in the
+  session); thirty Mobbin references were saved for the screens still to build (pull request
+  #454). Six findings were checked again by hand before being written down. Nothing was run
+  against a database, a browser or a vendor account.
+- Found, and now slices: API-key sign-in reads a field the installed Better Auth plugin no
+  longer returns (12.5); a new clinic's subscription has no seat item, so Stripe never receives
+  the seat count (11.7); "Try again" on the shared error page has no handler under Next 16.4.5
+  (13.2); a slow rate-limit store lets public requests through (13.3).
+- Found, and now questions: the Phase 12 file requires impersonation, which the code refuses on
+  purpose (F-04); phases 14 and 15 never schedule a full load of the MVP's data into production
+  (F-10); nobody has confirmed whether the production MVP runs Clerk or WorkOS (F-02); Phase 15
+  expects a platform-fee invoice at launch while issuing is closed (F-01); the plan says a
+  human approves every pull request and those of 2026-11-21 merged without one (F-13).
+- Rules taken from the night of 2026-11-21: one concern per pull request; three open at most
+  (the Neon branch limit); no branch stacked more than one deep (this log conflicts on every
+  merge otherwise); run the tests of every package a change touches before opening the pull
+  request; a migration is not shipped until it runs on production.
+- Counts: 12 slices left in Phase 11, 21 in Phase 12, 33 in Phase 13, 24 in Phase 14, 8 in
+  Phase 15, and 21 of the design plan's 39.
+- Not in this change: any of the slices; any change to the phase files' scope beyond the dated
+  status blocks; a decision on any open question.
+- Owner: engineering (the plan); founder (its order and every F question)
+
 ### 2026-11-21: A licence decision needs a session from today (12.4) (active)
 
 - Change (Phase 12.4): approving, sending back or rejecting an expert's

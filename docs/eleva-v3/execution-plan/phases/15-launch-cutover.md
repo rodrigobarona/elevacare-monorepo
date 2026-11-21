@@ -8,6 +8,22 @@
 | Touches    | `docs/eleva-v3/launch-readiness-checklist.md`, `apps/docs` (compliance pages), `infra/**` (production apply scripts), Vercel project settings (domains, env), DNS, Stripe webhook endpoints, Daily/Resend/Twilio production keys              |
 | Exit gate  | Production traffic on v3 at `eleva.care`; migrated experts sign in and see history; 7-day SLO >= 99.9% API availability, zero P1 incidents; rollback documented and rehearsed; WorkOS cancelled only after final record checksum verification |
 
+## Status on 2026-11-21
+
+Not started. The slices are in
+[`remaining-roadmap.md`](../remaining-roadmap.md#phase-15-launch): 15.1 to 15.7, then the
+operated cutover.
+
+Where this file no longer matches what exists:
+
+- The live €1 test expects a platform-fee invoice while issuing is closed on purpose. The founder
+  decides whether launch waits for invoicing (roadmap, F-01).
+- `sessions` is still in the list of domains to move; that address is deferred.
+- The regulator pages belong in `@eleva/content`, rendered by `apps/web`, not in
+  `apps/docs/compliance/portugal`.
+- `betterstack:setup`, `daily:setup`, `resend:setup` and `twilio:setup` do not exist yet (15.3).
+- Phase 14 and this file never schedule a full load into production, only the final changes.
+
 ## Why this phase exists
 
 ADR-012 (Portugal-first) and ADR-019 (cutover) require a formal gate. This phase verifies every

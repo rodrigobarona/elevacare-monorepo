@@ -8,6 +8,26 @@
 | Touches    | `packages/observability/**`, `apps/*/src/proxy.ts`, `apps/api/src/lib/{rate-limit,bot-protection,security-headers}.ts`, `packages/analytics/**` (new, PostHog) or `packages/observability`, `apps/web` (GA4 + consent banner), `e2e/**`, `.github/workflows/**`, all `messages/*.json`, `docs/eleva-v3/**` checklists                                            |
 | Exit gate  | `security-hardening-checklist.md` fully ticked; Sentry (EU) redaction verified; BetterStack heartbeats for every QStash job + status page live; PostHog EU with consent; i18n parity 100% for `pt/en/es`; Core Web Vitals budgets green on staging; full Playwright suites (auth, booking, member, expert onboarding, team, admin, video join) green on every PR |
 
+## Status on 2026-11-21
+
+Slice 13.1 is on `main` (two CI guards). Dependency audit, Renovate, security headers and
+server-side Sentry were already there. The slices still to build, by group, are in
+[`remaining-roadmap.md`](../remaining-roadmap.md#phase-13-hardening): 13.2 to 13.34. Several are
+small and worth doing before Phase 12 ends (the two fixes, tests that run signed in on every
+pull request, Sentry that knows the release).
+
+Where this file no longer matches what was built or decided (the code and the decision log win):
+
+- The work ships as one-concern slices, not two large pull requests.
+- Join routes are `/expert/{slug}/sessions/{id}/join`, `/space/sessions/{id}/join` and
+  `/join/{id}`. i18n helpers are in `@eleva/config/i18n`. Storage is R2, not Vercel Blob.
+- The consent banner is `@eleva/consent` (c15t), with `necessary` and `marketing` only.
+- The `sessions.eleva.care` address is deferred: no monitor and no policy entry for it.
+- Sentry uses one DSN with an app tag, and the marketing apps skip it on purpose.
+- Rate limits in code are 10 and 60 a minute; this file says 20 and 120, and `AGENTS.md` forbids
+  weakening the public 10 (roadmap, F-08).
+- AI endpoints need a session, so they are not BotID targets.
+
 ## Why this phase exists
 
 Before migrating real users, the platform must be secure, observable and measurable. Most items

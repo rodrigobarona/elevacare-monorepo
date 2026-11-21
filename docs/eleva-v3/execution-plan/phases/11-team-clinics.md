@@ -8,6 +8,31 @@
 | Touches    | `apps/team/**`, `apps/web` (clinic public page), `packages/billing/src/server/{subscriptions,provisioning}.ts`, `packages/accounting` (Tier 1b activation), `packages/db/src/schema/main/{clinic-profiles,clinic-members}.ts`, `apps/api/src/app/{teams,billing}/**`, `packages/auth` (invitations, team roles), `infra/stripe/**` (products/prices/entitlements) |
 | Exit gate  | A clinic admin creates a Team, subscribes (Embedded Checkout), invites 3 experts who accept and appear on the clinic page; members book a clinic expert with 0% commission; seat changes update Stripe; monthly SaaS invoice (`ELEVA-SAAS-{YYYY}`) fires on `invoice.finalized`; Customer Portal manages the plan                                                 |
 
+## Status on 2026-11-21
+
+Slices 11.1 to 11.6 are on `main`; the phase is not complete. The slices still to build, in
+order, are in [`remaining-roadmap.md`](../remaining-roadmap.md#6-phase-11-clinics): 11.7 to
+11.18, plus four items that wait on a person.
+
+Where this file no longer matches what was built or decided (the code and the decision log win):
+
+- A clinic is verified when an `approved` row exists in `clinic_verifications`, which holds the
+  legal name and the tax number. There is no `verification_status` column, and the flow has a
+  "needs changes" state.
+- Invitations go through `POST /teams/{teamId}/invitations` in `@eleva/auth`. Better Auth's own
+  invite endpoint is refused for every organization. Only the owner invites an admin. Limits: 200
+  people, 50 addresses a day, eight hours between emails to one address, 30 days after a decline.
+- The accept page is `/accept-invitation`. The clinic's tools live at `/team/{slug}` and admit
+  only clinic admins; clinicians work at `/expert/{slug}`.
+- The seat limit takes an advisory lock, not `FOR UPDATE`. A clinic with no current plan counts as
+  Starter. The seat price is a fixed per-seat price, not a metered one.
+- The schema has `tier` and `seatItemId`, not `plan_key` and `seat_quantity`.
+  `bookings.attributed_org_id` and `payout_mode` exist and nothing writes or reads them yet.
+- The clinic plan's invoice (Tier 1b, and the invoice line of the exit gate) depends on issuing,
+  which is closed on purpose.
+- Stripe's customer portal cannot change a subscription with two products, which a clinic's has:
+  a plan change is built on our side.
+
 ## Why this phase exists
 
 Clinics are the SaaS revenue line (ADR-005/016): per-seat tiers, no booking commission. Better

@@ -8,6 +8,32 @@
 | Touches    | `infra/migration/**` (new package `@eleva/infra-migration`), `packages/db` (staging tables `migration_*`), `apps/web` redirects (`next.config` / gateway), `packages/email` (welcome/set-password campaign), `docs/eleva-v3/operator-tasks/**`                                           |
 | Exit gate  | Three full rehearsals on Neon branches of a production snapshot with row-count and checksum reports within tolerance; every migrated expert can sign in via magic link and sees history; records decrypted from WorkOS Vault and re-encrypted; Stripe objects linked; rollback rehearsed |
 
+## Status on 2026-11-21
+
+Slice 14.1 is on `main`: the target guard in `infra/migration`. No tool reads or writes data yet.
+The slices still to build, in a safe order, are in
+[`remaining-roadmap.md`](../remaining-roadmap.md#phase-14-moving-the-mvps-data): 14.2 to 14.25
+and two operator steps. The first blocker is access to the MVP database and knowing what
+production runs (roadmap, F-02), not code.
+
+Where this file no longer matches what exists (checked against the MVP snapshot in
+`_context/clone-repo/eleva-care-app`):
+
+- **No step loads the full data into production.** This file never applies to production, and
+  Phase 15 runs only the changes since a date. The runbook needs a dated full-load step.
+- "Changes since" by `updated_at` does not fit every table: availability rows have no timestamps,
+  and the MVP deletes events for good.
+- MVP roles are `expert_top`, `expert_community`, `expert_lecturer`, with a `roles` table.
+- Fields this file maps do not exist in the snapshot: event location and languages, profile
+  country and languages, `marketing_opt_in`, a booking health consent, and `locale`, `timezone`,
+  `name` and `emailVerified` on `users`. There is no consent table.
+- Targets moved: `commission_override_bps` is on `billing_customers`; `bookings` has
+  `session_mode`, not `location_id`; `/app/*` is `/space`; expert tools are `/expert/{slug}`.
+- Files (profile pictures, résumés) are not in this phase at all; storage is R2 through
+  `@eleva/storage`.
+- "Sample logins on staging" cannot work as written: rehearsal branches live in the production
+  database project.
+
 ## Why this phase exists
 
 ADR-019: the live MVP (WorkOS + Neon + Stripe Connect) must move into v3 without losing experts,
