@@ -117,7 +117,7 @@
       "approve": "Aprovar",
       "approving": "A aprovar...",
       "reasonLabel": "Motivo",
-      "reasonHelp": "Necessário para pedir alterações ou rejeitar. A Eleva envia-o por email a quem é titular ou administra a clínica e mostra-o na página de Verificação da clínica, por isso escreva para a clínica: sobre a empresa, sem nomes, emails ou números de telefone.",
+      "reasonHelp": "Peça alterações quando a clínica pode corrigir um dado; rejeite quando não é possível confirmar a empresa. A Eleva envia o motivo por email a quem é titular ou administra a clínica e mostra-o na página de Verificação da clínica, por isso escreva para a clínica: sobre a empresa, sem nomes, emails ou números de telefone.",
       "needsChanges": "Pedir alterações",
       "reject": "Rejeitar",
       "saving": "A guardar...",
@@ -132,7 +132,8 @@
         "decided": "Alguém já decidiu este envio. Recarregue para ver a decisão.",
         "self": "Não pode rever uma clínica de que faz parte. Peça a outra pessoa da equipa.",
         "forbidden": "Não tem acesso a esta revisão.",
-        "failed": "Não foi possível concluir. Tente novamente."
+        "failed": "Não foi possível concluir. Tente novamente.",
+        "step-up": "Inicie sessão de novo para decidir. Uma decisão precisa de uma sessão iniciada nas últimas 12 horas."
       },
       "notes": {
         "approved": "Este envio está aprovado: a clínica está verificada. A Eleva avisa por email quem é titular ou administra a clínica.",
@@ -141,7 +142,15 @@
       },
       "historyTitle": "Envios anteriores",
       "people": "{people, plural, one {# pessoa na clínica} other {# pessoas na clínica}}",
-      "newTab": "(abre num novo separador)"
+      "newTab": "(abre num novo separador)",
+      "owner": "Titular: {name}",
+      "rejectConfirm": {
+        "title": "Rejeitar este envio?",
+        "body": "A Eleva avisa por email quem é titular ou administra a clínica de que não foi possível verificar estes dados, com o motivo que escreveu. A clínica pode enviar os dados de novo.",
+        "reason": "O seu motivo, como a clínica o vai ler",
+        "cancel": "Continuar a rever",
+        "confirm": "Rejeitar envio"
+      }
     }
   },
   "staffEntry": {

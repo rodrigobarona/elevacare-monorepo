@@ -112,6 +112,48 @@ describe("/admin/clinics", () => {
     expect(mocks.decide).not.toHaveBeenCalled()
   })
 
+  it("asks a browser session that started long ago to sign in again before deciding", async () => {
+    const hoursAgo = (hours: number) =>
+      new Date(Date.now() - hours * 60 * 60 * 1000)
+    mocks.decide.mockResolvedValue({ status: "approved", verified: true })
+
+    // Left open since yesterday: no decision, whatever the capability.
+    mocks.writeAuth.mockResolvedValue({
+      user: { id: "staff-1" },
+      authenticatedAt: hoursAgo(13),
+    })
+    const stale = await post(approve)
+    expect(stale.status).toBe(403)
+    await expect(stale.json()).resolves.toMatchObject({
+      error: "STEP_UP_REQUIRED",
+    })
+    expect(mocks.decide).not.toHaveBeenCalled()
+
+    // Signed in this morning: decides.
+    mocks.writeAuth.mockResolvedValue({
+      user: { id: "staff-1" },
+      authenticatedAt: hoursAgo(3),
+    })
+    expect((await post(approve)).status).toBe(200)
+
+    // An API key has no sign-in moment; it is revocable and issued on purpose.
+    mocks.writeAuth.mockResolvedValue({
+      user: { id: "staff-1" },
+      authenticatedAt: null,
+    })
+    expect((await post(approve)).status).toBe(200)
+    expect(mocks.decide).toHaveBeenCalledTimes(2)
+  })
+
+  it("reads the queue and a filing with a session of any age", async () => {
+    mocks.readAuth.mockResolvedValue({
+      user: { id: "staff-1" },
+      authenticatedAt: new Date(0),
+    })
+    mocks.listQueue.mockResolvedValue([])
+    expect((await getQueue(new Request(URL))).status).toBe(200)
+  })
+
   it("lists the queue", async () => {
     mocks.listQueue.mockResolvedValue([
       {
@@ -154,7 +196,7 @@ describe("/admin/clinics", () => {
         countryCode: "PT",
         billingAddress: { city: "Lisboa", country: "PT" },
       },
-      owner: { name: "Ana Mota", email: "ana@example.test" },
+      owner: { name: "Ana Mota" },
       people: 3,
       verified: false,
       history: [],

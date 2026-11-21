@@ -117,7 +117,7 @@
       "approve": "Approve",
       "approving": "Approving...",
       "reasonLabel": "Reason",
-      "reasonHelp": "Needed to ask for changes or reject. Eleva emails it to the clinic's owner and admins and shows it on the clinic's Verification page, so write it for the clinic: about the company, without names, emails or phone numbers.",
+      "reasonHelp": "Ask for changes when the clinic can correct a detail; reject when the company cannot be confirmed. Eleva emails your reason to the clinic's owner and admins and shows it on the clinic's Verification page, so write it for the clinic: about the company, without names, emails or phone numbers.",
       "needsChanges": "Ask for changes",
       "reject": "Reject",
       "saving": "Saving...",
@@ -132,7 +132,8 @@
         "decided": "Someone already decided this filing. Reload to see the decision.",
         "self": "You cannot review a clinic you belong to. Ask another reviewer.",
         "forbidden": "You do not have access to this review.",
-        "failed": "That did not work. Please try again."
+        "failed": "That did not work. Please try again.",
+        "step-up": "Sign in again to decide. A decision needs a session started in the last 12 hours."
       },
       "notes": {
         "approved": "This filing is approved: the clinic is verified. Eleva tells the clinic's owner and admins by email.",
@@ -141,7 +142,15 @@
       },
       "historyTitle": "Earlier filings",
       "people": "{people, plural, one {# person in the clinic} other {# people in the clinic}}",
-      "newTab": "(opens in a new tab)"
+      "newTab": "(opens in a new tab)",
+      "owner": "Owner: {name}",
+      "rejectConfirm": {
+        "title": "Reject this filing?",
+        "body": "Eleva emails the clinic's owner and admins that these details could not be verified, with your reason. The clinic can send its details again.",
+        "reason": "Your reason, as the clinic will read it",
+        "cancel": "Keep reviewing",
+        "confirm": "Reject filing"
+      }
     }
   },
   "staffEntry": {

@@ -225,7 +225,7 @@ test.describe("Phase 12 — staff verify a clinic", () => {
     await page.getByText("NIF or VAT number belongs to that company").click()
     await page.getByTestId("clinic-approve").click()
     await expect(page.getByTestId("clinic-filing-note")).toHaveText(
-      "This filing is approved: the clinic is verified.",
+      "This filing is approved: the clinic is verified. Eleva tells the clinic's owner and admins by email.",
       { timeout: 30_000 }
     )
     await shot(page, "03-clinic-verified.desktop")
@@ -268,6 +268,34 @@ test.describe("Phase 12 — staff verify a clinic", () => {
       { timeout: 30_000 }
     )
     await shot(page, "04-clinic-sent-back.desktop")
+
+    // The clinic sends it again; this time staff reject. Rejecting tells
+    // the whole clinic, so it is confirmed with the reason as they read it.
+    await sql`
+      UPDATE clinic_verifications
+      SET status = 'pending', reason = NULL, reviewer_user_id = NULL,
+          reviewed_at = NULL, submitted_at = now()
+      WHERE id = ${second!.id}::uuid
+    `
+    await page.reload()
+    await expect(page.getByTestId("clinic-reject")).toBeDisabled({
+      timeout: 60_000,
+    })
+    await page.getByLabel("Reason").fill("This company is not in the register.")
+    await page.getByTestId("clinic-reject").click()
+    await expect(page.getByTestId("clinic-reject-reason")).toHaveText(
+      "This company is not in the register."
+    )
+    await shot(page, "05-clinic-reject-confirm.desktop")
+    // Backing out decides nothing.
+    await page.getByRole("button", { name: "Keep reviewing" }).click()
+    await expect(page.getByTestId("clinic-reject-confirm")).toHaveCount(0)
+    await page.getByTestId("clinic-reject").click()
+    await page.getByTestId("clinic-reject-confirm").click()
+    await expect(page.getByTestId("clinic-filing-note")).toContainText(
+      "This filing was rejected.",
+      { timeout: 30_000 }
+    )
     await page.context().close()
 
     // The clinic stays verified, and both decisions are audited.
@@ -278,10 +306,12 @@ test.describe("Phase 12 — staff verify a clinic", () => {
     expect(await team.json()).toMatchObject({
       verified: true,
       verification: {
-        status: "needs_changes",
-        reason: "The NIF belongs to another company in the register.",
+        status: "rejected",
+        reason: "This company is not in the register.",
       },
     })
+    // Staff see the owner by name only: Eleva writes to the clinic itself.
+    expect(Object.keys((await team.json()).owner)).toEqual(["name"])
     const audit = (await sql`
       SELECT action FROM audit_outbox
       WHERE org_id = ${clinicId}::uuid AND action LIKE 'clinic_verification.%'
@@ -290,6 +320,19 @@ test.describe("Phase 12 — staff verify a clinic", () => {
     expect(audit.map((r) => r.action)).toEqual([
       "clinic_verification.approved",
       "clinic_verification.changes_requested",
+      "clinic_verification.rejected",
+    ])
+    // Each decision queued its notice to the clinic, and a clinic that was
+    // already verified is told it stays verified.
+    const notices = (await sql`
+      SELECT type, payload->>'verified' AS verified FROM domain_events_outbox
+      WHERE org_id = ${clinicId}::uuid AND type LIKE 'clinic.%'
+      ORDER BY created_at
+    `) as { type: string; verified: string }[]
+    expect(notices).toEqual([
+      { type: "clinic.verified", verified: "true" },
+      { type: "clinic.needs_changes", verified: "true" },
+      { type: "clinic.rejected", verified: "true" },
     ])
   })
 })

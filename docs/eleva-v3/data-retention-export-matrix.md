@@ -69,10 +69,11 @@ Use this document to answer:
 - Data type: a clinic's legal name and tax number, the staff decision, who
   decided and when, and the reason on a filing that was sent back or
   rejected (`clinic_verifications`). Staff also read, without storing a
-  copy, the clinic's billing address and website and the name and email of
-  its owner
-- Sensitivity: business data, plus personal data of the owner (name, email)
-  and of the reviewer (staff user id)
+  copy, the clinic's billing address and website and the name of its owner
+- Sensitivity: business data, plus personal data of the owner (name; the
+  email is no longer shown to staff or returned by the staff API) and of
+  the reviewer (staff user id). When the clinic is a sole trader, the legal
+  name, tax number and billing address are that person's personal data
 - Export: yes for the clinic (`GET /teams/{teamId}` returns its filing, the
   state and the reason)
 - Deletion: an approved filing is the clinic's verification record and is

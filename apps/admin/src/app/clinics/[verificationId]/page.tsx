@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { getFormatter, getTranslations } from "next-intl/server"
+import { getFormatter, getLocale, getTranslations } from "next-intl/server"
 import { ApiClientError } from "@eleva/api-client"
 import {
   COMPANY_REGISTER_URL,
@@ -47,13 +47,20 @@ export default async function ClinicReviewPage({
       dateStyle: "medium",
       timeStyle: "short",
     })
+  const countryNames = new Intl.DisplayNames([await getLocale()], {
+    type: "region",
+  })
   const address = [
     clinic.billingAddress.line1,
     clinic.billingAddress.line2,
     [clinic.billingAddress.postalCode, clinic.billingAddress.city]
       .filter(Boolean)
       .join(" "),
-    clinic.billingAddress.country,
+    // The country by name, in the reviewer's language ("Portugal", not "PT").
+    clinic.billingAddress.country
+      ? (countryNames.of(clinic.billingAddress.country) ??
+        clinic.billingAddress.country)
+      : null,
   ].filter(Boolean)
 
   return (
@@ -68,12 +75,7 @@ export default async function ClinicReviewPage({
         <PageHeader title={clinic.displayName} className="mb-3" />
         {/* Separate items, so a narrow screen wraps between them. */}
         <ul className="flex flex-wrap gap-x-4 gap-y-1 text-base text-muted-foreground">
-          {owner ? (
-            <>
-              <li>{owner.name}</li>
-              <li className="break-all">{owner.email}</li>
-            </>
-          ) : null}
+          {owner ? <li>{t("detail.owner", { name: owner.name })}</li> : null}
           <li>{t("detail.people", { people: review.people })}</li>
         </ul>
       </div>
