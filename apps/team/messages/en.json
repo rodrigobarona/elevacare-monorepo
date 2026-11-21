@@ -6,10 +6,33 @@
   },
   "dashboard": {
     "title": "Your clinic",
-    "subtitle": "Start with the people: invite the experts who work with you.",
+    "subtitle": "What your clinic needs from you, and the people who work with you.",
     "emptyTitle": "Invite your team",
     "emptyBody": "Each person gets an email, accepts in their Eleva account and sets up their services in your clinic.",
-    "openTeam": "Go to Team"
+    "openTeam": "Go to Team",
+    "verification": {
+      "open": "Go to Verification",
+      "not-sent": {
+        "title": "Send your clinic's legal details",
+        "body": "We check them in the public register, so people know who is behind your clinic. You do this once."
+      },
+      "change-needed": {
+        "title": "Your clinic's details need a change",
+        "body": "Read what we found, correct your details and send them again."
+      },
+      "verified-change-needed": {
+        "title": "Your new details need a change",
+        "body": "Your clinic stays verified. Read what we found and send the new details again."
+      },
+      "not-verified": {
+        "title": "We could not verify your clinic with these details",
+        "body": "Read what we found. You can send your details again."
+      },
+      "verified-new-rejected": {
+        "title": "We could not confirm your new details",
+        "body": "Your clinic stays verified. Read what we found; if your details have changed, correct them and send them again."
+      }
+    }
   },
   "members": {
     "title": "Team",

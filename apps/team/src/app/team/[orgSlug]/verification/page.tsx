@@ -3,23 +3,12 @@ import { getFormatter, getTranslations } from "next-intl/server"
 import { getClinicSummary } from "@eleva/auth"
 import { getSessionForOrg } from "@eleva/auth/server"
 import {
+  CLINIC_STANDING_TONES,
   clinicStanding,
-  type ClinicStanding,
 } from "@eleva/config/clinic-verification"
 import { PageHeader } from "@eleva/ui/components/page-header"
-import { StatusPill, type StatusTone } from "@eleva/ui/components/status-pill"
+import { StatusPill } from "@eleva/ui/components/status-pill"
 import { VerificationForm } from "./verification-form"
-
-const TONES: Record<ClinicStanding, StatusTone> = {
-  "not-sent": "neutral",
-  checking: "attention",
-  "change-needed": "attention",
-  verified: "positive",
-  "verified-checking": "positive",
-  "verified-change-needed": "positive",
-  "verified-new-rejected": "positive",
-  "not-verified": "neutral",
-}
 
 /** The standing's title: focus lands here after details are sent. */
 const STANDING_TITLE_ID = "verification-standing-title"
@@ -72,7 +61,7 @@ export default async function TeamVerificationPage({
           data-testid="verification-standing"
           data-standing={standing}
         >
-          <StatusPill tone={TONES[standing]}>
+          <StatusPill tone={CLINIC_STANDING_TONES[standing]}>
             {t(`standing.${standing}.pill`)}
           </StatusPill>
           <div className="space-y-2">

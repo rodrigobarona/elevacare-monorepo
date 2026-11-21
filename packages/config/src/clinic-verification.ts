@@ -72,3 +72,24 @@ export function clinicStanding(
   if (status === "rejected") return "not-verified"
   return "not-sent"
 }
+
+/**
+ * How each standing is shown, wherever it is shown (the Verification page,
+ * the Overview card): "positive" once verified, "attention" while a check
+ * is running or a change was asked, "neutral" before anything was sent
+ * and after a refusal. The names are the `StatusPill` tones of
+ * `@eleva/ui`.
+ */
+export const CLINIC_STANDING_TONES = {
+  "not-sent": "neutral",
+  checking: "attention",
+  "change-needed": "attention",
+  verified: "positive",
+  "verified-checking": "positive",
+  "verified-change-needed": "positive",
+  "verified-new-rejected": "positive",
+  "not-verified": "neutral",
+} as const satisfies Record<
+  ClinicStanding,
+  "neutral" | "attention" | "positive"
+>

@@ -6,10 +6,33 @@
   },
   "dashboard": {
     "title": "A sua clínica",
-    "subtitle": "Comece pelas pessoas: convide os especialistas que trabalham consigo.",
+    "subtitle": "O que a sua clínica precisa de si e as pessoas que trabalham consigo.",
     "emptyTitle": "Convide a sua equipa",
     "emptyBody": "Cada pessoa recebe um email, aceita na sua conta Eleva e prepara os seus serviços na clínica.",
-    "openTeam": "Ir para Equipa"
+    "openTeam": "Ir para Equipa",
+    "verification": {
+      "open": "Ir para Verificação",
+      "not-sent": {
+        "title": "Envie os dados legais da sua clínica",
+        "body": "Confirmamos os dados no registo público, para que as pessoas saibam quem está por trás da sua clínica. Só precisa de o fazer uma vez."
+      },
+      "change-needed": {
+        "title": "Os dados da sua clínica precisam de uma alteração",
+        "body": "Leia o que encontrámos, corrija os dados e envie-os de novo."
+      },
+      "verified-change-needed": {
+        "title": "Os novos dados precisam de uma alteração",
+        "body": "A clínica continua verificada. Leia o que encontrámos e envie os novos dados outra vez."
+      },
+      "not-verified": {
+        "title": "Não conseguimos verificar a sua clínica com estes dados",
+        "body": "Leia o que encontrámos. Pode enviar os dados de novo."
+      },
+      "verified-new-rejected": {
+        "title": "Não conseguimos confirmar os novos dados",
+        "body": "A clínica continua verificada. Leia o que encontrámos; se os dados mudaram, corrija-os e envie-os de novo."
+      }
+    }
   },
   "members": {
     "title": "Equipa",

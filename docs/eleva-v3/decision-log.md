@@ -32,6 +32,77 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-21: Judges panel on the night's slices (11.3 to 11.6, 12.1, 12.2, 13.1, 14.1) (active)
+
+- What ran: reviewer agents holding the seats of the panel (UI, UX and
+  writing, GDPR, legal, compliance and accessibility, security by design,
+  engineering). They read code, records and screenshots; they are not the
+  founder, a DPO or counsel, and a score is not a sign-off.
+- The bar used that night was 8.0 per seat (the founder's instruction for
+  the session). The standing bar in `AGENTS.md` is 8.5. Most seats are
+  between 8.0 and 8.6: these slices do not meet 8.5 across the board.
+- Last score each seat gave, by slice (a dash where a seat does not
+  apply):
+
+  | Slice                   | UI  | UX, writing | GDPR | Legal | Compliance, a11y | Security | Engineering |
+  | ----------------------- | --- | ----------- | ---- | ----- | ---------------- | -------- | ----------- |
+  | 11.2/11.3 people, seats | 8.3 | 8.1         | 8.3  | 8.1   | 8.4              | 8.5      | 8.5         |
+  | 11.4 Verification page  | 8.3 | 8.2         | 8.3  | 8.6   | 8.1              | 8.5      | 8.6         |
+  | 11.5 decision notice    | 8.1 | 8.4         | 8.4  | 8.2   | 8.3              | 8.5      | 8.4         |
+  | 11.6 Overview card      | 8.3 | 8.1         | -    | -     | 8.1              | -        | -           |
+  | 12.1 staff verification | 8.3 | 8.3         | 8.0  | 8.0   | 8.1              | 8.6      | 8.6         |
+  | 12.2 read audit         | -   | -           | 8.2  | -     | 8.3              | 8.4      | 8.2         |
+  | 13.1 CI guards          | -   | -           | 8.3  | -     | 8.3              | 8.2      | 8.4         |
+  | 14.1 migration guard    | -   | 8.1         | 8.3  | -     | 8.3              | 8.6      | 8.5         |
+
+- How to read it: first-round scores were between 6.6 and 8.6. Seats
+  under 8.0 were fixed and scored again, up to five rounds for one seat.
+  A seat already at 8.0 or above was not always scored again after later
+  changes to the same slice, so some numbers describe the code a few
+  commits before the merge. 11.6 had no legal, GDPR, security or
+  engineering seat.
+- What the reviewers could not check, and said so: real emails arriving,
+  the pages in Portuguese and Spanish on screen, screen-reader output,
+  the auth guard against the running auth server, the Neon API live, and
+  several states with no screenshot.
+- Owner: engineering
+
+### 2026-11-21: The clinic's Overview says when verification needs it (11.6) (active)
+
+- Change (Phase 11.6): the clinic's Overview shows one card when
+  verification waits on the clinic: details not sent yet, a change asked,
+  details refused, and the same two for newer details of a verified
+  clinic. The card says what stands in one sentence and has one button to
+  Verification. While Eleva is checking, or once the clinic is verified,
+  the Overview shows nothing about it.
+- Only people who can act on it see it (`clinic:manage`). The standing is
+  the one the Verification page words (`clinicStanding`), and the status
+  uses that page's words. A verified clinic is told it stays verified.
+- Pattern: Square's "Complete approval to take payments" card on the
+  dashboard home (Mobbin `11-team` reference 13): small, one action, there
+  only while the step is open.
+- Proof: `e2e/team-verification.spec.ts` (opt-in, loopback, run
+  2026-11-21): the card shows for not sent, is gone while checking, and
+  shows again when a change is asked; its button opens Verification.
+  Captures `19-overview-verification-*` (desktop, and 360px wide) in
+  `design-audit/captures/2026-11-21-team-verification-after/11-team/`.
+- While the card shows, its button is the page's main action and "Go to
+  Team" steps back to an outline; the page subtitle no longer says to
+  start with the people. One tone per standing, shared with the
+  Verification page (`CLINIC_STANDING_TONES`). If the standing cannot be
+  read, the Overview opens without the card.
+- Stated limits: the Overview reads the clinic's whole filing to work out
+  the standing (legal name and number included, never sent to the page),
+  where a narrower read would do; and, as on the Verification page,
+  opening it can create a missing clinic profile row (audited).
+- Judges, first round: UI 7.3, UX and writing 7.1, compliance and
+  accessibility 8.1. The must-fix items were applied (button weight, the
+  phone layout, the subtitle and the change-needed wording); not scored
+  again.
+- Not in this slice: captures of the three other standings and of pt and
+  es; a count on the navigation item; a notice for clinicians.
+- Owner: engineering
+
 ### 2026-11-21: Staff opening a clinic's filing is on record (12.2) (active)
 
 - Change (Phase 12.2): `GET /admin/clinics/{verificationId}` records
@@ -184,7 +255,7 @@ Each entry should include:
   Mobbin `11-team` references 10 to 12.
 - Not in this slice: an email or inbox notice when staff decide (built in
   11.5); a hint on
-  the clinic's Overview when verification needs the clinic; showing the
+  the clinic's Overview (built in 11.6) when verification needs the clinic; showing the
   verified legal name when newer details are being checked.
 - Owner: engineering
 
