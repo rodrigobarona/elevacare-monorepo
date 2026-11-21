@@ -8,6 +8,30 @@
 | Touches    | `apps/admin/**`, `apps/api/src/app/admin/**`, `packages/auth` (admin plugin usage, staff roles), `packages/db` (`become_partner_applications`, `admin_actions` views), `packages/dashboard` (admin nav), `packages/flags` (read view), `packages/observability`                                                                                                                                                                                                            |
 | Exit gate  | Eleva staff (`platform_admin`, `staff_support`, `staff_finance`) can: manage users (search, ban, unban, reset 2FA, impersonate with audit), process the Become-Partner and clinic verification queues, approve/hold payouts, refund, inspect subscriptions, view accounting reconciliation and invoices, inspect Stripe webhook events and workflow DLQ with replay, search audit events by correlation id, view feature flags — every action audited and permission-gated |
 
+## Status on 2026-11-21
+
+On `main`: the licence review, and slices 12.1 to 12.4 (clinic verification, a recent sign-in
+for decisions, a record each time staff open a filing or a licence review). The phase is not
+complete. The slices still to build, in order, are in
+[`remaining-roadmap.md`](../remaining-roadmap.md#7-phase-12-staff-console): 12.5 to 12.25.
+
+Where this file no longer matches what was built or decided (the code and the decision log win):
+
+- **Impersonation is refused in code** (D-11: staff never read members' health records). This
+  file still lists it in scope, deliverable 4, an acceptance criterion and the e2e. The founder
+  decides which one changes (roadmap, F-04).
+- Staff identity is a `staff` organization plus the admin plugin's role; routes are gated by
+  capability. `requireStaff(role[])`, `adminRoute` and `ADMIN_ROUTE_POLICY` do not exist.
+- `become_partner_applications` exists since migration 0071; this phase does not create it.
+- Decisions are `POST …/decision` with `approve`, `needs_changes` or `reject`, keyed by
+  `expertProfileId` and `verificationId`.
+- The step-up answers 403 `STEP_UP_REQUIRED` from the session's start time (12 hours). The
+  second factor and the 10-minute re-check this file describes are slices 12.8 and 12.9.
+- Better Auth's second-factor plugin challenges only password sign-in, and it has no option for
+  a host-only cookie: 12.8 and 12.11 build what the file assumes exists.
+- Payout and refund routes are at `/payouts/*` and `/payments/*`. Private files are in R2 through
+  `@eleva/storage`, streamed by the API. Admin copy ships in `en`, `pt` and `es`.
+
 ## Why this phase exists
 
 The user's requirement: "the UI console for admin ... all working as expected." Operations need

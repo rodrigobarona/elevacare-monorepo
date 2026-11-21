@@ -70,36 +70,51 @@ These are recorded as ADRs in Phase 1. Do not re-open them inside a phase prompt
 
 ## 3. Current state (why phases are ordered this way)
 
-Refreshed 2026-10-29 (code on `main` checked against
-[`audits/2026-10-phases-01-10-audit.md`](../audits/2026-10-phases-01-10-audit.md)).
+Refreshed 2026-11-21 (code on `main` at `58816804`). The state of each phase, the next slices
+and what is waiting on a person are kept in [`remaining-roadmap.md`](./remaining-roadmap.md);
+this section is the short version.
 
 Identity is Better Auth (ADR-017); WorkOS is fully removed. Phases 01–10 are engineering-on-main.
 Proof and sign-off lag behind: Phase 06 (pay → transfer → payout) and Phase 09 (Eleva grant join +
 Daily webhooks) have no staging/dev-prod evidence yet, Phase 07 issuance stays closed, and Phase 10
-closes only on DPO/legal sign-off (AUD-028 retention, AUD-029 AI-processing copy). Phases 11–15 are
-not started: `apps/team`, `apps/admin` and `apps/academy` are shells, and there is no Phase 14
-migration code.
+closes only on DPO/legal sign-off (AUD-028 retention, AUD-029 AI-processing copy).
 
-- `apps/api`: 145 route handlers, every one with an enforced `ROUTE_POLICY`; OpenAPI at
+Phases 11–14 have started, in small slices, and none is complete:
+
+- **Phase 11** (11.1–11.6): clinic profile and verification filing, invitations and the Team page,
+  the seat limit by plan, the clinic's Verification page, the decision notice, the Overview card.
+  `apps/team` has no billing, sessions, schedule or settings page yet, and there is no public
+  clinic page.
+- **Phase 12** (licence review, 12.1–12.4): staff verify a licence and a clinic; a decision needs
+  a recent sign-in; each time staff open a filing or a licence review is on record. The second
+  factor, the role table, two-person approval and every other console area are not built.
+  Impersonation is refused in code (D-11) although the phase file still asks for it.
+- **Phase 13** (13.1): two CI guards. Dependency audit, Renovate, security headers and server-side
+  Sentry already existed.
+- **Phase 14** (14.1): the migration target guard in `infra/migration`. No tool reads or writes
+  data.
+- **Phase 15**: not started.
+
+- `apps/api`: 166 route handlers, every one with an enforced `ROUTE_POLICY`; OpenAPI at
   `GET /openapi.json` with a coverage test. Stripe (platform + Connect), Resend, Twilio, Daily and
   QStash webhooks/workflows.
-- `packages/db`: 71 main migrations (`0000`–`0070`) plus the audit project migration; RLS via
-  `eleva.org_id` and the 7-class taxonomy.
+- `packages/db`: 80 main migrations (`0000`–`0079`) plus the audit project migration; RLS via
+  `eleva.org_id` and the 7-class taxonomy. `0079` is not on the production database yet.
 - Domain packages with real code: `auth`, `audit`, `billing`, `scheduling`, `calendar`,
   `accounting` (closed-gate TOConline; Moloni adapter is a scaffold), `notifications`,
   `compliance`, `video` (Daily, standard, recording off), `records` (encrypted session records),
   `crm`, `ai`, `encryption`, `storage`, `media`, `editor`, `content`, `consent`, `flags`,
   `observability`, `ui`, `icons`, `dashboard`, `site-chrome`, `email`, `api-client`.
 - Stub: `academy`.
-- Apps: public marketing and booking (`apps/web`), member (`apps/app`), expert, account, docs and
-  email are live in code. `/become-expert`, `/for-clinics` and `/contact` still carry draft banners.
-- Paid booking still charges through `POST /payments/intent` (PaymentIntent + Payment Element).
-  The Checkout Sessions (`ui_mode: elements`) helper exists but the funnel has not been switched
-  (decision log 2026-10-13, `proposed`).
-- Expert listing: finishing setup moves a profile to `active` with no review. Founder 2026-10-29
-  (regulated professionals only) requires a licence check before listing — see decision log.
-- Playwright `e2e/` has 21 specs. CI runs the unseeded smoke set; auth, member, admin, video and
-  live money flows are opt-in loopback runs.
+- Apps: public marketing and booking (`apps/web`), member (`apps/app`), expert, account, team
+  (partly), admin (partly), docs and email are live in code. `/become-expert`, `/for-clinics` and
+  `/contact` still carry draft banners.
+- Paid booking charges through Checkout Sessions (`ui_mode: elements`, decision log 2026-10-13);
+  the public funnel calls `POST /payments/checkout-session`.
+- Expert listing: a profile is listed only after staff approve its licence application
+  (founder 2026-10-29, regulated professionals only).
+- Playwright `e2e/` has 31 specs. CI runs the unseeded smoke set; auth, member, team, admin, video
+  and live money flows are opt-in loopback runs.
 - Hosting: `eleva.care` still serves the MVP. `api.eleva.care` and `dev.eleva.care` run v3.
 
 Still gated: live FT POST / Comunicação / `invoice.issued` (`issueInvoice()` closed) and the
@@ -273,6 +288,11 @@ Rules of the loop:
 | 14    | MVP data migration scripts + rehearsals                                                                               | `phase-14/mvp-migration`                  | 2 weeks              | 13                                     | [`phases/14-mvp-migration.md`](./phases/14-mvp-migration.md)                                   |
 | 15    | PT launch gate + production cutover                                                                                   | `phase-15/launch-cutover`                 | 1 week + 7-day watch | 14                                     | [`phases/15-launch-cutover.md`](./phases/15-launch-cutover.md)                                 |
 | 16    | Post-launch backlog (not a PR phase)                                                                                  | —                                         | —                    | 15                                     | [`phases/16-post-launch-backlog.md`](./phases/16-post-launch-backlog.md)                       |
+
+Since 2026-11 the phases from 11 on ship as numbered slices (`11.7`, `12.5`, …), one concern per
+pull request, on branches named `phase-NN.M/<slug>`. The slices still to build, and their order,
+are in [`remaining-roadmap.md`](./remaining-roadmap.md); the "Effort" and "Branch" columns above
+describe the original plan.
 
 Parallelism allowed (PR-level, not phase-level — the dependency edges are between PRs): 4B
 starts after **PR 04.1** (tables, `public_handles`, public reads) and needs 3; 5 after PR 04.1
@@ -479,6 +499,8 @@ Plan: docs/eleva-v3/execution-plan/phases/NN-<slug>.md
 
 - `docs/eleva-v3/README.md` (handbook index) — the phase files link into the specs there.
 - `docs/eleva-v3/contribution-workflow.md` — PR policy; Phase 0 adds the CLI loop to it.
+- [`remaining-roadmap.md`](./remaining-roadmap.md) — the state of each phase, the next slices in
+  order, what is waiting on a person, and what the current SDK docs say. Updated as slices merge.
 - `docs/eleva-v3/decision-log.md`, `docs/eleva-v3/adrs/` — where decisions are recorded.
 - `.cursor/skills/coderabbit-review/SKILL.md` — how agents run the review loop.
 - `reviews/` — external reviews of this plan kept verbatim, each with a response document that
