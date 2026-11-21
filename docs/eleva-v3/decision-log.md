@@ -52,8 +52,22 @@ Each entry should include:
   that an unknown filing records nothing; the route test asserts the
   reader is passed; `e2e/admin-clinics.spec.ts` (opt-in) asserts the rows
   exist for one reader.
-- Not in this slice: auditing the queue; the same record for licence
-  reviews, if they do not have it; a view of this trail in the console.
+- The audit row is atomic with the read by construction
+  (`withPlatformAudit`); the integration test asserts the row, not the
+  atomicity.
+- Stated limits: the staff rate limit is 60 a minute and lets requests
+  through when its store is down, so one staff credential can write many
+  of these rows; reads accept a credential that cannot be revoked before
+  it expires (decisions do not).
+- Not built, and it should be before the first real expert files a
+  licence: the licence review has no such record. `GET
+/admin/partners/{expertProfileId}` shows a person's email, licence
+  number and regulator number to staff with no trace. Owner: engineering,
+  next Phase 12 slice.
+- For the DPO: how long these access rows are kept (nothing deletes them
+  today), and how staff are told that opening a filing is recorded.
+- Not in this slice: auditing the queue, which lists clinics by name and
+  legal name; a view of this trail in the console.
 - Owner: engineering
 
 ### 2026-11-21: A clinic is told when staff decide its verification (11.5) (active)

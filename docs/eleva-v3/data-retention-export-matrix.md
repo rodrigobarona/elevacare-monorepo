@@ -92,7 +92,10 @@ Use this document to answer:
 - Audit access: yes for every decision (`clinic_verification.approved`,
   `.changes_requested`, `.rejected`), with the reason in the audit payload;
   staff opening a filing is audited too (`clinic_verification.opened`,
-  with the state the filing was in, never its details)
+  with the state the filing was in, never its details). The queue, which lists
+  clinics by name and legal name (personal data for a sole trader), is not
+  recorded per row. **For the DPO to decide:** how long
+  `clinic_verification.opened` rows are kept; nothing deletes them today
 - Transparency: **proposed privacy-notice line, for the DPO to word and
   publish:** "Clinics: we check the legal name, tax number and billing
   address of the clinic, and the name and email of the person who manages

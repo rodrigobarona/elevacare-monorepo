@@ -201,74 +201,72 @@ async function readClinicVerificationReview(
 ): Promise<ClinicVerificationReview | null> {
   const v = main.clinicVerifications
   const c = main.clinicProfiles
-  {
-    const [row] = await tx
-      .select({
-        ...FILING_COLUMNS,
-        orgId: v.orgId,
-        displayName: c.displayName,
-        slug: c.slug,
-        websiteUrl: c.websiteUrl,
-        countryCode: c.countryCode,
-        billingAddress: c.billingAddress,
-      })
-      .from(v)
-      .innerJoin(c, eq(c.orgId, v.orgId))
-      .where(eq(v.id, verificationId))
-      .limit(1)
-    if (!row) return null
+  const [row] = await tx
+    .select({
+      ...FILING_COLUMNS,
+      orgId: v.orgId,
+      displayName: c.displayName,
+      slug: c.slug,
+      websiteUrl: c.websiteUrl,
+      countryCode: c.countryCode,
+      billingAddress: c.billingAddress,
+    })
+    .from(v)
+    .innerJoin(c, eq(c.orgId, v.orgId))
+    .where(eq(v.id, verificationId))
+    .limit(1)
+  if (!row) return null
 
-    const filings = await tx
-      .select(FILING_COLUMNS)
-      .from(v)
-      .where(eq(v.orgId, row.orgId))
-      .orderBy(desc(v.submittedAt))
-    // Only the owner's name is read; everyone else is a count. With two
-    // owners, the one who joined first, so staff see the same name each time.
-    const members = await tx
-      .select({ userId: auth.member.userId, role: auth.member.role })
-      .from(auth.member)
-      .where(eq(auth.member.organizationId, row.orgId))
-      .orderBy(auth.member.createdAt, auth.member.userId)
-    const ownerId = members.find((m) =>
-      m.role.split(",").includes("owner")
-    )?.userId
-    const [owner] = ownerId
-      ? await tx
-          .select({ name: auth.user.name })
-          .from(auth.user)
-          .where(eq(auth.user.id, ownerId))
-          .limit(1)
-      : []
+  const filings = await tx
+    .select(FILING_COLUMNS)
+    .from(v)
+    .where(eq(v.orgId, row.orgId))
+    .orderBy(desc(v.submittedAt))
+  // Only the owner's name is read; everyone else is a count. With two
+  // owners, the one who joined first, so staff see the same name each time.
+  const members = await tx
+    .select({ userId: auth.member.userId, role: auth.member.role })
+    .from(auth.member)
+    .where(eq(auth.member.organizationId, row.orgId))
+    .orderBy(auth.member.createdAt, auth.member.userId)
+  const ownerId = members.find((m) =>
+    m.role.split(",").includes("owner")
+  )?.userId
+  const [owner] = ownerId
+    ? await tx
+        .select({ name: auth.user.name })
+        .from(auth.user)
+        .where(eq(auth.user.id, ownerId))
+        .limit(1)
+    : []
 
-    const {
+  const {
+    orgId,
+    displayName,
+    slug,
+    websiteUrl,
+    countryCode,
+    billingAddress,
+    ...verification
+  } = row
+  return {
+    verification,
+    clinic: {
       orgId,
       displayName,
       slug,
       websiteUrl,
       countryCode,
       billingAddress,
-      ...verification
-    } = row
-    return {
-      verification,
-      clinic: {
-        orgId,
-        displayName,
-        slug,
-        websiteUrl,
-        countryCode,
-        billingAddress,
-      },
-      owner: owner ? { name: owner.name } : null,
-      people: members.length,
-      verified: filings.some((filing) => filing.status === "approved"),
-      history: filings.filter(
-        (filing) =>
-          filing.id !== verificationId &&
-          filing.submittedAt.getTime() < verification.submittedAt.getTime()
-      ),
-    }
+    },
+    owner: owner ? { name: owner.name } : null,
+    people: members.length,
+    verified: filings.some((filing) => filing.status === "approved"),
+    history: filings.filter(
+      (filing) =>
+        filing.id !== verificationId &&
+        filing.submittedAt.getTime() < verification.submittedAt.getTime()
+    ),
   }
 }
 
