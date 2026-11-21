@@ -2016,8 +2016,8 @@ export const AdminClinicReviewResponseSchema = z.object({
     countryCode: z.string().nullable(),
     billingAddress: ClinicBillingAddressSchema,
   }),
-  /** The clinic's owner, the person staff write to. */
-  owner: z.object({ name: z.string(), email: z.string() }).nullable(),
+  /** The clinic's owner, by name. Eleva notifies the clinic itself. */
+  owner: z.object({ name: z.string() }).strict().nullable(),
   people: z.number().int().nonnegative(),
   /** An approved filing exists (this one or another one). */
   verified: z.boolean(),

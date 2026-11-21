@@ -10,6 +10,7 @@ export type DecideClinicError =
   | "changed"
   | "decided"
   | "self"
+  | "step-up"
   | "forbidden"
   | "failed"
 
@@ -17,6 +18,7 @@ const API_ERRORS: Record<string, DecideClinicError> = {
   VERIFICATION_CHANGED: "changed",
   VERIFICATION_ALREADY_DECIDED: "decided",
   SELF_REVIEW: "self",
+  STEP_UP_REQUIRED: "step-up",
 }
 
 const IdSchema = z.string().uuid()
