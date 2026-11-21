@@ -157,6 +157,7 @@ import {
   InviteTeamMemberRequestSchema,
   InviteTeamMemberResponseSchema,
   RemoveTeamMemberResponseSchema,
+  TeamMemberErrorSchema,
   TeamMembersResponseSchema,
   TeamSummarySchema,
   UpdateTeamProfileRequestSchema,
@@ -4189,7 +4190,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "removeTeamMember",
           summary: "Remove someone from the clinic",
           description:
-            "Requires members:manage in the active team org and a revocable credential. The person loses access to the clinic and their services in it are unpublished in the same transaction; the Stripe seat count is then synced. 409 CANNOT_REMOVE_OWNER, 409 CANNOT_REMOVE_SELF, and 409 MEMBER_HAS_UPCOMING_SESSIONS (with upcomingSessions) while the member has sessions still to happen or a slot being paid for: finish or cancel those first. Audited as membership.removed.",
+            "Requires members:manage in the active team org and a revocable credential. The person loses access to the clinic, their services in it are unpublished in the same transaction and they take no new booking there; the Stripe seat count is then synced. Only the owner removes an admin (403 OWNER_REQUIRED). 409 CANNOT_REMOVE_OWNER, 409 CANNOT_REMOVE_SELF, and 409 MEMBER_HAS_UPCOMING_SESSIONS (with upcomingSessions) while the member has sessions booked or a slot being paid for: those have to be done or cancelled first. Audited as membership.removed.",
           tags: ["Teams"],
           requestParams: {
             path: z.object({
@@ -4211,8 +4212,10 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "409": {
               description:
-                "CANNOT_REMOVE_OWNER, CANNOT_REMOVE_SELF or MEMBER_HAS_UPCOMING_SESSIONS",
-              content: { "application/json": { schema: ErrorSchema } },
+                "CANNOT_REMOVE_OWNER, CANNOT_REMOVE_SELF or MEMBER_HAS_UPCOMING_SESSIONS (with upcomingSessions)",
+              content: {
+                "application/json": { schema: TeamMemberErrorSchema },
+              },
             },
           },
         },
@@ -4222,7 +4225,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "inviteTeamMember",
           summary: "Invite someone to the clinic by email",
           description:
-            "Requires members:manage in the active team org and a revocable credential. Creates an invitation valid for 7 days and emails its link; the invited person accepts or declines it from their Eleva account. Role is admin (manages the clinic) or member (an expert working in it); ownership is never invited. Sending to an address that already has a pending invitation renews it (200, resent true) and emails the same link again. emailSent false means the invitation exists but the email could not be sent: call again to resend. 409 ALREADY_MEMBER, 409 MEMBER_LIMIT_REACHED (200 people including pending invitations). Audited as invitation.invited.",
+            "Requires members:manage in the active team org and a revocable credential. Creates an invitation valid for 7 days and emails its link, naming the clinic and who invites; the invited person accepts or declines it from their Eleva account. Role is admin (manages the clinic) or member (an expert working in it); only the owner invites an admin (403 OWNER_REQUIRED) and ownership is never invited. Sending to an address that already has a pending invitation renews it (200, resent true) and emails the same link again, at most once a minute per address (429 INVITATION_RECENTLY_SENT with retryAfterSeconds and a Retry-After header). emailSent false means the invitation exists but no email left (the address is suppressed, or the mail provider failed): call again after the minute. 409 ALREADY_MEMBER, 409 MEMBER_LIMIT_REACHED (200 people including pending invitations). Audited as invitation.invited.",
           tags: ["Teams"],
           requestParams: { path: z.object({ teamId: z.string().uuid() }) },
           requestBody: {
@@ -4251,7 +4254,16 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "409": {
               description: "ALREADY_MEMBER or MEMBER_LIMIT_REACHED",
-              content: { "application/json": { schema: ErrorSchema } },
+              content: {
+                "application/json": { schema: TeamMemberErrorSchema },
+              },
+            },
+            "429": {
+              description:
+                "INVITATION_RECENTLY_SENT: this address was emailed less than a minute ago",
+              content: {
+                "application/json": { schema: TeamMemberErrorSchema },
+              },
             },
           },
         },
@@ -4261,7 +4273,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "cancelTeamInvitation",
           summary: "Withdraw a pending invitation",
           description:
-            "Requires members:manage in the active team org and a revocable credential. The invitation's link stops working. 404 INVITATION_NOT_FOUND when it is not pending in this clinic (already answered, withdrawn or unknown). Audited as invitation.revoked.",
+            "Requires members:manage in the active team org and a revocable credential. The invitation's link stops working. Only the owner withdraws an invitation to be an admin (403 OWNER_REQUIRED). 404 INVITATION_NOT_FOUND when it is not pending in this clinic (already answered, withdrawn or unknown). Audited as invitation.revoked.",
           tags: ["Teams"],
           requestParams: {
             path: z.object({

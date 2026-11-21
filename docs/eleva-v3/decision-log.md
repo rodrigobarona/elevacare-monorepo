@@ -47,39 +47,75 @@ Each entry should include:
   accepts (cookie, bearer, API key) can manage the team, and sending an
   invitation is now audited (`invitation.invited`), which the 11.1c entry
   left open. Accepting and declining stay with Better Auth.
-- An invitation is valid for 7 days (Phase 11 scope). Inviting an address
-  that already has a pending invitation renews that invitation and sends
-  the same link again; there is never a second pending invitation for one
-  address (serialised with an advisory lock on clinic and address).
-  Withdrawing sets it to `canceled` (`invitation.revoked`). The invitation
-  link is only ever emailed to the invited address; the page offers no
-  "copy link".
-- Roles on an invitation are `admin` or `member` (shown as Admin and
-  Expert). Ownership is never invited.
+- Better Auth's own invite, cancel-invitation, remove-member and
+  update-member-role endpoints answer 403 `TEAM_MEMBERS_API_REQUIRED` for a
+  team org, so the rules below cannot be walked around.
+  `/auth/organization/leave` is disabled for every org type: it has no hook
+  to guard it and nothing in the product calls it. A clinician who wants to
+  leave asks an admin (a "leave this clinic" action is a follow-up).
+- An invitation is valid for 7 days, on both paths (`invitationExpiresIn`
+  is now 7 days for Better Auth's own invitations too). Inviting an address
+  that already has a pending invitation renews it and emails the same link
+  again; there is never a second pending invitation for one address
+  (advisory lock on clinic and address). One address is emailed at most
+  once a minute (429 `INVITATION_RECENTLY_SENT`). Withdrawing sets it to
+  `canceled` (`invitation.revoked`). The link is only ever emailed to the
+  invited address; the page offers no "copy link".
+- The invitation email names the clinic and the person who invites, says
+  it is valid for 7 days and says why the person received it ("{clinic}
+  gave us your email address to send you this invitation…"). Names are
+  shown as one line of plain text, without links, at most 80 characters.
+  Someone with no Eleva account gets it in the inviter's language. Each
+  send has its own delivery key, so "Send again" really sends; `emailSent`
+  is false when no email left (suppressed address or provider failure).
+- Working decision, for the founder to confirm: only the owner invites an
+  admin, withdraws an admin's invitation or removes an admin
+  (403 `OWNER_REQUIRED`). Admins manage experts. Ownership is never
+  invited.
 - Removal rules: the owner is never removed, nobody removes their own
-  account, and a member with sessions still to happen in the clinic (or a
-  slot being paid for) is refused with `MEMBER_HAS_UPCOMING_SESSIONS` and
-  the count, so no member is left with a session nobody can run. The same
-  blockers as closing a practice (ADR-026). On removal the person's
-  services in the clinic are unpublished in the same transaction
+  account, and a member with sessions booked in the clinic (or a slot being
+  paid for) is refused with `MEMBER_HAS_UPCOMING_SESSIONS` and the count,
+  so no member is left with a session nobody can run: the same blockers as
+  closing a practice (ADR-026). The removal locks the person's clinic
+  profile rows, which a reservation holds shared, so a booking and a
+  removal never interleave; afterwards `lockOpenExpertProfile` refuses new
+  reservations for someone who is no longer a member of the team org. The
+  person's services in the clinic are unpublished in the same transaction
   (`membership.removed`), the seat count is marked for sync in that
   transaction and Stripe is synced after it.
 - The Team page shows who has a published service but no prices or plan:
   billing has its own slice.
 - `@eleva/dashboard/workspace-api` now owns the server-side API client for
   dashboards under a workspace address; `apps/expert` uses it too.
-- Proof: `team-members.integration.test.ts` runs on the PR's Neon branch
-  (8 cases); `e2e/team-members.spec.ts` (opt-in, loopback) drives the page
-  in a browser and checks the audit rows. Captures:
+- Proof: `team-members.integration.test.ts` on the PR's Neon branch
+  (13 cases, with `practice-closure` re-run for the changed lock);
+  `team-people.route.test.ts` (19 cases: who may call, refusal mapping);
+  `e2e/team-members.spec.ts` (opt-in, loopback) drives the page in a
+  browser, checks that Better Auth's endpoints are refused and checks the
+  audit rows. Captures:
   `design-audit/captures/2026-11-20-team-members-after/11-team/`. Mobbin
   `11-team` references 05 to 09.
-- Not in this slice (follow-ups): changing a member's role; a clinic admin
-  cancelling or reassigning a clinician's upcoming sessions (today the
-  clinician does it); an email to the person who was removed; the
-  inviter's name in the invitation email; the Better Auth invitation
-  endpoints in `/openapi.json`; the notification kinds `team.invitation`
-  and `team.member_joined` (invitations still go out as
-  `auth.org_invitation`).
+- For the DPO and counsel (prepared, not decided here):
+  - a line in the privacy notice for people invited by a clinic (their
+    email address comes from the clinic; it is kept until the invitation is
+    answered or expires, plus the period below). Proposed text is in
+    `data-retention-export-matrix.md`; publishing it changes the notice and
+    is the DPO's call;
+  - how long answered, withdrawn and expired invitations are kept (proposed
+    90 days, then deleted by the Phase 13 sweep);
+  - what the expert agreement says a professional keeps when a clinic
+    removes them.
+- Not in this slice (follow-ups, Phase 11 unless noted): changing a
+  member's role; "leave this clinic"; a clinic admin cancelling or
+  reassigning a clinician's upcoming sessions (today the clinician does
+  it); an email to the person who was removed; clearing the removed
+  person's active workspace on their open sessions and revoking their API
+  keys for the clinic (their requests are already refused as
+  `not-a-member`); a unique index on pending `(organization, email)`; the
+  notification kinds `team.invitation` and `team.member_joined`
+  (invitations still go out as `auth.org_invitation`); the Better Auth
+  accept and decline endpoints in `/openapi.json`; the retention sweep for
+  old invitations (Phase 13).
 - Owner: engineering
 
 ### 2026-11-16: Free services publish without Payments setup (active)

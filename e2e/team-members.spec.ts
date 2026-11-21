@@ -10,7 +10,7 @@
 import { mkdirSync } from "node:fs"
 import { neon } from "@neondatabase/serverless"
 import { expect, test, type Browser, type Page } from "@playwright/test"
-import { apiUrl, authHeaders } from "./helpers/auth"
+import { apiUrl, authHeaders, ORG_HEADER } from "./helpers/auth"
 import { expertSession } from "./helpers/booking-request-smoke"
 import { sessionFromMagicLink } from "./helpers/cancellation-policy-smoke"
 import {
@@ -52,6 +52,8 @@ async function pageWithSession(
 async function shot(page: Page, name: string): Promise<void> {
   if (!CAPTURE_DIR) return
   mkdirSync(CAPTURE_DIR, { recursive: true })
+  // Never capture the loading skeleton: the page streams in under it.
+  await page.getByRole("heading", { level: 1 }).waitFor({ state: "visible" })
   const reject = page.getByRole("button", { name: /reject optional/i })
   if (await reject.isVisible().catch(() => false)) await reject.click()
   await page.addStyleTag({ content: "nextjs-portal{display:none!important}" })
@@ -90,6 +92,7 @@ test.describe("Phase 11.2 — the clinic's Team page", () => {
   test.afterAll(async () => {
     if (!teamId) return
     const sql = neon(process.env.DATABASE_URL!)
+    await sql`DELETE FROM bookings WHERE org_id = ${teamId}::uuid`
     await sql`DELETE FROM auth.organization WHERE id = ${teamId}::uuid`
   })
 
@@ -97,9 +100,21 @@ test.describe("Phase 11.2 — the clinic's Team page", () => {
     browser,
     request,
   }) => {
-    test.setTimeout(240_000)
+    test.setTimeout(300_000)
     const membersUrl = `${teamUrl}/team/${teamSlug}/members`
     const sql = neon(process.env.DATABASE_URL!)
+    const pendingInvitations = async () =>
+      (await sql`
+        SELECT id, expires_at FROM auth.invitation
+        WHERE organization_id = ${teamId}::uuid AND status = 'pending'
+      `) as { id: string; expires_at: string }[]
+    // Pretend the invitation was last sent `minutes` ago (or expired).
+    const ageInvitation = async (id: string, minutes: number) =>
+      sql`
+        UPDATE auth.invitation
+        SET expires_at = expires_at - make_interval(mins => ${minutes})
+        WHERE id = ${id}::uuid
+      `
 
     const page = await pageWithSession(browser, expertCookie)
     await page.goto(membersUrl)
@@ -110,7 +125,7 @@ test.describe("Phase 11.2 — the clinic's Team page", () => {
     const people = page.getByTestId("team-people")
     await expect(people).toContainText("Owner")
     await expect(people).toContainText("(you)")
-    await expect(people.getByRole("button", { name: /remove/i })).toHaveCount(0)
+    await expect(people.getByRole("button")).toHaveCount(0)
     await shot(page, "06-team-owner-only.desktop")
 
     // An address that is not an email is refused in the dialog.
@@ -120,11 +135,10 @@ test.describe("Phase 11.2 — the clinic's Team page", () => {
     ).toBeVisible()
     await page.getByTestId("team-invite-email").fill("not-an-email")
     await page.getByTestId("team-invite-send").click()
-    await expect(
-      page
-        .getByRole("alert")
-        .filter({ hasText: "Enter a valid email address." })
-    ).toBeVisible()
+    await expect(page.getByTestId("team-invite-error")).toHaveText(
+      "Enter a valid email address."
+    )
+    await shot(page, "07-team-invite-error.desktop")
     await page.getByTestId("team-invite-email").fill(MEMBER_EMAIL)
     await shot(page, "07-team-invite-dialog.desktop")
     await page.getByTestId("team-invite-send").click()
@@ -137,44 +151,85 @@ test.describe("Phase 11.2 — the clinic's Team page", () => {
     ).toBeVisible()
     await shot(page, "08-team-invited.desktop")
 
-    const [first] = (await sql`
-      SELECT id, expires_at FROM auth.invitation
-      WHERE organization_id = ${teamId}::uuid AND status = 'pending'
-    `) as { id: string; expires_at: string }[]
+    const [first] = await pendingInvitations()
     expect(first).toBeTruthy()
     const days =
       (new Date(first!.expires_at).getTime() - Date.now()) / 86_400_000
     expect(days).toBeGreaterThan(6.9)
     expect(days).toBeLessThanOrEqual(7)
 
-    // Sending again renews the same invitation instead of adding one.
-    await page
-      .getByRole("button", {
-        name: `Send the invitation to ${MEMBER_EMAIL} again`,
+    // The same address is not emailed twice within a minute.
+    const resend = page.getByTestId(`team-invitation-resend-${first!.id}`)
+    await resend.click()
+    await expect(
+      page.getByText("This invitation was sent less than a minute ago.", {
+        exact: false,
       })
-      .click()
+    ).toBeVisible({ timeout: 30_000 })
+
+    // Later, sending again renews the same invitation instead of adding one.
+    await ageInvitation(first!.id, 2)
+    await resend.click()
     await expect(
       page.getByText(`Invitation sent again to ${MEMBER_EMAIL}.`)
     ).toBeVisible({ timeout: 30_000 })
-    const pending = (await sql`
-      SELECT id FROM auth.invitation
-      WHERE organization_id = ${teamId}::uuid AND status = 'pending'
-    `) as { id: string }[]
-    expect(pending.map((row) => row.id)).toEqual([first!.id])
+    const renewed = await pendingInvitations()
+    expect(renewed.map((row) => row.id)).toEqual([first!.id])
+    expect(new Date(renewed[0]!.expires_at).getTime()).toBeGreaterThan(
+      new Date(first!.expires_at).getTime() - 60_000
+    )
+
+    // An expired invitation says so, and can still be sent again.
+    await ageInvitation(first!.id, 8 * 24 * 60)
+    await page.reload()
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible({
+      timeout: 30_000,
+    })
+    await expect(invited).toContainText("expired on", { timeout: 30_000 })
+    await expect(invited).toContainText("Expired")
+    await shot(page, "08-team-invitation-expired.desktop")
+
+    const phone = await pageWithSession(browser, expertCookie, true)
+    await phone.goto(membersUrl)
+    await expect(
+      phone.getByRole("heading", { name: "1 invitation waiting" })
+    ).toBeVisible({ timeout: 60_000 })
+    await expect(phone.getByTestId("team-invitations")).toContainText(
+      MEMBER_EMAIL
+    )
+    await shot(phone, "08-team-invitation-expired.mobile")
+    await phone.getByTestId("team-invite-open").click()
+    await expect(phone.getByTestId("team-invite-email")).toBeVisible()
+    await shot(phone, "07-team-invite-dialog.mobile")
+    await phone.context().close()
 
     // Withdrawn: the row goes and the link stops working.
-    await page
-      .getByRole("button", {
-        name: `Withdraw the invitation to ${MEMBER_EMAIL}`,
-      })
-      .click()
+    await page.getByTestId(`team-invitation-withdraw-${first!.id}`).click()
     await expect(page.getByText(MEMBER_EMAIL)).toHaveCount(0, {
       timeout: 30_000,
     })
 
+    // Better Auth's own endpoints cannot go around the team rules.
+    const bypass = await request.post(
+      `${apiUrl}/auth/organization/invite-member`,
+      {
+        headers: authHeaders(expertCookie),
+        data: { email: MEMBER_EMAIL, role: "admin", organizationId: teamId },
+      }
+    )
+    expect(bypass.status(), await bypass.text()).toBe(403)
+    expect(((await bypass.json()) as { code?: string }).code).toBe(
+      "TEAM_MEMBERS_API_REQUIRED"
+    )
+    const leave = await request.post(`${apiUrl}/auth/organization/leave`, {
+      headers: authHeaders(expertCookie),
+      data: { organizationId: teamId },
+    })
+    expect(leave.status()).toBe(404)
+
     // A second invitation, accepted by the member.
     const again = await request.post(`${apiUrl}/teams/${teamId}/invitations`, {
-      headers: { ...authHeaders(expertCookie), "x-eleva-org": teamSlug },
+      headers: { ...authHeaders(expertCookie), [ORG_HEADER]: teamSlug },
       data: { email: MEMBER_EMAIL, role: "member" },
     })
     expect(again.status(), await again.text()).toBe(201)
@@ -191,29 +246,68 @@ test.describe("Phase 11.2 — the clinic's Team page", () => {
     )
     expect(accepted.status(), await accepted.text()).toBe(200)
 
+    // She works in the clinic: one published service, one session booked.
+    const [joined] = (await sql`
+      SELECT m.id, m.user_id FROM auth.member m
+      JOIN auth."user" u ON u.id = m.user_id
+      WHERE m.organization_id = ${teamId}::uuid AND lower(u.email) = ${MEMBER_EMAIL}
+    `) as { id: string; user_id: string }[]
+    expect(joined).toBeTruthy()
+    const [profile] = (await sql`
+      INSERT INTO expert_profiles (org_id, user_id, username, display_name, status, practice_countries)
+      VALUES (${teamId}::uuid, ${joined!.user_id}::uuid, ${`e2e-${teamId.slice(0, 8)}`}, 'Leonor Almeida', 'active', '{}')
+      RETURNING id
+    `) as { id: string }[]
+    const [service] = (await sql`
+      INSERT INTO event_types (org_id, expert_profile_id, slug, title, published, languages)
+      VALUES (${teamId}::uuid, ${profile!.id}::uuid, 'first-visit', '{"en":"First visit"}'::jsonb, true, '{}')
+      RETURNING id
+    `) as { id: string }[]
+    const [booking] = (await sql`
+      INSERT INTO bookings (
+        org_id, event_type_id, expert_profile_id, expert_user_id, guest_email,
+        price_cents, price_amount, starts_at, ends_at, timezone, status, session_mode
+      ) VALUES (
+        ${teamId}::uuid, ${service!.id}::uuid, ${profile!.id}::uuid, ${joined!.user_id}::uuid,
+        'guest@example.test', 0, 0, now() + interval '1 day',
+        now() + interval '1 day 1 hour', 'Europe/Lisbon', 'confirmed', 'online'
+      ) RETURNING id
+    `) as { id: string }[]
+
     await page.reload()
     await expect(page.getByRole("heading", { name: "2 people" })).toBeVisible({
       timeout: 30_000,
     })
-    await expect(people).toContainText("No published service yet")
+    await expect(people).toContainText("1 published service")
     await shot(page, "09-team-two-people.desktop")
 
-    const phone = await pageWithSession(browser, expertCookie, true)
-    await phone.goto(membersUrl)
-    await expect(phone.getByRole("heading", { name: "2 people" })).toBeVisible({
-      timeout: 60_000,
-    })
-    await shot(phone, "09-team-two-people.mobile")
-    await phone.context().close()
+    const phoneList = await pageWithSession(browser, expertCookie, true)
+    await phoneList.goto(membersUrl)
+    await expect(
+      phoneList.getByRole("heading", { name: "2 people" })
+    ).toBeVisible({ timeout: 60_000 })
+    await shot(phoneList, "09-team-two-people.mobile")
+    await phoneList.context().close()
 
-    // Removed: she loses the clinic, and the list says so.
-    await page
-      .getByRole("button", { name: /^Remove .* from the team$/ })
-      .click()
+    // A session still booked keeps her in the clinic, and says why.
+    const removeButton = page.getByTestId(`team-member-remove-${joined!.id}`)
+    await removeButton.click()
     await expect(
       page.getByRole("heading", { name: new RegExp(`from ${CLINIC_NAME}\\?$`) })
     ).toBeVisible()
     await shot(page, "10-team-remove-dialog.desktop")
+    await page.getByTestId("team-member-remove-confirm").click()
+    await expect(page.getByTestId("team-member-remove-error")).toContainText(
+      "still has 1 session booked in this clinic",
+      { timeout: 30_000 }
+    )
+    await expect(page.getByTestId("team-member-remove-confirm")).toBeDisabled()
+    await shot(page, "10-team-remove-blocked.desktop")
+    await page.getByRole("button", { name: "Keep in team" }).click()
+
+    // Once the session is done she can be removed, and her service with her.
+    await sql`UPDATE bookings SET status = 'completed' WHERE id = ${booking!.id}::uuid`
+    await removeButton.click()
     await page.getByTestId("team-member-remove-confirm").click()
     await expect(page.getByRole("heading", { name: "1 person" })).toBeVisible({
       timeout: 30_000,
@@ -224,6 +318,10 @@ test.describe("Phase 11.2 — the clinic's Team page", () => {
       SELECT role FROM auth.member WHERE organization_id = ${teamId}::uuid
     `) as { role: string }[]
     expect(members.map((m) => m.role)).toEqual(["owner"])
+    const [unpublished] = (await sql`
+      SELECT published FROM event_types WHERE id = ${service!.id}::uuid
+    `) as { published: boolean }[]
+    expect(unpublished!.published).toBe(false)
 
     // Every step left its audit row.
     const audit = (await sql`

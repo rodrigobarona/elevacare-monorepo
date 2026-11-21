@@ -20,6 +20,9 @@ export type AuthMailerSend = (input: {
   locale?: EmailLocale
   recipient: NotificationRecipient
   orgId?: string
+  /** `organization-invitation`: who invites, and into which organization. */
+  organizationName?: string
+  inviterName?: string
   idempotencyKey: string
 }) => Promise<SendNotificationResult | void>
 
@@ -44,12 +47,26 @@ export type AuthTransactionalMailer = {
     user: AuthMailerUser
     otp: string
   }) => Promise<void>
+  /**
+   * Resolves true when the email was handed to the mail provider, false
+   * when it was held back (suppressed address, or a send already running).
+   */
   sendOrgInvitation: (input: {
     email: string
     url: string
     orgId: string
     invitationId: string
-  }) => Promise<void>
+    /** Shown in the email, so the invited person knows who is asking. */
+    organizationName?: string
+    inviterName?: string
+    /** Language when the invited address has no Eleva account yet. */
+    fallbackLocale?: string | null
+    /**
+     * Changes each time the invitation is sent again, so the renewal is
+     * delivered instead of being taken for a repeat of the first email.
+     */
+    sendKey?: string
+  }) => Promise<boolean>
 }
 
 export type CreateAuthMailerDeps = {
@@ -112,6 +129,8 @@ async function defaultSend(
     code: input.code,
     name: input.name,
     locale: input.locale,
+    organizationName: input.organizationName,
+    inviterName: input.inviterName,
   })
   const notificationKind = KIND_TO_NOTIFICATION[input.kind]
   if (notificationKind === "auth.org_invitation") {
@@ -144,13 +163,30 @@ async function defaultSend(
   })
 }
 
+const HANDED_OVER = new Set(["sent", "queued", "delivered"])
+
+/**
+ * Whether an email left for the mail provider. No result means the send
+ * was skipped on a machine without a mail key (local development), which
+ * callers treat as sent.
+ */
+function emailHandedOver(result: SendNotificationResult | void): boolean {
+  if (!result) return true
+  return result.deliveries.some(
+    (delivery) =>
+      delivery.channel === "email" && HANDED_OVER.has(delivery.status)
+  )
+}
+
 export function createAuthMailer(
   deps: CreateAuthMailerDeps = {}
 ): AuthTransactionalMailer {
   const send = deps.send ?? defaultSend
   const loadUser = deps.loadUser ?? loadUserByEmail
 
-  async function deliver(input: Parameters<AuthMailerSend>[0]): Promise<void> {
+  async function deliver(
+    input: Parameters<AuthMailerSend>[0]
+  ): Promise<SendNotificationResult | void> {
     if (!process.env.RESEND_API_KEY) {
       if (isDeployedRuntime()) {
         throw new Error("RESEND_API_KEY is required in production and preview")
@@ -159,7 +195,7 @@ export function createAuthMailer(
       return
     }
     try {
-      await send(input)
+      return await send(input)
     } catch {
       console.error(`[notifications] ${input.kind} AUTH_MAIL_SEND_FAILED`)
       if (isDeployedRuntime()) {
@@ -211,17 +247,31 @@ export function createAuthMailer(
         idempotencyKey: `auth.two_factor_otp:${user.email}:${keyedDigest(`${user.email}:${otp}`)}`,
       })
     },
-    async sendOrgInvitation({ email, url, orgId, invitationId }) {
+    async sendOrgInvitation({
+      email,
+      url,
+      orgId,
+      invitationId,
+      organizationName,
+      inviterName,
+      fallbackLocale,
+      sendKey,
+    }) {
       const existing = await loadUser(email)
-      await deliver({
+      const result = await deliver({
         kind: "organization-invitation",
         to: email,
         url,
-        locale: toLocale(existing?.locale),
+        locale: toLocale(existing?.locale ?? fallbackLocale),
         orgId,
+        organizationName,
+        inviterName,
         recipient: existing ? { userId: existing.userId } : { email },
-        idempotencyKey: `auth.org_invitation:${invitationId}`,
+        idempotencyKey: sendKey
+          ? `auth.org_invitation:${invitationId}:${sendKey}`
+          : `auth.org_invitation:${invitationId}`,
       })
+      return emailHandedOver(result)
     },
   }
 }

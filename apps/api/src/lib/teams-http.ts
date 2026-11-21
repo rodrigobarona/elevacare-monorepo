@@ -26,6 +26,8 @@ const TEAM_MEMBER_STATUS: Record<TeamMemberErrorCode, number> = {
   MEMBER_LIMIT_REACHED: 409,
   MEMBER_NOT_FOUND: 404,
   INVITATION_NOT_FOUND: 404,
+  INVITATION_RECENTLY_SENT: 429,
+  OWNER_REQUIRED: 403,
   CANNOT_REMOVE_OWNER: 409,
   CANNOT_REMOVE_SELF: 409,
   MEMBER_HAS_UPCOMING_SESSIONS: 409,
@@ -135,11 +137,18 @@ export function teamErrorResponse(
       {
         error: err.code,
         code: err.code,
-        ...(err.upcomingSessions !== undefined && {
-          upcomingSessions: err.upcomingSessions,
-        }),
+        ...err.detail,
       },
-      { status: TEAM_MEMBER_STATUS[err.code], headers }
+      {
+        status: TEAM_MEMBER_STATUS[err.code],
+        headers:
+          err.detail.retryAfterSeconds === undefined
+            ? headers
+            : {
+                ...headers,
+                "Retry-After": String(err.detail.retryAfterSeconds),
+              },
+      }
     )
   }
   console.error(`[teams] ${operation} failed`, describeError(err))

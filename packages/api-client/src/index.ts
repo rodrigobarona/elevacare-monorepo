@@ -1041,6 +1041,26 @@ export const InviteTeamMemberResponseSchema = z.object({
   emailSent: z.boolean(),
 })
 
+/** Why a team change was refused (403, 404, 409, 429). */
+export const TeamMemberErrorSchema = z.object({
+  error: z.string(),
+  code: z.enum([
+    "ALREADY_MEMBER",
+    "MEMBER_LIMIT_REACHED",
+    "MEMBER_NOT_FOUND",
+    "INVITATION_NOT_FOUND",
+    "INVITATION_RECENTLY_SENT",
+    "OWNER_REQUIRED",
+    "CANNOT_REMOVE_OWNER",
+    "CANNOT_REMOVE_SELF",
+    "MEMBER_HAS_UPCOMING_SESSIONS",
+  ]),
+  /** MEMBER_HAS_UPCOMING_SESSIONS: sessions booked or being paid for. */
+  upcomingSessions: z.number().int().positive().optional(),
+  /** INVITATION_RECENTLY_SENT: seconds until it can be sent again. */
+  retryAfterSeconds: z.number().int().positive().optional(),
+})
+
 export const RemoveTeamMemberResponseSchema = z.object({
   userId: z.string().uuid(),
   /** Services taken off the clinic's public pages with the removal. */
@@ -1242,6 +1262,7 @@ export type InviteTeamMemberResponse = z.infer<
 export type RemoveTeamMemberResponse = z.infer<
   typeof RemoveTeamMemberResponseSchema
 >
+export type TeamMemberError = z.infer<typeof TeamMemberErrorSchema>
 export type CreateCrmContactRequest = z.infer<
   typeof CreateCrmContactRequestSchema
 >

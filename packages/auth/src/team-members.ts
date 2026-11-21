@@ -1,9 +1,19 @@
 import { and, asc, eq, gt, inArray, isNull, notInArray, sql } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
 import { auth, main, withOrgContext, type Tx } from "@eleva/db"
+import {
+  FINISHED_BOOKING_STATUSES,
+  LIVE_HOLD_STATUSES,
+  lockExpertProfilesForRemoval,
+} from "@eleva/db/queries/practice-closure"
 import { toMembershipSeniority } from "./capabilities"
 import { invitationAcceptUrl } from "./invitation-accept-url"
 import { sendOrgInvitationEmail } from "./send-auth-email"
+import {
+  TEAM_INVITATION_RESEND_COOLDOWN_MS,
+  TEAM_INVITATION_TTL_MS,
+  TEAM_MEMBER_LIMIT,
+} from "./team-limits"
 
 /**
  * The people of a clinic (team org) — Phase 11.2.
@@ -11,8 +21,10 @@ import { sendOrgInvitationEmail } from "./send-auth-email"
  * Invitations and removals are written here, in one transaction with their
  * audit row, instead of through Better Auth's session-only endpoints: every
  * credential the API accepts (cookie, bearer, API key) can manage the team,
- * and an invitation never exists without its audit entry. Accepting and
- * declining stay with Better Auth (`/auth/organization/*-invitation`).
+ * and an invitation never exists without its audit entry. Better Auth's own
+ * invite, cancel, remove, role and leave endpoints are refused for team
+ * orgs (`server/auth.ts`), so these rules cannot be walked around.
+ * Accepting and declining stay with Better Auth.
  */
 
 export type TeamMemberErrorCode =
@@ -20,6 +32,8 @@ export type TeamMemberErrorCode =
   | "MEMBER_LIMIT_REACHED"
   | "MEMBER_NOT_FOUND"
   | "INVITATION_NOT_FOUND"
+  | "INVITATION_RECENTLY_SENT"
+  | "OWNER_REQUIRED"
   | "CANNOT_REMOVE_OWNER"
   | "CANNOT_REMOVE_SELF"
   | "MEMBER_HAS_UPCOMING_SESSIONS"
@@ -27,33 +41,26 @@ export type TeamMemberErrorCode =
 export class TeamMemberError extends Error {
   constructor(
     readonly code: TeamMemberErrorCode,
-    /** Upcoming sessions that block a removal. */
-    readonly upcomingSessions?: number
+    readonly detail: {
+      /** Sessions booked or being paid for that block a removal. */
+      upcomingSessions?: number
+      /** Seconds until an invitation can be sent again. */
+      retryAfterSeconds?: number
+    } = {}
   ) {
     super(code)
     this.name = "TeamMemberError"
   }
 }
 
-/** An invitation is valid for 7 days (Phase 11 scope). */
-export const TEAM_INVITATION_TTL_MS = 7 * 24 * 60 * 60 * 1000
-
-/** Members plus pending invitations (Better Auth `membershipLimit`). */
-export const TEAM_MEMBER_LIMIT = 200
+export {
+  TEAM_INVITATION_RESEND_COOLDOWN_MS,
+  TEAM_INVITATION_TTL_MS,
+  TEAM_MEMBER_LIMIT,
+}
 
 /** Roles an invitation may grant. Ownership is never invited. */
 export type TeamInviteRole = "admin" | "member"
-
-/** Bookings in these states are over and never block a removal. */
-const FINISHED_BOOKING_STATUSES = [
-  "cancelled",
-  "completed",
-  "no_show",
-  "refunded",
-] as const
-
-/** A slot a member is holding or paying for: confirming it books a session. */
-const LIVE_HOLD_STATUSES = ["active", "reserved"] as const
 
 export interface TeamMember {
   memberId: string
@@ -178,6 +185,25 @@ export async function listTeamMembers(
   })
 }
 
+/**
+ * The caller's role in the clinic. Changing who administers a clinic
+ * (inviting, removing or un-inviting an admin) is the owner's call.
+ */
+async function isOwner(
+  tx: Tx,
+  orgId: string,
+  userId: string
+): Promise<boolean> {
+  const [row] = await tx
+    .select({ role: auth.member.role })
+    .from(auth.member)
+    .where(
+      and(eq(auth.member.organizationId, orgId), eq(auth.member.userId, userId))
+    )
+    .limit(1)
+  return row !== undefined && toMembershipSeniority(row.role) === "owner"
+}
+
 export interface InviteTeamMemberResult {
   invitationId: string
   email: string
@@ -198,6 +224,40 @@ async function lockInvitationSlot(
   await tx.execute(
     sql`select pg_advisory_xact_lock(hashtextextended(${`team-invitation:${orgId}:${email}`}, 0))`
   )
+}
+
+/** Who invites and into which clinic, for the invitation email. */
+async function invitationNames(
+  tx: Tx,
+  orgId: string,
+  actorUserId: string
+): Promise<{
+  organizationName: string | undefined
+  inviterName: string | undefined
+  inviterLocale: string | null
+}> {
+  const [org] = await tx
+    .select({
+      name: auth.organization.name,
+      clinicName: main.clinicProfiles.displayName,
+    })
+    .from(auth.organization)
+    .leftJoin(
+      main.clinicProfiles,
+      eq(main.clinicProfiles.orgId, auth.organization.id)
+    )
+    .where(eq(auth.organization.id, orgId))
+    .limit(1)
+  const [inviter] = await tx
+    .select({ name: auth.user.name, locale: auth.user.locale })
+    .from(auth.user)
+    .where(eq(auth.user.id, actorUserId))
+    .limit(1)
+  return {
+    organizationName: org?.clinicName ?? org?.name ?? undefined,
+    inviterName: inviter?.name ?? undefined,
+    inviterLocale: inviter?.locale ?? null,
+  }
 }
 
 /**
@@ -222,6 +282,12 @@ export async function inviteTeamMember(input: {
     { orgId: input.orgId, actorUserId: input.actorUserId },
     async (tx, ctx) => {
       await lockInvitationSlot(tx, input.orgId, email)
+      if (
+        input.role === "admin" &&
+        !(await isOwner(tx, input.orgId, input.actorUserId))
+      ) {
+        throw new TeamMemberError("OWNER_REQUIRED")
+      }
 
       const [existingMember] = await tx
         .select({ id: auth.member.id })
@@ -237,7 +303,11 @@ export async function inviteTeamMember(input: {
       if (existingMember) throw new TeamMemberError("ALREADY_MEMBER")
 
       const [pending] = await tx
-        .select({ id: auth.invitation.id })
+        .select({
+          id: auth.invitation.id,
+          role: auth.invitation.role,
+          expiresAt: auth.invitation.expiresAt,
+        })
         .from(auth.invitation)
         .where(
           and(
@@ -249,6 +319,26 @@ export async function inviteTeamMember(input: {
         .limit(1)
 
       if (pending) {
+        if (
+          inviteRole(pending.role) === "admin" &&
+          !(await isOwner(tx, input.orgId, input.actorUserId))
+        ) {
+          throw new TeamMemberError("OWNER_REQUIRED")
+        }
+        // Each send moves the expiry to seven days out, so the last send
+        // is the expiry minus seven days.
+        const sinceLastSend =
+          now.getTime() - (pending.expiresAt.getTime() - TEAM_INVITATION_TTL_MS)
+        if (
+          sinceLastSend >= 0 &&
+          sinceLastSend < TEAM_INVITATION_RESEND_COOLDOWN_MS
+        ) {
+          throw new TeamMemberError("INVITATION_RECENTLY_SENT", {
+            retryAfterSeconds: Math.ceil(
+              (TEAM_INVITATION_RESEND_COOLDOWN_MS - sinceLastSend) / 1000
+            ),
+          })
+        }
         await tx
           .update(auth.invitation)
           .set({
@@ -263,7 +353,11 @@ export async function inviteTeamMember(input: {
           entityId: pending.id,
           payload: { role: input.role, resent: true },
         })
-        return { invitationId: pending.id, resent: true }
+        return {
+          invitationId: pending.id,
+          resent: true,
+          ...(await invitationNames(tx, input.orgId, input.actorUserId)),
+        }
       }
 
       const [memberCount] = await tx
@@ -304,17 +398,26 @@ export async function inviteTeamMember(input: {
         entityId: created.id,
         payload: { role: input.role, resent: false },
       })
-      return { invitationId: created.id, resent: false }
+      return {
+        invitationId: created.id,
+        resent: false,
+        ...(await invitationNames(tx, input.orgId, input.actorUserId)),
+      }
     }
   )
 
-  let emailSent = true
+  let emailSent: boolean
   try {
-    await sendOrgInvitationEmail({
+    emailSent = await sendOrgInvitationEmail({
       email,
       url: invitationAcceptUrl(saved.invitationId),
       orgId: input.orgId,
       invitationId: saved.invitationId,
+      organizationName: saved.organizationName,
+      inviterName: saved.inviterName,
+      fallbackLocale: saved.inviterLocale,
+      // A renewal has a new expiry, so it is delivered as a new email.
+      sendKey: String(expiresAt.getTime()),
     })
   } catch (err) {
     emailSent = false
@@ -343,13 +446,30 @@ export async function cancelTeamInvitation(input: {
   await withAudit(
     { orgId: input.orgId, actorUserId: input.actorUserId },
     async (tx, ctx) => {
+      const [pending] = await tx
+        .select({ id: auth.invitation.id, role: auth.invitation.role })
+        .from(auth.invitation)
+        .where(
+          and(
+            eq(auth.invitation.id, input.invitationId),
+            eq(auth.invitation.organizationId, input.orgId),
+            eq(auth.invitation.status, "pending")
+          )
+        )
+        .for("update")
+      if (!pending) throw new TeamMemberError("INVITATION_NOT_FOUND")
+      if (
+        inviteRole(pending.role) === "admin" &&
+        !(await isOwner(tx, input.orgId, input.actorUserId))
+      ) {
+        throw new TeamMemberError("OWNER_REQUIRED")
+      }
       const [cancelled] = await tx
         .update(auth.invitation)
         .set({ status: "canceled" })
         .where(
           and(
-            eq(auth.invitation.id, input.invitationId),
-            eq(auth.invitation.organizationId, input.orgId),
+            eq(auth.invitation.id, pending.id),
             eq(auth.invitation.status, "pending")
           )
         )
@@ -413,17 +533,20 @@ export async function removeTeamMember(input: {
       if (target.userId === input.actorUserId) {
         throw new TeamMemberError("CANNOT_REMOVE_SELF")
       }
+      if (
+        role === "admin" &&
+        !(await isOwner(tx, input.orgId, input.actorUserId))
+      ) {
+        throw new TeamMemberError("OWNER_REQUIRED")
+      }
 
-      const profiles = await tx
-        .select({ id: main.expertProfiles.id })
-        .from(main.expertProfiles)
-        .where(
-          and(
-            eq(main.expertProfiles.orgId, input.orgId),
-            eq(main.expertProfiles.userId, target.userId)
-          )
-        )
-      const profileIds = profiles.map((p) => p.id)
+      // Reservations hold these rows shared: wait for any in flight, then
+      // count them; later ones wait for this removal and are refused.
+      const profileIds = await lockExpertProfilesForRemoval(
+        tx,
+        input.orgId,
+        target.userId
+      )
 
       let unpublishedServices = 0
       if (profileIds.length > 0) {
@@ -456,7 +579,9 @@ export async function removeTeamMember(input: {
         const upcoming =
           Number(scheduled?.bookings ?? 0) + Number(scheduled?.holds ?? 0)
         if (upcoming > 0) {
-          throw new TeamMemberError("MEMBER_HAS_UPCOMING_SESSIONS", upcoming)
+          throw new TeamMemberError("MEMBER_HAS_UPCOMING_SESSIONS", {
+            upcomingSessions: upcoming,
+          })
         }
         const unpublished = await tx
           .update(main.eventTypes)

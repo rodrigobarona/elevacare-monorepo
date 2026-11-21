@@ -1,6 +1,10 @@
 import { Redis } from "@upstash/redis"
 import { rewriteMagicLinkVerifyUrl } from "./return-to"
-import { getAuthTransactionalMailer, type AuthMailerUser } from "./auth-mailer"
+import {
+  getAuthTransactionalMailer,
+  type AuthMailerUser,
+  type AuthTransactionalMailer,
+} from "./auth-mailer"
 import {
   e2eAuthUrlKey,
   shouldPersistE2eAuthUrl,
@@ -63,11 +67,9 @@ export async function sendTwoFactorOtpEmail(input: {
   await getAuthTransactionalMailer().sendTwoFactorOtp(input)
 }
 
-export async function sendOrgInvitationEmail(input: {
-  email: string
-  url: string
-  orgId: string
-  invitationId: string
-}): Promise<void> {
-  await getAuthTransactionalMailer().sendOrgInvitation(input)
+/** True when the email was handed to the mail provider. */
+export async function sendOrgInvitationEmail(
+  input: Parameters<AuthTransactionalMailer["sendOrgInvitation"]>[0]
+): Promise<boolean> {
+  return getAuthTransactionalMailer().sendOrgInvitation(input)
 }

@@ -63,7 +63,6 @@ export interface RosterInvitation {
   role: InviteRole
   expiresAt: string
   expired: boolean
-  invitedByName: string | null
 }
 
 function initials(name: string): string {
@@ -74,6 +73,12 @@ function initials(name: string): string {
 }
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+/** Errors about the address itself sit under the field; the rest above the buttons. */
+const FIELD_ERRORS: readonly InviteError[] = ["validation", "already-member"]
+
+/** Row buttons: a full-height target on a phone, compact from `sm` up. */
+const ROW_BUTTON = "max-sm:h-10 max-sm:px-4"
 
 export function TeamRoster({
   clinicName,
@@ -94,19 +99,26 @@ export function TeamRoster({
     error: RemoveError
     upcomingSessions?: number
   } | null>(null)
-  const [busyInvitation, setBusyInvitation] = React.useState<string | null>(
-    null
-  )
+  const [busy, setBusy] = React.useState<{
+    id: string
+    kind: "resend" | "withdraw"
+  } | null>(null)
   const [pending, startTransition] = React.useTransition()
+  const peopleHeading = React.useRef<HTMLHeadingElement>(null)
+  const invitedHeading = React.useRef<HTMLHeadingElement>(null)
+
+  // Only the owner changes who administers the clinic.
+  const viewerIsOwner =
+    members.find((member) => member.userId === currentUserId)?.role === "owner"
 
   function resend(invitation: RosterInvitation) {
-    setBusyInvitation(invitation.id)
+    setBusy({ id: invitation.id, kind: "resend" })
     startTransition(async () => {
       const result = await inviteMember({
         email: invitation.email,
         role: invitation.role,
       })
-      setBusyInvitation(null)
+      setBusy(null)
       if (result.ok && result.emailSent) {
         toast.success(t("toast.resent", { email: invitation.email }))
       } else if (result.ok) {
@@ -118,14 +130,20 @@ export function TeamRoster({
   }
 
   function withdraw(invitation: RosterInvitation) {
-    setBusyInvitation(invitation.id)
+    setBusy({ id: invitation.id, kind: "withdraw" })
+    // The row is about to go: keep the keyboard's place on a heading.
+    const nextFocus = invitations.length > 1 ? invitedHeading : peopleHeading
     startTransition(async () => {
       const result = await withdrawInvitation(invitation.id)
-      setBusyInvitation(null)
+      setBusy(null)
       if (result.ok) {
+        nextFocus.current?.focus()
         toast.success(t("toast.withdrawn", { email: invitation.email }))
       } else if (result.error === "gone") {
+        nextFocus.current?.focus()
         toast.message(t("toast.invitationGone"))
+      } else if (result.error === "owner-required") {
+        toast.error(t("inviteError.owner-required"))
       } else {
         toast.error(t("toast.failed"))
       }
@@ -137,16 +155,15 @@ export function TeamRoster({
     if (!member) return
     startTransition(async () => {
       const result = await removeMember(member.memberId)
-      if (result.ok) {
+      if (result.ok || result.error === "gone") {
         setRemoving(null)
         setRemoveError(null)
-        toast.success(t("toast.removed", { name: member.name }))
-        return
-      }
-      if (result.error === "gone") {
-        setRemoving(null)
-        setRemoveError(null)
-        toast.message(t("toast.memberGone"))
+        peopleHeading.current?.focus()
+        if (result.ok) {
+          toast.success(t("toast.removed", { name: member.name }))
+        } else {
+          toast.message(t("toast.memberGone"))
+        }
         return
       }
       setRemoveError({
@@ -160,7 +177,12 @@ export function TeamRoster({
     <div className="space-y-10">
       <section aria-labelledby="team-people" className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 id="team-people" className="text-lg font-medium text-foreground">
+          <h2
+            id="team-people"
+            ref={peopleHeading}
+            tabIndex={-1}
+            className="text-lg font-medium text-foreground outline-none"
+          >
             {t("peopleHeading", { count: members.length })}
           </h2>
           <Button
@@ -178,7 +200,11 @@ export function TeamRoster({
         >
           {members.map((member) => {
             const isYou = member.userId === currentUserId
-            const canRemove = member.role !== "owner" && !isYou
+            const canRemove =
+              member.role !== "owner" &&
+              !isYou &&
+              (member.role !== "admin" || viewerIsOwner)
+            const nameId = `team-member-name-${member.memberId}`
             return (
               <li
                 key={member.memberId}
@@ -194,7 +220,9 @@ export function TeamRoster({
                   </Avatar>
                   <div className="min-w-0">
                     <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-medium text-foreground">
-                      <span className="truncate">{member.name}</span>
+                      <span id={nameId} className="truncate">
+                        {member.name}
+                      </span>
                       {isYou ? (
                         <span className="text-sm font-normal text-muted-foreground">
                           {t("you")}
@@ -215,31 +243,42 @@ export function TeamRoster({
                       {t(`role.${member.role}`)}
                     </StatusPill>
                   </div>
-                  {canRemove ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onPress={() => {
-                        setRemoveError(null)
-                        setRemoving(member)
-                      }}
-                      aria-label={t("remove.openLabel", { name: member.name })}
-                      data-testid={`team-member-remove-${member.memberId}`}
-                    >
-                      {t("remove.open")}
-                    </Button>
-                  ) : null}
+                  {/* A fixed slot, so roles line up whether or not a row has an action. */}
+                  <div className="flex shrink-0 justify-end sm:w-24">
+                    {canRemove ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={ROW_BUTTON}
+                        onPress={() => {
+                          setRemoveError(null)
+                          setRemoving(member)
+                        }}
+                        aria-describedby={nameId}
+                        data-testid={`team-member-remove-${member.memberId}`}
+                      >
+                        {t("remove.open")}
+                      </Button>
+                    ) : null}
+                  </div>
                 </div>
               </li>
             )
           })}
         </ul>
-        <p className="text-sm text-muted-foreground">{t("ownerNote")}</p>
+        <p className="max-w-prose text-sm text-muted-foreground">
+          {t("ownerNote")}
+        </p>
       </section>
 
       {invitations.length > 0 ? (
         <section aria-labelledby="team-invited" className="space-y-4">
-          <h2 id="team-invited" className="text-lg font-medium text-foreground">
+          <h2
+            id="team-invited"
+            ref={invitedHeading}
+            tabIndex={-1}
+            className="text-lg font-medium text-foreground outline-none"
+          >
             {t("invitedHeading", { count: invitations.length })}
           </h2>
           <ul
@@ -247,7 +286,9 @@ export function TeamRoster({
             data-testid="team-invitations"
           >
             {invitations.map((invitation) => {
-              const busy = pending && busyInvitation === invitation.id
+              const rowBusy = pending && busy?.id === invitation.id
+              const canChange = invitation.role !== "admin" || viewerIsOwner
+              const emailId = `team-invitation-email-${invitation.id}`
               const date = format.dateTime(new Date(invitation.expiresAt), {
                 day: "numeric",
                 month: "long",
@@ -266,7 +307,10 @@ export function TeamRoster({
                       <EnvelopeIcon className="size-5" />
                     </span>
                     <div className="min-w-0">
-                      <p className="truncate font-medium text-foreground">
+                      <p
+                        id={emailId}
+                        className="truncate font-medium text-foreground"
+                      >
                         {invitation.email}
                       </p>
                       <p className="text-sm text-muted-foreground">
@@ -284,28 +328,36 @@ export function TeamRoster({
                         {t("invitation.expiredPill")}
                       </StatusPill>
                     ) : null}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      isDisabled={pending}
-                      onPress={() => resend(invitation)}
-                      aria-label={t("invitation.resendLabel", {
-                        email: invitation.email,
-                      })}
-                    >
-                      {busy ? t("invitation.working") : t("invitation.resend")}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      isDisabled={pending}
-                      onPress={() => withdraw(invitation)}
-                      aria-label={t("invitation.withdrawLabel", {
-                        email: invitation.email,
-                      })}
-                    >
-                      {t("invitation.withdraw")}
-                    </Button>
+                    {canChange ? (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={ROW_BUTTON}
+                          isDisabled={pending}
+                          onPress={() => resend(invitation)}
+                          aria-describedby={emailId}
+                          data-testid={`team-invitation-resend-${invitation.id}`}
+                        >
+                          {rowBusy && busy?.kind === "resend"
+                            ? t("invitation.sending")
+                            : t("invitation.resend")}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={ROW_BUTTON}
+                          isDisabled={pending}
+                          onPress={() => withdraw(invitation)}
+                          aria-describedby={emailId}
+                          data-testid={`team-invitation-withdraw-${invitation.id}`}
+                        >
+                          {rowBusy && busy?.kind === "withdraw"
+                            ? t("invitation.withdrawing")
+                            : t("invitation.withdraw")}
+                        </Button>
+                      </>
+                    ) : null}
                   </div>
                 </li>
               )
@@ -316,6 +368,7 @@ export function TeamRoster({
 
       <InviteDialog
         clinicName={clinicName}
+        canInviteAdmin={viewerIsOwner}
         isOpen={inviteOpen}
         onClose={() => setInviteOpen(false)}
       />
@@ -340,7 +393,7 @@ export function TeamRoster({
         </AlertDialogHeader>
         {removeError ? (
           <Alert variant="destructive" role="alert">
-            <AlertDescription>
+            <AlertDescription data-testid="team-member-remove-error">
               {removeError.error === "upcoming-sessions"
                 ? t("remove.error.upcoming-sessions", {
                     name: removing?.name ?? "",
@@ -370,10 +423,12 @@ export function TeamRoster({
 
 function InviteDialog({
   clinicName,
+  canInviteAdmin,
   isOpen,
   onClose,
 }: {
   clinicName: string
+  canInviteAdmin: boolean
   isOpen: boolean
   onClose: () => void
 }) {
@@ -384,13 +439,19 @@ function InviteDialog({
   const [pending, startTransition] = React.useTransition()
   const emailId = React.useId()
   const errorId = React.useId()
+  const roleHelpId = React.useId()
+  const fieldError = error !== null && FIELD_ERRORS.includes(error)
+
+  function reset() {
+    setEmail("")
+    setRole("member")
+    setError(null)
+  }
 
   function close() {
     if (pending) return
     onClose()
-    setEmail("")
-    setRole("member")
-    setError(null)
+    reset()
   }
 
   function submit(event: React.FormEvent) {
@@ -408,8 +469,7 @@ function InviteDialog({
         return
       }
       onClose()
-      setEmail("")
-      setRole("member")
+      reset()
       if (!result.emailSent) {
         toast.error(t("toast.emailNotSent", { email: result.email }))
       } else if (result.resent) {
@@ -446,42 +506,65 @@ function InviteDialog({
                 if (error) setError(null)
               }}
               placeholder={t("invite.emailPlaceholder")}
-              aria-invalid={error ? true : undefined}
-              aria-describedby={error ? errorId : undefined}
+              aria-invalid={fieldError ? true : undefined}
+              aria-describedby={fieldError ? errorId : undefined}
               data-testid="team-invite-email"
               autoFocus
             />
-            {error ? (
-              <p id={errorId} role="alert" className="text-sm text-destructive">
+            {fieldError ? (
+              <p
+                id={errorId}
+                role="alert"
+                className="text-sm text-destructive"
+                data-testid="team-invite-error"
+              >
                 {t(`inviteError.${error}`)}
               </p>
             ) : null}
           </div>
-          <div className="space-y-1.5">
-            <Select
-              selectedKey={role}
-              onSelectionChange={(key) => {
-                if (key === "admin" || key === "member") setRole(key)
-              }}
-            >
-              <Label className="mb-1.5">{t("invite.role")}</Label>
-              <SelectTrigger className="w-full" data-testid="team-invite-role">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem id="member" textValue={t("role.member")}>
-                  {t("role.member")}
-                </SelectItem>
-                <SelectItem id="admin" textValue={t("role.admin")}>
-                  {t("role.admin")}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+          {canInviteAdmin ? (
+            <div className="space-y-1.5">
+              <Select
+                className="w-full"
+                selectedKey={role}
+                onSelectionChange={(key) => {
+                  if (key === "admin" || key === "member") setRole(key)
+                }}
+                aria-describedby={roleHelpId}
+              >
+                <Label className="mb-1.5">{t("invite.role")}</Label>
+                <SelectTrigger
+                  className="w-full"
+                  data-testid="team-invite-role"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem id="member" textValue={t("role.member")}>
+                    {t("role.member")}
+                  </SelectItem>
+                  <SelectItem id="admin" textValue={t("role.admin")}>
+                    {t("role.admin")}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p id={roleHelpId} className="text-sm text-muted-foreground">
+                {t(`invite.roleHelp.${role}`)}
+              </p>
+            </div>
+          ) : (
             <p className="text-sm text-muted-foreground">
-              {t(`invite.roleHelp.${role}`)}
+              {t("invite.roleFixed")}
             </p>
-          </div>
+          )}
         </div>
+        {error && !fieldError ? (
+          <Alert variant="destructive" role="alert">
+            <AlertDescription data-testid="team-invite-error">
+              {t(`inviteError.${error}`)}
+            </AlertDescription>
+          </Alert>
+        ) : null}
         <DialogFooter>
           <Button
             type="button"

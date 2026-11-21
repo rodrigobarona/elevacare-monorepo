@@ -5,6 +5,7 @@ import { z } from "zod"
 import {
   ApiClientError,
   InviteTeamMemberRequestSchema,
+  TeamMemberErrorSchema,
 } from "@eleva/api-client"
 import { resolveTeamWorkspaceBase } from "@eleva/auth/org-routing"
 import {
@@ -12,14 +13,34 @@ import {
   requireWorkspaceSession,
 } from "@eleva/dashboard/workspace-api"
 
-export type InviteError = "validation" | "already-member" | "limit" | "failed"
+/** The refusal code the API sent, when it sent one this page knows. */
+function refusal(err: unknown) {
+  if (!(err instanceof ApiClientError)) return null
+  const parsed = TeamMemberErrorSchema.safeParse(err.body)
+  return parsed.success ? parsed.data : null
+}
+
+function revalidateMembers(orgSlug: string | null): void {
+  if (orgSlug) revalidatePath(`${resolveTeamWorkspaceBase(orgSlug)}/members`)
+}
+
+export type InviteError =
+  | "validation"
+  | "already-member"
+  | "limit"
+  | "owner-required"
+  | "recently-sent"
+  | "failed"
 
 export type InviteResult =
   | { ok: true; email: string; resent: boolean; emailSent: boolean }
   | { ok: false; error: InviteError }
 
-function revalidateMembers(orgSlug: string | null): void {
-  if (orgSlug) revalidatePath(`${resolveTeamWorkspaceBase(orgSlug)}/members`)
+const INVITE_ERRORS: Partial<Record<string, InviteError>> = {
+  ALREADY_MEMBER: "already-member",
+  MEMBER_LIMIT_REACHED: "limit",
+  OWNER_REQUIRED: "owner-required",
+  INVITATION_RECENTLY_SENT: "recently-sent",
 }
 
 /** Invite by email, or send a pending invitation again. */
@@ -41,14 +62,10 @@ export async function inviteMember(input: {
       emailSent: result.emailSent,
     }
   } catch (err) {
-    if (err instanceof ApiClientError) {
-      if (err.body.error === "ALREADY_MEMBER") {
-        return { ok: false, error: "already-member" }
-      }
-      if (err.body.error === "MEMBER_LIMIT_REACHED") {
-        return { ok: false, error: "limit" }
-      }
-      if (err.status === 422) return { ok: false, error: "validation" }
+    const known = INVITE_ERRORS[refusal(err)?.code ?? ""]
+    if (known) return { ok: false, error: known }
+    if (err instanceof ApiClientError && err.status === 422) {
+      return { ok: false, error: "validation" }
     }
     console.error("[team] inviteMember failed", err)
     return { ok: false, error: "failed" }
@@ -59,7 +76,7 @@ const IdSchema = z.string().uuid()
 
 export type WithdrawResult =
   | { ok: true }
-  | { ok: false; error: "gone" | "failed" }
+  | { ok: false; error: "gone" | "owner-required" | "failed" }
 
 /** Withdraw a pending invitation: its link stops working. */
 export async function withdrawInvitation(
@@ -70,16 +87,21 @@ export async function withdrawInvitation(
   try {
     const session = await requireWorkspaceSession("members:manage")
     const api = await getWorkspaceApiClient()
-    await api.teams.cancelInvitation(session.orgId, id.data)
-    revalidateMembers(session.orgSlug)
-    return { ok: true }
-  } catch (err) {
-    if (err instanceof ApiClientError && err.status === 404) {
+    try {
+      await api.teams.cancelInvitation(session.orgId, id.data)
+    } catch (err) {
+      const code = refusal(err)?.code
+      if (code === "OWNER_REQUIRED") {
+        return { ok: false, error: "owner-required" }
+      }
+      if (code !== "INVITATION_NOT_FOUND") throw err
       // Answered or withdrawn meanwhile: refresh so the row goes away.
-      const session = await requireWorkspaceSession("members:manage")
       revalidateMembers(session.orgSlug)
       return { ok: false, error: "gone" }
     }
+    revalidateMembers(session.orgSlug)
+    return { ok: true }
+  } catch (err) {
     console.error("[team] withdrawInvitation failed", err)
     return { ok: false, error: "failed" }
   }
@@ -89,12 +111,20 @@ export type RemoveError =
   | "upcoming-sessions"
   | "owner"
   | "self"
-  | "gone"
+  | "owner-required"
   | "failed"
 
 export type RemoveResult =
-  | { ok: true; unpublishedServices: number }
+  | { ok: true }
+  | { ok: false; error: "gone" }
   | { ok: false; error: RemoveError; upcomingSessions?: number }
+
+const REMOVE_ERRORS: Partial<Record<string, RemoveError>> = {
+  MEMBER_HAS_UPCOMING_SESSIONS: "upcoming-sessions",
+  CANNOT_REMOVE_OWNER: "owner",
+  CANNOT_REMOVE_SELF: "self",
+  OWNER_REQUIRED: "owner-required",
+}
 
 /** Remove someone from the clinic. */
 export async function removeMember(memberId: string): Promise<RemoveResult> {
@@ -103,30 +133,26 @@ export async function removeMember(memberId: string): Promise<RemoveResult> {
   try {
     const session = await requireWorkspaceSession("members:manage")
     const api = await getWorkspaceApiClient()
-    const removed = await api.teams.removeMember(session.orgId, id.data)
-    revalidateMembers(session.orgSlug)
-    return { ok: true, unpublishedServices: removed.unpublishedServices }
-  } catch (err) {
-    if (err instanceof ApiClientError) {
-      const body = err.body as { error: string; upcomingSessions?: unknown }
-      if (body.error === "MEMBER_HAS_UPCOMING_SESSIONS") {
-        return {
-          ok: false,
-          error: "upcoming-sessions",
-          upcomingSessions:
-            typeof body.upcomingSessions === "number"
-              ? body.upcomingSessions
-              : undefined,
-        }
+    try {
+      await api.teams.removeMember(session.orgId, id.data)
+    } catch (err) {
+      const refused = refusal(err)
+      if (refused?.code === "MEMBER_NOT_FOUND") {
+        // Removed meanwhile: refresh so the row goes away.
+        revalidateMembers(session.orgSlug)
+        return { ok: false, error: "gone" }
       }
-      if (body.error === "CANNOT_REMOVE_OWNER") {
-        return { ok: false, error: "owner" }
+      const known = REMOVE_ERRORS[refused?.code ?? ""]
+      if (!known) throw err
+      return {
+        ok: false,
+        error: known,
+        upcomingSessions: refused?.upcomingSessions,
       }
-      if (body.error === "CANNOT_REMOVE_SELF") {
-        return { ok: false, error: "self" }
-      }
-      if (err.status === 404) return { ok: false, error: "gone" }
     }
+    revalidateMembers(session.orgSlug)
+    return { ok: true }
+  } catch (err) {
     console.error("[team] removeMember failed", err)
     return { ok: false, error: "failed" }
   }

@@ -21,17 +21,16 @@
       "admin": "Admin",
       "member": "Especialista"
     },
-    "ownerNote": "O titular não pode ser removido. Quem tem o papel Admin gere a equipa e o perfil da clínica. Os especialistas oferecem serviços e realizam sessões.",
+    "ownerNote": "Quem é titular fica sempre na equipa e é a única pessoa que pode adicionar ou remover quem tem a função Admin. Quem tem a função Admin gere a equipa, o perfil da clínica e a faturação. Quem tem a função Especialista oferece serviços e realiza sessões.",
     "invitedHeading": "{count, plural, one {# convite por responder} other {# convites por responder}}",
     "invitation": {
       "validUntil": "válido até {date}",
       "expired": "expirou a {date}",
       "expiredPill": "Expirado",
       "resend": "Enviar de novo",
-      "resendLabel": "Enviar de novo o convite para {email}",
       "withdraw": "Retirar",
-      "withdrawLabel": "Retirar o convite para {email}",
-      "working": "A enviar…"
+      "sending": "A enviar…",
+      "withdrawing": "A retirar…"
     },
     "invite": {
       "open": "Convidar alguém",
@@ -39,19 +38,22 @@
       "description": "A pessoa recebe um email com uma ligação para entrar. O convite é válido durante 7 dias.",
       "email": "Email",
       "emailPlaceholder": "nome@exemplo.pt",
-      "role": "Papel",
+      "role": "Função",
       "roleHelp": {
         "member": "Oferece serviços e realiza sessões nesta clínica.",
-        "admin": "Faz tudo o que um especialista faz e também gere a equipa e o perfil da clínica."
+        "admin": "Oferece serviços e realiza sessões, e também gere a equipa, o perfil da clínica e a faturação."
       },
       "cancel": "Cancelar",
       "send": "Enviar convite",
-      "sending": "A enviar…"
+      "sending": "A enviar…",
+      "roleFixed": "A pessoa entra como especialista: oferece serviços e realiza sessões nesta clínica. Quem é titular pode convidar para a função Admin."
     },
     "inviteError": {
       "validation": "Introduza um endereço de email válido.",
-      "already-member": "Esta pessoa já faz parte da sua equipa.",
+      "already-member": "Esta pessoa já faz parte da sua equipa. Encontra-a na lista de pessoas.",
       "limit": "A sua equipa chegou às 200 pessoas. Remova alguém ou retire um convite primeiro.",
+      "owner-required": "Só quem é titular pode convidar para a função Admin ou alterar um convite para essa função. Peça a quem é titular.",
+      "recently-sent": "Este convite foi enviado há menos de um minuto. Aguarde um minuto e envie de novo.",
       "failed": "Não foi possível enviar o convite. Tente de novo."
     },
     "remove": {
@@ -63,10 +65,10 @@
       "confirm": "Remover da equipa",
       "working": "A remover…",
       "error": {
-        "upcoming-sessions": "{name} ainda tem {count, plural, one {# sessão} other {# sessões}} por realizar nesta clínica. A remoção fica disponível quando {count, plural, one {estiver concluída, reagendada ou cancelada} other {estiverem concluídas, reagendadas ou canceladas}}.",
-        "owner": "O titular não pode ser removido.",
+        "upcoming-sessions": "{name} ainda tem {count, plural, one {# sessão marcada} other {# sessões marcadas}} nesta clínica. Pode remover esta pessoa quando {count, plural, one {estiver concluída ou cancelada} other {estiverem concluídas ou canceladas}}.",
+        "owner": "Quem é titular fica sempre na equipa.",
         "self": "Não pode remover a sua própria conta.",
-        "gone": "Esta pessoa já não faz parte da sua equipa.",
+        "owner-required": "Só quem é titular pode remover quem tem a função Admin. Peça a quem é titular.",
         "failed": "Não foi possível remover esta pessoa. Tente de novo."
       }
     },

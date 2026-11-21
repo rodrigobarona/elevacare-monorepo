@@ -21,52 +21,54 @@
       "admin": "Admin",
       "member": "Especialista"
     },
-    "ownerNote": "El titular no se puede quitar. Quien tiene el rol Admin gestiona el equipo y el perfil de la clínica. Los especialistas ofrecen servicios y realizan sesiones.",
+    "ownerNote": "Quien es titular permanece siempre en el equipo y es la única persona que puede añadir o quitar a quien tiene el rol Admin. Quien tiene el rol Admin gestiona el equipo, el perfil de la clínica y la facturación. Quien tiene el rol Especialista ofrece servicios y realiza sesiones.",
     "invitedHeading": "{count, plural, one {# invitación pendiente} other {# invitaciones pendientes}}",
     "invitation": {
       "validUntil": "válida hasta el {date}",
       "expired": "caducó el {date}",
       "expiredPill": "Caducada",
       "resend": "Enviar de nuevo",
-      "resendLabel": "Enviar de nuevo la invitación a {email}",
       "withdraw": "Retirar",
-      "withdrawLabel": "Retirar la invitación a {email}",
-      "working": "Enviando…"
+      "sending": "Enviando…",
+      "withdrawing": "Retirando…"
     },
     "invite": {
       "open": "Invitar a alguien",
       "title": "Invitar a alguien a {clinic}",
-      "description": "Recibirá un correo con un enlace para unirse. La invitación es válida durante 7 días.",
+      "description": "La persona recibirá un correo con un enlace para unirse. La invitación es válida durante 7 días.",
       "email": "Correo electrónico",
       "emailPlaceholder": "nombre@ejemplo.com",
       "role": "Rol",
       "roleHelp": {
         "member": "Ofrece servicios y realiza sesiones en esta clínica.",
-        "admin": "Hace todo lo que hace un especialista y además gestiona el equipo y el perfil de la clínica."
+        "admin": "Ofrece servicios y realiza sesiones, y además gestiona el equipo, el perfil de la clínica y la facturación."
       },
       "cancel": "Cancelar",
       "send": "Enviar invitación",
-      "sending": "Enviando…"
+      "sending": "Enviando…",
+      "roleFixed": "La persona entra como especialista: ofrece servicios y realiza sesiones en esta clínica. Quien es titular puede invitar con el rol Admin."
     },
     "inviteError": {
       "validation": "Introduce un correo electrónico válido.",
-      "already-member": "Esta persona ya forma parte de tu equipo.",
+      "already-member": "Esta persona ya forma parte de tu equipo. La encontrarás en la lista de personas.",
       "limit": "Tu equipo ha llegado a 200 personas. Quita a alguien o retira una invitación primero.",
+      "owner-required": "Solo quien es titular puede invitar con el rol Admin o cambiar una invitación para ese rol. Pídeselo a quien es titular.",
+      "recently-sent": "Esta invitación se envió hace menos de un minuto. Espera un minuto y envíala de nuevo.",
       "failed": "No hemos podido enviar la invitación. Inténtalo de nuevo."
     },
     "remove": {
       "open": "Quitar",
       "openLabel": "Quitar a {name} del equipo",
       "title": "¿Quitar a {name} de {clinic}?",
-      "body": "Pierde el acceso a esta clínica de inmediato y sus servicios aquí dejan de poder reservarse. Su cuenta de Eleva sigue como está.",
+      "body": "Esta persona pierde el acceso a esta clínica de inmediato y sus servicios aquí ya no se pueden reservar. La cuenta de Eleva de esta persona sigue como está.",
       "cancel": "Mantener en el equipo",
       "confirm": "Quitar del equipo",
       "working": "Quitando…",
       "error": {
-        "upcoming-sessions": "{name} aún tiene {count, plural, one {# sesión} other {# sesiones}} por realizar en esta clínica. Podrás quitar a esta persona cuando {count, plural, one {esté terminada, reprogramada o cancelada} other {estén terminadas, reprogramadas o canceladas}}.",
-        "owner": "El titular no se puede quitar.",
+        "upcoming-sessions": "{name} aún tiene {count, plural, one {# sesión reservada} other {# sesiones reservadas}} en esta clínica. Podrás quitar a esta persona cuando {count, plural, one {esté terminada o cancelada} other {estén terminadas o canceladas}}.",
+        "owner": "Quien es titular permanece siempre en el equipo.",
         "self": "No puedes quitar tu propia cuenta.",
-        "gone": "Esta persona ya no forma parte de tu equipo.",
+        "owner-required": "Solo quien es titular puede quitar a quien tiene el rol Admin. Pídeselo a quien es titular.",
         "failed": "No hemos podido quitar a esta persona. Inténtalo de nuevo."
       }
     },

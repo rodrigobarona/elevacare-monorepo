@@ -16,6 +16,7 @@ import {
 } from "better-auth/plugins"
 import { resolveGatewayUrl } from "@eleva/config/env"
 import { cookieName } from "@eleva/config/i18n"
+import { eq } from "drizzle-orm"
 import * as authSchema from "@eleva/db/schema/auth"
 import { db } from "@eleva/db"
 import { ac, adminAccess, adminRoles, organizationRoles } from "../permissions"
@@ -35,6 +36,11 @@ import { authRateLimitEnabled } from "../e2e-auth-url"
 import { logError } from "@eleva/observability"
 import { recordInvitationResponse } from "../invitations"
 import { invitationAcceptUrl } from "../invitation-accept-url"
+import {
+  TEAM_INVITATION_TTL_MS,
+  TEAM_MEMBER_LIMIT,
+  TEAM_MEMBERS_API_REQUIRED,
+} from "../team-limits"
 import {
   guardAccountLink,
   purgeBeforeClaim,
@@ -291,13 +297,18 @@ function createAuth() {
         },
       },
     },
+    // Leaving has no hook to guard it (a clinician with sessions still to
+    // run must not vanish from a clinic); nothing in the product calls it.
+    disabledPaths: ["/organization/leave"],
     plugins: [
       organization({
         ac,
         roles: organizationRoles,
         allowUserToCreateOrganization: true,
         creatorRole: "owner",
-        membershipLimit: 200,
+        membershipLimit: TEAM_MEMBER_LIMIT,
+        // Seven days, the same as a clinic invitation (`team-members.ts`).
+        invitationExpiresIn: TEAM_INVITATION_TTL_MS / 1000,
         // Nobody deletes an organization through the API (ADR-026): invoices
         // are kept 10 years and session records have their own retention.
         // An expert closes a practice instead (POST /expert/closure).
@@ -326,13 +337,17 @@ function createAuth() {
         sendInvitationEmail: async (data: {
           email: string
           invitation: { id: string }
-          organization: { id: string }
+          organization: { id: string; name?: string }
+          inviter?: { user?: { name?: string; locale?: string | null } }
         }) => {
           await sendOrgInvitationEmail({
             email: data.email,
             url: invitationAcceptUrl(data.invitation.id),
             orgId: data.organization.id,
             invitationId: data.invitation.id,
+            organizationName: data.organization.name,
+            inviterName: data.inviter?.user?.name,
+            fallbackLocale: data.inviter?.user?.locale,
           })
         },
         organizationHooks: {
@@ -357,8 +372,20 @@ function createAuth() {
           },
           // Nobody joins a closed practice (ADR-026): delegates removed at
           // closure cannot come back by any invitation or member path.
-          beforeCreateInvitation: async ({ invitation }) => {
+          beforeCreateInvitation: async ({ invitation, organization }) => {
+            await refuseTeamOrg(organization)
             await refuseClosedPractice(invitation.organizationId)
+          },
+          // A clinic's people change only through /teams/{teamId}/…, which
+          // carries the removal guards and the audit rows.
+          beforeCancelInvitation: async ({ organization }) => {
+            await refuseTeamOrg(organization)
+          },
+          beforeRemoveMember: async ({ organization }) => {
+            await refuseTeamOrg(organization)
+          },
+          beforeUpdateMemberRole: async ({ organization }) => {
+            await refuseTeamOrg(organization)
           },
           beforeAddMember: async ({ member }) => {
             await refuseClosedPractice(member.organizationId)
@@ -553,6 +580,36 @@ export interface AuthApi {
     body: { email: string; callbackURL: string }
     headers?: Headers
   }) => Promise<unknown>
+}
+
+/**
+ * Better Auth's own invite, cancel, remove and role endpoints are refused
+ * for a clinic: `@eleva/auth` `team-members` owns those writes.
+ */
+async function refuseTeamOrg(organization: {
+  id: string
+  type?: unknown
+}): Promise<void> {
+  const type =
+    typeof organization.type === "string"
+      ? organization.type
+      : await organizationType(organization.id)
+  if (type === "team") {
+    throw new APIError("FORBIDDEN", {
+      message:
+        "A clinic's members and invitations are managed through /teams/{teamId}/members and /teams/{teamId}/invitations.",
+      code: TEAM_MEMBERS_API_REQUIRED,
+    })
+  }
+}
+
+async function organizationType(id: string): Promise<string | undefined> {
+  const [row] = await db()
+    .select({ type: authSchema.organization.type })
+    .from(authSchema.organization)
+    .where(eq(authSchema.organization.id, id))
+    .limit(1)
+  return row?.type
 }
 
 async function refuseClosedPractice(organizationId: string): Promise<void> {

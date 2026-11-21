@@ -38,6 +38,27 @@ Use this document to answer:
 - Deletion: usually replaced by deactivation/history rather than full erasure in all cases
 - Audit access: yes for changes
 
+### Invitations to a clinic or practice
+
+- Data type: the invited email address, the role offered, who invited, when
+  it was sent and how it ended (`auth.invitation`); the audit rows carry the
+  invitation id and role, never the address
+- Sensitivity: personal data of someone who may not have an Eleva account;
+  the address is supplied by the clinic
+- Export: yes for the clinic (its pending invitations, `GET /teams/{teamId}/members`);
+  the invited person sees their own invitation on the accept page
+- Deletion: a pending invitation stops working after 7 days. **Proposed, for
+  the DPO to confirm:** accepted, declined, withdrawn and expired invitations
+  are deleted 90 days after they end. The sweep is Phase 13 work; until it
+  ships these rows stay
+- Audit access: yes for sending, withdrawing, accepting and declining
+- Transparency: the invitation email names the clinic and the person who
+  invites and says why the email was sent. **Proposed privacy-notice line,
+  for the DPO to word and publish:** "If a clinic or an expert invites you
+  to join their team, they give us your email address so we can send you
+  the invitation. We keep it until you answer or the invitation expires,
+  and for a short period afterwards."
+
 ### Booking and session metadata
 
 - Data type: bookings, schedule selections, timestamps, session mode, status

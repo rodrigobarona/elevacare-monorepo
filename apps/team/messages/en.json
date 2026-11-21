@@ -15,23 +15,22 @@
     "description": "Invite the experts who work at your clinic, and the people who help you run it.",
     "peopleHeading": "{count, plural, one {# person} other {# people}}",
     "you": "(you)",
-    "services": "{count, plural, =0 {No published service yet} one {# published service} other {# published services}}",
+    "services": "{count, plural, =0 {No published services yet} one {# published service} other {# published services}}",
     "role": {
       "owner": "Owner",
       "admin": "Admin",
       "member": "Expert"
     },
-    "ownerNote": "The owner cannot be removed. Admins manage the team and the clinic profile. Experts offer services and run sessions.",
+    "ownerNote": "The owner always stays in the team, and is the only one who can add or remove admins. Admins manage the team, the clinic profile and billing. Experts offer services and run sessions.",
     "invitedHeading": "{count, plural, one {# invitation waiting} other {# invitations waiting}}",
     "invitation": {
       "validUntil": "valid until {date}",
       "expired": "expired on {date}",
       "expiredPill": "Expired",
       "resend": "Send again",
-      "resendLabel": "Send the invitation to {email} again",
       "withdraw": "Withdraw",
-      "withdrawLabel": "Withdraw the invitation to {email}",
-      "working": "Sending…"
+      "sending": "Sending…",
+      "withdrawing": "Withdrawing…"
     },
     "invite": {
       "open": "Invite someone",
@@ -42,16 +41,19 @@
       "role": "Role",
       "roleHelp": {
         "member": "Offers services and runs sessions in this clinic.",
-        "admin": "Does everything an expert does, and also manages the team and the clinic profile."
+        "admin": "Offers services and runs sessions, and also manages the team, the clinic profile and billing."
       },
       "cancel": "Cancel",
       "send": "Send invitation",
-      "sending": "Sending…"
+      "sending": "Sending…",
+      "roleFixed": "They join as an expert: they offer services and run sessions in this clinic. The owner can invite an admin."
     },
     "inviteError": {
       "validation": "Enter a valid email address.",
-      "already-member": "This person is already in your team.",
+      "already-member": "This person is already in your team. You'll find them in the list of people.",
       "limit": "Your team has reached 200 people. Remove someone or withdraw an invitation first.",
+      "owner-required": "Only the owner can invite an admin or change an admin's invitation. Ask the owner to do it.",
+      "recently-sent": "This invitation was sent less than a minute ago. Wait a minute, then send it again.",
       "failed": "We could not send the invitation. Please try again."
     },
     "remove": {
@@ -63,10 +65,10 @@
       "confirm": "Remove from team",
       "working": "Removing…",
       "error": {
-        "upcoming-sessions": "{name} still has {count, plural, one {# session} other {# sessions}} to run in this clinic. You can remove them once {count, plural, one {it is} other {they are}} done, rescheduled or cancelled.",
-        "owner": "The owner cannot be removed.",
+        "upcoming-sessions": "{name} still has {count, plural, one {# session} other {# sessions}} booked in this clinic. You can remove them once {count, plural, one {it is} other {they are}} done or cancelled.",
+        "owner": "The owner always stays in the team.",
         "self": "You cannot remove your own account.",
-        "gone": "This person is no longer in your team.",
+        "owner-required": "Only the owner can remove an admin. Ask the owner to do it.",
         "failed": "We could not remove this person. Please try again."
       }
     },

@@ -41,7 +41,6 @@ export default async function TeamMembersPage({
           role: invitation.role,
           expiresAt: invitation.expiresAt.toISOString(),
           expired: invitation.expired,
-          invitedByName: invitation.invitedByName,
         }))}
       />
     </div>
