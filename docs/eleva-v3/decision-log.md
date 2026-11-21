@@ -79,10 +79,10 @@ Each entry should include:
     dual control, the host-only admin cookie) is not built.
   - Approving asks for the two checks, not for a written reason (the phase
     file wants a reason on every staff action).
-  - A decision cannot be withdrawn: only a pending filing is decided. To
-    undo an approval made by mistake, the clinic files again and staff
-    reject that filing; the earlier approval still counts until a
-    "withdraw verification" action exists.
+  - A decision cannot be withdrawn: only a pending filing is decided.
+    There is no supported way yet to take back an approval made by
+    mistake (rejecting a later filing does not undo it); it needs a
+    "withdraw verification" action.
   - Staff opening a filing is not audited (only decisions are).
   - Self-review is refused by current membership. A filing does not record
     who sent it, so a staff member who filed and then left the clinic is

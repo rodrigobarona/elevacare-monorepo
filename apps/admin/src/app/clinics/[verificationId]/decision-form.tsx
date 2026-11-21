@@ -45,13 +45,15 @@ export function DecisionForm({
   async function decide(decision: Decision) {
     setPending(decision)
     setError(null)
+    // A request that never reaches the server must not lock the form.
     const result = await decideClinic(
       verificationId,
       decision === "approve"
         ? { submittedAt, decision, checklist: checked }
         : { submittedAt, decision, reason: reason.trim() }
     )
-    setPending(null)
+      .catch(() => ({ ok: false as const, error: "failed" as const }))
+      .finally(() => setPending(null))
     if (!result.ok) {
       setError({ decision, code: result.error })
       return

@@ -161,20 +161,24 @@ test.describe("Phase 12 — staff verify a clinic", () => {
   })
 
   test.afterAll(async ({ request }) => {
-    if (previousOrgId) {
-      await request.post(`${apiUrl}/auth/organization/set-active`, {
-        headers: authHeaders(cookie),
-        data: { organizationId: previousOrgId },
-      })
-    }
-    const sql = neon(process.env.DATABASE_URL!)
-    if (clinicId) {
-      // Approved filings keep their reviewer: filings go before the org.
-      await sql`DELETE FROM clinic_verifications WHERE org_id = ${clinicId}::uuid`
-      await sql`DELETE FROM auth.organization WHERE id = ${clinicId}::uuid`
-    }
-    if (staffOrgId) {
-      await sql`DELETE FROM auth.organization WHERE id = ${staffOrgId}::uuid`
+    try {
+      if (previousOrgId) {
+        await request.post(`${apiUrl}/auth/organization/set-active`, {
+          headers: authHeaders(cookie),
+          data: { organizationId: previousOrgId },
+        })
+      }
+    } finally {
+      // The fixtures go even if the API is gone.
+      const sql = neon(process.env.DATABASE_URL!)
+      if (clinicId) {
+        // Approved filings keep their reviewer: filings go before the org.
+        await sql`DELETE FROM clinic_verifications WHERE org_id = ${clinicId}::uuid`
+        await sql`DELETE FROM auth.organization WHERE id = ${clinicId}::uuid`
+      }
+      if (staffOrgId) {
+        await sql`DELETE FROM auth.organization WHERE id = ${staffOrgId}::uuid`
+      }
     }
   })
 

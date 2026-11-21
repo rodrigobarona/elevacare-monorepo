@@ -304,15 +304,13 @@ export async function fileClinicVerification(input: {
             submittedAt: new Date(),
             updatedAt: new Date(),
           })
-          // Still open: a staff decision that landed meanwhile is never
-          // overwritten (the clinic gets VERIFICATION_LOCKED and files anew).
+          // Still as it was read: a staff decision that landed meanwhile
+          // (approved, rejected or sent back) is never overwritten. The
+          // clinic gets VERIFICATION_LOCKED, reloads and sees it.
           .where(
             and(
               eq(main.clinicVerifications.id, open.id),
-              inArray(main.clinicVerifications.status, [
-                "pending",
-                "needs_changes",
-              ])
+              eq(main.clinicVerifications.status, open.status)
             )
           )
           .returning({ id: main.clinicVerifications.id })
