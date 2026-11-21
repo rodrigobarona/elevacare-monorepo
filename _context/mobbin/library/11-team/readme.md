@@ -2,9 +2,9 @@
 
 > Generated from `references.json` by `docs/eleva-v3/design-audit/build.mjs`. Edit the JSON, then run the build.
 
-Researcher seat: Activation. Date: 2026-11-15. Before captures: `docs/eleva-v3/design-audit/captures/2026-11-14-before/11-team/`.
+Researcher seat: Activation. Date: 2026-11-20. Before captures: `docs/eleva-v3/design-audit/captures/2026-11-14-before/11-team/`.
 
-Invitation acceptance, the first team surface built (Phase 11.1c). References show the clinic as a card, one clear question, which email the invite was sent to, and a confirmed state with one next step.
+Invitation acceptance (Phase 11.1c) and the clinic's Team page (Phase 11.2). References show the clinic as a card, one clear question, which email the invite was sent to and a confirmed state with one next step; then one list of people with their role, pending invitations kept apart with Send again and Withdraw, and an invite dialog that says what each role can do and how long the invitation lasts.
 
 ## Keep
 
@@ -22,6 +22,11 @@ Invitation acceptance, the first team surface built (Phase 11.1c). References sh
 | [02](img/02-slack-join-invited-workspace.jpg) | Slack (web) | Join page that says which email the invitation was sent to | Say which email the invitation was sent to; if the signed-in account is different, say so and offer to switch account. | [open](https://mobbin.com/screens/aadc3502-05ad-470b-b3f9-d9db11fcb92a?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp) |
 | [03](img/03-hilos-you-are-invited-card.jpg) | hilos (web) | Invitation card with sender, address and 'Not you?' | Mask the invited address, show who is signed in, and give 'Not you?' to switch. | [open](https://mobbin.com/screens/509e8fe1-9d4e-4e84-a8a8-f83cf2478348?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp) |
 | [04](img/04-craft-invited-joined-state.jpg) | Craft (web) | Invited → joined, with the next step in the same card | After accepting, confirm in place with who and where, and give one button to the clinic dashboard. | [open](https://mobbin.com/screens/42661382-7e20-4ccb-8383-485465f039c2?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp) |
+| [05](img/05-bonsai-team-table-roles-pending.jpg) | Bonsai (web) | One list of people: name, email, role pill, and one primary 'Invite member' | One list of people with name, email and a role pill; one primary 'Invite someone'; confirm a sent invitation with a toast, not a banner. | [open](https://mobbin.com/screens/1b575eab-0659-4b26-bc02-f27cce0b7e9c?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp) |
+| [06](img/06-attio-members-invite-pending-seats.jpg) | Attio (web) | Members page that opens with one line on what you can do, and marks you and pending invites | Open with the headline and one line; mark the signed-in person as '(you)'; show an invitation's state in words on its row. | [open](https://mobbin.com/screens/0061cd35-3252-48c5-bc67-7af8e1b1c9be?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp) |
+| [07](img/07-krea-pending-invites-cancel.jpg) | Krea AI (web) | Pending invitations as their own block with a count and Cancel on each row | Keep invitations in their own block with a count in the heading; each row has Send again and Withdraw. Eleva does not offer 'copy link': the link is only ever emailed to the invited address. | [open](https://mobbin.com/screens/bb421ef5-0798-47d7-a355-95524bd944ba?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp) |
+| [08](img/08-productboard-invite-role-descriptions.jpg) | Productboard (web) | Invite dialog: email, then a role with one line on what it can do | Two fields only (email, role); say in one line what the chosen role can do in the clinic, in the clinic's words, not permission names. | [open](https://mobbin.com/screens/849d1f53-bd7e-4f3c-900a-dedc890ddacd?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp) |
+| [09](img/09-dub-invite-validity.jpg) | Dub (web) | Invite dialog that says how long the invitation is valid | Say in the dialog what the person receives and that the invitation is valid for 7 days; show the last valid day on the pending row. | [open](https://mobbin.com/screens/b810f603-540c-4891-a0f2-9358d8714a58?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp) |
 
 ## Judging criteria
 
@@ -31,3 +36,7 @@ A review panel scores a new design for this surface against these, with the refe
 2. Is there one clear accept action and an equally clear way to decline or not now, with what happens next said in plain words? (Attio 11-team/01, Craft 11-team/04)
 3. If the signed-in account does not match the invitation, does the page say so and offer to switch, instead of failing? (hilos 11-team/03, Slack 11-team/02)
 4. Do expired, cancelled and already-used invitations each say what happened and what to do? 
+5. On the Team page, can a clinic admin see within 5 seconds who is in the clinic, each person's role and who has a published service, with one clear way to invite? (Bonsai 11-team/05, Attio 11-team/06)
+6. Are pending invitations kept apart from people, each with its last valid day (or that it expired) and with Send again and Withdraw on the row? (Krea 11-team/07, Attio 11-team/06)
+7. Does the invite dialog ask only for email and role, say in plain words what the role can do and how long the invitation is valid, and refuse a bad address or an existing member with a sentence that says what to do? (Productboard 11-team/08, Dub 11-team/09)
+8. Before someone is removed, does the confirmation name the person and the clinic and say what happens to their access, their services and their account, and does a refusal (sessions still to run, the owner, yourself) say why and what to do first?
