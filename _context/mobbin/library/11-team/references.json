@@ -148,6 +148,18 @@
       "why": "'We're reviewing your application' with a line that says no action is needed, and a small timeline with dates on the side.",
       "apply": "While Eleva checks, say plainly that the clinic does not need to do anything, and show what was sent and when.",
       "query": "business verification status page showing details under review and what happens next"
+    },
+    {
+      "id": "11-team/13",
+      "file": "img/13-square-complete-approval-card.jpg",
+      "app": "Square",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/30ded136-0671-43d5-bad1-e6235aff43d7?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "One compact card on the home page while an approval step is open",
+      "why": "'Complete approval to take payments' sits at the top of the dashboard as a small card: an icon, one sentence that says what it unlocks and one button. It is there only while the step is open.",
+      "apply": "On the clinic's Overview, show one card only when verification needs the clinic: what stands, one sentence, one button to Verification. Nothing when Eleva is checking or the clinic is verified.",
+      "query": "business banking dashboard home with an action required notice to finish business verification"
     }
   ],
   "judging_criteria": [
@@ -161,6 +173,7 @@
     "Before someone is removed, does the confirmation name the person and the clinic and say what happens to their access, their services and their account, and does a refusal (sessions still to run, the owner, yourself) say why and what to do first?",
     "On the Verification page, can a clinic admin tell in one sentence where the check stands and whether anything is needed from them? (Airwallex 11-team/10, Mercury 11-team/12)",
     "When Eleva asks for a change or cannot verify, does the page show the reason in Eleva's own words and put the form to send new details right below it, filled with what was sent? (Stripe 11-team/11)",
-    "Does the form ask only for the legal name and the tax number, say what Eleva does with them, and refuse a malformed number with a sentence that says what a valid one looks like?"
+    "Does the form ask only for the legal name and the tax number, say what Eleva does with them, and refuse a malformed number with a sentence that says what a valid one looks like?",
+    "When verification needs the clinic, does the Overview say so in one card with one action, and stay quiet when it does not? (Square 11-team/13)"
   ]
 }

@@ -120,6 +120,20 @@ test.describe("Phase 11.4 — the clinic's Verification page", () => {
         timeout: 60_000,
       })
 
+    // The Overview points here while verification waits on the clinic, and
+    // says nothing once it does not.
+    const overviewUrl = `${teamUrl}/team/${teamSlug}`
+    const overview = await pageWithSession(browser, cookie)
+    const notice = overview.getByTestId("overview-verification")
+    await overview.goto(overviewUrl)
+    await expect(notice).toHaveAttribute("data-standing", "not-sent", {
+      timeout: 90_000,
+    })
+    await expect(notice).toContainText("Send your clinic's legal details")
+    await shot(overview, "19-overview-verification-not-sent.desktop")
+    await notice.getByRole("link", { name: "Go to Verification" }).click()
+    await expect(overview).toHaveURL(url, { timeout: 60_000 })
+
     await page.goto(url)
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
       "Verification",
@@ -150,6 +164,12 @@ test.describe("Phase 11.4 — the clinic's Verification page", () => {
     await expect(page.getByTestId("verification-send")).toBeDisabled()
     await expect(page.getByTestId("verification-unchanged")).toBeVisible()
     await shot(page, "14-verification-checking.desktop")
+    // Eleva is checking: nothing for the clinic to do, nothing on Overview.
+    await overview.goto(overviewUrl)
+    await expect(
+      overview.getByRole("heading", { level: 1, name: "Your clinic" })
+    ).toBeVisible({ timeout: 60_000 })
+    await expect(notice).toHaveCount(0)
 
     // Staff ask for a change (their queue is covered by admin-clinics).
     const [reviewer] = (await sql`
@@ -170,6 +190,13 @@ test.describe("Phase 11.4 — the clinic's Verification page", () => {
       "Clínica Lumen, Lda"
     )
     await shot(page, "15-verification-change-needed.desktop")
+    await overview.goto(overviewUrl)
+    await expect(notice).toHaveAttribute("data-standing", "change-needed", {
+      timeout: 60_000,
+    })
+    await expect(notice).toContainText("Your verification needs a change")
+    await shot(overview, "19-overview-verification-change-needed.desktop")
+    await overview.context().close()
 
     const phone = await pageWithSession(browser, cookie, true)
     await phone.goto(url)

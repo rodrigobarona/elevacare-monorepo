@@ -32,6 +32,30 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-21: The clinic's Overview says when verification needs it (11.6) (active)
+
+- Change (Phase 11.6): the clinic's Overview shows one card when
+  verification waits on the clinic: details not sent yet, a change asked,
+  details refused, and the same two for newer details of a verified
+  clinic. The card says what stands in one sentence and has one button to
+  Verification. While Eleva is checking, or once the clinic is verified,
+  the Overview shows nothing about it.
+- Only people who can act on it see it (`clinic:manage`). The standing is
+  the one the Verification page words (`clinicStanding`), and the status
+  uses that page's words. A verified clinic is told it stays verified.
+- Pattern: Square's "Complete approval to take payments" card on the
+  dashboard home (Mobbin `11-team` reference 13): small, one action, there
+  only while the step is open.
+- Proof: `e2e/team-verification.spec.ts` (opt-in, loopback, run
+  2026-11-21): the card shows for not sent, is gone while checking, and
+  shows again when a change is asked; its button opens Verification.
+  Captures `19-overview-verification-*` in
+  `design-audit/captures/2026-11-21-team-verification-after/11-team/`.
+- Not scored by the judges panel.
+- Not in this slice: the same card on a phone-width capture; a count on
+  the navigation item; a notice for clinicians.
+- Owner: engineering
+
 ### 2026-11-21: Staff opening a clinic's filing is on record (12.2) (active)
 
 - Change (Phase 12.2): `GET /admin/clinics/{verificationId}` records
@@ -184,7 +208,7 @@ Each entry should include:
   Mobbin `11-team` references 10 to 12.
 - Not in this slice: an email or inbox notice when staff decide (built in
   11.5); a hint on
-  the clinic's Overview when verification needs the clinic; showing the
+  the clinic's Overview (built in 11.6) when verification needs the clinic; showing the
   verified legal name when newer details are being checked.
 - Owner: engineering
 

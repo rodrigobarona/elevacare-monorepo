@@ -9,7 +9,30 @@
     "subtitle": "Start with the people: invite the experts who work with you.",
     "emptyTitle": "Invite your team",
     "emptyBody": "Each person gets an email, accepts in their Eleva account and sets up their services in your clinic.",
-    "openTeam": "Go to Team"
+    "openTeam": "Go to Team",
+    "verification": {
+      "open": "Go to Verification",
+      "not-sent": {
+        "title": "Send your clinic's legal details",
+        "body": "Eleva checks them in the public register, so people know who is behind the clinic. You do this once."
+      },
+      "change-needed": {
+        "title": "Your verification needs a change",
+        "body": "We wrote what we found. Correct your details and send them again."
+      },
+      "verified-change-needed": {
+        "title": "Your new details need a change",
+        "body": "Your clinic stays verified. We wrote what we found about the new details."
+      },
+      "not-verified": {
+        "title": "We could not verify your clinic",
+        "body": "Read what we found. You can send your details again."
+      },
+      "verified-new-rejected": {
+        "title": "We could not confirm your new details",
+        "body": "Your clinic stays verified. Read what we found."
+      }
+    }
   },
   "members": {
     "title": "Team",

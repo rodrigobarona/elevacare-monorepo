@@ -9,7 +9,30 @@
     "subtitle": "Empieza por las personas: invita a los especialistas que trabajan contigo.",
     "emptyTitle": "Invita a tu equipo",
     "emptyBody": "Cada persona recibe un correo, acepta en su cuenta de Eleva y prepara sus servicios en tu clínica.",
-    "openTeam": "Ir a Equipo"
+    "openTeam": "Ir a Equipo",
+    "verification": {
+      "open": "Ir a Verificación",
+      "not-sent": {
+        "title": "Envía los datos legales de tu clínica",
+        "body": "Eleva los comprueba en el registro público, para que las personas sepan quién está detrás de la clínica. Solo tienes que hacerlo una vez."
+      },
+      "change-needed": {
+        "title": "Tu verificación necesita un cambio",
+        "body": "Hemos escrito lo que encontramos. Corrige los datos y envíalos de nuevo."
+      },
+      "verified-change-needed": {
+        "title": "Los nuevos datos necesitan un cambio",
+        "body": "La clínica sigue verificada. Hemos escrito lo que encontramos sobre los nuevos datos."
+      },
+      "not-verified": {
+        "title": "No hemos podido verificar tu clínica",
+        "body": "Lee lo que hemos encontrado. Puedes enviar los datos de nuevo."
+      },
+      "verified-new-rejected": {
+        "title": "No hemos podido confirmar los nuevos datos",
+        "body": "La clínica sigue verificada. Lee lo que hemos encontrado."
+      }
+    }
   },
   "members": {
     "title": "Equipo",
