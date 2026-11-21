@@ -3262,7 +3262,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             ...stdErrors,
             "403": {
               description:
-                "Missing applications:review, or SELF_REVIEW when staff decide their own application",
+                "Missing applications:review, SELF_REVIEW when staff decide their own application, or STEP_UP_REQUIRED when the browser session started more than 12 hours ago",
               content: { "application/json": { schema: ErrorSchema } },
             },
             "404": {

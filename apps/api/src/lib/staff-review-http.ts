@@ -58,6 +58,11 @@ export async function requireStaffReviewer(
       STAFF_DECISION_SIGN_IN_MAX_AGE_MS
     )
   ) {
+    // Worth a line: an old session trying to decide is what a taken
+    // cookie looks like. The staff member's id only.
+    console.warn("[staff-review] decision refused: session not recent", {
+      userId: session.user.id,
+    })
     return secureJson(
       {
         error: "STEP_UP_REQUIRED",

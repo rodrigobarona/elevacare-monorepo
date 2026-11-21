@@ -52,7 +52,13 @@ Each entry should include:
 - Proof: the route test (a 13-hour-old session and a session with no
   readable start refused; a 3-hour-old one and an API key accepted). The
   licence page was not opened in a browser after this change.
-- Not scored by the judges panel.
+- The message says what to do: "You signed in more than 12 hours ago.
+  Copy your reason, sign out and sign in again, then decide." The same
+  line replaces the clinic one. There is no link to sign in again, and a
+  refused decision is logged with the staff member's id.
+- Judges, first round: security 8.3, engineering 8.4, UX and writing 7.3
+  (the message did not say what to do). The copy was rewritten; not
+  scored again.
 - Owner: engineering
 
 ### 2026-11-21: Staff opening a licence review is on record (12.3) (active)
