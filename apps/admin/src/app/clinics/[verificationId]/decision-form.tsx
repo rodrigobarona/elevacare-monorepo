@@ -10,6 +10,14 @@ import {
   type ClinicChecklistItem,
 } from "@eleva/config/clinic-verification"
 import { Alert, AlertDescription } from "@eleva/ui/components/alert"
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@eleva/ui/components/alert-dialog"
 import { Button } from "@eleva/ui/components/button"
 import { CheckboxField } from "@eleva/ui/components/checkbox-field"
 import { Label } from "@eleva/ui/components/label"
@@ -33,6 +41,9 @@ export function DecisionForm({
   >({})
   const [reason, setReason] = React.useState("")
   const [pending, setPending] = React.useState<Decision | null>(null)
+  // Rejecting tells the whole clinic and cannot be taken back here: it is
+  // confirmed, with the reason as the clinic will read it.
+  const [confirmingReject, setConfirmingReject] = React.useState(false)
   // The refusal is shown beside the button that was pressed.
   const [error, setError] = React.useState<{
     decision: Decision
@@ -136,12 +147,50 @@ export function DecisionForm({
             variant="destructive"
             isDisabled={!hasReason || pending !== null}
             isPending={pending === "reject"}
-            onPress={() => decide("reject")}
+            onPress={() => setConfirmingReject(true)}
             data-testid="clinic-reject"
           >
             {pending === "reject" ? t("saving") : t("reject")}
           </Button>
         </div>
+        <AlertDialog
+          isOpen={confirmingReject}
+          onOpenChange={setConfirmingReject}
+        >
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("rejectConfirm.title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("rejectConfirm.body")}
+              <span className="mt-3 block text-sm font-medium text-foreground">
+                {t("rejectConfirm.reason")}
+              </span>
+              {/* A long reason scrolls here, so the buttons stay in view. */}
+              <span
+                className="mt-1 block max-h-40 overflow-y-auto whitespace-pre-line text-foreground"
+                tabIndex={0}
+                data-testid="clinic-reject-reason"
+              >
+                {reason.trim()}
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel isDisabled={pending !== null}>
+              {t("rejectConfirm.cancel")}
+            </AlertDialogCancel>
+            <Button
+              variant="destructive"
+              isDisabled={pending !== null}
+              onPress={() => {
+                setConfirmingReject(false)
+                void decide("reject")
+              }}
+              data-testid="clinic-reject-confirm"
+            >
+              {t("rejectConfirm.confirm")}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialog>
       </div>
     </div>
   )

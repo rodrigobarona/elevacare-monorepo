@@ -38,7 +38,7 @@ Use this document to answer:
 - Deletion: usually replaced by deactivation/history rather than full erasure in all cases
 - Audit access: yes for changes
 
-### Invitations to a clinic or practice
+### Invitations to a clinic
 
 - Data type: the invited email address, the role offered, who invited, when
   it was sent and how it ended (`auth.invitation`); the audit rows carry the
@@ -52,15 +52,18 @@ Use this document to answer:
   the invited person sees their own invitation on the accept page
 - Deletion: a pending invitation stops working after 7 days. **Proposed, for
   the DPO to confirm:** accepted, declined, withdrawn and expired invitations
-  are deleted 90 days after they end. The sweep is Phase 13 work; until it
-  ships these rows stay. The DPO also decides whether the delivery record
+  are deleted 90 days after they end. A declined invitation's row is what
+  keeps the clinic from inviting that address again (for 30 to 37 days):
+  whatever period is chosen must stay above 37 days, or a decline is
+  forgotten early. The sweep is Phase 13 work; until it ships these rows
+  stay. The DPO also decides whether the delivery record
   of an invitation to a non-account address keeps the 365 days or follows
   the invitation (the two periods must be stated together)
 - Audit access: yes for sending, withdrawing, accepting and declining
 - Transparency: the invitation email names the clinic and the person who
   invites and says why the email was sent. **Proposed privacy-notice line,
-  for the DPO to word and publish:** "If a clinic or an expert invites you
-  to join their team, they give us your email address so we can send you
+  for the DPO to word and publish:** "If a clinic invites you to join its
+  team, they give us your email address so we can send you
   the invitation. We keep it until you answer or the invitation expires,
   and for [period] afterwards, with the record that the email was sent."
 
@@ -69,10 +72,11 @@ Use this document to answer:
 - Data type: a clinic's legal name and tax number, the staff decision, who
   decided and when, and the reason on a filing that was sent back or
   rejected (`clinic_verifications`). Staff also read, without storing a
-  copy, the clinic's billing address and website and the name and email of
-  its owner
-- Sensitivity: business data, plus personal data of the owner (name, email)
-  and of the reviewer (staff user id)
+  copy, the clinic's billing address and website and the name of its owner
+- Sensitivity: business data, plus personal data of the owner (name; the
+  email is no longer shown to staff or returned by the staff API) and of
+  the reviewer (staff user id). When the clinic is a sole trader, the legal
+  name, tax number and billing address are that person's personal data
 - Export: yes for the clinic (`GET /teams/{teamId}` returns its filing, the
   state and the reason)
 - Deletion: an approved filing is the clinic's verification record and is

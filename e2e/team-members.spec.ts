@@ -172,7 +172,7 @@ test.describe("Phase 11.2 — the clinic's Team page", () => {
     ).toBeVisible({ timeout: 30_000 })
 
     // Later, sending again renews the same invitation instead of adding one.
-    await ageInvitation(first!.id, 2)
+    await ageInvitation(first!.id, 8 * 60 + 1)
     await resend.click()
     await expect(
       page.getByText(`Invitation sent again to ${MEMBER_EMAIL}.`)
@@ -328,6 +328,54 @@ test.describe("Phase 11.2 — the clinic's Team page", () => {
     ).toBeVisible({ timeout: 60_000 })
     await shot(phoneList, "09-team-two-people.mobile")
     await phoneList.context().close()
+
+    // Four more experts publish: the Starter plan's five seats are in use,
+    // and the page says so in words and says how a seat becomes free.
+    const extras = (await sql`
+      INSERT INTO auth."user" (name, email, email_verified)
+      SELECT 'Seat Holder ' || n, 'seat-' || n || '-' || ${teamId.slice(0, 8)} || '@example.test', true
+      FROM generate_series(1, 4) AS n
+      RETURNING id
+    `) as { id: string }[]
+    try {
+      for (const [index, extra] of extras.entries()) {
+        await sql`
+          INSERT INTO auth.member (organization_id, user_id, role)
+          VALUES (${teamId}::uuid, ${extra.id}::uuid, 'member')
+        `
+        const [seatProfile] = (await sql`
+          INSERT INTO expert_profiles (org_id, user_id, username, display_name, status, practice_countries)
+          VALUES (${teamId}::uuid, ${extra.id}::uuid, ${`e2e-seat-${index}-${teamId.slice(0, 8)}`}, ${`Seat Holder ${index + 1}`}, 'active', '{}')
+          RETURNING id
+        `) as { id: string }[]
+        await sql`
+          INSERT INTO event_types (org_id, expert_profile_id, slug, title, published, languages)
+          VALUES (${teamId}::uuid, ${seatProfile!.id}::uuid, ${`seat-${index}`}, '{"en":"Session"}'::jsonb, true, '{}')
+        `
+      }
+      const full = await pageWithSession(browser, expertCookie)
+      await full.goto(membersUrl)
+      const seats = full.getByTestId("team-seats")
+      await expect(seats).toHaveAttribute("data-seats", "full", {
+        timeout: 60_000,
+      })
+      await expect(seats).toContainText("All seats in use")
+      await expect(seats).toContainText(
+        "A seat frees up when an expert unpublishes their last service or leaves the team"
+      )
+      await seats.scrollIntoViewIfNeeded()
+      await shot(full, "11-team-seats-full.desktop")
+      await full.context().close()
+    } finally {
+      const ids = extras.map((extra) => extra.id)
+      await sql`
+        DELETE FROM event_types WHERE expert_profile_id IN (
+          SELECT id FROM expert_profiles WHERE user_id = ANY(${ids}::uuid[])
+        )
+      `
+      await sql`DELETE FROM expert_profiles WHERE user_id = ANY(${ids}::uuid[])`
+      await sql`DELETE FROM auth."user" WHERE id = ANY(${ids}::uuid[])`
+    }
 
     // A session still booked keeps her in the clinic, and says why.
     const removeButton = page.getByTestId(`team-member-remove-${joined!.id}`)

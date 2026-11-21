@@ -124,8 +124,11 @@ export interface ClinicVerificationReview {
     countryCode: string | null
     billingAddress: ClinicBillingAddress
   }
-  /** The clinic's owner, the person staff write to. */
-  owner: { name: string; email: string } | null
+  /**
+   * The clinic's owner, by name only. Eleva tells the clinic about a
+   * decision itself, so staff are not shown an address to write to.
+   */
+  owner: { name: string } | null
   people: number
   /** An approved filing exists (this one or another one). */
   verified: boolean
@@ -171,17 +174,19 @@ export async function getClinicVerificationReview(
       .from(v)
       .where(eq(v.orgId, row.orgId))
       .orderBy(desc(v.submittedAt))
-    // Only the owner's name and address are read; everyone else is a count.
+    // Only the owner's name is read; everyone else is a count. With two
+    // owners, the one who joined first, so staff see the same name each time.
     const members = await tx
       .select({ userId: auth.member.userId, role: auth.member.role })
       .from(auth.member)
       .where(eq(auth.member.organizationId, row.orgId))
+      .orderBy(auth.member.createdAt, auth.member.userId)
     const ownerId = members.find((m) =>
       m.role.split(",").includes("owner")
     )?.userId
     const [owner] = ownerId
       ? await tx
-          .select({ name: auth.user.name, email: auth.user.email })
+          .select({ name: auth.user.name })
           .from(auth.user)
           .where(eq(auth.user.id, ownerId))
           .limit(1)
@@ -206,7 +211,7 @@ export async function getClinicVerificationReview(
         countryCode,
         billingAddress,
       },
-      owner: owner ? { name: owner.name, email: owner.email } : null,
+      owner: owner ? { name: owner.name } : null,
       people: members.length,
       verified: filings.some((filing) => filing.status === "approved"),
       history: filings.filter(

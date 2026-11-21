@@ -289,24 +289,55 @@ branch|production`, `--since`, `--report`) and the target guard
 - The reason is kept with the filing and in the audit log, which is never
   edited. It is about the company: the form says so and an email address
   in it is refused.
+- Follow-up (judges, 2026-11-21):
+  - A decision from the console needs a session that started in the last
+    12 hours (403 `STEP_UP_REQUIRED`, "Sign in again to decide"), so a
+    console left open for days, or a cookie taken from it, cannot verify a
+    clinic. Reading the queue has no such limit. An API key has no sign-in
+    moment and is still accepted: it is issued on purpose and revocable.
+    So that an old staff session cannot make itself a new way in, staff
+    need a session from today to link a sign-in account, create an API key,
+    add a passkey or invite someone into a workspace
+    (`staff-fresh-session.ts`, in the auth server's request hook); nobody
+    else is asked. A request can carry two sessions, one in a cookie and
+    one as a bearer token, and the endpoint may act for either: the hook
+    asks about both, so an old staff token cannot ride behind a fresh
+    cookie from another account. Proven by unit tests of the two
+    functions; the hook itself has not been driven against a running auth
+    server, and whether an API key can reach `applications:review` at all
+    is unproven (the key plugin's field names may not match what
+    `api-auth.ts` reads; if so keys are refused, which is the safe side). This is a limit on the age of a
+    session. It stands in for, and is weaker than, the phase file's
+    enrolled second factor re-verified within 10 minutes, which is not
+    built. Licence decisions do not have this check yet.
+  - Rejecting is confirmed in a dialog that shows the reason as the clinic
+    will read it.
+  - Staff see the owner by name only. The email was shown as "the person
+    staff write to"; since 11.5 Eleva writes to the clinic itself, so the
+    address is no longer returned by `GET /admin/clinics/{id}` or shown.
+  - The billing country is shown by name, the owner is labelled, and the
+    reason help says when to ask for a change and when to reject.
 - Stated limits of this slice:
-  - Eleva does not tell the clinic about a decision yet. The staff page
-    says so and asks the reviewer to write to the owner. The kinds
-    `clinic.verified` and `clinic.rejected` need a migration of the
-    notification kinds; the state and the reason are in
-    `GET /teams/{teamId}`.
-  - The clinic's own dashboard has no page to file or follow its
-    verification (API only, from 11.1b).
+  - Built since: the clinic is told about a decision (11.5) and has a
+    page to send and follow its verification (11.4).
   - Any member of a staff workspace holds `applications:review`, as for
-    licence reviews. The phase file's stricter model (staff roles, step-up,
-    dual control, the host-only admin cookie) is not built.
+    licence reviews. Which staff roles may verify a clinic is the
+    founder's call; dual control and the host-only admin cookie from the
+    phase file are not built. Staff routes still accept the shared product
+    cookie.
+  - The queue has no page size and keeps every filing that was sent back
+    and never sent again.
   - Approving asks for the two checks, not for a written reason (the phase
     file wants a reason on every staff action).
+  - To build before the first real clinic files: taking back an approval,
+    and the founder's decision on which staff roles may verify. Until then
+    one staff member decides alone and an approval stands.
   - A decision cannot be withdrawn: only a pending filing is decided.
     There is no supported way yet to take back an approval made by
     mistake (rejecting a later filing does not undo it); it needs a
     "withdraw verification" action.
-  - Staff opening a filing is not audited (only decisions are).
+  - Staff opening a filing is not audited (only decisions are). To build
+    before the first real clinic files.
   - Self-review is refused by current membership. A filing does not record
     who sent it, so a staff member who filed and then left the clinic is
     not caught; recording the filer needs a column.
@@ -320,6 +351,21 @@ branch|production`, `--since`, `--report`) and the target guard
   - what "Verified" may claim for a clinic. Proposed for the terms: "For
     clinics, Eleva checks the legal name and tax number against the public
     register. It is not an assessment of licensing or quality of care."
+    That second sentence says what the check is not; the founder's rule is
+    to describe what Eleva does. Founder and counsel to settle the wording;
+  - whether a clinic may be shown as verified without its own registration
+    with the health regulator (ERS), which the trust page says
+    establishments need;
+  - whether refusing a clinic needs a way to contest the decision under
+    the EU platform-to-business rules, beyond sending details again;
+  - a sole trader's legal name, tax number and billing address are
+    personal data; the retention matrix now says so;
+  - the reason is free text in an audit log that is never edited: how a
+    request to correct or erase it is answered;
+  - the reviewer's user id is kept on every decided filing, and blocks
+    deleting that staff account while an approved filing exists;
+  - for the accountant: whether a VAT-exempt clinic shows as valid in
+    VIES, which the second check relies on.
 - Not in this slice: the other Phase 12 admin areas.
 - Owner: engineering
 
@@ -379,8 +425,16 @@ branch|production`, `--since`, `--report`) and the target guard
   and support has no tool yet to stop one clinic's invitations to an
   address; an address written another way (plus-addressing, dots) and a
   second clinic run by the same people are each a new address or a new
-  clinic to these rules; invitations to an expert practice go through
-  Better Auth and have none of these limits. For the DPO: whether someone
+  clinic to these rules. Better Auth's own invite endpoint, which had
+  none of these limits and sends the same email, now refuses every kind
+  of organization (403 `TEAM_MEMBERS_API_REQUIRED`): nothing in the
+  product called it, and the email's promise that declining stops a
+  clinic's invitations would not have held there. When a practice or an
+  academy invites people, it gets an endpoint with the same rules. A
+  decline lapses after 30 to 37 days, and only while the declined
+  invitation's row exists: its retention must stay above 37 days (the
+  proposal is 90). For the DPO: whether an objection may lapse at all, and
+  who answers a request to stop sent to support, and by when. For the DPO: whether someone
   with no account needs a way to object without signing up.
   The expert's "no seat left" message is an alert under the service, the
   over-limit line says what frees a seat, and the public footer named in

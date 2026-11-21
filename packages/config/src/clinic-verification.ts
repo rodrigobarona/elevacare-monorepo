@@ -17,6 +17,13 @@ export const COMPANY_REGISTER_URL = "https://publicacoes.mj.pt/Pesquisa.aspx"
 export const VIES_URL = "https://ec.europa.eu/taxation_customs/vies/"
 
 /**
+ * A staff decision on a clinic's identity needs a browser session that
+ * started within this window: a session left open for days cannot decide.
+ * A working day, so a reviewer signs in once in the morning.
+ */
+export const STAFF_DECISION_SIGN_IN_MAX_AGE_MS = 12 * 60 * 60 * 1000
+
+/**
  * A clinic's NIF or EU VAT number as it is stored: "PT 515 001 708" →
  * "PT515001708". Null when it cannot be one (8 to 32 letters and digits
  * once spaces, dots and dashes are gone). The form, the API and the domain
