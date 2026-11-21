@@ -31,7 +31,8 @@ A connection URL may carry `sslmode` (`require` or `verify-full`) and
 `channel_binding` (`require` or `prefer`), each once, and nothing else:
 `host`, `hostaddr`, `port`, `options` and any other parameter are refused,
 because a driver would follow them to a different database than the one in
-the URL, and a value that turns encryption off is refused too. The guard returns `targetUrl` and `sourceUrl`, rebuilt
+the URL, and a value that turns encryption off is refused too. A URL
+that carries no `sslmode` gets `sslmode=require`. The guard returns `targetUrl` and `sourceUrl`, rebuilt
 from the parts it checked. **A run connects with those two strings and
 never reads the environment again.**
 

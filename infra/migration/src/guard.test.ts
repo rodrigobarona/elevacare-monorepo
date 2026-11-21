@@ -93,8 +93,9 @@ describe("rehearsal (--target branch)", () => {
         projectId: PROJECT,
         branchId: "br-rehearsal",
         branchName: "rehearsal-2026-11-21",
-        targetUrl: `postgresql://app:pw@${REHEARSAL_HOST}/eleva`,
-        sourceUrl: MVP_URL,
+        // Neither URL said anything about TLS: both ask for it.
+        targetUrl: `postgresql://app:pw@${REHEARSAL_HOST}/eleva?sslmode=require`,
+        sourceUrl: `${MVP_URL}?sslmode=require`,
       })
     }
     expect(d.prompt).not.toHaveBeenCalled()
@@ -319,6 +320,24 @@ describe("the connection a run may use", () => {
     expect(d.resolveEndpoint).not.toHaveBeenCalled()
   })
 
+  it("refuses a stray percent sign in a password as a bad URL, not a crash", async () => {
+    const err = await refusal(
+      assertMigrationTarget(
+        {
+          target: "branch",
+          mode: "apply",
+          env: env({
+            MVP_DATABASE_URL:
+              "postgresql://reader:p%zzs3cret@mvp.example.com/mvp",
+          }),
+        },
+        deps()
+      )
+    )
+    expect(err.code).toBe("SOURCE_URL_INVALID")
+    expect(err.message).not.toContain("s3cret")
+  })
+
   it("names the source, not the target, when the MVP URL is malformed", async () => {
     for (const url of ["not a url", "https://example.com/db"]) {
       const err = await refusal(
@@ -372,7 +391,7 @@ describe("the connection a run may use", () => {
     expect(approved.targetUrl).toBe(
       `postgresql://app:p%40ss@${REHEARSAL_POOLED}/eleva?sslmode=require&channel_binding=require`
     )
-    expect(approved.sourceUrl).toBe(MVP_URL)
+    expect(approved.sourceUrl).toBe(`${MVP_URL}?sslmode=require`)
     // The host the driver will use is the host that was approved.
     expect(new URL(approved.targetUrl).hostname).toBe(approved.host)
   })

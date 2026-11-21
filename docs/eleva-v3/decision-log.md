@@ -54,9 +54,10 @@ branch|production`, `--since`, `--report`) and the target guard
   the source is refused even when Neon lists only the direct host.
 - A connection URL may carry `sslmode` (`require` or `verify-full`) and
   `channel_binding` (`require` or `prefer`) only, each once: a value that
-  turns encryption off is refused, and so is a password that starts with
-  `endpoint=` or `project=`, which Neon reads as the endpoint to connect
-  to. A
+  turns encryption off is refused, a URL that says nothing about TLS gets
+  `sslmode=require`, and a password that starts with `endpoint=` or
+  `project=`, which Neon reads as the endpoint to connect to, is refused.
+  A
   driver also follows `host`, `hostaddr`, `port` and `options` given as
   parameters, which would send it to a different database than the one
   that was checked, so every other parameter is refused. The guard returns
@@ -74,6 +75,15 @@ branch|production`, `--since`, `--report`) and the target guard
 - Stricter than the phase file in one place: a dry run against production
   asks for the same confirmation as a write, because it reads production
   data.
+- Carried here from the 13.1 review: `check:route-guards` now reads a
+  route's exports and policy from the file as written (it read them from
+  text with comments cut out by a pattern, so a `"image/*"` string could
+  hide a method), names the real internal checks instead of accepting any
+  function with "workflow" or "secret" in its name, and wants the auth
+  call in the route file or a sibling handler, not anywhere in a shared
+  helper it imports. Probed with four throwaway routes. It still has no
+  test file of its own, and what counts as request validation is still a
+  list of exclusions.
 - `pnpm check:no-migration-imports` (CI, lint job) fails when a file or a
   `package.json` under `apps/**` or `packages/**` depends on the package,
   so removing it after cutover cannot break the product.

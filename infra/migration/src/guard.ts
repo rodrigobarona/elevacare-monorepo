@@ -180,7 +180,19 @@ function checkedUrl(
   }
   // Neon reads "endpoint=…" or "project=…" at the start of a password as the
   // endpoint to connect to, whatever the host says.
-  if (/^(endpoint|project)=/i.test(decodeURIComponent(parsed.password))) {
+  // A URL that says nothing about TLS would leave it to the driver's
+  // default: the connection the guard hands back always asks for it.
+  if (!parameters.has("sslmode")) parameters.set("sslmode", "require")
+  let password: string
+  try {
+    password = decodeURIComponent(parsed.password)
+  } catch {
+    throw new MigrationGuardError(
+      invalid,
+      `the password in ${name} has a "%" that is not a percent-encoding. Percent-encode special characters, "%" itself as %25`
+    )
+  }
+  if (/^(endpoint|project)=/i.test(password)) {
     throw new MigrationGuardError(
       "URL_PASSWORD_NAMES_ENDPOINT",
       `the password in ${name} starts with "endpoint=" or "project=", which Neon reads as the endpoint to connect to. Use the plain password`
