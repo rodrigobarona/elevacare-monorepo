@@ -57,7 +57,7 @@
       "already-member": "Esta persona ya forma parte de tu equipo. La encontrarás en la lista de personas.",
       "limit": "Tu equipo ha llegado a 200 personas. Quita a alguien o retira una invitación primero.",
       "owner-required": "Solo quien es titular puede invitar con el rol Admin o cambiar una invitación para ese rol. Pídeselo a quien es titular.",
-      "recently-sent": "Podrás enviar esta invitación de nuevo dentro de un minuto.",
+      "recently-sent": "Esta persona recibió una invitación hace menos de 8 horas. Podrás enviarla de nuevo después.",
       "declined": "Esta persona rechazó la invitación de tu clínica. Para respetarlo, puedes volver a invitarla dentro de un mes aproximadamente.",
       "daily-limit": "Tu clínica ya ha invitado al máximo de personas por día. Podrás invitar a más mañana.",
       "failed": "No hemos podido enviar la invitación. Inténtalo de nuevo."

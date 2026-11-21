@@ -162,11 +162,13 @@ test.describe("Phase 11.2 — the clinic's Team page", () => {
     expect(days).toBeGreaterThan(6.9)
     expect(days).toBeLessThanOrEqual(7)
 
-    // The same address is not emailed twice within a minute.
+    // The same address is not emailed twice within eight hours.
     const resend = page.getByTestId(`team-invitation-resend-${first!.id}`)
     await resend.click()
     await expect(
-      page.getByText("You can send this invitation again in a minute.")
+      page.getByText(
+        "This person was sent an invitation less than 8 hours ago. You can send it again after that."
+      )
     ).toBeVisible({ timeout: 30_000 })
 
     // Later, sending again renews the same invitation instead of adding one.

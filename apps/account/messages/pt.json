@@ -480,7 +480,7 @@
     "joinedBody": "É agora o seu espaço de trabalho ativo. Pode alternar entre os seus espaços a qualquer momento.",
     "open": "Abrir {org}",
     "declinedHeading": "Convite recusado",
-    "declinedBody": "A sua resposta ficou guardada. Se mudar de ideias, peça a {org} um novo convite.",
+    "declinedBody": "A sua resposta ficou guardada. {org} não pode voltar a enviar-lhe um convite durante cerca de um mês.",
     "wrongAccountHeading": "Este convite é para outro email",
     "wrongAccountBody": "Tem sessão iniciada como {email}. Entre com o email para onde este convite foi enviado e regressa diretamente aqui.",
     "verifyHeading": "Confirme primeiro o seu email",

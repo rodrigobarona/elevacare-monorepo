@@ -10,11 +10,12 @@ export const TEAM_INVITATION_TTL_MS = 7 * 24 * 60 * 60 * 1000
 export const TEAM_MEMBER_LIMIT = 200
 
 /**
- * A clinic emails one address at most once a minute, whatever happened to
- * its earlier invitations, so inviting cannot be used to flood someone who
- * never asked to hear from the clinic.
+ * A clinic emails one address at most once in eight hours (three times a
+ * day), whatever happened to its earlier invitations, so inviting cannot
+ * be used to flood someone who never asked to hear from the clinic and may
+ * have no account to decline from.
  */
-export const TEAM_INVITATION_RESEND_COOLDOWN_MS = 60 * 1000
+export const TEAM_INVITATION_RESEND_COOLDOWN_MS = 8 * 60 * 60 * 1000
 
 /**
  * After someone declines a clinic's invitation, that clinic does not invite

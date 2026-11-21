@@ -291,7 +291,7 @@ async function assertTeamHasRoom(
 }
 
 /**
- * One address is emailed at most once a minute by a clinic, whatever
+ * One address is emailed at most once in eight hours by a clinic, whatever
  * happened to its earlier invitations (withdrawn, declined, expired). Each
  * send sets the expiry seven days out, so the last send is the latest
  * expiry minus seven days. A stored time in the future counts as just sent.
@@ -302,28 +302,6 @@ async function assertMayInvite(
   email: string,
   now: Date
 ): Promise<void> {
-  const [latest] = await tx
-    .select({ expiresAt: sql<Date | null>`max(${auth.invitation.expiresAt})` })
-    .from(auth.invitation)
-    .where(
-      and(
-        eq(auth.invitation.organizationId, orgId),
-        sql`lower(${auth.invitation.email}) = ${email}`
-      )
-    )
-  if (latest?.expiresAt) {
-    const lastSent =
-      new Date(latest.expiresAt).getTime() - TEAM_INVITATION_TTL_MS
-    const sinceLastSend = now.getTime() - lastSent
-    if (sinceLastSend < TEAM_INVITATION_RESEND_COOLDOWN_MS) {
-      throw new TeamMemberError("INVITATION_RECENTLY_SENT", {
-        retryAfterSeconds: Math.ceil(
-          (TEAM_INVITATION_RESEND_COOLDOWN_MS - sinceLastSend) / 1000
-        ),
-      })
-    }
-  }
-
   // The person said no: this clinic leaves them alone for a while.
   const [newest] = await tx
     .select({
@@ -348,6 +326,28 @@ async function assertMayInvite(
     if (now.getTime() < quietUntil) {
       throw new TeamMemberError("INVITATION_DECLINED", {
         retryAfterSeconds: Math.ceil((quietUntil - now.getTime()) / 1000),
+      })
+    }
+  }
+
+  const [latest] = await tx
+    .select({ expiresAt: sql<Date | null>`max(${auth.invitation.expiresAt})` })
+    .from(auth.invitation)
+    .where(
+      and(
+        eq(auth.invitation.organizationId, orgId),
+        sql`lower(${auth.invitation.email}) = ${email}`
+      )
+    )
+  if (latest?.expiresAt) {
+    const lastSent =
+      new Date(latest.expiresAt).getTime() - TEAM_INVITATION_TTL_MS
+    const sinceLastSend = now.getTime() - lastSent
+    if (sinceLastSend < TEAM_INVITATION_RESEND_COOLDOWN_MS) {
+      throw new TeamMemberError("INVITATION_RECENTLY_SENT", {
+        retryAfterSeconds: Math.ceil(
+          (TEAM_INVITATION_RESEND_COOLDOWN_MS - sinceLastSend) / 1000
+        ),
       })
     }
   }

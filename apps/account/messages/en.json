@@ -480,7 +480,7 @@
     "joinedBody": "It's now your active workspace. You can switch between your workspaces at any time.",
     "open": "Open {org}",
     "declinedHeading": "Invitation declined",
-    "declinedBody": "Your answer is saved. If you change your mind, ask {org} to send you a new invitation.",
+    "declinedBody": "Your answer is saved. {org} cannot invite you again for about a month.",
     "wrongAccountHeading": "This invitation is for another email",
     "wrongAccountBody": "You're signed in as {email}. Sign in with the email this invitation was sent to and we'll bring you straight back here.",
     "verifyHeading": "Confirm your email first",

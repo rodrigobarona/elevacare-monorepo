@@ -259,7 +259,17 @@ branch|production`, `--since`, `--report`) and the target guard
   from when the invitation would have expired, because the moment of a
   decline is not stored, so up to 37 days), and a clinic invites at most
   50 different addresses in 24 hours, withdrawn ones included (429
-  `INVITATION_DAILY_LIMIT`). The per-address minute between emails stays.
+  `INVITATION_DAILY_LIMIT`). One address gets at most one email in eight
+  hours from a clinic (three a day; it was one a minute), and the
+  invitation says how to stop them: decline it, or write to support.
+  Stated limits: declining needs an account with a verified email, so a
+  person with no account can only ignore the email or write to support,
+  and support has no tool yet to stop one clinic's invitations to an
+  address; an address written another way (plus-addressing, dots) and a
+  second clinic run by the same people are each a new address or a new
+  clinic to these rules; invitations to an expert practice go through
+  Better Auth and have none of these limits. For the DPO: whether someone
+  with no account needs a way to object without signing up.
   The expert's "no seat left" message is an alert under the service, the
   over-limit line says what frees a seat, and the public footer named in
   the first follow-up is the checkout footer (`checkout-site-footer.tsx`);

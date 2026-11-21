@@ -28,6 +28,10 @@ describe("organization invitation email", () => {
     // Someone with no account is told who is writing and where the privacy
     // notice is.
     expect(email.html).toContain("eleva.care/legal/privacy")
+    // And how to make this clinic's invitations stop.
+    expect(email.html).toContain(
+      "To stop invitations from Clínica Lumen, open the invitation and decline it, or write to support@eleva.care."
+    )
     expect(email.html).toContain("NIPC 515001708")
     expect(email.html).toContain("support@eleva.care")
   })

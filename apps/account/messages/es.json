@@ -480,7 +480,7 @@
     "joinedBody": "Ahora es tu espacio de trabajo activo. Puedes cambiar entre tus espacios cuando quieras.",
     "open": "Abrir {org}",
     "declinedHeading": "Invitación rechazada",
-    "declinedBody": "Tu respuesta queda guardada. Si cambias de idea, pide a {org} una nueva invitación.",
+    "declinedBody": "Tu respuesta queda guardada. {org} no podrá volver a invitarte durante un mes aproximadamente.",
     "wrongAccountHeading": "Esta invitación es para otro email",
     "wrongAccountBody": "Has iniciado sesión como {email}. Entra con el email al que se envió esta invitación y te traemos de vuelta aquí.",
     "verifyHeading": "Confirma primero tu email",

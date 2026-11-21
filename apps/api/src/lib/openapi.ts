@@ -4349,7 +4349,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "429": {
               description:
-                "INVITATION_RECENTLY_SENT (this address was emailed less than a minute ago), INVITATION_DAILY_LIMIT (the clinic invited 50 different addresses in the last 24 hours), or the caller's own request rate limit",
+                "INVITATION_RECENTLY_SENT (this address was emailed less than eight hours ago; Retry-After says when), INVITATION_DAILY_LIMIT (the clinic invited 50 different addresses in the last 24 hours), or the caller's own request rate limit",
               content: {
                 "application/json": {
                   schema: z.union([
