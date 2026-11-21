@@ -255,8 +255,10 @@ branch|production`, `--since`, `--report`) and the target guard
   and the registry office are in the terms, not in the email line).
 - Second follow-up (judges, round 2, 2026-11-21): an invited person can
   make the invitations stop. After a decline, the same clinic cannot invite
-  that address for 30 days (409 `INVITATION_DECLINED`), and a clinic
-  invites at most 50 addresses in 24 hours, withdrawn ones included (429
+  that address for at least 30 days (409 `INVITATION_DECLINED`; counted
+  from when the invitation would have expired, because the moment of a
+  decline is not stored, so up to 37 days), and a clinic invites at most
+  50 different addresses in 24 hours, withdrawn ones included (429
   `INVITATION_DAILY_LIMIT`). The per-address minute between emails stays.
   The expert's "no seat left" message is an alert under the service, the
   over-limit line says what frees a seat, and the public footer named in

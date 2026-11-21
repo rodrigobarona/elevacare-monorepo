@@ -58,7 +58,7 @@
       "limit": "A sua equipa chegou às 200 pessoas. Remova alguém ou retire um convite primeiro.",
       "owner-required": "Só quem é titular pode convidar para a função Admin ou alterar um convite para essa função. Peça a quem é titular.",
       "recently-sent": "Pode enviar este convite de novo dentro de um minuto.",
-      "declined": "Esta pessoa recusou o convite da sua clínica. Para respeitar essa decisão, pode voltar a convidá-la passados 30 dias.",
+      "declined": "Esta pessoa recusou o convite da sua clínica. Para respeitar essa decisão, pode voltar a convidá-la daqui a cerca de um mês.",
       "daily-limit": "A sua clínica já convidou o número máximo de pessoas por dia. Pode convidar mais amanhã.",
       "failed": "Não foi possível enviar o convite. Tente de novo."
     },

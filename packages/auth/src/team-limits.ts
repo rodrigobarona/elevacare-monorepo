@@ -18,8 +18,10 @@ export const TEAM_INVITATION_RESEND_COOLDOWN_MS = 60 * 1000
 
 /**
  * After someone declines a clinic's invitation, that clinic does not invite
- * the same address again for this long: declining has to mean something to
- * a person who may not even have an account to manage it from.
+ * the same address again for at least this long: declining has to mean
+ * something to a person who may not even have an account to manage it
+ * from. Counted from when the declined invitation would have expired (the
+ * moment of the decline is not stored), so up to seven days longer.
  */
 export const TEAM_INVITATION_DECLINE_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000
 

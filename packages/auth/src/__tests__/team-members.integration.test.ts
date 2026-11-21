@@ -498,15 +498,33 @@ describe.skipIf(!enabled || !databaseUrl)(
         })
       )
       expect(err.code).toBe("INVITATION_DECLINED")
-      expect(err.detail.retryAfterSeconds).toBeGreaterThan(29 * 24 * 3600)
+      expect(err.detail.retryAfterSeconds).toBeGreaterThan(30 * 24 * 3600)
+      // Thirty days after it was sent is not yet thirty days after a
+      // decline on its last day: still refused.
+      expect(
+        (
+          await refusal(
+            inviteTeamMember({
+              orgId,
+              actorUserId: owner,
+              email,
+              role: "member",
+              now: later(hour + TEAM_INVITATION_DECLINE_COOLDOWN_MS),
+            })
+          )
+        ).code
+      ).toBe("INVITATION_DECLINED")
       expect(sent).toHaveLength(before)
-      // After the 30 days the clinic may ask again.
+      // Thirty days after the invitation would have expired, the clinic
+      // may ask again.
       const again = await inviteTeamMember({
         orgId,
         actorUserId: owner,
         email,
         role: "member",
-        now: later(hour + TEAM_INVITATION_DECLINE_COOLDOWN_MS),
+        now: later(
+          hour + TEAM_INVITATION_TTL_MS + TEAM_INVITATION_DECLINE_COOLDOWN_MS
+        ),
       })
       expect(again.invitationId).not.toBe(first.invitationId)
       await db()
@@ -521,15 +539,17 @@ describe.skipIf(!enabled || !databaseUrl)(
 
     it("invites at most 50 addresses a day, withdrawn ones included", async () => {
       const day = 24 * 60 * 60 * 1000
-      const at = later(40 * day)
+      const at = later(60 * day)
       // Fifty invitations sent that day and withdrawn: the way to email
       // many strangers without ever holding many pending places.
       await db()
         .insert(auth.invitation)
         .values(
+          // One address was invited, withdrawn and invited again: two rows,
+          // one person. Fifty rows are then forty-nine addresses.
           Array.from({ length: TEAM_INVITATIONS_PER_DAY }, (_, index) => ({
             organizationId: orgId,
-            email: `flood-${index}-${suffix}@example.test`,
+            email: `flood-${Math.max(index, 1)}-${suffix}@example.test`,
             role: "member",
             status: "canceled",
             expiresAt: new Date(at.getTime() + TEAM_INVITATION_TTL_MS),
@@ -537,6 +557,15 @@ describe.skipIf(!enabled || !databaseUrl)(
           }))
         )
       const email = `one-more-${suffix}@example.test`
+      // The fiftieth address still fits.
+      const fiftieth = await inviteTeamMember({
+        orgId,
+        actorUserId: owner,
+        email: `fiftieth-${suffix}@example.test`,
+        role: "member",
+        now: new Date(at.getTime() + 30_000),
+      })
+      expect(fiftieth.resent).toBe(false)
       const before = sent.length
       const err = await refusal(
         inviteTeamMember({
@@ -563,7 +592,7 @@ describe.skipIf(!enabled || !databaseUrl)(
         .where(
           and(
             eq(auth.invitation.organizationId, orgId),
-            sql`${auth.invitation.email} like ${`%-${suffix}@example.test`} and (${auth.invitation.email} like 'flood-%' or ${auth.invitation.email} like 'one-more-%')`
+            sql`${auth.invitation.email} like ${`%-${suffix}@example.test`} and (${auth.invitation.email} like 'flood-%' or ${auth.invitation.email} like 'one-more-%' or ${auth.invitation.email} like 'fiftieth-%')`
           )
         )
     })

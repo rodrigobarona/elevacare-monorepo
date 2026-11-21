@@ -58,7 +58,7 @@
       "limit": "Your team has reached 200 people. Remove someone or withdraw an invitation first.",
       "owner-required": "Only the owner can invite an admin or change an admin's invitation. Ask the owner to do it.",
       "recently-sent": "You can send this invitation again in a minute.",
-      "declined": "This person declined your clinic's invitation. To respect that, you can invite them again after 30 days.",
+      "declined": "This person declined your clinic's invitation. To respect that, you can invite them again in about a month.",
       "daily-limit": "Your clinic has invited as many people as it can in one day. You can invite more tomorrow.",
       "failed": "We could not send the invitation. Please try again."
     },

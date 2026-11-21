@@ -340,24 +340,29 @@ async function assertMayInvite(
     .orderBy(desc(auth.invitation.expiresAt))
     .limit(1)
   if (newest?.status === "rejected") {
-    const sinceDeclined =
-      now.getTime() - (newest.expiresAt.getTime() - TEAM_INVITATION_TTL_MS)
-    if (sinceDeclined < TEAM_INVITATION_DECLINE_COOLDOWN_MS) {
+    // The moment of a decline is not stored. It was before the invitation
+    // would have expired, so the wait is counted from that expiry: never
+    // less than the full period after the decline, at most a week more.
+    const quietUntil =
+      newest.expiresAt.getTime() + TEAM_INVITATION_DECLINE_COOLDOWN_MS
+    if (now.getTime() < quietUntil) {
       throw new TeamMemberError("INVITATION_DECLINED", {
-        retryAfterSeconds: Math.ceil(
-          (TEAM_INVITATION_DECLINE_COOLDOWN_MS - sinceDeclined) / 1000
-        ),
+        retryAfterSeconds: Math.ceil((quietUntil - now.getTime()) / 1000),
       })
     }
   }
 
-  // Every invitation this clinic sent in the last day, whatever became of
-  // it (accepted, withdrawn, declined, expired).
+  // Every other address this clinic invited in the last day, whatever
+  // became of the invitation (accepted, withdrawn, declined, expired).
+  // Addresses, not rows: inviting someone again after a withdrawal is a
+  // new row and the same person.
   const dayAgo = new Date(
     now.getTime() + TEAM_INVITATION_TTL_MS - 24 * 60 * 60 * 1000
   )
   const [today] = await tx
-    .select({ sent: sql<number>`count(*)::int` })
+    .select({
+      sent: sql<number>`count(distinct lower(${auth.invitation.email}))::int`,
+    })
     .from(auth.invitation)
     .where(
       and(
