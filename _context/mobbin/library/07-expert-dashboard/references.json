@@ -408,6 +408,67 @@
       "detail": "'YOUR PRACTICE' above 'Hello, Marta', 'YOUR SPACE' above the Space home, and similar labels on 19 pages repeat what the sidebar already says.",
       "recommendation": "Remove the eyebrow from every PageHeader in the app, expert, team, academy and admin apps, and remove the prop from @eleva/ui so it cannot creep back. Where the eyebrow carried information (the date on a session report), move it into the page line.",
       "references": ["07-expert-dashboard/32"]
+    },
+    {
+      "id": "XDASH-32",
+      "severity": "P1",
+      "lens": "copy",
+      "title": "Finance tells the expert what is not switched on",
+      "evidence": [
+        "2026-11-20-practice-before/07-expert-dashboard/15-finance-invoices.desktop.jpg",
+        "2026-11-20-practice-before/07-expert-dashboard/16-finance-invoicing.desktop.jpg"
+      ],
+      "detail": "Member invoices says 'Automatic issuance stays closed until fiscal setup is complete' and offers to 'Retry a failed automatic dispatch'. Invoicing shows TOConline ('Automatic invoice issuance is not active yet') and Moloni ('Coming soon') as greyed cards with disabled Connect buttons above the one choice that works. A linked account reads 'Automatic invoice issuance is not active yet.'",
+      "recommendation": "Show only the ways of invoicing that work today (07-expert-dashboard/37) and say what the expert does: she issues each invoice in her own software and marks it as issued. A linked account says it is linked and what to do next (07-expert-dashboard/36).",
+      "references": ["07-expert-dashboard/36", "07-expert-dashboard/37"]
+    },
+    {
+      "id": "XDASH-33",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "Integrations lists invoicing apps that cannot be connected, with no action",
+      "evidence": [
+        "2026-11-20-practice-before/07-expert-dashboard/09-integrations.desktop.jpg"
+      ],
+      "detail": "Under Invoicing, TOConline, Moloni and 'Manual invoicing' are three cards with a description ('Issue Portuguese fiscal invoices via Moloni ERP.'), 'Available in PT' and no button. Moloni cannot be connected at all; none of the cards leads anywhere.",
+      "recommendation": "List only what can be used today and give each card one action that opens Invoicing settings (07-expert-dashboard/37).",
+      "references": ["07-expert-dashboard/37"]
+    },
+    {
+      "id": "XDASH-34",
+      "severity": "P2",
+      "lens": "copy",
+      "title": "Invoice rows are named by an ID fragment, with system statuses and a Retry that cannot succeed",
+      "evidence": [
+        "2026-11-20-practice-before/07-expert-dashboard/15-finance-invoices.desktop.jpg"
+      ],
+      "detail": "Read from the code: the invoice list is empty for the seeded practice. The first column, 'Session', shows the first eight characters of the booking ID. 'Method' reads 'Manual'. Statuses are 'Pending', 'Failed' and 'Manual pending'. An invoice the expert has to issue herself shows 'Failed', a paragraph ('Automatic issuance is not active yet. You can retry later or mark the invoice as issued manually.') and two buttons, Retry and 'Mark as issued manually'; Retry ends the same way every time.",
+      "recommendation": "Name the row after the session: the member's first name and the date (07-expert-dashboard/33). One status in plain words: 'To issue', 'Being prepared', 'Issued', 'Issued by you'. One action, 'Mark as issued'; 'Try again' only for an invoice that really failed on its way (07-expert-dashboard/34).",
+      "references": ["07-expert-dashboard/33", "07-expert-dashboard/34"]
+    },
+    {
+      "id": "XDASH-35",
+      "severity": "P2",
+      "lens": "copy",
+      "title": "System words in private links, payouts and the calendar feed",
+      "evidence": [
+        "2026-11-20-practice-before/07-expert-dashboard/17-private-links.desktop.jpg"
+      ],
+      "detail": "Private links: 'The token is shown once', 'Eleva only stores a hash; the token cannot be recovered later', and on revoke 'Anyone with the link will get a 404'. Earnings can read 'Reversal pending' and 'Reversed'. Payouts that cannot be set up read 'Payments are not configured on this environment'. The calendar feed says 'A feed token is active.'",
+      "recommendation": "Say what the expert needs to do or know: 'Copy this link now. For your security, we can't show it again.' (07-expert-dashboard/35); 'The link stops working for anyone who has it'; 'Refund in progress' and 'Refunded'; 'Your calendar feed is on.'",
+      "references": ["07-expert-dashboard/35"]
+    },
+    {
+      "id": "XDASH-36",
+      "severity": "P3",
+      "lens": "copy",
+      "title": "The monthly export is described in file-format terms and by what it is not",
+      "evidence": [
+        "2026-11-20-practice-before/07-expert-dashboard/15-finance-invoices.desktop.jpg"
+      ],
+      "detail": "'CSV plus a SAF-T skeleton for member invoices in the selected month. This is not a certified tax file.' A truncated export says 'The downloaded file is truncated.'",
+      "recommendation": "Say what it is for and where the certified file comes from: 'A spreadsheet (CSV) and a draft SAF-T file of the month's member invoices, to share with your accountant. Your certified tax file comes from your invoicing software.'",
+      "references": []
     }
   ],
   "references": [
@@ -798,6 +859,66 @@
       "why": "The sidebar already says where you are, so the page starts with the person and what is next.",
       "apply": "Remove every eyebrow above PageHeader titles in the Space, practice, clinic, academy and admin apps, and drop the prop so it cannot come back.",
       "query": "calm dashboard home page with a greeting headline and no label above it"
+    },
+    {
+      "id": "07-expert-dashboard/33",
+      "file": "img/33-paypal-invoices-one-status.jpg",
+      "app": "PayPal",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/82444ae8-f07d-446d-b3d7-7ad5803eecef?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Invoice row: who, the number, the dates, one status word and the amount",
+      "why": "Each invoice is one row named after the customer, with its number, created and due dates, a one-word status ('Paid') and the amount. Row actions sit behind one menu. Payments product, kept for the row structure.",
+      "apply": "Name each of Eleva's invoice rows after the session (the member and the date), with one status in a plain word and one action.",
+      "query": "invoices list for a freelancer with invoice status"
+    },
+    {
+      "id": "07-expert-dashboard/34",
+      "file": "img/34-melio-invoices-list.jpg",
+      "app": "Melio",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/44f68328-86ad-4d7a-b891-fef361dc5d95?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Invoices list with one status pill per row and nothing about the machinery",
+      "why": "'Get Paid' lists invoices by customer with the invoice number, dates, one status pill ('Open') and the amount. The page says nothing about how sending works behind it. Payments product, kept for what it leaves out.",
+      "apply": "The invoice list says what state each invoice is in, not how issuing is wired.",
+      "query": "invoices list for a freelancer with invoice status"
+    },
+    {
+      "id": "07-expert-dashboard/35",
+      "file": "img/35-navan-link-created-copy.jpg",
+      "app": "Navan",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/d504fcc0-e338-499e-881c-209a22feb2b0?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A link was created: one sentence, the link and Copy",
+      "why": "After creating a guest invite link the dialog says 'The booking link has been successfully created', one line about where to find it, the link and a 'Copy' button. No word about tokens or storage. Travel product, kept for the dialog's plain wording.",
+      "apply": "Eleva shows a private link once: say 'Copy this link now. For your security, we can't show it again.' and nothing about how it is stored.",
+      "query": "share link created dialog with copy link"
+    },
+    {
+      "id": "07-expert-dashboard/36",
+      "file": "img/36-acctual-accounting-connected.jpg",
+      "app": "Acctual",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/78868383-2fad-4b4a-a527-5c77e4ca5d18?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A linked accounting account is one row: its name and 'Connected'",
+      "why": "Settings > Accounting shows the linked account as a single row with its name and a green 'Connected'. Nothing else. Invoicing product, kept for how little a linked account needs to say.",
+      "apply": "A linked TOConline account shows its name, 'Connected' and one line about what the expert does next.",
+      "query": "accounting software integration settings connected"
+    },
+    {
+      "id": "07-expert-dashboard/37",
+      "file": "img/37-revolut-accounting-live-only.jpg",
+      "app": "Revolut Business",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/28b9e426-75b2-447a-91dc-388b14618bd9?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Only the providers that can be connected are listed",
+      "why": "The Accounting list shows the six providers that can be connected today, each a row that opens its setup, and one quiet row under them: 'Don't see yours? Let us know'. No greyed-out or 'coming soon' entries. Banking product, kept for listing only what works.",
+      "apply": "List only the invoicing options an expert can use today. Moloni and a TOConline that cannot be linked are not shown.",
+      "query": "accounting software integration settings connected"
     }
   ],
   "judging_criteria": [
@@ -819,6 +940,7 @@
     "After setup, can an expert change every answer from setup (except the licence) on a settings page, and does a refused change say which services it affects and where to fix them? (07-expert-dashboard/25, 07-expert-dashboard/26, 07-expert-dashboard/27)",
     "Can the expert set when her calendar reminds her of a session, next to where sessions go, with her calendar app's usual reminder as the default and a line that says members are reminded separately? (07-expert-dashboard/29, 07-expert-dashboard/30, 07-expert-dashboard/31)",
     "Can she see every calendar of an account and which ones are checked without opening anything, with the calendar sessions go to clearly switched on? (07-expert-dashboard/13, 07-expert-dashboard/31)",
-    "Does each page open with its headline (no label above it) and one line on what you can do there? (07-expert-dashboard/32)"
+    "Does each page open with its headline (no label above it) and one line on what you can do there? (07-expert-dashboard/32)",
+    "Does Finance show only what works today, in plain words? Only the ways of invoicing an expert can use are offered; an invoice row is named after its session, with one plain status and one action; nothing mentions tokens, hashes, error codes or what is not switched on. (07-expert-dashboard/33, 07-expert-dashboard/34, 07-expert-dashboard/35, 07-expert-dashboard/36, 07-expert-dashboard/37)"
   ]
 }

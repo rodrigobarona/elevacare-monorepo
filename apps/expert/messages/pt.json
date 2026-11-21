@@ -277,15 +277,15 @@
     },
     "privateLinks": {
       "title": "Links privados",
-      "description": "Convide alguém quando a agenda pública está fechada. O token é mostrado uma vez.",
+      "description": "Convide alguém a marcar com um link só para essa pessoa, mesmo quando não está a aceitar novas marcações. Verá cada link uma única vez, ao criá-lo.",
       "create": "Criar link privado",
       "save": "Criar link",
       "saving": "A criar…",
       "cancel": "Cancelar",
       "empty": "Ainda não há links privados.",
       "needMode": "Adicione um modo de entrega ativo antes de criar um link privado.",
-      "created": "Link privado criado. Copie agora — não será mostrado outra vez.",
-      "tokenOnce": "Copie este link agora. A Eleva só guarda um hash; o token não pode ser recuperado depois.",
+      "created": "Link privado criado.",
+      "tokenOnce": "Copie este link agora. Por segurança, só é mostrado esta vez.",
       "copyLink": "Copiar link",
       "sendEmail": "Enviar por e-mail",
       "dismissToken": "Concluído",
@@ -298,7 +298,7 @@
       "expires": "Expira {date}",
       "revoke": "Revogar",
       "revokeTitle": "Revogar este link privado?",
-      "revokeDescription": "Quem tiver o link verá um 404. Não é possível anular.",
+      "revokeDescription": "O link deixa de funcionar para quem o tiver. Não é possível anular.",
       "revokeConfirm": "Revogar link",
       "revoking": "A revogar…",
       "revoked": "Link privado revogado.",
@@ -567,7 +567,7 @@
       "title": "Feed ICS",
       "description": "Subscreva no Apple Calendar, Google Calendar ou Outlook com um link privado só de leitura.",
       "empty": "Ainda não há feed. Crie um para subscrever noutro calendário.",
-      "active": "Há um token de feed ativo.",
+      "active": "O seu feed de calendário está ativo.",
       "activeSince": "Feed ativo desde {date}.",
       "create": "Criar feed",
       "rotate": "Rodar link",
@@ -753,7 +753,7 @@
   },
   "integrations": {
     "title": "Integrações",
-    "description": "Ligue calendários, faturação e outros serviços à sua prática Eleva.",
+    "description": "Ligue os seus calendários e defina como emite as faturas.",
     "category": {
       "calendar": {
         "title": "Calendários",
@@ -787,10 +787,12 @@
       "expired": "Expirado"
     },
     "names": {
-      "manual": "Faturação manual"
+      "manual": "Emito as minhas faturas"
     },
     "connectCalendarNamed": "Ligar {name}",
-    "configureCalendarsNamed": "Gerir {name}"
+    "configureCalendarsNamed": "Gerir {name}",
+    "openInvoicing": "Definições de faturação",
+    "openInvoicingNamed": "{name}: definições de faturação"
   },
   "finance": {
     "title": "Finanças",
@@ -809,68 +811,63 @@
     "payoutState": "Estado do pagamento",
     "eligibleAt": "Elegível",
     "exportCsv": "Exportar CSV",
-    "exportFailed": "Não foi possível exportar o CSV. Tenta novamente.",
+    "exportFailed": "Não foi possível exportar o CSV. Tente novamente.",
     "empty": "Ainda não há pagamentos de marcações.",
     "noPayout": "Não agendado",
     "invoices": {
       "link": "Faturas dos membros",
       "title": "Faturas dos membros",
-      "description": "Acompanha as faturas emitidas aos membros por sessões pagas. Podes repetir um envio automático falhado ou marcar a sessão como faturada fora da Eleva.",
+      "description": "Cada sessão paga precisa de uma fatura sua. Emita-a no seu software de faturação e marque-a aqui como emitida.",
       "backToFinance": "Finanças",
       "empty": "Ainda não há faturas de membros.",
       "booking": "Sessão",
-      "adapter": "Método",
       "amount": "Valor",
       "statusLabel": "Estado",
-      "issuedAt": "Emitida",
+      "issuedAt": "Data de emissão",
       "actionsLabel": "Ações",
       "retry": "Tentar novamente",
-      "retryQueued": "Pedido enviado. A emissão automática continua fechada até a configuração fiscal estar concluída.",
+      "retryQueued": "A tentar novamente.",
       "loadMore": "Carregar faturas mais antigas",
       "loadingMore": "A carregar...",
-      "markManual": "Marcar como emitida manualmente",
-      "markManualTitle": "Marcar esta sessão como faturada?",
-      "markManualDescription": "Usa isto apenas depois de emitires uma fatura certificada ao membro fora da Eleva. Ficas legalmente responsável por essa fatura.",
-      "markedManual": "Sessão marcada como faturada manualmente.",
+      "markManual": "Marcar como emitida",
+      "markManualTitle": "Marcar esta fatura como emitida?",
+      "markManualDescription": "Faça-o depois de emitir uma fatura certificada ao membro no seu software de faturação. Continua legalmente responsável por essa fatura.",
+      "markedManual": "Marcada como emitida.",
       "marking": "A guardar...",
       "cancel": "Cancelar",
-      "blocked": "A emissão automática ainda não está ativa. Podes tentar novamente mais tarde ou marcar a fatura como emitida manualmente.",
       "exportMonth": "Mês de exportação",
       "exportSaft": "Preparar exportação mensal",
       "exporting": "A preparar a exportação...",
-      "exportReady": "Exportação pronta. Abre o ficheiro para o descarregar.",
+      "exportReady": "Exportação pronta. Abra o ficheiro para o descarregar.",
       "openExport": "Abrir ficheiro",
-      "exportTruncated": "Este mês tem mais faturas do que o limite da exportação. O ficheiro descarregado está truncado.",
-      "exportHint": "CSV e um esqueleto SAF-T das faturas dos membros no mês selecionado. Não é um ficheiro fiscal certificado.",
+      "exportTruncated": "Este mês tem mais faturas do que cabem num ficheiro, por isso este ficheiro está incompleto.",
+      "exportHint": "Uma folha de cálculo (CSV) e um rascunho SAF-T das faturas dos membros nesse mês, para partilhar com o seu contabilista. O ficheiro fiscal certificado vem do seu software de faturação.",
       "invoiceStatus": {
-        "pending": "Pendente",
+        "pending": "Em preparação",
         "issued": "Emitida",
-        "failed": "Falhou",
-        "manualPending": "Manual pendente",
-        "manualIssued": "Emitida manualmente"
-      },
-      "adapters": {
-        "toconline": "TOConline",
-        "moloni": "Moloni",
-        "manual": "Manual"
+        "failed": "Não foi emitida",
+        "manualPending": "Por emitir",
+        "manualIssued": "Emitida por si"
       },
       "errors": {
-        "flag_disabled": "A faturação automática ainda não está ativa.",
+        "flag_disabled": "Emita esta fatura no seu software de faturação e marque-a como emitida.",
         "not_found": "Essa fatura não foi encontrada.",
         "already_issued": "Esta fatura já está emitida.",
-        "not_retryable": "Esta fatura não pode ser reenviada. Marca-a como emitida manualmente se já faturaste o membro fora da Eleva.",
-        "already_manual": "Esta fatura já está marcada como emitida manualmente.",
-        "payment_not_succeeded": "O pagamento da sessão não está concluído, por isso a fatura não pode ser reenviada.",
-        "forbidden": "Não podes alterar esta fatura.",
-        "validation": "O pedido é inválido.",
-        "blocked": "Este pedido foi bloqueado. Tenta novamente.",
-        "conflict": "Esta fatura não pode ser atualizada no estado atual.",
-        "generic": "Algo correu mal. Tenta novamente."
+        "not_retryable": "Emita esta fatura no seu software de faturação e marque-a como emitida.",
+        "already_manual": "Esta fatura já está marcada como emitida.",
+        "payment_not_succeeded": "Esta sessão não foi paga, por isso não há fatura para emitir.",
+        "forbidden": "Não pode alterar esta fatura.",
+        "validation": "Faltou alguma informação. Tente novamente.",
+        "blocked": "Este pedido foi bloqueado. Tente novamente.",
+        "conflict": "Esta fatura mudou. Atualize a página e tente novamente.",
+        "generic": "Algo correu mal. Tente novamente."
       },
       "listTitle": "Faturas",
-      "listHint": "Uma linha por sessão paga. A emissão automática continua fechada até a configuração fiscal estar concluída.",
       "exportTitle": "Exportação mensal",
-      "emptyHint": "As faturas aparecem aqui depois de um membro pagar uma sessão."
+      "emptyHint": "Quando um membro pagar uma sessão, ela aparece aqui para emitir a fatura.",
+      "markManualNamed": "Marcar como emitida: {session}",
+      "retryNamed": "Tentar novamente: {session}",
+      "failedHint": "Tente novamente, ou emita-a no seu software de faturação e marque-a como emitida."
     },
     "status": {
       "pending": "Pendente",
@@ -880,8 +877,8 @@
       "paidOut": "Pago",
       "failed": "Falhou",
       "held": "Em retenção",
-      "reversalPending": "Reversão pendente",
-      "reversed": "Revertido"
+      "reversalPending": "Reembolso em curso",
+      "reversed": "Reembolsado"
     },
     "bookingsHint": "Cada sessão paga, a comissão Eleva e o estado da transferência.",
     "netHint": "De {gross} pagos pelos membros, após {fees} de comissão Eleva e eventuais reembolsos",
@@ -895,8 +892,8 @@
       "start": "Configurar pagamentos",
       "starting": "A abrir pagamentos…",
       "error": "Não foi possível iniciar a configuração de pagamentos. Tente novamente.",
-      "unavailableTitle": "Os pagamentos ainda não estão disponíveis",
-      "unavailable": "Os pagamentos não estão configurados neste ambiente. Contacte o suporte."
+      "unavailableTitle": "Não é possível configurar os pagamentos neste momento",
+      "unavailable": "Escreva para support@eleva.care e tratamos disso."
     },
     "finishSetup": {
       "title": "Termine a configuração dos pagamentos",
@@ -905,19 +902,17 @@
     "invoicing": {
       "link": "Definições de faturação",
       "title": "Faturação",
-      "description": "Escolha como são emitidas as faturas das suas sessões e altere quando quiser.",
+      "description": "Como emite as faturas das suas sessões.",
       "backToFinance": "Voltar a finanças",
       "currentTitle": "Método de faturação",
-      "currentHint": "O fornecedor ou método que a Eleva regista para as suas sessões.",
       "connectedSince": "Ligado a {date}",
       "health": {
         "connected": {
           "label": "Ligado",
-          "body": "A sua conta está ligada. A emissão automática de faturas ainda não está ativa."
+          "body": "A sua conta {provider} está ligada. Emita cada fatura lá."
         },
         "manual": {
-          "label": "Manual",
-          "body": "Emite a cada membro uma fatura certificada por conta própria, fora da Eleva."
+          "body": "Emite a cada membro uma fatura certificada no seu software de faturação."
         },
         "attention": {
           "label": "Requer atenção",
@@ -932,7 +927,7 @@
         "disconnectBody": "A Eleva apaga as credenciais guardadas de {provider}. Os documentos já emitidos em {provider} ficam lá. Pode voltar a ligar ou escolher outro método depois.",
         "disconnectAction": "Desligar",
         "changeTitle": "Mudar de método de faturação?",
-        "changeBody": "A sua escolha de faturação manual é removida para poder escolher outro método.",
+        "changeBody": "A sua escolha atual é removida para poder escolher outro método.",
         "changeAction": "Continuar",
         "cancel": "Cancelar"
       },
@@ -955,7 +950,8 @@
         "saving": "A guardar…",
         "saved": "Número fiscal guardado.",
         "failed": "Não foi possível guardar o seu número fiscal. Tente novamente."
-      }
+      },
+      "markHint": "Depois, marque-a como emitida em Faturas dos membros."
     }
   },
   "onboarding": {
@@ -1015,42 +1011,40 @@
       "provisioning": "A abrir Pagamentos…",
       "later": "Concluo isto mais tarde",
       "error": "Não foi possível iniciar a configuração de Pagamentos. Tente novamente.",
-      "missingStripe": "A configuração Stripe está em falta. Contacte o suporte."
+      "missingStripe": "Não é possível configurar os pagamentos neste momento. Escreva para support@eleva.care."
     },
     "invoicing": {
-      "intro": "Escolha como as faturas dos membros serão emitidas. Pode ligar um fornecedor automático ou tratar da faturação sozinho.",
+      "intro": "Escolha como emite as faturas aos membros.",
       "connected": "Ligado",
       "acknowledged": "Confirmado",
-      "connectedVia": "A faturação está configurada via {provider}.",
+      "connectedVia": "A sua conta {provider} está ligada.",
+      "issuesOwn": "Emite as suas próprias faturas.",
       "continue": "Continuar",
       "connectToconline": "Ligar TOConline",
-      "connectProvider": "Ligar",
-      "acknowledgeManual": "Confirmar faturação manual",
+      "acknowledgeManual": "Confirmar",
       "manualLegal": "Continua legalmente responsável por emitir uma fatura certificada a cada membro pelas sessões pagas através da Eleva, usando o seu próprio software de faturação.",
       "manualCheckbox": "Compreendo e aceito esta obrigação de faturação",
       "adapters": {
         "toconline": {
           "name": "TOConline",
-          "description": "Ligue a sua conta TOConline. A emissão automática de faturas ainda não está ativa."
+          "description": "Ligue a sua conta TOConline. Depois, emita cada fatura lá e marque-a como emitida em Faturas dos membros."
         },
         "moloni": {
-          "name": "Moloni",
-          "description": "Faturação automática via Moloni. Em breve."
+          "name": "Moloni"
         },
         "manual": {
-          "name": "Faturação manual",
-          "description": "Emite as faturas fora da Eleva. Confirme a obrigação legal para avançar."
+          "name": "Emito as minhas faturas"
         }
       },
       "errors": {
-        "flag_disabled": "A faturação automática ainda não está ativa. Escolha faturação manual ou tente mais tarde.",
+        "flag_disabled": "Não é possível ligar a TOConline neste momento. Escolha emitir as suas faturas ou tente mais tarde.",
         "not_found": "Não encontrámos o seu perfil de especialista. Atualize a página e tente novamente.",
         "connect_failed": "Não foi possível ligar o fornecedor de faturação. Tente novamente.",
-        "provider_denied": "O acesso ao fornecedor de faturação foi recusado. Tente outra vez ou escolha faturação manual.",
-        "missing_params": "O retorno da faturação ficou incompleto. Tente ligar novamente.",
-        "invalid_state": "O retorno da faturação era inválido. Tente ligar novamente.",
+        "provider_denied": "A TOConline não deu acesso. Tente novamente ou escolha emitir as suas faturas.",
+        "missing_params": "A ligação não ficou concluída. Tente ligar novamente.",
+        "invalid_state": "A ligação não ficou concluída. Tente ligar novamente.",
         "invalid_provider": "Esse fornecedor de faturação não é suportado.",
-        "manual_ack_required": "Confirme a obrigação de faturação antes de continuar com faturação manual."
+        "manual_ack_required": "Assinale a caixa para confirmar primeiro a obrigação de faturação."
       }
     },
     "requirements": {

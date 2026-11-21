@@ -30,7 +30,10 @@ export async function RouteLoading() {
 export async function RouteNotFound() {
   const t = await getTranslations("routeStates")
   return (
-    <div className="flex min-h-[60svh] items-center justify-center p-6">
+    <div
+      className="flex min-h-[60svh] items-center justify-center p-6"
+      data-testid="route-not-found"
+    >
       <EmptyState
         variant="no-results"
         className="max-w-lg"

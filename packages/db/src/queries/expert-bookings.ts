@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, lt, notInArray } from "drizzle-orm"
+import { and, asc, eq, gt, inArray, lt, notInArray } from "drizzle-orm"
 import { withOrgContext, withPlatformAdminContext, type Tx } from "../context"
 import { user } from "../schema/auth"
 import {
@@ -173,6 +173,45 @@ export async function getExpertBookingById(
       )
       .limit(1)
     return row ?? null
+  })
+}
+
+export type BookingSessionSummary = {
+  startsAt: Date
+  /** The member's first name, as the expert sees it elsewhere. */
+  memberName: string | null
+}
+
+/**
+ * When each booking takes place and who it is with, for a list that names
+ * its rows after the session (an expert's invoices). Reads inside the
+ * practice's own context, so only its bookings come back.
+ */
+export async function listBookingSessionSummaries(
+  orgId: string,
+  bookingIds: string[]
+): Promise<Map<string, BookingSessionSummary>> {
+  if (bookingIds.length === 0) return new Map()
+  return withOrgContext(orgId, async (tx: Tx) => {
+    const rows = await tx
+      .select({
+        id: bookings.id,
+        startsAt: bookings.startsAt,
+        guestName: bookings.guestName,
+        accountName: user.name,
+      })
+      .from(bookings)
+      .leftJoin(user, eq(user.id, bookings.memberUserId))
+      .where(and(eq(bookings.orgId, orgId), inArray(bookings.id, bookingIds)))
+    return new Map(
+      rows.map((row) => [
+        row.id,
+        {
+          startsAt: row.startsAt,
+          memberName: memberFirstName(row.guestName, row.accountName),
+        },
+      ])
+    )
   })
 }
 

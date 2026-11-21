@@ -10,9 +10,9 @@ const toconline: IntegrationManifest = {
   countries: ["PT"],
   connectType: "oauth",
   description: {
-    en: "Issue Portuguese fiscal invoices (FT) via TOConline ERP.",
-    pt: "Emita faturas fiscais portuguesas (FT) via TOConline ERP.",
-    es: "Emita facturas fiscales portuguesas (FT) a través de TOConline ERP.",
+    en: "Link your TOConline account. You issue each invoice there, then mark it as issued under Member invoices.",
+    pt: "Ligue a sua conta TOConline. Depois, emita cada fatura lá e marque-a como emitida em Faturas dos membros.",
+    es: "Vincula tu cuenta de TOConline. Después, emite cada factura allí y márcala como emitida en Facturas de miembros.",
   },
   docsUrl: "https://www.toconline.com",
   featureFlag: "ff.invoicing.toconline",
@@ -44,9 +44,9 @@ const manual: IntegrationManifest = {
   countries: [],
   connectType: "manual",
   description: {
-    en: "Handle invoicing manually outside of Eleva. You acknowledge responsibility for fiscal compliance.",
-    pt: "Fature manualmente fora da Eleva. Reconhece a responsabilidade pelo cumprimento fiscal.",
-    es: "Facture manualmente fuera de Eleva. Reconoce la responsabilidad del cumplimiento fiscal.",
+    en: "A certified invoice for each member, from your own invoicing software.",
+    pt: "Uma fatura certificada para cada membro, no seu software de faturação.",
+    es: "Una factura certificada para cada miembro, desde tu software de facturación.",
   },
 }
 

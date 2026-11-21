@@ -5033,7 +5033,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "listExpertInvoices",
           summary: "List expert → member invoices",
           description:
-            "Returns the authenticated expert organization's Tier 2 invoices. Does not include member tax IDs. Automatic TOConline issuance stays closed until fiscal parameters are signed. A clinic clinician (team member) sees only invoices for bookings where they are the expert, and gets 403 `missing-expert-profile` without an expert profile in the clinic.",
+            "Returns the authenticated expert organization's Tier 2 invoices. Each invoice names its session (`session`: start time and the member's first name). Does not include member tax IDs. Automatic TOConline issuance stays closed until fiscal parameters are signed. A clinic clinician (team member) sees only invoices for bookings where they are the expert, and gets 403 `missing-expert-profile` without an expert profile in the clinic.",
           tags: ["Invoicing"],
           requestParams: {
             query: ListExpertInvoicesQuerySchema,

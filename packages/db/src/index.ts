@@ -150,6 +150,8 @@ export {
   listExpertBookings,
   listExpertBookingsForFeed,
   getExpertBookingById,
+  listBookingSessionSummaries,
+  type BookingSessionSummary,
   type ExpertBookingListItem,
 } from "./queries/expert-bookings"
 export {

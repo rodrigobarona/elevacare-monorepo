@@ -468,8 +468,14 @@
         {
           "id": "D7.5",
           "title": "Practice: only what is live, in plain words",
-          "scope": "Hide Moloni, 'not active yet' and closed-issuing lines and the useless Retry; rewrite system words (hash, 404, Intent pending, Reversal pending).",
-          "findings": [],
+          "scope": "Only the ways of invoicing that work today are offered (Moloni and an unlinkable TOConline are not shown, on Invoicing, in setup and on Integrations); no line about what is not active; an invoice row is named after its session, with one plain status and one action (Try again only for a real failure); private links, payouts and the calendar feed lose their system words (token, hash, 404, Reversal pending).",
+          "findings": [
+            "XDASH-32",
+            "XDASH-33",
+            "XDASH-34",
+            "XDASH-35",
+            "XDASH-36"
+          ],
           "effort": "M"
         },
         {
