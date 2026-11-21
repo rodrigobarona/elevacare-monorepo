@@ -72,7 +72,8 @@
         "decided": "Someone already decided this application.",
         "self": "You cannot review your own application.",
         "forbidden": "You do not have access to this review.",
-        "failed": "That did not work. Please try again."
+        "failed": "That did not work. Please try again.",
+        "step-up": "Sign in again to decide. A decision needs a session started in the last 12 hours."
       }
     }
   },

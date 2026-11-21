@@ -3241,7 +3241,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "decidePartnerReview",
           summary: "Decide an open licence application",
           description:
-            "Staff-only (`applications:review`, revocable session). `approve` needs every checklist item and is the licence verification record: an `approved` profile becomes `active`, an `active` profile stays active. `needs_changes` and `reject` need a reason and leave the profile status alone. The expert gets an email on each decision.",
+            "Staff-only (`applications:review`, revocable credential; from a browser the session must have started in the last 12 hours, 403 STEP_UP_REQUIRED otherwise). `approve` needs every checklist item and is the licence verification record: an `approved` profile becomes `active`, an `active` profile stays active. `needs_changes` and `reject` need a reason and leave the profile status alone. The expert gets an email on each decision.",
           tags: ["Admin"],
           requestParams: {
             path: z.object({ expertProfileId: z.string().uuid() }),

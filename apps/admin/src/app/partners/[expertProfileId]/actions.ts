@@ -9,6 +9,7 @@ export type DecideLicenceError =
   | "changed"
   | "decided"
   | "self"
+  | "step-up"
   | "forbidden"
   | "failed"
 
@@ -16,6 +17,7 @@ const API_ERRORS: Record<string, DecideLicenceError> = {
   APPLICATION_CHANGED: "changed",
   APPLICATION_ALREADY_DECIDED: "decided",
   SELF_REVIEW: "self",
+  STEP_UP_REQUIRED: "step-up",
 }
 
 export async function decideLicence(

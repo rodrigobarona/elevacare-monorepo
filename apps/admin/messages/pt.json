@@ -72,7 +72,8 @@
         "decided": "Alguém já decidiu este pedido.",
         "self": "Não pode rever o seu próprio pedido.",
         "forbidden": "Não tem acesso a esta revisão.",
-        "failed": "Não foi possível concluir. Tente novamente."
+        "failed": "Não foi possível concluir. Tente novamente.",
+        "step-up": "Inicie sessão de novo para decidir. Uma decisão precisa de uma sessão iniciada nas últimas 12 horas."
       }
     }
   },

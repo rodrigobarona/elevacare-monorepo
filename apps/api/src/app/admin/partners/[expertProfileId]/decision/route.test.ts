@@ -63,7 +63,12 @@ function post(body: unknown, profileId = PROFILE_ID) {
 describe("POST /admin/partners/{expertProfileId}/decision", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    requireCapability.mockResolvedValue({ user: { id: "staff-1" } })
+    // A console session that started a moment ago.
+    requireCapability.mockResolvedValue({
+      user: { id: "staff-1" },
+      authMode: "cookie",
+      authenticatedAt: new Date(),
+    })
     decide.mockResolvedValue({ status: "approved", profileStatus: "active" })
   })
 
@@ -76,6 +81,45 @@ describe("POST /admin/partners/{expertProfileId}/decision", () => {
       "applications:review"
     )
     expect(decide).not.toHaveBeenCalled()
+  })
+
+  it("asks a browser session that started long ago to sign in again", async () => {
+    const hoursAgo = (hours: number) =>
+      new Date(Date.now() - hours * 60 * 60 * 1000)
+    const approve = { ...TARGET, decision: "approve", checklist: CHECKLIST }
+    // Left open since yesterday: no licence is verified from it.
+    requireCapability.mockResolvedValue({
+      user: { id: "staff-1" },
+      authMode: "cookie",
+      authenticatedAt: hoursAgo(13),
+    })
+    const stale = await post(approve)
+    expect(stale.status).toBe(403)
+    await expect(stale.json()).resolves.toMatchObject({
+      error: "STEP_UP_REQUIRED",
+    })
+    expect(decide).not.toHaveBeenCalled()
+    // A session with no readable start is old too, not an API key.
+    requireCapability.mockResolvedValue({
+      user: { id: "staff-1" },
+      authMode: "bearer",
+      authenticatedAt: null,
+    })
+    expect((await post(approve)).status).toBe(403)
+    // Signed in this morning, or an API key issued on purpose: decides.
+    requireCapability.mockResolvedValue({
+      user: { id: "staff-1" },
+      authMode: "cookie",
+      authenticatedAt: hoursAgo(3),
+    })
+    expect((await post(approve)).status).toBe(200)
+    requireCapability.mockResolvedValue({
+      user: { id: "staff-1" },
+      authMode: "api-key",
+      authenticatedAt: null,
+    })
+    expect((await post(approve)).status).toBe(200)
+    expect(decide).toHaveBeenCalledTimes(2)
   })
 
   it("approves with every checklist item", async () => {
