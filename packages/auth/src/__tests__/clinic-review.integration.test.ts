@@ -253,6 +253,17 @@ describe.skipIf(!enabled || !databaseUrl)(
       )
     })
 
+    it("lets the clinic send the same details again once staff asked for a change", async () => {
+      // What staff asked for may be outside the two fields: the same legal
+      // name and number are accepted, and the filing is undecided again.
+      const again = await file("Review Clinic, Lda", "PT 515 001 708")
+      const [row] = await db()
+        .select({ status: main.clinicVerifications.status })
+        .from(main.clinicVerifications)
+        .where(eq(main.clinicVerifications.id, again.id))
+      expect(row?.status).toBe("pending")
+    })
+
     it("approves the refiled identity: the clinic is verified", async () => {
       const refiled = await file("Review Clinic Unipessoal, Lda", "515001708")
       // Refiling makes it undecided again: the earlier staff stamp is gone.

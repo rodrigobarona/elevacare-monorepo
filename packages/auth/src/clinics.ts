@@ -292,10 +292,17 @@ export async function fileClinicVerification(input: {
         .limit(1)
       let id: string
       if (open) {
-        // The same details again change nothing for staff, and would only
-        // send the filing to the back of the queue (it is checked oldest
-        // first) and make a decision in progress answer "changed".
-        if (open.legalName === legalName && open.taxId === taxId) {
+        // While staff are checking, the same details again change nothing
+        // for them, and would only send the filing to the back of the queue
+        // (it is checked oldest first) and make a decision in progress
+        // answer "changed". Once staff asked for a change, the same details
+        // can be sent again: what they asked for may be outside these two
+        // fields (the billing address, a register that was not yet updated).
+        if (
+          open.status === "pending" &&
+          open.legalName === legalName &&
+          open.taxId === taxId
+        ) {
           throw new ClinicError("VERIFICATION_UNCHANGED")
         }
         const [row] = await tx

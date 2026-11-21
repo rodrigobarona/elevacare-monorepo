@@ -127,7 +127,7 @@
       "verified-new-rejected": {
         "pill": "Verified",
         "title": "Your clinic is verified, but we could not confirm your new details",
-        "body": "Your clinic stays verified with the details we checked before. Read what we found below."
+        "body": "Your clinic stays verified with the details we checked before. Read what we found below. If your details have changed, correct them and send them again."
       },
       "not-verified": {
         "pill": "Not verified",
@@ -168,7 +168,9 @@
       },
       "sendCorrection": "Send the correction",
       "sendNew": "Send new details",
-      "unchanged": "Change a detail to send it."
+      "unchanged": "Change a detail to send it.",
+      "headingRefused": "Want to send your new details again?",
+      "refusedHelp": "Correct what we could not confirm and send it. Your clinic stays verified while we check."
     }
   }
 }

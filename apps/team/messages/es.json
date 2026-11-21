@@ -127,7 +127,7 @@
       "verified-new-rejected": {
         "pill": "Verificada",
         "title": "Tu clínica está verificada, pero no hemos podido comprobar los nuevos datos",
-        "body": "La clínica sigue verificada con los datos que comprobamos antes. Lee abajo lo que hemos encontrado."
+        "body": "La clínica sigue verificada con los datos que comprobamos antes. Lee abajo lo que hemos encontrado. Si los datos han cambiado, corrígelos y envíalos de nuevo."
       },
       "not-verified": {
         "pill": "Sin verificar",
@@ -168,7 +168,9 @@
       },
       "sendCorrection": "Enviar la corrección",
       "sendNew": "Enviar los nuevos datos",
-      "unchanged": "Cambia un dato para enviarlo."
+      "unchanged": "Cambia un dato para enviarlo.",
+      "headingRefused": "¿Quieres enviar de nuevo los nuevos datos?",
+      "refusedHelp": "Corrige lo que no hemos podido comprobar y envíalo. La clínica sigue verificada mientras lo comprobamos."
     }
   }
 }

@@ -179,8 +179,9 @@ test.describe("Phase 11.4 — the clinic's Verification page", () => {
     await shot(phone, "15-verification-change-needed.mobile")
     await phone.context().close()
 
-    // Asked to change something: the button waits for a change.
-    await expect(page.getByTestId("verification-send")).toBeDisabled()
+    // Staff asked for a change: the details can be sent again as they are
+    // (what was asked may be elsewhere), or corrected first.
+    await expect(page.getByTestId("verification-send")).toBeEnabled()
     await page
       .getByTestId("verification-legal-name")
       .fill("Clínica Lumen, Unipessoal Lda")
@@ -248,6 +249,12 @@ test.describe("Phase 11.4 — the clinic's Verification page", () => {
     await expect(page.getByTestId("verification-legal-name")).toHaveValue(
       "Lumen Saúde, Lda"
     )
+    await expect(page.getByTestId("verification-send")).toBeEnabled()
+    await expect(
+      page.getByRole("heading", {
+        name: "Want to send your new details again?",
+      })
+    ).toBeVisible()
     await shot(page, "18-verification-verified-new-rejected.desktop")
     await page.context().close()
   })

@@ -47,10 +47,16 @@ Each entry should include:
   verified. A verified clinic is always told it stays verified.
 - A malformed number is refused next to the field with what a valid one
   looks like; spaces, dots and dashes are accepted and dropped.
-- The same details cannot be sent twice. The button waits for a change,
-  and the API answers 409 `VERIFICATION_UNCHANGED` without writing, so a
-  filing keeps its place in the staff queue (oldest first) and a decision
-  in progress is not made stale. The button reads "Send for checking",
+- While staff are checking, the same details cannot be sent again. The
+  button waits for a change, and the API answers 409
+  `VERIFICATION_UNCHANGED` without writing, so a filing keeps its place in
+  the staff queue (oldest first) and a decision in progress is not made
+  stale. Once staff asked for a change or refused, the same details can be
+  sent again: what they asked for may be outside the two fields (the
+  billing address, a register updated since), and sending again is the
+  clinic's only way to answer a refusal today. Stated limit: the comparison
+  is exact, so changing a comma moves a filing to the back of the queue;
+  there is no minimum time between two sends. The button reads "Send for checking",
   "Send the correction" or "Send new details" by standing, and is the main
   action only when sending is the next step.
 - Under a "Verified" pill the details are captioned: "The details we

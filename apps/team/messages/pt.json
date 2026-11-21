@@ -100,8 +100,8 @@
         "body": "Confirmamos os dados no registo comercial público. Faz isto uma vez, e de novo só se mudarem."
       },
       "checking": {
-        "pill": "Em verificação",
-        "title": "Estamos a verificar os seus dados",
+        "pill": "Em análise",
+        "title": "Estamos a confirmar os seus dados",
         "body": "Não precisa de fazer nada. Esta página mostra o resultado assim que a verificação terminar."
       },
       "change-needed": {
@@ -127,7 +127,7 @@
       "verified-new-rejected": {
         "pill": "Verificada",
         "title": "A sua clínica está verificada, mas não conseguimos confirmar os novos dados",
-        "body": "A clínica continua verificada com os dados que confirmámos antes. Leia abaixo o que encontrámos."
+        "body": "A clínica continua verificada com os dados que confirmámos antes. Leia abaixo o que encontrámos. Se os dados mudaram, corrija-os e envie de novo."
       },
       "not-verified": {
         "pill": "Não verificada",
@@ -148,16 +148,16 @@
     "form": {
       "heading": "Os dados legais da sua clínica",
       "headingCorrect": "Encontrou um erro?",
-      "correctHelp": "Pode corrigir o que enviou enquanto verificamos.",
+      "correctHelp": "Pode corrigir o que enviou enquanto confirmamos.",
       "headingChanged": "A denominação social ou o NIF mudaram?",
       "changedHelp": "Envie os novos dados. A clínica continua verificada enquanto os confirmamos.",
       "legalName": "Denominação social",
       "taxId": "NIF ou número de IVA",
       "taxIdHelp": "Como aparece nas suas faturas, por exemplo PT123456789.",
-      "send": "Enviar para verificação",
+      "send": "Enviar para confirmação",
       "sending": "A enviar…",
       "use": "Usamos estes dados para confirmar a identidade legal da sua clínica.",
-      "sent": "Dados enviados. Estamos a verificá-los.",
+      "sent": "Dados enviados. Estamos a confirmá-los.",
       "errors": {
         "legal-name": "Introduza a denominação social da sua clínica.",
         "invalid-tax-id": "Introduza um NIF ou número de IVA válido: 8 a 32 letras e algarismos.",
@@ -168,7 +168,9 @@
       },
       "sendCorrection": "Enviar a correção",
       "sendNew": "Enviar os novos dados",
-      "unchanged": "Altere um dado para o enviar."
+      "unchanged": "Altere um dado para o enviar.",
+      "headingRefused": "Quer enviar os novos dados outra vez?",
+      "refusedHelp": "Corrija o que não conseguimos confirmar e envie. A clínica continua verificada enquanto confirmamos."
     }
   }
 }

@@ -79,7 +79,7 @@ export default async function TeamVerificationPage({
             <h2
               id={STANDING_TITLE_ID}
               tabIndex={-1}
-              className="text-xl font-medium text-foreground outline-none"
+              className="rounded-sm text-xl font-medium text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
             >
               {t(`standing.${standing}.title`)}
             </h2>
@@ -156,11 +156,17 @@ export default async function TeamVerificationPage({
                 ? t("form.heading")
                 : waiting
                   ? t("form.headingCorrect")
-                  : t("form.headingChanged")}
+                  : standing === "verified-new-rejected"
+                    ? t("form.headingRefused")
+                    : t("form.headingChanged")}
             </h2>
             {formFirst ? null : (
               <p className="text-sm text-muted-foreground">
-                {waiting ? t("form.correctHelp") : t("form.changedHelp")}
+                {waiting
+                  ? t("form.correctHelp")
+                  : standing === "verified-new-rejected"
+                    ? t("form.refusedHelp")
+                    : t("form.changedHelp")}
               </p>
             )}
           </div>
@@ -173,6 +179,7 @@ export default async function TeamVerificationPage({
                 : null
             }
             prefill={prefill}
+            waitForChange={waiting}
             intent={
               standing === "not-sent"
                 ? "first"

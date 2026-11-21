@@ -15,6 +15,7 @@ type FieldError = "legal-name" | "invalid-tax-id"
 export function VerificationForm({
   sent,
   prefill,
+  waitForChange,
   intent,
   primary,
   focusAfterSendId,
@@ -23,6 +24,11 @@ export function VerificationForm({
   sent: { legalName: string; taxId: string } | null
   /** Start from what was sent, ready to correct. */
   prefill: boolean
+  /**
+   * Staff are checking these details right now: sending them again
+   * unchanged would only move the clinic to the back of the queue.
+   */
+  waitForChange: boolean
   /** First details, a correction of what was sent, or new details. */
   intent: "first" | "correction" | "new"
   /** Sending details is the next step on the page. */
@@ -38,9 +44,11 @@ export function VerificationForm({
   const nameRef = React.useRef<HTMLInputElement>(null)
   const taxIdRef = React.useRef<HTMLInputElement>(null)
   const unchangedId = React.useId()
-  // Sending the same details again would only move the clinic to the back
-  // of the queue: the button waits for a change.
+  // Only while a check is running. After staff asked for a change or
+  // refused, the same details can be sent again: what they asked for may be
+  // somewhere else (the billing address, a register updated since).
   const unchanged =
+    waitForChange &&
     sent !== null &&
     legalName.trim() === sent.legalName &&
     normalizeClinicTaxId(taxId) === sent.taxId
@@ -158,6 +166,16 @@ export function VerificationForm({
         </Alert>
       ) : null}
       <div className="space-y-3">
+        {/* Before the button, so it is read before the button it explains. */}
+        {unchanged ? (
+          <p
+            id={unchangedId}
+            className="text-sm text-muted-foreground"
+            data-testid="verification-unchanged"
+          >
+            {t("unchanged")}
+          </p>
+        ) : null}
         <Button
           type="submit"
           variant={primary ? "default" : "outline"}
@@ -174,15 +192,6 @@ export function VerificationForm({
                 ? t("sendNew")
                 : t("sendCorrection")}
         </Button>
-        {unchanged ? (
-          <p
-            id={unchangedId}
-            className="text-sm text-muted-foreground"
-            data-testid="verification-unchanged"
-          >
-            {t("unchanged")}
-          </p>
-        ) : null}
         <p className="text-sm text-muted-foreground">{t("use")}</p>
       </div>
     </form>
