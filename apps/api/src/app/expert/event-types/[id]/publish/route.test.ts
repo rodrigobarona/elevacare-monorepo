@@ -116,6 +116,8 @@ describe("POST /expert/event-types/{id}/publish — clinic seats", () => {
     expect(mocks.updateEventType.mock.calls[0]?.[4]).toBe(TX)
     expect(mocks.markSeatSyncPending).toHaveBeenCalledWith("clinic-1", TX)
     expect(mocks.enqueueSeatSync).toHaveBeenCalledWith("clinic-1", "user-1")
+    // The publish is audited once, in that same transaction.
+    expect(mocks.emit).toHaveBeenCalledTimes(1)
   })
 
   it("answers 409 with the cap and the plan, and publishes nothing", async () => {

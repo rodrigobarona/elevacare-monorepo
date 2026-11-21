@@ -56,21 +56,21 @@ const INVITATION_COPY: Record<
     title: `Join ${organization} on Eleva Care`,
     body: `${inviter ? `${inviter} invited you` : "You are invited"} to join ${organization} on Eleva Care. This invitation is valid for 7 days.`,
     action: "See the invitation",
-    ignore: `${organization} gave us your email address to send you this invitation. If you were not expecting it, you can ignore this email and the invitation expires on its own.`,
+    ignore: `${organization} gave us your email address to send you this invitation. If you were not expecting it, you can ignore this email and the invitation expires on its own. How Eleva uses personal data: eleva.care/legal/privacy`,
   }),
   pt: (organization, inviter) => ({
     subject: `Tem um convite para se juntar a ${organization} na Eleva Care`,
     title: `Junte-se a ${organization} na Eleva Care`,
     body: `${inviter ? `${inviter} enviou-lhe um convite` : "Tem um convite"} para se juntar a ${organization} na Eleva Care. O convite é válido durante 7 dias.`,
     action: "Ver o convite",
-    ignore: `${organization} deu-nos o seu endereço de email para lhe enviar este convite. Se não o esperava, pode ignorar este email e o convite expira por si.`,
+    ignore: `${organization} deu-nos o seu endereço de email para lhe enviar este convite. Se não o esperava, pode ignorar este email e o convite expira por si. Como a Eleva utiliza os dados pessoais: eleva.care/legal/privacy`,
   }),
   es: (organization, inviter) => ({
     subject: `Tienes una invitación para unirte a ${organization} en Eleva Care`,
     title: `Únete a ${organization} en Eleva Care`,
     body: `${inviter ? `${inviter} te ha enviado una invitación` : "Tienes una invitación"} para unirte a ${organization} en Eleva Care. La invitación es válida durante 7 días.`,
     action: "Ver la invitación",
-    ignore: `${organization} nos ha dado tu correo electrónico para enviarte esta invitación. Si no la esperabas, puedes ignorar este correo y la invitación caducará sola.`,
+    ignore: `${organization} nos ha dado tu correo electrónico para enviarte esta invitación. Si no la esperabas, puedes ignorar este correo y la invitación caducará sola. Cómo usa Eleva los datos personales: eleva.care/legal/privacy`,
   }),
 }
 
