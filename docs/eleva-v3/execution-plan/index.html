@@ -1219,7 +1219,7 @@ them, and stops at the one that does.</p>
 <td>Phase 15 gate</td>
 </tr>
 </tbody></table>
-<p><strong>DPO</strong></p>
+<p><strong>DPO</strong> (ids start with P, for privacy; <code>D-NN</code> stays the name of the decision gates in the README)</p>
 <table>
 <thead>
 <tr>
@@ -1229,37 +1229,37 @@ them, and stops at the one that does.</p>
 </tr>
 </thead>
 <tbody><tr>
-<td>D-01</td>
+<td>P-01</td>
 <td>Shared records in a clinic: what members are told, and whether the clinical access model (gate D-11) must be signed again before any clinic can turn it on.</td>
 <td>The shared-records setting</td>
 </tr>
 <tr>
-<td>D-02</td>
+<td>P-02</td>
 <td>Retention periods: ended invitations (90 days proposed, never under 37), refused filings, staff access records, published events, legacy audit rows.</td>
 <td>13.21 to 13.24 schedules</td>
 </tr>
 <tr>
-<td>D-03</td>
+<td>P-03</td>
 <td>Privacy-notice lines for invited people and for clinics, and how staff are told that opening a filing is recorded.</td>
 <td>First real clinic</td>
 </tr>
 <tr>
-<td>D-04</td>
+<td>P-04</td>
 <td>May a decline lapse after 30 days? Does someone with no account need a way to object without signing up? Who answers a request to stop, and by when?</td>
 <td>Invitations at launch</td>
 </tr>
 <tr>
-<td>D-05</td>
+<td>P-05</td>
 <td>The MVP holds no acceptance timestamps for members. Import the consent given at Stripe Checkout and the practitioner agreement, or ask again at first sign-in?</td>
 <td>14.16</td>
 </tr>
 <tr>
-<td>D-06</td>
+<td>P-06</td>
 <td>Who may run a migration rehearsal, when its copy is deleted, and whether a masked copy is required.</td>
 <td>14.20</td>
 </tr>
 <tr>
-<td>D-07</td>
+<td>P-07</td>
 <td>Sign the impact assessment, add clinic verification and the access log to the record of processing, and close the two Phase 10 items (retention of records, the AI-processing copy).</td>
 <td>Phase 15 gate</td>
 </tr>
@@ -1385,7 +1385,7 @@ them, and stops at the one that does.</p>
 </tbody></table>
 <p><strong>Wave 0: fix what the review found.</strong> 12.5, 11.7, 13.2, 13.3. Operator: O-1. Start the slow
 human items the same week, because they set the launch date more than any code does: F-01,
-F-02, F-03, F-14, D-07.</p>
+F-02, F-03, F-14, P-07.</p>
 <p><strong>Wave 1: clinics can pay and be found.</strong> 11.8 to 11.18. Beside it: tests that run signed in on
 every pull request (13.25, 13.26), so later slices are proven in CI and not only on a laptop;
 Sentry that knows the release (13.16 to 13.18); the migration frame (14.2 to 14.5).</p>
@@ -1525,7 +1525,7 @@ them are slices here (12.8, 13.14, 13.32).</p>
 <p>Waiting on a person:</p>
 <ul>
 <li><strong>The clinic plan&#39;s invoice</strong> (<code>invoice.finalized</code> to the SaaS series): F-01 and A-03.</li>
-<li><strong>Shared records</strong> (the setting, its reason, the member notice): D-01. Refs <code>11-team/23</code>, <code>24</code>
+<li><strong>Shared records</strong> (the setting, its reason, the member notice): P-01. Refs <code>11-team/23</code>, <code>24</code>
 show the confirmation and &quot;turned on by&quot;; Mobbin had no example that asks for a written reason.</li>
 <li><strong>Who is paid and when the commission is 0%</strong>: F-05. Today the code pays the account of the
 organization that owns the booking and reads 0% from that organization&#39;s plan.</li>
@@ -1743,7 +1743,7 @@ as safe as the door in front of them.</p>
 </tbody></table>
 <p>12.5, 12.6 and 12.7 can start now.</p>
 <p>Waiting on a person: F-03 (roles, two people), F-04 (impersonation, break-glass read), A-04 (refund
-threshold), D-03 and D-07 (what staff and clinics are told; the record of processing).
+threshold), P-03 and P-07 (what staff and clinics are told; the record of processing).
 References for impersonation (<code>13-admin/07</code>, <code>08</code>) and staff-only notes (<code>13-admin/09</code>, <code>10</code>) are
 saved in case F-04 reopens it.</p>
 <h2 id="remaining-roadmap--8-phases-13-14-and-15"><a class="anchor" href="#remaining-roadmap--8-phases-13-14-and-15" aria-label="Link to section">#</a>8. Phases 13, 14 and 15</h2>
@@ -1896,7 +1896,7 @@ saved in case F-04 reopens it.</p>
 <td>13.21</td>
 <td>Ended invitations are deleted</td>
 <td>S</td>
-<td>D-02; a test for the 37-day floor</td>
+<td>P-02; a test for the 37-day floor</td>
 </tr>
 <tr>
 <td></td>
@@ -1991,7 +1991,7 @@ saved in case F-04 reopens it.</p>
 </tr>
 </tbody></table>
 <p>Waiting on a person or an outside party: the penetration test and the DPO provider (F-14), the
-retention periods (D-02), analytics (F-09), the limits (F-08), the accounts and the restore
+retention periods (P-02), analytics (F-09), the limits (F-08), the accounts and the restore
 drill (O-3, O-4). The retention sweep that already exists stays unscheduled until the DPO signs.</p>
 <h3 id="remaining-roadmap--phase-14-moving-the-mvps-data"><a class="anchor" href="#remaining-roadmap--phase-14-moving-the-mvps-data" aria-label="Link to section">#</a>Phase 14: moving the MVP&#39;s data</h3>
 <p>The order is safe by construction: count before writing, dry run before apply, one family of
@@ -2122,7 +2122,7 @@ branch before production.</p>
 <tr>
 <td>14.16</td>
 <td>Consents</td>
-<td>D-05</td>
+<td>P-05</td>
 <td>S</td>
 <td>One fixture per case</td>
 </tr>
@@ -2136,7 +2136,7 @@ branch before production.</p>
 <tr>
 <td>14.18</td>
 <td>Legacy audit rows</td>
-<td>D-02</td>
+<td>P-02</td>
 <td>S</td>
 <td>Counts match</td>
 </tr>
@@ -2150,7 +2150,7 @@ branch before production.</p>
 <tr>
 <td>14.20</td>
 <td>The rehearse command; rehearsal one</td>
-<td>14.19, D-06</td>
+<td>14.19, P-06</td>
 <td>S</td>
 <td>A rehearsal report</td>
 </tr>
@@ -2246,7 +2246,7 @@ password&quot; and &quot;reconnect your calendar&quot;; Mobbin had no &quot;we h
 <td>15.7</td>
 <td>The impact assessment, the sub-processor list, every decision gate dated</td>
 <td>S</td>
-<td>D-07</td>
+<td>P-07</td>
 </tr>
 <tr>
 <td>15.8</td>
@@ -2263,7 +2263,7 @@ password&quot; and &quot;reconnect your calendar&quot;; Mobbin had no &quot;we h
 remaining conditions and the tax authority communication, run by the operator (F-01).</li>
 <li><strong>Video (09):</strong> the two-browser session through Eleva&#39;s own join link, with Daily&#39;s webhooks,
 on staging.</li>
-<li><strong>Records (10):</strong> the DPO&#39;s sign-off on retention and on the AI-processing copy (D-07).</li>
+<li><strong>Records (10):</strong> the DPO&#39;s sign-off on retention and on the AI-processing copy (P-07).</li>
 <li><strong>Offer builder (04B):</strong> the human evidence was waived, so it is unproven, not proven.</li>
 <li><strong>Others:</strong> the SMS sender&#39;s EU setup, the consent banner&#39;s languages and its five browser
 journeys, Google&#39;s review of the sign-in screen (on staging until cutover), and the draft
@@ -2456,7 +2456,7 @@ is the form for signed-in data (13.31).</li>
 command each; a restore drill is a branch created at a past time (O-4, 14.20).</li>
 <li>Plans include ten branches (Free, Launch) or twenty-five (Scale); temporary branches should
 carry an expiry (13.28, O-2).</li>
-<li>A masked copy of production is a documented feature (D-06). Resetting it from its parent
+<li>A masked copy of production is a documented feature (P-06). Resetting it from its parent
 brings the real data back, so masking runs again after every reset.</li>
 </ul>
 <p><strong>Upstash</strong> (<code>/websites/upstash_redis_sdks_ratelimit-</code>, <code>/websites/upstash_qstash</code>)</p>

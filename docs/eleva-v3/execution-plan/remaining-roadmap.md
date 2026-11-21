@@ -130,17 +130,17 @@ them, and stops at the one that does.
 | F-13 | Branch protection: require a human approval and the database job on `main`?                                                                                            | Process                                      |
 | F-14 | Book an EU penetration test, and choose the DPO provider.                                                                                                              | Phase 15 gate                                |
 
-**DPO**
+**DPO** (ids start with P, for privacy; `D-NN` stays the name of the decision gates in the README)
 
 | Id   | Question                                                                                                                                                                             | Blocks                     |
 | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------- |
-| D-01 | Shared records in a clinic: what members are told, and whether the clinical access model (gate D-11) must be signed again before any clinic can turn it on.                          | The shared-records setting |
-| D-02 | Retention periods: ended invitations (90 days proposed, never under 37), refused filings, staff access records, published events, legacy audit rows.                                 | 13.21 to 13.24 schedules   |
-| D-03 | Privacy-notice lines for invited people and for clinics, and how staff are told that opening a filing is recorded.                                                                   | First real clinic          |
-| D-04 | May a decline lapse after 30 days? Does someone with no account need a way to object without signing up? Who answers a request to stop, and by when?                                 | Invitations at launch      |
-| D-05 | The MVP holds no acceptance timestamps for members. Import the consent given at Stripe Checkout and the practitioner agreement, or ask again at first sign-in?                       | 14.16                      |
-| D-06 | Who may run a migration rehearsal, when its copy is deleted, and whether a masked copy is required.                                                                                  | 14.20                      |
-| D-07 | Sign the impact assessment, add clinic verification and the access log to the record of processing, and close the two Phase 10 items (retention of records, the AI-processing copy). | Phase 15 gate              |
+| P-01 | Shared records in a clinic: what members are told, and whether the clinical access model (gate D-11) must be signed again before any clinic can turn it on.                          | The shared-records setting |
+| P-02 | Retention periods: ended invitations (90 days proposed, never under 37), refused filings, staff access records, published events, legacy audit rows.                                 | 13.21 to 13.24 schedules   |
+| P-03 | Privacy-notice lines for invited people and for clinics, and how staff are told that opening a filing is recorded.                                                                   | First real clinic          |
+| P-04 | May a decline lapse after 30 days? Does someone with no account need a way to object without signing up? Who answers a request to stop, and by when?                                 | Invitations at launch      |
+| P-05 | The MVP holds no acceptance timestamps for members. Import the consent given at Stripe Checkout and the practitioner agreement, or ask again at first sign-in?                       | 14.16                      |
+| P-06 | Who may run a migration rehearsal, when its copy is deleted, and whether a masked copy is required.                                                                                  | 14.20                      |
+| P-07 | Sign the impact assessment, add clinic verification and the access log to the record of processing, and close the two Phase 10 items (retention of records, the AI-processing copy). | Phase 15 gate              |
 
 **Counsel**
 
@@ -183,7 +183,7 @@ Four tracks run side by side, one open pull request each, three open in total.
 
 **Wave 0: fix what the review found.** 12.5, 11.7, 13.2, 13.3. Operator: O-1. Start the slow
 human items the same week, because they set the launch date more than any code does: F-01,
-F-02, F-03, F-14, D-07.
+F-02, F-03, F-14, P-07.
 
 **Wave 1: clinics can pay and be found.** 11.8 to 11.18. Beside it: tests that run signed in on
 every pull request (13.25, 13.26), so later slices are proven in CI and not only on a laptop;
@@ -225,7 +225,7 @@ Slices, in order. "Refs" are Mobbin references in `_context/mobbin/library/`.
 Waiting on a person:
 
 - **The clinic plan's invoice** (`invoice.finalized` to the SaaS series): F-01 and A-03.
-- **Shared records** (the setting, its reason, the member notice): D-01. Refs `11-team/23`, `24`
+- **Shared records** (the setting, its reason, the member notice): P-01. Refs `11-team/23`, `24`
   show the confirmation and "turned on by"; Mobbin had no example that asks for a written reason.
 - **Who is paid and when the commission is 0%**: F-05. Today the code pays the account of the
   organization that owns the booking and reads 0% from that organization's plan.
@@ -269,7 +269,7 @@ as safe as the door in front of them.
 12.5, 12.6 and 12.7 can start now.
 
 Waiting on a person: F-03 (roles, two people), F-04 (impersonation, break-glass read), A-04 (refund
-threshold), D-03 and D-07 (what staff and clinics are told; the record of processing).
+threshold), P-03 and P-07 (what staff and clinics are told; the record of processing).
 References for impersonation (`13-admin/07`, `08`) and staff-only notes (`13-admin/09`, `10`) are
 saved in case F-04 reopens it.
 
@@ -298,7 +298,7 @@ saved in case F-04 reopens it.
 |                         | 13.18 | Every background job reports that it ran                      | S    | 5 of 20 do today                                                              |
 |                         | 13.19 | Monitors as code, and a health check that checks              | M    | After 13.18, O-3                                                              |
 |                         | 13.20 | Runbooks and final service levels                             | S    | Docs                                                                          |
-| Retention               | 13.21 | Ended invitations are deleted                                 | S    | D-02; a test for the 37-day floor                                             |
+| Retention               | 13.21 | Ended invitations are deleted                                 | S    | P-02; a test for the 37-day floor                                             |
 |                         | 13.22 | Unused guest accounts are anonymised                          | M    |                                                                               |
 |                         | 13.23 | Stuck notices are retried; dead ones can be sent again        | M    |                                                                               |
 |                         | 13.24 | Shipped audit rows leave the outbox after 90 days             | S    |                                                                               |
@@ -314,7 +314,7 @@ saved in case F-04 reopens it.
 |                         | 13.34 | Every email renders in three languages                        | S    | A test                                                                        |
 
 Waiting on a person or an outside party: the penetration test and the DPO provider (F-14), the
-retention periods (D-02), analytics (F-09), the limits (F-08), the accounts and the restore
+retention periods (P-02), analytics (F-09), the limits (F-08), the accounts and the restore
 drill (O-3, O-4). The retention sweep that already exists stays unscheduled until the DPO signs.
 
 ### Phase 14: moving the MVP's data
@@ -341,11 +341,11 @@ branch before production.
 | 14.13 | Stripe check, read only                                                            | 14.9        | S    | Every id found                        |
 | 14.14 | Plans and kept commissions                                                         | A-02        | S    | One fixture per plan                  |
 | 14.15 | Session notes: decrypt, encrypt again, checksum                                    | N1, F-11    | M    | Checksums match                       |
-| 14.16 | Consents                                                                           | D-05        | S    | One fixture per case                  |
+| 14.16 | Consents                                                                           | P-05        | S    | One fixture per case                  |
 | 14.17 | Files: from the MVP's storage to R2                                                | 14.9        | M    | Counts and sizes match                |
-| 14.18 | Legacy audit rows                                                                  | D-02        | S    | Counts match                          |
+| 14.18 | Legacy audit rows                                                                  | P-02        | S    | Counts match                          |
 | 14.19 | Verify: counts, orphans, checksums, a sample of addresses                          | 14.11       | M    | A planted orphan is found             |
-| 14.20 | The rehearse command; rehearsal one                                                | 14.19, D-06 | S    | A rehearsal report                    |
+| 14.20 | The rehearse command; rehearsal one                                                | 14.19, P-06 | S    | A rehearsal report                    |
 | 14.21 | Changes since a date, with deletions; rehearsal two                                | 14.20       | M    | Edit, delete, run again               |
 | 14.22 | Old private addresses redirect                                                     | none        | S    | Redirect tests                        |
 | 14.23 | The welcome email, in waves; the calendar notice                                   | 14.6, F-10  | M    | A dry run prints who would receive it |
@@ -369,7 +369,7 @@ password" and "reconnect your calendar"; Mobbin had no "we have moved" screen.
 | 15.4 | A production smoke test: read only, plus one €1 booking behind a switch  | S    | Depends on F-01 for the invoice step                              |
 | 15.5 | The regulator pages for Portugal, linked from the footer                 | M    | In `@eleva/content`, not `apps/docs` as the phase file says; C-03 |
 | 15.6 | A maintenance notice and a status link                                   | S    | Refs `09-trust/13`, `14`                                          |
-| 15.7 | The impact assessment, the sub-processor list, every decision gate dated | S    | D-07                                                              |
+| 15.7 | The impact assessment, the sub-processor list, every decision gate dated | S    | P-07                                                              |
 | 15.8 | The cutover, operated step by step, then seven days of watching          | -    | From the 14.25 runbook; engineering never runs production steps   |
 
 ## 9. Owed from phases 01 to 10
@@ -381,7 +381,7 @@ These are not new work; they are proofs and signatures the earlier phases still 
   remaining conditions and the tax authority communication, run by the operator (F-01).
 - **Video (09):** the two-browser session through Eleva's own join link, with Daily's webhooks,
   on staging.
-- **Records (10):** the DPO's sign-off on retention and on the AI-processing copy (D-07).
+- **Records (10):** the DPO's sign-off on retention and on the AI-processing copy (P-07).
 - **Offer builder (04B):** the human evidence was waived, so it is unproven, not proven.
 - **Others:** the SMS sender's EU setup, the consent banner's languages and its five browser
   journeys, Google's review of the sign-in screen (on staging until cutover), and the draft
@@ -474,7 +474,7 @@ From Context7 on 2026-11-21. Only the facts that change how a slice is built.
   command each; a restore drill is a branch created at a past time (O-4, 14.20).
 - Plans include ten branches (Free, Launch) or twenty-five (Scale); temporary branches should
   carry an expiry (13.28, O-2).
-- A masked copy of production is a documented feature (D-06). Resetting it from its parent
+- A masked copy of production is a documented feature (P-06). Resetting it from its parent
   brings the real data back, so masking runs again after every reset.
 
 **Upstash** (`/websites/upstash_redis_sdks_ratelimit-`, `/websites/upstash_qstash`)
