@@ -117,9 +117,12 @@ export async function checkI18nParity(
     const keySets: { locale: Locale; keys: Set<string> }[] = []
 
     // A locale an app ships is held to the same rules as a required one.
-    const checked = locales.filter(
-      (locale) => required.includes(locale) || present.has(locale)
-    )
+    const checked = [
+      ...required,
+      ...locales.filter(
+        (locale) => !required.includes(locale) && present.has(locale)
+      ),
+    ]
     for (const locale of checked) {
       const filePath = present.get(locale)
       if (!filePath) {

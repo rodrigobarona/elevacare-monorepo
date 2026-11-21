@@ -136,6 +136,27 @@ describe("checkI18nParity", () => {
     ])
   })
 
+  it("holds a locale an app ships but does not require to the same rules", async () => {
+    const appsRoot = await mkdtemp(path.join(tmpdir(), "i18n-parity-"))
+    dirs.push(appsRoot)
+    // The admin console requires pt and en, and also ships es.
+    await writeAppMessages(appsRoot, "admin", {
+      pt: { title: "Olá", body: "Texto" },
+      en: { title: "Hello", body: "Copy" },
+      es: { title: "TODO" },
+    })
+    const result = await checkI18nParity(appsRoot)
+    const messages = result.issues.map((issue) => issue.message)
+    expect(messages).toContain(
+      'key "title" in es.json is empty or a placeholder (TODO, TBD, FIXME, lorem ipsum)'
+    )
+    expect(
+      messages.some(
+        (message) => /es\.json/.test(message) && /body/.test(message)
+      )
+    ).toBe(true)
+  })
+
   it("accepts the everyday word todo in Portuguese and Spanish", async () => {
     const appsRoot = await mkdtemp(path.join(tmpdir(), "i18n-parity-"))
     dirs.push(appsRoot)
