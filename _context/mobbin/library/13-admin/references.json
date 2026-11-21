@@ -3,7 +3,7 @@
   "title": "Staff console: queues, people, approvals and logs",
   "researcher": "Trust and operations",
   "date": "2026-11-21",
-  "summary": "The clinic verification queue (Phase 12). References show the details to check grouped under plain labels, a short checklist where each item has its own state, and a status said in words on every row. The screens follow the licence review already shipped, so staff learn one pattern. References 04 to 16 (2026-11-21) prepare the rest of the console: finding a person and signing them out everywhere, the bar shown while acting as someone else, notes only staff see, a request that waits for a second person, a log of who did what, and failed deliveries that can be sent again.",
+  "summary": "The clinic verification queue (Phase 12). References show the details to check grouped under plain labels, a short checklist where each item has its own state, and a status said in words on every row. The screens follow the licence review already shipped, so staff learn one pattern. References 04 and 06 to 16 (2026-11-21) prepare the rest of the console: finding a person and signing them out everywhere, the bar shown while acting as someone else, notes only staff see, a request that waits for a second person, a log of who did what, and failed deliveries that can be sent again.",
   "references": [
     {
       "id": "13-admin/01",
@@ -52,18 +52,6 @@
       "why": "'People' is a table of name, email and status. The status reads 'Active', 'Suspended' or 'Waiting to be confirmed' in words, with a 'Guest' tag where it applies. A search by name or email and a status filter sit above the table.",
       "apply": "The staff Users list: name, email, role and state in words (Active, Suspended, Email not confirmed), with a search by name or email and a state filter. Colour only supports the word.",
       "query": "users table in an admin dashboard with account status and a ban or suspend action"
-    },
-    {
-      "id": "13-admin/05",
-      "file": "img/05-workos-user-session-revoke.jpg",
-      "app": "WorkOS",
-      "platform": "web",
-      "type": "screen",
-      "mobbin_url": "https://mobbin.com/screens/1f29c1a7-c5bd-42a5-87a7-7127d2e4755b?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
-      "pattern": "User page with Details, Sessions and Events tabs; a session opens with everything about it and Revoke",
-      "why": "The user profile shows the name, user id and email, then tabs for Details, Sessions and Events. A session opens as a dialog: status 'Active', when it was issued and when it expires, IP address, browser and device ('Chrome on macOS'), the sign-in method, and two buttons, Revoke and Done.",
-      "apply": "A user's page in the staff console has the same three parts: details, sessions, activity. Each session shows the device, when it started, when it ends and how she signed in, with 'Sign out this device' on it.",
-      "query": "admin console user detail page with active sessions and suspend user action"
     },
     {
       "id": "13-admin/06",
@@ -203,7 +191,7 @@
     "On a filing, is everything staff must compare (legal name, NIF, billing address, website, owner) on one screen, with the public register one click from the value it checks? (Stripe 13-admin/01)",
     "Is approving impossible until both checks are confirmed, and are sending back and rejecting impossible without a reason the clinic can read? (Klaviyo 13-admin/02)",
     "After a decision, does the page say what happened and what happens next, and does a refusal (already decided, new details, your own clinic) say what to do?",
-    "On a user's page, can staff see the account state in words and every active session, and sign out one device or all of them, or suspend the account, each with a confirmation that says what will happen? (1Password 13-admin/04, WorkOS 13-admin/05, Homerun 13-admin/06)",
+    "On a user's page, can staff see the account state in words and every active session, and sign out one device or all of them, or suspend the account, each with a confirmation that says what will happen? (1Password 13-admin/04, Homerun 13-admin/06)",
     "Does 'View as' ask for a reason before it starts, and does a bar that names the person and offers 'Stop viewing' stay on every page while it lasts? (Clerk 13-admin/07, Base44 13-admin/08)",
     "Is it clear at the composer that a note is for Eleva staff only, and does each note show who wrote it and when? (Shopify 13-admin/09, Zendesk 13-admin/10)",
     "For an action that needs two people, can the second person see what is asked, by whom, when and why, and approve or reject it, while the first sees that it is waiting and for how many approvals? (Airwallex 13-admin/11, Acctual 13-admin/12)",
