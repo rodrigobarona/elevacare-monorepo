@@ -3218,7 +3218,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "getPartnerReview",
           summary: "Get one profile's licence review",
           description:
-            "Staff-only (`applications:review`). Returns the latest application snapshot, or null when the expert never filed.",
+            "Staff-only (`applications:review`). Returns the latest application snapshot, or null when the expert never filed. Each read is audited as partner_application.opened with the reader; the record holds the review state, never the licence or regulator number.",
           tags: ["Admin"],
           requestParams: {
             path: z.object({ expertProfileId: z.string().uuid() }),

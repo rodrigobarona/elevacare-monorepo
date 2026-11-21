@@ -1,108 +1,116 @@
 /* eslint-disable @next/next/no-img-element */
-import React from 'react';
+import React from "react"
 
 // Eleva Care Brand Constants for OG Images
 const ELEVA_BRAND = {
   colors: {
-    primary: '#006D77', // Deep Teal
-    primaryLight: '#83C5BE', // Sage Green
-    secondary: '#E29578', // Soft Coral
-    secondaryLight: '#FFDDD2', // Warm Sand
-    accent: '#E0FBFC', // Pale Lavender
+    primary: "#006D77", // Deep Teal
+    primaryLight: "#83C5BE", // Sage Green
+    secondary: "#E29578", // Soft Coral
+    secondaryLight: "#FFDDD2", // Warm Sand
+    accent: "#E0FBFC", // Pale Lavender
     neutral: {
-      100: '#F7F9F9', // Soft White
-      200: '#D1D1D1', // Light Grey
-      900: '#333333', // Charcoal
+      100: "#F7F9F9", // Soft White
+      200: "#D1D1D1", // Light Grey
+      900: "#333333", // Charcoal
     },
     highlight: {
-      red: '#EE4266', // Vibrant Rose
-      purple: '#540D6E', // Deep Purple
-      yellow: '#FFD23F', // Sunshine Yellow
+      red: "#EE4266", // Vibrant Rose
+      purple: "#540D6E", // Deep Purple
+      yellow: "#FFD23F", // Sunshine Yellow
     },
   },
   gradients: {
-    primary: 'linear-gradient(135deg, #006D77 0%, #83C5BE 100%)',
-    secondary: 'linear-gradient(135deg, #E29578 0%, #FFDDD2 100%)',
-    accent: 'linear-gradient(135deg, #E0FBFC 0%, #F7F9F9 100%)',
-    highlight: 'linear-gradient(135deg, #EE4266 0%, #540D6E 50%, #FFD23F 100%)',
+    primary: "linear-gradient(135deg, #006D77 0%, #83C5BE 100%)",
+    secondary: "linear-gradient(135deg, #E29578 0%, #FFDDD2 100%)",
+    accent: "linear-gradient(135deg, #E0FBFC 0%, #F7F9F9 100%)",
+    highlight: "linear-gradient(135deg, #EE4266 0%, #540D6E 50%, #FFD23F 100%)",
   },
-} as const;
+} as const
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
 
 // Type definitions
 export interface UserProfileImageProps {
-  name: string;
-  username: string;
-  headline?: string;
-  image?: string | null;
-  specialties?: string[];
+  name: string
+  username: string
+  headline?: string
+  image?: string | null
+  specialties?: string[]
 }
 
 export interface GenericImageProps {
-  title: string;
-  description: string;
-  variant?: 'primary' | 'secondary' | 'accent';
+  title: string
+  description: string
+  variant?: "primary" | "secondary" | "accent"
 }
 
 export interface EventImageProps {
-  title: string;
-  expertName: string;
-  expertImage?: string | null;
-  duration?: string;
-  price?: string;
+  title: string
+  expertName: string
+  expertImage?: string | null
+  duration?: string
+  price?: string
 }
 
 // Utility functions
-const makeAbsoluteUrl = (url: string) => (/^https?:\/\//.test(url) ? url : `${APP_URL}${url}`);
+const makeAbsoluteUrl = (url: string) =>
+  /^https?:\/\//.test(url) ? url : `${APP_URL}${url}`
 
 const joinSpecialties = (specialties: string[] = []) => {
-  if (specialties.length === 0) return '';
-  if (specialties.length === 1) return specialties[0];
-  const last = specialties.pop();
-  return `${specialties.join(', ')} & ${last}`;
-};
+  if (specialties.length === 0) return ""
+  if (specialties.length === 1) return specialties[0]
+  const last = specialties.pop()
+  return `${specialties.join(", ")} & ${last}`
+}
 
 // Wrapper component for consistent layout
 interface WrapperProps {
-  children: React.ReactNode;
-  variant?: 'light' | 'dark' | 'gradient';
-  backgroundImage?: string;
+  children: React.ReactNode
+  variant?: "light" | "dark" | "gradient"
+  backgroundImage?: string
 }
 
-const Wrapper = ({ children, variant = 'light', backgroundImage }: WrapperProps) => {
+const Wrapper = ({
+  children,
+  variant = "light",
+  backgroundImage,
+}: WrapperProps) => {
   const getBackgroundStyle = () => {
     if (backgroundImage) {
       return {
         backgroundImage: `url(${backgroundImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      };
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }
     }
 
     switch (variant) {
-      case 'dark':
-        return { backgroundColor: ELEVA_BRAND.colors.neutral[900] };
-      case 'gradient':
-        return { background: ELEVA_BRAND.gradients.primary };
+      case "dark":
+        return { backgroundColor: ELEVA_BRAND.colors.neutral[900] }
+      case "gradient":
+        return { background: ELEVA_BRAND.gradients.primary }
       default:
-        return { backgroundColor: ELEVA_BRAND.colors.neutral[100] };
+        return { backgroundColor: ELEVA_BRAND.colors.neutral[100] }
     }
-  };
+  }
 
   return (
     <div tw="flex w-full h-full relative" style={getBackgroundStyle()}>
       {/* Overlay for better text readability on gradients/images */}
-      {(variant === 'gradient' || backgroundImage) && (
-        <div tw="absolute inset-0" style={{ backgroundColor: 'rgba(0, 109, 119, 0.1)' }} />
+      {(variant === "gradient" || backgroundImage) && (
+        <div
+          tw="absolute inset-0"
+          style={{ backgroundColor: "rgba(0, 109, 119, 0.1)" }}
+        />
       )}
 
       <div tw="flex flex-col w-full h-full px-20 py-16 items-start justify-between relative z-10">
         {children}
       </div>
     </div>
-  );
-};
+  )
+}
 
 // User Profile OG Image Component
 export const UserProfile = ({
@@ -112,15 +120,22 @@ export const UserProfile = ({
   image,
   specialties = [],
 }: UserProfileImageProps) => {
-  const hasImage = image && image !== null;
-  const displaySpecialties = joinSpecialties(specialties.slice(0, 3));
+  const hasImage = image && image !== null
+  const displaySpecialties = joinSpecialties(specialties.slice(0, 3))
 
   return (
     <Wrapper variant="gradient">
       {/* Header with Eleva Care logo */}
       <div tw="flex items-center justify-between w-full">
-        <img src={`${APP_URL}/eleva-logo-white.png`} width="200" height="60" alt="Eleva Care" />
-        <div tw="flex items-center text-white text-lg font-medium">eleva.care</div>
+        <img
+          src={`${APP_URL}/eleva-logo-white.png`}
+          width="200"
+          height="60"
+          alt="Eleva Care"
+        />
+        <div tw="flex items-center text-white text-lg font-medium">
+          eleva.care
+        </div>
       </div>
 
       {/* Main content */}
@@ -140,16 +155,25 @@ export const UserProfile = ({
 
         {/* Profile info */}
         <div tw="flex flex-col flex-1">
-          <div tw="flex text-white text-6xl font-bold mb-4" style={{ fontFamily: 'system-ui' }}>
+          <div
+            tw="flex text-white text-6xl font-bold mb-4"
+            style={{ fontFamily: "system-ui" }}
+          >
             {name}
           </div>
 
-          <div tw="flex text-white text-3xl mb-6 opacity-90" style={{ fontFamily: 'system-ui' }}>
+          <div
+            tw="flex text-white text-3xl mb-6 opacity-90"
+            style={{ fontFamily: "system-ui" }}
+          >
             @{username}
           </div>
 
           {headline && (
-            <div tw="flex text-white text-2xl mb-4 opacity-80" style={{ fontFamily: 'system-ui' }}>
+            <div
+              tw="flex text-white text-2xl mb-4 opacity-80"
+              style={{ fontFamily: "system-ui" }}
+            >
               {headline}
             </div>
           )}
@@ -159,9 +183,9 @@ export const UserProfile = ({
               <div
                 tw="px-6 py-3 rounded-full text-lg font-medium"
                 style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                  color: 'white',
-                  fontFamily: 'system-ui',
+                  backgroundColor: "rgba(255, 255, 255, 0.2)",
+                  color: "white",
+                  fontFamily: "system-ui",
                 }}
               >
                 {displaySpecialties}
@@ -177,32 +201,36 @@ export const UserProfile = ({
         <div>Book your consultation today</div>
       </div>
     </Wrapper>
-  );
-};
+  )
+}
 
 // Generic page OG Image Component
-export const Generic = ({ title, description, variant = 'primary' }: GenericImageProps) => {
+export const Generic = ({
+  title,
+  description,
+  variant = "primary",
+}: GenericImageProps) => {
   const getVariantStyles = () => {
     switch (variant) {
-      case 'secondary':
+      case "secondary":
         return {
           background: ELEVA_BRAND.gradients.secondary,
           textColor: ELEVA_BRAND.colors.neutral[900],
-        };
-      case 'accent':
+        }
+      case "accent":
         return {
           background: ELEVA_BRAND.gradients.accent,
           textColor: ELEVA_BRAND.colors.neutral[900],
-        };
+        }
       default:
         return {
           background: ELEVA_BRAND.gradients.primary,
-          textColor: 'white',
-        };
+          textColor: "white",
+        }
     }
-  };
+  }
 
-  const styles = getVariantStyles();
+  const styles = getVariantStyles()
 
   return (
     <div tw="flex w-full h-full" style={{ background: styles.background }}>
@@ -210,7 +238,7 @@ export const Generic = ({ title, description, variant = 'primary' }: GenericImag
         {/* Logo */}
         <div tw="flex mb-12">
           <img
-            src={`${APP_URL}/${variant === 'primary' ? 'eleva-logo-white.png' : 'eleva-logo-color.png'}`}
+            src={`${APP_URL}/${variant === "primary" ? "eleva-logo-white.png" : "eleva-logo-color.png"}`}
             width="300"
             height="90"
             alt="Eleva Care"
@@ -222,8 +250,8 @@ export const Generic = ({ title, description, variant = 'primary' }: GenericImag
           tw="flex text-6xl font-bold mb-8 text-center max-w-4xl"
           style={{
             color: styles.textColor,
-            fontFamily: 'system-ui',
-            lineHeight: '1.1',
+            fontFamily: "system-ui",
+            lineHeight: "1.1",
           }}
         >
           {title}
@@ -234,36 +262,50 @@ export const Generic = ({ title, description, variant = 'primary' }: GenericImag
           tw="flex text-2xl text-center max-w-3xl opacity-90"
           style={{
             color: styles.textColor,
-            fontFamily: 'system-ui',
-            lineHeight: '1.4',
+            fontFamily: "system-ui",
+            lineHeight: "1.4",
           }}
         >
           {description}
         </div>
 
         {/* Footer tagline */}
-        <div tw="flex mt-16 text-xl opacity-75" style={{ color: styles.textColor }}>
+        <div
+          tw="flex mt-16 text-xl opacity-75"
+          style={{ color: styles.textColor }}
+        >
           Expert Healthcare for Women • eleva.care
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
 // Event booking OG Image Component
-export const Event = ({ title, expertName, expertImage, duration, price }: EventImageProps) => {
-  const hasImage = expertImage && expertImage !== null;
+export const Event = ({
+  title,
+  expertName,
+  expertImage,
+  duration,
+  price,
+}: EventImageProps) => {
+  const hasImage = expertImage && expertImage !== null
 
   return (
     <Wrapper variant="light">
       {/* Header */}
       <div tw="flex items-center justify-between w-full">
-        <img src={`${APP_URL}/eleva-logo-color.png`} width="200" height="60" alt="Eleva Care" />
+        <img
+          src={`${APP_URL}/eleva-logo-color.png`}
+          width="200"
+          height="60"
+          alt="Eleva Care"
+        />
         <div
           tw="flex items-center px-6 py-3 rounded-full text-lg font-medium"
           style={{
             backgroundColor: ELEVA_BRAND.colors.primary,
-            color: 'white',
+            color: "white",
           }}
         >
           Book Consultation
@@ -292,7 +334,7 @@ export const Event = ({ title, expertName, expertImage, duration, price }: Event
             tw="flex text-5xl font-bold mb-4"
             style={{
               color: ELEVA_BRAND.colors.neutral[900],
-              fontFamily: 'system-ui',
+              fontFamily: "system-ui",
             }}
           >
             {title}
@@ -302,7 +344,7 @@ export const Event = ({ title, expertName, expertImage, duration, price }: Event
             tw="flex text-2xl mb-6"
             style={{
               color: ELEVA_BRAND.colors.primary,
-              fontFamily: 'system-ui',
+              fontFamily: "system-ui",
             }}
           >
             with {expertName}
@@ -326,7 +368,7 @@ export const Event = ({ title, expertName, expertImage, duration, price }: Event
                 tw="flex items-center px-4 py-2 rounded-lg text-lg font-semibold"
                 style={{
                   backgroundColor: ELEVA_BRAND.colors.secondary,
-                  color: 'white',
+                  color: "white",
                 }}
               >
                 {price}
@@ -346,8 +388,8 @@ export const Event = ({ title, expertName, expertImage, duration, price }: Event
         </div>
       </div>
     </Wrapper>
-  );
-};
+  )
+}
 
 // Constructor functions for generating OG image URLs
 export const constructUserProfileImage = ({
@@ -358,34 +400,34 @@ export const constructUserProfileImage = ({
   specialties,
 }: UserProfileImageProps): string => {
   const params = new URLSearchParams({
-    type: 'profile',
+    type: "profile",
     name,
     username,
-  });
+  })
 
-  if (headline) params.set('headline', headline);
-  if (image) params.set('image', makeAbsoluteUrl(image));
+  if (headline) params.set("headline", headline)
+  if (image) params.set("image", makeAbsoluteUrl(image))
   if (specialties && specialties.length > 0) {
-    specialties.forEach((specialty) => params.append('specialties', specialty));
+    specialties.forEach((specialty) => params.append("specialties", specialty))
   }
 
-  return `/api/og/image?${params.toString()}`;
-};
+  return `/api/og/image?${params.toString()}`
+}
 
 export const constructGenericImage = ({
   title,
   description,
-  variant = 'primary',
+  variant = "primary",
 }: GenericImageProps): string => {
   const params = new URLSearchParams({
-    type: 'generic',
+    type: "generic",
     title,
     description,
     variant,
-  });
+  })
 
-  return `/api/og/image?${params.toString()}`;
-};
+  return `/api/og/image?${params.toString()}`
+}
 
 export const constructEventImage = ({
   title,
@@ -395,14 +437,14 @@ export const constructEventImage = ({
   price,
 }: EventImageProps): string => {
   const params = new URLSearchParams({
-    type: 'event',
+    type: "event",
     title,
     expertName,
-  });
+  })
 
-  if (expertImage) params.set('expertImage', makeAbsoluteUrl(expertImage));
-  if (duration) params.set('duration', duration);
-  if (price) params.set('price', price);
+  if (expertImage) params.set("expertImage", makeAbsoluteUrl(expertImage))
+  if (duration) params.set("duration", duration)
+  if (price) params.set("price", price)
 
-  return `/api/og/image?${params.toString()}`;
-};
+  return `/api/og/image?${params.toString()}`
+}

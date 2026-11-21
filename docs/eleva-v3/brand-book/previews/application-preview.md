@@ -4,12 +4,12 @@ The live product in [`_context/clone-repo/eleva-care-app`](../../../../_context/
 
 ## Header (marketing)
 
-- **Logo:** Inline SVG in `src/components/layout/header/HeaderContent.tsx` — default color follows `currentColor`; white on transparent hero.  
+- **Logo:** Inline SVG in `src/components/layout/header/HeaderContent.tsx` — default color follows `currentColor`; white on transparent hero.
 - **Size:** `h-8` / `w-[160px]` mobile, `lg:h-12` / `lg:w-[240px]` desktop.
 
 ## Primary action
 
-- **Color:** `eleva-primary` / `#006D77` (see `globals.css` and component usage).  
+- **Color:** `eleva-primary` / `#006D77` (see `globals.css` and component usage).
 - **Type:** `font-sans` (DM Sans stack).
 
 ## Trust in product
@@ -27,5 +27,5 @@ The live product in [`_context/clone-repo/eleva-care-app`](../../../../_context/
 
 ## Related
 
-- [Usage examples — Product UI](../usage-examples.md#product-ui)  
+- [Usage examples — Product UI](../usage-examples.md#product-ui)
 - [Main handbook — Application system](../README.md#5-application-system)

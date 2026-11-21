@@ -219,35 +219,39 @@ export interface LicenceReview {
   application: main.BecomePartnerApplication | null
 }
 
-/** One profile's review: latest application plus the profile behind it. */
-export async function getLicenceReview(
+/**
+ * One profile's review: latest application plus the profile behind it.
+ * Read inside the caller's transaction, so `@eleva/auth` can record who
+ * opened it in the same one (`openLicenceReview`). Not for apps: a read of
+ * a person's licence is always audited.
+ */
+export async function _readLicenceReview(
+  tx: Tx,
   expertProfileId: string
 ): Promise<LicenceReview | null> {
   const p = main.expertProfiles
   const a = main.becomePartnerApplications
-  return withPlatformAdminContext(async (tx) => {
-    const [row] = await tx
-      .select({ profile: p, email: auth.user.email })
-      .from(p)
-      .innerJoin(auth.user, eq(auth.user.id, p.userId))
-      .where(and(eq(p.id, expertProfileId), isNull(p.deletedAt)))
-      .limit(1)
-    if (!row) return null
-    const [application = null] = await tx
-      .select()
-      .from(a)
-      .where(eq(a.expertProfileId, expertProfileId))
-      .orderBy(desc(a.submittedAt))
-      .limit(1)
-    return {
-      ...row,
-      application,
-      reviewState: licenceReviewState(
-        row.profile.status,
-        application?.status ?? null
-      ),
-    }
-  })
+  const [row] = await tx
+    .select({ profile: p, email: auth.user.email })
+    .from(p)
+    .innerJoin(auth.user, eq(auth.user.id, p.userId))
+    .where(and(eq(p.id, expertProfileId), isNull(p.deletedAt)))
+    .limit(1)
+  if (!row) return null
+  const [application = null] = await tx
+    .select()
+    .from(a)
+    .where(eq(a.expertProfileId, expertProfileId))
+    .orderBy(desc(a.submittedAt))
+    .limit(1)
+  return {
+    ...row,
+    application,
+    reviewState: licenceReviewState(
+      row.profile.status,
+      application?.status ?? null
+    ),
+  }
 }
 
 export const PARTNER_DECISION_EVENT_TYPES = [

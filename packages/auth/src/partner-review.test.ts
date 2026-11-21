@@ -34,22 +34,33 @@ vi.mock("@eleva/db", () => ({
   },
   withPlatformAdminContext: (fn: (t: typeof tx) => unknown) => fn(tx),
 }))
+const readReview = vi.fn()
 vi.mock("@eleva/db/queries/partner-applications", () => ({
   _emitPartnerDecisionEvent: (...args: unknown[]) => emitEvent(...args),
+  _readLicenceReview: (...args: unknown[]) => readReview(...args),
 }))
+const auditOptions = vi.fn()
 vi.mock("@eleva/audit", () => ({
   withPlatformAudit: async (
-    _options: unknown,
+    options: unknown,
     fn: (t: typeof tx, ctx: { emit: typeof emit }) => unknown
-  ) => fn(tx, { emit }),
+  ) => {
+    auditOptions(options)
+    return fn(tx, { emit })
+  },
 }))
 vi.mock("drizzle-orm", () => ({
   and: vi.fn(),
   eq: vi.fn(),
   inArray: vi.fn(),
+  isNull: vi.fn(),
 }))
 
-import { decideLicenceApplication, PartnerReviewError } from "./partner-review"
+import {
+  decideLicenceApplication,
+  openLicenceReview,
+  PartnerReviewError,
+} from "./partner-review"
 
 const SUBMITTED = new Date("2026-10-30T10:00:00.000Z")
 const CHECKLIST = {
@@ -249,5 +260,78 @@ describe("decideLicenceApplication", () => {
     ).rejects.toBeInstanceOf(PartnerReviewError)
     expect(updates).toHaveLength(0)
     expect(emit).not.toHaveBeenCalled()
+  })
+})
+
+describe("openLicenceReview", () => {
+  const REVIEW = {
+    profile: { id: "profile-1" },
+    email: "ana@example.test",
+    reviewState: "pending",
+    application: { id: "application-1", licenceNumber: "12345" },
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it("records who opened whose licence, without the numbers", async () => {
+    selects = [[{ orgId: "org-1" }]]
+    readReview.mockResolvedValue(REVIEW)
+    await expect(
+      openLicenceReview("profile-1", { actorUserId: "staff-1" })
+    ).resolves.toBe(REVIEW)
+    // On the record: the staff member who opened it, in the expert's org.
+    expect(auditOptions).toHaveBeenCalledWith({
+      orgId: "org-1",
+      actorUserId: "staff-1",
+    })
+    // Read inside the audited transaction.
+    expect(readReview).toHaveBeenCalledWith(tx, "profile-1")
+    expect(emit).toHaveBeenCalledTimes(1)
+    expect(emit).toHaveBeenCalledWith({
+      entity: "partner_application",
+      action: "opened",
+      entityId: "application-1",
+      payload: { expertProfileId: "profile-1", reviewState: "pending" },
+    })
+    // Never the email or the licence number.
+    expect(JSON.stringify(emit.mock.calls)).not.toMatch(/example\.test|12345/)
+  })
+
+  it("records a profile that never filed, with no application to name", async () => {
+    selects = [[{ orgId: "org-1" }]]
+    readReview.mockResolvedValue({ ...REVIEW, application: null })
+    await openLicenceReview("profile-1", { actorUserId: "staff-1" })
+    expect(emit).toHaveBeenCalledWith(
+      expect.objectContaining({ entityId: null })
+    )
+  })
+
+  it("answers null for an unknown profile and records nothing", async () => {
+    selects = [[]]
+    await expect(
+      openLicenceReview("profile-1", { actorUserId: "staff-1" })
+    ).resolves.toBeNull()
+    expect(readReview).not.toHaveBeenCalled()
+    expect(emit).not.toHaveBeenCalled()
+  })
+
+  it("answers null and records nothing when the profile goes between the two reads", async () => {
+    selects = [[{ orgId: "org-1" }]]
+    readReview.mockResolvedValue(null)
+    await expect(
+      openLicenceReview("profile-1", { actorUserId: "staff-1" })
+    ).resolves.toBeNull()
+    expect(emit).not.toHaveBeenCalled()
+  })
+
+  it("shows nothing when the record cannot be written", async () => {
+    selects = [[{ orgId: "org-1" }]]
+    readReview.mockResolvedValue(REVIEW)
+    emit.mockRejectedValueOnce(new Error("audit store down"))
+    await expect(
+      openLicenceReview("profile-1", { actorUserId: "staff-1" })
+    ).rejects.toThrow("audit store down")
   })
 })

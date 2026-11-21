@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { AdminPartnerReviewResponseSchema } from "@eleva/api-client"
-import { getLicenceReview } from "@eleva/db"
+import { openLicenceReview } from "@eleva/auth/partner-review"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -50,7 +50,10 @@ export async function GET(
     )
   }
 
-  const review = await getLicenceReview(id.data)
+  // Recorded as partner_application.opened, with who opened it.
+  const review = await openLicenceReview(id.data, {
+    actorUserId: session.user.id,
+  })
   if (!review) {
     return secureJson(
       { error: "not found", message: "no expert profile" },

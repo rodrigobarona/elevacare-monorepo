@@ -1,22 +1,22 @@
-import * as React from 'react';
-import type { EmailContext, SupportedLocale } from '@/emails/utils/i18n';
-import { Body, Container, Head, Html, Preview } from '@react-email/components';
+import * as React from "react"
+import type { EmailContext, SupportedLocale } from "@/emails/utils/i18n"
+import { Body, Container, Head, Html, Preview } from "@react-email/components"
 
-import { EmailFooter } from './EmailFooter';
-import { EmailHeader } from './EmailHeader';
+import { EmailFooter } from "./EmailFooter"
+import { EmailHeader } from "./EmailHeader"
 
 export interface EmailLayoutProps {
-  children: React.ReactNode;
-  subject: string;
-  previewText?: string;
-  headerVariant?: 'default' | 'minimal' | 'branded';
-  footerVariant?: 'default' | 'minimal' | 'branded';
-  theme?: 'light' | 'dark';
-  locale?: SupportedLocale;
-  emailContext?: EmailContext;
+  children: React.ReactNode
+  subject: string
+  previewText?: string
+  headerVariant?: "default" | "minimal" | "branded"
+  footerVariant?: "default" | "minimal" | "branded"
+  theme?: "light" | "dark"
+  locale?: SupportedLocale
+  emailContext?: EmailContext
   userContext?: {
-    displayName?: string;
-  };
+    displayName?: string
+  }
 }
 
 /**
@@ -27,20 +27,20 @@ export function EmailLayout({
   children,
   subject,
   previewText,
-  headerVariant = 'default',
-  footerVariant = 'default',
-  theme = 'light',
-  locale = 'en',
+  headerVariant = "default",
+  footerVariant = "default",
+  theme = "light",
+  locale = "en",
   emailContext,
   userContext,
 }: EmailLayoutProps) {
-  const isDark = theme === 'dark';
+  const isDark = theme === "dark"
 
   // Use theme colors from emailContext if available, otherwise fallback to defaults
   const themeColors = emailContext?.theme?.colors || {
-    background: isDark ? '#1F2937' : '#F9FAFB',
-    surface: isDark ? '#374151' : '#FFFFFF',
-  };
+    background: isDark ? "#1F2937" : "#F9FAFB",
+    surface: isDark ? "#374151" : "#FFFFFF",
+  }
 
   return (
     <Html lang={locale} dir="ltr">
@@ -49,8 +49,11 @@ export function EmailLayout({
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="x-apple-disable-message-reformatting" />
-        <meta name="color-scheme" content={isDark ? 'dark' : 'light'} />
-        <meta name="format-detection" content="telephone=no,date=no,address=no,email=no" />
+        <meta name="color-scheme" content={isDark ? "dark" : "light"} />
+        <meta
+          name="format-detection"
+          content="telephone=no,date=no,address=no,email=no"
+        />
       </Head>
 
       {previewText && <Preview>{previewText}</Preview>}
@@ -58,19 +61,19 @@ export function EmailLayout({
       <Body
         style={{
           backgroundColor: themeColors.background,
-          fontFamily: 'system-ui, -apple-system, sans-serif',
+          fontFamily: "system-ui, -apple-system, sans-serif",
           margin: 0,
-          padding: '20px 0',
+          padding: "20px 0",
         }}
       >
         <Container
           style={{
-            maxWidth: '600px',
-            margin: '0 auto',
+            maxWidth: "600px",
+            margin: "0 auto",
             backgroundColor: themeColors.surface,
-            borderRadius: '12px',
-            overflow: 'hidden',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+            borderRadius: "12px",
+            overflow: "hidden",
+            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
           }}
         >
           {/* Email Header */}
@@ -84,7 +87,7 @@ export function EmailLayout({
           {/* Main Content */}
           <Container
             style={{
-              padding: '32px 24px',
+              padding: "32px 24px",
               backgroundColor: themeColors.surface,
             }}
           >
@@ -92,7 +95,11 @@ export function EmailLayout({
           </Container>
 
           {/* Email Footer */}
-          <EmailFooter variant={footerVariant} theme={theme} emailContext={emailContext} />
+          <EmailFooter
+            variant={footerVariant}
+            theme={theme}
+            emailContext={emailContext}
+          />
         </Container>
 
         {/* Global styles for email clients */}
@@ -140,5 +147,5 @@ export function EmailLayout({
         `}</style>
       </Body>
     </Html>
-  );
+  )
 }
