@@ -1,7 +1,6 @@
 import { render } from "react-email"
 import {
   AuthTransactionalEmail,
-  AUTH_EMAIL_SUBJECT,
   authEmailText,
   type AuthEmailKind,
   type AuthTransactionalProps,
@@ -47,7 +46,7 @@ export async function renderAuthEmail(
   input: AuthTransactionalProps & { kind: AuthEmailKind }
 ): Promise<AuthEmailContent> {
   const locale: EmailLocale = input.locale ?? "en"
-  const text = authEmailText(input.kind, locale)
+  const text = authEmailText({ ...input, locale })
   const html = await render(
     <AuthTransactionalEmail
       kind={input.kind}
@@ -55,10 +54,12 @@ export async function renderAuthEmail(
       code={input.code}
       name={input.name}
       locale={locale}
+      organizationName={input.organizationName}
+      inviterName={input.inviterName}
     />
   )
   return {
-    subject: AUTH_EMAIL_SUBJECT[input.kind][locale],
+    subject: text.subject,
     html,
     title: text.title,
     body: text.body,

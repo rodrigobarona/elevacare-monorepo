@@ -39,7 +39,15 @@ export default async function TeamAdminLayout({
     session,
     [
       {
-        items: [{ title: t("dashboard"), url: base, icon: "SquaresFourIcon" }],
+        items: [
+          { title: t("overview"), url: base, icon: "SquaresFourIcon" },
+          {
+            title: t("team"),
+            url: `${base}/members`,
+            icon: "UsersIcon",
+            needs: "members:manage",
+          },
+        ],
       },
     ],
     { inboxUrl: `${base}/notifications` }

@@ -50,6 +50,7 @@
     "./eleva-theme-provider": "./src/eleva-theme-provider.tsx",
     "./use-resolved-appearance": "./src/use-resolved-appearance.ts",
     "./server-theme": "./src/server-theme.ts",
+    "./workspace-api": "./src/workspace-api.ts",
     "./*": "./src/*.tsx"
   }
 }

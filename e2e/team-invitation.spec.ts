@@ -15,7 +15,7 @@ import {
   type Browser,
   type Page,
 } from "@playwright/test"
-import { accountUrl, apiUrl, authHeaders } from "./helpers/auth"
+import { accountUrl, apiUrl, authHeaders, ORG_HEADER } from "./helpers/auth"
 import { expertSession } from "./helpers/booking-request-smoke"
 import { sessionFromMagicLink } from "./helpers/cancellation-policy-smoke"
 import {
@@ -64,20 +64,18 @@ async function shot(page: Page, name: string): Promise<void> {
 async function invite(
   request: APIRequestContext,
   cookie: string,
-  organizationId: string
+  organizationId: string,
+  teamSlug: string
 ): Promise<string> {
-  const res = await request.post(`${apiUrl}/auth/organization/invite-member`, {
-    headers: authHeaders(cookie),
-    data: { email: MEMBER_EMAIL, role: "member", organizationId },
-  })
-  expect(res.status(), await res.text()).toBe(200)
-  const body = (await res.json()) as {
-    id?: string
-    invitation?: { id: string }
-  }
-  const id = body.id ?? body.invitation?.id
-  expect(id).toBeTruthy()
-  return id!
+  const res = await request.post(
+    `${apiUrl}/teams/${organizationId}/invitations`,
+    {
+      headers: { ...authHeaders(cookie), [ORG_HEADER]: teamSlug },
+      data: { email: MEMBER_EMAIL, role: "member" },
+    }
+  )
+  expect(res.status(), await res.text()).toBe(201)
+  return ((await res.json()) as { invitation: { id: string } }).invitation.id
 }
 
 test.describe("Phase 11.1c — accept a clinic invitation", () => {
@@ -91,6 +89,7 @@ test.describe("Phase 11.1c — accept a clinic invitation", () => {
 
   let expertCookie = ""
   let teamId = ""
+  let teamSlug = ""
 
   test.beforeAll(async ({ request }) => {
     const health = await request.get(`${apiUrl}/health`)
@@ -101,7 +100,9 @@ test.describe("Phase 11.1c — accept a clinic invitation", () => {
       data: { name: "Clínica Lumen", type: "team" },
     })
     expect(created.status(), await created.text()).toBe(201)
-    teamId = ((await created.json()) as { orgId: string }).orgId
+    const body = (await created.json()) as { orgId: string; slug: string }
+    teamId = body.orgId
+    teamSlug = body.slug
   })
 
   test.afterAll(async () => {
@@ -114,7 +115,7 @@ test.describe("Phase 11.1c — accept a clinic invitation", () => {
     browser,
     request,
   }) => {
-    const invitationId = await invite(request, expertCookie, teamId)
+    const invitationId = await invite(request, expertCookie, teamId, teamSlug)
     const memberCookie = await sessionFromMagicLink(request, MEMBER_EMAIL)
     const link = `${accountUrl}/accept-invitation?id=${invitationId}`
 
@@ -170,7 +171,7 @@ test.describe("Phase 11.1c — accept a clinic invitation", () => {
     await phone.context().close()
 
     // Desktop: a fresh invitation, accepted.
-    const secondId = await invite(request, expertCookie, teamId)
+    const secondId = await invite(request, expertCookie, teamId, teamSlug)
     const desk = await pageWithSession(browser, memberCookie, false)
     await desk.goto(`${accountUrl}/accept-invitation?id=${secondId}`)
     await expect(desk.getByTestId("invitation-heading")).toHaveAttribute(

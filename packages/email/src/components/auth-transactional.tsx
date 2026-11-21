@@ -18,6 +18,60 @@ export interface AuthTransactionalProps {
   code?: string
   name?: string
   locale?: EmailLocale
+  /** `organization-invitation`: the clinic or practice that invites. */
+  organizationName?: string
+  /** `organization-invitation`: the person who sent the invitation. */
+  inviterName?: string
+}
+
+type AuthCopy = { title: string; body: string; action: string; ignore: string }
+
+/** Names shown in an email: one line, no links, at most 80 characters. */
+function emailSafeName(value: string | undefined): string | null {
+  const name = (value ?? "")
+    .replace(/https?:\/\/\S*|www\.\S*/gi, "")
+    // Control and invisible formatting characters (bidi overrides too).
+    .replace(/[\p{Cc}\p{Cf}<>]/gu, " ")
+    // "name.tld" would be turned into a link by mail apps: break the dot.
+    .replace(/([\p{L}\d])\.(?=[\p{L}\d])/gu, "$1 ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 80)
+  return name || null
+}
+
+/**
+ * The invitation names who invites and where, and says why the person got
+ * the email: the invited person may not have an Eleva account yet.
+ */
+const INVITATION_COPY: Record<
+  EmailLocale,
+  (
+    organization: string,
+    inviter: string | null
+  ) => AuthCopy & { subject: string }
+> = {
+  en: (organization, inviter) => ({
+    subject: `You are invited to join ${organization} on Eleva Care`,
+    title: `Join ${organization} on Eleva Care`,
+    body: `${inviter ? `${inviter} invited you` : "You are invited"} to join ${organization} on Eleva Care. This invitation is valid for 7 days.`,
+    action: "See the invitation",
+    ignore: `${organization} gave us your email address to send you this invitation. If you were not expecting it, you can ignore this email and the invitation expires on its own.`,
+  }),
+  pt: (organization, inviter) => ({
+    subject: `Tem um convite para se juntar a ${organization} na Eleva Care`,
+    title: `Junte-se a ${organization} na Eleva Care`,
+    body: `${inviter ? `${inviter} enviou-lhe um convite` : "Tem um convite"} para se juntar a ${organization} na Eleva Care. O convite é válido durante 7 dias.`,
+    action: "Ver o convite",
+    ignore: `${organization} deu-nos o seu endereço de email para lhe enviar este convite. Se não o esperava, pode ignorar este email e o convite expira por si.`,
+  }),
+  es: (organization, inviter) => ({
+    subject: `Tienes una invitación para unirte a ${organization} en Eleva Care`,
+    title: `Únete a ${organization} en Eleva Care`,
+    body: `${inviter ? `${inviter} te ha enviado una invitación` : "Tienes una invitación"} para unirte a ${organization} en Eleva Care. La invitación es válida durante 7 días.`,
+    action: "Ver la invitación",
+    ignore: `${organization} nos ha dado tu correo electrónico para enviarte esta invitación. Si no la esperabas, puedes ignorar este correo y la invitación caducará sola.`,
+  }),
 }
 
 const COPY: Record<
@@ -160,12 +214,34 @@ export const AUTH_EMAIL_SUBJECT: Record<
   },
 }
 
-export function authEmailText(
-  kind: AuthEmailKind,
-  locale: EmailLocale = "en"
-): { title: string; body: string } {
-  const copy = COPY[kind][locale] ?? COPY[kind].en
-  return { title: copy.title, body: copy.body }
+type AuthCopyInput = Pick<
+  AuthTransactionalProps,
+  "kind" | "locale" | "organizationName" | "inviterName"
+>
+
+function authCopy(input: AuthCopyInput): AuthCopy & { subject: string } {
+  const locale = input.locale ?? "en"
+  const organization =
+    input.kind === "organization-invitation"
+      ? emailSafeName(input.organizationName)
+      : null
+  if (organization) {
+    return (INVITATION_COPY[locale] ?? INVITATION_COPY.en)(
+      organization,
+      emailSafeName(input.inviterName)
+    )
+  }
+  const copy = COPY[input.kind][locale] ?? COPY[input.kind].en
+  return { ...copy, subject: AUTH_EMAIL_SUBJECT[input.kind][locale] }
+}
+
+export function authEmailText(input: AuthCopyInput): {
+  subject: string
+  title: string
+  body: string
+} {
+  const copy = authCopy(input)
+  return { subject: copy.subject, title: copy.title, body: copy.body }
 }
 
 export function AuthTransactionalEmail({
@@ -174,12 +250,18 @@ export function AuthTransactionalEmail({
   code,
   name,
   locale = "en",
+  organizationName,
+  inviterName,
 }: AuthTransactionalProps) {
-  const copy = COPY[kind][locale] ?? COPY[kind].en
+  const copy = authCopy({ kind, locale, organizationName, inviterName })
   const isOtp = kind === "two-factor-otp"
 
   return (
-    <EmailLayout preview={copy.title} locale={locale}>
+    <EmailLayout
+      preview={copy.title}
+      locale={locale}
+      accountFooter={kind !== "organization-invitation"}
+    >
       <EmailHeading>{copy.title}</EmailHeading>
       {name ? <EmailBodyText className="mb-[8px]">{name}</EmailBodyText> : null}
       <EmailBodyText className="mb-[24px]">{copy.body}</EmailBodyText>

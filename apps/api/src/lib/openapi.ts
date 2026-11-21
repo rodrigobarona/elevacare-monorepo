@@ -154,6 +154,11 @@ import {
   CrmContactSchema,
   CrmFollowUpSchema,
   FileClinicVerificationRequestSchema,
+  InviteTeamMemberRequestSchema,
+  InviteTeamMemberResponseSchema,
+  RemoveTeamMemberResponseSchema,
+  TeamMemberErrorSchema,
+  TeamMembersResponseSchema,
   TeamSummarySchema,
   UpdateTeamProfileRequestSchema,
   ListCrmContactsQuerySchema,
@@ -4157,6 +4162,140 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
+      "/teams/{teamId}/members": {
+        get: {
+          operationId: "listTeamMembers",
+          summary: "List the clinic's members and pending invitations",
+          description:
+            "Requires members:manage, and teamId must be the caller's active team org (403 TEAM_NOT_ACTIVE otherwise). Returns every member with their role and how many services they have published in this clinic, the pending invitations (expired ones are flagged and can be sent again) and seats.billable: the members with at least one published service, which is what the clinic's plan charges for.",
+          tags: ["Teams"],
+          requestParams: { path: z.object({ teamId: z.string().uuid() }) },
+          responses: {
+            ...stdWithNotFound,
+            "200": {
+              description: "Members, invitations and seat count",
+              content: {
+                "application/json": { schema: TeamMembersResponseSchema },
+              },
+            },
+            "403": {
+              description: "teamId is not the caller's active team org",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+      },
+      "/teams/{teamId}/members/{memberId}": {
+        delete: {
+          operationId: "removeTeamMember",
+          summary: "Remove someone from the clinic",
+          description:
+            "Requires members:manage in the active team org and a revocable credential. The person loses access to the clinic, their services in it are unpublished in the same transaction and they take no new booking there; the Stripe seat count is then synced. Only the owner removes an admin (403 OWNER_REQUIRED). 409 CANNOT_REMOVE_OWNER, 409 CANNOT_REMOVE_SELF, and 409 MEMBER_HAS_UPCOMING_SESSIONS while the member has sessions booked (upcomingSessions: they have to be done or cancelled first) or a slot someone is paying for right now (pendingBookings: try again in a few minutes). Audited as membership.removed.",
+          tags: ["Teams"],
+          requestParams: {
+            path: z.object({
+              teamId: z.string().uuid(),
+              memberId: z.string().uuid(),
+            }),
+          },
+          responses: {
+            ...stdWithNotFound,
+            "200": {
+              description: "Removed",
+              content: {
+                "application/json": { schema: RemoveTeamMemberResponseSchema },
+              },
+            },
+            "403": {
+              description: "teamId is not the caller's active team org",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "409": {
+              description:
+                "CANNOT_REMOVE_OWNER, CANNOT_REMOVE_SELF or MEMBER_HAS_UPCOMING_SESSIONS (with upcomingSessions and pendingBookings)",
+              content: {
+                "application/json": { schema: TeamMemberErrorSchema },
+              },
+            },
+          },
+        },
+      },
+      "/teams/{teamId}/invitations": {
+        post: {
+          operationId: "inviteTeamMember",
+          summary: "Invite someone to the clinic by email",
+          description:
+            "Requires members:manage in the active team org and a revocable credential. Creates an invitation valid for 7 days and emails its link, naming the clinic and who invites; the invited person accepts or declines it from their Eleva account. Role is admin (manages the clinic) or member (an expert working in it); only the owner invites an admin (403 OWNER_REQUIRED) and ownership is never invited. Sending to an address that already has a pending invitation renews it (200, resent true) and emails the same link again. A clinic emails one address at most once a minute, also after a withdrawal (429 INVITATION_RECENTLY_SENT with retryAfterSeconds and a Retry-After header). emailSent false means the invitation exists but no email left (the address is suppressed, or the mail provider failed): call again after the minute. 409 ALREADY_MEMBER, 409 MEMBER_LIMIT_REACHED (200 people including pending invitations). Audited as invitation.invited.",
+          tags: ["Teams"],
+          requestParams: { path: z.object({ teamId: z.string().uuid() }) },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: InviteTeamMemberRequestSchema },
+            },
+          },
+          responses: {
+            ...stdWithNotFound,
+            "200": {
+              description: "Pending invitation renewed and sent again",
+              content: {
+                "application/json": { schema: InviteTeamMemberResponseSchema },
+              },
+            },
+            "201": {
+              description: "Invitation created",
+              content: {
+                "application/json": { schema: InviteTeamMemberResponseSchema },
+              },
+            },
+            "403": {
+              description: "teamId is not the caller's active team org",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "409": {
+              description: "ALREADY_MEMBER or MEMBER_LIMIT_REACHED",
+              content: {
+                "application/json": { schema: TeamMemberErrorSchema },
+              },
+            },
+            "429": {
+              description:
+                "INVITATION_RECENTLY_SENT (this address was emailed less than a minute ago), or the caller's own request rate limit",
+              content: {
+                "application/json": {
+                  schema: z.union([
+                    TeamMemberErrorSchema,
+                    RateLimitErrorSchema,
+                  ]),
+                },
+              },
+            },
+          },
+        },
+      },
+      "/teams/{teamId}/invitations/{invitationId}": {
+        delete: {
+          operationId: "cancelTeamInvitation",
+          summary: "Withdraw a pending invitation",
+          description:
+            "Requires members:manage in the active team org and a revocable credential. The invitation's link stops working. Only the owner withdraws an invitation to be an admin (403 OWNER_REQUIRED). 404 INVITATION_NOT_FOUND when it is not pending in this clinic (already answered, withdrawn or unknown). Audited as invitation.revoked.",
+          tags: ["Teams"],
+          requestParams: {
+            path: z.object({
+              teamId: z.string().uuid(),
+              invitationId: z.string().uuid(),
+            }),
+          },
+          responses: {
+            ...stdWithNotFound,
+            "204": { description: "Withdrawn" },
+            "403": {
+              description: "teamId is not the caller's active team org",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+      },
       "/crm/contacts": {
         get: {
           operationId: "listCrmContacts",
@@ -5659,6 +5798,12 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
         summary: "Expire lapsed slot holds",
         description:
           "Expires lapsed holds, cancelling still-cancelable PaymentIntents first and keeping holds whose payment can still settle.",
+      }),
+      "/workflows/seat-sync-sweep": internalWorkflow({
+        operationId: "sweepPendingSeatSyncs",
+        summary: "Finish clinic seat syncs left pending",
+        description:
+          "Recounts and syncs to Stripe the seat quantity of clinics whose last change (publish, unpublish, deleted service, removed member) was marked but never reached Stripe. Returns pending, synced and failed counts.",
       }),
       "/workflows/booking-request-expiry": internalWorkflow({
         operationId: "expireBookingRequests",

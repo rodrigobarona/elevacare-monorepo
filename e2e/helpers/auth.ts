@@ -11,6 +11,8 @@ import {
 } from "@eleva/auth/e2e-auth-url"
 
 export const apiUrl = process.env.E2E_API_URL ?? "http://localhost:3002"
+/** Names the workspace a request acts for (`ELEVA_ORG_HEADER`). */
+export const ORG_HEADER = "x-eleva-org"
 export const accountUrl = process.env.E2E_ACCOUNT_URL ?? "http://localhost:3006"
 export const adminUrl = process.env.E2E_ADMIN_URL ?? "http://localhost:3007"
 

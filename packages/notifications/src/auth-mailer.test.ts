@@ -115,6 +115,73 @@ describe("createAuthMailer", () => {
     expect(send.mock.calls[1]?.[0].orgId).toBe(ORG_ID)
   })
 
+  it("delivers a renewed invitation as a new email, naming who invites", async () => {
+    const loadUser = vi.fn().mockResolvedValue(null)
+    const mailer = createAuthMailer({ send, loadUser })
+    const invitation = {
+      email: "new@example.com",
+      url: "https://eleva.care/invite/3",
+      orgId: ORG_ID,
+      invitationId: "inv_3",
+      organizationName: "Clínica Lumen",
+      inviterName: "Ana Mota",
+      fallbackLocale: "pt",
+    }
+    await mailer.sendOrgInvitation({ ...invitation, sendKey: "1000" })
+    await mailer.sendOrgInvitation({ ...invitation, sendKey: "2000" })
+    expect(send.mock.calls.map((call) => call[0].idempotencyKey)).toEqual([
+      "auth.org_invitation:inv_3:1000",
+      "auth.org_invitation:inv_3:2000",
+    ])
+    expect(send.mock.calls[0]?.[0]).toMatchObject({
+      organizationName: "Clínica Lumen",
+      inviterName: "Ana Mota",
+      // No account yet: the inviter's language.
+      locale: "pt",
+    })
+  })
+
+  it("reports whether the invitation email left", async () => {
+    const loadUser = vi.fn().mockResolvedValue(null)
+    const mailer = createAuthMailer({ send, loadUser })
+    const invitation = {
+      email: "new@example.com",
+      url: "https://eleva.care/invite/4",
+      orgId: ORG_ID,
+      invitationId: "inv_4",
+    }
+    const outcome = (status: string) => ({
+      kind: "auth.org_invitation",
+      deliveries: [{ channel: "email", deliveryId: "d1", status }],
+    })
+    send.mockResolvedValueOnce(outcome("sent"))
+    await expect(mailer.sendOrgInvitation(invitation)).resolves.toBe(true)
+    for (const status of ["suppressed", "held", "failed", "bounced"]) {
+      send.mockResolvedValueOnce(outcome(status))
+      await expect(mailer.sendOrgInvitation(invitation)).resolves.toBe(false)
+    }
+    // A send that throws outside production is a failure, not a skip.
+    send.mockRejectedValueOnce(new Error("provider down"))
+    await expect(mailer.sendOrgInvitation(invitation)).resolves.toBe(false)
+    // Nothing delivered at all (every channel skipped).
+    send.mockResolvedValueOnce({ kind: "auth.org_invitation", deliveries: [] })
+    await expect(mailer.sendOrgInvitation(invitation)).resolves.toBe(false)
+  })
+
+  it("counts a local skip without a mail key as sent", async () => {
+    delete process.env.RESEND_API_KEY
+    const mailer = createAuthMailer({ send, loadUser: vi.fn() })
+    await expect(
+      mailer.sendOrgInvitation({
+        email: "new@example.com",
+        url: "https://eleva.care/invite/5",
+        orgId: ORG_ID,
+        invitationId: "inv_5",
+      })
+    ).resolves.toBe(true)
+    expect(send).not.toHaveBeenCalled()
+  })
+
   it("skips the provider when RESEND_API_KEY is missing", async () => {
     delete process.env.RESEND_API_KEY
     const mailer = createAuthMailer({ send })

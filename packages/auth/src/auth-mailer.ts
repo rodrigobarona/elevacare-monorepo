@@ -19,12 +19,26 @@ export type AuthTransactionalMailer = {
     user: AuthMailerUser
     otp: string
   }) => Promise<void>
+  /**
+   * Resolves true when the email was handed to the mail provider, false
+   * when it was held back (suppressed address, or a send already running).
+   */
   sendOrgInvitation: (input: {
     email: string
     url: string
     orgId: string
     invitationId: string
-  }) => Promise<void>
+    /** Shown in the email, so the invited person knows who is asking. */
+    organizationName?: string
+    inviterName?: string
+    /** Language when the invited address has no Eleva account yet. */
+    fallbackLocale?: string | null
+    /**
+     * Changes each time the invitation is sent again, so the renewal is
+     * delivered instead of being taken for a repeat of the first email.
+     */
+    sendKey?: string
+  }) => Promise<boolean>
 }
 
 // Cache on `globalThis` so Turbopack/Next instrumentation and route

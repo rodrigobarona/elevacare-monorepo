@@ -13,6 +13,15 @@ function isLoopbackHost(host: string): boolean {
 }
 
 /** True when any configured e2e URL is not loopback (including invalid URLs). */
+/** True for a URL on this machine. Use it for app URLs a spec adds itself. */
+export function isLoopbackUrl(raw: string): boolean {
+  try {
+    return isLoopbackHost(new URL(raw).hostname)
+  } catch {
+    return false
+  }
+}
+
 export function isNonLoopbackE2eTarget(): boolean {
   if (process.env.VERCEL_ENV === "production") return true
   const urls = [
