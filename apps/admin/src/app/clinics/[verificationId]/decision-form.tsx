@@ -164,8 +164,10 @@ export function DecisionForm({
               <span className="mt-3 block text-sm font-medium text-foreground">
                 {t("rejectConfirm.reason")}
               </span>
+              {/* A long reason scrolls here, so the buttons stay in view. */}
               <span
-                className="mt-1 block whitespace-pre-line text-foreground"
+                className="mt-1 block max-h-40 overflow-y-auto whitespace-pre-line text-foreground"
+                tabIndex={0}
                 data-testid="clinic-reject-reason"
               >
                 {reason.trim()}
