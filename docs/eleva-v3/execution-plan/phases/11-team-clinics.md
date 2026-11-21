@@ -30,8 +30,9 @@ Where this file no longer matches what was built or decided (the code and the de
   `bookings.attributed_org_id` and `payout_mode` exist and nothing writes or reads them yet.
 - The clinic plan's invoice (Tier 1b, and the invoice line of the exit gate) depends on issuing,
   which is closed on purpose.
-- Stripe's customer portal cannot change a subscription with two products, which a clinic's has:
-  a plan change is built on our side.
+- A clinic's subscription has two items (plan and seats) whose prices sit on one Stripe
+  product. Whether Stripe's customer portal can change such a plan is not settled by the docs;
+  slice 11.8 tries it in test mode before choosing where a plan change lives.
 
 ## Why this phase exists
 

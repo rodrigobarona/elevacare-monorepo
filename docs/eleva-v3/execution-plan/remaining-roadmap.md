@@ -207,20 +207,20 @@ them are slices here (12.8, 13.14, 13.32).
 
 Slices, in order. "Refs" are Mobbin references in `_context/mobbin/library/`.
 
-| Id    | Title                                        | What it includes                                                                                                                                    | Depends on  | Size | Screen | Proof                                            |
-| ----- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | ---- | ------ | ------------------------------------------------ |
-| 11.7  | Every clinic subscription has a seat item    | Attach it at creation and checkout; create it when missing; save the tax number (`customer_update`); correct the API text. Finding 2 and 7.         | A-03        | S    | No     | Unit tests, one run in Stripe test mode          |
-| 11.8  | The clinic's Billing page                    | `/team/{slug}/billing`: plan, seats in use, checkout in the page, invoices. Plan changes happen on our server, not in Stripe's portal (section 11). | 11.7, C-02  | M    | Yes    | New opt-in e2e. Refs `11-team/14` to `17`        |
-| 11.9  | "No seat left" points to Billing             | A link from the Team page and from the expert's message, saying what a bigger plan gives.                                                           | 11.8        | S    | Yes    | Route test, capture. Ref `11-team/18`            |
-| 11.10 | Change a role; leave a clinic                | Two endpoints and the Team page actions.                                                                                                            | F-07        | M    | Yes    | Integration test                                 |
-| 11.11 | People notices                               | An email when someone joins or is removed; clear the removed person's active workspace and keys.                                                    | none        | M    | Email  | Sender tests. Adds a migration (kinds)           |
-| 11.12 | Clinic settings                              | Name, description, logo (public bucket, verified upload), specialties, billing address.                                                             | none        | M    | Yes    | Route test, opt-in e2e                           |
-| 11.13 | All the clinic's sessions                    | `GET /teams/{id}/bookings` and a list filtered by expert and date. Writes `attributed_org_id`, which exists and is never written today.             | F-05        | M    | Yes    | Row-level security test. Refs `11-team/19`, `20` |
-| 11.14 | The clinic's schedule, read only             | `GET /teams/{id}/schedule` and a week with experts side by side.                                                                                    | 11.13       | M    | Yes    | Route test, capture. Refs `11-team/21`, `22`     |
-| 11.15 | Overview shows sessions and seats            | Upcoming sessions and the seat line on the first page.                                                                                              | 11.13       | S    | Yes    | e2e capture                                      |
-| 11.16 | Clinics share the public name space          | Clinic names in `public_handles` with a backfill; a flag; `GET /public/clinics/{slug}` for verified clinics only.                                   | none        | M    | No     | Collision test. Adds a migration                 |
-| 11.17 | The clinic's public page                     | The page, its experts, the sitemap, behind the flag.                                                                                                | 11.16, C-01 | M    | Yes    | 404 until verified. Refs `03-profile/25`, `26`   |
-| 11.18 | One clinic e2e, and the phase file corrected | One spec for the whole journey; the corrections below.                                                                                              | the above   | S    | No     | Spec passes on loopback                          |
+| Id    | Title                                        | What it includes                                                                                                                                                                  | Depends on  | Size | Screen | Proof                                            |
+| ----- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | ---- | ------ | ------------------------------------------------ |
+| 11.7  | Every clinic subscription has a seat item    | Attach it at creation and checkout; create it when missing; save the tax number (`customer_update`); correct the API text. Finding 2 and 7.                                       | A-03        | S    | No     | Unit tests, one run in Stripe test mode          |
+| 11.8  | The clinic's Billing page                    | `/team/{slug}/billing`: plan, seats in use, checkout in the page, invoices. Where a plan change happens (Stripe's portal or our server) is tried in test mode first (section 11). | 11.7, C-02  | M    | Yes    | New opt-in e2e. Refs `11-team/14` to `17`        |
+| 11.9  | "No seat left" points to Billing             | A link from the Team page and from the expert's message, saying what a bigger plan gives.                                                                                         | 11.8        | S    | Yes    | Route test, capture. Ref `11-team/18`            |
+| 11.10 | Change a role; leave a clinic                | Two endpoints and the Team page actions.                                                                                                                                          | F-07        | M    | Yes    | Integration test                                 |
+| 11.11 | People notices                               | An email when someone joins or is removed; clear the removed person's active workspace and keys.                                                                                  | none        | M    | Email  | Sender tests. Adds a migration (kinds)           |
+| 11.12 | Clinic settings                              | Name, description, logo (public bucket, verified upload), specialties, billing address.                                                                                           | none        | M    | Yes    | Route test, opt-in e2e                           |
+| 11.13 | All the clinic's sessions                    | `GET /teams/{id}/bookings` and a list filtered by expert and date. Writes `attributed_org_id`, which exists and is never written today.                                           | F-05        | M    | Yes    | Row-level security test. Refs `11-team/19`, `20` |
+| 11.14 | The clinic's schedule, read only             | `GET /teams/{id}/schedule` and a week with experts side by side.                                                                                                                  | 11.13       | M    | Yes    | Route test, capture. Refs `11-team/21`, `22`     |
+| 11.15 | Overview shows sessions and seats            | Upcoming sessions and the seat line on the first page.                                                                                                                            | 11.13       | S    | Yes    | e2e capture                                      |
+| 11.16 | Clinics share the public name space          | Clinic names in `public_handles` with a backfill; a flag; `GET /public/clinics/{slug}` for verified clinics only.                                                                 | none        | M    | No     | Collision test. Adds a migration                 |
+| 11.17 | The clinic's public page                     | The page, its experts, the sitemap, behind the flag.                                                                                                                              | 11.16, C-01 | M    | Yes    | 404 until verified. Refs `03-profile/25`, `26`   |
+| 11.18 | One clinic e2e, and the phase file corrected | One spec for the whole journey; the corrections below.                                                                                                                            | the above   | S    | No     | Spec passes on loopback                          |
 
 Waiting on a person:
 
@@ -353,8 +353,9 @@ branch before production.
 | 14.25 | The cutover runbook, with a full-load step; rehearsal three                        | all, F-10   | S    | A timed report                        |
 
 What the code review of the MVP snapshot showed, to settle before the mappers: the MVP has no
-passwords to move (people set a new one or use Google); no time-zone column and timestamps
-without a zone; one schedule per person; no status on a meeting; no practice country, languages
+passwords to move (people set a new one or use Google); no time zone on the person, while
+schedules and meetings each carry one that the mappers must keep; timestamps stored without a
+zone; one schedule per person; no status on a meeting; no practice country, languages
 or licence fields; calendar tokens that are dropped (experts reconnect); files in storage that
 Phase 14 does not mention; and no consent table. References `05-auth/12` and `13` cover "set a new
 password" and "reconnect your calendar"; Mobbin had no "we have moved" screen.
@@ -434,9 +435,11 @@ From Context7 on 2026-11-21. Only the facts that change how a slice is built.
 - A seat change is a subscription update with a proration choice. For an increase Stripe
   recommends `payment_behavior: "pending_if_incomplete"` with `always_invoice`; the code uses
   `default_incomplete` with `create_prorations` (A-03, 11.7).
-- Stripe's customer portal cannot change a subscription that has more than one product, and a
-  clinic's has two (plan and seats). The portal stays for payment method, invoices and
-  cancelling; a plan change is ours to build (11.8).
+- Stripe's docs say the customer portal cannot change a subscription that has more than one
+  product. A clinic's subscription has two items (plan and seats), but our seed script puts both
+  prices on one product, so the docs do not settle whether the portal can change a clinic's
+  plan. 11.8 tries it in test mode first; if the portal refuses, the plan change is ours to
+  build. Either way a portal configuration needs a product catalog before it offers a switch.
 - Entitlements change with `entitlements.active_entitlement_summary.updated`. It is not in our
   webhook registry, nor are `invoice.finalized`, `invoice.finalization_failed` and
   `customer.tax_id.updated`. Adding an event means the three-file contract and the setup script.

@@ -1425,7 +1425,7 @@ them are slices here (12.8, 13.14, 13.32).</p>
 <tr>
 <td>11.8</td>
 <td>The clinic&#39;s Billing page</td>
-<td><code>/team/{slug}/billing</code>: plan, seats in use, checkout in the page, invoices. Plan changes happen on our server, not in Stripe&#39;s portal (section 11).</td>
+<td><code>/team/{slug}/billing</code>: plan, seats in use, checkout in the page, invoices. Where a plan change happens (Stripe&#39;s portal or our server) is tried in test mode first (section 11).</td>
 <td>11.7, C-02</td>
 <td>M</td>
 <td>Yes</td>
@@ -2191,8 +2191,9 @@ branch before production.</p>
 </tr>
 </tbody></table>
 <p>What the code review of the MVP snapshot showed, to settle before the mappers: the MVP has no
-passwords to move (people set a new one or use Google); no time-zone column and timestamps
-without a zone; one schedule per person; no status on a meeting; no practice country, languages
+passwords to move (people set a new one or use Google); no time zone on the person, while
+schedules and meetings each carry one that the mappers must keep; timestamps stored without a
+zone; one schedule per person; no status on a meeting; no practice country, languages
 or licence fields; calendar tokens that are dropped (experts reconnect); files in storage that
 Phase 14 does not mention; and no consent table. References <code>05-auth/12</code> and <code>13</code> cover &quot;set a new
 password&quot; and &quot;reconnect your calendar&quot;; Mobbin had no &quot;we have moved&quot; screen.</p>
@@ -2416,9 +2417,11 @@ with <code>EmbeddedCheckoutProvider</code>. Nothing in the apps mounts it yet (1
 <li>A seat change is a subscription update with a proration choice. For an increase Stripe
 recommends <code>payment_behavior: &quot;pending_if_incomplete&quot;</code> with <code>always_invoice</code>; the code uses
 <code>default_incomplete</code> with <code>create_prorations</code> (A-03, 11.7).</li>
-<li>Stripe&#39;s customer portal cannot change a subscription that has more than one product, and a
-clinic&#39;s has two (plan and seats). The portal stays for payment method, invoices and
-cancelling; a plan change is ours to build (11.8).</li>
+<li>Stripe&#39;s docs say the customer portal cannot change a subscription that has more than one
+product. A clinic&#39;s subscription has two items (plan and seats), but our seed script puts both
+prices on one product, so the docs do not settle whether the portal can change a clinic&#39;s
+plan. 11.8 tries it in test mode first; if the portal refuses, the plan change is ours to
+build. Either way a portal configuration needs a product catalog before it offers a switch.</li>
 <li>Entitlements change with <code>entitlements.active_entitlement_summary.updated</code>. It is not in our
 webhook registry, nor are <code>invoice.finalized</code>, <code>invoice.finalization_failed</code> and
 <code>customer.tax_id.updated</code>. Adding an event means the three-file contract and the setup script.</li>
@@ -8041,8 +8044,9 @@ Starter. The seat price is a fixed per-seat price, not a metered one.</li>
 <code>bookings.attributed_org_id</code> and <code>payout_mode</code> exist and nothing writes or reads them yet.</li>
 <li>The clinic plan&#39;s invoice (Tier 1b, and the invoice line of the exit gate) depends on issuing,
 which is closed on purpose.</li>
-<li>Stripe&#39;s customer portal cannot change a subscription with two products, which a clinic&#39;s has:
-a plan change is built on our side.</li>
+<li>A clinic&#39;s subscription has two items (plan and seats) whose prices sit on one Stripe
+product. Whether Stripe&#39;s customer portal can change such a plan is not settled by the docs;
+slice 11.8 tries it in test mode before choosing where a plan change lives.</li>
 </ul>
 <h2 id="11-team-clinics--why-this-phase-exists"><a class="anchor" href="#11-team-clinics--why-this-phase-exists" aria-label="Link to section">#</a>Why this phase exists</h2>
 <p>Clinics are the SaaS revenue line (ADR-005/016): per-seat tiers, no booking commission. Better
