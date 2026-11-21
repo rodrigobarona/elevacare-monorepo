@@ -15,6 +15,7 @@ export type FileVerificationError =
   | "validation"
   | "invalid-tax-id"
   | "changed"
+  | "unchanged"
   | "failed"
 
 /** Send (or send again) the clinic's legal name and tax number. */
@@ -41,6 +42,9 @@ export async function fileVerification(input: {
       }
       if (err.body.error === "VERIFICATION_LOCKED") {
         return { ok: false, error: "changed" }
+      }
+      if (err.body.error === "VERIFICATION_UNCHANGED") {
+        return { ok: false, error: "unchanged" }
       }
       if (err.status === 422) return { ok: false, error: "validation" }
     }

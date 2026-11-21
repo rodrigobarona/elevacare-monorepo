@@ -7,27 +7,43 @@ import { Alert, AlertDescription } from "@eleva/ui/components/alert"
 import { Button } from "@eleva/ui/components/button"
 import { Input } from "@eleva/ui/components/input"
 import { Label } from "@eleva/ui/components/label"
+import { normalizeClinicTaxId } from "@eleva/config/clinic-verification"
 import { fileVerification, type FileVerificationError } from "./actions"
-
-/** The same shape the API accepts once spaces, dots and dashes are gone. */
-const TAX_ID = /^[A-Za-z0-9]{8,32}$/
 
 type FieldError = "legal-name" | "invalid-tax-id"
 
 export function VerificationForm({
-  legalName: sentLegalName,
-  taxId: sentTaxId,
-  resend,
+  sent,
+  prefill,
+  intent,
+  primary,
+  focusAfterSendId,
 }: {
-  /** What was sent before, when there is something to correct. */
-  legalName: string
-  taxId: string
-  /** The clinic already sent details once. */
-  resend: boolean
+  /** The details Eleva already holds, if any were sent. */
+  sent: { legalName: string; taxId: string } | null
+  /** Start from what was sent, ready to correct. */
+  prefill: boolean
+  /** First details, a correction of what was sent, or new details. */
+  intent: "first" | "correction" | "new"
+  /** Sending details is the next step on the page. */
+  primary: boolean
+  /** Where focus goes once the details are sent. */
+  focusAfterSendId: string
 }) {
   const t = useTranslations("verification.form")
-  const [legalName, setLegalName] = React.useState(sentLegalName)
-  const [taxId, setTaxId] = React.useState(sentTaxId)
+  const [legalName, setLegalName] = React.useState(
+    prefill ? (sent?.legalName ?? "") : ""
+  )
+  const [taxId, setTaxId] = React.useState(prefill ? (sent?.taxId ?? "") : "")
+  const nameRef = React.useRef<HTMLInputElement>(null)
+  const taxIdRef = React.useRef<HTMLInputElement>(null)
+  const unchangedId = React.useId()
+  // Sending the same details again would only move the clinic to the back
+  // of the queue: the button waits for a change.
+  const unchanged =
+    sent !== null &&
+    legalName.trim() === sent.legalName &&
+    normalizeClinicTaxId(taxId) === sent.taxId
   const [fieldError, setFieldError] = React.useState<FieldError | null>(null)
   const [error, setError] = React.useState<FileVerificationError | null>(null)
   const [pending, startTransition] = React.useTransition()
@@ -42,10 +58,12 @@ export function VerificationForm({
     setError(null)
     if (legalName.trim().length < 2) {
       setFieldError("legal-name")
+      nameRef.current?.focus()
       return
     }
-    if (!TAX_ID.test(taxId.replace(/[\s.-]/g, ""))) {
+    if (normalizeClinicTaxId(taxId) === null) {
       setFieldError("invalid-tax-id")
+      taxIdRef.current?.focus()
       return
     }
     setFieldError(null)
@@ -56,10 +74,15 @@ export function VerificationForm({
       })
       if (result.ok) {
         toast.success(t("sent"))
+        // The form is replaced by the new standing: focus goes to it, not
+        // back to the top of the page.
+        document.getElementById(focusAfterSendId)?.focus()
         return
       }
-      if (result.error === "invalid-tax-id") setFieldError("invalid-tax-id")
-      else setError(result.error)
+      if (result.error === "invalid-tax-id") {
+        setFieldError("invalid-tax-id")
+        taxIdRef.current?.focus()
+      } else setError(result.error)
     })
   }
 
@@ -69,6 +92,8 @@ export function VerificationForm({
         <Label htmlFor={nameId}>{t("legalName")}</Label>
         <Input
           id={nameId}
+          ref={nameRef}
+          aria-required
           value={legalName}
           maxLength={200}
           autoComplete="organization"
@@ -93,6 +118,8 @@ export function VerificationForm({
         <Label htmlFor={taxIdId}>{t("taxId")}</Label>
         <Input
           id={taxIdId}
+          ref={taxIdRef}
+          aria-required
           value={taxId}
           maxLength={40}
           autoComplete="off"
@@ -133,12 +160,29 @@ export function VerificationForm({
       <div className="space-y-3">
         <Button
           type="submit"
+          variant={primary ? "default" : "outline"}
           className="max-sm:h-10 max-sm:w-full"
-          isDisabled={pending}
+          isDisabled={pending || unchanged}
+          aria-describedby={unchanged ? unchangedId : undefined}
           data-testid="verification-send"
         >
-          {pending ? t("sending") : resend ? t("sendAgain") : t("send")}
+          {pending
+            ? t("sending")
+            : intent === "first"
+              ? t("send")
+              : intent === "new"
+                ? t("sendNew")
+                : t("sendCorrection")}
         </Button>
+        {unchanged ? (
+          <p
+            id={unchangedId}
+            className="text-sm text-muted-foreground"
+            data-testid="verification-unchanged"
+          >
+            {t("unchanged")}
+          </p>
+        ) : null}
         <p className="text-sm text-muted-foreground">{t("use")}</p>
       </div>
     </form>

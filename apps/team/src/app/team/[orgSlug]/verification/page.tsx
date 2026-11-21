@@ -2,22 +2,15 @@ import { notFound } from "next/navigation"
 import { getFormatter, getTranslations } from "next-intl/server"
 import { getClinicSummary } from "@eleva/auth"
 import { getSessionForOrg } from "@eleva/auth/server"
+import {
+  clinicStanding,
+  type ClinicStanding,
+} from "@eleva/config/clinic-verification"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { StatusPill, type StatusTone } from "@eleva/ui/components/status-pill"
 import { VerificationForm } from "./verification-form"
 
-/** Where the clinic's verification stands, as the page words it. */
-type Standing =
-  | "not-sent"
-  | "checking"
-  | "change-needed"
-  | "verified"
-  | "verified-checking"
-  | "verified-change-needed"
-  | "verified-new-rejected"
-  | "not-verified"
-
-const TONES: Record<Standing, StatusTone> = {
+const TONES: Record<ClinicStanding, StatusTone> = {
   "not-sent": "neutral",
   checking: "attention",
   "change-needed": "attention",
@@ -28,22 +21,8 @@ const TONES: Record<Standing, StatusTone> = {
   "not-verified": "neutral",
 }
 
-function standingOf(
-  verified: boolean,
-  status: "pending" | "needs_changes" | "approved" | "rejected" | null
-): Standing {
-  if (verified) {
-    if (status === "pending") return "verified-checking"
-    if (status === "needs_changes") return "verified-change-needed"
-    // The newest details were refused; an earlier approval still stands.
-    if (status === "rejected") return "verified-new-rejected"
-    return "verified"
-  }
-  if (status === "pending") return "checking"
-  if (status === "needs_changes") return "change-needed"
-  if (status === "rejected") return "not-verified"
-  return "not-sent"
-}
+/** The standing's title: focus lands here after details are sent. */
+const STANDING_TITLE_ID = "verification-standing-title"
 
 export default async function TeamVerificationPage({
   params,
@@ -60,7 +39,7 @@ export default async function TeamVerificationPage({
     getFormatter(),
   ])
   const filing = summary.verification
-  const standing = standingOf(summary.verified, filing?.status ?? null)
+  const standing = clinicStanding(summary.verified, filing?.status ?? null)
   const date = (value: Date) =>
     format.dateTime(value, { day: "numeric", month: "long", year: "numeric" })
   // The form is offered whenever sending details is the next step, and for
@@ -71,6 +50,17 @@ export default async function TeamVerificationPage({
     standing === "verified-change-needed" ||
     standing === "not-verified"
   const waiting = standing === "checking" || standing === "verified-checking"
+  // A verified clinic with nothing open starts from empty fields; every
+  // other standing shows what was sent, ready to correct.
+  const prefill = standing !== "verified"
+  // Under a "Verified" pill, say which details these are: the ones we
+  // checked, or newer ones that are not confirmed.
+  const sentCaption =
+    standing === "verified"
+      ? t("sent.captionVerified")
+      : summary.verified
+        ? t("sent.captionNew")
+        : t("sent.caption")
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -86,7 +76,11 @@ export default async function TeamVerificationPage({
             {t(`standing.${standing}.pill`)}
           </StatusPill>
           <div className="space-y-2">
-            <h2 className="text-xl font-medium text-foreground">
+            <h2
+              id={STANDING_TITLE_ID}
+              tabIndex={-1}
+              className="text-xl font-medium text-foreground outline-none"
+            >
               {t(`standing.${standing}.title`)}
             </h2>
             <p className="text-base leading-7 text-muted-foreground">
@@ -109,34 +103,41 @@ export default async function TeamVerificationPage({
           ) : null}
 
           {filing ? (
-            <dl className="grid gap-4 border-t pt-4 sm:grid-cols-3">
-              <div>
-                <dt className="text-sm text-muted-foreground">
-                  {t("sent.legalName")}
-                </dt>
-                <dd className="font-medium break-words">{filing.legalName}</dd>
-              </div>
-              <div>
-                <dt className="text-sm text-muted-foreground">
-                  {t("sent.taxId")}
-                </dt>
-                <dd className="font-mono">{filing.taxId}</dd>
-              </div>
-              <div>
-                <dt className="text-sm text-muted-foreground">
-                  {filing.status === "approved" && filing.reviewedAt
-                    ? t("sent.verifiedOn")
-                    : t("sent.sentOn")}
-                </dt>
-                <dd>
-                  {date(
-                    filing.status === "approved" && filing.reviewedAt
-                      ? filing.reviewedAt
-                      : filing.submittedAt
-                  )}
-                </dd>
-              </div>
-            </dl>
+            <div className="space-y-3 border-t pt-4">
+              <h3 className="text-sm font-medium text-foreground">
+                {sentCaption}
+              </h3>
+              <dl className="grid gap-4 sm:grid-cols-3">
+                <div>
+                  <dt className="text-sm text-muted-foreground">
+                    {t("sent.legalName")}
+                  </dt>
+                  <dd className="font-medium break-words">
+                    {filing.legalName}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-sm text-muted-foreground">
+                    {t("sent.taxId")}
+                  </dt>
+                  <dd className="font-mono">{filing.taxId}</dd>
+                </div>
+                <div>
+                  <dt className="text-sm text-muted-foreground">
+                    {filing.status === "approved" && filing.reviewedAt
+                      ? t("sent.verifiedOn")
+                      : t("sent.sentOn")}
+                  </dt>
+                  <dd>
+                    {date(
+                      filing.status === "approved" && filing.reviewedAt
+                        ? filing.reviewedAt
+                        : filing.submittedAt
+                    )}
+                  </dd>
+                </div>
+              </dl>
+            </div>
           ) : null}
         </section>
 
@@ -144,7 +145,12 @@ export default async function TeamVerificationPage({
           <div className="space-y-1">
             <h2
               id="verification-form"
-              className="text-lg font-medium text-foreground"
+              // The standing above already says it when nothing was sent.
+              className={
+                standing === "not-sent"
+                  ? "sr-only"
+                  : "text-lg font-medium text-foreground"
+              }
             >
               {formFirst
                 ? t("form.heading")
@@ -161,9 +167,22 @@ export default async function TeamVerificationPage({
           <VerificationForm
             // A new filing state resets what the form shows.
             key={`${filing?.id ?? "none"}:${filing?.status ?? "none"}:${filing?.submittedAt.getTime() ?? 0}`}
-            legalName={formFirst || waiting ? (filing?.legalName ?? "") : ""}
-            taxId={formFirst || waiting ? (filing?.taxId ?? "") : ""}
-            resend={filing !== null}
+            sent={
+              filing
+                ? { legalName: filing.legalName, taxId: filing.taxId }
+                : null
+            }
+            prefill={prefill}
+            intent={
+              standing === "not-sent"
+                ? "first"
+                : standing === "verified"
+                  ? "new"
+                  : "correction"
+            }
+            // The main action only when sending details is the next step.
+            primary={formFirst}
+            focusAfterSendId={STANDING_TITLE_ID}
           />
         </section>
       </div>

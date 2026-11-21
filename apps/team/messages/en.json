@@ -90,7 +90,7 @@
   },
   "verification": {
     "title": "Verification",
-    "description": "Eleva checks your clinic's legal name and tax number in the public register, so people can trust who is behind the clinic.",
+    "description": "Eleva checks your clinic's legal name and tax number in the public register, so people know who is behind the clinic.",
     "standing": {
       "not-sent": {
         "pill": "Not sent yet",
@@ -138,7 +138,10 @@
       "legalName": "Legal name",
       "taxId": "NIF or VAT number",
       "sentOn": "Sent on",
-      "verifiedOn": "Verified on"
+      "verifiedOn": "Verified on",
+      "caption": "What you sent",
+      "captionNew": "The new details you sent",
+      "captionVerified": "The details we checked"
     },
     "form": {
       "heading": "Your clinic's legal details",
@@ -148,19 +151,22 @@
       "changedHelp": "Send the new details. Your clinic stays verified while we check them.",
       "legalName": "Legal name",
       "taxId": "NIF or VAT number",
-      "taxIdHelp": "As it appears on your invoices, for example PT515001708.",
+      "taxIdHelp": "As it appears on your invoices, for example PT123456789.",
       "send": "Send for checking",
-      "sendAgain": "Send again",
       "sending": "Sending…",
       "use": "We use these details to check your clinic's legal identity.",
       "sent": "Details sent. We are checking them.",
       "errors": {
         "legal-name": "Enter your clinic's legal name.",
-        "invalid-tax-id": "Enter a valid NIF or VAT number: 8 to 32 letters and digits, for example PT515001708.",
+        "invalid-tax-id": "Enter a valid NIF or VAT number: 8 to 32 letters and digits.",
         "validation": "Check both fields and try again.",
-        "changed": "Your details were updated while you were sending. Reload the page and try again.",
-        "failed": "We could not send your details. Please try again."
-      }
+        "changed": "Something changed while you were sending: we may have just finished the check, or someone else in your clinic sent details. Reload the page to see where things stand.",
+        "failed": "We could not send your details. Please try again.",
+        "unchanged": "These are the details we already have. Change a detail to send it."
+      },
+      "sendCorrection": "Send the correction",
+      "sendNew": "Send new details",
+      "unchanged": "Change a detail to send it."
     }
   }
 }
