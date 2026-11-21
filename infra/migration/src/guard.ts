@@ -20,10 +20,13 @@ import type { MigrationMode, MigrationTargetKind } from "./args"
 export type MigrationGuardErrorCode =
   | "TARGET_URL_MISSING"
   | "TARGET_URL_INVALID"
+  | "URL_PARAMETER_NOT_ALLOWED"
   | "TARGET_NOT_NEON"
   | "SOURCE_URL_MISSING"
   | "SOURCE_IS_TARGET"
+  | "SOURCE_IN_TARGET_PROJECT"
   | "NEON_PROJECT_MISSING"
+  | "NEON_LOOKUP_FAILED"
   | "ENDPOINT_NOT_IN_PROJECT"
   | "ENDPOINT_NOT_WRITABLE"
   | "BRANCH_UNKNOWN"
@@ -31,6 +34,7 @@ export type MigrationGuardErrorCode =
   | "HOST_NOT_ALLOWED"
   | "NOT_DEFAULT_BRANCH"
   | "PRODUCTION_NOT_CONFIRMED"
+  | "PRODUCTION_NOT_INTERACTIVE"
   | "PROJECT_ID_NOT_TYPED"
 
 export class MigrationGuardError extends Error {
@@ -73,6 +77,8 @@ export interface MigrationGuardDeps {
   resolveEndpoint: (host: string) => Promise<NeonEndpointInfo | null>
   /** Asks the operator a question on the terminal. */
   prompt: (question: string) => Promise<string>
+  /** A person is at the terminal (stdin is a TTY), not a pipe or a CI job. */
+  isInteractive: () => boolean
   now: () => Date
 }
 
@@ -83,32 +89,76 @@ export interface ApprovedMigrationTarget {
   projectId: string
   branchId: string
   branchName: string
+  /**
+   * The only connection strings a run may use. They are rebuilt from the
+   * parts the guard checked, so nothing in the original URL (a `host` or
+   * `options` parameter, a second host) can send the driver elsewhere.
+   * They carry credentials: never log them.
+   */
+  targetUrl: string
+  sourceUrl: string
 }
 
-function hostOf(
+/** Parameters a connection URL may carry. Everything else is refused. */
+const ALLOWED_URL_PARAMETERS = new Set(["sslmode", "channel_binding"])
+
+interface CheckedUrl {
+  host: string
+  /** Rebuilt from the checked parts only. */
+  url: string
+}
+
+/**
+ * Reads a Postgres connection URL and rebuilds it from the parts that were
+ * checked. A driver also honours `host`, `hostaddr`, `port` and `options`
+ * given as query parameters, which would move the connection away from the
+ * host in the URL, so any parameter outside the short allowlist is refused.
+ */
+function checkedUrl(
   url: string | undefined,
   missing: MigrationGuardErrorCode,
   name: string
-): string {
+): CheckedUrl {
   if (!url?.trim()) {
     throw new MigrationGuardError(missing, `${name} is not set`)
   }
   let parsed: URL
   try {
-    parsed = new URL(url)
+    parsed = new URL(url.trim())
   } catch {
     throw new MigrationGuardError(
       "TARGET_URL_INVALID",
       `${name} is not a valid connection URL`
     )
   }
-  if (!/^postgres(ql)?:$/.test(parsed.protocol) || !parsed.hostname) {
+  const host = parsed.hostname.toLowerCase()
+  if (
+    !/^postgres(ql)?:$/.test(parsed.protocol) ||
+    !/^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$/.test(host) ||
+    (parsed.port !== "" && parsed.port !== "5432") ||
+    parsed.hash !== ""
+  ) {
     throw new MigrationGuardError(
       "TARGET_URL_INVALID",
-      `${name} is not a Postgres connection URL`
+      `${name} is not a plain Postgres connection URL (one host, default port)`
     )
   }
-  return parsed.hostname.toLowerCase()
+  const parameters = new URLSearchParams()
+  for (const [key, value] of parsed.searchParams) {
+    if (!ALLOWED_URL_PARAMETERS.has(key)) {
+      throw new MigrationGuardError(
+        "URL_PARAMETER_NOT_ALLOWED",
+        `${name} carries the parameter "${key}"; only ${[...ALLOWED_URL_PARAMETERS].join(" and ")} are allowed`
+      )
+    }
+    parameters.set(key, value)
+  }
+  const rebuilt = new URL(`postgresql://${host}`)
+  rebuilt.username = parsed.username
+  rebuilt.password = parsed.password
+  rebuilt.pathname = parsed.pathname
+  rebuilt.search = parameters.toString()
+  return { host, url: rebuilt.toString() }
 }
 
 /** `ep-name-123-pooler.region.aws.neon.tech` and its direct host are one database. */
@@ -138,22 +188,24 @@ export async function assertMigrationTarget(
   deps: MigrationGuardDeps
 ): Promise<ApprovedMigrationTarget> {
   const { env, target, mode } = input
-  const host = hostOf(
+  const checkedTarget = checkedUrl(
     env.TARGET_DATABASE_URL,
     "TARGET_URL_MISSING",
     "TARGET_DATABASE_URL"
   )
+  const host = checkedTarget.host
   if (!host.endsWith(".neon.tech")) {
     throw new MigrationGuardError(
       "TARGET_NOT_NEON",
       `the target host ${host} is not a Neon endpoint`
     )
   }
-  const sourceHost = hostOf(
+  const checkedSource = checkedUrl(
     env.MVP_DATABASE_URL,
     "SOURCE_URL_MISSING",
     "MVP_DATABASE_URL"
   )
+  const sourceHost = checkedSource.host
   if (sameDatabaseHost(sourceHost, host)) {
     throw new MigrationGuardError(
       "SOURCE_IS_TARGET",
@@ -168,7 +220,27 @@ export async function assertMigrationTarget(
     )
   }
 
-  const endpoint = await deps.resolveEndpoint(host)
+  // Neon is asked through one door, so a failed or unreadable answer is a
+  // refusal like any other, never a crash that skips the checks below.
+  const lookup = async (name: string) => {
+    try {
+      return await deps.resolveEndpoint(name)
+    } catch (err) {
+      throw new MigrationGuardError(
+        "NEON_LOOKUP_FAILED",
+        `Neon could not be asked about ${name}: ${err instanceof Error ? err.message : "unknown error"}`
+      )
+    }
+  }
+  // The MVP lives in another project: a "source" inside the v3 production
+  // project is a v3 database given by mistake.
+  if (await lookup(sourceHost)) {
+    throw new MigrationGuardError(
+      "SOURCE_IN_TARGET_PROJECT",
+      `MVP_DATABASE_URL points to an endpoint of Neon project ${projectId}, the v3 project`
+    )
+  }
+  const endpoint = await lookup(host)
   if (!endpoint || endpoint.projectId !== projectId) {
     throw new MigrationGuardError(
       "ENDPOINT_NOT_IN_PROJECT",
@@ -195,6 +267,8 @@ export async function assertMigrationTarget(
     projectId,
     branchId: endpoint.branchId,
     branchName: endpoint.branchName,
+    targetUrl: checkedTarget.url,
+    sourceUrl: checkedSource.url,
   }
 
   if (target === "branch") {
@@ -225,6 +299,12 @@ export async function assertMigrationTarget(
     throw new MigrationGuardError(
       "PRODUCTION_NOT_CONFIRMED",
       `MIGRATION_CONFIRM_PRODUCTION must be today's date in UTC (${today})`
+    )
+  }
+  if (!deps.isInteractive()) {
+    throw new MigrationGuardError(
+      "PRODUCTION_NOT_INTERACTIVE",
+      "--target production needs a person at the terminal to type the Neon project id"
     )
   }
   const typed = await deps.prompt(

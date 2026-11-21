@@ -19,10 +19,18 @@ opened and decides whether a run may touch the database behind
 | `--target production`       | the read-write endpoint of the **default** branch of that project                                                        | `MIGRATION_CONFIRM_PRODUCTION` set to today's date in UTC (`YYYY-MM-DD`), and the operator types the Neon project id when asked |
 
 In both cases the source (`MVP_DATABASE_URL`) and the target must be
-different databases, and the Neon API has to say clearly which branch the
-host belongs to: a host of another project, a read replica, or an answer the
-guard cannot read is refused. A dry run against production asks for the same
-confirmation as a write.
+different databases, the source must not be a database of the v3 project,
+and the Neon API has to say clearly which branch the host belongs to: a
+host of another project, a read replica, or an answer the guard cannot read
+is refused. A dry run against production asks for the same confirmation as
+a write, and a production run needs a person at the terminal.
+
+A connection URL may carry `sslmode` and `channel_binding` and nothing
+else: `host`, `hostaddr`, `port`, `options` and any other parameter are
+refused, because a driver would follow them to a different database than
+the one in the URL. The guard returns `targetUrl` and `sourceUrl`, rebuilt
+from the parts it checked. **A run connects with those two strings and
+never reads the environment again.**
 
 `--dry-run` is the default. `--apply` writes. `--since <ISO-8601 instant>`
 selects a delta run. `--report <path>` chooses where the report goes.
