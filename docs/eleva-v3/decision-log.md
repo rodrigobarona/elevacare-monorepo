@@ -32,6 +32,74 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-21: The migration tools start with the guard (14.1) (active)
+
+- Change (Phase 14, task 1, the part with no data in it): the temporary
+  package `infra/migration` (`@eleva/infra-migration`) exists with the
+  argument parser (`--dry-run` by default, `--apply`, `--target
+branch|production`, `--since`, `--report`) and the target guard
+  (`assertMigrationTarget`), both covered by tests (74 cases). There is no
+  command to run yet: nothing calls the two, no mapper exists, no database
+  is opened and nothing is written.
+- The guard decides before any connection is opened. A rehearsal
+  (`--target branch`, the default) needs a read-write endpoint of the v3
+  production Neon project on a branch that is not the default one, listed
+  in `MIGRATION_ALLOWED_TARGET_HOSTS`. The cutover (`--target production`)
+  needs the default branch, `MIGRATION_CONFIRM_PRODUCTION` equal to today's
+  date in UTC, and a person at the terminal typing the Neon project id.
+  Source and target must be different databases, and the source is never a
+  database of the v3 project. A host of another project, a read replica or
+  an unclear answer from the Neon API is refused. A pooled host and its
+  direct host are matched as one endpoint, so a pooled v3 host given as
+  the source is refused even when Neon lists only the direct host.
+- A connection URL may carry `sslmode` (`require` or `verify-full`) and
+  `channel_binding` (`require` or `prefer`) only, each once: a value that
+  turns encryption off is refused, a URL that says nothing about TLS gets
+  `sslmode=require`, and a password that starts with `endpoint=` or
+  `project=`, which Neon reads as the endpoint to connect to, is refused.
+  A
+  driver also follows `host`, `hostaddr`, `port` and `options` given as
+  parameters, which would send it to a different database than the one
+  that was checked, so every other parameter is refused. The guard returns
+  the two connection strings rebuilt from what it checked, and a run
+  connects with those and nothing else.
+- Each refusal says what to do next, and none prints a URL parameter or a
+  host it could not validate (an unencoded character in a password would
+  put part of it there). The README lists every refusal code.
+- For the first tool that connects: one `connect(approved)` that alone
+  imports the driver, a lint rule against reading `*DATABASE_URL` from the
+  environment anywhere else in the package, the Neon project id pinned in
+  code, and who may run a rehearsal and when its branch and dump are
+  deleted (a rehearsal branch is a full copy of production personal data;
+  for the DPO).
+- Stricter than the phase file in one place: a dry run against production
+  asks for the same confirmation as a write, because it reads production
+  data.
+- Carried here from the 13.1 review: `check:route-guards` now reads a
+  route's exports and policy from the file as written (it read them from
+  text with comments cut out by a pattern, so a `"image/*"` string could
+  hide a method), names the real internal checks instead of accepting any
+  function with "workflow" or "secret" in its name, and wants the auth
+  call in the route file or a sibling handler, not anywhere in a shared
+  helper it imports. Probed with four throwaway routes. It still has no
+  test file of its own, and what counts as request validation is still a
+  list of exclusions.
+- `pnpm check:no-migration-imports` (CI, lint job) fails when a file or a
+  `package.json` under `apps/**` or `packages/**` depends on the package,
+  so removing it after cutover cannot break the product.
+- The Neon response fields the reader uses (`endpoints[].host`, `hosts.*`,
+  `project_id`, `branch_id`, `type`; `branch.default`, `branch.primary`)
+  were checked against Neon's API reference on 2026-11-21, not against a
+  live call: the first rehearsal is the live check.
+- Not in this slice (the rest of Phase 14): the `migration` schema tables,
+  the mappers and the consent mapping, checksums, verify and report, the
+  welcome campaign, the redirect map, reverse export and the three
+  rehearsals. The identity export and the vault read need the previous
+  provider to be live; the rehearsals need a dump of the MVP production
+  database; the consent mapping needs the DPO and the grandfathering table
+  needs finance.
+- Owner: engineering
+
 ### 2026-11-21: Two CI guards from Phase 13: BotID coverage and real copy (13.1) (active)
 
 - Change (Phase 13, tasks 2 and 6, the parts that need no staging run):

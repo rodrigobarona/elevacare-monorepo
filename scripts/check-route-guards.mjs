@@ -44,7 +44,9 @@ const AUTH_CALLS = {
     /\b(?:require[A-Z]\w*|resolveApiAuth|getSession|verifyApiKey)\(|\bauth\.api\./,
   signature:
     /\b\w*(?:[Vv]erify|constructEvent|[Ss]ignature)\w*\(|\bhandle\w*Webhook\(/,
-  internal: /\b\w*(?:[Ii]nternal|[Ww]orkflow|[Cc]ron|[Ss]ecret)\w*\(/,
+  // By name: a job that merely has "workflow" in its name is not a check.
+  internal:
+    /\b(?:authorizeInternalWorkflow|runInternalWorkflow|requireCronSecret|isAuthorizedWorkflowCall)\(/,
 }
 
 // Routes whose request validation is owned by a vendor handler.
@@ -102,7 +104,7 @@ function resolveLocal(from, specifier) {
   )
 }
 
-async function localImports(file) {
+async function localImports(file, relativeOnly = false) {
   const sf = ts.createSourceFile(
     file,
     await sourceOf(file),
@@ -115,20 +117,22 @@ async function localImports(file) {
       ts.isImportDeclaration(node) &&
       ts.isStringLiteral(node.moduleSpecifier)
     ) {
-      const target = resolveLocal(file, node.moduleSpecifier.text)
+      const specifier = node.moduleSpecifier.text
+      if (relativeOnly && !specifier.startsWith(".")) return
+      const target = resolveLocal(file, specifier)
       if (target) resolved.push(target)
     }
   })
   return resolved
 }
 
-async function reachable(file, hops = 2) {
+async function reachable(file, hops = 2, relativeOnly = false) {
   const seen = new Set([file])
   let frontier = [file]
   for (let hop = 0; hop < hops; hop++) {
     const next = []
     for (const current of frontier) {
-      for (const dep of await localImports(current)) {
+      for (const dep of await localImports(current, relativeOnly)) {
         if (!seen.has(dep)) {
           seen.add(dep)
           next.push(dep)
@@ -153,8 +157,8 @@ const GUARD_DEFINITIONS = [
   "lib/idempotency.ts",
   "lib/openapi.ts",
 ]
-async function reachesCall(file, matches) {
-  for (const candidate of await reachable(file)) {
+async function reachesCall(file, matches, relativeOnly = false) {
+  for (const candidate of await reachable(file, 2, relativeOnly)) {
     if (GUARD_DEFINITIONS.some((def) => candidate.endsWith(def))) continue
     if (matches(await codeOf(candidate))) return true
   }
@@ -174,13 +178,17 @@ for (const file of routes) {
     )
     continue
   }
-  const policy = extractPolicy(content)
+  // The syntax tree is read from the file as written. Text with comments
+  // cut out by a pattern is only for finding call sites: a "/*" inside a
+  // string (an "image/*" accept list) would cut real code out of it.
+  const raw = await sourceOf(file)
+  const policy = extractPolicy(raw)
   if (!isValidPolicy(policy)) {
     missing.push(relative)
     continue
   }
   // Read from the syntax tree, so every way of exporting a method counts.
-  const { methods, opaque } = exportedMethods(content)
+  const { methods, opaque } = exportedMethods(raw)
   if (opaque) {
     unenforced.push(
       `${relative}: "export *" hides which methods the route exports. Export each method by name.`
@@ -200,11 +208,14 @@ for (const file of routes) {
   ) {
     unenforced.push(`${relative}: botId:true but no checkBot() call`)
   }
-  // The declared auth model is held to a call that enforces it.
+  // The declared auth model is held to a call that enforces it, in the
+  // route file or a sibling handler it delegates to. A shared helper under
+  // lib/ never counts: importing `teamErrorResponse` from a module that
+  // also defines `requireTeamCaller` is not a check.
   const enforcesAuth = AUTH_CALLS[policy.auth]
   if (
     enforcesAuth &&
-    !(await reachesCall(file, (src) => enforcesAuth.test(src)))
+    !(await reachesCall(file, (src) => enforcesAuth.test(src), true))
   ) {
     unenforced.push(
       `${relative}: auth:"${policy.auth}" but no call that enforces it`
