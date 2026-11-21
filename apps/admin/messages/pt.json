@@ -73,7 +73,7 @@
         "self": "Não pode rever o seu próprio pedido.",
         "forbidden": "Não tem acesso a esta revisão.",
         "failed": "Não foi possível concluir. Tente novamente.",
-        "step-up": "Iniciou sessão há mais de 12 horas. Copie o motivo, termine a sessão e inicie-a de novo para decidir."
+        "step-up": "Iniciou sessão há mais de 12 horas. Termine a sessão e inicie-a de novo para decidir. Se escreveu um motivo, copie-o primeiro: esta página não o guarda."
       }
     }
   },
@@ -134,7 +134,7 @@
         "self": "Não pode rever uma clínica de que faz parte. Peça a outra pessoa da equipa.",
         "forbidden": "Não tem acesso a esta revisão.",
         "failed": "Não foi possível concluir. Tente novamente.",
-        "step-up": "Iniciou sessão há mais de 12 horas. Copie o motivo, termine a sessão e inicie-a de novo para decidir."
+        "step-up": "Iniciou sessão há mais de 12 horas. Termine a sessão e inicie-a de novo para decidir. Se escreveu um motivo, copie-o primeiro: esta página não o guarda."
       },
       "notes": {
         "approved": "Este envio está aprovado: a clínica está verificada. A Eleva avisa por email quem é titular ou administra a clínica.",

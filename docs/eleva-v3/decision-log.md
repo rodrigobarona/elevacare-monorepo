@@ -52,13 +52,16 @@ Each entry should include:
 - Proof: the route test (a 13-hour-old session and a session with no
   readable start refused; a 3-hour-old one and an API key accepted). The
   licence page was not opened in a browser after this change.
-- The message says what to do: "You signed in more than 12 hours ago.
-  Copy your reason, sign out and sign in again, then decide." The same
-  line replaces the clinic one. There is no link to sign in again, and a
+- The message in the console says what to do: "You signed in more than 12
+  hours ago. Sign out and sign in again, then decide. Copy your reason
+  first if you wrote one: this page will not keep it." The same line
+  replaces the clinic one. There is no link to sign in again, and a
   refused decision is logged with the staff member's id.
-- Judges, first round: security 8.3, engineering 8.4, UX and writing 7.3
-  (the message did not say what to do). The copy was rewritten; not
-  scored again.
+- Judges: security 8.3, engineering 8.4; UX and writing 7.3 at first (the
+  message did not say what to do), 8.2 after the copy was rewritten. The
+  last wording, which also fits an approval, came from that second round.
+  Also guarded for staff since: updating an API key and setting a
+  password for an account.
 - Owner: engineering
 
 ### 2026-11-21: Staff opening a licence review is on record (12.3) (active)
@@ -103,7 +106,7 @@ Each entry should include:
   by name; the sign-in check from 12.1 for licence decisions (built in 12.4).
 - Owner: engineering
 
-### 2026-11-21: Judges panel on the night's slices (11.3 to 11.6, 12.1 to 12.3, 13.1, 14.1) (active)
+### 2026-11-21: Judges panel on the night's slices (11.3 to 11.6, 12.1 to 12.4, 13.1, 14.1) (active)
 
 - What ran: reviewer agents holding the seats of the panel (UI, UX and
   writing, GDPR, legal, compliance and accessibility, security by design,
@@ -115,17 +118,18 @@ Each entry should include:
 - Last score each seat gave, by slice (a dash where a seat does not
   apply):
 
-  | Slice                   | UI  | UX, writing | GDPR | Legal | Compliance, a11y | Security | Engineering |
-  | ----------------------- | --- | ----------- | ---- | ----- | ---------------- | -------- | ----------- |
-  | 11.2/11.3 people, seats | 8.3 | 8.1         | 8.3  | 8.1   | 8.4              | 8.5      | 8.5         |
-  | 11.4 Verification page  | 8.3 | 8.2         | 8.3  | 8.6   | 8.1              | 8.5      | 8.6         |
-  | 11.5 decision notice    | 8.1 | 8.4         | 8.4  | 8.2   | 8.3              | 8.5      | 8.4         |
-  | 11.6 Overview card      | 8.3 | 8.1         | -    | -     | 8.1              | -        | -           |
-  | 12.1 staff verification | 8.3 | 8.3         | 8.0  | 8.0   | 8.1              | 8.6      | 8.6         |
-  | 12.2 read audit         | -   | -           | 8.2  | -     | 8.3              | 8.4      | 8.2         |
-  | 12.3 licence read audit | -   | -           | 8.1  | -     | 8.3              | 8.3      | 8.0         |
-  | 13.1 CI guards          | -   | -           | 8.3  | -     | 8.3              | 8.2      | 8.4         |
-  | 14.1 migration guard    | -   | 8.1         | 8.3  | -     | 8.3              | 8.6      | 8.5         |
+  | Slice                       | UI  | UX, writing | GDPR | Legal | Compliance, a11y | Security | Engineering |
+  | --------------------------- | --- | ----------- | ---- | ----- | ---------------- | -------- | ----------- |
+  | 11.2/11.3 people, seats     | 8.3 | 8.1         | 8.3  | 8.1   | 8.4              | 8.5      | 8.5         |
+  | 11.4 Verification page      | 8.3 | 8.2         | 8.3  | 8.6   | 8.1              | 8.5      | 8.6         |
+  | 11.5 decision notice        | 8.1 | 8.4         | 8.4  | 8.2   | 8.3              | 8.5      | 8.4         |
+  | 11.6 Overview card          | 8.3 | 8.1         | -    | -     | 8.1              | -        | -           |
+  | 12.1 staff verification     | 8.3 | 8.3         | 8.0  | 8.0   | 8.1              | 8.6      | 8.6         |
+  | 12.2 read audit             | -   | -           | 8.2  | -     | 8.3              | 8.4      | 8.2         |
+  | 12.3 licence read audit     | -   | -           | 8.1  | -     | 8.3              | 8.3      | 8.0         |
+  | 12.4 licence decision check | -   | 8.2         | -    | -     | -                | 8.3      | 8.4         |
+  | 13.1 CI guards              | -   | -           | 8.3  | -     | 8.3              | 8.2      | 8.4         |
+  | 14.1 migration guard        | -   | 8.1         | 8.3  | -     | 8.3              | 8.6      | 8.5         |
 
 - How to read it: first-round scores were between 6.6 and 8.6. Seats
   under 8.0 were fixed and scored again, up to five rounds for one seat.
