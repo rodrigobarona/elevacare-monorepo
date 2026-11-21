@@ -157,6 +157,7 @@ import {
   InviteTeamMemberRequestSchema,
   InviteTeamMemberResponseSchema,
   RemoveTeamMemberResponseSchema,
+  SeatLimitReachedErrorSchema,
   TeamMemberErrorSchema,
   TeamMembersResponseSchema,
   TeamSummarySchema,
@@ -1666,10 +1667,14 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "409": {
               description:
-                "CONNECT_INCOMPLETE — a paid service (base price or any active mode price above zero) needs Payments onboarding ready (details submitted, payouts enabled, transfers active, and Identity verified when required). Free services publish without it.",
+                "CONNECT_INCOMPLETE — a paid service (base price or any active mode price above zero) needs Payments onboarding ready (details submitted, payouts enabled, transfers active, and Identity verified when required). Free services publish without it. SEAT_LIMIT_REACHED — in a clinic, a member's first published service takes a seat and the plan has none left (Starter 5, Growth 20; cap and plan are in the body). Publishing another service for a member who already has one never takes a seat.",
               content: {
                 "application/json": {
-                  schema: z.union([ErrorSchema, ConnectIncompleteErrorSchema]),
+                  schema: z.union([
+                    ErrorSchema,
+                    ConnectIncompleteErrorSchema,
+                    SeatLimitReachedErrorSchema,
+                  ]),
                 },
               },
             },

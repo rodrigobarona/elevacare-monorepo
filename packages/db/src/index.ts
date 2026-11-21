@@ -196,7 +196,7 @@ export {
   listMemberOwnedSessionDocuments,
   type MemberOwnedSessionDocument,
 } from "./queries/session-documents"
-export { countBillableSeats } from "./queries/seats"
+export { countBillableSeats, listBillableSeatUserIds } from "./queries/seats"
 export {
   getLatestPartnerApplication,
   getLicenceReview,
