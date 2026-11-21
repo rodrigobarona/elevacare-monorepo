@@ -3,7 +3,7 @@
   "title": "Clinic (team) admin and membership",
   "researcher": "Activation",
   "date": "2026-11-20",
-  "summary": "Invitation acceptance (Phase 11.1c) and the clinic's Team page (Phase 11.2). References show the clinic as a card, one clear question, which email the invite was sent to and a confirmed state with one next step; then one list of people with their role, pending invitations kept apart with Send again and Withdraw, and an invite dialog that says what each role can do and how long the invitation lasts. The Verification page (Phase 11.4) says where the check stands in one sentence, shows the reason when a change is needed, and keeps the form next to it.",
+  "summary": "Invitation acceptance (Phase 11.1c) and the clinic's Team page (Phase 11.2). References show the clinic as a card, one clear question, which email the invite was sent to and a confirmed state with one next step; then one list of people with their role, pending invitations kept apart with Send again and Withdraw, and an invite dialog that says what each role can do and how long the invitation lasts. The Verification page (Phase 11.4) says where the check stands in one sentence, shows the reason when a change is needed, and keeps the form next to it. References 14 to 24 (2026-11-21) prepare the slices still to build: choosing a plan priced per seat, the Billing page with seats in use, the moment a clinic reaches its seat limit, a list of every session across the clinic's experts, a schedule with experts side by side, and a sensitive setting that is confirmed and shows who turned it on.",
   "references": [
     {
       "id": "11-team/01",
@@ -160,6 +160,138 @@
       "why": "'Complete approval to take payments' sits at the top of the dashboard as a small card: an icon, one sentence that says what it unlocks and one button. It is there only while the step is open.",
       "apply": "On the clinic's Overview, show one card only when verification needs the clinic: what stands, one sentence, one button to Verification. Nothing when Eleva is checking or the clinic is verified.",
       "query": "business banking dashboard home with an action required notice to finish business verification"
+    },
+    {
+      "id": "11-team/14",
+      "file": "img/14-sketch-choose-plan-per-editor.jpg",
+      "app": "Sketch",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/70354ca1-3fbb-4c0c-8b89-d387aaed5e14?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Two plans as two cards priced per seat, with a seat stepper and a running bill summary on the same screen",
+      "why": "'Choose a Plan' shows Standard and Business as two cards, each with its price 'Monthly / per Editor', under a yearly or monthly choice. Beside them an 'Add Editors' stepper and a 'Bill Summary' give the total per month and the date of the first charge, with one button: 'Continue to Billing Details'. A two-step line on top says where she is.",
+      "apply": "Show the clinic's two plans as two cards, each with its price and how many expert seats it includes (Starter 5, Growth 20), and a summary of the first charge before she continues to payment. Do not copy the seat stepper: at Eleva nobody types a number of seats; a seat is taken when an expert in the clinic publishes a first service.",
+      "query": "workspace plans page comparing two paid plans with price per member"
+    },
+    {
+      "id": "11-team/15",
+      "file": "img/15-attio-upgrade-change-summary.jpg",
+      "app": "Attio",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/76c3d525-7357-4001-b655-5af05b1c1dee?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Change summary before paying: plan, billing period and seats on the left, what is due today and at renewal on the right",
+      "why": "'Upgrade to Pro' is one dialog: the billing period with the price per user per month, a seats stepper, and on the right '3 seat x Pro', subtotal, tax, 'Total at renewal' and 'Adjustment due today'. A note says the card is not charged until the trial ends. One button: 'Confirm and upgrade'.",
+      "apply": "Before the clinic subscribes or changes plan, show one summary: the plan, the seats in use today times the price, tax, what is charged today and what renews on which date, then one button that names the action. The seat count shown is read from the clinic's experts with a published service, never typed in.",
+      "query": "choose a team plan screen with plans priced per seat"
+    },
+    {
+      "id": "11-team/16",
+      "file": "img/16-attio-billing-plan-seats-usage.jpg",
+      "app": "Attio",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/6e18b2b4-c628-4f51-bf6c-c7833c7af2e9?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Billing page that leads with the plan, then seats used out of seats included as numbers with a bar",
+      "why": "'Billing' opens with the plan name, 'Monthly', '$69.00 per seat/month' and when the billing period starts, with 'Explore Plans' under it. A Usage block reads 'Seats: 2 used / 2 included' above a bar. Billing email, company name and payment method follow. A quiet strip on top says how many trial days are left.",
+      "apply": "Lead the clinic's Billing page with the plan and the price per seat, then 'Seats: 4 in use of 5 included' in words and numbers, with the bar only as a helper. Billing details and payment method come after.",
+      "query": "workspace billing settings page with current plan, seats used and invoices"
+    },
+    {
+      "id": "11-team/17",
+      "file": "img/17-runway-plan-seats-invoices.jpg",
+      "app": "Runway",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/a749b4ff-94af-4f2b-8c9d-b0d77b59324b?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Billing as labelled rows, each with its own action: subscription, seats, then invoices",
+      "why": "'Workspace plan details' is a list of rows. Subscription reads 'Standard. Renews on March 2nd, 2026.' with Manage billing, Cancel plan and Update plan beside it. Workspace members reads '1 seat in use' with a line on what to do at the seat limit and a Manage button. An Invoices table follows with date, status, amount and a link to each invoice.",
+      "apply": "One row per fact with its action beside it: plan and renewal date with 'Change plan' and 'Manage billing'; seats in use with a link to the Team page; past invoices as a table with date, status in words, amount and a download. Keep one primary button on the page, not one per row.",
+      "query": "workspace billing settings page with current plan, seats used and invoices"
+    },
+    {
+      "id": "11-team/18",
+      "file": "img/18-navattic-member-limit-upgrade.jpg",
+      "app": "Navattic",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/aec544a8-1ada-4fda-afc0-6b7f68dd6780?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "At the seat limit, the invite dialog says the limit and offers the upgrade in place",
+      "why": "Pressing invite at the limit opens 'Invite member to SL Mobbin' with one sentence: 'You have reached the maximum number of members for your workspace (1). Upgrade your workspace to add more members.' Two buttons: Cancel and Upgrade.",
+      "apply": "Use the wording, not the place. At Eleva inviting is never stopped by seats: the limit is met when an expert publishes a first service. So this prompt belongs in the expert's \"no seat left\" message and on the Team page's seat line: say how many seats the plan has and that all are in use, then what the larger plan gives (how many seats, at what price per seat), with 'See plans' and 'Not now'. Navattic names the limit but not what upgrading gives; Eleva says both.",
+      "query": "upgrade prompt when a team reaches its seat limit"
+    },
+    {
+      "id": "11-team/19",
+      "file": "img/19-fresha-appointments-list.jpg",
+      "app": "Fresha",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/a1f76a62-568f-4b2d-9c9f-6a610dd3ebf7?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "All appointments in one table: date range and filters on top, team member as a column, status in words",
+      "why": "'Appointments' has one line on what the page is for, then a search field, a date range, a Filters button and a sort. Each row shows the reference, service, who created it, scheduled date, duration, team member, price and a status that reads 'Booked' or 'Cancelled'. Export sits top right.",
+      "apply": "The clinic's Sessions list: one row per session with date and time, member, service, clinician and status in words. A date range and a clinician filter stay visible above the table, with an export for the clinic's own records.",
+      "query": "appointments list for a clinic filtered by staff member and date"
+    },
+    {
+      "id": "11-team/20",
+      "file": "img/20-wix-booking-list-filters.jpg",
+      "app": "Wix",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/3d24fd4c-4f1e-44b1-b86d-11a734f43b17?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Filter panel that names each filter, counts the ones in use and ends with Clear and Apply",
+      "why": "'Booking List' opens a side panel of filters: session date and time, booking status, payment status, service name, staff member, client name and location. A group in use shows a count, the footer says '2 filters selected' with Clear and Apply, and the Filter button carries a badge.",
+      "apply": "Keep clinician and date as the two filters that are always visible and put the rest (status, service, online or in person) in a panel like this. Always show how many filters are on and one way to clear them all.",
+      "query": "appointments list for a clinic filtered by staff member and date"
+    },
+    {
+      "id": "11-team/21",
+      "file": "img/21-fresha-calendar-team-columns.jpg",
+      "app": "Fresha",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/a531e5be-cb29-4688-bfec-eb8db07008f4?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Day calendar with one column per practitioner, portrait and name on top",
+      "why": "The day view gives each team member a column headed by a portrait and a name. Hours outside working time are shaded, a red line marks the current time, and a booking block shows time, client and service. The controls on top are Today, the date with arrows, 'Scheduled team' and a Day switch.",
+      "apply": "The clinic schedule's day view: one column per clinician who works that day, non-working hours shaded, each session block with its time, member and service. Offer 'Working today' and 'All clinicians' as the first filter.",
+      "query": "team calendar day view with staff members in side by side columns"
+    },
+    {
+      "id": "11-team/22",
+      "file": "img/22-workable-work-calendar-people-rows.jpg",
+      "app": "Workable",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/6b113f7c-1532-49f1-9822-2988a3e9c16d?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Week view with people as rows and days as columns, for when columns per person no longer fit",
+      "why": "'Work calendar' lists employees down the left with their role and the days across the top, with today marked. Each cell holds a labelled block ('09:00 AM - 05:00 PM, Remote', 'Paid time off - 1 day'). One line under the title sums up the day ('No employees out of office today'); filters and a Week or Month switch sit above the grid.",
+      "apply": "For the week, switch to one row per clinician and one column per day, each cell showing her hours and number of sessions. Every block carries a text label, never colour alone, and the page opens with one line that sums up today.",
+      "query": "team calendar day view with staff members in side by side columns"
+    },
+    {
+      "id": "11-team/23",
+      "file": "img/23-productboard-allow-support-access.jpg",
+      "app": "Productboard",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/e88a63ef-415d-4cb5-945e-778aaf5ac404?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A sensitive access setting that says what it grants, asks for an explicit tick and a duration, then has one button",
+      "why": "'Allow access to your space for remote support' says in two sentences who gets access and why, and that it can be removed at any time. A tick box states what the admin agrees to, a Duration field is set to 30 days, and the button reads 'Allow access'.",
+      "apply": "Letting a clinic's clinicians read each other's session records is its own block, not a bare switch: say who will be able to read what, ask for a written reason and an explicit tick, and name the button after the action. No Mobbin result asked for a written reason; Eleva adds that field.",
+      "query": "grant support access to the workspace setting with an expiry"
+    },
+    {
+      "id": "11-team/24",
+      "file": "img/24-height-integration-added-by.jpg",
+      "app": "Height",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/25de2e30-f93f-473e-9f0a-149f89a2f08b?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Who turned it on and when, in one line under the setting's name",
+      "why": "The Figma integration's Connection tab shows 'Added by Sam Lee on Dec 2, 2024' right under the name, with 'Remove for everyone' beside it. An 'Action required' box says what is missing and has one button.",
+      "apply": "Once shared records is on, show 'Turned on by {name} on {date}' under the setting with the reason she gave, and 'Turn off' beside it. Link to the clinic's activity log for the full history.",
+      "query": "integrations settings with a connection that expired and needs to be reconnected"
     }
   ],
   "judging_criteria": [
@@ -174,6 +306,12 @@
     "On the Verification page, can a clinic admin tell in one sentence where the check stands and whether anything is needed from them? (Airwallex 11-team/10, Mercury 11-team/12)",
     "When Eleva asks for a change or cannot verify, does the page show the reason in Eleva's own words and put the form to send new details right below it, filled with what was sent? (Stripe 11-team/11)",
     "Does the form ask only for the legal name and the tax number, say what Eleva does with them, and refuse a malformed number with a sentence that says what a valid one looks like?",
-    "When verification needs the clinic, does the Overview say so in one card with one action, and stay quiet when it does not? (Square 11-team/13)"
+    "When verification needs the clinic, does the Overview say so in one card with one action, and stay quiet when it does not? (Square 11-team/13)",
+    "Can a clinic admin compare the two plans side by side, each with its price and the number of expert seats it includes, and see the seats in use today, the total and the first charge date before she pays, without typing a number of seats? (Sketch 11-team/14, Attio 11-team/15)",
+    "Does the Billing page show the plan, seats in use out of seats included in words and numbers, the next invoice date and amount, past invoices and one clear way to change the plan? (Attio 11-team/16, Runway 11-team/17)",
+    "When an expert cannot publish because the clinic is at its seat limit, do the expert's message and the Team page say what the limit is, that it is reached and what the larger plan gives, with one way to continue, and is inviting still possible? (Navattic 11-team/18)",
+    "Can a clinic admin see every clinician's sessions in one list and narrow it by clinician and by date, with the filters in use always visible and each status in words? (Fresha 11-team/19, Wix 11-team/20)",
+    "Does the schedule show several clinicians side by side for a day and as rows for a week, with non-working time marked and every block labelled in text? (Fresha 11-team/21, Workable 11-team/22)",
+    "Before shared session records are turned on, does the clinic admin read who will see what, give a written reason and confirm explicitly, and does the setting then show who turned it on and when? (Productboard 11-team/23, Height 11-team/24)"
   ]
 }

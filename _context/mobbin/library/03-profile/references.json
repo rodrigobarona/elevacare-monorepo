@@ -3,7 +3,7 @@
   "title": "Expert public profile (/{username})",
   "researcher": "Marketplace and profile",
   "date": "2026-11-14",
-  "summary": "The profile's booking mechanics are sound: real next times, a sticky card on desktop, a sticky bar on phones, a cancellation line on every service. What is weak is the person. With no photo, no profession line and a short bio, the page is a monogram, a name and grey small print, and the one fact Eleva has checked (the professional registration) reads like a legal footnote. The change that matters most is to turn that checked registration into a visible proof block beside the name and to give every profile a structured \"about\" (profession, focus, approach, training, what a first session looks like) that still looks complete when an expert is new.",
+  "summary": "The profile's booking mechanics are sound: real next times, a sticky card on desktop, a sticky bar on phones, a cancellation line on every service. What is weak is the person. With no photo, no profession line and a short bio, the page is a monogram, a name and grey small print, and the one fact Eleva has checked (the professional registration) reads like a legal footnote. The change that matters most is to turn that checked registration into a visible proof block beside the name and to give every profile a structured \"about\" (profession, focus, approach, training, what a first session looks like) that still looks complete when an expert is new. References 25 and 26 (2026-11-21) prepare the clinic's public page: the team shown as people, and choosing a professional or the first one free.",
   "strengths": [
     "Next open times are on the profile itself, grouped by day, with the member's timezone named. On desktop the booking card stays in view while she reads (01-profile-paid.desktop.jpg).",
     "Phones already have a sticky bar with the starting price and \"See times\" (01-profile-paid.mobile.jpg, 02-profile-free.mobile.jpg). Keep it and make it do more.",
@@ -487,6 +487,30 @@
       "why": "The card holds the choice and the action; it does not repeat the price or credentials shown elsewhere.",
       "apply": "Booking card footer keeps only what helps the decision now ('No account needed', the cancellation line); drop the repeated '60 min · €60 total' and 'Registration checked' lines.",
       "query": "professional profile page with list of bookable services and a sticky booking card"
+    },
+    {
+      "id": "03-profile/25",
+      "file": "img/25-fresha-venue-team-section.jpg",
+      "app": "Fresha",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/a51b0aa9-519a-497c-ab95-65d0b6478fd2?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Business page with a Team section: each person as a portrait, name and role, beside one sticky booking card",
+      "why": "A salon's page has anchors for Photos, Services, Team, Reviews and About. 'Team' shows each professional as a round portrait with a first name and a role. A card on the right keeps the business name, rating, 'Book now', opening hours and address in view.",
+      "apply": "A clinic's public page lists its clinicians under 'Our team': photo, name, profession and a link to each person's own profile, with the clinic's name, address and one booking button in a sticky card.",
+      "query": "Fresha salon venue page with team section"
+    },
+    {
+      "id": "03-profile/26",
+      "file": "img/26-fresha-select-professional.jpg",
+      "app": "Fresha",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/d0b3a99b-2e01-4f12-b796-cda8596736c7?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Booking step 'Select professional': any professional first, then each person as a card",
+      "why": "After the service, a step called 'Select professional' offers 'Any professional, for maximum availability' as the first card, then one card per person with name and role. The breadcrumb reads Services, Professional, Time, Confirm, and the summary on the right keeps the business, the service and the total.",
+      "apply": "When a member books from a clinic's page, ask who she wants to see as its own step: 'First available' first, then each clinician with photo, profession and next free time. Keep the clinic and the service in the summary beside it.",
+      "query": "salon or clinic public booking page listing team members to book"
     }
   ],
   "judging_criteria": [
@@ -497,6 +521,7 @@
     "Does the profile have fixed, labelled sections for approach and training, in the same place on every profile? (03-profile/03, 03-profile/11)",
     "Does a new expert's page (no reviews, short bio) still look complete and ordered? (03-profile/12, 03-profile/06)",
     "When an expert cannot be booked, does the booking block explain why and offer a next step? (03-profile/02)",
-    "Is the page calm: one primary booking action, service cards led by their title with a quiet duration and mode line, trust shown once with how it is checked one tap away? (03-profile/22, 03-profile/23, 03-profile/24)"
+    "Is the page calm: one primary booking action, service cards led by their title with a quiet duration and mode line, trust shown once with how it is checked one tap away? (03-profile/22, 03-profile/23, 03-profile/24)",
+    "On a clinic's public page, is every clinician listed with photo, name and profession, and can a member book either the first available clinician or one she names? (03-profile/25, 03-profile/26)"
   ]
 }

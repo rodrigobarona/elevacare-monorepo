@@ -3,7 +3,7 @@
   "title": "Trust, legal and governance (cross-cutting)",
   "researcher": "Trust, legal and governance",
   "date": "2026-11-14",
-  "summary": "The legal substance is unusually complete for a pre-launch product: consents are separate and unticked, every policy is dated, the controller is named, and export and deletion are in the product. The design does not yet let a member feel that. Trust facts sit in grey fine print, in documents and in FAQ accordions, while the moments that carry the most weight (the health-data consent, the pay step, the privacy controls) are the least explained. The one change that matters most: explain each trust moment in one plain sentence at the place where it is asked, starting with the health-data consent and the cancellation deadline next to the Pay button.",
+  "summary": "The legal substance is unusually complete for a pre-launch product: consents are separate and unticked, every policy is dated, the controller is named, and export and deletion are in the product. The design does not yet let a member feel that. Trust facts sit in grey fine print, in documents and in FAQ accordions, while the moments that carry the most weight (the health-data consent, the pay step, the privacy controls) are the least explained. The one change that matters most: explain each trust moment in one plain sentence at the place where it is asked, starting with the health-data consent and the cancellation deadline next to the Pay button. References 13 and 14 (2026-11-21) prepare planned maintenance: a notice in advance with the exact window, and a status page that answers in one line.",
   "strengths": [
     "Checkout consents are four separate, unticked checkboxes, and the AI and transcription choice is marked Optional and left off (04-booking-checkout/05-paid-step-details). Keep the separation; improve the explanation.",
     "The details step turns the cancellation policy into dated facts for this booking: \"Full refund if you cancel before 15 Nov 2026, 10:00\" (04-booking-checkout/06-paid-details-filled). This is the best trust line in the funnel.",
@@ -386,6 +386,30 @@
       "why": "Beside the logo the footer gives the registered office, the line \"Authorised and regulated by…\", and regulator and certification marks. The bottom bar carries the registration and VAT numbers. Policies are a short column of three: Complaints, Privacy Policy, Terms. A law firm, kept for the identity block of a regulated service.",
       "apply": "Add an identity line to Eleva's footer (legal name, NIPC, registered address, regulator registration where it applies), shorten the legal column, and give the complaints book a clear place.",
       "query": "footer with company legal details"
+    },
+    {
+      "id": "09-trust/13",
+      "file": "img/13-betterstack-status-page.jpg",
+      "app": "Better Stack",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/0d34fbf2-e4c4-451c-ad5d-de3cdf409164?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Status page that answers in one headline, then each service with its state and 30-day history",
+      "why": "The page opens with a tick and one headline (here in German: all services are available), the time of the last update and a box for a current notice. Each service follows with its state in words, an uptime figure and a 30-day bar. The top bar links Status, Maintenance and Previous incidents, and a language menu sits in the footer.",
+      "apply": "Eleva's status page: one sentence on top, when it was last checked, then booking, video sessions, payments and email each with a state in words. Planned maintenance and past incidents are one click away, in EN, PT and ES.",
+      "query": "public status page showing system components and uptime"
+    },
+    {
+      "id": "09-trust/14",
+      "file": "img/14-pandadoc-maintenance-banner.jpg",
+      "app": "PandaDoc",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/2e939f4e-7376-4e6f-8ddc-312e2b4696c3?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Maintenance announced ahead in a bar: why, the exact window with its time zone, and what will not work",
+      "why": "A slim bar across the top reads: 'To make PandaDoc faster, we are upgrading our system on Apr 21, 01:00 AM - 05:00 AM PST. During this maintenance window, the PandaDoc application will not be available.' It ends with 'More details' and a close button.",
+      "apply": "Before planned maintenance, show a bar with the date and window in the reader's own time zone and what will not work, and link to the status page. The 'back soon' page repeats the same window and says how to reach Eleva; no Mobbin result showed a full maintenance page.",
+      "query": "scheduled maintenance page saying the service will be back soon"
     }
   ],
   "judging_criteria": [
@@ -395,6 +419,7 @@
     "Does the expert profile show the professional body and registration number as a checked fact next to the name or the booking CTA, with a one-tap explanation of what Eleva checks? (09-trust/05)",
     "Does the trust centre state at least five specific facts on the page itself before listing any document, and say who runs Eleva? (09-trust/06, 09-trust/12)",
     "Can a member see the current state and date of every consent, change each optional one with a single switch, and follow an export or deletion request through a dated status, with a delete confirmation that names what is erased and what is kept? (09-trust/08, 09-trust/09, 09-trust/10)",
-    "Can a reader of any policy page get a short summary, jump between sections on a phone, start a data request from the rights section, and report a concern about an expert in two steps with a reference number? (09-trust/07, 09-trust/11)"
+    "Can a reader of any policy page get a short summary, jump between sections on a phone, start a data request from the rights section, and report a concern about an expert in two steps with a reference number? (09-trust/07, 09-trust/11)",
+    "Before and during planned maintenance, does Eleva say when it starts and ends in the reader's time zone and what will not work, and does the status page answer whether Eleva is working in one sentence? (09-trust/13, 09-trust/14)"
   ]
 }

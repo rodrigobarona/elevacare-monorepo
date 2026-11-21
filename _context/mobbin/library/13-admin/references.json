@@ -1,9 +1,9 @@
 {
   "surface": "13-admin",
-  "title": "Staff console: verification queues",
+  "title": "Staff console: queues, people, approvals and logs",
   "researcher": "Trust and operations",
   "date": "2026-11-21",
-  "summary": "The clinic verification queue (Phase 12). References show the details to check grouped under plain labels, a short checklist where each item has its own state, and a status said in words on every row. The screens follow the licence review already shipped, so staff learn one pattern.",
+  "summary": "The clinic verification queue (Phase 12). References show the details to check grouped under plain labels, a short checklist where each item has its own state, and a status said in words on every row. The screens follow the licence review already shipped, so staff learn one pattern. References 04 and 06 to 16 (2026-11-21) prepare the rest of the console: finding a person and signing them out everywhere, the bar shown while acting as someone else, notes only staff see, a request that waits for a second person, a log of who did what, and failed deliveries that can be sent again.",
   "references": [
     {
       "id": "13-admin/01",
@@ -40,12 +40,162 @@
       "why": "'Verify details' lists each request with its state in words (Verifying, Verified, Requires action), so it is clear which ones wait on the reader.",
       "apply": "Queue states say who acts next: 'To check' (staff) and 'Waiting on the clinic'; decided filings read 'Verified' or 'Rejected'.",
       "query": "back office review page to approve or reject a business verification request with checklist and reason"
+    },
+    {
+      "id": "13-admin/04",
+      "file": "img/04-1password-people-status-words.jpg",
+      "app": "1Password",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/6d23f6e5-bc91-4aba-9a06-bf2d0b06e35f?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "People list with the account state in words on every row",
+      "why": "'People' is a table of name, email and status. The status reads 'Active', 'Suspended' or 'Waiting to be confirmed' in words, with a 'Guest' tag where it applies. A search by name or email and a status filter sit above the table.",
+      "apply": "The staff Users list: name, email, role and state in words (Active, Suspended, Email not confirmed), with a search by name or email and a state filter. Colour only supports the word.",
+      "query": "users table in an admin dashboard with account status and a ban or suspend action"
+    },
+    {
+      "id": "13-admin/06",
+      "file": "img/06-homerun-log-out-everywhere.jpg",
+      "app": "Homerun",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/93769fc7-b019-48c6-b8b2-e0d65578c3d6?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Sessions table with one button above it to sign out everywhere else",
+      "why": "'Active sessions' lists device, location, IP, started on and last used, with a menu on each row and one red button above the table: 'Log out everywhere else'.",
+      "apply": "Put 'Sign out everywhere' above the user's sessions table. Confirm it with the number of sessions it will end and ask for a reason, since staff do this on someone else's account.",
+      "query": "admin console user detail page with active sessions and suspend user action"
+    },
+    {
+      "id": "13-admin/07",
+      "file": "img/07-clerk-user-impersonate-ban.jpg",
+      "app": "Clerk",
+      "platform": "web",
+      "type": "flow",
+      "mobbin_url": "https://mobbin.com/flows/7c36a134-e217-4857-9f32-9e4172a8d1d0?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "User detail with a short action list beside the identity: impersonate, change password, ban, delete",
+      "why": "A user's page puts the avatar, email, last sign-in and user id on the left with four actions under them: Impersonate user, Change password, then Ban user and Delete user in red. Verified email and phone sit in cards on the right.",
+      "apply": "Keep account actions in one short list beside the user's identity, everyday ones first and Suspend set apart. 'View as this person' opens a dialog that asks for a reason before it starts; Clerk starts without one, Eleva asks.",
+      "query": "admin logging in as a user to view their account"
+    },
+    {
+      "id": "13-admin/08",
+      "file": "img/08-base44-acting-as-banner-exit.jpg",
+      "app": "Base44",
+      "platform": "web",
+      "type": "flow",
+      "mobbin_url": "https://mobbin.com/flows/d2f16499-dc9c-4898-921d-53e633fb826c?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A full-width bar while acting as someone: who you are acting as, and the way out on the same bar",
+      "why": "After 'Act as a user' is chosen from a menu, a blue bar spans the top of the view: 'You're acting as' with the person's email in a selector, and 'Exit mode' with a close icon on the right. The view below is framed in the same colour for as long as the mode is on.",
+      "apply": "While staff view Eleva as a member or an expert, keep a bar on every page: 'Viewing as {name}' and 'Stop viewing'. Say it in words and frame the page, so it never rests on colour alone, and show the time left when the session is limited.",
+      "query": "admin logging in as a user to view their account"
+    },
+    {
+      "id": "13-admin/09",
+      "file": "img/09-shopify-staff-only-comments.jpg",
+      "app": "Shopify",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/0923dee6-44f2-4b31-8fa2-ef202f0548ae?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Staff-only comments in the customer's timeline, with the audience stated under the box",
+      "why": "The customer page has a Timeline with a comment box on top and one line under it: 'Only you and other staff can see comments'. Staff comments and system events ('You sent a store credit issued email to this customer') share one dated list.",
+      "apply": "Internal notes sit in the user's activity timeline with the line 'Only Eleva staff can see notes' under the box. Each note shows who wrote it and when; the member or expert never sees them.",
+      "query": "customer profile with internal notes visible only to the team"
+    },
+    {
+      "id": "13-admin/10",
+      "file": "img/10-zendesk-internal-note.jpg",
+      "app": "Zendesk",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/5daa59c5-5b92-47f2-9b8a-3fa2433d41b8?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Internal note composer that is labelled and looks different from a reply",
+      "why": "On a contact's page the composer is labelled 'Internal note' on a tinted background, with the placeholder 'Add a note about this contact'. The activity list below can be narrowed by type and by person.",
+      "apply": "Label the composer 'Internal note' and tint it, so staff never mistake it for a message to the person. Let staff narrow the timeline to notes only.",
+      "query": "customer profile with internal notes visible only to the team"
+    },
+    {
+      "id": "13-admin/11",
+      "file": "img/11-airwallex-request-pending-approval.jpg",
+      "app": "Airwallex",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/eb0a451e-ecc1-474b-97fd-57dabeb9c8f2?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Approval panel: what is asked, by whom and when, a comment, then Reject and Approve",
+      "why": "A spend request opens in a side panel: the title with the tag 'Pending your approval', 'Submitted by Sam Lee on 2025-11-27', the amount, who it is for and the category, then a comment box and attachments, with Reject and Approve at the bottom right. The list behind it has 'Pending your approval' and 'All requests in approval'.",
+      "apply": "An action that needs two people opens the same way for the second person: what will happen, who asked, when and why, then 'Approve' and 'Reject', and a rejection needs a reason. The person who asked cannot approve her own request.",
+      "query": "payment waiting for approval from a second team member with approve and reject buttons"
+    },
+    {
+      "id": "13-admin/12",
+      "file": "img/12-acctual-bills-approve-count.jpg",
+      "app": "Acctual",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/4b992650-0ce5-4fc7-9efb-8407b7ac70ac?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "The waiting state as a count: '0/1 Approved' on the row, in an Approve tab with its own number",
+      "why": "'Bills' has tabs for Draft, Approve, Ready for payment and Paid, each with a count. Rows under Approve show '0/1 Approved' as their status, with approve and reject icons at the end of the row.",
+      "apply": "Give requests that wait for a second person their own tab with a count, and say on each row who asked and how many approvals it has and needs ('Waiting for 1 approval'). Use buttons with words where Acctual uses a bare tick and cross.",
+      "query": "payment waiting for approval from a second team member with approve and reject buttons"
+    },
+    {
+      "id": "13-admin/13",
+      "file": "img/13-front-audit-log-filters.jpg",
+      "app": "Front",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/0c2efddc-d2d9-4a17-b589-34523d08e1d8?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Audit log with one filter per question: when, who, what was changed, which event",
+      "why": "'Audit log' shows 'Last updated just now' with Refresh, then filters for Date range, Updated by, Updated resources, Event and Belongs to, and an Export button. Each row has the date and time, the person, the resource and the event. A note beside the table says what the log is for.",
+      "apply": "Eleva's audit viewer: filters for date, staff member, record and action above the table; rows with time, who, what and on which record; an export. One line on top says what is recorded.",
+      "query": "audit log page with filters by actor, action and date"
+    },
+    {
+      "id": "13-admin/14",
+      "file": "img/14-customerio-audit-log-sentences.jpg",
+      "app": "Customer.io",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/5e4f44d9-4c65-4381-8681-d2921df2591e?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Each log line is a sentence, and it opens in place to show the detail",
+      "why": "Rows read as sentences ('Sam Lee added sender identity \"Sam Lee\"') with the timestamp and time zone at the right. A row opens in place to a 'Log entry' with its fields. The filters above are date range, team member, IP address and event type, with Export CSV top right.",
+      "apply": "Write each audit row as a sentence (who did what to which record) with the exact time and time zone. Open a row to show the reason given and what changed; never show a member's health details there.",
+      "query": "audit log page with filters by actor, action and date"
+    },
+    {
+      "id": "13-admin/15",
+      "file": "img/15-resend-webhook-events-replay.jpg",
+      "app": "Resend",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/e5079320-66e3-4ae3-86e3-336a72fd9a6c?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Webhook page: events on the left with a status in words, the chosen event on the right with Replay",
+      "why": "The endpoint's page says what it listens for, its status and when it was created. 'Events' lists each delivery with its type, age and 'Success'. The selected one shows its id, timestamp, HTTP status code, number of attempts, response body and payload, with a 'Replay' button.",
+      "apply": "Staff see webhook events as a list with provider, type, time and state in words. One event opens beside the list with its attempts, the last error and 'Run again'. Mask personal data in the payload.",
+      "query": "webhook delivery attempts list with failed events and a resend button"
+    },
+    {
+      "id": "13-admin/16",
+      "file": "img/16-customerio-failed-deliveries-retry.jpg",
+      "app": "Customer.io",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/c2bc5440-c6ca-4dd4-bfd2-ec70a26039c5?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Failed deliveries can be ticked and retried together",
+      "why": "'Deliveries' filters by channel, status and date range. Each row has the time, the message, the recipient and a 'Failed' tag. Ticking rows shows '4 selected', '4 failed emails selected' and a 'Retry selected' button. 'Last updated today at...' and an auto refresh switch sit above the list.",
+      "apply": "Let staff narrow the list to failed events, tick several and press 'Run again' once. Say how many are selected and when the list was last refreshed, and report the result for each event.",
+      "query": "webhook delivery attempts list with failed events and a resend button"
     }
   ],
   "judging_criteria": [
     "In the queue, can staff see which filings wait on them and which wait on the clinic, oldest first, with the clinic and its legal name on the row? (Revolut Business 13-admin/03)",
     "On a filing, is everything staff must compare (legal name, NIF, billing address, website, owner) on one screen, with the public register one click from the value it checks? (Stripe 13-admin/01)",
     "Is approving impossible until both checks are confirmed, and are sending back and rejecting impossible without a reason the clinic can read? (Klaviyo 13-admin/02)",
-    "After a decision, does the page say what happened and what happens next, and does a refusal (already decided, new details, your own clinic) say what to do?"
+    "After a decision, does the page say what happened and what happens next, and does a refusal (already decided, new details, your own clinic) say what to do?",
+    "On a user's page, can staff see the account state in words and every active session, and sign out one device or all of them, or suspend the account, each with a confirmation that says what will happen? (1Password 13-admin/04, Homerun 13-admin/06)",
+    "Does 'View as' ask for a reason before it starts, and does a bar that names the person and offers 'Stop viewing' stay on every page while it lasts? (Clerk 13-admin/07, Base44 13-admin/08)",
+    "Is it clear at the composer that a note is for Eleva staff only, does each note show who wrote it and when, and is the note absent from everything the member, the expert or the clinic can open (their activity, exports and emails)? (Shopify 13-admin/09, Zendesk 13-admin/10)",
+    "For an action that needs two people, can the second person see what is asked, by whom, when and why, and approve or reject it, while the first sees that it is waiting and for how many approvals, and is the person who asked unable to approve their own request? (Airwallex 13-admin/11, Acctual 13-admin/12)",
+    "Can staff answer who did what, to which record and when from the audit log, by filtering on person, action, record and date, with each row readable as a sentence? (Front 13-admin/13, Customer.io 13-admin/14)",
+    "Can staff find the webhook events that failed, see why each one failed and how many times it was tried, run one or several again, and then see the result of each one, not only that a retry was asked? (Resend 13-admin/15, Customer.io 13-admin/16)"
   ]
 }
