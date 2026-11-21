@@ -86,8 +86,10 @@ Use this document to answer:
   review (`partner_application.opened`, with the review's state, never the
   numbers or the email). The queue, which lists experts by name and
   professional body, is not recorded per row. **For the DPO to decide:**
-  how long `partner_application.opened` rows are kept (nothing deletes
-  them today), and whether an expert may learn who at Eleva opened their
+  whether `partner_application.opened` rows follow the retention
+  schedule's periods for the audit stream (10 years in `audit_events`, 90
+  days for shipped outbox rows; `legal/retention-schedule.md`) or a
+  shorter one, and whether an expert may learn who at Eleva opened their
   review: the audit stream's row-level rule lets an organization read its
   own rows, staff user id included, and no screen shows them yet
 
@@ -118,8 +120,10 @@ Use this document to answer:
   staff opening a filing is audited too (`clinic_verification.opened`,
   with the state the filing was in, never its details). The queue, which lists
   clinics by name and legal name (personal data for a sole trader), is not
-  recorded per row. **For the DPO to decide:** how long
-  `clinic_verification.opened` rows are kept; nothing deletes them today
+  recorded per row. **For the DPO to decide:** whether
+  `clinic_verification.opened` rows follow the retention schedule's
+  periods for the audit stream (10 years in `audit_events`, 90 days for
+  shipped outbox rows) or a shorter one
 - Transparency: **proposed privacy-notice line, for the DPO to word and
   publish:** "Clinics: we check the legal name, tax number and billing
   address of the clinic, and the name and email of the person who manages

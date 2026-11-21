@@ -64,16 +64,16 @@ Each entry should include:
   shows them yet); the access log is not yet named in the record of
   processing (`legal/ropa.md`, activity C2, "Evidence kept"). The
   retention matrix now has a section for licence applications.
-- Judges, first round: GDPR 7.7, compliance 7.9, security 8.3,
-  engineering 8.0. The must-fix items were applied (the retention
-  section, this hand-off, tests that assert who is on the record); not
-  scored again.
+- Judges: first round GDPR 7.7, compliance 7.9, security 8.3,
+  engineering 8.0. After the must-fix items (the retention section, this
+  hand-off, tests that assert who is on the record), second round GDPR
+  8.1 and compliance 8.3.
 - Not in this slice: the two staff queues, which list people and clinics
   by name; the sign-in check from 12.1 for licence decisions; a database
   test for this read.
 - Owner: engineering
 
-### 2026-11-21: Judges panel on the night's slices (11.3 to 11.6, 12.1, 12.2, 13.1, 14.1) (active)
+### 2026-11-21: Judges panel on the night's slices (11.3 to 11.6, 12.1 to 12.3, 13.1, 14.1) (active)
 
 - What ran: reviewer agents holding the seats of the panel (UI, UX and
   writing, GDPR, legal, compliance and accessibility, security by design,
@@ -93,6 +93,7 @@ Each entry should include:
   | 11.6 Overview card      | 8.3 | 8.1         | -    | -     | 8.1              | -        | -           |
   | 12.1 staff verification | 8.3 | 8.3         | 8.0  | 8.0   | 8.1              | 8.6      | 8.6         |
   | 12.2 read audit         | -   | -           | 8.2  | -     | 8.3              | 8.4      | 8.2         |
+  | 12.3 licence read audit | -   | -           | 8.1  | -     | 8.3              | 8.3      | 8.0         |
   | 13.1 CI guards          | -   | -           | 8.3  | -     | 8.3              | 8.2      | 8.4         |
   | 14.1 migration guard    | -   | 8.1         | 8.3  | -     | 8.3              | 8.6      | 8.5         |
 
