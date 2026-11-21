@@ -1,7 +1,8 @@
 {
   "nav": {
     "overview": "Resumen",
-    "team": "Equipo"
+    "team": "Equipo",
+    "verification": "Verificación"
   },
   "dashboard": {
     "title": "Tu clínica",
@@ -87,6 +88,81 @@
       "removed": "{name} ya no forma parte de tu equipo.",
       "memberGone": "Esta persona ya no forma parte de tu equipo.",
       "failed": "Algo ha salido mal. Inténtalo de nuevo."
+    }
+  },
+  "verification": {
+    "title": "Verificación",
+    "description": "Eleva comprueba la razón social y el NIF de tu clínica en el registro público, para que las personas sepan quién está detrás de la clínica.",
+    "standing": {
+      "not-sent": {
+        "pill": "Sin enviar",
+        "title": "Envía los datos legales de tu clínica",
+        "body": "Los comprobamos en el registro mercantil público. Lo haces una vez, y de nuevo solo si cambian."
+      },
+      "checking": {
+        "pill": "En comprobación",
+        "title": "Estamos comprobando tus datos",
+        "body": "No tienes que hacer nada. Esta página mostrará el resultado en cuanto termine la comprobación."
+      },
+      "change-needed": {
+        "pill": "Necesita un cambio",
+        "title": "Necesitamos un cambio antes de verificar tu clínica",
+        "body": "Lee abajo lo que hemos encontrado, corrige los datos y envíalos de nuevo."
+      },
+      "verified": {
+        "pill": "Verificada",
+        "title": "Tu clínica está verificada",
+        "body": "Hemos encontrado la razón social y el NIF de tu clínica en el registro público."
+      },
+      "verified-checking": {
+        "pill": "Verificada",
+        "title": "Tu clínica está verificada y estamos comprobando los nuevos datos",
+        "body": "La clínica sigue verificada con los datos que comprobamos antes. No tienes que hacer nada."
+      },
+      "verified-change-needed": {
+        "pill": "Verificada",
+        "title": "Tu clínica está verificada y los nuevos datos necesitan un cambio",
+        "body": "La clínica sigue verificada con los datos que comprobamos antes. Lee abajo lo que hemos encontrado y envía de nuevo los nuevos datos."
+      },
+      "verified-new-rejected": {
+        "pill": "Verificada",
+        "title": "Tu clínica está verificada, pero no hemos podido comprobar los nuevos datos",
+        "body": "La clínica sigue verificada con los datos que comprobamos antes. Lee abajo lo que hemos encontrado."
+      },
+      "not-verified": {
+        "pill": "Sin verificar",
+        "title": "No hemos podido verificar tu clínica con estos datos",
+        "body": "Lee abajo lo que hemos encontrado. Puedes corregir los datos y enviarlos de nuevo."
+      }
+    },
+    "reasonTitle": "Lo que hemos encontrado",
+    "sent": {
+      "legalName": "Razón social",
+      "taxId": "NIF o número de IVA",
+      "sentOn": "Enviado el",
+      "verifiedOn": "Verificada el"
+    },
+    "form": {
+      "heading": "Los datos legales de tu clínica",
+      "headingCorrect": "¿Has visto un error?",
+      "correctHelp": "Puedes corregir lo que enviaste mientras lo comprobamos.",
+      "headingChanged": "¿Ha cambiado la razón social o el NIF?",
+      "changedHelp": "Envía los nuevos datos. La clínica sigue verificada mientras los comprobamos.",
+      "legalName": "Razón social",
+      "taxId": "NIF o número de IVA",
+      "taxIdHelp": "Como aparece en tus facturas, por ejemplo PT515001708.",
+      "send": "Enviar para comprobar",
+      "sendAgain": "Enviar de nuevo",
+      "sending": "Enviando…",
+      "use": "Usamos estos datos para comprobar la identidad legal de tu clínica.",
+      "sent": "Datos enviados. Los estamos comprobando.",
+      "errors": {
+        "legal-name": "Introduce la razón social de tu clínica.",
+        "invalid-tax-id": "Introduce un NIF o número de IVA válido: de 8 a 32 letras y cifras, por ejemplo PT515001708.",
+        "validation": "Revisa los dos campos e inténtalo de nuevo.",
+        "changed": "Tus datos se actualizaron mientras enviabas. Recarga la página e inténtalo de nuevo.",
+        "failed": "No hemos podido enviar tus datos. Inténtalo de nuevo."
+      }
     }
   }
 }
