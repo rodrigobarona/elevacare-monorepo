@@ -22,6 +22,12 @@ interface LayoutProps {
   locale?: EmailLocale
   children: ReactNode
   jsonLd?: Record<string, unknown>
+  /**
+   * The closing "you have an account" line. False for an email that can
+   * reach someone without an Eleva account (an invitation): the email body
+   * says why they received it.
+   */
+  accountFooter?: boolean
 }
 
 export function EmailLayout({
@@ -29,6 +35,7 @@ export function EmailLayout({
   locale = "en",
   children,
   jsonLd,
+  accountFooter = true,
 }: LayoutProps) {
   const t = getEmailTranslations(locale)
 
@@ -71,9 +78,11 @@ export function EmailLayout({
                 <Text className="text-fg-3 m-0 text-[12px] leading-[18px]">
                   {t.layout.location}
                 </Text>
-                <Text className="text-fg-3 m-0 mt-[8px] text-[12px] leading-[18px]">
-                  {t.layout.footer}
-                </Text>
+                {accountFooter ? (
+                  <Text className="text-fg-3 m-0 mt-[8px] text-[12px] leading-[18px]">
+                    {t.layout.footer}
+                  </Text>
+                ) : null}
               </Section>
             </Section>
           </Container>

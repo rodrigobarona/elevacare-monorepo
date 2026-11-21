@@ -163,15 +163,21 @@ async function defaultSend(
   })
 }
 
-const HANDED_OVER = new Set(["sent", "queued", "delivered"])
+const HANDED_OVER = new Set(["sent", "delivered"])
+
+/** A send that did not reach the provider on a machine outside production. */
+type LocalOutcome = "skipped" | "failed"
 
 /**
- * Whether an email left for the mail provider. No result means the send
- * was skipped on a machine without a mail key (local development), which
- * callers treat as sent.
+ * Whether an email left for the mail provider. A send skipped on a machine
+ * without a mail key (local development) counts as sent; a send that threw
+ * does not.
  */
-function emailHandedOver(result: SendNotificationResult | void): boolean {
-  if (!result) return true
+function emailHandedOver(
+  result: SendNotificationResult | LocalOutcome | void
+): boolean {
+  if (result === "failed") return false
+  if (!result || result === "skipped") return true
   return result.deliveries.some(
     (delivery) =>
       delivery.channel === "email" && HANDED_OVER.has(delivery.status)
@@ -186,13 +192,13 @@ export function createAuthMailer(
 
   async function deliver(
     input: Parameters<AuthMailerSend>[0]
-  ): Promise<SendNotificationResult | void> {
+  ): Promise<SendNotificationResult | LocalOutcome | void> {
     if (!process.env.RESEND_API_KEY) {
       if (isDeployedRuntime()) {
         throw new Error("RESEND_API_KEY is required in production and preview")
       }
       console.info(`[notifications] skip ${input.kind} (no RESEND_API_KEY)`)
-      return
+      return "skipped"
     }
     try {
       return await send(input)
@@ -201,6 +207,7 @@ export function createAuthMailer(
       if (isDeployedRuntime()) {
         throw new Error("AUTH_MAIL_SEND_FAILED")
       }
+      return "failed"
     }
   }
 

@@ -181,7 +181,7 @@ export function TeamRoster({
             id="team-people"
             ref={peopleHeading}
             tabIndex={-1}
-            className="text-lg font-medium text-foreground outline-none"
+            className="rounded-sm text-lg font-medium text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           >
             {t("peopleHeading", { count: members.length })}
           </h2>
@@ -277,7 +277,7 @@ export function TeamRoster({
             id="team-invited"
             ref={invitedHeading}
             tabIndex={-1}
-            className="text-lg font-medium text-foreground outline-none"
+            className="rounded-sm text-lg font-medium text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           >
             {t("invitedHeading", { count: invitations.length })}
           </h2>
@@ -399,16 +399,21 @@ export function TeamRoster({
                     name: removing?.name ?? "",
                     count: removeError.upcomingSessions ?? 1,
                   })
-                : t(`remove.error.${removeError.error}`)}
+                : removeError.error === "pending-bookings"
+                  ? t("remove.error.pending-bookings", {
+                      name: removing?.name ?? "",
+                    })
+                  : t(`remove.error.${removeError.error}`)}
             </AlertDescription>
           </Alert>
         ) : null}
         <AlertDialogFooter>
-          <AlertDialogCancel isDisabled={pending}>
+          <AlertDialogCancel isDisabled={pending} className="max-sm:h-10">
             {t("remove.cancel")}
           </AlertDialogCancel>
           <Button
             variant="destructive"
+            className="max-sm:h-10"
             isDisabled={pending || removeError?.error === "upcoming-sessions"}
             onPress={confirmRemove}
             data-testid="team-member-remove-confirm"
@@ -569,6 +574,7 @@ function InviteDialog({
           <Button
             type="button"
             variant="outline"
+            className="max-sm:h-10"
             onPress={close}
             isDisabled={pending}
           >
@@ -576,6 +582,7 @@ function InviteDialog({
           </Button>
           <Button
             type="submit"
+            className="max-sm:h-10"
             isDisabled={pending}
             data-testid="team-invite-send"
           >

@@ -109,6 +109,7 @@ export async function withdrawInvitation(
 
 export type RemoveError =
   | "upcoming-sessions"
+  | "pending-bookings"
   | "owner"
   | "self"
   | "owner-required"
@@ -144,11 +145,12 @@ export async function removeMember(memberId: string): Promise<RemoveResult> {
       }
       const known = REMOVE_ERRORS[refused?.code ?? ""]
       if (!known) throw err
-      return {
-        ok: false,
-        error: known,
-        upcomingSessions: refused?.upcomingSessions,
+      const upcomingSessions = refused?.upcomingSessions ?? 0
+      // Only a slot being paid for is in the way: it clears in minutes.
+      if (known === "upcoming-sessions" && upcomingSessions === 0) {
+        return { ok: false, error: "pending-bookings" }
       }
+      return { ok: false, error: known, upcomingSessions }
     }
     revalidateMembers(session.orgSlug)
     return { ok: true }

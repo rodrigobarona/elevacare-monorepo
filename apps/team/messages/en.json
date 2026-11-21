@@ -53,12 +53,11 @@
       "already-member": "This person is already in your team. You'll find them in the list of people.",
       "limit": "Your team has reached 200 people. Remove someone or withdraw an invitation first.",
       "owner-required": "Only the owner can invite an admin or change an admin's invitation. Ask the owner to do it.",
-      "recently-sent": "This invitation was sent less than a minute ago. Wait a minute, then send it again.",
+      "recently-sent": "You can send this invitation again in a minute.",
       "failed": "We could not send the invitation. Please try again."
     },
     "remove": {
       "open": "Remove",
-      "openLabel": "Remove {name} from the team",
       "title": "Remove {name} from {clinic}?",
       "body": "They lose access to this clinic right away, and their services here can no longer be booked. Their Eleva account stays as it is.",
       "cancel": "Keep in team",
@@ -69,13 +68,14 @@
         "owner": "The owner always stays in the team.",
         "self": "You cannot remove your own account.",
         "owner-required": "Only the owner can remove an admin. Ask the owner to do it.",
-        "failed": "We could not remove this person. Please try again."
+        "failed": "We could not remove this person. Please try again.",
+        "pending-bookings": "Someone is booking a session with {name} right now. Try again in a few minutes."
       }
     },
     "toast": {
       "invited": "Invitation sent to {email}.",
       "resent": "Invitation sent again to {email}.",
-      "emailNotSent": "The invitation for {email} is saved, but the email could not be sent. Use Send again in a moment.",
+      "emailNotSent": "The invitation for {email} is saved, but the email could not be sent. Wait a minute, then use Send again.",
       "withdrawn": "Invitation to {email} withdrawn.",
       "invitationGone": "This invitation was already answered or withdrawn.",
       "removed": "{name} is no longer in your team.",

@@ -372,6 +372,7 @@ describe("/teams/{teamId} members and invitations", () => {
       mocks.removeTeamMember.mockRejectedValue(
         new mocks.TeamMemberError("MEMBER_HAS_UPCOMING_SESSIONS", {
           upcomingSessions: 3,
+          pendingBookings: 1,
         })
       )
       const res = await remove()
@@ -379,6 +380,7 @@ describe("/teams/{teamId} members and invitations", () => {
       await expect(res.json()).resolves.toMatchObject({
         code: "MEMBER_HAS_UPCOMING_SESSIONS",
         upcomingSessions: 3,
+        pendingBookings: 1,
       })
       expect(mocks.enqueueSeatSync).not.toHaveBeenCalled()
     })

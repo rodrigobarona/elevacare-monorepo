@@ -1055,8 +1055,13 @@ export const TeamMemberErrorSchema = z.object({
     "CANNOT_REMOVE_SELF",
     "MEMBER_HAS_UPCOMING_SESSIONS",
   ]),
-  /** MEMBER_HAS_UPCOMING_SESSIONS: sessions booked or being paid for. */
-  upcomingSessions: z.number().int().positive().optional(),
+  /** MEMBER_HAS_UPCOMING_SESSIONS: sessions booked in the clinic. */
+  upcomingSessions: z.number().int().nonnegative().optional(),
+  /**
+   * MEMBER_HAS_UPCOMING_SESSIONS: slots someone is paying for right now.
+   * They become sessions or are released within minutes.
+   */
+  pendingBookings: z.number().int().nonnegative().optional(),
   /** INVITATION_RECENTLY_SENT: seconds until it can be sent again. */
   retryAfterSeconds: z.number().int().positive().optional(),
 })

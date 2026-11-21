@@ -10,8 +10,9 @@ export const TEAM_INVITATION_TTL_MS = 7 * 24 * 60 * 60 * 1000
 export const TEAM_MEMBER_LIMIT = 200
 
 /**
- * One address is emailed at most once a minute, so "send again" cannot be
- * used to flood someone who never asked to hear from the clinic.
+ * A clinic emails one address at most once a minute, whatever happened to
+ * its earlier invitations, so inviting cannot be used to flood someone who
+ * never asked to hear from the clinic.
  */
 export const TEAM_INVITATION_RESEND_COOLDOWN_MS = 60 * 1000
 

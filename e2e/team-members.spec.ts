@@ -15,6 +15,7 @@ import { expertSession } from "./helpers/booking-request-smoke"
 import { sessionFromMagicLink } from "./helpers/cancellation-policy-smoke"
 import {
   isApprovedE2eDatabaseUrl,
+  isLoopbackUrl,
   isNonLoopbackE2eTarget,
 } from "./helpers/local"
 
@@ -63,7 +64,10 @@ async function shot(page: Page, name: string): Promise<void> {
 test.describe("Phase 11.2 — the clinic's Team page", () => {
   test.describe.configure({ mode: "serial" })
   test.skip(!runSmoke, "Set E2E_TEAM_API=1 to run the team smoke")
-  test.skip(isNonLoopbackE2eTarget(), "Team smoke stays on loopback")
+  test.skip(
+    isNonLoopbackE2eTarget() || !isLoopbackUrl(teamUrl),
+    "Team smoke stays on loopback"
+  )
   test.skip(
     !isApprovedE2eDatabaseUrl(),
     "needs E2E_ALLOW_DB_WRITES=1 and approved loopback test DATABASE_URL"
@@ -162,9 +166,7 @@ test.describe("Phase 11.2 — the clinic's Team page", () => {
     const resend = page.getByTestId(`team-invitation-resend-${first!.id}`)
     await resend.click()
     await expect(
-      page.getByText("This invitation was sent less than a minute ago.", {
-        exact: false,
-      })
+      page.getByText("You can send this invitation again in a minute.")
     ).toBeVisible({ timeout: 30_000 })
 
     // Later, sending again renews the same invitation instead of adding one.
@@ -210,17 +212,32 @@ test.describe("Phase 11.2 — the clinic's Team page", () => {
     })
 
     // Better Auth's own endpoints cannot go around the team rules.
-    const bypass = await request.post(
-      `${apiUrl}/auth/organization/invite-member`,
-      {
+    const refusedByTeamRules = async (path: string, data: object) => {
+      const res = await request.post(`${apiUrl}/auth/organization/${path}`, {
         headers: authHeaders(expertCookie),
-        data: { email: MEMBER_EMAIL, role: "admin", organizationId: teamId },
-      }
-    )
-    expect(bypass.status(), await bypass.text()).toBe(403)
-    expect(((await bypass.json()) as { code?: string }).code).toBe(
-      "TEAM_MEMBERS_API_REQUIRED"
-    )
+        data: { ...data, organizationId: teamId },
+      })
+      const body = (await res.json().catch(() => ({}))) as { code?: string }
+      expect(body.code, `${path} answered ${res.status()}`).toBe(
+        "TEAM_MEMBERS_API_REQUIRED"
+      )
+      return res.status()
+    }
+    expect(
+      await refusedByTeamRules("invite-member", {
+        email: MEMBER_EMAIL,
+        role: "admin",
+      })
+    ).toBe(403)
+    // Renewing skips Better Auth's organization hooks: refused up front.
+    expect(
+      await refusedByTeamRules("invite-member", {
+        email: MEMBER_EMAIL,
+        role: "member",
+        resend: true,
+      })
+    ).toBe(400)
+    expect(await pendingInvitations()).toEqual([])
     const leave = await request.post(`${apiUrl}/auth/organization/leave`, {
       headers: authHeaders(expertCookie),
       data: { organizationId: teamId },
@@ -236,6 +253,12 @@ test.describe("Phase 11.2 — the clinic's Team page", () => {
     const secondId = ((await again.json()) as { invitation: { id: string } })
       .invitation.id
     expect(secondId).not.toBe(first!.id)
+    expect(
+      await refusedByTeamRules("cancel-invitation", { invitationId: secondId })
+    ).toBe(403)
+    expect((await pendingInvitations()).map((row) => row.id)).toEqual([
+      secondId,
+    ])
     const memberCookie = await sessionFromMagicLink(request, MEMBER_EMAIL)
     const accepted = await request.post(
       `${apiUrl}/auth/organization/accept-invitation`,
@@ -253,6 +276,21 @@ test.describe("Phase 11.2 — the clinic's Team page", () => {
       WHERE m.organization_id = ${teamId}::uuid AND lower(u.email) = ${MEMBER_EMAIL}
     `) as { id: string; user_id: string }[]
     expect(joined).toBeTruthy()
+    expect(
+      await refusedByTeamRules("remove-member", {
+        memberIdOrEmail: joined!.id,
+      })
+    ).toBe(403)
+    expect(
+      await refusedByTeamRules("update-member-role", {
+        memberId: joined!.id,
+        role: "admin",
+      })
+    ).toBe(403)
+    const [stillMember] = (await sql`
+      SELECT role FROM auth.member WHERE id = ${joined!.id}::uuid
+    `) as { role: string }[]
+    expect(stillMember?.role).toBe("member")
     const [profile] = (await sql`
       INSERT INTO expert_profiles (org_id, user_id, username, display_name, status, practice_countries)
       VALUES (${teamId}::uuid, ${joined!.user_id}::uuid, ${`e2e-${teamId.slice(0, 8)}`}, 'Leonor Almeida', 'active', '{}')

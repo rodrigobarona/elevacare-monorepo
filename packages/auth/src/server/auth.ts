@@ -3,7 +3,7 @@ import { drizzleAdapter } from "@better-auth/drizzle-adapter"
 import { i18n, locales } from "@better-auth/i18n"
 import { passkey } from "@better-auth/passkey"
 import { betterAuth } from "better-auth"
-import { APIError } from "better-auth/api"
+import { APIError, createAuthMiddleware } from "better-auth/api"
 import { nextCookies, toNextJsHandler } from "better-auth/next-js"
 import {
   admin,
@@ -300,6 +300,23 @@ function createAuth() {
     // Leaving has no hook to guard it (a clinician with sessions still to
     // run must not vanish from a clinic); nothing in the product calls it.
     disabledPaths: ["/organization/leave"],
+    hooks: {
+      // Better Auth renews a pending invitation (`resend: true`) before it
+      // calls any organization hook, which would skip the clinic rules and
+      // every audit row. Nothing uses that branch: invite again instead.
+      before: createAuthMiddleware(async (ctx) => {
+        if (
+          ctx.path === "/organization/invite-member" &&
+          (ctx.body as { resend?: unknown } | undefined)?.resend
+        ) {
+          throw new APIError("BAD_REQUEST", {
+            message:
+              "Sending an invitation again is not available here. Clinics use POST /teams/{teamId}/invitations.",
+            code: TEAM_MEMBERS_API_REQUIRED,
+          })
+        }
+      }),
+    },
     plugins: [
       organization({
         ac,

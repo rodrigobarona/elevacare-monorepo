@@ -53,12 +53,11 @@
       "already-member": "Esta persona ya forma parte de tu equipo. La encontrarás en la lista de personas.",
       "limit": "Tu equipo ha llegado a 200 personas. Quita a alguien o retira una invitación primero.",
       "owner-required": "Solo quien es titular puede invitar con el rol Admin o cambiar una invitación para ese rol. Pídeselo a quien es titular.",
-      "recently-sent": "Esta invitación se envió hace menos de un minuto. Espera un minuto y envíala de nuevo.",
+      "recently-sent": "Podrás enviar esta invitación de nuevo dentro de un minuto.",
       "failed": "No hemos podido enviar la invitación. Inténtalo de nuevo."
     },
     "remove": {
       "open": "Quitar",
-      "openLabel": "Quitar a {name} del equipo",
       "title": "¿Quitar a {name} de {clinic}?",
       "body": "Esta persona pierde el acceso a esta clínica de inmediato y sus servicios aquí ya no se pueden reservar. La cuenta de Eleva de esta persona sigue como está.",
       "cancel": "Mantener en el equipo",
@@ -69,13 +68,14 @@
         "owner": "Quien es titular permanece siempre en el equipo.",
         "self": "No puedes quitar tu propia cuenta.",
         "owner-required": "Solo quien es titular puede quitar a quien tiene el rol Admin. Pídeselo a quien es titular.",
-        "failed": "No hemos podido quitar a esta persona. Inténtalo de nuevo."
+        "failed": "No hemos podido quitar a esta persona. Inténtalo de nuevo.",
+        "pending-bookings": "Alguien está reservando una sesión con {name} ahora mismo. Inténtalo de nuevo en unos minutos."
       }
     },
     "toast": {
       "invited": "Invitación enviada a {email}.",
       "resent": "Invitación enviada de nuevo a {email}.",
-      "emailNotSent": "La invitación para {email} está guardada, pero no hemos podido enviar el correo. Usa Enviar de nuevo en un momento.",
+      "emailNotSent": "La invitación para {email} está guardada, pero no hemos podido enviar el correo. Espera un minuto y usa Enviar de nuevo.",
       "withdrawn": "Invitación a {email} retirada.",
       "invitationGone": "Esta invitación ya se había respondido o retirado.",
       "removed": "{name} ya no forma parte de tu equipo.",

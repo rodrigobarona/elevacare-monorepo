@@ -42,7 +42,10 @@ Use this document to answer:
 
 - Data type: the invited email address, the role offered, who invited, when
   it was sent and how it ended (`auth.invitation`); the audit rows carry the
-  invitation id and role, never the address
+  invitation id and role, never the address. For someone with no Eleva
+  account the address is also on the delivery record of each invitation
+  email (`notification_deliveries.recipient_email`), which follows the
+  notification delivery period below (365 days)
 - Sensitivity: personal data of someone who may not have an Eleva account;
   the address is supplied by the clinic
 - Export: yes for the clinic (its pending invitations, `GET /teams/{teamId}/members`);
@@ -50,14 +53,16 @@ Use this document to answer:
 - Deletion: a pending invitation stops working after 7 days. **Proposed, for
   the DPO to confirm:** accepted, declined, withdrawn and expired invitations
   are deleted 90 days after they end. The sweep is Phase 13 work; until it
-  ships these rows stay
+  ships these rows stay. The DPO also decides whether the delivery record
+  of an invitation to a non-account address keeps the 365 days or follows
+  the invitation (the two periods must be stated together)
 - Audit access: yes for sending, withdrawing, accepting and declining
 - Transparency: the invitation email names the clinic and the person who
   invites and says why the email was sent. **Proposed privacy-notice line,
   for the DPO to word and publish:** "If a clinic or an expert invites you
   to join their team, they give us your email address so we can send you
   the invitation. We keep it until you answer or the invitation expires,
-  and for a short period afterwards."
+  and for [period] afterwards, with the record that the email was sent."
 
 ### Booking and session metadata
 

@@ -42,8 +42,10 @@ export class TeamMemberError extends Error {
   constructor(
     readonly code: TeamMemberErrorCode,
     readonly detail: {
-      /** Sessions booked or being paid for that block a removal. */
+      /** Sessions booked that block a removal. */
       upcomingSessions?: number
+      /** Slots someone is paying for right now, which block it briefly. */
+      pendingBookings?: number
       /** Seconds until an invitation can be sent again. */
       retryAfterSeconds?: number
     } = {}
@@ -215,15 +217,75 @@ export interface InviteTeamMemberResult {
   emailSent: boolean
 }
 
-/** One invitation per address at a time: serialise on (org, email). */
-async function lockInvitationSlot(
+/**
+ * One invitation write per clinic at a time. It keeps a single pending
+ * invitation per address and makes the 200-person limit hold when two
+ * admins invite different people at once.
+ */
+async function lockTeamInvitations(tx: Tx, orgId: string): Promise<void> {
+  await tx.execute(
+    sql`select pg_advisory_xact_lock(hashtextextended(${`team-invitations:${orgId}`}, 0))`
+  )
+}
+
+/** Members plus invitations that can still be accepted, against the limit. */
+async function assertTeamHasRoom(
   tx: Tx,
   orgId: string,
-  email: string
+  now: Date
 ): Promise<void> {
-  await tx.execute(
-    sql`select pg_advisory_xact_lock(hashtextextended(${`team-invitation:${orgId}:${email}`}, 0))`
-  )
+  const [memberCount] = await tx
+    .select({ value: sql<number>`count(*)::int` })
+    .from(auth.member)
+    .where(eq(auth.member.organizationId, orgId))
+  const [invitationCount] = await tx
+    .select({ value: sql<number>`count(*)::int` })
+    .from(auth.invitation)
+    .where(
+      and(
+        eq(auth.invitation.organizationId, orgId),
+        eq(auth.invitation.status, "pending"),
+        gt(auth.invitation.expiresAt, now)
+      )
+    )
+  const people =
+    Number(memberCount?.value ?? 0) + Number(invitationCount?.value ?? 0)
+  if (people >= TEAM_MEMBER_LIMIT) {
+    throw new TeamMemberError("MEMBER_LIMIT_REACHED")
+  }
+}
+
+/**
+ * One address is emailed at most once a minute by a clinic, whatever
+ * happened to its earlier invitations (withdrawn, declined, expired). Each
+ * send sets the expiry seven days out, so the last send is the latest
+ * expiry minus seven days. A stored time in the future counts as just sent.
+ */
+async function assertNotJustSent(
+  tx: Tx,
+  orgId: string,
+  email: string,
+  now: Date
+): Promise<void> {
+  const [latest] = await tx
+    .select({ expiresAt: sql<Date | null>`max(${auth.invitation.expiresAt})` })
+    .from(auth.invitation)
+    .where(
+      and(
+        eq(auth.invitation.organizationId, orgId),
+        sql`lower(${auth.invitation.email}) = ${email}`
+      )
+    )
+  if (!latest?.expiresAt) return
+  const lastSent = new Date(latest.expiresAt).getTime() - TEAM_INVITATION_TTL_MS
+  const sinceLastSend = now.getTime() - lastSent
+  if (sinceLastSend < TEAM_INVITATION_RESEND_COOLDOWN_MS) {
+    throw new TeamMemberError("INVITATION_RECENTLY_SENT", {
+      retryAfterSeconds: Math.ceil(
+        (TEAM_INVITATION_RESEND_COOLDOWN_MS - sinceLastSend) / 1000
+      ),
+    })
+  }
 }
 
 /** Who invites and into which clinic, for the invitation email. */
@@ -274,14 +336,16 @@ export async function inviteTeamMember(input: {
   role: TeamInviteRole
   now?: Date
 }): Promise<InviteTeamMemberResult> {
-  const now = input.now ?? new Date()
   const email = input.email.trim().toLowerCase()
-  const expiresAt = new Date(now.getTime() + TEAM_INVITATION_TTL_MS)
 
   const saved = await withAudit(
     { orgId: input.orgId, actorUserId: input.actorUserId },
     async (tx, ctx) => {
-      await lockInvitationSlot(tx, input.orgId, email)
+      await lockTeamInvitations(tx, input.orgId)
+      // Read the clock after the lock: a request that waited its turn must
+      // not judge the cooldown with a time from before the wait.
+      const now = input.now ?? new Date()
+      const expiresAt = new Date(now.getTime() + TEAM_INVITATION_TTL_MS)
       if (
         input.role === "admin" &&
         !(await isOwner(tx, input.orgId, input.actorUserId))
@@ -302,6 +366,7 @@ export async function inviteTeamMember(input: {
         .limit(1)
       if (existingMember) throw new TeamMemberError("ALREADY_MEMBER")
 
+      // Locked, so a withdrawal in flight finishes first and is seen.
       const [pending] = await tx
         .select({
           id: auth.invitation.id,
@@ -317,68 +382,51 @@ export async function inviteTeamMember(input: {
           )
         )
         .limit(1)
+        .for("update")
+      if (
+        pending &&
+        inviteRole(pending.role) === "admin" &&
+        !(await isOwner(tx, input.orgId, input.actorUserId))
+      ) {
+        throw new TeamMemberError("OWNER_REQUIRED")
+      }
+      await assertNotJustSent(tx, input.orgId, email, now)
 
       if (pending) {
-        if (
-          inviteRole(pending.role) === "admin" &&
-          !(await isOwner(tx, input.orgId, input.actorUserId))
-        ) {
-          throw new TeamMemberError("OWNER_REQUIRED")
+        // A lapsed invitation gave its place back: renewing takes one again.
+        if (pending.expiresAt.getTime() <= now.getTime()) {
+          await assertTeamHasRoom(tx, input.orgId, now)
         }
-        // Each send moves the expiry to seven days out, so the last send
-        // is the expiry minus seven days.
-        const sinceLastSend =
-          now.getTime() - (pending.expiresAt.getTime() - TEAM_INVITATION_TTL_MS)
-        if (
-          sinceLastSend >= 0 &&
-          sinceLastSend < TEAM_INVITATION_RESEND_COOLDOWN_MS
-        ) {
-          throw new TeamMemberError("INVITATION_RECENTLY_SENT", {
-            retryAfterSeconds: Math.ceil(
-              (TEAM_INVITATION_RESEND_COOLDOWN_MS - sinceLastSend) / 1000
-            ),
-          })
-        }
-        await tx
+        const [renewed] = await tx
           .update(auth.invitation)
           .set({
             role: input.role,
             expiresAt,
             inviterId: input.actorUserId,
           })
-          .where(eq(auth.invitation.id, pending.id))
+          .where(
+            and(
+              eq(auth.invitation.id, pending.id),
+              eq(auth.invitation.status, "pending")
+            )
+          )
+          .returning({ id: auth.invitation.id })
+        if (!renewed) throw new TeamMemberError("INVITATION_NOT_FOUND")
         await ctx.emit({
           entity: "invitation",
           action: "invited",
-          entityId: pending.id,
+          entityId: renewed.id,
           payload: { role: input.role, resent: true },
         })
         return {
-          invitationId: pending.id,
+          invitationId: renewed.id,
           resent: true,
+          expiresAt,
           ...(await invitationNames(tx, input.orgId, input.actorUserId)),
         }
       }
 
-      const [memberCount] = await tx
-        .select({ value: sql<number>`count(*)::int` })
-        .from(auth.member)
-        .where(eq(auth.member.organizationId, input.orgId))
-      const [invitationCount] = await tx
-        .select({ value: sql<number>`count(*)::int` })
-        .from(auth.invitation)
-        .where(
-          and(
-            eq(auth.invitation.organizationId, input.orgId),
-            eq(auth.invitation.status, "pending"),
-            gt(auth.invitation.expiresAt, now)
-          )
-        )
-      const people =
-        Number(memberCount?.value ?? 0) + Number(invitationCount?.value ?? 0)
-      if (people >= TEAM_MEMBER_LIMIT) {
-        throw new TeamMemberError("MEMBER_LIMIT_REACHED")
-      }
+      await assertTeamHasRoom(tx, input.orgId, now)
 
       const [created] = await tx
         .insert(auth.invitation)
@@ -401,6 +449,7 @@ export async function inviteTeamMember(input: {
       return {
         invitationId: created.id,
         resent: false,
+        expiresAt,
         ...(await invitationNames(tx, input.orgId, input.actorUserId)),
       }
     }
@@ -417,7 +466,7 @@ export async function inviteTeamMember(input: {
       inviterName: saved.inviterName,
       fallbackLocale: saved.inviterLocale,
       // A renewal has a new expiry, so it is delivered as a new email.
-      sendKey: String(expiresAt.getTime()),
+      sendKey: String(saved.expiresAt.getTime()),
     })
   } catch (err) {
     emailSent = false
@@ -431,7 +480,7 @@ export async function inviteTeamMember(input: {
     invitationId: saved.invitationId,
     email,
     role: input.role,
-    expiresAt,
+    expiresAt: saved.expiresAt,
     resent: saved.resent,
     emailSent,
   }
@@ -576,11 +625,12 @@ export async function removeTeamMember(input: {
           })
           .from(auth.member)
           .where(eq(auth.member.id, target.id))
-        const upcoming =
-          Number(scheduled?.bookings ?? 0) + Number(scheduled?.holds ?? 0)
-        if (upcoming > 0) {
+        const upcomingSessions = Number(scheduled?.bookings ?? 0)
+        const pendingBookings = Number(scheduled?.holds ?? 0)
+        if (upcomingSessions + pendingBookings > 0) {
           throw new TeamMemberError("MEMBER_HAS_UPCOMING_SESSIONS", {
-            upcomingSessions: upcoming,
+            upcomingSessions,
+            pendingBookings,
           })
         }
         const unpublished = await tx

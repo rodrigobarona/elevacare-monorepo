@@ -53,12 +53,11 @@
       "already-member": "Esta pessoa já faz parte da sua equipa. Encontra-a na lista de pessoas.",
       "limit": "A sua equipa chegou às 200 pessoas. Remova alguém ou retire um convite primeiro.",
       "owner-required": "Só quem é titular pode convidar para a função Admin ou alterar um convite para essa função. Peça a quem é titular.",
-      "recently-sent": "Este convite foi enviado há menos de um minuto. Aguarde um minuto e envie de novo.",
+      "recently-sent": "Pode enviar este convite de novo dentro de um minuto.",
       "failed": "Não foi possível enviar o convite. Tente de novo."
     },
     "remove": {
       "open": "Remover",
-      "openLabel": "Remover {name} da equipa",
       "title": "Remover {name} de {clinic}?",
       "body": "A pessoa perde de imediato o acesso a esta clínica e os serviços dela aqui deixam de poder ser marcados. A conta Eleva dela mantém-se como está.",
       "cancel": "Manter na equipa",
@@ -69,13 +68,14 @@
         "owner": "Quem é titular fica sempre na equipa.",
         "self": "Não pode remover a sua própria conta.",
         "owner-required": "Só quem é titular pode remover quem tem a função Admin. Peça a quem é titular.",
-        "failed": "Não foi possível remover esta pessoa. Tente de novo."
+        "failed": "Não foi possível remover esta pessoa. Tente de novo.",
+        "pending-bookings": "Alguém está a marcar uma sessão com {name} neste momento. Tente de novo dentro de alguns minutos."
       }
     },
     "toast": {
       "invited": "Convite enviado para {email}.",
       "resent": "Convite enviado de novo para {email}.",
-      "emailNotSent": "O convite para {email} ficou guardado, mas não foi possível enviar o email. Use Enviar de novo dentro de momentos.",
+      "emailNotSent": "O convite para {email} ficou guardado, mas não foi possível enviar o email. Aguarde um minuto e use Enviar de novo.",
       "withdrawn": "Convite para {email} retirado.",
       "invitationGone": "Este convite já tinha sido respondido ou retirado.",
       "removed": "{name} já não faz parte da sua equipa.",

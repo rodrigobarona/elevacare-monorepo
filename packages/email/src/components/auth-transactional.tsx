@@ -30,7 +30,10 @@ type AuthCopy = { title: string; body: string; action: string; ignore: string }
 function emailSafeName(value: string | undefined): string | null {
   const name = (value ?? "")
     .replace(/https?:\/\/\S*|www\.\S*/gi, "")
-    .replace(/[\p{Cc}<>]/gu, " ")
+    // Control and invisible formatting characters (bidi overrides too).
+    .replace(/[\p{Cc}\p{Cf}<>]/gu, " ")
+    // "name.tld" would be turned into a link by mail apps: break the dot.
+    .replace(/([\p{L}\d])\.(?=[\p{L}\d])/gu, "$1 ")
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 80)
@@ -254,7 +257,11 @@ export function AuthTransactionalEmail({
   const isOtp = kind === "two-factor-otp"
 
   return (
-    <EmailLayout preview={copy.title} locale={locale}>
+    <EmailLayout
+      preview={copy.title}
+      locale={locale}
+      accountFooter={kind !== "organization-invitation"}
+    >
       <EmailHeading>{copy.title}</EmailHeading>
       {name ? <EmailBodyText className="mb-[8px]">{name}</EmailBodyText> : null}
       <EmailBodyText className="mb-[24px]">{copy.body}</EmailBodyText>

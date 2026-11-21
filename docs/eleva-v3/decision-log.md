@@ -50,15 +50,21 @@ Each entry should include:
 - Better Auth's own invite, cancel-invitation, remove-member and
   update-member-role endpoints answer 403 `TEAM_MEMBERS_API_REQUIRED` for a
   team org, so the rules below cannot be walked around.
-  `/auth/organization/leave` is disabled for every org type: it has no hook
-  to guard it and nothing in the product calls it. A clinician who wants to
-  leave asks an admin (a "leave this clinic" action is a follow-up).
+  Renewing through Better Auth (`invite-member` with `resend: true`) runs
+  before any organization hook, so it is refused for every org type
+  (400, same code). `/auth/organization/leave` is disabled for every org
+  type: it has no hook to guard it and nothing in the product calls it. A
+  clinician who wants to leave asks an admin (a "leave this clinic" action
+  is a follow-up).
 - An invitation is valid for 7 days, on both paths (`invitationExpiresIn`
   is now 7 days for Better Auth's own invitations too). Inviting an address
   that already has a pending invitation renews it and emails the same link
-  again; there is never a second pending invitation for one address
-  (advisory lock on clinic and address). One address is emailed at most
-  once a minute (429 `INVITATION_RECENTLY_SENT`). Withdrawing sets it to
+  again; there is never a second pending invitation for one address and
+  the 200-person limit holds across addresses (one invitation write per
+  clinic at a time, advisory lock). A clinic emails one address at most
+  once a minute, also after a withdrawal (429 `INVITATION_RECENTLY_SENT`);
+  a failed send starts that minute too. Renewing a lapsed invitation is
+  checked against the limit. Withdrawing sets it to
   `canceled` (`invitation.revoked`). The link is only ever emailed to the
   invited address; the page offers no "copy link".
 - The invitation email names the clinic and the person who invites, says
@@ -76,7 +82,10 @@ Each entry should include:
   account, and a member with sessions booked in the clinic (or a slot being
   paid for) is refused with `MEMBER_HAS_UPCOMING_SESSIONS` and the count,
   so no member is left with a session nobody can run: the same blockers as
-  closing a practice (ADR-026). The removal locks the person's clinic
+  closing a practice (ADR-026). The refusal says which it is: sessions
+  booked (`upcomingSessions`) or a slot someone is paying for right now
+  (`pendingBookings`, which clears in minutes; a hold past its time counts
+  until the hold sweep releases it, as it does for closing a practice). The removal locks the person's clinic
   profile rows, which a reservation holds shared, so a booking and a
   removal never interleave; afterwards `lockOpenExpertProfile` refuses new
   reservations for someone who is no longer a member of the team org. The
@@ -88,13 +97,19 @@ Each entry should include:
 - `@eleva/dashboard/workspace-api` now owns the server-side API client for
   dashboards under a workspace address; `apps/expert` uses it too.
 - Proof: `team-members.integration.test.ts` on the PR's Neon branch
-  (13 cases, with `practice-closure` re-run for the changed lock);
+  (14 cases, with `practice-closure` re-run for the changed lock);
   `team-people.route.test.ts` (19 cases: who may call, refusal mapping);
+  `auth-invitation.test.ts` (the email in three languages, hostile names);
   `e2e/team-members.spec.ts` (opt-in, loopback) drives the page in a
-  browser, checks that Better Auth's endpoints are refused and checks the
-  audit rows. Captures:
+  browser, checks that each Better Auth endpoint (invite, renew, cancel,
+  remove, role, leave) is refused on real rows and checks the audit rows. Captures:
   `design-audit/captures/2026-11-20-team-members-after/11-team/`. Mobbin
   `11-team` references 05 to 09.
+- Before the next production deploy (operator, read-only): count
+  `expert_profiles` in team orgs whose user has no `auth.member` row in
+  that org. `lockOpenExpertProfile` now refuses reservations for those; the
+  count must be 0, or those profiles need a membership first. Solo
+  practices are never affected.
 - For the DPO and counsel (prepared, not decided here):
   - a line in the privacy notice for people invited by a clinic (their
     email address comes from the clinic; it is kept until the invitation is
@@ -104,7 +119,7 @@ Each entry should include:
   - how long answered, withdrawn and expired invitations are kept (proposed
     90 days, then deleted by the Phase 13 sweep);
   - what the expert agreement says a professional keeps when a clinic
-    removes them.
+    removes them, and whether they are told (no notice is sent today).
 - Not in this slice (follow-ups, Phase 11 unless noted): changing a
   member's role; "leave this clinic"; a clinic admin cancelling or
   reassigning a clinician's upcoming sessions (today the clinician does
@@ -115,7 +130,13 @@ Each entry should include:
   notification kinds `team.invitation` and `team.member_joined`
   (invitations still go out as `auth.org_invitation`); the Better Auth
   accept and decline endpoints in `/openapi.json`; the retention sweep for
-  old invitations (Phase 13).
+  old invitations (Phase 13); a sweep that retries a seat sync left
+  pending when Stripe was unreachable (with billing, 11.3: publish has the
+  same gap today); captures of the page as an admin who is not the owner
+  and in dark mode; a hard lock on the member row for a clinician who has
+  no profile yet (theoretical: nothing can be booked without a profile).
+- Withdrawing an invitation has no confirmation step on purpose: nothing
+  is lost, the same address can be invited again a minute later.
 - Owner: engineering
 
 ### 2026-11-16: Free services publish without Payments setup (active)

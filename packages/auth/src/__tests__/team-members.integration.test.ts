@@ -417,6 +417,42 @@ describe.skipIf(!enabled || !databaseUrl)(
       expect(await auditActions()).toContain("invitation.revoked")
     })
 
+    it("keeps the minute between emails after a withdrawal", async () => {
+      const email = `team-again-${orgId}@example.test`
+      const first = await inviteTeamMember({
+        orgId,
+        actorUserId: owner,
+        email,
+        role: "member",
+      })
+      await cancelTeamInvitation({
+        orgId,
+        actorUserId: owner,
+        invitationId: first.invitationId,
+      })
+      const before = sent.length
+      const err = await refusal(
+        inviteTeamMember({ orgId, actorUserId: owner, email, role: "member" })
+      )
+      expect(err.code).toBe("INVITATION_RECENTLY_SENT")
+      expect(sent).toHaveLength(before)
+      // A minute later it is a new invitation with a new link.
+      const second = await inviteTeamMember({
+        orgId,
+        actorUserId: owner,
+        email,
+        role: "member",
+        now: new Date(Date.now() + TEAM_INVITATION_RESEND_COOLDOWN_MS),
+      })
+      expect(second.resent).toBe(false)
+      expect(second.invitationId).not.toBe(first.invitationId)
+      await cancelTeamInvitation({
+        orgId,
+        actorUserId: owner,
+        invitationId: second.invitationId,
+      })
+    })
+
     it("never removes the owner, the caller or another clinic's member", async () => {
       const cases = [
         { memberId: await memberId(owner), code: "CANNOT_REMOVE_OWNER" },
@@ -451,7 +487,7 @@ describe.skipIf(!enabled || !databaseUrl)(
         removeTeamMember({ orgId, actorUserId: owner, memberId: target })
       )
       expect(both.code).toBe("MEMBER_HAS_UPCOMING_SESSIONS")
-      expect(both.detail.upcomingSessions).toBe(2)
+      expect(both.detail).toEqual({ upcomingSessions: 1, pendingBookings: 1 })
 
       await db()
         .update(main.bookings)
@@ -460,7 +496,10 @@ describe.skipIf(!enabled || !databaseUrl)(
       const holdOnly = await refusal(
         removeTeamMember({ orgId, actorUserId: owner, memberId: target })
       )
-      expect(holdOnly.detail.upcomingSessions).toBe(1)
+      expect(holdOnly.detail).toEqual({
+        upcomingSessions: 0,
+        pendingBookings: 1,
+      })
 
       // Refused removals change nothing.
       expect(await memberId(clinician)).toBe(target)
