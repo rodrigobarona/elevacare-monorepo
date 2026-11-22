@@ -5714,6 +5714,8 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       },
       "/storage/upload": {
         post: {
+          // Only the sealed upload token it was given, as a bearer token.
+          security: [{ bearerAuth: [] }],
           operationId: "createStorageUpload",
           summary: "Presign a public upload",
           description:
