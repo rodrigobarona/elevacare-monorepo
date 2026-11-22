@@ -297,6 +297,15 @@ describe("requireApiAuth", () => {
     expect(findDefaultOrganizationId).not.toHaveBeenCalled()
   })
 
+  it("refuses a valid key whose owner belongs to no workspace, as a member problem", async () => {
+    verifyApiKey.mockResolvedValue(verifiedKey())
+    findDefaultOrganizationId.mockResolvedValue(null)
+    // 403, not "no credential": optional sign-in must not treat it as a visitor.
+    await expect(requireApiAuth(withKey())).rejects.toMatchObject({
+      code: "not-a-member",
+    })
+  })
+
   it("accepts a key again once its owner's ban has run out", async () => {
     verifyApiKey.mockResolvedValue(verifiedKey())
     findDefaultOrganizationId.mockResolvedValue("org-1")

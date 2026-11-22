@@ -9,8 +9,9 @@ import { beforeAll, describe, expect, it, vi } from "vitest"
  *
  * Nothing here is answered by a canned value. The lookups that read
  * Postgres directly are served from the same in-memory tables the auth
- * server writes: a small reader that understands the three queries
- * `api-auth.ts` makes, and plain functions for the two others.
+ * server writes: a small reader that understands the queries `api-auth.ts`
+ * and the staff guard make (one table, or two joined, filtered by equality),
+ * and a plain function for the default workspace.
  */
 
 type Row = Record<string, unknown>
@@ -144,6 +145,8 @@ interface Person {
   bearer: string
 }
 
+type Answer = { status: number; code?: string }
+
 type TestHelpers = {
   login: (input: {
     userId: string
@@ -187,10 +190,6 @@ beforeAll(async () => {
   const created = createAuthForTest({
     database: memoryAdapter(tables),
     plugins: [testUtils(), recorder],
-    isStaff: async (userId) =>
-      memberships(userId).some(
-        (member) => organization(member.organizationId)?.type === "staff"
-      ),
   }) as unknown as typeof auth & {
     $context: Promise<{ test: TestHelpers }>
   }
@@ -273,19 +272,32 @@ async function post(path: string, headers: Record<string, string>, body: Row) {
   return { status: response.status, body: answer }
 }
 
-/** Mint a key, and say whose it is. */
-async function mintKey(headers: Record<string, string>) {
-  const { status, body } = await post("/api-key/create", headers, { name: "k" })
-  return {
-    status,
-    code: body?.code as string | undefined,
-    owner: body?.referenceId as string | undefined,
-  }
+/**
+ * Rename a key over HTTP: a path the staff guard watches, and one the
+ * endpoint only answers 200 for when it acts as the key's owner.
+ */
+async function renameKey(
+  headers: Record<string, string>,
+  keyId: string
+): Promise<Answer> {
+  const { status, body } = await post("/api-key/update", headers, {
+    keyId,
+    name: "renamed",
+  })
+  return { status, code: body?.code as string | undefined }
 }
 
-async function keyFor(owner: Person, extra: Row = {}): Promise<string> {
+/** A key made on the server for this person; its id, to rename it by. */
+async function keyIdFor(owner: Person): Promise<string> {
   const created = await auth.api.createApiKey({
-    body: { userId: owner.id, name: "agent", ...extra },
+    body: { userId: owner.id, name: "to-rename" },
+  })
+  return created.id
+}
+
+async function keyFor(owner: Person): Promise<string> {
+  const created = await auth.api.createApiKey({
+    body: { userId: owner.id, name: "agent" },
   })
   return created.key
 }
@@ -296,89 +308,109 @@ function withKey(key: string, headers: Record<string, string> = {}) {
   })
 }
 
-describe("minting a key through the auth server (the staff session guard)", () => {
+describe("a new credential through the auth server (the staff session guard)", () => {
   const STALE = STAFF_DECISION_SIGN_IN_MAX_AGE_MS / HOUR + 1
 
+  it("lets no session make itself a key", async () => {
+    const staff = await person({ staff: true })
+    const member = await person()
+    const sessions: Record<string, string>[] = [
+      {},
+      { cookie: staff.cookie },
+      { authorization: `Bearer ${staff.bearer}` },
+      { cookie: member.cookie },
+    ]
+    for (const headers of sessions) {
+      const { status } = await post("/api-key/create", headers, { name: "k" })
+      expect(status).toBe(404)
+    }
+    expect(tables.apikey).toHaveLength(0)
+  })
+
   it("needs a session", async () => {
-    expect(await mintKey({})).toMatchObject({ status: 401 })
+    const member = await person()
+    const keyId = await keyIdFor(member)
+    expect(await renameKey({}, keyId)).toMatchObject({ status: 401 })
     expect(
-      await mintKey({ authorization: "Bearer not-a-session" })
+      await renameKey({ authorization: "Bearer not-a-session" }, keyId)
     ).toMatchObject({ status: 401 })
   })
 
-  it("mints for a staff member whose session started today, by cookie or bearer", async () => {
+  it("lets a staff member through on a session from today, by cookie or bearer", async () => {
     const staff = await person({ staff: true })
-    expect(await mintKey({ cookie: staff.cookie })).toEqual({
+    const keyId = await keyIdFor(staff)
+    expect(await renameKey({ cookie: staff.cookie }, keyId)).toEqual({
       status: 200,
       code: undefined,
-      owner: staff.id,
     })
     expect(
-      await mintKey({ authorization: `Bearer ${staff.bearer}` })
-    ).toMatchObject({ status: 200, owner: staff.id })
+      await renameKey({ authorization: `Bearer ${staff.bearer}` }, keyId)
+    ).toMatchObject({ status: 200 })
   })
 
   it("refuses a staff member whose session is older, by cookie or bearer", async () => {
     const staff = await person({ staff: true, sessionAgeHours: STALE })
-    expect(await mintKey({ cookie: staff.cookie })).toMatchObject({
+    const keyId = await keyIdFor(staff)
+    expect(await renameKey({ cookie: staff.cookie }, keyId)).toEqual({
       status: 403,
       code: "STEP_UP_REQUIRED",
     })
     expect(
-      await mintKey({ authorization: `Bearer ${staff.bearer}` })
-    ).toMatchObject({ status: 403, code: "STEP_UP_REQUIRED" })
-    // The same for another way to a new credential.
-    expect(
-      await post("/api-key/update", { cookie: staff.cookie }, { keyId: "x" })
-    ).toMatchObject({ status: 403, body: { code: "STEP_UP_REQUIRED" } })
+      await renameKey({ authorization: `Bearer ${staff.bearer}` }, keyId)
+    ).toEqual({ status: 403, code: "STEP_UP_REQUIRED" })
   })
 
   it("asks nobody but staff", async () => {
     const member = await person({ sessionAgeHours: 24 * 20 })
-    expect(await mintKey({ cookie: member.cookie })).toMatchObject({
-      status: 200,
-      owner: member.id,
-    })
+    expect(
+      await renameKey({ cookie: member.cookie }, await keyIdFor(member))
+    ).toMatchObject({ status: 200 })
   })
 
   it("refuses when either of two sessions on one request is an old staff one", async () => {
     const oldStaff = await person({ staff: true, sessionAgeHours: STALE })
     const member = await person()
+    const keyId = await keyIdFor(member)
     expect(
-      await mintKey({
-        cookie: member.cookie,
-        authorization: `Bearer ${oldStaff.bearer}`,
-      })
-    ).toMatchObject({ status: 403, code: "STEP_UP_REQUIRED" })
+      await renameKey(
+        { cookie: member.cookie, authorization: `Bearer ${oldStaff.bearer}` },
+        keyId
+      )
+    ).toEqual({ status: 403, code: "STEP_UP_REQUIRED" })
     expect(
-      await mintKey({
-        cookie: oldStaff.cookie,
-        authorization: `Bearer ${member.bearer}`,
-      })
-    ).toMatchObject({ status: 403, code: "STEP_UP_REQUIRED" })
+      await renameKey(
+        { cookie: oldStaff.cookie, authorization: `Bearer ${member.bearer}` },
+        keyId
+      )
+    ).toEqual({ status: 403, code: "STEP_UP_REQUIRED" })
   })
 
   it("runs the guard before any plugin hook, and the endpoint acts for the session the guard read", async () => {
     const staff = await person({ staff: true })
     const member = await person()
-    seenByPluginHook.length = 0
-    const minted = await mintKey({
+    const both = {
       cookie: staff.cookie,
       authorization: `Bearer ${member.bearer}`,
-    })
+    }
+    seenByPluginHook.length = 0
     // The bearer plugin would hand the endpoint the member's session. The
     // guard ran first, read the cookie's session from the store, and Better
     // Auth keeps that answer for the rest of the request: the plugin hooks
-    // already see it, and the key is the staff member's.
+    // already see it, and the endpoint acts as the staff member. So their
+    // own key can be renamed, and the member's cannot be found.
+    expect(await renameKey(both, await keyIdFor(staff))).toMatchObject({
+      status: 200,
+    })
     expect(seenByPluginHook).toContainEqual({
-      path: "/api-key/create",
+      path: "/api-key/update",
       sessionUserId: staff.id,
     })
-    expect(minted).toMatchObject({ status: 200, owner: staff.id })
+    expect((await renameKey(both, await keyIdFor(member))).status).toBe(404)
   })
 
   it("refuses a session that was revoked while the browser still holds its cached copy", async () => {
     const staff = await person({ staff: true })
+    const keyId = await keyIdFor(staff)
     // A page load makes the browser hold the 5-minute signed copy.
     const page = await auth.handler(
       new Request(`${ORIGIN}/auth/get-session`, {
@@ -390,22 +422,33 @@ describe("minting a key through the auth server (the staff session guard)", () =
       .map((cookie) => cookie.split(";")[0])
       .filter((cookie) => cookie?.includes("session_data"))
     expect(cached).toHaveLength(1)
+    const withCachedCopy = { cookie: `${staff.cookie}; ${cached[0]}` }
+    expect(await renameKey(withCachedCopy, keyId)).toMatchObject({
+      status: 200,
+    })
     // Signed out everywhere, banned, or a password reset: the row is gone.
     tables.session!.splice(
       tables.session!.findIndex((row) => row.token === staff.bearer),
       1
     )
+    expect(await renameKey(withCachedCopy, keyId)).toMatchObject({
+      status: 401,
+    })
+    // The same on a path whose endpoint would have trusted the cached copy.
     expect(
-      await mintKey({ cookie: `${staff.cookie}; ${cached[0]}` })
+      await post("/organization/invite-member", withCachedCopy, {
+        email: "someone@example.test",
+        role: "member",
+        organizationId: staff.orgId,
+      })
     ).toMatchObject({ status: 401 })
   })
 
-  it("never lets a key mint or change a key", async () => {
+  it("never lets a key change a key", async () => {
     const owner = await person()
     const key = await keyFor(owner)
-    expect(await mintKey({ "x-api-key": key })).toMatchObject({ status: 401 })
     expect(
-      await post("/api-key/update", { "x-api-key": key }, { keyId: "x" })
+      await renameKey({ "x-api-key": key }, await keyIdFor(owner))
     ).toMatchObject({ status: 401 })
   })
 })
@@ -451,9 +494,14 @@ describe("signing in to the API with a key", () => {
       { code: "invalid-token" }
     )
 
-    const deleted = await keyFor(owner)
-    tables.apikey!.splice(0, tables.apikey!.length)
-    await expect(requireApiAuth(withKey(deleted))).rejects.toMatchObject({
+    const deleted = await auth.api.createApiKey({
+      body: { userId: owner.id, name: "revoked" },
+    })
+    tables.apikey!.splice(
+      tables.apikey!.findIndex((row) => row.id === deleted.id),
+      1
+    )
+    await expect(requireApiAuth(withKey(deleted.key))).rejects.toMatchObject({
       code: "invalid-token",
     })
 
@@ -467,13 +515,15 @@ describe("signing in to the API with a key", () => {
       code: "invalid-token",
     })
 
-    const expired = await keyFor(owner, { expiresIn: 60 * 60 * 24 })
-    tables.apikey!.find((row) => row.name === "agent")!.expiresAt = new Date(
+    const expired = await auth.api.createApiKey({
+      body: { userId: owner.id, name: "old", expiresIn: 60 * 60 * 24 },
+    })
+    tables.apikey!.find((row) => row.id === expired.id)!.expiresAt = new Date(
       Date.now() - 1000
     )
     for (const attempt of [1, 2]) {
       await expect(
-        requireApiAuth(withKey(expired)),
+        requireApiAuth(withKey(expired.key)),
         `attempt ${attempt}`
       ).rejects.toMatchObject({ code: "invalid-token" })
     }
@@ -507,8 +557,13 @@ describe("signing in to the API with a key", () => {
       tables.member!.findIndex((row) => row.userId === removed.id),
       1
     )
+    // Out of the staff workspace: the key no longer acts there, by name or
+    // by default.
+    await expect(
+      requireApiAuth(withKey(removedKey, { "x-eleva-org": removed.slug }))
+    ).rejects.toMatchObject({ code: "not-a-member" })
     await expect(requireApiAuth(withKey(removedKey))).rejects.toMatchObject({
-      code: "no-session",
+      code: "not-a-member",
     })
   })
 
@@ -528,10 +583,14 @@ describe("signing in to the API with a key", () => {
     await expect(requireApiAuth(withKey(key))).rejects.toMatchObject({
       code: "invalid-token",
     })
-    // A key of a configuration whose owners are organizations.
+    // A key of another configuration, whose owners may be organizations.
+    // The plugin falls back to its default configuration and calls the key
+    // valid, so Eleva's own check is the one that refuses.
     row.referenceId = owner.id
     row.configId = "organization-keys"
-    await expect(requireApiAuth(withKey(key))).rejects.toThrow()
+    await expect(requireApiAuth(withKey(key))).rejects.toMatchObject({
+      code: "invalid-token",
+    })
   })
 
   it("is one credential, sent in its own header", async () => {

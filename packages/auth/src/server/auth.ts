@@ -52,6 +52,7 @@ import {
   refuseUnverifiedSession,
 } from "./account-claim"
 import { crossSubDomainCookieConfig } from "./cookie-domain"
+import { cookieHeaderHasSession } from "./credentials"
 import { magicLinkServerHeaders } from "./magic-link-headers"
 import { orgCreateViolation, orgUpdateViolation } from "./org-type-guard"
 import {
@@ -64,10 +65,7 @@ import {
   sweepClosedPractice,
 } from "../practice-closure"
 import { passkeyOrigins } from "./passkey-origin"
-import {
-  mustRefuseForStaleStaffSession,
-  STEP_UP_REQUIRED,
-} from "./staff-fresh-session"
+import { newCredentialVerdict, STEP_UP_REQUIRED } from "./staff-fresh-session"
 import {
   AUTH_IP_ADDRESS_HEADERS,
   createSecondaryStorage,
@@ -151,15 +149,17 @@ export interface AuthTestSeam {
   database: unknown
   /** Plugins added after Eleva's own, e.g. Better Auth's test utilities. */
   plugins?: unknown[]
-  /** Stands in for the staff lookup, which reads Postgres directly. */
-  isStaff: (userId: string) => Promise<boolean>
 }
 
 /**
  * The real configuration on another database, for tests. `databaseHooks`
- * are left out: they provision and audit in Postgres.
+ * are left out: they provision and audit in Postgres. Never in a deployed
+ * app: with test plugins it could sign in as anyone.
  */
 export function createAuthForTest(seam: AuthTestSeam) {
+  if (process.env.NODE_ENV === "production" || process.env.VERCEL_ENV) {
+    throw new Error("createAuthForTest is for tests only")
+  }
   return createAuth(seam)
 }
 
@@ -344,9 +344,16 @@ function createAuth(seam?: AuthTestSeam) {
         },
       },
     },
-    // Leaving has no hook to guard it (a clinician with sessions still to
-    // run must not vanish from a clinic); nothing in the product calls it.
-    disabledPaths: ["/organization/leave"],
+    disabledPaths: [
+      // Leaving has no hook to guard it (a clinician with sessions still to
+      // run must not vanish from a clinic); nothing in the product calls it.
+      "/organization/leave",
+      // A key does not expire and outlives a sign-out or a password reset,
+      // and there is no screen yet to see or revoke one. Until there is,
+      // no session can make itself a key: keys are issued on the server
+      // (`auth.api.createApiKey`). Decision log 2026-11-22, slice 12.5.
+      "/api-key/create",
+    ],
     hooks: {
       // Better Auth renews a pending invitation (`resend: true`) before it
       // calls any organization hook, which would skip the clinic rules and
@@ -363,31 +370,35 @@ function createAuth(seam?: AuthTestSeam) {
           })
         }
         // A staff decision needs a session from today. Linking a sign-in
-        // account, creating an API key or adding a passkey would let an
-        // old staff session make itself a new way in, so staff do those on
-        // a session from today too.
+        // account, changing an API key or adding a passkey would let an old
+        // staff session make itself a new way in, so staff do those on a
+        // session from today too.
         //
         // Both reads go to the session store, never the 5-minute cookie
         // cache. Better Auth keeps the first answer for the rest of the
         // request, so a cached one here would also be what the endpoint
-        // acts on: a session revoked a minute ago could still mint a key.
-        if (
-          await mustRefuseForStaleStaffSession(
-            {
-              path: ctx.path,
-              fromCookie: () =>
-                getSessionFromCtx(ctx, { disableCookieCache: true }),
-              headers: ctx.headers,
-              // The same store read, typed as the cookie one above.
-              fromHeaders: async (headers) =>
-                (await self.getSession?.({
-                  headers,
-                  query: { disableCookieCache: true },
-                })) as Awaited<ReturnType<typeof getSessionFromCtx>>,
-            },
-            seam ? { isStaff: seam.isStaff } : undefined
-          )
-        ) {
+        // acts on: a session revoked a minute ago could still get in.
+        if (!self.getSession) throw new APIError("INTERNAL_SERVER_ERROR")
+        const readFromStore = self.getSession
+        const verdict = await newCredentialVerdict({
+          path: ctx.path,
+          hasSessionCookie: cookieHeaderHasSession(
+            ctx.headers?.get("cookie") ?? null
+          ),
+          fromCookie: () =>
+            getSessionFromCtx(ctx, { disableCookieCache: true }),
+          headers: ctx.headers,
+          // The same store read, typed as the cookie one above.
+          fromHeaders: async (headers) =>
+            (await readFromStore({
+              headers,
+              query: { disableCookieCache: true },
+            })) as Awaited<ReturnType<typeof getSessionFromCtx>>,
+        })
+        if (verdict === "no-session") {
+          throw new APIError("UNAUTHORIZED", { message: "Sign in to do this." })
+        }
+        if (verdict === "sign-in-again") {
           throw new APIError("FORBIDDEN", {
             message: "Sign in again to do this.",
             code: STEP_UP_REQUIRED,

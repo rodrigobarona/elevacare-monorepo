@@ -3,9 +3,8 @@ import { describe, expect, it, vi } from "vitest"
 vi.mock("@eleva/db", () => ({ auth: {}, db: vi.fn() }))
 
 import {
-  mustRefuseForStaleStaffSession,
   NEW_CREDENTIAL_PATHS,
-  sessionsForRequestHook,
+  newCredentialVerdict,
   staffMustSignInAgain,
 } from "./staff-fresh-session"
 
@@ -84,99 +83,54 @@ describe("staffMustSignInAgain", () => {
   })
 })
 
-describe("sessionsForRequestHook", () => {
-  const staff = { user: { id: "staff" } }
-  const throwaway = { user: { id: "throwaway" } }
-
-  it("answers both sessions when a request carries a cookie and a bearer token", async () => {
-    // A throwaway account's cookie in front of an old staff bearer token:
-    // the endpoint acts for the bearer, so the guard must see it too.
-    const headers = new Headers({ authorization: "Bearer old-staff-session" })
-    await expect(
-      sessionsForRequestHook({
-        fromCookie: async () => throwaway,
-        headers,
-        fromHeaders: async () => staff,
-      })
-    ).resolves.toEqual([staff, throwaway])
-  })
-
-  it("finds a session sent as a bearer token alone", async () => {
-    const headers = new Headers({ authorization: "Bearer old-staff-session" })
-    const fromHeaders = vi.fn(async () => staff)
-    await expect(
-      sessionsForRequestHook({
-        fromCookie: async () => null,
-        headers,
-        fromHeaders,
-      })
-    ).resolves.toEqual([staff])
-    expect(fromHeaders).toHaveBeenCalledWith(headers)
-  })
-
-  it("answers the cookie session when there is no header", async () => {
-    const fromHeaders = vi.fn()
-    await expect(
-      sessionsForRequestHook({
-        fromCookie: async () => staff,
-        headers: new Headers(),
-        fromHeaders,
-      })
-    ).resolves.toEqual([staff])
-    expect(fromHeaders).not.toHaveBeenCalled()
-  })
-
-  it("answers nobody when the request carries no credentials", async () => {
-    await expect(
-      sessionsForRequestHook({
-        fromCookie: async () => null,
-        headers: undefined,
-        fromHeaders: vi.fn(),
-      })
-    ).resolves.toEqual([])
-  })
-})
-
-describe("mustRefuseForStaleStaffSession", () => {
+describe("newCredentialVerdict", () => {
   const session = (id: string, hours: number) => ({
     user: { id },
     session: { createdAt: hoursAgo(hours) },
   })
   const onlyStaff = { isStaff: async (id: string) => id === "staff" }
-  const bearer = new Headers({ authorization: "Bearer old-staff-session" })
+  const bearer = new Headers({ authorization: "Bearer a-session-token" })
+  const none = new Headers()
 
   it("refuses when an old staff token rides behind a fresh cookie from another account", async () => {
+    // A throwaway account's cookie in front of an old staff bearer token:
+    // the endpoint acts for the bearer, so the guard must ask about it too.
+    const fromHeaders = vi.fn(async () => session("staff", 48))
     await expect(
-      mustRefuseForStaleStaffSession(
+      newCredentialVerdict(
         {
           path: "/link-social",
+          hasSessionCookie: true,
           fromCookie: async () => session("throwaway", 0),
           headers: bearer,
-          fromHeaders: async () => session("staff", 48),
+          fromHeaders,
           now: NOW,
         },
         onlyStaff
       )
-    ).resolves.toBe(true)
+    ).resolves.toBe("sign-in-again")
+    expect(fromHeaders).toHaveBeenCalledWith(bearer)
   })
 
   it("refuses an old staff cookie, and an old staff bearer token alone", async () => {
     await expect(
-      mustRefuseForStaleStaffSession(
+      newCredentialVerdict(
         {
-          path: "/api-key/create",
+          path: "/api-key/update",
+          hasSessionCookie: true,
           fromCookie: async () => session("staff", 13),
-          headers: new Headers(),
+          headers: none,
           fromHeaders: async () => null,
           now: NOW,
         },
         onlyStaff
       )
-    ).resolves.toBe(true)
+    ).resolves.toBe("sign-in-again")
     await expect(
-      mustRefuseForStaleStaffSession(
+      newCredentialVerdict(
         {
           path: "/passkey/verify-registration",
+          hasSessionCookie: false,
           fromCookie: async () => null,
           headers: bearer,
           fromHeaders: async () => session("staff", 13),
@@ -184,42 +138,109 @@ describe("mustRefuseForStaleStaffSession", () => {
         },
         onlyStaff
       )
-    ).resolves.toBe(true)
+    ).resolves.toBe("sign-in-again")
   })
 
   it("lets staff through on a session from today, and never asks anyone else", async () => {
+    const fromHeaders = vi.fn()
     await expect(
-      mustRefuseForStaleStaffSession(
+      newCredentialVerdict(
         {
           path: "/link-social",
+          hasSessionCookie: true,
           fromCookie: async () => session("staff", 2),
-          headers: new Headers(),
-          fromHeaders: async () => null,
+          headers: none,
+          fromHeaders,
           now: NOW,
         },
         onlyStaff
       )
-    ).resolves.toBe(false)
+    ).resolves.toBe("allow")
+    // No header, no read through it.
+    expect(fromHeaders).not.toHaveBeenCalled()
     await expect(
-      mustRefuseForStaleStaffSession(
+      newCredentialVerdict(
         {
           path: "/link-social",
+          hasSessionCookie: true,
           fromCookie: async () => session("expert", 24 * 30),
-          headers: new Headers(),
+          headers: none,
+          fromHeaders,
+          now: NOW,
+        },
+        onlyStaff
+      )
+    ).resolves.toBe("allow")
+  })
+
+  it("refuses a cookie or a bearer token the session store no longer knows", async () => {
+    // Revoked a minute ago, but the browser still holds its 5-minute copy,
+    // which the endpoint behind the hook might read.
+    await expect(
+      newCredentialVerdict(
+        {
+          path: "/organization/invite-member",
+          hasSessionCookie: true,
+          fromCookie: async () => null,
+          headers: none,
           fromHeaders: async () => null,
           now: NOW,
         },
         onlyStaff
       )
-    ).resolves.toBe(false)
+    ).resolves.toBe("no-session")
+    // The same when a good session comes with a dead one beside it.
+    await expect(
+      newCredentialVerdict(
+        {
+          path: "/link-social",
+          hasSessionCookie: true,
+          fromCookie: async () => null,
+          headers: bearer,
+          fromHeaders: async () => session("expert", 1),
+          now: NOW,
+        },
+        onlyStaff
+      )
+    ).resolves.toBe("no-session")
+    await expect(
+      newCredentialVerdict(
+        {
+          path: "/link-social",
+          hasSessionCookie: true,
+          fromCookie: async () => session("expert", 1),
+          headers: bearer,
+          fromHeaders: async () => null,
+          now: NOW,
+        },
+        onlyStaff
+      )
+    ).resolves.toBe("no-session")
+  })
+
+  it("leaves a request with no credentials to the endpoint", async () => {
+    await expect(
+      newCredentialVerdict(
+        {
+          path: "/link-social",
+          hasSessionCookie: false,
+          fromCookie: async () => null,
+          headers: undefined,
+          fromHeaders: vi.fn(),
+          now: NOW,
+        },
+        onlyStaff
+      )
+    ).resolves.toBe("allow")
   })
 
   it("reads no session at all for a path that hands out nothing", async () => {
     const fromCookie = vi.fn()
     await expect(
-      mustRefuseForStaleStaffSession(
+      newCredentialVerdict(
         {
           path: "/get-session",
+          hasSessionCookie: true,
           fromCookie,
           headers: bearer,
           fromHeaders: vi.fn(),
@@ -227,7 +248,7 @@ describe("mustRefuseForStaleStaffSession", () => {
         },
         onlyStaff
       )
-    ).resolves.toBe(false)
+    ).resolves.toBe("allow")
     expect(fromCookie).not.toHaveBeenCalled()
   })
 })

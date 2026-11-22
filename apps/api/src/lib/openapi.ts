@@ -477,7 +477,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       title: "Eleva Care API",
       version: "1.0.0",
       description:
-        "API-first platform for Eleva Care. Supports session-based auth (browser) and Bearer token auth (AI agents, M2M).",
+        "API-first platform for Eleva Care. A browser signs in with a session cookie. An agent or a service sends a session token or a short-lived JWT as a Bearer token, or an API key in `x-api-key`.",
     },
     servers: [
       {
@@ -493,6 +493,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
     paths: {
       "/onboarding/complete": {
         post: {
+          security: [{ bearerAuth: [] }, { cookieAuth: [] }],
           operationId: "completeOnboarding",
           summary: "Complete user onboarding",
           description:
@@ -552,6 +553,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       },
       "/onboarding/sync-existing": {
         post: {
+          security: [{ bearerAuth: [] }, { cookieAuth: [] }],
           operationId: "syncExistingOnboardingMembership",
           summary: "Confirm an existing organization membership",
           description:
@@ -663,6 +665,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       },
       "/organizations/active": {
         post: {
+          security: [{ bearerAuth: [] }, { cookieAuth: [] }],
           operationId: "setActiveOrganization",
           summary: "Set the active organization on the current session",
           tags: ["Organizations"],
@@ -1127,6 +1130,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       },
       "/expert/closure": {
         post: {
+          security: [{ bearerAuth: [] }, { cookieAuth: [] }],
           operationId: "closeExpertPractice",
           summary: "Close the expert practice",
           description:
@@ -3159,6 +3163,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       },
       "/admin/clinics/{verificationId}/decision": {
         post: {
+          security: [{ bearerAuth: [] }, { cookieAuth: [] }],
           operationId: "decideClinicVerification",
           summary: "Decide a pending clinic filing",
           description:
@@ -3238,6 +3243,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       },
       "/admin/partners/{expertProfileId}/decision": {
         post: {
+          security: [{ bearerAuth: [] }, { cookieAuth: [] }],
           operationId: "decidePartnerReview",
           summary: "Decide an open licence application",
           description:
@@ -3279,6 +3285,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       },
       "/payouts/{id}/approve": {
         post: {
+          security: [{ bearerAuth: [] }, { cookieAuth: [] }],
           operationId: "approvePayout",
           summary: "Approve an approval_required payout",
           description:
@@ -3306,6 +3313,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       },
       "/payouts/{id}/hold": {
         post: {
+          security: [{ bearerAuth: [] }, { cookieAuth: [] }],
           operationId: "holdPayout",
           summary: "Add a manual hold to a payout",
           tags: ["Payouts"],
@@ -3331,6 +3339,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       },
       "/payouts/{id}/release": {
         post: {
+          security: [{ bearerAuth: [] }, { cookieAuth: [] }],
           operationId: "releasePayoutHold",
           summary: "Remove a manual hold from a payout",
           tags: ["Payouts"],
@@ -5964,7 +5973,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           in: "header",
           name: "x-api-key",
           description:
-            "An API key made at `POST /auth/api-key/create`, for agents and services. It acts as the person who owns it, with what that person may do now, in the workspace named by the `x-eleva-org` header (a slug) or else their default one. Send it alone: a request with a key and a cookie or bearer token is refused (400 AMBIGUOUS_CREDENTIALS). A key cannot make a staff decision, start onboarding, or make another key.",
+            "An API key, for agents and services. Keys are issued by Eleva for now: no session can make one for itself. A key acts as the person who owns it, with what that person may do now, in the workspace named by the `x-eleva-org` header (a slug) or else their default one. Send it alone: a request with a key and a cookie or bearer token is refused (400 AMBIGUOUS_CREDENTIALS). Operations that need a signed-in person (onboarding, switching workspace, closing a practice, staff decisions, staff payout actions) do not list this scheme and refuse a key; a refund made as staff refuses one too.",
         },
         cookieAuth: {
           type: "apiKey",

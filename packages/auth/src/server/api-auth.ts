@@ -298,12 +298,21 @@ async function sessionFromApiKey(request: Request): Promise<ApiIdentity> {
   if (!owner) throw new UnauthorizedError("invalid-token")
 
   const namedSlug = request.headers.get(ELEVA_ORG_HEADER)?.trim() || null
+  const orgId = namedSlug
+    ? await membershipOrgIdBySlug(owner.id, namedSlug)
+    : await findDefaultOrganizationId(owner.id)
+  // A valid key whose owner belongs nowhere is refused as that (403), not
+  // as "no credential": routes with optional sign-in treat the latter as a
+  // visitor.
+  if (!orgId) {
+    throw new UnauthorizedError("not-a-member", "membership not found")
+  }
   return buildIdentity({
     userId: owner.id,
     email: owner.email,
     name: owner.name,
     image: owner.image,
-    orgId: namedSlug ? await membershipOrgIdBySlug(owner.id, namedSlug) : null,
+    orgId,
     authMode: "api-key",
     authenticatedAt: null,
   })

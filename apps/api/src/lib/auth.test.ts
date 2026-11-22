@@ -120,6 +120,18 @@ describe("requireStaffPayoutMutator", () => {
       )
     ).rejects.toMatchObject({ code: "jwt-not-revocable" })
   })
+
+  it("lets staff finance through on a session, and never on an API key", async () => {
+    const request = new Request("https://api.test/x")
+    await expect(
+      requireStaffPayoutMutator(request, "admin_payouts:refund")
+    ).resolves.toMatchObject({ user: { id: "user_1" } })
+    // A key does not expire and has no sign-in moment.
+    requireRevocable.mockResolvedValue({ ...SESSION, authMode: "api-key" })
+    await expect(
+      requireStaffPayoutMutator(request, "admin_payouts:refund")
+    ).rejects.toMatchObject({ code: "missing-capability" })
+  })
 })
 
 describe("apiAuthFailure", () => {
