@@ -38,6 +38,7 @@
     "e2e:passkey": "E2E_AUTH=1 E2E_PASSKEY=1 E2E_SKIP_WEBSERVER=1 playwright test e2e/auth-passkey.spec.ts --project=chromium --workers=1",
     "e2e:report-smoke": "E2E_REPORT_SMOKE=1 E2E_SKIP_WEBSERVER=1 playwright test e2e/member-report.spec.ts --project=chromium --workers=1",
     "e2e:waiting-room": "E2E_WAITING_ROOM=1 E2E_SKIP_WEBSERVER=1 playwright test e2e/waiting-room.spec.ts --project=chromium --workers=1",
+    "e2e:route-error": "E2E_ROUTE_ERROR=1 E2E_SKIP_WEBSERVER=1 playwright test e2e/route-error.spec.ts --project=chromium --workers=1",
     "e2e:crm-smoke": "E2E_CRM_SMOKE=1 E2E_SKIP_WEBSERVER=1 playwright test e2e/crm-smoke.spec.ts --workers=1",
     "lighthouse:public-profile": "node scripts/lighthouse-public-profile.mjs",
     "e2e:ui": "playwright test --ui",

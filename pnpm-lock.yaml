@@ -963,6 +963,9 @@ importers:
       next:
         specifier: ^16.4.5
         version: 16.4.5(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@25.8.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      next-intl:
+        specifier: 'catalog:'
+        version: 4.12.0(@swc/helpers@0.5.23)(next@16.4.5(@opentelemetry/api@1.9.1)(@playwright/test@1.63.0)(@types/node@25.8.0)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
       next-themes:
         specifier: 'catalog:'
         version: 0.4.6(patch_hash=73478c20fb87207168b5c0fa9ccabf0c042408da2bc5a36131ed1c8bb57bf5a3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -2380,6 +2383,9 @@ importers:
 
   packages/ui:
     dependencies:
+      '@eleva/config':
+        specifier: workspace:*
+        version: link:../config
       '@eleva/icons':
         specifier: workspace:*
         version: link:../icons

@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@eleva/config": "workspace:*",
     "@eleva/icons": "workspace:*",
     "@internationalized/date": "^3.12.4",
     "@vercel/og": "^0.11.1",
