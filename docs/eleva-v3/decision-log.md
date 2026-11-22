@@ -55,17 +55,20 @@ Each entry should include:
   payment, a guest joining a session, and the profile pages `apps/web`
   renders; and the Daily and Resend webhooks. That was already the rule for
   a store that failed fast; it now also holds for one that is slow.
-- **Webhooks are the cost of this rule, and an operator must know it.**
-  Both routes are signed, so the limiter is not their only guard. A
-  reviewer read in Daily's docs that its default retry type stops
-  delivering after three failed deliveries until the webhook is created
-  again (not tested here), and `operator-tasks/daily-setup.md` creates the
-  webhook with that default. A slow spell of the store during live sessions
-  can therefore stop `meeting.*` and `participant.*` events. Follow-ups:
-  create the Daily webhook with the retrying type; decide under F-08
-  whether `webhook` stays in the classes that refuse; and after any burst
-  of the log line below with `class: "webhook"`, check that the Daily
-  webhook is still `ACTIVE`.
+- **Webhooks are the cost of this rule, and an operator must act on it.**
+  Both routes are signed, so the limiter is not their only guard. Daily's
+  default retry type, `circuit-breaker`, stops delivering after three
+  failed deliveries and the webhook stays `FAILED` until it is re-activated
+  (Daily's docs, read 2026-11-22; not tested here). The production webhook
+  was created on 2026-10-30 with that default. A slow spell of the store
+  during live sessions could therefore switch off `meeting.*` and
+  `participant.*` events. `operator-tasks/daily-setup.md` now creates the
+  webhook with `retryType: "exponential"` (Daily then never switches off
+  and retries each event for about 13 minutes) and has the one command
+  that moves the existing webhook to it: **operator, run it before real
+  sessions depend on these events.** Still to decide under F-08: whether
+  `webhook` stays among the classes that refuse. After any burst of the
+  log line below with `class: "webhook"`, check the webhook is `ACTIVE`.
 - For agents: `rate_limit_unavailable` is now in the OpenAPI spec, on every
   operation of those three classes and on no other. A test walks the route
   files and fails in either direction.
@@ -88,6 +91,7 @@ Each entry should include:
   has measured its latency from there. If it is often slower than a second,
   public visitors are refused during those spells; the log line gives the
   rate after deploy.
+
 ### 2026-11-22: "Try again" works on every error page (13.2) (active)
 
 - Change (Phase 13.2): the error page of the six dashboards (`RouteError` in
