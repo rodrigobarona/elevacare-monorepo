@@ -489,7 +489,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
         description: "Local development",
       },
     ],
-    security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+    security: [{ bearerAuth: [] }, { apiKeyAuth: [] }, { cookieAuth: [] }],
     paths: {
       "/onboarding/complete": {
         post: {
@@ -3162,7 +3162,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "decideClinicVerification",
           summary: "Decide a pending clinic filing",
           description:
-            "Staff-only (`applications:review`, revocable credential; from a browser the session must have started in the last 12 hours, 403 STEP_UP_REQUIRED otherwise). `approve` needs both checks (legal entity and NIF found in the public register) and is the clinic's verification record. `needs_changes` and `reject` need a reason the clinic reads; after `needs_changes` the clinic files again. `submittedAt` is the filing staff reviewed: a refile since then answers 409 VERIFICATION_CHANGED. 409 VERIFICATION_ALREADY_DECIDED when the filing is not pending. 403 SELF_REVIEW for a member of that clinic. A clinic already verified under an earlier filing stays verified. Each decision queues a notice (clinic.verified, clinic.needs_changes or clinic.rejected) in the same transaction: the clinic's owner and admins get an email with the reason and an inbox notice. Audited as clinic_verification.approved, .changes_requested or .rejected.",
+            "Staff-only (`applications:review`, a signed-in session that started in the last 12 hours, 403 STEP_UP_REQUIRED otherwise; an API key or a JWT cannot decide). `approve` needs both checks (legal entity and NIF found in the public register) and is the clinic's verification record. `needs_changes` and `reject` need a reason the clinic reads; after `needs_changes` the clinic files again. `submittedAt` is the filing staff reviewed: a refile since then answers 409 VERIFICATION_CHANGED. 409 VERIFICATION_ALREADY_DECIDED when the filing is not pending. 403 SELF_REVIEW for a member of that clinic. A clinic already verified under an earlier filing stays verified. Each decision queues a notice (clinic.verified, clinic.needs_changes or clinic.rejected) in the same transaction: the clinic's owner and admins get an email with the reason and an inbox notice. Audited as clinic_verification.approved, .changes_requested or .rejected.",
           tags: ["Admin"],
           requestParams: {
             path: z.object({ verificationId: z.string().uuid() }),
@@ -3241,7 +3241,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "decidePartnerReview",
           summary: "Decide an open licence application",
           description:
-            "Staff-only (`applications:review`, revocable credential; from a browser the session must have started in the last 12 hours, 403 STEP_UP_REQUIRED otherwise). `approve` needs every checklist item and is the licence verification record: an `approved` profile becomes `active`, an `active` profile stays active. `needs_changes` and `reject` need a reason and leave the profile status alone. The expert gets an email on each decision.",
+            "Staff-only (`applications:review`, a signed-in session that started in the last 12 hours, 403 STEP_UP_REQUIRED otherwise; an API key or a JWT cannot decide). `approve` needs every checklist item and is the licence verification record: an `approved` profile becomes `active`, an `active` profile stays active. `needs_changes` and `reject` need a reason and leave the profile status alone. The expert gets an email on each decision.",
           tags: ["Admin"],
           requestParams: {
             path: z.object({ expertProfileId: z.string().uuid() }),
@@ -3262,7 +3262,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             ...stdErrors,
             "403": {
               description:
-                "Missing applications:review, SELF_REVIEW when staff decide their own application, or STEP_UP_REQUIRED when the browser session started more than 12 hours ago",
+                "Missing applications:review, SELF_REVIEW when staff decide their own application, or STEP_UP_REQUIRED when the session started more than 12 hours ago or the request used an API key",
               content: { "application/json": { schema: ErrorSchema } },
             },
             "404": {
@@ -5957,7 +5957,14 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           type: "http",
           scheme: "bearer",
           description:
-            "API key (elk_ prefix) or M2M JWT token for agent/service auth",
+            "A session token, or a short-lived JWT from `/auth/token`. An API key is never sent here: use `x-api-key`.",
+        },
+        apiKeyAuth: {
+          type: "apiKey",
+          in: "header",
+          name: "x-api-key",
+          description:
+            "An API key made at `POST /auth/api-key/create`, for agents and services. It acts as the person who owns it, with what that person may do now, in the workspace named by the `x-eleva-org` header (a slug) or else their default one. Send it alone: a request with a key and a cookie or bearer token is refused (400 AMBIGUOUS_CREDENTIALS). A key cannot make a staff decision, start onboarding, or make another key.",
         },
         cookieAuth: {
           type: "apiKey",

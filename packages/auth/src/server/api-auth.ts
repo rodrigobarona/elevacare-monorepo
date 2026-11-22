@@ -263,6 +263,18 @@ async function sessionFromJwt(token: string): Promise<ApiIdentity> {
   })
 }
 
+/** The one key configuration Eleva has: keys owned by a person. */
+const USER_KEY_CONFIG = "default"
+const UUID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+/**
+ * An API key stands for the person who owns it, with what that person may
+ * do now: the plugin checks the key, and nothing about its owner, so the
+ * owner is read here on every request. The key names no workspace; the
+ * request does (`x-eleva-org`), or the owner's default one is used, as for
+ * a session.
+ */
 async function sessionFromApiKey(request: Request): Promise<ApiIdentity> {
   const key = request.headers.get("x-api-key")?.trim()
   if (!key) throw new UnauthorizedError("no-session")
@@ -270,20 +282,56 @@ async function sessionFromApiKey(request: Request): Promise<ApiIdentity> {
   const verified = await getAuthApi().verifyApiKey({
     body: { key },
   })
-  if (!verified?.valid || !verified.key) {
+  const record = verified?.valid ? verified.key : null
+  if (!record) throw new UnauthorizedError("invalid-token")
+
+  // `referenceId` is a person only for keys of the user-owned
+  // configuration. A key of any other one could name an organization there.
+  if (record.configId && record.configId !== USER_KEY_CONFIG) {
     throw new UnauthorizedError("invalid-token")
   }
+  const ownerId = record.referenceId
+  if (typeof ownerId !== "string" || !UUID.test(ownerId)) {
+    throw new UnauthorizedError("invalid-token")
+  }
+  const owner = await keyOwner(ownerId)
+  if (!owner) throw new UnauthorizedError("invalid-token")
 
-  const orgId = verified.key.referenceId ?? null
+  const namedSlug = request.headers.get(ELEVA_ORG_HEADER)?.trim() || null
   return buildIdentity({
-    userId: verified.key.userId,
-    email: "",
-    name: verified.key.name ?? null,
-    image: null,
-    orgId,
+    userId: owner.id,
+    email: owner.email,
+    name: owner.name,
+    image: owner.image,
+    orgId: namedSlug ? await membershipOrgIdBySlug(owner.id, namedSlug) : null,
     authMode: "api-key",
     authenticatedAt: null,
   })
+}
+
+/**
+ * The person a key belongs to, or null when they may not sign in: no such
+ * person, a ban that still runs, or an address never verified (which gets
+ * no session either).
+ */
+async function keyOwner(userId: string) {
+  const [row] = await db()
+    .select({
+      id: authTables.user.id,
+      email: authTables.user.email,
+      name: authTables.user.name,
+      image: authTables.user.image,
+      emailVerified: authTables.user.emailVerified,
+      banned: authTables.user.banned,
+      banExpires: authTables.user.banExpires,
+    })
+    .from(authTables.user)
+    .where(eq(authTables.user.id, userId))
+    .limit(1)
+  if (!row || !row.emailVerified) return null
+  const banRuns =
+    row.banned && (!row.banExpires || row.banExpires.getTime() > Date.now())
+  return banRuns ? null : row
 }
 
 function sessionStartedAt(value: unknown): Date | null {

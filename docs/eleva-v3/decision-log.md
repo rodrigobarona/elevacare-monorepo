@@ -32,6 +32,74 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-22: API keys identify their owner again (12.5) (active)
+
+- Change (Phase 12.5): signing in to the API with a key read `key.userId`,
+  a field the installed key plugin (Better Auth 1.7.18) no longer returns,
+  and took `referenceId`, which is now the owner's own id, for the
+  organization. No key could authenticate as anyone: a valid one ended in 403. It failed closed, but "every endpoint works for agents" did not hold
+  for keys. TypeScript could not see it because the plugin's answer was
+  typed by hand; it is now typed from the plugin.
+- What a key is now: it stands for **the person who owns it**, with what
+  that person may do at the time of the request. The plugin checks the key
+  and nothing about its owner, so the owner is read on every request: a
+  person who is banned, deleted or never verified their address is refused,
+  and so is a key that names anything but a person (an old row, or a key of
+  another configuration). The key names no workspace. The request does
+  (`x-eleva-org`, checked against the owner's memberships), or the owner's
+  default one is used, as for a session. This replaces the Phase 2 plan of
+  keys "scoped to an org", which the plugin no longer supports in that
+  form.
+- **Turning keys on is a real change: read this part.** From this slice a
+  key works on every route that takes a capability, with its owner's full
+  power in any workspace they belong to, and it does not expire. Nothing in
+  the product makes a key yet (no screen calls it); the auth server's
+  `POST /auth/api-key/create` does, for any signed-in person.
+- A key cannot make a staff decision. Until now the review routes accepted
+  one "issued on purpose" (12.4), a path no key could reach. Now that keys
+  work, a key that never expires could verify a clinic or a licence long
+  after its owner last signed in, and the second factor planned in 12.8 and
+  12.9 could not apply to it. So a decision needs a signed-in session from
+  today, whatever the credential; a key gets 403 `STEP_UP_REQUIRED` with
+  "An API key cannot decide." This reverses that line of 12.4 and is the
+  founder's to confirm or undo (one condition in `requireStaffReviewer`).
+- The staff guard on new credentials is tighter: it read the session from
+  the 5-minute cookie cache, and Better Auth keeps the first answer for the
+  rest of the request, so a session revoked a minute earlier (signed out
+  elsewhere, banned, password reset) could still mint a key. Both reads now
+  go to the session store.
+- The plugin's own limit, 10 verifications a day for each key, is off: the
+  API already limits each caller, and ten calls a day stops an agent before
+  lunch. Keys made while it was on carry the old numbers on their row; none
+  is known to exist.
+- For agents: the OpenAPI spec names `x-api-key` as a scheme and no longer
+  says a key is a Bearer token with an `elk_` prefix.
+- Proof: `auth-keys.memory.test.ts` runs Eleva's own auth configuration
+  (the same plugins and request hook as production, through a seam that
+  swaps the database) on Better Auth's in-memory adapter, with the Postgres
+  lookups served from the same in-memory tables. 17 cases: minting a key
+  with a cookie, a bearer token and both, for sessions from today and older
+  ones; whose key is minted when two sessions arrive together, which proves
+  the guard runs before the plugin hooks; a revoked session holding a cached
+  copy; and signing in with a key that is unknown, deleted, disabled or
+  expired, whose owner is banned, deleted, unverified or out of the
+  workspace, past ten requests, with a cookie or bearer beside it. Undoing
+  the fixes makes four of them fail. The unit tests no longer mock the shape
+  the plugin dropped.
+- Not proven: against Postgres or the deployed auth server (the in-memory
+  run leaves out `databaseHooks`, which provision and audit there); whether
+  `auth.apikey` holds rows in staging or production (rows from the old plan
+  are refused, not migrated).
+- Questions for the founder (with F-03): may a key ever decide; should keys
+  expire by default or carry a narrower scope than their owner; should a key
+  be tied to one workspace (today a leaked key reaches every workspace of
+  its owner, the staff one included).
+- Left for later: `auth.apikey.user_id` is no longer written by the plugin,
+  so deleting a person no longer deletes their keys through the foreign key
+  (the key is refused at once, and the account purge deletes by either
+  column); dropping that column needs a migration.
+- Owner: engineering (the fix); founder (the three questions)
+
 ### 2026-11-22: "Try again" works on every error page (13.2) (active)
 
 - Change (Phase 13.2): the error page of the six dashboards (`RouteError` in

@@ -106,20 +106,25 @@ describe("POST /admin/partners/{expertProfileId}/decision", () => {
       authenticatedAt: null,
     })
     expect((await post(approve)).status).toBe(403)
-    // Signed in this morning, or an API key issued on purpose: decides.
+    // Signed in this morning: decides.
     requireCapability.mockResolvedValue({
       user: { id: "staff-1" },
       authMode: "cookie",
       authenticatedAt: hoursAgo(3),
     })
     expect((await post(approve)).status).toBe(200)
+    // An API key has no sign-in moment and does not expire: it cannot decide.
     requireCapability.mockResolvedValue({
       user: { id: "staff-1" },
       authMode: "api-key",
       authenticatedAt: null,
     })
-    expect((await post(approve)).status).toBe(200)
-    expect(decide).toHaveBeenCalledTimes(2)
+    const viaKey = await post(approve)
+    expect(viaKey.status).toBe(403)
+    await expect(viaKey.json()).resolves.toMatchObject({
+      code: "STEP_UP_REQUIRED",
+    })
+    expect(decide).toHaveBeenCalledTimes(1)
   })
 
   it("approves with every checklist item", async () => {

@@ -151,14 +151,20 @@ describe("/admin/clinics", () => {
     })
     expect((await post(approve)).status).toBe(403)
 
-    // An API key has no sign-in moment; it is revocable and issued on purpose.
+    // An API key has no sign-in moment and does not expire: it cannot decide.
     mocks.writeAuth.mockResolvedValue({
       user: { id: "staff-1" },
       authMode: "api-key",
       authenticatedAt: null,
     })
-    expect((await post(approve)).status).toBe(200)
-    expect(mocks.decide).toHaveBeenCalledTimes(2)
+    const viaKey = await post(approve)
+    expect(viaKey.status).toBe(403)
+    await expect(viaKey.json()).resolves.toMatchObject({
+      code: "STEP_UP_REQUIRED",
+      message:
+        "A decision needs a signed-in session from today. An API key cannot decide.",
+    })
+    expect(mocks.decide).toHaveBeenCalledTimes(1)
   })
 
   it("reads the queue and a filing with a session of any age", async () => {

@@ -10,12 +10,14 @@ import { isRecentSignIn } from "@eleva/config/practice-closure"
 
 /**
  * Staff auth shared by the review routes (a clinic's legal identity, an
- * expert's licence): `applications:review`,
- * rate limited per staff member. A decision needs a credential that can be
- * revoked (no bare JWT), and from a browser, a session that started today
- * (403 STEP_UP_REQUIRED otherwise): a console left open for days, or a
- * cookie taken from it, cannot verify a clinic or a licence. An API key has no sign-in
- * moment; it is issued on purpose and can be revoked.
+ * expert's licence): `applications:review`, rate limited per staff member.
+ *
+ * A decision needs a signed-in session that started today (403
+ * STEP_UP_REQUIRED otherwise): a console left open for days, or a cookie
+ * taken from it, cannot verify a clinic or a licence. That rules out a bare
+ * JWT, and an API key too: a key has no sign-in moment and does not expire,
+ * so it could decide long after the person who made it last signed in.
+ * Reading the queue or a filing takes any of them.
  */
 export async function requireStaffReviewer(
   request: Request,
@@ -23,18 +25,17 @@ export async function requireStaffReviewer(
   options: { decision?: boolean } = {}
 ): Promise<{ userId: string } | Response> {
   let session
-  // A decision from anything but an API key is held to a recent sign-in. A
-  // session whose start cannot be read is treated as old, never as a key.
-  let mustBeRecent = false
+  // A session whose start cannot be read is treated as old.
   let authenticatedAt: Date | null = null
+  let viaKey = false
   try {
     if (options.decision) {
       const identity = await requireRevocableApiCapability(
         request,
         "applications:review"
       )
-      mustBeRecent = identity.authMode !== "api-key"
       authenticatedAt = identity.authenticatedAt ?? null
+      viaKey = identity.authMode === "api-key"
       session = identity
     } else {
       session = await requireApiCapability(request, "applications:review")
@@ -51,7 +52,7 @@ export async function requireStaffReviewer(
   )
   if (rateLimited) return rateLimited
   if (
-    mustBeRecent &&
+    options.decision &&
     !isRecentSignIn(
       authenticatedAt,
       new Date(),
@@ -62,12 +63,15 @@ export async function requireStaffReviewer(
     // cookie looks like. The staff member's id only.
     console.warn("[staff-review] decision refused: session not recent", {
       userId: session.user.id,
+      viaKey,
     })
     return secureJson(
       {
         error: "STEP_UP_REQUIRED",
         code: "STEP_UP_REQUIRED",
-        message: "Sign in again to decide.",
+        message: viaKey
+          ? "A decision needs a signed-in session from today. An API key cannot decide."
+          : "Sign in again to decide.",
       },
       { status: 403, headers }
     )

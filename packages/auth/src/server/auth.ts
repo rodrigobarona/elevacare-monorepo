@@ -1,4 +1,4 @@
-import { apiKey } from "@better-auth/api-key"
+import { apiKey, type ApiKey } from "@better-auth/api-key"
 import { drizzleAdapter } from "@better-auth/drizzle-adapter"
 import { i18n, locales } from "@better-auth/i18n"
 import { passkey } from "@better-auth/passkey"
@@ -131,7 +131,42 @@ function requireSecondaryStorageWhenDeployed(
   }
 }
 
-function createAuth() {
+/**
+ * The key plugin's options. Its own limit (10 verifications a day for each
+ * key, copied onto every key it creates) is off: the API already limits
+ * each caller through `RATE_LIMITS`, and ten calls a day would stop an agent
+ * before lunch.
+ */
+const API_KEY_OPTIONS = {
+  enableMetadata: true,
+  rateLimit: { enabled: false },
+} as const
+
+/**
+ * What a test replaces to run this very configuration without Postgres.
+ * Production passes nothing.
+ */
+export interface AuthTestSeam {
+  /** A Better Auth database adapter, e.g. the in-memory one. */
+  database: unknown
+  /** Plugins added after Eleva's own, e.g. Better Auth's test utilities. */
+  plugins?: unknown[]
+  /** Stands in for the staff lookup, which reads Postgres directly. */
+  isStaff: (userId: string) => Promise<boolean>
+}
+
+/**
+ * The real configuration on another database, for tests. `databaseHooks`
+ * are left out: they provision and audit in Postgres.
+ */
+export function createAuthForTest(seam: AuthTestSeam) {
+  return createAuth(seam)
+}
+
+function createAuth(seam?: AuthTestSeam) {
+  // The request hook asks this instance about a bearer session; it is set
+  // just below, once the instance exists.
+  const self: { getSession?: AuthApi["getSession"] } = {}
   const storage = createSecondaryStorage()
   requireSecondaryStorageWhenDeployed(storage)
   const issuer = baseURL()
@@ -140,7 +175,7 @@ function createAuth() {
   // Plugin packages resolve a second @better-auth/core copy; the runtime
   // contract is 1.7.18. Cast keeps tsc aligned with the spike-proven set;
   // account-claim-wiring.test.ts checks the options it cannot type-check.
-  return betterAuth({
+  const instance = betterAuth({
     appName: "Eleva.care",
     baseURL: issuer,
     basePath: "/auth",
@@ -149,10 +184,12 @@ function createAuth() {
     // or doubled callback, a refused link) lands on Eleva's own page with
     // `?error=<code>`, not Better Auth's bare error screen on the API host.
     onAPIError: { errorURL: `${resolveGatewayUrl()}/callback` },
-    database: drizzleAdapter(db(), {
-      provider: "pg",
-      schema: authSchema,
-    }),
+    database:
+      seam?.database ??
+      drizzleAdapter(db(), {
+        provider: "pg",
+        schema: authSchema,
+      }),
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: true,
@@ -246,48 +283,50 @@ function createAuth() {
       enabled: authRateLimitEnabled(Boolean(storage)),
       storage: "secondary-storage",
     },
-    databaseHooks: {
-      user: {
-        create: {
-          after: async (user: { id: string; name?: string | null }) => {
-            await provisionPersonalSpace({
-              id: user.id,
-              name: user.name,
-            })
+    databaseHooks: seam
+      ? undefined
+      : {
+          user: {
+            create: {
+              after: async (user: { id: string; name?: string | null }) => {
+                await provisionPersonalSpace({
+                  id: user.id,
+                  name: user.name,
+                })
+              },
+            },
+          },
+          account: {
+            create: {
+              before: async (
+                account: { userId: string; providerId: string },
+                ctx: Parameters<typeof purgeBeforeClaim>[1]
+              ) => {
+                await purgeBeforeClaim(account, ctx)
+              },
+            },
+          },
+          session: {
+            create: {
+              // Raw-SQL personal Space provisioning skips BA createOrganization,
+              // which normally sets activeOrganizationId. Without this, RSC
+              // loadElevaSession can fall back to the first membership while
+              // requireApiAuth rejects the same cookie with 401 no-session.
+              before: async (session: {
+                userId: string
+                activeOrganizationId?: string | null
+                impersonatedBy?: string | null
+              }) => {
+                refuseImpersonationSession(session)
+                await refuseUnverifiedSession(session)
+                if (session.activeOrganizationId) return
+                const orgId = await findDefaultOrganizationId(session.userId)
+                if (!orgId) return
+                return { data: { activeOrganizationId: orgId } }
+              },
+            },
           },
         },
-      },
-      account: {
-        create: {
-          before: async (
-            account: { userId: string; providerId: string },
-            ctx: Parameters<typeof purgeBeforeClaim>[1]
-          ) => {
-            await purgeBeforeClaim(account, ctx)
-          },
-        },
-      },
-      session: {
-        create: {
-          // Raw-SQL personal Space provisioning skips BA createOrganization,
-          // which normally sets activeOrganizationId. Without this, RSC
-          // loadElevaSession can fall back to the first membership while
-          // requireApiAuth rejects the same cookie with 401 no-session.
-          before: async (session: {
-            userId: string
-            activeOrganizationId?: string | null
-            impersonatedBy?: string | null
-          }) => {
-            refuseImpersonationSession(session)
-            await refuseUnverifiedSession(session)
-            if (session.activeOrganizationId) return
-            const orgId = await findDefaultOrganizationId(session.userId)
-            if (!orgId) return
-            return { data: { activeOrganizationId: orgId } }
-          },
-        },
-      },
-    },
     user: {
       validateUserInfo: guardAccountLink,
       additionalFields: {
@@ -327,13 +366,27 @@ function createAuth() {
         // account, creating an API key or adding a passkey would let an
         // old staff session make itself a new way in, so staff do those on
         // a session from today too.
+        //
+        // Both reads go to the session store, never the 5-minute cookie
+        // cache. Better Auth keeps the first answer for the rest of the
+        // request, so a cached one here would also be what the endpoint
+        // acts on: a session revoked a minute ago could still mint a key.
         if (
-          await mustRefuseForStaleStaffSession({
-            path: ctx.path,
-            fromCookie: () => getSessionFromCtx(ctx),
-            headers: ctx.headers,
-            fromHeaders: (headers) => getAuth().api.getSession({ headers }),
-          })
+          await mustRefuseForStaleStaffSession(
+            {
+              path: ctx.path,
+              fromCookie: () =>
+                getSessionFromCtx(ctx, { disableCookieCache: true }),
+              headers: ctx.headers,
+              // The same store read, typed as the cookie one above.
+              fromHeaders: async (headers) =>
+                (await self.getSession?.({
+                  headers,
+                  query: { disableCookieCache: true },
+                })) as Awaited<ReturnType<typeof getSessionFromCtx>>,
+            },
+            seam ? { isStaff: seam.isStaff } : undefined
+          )
         ) {
           throw new APIError("FORBIDDEN", {
             message: "Sign in again to do this.",
@@ -560,7 +613,7 @@ function createAuth() {
           keyPairConfig: { alg: "EdDSA", crv: "Ed25519" },
         },
       }),
-      apiKey({ enableMetadata: true }),
+      apiKey(API_KEY_OPTIONS),
       openAPI({ path: "/reference", disableDefaultReference: true }),
       i18n({
         translations: {
@@ -574,9 +627,12 @@ function createAuth() {
         userLocaleField: "locale",
       }),
       nextCookies(),
+      ...(seam?.plugins ?? []),
     ],
     secondaryStorage: storage,
   } as never)
+  self.getSession = (instance.api as unknown as AuthApi).getSession
+  return instance
 }
 
 export interface AuthApi {
@@ -620,9 +676,14 @@ export interface AuthApi {
     body: { organizationId: string }
   }) => Promise<unknown>
   signOut: (opts: { headers: Headers }) => Promise<unknown>
+  /**
+   * Typed from the plugin, not by hand: a field it renames or drops must
+   * fail typecheck here. The key names its owner in `referenceId`.
+   */
   verifyApiKey: (opts: { body: { key: string } }) => Promise<{
     valid: boolean
-    key?: { userId: string; referenceId?: string | null; name?: string | null }
+    error: { message: string; code: string } | null
+    key: Omit<ApiKey, "key"> | null
   } | null>
   getAccessToken: (opts: {
     body: { accountId: string; userId?: string }
