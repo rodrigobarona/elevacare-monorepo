@@ -125,6 +125,66 @@ Each entry should include:
   `x-eleva-org` is not a documented parameter of the spec.
 - Owner: engineering (the fix); founder (the questions)
 
+### 2026-11-22: A slow rate-limit store no longer lets public requests through (13.3) (active)
+
+- Change (Phase 13.3): the limiter treated only a thrown error as "the
+  store is down". The library answers "allowed" when its store is slower
+  than its timeout (five seconds by default), and the Redis client retries
+  a dead connection for about four seconds before it throws, so in most
+  real outages public and webhook requests waited five seconds and then
+  went through. Now every limiter is built with a one-second timeout
+  (`RATE_LIMIT_STORE_TIMEOUT_MS`), and a timed-out answer is read before
+  "allowed" and takes the same path as a thrown error.
+- What each class does when the store is silent (not configured, threw, or
+  timed out) is unchanged in policy: `public`, `publicSsr` and `webhook`
+  answer 503 `rate_limit_unavailable` with `Retry-After: 30` on Vercel
+  production and preview; every other class lets the request through, and
+  now after one second, not five. Local development and CI stay permissive.
+- No limit changed: `public` is still 10 a minute (a test pins it). The
+  numbers and whether signed-in classes should refuse are the founder's
+  call (F-08).
+- Who is refused while the store is silent, on production and preview:
+  everyone on a public route, which includes confirming a booking after
+  payment, a guest joining a session, and the profile pages `apps/web`
+  renders; and the Daily and Resend webhooks. That was already the rule for
+  a store that failed fast; it now also holds for one that is slow.
+- **Webhooks are the cost of this rule, and an operator must act on it.**
+  Both routes are signed, so the limiter is not their only guard. Daily's
+  default retry type, `circuit-breaker`, stops delivering after three
+  failed deliveries and the webhook stays `FAILED` until it is re-activated
+  (Daily's docs, read 2026-11-22; not tested here). The production webhook
+  was created on 2026-10-30 with that default. A slow spell of the store
+  during live sessions could therefore switch off `meeting.*` and
+  `participant.*` events. `operator-tasks/daily-setup.md` now creates the
+  webhook with `retryType: "exponential"` (Daily then never switches off
+  and retries each event for about 13 minutes) and has the one command
+  that moves the existing webhook to it: **operator, run it before real
+  sessions depend on these events.** Still to decide under F-08: whether
+  `webhook` stays among the classes that refuse. After any burst of the
+  log line below with `class: "webhook"`, check the webhook is `ACTIVE`.
+- For agents: `rate_limit_unavailable` is now in the OpenAPI spec, on every
+  operation of those three classes and on no other. A test walks the route
+  files and fails in either direction.
+- One log line from Eleva each time the store is silent: the cause, the
+  class, whether the request was refused. Never the caller's address or id,
+  never an error message. It is one line per request, with no sampling and
+  no alert yet (13.19). The library's own analytics write can still warn
+  with the caller's key when that write fails; that is older than this
+  change and is left to 13.17.
+- A check that timed out is not cancelled: the store may still count it, so
+  a caller who retries at once can meet a 429 after the store recovers.
+- Proof: `apps/api` unit tests: the three causes give the same 503, with
+  the route's headers and no limit headers; a limiter that cannot be built
+  gets the same answer; a caller already over the limit still gets 429; and
+  one test drives the real library against a store that never answers, with
+  a fake clock: nothing at 999 ms, at 1 000 ms the public request is refused
+  and the signed-in one goes through.
+- Not proven: against Upstash itself. The store is recorded in
+  `eu-central-1`, the API's own region (`legal/fact-sheet.md`), but nobody
+  has measured its latency from there. If it is often slower than a second,
+  public visitors are refused during those spells; the log line gives the
+  rate after deploy.
+
 ### 2026-11-22: "Try again" works on every error page (13.2) (active)
 
 - Change (Phase 13.2): the error page of the six dashboards (`RouteError` in
