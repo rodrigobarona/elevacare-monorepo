@@ -26,15 +26,37 @@ verifies, so the secret must be on the deployed `elevacare-api` **before**
    sensitive; development non-sensitive) and locally. **Done 2026-10-08.**
 2. Redeploy `elevacare-api` so the deployed API has the secret. **Done** for
    `api.eleva.care` (verified 2026-10-30 with a signed `{ "test": "test" }`).
-3. Create the webhook with that same `hmac` and event types
-   `meeting.started`, `meeting.ended`, `participant.joined`,
-   `participant.left`. **Done 2026-10-30** for production. Check it stays
-   `ACTIVE` with `GET https://api.daily.co/v1/webhooks`. URL:
+3. Create the webhook with that same `hmac`, `"retryType": "exponential"`
+   and event types `meeting.started`, `meeting.ended`,
+   `participant.joined`, `participant.left`. **Done 2026-10-30** for
+   production, with Daily's default retry type (step 4 changes it). Check
+   it stays `ACTIVE` with `GET https://api.daily.co/v1/webhooks`. URL:
 
 | Environment | URL                                         |
 | ----------- | ------------------------------------------- |
 | Staging     | `https://api.dev.eleva.care/webhooks/daily` |
 | Production  | `https://api.eleva.care/webhooks/daily`     |
+
+4. **To do: move the existing webhook to the retrying type.** Daily's
+   default, `circuit-breaker`, stops sending for good after three failed
+   deliveries: the webhook goes to `FAILED` and stays there until someone
+   re-activates it. Our endpoint answers 503 while its rate-limit store is
+   down or slow (decision log 2026-11-22, slice 13.3), so three events in a
+   bad minute would switch the session events off. With `exponential`,
+   Daily never switches off: it retries each event up to five times over
+   about 13 minutes. For the webhook's `uuid` from the `GET` above:
+
+   ```bash
+   curl -sS -X POST "https://api.daily.co/v1/webhooks/$WEBHOOK_UUID" \
+     -H "Authorization: Bearer $DAILY_API_KEY" \
+     -H "Content-Type: application/json" \
+     -d '{"retryType":"exponential"}'
+   ```
+
+   The same `POST` (with or without a body) re-activates a webhook that is
+   `FAILED`: Daily sends a signed test message and turns it back on when
+   the endpoint answers 200. Source:
+   <https://docs.daily.co/reference/rest-api/webhooks>, read 2026-11-22.
 
 Signature failure returns 401. Phase 15 repeats production after staging
 evidence.

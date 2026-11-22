@@ -243,6 +243,31 @@ const RateLimitErrorSchema = z.object({
   retryAfter: z.number(),
 })
 
+const RateLimitUnavailableErrorSchema = z.object({
+  error: z.literal("rate_limit_unavailable"),
+})
+
+/**
+ * 503 of a public or webhook route. Those classes refuse a request when the
+ * rate limiter's store cannot be reached, so every one of them can answer
+ * `rate_limit_unavailable` with `Retry-After`. `own` is what else the route
+ * itself answers 503 for.
+ */
+function limiterUnavailable(own?: string) {
+  const limiter =
+    "`rate_limit_unavailable` when the rate limiter cannot be reached (retry after `Retry-After`)"
+  return {
+    description: own ? `${own}; or ${limiter}` : limiter,
+    content: {
+      "application/json": {
+        schema: own
+          ? z.union([ErrorSchema, RateLimitUnavailableErrorSchema])
+          : RateLimitUnavailableErrorSchema,
+      },
+    },
+  }
+}
+
 const OkSchema = z.object({ ok: z.literal(true) })
 
 const emptyRequestBody = {
@@ -287,8 +312,14 @@ const IdempotencyKeyHeaderSchema = z.object({
     ),
 })
 
+/**
+ * For routes read through `handlePublicGet` or limited by the `public`
+ * class. A route with a 503 of its own puts it AFTER this spread, as
+ * `limiterUnavailable("…")`: before it, this one would replace it.
+ */
 const stdPublicWithNotFound = {
   ...stdPublicErrors,
+  "503": limiterUnavailable(),
   "404": {
     description: "Not found",
     content: { "application/json": { schema: ErrorSchema } },
@@ -2828,6 +2859,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               },
             },
             ...stdPublicErrors,
+            "503": limiterUnavailable(),
           },
         },
       },
@@ -2939,12 +2971,10 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               description: "Reservation write failed",
               content: { "application/json": { schema: ErrorSchema } },
             },
-            "503": {
-              description:
-                "Reservation lock unavailable, or `calendar_unavailable` when a connected external calendar could not be checked (retry after `Retry-After`)",
-              content: { "application/json": { schema: ErrorSchema } },
-            },
             ...stdPublicWithNotFound,
+            "503": limiterUnavailable(
+              "Reservation lock unavailable, or `calendar_unavailable` when a connected external calendar could not be checked (retry after `Retry-After`)"
+            ),
             "422": {
               description:
                 "Consent, mode, guest, phone, or unpublished/unavailable slot",
@@ -3004,10 +3034,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               description: "Internal error",
               content: { "application/json": { schema: ErrorSchema } },
             },
-            "503": {
-              description: "Stripe or snapshot unavailable",
-              content: { "application/json": { schema: ErrorSchema } },
-            },
+            "503": limiterUnavailable("Stripe or snapshot unavailable"),
           },
         },
       },
@@ -3043,15 +3070,12 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               description: "Member cannot book (deletion scheduled or banned)",
               content: { "application/json": { schema: ErrorSchema } },
             },
-            "503": {
-              description: "Stripe or snapshot unavailable",
-              content: { "application/json": { schema: ErrorSchema } },
-            },
             "500": {
               description: "Intent write failed",
               content: { "application/json": { schema: ErrorSchema } },
             },
             ...stdPublicWithNotFound,
+            "503": limiterUnavailable("Stripe or snapshot unavailable"),
             "422": {
               description: "Invalid reservationId or reservationToken",
               content: { "application/json": { schema: ErrorSchema } },
@@ -3458,10 +3482,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               description: "Bot detected",
               content: { "application/json": { schema: ErrorSchema } },
             },
-            "503": {
-              description: "Stripe retrieve unavailable",
-              content: { "application/json": { schema: ErrorSchema } },
-            },
+            "503": limiterUnavailable("Stripe retrieve unavailable"),
             "500": {
               description: "Confirmation write failed",
               content: { "application/json": { schema: ErrorSchema } },
@@ -3588,6 +3609,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               },
             },
             ...stdErrors,
+            "503": limiterUnavailable(),
           },
         },
       },
@@ -3747,6 +3769,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
                 },
               },
             },
+            "503": limiterUnavailable(),
           },
         },
       },
@@ -3800,6 +3823,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
                 "SESSION_ENDED: joining has closed (30 minutes after the booked end), the session was completed, or the join grant is genuine but past its end. SESSION_NOT_ACTIVE: the session was cancelled or is otherwise not joinable.",
               content: { "application/json": { schema: ErrorSchema } },
             },
+            "503": limiterUnavailable(),
           },
         },
       },
@@ -4705,6 +4729,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               content: { "application/json": { schema: ErrorSchema } },
             },
             ...stdWithNotFound,
+            "503": limiterUnavailable(),
           },
         },
       },
@@ -4753,6 +4778,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               description: "Retryable handler failure",
               content: { "application/json": { schema: ErrorSchema } },
             },
+            "503": limiterUnavailable(),
           },
         },
       },
@@ -5739,6 +5765,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               description: "Rate limit exceeded",
               content: { "application/json": { schema: RateLimitErrorSchema } },
             },
+            "503": limiterUnavailable(),
           },
         },
       },

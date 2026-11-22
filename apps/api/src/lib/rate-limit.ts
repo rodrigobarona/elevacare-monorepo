@@ -4,9 +4,20 @@ import {
   PUBLIC_SSR_CLIENT_IP_HEADER,
   PUBLIC_SSR_SECRET_HEADER,
 } from "@eleva/api-client"
+import { describeError } from "@eleva/observability"
 import { Ratelimit } from "@upstash/ratelimit"
 import { Redis } from "@upstash/redis"
 import { secureJson } from "./security-headers"
+
+/**
+ * How long a request waits for the limiter's store before it is treated as
+ * down. The library's default is five seconds, after which it answers
+ * "allowed". One second is the value Upstash's own docs use: the API runs in
+ * one region and a healthy check is a single HTTPS call that takes tens of
+ * milliseconds, so this leaves room for a cold connection without making
+ * every request wait five seconds during an outage.
+ */
+export const RATE_LIMIT_STORE_TIMEOUT_MS = 1_000
 
 let redis: Redis | null = null
 
@@ -37,6 +48,7 @@ function getLimiter(
       limiter: Ratelimit.slidingWindow(maxRequests, `${windowMs} ms`),
       prefix: `rl:${prefix}`,
       analytics: true,
+      timeout: RATE_LIMIT_STORE_TIMEOUT_MS,
     })
     limiters.set(key, limiter)
   }
@@ -155,9 +167,43 @@ function rateLimitUnavailable(routeHeaders?: HeadersInit): Response {
   )
 }
 
+/** Why the limiter's store gave no answer for a request. */
+type StoreFailure =
+  | { cause: "not_configured" | "timeout" }
+  | { cause: "error"; error: unknown }
+
+/**
+ * The one answer for "the store did not say": refuse (503) for the classes
+ * that fail closed, allow for the others. Logged once per request, with the
+ * class and the cause and nothing about who asked.
+ */
+function storeUnavailable(
+  failure: StoreFailure,
+  config: RateLimitConfig,
+  routeHeaders?: HeadersInit
+): Response | null {
+  const refused = isRateLimitFailClosed(config)
+  // Without Redis configured (local dev, CI) every request would log.
+  if (failure.cause !== "not_configured" || refused) {
+    console.warn(
+      JSON.stringify({
+        event: "rate_limit.store_unavailable",
+        cause: failure.cause,
+        class: config.prefix,
+        refused,
+        ...(failure.cause === "error"
+          ? { error: describeError(failure.error) }
+          : {}),
+      })
+    )
+  }
+  return refused ? rateLimitUnavailable(routeHeaders) : null
+}
+
 /**
  * Apply rate limiting. Returns null if allowed, or a Response if blocked.
- * Degrades open (allows the request) when Redis is unavailable, except for the
+ * When the store is not configured, throws, or does not answer within
+ * `RATE_LIMIT_STORE_TIMEOUT_MS`, the request is allowed, except for the
  * public and webhook tiers on Vercel, which fail closed with 503
  * (`isRateLimitFailClosed`).
  * Pass `routeHeaders` to merge CORS/security headers into the 429/503 response.
@@ -175,38 +221,50 @@ export async function applyRateLimit(
     return null
   }
 
-  const limiter = getLimiter(config.prefix, config.maxRequests, config.windowMs)
-  if (!limiter) {
-    return isRateLimitFailClosed(config)
-      ? rateLimitUnavailable(routeHeaders)
-      : null
-  }
-
+  let result: Awaited<ReturnType<Ratelimit["limit"]>>
   try {
-    const result = await limiter.limit(identifier)
-    if (!result.success) {
-      const retryAfter = Math.max(
-        0,
-        Math.ceil((result.reset - Date.now()) / 1000)
-      )
-      return secureJson(
-        { error: "rate_limit_exceeded", retryAfter: result.reset },
-        {
-          status: 429,
-          headers: {
-            ...routeHeadersRecord(routeHeaders),
-            "Retry-After": String(retryAfter),
-            "X-RateLimit-Limit": String(config.maxRequests),
-            "X-RateLimit-Remaining": String(result.remaining),
-            "X-RateLimit-Reset": String(result.reset),
-          },
-        }
-      )
+    // Building the limiter is inside the `try` too: a malformed store URL
+    // throws there, and must get the same answer as a store that is down.
+    const limiter = getLimiter(
+      config.prefix,
+      config.maxRequests,
+      config.windowMs
+    )
+    if (!limiter) {
+      return storeUnavailable({ cause: "not_configured" }, config, routeHeaders)
     }
-  } catch {
+    result = await limiter.limit(identifier)
+  } catch (error) {
     // Redis unreachable: authenticated tiers fail open so members are not
     // locked out; public/webhook tiers fail closed on Vercel.
-    if (isRateLimitFailClosed(config)) return rateLimitUnavailable(routeHeaders)
+    return storeUnavailable({ cause: "error", error }, config, routeHeaders)
+  }
+
+  // Checked before `success`: on a timeout the library answers "allowed",
+  // with zeros that are not facts about this caller. `result.pending` is
+  // left alone, as before: on this path it is a write to the same slow store.
+  if (result.reason === "timeout") {
+    return storeUnavailable({ cause: "timeout" }, config, routeHeaders)
+  }
+
+  if (!result.success) {
+    const retryAfter = Math.max(
+      0,
+      Math.ceil((result.reset - Date.now()) / 1000)
+    )
+    return secureJson(
+      { error: "rate_limit_exceeded", retryAfter: result.reset },
+      {
+        status: 429,
+        headers: {
+          ...routeHeadersRecord(routeHeaders),
+          "Retry-After": String(retryAfter),
+          "X-RateLimit-Limit": String(config.maxRequests),
+          "X-RateLimit-Remaining": String(result.remaining),
+          "X-RateLimit-Reset": String(result.reset),
+        },
+      }
+    )
   }
 
   return null
