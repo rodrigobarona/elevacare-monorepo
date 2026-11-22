@@ -2,7 +2,7 @@ import {
   PUBLIC_SSR_CLIENT_IP_HEADER,
   PUBLIC_SSR_SECRET_HEADER,
 } from "@eleva/api-client"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import {
   isLocalPublicRateLimitExempt,
   rateLimitKey,
@@ -154,17 +154,42 @@ describe("isLocalPublicRateLimitExempt", () => {
 })
 
 describe("applyRateLimit outage behaviour", () => {
-  async function loadWithRedis(configured: boolean, limitThrows = false) {
+  type LimitAnswer = Record<string, unknown> | Error
+  const HEALTHY = { success: true, remaining: 1, reset: Date.now() + 1000 }
+  /** What the library answers when its store is slower than `timeout`. */
+  const TIMED_OUT = {
+    success: true,
+    limit: 0,
+    remaining: 0,
+    reset: 0,
+    pending: Promise.resolve(),
+    reason: "timeout",
+  }
+  const constructed: Record<string, unknown>[] = []
+
+  beforeEach(() => {
+    // The module logs each time the store is silent; keep the run readable.
+    vi.spyOn(console, "warn").mockImplementation(() => undefined)
+  })
+
+  async function loadWithRedis(
+    configured: boolean,
+    answer: LimitAnswer = HEALTHY
+  ) {
     vi.resetModules()
+    constructed.length = 0
     vi.doMock("@upstash/redis", () => ({ Redis: class {} }))
     vi.doMock("@upstash/ratelimit", () => {
       class Ratelimit {
         static slidingWindow() {
           return {}
         }
+        constructor(options: Record<string, unknown>) {
+          constructed.push(options)
+        }
         async limit() {
-          if (limitThrows) throw new Error("redis down")
-          return { success: true, remaining: 1, reset: Date.now() + 1000 }
+          if (answer instanceof Error) throw answer
+          return answer
         }
       }
       return { Ratelimit }
@@ -177,6 +202,15 @@ describe("applyRateLimit outage behaviour", () => {
       vi.stubEnv("KV_REST_API_TOKEN", "")
     }
     return import("./rate-limit")
+  }
+
+  /** The one 503 every cause must produce, whatever made the store silent. */
+  async function unavailable(response: Response | null) {
+    return {
+      status: response?.status,
+      body: await response?.json(),
+      headers: Object.fromEntries(response?.headers.entries() ?? []),
+    }
   }
 
   it("fails closed with 503 for public and webhook tiers on Vercel without Redis", async () => {
@@ -194,7 +228,10 @@ describe("applyRateLimit outage behaviour", () => {
 
   it("fails closed on preview when the limiter throws", async () => {
     vi.stubEnv("VERCEL_ENV", "preview")
-    const { applyRateLimit, RATE_LIMITS } = await loadWithRedis(true, true)
+    const { applyRateLimit, RATE_LIMITS } = await loadWithRedis(
+      true,
+      new Error("redis down")
+    )
     const response = await applyRateLimit("ip:203.0.113.7", RATE_LIMITS.public)
     expect(response?.status).toBe(503)
   })
@@ -219,5 +256,254 @@ describe("applyRateLimit outage behaviour", () => {
     expect(
       await applyRateLimit("ip:203.0.113.7", RATE_LIMITS.public)
     ).toBeNull()
+  })
+
+  it.each(["production", "preview"])(
+    "refuses public and webhook requests when the store times out on %s",
+    async (vercelEnv) => {
+      vi.stubEnv("VERCEL_ENV", vercelEnv)
+      const { applyRateLimit, RATE_LIMITS } = await loadWithRedis(
+        true,
+        TIMED_OUT
+      )
+      for (const config of [
+        RATE_LIMITS.public,
+        RATE_LIMITS.publicSsr,
+        RATE_LIMITS.webhook,
+      ]) {
+        const response = await applyRateLimit("ip:203.0.113.7", config)
+        expect(response?.status).toBe(503)
+        expect(response?.headers.get("Retry-After")).toBe("30")
+        expect(await response?.json()).toEqual({
+          error: "rate_limit_unavailable",
+        })
+      }
+    }
+  )
+
+  it("still allows the fail-open tiers when the store throws, and says so once", async () => {
+    vi.stubEnv("VERCEL_ENV", "production")
+    const warn = vi.mocked(console.warn)
+    const { applyRateLimit, RATE_LIMITS } = await loadWithRedis(
+      true,
+      new Error("redis down")
+    )
+    expect(await applyRateLimit("user:1", RATE_LIMITS.authenticated)).toBeNull()
+    expect(warn.mock.calls.map(([line]) => JSON.parse(String(line)))).toEqual([
+      {
+        event: "rate_limit.store_unavailable",
+        cause: "error",
+        class: "auth",
+        refused: false,
+        error: "Error",
+      },
+    ])
+  })
+
+  it("refuses, as for a store that is down, when the limiter cannot be built", async () => {
+    vi.stubEnv("VERCEL_ENV", "production")
+    vi.stubEnv("KV_REST_API_URL", "not a url")
+    vi.stubEnv("KV_REST_API_TOKEN", "token")
+    vi.resetModules()
+    vi.doMock("@upstash/redis", () => ({
+      Redis: class {
+        constructor() {
+          throw new Error("UrlError")
+        }
+      },
+    }))
+    const { applyRateLimit, RATE_LIMITS } = await import("./rate-limit")
+    const response = await applyRateLimit("ip:203.0.113.7", RATE_LIMITS.public)
+    expect(response?.status).toBe(503)
+    expect(await response?.json()).toEqual({ error: "rate_limit_unavailable" })
+    expect(await applyRateLimit("user:1", RATE_LIMITS.authenticated)).toBeNull()
+  })
+
+  it("still allows the fail-open tiers when the store times out", async () => {
+    vi.stubEnv("VERCEL_ENV", "production")
+    const { applyRateLimit, RATE_LIMITS } = await loadWithRedis(true, TIMED_OUT)
+    for (const config of [
+      RATE_LIMITS.authenticated,
+      RATE_LIMITS.onboarding,
+      RATE_LIMITS.icsFeed,
+    ]) {
+      expect(await applyRateLimit("user:1", config)).toBeNull()
+    }
+  })
+
+  it("stays permissive off Vercel when the store times out", async () => {
+    vi.stubEnv("VERCEL_ENV", "")
+    const { applyRateLimit, RATE_LIMITS } = await loadWithRedis(true, TIMED_OUT)
+    expect(
+      await applyRateLimit("ip:203.0.113.7", RATE_LIMITS.public)
+    ).toBeNull()
+  })
+
+  it("answers the same 503 whatever silenced the store, with the route's headers and no limit headers", async () => {
+    vi.stubEnv("VERCEL_ENV", "production")
+    const cors = { "Access-Control-Allow-Origin": "https://eleva.care" }
+    const answers = []
+    for (const [configured, answer] of [
+      [false, HEALTHY],
+      [true, new Error("redis down")],
+      [true, TIMED_OUT],
+    ] as const) {
+      const { applyRateLimit, RATE_LIMITS } = await loadWithRedis(
+        configured,
+        answer
+      )
+      answers.push(
+        await unavailable(
+          await applyRateLimit("ip:203.0.113.7", RATE_LIMITS.public, cors)
+        )
+      )
+    }
+    expect(answers[0]).toMatchObject({
+      status: 503,
+      body: { error: "rate_limit_unavailable" },
+    })
+    expect(answers[0]?.headers).toMatchObject({
+      "access-control-allow-origin": "https://eleva.care",
+      "cache-control": "no-store",
+      "retry-after": "30",
+    })
+    expect(
+      Object.keys(answers[0]?.headers ?? {}).filter((name) =>
+        name.startsWith("x-ratelimit")
+      )
+    ).toEqual([])
+    expect(answers[1]).toEqual(answers[0])
+    expect(answers[2]).toEqual(answers[0])
+  })
+
+  it("keeps the 429 for a caller the library already knows is over the limit", async () => {
+    vi.stubEnv("VERCEL_ENV", "production")
+    const reset = Date.now() + 42_000
+    const { applyRateLimit, RATE_LIMITS } = await loadWithRedis(true, {
+      success: false,
+      limit: 10,
+      remaining: 0,
+      reset,
+      pending: Promise.resolve(),
+      reason: "cacheBlock",
+    })
+    const response = await applyRateLimit("ip:203.0.113.7", RATE_LIMITS.public)
+    expect(response?.status).toBe(429)
+    expect(await response?.json()).toEqual({
+      error: "rate_limit_exceeded",
+      retryAfter: reset,
+    })
+    expect(Number(response?.headers.get("Retry-After"))).toBeGreaterThan(0)
+    expect(response?.headers.get("X-RateLimit-Limit")).toBe("10")
+    expect(response?.headers.get("X-RateLimit-Remaining")).toBe("0")
+  })
+
+  it("logs the cause and the class once, and nothing about who asked", async () => {
+    vi.stubEnv("VERCEL_ENV", "production")
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined)
+    const secretLooking = new Error("connect ECONNREFUSED redis://user:pw@host")
+    for (const answer of [TIMED_OUT, secretLooking]) {
+      const { applyRateLimit, RATE_LIMITS } = await loadWithRedis(true, answer)
+      await applyRateLimit("ip:203.0.113.7", RATE_LIMITS.public)
+    }
+    expect(warn.mock.calls.map(([line]) => JSON.parse(String(line)))).toEqual([
+      {
+        event: "rate_limit.store_unavailable",
+        cause: "timeout",
+        class: "pub",
+        refused: true,
+      },
+      {
+        event: "rate_limit.store_unavailable",
+        cause: "error",
+        class: "pub",
+        refused: true,
+        error: "Error",
+      },
+    ])
+    expect(JSON.stringify(warn.mock.calls)).not.toMatch(/203\.0\.113\.7|pw@/)
+  })
+
+  it("does not log every request when no store is configured off Vercel", async () => {
+    vi.stubEnv("VERCEL_ENV", "")
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined)
+    const { applyRateLimit, RATE_LIMITS } = await loadWithRedis(false)
+    await applyRateLimit("ip:203.0.113.7", RATE_LIMITS.public)
+    await applyRateLimit("user:1", RATE_LIMITS.authenticated)
+    expect(warn).not.toHaveBeenCalled()
+  })
+
+  it("builds every limiter with the explicit timeout", async () => {
+    const { applyRateLimit, RATE_LIMITS, RATE_LIMIT_STORE_TIMEOUT_MS } =
+      await loadWithRedis(true)
+    await applyRateLimit("ip:203.0.113.7", RATE_LIMITS.public)
+    await applyRateLimit("user:1", RATE_LIMITS.authenticated)
+    expect(RATE_LIMIT_STORE_TIMEOUT_MS).toBeGreaterThanOrEqual(500)
+    expect(RATE_LIMIT_STORE_TIMEOUT_MS).toBeLessThanOrEqual(2_000)
+    expect(constructed).toHaveLength(2)
+    for (const options of constructed) {
+      expect(options.timeout).toBe(RATE_LIMIT_STORE_TIMEOUT_MS)
+    }
+  })
+
+  it("keeps the public limit at 10 a minute", async () => {
+    const { RATE_LIMITS } = await loadWithRedis(false)
+    expect(RATE_LIMITS.public).toMatchObject({
+      maxRequests: 10,
+      windowMs: 60_000,
+    })
+  })
+})
+
+describe("applyRateLimit with the real library and a store that never answers", () => {
+  /** A Redis client whose every call hangs, as a dead connection does. */
+  function hangingRedis() {
+    const never = () => new Promise(() => {})
+    return new Proxy(
+      {},
+      { get: (_target, prop) => (prop === "then" ? undefined : never) }
+    )
+  }
+
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.doUnmock("@upstash/redis")
+  })
+
+  it("waits the timeout and no longer, then refuses public and allows signed-in", async () => {
+    vi.resetModules()
+    vi.doUnmock("@upstash/ratelimit")
+    vi.doMock("@upstash/redis", () => ({
+      Redis: class {
+        constructor() {
+          return hangingRedis()
+        }
+      },
+    }))
+    vi.stubEnv("KV_REST_API_URL", "https://redis.invalid")
+    vi.stubEnv("KV_REST_API_TOKEN", "fixture")
+    vi.stubEnv("VERCEL_ENV", "production")
+    vi.spyOn(console, "warn").mockImplementation(() => undefined)
+    // Imported before the clock is faked: the import itself needs real timers.
+    const { applyRateLimit, RATE_LIMITS, RATE_LIMIT_STORE_TIMEOUT_MS } =
+      await import("./rate-limit")
+    vi.useFakeTimers()
+
+    let publicAnswer: Response | null | "pending" = "pending"
+    let signedInAnswer: Response | null | "pending" = "pending"
+    void applyRateLimit("ip:203.0.113.7", RATE_LIMITS.public).then((answer) => {
+      publicAnswer = answer
+    })
+    void applyRateLimit("user:1", RATE_LIMITS.authenticated).then((answer) => {
+      signedInAnswer = answer
+    })
+
+    await vi.advanceTimersByTimeAsync(RATE_LIMIT_STORE_TIMEOUT_MS - 1)
+    expect(publicAnswer).toBe("pending")
+    expect(signedInAnswer).toBe("pending")
+
+    await vi.advanceTimersByTimeAsync(1)
+    expect((publicAnswer as unknown as Response).status).toBe(503)
+    expect(signedInAnswer).toBeNull()
   })
 })
