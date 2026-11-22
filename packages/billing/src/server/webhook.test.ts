@@ -1,6 +1,7 @@
 import type Stripe from "stripe"
 import { describe, expect, it } from "vitest"
 import {
+  clinicPlanBecameCurrent,
   extractErrorDetail,
   mapSubscriptionAction,
   orgIdFromMetadata,
@@ -104,6 +105,52 @@ describe("mapSubscriptionAction", () => {
         "active"
       )
     ).toBe("updated")
+  })
+})
+
+describe("clinicPlanBecameCurrent", () => {
+  it("asks for a seat recount when a clinic plan becomes current", () => {
+    // Paid in Checkout, or a first event that is already active.
+    expect(clinicPlanBecameCurrent("clinic_starter", "active", null)).toBe(true)
+    expect(
+      clinicPlanBecameCurrent("clinic_starter", "active", "incomplete")
+    ).toBe(true)
+    expect(clinicPlanBecameCurrent("clinic_growth", "trialing", null)).toBe(
+      true
+    )
+    expect(clinicPlanBecameCurrent("clinic_growth", "active", "canceled")).toBe(
+      true
+    )
+  })
+
+  it("does not ask again while the plan stays current", () => {
+    // What Eleva's own seat update looks like when Stripe reports it back,
+    // and the same event delivered twice: no loop, no second mark.
+    expect(clinicPlanBecameCurrent("clinic_starter", "active", "active")).toBe(
+      false
+    )
+    expect(
+      clinicPlanBecameCurrent("clinic_starter", "active", "past_due")
+    ).toBe(false)
+    expect(
+      clinicPlanBecameCurrent("clinic_starter", "past_due", "active")
+    ).toBe(false)
+  })
+
+  it("never asks for a plan that is not current, or bills no seats", () => {
+    for (const status of [
+      "incomplete",
+      "incomplete_expired",
+      "canceled",
+      "unpaid",
+      "paused",
+    ]) {
+      expect(clinicPlanBecameCurrent("clinic_starter", status, null)).toBe(
+        false
+      )
+    }
+    expect(clinicPlanBecameCurrent("expert_top", "active", null)).toBe(false)
+    expect(clinicPlanBecameCurrent("unknown", "active", null)).toBe(false)
   })
 })
 

@@ -32,6 +32,79 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-22: Every clinic subscription has a seat item (11.7) (active)
+
+- Change (Phase 11.7): a clinic's subscription got a seat item only when it
+  was created with a seat count, and nothing ever sent one. A new clinic has
+  no seats, so it had no seat item, and the seat sync answered "nothing to
+  do" for ever: the seat limit worked (it is checked in our database) but
+  Stripe never billed a seat. Now:
+  - a clinic subscription is created with its seat item, at the number of
+    seats the clinic has, zero included;
+  - the seat sync creates the item when the clinic's current subscription
+    has none, and sets its quantity to the count;
+  - every ten minutes the sweep gives a seat item to any current clinic
+    subscription still without one, so clinics from before this slice are
+    repaired without waiting for their next change.
+- **Seats are counted by Eleva, never by the request.** `quantity` is gone
+  from `POST /billing/checkout` and `POST /billing/subscribe`: the number is
+  the members with a published service. A plan change sends the seat
+  quantity outright (Stripe resets a moved item to 1 otherwise, which would
+  have billed one seat whatever the clinic had).
+- On the same path, found by the research and fixed here because the slice
+  could not be right without them:
+  - the sync picked one of the clinic's subscription rows at random, and a
+    clinic usually has an unpaid one from provisioning beside the paid one.
+    It now uses the current one (active, trialing, past due), by the same
+    list as the seat limit;
+  - Stripe was called inside the audit transaction. It is called first, and
+    the transaction opens only to record the answer;
+  - a canceled subscription was retried every ten minutes without end. No
+    current subscription now means nothing to do;
+  - every subscription webhook erased the "sync pending" mark. The mirror
+    keeps it;
+  - Checkout sent the same idempotency key for a person and a plan all day,
+    which hands back a finished session and errors when anything differs.
+    The key now follows the request.
+- Checkout saves what the buyer types (`customer_update`): the customer
+  already exists, made by provisioning without an address, and without this
+  the company name, the address and with them the VAT number were not saved
+  on it.
+- Stripe, asked in test mode on 2026-11-22 (API `2026-04-22.dahlia`): a
+  subscription accepts a seat item at quantity 0; adding one to an active
+  subscription at 0 works and repeats safely with the same key; Checkout
+  refuses a line at 0 ("must be greater than or equal to 1"), so at zero
+  seats the line is left out and the sync adds the item once the
+  subscription is active; Stripe itself refuses a second item with a price
+  the subscription already has; going from 0 to 2 seats adds prorated lines
+  to the next invoice.
+- **Not proven, and it blocks the next slice: Checkout itself.** In the test
+  account every Checkout with automatic tax is refused: "You must have a
+  valid head office address to enable automatic tax calculation in test
+  mode." So `customer_update` and the whole "clinic pays, becomes active,
+  gets its seat item" journey were not run. Operator: set the head office
+  address in the Stripe test account's tax settings (and check the live
+  one) before 11.8.
+- For the accountant (A-03): proration is unchanged, and is now one named
+  constant. A clinic that already has seats will see prorated seat charges
+  on its next invoice the first time the sweep gives it a seat item. No
+  such clinic is known today.
+- Also corrected: the API text said `ui_mode=embedded` (the code sends
+  `embedded_page`); `.env.example` pinned Stripe API `2023-08-16`, which
+  predates `embedded_page` (what is deployed is still the operator's check,
+  O-5); the unused "metered seat" branch and its comments are gone.
+- Proof: `@eleva/billing` unit tests (seat sync: 14 cases with a recording
+  gateway; the Stripe side of the seat item and the order of Stripe and
+  database work: 11; subscription items, Checkout parameters and plan
+  change: 10; the activation rule: 3); the mirror's merge of metadata was
+  evaluated on Postgres with literals.
+- Not in this slice: the Billing page and a guard against a second Checkout
+  for a clinic that already pays (11.8); whether provisioning should keep
+  creating an unpaid clinic subscription that expires in 23 hours;
+  `POST /billing/subscribe` reads a field of the invoice that the installed
+  SDK no longer has.
+- Owner: engineering; accountant (A-03); operator (the test account's
+  address, O-5)
 ### 2026-11-22: A slow rate-limit store no longer lets public requests through (13.3) (active)
 
 - Change (Phase 13.3): the limiter treated only a thrown error as "the

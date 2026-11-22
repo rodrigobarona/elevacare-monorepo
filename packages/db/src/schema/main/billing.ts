@@ -260,7 +260,7 @@ export const billingSubscriptions = pgTable(
       .array()
       .notNull()
       .$defaultFn(() => []),
-    /** Subscription item ID for the metered seat, if any. */
+    /** The subscription item that bills seats (a licensed price), if any. */
     seatItemId: varchar("seat_item_id", { length: 255 }),
     currentPeriodStart: timestamp("current_period_start", {
       withTimezone: true,

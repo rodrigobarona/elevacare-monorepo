@@ -30,12 +30,31 @@ export function clinicPlanTier(
     : DEFAULT_CLINIC_TIER
 }
 
-/** A subscription in one of these states is the clinic's current plan. */
-const CURRENT_SUBSCRIPTION_STATUSES = [
+/**
+ * A subscription in one of these states is the clinic's current plan. One
+ * list for the seat limit and the seat sync, so the two always agree on
+ * which subscription counts.
+ */
+export const CURRENT_SUBSCRIPTION_STATUSES = [
   "active",
   "trialing",
   "past_due",
 ] as const
+
+export function isCurrentSubscriptionStatus(status: string): boolean {
+  return (CURRENT_SUBSCRIPTION_STATUSES as readonly string[]).includes(status)
+}
+
+/** The plans that bill seats. */
+export const CLINIC_PLAN_TIERS = Object.keys(
+  CLINIC_SEAT_CAPS
+) as ClinicPlanTier[]
+
+export function isClinicPlanTier(tier: string | null | undefined): boolean {
+  return (
+    tier !== null && tier !== undefined && Object.hasOwn(CLINIC_SEAT_CAPS, tier)
+  )
+}
 
 /**
  * The plan the clinic is on now: its current clinic subscription. Ended
@@ -53,7 +72,7 @@ async function clinicPlan(tx: Tx, orgId: string): Promise<ClinicPlanTier> {
         inArray(main.billingSubscriptions.status, [
           ...CURRENT_SUBSCRIPTION_STATUSES,
         ]),
-        inArray(main.billingSubscriptions.tier, Object.keys(CLINIC_SEAT_CAPS))
+        inArray(main.billingSubscriptions.tier, CLINIC_PLAN_TIERS)
       )
     )
   return rows

@@ -86,7 +86,6 @@ export async function POST(request: Request): Promise<Response> {
       orgId: session.orgId,
       actorUserId: session.user.id,
       tier: parsed.data.tier,
-      quantity: parsed.data.quantity,
       returnUrl:
         parsed.data.returnUrl ??
         `${appBaseUrl()}/account/billing/return?checkout_session_id={CHECKOUT_SESSION_ID}`,

@@ -14,6 +14,8 @@ import {
 } from "@eleva/scheduling"
 import { emitPaymentPayoutNotificationEvent } from "../emit-domain-event"
 import { stripe } from "./client"
+import { isClinicPlanTier, isCurrentSubscriptionStatus } from "./seat-cap"
+import { markSeatSyncPending, SEAT_PRICE_TYPE } from "./seats"
 import { foreignEnvironmentReason } from "./stripe-environment"
 import {
   isMissingBillingCustomerError,
@@ -826,6 +828,15 @@ async function handleSubscriptionEvent(
       eventCreatedAt,
     })
 
+    // A clinic plan that has just become current: its seats are recounted
+    // and sent to Stripe (they may have changed while Checkout was open,
+    // and a Checkout with no seats has no seat item yet). Only on that
+    // change of state: Eleva's own seat updates come back as
+    // `customer.subscription.updated` and must not ask for another sync.
+    if (clinicPlanBecameCurrent(tier, status, priorStatus)) {
+      await markSeatSyncPending(orgId, tx)
+    }
+
     // F3: top_expert_active is mirrored from EVERY subscription event,
     // regardless of tier, so downgrades / cancellations / past_due
     // transitions correctly clear the flag. The query no-ops when no
@@ -883,6 +894,24 @@ export function mapSubscriptionAction(
   return "updated"
 }
 
+/**
+ * @internal Exposed for unit tests. True when this event is a clinic plan
+ * entering a current state (from nothing, or from a state that is not
+ * current). False for a current plan that stays current, which is what
+ * Eleva's own seat updates look like when Stripe reports them back.
+ */
+export function clinicPlanBecameCurrent(
+  tier: string,
+  status: string,
+  priorStatus: string | null
+): boolean {
+  return (
+    isClinicPlanTier(tier) &&
+    isCurrentSubscriptionStatus(status) &&
+    !(priorStatus !== null && isCurrentSubscriptionStatus(priorStatus))
+  )
+}
+
 async function upsertSubscriptionMirror(
   tx: Tx,
   input: {
@@ -902,11 +931,17 @@ async function upsertSubscriptionMirror(
   const priceIds = subscription.items.data.map((item) => item.price.id)
   const seatItemId =
     subscription.items.data.find(
-      (item) =>
-        item.price.metadata?.eleva_price_type === "per_seat" ||
-        item.price.metadata?.eleva_price_type === "per_seat_metered" ||
-        item.price.recurring?.usage_type === "metered"
+      (item) => item.price.metadata?.eleva_price_type === SEAT_PRICE_TYPE
     )?.id ?? null
+  // The column also carries Eleva's own "seat sync pending" mark
+  // (`markSeatSyncPending`). Stripe's metadata replaces the rest; the mark
+  // stays, or a sync waiting for the sweep would be forgotten by the next
+  // subscription event.
+  const metadata = sql`${JSON.stringify(subscription.metadata ?? {})}::jsonb
+    || jsonb_strip_nulls(jsonb_build_object(
+      'seatSyncPending', ${main.billingSubscriptions.metadata}->'seatSyncPending',
+      'seatSyncGeneration', ${main.billingSubscriptions.metadata}->'seatSyncGeneration'
+    ))`
 
   const period = subscriptionPeriod(subscription)
   const canceledAt = subscription.canceled_at
@@ -941,7 +976,7 @@ async function upsertSubscriptionMirror(
         currentPeriodEnd: period.end,
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
         canceledAt,
-        metadata: subscription.metadata as Record<string, unknown>,
+        metadata,
         lastEventCreatedAt: eventCreatedAt,
         updatedAt: new Date(),
       },
