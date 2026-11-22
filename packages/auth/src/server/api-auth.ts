@@ -265,6 +265,13 @@ async function sessionFromJwt(token: string): Promise<ApiIdentity> {
 
 /** The one key configuration Eleva has: keys owned by a person. */
 const USER_KEY_CONFIG = "default"
+/**
+ * Keys made before this moment are refused. Until slice 12.5 any signed-in
+ * person could make a key over HTTP, and none of them worked; from 12.5
+ * keys work and are issued on the server only. Without this line, whatever
+ * was made while the door was open would come alive on deploy.
+ */
+export const API_KEYS_ISSUED_FROM = new Date("2026-11-24T00:00:00.000Z")
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -288,6 +295,10 @@ async function sessionFromApiKey(request: Request): Promise<ApiIdentity> {
   // `referenceId` is a person only for keys of the user-owned
   // configuration. A key of any other one could name an organization there.
   if (record.configId && record.configId !== USER_KEY_CONFIG) {
+    throw new UnauthorizedError("invalid-token")
+  }
+  const madeAt = new Date(record.createdAt)
+  if (!(madeAt.getTime() >= API_KEYS_ISSUED_FROM.getTime())) {
     throw new UnauthorizedError("invalid-token")
   }
   const ownerId = record.referenceId

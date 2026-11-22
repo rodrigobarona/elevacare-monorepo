@@ -351,7 +351,8 @@ function createAuth(seam?: AuthTestSeam) {
       // A key does not expire and outlives a sign-out or a password reset,
       // and there is no screen yet to see or revoke one. Until there is,
       // no session can make itself a key: keys are issued on the server
-      // (`auth.api.createApiKey`). Decision log 2026-11-22, slice 12.5.
+      // (`auth.api.createApiKey`, which this list does not stop: it covers
+      // HTTP only). Decision log 2026-11-22, slice 12.5.
       "/api-key/create",
     ],
     hooks: {
@@ -382,9 +383,11 @@ function createAuth(seam?: AuthTestSeam) {
         const readFromStore = self.getSession
         const verdict = await newCredentialVerdict({
           path: ctx.path,
-          hasSessionCookie: cookieHeaderHasSession(
-            ctx.headers?.get("cookie") ?? null
-          ),
+          // Asked the way Better Auth reads cookies (it trims names, so
+          // `session_token =…` counts), and by our own reading as well.
+          hasSessionCookie:
+            Boolean(ctx.getCookie(ctx.context.authCookies.sessionToken.name)) ||
+            cookieHeaderHasSession(ctx.headers?.get("cookie") ?? null),
           fromCookie: () =>
             getSessionFromCtx(ctx, { disableCookieCache: true }),
           headers: ctx.headers,

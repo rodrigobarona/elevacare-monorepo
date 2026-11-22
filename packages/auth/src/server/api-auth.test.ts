@@ -99,6 +99,7 @@ function verifiedKey(overrides: Record<string, unknown> = {}) {
       configId: "default",
       name: "ci",
       referenceId: OWNER_ID,
+      createdAt: new Date("2026-12-01T10:00:00.000Z"),
       enabled: true,
       metadata: null,
       permissions: null,
@@ -262,6 +263,11 @@ describe("requireApiAuth", () => {
       verifiedKey({ configId: "organization-keys" }),
     ],
     ["a key with no owner", verifiedKey({ referenceId: null })],
+    [
+      "a key made while any session could make one",
+      verifiedKey({ createdAt: new Date("2026-11-23T23:59:59.000Z") }),
+    ],
+    ["a key with no readable date", verifiedKey({ createdAt: undefined })],
     [
       "an owner that is not a person's id",
       verifiedKey({ referenceId: "org_staff" }),

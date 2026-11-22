@@ -60,6 +60,11 @@ Each entry should include:
   the server (`auth.api.createApiKey`), which no code does yet. In effect
   keys are correct and proven, and switched off at the source, until there
   are rules for them (below) and a screen.
+- Keys made before 2026-11-24 are refused (`API_KEYS_ISSUED_FROM`). The
+  endpoint was open to any signed-in person until this slice, and nobody
+  has looked at whether `auth.apikey` holds rows in staging or production:
+  without that line, whatever was made while the door was open would have
+  come alive on deploy. Operator: those rows can be deleted.
 - A key is also refused where a signed-in person is the point: a staff
   decision (403 `STEP_UP_REQUIRED`, "An API key cannot decide"), and staff
   approving, holding or releasing a payout or refunding as staff. The
@@ -95,10 +100,14 @@ Each entry should include:
   the fixes made four of them fail. The unit tests no longer mock the shape
   the plugin dropped.
 - Not proven: against Postgres or the deployed auth server (the in-memory
-  run leaves out `databaseHooks`, which provision and audit there); whether
-  `auth.apikey` holds rows in staging or production (rows from the old plan
-  are refused, not migrated); a staff decision or payout made with a real
-  key end to end (the routes are tested with a key's identity, not a key).
+  run leaves out `databaseHooks`, which provision and audit there); a staff
+  decision or payout made with a real key end to end (the routes are tested
+  with a key's identity, not a key).
+- Staff routes that would still take a key, to settle before key creation
+  comes back or invoicing opens: replaying a platform-fee invoice
+  (`invoicing/platform-fee`, two routes, which write rows and events and
+  move no money), and reading platform-fee invoices, the accounting
+  reconciliation and the payouts list.
 - **What opening keys will mean, for the founder to decide (with F-03).** A
   key reaches everything its owner can do: session records, the data
   export, account deletion, Stripe account sessions, payouts and refunds of

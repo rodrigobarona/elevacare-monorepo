@@ -128,7 +128,11 @@ vi.stubEnv("KV_REST_API_URL", "")
 vi.stubEnv("KV_REST_API_TOKEN", "")
 
 import { STAFF_DECISION_SIGN_IN_MAX_AGE_MS } from "@eleva/config/clinic-verification"
-import { requireApiAuth, requireApiUser } from "./api-auth"
+import {
+  API_KEYS_ISSUED_FROM,
+  requireApiAuth,
+  requireApiUser,
+} from "./api-auth"
 import { createAuthForTest } from "./auth"
 
 const ORIGIN = "http://localhost:3002"
@@ -295,11 +299,22 @@ async function keyIdFor(owner: Person): Promise<string> {
   return created.id
 }
 
-async function keyFor(owner: Person): Promise<string> {
+/**
+ * A key issued on the server, as the only way to one is. Its row is dated
+ * after the cutoff below which keys are refused (the test may run earlier).
+ */
+async function issueKey(owner: Person, body: Row = {}) {
   const created = await auth.api.createApiKey({
-    body: { userId: owner.id, name: "agent" },
+    body: { userId: owner.id, name: "agent", ...body },
   })
-  return created.key
+  tables.apikey!.find((row) => row.id === created.id)!.createdAt = new Date(
+    Math.max(Date.now(), API_KEYS_ISSUED_FROM.getTime())
+  )
+  return created
+}
+
+async function keyFor(owner: Person): Promise<string> {
+  return (await issueKey(owner)).key
 }
 
 function withKey(key: string, headers: Record<string, string> = {}) {
@@ -434,14 +449,40 @@ describe("a new credential through the auth server (the staff session guard)", (
     expect(await renameKey(withCachedCopy, keyId)).toMatchObject({
       status: 401,
     })
-    // The same on a path whose endpoint would have trusted the cached copy.
+    // The same on a path whose endpoint would have trusted the cached copy,
+    // and with the cookie written the loose way Better Auth also accepts.
+    const invite = {
+      email: "someone@example.test",
+      role: "member",
+      organizationId: staff.orgId,
+    }
     expect(
-      await post("/organization/invite-member", withCachedCopy, {
-        email: "someone@example.test",
-        role: "member",
-        organizationId: staff.orgId,
-      })
+      await post("/organization/invite-member", withCachedCopy, invite)
     ).toMatchObject({ status: 401 })
+    const spaced = {
+      cookie: withCachedCopy.cookie.replace(
+        "session_token=",
+        "session_token ="
+      ),
+    }
+    expect(
+      await post("/organization/invite-member", spaced, invite)
+    ).toMatchObject({ status: 401 })
+  })
+
+  it("is a seam for tests only", () => {
+    for (const [name, value] of [
+      ["NODE_ENV", "production"],
+      ["VERCEL_ENV", "preview"],
+    ] as const) {
+      const before = process.env[name]
+      vi.stubEnv(name, value)
+      expect(() =>
+        createAuthForTest({ database: memoryAdapter(tables) })
+      ).toThrow("for tests only")
+      // Put back by hand: the file's own stubs must stay.
+      vi.stubEnv(name, before ?? "")
+    }
   })
 
   it("never lets a key change a key", async () => {
@@ -494,9 +535,7 @@ describe("signing in to the API with a key", () => {
       { code: "invalid-token" }
     )
 
-    const deleted = await auth.api.createApiKey({
-      body: { userId: owner.id, name: "revoked" },
-    })
+    const deleted = await issueKey(owner)
     tables.apikey!.splice(
       tables.apikey!.findIndex((row) => row.id === deleted.id),
       1
@@ -505,9 +544,7 @@ describe("signing in to the API with a key", () => {
       code: "invalid-token",
     })
 
-    const disabled = await auth.api.createApiKey({
-      body: { userId: owner.id, name: "off" },
-    })
+    const disabled = await issueKey(owner)
     await auth.api.updateApiKey({
       body: { keyId: disabled.id, userId: owner.id, enabled: false },
     })
@@ -515,9 +552,7 @@ describe("signing in to the API with a key", () => {
       code: "invalid-token",
     })
 
-    const expired = await auth.api.createApiKey({
-      body: { userId: owner.id, name: "old", expiresIn: 60 * 60 * 24 },
-    })
+    const expired = await issueKey(owner, { expiresIn: 60 * 60 * 24 })
     tables.apikey!.find((row) => row.id === expired.id)!.expiresAt = new Date(
       Date.now() - 1000
     )
@@ -564,6 +599,21 @@ describe("signing in to the API with a key", () => {
     ).rejects.toMatchObject({ code: "not-a-member" })
     await expect(requireApiAuth(withKey(removedKey))).rejects.toMatchObject({
       code: "not-a-member",
+    })
+  })
+
+  it("refuses a key made while any session could make one", async () => {
+    const owner = await person()
+    const created = await issueKey(owner)
+    await expect(requireApiAuth(withKey(created.key))).resolves.toMatchObject({
+      user: { id: owner.id },
+    })
+    // The same key, dated the day before keys were closed to sessions.
+    tables.apikey!.find((row) => row.id === created.id)!.createdAt = new Date(
+      API_KEYS_ISSUED_FROM.getTime() - 1
+    )
+    await expect(requireApiAuth(withKey(created.key))).rejects.toMatchObject({
+      code: "invalid-token",
     })
   })
 
