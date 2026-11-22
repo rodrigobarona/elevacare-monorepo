@@ -32,6 +32,62 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-22: "Try again" works on every error page (13.2) (active)
+
+- Change (Phase 13.2): the error page of the six dashboards (`RouteError` in
+  `@eleva/dashboard`) and the full-page fallback of all eight apps
+  (`GlobalError` in `@eleva/ui`) read a prop named `unstable_retry`. Next
+  16.4.5 passes `retry`, so "Try again" had no handler on 14 pages. Both now
+  take Next's own type (`ErrorInfo` from `next/error`): a renamed prop fails
+  typecheck from here on. The roadmap named one file; the fallback had the
+  same fault.
+- What a reader sees: a calm card in place of the red one. "We couldn't
+  load this page", "Try again" (it says "Trying again…" while the page
+  loads, and "Still not loading. It may need a minute." when it fails
+  again), "Go to dashboard", and a line to write to support with a
+  reference that can be copied. Offline, the page says so and the button
+  waits for the connection. "Your data is safe" is gone: the page cannot
+  check it. Nothing the error itself says is ever shown.
+- Design: three Mobbin references saved first (`09-trust/15` to `17`: the
+  error inside the app, a reference that can be copied, two actions in a
+  clear order). Captures before and after are in
+  `design-audit/captures/2026-11-22-route-error-{before,after}/`.
+- Proof: unit tests in `@eleva/dashboard` and `@eleva/ui` (the button calls
+  `retry` and never only `reset`; a thrown value that is not an error; the
+  two pages say the same in three languages). In a browser,
+  `pnpm e2e:route-error` (opt-in, 11 cases) against playground pages that
+  fail on purpose, one with a loading skeleton as every dashboard has and
+  one without: a retry that fails once and then loads, focus back on the
+  button after a failed retry and on the page once it loads, the reference
+  copied, keyboard order, offline, 320 px in pt and es.
+- A retry is remembered for a minute, for the page it happened on: a
+  dashboard shows its skeleton while it loads again, so the error page that
+  comes back is a new one and has to be told. The page is what is matched,
+  not the reference: that is a hash of the error's message and stack, and
+  in the browser run the same fault did not always get the same one. So a
+  second error on the same page within that minute reads "Still not
+  loading" even if the page loaded in between.
+- Not proven: the page inside a real dashboard shell (the playground has no
+  sidebar); the full-page fallback replacing a failed root layout (its
+  content was rendered on a playground page, the real fallback was not
+  triggered); a screen reader.
+- Left open: the kit's filled button drops to 3.8:1 on hover in the light
+  theme (`hover:bg-primary/80`), on every page, not only here. That is a
+  change to the kit and belongs to 13.32. Offline, "Try again" is a
+  disabled button, so it leaves the tab order until the connection is back;
+  the sentence above it says why. The "Try again" button here keeps its
+  label at 4.6:1 on hover; the kit's other filled buttons do not yet.
+  Neither page reports the error to Sentry yet (13.16).
+- Review: CodeRabbit approved; Greptile found that the fallback read the
+  first language cookie where the app reads the last (fixed, with a test).
+  Judges, three rounds: UX and writing 8.6; engineering 8.3, then 6.8 (a
+  red typecheck and a retry memory that a loading skeleton erased, both
+  fixed and now proven with a skeleton), then 8.2; UI 8.0, 8.0, 8.3; trust
+  and accessibility 8.0, 8.3, 8.2. The last batch after the third round (a
+  spinner, the fallback's dark theme, a refusal to copy that stays on
+  screen, the hover fill) was not scored again.
+- Owner: engineering
+
 ### 2026-11-21: The rest of the roadmap, reviewed and re-planned (proposed)
 
 - What: a review of phases 11 to 15 against the code on `main` at `58816804`, and a plan for

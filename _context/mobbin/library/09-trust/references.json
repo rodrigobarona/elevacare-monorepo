@@ -3,7 +3,7 @@
   "title": "Trust, legal and governance (cross-cutting)",
   "researcher": "Trust, legal and governance",
   "date": "2026-11-14",
-  "summary": "The legal substance is unusually complete for a pre-launch product: consents are separate and unticked, every policy is dated, the controller is named, and export and deletion are in the product. The design does not yet let a member feel that. Trust facts sit in grey fine print, in documents and in FAQ accordions, while the moments that carry the most weight (the health-data consent, the pay step, the privacy controls) are the least explained. The one change that matters most: explain each trust moment in one plain sentence at the place where it is asked, starting with the health-data consent and the cancellation deadline next to the Pay button. References 13 and 14 (2026-11-21) prepare planned maintenance: a notice in advance with the exact window, and a status page that answers in one line.",
+  "summary": "The legal substance is unusually complete for a pre-launch product: consents are separate and unticked, every policy is dated, the controller is named, and export and deletion are in the product. The design does not yet let a member feel that. Trust facts sit in grey fine print, in documents and in FAQ accordions, while the moments that carry the most weight (the health-data consent, the pay step, the privacy controls) are the least explained. The one change that matters most: explain each trust moment in one plain sentence at the place where it is asked, starting with the health-data consent and the cancellation deadline next to the Pay button. References 13 and 14 (2026-11-21) prepare planned maintenance: a notice in advance with the exact window, and a status page that answers in one line. References 15 to 17 (2026-11-22) prepare the dashboard error page (slice 13.2): the error stays inside the app, 'Try again' works, there is a second way out and a reference to copy for support.",
   "strengths": [
     "Checkout consents are four separate, unticked checkboxes, and the AI and transcription choice is marked Optional and left off (04-booking-checkout/05-paid-step-details). Keep the separation; improve the explanation.",
     "The details step turns the cancellation policy into dated facts for this booking: \"Full refund if you cancel before 15 Nov 2026, 10:00\" (04-booking-checkout/06-paid-details-filled). This is the best trust line in the funnel.",
@@ -410,6 +410,42 @@
       "why": "A slim bar across the top reads: 'To make PandaDoc faster, we are upgrading our system on Apr 21, 01:00 AM - 05:00 AM PST. During this maintenance window, the PandaDoc application will not be available.' It ends with 'More details' and a close button.",
       "apply": "Before planned maintenance, show a bar with the date and window in the reader's own time zone and what will not work, and link to the status page. The 'back soon' page repeats the same window and says how to reach Eleva; no Mobbin result showed a full maintenance page.",
       "query": "scheduled maintenance page saying the service will be back soon"
+    },
+    {
+      "id": "09-trust/15",
+      "file": "img/15-revolut-error-inside-shell.jpg",
+      "app": "Revolut Business",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/b719158e-0a19-4b2e-8cc0-5217648ea20a?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "The error stays inside the page: the menu, the title and the filters remain, and the content area says what failed with one 'Try again'",
+      "why": "On Cards, the list did not load. The sidebar, the page title, the search and the two filter chips ('Filters · 1', 'Pending') are all still there. The panel shows a warning icon, 'Connection issue' and one 'Try again' button, and a slim bar on top says 'Back online' once the connection returns.",
+      "apply": "Eleva's dashboard error page renders inside the shell, so the sidebar and the account menu keep working. The content area holds one short title, one or two sentences and 'Try again', which loads the same address again so anything kept in the URL stays. Eleva adds what Revolut leaves out: what to do next, a second way out and a reference.",
+      "query": "dashboard error page with a try again button"
+    },
+    {
+      "id": "09-trust/16",
+      "file": "img/16-contractbook-error-id-copy.jpg",
+      "app": "Contractbook",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/e556dced-1023-41a8-a567-7a4d24570b72?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "An error ID under the message with a copy button, and a line on what to do if it happens again",
+      "why": "The page says something went wrong, that the team has been told, to refresh and, if it goes on, to contact support. 'Refresh' is the one button. Under it, in small grey type: 'Error ID: 3a76…' with a copy icon. Kept for its structure only: the joke about frantic keyboards is not Eleva's voice.",
+      "apply": "Show 'Reference: {code}' in the monospace face with a 'Copy reference' button that has words, and tell the reader to send it to support if the page fails again. Keep the reference next to the message, not at the foot of the page, and confirm the copy in words.",
+      "query": "dashboard error page with a try again button"
+    },
+    {
+      "id": "09-trust/17",
+      "file": "img/17-chronicle-reload-go-to-dashboard.jpg",
+      "app": "Chronicle",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/3bd32686-26bb-4d14-9fab-ccdec3c68149?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Two ways on: the main button tries again, a quiet link under it leaves for the dashboard",
+      "why": "'An error occurred. Please reload the page.' with a 'Reload' button and, under it, a small text link, 'Go to dashboard'. The second action is plainly the lesser one, so the eye goes to the retry first, and there is still a way out when retrying keeps failing.",
+      "apply": "'Try again' is the only filled button. Beside it sits a quiet link with the same words as the not-found page ('Go to dashboard'). Eleva writes a fuller message than Chronicle: what failed, what to do next and the reference.",
+      "query": "dashboard error page with a try again button"
     }
   ],
   "judging_criteria": [
@@ -420,6 +456,7 @@
     "Does the trust centre state at least five specific facts on the page itself before listing any document, and say who runs Eleva? (09-trust/06, 09-trust/12)",
     "Can a member see the current state and date of every consent, change each optional one with a single switch, and follow an export or deletion request through a dated status, with a delete confirmation that names what is erased and what is kept? (09-trust/08, 09-trust/09, 09-trust/10)",
     "Can a reader of any policy page get a short summary, jump between sections on a phone, start a data request from the rights section, and report a concern about an expert in two steps with a reference number? (09-trust/07, 09-trust/11)",
-    "Before and during planned maintenance, does Eleva say when it starts and ends in the reader's time zone and what will not work, and does the status page answer whether Eleva is working in one sentence? (09-trust/13, 09-trust/14)"
+    "Before and during planned maintenance, does Eleva say when it starts and ends in the reader's time zone and what will not work, and does the status page answer whether Eleva is working in one sentence? (09-trust/13, 09-trust/14)",
+    "When a signed-in page fails to load, does the menu stay usable, does the page say in plain words what happened and what to do, does 'Try again' load the page again, is there a second way out, and can the reader copy a reference to send to support? (09-trust/15, 09-trust/16, 09-trust/17)"
   ]
 }
