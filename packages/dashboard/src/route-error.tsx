@@ -9,6 +9,7 @@ import { Button } from "@eleva/ui/components/button"
 import { buttonVariants } from "@eleva/ui/components/button-variants"
 import {
   ErrorReference,
+  ErrorRetryLabel,
   errorDigest,
   errorSupportLinkClassName,
   useErrorRetry,
@@ -71,7 +72,11 @@ export function RouteError({
         </div>
         <div className="mt-4 flex flex-col items-stretch justify-center gap-2 sm:flex-row sm:items-center">
           <Button {...retryButtonProps}>
-            {retryButtonProps.isPending ? t("retrying") : t("retry")}
+            <ErrorRetryLabel
+              isPending={retryButtonProps.isPending}
+              label={t("retry")}
+              pendingLabel={t("retrying")}
+            />
           </Button>
           <a
             href={gatewayUrl("/dashboard")}

@@ -8,11 +8,13 @@ import { LogoMark } from "@eleva/ui/components/brand"
 import { Button } from "@eleva/ui/components/button"
 import {
   ErrorReference,
+  ErrorRetryLabel,
   errorDigest,
   errorSupportLinkClassName,
   useErrorRetry,
 } from "@eleva/ui/components/error-recovery"
 import { fontClassName } from "@eleva/ui/fonts"
+import { cn } from "@eleva/ui/lib/utils"
 
 // Rendered instead of the root layout, so next-intl messages are unavailable.
 // The wording follows `routeStates` in `@eleva/dashboard` (a test there keeps
@@ -112,20 +114,44 @@ function isLocale(value: string | undefined): value is Locale {
 }
 
 /**
- * Eleva's language cookie (`cookieName` in `@eleva/config/i18n`; a test keeps
- * the two equal). Written here so this page does not load that whole module.
+ * Eleva's language and theme cookies (`cookieName` in `@eleva/config/i18n`
+ * and `@eleva/config/theme`; a test keeps them equal). Written here so this
+ * page does not load those modules.
  */
 export const LOCALE_COOKIE = "ELEVA_LOCALE"
+export const THEME_COOKIE = "ELEVA_THEME"
+
+/**
+ * The last cookie of that name, as the rest of Eleva reads them: a browser
+ * can hold an older host-only copy beside the shared one.
+ */
+function savedCookie(name: string): string | undefined {
+  try {
+    return document.cookie
+      .split(/;\s*/)
+      .map((pair) => pair.split("="))
+      .filter(([key]) => key === name)
+      .at(-1)?.[1]
+  } catch {
+    // Cookies cannot be read here (a sandboxed frame): go by the browser.
+    return undefined
+  }
+}
 
 /** The language chosen in Eleva (its cookie), then the browser's. */
 export function readGlobalErrorLocale(): Locale {
-  const saved = document.cookie
-    .split(/;\s*/)
-    .map((pair) => pair.split("="))
-    .find(([name]) => name === LOCALE_COOKIE)?.[1]
+  const saved = savedCookie(LOCALE_COOKIE)
   if (isLocale(saved)) return saved
   const browser = navigator.language.slice(0, 2).toLowerCase()
   return isLocale(browser) ? browser : "en"
+}
+
+/** The theme chosen in Eleva (its cookie), then the system's. */
+export function readGlobalErrorDark(): boolean {
+  const saved = savedCookie(THEME_COOKIE)
+  if (saved === "dark") return true
+  if (saved === "light") return false
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
 }
 
 function useLocale(): Locale {
@@ -169,7 +195,11 @@ export function GlobalErrorContent({
       </div>
       <div className="mt-4 flex flex-col items-stretch sm:items-center">
         <Button {...retryButtonProps}>
-          {retryButtonProps.isPending ? t.retrying : t.retry}
+          <ErrorRetryLabel
+            isPending={retryButtonProps.isPending}
+            label={t.retry}
+            pendingLabel={t.retrying}
+          />
         </Button>
       </div>
       <div className="mt-8 space-y-3 border-t pt-6">
@@ -205,8 +235,17 @@ export function GlobalErrorContent({
  */
 export function GlobalError({ error, retry }: GlobalErrorProps) {
   const locale = useLocale()
+  const dark = useSyncExternalStore(
+    noopSubscribe,
+    readGlobalErrorDark,
+    () => false
+  )
   return (
-    <html lang={locale} className={fontClassName} suppressHydrationWarning>
+    <html
+      lang={locale}
+      className={cn(fontClassName, dark && "dark")}
+      suppressHydrationWarning
+    >
       {/* `metadata` is not read here; React hoists this into the head. */}
       <title>{GLOBAL_ERROR_COPY[locale].title}</title>
       <body

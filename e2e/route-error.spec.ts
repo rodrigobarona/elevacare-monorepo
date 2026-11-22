@@ -123,7 +123,7 @@ test("the reference can be copied and sent to support", async ({
   const reference = await page
     .locator('[data-slot="error-reference"]')
     .innerText()
-  expect(reference).toMatch(/^[\w.:-]+$/)
+  expect(reference).toMatch(/^\d+$/)
 
   await page.getByRole("button", { name: "Copy reference" }).click()
   await expect(page.getByRole("button", { name: "Copied" })).toBeVisible()
@@ -210,7 +210,8 @@ test("dark theme capture", async ({ page }) => {
 
 test("the full-page fallback's content, on a desktop", async ({ page }) => {
   test.skip(!outDir, "captures only")
-  // The fallback has no dark theme of its own, so it is only shown in light.
+  // On this page the playground sets the theme; the real fallback reads
+  // Eleva's theme cookie, which a unit test covers.
   await page.emulateMedia({ colorScheme: "light" })
   await page.goto(`${POC_URL}/fixtures/global-error/en`)
   await page.addStyleTag({ content: "nextjs-portal { display: none }" })

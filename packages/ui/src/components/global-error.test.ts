@@ -2,13 +2,16 @@ import { createElement } from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { cookieName } from "@eleva/config/i18n"
+import { cookieName as themeCookieName } from "@eleva/config/theme"
 import { errorDigest, isRecentRetry } from "./error-recovery"
 import {
   GLOBAL_ERROR_COPY,
   GlobalError,
   GlobalErrorContent,
   LOCALE_COOKIE,
+  readGlobalErrorDark,
   readGlobalErrorLocale,
+  THEME_COOKIE,
 } from "./global-error"
 
 // `next/font/local` only works under the Next compiler.
@@ -117,6 +120,20 @@ describe("the fallback's language", () => {
     expect(locale("", "fr-FR")).toBe("en")
   })
 
+  it("takes the last copy when the browser holds two, as the app does", () => {
+    expect(locale(`${cookieName}=es; ${cookieName}=en`, "pt-PT")).toBe("en")
+  })
+
+  it("goes by the browser when cookies cannot be read", () => {
+    vi.stubGlobal("document", {
+      get cookie(): string {
+        throw new Error("SecurityError")
+      },
+    })
+    vi.stubGlobal("navigator", { language: "es-ES" })
+    expect(readGlobalErrorLocale()).toBe("es")
+  })
+
   it.each(["constructor", "toString", "__proto__", "valueOf", "fr", ""])(
     "ignores a cookie that says %j",
     (value) => {
@@ -124,6 +141,26 @@ describe("the fallback's language", () => {
       expect(locale(`${cookieName}=${value}`, "constructor")).toBe("en")
     }
   )
+})
+
+describe("the fallback's theme", () => {
+  function dark(cookie: string, systemDark: boolean) {
+    vi.stubGlobal("document", { cookie })
+    vi.stubGlobal("window", { matchMedia: () => ({ matches: systemDark }) })
+    return readGlobalErrorDark()
+  }
+
+  it("is the one chosen in Eleva, before the system's", () => {
+    expect(THEME_COOKIE).toBe(themeCookieName)
+    expect(dark(`${themeCookieName}=dark`, false)).toBe(true)
+    expect(dark(`${themeCookieName}=light`, true)).toBe(false)
+  })
+
+  it("follows the system when the choice is the system, or nothing", () => {
+    expect(dark(`${themeCookieName}=system`, true)).toBe(true)
+    expect(dark("", true)).toBe(true)
+    expect(dark("", false)).toBe(false)
+  })
 })
 
 describe("isRecentRetry", () => {

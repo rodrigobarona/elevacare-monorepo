@@ -8,6 +8,7 @@ import {
   useTransition,
 } from "react"
 
+import { SpinnerIcon } from "@eleva/icons"
 import { Button } from "@eleva/ui/components/button"
 import { cn } from "@eleva/ui/lib/utils"
 
@@ -41,10 +42,11 @@ interface RetryRecord {
 
 // Kept outside React: a retry unmounts the error page (a dashboard shows its
 // loading skeleton meanwhile), and the page that comes back when the retry
-// fails is a new one that still has to know the reader already tried. Next
-// gives every failed render its own reference, so the page is all there is
-// to go by: an error on the same page within a minute of a retry counts as
-// "still not loading", even if the page loaded in between.
+// fails is a new one that still has to know the reader already tried. The
+// page is what is matched, not the reference: that is a hash of the error's
+// message and stack, and the same fault did not always get the same one from
+// one render to the next. So an error on the same page within a minute of a
+// retry counts as "still not loading", even if the page loaded in between.
 let lastRetry: RetryRecord | null = null
 /** Where focus was put while the page loaded again. */
 let parkedFocus: HTMLElement | null = null
@@ -161,11 +163,35 @@ export function useErrorRetry(retry: () => void) {
       onPress,
       isPending,
       isDisabled: offline,
-      // Same width for "Try again" and "Trying again…", so the row stays put.
-      className: "data-pending:cursor-wait sm:min-w-40",
+      // One width for "Try again" and "Trying again…", so the row stays put.
+      // The kit's hover fill leaves the label under 4.5:1 in the light theme.
+      className: "hover:bg-primary/90 data-pending:cursor-wait sm:min-w-48",
       [RETRY_BUTTON]: "",
     },
   }
+}
+
+/** The label of the "Try again" button, with a spinner while it loads. */
+export function ErrorRetryLabel({
+  isPending,
+  label,
+  pendingLabel,
+}: {
+  isPending: boolean
+  label: string
+  pendingLabel: string
+}) {
+  if (!isPending) return label
+  return (
+    <>
+      <SpinnerIcon
+        aria-hidden="true"
+        data-icon="inline-start"
+        className="animate-spin motion-reduce:animate-none"
+      />
+      {pendingLabel}
+    </>
+  )
 }
 
 /** The support address inside an error page's sentence. */
@@ -199,7 +225,9 @@ export function ErrorReference({
   const code = useRef<HTMLElement>(null)
 
   useEffect(() => {
-    if (!outcome) return
+    // "Copied" goes back by itself. A refusal stays until the next press:
+    // it is an instruction, and needs longer than two seconds to read.
+    if (outcome !== "copied") return
     const timer = setTimeout(() => setOutcome(null), 2000)
     return () => clearTimeout(timer)
   }, [outcome])

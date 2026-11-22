@@ -62,10 +62,11 @@ Each entry should include:
   copied, keyboard order, offline, 320 px in pt and es.
 - A retry is remembered for a minute, for the page it happened on: a
   dashboard shows its skeleton while it loads again, so the error page that
-  comes back is a new one and has to be told. Next gives every failed
-  render its own reference, so the page is all there is to go by: a second
-  error on the same page within that minute reads "Still not loading" even
-  if the page loaded in between.
+  comes back is a new one and has to be told. The page is what is matched,
+  not the reference: that is a hash of the error's message and stack, and
+  in the browser run the same fault did not always get the same one. So a
+  second error on the same page within that minute reads "Still not
+  loading" even if the page loaded in between.
 - Not proven: the page inside a real dashboard shell (the playground has no
   sidebar); the full-page fallback replacing a failed root layout (its
   content was rendered on a playground page, the real fallback was not
@@ -74,9 +75,17 @@ Each entry should include:
   theme (`hover:bg-primary/80`), on every page, not only here. That is a
   change to the kit and belongs to 13.32. Offline, "Try again" is a
   disabled button, so it leaves the tab order until the connection is back;
-  the sentence above it says why. The fallback follows Eleva's language
-  cookie, but not its dark theme. Neither page reports the error to Sentry
-  yet (13.16).
+  the sentence above it says why. The "Try again" button here keeps its
+  label at 4.6:1 on hover; the kit's other filled buttons do not yet.
+  Neither page reports the error to Sentry yet (13.16).
+- Review: CodeRabbit approved; Greptile found that the fallback read the
+  first language cookie where the app reads the last (fixed, with a test).
+  Judges, three rounds: UX and writing 8.6; engineering 8.3, then 6.8 (a
+  red typecheck and a retry memory that a loading skeleton erased, both
+  fixed and now proven with a skeleton), then 8.2; UI 8.0, 8.0, 8.3; trust
+  and accessibility 8.0, 8.3, 8.2. The last batch after the third round (a
+  spinner, the fallback's dark theme, a refusal to copy that stays on
+  screen, the hover fill) was not scored again.
 - Owner: engineering
 
 ### 2026-11-21: The rest of the roadmap, reviewed and re-planned (proposed)
