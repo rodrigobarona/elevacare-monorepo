@@ -29,8 +29,11 @@ export type MigrationGuardErrorCode =
   | "SOURCE_URL_MISSING"
   | "SOURCE_IS_TARGET"
   | "SOURCE_IN_TARGET_PROJECT"
+  | "TARGET_HOST_POOLED"
+  | "SOURCE_HOST_POOLED"
   | "NEON_PROJECT_MISSING"
   | "NEON_API_KEY_MISSING"
+  | "NEON_API_KEY_INVALID"
   | "NEON_LOOKUP_FAILED"
   | "ENDPOINT_NOT_IN_PROJECT"
   | "ENDPOINT_NOT_WRITABLE"
@@ -52,6 +55,25 @@ export class MigrationGuardError extends Error {
     super(message)
     this.name = "MigrationGuardError"
   }
+}
+
+/**
+ * A failure to ask Neon whose message was written here, on purpose, and is
+ * safe to show an operator. Any other error from a resolver is shown by its
+ * class only: a runtime's own message can quote a request header, and the
+ * header carries the API key.
+ */
+export class NeonLookupError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "NeonLookupError"
+  }
+}
+
+/** A short name for an unknown error: letters and digits only, never its message. */
+export function errorKind(error: unknown): string {
+  const name = error instanceof Error ? error.name : ""
+  return /^[A-Za-z][A-Za-z0-9]{0,40}$/.test(name) ? name : "unknown error"
 }
 
 /** What the Neon API says about the endpoint behind a hostname. */
@@ -90,7 +112,10 @@ export interface MigrationGuardDeps {
 export interface ApprovedMigrationTarget {
   kind: MigrationTargetKind
   mode: MigrationMode
+  /** The v3 database's host. */
   host: string
+  /** The MVP database's host, so an operator sees which one was approved. */
+  sourceHost: string
   projectId: string
   branchId: string
   branchName: string
@@ -289,6 +314,23 @@ export async function assertMigrationTarget(
       "MVP_DATABASE_URL and TARGET_DATABASE_URL point to the same database"
     )
   }
+  // A migration needs a session of its own: read-only for the whole
+  // session, one snapshot, transactions. A pooled host gives each
+  // transaction to whichever connection is free, so none of that holds
+  // there. Refused here, so the check a rehearsal passes is the check the
+  // real run passes.
+  if (directHost(host) !== host) {
+    throw new MigrationGuardError(
+      "TARGET_HOST_POOLED",
+      `TARGET_DATABASE_URL uses a pooled host (its name has "-pooler"). Use the direct host of the same branch: ${directHost(host)}`
+    )
+  }
+  if (directHost(sourceHost) !== sourceHost) {
+    throw new MigrationGuardError(
+      "SOURCE_HOST_POOLED",
+      `MVP_DATABASE_URL uses a pooled host (its name has "-pooler"). Use the direct host of the same database`
+    )
+  }
   const projectId = env.NEON_PROJECT_ID?.trim()
   if (!projectId) {
     throw new MigrationGuardError(
@@ -307,7 +349,7 @@ export async function assertMigrationTarget(
       if (err instanceof MigrationGuardError) throw err
       throw new MigrationGuardError(
         "NEON_LOOKUP_FAILED",
-        `could not ask Neon about ${name} (${err instanceof Error ? err.message : "unknown error"}). Check NEON_API_KEY and NEON_PROJECT_ID, then run again`
+        `could not ask Neon about ${name} (${err instanceof NeonLookupError ? err.message : errorKind(err)}). Check NEON_API_KEY and NEON_PROJECT_ID, then run again`
       )
     }
   }
@@ -343,6 +385,7 @@ export async function assertMigrationTarget(
     kind: target,
     mode,
     host,
+    sourceHost,
     projectId,
     branchId: endpoint.branchId,
     branchName: endpoint.branchName,

@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { directHost, type NeonEndpointInfo } from "./guard"
+import { directHost, NeonLookupError, type NeonEndpointInfo } from "./guard"
 
 /**
  * Reads the Neon API (v2) for the migration guard: which endpoint of the
@@ -61,7 +61,9 @@ export function createNeonEndpointResolver(
       },
     })
     if (!response.ok) {
-      throw new Error(`Neon API answered ${response.status} for ${path}`)
+      throw new NeonLookupError(
+        `Neon API answered ${response.status} for ${path}`
+      )
     }
     return response.json()
   }
@@ -87,7 +89,7 @@ export function createNeonEndpointResolver(
       )
     )
     if (branch.primary !== undefined && branch.primary !== branch.default) {
-      throw new Error(
+      throw new NeonLookupError(
         `Neon reports branch ${branch.id} as default=${branch.default} and primary=${branch.primary}`
       )
     }

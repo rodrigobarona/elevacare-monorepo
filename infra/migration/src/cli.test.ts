@@ -1,4 +1,5 @@
 import { spawnSync } from "node:child_process"
+import { rmSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { describe, expect, it, vi } from "vitest"
 import {
@@ -7,7 +8,9 @@ import {
   type MigrationCommandDeps,
   type MigrationCommandEnv,
 } from "./cli"
+import { MigrationConnectError } from "./connect"
 import type { NeonEndpointInfo } from "./guard"
+import { createNeonEndpointResolver } from "./neon-api"
 
 const PROJECT = "aged-wildflower-123456"
 const REHEARSAL_HOST = "ep-rehearsal-a1b2c3d4.eu-central-1.aws.neon.tech"
@@ -91,12 +94,11 @@ describe("guard: approved", () => {
     expect(code).toBe(0)
     expect(code).toBe(MIGRATION_EXIT.approved)
     expect(h.err).toEqual([])
-    expect(h.out[0]).toBe(
-      `approved: target=branch mode=dry-run host=${REHEARSAL_HOST} project=${PROJECT} branch=rehearsal-2026-11-23 (br-rehearsal)`
-    )
-    expect(h.out[1]).toBe(
-      "The guard ran and stopped: no database was connected to."
-    )
+    // One line: what was approved, which MVP database it reads, and that
+    // nothing was connected to.
+    expect(h.out).toEqual([
+      `approved: target=branch mode=dry-run host=${REHEARSAL_HOST} project=${PROJECT} branch=rehearsal-2026-11-23 (br-rehearsal) source=${MVP_HOST}. The guard ran and stopped: no database was connected to.`,
+    ])
     // Neon was asked, once built, with the key; about the MVP host and
     // the target host.
     expect(h.createResolver).toHaveBeenCalledTimes(1)
@@ -115,6 +117,17 @@ describe("guard: approved", () => {
     const h = harness()
     const code = await runMigrationCommand(
       ["guard", "--apply", "--since", "2026-11-01T00:00:00Z"],
+      ENV,
+      h.deps
+    )
+    expect(code).toBe(0)
+    expect(h.out[0]).toContain("mode=apply")
+  })
+
+  it('takes its flags after the "--" a package script passes on', async () => {
+    const h = harness()
+    const code = await runMigrationCommand(
+      ["guard", "--", "--apply"],
       ENV,
       h.deps
     )
@@ -172,6 +185,16 @@ describe("guard: refused", () => {
       { ...ENV, NEON_PROJECT_ID: undefined },
       "NEON_PROJECT_MISSING",
     ],
+    [
+      "the target uses a pooled host, which the run that connects could not use",
+      {
+        ...ENV,
+        TARGET_DATABASE_URL: target(
+          REHEARSAL_HOST.replace("a1b2c3d4", "a1b2c3d4-pooler")
+        ),
+      },
+      "TARGET_HOST_POOLED",
+    ],
   ] as const)("exits 2 when %s", async (_name, env, expected) => {
     const h = harness()
     const code = await runMigrationCommand(["guard"], env, h.deps)
@@ -194,6 +217,45 @@ describe("guard: refused", () => {
     expectNoSecrets(h)
   })
 
+  it("never prints the key, even when the runtime's own error quotes it", async () => {
+    // The real question to Neon, with a fetch that does what a runtime
+    // does first: build the request, headers included. A key with a line
+    // break in it makes that throw an error that quotes the whole header.
+    const realResolver = (options: { apiKey: string; projectId: string }) =>
+      createNeonEndpointResolver({
+        ...options,
+        fetch: async (input, init) => {
+          new Request(input as string, init)
+          return Response.json({ endpoints: [] })
+        },
+      })
+    const pastedWrong = `${API_KEY}\n# rotated 2026-11`
+    const h = harness({ createResolver: vi.fn(realResolver) })
+    const code = await runMigrationCommand(
+      ["guard"],
+      { ...ENV, NEON_API_KEY: pastedWrong },
+      h.deps
+    )
+    // Refused before the question is built: a key never has a line break.
+    expect(code).toBe(2)
+    expect(h.err[0]).toMatch(/^refused NEON_API_KEY_INVALID: /)
+    expect(h.deps.createResolver).not.toHaveBeenCalled()
+    expectNoSecrets(h)
+
+    // And if a runtime error about the header ever does reach the guard,
+    // only its class is shown.
+    const leaky = harness({
+      createResolver: () => async () => {
+        throw new TypeError(
+          `Headers.append: "Bearer ${API_KEY}" is an invalid header value.`
+        )
+      },
+    })
+    expect(await runMigrationCommand(["guard"], ENV, leaky.deps)).toBe(2)
+    expect(leaky.err[0]).toContain("(TypeError)")
+    expectNoSecrets(leaky)
+  })
+
   it("exits 2 without an API key, before any question to Neon is built", async () => {
     for (const NEON_API_KEY of [undefined, "", "   "]) {
       const h = harness()
@@ -206,6 +268,7 @@ describe("guard: refused", () => {
       expect(h.err[0]).toMatch(/^refused NEON_API_KEY_MISSING: /)
       expect(h.createResolver).not.toHaveBeenCalled()
       expect(h.resolve).not.toHaveBeenCalled()
+      expectNoSecrets(h)
     }
   })
 
@@ -265,14 +328,27 @@ describe("guard: refused", () => {
     )
     expect(code).toBe(2)
     expect(h.err[0]).toMatch(/^refused PRODUCTION_NOT_INTERACTIVE: /)
+    expectNoSecrets(h)
+  })
+
+  it("refuses production when the question gets no answer", async () => {
+    // What the terminal gives back when its input ends (Ctrl-D).
+    const h = harness({ prompt: async () => "" })
+    const code = await runMigrationCommand(
+      ["guard", "--target", "production"],
+      PRODUCTION_ENV,
+      h.deps
+    )
+    expect(code).toBe(2)
+    expect(h.err[0]).toMatch(/^refused PROJECT_ID_NOT_TYPED: /)
   })
 })
 
 describe("guard: usage", () => {
   it.each([
     [[], /name a command: guard/],
-    [["migrate"], /unknown command "migrate"/],
-    [["--apply"], /unknown command "--apply"/],
+    [["migrate"], /unknown command\. The commands are: guard/],
+    [["--apply"], /unknown command\. The commands are: guard/],
     [["guard", "--frobnicate"], /unknown argument "--frobnicate"/],
     [["guard", "--dry-run", "--apply"], /choose one of --dry-run and --apply/],
     [["guard", "--target", "staging"], /--target must be/],
@@ -287,8 +363,24 @@ describe("guard: usage", () => {
       expect(h.err[0]).toMatch(message)
       expect(h.out).toEqual([])
       expect(h.createResolver).not.toHaveBeenCalled()
+      expectNoSecrets(h)
     }
   )
+
+  it("does not repeat a connection string typed where a flag belongs", async () => {
+    const pasted = ENV.TARGET_DATABASE_URL!
+    for (const argv of [
+      [pasted],
+      ["guard", pasted],
+      ["guard", "--target", pasted],
+      ["guard", "--since", pasted],
+    ]) {
+      const h = harness()
+      expect(await runMigrationCommand(argv, ENV, h.deps)).toBe(2)
+      expect(h.err[0]).toMatch(/^refused USAGE: /)
+      expectNoSecrets(h)
+    }
+  })
 })
 
 describe("guard: something unexpected", () => {
@@ -308,10 +400,25 @@ describe("guard: something unexpected", () => {
     expect(code).toBe(1)
     expect(code).toBe(MIGRATION_EXIT.unexpected)
     expect(h.out).toEqual([])
-    expect(h.err).toEqual([
-      "failed: unexpected TypeError. No database was connected to.",
-    ])
+    expect(h.err).toEqual(["failed: unexpected TypeError"])
     expectNoSecrets(h)
+  })
+
+  it("shows an unknown error's class only when it looks like one", async () => {
+    const hostile = new Error("x")
+    hostile.name = ENV.TARGET_DATABASE_URL!
+    const h = harness({
+      now: () => {
+        throw hostile
+      },
+    })
+    const code = await runMigrationCommand(
+      ["guard", "--target", "production"],
+      PRODUCTION_ENV,
+      h.deps
+    )
+    expect(code).toBe(1)
+    expect(h.err).toEqual(["failed: unexpected unknown error"])
   })
 
   it("exits 1 when what was thrown is not even an error", async () => {
@@ -326,18 +433,45 @@ describe("guard: something unexpected", () => {
       h.deps
     )
     expect(code).toBe(1)
+    expect(h.err).toEqual(["failed: unexpected unknown error"])
+  })
+})
+
+describe("a connection that fails, for the commands that will connect", () => {
+  it.each([
+    ["CONNECT_FAILED", "target", 3],
+    ["CONNECT_TIMED_OUT", "source", 3],
+    ["NOT_READ_ONLY", "source", 3],
+    ["POOLED_HOST", "target", 2],
+    ["NOT_APPROVED", null, 1],
+  ] as const)("%s exits with its own status", async (code, side, status) => {
+    // No command connects yet: the failure is handed in where a later
+    // command will raise it, to pin how it is reported.
+    const h = harness({
+      now: () => {
+        throw new MigrationConnectError(code, "what went wrong", side)
+      },
+    })
+    const result = await runMigrationCommand(
+      ["guard", "--target", "production"],
+      PRODUCTION_ENV,
+      h.deps
+    )
+    expect(result).toBe(status)
     expect(h.err).toEqual([
-      "failed: unexpected error. No database was connected to.",
+      `failed ${code}${side ? ` (${side})` : ""}: what went wrong`,
     ])
+    expect(h.out).toEqual([])
+  })
+
+  it("3 is the status the table names for it", () => {
+    expect(MIGRATION_EXIT.connectFailed).toBe(3)
   })
 })
 
 describe("the real process", () => {
-  const PACKAGE = path.resolve(
-    path.dirname(new URL(import.meta.url).pathname),
-    ".."
-  )
-  /** The package's own script, with an environment that holds nothing. */
+  const PACKAGE = path.resolve(import.meta.dirname, "..")
+  /** The package's own entry point, with an environment that holds nothing. */
   const run = (args: string[], env: Record<string, string> = {}) =>
     spawnSync(
       process.execPath,
@@ -346,7 +480,7 @@ describe("the real process", () => {
         cwd: PACKAGE,
         env: { PATH: process.env.PATH ?? "", ...env },
         encoding: "utf8",
-        // No terminal: stdin is closed, so a prompt could only hang.
+        // No terminal: standard input is closed.
         stdio: ["ignore", "pipe", "pipe"],
         timeout: 60_000,
       }
@@ -356,19 +490,34 @@ describe("the real process", () => {
     const result = run(["guard"])
     expect(result.status).toBe(2)
     expect(result.stdout).toBe("")
-    expect(result.stderr).toMatch(/^refused TARGET_URL_MISSING: /)
+    expect(result.stderr).toMatch(/^refused TARGET_URL_MISSING: /m)
   }, 90_000)
 
   it("exits 2 on a usage error", () => {
     const result = run(["guard", "--frobnicate"])
     expect(result.status).toBe(2)
-    expect(result.stderr).toMatch(/^refused USAGE: unknown argument/)
+    expect(result.stderr).toMatch(/^refused USAGE: unknown argument/m)
   }, 90_000)
 
-  it("refuses production from a process with no terminal, and does not hang", () => {
-    // The checks before the terminal need Neon, which this test never
-    // reaches: without a key the run stops there. What matters is that it
-    // ends, with 2, and a .env file next to the package is not read.
+  it("does not read a .env file left beside the package", () => {
+    const file = path.join(PACKAGE, ".env")
+    writeFileSync(
+      file,
+      `TARGET_DATABASE_URL=${target(REHEARSAL_HOST)}\nNEON_PROJECT_ID=${PROJECT}\n`
+    )
+    try {
+      const result = run(["guard"])
+      // Had the file been loaded, the refusal would be about something else.
+      expect(result.status).toBe(2)
+      expect(result.stderr).toMatch(/^refused TARGET_URL_MISSING: /m)
+    } finally {
+      rmSync(file, { force: true })
+    }
+  }, 90_000)
+
+  it("stops at the first thing it cannot check, with no terminal and no key", () => {
+    // Everything for production except the key: the run ends there, with
+    // 2 and no signal, and prints neither password.
     const result = run(["guard", "--target", "production"], {
       TARGET_DATABASE_URL: target(PRODUCTION_HOST),
       MVP_DATABASE_URL: `postgresql://reader:${SOURCE_SECRET}@${MVP_HOST}/mvp`,
@@ -377,7 +526,7 @@ describe("the real process", () => {
     })
     expect(result.status).toBe(2)
     expect(result.signal).toBeNull()
-    expect(result.stderr).toMatch(/^refused NEON_API_KEY_MISSING: /)
+    expect(result.stderr).toMatch(/^refused NEON_API_KEY_MISSING: /m)
     expect(result.stdout + result.stderr).not.toContain(TARGET_SECRET)
     expect(result.stdout + result.stderr).not.toContain(SOURCE_SECRET)
   }, 90_000)

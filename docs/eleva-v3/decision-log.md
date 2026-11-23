@@ -48,23 +48,44 @@ Each entry should include:
   connection strings changed afterwards. Before this, any code could
   build an "approved target" that type-checked.
 - **Sessions are read-only unless the run writes.** The MVP side always,
-  the v3 side in a dry run: the setting is made for the session and read
-  back from the server, and a session that does not answer "on" is closed.
-  A pooled host is refused, because a session setting does not hold on
-  one. This is the second safeguard; the first is the read-only database
-  role the operator creates for the MVP (N1).
+  the v3 side in a dry run: the driver is told to open the connection
+  read-only, the setting is made for the session and read back from the
+  server, and a session that does not answer "on" is closed. This guards
+  against a mapper with a bug; it does not stop code that sets out to
+  write. On the MVP side the real boundary is the read-only database role
+  the operator creates (N1). On the v3 side in a dry run there is no such
+  role: there this setting is the safeguard there is. The driver has to
+  give one dedicated connection per session, never a pool, and the
+  contract says so.
+- **Pooled hosts are refused by the guard**, on both sides
+  (`TARGET_HOST_POOLED`, `SOURCE_HOST_POOLED`). The first version let the
+  guard approve one and refused it only when connecting: the check a
+  rehearsal passed was not the check the real run passes (both reviewers
+  caught it). 14.1 had treated a pooled host as fine; it is not, for a
+  migration.
 - **Exit statuses:** 0 approved, 2 refused (a usage error or a guard
   refusal, nothing connected to), 1 anything unexpected (never read as
-  approval), and 3 reserved for "approved, and a connection failed", so
-  the table does not change when the commands that connect arrive. A
-  missing `NEON_API_KEY` is its own refusal (`NEON_API_KEY_MISSING`),
-  decided before any network call.
-- **Nothing printed carries a secret.** The summary names the host, the
-  project and the branch, never a URL, a user or a password. A refusal
-  prints the guard's own message. An unexpected error prints its class
-  only, and a failed connection the side and the class: a driver's message
-  can carry the whole connection string. Tests look for two passwords and
-  an API key in everything every outcome prints.
+  approval), and 3 for "approved, a connection was tried, and the database
+  did not answer or would not be read-only". No command connects yet; the
+  command line already reports such a failure with its side and status,
+  so the table does not change when one does. An unapproved target handed
+  to the connection module is a bug in the caller: 1, not 3. A missing
+  `NEON_API_KEY` is its own refusal (`NEON_API_KEY_MISSING`), decided
+  before any network call, and so is one with a space or a line break in
+  it (`NEON_API_KEY_INVALID`).
+- **Nothing printed carries a secret, as far as the tests can tell.** The
+  summary names the hosts, the project and the branch, never a URL, a
+  user or a password. A refusal prints the guard's own message. An error
+  the code did not word itself is shown by its class only, and only when
+  the class looks like one; a failed connection adds the driver's code
+  when it has the shape of a code. The first version repeated the message
+  of any error from the question to Neon: a key pasted with a line break
+  makes the runtime throw an error that quotes the whole header, key
+  included, and that reached the terminal (the security review reproduced
+  it). Messages about arguments no longer repeat what was typed unless it
+  is a plain short word: a connection string pasted where a flag belongs
+  carried its password into the message. Tests look for two passwords and
+  an API key in what every outcome prints, those two cases included.
 - Rule 13 of the execution plan holds: the command loads no `.env` file,
   reads the process's environment and arguments in `main.ts` only (a test
   keeps it so), defaults to a dry run against a branch, refuses on missing
@@ -75,14 +96,26 @@ Each entry should include:
   production database runs on (F-02). The driver is an argument, and 14.3
   adds the real one in `connect.ts` once that is known. Pooled or direct:
   direct, enforced.
-- Proof: 41 new tests (115 in the package): each exit status, each family
-  of refusal, production with fakes only, usage errors that never reach
-  Neon, a forged approval, the environment changed after approval, both
-  sides' read-only state, a failed second connection, `close()` twice, a
-  scan that only `connect.ts` may import a driver, and three runs of the
-  real process (`node --import tsx/esm src/main.ts`) with an empty
-  environment: status 2, `TARGET_URL_MISSING`, no network, no hang without
-  a terminal.
+- Proof: 140 tests in the package (75 before), all with fakes: each exit
+  status, each family of refusal, production with fakes only, usage errors
+  that never reach Neon, a forged approval (a copy, a prototype, a proxy),
+  the environment changed after approval, both sides' read-only state and
+  every shape of a wrong answer to it, a database that does not answer, a
+  failed second connection, `close()` twice, the terminal's question
+  answered, ended and already closed, and four runs of the real process
+  (`node --import tsx/esm src/main.ts`) with an empty environment: status
+  2, `TARGET_URL_MISSING`, no network, and a `.env` file left beside the
+  package not read. Three scans keep the shape: what any file but
+  `connect.ts` may import is a short allow-list, in every folder; only
+  `main.ts` reads the process's environment and arguments; the guard is
+  called from one place and the real question to Neon built in one place.
+- Judges, first commit: security 7.3, engineering 7.6. What they found is
+  what the second commit answers: the key in an error message, the guard
+  approving a pooled host, a read-only claim larger than what one `SET`
+  gives, scans that looked at one folder and a list of driver names, a
+  question on a closed terminal that left the process to end with a
+  status of its own (13), a status 3 that also meant "a bug" and "refused",
+  and arguments echoed into messages.
 - Not proven, and not meant to be yet: a connection to any real database;
   the read-only setting against a real server; the command against the
   real Neon API (an operator runs it against a rehearsal branch from the

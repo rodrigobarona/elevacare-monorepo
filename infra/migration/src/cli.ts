@@ -1,6 +1,8 @@
 import { MigrationArgsError, parseMigrationArgs } from "./args"
+import { MigrationConnectError } from "./connect"
 import {
   assertMigrationTarget,
+  errorKind,
   MigrationGuardError,
   type MigrationGuardDeps,
   type MigrationGuardEnv,
@@ -27,7 +29,11 @@ export const MIGRATION_EXIT = {
   unexpected: 1,
   /** Refused: a usage error or a guard refusal. Nothing was connected to. */
   refused: 2,
-  /** Approved, and a connection then failed (`MigrationConnectError`). */
+  /**
+   * Approved, a connection was tried, and the database did not answer or
+   * would not be read-only (`MigrationConnectError`). No command connects
+   * yet; the status is fixed now so the table does not change when one does.
+   */
   connectFailed: 3,
 } as const
 
@@ -59,11 +65,13 @@ export async function runMigrationCommand(
   deps: MigrationCommandDeps
 ): Promise<number> {
   try {
-    const [command, ...flags] = argv
+    const [command, ...rest] = argv
+    // `pnpm <script> -- --flag` hands the "--" on: it is not a flag.
+    const flags = rest[0] === "--" ? rest.slice(1) : rest
     if (command !== "guard") {
       throw new MigrationArgsError(
         command
-          ? `unknown command "${command}". The commands are: ${COMMANDS.join(", ")}`
+          ? `unknown command. The commands are: ${COMMANDS.join(", ")}`
           : `name a command: ${COMMANDS.join(", ")}`
       )
     }
@@ -80,6 +88,15 @@ export async function runMigrationCommand(
           throw new MigrationGuardError(
             "NEON_API_KEY_MISSING",
             "NEON_API_KEY is not set, so Neon cannot be asked which branch the target is"
+          )
+        }
+        // A key with a space, a line break or anything else that is not
+        // plain printable text was pasted wrong. It is refused here: sent
+        // as a header, the runtime's own error would quote it.
+        if (!/^[\x21-\x7e]+$/.test(apiKey)) {
+          throw new MigrationGuardError(
+            "NEON_API_KEY_INVALID",
+            "NEON_API_KEY has a space, a line break or another character a key never has. Set it to the key alone"
           )
         }
         resolver = deps.createResolver({
@@ -100,12 +117,11 @@ export async function runMigrationCommand(
         now: deps.now,
       }
     )
-    // What was approved, by its names only: never a connection string, a
-    // user or a password.
+    // What was approved, by its names only, on one line: never a
+    // connection string, a user or a password.
     deps.out(
-      `approved: target=${approved.kind} mode=${approved.mode} host=${approved.host} project=${approved.projectId} branch=${approved.branchName} (${approved.branchId})`
+      `approved: target=${approved.kind} mode=${approved.mode} host=${approved.host} project=${approved.projectId} branch=${approved.branchName} (${approved.branchId}) source=${approved.sourceHost}. The guard ran and stopped: no database was connected to.`
     )
-    deps.out("The guard ran and stopped: no database was connected to.")
     return MIGRATION_EXIT.approved
   } catch (error) {
     if (error instanceof MigrationArgsError) {
@@ -116,11 +132,17 @@ export async function runMigrationCommand(
       deps.err(`refused ${error.code}: ${error.message}`)
       return MIGRATION_EXIT.refused
     }
+    // For the commands that will connect: which side, and what kind of
+    // failure, in the module's own words.
+    if (error instanceof MigrationConnectError) {
+      deps.err(
+        `failed ${error.code}${error.side ? ` (${error.side})` : ""}: ${error.message}`
+      )
+      return error.exitCode
+    }
     // Its class only: the message of an unknown error is not ours, and
     // could carry a connection string.
-    deps.err(
-      `failed: unexpected ${error instanceof Error ? error.name : "error"}. No database was connected to.`
-    )
+    deps.err(`failed: unexpected ${errorKind(error)}`)
     return MIGRATION_EXIT.unexpected
   }
 }
