@@ -12,6 +12,9 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+# The job below prints one line and needs nothing from the repository.
+permissions: {}
+
 jobs:
   coderabbit-noop:
     name: CodeRabbit (no-op placeholder)

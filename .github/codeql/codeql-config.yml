@@ -1,0 +1,13 @@
+name: Eleva CodeQL configuration
+
+# Reference snapshots of other projects and the internal design playground
+# are not the product: they hold three times as many script files as the
+# product does, and their findings are not ours to fix. The same two paths
+# are left out of Renovate (renovate.json) and gitleaks (.gitleaks.toml).
+paths-ignore:
+  - _context
+  - apps/poc
+  - "**/node_modules"
+  - "**/.next"
+  - "**/dist"
+  - "**/coverage"

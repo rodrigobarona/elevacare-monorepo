@@ -1,0 +1,56 @@
+name: Bill of materials
+
+# One CycloneDX file for each deployed app (scripts/build-sboms.mjs), on
+# every pull request and on main. The files of main are kept as an
+# artifact, named for the commit, for 90 days.
+#
+# A workflow of its own, so that a second merge soon after a first does
+# not cancel the first one's run: CI cancels a run of main that a newer
+# one replaces, and the files of a commit that was deployed would be lost.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: sbom-${{ github.ref }}
+  # A newer push to a pull request replaces the older run. A run of main
+  # always finishes.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: 24
+
+jobs:
+  sbom:
+    name: Bill of materials
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        with:
+          run_install: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      # Installed, so that each package's licence can be read.
+      - run: pnpm install --frozen-lockfile
+      # Fails when a file does not list a package the app depends on in
+      # production.
+      - run: pnpm sbom:apps
+      - if: github.event_name == 'push'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: sbom-${{ github.sha }}
+          path: sbom/
+          if-no-files-found: error
+          retention-days: 90
