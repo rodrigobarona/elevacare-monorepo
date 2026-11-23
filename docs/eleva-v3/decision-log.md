@@ -54,9 +54,10 @@ Each entry should include:
 - **The cause was measured afterwards** (Neon's API and production's
   logs, read only): production's own branch used 92.6 of the 110.5
   compute-hours of the period, because the job that runs every minute
-  keeps its compute awake, about 126 hours in a month by itself. The
-  night's runs brought the stop forward by a few days; on this plan it
-  returns late in every month without them.
+  keeps its compute awake: sixteen days around the clock since 2026-11-07,
+  about 180 hours in a month by itself. The night's runs brought the stop
+  forward; left as it was it returns about the 18th of every month
+  without them. Slice 13.35 (#474) is the fix.
 - New for people, in the roadmap's section 4: F-15 (the rules an API key
   must follow before one can be made again), F-16 (whether a key may read
   a staff queue), P-08 (who reads and reviews the staff access log), the
