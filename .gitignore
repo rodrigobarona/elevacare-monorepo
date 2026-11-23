@@ -55,6 +55,9 @@ npm-debug.log*
 _context/Postman OAuth2 Credentials.json
 # Private research reports (third-party audits): keep local, never publish
 _context/HeadiHealth/
+# The private design library (rodrigobarona/design-references), cloned or
+# linked here. New third-party screenshots live there, never in this repo.
+_context/design-references
 .vercel
 
 # Turborepo

@@ -1,0 +1,453 @@
+{
+  "surface": "15-brand-art-direction",
+  "title": "Brand and art direction for the public site",
+  "researcher": "Brand and art direction",
+  "date": "2026-11-23",
+  "summary": "The public site is tidy, honest and calm, and it could belong to anyone. Deep teal does every job, the photographs come from many shoots with no shared treatment, the serif never gets large enough to show character, and every section is the same row of rounded cards. The references here show how health and wellness brands build a recognisable identity from a few decisions made firmly: a palette with a role for each colour, one photographic treatment, one display moment per page, a small set of shapes, and a signature ending. Three worked directions with palettes, type and contrast figures are in the panel's brand-directions.md. The change that matters most, whichever direction is chosen: give each colour one job and put every photograph through one treatment.",
+  "strengths": [
+    "Cream paper with deep teal already reads calm and trustworthy, and text contrast is strong: ink on the page is 16 to 1, teal on the page 5.8 to 1 and the button label 5.7 to 1, by calculation.",
+    "Fraunces with DM Sans is a sound pair, already self-hosted, and the tokens hold fluid display steps and warm shadows that a new direction can reuse.",
+    "The large rounded portrait on the expert profile is the most distinctive picture on the site, and the deep teal quote band shows that one strong field works.",
+    "The leaf mark and wordmark are recognisable, and the mono eyebrow gives pages a quiet structure worth keeping."
+  ],
+  "findings": [
+    {
+      "id": "BRAND-01",
+      "severity": "P1",
+      "lens": "ui",
+      "title": "One colour does every job, so nothing stands out",
+      "evidence": [
+        "2026-11-14-before/01-homepage/01-home.desktop.jpg",
+        "2026-11-14-before/08-marketing/01-become-expert.desktop.jpg",
+        "2026-11-14-before/08-marketing/03-about.desktop.jpg"
+      ],
+      "detail": "Deep teal (#006D77) is the header button, every link, the numerals, the icon discs, the chip text, the eyebrow and the two dark bands. Coral appears once on the homepage, as the 'Become an expert' button, and nowhere on /become-expert. The tokens hold a full coral scale, a sand scale and three highlight colours, but no colour has a stated role on the public site. With the logo covered, the page could belong to any careful health or finance brand.",
+      "recommendation": "Write a palette of five to seven colours with one job each: page, surface, text, action, emphasis words, one deep field, and one tint that only ever marks trust or health facts ('Registration checked', a session time). Use the action colour on nothing that cannot be pressed. Three worked palettes with contrast figures are in brand-directions.md.",
+      "references": [
+        "15-brand-art-direction/03",
+        "15-brand-art-direction/04",
+        "15-brand-art-direction/07",
+        "15-brand-art-direction/18",
+        "15-brand-art-direction/19",
+        "15-brand-art-direction/22"
+      ]
+    },
+    {
+      "id": "BRAND-02",
+      "severity": "P1",
+      "lens": "ui",
+      "title": "The photographs do not look like one brand",
+      "evidence": [
+        "2026-11-14-before/01-homepage/01-home.desktop.jpg",
+        "2026-11-14-before/01-homepage/01-home.mobile.jpg",
+        "2026-11-14-before/08-marketing/03-about.desktop.jpg"
+      ],
+      "detail": "The homepage hero is a dark collage of three stock pictures. The four service tiles come from four shoots with four kinds of light. The advisors on About stand in front of grey studio paper, a white wall, a red wall, a garden and a conference stage, at different crops. The brand book already says 'mixed lighting styles in one page without intent' is a don't, and asks for one headshot spec that has not been written.",
+      "recommendation": "Choose one treatment and apply it to everything this month, before any shoot: cut-outs on brand tints, or black and white under one colour wash, at one crop. Then write a one-page photo guide for experts (open shade, chest up, plain wall) and commission about ten documentary photographs in real rooms for the marketing pages. Replace stock service tiles with type or shapes until real pictures exist.",
+      "references": [
+        "15-brand-art-direction/02",
+        "15-brand-art-direction/05",
+        "15-brand-art-direction/06",
+        "15-brand-art-direction/10",
+        "15-brand-art-direction/11",
+        "15-brand-art-direction/12"
+      ]
+    },
+    {
+      "id": "BRAND-03",
+      "severity": "P1",
+      "lens": "ui",
+      "title": "The serif has no moment of scale, and the italic is spent on every heading",
+      "evidence": [
+        "2026-11-14-before/01-homepage/01-home.desktop.jpg",
+        "2026-11-14-before/08-marketing/01-become-expert.desktop.jpg",
+        "2026-11-14-before/08-marketing/03-about.desktop.jpg"
+      ],
+      "detail": "At 1440px the hero headline is about 56px and section headings about 44 to 48px, by estimate, so the largest type is 4% of the viewport width. Fraunces at that size reads as a tidy serif and shows little of its character. Five of six homepage headings end in an italic phrase ('on your schedule', 'women's health', 'tailored to you', 'lifelong journey', 'with Eleva'), so the italic no longer signals anything. The brand book names Lora as the headline face while packages/ui/src/fonts.ts ships Fraunces; the two documents disagree.",
+      "recommendation": "Give each page one display moment at 8 to 10% of the viewport width on desktop and 12 to 14% on a phone, and keep other headings modest. Reserve italic (or the accent colour) for one phrase per page. Decide the display face on purpose and correct the brand book to match the code.",
+      "references": [
+        "15-brand-art-direction/01",
+        "15-brand-art-direction/04",
+        "15-brand-art-direction/13",
+        "15-brand-art-direction/14",
+        "15-brand-art-direction/20"
+      ]
+    },
+    {
+      "id": "BRAND-04",
+      "severity": "P2",
+      "lens": "ui",
+      "title": "There is no shape or illustration language",
+      "evidence": [
+        "2026-11-14-before/08-marketing/01-become-expert.desktop.jpg",
+        "2026-11-14-before/08-marketing/03-about.desktop.jpg",
+        "2026-11-14-before/01-homepage/01-home.desktop.jpg"
+      ],
+      "detail": "The only graphic devices are a rounded rectangle and a small teal disc behind an icon. The leaf in the logo, which the brand book calls the motif, is not used anywhere else. Pages without photographs (the benefits grid on /become-expert, 'What we stand for' on About) fall back to icon-in-disc cards, the most common pattern on the web.",
+      "recommendation": "Draw four or five shapes from the mark (leaf, arch, disc, half disc) and use them three ways: as a frame for portraits, as a large cropped field in closing sections, and in place of stock pictures where no real photograph exists. Keep to two or three colours per composition.",
+      "references": [
+        "15-brand-art-direction/09",
+        "15-brand-art-direction/16",
+        "15-brand-art-direction/23",
+        "15-brand-art-direction/05"
+      ]
+    },
+    {
+      "id": "BRAND-05",
+      "severity": "P2",
+      "lens": "ui",
+      "title": "Every section is the same block: eyebrow, serif heading, paragraph, a row of rounded cards",
+      "evidence": [
+        "2026-11-14-before/01-homepage/01-home.desktop.jpg",
+        "2026-11-14-before/08-marketing/03-about.desktop.jpg",
+        "2026-11-14-before/08-marketing/01-become-expert.desktop.jpg"
+      ],
+      "detail": "The homepage repeats one template seven times and About repeats it eight times. Columns are equal, pictures are the same size within a row and every block is centred on the same width. There is no lead item, no numbered sequence with lines, no text set in two columns and no picture that breaks the grid. The page is easy to scan but has no rhythm, and nothing tells the reader which part matters most.",
+      "recommendation": "Alternate three or four layouts: one lead with four smaller items; numbered rows on hairlines; a statement with a two-column story; one tall picture beside a short text. Allow one picture per page to bleed off an edge. Keep cards for things that are objects (an expert, a service).",
+      "references": [
+        "15-brand-art-direction/15",
+        "15-brand-art-direction/16",
+        "15-brand-art-direction/17",
+        "15-brand-art-direction/13",
+        "15-brand-art-direction/01"
+      ]
+    },
+    {
+      "id": "BRAND-06",
+      "severity": "P2",
+      "lens": "ui",
+      "title": "The page and its surfaces are almost the same colour, and the deep band is used twice",
+      "evidence": [
+        "2026-11-14-before/01-homepage/01-home.desktop.jpg",
+        "2026-11-14-before/08-marketing/01-become-expert.desktop.jpg"
+      ],
+      "detail": "The page is sand-50 (#FDFAF5), the alternate sections are sand-100 (#F9F3EB) and the cards are white. The three differ by a few points of lightness, so on most screens the sections run together and the 'cream' reads as off-white. The one strong field, deep teal, appears twice on the homepage (the quote and the expert call to action), which halves its effect.",
+      "recommendation": "Deepen the page colour until it is clearly warm next to a white card, and give alternate sections a real second colour. Use the deep field once per page for the single most important statement, with type large enough to deserve it.",
+      "references": [
+        "15-brand-art-direction/01",
+        "15-brand-art-direction/03",
+        "15-brand-art-direction/19",
+        "15-brand-art-direction/20",
+        "15-brand-art-direction/21"
+      ]
+    },
+    {
+      "id": "BRAND-07",
+      "severity": "P3",
+      "lens": "ui",
+      "title": "Pages end without a signature",
+      "evidence": [
+        "2026-11-14-before/01-homepage/01-home.desktop.jpg",
+        "2026-11-14-before/03-profile/01-profile-paid.desktop.jpg",
+        "2026-11-14-before/08-marketing/01-become-expert.desktop.jpg"
+      ],
+      "detail": "The footer is a small logo and three columns of links on the same cream as the page, with nineteen links at one size. The closing section above it is a different pattern on each page (a teal photo block on the homepage, a plain heading and button on /become-expert, nothing on the profile). The last screen of every page is the least branded.",
+      "recommendation": "Give every page the same ending: a closing block with one brand shape or the deep colour, one sentence and one action, then a footer where the wordmark or leaf appears large and the legal links sit small beneath.",
+      "references": [
+        "15-brand-art-direction/08",
+        "15-brand-art-direction/23",
+        "15-brand-art-direction/24"
+      ]
+    }
+  ],
+  "references": [
+    {
+      "id": "15-brand-art-direction/01",
+      "file": "img/01-oura-light-sans-one-italic-serif-word.jpg",
+      "app": "Oura Ring",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/3b140d69-bd38-4283-a5df-c1d66c206e1b?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Sand page, a light sans headline with one word in italic serif",
+      "why": "The page is a warm sand (about #ECE2D8), not white, with warm charcoal text (about #3A3531). The headline is a light-weight sans at roughly 80px on a 1440px viewport, two lines of about 24 characters, and only the word 'health' is set in italic serif. The body sits in a narrower column that starts a third of the way in, about 75 characters a line. A close crop of a smile in low warm light bleeds off the right edge and starts 17% in from the left, so the grid is visibly asymmetric. The only shape is a thin outlined circle.",
+      "apply": "Eleva sets italic serif in every heading, so it stops meaning anything. Keep the italic for one word per page, the word that carries the promise. Deepen the page from near-white sand (#FDFAF5) to a sand a member can see, and let one photograph bleed off an edge instead of sitting in a rounded card. A ring and sleep tracker; kept for colour, type and layout.",
+      "query": "Oura ring sleep tracker hero section"
+    },
+    {
+      "id": "15-brand-art-direction/02",
+      "file": "img/02-oura-documentary-photo-frosted-data-cards.jpg",
+      "app": "Oura Ring",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/70f3a470-35a9-48cf-ada4-59a44df8cb5f?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "One documentary photograph at full width, with health data on frosted cards",
+      "why": "A woman stretches awake in her own bedroom in early light. The grade is muted and warm: olive-browns and stone (about #524434, #7E766C, #A7A19B), no pure white and no pure black. The headline is white light sans at about 44px with 'rested' in italic serif beneath. Readiness, time asleep and heart rate sit on small frosted-glass cards with an 8px radius, so the data reads as part of the scene. A thin vertical time line runs down the left edge.",
+      "apply": "This is the photography brief in one image: a real room, one window, a person doing something and not posing for the camera. Eleva can commission ten photographs like this (a video call at a kitchen table, a physiotherapy room in Lisbon) and use one per page at full width. A booking time or a 'registration checked' fact can sit on a frosted card over the photograph.",
+      "query": "Oura ring sleep tracker hero section"
+    },
+    {
+      "id": "15-brand-art-direction/03",
+      "file": "img/03-function-cream-rust-italic-emphasis.jpg",
+      "app": "Function",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/b059401f-1b1b-49b2-bf84-9d5c300f829d?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Cream and rust: one warm colour for action and emphasis, a darker tone of it for the big tile",
+      "why": "The page is cream (about #FDF7EB) with dark brown ink. Rust (about #A8502F) does three jobs and no others: the logo, the 'Start testing' pill and the italic serif phrase 'health in motion' in a centred serif headline of about 44px. The large tile is a deep rust-brown texture (about #4E2B1D) with white figures; the smaller tiles are a sand one step darker than the page (about #F1E9DA) with a 12px radius. Green appears only inside the data ring, where it means 'in range'.",
+      "apply": "A palette where each colour has a job. For Eleva: one colour for actions, one deep tone of the brand colour for a single large tile or band, a tint one step from the page for quiet cards, and a separate colour that only ever means health data or 'checked'. A lab-testing service; kept for the palette logic.",
+      "query": "fertility and pregnancy care hero section"
+    },
+    {
+      "id": "15-brand-art-direction/04",
+      "file": "img/04-hims-two-tone-headline-clay.jpg",
+      "app": "Hims",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/e2d2a1d5-9143-4773-bf2b-d98a81002cbf?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Two-tone headline: ink for the sentence, clay for the promise",
+      "why": "The headline is a medium geometric sans at about 48px, three lines of about 26 characters, on white. Most of it is near-black; 'feel great' and 'power of better health.' are a soft clay (about #C08A6E). A 10px uppercase eyebrow sits above. Below, a single photograph runs the full column with a 12px radius: a face cropped so tight the hair leaves the frame, on a peach wall (about #E3D2C5) that matches the clay in the headline.",
+      "apply": "Emphasis by colour, not by italics, and a photograph whose background shares the headline's accent. Eleva can colour the two or three words that carry the benefit and shoot portraits against a wall in the brand's warm tint. Note the clay on white here is about 3 to 1 by calculation, under 4.5 to 1; Eleva's accent must be darker when it is used for words.",
+      "query": "supplements brand hero section with large serif headline"
+    },
+    {
+      "id": "15-brand-art-direction/05",
+      "file": "img/05-hims-cut-out-portrait-plaster-backdrop.jpg",
+      "app": "Hims",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/85148634-c898-49ac-8428-094635752306?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A portrait on a painted plaster backdrop in the brand's warm tone",
+      "why": "The whole section is one photograph: a man in a maroon T-shirt, arms crossed, cut at the waist and filling the right 45%, in front of mottled warm plaster (about #E4CFBB). The left half of the same backdrop holds a 32px sans headline, three lines with ochre check marks and a black pill button. No card, no border and no gradient: the backdrop is the layout.",
+      "apply": "One backdrop solves two problems for Eleva: every expert and member photographed against it belongs to the same series, and the empty half is a ready place for words. A painted canvas in the chosen sand or clay costs little and can travel to each shoot.",
+      "query": "women's health telehealth homepage hero section"
+    },
+    {
+      "id": "15-brand-art-direction/06",
+      "file": "img/06-hims-image-mosaic-one-colour-grade.jpg",
+      "app": "Hims",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/da939d3c-f9fe-4777-9013-2bf161bcbcfc?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A mosaic of people, hands and objects held together by one colour grade",
+      "why": "Five columns of square tiles with a 14px radius and a 10px gap. Faces, hands, skin, products and textures are mixed, but every tile sits in the same range: peach and clay (about #B98E76, #CDA689), sand (#E9E0D7) and one pale blue-grey. The light is soft and from the side in each. No tile carries text.",
+      "apply": "Eleva's four service tiles today come from four different stock shoots. A grade and a palette rule (clothing and backgrounds in sand, clay and the brand's deep colour; soft side light) would let pregnancy, pelvic health, menopause and recovery sit together. Crops of hands and gestures say 'care' without showing a face that is not a real member.",
+      "query": "hero section with photos inside arch and circle shapes for a care brand"
+    },
+    {
+      "id": "15-brand-art-direction/07",
+      "file": "img/07-hims-sand-tiles-line-icons.jpg",
+      "app": "Hims",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/28464c36-d592-4a36-b7ed-97dc892b4d67?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Sand tiles with one line icon each, a two-tone heading and a black pill",
+      "why": "On white, the heading is a 36px sans in black with the second sentence, 'All of you.', in ochre (about #C98A45). A row of tiles in one sand tint (#EFE4D2) with a 12px radius each holds a 40px line icon in the same ochre and two lines of 14px medium text. The one action is a black pill, about 44px tall. Three colours in all.",
+      "apply": "A component set that is easy to recognise: one tile colour, one radius, one icon weight, one button shape. Eleva's cards today are white on near-white with a hairline; a filled tint with no border reads warmer and needs no shadow. Phosphor icons at one weight would fit.",
+      "query": "menopause and hormone care website hero section"
+    },
+    {
+      "id": "15-brand-art-direction/08",
+      "file": "img/08-daylight-footer-colour-field.jpg",
+      "app": "Daylight",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/ed5da041-d991-4954-a70b-d5c77d8c73b2?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "The page ends in a full field of the brand colour with the logo and one line",
+      "why": "The last screen is filled edge to edge with the brand orange (about #FD6B03) in soft diagonal waves a few shades apart. The logo sits left at about 150px wide, a two-word line sits right in the same white, and the links are a single centred column of small bracketed mono labels. Nothing else competes.",
+      "apply": "Eleva's footer is three columns of links on the same cream as the page, so the site ends without a signature. A closing field in the deep brand colour with the leaf mark large and one calm line would give every page the same last impression, with the legal links kept small beneath. An energy company; kept for the closing structure.",
+      "query": "footer with large wordmark on colour field"
+    },
+    {
+      "id": "15-brand-art-direction/09",
+      "file": "img/09-headspace-shape-characters-hero.jpg",
+      "app": "Headspace",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/193eea98-37bc-47e3-82da-c6cb5cc2eda0?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A hero built from three flat shapes with drawn faces, no photograph",
+      "why": "A blue band (about #2450ED and #3370F1) holds a yellow circle (#F7D045), an off-white circle and a pale blue hexagon (#57A8F7), each with closed eyes and a smile drawn in three strokes. Below, on light grey, the heading is a bold rounded sans at about 44px and the body runs about 70 characters. The shapes overlap and are cropped by the band, which makes them feel large and calm.",
+      "apply": "A shape system can replace stock photographs on pages where Eleva has no real picture yet (help, legal, newsletter, empty states). Eleva's own shapes could come from the leaf mark: a leaf, an arch, a disc and a half disc, in three brand colours, cropped large. Faces on shapes are Headspace's own idea and should not be copied.",
+      "query": "mental health app hero section with coloured background"
+    },
+    {
+      "id": "15-brand-art-direction/10",
+      "file": "img/10-miro-cut-out-portraits-flat-colours.jpg",
+      "app": "Miro",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/28f34e76-1c4c-40e5-9148-b7936ec729fd?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Cut-out portraits on flat brand colours, one crop for everyone",
+      "why": "On a cream page (#FBF7EE), a three-column grid of 3:2 tiles each holds a head-and-shoulders cut-out on one flat colour: two yellows (about #FFDB07, #FDDF45), lilac (#ACA3FC), orange (#FFB053), pink (#F8A8FF) and lime (#CDFF78). Every head starts the same distance below the top edge and every pair of shoulders leaves the bottom edge. Names are 18px and roles 14px, centred beneath.",
+      "apply": "Eleva's eight advisor photographs have eight backgrounds: grey studio, white, a red wall, a garden. Removing the backgrounds and placing each person on one of two or three brand tints, at one crop, makes them a series this month, before any shoot. Miro's colours are loud; Eleva would use its sand, clay and tint. A whiteboard tool; kept for the photo treatment.",
+      "query": "team section with portraits cut out on coloured backgrounds"
+    },
+    {
+      "id": "15-brand-art-direction/11",
+      "file": "img/11-until-portraits-one-backdrop.jpg",
+      "app": "Until",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/8a79182a-a10b-4c32-9b82-ec746f3a2c62?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Every portrait taken in front of the same hedge, in daylight",
+      "why": "A four-column grid of square tiles with a 14px radius, a 4px white edge and a soft shadow, on cream (#F7F3EB). Ten of twelve people stand in front of the same dark green hedge, shot from the chest up in open shade, wearing their own clothes. Two lab photographs and one object tile break the rhythm on purpose.",
+      "apply": "Consistency without a studio: one place, one time of day, one distance. Eleva can ask each expert for a portrait against a plain wall or greenery in open shade, with a one-page guide (chest up, eyes to camera, no flash), and reach a shared look across a marketplace of independent people who will never be in one room.",
+      "query": "team section with portraits cut out on coloured backgrounds"
+    },
+    {
+      "id": "15-brand-art-direction/12",
+      "file": "img/12-anima-portraits-colour-wash.jpg",
+      "app": "Anima",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/5151f1c7-7ebf-429b-97c4-299719e57b48?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Black-and-white portraits under one colour wash",
+      "why": "Three tall 3:4 portraits with a 6px radius are black and white, and an olive-green wash (about #828964) rises from the bottom of each to about two thirds of the height. Names and roles sit in small mono capitals on translucent chips in the bottom-left corner. The three photographs were plainly taken in different rooms, and the wash makes them one set.",
+      "apply": "The fastest fix for mixed photographs: convert to black and white and lay one brand colour over the lower part. Eleva can do this in CSS today (a grayscale filter and a gradient overlay) for advisors and for experts whose photo is weak, with the name on a chip in the corner. A venture studio; kept for the treatment.",
+      "query": "team section with portraits cut out on coloured backgrounds"
+    },
+    {
+      "id": "15-brand-art-direction/13",
+      "file": "img/13-amperos-serif-display-two-column-body.jpg",
+      "app": "Amperos",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/7730614f-a372-4c59-b08a-afb9eab5637f?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A centred serif statement in warm brown, then the story in two columns",
+      "why": "The headline is a regular-weight serif with strong contrast at about 52px, two centred lines of about 30 characters, in dark brown (#39241B) on white. A small round engraved image sits beneath it as a full stop. The story then splits in two columns: the problem in 14px sans on the left, and on the right a single 18px serif sentence ('We started Amperos because it shouldn't be.') before the answer. A torn-paper collage in blush (#F3E7E0) fills one corner.",
+      "apply": "Eleva's About page uses the same card rows as the homepage. This is the editorial alternative: one large serif statement, then problem and answer side by side with the turning sentence set larger in serif. Warm brown ink in place of neutral black is a small change that warms every page. A claims service for clinics; kept for the typography.",
+      "query": "health insurance website section with illustrations instead of photos"
+    },
+    {
+      "id": "15-brand-art-direction/14",
+      "file": "img/14-face-formula-italic-serif-list-over-photo.jpg",
+      "app": "Face Formula",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/d7990263-c447-4583-bca4-f88350bde068?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A list of five words in large italic serif is the navigation",
+      "why": "Over a dimmed close photograph in deep browns (about #2D1F1A to #62493F), five words are stacked in italic serif at about 80px, roughly 6% of the viewport width. The active one is white and wrapped in thin parentheses; the others are white at about 40%. A 10px uppercase label sits above, and a 12px paragraph of about 45 characters a line sits bottom right with an underlined link.",
+      "apply": "Type as the interface. Eleva's needs (Pregnancy, Pelvic health, Menopause, Nutrition, Mind) could be a stacked list in display serif where the chosen word is full strength and the photograph and paragraph change with it. It gives the homepage one moment of scale it lacks today. Skincare; kept for the type treatment.",
+      "query": "skincare brand hero section with warm colour palette"
+    },
+    {
+      "id": "15-brand-art-direction/15",
+      "file": "img/15-face-formula-asymmetric-editorial-layout.jpg",
+      "app": "Face Formula",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/ac5e58b2-68d4-4ade-bbb2-23ff9123c657?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Asymmetric spread: small pictures and a short text on the left, one tall portrait on the right",
+      "why": "The left half holds a 24px serif heading in slate (about #3B4A5A), two small pictures of equal size (a landscape and a product), a centred paragraph of about 55 characters a line and a small underlined link, all with wide white margins. The right half is one tall sunlit portrait with sea blue behind it, running from the top edge to the bottom. About half of the screen is empty.",
+      "apply": "Scale contrast and empty space do the work that cards do on Eleva today. One tall portrait beside a short text column, with two small supporting pictures, would suit 'Our belief' on the homepage and the founders' note on About. Skincare; kept for the layout.",
+      "query": "skincare brand hero section with warm colour palette"
+    },
+    {
+      "id": "15-brand-art-direction/16",
+      "file": "img/16-function-editorial-grid-mono-tags.jpg",
+      "app": "Function",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/061d234b-3a04-40a2-80d3-489f1769036f?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Editorial grid: one large lead and four small pieces, mono tags, serif lead title",
+      "why": "On cream (#FCF8ED), the lead picture takes the left half and two rows; four smaller pictures form a two-by-two block on the right, all with a 10px radius. Each has a tag in 9px mono capitals on a sand chip. The lead title is serif at about 30px with its question in italic rust; the small titles are 15px bold sans. The lead image is a collage of capsules on green discs over a pale grid, so even the picture uses shapes.",
+      "apply": "A hierarchy of one and four reads as a magazine, where four equal cards read as a catalogue. Eleva can use it for the evidence and guide pages and for 'How we support you' (one lead need, four others). The mono tag is already in Eleva's system as the eyebrow.",
+      "query": "editorial section with pull quote and numbered list on a health website"
+    },
+    {
+      "id": "15-brand-art-direction/17",
+      "file": "img/17-zaro-numbered-rows-hairlines.jpg",
+      "app": "Zaro",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/448a046b-3236-4d07-af33-a58cb00ea240?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Numbered rows divided by hairlines, with the open row in ink and the rest in grey",
+      "why": "On off-white (#FAFAF8), the heading is a 32px medium sans whose second clause turns warm grey-brown. Three rows numbered 01, 02 and 03 are separated by 1px lines. The open row is ink at 26px with one line of explanation; the closed rows are grey. A soft, blurred warm photograph on the right carries two white chips. No card has a border or a fill.",
+      "apply": "Eleva's 'How it works' already has 01, 02, 03 in teal italic numerals. Hairlines and one open row would turn it from three equal blocks into a sequence, and would work the same on a phone. A data product; kept for the structure.",
+      "query": "editorial section with pull quote and numbered list on a health website"
+    },
+    {
+      "id": "15-brand-art-direction/18",
+      "file": "img/18-ragged-edge-colour-blocks-two-voices.jpg",
+      "app": "Ragged Edge",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/12993e13-853d-42fc-90c7-5966e0bd98c7?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Three colour blocks with a role each, and two type voices",
+      "why": "On a pale blush page (#FBF7F6), a charcoal block (#1F1F1D) carries five stacked words in blush bold geometric sans at about 96px, with a short serif line in the corner. Under it, an olive block (about #768437) holds a 30px serif sentence about one customer, and a blush block (#F8EDE6) holds the call to action in bold sans. The bright pink appears only in the logo. Sans speaks for the brand and serif speaks for people.",
+      "apply": "A palette of three fields used with intent: the dark one for the brand statement, the mid one for a human story, the light one for the action. Eleva could give its deep colour, a warm mid colour and a tint the same three roles, and keep serif for human voices (quotes, experts' words) and sans for facts. An agency case study for an insurer; kept for the colour and type logic.",
+      "query": "health insurance website section with illustrations instead of photos"
+    },
+    {
+      "id": "15-brand-art-direction/19",
+      "file": "img/19-klarna-mauve-section-plum-type.jpg",
+      "app": "Klarna",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/3cd1f36b-d3d2-494b-953c-a7fcd9087451?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A full-width mauve section with plum-black type",
+      "why": "The section is one flat mauve (#B698BC) from edge to edge. The heading is a condensed bold sans at about 32px in plum-black (#24202C), and four figures at 30px sit in a row with 12px labels. Everything is left-aligned with a margin of about an eighth of the width. There are no cards, lines or icons.",
+      "apply": "A coloured section needs no cards inside it. Mauve with plum-black is calm, clearly not clinical blue or green, and passes contrast with room to spare (about 6.2 to 1 by calculation). It is evidence for a departure from teal. A payments company; kept for the colour pair.",
+      "query": "statistics section with large serif numerals on a warm background"
+    },
+    {
+      "id": "15-brand-art-direction/20",
+      "file": "img/20-craft-agency-deep-green-ivory-serif.jpg",
+      "app": "Craft Agency",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/cbde3ed5-2c73-47ee-91a4-6b33cb7efa0e?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Deep green ground, ivory serif capitals, one line roman and one italic",
+      "why": "The ground is a deep green close to black (#17271C). Two lines of high-contrast serif capitals in ivory (about #EDE8DC) run at roughly 10% of the viewport width: the first roman and left-aligned, the second italic and pushed right until it leaves the screen. A soft green and lilac gradient shape glows behind. The body is three lines of 14px ivory text set low and left.",
+      "apply": "A deep ground with ivory serif is premium and calm at once, and roman against italic gives contrast without a second colour. Eleva's deep band could use this once per page with type three times today's size. Capitals at this size suit two or three words only. A talent consultancy; kept for the type and colour.",
+      "query": "therapy and counselling website hero section on a deep colour background with serif type"
+    },
+    {
+      "id": "15-brand-art-direction/21",
+      "file": "img/21-frontify-serif-quote-dark-band.jpg",
+      "app": "Frontify",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/5b94ffca-63af-41b2-a5f5-4c510c51bff0?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A serif pull quote on a dark band, set like a page in a magazine",
+      "why": "On near-black (#11110F), the speaker's company sits alone in a narrow left column. The quote runs in a light serif at about 30px, four lines of about 40 characters, starting a third of the way in. The attribution is 11px beneath, and 'Read story' with an arrow sits at the far right on the same baseline. No quotation-mark graphic, no portrait, no card.",
+      "apply": "Eleva's quote band centres a long quote with a small avatar. Setting it on a grid (who on the left, words on the right, one link) makes it read as editorial. It also shows restraint: the dark band is used once. Eleva uses its deep teal band twice on the homepage. A brand-management tool; kept for the layout.",
+      "query": "testimonial section on a dark green background on a light page"
+    },
+    {
+      "id": "15-brand-art-direction/22",
+      "file": "img/22-monarch-pill-buttons-warm-panel.jpg",
+      "app": "Monarch",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/484401ea-fc2f-400e-9069-107ed3dcf00d?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "One shape language: pills for actions, 12px for panels, one accent only on what you can press",
+      "why": "A warm grey panel (#EDECEA) with a 12px radius sits on an off-white page (#F9F9F7). The heading is a centred serif at about 44px. Of four feature blocks, the active one is a white card with the same 12px radius; the others fade to half strength. Orange (about #F9772B) appears only on the 13px uppercase labels and on pill buttons 44px tall; 'Sign in' is a white pill with a hairline.",
+      "apply": "Two radii, used without exception: full pills for anything pressable, 12px for anything that holds content. The accent marks only actions and labels. Eleva can adopt the same rule with its own values. Do not take the colour pair: white on this orange is about 2.7 to 1 by calculation, under the 4.5 to 1 Eleva needs. A budgeting app; kept for the shape rules.",
+      "query": "feature cards section with pill buttons and rounded chips on a consumer finance website"
+    },
+    {
+      "id": "15-brand-art-direction/23",
+      "file": "img/23-metic-closing-card-one-shape.jpg",
+      "app": "metic.",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/ee837041-e532-4337-981b-4cba5f8697e5?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A closing card with one large shape, one sentence and one action",
+      "why": "A charcoal card (#131315) with an 8px radius sits on a pale grey page. A single red disc (#FF3038), about 40% of the card's width, is cropped by the top-right corner. The heading is white sans at about 48px over three short lines; the body is grey at 18px, about 22 characters a line; the one action is an outlined pill with a red circular arrow.",
+      "apply": "A closing section does not need a photograph. One brand shape cropped large, one plain sentence and one action would end Eleva's pages with more character than the current photo-and-teal block, and it costs nothing to produce. Eleva's shape would be the leaf or an arch in its accent colour. A design studio; kept for the composition.",
+      "query": "therapy and counselling website hero section on a deep colour background with serif type"
+    },
+    {
+      "id": "15-brand-art-direction/24",
+      "file": "img/24-structured-footer-serif-wordmark.jpg",
+      "app": "Structured",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/cf954a98-4f2e-41d3-b2a1-168e4ba0108d?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "The footer is the wordmark, set as wide as the screen",
+      "why": "On light grey (#EBEBEB), the name is set in a black high-contrast serif that spans about 96% of the viewport width, with a cap height near 17% of the width. Six links sit in 9px capitals at the top right and three legal links in a row beneath the name. That is the whole footer.",
+      "apply": "The last thing a visitor sees is the name, large. Eleva keeps its logo, so the equivalent is the existing wordmark and leaf at full width in a tone close to the ground (deep on deep, or sand on sand), with the link columns above it. It gives the brand a signature on every page without a new asset. A finance protocol; kept for the footer idea.",
+      "query": "footer with large wordmark on colour field"
+    }
+  ],
+  "judging_criteria": [
+    "Does every colour on the page have one visible job (page, surface, text, action, emphasis, deep field, trust tint), with the action colour on nothing that cannot be pressed? (15-brand-art-direction/03 Function, 15-brand-art-direction/22 Monarch, 15-brand-art-direction/18 Ragged Edge)",
+    "Does every piece of text reach 4.5 to 1 against its background, including accent-coloured words and the label on the primary button, checked by calculation and not by eye? (15-brand-art-direction/04 Hims and 15-brand-art-direction/22 Monarch show pairs to avoid)",
+    "Do all photographs on the page share one treatment: the same light, crop and grade, or the same cut-out or wash? (15-brand-art-direction/06 Hims, 15-brand-art-direction/10 Miro, 15-brand-art-direction/11 Until, 15-brand-art-direction/12 Anima)",
+    "Is there exactly one display-size moment per page (8% of the viewport width or more on desktop, 12% or more on a phone), with body text at 17px or more and lines of 45 to 80 characters? (15-brand-art-direction/01 Oura, 15-brand-art-direction/13 Amperos, 15-brand-art-direction/20 Craft Agency)",
+    "Is emphasis (italic or accent colour) used on one phrase per page at most? (15-brand-art-direction/01 Oura, 15-brand-art-direction/04 Hims)",
+    "Do buttons, chips, cards and fields follow one shape rule (no more than two radii, one border weight, shadows only on floating elements)? (15-brand-art-direction/22 Monarch, 15-brand-art-direction/07 Hims)",
+    "Is the page still recognisable as Eleva with the logo covered, through its colour fields, its shapes or its photographic treatment? (15-brand-art-direction/09 Headspace, 15-brand-art-direction/05 Hims, 15-brand-art-direction/18 Ragged Edge)",
+    "Do consecutive sections use different layouts, with the deep colour field used once and the page ending in a branded closing block and footer? (15-brand-art-direction/16 Function, 15-brand-art-direction/17 Zaro, 15-brand-art-direction/21 Frontify, 15-brand-art-direction/23 metic., 15-brand-art-direction/24 Structured)"
+  ]
+}

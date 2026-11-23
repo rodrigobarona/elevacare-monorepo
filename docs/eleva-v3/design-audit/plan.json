@@ -2,7 +2,7 @@
   "title": "Eleva design audit and plan",
   "date": "2026-11-14",
   "baseline": "2026-11-14-before",
-  "status": "Audit of 2026-11-14 with its plan. By 2026-11-21, 18 of the 39 slices are merged (D0.1 to D0.3, D1.1 to D1.5, D2.1, D2.2, D5.7 to D5.9, D7.1 to D7.5); the 21 still open are listed in execution-plan/remaining-roadmap.md.",
+  "status": "Audit of 2026-11-14 with its plan. By 2026-11-21, 18 of the first 39 slices are merged (D0.1 to D0.3, D1.1 to D1.5, D2.1, D2.2, D5.7 to D5.9, D7.1 to D7.5); the 21 still open, and the three of Phase 8, are listed in execution-plan/remaining-roadmap.md. On 2026-11-23 the public site became its own track (Track E, the marketing thread) and the founder opened its whole design for a rethink: Phase 8 holds the new slices, and D3, D2.3, D2.4 and D6.1 are built in that track against the seven-seat panel in judges-panel.md.",
   "topMoves": [
     {
       "title": "Rebuild the pay step as a confirm-and-pay page, in a quiet checkout frame",
@@ -166,7 +166,7 @@
           "id": "D2.3",
           "title": "Services and booking on the profile",
           "scope": "Even service cards with one action each, a clearer availability card, and on phones a sticky bar that opens the picker with the next open time.",
-          "findings": ["PROF-05", "PROF-06", "PROF-07"],
+          "findings": ["PROF-05", "PROF-06", "PROF-07", "PROF-15"],
           "effort": "M"
         },
         {
@@ -181,7 +181,8 @@
             "DISC-06",
             "DISC-07",
             "DISC-08",
-            "DISC-09"
+            "DISC-09",
+            "DISC-10"
           ],
           "effort": "M"
         },
@@ -419,7 +420,7 @@
           "id": "D6.1",
           "title": "Trust centre and policy layout",
           "scope": "Trust centre opens with fact tiles before the documents. Legal pages get a plain-language summary, contents on phones, last updated, and a way to act on a right.",
-          "findings": ["TRUST-05", "TRUST-07"],
+          "findings": ["TRUST-05", "TRUST-07", "TRUST-17"],
           "effort": "M",
           "legalReview": true
         }
@@ -500,6 +501,43 @@
           "effort": "S"
         }
       ]
+    },
+    {
+      "id": "8",
+      "title": "The public site, rethought",
+      "goal": "A visitor recognises Eleva with the logo covered, and every public page passes the seven-seat panel.",
+      "slices": [
+        {
+          "id": "D8.1",
+          "title": "A brand direction for the public site",
+          "scope": "Three directions (palette with a role for each colour, type, imagery, shapes) shown on the real homepage, expert card and pay step, side by side. The founder chooses. The choice becomes the tokens of apps/web first, so the dashboards do not change under it, and the brand book is corrected to match the code.",
+          "findings": [
+            "BRAND-01",
+            "BRAND-02",
+            "BRAND-03",
+            "BRAND-04",
+            "BRAND-05",
+            "BRAND-06",
+            "BRAND-07",
+            "HOME-12"
+          ],
+          "effort": "M"
+        },
+        {
+          "id": "D8.2",
+          "title": "Checkout: one frame on a phone, and the last details",
+          "scope": "Every step shares one frame on a phone (a one-line summary that opens, and a fixed bar with that step's action). Promo code and tax number live in the summary. Nothing optional sits between the total and the pay button. A guest can correct her email and move or cancel from the thank-you page, once product and security agree how she is recognised.",
+          "findings": ["BOOK-22", "BOOK-23", "BOOK-24", "BOOK-25"],
+          "effort": "M"
+        },
+        {
+          "id": "D8.3",
+          "title": "Content pages",
+          "scope": "Newsletter, podcast, community, evidence-based care, contact and the founders' story: captured first, then rewritten and rebuilt to the ten writing rules in voice-notes.md. Each shows the real thing (an issue, an episode, a reply time) or an honest empty state.",
+          "findings": [],
+          "effort": "M"
+        }
+      ]
     }
   ],
   "notCovered": [
@@ -509,6 +547,8 @@
     "Dark mode and PT/ES layouts were not captured. Captures are English, light theme.",
     "No accessibility tooling (axe, screen reader) was run; a11y notes come from looking at the captures.",
     "Findings marked for legal review are design proposals. The panel did not give legal advice.",
-    "Mobbin had no women's-health marketplace and no clinician licence check; those references come from other domains and are used for structure only."
+    "Mobbin had no women's-health marketplace and no clinician licence check; those references come from other domains and are used for structure only.",
+    "The content pages (newsletter, podcast, community, evidence-based care, contact, history) have references and judging criteria but no captures or findings yet; D8.3 captures them first.",
+    "The three brand directions are proposals from references. None has been tested with members, and the motion ideas have no reference behind them because stills cannot show motion."
   ]
 }

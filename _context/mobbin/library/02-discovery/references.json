@@ -25,7 +25,10 @@
         "02-discovery/04",
         "02-discovery/12",
         "02-discovery/06",
-        "02-discovery/03"
+        "02-discovery/03",
+        "02-discovery/16",
+        "02-discovery/20",
+        "02-discovery/19"
       ]
     },
     {
@@ -40,7 +43,9 @@
         "02-discovery/01",
         "02-discovery/02",
         "02-discovery/03",
-        "02-discovery/10"
+        "02-discovery/10",
+        "02-discovery/14",
+        "02-discovery/19"
       ]
     },
     {
@@ -51,7 +56,12 @@
       "evidence": ["01-experts.desktop.jpg"],
       "detail": "On desktop each card gives about 290px of its 420px to a pale gradient panel with a monogram circle (AQ, FM, PM). Three of them in a row read as an unfinished page, and the only photograph on the screen belongs to the expert-recruitment band below. New experts will often have no photo on day one, so this is the default look of the directory, not an edge case.",
       "recommendation": "Ask for a portrait before a profile can be listed (a publish gate in expert setup, with guidance on a good photo). For any profile that still has none, use the compact layout at every breakpoint: a small avatar beside the text, so the card's weight goes to profession, focus and next time instead of an empty panel. Order profiles with a photo ahead of those without inside the same sort.",
-      "references": ["02-discovery/06", "02-discovery/12", "02-discovery/01"]
+      "references": [
+        "02-discovery/06",
+        "02-discovery/12",
+        "02-discovery/01",
+        "02-discovery/13"
+      ]
     },
     {
       "id": "DISC-04",
@@ -65,7 +75,9 @@
         "02-discovery/05",
         "02-discovery/07",
         "02-discovery/03",
-        "02-discovery/01"
+        "02-discovery/01",
+        "02-discovery/15",
+        "02-discovery/16"
       ]
     },
     {
@@ -86,7 +98,7 @@
       "evidence": ["01-experts.desktop.jpg", "01-experts.mobile.jpg"],
       "detail": "The third card (Patricia Mota) has no price row because she has no services yet. It looks like a rendering gap, and tapping it leads to a profile that says she is not taking bookings. In a list of three, one dead end is a third of the experience.",
       "recommendation": "List an expert only once one service is published. If the founder wants early profiles visible, label the card \"Opening soon\", sort it last, and replace the price row with \"Tell me when bookings open\". For bookable experts fill the same row with the next open time so every card ends on something a member can act on.",
-      "references": ["02-discovery/04", "02-discovery/09"]
+      "references": ["02-discovery/04", "02-discovery/09", "02-discovery/18"]
     },
     {
       "id": "DISC-07",
@@ -96,7 +108,12 @@
       "evidence": ["01-experts.desktop.jpg", "01-experts.mobile.jpg"],
       "detail": "\"Bring your practice to Eleva\" is a 470px dark band with the page's only photograph on desktop, and on phones it is about 690px tall, longer than the list of experts above it (about 470px). A member's page ends on a message for someone else, and the strongest visual on the screen is not an expert she can book.",
       "recommendation": "End the member's page with help for the member: a short \"Not sure who to choose?\" block that asks what she needs and suggests an area or a free first chat, with a link to how Eleva works. Reduce the expert invitation to one quiet line with a link (\"Are you a women's health professional? Bring your practice to Eleva\").",
-      "references": ["02-discovery/06", "02-discovery/04"]
+      "references": [
+        "02-discovery/06",
+        "02-discovery/04",
+        "02-discovery/17",
+        "02-discovery/18"
+      ]
     },
     {
       "id": "DISC-08",
@@ -106,7 +123,14 @@
       "evidence": ["01-experts.desktop.jpg"],
       "detail": "With three experts the page is a heading, one row of cards and white space. Nothing says how many experts there are or that the list is growing. Read from the source, a filter that matches nobody shows \"No experts match these filters yet.\" with a single \"See all experts\" button, which throws away every choice the member made instead of helping her loosen one.",
       "recommendation": "Show a count and frame a short list as chosen (\"3 experts, each with a checked registration\"). When filters leave few or no results, keep the results visible, list the applied filters as removable chips under \"See more experts\", and say which one to drop. When an area has nobody yet, offer \"Tell me when a [area] expert joins\" and the nearest area that does have experts.",
-      "references": ["02-discovery/08", "02-discovery/10", "02-discovery/04"]
+      "references": [
+        "02-discovery/08",
+        "02-discovery/10",
+        "02-discovery/04",
+        "02-discovery/17",
+        "02-discovery/15",
+        "02-discovery/18"
+      ]
     },
     {
       "id": "DISC-09",
@@ -117,6 +141,19 @@
       "detail": "\"From €45.00\" carries cents that add nothing and make the price look longer than it is. The price has no unit, so a member cannot tell whether it is for 20 or 60 minutes. The eyebrow \"FIND YOUR EXPERT\" repeats the heading directly under it.",
       "recommendation": "Show whole euros when there are no cents (\"From €45\") and add the shortest session length (\"From €45 · 45 min\"). Replace the eyebrow with something the heading does not say, such as the count (\"3 experts in Portugal and Spain\"), or remove it.",
       "references": ["02-discovery/01"]
+    },
+    {
+      "id": "DISC-10",
+      "severity": "P2",
+      "lens": "ui",
+      "title": "After the name every line on the card has the same weight, and the portraits do not match",
+      "evidence": [
+        "2026-11-15-d2.2/02-discovery/01-experts.desktop.jpg",
+        "2026-11-15-d2.2/02-discovery/01-experts.mobile.jpg"
+      ],
+      "detail": "In the 2026-11-15 capture (slice D2.2) each card has four lines in the same small grey sans under the name: the registration mark, the headline, the areas and the price. The price or \"Free session available\" is the last item of a dot-separated line, and on a phone it breaks in two (\"Free\" on one line, \"session available\" on the next). No fact has a fixed place, so comparing three experts means reading three whole cards. The portraits differ in crop and distance (a close face, a half-length studio shot, a street scene, a clinical uniform), which makes the grid look uneven even when everyone has a photo.",
+      "recommendation": "End every card with two or three fixed cells, each a small label above a value (Next time, Meets by, From), divided by thin rules, so the same fact sits in the same place on every card. Keep the areas on a line of their own and never let the price wrap. Crop every portrait to one ratio with the face in the same position, and give experts a short photo guide at the publish step (head and shoulders, plain light background, daylight).",
+      "references": ["02-discovery/14", "02-discovery/13", "02-discovery/02"]
     }
   ],
   "references": [
@@ -263,6 +300,102 @@
       "why": "\"All 1-on-1 Sessions\" has a search field for teachers and a wrap of category chips with \"All Categories\" selected. The grid is led by portraits with name, a one-line role and a price range. One teacher uses an illustration instead of a photo and the grid still holds because the tile is square and the same size. Education product, kept for the layout.",
       "apply": "Always-visible area chips plus a name search, and a consistent portrait tile. It also shows why a portrait-led grid needs real photos: the cards work because nearly everyone has one.",
       "query": "therapist directory search results with filters"
+    },
+    {
+      "id": "02-discovery/13",
+      "file": "img/13-open-teachers-portrait-grid.jpg",
+      "app": "Open",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/97d27bbc-3e27-4696-80c0-9920d4525039?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A portrait grid where every photo shares one light, crop and backdrop",
+      "why": "Under a one-word heading and two lines of text, the page is a grid of equal portrait tiles with thin gaps and no card frame. Every teacher is photographed head and shoulders, facing the camera, in the same warm light on the same brown backdrop. Because the portraits match, the grid needs no borders, badges or shadows to look finished.",
+      "apply": "The standard to aim for, and the reason for a photo guide at the publish step: head and shoulders, plain light background, daylight, the face in the upper middle. Eleva cannot photograph every expert, so it fixes what it controls: one crop ratio, the face position and a soft cream backdrop behind small or cut-out photos. Mindfulness and movement studio.",
+      "query": "healthcare provider directory page with portrait cards"
+    },
+    {
+      "id": "02-discovery/14",
+      "file": "img/14-fiverr-card-footer-cells.jpg",
+      "app": "Fiverr",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/197cb488-d30b-41ce-9891-7b75da13de20?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A card footer of three labelled cells",
+      "why": "Each card opens with a small round photo, the name, a level tag and the languages, then a bold role line, two lines of text and a row of skill chips that ends in \"+13\". The footer is three cells divided by thin rules, each a small grey label above a bold value (\"171 reviews 4.8\", \"Orders 133\", \"Services from $80\"). The same fact sits in the same place on every card, so three people can be compared at a glance. The count and the filters sit in one row above the grid.",
+      "apply": "End every Eleva card with fixed cells: \"Next time: Thu 26 Nov\", \"Meets by: Video, in person\", \"From: €45, 45 min\". Put languages directly under the name and cap focus chips at two plus a count. Leave out the work samples and the rating cell. Freelance marketplace; kept for the card structure.",
+      "query": "Zocdoc doctor search results page"
+    },
+    {
+      "id": "02-discovery/15",
+      "file": "img/15-braintrust-filter-chips-popover.jpg",
+      "app": "Braintrust",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/4d98bdca-8ffe-4480-b2ad-656f80a85821?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Filter chips with icons that open a small panel, and a count beside \"Clear all\"",
+      "why": "One row holds the search field and six filter chips, each with an icon. A chip that has a value is tinted and says what was chosen (\"Design\", \"Figma & 3 others\"), so there is no second row of applied filters. The open chip shows a small panel with a field, a few common choices as buttons, \"Clear all\" and \"Apply\". Under the row the result is stated plainly (\"3 people found\") next to \"Clear all\", and a list of only a few wide cards still fills the page.",
+      "apply": "Eleva's desktop filters: area, language, how you meet, city, price and free first chat as chips with icons. A chosen chip is tinted and carries its value, and each panel offers the common choices first. State the count under the row with \"Clear all\" beside it. Hiring marketplace; kept for the filter row.",
+      "query": "Zocdoc doctor search results page"
+    },
+    {
+      "id": "02-discovery/16",
+      "file": "img/16-polywork-sentence-search-result-heading.jpg",
+      "app": "Polywork",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/16e42ada-3c4d-44b2-bbcc-243323cd545b?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Search written as a sentence, and a result heading that repeats the choices in words",
+      "why": "The search bar has two labelled parts, \"Looking for: Product Designers\" and \"Available for: Mentoring\". Under the chip row the heading restates the query with its count (\"290 Product Designers\" who \"Designed a style guide & more\"), so the reader can tell what the list is. The one chip with a value is filled dark and the others are outlined. Each card ends with \"Available for\" chips. A filter panel is open over part of this capture.",
+      "apply": "A two-part search for Eleva (\"Help with: Pelvic health\", \"Meet by: Video\") and a heading that reads the result back (\"4 pelvic health experts who meet by video in Portuguese\"). The sentence replaces the eyebrow and tells the member why these experts are shown. Professional network; kept for the search and the heading.",
+      "query": "healthcare provider directory page with portrait cards"
+    },
+    {
+      "id": "02-discovery/17",
+      "file": "img/17-codecademy-no-match-popular-quiz.jpg",
+      "app": "Codecademy",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/a70323a2-0f2f-4248-8fb4-92e3a3190967?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "No match: one plain sentence, what other members choose, and a way in for the unsure",
+      "why": "The message repeats the search term and gives two ways forward in one sentence (\"Try another keyword, or see what our members are learning\"). Five popular items follow as a plain list, each with a small tag for its type. A ruled footer asks \"Not sure where to begin?\" with a link to a quiz, and a help link sits at the right. The state has no illustration and no dead end.",
+      "apply": "Eleva's no-results state: say what was searched, list the areas or experts members book most, each with a tag (Area, Expert, Free first chat), and close with \"Not sure who to choose?\" linking to how Eleva works or a free first chat. Use it together with the removable filter chips in reference 08. Learning product; kept for the structure.",
+      "query": "marketplace search results page with no results found"
+    },
+    {
+      "id": "02-discovery/18",
+      "file": "img/18-alan-short-list-unavailable-help.jpg",
+      "app": "Alan",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/02c485ac-64fd-48f1-a11c-6d099c0bcf85?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A list of two on a phone: availability in words, one person not available, and help under the list",
+      "why": "Two chips sit above two cards. Each card has a small round photo, the name, an availability line, the languages and focus tags. The first says \"Available on Thursday\" with the day in the accent colour. The second says \"No availability\" in grey and stays in the list, so nothing looks broken. Under the short list a tinted block titled \"Help is available\" offers support to someone in distress. iOS screen from a European health product.",
+      "apply": "On a phone, state availability on every card in words, including \"Opening soon\" for an expert who cannot be booked yet, and sort those last. End a short list with a block for the member (\"Not sure who to choose?\" and, in mental health areas, where to get urgent help), not with the invitation to experts. The layout carries to mobile web.",
+      "query": "wellness app practitioner list screen with next available time"
+    },
+    {
+      "id": "02-discovery/19",
+      "file": "img/19-delphi-rows-sample-question.jpg",
+      "app": "Delphi",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/8f8d34a4-18a6-445d-bded-6e95d87adc78?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "List rows that each carry a question you could bring to this person",
+      "why": "Topic chips and a search field sit above a plain list. Each row has a small square photo, the name with a verified mark, one line on who the person is and, at the right, a single question in a soft grey bubble (\"What is minimalist entrepreneurship?\"). The question shows what this person can help with in the reader's own terms, which a job title does not.",
+      "apply": "Give each Eleva card one line in the member's words under the profession, written by the expert and capped at one line: \"Ask me about: pain after birth, returning to running\". It helps a member recognise her need on the card. The row layout is also a dense option for a long list on desktop. From an expert question-and-answer product; kept for the row content only.",
+      "query": "coaching marketplace browse coaches page with specialty filter"
+    },
+    {
+      "id": "02-discovery/20",
+      "file": "img/20-fiverr-area-icon-grid.jpg",
+      "app": "Fiverr",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/47806c5f-680d-4690-a44f-a65692ab15a6?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Areas as a grid of line icons with a short rule under each",
+      "why": "Ten categories sit in two rows of five. Each is a line icon in one stroke weight, a short rule and a label, with wide gaps and no boxes or photographs. The whole catalogue can be read in one glance and takes about a third of a screen.",
+      "apply": "An icon version of Eleva's areas of care for the top of the explorer, where photo tiles would push the first expert down: nine areas in one stroke style from the icon set, a count under each label, and \"Opening soon\" in grey where nobody is listed yet. On a phone it becomes one scrolling row. Freelance marketplace; kept for the layout.",
+      "query": "services marketplace navigation mega menu"
     }
   ],
   "judging_criteria": [
@@ -272,6 +405,9 @@
     "Is checked registration visible on each card and explained in one sentence above the grid? (02-discovery/05, 02-discovery/07)",
     "Is the current order stated next to the result count, and is paid placement labelled on the card on phones as well as desktop? (02-discovery/11, 02-discovery/07)",
     "When filters leave one or zero experts, can the member remove a single filter from the results area and see what else is close? (02-discovery/08, 02-discovery/10)",
-    "On a phone, do filters open in one sheet with a sticky button that shows how many experts will match? (02-discovery/07, 02-discovery/03)"
+    "On a phone, do filters open in one sheet with a sticky button that shows how many experts will match? (02-discovery/07, 02-discovery/03)",
+    "Do the next open time, how you meet and the price sit in the same place on every card, each with a label, and does no value wrap onto a second line at 390px? (02-discovery/14, 02-discovery/02)",
+    "Do the portraits in the grid share one crop ratio and face position, so no card looks heavier than its neighbour? (02-discovery/13)",
+    "On a phone, do the filter chips and the first expert both show on the first screen, and does a list of one or two end with help for the member? (02-discovery/18, 02-discovery/15)"
   ]
 }

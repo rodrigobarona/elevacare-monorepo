@@ -9,18 +9,26 @@ Two parts:
 
 ## `library/`: references by surface
 
-| Surface                                                          | Covers                                                 | Findings | References |
-| ---------------------------------------------------------------- | ------------------------------------------------------ | -------- | ---------- |
-| [`01-homepage`](library/01-homepage/readme.md)                   | Public homepage                                        | 11       | 11         |
-| [`02-discovery`](library/02-discovery/readme.md)                 | Expert explorer `/experts`                             | 9        | 12         |
-| [`03-profile`](library/03-profile/readme.md)                     | Expert public profile                                  | 10       | 12         |
-| [`04-booking-checkout`](library/04-booking-checkout/readme.md)   | Booking funnel, pay step, thank-you                    | 18       | 12         |
-| [`05-auth`](library/05-auth/readme.md)                           | Sign in and sign up                                    | 10       | 11         |
-| [`06-expert-onboarding`](library/06-expert-onboarding/readme.md) | New account to working practice                        | 15       | 12         |
-| [`07-expert-dashboard`](library/07-expert-dashboard/readme.md)   | Expert practice app                                    | 16       | 12         |
-| [`08-marketing`](library/08-marketing/readme.md)                 | Become an expert, for clinics, about                   | 12       | 11         |
-| [`09-trust`](library/09-trust/readme.md)                         | Trust, legal and governance moments across the product | 16       | 12         |
-| [`10-member-space`](library/10-member-space/readme.md)           | Member Space                                           | 10       | 12         |
+| Surface                                                              | Covers                                                     | Findings | References |
+| -------------------------------------------------------------------- | ---------------------------------------------------------- | -------- | ---------- |
+| [`01-homepage`](library/01-homepage/readme.md)                       | Public homepage                                            | 12       | 25         |
+| [`02-discovery`](library/02-discovery/readme.md)                     | Expert explorer `/experts`                                 | 10       | 20         |
+| [`03-profile`](library/03-profile/readme.md)                         | Expert public profile                                      | 15       | 36         |
+| [`04-booking-checkout`](library/04-booking-checkout/readme.md)       | Booking funnel, pay step, thank-you                        | 25       | 43         |
+| [`05-auth`](library/05-auth/readme.md)                               | Sign in and sign up                                        | 10       | 13         |
+| [`06-expert-onboarding`](library/06-expert-onboarding/readme.md)     | New account to working practice                            | 15       | 15         |
+| [`07-expert-dashboard`](library/07-expert-dashboard/readme.md)       | Expert practice app                                        | 36       | 37         |
+| [`08-marketing`](library/08-marketing/readme.md)                     | Become an expert, for clinics, about                       | 12       | 22         |
+| [`09-trust`](library/09-trust/readme.md)                             | Trust, legal and governance moments across the product     | 17       | 33         |
+| [`10-member-space`](library/10-member-space/readme.md)               | Member Space                                               | 16       | 17         |
+| [`11-team`](library/11-team/readme.md)                               | Clinic admin and membership                                | 0        | 24         |
+| [`12-account-settings`](library/12-account-settings/readme.md)       | Account settings                                           | 7        | 12         |
+| [`13-admin`](library/13-admin/readme.md)                             | Staff console                                              | 0        | 21         |
+| [`14-content-pages`](library/14-content-pages/readme.md)             | Newsletter, podcast, community, evidence, contact, history | 0        | 17         |
+| [`15-brand-art-direction`](library/15-brand-art-direction/readme.md) | Brand and art direction for the public site                | 7        | 24         |
+
+Counts as of 2026-11-23. The public site also has a library of Awwwards winners with their
+published jury scores: [`_context/awwwards/library/`](../awwwards/library/readme.md).
 
 Each surface folder holds:
 
@@ -32,11 +40,25 @@ The plan that uses these, with before captures beside them: [`docs/eleva-v3/desi
 
 ### Adding references
 
+This repository is public, so screenshots of other companies' products are not committed
+here any more (since 2026-11-23). They live in the private library
+[`rodrigobarona/design-references`](https://github.com/rodrigobarona/design-references),
+which holds every reference from this folder and grows with each design challenge. Link it
+once, at a path git ignores:
+
+```bash
+git clone git@github.com:rodrigobarona/design-references.git ~/Documents/GitHub/design-references
+ln -s ~/Documents/GitHub/design-references _context/design-references
+```
+
 1. Search with the Mobbin MCP. One screen, flow or section per query, in a plain phrase that starts with its type and names the kind of app ("therapist profile page", "appointment booking checkout"). At most three extra constraints, no style words.
 2. Look at every result before keeping it. Keep only what teaches one specific thing.
-3. Download the high-resolution `image_url` into the surface's `img/` (JPEG, 1800px on the long side at most) and add an entry to `references.json` with the `mobbin_url` as returned. Image links expire; the `mobbin_url` does not.
-4. Point the finding it answers at the new reference id, then run the build.
-5. A new surface gets a new numbered folder with the same three parts.
+3. Download the high-resolution `image_url` into the private library at `mobbin/library/{surface}/img/` (JPEG, 1800px on the long side at most), and add the same entry to both `references.json` files: the one here, which also holds this project's findings and criteria, and the one in the private library. Use the `mobbin_url` as returned. Image links expire; the `mobbin_url` does not.
+4. Point the finding it answers at the new reference id, then run the build here and `node scripts/build-catalog.mjs` in the private library, and commit both.
+5. A new surface gets a new numbered folder with the same parts.
+
+Images committed here before that date stay where they are; the build looks in this folder
+first and in the private library second.
 
 Leave out any screen that mentions HIPAA or another US framework. A reference from outside health is fine when its structure is the lesson; say so in `why`.
 
