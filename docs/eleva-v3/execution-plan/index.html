@@ -1226,6 +1226,26 @@ of 2026-11-21 merged without one (F-13).</li>
 <td><code>apps/api/src/app/workflows/stripe-toconline-reconciliation/route.ts</code>, <code>apps/api/src/app/workflows/*/route.ts</code></td>
 <td></td>
 </tr>
+<tr>
+<td>Packages have no boundary rules: each has its own lint config, so <code>packages/ui</code> could import Stripe or the database and a frontend would get it through the package. None does today.</td>
+<td><code>packages/*/eslint.config.js</code>, <code>scripts/check-boundaries.mjs</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Every other lint rule is still a warning that fails nothing (<code>eslint-plugin-only-warn</code>). Making lint fail a build means clearing every warning in 44 workspaces first.</td>
+<td><code>packages/eslint-config/base.js</code></td>
+<td></td>
+</tr>
+<tr>
+<td>The vendor bans match a banned name anywhere in a path, so a file of our own named <code>./better-auth</code> is refused. The list of reads a frontend may use lives in the lint package; a <code>@eleva/db/reads</code> entry point would put it beside its owner.</td>
+<td><code>packages/eslint-config/boundaries.js</code>, <code>frontend-db-reads.js</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Whether the Lint job (and so <code>check:boundaries</code>) is a required check in branch protection was not looked at.</td>
+<td>GitHub branch protection</td>
+<td></td>
+</tr>
 </tbody></table>
 <h2 id="remaining-roadmap--4-waiting-on-a-person"><a class="anchor" href="#remaining-roadmap--4-waiting-on-a-person" aria-label="Link to section">#</a>4. Waiting on a person</h2>
 <p>Engineering does not wait silently on these: it builds every slice that does not depend on
@@ -1952,9 +1972,9 @@ saved in case F-04 reopens it.</p>
 <tr>
 <td></td>
 <td>13.10</td>
-<td>Lint keeps raw read helpers out of apps</td>
+<td><strong>Open (#468), waits on O-2 to merge.</strong> The boundary lint rules fail the build; frontends read from a list</td>
 <td>S</td>
-<td></td>
+<td>Found: no lint rule could fail a build (<code>only-warn</code>). <code>pnpm check:boundaries</code> replaces <code>check:api-first-actions</code></td>
 </tr>
 <tr>
 <td></td>
