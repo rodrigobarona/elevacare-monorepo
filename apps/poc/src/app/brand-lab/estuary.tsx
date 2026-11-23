@@ -1,5 +1,6 @@
 import { ArrowRightIcon, SealCheckIcon } from "@eleva/icons"
 import { FOOTER, LEGAL, NEEDS, photo } from "./content"
+import { HeroFilm } from "./hero-film"
 import { LabLogo } from "./lab-bar"
 
 /**
@@ -142,10 +143,8 @@ export function EstuaryHome() {
           </div>
         </section>
 
-        <div className="es-plate" aria-hidden>
-          <div>
-            <img src={photo("postpartum-mother")} alt="" />
-          </div>
+        <div className="es-plate">
+          <HeroFilm />
         </div>
 
         <section className="es-needs bl-wrap" id="needs">

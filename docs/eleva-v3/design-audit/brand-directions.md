@@ -142,7 +142,9 @@ chips. Rows on hairlines in place of cards. No shadows except the phone bar.
 search with its button, and one large photograph. The founder asked for this on 2026-11-23,
 after the panel: the version the judges scored also held eight need chips, a proof line, a
 smaller photograph, a bookable expert and a facts strip in the hero, and he found it cluttered.
-The need chips and the experts now come straight after the hero. Experts as ruled rows that
+The need chips and the experts now come straight after the hero. The photograph became a silent
+23-second film the same day, also at his request (six clips in one light; poster only on
+phones and with reduced motion; a pause button). Experts as ruled rows that
 stack on a phone with their price; steps that show pieces of the product; one statement about advisors in
 place of the quote; the wordmark as the close. On the booking path: how she meets is chosen and
 shown, the time zone sits beside the time, the button says "Continue to payment", and a bar on

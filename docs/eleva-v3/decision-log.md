@@ -84,6 +84,20 @@ Each entry should include:
   header keeps its links and loses its second "Find an expert" button, so
   the first screen has one action. **Not judged again**: the scores above
   are for the busier hero.
+- **A hero film in place of the still (founder, 2026-11-23).** He asked for
+  a video like the one on today's homepage. Today's is 131 seconds and
+  35 MB, cut from clips in very different light, and three of its scenes
+  (a woman in distress, a fairground ride, a product shot) do not belong on
+  a calm first screen. The lab has a new cut: six clips from Pexels in one
+  soft, warm light (an expert guiding a woman, pregnancy, a newborn, a
+  video consultation, midlife, friends), 22.8 seconds, a seamless loop,
+  2.0 MB as MP4 and 1.7 MB as WebM at 1280 by 720, silent. Phones and
+  reduced motion get the poster only and never download it, and it has a
+  pause button because it moves for longer than five seconds. Credits are
+  in `apps/poc/public/brand-lab/film/credits.json`. **Not done:** it is
+  not in the media library or on the media host, it is not on the live
+  homepage, the cut for production should be made at 1920 wide, and no
+  judge has seen it.
 - **What stands between D and 8.5** (the judges' lists, merged): a hero
   photograph with real scale, graded like the portraits; the real pay step
   (card form, consent, promo code, tax number); a fuller profile with a
