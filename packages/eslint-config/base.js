@@ -69,6 +69,13 @@ export const config = [
     },
   },
   {
-    ignores: ["dist/**", ".next/**", "**/.turbo/**", "**/coverage/**"],
+    ignores: [
+      "dist/**",
+      ".next/**",
+      "**/.turbo/**",
+      "**/coverage/**",
+      // The preview app that `email dev` generates (git-ignored).
+      ".react-email/**",
+    ],
   },
 ]

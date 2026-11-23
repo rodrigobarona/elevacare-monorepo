@@ -32,6 +32,53 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-23: The boundary lint rules fail the build, and frontends read by name (13.10) (active)
+
+- Found while building 13.10: **no lint rule in the repository could fail a
+  build.** The shared config uses `eslint-plugin-only-warn`, which turns
+  every finding into a warning, and nothing runs lint with a limit on
+  warnings. A Stripe import in an app, or health data unwrapped in an app,
+  was a warning and `pnpm lint` exited 0. The commit hook's comment said
+  the boundary rules were "re-escalated"; they were not. The code was
+  clean: run alone over 44 workspaces, the boundary rules found nothing in
+  our own files.
+- Found too: in every `actions.ts` the vendor bans were off. A config for
+  those files set `no-restricted-imports` again, and in a flat config a
+  later setting replaces the earlier one, it is not added to it.
+- Change (Phase 13.10), three parts.
+  - `pnpm check:boundaries` (`scripts/check-boundaries.mjs`, in CI) runs
+    the boundary rules alone over every workspace with a lint config and
+    fails on any finding. It also lints a few lines in each app that must
+    be refused, so a config that leaves a rule out, or sets one twice,
+    fails by name. An app with no lint config fails too.
+  - `@eleva/eslint-config/frontend-db-reads`, on every app except
+    `apps/api`: from `@eleva/db` an app takes named read helpers (`get…`,
+    `list…`, `count…`, and the mappers and tests `to…`, `is…`, `has…`) and
+    types. It does not take a write helper, a database handle (`db`,
+    `withOrgContext`, `withPlatformAdminContext`), anything from a subpath
+    (`/queries/*`, `/client`, `/rls`, `/schema`), or the package through
+    `import()` or `require`. Staff queues are the reason for the subpaths:
+    they are read through the API so that each read is recorded (12.6).
+  - `@eleva/eslint-config/api-first-actions` is removed. It banned eight
+    write helpers by name in `actions.ts` only; the new rule bans every
+    write in every frontend file, and it was the config that switched the
+    vendor bans off.
+- No app had to change: today only `apps/expert` imports `@eleva/db`, and
+  only named reads.
+- **A read helper is known by its name.** That is the limit of this rule:
+  a helper named `getSomething` that writes would pass. Names with
+  `OrCreate`, `OrInsert` or `ForUpdate` are refused; the rest is review.
+- Not changed: `only-warn` stays, so the other lint rules (unused
+  variables, React hooks) are still warnings that fail nothing. Making all
+  of lint fail a build means first clearing every warning in 44
+  workspaces, which is its own slice. `pnpm check:api-first-actions` stays
+  as it was; the new check covers what it covers and more.
+- Read before building: ESLint's flat-config rule on repeated rule settings
+  and its `ruleFilter` option, `no-restricted-imports`
+  (`allowImportNamePattern`, `regex`), typescript-eslint's
+  `no-restricted-imports` (`allowTypeImports`), each checked against the
+  installed version by running it.
+
 ### 2026-11-23: Staff queues have pages, and reading one is on record (12.6) (active)
 
 - Change (Phase 12.6): the two staff queues (clinic verifications, licence

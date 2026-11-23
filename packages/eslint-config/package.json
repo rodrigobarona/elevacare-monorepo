@@ -8,7 +8,7 @@
     "./next-js": "./next.js",
     "./react-internal": "./react-internal.js",
     "./boundaries": "./boundaries.js",
-    "./api-first-actions": "./api-first-actions.js"
+    "./frontend-db-reads": "./frontend-db-reads.js"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

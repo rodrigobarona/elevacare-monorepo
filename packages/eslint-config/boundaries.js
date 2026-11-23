@@ -30,8 +30,15 @@
  *   cannot import `Decrypted`/`isDecrypted` or the `decrypt*` helpers, so a
  *   `Decrypted` value can never reach `NextResponse.json` / `secureJson`.
  *
+ * - Phase 13.10: apps other than `apps/api` read from `@eleva/db` by named
+ *   read helper only (`./frontend-db-reads.js`).
+ *
  * Each addition above must also land in docs/eleva-v3/implementation-sprints.md
  * under "Global Rules Applied Every Sprint".
+ *
+ * `eslint-plugin-only-warn` (base config) turns every finding into a warning,
+ * so `pnpm lint` never fails on these. What fails is `pnpm check:boundaries`
+ * (`scripts/check-boundaries.mjs`, in CI), which runs these rules alone.
  *
  * Boundaries are enforced via no-restricted-imports per consumer
  * (apps/* eslint.config.js), since ESLint's flat-config currently
@@ -40,6 +47,19 @@
  * have their OWN local eslint configs without boundariesConfig) are
  * the only places those imports compile.
  */
+
+/**
+ * `Decrypted#reveal()` outside the packages that own health data. Named, so
+ * a config that adds its own `no-restricted-syntax` entries can keep this
+ * one: a later setting of a rule replaces an earlier one, it is not added
+ * to it.
+ */
+export const REVEAL_RESTRICTION = {
+  selector:
+    "CallExpression[callee.type='MemberExpression'][callee.property.name='reveal'][arguments.length=0]",
+  message:
+    "Decrypted PHI is unwrapped only inside @eleva/records / @eleva/encryption when mapping into a response DTO (Phase 10 PHI lint).",
+}
 
 /** @type {import("eslint").Linter.Config[]} */
 export const boundariesConfig = [
@@ -199,15 +219,7 @@ export const boundariesConfig = [
   },
   {
     rules: {
-      "no-restricted-syntax": [
-        "error",
-        {
-          selector:
-            "CallExpression[callee.type='MemberExpression'][callee.property.name='reveal'][arguments.length=0]",
-          message:
-            "Decrypted PHI is unwrapped only inside @eleva/records / @eleva/encryption when mapping into a response DTO (Phase 10 PHI lint).",
-        },
-      ],
+      "no-restricted-syntax": ["error", REVEAL_RESTRICTION],
     },
   },
 ]
