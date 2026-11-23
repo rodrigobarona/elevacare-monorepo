@@ -48,6 +48,35 @@ changing API base URLs.
 
 All QStash setup commands accept `-- --dry-run` for preview-only mode.
 
+### Cutover (Phase 15)
+
+One approval for each production change, kept by the repository and not by a chat (ADR-019).
+
+| Command                                    | What it does                                                                                                                                                                                                                             | Idempotent? |
+| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| `pnpm cutover:gate <step> -- <command...>` | Runs the command only when today's cutover log holds `<step> \| approved \| @rodrigobarona \| <time>`, in a commit the owner signed and pushed less than four hours ago. Writes `started`, then `executed` or `failed`, to the same log. | No          |
+
+How a step goes:
+
+1. The operator prints the step and the exact command, and stops.
+2. The owner adds the approval line to `docs/eleva-v3/operator-tasks/cutover-log-YYYY-MM-DD.md` (the
+   file of the current UTC day) and commits it, signed, to the branch the operator works on. A commit
+   made on github.com is signed by GitHub for the account that made it, and counts.
+3. The operator pulls and runs the step through the gate.
+4. The operator copies what is safe from the evidence file into the log, commits the log, and pushes.
+   The next approval is added on top of that.
+
+Good to know:
+
+- An approval is good for one run, whether the run worked or not. A failed run may have changed
+  something: look, then ask for a new line.
+- What the command printed is kept in `docs/eleva-v3/operator-tasks/cutover-evidence/`, which git
+  ignores, because it can hold secrets.
+- The gate refuses a command with a secret on its command line (the command is written to the log).
+  Give secrets through the environment of the shell.
+- A refusal exits with 2 and says why. `gh` must be signed in: the gate asks GitHub who made the
+  commit and whether it is signed.
+
 ### DB (Drizzle / Neon)
 
 | Command                            | What it does                                                                                                                                                                   | Idempotent?                                          |

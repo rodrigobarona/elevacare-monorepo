@@ -59,3 +59,7 @@ _context/HeadiHealth/
 
 # Turborepo
 .turbo
+
+# What a gated cutover command printed (scripts/cutover-gate.mjs): may hold
+# secrets. The operator copies what is safe into the cutover log.
+docs/eleva-v3/operator-tasks/cutover-evidence/

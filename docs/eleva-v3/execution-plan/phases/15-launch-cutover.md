@@ -10,9 +10,14 @@
 
 ## Status on 2026-11-21
 
-Not started. The slices are in
+Not started, but for one piece. The slices are in
 [`remaining-roadmap.md`](../remaining-roadmap.md#phase-15-launch): 15.1 to 15.7, then the
 operated cutover.
+
+Built since (2026-11-23): **15.2, the cutover gate** (`scripts/cutover-gate.mjs`,
+`pnpm cutover:gate <step> -- <command...>`), as section B of the prompt below defines it. How a
+step goes is in [`operator-tasks/scripts-catalog.md`](../../operator-tasks/scripts-catalog.md). It
+has not gated a real command yet: the setup scripts it will wrap are 15.3.
 
 Where this file no longer matches what exists:
 

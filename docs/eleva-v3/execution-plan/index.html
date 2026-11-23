@@ -3294,7 +3294,8 @@ cookie-only POST -&gt; 403 <code>CSRF_ORIGIN_MISMATCH</code>; tossed/duplicate s
 row-count parity script prints <code>auth.* == main.*</code> for users, orgs, memberships; every FK
 validated (<code>pg_constraint.convalidated = true</code>).</li>
 <li><input disabled="" type="checkbox"> <code>requireApiAuth()</code> accepts: cookie session; <code>Authorization: Bearer &lt;session token&gt;</code>;
-<code>x-api-key</code> created via <code>apiKey</code> plugin scoped to an org; JWT from <code>/auth/token</code> verified
+<code>x-api-key</code> created via <code>apiKey</code> plugin (owned by a person since slice 12.5, not scoped to an
+org); JWT from <code>/auth/token</code> verified
 via JWKS (Bearer value routed by shape: compact JWS -&gt; JWT verifier, anything else -&gt;
 session-token verifier). JWTs are short-lived (<code>15m</code>) and <strong>non-revocable</strong> (JWKS only;
 no session-table check). After <code>revoke-other-sessions</code>, cookie/opaque bearer of that
@@ -3500,7 +3501,9 @@ PR 02.1 — server + schema + API:
    (b) Authorization: Bearer &lt;token&gt;: if the value is a compact JWS (three base64url segments,
    kid header) verify it as a JWT with JWKS from /auth/jwks (jwt plugin), otherwise verify it as
    a Better Auth session token (bearer plugin) — one discriminator, two verifiers, never both;
-   (c) x-api-key (apiKey plugin -&gt; referenceId = orgId; an API key sent as Bearer is rejected).
+   (c) x-api-key (apiKey plugin; since Better Auth 1.7 a key names one owner in `referenceId`, here a
+   person, and the workspace comes from `x-eleva-org` or the owner&#39;s default one: decision log
+   2026-11-22, slice 12.5; an API key sent as Bearer is rejected).
    Before verifying anything, count the credential sources present (cookie, Authorization,
    x-api-key); if more than one is present return 400 AMBIGUOUS_CREDENTIALS (audited) — never
    pick the first match. Return { userId, orgId, roles, capabilities, authMode }. Unit tests:
@@ -9592,9 +9595,13 @@ operator prerequisites for Phase 15 (MVP read-only role, WorkOS key retention, D
 </tr>
 </tbody></table>
 <h2 id="15-launch-cutover--status-on-2026-11-21"><a class="anchor" href="#15-launch-cutover--status-on-2026-11-21" aria-label="Link to section">#</a>Status on 2026-11-21</h2>
-<p>Not started. The slices are in
+<p>Not started, but for one piece. The slices are in
 <a href="#remaining-roadmap--phase-15-launch"><code>remaining-roadmap.md</code></a>: 15.1 to 15.7, then the
 operated cutover.</p>
+<p>Built since (2026-11-23): <strong>15.2, the cutover gate</strong> (<code>scripts/cutover-gate.mjs</code>,
+<code>pnpm cutover:gate &lt;step&gt; -- &lt;command...&gt;</code>), as section B of the prompt below defines it. How a
+step goes is in <a href="../operator-tasks/scripts-catalog.md"><code>operator-tasks/scripts-catalog.md</code></a>. It
+has not gated a real command yet: the setup scripts it will wrap are 15.3.</p>
 <p>Where this file no longer matches what exists:</p>
 <ul>
 <li>The live €1 test expects a platform-fee invoice while issuing is closed on purpose. The founder

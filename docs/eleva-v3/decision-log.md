@@ -32,6 +32,62 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-23: A production change runs only on an approval the owner signed and pushed (15.2) (active)
+
+- Problem: the cutover changes production one step at a time (Vercel
+  variables, Stripe's live webhook, the queue's schedules, DNS). ADR-019
+  asks for one approval for each of those steps. An approval given in a
+  chat cannot be checked afterwards, and the one asking for it can
+  misread it.
+- Change (Phase 15.2): `pnpm cutover:gate <step> -- <command...>`
+  (`scripts/cutover-gate.mjs`). It runs the command only when today's
+  cutover log (`docs/eleva-v3/operator-tasks/cutover-log-YYYY-MM-DD.md`,
+  one file per UTC day) holds the line
+  `<step> | approved | @rodrigobarona | <time>`, and the commit that
+  wrote that very line:
+  - is on GitHub, made by the owner's account;
+  - is signed with a key GitHub knows as theirs (the name and email typed
+    into a commit are not believed);
+  - is less than four hours old.
+- **The commit is the approval, not the text.** The gate asks git which
+  commit wrote the line (`git blame`), so a later commit to the file
+  changes nothing, an approval edited after it was committed no longer
+  counts, and yesterday's line copied into today's file is judged by who
+  copied it. A fresh time typed into the line does not make an old commit
+  fresh.
+- **One approval, one run.** Before the command starts the gate writes
+  `started` to the log; when it ends, `executed` with where its output
+  is kept, or `failed` with the exit code. Any of the three uses the
+  approval up. A run that failed may have changed something, so trying
+  again needs a new line. `started` is written first so that a command
+  that changed something and then lost its connection is on record; if
+  the log cannot be written, nothing runs.
+- What the command printed goes to
+  `docs/eleva-v3/operator-tasks/cutover-evidence/`, which git ignores:
+  output can hold secrets. The operator copies what is safe into the
+  log. For the same reason the gate refuses a command with a secret on
+  its command line, since the command itself is written to the log.
+- Not in the plan's text, and added: the `started` and `failed` lines;
+  the refusal of a commit dated after now; the refusal of a secret on
+  the command line; "GitHub could not be asked" as its own refusal
+  (nothing runs on an approval that cannot be checked).
+- Proof: 23 tests (`scripts/cutover-gate.test.mjs`, run in CI with the
+  other script tests). Missing, stale and foreign approvals each have
+  their cases; one test makes a real git repository to check which
+  commit wrote a line; six ways of breaking the gate were tried by hand
+  and each failed a test.
+- Not proven: it has not gated a real command, and it has not asked the
+  real GitHub about a real signed commit (the answer's three fields are
+  read from a written-out example). The scripts it will wrap are 15.3.
+- Known limits. The gate trusts the `gh` and `git` on the operator's
+  machine: it keeps an honest operator from running on a misread or
+  stale approval, not a hostile one from editing the script. It reads
+  the log of the current UTC day only, so an approval given before
+  midnight UTC for a step run after it has to be given again.
+- Owner: engineering (the gate); the founder (every approval line)
+- Related: ADR-019; `execution-plan/phases/15-launch-cutover.md`
+  (section B of the prompt); `operator-tasks/scripts-catalog.md`
+
 ### 2026-11-23: Staff queues have pages, and reading one is on record (12.6) (active)
 
 - Change (Phase 12.6): the two staff queues (clinic verifications, licence
