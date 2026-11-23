@@ -17,7 +17,7 @@ import { stripe } from "./client"
 import {
   isClinicPlanTier,
   isCurrentSubscriptionStatus,
-  SEAT_PRICE_TYPE,
+  seatItemKind,
 } from "./seat-cap"
 import { markSeatSyncPending } from "./seats"
 import { foreignEnvironmentReason } from "./stripe-environment"
@@ -840,7 +840,9 @@ export async function handleSubscriptionEvent(
         tier,
         status,
         priorStatus,
-        hasSeatItem: seatItemOf(subscription) !== null,
+        // A metered seat item counts: asking for a sync on every event of
+        // such a subscription would find nothing to do each time.
+        hasSeatItem: billsSeats(subscription),
       })
     ) {
       await markSeatSyncPending(orgId, tx)
@@ -930,13 +932,21 @@ export function clinicPlanNeedsSeatSync(input: {
   return !wasCurrent || !input.hasSeatItem
 }
 
-/** The subscription item that bills seats, if the subscription has one. */
+/**
+ * The subscription item Eleva sets the seat quantity of, if the
+ * subscription has one. An old metered seat item is not it (it takes no
+ * quantity), so the mirror keeps no id for it.
+ */
 function seatItemOf(subscription: Stripe.Subscription): string | null {
   return (
-    subscription.items.data.find(
-      (item) => item.price.metadata?.eleva_price_type === SEAT_PRICE_TYPE
-    )?.id ?? null
+    subscription.items.data.find((item) => seatItemKind(item) === "licensed")
+      ?.id ?? null
   )
+}
+
+/** True when some item already bills this subscription's seats. */
+function billsSeats(subscription: Stripe.Subscription): boolean {
+  return subscription.items.data.some((item) => seatItemKind(item) !== null)
 }
 
 async function upsertSubscriptionMirror(

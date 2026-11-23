@@ -16,6 +16,7 @@ import {
   CURRENT_SUBSCRIPTION_STATUSES,
   isCurrentSubscriptionStatus,
   SEAT_PRICE_TYPE,
+  seatItemKind,
 } from "./seat-cap"
 
 /** Why a sync sent nothing: all of them final, none an error to retry. */
@@ -143,10 +144,11 @@ const stripeSeatGateway: SeatGateway = {
       await stripe().subscriptions.retrieve(stripeSubscriptionId)
     if (!isCurrentSubscriptionStatus(subscription.status)) return null
     const items = subscription.items.data
-    const existing = items.find(
-      (item) => item.price.metadata?.eleva_price_type === SEAT_PRICE_TYPE
-    )
+    const existing = items.find((item) => seatItemKind(item) === "licensed")
     if (existing) return { itemId: existing.id, created: false }
+    // An old metered seat item bills these seats already: adding a licensed
+    // one beside it would bill them twice, and it takes no quantity.
+    if (items.some((item) => seatItemKind(item) === "metered")) return null
 
     // The seat price of this subscription's own plan, so another plan's
     // seat price can never be attached.

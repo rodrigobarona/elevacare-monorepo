@@ -169,6 +169,32 @@ describe("the seat item in Stripe", () => {
     }
   )
 
+  it("is never added beside an old metered seat item, which bills the seats already", async () => {
+    for (const metered of [
+      {
+        id: "si_old",
+        price: { metadata: { eleva_price_type: "per_seat_metered" } },
+      },
+      {
+        id: "si_old",
+        price: { metadata: {}, recurring: { usage_type: "metered" } },
+      },
+    ]) {
+      fake.subscriptions.retrieve = stripeCall("subscriptions.retrieve", {
+        status: "active",
+        items: { data: [planItem, metered] },
+      })
+      await expect(
+        syncSeatQuantity("org_1", clinicWithoutSeatItem(3))
+      ).resolves.toEqual({
+        synced: false,
+        reason: "nothing_to_bill_in_stripe",
+      })
+      expect(fake.subscriptionItems.create).not.toHaveBeenCalled()
+      expect(fake.subscriptionItems.update).not.toHaveBeenCalled()
+    }
+  })
+
   it("is not created for a plan that has no seat price", async () => {
     fake.subscriptions.retrieve = stripeCall("subscriptions.retrieve", {
       status: "active",

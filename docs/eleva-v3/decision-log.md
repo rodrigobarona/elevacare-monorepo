@@ -118,10 +118,15 @@ Each entry should include:
   check that does not exist). The second commit answers those and was not
   scored again.
 - Left open on this path: nothing stops a clinic that already pays from
-  opening Checkout again (11.8); a subscription
-  with one of the old metered seat items would get a second, licensed one
-  (none is known; the seed script has refused to run beside a metered price
-  for months).
+  opening Checkout again (11.8).
+- An old subscription with a metered seat item (the earlier design, which
+  no price uses now and no subscription is known to carry) is left as it
+  is: the sync never adds a licensed item beside it, which would bill the
+  same seats twice, and never asks about it on every event (CodeRabbit).
+- Declined for now, from CodeRabbit: refusing at boot a `STRIPE_API_VERSION`
+  older than `2026-03-25`. Nobody has confirmed what is deployed (O-5); if
+  it is the old value, that check would stop billing at the next deploy.
+  It belongs with the operator's answer.
 - Not in this slice: the Billing page and a guard against a second Checkout
   for a clinic that already pays (11.8); whether provisioning should keep
   creating an unpaid clinic subscription that expires in 23 hours;

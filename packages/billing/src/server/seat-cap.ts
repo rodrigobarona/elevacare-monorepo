@@ -48,6 +48,30 @@ export function isCurrentSubscriptionStatus(status: string): boolean {
 /** `metadata.eleva_price_type` of the price that bills seats (licensed). */
 export const SEAT_PRICE_TYPE = "per_seat"
 
+/**
+ * How a subscription item bills seats, if it does. `licensed`: the item
+ * Eleva sets the quantity of. `metered`: the older design (a price fed by
+ * usage records), which no price uses any more but an old subscription
+ * could still carry. It is never given a quantity, and never gets a
+ * licensed item beside it: that would bill the same seats twice.
+ */
+export function seatItemKind(item: {
+  price: {
+    metadata?: Record<string, string> | null
+    recurring?: { usage_type?: string | null } | null
+  }
+}): "licensed" | "metered" | null {
+  const type = item.price.metadata?.eleva_price_type
+  if (type === SEAT_PRICE_TYPE) return "licensed"
+  if (
+    type === "per_seat_metered" ||
+    item.price.recurring?.usage_type === "metered"
+  ) {
+    return "metered"
+  }
+  return null
+}
+
 /** The plans that bill seats. */
 export const CLINIC_PLAN_TIERS = Object.keys(
   CLINIC_SEAT_CAPS
