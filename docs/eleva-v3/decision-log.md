@@ -45,56 +45,69 @@ Each entry should include:
   `window` seconds, for one IP on one path, counted in Redis from the first
   request (a fixed window).
 
-  | What                          | Path                                                                   | Now                | Before                  |
-  | ----------------------------- | ---------------------------------------------------------------------- | ------------------ | ----------------------- |
-  | Password sign-in              | `/sign-in/email`                                                       | 10 a minute        | 3 in 10 s               |
-  | Sign-in link, send            | `/sign-in/magic-link`                                                  | 5 a minute         | same                    |
-  | Google or Microsoft, start    | `/sign-in/social`                                                      | 20 a minute        | 3 in 10 s               |
-  | Sign-up                       | `/sign-up/email`                                                       | 5 a minute         | 3 in 10 s               |
-  | Links opened from an email    | `/magic-link/verify`, `/verify-email`                                  | 30 a minute        | 5 a minute; 100 in 10 s |
-  | Emails on request             | `/request-password-reset`, `/send-verification-email`, `/change-email` | 3 a minute         | 3 a minute; 3 in 10 s   |
-  | A password set or asked again | `/reset-password`, `/verify-password`, `/change-password`              | 5 a minute         | 100 in 10 s; 3 in 10 s  |
-  | Second step, code by email    | `/two-factor/send-otp`                                                 | 3 a minute         | 3 in 10 s               |
-  | Second step, the rest         | `/two-factor/*`                                                        | 10 a minute a path | 3 in 10 s               |
-  | Passkey                       | `/passkey/verify-authentication`                                       | 20 a minute        | 100 in 10 s             |
-  | Everything else               | (default)                                                              | 100 in 10 s        | same                    |
+  | What                             | Path                                                                   | Now                | Before                  |
+  | -------------------------------- | ---------------------------------------------------------------------- | ------------------ | ----------------------- |
+  | Password sign-in                 | `/sign-in/email`                                                       | 10 a minute        | 3 in 10 s               |
+  | Sign-in link, send               | `/sign-in/magic-link`                                                  | 5 a minute         | same                    |
+  | Google or Microsoft, start       | `/sign-in/social`                                                      | 20 a minute        | 3 in 10 s               |
+  | Sign-up                          | `/sign-up/email`                                                       | 5 a minute         | 3 in 10 s               |
+  | Links opened from an email       | `/magic-link/verify`, `/verify-email`                                  | 30 a minute        | 5 a minute; 100 in 10 s |
+  | Emails on request                | `/request-password-reset`, `/send-verification-email`, `/change-email` | 3 a minute         | 3 a minute; 3 in 10 s   |
+  | A password set or asked again    | `/reset-password`, `/verify-password`, `/change-password`              | 5 a minute         | 100 in 10 s; 3 in 10 s  |
+  | Second step, code by email       | `/two-factor/send-otp`                                                 | 3 a minute         | 3 in 10 s               |
+  | Second step, the rest            | `/two-factor/*`                                                        | 10 a minute a path | 3 in 10 s               |
+  | Passkey                          | `/passkey/verify-authentication`                                       | 20 a minute        | 100 in 10 s             |
+  | An invitation to an organization | `/organization/invite-member`                                          | 20 a minute        | 100 in 10 s             |
+  | Everything else                  | (default)                                                              | 100 in 10 s        | same                    |
 
 - **What shaped the numbers.** A clinic is one office address, and a mobile
   network puts many members behind one: a limit has to slow a script, not
-  stop ten colleagues at nine. Each path has its own count, so someone held
-  on the password can still use a sign-in link, Google or a passkey. Nobody
+  stop ten colleagues signing in with their passwords at nine. What sends
+  an email is tighter, so a full office asking for sign-in links at once
+  can be asked to wait a minute. Each path has its own count, so someone
+  held on one can still use another: a sign-in link, Google, a passkey. Nobody
   waits more than a minute for what they do themselves. A link opened from
   an email gets room, because refused there a person lands on a bare page
   of the API. The numbers are a judgement, not a measurement: **for the
   founder to confirm (F-08)**, the password and sign-in-link ones first.
-- **What changed for the worse on purpose:** nothing got looser where
-  something is guessed. Password tries go from at most 18 a minute to 10;
-  second-step emails from 18 a minute to 3; a new password and a password
-  re-check, which had no real limit, to 5 a minute.
+- **Tighter over time, looser in a burst.** Over a minute nothing got
+  looser where something is guessed: password tries go from at most 18 a
+  minute to 10, second-step emails from 18 to 3, and a new password and a
+  password re-check, which had no real limit, to 5. In a burst it is
+  looser: ten password tries can arrive at once, and twenty across the end
+  of one minute and the start of the next, where three and six could
+  before. The second step keeps the plugin's own guard: five tries for one
+  code, and a 15-minute lock after ten wrong ones.
 - **What a refused caller is told.** The answer (HTTP 429) now has the code
   `RATE_LIMITED`, the seconds in its body (`retryAfter`) and in a standard
   `Retry-After` header that a browser on another origin may read. The
-  sign-in screens say the number: "There were many tries in a short time,
-  so this is paused for a moment to keep accounts safe. You can try again
-  in 60 seconds." On the sign-in screen it adds that another way of
-  signing in still works. It does not say "you": from an office, the tries
-  may be a colleague's. It is one fixed sentence, so a screen reader says
-  it once. The second step's own lock (ten wrong codes) is said as 15
-  minutes. Sign-in, sign-up, the sign-in link, the password reset and both
-  second-step screens all use it, in three languages.
+  sign-in screens say the number: "To keep accounts safe, we pause after
+  many tries in a short time. You can try again in 1 minute." On the
+  sign-in screen it adds "In the meantime, you can try signing in another
+  way." It names a rule, not a fault: from an office, the tries may be a
+  colleague's. It is one fixed sentence, so a screen reader says it once.
+  The second step's own lock (ten wrong codes) is said as 15 minutes.
+  Sign-in, sign-up, the sign-in link and its "send again", the password
+  reset, both second-step screens and the password change all use it, in
+  three languages. In Security it is a toast that stays ten seconds.
+- Two faults found on the way and fixed: the Google button spun for ever
+  when it was refused, with nothing said; and "send again" restarted its
+  own 30 seconds when it had been told to wait longer.
 - The wait said is the whole window, so it is never too short, and can be
   longer than what is really left.
 - Tests drive the real limiter on Eleva's own configuration, with the same
   way of counting as production: each rule's number passes, the next is
   refused with the wait, another address is not held up, and the wait
   ends. They fail when a rule names a path the installed Better Auth does
-  not serve, and when an endpoint for signing in, signing up or the second
-  step has no rule.
+  not serve, and when any of its 92 endpoints has neither a rule nor a
+  written reason to be on the default, so a release that adds one asks for
+  a decision.
 - **Not built, and it matters.** The limiter knows the address a request
   comes from, not the account it is about. Someone with many addresses can
   keep trying one account's password (Better Auth 1.7 counts failures for
-  the second step only), and one address can send five sign-in emails a
-  minute to one inbox. OWASP and NIST both ask for a count on the account.
+  the second step only), and one address can send about sixteen emails a
+  minute to one inbox (sign-in links, password resets, verification and
+  sign-up each have their own count). OWASP and NIST both ask for a count on the account.
   A limit for each account and each inbox is its own slice.
 - Also not built: a page of our own for a link from an email that is
   refused (today: a bare answer on the API's address); a time left that is
