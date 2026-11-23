@@ -6,7 +6,7 @@ import { ArrowSquareOutIcon, PaperPlaneTiltIcon } from "@eleva/icons"
 import { Button } from "@eleva/ui/components/button"
 import { buttonVariants } from "@eleva/ui/components/button-variants"
 import { cn } from "@eleva/ui/lib/utils"
-import { authWaitWords } from "@eleva/auth/rate-limited"
+import { authWait, authWaitWords } from "@eleva/auth/rate-limited"
 
 const RESEND_COOLDOWN_S = 30
 
@@ -148,7 +148,11 @@ export function InboxActions({
   onResend,
 }: {
   email: string
-  onResend: () => Promise<boolean>
+  /**
+   * Sends again. True when it was sent; false when it was not; a number
+   * when it was refused for asking too often: the seconds to wait.
+   */
+  onResend: () => Promise<boolean | number>
 }) {
   const t = useTranslations("auth")
   const [cooldown, setCooldown] = useState(RESEND_COOLDOWN_S)
@@ -164,7 +168,11 @@ export function InboxActions({
   async function resend() {
     setResent(false)
     setCooldown(RESEND_COOLDOWN_S)
-    setResent(await onResend())
+    const sent = await onResend()
+    // Asked to wait: the button counts that wait down, so that a second
+    // press is not refused as well.
+    if (typeof sent === "number") setCooldown(Math.max(sent, RESEND_COOLDOWN_S))
+    setResent(sent === true)
   }
 
   return (
@@ -219,6 +227,16 @@ export function oauthErrorCallbackURL(): string {
   url.searchParams.delete("error")
   url.searchParams.delete("error_description")
   return url.toString()
+}
+
+/**
+ * What a "send again" answers when the send failed: the seconds to wait
+ * when it was refused for asking too often, false otherwise.
+ */
+export function resendRefusal(
+  error: { status?: number; code?: string; retryAfter?: unknown } | null
+): number | false {
+  return authWait(error)?.seconds ?? false
 }
 
 /** A translator of the `auth` messages. */

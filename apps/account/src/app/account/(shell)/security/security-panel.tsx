@@ -34,7 +34,7 @@ import {
   SettingsFieldsetTitle,
   SettingsRow,
 } from "@eleva/ui/components/settings-fieldset"
-import { authErrorKey } from "./auth-error"
+import { securityError } from "./auth-error"
 import { TwoStepDialog } from "./two-step-dialog"
 
 interface PasskeyRow {
@@ -233,6 +233,7 @@ function PasswordCard({
   onChanged: () => void
 }) {
   const t = useTranslations("security")
+  const tAuth = useTranslations("auth")
   const [current, setCurrent] = useState("")
   const [next, setNext] = useState("")
   const [saving, setSaving] = useState(false)
@@ -249,7 +250,7 @@ function PasswordCard({
         revokeOtherSessions: true,
       })
       if (error) {
-        toast.error(t(authErrorKey(error)))
+        toast.error(...securityError(error, tAuth, t))
         return
       }
       setCurrent("")

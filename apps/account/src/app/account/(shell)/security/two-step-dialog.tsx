@@ -16,8 +16,7 @@ import {
 } from "@eleva/ui/components/dialog"
 import { Field, FieldLabel } from "@eleva/ui/components/field"
 import { Input } from "@eleva/ui/components/input"
-import { authErrorKey } from "./auth-error"
-import { authWaitWords } from "@eleva/auth/rate-limited"
+import { securityError } from "./auth-error"
 
 type Mode = "on" | "off"
 type Step = "password" | "scan" | "code" | "backup"
@@ -110,9 +109,7 @@ export function TwoStepDialog({
       if (mode === "off") {
         const { error } = await authClient.twoFactor.disable({ password })
         if (error) {
-          toast.error(
-            authWaitWords(error, tAuth) ?? tSecurity(authErrorKey(error))
-          )
+          toast.error(...securityError(error, tAuth, tSecurity))
           return
         }
         toast.success(t("disabled"))
@@ -124,9 +121,7 @@ export function TwoStepDialog({
         const { data, error } = await authClient.twoFactor.enable({ password })
         const next = setupFrom(data)
         if (error || !next) {
-          toast.error(
-            authWaitWords(error, tAuth) ?? tSecurity(authErrorKey(error))
-          )
+          toast.error(...securityError(error, tAuth, tSecurity))
           return
         }
         setSetup(next)
@@ -145,9 +140,7 @@ export function TwoStepDialog({
         code: code.trim(),
       })
       if (error) {
-        toast.error(
-          authWaitWords(error, tAuth) ?? tSecurity(authErrorKey(error))
-        )
+        toast.error(...securityError(error, tAuth, tSecurity))
         return
       }
       if (hasBackupCodes) {

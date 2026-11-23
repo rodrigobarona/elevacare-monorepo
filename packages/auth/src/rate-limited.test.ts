@@ -47,13 +47,15 @@ describe("authWait", () => {
 })
 
 describe("waitForPeople", () => {
-  it("says seconds up to a minute", () => {
+  it("says seconds under a minute", () => {
     expect(waitForPeople(1)).toEqual({ unit: "seconds", count: 1 })
     expect(waitForPeople(10)).toEqual({ unit: "seconds", count: 10 })
-    expect(waitForPeople(60)).toEqual({ unit: "seconds", count: 60 })
+    expect(waitForPeople(59)).toEqual({ unit: "seconds", count: 59 })
   })
 
-  it("says whole minutes above, rounded up", () => {
+  it("says whole minutes from one minute on, rounded up", () => {
+    // "1 minute", not "60 seconds".
+    expect(waitForPeople(60)).toEqual({ unit: "minutes", count: 1 })
     expect(waitForPeople(61)).toEqual({ unit: "minutes", count: 2 })
     expect(waitForPeople(300)).toEqual({ unit: "minutes", count: 5 })
     expect(waitForPeople(900)).toEqual({ unit: "minutes", count: 15 })
@@ -72,7 +74,7 @@ describe("authWaitWords", () => {
 
   it("says the seconds, or the minutes, the answer gave", () => {
     expect(authWaitWords({ status: 429, retryAfter: 60 }, t)).toBe(
-      'waitSeconds:{"count":60}'
+      'waitMinutes:{"count":1}'
     )
     expect(authWaitWords({ status: 429, retryAfter: 10 }, t)).toBe(
       'waitSeconds:{"count":10}'
@@ -91,7 +93,7 @@ describe("authWaitWords", () => {
 
   it("adds, on the sign-in screen, that another way in still works", () => {
     expect(authWaitWords({ status: 429, retryAfter: 60 }, t, "signIn")).toBe(
-      'waitSeconds:{"count":60} waitOtherWays'
+      'waitMinutes:{"count":1} waitOtherWays'
     )
     expect(authWaitWords({ status: 429 }, t, "signIn")).toBe(
       "waitAFewMinutes waitOtherWays"

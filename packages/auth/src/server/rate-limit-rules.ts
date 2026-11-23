@@ -13,9 +13,12 @@
  *
  * What shaped the numbers:
  * - A clinic is one office address, and a mobile network puts many members
- *   behind one. A limit has to slow a script, not stop ten colleagues at
- *   nine in the morning. Each path has its own count, so someone held on
- *   the password path can still use a sign-in link, Google or a passkey.
+ *   behind one. A limit has to slow a script, not stop ten colleagues
+ *   signing in with their passwords at nine in the morning. What sends an
+ *   email is tighter (three to five a minute), so a full office asking for
+ *   sign-in links at once can be asked to wait a minute. Each path has its
+ *   own count, so someone held on one can still use another: a sign-in
+ *   link, Google, a passkey.
  * - Nobody waits more than a minute for anything they do themselves.
  * - A link opened from an email gets room: refused there, a person lands
  *   on a bare page of the API with nowhere to go.
@@ -89,11 +92,15 @@ export const AUTH_RATE_LIMIT_RULES = {
 
   // A passkey cannot be guessed; written down so that it is ours.
   "/passkey/verify-authentication": { window: MINUTE, max: 20 },
+
+  // An invitation is an email to someone outside. Twenty a minute lets a
+  // clinic invite its team in one sitting; the default allowed six hundred.
+  "/organization/invite-member": { window: MINUTE, max: 20 },
 } as const satisfies Record<string, AuthRateLimitRule>
 
 /**
- * The longest a person is asked to wait by these rules, in seconds. What
- * the sign-in screens fall back to when an answer does not say.
+ * The longest a person is asked to wait by these rules, in seconds. A test
+ * holds it at one minute.
  */
 export const AUTH_RATE_LIMIT_LONGEST_WAIT = Math.max(
   ...Object.values(AUTH_RATE_LIMIT_RULES).map((rule) => rule.window)

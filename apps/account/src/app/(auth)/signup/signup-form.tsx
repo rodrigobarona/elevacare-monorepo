@@ -22,6 +22,7 @@ import {
   EmailChip,
   InboxActions,
   authErrorMessage,
+  resendRefusal,
 } from "@/components/auth-ui"
 
 type Step = "email" | "details" | "verify" | "magicSent"
@@ -72,7 +73,8 @@ export function SignupForm({
     setStep(nextStep)
   }
 
-  async function sendMagicLink(): Promise<boolean> {
+  async function sendMagicLink(): Promise<boolean | number> {
+    setError(null)
     // The name only applies when this link creates the account (a booking
     // request that is not confirmed yet has not started one).
     const { error: magicError } = await authClient.signIn.magicLink({
@@ -82,19 +84,20 @@ export function SignupForm({
     })
     if (magicError) {
       setError(authErrorMessage(magicError, t))
-      return false
+      return resendRefusal(magicError)
     }
     return true
   }
 
-  async function resendVerification(): Promise<boolean> {
+  async function resendVerification(): Promise<boolean | number> {
+    setError(null)
     const { error: result } = await authClient.sendVerificationEmail({
       email,
       callbackURL: toGatewayCallbackURL("/verify-email"),
     })
     if (result) {
       setError(authErrorMessage(result, t))
-      return false
+      return resendRefusal(result)
     }
     return true
   }
@@ -113,7 +116,7 @@ export function SignupForm({
       // account with a magic link. Password signup stays for a different
       // address the visitor types themselves.
       if (claimingGuest) {
-        if (await sendMagicLink()) goTo("magicSent")
+        if ((await sendMagicLink()) === true) goTo("magicSent")
         return
       }
       const { error: result } = await authClient.signUp.email({
@@ -145,11 +148,19 @@ export function SignupForm({
 
   async function onGoogle() {
     setGooglePending(true)
-    await authClient.signIn.social({
+    setError(null)
+    // Typed loosely by the client: what matters here is whether it failed.
+    const { error: result } = (await authClient.signIn.social({
       provider: "google",
       callbackURL: toGatewayCallbackURL("/dashboard"),
       errorCallbackURL: new URL("/login", window.location.href).toString(),
-    })
+    })) as { error?: Parameters<typeof authErrorMessage>[0] | null }
+    // On success the browser is already leaving for Google. Refused, the
+    // button must not spin for ever with nothing said.
+    if (result) {
+      setGooglePending(false)
+      setError(authErrorMessage(result, t))
+    }
   }
 
   const errorText = error ? (

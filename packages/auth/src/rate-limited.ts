@@ -50,14 +50,15 @@ export function authWait(
 }
 
 /**
- * A wait as a person is told it: seconds up to a minute, whole minutes
- * above, rounded up so that it is never too short.
+ * A wait as a person is told it: seconds under a minute, whole minutes
+ * from there ("1 minute", not "60 seconds"), rounded up so that it is
+ * never too short.
  */
 export function waitForPeople(seconds: number): {
   unit: "seconds" | "minutes"
   count: number
 } {
-  if (seconds <= 60) return { unit: "seconds", count: Math.ceil(seconds) }
+  if (seconds < 60) return { unit: "seconds", count: Math.ceil(seconds) }
   return { unit: "minutes", count: Math.ceil(seconds / 60) }
 }
 

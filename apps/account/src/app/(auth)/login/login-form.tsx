@@ -26,6 +26,7 @@ import {
   authErrorMessage,
   oauthErrorCallbackURL,
   oauthErrorMessage,
+  resendRefusal,
 } from "@/components/auth-ui"
 
 type Step = "email" | "password" | "magicSent"
@@ -105,33 +106,45 @@ export function LoginForm() {
     finish()
   }
 
-  async function sendMagicLink(): Promise<boolean> {
+  /**
+   * Sends the sign-in link. `again` is the "send again" on the inbox step,
+   * where no other way of signing in is on the screen to point to.
+   */
+  async function sendMagicLink(again = false): Promise<boolean | number> {
+    setError(null)
     const { error: result } = await authClient.signIn.magicLink({
       email,
       callbackURL: next,
     })
     if (result) {
-      setError(authErrorMessage(result, t, "signIn"))
-      return false
+      setError(authErrorMessage(result, t, again ? "elsewhere" : "signIn"))
+      return resendRefusal(result)
     }
     return true
   }
 
   async function onMagic() {
     setPending(true)
-    setError(null)
     const sent = await sendMagicLink()
     setPending(false)
-    if (sent) goTo("magicSent")
+    if (sent === true) goTo("magicSent")
   }
 
   async function onGoogle() {
     setGooglePending(true)
-    await authClient.signIn.social({
+    setError(null)
+    // Typed loosely by the client: what matters here is whether it failed.
+    const { error: result } = (await authClient.signIn.social({
       provider: "google",
       callbackURL: next,
       errorCallbackURL: oauthErrorCallbackURL(),
-    })
+    })) as { error?: Parameters<typeof authErrorMessage>[0] | null }
+    // On success the browser is already leaving for Google. Refused, the
+    // button must not spin for ever with nothing said.
+    if (result) {
+      setGooglePending(false)
+      setError(authErrorMessage(result, t, "signIn"))
+    }
   }
 
   async function onPasskey() {
@@ -162,7 +175,7 @@ export function LoginForm() {
           title={t("magicSentTitle")}
           description={t("magicSentBody", { email })}
         />
-        <InboxActions email={email} onResend={sendMagicLink} />
+        <InboxActions email={email} onResend={() => sendMagicLink(true)} />
         {errorText}
         <Button
           variant="link"

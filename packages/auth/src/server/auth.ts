@@ -857,7 +857,8 @@ export async function withRetryAfter(response: Response): Promise<Response> {
   )
 }
 
-function withCors(
+/** What every answer of `/auth/*` passes through on its way out. */
+export function withCors(
   handler: (request: Request) => Promise<Response>
 ): (request: Request) => Promise<Response> {
   return async (request) => {

@@ -35,7 +35,7 @@ vi.stubEnv("BETTER_AUTH_URL", "http://localhost:3002/auth")
 vi.stubEnv("KV_REST_API_URL", "")
 vi.stubEnv("KV_REST_API_TOKEN", "")
 
-import { createAuthForTest, withRetryAfter } from "./auth"
+import { createAuthForTest, withCors, withRetryAfter } from "./auth"
 import {
   AUTH_RATE_LIMIT_DEFAULT,
   AUTH_RATE_LIMIT_LONGEST_WAIT,
@@ -142,6 +142,7 @@ const PATH_FOR: Record<keyof typeof AUTH_RATE_LIMIT_RULES, string> = {
   "/two-factor/send-otp": "/two-factor/send-otp",
   "/two-factor/*": "/two-factor/verify-totp",
   "/passkey/verify-authentication": "/passkey/verify-authentication",
+  "/organization/invite-member": "/organization/invite-member",
 }
 const GET_PATHS = new Set(["/magic-link/verify", "/verify-email"])
 
@@ -229,20 +230,85 @@ describe("the rules and the installed Better Auth agree", () => {
     }
   })
 
-  it("every endpoint for signing in, signing up and the second step has a rule", () => {
+  /**
+   * Endpoints left on the wide default (100 in 10 seconds), each for a
+   * reason. An endpoint that is in no rule and not here fails the test
+   * below: a release that adds one asks for a decision.
+   */
+  const ON_THE_DEFAULT: Record<string, string[]> = {
+    "read by every page that is signed in, or must never be refused": [
+      "/get-session",
+      "/sign-out",
+    ],
+    "tokens for a session that is already signed in": [
+      "/token",
+      "/jwks",
+      "/refresh-token",
+      "/get-access-token",
+    ],
+    "pages and documents with nothing to guess": [
+      "/ok",
+      "/error",
+      "/reference",
+      "/open-api/generate-schema",
+    ],
+    "a browser arriving from a provider or from a link in an email, with a token of its own":
+      ["/callback/:id", "/reset-password/:token", "/delete-user/callback"],
+    "needs a signed-in session, and sends nothing to anyone else": [
+      "/list-sessions",
+      "/list-accounts",
+      "/account-info",
+      "/revoke-session",
+      "/revoke-sessions",
+      "/revoke-other-sessions",
+      "/update-session",
+      "/update-user",
+      "/unlink-account",
+      "/link-social",
+      "/delete-user",
+    ],
+    "needs a signed-in member of the organization (inviting has its own rule)":
+      ["/organization/*"],
+    "needs a staff session": ["/admin/*"],
+    "needs a signed-in session; a key is checked on the server, not here": [
+      "/api-key/*",
+    ],
+    "a passkey cannot be guessed (signing in with one has its own rule)": [
+      "/passkey/*",
+    ],
+  }
+
+  const matches = (pattern: string, path: string) =>
+    pattern.includes("*")
+      ? new RegExp(`^${pattern.replace("*", "[^/]+")}$`).test(path)
+      : pattern === path
+
+  it("every endpoint has a rule, or a reason to be on the default", () => {
     const rules = Object.keys(AUTH_RATE_LIMIT_RULES)
-    const covered = (path: string) =>
-      rules.some((rule) =>
-        rule.includes("*")
-          ? new RegExp(`^${rule.replace("*", "[^/]+")}$`).test(path)
-          : rule === path
-      )
+    const fine = Object.values(ON_THE_DEFAULT).flat()
+    const undecided = [...endpoints()].filter(
+      (path) =>
+        !rules.some((rule) => matches(rule, path)) &&
+        !fine.some((pattern) => matches(pattern, path))
+    )
+    expect(undecided).toEqual([])
+    // And nothing listed as fine is a name from an older release.
+    for (const pattern of fine) {
+      expect(
+        [...endpoints()].some((path) => matches(pattern, path)),
+        `${pattern} is served`
+      ).toBe(true)
+    }
+  })
+
+  it("every endpoint that signs in, signs up, takes a code or sends an email has a rule", () => {
+    const rules = Object.keys(AUTH_RATE_LIMIT_RULES)
+    const covered = (path: string) => rules.some((rule) => matches(rule, path))
     const sensitive = [...endpoints()].filter((path) =>
       /^\/(sign-in|sign-up|two-factor)\//.test(path)
     )
     expect(sensitive.length).toBeGreaterThanOrEqual(8)
     for (const path of sensitive) expect(covered(path), path).toBe(true)
-    // And the ones that send an email or take a password.
     for (const path of [
       "/request-password-reset",
       "/send-verification-email",
@@ -252,6 +318,7 @@ describe("the rules and the installed Better Auth agree", () => {
       "/change-email",
       "/magic-link/verify",
       "/verify-email",
+      "/organization/invite-member",
     ]) {
       expect(endpoints().has(path), `${path} is served`).toBe(true)
       expect(covered(path), path).toBe(true)
@@ -296,6 +363,47 @@ describe("what a refused caller is told", () => {
       message: "Too many requests. Please try again later.",
       retryAfter: window,
     })
+  })
+
+  it("through the wrapper every answer leaves by, a browser on another origin can read it", async () => {
+    const here = newAddress()
+    const leave = withCors((request) => auth.handler(request))
+    const send = () =>
+      leave(
+        new Request(`${ORIGIN}/auth/sign-up/email`, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            origin: ORIGIN,
+            "x-vercel-forwarded-for": here,
+          },
+          body: "{}",
+        })
+      )
+    const { max, window } = AUTH_RATE_LIMIT_RULES["/sign-up/email"]
+    for (let count = 0; count < max; count += 1) await send()
+    const refused = await send()
+    expect(refused.status).toBe(429)
+    // The sign-in screens are on another origin than the API.
+    expect(refused.headers.get("access-control-allow-origin")).toBe(ORIGIN)
+    expect(
+      refused.headers
+        .get("access-control-expose-headers")
+        ?.split(",")
+        .map((name) => name.trim().toLowerCase())
+    ).toEqual(["retry-after", "x-retry-after"])
+    expect(refused.headers.get("retry-after")).toBe(String(window))
+    expect(await refused.json()).toMatchObject({
+      code: RATE_LIMITED_CODE,
+      retryAfter: window,
+    })
+    // An answer that is not a refusal names the same readable headers.
+    const allowed = await withCors(async () => Response.json({ ok: true }))(
+      new Request(`${ORIGIN}/auth/ok`, { headers: { origin: ORIGIN } })
+    )
+    expect(allowed.headers.get("access-control-expose-headers")).toContain(
+      "Retry-After"
+    )
   })
 
   it("leaves every other answer as it was", async () => {
