@@ -45,45 +45,87 @@ Each entry should include:
   one file per UTC day) holds the line
   `<step> | approved | @rodrigobarona | <time>`, and the commit that
   wrote that very line:
-  - is on GitHub, made by the owner's account;
-  - is signed with a key GitHub knows as theirs (the name and email typed
-    into a commit are not believed);
+  - is on GitHub, authored and committed by the owner's account;
+  - is signed by the owner's own key, one registered on that account
+    (GitHub's reason for "verified" must be `valid`);
   - is less than four hours old.
+- **A commit GitHub makes in the owner's name is refused.** A commit
+  written on github.com, and every squash merge on `main`, names the
+  owner as author and is made and signed by GitHub. An agent working
+  with the owner's GitHub login can produce one, so it cannot be what
+  separates the owner's approval from the operator's reading of a chat.
+  The cost: an approval cannot be given from github.com on a phone. The
+  owner needs a signing key registered on GitHub that the operator
+  cannot use without them (operator task, below). This machine has no
+  signing key today.
 - **The commit is the approval, not the text.** The gate asks git which
   commit wrote the line (`git blame`), so a later commit to the file
   changes nothing, an approval edited after it was committed no longer
   counts, and yesterday's line copied into today's file is judged by who
   copied it. A fresh time typed into the line does not make an old commit
-  fresh.
+  fresh, and neither does a rebase by someone else: the maker of the
+  commit must be the owner. A clone with part of the history is refused,
+  because there git names the newest commit as the writer of every line.
 - **One approval, one run.** Before the command starts the gate writes
   `started` to the log; when it ends, `executed` with where its output
-  is kept, or `failed` with the exit code. Any of the three uses the
-  approval up. A run that failed may have changed something, so trying
-  again needs a new line. `started` is written first so that a command
-  that changed something and then lost its connection is on record; if
-  the log cannot be written, nothing runs.
+  is kept, or `failed` with the exit code or the signal. Any of the three
+  uses the approval up. A run that failed may have changed something, so
+  trying again needs a new line. `started` is written first so that a
+  command that changed something and then lost its connection is on
+  record; if the log cannot be written, nothing runs. Those lines are not
+  committed until the operator commits them, so the gate also keeps a
+  note that the approval was used in the ignored evidence folder, where
+  `git stash` and `git reset` do not reach. That note is on one machine:
+  a second clone that has not pulled the committed log does not know.
 - What the command printed goes to
   `docs/eleva-v3/operator-tasks/cutover-evidence/`, which git ignores:
   output can hold secrets. The operator copies what is safe into the
-  log. For the same reason the gate refuses a command with a secret on
-  its command line, since the command itself is written to the log.
-- Not in the plan's text, and added: the `started` and `failed` lines;
-  the refusal of a commit dated after now; the refusal of a secret on
-  the command line; "GitHub could not be asked" as its own refusal
-  (nothing runs on an approval that cannot be checked).
-- Proof: 23 tests (`scripts/cutover-gate.test.mjs`, run in CI with the
+  log. The gate refuses a command that looks like it carries a secret on
+  its command line, since the command itself is written to the log. That
+  is a net for the common shapes (a key with a known prefix, a header
+  that authorises, a name that says so, a password in an address), not a
+  proof.
+- Where this departs from the plan's text, or adds to it: the `started`
+  and `failed` lines and the note that an approval was used; the maker
+  of the commit must be the owner (the plan names the author only);
+  of several approval lines for one step the last is read; the command
+  runs from the repository root, without a shell, with its output
+  through a pipe; a commit dated after now is refused; "GitHub could not
+  be asked" is its own refusal; a clone with part of the history is
+  refused; cutover logs are left out of the commit hook's formatting, so
+  the log says what ran character for character.
+- Proof: 36 tests (`scripts/cutover-gate.test.mjs`, run in CI with the
   other script tests). Missing, stale and foreign approvals each have
-  their cases; one test makes a real git repository to check which
-  commit wrote a line; six ways of breaking the gate were tried by hand
-  and each failed a test.
+  their cases. Five tests run the command itself in a scratch repository
+  with a stand-in for `gh`: it asks about the commit that wrote the
+  line, runs without a shell, records a run ended by a signal as failed,
+  and refuses after a stash. Eleven ways of breaking the gate were tried
+  by hand and each failed a test.
+- **A fault the tests found:** run through a path with a symbolic link
+  in it, the script did nothing and exited 0, which would have read as a
+  step that ran. It now knows itself by its real path, and a test runs
+  it through a link.
+- Review: the first version was scored 7 correctness, 6 security, 7
+  tests, 7.5 write-up by an independent reviewer, with one blocker (the
+  GitHub-made commit above). This is the answer to it; it has not been
+  scored again.
 - Not proven: it has not gated a real command, and it has not asked the
-  real GitHub about a real signed commit (the answer's three fields are
-  read from a written-out example). The scripts it will wrap are 15.3.
+  real GitHub about a real signed commit (the fields it reads are tested
+  from a written-out answer; that a commit made on github.com answers
+  `web-flow` as its maker is from GitHub's behaviour as seen on this
+  repository's merges, read locally, not from a call). The scripts it
+  will wrap are 15.3.
 - Known limits. The gate trusts the `gh` and `git` on the operator's
-  machine: it keeps an honest operator from running on a misread or
-  stale approval, not a hostile one from editing the script. It reads
-  the log of the current UTC day only, so an approval given before
-  midnight UTC for a step run after it has to be given again.
+  machine: it keeps an operator who means well from running on a misread
+  or stale approval, not one who edits the script. It is as strong as
+  the owner's signing key is out of the operator's reach. It reads the
+  log of the current UTC day only, so an approval given before midnight
+  UTC for a step run after it has to be given again. A tool that asks a
+  question only on a terminal will not ask it under the gate.
+- Operator, before the cutover: a signing key (SSH or GPG) registered on
+  the owner's GitHub account, kept behind a passphrase, a hardware key
+  or a prompt; and one signed commit pushed to a branch as a trial, to
+  see GitHub's real answer before the day.
 - Owner: engineering (the gate); the founder (every approval line)
 - Related: ADR-019; `execution-plan/phases/15-launch-cutover.md`
   (section B of the prompt); `operator-tasks/scripts-catalog.md`
