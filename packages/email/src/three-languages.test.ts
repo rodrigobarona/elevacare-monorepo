@@ -818,17 +818,19 @@ describe("the list of emails above", () => {
       .replace(/\/\/[^\n]*/g, "")
     const declared = [
       ...sources.matchAll(
-        /export type (\w+(Kind|Status|Window|Detail|Mode))\b[^=\n]*=\s*\|?\s*"/g
+        /export type (\w+(Kind|Status|Window|Detail|Mode))\b[^=\n]*=\s*\|?\s*["']/g
       ),
     ].map((match) => match[1]!)
     const unions = [
       ...sources.matchAll(
-        /export type (\w+(Kind|Status|Window|Detail|Mode)) =\s*\|?((?:\s*"[^"]+"\s*\|?)+)/g
+        /export type (\w+(Kind|Status|Window|Detail|Mode)) =\s*\|?((?:\s*["'][^"']+["']\s*\|?)+)/g
       ),
     ].map((match) => ({
       name: match[1]!,
       input: INPUT[match[2] as keyof typeof INPUT],
-      members: [...match[3]!.matchAll(/"([^"]+)"/g)].map((one) => one[1]!),
+      members: [...match[3]!.matchAll(/["']([^"']+)["']/g)].map(
+        (one) => one[1]!
+      ),
     }))
     // Every such type that begins with a quoted name was read to its end.
     // Not read: a type built another way (`(typeof LIST)[number]`), one in

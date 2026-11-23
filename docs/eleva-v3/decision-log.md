@@ -45,7 +45,8 @@ Each entry should include:
   that no value is missing from the text (`undefined`, `{name}`), that the
   names, dates and amounts the English email shows are in the other two
   (and that each shared sentence given a name, a date or a number says it),
-  that **no English is left in the Portuguese or the Spanish**, and that
+  that **English left in the Portuguese or the Spanish is found** (the
+  three ways below; what it can miss is in the last point), and that
   Portuguese and Spanish are not one pasted over the other.
 - English is found three ways: a sentence the same as the English email's
   (down to a one-word label, sentence by sentence inside a paragraph,
@@ -58,7 +59,10 @@ Each entry should include:
 - The list keeps itself whole: the test reads the package and fails when a
   renderer, or a form an email comes in (its kinds, statuses, reminder
   windows, session modes), has no entry in it. That search is by text: it
-  says a form is listed, not under which email.
+  says a form is listed, not under which email. It reads the named types
+  only, so a choice written inside a props type
+  (`audience?: "member" | "expert"`) can gain a value without the list
+  noticing.
 - It found nothing to fix: every sentence was already translated. The check
   was proven able to fail eighteen ways, each tried and then undone. Among
   them: an English sentence, a short title, reworded English, and a
