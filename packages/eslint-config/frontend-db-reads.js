@@ -1,4 +1,4 @@
-import { BOUNDARY_SYNTAX } from "./boundaries.js"
+import { BOUNDARY_SYNTAX, namedAsText } from "./boundaries.js"
 
 /**
  * @file What an app other than `apps/api` may take from `@eleva/db`.
@@ -35,7 +35,7 @@ import { BOUNDARY_SYNTAX } from "./boundaries.js"
  * `scripts/check-boundaries.test.mjs` fails on a name here that
  * `@eleva/db` does not export or that no app uses.
  */
-export const FRONTEND_DB_READS = [
+export const FRONTEND_DB_READS = Object.freeze([
   "getActiveCalendarFeedToken",
   "getDefaultSchedule",
   "getDestinationCalendar",
@@ -58,7 +58,7 @@ export const FRONTEND_DB_READS = [
   "listSchedules",
   // Not a read: turns a row already read into what a page shows.
   "toBookingLinkListItem",
-]
+])
 
 const HOW =
   "An app takes from @eleva/db only the read helpers listed in @eleva/eslint-config/frontend-db-reads, and types. For anything else (a write, a database handle, a subpath, a read not on the list) call apps/api through @eleva/api-client, or add the read to the list in a reviewed change."
@@ -67,19 +67,13 @@ const DRIVERS =
   "An app does not query the database itself: no drizzle-orm, no database driver. Use a listed @eleva/db read helper or call apps/api (frontend-db-reads lint)."
 
 /**
- * The database package, or what is under it, named as text anywhere it can
- * be loaded from: `import("@eleva/db")`, `` import(`@eleva/db`) ``,
- * `require(...)`, `createRequire(...)("@eleva/db")`, a path into
- * `packages/db`. The import rule only reads `import ... from`.
+ * The database package, or what is under it, named as text where it can
+ * be loaded from (`namedAsText`). A path into `packages/db` is refused by
+ * the boundaries, like any path into a workspace.
  */
 const DATABASE_TEXT =
-  "/(^|\\/)(@eleva|packages)\\/(\\.\\/)*db(\\/|$)|^drizzle-orm(\\/|$)|^@neondatabase\\//"
-const LOADED_AT_RUN_TIME = [
-  `ImportExpression Literal[value=${DATABASE_TEXT}]`,
-  `ImportExpression TemplateElement[value.raw=${DATABASE_TEXT}]`,
-  `CallExpression > Literal[value=${DATABASE_TEXT}]`,
-  `CallExpression > TemplateLiteral > TemplateElement[value.raw=${DATABASE_TEXT}]`,
-].map((selector) => ({ selector, message: HOW }))
+  "/^@eleva\\/db([\\/?#]|$)|^drizzle-orm(\\/|$)|^@neondatabase\\//"
+const LOADED_AT_RUN_TIME = namedAsText(DATABASE_TEXT, HOW)
 
 /** @type {import("eslint").Linter.Config[]} */
 export const frontendDbReadsConfig = [
@@ -102,14 +96,10 @@ export const frontendDbReadsConfig = [
           ],
           patterns: [
             {
-              regex: "^@eleva/db/",
+              // A subpath, or the name with something after it that a
+              // bundler would drop (`@eleva/db?raw`).
+              regex: "^@eleva/db[/?#]",
               allowTypeImports: true,
-              message: HOW,
-            },
-            {
-              // The package by its place on disk, in the repository or
-              // under node_modules.
-              regex: "(^|/)(packages|node_modules/@eleva)/(\\./)*db(/|$)",
               message: HOW,
             },
             {

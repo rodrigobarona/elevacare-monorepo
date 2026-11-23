@@ -30,6 +30,7 @@ import {
   lintedWorkspaces,
   report,
   sharedConfigsFor,
+  sharedConfigTexts,
   sourceFilesOf,
 } from "./check-boundaries.mjs"
 
@@ -86,25 +87,36 @@ async function expectLines(app, file, lines) {
   assert.deepEqual(first, expected, `${app}: ${JSON.stringify(found)}`)
 }
 
-test("run as CI runs it, through a link too: the repository passes", () => {
+test("run as a command, through a link too: it checks, and says what", () => {
   // A script that only runs when called by its own path would pass,
   // having checked nothing, when called through a link.
   const link = path.join(temporary(), "check.mjs")
   symlinkSync(SCRIPT, link)
-  const run = spawnSync(process.execPath, [link], { encoding: "utf8" })
-  assert.equal(run.status, 0, run.stderr)
-  const [, files, workspaces] = run.stdout.match(
-    /^Boundary check passed \((\d+) files in (\d+) workspaces\)\.$/m
+  const run = (...names) =>
+    spawnSync(process.execPath, [link, ...names], { encoding: "utf8" })
+
+  const one = run("apps/academy", "packages/ui/")
+  assert.equal(one.status, 0, one.stderr)
+  assert.match(
+    one.stdout,
+    /^Boundary check passed \(\d+ files in 2 workspaces\)\.$/m
   )
-  // Every workspace with a lint config, and no app left out.
-  assert.equal(Number(workspaces), lintedWorkspaces(ROOT).length)
-  assert.ok(Number(files) > Number(workspaces))
+  const none = run("apps/no-such-app")
+  assert.equal(none.status, 1)
+  assert.match(
+    none.stderr,
+    /Not a workspace with a lint config: apps\/no-such-app/
+  )
+})
+
+test("every app is on the list of what is checked", () => {
   assert.deepEqual(appsWithoutLint(ROOT), [])
   const apps = lintedWorkspaces(ROOT).filter((name) => name.startsWith("apps/"))
   for (const app of ["apps/api", "apps/web", "apps/expert", "apps/admin"]) {
     assert.ok(apps.includes(app), `${app} is linted`)
   }
   assert.ok(!apps.includes("apps/poc"), "the playground is not linted")
+  assert.ok(lintedWorkspaces(ROOT).length >= 40)
 })
 
 test("what is printed, and the exit code", () => {
@@ -122,18 +134,21 @@ test("what is printed, and the exit code", () => {
     failed.lines.at(-1),
     "- apps/web/src/a.ts:1: no stripe (no-restricted-imports)"
   )
-  // Nothing linted is not a pass.
-  assert.equal(
-    report("/repo", { problems: [], files: 0, workspaces: 3 }).code,
-    1
-  )
+  // Nothing linted is not a pass, and why is said.
+  const nothing = report("/repo", {
+    problems: ["apps/web: could not be checked (boom)"],
+    files: 0,
+    workspaces: 1,
+  })
+  assert.equal(nothing.code, 1)
+  assert.equal(nothing.lines.at(-1), "- apps/web: could not be checked (boom)")
   assert.equal(
     report("/repo", { problems: [], files: 0, workspaces: 0 }).code,
     1
   )
 })
 
-test("an app's lint config is the shared configs, and nothing else", () => {
+test("an app's lint config exports the shared configs, and nothing else", () => {
   const [web] = sharedConfigsFor("apps/web")
   const [api] = sharedConfigsFor("apps/api")
   assert.deepEqual(appConfigProblems("apps/web", web), [])
@@ -146,10 +161,7 @@ test("an app's lint config is the shared configs, and nothing else", () => {
   const named = (workspace, config) => {
     const problems = appConfigProblems(workspace, config)
     assert.equal(problems.length, 1)
-    assert.match(
-      problems[0],
-      new RegExp(`^${workspace}/eslint\\.config\\.js: `)
-    )
+    assert.match(problems[0], new RegExp(`^${workspace}: the lint config `))
   }
   // An entry more: a folder ignored, a rule off, a rule set again.
   named("apps/web", [...web, { ignores: ["src/legacy/**"] }])
@@ -172,12 +184,201 @@ test("an app's lint config is the shared configs, and nothing else", () => {
   named("apps/web", undefined)
 })
 
-test("every app's own lint config is exactly that", async () => {
+test("an app's lint config file is three lines, and no other code", () => {
+  const text = (workspace, source) =>
+    appConfigProblems(workspace, undefined, source).length === 0
+  const web = `import { nextJsConfig } from "@eleva/eslint-config/next-js"
+import { boundariesConfig } from "@eleva/eslint-config/boundaries"
+import { frontendDbReadsConfig } from "@eleva/eslint-config/frontend-db-reads"
+
+/** @type {import("eslint").Linter.Config} */
+export default [...nextJsConfig, ...boundariesConfig, ...frontendDbReadsConfig]
+`
+  assert.ok(text("apps/web", web))
+  // Spacing, quotes, semicolons and comments are not code.
+  assert.ok(
+    text(
+      "apps/web",
+      web.replaceAll('"', "'").replaceAll("\n", ";\n") + "// a note\n"
+    )
+  )
+  assert.equal(sharedConfigTexts("apps/web").length, 2)
+
+  // Code that runs when the file is loaded, around the same export.
+  assert.ok(!text("apps/web", `process.exit(0)\n${web}`))
+  assert.ok(
+    !text(
+      "apps/web",
+      web.replace(
+        "export default",
+        'frontendDbReadsConfig[0].rules["no-restricted-syntax"] = "off"\nexport default'
+      )
+    )
+  )
+  assert.ok(
+    !text(
+      "apps/web",
+      web.replace("...frontendDbReadsConfig]", "...frontendDbReadsConfig, {}]")
+    )
+  )
+  // The shared configs from somewhere else.
+  assert.ok(!text("apps/web", web.replace("/boundaries", "/boundaries-local")))
+  // A frontend's file is not the API's, nor the other way round.
+  const api = web
+    .replace(/^import \{ frontendDbReadsConfig \}.*\n/m, "")
+    .replace(", ...frontendDbReadsConfig", "")
+  assert.ok(text("apps/api", api))
+  assert.ok(!text("apps/web", api))
+  assert.ok(!text("apps/api", web))
+})
+
+test("every app's own lint config is exactly that, by text and by what it exports", async () => {
   for (const app of lintedWorkspaces(ROOT)) {
     if (!app.startsWith("apps/")) continue
-    const config = await import(path.join(ROOT, app, "eslint.config.js"))
-    assert.deepEqual(appConfigProblems(app, config.default), [], app)
+    const file = path.join(ROOT, app, "eslint.config.js")
+    assert.deepEqual(
+      appConfigProblems(app, undefined, readFileSync(file, "utf8")),
+      [],
+      app
+    )
+    assert.deepEqual(
+      appConfigProblems(app, (await import(file)).default),
+      [],
+      app
+    )
   }
+})
+
+/**
+ * A repository of its own, with one app, that the check can run on: the
+ * lint package is linked in, so the app's config is the real shared one.
+ */
+function scratchRepository(files) {
+  const root = temporary()
+  const app = path.join(root, "apps", "demo")
+  mkdirSync(path.join(root, "packages"), { recursive: true })
+  symlinkSync(
+    path.join(ROOT, "packages", "eslint-config"),
+    path.join(root, "packages", "eslint-config")
+  )
+  mkdirSync(path.join(app, "node_modules", "@eleva"), { recursive: true })
+  symlinkSync(
+    path.join(ROOT, "packages", "eslint-config"),
+    path.join(app, "node_modules", "@eleva", "eslint-config")
+  )
+  const all = {
+    "eslint.config.js": readFileSync(
+      path.join(ROOT, "apps", "academy", "eslint.config.js"),
+      "utf8"
+    ),
+    "src/app/page.ts": "export const page = 1\n",
+    ...files,
+  }
+  for (const [file, source] of Object.entries(all)) {
+    mkdirSync(path.dirname(path.join(app, file)), { recursive: true })
+    writeFileSync(path.join(app, file), source)
+  }
+  return { root, app }
+}
+
+const checkScratch = async (files) => {
+  const { root, app } = scratchRepository(files)
+  const found = await findBoundaryProblems(root, { workspaces: ["apps/demo"] })
+  return { ...found, root, app }
+}
+
+test("an app on its own: clean passes, and each way of going wrong is named", async () => {
+  const clean = await checkScratch({})
+  assert.deepEqual(clean.problems, [])
+  assert.equal(clean.files, 2)
+
+  // A boundary crossed in the code.
+  const crossed = await checkScratch({
+    "src/app/x/page.ts":
+      'import { db } from "@eleva/db"\nexport const x = db\n',
+  })
+  assert.equal(crossed.problems.length, 1, crossed.problems.join("\n"))
+  assert.match(crossed.problems[0], /^apps\/demo\/src\/app\/x\/page\.ts:1: /)
+
+  // A file that lint skips: the shared config ignores `.turbo` anywhere.
+  const skipped = await checkScratch({
+    "src/lib/.turbo/hidden.ts":
+      'import { db } from "@eleva/db"\nexport const x = db\n',
+  })
+  assert.deepEqual(
+    skipped.problems.map((one) => one.split(": ")[0]),
+    ["apps/demo/src/lib/.turbo/hidden.ts"]
+  )
+  assert.match(skipped.problems[0], /is not linted/)
+
+  // A lint config inside a folder, which would switch lint off under it.
+  const nested = await checkScratch({
+    "src/app/legacy/eslint.config.js": 'export default [{ ignores: ["**"] }]\n',
+    "src/app/legacy/page.ts":
+      'import { db } from "@eleva/db"\nexport const x = db\n',
+  })
+  assert.ok(
+    nested.problems.some((one) =>
+      /^apps\/demo\/src\/app\/legacy\/eslint\.config\.js: an app has one lint config/.test(
+        one
+      )
+    ),
+    nested.problems.join("\n")
+  )
+
+  // A folder with a generated folder's name, deeper down, is ours.
+  const deeper = await checkScratch({
+    "src/app/test-results/page.ts":
+      'import { db } from "@eleva/db"\nexport const x = db\n',
+  })
+  assert.equal(deeper.problems.length, 1, deeper.problems.join("\n"))
+  assert.match(deeper.problems[0], /test-results\/page\.ts:1: /)
+})
+
+test("an app whose lint config is other code is named, and its code is not run", async () => {
+  const marker = path.join(temporary(), "ran")
+  const original = readFileSync(
+    path.join(ROOT, "apps", "academy", "eslint.config.js"),
+    "utf8"
+  )
+  const { problems } = await checkScratch({
+    // Were this loaded, it would leave a file behind, and end the run.
+    "eslint.config.js": `import { writeFileSync } from "node:fs"
+writeFileSync(${JSON.stringify(marker)}, "ran")
+process.exit(0)
+${original}`,
+    "src/app/x/page.ts":
+      'import { db } from "@eleva/db"\nexport const x = db\n',
+  })
+  assert.equal(problems.length, 1, problems.join("\n"))
+  assert.match(
+    problems[0],
+    /^apps\/demo: the lint config of an app is three lines/
+  )
+  assert.throws(() => statSync(marker), /ENOENT/)
+})
+
+test("a link to code outside an app is named", async () => {
+  const outside = temporary()
+  writeFileSync(
+    path.join(outside, "page.ts"),
+    'import { db } from "@eleva/db"\nexport const x = db\n'
+  )
+  const { root, app } = scratchRepository({})
+  symlinkSync(outside, path.join(app, "src", "linked"))
+  symlinkSync(path.join(outside, "page.ts"), path.join(app, "src", "one.ts"))
+  // A link that is not code, as `.env.local` is in every app.
+  writeFileSync(path.join(outside, "env"), "A=1\n")
+  symlinkSync(path.join(outside, "env"), path.join(app, ".env.local"))
+  const { problems } = await findBoundaryProblems(root, {
+    workspaces: ["apps/demo"],
+  })
+  assert.deepEqual(
+    problems
+      .filter((one) => / is a link\./.test(one))
+      .map((one) => one.split(": ")[0]),
+    ["apps/demo/src/linked", "apps/demo/src/one.ts"]
+  )
 })
 
 test("one small app, checked whole: clean, and its canaries are refused", async () => {
@@ -245,23 +446,36 @@ test("a frontend takes the listed reads and types from the database, and no more
     line('import { getMemberProfile } from "@eleva/db"', DB_RULE),
     line('import { listMemberPayments } from "@eleva/db"', DB_RULE),
     line('import { getAuthUserRole } from "@eleva/db"', DB_RULE),
-    // Subpaths, the package by its place on disk, what is under it.
+    // Subpaths, and the name with something after it.
     line('import { main } from "@eleva/db/schema"', DB_RULE),
     line(
       'import { listPartnerApplications } from "@eleva/db/queries/partner-applications"',
       DB_RULE
     ),
-    line(
-      'import { client } from "../../../../packages/db/src/client"',
-      DB_RULE
-    ),
-    line('import { a } from "../../packages/./db/src/index"', DB_RULE),
-    line('import { b } from "../../node_modules/@eleva/db/src/index"', DB_RULE),
+    line('import raw from "@eleva/db?raw"', DB_RULE),
+    // What is under the package.
     line('import { sql } from "drizzle-orm"', DB_RULE),
     line('import { eq } from "drizzle-orm/pg-core"', DB_RULE),
     line('import { neon } from "@neondatabase/serverless"', DB_RULE),
     line('import { Client } from "pg/lib/client"', DB_RULE),
     line('import postgres from "postgres"', DB_RULE),
+    // The package by its place on disk: any workspace by path is refused.
+    line(
+      'import { client } from "../../../../packages/db/src/client"',
+      "no-restricted-imports"
+    ),
+    line(
+      'import { a } from "../../packages/auth/../db/src/index"',
+      "no-restricted-imports"
+    ),
+    line(
+      'import { b } from "../../node_modules/@eleva/db/src/index"',
+      "no-restricted-imports"
+    ),
+    line(
+      'import { c } from "../../../poc/../apps/poc/src/x"',
+      "no-restricted-imports"
+    ),
     // Loaded at run time, written as text.
     line('export const l1 = () => import("@eleva/db")', "no-restricted-syntax"),
     line("export const l2 = () => import(`@eleva/db`)", "no-restricted-syntax"),
@@ -289,8 +503,19 @@ test("a frontend takes the listed reads and types from the database, and no more
       'export const l8 = createRequire(import.meta.url)("@eleva/db")',
       "no-restricted-syntax"
     ),
-    // Text that is not the database.
+    line(
+      'export const l9 = require("@eleva/db" as string)',
+      "no-restricted-syntax"
+    ),
+    line(
+      'export const l10 = require.resolve("drizzle-orm")',
+      "no-restricted-syntax"
+    ),
+    // Text that names the database and loads nothing.
     line('export const fine = () => import("@eleva/ui/components/button")'),
+    line('vi.mock("@eleva/db", () => ({}))'),
+    line('console.log("drizzle-orm", ["@eleva/db"].includes("@eleva/db"))'),
+    line('export const where = path.resolve(here, "../../packages/content")'),
     line('export const label = t("database")'),
   ]
   for (const app of ["apps/expert", "apps/web", "apps/account", "apps/email"]) {
@@ -440,25 +665,35 @@ test("every source file of an app is found, and a lint config inside it", () => 
   write("next.config.mjs")
   write("src/proxy.ts")
   write("src/app/page.tsx")
-  write("src/app/coverage/page.tsx") // a route named coverage is ours
   write("src/app/legacy/eslint.config.js")
   write("src/app/notes.md", "not source")
-  write("coverage/lcov-report/index.js") // the report is not
+  // What tools generate, at the top of the app, is not ours.
+  write("coverage/lcov-report/index.js")
   write("node_modules/x/index.js")
   write(".next/server/app.js")
-  const { sources, configs } = sourceFilesOf(app)
+  write("dist/index.js")
+  // The same names deeper down are folders like any other.
+  write("src/app/coverage/page.tsx")
+  write("src/app/dist/page.tsx")
+  write("src/lib/node_modules/evil/index.ts")
+  write("src/lib/.turbo/evil.ts")
+  const { sources, configs, links } = sourceFilesOf(app)
   const relative = (files) =>
     files.map((file) => path.relative(app, file)).sort()
   assert.deepEqual(relative(sources), [
     "next.config.mjs",
     "src/app/coverage/page.tsx",
+    "src/app/dist/page.tsx",
     "src/app/page.tsx",
+    "src/lib/.turbo/evil.ts",
+    "src/lib/node_modules/evil/index.ts",
     "src/proxy.ts",
   ])
   assert.deepEqual(relative(configs), [
     "eslint.config.js",
     "src/app/legacy/eslint.config.js",
   ])
+  assert.deepEqual(links, [])
 })
 
 test("the API may take what it needs from the database", async () => {
@@ -499,11 +734,45 @@ test("every app keeps the vendor and health-data boundaries, in every file", asy
     ),
     line('export const v1 = () => import("stripe")', "no-restricted-syntax"),
     line('export const v2 = require("twilio")', "no-restricted-syntax"),
+    // The run-time bans are the import bans: every banned module.
+    line(
+      'export const v3 = () => import("better-auth")',
+      "no-restricted-syntax"
+    ),
+    line('export const v4 = require("lucide-react")', "no-restricted-syntax"),
+    line(
+      'export const v5 = () => import("@radix-ui/react-dialog")',
+      "no-restricted-syntax"
+    ),
+    line("export const v6 = () => import(`stripe`)", "no-restricted-syntax"),
+    line('export const v7 = module.require("stripe")', "no-restricted-syntax"),
     line("export const all = [Stripe, Resend, S3]"),
     line('export const fine = () => import("./stripe-button")'),
   ]
   for (const app of ["apps/expert", "apps/account", "apps/admin", "apps/api"]) {
     await expectLines(app, "src/app/thing/actions.ts", lines)
+  }
+})
+
+test("the shared configs set each boundary rule for every file, or not at all", () => {
+  // The check reads "what the shared configs set" as the last entry that
+  // sets a rule. That is only true while no entry sets one for some files.
+  const everyFile = "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}"
+  for (const workspace of ["apps/web", "apps/api"]) {
+    for (const entry of sharedConfigsFor(workspace).flat()) {
+      for (const rule of [
+        "no-restricted-imports",
+        "@typescript-eslint/no-restricted-imports",
+        "no-restricted-syntax",
+      ]) {
+        if (entry.rules?.[rule] === undefined) continue
+        assert.ok(
+          entry.files === undefined ||
+            (entry.files.length === 1 && entry.files[0] === everyFile),
+          `${rule} is set for ${JSON.stringify(entry.files)} only`
+        )
+      }
+    }
   }
 })
 

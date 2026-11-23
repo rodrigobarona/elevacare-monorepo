@@ -78,6 +78,8 @@ export const config = [
       "coverage/**",
       // The preview app that `email dev` generates (git-ignored).
       ".react-email/**",
+      // What Fumadocs generates from the content (git-ignored).
+      ".source/**",
     ],
   },
 ]
@@ -105,10 +107,15 @@ export function importBansWithout(bans, isOwned) {
       ? { paths: bans.paths.filter((path) => !isOwned(path.name)) }
       : {}),
     patterns: (bans.patterns ?? [])
-      .map((pattern) => ({
-        ...pattern,
-        group: pattern.group.filter((module) => !isOwned(module)),
-      }))
-      .filter((pattern) => pattern.group.length > 0),
+      .map((pattern) =>
+        // A pattern given as `regex` names no module to own: it is kept.
+        pattern.group
+          ? {
+              ...pattern,
+              group: pattern.group.filter((module) => !isOwned(module)),
+            }
+          : pattern
+      )
+      .filter((pattern) => !pattern.group || pattern.group.length > 0),
   }
 }

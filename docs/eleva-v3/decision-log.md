@@ -50,24 +50,27 @@ Each entry should include:
     runs the boundary rules alone over every workspace with a lint config
     and fails on any finding. It does not obey `eslint-disable` comments,
     and a file it cannot parse is a finding. It also makes sure nothing
-    switches the rules off. **An app's lint config must be the shared
-    configs, in order, and nothing else**: a rule set again, a folder
-    ignored, a processor or an entry left out fails by name, and what an
-    app needs changed goes into `@eleva/eslint-config`. Every source file
-    of an app must be linted, no lint config may sit inside an app's
-    folders, every file must have the boundary rules as the shared configs
-    set them, and in each app a few lines that must be refused are linted.
-    An app with no lint config fails.
+    switches the rules off by mistake. **An app's lint config must be the
+    shared configs, in order, and nothing else**: its file is three lines,
+    read as text before it is ever loaded, so a rule set again, a folder
+    ignored or any other code fails by name; what an app needs changed
+    goes into `@eleva/eslint-config`. Every source file of an app must be
+    linted, an app has one lint config (none inside its folders), no link
+    to code or to a folder, every file must have the boundary rules as the
+    shared configs set them, and in each app a few lines that must be
+    refused are linted. An app with no lint config fails.
+    `node scripts/check-boundaries.mjs apps/web` checks one workspace.
   - **`@eleva/eslint-config/frontend-db-reads`**, on every app except
     `apps/api`: from `@eleva/db` an app takes the read helpers on one list
     (`FRONTEND_DB_READS`, the 21 that `apps/expert` uses today) and types.
     It does not take a write helper, a database handle (`db`,
     `withOrgContext`, `withPlatformAdminContext`), a read that is not on
     the list, anything from a subpath (`/queries/*`, `/client`, `/rls`,
-    `/schema`), the package by its path on disk, `drizzle-orm` or a
-    database driver, or any of those named as text where it can be loaded
-    from (`import("@eleva/db")`, a template literal, `require`,
-    `createRequire(...)("@eleva/db")`). Adding a read to the list is a reviewed change: does the
+    `/schema`, `@eleva/db?raw`), `drizzle-orm` or a database driver, or
+    any of those named as text where it is loaded (`import("@eleva/db")`,
+    a template literal, `require`, `require.resolve`,
+    `createRequire(...)("@eleva/db")`, with or without a type cast).
+    `vi.mock("@eleva/db")` in a test is not a load and is allowed. Adding a read to the list is a reviewed change: does the
     helper scope what it reads to the caller's organization, and is the
     read one that need not be recorded?
   - **Removed:** `@eleva/eslint-config/api-first-actions` and
@@ -81,18 +84,33 @@ Each entry should include:
   (`getMemberProfile(userId)`, `listMemberPayments`): the raw reads this
   slice is named for. A name does not say how a helper is scoped; a list
   that someone reviews does.
+- **No workspace is imported by its place on disk**, in any app:
+  `../../packages/db/src/client`, anything under `node_modules/`, another
+  app's folder. A path gets around every rule about what may import what;
+  workspace code is imported by its package name.
 - Also tightened: `value["reveal"]()` and `value.reveal.call(value)` are
   refused like `value.reveal()`; vendor SDKs are refused by any path inside
-  them (`stripe/lib/...`) and when loaded with `import("stripe")` or
-  `require`; a route folder named `coverage` is no longer skipped.
+  them (`stripe/lib/...`), and every module the import bans name is
+  refused when loaded with `import()` or `require` too (that list is
+  derived from the bans, not written twice); a route folder named
+  `coverage` is no longer skipped; what Fumadocs generates (`.source`) is
+  no longer linted.
   `packages/auth` had lost the icon ban the same way `actions.ts` had lost
   the vendor bans: the three packages that wrap a vendor (`auth`, `icons`,
   `editor`) no longer copy the bans by hand, they take the shared ones
   without their own (`baseImportBansWithout`, `boundaryImportBansWithout`).
 - No app had to change.
+- **What this is for.** It stops a boundary from being crossed or switched
+  off by mistake, or quietly, in an ordinary change. It does not stand
+  against someone who sets out to defeat it: a package's lint config is
+  code, the shared configs and the script can be edited, and the CI step
+  can be removed. Review stands against that.
 - **Limits.**
   - A module name put together at run time (`import("@eleva/" + name)`, a
-    name held in a variable) cannot be seen by lint.
+    name held in a variable), or reached through an alias (`imports` in
+    `package.json`, `paths` in `tsconfig.json`, a renamed dependency),
+    cannot be seen by lint. No app has such an alias to the database
+    today.
   - The list says which reads a frontend may use; that each of them scopes
     its read to the caller's organization was checked by reading them (20
     take the organization and run in its context, one is a mapper), not by

@@ -78,23 +78,6 @@ export const REVEAL_RESTRICTIONS = [
   ),
 ]
 
-/**
- * A vendor SDK loaded at run time, written as text: `import("stripe")`,
- * `require("twilio")`. The import rule only reads `import ... from`.
- */
-const VENDOR_TEXT =
-  "/^(stripe|twilio|resend|platejs|ai)(\\/|$)|^(@stripe|@aws-sdk|@daily-co|@ai-sdk|@platejs)\\//"
-const VENDOR_MESSAGE =
-  "Vendor SDKs are imported only by the package that owns them, also when loaded at run time (boundary lint)."
-
-export const VENDOR_AT_RUN_TIME = [
-  `ImportExpression Literal[value=${VENDOR_TEXT}]`,
-  `CallExpression[callee.name='require'] > Literal[value=${VENDOR_TEXT}]`,
-].map((selector) => ({ selector, message: VENDOR_MESSAGE }))
-
-/** What `boundariesConfig` sets for `no-restricted-syntax`. */
-export const BOUNDARY_SYNTAX = [...REVEAL_RESTRICTIONS, ...VENDOR_AT_RUN_TIME]
-
 /** @type {import("eslint").Linter.Config[]} */
 export const boundariesConfig = [
   {
@@ -194,6 +177,11 @@ export const boundariesConfig = [
           ],
           patterns: [
             {
+              regex: "(^|/)(packages|apps|node_modules)/",
+              message:
+                "Import workspace code by its package name (@eleva/...), not by a path into packages/, apps/ or node_modules/: a path gets around every rule about what may import what (boundary lint).",
+            },
+            {
               // The SDKs banned by name above, by any path inside them.
               group: [
                 "stripe/**",
@@ -265,7 +253,8 @@ export const boundariesConfig = [
   },
   {
     rules: {
-      "no-restricted-syntax": ["error", ...BOUNDARY_SYNTAX],
+      // Set below, once the import bans it is derived from are known.
+      "no-restricted-syntax": ["error", ...REVEAL_RESTRICTIONS],
     },
   },
 ]
@@ -273,6 +262,75 @@ export const boundariesConfig = [
 const boundaryImportBans = boundariesConfig.find(
   (entry) => entry.rules?.["no-restricted-imports"]
 ).rules["no-restricted-imports"][1]
+
+/**
+ * The same module named as text where it can be loaded from, which the
+ * import rule does not read: `import("x")`, `` import(`x`) ``,
+ * `require("x")`, `module.require("x")`, `require.resolve("x")`,
+ * `createRequire(...)("x")`, with or without a type cast around the text.
+ * Other calls are left alone: `vi.mock("x")` in a test is not a load.
+ *
+ * @param {string} text A regular expression, as text, for the module name.
+ * @param {string} message
+ */
+export function namedAsText(text, message) {
+  const loaders = [
+    "CallExpression[callee.name='require']",
+    "CallExpression[callee.property.name='require']",
+    // require.resolve("x") and import.meta.resolve("x"), not path.resolve.
+    "CallExpression[callee.property.name='resolve'][callee.object.name='require']",
+    "CallExpression[callee.property.name='resolve'][callee.object.type='MetaProperty']",
+    // createRequire(import.meta.url)("x")
+    "CallExpression[callee.type='CallExpression']",
+  ]
+  const cast =
+    ":matches(TSAsExpression, TSNonNullExpression, TSSatisfiesExpression, TSTypeAssertion)"
+  return [
+    `ImportExpression Literal[value=${text}]`,
+    `ImportExpression TemplateElement[value.raw=${text}]`,
+    ...loaders.flatMap((loader) => [
+      `${loader} > Literal[value=${text}]`,
+      `${loader} > ${cast} Literal[value=${text}]`,
+      `${loader} > TemplateLiteral > TemplateElement[value.raw=${text}]`,
+    ]),
+  ].map((selector) => ({ selector, message }))
+}
+
+const escaped = (text) => text.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&")
+
+/**
+ * Every module the import bans name, as one regular expression: the
+ * run-time bans are the import bans, not a second list.
+ */
+const bannedModules = [
+  ...boundaryImportBans.paths
+    // Bans on single names of a module do not ban the module.
+    .filter((path) => !path.importNames)
+    .map((path) => path.name),
+  ...boundaryImportBans.patterns.flatMap((pattern) => pattern.group ?? []),
+]
+  // "stripe/**" and "slate-*" as the name they begin with.
+  .map((module) => module.replace(/(\/\*+|\*)$/, ""))
+const VENDOR_TEXT = `/^(${[...new Set(bannedModules)].map(escaped).join("|")})(\\/|-|$)/`
+
+/** A workspace named by its place on disk instead of by its package name. */
+const BY_PATH_TEXT = "/(^|\\/)(packages|apps|node_modules)\\//"
+const BY_PATH_MESSAGE =
+  "Import workspace code by its package name (@eleva/...), not by a path into packages/, apps/ or node_modules/: a path gets around every rule about what may import what (boundary lint)."
+
+/** What `boundariesConfig` sets for `no-restricted-syntax`. */
+export const BOUNDARY_SYNTAX = [
+  ...REVEAL_RESTRICTIONS,
+  ...namedAsText(
+    VENDOR_TEXT,
+    "Vendor SDKs are imported only by the package that owns them, also when loaded at run time (boundary lint)."
+  ),
+  ...namedAsText(BY_PATH_TEXT, BY_PATH_MESSAGE),
+]
+
+boundariesConfig.find((entry) => entry.rules?.["no-restricted-syntax"]).rules[
+  "no-restricted-syntax"
+] = ["error", ...BOUNDARY_SYNTAX]
 
 /**
  * The boundary import bans without the ones a package owns: for a package

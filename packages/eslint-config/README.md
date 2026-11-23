@@ -24,9 +24,10 @@ obey `eslint-disable` comments.
 export default [...nextJsConfig, ...boundariesConfig, ...frontendDbReadsConfig]
 ```
 
-`pnpm check:boundaries` fails an app whose config has anything more or less
-(`apps/api` leaves out `frontendDbReadsConfig`; an app that is not Next.js
-starts from the base config). The reason: in a flat config a later setting
+`pnpm check:boundaries` reads the file as text, before loading it, and
+fails an app whose config has anything more or less: another entry, or any
+other line of code. (`apps/api` leaves out `frontendDbReadsConfig`; an app
+that is not Next.js starts from the base config.) The reason: in a flat config a later setting
 of a rule replaces the earlier one, it is not added to it, and an `ignores`
 entry takes a folder out of lint. One extra entry in one app can switch a
 boundary off without a word. A change an app needs goes here, in this
@@ -35,6 +36,16 @@ package.
 A shared config that needs its own `no-restricted-imports` or
 `no-restricted-syntax` entries has to carry the earlier entries with it, as
 `./frontend-db-reads` does with `BOUNDARY_SYNTAX`.
+
+## What the check is for
+
+It stops a boundary from being crossed or switched off by mistake, or
+quietly, in an ordinary change. It does not stand against someone who sets
+out to defeat it: these configs and the script can be edited, and the CI
+step can be removed. Review stands against that.
+
+It cannot see a module name put together at run time, or one reached
+through an alias (`imports` in `package.json`, `paths` in `tsconfig.json`).
 
 ## Packages
 
