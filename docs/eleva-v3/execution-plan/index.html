@@ -1246,6 +1246,16 @@ of 2026-11-21 merged without one (F-13).</li>
 <td>GitHub branch protection</td>
 <td></td>
 </tr>
+<tr>
+<td>The sign-in limiter counts by address, not by account or inbox: many addresses can keep trying one password, and one address can send about sixteen emails a minute to one inbox. OWASP and NIST ask for a count on the account.</td>
+<td><code>packages/auth/src/server/rate-limit-rules.ts</code>, a counter in the auth request hook</td>
+<td></td>
+</tr>
+<tr>
+<td>A link from an email that is refused for asking too often shows a bare answer on the API&#39;s address. The wait said is the whole window, not what is left.</td>
+<td><code>packages/auth/src/server/auth.ts</code></td>
+<td></td>
+</tr>
 </tbody></table>
 <h2 id="remaining-roadmap--4-waiting-on-a-person"><a class="anchor" href="#remaining-roadmap--4-waiting-on-a-person" aria-label="Link to section">#</a>4. Waiting on a person</h2>
 <p>Engineering does not wait silently on these: it builds every slice that does not depend on
@@ -1941,9 +1951,9 @@ saved in case F-04 reopens it.</p>
 <tr>
 <td></td>
 <td>13.5</td>
-<td>Sign-in limits are explicit</td>
+<td><strong>Open (#470), waits on O-2 to merge.</strong> Sign-in limits are our own, and the wait is said</td>
 <td>S</td>
-<td>Better Auth custom rules for sign-in, magic link and the second factor</td>
+<td>One table of limits, driven by a test through the real limiter. The numbers are for the founder to confirm (F-08)</td>
 </tr>
 <tr>
 <td></td>
