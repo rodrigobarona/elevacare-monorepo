@@ -15,7 +15,7 @@ export const ROUTE_POLICY = {
 /**
  * POST /workflows/video-attendance-sweep
  *
- * Every 10 minutes: sessions still `scheduled`/`live`/`room_unresolved`
+ * In the hourly tick: sessions still `scheduled`/`live`/`room_unresolved`
  * with null attendance whose Eleva join window (`endsAt + 30m`) has
  * closed get `finalizeAttendance` from participant history (empty
  * history → nobody / no_show). That is for online sessions only: a phone

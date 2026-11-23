@@ -35,12 +35,15 @@ pnpm qstash:list
 ```
 
 Expect 4 schedules: reconciliation, 3 payouts (the audit drainer runs in the hourly tick since 2026-11-11). Leave the retention sweep off until
-DPO sign-off (AUD-028). The minute, 10-minute and hourly ticks run on Vercel Cron (`apps/api/vercel.json`),
-not QStash. `elevacare-api` Production must have `CRON_SECRET`. Check both:
+DPO sign-off (AUD-028). One hourly tick runs on Vercel Cron (`apps/api/vercel.json`), not QStash;
+nothing is scheduled more often, so that the database can sleep between runs. `elevacare-api`
+Production must have `CRON_SECRET`. Check both:
 
-- `GET /workflows/tick/minutely` without a token answers 401, not 404.
-- The `elevacare-api` Cron Jobs page shows successful runs of all three ticks (or a manual GET with
-  `Authorization: Bearer $CRON_SECRET` answers 200).
+- `GET /workflows/tick/hourly` without a token answers 401, not 404.
+- The `elevacare-api` Cron Jobs page lists three jobs (the hourly tick and the two daily ones) and
+  shows successful runs of the tick (or a manual GET with `Authorization: Bearer $CRON_SECRET`
+  answers 200). The per-minute and ten-minute ticks are gone since slice 13.35: if the page still
+  lists them, the deployment is older than that.
 
 Remove the old QStash tick schedules (`pnpm qstash:setup`) only after the Vercel Cron runs succeed.
 

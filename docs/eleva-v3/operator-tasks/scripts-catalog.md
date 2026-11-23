@@ -40,11 +40,11 @@ QStash is shared across environments; schedules differentiate
 themselves by destination URL. Re-run after rotating tokens or
 changing API base URLs.
 
-| Command                       | What it does                                                                                                                                                                                                                                                    | Idempotent? |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| `pnpm qstash:list`            | Print every schedule + cross-check expected paths.                                                                                                                                                                                                              | Yes         |
-| `pnpm qstash:setup`           | Provision every QStash schedule (`setup:all`): daily, monthly and payout jobs. Removes QStash schedules for the cadence ticks (`/workflows/tick/{minutely,10min,hourly}`) and their jobs, which run on Vercel Cron. `--with-retention` only after DPO sign-off. | Yes         |
-| `pnpm qstash:setup:invoicing` | (Re)register the monthly `/workflows/stripe-toconline-reconciliation`; invoicing retry runs in the hourly tick.                                                                                                                                                 | Yes         |
+| Command                       | What it does                                                                                                                                                                                                                                                 | Idempotent? |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
+| `pnpm qstash:list`            | Print every schedule + cross-check expected paths.                                                                                                                                                                                                           | Yes         |
+| `pnpm qstash:setup`           | Provision every QStash schedule (`setup:all`): daily, monthly and payout jobs. Removes QStash schedules for the tick (`/workflows/tick/hourly`, and the two older ticks) and its jobs, which run on Vercel Cron. `--with-retention` only after DPO sign-off. | Yes         |
+| `pnpm qstash:setup:invoicing` | (Re)register the monthly `/workflows/stripe-toconline-reconciliation`; invoicing retry runs in the hourly tick.                                                                                                                                              | Yes         |
 
 All QStash setup commands accept `-- --dry-run` for preview-only mode.
 

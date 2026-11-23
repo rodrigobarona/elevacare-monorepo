@@ -1,7 +1,12 @@
 /**
- * Jobs that share a cadence run in one tick (`/workflows/tick/{cadence}`),
- * scheduled by Vercel Cron in `apps/api/vercel.json`. Daily, monthly and
- * payout jobs keep their own QStash schedules (infra/qstash).
+ * The jobs of the hourly tick (`/workflows/tick/hourly`), scheduled by
+ * Vercel Cron in `apps/api/vercel.json`. Daily, monthly and payout jobs
+ * keep their own QStash schedules (infra/qstash).
+ *
+ * There is one tick, and it is hourly, on purpose: see
+ * `@eleva/config/background-jobs`. A job here is the net under its work.
+ * Where a person would notice an hour, the work is started when it is
+ * created or falls due (`./run-job-at.ts`, `./publish-domain-events.ts`).
  */
 import type { JobsInTick, TickCadence } from "@eleva/config/background-jobs"
 import { POST as accountDeletionSweep } from "@/app/workflows/account-deletion-sweep/route"
@@ -18,19 +23,15 @@ import { POST as videoEjectRetry } from "@/app/workflows/video-eject-retry/route
 import { POST as videoRoomSweep } from "@/app/workflows/video-room-sweep/route"
 
 export const WORKFLOW_TICKS = {
-  minutely: {
+  hourly: {
     "slot-reservation-expiry": slotReservationExpiry,
     "booking-request-expiry": bookingRequestExpiry,
     "domain-events-publisher": domainEventsPublisher,
     "video-eject-retry": videoEjectRetry,
-  },
-  "10min": {
     "stripe-stuck-events": stripeStuckEvents,
     "video-room-sweep": videoRoomSweep,
     "video-attendance-sweep": videoAttendanceSweep,
     "seat-sync-sweep": seatSyncSweep,
-  },
-  hourly: {
     "audit-outbox-drainer": auditOutboxDrainer,
     "account-deletion-sweep": accountDeletionSweep,
     "crm-follow-up-due": crmFollowUpDue,

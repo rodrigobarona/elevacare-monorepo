@@ -269,7 +269,7 @@ API_BASE_URL=https://api.eleva.care \
 Creates a schedule `0 6,18 * * *` (06:00 + 18:00 UTC) that POSTs to
 `/workflows/audit-outbox-drainer` with the bearer token.
 
-### 5.2 Stripe stuck-events detector (every 10 minutes)
+### 5.2 Stripe stuck-events detector (hourly)
 
 ```bash
 API_BASE_URL=https://api.eleva.care \
@@ -289,7 +289,7 @@ invocation with `200 OK` response and the JSON body.
 
 Then, in the API's runtime logs (Vercel → elevacare-api → Logs),
 filter on `/workflows/` paths — you should see one POST to
-`stripe-stuck-events` every 10 minutes and one to
+`stripe-stuck-events` every hour and one to
 `audit-outbox-drainer` at 06:00 + 18:00 UTC.
 
 ---
@@ -452,7 +452,7 @@ In Sentry → elevacare-api project, after section 6:
 
 If `BETTERSTACK_HEARTBEAT_URLS` has an address for `stripe-stuck-events`:
 
-- A heartbeat fires every 10 min from `stripe-stuck-events`
+- A heartbeat fires every hour from `stripe-stuck-events`
 - Heartbeat goes silent → BetterStack pages on-call
 
 ### 8.3 Manual stuck-event drill

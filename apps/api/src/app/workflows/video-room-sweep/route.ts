@@ -18,7 +18,7 @@ export const ROUTE_POLICY = {
 /**
  * POST /workflows/video-room-sweep
  *
- * Every 15 minutes: create Daily rooms for confirmed/rescheduled online
+ * In the hourly tick: create Daily rooms for confirmed/rescheduled online
  * bookings that start within 2 hours and still have no room name.
  * Phone and in-person bookings are excluded by the sweep query.
  * Also deletes rooms whose join window closed over an hour ago (AUD-036).

@@ -1,4 +1,5 @@
 import { env } from "@eleva/config/env"
+import { pingMainDb } from "@eleva/db"
 import { captureException, reportJobRun } from "@eleva/observability"
 import { corsHeaders } from "@/lib/cors"
 import { bearerMatches } from "@/lib/internal-auth"
@@ -23,10 +24,13 @@ export const ROUTE_POLICY = {
 /**
  * GET|POST /workflows/tick/{cadence}
  *
- * One schedule per cadence instead of one per job. Each job keeps its own
- * route (manual runs, tests); a tick calls those handlers in-process, in
- * parallel, so one failing job never blocks the others. Every job is
- * idempotent, so a retry of the whole tick is safe.
+ * One schedule for all the jobs instead of one per job, and one cadence,
+ * hourly: nothing is scheduled more often, so that the database can
+ * sleep between runs (`@eleva/config/background-jobs`). Each job keeps
+ * its own route (manual runs, tests, and the single delayed runs a job
+ * asks for); the tick calls those handlers in-process, in parallel, so
+ * one failing job never blocks the others. Every job is idempotent, so a
+ * retry of the whole tick is safe.
  *
  * Each job reports its own run (`reportedJob` on its route). The tick
  * reports as `tick-{cadence}` that it ran: done once every job was called,
@@ -35,10 +39,8 @@ export const ROUTE_POLICY = {
  * reports failed broke before it had called every job.
  *
  * GET is Vercel Cron (`apps/api/vercel.json`), which sends
- * `Authorization: Bearer ${CRON_SECRET}`. Ticks run on Vercel Cron, not
- * QStash: a minute tick alone is 1,440 messages a day, more than the
- * QStash daily allowance. POST (Bearer `WORKFLOWS_DRAIN_SECRET` or a
- * QStash signature) stays for manual runs.
+ * `Authorization: Bearer ${CRON_SECRET}`. POST (Bearer
+ * `WORKFLOWS_DRAIN_SECRET` or a QStash signature) stays for manual runs.
  */
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -92,6 +94,11 @@ async function runTick(request: Request, { params }: TickContext) {
 /** Calls every job of the cadence, in parallel, and gathers what each answered. */
 async function runJobs(request: Request, cadence: WorkflowTickCadence) {
   const jobs = Object.entries(WORKFLOW_TICKS[cadence])
+  // The database has usually been asleep since the last tick. One
+  // question wakes it, so that the jobs do not all start at once against
+  // a database that is still waking and give up waiting for it. If it
+  // does not answer, the jobs run anyway and each says what it found.
+  await pingMainDb().catch(() => undefined)
   const settled = await Promise.allSettled(
     jobs.map(async ([name, run]) => {
       const inner = new Request(new URL(`/workflows/${name}`, request.url), {
@@ -100,7 +107,9 @@ async function runJobs(request: Request, cadence: WorkflowTickCadence) {
           authorization: `Bearer ${process.env.WORKFLOWS_DRAIN_SECRET}`,
           "content-type": "application/json",
         },
-        body: "{}",
+        // A job told this is the tick does not start a string of runs
+        // of its own after a failure: the next tick is its next run.
+        body: JSON.stringify({ tick: true }),
       })
       const response = await run(inner)
       return {

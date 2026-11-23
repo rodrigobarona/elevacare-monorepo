@@ -5,10 +5,12 @@ import {
   removeSessionParticipant,
   SessionParticipantError,
 } from "@eleva/workflows/video"
+import { afterResponse } from "@/lib/after-response"
 import { apiAuthFailure, requireApiAuth } from "@/lib/auth"
 import { corsHeaders } from "@/lib/cors"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import type { RoutePolicy } from "@/lib/route-policy"
+import { runJobAgain } from "@/lib/run-job-at"
 import { secureJson } from "@/lib/security-headers"
 
 export const ROUTE_POLICY = {
@@ -70,6 +72,10 @@ export async function DELETE(
       userId,
     })
     if ("ejectionPending" in result) {
+      // Removed here, and still in the call: the video service did not
+      // take the removal. The job that tries again runs hourly, so a run
+      // is asked for soon.
+      afterResponse(() => runJobAgain("video-eject-retry", 0))
       return secureJson(
         RemoveSessionParticipantResponseSchema.parse({
           ok: true,
@@ -90,6 +96,10 @@ export async function DELETE(
       )
     }
     logError("[sessions/participants/delete] unexpected error", err)
+    // The removal may be written and the person still in the call (the
+    // failure came after). A run that finds nobody to put out costs
+    // little; a person left in a session they were removed from does not.
+    afterResponse(() => runJobAgain("video-eject-retry", 0))
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }

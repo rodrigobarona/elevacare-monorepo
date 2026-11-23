@@ -7,10 +7,12 @@ import {
   addSessionParticipant,
   SessionParticipantError,
 } from "@eleva/workflows/video"
+import { afterResponse } from "@/lib/after-response"
 import { apiAuthFailure, requireApiAuth } from "@/lib/auth"
 import { corsHeaders } from "@/lib/cors"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import type { RoutePolicy } from "@/lib/route-policy"
+import { runJobAgain } from "@/lib/run-job-at"
 import { secureJson } from "@/lib/security-headers"
 
 export const ROUTE_POLICY = {
@@ -70,6 +72,10 @@ export async function POST(
       role: parsed.data.role,
     })
     const { capacityPending, ...row } = participant
+    // The room is still too small for this person. The job that fixes it
+    // runs hourly, so a run is asked for soon.
+    if (capacityPending)
+      afterResponse(() => runJobAgain("video-eject-retry", 0))
     return secureJson(
       AddSessionParticipantResponseSchema.parse({
         ok: true,

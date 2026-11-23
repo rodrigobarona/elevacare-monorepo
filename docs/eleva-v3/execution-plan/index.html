@@ -3294,7 +3294,8 @@ cookie-only POST -&gt; 403 <code>CSRF_ORIGIN_MISMATCH</code>; tossed/duplicate s
 row-count parity script prints <code>auth.* == main.*</code> for users, orgs, memberships; every FK
 validated (<code>pg_constraint.convalidated = true</code>).</li>
 <li><input disabled="" type="checkbox"> <code>requireApiAuth()</code> accepts: cookie session; <code>Authorization: Bearer &lt;session token&gt;</code>;
-<code>x-api-key</code> created via <code>apiKey</code> plugin scoped to an org; JWT from <code>/auth/token</code> verified
+<code>x-api-key</code> created via <code>apiKey</code> plugin (owned by a person since slice 12.5, not scoped to an
+org); JWT from <code>/auth/token</code> verified
 via JWKS (Bearer value routed by shape: compact JWS -&gt; JWT verifier, anything else -&gt;
 session-token verifier). JWTs are short-lived (<code>15m</code>) and <strong>non-revocable</strong> (JWKS only;
 no session-table check). After <code>revoke-other-sessions</code>, cookie/opaque bearer of that
@@ -3500,7 +3501,9 @@ PR 02.1 — server + schema + API:
    (b) Authorization: Bearer &lt;token&gt;: if the value is a compact JWS (three base64url segments,
    kid header) verify it as a JWT with JWKS from /auth/jwks (jwt plugin), otherwise verify it as
    a Better Auth session token (bearer plugin) — one discriminator, two verifiers, never both;
-   (c) x-api-key (apiKey plugin -&gt; referenceId = orgId; an API key sent as Bearer is rejected).
+   (c) x-api-key (apiKey plugin; since Better Auth 1.7 a key names one owner in `referenceId`, here a
+   person, and the workspace comes from `x-eleva-org` or the owner&#39;s default one: decision log
+   2026-11-22, slice 12.5; an API key sent as Bearer is rejected).
    Before verifying anything, count the credential sources present (cookie, Authorization,
    x-api-key); if more than one is present return 400 AMBIGUOUS_CREDENTIALS (audited) — never
    pick the first match. Return { userId, orgId, roles, capabilities, authMode }. Unit tests:
@@ -4651,7 +4654,7 @@ PR 04.2 — funnel + payment + marketing/legal:
    packages/workflows/src/domain-events.ts (typed union of event names + payloads, starting with
    booking.guest_activation_required; INSERT inside the caller&#39;s Drizzle transaction, never from
    after() alone), and POST /workflows/domain-events-publisher (QStash Receiver.verify, scheduled
-   every minute and kicked best-effort from after() after commit; claims pending deliveries FOR
+   hourly since 13.35 and run from after() by every request that writes an event; claims pending deliveries FOR
    UPDATE SKIP LOCKED, runs each subscriber independently, marks the delivery succeeded|failed
    with attempts + last_error, dead-letters a delivery after 10 attempts, and sets the event&#39;s
    published_at only when every delivery is succeeded — a failing subscriber never re-runs a
@@ -6207,7 +6210,7 @@ dispatcher: this phase <strong>extends the typed event union</strong> with the i
 (<code>platform_fee</code> | <code>expert_service</code>), <code>invoiceId</code>, <code>bookingPaymentId</code> or <code>bookingId</code>,
 <code>expertOrgId</code>, <code>number</code>, optional <code>pdfUrl</code> / <code>error</code>; <code>idempotency_key</code> =
 <code>invoice:&lt;kind&gt;:&lt;id&gt;:&lt;status&gt;</code>. A publisher workflow <code>POST /workflows/domain-events-publisher</code>
-(QStash schedule every minute, plus a best-effort immediate kick via Next.js <code>after()</code>) reads
+(the hourly tick since 13.35, plus an immediate run via Next.js <code>after()</code> by the request that wrote the event) reads
 unpublished rows, dispatches to registered subscribers, and sets <code>published_at</code>; subscribers
 must be idempotent on <code>idempotency_key</code> (Phase 8 registers <code>sendNotification</code>; until then the
 only subscriber is a structured logger). Test: replaying the same <code>payment_intent.succeeded</code>
@@ -7182,7 +7185,7 @@ token, no eject of a phantom); phase 2 calls Daily <code>POST /rooms/{name}/ejec
 <code>user_ids: [userId]</code> and <code>ban: true</code> (idempotent — no live participant is a no-op) with a
 10 s timeout and bounded retry, then sets <code>ejected_at</code>; the route returns 200 when both
 phases succeeded and 202 <code>{ ejectionPending: true }</code> when Daily failed — the row stays revoked
-and <code>POST /workflows/video-eject-retry</code> (QStash, every minute while rows have <code>revoked_at</code>
+and <code>POST /workflows/video-eject-retry</code> (since 13.35: delayed runs after a removal that did not go through, and the hourly tick, while rows have <code>revoked_at</code>
 and no <code>ejected_at</code>) completes the ejection. Rows are never hard-deleted while the session
 exists (revoked rows are history). Tests: Daily 5xx -&gt; row revoked, join 403, retry job ejects;
 DB failure after a successful eject cannot re-authorize because the eject is only attempted
@@ -7454,7 +7457,7 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    returns 200 after eject succeeded (or the room does not exist yet) and 202 { ejectionPending:
    true } when Daily failed — two-phase per the Scope section: revoked_at first (deny state,
    join checks revoked_at IS NULL), eject second (10 s timeout, retry via POST
-   /workflows/video-eject-retry every minute until ejected_at is set); tests for Daily 5xx and
+   /workflows/video-eject-retry until ejected_at is set, by delayed runs and the hourly tick since 13.35); tests for Daily 5xx and
    for mint -&gt; remove -&gt; rejoin 403. OpenAPI + client.
 5. Join pages: apps/app/src/app/[orgSlug]/sessions/[bookingId]/join/page.tsx and the expert
    equivalent — server component fetches booking, renders &lt;JoinClient&gt; that calls the join

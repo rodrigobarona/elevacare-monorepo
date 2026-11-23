@@ -4,12 +4,13 @@
  * Use this when promoting from staging → production, after rotating
  * QStash tokens, or after migrating to a new API base URL.
  *
- * Jobs that run every minute, every 10 minutes or hourly share a tick
- * (`/workflows/tick/{minutely|10min|hourly}`, see
- * `apps/api/src/lib/workflow-ticks.ts`) that Vercel Cron triggers, so they
- * do not use the QStash daily message allowance. QStash keeps the daily,
- * monthly and payout jobs. Per-job and tick schedules left from earlier
- * layouts are removed.
+ * The hourly jobs share one tick (`/workflows/tick/hourly`, see
+ * `apps/api/src/lib/workflow-ticks.ts`) that Vercel Cron triggers. Nothing
+ * runs more often than that on a schedule (see
+ * `@eleva/config/background-jobs`). QStash keeps the daily, monthly and
+ * payout jobs, and carries the single delayed runs a job asks for when
+ * work falls due. Per-job and tick schedules left from earlier layouts
+ * are removed.
  *
  * The retention sweep deletes data on DPO-owned periods (AUD-028) and is
  * only registered with `--with-retention`, after DPO sign-off.
@@ -32,7 +33,10 @@ import { PAYOUT_SCHEDULES } from "./payout-schedules"
 const dryRun = isDryRun()
 const withRetention = process.argv.includes("--with-retention")
 
-/** Run by the Vercel Cron ticks; any QStash schedule for them is removed. */
+/**
+ * Run by the Vercel Cron tick; any QStash schedule for them is removed,
+ * and so is one for the two ticks that no longer exist.
+ */
 const VERCEL_CRON_PATHS = [
   "/workflows/tick/minutely",
   "/workflows/tick/10min",

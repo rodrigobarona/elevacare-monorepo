@@ -9,7 +9,7 @@
  */
 
 import { eq } from "drizzle-orm"
-import { main, type Tx } from "@eleva/db"
+import { domainEventWritten, main, type Tx } from "@eleva/db"
 
 export const CLOSED_GATE_INVOICE_EVENT_TYPES = [
   "invoice.blocked",
@@ -112,6 +112,7 @@ export async function emitClosedGateInvoiceDomainEvent(
   )
   const payload = closedGateInvoicePayload(input)
 
+  domainEventWritten()
   const inserted = await tx
     .insert(main.domainEventsOutbox)
     .values({

@@ -101,7 +101,7 @@ toconline_document_id, series, number, status, issued_at, pdf_url, error)`. Cred
   (`platform_fee` | `expert_service`), `invoiceId`, `bookingPaymentId` or `bookingId`,
   `expertOrgId`, `number`, optional `pdfUrl` / `error`; `idempotency_key` =
   `invoice:<kind>:<id>:<status>`. A publisher workflow `POST /workflows/domain-events-publisher`
-  (QStash schedule every minute, plus a best-effort immediate kick via Next.js `after()`) reads
+  (the hourly tick since 13.35, plus an immediate run via Next.js `after()` by the request that wrote the event) reads
   unpublished rows, dispatches to registered subscribers, and sets `published_at`; subscribers
   must be idempotent on `idempotency_key` (Phase 8 registers `sendNotification`; until then the
   only subscriber is a structured logger). Test: replaying the same `payment_intent.succeeded`

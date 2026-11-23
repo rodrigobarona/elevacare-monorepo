@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm"
-import { main, type Tx } from "@eleva/db"
+import { domainEventWritten, main, type Tx } from "@eleva/db"
 import { ENSURE_SESSION_ROOM_SUBSCRIBER } from "./emit-domain-event"
 
 export const PAYMENT_FAILED_EVENT_TYPE = "payment.failed" as const
@@ -43,6 +43,7 @@ export async function emitPaymentFailedEvent(
     occurredAt: input.occurredAt.toISOString(),
   }
 
+  domainEventWritten()
   const inserted = await tx
     .insert(main.domainEventsOutbox)
     .values({
@@ -123,6 +124,7 @@ export async function emitRefundSucceededEvent(
     cancelsSession: input.cancelsSession,
   }
 
+  domainEventWritten()
   const inserted = await tx
     .insert(main.domainEventsOutbox)
     .values({

@@ -67,10 +67,31 @@ describe("the list of background jobs", () => {
     }
   )
 
+  it.each(jobs)(
+    "%s does not run more often than once an hour",
+    (_name, job) => {
+      // The rule of this list. The database sleeps when nothing asks it
+      // anything, and every job here asks it something on every run: one
+      // job a minute keeps it awake around the clock, which in November
+      // 2026 used a month's allowance in sixteen days and stopped
+      // production. Work that cannot wait an hour is started when it is
+      // created or falls due, not polled for (`apps/api/src/lib/run-job-at.ts`).
+      expect(job.periodSeconds).toBeGreaterThanOrEqual(60 * 60)
+      expect(everySeconds(job.schedule)).toBeGreaterThanOrEqual(60 * 60)
+    }
+  )
+
+  it("starts on the hour whatever runs every hour or two, to share one waking", () => {
+    for (const [name, job] of jobs) {
+      if (job.periodSeconds > 2 * 60 * 60) continue
+      expect(job.schedule.split(" ")[0], name).toBe("0")
+    }
+  })
+
   it("reads the schedules it is checked against", () => {
     expect(everySeconds("* * * * *")).toBe(60)
     expect(everySeconds("*/10 * * * *")).toBe(600)
-    expect(everySeconds("5 * * * *")).toBe(3600)
+    expect(everySeconds("0 * * * *")).toBe(3600)
     expect(everySeconds("0 */2 * * *")).toBe(7200)
     expect(everySeconds("15 6 * * *")).toBe(86400)
     expect(everySeconds("0 4 1 * *")).toBe(31 * 86400)

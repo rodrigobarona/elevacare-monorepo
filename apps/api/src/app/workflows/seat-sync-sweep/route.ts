@@ -15,7 +15,7 @@ export const ROUTE_POLICY = {
 /**
  * POST /workflows/seat-sync-sweep
  *
- * Every ten minutes: finish clinic seat syncs that were marked but never
+ * In the hourly tick: finish clinic seat syncs that were marked but never
  * reached Stripe (after a publish, an unpublish, a deleted service or a
  * removed member), so the billed seat count catches up on its own.
  *

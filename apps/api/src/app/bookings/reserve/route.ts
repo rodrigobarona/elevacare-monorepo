@@ -8,6 +8,7 @@ import {
   BookingError,
   type ReserveBookingError,
 } from "@eleva/scheduling"
+import { afterResponse } from "@/lib/after-response"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, resolveApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -20,6 +21,7 @@ import { checkBot } from "@/lib/bot-protection"
 import { withIdempotency } from "@/lib/idempotency"
 import { isIanaTimeZone, PUBLIC_NOT_FOUND } from "@/lib/public-marketplace"
 import { rejectIfMemberCannotBook } from "@/lib/member-bookability"
+import { runJobAt } from "@/lib/run-job-at"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
 
@@ -187,6 +189,11 @@ export async function POST(request: Request) {
           { status: RESERVE_ERROR_STATUS[result.error], headers }
         )
       }
+
+      // The job that releases a lapsed hold runs hourly; this hold lapses
+      // in minutes. One delayed message runs it then. After the answer,
+      // so that the visitor does not wait for the queue.
+      afterResponse(() => runJobAt("slot-reservation-expiry", result.expiresAt))
 
       return secureJson(
         ReserveBookingResponseSchema.parse({

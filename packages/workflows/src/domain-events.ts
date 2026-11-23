@@ -11,6 +11,7 @@ import {
 } from "@eleva/billing/notification-events"
 import {
   CLINIC_DECISION_EVENT_TYPES,
+  domainEventWritten,
   main,
   PARTNER_DECISION_EVENT_TYPES,
   withPlatformAdminContext,
@@ -155,6 +156,7 @@ export async function emitDomainEvent(
   event: DomainEvent,
   subscribers: readonly string[] = DEFAULT_SUBSCRIBERS[event.type]
 ): Promise<{ eventId: string; created: boolean }> {
+  domainEventWritten()
   const inserted = await tx
     .insert(main.domainEventsOutbox)
     .values({

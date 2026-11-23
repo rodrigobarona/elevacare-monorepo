@@ -15,7 +15,7 @@ export const ROUTE_POLICY = {
 /**
  * POST /workflows/booking-request-expiry
  *
- * Every minute: expire awaiting_confirmation bookings past
+ * In the hourly tick: expire awaiting_confirmation bookings past
  * approval_deadline_at (24h or session start). Full refund + slot release.
  *
  * Authz: Bearer `WORKFLOWS_DRAIN_SECRET`.

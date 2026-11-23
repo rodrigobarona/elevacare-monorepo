@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+const { pingMainDb } = vi.hoisted(() => ({
+  pingMainDb: vi.fn(async () => {}),
+}))
+vi.mock("@eleva/db", () => ({ pingMainDb }))
+
 const ok = vi.fn(async (_request: Request) =>
   Response.json({ ok: true, done: 1 })
 )
@@ -12,12 +17,12 @@ const throws = vi.fn(async (): Promise<Response> => {
 
 vi.mock("@/lib/workflow-ticks", () => ({
   WORKFLOW_TICKS: {
-    minutely: { "job-a": ok, "job-b": broken },
+    "one-fails": { "job-a": ok, "job-b": broken },
     hourly: { "job-a": ok, "job-c": throws },
-    "10min": { "job-a": ok },
+    "all-fine": { "job-a": ok },
   },
   isWorkflowTickCadence: (value: string) =>
-    ["minutely", "hourly", "10min"].includes(value),
+    ["one-fails", "hourly", "all-fine"].includes(value),
 }))
 
 const authorize = vi.fn(async (): Promise<Response | null> => null)
@@ -52,16 +57,34 @@ describe("POST /workflows/tick/{cadence}", () => {
   })
 
   it("runs every job of the cadence with the server secret", async () => {
-    const response = await tick("10min")
+    const response = await tick("all-fine")
     expect(response.status).toBe(200)
     expect(await response.json()).toMatchObject({ ok: true, failed: 0 })
     const inner = ok.mock.calls[0]?.[0] as Request
     expect(inner.headers.get("authorization")).toBe("Bearer inner-secret")
     expect(new URL(inner.url).pathname).toBe("/workflows/job-a")
+    // Each job is told the tick sent it: a job does not start a string
+    // of runs of its own after the tick's run.
+    expect(await inner.json()).toEqual({ tick: true })
+  })
+
+  it("wakes the database once before the jobs start, and runs them even if it does not answer", async () => {
+    pingMainDb.mockClear()
+    await tick("all-fine")
+    expect(pingMainDb).toHaveBeenCalledTimes(1)
+    expect(pingMainDb.mock.invocationCallOrder[0]).toBeLessThan(
+      ok.mock.invocationCallOrder.at(-1)!
+    )
+
+    ok.mockClear()
+    pingMainDb.mockRejectedValueOnce(new Error("still asleep"))
+    const response = await tick("all-fine")
+    expect(response.status).toBe(200)
+    expect(ok).toHaveBeenCalledTimes(1)
   })
 
   it("reports a failing job without skipping the others", async () => {
-    const response = await tick("minutely")
+    const response = await tick("one-fails")
     expect(response.status).toBe(500)
     const body = (await response.json()) as {
       failed: number
@@ -85,7 +108,7 @@ describe("POST /workflows/tick/{cadence}", () => {
   it("404s an unknown cadence and enforces auth", async () => {
     expect((await tick("weekly")).status).toBe(404)
     authorize.mockResolvedValue(new Response(null, { status: 401 }))
-    expect((await tick("minutely")).status).toBe(401)
+    expect((await tick("one-fails")).status).toBe(401)
     expect(ok).not.toHaveBeenCalled()
   })
 })
@@ -93,10 +116,10 @@ describe("POST /workflows/tick/{cadence}", () => {
 describe("GET /workflows/tick/{cadence} (Vercel Cron)", () => {
   function cron(authorization?: string) {
     return GET(
-      new Request("https://api.eleva.care/workflows/tick/10min", {
+      new Request("https://api.eleva.care/workflows/tick/all-fine", {
         headers: authorization ? { authorization } : {},
       }),
-      { params: Promise.resolve({ cadence: "10min" }) }
+      { params: Promise.resolve({ cadence: "all-fine" }) }
     )
   }
 

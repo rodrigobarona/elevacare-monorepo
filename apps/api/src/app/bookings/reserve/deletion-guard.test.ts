@@ -3,6 +3,13 @@ import { describe, expect, it, vi } from "vitest"
 const reserveBooking = vi.fn()
 const assertMemberCanBook = vi.fn()
 
+const { afterResponse, runJobAt } = vi.hoisted(() => ({
+  afterResponse: vi.fn((_task: () => unknown) => true),
+  runJobAt: vi.fn(async () => {}),
+}))
+vi.mock("@/lib/after-response", () => ({ afterResponse }))
+vi.mock("@/lib/run-job-at", () => ({ runJobAt }))
+
 const { BookingError } = vi.hoisted(() => {
   class BookingError extends Error {
     readonly code: string
@@ -87,6 +94,8 @@ describe("POST /bookings/reserve member bookability", () => {
       error: "ACCOUNT_DELETION_SCHEDULED",
     })
     expect(reserveBooking).not.toHaveBeenCalled()
+    // No hold was made, so there is nothing to come back for.
+    expect(afterResponse).not.toHaveBeenCalled()
   })
 
   it("reserves after deletion is cancelled", async () => {
@@ -102,5 +111,16 @@ describe("POST /bookings/reserve member bookability", () => {
     expect(response.status).toBe(201)
     expect(await response.json()).toMatchObject({ requiresApproval: false })
     expect(reserveBooking).toHaveBeenCalled()
+
+    // The job that releases a lapsed hold runs hourly, and this hold
+    // lapses in five minutes: one run is asked for then, once the visitor
+    // has their answer and not before.
+    expect(afterResponse).toHaveBeenCalledTimes(1)
+    expect(runJobAt).not.toHaveBeenCalled()
+    await afterResponse.mock.calls[0]![0]()
+    expect(runJobAt).toHaveBeenCalledWith(
+      "slot-reservation-expiry",
+      new Date("2026-09-20T10:05:00.000Z")
+    )
   })
 })

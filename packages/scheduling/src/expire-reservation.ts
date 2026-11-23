@@ -1,4 +1,4 @@
-import { and, eq, inArray, lte, min, sql } from "drizzle-orm"
+import { and, eq, gt, inArray, lte, min, sql } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
 import { main, withPlatformAdminContext } from "@eleva/db"
 
@@ -53,6 +53,42 @@ export async function listExpiredReservations(input: {
       .orderBy(main.slotReservations.expiresAt, main.slotReservations.id)
       .limit(input.limit)
   )
+}
+
+/**
+ * When the next hold that is still good lapses, or null when none is
+ * held. The job that expires holds asks this after a run, to come back
+ * at that moment and not before it (a hold can be extended, so the
+ * moment it was made for is not always the moment it ends).
+ *
+ * Only holds still to lapse: one already past and left behind by a run
+ * that failed is not "next", or the job would be called back at once,
+ * over and over. And only holds made lately: a hold lives an hour at
+ * most, so one older than `HOLD_STILL_FRESH_MS` is kept open by a
+ * payment that never settled. Its ten-minute looks are left to the
+ * hourly run, or one such hold would wake the database 144 times a day.
+ */
+export const HOLD_STILL_FRESH_MS = 2 * 60 * 60 * 1000
+
+export async function nextReservationExpiry(
+  now: Date = new Date()
+): Promise<Date | null> {
+  return withPlatformAdminContext(async (tx) => {
+    const [row] = await tx
+      .select({ at: min(main.slotReservations.expiresAt) })
+      .from(main.slotReservations)
+      .where(
+        and(
+          eq(main.slotReservations.status, "active"),
+          gt(main.slotReservations.expiresAt, now),
+          gt(
+            main.slotReservations.createdAt,
+            new Date(now.getTime() - HOLD_STILL_FRESH_MS)
+          )
+        )
+      )
+    return row?.at ?? null
+  })
 }
 
 /**

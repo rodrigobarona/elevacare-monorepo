@@ -82,11 +82,11 @@ describe("reportJobRun", () => {
     it("is the job's own address, as it was given", async () => {
       configure({
         "keep-alive": `${ADDRESS}/${SECRET}`,
-        "tick-minutely": "https://other.example/hb/abc/",
+        "tick-hourly": "https://other.example/hb/abc/",
       })
       const { calls } = monitor(200)
       await reportJobRun("keep-alive", "ok")
-      await reportJobRun("tick-minutely", "ok")
+      await reportJobRun("tick-hourly", "ok")
       expect(calls).toEqual([
         { url: `${ADDRESS}/${SECRET}`, method: "POST", body: undefined },
         // A slash at the end is not part of the address.

@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm"
-import { main, type Tx } from "@eleva/db"
+import { domainEventWritten, main, type Tx } from "@eleva/db"
 
 export const BOOKING_NOTIFICATION_EVENT_TYPES = [
   "booking.confirmed",
@@ -162,6 +162,7 @@ export async function emitBookingNotificationEvent(
       : {}),
   }
 
+  domainEventWritten()
   const inserted = await tx
     .insert(main.domainEventsOutbox)
     .values({

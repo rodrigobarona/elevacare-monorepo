@@ -11,6 +11,7 @@ import {
   sql,
 } from "drizzle-orm"
 import { withAudit, withPlatformAudit } from "@eleva/audit"
+import { logError } from "@eleva/observability"
 import {
   isActiveBookingExpert,
   main,
@@ -62,8 +63,44 @@ export function isSelfDelegate(
   return userId === expertUserId || userId === memberUserId
 }
 
+/**
+ * Whether a call to the video service that failed is worth making again:
+ * the service said it could not (5xx), said "not now" (408, 429), or
+ * said nothing at all (the call timed out or never reached it). A person
+ * removed from a session is then still to be put out of the call, and
+ * the caller must say so and not answer as if the removal had failed.
+ */
 export function isRetryableDailyFailure(err: unknown) {
-  return err instanceof DailyHttpError && err.status >= 500
+  if (err instanceof DailyHttpError) {
+    return err.status >= 500 || err.status === 408 || err.status === 429
+  }
+  if (!(err instanceof Error)) return false
+  return (
+    err.name === "TimeoutError" ||
+    err.name === "AbortError" ||
+    (err instanceof TypeError && /fetch failed|network/i.test(err.message))
+  )
+}
+
+/**
+ * What a failed call to the video service means for trying again:
+ * - `away`: it could not answer. Tried again every minute or two for as
+ *   long as it takes.
+ * - `refused`: it answered that we may not (a changed key, a closed
+ *   account). Asking more often will not change that: for a person to
+ *   look at, and the hourly run.
+ * - `unsure`: anything else. Tried again a few times, then hourly: it
+ *   may pass, and it must not be tried for ever at a minute's pace.
+ */
+export function dailyFailureKind(err: unknown): "away" | "refused" | "unsure" {
+  if (isRetryableDailyFailure(err)) return "away"
+  if (
+    err instanceof DailyHttpError &&
+    (err.status === 401 || err.status === 403)
+  ) {
+    return "refused"
+  }
+  return "unsure"
 }
 
 /** Do not shrink a room while a revoked participant is still waiting to eject. */
@@ -493,6 +530,8 @@ async function retryStaleRoomCapacities(
 
   let repaired = 0
   let pending = 0
+  let refused = 0
+  let unsure = 0
   for (const session of rooms) {
     if (!session.dailyRoomName) {
       await clearCapacityPending(session.bookingId)
@@ -509,15 +548,25 @@ async function retryStaleRoomCapacities(
         await clearCapacityPending(session.bookingId)
         continue
       }
-      pending += 1
+      // As for a removal: away is tried again soon, the rest is said.
+      const kind = dailyFailureKind(err)
+      if (kind === "away") pending += 1
+      else if (kind === "unsure") unsure += 1
+      else refused += 1
+      if (kind !== "away") {
+        logError(`[video-eject-retry] a room's size was not set (${kind})`, err)
+      }
     }
   }
-  return { scanned: rooms.length, repaired, pending }
+  return { scanned: rooms.length, repaired, pending, refused, unsure }
 }
+
+/** How many removals one run of the retry takes. A full run means more may wait. */
+export const EJECT_RETRY_BATCH_SIZE = 25
 
 export async function retryPendingEjects(
   deps: SessionParticipantDeps = {},
-  limit = 25
+  limit = EJECT_RETRY_BATCH_SIZE
 ) {
   const pending = await withPlatformAdminContext(async (tx) => {
     return tx
@@ -543,6 +592,8 @@ export async function retryPendingEjects(
 
   let ejected = 0
   let pendingCount = 0
+  let refusedCount = 0
+  let unsureCount = 0
   for (const row of pending) {
     const stillRevoked = await withPlatformAdminContext(async (tx) => {
       const [current] = await tx
@@ -563,8 +614,17 @@ export async function retryPendingEjects(
     if (row.dailyRoomName && isElevaRoomName(row.dailyRoomName)) {
       try {
         await daily(deps).ejectParticipants(row.dailyRoomName, [row.userId])
-      } catch {
-        pendingCount += 1
+      } catch (err) {
+        // (A room that is gone is not an error here: the client answers
+        // as if the person had been put out.)
+        const kind = dailyFailureKind(err)
+        if (kind === "away") pendingCount += 1
+        else if (kind === "unsure") unsureCount += 1
+        else refusedCount += 1
+        // Anything but "away" is said where a person will see it.
+        if (kind !== "away") {
+          logError(`[video-eject-retry] not put out of the call (${kind})`, err)
+        }
         continue
       }
     }
@@ -595,7 +655,12 @@ export async function retryPendingEjects(
   return {
     scanned: pending.length,
     ejected,
+    /** Still to do, and worth trying again soon: the service was away. */
     pending: pendingCount,
+    /** Still to do, and the service said no: for a person to look at. */
+    refused: refusedCount,
+    /** Still to do, for a reason not known: worth a few more tries. */
+    unsure: unsureCount,
     capacity,
   }
 }
