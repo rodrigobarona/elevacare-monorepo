@@ -104,6 +104,197 @@ Each entry should include:
   had a second page, captures taken before the controls got their border,
   and a range that ran into the sentence after it. The second commit
   answers those and was not scored again.
+
+### 2026-11-22: Every clinic subscription has a seat item (11.7) (active)
+
+- Change (Phase 11.7): a clinic's subscription got a seat item only when it
+  was created with a seat count, and nothing ever sent one. A new clinic has
+  no seats, so it had no seat item, and the seat sync answered "nothing to
+  do" for ever: the seat limit worked (it is checked in our database) but
+  Stripe never billed a seat. Now:
+  - a clinic subscription is created with its seat item, at the number of
+    seats the clinic has, zero included;
+  - the seat sync creates the item when the clinic's current subscription
+    has none, and sets its quantity to the count;
+  - the subscription webhook asks for a sync when a clinic plan becomes
+    current (paid in Checkout) and whenever a current clinic plan has no
+    seat item, so a clinic from before this slice is repaired at its next
+    Stripe event or seat change. The first version repaired on a timer
+    instead; the review showed it would have asked Stripe every ten
+    minutes, for ever, about any subscription it could never fix.
+- **Seats are counted by Eleva, never by the request.** `quantity` is gone
+  from `POST /billing/checkout` and `POST /billing/subscribe`: the number is
+  the members with a published service. A plan change sends the seat
+  quantity outright (Stripe resets a moved item to 1 otherwise, which would
+  have billed one seat whatever the clinic had).
+- On the same path, found by the research and fixed here because the slice
+  could not be right without them:
+  - the sync picked one of the clinic's subscription rows at random, and a
+    clinic usually has an unpaid one from provisioning beside the paid one.
+    It now uses the current one (active, trialing, past due), by the same
+    list as the seat limit;
+  - Stripe was called inside the audit transaction. It is called first, and
+    the transaction opens only to record the answer;
+  - a canceled subscription was retried every ten minutes without end. No
+    current subscription now means nothing to do;
+  - every subscription webhook erased the "sync pending" mark. The mirror
+    keeps it;
+  - Checkout sent the same idempotency key for a person and a plan all day,
+    which hands back a finished session and errors when anything differs.
+    The key now follows the request and the attempt: the same request
+    within ten minutes is the same session, a later one is a new one.
+  - a plan change counted and wrote the seats outside the clinic's seat
+    lock, so a seat change at the same moment could be overwritten by the
+    older count (Greptile). It now runs under the same lock as the sync.
+- Checkout saves what the buyer types (`customer_update`): the customer
+  already exists, made by provisioning without an address, and without this
+  the company name, the address and with them the VAT number were not saved
+  on it.
+- Stripe, asked in test mode on 2026-11-22 (API `2026-04-22.dahlia`): a
+  subscription accepts a seat item at quantity 0; adding one to an active
+  subscription at 0 works and repeats safely with the same key; Checkout
+  refuses a line at 0 ("must be greater than or equal to 1"), so at zero
+  seats the line is left out and the sync adds the item once the
+  subscription is active; Stripe itself refuses a second item with a price
+  the subscription already has; going from 0 to 2 seats adds prorated lines
+  to the next invoice.
+- **Not proven, and it blocks the next slice: Checkout itself.** In the test
+  account every Checkout with automatic tax is refused: "You must have a
+  valid head office address to enable automatic tax calculation in test
+  mode." So `customer_update` and the whole "clinic pays, becomes active,
+  gets its seat item" journey were not run. Operator: set the head office
+  address in the Stripe test account's tax settings (and check the live
+  one) before 11.8.
+- For the accountant (A-03): proration is unchanged, and is now one named
+  constant. A clinic that already has seats will see prorated seat charges
+  on its next invoice the first time the sweep gives it a seat item. No
+  such clinic is known today.
+- Also corrected: the API text said `ui_mode=embedded` (the code sends
+  `embedded_page`); `.env.example` pinned Stripe API `2023-08-16`, which
+  predates `embedded_page` (what is deployed is still the operator's check,
+  O-5); the unused "metered seat" branch and its comments are gone.
+- A sync that sends nothing now says why (not a clinic, no current
+  subscription, nothing to bill in Stripe, gone in Stripe), in its result
+  and in its audit record.
+- Proof: `@eleva/billing` unit tests (seat sync: 14 cases with a recording
+  gateway; the Stripe side of the seat item and the order of Stripe and
+  database work: 10; subscription items, Checkout parameters and plan
+  change: 10; the rule for when the webhook asks for a sync: 4). On
+  Postgres (`seat-sync.integration.test.ts`, the dev branch here and the
+  pull request's branch in CI): the webhook's mirror for unpaid, paid, late
+  and repeated events; the mark set once and kept while Stripe's metadata
+  replaces the rest; seats billed on the paid subscription and never the
+  unpaid one beside it; the new item stored on that row only; nothing sent
+  once the plan has ended.
+- Judges, first commit: payments 7.6, engineering 7.3 (the timer above; new
+  queries that had only run against mocks; a comment that claimed a boot
+  check that does not exist). The second commit answers those and was not
+  scored again.
+- Left open on this path: nothing stops a clinic that already pays from
+  opening Checkout again (11.8).
+- An old subscription with a metered seat item (the earlier design, which
+  no price uses now and no subscription is known to carry) is left as it
+  is: the sync never adds a licensed item beside it, which would bill the
+  same seats twice, and never asks about it on every event (CodeRabbit).
+- Declined for now, from CodeRabbit: refusing at boot a `STRIPE_API_VERSION`
+  older than `2026-03-25`. Nobody has confirmed what is deployed (O-5); if
+  it is the old value, that check would stop billing at the next deploy.
+  It belongs with the operator's answer.
+- Not in this slice: the Billing page and a guard against a second Checkout
+  for a clinic that already pays (11.8); whether provisioning should keep
+  creating an unpaid clinic subscription that expires in 23 hours;
+  `POST /billing/subscribe` reads a field of the invoice that the installed
+  SDK no longer has.
+- Owner: engineering; accountant (A-03); operator (the test account's
+  address, O-5)
+
+### 2026-11-23: The route guard has its own tests, and a list of what counts as validation (13.4) (active)
+
+- Change (Phase 13.4): `pnpm check:route-guards` holds every API route to
+  its declared policy, and had no test of its own: all its logic ran at the
+  top of the file and ended in `process.exit`. It now exports its logic and
+  has 12 tests (`scripts/check-route-guards.test.mjs`, run by
+  `pnpm test:scripts` in CI): each auth mode, the policy shapes it refuses,
+  rate limit, BotID, and the rule below.
+- **"Validates the request" was a list of what does not count.** A mutating
+  route passed when any `.parse(` appeared whose receiver was not one of
+  eight names, or an audit wrapper, or two helper names that do not exist,
+  anywhere within two imports. So another library's `parse`, an output
+  schema, or a shared module that happened to parse something, each let a
+  route through. It is now a list of what counts (`REQUEST_VALIDATION`): a
+  Zod parse on a schema (a name ending in `Schema`, or an inline `z.…`
+  chain) that is not inside the building of a response, or
+  `rejectUnexpectedBody()`, in the route file or a handler beside it.
+- The new rule found two routes that validated nothing, and both are fixed
+  here: deleting a schedule override and disconnecting a calendar took the
+  path id as sent. Each now refuses an id that is not well formed (422).
+  The first also answered a failure with the caught error's own message;
+  it now logs it and answers with the code. No route was given an
+  exemption: the only one is still Better Auth's own handler.
+- An audit wrapper no longer counts as validation: recording a write says
+  nothing about what was written.
+- What the rule still cannot see, each pinned by a test: it reads the
+  file, not each handler, so one method's parse covers another method of
+  the same route; it does not know that the value parsed came from the
+  request (only that it is not `process.env`), that every path id is
+  parsed, or that the result is used; and for rate limit, BotID and auth a
+  call written inside a string still counts.
+- So "two routes that validated nothing" is true by file, not by handler.
+  The review found four `DELETE` handlers that pass on another method's
+  parse and still use their path id as sent: `expert/locations/[id]`,
+  `expert/schedules/[id]`, `expert/event-types/[id]` (which also answers a
+  failure with the caught error's message) and
+  `expert/event-types/[id]/modes/[modeId]`; and `expert/schedule/overrides`
+  (the list route) answers a failure with the error's message too. They are
+  the next slice on this track (parse every path id, never answer with an
+  error's own words), with a rule per handler to go with it.
+- The guard also follows `export { POST } from "./handler"` now, as it
+  followed imports. And a shared module under `apps/api/src/lib` counts for
+  neither auth nor validation however its import is written: `../../lib/x`
+  used to slip past a rule that looked at the spelling (Greptile).
+- The script also fails when it finds no route at all (a wrong path used
+  to pass with "0 routes").
+- Proof: `pnpm test:scripts` (27 tests, 13 new); the guard passes on the 166
+  routes; route tests for the two fixed routes.
+- Judge: 8.0 at the first commit (a parse of the environment still counted;
+  the per-file limit was not said). The second commit answers both and was
+  not scored again.
+
+### 2026-11-23: Preview database branches expire by themselves (13.28) (active)
+
+- Change (Phase 13.28): a pull request's Neon branch (`pr-N`) was deleted
+  only when the pull request closed, or by the nightly sweep if that delete
+  failed. A pull request left open kept its branch for as long as it stayed
+  open, and on 2026-11-21 six open ones used every branch the project has,
+  so the database job failed. Now the job gives the branch an expiry each
+  time it runs: Neon deletes it by itself seven days after the last run
+  (`NEON_PR_BRANCH_TTL_DAYS`), and a later push makes it again.
+- Seven days: the branch is used by this job only (Vercel previews use the
+  `preview` branch), so losing it costs one re-run; it is far inside Neon's
+  30-day maximum; and work in review does not lose its branch over a
+  weekend.
+- The expiry is written with one call to Neon's API, to a branch whose name
+  is `pr-<this pull request>` and which is neither the default branch nor
+  protected; anything else stops the job. Neon itself refuses an expiry on
+  a default or protected branch, and on a branch with children (`preview`
+  while any `pr-N` exists).
+- Neon accepts it: this pull request's own run printed the branch before
+  (`"expires_at":null`) and after (`"expires_at":"2026-11-30T00:10:53Z"`,
+  `"ttl_interval_seconds":604800`). Its API reference marks the field early
+  access, so if Neon ever refuses, or cannot be reached, the job warns and
+  goes on: the delete on close and the nightly sweep still apply. Only a
+  branch that fails the check above stops the job.
+- The expiry is set by that call and not by the action that creates the
+  branch, which also takes one: a refusal there would fail the create, and
+  with it the database job of every pull request. The cost is that a job
+  which dies between the create and this step leaves a branch with no
+  expiry until its next run.
+- The job that deletes the branch on close now looks for it first, and is
+  green when the branch is already gone (expired, or swept).
+- Not changed: the nightly sweep; the limit of three open pull requests
+  (an expiry frees a forgotten branch, it does not raise the limit).
+  Operator: which Neon plan the project is on (O-2), and whether the
+  production branch is marked protected in Neon.
 - Owner: engineering
 
 ### 2026-11-22: An API key identifies its owner again, and no session can make one (12.5) (active)

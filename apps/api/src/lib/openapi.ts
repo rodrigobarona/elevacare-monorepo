@@ -2511,7 +2511,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "createBillingCheckoutSession",
           summary: "Create an embedded subscription Checkout Session",
           description:
-            "Creates a Stripe Checkout Session with ui_mode=embedded for the authenticated user's current organization.",
+            "Creates a Stripe Checkout Session with `ui_mode=embedded_page` for the authenticated user's current organization. For a clinic plan the session has a second line, the seats: one for each member of the clinic with a published service, counted by Eleva at the time of the request. The request never names a quantity, and the line is left out while the clinic has no such member (the seat item is then added once the subscription is active).",
           tags: ["Billing"],
           requestBody: {
             required: true,
@@ -2585,7 +2585,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "billingSubscribe",
           summary: "Create or upgrade an org subscription",
           description:
-            "Compatibility endpoint for the legacy Payment Element subscription flow. Prefer POST /billing/checkout for new clients.",
+            "Compatibility endpoint for the legacy Payment Element subscription flow. Prefer POST /billing/checkout for new clients. For a clinic plan Eleva counts the seats (members with a published service); the request never names a quantity.",
           tags: ["Billing"],
           requestBody: {
             required: true,

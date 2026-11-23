@@ -14,6 +14,12 @@ import {
 } from "@eleva/scheduling"
 import { emitPaymentPayoutNotificationEvent } from "../emit-domain-event"
 import { stripe } from "./client"
+import {
+  isClinicPlanTier,
+  isCurrentSubscriptionStatus,
+  seatItemKind,
+} from "./seat-cap"
+import { markSeatSyncPending } from "./seats"
 import { foreignEnvironmentReason } from "./stripe-environment"
 import {
   isMissingBillingCustomerError,
@@ -764,7 +770,8 @@ const subscriptionStatusSchema = z.enum(
   main.stripeSubscriptionStatusEnum.enumValues
 )
 
-async function handleSubscriptionEvent(
+/** @internal Exported so an integration test can run it on Postgres. */
+export async function handleSubscriptionEvent(
   event: Stripe.Event
 ): Promise<DispatchOutcome> {
   const subscription = event.data.object as Stripe.Subscription
@@ -826,6 +833,21 @@ async function handleSubscriptionEvent(
       eventCreatedAt,
     })
 
+    // Marked here, in the same transaction as the mirror; the sweep sends
+    // it to Stripe after the commit (no vendor call inside a transaction).
+    if (
+      clinicPlanNeedsSeatSync({
+        tier,
+        status,
+        priorStatus,
+        // A metered seat item counts: asking for a sync on every event of
+        // such a subscription would find nothing to do each time.
+        hasSeatItem: billsSeats(subscription),
+      })
+    ) {
+      await markSeatSyncPending(orgId, tx)
+    }
+
     // F3: top_expert_active is mirrored from EVERY subscription event,
     // regardless of tier, so downgrades / cancellations / past_due
     // transitions correctly clear the flag. The query no-ops when no
@@ -883,6 +905,50 @@ export function mapSubscriptionAction(
   return "updated"
 }
 
+/**
+ * @internal Exposed for unit tests. True when this subscription event
+ * should have the clinic's seats recounted and sent to Stripe:
+ *
+ * - a clinic plan has just become current (paid in Checkout): its seats may
+ *   have changed while Checkout was open;
+ * - or a current clinic plan has no seat item (a Checkout with no seats, or
+ *   a subscription from before seat items were always attached).
+ *
+ * Eleva's own seat writes come back as `customer.subscription.updated` on
+ * a plan that stays current and has its seat item: those ask for nothing,
+ * so there is no loop. A plan that can never get a seat item is asked about
+ * once for each event Stripe sends, never on a timer.
+ */
+export function clinicPlanNeedsSeatSync(input: {
+  tier: string
+  status: string
+  priorStatus: string | null
+  hasSeatItem: boolean
+}): boolean {
+  if (!isClinicPlanTier(input.tier)) return false
+  if (!isCurrentSubscriptionStatus(input.status)) return false
+  const wasCurrent =
+    input.priorStatus !== null && isCurrentSubscriptionStatus(input.priorStatus)
+  return !wasCurrent || !input.hasSeatItem
+}
+
+/**
+ * The subscription item Eleva sets the seat quantity of, if the
+ * subscription has one. An old metered seat item is not it (it takes no
+ * quantity), so the mirror keeps no id for it.
+ */
+function seatItemOf(subscription: Stripe.Subscription): string | null {
+  return (
+    subscription.items.data.find((item) => seatItemKind(item) === "licensed")
+      ?.id ?? null
+  )
+}
+
+/** True when some item already bills this subscription's seats. */
+function billsSeats(subscription: Stripe.Subscription): boolean {
+  return subscription.items.data.some((item) => seatItemKind(item) !== null)
+}
+
 async function upsertSubscriptionMirror(
   tx: Tx,
   input: {
@@ -900,13 +966,16 @@ async function upsertSubscriptionMirror(
   const { orgId, subscription, tier, status, customerId, eventCreatedAt } =
     input
   const priceIds = subscription.items.data.map((item) => item.price.id)
-  const seatItemId =
-    subscription.items.data.find(
-      (item) =>
-        item.price.metadata?.eleva_price_type === "per_seat" ||
-        item.price.metadata?.eleva_price_type === "per_seat_metered" ||
-        item.price.recurring?.usage_type === "metered"
-    )?.id ?? null
+  const seatItemId = seatItemOf(subscription)
+  // The column also carries Eleva's own "seat sync pending" mark
+  // (`markSeatSyncPending`). Stripe's metadata replaces the rest; the mark
+  // stays, or a sync waiting for the sweep would be forgotten by the next
+  // subscription event.
+  const metadata = sql`${JSON.stringify(subscription.metadata ?? {})}::jsonb
+    || jsonb_strip_nulls(jsonb_build_object(
+      'seatSyncPending', ${main.billingSubscriptions.metadata}->'seatSyncPending',
+      'seatSyncGeneration', ${main.billingSubscriptions.metadata}->'seatSyncGeneration'
+    ))`
 
   const period = subscriptionPeriod(subscription)
   const canceledAt = subscription.canceled_at
@@ -941,7 +1010,7 @@ async function upsertSubscriptionMirror(
         currentPeriodEnd: period.end,
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
         canceledAt,
-        metadata: subscription.metadata as Record<string, unknown>,
+        metadata,
         lastEventCreatedAt: eventCreatedAt,
         updatedAt: new Date(),
       },

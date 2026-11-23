@@ -15,10 +15,9 @@ type StripeApiVersion = ConstructorParameters<typeof Stripe>[1] extends
  * The Stripe library is imported here and only here. Boundary lint
  * forbids `from "stripe"` outside of `@eleva/billing/**`.
  *
- * The API version is pinned via env (default '2023-08-16' — the floor
- * for Connect Embedded Components per payments-payouts-spec.md).
- * Newer pinned versions are accepted; older ones cause Stripe to
- * reject AccountSession requests.
+ * The API version is pinned via env (`STRIPE_API_VERSION`; the example
+ * names the installed SDK's own version). The floor is 2026-03-25.dahlia:
+ * embedded Checkout's `ui_mode: "embedded_page"` does not exist before it.
  */
 
 let cached: Stripe | null = null

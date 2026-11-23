@@ -152,7 +152,6 @@ export const BillingTierSchema = z.enum([
 
 export const BillingCheckoutRequestSchema = z.object({
   tier: BillingTierSchema,
-  quantity: z.number().int().min(1).max(100).optional(),
   returnUrl: z.string().url().optional(),
 })
 
@@ -172,7 +171,6 @@ export const BillingPortalResponseSchema = z.object({
 
 export const BillingSubscribeRequestSchema = z.object({
   tier: BillingTierSchema,
-  quantity: z.number().int().min(1).max(100).optional(),
 })
 
 export const BillingSubscribeResponseSchema = z.object({

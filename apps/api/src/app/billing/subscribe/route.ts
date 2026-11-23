@@ -37,7 +37,9 @@ export const ROUTE_POLICY = {
  * The user must hold `billing:manage_org` or `subscriptions:manage_org` capability.
  *
  * Request body:
- *   { tier: "clinic_starter" | "clinic_growth" | "expert_top", quantity?: number }
+ *   { tier: "clinic_starter" | "clinic_growth" | "expert_top" }
+ *   For a clinic plan Eleva counts the seats (members with a published
+ *   service); the request never names a quantity.
  *
  * Response:
  *   { subscriptionId, status, clientSecret? }
@@ -110,7 +112,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const { tier, quantity } = body
+  const { tier } = body
 
   try {
     const s = stripe()
@@ -155,7 +157,6 @@ export async function POST(request: Request) {
         subscriptionId: existingSub.id,
         newTier: tier,
         orgId: session.orgId,
-        quantity,
       })
 
       if (!updated) {
@@ -194,7 +195,6 @@ export async function POST(request: Request) {
       customerId: customer.id,
       tier,
       orgId: session.orgId,
-      quantity,
     })
 
     if (!subscription) {
