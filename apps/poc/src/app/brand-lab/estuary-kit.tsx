@@ -28,21 +28,32 @@ const DAYS = [
 const TIMES = ["09:00", "10:30", "11:15", "14:00", "15:30", "17:00"] as const
 
 /**
- * Direction D on the booking path: the profile and the step before payment,
- * with the fixes the first panel asked for (how she meets is chosen and
- * shown, the time zone sits beside the time, the button says what happens
- * next, and a bar on phones keeps the next free time in reach).
+ * Directions D and E on the booking path: the profile and the step before
+ * payment, with the fixes the first panel asked for (how she meets is chosen
+ * and shown, the time zone sits beside the time, the button says what happens
+ * next, and a bar on phones keeps the next free time in reach) and the third
+ * panel's (every choice is a real radio button, so the picker works from the
+ * keyboard; there is a way back and a way to help; the profile has fixed
+ * sections; the summary says who provides the session and who takes payment).
  */
 export function EstuaryKit({
   faces = "faces",
+  home = "/brand-lab/estuary",
 }: {
   faces?: "faces" | "faces-colour"
+  home?: string
 }) {
   const expert = ES_EXPERTS[0]
   return (
     <>
       <header className="kit-nav bl-wrap">
-        <LabLogo />
+        <a href={home} aria-label="Eleva Care, home" className="ek-home">
+          <LabLogo />
+        </a>
+        <nav aria-label="Booking">
+          <a href={home}>All experts</a>
+          <a href="#help">Help</a>
+        </nav>
         <span>
           <ShieldCheckIcon aria-hidden /> Secure booking
         </span>
@@ -59,7 +70,10 @@ export function EstuaryKit({
               <p className="kit-role">{expert.role}</p>
               <p className="kit-checked">
                 <SealCheckIcon weight="fill" aria-hidden />
-                Registration checked with the Ordem dos Fisioterapeutas
+                <span>
+                  Registered with the Ordem dos Fisioterapeutas. Checked by
+                  Eleva in October 2026. <a href="#help">How we check</a>
+                </span>
               </p>
               <ul className="kit-facts">
                 <li>Portuguese, English, Spanish</li>
@@ -73,19 +87,43 @@ export function EstuaryKit({
             pregnancy, after birth and through menopause for leaking, pain and
             getting back to sport.
           </p>
-          <h2>Services</h2>
-          <ul className="kit-services">
+          <div className="ek-about">
+            <div>
+              <h2>How I work</h2>
+              <p>
+                On a first visit we mostly talk. I ask what is happening and
+                what you want to get back to, and we agree on a plan you can
+                follow at home.
+              </p>
+            </div>
+            <div>
+              <h2>Training</h2>
+              <ul>
+                <li>Degree in Physiotherapy, Lisbon, 2012</li>
+                <li>Postgraduate course in pelvic health, 2015</li>
+              </ul>
+            </div>
+          </div>
+          <h2 id="services">Services</h2>
+          <ul className="kit-services" aria-labelledby="services">
             {SERVICES.map((service, index) => (
-              <li key={service.name} data-on={index === 0 || undefined}>
-                <div>
-                  <b>{service.name}</b>
-                  <small>{service.meta}</small>
-                  <p>{service.line}</p>
-                </div>
-                <span>
-                  {service.price}
-                  {index === 0 ? <small>Selected</small> : null}
-                </span>
+              <li key={service.name}>
+                <label>
+                  <input
+                    type="radio"
+                    name="service"
+                    defaultChecked={index === 0}
+                  />
+                  <span>
+                    <b>{service.name}</b>
+                    <small>{service.meta}</small>
+                    <span>{service.line}</span>
+                  </span>
+                  <span>
+                    {service.price}
+                    <small>Selected</small>
+                  </span>
+                </label>
               </li>
             ))}
           </ul>
@@ -95,25 +133,53 @@ export function EstuaryKit({
           <h2>Choose a time</h2>
           <fieldset className="ek-mode">
             <legend>How would you like to meet?</legend>
-            <span data-on>Video</span>
-            <span>In person, Lisbon</span>
+            <label>
+              <input type="radio" name="mode" defaultChecked />
+              Video
+            </label>
+            <label>
+              <input type="radio" name="mode" />
+              In person, Lisbon
+            </label>
           </fieldset>
-          <p className="ek-label">Wednesday 25 November · Lisbon time</p>
-          <ul className="kit-days">
-            {DAYS.map((day) => (
-              <li key={day.date} data-on={"on" in day || undefined}>
-                <small>{day.day}</small>
-                {day.date}
-              </li>
-            ))}
-          </ul>
-          <ul className="kit-times">
-            {TIMES.map((time) => (
-              <li key={time} data-on={time === "10:30" || undefined}>
-                {time}
-              </li>
-            ))}
-          </ul>
+          <fieldset className="ek-set">
+            <legend>Day · November</legend>
+            <ul className="kit-days">
+              {DAYS.map((day) => (
+                <li key={day.date}>
+                  <label>
+                    <input
+                      type="radio"
+                      name="day"
+                      defaultChecked={"on" in day}
+                    />
+                    <small>{day.day}</small>
+                    {day.date}
+                  </label>
+                </li>
+              ))}
+            </ul>
+            <button type="button" className="ek-later">
+              Later days
+            </button>
+          </fieldset>
+          <fieldset className="ek-set">
+            <legend>Time · Lisbon time</legend>
+            <ul className="kit-times">
+              {TIMES.map((time) => (
+                <li key={time}>
+                  <label>
+                    <input
+                      type="radio"
+                      name="time"
+                      defaultChecked={time === "10:30"}
+                    />
+                    {time}
+                  </label>
+                </li>
+              ))}
+            </ul>
+          </fieldset>
           <div className="kit-summary">
             <dl>
               <div>
@@ -134,8 +200,8 @@ export function EstuaryKit({
               </div>
             </dl>
             <p>
-              Cancel free until Tuesday 24 November, 10:30. After that the
-              session is charged in full.
+              €60.00 is the full price. Cancel free until Tuesday 24 November,
+              10:30. After that the session is charged in full.
             </p>
           </div>
           <label className="kit-field">
@@ -148,12 +214,14 @@ export function EstuaryKit({
           <p className="kit-secure">
             <ShieldCheckIcon aria-hidden />
             <span>
-              You pay on the next step, and nothing is charged before it. Your
-              card details go to our payment provider, never to Eleva.
+              Nothing is charged yet. You enter your card on the next step, and
+              your card details never reach Eleva.
             </span>
           </p>
-          <p className="ek-legal">
-            By continuing you agree to the <a href="#book">Terms</a>. The{" "}
+          <p className="ek-legal" id="help">
+            Inês Mota provides the session as an independent physiotherapist.
+            Eleva Care (Búzios e Tartarugas, Lda) takes the payment for her. By
+            continuing you agree to the <a href="#book">Terms</a>. The{" "}
             <a href="#book">Privacy notice</a> says how we handle your data.
           </p>
         </aside>

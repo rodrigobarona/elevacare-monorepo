@@ -1,5 +1,5 @@
 import { SealCheckIcon } from "@eleva/icons"
-import { FOOTER, LEGAL, photo } from "./content"
+import { FOOTER, LEGAL } from "./content"
 import { ES_EXPERTS } from "./estuary"
 import { HeroFilm } from "./hero-film"
 import { HeroQuestions } from "./hero-questions"
@@ -9,38 +9,57 @@ import { LabLogo } from "./lab-bar"
  * Direction E, In her words. Made with Anthropic's frontend-design skill
  * after the founder found the earlier directions short on character and too
  * reliant on type. The page is built from what women ask: the hero is the
- * film with one question and one action, need-first browsing is a set of
+ * film with one question and one action, need-first browsing is a list of
  * questions, and each expert speaks in her own words. Colour is two fields,
- * the brand's teal and coral. There is no accent phrase, no label above a
- * heading, no numbered marker and no gradient.
+ * each used once: deep teal for how experts are checked, coral for the
+ * closing block. There is no accent phrase, no label above a heading, no
+ * numbered marker and no gradient.
+ *
+ * Second pass, after the third blind panel (2026-11-23): the hero's action
+ * no longer changes, its words sit on a panel that holds contrast on every
+ * clip, experts are three equal cards with the facts a member compares, the
+ * steps show the product, and the page ends in a block of its own.
  */
 
 const colour = (slug: string) => `/brand-lab/faces-colour/${slug}.jpg`
 
-/** "Tomorrow, 10:30" reads "tomorrow, 10:30" mid-sentence; a weekday keeps its capital. */
-const when = (next: string) =>
-  /^(Today|Tomorrow)/.test(next)
-    ? next.charAt(0).toLowerCase() + next.slice(1)
-    : next
-
+/** The first four show on a phone, so they cover four different moments of life. */
 const ASKS = [
-  "Is this pain normal in pregnancy?",
-  "How do I write a birth plan I understand?",
-  "When can I run again after the birth?",
-  "Is my baby getting enough milk?",
-  "Why are my periods changing at 44?",
-  "What should I eat with PCOS?",
-  "Why don't I feel like myself?",
-  "Who do I even ask about this?",
+  {
+    ask: "Is it normal to leak when I laugh?",
+    to: "Pelvic health physiotherapists",
+  },
+  { ask: "What goes in a birth plan?", to: "Midwives" },
+  {
+    ask: "Why am I awake at three again?",
+    to: "Doctors who work with menopause",
+  },
+  { ask: "Why don't I feel like myself?", to: "Psychologists" },
+  { ask: "Is my baby getting enough milk?", to: "Nurses and midwives" },
+  { ask: "What should I eat while trying for a baby?", to: "Nutritionists" },
+  {
+    ask: "When can I run again after the birth?",
+    to: "Pelvic health physiotherapists",
+  },
+  {
+    ask: "How do I ease back pain in pregnancy?",
+    to: "Physiotherapists and midwives",
+  },
 ] as const
 
-const SAYS: Record<string, string> = {
-  fisiomota:
-    "A first visit is a calm conversation and a clear plan you can follow at home.",
-  joanalima:
-    "No strict diets and no long lists of banned foods. We build a plan around your real week.",
-  sofiacosta:
-    "Sessions are a place to say what you cannot say anywhere else, at your pace.",
+const PEOPLE: Record<string, { says: string; body: string }> = {
+  fisiomota: {
+    says: "On a first visit we mostly talk. You go home with a plan you can follow.",
+    body: "Ordem dos Fisioterapeutas",
+  },
+  joanalima: {
+    says: "No strict diets and no long lists of banned foods. We build a plan around your real week.",
+    body: "Ordem dos Nutricionistas",
+  },
+  sofiacosta: {
+    says: "You can say here what you can't say anywhere else. We go at your pace.",
+    body: "Ordem dos Psicólogos",
+  },
 }
 
 const BODIES = [
@@ -51,54 +70,47 @@ const BODIES = [
   "Ordem dos Médicos",
 ] as const
 
-const MOMENTS = [
-  {
-    when: "First",
-    title: "You pick a time",
-    line: "No account needed. You see the price and you pay when you book.",
-  },
-  {
-    when: "Then",
-    title: "She meets you",
-    line: "At the time you chose, by video, by phone or in person.",
-  },
-  {
-    when: "After",
-    title: "You decide what comes next",
-    line: "Book a follow-up with her, or don't. It is your call.",
-  },
-] as const
-
 const ADVISORS = [
-  { slug: "kari-bo", name: "Kari Bø, PT, PhD", role: "Pelvic floor health" },
+  {
+    slug: "kari-bo",
+    name: "Kari Bø, PT, PhD",
+    role: "Pelvic floor health",
+    place: "Norwegian School of Sport Sciences",
+  },
   {
     slug: "jenny-bagwell",
     name: "Jenny Bagwell, PT, PhD, DPT",
     role: "Biomechanics and perinatal health",
+    place: "California State University, Long Beach",
   },
   {
     slug: "cristine-homsi-jorge",
     name: "Cristine Homsi Jorge, PT, PhD",
     role: "Women's health",
+    place: "University of São Paulo",
   },
 ] as const
 
 const FAQ = [
   {
     q: "Do I need an account to book?",
-    a: "No. Choose a time, add your details and pay. Your confirmation email has everything you need.",
+    a: "No. Choose a time, add your email and pay. Everything you need arrives in your confirmation email.",
+  },
+  {
+    q: "Who are the experts?",
+    a: "Physiotherapists, midwives, nurses, nutritionists, psychologists and doctors who work in women's health. Each one runs her own practice.",
   },
   {
     q: "How much does it cost?",
-    a: "Each expert sets her own prices. You see the price of a first visit on her page, before you choose a time.",
+    a: "Each expert sets her own price. A first visit is usually between €50 and €70, and the price is on her page.",
   },
   {
     q: "How does a session work?",
-    a: "By video, by phone or in person, depending on the expert. A video session opens from the link in your email.",
+    a: "It depends on the expert: some meet by video or phone, some in person, some both. A video session opens from the link in your email.",
   },
   {
     q: "Can I cancel?",
-    a: "Yes. Each service shows its cancellation terms, and the date they apply until, before you pay.",
+    a: "Yes. Before you pay, you see the last day you can cancel without charge.",
   },
 ] as const
 
@@ -110,11 +122,10 @@ const NAV = [
 ] as const
 
 export function VoicesHome() {
-  const [lead, ...others] = ES_EXPERTS.slice(0, 3)
+  const people = ES_EXPERTS.slice(0, 3)
   return (
     <>
       <section className="vo-hero">
-        <HeroFilm className="vo-film" />
         <div className="vo-shade" aria-hidden />
         <header className="vo-nav">
           <LabLogo />
@@ -137,15 +148,26 @@ export function VoicesHome() {
           </details>
         </header>
         <HeroQuestions />
+        {/* After the action in the page, so the pause control follows it for a keyboard. */}
+        <HeroFilm className="vo-film" />
+        <small className="vo-posed">Posed by models</small>
       </section>
 
       <main>
         <section className="vo-asks bl-wrap" id="asks">
-          <h2>What do you want to ask?</h2>
+          <div className="vo-head">
+            <h2>What do you want to ask?</h2>
+            <a href="#experts" className="vo-link">
+              See experts by profession
+            </a>
+          </div>
           <ul>
-            {ASKS.map((ask) => (
-              <li key={ask}>
-                <a href="#experts">{ask}</a>
+            {ASKS.map((item) => (
+              <li key={item.ask}>
+                <a href="#experts">
+                  <span>{item.ask}</span>
+                  <small>{item.to}</small>
+                </a>
               </li>
             ))}
           </ul>
@@ -153,46 +175,48 @@ export function VoicesHome() {
 
         <section className="vo-experts bl-wrap" id="experts">
           <div className="vo-head">
-            <h2>The people who answer</h2>
+            <div>
+              <h2>The people who answer</h2>
+              <p>Three experts with time free this week.</p>
+            </div>
             <a href="#experts" className="vo-link">
               See all experts
             </a>
           </div>
-          <div className="vo-people">
-            {lead ? (
-              <a href="#experts" className="vo-person vo-person-lead">
-                <span className="vo-photo">
-                  <img src={colour(lead.slug)} alt="" />
-                </span>
-                <span className="vo-person-text">
-                  <q>{SAYS[lead.slug]}</q>
-                  <b>{lead.name}</b>
-                  <span>{lead.role}</span>
-                  <span className="vo-when">
-                    Free {when(lead.next)}. First visit {lead.first}.
+          <ul className="vo-people">
+            {people.map((expert) => (
+              <li key={expert.slug}>
+                <a href="#experts" className="vo-person">
+                  <span className="vo-photo">
+                    <img src={colour(expert.slug)} alt="" />
                   </span>
-                </span>
-              </a>
-            ) : null}
-            {others.map((expert) => (
-              <a key={expert.slug} href="#experts" className="vo-person">
-                <span className="vo-photo">
-                  <img src={colour(expert.slug)} alt="" />
-                </span>
-                <span className="vo-person-text">
-                  <q>{SAYS[expert.slug]}</q>
-                  <b>{expert.name}</b>
-                  <span>{expert.role}</span>
-                  <span className="vo-when">
-                    Free {when(expert.next)}. First visit {expert.first}.
+                  <q>{PEOPLE[expert.slug]?.says}</q>
+                  <span className="vo-who">
+                    <b>{expert.name}</b>
+                    <span>{expert.role}</span>
+                    <small>
+                      <SealCheckIcon weight="fill" aria-hidden />
+                      Registered with the {PEOPLE[expert.slug]?.body}
+                    </small>
                   </span>
-                </span>
-              </a>
+                  <span className="vo-cells">
+                    <span>
+                      <small>Next free</small>
+                      {expert.next}
+                    </span>
+                    <span>
+                      <small>First visit</small>
+                      {expert.first}
+                    </span>
+                  </span>
+                  <span className="vo-go">See her times</span>
+                </a>
+              </li>
             ))}
-          </div>
+          </ul>
         </section>
 
-        <section className="vo-checked">
+        <section className="vo-checked" id="checked">
           <div className="bl-wrap">
             <div>
               <SealCheckIcon weight="fill" aria-hidden />
@@ -200,7 +224,7 @@ export function VoicesHome() {
                 Every expert here is registered with her professional body. We
                 check that before her profile goes live.
               </h2>
-              <p>{BODIES.join(", ")}.</p>
+              <p>In Portugal: {BODIES.join(", ")}.</p>
             </div>
             <ul>
               <li>
@@ -208,58 +232,88 @@ export function VoicesHome() {
                 You book her and you talk with her directly.
               </li>
               <li>
-                <b>Nothing is hidden</b>
-                You see the price and the cancellation terms, with their date,
-                before you pay.
+                <b>You see the price first</b>
+                And the last day you can cancel without charge.
               </li>
             </ul>
           </div>
         </section>
 
-        <section className="vo-session" id="session">
-          <div className="bl-wrap">
-            <div className="vo-session-photo" aria-hidden>
-              <img src={photo("online-session-mature")} alt="" />
-            </div>
-            <div>
-              <h2>What a first session is like</h2>
-              <ol>
-                {MOMENTS.map((moment) => (
-                  <li key={moment.title}>
-                    <span>{moment.when}</span>
-                    <div>
-                      <b>{moment.title}</b>
-                      <p>{moment.line}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </div>
+        <section className="vo-session bl-wrap" id="session">
+          <h2>What a first session is like</h2>
+          <ol>
+            <li>
+              <div className="vo-ui vo-ui-times" aria-hidden>
+                <small>Wednesday 25 November · Lisbon time</small>
+                <span>09:00</span>
+                <span data-on>10:30</span>
+                <span>11:15</span>
+                <span>14:00</span>
+                <span>15:30</span>
+                <span>17:00</span>
+              </div>
+              <span className="vo-step">First</span>
+              <b>You pick a time</b>
+              <p>No account needed. You pay when you book.</p>
+            </li>
+            <li>
+              <div className="vo-ui vo-ui-mail" aria-hidden>
+                <small>Your confirmation email</small>
+                <b>Wednesday, 10:30</b>
+                <small>Video session with Inês Mota · 50 min</small>
+                <span>Join the session</span>
+              </div>
+              <span className="vo-step">Then</span>
+              <b>She meets you</b>
+              <p>
+                A video session opens from the link in your email. In person,
+                you go to her.
+              </p>
+            </li>
+            <li>
+              <div className="vo-ui vo-ui-next" aria-hidden>
+                <small>With Inês Mota</small>
+                <b>Follow-up</b>
+                <small>30 min · €45</small>
+                <span>Book again</span>
+              </div>
+              <span className="vo-step">After</span>
+              <b>You decide what comes next</b>
+              <p>Book a follow-up with her, or don&apos;t.</p>
+            </li>
+          </ol>
+          <a href="#experts" className="bl-btn">
+            See the experts
+          </a>
         </section>
 
-        <section className="vo-advisors bl-wrap">
-          <div>
-            <h2>Guided by people who study women&apos;s health</h2>
-            <p>
-              Our advisors bring clinical research into how Eleva works. Your
-              care comes from the expert you choose.
-            </p>
-            <a href="#close" className="vo-link">
-              Meet the advisors
-            </a>
+        <section className="vo-advisors">
+          <div className="bl-wrap">
+            <div>
+              <h2>Guided by people who study women&apos;s health</h2>
+              <p>
+                Our advisors bring clinical research into how Eleva works. Your
+                care comes from the expert you choose.
+              </p>
+              <a href="#close" className="vo-link">
+                Meet the advisors
+              </a>
+            </div>
+            <ul>
+              {ADVISORS.map((advisor) => (
+                <li key={advisor.slug}>
+                  <span className="vo-photo">
+                    <img src={colour(advisor.slug)} alt="" />
+                  </span>
+                  <span>
+                    <b>{advisor.name}</b>
+                    <span>{advisor.role}</span>
+                    <span>{advisor.place}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
-          <ul>
-            {ADVISORS.map((advisor) => (
-              <li key={advisor.slug}>
-                <span className="vo-photo">
-                  <img src={colour(advisor.slug)} alt="" />
-                </span>
-                <b>{advisor.name}</b>
-                <span>{advisor.role}</span>
-              </li>
-            ))}
-          </ul>
         </section>
 
         <section className="vo-faq bl-wrap">
@@ -273,34 +327,34 @@ export function VoicesHome() {
             ))}
           </div>
         </section>
-      </main>
 
-      <footer className="vo-foot" id="close">
-        <div className="bl-wrap">
-          <div className="vo-close">
+        <section className="vo-close" id="close">
+          <div className="bl-wrap">
             <div>
               <h2>Not sure who to ask?</h2>
-              <p>Choose an area, or look through everyone.</p>
+              <p>Start with the experts who are free this week.</p>
               <a href="#experts" className="bl-btn">
-                Find an expert
+                See the experts
               </a>
             </div>
             <div>
-              <h2>Are you a health professional?</h2>
+              <b>Are you a health professional?</b>
               <p>Set your own prices and see members on your own terms.</p>
-              <a href="#close" className="vo-link">
+              <a href="#close" className="vo-door">
                 Offer care on Eleva
               </a>
             </div>
           </div>
+        </section>
+      </main>
+
+      <footer className="vo-foot">
+        <div className="bl-wrap">
           <div className="vo-foot-top">
-            <div>
-              <LabLogo />
-              <p>
-                Eleva Care is run by Búzios e Tartarugas, Lda, a company
-                registered in Portugal.
-              </p>
-            </div>
+            <p>
+              Eleva Care is run by Búzios e Tartarugas, Lda, a company
+              registered in Portugal.
+            </p>
             {FOOTER.map((column) => (
               <nav key={column.title} aria-label={column.title}>
                 <b>{column.title}</b>
@@ -312,6 +366,7 @@ export function VoicesHome() {
               </nav>
             ))}
           </div>
+          <LabLogo className="vo-wordmark" />
           <div className="vo-foot-legal">
             <span>© 2026 Eleva Care</span>
             {LEGAL.map((link) => (

@@ -67,13 +67,13 @@ The homepage looks calm and well made, and the headline says what Eleva is in on
 
 A review panel scores a new design for this surface against these, with the references open.
 
-1. Can a first-time visitor choose a need or type a search inside the hero, without scrolling? (01-homepage/01 Fresha, 01-homepage/02 Hims)
+1. Does the hero have one goal (one headline, one line, one action, at most one image or film), and can a first-time visitor choose a need or start a search in the section straight after it? (01-homepage/01 Fresha, 01-homepage/02 Hims)
 2. Does at least one real, bookable expert card (photo or fallback, profession, languages, price from, next slot) appear within the first two screens on a phone? (01-homepage/03 Zocdoc)
 3. Does the expert card still look complete when the expert has no photo and a two-line bio? (01-homepage/04 Glide)
 4. Does the page state that every expert's professional registration is checked, with at least one true number beside it? (01-homepage/05 Hims)
 5. Do the advisors appear once, in a single band with credentials and institutions, placed after the experts and services? (01-homepage/06 Superpower, 01-homepage/07 SwimClub)
 6. Does each 'how it works' step show a piece of the real Eleva interface? (01-homepage/09 Function)
 7. Does the page answer 'what is Eleva, who are the experts, what does it cost' in an FAQ and end with a call to action for members before the expert band? (01-homepage/10 Hims)
-8. On a phone, does the first screen show the headline, the search field or need chips and the start of the proof line, with no face behind the text? (01-homepage/12 Craft, 01-homepage/14 Biograph)
+8. On a phone, does the first screen show the headline, its one line and its one action, all easy to read over whatever is behind them? (01-homepage/12 Craft, 01-homepage/14 Biograph)
 9. Do all photographs on the page share one treatment (crop, light, colour or brand shape), with no more than one stock photograph in view at a time? (01-homepage/16 Headspace, 01-homepage/21 Ease, 01-homepage/22 Headspace)
 10. Does each section differ in composition from the one before it (centred, two unequal columns, full-width band, ruled type-only grid), so no two neighbours repeat the same eyebrow, heading and card row? (01-homepage/18 Function, 01-homepage/19 Glide, 01-homepage/21 Ease)

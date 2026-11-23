@@ -1,4 +1,4 @@
-# Three brand directions for the Eleva public site
+# Brand directions for the Eleva public site
 
 Status: Proposed. Three options from the brand seat of the research panel, 2026-11-23, after the
 founder opened the whole public design for a rethink. Reference ids are from
@@ -216,8 +216,40 @@ Before you book              (four questions)
 4. Colour is two flat fields. No gradient, no tint per category.
 5. Each section has its own shape, so no two neighbours look the same.
 
-**Not done, and not judged.** No panel has seen E. The experts' quotes are from the fictional
-demo seed. The film is the lab cut at 1280 wide. Portuguese and Spanish are not set.
+**Second pass, after the third blind panel (2026-11-23).** The panel liked the idea, the hero
+and the voice, and found the rest of the page weaker than D. E was revised the same day:
+
+- **Hero.** Only the question changes with the film. The line under it and the one action
+  ("See the experts") are fixed, so nobody presses a different link from the one she read. The
+  words sit on a dark panel that holds contrast on every clip, and the navigation sits on a
+  fixed scrim. The heading a screen reader gets is fixed; the changing question is hidden from
+  assistive technology, and the same questions are links in the next section. The pause control
+  follows the action in keyboard order and stops film and words together. "Posed by models" is
+  shown on the film.
+- **Questions.** A ruled list in two columns. Each question says who answers it. A phone shows
+  four, one per moment of life.
+- **Experts.** Three equal cards: her words, her name and profession, the body she is registered
+  with, next free time, first-visit price and "See her times". One line says how the three were
+  chosen.
+- **Steps.** Each step shows a piece of the product (time picker, confirmation email, follow-up),
+  drawn in ink so nothing in a picture looks pressable.
+- **Fields.** Deep teal once, for how experts are checked. Coral once, as the closing block.
+  They no longer touch.
+- **Ending.** The coral block, then a footer with the wordmark at full width.
+- **Shapes and type.** Two radii and the pill. Section headings are 36px, so the hero question
+  (47px) leads.
+- **Profile and step before payment (shared with D).** Every choice is a real radio button, so
+  the picker works from a keyboard. A way back and a help link. "How I work" and "Training"
+  sections. The registration line says who checked and when. The summary says who provides the
+  session and who takes the payment.
+
+Captures: `16-voices-pass2-*`, `17-voices-pass2-*`, `18-voices-pass2-*` in
+`captures/2026-11-23-brand-lab/15-brand-art-direction/`. The earlier `13` to `15` are the first
+pass.
+
+**Not done.** The experts' quotes are from the fictional demo seed. The film is the lab cut at
+1280 wide. Portuguese and Spanish are not set. The advisors' institutions and the €50 to €70
+range in the FAQ need the founder's confirmation.
 
 ## What the blind panel scored
 
@@ -261,6 +293,63 @@ seats had asked for a photograph with real scale, which the simpler hero has.
    cancel until ... After that, you pay the full €60." (writing).
 7. The company's number and address in the footer, and a seller and VAT line in the summary
    (trust). These are facts the founder supplies.
+
+### Rounds 3 and 4: D beside E (2026-11-23)
+
+New judges each time, five seats, neutral letters. They also received machine measurements
+(automated accessibility run, sizes, headings, keyboard order), every word of each page as
+text, and six frames of each hero in motion. Three criteria were changed first to match what
+the founder decided: the hero has one goal, with needs or search straight after it, and no
+display size is required.
+
+| Seat                                | Round 3: D | Round 3: E | Round 4: D | Round 4: E, second pass |
+| ----------------------------------- | ---------- | ---------- | ---------- | ----------------------- |
+| Awwwards jury (panel scale)         | 7.90       | 7.75       | 7.90       | **8.15**                |
+| Awwwards' own scale (estimate)      | 6.83       | 6.86       | 6.65       | **6.84**                |
+| UI and visual design                | **8.0**    | 7.5        | **8.0**    | 7.5                     |
+| UX and flow                         | **8.0**    | 7.0        | 7.5        | **8.0**                 |
+| UX writing                          | 7.5        | **8.0**    | 7.5        | **8.0**                 |
+| Compliance, legal and accessibility | **7.5**    | 6.5        | 7.5        | **8.0**                 |
+| Judges who would build on it        | 3          | 2          | 1          | 4                       |
+
+Nothing has reached 8.5. D's homepage did not change between the two rounds; its profile and
+step before payment gained the same fixes as E's.
+
+**What the judges said about the founder's three wishes** (one goal in the hero, large type not
+the main idea, character with careful colour). All ten judges said E meets them and D does not
+meet the second. Two called D's first screen today's most recognisable generated look: a cream
+page, a very large light serif and one highlighted italic phrase.
+
+**Round 3 on E, first pass.** Two blocking findings, both in the hero: the button changed its
+label and destination with each clip, and white text crossed bright parts of the film. Below
+the hero: portraits with no shared treatment, expert cards with empty space and no price or
+registration mark, steps shown with a stock photograph, two colour fields touching, no ending.
+
+**What stands between E and 8.5 after round 4, largest first**
+
+1. One treatment for portraits (UI, Awwwards). Experts upload their own photographs, so this
+   needs a rule: one crop and one grade or wash. The founder has said no to black and white.
+2. The middle of the page reads as a well-made product template: white rounded cards on a cool
+   grey page (UI, Awwwards). It needs one visual element of its own between the hero and the
+   coral block.
+3. The company's address, registration and tax number, a contact address and the complaints-book
+   link, in the footer and on the step before payment (compliance). Facts the founder supplies.
+4. First-person health questions beside recognisable faces (compliance): confirm the film
+   licence allows it. "Posed by models" was added after the round.
+5. On a phone, the bar should become "Continue" with the chosen time once a time is picked (UX).
+   This belongs to the real page.
+6. A way in by profession that is more than one link (UX).
+7. The tax position of the price and the name of the payment company (compliance): a legal
+   wording question.
+
+Applied after round 4 and not judged: the writing judge's rewrites, a phone list with one
+question per moment of life, "See her times" on each card, section headings stepped down, two
+radii, one inverse button, pictures of the product drawn in ink, the fixed heading moved out of
+the changing line, the pause control after the action in keyboard order.
+
+Two judges disagreed and the choice is recorded: the writing seat wanted the film's questions
+not repeated in the list below; the accessibility seat needs them there, because the changing
+line is hidden from assistive technology. Accessibility won.
 
 ## The brand seat's recommendation, before the panel
 

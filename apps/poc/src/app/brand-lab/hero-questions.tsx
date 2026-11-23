@@ -3,37 +3,24 @@
 import { useEffect, useRef, useState } from "react"
 
 /**
- * The hero's one moving idea: a question a woman might bring, and the one
- * action that answers it. Each question belongs to one clip of the film and
- * changes with it, so the words always match the picture. Without the film
- * (phones, reduced motion) or while it is paused, the question stays.
+ * The hero's one moving idea: a question a woman might bring. Each question
+ * belongs to one clip of the film and changes with it, so the words match the
+ * picture. Only the question moves, and it is hidden from assistive
+ * technology: the heading a screen reader gets is fixed, and the line under
+ * it and the one action never change, so nobody presses a
+ * different link from the one she read (the third blind panel's first
+ * blocking finding). Without the film (phones, reduced motion) or while it is
+ * paused, the first question stays.
  */
 const CLIP_SECONDS = 3.8
+/** In the film's order. The first is also the still, so it has to fit any visitor. */
 const QUESTIONS = [
-  {
-    ask: "Is it normal to leak when I run?",
-    action: "See pelvic health physiotherapists",
-  },
-  {
-    ask: "How do I write a birth plan I understand?",
-    action: "See midwives",
-  },
-  {
-    ask: "Is my baby getting enough milk?",
-    action: "See breastfeeding consultants",
-  },
-  {
-    ask: "What should I eat while we are trying?",
-    action: "See fertility nutritionists",
-  },
-  {
-    ask: "Why am I awake at three again?",
-    action: "See doctors who work with menopause",
-  },
-  {
-    ask: "Who do I even ask about this?",
-    action: "See all experts",
-  },
+  "Who do I even ask about this?",
+  "What goes in a birth plan?",
+  "Is my baby getting enough milk?",
+  "What should I eat while trying for a baby?",
+  "Why am I awake at three again?",
+  "Is it normal to leak when I laugh?",
 ] as const
 
 export function HeroQuestions() {
@@ -41,7 +28,7 @@ export function HeroQuestions() {
   const [index, setIndex] = useState(0)
 
   useEffect(() => {
-    const hero = root.current?.parentElement
+    const hero = root.current?.closest(".vo-hero")
     if (!hero) return
     let video: HTMLVideoElement | null = null
     const onTime = () => {
@@ -74,13 +61,16 @@ export function HeroQuestions() {
 
   return (
     <div className="vo-ask" ref={root}>
-      <h1 key={current.ask}>{current.ask}</h1>
-      <p>
+      <h1 className="vo-sr">{QUESTIONS[0]}</h1>
+      <p className="vo-q" aria-hidden>
+        <span key={current}>{current}</span>
+      </p>
+      <p className="vo-lead">
         Ask someone who knows. Book a registered women&apos;s health expert, by
         video, phone or in person.
       </p>
-      <a href="#experts" className="bl-btn" key={current.action}>
-        {current.action}
+      <a href="#experts" className="bl-btn">
+        See the experts
       </a>
     </div>
   )

@@ -144,6 +144,41 @@ Each entry should include:
 - Related: `design-audit/brand-directions.md`, `design-audit/judges-panel.md`,
   `design-audit/plan.json` (D8.1), `apps/poc/src/app/brand-lab/`.
 - Next review: when the founder has chosen.
+- **Blind panel, rounds 3 and 4 (D beside E), same day.** The founder asked
+  what the panel thinks of E. Five new judges per round, neutral letters,
+  with machine measurements and the page's words as text. Three judging
+  criteria were first changed to match his decisions (hero with one goal,
+  needs or search straight after it, no required display size) in
+  `01-homepage` and `15-brand-art-direction`.
+
+  | Seat                           | R3: D | R3: E | R4: D | R4: E, second pass |
+  | ------------------------------ | ----- | ----- | ----- | ------------------ |
+  | Awwwards jury (panel scale)    | 7.90  | 7.75  | 7.90  | 8.15               |
+  | Awwwards' own scale (estimate) | 6.83  | 6.86  | 6.65  | 6.84               |
+  | UI and visual design           | 8.0   | 7.5   | 8.0   | 7.5                |
+  | UX and flow                    | 8.0   | 7.0   | 7.5   | 8.0                |
+  | UX writing                     | 7.5   | 8.0   | 7.5   | 8.0                |
+  | Compliance and accessibility   | 7.5   | 6.5   | 7.5   | 8.0                |
+
+  Round 3 found two blocking faults in E's hero (the button changed its
+  destination with the film; white text crossed bright film) and a weak
+  page below it. E was revised between the rounds: a fixed action, words
+  on a panel, three equal expert cards with price and registration, steps
+  that show the product, a coral closing block, and a keyboard-operable
+  picker on the booking path (shared with D). After round 4, four of five
+  judges would build on E. All ten said E meets the founder's three taste
+  rules and D does not. **Nothing has reached 8.5.**
+
+- **Open after round 4:** one treatment for expert portraits (the founder
+  has ruled out black and white), a visual element of its own for the middle
+  of the page, the company's legal details, the film licence for
+  first-person health questions beside faces, and the tax and payment
+  wording. The list is in `brand-directions.md`. Fixes applied after round 4
+  are not judged.
+- **Not claimed:** "nobody pays to appear here". The live site has a paid
+  "Top Expert" plan, so the listing line only says how the three shown were
+  chosen. Advisors' institutions and the €50 to €70 range shown in the lab
+  are unconfirmed.
 
 ### 2026-11-23: The public site gets its own track, a full rethink and a seven-seat panel (active)
 

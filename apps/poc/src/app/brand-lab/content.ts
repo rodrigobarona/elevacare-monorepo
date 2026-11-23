@@ -33,7 +33,7 @@ export const DIRECTIONS = [
     id: "voices",
     letter: "E",
     name: "In her words",
-    line: "Built from what women ask. The film fills the first screen, the questions do the talking, and colour is two fields: the brand's teal and coral.",
+    line: "Built from what women ask. The film fills the first screen, the questions do the talking, and colour is two fields: the brand's teal and coral. Revised after the third blind panel.",
   },
 ] as const
 
