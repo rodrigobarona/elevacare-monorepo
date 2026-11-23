@@ -25,10 +25,7 @@
       ],
       "detail": "'Join Eleva. Book experts and keep your care in one place.' and a panel reading 'Expert care for pregnancy' tell a physiotherapist or midwife that this form is for people seeking care. There is no line for someone who wants to offer it, on sign-up or sign-in, and every new account is then sent to a member Space (see ONB-01 in 06-expert-onboarding). The expert side of the marketplace starts with a moment of doubt on its first screen. Two-sided products keep one form but name both sides: Upwork changes the headline per role and links to the other ('Here to hire talent? Join as a Client'); Preply puts 'Sign up as a student or Sign up as a tutor' directly under 'Log in'.",
       "recommendation": "Keep one identifier-first form. Under it add 'Are you a health professional? Join as an expert'. That link, and every link from /become-expert, opens the same form in an expert variant: headline 'Offer care on Eleva', a sub-line about running a practice, and panel points written for experts (get paid through Stripe, your own booking page, members in three languages). The variant carries intent=expert so the account opens practice setup after verification instead of the member Space. On sign-in, add the same two links for people who landed on the wrong page.",
-      "references": [
-        "05-auth/04",
-        "05-auth/05"
-      ]
+      "references": ["05-auth/04", "05-auth/05"]
     },
     {
       "id": "AUTH-02",
@@ -42,11 +39,7 @@
       ],
       "detail": "The brand panel is hidden below the desktop breakpoint, so the phone screens are a logo, about 170 px of empty cream, and a form. The three trust points, the headline and any sense of what Eleva is are gone. Most members reach sign-up on a phone, from an expert profile or a confirmation email, and are about to hand over an email address for a health service. The empty band also pushes the form down, so on step two the 'Create account' button is likely to sit under the keyboard. Health and wellness apps keep one image or one promise above the buttons on mobile (Google Health), or a short reassurance and the legal line right at the form (Stardust).",
       "recommendation": "On mobile, move the form up to sit directly under the logo and add a compact reassurance in the freed space: one Lora line under the heading on the first step ('Care from verified health experts, in your language') and a single row of the three points below the form in small text. Keep it to the first step; steps two and three stay bare so the keyboard never covers the button. Test at 390 x 844 with the keyboard open.",
-      "references": [
-        "05-auth/10",
-        "05-auth/11",
-        "05-auth/03"
-      ]
+      "references": ["05-auth/10", "05-auth/11", "05-auth/03"]
     },
     {
       "id": "AUTH-03",
@@ -60,10 +53,7 @@
       ],
       "detail": "The panel is a gradient, a headline and three ticks. It is handsome, but a care service earns trust through people: the experts a member will meet, or a member's own words. The third point ('Sessions, payments and privacy settings in one place') lists features rather than a feeling of safety. The rotating word is also caught mid-fade in two captures (01-login and 06-magic-link-sent), leaving 'Expert care for' above an empty or blurred line; check that a word is always legible and that the animation stops under reduced-motion settings. lululemon gives its sign-up a photo of members with one promise; Fiverr surrounds its form with named portraits of the people on the platform.",
       "recommendation": "Keep the teal gradient and the Lora headline. Add one human element that rotates with the word: a small expert card (portrait, name, profession, a 'Verified' mark) or a one-sentence member quote with first name and city. Use real, consented photos only; until they exist, use the quote form. Replace the third point with a privacy promise in plain words ('Your health details stay between you and your expert'). Consider a different panel for sign-in (welcome back, your next session) and sign-up (what you get).",
-      "references": [
-        "05-auth/01",
-        "05-auth/02"
-      ]
+      "references": ["05-auth/01", "05-auth/02"]
     },
     {
       "id": "AUTH-04",
@@ -78,11 +68,7 @@
       ],
       "detail": "After sign-up or a link request the only control is a disabled 'Resend in 30s' button, drawn like a primary action. There is no button to open the inbox, no word about the spam folder, no sender name or subject to look for, and no help link. 'Verify your email' has no way to correct a mistyped address (the magic-link screen does). The address runs inside the sentence and breaks mid-word ('design-' / 'capture...'), so a long address is hard to check. This is the step where a new account is most easily lost. Klaviyo puts the address on its own bold line with 'Update Email' and an 'Open in Gmail' button; Customer.io lists what to check, including the sender and subject line; Reddit's mobile screen keeps a full-width 'Open Email App' with the resend timer as a quiet line above it.",
       "recommendation": "Rebuild both screens on one pattern: heading, the address alone on a bold line with 'Change' beside it, then one primary action ('Open Gmail' or 'Open Outlook' when the domain is known; 'Open email app' on mobile). Under it, one helper line: 'Look for an email from Eleva Care. If it is not there in a minute, check spam.' Make resend a text link with the countdown. Keep 'It works for 5 minutes'. Add 'Need help?' to support.",
-      "references": [
-        "05-auth/07",
-        "05-auth/08",
-        "05-auth/09"
-      ]
+      "references": ["05-auth/07", "05-auth/08", "05-auth/09"]
     },
     {
       "id": "AUTH-05",
@@ -95,9 +81,7 @@
       ],
       "detail": "On desktop the block starts about 160 px left of where every other step starts (x 695 against 855), so it no longer lines up with the form it replaced, and 'Use a different email' is centred under the shifted block. On mobile the logo and text touch the left edge of the screen with no gutter, while every other mobile capture has 20 px. The step animation is vertical, so this is not a transition frame; the likely cause is the long unbroken email address forcing the column wider than its container and scrolling the pane sideways. A real member with a long address would see a visibly broken page at the moment she is deciding whether the email was sent. This is a defect, so no Mobbin reference is needed; the layout fix is the address on its own line as in Klaviyo.",
       "recommendation": "Let the description wrap anywhere (overflow-wrap: anywhere, min-width: 0 on the flex child) and put the address on its own truncating line. Add a visual test with a 45-character address at 390 px and 1440 px for the verify and magic-link steps.",
-      "references": [
-        "05-auth/07"
-      ]
+      "references": ["05-auth/07"]
     },
     {
       "id": "AUTH-06",
@@ -111,10 +95,7 @@
       ],
       "detail": "A new member enters an email, then a name and a password, ticks a box, and is then sent to her inbox to verify. Sign-in already offers a link by email, but sign-up does not, so the person least committed to Eleva is asked for the most. A password is one more thing to invent on a phone, and the verification email is going out anyway. Reddit's link screen states the benefit outright ('for you to log in without a password'); lululemon keeps step two to the address, one password field and its rule.",
       "recommendation": "On step two, keep the name and offer two ways forward: 'Email me a link' as the first action (one email both verifies the address and signs her in) and 'Use a password instead', which reveals the password field. Members who want a password can add one later in settings. If the product must keep a password at sign-up, at least skip the separate verify screen by signing her in from the verification link.",
-      "references": [
-        "05-auth/09",
-        "05-auth/01"
-      ]
+      "references": ["05-auth/09", "05-auth/01"]
     },
     {
       "id": "AUTH-07",
@@ -128,26 +109,17 @@
       ],
       "detail": "The panel promises care 'In English, Portuguese and Spanish', yet nothing on the page lets a Portuguese member change the language of the form she is reading. There is no 'Need help?' for someone locked out before a session, and Terms and Privacy appear only on sign-up. On a phone the page has no footer at all. Deel puts 'Have questions? Contact support' and a language menu in the top corner of its login; Preply keeps language and help in the header of the log-in page.",
       "recommendation": "Add a small language menu (EN, PT, ES; it sets ELEVA_LOCALE) and 'Need help?' in the top right of the form side on desktop and next to the logo on mobile. Put Terms and Privacy in a quiet footer line on every auth screen.",
-      "references": [
-        "05-auth/06",
-        "05-auth/05"
-      ]
+      "references": ["05-auth/06", "05-auth/05"]
     },
     {
       "id": "AUTH-08",
       "severity": "P3",
       "lens": "ux",
       "title": "Four ways to sign in and no memory of which one she used",
-      "evidence": [
-        "01-login.desktop.jpg",
-        "02-login-step-two.desktop.jpg"
-      ],
+      "evidence": ["01-login.desktop.jpg", "02-login-step-two.desktop.jpg"],
       "detail": "Across two steps a returning member can choose Google, a password, an emailed link or a passkey. Someone who joined with Google and now types her email meets a password field she never set. Nothing hints at the method she used last time. Deel's login says 'Log in with your last method or choose another' and shows that method first; Stardust tells returning people to 'use the sign in method you have used in the past'.",
       "recommendation": "Remember the last successful method on the device and mark it ('Last used') on the first step. On step two, when the account has no password, lead with 'Email me a sign-in link' and show the Google button instead of an empty password field.",
-      "references": [
-        "05-auth/06",
-        "05-auth/11"
-      ]
+      "references": ["05-auth/06", "05-auth/11"]
     },
     {
       "id": "AUTH-09",
@@ -161,25 +133,17 @@
       ],
       "detail": "Fields are filled with a mid beige and outlined in dark grey, which is the usual look of a disabled control, and the placeholder ('you@example.com') is low contrast on that fill. The 'Sign in' button on step two is drawn in a paler teal than 'Continue' on step one in the desktop capture, and 'Sign in with a passkey' is pale grey text that is easy to miss. No Mobbin reference is needed; lululemon's white field with a clear focus ring shows the conventional treatment.",
       "recommendation": "Use a white or near-white field with a 1 px warm border, keep the teal focus ring, and reserve the beige fill for disabled fields. Check placeholder and passkey-link text against 4.5:1. Use one teal for every enabled primary button.",
-      "references": [
-        "05-auth/01"
-      ]
+      "references": ["05-auth/01"]
     },
     {
       "id": "AUTH-10",
       "severity": "P3",
       "lens": "copy",
       "title": "Consent and password guidance are inconsistent between the two sign-up paths",
-      "evidence": [
-        "03-signup.desktop.jpg",
-        "04-signup-step-two.desktop.jpg"
-      ],
+      "evidence": ["03-signup.desktop.jpg", "04-signup-step-two.desktop.jpg"],
       "detail": "With Google, agreement is a sentence ('By continuing with Google, you agree to the Terms and Privacy Policy'); with email, it is a checkbox she must tick. The same promise is asked for in two ways one screen apart. The password rule is a single static line ('At least 8 characters.') with no feedback as she types. 'Verify your email' ends with 'Open it to finish creating your Space', the first time the word Space appears in sign-up, with no hint of what it is. lululemon states the password rule under the field and uses one consent sentence under the button; Upwork uses a checkbox for every path.",
       "recommendation": "Pick one consent pattern for both paths with legal (a sentence under the button if a checkbox is not required; a checkbox on both if it is). Turn the password line into a live check that ticks when met. Introduce Space once on sign-up ('Your Space is your private home on Eleva: sessions, payments and privacy settings').",
-      "references": [
-        "05-auth/01",
-        "05-auth/04"
-      ]
+      "references": ["05-auth/01", "05-auth/04"]
     }
   ],
   "references": [
