@@ -29,7 +29,6 @@ export default async function CommunityPage({ params }: Props) {
 
   return (
     <PillarPage
-      eyebrow={t("eyebrow")}
       heading={t("heading")}
       body={t("body")}
       primaryCta={{

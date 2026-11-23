@@ -8,9 +8,9 @@ export type TrustItem = {
 }
 
 /**
- * Row of reassurance points in one panel split by hairlines. Pass duotone
- * icons: they sit white on a solid teal tile. The `bar` variant is a single
- * slim line of icon and title, for use right under a hero.
+ * Reassurance points as a ruled list: an icon in ink, a statement, a line.
+ * No tiles and no cards. The `bar` variant is a single slim line of icon and
+ * title, for use right under a hero.
  */
 function TrustStrip({
   items,
@@ -46,25 +46,17 @@ function TrustStrip({
   return (
     <ul
       data-slot="trust-strip"
-      className={cn(
-        "grid gap-px overflow-hidden rounded-3xl bg-border/70 ring-1 ring-border/70 sm:grid-cols-2 lg:grid-cols-4",
-        className
-      )}
+      className={cn("grid gap-x-10 sm:grid-cols-2 lg:grid-cols-4", className)}
     >
       {items.map((item, index) => (
-        <li
-          key={index}
-          className="flex flex-col gap-5 bg-background p-6 sm:p-7"
-        >
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-teal-700 text-white shadow-1 ring-4 ring-teal-50 dark:bg-teal-600 dark:ring-teal-950 [&_svg]:size-6">
-            {item.icon}
-          </span>
+        <li key={index} className="flex flex-col gap-3 border-t py-6">
+          <span className="text-foreground [&_svg]:size-7">{item.icon}</span>
           <div className="flex flex-col gap-1.5">
-            <p className="text-base font-medium text-foreground">
+            <p className="font-display text-2xl tracking-tight text-foreground">
               {item.title}
             </p>
             {item.description ? (
-              <p className="text-sm text-pretty text-muted-foreground">
+              <p className="text-lg text-pretty text-muted-foreground">
                 {item.description}
               </p>
             ) : null}

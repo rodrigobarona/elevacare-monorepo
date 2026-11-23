@@ -183,15 +183,12 @@ export default async function ExpertProfilePage({ params }: Props) {
             Future Pro, Insight Timer). On phones the portrait runs edge to
             edge with her name on its foot; without a photo the same frame
             holds a branded field and her initials (PROF-03). */}
-        <Section
-          spacing="compact"
-          className="bg-linear-to-b from-sand-50 to-background pt-0 max-sm:px-0 sm:pt-14 dark:from-teal-950/40"
-        >
+        <Section spacing="compact" className="pt-0 max-sm:px-0 sm:pt-14">
           <Container className="grid gap-6 sm:gap-10 lg:grid-cols-[minmax(0,500px)_minmax(0,1fr)] lg:items-center lg:gap-16 xl:grid-cols-[minmax(0,540px)_minmax(0,1fr)]">
             {/* Phones: the photo is capped (6:7, at most 64svh) but the
                 name and headline sit in flow, so a long headline grows the
                 frame instead of being clipped. */}
-            <div className="relative flex w-full flex-col justify-end overflow-hidden bg-muted max-sm:min-h-[min(116.667vw,64svh)] sm:mx-auto sm:aspect-[4/5] sm:max-w-md sm:rounded-4xl sm:shadow-2 lg:max-w-none">
+            <div className="relative flex w-full flex-col justify-end overflow-hidden bg-coral-100 max-sm:min-h-[min(116.667vw,64svh)] sm:mx-auto sm:aspect-[4/5] sm:max-w-md sm:rounded-3xl lg:max-w-none [&_img]:object-top">
               <div className="absolute inset-0">
                 {expert.avatarUrl ? (
                   <ExpertPortrait
@@ -234,7 +231,7 @@ export default async function ExpertProfilePage({ params }: Props) {
               <div className="flex flex-col gap-3">
                 <h1
                   data-testid="expert-profile-heading"
-                  className="font-display text-4xl leading-[1.05] font-medium tracking-tight text-balance max-sm:sr-only sm:text-6xl"
+                  className="font-display text-4xl leading-[1.05] font-medium tracking-tight text-balance max-sm:sr-only sm:text-5xl"
                 >
                   {name}
                 </h1>
@@ -550,7 +547,7 @@ function ServiceCard({
   return (
     <li
       id={eventType.slug}
-      className="flex scroll-mt-24 flex-col gap-4 rounded-4xl border bg-card p-6 shadow-1 sm:p-7"
+      className="flex scroll-mt-24 flex-col gap-4 rounded-3xl border bg-card p-6 sm:p-7"
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 flex-col gap-1">
@@ -683,7 +680,7 @@ function ServiceDetail({
 
 function BookingCardSkeleton() {
   return (
-    <div className="flex flex-col gap-3 rounded-4xl border bg-card p-6">
+    <div className="flex flex-col gap-3 rounded-3xl border bg-card p-6">
       <div className="h-7 w-40 animate-pulse rounded-full bg-muted" />
       {[0, 1, 2].map((row) => (
         <div key={row} className="h-11 animate-pulse rounded-2xl bg-muted" />
@@ -1221,7 +1218,7 @@ async function NotBookableYet({
   return (
     <section
       aria-labelledby="not-bookable-heading"
-      className="flex max-w-4xl flex-col gap-5 rounded-4xl bg-muted/50 p-6 sm:p-8"
+      className="flex max-w-4xl flex-col gap-5 rounded-3xl bg-muted/50 p-6 sm:p-8"
       data-testid="not-bookable"
     >
       <div className="flex flex-col gap-2">
@@ -1240,9 +1237,9 @@ async function NotBookableYet({
               <li key={other.username}>
                 <Link
                   href={`/${other.username}`}
-                  className="group flex items-center gap-3 rounded-3xl bg-card p-3 shadow-1 transition-shadow hover:shadow-2 focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none sm:flex-col sm:items-start"
+                  className="group flex items-center gap-3 rounded-3xl border bg-card p-3 transition-colors hover:border-foreground/40 focus-visible:ring-3 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none sm:flex-col sm:items-start"
                 >
-                  <span className="relative block size-16 shrink-0 overflow-hidden rounded-2xl bg-muted sm:aspect-[4/5] sm:h-auto sm:w-full">
+                  <span className="relative block size-16 shrink-0 overflow-hidden rounded-xl bg-coral-100 sm:aspect-[18/19] sm:h-auto sm:w-full [&_img]:object-top">
                     <ExpertPortrait
                       displayName={other.displayName}
                       avatarUrl={other.avatarUrl}

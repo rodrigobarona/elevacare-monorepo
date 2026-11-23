@@ -32,6 +32,60 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-23: Direction E reaches every public page (D2.3, D2.4, D3.3, D3.4, D8.3 in part) (needs-review)
+
+- **Owner:** founder, with the public-site track. **Review:** when the
+  seven-seat panel has judged the pages.
+- **Why.** The founder, after the homepage: "continue the design
+  implementation across all the web project".
+- **Made once, for the whole public site.**
+  - _Paper and type scale._ `apps/web/src/app/styles.css` sets a cooler
+    paper, matching rules and quiet surfaces, and a smaller heading scale
+    (48px at most, 36px for a section). It applies to `apps/web` only;
+    `@eleva/ui` tokens are unchanged, so no dashboard moves.
+  - _No label above a heading._ `SectionHeader` lost its `eyebrow`; the
+    landing and pillar templates lost theirs; nineteen `eyebrow` keys and
+    three `headingAccent` keys left the words in each language. No heading
+    carries an italic phrase.
+  - _The closing block._ `CtaBand` is now a full-width coral field, the
+    last section of a page, with ink text and an optional second door.
+    Coral appears nowhere else on a page.
+  - _The deep field._ `Section tone="primary"` is the deep teal, once a
+    page.
+  - _The expert card._ One card for the homepage and the directory
+    (`@eleva/ui/blocks/expert-card`): portrait on the sand field, the
+    expert's own line, name, areas, the registration mark, languages,
+    price, and what it opens.
+  - _One portrait frame_ (`expertPortraitFrame`): the profile header,
+    related experts, About's leadership and advisors, and the author of Our
+    story all use it. Ten team cut-outs are in the media library
+    (`team-*-cutout`).
+  - _Steps and reassurance._ `Steps` keeps numbers, since these are real
+    sequences, but quiet ones. `TrustStrip` is a ruled list: no tiles.
+  - _Shapes._ 24px for cards and frames, 12px for small controls, the
+    pill. Static cards have a hairline and no shadow.
+  - _Footer._ The wordmark at full width, the operator line (legal name,
+    tax number, registered address: it was already published on the Terms
+    page and in the booking footer), and links at least 28px tall.
+- **Pages this reaches:** directory and area pages, expert profile,
+  booking steps and confirmation, About, Our story, Become an expert, For
+  clinics, Contact, Newsletter, Podcast, Community, Evidence-based care,
+  Trust, legal pages, Photo credits, not found.
+- **Also fixed on the way.** The three pillar pages had no `h1`; they have
+  one now.
+- **Not changed.** The structure of the booking steps, the profile's
+  sections, the header and its menus. Those are their own slices (D8.2,
+  D2.3). On a phone the profile still sets the name on the portrait over a
+  dark shade.
+- **Before production:** copy the ten `team-*-cutout` objects to the
+  production public bucket, or those portraits will not load there.
+- **Checked.** Types and lint in `apps/web`, `apps/docs`, `@eleva/ui`,
+  `@eleva/site-chrome`, `@eleva/media`; unit tests; the three languages
+  carry the same keys; the automated accessibility run has no failure on
+  eleven pages at two widths.
+- **Not judged.** No panel has seen these pages. Captures:
+  `design-audit/captures/2026-11-23-site-direction-e/`.
+
 ### 2026-11-23: The real homepage is rebuilt in direction E (D3.1 and D3.2) (needs-review)
 
 - **Owner:** founder, with the public-site track. **Review:** when the

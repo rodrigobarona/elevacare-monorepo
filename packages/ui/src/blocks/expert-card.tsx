@@ -1,5 +1,5 @@
 import type * as React from "react"
-import { ShieldCheckIcon } from "@eleva/icons"
+import { ArrowRightIcon, ShieldCheckIcon } from "@eleva/icons"
 import { cn } from "@eleva/ui/lib/utils"
 
 type LinkComponent = React.ElementType<{
@@ -9,11 +9,22 @@ type LinkComponent = React.ElementType<{
 }>
 
 /**
- * Portrait-led marketplace card. The name anchor stretches over the card, so
- * the whole card is one link and one tab stop. Phones get a horizontal card
- * (small portrait beside the text) so a short list does not take eight
- * screens; from `sm` up a 5:4 photo sits on top, framed on the upper third
- * where faces are, so a row of cards stays compact.
+ * One frame for every expert portrait: a sand field, with the person set at
+ * the top. A photograph cut out of its background shows the sand through
+ * it, so a row of portraits reads as one set; one that has not been cut out
+ * fills the same frame.
+ */
+const expertPortraitFrame =
+  "overflow-hidden rounded-xl bg-coral-100 [&_img]:object-cover [&_img]:object-top"
+
+export type ExpertCardFact = { label: React.ReactNode; value: React.ReactNode }
+
+/**
+ * The expert, in the public site's voice: portrait, what she says about her
+ * work, who she is, and the facts a member compares. The name anchor
+ * stretches over the card, so the whole card is one link and one tab stop.
+ * Phones get a compact card (small portrait beside the name) so a short list
+ * does not take eight screens.
  */
 function ExpertCard({
   media,
@@ -21,9 +32,9 @@ function ExpertCard({
   headline,
   badge,
   checkedLabel,
-  tags,
   meta,
-  price,
+  facts = [],
+  action,
   href,
   linkAs: LinkAs = "a",
   className,
@@ -31,15 +42,18 @@ function ExpertCard({
 }: {
   media: React.ReactNode
   name: React.ReactNode
+  /** The expert's own line about her work, set as speech. */
   headline?: React.ReactNode
   /** Short highlight shown over the portrait, e.g. "Top Expert". */
   badge?: React.ReactNode
   /** "Registration checked": Eleva checked this expert's registration. */
   checkedLabel?: React.ReactNode
-  tags?: readonly React.ReactNode[]
-  /** One quiet line under the headline, e.g. areas of care. */
+  /** One quiet line under the name, e.g. areas of care. */
   meta?: React.ReactNode
-  price?: React.ReactNode
+  /** Up to two labelled facts, e.g. languages and price. */
+  facts?: readonly ExpertCardFact[]
+  /** What the card opens, in words, e.g. "See profile". */
+  action?: React.ReactNode
   href: string
   linkAs?: LinkComponent
   className?: string
@@ -48,33 +62,26 @@ function ExpertCard({
     <article
       data-slot="expert-card"
       className={cn(
-        "group relative flex h-full flex-row gap-4 overflow-hidden rounded-3xl border bg-card p-3 shadow-1 transition-shadow duration-(--duration-base) focus-within:ring-3 focus-within:ring-ring/50 hover:shadow-2 sm:flex-col sm:gap-0 sm:p-0",
+        "group relative grid h-full grid-cols-[5.5rem_minmax(0,1fr)] content-start gap-x-4 rounded-3xl border bg-card p-3.5 transition-colors focus-within:ring-3 focus-within:ring-ring/50 hover:border-foreground/40 sm:flex sm:flex-col",
         className
       )}
       {...props}
     >
-      <div className="relative aspect-[4/5] w-24 shrink-0 overflow-hidden rounded-2xl bg-muted sm:aspect-[5/4] sm:w-full sm:rounded-none [&_img]:object-cover [&_img]:object-[center_25%] [&_img]:transition-transform [&_img]:duration-(--duration-slower) [&_img]:ease-out motion-safe:group-hover:[&_img]:scale-[1.03]">
+      <div
+        className={cn(
+          expertPortraitFrame,
+          "relative aspect-square sm:aspect-[18/19]"
+        )}
+      >
         {media}
         {badge ? (
-          <span className="absolute top-3 left-3 hidden rounded-full bg-background/90 px-3 py-1 text-xs font-medium text-primary shadow-1 backdrop-blur sm:inline">
+          <span className="absolute top-3 left-3 hidden rounded-full bg-background/90 px-3 py-1 text-sm font-medium text-foreground backdrop-blur sm:inline">
             {badge}
           </span>
         ) : null}
       </div>
-      <div className="flex min-w-0 flex-1 flex-col gap-1.5 py-1 sm:gap-2 sm:p-5">
-        {tags && tags.length > 0 ? (
-          <ul className="flex flex-wrap gap-1.5">
-            {tags.map((tag, index) => (
-              <li
-                key={index}
-                className="rounded-full bg-teal-50 px-2.5 py-0.5 text-xs text-teal-800 dark:bg-teal-950 dark:text-teal-200"
-              >
-                {tag}
-              </li>
-            ))}
-          </ul>
-        ) : null}
-        <h3 className="font-display text-lg leading-tight font-medium tracking-tight sm:text-xl">
+      <div className="self-center sm:order-2 sm:mt-5 sm:self-auto sm:px-2.5">
+        <h3 className="text-lg font-medium">
           <LinkAs
             href={href}
             className="outline-none after:absolute after:inset-0 after:rounded-3xl"
@@ -82,50 +89,52 @@ function ExpertCard({
             {name}
           </LinkAs>
         </h3>
-        {checkedLabel || badge ? (
-          <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-muted-foreground">
-            {checkedLabel ? (
-              <span className="inline-flex items-center gap-1">
-                <ShieldCheckIcon
-                  aria-hidden
-                  className="size-4 shrink-0 text-primary"
-                  weight="fill"
-                />
-                {checkedLabel}
-              </span>
-            ) : null}
-            {/* On phones the photo is small: the paid placement shows here,
-                styled apart so it never reads as part of the check. */}
-            {badge ? (
-              <span className="inline-flex items-center gap-1.5 sm:hidden">
-                {checkedLabel ? <span aria-hidden>·</span> : null}
-                <span className="rounded-full border px-2 py-0.5 text-[0.6875rem] font-medium text-foreground">
-                  {badge}
-                </span>
-              </span>
-            ) : null}
+        {meta ? (
+          <p className="text-base text-muted-foreground">{meta}</p>
+        ) : null}
+        {checkedLabel ? (
+          <p className="mt-1.5 flex items-start gap-1.5 text-base">
+            <ShieldCheckIcon
+              aria-hidden
+              weight="fill"
+              className="mt-1 size-4 shrink-0"
+            />
+            {checkedLabel}
           </p>
         ) : null}
-        {headline ? (
-          <p className="line-clamp-2 text-sm text-pretty text-muted-foreground">
-            {headline}
+        {/* On phones the photo is small: the paid placement shows here,
+            styled apart so it never reads as part of the check. */}
+        {badge ? (
+          <p className="mt-1.5 sm:hidden">
+            <span className="rounded-full border px-2.5 py-0.5 text-sm font-medium text-foreground">
+              {badge}
+            </span>
           </p>
         ) : null}
-        {meta || price ? (
-          <p className="mt-auto pt-1 text-sm text-pretty">
-            {meta ? (
-              <span className="text-muted-foreground">{meta}</span>
-            ) : null}
-            {meta && price ? (
-              <span aria-hidden className="text-muted-foreground">
-                {" · "}
-              </span>
-            ) : null}
-            {price ? (
-              // May wrap on narrow phone cards; formatted amounts keep their
-              // no-break space, so "€ 60" itself never splits.
-              <span className="font-medium text-foreground">{price}</span>
-            ) : null}
+      </div>
+      {headline ? (
+        <p className="col-span-2 mt-4 line-clamp-3 font-display text-xl leading-snug tracking-tight text-pretty sm:order-1 sm:mt-5 sm:min-h-[4.2em] sm:px-2.5">
+          {headline}
+        </p>
+      ) : null}
+      <div className="col-span-2 mt-4 flex flex-col sm:order-3 sm:mx-2.5 sm:mt-auto sm:pt-5">
+        {facts.length > 0 ? (
+          <dl className="grid grid-cols-2 gap-4 border-t py-3.5 text-base">
+            {facts.map((fact, index) => (
+              <div key={index}>
+                <dt className="text-muted-foreground">{fact.label}</dt>
+                <dd className="font-medium">{fact.value}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : null}
+        {action ? (
+          <p
+            aria-hidden
+            className="flex min-h-12 items-center gap-1.5 border-t pt-1 text-lg font-medium text-primary group-hover:underline group-hover:underline-offset-[5px]"
+          >
+            {action}
+            <ArrowRightIcon className="size-4.5" />
           </p>
         ) : null}
       </div>
@@ -159,4 +168,4 @@ function ExpertCardInitials({
   )
 }
 
-export { ExpertCard, ExpertCardInitials }
+export { ExpertCard, ExpertCardInitials, expertPortraitFrame }

@@ -31,7 +31,6 @@ export default async function ForClinicsPage({ params }: Props) {
 
   return (
     <MarketingPage
-      eyebrow={t("eyebrow")}
       heading={t("heading")}
       headingTestId="for-clinics-heading"
       body={t("body")}

@@ -4,14 +4,12 @@ import {
   ApiClientError,
   type ListPublicExpertsResponse,
 } from "@eleva/api-client"
-import { defaultLocale, isLocale } from "@eleva/config/i18n"
 import {
   ArrowRightIcon,
   CaretDownIcon,
   ShieldCheckIcon,
   XIcon,
 } from "@eleva/icons"
-import { ElevaImage } from "@eleva/media/image"
 import { CtaBand } from "@eleva/ui/blocks/cta-band"
 import { ExpertCard } from "@eleva/ui/blocks/expert-card"
 import { Container, Section, SectionHeader } from "@eleva/ui/blocks/section"
@@ -97,6 +95,7 @@ export async function Explorer({
     }
   }
 
+  const list = new Intl.ListFormat(locale, { type: "conjunction" })
   const basePath = category ? `/experts/${category}` : "/experts"
   const filterHref = (next: ExplorerSearch) => {
     const params = new URLSearchParams()
@@ -138,7 +137,6 @@ export async function Explorer({
           <Container className="flex flex-col gap-8">
             <SectionHeader
               as="h1"
-              eyebrow={t("eyebrow")}
               title={
                 category
                   ? t("categoryHeading", {
@@ -375,6 +373,9 @@ export async function Explorer({
                     .map(categoryLabel)
                     .filter((label) => label !== null)
                     .slice(0, 2)
+                  const spoken = expert.languages
+                    .filter((code) => LANGUAGES.some((item) => item === code))
+                    .map((code) => t(`languages.${code}`))
                   return (
                     <li key={expert.username}>
                       <ExpertCard
@@ -396,18 +397,33 @@ export async function Explorer({
                         // Every listed expert passed the registration check.
                         checkedLabel={t("checkedMark")}
                         meta={areas.length > 0 ? areas.join(" · ") : undefined}
-                        price={
-                          expert.minPriceCents == null
-                            ? undefined
-                            : expert.minPriceCents === 0
-                              ? t("freeSession")
-                              : t("fromPrice", {
-                                  price: formatEur(
-                                    expert.minPriceCents,
-                                    locale
-                                  ),
-                                })
-                        }
+                        facts={[
+                          ...(spoken.length > 0
+                            ? [
+                                {
+                                  label: t("card.speaks"),
+                                  value: list.format(spoken),
+                                },
+                              ]
+                            : []),
+                          ...(expert.minPriceCents == null
+                            ? []
+                            : [
+                                {
+                                  label: t("card.sessions"),
+                                  value:
+                                    expert.minPriceCents === 0
+                                      ? t("freeSession")
+                                      : t("fromPrice", {
+                                          price: formatEur(
+                                            expert.minPriceCents,
+                                            locale
+                                          ),
+                                        }),
+                                },
+                              ]),
+                        ]}
+                        action={t("card.profile")}
                       />
                     </li>
                   )
@@ -432,32 +448,19 @@ export async function Explorer({
           </Container>
         </Section>
 
-        <Section spacing="compact" className="pb-24">
-          <Container>
-            <CtaBand
-              eyebrow={t("join.eyebrow")}
-              title={t("join.heading")}
-              lead={t("join.lead")}
-              media={
-                <ElevaImage
-                  slug="physio-session"
-                  locale={isLocale(locale) ? locale : defaultLocale}
-                  fill
-                  sizes="(min-width: 1024px) 50vw, 100vw"
-                />
-              }
-              actions={
-                <Link
-                  href="/become-expert"
-                  className={buttonVariants({ variant: "inverse", size: "lg" })}
-                >
-                  {t("join.cta")}
-                  <ArrowRightIcon data-icon="inline-end" />
-                </Link>
-              }
-            />
-          </Container>
-        </Section>
+        <CtaBand
+          className="mt-8"
+          title={t("join.heading")}
+          lead={t("join.lead")}
+          actions={
+            <Link
+              href="/become-expert"
+              className={buttonVariants({ variant: "inverse", size: "xl" })}
+            >
+              {t("join.cta")}
+            </Link>
+          }
+        />
       </main>
       <SiteFooter />
     </div>

@@ -1,54 +1,65 @@
 import type * as React from "react"
 import { cn } from "@eleva/ui/lib/utils"
-import { Eyebrow, Heading, Lead } from "@eleva/ui/components/typography"
+import { Container } from "@eleva/ui/blocks/section"
+import { Heading } from "@eleva/ui/components/typography"
 
 /**
- * Closing call to action. One per page: warm gradient by default, or a split
- * layout with a photo when `media` is set.
+ * The closing block: a full-width coral field with one thing to do next.
+ * One per page, as its last section. Coral is used nowhere else on the
+ * page, so the ending is recognisable. Text on it is always ink.
+ *
+ * `aside` adds a second, quieter door beside the first (for example the
+ * professional's way in beside the member's).
  */
 function CtaBand({
-  eyebrow,
   title,
   lead,
   actions,
-  media,
+  aside,
   className,
 }: {
-  eyebrow?: React.ReactNode
   title: React.ReactNode
   lead?: React.ReactNode
   actions: React.ReactNode
-  media?: React.ReactNode
+  aside?: React.ReactNode
   className?: string
 }) {
   return (
-    <div
+    <section
       data-slot="cta-band"
       className={cn(
-        "relative isolate overflow-hidden rounded-3xl bg-teal-900 text-white lg:rounded-4xl",
-        media ? "grid lg:grid-cols-2" : "",
+        "bg-coral-400 px-4 py-18 text-neutral-950 sm:px-6 sm:py-24",
         className
       )}
     >
-      {media ? null : (
-        <div
-          aria-hidden
-          className="absolute inset-0 -z-10 bg-[radial-gradient(60rem_30rem_at_110%_-10%,var(--color-coral-400),transparent_60%),radial-gradient(40rem_24rem_at_-10%_120%,var(--color-teal-500),transparent_60%)] opacity-60"
-        />
-      )}
-      <div className="flex flex-col gap-5 px-6 py-14 sm:px-12 sm:py-20">
-        {eyebrow ? <Eyebrow tone="inverse">{eyebrow}</Eyebrow> : null}
-        <Heading size="headline" tone="inverse" className="max-w-xl">
-          {title}
-        </Heading>
-        {lead ? <Lead className="max-w-lg text-white/80">{lead}</Lead> : null}
-        <div className="mt-3 flex flex-col gap-3 sm:flex-row">{actions}</div>
-      </div>
-      {media ? (
-        <div className="relative min-h-72 [&_img]:object-cover">{media}</div>
-      ) : null}
-    </div>
+      <Container
+        className={cn(
+          aside && "grid items-end gap-10 lg:grid-cols-[1.4fr_1fr] lg:gap-18"
+        )}
+      >
+        <div>
+          <Heading size="headline" className="max-w-xl text-neutral-950">
+            {title}
+          </Heading>
+          {lead ? (
+            <p className="mt-3.5 max-w-[26em] text-xl text-pretty">{lead}</p>
+          ) : null}
+          <div className="mt-7 flex flex-col gap-x-6 gap-y-3 sm:flex-row sm:items-center">
+            {actions}
+          </div>
+        </div>
+        {aside ? (
+          <div className="border-neutral-950/40 max-lg:border-t max-lg:pt-8 lg:border-l lg:pl-10">
+            {aside}
+          </div>
+        ) : null}
+      </Container>
+    </section>
   )
 }
 
-export { CtaBand }
+/** A quiet link for the closing block: underlined ink, never a second button. */
+const ctaBandLinkClass =
+  "inline-flex min-h-11 items-center font-medium text-neutral-950 underline decoration-[1.5px] underline-offset-[5px]"
+
+export { CtaBand, ctaBandLinkClass }

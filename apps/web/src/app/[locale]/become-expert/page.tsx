@@ -39,7 +39,6 @@ export default async function BecomeExpertPage({ params }: Props) {
 
   return (
     <MarketingPage
-      eyebrow={t("eyebrow")}
       heading={t("heading")}
       headingTestId="become-expert-heading"
       body={t("body")}

@@ -53,7 +53,6 @@ export default async function PodcastPage({ params }: Props) {
 
   return (
     <PillarPage
-      eyebrow={t("eyebrow")}
       heading={t("heading")}
       body={t("body")}
       secondaryLinks={

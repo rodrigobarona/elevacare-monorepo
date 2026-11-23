@@ -30,12 +30,7 @@ export default async function CreditsPage({ params }: Props) {
       <main className="flex-1">
         <Section>
           <Container>
-            <SectionHeader
-              as="h1"
-              eyebrow={t("eyebrow")}
-              title={t("title")}
-              lead={t("lead")}
-            />
+            <SectionHeader as="h1" title={t("title")} lead={t("lead")} />
             <ul
               data-testid="photo-credits"
               className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
