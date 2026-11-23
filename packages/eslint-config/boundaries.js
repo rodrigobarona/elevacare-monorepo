@@ -54,12 +54,22 @@
  * one: a later setting of a rule replaces an earlier one, it is not added
  * to it.
  */
-export const REVEAL_RESTRICTION = {
-  selector:
-    "CallExpression[callee.type='MemberExpression'][callee.property.name='reveal'][arguments.length=0]",
-  message:
-    "Decrypted PHI is unwrapped only inside @eleva/records / @eleva/encryption when mapping into a response DTO (Phase 10 PHI lint).",
-}
+const REVEAL_MESSAGE =
+  "Decrypted PHI is unwrapped only inside @eleva/records / @eleva/encryption when mapping into a response DTO (Phase 10 PHI lint)."
+
+export const REVEAL_RESTRICTIONS = [
+  {
+    selector:
+      "CallExpression[callee.type='MemberExpression'][callee.property.name='reveal'][arguments.length=0]",
+    message: REVEAL_MESSAGE,
+  },
+  {
+    // value["reveal"]()
+    selector:
+      "CallExpression[callee.type='MemberExpression'][callee.property.value='reveal'][arguments.length=0]",
+    message: REVEAL_MESSAGE,
+  },
+]
 
 /** @type {import("eslint").Linter.Config[]} */
 export const boundariesConfig = [
@@ -160,6 +170,18 @@ export const boundariesConfig = [
           ],
           patterns: [
             {
+              // The SDKs banned by name above, by any path inside them.
+              group: [
+                "stripe/**",
+                "@stripe/**",
+                "@aws-sdk/**",
+                "twilio/**",
+                "resend/**",
+              ],
+              message:
+                "Vendor SDKs are imported only by the package that owns them: @eleva/billing, @eleva/storage, @eleva/notifications (boundary lint).",
+            },
+            {
               group: ["better-auth", "better-auth/*", "@better-auth/*"],
               message:
                 "Import Better Auth only through @eleva/auth (boundary lint).",
@@ -219,7 +241,7 @@ export const boundariesConfig = [
   },
   {
     rules: {
-      "no-restricted-syntax": ["error", REVEAL_RESTRICTION],
+      "no-restricted-syntax": ["error", ...REVEAL_RESTRICTIONS],
     },
   },
 ]

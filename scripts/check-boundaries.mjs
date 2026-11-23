@@ -10,9 +10,19 @@
  * alone, over every workspace that has a lint config, and fails on any
  * finding.
  *
- * It also checks that the rules are switched on: in each app it lints a
- * few lines that must be refused (`CANARIES`). An app whose lint config
- * leaves a rule out, or sets it again and so replaces it, fails here.
+ * It also checks that the rules are switched on, three ways:
+ * - in each app it lints a few lines that must be refused. An app whose
+ *   lint config leaves a rule out, or sets it again and so replaces it,
+ *   fails here;
+ * - every file of an app must have the boundary rules exactly as that
+ *   app's ordinary file has them. A config that switches a rule off, or
+ *   sets it differently, for one folder fails here;
+ * - comments in a file (`eslint-disable`) are not obeyed, and a file that
+ *   cannot be parsed is a finding, not a pass.
+ *
+ * What it cannot see: a module name put together at run time
+ * (`import("@eleva/" + name)`), and packages, which have their own lint
+ * configs and no canaries.
  */
 import { existsSync, readdirSync } from "node:fs"
 import { createRequire } from "node:module"
@@ -119,16 +129,55 @@ function loadEslint(root) {
   return require("eslint").ESLint
 }
 
-/** The boundary findings in what ESLint returned, one line each. */
+/**
+ * The boundary findings in what ESLint returned, one line each. A file
+ * that could not be parsed counts: no rule ran on it.
+ */
 export function boundaryFindings(root, results) {
   return results.flatMap((result) =>
     result.messages
-      .filter((message) => BOUNDARY_RULES.has(message.ruleId))
-      .map(
-        (message) =>
-          `${path.relative(root, result.filePath)}:${message.line}: ${message.message} (${message.ruleId})`
+      .filter((message) => message.fatal || BOUNDARY_RULES.has(message.ruleId))
+      .map((message) =>
+        message.fatal
+          ? `${path.relative(root, result.filePath)}:${message.line}: could not be read, so no boundary rule ran on it (${message.message})`
+          : `${path.relative(root, result.filePath)}:${message.line}: ${message.message} (${message.ruleId})`
       )
   )
+}
+
+/** The rules an app's files must all have set the same way. */
+const SAME_IN_EVERY_FILE = [
+  "no-restricted-imports",
+  "@typescript-eslint/no-restricted-imports",
+  "no-restricted-syntax",
+]
+
+const boundarySettings = (config) =>
+  JSON.stringify(
+    SAME_IN_EVERY_FILE.map((rule) => config?.rules?.[rule] ?? "not set")
+  )
+
+/**
+ * Files of an app whose boundary rules are not set as the app's ordinary
+ * file has them: switched off, or set again with other bans, for a folder
+ * or a kind of file.
+ */
+export async function filesWithOtherRules(eslint, root, cwd, files) {
+  const ordinary = boundarySettings(
+    await eslint.calculateConfigForFile(
+      path.join(cwd, "src", "__canary__", "page.ts")
+    )
+  )
+  const other = []
+  for (const file of files) {
+    const config = await eslint.calculateConfigForFile(file)
+    if (config && boundarySettings(config) !== ordinary) {
+      other.push(
+        `${path.relative(root, file)}: the boundary rules are not set for this file as for the rest of the app (a lint config switches one off, or sets it again, for this path)`
+      )
+    }
+  }
+  return other
 }
 
 /**
@@ -150,11 +199,23 @@ export async function findBoundaryProblems(
     const eslint = new ESLint({
       cwd,
       errorOnUnmatchedPattern: false,
+      // A comment in a file does not switch a boundary off.
+      allowInlineConfig: false,
       ruleFilter: ({ ruleId }) => BOUNDARY_RULES.has(ruleId),
     })
     const results = await eslint.lintFiles(["."])
     files += results.length
     problems.push(...boundaryFindings(root, results))
+    if (workspace.startsWith("apps/")) {
+      problems.push(
+        ...(await filesWithOtherRules(
+          eslint,
+          root,
+          cwd,
+          results.map((result) => result.filePath)
+        ))
+      )
+    }
 
     for (const canary of canaries(workspace)) {
       const [result] = await eslint.lintText(canary.code, {

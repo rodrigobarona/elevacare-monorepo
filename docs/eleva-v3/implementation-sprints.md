@@ -70,7 +70,7 @@ Composition rule: `src/proxy.ts` must stay under ~50 LOC. Every concern (intl, a
 - **Audit outbox rule**: `withAudit` writes domain rows + `audit_outbox` row in the same main-DB transaction; `auditOutboxDrainer` Vercel Workflow ships to `eleva_v3_audit` (ADR-003 audit pipeline).
 - Every flag read through `@eleva/flags`. Banned direct `@vercel/flags` / `posthog-js` flag calls.
 - No direct `stripe` / `resend` / `twilio` / `the previous identity SDK` / `@daily-co/daily-js` / `toconline-sdk` imports outside the owning package. CI verifies with `pnpm check:boundaries` (since 2026-11-23; `pnpm lint` reports these as warnings and never fails).
-- An app other than `apps/api` takes named read helpers (`get…`, `list…`, `count…`) and types from `@eleva/db`, and nothing else: no write helper, no database handle, no subpath (`@eleva/eslint-config/frontend-db-reads`, checked by `pnpm check:boundaries`).
+- An app other than `apps/api` takes from `@eleva/db` the read helpers listed in `@eleva/eslint-config/frontend-db-reads` and types, and nothing else: no write helper, no database handle, no subpath, no read that is not on the list (checked by `pnpm check:boundaries`).
 - Every new permission added to `the former identity infra package/rbac-config.json`; `pnpm rbac:generate` regenerated.
 - **Username + slug rule**: every route segment the gateway adds goes into [`@eleva/config/reserved-usernames.ts`](../../packages/config/src/reserved-usernames.ts) before the route ships. CI check compares route manifest against the reserved list and fails on drift.
 - Every sprint ends with a Vercel preview URL + a recorded end-to-end test on staging with a pilot expert account.

@@ -114,7 +114,6 @@ Run from the repo root. The full catalog is in `docs/eleva-v3/operator-tasks/scr
 | `pnpm build`                                 | Production build                                                                                          |
 | `pnpm lint` / `pnpm typecheck` / `pnpm test` | Lint, type-check and Vitest across the workspace                                                          |
 | `pnpm check:route-guards`                    | Every API route declares and enforces its policy                                                          |
-| `pnpm check:api-first-actions`               | No DB write helpers in frontend Server Actions                                                            |
 | `pnpm check:boundaries`                      | The boundary lint rules fail the build: vendor SDKs, health data, what a frontend takes from the database |
 | `pnpm check:no-phi-logs`                     | No decrypted PHI outside the domain packages                                                              |
 | `pnpm check:i18n-parity`                     | `en`/`pt`/`es` message parity                                                                             |

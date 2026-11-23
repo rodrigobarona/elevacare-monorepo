@@ -421,7 +421,7 @@ what you implement at the "Implement the deliverables" step. Read the whole prom
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-04.1/public-api-and-explorer
 - Second PR (opened after the first merges): phase-04.2/booking-funnel-payment. Each PR: <= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
-- Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
+- Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:boundaries && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
@@ -599,7 +599,7 @@ PR 04.1 — data, scheduling engine, public API, explorer + profile:
    Security forward-pull (review 6.2): scripts/check-route-guards.mjs walks apps/api/src/app/**/
    route.ts and fails when a handler lacks the exported ROUTE_POLICY = { auth, rateLimit, botId }
    declaration (add the declaration to every existing route in this PR); wire it as
-   pnpm check:route-guards in CI next to check:api-first-actions.
+   pnpm check:route-guards in CI next to check:boundaries.
 
 PR 04.2 — funnel + payment + marketing/legal:
 5. apps/api: POST /bookings/reserve (guest {email,name,phone?} or session; body also carries

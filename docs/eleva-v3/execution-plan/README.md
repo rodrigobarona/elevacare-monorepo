@@ -127,7 +127,7 @@ flowchart LR
   A[git checkout main and pull] --> B[git checkout -b phase-NN/slug]
   B --> C[Read local refs and Context7 docs listed in the phase]
   C --> D[Implement]
-  D --> E[pnpm lint, typecheck, test, build, check:api-first-actions]
+  D --> E[pnpm lint, typecheck, test, build, check:boundaries]
   E --> F[pnpm review - CodeRabbit CLI on uncommitted]
   F -->|findings| D
   F -->|clean| G[Conventional commit]
@@ -411,7 +411,7 @@ what you implement at the "Implement the deliverables" step. Read the whole prom
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b <branch from this phase>
 - Implement the deliverables in the order listed. Keep the PR at <= 30 files / 400 lines where possible; split above 60 files / 800 lines and always before 100 reviewable files (the review cap); split into phase-NN.1 / phase-NN.2 branches if needed.
-- Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
+- Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:boundaries && pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
   remaining Minor/Trivial listed in the PR body "Deferred findings" table with a reason each).

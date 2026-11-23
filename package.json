@@ -11,7 +11,6 @@
     "lint": "turbo lint",
     "format": "turbo format",
     "typecheck": "turbo typecheck",
-    "check:api-first-actions": "node scripts/check-api-first-actions.mjs",
     "check:route-guards": "node scripts/check-route-guards.mjs",
     "check:botid-coverage": "node scripts/check-botid-coverage.mjs",
     "check:boundaries": "node scripts/check-boundaries.mjs",

@@ -50,7 +50,7 @@ with the architecture rules in `AGENTS.md`.
 ## The loop
 
 ```text
-implement -> pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
+implement -> pnpm lint && pnpm typecheck && pnpm test && pnpm check:boundaries && pnpm build
           -> pnpm review        (fix every finding, re-run until "no findings" — max 3 rounds)
           -> git commit (Conventional Commits)
           -> pnpm review:branch (fix, commit, re-run until clean — max 2 rounds)

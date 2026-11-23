@@ -204,7 +204,7 @@ what you implement at the "Implement the deliverables" step. Read the whole prom
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-11/team-clinics
 - Keep the PR at <= 30 files / 400 lines where possible; split above 60 files / 800 lines and always before 100 reviewable files (the review cap). Split into phase-11.1/team-core-billing and phase-11.2/team-dashboard-public if needed.
-- Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
+- Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:boundaries && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,

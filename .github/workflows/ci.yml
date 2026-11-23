@@ -83,7 +83,6 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
-      - run: pnpm check:api-first-actions
       - run: pnpm check:route-guards
       - run: pnpm check:botid-coverage
       - run: pnpm check:boundaries

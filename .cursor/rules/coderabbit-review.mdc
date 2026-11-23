@@ -10,7 +10,7 @@ Full manual: `.cursor/skills/coderabbit-review/SKILL.md`. Sequencing SSOT:
 
 ## Order of operations
 
-1. `pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build`
+1. `pnpm lint && pnpm typecheck && pnpm test && pnpm check:boundaries && pnpm build`
 2. `pnpm review` — CodeRabbit CLI on uncommitted changes. Fix every finding. Re-run until clean
    or the cap (max 3 rounds; exit at the cap only with zero Critical/Major; leftover Minor/Trivial
    go to the PR body "Deferred findings" table).

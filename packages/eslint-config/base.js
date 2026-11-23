@@ -73,7 +73,9 @@ export const config = [
       "dist/**",
       ".next/**",
       "**/.turbo/**",
-      "**/coverage/**",
+      // The test coverage report, at the top of a workspace only: a route
+      // folder named `coverage` is still linted.
+      "coverage/**",
       // The preview app that `email dev` generates (git-ignored).
       ".react-email/**",
     ],
