@@ -7,6 +7,7 @@ import {
   authClient,
   MFA_RETURN_TO_STORAGE_KEY,
   readBrowserSession,
+  signInLinkWasUsed,
 } from "@eleva/auth/client"
 import { toGatewayCallbackURL } from "@eleva/auth/return-to"
 import {
@@ -50,9 +51,11 @@ export function LoginForm() {
   const [googlePending, setGooglePending] = useState(false)
   const autofillStarted = useRef(false)
   // The sign-in this browser carried when the link was sent: its start, or
-  // null for signed out. `undefined` while that could not be told, and then
-  // the tab never goes on by itself.
+  // null for signed out. `undefined` while that could not be told.
   const signedInWhenSent = useRef<number | null | undefined>(undefined)
+  // When the link was asked for. If the sign-in above could not be read,
+  // only a sign-in that began after this counts as the link being used.
+  const linkSentAt = useRef(0)
 
   function finish() {
     setSignedIn(true)
@@ -86,7 +89,7 @@ export function LoginForm() {
     let looking = false
     const look = async () => {
       if (gone || document.visibilityState !== "visible") return
-      if (looking || signedInWhenSent.current === undefined) return
+      if (looking) return
       looking = true
       const now = await readBrowserSession().finally(() => {
         looking = false
@@ -96,9 +99,12 @@ export function LoginForm() {
       // another person) stays on this step until the link is used.
       if (
         gone ||
-        !now ||
-        now.email.toLowerCase() !== email.trim().toLowerCase() ||
-        (now.startedAt?.getTime() ?? null) === signedInWhenSent.current
+        !signInLinkWasUsed({
+          now,
+          email,
+          before: signedInWhenSent.current,
+          linkSentAt: linkSentAt.current,
+        })
       ) {
         return
       }
@@ -174,6 +180,7 @@ export function LoginForm() {
     const before = await readBrowserSession()
     signedInWhenSent.current =
       before === undefined ? undefined : (before?.startedAt?.getTime() ?? null)
+    linkSentAt.current = Date.now()
     const sent = await sendMagicLink()
     setPending(false)
     if (sent) goTo("magicSent")

@@ -10,6 +10,13 @@ import {
 import { apiKeyClient } from "@better-auth/api-key/client"
 import { passkeyClient } from "@better-auth/passkey/client"
 import { ac, organizationRoles } from "./permissions"
+import { browserSessionFrom, type BrowserSession } from "./browser-session"
+
+export {
+  sameReviewer,
+  signInLinkWasUsed,
+  type BrowserSession,
+} from "./browser-session"
 
 export const MFA_RETURN_TO_STORAGE_KEY = "eleva.mfaReturnTo"
 
@@ -188,16 +195,6 @@ export const authClient = createAuthClient({
   ],
 }) as unknown as ElevaAuthClient
 
-/** The session this browser carries, as the auth server reports it. */
-export interface BrowserSession {
-  userId: string
-  email: string
-  /** The workspace the session is working in, if it has chosen one. */
-  activeOrganizationId: string | null
-  /** When the person signed in, or null when it cannot be read. */
-  startedAt: Date | null
-}
-
 /** How long a question about the session may take before it counts as unanswered. */
 const SESSION_READ_TIMEOUT_MS = 5_000
 
@@ -220,26 +217,8 @@ export async function readBrowserSession(): Promise<
         timer = setTimeout(() => resolve("late"), SESSION_READ_TIMEOUT_MS)
       }),
     ])
-    if (answer === "late" || answer.error) return undefined
-    const session = answer.data?.session as Record<string, unknown> | undefined
-    const user = answer.data?.user as Record<string, unknown> | undefined
-    if (!session || !user) return null
-    if (typeof user.id !== "string" || typeof user.email !== "string") {
-      return undefined
-    }
-    const started =
-      typeof session.createdAt === "string" || session.createdAt instanceof Date
-        ? new Date(session.createdAt)
-        : null
-    return {
-      userId: user.id,
-      email: user.email,
-      activeOrganizationId:
-        typeof session.activeOrganizationId === "string"
-          ? session.activeOrganizationId
-          : null,
-      startedAt: started && !Number.isNaN(started.getTime()) ? started : null,
-    }
+    if (answer === "late") return undefined
+    return browserSessionFrom(answer)
   } catch {
     return undefined
   } finally {

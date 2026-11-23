@@ -310,6 +310,20 @@ Each entry should include:
   that uses them is not, because the console's tests draw markup and do
   not run a browser. The step added to the browser test for Reject after
   a newer sign-in is written and has not run.
+- Review round of 2026-11-23 (CodeRabbit), three rules moved into
+  `packages/auth/src/browser-session.ts` with a test each: an answer about
+  the session that cannot be read is "could not tell", and only an answer
+  with no data at all is "signed out" (before, a half-read answer could
+  reload a reviewer's page as if they had signed out); a page the browser
+  brings back stays only for the same reviewer in the same staff
+  workspace (before, the same person in another workspace kept the
+  filing on screen); and when the sign-in from before the link could not
+  be read, the "check your inbox" step goes on only for a sign-in of that
+  person that began after the link was sent (before, it never went on by
+  itself). The page's question about a newer sign-in is reused only for
+  the drawing it was asked for. Not done: a browser case where the page
+  still shows the old sign-in at the Reject press; it is written down
+  for the same run of `e2e/admin-clinics.spec.ts` as above.
 - Left for later: the sign-in page still greets a reviewer in the middle
   of a decision with "Welcome back" and "Create an account" (12.8 builds
   the staff's own way in); "Sign in again" ends the session in every

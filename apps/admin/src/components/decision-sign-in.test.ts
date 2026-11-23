@@ -11,6 +11,7 @@ import pt from "../../messages/pt.json"
 vi.mock("@eleva/auth/client", () => ({
   authClient: { signOut: vi.fn() },
   readBrowserSession: vi.fn(async () => null),
+  sameReviewer: () => true,
 }))
 
 import {

@@ -2,7 +2,11 @@
 
 import * as React from "react"
 import { useTranslations } from "next-intl"
-import { authClient, readBrowserSession } from "@eleva/auth/client"
+import {
+  authClient,
+  readBrowserSession,
+  sameReviewer,
+} from "@eleva/auth/client"
 import { signOutAndLeave } from "@eleva/auth/sign-out"
 import {
   SignedInAgainNotice,
@@ -183,14 +187,19 @@ export function DecisionSignInScope({
   // a filing is recorded), and what is on the form is not touched. One
   // question at a time; when the tab is merely shown, at most one every
   // few seconds.
-  const asking = React.useRef<Promise<number | null> | null>(null)
+  const asking = React.useRef<{
+    drawn: DecisionSignIn
+    answer: Promise<number | null>
+  } | null>(null)
   const askedAt = React.useRef(0)
   const gained = seen.gained
   const newerSignIn = React.useCallback(
     (always: boolean): Promise<number | null> => {
       const { startedAt, reviewer, msLeft } = signIn
       if (!startedAt || msLeft === null) return Promise.resolve(null)
-      if (asking.current) return asking.current
+      // A question already on its way is reused only for the drawing it
+      // was asked for: its numbers are that drawing's.
+      if (asking.current?.drawn === signIn) return asking.current.answer
       if (!always && Date.now() - askedAt.current < PROBE_GAP_MS) {
         return Promise.resolve(null)
       }
@@ -215,9 +224,9 @@ export function DecisionSignInScope({
         })
         .catch(() => null)
         .finally(() => {
-          asking.current = null
+          if (asking.current?.answer === answer) asking.current = null
         })
-      asking.current = answer
+      asking.current = { drawn: signIn, answer }
       return answer
     },
     [signIn, gained]
@@ -311,20 +320,21 @@ export function DecisionSignInScope({
 
   // Back to a page the browser kept as it was drawn. The button must not
   // stay on "Opening...". And if the browser is signed out by now, or
-  // signed in as someone else, the filing must not stay on screen: what
-  // was typed is kept for its owner, and the page is loaded again (the
-  // console sends a signed-out visitor to sign in). On every review, the
-  // decided ones too.
+  // signed in as someone else or in another workspace, the filing must
+  // not stay on screen: what was typed is kept for its owner, and the page
+  // is loaded again (the console sends a signed-out visitor to sign in).
+  // On every review, the decided ones too.
   const reviewerId = signIn.reviewer.id
+  const reviewerOrgId = signIn.reviewer.orgId
   React.useEffect(() => {
     let stopped = false
     const shown = (event: PageTransitionEvent) => {
       if (!event.persisted) return
       setLeaving(false)
       void readBrowserSession().then((now) => {
-        // `undefined` is "could not tell": the page stays as it is.
-        if (stopped || now === undefined) return
-        if (now === null || now.userId !== reviewerId) {
+        // "Could not tell" keeps the page as it is: see `sameReviewer`.
+        if (stopped) return
+        if (!sameReviewer(now, { id: reviewerId, orgId: reviewerOrgId })) {
           keepNow()
           window.location.reload()
         }
@@ -335,7 +345,7 @@ export function DecisionSignInScope({
       stopped = true
       window.removeEventListener("pageshow", shown)
     }
-  }, [reviewerId, keepNow])
+  }, [reviewerId, reviewerOrgId, keepNow])
 
   const signInAgain = React.useCallback(
     (from: Pressed) => {
