@@ -32,6 +32,97 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-23: The real homepage is rebuilt in direction E (D3.1 and D3.2) (needs-review)
+
+- **Owner:** founder, with the public-site track. **Review:** when the
+  seven-seat panel has judged the page.
+- **What changed.** `apps/web` homepage, all three languages. The founder
+  asked for the real page in direction E, with the founding team's real
+  names, photographs and roles as context.
+  - **Hero.** The original film (`hero-intro`), one question, one line, one
+    action. The question changes scene by scene through the film
+    (`apps/web/src/lib/home-questions.ts` holds the timing); the page
+    heading, the line and the action do not. Phones and reduced motion get
+    the poster and the opening question.
+  - **No panel behind the words.** The founder rejected the dark box:
+    "more premium and subtle, can be a glass effect and grading dark or a
+    dropshadow on the font but not that cut". The words sit on the film,
+    over a feathered dark grade, an edgeless blur and a light text shadow.
+    Measured on eleven scenes with the words hidden: the brightest pixel
+    behind the headline gives 4.8 to 1 at worst, behind the line 7.4 to 1.
+  - **The film's controls stay quiet** (founder, same day): the pause
+    control is a small round icon button, and the line "The people in this
+    film are models" is a small muted note in the corner of the picture,
+    not a pill that reads as an action. The note is there because the film
+    sets first-person health questions beside recognisable faces. It keeps
+    4.8 to 1 at worst across the film's scenes.
+  - **The film can be paused.** `ElevaVideo` in `@eleva/media` gained an
+    optional pause button and a playhead callback; the film runs for 131
+    seconds, so a pause control is required (WCAG 2.2.2).
+  - **Questions.** Ten, each linking to its area of care. An area with
+    nobody listed links to the whole directory, so no question is a dead
+    end. Area chips show only areas with a listed expert.
+  - **Every film scene has its own question, for a different visitor**
+    (founder, same day: he liked that the words "are aligned with the video
+    running"). Ten scenes: women of every age, two friends, pregnancy, a
+    newborn, cooking, a baby's foot, a woman comforted, friends laughing on
+    a ride, cloth pads, an older woman at a café. Every film question is
+    also in the list below it.
+  - **Experts.** The first three from the public directory, in the
+    directory's own order, with the sentence that says how it is ordered
+    and the link to the ranking terms. Each card: portrait, headline, name,
+    areas, the registration mark, languages, price from. With nobody
+    listed, or the directory unreachable, the section is absent and the
+    page still reads.
+  - **Portraits are cut out and set on one sand field** (founder, same
+    day, correcting my earlier reading: "make a cut-off the images like the
+    playground from the correct images to align all the images portraits to
+    the design"). The frame is the same for experts and advisors. A
+    photograph with a transparent background shows the sand through it; one
+    that has not been cut out fills the frame, so the page works with both.
+  - **Then:** how experts are checked (deep teal, once), how booking works
+    with pictures of the product, three advisors and a count of the rest,
+    five questions before booking, and a coral closing block with the
+    member's action and the professional's.
+  - **Paper.** The page sets a cooler `--background` on its own wrapper.
+    `@eleva/ui` is unchanged, so no dashboard moves.
+- **Copy about experts no longer says "her".** One founding expert is a
+  man.
+- **Dropped from the homepage:** the care-area photo grid, the advisor
+  quote (HOME-13: it read as a claim about treatment), the "belief" block
+  and the trust strip. `home.services.*` stays; the header menu and About
+  use it.
+- **Not on the page, and why.** No "next free time" on a card: the
+  directory endpoint does not return one, and three extra calls per visit
+  is not acceptable; it needs a field on `GET /public/experts` (platform
+  track). No price range in the FAQ and no advisors' institutions: not
+  confirmed. No "nobody pays to appear here": a paid plan exists.
+- **The cut-outs need two things that are not in this change.**
+  - _Experts._ The directory serves the photograph each expert uploaded.
+    To show cut-outs, the platform needs a step that removes the background
+    and stores the result beside the original (a second address on
+    `GET /public/experts`), and upload guidance: head and shoulders, with
+    room above the head. Until then the homepage shows cut-outs only for
+    experts whose stored photograph is already one. The seven founding
+    experts' cut-outs are made and kept in the private library, ready for
+    the migration.
+  - _Advisors._ Three cut-outs were added to the media library
+    (`team-*-cutout`) in the development bucket. **Before this is deployed
+    to production, the same three objects must be copied to the production
+    public bucket**, or the three portraits will not load there.
+- **Not judged.** No panel has seen the real page. The GDPR and security
+  seats can now run, since this is a real page.
+- **What the founder's content will show.** The founding team's headlines
+  on the live MVP are in English only and several are lists, not
+  sentences. Each expert should write one sentence in each language.
+- **Real people stay out of this repository.** Captures made with the
+  founding team's photographs are kept in the private
+  `design-references` repository. Captures here use the fictional demo
+  experts: `design-audit/captures/2026-11-23-d3.1/01-homepage/`.
+- **Local preview without a database.** The Neon quota still fails local
+  and CI database work, so the page was run against a stand-in for
+  `GET /public/experts`. Nothing of it is in the repository.
+
 ### 2026-11-23: Four brand directions for the public site, judged blind twice (D8.1) (needs-review)
 
 - **What was built (design slice D8.1, playground only).** `apps/poc` gains

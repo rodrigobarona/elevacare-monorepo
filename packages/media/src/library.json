@@ -538,6 +538,27 @@
   },
   {
     "kind": "image",
+    "slug": "team-cristine-homsi-jorge-cutout",
+    "key": "media/eleva/team-cristine-homsi-jorge-cutout-d6c2fc41eecd4b7cb53ce7ab2a60cde7.webp",
+    "width": 720,
+    "height": 760,
+    "blurDataURL": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRkxOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0//wAARCAAZABgDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDuZZFijLt26e57VzDazfRMl6bqJoHk2/Z9ozjOOvrWt4ido9KZ48l1YFQK5lZlk0XzkRUGw5BXHzEdc/XvXO3qdcIprU7iKRJolliYMjjII7iiqOgW8ltottFMcuFyc9eTkUVRA7W7GS8stsLYdcnHrxisjQIkm0t7WWEZtnKNkV1PesDSP+Qlqv8A13/pWvIlJMhTdjRssogjySqjGCc4xRTbX/j5l+o/lRUzVmUj/9k=",
+    "alt": {
+      "en": "Portrait of Cristine Homsi Jorge",
+      "pt": "Retrato de Cristine Homsi Jorge",
+      "es": "Retrato de Cristine Homsi Jorge"
+    },
+    "tags": ["team", "advisors", "cutout"],
+    "license": "eleva-owned",
+    "credit": {
+      "name": "Eleva Care"
+    },
+    "source": {
+      "provider": "eleva"
+    }
+  },
+  {
+    "kind": "image",
     "slug": "team-jenny-bagwell",
     "key": "media/eleva/team-jenny-bagwell-WTqfZEEJb97bsKIFlZBwEbYVgimTPr.jpg",
     "width": 800,
@@ -549,6 +570,27 @@
       "es": "Retrato de Jenny Bagwell"
     },
     "tags": ["team", "advisors"],
+    "license": "eleva-owned",
+    "credit": {
+      "name": "Eleva Care"
+    },
+    "source": {
+      "provider": "eleva"
+    }
+  },
+  {
+    "kind": "image",
+    "slug": "team-jenny-bagwell-cutout",
+    "key": "media/eleva/team-jenny-bagwell-cutout-0ccb41053cf3b96218d6e22e7faec7f3.webp",
+    "width": 720,
+    "height": 760,
+    "blurDataURL": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRkxOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0//wAARCAAZABgDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDupHWKJ5G+6gLH8KyrrUZ7QpPJJC0Z5eEdVHXg+oFT69dpZaNczyEABe/esHUtQDaFFq4UJHIpfy9nPIwR9cjrXPK/Q64JPc61WDKGU5BGQfWiqWhzNPotpI/3jEAfwoqk7ohlLxFAt1b+TMoZOG554z6flWLPp8qwSWcZZ4nbMSMeF46n9a2NV/4/5f8Arh/hUN1/yEIP92P/ANCNXVgiaMmRaHNdWi26XG5Fdgmwng9cn+VFPu/+Pqz/AN9v5Cip5eXRBzX1P//Z",
+    "alt": {
+      "en": "Portrait of Jenny Bagwell",
+      "pt": "Retrato de Jenny Bagwell",
+      "es": "Retrato de Jenny Bagwell"
+    },
+    "tags": ["team", "advisors", "cutout"],
     "license": "eleva-owned",
     "credit": {
       "name": "Eleva Care"
@@ -591,6 +633,27 @@
       "es": "Retrato de Kari Bø"
     },
     "tags": ["team", "advisors"],
+    "license": "eleva-owned",
+    "credit": {
+      "name": "Eleva Care"
+    },
+    "source": {
+      "provider": "eleva"
+    }
+  },
+  {
+    "kind": "image",
+    "slug": "team-kari-bo-cutout",
+    "key": "media/eleva/team-kari-bo-cutout-0d9809395b500eea1f032c8613d3d93b.webp",
+    "width": 720,
+    "height": 760,
+    "blurDataURL": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRkxOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0//wAARCAAZABgDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDupZEhiaSRtqKMk1x9/wCJtWjkke2ghESNwGUkMvuc1v8AiWdbfw/eSv0CADnuSAK5WeW2dF2mUxk7h06Y/lWDudUY3Ow0bUotW02K8iG3dkOmc7GHUUVzXw9nUDULVT8okEqj68H+QoqiC34+u4oNDSGRvmmmXC+oHJ/pXIWp/wCJIzTTBI2ZigL/AMJPpW38S/8AWad9JP8A2WuLf/j1j+ppqN0Tz2bNPwzrUWmeIVuJ3cWzbkchegPfHoDiislP9VJ9BRVuKI52f//Z",
+    "alt": {
+      "en": "Portrait of Kari Bø",
+      "pt": "Retrato de Kari Bø",
+      "es": "Retrato de Kari Bø"
+    },
+    "tags": ["team", "advisors", "cutout"],
     "license": "eleva-owned",
     "credit": {
       "name": "Eleva Care"

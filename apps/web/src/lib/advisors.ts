@@ -1,6 +1,15 @@
-/** Board of advisors. Roles and quotes live under `about.advisors.<id>`. */
+/**
+ * Board of advisors. Roles and quotes live under `about.advisors.<id>`.
+ * `cutout` is the same portrait cut out of its background, for pages that
+ * set every portrait on one field (the homepage).
+ */
 export const ADVISORS = [
-  { id: "kariBo", name: "Kari Bø, PT, PhD", slug: "team-kari-bo" },
+  {
+    id: "kariBo",
+    name: "Kari Bø, PT, PhD",
+    slug: "team-kari-bo",
+    cutout: "team-kari-bo-cutout",
+  },
   {
     id: "rubenBarakat",
     name: "Ruben Barakat, PhD",
@@ -15,6 +24,7 @@ export const ADVISORS = [
     id: "cristineHomsiJorge",
     name: "Cristine Homsi Jorge, PT, PhD",
     slug: "team-cristine-homsi-jorge",
+    cutout: "team-cristine-homsi-jorge-cutout",
   },
   {
     id: "annelieGutke",
@@ -35,5 +45,6 @@ export const ADVISORS = [
     id: "jennyBagwell",
     name: "Jenny Bagwell, PT, PhD, DPT",
     slug: "team-jenny-bagwell",
+    cutout: "team-jenny-bagwell-cutout",
   },
 ] as const

@@ -64,49 +64,82 @@
   },
   "home": {
     "hero": {
-      "eyebrow": "Salud de la mujer, elevada",
-      "heading": "Especialistas en salud de la mujer, ",
-      "headingAccent": "a tu ritmo.",
-      "description": "Reserva especialistas de confianza en embarazo, salud pélvica y cada etapa de la vida. Online, por teléfono o en persona.",
-      "cta": "Encontrar especialista",
-      "ctaSecondary": "Hazte especialista",
-      "disclaimer": "Eleva te conecta con especialistas de salud independientes, con consulta propia.",
-      "aside": {
-        "stages": "Cuidados en cada etapa de la vida",
-        "listen": "Especialistas que te escuchan"
+      "heading": "¿A quién le pregunto esto?",
+      "lead": "Pregunta a quien sabe. Reserva con especialistas en salud de la mujer, con colegiación comprobada: por vídeo, teléfono o en persona.",
+      "cta": "Ver especialistas",
+      "pause": "Pausar el vídeo",
+      "play": "Reanudar el vídeo",
+      "note": "Las personas de este vídeo son modelos."
+    },
+    "questions": {
+      "heading": "¿Qué quieres preguntar?",
+      "areas": "O elige por área",
+      "items": {
+        "leakLaugh": "¿Es normal que se me escape la orina al reír?",
+        "backPainPregnancy": "¿Cómo alivio el dolor de espalda en el embarazo?",
+        "eatTrying": "¿Qué debo comer si estoy buscando un embarazo?",
+        "pelvicFloorMenopause": "¿Qué le pasa a mi suelo pélvico en la menopausia?",
+        "healAfterBirth": "¿Qué ayuda a mi cuerpo a recuperarse después del parto?",
+        "exerciseAfterBirth": "¿Cuándo puedo volver a hacer ejercicio después del parto?",
+        "painfulPeriods": "¿Por qué me duele tanto la regla?",
+        "livingWithPain": "¿De verdad tengo que vivir con este dolor?",
+        "backToSport": "¿Cómo vuelvo al deporte sin dolor?",
+        "movingAfterCancer": "¿Cómo vuelvo a moverme después del tratamiento del cáncer?"
       }
     },
-    "trust": {
-      "independent": {
-        "title": "Especialistas independientes",
-        "description": "Profesionales cualificados con consulta propia."
+    "people": {
+      "heading": "Quienes responden",
+      "speaks": "Habla",
+      "sessions": "Sesiones",
+      "profile": "Ver perfil"
+    },
+    "checked": {
+      "heading": "Cada especialista aquí tiene su colegiación profesional. La comprobamos antes de publicar su perfil.",
+      "practice": {
+        "title": "Tienen consulta propia",
+        "body": "Reservas directamente con quien te va a atender."
       },
-      "modes": {
-        "title": "Online o en persona",
-        "description": "Vídeo, teléfono o una clínica cerca de ti."
+      "price": {
+        "title": "Ves el precio primero",
+        "body": "Está en cada perfil, antes de elegir una hora."
+      }
+    },
+    "how": {
+      "heading": "Cómo funciona la reserva",
+      "cta": "Ver especialistas",
+      "pick": {
+        "label": "Primero",
+        "title": "Eliges una hora",
+        "body": "Pagas al reservar."
       },
-      "languages": {
-        "title": "En tu idioma",
-        "description": "Español, portugués e inglés."
+      "meet": {
+        "label": "Después",
+        "title": "Os encontráis",
+        "body": "La sesión por vídeo se abre desde el enlace de tu email. En persona, vas a su consulta."
       },
-      "pricing": {
-        "title": "Precios claros",
-        "description": "Pagas al reservar. Condiciones de cancelación a la vista."
+      "next": {
+        "label": "Luego",
+        "title": "Tú decides qué viene después",
+        "body": "Reserva un seguimiento, o no."
+      },
+      "sample": {
+        "day": "Miércoles, 25 de noviembre",
+        "email": "Tu email de confirmación",
+        "when": "Miércoles, 10:30",
+        "session": "Sesión por vídeo · 50 min",
+        "join": "Entrar en la sesión",
+        "followUp": "Seguimiento",
+        "followUpMeta": "30 min",
+        "again": "Reservar de nuevo"
       }
     },
     "advisors": {
-      "heading": "Con la guía de referentes en ",
-      "headingAccent": "salud de la mujer",
+      "heading": "Con la guía de quienes estudian la salud de la mujer",
       "lead": "Nuestro consejo asesor lleva la investigación clínica a la forma de trabajar de Eleva. Tu atención la presta la especialista independiente que elijas.",
       "cta": "Conocer el consejo",
       "more": "{count} asesores más"
     },
     "services": {
-      "eyebrow": "Cómo te acompañamos",
-      "heading": "Cuidado experto, ",
-      "headingAccent": "pensado para ti",
-      "lead": "Desde tu primera ecografía hasta la vida después de la menopausia, encuentra a la especialista que entiende tu momento.",
-      "action": "Ver especialistas",
       "pregnancy": {
         "title": "Embarazo y posparto",
         "description": "Apoyo sereno y basado en la evidencia durante el embarazo y la maternidad temprana."
@@ -122,40 +155,41 @@
       "cancerJourney": {
         "title": "Tu camino con el cáncer",
         "description": "Cuidado experto y cercano durante y después del tratamiento."
-      },
-      "browseLabel": "Buscar por especialidad"
-    },
-    "how": {
-      "eyebrow": "Cómo funciona",
-      "heading": "De la primera duda a la primera sesión",
-      "lead": "Sin listas de espera y sin necesidad de cuenta para reservar.",
-      "find": {
-        "title": "Encuentra a tu especialista",
-        "description": "Busca por necesidad, idioma, precio y forma de consulta."
-      },
-      "book": {
-        "title": "Reserva una hora",
-        "description": "Elige el horario que te convenga y paga de forma segura en pocos pasos."
-      },
-      "meet": {
-        "title": "Conoce a tu especialista",
-        "description": "Únete online desde el email de confirmación o acude en persona."
       }
     },
-    "belief": {
-      "eyebrow": "En qué creemos",
-      "heading": "La salud de la mujer es ",
-      "headingAccent": "un camino de toda la vida",
-      "lead": "Reunimos especialistas que escuchan, explican y trabajan contigo, para que cada decisión sobre tu salud sea de verdad tuya.",
-      "cta": "Nuestra misión"
+    "faq": {
+      "heading": "Antes de reservar",
+      "account": {
+        "q": "¿Necesito una cuenta para reservar?",
+        "a": "No. Elige una hora, añade tu email y paga. Todo lo que necesitas llega en tu email de confirmación."
+      },
+      "who": {
+        "q": "¿Quiénes son los especialistas?",
+        "a": "Profesionales de la salud independientes que trabajan en salud de la mujer. Cada perfil cuenta qué hacen y qué formación tienen."
+      },
+      "cost": {
+        "q": "¿Cuánto cuesta?",
+        "a": "Cada especialista fija su precio. Lo ves en su perfil antes de elegir una hora."
+      },
+      "session": {
+        "q": "¿Cómo funciona una sesión?",
+        "a": "Depende de cada especialista: por vídeo o teléfono, en persona, o ambas. Su perfil lo indica."
+      },
+      "cancel": {
+        "q": "¿Puedo cancelar?",
+        "a": "Sí. Antes de pagar ves hasta qué día puedes cancelar sin coste."
+      }
     },
-    "experts": {
-      "eyebrow": "Para especialistas",
-      "heading": "Haz crecer tu consulta ",
-      "headingAccent": "con Eleva",
-      "lead": "Reservas, pagos y sesiones por vídeo en un solo lugar, para que te centres en cuidar.",
-      "cta": "Ser especialista",
-      "ctaSecondary": "Para clínicas"
+    "close": {
+      "heading": "¿No sabes a quién preguntar?",
+      "lead": "Empieza por los especialistas. Cada perfil cuenta en qué pueden ayudarte.",
+      "cta": "Ver especialistas",
+      "pro": {
+        "heading": "¿Eres profesional de la salud?",
+        "lead": "Fija tus precios y atiende a miembros en tus condiciones.",
+        "cta": "Hazte especialista",
+        "clinics": "Para clínicas"
+      }
     }
   },
   "about": {
