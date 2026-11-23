@@ -142,23 +142,26 @@ describe("createGatewayProxy integration", () => {
       origins: testOrigins,
       intlMiddleware: marketingIntl,
     })
-    for (const [from, to, status] of [
-      ["/appointments/patients/8f1c2d", "/dashboard", 301],
-      ["/booking/schedule/limits", "/dashboard", 301],
-      ["/setup", "/dashboard", 301],
-      ["/register", "/signup", 301],
-      ["/unauthorized", "/login", 301],
-      ["/sign-in", "/login", 301],
-      ["/profile/complete", "/dashboard", 301],
-      ["/unsubscribe", "/account/notifications", 301],
-      // Under a word that is still v3's: not for good.
-      ["/dashboard/subscription", "/dashboard", 302],
-      ["/account/identity/callback", "/dashboard", 302],
+    for (const [from, to] of [
+      ["/appointments/patients/8f1c2d", "/dashboard"],
+      ["/booking/schedule/limits", "/dashboard"],
+      ["/setup", "/dashboard"],
+      ["/register", "/signup"],
+      ["/unauthorized", "/dashboard"],
+      ["/sign-in", "/dashboard"],
+      ["/profile/complete", "/dashboard"],
+      ["/unsubscribe", "/account/notifications"],
+      ["/dashboard/subscription", "/dashboard"],
+      ["/account/identity/callback", "/dashboard"],
+      ["/account/security/password", "/account/security"],
+      ["/account/billing/receipts/pi_3Q", "/account/billing"],
+      ["/account/profile", "/account/settings"],
     ] as const) {
       const res = await proxy(
         makeRequest(from, { search: "?redirect=%2Fx&token=abc&console=%2Fy" })
       )
-      expect(res.status, from).toBe(status)
+      // Not a permanent answer: a browser must not keep it.
+      expect(res.status, from).toBe(302)
       // Nothing of the old query goes along, whatever it carried.
       expect(res.headers.get("location"), from).toBe(
         `http://localhost:3000${to}`
@@ -176,7 +179,7 @@ describe("createGatewayProxy integration", () => {
         search: "?expert=true&plan=community-paygo",
       })
     )
-    expect(res.status).toBe(301)
+    expect(res.status).toBe(302)
     expect(res.headers.get("location")).toBe(
       "http://localhost:3000/account/workspaces/create/expert"
     )
@@ -192,6 +195,8 @@ describe("createGatewayProxy integration", () => {
       "/dashboard",
       "/dashboard/",
       "/account/billing",
+      "/account/billing/return",
+      "/account/security",
       "/account/settings",
       "/account/workspaces/create/expert",
       "/onboarding",

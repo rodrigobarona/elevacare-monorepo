@@ -113,13 +113,14 @@ export function createGatewayProxy(options: GatewayProxyOptions) {
     // Where the MVP's signed-in pages were. Before dispatch: some of these
     // words would otherwise read as a username, or reach a zone that has
     // no such page. The query goes, once the rule has read it: it may
-    // carry something from an old email, and v3 has no use for it.
-    const moved = rewriteLegacyPrivatePath(pathname, request.nextUrl.search)
-    if (moved) {
+    // carry something from an old email, and v3 has no use for it. Not a
+    // permanent answer: see `legacy-private-routes.ts`.
+    const movedPath = rewriteLegacyPrivatePath(pathname, request.nextUrl.search)
+    if (movedPath) {
       const destination = request.nextUrl.clone()
-      destination.pathname = moved.to
+      destination.pathname = movedPath
       destination.search = ""
-      return NextResponse.redirect(destination, moved.permanent ? 301 : 302)
+      return NextResponse.redirect(destination, 302)
     }
 
     // Routing reads the address only (ADR-026): no session cookie check and

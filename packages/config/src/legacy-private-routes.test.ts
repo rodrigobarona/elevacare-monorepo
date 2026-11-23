@@ -9,6 +9,13 @@ import {
 import { rewriteParityPath } from "./public-site-parity"
 import { isReserved } from "./reserved-usernames"
 import { resolveDispatch } from "./dispatch"
+import {
+  APP_REWRITE_PATHS,
+  createWorkspacePath,
+  WEB_MARKETING_PATHS,
+  WORKSPACE_NAMESPACES,
+} from "./routing"
+import { locales } from "./i18n-locales"
 
 const REPOSITORY = join(import.meta.dirname, "../../..")
 
@@ -64,8 +71,7 @@ const V3_SERVES = [
  */
 const isStaffPage = (path: string) => path.startsWith("/admin/")
 
-const to = (path: string, search?: string) =>
-  rewriteLegacyPrivatePath(path, search)?.to ?? null
+const to = rewriteLegacyPrivatePath
 
 describe("where the MVP's signed-in addresses go", () => {
   it.each([
@@ -89,11 +95,29 @@ describe("where the MVP's signed-in addresses go", () => {
     ["/account/identity/success", "/dashboard"],
     // Creating an account, and "you may not see this".
     ["/register", "/signup"],
-    ["/unauthorized", "/login"],
+    ["/unauthorized", "/dashboard"],
     // Written in the MVP's own code and emails.
-    ["/sign-in", "/login"],
+    ["/sign-in", "/dashboard"],
+    ["/profile", "/dashboard"],
     ["/profile/complete", "/dashboard"],
     ["/unsubscribe", "/account/notifications"],
+    // Written in its notices, under a word v3 still answers.
+    ["/account/security/password", "/account/security"],
+    ["/account/security/sessions", "/account/security"],
+    ["/account/security/two-factor", "/account/security"],
+    ["/account/security/devices", "/account/security"],
+    ["/account/billing/receipts", "/account/billing"],
+    ["/account/billing/receipts/pi_3Q", "/account/billing"],
+    ["/account/billing/retry/pi_3Q", "/account/billing"],
+    ["/account/billing/multibanco", "/account/billing"],
+    ["/account/billing/refunds/re_1", "/account/billing"],
+    ["/account/earnings", "/dashboard"],
+    ["/account/earnings/payouts/po_1", "/dashboard"],
+    ["/account/payments", "/dashboard"],
+    ["/account/connect", "/dashboard"],
+    ["/account/verification", "/dashboard"],
+    ["/account/schedule", "/dashboard"],
+    ["/account/profile", "/account/settings"],
     // As typed: a slash at the end, capitals, a slash too many.
     ["/appointments/", "/dashboard"],
     ["/Booking/Schedule", "/dashboard"],
@@ -106,7 +130,8 @@ describe("where the MVP's signed-in addresses go", () => {
   })
 
   it("sends the MVP's \"become an expert\" button to v3's", () => {
-    const expert = "/account/workspaces/create/expert"
+    const expert = createWorkspacePath("expert")
+    expect(expert).toBe("/account/workspaces/create/expert")
     expect(to("/register", "?expert=true")).toBe(expert)
     expect(to("/register", "?expert=true&plan=community-paygo")).toBe(expert)
     expect(to("/register/", "?plan=top-annual&expert=true")).toBe(expert)
@@ -114,19 +139,8 @@ describe("where the MVP's signed-in addresses go", () => {
     expect(to("/register", "?expert=false")).toBe("/signup")
     expect(to("/register", "?plan=top-annual")).toBe("/signup")
     expect(to("/register", "")).toBe("/signup")
-    expect(to("/unauthorized", "?expert=true")).toBe("/login")
+    expect(to("/unauthorized", "?expert=true")).toBe("/dashboard")
     expect(to("/appointments", "?expert=true")).toBe("/dashboard")
-  })
-
-  it("is for good only where v3 will not use the word again", () => {
-    for (const word of Object.keys(LEGACY_PRIVATE_SECTIONS)) {
-      expect(rewriteLegacyPrivatePath(`/${word}`)?.permanent, word).toBe(true)
-    }
-    // `/dashboard` and `/account` are v3's own: it may build under them.
-    for (const { under, page } of LEGACY_PRIVATE_PAGES) {
-      const path = `/${under}/${page === "*" ? "anything" : page}`
-      expect(rewriteLegacyPrivatePath(path)?.permanent, path).toBe(false)
-    }
   })
 
   it.each([
@@ -145,7 +159,11 @@ describe("where the MVP's signed-in addresses go", () => {
     "/account/billing",
     "/account/billing/return",
     "/account/notifications",
+    "/account/billing/returned",
     "/account/security",
+    "/account/security/",
+    "/account/privacy",
+    "/account/organizations",
     "/account/workspaces/new",
     "/account/workspaces/create/expert",
     "/space",
@@ -172,18 +190,22 @@ describe("where the MVP's signed-in addresses go", () => {
     "/unsubscribed",
     "/account/identity-check",
     "/account/identities",
+    "/account/profiles",
+    "/account/billing/receipt",
+    "/account/security-keys",
     // A locale in front was never one of the MVP's signed-in addresses.
     "/pt/appointments",
     "/es/booking/schedule",
     "/en/register",
     "/pt/dashboard/subscription",
     "/pt/account/identity",
+    "/pt/account/security/password",
   ])("%s only begins like one, and is left alone", (path) => {
     expect(rewriteLegacyPrivatePath(path)).toBeNull()
   })
 
   it("sends every one of them to a page the account app has", () => {
-    const targets = new Set([
+    const targets = new Set<string>([
       ...Object.values(LEGACY_PRIVATE_SECTIONS),
       ...LEGACY_PRIVATE_PAGES.map((one) => one.to),
       to("/register", "?expert=true")!,
@@ -208,13 +230,44 @@ describe("where the MVP's signed-in addresses go", () => {
     }
   })
 
+  it("moves no address the account app has", () => {
+    // Read from its folders, so a page added there later under one of
+    // these words fails here and not in front of a visitor.
+    for (const address of ACCOUNT_APP) {
+      const example = address.replace(/\[[^\]]+\]/g, "example")
+      expect(rewriteLegacyPrivatePath(example), address).toBeNull()
+      expect(rewriteLegacyPrivatePath(`${example}/`), address).toBeNull()
+    }
+  })
+
+  it("moves no first word the gateway gives to an app or to the public site", () => {
+    // The rule runs before the gateway decides whose address it is, so a
+    // word in both places would be moved without anyone noticing.
+    const live = new Set<string>([
+      ...APP_REWRITE_PATHS,
+      ...WEB_MARKETING_PATHS,
+      ...WORKSPACE_NAMESPACES,
+      ...locales,
+      "docs",
+      "admin",
+    ])
+    for (const word of Object.keys(LEGACY_PRIVATE_SECTIONS)) {
+      expect(live.has(word), word).toBe(false)
+    }
+    // And the words whose pages are moved one by one are the account
+    // app's: nothing else is touched under any other first word.
+    for (const one of LEGACY_PRIVATE_PAGES) {
+      const first = ("below" in one ? one.below : one.from).split("/")[1]
+      expect(["dashboard", "account"], first).toContain(first)
+    }
+  })
+
   it("no first word of theirs can be taken as a username", () => {
-    for (const word of [
-      ...Object.keys(LEGACY_PRIVATE_SECTIONS),
-      ...LEGACY_PRIVATE_PAGES.map((one) => one.under),
-    ]) {
+    for (const word of Object.keys(LEGACY_PRIVATE_SECTIONS)) {
       expect(isReserved(word), word).toBe(true)
     }
+    expect(isReserved("dashboard")).toBe(true)
+    expect(isReserved("account")).toBe(true)
     // And the two that are written like `sign-in`.
     expect(isReserved("sign-up")).toBe(true)
     expect(isReserved("sign-out")).toBe(true)
@@ -225,7 +278,7 @@ describe("the account app's own list of addresses", () => {
   it("is read from its folders", () => {
     expect(ACCOUNT_APP.length).toBeGreaterThanOrEqual(15)
     expect(serves(ACCOUNT_APP, "/login")).toBe(true)
-    expect(serves(ACCOUNT_APP, "/account/workspaces/create/team")).toBe(true)
+    expect(serves(ACCOUNT_APP, createWorkspacePath("team"))).toBe(true)
     expect(serves(ACCOUNT_APP, "/account/workspaces/create")).toBe(false)
     expect(serves(ACCOUNT_APP, "/no-such-page")).toBe(false)
   })

@@ -1,16 +1,16 @@
 import { notFound, redirect } from "next/navigation"
 import { getAuthUser } from "@eleva/auth/server"
+import { SLUGGED_WORKSPACE_NAMESPACES } from "@eleva/config/routing"
 import { loadExistingPractice } from "@eleva/dashboard/existing-practice"
 import { getTranslations } from "next-intl/server"
 import { SetupShell } from "@/components/setup-shell"
 import { CreateWorkspaceForm } from "./create-workspace-form"
 
-const workspaceTypes = ["expert", "team", "academy"] as const
-
-type WorkspaceType = (typeof workspaceTypes)[number]
+// The same three kinds `createWorkspacePath` builds an address for.
+type WorkspaceType = (typeof SLUGGED_WORKSPACE_NAMESPACES)[number]
 
 function isWorkspaceType(value: string): value is WorkspaceType {
-  return workspaceTypes.includes(value as WorkspaceType)
+  return SLUGGED_WORKSPACE_NAMESPACES.includes(value as WorkspaceType)
 }
 
 export default async function CreateWorkspacePage({

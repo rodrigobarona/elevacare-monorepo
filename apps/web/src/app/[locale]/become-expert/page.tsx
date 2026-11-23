@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server"
 import { cookies } from "next/headers"
 import type { Metadata } from "next"
 import { requestHasSessionCookie } from "@eleva/auth/credentials"
+import { createWorkspacePath } from "@eleva/config/routing"
 import {
   MarketingPage,
   type MarketingIconId,
@@ -44,7 +45,7 @@ export default async function BecomeExpertPage({ params }: Props) {
       headingTestId="become-expert-heading"
       body={t("body")}
       imageSlug="physio-session"
-      cta={{ href: "/account/workspaces/create/expert", label: ctaLabel }}
+      cta={{ href: createWorkspacePath("expert"), label: ctaLabel }}
       stepsHeading={t("stepsHeading")}
       steps={t.raw("steps") as { title: string; body: string }[]}
       benefitsHeading={t("benefitsHeading")}
@@ -60,7 +61,7 @@ export default async function BecomeExpertPage({ params }: Props) {
       finalHeading={t("finalHeading")}
       finalBody={t("finalBody")}
       finalCta={{
-        href: "/account/workspaces/create/expert",
+        href: createWorkspacePath("expert"),
         label: ctaLabel,
       }}
     />
