@@ -5,3 +5,6 @@ node_modules/
 coverage/
 pnpm-lock.yaml
 .pnpm-store/
+
+# A cutover log says what ran, character for character (scripts/cutover-gate.mjs).
+docs/eleva-v3/operator-tasks/cutover-log-*.md
