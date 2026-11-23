@@ -1,19 +1,8 @@
-import {
-  and,
-  asc,
-  count,
-  desc,
-  eq,
-  inArray,
-  isNull,
-  ne,
-  or,
-  sql,
-} from "drizzle-orm"
+import { and, asc, desc, eq, inArray, isNull, ne, or, sql } from "drizzle-orm"
 
-import { pageWindow, type PageWindow } from "@eleva/config/pagination"
+import { readPage, type PageWindow } from "@eleva/config/pagination"
 
-import { withOrgContext, withPlatformAdminContext, type Tx } from "../context"
+import { withOrgContext, type Tx } from "../context"
 import * as auth from "../schema/auth"
 import * as main from "../schema/main"
 
@@ -197,34 +186,35 @@ export async function _listLicenceReviewQueue(
       )
     )
   )
-  const [counted] = await tx
-    .select({ total: count() })
-    .from(p)
-    .leftJoin(latest, eq(latest.expertProfileId, p.id))
-    .where(inQueue)
-  const window = pageWindow({ ...input, total: counted?.total ?? 0 })
-  const rows = await tx
-    .select({
-      expertProfileId: p.id,
-      displayName: p.displayName,
-      username: p.username,
-      profileStatus: p.status,
-      status: latest.status,
-      professionalBody: latest.professionalBody,
-      submittedAt: latest.submittedAt,
-      createdAt: p.createdAt,
-    })
-    .from(p)
-    .leftJoin(latest, eq(latest.expertProfileId, p.id))
-    .where(inQueue)
-    // The id settles two profiles with the same time, so a row is never on
-    // two pages or on none.
-    .orderBy(
-      asc(sql`coalesce(${latest.submittedAt}, ${p.createdAt})`),
-      asc(p.id)
-    )
-    .limit(input.pageSize)
-    .offset(window.offset)
+  // The rows and the count come from one statement: a decision made
+  // between a count and a read must not empty the last page.
+  const { rows, window } = await readPage({
+    ...input,
+    rowsFrom: (offset) =>
+      tx
+        .select({
+          expertProfileId: p.id,
+          displayName: p.displayName,
+          username: p.username,
+          profileStatus: p.status,
+          status: latest.status,
+          professionalBody: latest.professionalBody,
+          submittedAt: latest.submittedAt,
+          createdAt: p.createdAt,
+          total: sql<number>`count(*) over ()`.mapWith(Number),
+        })
+        .from(p)
+        .leftJoin(latest, eq(latest.expertProfileId, p.id))
+        .where(inQueue)
+        // The id settles two profiles with the same time, so a row is never
+        // on two pages or on none.
+        .orderBy(
+          asc(sql`coalesce(${latest.submittedAt}, ${p.createdAt})`),
+          asc(p.id)
+        )
+        .limit(input.pageSize)
+        .offset(offset),
+  })
   return {
     window,
     rows: rows.map((row) => ({

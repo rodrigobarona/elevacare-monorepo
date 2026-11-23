@@ -1,7 +1,7 @@
-import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm"
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm"
 import { withPlatformAudit } from "@eleva/audit"
 import type { ClinicChecklistItem } from "@eleva/config/clinic-verification"
-import { pageWindow, STAFF_QUEUE_PAGE_SIZE } from "@eleva/config/pagination"
+import { readPage, STAFF_QUEUE_PAGE_SIZE } from "@eleva/config/pagination"
 import { auth, main, withPlatformAdminContext, type Tx } from "@eleva/db"
 import { _emitClinicDecisionEvent } from "@eleva/db/queries/clinic-verifications"
 import type { ClinicBillingAddress } from "@eleva/db/schema"
@@ -107,42 +107,40 @@ export async function listClinicVerificationQueue(input: {
   const c = main.clinicProfiles
   const inReview = inArray(v.status, ["pending", "needs_changes"])
   return withPlatformAudit(input.viewer, async (tx, ctx) => {
-    const [counted] = await tx
-      .select({ total: count() })
-      .from(v)
-      .innerJoin(c, eq(c.orgId, v.orgId))
-      .where(inReview)
-    const window = pageWindow({
-      total: counted?.total ?? 0,
+    // The rows and the count come from one statement: a filing decided
+    // between a count and a read must not empty the last page.
+    const { rows: items, window } = await readPage({
       page: input.page,
       pageSize: STAFF_QUEUE_PAGE_SIZE,
+      rowsFrom: (offset) =>
+        tx
+          .select({
+            verificationId: v.id,
+            orgId: v.orgId,
+            clinicName: c.displayName,
+            legalName: v.legalName,
+            countryCode: c.countryCode,
+            status: v.status,
+            waitingSince: v.submittedAt,
+            verified: sql<boolean>`exists (
+              select 1 from ${v} approved
+              where approved.org_id = ${v.orgId} and approved.status = 'approved'
+            )`,
+            total: sql<number>`count(*) over ()`.mapWith(Number),
+          })
+          .from(v)
+          .innerJoin(c, eq(c.orgId, v.orgId))
+          .where(inReview)
+          // The id settles two filings sent at the same moment, so a row is
+          // never on two pages or on none.
+          .orderBy(
+            desc(sql`${v.status} = 'pending'`),
+            asc(v.submittedAt),
+            asc(v.id)
+          )
+          .limit(STAFF_QUEUE_PAGE_SIZE)
+          .offset(offset),
     })
-    const items = await tx
-      .select({
-        verificationId: v.id,
-        orgId: v.orgId,
-        clinicName: c.displayName,
-        legalName: v.legalName,
-        countryCode: c.countryCode,
-        status: v.status,
-        waitingSince: v.submittedAt,
-        verified: sql<boolean>`exists (
-          select 1 from ${v} approved
-          where approved.org_id = ${v.orgId} and approved.status = 'approved'
-        )`,
-      })
-      .from(v)
-      .innerJoin(c, eq(c.orgId, v.orgId))
-      .where(inReview)
-      // The id settles two filings sent at the same moment, so a row is
-      // never on two pages or on none.
-      .orderBy(
-        desc(sql`${v.status} = 'pending'`),
-        asc(v.submittedAt),
-        asc(v.id)
-      )
-      .limit(STAFF_QUEUE_PAGE_SIZE)
-      .offset(window.offset)
     await ctx.emit({
       entity: "clinic_verification",
       action: "listed",

@@ -62,8 +62,12 @@ Each entry should include:
   so in a queue that does not change a row is never on two pages or on
   none. When a filing is decided while someone pages, the rows after it
   move up by one and the next page starts one row later: the reviewer can
-  miss a row until they come back to the top. The count and the page are
-  two reads, so for an instant they can disagree by a row.
+  miss a row until they come back to the top. The rows and the count come
+  from one statement (`count(*) over ()`), so they describe the same
+  moment: the first version counted, then read, and a filing decided in
+  between could come back as an empty last page with no way back (the
+  review caught it). A page with no row at its place is looked for again
+  from the top of the queue, `readPage` in `@eleva/config/pagination`.
 - Design: three Mobbin references saved first (`13-admin/17` to `19`: range
   and total beside Previous and Next in words; a count on the queue itself;
   the count of the filtered list). Previous and Next, not "Load more": a

@@ -55,6 +55,46 @@ export function pageWindow(input: {
   }
 }
 
+/** How many times a page read follows a list that keeps getting shorter. */
+const PAGE_READ_ROUNDS = 3
+
+/**
+ * Reads one page of a list that other people change while it is read.
+ *
+ * `rowsFrom(offset)` is one statement that returns the rows from `offset`
+ * and, on each of them, the size of the whole list (`count(*) over ()`).
+ * The rows and the count then describe the same moment: a count read first
+ * and rows read after can disagree, and a list that got one row shorter in
+ * between would come back as an empty last page.
+ *
+ * No row at the page asked for means the list is empty or the page is past
+ * its end. The top of the list says which, and the read moves to the last
+ * page. A list that keeps getting shorter ends at its top.
+ */
+export async function readPage<Row>(input: {
+  page: number
+  pageSize: number
+  rowsFrom: (offset: number) => Promise<Array<Row & { total: number }>>
+}): Promise<{ rows: Row[]; window: PageWindow }> {
+  const pageSize = Math.max(1, Math.trunc(input.pageSize))
+  const asked = Number.isFinite(input.page) ? Math.trunc(input.page) : 1
+  const settle = (found: Array<Row & { total: number }>, page: number) => ({
+    rows: found.map(({ total: _total, ...row }) => row as unknown as Row),
+    window: pageWindow({ total: found[0]?.total ?? 0, page, pageSize }),
+  })
+  let page = Math.max(1, asked)
+  let top: Array<Row & { total: number }> = []
+  for (let round = 0; round < PAGE_READ_ROUNDS; round++) {
+    const found = await input.rowsFrom((page - 1) * pageSize)
+    if (found.length > 0 || page === 1) return settle(found, page)
+    top = await input.rowsFrom(0)
+    const last = pageWindow({ total: top[0]?.total ?? 0, page, pageSize }).page
+    if (last === 1) return settle(top, 1)
+    page = last
+  }
+  return settle(top, 1)
+}
+
 /**
  * The page a `?page=` value names: a whole number from 1 to `MAX_PAGE`.
  * Null for anything else ("0", "-2", "abc", "1.5", "2 ", a repeated
