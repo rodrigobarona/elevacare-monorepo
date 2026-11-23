@@ -30,10 +30,11 @@ import {
  * a template. The shared words (`i18n.ts`) are compared entry by entry, at
  * any length, so a branch no form here reaches is still read. And common
  * English words (the, your, with) fail wherever they turn up in Portuguese
- * or Spanish, so English that was reworded is caught too.
+ * or Spanish, so English that was reworded is nearly always caught too.
  *
  * What this cannot see: words a template writes itself in a branch that no
- * form below renders. A new branch with words of its own needs a form.
+ * form below renders (a new branch with words of its own needs a form),
+ * and text in attributes such as `alt` (today only the logo's name).
  */
 const LOCALES = ["en", "pt", "es"] as const satisfies readonly EmailLocale[]
 
@@ -566,12 +567,13 @@ function englishLeft(english: string, other: string): string[] {
  * hold"): this narrows the gap, it does not close it.
  *
  * Left out on purpose, because Portuguese or Spanish use them: for, a, no,
- * do, as, has, can, in, on (the last two inside "check-in", "on-line").
+ * do, as, has, can; in, on and by (inside "check-in", "on-line",
+ * "stand-by"); and at (AT is the Portuguese tax authority).
  */
 const ENGLISH_WORDS = new Set(
   (
     "the your you this with and will please that from have been was were " +
-    "our their they here when what not to is of it an we be if at by"
+    "our their they here when what not to is of it an we be if"
   ).split(" ")
 )
 
@@ -803,6 +805,7 @@ describe("the list of emails above", () => {
     } as const
     const sources = [
       read("session-mode.ts"),
+      read("render.tsx"),
       ...["components", "templates"].flatMap((folder) =>
         readdirSync(join(here, folder))
           .filter((file) => file.endsWith(".tsx"))
@@ -827,9 +830,10 @@ describe("the list of emails above", () => {
       input: INPUT[match[2] as keyof typeof INPUT],
       members: [...match[3]!.matchAll(/"([^"]+)"/g)].map((one) => one[1]!),
     }))
-    // Every such type made of quoted names was read to its end: one
-    // written in a way this cannot read fails here instead of being
-    // skipped.
+    // Every such type that begins with a quoted name was read to its end.
+    // Not read: a type built another way (`(typeof LIST)[number]`), one in
+    // a file outside these folders, and a choice written inside a props
+    // type (`audience?: "member" | "expert"`). Those need a form by hand.
     expect(unions.map((union) => union.name).sort()).toEqual(declared.sort())
     expect(declared).toEqual(
       expect.arrayContaining([
@@ -963,9 +967,10 @@ describe("the words the emails share", () => {
       for (const [path, say] of english) {
         for (const given of SAMPLES) {
           const there = String(other.get(path)!(...given))
-          // A name, a date or a number the English sentence says.
+          // A name, a date or a number the English sentence says. Not the
+          // number one: "1 follow-up" is rightly "un seguimiento".
           for (const value of given) {
-            if (typeof value === "boolean") continue
+            if (typeof value === "boolean" || value === 1) continue
             if (
               String(say(...given)).includes(String(value)) &&
               !there.includes(String(value))

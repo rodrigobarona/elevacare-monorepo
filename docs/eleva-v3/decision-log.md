@@ -67,9 +67,9 @@ Each entry should include:
   paragraph half in English; a greeting that dropped the name; a subject
   that dropped the date; a `{placeholder}` left in; a new kind; a new
   reminder window.
-- Three blind reviews scored earlier states 6, 6 and 7 out of 10 and named
-  the gaps that the later commits close. The last state's score is in the
-  pull request.
+- Four blind reviews scored it 6, 6, 7 and then 8 out of 10, each naming
+  gaps that the next commit closed. The last commit (two words taken off
+  the English list, comments made exact) was not scored again.
 - Not covered: whether a translation reads well to a native speaker (a
   person's review); a short English label with no common English word in it
   that differs from the English email's ("On hold"); words a template writes itself in a branch that no form
