@@ -43,9 +43,29 @@ const remove = (id: string) =>
     }
   )
 
+const emitted: unknown[] = []
+
 beforeEach(() => {
   vi.clearAllMocks()
-  mocks.withAudit.mockResolvedValue(undefined)
+  emitted.length = 0
+  // Runs the route's own write with a transaction that finds the override.
+  mocks.withAudit.mockImplementation(
+    async (
+      _options: unknown,
+      write: (tx: unknown, ctx: { emit: (event: unknown) => void }) => unknown
+    ) => {
+      const tx = {
+        select: () => ({
+          from: () => ({
+            where: () => ({
+              limit: async () => [{ scheduleId: "schedule-1" }],
+            }),
+          }),
+        }),
+      }
+      return write(tx, { emit: (event) => void emitted.push(event) })
+    }
+  )
 })
 
 describe("DELETE /expert/schedule/overrides/{id}", () => {
@@ -61,10 +81,28 @@ describe("DELETE /expert/schedule/overrides/{id}", () => {
     }
   )
 
-  it("removes an override named by a well-formed id", async () => {
+  it("removes an override named by a well-formed id, and records it", async () => {
     const response = await remove(ID)
     expect(response.status).toBe(200)
-    expect(mocks.withAudit).toHaveBeenCalledTimes(1)
+    expect(mocks.withAudit).toHaveBeenCalledWith(
+      { orgId: "org-1", actorUserId: "user-1" },
+      expect.any(Function)
+    )
+    // The caller's own practice and profile, and the parsed id.
+    expect(mocks.deleteDateOverride).toHaveBeenCalledWith(
+      "org-1",
+      ID,
+      "profile-1",
+      expect.anything()
+    )
+    expect(emitted).toEqual([
+      {
+        entity: "schedule",
+        action: "updated",
+        entityId: "schedule-1",
+        payload: { action: "override_removed", overrideId: ID },
+      },
+    ])
   })
 
   it("keeps the error's own words in the log, not in the answer", async () => {

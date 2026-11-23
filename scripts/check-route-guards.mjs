@@ -12,8 +12,8 @@
  *
  * "Reachable" for rate limit and BotID = the route file or a local module
  * it imports (two import hops, `@/` and relative specifiers). For auth and
- * for validation = the route file or a handler it delegates to by a
- * relative path: a shared helper imported from `@/lib` never counts.
+ * for validation = the route file or a handler beside it: a shared helper
+ * under `apps/api/src/lib` never counts, however its import is written.
  *
  * The logic is exported (`findRouteGuardProblems`, `validatesRequest`) and
  * tested in `check-route-guards.test.mjs`.
@@ -206,6 +206,7 @@ const FRONTEND_ROUTE_EXCEPTIONS = new Set([
 export async function findRouteGuardProblems(root) {
   const appDir = path.join(root, "apps/api/src/app")
   const srcDir = path.join(root, "apps/api/src")
+  const libDir = path.join(srcDir, "lib")
 
   const sourceCache = new Map()
   async function sourceOf(file) {
@@ -253,6 +254,9 @@ export async function findRouteGuardProblems(root) {
         const specifier = node.moduleSpecifier.text
         if (relativeOnly && !specifier.startsWith(".")) return
         const target = resolveLocal(file, specifier)
+        // By where the module is, not by how its path is spelled:
+        // `../../../lib/x` is the shared lib as much as `@/lib/x`.
+        if (relativeOnly && target?.startsWith(libDir + path.sep)) return
         if (target) resolved.push(target)
       }
     })

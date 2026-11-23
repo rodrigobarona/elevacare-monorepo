@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const listCalendarIntegrations = vi.hoisted(() => vi.fn(async () => []))
 
@@ -40,6 +40,10 @@ const remove = (id: string) =>
       params: Promise.resolve({ id }),
     }
   )
+
+beforeEach(() => {
+  vi.clearAllMocks()
+})
 
 describe("DELETE /expert/integrations/{id}", () => {
   it("refuses an id that is not well formed, before it lists any integration", async () => {

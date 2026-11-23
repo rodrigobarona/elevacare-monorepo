@@ -205,6 +205,17 @@ test("what does not validate a request", async () => {
     "apps/api/src/lib/teams-http.ts": `export function teamSummary(row) { return TeamSummarySchema.parse(row) }\nexport function check(body) { return BodyRequestSchema.safeParse(body) }\n`,
   })
   assert.match(lines[0], VALIDATES_NOTHING)
+
+  // The same shared module, reached by a relative path: where it is
+  // decides, not how the import is spelled.
+  const viaRelativeLib = sessionPost(`  return teamSummary(row)\n`).replace(
+    "export async function",
+    `import { teamSummary } from "../../lib/teams-http"\nexport async function`
+  )
+  const relativeLines = await problemsOf(viaRelativeLib, {
+    "apps/api/src/lib/teams-http.ts": `export function teamSummary(row) { return TeamSummarySchema.parse(row) }\nexport function check(body) { return BodyRequestSchema.safeParse(body) }\n`,
+  })
+  assert.match(relativeLines[0], VALIDATES_NOTHING)
 })
 
 test("what validates a request", async () => {

@@ -73,7 +73,9 @@ Each entry should include:
   the next slice on this track (parse every path id, never answer with an
   error's own words), with a rule per handler to go with it.
 - The guard also follows `export { POST } from "./handler"` now, as it
-  followed imports.
+  followed imports. And a shared module under `apps/api/src/lib` counts for
+  neither auth nor validation however its import is written: `../../lib/x`
+  used to slip past a rule that looked at the spelling (Greptile).
 - The script also fails when it finds no route at all (a wrong path used
   to pass with "0 routes").
 - Proof: `pnpm test:scripts` (27 tests, 13 new); the guard passes on the 166
