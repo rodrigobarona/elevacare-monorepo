@@ -49,8 +49,17 @@ export function ElevaVideo({
   className?: string
   sizes?: string
   priority?: boolean
-  /** Labels (and optional classes) for the pause and play button. */
-  pause?: { pauseLabel: string; playLabel: string; className?: string }
+  /**
+   * Names (and optional classes) for the pause and play button. With `icons`
+   * the button shows the icon and carries the name for assistive technology;
+   * without them it shows the name.
+   */
+  pause?: {
+    pauseLabel: string
+    playLabel: string
+    className?: string
+    icons?: { pause: React.ReactNode; play: React.ReactNode }
+  }
   /** Called with the playhead in seconds while the film plays. */
   onTime?: (seconds: number) => void
 }) {
@@ -106,13 +115,26 @@ export function ElevaVideo({
             <source src={video.url} type="video/mp4" />
           </video>
           {pause ? (
+            // The name says what pressing does, so it changes with the state.
             <button
               type="button"
               onClick={toggle}
-              aria-pressed={isPaused}
+              aria-label={
+                pause.icons
+                  ? isPaused
+                    ? pause.playLabel
+                    : pause.pauseLabel
+                  : undefined
+              }
               className={pause.className}
             >
-              {isPaused ? pause.playLabel : pause.pauseLabel}
+              {pause.icons
+                ? isPaused
+                  ? pause.icons.play
+                  : pause.icons.pause
+                : isPaused
+                  ? pause.playLabel
+                  : pause.pauseLabel}
             </button>
           ) : null}
         </>

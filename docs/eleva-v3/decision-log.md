@@ -50,6 +50,12 @@ Each entry should include:
     over a feathered dark grade, an edgeless blur and a light text shadow.
     Measured on eleven scenes with the words hidden: the brightest pixel
     behind the headline gives 4.8 to 1 at worst, behind the line 7.4 to 1.
+  - **The film's controls stay quiet** (founder, same day): the pause
+    control is a small round icon button, and the line "The people in this
+    film are models" is a small muted note in the corner of the picture,
+    not a pill that reads as an action. The note is there because the film
+    sets first-person health questions beside recognisable faces. It keeps
+    4.8 to 1 at worst across the film's scenes.
   - **The film can be paused.** `ElevaVideo` in `@eleva/media` gained an
     optional pause button and a playhead callback; the film runs for 131
     seconds, so a pause control is required (WCAG 2.2.2).

@@ -89,7 +89,7 @@ async function MarketingContent() {
           action={t("hero.cta")}
           pauseLabel={t("hero.pause")}
           playLabel={t("hero.play")}
-          posedLabel={t("hero.posed")}
+          note={t("hero.note")}
           scenes={HERO_FILM_QUESTIONS.map((scene) => ({
             from: scene.from,
             text: scene.id

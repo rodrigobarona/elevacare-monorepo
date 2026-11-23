@@ -2,13 +2,11 @@
 
 import { useState } from "react"
 import type { Locale } from "@eleva/config/i18n-locales"
+import { PauseIcon, PlayIcon } from "@eleva/icons"
 import { ElevaVideo } from "@eleva/media/video"
 import { buttonVariants } from "@eleva/ui/components/button-variants"
 import { cn } from "@eleva/ui/lib/utils"
 import { Link } from "@/i18n/navigation"
-
-const CHIP =
-  "inline-flex min-h-11 items-center rounded-full bg-teal-950/55 px-4 text-sm text-white backdrop-blur-md"
 
 /**
  * The homepage hero: the film, one question, one line and one action.
@@ -31,7 +29,7 @@ export function HomeHero({
   scenes,
   pauseLabel,
   playLabel,
-  posedLabel,
+  note,
 }: {
   locale: Locale
   /** The page heading and the opening question. */
@@ -42,7 +40,8 @@ export function HomeHero({
   scenes: readonly { from: number; text: string }[]
   pauseLabel: string
   playLabel: string
-  posedLabel: string
+  /** A quiet note in the corner of the film, e.g. who appears in it. */
+  note: string
 }) {
   const [question, setQuestion] = useState(heading)
 
@@ -57,7 +56,7 @@ export function HomeHero({
   }
 
   return (
-    <section className="relative isolate mx-2 flex min-h-[min(78svh,46rem)] flex-col justify-end overflow-hidden rounded-3xl bg-teal-950 text-white sm:mx-3">
+    <section className="group/hero relative isolate mx-2 flex min-h-[min(78svh,46rem)] flex-col justify-end overflow-hidden rounded-3xl bg-teal-950 text-white sm:mx-3">
       <div className="relative max-w-3xl px-6 pt-40 pb-8 sm:px-10 sm:pb-12 lg:px-14 lg:pb-14">
         <h1 className="sr-only" data-testid="marketing-hero">
           {heading}
@@ -99,10 +98,12 @@ export function HomeHero({
         pause={{
           pauseLabel,
           playLabel,
-          className: cn(
-            CHIP,
-            "absolute right-4 bottom-4 cursor-pointer hover:bg-teal-950/75 sm:right-6 sm:bottom-6"
-          ),
+          icons: {
+            pause: <PauseIcon aria-hidden weight="fill" className="size-4" />,
+            play: <PlayIcon aria-hidden weight="fill" className="size-4" />,
+          },
+          className:
+            "absolute right-3 bottom-3 grid size-10 cursor-pointer place-content-center rounded-full bg-teal-950/45 text-white backdrop-blur-md transition-colors hover:bg-teal-950/70 sm:right-5 sm:bottom-5",
         }}
       />
       {/* The grade: dark where the words sit, clear where the faces are. */}
@@ -114,13 +115,14 @@ export function HomeHero({
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-10 [mask-image:linear-gradient(to_top,black_30%,transparent_70%)] backdrop-blur-md lg:[mask-image:radial-gradient(ellipse_70%_85%_at_0%_100%,black_30%,transparent_78%)]"
       />
-      <p
-        className={cn(
-          CHIP,
-          "pointer-events-none absolute top-4 right-4 min-h-8 px-3 text-xs sm:top-6 sm:right-6"
-        )}
-      >
-        {posedLabel}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(to_bottom,rgb(4_26_30/0.5)_0%,rgb(4_26_30/0)_16%)] sm:bg-[linear-gradient(to_top,rgb(4_26_30/0.72)_0%,rgb(4_26_30/0)_20%)]"
+      />
+      {/* A note, not an action: small and quiet, in the corner of the
+          picture, beside the pause button when the film runs. */}
+      <p className="pointer-events-none absolute top-3 right-4 flex h-10 items-center text-xs text-white/80 text-shadow-sm sm:top-auto sm:right-5 sm:bottom-5 group-has-[video]/hero:sm:right-[4.5rem]">
+        {note}
       </p>
     </section>
   )
