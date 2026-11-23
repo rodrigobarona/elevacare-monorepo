@@ -41,6 +41,10 @@ const OWN_PLACE = "/dashboard"
 export const LEGACY_PRIVATE_SECTIONS = {
   // Sessions, the people an expert sees, their records.
   appointments: OWN_PLACE,
+  // An expert's services, as its notices about a coming payout wrote them.
+  events: OWN_PLACE,
+  // The calendar connection, as its own pages linked to it.
+  settings: OWN_PLACE,
   // Services, the expert's public profile, the schedule and its limits.
   booking: OWN_PLACE,
   // The expert's set-up checklist: v3 picks it up where it stands.
@@ -53,8 +57,18 @@ export const LEGACY_PRIVATE_SECTIONS = {
   // Not pages of the MVP, but addresses its own code and emails wrote:
   // where it sent a person after signing out, or after a Google error.
   "sign-in": OWN_PLACE,
+  // The address its sign-out went by. v3's page asks before signing out.
+  "sign-out": "/logout",
   // "Complete your profile", in its welcome email.
   profile: OWN_PLACE,
+  // What its payment and session emails linked to when the sender gave
+  // no address of its own: one session, a receipt, a Multibanco voucher,
+  // the call.
+  appointment: OWN_PLACE,
+  receipt: OWN_PLACE,
+  receipts: OWN_PLACE,
+  payment: OWN_PLACE,
+  meet: OWN_PLACE,
   // The foot of its emails. v3 keeps what it sends to a person here.
   unsubscribe: "/account/notifications",
 } as const satisfies Record<string, string>

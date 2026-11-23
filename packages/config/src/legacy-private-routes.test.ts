@@ -1,4 +1,4 @@
-import { existsSync, readdirSync } from "node:fs"
+import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 import {
@@ -18,6 +18,7 @@ import {
 import { locales } from "./i18n-locales"
 
 const REPOSITORY = join(import.meta.dirname, "../../..")
+const read = (file: string) => readFileSync(file, "utf8")
 
 /**
  * The addresses of an app directory: a folder with `page.tsx` or
@@ -53,6 +54,24 @@ function serves(served: string[], path: string): boolean {
 
 /** What the account app answers today, read from its own folders. */
 const ACCOUNT_APP = addresses(join(REPOSITORY, "apps/account/src/app"))
+
+/** The first words of the public site's own pages, read from its folders. */
+const PUBLIC_SITE = readdirSync(join(REPOSITORY, "apps/web/src/app/[locale]"), {
+  withFileTypes: true,
+})
+  .filter((entry) => entry.isDirectory() && /^[a-z]/.test(entry.name))
+  .map((entry) => entry.name)
+
+/** Every first word the gateway gives to an app or to the public site. */
+const LIVE_FIRST_WORDS = new Set<string>([
+  ...APP_REWRITE_PATHS,
+  ...WEB_MARKETING_PATHS,
+  ...WORKSPACE_NAMESPACES,
+  ...PUBLIC_SITE,
+  ...locales,
+  "docs",
+  "admin",
+])
 
 /** The MVP's signed-in addresses that v3 answers itself, at the same path. */
 const V3_SERVES = [
@@ -98,6 +117,16 @@ describe("where the MVP's signed-in addresses go", () => {
     ["/unauthorized", "/dashboard"],
     // Written in the MVP's own code and emails.
     ["/sign-in", "/dashboard"],
+    ["/sign-out", "/logout"],
+    ["/events", "/dashboard"],
+    ["/events/evt_1", "/dashboard"],
+    ["/settings/calendar", "/dashboard"],
+    ["/settings/integrations", "/dashboard"],
+    ["/appointment/123", "/dashboard"],
+    ["/receipt/123", "/dashboard"],
+    ["/receipts/123", "/dashboard"],
+    ["/payment/voucher/123", "/dashboard"],
+    ["/meet/apt_conf_123", "/dashboard"],
     ["/profile", "/dashboard"],
     ["/profile/complete", "/dashboard"],
     ["/unsubscribe", "/account/notifications"],
@@ -186,6 +215,9 @@ describe("where the MVP's signed-in addresses go", () => {
     "/setupstudio",
     "/registered",
     "/profiles",
+    "/eventsclub",
+    "/payments",
+    "/meeting",
     "/sign-in-help",
     "/unsubscribed",
     "/account/identity-check",
@@ -243,16 +275,8 @@ describe("where the MVP's signed-in addresses go", () => {
   it("moves no first word the gateway gives to an app or to the public site", () => {
     // The rule runs before the gateway decides whose address it is, so a
     // word in both places would be moved without anyone noticing.
-    const live = new Set<string>([
-      ...APP_REWRITE_PATHS,
-      ...WEB_MARKETING_PATHS,
-      ...WORKSPACE_NAMESPACES,
-      ...locales,
-      "docs",
-      "admin",
-    ])
     for (const word of Object.keys(LEGACY_PRIVATE_SECTIONS)) {
-      expect(live.has(word), word).toBe(false)
+      expect(LIVE_FIRST_WORDS.has(word), word).toBe(false)
     }
     // And the words whose pages are moved one by one are the account
     // app's: nothing else is touched under any other first word.
@@ -268,9 +292,8 @@ describe("where the MVP's signed-in addresses go", () => {
     }
     expect(isReserved("dashboard")).toBe(true)
     expect(isReserved("account")).toBe(true)
-    // And the two that are written like `sign-in`.
+    // And the one that is written like `sign-in`.
     expect(isReserved("sign-up")).toBe(true)
-    expect(isReserved("sign-out")).toBe(true)
   })
 })
 
@@ -320,5 +343,96 @@ describe("the MVP's own list of routes", () => {
   it("names as answered by v3 only addresses the MVP had", () => {
     const signedIn = new Set([...pages("(app)"), ...pages("(auth)")])
     for (const path of V3_SERVES) expect(signedIn.has(path), path).toBe(true)
+  })
+})
+
+describe("the addresses the MVP's own code wrote", () => {
+  // Its pages are not all of it: its emails, notices and links wrote
+  // addresses too, some with no page behind them. Every quoted address in
+  // its code is read here, so one that is found later fails this test and
+  // not a person with an old email.
+  const source = join(REPOSITORY, "_context/clone-repo/eleva-care-app/src")
+
+  function files(dir: string): string[] {
+    return readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
+      entry.isDirectory()
+        ? files(join(dir, entry.name))
+        : /\.tsx?$/.test(entry.name)
+          ? [join(dir, entry.name)]
+          : []
+    )
+  }
+
+  /** `'/x/y'`, `"https://eleva.care/x"`, `` `/x/${id}` ``: the path of each. */
+  function written(text: string): string[] {
+    const quoted =
+      /['"`](?:https?:\/\/(?:www\.)?eleva\.care)?(\/[a-z][^'"`\s]*)['"`]?/g
+    return [...text.matchAll(quoted)].flatMap((match) => {
+      const path = match[1]!
+        .split(/[?#]/)[0]!
+        // A part filled in when the address is made.
+        .replace(/\$\{.*$/, "example")
+        .replace(/\/$/, "")
+      // A file (`/img/share.png`) is not a page.
+      return path.includes(".") ? [] : [path]
+    })
+  }
+
+  /**
+   * First words that are not a signed-in address of the MVP's site, each
+   * with what it is.
+   */
+  const NOT_ONE: Record<string, string> = {
+    api: "its API routes: not pages",
+    auth: "a word its analytics looks for inside an address",
+    monitoring: "the route its error reports were sent through",
+    emails: "files of its own email templates",
+    data: "a folder its robots file names, with no page",
+    bookings: "a folder its robots file names, with no page",
+    foo: "an example in a comment",
+    partner: "in its permission list, with no page behind it",
+    providers: "sample data in the preview of an email",
+    // Public addresses. The public pages are Phase 4's
+    // (`public-site-parity`); these two are not in it.
+    services: "public pages of its footer",
+    "become-partner": "a public page",
+  }
+
+  const all = [...new Set(files(source).flatMap((file) => written(read(file))))]
+
+  it("reads a few hundred files and finds the ones we know", () => {
+    expect(files(source).length).toBeGreaterThan(300)
+    for (const known of [
+      "/account/security/password",
+      "/events/example",
+      "/register",
+      "/unauthorized",
+      "/sign-in",
+    ]) {
+      expect(all, known).toContain(known)
+    }
+  })
+
+  it("has none that is neither moved, nor answered by v3, nor named as something else", () => {
+    const forgotten = all.filter((path) => {
+      const first = path.split("/")[1]!
+      if (!/^[a-z][a-z0-9-]*$/.test(first)) return false
+      if (rewriteLegacyPrivatePath(path) !== null) return false
+      if (rewriteParityPath(path) !== null) return false
+      // Under the account app's words, the page itself must be there.
+      if (ACCOUNT_APP.some((address) => address.split("/")[1] === first)) {
+        return !serves(ACCOUNT_APP, path)
+      }
+      return !LIVE_FIRST_WORDS.has(first) && !Object.hasOwn(NOT_ONE, first)
+    })
+    expect(forgotten.sort()).toEqual([])
+  })
+
+  it("names as something else only words the code has, and none it moves", () => {
+    const firsts = new Set(all.map((path) => path.split("/")[1]))
+    for (const word of Object.keys(NOT_ONE)) {
+      expect(firsts.has(word), word).toBe(true)
+      expect(rewriteLegacyPrivatePath(`/${word}`), word).toBeNull()
+    }
   })
 })

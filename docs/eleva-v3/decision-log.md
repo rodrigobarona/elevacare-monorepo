@@ -47,8 +47,10 @@ Each entry should include:
 
   | The MVP's address                                                                    | Goes to                             |
   | ------------------------------------------------------------------------------------ | ----------------------------------- |
-  | `/appointments`, `/booking`, `/setup`, `/profile`, and everything under              | `/dashboard`                        |
+  | `/appointments`, `/booking`, `/setup`, `/events`, `/settings`, and everything under  | `/dashboard`                        |
+  | `/profile`, `/appointment`, `/receipt`, `/receipts`, `/payment`, `/meet`, and under  | `/dashboard`                        |
   | `/unauthorized`, `/sign-in`                                                          | `/dashboard`                        |
+  | `/sign-out`                                                                          | `/logout`                           |
   | `/register`                                                                          | `/signup`                           |
   | `/register?expert=true` (its "become an expert" button)                              | `/account/workspaces/create/expert` |
   | `/unsubscribe`                                                                       | `/account/notifications`            |
@@ -65,14 +67,29 @@ Each entry should include:
   anyone else to sign in. An old link to one person's record goes there
   too: v3 has no page at that old address. `/unauthorized` and `/sign-in`
   go there and not straight to the sign-in page, so a person who is signed
-  in is not shown a sign-in form.
-- **Addresses that were never pages of the MVP.** Its code, email
-  templates and notices wrote them: `/sign-in` (after signing out),
-  `/profile` (its welcome email), `/unsubscribe` (the foot of its emails,
-  by default), and the `/account/...` rows above from the fourth on (its
-  `notification-links` and payment webhooks). Which of those emails and
-  notices were in fact sent was not checked; each now lands on the page
-  in v3 that covers the same thing.
+  in is not shown a sign-in form. `/sign-out` goes to v3's own page, which
+  asks before signing anyone out.
+- **Addresses that were never pages of the MVP.** Its pages were
+  `/appointments`, `/booking`, `/setup`, `/register`, `/unauthorized`,
+  `/dashboard/subscription` and `/account/identity`. Every other row was
+  written by its code without a page behind it: `/sign-in` and `/sign-out`
+  (its sign-out), `/events` (its notice of a coming payout), `/settings`
+  (its calendar connection), `/profile`, `/appointment`, `/receipt`,
+  `/receipts`, `/payment` and `/meet` (what its emails linked to when the
+  sender gave no address), `/unsubscribe` (the foot of its emails), and
+  the `/account/...` addresses other than `identity` (its notices and its
+  payment webhooks). Which of those emails and notices were in fact sent
+  was not checked; each now lands on the page in v3 that covers the same
+  thing.
+- **The list is what a read of the code found, and a test repeats the
+  read.** Every quoted address in the MVP's code (505 files) is read by
+  the test. Each must be moved, answered by v3, or named in the test as
+  something that is not a signed-in address, with what it is: its API
+  routes, its email template files, two folders its robots file names,
+  the route its error reports went through, a permission entry with no
+  page (`/partner`), sample data in an email preview (`/providers`), and
+  two public addresses that Phase 4's map does not have (`/services/...`
+  from its footer, `/become-partner`).
 - **Every answer is a 302, none is permanent.** These were pages behind a
   sign-in, so a permanent answer gains nothing in search, and a browser
   that kept one could never be told otherwise if v3 wants the address one
@@ -82,16 +99,18 @@ Each entry should include:
   MVP's become-an-expert page carried. The plan named beside it
   (`plan=community-paygo`) is lost: in v3 a new expert starts on the basic
   plan and can change it later.
-- `appointments`, `booking`, `register`, `unauthorized`, `sign-in`,
-  `profile` and `unsubscribe` are now reserved usernames, taken from the
-  map itself, with `sign-up` and `sign-out` beside them. The roadmap's
-  rule for the move (14.9, not built) is that a reserved name stops the
-  run, so a person in the MVP who has one of these as a username will have
-  to be handled there.
+- Every first word in the first seven rows is now a reserved username,
+  taken from the map itself: fourteen that were not reserved before
+  (`appointments`, `booking`, `events`, `register`, `unauthorized`,
+  `sign-in`, `sign-out`, `profile`, `appointment`, `receipt`, `receipts`,
+  `payment`, `meet`, `unsubscribe`), and `sign-up` beside them. The
+  roadmap's rule for the move (14.9, not built) is that a reserved name
+  stops the run, so a person in the MVP who has one of these as a username
+  will have to be handled there.
 - The address where a person starts a work organization is now built in
   one place, `createWorkspacePath()` in `@eleva/config/routing`, used by
-  this map, the two public pages that link to it, the picker and the page
-  itself.
+  this map, the two public pages that link to it and the picker. The page
+  that answers it checks the kind against the same list.
 - Left alone, because v3 answers the same address: `/login`, `/onboarding`,
   `/dashboard`, `/account`, `/account/billing`, `/account/notifications`,
   `/account/security`. `/admin/*` goes to the staff console's own host,
@@ -99,28 +118,34 @@ Each entry should include:
   `payments/{id}`, `subscriptions`, `users`) are "page not found": the
   console has clinics and partners today. The MVP's public addresses were
   done in Phase 4 (`public-site-parity`).
-- The tests read two lists from the repository: the MVP's route list from
-  its snapshot (a signed-in page that is neither moved nor named as one v3
-  answers fails), and the account app's own folders (a destination that
-  is not a page there fails, and so does any page there that the rule
-  would move). A third check holds that no moved first word is one the
-  gateway gives to an app or to the public site. The build cache now
-  counts both folders as inputs of these tests.
-- Not checked: whether a person in v3 already has one of the nine words as
-  a username (the database was not answering; their profile would stop
-  opening, so this is one read to make before the merge); that each
-  address v3 "answers at the same path" shows the same thing as the MVP's
-  did (`/account/billing` is a different page now); what a visitor sees
-  one step after each destination, other than by reading the code; and
+- The tests read four things from the repository: the MVP's route list
+  (a signed-in page that is neither moved nor named as one v3 answers
+  fails); every quoted address in the MVP's code (as above); the account
+  app's own folders (a destination that is not a page there fails, and so
+  does any page there that the rule would move); and the public site's
+  own folders, with the gateway's lists (a moved first word that is live
+  fails). The build cache counts all four as inputs of these tests.
+- Not checked: whether a person in v3 already has one of the fifteen
+  words as a username (the database was not answering; their profile
+  would stop opening while their card stayed in the list of experts, so
+  this is one read to make before the merge); that each address v3
+  "answers at the same path" shows the same thing as the MVP's did
+  (`/account/billing` is a different page now); what a visitor sees one
+  step after each destination, other than by reading the code; and
   nothing was run in a browser, so there are no rows for these in
   `e2e/legacy-urls.spec.ts`.
+- Known limit: the gateway does not look at an address with a dot in it,
+  so `/appointments/a.b` is "page not found". No address the MVP wrote
+  has one.
 - Left for later: the database's own list of reserved words
   (`reserved_public_handles()`, written once in migration 0027) has none
-  of these nine, nor the twenty or so other words reserved since. The
+  of these fifteen, nor the twenty other words reserved since. The
   product's own way of creating a practice refuses a reserved word, and a
-  profile under one is never read; a call made straight to the auth
-  server's create-organization endpoint is not checked against the list.
-  Both need their own change (a migration, and a check in the hook).
+  profile under one does not open; a call made straight to the auth
+  server's create-organization endpoint is not checked against the list,
+  and the list of experts does not leave such a name out. Each needs its
+  own change. And the two public addresses above (`/services/...`,
+  `/become-partner`) belong in Phase 4's map.
 - Owner: engineering
 - Related: `execution-plan/remaining-roadmap.md` (14.22, 14.9);
   `packages/config/src/public-site-parity.ts`;
