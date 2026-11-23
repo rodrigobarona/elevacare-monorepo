@@ -140,15 +140,17 @@ Each entry should include:
 - Known limit: the gateway does not look at an address with a dot in it,
   so `/appointments/a.b` is "page not found". No address the MVP wrote
   has one.
+- A reserved word is now refused as an organization's address on every
+  way of creating one (`orgCreateViolation` in `@eleva/auth`), so a call
+  made straight to the auth server cannot take `events` or `dashboard`
+  either. The product's own way never proposed one. No seed, fixture or
+  test in the repository uses one.
 - Left for later: the database's own list of reserved words
   (`reserved_public_handles()`, written once in migration 0027) has none
-  of these fifteen, nor the twenty other words reserved since. The
-  product's own way of creating a practice refuses a reserved word, and a
-  profile under one does not open; a call made straight to the auth
-  server's create-organization endpoint is not checked against the list,
-  and the list of experts does not leave such a name out. Each needs its
-  own change. And the two public addresses above (`/services/...`,
-  `/become-partner`) belong in Phase 4's map.
+  of these fifteen, nor the twenty other words reserved since, and the
+  list of experts does not leave a reserved name out (a profile under one
+  does not open). Each needs its own change. And the two public addresses
+  above (`/services/...`, `/become-partner`) belong in Phase 4's map.
 - Owner: engineering
 - Related: `execution-plan/remaining-roadmap.md` (14.22, 14.9);
   `packages/config/src/public-site-parity.ts`;
