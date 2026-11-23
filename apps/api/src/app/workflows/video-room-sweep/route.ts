@@ -7,6 +7,7 @@ import {
   internalWorkflowOptions,
   runInternalWorkflow,
 } from "@/lib/internal-workflow"
+import { reportedJob } from "@/lib/reported-job"
 
 export const ROUTE_POLICY = {
   auth: "internal",
@@ -27,14 +28,17 @@ export const ROUTE_POLICY = {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-export async function POST(request: Request) {
-  return runInternalWorkflow(request, async () => {
-    const now = new Date()
-    const missing = await sweepMissingSessionRooms(now)
-    const expired = await sweepExpiredSessionRooms(now)
-    return { ...missing, expired }
-  })
-}
+export const POST = reportedJob(
+  "video-room-sweep",
+  async (request: Request) => {
+    return runInternalWorkflow(request, async () => {
+      const now = new Date()
+      const missing = await sweepMissingSessionRooms(now)
+      const expired = await sweepExpiredSessionRooms(now)
+      return { ...missing, expired }
+    })
+  }
+)
 
 export async function OPTIONS(request: Request) {
   return internalWorkflowOptions(request)

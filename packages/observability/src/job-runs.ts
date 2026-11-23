@@ -1,0 +1,168 @@
+import {
+  isOnDemandJob,
+  isScheduledJob,
+  type BackgroundJobName,
+  type ScheduledJobName,
+} from "@eleva/config/background-jobs"
+
+/**
+ * Says that a background job ran, to the monitor that expects it.
+ *
+ * Each scheduled job has its own heartbeat in Better Stack, with its own
+ * secret address. A job that finished requests its address; one that
+ * failed requests it with `/fail`; one that never ran requests nothing,
+ * and the monitor raises the alert when the run is late. The addresses
+ * come from `BETTERSTACK_HEARTBEAT_URLS`, a JSON object of job name to
+ * address. A job with no address reports nothing, so this is safe with no
+ * monitoring account at all.
+ *
+ * Reporting never changes what a job does: it has a time limit, it never
+ * throws, and what goes wrong is logged without the address, which is a
+ * secret. It keeps no state, so a run delivered twice or retried just
+ * reports again, and a success after a failure clears it.
+ */
+
+export type JobOutcome = "ok" | "fail"
+
+/** Why a run failed, in a form that can hold no personal data. */
+export type JobFailure = "threw" | `status ${number}`
+
+const ATTEMPTS = 2
+const ATTEMPT_TIMEOUT_MS = 4000
+
+let parsedFrom: string | undefined
+let parsed: Partial<Record<ScheduledJobName, string>> = {}
+
+/** The addresses in the setting, read once for each value it takes. */
+function heartbeatUrls(): Partial<Record<ScheduledJobName, string>> {
+  const raw = process.env.BETTERSTACK_HEARTBEAT_URLS?.trim() ?? ""
+  if (raw === parsedFrom) return parsed
+  parsedFrom = raw
+  parsed = {}
+  if (raw === "") return parsed
+
+  let value: unknown
+  try {
+    value = JSON.parse(raw)
+  } catch {
+    value = null
+  }
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    console.error(
+      "[job-runs] BETTERSTACK_HEARTBEAT_URLS is not a JSON object of job name to address; no job reports"
+    )
+    return parsed
+  }
+  let unknown = 0
+  for (const [name, url] of Object.entries(value)) {
+    if (isOnDemandJob(name)) {
+      console.error(
+        `[job-runs] BETTERSTACK_HEARTBEAT_URLS names "${name}", which runs on demand and has no monitor; it is ignored`
+      )
+      continue
+    }
+    if (!isScheduledJob(name)) {
+      // Not printed: a name that is not a job may be an address put on
+      // the wrong side.
+      unknown += 1
+      continue
+    }
+    const address = typeof url === "string" ? heartbeatAddress(url) : null
+    if (!address) {
+      console.error(
+        `[job-runs] the address for "${name}" in BETTERSTACK_HEARTBEAT_URLS is not a plain https address; that job does not report`
+      )
+      continue
+    }
+    parsed[name] = address
+  }
+  // One address for two jobs would let the one that runs hide the one
+  // that does not: neither reports.
+  const jobsAt = new Map<string, ScheduledJobName[]>()
+  for (const [name, address] of Object.entries(parsed)) {
+    jobsAt.set(address, [
+      ...(jobsAt.get(address) ?? []),
+      name as ScheduledJobName,
+    ])
+  }
+  for (const names of jobsAt.values()) {
+    if (names.length < 2) continue
+    for (const name of names) delete parsed[name]
+    console.error(
+      `[job-runs] BETTERSTACK_HEARTBEAT_URLS gives one address to ${names.map((name) => `"${name}"`).join(" and ")}; each job needs its own, so none of them reports`
+    )
+  }
+  if (unknown > 0) {
+    console.error(
+      `[job-runs] BETTERSTACK_HEARTBEAT_URLS has ${unknown} name(s) that are not jobs; they are ignored`
+    )
+  }
+  return parsed
+}
+
+/**
+ * The address without a slash at its end, or null when it cannot be used:
+ * not https, with a `?` or `#` part (which `/fail` cannot follow), or
+ * already ending in `/fail` or an exit code, which is how a failure is
+ * said and would turn every report around.
+ */
+function heartbeatAddress(value: string): string | null {
+  let url: URL
+  try {
+    url = new URL(value)
+  } catch {
+    return null
+  }
+  if (url.protocol !== "https:" || url.search || url.hash) return null
+  if (url.username || url.password) return null
+  const path = url.pathname.replace(/\/+$/, "")
+  if (path === "" || /\/(fail|\d+)$/i.test(path)) return null
+  return `${url.origin}${path}`
+}
+
+async function request(url: string, body: string | undefined) {
+  return fetch(url, {
+    method: "POST",
+    body,
+    signal: AbortSignal.timeout(ATTEMPT_TIMEOUT_MS),
+  })
+}
+
+/**
+ * Report one run. Resolves when the monitor has it, or when it could not
+ * be told; never rejects.
+ */
+export async function reportJobRun(
+  job: BackgroundJobName,
+  outcome: JobOutcome,
+  failure?: JobFailure
+): Promise<void> {
+  try {
+    if (!isScheduledJob(job)) return
+    const base = heartbeatUrls()[job]
+    if (!base) return
+    const url = outcome === "ok" ? base : `${base}/fail`
+    const body = outcome === "ok" ? undefined : (failure ?? "failed")
+
+    // A second try: a lost report from a daily job is a false alarm a day
+    // later. Two tries of four seconds stay under ten in all.
+    let problem = ""
+    for (let attempt = 1; attempt <= ATTEMPTS; attempt += 1) {
+      try {
+        const response = await request(url, body)
+        if (response.ok) return
+        problem = `the monitor answered ${response.status}`
+        // A wrong address stays wrong: do not ask again.
+        if (response.status < 500) break
+      } catch (err) {
+        problem =
+          err instanceof Error && err.name === "TimeoutError"
+            ? "the monitor did not answer in time"
+            : "the monitor could not be reached"
+      }
+    }
+    console.error(`[job-runs] "${job}" could not report ${outcome}: ${problem}`)
+  } catch {
+    // Reporting must never be the reason a job fails.
+  }
+}

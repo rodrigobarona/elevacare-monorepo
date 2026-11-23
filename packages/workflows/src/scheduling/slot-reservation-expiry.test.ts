@@ -21,10 +21,7 @@ vi.mock("@eleva/scheduling", () => ({
   listExpiredReservations,
   finalizeExpiredReservation,
 }))
-vi.mock("@eleva/observability", () => ({
-  captureException,
-  heartbeat: vi.fn(async () => undefined),
-}))
+vi.mock("@eleva/observability", () => ({ captureException }))
 
 import { expireStaleReservations } from "./slot-reservation-expiry"
 
@@ -158,6 +155,17 @@ describe("expireStaleReservations", () => {
 
     expect(finalizeExpiredReservation).not.toHaveBeenCalled()
     expect(result.errors).toBe(1)
+    expect(captureException).toHaveBeenCalledTimes(1)
+  })
+
+  it("fails the run when the reservations cannot be listed", async () => {
+    // One reservation that fails is counted; a run that cannot start is
+    // a failed run, so its route answers 500 and says so to the monitor.
+    const down = new Error("database down")
+    listExpiredReservations.mockRejectedValue(down)
+
+    await expect(expireStaleReservations({ now })).rejects.toBe(down)
+    expect(settleExpiredReservationIntent).not.toHaveBeenCalled()
     expect(captureException).toHaveBeenCalledTimes(1)
   })
 })

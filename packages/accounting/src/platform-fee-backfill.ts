@@ -10,6 +10,7 @@ import { and, eq, gte, lte, notExists } from "drizzle-orm"
 import { withPlatformAudit } from "@eleva/audit"
 import { main, withPlatformAdminContext } from "@eleva/db"
 import { getFlag } from "@eleva/flags"
+import { logError } from "@eleva/observability"
 import {
   issuePlatformFeeInvoice,
   type PlatformFeeIssuanceOutcome,
@@ -116,16 +117,18 @@ export async function backfillMissingPlatformFeeInvoices(
       if (issued.invoice || issued.reason === "flag_disabled") continue
       reason = issued.reason ?? issued.outcome
     } catch (err) {
-      console.error("[platform-fee-backfill] unexpected error", payment.id, err)
+      logError(
+        `[platform-fee-backfill] unexpected error for ${payment.id}`,
+        err
+      )
       result.errors += 1
       reason = err instanceof Error ? err.message : String(err)
     }
     try {
       if (await deadLetterPayment(payment, reason)) result.deadLettered += 1
     } catch (err) {
-      console.error(
-        "[platform-fee-backfill] dead-letter failed",
-        payment.id,
+      logError(
+        `[platform-fee-backfill] dead-letter failed for ${payment.id}`,
         err
       )
       result.errors += 1

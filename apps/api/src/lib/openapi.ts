@@ -5811,7 +5811,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
         operationId: "cronKeepAlive",
         summary: "Database keep-alive probe",
         description:
-          "Pings the main and audit databases and sends a heartbeat when both answer.",
+          "Pings the main and audit databases. The run is reported as done when both answer, and as failed when one does not.",
       }),
       "/cron/booking-probes": cronProbe({
         operationId: "cronBookingProbes",

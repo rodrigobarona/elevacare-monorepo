@@ -8,6 +8,7 @@ import {
 } from "@/lib/internal-workflow"
 import type { RoutePolicy } from "@/lib/route-policy"
 import { secureJson } from "@/lib/security-headers"
+import { reportedJob } from "@/lib/reported-job"
 
 export const ROUTE_POLICY = {
   auth: "internal",
@@ -28,7 +29,7 @@ export const ROUTE_POLICY = {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-export async function POST(request: Request) {
+export const POST = reportedJob("kek-rotation", async (request: Request) => {
   const denied = await authorizeInternalWorkflow(request)
   if (denied) return denied
   const headers = corsHeaders(request, "POST, OPTIONS")
@@ -57,7 +58,7 @@ export async function POST(request: Request) {
       maxOrgs: parsed.data.maxOrgs,
     })),
   }))
-}
+})
 
 export async function OPTIONS(request: Request) {
   return internalWorkflowOptions(request)

@@ -3,6 +3,7 @@ import { corsHeaders } from "@/lib/cors"
 import { authorizeInternalWorkflow } from "@/lib/internal-workflow"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
+import { reportedJob } from "@/lib/reported-job"
 
 export const ROUTE_POLICY = {
   auth: "internal",
@@ -30,32 +31,33 @@ export const ROUTE_POLICY = {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-export async function POST(request: Request) {
-  const headers = corsHeaders(request, "POST, OPTIONS")
+export const POST = reportedJob(
+  "stripe-stuck-events",
+  async (request: Request) => {
+    const headers = corsHeaders(request, "POST, OPTIONS")
 
-  const denied = await authorizeInternalWorkflow(request)
-  if (denied) return denied
+    const denied = await authorizeInternalWorkflow(request)
+    if (denied) return denied
 
-  try {
-    const report = await detectStuckStripeEvents({
-      heartbeatName: "stripe-stuck-events",
-    })
-    return secureJson(
-      {
-        ok: true,
-        scanned: report.scanned.toISOString(),
-        stuckCount: report.stuck.length,
-      },
-      { status: 200, headers }
-    )
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    return secureJson(
-      { ok: false, error: "internal", message },
-      { status: 500, headers }
-    )
+    try {
+      const report = await detectStuckStripeEvents()
+      return secureJson(
+        {
+          ok: true,
+          scanned: report.scanned.toISOString(),
+          stuckCount: report.stuck.length,
+        },
+        { status: 200, headers }
+      )
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      return secureJson(
+        { ok: false, error: "internal", message },
+        { status: 500, headers }
+      )
+    }
   }
-}
+)
 
 export async function OPTIONS(request: Request) {
   return new Response(null, {

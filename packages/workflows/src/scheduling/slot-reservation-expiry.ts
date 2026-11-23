@@ -1,5 +1,5 @@
 import { settleExpiredReservationIntent } from "@eleva/billing/server"
-import { captureException, heartbeat } from "@eleva/observability"
+import { captureException } from "@eleva/observability"
 import {
   deferKeptReservation,
   finalizeExpiredReservation,
@@ -102,10 +102,12 @@ export async function expireStaleReservations(
       }
     }
   } catch (err) {
-    result.errors += 1
+    // The run itself failed (the list could not be read): nothing was
+    // released. Thrown on, so the route answers 500 and the run is
+    // reported as failed, not as a quiet minute.
     await captureException(err, { workflow: "slotReservationExpiry" })
+    throw err
   }
 
-  await heartbeat("slot-reservation-expiry")
   return result
 }

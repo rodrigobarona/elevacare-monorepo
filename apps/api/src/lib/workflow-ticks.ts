@@ -3,6 +3,7 @@
  * scheduled by Vercel Cron in `apps/api/vercel.json`. Daily, monthly and
  * payout jobs keep their own QStash schedules (infra/qstash).
  */
+import type { JobsInTick, TickCadence } from "@eleva/config/background-jobs"
 import { POST as accountDeletionSweep } from "@/app/workflows/account-deletion-sweep/route"
 import { POST as auditOutboxDrainer } from "@/app/workflows/audit-outbox-drainer/route"
 import { POST as bookingRequestExpiry } from "@/app/workflows/booking-request-expiry/route"
@@ -35,10 +36,14 @@ export const WORKFLOW_TICKS = {
     "crm-follow-up-due": crmFollowUpDue,
     "invoicing-retry": invoicingRetry,
   },
-} as const satisfies Record<
-  string,
-  Record<string, (request: Request) => Promise<Response>>
->
+  // The jobs of each tick are those `@eleva/config/background-jobs` lists
+  // under that cadence: one more, one fewer or one moved does not compile.
+} as const satisfies {
+  [Cadence in TickCadence]: Record<
+    JobsInTick<Cadence>,
+    (request: Request) => Promise<Response>
+  >
+}
 
 export type WorkflowTickCadence = keyof typeof WORKFLOW_TICKS
 

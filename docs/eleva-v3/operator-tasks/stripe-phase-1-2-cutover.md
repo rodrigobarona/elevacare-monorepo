@@ -149,11 +149,11 @@ with noise.
 
 ### 2.4 Optional / phase-2
 
-| Var                                     | When needed                                                                                              |
-| --------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `SEAT_METER_ID`                         | Required for clinic-tier metered seat pricing (W5). Until set, clinic prices fall back to licensed seats |
-| `BETTERSTACK_HEARTBEAT_URL`             | If you want the stripe-stuck-events heartbeat in BetterStack                                             |
-| `KV_REST_API_URL` + `KV_REST_API_TOKEN` | Already required by `/legacy-identity/sync` and rate limiting; verify still set                          |
+| Var                                     | When needed                                                                                                                                                         |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SEAT_METER_ID`                         | Required for clinic-tier metered seat pricing (W5). Until set, clinic prices fall back to licensed seats                                                            |
+| `BETTERSTACK_HEARTBEAT_URLS`            | If you want job heartbeats in Better Stack: a JSON object of job name to that heartbeat's address (replaced `BETTERSTACK_HEARTBEAT_URL` on 2026-11-23, slice 13.18) |
+| `KV_REST_API_URL` + `KV_REST_API_TOKEN` | Already required by `/legacy-identity/sync` and rate limiting; verify still set                                                                                     |
 
 ### 2.5 Verification
 
@@ -450,7 +450,7 @@ In Sentry → elevacare-api project, after section 6:
 
 ### 8.2 BetterStack
 
-If `BETTERSTACK_HEARTBEAT_URL` is set:
+If `BETTERSTACK_HEARTBEAT_URLS` has an address for `stripe-stuck-events`:
 
 - A heartbeat fires every 10 min from `stripe-stuck-events`
 - Heartbeat goes silent → BetterStack pages on-call
@@ -559,7 +559,7 @@ cutover date.
 | `QSTASH_CURRENT_SIGNING_KEY` / `QSTASH_NEXT_SIGNING_KEY` | elevacare-api Production            | dev                     |
 | `AUDIT_DATABASE_URL` / `AUDIT_DATABASE_URL_UNPOOLED`     | elevacare-api Production            | dev (currently MISSING) |
 | `SEAT_METER_ID`                                          | elevacare-api Production (optional) | dev                     |
-| `BETTERSTACK_HEARTBEAT_URL`                              | elevacare-api Production (optional) | ops                     |
+| `BETTERSTACK_HEARTBEAT_URLS`                             | elevacare-api Production (optional) | ops                     |
 
 ---
 
@@ -708,7 +708,7 @@ dashboard since it was a synthetic test.
 | ~~N1~~ | Webhook endpoint `api_version: null` (account default was `2025-02-24.acacia`) | RESOLVED (Sandbox) 16:55 UTC | Operator upgraded the Stripe account default version to `2026-04-22.dahlia` via the Dashboard. Verified: fresh events now serialize as `api_version=2026-04-22.dahlia`, matching the SDK types pinned in `@eleva/billing`. Endpoint itself still reads `api_version: null` (follow-default) which is fine for Sandbox. For the live-mode cutover, recreate the live endpoint via `pnpm stripe:setup:webhooks --apply` so it reports `api_version: "2026-04-22.dahlia"` explicitly locked. |
 | N2     | ~~`stripe-stuck-events` QStash schedule missing~~                              | RESOLVED                     | Schedule `scd_4ruV6aUpBAA4UPnXcpffZuLyVmM8` created at 14:43 UTC, cron `*/10 * * * *`, retries 3.                                                                                                                                                                                                                                                                                                                                                                                         |
 | N3     | `SEAT_METER_ID` not configured                                                 | Low                          | Optional W5 metered-seat path. Clinic prices currently `usage_type: licensed`. Defer to phase-2 unless metered billing is needed at launch.                                                                                                                                                                                                                                                                                                                                               |
-| N4     | `BETTERSTACK_HEARTBEAT_URL` not configured                                     | Low                          | Detector heartbeat fires `void` and silently resolves. Liveness signal of the alerting job is non-existent.                                                                                                                                                                                                                                                                                                                                                                               |
+| N4     | `BETTERSTACK_HEARTBEAT_URL` not configured                                     | Low                          | Detector heartbeat fires `void` and silently resolves. Liveness signal of the alerting job is non-existent. **2026-11-23 (13.18):** the code side is fixed: every scheduled job now waits for its report before it answers, and reports failure too. The setting is now `BETTERSTACK_HEARTBEAT_URLS` and is still not configured, so there is still no signal until the heartbeats are created (O-3).                                                                                     |
 | N5     | ~~2 stale rows in `audit_outbox` since 2026-05-18 17:16 UTC~~                  | RESOLVED                     | Drained 14:42 UTC after G2 fix. `audit_outbox` shows `shipped: 2`, `pending: 0`.                                                                                                                                                                                                                                                                                                                                                                                                          |
 | N6     | ~~Misleading error log at `apps/api/src/app/webhooks/stripe/route.ts:63`~~     | RESOLVED                     | Refactored 14:42 UTC: SDK init in its own `try` returning `500 stripe_init_failed` + `captureException`. Signature catch only fires for `StripeSignatureVerificationError`. Awaiting deploy.                                                                                                                                                                                                                                                                                              |
 

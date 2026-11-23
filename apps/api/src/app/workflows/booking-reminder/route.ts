@@ -1,3 +1,4 @@
+import { captureException } from "@eleva/observability"
 import { BookingReminderRequestSchema } from "@eleva/api-client"
 import { deliverBookingReminder } from "@eleva/workflows/notifications"
 import { corsHeaders } from "@/lib/cors"
@@ -8,6 +9,7 @@ import {
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
+import { reportedJob } from "@/lib/reported-job"
 
 export const ROUTE_POLICY = {
   auth: "internal",
@@ -28,37 +30,42 @@ export const ROUTE_POLICY = {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-export async function POST(request: Request) {
-  const denied = await authorizeInternalWorkflow(request)
-  if (denied) return denied
-  const headers = corsHeaders(request, "POST, OPTIONS")
-  const rateLimited = await applyRateLimit(
-    rateLimitKey(request),
-    RATE_LIMITS.internalWorkflow,
-    headers
-  )
-  if (rateLimited) return rateLimited
-  const parsed = BookingReminderRequestSchema.safeParse(
-    await request.json().catch(() => ({}))
-  )
-  if (!parsed.success) {
-    return secureJson(
-      { error: "validation", issues: parsed.error.issues },
-      { status: 422, headers }
+export const POST = reportedJob(
+  "booking-reminder",
+  async (request: Request) => {
+    const denied = await authorizeInternalWorkflow(request)
+    if (denied) return denied
+    const headers = corsHeaders(request, "POST, OPTIONS")
+    const rateLimited = await applyRateLimit(
+      rateLimitKey(request),
+      RATE_LIMITS.internalWorkflow,
+      headers
     )
-  }
+    if (rateLimited) return rateLimited
+    const parsed = BookingReminderRequestSchema.safeParse(
+      await request.json().catch(() => ({}))
+    )
+    if (!parsed.success) {
+      return secureJson(
+        { error: "validation", issues: parsed.error.issues },
+        { status: 422, headers }
+      )
+    }
 
-  try {
-    const result = await deliverBookingReminder(parsed.data)
-    return secureJson({ ...result, ok: true }, { status: 200, headers })
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    return secureJson(
-      { ok: false, error: "internal", message },
-      { status: 500, headers }
-    )
+    try {
+      const result = await deliverBookingReminder(parsed.data)
+      return secureJson({ ...result, ok: true }, { status: 200, headers })
+    } catch (err) {
+      // On demand, so no monitor expects it: Sentry is where it shows.
+      await captureException(err, { probe: "booking-reminder" })
+      const message = err instanceof Error ? err.message : String(err)
+      return secureJson(
+        { ok: false, error: "internal", message },
+        { status: 500, headers }
+      )
+    }
   }
-}
+)
 
 export function OPTIONS(request: Request) {
   return internalWorkflowOptions(request)

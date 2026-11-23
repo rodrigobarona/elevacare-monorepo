@@ -4,6 +4,7 @@ import { corsHeaders } from "@/lib/cors"
 import { authorizeInternalWorkflow } from "@/lib/internal-workflow"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
+import { reportedJob } from "@/lib/reported-job"
 
 export const ROUTE_POLICY = {
   auth: "internal",
@@ -14,24 +15,27 @@ export const ROUTE_POLICY = {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-export async function POST(request: Request) {
-  const headers = corsHeaders(request, "POST, OPTIONS")
-  const denied = await authorizeInternalWorkflow(request)
-  if (denied) return denied
+export const POST = reportedJob(
+  "domain-events-publisher",
+  async (request: Request) => {
+    const headers = corsHeaders(request, "POST, OPTIONS")
+    const denied = await authorizeInternalWorkflow(request)
+    if (denied) return denied
 
-  try {
-    const result = await publishPendingDomainEvents({
-      subscribers: defaultDomainEventSubscribers(),
-    })
-    return secureJson({ ok: true, ...result }, { status: 200, headers })
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    return secureJson(
-      { ok: false, error: "internal", message },
-      { status: 500, headers }
-    )
+    try {
+      const result = await publishPendingDomainEvents({
+        subscribers: defaultDomainEventSubscribers(),
+      })
+      return secureJson({ ok: true, ...result }, { status: 200, headers })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      return secureJson(
+        { ok: false, error: "internal", message },
+        { status: 500, headers }
+      )
+    }
   }
-}
+)
 
 export function OPTIONS(request: Request) {
   return new Response(null, {

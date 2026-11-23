@@ -32,6 +32,100 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-23: Every background job reports that it ran (13.18) (active)
+
+- Problem: 7 of 23 job routes sent a heartbeat, in three different ways,
+  and to an address that Better Stack does not have. The helper built
+  `one base address + /job-name`; Better Stack gives each heartbeat its own
+  secret address, so no job could ever have reported. The setting was never
+  configured, so nothing was lost.
+- Change (Phase 13.18): one list, `@eleva/config/background-jobs`, names
+  every job: 22 on a schedule (with how often each is expected and how late
+  it may be; 21 run today, `retention-sweep` waits for the DPO) and 3 that
+  run on demand (with the reason no monitor can watch
+  them). One wrapper, `reportedJob` in `apps/api`, is on every job route. One
+  reporter, `reportJobRun` in `@eleva/observability`, sends the report. The
+  old helper and its seven calls are gone.
+- **What is reported.** A run that answers 2xx is reported as done, also
+  when it had nothing to do. A run that answers 5xx or throws is reported as
+  failed (Better Stack's `/fail`), with the status and nothing else: no
+  error text, because it can name a person. A caller who is refused (401,
+  422, 429) reports nothing, so a stranger cannot make a job look alive or
+  broken. One exception: when the server itself is set up wrong (its secret
+  for these routes missing, or its environment invalid), a call fails
+  before the caller is checked; the job cannot run at all then, and it is
+  reported as failed. A tick reports as `tick-{cadence}` that the schedule
+  fired and every job was called; a job that failed inside it has already
+  said so. A tick that breaks before it has called every job reports
+  failed.
+- **Each failed attempt is reported, also one QStash will retry.** The alert
+  comes early and the retry that succeeds clears it. Chosen over waiting
+  for the last attempt, which is 33 minutes later for a payout job.
+- **Reporting cannot hurt a job.** Two tries of four seconds, then it gives
+  up and logs why without the address, which is a secret. It is awaited
+  before the job answers, so the platform cannot cut it off; the cost is at
+  most eight seconds on a run where the monitor is down, and sixteen for a
+  tick, which reports for itself after its jobs have.
+- **Setting.** `BETTERSTACK_HEARTBEAT_URLS` replaces
+  `BETTERSTACK_HEARTBEAT_URL`: a JSON object of job name to that job's
+  heartbeat address. Unset, or with no address for a job, that job reports
+  nothing. A wrong value (not JSON, not https, an address with a `?` or `#`
+  part or already ending in `/fail`, one address given to two jobs, an
+  unknown job) is logged once and never stops a job. A name that is not a
+  job is counted, not printed: it may be an address put on the wrong side.
+- **How late is late.** Vercel Cron may skip a run and never retries, so
+  jobs it starts wait for two missed runs (every minute, every ten minutes)
+  or one (hourly, daily). QStash does not skip; it retries for about 33
+  minutes, so its jobs wait one hour, which is less than one missed run on
+  purpose. `retention-sweep` is marked as not registered yet (it waits for
+  the DPO), so 13.19 must not create its monitor.
+- **On-demand jobs** have no monitor. Two of them (`dsar-export`,
+  `booking-reminder`) answered 500 on a failure without telling anyone;
+  their routes now send the failure to Sentry.
+- Tests fail when a job route does not report under its own name, when a
+  route file sits anywhere the scan does not know, when a job is in the
+  list with no route, when a period does not follow its schedule, and when
+  a schedule changes in `vercel.json` or `infra/qstash` and not in the
+  list. The tick table does not compile when its jobs differ from the
+  list's.
+- **Two jobs said "done" when the whole run had failed; they no longer
+  do.** `slot-reservation-expiry` swallowed a failure to read the list of
+  holds (the database down) and answered 200; `invoicing-retry` did the
+  same when the whole platform-fee backfill threw, and only wrote it to the
+  console. Both now send it to Sentry and throw, so the route answers 500
+  and the run is reported as failed. What stays as it was: one hold or one
+  invoice that fails inside a run is counted and sent to Sentry, and the
+  run is still done. (For a platform-fee invoice that was true of the
+  count only: its failure was written to the console. It now goes to
+  Sentry the same way an expert invoice's does.) In `invoicing-retry` the expert-invoice part runs
+  first and stands when the backfill fails.
+- **Known limit: "done" means the run ended, not that every item worked.**
+  Jobs that work through a list count each item that fails and still
+  answer 200. If every item fails (Stripe down for a whole run of
+  `slot-reservation-expiry`, `process-expert-transfers` or
+  `seat-sync-sweep`), the run is reported as done and only Sentry shows it.
+  `booking-request-expiry` and `crm-follow-up-due` write item failures to
+  the console only. Making "every item failed" a failed run changes what
+  five jobs answer, payments among them, so it is a slice of its own.
+  A manual run of `stripe-toconline-reconciliation` for another month also
+  reports done, which restarts the monthly monitor's clock.
+- **Not built, and not claimed:** no heartbeat exists in Better Stack and
+  the setting is empty everywhere, so today no job reports anything. The
+  operator account is O-3 and the script that creates the heartbeats from
+  the list is slice 13.19. Better Stack's free plan covers 10 monitors and
+  heartbeats; 22 jobs need a paid plan or a choice of which to watch.
+  Nothing was run against Better Stack: the address shape, `/fail` and the
+  404 for an unknown token are from its documentation and a probe with a
+  made-up token.
+- Read before building: Better Stack's heartbeat guide and API
+  (betterstack.com/docs/uptime/cron-and-heartbeat-monitor), Sentry's Cron
+  Monitors for Next.js, Vercel's cron delivery rules ("best effort", may
+  skip, may deliver twice, no retry), QStash's retry rules, and
+  Healthchecks.io and the SRE book on monitoring scheduled jobs. Sentry
+  Cron Monitors were the alternative: more per job, but one more paid item and the same
+  vendor that reports errors. The reporter has one seam, so a second place
+  to report can be added without touching a job.
+
 ### 2026-11-23: Staff queues have pages, and reading one is on record (12.6) (active)
 
 - Change (Phase 12.6): the two staff queues (clinic verifications, licence

@@ -238,7 +238,13 @@ staleness: about one hour.
 2. For each row, inserts into `audit_events` with `ON CONFLICT DO NOTHING`
 3. Marks successfully inserted rows as `shipped`
 4. On failure, increments `attempts`; after 5 attempts marks `failed`
-5. Fires a BetterStack heartbeat on every tick (even zero rows)
+5. When the job monitor is set up (`BETTERSTACK_HEARTBEAT_URLS` holds an
+   address for `audit-outbox-drainer`), its route reports each run: done
+   (also with zero rows), or failed when the audit database refuses 10
+   rows in a row within one run. Fewer refusals than that count against
+   those rows only and the run still reports done, so a short outage
+   shows on the rows (`attempts`, then `failed`) before it shows on the
+   monitor. With no address set, nothing is reported
 
 ### Manual drain
 

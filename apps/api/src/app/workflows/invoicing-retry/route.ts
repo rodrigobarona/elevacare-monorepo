@@ -4,6 +4,7 @@ import {
   internalWorkflowOptions,
   runInternalWorkflow,
 } from "@/lib/internal-workflow"
+import { reportedJob } from "@/lib/reported-job"
 
 export const ROUTE_POLICY = {
   auth: "internal",
@@ -24,9 +25,9 @@ export const ROUTE_POLICY = {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-export async function POST(request: Request) {
+export const POST = reportedJob("invoicing-retry", async (request: Request) => {
   return runInternalWorkflow(request, async () => processInvoicingRetry())
-}
+})
 
 export async function OPTIONS(request: Request) {
   return internalWorkflowOptions(request)

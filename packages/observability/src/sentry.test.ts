@@ -1,12 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const { init, captureRequestError: sentryCaptureRequestError } = vi.hoisted(
-  () => ({ init: vi.fn(), captureRequestError: vi.fn() })
-)
+const {
+  init,
+  captureException: sentryCaptureException,
+  captureRequestError: sentryCaptureRequestError,
+} = vi.hoisted(() => ({
+  init: vi.fn(),
+  captureException: vi.fn(),
+  captureRequestError: vi.fn(),
+}))
 
 vi.mock("@sentry/nextjs", () => ({
   init,
-  captureException: vi.fn(),
+  captureException: sentryCaptureException,
   captureRequestError: sentryCaptureRequestError,
 }))
 vi.mock("@eleva/config/env", () => ({
@@ -16,7 +22,7 @@ vi.mock("@eleva/config/env", () => ({
   }),
 }))
 
-import { captureRequestError, initSentry } from "./sentry"
+import { captureException, captureRequestError, initSentry } from "./sentry"
 import { Decrypted, registerPhi, withPhiScope } from "./phi"
 
 type SentryOptions = {
@@ -88,5 +94,30 @@ describe("captureRequestError", () => {
       request,
       context
     )
+  })
+})
+
+describe("captureException", () => {
+  // In braces: a hook that returns a function has it run as its clean-up,
+  // and `mockReset()` returns the mock.
+  beforeEach(() => {
+    sentryCaptureException.mockReset()
+  })
+
+  it("sends the error with its context", async () => {
+    const boom = new Error("boom")
+    await captureException(boom, { probe: "dsar-export" })
+    expect(sentryCaptureException).toHaveBeenCalledWith(boom, {
+      extra: { probe: "dsar-export" },
+    })
+  })
+
+  it("never rejects, so a caller that does not wait for it is safe", async () => {
+    sentryCaptureException.mockImplementation(() => {
+      throw new Error("the SDK is not there")
+    })
+    await expect(
+      captureException(new Error("boom"), { probe: "booking-reminder" })
+    ).resolves.toBeUndefined()
   })
 })

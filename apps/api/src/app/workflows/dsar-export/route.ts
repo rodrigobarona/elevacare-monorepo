@@ -1,9 +1,11 @@
+import { captureException } from "@eleva/observability"
 import { DsarExportWorkflowRequestSchema } from "@eleva/api-client"
 import { processDsarExport } from "@eleva/compliance"
 import { corsHeaders } from "@/lib/cors"
 import { authorizeInternalWorkflow } from "@/lib/internal-workflow"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
+import { reportedJob } from "@/lib/reported-job"
 
 export const ROUTE_POLICY = {
   auth: "internal",
@@ -14,7 +16,7 @@ export const ROUTE_POLICY = {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-export async function POST(request: Request) {
+export const POST = reportedJob("dsar-export", async (request: Request) => {
   const headers = corsHeaders(request, "POST, OPTIONS")
 
   const denied = await authorizeInternalWorkflow(request)
@@ -38,15 +40,28 @@ export async function POST(request: Request) {
         { status: 500, headers }
       )
     }
+    if (result.status === "failed") {
+      // The export itself failed and the request is marked so; the cause
+      // is on the request's audit trail. Nothing is thrown this far, so
+      // this is the only place Sentry can hear of it. Waited for: once
+      // the answer is sent nothing keeps the report going, and it cannot
+      // reject.
+      await captureException(new Error("dsar export failed"), {
+        probe: "dsar-export",
+        dsarId: parsed.data.dsarId,
+      })
+    }
     return secureJson({ ok: true, ...result }, { status: 200, headers })
   } catch (err) {
+    // On demand, so no monitor expects it: Sentry is where it shows.
+    await captureException(err, { probe: "dsar-export" })
     const message = err instanceof Error ? err.message : String(err)
     return secureJson(
       { ok: false, error: "internal", message },
       { status: 500, headers }
     )
   }
-}
+})
 
 export async function OPTIONS(request: Request) {
   return new Response(null, {

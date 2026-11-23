@@ -8,6 +8,7 @@ import {
 } from "@/lib/internal-workflow"
 import type { RoutePolicy } from "@/lib/route-policy"
 import { secureJson } from "@/lib/security-headers"
+import { reportedJob } from "@/lib/reported-job"
 
 export const ROUTE_POLICY = {
   auth: "internal",
@@ -28,33 +29,36 @@ export const ROUTE_POLICY = {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-export async function POST(request: Request) {
-  const denied = await authorizeInternalWorkflow(request)
-  if (denied) return denied
-  const headers = corsHeaders(request, "POST, OPTIONS")
-  const raw = await request.text()
-  let json: unknown = {}
-  if (raw.trim() !== "") {
-    try {
-      json = JSON.parse(raw) as unknown
-    } catch {
+export const POST = reportedJob(
+  "stripe-toconline-reconciliation",
+  async (request: Request) => {
+    const denied = await authorizeInternalWorkflow(request)
+    if (denied) return denied
+    const headers = corsHeaders(request, "POST, OPTIONS")
+    const raw = await request.text()
+    let json: unknown = {}
+    if (raw.trim() !== "") {
+      try {
+        json = JSON.parse(raw) as unknown
+      } catch {
+        return secureJson(
+          { error: "validation", message: "invalid json" },
+          { status: 422, headers }
+        )
+      }
+    }
+    const parsed = ReconciliationWorkflowRequestSchema.safeParse(json)
+    if (!parsed.success) {
       return secureJson(
-        { error: "validation", message: "invalid json" },
+        { error: "validation", issues: parsed.error.issues },
         { status: 422, headers }
       )
     }
-  }
-  const parsed = ReconciliationWorkflowRequestSchema.safeParse(json)
-  if (!parsed.success) {
-    return secureJson(
-      { error: "validation", issues: parsed.error.issues },
-      { status: 422, headers }
+    return executeInternalWorkflow(request, async () =>
+      processStripeToconlineReconciliation({ month: parsed.data.month })
     )
   }
-  return executeInternalWorkflow(request, async () =>
-    processStripeToconlineReconciliation({ month: parsed.data.month })
-  )
-}
+)
 
 export async function OPTIONS(request: Request) {
   return internalWorkflowOptions(request)

@@ -1,6 +1,6 @@
 import { and, asc, eq, inArray, lte, notInArray } from "drizzle-orm"
 import { auditDb, db, main, audit as auditSchema } from "@eleva/db"
-import { captureException, heartbeat } from "@eleva/observability"
+import { captureException } from "@eleva/observability"
 
 /**
  * Drain rows from `eleva_v3_main.audit_outbox` (status='pending') into
@@ -16,12 +16,11 @@ import { captureException, heartbeat } from "@eleva/observability"
  *   its last error, and reported to Sentry.
  * - When the audit database itself is failing (several rows in a row),
  *   the run stops and throws without counting an attempt against those
- *   rows: an outage must not use up their retries. No heartbeat then, so
- *   the missed beat raises the alert.
- * - Heartbeat fires once per completed run (even with zero rows
- *   processed) so the status page shows liveness. A run that ends with
- *   rows marked failed, or with more still waiting at the cap, is also
- *   reported to Sentry.
+ *   rows: an outage must not use up their retries. The route answers 500
+ *   then, and its run is reported as failed.
+ * - A completed run (also one with zero rows) is reported as done by its
+ *   route. A run that ends with rows marked failed, or with more still
+ *   waiting at the cap, is also reported to Sentry.
  * - A run drains oldest first, batch after batch, until nothing is
  *   pending or `maxBatches` is reached (`more` then says so). Rows that
  *   fail in a run are not retried within it.
@@ -36,8 +35,6 @@ export interface DrainOptions {
   maxBatches?: number
   /** Per-row retry cap before marking failed. */
   maxAttempts?: number
-  /** BetterStack monitor name; defaults to 'audit-outbox-drainer'. */
-  heartbeatName?: string
 }
 
 export interface DrainResult {
@@ -213,10 +210,6 @@ export async function drainAuditOutbox(
       failed: result.failed,
     })
   }
-
-  // Heartbeat on every run (even zero rows) so the status page reflects
-  // that the drainer is alive.
-  await heartbeat(options.heartbeatName ?? "audit-outbox-drainer")
 
   return result
 }
