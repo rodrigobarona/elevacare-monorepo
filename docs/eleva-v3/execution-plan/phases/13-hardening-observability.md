@@ -291,10 +291,12 @@ PR 13.1 — security + observability + analytics:
    Receiver.verify from the shared helpers, not a local reimplementation) and calls it before any
    body parsing or side effect (AST check, not a string match), and unless a colocated test sends
    an invalid signature and asserts 401 with no side effect; (2) /auth/* — the single Better Auth
-   catch-all handler, exempt because Better Auth applies its own rate limiting — for which the
-   script instead asserts that packages/auth/src/server/auth.ts enables rateLimit with
-   customRules for /sign-in/*, /sign-up/*, /magic-link, /two-factor/*, /forget-password (and a
-   unit test exercises the limiter). The script fails when a public POST is neither
+   catch-all handler, exempt because Better Auth applies its own rate limiting — which
+   packages/auth/src/server/rate-limit-rules.ts sets for /sign-in/*, /sign-up/*,
+   /sign-in/magic-link, /magic-link/verify, /two-factor/*, /request-password-reset and the rest
+   (slice 13.5; `/magic-link` and `/forget-password` are not paths of Better Auth 1.7), and a
+   unit test drives the limiter on Eleva's own configuration
+   (auth-rate-limit.memory.test.ts). The script fails when a public POST is neither
    BotID-guarded nor in one of those two classes. CORS allow-list
    review. Dependabot or Renovate config for weekly grouped updates; pnpm audit --prod in CI
    (fail on high). Secret rotation runbook in integration-runbooks.md (BETTER_AUTH_SECRET,

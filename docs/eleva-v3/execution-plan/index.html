@@ -3294,7 +3294,8 @@ cookie-only POST -&gt; 403 <code>CSRF_ORIGIN_MISMATCH</code>; tossed/duplicate s
 row-count parity script prints <code>auth.* == main.*</code> for users, orgs, memberships; every FK
 validated (<code>pg_constraint.convalidated = true</code>).</li>
 <li><input disabled="" type="checkbox"> <code>requireApiAuth()</code> accepts: cookie session; <code>Authorization: Bearer &lt;session token&gt;</code>;
-<code>x-api-key</code> created via <code>apiKey</code> plugin scoped to an org; JWT from <code>/auth/token</code> verified
+<code>x-api-key</code> created via <code>apiKey</code> plugin (owned by a person since slice 12.5, not scoped to an
+org); JWT from <code>/auth/token</code> verified
 via JWKS (Bearer value routed by shape: compact JWS -&gt; JWT verifier, anything else -&gt;
 session-token verifier). JWTs are short-lived (<code>15m</code>) and <strong>non-revocable</strong> (JWKS only;
 no session-table check). After <code>revoke-other-sessions</code>, cookie/opaque bearer of that
@@ -3500,7 +3501,9 @@ PR 02.1 — server + schema + API:
    (b) Authorization: Bearer &lt;token&gt;: if the value is a compact JWS (three base64url segments,
    kid header) verify it as a JWT with JWKS from /auth/jwks (jwt plugin), otherwise verify it as
    a Better Auth session token (bearer plugin) — one discriminator, two verifiers, never both;
-   (c) x-api-key (apiKey plugin -&gt; referenceId = orgId; an API key sent as Bearer is rejected).
+   (c) x-api-key (apiKey plugin; since Better Auth 1.7 a key names one owner in `referenceId`, here a
+   person, and the workspace comes from `x-eleva-org` or the owner&#39;s default one: decision log
+   2026-11-22, slice 12.5; an API key sent as Bearer is rejected).
    Before verifying anything, count the credential sources present (cookie, Authorization,
    x-api-key); if more than one is present return 400 AMBIGUOUS_CREDENTIALS (audited) — never
    pick the first match. Return { userId, orgId, roles, capabilities, authMode }. Unit tests:
@@ -9040,10 +9043,12 @@ PR 13.1 — security + observability + analytics:
    Receiver.verify from the shared helpers, not a local reimplementation) and calls it before any
    body parsing or side effect (AST check, not a string match), and unless a colocated test sends
    an invalid signature and asserts 401 with no side effect; (2) /auth/* — the single Better Auth
-   catch-all handler, exempt because Better Auth applies its own rate limiting — for which the
-   script instead asserts that packages/auth/src/server/auth.ts enables rateLimit with
-   customRules for /sign-in/*, /sign-up/*, /magic-link, /two-factor/*, /forget-password (and a
-   unit test exercises the limiter). The script fails when a public POST is neither
+   catch-all handler, exempt because Better Auth applies its own rate limiting — which
+   packages/auth/src/server/rate-limit-rules.ts sets for /sign-in/*, /sign-up/*,
+   /sign-in/magic-link, /magic-link/verify, /two-factor/*, /request-password-reset and the rest
+   (slice 13.5; `/magic-link` and `/forget-password` are not paths of Better Auth 1.7), and a
+   unit test drives the limiter on Eleva&#39;s own configuration
+   (auth-rate-limit.memory.test.ts). The script fails when a public POST is neither
    BotID-guarded nor in one of those two classes. CORS allow-list
    review. Dependabot or Renovate config for weekly grouped updates; pnpm audit --prod in CI
    (fail on high). Secret rotation runbook in integration-runbooks.md (BETTER_AUTH_SECRET,
