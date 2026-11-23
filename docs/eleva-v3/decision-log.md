@@ -32,6 +32,43 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-23: Preview database branches expire by themselves (13.28) (active)
+
+- Change (Phase 13.28): a pull request's Neon branch (`pr-N`) was deleted
+  only when the pull request closed, or by the nightly sweep if that delete
+  failed. A pull request left open kept its branch for as long as it stayed
+  open, and on 2026-11-21 six open ones used every branch the project has,
+  so the database job failed. Now the job gives the branch an expiry each
+  time it runs: Neon deletes it by itself seven days after the last run
+  (`NEON_PR_BRANCH_TTL_DAYS`), and a later push makes it again.
+- Seven days: the branch is used by this job only (Vercel previews use the
+  `preview` branch), so losing it costs one re-run; it is far inside Neon's
+  30-day maximum; and work in review does not lose its branch over a
+  weekend.
+- The expiry is written with one call to Neon's API, to a branch whose name
+  is `pr-<this pull request>` and which is neither the default branch nor
+  protected; anything else stops the job. Neon itself refuses an expiry on
+  a default or protected branch, and on a branch with children (`preview`
+  while any `pr-N` exists).
+- Neon accepts it: this pull request's own run printed the branch before
+  (`"expires_at":null`) and after (`"expires_at":"2026-11-30T00:10:53Z"`,
+  `"ttl_interval_seconds":604800`). Its API reference marks the field early
+  access, so if Neon ever refuses, or cannot be reached, the job warns and
+  goes on: the delete on close and the nightly sweep still apply. Only a
+  branch that fails the check above stops the job.
+- The expiry is set by that call and not by the action that creates the
+  branch, which also takes one: a refusal there would fail the create, and
+  with it the database job of every pull request. The cost is that a job
+  which dies between the create and this step leaves a branch with no
+  expiry until its next run.
+- The job that deletes the branch on close now looks for it first, and is
+  green when the branch is already gone (expired, or swept).
+- Not changed: the nightly sweep; the limit of three open pull requests
+  (an expiry frees a forgotten branch, it does not raise the limit).
+  Operator: which Neon plan the project is on (O-2), and whether the
+  production branch is marked protected in Neon.
+- Owner: engineering
+
 ### 2026-11-22: An API key identifies its owner again, and no session can make one (12.5) (active)
 
 - Change (Phase 12.5): signing in to the API with a key read `key.userId`,
