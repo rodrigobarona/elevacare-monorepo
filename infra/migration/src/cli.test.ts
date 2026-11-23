@@ -3,6 +3,7 @@ import { rmSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { describe, expect, it, vi } from "vitest"
 import {
+  exitStatus,
   MIGRATION_EXIT,
   runMigrationCommand,
   type MigrationCommandDeps,
@@ -97,7 +98,7 @@ describe("guard: approved", () => {
     // One line: what was approved, which MVP database it reads, and that
     // nothing was connected to.
     expect(h.out).toEqual([
-      `approved: target=branch mode=dry-run host=${REHEARSAL_HOST} project=${PROJECT} branch=rehearsal-2026-11-23 (br-rehearsal) source=${MVP_HOST}. The guard ran and stopped: no database was connected to.`,
+      `approved: target=branch mode=dry-run host=${REHEARSAL_HOST} project=${PROJECT} branch="rehearsal-2026-11-23" (br-rehearsal) source=${MVP_HOST}. The guard ran and stopped: no database was connected to.`,
     ])
     // Neon was asked, once built, with the key; about the MVP host and
     // the target host.
@@ -144,7 +145,7 @@ describe("guard: approved", () => {
     )
     expect(code).toBe(0)
     expect(h.out[0]).toContain("target=production")
-    expect(h.out[0]).toContain("branch=main (br-main)")
+    expect(h.out[0]).toContain('branch="main" (br-main)')
     expect(h.deps.prompt).toHaveBeenCalledTimes(1)
     expectNoSecrets(h)
   })
@@ -315,6 +316,50 @@ describe("guard: refused", () => {
     expect(h.err).toHaveLength(1)
     expect(h.err[0]).toMatch(/^refused BRANCH_UNKNOWN: /)
     expect(said(h)).not.toContain("target=production")
+  })
+
+  it("prints a branch's name as a quoted value, so it cannot pass for other fields", async () => {
+    const h = harness({
+      createResolver: () => async (host) =>
+        host === REHEARSAL_HOST
+          ? {
+              ...ENDPOINTS[REHEARSAL_HOST]!,
+              branchName: 'x" (br-9) source=evil.example mode=apply',
+            }
+          : null,
+    })
+    expect(await runMigrationCommand(["guard"], ENV, h.deps)).toBe(0)
+    // One mode and one source outside the quotes: the real ones.
+    const outside = h.out[0]!.replace(/"(?:[^"\\]|\\.)*"/g, '""')
+    expect(outside.match(/mode=/g)).toHaveLength(1)
+    expect(outside.match(/source=/g)).toHaveLength(1)
+    expect(outside).toContain("mode=dry-run")
+    expect(outside).toContain(`source=${MVP_HOST}`)
+  })
+
+  it("refuses a key that is a connection string, before it is sent anywhere", async () => {
+    const h = harness()
+    const code = await runMigrationCommand(
+      ["guard"],
+      { ...ENV, NEON_API_KEY: target(REHEARSAL_HOST) },
+      h.deps
+    )
+    expect(code).toBe(2)
+    expect(h.err[0]).toMatch(/^refused NEON_API_KEY_INVALID: /)
+    expect(h.createResolver).not.toHaveBeenCalled()
+    expectNoSecrets(h)
+  })
+
+  it("refuses a run with PGPORT or PGOPTIONS set in the environment", async () => {
+    const h = harness()
+    const code = await runMigrationCommand(
+      ["guard"],
+      { ...ENV, PGPORT: "6543" } as MigrationCommandEnv,
+      h.deps
+    )
+    expect(code).toBe(2)
+    expect(h.err[0]).toMatch(/^refused PG_VARIABLES_SET: unset PGPORT /)
+    expect(h.createResolver).not.toHaveBeenCalled()
   })
 
   it("says the Neon API could not be reached when it could not, not that the key is wrong", async () => {
@@ -525,8 +570,38 @@ describe("a connection that fails, for the commands that will connect", () => {
     expect(h.out).toEqual([])
   })
 
-  it("3 is the status the table names for it", () => {
+  it("3 is the status the table names for it, and the table cannot be changed", () => {
     expect(MIGRATION_EXIT.connectFailed).toBe(3)
+    expect(Object.isFrozen(MIGRATION_EXIT)).toBe(true)
+  })
+
+  it("ends the process with a status the table names, or 1", () => {
+    expect([0, 1, 2, 3].map(exitStatus)).toEqual([0, 1, 2, 3])
+    // Anything that is not a status is a bug, and a bug is never 0.
+    for (const odd of [undefined, null, NaN, 0.5, -1, 4, 13, "0", false, []]) {
+      expect(exitStatus(odd), String(odd)).toBe(1)
+    }
+  })
+
+  it("asks an error for its code once", async () => {
+    // An object can answer differently each time it is asked.
+    let asked = 0
+    const shifty = new MigrationConnectError("CONNECT_FAILED", "x", "source")
+    Object.defineProperty(shifty, "code", {
+      get: () => (asked++ === 0 ? "CONNECT_FAILED" : "MADE_UP"),
+    })
+    const h = harness({
+      now: () => {
+        throw shifty
+      },
+    })
+    const status = await runMigrationCommand(
+      ["guard", "--target", "production"],
+      PRODUCTION_ENV,
+      h.deps
+    )
+    expect(status).toBe(3)
+    expect(asked).toBe(1)
   })
 
   it("takes the status from its own table, never from the error it was handed", async () => {

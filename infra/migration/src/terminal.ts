@@ -5,7 +5,7 @@ import { createInterface } from "node:readline/promises"
  * input ends without an answer (Ctrl-D, a closed pipe, an input that was
  * closed before the question), the answer is empty: the guard then refuses
  * as it does for any wrong answer, with its own message and exit status,
- * and the process does not wait on a question nobody can answer. The
+ * and the run does not wait on a question nobody can answer. The
  * reader is always closed.
  */
 export async function askOnTerminal(

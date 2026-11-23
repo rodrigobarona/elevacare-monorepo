@@ -96,7 +96,7 @@ Each entry should include:
   production database runs on (F-02). The driver is an argument, and 14.3
   adds the real one in `connect.ts` once that is known. Pooled or direct:
   direct, enforced.
-- Proof: 140 tests in the package (75 before), all with fakes: each exit
+- Proof: 158 tests in the package (75 before), all with fakes: each exit
   status, each family of refusal, production with fakes only, usage errors
   that never reach Neon, a forged approval (a copy, a prototype, a proxy),
   the environment changed after approval, both sides' read-only state and
@@ -132,7 +132,17 @@ Each entry should include:
   only at `src`, let a relative path leave the package, and matched a
   call's spelling where they now match the name. The pooled-host check
   kept in the connection module could no longer be reached and is gone.
-  Not scored again.
+  Third security review: 7.8, with no path found to "approved" without
+  the guard and no realistic leak of a credential. The fourth commit
+  answers it: the port is written into the rebuilt URL, and a run with a
+  `PG*` variable set is refused, since a driver reads those beside any
+  connection string; a URL has exactly one "@", so a piece of a password
+  cannot be shown as a host; nothing Neon says is put into a message
+  except a branch's name, quoted; the table of statuses is frozen and an
+  error is asked for its code once; the scans read the text as written
+  (taking comments out first was a way to hide code from them), know
+  every kind of code file, refuse an import that is worked out, and say
+  that only one file reaches the network. Not scored again.
 - Decided for 14.3, so it does not have to be found out there: the
   inventory reads only the MVP, and today's guard and connection module
   need a v3 target as well. 14.3 adds an approval for the source alone

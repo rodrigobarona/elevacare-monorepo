@@ -74,9 +74,8 @@ export function createNeonEndpointResolver(
       )
     }
     if (!response.ok) {
-      throw new NeonLookupError(
-        `Neon API answered ${response.status} for ${path}`
-      )
+      // The status only: the path holds ids, and the body is Neon's text.
+      throw new NeonLookupError(`Neon API answered ${response.status}`)
     }
     return response.json()
   }
@@ -103,7 +102,7 @@ export function createNeonEndpointResolver(
     )
     if (branch.primary !== undefined && branch.primary !== branch.default) {
       throw new NeonLookupError(
-        `Neon reports branch ${branch.id} as default=${branch.default} and primary=${branch.primary}`
+        "Neon says two different things about whether the branch is the default one"
       )
     }
     return {

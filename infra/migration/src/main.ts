@@ -1,4 +1,4 @@
-import { runMigrationCommand } from "./cli"
+import { exitStatus, runMigrationCommand } from "./cli"
 import { createNeonEndpointResolver } from "./neon-api"
 import { askOnTerminal } from "./terminal"
 
@@ -21,4 +21,4 @@ const status = await runMigrationCommand(process.argv.slice(2), process.env, {
 })
 // Only a status the table knows is passed on; anything else is a bug and
 // ends as one. Nothing but an approval can end as 0.
-process.exitCode = status === 0 || status === 2 || status === 3 ? status : 1
+process.exitCode = exitStatus(status)

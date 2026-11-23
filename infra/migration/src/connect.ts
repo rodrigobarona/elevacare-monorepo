@@ -8,7 +8,7 @@ import {
  * The one place in this package that opens database connections (Phase
  * 14.2). Two rules hold here and nowhere else has to repeat them:
  *
- * - Nothing is opened without a target the guard approved in this process.
+ * - Nothing is opened without a target the guard approved in this run.
  *   A hand-built object of the right shape is refused before any
  *   connection.
  * - The connection strings are the two the guard rebuilt. The environment
@@ -89,8 +89,9 @@ export interface MigrationSession {
  *   statement.
  * - Never reconnect by itself: a dropped connection fails the next query.
  *   A silent reconnect would lose the snapshot the readers share.
- * - Take the user, the password and the database from the URL only, and
- *   never from `PGUSER`, `PGPASSWORD`, `PGDATABASE` or `PGOPTIONS`.
+ * - Take everything from the URL (host, port, user, password, database)
+ *   and nothing from the `PG*` variables of the environment. The guard
+ *   refuses a run that has one set; the driver must not need that.
  */
 export type OpenMigrationSession = (
   url: string,
@@ -171,6 +172,17 @@ async function openSide(
   const opening = Promise.resolve().then(() => open(url, { readOnly }))
   const ready = opening.then(
     async (session) => {
+      // A driver that hands back something that is not a session.
+      if (
+        typeof session?.query !== "function" ||
+        typeof session.end !== "function"
+      ) {
+        throw new MigrationConnectError(
+          "CONNECT_FAILED",
+          `the ${side} driver did not give a session`,
+          side
+        )
+      }
       if (!readOnly) return session
       try {
         // Asked for at start-up by the driver, set again for every later
@@ -221,7 +233,7 @@ async function openSide(
 
 /**
  * Opens the MVP and v3 sessions for one run. `approved` must be the object
- * `assertMigrationTarget` returned; anything else is refused before `open`
+ * the guard returned; anything else is refused before `open`
  * is called.
  */
 export async function openMigrationConnections(

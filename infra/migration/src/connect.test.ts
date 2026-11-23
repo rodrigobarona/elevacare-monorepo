@@ -420,6 +420,16 @@ describe("openMigrationConnections", () => {
     expect(Object.isFrozen(MIGRATION_CONNECT_EXIT)).toBe(true)
   })
 
+  it("refuses a driver that hands back something that is not a session", async () => {
+    const approved = await approve("apply")
+    for (const notASession of [undefined, null, {}, { query: () => 1 }]) {
+      const open = (async () => notASession) as unknown as OpenMigrationSession
+      await expect(
+        openMigrationConnections(approved, { open })
+      ).rejects.toMatchObject({ code: "CONNECT_FAILED", side: "source" })
+    }
+  })
+
   it("closes both sessions, once, however often it is asked", async () => {
     const approved = await approve()
     const driver = fakeDriver()
@@ -444,32 +454,33 @@ describe("openMigrationConnections", () => {
 describe("the package's files", () => {
   const SRC = import.meta.dirname
   const PACKAGE = path.resolve(SRC, "..")
-  const CODE = /\.(ts|mts|cts|js|mjs|cjs)$/
-  const TEST = /\.test\.[cm]?[jt]s$/
+  const CODE = /\.([cm]?[jt]s|[jt]sx)$/
+  const TEST = /\.test\.([cm]?[jt]s|[jt]sx)$/
 
   /** Every code file under a folder that is not a test, at any depth. */
   const codeFiles = (root: string) =>
     (readdirSync(root, { recursive: true }) as string[])
       .map((file) => file.split(path.sep).join("/"))
-      .filter((file) => !file.split("/").includes("node_modules"))
+      .filter((file) => !/^node_modules\//.test(file))
       .filter((file) => CODE.test(file) && !TEST.test(file))
   /** The package's own code: everything but its tests and its tool configs. */
   const sources = () =>
     codeFiles(PACKAGE).filter(
       (file) => !/^[\w.-]+\.config\.[cm]?[jt]s$/.test(file)
     )
-  /** A file's code without its comments, where English uses the same words. */
-  const code = (file: string) =>
-    readFileSync(path.join(PACKAGE, file), "utf8")
-      .replace(/\/\*[\s\S]*?\*\//g, "")
-      .replace(/(^|[^:])\/\/.*$/gm, "$1")
-  /** What a piece of code imports, by any of the ways to import. */
+  // The text as it is written, comments included. Taking comments out
+  // first is how a scan gets fooled (a "/*" inside a string hides the code
+  // after it), so these files do not use the scanned words in comments.
+  const text = (file: string) => readFileSync(path.join(PACKAGE, file), "utf8")
+  /** What a piece of code imports from a named place, by any way to import. */
   const imports = (source: string) =>
     [
       ...source.matchAll(
-        /(?:from\s+|import\s*\(\s*|require\s*\(\s*|^\s*import\s+)["'`]([^"'`]+)["'`]/gm
+        /(?:\bfrom\s*|\bimport\s*\(\s*\(*\s*|\brequire\s*\(\s*\(*\s*|\bimport\s*)["'`]([^"'`]*)["'`]/g
       ),
     ].map((match) => match[1]!)
+  /** An import or require whose target is worked out, not written. */
+  const COMPUTED = /\b(?:import|require)\s*\(\s*\(*\s*(?!["'`(])[^)\s]/
 
   // What a file here may import: a neighbour inside src, the one part of
   // Node the terminal needs, and zod. A list of what is allowed, not of
@@ -482,11 +493,22 @@ describe("the package's files", () => {
       return true
     }
     if (!/^\.{1,2}\//.test(specifier)) return false
-    // A neighbour, and one that stays inside src: "../../packages/db" is
-    // a relative path too.
+    // A neighbour that stays inside src ("../../packages/db" is a relative
+    // path too), and not a test file or anything installed.
     const resolved = path.resolve(PACKAGE, path.dirname(file), specifier)
-    return resolved.startsWith(`${SRC}${path.sep}`)
+    return (
+      resolved.startsWith(`${SRC}${path.sep}`) &&
+      !resolved.includes(`${path.sep}node_modules${path.sep}`) &&
+      !/\.test(\.|$)/.test(path.basename(resolved))
+    )
   }
+  /** Why a file's imports are not all allowed, or an empty list. */
+  const importOffences = (file: string, source: string) => [
+    ...imports(source)
+      .filter((specifier) => !allowed(file, specifier))
+      .map((specifier) => `${file}: ${specifier}`),
+    ...(COMPUTED.test(source) ? [`${file}: an import that is worked out`] : []),
+  ]
 
   it("the package's code is all in src", () => {
     expect(sources().every((file) => file.startsWith("src/"))).toBe(true)
@@ -494,36 +516,40 @@ describe("the package's files", () => {
   })
 
   it("no file but connect.ts imports anything that could open a connection", () => {
-    const offenders = sources()
-      .filter((file) => file !== "src/connect.ts")
-      .flatMap((file) =>
-        imports(code(file))
-          .filter((specifier) => !allowed(file, specifier))
-          .map((specifier) => `${file}: ${specifier}`)
-      )
-    expect(offenders).toEqual([])
+    expect(
+      sources()
+        .filter((file) => file !== "src/connect.ts")
+        .flatMap((file) => importOffences(file, text(file)))
+    ).toEqual([])
+    // connect.ts itself imports no driver yet, and says so.
+    expect(importOffences("src/connect.ts", text("src/connect.ts"))).toEqual([])
   })
 
   it("the check would catch a driver, the product's own client, a path out of the package, and a file in a folder", () => {
     for (const line of [
       'import { Client } from "pg"',
+      'import{Client}from"pg"',
       'import { Pool } from "@neondatabase/serverless"',
       'import { db } from "@eleva/db"',
       'import type { Tx } from "@eleva/db"',
       'import "pg"',
+      'import"pg"',
       'const { Client } = await import("pg")',
       "const { Client } = await import(`pg`)",
+      'const { Client } = await import(("pg"))',
+      "const driver = await import(name)",
+      "const driver = require(name)",
       'const pg = require("pg/lib/client")',
       'import net from "node:net"',
       'import { env } from "node:process"',
       'import { readFileSync } from "node:fs"',
       'import { db } from "../../../packages/db/src/index"',
       'import pg from "../node_modules/pg/lib/index.js"',
+      'import { helper } from "./cli.test"',
+      'const sep = "a//"; await import("pg")',
+      'const glob = "migrations/*.sql"; await import("pg") /* */',
     ]) {
-      expect(
-        imports(line).some((specifier) => !allowed("src/x.ts", specifier)),
-        line
-      ).toBe(true)
+      expect(importOffences("src/x.ts", line), line).not.toEqual([])
     }
     for (const [file, line] of [
       ["src/x.ts", 'import { z } from "zod"'],
@@ -531,50 +557,68 @@ describe("the package's files", () => {
       ["src/map/users.ts", 'import { directHost } from "../guard"'],
       ["src/x.ts", 'import { createInterface } from "node:readline/promises"'],
     ] as const) {
-      expect(
-        imports(line).every((specifier) => allowed(file, specifier)),
-        line
-      ).toBe(true)
+      expect(importOffences(file, line), line).toEqual([])
     }
-    // The walk goes into folders: a file two levels down is found.
+    // The walk goes into folders and knows every kind of code file.
     const scratch = mkdtempSync(path.join(tmpdir(), "migration-scan-"))
     try {
       mkdirSync(path.join(scratch, "src", "map"), { recursive: true })
+      mkdirSync(path.join(scratch, "scripts"), { recursive: true })
       writeFileSync(path.join(scratch, "src", "map", "users.mts"), "")
+      writeFileSync(path.join(scratch, "src", "map", "view.tsx"), "")
       writeFileSync(path.join(scratch, "src", "map", "users.test.ts"), "")
-      expect(codeFiles(scratch)).toEqual(["src/map/users.mts"])
+      writeFileSync(path.join(scratch, "scripts", "run.js"), "")
+      expect(codeFiles(scratch).sort()).toEqual([
+        "scripts/run.js",
+        "src/map/users.mts",
+        "src/map/view.tsx",
+      ])
     } finally {
       rmSync(scratch, { recursive: true, force: true })
     }
   })
 
   it("the package depends on nothing that connects", () => {
-    const manifest = JSON.parse(
-      readFileSync(path.join(PACKAGE, "package.json"), "utf8")
-    ) as {
+    const manifest = JSON.parse(text("package.json")) as {
       dependencies?: Record<string, string>
+      devDependencies?: Record<string, string>
+      optionalDependencies?: Record<string, string>
+      peerDependencies?: Record<string, string>
       scripts: Record<string, string>
     }
     expect(Object.keys(manifest.dependencies ?? {})).toEqual(["zod"])
+    expect(Object.keys(manifest.devDependencies ?? {}).sort()).toEqual([
+      "@eleva/eslint-config",
+      "@eleva/typescript-config",
+      "@types/node",
+      "eslint",
+      "tsx",
+      "typescript",
+      "vitest",
+    ])
+    expect(manifest.optionalDependencies).toBeUndefined()
+    expect(manifest.peerDependencies).toBeUndefined()
     // The command as the README gives it: no file of variables is loaded.
     expect(manifest.scripts.guard).toBe("tsx src/main.ts guard")
   })
 
-  it("only main.ts touches the process", () => {
+  it("only main.ts touches the process, and only neon-api.ts the network", () => {
     // The environment, the arguments, the terminal, a `.env` loader: all
     // of it is reached through `process`, so the word itself is the test.
-    const offenders = sources()
-      .filter((file) => file !== "src/main.ts")
-      .filter((file) => /\bprocess\b/.test(code(file)))
-    expect(offenders).toEqual([])
-    expect(/\bprocess\b/.test(code("src/main.ts"))).toBe(true)
-    // Comments may say "in this process"; code may not say `process`.
-    expect(code("src/guard.ts")).not.toMatch(/in this process/)
+    const using = (word: RegExp) =>
+      sources().filter((file) => word.test(text(file)))
+    expect(using(/\bprocess\b/)).toEqual(["src/main.ts"])
+    // The same for what reaches the network or the globals without an
+    // import: Neon answers SQL over HTTPS, so `fetch` is a driver too.
+    expect(using(/\b(fetch|WebSocket|XMLHttpRequest)\b/)).toEqual([
+      "src/neon-api.ts",
+    ])
+    expect(using(/\bglobalThis\b/)).toEqual(["src/neon-api.ts"])
   })
 
   it("the guard is asked in one place, the command run from one place, and Neon's real answer built in one place", () => {
     const users = (name: string) =>
-      sources().filter((file) => new RegExp(`\\b${name}\\b`).test(code(file)))
+      sources().filter((file) => text(file).includes(name))
     // By the name, however it is imported, renamed or called: a second
     // caller could bring its own answers from Neon and get a real
     // approval for them.

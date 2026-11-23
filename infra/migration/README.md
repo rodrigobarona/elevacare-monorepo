@@ -42,9 +42,12 @@ well as for status 0: with a mistyped package name and no
 
 `openMigrationConnections()` (`src/connect.ts`) is the only place in the
 package that opens a database connection. A test lists what every other
-file may import (its neighbours, a few parts of Node that open nothing,
-and `zod`), so a driver, or the product's own database client, cannot come
-in through another file or a folder.
+file may import (its neighbours inside `src`, the one part of Node the
+terminal needs, and `zod`), in every folder and for every kind of code
+file, and that only `neon-api.ts` reaches the network. A driver, or the
+product's own database client, cannot come in through another file. The
+scans read text, so they stop a mistake, not someone set on getting
+around them.
 
 - It takes only the object the guard returned in this process. A copy, or
   an object built by hand with the same fields, is refused (`NOT_APPROVED`,
@@ -65,9 +68,10 @@ in through another file or a folder.
 - The driver must give **one dedicated connection per session, never a
   pool** (a pool has the same shape and would undo the read-only setting,
   a snapshot and any transaction), must never reconnect by itself, and
-  must take the user, the password and the database from the URL only,
-  never from `PGUSER`, `PGPASSWORD` or `PGDATABASE`. Nothing here can
-  check that: the first driver's own tests have to show it (14.3).
+  must take everything from the URL and nothing from the `PG*` variables
+  of the environment (the guard also refuses a run that has one set).
+  Nothing here can check the driver: the first one's own tests have to
+  show it (14.3).
 - A database that does not answer within 30 seconds, connection and
   read-only check together, is given up on (`CONNECT_TIMED_OUT`). If the second connection fails, the first is
   closed. `close()` closes both and can be called twice.
@@ -108,7 +112,8 @@ A connection URL may carry `sslmode` (`require` or `verify-full`) and
 `host`, `hostaddr`, `port`, `options` and any other parameter are refused,
 because a driver would follow them to a different database than the one in
 the URL, and a value that turns encryption off is refused too. A URL
-that carries no `sslmode` gets `sslmode=require`. The guard returns `targetUrl` and `sourceUrl`, rebuilt
+that carries no `sslmode` gets `sslmode=require`, and the port is always
+written out (`:5432`), so a driver takes neither from anywhere else. The guard returns `targetUrl` and `sourceUrl`, rebuilt
 from the parts it checked. **A run connects with those two strings and
 never reads the environment again.**
 
@@ -119,31 +124,32 @@ selects a delta run. `--report <path>` chooses where the report goes.
 
 Nothing has been connected to when a refusal is shown.
 
-| Code                                       | What it means                                                                                                             | What to do                                                                                      |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `TARGET_URL_MISSING`, `SOURCE_URL_MISSING` | `TARGET_DATABASE_URL` or `MVP_DATABASE_URL` is not set                                                                    | Set it                                                                                          |
-| `TARGET_URL_INVALID`, `SOURCE_URL_INVALID` | The URL is not a plain Postgres URL: a user, a password, one host, the default port, one database, no fragment            | Fix the URL; percent-encode special characters in the password                                  |
-| `URL_PARAMETER_NOT_ALLOWED`                | The URL carries a parameter other than `sslmode` and `channel_binding`                                                    | Remove it                                                                                       |
-| `URL_PARAMETER_VALUE_NOT_ALLOWED`          | `sslmode` or `channel_binding` is repeated or set to a value that weakens TLS                                             | Use `sslmode=require` (or `verify-full`) and `channel_binding=require` (or `prefer`), each once |
-| `URL_PASSWORD_NAMES_ENDPOINT`              | The password starts with `endpoint=` or `project=`                                                                        | Use the plain password                                                                          |
-| `TARGET_NOT_NEON`                          | The target host does not end in `.neon.tech`                                                                              | Point `TARGET_DATABASE_URL` at the v3 Neon project                                              |
-| `SOURCE_IS_TARGET`                         | Source and target are the same database                                                                                   | Set `MVP_DATABASE_URL` to the MVP database                                                      |
-| `SOURCE_IN_TARGET_PROJECT`                 | `MVP_DATABASE_URL` points into the v3 project                                                                             | Set it to the MVP database                                                                      |
-| `TARGET_HOST_POOLED`, `SOURCE_HOST_POOLED` | The URL uses a Neon pooled host (its name has `-pooler`). A migration needs a session of its own                          | Use the direct host of the same database; the message names it for the target                   |
-| `NEON_PROJECT_MISSING`                     | `NEON_PROJECT_ID` is not set                                                                                              | Set it to the v3 production project                                                             |
-| `NEON_PROJECT_INVALID`                     | `NEON_PROJECT_ID` is not shaped like a project id (lower-case letters, digits, dashes). It is not repeated in the message | Check that the variables were not swapped                                                       |
-| `NEON_API_KEY_MISSING`                     | `NEON_API_KEY` is not set, so Neon cannot be asked (no network call was made)                                             | Set it to a key that can read the v3 project                                                    |
-| `NEON_API_KEY_INVALID`                     | `NEON_API_KEY` has a space, a line break or another character a key never has                                             | Set it to the key alone                                                                         |
-| `NEON_LOOKUP_FAILED`                       | The Neon API could not be asked, or its answer could not be read                                                          | Check `NEON_API_KEY` and `NEON_PROJECT_ID`, then run again                                      |
-| `ENDPOINT_NOT_IN_PROJECT`                  | The target host is not an endpoint of `NEON_PROJECT_ID`                                                                   | Check both variables                                                                            |
-| `ENDPOINT_NOT_WRITABLE`                    | The target host is a read replica                                                                                         | Use the read-write endpoint of the same branch                                                  |
-| `BRANCH_UNKNOWN`                           | Neon did not say which branch the host belongs to, or the branch's name is not plain text                                 | Run again; if it repeats, check the endpoint and the branch's name in the Neon console          |
-| `DEFAULT_BRANCH_IN_BRANCH_MODE`            | A rehearsal was pointed at the production branch                                                                          | Create a rehearsal branch and use its host                                                      |
-| `HOST_NOT_ALLOWED`                         | The rehearsal host is not in `MIGRATION_ALLOWED_TARGET_HOSTS`                                                             | Add it                                                                                          |
-| `NOT_DEFAULT_BRANCH`                       | `--target production` was pointed at a branch that is not the default one                                                 | Use the production branch's host, or run a rehearsal without `--target production`              |
-| `PRODUCTION_NOT_CONFIRMED`                 | `MIGRATION_CONFIRM_PRODUCTION` is not today's date in UTC                                                                 | Set it to the date in the message, for this run only                                            |
-| `PRODUCTION_NOT_INTERACTIVE`               | No person is at the terminal                                                                                              | Run it from a terminal, not a pipe or a CI job                                                  |
-| `PROJECT_ID_NOT_TYPED`                     | The project id typed does not match `NEON_PROJECT_ID`                                                                     | Run again and type the id                                                                       |
+| Code                                       | What it means                                                                                                                                                             | What to do                                                                                      |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `TARGET_URL_MISSING`, `SOURCE_URL_MISSING` | `TARGET_DATABASE_URL` or `MVP_DATABASE_URL` is not set                                                                                                                    | Set it                                                                                          |
+| `TARGET_URL_INVALID`, `SOURCE_URL_INVALID` | The URL is not a plain Postgres URL: a user, a password, exactly one `@`, one host, the default port, one database, no fragment                                           | Fix the URL; percent-encode special characters in the password (`@` as `%40`)                   |
+| `URL_PARAMETER_NOT_ALLOWED`                | The URL carries a parameter other than `sslmode` and `channel_binding`                                                                                                    | Remove it                                                                                       |
+| `URL_PARAMETER_VALUE_NOT_ALLOWED`          | `sslmode` or `channel_binding` is repeated or set to a value that weakens TLS                                                                                             | Use `sslmode=require` (or `verify-full`) and `channel_binding=require` (or `prefer`), each once |
+| `URL_PASSWORD_NAMES_ENDPOINT`              | The password starts with `endpoint=` or `project=`                                                                                                                        | Use the plain password                                                                          |
+| `TARGET_NOT_NEON`                          | The target host does not end in `.neon.tech`                                                                                                                              | Point `TARGET_DATABASE_URL` at the v3 Neon project                                              |
+| `SOURCE_IS_TARGET`                         | Source and target are the same database                                                                                                                                   | Set `MVP_DATABASE_URL` to the MVP database                                                      |
+| `SOURCE_IN_TARGET_PROJECT`                 | `MVP_DATABASE_URL` points into the v3 project                                                                                                                             | Set it to the MVP database                                                                      |
+| `TARGET_HOST_POOLED`, `SOURCE_HOST_POOLED` | The URL uses a Neon pooled host (its name has `-pooler`). A migration needs a session of its own                                                                          | Use the direct host of the same database; the message names it for the target                   |
+| `PG_VARIABLES_SET`                         | A `PG*` variable (`PGPORT`, `PGOPTIONS`, `PGPASSWORD`, …) is set. A Postgres driver would use it beside the connection strings the guard checks. Only the names are shown | Unset them for this run                                                                         |
+| `NEON_PROJECT_MISSING`                     | `NEON_PROJECT_ID` is not set                                                                                                                                              | Set it to the v3 production project                                                             |
+| `NEON_PROJECT_INVALID`                     | `NEON_PROJECT_ID` is not shaped like a project id (lower-case words and digits joined by dashes). It is not repeated in the message                                       | Check that the variables were not swapped                                                       |
+| `NEON_API_KEY_MISSING`                     | `NEON_API_KEY` is not set, so Neon cannot be asked (no network call was made)                                                                                             | Set it to a key that can read the v3 project                                                    |
+| `NEON_API_KEY_INVALID`                     | `NEON_API_KEY` has a space, a line break or another character a key never has, or is a connection string                                                                  | Set it to the key alone                                                                         |
+| `NEON_LOOKUP_FAILED`                       | The Neon API could not be asked, or its answer could not be read                                                                                                          | Check `NEON_API_KEY` and `NEON_PROJECT_ID`, then run again                                      |
+| `ENDPOINT_NOT_IN_PROJECT`                  | The target host is not an endpoint of `NEON_PROJECT_ID`                                                                                                                   | Check both variables                                                                            |
+| `ENDPOINT_NOT_WRITABLE`                    | The target host is a read replica                                                                                                                                         | Use the read-write endpoint of the same branch                                                  |
+| `BRANCH_UNKNOWN`                           | Neon did not say which branch the host belongs to, or the branch's name is not plain text                                                                                 | Run again; if it repeats, check the endpoint and the branch's name in the Neon console          |
+| `DEFAULT_BRANCH_IN_BRANCH_MODE`            | A rehearsal was pointed at the production branch                                                                                                                          | Create a rehearsal branch and use its host                                                      |
+| `HOST_NOT_ALLOWED`                         | The rehearsal host is not in `MIGRATION_ALLOWED_TARGET_HOSTS`                                                                                                             | Add it                                                                                          |
+| `NOT_DEFAULT_BRANCH`                       | `--target production` was pointed at a branch that is not the default one                                                                                                 | Use the production branch's host, or run a rehearsal without `--target production`              |
+| `PRODUCTION_NOT_CONFIRMED`                 | `MIGRATION_CONFIRM_PRODUCTION` is not today's date in UTC                                                                                                                 | Set it to the date in the message, for this run only                                            |
+| `PRODUCTION_NOT_INTERACTIVE`               | No person is at the terminal                                                                                                                                              | Run it from a terminal, not a pipe or a CI job                                                  |
+| `PROJECT_ID_NOT_TYPED`                     | The project id typed does not match `NEON_PROJECT_ID`                                                                                                                     | Run again and type the id                                                                       |
 
 ## Environment
 

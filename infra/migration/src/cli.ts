@@ -22,7 +22,7 @@ import {
  */
 
 /** What each exit status means. The README carries the same table. */
-export const MIGRATION_EXIT = {
+export const MIGRATION_EXIT = Object.freeze({
   /** The guard approved the target. */
   approved: 0,
   /** Something unexpected: a bug or a crash. Never read as approval. */
@@ -35,7 +35,16 @@ export const MIGRATION_EXIT = {
    * yet; the status is fixed now so the table does not change when one does.
    */
   connectFailed: 3,
-} as const
+} as const)
+
+/**
+ * What the program ends with: the status the command returned when it is
+ * one the table names, and 1 for anything else. A value that is not a
+ * status is a bug, and a bug never ends as 0.
+ */
+export function exitStatus(returned: unknown): 0 | 1 | 2 | 3 {
+  return returned === 0 || returned === 2 || returned === 3 ? returned : 1
+}
 
 export interface MigrationCommandEnv extends MigrationGuardEnv {
   /** Reads the Neon API. Needed to learn which branch the target is. */
@@ -93,10 +102,10 @@ export async function runMigrationCommand(
         // A key with a space, a line break or anything else that is not
         // plain printable text was pasted wrong. It is refused here: sent
         // as a header, the runtime's own error would quote it.
-        if (!/^[\x21-\x7e]+$/.test(apiKey)) {
+        if (!/^[\x21-\x7e]+$/.test(apiKey) || /:\/\/|@/.test(apiKey)) {
           throw new MigrationGuardError(
             "NEON_API_KEY_INVALID",
-            "NEON_API_KEY has a space, a line break or another character a key never has. Set it to the key alone"
+            "NEON_API_KEY has a space, a line break or another character a key never has, or is a connection string. Set it to the key alone"
           )
         }
         resolver = deps.createResolver({
@@ -120,7 +129,7 @@ export async function runMigrationCommand(
     // What was approved, by its names only, on one line: never a
     // connection string, a user or a password.
     deps.out(
-      `approved: target=${approved.kind} mode=${approved.mode} host=${approved.host} project=${approved.projectId} branch=${approved.branchName} (${approved.branchId}) source=${approved.sourceHost}. The guard ran and stopped: no database was connected to.`
+      `approved: target=${approved.kind} mode=${approved.mode} host=${approved.host} project=${approved.projectId} branch=${JSON.stringify(approved.branchName)} (${approved.branchId}) source=${approved.sourceHost}. The guard ran and stopped: no database was connected to.`
     )
     return MIGRATION_EXIT.approved
   } catch (error) {
@@ -138,15 +147,17 @@ export async function runMigrationCommand(
       // The status is looked up by the code in a closed table. It is
       // never taken from the error object, and an unknown code is a bug:
       // nothing here can turn a failure into 0.
-      const known = Object.hasOwn(MIGRATION_CONNECT_EXIT, error.code)
+      // Read once: an object can answer differently each time it is asked.
+      const code = error.code
+      const side = error.side
+      const known =
+        typeof code === "string" && Object.hasOwn(MIGRATION_CONNECT_EXIT, code)
       deps.err(
         known
-          ? `failed ${error.code}${error.side === "source" || error.side === "target" ? ` (${error.side})` : ""}: ${error.message}`
+          ? `failed ${code}${side === "source" || side === "target" ? ` (${side})` : ""}: ${error.message}`
           : "failed: unexpected MigrationConnectError"
       )
-      return known
-        ? MIGRATION_CONNECT_EXIT[error.code]
-        : MIGRATION_EXIT.unexpected
+      return known ? MIGRATION_CONNECT_EXIT[code] : MIGRATION_EXIT.unexpected
     }
     // Its class only: the message of an unknown error is not ours, and
     // could carry a connection string.

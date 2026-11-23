@@ -31,6 +31,7 @@ export type MigrationGuardErrorCode =
   | "SOURCE_IN_TARGET_PROJECT"
   | "TARGET_HOST_POOLED"
   | "SOURCE_HOST_POOLED"
+  | "PG_VARIABLES_SET"
   | "NEON_PROJECT_MISSING"
   | "NEON_PROJECT_INVALID"
   | "NEON_API_KEY_MISSING"
@@ -160,6 +161,15 @@ function checkedUrl(
   if (!url?.trim()) {
     throw new MigrationGuardError(missing, `${name} is not set`)
   }
+  // One "@", between the password and the host. A second one is a password
+  // with a character that was not percent-encoded: the parse would shift,
+  // and a piece of the password would be read, and shown, as the host.
+  if ((url.match(/@/g) ?? []).length !== 1) {
+    throw new MigrationGuardError(
+      invalid,
+      `${name} must have exactly one "@", between the password and the host. Percent-encode an "@" in the password as %40`
+    )
+  }
   let parsed: URL
   try {
     parsed = new URL(url.trim())
@@ -239,7 +249,9 @@ function checkedUrl(
       `the password in ${name} starts with "endpoint=" or "project=", which Neon reads as the endpoint to connect to. Use the plain password`
     )
   }
-  const rebuilt = new URL(`postgresql://${host}`)
+  // The port is written out even when the URL left it to the default: a
+  // driver takes a missing one from its environment (PGPORT).
+  const rebuilt = new URL(`postgresql://${host}:5432`)
   rebuilt.username = parsed.username
   rebuilt.password = parsed.password
   rebuilt.pathname = parsed.pathname
@@ -262,7 +274,7 @@ function issue(approved: ApprovedMigrationTarget): ApprovedMigrationTarget {
 }
 
 /**
- * True only for an object `assertMigrationTarget` returned in this process.
+ * True only for an object the guard returned in this run.
  * The module that opens connections asks this before it opens anything, so
  * a type that matches is not enough to reach a database.
  */
@@ -303,6 +315,21 @@ export async function assertMigrationTarget(
   deps: MigrationGuardDeps
 ): Promise<ApprovedMigrationTarget> {
   const { env, target, mode } = input
+  // A Postgres driver reads PGHOST, PGPORT, PGUSER, PGPASSWORD, PGOPTIONS
+  // and their kin for anything a connection string leaves out, and
+  // PGOPTIONS even when it leaves nothing out. With one of them set, what
+  // the guard checks is not all of what the run would use. Only the names
+  // are shown.
+  const libpq = Object.entries(env as Record<string, string | undefined>)
+    .filter(([name, value]) => /^PG[A-Z_]+$/.test(name) && Boolean(value))
+    .map(([name]) => name)
+    .sort()
+  if (libpq.length > 0) {
+    throw new MigrationGuardError(
+      "PG_VARIABLES_SET",
+      `unset ${libpq.join(", ")} for this run: a driver would use ${libpq.length === 1 ? "it" : "them"} beside the connection strings the guard checks`
+    )
+  }
   const checkedTarget = checkedUrl(
     env.TARGET_DATABASE_URL,
     "TARGET_URL_MISSING",
@@ -356,7 +383,10 @@ export async function assertMigrationTarget(
   // The id goes into the question to Neon and into what is printed. A
   // value that is not shaped like one (an API key or a connection string
   // set in the wrong variable) is refused without being repeated.
-  if (!/^[a-z0-9-]{1,64}$/.test(projectId)) {
+  if (
+    !/^[a-z0-9]+(-[a-z0-9]+){0,5}$/.test(projectId) ||
+    projectId.length > 40
+  ) {
     throw new MigrationGuardError(
       "NEON_PROJECT_INVALID",
       "NEON_PROJECT_ID is not a Neon project id (lower-case letters, digits and dashes). Check that the variables were not swapped"
@@ -400,12 +430,11 @@ export async function assertMigrationTarget(
   }
   // The branch's name and id are printed, and asked about at the prompt:
   // text from outside is shown only when it is plain.
-  const plain = /^[\x20-\x7e]{1,128}$/
   if (
     !endpoint.branchId ||
     typeof endpoint.isDefaultBranch !== "boolean" ||
-    !plain.test(endpoint.branchId) ||
-    !plain.test(endpoint.branchName)
+    !/^[\w-]{1,64}$/.test(endpoint.branchId) ||
+    !/^[\x20-\x7e]{1,128}$/.test(endpoint.branchName)
   ) {
     throw new MigrationGuardError(
       "BRANCH_UNKNOWN",

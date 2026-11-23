@@ -16,6 +16,9 @@ const REHEARSAL_POOLED =
 const PRODUCTION_HOST = "ep-prod-z9y8x7w6.eu-central-1.aws.neon.tech"
 const MVP_URL =
   "postgresql://reader:pw@ep-mvp-11112222.eu-west-2.aws.neon.tech/mvp"
+/** The MVP URL as the guard hands it back: the port written out. */
+const MVP_REBUILT =
+  "postgresql://reader:pw@ep-mvp-11112222.eu-west-2.aws.neon.tech:5432/mvp"
 const NOW = new Date("2026-11-21T23:30:00.000Z")
 
 const ENDPOINTS: Record<string, NeonEndpointInfo> = {
@@ -96,8 +99,9 @@ describe("rehearsal (--target branch)", () => {
         branchId: "br-rehearsal",
         branchName: "rehearsal-2026-11-21",
         // Neither URL said anything about TLS: both ask for it.
-        targetUrl: `postgresql://app:pw@${REHEARSAL_HOST}/eleva?sslmode=require`,
-        sourceUrl: `${MVP_URL}?sslmode=require`,
+        // The port is written out, so a driver takes it from nowhere else.
+        targetUrl: `postgresql://app:pw@${REHEARSAL_HOST}:5432/eleva?sslmode=require`,
+        sourceUrl: `${MVP_REBUILT}?sslmode=require`,
       })
     }
     expect(d.prompt).not.toHaveBeenCalled()
@@ -429,9 +433,9 @@ describe("the connection a run may use", () => {
       })
     )
     expect(approved.targetUrl).toBe(
-      `postgresql://app:p%40ss@${REHEARSAL_HOST}/eleva?sslmode=require&channel_binding=require`
+      `postgresql://app:p%40ss@${REHEARSAL_HOST}:5432/eleva?sslmode=require&channel_binding=require`
     )
-    expect(approved.sourceUrl).toBe(`${MVP_URL}?sslmode=require`)
+    expect(approved.sourceUrl).toBe(`${MVP_REBUILT}?sslmode=require`)
     // The host the driver will use is the host that was approved.
     expect(new URL(approved.targetUrl).hostname).toBe(approved.host)
   })
@@ -663,5 +667,62 @@ describe("cutover (--target production)", () => {
       )
     )
     expect(err.code).toBe("PRODUCTION_NOT_CONFIRMED")
+  })
+})
+
+describe("what a driver could take from somewhere else", () => {
+  it("refuses a run with a PG variable set, and shows its name only", async () => {
+    const err = await refusal(
+      assertMigrationTarget(
+        {
+          target: "branch",
+          mode: "dry-run",
+          env: {
+            ...env(),
+            PGPORT: "6543",
+            PGOPTIONS: "-c default_transaction_read_only=off",
+            PGPASSWORD: "s3cret-pw",
+            // Set and empty is not set.
+            PGHOST: "",
+          } as MigrationGuardEnv,
+        },
+        deps()
+      )
+    )
+    expect(err.code).toBe("PG_VARIABLES_SET")
+    expect(err.exitCode).toBe(2)
+    expect(err.message).toContain("PGOPTIONS, PGPASSWORD, PGPORT")
+    expect(err.message).not.toContain("PGHOST")
+    expect(err.message).not.toContain("6543")
+    expect(err.message).not.toContain("s3cret-pw")
+    expect(err.message).not.toContain("read_only")
+  })
+
+  it("refuses a URL with a second @, without showing any piece of it", async () => {
+    // An unencoded "@" and "/" in the password shift the parse: a piece of
+    // the password would be read as the host.
+    for (const [name, url, code] of [
+      [
+        "TARGET_DATABASE_URL",
+        `postgresql://app:t4rget@pa55frag/tail@${REHEARSAL_HOST}`,
+        "TARGET_URL_INVALID",
+      ],
+      [
+        "MVP_DATABASE_URL",
+        "postgresql://reader:s0urce@pa55frag/tail@ep-mvp-11112222.eu-west-2.aws.neon.tech",
+        "SOURCE_URL_INVALID",
+      ],
+    ] as const) {
+      const err = await refusal(
+        assertMigrationTarget(
+          { target: "branch", mode: "dry-run", env: env({ [name]: url }) },
+          deps()
+        )
+      )
+      expect(err.code).toBe(code)
+      expect(err.message).not.toContain("pa55frag")
+      expect(err.message).not.toContain("t4rget")
+      expect(err.message).not.toContain("s0urce")
+    }
   })
 })
