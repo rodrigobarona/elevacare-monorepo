@@ -5,6 +5,7 @@ import { countBillableSeats, main, withPlatformAdminContext } from "@eleva/db"
 import { eq } from "drizzle-orm"
 import { stripe } from "./client"
 import { SEAT_PRICE_TYPE } from "./seat-cap"
+import { withSharedSeatLock } from "./seats"
 
 /**
  * Stripe product metadata keys used to identify Eleva subscription tiers.
@@ -173,22 +174,29 @@ export async function createOrgSubscription(input: {
   })
 }
 
+/** How long the same request counts as the same attempt at Checkout. */
+const CHECKOUT_ATTEMPT_MS = 10 * 60 * 1000
+
 /**
- * A Checkout Session is the same request only when it asks for the same
- * things. A key fixed per person and plan errors as soon as the seat count
- * or the return address differs. An identical request inside Stripe's
- * key lifetime still gets the same session back, finished or not: telling
- * a clinic that already pays from one that does not is 11.8's.
+ * One Checkout Session for one attempt: the same person asking for the
+ * same things within ten minutes (a double press, a reload, a retry) gets
+ * the same session. A different seat count or return address is another
+ * request, and so is trying again later: a key fixed per person and plan
+ * handed back a finished or expired session for a day.
  */
-function checkoutIdempotencyKey(input: {
-  orgId: string
-  tier: ProductTier
-  actorUserId: string
-  returnUrl: string
-  items: Array<{ price: string; quantity: number }>
-}): string {
+export function checkoutIdempotencyKey(
+  input: {
+    orgId: string
+    tier: ProductTier
+    actorUserId: string
+    returnUrl: string
+    items: Array<{ price: string; quantity: number }>
+  },
+  now: number = Date.now()
+): string {
+  const attempt = Math.floor(now / CHECKOUT_ATTEMPT_MS)
   const request = createHash("sha256")
-    .update(JSON.stringify([input.returnUrl, input.items]))
+    .update(JSON.stringify([input.returnUrl, input.items, attempt]))
     .digest("hex")
     .slice(0, 16)
   return `checkout_${input.orgId}_${input.tier}_${input.actorUserId}_${request}`
@@ -309,8 +317,20 @@ export async function createBillingPortalSession(input: {
  * The seat item moves to the new plan's seat price with its quantity given
  * outright: Stripe resets an item to 1 when its price changes and no
  * quantity is sent, which would bill one seat whatever the clinic has.
+ *
+ * It counts and writes under the clinic's seat lock, like the seat sync: a
+ * seat change at the same moment could otherwise be overwritten by the
+ * count this took a moment earlier.
  */
 export async function swapSubscriptionTier(input: {
+  subscriptionId: string
+  newTier: ProductTier
+  orgId: string
+}): Promise<Stripe.Subscription | null> {
+  return withSharedSeatLock(input.orgId, () => swapTierUnderSeatLock(input))
+}
+
+async function swapTierUnderSeatLock(input: {
   subscriptionId: string
   newTier: ProductTier
   orgId: string

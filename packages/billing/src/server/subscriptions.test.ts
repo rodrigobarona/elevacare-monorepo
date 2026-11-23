@@ -22,8 +22,18 @@ vi.mock("@eleva/audit", () => ({
     fn: (tx: unknown, ctx: { emit: (event: unknown) => void }) => unknown
   ) => fn({}, { emit: (event) => void emitted.push(event) }),
 }))
+// The lock is Redis; here it runs the work at once and says it was asked.
+const locked = vi.hoisted(() => [] as string[])
+vi.mock("./seats", () => ({
+  withSharedSeatLock: async (orgId: string, work: () => Promise<unknown>) => {
+    locked.push(orgId)
+    return work()
+  },
+}))
+
 import { countBillableSeats } from "@eleva/db"
 import {
+  checkoutIdempotencyKey,
   createOrgSubscription,
   createSubscriptionCheckoutSession,
   swapSubscriptionTier,
@@ -71,6 +81,7 @@ const seats = (count: number) =>
 beforeEach(() => {
   vi.clearAllMocks()
   emitted.length = 0
+  locked.length = 0
   fake.subscriptions.create.mockResolvedValue({ id: "sub_1" })
   fake.checkout.sessions.create.mockResolvedValue({
     id: "cs_1",
@@ -199,6 +210,21 @@ describe("createSubscriptionCheckoutSession", () => {
     )
     expect(first).toMatch(/^checkout_org_1_clinic_starter_user_1_[0-9a-f]{16}$/)
   })
+
+  it("is one session for one attempt: the same within ten minutes, new after", () => {
+    const request = {
+      ...input,
+      items: [{ price: "price_plan", quantity: 1 }],
+    }
+    const noon = Date.UTC(2026, 10, 23, 12, 0, 0)
+    const key = (minutes: number) =>
+      checkoutIdempotencyKey(request, noon + minutes * 60_000)
+    // A double press or a reload a few minutes later: the same session.
+    expect(key(4)).toBe(key(0))
+    // Trying again later is a new attempt, not yesterday's finished session.
+    expect(key(10)).not.toBe(key(0))
+    expect(key(24 * 60)).not.toBe(key(0))
+  })
 })
 
 describe("swapSubscriptionTier", () => {
@@ -221,6 +247,8 @@ describe("swapSubscriptionTier", () => {
       newTier: "clinic_growth",
       orgId: "org_1",
     })
+    // Counted and written under the clinic's seat lock, like the seat sync.
+    expect(locked).toEqual(["org_1"])
     // Without a quantity Stripe would reset the moved item to 1.
     expect(fake.subscriptions.update).toHaveBeenCalledWith(
       "sub_1",

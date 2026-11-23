@@ -68,7 +68,11 @@ Each entry should include:
     keeps it;
   - Checkout sent the same idempotency key for a person and a plan all day,
     which hands back a finished session and errors when anything differs.
-    The key now follows the request.
+    The key now follows the request and the attempt: the same request
+    within ten minutes is the same session, a later one is a new one.
+  - a plan change counted and wrote the seats outside the clinic's seat
+    lock, so a seat change at the same moment could be overwritten by the
+    older count (Greptile). It now runs under the same lock as the sync.
 - Checkout saves what the buyer types (`customer_update`): the customer
   already exists, made by provisioning without an address, and without this
   the company name, the address and with them the VAT number were not saved
@@ -113,13 +117,11 @@ Each entry should include:
   queries that had only run against mocks; a comment that claimed a boot
   check that does not exist). The second commit answers those and was not
   scored again.
-- Left open on this path: a plan change runs outside the clinic's seat
-  lock and leaves no mark, so a seat change at the same moment can leave a
-  stale quantity until the next one; an identical Checkout request within a
-  day still gets the same session back, finished or not; a subscription
+- Left open on this path: nothing stops a clinic that already pays from
+  opening Checkout again (11.8); a subscription
   with one of the old metered seat items would get a second, licensed one
   (none is known; the seed script has refused to run beside a metered price
-  for months). The first two belong to 11.8.
+  for months).
 - Not in this slice: the Billing page and a guard against a second Checkout
   for a clinic that already pays (11.8); whether provisioning should keep
   creating an unpaid clinic subscription that expires in 23 hours;

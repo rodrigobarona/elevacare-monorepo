@@ -247,7 +247,11 @@ async function clearSeatSyncPending(
   })
 }
 
-async function withSharedSeatLock<T>(
+/**
+ * One writer at a time for a clinic's seat item: the seat sync, and a plan
+ * change (which moves the seat item to another price with its quantity).
+ */
+export async function withSharedSeatLock<T>(
   orgId: string,
   fn: () => Promise<T>
 ): Promise<T> {
