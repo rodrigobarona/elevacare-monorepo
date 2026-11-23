@@ -154,44 +154,66 @@ export function sharedConfigsFor(workspace) {
   ]
 }
 
-/** A lint config file as text, without comments, spaces or quote style. */
-const bare = (source) =>
-  source
-    .replace(/\/\*[\s\S]*?\*\//g, "")
-    .replace(/^\s*\/\/.*$/gm, "")
-    .replace(/[\s;]/g, "")
-    .replace(/'/g, '"')
-
-const SHARED_IMPORTS = {
-  nextJsConfig: 'import{nextJsConfig}from"@eleva/eslint-config/next-js"',
-  config: 'import{config}from"@eleva/eslint-config/base"',
-  boundariesConfig:
-    'import{boundariesConfig}from"@eleva/eslint-config/boundaries"',
-  frontendDbReadsConfig:
-    'import{frontendDbReadsConfig}from"@eleva/eslint-config/frontend-db-reads"',
+const SHARED_CONFIGS = {
+  nextJsConfig: "@eleva/eslint-config/next-js",
+  config: "@eleva/eslint-config/base",
+  boundariesConfig: "@eleva/eslint-config/boundaries",
+  frontendDbReadsConfig: "@eleva/eslint-config/frontend-db-reads",
 }
 
-/** The only texts an app's lint config file may be, bare. */
-export function sharedConfigTexts(workspace) {
+/** The shared configs an app spreads, by name, in order: both ways to begin. */
+function sharedNamesFor(workspace) {
   const rest =
     workspace === DATABASE_OWNER
       ? ["boundariesConfig"]
       : ["boundariesConfig", "frontendDbReadsConfig"]
-  return ["nextJsConfig", "config"].map((first) => {
-    const names = [first, ...rest]
-    return (
-      names.map((name) => SHARED_IMPORTS[name]).join("") +
-      `exportdefault[${names.map((name) => `...${name}`).join(",")}]`
-    )
-  })
+  return [
+    ["nextJsConfig", ...rest],
+    ["config", ...rest],
+  ]
+}
+
+/** What an app's lint config file is, written out (the Next.js one). */
+export function sharedConfigText(workspace) {
+  const [names] = sharedNamesFor(workspace)
+  return [
+    ...names.map((name) => `import { ${name} } from "${SHARED_CONFIGS[name]}"`),
+    "",
+    `export default [${names.map((name) => `...${name}`).join(", ")}]`,
+    "",
+  ].join("\n")
+}
+
+/**
+ * Whether a lint config file is those lines and no other code. How it is
+ * laid out does not count: comments, spacing, quotes, semicolons, a comma
+ * after the last entry, the order of the imports.
+ */
+export function isSharedConfigText(workspace, source) {
+  const bare = source
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/^\s*\/\/.*$/gm, "")
+    .replace(/[\s;]/g, "")
+    .replace(/'/g, '"')
+    .replace(/,\]/g, "]")
+  const imports = bare.match(/import\{\w+\}from"[^"]+"/g) ?? []
+  const rest = imports.reduce((text, one) => text.replace(one, ""), bare)
+  return sharedNamesFor(workspace).some(
+    (names) =>
+      imports.length === names.length &&
+      names.every((name) =>
+        imports.includes(`import{${name}}from"${SHARED_CONFIGS[name]}"`)
+      ) &&
+      rest === `exportdefault[${names.map((name) => `...${name}`).join(",")}]`
+  )
 }
 
 /**
  * What is wrong with an app's lint config: anything but the shared
- * configs. Given `source`, the file's text: it must be the three lines
- * and no other code, because the file is code and could change the
- * shared configs as it loads and still export them. Given `config`, what
- * the file exports: the shared configs themselves, entry for entry.
+ * configs. Given `source`, the file's text: it must be those lines and no
+ * other code, because the file is code and could change the shared
+ * configs as it loads and still export them. Given `config`, what the
+ * file exports: the shared configs themselves, entry for entry.
  */
 export function appConfigProblems(workspace, config, source) {
   const same = (expected) =>
@@ -201,12 +223,17 @@ export function appConfigProblems(workspace, config, source) {
   const ok =
     source === undefined
       ? sharedConfigsFor(workspace).some(same)
-      : sharedConfigTexts(workspace).includes(bare(source))
+      : isSharedConfigText(workspace, source)
   if (ok) return []
-  const frontend =
-    workspace === DATABASE_OWNER ? "" : ", ...frontendDbReadsConfig"
   return [
-    `${workspace}: the lint config of an app is three lines: import the shared configs from @eleva/eslint-config and export [...nextJsConfig (or the base config), ...boundariesConfig${frontend}]. Anything more (a rule set here, a folder ignored, any other code) or less can switch a boundary off, so the app was not checked further; put the change in @eleva/eslint-config`,
+    `${workspace}: the lint config of an app is the shared configs and nothing else, so the app was not checked further. Anything more (a rule set here, a folder ignored, any other code) or less can switch a boundary off; put the change in @eleva/eslint-config. The file should read:\n\n${sharedConfigText(
+      workspace
+    )
+      .trim()
+      .replace(
+        /^/gm,
+        "    "
+      )}\n\n  (a non-Next.js app begins from { config } of "@eleva/eslint-config/base")`,
   ]
 }
 
@@ -236,11 +263,16 @@ export function appsWithoutLint(root) {
   const dir = path.join(root, "apps")
   if (!existsSync(dir)) return []
   const linted = new Set(lintedWorkspaces(root))
-  return readdirSync(dir, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => `apps/${entry.name}`)
-    .filter((app) => !SKIPPED.has(app) && !linted.has(app))
-    .sort()
+  return (
+    readdirSync(dir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => `apps/${entry.name}`)
+      // A folder left behind by another branch, with no package in it, is
+      // not an app.
+      .filter((app) => existsSync(path.join(root, app, "package.json")))
+      .filter((app) => !SKIPPED.has(app) && !linted.has(app))
+      .sort()
+  )
 }
 
 function leadsToFolder(link) {
@@ -376,7 +408,6 @@ async function appProblems(root, workspace, eslint, results, canaries) {
   problems.push(...appConfigProblems(workspace, config))
 
   const linted = new Set(results.map((result) => result.filePath))
-  if (linted.size === 0) problems.push(`${workspace}: no file was linted`)
   const { sources, configs, links } = sourceFilesOf(cwd)
   for (const file of sources) {
     if (!linted.has(file)) {

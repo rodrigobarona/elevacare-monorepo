@@ -66,14 +66,20 @@ const HOW =
 const DRIVERS =
   "An app does not query the database itself: no drizzle-orm, no database driver. Use a listed @eleva/db read helper or call apps/api (frontend-db-reads lint)."
 
+/** The package by a subpath, or with something a bundler drops after it. */
+const SUBPATH = "^@eleva/db[/?#]"
+
+/** What the package is built on. */
+const UNDER_IT = "^(drizzle-orm|pg|postgres)(/|$)|^@neondatabase/"
+
 /**
- * The database package, or what is under it, named as text where it can
- * be loaded from (`namedAsText`). A path into `packages/db` is refused by
- * the boundaries, like any path into a workspace.
+ * The package, or what it is built on, named as text where it can be
+ * loaded from (`namedAsText`): the same names the import rule refuses.
  */
-const DATABASE_TEXT =
-  "/^@eleva\\/db([\\/?#]|$)|^drizzle-orm(\\/|$)|^@neondatabase\\//"
-const LOADED_AT_RUN_TIME = namedAsText(DATABASE_TEXT, HOW)
+const LOADED_AT_RUN_TIME = namedAsText(
+  `/^@eleva\\/db$|${[SUBPATH, UNDER_IT].join("|").replaceAll("/", "\\/")}/`,
+  HOW
+)
 
 /** @type {import("eslint").Linter.Config[]} */
 export const frontendDbReadsConfig = [
@@ -96,14 +102,14 @@ export const frontendDbReadsConfig = [
           ],
           patterns: [
             {
-              // A subpath, or the name with something after it that a
-              // bundler would drop (`@eleva/db?raw`).
-              regex: "^@eleva/db[/?#]",
+              regex: SUBPATH,
               allowTypeImports: true,
               message: HOW,
             },
             {
-              regex: "^(drizzle-orm|pg|postgres)(/|$)|^@neondatabase/",
+              // A type from the query builder is not a query.
+              regex: UNDER_IT,
+              allowTypeImports: true,
               message: DRIVERS,
             },
           ],

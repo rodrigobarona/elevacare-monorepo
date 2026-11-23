@@ -84,13 +84,15 @@ Each entry should include:
   (`getMemberProfile(userId)`, `listMemberPayments`): the raw reads this
   slice is named for. A name does not say how a helper is scoped; a list
   that someone reviews does.
-- **No workspace is imported by its place on disk**, in any app:
-  `../../packages/db/src/client`, anything under `node_modules/`, another
-  app's folder. A path gets around every rule about what may import what;
-  workspace code is imported by its package name.
+- **No workspace is imported by its place on disk**, in any app: a path
+  that climbs out to `packages/` or `apps/`
+  (`../../packages/db/src/client`), or one into `node_modules/`. A path
+  gets around every rule about what may import what; workspace code is
+  imported by its package name. A folder of an app's own named `packages`
+  or `apps` is left alone.
 - Also tightened: `value["reveal"]()` and `value.reveal.call(value)` are
   refused like `value.reveal()`; vendor SDKs are refused by any path inside
-  them (`stripe/lib/...`), and every module the import bans name is
+  them (`stripe/lib/...`), and every module the import bans refuse whole is
   refused when loaded with `import()` or `require` too (that list is
   derived from the bans, not written twice); a route folder named
   `coverage` is no longer skipped; what Fumadocs generates (`.source`) is
@@ -111,6 +113,18 @@ Each entry should include:
     `package.json`, `paths` in `tsconfig.json`, a renamed dependency),
     cannot be seen by lint. No app has such an alias to the database
     today.
+  - Two bans are on single names of a module (`Decrypted` from
+    `@eleva/observability`, the `decrypt…` helpers from
+    `@eleva/encryption`). Loaded with `import()`, those modules are not
+    refused, so the names can be reached that way.
+  - A relative path that climbs out of an app without naming `packages/`
+    or `apps/` (`../../../other-app/src/x`) is not refused.
+  - Lint reads script files only: an `import` in an `.mdx` file is not
+    read. A folder at the top of an app named `dist`, `coverage` or like
+    another generated folder is not linted, whatever is in it.
+  - Everything under an app counts as that app, its `e2e/` and `scripts/`
+    too. A test in a frontend that loads the database with `import()` is
+    refused; one that mocks it (`vi.mock`) is not.
   - The list says which reads a frontend may use; that each of them scopes
     its read to the caller's organization was checked by reading them (20
     take the organization and run in its context, one is a mapper), not by

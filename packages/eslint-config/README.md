@@ -44,8 +44,21 @@ quietly, in an ordinary change. It does not stand against someone who sets
 out to defeat it: these configs and the script can be edited, and the CI
 step can be removed. Review stands against that.
 
-It cannot see a module name put together at run time, or one reached
-through an alias (`imports` in `package.json`, `paths` in `tsconfig.json`).
+What it cannot see:
+
+- a module name put together at run time, or one reached through an alias
+  (`imports` in `package.json`, `paths` in `tsconfig.json`);
+- a module that is banned only for some of its names (`Decrypted` from
+  `@eleva/observability`, the `decrypt…` helpers from `@eleva/encryption`)
+  when it is loaded with `import()`;
+- a relative path that climbs out of an app without naming `packages/` or
+  `apps/`;
+- an `import` in an `.mdx` file, and anything in a folder at the top of an
+  app that is named like a generated one (`dist`, `coverage`, `.next`).
+
+Everything under an app counts as that app: its `e2e/` and `scripts/` too.
+`vi.mock("@eleva/db")` in a test is allowed; `await import("@eleva/db")` is
+not.
 
 ## Packages
 

@@ -1,10 +1,11 @@
 import assert from "node:assert/strict"
 import { spawnSync } from "node:child_process"
 import {
+  cpSync,
   mkdirSync,
   mkdtempSync,
-  readdirSync,
   readFileSync,
+  readdirSync,
   rmSync,
   statSync,
   symlinkSync,
@@ -13,7 +14,10 @@ import {
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { after, test } from "node:test"
-import { boundariesConfig } from "../packages/eslint-config/boundaries.js"
+import {
+  boundariesConfig,
+  modulesAsText,
+} from "../packages/eslint-config/boundaries.js"
 import {
   FRONTEND_DB_READS,
   frontendDbReadsConfig,
@@ -29,8 +33,9 @@ import {
   findBoundaryProblems,
   lintedWorkspaces,
   report,
+  isSharedConfigText,
   sharedConfigsFor,
-  sharedConfigTexts,
+  sharedConfigText,
   sourceFilesOf,
 } from "./check-boundaries.mjs"
 
@@ -184,52 +189,80 @@ test("an app's lint config exports the shared configs, and nothing else", () => 
   named("apps/web", undefined)
 })
 
-test("an app's lint config file is three lines, and no other code", () => {
-  const text = (workspace, source) =>
-    appConfigProblems(workspace, undefined, source).length === 0
-  const web = `import { nextJsConfig } from "@eleva/eslint-config/next-js"
-import { boundariesConfig } from "@eleva/eslint-config/boundaries"
-import { frontendDbReadsConfig } from "@eleva/eslint-config/frontend-db-reads"
-
-/** @type {import("eslint").Linter.Config} */
-export default [...nextJsConfig, ...boundariesConfig, ...frontendDbReadsConfig]
-`
-  assert.ok(text("apps/web", web))
-  // Spacing, quotes, semicolons and comments are not code.
+test("an app's lint config file is the shared configs, and no other code", () => {
+  const web = sharedConfigText("apps/web")
+  assert.ok(isSharedConfigText("apps/web", web))
   assert.ok(
-    text(
-      "apps/web",
-      web.replaceAll('"', "'").replaceAll("\n", ";\n") + "// a note\n"
+    web.includes(
+      "export default [...nextJsConfig, ...boundariesConfig, ...frontendDbReadsConfig]"
     )
   )
-  assert.equal(sharedConfigTexts("apps/web").length, 2)
 
-  // Code that runs when the file is loaded, around the same export.
-  assert.ok(!text("apps/web", `process.exit(0)\n${web}`))
-  assert.ok(
-    !text(
-      "apps/web",
-      web.replace(
-        "export default",
-        'frontendDbReadsConfig[0].rules["no-restricted-syntax"] = "off"\nexport default'
+  // How the file is laid out is not code: quotes, semicolons, comments,
+  // the export on several lines with a comma at its end, the imports in
+  // another order, the base config in place of the Next.js one.
+  const lines = web.trim().split("\n")
+  const laidOut = [
+    web.replaceAll('"', "'").replaceAll("\n", ";\n") + "// a note\n",
+    `/** @type {import("eslint").Linter.Config} */\n${web}`,
+    web.replace(
+      /export default \[(.*)\]/,
+      (_all, entries) =>
+        `export default [\n  ${entries.split(", ").join(",\n  ")},\n]`
+    ),
+    [lines[2], lines[0], lines[1], ...lines.slice(3)].join("\n"),
+    web
+      .replace(
+        '{ nextJsConfig } from "@eleva/eslint-config/next-js"',
+        '{ config } from "@eleva/eslint-config/base"'
       )
-    )
-  )
-  assert.ok(
-    !text(
-      "apps/web",
-      web.replace("...frontendDbReadsConfig]", "...frontendDbReadsConfig, {}]")
-    )
-  )
-  // The shared configs from somewhere else.
-  assert.ok(!text("apps/web", web.replace("/boundaries", "/boundaries-local")))
+      .replace("...nextJsConfig", "...config"),
+  ]
+  for (const source of laidOut) {
+    assert.ok(isSharedConfigText("apps/web", source), source)
+  }
+
+  const other = [
+    // Code that runs when the file is loaded, around the same export.
+    `process.exit(0)\n${web}`,
+    web.replace(
+      "export default",
+      'frontendDbReadsConfig[0].rules["no-restricted-syntax"] = "off"\nexport default'
+    ),
+    // An entry more, an entry fewer, another order.
+    web.replace("...frontendDbReadsConfig]", "...frontendDbReadsConfig, {}]"),
+    web.replace(", ...frontendDbReadsConfig", ""),
+    web.replace(
+      "...boundariesConfig, ...frontendDbReadsConfig",
+      "...frontendDbReadsConfig, ...boundariesConfig"
+    ),
+    // The shared configs from somewhere else, or under another name.
+    web.replace("/boundaries", "/boundaries-local"),
+    web.replace("{ boundariesConfig }", "{ boundariesConfig as b }"),
+    `${web}import { x } from "./local"\n`,
+    "",
+  ]
+  for (const source of other) {
+    assert.ok(!isSharedConfigText("apps/web", source), source)
+  }
+
   // A frontend's file is not the API's, nor the other way round.
-  const api = web
-    .replace(/^import \{ frontendDbReadsConfig \}.*\n/m, "")
-    .replace(", ...frontendDbReadsConfig", "")
-  assert.ok(text("apps/api", api))
-  assert.ok(!text("apps/web", api))
-  assert.ok(!text("apps/api", web))
+  const api = sharedConfigText("apps/api")
+  assert.ok(isSharedConfigText("apps/api", api))
+  assert.ok(!isSharedConfigText("apps/web", api))
+  assert.ok(!isSharedConfigText("apps/api", web))
+
+  // What a developer is told: the file as it should read.
+  const [told] = appConfigProblems(
+    "apps/web",
+    undefined,
+    `${web}\nconsole.log(1)`
+  )
+  assert.match(
+    told,
+    /^apps\/web: the lint config of an app is the shared configs/
+  )
+  for (const line of lines.filter(Boolean)) assert.ok(told.includes(line), line)
 })
 
 test("every app's own lint config is exactly that, by text and by what it exports", async () => {
@@ -335,6 +368,53 @@ test("an app on its own: clean passes, and each way of going wrong is named", as
   assert.match(deeper.problems[0], /test-results\/page\.ts:1: /)
 })
 
+test("an app whose lint config is the right text over other configs is named", async () => {
+  // The lint package as a copy: the same text in the app's config, other
+  // objects behind the names. And in the copy, a rule off for one folder.
+  const { root, app } = scratchRepository({
+    "src/app/legacy/page.ts":
+      'import { db } from "@eleva/db"\nexport const x = db\n',
+  })
+  const real = path.join(ROOT, "packages", "eslint-config")
+  const copy = path.join(app, "node_modules", "@eleva", "eslint-config")
+  rmSync(copy)
+  mkdirSync(copy)
+  for (const name of readdirSync(real)) {
+    if (name.endsWith(".js") || name === "package.json") {
+      cpSync(path.join(real, name), path.join(copy, name))
+    }
+  }
+  symlinkSync(path.join(real, "node_modules"), path.join(copy, "node_modules"))
+  const reads = path.join(copy, "frontend-db-reads.js")
+  writeFileSync(
+    reads,
+    readFileSync(reads, "utf8") +
+      '\nfrontendDbReadsConfig.push({ files: ["src/app/legacy/**"], rules: { "@typescript-eslint/no-restricted-imports": "off" } })\n'
+  )
+
+  const { problems } = await findBoundaryProblems(root, {
+    workspaces: ["apps/demo"],
+  })
+  // What the file exports is not the shared configs...
+  assert.ok(
+    problems.some((one) =>
+      /^apps\/demo: the lint config of an app is/.test(one)
+    ),
+    problems.join("\n")
+  )
+  // ...and the folder where the rule is off is named, though lint found
+  // nothing there.
+  assert.ok(
+    problems.some((one) =>
+      /^apps\/demo\/src\/app\/legacy\/page\.ts: the boundary rules are not set/.test(
+        one
+      )
+    ),
+    problems.join("\n")
+  )
+  assert.ok(!problems.some((one) => /legacy\/page\.ts:1: /.test(one)))
+})
+
 test("an app whose lint config is other code is named, and its code is not run", async () => {
   const marker = path.join(temporary(), "ran")
   const original = readFileSync(
@@ -351,10 +431,7 @@ ${original}`,
       'import { db } from "@eleva/db"\nexport const x = db\n',
   })
   assert.equal(problems.length, 1, problems.join("\n"))
-  assert.match(
-    problems[0],
-    /^apps\/demo: the lint config of an app is three lines/
-  )
+  assert.match(problems[0], /^apps\/demo: the lint config of an app is/)
   assert.throws(() => statSync(marker), /ENOENT/)
 })
 
@@ -472,10 +549,7 @@ test("a frontend takes the listed reads and types from the database, and no more
       'import { b } from "../../node_modules/@eleva/db/src/index"',
       "no-restricted-imports"
     ),
-    line(
-      'import { c } from "../../../poc/../apps/poc/src/x"',
-      "no-restricted-imports"
-    ),
+    line('import { c } from "../../apps/poc/src/x"', "no-restricted-imports"),
     // Loaded at run time, written as text.
     line('export const l1 = () => import("@eleva/db")', "no-restricted-syntax"),
     line("export const l2 = () => import(`@eleva/db`)", "no-restricted-syntax"),
@@ -511,6 +585,12 @@ test("a frontend takes the listed reads and types from the database, and no more
       'export const l10 = require.resolve("drizzle-orm")',
       "no-restricted-syntax"
     ),
+    // A folder of the app's own named like a workspace folder is not one.
+    line('import { list } from "./packages/list"'),
+    line('import { card } from "@/components/apps/app-card"'),
+    line('import type { Plan } from "../packages/types"'),
+    // A type from the query builder is not a query.
+    line('import type { InferSelectModel } from "drizzle-orm"'),
     // Text that names the database and loads nothing.
     line('export const fine = () => import("@eleva/ui/components/button")'),
     line('vi.mock("@eleva/db", () => ({}))'),
@@ -748,6 +828,11 @@ test("every app keeps the vendor and health-data boundaries, in every file", asy
     line('export const v7 = module.require("stripe")', "no-restricted-syntax"),
     line("export const all = [Stripe, Resend, S3]"),
     line('export const fine = () => import("./stripe-button")'),
+    // Names that only begin like a banned module, and calls that load
+    // nothing.
+    line('export const kinds = () => import("stripe-event-types")'),
+    line('describe.each([1])("stripe", () => {})'),
+    line('export const label = useTranslations("providers")("resend")'),
   ]
   for (const app of ["apps/expert", "apps/account", "apps/admin", "apps/api"]) {
     await expectLines(app, "src/app/thing/actions.ts", lines)
@@ -773,6 +858,38 @@ test("the shared configs set each boundary rule for every file, or not at all", 
         )
       }
     }
+  }
+})
+
+test("the run-time bans are the import bans, name for name", () => {
+  const text = modulesAsText([
+    "stripe",
+    "stripe/**",
+    "@ai-sdk/**",
+    "ai",
+    "ai/*",
+    "slate-*",
+  ])
+  const pattern = new RegExp(text.slice(1, -1))
+  for (const banned of [
+    "stripe",
+    "stripe/lib/x",
+    "@ai-sdk/openai",
+    "ai",
+    "ai/rsc",
+    "slate-react",
+  ]) {
+    assert.ok(pattern.test(banned), banned)
+  }
+  // A name that only begins the same way is another package.
+  for (const allowed of [
+    "stripe-event-types",
+    "aim",
+    "ai-sdk",
+    "slated",
+    "@ai-sdkx/y",
+  ]) {
+    assert.ok(!pattern.test(allowed), allowed)
   }
 })
 
