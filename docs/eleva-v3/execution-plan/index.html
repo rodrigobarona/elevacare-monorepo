@@ -9599,8 +9599,10 @@ operator prerequisites for Phase 15 (MVP read-only role, WorkOS key retention, D
 <a href="#remaining-roadmap--phase-15-launch"><code>remaining-roadmap.md</code></a>: 15.1 to 15.7, then the
 operated cutover.</p>
 <p>Built since (2026-11-23): <strong>15.2, the cutover gate</strong> (<code>scripts/cutover-gate.mjs</code>,
-<code>pnpm cutover:gate &lt;step&gt; -- &lt;command...&gt;</code>), as section B of the prompt below defines it. How a
-step goes is in <a href="../operator-tasks/scripts-catalog.md"><code>operator-tasks/scripts-catalog.md</code></a>. It
+<code>pnpm cutover:gate &lt;step&gt; -- &lt;command...&gt;</code>), as section B of the prompt below defines it, with one
+addition: the operator first writes the command to the log (<code>pnpm cutover:gate propose ...</code>) and the
+owner approves that line, so an approval says yes to a command and not only to a step. How a step
+goes is in <a href="../operator-tasks/scripts-catalog.md"><code>operator-tasks/scripts-catalog.md</code></a>. It
 has not gated a real command yet: the setup scripts it will wrap are 15.3.</p>
 <p>Where this file no longer matches what exists:</p>
 <ul>

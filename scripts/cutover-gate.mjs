@@ -3,31 +3,42 @@
  * The cutover gate (Phase 15.2, ADR-019): one approval per production
  * change, kept by the repository and not by a chat.
  *
+ *   pnpm cutover:gate propose <step> -- <command...>
  *   pnpm cutover:gate <step> -- <command...>
  *
- * It runs `<command>` only when today's cutover log
- * (`docs/eleva-v3/operator-tasks/cutover-log-YYYY-MM-DD.md`, one file per
- * UTC day) holds this line for `<step>`:
+ * Today's cutover log is
+ * `docs/eleva-v3/operator-tasks/cutover-log-YYYY-MM-DD.md` (one file per
+ * UTC day). A step goes through it in three lines:
  *
- *   <step> | approved | @rodrigobarona | <ISO-8601 UTC>
+ *   <step> | proposed | <time> | <command>        the operator (propose)
+ *   <step> | approved | @rodrigobarona | <time>   the owner, below it
+ *   <step> | started | <time> | <command> | ...   the gate, when it runs
  *
- * and the commit that wrote that very line (found with `git blame`, so a
- * later commit to the file changes nothing):
- * - is on GitHub, authored AND committed by the owner's account,
- * - is signed by the owner's own key, one registered on that account.
- *   A commit made on github.com, or by a merge button, is signed by
- *   GitHub and not by the owner, and anyone holding the owner's GitHub
- *   login can make one: it does not count. The name and email typed into
- *   a commit are never believed,
- * - was made less than four hours ago.
+ * The gate runs `<command>` only when:
+ * - it is, word for word, the command proposed above the approval, and
+ *   that proposal was committed before the approval and not touched
+ *   since: the owner approves what they read in the file, not what a
+ *   chat said;
+ * - the commit that wrote the approval line (found with `git blame`, so
+ *   a later commit to the file changes nothing):
+ *   - is on GitHub, authored AND committed by the owner's account,
+ *   - is signed by a key registered on that account. A commit made on
+ *     github.com, or by a merge button, is signed by GitHub and not by
+ *     the owner, and anyone holding the owner's GitHub login can make
+ *     one: it does not count. The name and email typed into a commit
+ *     are never believed,
+ *   - was made less than four hours ago;
+ * - the `gh` login here cannot add a signing key to the owner's account
+ *   (or it could sign as the owner).
  *
  * An approval is good for one run. Before the command starts, the gate
- * writes `<step> | started | <time> | <command>` to the log, and when it
- * ends, `<step> | executed | <time> | <command> | <evidence>` (or
- * `failed`, with the exit code or the signal). A run that failed may have
- * changed something, so it too needs a new approval to be tried again.
- * The gate also keeps its own note that an approval was used, where
- * `git stash` and `git reset` do not reach.
+ * writes the `started` line, and when it ends,
+ * `<step> | executed | <time> | <command> | <evidence>` (or `failed`,
+ * with the exit code or the signal). A run that failed may have changed
+ * something, so it too needs a new approval to be tried again. The gate
+ * also keeps a note that an approval was used inside `.git`, where
+ * `git stash`, `git reset` and `git clean` do not reach and every
+ * worktree of the clone sees it.
  *
  * What the command printed is kept in `<evidence>`, a file beside the log
  * that git ignores: output can hold secrets. The operator copies what is
@@ -42,8 +53,11 @@
  * command did.
  *
  * What this is for: an operator, a person or an agent, who means well
- * and may take a chat message for an approval, use an old one again, or
- * run the wrong step. It does not stop someone who edits this file.
+ * and may take a chat message for an approval, use an old one again, run
+ * another command than the one approved, or write the approval
+ * themselves with the owner's GitHub login. It does not stop someone who
+ * edits this file, and it is as strong as the owner's signing key is out
+ * of the operator's reach.
  */
 import { execFileSync, spawn } from "node:child_process"
 import {
@@ -53,6 +67,7 @@ import {
   mkdirSync,
   readFileSync,
   realpathSync,
+  rmSync,
   writeFileSync,
 } from "node:fs"
 import path from "node:path"
@@ -68,14 +83,24 @@ export const REPOSITORY = `${OWNER}/elevacare-monorepo`
 export const APPROVAL_GOOD_FOR_MS = 4 * 60 * 60 * 1000
 /** A commit dated this far ahead of the clock here is not believed. */
 const CLOCK_SLACK_MS = 5 * 60 * 1000
+/** With one of these a `gh` login can add a signing key to the account. */
+export const SIGNING_KEY_SCOPES = [
+  "admin:ssh_signing_key",
+  "write:ssh_signing_key",
+  "admin:gpg_key",
+  "write:gpg_key",
+]
 
 const OPERATOR_TASKS = "docs/eleva-v3/operator-tasks"
 /** Beside the log, ignored by git (`.gitignore`). */
 export const EVIDENCE_DIR = `${OPERATOR_TASKS}/cutover-evidence`
+/** Inside the clone's `.git`: the approvals that were used. */
+const USED_DIR = "cutover-gate-used"
 
 /** `B.2`, `B.1.a`, `C.4`, `B.9r`: a letter, then numbers and small letters. */
 const STEP = /^[A-Z](?:\.[0-9]+[a-z]?|\.[a-z])+$/
 const TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/
+const RUN_KINDS = ["started", "executed", "failed"]
 
 export function isStep(step) {
   return typeof step === "string" && STEP.test(step)
@@ -95,11 +120,17 @@ export function parseLog(text) {
     const parts = raw.split(" | ")
     const [step, kind] = parts
     if (!isStep(step)) return []
+    const line = index + 1
     if (kind === "approved" && parts.length === 4) {
-      return [{ line: index + 1, step, kind, by: parts[2], at: parts[3] }]
+      return [{ line, step, kind, by: parts[2], at: parts[3] }]
     }
-    if (["started", "executed", "failed"].includes(kind) && parts.length >= 4) {
-      return [{ line: index + 1, step, kind, at: parts[2] }]
+    if (kind === "proposed" && parts.length >= 4) {
+      // The command may hold the separator itself: it is the rest.
+      const command = parts.slice(3).join(" | ")
+      return [{ line, step, kind, at: parts[2], command }]
+    }
+    if (RUN_KINDS.includes(kind) && parts.length >= 4) {
+      return [{ line, step, kind, at: parts[2] }]
     }
     return []
   })
@@ -108,34 +139,39 @@ export function parseLog(text) {
 const refuse = (reason, message) => ({ ok: false, reason, message })
 
 /**
- * Whether `step` may run now.
+ * Whether `step` may run `command` (as `commandText` writes it) now.
  *
- * `blame(line)` says which commit wrote that line of the log, or null for
- * a line that is not committed. `commit(sha)` says what GitHub knows of
- * that commit (see `githubCommit`), null when it is not there, and it
- * throws when GitHub could not be asked. `shallow()` says whether this
- * clone has only part of the history.
+ * - `blame(line)`: which commit wrote that line of today's log, as
+ *   `{ sha, file }`; null for a line that is not committed
+ * - `ancestor(older, newer)`: whether `older` is `newer` or came before it
+ * - `commit(sha)`: what GitHub knows of that commit (see `githubCommit`),
+ *   null when it is not there; throws when GitHub could not be asked
+ * - `scopes()`: what the `gh` login here may do; throws likewise
+ * - `shallow()`: whether this clone has only part of the history
  *
  * Of several approval lines for one step, the last is the one read: an
  * approval given after a failed run is written below it.
  */
 export async function checkApproval({
   step,
+  command,
   logText,
+  logPath,
   blame,
+  ancestor,
   commit,
+  scopes = () => [],
   shallow = () => false,
   now,
 }) {
   if (logText === null) {
     return refuse(
       "no-log",
-      `There is no cutover log for today (${logPathFor(now)}). The owner adds the approval line to it.`
+      `There is no cutover log for today (${logPathFor(now)}). Start with: pnpm cutover:gate propose ${step} -- <command...>`
     )
   }
   const entries = parseLog(logText).filter((entry) => entry.step === step)
-  const approvals = entries.filter((entry) => entry.kind === "approved")
-  const approval = approvals.at(-1)
+  const approval = entries.filter((entry) => entry.kind === "approved").at(-1)
   if (!approval) {
     return refuse(
       "no-approval",
@@ -151,18 +187,34 @@ export async function checkApproval({
   if (!TIME.test(approval.at) || Number.isNaN(Date.parse(approval.at))) {
     return refuse(
       "bad-time",
-      `Line ${approval.line} does not end with a time such as 2026-12-01T09:30:00Z.`
+      `Line ${approval.line} does not end with a time such as 2026-12-01T09:30:00Z (and nothing after it: a file saved with Windows line ends reads wrong here).`
     )
   }
   // One approval, one run: anything the gate wrote for this step after
   // the approval means it was used, however that run ended.
   const used = entries.find(
-    (entry) => entry.kind !== "approved" && entry.line > approval.line
+    (entry) => RUN_KINDS.includes(entry.kind) && entry.line > approval.line
   )
   if (used) {
     return refuse(
       "used",
       `The approval on line ${approval.line} was used (line ${used.line}: ${used.kind}). Running ${step} again needs a new approval line.`
+    )
+  }
+  // The owner approves a command they read in the file.
+  const proposal = entries
+    .filter((entry) => entry.kind === "proposed" && entry.line < approval.line)
+    .at(-1)
+  if (!proposal) {
+    return refuse(
+      "no-proposal",
+      `The approval on line ${approval.line} has no proposed command above it, so it says "yes" to nothing in particular. Propose first: pnpm cutover:gate propose ${step} -- <command...>`
+    )
+  }
+  if (proposal.command !== command) {
+    return refuse(
+      "not-the-approved-command",
+      `The owner approved (line ${proposal.line}): ${proposal.command}\nThis is another command: ${command}\nPropose this one and ask again, or run the one that was approved.`
     )
   }
 
@@ -174,20 +226,53 @@ export async function checkApproval({
       "This clone has only part of the history, so git cannot say which commit wrote a line. Run `git fetch --unshallow` first."
     )
   }
-  const sha = await blame(approval.line)
-  if (!sha) {
+  const wrote = await blame(approval.line)
+  if (!wrote) {
     return refuse(
       "not-committed",
       `Line ${approval.line} is in the file and not in a commit. An approval counts once the owner has committed and pushed it.`
     )
   }
+  // A file moved to today's name keeps its old lines and their commits.
+  if (wrote.file !== logPath) {
+    return refuse(
+      "another-days-log",
+      `Line ${approval.line} was committed in ${wrote.file}, not in today's log. An approval is given in the log of the day it is used.`
+    )
+  }
+  const proposed = await blame(proposal.line)
+  if (
+    !proposed ||
+    proposed.file !== logPath ||
+    !(await ancestor(proposed.sha, wrote.sha))
+  ) {
+    return refuse(
+      "proposal-changed",
+      `The proposed command on line ${proposal.line} was written or changed after the approval on line ${approval.line} was committed. The owner has not seen it: ask for a new approval.`
+    )
+  }
+  const { sha } = wrote
+
   let found
+  let allowed
   try {
+    allowed = await scopes()
     found = await commit(sha)
   } catch (err) {
     return refuse(
       "github-unreachable",
       `GitHub could not be asked about commit ${sha.slice(0, 12)} (${err instanceof Error ? err.message : err}). Nothing runs on an approval that cannot be checked.`
+    )
+  }
+  // A login that can add a signing key to the owner's account can sign
+  // as the owner: then a signature proves nothing here.
+  const canAddKeys = allowed.filter((scope) =>
+    SIGNING_KEY_SCOPES.includes(scope)
+  )
+  if (canAddKeys.length > 0) {
+    return refuse(
+      "login-can-add-keys",
+      `The gh login on this machine may add a signing key to the account (${canAddKeys.join(", ")}), so it could sign as @${OWNER}. Sign in again without that: gh auth refresh --remove-scopes ${canAddKeys.join(",")}`
     )
   }
   if (!found) {
@@ -201,7 +286,7 @@ export async function checkApproval({
   if (found.authorLogin !== OWNER) {
     return refuse(
       "foreign-author",
-      `Line ${approval.line} was written by ${who(found.authorLogin)}, not by @${OWNER}.`
+      `Line ${approval.line} was written by ${who(found.authorLogin)}, not by @${OWNER}. (GitHub goes by the email in the commit: it has to be one verified on the owner's account.)`
     )
   }
   // Who made the commit, as opposed to who is named as its author. A
@@ -247,8 +332,9 @@ export async function checkApproval({
 
 /** Not a secret, whatever the name before it says. */
 const PLAIN_VALUE = /^(?:true|false|yes|no|on|off|\d{1,7})$/i
+/** Names that hold a secret. Not "auth" alone: `--author`, `BETTER_AUTH_URL`. */
 const SECRET_NAME =
-  /(?:secret|token|password|passwd|private[_-]?key|api[_-]?key|auth)/i
+  /(?:secret|token|password|passwd|private[_-]?key|signing[_-]?key|api[_-]?key|access[_-]?key)/i
 
 /**
  * The first argument that looks like it carries a secret, or null. A net
@@ -261,9 +347,12 @@ export function secretOnCommandLine(command) {
     if (
       /\b(?:sk|rk|pk)_live_[A-Za-z0-9]{8,}/.test(argument) ||
       /\b(?:sk|rk)_test_[A-Za-z0-9]{8,}/.test(argument) ||
-      /\b(?:whsec|re)_[A-Za-z0-9]{8,}/.test(argument) ||
+      /\b(?:whsec|re|ghp|gho|ghs|github_pat)_[A-Za-z0-9_]{8,}/.test(argument) ||
+      /\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\./.test(argument) ||
       /\bBearer\s+[A-Za-z0-9._~+/=-]{20,}/.test(argument) ||
-      /^(?:authorization|x-api-key|x-auth-token)\s*:\s*\S+/i.test(argument) ||
+      /^(?:authorization|cookie|x-api-key|x-auth-token)\s*:\s*\S+/i.test(
+        argument
+      ) ||
       /:\/\/[^/\s:@]+:[^/\s@]+@/.test(argument)
     ) {
       return argument
@@ -277,8 +366,12 @@ export function secretOnCommandLine(command) {
     ) {
       return argument
     }
-    // --name value
     const next = command[index + 1]
+    // curl's `-u user:password`
+    if (/^(?:-u|--user)$/.test(argument) && /:.+/.test(next ?? "")) {
+      return argument
+    }
+    // --name value
     if (
       /^--?[A-Za-z]/.test(argument) &&
       SECRET_NAME.test(argument) &&
@@ -314,15 +407,65 @@ function ending(result) {
   return { ok: code === 0, tail: `exit ${code}`, exit: code }
 }
 
+/** What is wrong with a step and a command before the log is read, or null. */
+function unusable(step, command) {
+  if (!isStep(step)) {
+    return `"${step ?? ""}" is not a step such as B.2 or B.1.a. Usage: pnpm cutover:gate [propose] <step> -- <command...>`
+  }
+  if (!Array.isArray(command) || command.length === 0) {
+    return `No command for ${step}. Usage: pnpm cutover:gate [propose] <step> -- <command...>`
+  }
+  if (command.some((argument) => /[\r\n]/.test(argument))) {
+    return "A command with a line break in it cannot be written to the log."
+  }
+  if (secretOnCommandLine(command)) {
+    return "The command looks like it carries a secret on its command line, and the command is written to the log. Give it through the environment of this shell."
+  }
+  return null
+}
+
+/**
+ * Writes the command an operator wants approved to today's log (making
+ * the file when the day has none). Nothing runs. Gives back an exit code.
+ */
+export function propose({ step, command, now, deps }) {
+  const { readLog, writeLog, appendLog, say } = deps
+  const problem = unusable(step, command)
+  if (problem) {
+    say(problem)
+    return 2
+  }
+  const at = now()
+  const file = logPathFor(at)
+  if (readLog(at) === null) {
+    writeLog(at, `# Cutover log ${at.toISOString().slice(0, 10)}\n\n`)
+  }
+  const text = commandText(command)
+  appendLog(at, `${step} | proposed | ${at.toISOString()} | ${text}`)
+  say(
+    [
+      `Proposed ${step}: ${text}`,
+      `Now commit and push the log, and stop:`,
+      `  git add ${file} && git commit -m "docs(p15): propose cutover step ${step}" && git push`,
+      `The owner pulls, adds this line below it, commits it signed and pushes:`,
+      `  ${step} | approved | @${OWNER} | ${at.toISOString().slice(0, 19)}Z   (the time they approve)`,
+      `  git commit -S -am "docs(p15): approve cutover step ${step}" && git push`,
+      `Then pull and run: pnpm cutover:gate ${step} -- ${text}`,
+    ].join("\n")
+  )
+  return 0
+}
+
 /**
  * The whole gate, with everything it touches handed in. `readLog`,
  * `appendLog` and `blame` take the moment the run began, which names the
  * day's log, so a run that crosses midnight does not change files.
  * - `readLog(day)`: the text of that day's log, or null when there is none
  * - `appendLog(day, line)`: adds one line to it
- * - `blame(day, line)`, `commit(sha)`, `shallow()`: see `checkApproval`
- * - `claim(step, sha, line)`: notes that this approval is being used;
- *   false when it was noted before
+ * - `blame(day, line)`, `ancestor`, `commit`, `scopes`, `shallow`: see
+ *   `checkApproval`
+ * - `claim(step, sha)`: notes that this approval is being used; false
+ *   when it was noted before. `release(step, sha)` takes the note back
  * - `run(command, evidence)`: runs it, keeps what it printed at
  *   `evidence`, and gives back `{ code, signal }`
  * - `say(message)`: tells the operator
@@ -330,37 +473,25 @@ function ending(result) {
  * Gives back the exit code for the process.
  */
 export async function gate({ step, command, now, deps }) {
-  const { readLog, appendLog, blame, commit, shallow, claim, run, say } = deps
-  if (!isStep(step)) {
-    say(
-      `"${step ?? ""}" is not a step such as B.2 or B.1.a. Usage: pnpm cutover:gate <step> -- <command...>`
-    )
-    return 2
-  }
-  if (!Array.isArray(command) || command.length === 0) {
-    say(
-      `No command to run for ${step}. Usage: pnpm cutover:gate <step> -- <command...>`
-    )
-    return 2
-  }
-  if (command.some((argument) => /[\r\n]/.test(argument))) {
-    say("A command with a line break in it cannot be written to the log.")
-    return 2
-  }
-  if (secretOnCommandLine(command)) {
-    say(
-      "The command looks like it carries a secret on its command line, and the command is written to the log. Give it through the environment of this shell."
-    )
+  const { readLog, appendLog, blame, claim, release, run, say } = deps
+  const problem = unusable(step, command)
+  if (problem) {
+    say(problem)
     return 2
   }
 
   const started = now()
+  const text = commandText(command)
   const verdict = await checkApproval({
     step,
+    command: text,
     logText: readLog(started),
+    logPath: logPathFor(started),
     blame: (line) => blame(started, line),
-    commit,
-    shallow,
+    ancestor: deps.ancestor,
+    commit: deps.commit,
+    scopes: deps.scopes,
+    shallow: deps.shallow,
     now: started,
   })
   if (!verdict.ok) {
@@ -369,23 +500,28 @@ export async function gate({ step, command, now, deps }) {
   }
   // The lines the gate writes to the log are not committed yet, and a
   // `git stash` takes them away. This note is kept where it does not.
-  if (!claim(step, verdict.sha, verdict.line)) {
+  if (!claim(step, verdict.sha)) {
     say(
-      `Refused (used): the approval on line ${verdict.line} was used by a run on this machine, though the log no longer says so. Running ${step} again needs a new approval line.`
+      `Refused (used): the approval on line ${verdict.line} was used by a run in this clone, though the log no longer says so. Running ${step} again needs a new approval line.`
     )
     return 2
   }
 
-  const text = commandText(command)
   const stamp = started.toISOString().replace(/[-:]/g, "")
   const evidence = `${EVIDENCE_DIR}/${started.toISOString().slice(0, 10)}/${step}-${stamp}.log`
   // Written before the command starts: a command that changed something
-  // and then lost its connection is still on record.
+  // and then lost its connection is still on record. With the approving
+  // commit, which a later squash of the branch would not show.
   try {
-    appendLog(started, `${step} | started | ${started.toISOString()} | ${text}`)
+    appendLog(
+      started,
+      `${step} | started | ${started.toISOString()} | ${text} | approval ${verdict.sha}`
+    )
   } catch (err) {
+    // Nothing ran: the approval is not spent.
+    release(step, verdict.sha)
     say(
-      `Refused: the log could not be written (${err instanceof Error ? err.message : err}), and nothing runs without a record.`
+      `Refused: the log could not be written (${err instanceof Error ? err.message : err}), and nothing runs without a record. The approval is still good.`
     )
     return 2
   }
@@ -394,11 +530,13 @@ export async function gate({ step, command, now, deps }) {
   )
 
   let result
+  let neverStarted = false
   try {
     result = await run(command, evidence)
   } catch (err) {
+    neverStarted = true
     say(
-      `${step} could not be started: ${err instanceof Error ? err.message : err}`
+      `${step} could not be started, so nothing ran: ${err instanceof Error ? err.message : err}`
     )
     result = 127
   }
@@ -412,8 +550,10 @@ export async function gate({ step, command, now, deps }) {
   )
   say(
     end.ok
-      ? `${step} ran. What it printed is in ${evidence} (not in git: copy what is safe into the log). Commit the log and push it now, before the next approval is asked for.`
-      : `${step} failed (${end.tail}). What it printed is in ${evidence}. It may have changed something: look, commit the log and push it, then ask for a new approval.`
+      ? `${step} ran. What it printed is in ${evidence} (not in git: copy what is safe into the log). Commit the log and push it now, before the next step is proposed.`
+      : neverStarted
+        ? `${step} is on record as failed (${end.tail}). The approval is spent all the same: commit the log, push it, and propose the command again.`
+        : `${step} failed (${end.tail}). What it printed is in ${evidence}. It may have changed something: look, commit the log and push it, then ask for a new approval.`
   )
   return end.exit
 }
@@ -425,11 +565,17 @@ const git = (root, args) =>
     stdio: ["ignore", "pipe", "pipe"],
   })
 
-/** Which commit wrote line `line` of `file`, or null when none did. */
+/**
+ * Which commit wrote line `line` of `file`, and under which file name it
+ * was committed; null when no commit did. Without the options that look
+ * for moved or copied lines, and without any list of commits to skip.
+ */
 export function blameLine(root, file, line) {
   let out
   try {
     out = git(root, [
+      "-c",
+      "blame.ignoreRevsFile=",
       "blame",
       "--porcelain",
       "-L",
@@ -442,8 +588,20 @@ export function blameLine(root, file, line) {
     return null
   }
   const sha = out.split(/\s/)[0] ?? ""
+  const named = out.match(/^filename (.+)$/m)?.[1]
   // Forty zeros is git's name for "not committed yet".
-  return /^[0-9a-f]{40}$/.test(sha) && !/^0+$/.test(sha) ? sha : null
+  if (!/^[0-9a-f]{40}$/.test(sha) || /^0+$/.test(sha) || !named) return null
+  return { sha, file: named }
+}
+
+/** Whether `older` is `newer` or one of the commits before it. */
+export function isAncestor(root, older, newer) {
+  try {
+    git(root, ["merge-base", "--is-ancestor", older, newer])
+    return true
+  } catch {
+    return false
+  }
 }
 
 /** Whether this clone has only part of the history. Unsure counts as yes. */
@@ -457,19 +615,19 @@ export function isShallow(root) {
   }
 }
 
+const gh = (exec, args) =>
+  exec("gh", args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] })
+
 /**
  * What GitHub knows of a commit; null when it has no such commit.
  * `authorLogin` and `committerLogin` are the accounts GitHub ties the
- * commit to (not the names typed into it); `verified` and `reason` are
- * its judgement of the signature.
+ * commit to (by the emails in it, not the names typed); `verified` and
+ * `reason` are its judgement of the signature.
  */
 export function githubCommit(sha, { exec = execFileSync } = {}) {
   let out
   try {
-    out = exec("gh", ["api", `repos/${REPOSITORY}/commits/${sha}`], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "pipe"],
-    })
+    out = gh(exec, ["api", `repos/${REPOSITORY}/commits/${sha}`])
   } catch (err) {
     const said = `${err?.stderr ?? ""}${err?.stdout ?? ""}`
     if (/HTTP 404|HTTP 422|No commit found/i.test(said)) return null
@@ -487,9 +645,36 @@ export function githubCommit(sha, { exec = execFileSync } = {}) {
   }
 }
 
+/**
+ * What the `gh` login here may do, as GitHub lists it for the token. A
+ * token of the kind that carries no such list gives an empty one.
+ */
+export function ghScopes({ exec = execFileSync } = {}) {
+  let out
+  try {
+    out = gh(exec, ["api", "-i", "user"])
+  } catch (err) {
+    const said = `${err?.stderr ?? ""}${err?.stdout ?? ""}`
+    throw new Error(said.trim().split("\n")[0] || "gh did not answer", {
+      cause: err,
+    })
+  }
+  const listed = out.match(/^x-oauth-scopes:[ \t]*(.*)$/im)?.[1] ?? ""
+  return listed
+    .split(",")
+    .map((scope) => scope.trim())
+    .filter(Boolean)
+}
+
+/** Where the notes of used approvals are: inside `.git`, for every worktree. */
+function usedNote(root, step, sha) {
+  const common = git(root, ["rev-parse", "--git-common-dir"]).trim()
+  return path.resolve(root, common, USED_DIR, `${step}-${sha}`)
+}
+
 /** Notes that an approval is being used. False when it was noted before. */
-export function claimApproval(root, step, sha, line) {
-  const file = path.join(root, EVIDENCE_DIR, "used", `${step}-${sha}-${line}`)
+export function claimApproval(root, step, sha) {
+  const file = usedNote(root, step, sha)
   mkdirSync(path.dirname(file), { recursive: true })
   try {
     // `wx`: fails when the note is there, so two runs started together
@@ -502,17 +687,24 @@ export function claimApproval(root, step, sha, line) {
   }
 }
 
+/** Takes the note back: for a run that never started. */
+export function releaseApproval(root, step, sha) {
+  rmSync(usedNote(root, step, sha), { force: true })
+}
+
 const PASSED_ON = ["SIGINT", "SIGTERM", "SIGHUP"]
 
 /**
- * Runs a command (no shell), shows what it prints and keeps it in
- * `evidence`. A signal sent to the gate is passed on, and the gate waits
- * for the command to end, so that the log gets its closing line.
+ * Runs a command from `root` (no shell), shows what it prints and keeps
+ * it in `evidence`, readable by this user only. What is typed here
+ * reaches the command. A signal sent to the gate is passed on, and the
+ * gate waits for the command to end, so that the log gets its closing
+ * line.
  */
 export function runAndKeep(root, command, evidence) {
   const file = path.join(root, evidence)
   mkdirSync(path.dirname(file), { recursive: true })
-  const kept = createWriteStream(file, { flags: "a" })
+  const kept = createWriteStream(file, { flags: "a", mode: 0o600 })
   return new Promise((resolve, reject) => {
     const child = spawn(command[0], command.slice(1), {
       cwd: root,
@@ -540,35 +732,55 @@ export function runAndKeep(root, command, evidence) {
 }
 
 /**
- * `<step> -- <command...>`. The first `--` only: the command may have
- * its own (`pnpm stripe:setup:webhooks -- --apply`). Some runners take
- * that first `--` away before the script sees it, so it may be absent.
+ * `[propose] <step> -- <command...>`. The first `--` only: the command
+ * may have its own (`pnpm stripe:setup:webhooks -- --apply`). Some
+ * runners take that first `--` away before the script sees it, so it may
+ * be absent.
  */
 export function readArguments(argv) {
-  const [step, ...rest] = argv
-  return { step, command: rest[0] === "--" ? rest.slice(1) : rest }
+  const proposing = argv[0] === "propose"
+  const [step, ...rest] = proposing ? argv.slice(1) : argv
+  return {
+    mode: proposing ? "propose" : "run",
+    step,
+    command: rest[0] === "--" ? rest.slice(1) : rest,
+  }
 }
 
 function main(argv) {
-  const { step, command } = readArguments(argv)
+  const { mode, step, command } = readArguments(argv)
   const log = (day) => path.join(ROOT, logPathFor(day))
+  const files = {
+    readLog: (day) =>
+      existsSync(log(day)) ? readFileSync(log(day), "utf8") : null,
+    writeLog: (day, text) => {
+      mkdirSync(path.dirname(log(day)), { recursive: true })
+      writeFileSync(log(day), text, { flag: "wx" })
+    },
+    appendLog: (day, line) => {
+      const text = readFileSync(log(day), "utf8")
+      appendFileSync(log(day), `${text.endsWith("\n") ? "" : "\n"}${line}\n`)
+    },
+    say: (message) => console.error(`[cutover:gate] ${message}`),
+  }
+  const now = () => new Date()
+  if (mode === "propose") {
+    return propose({ step, command, now, deps: files })
+  }
   return gate({
     step,
     command,
-    now: () => new Date(),
+    now,
     deps: {
-      readLog: (day) =>
-        existsSync(log(day)) ? readFileSync(log(day), "utf8") : null,
-      appendLog: (day, line) => {
-        const text = readFileSync(log(day), "utf8")
-        appendFileSync(log(day), `${text.endsWith("\n") ? "" : "\n"}${line}\n`)
-      },
+      ...files,
       blame: (day, line) => blameLine(ROOT, logPathFor(day), line),
+      ancestor: (older, newer) => isAncestor(ROOT, older, newer),
       commit: (sha) => githubCommit(sha),
+      scopes: () => ghScopes(),
       shallow: () => isShallow(ROOT),
-      claim: (claimed, sha, line) => claimApproval(ROOT, claimed, sha, line),
+      claim: (claimed, sha) => claimApproval(ROOT, claimed, sha),
+      release: (claimed, sha) => releaseApproval(ROOT, claimed, sha),
       run: (toRun, evidence) => runAndKeep(ROOT, toRun, evidence),
-      say: (message) => console.error(`[cutover:gate] ${message}`),
     },
   })
 }

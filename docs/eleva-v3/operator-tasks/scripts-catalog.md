@@ -52,43 +52,56 @@ All QStash setup commands accept `-- --dry-run` for preview-only mode.
 
 One approval for each production change, kept by the repository and not by a chat (ADR-019).
 
-| Command                                    | What it does                                                                                                                                                                                                                                                      | Idempotent? |
-| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| `pnpm cutover:gate <step> -- <command...>` | Runs the command only when today's cutover log holds `<step> \| approved \| @rodrigobarona \| <time>`, in a commit the owner made, signed with their own key and pushed less than four hours ago. Writes `started`, then `executed` or `failed`, to the same log. | No          |
+| Command                                            | What it does                                                                                                                                                                                                                            | Idempotent? |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| `pnpm cutover:gate propose <step> -- <command...>` | Writes the command to today's cutover log as `<step> \| proposed \| <time> \| <command>` (starting the day's file when there is none). Runs nothing.                                                                                    | No          |
+| `pnpm cutover:gate <step> -- <command...>`         | Runs the command only when it is, word for word, the one proposed, and the owner approved it below in a commit they made, signed with their own key and pushed less than four hours ago. Writes `started`, then `executed` or `failed`. | No          |
 
 Before the day:
 
-- **The owner needs a signing key registered on their GitHub account** (SSH or GPG), kept where an
-  agent working on the same machine cannot use it without them: a key with a passphrase, a hardware
-  key, or a password manager that asks each time. This is what makes an approval the owner's. A
-  commit made on github.com, or by a merge button, is signed by GitHub and is refused: anyone holding
-  the owner's GitHub login can make one.
+- **The owner needs a signing key registered on their GitHub account** (SSH or GPG) that an agent
+  working on the same machine cannot use without them. A passphrase is not enough when `ssh-agent`,
+  `gpg-agent` or the macOS keychain remembers it: use a hardware key, or a password manager that asks
+  each time. A commit made on github.com, or by a merge button, is signed by GitHub and is refused:
+  anyone holding the owner's GitHub login can make one.
+- The owner sets `git config commit.gpgsign true` in their clone, and uses an email in their commits
+  that is verified on their GitHub account (GitHub goes by the email to say whose commit it is).
+- **The `gh` login on the operator's machine must not be able to add signing keys.** The gate refuses
+  when it has `admin:ssh_signing_key`, `write:ssh_signing_key`, `admin:gpg_key` or `write:gpg_key`:
+  with one of those it could register a key and sign as the owner. If the owner added their key with
+  `gh`, take the scope away afterwards (`gh auth refresh --remove-scopes ...`).
 - Work on the branch `phase-15/launch-cutover`, not on `main`: a push to `main` deploys every app,
-  and `phase-*` branches do not deploy.
-- The operator needs a full clone (`git fetch --unshallow` if it is not) and `gh` signed in with
-  read access to the repository.
+  and `phase-*` branches do not deploy. Merge it with a merge commit, not a squash, so that the signed
+  commits stay in the history.
+- The operator needs a full clone (`git fetch --unshallow` if it is not) and `gh` signed in with read
+  access to the repository.
+- A trial, some days before: one proposed and approved step on a scratch branch with a harmless
+  command (`pnpm cutover:gate propose B.0 -- true`), to see GitHub's real answer for the owner's signed
+  commit, and one approval line written through github.com, to see it refused.
 
 How a step goes:
 
-1. The operator prints the step and the exact command, and stops.
-2. The owner pulls the branch, adds the approval line at the end of
-   `docs/eleva-v3/operator-tasks/cutover-log-YYYY-MM-DD.md` (the file of the current UTC day),
-   commits it signed (`git commit -S`) and pushes.
-3. The operator pulls and runs the step through the gate.
+1. The operator proposes: `pnpm cutover:gate propose <step> -- <command...>`, then commits the log
+   and pushes (the gate prints the exact `git` lines), and stops.
+2. The owner pulls, reads the proposed command, adds below it
+   `<step> | approved | @rodrigobarona | <time>`, commits it signed and pushes.
+3. The operator pulls and runs the same command through the gate: `pnpm cutover:gate <step> -- ...`.
 4. The operator copies what is safe from the evidence file into the log, **commits the log and
-   pushes it at once**. The owner's next approval goes on top of that.
+   pushes it at once**. The next step is proposed on top of that.
 
 Good to know:
 
+- An approval says yes to one command, the one proposed above it. Another command under the same
+  step is refused, and so is a proposal changed after the approval.
 - An approval is good for one run, whether the run worked or not. A failed run may have changed
-  something: look, then ask for a new line. Of several approval lines for one step, the last is the
-  one read.
+  something: look, then ask for a new line (the same proposal can be approved again). Of several
+  approval lines for one step, the last is the one read.
 - **Commit the log before pulling, and never stash it.** The lines the gate writes are not committed
-  until step 4. If the owner pushed the next approval first, the pull is a conflict at the end of the
-  file: keep both sides, the gate's lines above the new approval. (The gate also keeps its own note
-  that an approval was used, outside git's reach, so a stash cannot make one usable twice.)
+  until step 4. If a pull conflicts at the end of the file, keep both sides, the gate's lines first.
+  (The gate also notes inside `.git` that an approval was used, so a stash, a reset or a clean cannot
+  make one usable twice in this clone. A second clone learns it from the committed log.)
 - What the command printed is kept in `docs/eleva-v3/operator-tasks/cutover-evidence/`, which git
-  ignores, because it can hold secrets.
+  ignores, because it can hold secrets. The files are readable by the operator's user only.
 - The gate refuses a command that looks like it carries a secret on its command line (the command is
   written to the log). It knows the common shapes, not every one: give secrets through the
   environment of the shell.
