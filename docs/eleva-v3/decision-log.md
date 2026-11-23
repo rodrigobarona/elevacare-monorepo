@@ -97,6 +97,16 @@ Each entry should include:
   invoice that fails inside a run is counted and sent to Sentry, and the
   run is still done. In `invoicing-retry` the expert-invoice part runs
   first and stands when the backfill fails.
+- **Known limit: "done" means the run ended, not that every item worked.**
+  Jobs that work through a list count each item that fails and still
+  answer 200. If every item fails (Stripe down for a whole run of
+  `slot-reservation-expiry`, `process-expert-transfers` or
+  `seat-sync-sweep`), the run is reported as done and only Sentry shows it.
+  `booking-request-expiry` and `crm-follow-up-due` write item failures to
+  the console only. Making "every item failed" a failed run changes what
+  five jobs answer, payments among them, so it is a slice of its own.
+  A manual run of `stripe-toconline-reconciliation` for another month also
+  reports done, which restarts the monthly monitor's clock.
 - **Not built, and not claimed:** no heartbeat exists in Better Stack and
   the setting is empty everywhere, so today no job reports anything. The
   operator account is O-3 and the script that creates the heartbeats from
