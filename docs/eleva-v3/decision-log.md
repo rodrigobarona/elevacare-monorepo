@@ -32,6 +32,28 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-23: Every email is checked in three languages (13.34) (active)
+
+- Change (Phase 13.34): one test, `packages/email/src/three-languages.test.ts`,
+  renders every email Eleva sends in English, Portuguese and Spanish: the
+  five sign-in emails, booking confirmed (to the member, to the expert, in
+  person, by phone), rescheduled, cancelled, both reminders, the three
+  invoice notices, the partner and clinic decisions, and the payment and
+  payout notices. 32 forms in all.
+- For each form it checks that the email says its language (`<html lang>`),
+  that no value is missing from the text (`undefined`, `{name}`), that **no
+  sentence of English is left in the Portuguese or the Spanish**, and that
+  Portuguese and Spanish are not one pasted over the other. It also checks
+  that the shared words have the same entries in each language.
+- The list keeps itself whole: the test reads the package and fails when a
+  renderer, or a kind of an email that comes in kinds, has no entry in it.
+- It found nothing to fix: every sentence was already translated. The check
+  was proven able to fail by putting one English title into the Portuguese
+  words, which failed it; that change was not kept.
+- Not covered: whether a translation reads well to a native speaker (that is
+  a person's review), SMS and in-app text, and emails whose sentences are
+  shorter than three words, which only the shared-words check sees.
+
 ### 2026-11-23: Staff queues have pages, and reading one is on record (12.6) (active)
 
 - Change (Phase 12.6): the two staff queues (clinic verifications, licence
