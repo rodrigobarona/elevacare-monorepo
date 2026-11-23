@@ -75,6 +75,12 @@ export const RESERVED_USERNAMES: ReadonlySet<string> = new Set([
   "account",
   "onboarding",
   "setup",
+  // Where the MVP's signed-in pages were (./legacy-private-routes.ts): an
+  // old link must not open the public profile of whoever took the word.
+  "appointments",
+  "booking",
+  "register",
+  "unauthorized",
   // Account-app paths at the gateway root: a username here would sit at
   // an address that looks like an Eleva sign-in or invitation link.
   "verify-email",

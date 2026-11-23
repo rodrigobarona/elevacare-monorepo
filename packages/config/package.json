@@ -30,6 +30,7 @@
     "./expert-profile-content": "./src/expert-profile-content.ts",
     "./media-host": "./src/media-host.mjs",
     "./public-site-parity": "./src/public-site-parity.ts",
+    "./legacy-private-routes": "./src/legacy-private-routes.ts",
     "./editorial-pillars": "./src/editorial-pillars.ts",
     "./legal-slugs": "./src/legal-slugs.ts",
     "./phone": "./src/phone.ts",

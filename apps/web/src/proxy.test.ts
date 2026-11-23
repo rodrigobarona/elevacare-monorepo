@@ -137,6 +137,55 @@ describe("createGatewayProxy integration", () => {
     )
   })
 
+  it("301s the MVP's signed-in addresses to their new place, without the query", async () => {
+    const proxy = createGatewayProxy({
+      origins: testOrigins,
+      intlMiddleware: marketingIntl,
+    })
+    for (const [from, to] of [
+      ["/appointments/patients/8f1c2d", "/dashboard"],
+      ["/booking/schedule/limits", "/dashboard"],
+      ["/setup", "/dashboard"],
+      ["/dashboard/subscription", "/dashboard"],
+      ["/account/identity/callback", "/dashboard"],
+      ["/register", "/signup"],
+      ["/unauthorized", "/login"],
+    ] as const) {
+      const res = await proxy(
+        makeRequest(from, { search: "?redirect=%2Fx&console=%2Fy" })
+      )
+      expect(res.status, from).toBe(301)
+      // What the MVP put in the query means nothing to v3.
+      expect(res.headers.get("location"), from).toBe(
+        `http://localhost:3000${to}`
+      )
+    }
+  })
+
+  it("does not move the addresses v3 serves under the same words", async () => {
+    vi.stubEnv("NODE_ENV", "production")
+    const proxy = createGatewayProxy({
+      origins: testOrigins,
+      intlMiddleware: marketingIntl,
+    })
+    for (const path of [
+      "/dashboard",
+      "/account/billing",
+      "/account/settings",
+      "/onboarding",
+    ]) {
+      const res = await proxy(makeRequest(path))
+      expect(res.status, path).not.toBe(301)
+      expect(res.headers.get("x-middleware-rewrite"), path).toContain(
+        "localhost:3006"
+      )
+    }
+    // A username that only begins like a moved word is a public profile.
+    const profile = await proxy(makeRequest("/bookings"))
+    expect(profile.status).toBe(200)
+    expect(await profile.json()).toEqual({ zone: "marketing" })
+  })
+
   it("falls through to intl middleware for marketing paths", async () => {
     const proxy = createGatewayProxy({
       origins: testOrigins,

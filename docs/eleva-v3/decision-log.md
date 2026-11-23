@@ -32,6 +32,49 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-23: The MVP's signed-in addresses go to their new place (14.22) (active)
+
+- Problem: in the MVP an expert's pages sat at the root of the site
+  (`/appointments`, `/booking/schedule`, `/setup`). In v3 the first word of
+  an address is a public profile unless it is reserved, and `appointments`,
+  `booking`, `register` and `unauthorized` were not. An old bookmark opened
+  "page not found", and an expert could have taken one of those words as a
+  username and received everyone's old links.
+- Change (Phase 14.22): `@eleva/config/legacy-private-routes` is the map,
+  and the gateway answers each with a permanent redirect, before it looks
+  at the address for anything else.
+
+  | The MVP's address                                      | Goes to      |
+  | ------------------------------------------------------ | ------------ |
+  | `/appointments` and everything under it                | `/dashboard` |
+  | `/booking` and everything under it                     | `/dashboard` |
+  | `/setup`                                               | `/dashboard` |
+  | `/dashboard/subscription`, any page under `/dashboard` | `/dashboard` |
+  | `/account/identity` and under it                       | `/dashboard` |
+  | `/register`                                            | `/signup`    |
+  | `/unauthorized`                                        | `/login`     |
+
+- **Why `/dashboard` and not the page itself.** In v3 each practice has its
+  own address (`/expert/{slug}`), which only the session knows.
+  `/dashboard` sends a signed-in person to their own practice or Space, and
+  anyone else to sign in. An old link to one person's record goes there
+  too: the records get new ids in the move.
+- The query is dropped: nothing the MVP put there means anything to v3.
+- The four words are now reserved usernames. If someone in the MVP has one
+  of them as a username, the migration stops on it (14.9), which is the
+  rule for every reserved name.
+- Left alone, because v3 serves the same address: `/login`, `/onboarding`,
+  `/dashboard`, `/account`, `/account/billing`, `/account/notifications`,
+  `/account/security`. `/admin/*` already goes to the staff console's own
+  host. The MVP's public addresses were done in Phase 4
+  (`public-site-parity`).
+- The test reads the MVP's own route list from the snapshot in the
+  repository and fails if a signed-in page of the MVP is neither moved nor
+  named as one v3 serves.
+- Not checked: that each address v3 "serves at the same path" shows the
+  same thing as the MVP's did (`/account/billing` is a different page
+  now); and nothing was run in a browser.
+
 ### 2026-11-23: Staff queues have pages, and reading one is on record (12.6) (active)
 
 - Change (Phase 12.6): the two staff queues (clinic verifications, licence

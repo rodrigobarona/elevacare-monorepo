@@ -7,6 +7,7 @@ import {
   rewriteRetiredLocalePath,
   type Locale,
 } from "@eleva/config/i18n"
+import { rewriteLegacyPrivatePath } from "@eleva/config/legacy-private-routes"
 import { rewriteParityPath } from "@eleva/config/public-site-parity"
 import {
   persistLocaleCookie,
@@ -106,6 +107,17 @@ export function createGatewayProxy(options: GatewayProxyOptions) {
     if (parityPath) {
       const destination = request.nextUrl.clone()
       destination.pathname = parityPath
+      return NextResponse.redirect(destination, 301)
+    }
+
+    // Where the MVP's signed-in pages were. Before dispatch: some of these
+    // words would otherwise read as a username, or reach a zone that has
+    // no such page. The query goes: it meant something to the MVP only.
+    const movedPath = rewriteLegacyPrivatePath(pathname)
+    if (movedPath) {
+      const destination = request.nextUrl.clone()
+      destination.pathname = movedPath
+      destination.search = ""
       return NextResponse.redirect(destination, 301)
     }
 
