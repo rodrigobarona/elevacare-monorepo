@@ -53,15 +53,27 @@ Each entry should include:
   - **The film can be paused.** `ElevaVideo` in `@eleva/media` gained an
     optional pause button and a playhead callback; the film runs for 131
     seconds, so a pause control is required (WCAG 2.2.2).
-  - **Questions.** Eight, each linking to its area of care. An area with
+  - **Questions.** Ten, each linking to its area of care. An area with
     nobody listed links to the whole directory, so no question is a dead
     end. Area chips show only areas with a listed expert.
+  - **Every film scene has its own question, for a different visitor**
+    (founder, same day: he liked that the words "are aligned with the video
+    running"). Ten scenes: women of every age, two friends, pregnancy, a
+    newborn, cooking, a baby's foot, a woman comforted, friends laughing on
+    a ride, cloth pads, an older woman at a café. Every film question is
+    also in the list below it.
   - **Experts.** The first three from the public directory, in the
     directory's own order, with the sentence that says how it is ordered
-    and the link to the ranking terms. Each card: photograph as uploaded,
-    headline, name, areas, the registration mark, languages, price from.
-    With nobody listed, or the directory unreachable, the section is
-    absent and the page still reads.
+    and the link to the ranking terms. Each card: portrait, headline, name,
+    areas, the registration mark, languages, price from. With nobody
+    listed, or the directory unreachable, the section is absent and the
+    page still reads.
+  - **Portraits are cut out and set on one sand field** (founder, same
+    day, correcting my earlier reading: "make a cut-off the images like the
+    playground from the correct images to align all the images portraits to
+    the design"). The frame is the same for experts and advisors. A
+    photograph with a transparent background shows the sand through it; one
+    that has not been cut out fills the frame, so the page works with both.
   - **Then:** how experts are checked (deep teal, once), how booking works
     with pictures of the product, three advisors and a count of the rest,
     five questions before booking, and a coral closing block with the
@@ -79,6 +91,19 @@ Each entry should include:
   is not acceptable; it needs a field on `GET /public/experts` (platform
   track). No price range in the FAQ and no advisors' institutions: not
   confirmed. No "nobody pays to appear here": a paid plan exists.
+- **The cut-outs need two things that are not in this change.**
+  - _Experts._ The directory serves the photograph each expert uploaded.
+    To show cut-outs, the platform needs a step that removes the background
+    and stores the result beside the original (a second address on
+    `GET /public/experts`), and upload guidance: head and shoulders, with
+    room above the head. Until then the homepage shows cut-outs only for
+    experts whose stored photograph is already one. The seven founding
+    experts' cut-outs are made and kept in the private library, ready for
+    the migration.
+  - _Advisors._ Three cut-outs were added to the media library
+    (`team-*-cutout`) in the development bucket. **Before this is deployed
+    to production, the same three objects must be copied to the production
+    public bucket**, or the three portraits will not load there.
 - **Not judged.** No panel has seen the real page. The GDPR and security
   seats can now run, since this is a real page.
 - **What the founder's content will show.** The founding team's headlines

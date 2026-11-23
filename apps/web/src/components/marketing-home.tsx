@@ -36,6 +36,15 @@ const H2 = "font-display text-3xl tracking-tight text-balance sm:text-4xl"
 const LINK =
   "inline-flex min-h-11 items-center gap-1.5 font-medium text-primary underline decoration-[1.5px] underline-offset-[5px]"
 
+/**
+ * One frame for every portrait on the page: a sand field, with the person
+ * cut out of her photograph's background and set at one face size, so a row
+ * of portraits reads as one set. A photograph that has not been cut out
+ * fills the same frame.
+ */
+const PORTRAIT =
+  "overflow-hidden rounded-xl bg-coral-100 [&_img]:object-cover [&_img]:object-top"
+
 type Directory = ListPublicExpertsResponse | null
 
 /**
@@ -255,7 +264,9 @@ async function People({
                   data-testid="home-expert-card"
                   className="group relative grid h-full grid-cols-[5.5rem_minmax(0,1fr)] content-start gap-x-4 rounded-3xl border bg-card p-3.5 transition-colors focus-within:ring-3 focus-within:ring-ring/50 hover:border-foreground/40 sm:flex sm:flex-col"
                 >
-                  <div className="aspect-square overflow-hidden rounded-xl bg-coral-100 sm:aspect-[4/3.7] [&_img]:object-cover [&_img]:object-[center_22%]">
+                  <div
+                    className={cn(PORTRAIT, "aspect-square sm:aspect-[18/19]")}
+                  >
                     <ExpertPortrait
                       displayName={expert.displayName}
                       avatarUrl={expert.avatarUrl}
@@ -479,8 +490,10 @@ async function Advisors({ locale }: { locale: Locale }) {
     getTranslations("home"),
     getTranslations("about"),
   ])
-  const featured = ADVISORS.filter((person) =>
-    FEATURED_ADVISOR_IDS.includes(person.id)
+  const featured = ADVISORS.flatMap((person) =>
+    "cutout" in person && FEATURED_ADVISOR_IDS.includes(person.id)
+      ? [person]
+      : []
   )
   const others = ADVISORS.length - featured.length
 
@@ -503,13 +516,18 @@ async function Advisors({ locale }: { locale: Locale }) {
                 key={person.id}
                 className="grid grid-cols-[4.5rem_minmax(0,1fr)] items-center gap-x-4 py-3.5 sm:block sm:py-0"
               >
-                <span className="relative block aspect-square overflow-hidden rounded-xl bg-coral-100 sm:w-32">
+                <span
+                  className={cn(
+                    PORTRAIT,
+                    "relative block aspect-[18/19] sm:w-36"
+                  )}
+                >
                   <ElevaImage
-                    slug={person.slug}
+                    slug={person.cutout}
                     locale={locale}
                     decorative
                     fill
-                    sizes="(min-width: 640px) 128px, 72px"
+                    sizes="(min-width: 640px) 144px, 72px"
                     className="object-cover object-top"
                   />
                 </span>
