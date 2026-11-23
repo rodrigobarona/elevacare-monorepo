@@ -1501,6 +1501,10 @@ them, and stops at the one that does.</p>
 <td>O-12</td>
 <td>Once O-2 is lifted: run <code>e2e/admin-clinics.spec.ts</code> on the 12.7 branch (its later steps have never run), retake its real-console captures, then merge #463 (12.7), #465 (14.2, nothing in it uses a database) and this roadmap update. #464 and #465 both regenerate <code>execution-plan/index.html</code>: after the first merges, run <code>pnpm docs:execution-plan:html</code> on the other.</td>
 </tr>
+<tr>
+<td>O-13</td>
+<td>Switch on the dependency graph for the repository (it is off): GitHub can then review the dependencies a pull request adds. After the first CodeQL findings are sorted, make &quot;Code scanning results / CodeQL&quot; a required check or add a code scanning ruleset, or the scan only reports. Leave code scanning&#39;s default setup off (13.13).</td>
+</tr>
 </tbody></table>
 <h2 id="remaining-roadmap--5-order-of-work"><a class="anchor" href="#remaining-roadmap--5-order-of-work" aria-label="Link to section">#</a>5. Order of work</h2>
 <p>Four tracks run side by side, one open pull request each, three open in total.</p>
@@ -1993,9 +1997,9 @@ saved in case F-04 reopens it.</p>
 <tr>
 <td></td>
 <td>13.13</td>
-<td>Code scanning and a bill of materials in CI</td>
+<td><strong>Open (#469), waits on O-2 to merge.</strong> Code scanning and a bill of materials in CI</td>
 <td>S</td>
-<td></td>
+<td>CodeQL reports, it does not block. One CycloneDX file an app</td>
 </tr>
 <tr>
 <td></td>
