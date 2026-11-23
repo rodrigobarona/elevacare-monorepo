@@ -32,6 +32,126 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-23: Signing in again on a staff decision costs nothing typed (12.7) (active)
+
+- Change (Phase 12.7): a staff decision needs a sign-in from the last 12
+  hours. A reviewer on an older one found out only after ticking, writing
+  and pressing a button, from a red message that told them to sign out,
+  sign in, find the filing again, and copy their reason first because the
+  page would not keep it. Now:
+  - **Before anything is written**, a calm banner under the page header
+    says a newer sign-in is needed, why ("so a console left open can't be
+    used to decide in your name") and has one button. It also appears by
+    itself when the 12 hours pass on an open page.
+  - **After a decision pressed on an old sign-in**, the message sits beside
+    the button that was pressed, on both forms, and its first words are
+    "That decision wasn't saved."
+  - **One press** ends the old session and opens the sign-in page in the
+    same tab with the email filled in and the way back to this review.
+  - **Back on the review**, the ticks and the reason are on the form again,
+    a sentence says so and takes the keyboard's place, and the decision
+    still waits for the reviewer's own press.
+- One shared piece for both forms (clinic verification, licence review):
+  `apps/admin/src/components/decision-sign-in.tsx` over
+  `@eleva/dashboard/sign-in-again` (the notices) and
+  `sign-in-again-model` (the draft's rules), with one set of messages
+  (`signInAgain`). The two old `errors.step-up` strings are gone in three
+  languages. The number of hours is never written by hand: it comes from
+  `STAFF_DECISION_SIGN_IN_MAX_AGE_MS`. Slice 12.9 replaces the rule with a
+  second factor checked in the last 10 minutes; the notices and the kept
+  draft carry over with other sentences.
+- **What is kept, and for whom.** The ticks, the reason, the reviewer's id
+  and the filing's `submittedAt`, in this tab's `sessionStorage` under the
+  review's id, written when "Sign in again" is pressed. It is taken out
+  once when the form opens, and removed after a decision. Never
+  `localStorage`, never the server. Someone else who signs in gets nothing
+  back. Ticks say "I checked these details", so they come back only on the
+  filing they were made on: if the clinic or the expert sent new details
+  meanwhile, the reason comes back, the checks are unticked and a sentence
+  says why. Where the browser will not keep a draft, the message says to
+  copy the reason first: the page promises only what it can do.
+- **The way back.** The console has its own address, and the sign-in page
+  returns only to paths on the gateway, so a console page could not be a
+  `returnTo` (it was dropped, or on a local machine read as a gateway
+  path). A console page is now named by its path alone,
+  `/dashboard?console=<path>`: the gateway's `/dashboard` checks that it is
+  a plain path and joins it to the console's address from the server's own
+  configuration, so nothing a link carries can change where it lands, and
+  the console checks who arrives as it does on every request. No absolute
+  address was added to any allow-list. The console's own proxy uses the
+  same form, so a signed-out person who opens a console address comes
+  back to it after signing in (the 12.6 entry listed that as lost).
+- **Signing out first.** The sign-in page lets a signed-in person sign in
+  again, which would leave the old session alive beside the new one. The
+  button ends the old session, then leaves. If that fails, the reviewer
+  stays on the review with everything on it and is told "We couldn't open
+  the sign-in page."
+- **A new session starts in the person's own workspace**, so the console
+  shows its "enter the staff console" step first. That step used to send
+  everyone to the console's front page; it now reloads the address they
+  asked for. Entering stays a deliberate press, so the way back is two
+  presses (sign in, enter), not one.
+- A press the page already knows is on an old sign-in is answered on the
+  page, without asking the API for a refusal it is sure to give: the API
+  logs an old session that tries to decide, and that line is worth more
+  when it is not expected. The API stays the authority: a page that
+  cannot read when the sign-in started shows no banner, and the refusal
+  from the API shows the same message.
+- The review page reads when the reviewer signed in from the session
+  itself (`getSessionStartedAt` in `@eleva/auth/server`; `createdAt` added
+  to the session schema in `@eleva/api-client`).
+- Design: three Mobbin references saved first (`13-admin/20` to `22`: one
+  sentence of why and the next step as a button over a page that stays as
+  it was; the email already filled in; a box above the form that says what
+  is needed before submitting). Every example there asks for a password in
+  a dialog; Eleva needs a new session, so it sends the reviewer to sign in
+  and brings them back. No reference showed typed text coming back: that
+  part is Eleva's own. Calm notice style, not the red one: nothing is
+  wrong with what the reviewer did.
+- Accessibility (WCAG 2.2): nothing entered is asked twice (3.3.7); the
+  work continues after signing in again without loss (2.2.5, taken as the
+  bar); a banner present when the page opens is ordinary content, one that
+  appears later is polite, the answer to a press is an alert (4.1.3);
+  focus stays on the pressed button with "Sign in again" next to it, lands
+  on the notice after the return, or on the "Your decision" heading when
+  nothing had been entered (2.4.3); nothing leaves the page without a
+  press (3.2.2).
+- Proof: unit tests for the draft's rules (kept, given back once, someone
+  else, new details, nothing entered, a browser that refuses storage), the
+  console path (what is refused, and that it can only resolve on the
+  console's address), the notices in three languages, and that the old
+  message is gone. **In the real console** (`e2e/admin-clinics.spec.ts`,
+  opt-in; local API, console, account app and gateway on dev servers; the
+  session's start moved back 13 hours where Better Auth reads it): the
+  banner above the filing with the rule's number; ticks and a reason; a
+  decision pressed, refused beside the button, nothing saved, focus still
+  on the button; the API refusing the same decision sent to it directly;
+  a sign-out that fails, told, with nothing lost; then the sign-in page
+  with the way back and the email filled in; the old session ended; a new
+  session; the review again with the ticks and the reason, the notice
+  focused, the banner gone, nothing decided; the reviewer's own press
+  deciding, and no draft left. A second trip: a sign-in one minute short
+  of too old, the banner appearing by itself when the minute passes; the
+  clinic sending new details meanwhile; the reason back, the tick not,
+  and the sentence that says why. A signed-out request for
+  `/clinics?page=2` is sent to sign in with the way back to it.
+  Portuguese on a phone in the dark theme. Captures:
+  `design-audit/captures/2026-11-23-sign-in-again-before/` and `-after/`.
+- Not proven: the sign-in page's own steps inside this journey (the test
+  makes the new session with the suite's helper, then opens the address
+  the sign-in page goes to next; that address is unit-tested, and
+  signing in is the auth suite's); the return after Google, a passkey or a
+  second factor (same address, not walked); the licence form in a browser
+  (same component as the clinic form); the copy for a browser that
+  refuses storage, in a browser; staging and production, where the
+  console, the gateway and the API are three hosts.
+- Left for a person: a native reader for the Portuguese and Spanish
+  sentences before release.
+- Owner: engineering
+- Related: `execution-plan/remaining-roadmap.md` section 7 (12.7, 12.9);
+  `_context/mobbin/library/13-admin/` (20 to 22);
+  `packages/auth/src/return-to.ts`
+
 ### 2026-11-23: Staff queues have pages, and reading one is on record (12.6) (active)
 
 - Change (Phase 12.6): the two staff queues (clinic verifications, licence

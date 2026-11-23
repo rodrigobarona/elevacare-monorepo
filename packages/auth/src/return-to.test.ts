@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
+  consoleReturnPath,
+  consoleReturnTo,
   isTrustedReturnTo,
   rewriteMagicLinkVerifyUrl,
   sanitizeReturnTo,
@@ -226,5 +228,74 @@ describe("sanitizeReturnTo", () => {
     it("returns undefined for malformed percent-encoding", () => {
       expect(sanitizeReturnTo("%ZZ")).toBeUndefined()
     })
+  })
+})
+
+describe("returning to the staff console", () => {
+  it("names a console page by its path, behind the gateway's /dashboard", () => {
+    expect(consoleReturnTo("/clinics/abc")).toBe(
+      "/dashboard?console=%2Fclinics%2Fabc"
+    )
+    // The sign-in page keeps it as a gateway address.
+    expect(
+      toGatewayCallbackURL(
+        consoleReturnTo("/clinics/abc"),
+        "https://eleva.care"
+      )
+    ).toBe("https://eleva.care/dashboard?console=/clinics/abc")
+    expect(
+      toGatewayCallbackURL(
+        consoleReturnTo("/clinics?page=2"),
+        "https://eleva.care"
+      )
+    ).toBe("https://eleva.care/dashboard?console=/clinics?page=2")
+  })
+
+  it("takes a plain path, with one parameter at most", () => {
+    for (const path of [
+      "/",
+      "/clinics",
+      "/clinics/00000000-0000-4000-8000-000000000001",
+      "/partners/abc_def-1.2~3",
+      "/clinics?page=2",
+    ]) {
+      expect(consoleReturnPath(path), path).toBe(path)
+    }
+  })
+
+  it("refuses anything that could name another place", () => {
+    for (const raw of [
+      null,
+      undefined,
+      "",
+      "clinics",
+      "//evil.example",
+      "/\\evil.example",
+      "/clinics//evil.example",
+      "https://evil.example/clinics",
+      "/https://evil.example",
+      "/clinics/../../x",
+      "/..",
+      "/clinics\tx",
+      "/clinics x",
+      "/clinics#top",
+      "/clinics?next=https://evil.example",
+      "/clinics?a=1&b=2",
+      "/clinics?page=2?x",
+      "/%2F%2Fevil.example",
+      "/@evil.example",
+      `/${"a".repeat(600)}`,
+    ]) {
+      expect(consoleReturnPath(raw), JSON.stringify(raw)).toBeUndefined()
+    }
+  })
+
+  it("can only ever resolve on the console's own address", () => {
+    const consoleUrl = "https://admin.eleva.care"
+    for (const path of ["/", "/clinics/abc", "/clinics?page=2"]) {
+      expect(new URL(consoleReturnPath(path)!, consoleUrl).origin).toBe(
+        consoleUrl
+      )
+    }
   })
 })

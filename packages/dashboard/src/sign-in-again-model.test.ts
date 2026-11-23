@@ -1,0 +1,200 @@
+import { describe, expect, it } from "vitest"
+import { consoleReturnPath, toGatewayCallbackURL } from "@eleva/auth/return-to"
+import {
+  canKeepDrafts,
+  dropDraft,
+  keepDraft,
+  msUntil,
+  returnDraft,
+  signInAgainUrl,
+  takeDraft,
+  type DraftStorage,
+  type KeptDraft,
+} from "./sign-in-again-model"
+
+function memoryStorage(): DraftStorage & { size: () => number } {
+  const kept = new Map<string, string>()
+  return {
+    getItem: (key) => kept.get(key) ?? null,
+    setItem: (key, value) => void kept.set(key, value),
+    removeItem: (key) => void kept.delete(key),
+    size: () => kept.size,
+  }
+}
+
+/** A browser that refuses storage (private mode, blocked site data). */
+const refusing: DraftStorage = {
+  getItem: () => {
+    throw new Error("blocked")
+  },
+  setItem: () => {
+    throw new Error("blocked")
+  },
+  removeItem: () => {
+    throw new Error("blocked")
+  },
+}
+
+const KEY = "eleva.decision-draft:clinic:1"
+const draft: KeptDraft = {
+  ownerId: "staff-1",
+  version: "2026-11-20T10:00:00.000Z",
+  ticks: ["legal_entity_checked", "tax_id_checked"],
+  text: "The NIF belongs to another company.",
+}
+const now = {
+  ownerId: "staff-1",
+  version: draft.version,
+  ticks: ["legal_entity_checked", "tax_id_checked"],
+  maxText: 1000,
+}
+
+describe("keeping a draft while someone signs in", () => {
+  it("keeps it, gives it back once, and leaves nothing behind", () => {
+    const storage = memoryStorage()
+    expect(keepDraft(storage, KEY, draft)).toBe(true)
+    expect(takeDraft(storage, KEY)).toEqual(draft)
+    expect(takeDraft(storage, KEY)).toBeNull()
+    expect(storage.size()).toBe(0)
+  })
+
+  it("is one draft per task", () => {
+    const storage = memoryStorage()
+    keepDraft(storage, KEY, draft)
+    expect(takeDraft(storage, "eleva.decision-draft:clinic:2")).toBeNull()
+    expect(takeDraft(storage, KEY)).toEqual(draft)
+  })
+
+  it("says so when the browser will not keep it, and never throws", () => {
+    expect(canKeepDrafts(memoryStorage())).toBe(true)
+    expect(canKeepDrafts(null)).toBe(false)
+    expect(canKeepDrafts(refusing)).toBe(false)
+    expect(keepDraft(refusing, KEY, draft)).toBe(false)
+    expect(keepDraft(null, KEY, draft)).toBe(false)
+    expect(takeDraft(refusing, KEY)).toBeNull()
+    expect(() => dropDraft(refusing, KEY)).not.toThrow()
+  })
+
+  it("the probe leaves nothing in storage", () => {
+    const storage = memoryStorage()
+    canKeepDrafts(storage)
+    expect(storage.size()).toBe(0)
+  })
+
+  it("reads nothing from a value that is not a draft, and removes it", () => {
+    const storage = memoryStorage()
+    for (const value of [
+      "not json",
+      "null",
+      "[]",
+      JSON.stringify({ ownerId: "staff-1" }),
+      JSON.stringify({ ...draft, ticks: [1, 2] }),
+      JSON.stringify({ ...draft, text: 5 }),
+    ]) {
+      storage.setItem(KEY, value)
+      expect(takeDraft(storage, KEY), value).toBeNull()
+      expect(storage.size(), value).toBe(0)
+    }
+  })
+
+  it("is dropped after a decision", () => {
+    const storage = memoryStorage()
+    keepDraft(storage, KEY, draft)
+    dropDraft(storage, KEY)
+    expect(takeDraft(storage, KEY)).toBeNull()
+  })
+})
+
+describe("what a returning person gets back", () => {
+  it("everything, on the details they checked", () => {
+    expect(returnDraft(draft, now)).toEqual({
+      kind: "restored",
+      ticks: draft.ticks,
+      text: draft.text,
+    })
+  })
+
+  it("nothing when there is no draft", () => {
+    expect(returnDraft(null, now)).toEqual({ kind: "none" })
+  })
+
+  it("nothing when someone else signed in", () => {
+    expect(returnDraft(draft, { ...now, ownerId: "staff-2" })).toEqual({
+      kind: "none",
+    })
+  })
+
+  it("the reason but not the ticks when the details changed meanwhile", () => {
+    // Ticks say "I checked these details": never carried onto new ones.
+    expect(
+      returnDraft(draft, { ...now, version: "2026-11-21T09:00:00.000Z" })
+    ).toEqual({ kind: "changed", ticks: [], text: draft.text })
+  })
+
+  it("says nothing was entered when nothing was", () => {
+    expect(returnDraft({ ...draft, ticks: [], text: "  " }, now)).toEqual({
+      kind: "empty",
+    })
+  })
+
+  it("only ticks the form still has, and no more text than the field takes", () => {
+    expect(
+      returnDraft(
+        {
+          ...draft,
+          ticks: ["tax_id_checked", "made_up"],
+          text: "x".repeat(50),
+        },
+        { ...now, maxText: 10 }
+      )
+    ).toEqual({
+      kind: "restored",
+      ticks: ["tax_id_checked"],
+      text: "x".repeat(10),
+    })
+  })
+})
+
+describe("msUntil", () => {
+  const at = Date.parse("2026-11-23T12:00:00.000Z")
+  it("counts down to the moment and stops at it", () => {
+    expect(msUntil("2026-11-23T12:00:01.000Z", at)).toBe(1000)
+    expect(msUntil("2026-11-23T12:00:00.000Z", at)).toBe(0)
+    expect(msUntil("2026-11-23T00:00:00.000Z", at)).toBe(0)
+  })
+  it("is unknown without a moment", () => {
+    expect(msUntil(null, at)).toBeNull()
+    expect(msUntil("not a date", at)).toBeNull()
+  })
+})
+
+describe("signInAgainUrl", () => {
+  const url = new URL(
+    signInAgainUrl({
+      loginUrl: "https://eleva.care/login",
+      consolePath: "/clinics/00000000-0000-4000-8000-000000000001",
+      email: "ana+staff@eleva.care",
+    })
+  )
+
+  it("goes to the sign-in page with the email filled in", () => {
+    expect(`${url.origin}${url.pathname}`).toBe("https://eleva.care/login")
+    expect(url.searchParams.get("email")).toBe("ana+staff@eleva.care")
+  })
+
+  it("comes back to the same console page through the gateway", () => {
+    // What the sign-in page does with it, then what /dashboard reads.
+    const callback = new URL(
+      toGatewayCallbackURL(
+        url.searchParams.get("returnTo"),
+        "https://eleva.care"
+      )
+    )
+    expect(`${callback.origin}${callback.pathname}`).toBe(
+      "https://eleva.care/dashboard"
+    )
+    expect(consoleReturnPath(callback.searchParams.get("console"))).toBe(
+      "/clinics/00000000-0000-4000-8000-000000000001"
+    )
+  })
+})

@@ -17,6 +17,7 @@ import {
   isApprovedE2eDatabaseUrl,
   isLoopbackUrl,
   isNonLoopbackE2eTarget,
+  webUrl,
 } from "./helpers/local"
 
 const runSmoke = process.env.E2E_ADMIN_CLINICS === "1"
@@ -545,5 +546,352 @@ test.describe("Phase 12 — staff verify a clinic", () => {
     ).toBe(true)
     await shot(phone, "10-clinic-queue-page-2.mobile.dark", true)
     await phone.context().close()
+  })
+
+  test("an old sign-in is told before writing, and signing in again keeps what was written", async ({
+    browser,
+    request,
+  }) => {
+    test.setTimeout(420_000)
+    // The way back from signing in goes through the gateway and the
+    // account app, so this one needs them too.
+    const gateway = await request.get(`${webUrl}/login`).catch(() => null)
+    test.skip(
+      !gateway || gateway.status() >= 500,
+      "needs the gateway on :3000 and the account app on :3006"
+    )
+    const sql = neon(process.env.DATABASE_URL!)
+    // Two filings to decide: one for the journey, one for the captures.
+    await sql`
+      INSERT INTO auth.organization (name, slug, type)
+      SELECT 'Sign-in clinic ' || n, ${`${pagingSlugs}signin-`} || n, 'team'
+      FROM generate_series(1, 2) AS n
+    `
+    await sql`
+      INSERT INTO clinic_profiles (org_id, slug, display_name, country_code, billing_address, specialties)
+      SELECT id, slug, name, 'PT', '{"city":"Lisboa","country":"PT"}'::jsonb, '{}'
+      FROM auth.organization WHERE slug LIKE ${`${pagingSlugs}signin-%`}
+    `
+    const filings = (await sql`
+      INSERT INTO clinic_verifications (org_id, legal_name, tax_id)
+      SELECT id, name || ', Lda',
+             'PT5150018' || lpad((row_number() OVER (ORDER BY slug))::text, 2, '0')
+      FROM auth.organization WHERE slug LIKE ${`${pagingSlugs}signin-%`}
+      ORDER BY slug
+      RETURNING id
+    `) as { id: string }[]
+    const [journey, captures] = filings.map((row) => row.id) as [string, string]
+    const status = async (id: string) =>
+      (
+        (await sql`
+          SELECT status FROM clinic_verifications WHERE id = ${id}::uuid
+        `) as { status: string }[]
+      )[0]!.status
+
+    // The staff member signed in 13 hours ago. Better Auth reads a session
+    // from its session store when there is one, and from the database
+    // otherwise, so the start is moved back in both. The cookie that
+    // caches the session is left out, so every read asks the store.
+    const signedInHoursAgo = async (jar: string, hours: number) => {
+      const startedAt = new Date(Date.now() - hours * 60 * 60 * 1000)
+      await sql`
+        UPDATE auth.session SET created_at = ${startedAt.toISOString()}::timestamptz
+        WHERE user_id = (
+          SELECT id FROM auth."user" WHERE lower(email) = ${EXPERT_EMAIL}
+        )
+      `
+      const store = process.env.KV_REST_API_URL
+      if (!store) return
+      const command = async (parts: (string | number)[]) => {
+        const res = await fetch(store, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${process.env.KV_REST_API_TOKEN}` },
+          body: JSON.stringify(parts),
+        })
+        return ((await res.json()) as { result: unknown }).result
+      }
+      const pair = jar
+        .split("; ")
+        .find((entry) => entry.split("=")[0]!.endsWith("session_token"))
+      if (!pair) throw new Error("no session cookie to age")
+      // The cookie is `<token>.<signature>`; the store's key is the token.
+      const token = decodeURIComponent(pair.slice(pair.indexOf("=") + 1)).split(
+        "."
+      )[0]!
+      const raw = (await command(["GET", token])) as string | null
+      if (!raw) return
+      const stored = JSON.parse(raw) as { session: { createdAt: string } }
+      stored.session.createdAt = startedAt.toISOString()
+      const ttl = (await command(["TTL", token])) as number
+      await command(
+        ttl > 0
+          ? ["SET", token, JSON.stringify(stored), "EX", ttl]
+          : ["SET", token, JSON.stringify(stored)]
+      )
+    }
+    const withoutCache = (jar: string) =>
+      jar
+        .split("; ")
+        .filter((pair) => !pair.split("=")[0]!.endsWith("session_data"))
+        .join("; ")
+    await signedInHoursAgo(cookie, 13)
+    const old = withoutCache(cookie)
+
+    const page = await pageWithSession(browser, old)
+    await page.goto(`${adminUrl}/clinics/${journey}`)
+    const banner = page.getByTestId("decision-sign-in-banner")
+    await expect(banner).toBeVisible({ timeout: 90_000 })
+    await expect(banner).toContainText("Sign in again before you decide")
+    await expect(banner).toContainText(
+      "You signed in more than 12 hours ago. A decision needs a sign-in from the last 12 hours, so a console left open can't be used to decide in your name."
+    )
+    await expect(banner).toContainText(
+      "Your ticks and your reason stay on this page while you sign in."
+    )
+    // Said before the filing, and not as an interruption.
+    await expect(banner).toHaveAttribute("role", "note")
+    const bannerBox = (await banner.boundingBox())!
+    const filingBox = (await page
+      .getByRole("heading", { name: "What the clinic sent" })
+      .boundingBox())!
+    expect(bannerBox.y).toBeLessThan(filingBox.y)
+    // It does not take the keyboard's place when the page opens.
+    await expect(banner.getByTestId("sign-in-again")).not.toBeFocused()
+    await shot(page, "11-sign-in-again-banner.desktop", true)
+
+    // The reviewer may still read, tick and write.
+    const REASON = "The NIF belongs to another company in the register."
+    const legal = page.getByRole("checkbox", {
+      name: "Legal name found in the public register",
+    })
+    const nif = page.getByRole("checkbox", {
+      name: "NIF or VAT number belongs to that company",
+    })
+    await page.getByText("Legal name found in the public register").click()
+    await page.getByText("NIF or VAT number belongs to that company").click()
+    await page.getByTestId("clinic-decision-reason").fill(REASON)
+
+    // A decision pressed on the old sign-in: not saved, and said so first,
+    // beside the button, which keeps the keyboard's place.
+    await page.getByTestId("clinic-needs-changes").click()
+    const refusal = page.getByTestId("decision-sign-in-refusal")
+    await expect(refusal).toBeVisible()
+    await expect(refusal).toContainText(
+      "That decision wasn't saved. You signed in more than 12 hours ago, and a decision needs a newer sign-in. Your ticks and your reason are kept."
+    )
+    await expect(refusal).toHaveAttribute("role", "alert")
+    await expect(page.getByTestId("clinic-needs-changes")).toBeFocused()
+    expect(await status(journey)).toBe("pending")
+    await shot(page, "12-sign-in-again-refused.desktop", true)
+
+    // The API is the authority, whatever a page shows or hides.
+    const direct = await request.post(
+      `${apiUrl}/admin/clinics/${journey}/decision`,
+      {
+        headers: authHeaders(old),
+        data: {
+          decision: "needs_changes",
+          submittedAt: new Date().toISOString(),
+          reason: REASON,
+        },
+      }
+    )
+    expect(direct.status(), await direct.text()).toBe(403)
+    expect(await direct.json()).toMatchObject({ code: "STEP_UP_REQUIRED" })
+
+    // When signing out does not go through, the reviewer stays on the
+    // review, is told, and loses nothing.
+    await page.route("**/auth/sign-out", (route) => route.abort())
+    await refusal.getByTestId("sign-in-again").click()
+    await expect(refusal.getByTestId("sign-in-again-failure")).toHaveText(
+      "We couldn't open the sign-in page. Try again in a moment."
+    )
+    await expect(page).toHaveURL(`${adminUrl}/clinics/${journey}`)
+    await expect(page.getByTestId("clinic-decision-reason")).toHaveValue(REASON)
+    await page.unroute("**/auth/sign-out")
+
+    // One press: the sign-in page, in this tab, with the way back to this
+    // review and the email already filled in.
+    await refusal.getByTestId("sign-in-again").click()
+    await expect(page).toHaveURL(/\/login\?/, { timeout: 90_000 })
+    const signInUrl = new URL(page.url())
+    // Locally the gateway hands /login to the account app's own port.
+    expect(signInUrl.pathname).toBe("/login")
+    expect(signInUrl.searchParams.get("returnTo")).toBe(
+      `/dashboard?console=${encodeURIComponent(`/clinics/${journey}`)}`
+    )
+    await expect(page.locator("#email")).toHaveValue(EXPERT_EMAIL, {
+      timeout: 90_000,
+    })
+    await shot(page, "13-sign-in-email-filled.desktop")
+    // The old session ended: it cannot be used again.
+    const ended = await request.get(
+      `${apiUrl}/auth/get-session?disableCookieCache=true`,
+      { headers: authHeaders(old) }
+    )
+    expect((await ended.json())?.session ?? null).toBeNull()
+
+    // Signing in (the sign-in page's own steps are the auth suite's): a
+    // new session, then the address the sign-in page goes to next.
+    cookie = await expertSession(request)
+    await page.context().addCookies(
+      cookie.split("; ").map((pair) => {
+        const [name, ...rest] = pair.split("=")
+        return { name: name!, value: rest.join("="), url: adminUrl }
+      })
+    )
+    await page.goto(
+      `${webUrl}/dashboard?console=${encodeURIComponent(`/clinics/${journey}`)}`
+    )
+    await expect(page).toHaveURL(`${adminUrl}/clinics/${journey}`, {
+      timeout: 90_000,
+    })
+    // A new session starts in the person's own workspace. Entering the
+    // staff one is a deliberate step, and it keeps the address.
+    const enter = page.getByTestId("staff-entry-submit")
+    const restored = page.getByTestId("decision-restored")
+    await expect(enter.or(restored)).toBeVisible({ timeout: 90_000 })
+    if (await enter.isVisible()) await enter.click()
+    await expect(restored).toBeVisible({ timeout: 90_000 })
+    await expect(page).toHaveURL(`${adminUrl}/clinics/${journey}`)
+
+    // Everything is as it was left, a sentence says so, and the keyboard
+    // is at the form, not at the top of the page.
+    await expect(restored).toHaveText(
+      "You're signed in again. Your ticks and your reason are still here. Check them, then decide."
+    )
+    await expect(restored).toBeFocused()
+    await expect(legal).toBeChecked()
+    await expect(nif).toBeChecked()
+    await expect(page.getByTestId("clinic-decision-reason")).toHaveValue(REASON)
+    await expect(banner).toHaveCount(0)
+    await shot(page, "14-signed-in-again-restored.desktop", true)
+    // Nothing was decided for the reviewer.
+    expect(await status(journey)).toBe("pending")
+
+    // Their own press decides, and nothing of the draft is left behind.
+    await page.getByTestId("clinic-needs-changes").click()
+    await expect(page.getByTestId("clinic-filing-note")).toContainText(
+      "You asked for changes.",
+      { timeout: 60_000 }
+    )
+    expect(await status(journey)).toBe("needs_changes")
+    expect(
+      await page.evaluate(() =>
+        Object.keys(sessionStorage).filter((key) =>
+          key.startsWith("eleva.decision-draft")
+        )
+      )
+    ).toEqual([])
+    await page.context().close()
+
+    // A second trip, on the other filing. The sign-in is a minute short of
+    // too old when the page opens: no banner. The minute passes on the
+    // open page and the banner appears by itself, said politely.
+    await signedInHoursAgo(cookie, 12 - 1 / 60)
+    const second = await pageWithSession(browser, withoutCache(cookie))
+    await second.clock.install()
+    await second.goto(`${adminUrl}/clinics/${captures}`)
+    await expect(
+      second.getByRole("heading", { name: "Your decision" })
+    ).toBeVisible({ timeout: 90_000 })
+    const late = second.getByTestId("decision-sign-in-banner")
+    await expect(late).toHaveCount(0)
+    await second.clock.fastForward("02:00")
+    await expect(late).toBeVisible()
+    await expect(late).toHaveAttribute("role", "status")
+    await second.getByText("NIF or VAT number belongs to that company").click()
+    await second.getByTestId("clinic-decision-reason").fill(REASON)
+    // The banner's own button this time.
+    await late.getByTestId("sign-in-again").click()
+    await expect(second).toHaveURL(/\/login\?/, { timeout: 90_000 })
+    // The clinic sends new details while the reviewer signs in.
+    await sql`
+      UPDATE clinic_verifications
+      SET legal_name = 'Sign-in clinic 2 (new), Lda', submitted_at = now()
+      WHERE id = ${captures}::uuid
+    `
+    cookie = await expertSession(request)
+    await second.context().addCookies(
+      cookie.split("; ").map((pair) => {
+        const [name, ...rest] = pair.split("=")
+        return { name: name!, value: rest.join("="), url: adminUrl }
+      })
+    )
+    await second.goto(
+      `${webUrl}/dashboard?console=${encodeURIComponent(`/clinics/${captures}`)}`
+    )
+    const enterAgain = second.getByTestId("staff-entry-submit")
+    const changed = second.getByTestId("decision-restored")
+    await expect(enterAgain.or(changed)).toBeVisible({ timeout: 90_000 })
+    if (await enterAgain.isVisible()) await enterAgain.click()
+    // The reason is back; the tick is not, because it was made on other
+    // details; and a sentence says why.
+    await expect(changed).toHaveText(
+      "You're signed in again. The clinic sent new details while you were away, so the checks are unticked. Your reason is still here.",
+      { timeout: 90_000 }
+    )
+    await expect(
+      second.getByRole("checkbox", {
+        name: "NIF or VAT number belongs to that company",
+      })
+    ).not.toBeChecked()
+    await expect(second.getByTestId("clinic-decision-reason")).toHaveValue(
+      REASON
+    )
+    await expect(second.getByText("Sign-in clinic 2 (new), Lda")).toBeVisible()
+    await shot(second, "14-signed-in-again-new-details.desktop", true)
+    await second.context().close()
+
+    // A signed-out person who opens a console address is sent to sign in
+    // with the way back to that address, not to the console's front page.
+    const nobody = await browser.newContext()
+    const signedOut = await nobody.request.get(`${adminUrl}/clinics?page=2`, {
+      maxRedirects: 0,
+    })
+    await nobody.close()
+    expect(signedOut.status()).toBe(307)
+    expect(
+      new URL(signedOut.headers().location!).searchParams.get("returnTo")
+    ).toBe(`/dashboard?console=${encodeURIComponent("/clinics?page=2")}`)
+
+    // The same two messages in Portuguese, on a phone at night.
+    await signedInHoursAgo(cookie, 13)
+    const phone = await pageWithSession(browser, withoutCache(cookie), true)
+    await phone.context().addCookies([
+      { name: "ELEVA_LOCALE", value: "pt", url: adminUrl },
+      { name: "ELEVA_THEME", value: "dark", url: adminUrl },
+    ])
+    await phone.goto(`${adminUrl}/clinics/${captures}`)
+    const phoneBanner = phone.getByTestId("decision-sign-in-banner")
+    await expect(phoneBanner).toContainText(
+      "Inicie sessão de novo antes de decidir",
+      { timeout: 90_000 }
+    )
+    await expect(phoneBanner).toContainText("há mais de 12 horas")
+    // The button drops under the words and takes the width.
+    const words = (await phoneBanner
+      .getByText("Inicie sessão de novo antes de decidir")
+      .boundingBox())!
+    const button = (await phoneBanner
+      .getByTestId("sign-in-again")
+      .boundingBox())!
+    expect(button.y).toBeGreaterThan(words.y)
+    expect(button.width).toBeGreaterThan(250)
+    expect(
+      await phone.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth
+      )
+    ).toBe(true)
+    await shot(phone, "15-sign-in-again-banner.pt.mobile.dark", true)
+    await phone.getByTestId("clinic-decision-reason").fill("Motivo de teste.")
+    await phone.getByTestId("clinic-needs-changes").click()
+    await expect(phone.getByTestId("decision-sign-in-refusal")).toContainText(
+      "Essa decisão não foi guardada."
+    )
+    await shot(phone, "16-sign-in-again-refused.pt.mobile.dark", true)
+    await phone.context().close()
+    // The sign-in is as recent as it was, for whatever runs next.
+    await signedInHoursAgo(cookie, 0)
   })
 })

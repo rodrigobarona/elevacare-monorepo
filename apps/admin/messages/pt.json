@@ -72,8 +72,7 @@
         "decided": "Alguém já decidiu este pedido.",
         "self": "Não pode rever o seu próprio pedido.",
         "forbidden": "Não tem acesso a esta revisão.",
-        "failed": "Não foi possível concluir. Tente novamente.",
-        "step-up": "Iniciou sessão há mais de 12 horas. Termine a sessão e inicie-a de novo para decidir. Se escreveu um motivo, copie-o primeiro: esta página não o guarda."
+        "failed": "Não foi possível concluir. Tente novamente."
       }
     }
   },
@@ -145,8 +144,7 @@
         "decided": "Alguém já decidiu este envio. Recarregue para ver a decisão.",
         "self": "Não pode rever uma clínica de que faz parte. Peça a outra pessoa da equipa.",
         "forbidden": "Não tem acesso a esta revisão.",
-        "failed": "Não foi possível concluir. Tente novamente.",
-        "step-up": "Iniciou sessão há mais de 12 horas. Termine a sessão e inicie-a de novo para decidir. Se escreveu um motivo, copie-o primeiro: esta página não o guarda."
+        "failed": "Não foi possível concluir. Tente novamente."
       },
       "notes": {
         "approved": "Este envio está aprovado: a clínica está verificada. A Eleva avisa por email quem é titular ou administra a clínica.",
@@ -165,6 +163,25 @@
         "confirm": "Rejeitar envio"
       }
     }
+  },
+  "signInAgain": {
+    "banner": {
+      "title": "Inicie sessão de novo antes de decidir",
+      "body": "Iniciou sessão há mais de {hours, plural, one {# hora} other {# horas}}. Uma decisão precisa de um início de sessão {hours, plural, one {da última hora} other {das últimas # horas}}, para que ninguém possa decidir em seu nome numa consola deixada aberta."
+    },
+    "kept": "O que assinalou e o motivo que escreveu ficam nesta página enquanto inicia sessão.",
+    "notKept": "Copie o motivo antes de iniciar sessão: este navegador não o guarda.",
+    "refused": "Essa decisão não foi guardada. Iniciou sessão há mais de {hours, plural, one {# hora} other {# horas}} e uma decisão precisa de um início de sessão mais recente.",
+    "refusedKept": "O que assinalou e o motivo ficam guardados.",
+    "action": "Iniciar sessão de novo",
+    "actionPending": "A abrir o início de sessão…",
+    "restored": "Já iniciou sessão de novo. O que assinalou e o motivo continuam aqui. Confirme e decida.",
+    "changed": {
+      "clinic": "Já iniciou sessão de novo. A clínica enviou novos dados entretanto, por isso as verificações ficaram por assinalar.",
+      "expert": "Já iniciou sessão de novo. O especialista enviou novos dados entretanto, por isso as verificações ficaram por assinalar."
+    },
+    "reasonKept": "O motivo continua aqui.",
+    "unavailable": "Não foi possível abrir a página de início de sessão. Tente de novo dentro de momentos."
   },
   "staffEntry": {
     "title": "Entrar na consola da equipa",

@@ -22,10 +22,17 @@ import { Button } from "@eleva/ui/components/button"
 import { CheckboxField } from "@eleva/ui/components/checkbox-field"
 import { Label } from "@eleva/ui/components/label"
 import { Textarea } from "@eleva/ui/components/textarea"
+import {
+  DecisionRestoredNotice,
+  DecisionSignInRefusal,
+  useDecisionSignIn,
+} from "@/components/decision-sign-in"
 import { decideClinic, type DecideClinicError } from "./actions"
 import { DECIDED_KEY } from "./filing-note"
 
 type Decision = ClinicDecisionRequest["decision"]
+
+const REASON_MAX_LENGTH = 1000
 
 export function DecisionForm({
   verificationId,
@@ -53,9 +60,31 @@ export function DecisionForm({
   const allChecked = CLINIC_CHECKLIST_ITEMS.every((item) => checked[item])
   const hasReason = reason.trim().length > 0
 
+  // What is on the form survives signing in again, and comes back once.
+  const signIn = useDecisionSignIn({
+    version: submittedAt,
+    items: CLINIC_CHECKLIST_ITEMS,
+    maxText: REASON_MAX_LENGTH,
+    read: () => ({
+      ticks: CLINIC_CHECKLIST_ITEMS.filter((item) => checked[item]),
+      text: reason,
+    }),
+    restore: ({ ticks, text }) => {
+      setChecked(Object.fromEntries(ticks.map((item) => [item, true])))
+      setReason(text)
+    },
+  })
+
   async function decide(decision: Decision) {
-    setPending(decision)
     setError(null)
+    // A sign-in the page already knows is too old is answered here: the
+    // API would refuse it, and an old session that tries to decide is a
+    // line in its log worth keeping for the ones nobody expected.
+    if (signIn.expired) {
+      setError({ decision, code: "step-up" })
+      return
+    }
+    setPending(decision)
     // A request that never reaches the server must not lock the form.
     const result = await decideClinic(
       verificationId,
@@ -69,6 +98,7 @@ export function DecisionForm({
       setError({ decision, code: result.error })
       return
     }
+    signIn.forget()
     try {
       sessionStorage.setItem(DECIDED_KEY, verificationId)
     } catch {
@@ -80,6 +110,8 @@ export function DecisionForm({
 
   function refusal(shown: boolean) {
     if (!error || !shown) return null
+    // Signing in again is a routine step, not something that went wrong.
+    if (error.code === "step-up") return <DecisionSignInRefusal />
     return (
       <Alert variant="destructive" role="alert">
         <AlertDescription data-testid="clinic-decision-error">
@@ -91,6 +123,7 @@ export function DecisionForm({
 
   return (
     <div className="space-y-6">
+      <DecisionRestoredNotice returned={signIn.returned} hasText={hasReason} />
       <div className="space-y-3">
         <p className="text-sm text-muted-foreground">{t("checklistHelp")}</p>
         {CLINIC_CHECKLIST_ITEMS.map((item) => (
@@ -121,7 +154,7 @@ export function DecisionForm({
             id="clinic-decision-reason"
             data-testid="clinic-decision-reason"
             value={reason}
-            maxLength={1000}
+            maxLength={REASON_MAX_LENGTH}
             rows={3}
             aria-describedby="clinic-decision-reason-help"
             onChange={(event) => setReason(event.target.value)}

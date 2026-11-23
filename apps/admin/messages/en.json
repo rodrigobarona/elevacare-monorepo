@@ -72,8 +72,7 @@
         "decided": "Someone already decided this application.",
         "self": "You cannot review your own application.",
         "forbidden": "You do not have access to this review.",
-        "failed": "That did not work. Please try again.",
-        "step-up": "You signed in more than 12 hours ago. Sign out and sign in again, then decide. Copy your reason first if you wrote one: this page will not keep it."
+        "failed": "That did not work. Please try again."
       }
     }
   },
@@ -145,8 +144,7 @@
         "decided": "Someone already decided this filing. Reload to see the decision.",
         "self": "You cannot review a clinic you belong to. Ask another reviewer.",
         "forbidden": "You do not have access to this review.",
-        "failed": "That did not work. Please try again.",
-        "step-up": "You signed in more than 12 hours ago. Sign out and sign in again, then decide. Copy your reason first if you wrote one: this page will not keep it."
+        "failed": "That did not work. Please try again."
       },
       "notes": {
         "approved": "This filing is approved: the clinic is verified. Eleva tells the clinic's owner and admins by email.",
@@ -165,6 +163,25 @@
         "confirm": "Reject filing"
       }
     }
+  },
+  "signInAgain": {
+    "banner": {
+      "title": "Sign in again before you decide",
+      "body": "You signed in more than {hours, plural, one {# hour} other {# hours}} ago. A decision needs a sign-in from the last {hours, plural, one {hour} other {# hours}}, so a console left open can't be used to decide in your name."
+    },
+    "kept": "Your ticks and your reason stay on this page while you sign in.",
+    "notKept": "Copy your reason before you sign in: this browser won't keep it.",
+    "refused": "That decision wasn't saved. You signed in more than {hours, plural, one {# hour} other {# hours}} ago, and a decision needs a newer sign-in.",
+    "refusedKept": "Your ticks and your reason are kept.",
+    "action": "Sign in again",
+    "actionPending": "Opening sign-in…",
+    "restored": "You're signed in again. Your ticks and your reason are still here. Check them, then decide.",
+    "changed": {
+      "clinic": "You're signed in again. The clinic sent new details while you were away, so the checks are unticked.",
+      "expert": "You're signed in again. The expert sent new details while you were away, so the checks are unticked."
+    },
+    "reasonKept": "Your reason is still here.",
+    "unavailable": "We couldn't open the sign-in page. Try again in a moment."
   },
   "staffEntry": {
     "title": "Enter the staff console",

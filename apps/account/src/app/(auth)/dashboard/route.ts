@@ -7,9 +7,16 @@ import {
   getSessionForOrg,
   getSpaceSession,
 } from "@eleva/auth/server"
-import { sanitizeReturnTo } from "@eleva/auth/return-to"
+import {
+  CONSOLE_RETURN_PARAM,
+  consoleReturnPath,
+  sanitizeReturnTo,
+} from "@eleva/auth/return-to"
 import { resolveGatewayUrl } from "@eleva/config/env"
-import { resolveProductHomeUrl } from "@eleva/dashboard/resolve-product-home-url"
+import {
+  resolveAdminUrl,
+  resolveProductHomeUrl,
+} from "@eleva/dashboard/resolve-product-home-url"
 import {
   LAST_ACTIVE_ORG_COOKIE,
   RESERVED_SLUGS,
@@ -64,6 +71,17 @@ export async function GET(request: NextRequest) {
     applyExpiredSessionCookies(response)
     if (lastSlug) response.cookies.delete(LAST_ACTIVE_ORG_COOKIE)
     return response
+  }
+
+  // Someone who signed in from the staff console goes back to the page
+  // they were on. Only a path is taken from the link; the console's
+  // address is this server's own, and the console checks who they are as
+  // it does on every request.
+  const consolePath = consoleReturnPath(
+    request.nextUrl.searchParams.get(CONSOLE_RETURN_PARAM)
+  )
+  if (consolePath) {
+    return NextResponse.redirect(new URL(consolePath, resolveAdminUrl()))
   }
 
   if (!session.orgSlug) {

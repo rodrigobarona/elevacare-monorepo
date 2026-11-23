@@ -10,7 +10,8 @@ import { Button } from "@eleva/ui/components/button"
 /**
  * Switches the person's active workspace to their staff membership from the
  * browser, so the API's updated session cookie reaches it, then reloads the
- * console. A server action would leave the browser on the old workspace.
+ * page they asked for. A server action would leave the browser on the old
+ * workspace.
  */
 export function EnterStaffButton({
   staffOrgId,
@@ -36,7 +37,9 @@ export function EnterStaffButton({
       await createApiClient({ baseUrl: apiBaseUrl }).organizations.setActive(
         body
       )
-      window.location.assign("/")
+      // The page they came for, now as staff: a link into the console
+      // (or the way back from signing in again) is not lost here.
+      window.location.reload()
     } catch {
       setFailed(true)
       setPending(false)
