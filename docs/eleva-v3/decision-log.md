@@ -241,6 +241,26 @@ Each entry should include:
   hours (the banner now says "left open longer than that"), a notice
   whose words were not its name, a tick on news that is not good, and a
   refusal that could appear below the screen. Not scored again.
+- Fourth panel, on the fifth commit: engineering 7.6, UI 8.4, UX and
+  writing 8.2, trust and accessibility 8.4. Two judges found the same
+  hole, made by the commit before: Reject skipped its confirmation
+  whenever the page believed the sign-in was old, and the press then
+  looked at the session once more; when that look found a newer sign-in
+  (another tab had just signed in), the rejection was sent with no
+  confirmation. A rejection is now never sent from the button: the press
+  is either answered on the page, or it opens the confirmation. The same
+  commit: a newer sign-in counts only while it is itself still good after
+  the time spent on the page (worked out in two functions with their own
+  tests, since the first version got it wrong); the time spent is kept
+  when the browser's Back brings the page back; a question to the session
+  gives up after five seconds, and tells "signed out" from "could not
+  tell"; a press being answered shows the button as working, and the
+  pressed button is no longer disabled while it works, so the keyboard's
+  place is not lost when the API refuses; a page brought back from the
+  browser's cache after the reviewer signed out is loaded again, so the
+  filing does not stay on screen; the sign-in page never goes on by
+  itself when it could not tell who was signed in when the link was sent.
+  Not scored again, and not walked in the real console.
 - **How the notices look now is proven; the journey with them is not.**
   A playground page (`apps/poc` `fixtures/sign-in-again`) shows every
   state of the notices with the console's own words, read from its
@@ -269,11 +289,14 @@ Each entry should include:
   the "check your inbox" step, and the changed wording. Their unit tests,
   types and lint pass. They need one run of `e2e/admin-clinics.spec.ts`
   once the database answers, with the captures retaken, and are not to
-  be read as proven until then. Also with no test behind it: the
-  arithmetic of the time left after a newer sign-in; the API's refusal
-  reaching the page as the same message (every walked press was one the
-  page already knew about); the tab order by keyboard alone; contrast
-  measured on screen (the figures are worked out from the palette).
+  be read as proven until then. Also with no test behind it: the API's
+  refusal reaching the page as the same message (every walked press was
+  one the page already knew about); the tab order by keyboard alone; the
+  page's own timing (its timer, its listeners, the question it asks
+  before a press is answered): the rules it uses are tested, the page
+  that uses them is not, because the console's tests draw markup and do
+  not run a browser. The step added to the browser test for Reject after
+  a newer sign-in is written and has not run.
 - Left for later: the sign-in page still greets a reviewer in the middle
   of a decision with "Welcome back" and "Create an account" (12.8 builds
   the staff's own way in); "Sign in again" ends the session in every
