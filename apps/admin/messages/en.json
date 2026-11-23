@@ -168,7 +168,7 @@
   },
   "staffEntry": {
     "title": "Enter the staff console",
-    "body": "Here you can see members' and experts' data across Eleva. What you open and what you change is recorded in the audit log.",
+    "body": "Here you can see members' and experts' data across Eleva. What you open and what you change are recorded in the audit log.",
     "enter": "Enter the staff console",
     "back": "Back to Eleva",
     "error": "We couldn't open the staff console. Try again in a moment."

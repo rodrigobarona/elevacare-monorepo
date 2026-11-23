@@ -65,12 +65,19 @@ export default async function PartnersPage({
         />
       ) : (
         <DataTableShell footer={<QueuePager path={PATH} queue={queue} />}>
-          <Table aria-label={t("title")} aria-describedby={QUEUE_RANGE_ID}>
+          {/* Fixed columns: a page with longer names must not move them. */}
+          <Table
+            aria-label={t("title")}
+            aria-describedby={QUEUE_RANGE_ID}
+            className="min-w-160 table-fixed"
+          >
             <TableHeader>
-              <TableHead isRowHeader>{t("columns.expert")}</TableHead>
-              <TableHead>{t("columns.body")}</TableHead>
-              <TableHead>{t("columns.state")}</TableHead>
-              <TableHead>{t("columns.waiting")}</TableHead>
+              <TableHead isRowHeader className="w-[30%]">
+                {t("columns.expert")}
+              </TableHead>
+              <TableHead className="w-[34%]">{t("columns.body")}</TableHead>
+              <TableHead className="w-[16%]">{t("columns.state")}</TableHead>
+              <TableHead className="w-[20%]">{t("columns.waiting")}</TableHead>
             </TableHeader>
             <TableBody>
               {items.map((item) => (

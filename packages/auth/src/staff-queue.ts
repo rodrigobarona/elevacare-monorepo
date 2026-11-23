@@ -6,8 +6,10 @@ import {
 import type { ApiAuthMode } from "./types"
 
 /**
- * How a queue was read: at the console (`cookie`), or by a program holding
- * a token or a key. `unknown` when the request did not say.
+ * How a queue read was authenticated: a browser session (`cookie`: the
+ * console, or anything else that carries that session), a token or a key.
+ * `unknown` when the request did not say. It tells a key from a session;
+ * it cannot tell a person from a script that holds their session.
  */
 export type StaffQueueReadVia = ApiAuthMode | "unknown"
 

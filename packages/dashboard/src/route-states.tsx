@@ -57,7 +57,7 @@ export async function RouteTableLoading() {
         ))}
         {/* The range line only: most queues fit on one page and have no
             controls. */}
-        <div className="p-3">
+        <div className="flex min-h-14 items-center p-3">
           <Skeleton className="h-5 w-44" />
         </div>
       </div>

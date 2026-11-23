@@ -3148,7 +3148,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "listClinicVerifications",
           summary: "List the staff clinic verification queue",
           description:
-            "Staff-only (`applications:review`). One page (25 rows) of the filings of a clinic's legal name and NIF: `pending` first, oldest first (they wait on staff), then `needs_changes` (they wait on the clinic). `verified` says an earlier filing of the same clinic is already approved. `total`, `page` and `pages` say where the page sits; a `page` past the end returns the last page. Each read is audited as clinic_verification.listed with the reader, the page and the number of rows, never the names.",
+            "Staff-only (`applications:review`). One page (25 rows) of the filings of a clinic's legal name and NIF: `pending` first, oldest first (they wait on staff), then `needs_changes` (they wait on the clinic). `verified` says an earlier filing of the same clinic is already approved. `total`, `page` and `pages` say where the page sits; a `page` past the end returns the last page. Each read is audited as clinic_verification.listed with the reader, the page, the number of rows and how the read was authenticated, never the names.",
           tags: ["Admin"],
           requestParams: { query: StaffQueueQuerySchema },
           responses: {
@@ -3229,7 +3229,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "listPartnerReviews",
           summary: "List the staff licence review queue",
           description:
-            "Staff-only (`applications:review`). One page (25 rows), oldest first: open applications (`pending`, `needs_changes`) plus `active` profiles with no approved application (`needs_verification`). `total`, `page` and `pages` say where the page sits; a `page` past the end returns the last page. Each read is audited as partner_application.listed with the reader, the page and the number of rows, never the names.",
+            "Staff-only (`applications:review`). One page (25 rows) of open applications (`pending`, `needs_changes`) plus `active` profiles with no approved application (`needs_verification`): the licences that wait on staff (`pending`) first, oldest first, then the rest, oldest first. `total`, `page` and `pages` say where the page sits; a `page` past the end returns the last page. Each read is audited as partner_application.listed with the reader, the page, the number of rows and how the read was authenticated, never the names.",
           tags: ["Admin"],
           requestParams: { query: StaffQueueQuerySchema },
           responses: {

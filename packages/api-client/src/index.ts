@@ -1923,7 +1923,10 @@ const StaffQueuePageFields = {
   pageSize: z.number().int().min(1),
 }
 
-/** One page of the staff licence review queue, oldest first. */
+/**
+ * One page of the staff licence review queue: licences to check first,
+ * oldest first, then the rest, oldest first.
+ */
 export const AdminPartnerQueueResponseSchema = z.object({
   ...StaffQueuePageFields,
   items: z.array(

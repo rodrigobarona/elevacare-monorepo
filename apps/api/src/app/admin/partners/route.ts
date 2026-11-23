@@ -18,8 +18,9 @@ export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
 /**
- * GET /admin/partners?page= — one page of the staff licence review queue,
- * oldest first. Each read is recorded with the reader.
+ * GET /admin/partners?page= — one page of the staff licence review queue:
+ * licences to check first, oldest first, then the rest. Each read is
+ * recorded with the reader.
  */
 export async function GET(request: Request) {
   const headers = corsHeaders(request, "GET, OPTIONS")

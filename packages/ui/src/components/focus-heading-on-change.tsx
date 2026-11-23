@@ -30,7 +30,11 @@ export function FocusHeadingOnChange({
     const current = String(value)
     seen.set(address, current)
     const heading = document.querySelector<HTMLElement>("main h1")
-    if (!heading) return
+    if (!heading) {
+      return () => {
+        if (window.location.pathname !== address) seen.delete(address)
+      }
+    }
     // The description is set on every run, the first visit included, so it
     // is there whenever the heading is read; it is this component's only
     // while it is the one it set.
@@ -41,6 +45,9 @@ export function FocusHeadingOnChange({
         heading.getAttribute("aria-describedby") === describedBy
       )
         heading.removeAttribute("aria-describedby")
+      // Gone to another address: coming back later is a first visit again,
+      // and focus stays where the reader put it.
+      if (window.location.pathname !== address) seen.delete(address)
     }
     if (previous === undefined || previous === current) return giveBack
     if (!heading.hasAttribute("tabindex"))

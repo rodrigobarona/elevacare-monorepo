@@ -153,8 +153,9 @@ export interface LicenceReviewQueueRow {
 }
 
 /**
- * One page of the staff queue, oldest first, and how long the queue is:
- * open applications plus listed profiles with no approved application.
+ * One page of the staff queue and how long the queue is: open applications
+ * plus listed profiles with no approved application, the licences that wait
+ * on staff first, oldest first, then the rest, oldest first.
  * Approved is terminal per profile, so the latest application says whether
  * one exists. Read inside the caller's transaction, so `@eleva/auth` can
  * record who read it in the same one (`listLicenceQueue`). Not for apps: a

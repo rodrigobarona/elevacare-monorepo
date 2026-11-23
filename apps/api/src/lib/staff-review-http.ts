@@ -98,9 +98,15 @@ export function requestedQueuePage(
   const params = new URL(request.url).searchParams
   const query = StaffQueueQuerySchema.safeParse(Object.fromEntries(params))
   // `?page=1&page=2` names two pages: refused, not settled by position.
-  if (!query.success || params.getAll("page").length > 1) {
+  const repeated = params.getAll("page").length > 1
+  if (!query.success || repeated) {
     return secureJson(
-      { error: "validation", issues: query.error?.issues ?? [] },
+      {
+        error: "validation",
+        issues: query.success
+          ? [{ path: ["page"], message: "page is given more than once" }]
+          : query.error.issues,
+      },
       { status: 422, headers }
     )
   }

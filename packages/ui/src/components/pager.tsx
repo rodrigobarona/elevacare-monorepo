@@ -32,9 +32,11 @@ interface PagerProps {
 // control that is the only way to the next page gets a border that can be
 // seen (3:1) and full-strength words; the unavailable one stays in place,
 // quieter but still readable.
+// The border is already dark, so a change of border colour alone is a
+// weak sign of focus: the kit's outline goes around it.
 const control = cn(
   buttonVariants({ variant: "outline", size: "sm" }),
-  "border-input-border"
+  "border-input-border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring) max-sm:h-10"
 )
 const available = cn(control, "text-foreground")
 const unavailable = cn(
@@ -91,7 +93,9 @@ export function Pager({
     <div
       data-slot="pager"
       className={cn(
-        "flex w-full flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between",
+        // As tall with controls as without, so a footer keeps its height
+        // from one page to the next and under the loading state.
+        "flex w-full flex-col gap-3 text-sm text-muted-foreground sm:min-h-8 sm:flex-row sm:items-center sm:justify-between",
         className
       )}
     >

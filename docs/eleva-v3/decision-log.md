@@ -42,21 +42,31 @@ Each entry should include:
   so a staff member is sent no more names than the page they asked for.
 - **Each read of a queue page is recorded** (`clinic_verification.listed`,
   `partner_application.listed`): who read, which page, how many rows, and
-  how the read was made (`via`: at the console, or by a token or a key), in
+  how the read was authenticated (`via`: a browser session, a token or a
+  key), in
   the same transaction as the read, so nothing is shown when the record
   cannot be written. Never the names. A page spans many clinics or
   practices, so the record sits under the staff workspace of the reader. A
   key walking every page and a person paging must not look the same
-  afterwards (the second panel's finding).
+  afterwards (the second panel's finding). `via` tells a key from a
+  session; it cannot tell a person from a script that holds their session
+  cookie: that takes a look at how many pages one reader took and how
+  fast, which the breach runbook now names.
 - **A record means "served", and care was taken that it means no more.**
   Nothing fetches a queue ahead of the reader: the pager's links and the
   "back to the queue" links on a review are never prefetched, and the tab
   title is built from the address, not from a read (the first version read
   the queue for the title, and Next can ask for a page's title before a
-  visit: the review caught it). Two cases are still recorded more than a
-  reader would expect: an address with a page past the end is read, then
-  the reader is sent to the last page and that is read too; and Back shows
-  the rows the browser kept, with no new read and no new record.
+  visit: the review caught it). The guarantee is `prefetch={false}` on
+  those links, which Next documents as never fetching ahead, and the
+  title's unit test: the browser test below ran on the dev server, where
+  Next fetches nothing ahead anyway, so its "resting on a link" steps
+  cannot fail for that reason. Two mismatches remain. Recorded twice: an
+  address with a page past the end is read, then the reader is sent to
+  the last page and that is read too. Shown again without a record: Back
+  shows the rows the browser kept, with no new read. The brief asked for
+  "Page 2 of 5" in the tab title; it says "Page 2", because knowing the
+  5 would take a second, recorded read.
 - The page is in the address (`/clinics?page=2`), so Back, a reload and a
   shared link show the same rows. Page 1 has no parameter. A value that is
   not a page goes to page 1, and a page past the end (the queue shrank
@@ -102,16 +112,19 @@ Each entry should include:
   in id order; 26 listed profiles made at the same moment are each on
   exactly one page, with every licence to check before them.
 - **In the real console** (`e2e/admin-clinics.spec.ts`, opt-in, local API
-  and console, signed in as staff, 26 filings seeded): 25 rows and "Showing
-  1 to 25 of N"; Next is a link to `?page=2`; the tab reads "Clinic
-  verifications · Page 2"; the keyboard's place is the heading, described
-  by the range; **two pages served leave exactly two records, both
-  `via: cookie`**, with the pointer resting on a link in between; a reload
-  keeps the page; `?page=999` and `?page=123456` end on the last page with
+  and console on the dev server, signed in as staff, 51 filings seeded): 25
+  rows and "Showing 1 to 25 of N"; Next is a link to `?page=2`, a page in
+  the middle with both ways on; the tab reads "Clinic verifications · Page
+  2"; the keyboard's place is the heading, described by the range, as the
+  table is; **two pages served leave exactly two records, both
+  `via: cookie`**; a reload keeps the page; a filing opened from page 2
+  and the browser's Back show page 2 again with no new record;
+  `?page=999` and `?page=123456` end on the last page with
   the end sentence; `abc`, `0` and `1` end on the clean address; opening a
   filing and resting on its link back reads nothing, pressing it reads
-  once; Portuguese and Spanish; a phone in the dark theme with nothing
-  running off the side. Captures in
+  once; the first and second page's sentence in Portuguese and Spanish; a
+  phone in the dark theme with nothing running off the side; a control
+  reached with Tab, for the focus outline. Captures in
   `design-audit/captures/2026-11-23-staff-queue-pager-after/13-admin/`
   (the queue before this slice is `2026-11-21-admin-clinics-after/13-admin/01`).
   `pnpm e2e:pager` (6 cases) still covers each state of the footer on a
@@ -128,7 +141,9 @@ Each entry should include:
   chooses and shown to every staff member, has to exist before the console
   is used in production. Also for the DPO (P-02, P-03, P-07), named in the
   retention matrix: how long `.listed` and `.opened` records are kept; who
-  may read colleagues' access records; whether logging employees' reads
+  may read colleagues' access records, who must review them and how
+  often; whether a token or an API key should read these queues at all
+  (the code allows it and labels it; a key cannot decide); whether logging employees' reads
   needs a review under employment law; whether a record per page (which
   cannot say whose rows were on it) is enough; the record of processing
   that names staff as data subjects of the access log.
@@ -147,7 +162,18 @@ Each entry should include:
   the licence queue's second page on Postgres, the skeleton in columns,
   the end sentence that wraps whole, wider controls on a phone, the
   Spanish and Portuguese of the staff sentence, and this entry's plain
-  statement that the sentence is interim.
+  statement that the sentence is interim. Third panel: engineering 8.6, UI
+  8.4, UX and writing 8.6, trust and accessibility 8.5. From it, in the
+  fourth commit: columns of a fixed width, so a page with longer names
+  does not move them; a footer as tall with controls as without, and under
+  the loading state; a focus outline on the controls that can be seen in
+  the light theme; taller controls on a phone; the licence queue's order
+  in the API description and the breach runbook's list of audited reads,
+  both of which still said the old thing; a page pattern in the API
+  description that refuses what the API refuses; a reason on the 422 for a
+  repeated `page`; a heading that no longer takes focus on a later return
+  to a queue; and a browser test with a real middle page, the browser's
+  Back, and the main sentence in all three languages. Not scored again.
 - Left for later, each from a judge: DM Sans as shipped has no tabular
   figures, so the range's width moves with its digits (the class was
   removed; a font build with them is a kit change, 13.32); the pager's

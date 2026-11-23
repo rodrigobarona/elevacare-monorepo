@@ -363,12 +363,13 @@ test.describe("Phase 12 — staff verify a clinic", () => {
   }) => {
     test.setTimeout(300_000)
     const sql = neon(process.env.DATABASE_URL!)
-    // 26 more filings, sent long before anything else in the queue, so
-    // they fill its first 26 places whatever the database already holds.
+    // 51 more filings, sent long before anything else in the queue, so
+    // they fill its first 51 places whatever the database already holds:
+    // a first page, a page in the middle and a last one.
     await sql`
       INSERT INTO auth.organization (name, slug, type)
       SELECT 'Paging clinic ' || n, ${pagingSlugs} || n, 'team'
-      FROM generate_series(1, 26) AS n
+      FROM generate_series(1, 51) AS n
     `
     await sql`
       INSERT INTO clinic_profiles (org_id, slug, display_name, country_code, billing_address, specialties)
@@ -407,19 +408,29 @@ test.describe("Phase 12 — staff verify a clinic", () => {
     await expect(
       pages.getByRole("link", { name: "Previous page" })
     ).toHaveAttribute("aria-disabled", "true")
-    await shot(page, "06-clinic-queue-page-1.desktop")
+    // The rows and the heading point at the range, so both read it.
+    await expect(page.getByRole("grid")).toHaveAttribute(
+      "aria-describedby",
+      "queue-range"
+    )
+    await shot(page, "06-clinic-queue-page-1.desktop", true)
 
     // Next is a link: the pointer rests on it, then presses it.
     const next = pages.getByRole("link", { name: "Next page" })
     await next.hover()
     await next.click()
     await expect(page).toHaveURL(/\/clinics\?page=2$/, { timeout: 60_000 })
-    await expect(range).toHaveText(/^Showing (26 to \d+|row 26) of \d+/)
+    await expect(range).toHaveText(/^Showing 26 to 50 of \d+$/)
     await expect(page).toHaveTitle("Clinic verifications · Page 2")
+    // A page in the middle has both ways on.
+    await expect(
+      pages.getByRole("link", { name: "Previous page" })
+    ).toHaveAttribute("href", "/clinics")
+    await expect(next).toHaveAttribute("href", "/clinics?page=3")
     // The keyboard continues from the heading, which then reads the range.
     await expect(heading).toBeFocused()
     await expect(heading).toHaveAttribute("aria-describedby", "queue-range")
-    await shot(page, "07-clinic-queue-page-2.desktop")
+    await shot(page, "07-clinic-queue-page-2.desktop", true)
 
     // Two pages were served and two are on record, each with how it was
     // read. Resting on a link and the tab title read nothing.
@@ -430,11 +441,30 @@ test.describe("Phase 12 — staff verify a clinic", () => {
     ])
     expect(served).toHaveLength(2)
 
+    // The keyboard's place on a control can be seen: reached with Tab, as
+    // a keyboard user reaches it.
+    await pages.getByRole("link", { name: "Previous page" }).focus()
+    await page.keyboard.press("Tab")
+    await expect(next).toBeFocused()
+    await shot(page, "07-clinic-queue-page-2.focus.desktop", true)
+
     // The page is in the address: a reload shows the same rows.
     await page.reload()
-    await expect(range).toHaveText(/^Showing (26 to \d+|row 26) of \d+/, {
+    await expect(range).toHaveText(/^Showing 26 to 50 of \d+$/, {
       timeout: 60_000,
     })
+
+    // A filing opened from page 2, then the browser's Back: page 2 again,
+    // with the rows the browser kept and no new read of the queue.
+    const beforeBack = (await reads()).length
+    await page.getByRole("row").nth(1).click()
+    await expect(page.getByText("What the clinic sent")).toBeVisible({
+      timeout: 60_000,
+    })
+    await page.goBack()
+    await expect(page).toHaveURL(/\/clinics\?page=2$/, { timeout: 60_000 })
+    await expect(range).toHaveText(/^Showing 26 to 50 of \d+$/)
+    expect((await reads()).length).toBe(beforeBack)
 
     // A page past the end is the last page, and the address says which.
     await page.goto(`${adminUrl}/clinics?page=999`)
@@ -448,7 +478,7 @@ test.describe("Phase 12 — staff verify a clinic", () => {
     await expect(
       pages.getByRole("link", { name: "Next page" })
     ).toHaveAttribute("aria-disabled", "true")
-    await shot(page, "08-clinic-queue-last-page.desktop")
+    await shot(page, "08-clinic-queue-last-page.desktop", true)
 
     // A number too large to be a page is past the end too.
     await page.goto(`${adminUrl}/clinics?page=123456`)
@@ -483,14 +513,21 @@ test.describe("Phase 12 — staff verify a clinic", () => {
       await page
         .context()
         .addCookies([{ name: "ELEVA_LOCALE", value: locale, url: adminUrl }])
+      await page.goto(`${adminUrl}/clinics`)
+      await expect(range).toHaveText(
+        locale === "pt"
+          ? /^A mostrar 1 a 25 de \d+$/
+          : /^Mostrando del 1 al 25 de \d+$/,
+        { timeout: 60_000 }
+      )
       await page.goto(`${adminUrl}/clinics?page=2`)
       await expect(range).toHaveText(
         locale === "pt"
-          ? /^A mostrar (26 a \d+|a linha 26) de \d+/
-          : /^Mostrando (del 26 al \d+|la fila 26) de \d+/,
+          ? /^A mostrar 26 a 50 de \d+$/
+          : /^Mostrando del 26 al 50 de \d+$/,
         { timeout: 60_000 }
       )
-      await shot(page, `09-clinic-queue-page-2.${locale}.desktop`)
+      await shot(page, `09-clinic-queue-page-2.${locale}.desktop`, true)
     }
     await page.context().close()
 

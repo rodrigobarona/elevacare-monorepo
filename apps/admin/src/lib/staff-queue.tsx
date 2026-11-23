@@ -36,7 +36,7 @@ export async function requestedQueuePage(
   // API answers the last page and the address follows.
   if (
     typeof raw === "string" &&
-    /^[1-9]\d{4,15}$/.test(raw) &&
+    /^[1-9]\d{4,}$/.test(raw) &&
     Number(raw) > MAX_PAGE
   ) {
     return MAX_PAGE

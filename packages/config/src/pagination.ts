@@ -9,8 +9,12 @@ export const STAFF_QUEUE_PAGE_SIZE = 25
 /** The highest page a request may name. A larger number is not a page. */
 export const MAX_PAGE = 10_000
 
-/** What a page number looks like in an address: digits, no sign, no zero in front. */
-export const PAGE_PARAM_PATTERN = /^[1-9]\d{0,4}$/
+/**
+ * What a page number looks like in an address: digits, no sign, no zero in
+ * front, from 1 to `MAX_PAGE`. The limit is written into the pattern so a
+ * schema made from it (the OpenAPI parameter) refuses what the API refuses.
+ */
+export const PAGE_PARAM_PATTERN = /^(?:[1-9]\d{0,3}|10000)$/
 
 export interface PageWindow {
   /** The page shown, from 1: the one asked for, pulled back inside the list. */
