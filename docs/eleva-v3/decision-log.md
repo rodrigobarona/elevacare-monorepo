@@ -78,10 +78,12 @@ Each entry should include:
   Nothing was run against Better Stack: the address shape, `/fail` and the
   404 for an unknown token are from its documentation and a probe with a
   made-up token.
-- Research: `research/13.18-job-heartbeats.md` in the session notes
-  (Better Stack, Sentry Cron Monitors, Vercel Cron and QStash delivery,
-  Healthchecks.io and the SRE book on job monitoring). Sentry Cron Monitors
-  were the alternative: more per job, but one more paid item and the same
+- Read before building: Better Stack's heartbeat guide and API
+  (betterstack.com/docs/uptime/cron-and-heartbeat-monitor), Sentry's Cron
+  Monitors for Next.js, Vercel's cron delivery rules ("best effort", may
+  skip, may deliver twice, no retry), QStash's retry rules, and
+  Healthchecks.io and the SRE book on monitoring scheduled jobs. Sentry
+  Cron Monitors were the alternative: more per job, but one more paid item and the same
   vendor that reports errors. The reporter has one seam, so a second place
   to report can be added without touching a job.
 
