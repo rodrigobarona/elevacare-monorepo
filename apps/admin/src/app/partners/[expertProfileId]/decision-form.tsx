@@ -14,11 +14,7 @@ import { Button } from "@eleva/ui/components/button"
 import { CheckboxField } from "@eleva/ui/components/checkbox-field"
 import { Label } from "@eleva/ui/components/label"
 import { Textarea } from "@eleva/ui/components/textarea"
-import {
-  DecisionRestoredNotice,
-  DecisionSignInRefusal,
-  useDecisionSignIn,
-} from "@/components/decision-sign-in"
+import { useDecisionSignIn } from "@/components/decision-sign-in"
 import { decideLicence, type DecideLicenceError } from "./actions"
 
 interface Props {
@@ -47,16 +43,13 @@ export function DecisionForm({
   const [error, setError] = React.useState<{
     decision: Decision
     code: DecideLicenceError
-    /** Counts the presses, so a second refusal is said again. */
-    press: number
   } | null>(null)
-  const presses = React.useRef(0)
 
   const allChecked = LICENCE_CHECKLIST_ITEMS.every((item) => checked[item])
   const hasReason = reason.trim().length > 0
 
   // What is on the form survives signing in again, and comes back once.
-  const signIn = useDecisionSignIn({
+  const signIn = useDecisionSignIn<Decision>({
     version: submittedAt,
     items: LICENCE_CHECKLIST_ITEMS,
     maxText: REASON_MAX_LENGTH,
@@ -72,13 +65,11 @@ export function DecisionForm({
 
   async function decide(decision: Decision) {
     setError(null)
-    // A sign-in the page already knows is too old is answered here: the
-    // API would refuse it, and an old session that tries to decide is a
-    // line in its log worth keeping for the ones nobody expected.
-    presses.current += 1
-    const press = presses.current
+    signIn.clearRefusal()
+    // A sign-in the page already knows is too old is answered here,
+    // without asking the API for a refusal it is sure to give.
     if (signIn.expired) {
-      setError({ decision, code: "step-up", press })
+      signIn.refuse(decision)
       return
     }
     setPending(decision)
@@ -93,7 +84,9 @@ export function DecisionForm({
       .catch(() => ({ ok: false as const, error: "failed" as const }))
       .finally(() => setPending(null))
     if (!result.ok) {
-      setError({ decision, code: result.error, press })
+      // The API said the sign-in is too old: the same message.
+      if (result.error === "step-up") signIn.refuse(decision)
+      else setError({ decision, code: result.error })
       return
     }
     signIn.forget()
@@ -101,12 +94,13 @@ export function DecisionForm({
     router.refresh()
   }
 
-  function refusal(shown: boolean) {
-    if (!error || !shown) return null
-    // Signing in again is a routine step, not something that went wrong.
-    if (error.code === "step-up") {
-      return <DecisionSignInRefusal key={error.press} />
-    }
+  // Beside the button that was pressed: what went wrong, or, on an old
+  // sign-in, the calm "not saved, sign in again" (a routine step, not
+  // something that went wrong).
+  function refusal(shown: (decision: Decision) => boolean) {
+    const signInAgain = signIn.refusalFor(shown)
+    if (signInAgain) return signInAgain
+    if (!error || !shown(error.decision)) return null
     return (
       <Alert variant="destructive" role="alert">
         <AlertDescription data-testid="licence-decision-error">
@@ -118,7 +112,7 @@ export function DecisionForm({
 
   return (
     <div className="space-y-6">
-      <DecisionRestoredNotice returned={signIn.returned} />
+      {signIn.notice}
       <div className="space-y-3">
         <p className="text-sm text-muted-foreground">{t("checklistHelp")}</p>
         {LICENCE_CHECKLIST_ITEMS.map((item) => (
@@ -131,7 +125,6 @@ export function DecisionForm({
             }
           />
         ))}
-        {refusal(error?.decision === "approve")}
         <Button
           isDisabled={!allChecked || pending !== null}
           isPending={pending === "approve"}
@@ -140,6 +133,8 @@ export function DecisionForm({
         >
           {pending === "approve" ? t("approving") : t("approve")}
         </Button>
+        {/* After the button, so it does not move under the pointer. */}
+        {refusal((decision) => decision === "approve")}
       </div>
 
       <div className="space-y-3 border-t pt-6">
@@ -161,7 +156,6 @@ export function DecisionForm({
             {t("reasonHelp")}
           </p>
         </div>
-        {refusal(error !== null && error.decision !== "approve")}
         <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
@@ -181,6 +175,7 @@ export function DecisionForm({
             {pending === "reject" ? t("saving") : t("reject")}
           </Button>
         </div>
+        {refusal((decision) => decision !== "approve")}
       </div>
     </div>
   )

@@ -188,6 +188,53 @@ export const authClient = createAuthClient({
   ],
 }) as unknown as ElevaAuthClient
 
+/** The session this browser carries, as the auth server reports it. */
+export interface BrowserSession {
+  userId: string
+  email: string
+  /** The workspace the session is working in, if it has chosen one. */
+  activeOrganizationId: string | null
+  /** When the person signed in, or null when it cannot be read. */
+  startedAt: Date | null
+}
+
+/**
+ * Asks the auth server which session this browser carries now: who, in
+ * which workspace, and since when. Null when signed out or when the answer
+ * cannot be read. For a page that needs to notice a sign-in made in
+ * another tab without loading anything else.
+ */
+export async function readBrowserSession(): Promise<BrowserSession | null> {
+  try {
+    const { data } = await authClient.getSession()
+    const session = data?.session as Record<string, unknown> | undefined
+    const user = data?.user as Record<string, unknown> | undefined
+    if (
+      !session ||
+      !user ||
+      typeof user.id !== "string" ||
+      typeof user.email !== "string"
+    ) {
+      return null
+    }
+    const started =
+      typeof session.createdAt === "string" || session.createdAt instanceof Date
+        ? new Date(session.createdAt)
+        : null
+    return {
+      userId: user.id,
+      email: user.email,
+      activeOrganizationId:
+        typeof session.activeOrganizationId === "string"
+          ? session.activeOrganizationId
+          : null,
+      startedAt: started && !Number.isNaN(started.getTime()) ? started : null,
+    }
+  } catch {
+    return null
+  }
+}
+
 /**
  * The narrowest Google scopes that cover what Eleva does: list the
  * calendars, read busy times only (never what is inside an event), and

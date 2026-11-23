@@ -10,7 +10,10 @@ import { consoleReturnTo } from "@eleva/auth/return-to"
  */
 
 /** The part of `Storage` a draft needs. */
-export type DraftStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">
+export type DraftStorage = Pick<
+  Storage,
+  "getItem" | "setItem" | "removeItem" | "key" | "length"
+>
 
 /** What a person had entered when they left to sign in. */
 export interface KeptDraft {
@@ -40,6 +43,11 @@ export type DraftReturn =
   | { kind: "none" }
   /** They left to sign in with nothing entered. */
   | { kind: "empty" }
+  /**
+   * Their own draft, with something in it, kept too long ago to give
+   * back: they are told, so it does not vanish without a word.
+   */
+  | { kind: "lapsed" }
   | { kind: "restored"; ticks: string[]; text: string }
   /** The details changed while they were away: the ticks are dropped. */
   | { kind: "changed"; ticks: []; text: string }
@@ -131,9 +139,10 @@ export function takeDraft(
 
 /**
  * What to give back to the person now on the page. Someone else's draft is
- * never given back, nor one kept more than `DRAFT_MAX_AGE_MS` ago. The text
- * always is; the ticks only when they were made on the details now shown,
- * and only those the form still has.
+ * never given back, nor one kept more than `DRAFT_MAX_AGE_MS` ago (their
+ * own is then `lapsed`, so they can be told). The text always is; the
+ * ticks only when they were made on the details now shown, and only those
+ * the form still has.
  */
 export function returnDraft(
   draft: KeptDraft | null,
@@ -147,13 +156,50 @@ export function returnDraft(
   }
 ): DraftReturn {
   if (!draft || draft.ownerId !== now.ownerId) return { kind: "none" }
-  const age = now.now - draft.keptAt
-  if (age < 0 || age > DRAFT_MAX_AGE_MS) return { kind: "none" }
   const text = draft.text.slice(0, now.maxText)
   const ticks = draft.ticks.filter((tick) => now.ticks.includes(tick))
-  if (ticks.length === 0 && text.trim() === "") return { kind: "empty" }
+  const nothing = ticks.length === 0 && text.trim() === ""
+  const age = now.now - draft.keptAt
+  // A draft from the future is a clock that changed: not trusted either.
+  if (age < 0 || age > DRAFT_MAX_AGE_MS) {
+    return nothing ? { kind: "none" } : { kind: "lapsed" }
+  }
+  if (nothing) return { kind: "empty" }
   if (draft.version !== now.version) return { kind: "changed", ticks: [], text }
   return { kind: "restored", ticks, text }
+}
+
+/**
+ * Removes every draft under `prefix` that was kept more than
+ * `DRAFT_MAX_AGE_MS` ago, or cannot be read. A reviewer who never came
+ * back leaves nothing in the tab for longer than that. Returns how many
+ * were removed.
+ */
+export function sweepDrafts(
+  storage: DraftStorage | null,
+  prefix: string,
+  now: number
+): number {
+  if (!storage) return 0
+  try {
+    const stale: string[] = []
+    for (let index = 0; index < storage.length; index++) {
+      const key = storage.key(index)
+      if (!key?.startsWith(prefix)) continue
+      let draft: unknown = null
+      try {
+        draft = JSON.parse(storage.getItem(key) ?? "null")
+      } catch {
+        // Not a draft: removed below.
+      }
+      const age = isDraft(draft) ? now - draft.keptAt : Number.NaN
+      if (!(age >= 0 && age <= DRAFT_MAX_AGE_MS)) stale.push(key)
+    }
+    for (const key of stale) storage.removeItem(key)
+    return stale.length
+  } catch {
+    return 0
+  }
 }
 
 /**

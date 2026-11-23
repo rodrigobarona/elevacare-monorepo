@@ -7,13 +7,10 @@ import en from "../../messages/en.json"
 import es from "../../messages/es.json"
 import pt from "../../messages/pt.json"
 
-// The browser's auth client and the router are not needed to draw the
-// notices.
+// The browser's auth client is not needed to draw the notices.
 vi.mock("@eleva/auth/client", () => ({
   authClient: { signOut: vi.fn() },
-}))
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: vi.fn() }),
+  readBrowserSession: vi.fn(async () => null),
 }))
 
 import {
@@ -29,16 +26,17 @@ const MESSAGES = { en, pt, es } as const
 function signIn(msLeft: number | null): DecisionSignIn {
   return {
     msLeft,
+    startedAt: msLeft === null ? null : "2026-11-23T08:00:00.000Z",
     hours: HOURS,
-    reviewer: { id: "staff-1", email: "ana@eleva.care" },
+    reviewer: { id: "staff-1", email: "ana@eleva.care", orgId: "staff-org" },
     loginUrl: "https://eleva.care/login",
     draftKey: "eleva.decision-draft:clinic:1",
     subject: "clinic",
   }
 }
 
-// As the server counted it: nothing left, or eleven hours still to go.
-const LONG_AGO = 0
+// As the server counted it: an hour past the limit, or eleven hours to go.
+const LONG_AGO = -60 * 60 * 1000
 const FAR_AHEAD = 11 * 60 * 60 * 1000
 
 function draw(
@@ -66,7 +64,7 @@ describe("the banner on a review", () => {
     // The rule's own number, and the reason in plain words.
     expect(html).toContain(`You signed in more than ${HOURS} hours ago.`)
     expect(html).toContain(
-      "so a console left open can&#x27;t be used to decide in your name"
+      "so a console left open overnight can&#x27;t be used to decide in your name"
     )
     expect(html).toContain(
       "Your ticks and your reason stay in this tab while you sign in."
@@ -117,12 +115,14 @@ describe("the answer to a decision pressed on an old sign-in", () => {
     expect(html).toMatch(
       /role="alert"[^>]*>(?:(?!<button)[\s\S])*That decision wasn/
     )
+    // Its first words stand out as the title: not grey help text.
+    expect(html).toMatch(/data-slot="alert-title"[^>]*>That decision wasn/)
     expect(html).not.toMatch(/role="alert"[^>]*>(?:(?!<\/div>)[\s\S])*<button/)
     const text = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ")
     expect(text.trim().startsWith("That decision wasn&#x27;t saved.")).toBe(
       true
     )
-    expect(html).toContain("Your ticks and your reason are kept.")
+    expect(html).toContain("Your ticks and your reason are still here.")
     expect(html).toMatch(/data-testid="sign-in-again"[^>]*>Sign in again</)
     expect(html).not.toMatch(/text-destructive/)
   })

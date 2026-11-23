@@ -643,7 +643,7 @@ test.describe("Phase 12 — staff verify a clinic", () => {
     await expect(banner).toBeVisible({ timeout: 90_000 })
     await expect(banner).toContainText("Sign in again before you decide")
     await expect(banner).toContainText(
-      "You signed in more than 12 hours ago. A decision needs a sign-in from the last 12 hours, so a console left open can't be used to decide in your name."
+      "You signed in more than 12 hours ago. A decision needs a sign-in from the last 12 hours, so a console left open overnight can't be used to decide in your name."
     )
     await expect(banner).toContainText(
       "Your ticks and your reason stay in this tab while you sign in."
@@ -676,9 +676,15 @@ test.describe("Phase 12 — staff verify a clinic", () => {
     await page.getByTestId("clinic-needs-changes").click()
     const refusal = page.getByTestId("decision-sign-in-refusal")
     await expect(refusal).toBeVisible()
+    await expect(refusal).toContainText("That decision wasn't saved.")
     await expect(refusal).toContainText(
-      "That decision wasn't saved. You signed in more than 12 hours ago, and a decision needs a newer sign-in. Your ticks and your reason are kept."
+      "You signed in more than 12 hours ago, and a decision needs a newer sign-in. Your ticks and your reason are still here."
     )
+    // After the buttons: the one that was pressed did not move.
+    const pressed = (await page
+      .getByTestId("clinic-needs-changes")
+      .boundingBox())!
+    expect((await refusal.boundingBox())!.y).toBeGreaterThan(pressed.y)
     // The words are the alert; the button beside them is not part of it.
     await expect(refusal.getByRole("alert")).toContainText(
       "That decision wasn't saved."
@@ -749,6 +755,9 @@ test.describe("Phase 12 — staff verify a clinic", () => {
     await expect(page.getByTestId("login-magic-sent")).toBeVisible({
       timeout: 60_000,
     })
+    await expect(page.getByTestId("login-magic-sent")).toContainText(
+      "After you open the link, come back to this tab. It carries on from here."
+    )
     cookie = await expertSession(request)
     await page.context().addCookies(
       cookie.split("; ").map((pair) => {
@@ -845,7 +854,7 @@ test.describe("Phase 12 — staff verify a clinic", () => {
     // The reason is back; the tick is not, because it was made on other
     // details; and a sentence says why.
     await expect(changed).toHaveText(
-      "You're signed in again. The clinic sent new details while you were away, so the checks are unticked. Your reason is still here.",
+      "You're signed in again. The clinic has sent new details, so the checks are unticked. Your reason is still here.",
       { timeout: 90_000 }
     )
     await expect(
@@ -921,5 +930,59 @@ test.describe("Phase 12 — staff verify a clinic", () => {
     ).toBeVisible({ timeout: 90_000 })
     await expect(ahead.getByTestId("decision-sign-in-banner")).toHaveCount(0)
     await ahead.context().close()
+
+    // Two tabs. A review opened on an old sign-in, with a reason on it and
+    // a press already refused; the reviewer then signs in again somewhere
+    // else and enters the staff console there.
+    await signedInHoursAgo(cookie, 13)
+    const other = await pageWithSession(browser, withoutCache(cookie))
+    await other.goto(`${adminUrl}/clinics/${captures}`)
+    const stale = other.getByTestId("decision-sign-in-banner")
+    await expect(stale).toBeVisible({ timeout: 90_000 })
+    await other.getByTestId("clinic-decision-reason").fill(REASON)
+    await other.getByTestId("clinic-needs-changes").click()
+    await expect(other.getByTestId("decision-sign-in-refusal")).toBeVisible()
+    const opened = async () =>
+      (
+        (await sql`
+          SELECT count(*)::int AS times FROM audit_outbox
+          WHERE action = 'clinic_verification.opened'
+            AND entity_id = ${captures}::uuid
+        `) as { times: number }[]
+      )[0]!.times
+    const readsBefore = await opened()
+
+    cookie = await expertSession(request)
+    const entered = await request.post(
+      `${apiUrl}/auth/organization/set-active`,
+      { headers: authHeaders(cookie), data: { organizationId: staffOrgId } }
+    )
+    expect(entered.status(), await entered.text()).toBe(200)
+    cookie = withCookies(cookie, sessionCookie(entered))
+    await other.context().addCookies(
+      cookie.split("; ").map((pair) => {
+        const [name, ...rest] = pair.split("=")
+        return { name: name!, value: rest.join("="), url: adminUrl }
+      })
+    )
+    // Back on the first tab: it asks the session, not the filing. The
+    // banner and the old answer go by themselves, the reason stays, and
+    // no new reading of the filing is on record.
+    await expect(async () => {
+      await other.evaluate(() => window.dispatchEvent(new Event("focus")))
+      await expect(stale).toHaveCount(0, { timeout: 2_000 })
+    }).toPass({ timeout: 45_000 })
+    await expect(other.getByTestId("decision-sign-in-refusal")).toHaveCount(0)
+    await expect(other.getByTestId("clinic-decision-reason")).toHaveValue(
+      REASON
+    )
+    expect(await opened()).toBe(readsBefore)
+    // And the press now reaches the API, which accepts it.
+    await other.getByTestId("clinic-needs-changes").click()
+    await expect(other.getByTestId("clinic-filing-note")).toContainText(
+      "You asked for changes.",
+      { timeout: 60_000 }
+    )
+    await other.context().close()
   })
 })

@@ -7,6 +7,7 @@ import {
   keepDraft,
   returnDraft,
   signInAgainUrl,
+  sweepDrafts,
   takeDraft,
   type DraftStorage,
   type KeptDraft,
@@ -18,6 +19,10 @@ function memoryStorage(): DraftStorage & { size: () => number } {
     getItem: (key) => kept.get(key) ?? null,
     setItem: (key, value) => void kept.set(key, value),
     removeItem: (key) => void kept.delete(key),
+    key: (index) => [...kept.keys()][index] ?? null,
+    get length() {
+      return kept.size
+    },
     size: () => kept.size,
   }
 }
@@ -31,6 +36,12 @@ const refusing: DraftStorage = {
     throw new Error("blocked")
   },
   removeItem: () => {
+    throw new Error("blocked")
+  },
+  key: () => {
+    throw new Error("blocked")
+  },
+  get length(): number {
     throw new Error("blocked")
   },
 }
@@ -110,6 +121,30 @@ describe("keeping a draft while someone signs in", () => {
   })
 })
 
+describe("drafts nobody came back for", () => {
+  it("are removed after an hour, with anything unreadable; the rest stay", () => {
+    const storage = memoryStorage()
+    const prefix = "eleva.decision-draft:"
+    keepDraft(storage, `${prefix}clinic:fresh`, draft)
+    keepDraft(storage, `${prefix}clinic:old`, {
+      ...draft,
+      keptAt: KEPT_AT - DRAFT_MAX_AGE_MS - 1,
+    })
+    storage.setItem(`${prefix}expert:broken`, "not json")
+    storage.setItem("something-else", "kept")
+    expect(sweepDrafts(storage, prefix, KEPT_AT)).toBe(2)
+    expect(storage.getItem(`${prefix}clinic:fresh`)).not.toBeNull()
+    expect(storage.getItem(`${prefix}clinic:old`)).toBeNull()
+    expect(storage.getItem(`${prefix}expert:broken`)).toBeNull()
+    expect(storage.getItem("something-else")).toBe("kept")
+  })
+
+  it("never throws where storage is refused", () => {
+    expect(sweepDrafts(refusing, "eleva.decision-draft:", KEPT_AT)).toBe(0)
+    expect(sweepDrafts(null, "eleva.decision-draft:", KEPT_AT)).toBe(0)
+  })
+})
+
 describe("what a returning person gets back", () => {
   it("everything, on the details they checked", () => {
     expect(returnDraft(draft, now)).toEqual({
@@ -141,13 +176,29 @@ describe("what a returning person gets back", () => {
     expect(
       returnDraft(draft, { ...now, now: KEPT_AT + DRAFT_MAX_AGE_MS })
     ).toMatchObject({ kind: "restored" })
+    // Their own draft, with something in it: told, not silently dropped.
     expect(
       returnDraft(draft, { ...now, now: KEPT_AT + DRAFT_MAX_AGE_MS + 1 })
-    ).toEqual({ kind: "none" })
+    ).toEqual({ kind: "lapsed" })
     // A draft from the future is a clock that changed: not trusted.
     expect(returnDraft(draft, { ...now, now: KEPT_AT - 1 })).toEqual({
-      kind: "none",
+      kind: "lapsed",
     })
+    // Nothing had been entered: nothing to say.
+    expect(
+      returnDraft(
+        { ...draft, ticks: [], text: "" },
+        { ...now, now: KEPT_AT + DRAFT_MAX_AGE_MS + 1 }
+      )
+    ).toEqual({ kind: "none" })
+    // Someone else's old draft is still nobody's business.
+    expect(
+      returnDraft(draft, {
+        ...now,
+        ownerId: "staff-2",
+        now: KEPT_AT + DRAFT_MAX_AGE_MS + 1,
+      })
+    ).toEqual({ kind: "none" })
   })
 
   it("says nothing was entered when nothing was", () => {

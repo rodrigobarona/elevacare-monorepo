@@ -317,6 +317,7 @@
     "signedIn": "Já está. A abrir o seu Espaço…",
     "magicSentTitle": "Veja o seu email",
     "magicSentBody": "Enviámos um link de acesso para {email}. É válido durante 5 minutos.",
+    "magicSentReturn": "Depois de abrir o link, volte a este separador. Continua a partir daqui.",
     "openGmail": "Abrir o Gmail",
     "openOutlook": "Abrir o Outlook",
     "resend": "Reenviar link",

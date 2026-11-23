@@ -3,7 +3,11 @@
 import { useEffect, useRef, useState, type FormEvent } from "react"
 import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { authClient, MFA_RETURN_TO_STORAGE_KEY } from "@eleva/auth/client"
+import {
+  authClient,
+  MFA_RETURN_TO_STORAGE_KEY,
+  readBrowserSession,
+} from "@eleva/auth/client"
 import { toGatewayCallbackURL } from "@eleva/auth/return-to"
 import {
   ArrowRightIcon,
@@ -77,8 +81,16 @@ export function LoginForm() {
     let gone = false
     const look = async () => {
       if (gone || document.visibilityState !== "visible") return
-      const { data } = await authClient.getSession()
-      if (gone || !data?.session) return
+      const now = await readBrowserSession()
+      // Only a session of the person the link was sent to: someone signed
+      // in as another person stays on this step until the link is used.
+      if (
+        gone ||
+        !now ||
+        now.email.toLowerCase() !== email.trim().toLowerCase()
+      ) {
+        return
+      }
       gone = true
       setSignedIn(true)
       // A full load, as after every sign-in: the next page reads the new
@@ -92,7 +104,7 @@ export function LoginForm() {
       document.removeEventListener("visibilitychange", look)
       window.removeEventListener("focus", look)
     }
-  }, [step, next])
+  }, [step, next, email])
 
   function goTo(nextStep: Step) {
     setError(null)
@@ -188,6 +200,7 @@ export function LoginForm() {
           title={t("magicSentTitle")}
           description={t("magicSentBody", { email })}
         />
+        <p className="text-sm text-muted-foreground">{t("magicSentReturn")}</p>
         <InboxActions email={email} onResend={sendMagicLink} />
         {errorText}
         <Button

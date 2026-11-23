@@ -73,8 +73,11 @@ Each entry should include:
   says why. Where the browser will not keep a draft, the message says to
   copy the reason first: the page promises only what it can do, and a
   write that fails at the press keeps the reviewer on the page with that
-  sentence. A draft is given back for an hour (`DRAFT_MAX_AGE_MS`): after
-  that it is an abandoned one. It is removed when signing out fails (the
+  sentence under the button. A draft is given back for an hour
+  (`DRAFT_MAX_AGE_MS`): after that the reviewer is told "It took a while,
+  so what you had entered is no longer here", and drafts nobody came back
+  for are removed from the tab the next time a review opens in it. It is
+  removed when signing out fails (the
   form still has everything, and it must not come back later under
   "you're signed in again") and when the review can no longer be decided.
   It holds the reviewer's id, the filing's date, the names of the ticks
@@ -97,18 +100,25 @@ Each entry should include:
   the page counts down from there. The first version compared a moment
   with the browser's clock: a clock twelve hours ahead would have made
   every new sign-in look old, with no way out, since the page answered
-  the press itself (the panel caught it). A page that was drawn on an old
-  sign-in asks the server again when it comes to the front, so a reviewer
-  who signed in again in another tab is not told to do it twice; what is
-  on the form stays.
+  the press itself (the first panel caught it). A page that believes its
+  sign-in is too old asks the session, when it comes to the front,
+  whether the browser now carries a newer sign-in of the same person in
+  the same staff workspace (`readBrowserSession` in `@eleva/auth/client`,
+  at most every five seconds). If so the banner and the old answer go by
+  themselves and a press reaches the API. Only the session is read: the
+  second version redrew the whole page instead, and each redraw read the
+  filing again (a recorded read, so one reading became several) and could
+  take the form away with what was on it (the second panel caught it).
 - **An email link opens another tab.** The sign-in page offers Google, a
   password, a passkey or an email link. The link opens wherever the mail
   app opens it, and the draft is in the tab that asked for it. The
   sign-in page's "check your inbox" step now goes on by itself once the
   link has been used and the person comes back to that tab
-  (`apps/account` `login-form.tsx`): that tab has the draft. The tab the
-  link opened shows the review with an empty form, so the sentence says
-  "stay in this tab", not "on this page".
+  (`apps/account` `login-form.tsx`): that tab has the draft. It goes on
+  only for the person the link was sent to, and the step now says "After
+  you open the link, come back to this tab. It carries on from here."
+  The tab the link opened shows the review with an empty form, so the
+  banner says "stay in this tab", not "on this page".
 - **Signing out first.** The sign-in page lets a signed-in person sign in
   again, which would leave the old session alive beside the new one. The
   button ends the old session, then leaves. If that fails, the reviewer
@@ -150,7 +160,14 @@ Each entry should include:
   the "Your decision" heading when nothing had been entered, both with a
   ring that can be seen (2.4.3, 2.4.7); nothing leaves the page without a
   press (3.2.2). Reject on a sign-in the page knows is too old asks for
-  no confirmation first.
+  no confirmation first. The refusal's first sentence is its title, in
+  the page's own text colour, and the message comes after the buttons,
+  so the one that was pressed does not move. The brief asked for a
+  status role on the notice after the return; it is a note that takes
+  focus, because a status that arrives with its words is often not said.
+- Both forms use one piece for the press on an old sign-in and its
+  answer (`useDecisionSignIn`): they kept their own copies in the first
+  version, which is how they had drifted before.
 - Proof: unit tests for the draft's rules (kept, given back once, someone
   else, new details, nothing entered, a browser that refuses storage), the
   console path (what is refused, and that it can only resolve on the
@@ -180,8 +197,8 @@ Each entry should include:
   factor (the same address and the same tab, not walked: the email link
   is the one walked, with the suite's helper standing in for the click in
   the mail); a laptop woken from sleep and a second open tab (handled by
-  the same listener, not walked); the licence form in a browser (same
-  component as the clinic form); the copy for a browser that refuses
+  the same listener, not walked); the licence form in a browser (its own
+  file, on the same hook and notices as the clinic form); the copy for a browser that refuses
   storage, in a browser; 320 px; staging and production, where the
   console, the gateway and the API are three hosts. There the account
   project needs `ADMIN_URL`, or a staging sign-in returns to the
@@ -197,7 +214,23 @@ Each entry should include:
   again" after a failed sign-out; "your reason is still here" following
   the field), announcements claimed from roles, a focus ring that could
   not be seen, a banner with no edge in the light theme, and a phone
-  button out of line.
+  button out of line. Second panel: 7.6, 8.4, 8.2, 8.0. Its findings are
+  the third commit: the redraw on focus described above, a page that
+  became old while open never learning of a newer sign-in, the sign-in
+  page going on for any session, a draft that lapsed without a word, a
+  refusal that looked like help text, a row that would squeeze beside the
+  sidebar, and "left open" where the rule is about a night.
+- **The third commit was not walked in a browser.** The dev database
+  stopped answering at 02:46 UTC on 2026-11-23 ("exceeded the quota",
+  Neon, HTTP 402): the local stack cannot sign anyone in, and the pull
+  request's database job fails for the same reason. The second commit's
+  journey passed in full before that (the list above). What the third
+  commit adds to the browser test is written and has never run: the two
+  tabs (the banner going from the session alone, with no new reading of
+  the filing on record), the refusal after the buttons, the sentence on
+  the "check your inbox" step, and the changed wording. Its unit tests,
+  types and lint pass. It needs one run of `e2e/admin-clinics.spec.ts`
+  once the database answers, and is not to be read as proven until then.
 - Left for later: the sign-in page still greets a reviewer in the middle
   of a decision with "Welcome back" and "Create an account" (12.8 builds
   the staff's own way in); "Sign in again" ends the session in every

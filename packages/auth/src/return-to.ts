@@ -117,7 +117,8 @@ export function sanitizeReturnTo(
  * gateway's `/dashboard` joins that path to the console's address from the
  * server's own configuration. Nothing a link carries can change the host.
  */
-const CONSOLE_PARAM = "console"
+/** The query parameter `/dashboard` reads a console path from. */
+export const CONSOLE_RETURN_PARAM = "console"
 
 // Letters, digits and the plain marks of a path, then an optional query of
 // the same (no `&`: one parameter survives the trip, which is what the
@@ -126,7 +127,7 @@ const CONSOLE_PATH = /^\/[A-Za-z0-9._~\-/]*(?:\?[A-Za-z0-9._~\-=]*)?$/
 
 /** The `returnTo` that brings a person back to `path` on the staff console. */
 export function consoleReturnTo(path: string): string {
-  return `/dashboard?${CONSOLE_PARAM}=${encodeURIComponent(path)}`
+  return `/dashboard?${CONSOLE_RETURN_PARAM}=${encodeURIComponent(path)}`
 }
 
 /**
@@ -141,9 +142,6 @@ export function consoleReturnPath(
   if (path.includes("//") || path.split("/").includes("..")) return undefined
   return raw
 }
-
-/** The query parameter `/dashboard` reads a console path from. */
-export const CONSOLE_RETURN_PARAM = CONSOLE_PARAM
 
 /** True when `raw` is a relative path we would keep, or an absolute URL on the gateway origin. */
 export function isTrustedReturnTo(

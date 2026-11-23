@@ -56,20 +56,26 @@ export function SignInAgainNotice({
       data-testid={testId}
     >
       <InfoIcon aria-hidden />
-      <div className="col-start-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+      {/* Side by side only where there is room for both: the console's
+          sidebar takes its share from 768 px up. */}
+      <div className="col-start-2 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
         <div
           className="space-y-0.5"
           role={answersAPress ? "alert" : undefined}
           data-testid="sign-in-again-words"
         >
-          {title ? <AlertTitle>{title}</AlertTitle> : null}
+          {title ? (
+            <AlertTitle className={size === "roomy" ? "font-semibold" : ""}>
+              {title}
+            </AlertTitle>
+          ) : null}
           <AlertDescription className="text-pretty">
             {children}
           </AlertDescription>
         </div>
         {/* On a phone the button lines up with the notice, not the text
             column: back under the icon, the full width. */}
-        <div className="flex shrink-0 flex-col gap-2 max-sm:-ml-6.5 sm:items-end">
+        <div className="flex shrink-0 flex-col gap-2 max-sm:-ml-6.5 sm:items-start lg:items-end">
           <Button
             variant="outline"
             // On the notice's tinted ground the kit's hairline is lost: the
@@ -87,7 +93,7 @@ export function SignInAgainNotice({
           {failure ? (
             <p
               role="alert"
-              className="text-sm text-destructive sm:max-w-56 sm:text-right"
+              className="text-sm text-destructive lg:max-w-56 lg:text-right"
               data-testid="sign-in-again-failure"
             >
               {failure}
@@ -107,10 +113,13 @@ export function SignInAgainNotice({
  */
 export function SignedInAgainNotice({
   children,
+  tone = "good",
   className,
   "data-testid": testId,
 }: {
   children: React.ReactNode
+  /** `good`: it is all back. `plain`: something to know, not good news. */
+  tone?: "good" | "plain"
   className?: string
   "data-testid"?: string
 }) {
@@ -127,12 +136,17 @@ export function SignedInAgainNotice({
       // A different ground from the warning, and an edge that stays after
       // the keyboard has moved on. Focus is only ever put here by the page.
       className={cn(
-        "rounded-xl border-primary/30 bg-primary/5 outline-none focus:ring-2 focus:ring-ring",
+        "rounded-xl outline-none focus:ring-2 focus:ring-ring",
+        tone === "good" ? "border-primary/30 bg-primary/5" : "border-border",
         className
       )}
       data-testid={testId}
     >
-      <CheckCircleIcon aria-hidden />
+      {tone === "good" ? (
+        <CheckCircleIcon weight="fill" aria-hidden />
+      ) : (
+        <InfoIcon aria-hidden />
+      )}
       <AlertDescription className="text-pretty text-foreground">
         {children}
       </AlertDescription>

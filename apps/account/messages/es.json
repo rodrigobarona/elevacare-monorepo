@@ -317,6 +317,7 @@
     "signedIn": "Ya está. Abriendo tu Espacio…",
     "magicSentTitle": "Revisa tu email",
     "magicSentBody": "Hemos enviado un enlace de acceso a {email}. Es válido durante 5 minutos.",
+    "magicSentReturn": "Cuando abras el enlace, vuelve a esta pestaña. Sigue desde aquí.",
     "openGmail": "Abrir Gmail",
     "openOutlook": "Abrir Outlook",
     "resend": "Reenviar enlace",

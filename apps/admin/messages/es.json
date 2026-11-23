@@ -167,21 +167,27 @@
   "signInAgain": {
     "banner": {
       "title": "Vuelve a iniciar sesión antes de decidir",
-      "body": "Iniciaste sesión hace más de {hours, plural, one {# hora} other {# horas}}. Una decisión necesita un inicio de sesión {hours, plural, one {de la última hora} other {de las últimas # horas}}, para que nadie pueda decidir en tu nombre desde una consola que quedó abierta."
+      "body": "Iniciaste sesión hace más de {hours, plural, one {# hora} other {# horas}}. Una decisión necesita un inicio de sesión {hours, plural, one {de la última hora} other {de las últimas # horas}}, para que nadie pueda decidir en tu nombre desde una consola que se haya quedado abierta de un día para otro."
     },
     "kept": "Lo que has marcado y el motivo que has escrito se quedan en esta pestaña mientras inicias sesión.",
     "notKept": "Copia el motivo antes de iniciar sesión: este navegador no lo guarda.",
-    "refused": "Esa decisión no se ha guardado. Iniciaste sesión hace más de {hours, plural, one {# hora} other {# horas}} y una decisión necesita un inicio de sesión más reciente.",
-    "refusedKept": "Lo que has marcado y el motivo siguen guardados.",
+    "refused": {
+      "title": "Esa decisión no se ha guardado.",
+      "body": "Iniciaste sesión hace más de {hours, plural, one {# hora} other {# horas}} y una decisión necesita un inicio de sesión más reciente.",
+      "kept": "Lo que has marcado y el motivo siguen aquí."
+    },
     "action": "Volver a iniciar sesión",
-    "actionPending": "Abriendo el inicio de sesión...",
+    "actionPending": "Abriendo...",
     "restored": "Ya has vuelto a iniciar sesión. Lo que has marcado y el motivo siguen aquí. Revísalos y decide.",
+    "restoredSome": "Ya has vuelto a iniciar sesión. Lo que habías rellenado sigue aquí. Revísalo y decide.",
+    "lapsed": "Ya has vuelto a iniciar sesión. Ha pasado un rato, así que lo que habías rellenado ya no está aquí.",
     "changed": {
-      "clinic": "Ya has vuelto a iniciar sesión. La clínica envió nuevos datos mientras tanto, así que las comprobaciones están sin marcar.",
-      "expert": "Ya has vuelto a iniciar sesión. El especialista envió nuevos datos mientras tanto, así que las comprobaciones están sin marcar."
+      "clinic": "Ya has vuelto a iniciar sesión. La clínica ha enviado nuevos datos mientras tanto, así que las comprobaciones están sin marcar.",
+      "expert": "Ya has vuelto a iniciar sesión. El especialista ha enviado nuevos datos mientras tanto, así que las comprobaciones están sin marcar."
     },
     "reasonKept": "El motivo sigue aquí.",
-    "unavailable": "No hemos podido abrir la página de inicio de sesión. Inténtalo de nuevo en un momento."
+    "unavailable": "No hemos podido abrir la página de inicio de sesión. Inténtalo de nuevo en un momento.",
+    "writeFailed": "Este navegador no ha guardado el motivo. Cópialo e inténtalo de nuevo."
   },
   "staffEntry": {
     "title": "Entrar en la consola del equipo",
