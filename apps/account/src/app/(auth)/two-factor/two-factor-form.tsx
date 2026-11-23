@@ -19,6 +19,7 @@ import {
 } from "@eleva/ui/components/card"
 import { Input } from "@eleva/ui/components/input"
 import { Label } from "@eleva/ui/components/label"
+import { authErrorMessage } from "@/components/auth-ui"
 
 function readStoredReturnTo(): string | undefined {
   try {
@@ -45,7 +46,7 @@ export function TwoFactorForm() {
       : await authClient.twoFactor.verifyTotp({ code })
     setPending(false)
     if (result.error) {
-      setError(result.error.message ?? t("errorGeneric"))
+      setError(authErrorMessage(result.error, t))
       return
     }
     const query = searchParams.get("returnTo")

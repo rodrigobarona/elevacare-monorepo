@@ -14,6 +14,7 @@ import {
 } from "@eleva/ui/components/card"
 import { Input } from "@eleva/ui/components/input"
 import { Label } from "@eleva/ui/components/label"
+import { authErrorMessage } from "@/components/auth-ui"
 
 export function ResetPasswordForm() {
   const t = useTranslations("auth")
@@ -35,7 +36,7 @@ export function ResetPasswordForm() {
     })
     setPending(false)
     if (result) {
-      setError(result.message ?? t("errorGeneric"))
+      setError(authErrorMessage(result, t))
       return
     }
     setDone(true)
@@ -52,7 +53,7 @@ export function ResetPasswordForm() {
     })
     setPending(false)
     if (result) {
-      setError(result.message ?? t("errorGeneric"))
+      setError(authErrorMessage(result, t))
       return
     }
     setDone(true)

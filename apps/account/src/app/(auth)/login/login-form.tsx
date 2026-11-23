@@ -99,7 +99,7 @@ export function LoginForm() {
     }
     if (result) {
       setPending(false)
-      setError(authErrorMessage(result, t))
+      setError(authErrorMessage(result, t, "signIn"))
       return
     }
     finish()
@@ -111,7 +111,7 @@ export function LoginForm() {
       callbackURL: next,
     })
     if (result) {
-      setError(authErrorMessage(result, t))
+      setError(authErrorMessage(result, t, "signIn"))
       return false
     }
     return true
@@ -140,7 +140,7 @@ export function LoginForm() {
       fetchOptions: { onSuccess: finish },
     })
     if (result && result.code !== "AUTH_CANCELLED") {
-      setError(authErrorMessage(result, t))
+      setError(authErrorMessage(result, t, "signIn"))
     }
   }
 

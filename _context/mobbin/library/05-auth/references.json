@@ -302,6 +302,42 @@
       "why": "'Mailchimp sync' explains how it works in a short box. Under 'Connect account' a 'Disconnected' tag with an icon sits on the same line as a 'Reconnect' button. The steps that need the connection are greyed out below.",
       "apply": "After the move, an expert's calendar row reads 'Disconnected' with one line on why and what it affects (her busy times are not blocked), and 'Reconnect' on the same row. Repeat it as one card on her Overview until it is done.",
       "query": "integrations settings with a connection that expired and needs to be reconnected"
+    },
+    {
+      "id": "05-auth/14",
+      "file": "img/14-surfshark-too-many-attempts-other-way.webp",
+      "app": "Surfshark",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/a216f75b-1823-4834-820d-c15b5a3e1685?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Sign-in paused after too many tries: the message offers another way in, as a button",
+      "why": "\"There have been too many attempts to log in.\" Under it, one line on what to do, and two buttons: \"Login with code\" and \"Ok\". The typed email stays in the form behind. The person is not left waiting with nothing to do.",
+      "apply": "When the password path is held, say that another way of signing in still works: each way has its own count, so a sign-in link, Google or a passkey do work. Eleva says it in the same sentence, in the alert, and the other ways are the buttons already on the screen. No dialog.",
+      "query": "sign in screen with too many attempts error message telling the user to wait before trying again"
+    },
+    {
+      "id": "05-auth/15",
+      "file": "img/15-vipps-wrong-code-try-again-in-5-minutes.webp",
+      "app": "Vipps",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/893a9846-5bae-4cc0-bc2c-76a9fff210f1?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A wait said as a number, without blame",
+      "why": "\"You have entered the wrong code too many times. It happens to the best of us, try again in 5 minutes.\" It says how long, and it is kind about it. \"Use Face ID\" stays available below.",
+      "apply": "Say the wait as a number taken from the answer (seconds up to a minute, minutes above), never \"later\" or a fixed \"a minute\". Eleva does not say \"you\": from an office the tries may be a colleague, so it says \"there were many tries\".",
+      "query": "verification code screen with resend code countdown and too many attempts try again later message"
+    },
+    {
+      "id": "05-auth/16",
+      "file": "img/16-agoda-resend-countdown-other-ways.webp",
+      "app": "Agoda",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/857730f8-e837-4d2b-a7fb-0ca6f89eab82?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "The countdown sits on the action, the error stays a fixed sentence, other ways are listed",
+      "why": "The error is one fixed line at the top. The time left is under \"Resend email\" (00:35), not in the error. \"Other ways to sign in\" and \"Use Password\" are links below.",
+      "apply": "Keep the alert a fixed sentence, so that a screen reader says it once, and keep any ticking number on a button, as the \"Resend in 30s\" button already does. Eleva’s wait sentence has no countdown in it.",
+      "query": "verification code screen with resend code countdown and too many attempts try again later message"
     }
   ],
   "judging_criteria": [

@@ -6,6 +6,7 @@ import { ArrowSquareOutIcon, PaperPlaneTiltIcon } from "@eleva/icons"
 import { Button } from "@eleva/ui/components/button"
 import { buttonVariants } from "@eleva/ui/components/button-variants"
 import { cn } from "@eleva/ui/lib/utils"
+import { authWaitWords } from "@eleva/auth/rate-limited"
 
 const RESEND_COOLDOWN_S = 30
 
@@ -220,11 +221,24 @@ export function oauthErrorCallbackURL(): string {
   return url.toString()
 }
 
+/** A translator of the `auth` messages. */
+type AuthMessages = (
+  key: string,
+  values?: Record<string, string | number>
+) => string
+
 export function authErrorMessage(
-  error: { code?: string; status?: number; message?: string },
-  t: (key: string) => string
+  error: {
+    code?: string
+    status?: number
+    message?: string
+    retryAfter?: unknown
+  },
+  t: AuthMessages,
+  where: "signIn" | "elsewhere" = "elsewhere"
 ): string {
-  if (error.status === 429) return t("tooManyAttempts")
+  const wait = authWaitWords(error, t, where)
+  if (wait) return wait
   switch (error.code) {
     case "INVALID_EMAIL_OR_PASSWORD":
       return t("invalidCredentials")

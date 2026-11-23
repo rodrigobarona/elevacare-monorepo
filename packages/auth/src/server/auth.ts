@@ -71,6 +71,11 @@ import {
   createSecondaryStorage,
   type AuthSecondaryStorage,
 } from "./secondary-storage"
+import {
+  AUTH_RATE_LIMIT_DEFAULT,
+  AUTH_RATE_LIMIT_RULES,
+} from "./rate-limit-rules"
+import { RATE_LIMITED_CODE } from "../rate-limited"
 
 export { setAuthTransactionalMailer } from "../send-auth-email"
 
@@ -149,6 +154,11 @@ export interface AuthTestSeam {
   database: unknown
   /** Plugins added after Eleva's own, e.g. Better Auth's test utilities. */
   plugins?: unknown[]
+  /**
+   * A store in place of Redis. Given one, the rate limiter is on, so a
+   * test can drive the very rules production uses.
+   */
+  secondaryStorage?: AuthSecondaryStorage
 }
 
 /**
@@ -167,7 +177,7 @@ function createAuth(seam?: AuthTestSeam) {
   // The request hook asks this instance about a bearer session; it is set
   // just below, once the instance exists.
   const self: { getSession?: AuthApi["getSession"] } = {}
-  const storage = createSecondaryStorage()
+  const storage = seam?.secondaryStorage ?? createSecondaryStorage()
   requireSecondaryStorageWhenDeployed(storage)
   const issuer = baseURL()
   const passkeyOrigin = passkeyOrigins()
@@ -279,9 +289,15 @@ function createAuth(seam?: AuthTestSeam) {
       },
     },
     trustedOrigins: trustedOrigins(),
+    // Eleva's own numbers for every path, not Better Auth's or a plugin's
+    // (./rate-limit-rules.ts says why each is what it is).
     rateLimit: {
-      enabled: authRateLimitEnabled(Boolean(storage)),
+      enabled: seam?.secondaryStorage
+        ? true
+        : authRateLimitEnabled(Boolean(storage)),
       storage: "secondary-storage",
+      ...AUTH_RATE_LIMIT_DEFAULT,
+      customRules: AUTH_RATE_LIMIT_RULES,
     },
     databaseHooks: seam
       ? undefined
@@ -801,8 +817,44 @@ function corsHeaders(request: Request): Headers {
     "Access-Control-Allow-Headers",
     "authorization, content-type, x-api-key, x-correlation-id"
   )
+  // A browser on another origin reads only the headers named here: how
+  // long to wait after a refusal for asking too often.
+  headers.set("Access-Control-Expose-Headers", "Retry-After, X-Retry-After")
   headers.set("Vary", "Origin")
   return headers
+}
+
+/**
+ * The limiter's refusal, said so that every caller can act on it. Better
+ * Auth answers 429 with `X-Retry-After` (seconds) and an English sentence.
+ * This adds the standard `Retry-After`, a code that does not change, and
+ * the seconds in the body, where the sign-in screens and an agent can read
+ * them without reading headers.
+ */
+export async function withRetryAfter(response: Response): Promise<Response> {
+  const seconds = Number(response.headers.get("x-retry-after"))
+  if (response.status !== 429 || !Number.isInteger(seconds) || seconds <= 0) {
+    return response
+  }
+  const said = (await response
+    .clone()
+    .json()
+    .catch(() => null)) as { message?: unknown } | null
+  const headers = new Headers(response.headers)
+  headers.set("Retry-After", String(seconds))
+  headers.set("Content-Type", "application/json")
+  headers.delete("Content-Length")
+  return new Response(
+    JSON.stringify({
+      code: RATE_LIMITED_CODE,
+      message:
+        typeof said?.message === "string"
+          ? said.message
+          : "Too many requests. Please try again later.",
+      retryAfter: seconds,
+    }),
+    { status: 429, statusText: response.statusText, headers }
+  )
 }
 
 function withCors(
@@ -812,7 +864,7 @@ function withCors(
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: corsHeaders(request) })
     }
-    const response = await handler(request)
+    const response = await withRetryAfter(await handler(request))
     const headers = corsHeaders(request)
     headers.forEach((value, key) => {
       response.headers.set(key, value)
