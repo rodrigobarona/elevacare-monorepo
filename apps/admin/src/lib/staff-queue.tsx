@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
-import { pageWindow, parsePageParam } from "@eleva/config/pagination"
+import { MAX_PAGE, pageWindow, parsePageParam } from "@eleva/config/pagination"
 import { FocusHeadingOnChange } from "@eleva/ui/components/focus-heading-on-change"
 import { Pager } from "@eleva/ui/components/pager"
 
@@ -32,6 +32,15 @@ export async function requestedQueuePage(
 ): Promise<number> {
   const raw = (await searchParams).page
   if (raw === undefined) return 1
+  // A number too large to be a page is past the end like any other: the
+  // API answers the last page and the address follows.
+  if (
+    typeof raw === "string" &&
+    /^[1-9]\d{4,15}$/.test(raw) &&
+    Number(raw) > MAX_PAGE
+  ) {
+    return MAX_PAGE
+  }
   const page = parsePageParam(raw)
   if (page === null || page === 1) redirect(path)
   return page

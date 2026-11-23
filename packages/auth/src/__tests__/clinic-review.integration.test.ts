@@ -43,7 +43,11 @@ describe.skipIf(!enabled || !databaseUrl)(
     const owner = randomUUID()
     const staff = randomUUID()
     const suffix = clinicId.slice(0, 8)
-    const viewer = { actorUserId: staff, orgId: staffOrgId }
+    const viewer = {
+      actorUserId: staff,
+      orgId: staffOrgId,
+      via: "cookie" as const,
+    }
 
     /** This clinic's row in the queue, on whichever page it is. */
     async function inQueue() {

@@ -32,7 +32,7 @@ const COPY = {
     range: (from: number, to: number, total: number) =>
       `A mostrar ${from} a ${to} de ${total}`,
     end: "Chegou ao fim da fila.",
-    columns: ["Clínica", "Denominação social", "Estado", "À espera desde"],
+    columns: ["Clínica", "Denominação social", "Estado", "A aguardar desde"],
     state: "Por verificar",
   },
 } as const

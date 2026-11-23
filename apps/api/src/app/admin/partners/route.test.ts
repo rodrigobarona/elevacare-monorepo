@@ -43,6 +43,7 @@ describe("GET /admin/partners", () => {
     requireCapability.mockResolvedValue({
       user: { id: "staff-1" },
       orgId: "staff-org",
+      authMode: "cookie",
     })
   })
 
@@ -81,7 +82,7 @@ describe("GET /admin/partners", () => {
     // The read is recorded for this staff member, in the staff workspace.
     expect(listQueue).toHaveBeenCalledWith({
       page: 2,
-      viewer: { actorUserId: "staff-1", orgId: "staff-org" },
+      viewer: { actorUserId: "staff-1", orgId: "staff-org", via: "cookie" },
     })
     await expect(res.json()).resolves.toEqual({
       total: 26,

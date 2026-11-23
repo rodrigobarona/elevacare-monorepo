@@ -206,9 +206,12 @@ export async function _listLicenceReviewQueue(
         .from(p)
         .leftJoin(latest, eq(latest.expertProfileId, p.id))
         .where(inQueue)
-        // The id settles two profiles with the same time, so a row is never
-        // on two pages or on none.
+        // What waits on staff comes first, so the top of the queue is the
+        // next licence to check and nobody pages to find one. The id
+        // settles two profiles with the same time, so a row is never on
+        // two pages or on none.
         .orderBy(
+          desc(sql`coalesce(${latest.status} = 'pending', false)`),
           asc(sql`coalesce(${latest.submittedAt}, ${p.createdAt})`),
           asc(p.id)
         )

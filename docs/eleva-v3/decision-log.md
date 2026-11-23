@@ -41,10 +41,13 @@ Each entry should include:
   either side. The API returns one page with `total`, `page` and `pages`,
   so a staff member is sent no more names than the page they asked for.
 - **Each read of a queue page is recorded** (`clinic_verification.listed`,
-  `partner_application.listed`): who read, which page, how many rows, in
+  `partner_application.listed`): who read, which page, how many rows, and
+  how the read was made (`via`: at the console, or by a token or a key), in
   the same transaction as the read, so nothing is shown when the record
   cannot be written. Never the names. A page spans many clinics or
-  practices, so the record sits under the staff workspace of the reader.
+  practices, so the record sits under the staff workspace of the reader. A
+  key walking every page and a person paging must not look the same
+  afterwards (the second panel's finding).
 - **A record means "served", and care was taken that it means no more.**
   Nothing fetches a queue ahead of the reader: the pager's links and the
   "back to the queue" links on a review are never prefetched, and the tab
@@ -58,7 +61,12 @@ Each entry should include:
   shared link show the same rows. Page 1 has no parameter. A value that is
   not a page goes to page 1, and a page past the end (the queue shrank
   after decisions) goes to the last page: never an empty table with a
-  pager. The order is the same as before with the row's id to settle ties,
+  pager. A number too large to be a page (`?page=123456`) is past the end
+  like any other. The clinic queue keeps its order (to check first, oldest
+  first). The licence queue was oldest first across every state, so listed
+  experts with no licence on file sat on top and a licence to check could
+  be on any page: it now puts the licences that wait on staff first too.
+  Both use the row's id to settle ties,
   so in a queue that does not change a row is never on two pages or on
   none. When a filing is decided while someone pages, the rows after it
   move up by one and the next page starts one row later: the reviewer can
@@ -82,32 +90,74 @@ Each entry should include:
   `pageWindow` and `parsePageParam` in `@eleva/config/pagination`, `Pager`
   and `FocusHeadingOnChange` in `@eleva/ui`, a table-shaped loading state
   in `@eleva/dashboard`.
-- Proof: unit tests for the paging maths, the pager and both routes; on
-  Postgres (the dev branch here, the pull request's branch in CI), both
-  queues return one page, pull a page past the end back to the last, and
-  leave a record of each read with no name in it; 26 filings sent at the
-  same moment come back 25 and then 1, in id order, each exactly once; in a
-  browser, `pnpm e2e:pager` (opt-in, 6 cases) on a playground page that
-  shows each state of the footer: links, the unavailable control out of
-  the tab order, keyboard, Portuguese, 320 and 375 px. Captures in
-  `design-audit/captures/2026-11-23-staff-queue-pager-after/`.
-- Not proven: the two queue pages in the real console (the redirects, the
-  tab title, focus after a page change, the loading skeleton): that needs a
-  signed-in staff member and more than 25 filings, which the local data
-  does not have.
-- The staff entry screen said that what staff change is recorded. It now
-  says "What you open and what you change is recorded in the audit log",
-  which is what happens. The formal notice to staff, and how long these
-  records are kept, are still the DPO's (P-02, P-03); the retention matrix
-  names the new records.
+- Proof: unit tests for the paging maths (an empty queue, a page past the
+  end, a queue one row shorter than when the address was made, a queue that
+  keeps shrinking), the pager and both routes. The console has its first
+  unit tests (`apps/admin` had no test runner): what each address does, the
+  footer's words in each case, and that asking either queue for its tab
+  title reaches no API. On Postgres (the dev branch here, the pull
+  request's branch in CI), both queues return one page, pull a page past
+  the end back to the last, and leave a record of each read with no name
+  in it; 26 clinic filings sent at the same moment come back 25 and then 1
+  in id order; 26 listed profiles made at the same moment are each on
+  exactly one page, with every licence to check before them.
+- **In the real console** (`e2e/admin-clinics.spec.ts`, opt-in, local API
+  and console, signed in as staff, 26 filings seeded): 25 rows and "Showing
+  1 to 25 of N"; Next is a link to `?page=2`; the tab reads "Clinic
+  verifications · Page 2"; the keyboard's place is the heading, described
+  by the range; **two pages served leave exactly two records, both
+  `via: cookie`**, with the pointer resting on a link in between; a reload
+  keeps the page; `?page=999` and `?page=123456` end on the last page with
+  the end sentence; `abc`, `0` and `1` end on the clean address; opening a
+  filing and resting on its link back reads nothing, pressing it reads
+  once; Portuguese and Spanish; a phone in the dark theme with nothing
+  running off the side. Captures in
+  `design-audit/captures/2026-11-23-staff-queue-pager-after/13-admin/`
+  (the queue before this slice is `2026-11-21-admin-clinics-after/13-admin/01`).
+  `pnpm e2e:pager` (6 cases) still covers each state of the footer on a
+  playground page, at 320 and 375 px.
+- Not proven: the loading skeleton against the real page (no capture), the
+  licence queue in a browser (same components, clinic queue proven), and
+  anything on staging.
+- **The sentence staff read is interim.** The entry screen said that what
+  staff change is recorded; it now says "What you open and what you change
+  is recorded in the audit log", because leaving the old one would have
+  claimed less than what happens. Only people who arrive from another
+  workspace see that screen. The brief held this wording for P-03, and
+  nobody has approved it: the formal notice to staff, in words the DPO
+  chooses and shown to every staff member, has to exist before the console
+  is used in production. Also for the DPO (P-02, P-03, P-07), named in the
+  retention matrix: how long `.listed` and `.opened` records are kept; who
+  may read colleagues' access records; whether logging employees' reads
+  needs a review under employment law; whether a record per page (which
+  cannot say whose rows were on it) is enough; the record of processing
+  that names staff as data subjects of the access log.
 - The API takes `?page=` by the rule the console's addresses follow
   (digits, from 1) and refuses anything else, a repeated `page` and an
-  unknown parameter included.
-- Judges, first commit: engineering 7.0, UI 7.2, UX and writing 8.1, trust
-  and accessibility 7.8. They found the title's read above, that no test
-  had a second page, captures taken before the controls got their border,
-  and a range that ran into the sentence after it. The second commit
-  answers those and was not scored again.
+  unknown parameter included. The OpenAPI parameter says the default, the
+  limit and what a page past the end returns.
+- Judges, blind, against the design brief. First commit: engineering 7.0,
+  UI 7.2, UX and writing 8.1, trust and accessibility 7.8 (the title's
+  read, no test with a second page, captures taken before the controls got
+  their border). Second panel, after those fixes and the reviewers'
+  (Greptile: an empty last page when the queue shrank between the count
+  and the read; CodeRabbit: a heading that kept a description): 8.0, 7.8,
+  8.2, 8.1. Its findings are what the third commit answers: the licence
+  queue's order, `via`, the console's tests and the real-console proof,
+  the licence queue's second page on Postgres, the skeleton in columns,
+  the end sentence that wraps whole, wider controls on a phone, the
+  Spanish and Portuguese of the staff sentence, and this entry's plain
+  statement that the sentence is interim.
+- Left for later, each from a judge: DM Sans as shipped has no tabular
+  figures, so the range's width moves with its digits (the class was
+  removed; a font build with them is a kit change, 13.32); the pager's
+  visible border should become the kit's outline, not a one-off (13.32);
+  numbers and dates use `pt` and `en`, not `pt-PT` and `en-IE` (one line in
+  `@eleva/dashboard` that changes every dashboard, so its own slice); the
+  total is only in the footer; paging by "after this row" would stop a
+  colleague's decision from moving rows between pages; the console's
+  proxy sends a signed-out person to sign in with an address the sign-in
+  page cannot return to, so a deep link is lost (12.7 touches this).
 
 ### 2026-11-22: Every clinic subscription has a seat item (11.7) (active)
 

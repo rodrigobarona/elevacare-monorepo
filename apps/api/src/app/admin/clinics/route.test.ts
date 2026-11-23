@@ -96,6 +96,7 @@ describe("/admin/clinics", () => {
     mocks.readAuth.mockResolvedValue({
       user: { id: "staff-1" },
       orgId: "staff-org",
+      authMode: "cookie",
     })
     // A console session that started a moment ago.
     mocks.writeAuth.mockResolvedValue({
@@ -205,10 +206,23 @@ describe("/admin/clinics", () => {
     })
     const res = await getQueue(new Request(`${URL}?page=3`))
     expect(res.status).toBe(200)
-    // The read is recorded for this staff member, in the staff workspace.
+    // The read is recorded for this staff member, in the staff workspace,
+    // with how it was made.
     expect(mocks.listQueue).toHaveBeenCalledWith({
       page: 3,
-      viewer: { actorUserId: "staff-1", orgId: "staff-org" },
+      viewer: { actorUserId: "staff-1", orgId: "staff-org", via: "cookie" },
+    })
+
+    // A key reads the queue too, and the record says it was a key.
+    mocks.readAuth.mockResolvedValue({
+      user: { id: "staff-1" },
+      orgId: "staff-org",
+      authMode: "api-key",
+    })
+    await getQueue(new Request(URL))
+    expect(mocks.listQueue).toHaveBeenLastCalledWith({
+      page: 1,
+      viewer: { actorUserId: "staff-1", orgId: "staff-org", via: "api-key" },
     })
     await expect(res.json()).resolves.toEqual({
       total: 51,

@@ -1905,7 +1905,10 @@ export const StaffQueueQuerySchema = z
       .regex(PAGE_PARAM_PATTERN)
       .transform(Number)
       .pipe(z.number().int().min(1).max(MAX_PAGE))
-      .default(1),
+      .default(1)
+      .describe(
+        `The page to return, from 1 (the default) to ${MAX_PAGE}, 25 rows a page. A page past the end returns the last page; the response says which page it is.`
+      ),
   })
   .strict()
 

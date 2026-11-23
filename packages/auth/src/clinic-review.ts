@@ -5,6 +5,11 @@ import { readPage, STAFF_QUEUE_PAGE_SIZE } from "@eleva/config/pagination"
 import { auth, main, withPlatformAdminContext, type Tx } from "@eleva/db"
 import { _emitClinicDecisionEvent } from "@eleva/db/queries/clinic-verifications"
 import type { ClinicBillingAddress } from "@eleva/db/schema"
+import {
+  servedQueuePage,
+  type StaffQueuePage,
+  type StaffQueueReader,
+} from "./staff-queue"
 
 /**
  * Staff review of a clinic's legal identity (Phase 12, queue for the
@@ -73,22 +78,6 @@ export interface ClinicVerificationQueueRow {
   waitingSince: Date
 }
 
-/** The staff member reading a queue, and the staff workspace they act in. */
-export interface StaffQueueReader {
-  actorUserId: string
-  orgId: string
-}
-
-/** One page of a staff queue, and where it sits in the whole queue. */
-export interface StaffQueuePage<Row> {
-  items: Row[]
-  total: number
-  /** The page returned: the one asked for, or the last one if it was past it. */
-  page: number
-  pages: number
-  pageSize: number
-}
-
 /**
  * One page of the filings in review: those waiting on staff (`pending`,
  * oldest first), then the ones sent back to the clinic (`needs_changes`),
@@ -96,8 +85,9 @@ export interface StaffQueuePage<Row> {
  *
  * A page shows clinics' legal names to a staff member, so each read is
  * recorded (`clinic_verification.listed`) in the same transaction: who
- * read, which page, how many rows. Never the names themselves. The record
- * sits under the staff workspace: a page spans many clinics.
+ * read, which page, how many rows, and how the read was made. Never the
+ * names themselves. The record sits under the staff workspace: a page
+ * spans many clinics.
  */
 export async function listClinicVerificationQueue(input: {
   page: number
@@ -141,24 +131,13 @@ export async function listClinicVerificationQueue(input: {
           .limit(STAFF_QUEUE_PAGE_SIZE)
           .offset(offset),
     })
-    await ctx.emit({
-      entity: "clinic_verification",
-      action: "listed",
-      entityId: null,
-      payload: {
-        page: window.page,
-        pages: window.pages,
-        shown: items.length,
-        total: window.total,
-      },
-    })
-    return {
+    return servedQueuePage(
+      ctx,
+      "clinic_verification",
+      input.viewer,
       items,
-      total: window.total,
-      page: window.page,
-      pages: window.pages,
-      pageSize: STAFF_QUEUE_PAGE_SIZE,
-    }
+      window
+    )
   })
 }
 

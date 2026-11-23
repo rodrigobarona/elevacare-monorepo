@@ -86,7 +86,7 @@
     "previousPage": "Previous page",
     "nextPage": "Next page",
     "pages": "Pages",
-    "end": "You’ve reached the end of the queue.",
+    "end": "You've reached the end of the queue.",
     "titleWithPage": "{title} · Page {page, number}"
   },
   "clinics": {

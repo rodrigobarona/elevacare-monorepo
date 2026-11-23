@@ -29,21 +29,24 @@ export function FocusHeadingOnChange({
     const previous = seen.get(address)
     const current = String(value)
     seen.set(address, current)
-    if (previous === undefined || previous === current) return
     const heading = document.querySelector<HTMLElement>("main h1")
     if (!heading) return
-    if (!heading.hasAttribute("tabindex"))
-      heading.setAttribute("tabindex", "-1")
+    // The description is set on every run, the first visit included, so it
+    // is there whenever the heading is read; it is this component's only
+    // while it is the one it set.
     if (describedBy) heading.setAttribute("aria-describedby", describedBy)
-    heading.focus()
-    // The description is this component's only while it is the one it set.
-    return () => {
+    const giveBack = () => {
       if (
         describedBy &&
         heading.getAttribute("aria-describedby") === describedBy
       )
         heading.removeAttribute("aria-describedby")
     }
+    if (previous === undefined || previous === current) return giveBack
+    if (!heading.hasAttribute("tabindex"))
+      heading.setAttribute("tabindex", "-1")
+    heading.focus()
+    return giveBack
   }, [value, describedBy])
   return null
 }

@@ -27,6 +27,11 @@ describe.skipIf(!enabled || !databaseUrl)(
     const staff = randomUUID()
     const profileId = randomUUID()
     const suffix = orgId.slice(0, 8)
+    const viewer = {
+      actorUserId: staff,
+      orgId: staffOrgId,
+      via: "cookie" as const,
+    }
 
     async function openings() {
       return db()
@@ -105,14 +110,10 @@ describe.skipIf(!enabled || !databaseUrl)(
     })
 
     it("returns one page of the queue and records who read it", async () => {
-      const viewer = { actorUserId: staff, orgId: staffOrgId }
       const first = await listLicenceQueue({ page: 1, viewer })
       expect(first).toMatchObject({ page: 1, pageSize: 25 })
       expect(first.items.length).toBe(Math.min(25, first.total))
       expect(first.pages).toBe(Math.max(1, Math.ceil(first.total / 25)))
-      // Oldest first, and the same order on every read.
-      const times = first.items.map((row) => row.waitingSince.getTime())
-      expect(times).toEqual([...times].sort((a, b) => a - b))
       const past = await listLicenceQueue({ page: 9_999, viewer })
       expect(past.page).toBe(first.pages)
 
@@ -136,10 +137,89 @@ describe.skipIf(!enabled || !databaseUrl)(
           pages: first.pages,
           shown: first.items.length,
           total: first.total,
+          via: "cookie",
         },
       })
       // Who and how many, never whose licences.
       expect(JSON.stringify(reads)).not.toContain("Licence Expert")
+    })
+
+    it("pages 26 listed profiles made at the same moment: each on one page, licences to check first", async () => {
+      const madeAt = new Date("2001-01-01T00:00:00.000Z")
+      const tag = `q${suffix}`
+      const batch = Array.from({ length: 26 }, (_, index) => ({
+        org: randomUUID(),
+        user: randomUUID(),
+        profile: randomUUID(),
+        name: `${tag}-${index}`,
+      }))
+      await db()
+        .insert(auth.user)
+        .values(
+          batch.map((row) => ({
+            id: row.user,
+            name: "Paging expert",
+            email: `${row.name}@example.test`,
+          }))
+        )
+      await db()
+        .insert(auth.organization)
+        .values(
+          batch.map((row) => ({
+            id: row.org,
+            name: "Paging practice",
+            slug: row.name,
+            type: "expert",
+          }))
+        )
+      try {
+        // Listed with no licence on file: in the queue, with nothing to
+        // order them but the id.
+        await db()
+          .insert(main.expertProfiles)
+          .values(
+            batch.map((row) => ({
+              id: row.profile,
+              orgId: row.org,
+              userId: row.user,
+              username: row.name,
+              displayName: "Paging expert",
+              status: "active" as const,
+              createdAt: madeAt,
+            }))
+          )
+        const first = await listLicenceQueue({ page: 1, viewer })
+        expect(first.pages).toBeGreaterThanOrEqual(2)
+        const all = [...first.items]
+        for (let page = 2; page <= first.pages; page++) {
+          all.push(...(await listLicenceQueue({ page, viewer })).items)
+        }
+        // No profile on two pages, and none of the 26 on none.
+        const ids = all.map((row) => row.expertProfileId)
+        expect(new Set(ids).size).toBe(ids.length)
+        const seeded: string[] = batch.map((row) => row.profile).sort()
+        expect(ids.filter((id) => seeded.includes(id))).toEqual(seeded)
+        // What waits on staff is at the top, whatever the page.
+        const waits = all.map((row) => row.reviewState === "pending")
+        expect(waits).toEqual([...waits].sort((a, b) => Number(b) - Number(a)))
+      } finally {
+        await db()
+          .delete(auth.organization)
+          .where(
+            inArray(
+              auth.organization.id,
+              batch.map((row) => row.org)
+            )
+          )
+        await db()
+          .delete(auth.user)
+          .where(
+            inArray(
+              auth.user.id,
+              batch.map((row) => row.user)
+            )
+          )
+      }
     })
 
     it("records a profile that never filed, with no application to name", async () => {

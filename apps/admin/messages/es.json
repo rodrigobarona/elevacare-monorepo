@@ -168,7 +168,7 @@
   },
   "staffEntry": {
     "title": "Entrar en la consola del equipo",
-    "body": "Aquí ves datos de miembros y expertos de toda Eleva. Lo que abras y lo que cambies queda registrado en el registro de auditoría.",
+    "body": "Aquí ves datos de miembros y especialistas de toda Eleva. Lo que abras y lo que cambies queda guardado en el registro de auditoría.",
     "enter": "Entrar en la consola del equipo",
     "back": "Volver a Eleva",
     "error": "No hemos podido abrir la consola del equipo. Inténtalo de nuevo en un momento."

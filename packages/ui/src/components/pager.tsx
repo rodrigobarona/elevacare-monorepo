@@ -91,18 +91,22 @@ export function Pager({
     <div
       data-slot="pager"
       className={cn(
-        "flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between",
+        "flex w-full flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between",
         className
       )}
     >
-      <p id={rangeId} className="tabular-nums">
+      <p id={rangeId}>
         {range}
-        {/* The range is a phrase; with a sentence after it, it needs its stop. */}
-        {end ? "." : null}
-        {end ? <span className="block sm:inline"> {end}</span> : null}
+        {/* The range is a phrase; with a sentence after it, it needs its
+            stop. The sentence moves to the next line whole, never broken. */}
+        {end ? ". " : null}
+        {end ? <span className="inline-block">{end}</span> : null}
       </p>
       {links ? (
-        <nav aria-label={labels.landmark} className="flex shrink-0 gap-2">
+        <nav
+          aria-label={labels.landmark}
+          className="flex shrink-0 gap-2 max-sm:*:flex-1"
+        >
           <PageLink href={links.previous} label={labels.previousPage}>
             {labels.previous}
           </PageLink>

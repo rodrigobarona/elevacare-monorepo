@@ -1,12 +1,12 @@
-import {
-  AdminPartnerQueueResponseSchema,
-  StaffQueueQuerySchema,
-} from "@eleva/api-client"
+import { AdminPartnerQueueResponseSchema } from "@eleva/api-client"
 import { listLicenceQueue } from "@eleva/auth/partner-review"
 import { corsHeaders } from "@/lib/cors"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
-import { requireStaffReviewer } from "@/lib/staff-review-http"
+import {
+  requestedQueuePage,
+  requireStaffReviewer,
+} from "@/lib/staff-review-http"
 
 export const ROUTE_POLICY = {
   auth: "session",
@@ -26,19 +26,12 @@ export async function GET(request: Request) {
   const staff = await requireStaffReviewer(request, headers)
   if (staff instanceof Response) return staff
 
-  const params = new URL(request.url).searchParams
-  const query = StaffQueueQuerySchema.safeParse(Object.fromEntries(params))
-  // `?page=1&page=2` names two pages: refused, not settled by position.
-  if (!query.success || params.getAll("page").length > 1) {
-    return secureJson(
-      { error: "validation", issues: query.error?.issues ?? [] },
-      { status: 422, headers }
-    )
-  }
+  const page = requestedQueuePage(request, headers)
+  if (page instanceof Response) return page
 
   const queue = await listLicenceQueue({
-    page: query.data.page,
-    viewer: { actorUserId: staff.userId, orgId: staff.orgId },
+    page,
+    viewer: { actorUserId: staff.userId, orgId: staff.orgId, via: staff.via },
   })
   return secureJson(
     AdminPartnerQueueResponseSchema.parse({

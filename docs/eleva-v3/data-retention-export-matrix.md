@@ -88,9 +88,13 @@ Use this document to answer:
   professional body, is not recorded per row: each page a staff member is
   served is recorded once (`partner_application.listed`, and
   `clinic_verification.listed` for the clinic queue, since slice 12.6) with
-  the reader, the page number and how many rows, never a name, under the
-  staff workspace. These records are there to account for access, not to
-  measure staff. **For the DPO to decide:**
+  the reader, the page number, how many rows and how the read was made (at
+  the console, or by a token or a key), never a name, under the staff
+  workspace. These records are there to account for access, not to
+  measure staff: that purpose is written here only, nothing enforces it,
+  and nothing staff read says it yet. **For the DPO to decide:** who may
+  read colleagues' access records, whether logging employees' reads needs
+  a review under employment law, and
   whether `partner_application.opened` and the `.listed` rows follow the retention
   schedule's periods for the audit stream (10 years in `audit_events`, 90
   days for shipped outbox rows; `legal/retention-schedule.md`) or a
@@ -125,8 +129,14 @@ Use this document to answer:
   staff opening a filing is audited too (`clinic_verification.opened`,
   with the state the filing was in, never its details). The queue, which lists
   clinics by name and legal name (personal data for a sole trader), is not
-  recorded per row. **For the DPO to decide:** whether
-  `clinic_verification.opened` rows follow the retention schedule's
+  recorded per row: each page a staff member is served is recorded once
+  (`clinic_verification.listed`, since slice 12.6) with the reader, the
+  page number, how many rows and how the read was made (at the console, or
+  by a token or a key), never a name, under the staff workspace. A record
+  says a page was served; it cannot say whose rows were on it, because the
+  queue moves with every decision. **For the DPO to decide:** whether
+  that is enough to answer "who saw my name in the list", and whether
+  `clinic_verification.opened` and `.listed` rows follow the retention schedule's
   periods for the audit stream (10 years in `audit_events`, 90 days for
   shipped outbox rows) or a shorter one
 - Transparency: **proposed privacy-notice line, for the DPO to word and

@@ -10,7 +10,11 @@ import {
   type LicenceReview,
   type LicenceReviewQueueRow,
 } from "@eleva/db/queries/partner-applications"
-import type { StaffQueuePage, StaffQueueReader } from "./clinic-review"
+import {
+  servedQueuePage,
+  type StaffQueuePage,
+  type StaffQueueReader,
+} from "./staff-queue"
 
 export type LicenceDecision =
   | { decision: "approve"; checklist: Record<LicenceChecklistItem, true> }
@@ -197,12 +201,14 @@ export async function decideLicenceApplication(input: {
 }
 
 /**
- * One page of the licence review queue, oldest first.
+ * One page of the licence review queue: the licences that wait on staff,
+ * oldest first, then everything else in the queue, oldest first.
  *
  * A page shows people's names and their regulator to a staff member, so
  * each read is recorded (`partner_application.listed`) in the same
- * transaction: who read, which page, how many rows. Never the names. The
- * record sits under the staff workspace: a page spans many practices.
+ * transaction: who read, which page, how many rows, and how the read was
+ * made. Never the names. The record sits under the staff workspace: a page
+ * spans many practices.
  */
 export async function listLicenceQueue(input: {
   page: number
@@ -213,24 +219,13 @@ export async function listLicenceQueue(input: {
       page: input.page,
       pageSize: STAFF_QUEUE_PAGE_SIZE,
     })
-    await ctx.emit({
-      entity: "partner_application",
-      action: "listed",
-      entityId: null,
-      payload: {
-        page: window.page,
-        pages: window.pages,
-        shown: rows.length,
-        total: window.total,
-      },
-    })
-    return {
-      items: rows,
-      total: window.total,
-      page: window.page,
-      pages: window.pages,
-      pageSize: STAFF_QUEUE_PAGE_SIZE,
-    }
+    return servedQueuePage(
+      ctx,
+      "partner_application",
+      input.viewer,
+      rows,
+      window
+    )
   })
 }
 

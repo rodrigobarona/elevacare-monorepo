@@ -28,11 +28,19 @@ export async function RouteLoading() {
 
 /**
  * `loading.tsx` body for a page that is a table (a queue, a list): the page
- * header, a card with a header row and rows, and the footer bar, so the
- * layout does not jump when the rows arrive.
+ * header, a card with a header row and rows in columns, and the footer
+ * line, so the layout does not jump when the rows arrive.
  */
 export async function RouteTableLoading() {
   const t = await getTranslations("routeStates")
+  const columns = (
+    <div className="grid w-full grid-cols-4 gap-4">
+      <Skeleton className="h-5" />
+      <Skeleton className="h-5" />
+      <Skeleton className="h-5 w-2/3" />
+      <Skeleton className="h-5 w-2/3" />
+    </div>
+  )
   return (
     <div role="status" className="mx-auto max-w-5xl space-y-8">
       <span className="sr-only">{t("loading")}</span>
@@ -41,17 +49,16 @@ export async function RouteTableLoading() {
         <Skeleton className="h-7 w-[32rem] max-w-full" />
       </div>
       <div className="overflow-hidden rounded-xl border bg-card shadow-1">
-        <div className="border-b p-3">
-          <Skeleton className="h-5 w-2/3" />
-        </div>
+        <div className="flex h-12 items-center border-b px-3">{columns}</div>
         {Array.from({ length: 8 }, (_, row) => (
           <div key={row} className="border-b p-3">
-            <Skeleton className="h-5" />
+            {columns}
           </div>
         ))}
-        <div className="flex flex-col gap-3 px-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* The range line only: most queues fit on one page and have no
+            controls. */}
+        <div className="p-3">
           <Skeleton className="h-5 w-44" />
-          <Skeleton className="h-8 w-40 rounded-4xl" />
         </div>
       </div>
     </div>

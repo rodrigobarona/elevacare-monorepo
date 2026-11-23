@@ -168,7 +168,7 @@
   },
   "staffEntry": {
     "title": "Entrar na consola da equipa",
-    "body": "Aqui vê dados de membros e especialistas de toda a Eleva. O que abrir e o que alterar fica registado no registo de auditoria.",
+    "body": "Aqui vê dados de membros e especialistas de toda a Eleva. O que abrir e o que alterar fica guardado no registo de auditoria.",
     "enter": "Entrar na consola da equipa",
     "back": "Voltar à Eleva",
     "error": "Não foi possível abrir a consola da equipa. Tente novamente daqui a pouco."
