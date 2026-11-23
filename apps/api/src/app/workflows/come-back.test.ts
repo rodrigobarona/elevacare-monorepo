@@ -144,6 +144,20 @@ describe("the job that releases lapsed holds", () => {
     expect(runJobAt).not.toHaveBeenCalled()
   })
 
+  it("does not go on at once after a full batch in which every hold failed", async () => {
+    // It would be the same hundred again, every half minute.
+    expireStaleReservations.mockResolvedValue(
+      expired({ scanned: 100, errors: 100 })
+    )
+    nextReservationExpiry.mockResolvedValue(null)
+    await run(holds, "slot-reservation-expiry", TICK)
+    expect(runJobAt).not.toHaveBeenCalled()
+    await run(holds, "slot-reservation-expiry", { again: 0 })
+    expect(runJobAt).not.toHaveBeenCalled()
+    // Outside the tick it is a failure like any other: the few steps.
+    expect(runJobAgain).toHaveBeenCalledTimes(1)
+  })
+
   it("goes on at once after a full batch, from the tick too: more are waiting", async () => {
     expireStaleReservations.mockResolvedValue(
       expired({ scanned: 100, expired: 100 })
@@ -225,14 +239,16 @@ describe("the job that publishes events", () => {
 })
 
 describe("the job that finishes removing people from calls", () => {
-  const retried = (pending: number, capacityPending = 0) => ({
-    scanned: pending,
+  const retried = (pending: number, capacityPending = 0, refused = 0) => ({
+    scanned: pending + refused,
     ejected: 0,
     pending,
+    refused,
     capacity: {
       scanned: capacityPending,
       repaired: 0,
       pending: capacityPending,
+      refused: 0,
     },
   })
 
@@ -252,6 +268,16 @@ describe("the job that finishes removing people from calls", () => {
     retryPendingEjects.mockResolvedValue(retried(0, 1))
     await run(ejects, "video-eject-retry")
     expect(runJobAgain).toHaveBeenCalledWith("video-eject-retry", 0)
+  })
+
+  it("does not keep coming back for what the video service refuses outright", async () => {
+    // A changed key, a closed account: every minute would be 240
+    // messages a day and a database that never sleeps, for an answer
+    // that will not change. The hourly run tries, and it is reported.
+    retryPendingEjects.mockResolvedValue(retried(0, 0, 2))
+    await run(ejects, "video-eject-retry", TICK)
+    await run(ejects, "video-eject-retry", { again: 3 })
+    expect(runJobAgain).not.toHaveBeenCalled()
   })
 
   it("starts the tries again from the tick, unlike the other jobs: someone is still in a call", async () => {

@@ -55,8 +55,11 @@ async function comeBackForHolds(
   run: { again: number; fromTick: boolean }
 ): Promise<void> {
   try {
-    if (result.scanned >= SLOT_RESERVATION_EXPIRY_BATCH_SIZE) {
-      // A full batch is not a failure: more are waiting, now.
+    const dealtWith = result.expired + result.kept + result.retried
+    if (result.scanned >= SLOT_RESERVATION_EXPIRY_BATCH_SIZE && dealtWith > 0) {
+      // A full batch is not a failure: more are waiting, now. Only when
+      // this one got somewhere: a batch that all failed would be the
+      // same batch again, every half minute.
       await runJobAt("slot-reservation-expiry", new Date())
     } else if (result.errors > 0 && !run.fromTick) {
       // Not after the tick's own run: a hold that cannot be dealt with

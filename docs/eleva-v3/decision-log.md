@@ -83,7 +83,9 @@ Each entry should include:
   reminders already work. The job is the same one the tick runs: it looks
   for what is due, so a message that is early, late or doubled does no
   harm, and one that never arrives is caught within the hour. Items due
-  within the same 30 seconds share one message. A route is told which run
+  within the same 30 seconds share one message; the message's id carries
+  the API's address, so staging and production do not swallow each
+  other's. A route is told which run
   it is (`again`) and whether the tick sent it (`tick`), read with one
   Zod schema (`JobRunSchema`).
 - **Trying again after a failure, and where it stops.** A run that left
@@ -91,20 +93,24 @@ Each entry should include:
   nothing, and the hourly tick is the next try. A run the tick started
   does not begin these steps again, or one hold that can never be dealt
   with would cost four runs an hour for ever. A backlog is not a failure:
-  a run that took a full batch goes on at once (the publisher makes up to
-  twenty passes, 500 deliveries, before it asks).
+  a run that took a full batch and got somewhere goes on at once (the
+  publisher makes up to twenty passes, 500 deliveries, before it asks).
+  A full batch in which every item failed does not: it would be the same
+  batch again every half minute.
 - **Removing a person from a call is the exception, on purpose.** A
   person removed from a health session must not stay in it. The steps
   are a minute, a minute, two, two, five, five, then ten minutes four
   times, and the tick starts them again, so the tries go on for as long
-  as someone is still to be put out. Two things changed in the removal
-  itself: a call to the video service that times out, is refused for
-  rate, or never gets through now counts as "still to do" and is tried
-  again (before, the route answered with an error and the per-minute job
-  happened to pick it up); and a room that no longer exists ends the
-  tries (before, such a row was tried every minute for ever). The route
-  asks for a run on any failure it cannot name, because the removal may
-  already be written.
+  as someone is still to be put out. One thing changed in the removal itself: a call to
+  the video service that times out, is told "not now", or never gets
+  through now counts as "still to do" and is tried again (before, the
+  route answered with an error and the per-minute job happened to pick
+  it up). The route asks for a run on any failure it cannot name, because
+  the removal may already be written. What the service refuses outright
+  (a changed key, a closed account) is not tried every minute: it is
+  reported to Sentry for a person to look at and tried again by the
+  hourly run, since asking more often would not change the answer and
+  would keep the database awake most of every hour.
 - The tick moved from five past the hour to the hour, where the two-hourly
   and daily QStash jobs already run, so that they share one waking.
 - **What this should cost, as an estimate and not a measurement:** about
@@ -129,13 +135,25 @@ Each entry should include:
   lapses only if the queue delivers; if it does not, within the hour
   (before: within a minute). A hold usually costs one to three queue
   messages; more when the visitor extends it several times, and one
-  every ten minutes while a payment is still settling at the bank. They
+  every ten minutes while a payment is still settling at the bank, for
+  two hours after the hold was made and hourly after that. They
   count against QStash's daily allowance, which per-minute schedules used
   up on 2026-11-07; at this traffic that is far below it. Where no queue
   is set up, every one of these is lost and the work is hourly: the API
   says so once in its log. Work with a long
   deadline (a request to book, an account deletion) is now late by up to
   an hour and no more.
+- Slower than before when something is down, and by how much. Stripe
+  away for more than about twenty minutes after a hold lapsed: the slot
+  of an abandoned checkout stays blocked until the next hourly run after
+  Stripe is back (before: a minute). A delivery that keeps failing
+  reaches its tenth and last try after about six hours (before: about an
+  hour). The video service away for more than a quarter of an hour: a
+  removed person can stay up to about ten minutes after it is back
+  (before: a minute).
+- The hourly tick asks the database one thing before it starts the
+  twelve jobs, so that they do not all start against a database that is
+  still waking.
 - Operator: after the deployment, the Cron Jobs page of `elevacare-api`
   lists three jobs, not five. `BETTERSTACK_HEARTBEAT_URLS`, when it is
   set up (O-3), has no `tick-minutely` or `tick-10min`: 20 jobs are

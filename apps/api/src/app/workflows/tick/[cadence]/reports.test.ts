@@ -13,6 +13,8 @@ vi.mock("@eleva/observability", () => ({
   }),
 }))
 
+vi.mock("@eleva/db", () => ({ pingMainDb: vi.fn(async () => {}) }))
+
 vi.mock("@/lib/workflow-ticks", async () => {
   const { reportedJob } = await import("@/lib/reported-job")
   const done = async () => Response.json({ ok: true, expired: 0 })

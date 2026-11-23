@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+const { pingMainDb } = vi.hoisted(() => ({
+  pingMainDb: vi.fn(async () => {}),
+}))
+vi.mock("@eleva/db", () => ({ pingMainDb }))
+
 const ok = vi.fn(async (_request: Request) =>
   Response.json({ ok: true, done: 1 })
 )
@@ -58,6 +63,24 @@ describe("POST /workflows/tick/{cadence}", () => {
     const inner = ok.mock.calls[0]?.[0] as Request
     expect(inner.headers.get("authorization")).toBe("Bearer inner-secret")
     expect(new URL(inner.url).pathname).toBe("/workflows/job-a")
+    // Each job is told the tick sent it: a job does not start a string
+    // of runs of its own after the tick's run.
+    expect(await inner.json()).toEqual({ tick: true })
+  })
+
+  it("wakes the database once before the jobs start, and runs them even if it does not answer", async () => {
+    pingMainDb.mockClear()
+    await tick("all-fine")
+    expect(pingMainDb).toHaveBeenCalledTimes(1)
+    expect(pingMainDb.mock.invocationCallOrder[0]).toBeLessThan(
+      ok.mock.invocationCallOrder.at(-1)!
+    )
+
+    ok.mockClear()
+    pingMainDb.mockRejectedValueOnce(new Error("still asleep"))
+    const response = await tick("all-fine")
+    expect(response.status).toBe(200)
+    expect(ok).toHaveBeenCalledTimes(1)
   })
 
   it("reports a failing job without skipping the others", async () => {

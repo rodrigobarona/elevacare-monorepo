@@ -44,7 +44,8 @@ describe("publishWorkflowJob", () => {
     expect(message).toMatchObject({
       url: "https://api.eleva.test/workflows/slot-reservation-expiry",
       notBefore: Date.parse("2026-12-01T10:05:01Z") / 1000,
-      deduplicationId: "slot-reservation-expiry:1:0",
+      // Another deployment asking for the same run is another message.
+      deduplicationId: "api.eleva.test:slot-reservation-expiry:1:0",
     })
   })
 

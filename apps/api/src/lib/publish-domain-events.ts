@@ -55,11 +55,13 @@ export async function publishPasses(
     total.succeeded += result.succeeded
     total.failed += result.failed
     total.dead += result.dead
-    total.more = result.claimed >= BATCH
-    if (!total.more && !keepGoing()) return total
+    // Asked once a pass: asking takes the answer away.
+    const asked = keepGoing()
+    total.more = result.claimed >= BATCH || asked
+    if (!total.more) return total
   }
-  // Out of passes with a caller still asking: something is left.
-  total.more = total.more || keepGoing()
+  // Out of passes with a full batch or a caller still asking: something
+  // is left, and `more` says so.
   return total
 }
 

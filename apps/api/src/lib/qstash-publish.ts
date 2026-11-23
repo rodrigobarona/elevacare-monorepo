@@ -44,7 +44,9 @@ export async function publishWorkflowJob(
     ...(later
       ? {
           notBefore: Math.ceil(later.notBefore.getTime() / 1000),
-          deduplicationId: later.deduplicationId,
+          // With the address: staging and production may share one
+          // queue account, and their runs are not each other's.
+          deduplicationId: `${parsed.host}:${later.deduplicationId}`,
         }
       : {}),
   })

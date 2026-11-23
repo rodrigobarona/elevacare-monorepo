@@ -110,7 +110,7 @@ NULL`, so no new token can be minted from this instant) inside withAudit
   `user_ids: [userId]` and `ban: true` (idempotent — no live participant is a no-op) with a
   10 s timeout and bounded retry, then sets `ejected_at`; the route returns 200 when both
   phases succeeded and 202 `{ ejectionPending: true }` when Daily failed — the row stays revoked
-  and `POST /workflows/video-eject-retry` (QStash, every minute while rows have `revoked_at`
+  and `POST /workflows/video-eject-retry` (since 13.35: delayed runs after a removal that did not go through, and the hourly tick, while rows have `revoked_at`
   and no `ejected_at`) completes the ejection. Rows are never hard-deleted while the session
   exists (revoked rows are history). Tests: Daily 5xx -> row revoked, join 403, retry job ejects;
   DB failure after a successful eject cannot re-authorize because the eject is only attempted
@@ -380,7 +380,7 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    returns 200 after eject succeeded (or the room does not exist yet) and 202 { ejectionPending:
    true } when Daily failed — two-phase per the Scope section: revoked_at first (deny state,
    join checks revoked_at IS NULL), eject second (10 s timeout, retry via POST
-   /workflows/video-eject-retry every minute until ejected_at is set); tests for Daily 5xx and
+   /workflows/video-eject-retry until ejected_at is set, by delayed runs and the hourly tick since 13.35); tests for Daily 5xx and
    for mint -> remove -> rejoin 403. OpenAPI + client.
 5. Join pages: apps/app/src/app/[orgSlug]/sessions/[bookingId]/join/page.tsx and the expert
    equivalent — server component fetches booking, renders <JoinClient> that calls the join

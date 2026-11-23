@@ -11,6 +11,7 @@ import {
   sql,
 } from "drizzle-orm"
 import { withAudit, withPlatformAudit } from "@eleva/audit"
+import { logError } from "@eleva/observability"
 import {
   isActiveBookingExpert,
   main,
@@ -79,14 +80,6 @@ export function isRetryableDailyFailure(err: unknown) {
     err.name === "AbortError" ||
     (err instanceof TypeError && /fetch failed|network/i.test(err.message))
   )
-}
-
-/**
- * The room is not there any more (it was deleted after the session):
- * nobody can be in it, so there is nobody left to put out.
- */
-export function isRoomGone(err: unknown) {
-  return err instanceof DailyHttpError && err.status === 404
 }
 
 /** Do not shrink a room while a revoked participant is still waiting to eject. */
@@ -516,6 +509,7 @@ async function retryStaleRoomCapacities(
 
   let repaired = 0
   let pending = 0
+  let refused = 0
   for (const session of rooms) {
     if (!session.dailyRoomName) {
       await clearCapacityPending(session.bookingId)
@@ -532,10 +526,16 @@ async function retryStaleRoomCapacities(
         await clearCapacityPending(session.bookingId)
         continue
       }
-      pending += 1
+      // As for a removal: away is tried again soon, "no" is said.
+      if (isRetryableDailyFailure(err)) {
+        pending += 1
+      } else {
+        refused += 1
+        logError("[video-eject-retry] a room's size could not be set", err)
+      }
     }
   }
-  return { scanned: rooms.length, repaired, pending }
+  return { scanned: rooms.length, repaired, pending, refused }
 }
 
 export async function retryPendingEjects(
@@ -566,6 +566,7 @@ export async function retryPendingEjects(
 
   let ejected = 0
   let pendingCount = 0
+  let refusedCount = 0
   for (const row of pending) {
     const stillRevoked = await withPlatformAdminContext(async (tx) => {
       const [current] = await tx
@@ -587,12 +588,19 @@ export async function retryPendingEjects(
       try {
         await daily(deps).ejectParticipants(row.dailyRoomName, [row.userId])
       } catch (err) {
-        // A room that is gone ends it: without this the same row would
-        // be tried again for ever.
-        if (!isRoomGone(err)) {
+        // (A room that is gone is not an error here: the client answers
+        // as if the person had been put out.)
+        if (isRetryableDailyFailure(err)) {
           pendingCount += 1
-          continue
+        } else {
+          // The service answered and said no (a key that was changed,
+          // an account that is closed). Trying again every minute will
+          // not change that: it is said where a person will see it, and
+          // the hourly run tries again.
+          refusedCount += 1
+          logError("[video-eject-retry] the video service refused", err)
         }
+        continue
       }
     }
     await withPlatformAudit(
@@ -622,7 +630,10 @@ export async function retryPendingEjects(
   return {
     scanned: pending.length,
     ejected,
+    /** Still to do, and worth trying again soon: the service was away. */
     pending: pendingCount,
+    /** Still to do, and the service said no: for a person to look at. */
+    refused: refusedCount,
     capacity,
   }
 }

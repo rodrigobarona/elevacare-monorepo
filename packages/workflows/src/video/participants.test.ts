@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest"
 import { buildSessionRoomBody, DailyHttpError } from "@eleva/video"
 import {
   isRetryableDailyFailure,
-  isRoomGone,
   isSelfDelegate,
   runRevokedParticipantDailyCleanup,
   SessionParticipantError,
@@ -30,23 +29,6 @@ describe("shouldRepairRoomCapacity", () => {
   it("waits while a revoked participant is still pending eject", () => {
     expect(shouldRepairRoomCapacity(1)).toBe(false)
     expect(shouldRepairRoomCapacity(0)).toBe(true)
-  })
-})
-
-describe("isRoomGone", () => {
-  it("is only the service saying the room is not there", () => {
-    expect(isRoomGone(new DailyHttpError(404, "not found"))).toBe(true)
-    expect(isRoomGone(new DailyHttpError(500, "down"))).toBe(false)
-    expect(isRoomGone(new DailyHttpError(403, "no"))).toBe(false)
-    expect(isRoomGone(new DOMException("timed out", "TimeoutError"))).toBe(
-      false
-    )
-  })
-
-  it("is never a reason to try again: there is nobody left to put out", () => {
-    expect(isRetryableDailyFailure(new DailyHttpError(404, "not found"))).toBe(
-      false
-    )
   })
 })
 

@@ -26,16 +26,14 @@ const GROUP_SECONDS = 30
 const SOONEST_MS = 5_000
 
 /**
- * What a job's route is sent beside its own input: which run after a
- * failure this is, and whether the tick sent it. Both are optional and
- * anything else in the body is the route's own.
+ * What a job's route is sent: which run after a failure this is, and
+ * whether the tick sent it. Both are optional. A body that does not
+ * read as this is a first run, not from the tick.
  */
-export const JobRunSchema = z
-  .object({
-    again: z.number().int().min(1).max(50).optional(),
-    tick: z.literal(true).optional(),
-  })
-  .passthrough()
+export const JobRunSchema = z.object({
+  again: z.number().int().min(1).max(50).optional(),
+  tick: z.literal(true).optional(),
+})
 
 /** Which run this is: 0 for a first run, and whether the hourly tick sent it. */
 export async function whichRun(

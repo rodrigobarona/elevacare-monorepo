@@ -711,7 +711,7 @@ PR 04.2 — funnel + payment + marketing/legal:
    packages/workflows/src/domain-events.ts (typed union of event names + payloads, starting with
    booking.guest_activation_required; INSERT inside the caller's Drizzle transaction, never from
    after() alone), and POST /workflows/domain-events-publisher (QStash Receiver.verify, scheduled
-   every minute and kicked best-effort from after() after commit; claims pending deliveries FOR
+   hourly since 13.35 and run from after() by every request that writes an event; claims pending deliveries FOR
    UPDATE SKIP LOCKED, runs each subscriber independently, marks the delivery succeeded|failed
    with attempts + last_error, dead-letters a delivery after 10 attempts, and sets the event's
    published_at only when every delivery is succeeded — a failing subscriber never re-runs a

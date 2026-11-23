@@ -30,8 +30,9 @@ export const POST = reportedJob(
       // Someone removed from a call is still in it, or a room is still
       // too small for someone added: not something to leave for an hour.
       // After the tick's run too (it counts as a first run), so the
-      // tries go on for as long as someone is still to be put out. It
-      // ends: a room that is gone counts as done.
+      // tries go on for as long as the video service is away. What it
+      // refuses outright is not counted here: that is reported for a
+      // person to look at, and tried again by the hourly run only.
       if (result.pending > 0 || result.capacity.pending > 0) {
         const { again } = await whichRun(request)
         await runJobAgain("video-eject-retry", again)

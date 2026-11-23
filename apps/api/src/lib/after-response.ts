@@ -1,4 +1,7 @@
 import { after } from "next/server"
+import { logError } from "@eleva/observability"
+
+let saidNoRequest = false
 
 /**
  * Does `task` once the request has been answered.
@@ -13,7 +16,17 @@ export function afterResponse(task: () => unknown): boolean {
   try {
     after(task)
     return true
-  } catch {
+  } catch (err) {
+    // On a deployed server every call is inside a request. If this is
+    // reached there, emails and the rest are waiting for the hour, and
+    // nothing else would show it: said once.
+    if (process.env.VERCEL_ENV && !saidNoRequest) {
+      saidNoRequest = true
+      logError(
+        "[after-response] no request to wait for: the task is not run",
+        err
+      )
+    }
     return false
   }
 }

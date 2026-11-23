@@ -63,8 +63,13 @@ export async function listExpiredReservations(input: {
  *
  * Only holds still to lapse: one already past and left behind by a run
  * that failed is not "next", or the job would be called back at once,
- * over and over.
+ * over and over. And only holds made lately: a hold lives an hour at
+ * most, so one older than `HOLD_STILL_FRESH_MS` is kept open by a
+ * payment that never settled. Its ten-minute looks are left to the
+ * hourly run, or one such hold would wake the database 144 times a day.
  */
+export const HOLD_STILL_FRESH_MS = 2 * 60 * 60 * 1000
+
 export async function nextReservationExpiry(
   now: Date = new Date()
 ): Promise<Date | null> {
@@ -75,7 +80,11 @@ export async function nextReservationExpiry(
       .where(
         and(
           eq(main.slotReservations.status, "active"),
-          gt(main.slotReservations.expiresAt, now)
+          gt(main.slotReservations.expiresAt, now),
+          gt(
+            main.slotReservations.createdAt,
+            new Date(now.getTime() - HOLD_STILL_FRESH_MS)
+          )
         )
       )
     return row?.at ?? null

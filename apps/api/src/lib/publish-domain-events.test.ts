@@ -111,6 +111,28 @@ describe("publishDomainEventsNow", () => {
     expect(publishPendingDomainEvents).toHaveBeenCalledTimes(3)
   })
 
+  it("does not lose a call made during the last pass: the job is asked to go on", async () => {
+    // Three full passes, then a fourth that is not full, with a request
+    // writing an event while it is out.
+    const full = { ...none, claimed: 25, succeeded: 25 }
+    publishPendingDomainEvents
+      .mockResolvedValueOnce(full)
+      .mockResolvedValueOnce(full)
+      .mockResolvedValueOnce(full)
+    const release = held({ ...none, claimed: 2, succeeded: 2 })
+    const first = publishDomainEventsNow()
+    // Let the three passes go by, then call during the fourth.
+    await vi.waitFor(() =>
+      expect(publishPendingDomainEvents).toHaveBeenCalledTimes(4)
+    )
+    void publishDomainEventsNow()
+    release()
+    await first
+    expect(publishPendingDomainEvents).toHaveBeenCalledTimes(4)
+    expect(runJobAt).toHaveBeenCalledTimes(1)
+    expect(runJobAt.mock.calls[0]![0]).toBe("domain-events-publisher")
+  })
+
   it("asks for a run that tries again when a delivery failed", async () => {
     publishPendingDomainEvents.mockResolvedValueOnce({
       ...none,

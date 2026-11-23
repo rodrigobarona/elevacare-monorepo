@@ -1,4 +1,5 @@
 import { env } from "@eleva/config/env"
+import { pingMainDb } from "@eleva/db"
 import { captureException, reportJobRun } from "@eleva/observability"
 import { corsHeaders } from "@/lib/cors"
 import { bearerMatches } from "@/lib/internal-auth"
@@ -93,6 +94,11 @@ async function runTick(request: Request, { params }: TickContext) {
 /** Calls every job of the cadence, in parallel, and gathers what each answered. */
 async function runJobs(request: Request, cadence: WorkflowTickCadence) {
   const jobs = Object.entries(WORKFLOW_TICKS[cadence])
+  // The database has usually been asleep since the last tick. One
+  // question wakes it, so that the jobs do not all start at once against
+  // a database that is still waking and give up waiting for it. If it
+  // does not answer, the jobs run anyway and each says what it found.
+  await pingMainDb().catch(() => undefined)
   const settled = await Promise.allSettled(
     jobs.map(async ([name, run]) => {
       const inner = new Request(new URL(`/workflows/${name}`, request.url), {
