@@ -1549,6 +1549,10 @@ them, and stops at the one that does.</p>
 <td>O-13</td>
 <td>Switch on the dependency graph for the repository (it is off): GitHub can then review the dependencies a pull request adds. After the first CodeQL findings are sorted, make &quot;Code scanning results / CodeQL&quot; a required check or add a code scanning ruleset, or the scan only reports. Leave code scanning&#39;s default setup off (13.13).</td>
 </tr>
+<tr>
+<td>O-14</td>
+<td>Before the cutover (15.2): a commit-signing key (SSH or GPG) registered on the owner&#39;s GitHub account, which an agent on the same machine cannot use without the owner (a hardware key, or a password manager that asks each time); <code>commit.gpgsign true</code> and a verified email in the owner&#39;s clone; and the trial in <code>operator-tasks/scripts-catalog.md</code> (one signed approval on a scratch branch, one written through github.com to see it refused). The <code>gh</code> login used by the operator must not carry a scope that can add signing keys.</td>
+</tr>
 </tbody></table>
 <p><strong>O-2 in numbers.</strong> Read on 2026-11-23 from Neon&#39;s API and from production&#39;s logs; nothing was
 changed there.</p>
@@ -2445,9 +2449,9 @@ password&quot; and &quot;reconnect your calendar&quot;; Mobbin had no &quot;we h
 </tr>
 <tr>
 <td>15.2</td>
-<td>The cutover gate: a production command runs only with a dated approval</td>
+<td><strong>Open (#475).</strong> The cutover gate: a production command runs only on the owner&#39;s signed approval of that command</td>
 <td>M</td>
-<td>Unit tests for missing, stale and foreign approvals</td>
+<td>45 tests. Two reviews, last 7.5 / 7 / 7.5 / 8, its findings fixed and not scored again. Has not asked the real GitHub: see O-14</td>
 </tr>
 <tr>
 <td>15.3</td>
