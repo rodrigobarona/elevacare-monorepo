@@ -369,7 +369,7 @@ saved in case F-04 reopens it.
 |                         | 13.31 | Public pages are cached                                                        | M    | Next 16 caching (section 11)                                                  |
 |                         | 13.32 | Accessibility checks on the signed-in apps                                     | S    | After 13.25                                                                   |
 | Languages               | 13.33 | API error codes map to copy in three languages                                 | M    |                                                                               |
-|                         | 13.34 | Every email renders in three languages                                         | S    | A test                                                                        |
+|                         | 13.34 | **Open (#466), waits on O-2 to merge.** Every email renders in three languages | S    | A test (220 pass)                                                             |
 
 Waiting on a person or an outside party: the penetration test and the DPO provider (F-14), the
 retention periods (P-02), analytics (F-09), the limits (F-08), the accounts and the restore
