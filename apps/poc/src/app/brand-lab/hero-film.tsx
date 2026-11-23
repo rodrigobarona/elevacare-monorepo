@@ -18,7 +18,7 @@ function subscribe(onChange: () => void) {
  * video (the same rule as `ElevaVideo` in `@eleva/media`). The film can be
  * paused, because it moves for longer than five seconds.
  */
-export function HeroFilm() {
+export function HeroFilm({ className = "es-film" }: { className?: string }) {
   const video = useRef<HTMLVideoElement>(null)
   const [paused, setPaused] = useState(false)
   const ambient = useSyncExternalStore(
@@ -40,7 +40,7 @@ export function HeroFilm() {
   }
 
   return (
-    <div className="es-film">
+    <div className={`bl-film ${className}`}>
       <img src={`${FILM}/poster.jpg`} alt="" />
       {ambient ? (
         <>

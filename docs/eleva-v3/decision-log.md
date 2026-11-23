@@ -98,6 +98,20 @@ Each entry should include:
   not in the media library or on the media host, it is not on the live
   homepage, the cut for production should be made at 1920 wide, and no
   judge has seen it.
+- **Founder's second reaction, and direction E (2026-11-23).** A to D need
+  more character; a design that leans on a typeface "looks a little bit AI
+  slop"; "even the OURA ring is more fun to read"; use Anthropic's
+  frontend-design skill; no "rainbow or funfair". The skill's list of marks
+  of a generated page matched A to D closely (cream page with a serif
+  display, one italic phrase, labels above headings, numbered markers, an
+  arrow on every link). Direction E, "In her words", is built from what
+  women ask: the film fills the first screen with one question and one
+  action, and the question changes with the film, clip by clip; need-first
+  browsing is eight questions; experts are introduced by their own words;
+  colour is two flat fields, the brand's teal and coral. A first attempt
+  with a sunrise gradient and five tints was dropped before it was shown.
+  **The blind judges had preferred the type-led direction; the founder's
+  taste decides, and E has not been judged.**
 - **What stands between D and 8.5** (the judges' lists, merged): a hero
   photograph with real scale, graded like the portraits; the real pay step
   (card form, consent, promo code, tax number); a fuller profile with a

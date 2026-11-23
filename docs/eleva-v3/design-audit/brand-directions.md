@@ -150,6 +150,75 @@ place of the quote; the wordmark as the close. On the booking path: how she meet
 shown, the time zone sits beside the time, the button says "Continue to payment", and a bar on
 phones keeps the next free time in reach.
 
+## Direction E: In her words (after the founder's reaction to D)
+
+Added on 2026-11-23. The founder's words about A to D: they need more character, he does not
+want a design that leans on a typeface because it "looks a little bit AI slop", and "even the
+OURA ring is more fun to read". He asked for Anthropic's frontend-design skill to be used, and
+warned against "a rainbow or a funfair". A first attempt at colour (a sunrise gradient with five
+tints) was exactly that and was thrown away before it was shown.
+
+**What the skill showed about A to D.** They carry most of the marks it lists for pages that
+read as generated: a cream page with a serif display and a clay accent; one phrase of the
+headline in italic; small labels above headings; numbered markers on things that are not a
+sequence; a mono face for small labels; an arrow added to every link; the same rounded card and
+shadow everywhere. E has none of them.
+
+**Why Oura is more fun to read.** Not decoration. Specific statements, real people's words with
+their names, close photographs of people, and sections that each look different. So E is built
+from content first.
+
+**The idea.** The most characteristic thing in Eleva's world is the question a woman brings. The
+page is built from those questions and from the experts' own words.
+
+**Palette: two fields and no gradient**
+
+| Role                  | Colour                                    | Hex     | Contrast                                   |
+| --------------------- | ----------------------------------------- | ------- | ------------------------------------------ |
+| Page                  | Chalk (the brand's own soft white)        | #F6F8F7 | ink on it 15.17; second ink #50605F 6.19   |
+| Text                  | Ink                                       | #142326 |                                            |
+| Action, links         | Eleva teal (the logo's colour)            | #006D77 | white on it 6.08; as link on the page 5.70 |
+| Field one             | Deep teal                                 | #0A3A40 | white on it 12.41                          |
+| Field two             | Coral (already the brand's second colour) | #E29578 | ink on it 6.78                             |
+| Selected, trust facts | Mist                                      | #DCEBE8 |                                            |
+
+Each field is used once on the page. Photographs and the film stay in full colour and carry the
+rest.
+
+**Type.** Fraunces for headings at an ordinary size (the hero question is 72px at most, section
+headings 42px), roman only, with no accent phrase. DM Sans for everything else. Both are already
+the brand's faces. The questions and the experts' quotes are set in the heading face, so the
+serif means "someone is speaking".
+
+**Layout**
+
+```
+[ film, in a rounded frame with a small margin                  ]
+[ nav                                                           ]
+[ Is it normal to leak when I run?                              ]
+[ one line                    [ See pelvic health physios ]     ]
+
+What do you want to ask?     (eight questions, each a link)
+The people who answer        (one large portrait, two smaller, each with her words)
+[ deep teal ]  Every expert is registered with her professional body ...
+[ coral ]      What a first session is like: first, then, after
+Guided by people who study women's health   (three advisors)
+Before you book              (four questions)
+```
+
+**Principles**
+
+1. One goal in the hero: one question, one line, one button. The button says where it goes.
+2. One moving idea on the page: the question changes with the film, clip by clip, so the words
+   always match the picture. Nothing else moves by itself. Without the film (phones, reduced
+   motion) or while it is paused, the first question stays.
+3. People speak. Experts are introduced by a sentence of their own, not by a list of facts.
+4. Colour is two flat fields. No gradient, no tint per category.
+5. Each section has its own shape, so no two neighbours look the same.
+
+**Not done, and not judged.** No panel has seen E. The experts' quotes are from the fictional
+demo seed. The film is the lab cut at 1280 wide. Portuguese and Spanish are not set.
+
 ## What the blind panel scored
 
 Judges saw neutral letters, never the names or these notes. Scale: 8.5 means "stands beside the

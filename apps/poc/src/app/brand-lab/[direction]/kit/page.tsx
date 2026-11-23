@@ -45,11 +45,11 @@ export default async function BrandKitPage({
   const { direction } = await params
   if (!isDirection(direction)) notFound()
   const expert = EXPERTS[0]
-  if (direction === "estuary") {
+  if (direction === "estuary" || direction === "voices") {
     return (
       <div className="bl" data-direction={direction}>
         <LabBar current={direction} view="kit" />
-        <EstuaryKit />
+        <EstuaryKit faces={direction === "voices" ? "faces-colour" : "faces"} />
       </div>
     )
   }

@@ -29,6 +29,12 @@ export const DIRECTIONS = [
     name: "Estuary",
     line: "What the first blind panel asked for: Folio's type and discipline, Tide's hero and warmth, the teal the logo already has.",
   },
+  {
+    id: "voices",
+    letter: "E",
+    name: "In her words",
+    line: "Built from what women ask. The film fills the first screen, the questions do the talking, and colour is two fields: the brand's teal and coral.",
+  },
 ] as const
 
 export type DirectionId = (typeof DIRECTIONS)[number]["id"]

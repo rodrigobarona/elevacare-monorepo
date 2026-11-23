@@ -438,6 +438,30 @@
       "why": "On light grey (#EBEBEB), the name is set in a black high-contrast serif that spans about 96% of the viewport width, with a cap height near 17% of the width. Six links sit in 9px capitals at the top right and three legal links in a row beneath the name. That is the whole footer.",
       "apply": "The last thing a visitor sees is the name, large. Eleva keeps its logo, so the equivalent is the existing wordmark and leaf at full width in a tone close to the ground (deep on deep, or sand on sand), with the link columns above it. It gives the brand a signature on every page without a new asset. A finance protocol; kept for the footer idea.",
       "query": "footer with large wordmark on colour field"
+    },
+    {
+      "id": "15-brand-art-direction/25",
+      "file": "img/25-waabi-film-hero-headline-over.jpg",
+      "app": "Waabi",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/0345226a-541f-4607-89b7-b6e0923cb872?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A film fills the first screen and a short headline sits over its lower left",
+      "why": "The whole screen is one moving picture. The headline is two short sentences in a serif at an ordinary size, set over the quiet part of the frame, and the navigation is a small bar at the top. Nothing else is on the screen, so the picture carries the character and the words stay easy to read.",
+      "apply": "Eleva's hero as the film with one question over its lower left and one action under it. The headline does not need to be large when the picture is doing the work. A self-driving truck company; kept for the composition only.",
+      "query": "wellness brand hero section with full-bleed background video"
+    },
+    {
+      "id": "15-brand-art-direction/26",
+      "file": "img/26-superpower-framed-hero-one-action.jpg",
+      "app": "Superpower",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/db484778-34d1-4a38-af04-5593bee2f342?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A hero inside a rounded frame: one person, one colour of light, a headline and its action on the left",
+      "why": "The picture sits in a frame with rounded corners and a small margin, so it reads as an object on the page and not a banner. One woman in profile, lit by one warm colour. The headline, one line and the main button share the left edge, and three short facts sit along the bottom. The colour comes from the light in the photograph, not from a gradient laid over it.",
+      "apply": "Keep Eleva's film in a rounded frame with a small margin, and let colour come from the footage and from two flat fields lower on the page (teal and coral). A health-testing company in the US; its eligibility line is specific to that market and is not something Eleva shows. Kept for the frame and the light.",
+      "query": "health brand section on a colourful gradient background"
     }
   ],
   "judging_criteria": [

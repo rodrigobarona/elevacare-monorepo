@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { DIRECTIONS, isDirection } from "../content"
 import { LabBar } from "../lab-bar"
+import { VoicesHome } from "../voices"
 import { ClayHome } from "../clay"
 import { EstuaryHome } from "../estuary"
 import { FolioHome } from "../folio"
@@ -24,6 +25,7 @@ export default async function BrandDirectionPage({
       {direction === "clay" ? <ClayHome /> : null}
       {direction === "folio" ? <FolioHome /> : null}
       {direction === "estuary" ? <EstuaryHome /> : null}
+      {direction === "voices" ? <VoicesHome /> : null}
     </div>
   )
 }

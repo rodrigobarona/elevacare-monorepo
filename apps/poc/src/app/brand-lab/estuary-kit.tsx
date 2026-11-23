@@ -1,5 +1,5 @@
 import { SealCheckIcon, ShieldCheckIcon } from "@eleva/icons"
-import { ES_EXPERTS, face } from "./estuary"
+import { ES_EXPERTS } from "./estuary"
 import { LabLogo } from "./lab-bar"
 
 const SERVICES = [
@@ -33,7 +33,11 @@ const TIMES = ["09:00", "10:30", "11:15", "14:00", "15:30", "17:00"] as const
  * shown, the time zone sits beside the time, the button says what happens
  * next, and a bar on phones keeps the next free time in reach).
  */
-export function EstuaryKit() {
+export function EstuaryKit({
+  faces = "faces",
+}: {
+  faces?: "faces" | "faces-colour"
+}) {
   const expert = ES_EXPERTS[0]
   return (
     <>
@@ -48,7 +52,7 @@ export function EstuaryKit() {
         <section className="kit-profile" aria-label="Expert profile">
           <div className="kit-id">
             <span className="kit-portrait">
-              <img src={face(expert.slug)} alt="" />
+              <img src={`/brand-lab/${faces}/${expert.slug}.jpg`} alt="" />
             </span>
             <div>
               <h1>{expert.name}</h1>

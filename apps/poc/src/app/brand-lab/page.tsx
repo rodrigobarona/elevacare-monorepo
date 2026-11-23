@@ -6,6 +6,7 @@ const SWATCHES: Record<string, string[]> = {
   clay: ["#FBF3EC", "#A23E22", "#3A1830", "#E2A63B", "#E9E0F0"],
   folio: ["#FAF7F0", "#1C3A2E", "#1F5A43", "#F1E1A0", "#E2EBDD"],
   estuary: ["#FAF6EE", "#0B5A63", "#0E3338", "#F1E1A0", "#DCE9E3"],
+  voices: ["#F6F8F7", "#006D77", "#0A3A40", "#E29578", "#142326"],
 }
 
 /** The lab's front door: three directions, each on the same two pages. */
@@ -18,7 +19,8 @@ export default function BrandLabIndex() {
         The same homepage, profile and pay step in three directions, A to C,
         with the same words and people, so what you compare is colour, type,
         imagery and shape. D was built after a blind panel scored the first
-        three, from what the judges asked for. Nothing here is decided.
+        three, from what the judges asked for. E came after the founder asked
+        for more character and less reliance on type. Nothing here is decided.
       </p>
       <ul>
         {DIRECTIONS.map((direction) => (
