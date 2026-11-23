@@ -32,6 +32,33 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-23: The roadmap after a night of seven slices, and a development database over its quota (active)
+
+- `execution-plan/remaining-roadmap.md` is updated to `main` at `3a4bec75`.
+  Merged since the review of 2026-11-21: 13.2 (#456), 13.3 (#457), 12.5
+  (#458), 11.7 (#459), 13.28 (#460), 13.4 (#461), 12.6 (#462). The
+  review's findings 1 to 4 and 7 are fixed. 12.7 is open (#463).
+- **The development database is over its quota.** Since 02:46 UTC on
+  2026-11-23 the Neon project used by local development and by
+  pull-request branches answers every query with HTTP 402. Production
+  reads were checked from outside and work. Nothing that needs that
+  database can run, and every pull request's database job fails, so
+  nothing merges until an operator lifts it (O-2). The night's own runs
+  (seven pull requests' database jobs, about twenty local browser and
+  integration runs) are the likely cause; nobody measured it.
+- New for people, in the roadmap's section 4: F-15 (the rules an API key
+  must follow before one can be made again), F-16 (whether a key may read
+  a staff queue), P-08 (who reads and reviews the staff access log), the
+  interim sentence staff read (P-03), prorated seat charges on first
+  sync (A-03), and six operator actions (O-7 to O-12).
+- Six lessons (17 to 22): score every fix again; a recorded read happens
+  only when a person asks; tell the browser how long, not when; prove it
+  in the real app; the development database has a quota; say what was
+  written and not run.
+- Owner: engineering (the plan); operator (O-2 first); founder, DPO and
+  accountant (their rows)
+- Related: `execution-plan/remaining-roadmap.md`
+
 ### 2026-11-23: Staff queues have pages, and reading one is on record (12.6) (active)
 
 - Change (Phase 12.6): the two staff queues (clinic verifications, licence
