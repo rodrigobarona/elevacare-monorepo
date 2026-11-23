@@ -12,7 +12,7 @@ CI when a row has no enforcing test or CI job.
 | Duplicate session-cookie rejection               | 2.2                 | `requireApiAuth` `SESSION_COOKIE_AMBIGUOUS` test + Set-Cookie clear                               | D-13                                |
 | E2E email-verify bypass fail-closed              | 2.2                 | `e2e-env.test.ts`; production request → 404                                                       | environment-matrix.md               |
 | Vendor SDK boundaries                            | 0 / 1               | ESLint `boundaries` + CodeRabbit path_instructions                                                | `AGENTS.md`                         |
-| `withAudit` on mutations                         | existing / 2+       | `packages/audit` tests; `check:boundaries`                                                        | ADR / audit-wiring                  |
+| `withAudit` on mutations                         | existing / 2+       | Review of each change (no automated check); `packages/audit` tests cover the wrapper only         | ADR / audit-wiring                  |
 | Envelope encryption / no KEK in logs             | 3 / 10              | encryption known-vector tests; Sentry redaction                                                   | ADR-020                             |
 | Crypto-shred (`shredOrgKeys` / `orgKeyShredder`) | 10 / launch         | `shredOrgKeys` integration test (ciphertext unreadable after DEK delete; legal-hold blocks shred) | ADR-020, compliance-data-governance |
 | Public route BotID + rate limit                  | existing / 4        | route-guard checker (Phase 4)                                                                     | api-first-agentic                   |

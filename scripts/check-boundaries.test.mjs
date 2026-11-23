@@ -587,6 +587,15 @@ test("a frontend takes the listed reads and types from the database, and no more
       'export const l10 = require.resolve("drizzle-orm")',
       "no-restricted-syntax"
     ),
+    // A cast around the text does not hide it, whichever way it is quoted.
+    line(
+      "export const l11 = require(`@eleva/db` as string)",
+      "no-restricted-syntax"
+    ),
+    line(
+      "export const l12 = () => import(`drizzle-orm` as string)",
+      "no-restricted-syntax"
+    ),
     // A folder of the app's own named like a workspace folder is not one.
     line('import { list } from "./packages/list"'),
     line('import { card } from "@/components/apps/app-card"'),
@@ -833,6 +842,14 @@ test("every app keeps the vendor and health-data boundaries, in every file", asy
     ),
     line("export const v6 = () => import(`stripe`)", "no-restricted-syntax"),
     line('export const v7 = module.require("stripe")', "no-restricted-syntax"),
+    line(
+      "export const v8 = require(`stripe` as string)",
+      "no-restricted-syntax"
+    ),
+    line(
+      "export const v9 = createRequire(import.meta.url)(`twilio` satisfies string)",
+      "no-restricted-syntax"
+    ),
     line("export const all = [Stripe, Resend, S3]"),
     line('export const fine = () => import("./stripe-button")'),
     // Names that only begin like a banned module, and calls that load

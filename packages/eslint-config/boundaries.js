@@ -277,6 +277,7 @@ export function namedAsText(text, message) {
       `${loader} > Literal[value=${text}]`,
       `${loader} > ${cast} Literal[value=${text}]`,
       `${loader} > TemplateLiteral > TemplateElement[value.raw=${text}]`,
+      `${loader} > ${cast} TemplateElement[value.raw=${text}]`,
     ]),
   ].map((selector) => ({ selector, message }))
 }
