@@ -184,6 +184,17 @@ Each entry should include:
   colleague's decision from moving rows between pages; the console's
   proxy sends a signed-out person to sign in with an address the sign-in
   page cannot return to, so a deep link is lost (12.7 touches this).
+- Owner: engineering (the queues, the record, the proof); DPO (the notice
+  to staff, how long the records are kept and who reads them: P-02, P-03,
+  P-07); founder (whether a key may read a staff queue)
+- Related: `docs/eleva-v3/data-retention-export-matrix.md` (staff access
+  records under "Expert licences" and "Clinics");
+  `docs/eleva-v3/legal/breach-response.md` (what a walk through a queue
+  looks like in the audit stream); `execution-plan/remaining-roadmap.md`
+  section 7; the design brief's references in
+  `_context/mobbin/library/13-admin/` (17 to 19)
+- Next review: before the console is used in production (the notice to
+  staff)
 
 ### 2026-11-22: Every clinic subscription has a seat item (11.7) (active)
 

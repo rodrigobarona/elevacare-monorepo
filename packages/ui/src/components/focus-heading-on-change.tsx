@@ -35,16 +35,23 @@ export function FocusHeadingOnChange({
         if (window.location.pathname !== address) seen.delete(address)
       }
     }
-    // The description is set on every run, the first visit included, so it
-    // is there whenever the heading is read; it is this component's only
-    // while it is the one it set.
-    if (describedBy) heading.setAttribute("aria-describedby", describedBy)
+    // The description is added on every run, the first visit included, so
+    // it is there whenever the heading is read. A description the heading
+    // already had stays in front of it, and comes back as it was once this
+    // component's own is no longer wanted.
+    const before = heading.getAttribute("aria-describedby")
+    const ids = before ? before.split(/\s+/).filter(Boolean) : []
+    const lent =
+      describedBy && !ids.includes(describedBy)
+        ? [...ids, describedBy].join(" ")
+        : null
+    if (lent) heading.setAttribute("aria-describedby", lent)
     const giveBack = () => {
-      if (
-        describedBy &&
-        heading.getAttribute("aria-describedby") === describedBy
-      )
-        heading.removeAttribute("aria-describedby")
+      // Only while the attribute is still what this component set.
+      if (lent && heading.getAttribute("aria-describedby") === lent) {
+        if (before === null) heading.removeAttribute("aria-describedby")
+        else heading.setAttribute("aria-describedby", before)
+      }
       // Gone to another address: coming back later is a first visit again,
       // and focus stays where the reader put it.
       if (window.location.pathname !== address) seen.delete(address)
