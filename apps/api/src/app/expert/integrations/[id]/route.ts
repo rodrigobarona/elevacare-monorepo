@@ -2,6 +2,7 @@ import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
+import { z } from "zod"
 import { withAudit } from "@eleva/audit"
 import { releaseCalendarAccount, revokeProviderGrant } from "@eleva/auth"
 import {
@@ -24,6 +25,8 @@ const PROVIDER_FOR_SLUG: Record<string, string> = {
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
+
+const IntegrationIdSchema = z.string().uuid()
 
 export async function DELETE(
   request: Request,
@@ -54,7 +57,14 @@ export async function DELETE(
     )
   }
 
-  const { id } = await params
+  const parsedId = IntegrationIdSchema.safeParse((await params).id)
+  if (!parsedId.success) {
+    return secureJson(
+      { error: "invalid_body", issues: parsedId.error.issues },
+      { status: 422, headers }
+    )
+  }
+  const id = parsedId.data
 
   const integrations = await listCalendarIntegrations(profile.orgId, profile.id)
   const integration = integrations.find((i) => i.id === id)

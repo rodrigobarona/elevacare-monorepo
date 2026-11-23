@@ -32,6 +32,40 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-23: The route guard has its own tests, and a list of what counts as validation (13.4) (active)
+
+- Change (Phase 13.4): `pnpm check:route-guards` holds every API route to
+  its declared policy, and had no test of its own: all its logic ran at the
+  top of the file and ended in `process.exit`. It now exports its logic and
+  has 12 tests (`scripts/check-route-guards.test.mjs`, run by
+  `pnpm test:scripts` in CI): each auth mode, the policy shapes it refuses,
+  rate limit, BotID, and the rule below.
+- **"Validates the request" was a list of what does not count.** A mutating
+  route passed when any `.parse(` appeared whose receiver was not one of
+  eight names, or an audit wrapper, or two helper names that do not exist,
+  anywhere within two imports. So another library's `parse`, an output
+  schema, or a shared module that happened to parse something, each let a
+  route through. It is now a list of what counts (`REQUEST_VALIDATION`): a
+  Zod parse on a schema (a name ending in `Schema`, or an inline `z.…`
+  chain) that is not inside the building of a response, or
+  `rejectUnexpectedBody()`, in the route file or a handler beside it.
+- The new rule found two routes that validated nothing, and both are fixed
+  here: deleting a schedule override and disconnecting a calendar took the
+  path id as sent. Each now refuses an id that is not well formed (422).
+  The first also answered a failure with the caught error's own message;
+  it now logs it and answers with the code. No route was given an
+  exemption: the only one is still Better Auth's own handler.
+- An audit wrapper no longer counts as validation: recording a write says
+  nothing about what was written.
+- What the rule still cannot see, and nobody should claim it does: whether
+  the value parsed came from the request, whether the result is used, and
+  whether every path id of a route is parsed.
+- The guard also follows `export { POST } from "./handler"` now, as it
+  followed imports.
+- Proof: `pnpm test:scripts` (26 tests, 12 new); the guard passes on the 166
+  routes; route tests for the two fixed routes.
+- Owner: engineering
+
 ### 2026-11-22: An API key identifies its owner again, and no session can make one (12.5) (active)
 
 - Change (Phase 12.5): signing in to the API with a key read `key.userId`,
