@@ -3,8 +3,10 @@ import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { eq } from "drizzle-orm"
+import { z } from "zod"
 import { withAudit } from "@eleva/audit"
 import { getExpertProfileForOrg, deleteDateOverride, main } from "@eleva/db"
+import { logError } from "@eleva/observability"
 import type { RoutePolicy } from "@/lib/route-policy"
 
 export const ROUTE_POLICY = {
@@ -15,6 +17,8 @@ export const ROUTE_POLICY = {
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
+
+const OverrideIdSchema = z.string().uuid()
 
 export async function DELETE(
   request: Request,
@@ -45,7 +49,15 @@ export async function DELETE(
     )
   }
 
-  const { id } = await params
+  // The id goes into two queries: only a well-formed one gets there.
+  const parsedId = OverrideIdSchema.safeParse((await params).id)
+  if (!parsedId.success) {
+    return secureJson(
+      { error: "invalid_body", issues: parsedId.error.issues },
+      { status: 422, headers }
+    )
+  }
+  const id = parsedId.data
 
   try {
     await withAudit(
@@ -67,9 +79,11 @@ export async function DELETE(
       }
     )
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Internal server error"
+    // The error's own words stay in the log (a database error names its
+    // query and values); the caller gets the code.
+    logError("[schedule-override] delete failed", err)
     return secureJson(
-      { ok: false, error: "internal", message },
+      { ok: false, error: "internal" },
       { status: 500, headers }
     )
   }
