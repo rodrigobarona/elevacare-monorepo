@@ -32,6 +32,45 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-23: The roadmap after a night of seven slices, and a database over its allowance, production included (active)
+
+- `execution-plan/remaining-roadmap.md` is updated to `main` at `3a4bec75`.
+  Merged since the review of 2026-11-21: 13.2 (#456), 13.3 (#457), 12.5
+  (#458), 11.7 (#459), 13.28 (#460), 13.4 (#461), 12.6 (#462). The
+  review's findings 1 to 4 and 7 are fixed. Eight slices are open and
+  wait to merge: 12.7 (#463), 14.2 (#465), 13.34 (#466), 13.18 (#467),
+  13.10 (#468), 13.13 (#469), 13.5 (#470), 14.22 (#471).
+- **The database is over its monthly allowance, and production is on
+  it.** One Neon project on the free plan holds production, development
+  and the pull-request branches. Since about 02:45 UTC on 2026-11-23
+  every branch answers "exceeded the quota": production reads that are
+  not cached fail with a 500, nothing local that needs a database runs,
+  and every pull request's database job fails, so nothing merges until
+  the plan is changed or the new period begins on 1 December (O-2).
+- **This entry first said production reads worked. They did not.** The
+  read used to check was one the API answers from its cache. An uncached
+  read and production's logs showed the failure; lesson 21 is rewritten
+  around that.
+- **The cause was measured afterwards** (Neon's API and production's
+  logs, read only): production's own branch used 92.6 of the 110.5
+  compute-hours of the period, because the job that runs every minute
+  keeps its compute awake: sixteen days around the clock since 2026-11-07,
+  about 180 hours in a month by itself. The night's runs brought the stop
+  forward; left as it was it returns about the 18th of every month
+  without them. Slice 13.35 (#474) is the fix.
+- New for people, in the roadmap's section 4: F-15 (the rules an API key
+  must follow before one can be made again), F-16 (whether a key may read
+  a staff queue), P-08 (who reads and reviews the staff access log), the
+  interim sentence staff read (P-03), prorated seat charges on first
+  sync (A-03), and seven operator actions (O-7 to O-13).
+- Six lessons (17 to 22): score every fix again; a recorded read happens
+  only when a person asks; tell the browser how long, not when; prove it
+  in the real app; production shares the database allowance, and a cached
+  answer is not a check; say what was written and not run.
+- Owner: engineering (the plan); operator (O-2 first); founder, DPO and
+  accountant (their rows)
+- Related: `execution-plan/remaining-roadmap.md`
+
 ### 2026-11-23: Staff queues have pages, and reading one is on record (12.6) (active)
 
 - Change (Phase 12.6): the two staff queues (clinic verifications, licence
