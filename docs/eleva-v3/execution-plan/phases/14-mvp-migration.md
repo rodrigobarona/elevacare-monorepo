@@ -8,7 +8,7 @@
 | Touches    | `infra/migration/**` (new package `@eleva/infra-migration`), `packages/db` (staging tables `migration_*`), `apps/web` redirects (`next.config` / gateway), `packages/email` (welcome/set-password campaign), `docs/eleva-v3/operator-tasks/**`                                           |
 | Exit gate  | Three full rehearsals on Neon branches of a production snapshot with row-count and checksum reports within tolerance; every migrated expert can sign in via magic link and sees history; records decrypted from WorkOS Vault and re-encrypted; Stripe objects linked; rollback rehearsed |
 
-## Status on 2026-11-21
+## Status on 2026-11-23
 
 Slice 14.1 is on `main`: the target guard in `infra/migration`. Slice 14.2 (2026-11-23) adds a
 command that only runs the guard, and the one module that will open connections; no driver is

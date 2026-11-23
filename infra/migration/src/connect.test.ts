@@ -1,7 +1,16 @@
-import { readdirSync, readFileSync } from "node:fs"
+import {
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs"
+import { tmpdir } from "node:os"
 import path from "node:path"
 import { describe, expect, it, vi } from "vitest"
 import {
+  MIGRATION_CONNECT_EXIT,
   MigrationConnectError,
   openMigrationConnections,
   type MigrationSession,
@@ -150,10 +159,9 @@ describe("openMigrationConnections", () => {
       },
       JSON.parse(JSON.stringify(approved)) as ApprovedMigrationTarget,
     ]) {
-      // A bug in the caller, not a database that did not answer: 1, not 3.
       await expect(
         openMigrationConnections(forged, driver)
-      ).rejects.toMatchObject({ code: "NOT_APPROVED", exitCode: 1 })
+      ).rejects.toMatchObject({ code: "NOT_APPROVED" })
     }
     // Things that pass for the object without being it.
     for (const lookalike of [
@@ -289,7 +297,7 @@ describe("openMigrationConnections", () => {
       })
       await expect(
         openMigrationConnections(approved, { open })
-      ).rejects.toMatchObject({ code: "NOT_READ_ONLY", exitCode: 3 })
+      ).rejects.toMatchObject({ code: "NOT_READ_ONLY" })
       expect(ended).toBe(1)
     }
   })
@@ -304,7 +312,6 @@ describe("openMigrationConnections", () => {
     expect(error).toMatchObject({
       code: "CONNECT_FAILED",
       side: "target",
-      exitCode: 3,
       message: "could not connect to the target database (Error)",
     })
     expect(driver.sessions.get(approved.sourceUrl)!.ended).toBe(1)
@@ -363,7 +370,6 @@ describe("openMigrationConnections", () => {
     expect(error).toMatchObject({
       code: "CONNECT_TIMED_OUT",
       side: "target",
-      exitCode: 3,
     })
     // The source, opened first, was closed when the target gave no answer.
     expect(driver.sessions.get(approved.sourceUrl)!.ended).toBe(1)
@@ -371,6 +377,47 @@ describe("openMigrationConnections", () => {
     await vi.waitFor(() => {
       expect(driver.sessions.get(approved.targetUrl)?.ended).toBe(1)
     })
+  })
+
+  it("gives up on a database that connects and then says nothing", async () => {
+    const approved = await approve()
+    let ended = 0
+    const open: OpenMigrationSession = async () => ({
+      // The read-only check never gets an answer.
+      query: () => new Promise(() => undefined),
+      end: async () => {
+        ended += 1
+      },
+    })
+    await expect(
+      openMigrationConnections(approved, { open, timeoutMs: 20 })
+    ).rejects.toMatchObject({ code: "CONNECT_TIMED_OUT", side: "source" })
+    await vi.waitFor(() => expect(ended).toBe(1))
+  })
+
+  it("treats a driver that throws at once like one that fails later", async () => {
+    const approved = await approve()
+    const open = (() => {
+      // Not a rejected promise: thrown before one exists.
+      throw new Error(`bad config ${approved.sourceUrl}`)
+    }) as unknown as OpenMigrationSession
+    const error = (await openMigrationConnections(approved, { open }).catch(
+      (caught: unknown) => caught
+    )) as MigrationConnectError
+    expect(error).toBeInstanceOf(MigrationConnectError)
+    expect(error).toMatchObject({ code: "CONNECT_FAILED", side: "source" })
+    expect(error.message).not.toContain(SECRET)
+  })
+
+  it("names an exit status for every failure, and none of them is 0", () => {
+    expect(MIGRATION_CONNECT_EXIT).toEqual({
+      // A bug in the caller, not a database that did not answer.
+      NOT_APPROVED: 1,
+      CONNECT_FAILED: 3,
+      CONNECT_TIMED_OUT: 3,
+      NOT_READ_ONLY: 3,
+    })
+    expect(Object.isFrozen(MIGRATION_CONNECT_EXIT)).toBe(true)
   })
 
   it("closes both sessions, once, however often it is asked", async () => {
@@ -397,68 +444,108 @@ describe("openMigrationConnections", () => {
 describe("the package's files", () => {
   const SRC = import.meta.dirname
   const PACKAGE = path.resolve(SRC, "..")
-  /** Every source file that is not a test, in any folder under src. */
-  const sources = () =>
-    (readdirSync(SRC, { recursive: true }) as string[])
-      .filter((file) => file.endsWith(".ts") && !file.endsWith(".test.ts"))
+  const CODE = /\.(ts|mts|cts|js|mjs|cjs)$/
+  const TEST = /\.test\.[cm]?[jt]s$/
+
+  /** Every code file under a folder that is not a test, at any depth. */
+  const codeFiles = (root: string) =>
+    (readdirSync(root, { recursive: true }) as string[])
       .map((file) => file.split(path.sep).join("/"))
-  const read = (file: string) => readFileSync(path.join(SRC, file), "utf8")
-  /** What a file imports, by any of the three ways to import. */
+      .filter((file) => !file.split("/").includes("node_modules"))
+      .filter((file) => CODE.test(file) && !TEST.test(file))
+  /** The package's own code: everything but its tests and its tool configs. */
+  const sources = () =>
+    codeFiles(PACKAGE).filter(
+      (file) => !/^[\w.-]+\.config\.[cm]?[jt]s$/.test(file)
+    )
+  /** A file's code without its comments, where English uses the same words. */
+  const code = (file: string) =>
+    readFileSync(path.join(PACKAGE, file), "utf8")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/(^|[^:])\/\/.*$/gm, "$1")
+  /** What a piece of code imports, by any of the ways to import. */
   const imports = (source: string) =>
     [
       ...source.matchAll(
-        /(?:from\s+|import\s*\(\s*|require\s*\(\s*|^\s*import\s+)["']([^"']+)["']/gm
+        /(?:from\s+|import\s*\(\s*|require\s*\(\s*|^\s*import\s+)["'`]([^"'`]+)["'`]/gm
       ),
     ].map((match) => match[1]!)
 
-  // What a file here may import: its neighbours, a few parts of Node that
-  // open nothing, and zod. A list of what is allowed, not of what is
-  // forbidden: `@eleva/db` opens a connection from the environment, and no
-  // list of driver names would have thought of it.
-  const ALLOWED =
-    /^(\.{1,2}\/[\w./-]+|node:(readline\/promises|path|fs|crypto)|zod)$/
+  // What a file here may import: a neighbour inside src, the one part of
+  // Node the terminal needs, and zod. A list of what is allowed, not of
+  // what is forbidden: `@eleva/db` opens a connection from the environment,
+  // and no list of driver names would have thought of it. The next slice
+  // that needs more (a file to write a report, a driver in connect.ts)
+  // changes this list in the open, which is the conversation to have.
+  const allowed = (file: string, specifier: string) => {
+    if (specifier === "zod" || specifier === "node:readline/promises") {
+      return true
+    }
+    if (!/^\.{1,2}\//.test(specifier)) return false
+    // A neighbour, and one that stays inside src: "../../packages/db" is
+    // a relative path too.
+    const resolved = path.resolve(PACKAGE, path.dirname(file), specifier)
+    return resolved.startsWith(`${SRC}${path.sep}`)
+  }
+
+  it("the package's code is all in src", () => {
+    expect(sources().every((file) => file.startsWith("src/"))).toBe(true)
+    expect(sources()).toContain("src/connect.ts")
+  })
 
   it("no file but connect.ts imports anything that could open a connection", () => {
     const offenders = sources()
-      .filter((file) => file !== "connect.ts")
+      .filter((file) => file !== "src/connect.ts")
       .flatMap((file) =>
-        imports(read(file))
-          .filter((specifier) => !ALLOWED.test(specifier))
+        imports(code(file))
+          .filter((specifier) => !allowed(file, specifier))
           .map((specifier) => `${file}: ${specifier}`)
       )
     expect(offenders).toEqual([])
   })
 
-  it("the check would catch a driver, the product's own database client, and a file in a folder", () => {
+  it("the check would catch a driver, the product's own client, a path out of the package, and a file in a folder", () => {
     for (const line of [
       'import { Client } from "pg"',
       'import { Pool } from "@neondatabase/serverless"',
       'import { db } from "@eleva/db"',
+      'import type { Tx } from "@eleva/db"',
       'import "pg"',
       'const { Client } = await import("pg")',
+      "const { Client } = await import(`pg`)",
       'const pg = require("pg/lib/client")',
       'import net from "node:net"',
       'import { env } from "node:process"',
+      'import { readFileSync } from "node:fs"',
+      'import { db } from "../../../packages/db/src/index"',
+      'import pg from "../node_modules/pg/lib/index.js"',
     ]) {
       expect(
-        imports(line).some((specifier) => !ALLOWED.test(specifier)),
+        imports(line).some((specifier) => !allowed("src/x.ts", specifier)),
         line
       ).toBe(true)
     }
-    for (const line of [
-      'import { z } from "zod"',
-      'import { directHost } from "./guard"',
-      'import { map } from "../map/users"',
-      'import { createInterface } from "node:readline/promises"',
-    ]) {
+    for (const [file, line] of [
+      ["src/x.ts", 'import { z } from "zod"'],
+      ["src/x.ts", 'import { directHost } from "./guard"'],
+      ["src/map/users.ts", 'import { directHost } from "../guard"'],
+      ["src/x.ts", 'import { createInterface } from "node:readline/promises"'],
+    ] as const) {
       expect(
-        imports(line).every((specifier) => ALLOWED.test(specifier)),
+        imports(line).every((specifier) => allowed(file, specifier)),
         line
       ).toBe(true)
     }
-    // The walk goes into folders.
-    expect(sources()).toContain("connect.ts")
-    expect(readdirSync(SRC, { recursive: true }).length).toBeGreaterThan(0)
+    // The walk goes into folders: a file two levels down is found.
+    const scratch = mkdtempSync(path.join(tmpdir(), "migration-scan-"))
+    try {
+      mkdirSync(path.join(scratch, "src", "map"), { recursive: true })
+      writeFileSync(path.join(scratch, "src", "map", "users.mts"), "")
+      writeFileSync(path.join(scratch, "src", "map", "users.test.ts"), "")
+      expect(codeFiles(scratch)).toEqual(["src/map/users.mts"])
+    } finally {
+      rmSync(scratch, { recursive: true, force: true })
+    }
   })
 
   it("the package depends on nothing that connects", () => {
@@ -473,34 +560,32 @@ describe("the package's files", () => {
     expect(manifest.scripts.guard).toBe("tsx src/main.ts guard")
   })
 
-  it("only main.ts reads the process's environment or arguments", () => {
-    const READS_PROCESS =
-      /\bprocess\s*(\.|\[)\s*["']?(env|argv)|=\s*process\b|node:process/
+  it("only main.ts touches the process", () => {
+    // The environment, the arguments, the terminal, a `.env` loader: all
+    // of it is reached through `process`, so the word itself is the test.
     const offenders = sources()
-      .filter((file) => file !== "main.ts")
-      .filter((file) => READS_PROCESS.test(read(file)))
+      .filter((file) => file !== "src/main.ts")
+      .filter((file) => /\bprocess\b/.test(code(file)))
     expect(offenders).toEqual([])
-    for (const line of [
-      "process.env.X",
-      'process["env"]',
-      "const { env } = process",
-      'import { env } from "node:process"',
-      "process.argv.slice(2)",
-    ]) {
-      expect(READS_PROCESS.test(line), line).toBe(true)
-    }
-    expect(READS_PROCESS.test("approved in this process.")).toBe(false)
+    expect(/\bprocess\b/.test(code("src/main.ts"))).toBe(true)
+    // Comments may say "in this process"; code may not say `process`.
+    expect(code("src/guard.ts")).not.toMatch(/in this process/)
   })
 
-  it("the guard is asked in one place, with the real question to Neon built in one place", () => {
-    const callers = (call: RegExp) =>
-      sources().filter((file) => call.test(read(file)))
-    // Defined in guard.ts, called from cli.ts: a second caller could bring
-    // its own answers from Neon and get a real approval for them.
-    expect(callers(/\bassertMigrationTarget\(/)).toEqual(["cli.ts", "guard.ts"])
-    expect(callers(/\bcreateNeonEndpointResolver\(/)).toEqual([
-      "main.ts",
-      "neon-api.ts",
+  it("the guard is asked in one place, the command run from one place, and Neon's real answer built in one place", () => {
+    const users = (name: string) =>
+      sources().filter((file) => new RegExp(`\\b${name}\\b`).test(code(file)))
+    // By the name, however it is imported, renamed or called: a second
+    // caller could bring its own answers from Neon and get a real
+    // approval for them.
+    expect(users("assertMigrationTarget")).toEqual([
+      "src/cli.ts",
+      "src/guard.ts",
+    ])
+    expect(users("runMigrationCommand")).toEqual(["src/cli.ts", "src/main.ts"])
+    expect(users("createNeonEndpointResolver")).toEqual([
+      "src/main.ts",
+      "src/neon-api.ts",
     ])
   })
 })

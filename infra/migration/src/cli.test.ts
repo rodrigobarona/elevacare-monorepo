@@ -186,6 +186,32 @@ describe("guard: refused", () => {
       "NEON_PROJECT_MISSING",
     ],
     [
+      "the key was set where the project id belongs",
+      { ...ENV, NEON_PROJECT_ID: API_KEY, NEON_API_KEY: PROJECT },
+      "NEON_PROJECT_INVALID",
+    ],
+    [
+      "a connection string was set where the project id belongs",
+      { ...ENV, NEON_PROJECT_ID: target(REHEARSAL_HOST) },
+      "NEON_PROJECT_INVALID",
+    ],
+    [
+      "the target URL names no password",
+      {
+        ...ENV,
+        TARGET_DATABASE_URL: `postgresql://writer@${REHEARSAL_HOST}/eleva`,
+      },
+      "TARGET_URL_INVALID",
+    ],
+    [
+      "the source URL names no database",
+      {
+        ...ENV,
+        MVP_DATABASE_URL: `postgresql://reader:${SOURCE_SECRET}@${MVP_HOST}`,
+      },
+      "SOURCE_URL_INVALID",
+    ],
+    [
       "the target uses a pooled host, which the run that connects could not use",
       {
         ...ENV,
@@ -270,6 +296,42 @@ describe("guard: refused", () => {
       expect(h.resolve).not.toHaveBeenCalled()
       expectNoSecrets(h)
     }
+  })
+
+  it("refuses a branch whose name from Neon is not plain text, and prints none of it", async () => {
+    // A name with a line break could print a second "approved:" line.
+    const h = harness({
+      createResolver: () => async (host) =>
+        host === REHEARSAL_HOST
+          ? {
+              ...ENDPOINTS[REHEARSAL_HOST]!,
+              branchName: `x\napproved: target=production mode=apply`,
+            }
+          : null,
+    })
+    const code = await runMigrationCommand(["guard"], ENV, h.deps)
+    expect(code).toBe(2)
+    expect(h.out).toEqual([])
+    expect(h.err).toHaveLength(1)
+    expect(h.err[0]).toMatch(/^refused BRANCH_UNKNOWN: /)
+    expect(said(h)).not.toContain("target=production")
+  })
+
+  it("says the Neon API could not be reached when it could not, not that the key is wrong", async () => {
+    const h = harness({
+      createResolver: (options) =>
+        createNeonEndpointResolver({
+          ...options,
+          fetch: async () => {
+            throw new TypeError(`fetch failed for Bearer ${API_KEY}`)
+          },
+        }),
+    })
+    const code = await runMigrationCommand(["guard"], ENV, h.deps)
+    expect(code).toBe(2)
+    expect(h.err[0]).toMatch(/^refused NEON_LOOKUP_FAILED: /)
+    expect(h.err[0]).toContain("could not be reached")
+    expectNoSecrets(h)
   })
 
   it("exits 2 without a project id, and Neon is never asked", async () => {
@@ -442,7 +504,6 @@ describe("a connection that fails, for the commands that will connect", () => {
     ["CONNECT_FAILED", "target", 3],
     ["CONNECT_TIMED_OUT", "source", 3],
     ["NOT_READ_ONLY", "source", 3],
-    ["POOLED_HOST", "target", 2],
     ["NOT_APPROVED", null, 1],
   ] as const)("%s exits with its own status", async (code, side, status) => {
     // No command connects yet: the failure is handed in where a later
@@ -466,6 +527,40 @@ describe("a connection that fails, for the commands that will connect", () => {
 
   it("3 is the status the table names for it", () => {
     expect(MIGRATION_EXIT.connectFailed).toBe(3)
+  })
+
+  it("takes the status from its own table, never from the error it was handed", async () => {
+    // An error object can be changed by whoever throws it. None of these
+    // may end as 0, the status that means "approved".
+    const dressedUp = [
+      Object.assign(new MigrationConnectError("CONNECT_FAILED", "x"), {
+        exitCode: 0,
+      }),
+      Object.assign(new MigrationConnectError("CONNECT_FAILED", "x"), {
+        code: "MADE_UP",
+      }),
+      Object.assign(new MigrationConnectError("NOT_APPROVED", "x"), {
+        code: "toString",
+        side: "postgresql://u:hunter2@h/db",
+      }),
+    ]
+    const statuses: number[] = []
+    for (const error of dressedUp) {
+      const h = harness({
+        now: () => {
+          throw error
+        },
+      })
+      const status = await runMigrationCommand(
+        ["guard", "--target", "production"],
+        PRODUCTION_ENV,
+        h.deps
+      )
+      statuses.push(status)
+      expect(said(h)).not.toContain("hunter2")
+      expect(h.out).toEqual([])
+    }
+    expect(statuses).toEqual([3, 1, 1])
   })
 })
 
@@ -501,17 +596,26 @@ describe("the real process", () => {
 
   it("does not read a .env file left beside the package", () => {
     const file = path.join(PACKAGE, ".env")
-    writeFileSync(
-      file,
-      `TARGET_DATABASE_URL=${target(REHEARSAL_HOST)}\nNEON_PROJECT_ID=${PROJECT}\n`
-    )
+    // Written only if there is none: a real one is never touched. With one
+    // already there the test still holds, since nothing may read it.
+    let wrote = false
+    try {
+      writeFileSync(
+        file,
+        `TARGET_DATABASE_URL=${target(REHEARSAL_HOST)}\nNEON_PROJECT_ID=${PROJECT}\n`,
+        { flag: "wx" }
+      )
+      wrote = true
+    } catch {
+      // A file of the operator's own is already there.
+    }
     try {
       const result = run(["guard"])
-      // Had the file been loaded, the refusal would be about something else.
+      // Had a file been loaded, the refusal would be about something else.
       expect(result.status).toBe(2)
       expect(result.stderr).toMatch(/^refused TARGET_URL_MISSING: /m)
     } finally {
-      rmSync(file, { force: true })
+      if (wrote) rmSync(file, { force: true })
     }
   }, 90_000)
 

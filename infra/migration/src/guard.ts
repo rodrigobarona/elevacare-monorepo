@@ -32,6 +32,7 @@ export type MigrationGuardErrorCode =
   | "TARGET_HOST_POOLED"
   | "SOURCE_HOST_POOLED"
   | "NEON_PROJECT_MISSING"
+  | "NEON_PROJECT_INVALID"
   | "NEON_API_KEY_MISSING"
   | "NEON_API_KEY_INVALID"
   | "NEON_LOOKUP_FAILED"
@@ -169,6 +170,20 @@ function checkedUrl(
     )
   }
   const host = parsed.hostname.toLowerCase()
+  // A user, a password and one database name, all in the URL. A driver
+  // fills whatever is missing from its own environment (PGUSER,
+  // PGPASSWORD, PGDATABASE), and the run would then connect with
+  // something the guard never saw.
+  if (
+    parsed.username === "" ||
+    parsed.password === "" ||
+    !/^\/[^/]+$/.test(parsed.pathname)
+  ) {
+    throw new MigrationGuardError(
+      invalid,
+      `${name} must name a user, a password and one database (user:password@host/database). Percent-encode special characters in the password`
+    )
+  }
   if (
     !/^postgres(ql)?:$/.test(parsed.protocol) ||
     !/^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$/.test(host) ||
@@ -338,6 +353,15 @@ export async function assertMigrationTarget(
       "NEON_PROJECT_ID (the v3 production Neon project) is not set"
     )
   }
+  // The id goes into the question to Neon and into what is printed. A
+  // value that is not shaped like one (an API key or a connection string
+  // set in the wrong variable) is refused without being repeated.
+  if (!/^[a-z0-9-]{1,64}$/.test(projectId)) {
+    throw new MigrationGuardError(
+      "NEON_PROJECT_INVALID",
+      "NEON_PROJECT_ID is not a Neon project id (lower-case letters, digits and dashes). Check that the variables were not swapped"
+    )
+  }
 
   // Neon is asked through one door, so a failed or unreadable answer is a
   // refusal like any other, never a crash that skips the checks below.
@@ -374,7 +398,15 @@ export async function assertMigrationTarget(
       `the target host ${host} is a read replica. Use the read-write endpoint of the same branch`
     )
   }
-  if (!endpoint.branchId || typeof endpoint.isDefaultBranch !== "boolean") {
+  // The branch's name and id are printed, and asked about at the prompt:
+  // text from outside is shown only when it is plain.
+  const plain = /^[\x20-\x7e]{1,128}$/
+  if (
+    !endpoint.branchId ||
+    typeof endpoint.isDefaultBranch !== "boolean" ||
+    !plain.test(endpoint.branchId) ||
+    !plain.test(endpoint.branchName)
+  ) {
     throw new MigrationGuardError(
       "BRANCH_UNKNOWN",
       `Neon did not say which branch ${host} belongs to, so the run stops. Run again; if it repeats, check the endpoint in the Neon console`

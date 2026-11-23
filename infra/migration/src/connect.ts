@@ -1,5 +1,4 @@
 import {
-  directHost,
   errorKind,
   isApprovedMigrationTarget,
   type ApprovedMigrationTarget,
@@ -21,9 +20,10 @@ import {
  * against a mapper with a bug; it does not stop code that sets out to
  * write (a session can turn the setting off again). On the MVP side the
  * real boundary is the read-only database role the operator creates. On
- * the v3 side in a dry run there is no such role: this setting is the
- * safeguard there is, which is one more reason a dry run only ever runs
- * against a rehearsal branch.
+ * the v3 side in a dry run there is no such role: this setting is the only
+ * safeguard there, on a rehearsal branch and on production alike, which
+ * is why the guard asks for the same confirmation before a dry run against
+ * production as before a write.
  *
  * No driver is installed yet. The driver comes in through `open`, and the
  * first command that connects (14.3) adds the real one in this file, once
@@ -33,7 +33,6 @@ import {
 
 export type MigrationConnectErrorCode =
   | "NOT_APPROVED"
-  | "POOLED_HOST"
   | "CONNECT_FAILED"
   | "CONNECT_TIMED_OUT"
   | "NOT_READ_ONLY"
@@ -41,21 +40,22 @@ export type MigrationConnectErrorCode =
 export type MigrationSide = "source" | "target"
 
 /**
- * 3: the guard approved, a connection was tried, and the database did not
- * answer or would not be read-only. 2: refused before anything was tried
- * (the guard's own check, repeated here). 1: a bug in the caller.
+ * The exit status of each failure, in one closed table. 3: the guard
+ * approved, a connection was tried, and the database did not answer or
+ * would not be read-only. 1: a bug in the caller. The command line reads
+ * the status from this table by the error's code, never from the error
+ * object, which anything could have changed.
  */
-const EXIT_OF: Record<MigrationConnectErrorCode, 1 | 2 | 3> = {
+export const MIGRATION_CONNECT_EXIT: Readonly<
+  Record<MigrationConnectErrorCode, 1 | 3>
+> = Object.freeze({
   NOT_APPROVED: 1,
-  POOLED_HOST: 2,
   CONNECT_FAILED: 3,
   CONNECT_TIMED_OUT: 3,
   NOT_READ_ONLY: 3,
-}
+})
 
 export class MigrationConnectError extends Error {
-  readonly exitCode: 1 | 2 | 3
-
   constructor(
     readonly code: MigrationConnectErrorCode,
     message: string,
@@ -63,7 +63,6 @@ export class MigrationConnectError extends Error {
   ) {
     super(message)
     this.name = "MigrationConnectError"
-    this.exitCode = EXIT_OF[code]
   }
 }
 
@@ -79,12 +78,19 @@ export interface MigrationSession {
 /**
  * Opens one session on a connection string. The driver lives behind it.
  *
- * It must return **one dedicated connection, never a pool**: a pool has
- * the same shape and would run each query on whichever connection is free,
- * which undoes the read-only setting, a snapshot and any transaction. With
- * `readOnly`, the driver sets `default_transaction_read_only=on` in the
- * connection's own start-up options, so the setting is there from the
- * first statement and comes back if the driver ever reconnects.
+ * What an implementation must do, and what the first one (14.3) has to
+ * show in its own tests, because nothing here can check it:
+ *
+ * - Return **one dedicated connection, never a pool**: a pool has the same
+ *   shape and would run each query on whichever connection is free, which
+ *   undoes the read-only setting, a snapshot and any transaction.
+ * - With `readOnly`, set `default_transaction_read_only=on` in the
+ *   connection's own start-up options, so it holds from the first
+ *   statement.
+ * - Never reconnect by itself: a dropped connection fails the next query.
+ *   A silent reconnect would lose the snapshot the readers share.
+ * - Take the user, the password and the database from the URL only, and
+ *   never from `PGUSER`, `PGPASSWORD`, `PGDATABASE` or `PGOPTIONS`.
  */
 export type OpenMigrationSession = (
   url: string,
@@ -101,8 +107,10 @@ export interface MigrationConnections {
   readonly close: () => Promise<void>
 }
 
-/** How long a connection may take to open before the run gives up on it. */
+/** How long a connection, and its read-only check, may take in all. */
 export const CONNECT_TIMEOUT_MS = 30_000
+/** How long closing one session may take before the run moves on. */
+const CLOSE_TIMEOUT_MS = 5_000
 
 /**
  * What went wrong, without the driver's own words: its class, and its
@@ -117,23 +125,20 @@ function describe(error: unknown): string {
     : errorKind(error)
 }
 
-/** The guard refuses pooled hosts; this is the same check, kept at the door. */
-function refusePooledHost(url: string, side: MigrationSide): void {
-  const host = new URL(url).hostname
-  if (directHost(host) !== host) {
-    throw new MigrationConnectError(
-      "POOLED_HOST",
-      `the ${side} connection goes through a pooled host (its name has "-pooler"). A migration needs its own session: use the direct host of the same database`,
-      side
-    )
-  }
-}
-
+/** Closing is best effort and never waits for ever: the run is over either way. */
 async function endQuietly(session: MigrationSession): Promise<void> {
+  let timer: ReturnType<typeof setTimeout> | undefined
   try {
-    await session.end()
+    await Promise.race([
+      session.end(),
+      new Promise<void>((resolve) => {
+        timer = setTimeout(resolve, CLOSE_TIMEOUT_MS)
+      }),
+    ])
   } catch {
-    // Closing is best effort: the run is over either way.
+    // A session that will not close cleanly is left to the server.
+  } finally {
+    clearTimeout(timer)
   }
 }
 
@@ -144,64 +149,73 @@ async function openSide(
   readOnly: boolean,
   timeoutMs: number
 ): Promise<MigrationSession> {
-  let session: MigrationSession
+  // One deadline for the whole of it: the connection, and the read-only
+  // check after it. A database that accepts a connection and then stalls
+  // is given up on like one that never answers.
   let timer: ReturnType<typeof setTimeout> | undefined
-  const opening = open(url, { readOnly })
-  try {
-    session = await Promise.race([
-      opening,
-      new Promise<never>((_, reject) => {
-        timer = setTimeout(
-          () =>
-            reject(
-              new MigrationConnectError(
-                "CONNECT_TIMED_OUT",
-                `the ${side} database did not answer within ${Math.round(timeoutMs / 1000)} seconds`,
-                side
-              )
-            ),
-          timeoutMs
+  let gaveUp = false
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      gaveUp = true
+      reject(
+        new MigrationConnectError(
+          "CONNECT_TIMED_OUT",
+          `the ${side} database did not answer within ${Math.round(timeoutMs / 1000)} seconds`,
+          side
         )
-      }),
-    ])
-  } catch (error) {
-    if (error instanceof MigrationConnectError) {
-      // Given up on: if it opens after all, it is closed, not left behind.
-      void opening.then(endQuietly, () => undefined)
-      throw error
-    }
-    throw new MigrationConnectError(
-      "CONNECT_FAILED",
-      `could not connect to the ${side} database (${describe(error)})`,
-      side
-    )
-  } finally {
-    clearTimeout(timer)
-  }
-  if (!readOnly) return session
-  try {
-    // Asked for at start-up by the driver, set again for every later
-    // transaction of this session, then read back from the server: a fact,
-    // not an assumption.
-    await session.query("SET default_transaction_read_only = on")
-    const { rows } = await session.query("SHOW default_transaction_read_only")
-    const value = rows[0]?.default_transaction_read_only
-    if (value !== "on") {
+      )
+    }, timeoutMs)
+  })
+  // Started inside a promise, so a driver that throws at once is handled
+  // like one that fails later: its message can carry the connection string.
+  const opening = Promise.resolve().then(() => open(url, { readOnly }))
+  const ready = opening.then(
+    async (session) => {
+      if (!readOnly) return session
+      try {
+        // Asked for at start-up by the driver, set again for every later
+        // transaction of this session, then read back from the server: a
+        // fact, not an assumption.
+        await session.query("SET default_transaction_read_only = on")
+        const { rows } = await session.query(
+          "SHOW default_transaction_read_only"
+        )
+        if (rows[0]?.default_transaction_read_only !== "on") {
+          throw new MigrationConnectError(
+            "NOT_READ_ONLY",
+            `the ${side} session did not become read-only, so it was closed`,
+            side
+          )
+        }
+        return session
+      } catch (error) {
+        await endQuietly(session)
+        if (error instanceof MigrationConnectError) throw error
+        throw new MigrationConnectError(
+          "NOT_READ_ONLY",
+          `the ${side} session could not be made read-only (${describe(error)}), so it was closed`,
+          side
+        )
+      }
+    },
+    (error: unknown) => {
       throw new MigrationConnectError(
-        "NOT_READ_ONLY",
-        `the ${side} session did not become read-only, so it was closed`,
+        "CONNECT_FAILED",
+        `could not connect to the ${side} database (${describe(error)})`,
         side
       )
     }
-    return session
+  )
+  try {
+    return await Promise.race([ready, deadline])
   } catch (error) {
-    await endQuietly(session)
-    if (error instanceof MigrationConnectError) throw error
-    throw new MigrationConnectError(
-      "NOT_READ_ONLY",
-      `the ${side} session could not be made read-only (${describe(error)}), so it was closed`,
-      side
-    )
+    if (gaveUp) {
+      // Given up on: if it opens after all, it is closed, not left behind.
+      void opening.then(endQuietly, () => undefined)
+    }
+    throw error
+  } finally {
+    clearTimeout(timer)
   }
 }
 
@@ -220,8 +234,6 @@ export async function openMigrationConnections(
       "this target was not approved by the guard in this run. Nothing was connected to"
     )
   }
-  refusePooledHost(approved.sourceUrl, "source")
-  refusePooledHost(approved.targetUrl, "target")
 
   const timeoutMs = deps.timeoutMs ?? CONNECT_TIMEOUT_MS
   const targetIsWritable = approved.mode === "apply"

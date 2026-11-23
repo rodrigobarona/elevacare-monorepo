@@ -115,7 +115,31 @@ Each entry should include:
   gives, scans that looked at one folder and a list of driver names, a
   question on a closed terminal that left the process to end with a
   status of its own (13), a status 3 that also meant "a bug" and "refused",
-  and arguments echoed into messages.
+  and arguments echoed into messages. Second pair: security 7.7,
+  engineering 8.3. The third commit answers what they reproduced: the
+  command took its exit status from the error it was handed, so an error
+  dressed up with a status of 0 ended as "approved" (it now reads a
+  closed table by the error's code, and the entry point passes on only a
+  status the table knows); a key set where the project id belongs was
+  repeated in the question to Neon and so in the refusal (the id's shape
+  is checked first and never repeated); a URL with no user, password or
+  database was approved, leaving a driver to fill the gaps from its own
+  environment; a branch name from Neon with a line break could print a
+  second "approved:" line; the deadline covered the connection and not
+  the read-only check; a driver that threw at once escaped unwrapped; a
+  short token typed as an argument was echoed; the test that proves no
+  `.env` file is read could overwrite a real one; and the scans looked
+  only at `src`, let a relative path leave the package, and matched a
+  call's spelling where they now match the name. The pooled-host check
+  kept in the connection module could no longer be reached and is gone.
+  Not scored again.
+- Decided for 14.3, so it does not have to be found out there: the
+  inventory reads only the MVP, and today's guard and connection module
+  need a v3 target as well. 14.3 adds an approval for the source alone
+  and a way to open only it, beside these, and extends the scan that
+  says who may ask the guard. An approval today can be used more than
+  once and does not expire; the commands that connect make one, use it
+  and end.
 - Not proven, and not meant to be yet: a connection to any real database;
   the read-only setting against a real server; the command against the
   real Neon API (an operator runs it against a rehearsal branch from the

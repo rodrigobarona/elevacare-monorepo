@@ -69,9 +69,16 @@ describe("parseMigrationArgs", () => {
       expect(message).not.toContain("postgresql")
       expect(message.length).toBeLessThan(160)
     }
-    // A plain word is still shown, so a typo is easy to see.
+    // A short token is not shown either: it could be a key.
+    expect(() => parseMigrationArgs(["npg_AbC123xyz456"])).toThrow(
+      "unknown argument what was given"
+    )
     expect(() => parseMigrationArgs(["--target", "staging"])).toThrow(
-      /not "staging"/
+      '--target must be "branch" or "production"'
+    )
+    // A flag that looks like one is shown, so a typo is easy to see.
+    expect(() => parseMigrationArgs(["--frobnicate"])).toThrow(
+      'unknown argument "--frobnicate"'
     )
   })
 })

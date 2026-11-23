@@ -30,14 +30,12 @@ const ISO_INSTANT =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?(Z|[+-]\d{2}:\d{2})$/
 
 /**
- * What was typed, for a message, only when it is a plain short word. A
- * connection string pasted in the wrong place carries a password, and an
- * error message goes to the terminal and its scrollback.
+ * A flag as it was typed, for a message, only when it looks like a flag.
+ * A value is never repeated: a connection string or a token pasted in the
+ * wrong place would go to the terminal and its scrollback.
  */
-function shown(value: string): string {
-  return /^[\w.:+-]{1,40}$/.test(value) && !value.includes("://")
-    ? `"${value}"`
-    : "what was given"
+function shown(flag: string): string {
+  return /^--[a-z][a-z-]{0,30}$/.test(flag) ? `"${flag}"` : "what was given"
 }
 
 function valueOf(flag: string, argv: readonly string[], index: number): string {
@@ -68,7 +66,7 @@ export function parseMigrationArgs(argv: readonly string[]): MigrationArgs {
         const value = valueOf(flag, argv, index)
         if (value !== "branch" && value !== "production") {
           throw new MigrationArgsError(
-            `--target must be "branch" or "production", not ${shown(value)}`
+            `--target must be "branch" or "production"`
           )
         }
         target = value
@@ -80,7 +78,7 @@ export function parseMigrationArgs(argv: readonly string[]): MigrationArgs {
         const instant = new Date(value)
         if (!ISO_INSTANT.test(value) || Number.isNaN(instant.getTime())) {
           throw new MigrationArgsError(
-            `--since must be an ISO-8601 instant with a time zone (for example 2026-11-21T10:00:00Z), not ${shown(value)}`
+            `--since must be an ISO-8601 instant with a time zone (for example 2026-11-21T10:00:00Z)`
           )
         }
         since = instant

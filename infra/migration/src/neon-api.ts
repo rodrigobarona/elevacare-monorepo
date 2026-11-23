@@ -9,6 +9,8 @@ import { directHost, NeonLookupError, type NeonEndpointInfo } from "./guard"
  */
 
 const NEON_API = "https://console.neon.tech/api/v2"
+/** How long one question to Neon may take. */
+const NEON_TIMEOUT_MS = 15_000
 
 const EndpointsSchema = z.object({
   endpoints: z.array(
@@ -54,12 +56,23 @@ export function createNeonEndpointResolver(
   const project = encodeURIComponent(options.projectId)
 
   async function get(path: string): Promise<unknown> {
-    const response = await fetchFn(`${NEON_API}${path}`, {
-      headers: {
-        accept: "application/json",
-        authorization: `Bearer ${options.apiKey}`,
-      },
-    })
+    let response: Response
+    try {
+      response = await fetchFn(`${NEON_API}${path}`, {
+        headers: {
+          accept: "application/json",
+          authorization: `Bearer ${options.apiKey}`,
+        },
+        signal: AbortSignal.timeout(NEON_TIMEOUT_MS),
+      })
+    } catch {
+      // Offline, DNS, a proxy, no answer in time: not a problem with the
+      // key. The runtime's own message is not repeated (it can quote the
+      // request).
+      throw new NeonLookupError(
+        "the Neon API could not be reached, or did not answer in time"
+      )
+    }
     if (!response.ok) {
       throw new NeonLookupError(
         `Neon API answered ${response.status} for ${path}`

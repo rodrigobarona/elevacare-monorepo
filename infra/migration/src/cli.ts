@@ -1,5 +1,5 @@
 import { MigrationArgsError, parseMigrationArgs } from "./args"
-import { MigrationConnectError } from "./connect"
+import { MIGRATION_CONNECT_EXIT, MigrationConnectError } from "./connect"
 import {
   assertMigrationTarget,
   errorKind,
@@ -135,10 +135,18 @@ export async function runMigrationCommand(
     // For the commands that will connect: which side, and what kind of
     // failure, in the module's own words.
     if (error instanceof MigrationConnectError) {
+      // The status is looked up by the code in a closed table. It is
+      // never taken from the error object, and an unknown code is a bug:
+      // nothing here can turn a failure into 0.
+      const known = Object.hasOwn(MIGRATION_CONNECT_EXIT, error.code)
       deps.err(
-        `failed ${error.code}${error.side ? ` (${error.side})` : ""}: ${error.message}`
+        known
+          ? `failed ${error.code}${error.side === "source" || error.side === "target" ? ` (${error.side})` : ""}: ${error.message}`
+          : "failed: unexpected MigrationConnectError"
       )
-      return error.exitCode
+      return known
+        ? MIGRATION_CONNECT_EXIT[error.code]
+        : MIGRATION_EXIT.unexpected
     }
     // Its class only: the message of an unknown error is not ours, and
     // could carry a connection string.
