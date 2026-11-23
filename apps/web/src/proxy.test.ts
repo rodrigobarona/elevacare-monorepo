@@ -137,6 +137,86 @@ describe("createGatewayProxy integration", () => {
     )
   })
 
+  it("sends the MVP's signed-in addresses to their new place, without the query", async () => {
+    const proxy = createGatewayProxy({
+      origins: testOrigins,
+      intlMiddleware: marketingIntl,
+    })
+    for (const [from, to] of [
+      ["/appointments/patients/8f1c2d", "/dashboard"],
+      ["/booking/schedule/limits", "/dashboard"],
+      ["/setup", "/dashboard"],
+      ["/register", "/signup"],
+      ["/unauthorized", "/dashboard"],
+      ["/sign-in", "/dashboard"],
+      ["/sign-out", "/logout"],
+      ["/events/evt_1", "/dashboard"],
+      ["/settings/integrations", "/dashboard"],
+      ["/payment/voucher/123", "/dashboard"],
+      ["/profile/complete", "/dashboard"],
+      ["/unsubscribe", "/account/notifications"],
+      ["/dashboard/subscription", "/dashboard"],
+      ["/account/identity/callback", "/dashboard"],
+      ["/account/security/password", "/account/security"],
+      ["/account/billing/receipts/pi_3Q", "/account/billing"],
+      ["/account/profile", "/account/settings"],
+    ] as const) {
+      const res = await proxy(
+        makeRequest(from, { search: "?redirect=%2Fx&token=abc&console=%2Fy" })
+      )
+      // Not a permanent answer: a browser must not keep it.
+      expect(res.status, from).toBe(302)
+      // Nothing of the old query goes along, whatever it carried.
+      expect(res.headers.get("location"), from).toBe(
+        `http://localhost:3000${to}`
+      )
+    }
+  })
+
+  it("sends the MVP's \"become an expert\" button to v3's, and still drops the query", async () => {
+    const proxy = createGatewayProxy({
+      origins: testOrigins,
+      intlMiddleware: marketingIntl,
+    })
+    const res = await proxy(
+      makeRequest("/register", {
+        search: "?expert=true&plan=community-paygo",
+      })
+    )
+    expect(res.status).toBe(302)
+    expect(res.headers.get("location")).toBe(
+      "http://localhost:3000/account/workspaces/create/expert"
+    )
+  })
+
+  it("does not move the addresses v3 serves under the same words", async () => {
+    vi.stubEnv("NODE_ENV", "production")
+    const proxy = createGatewayProxy({
+      origins: testOrigins,
+      intlMiddleware: marketingIntl,
+    })
+    for (const path of [
+      "/dashboard",
+      "/dashboard/",
+      "/account/billing",
+      "/account/billing/return",
+      "/account/security",
+      "/account/settings",
+      "/account/workspaces/create/expert",
+      "/onboarding",
+    ]) {
+      const res = await proxy(makeRequest(path))
+      expect([301, 302], path).not.toContain(res.status)
+      expect(res.headers.get("x-middleware-rewrite"), path).toContain(
+        "localhost:3006"
+      )
+    }
+    // A username that only begins like a moved word is a public profile.
+    const profile = await proxy(makeRequest("/bookings"))
+    expect(profile.status).toBe(200)
+    expect(await profile.json()).toEqual({ zone: "marketing" })
+  })
+
   it("falls through to intl middleware for marketing paths", async () => {
     const proxy = createGatewayProxy({
       origins: testOrigins,

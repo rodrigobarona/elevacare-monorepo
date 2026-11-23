@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useTranslations } from "next-intl"
+import { createWorkspacePath } from "@eleva/config/routing"
 import { cn } from "@eleva/ui/lib/utils"
 import { Button, LinkButton } from "@eleva/ui/components/button"
 import { BookOpenIcon, UserIcon, UsersIcon } from "@eleva/icons"
@@ -44,9 +45,7 @@ export function WorkspaceTypePicker({
   const t = useTranslations("createWorkspace")
   const [selected, setSelected] = React.useState<WorkspaceType | null>(null)
 
-  const continuePath = selected
-    ? `/account/workspaces/create/${selected}`
-    : undefined
+  const continuePath = selected ? createWorkspacePath(selected) : undefined
 
   const handleContinue = () => {
     if (!continuePath) return

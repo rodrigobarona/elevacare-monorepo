@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import type { Metadata } from "next"
+import { createWorkspacePath } from "@eleva/config/routing"
 import {
   MarketingPage,
   type MarketingIconId,
@@ -36,7 +37,7 @@ export default async function ForClinicsPage({ params }: Props) {
       headingTestId="for-clinics-heading"
       body={t("body")}
       imageSlug="clinic-lounge"
-      cta={{ href: "/account/workspaces/create/team", label: t("cta") }}
+      cta={{ href: createWorkspacePath("team"), label: t("cta") }}
       stepsHeading={t("stepsHeading")}
       steps={t.raw("steps") as { title: string; body: string }[]}
       benefitsHeading={t("benefitsHeading")}
@@ -52,7 +53,7 @@ export default async function ForClinicsPage({ params }: Props) {
       finalHeading={t("finalHeading")}
       finalBody={t("finalBody")}
       finalCta={{
-        href: "/account/workspaces/create/team",
+        href: createWorkspacePath("team"),
         label: t("finalCta"),
       }}
     />

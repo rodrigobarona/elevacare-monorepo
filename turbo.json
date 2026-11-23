@@ -182,6 +182,19 @@
         "../../vitest.shared.ts"
       ]
     },
+    "@eleva/config#test": {
+      "dependsOn": ["^typecheck"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "vitest.config.ts",
+        "../../vitest.shared.ts",
+        "../../apps/account/src/app/**/page.tsx",
+        "../../apps/account/src/app/**/route.ts",
+        "../../apps/web/src/app/*/**/page.tsx",
+        "../../_context/clone-repo/eleva-care-app/src/**/*.ts",
+        "../../_context/clone-repo/eleva-care-app/src/**/*.tsx"
+      ]
+    },
     "dev": {
       "cache": false,
       "persistent": true

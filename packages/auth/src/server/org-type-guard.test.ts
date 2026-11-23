@@ -16,6 +16,36 @@ describe("orgCreateViolation", () => {
       expect(orgCreateViolation({ type })).toBeNull()
     }
   )
+
+  it.each([
+    "events",
+    "appointments",
+    "unsubscribe",
+    "sign-in",
+    "dashboard",
+    "account",
+    "pt",
+    // As typed: the word is the same word.
+    "Events",
+    "DASHBOARD",
+  ])("refuses the address %s, which Eleva keeps for its own pages", (slug) => {
+    expect(orgCreateViolation({ type: "expert", slug })).toMatch(
+      /kept for Eleva's own pages/
+    )
+    expect(orgCreateViolation({ type: "team", slug })).not.toBeNull()
+  })
+
+  it.each(["fisiomota", "eventsclub", "clinica-lumen", "ana-s-space"])(
+    "allows the address %s",
+    (slug) => {
+      expect(orgCreateViolation({ type: "expert", slug })).toBeNull()
+    }
+  )
+
+  it("says nothing about an address that is not text", () => {
+    expect(orgCreateViolation({ type: "expert", slug: 7 })).toBeNull()
+    expect(orgCreateViolation({ type: "expert" })).toBeNull()
+  })
 })
 
 describe("orgUpdateViolation", () => {

@@ -29,6 +29,16 @@ export const SLUGGED_WORKSPACE_NAMESPACES = [
   "academy",
 ] as const
 
+/**
+ * Where a person starts a work organization of one kind, in the account
+ * app: `createWorkspacePath("expert")`.
+ */
+export function createWorkspacePath(
+  kind: (typeof SLUGGED_WORKSPACE_NAMESPACES)[number]
+): string {
+  return `/account/workspaces/create/${kind}`
+}
+
 /** The person's own Space: `/space` (one per person, no slug). */
 export const SPACE_BASE = "/space"
 
