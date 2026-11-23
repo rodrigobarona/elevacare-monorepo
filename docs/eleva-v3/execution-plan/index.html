@@ -955,8 +955,9 @@ the plan it landed. First entry: <code>2026-09-07-review-response.md</code>.</li
 <h1 id="remaining-roadmap--remaining-roadmap-from-today-to-launch"><a class="anchor" href="#remaining-roadmap--remaining-roadmap-from-today-to-launch" aria-label="Link to section">#</a>Remaining roadmap: from today to launch</h1>
 <p>Status: Living. Reviewed 2026-11-21 against <code>main</code> at <code>58816804</code>. Updated 2026-11-23 after
 the night that merged seven slices (<code>main</code> at <code>3a4bec75</code>): section 1, section 3, new items in
-section 4, lessons 17 to 22, and the slice tables. <strong>Read O-2 first: the development database
-is over its quota and nothing that needs it can run or merge until that is lifted.</strong></p>
+section 4, lessons 17 to 22, and the slice tables. <strong>Read O-2 first: the database is
+over its monthly allowance, production included. Uncached production reads fail, and nothing
+that needs a database can run or merge until that is lifted.</strong></p>
 <p>This page says what is left to build before Eleva v3 replaces the MVP at <code>eleva.care</code>, in what
 order, and what is waiting on a person. It does not replace the phase files: each phase file
 still holds the full scope, and this page holds the state of each phase and the next slices.
@@ -1074,11 +1075,12 @@ the page counts down from there (12.7).</li>
 <li><strong>Prove it in the real app once the fixture is green.</strong> The playground showed the pager&#39;s
 states; the real console showed the columns moving between pages, the tab title and the
 audit count. Both kinds of proof are kept, and the real one is the one that is believed.</li>
-<li><strong>The development database has a quota, and a night of tests can spend it.</strong> At 02:46 UTC
-on 2026-11-23 Neon began refusing every query from the dev branch and from pull-request
-branches (HTTP 402). Seven pull requests&#39; database jobs and about twenty local browser and
-integration runs came before it. Until the plan question (O-2) is settled, database-backed
-runs are spent on what cannot be proven another way.</li>
+<li><strong>Production and development share one database allowance, and a cached answer is not a
+check.</strong> At about 02:45 UTC on 2026-11-23 Neon began refusing every query on every branch
+of the project, production&#39;s too (O-2). Production was first reported as working from a
+list that the API serves from its cache; an uncached read and the production logs said
+otherwise. Check production with a read that cannot be cached, and read the project&#39;s
+usage before a night of database-backed runs.</li>
 <li><strong>What is written and not run is said to be so.</strong> The last two commits of 12.7 added steps
 to the browser test that never ran. The log and the pull request say which, and the slice
 stays open until they do.</li>
@@ -1254,6 +1256,31 @@ of 2026-11-21 merged without one (F-13).</li>
 <tr>
 <td>A link from an email that is refused for asking too often shows a bare answer on the API&#39;s address. The wait said is the whole window, not what is left.</td>
 <td><code>packages/auth/src/server/auth.ts</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Production, development and pull-request branches share one Neon project and one allowance, and a job that runs every minute keeps production&#39;s compute awake (O-2).</td>
+<td>Neon project; <code>apps/api/src/app/workflows/tick/[cadence]/route.ts</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Nothing automated checks that a mutating route or domain function calls <code>withAudit</code>; it is checked in review. The route-guard checker could grow the rule.</td>
+<td><code>scripts/check-route-guards.mjs</code>, <code>docs/eleva-v3/security-traceability.md</code></td>
+<td></td>
+</tr>
+<tr>
+<td>The database&#39;s own list of reserved words was written once (migration 0027) and lacks about thirty reserved since. A call made straight to the auth server&#39;s create-organization endpoint is not checked against the list.</td>
+<td><code>packages/db</code> (<code>reserved_public_handles()</code>), <code>packages/auth/src/server/auth.ts</code></td>
+<td></td>
+</tr>
+<tr>
+<td>A data export that fails answers 200 and is not run again by the queue; since 13.18 it is reported to Sentry. Whether to run it again is undecided.</td>
+<td><code>apps/api/src/app/workflows/dsar-export/route.ts</code></td>
+<td></td>
+</tr>
+<tr>
+<td>The MVP&#39;s five staff pages (<code>/admin/categories</code>, <code>payments</code>, <code>subscriptions</code>, <code>users</code>) are &quot;page not found&quot; on the staff console.</td>
+<td><code>apps/admin/src/app</code>, Phase 12</td>
 <td></td>
 </tr>
 </tbody></table>
@@ -1469,7 +1496,7 @@ them, and stops at the one that does.</p>
 </tr>
 <tr>
 <td>O-2</td>
-<td><strong>Blocking since 2026-11-23 02:46 UTC.</strong> The Neon project used by local development and by pull-request branches answers every query with HTTP 402, &quot;exceeded the quota&quot;. Production reads were checked and work. Until the quota is lifted or the plan changed: no local browser or integration run, and every pull request&#39;s <code>neon-branch-migrate-and-rls</code> job fails, so nothing merges. Also still open: the docs include ten branches, and the limit was hit with six pull requests open.</td>
+<td><strong>Blocking since about 02:45 UTC on 2026-11-23, production included.</strong> One Neon project on the free plan holds production, development and the pull-request branches, and its monthly compute allowance is used up: every branch answers &quot;exceeded the quota&quot;. Production reads that are not cached fail with a 500; cached pages still show. No local browser or integration run, and every pull request&#39;s <code>neon-branch-migrate-and-rls</code> job fails, so nothing merges. A paid plan lifts it at once; otherwise it returns on 1 December and stops again late in every month. Numbers and cause are under this table.</td>
 </tr>
 <tr>
 <td>O-3</td>
@@ -1509,13 +1536,30 @@ them, and stops at the one that does.</p>
 </tr>
 <tr>
 <td>O-12</td>
-<td>Once O-2 is lifted: run <code>e2e/admin-clinics.spec.ts</code> on the 12.7 branch (its later steps have never run), retake its real-console captures, then merge #463 (12.7), #465 (14.2, nothing in it uses a database) and this roadmap update. #464 and #465 both regenerate <code>execution-plan/index.html</code>: after the first merges, run <code>pnpm docs:execution-plan:html</code> on the other.</td>
+<td>Once O-2 is lifted: run <code>e2e/admin-clinics.spec.ts</code> on the 12.7 branch (its later steps have never run; a case for Reject pressed while the page still shows the old sign-in is still to be written), retake its real-console captures, and read whether anyone has one of 14.22&#39;s nine reserved words as a username. Then merge in this order: #463, #465, #466, #467, #468, #469, #470, #471, and this roadmap update last. Each one conflicts with the one before in <code>decision-log.md</code> (keep both entries); #469 and #468 both add a row to <code>README.md</code>; #470 after #463 conflicts in the sign-in form (keep 13.5&#39;s <code>sendMagicLink</code> and 12.7&#39;s check of who was signed in when the link was sent). After the merges run <code>pnpm docs:execution-plan:html</code> and rebuild the design-audit page.</td>
 </tr>
 <tr>
 <td>O-13</td>
 <td>Switch on the dependency graph for the repository (it is off): GitHub can then review the dependencies a pull request adds. After the first CodeQL findings are sorted, make &quot;Code scanning results / CodeQL&quot; a required check or add a code scanning ruleset, or the scan only reports. Leave code scanning&#39;s default setup off (13.13).</td>
 </tr>
 </tbody></table>
+<p><strong>O-2 in numbers.</strong> Read on 2026-11-23 from Neon&#39;s API and from production&#39;s logs; nothing was
+changed there.</p>
+<ul>
+<li>The project is on the free plan. In the period that began on 1 November it has used 110.5
+compute-hours: production&#39;s branch 92.6 (its compute was awake for 370 hours), development
+7.2, and the preview, pull-request and restore branches the rest.</li>
+<li>Production is awake that much because a job runs every minute and asks the database each
+time, so its compute never goes to sleep for long. That is about 4.2 hours of allowance a
+day, about 126 in a month of 30 days, from production by itself.</li>
+<li>So the night&#39;s runs did not cause the stop, they brought it forward by a few days. On this
+plan it comes back late in every month, with no development at all.</li>
+<li>What lifts it: a paid plan (at once), or the new period on 1 December (until it runs out
+again). Only the account&#39;s owner can do the first.</li>
+<li>What would make it smaller, as slices once the database answers: the per-minute job asking
+the database only when there is work (a look at Redis first); and a second Neon project
+for development and pull-request branches, so that they cannot stop production.</li>
+</ul>
 <h2 id="remaining-roadmap--5-order-of-work"><a class="anchor" href="#remaining-roadmap--5-order-of-work" aria-label="Link to section">#</a>5. Order of work</h2>
 <p>Four tracks run side by side, one open pull request each, three open in total.</p>
 <table>
@@ -2332,10 +2376,10 @@ branch before production.</p>
 </tr>
 <tr>
 <td>14.22</td>
-<td>Old private addresses redirect</td>
+<td><strong>Open (#471), waits on O-2 to merge.</strong> Old private addresses redirect</td>
 <td>none</td>
 <td>S</td>
-<td>Redirect tests</td>
+<td>Redirect tests; the old app&#39;s route list and the account app&#39;s pages are read by the tests</td>
 </tr>
 <tr>
 <td>14.23</td>
