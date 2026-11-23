@@ -135,6 +135,10 @@ describe("an approval", () => {
     const approved = await approve()
     expect(isApprovedMigrationTarget(approved)).toBe(true)
     expect(Object.isFrozen(approved)).toBe(true)
+    // Logged or written into a report, it carries no password.
+    expect(JSON.stringify(approved)).not.toContain(SECRET)
+    expect(JSON.stringify({ approved })).not.toContain("postgresql://")
+    expect(approved.targetUrl).toContain(SECRET)
     // A copy has every field and is not the approval.
     expect(isApprovedMigrationTarget({ ...approved })).toBe(false)
     expect(isApprovedMigrationTarget(structuredClone(approved))).toBe(false)
@@ -631,5 +635,18 @@ describe("the package's files", () => {
       "src/main.ts",
       "src/neon-api.ts",
     ])
+    // The way to open a session stays in the one file that may connect: no
+    // other file is handed a driver to call with a URL of its own.
+    expect(users("OpenMigrationSession")).toEqual(["src/connect.ts"])
+  })
+
+  it("no script loads a file of variables", () => {
+    const { scripts } = JSON.parse(text("package.json")) as {
+      scripts: Record<string, string>
+    }
+    for (const [name, script] of Object.entries(scripts)) {
+      expect(script, name).not.toMatch(/env-file|dotenv|\.env\b/)
+    }
+    expect(text("src/main.ts")).not.toMatch(/loadEnvFile|dotenv/)
   })
 })

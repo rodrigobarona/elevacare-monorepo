@@ -96,7 +96,7 @@ Each entry should include:
   production database runs on (F-02). The driver is an argument, and 14.3
   adds the real one in `connect.ts` once that is known. Pooled or direct:
   direct, enforced.
-- Proof: 158 tests in the package (75 before), all with fakes: each exit
+- Proof: 164 tests in the package (75 before), all with fakes: each exit
   status, each family of refusal, production with fakes only, usage errors
   that never reach Neon, a forged approval (a copy, a prototype, a proxy),
   the environment changed after approval, both sides' read-only state and
@@ -142,7 +142,19 @@ Each entry should include:
   error is asked for its code once; the scans read the text as written
   (taking comments out first was a way to hide code from them), know
   every kind of code file, refuse an import that is worked out, and say
-  that only one file reaches the network. Not scored again.
+  that only one file reaches the network. Fourth security review, on a
+  stated threat model (an operator's honest mistake, a wrong answer from
+  Neon, a driver that misbehaves, a later engineer who did not read the
+  rules): 8.2. From it, in the fifth commit: an approval logged or
+  written as JSON no longer shows its two connection strings; the command
+  is handed its own variables and no others; `NODE_TLS_REJECT_UNAUTHORIZED=0`
+  is refused; an answer from Neon about another branch than the
+  endpoint's is refused; the way to open a session is named in one file
+  only. Not scored again. Engineering stays at 8.3 from the second round.
+- Known and left: the scans read text, so they stop a mistake and not
+  someone set on getting around them, and they do not look inside test
+  files; the guard accepts only port 5432 for the MVP too, which F-02 may
+  change; an approval can be used more than once.
 - Decided for 14.3, so it does not have to be found out there: the
   inventory reads only the MVP, and today's guard and connection module
   need a v3 target as well. 14.3 adds an approval for the source alone

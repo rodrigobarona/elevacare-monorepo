@@ -88,11 +88,17 @@ export function createNeonEndpointResolver(
     // A pooled host and its direct host are one endpoint. They are matched
     // as one, so a pooled host is found even when the API lists only the
     // direct one (`hosts` is optional in the answer).
-    const endpoint = endpoints.find((candidate) =>
+    const matching = endpoints.filter((candidate) =>
       [candidate.host, ...Object.values(candidate.hosts ?? {})].some(
         (name) => name && directHost(name) === directHost(wanted)
       )
     )
+    if (matching.length > 1) {
+      throw new NeonLookupError(
+        "Neon lists more than one endpoint for the host"
+      )
+    }
+    const endpoint = matching[0]
     if (!endpoint) return null
 
     const { branch } = BranchSchema.parse(
@@ -100,6 +106,11 @@ export function createNeonEndpointResolver(
         `/projects/${project}/branches/${encodeURIComponent(endpoint.branch_id)}`
       )
     )
+    if (branch.id !== endpoint.branch_id) {
+      throw new NeonLookupError(
+        "Neon answered about another branch than the one the endpoint is on"
+      )
+    }
     if (branch.primary !== undefined && branch.primary !== branch.default) {
       throw new NeonLookupError(
         "Neon says two different things about whether the branch is the default one"

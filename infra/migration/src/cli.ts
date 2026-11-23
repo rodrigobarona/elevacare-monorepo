@@ -66,6 +66,34 @@ export interface MigrationCommandDeps {
   err: (line: string) => void
 }
 
+/** The variables a run reads. Nothing else in the environment is handed on. */
+const VARIABLES = [
+  "TARGET_DATABASE_URL",
+  "MVP_DATABASE_URL",
+  "NEON_PROJECT_ID",
+  "NEON_API_KEY",
+  "MIGRATION_ALLOWED_TARGET_HOSTS",
+  "MIGRATION_CONFIRM_PRODUCTION",
+  "NODE_TLS_REJECT_UNAUTHORIZED",
+] as const
+
+/**
+ * The part of an environment the command may see: its own variables, and
+ * the `PG*` ones so the guard can refuse a run that has one set. A
+ * `DATABASE_URL` left in a shell never reaches the command.
+ */
+export function migrationEnv(
+  all: Record<string, string | undefined>
+): MigrationCommandEnv {
+  return Object.fromEntries(
+    Object.entries(all).filter(
+      ([name]) =>
+        (VARIABLES as readonly string[]).includes(name) ||
+        /^PG[A-Z_]+$/.test(name)
+    )
+  )
+}
+
 const COMMANDS = ["guard"] as const
 
 export async function runMigrationCommand(

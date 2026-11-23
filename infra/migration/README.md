@@ -23,7 +23,10 @@ It runs the target guard with the flags a real run takes, prints what was
 approved and stops. It opens no database connection and writes nothing; its
 only network calls are the guard's two read-only questions to the Neon API.
 It does not load a `.env` file: set the variables in the table at the end
-of this page for the run. Use it to check a rehearsal branch's variables
+of this page for the run. Those variables, and any `PG*` one, are all it
+is handed: a `DATABASE_URL` left in the shell does not reach it. If you
+paste a secret as an argument by mistake, pnpm itself repeats the command
+line; the tool does not. Use it to check a rehearsal branch's variables
 before the first command that connects exists. `--since` and `--report` are
 accepted, as a real run accepts them, and do nothing here.
 
@@ -49,6 +52,8 @@ product's own database client, cannot come in through another file. The
 scans read text, so they stop a mistake, not someone set on getting
 around them.
 
+- The approval's two connection strings do not appear when it is logged,
+  inspected or written as JSON, only when code asks for them by name.
 - It takes only the object the guard returned in this process. A copy, or
   an object built by hand with the same fields, is refused (`NOT_APPROVED`,
   status 1: a bug in the caller) before anything is opened. The approved
@@ -136,6 +141,7 @@ Nothing has been connected to when a refusal is shown.
 | `SOURCE_IN_TARGET_PROJECT`                 | `MVP_DATABASE_URL` points into the v3 project                                                                                                                             | Set it to the MVP database                                                                      |
 | `TARGET_HOST_POOLED`, `SOURCE_HOST_POOLED` | The URL uses a Neon pooled host (its name has `-pooler`). A migration needs a session of its own                                                                          | Use the direct host of the same database; the message names it for the target                   |
 | `PG_VARIABLES_SET`                         | A `PG*` variable (`PGPORT`, `PGOPTIONS`, `PGPASSWORD`, …) is set. A Postgres driver would use it beside the connection strings the guard checks. Only the names are shown | Unset them for this run                                                                         |
+| `TLS_CHECK_DISABLED`                       | `NODE_TLS_REJECT_UNAUTHORIZED` is `0`, which turns certificate checking off for the question to Neon and for any driver                                                   | Unset it for this run                                                                           |
 | `NEON_PROJECT_MISSING`                     | `NEON_PROJECT_ID` is not set                                                                                                                                              | Set it to the v3 production project                                                             |
 | `NEON_PROJECT_INVALID`                     | `NEON_PROJECT_ID` is not shaped like a project id (lower-case words and digits joined by dashes). It is not repeated in the message                                       | Check that the variables were not swapped                                                       |
 | `NEON_API_KEY_MISSING`                     | `NEON_API_KEY` is not set, so Neon cannot be asked (no network call was made)                                                                                             | Set it to a key that can read the v3 project                                                    |

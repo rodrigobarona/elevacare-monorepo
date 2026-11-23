@@ -1,3 +1,4 @@
+import { inspect } from "node:util"
 import { describe, expect, it, vi } from "vitest"
 import {
   assertMigrationTarget,
@@ -88,9 +89,11 @@ describe("rehearsal (--target branch)", () => {
   it("accepts an allowed branch of the production project, and never prompts", async () => {
     const d = deps()
     for (const mode of ["dry-run", "apply"] as const) {
-      await expect(
-        assertMigrationTarget({ target: "branch", mode, env: env() }, d)
-      ).resolves.toEqual({
+      const approved = await assertMigrationTarget(
+        { target: "branch", mode, env: env() },
+        d
+      )
+      expect(approved).toEqual({
         kind: "branch",
         mode,
         host: REHEARSAL_HOST,
@@ -98,11 +101,18 @@ describe("rehearsal (--target branch)", () => {
         projectId: PROJECT,
         branchId: "br-rehearsal",
         branchName: "rehearsal-2026-11-21",
-        // Neither URL said anything about TLS: both ask for it.
-        // The port is written out, so a driver takes it from nowhere else.
-        targetUrl: `postgresql://app:pw@${REHEARSAL_HOST}:5432/eleva?sslmode=require`,
-        sourceUrl: `${MVP_REBUILT}?sslmode=require`,
       })
+      // The two connection strings are there for whoever asks by name.
+      // Neither URL said anything about TLS: both ask for it. The port is
+      // written out, so a driver takes it from nowhere else.
+      expect(approved.targetUrl).toBe(
+        `postgresql://app:pw@${REHEARSAL_HOST}:5432/eleva?sslmode=require`
+      )
+      expect(approved.sourceUrl).toBe(`${MVP_REBUILT}?sslmode=require`)
+      // And they do not travel with the approval into a log or a report.
+      expect(JSON.stringify(approved)).not.toContain("pw@")
+      expect(inspect(approved, { depth: 5 })).not.toContain("pw@")
+      expect(Object.keys(approved)).not.toContain("targetUrl")
     }
     expect(d.prompt).not.toHaveBeenCalled()
   })
@@ -724,5 +734,88 @@ describe("what a driver could take from somewhere else", () => {
       expect(err.message).not.toContain("t4rget")
       expect(err.message).not.toContain("s0urce")
     }
+  })
+})
+
+describe("what else the guard will not start with", () => {
+  it("refuses every PG variable a driver reads, whichever it is", async () => {
+    for (const name of [
+      "PGUSER",
+      "PGDATABASE",
+      "PGSSLMODE",
+      "PGSERVICE",
+      "PGHOSTADDR",
+      "PGAPPNAME",
+    ]) {
+      const err = await refusal(
+        assertMigrationTarget(
+          {
+            target: "branch",
+            mode: "dry-run",
+            env: { ...env(), [name]: "x" } as MigrationGuardEnv,
+          },
+          deps()
+        )
+      )
+      expect(err.code, name).toBe("PG_VARIABLES_SET")
+      expect(err.message).toContain(name)
+    }
+  })
+
+  it("refuses a run with certificate checking turned off", async () => {
+    const err = await refusal(
+      assertMigrationTarget(
+        {
+          target: "branch",
+          mode: "dry-run",
+          env: env({ NODE_TLS_REJECT_UNAUTHORIZED: "0" }),
+        },
+        deps()
+      )
+    )
+    expect(err.code).toBe("TLS_CHECK_DISABLED")
+    // Left at its default, or set to keep checking, it is fine.
+    await expect(
+      assertMigrationTarget(
+        {
+          target: "branch",
+          mode: "dry-run",
+          env: env({ NODE_TLS_REJECT_UNAUTHORIZED: "1" }),
+        },
+        deps()
+      )
+    ).resolves.toMatchObject({ kind: "branch" })
+  })
+
+  it("refuses a URL that names no user, since a driver would take one from the machine", async () => {
+    const err = await refusal(
+      assertMigrationTarget(
+        {
+          target: "branch",
+          mode: "dry-run",
+          env: env({
+            TARGET_DATABASE_URL: `postgresql://:pw@${REHEARSAL_HOST}/eleva`,
+          }),
+        },
+        deps()
+      )
+    )
+    expect(err.code).toBe("TARGET_URL_INVALID")
+  })
+
+  it("refuses a branch id from Neon that is not shaped like one", async () => {
+    const err = await refusal(
+      assertMigrationTarget(
+        { target: "branch", mode: "dry-run", env: env() },
+        deps({
+          resolveEndpoint: forTarget({
+            ...ENDPOINTS[REHEARSAL_HOST]!,
+            branchId: "br-1) source=evil.example mode=apply",
+          }),
+        })
+      )
+    )
+    expect(err.code).toBe("BRANCH_UNKNOWN")
+    expect(err.message).not.toContain("evil.example")
   })
 })

@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest"
 import {
   exitStatus,
   MIGRATION_EXIT,
+  migrationEnv,
   runMigrationCommand,
   type MigrationCommandDeps,
   type MigrationCommandEnv,
@@ -573,6 +574,26 @@ describe("a connection that fails, for the commands that will connect", () => {
   it("3 is the status the table names for it, and the table cannot be changed", () => {
     expect(MIGRATION_EXIT.connectFailed).toBe(3)
     expect(Object.isFrozen(MIGRATION_EXIT)).toBe(true)
+  })
+
+  it("hands the command its own variables and no others", () => {
+    expect(
+      migrationEnv({
+        ...ENV,
+        MIGRATION_CONFIRM_PRODUCTION: "2026-11-23",
+        NODE_TLS_REJECT_UNAUTHORIZED: "0",
+        PGPORT: "6543",
+        // What a shell has lying around.
+        DATABASE_URL: target(PRODUCTION_HOST),
+        HOME: "/home/operator",
+        PATH: "/usr/bin",
+      })
+    ).toEqual({
+      ...ENV,
+      MIGRATION_CONFIRM_PRODUCTION: "2026-11-23",
+      NODE_TLS_REJECT_UNAUTHORIZED: "0",
+      PGPORT: "6543",
+    })
   })
 
   it("ends the process with a status the table names, or 1", () => {

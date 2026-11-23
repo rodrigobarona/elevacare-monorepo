@@ -77,6 +77,9 @@ export interface MigrationSession {
 
 /**
  * Opens one session on a connection string. The driver lives behind it.
+ * The real one will be private to this file: `open` is handed in so that
+ * tests can stand in for it, and no other file is to hold one (a test
+ * keeps this type's name out of every other file).
  *
  * What an implementation must do, and what the first one (14.3) has to
  * show in its own tests, because nothing here can check it:

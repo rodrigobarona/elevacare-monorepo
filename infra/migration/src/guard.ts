@@ -32,6 +32,7 @@ export type MigrationGuardErrorCode =
   | "TARGET_HOST_POOLED"
   | "SOURCE_HOST_POOLED"
   | "PG_VARIABLES_SET"
+  | "TLS_CHECK_DISABLED"
   | "NEON_PROJECT_MISSING"
   | "NEON_PROJECT_INVALID"
   | "NEON_API_KEY_MISSING"
@@ -91,6 +92,8 @@ export interface NeonEndpointInfo {
 }
 
 export interface MigrationGuardEnv {
+  /** Node's switch that turns certificate checking off when it is "0". */
+  NODE_TLS_REJECT_UNAUTHORIZED?: string
   TARGET_DATABASE_URL?: string
   MVP_DATABASE_URL?: string
   NEON_PROJECT_ID?: string
@@ -125,10 +128,12 @@ export interface ApprovedMigrationTarget {
    * The only connection strings a run may use. They are rebuilt from the
    * parts the guard checked, so nothing in the original URL (a `host` or
    * `options` parameter, a second host) can send the driver elsewhere.
-   * They carry credentials: never log them.
+   * They carry credentials, so they are kept out of sight: they do not
+   * appear when the approval is logged, inspected or turned into JSON,
+   * only when a caller asks for them by name.
    */
-  targetUrl: string
-  sourceUrl: string
+  readonly targetUrl: string
+  readonly sourceUrl: string
 }
 
 /**
@@ -268,6 +273,14 @@ const issued = new WeakSet<object>()
  * it are the ones that were checked, for as long as the object lives.
  */
 function issue(approved: ApprovedMigrationTarget): ApprovedMigrationTarget {
+  // A report or a log line that includes "what was approved" must not
+  // carry two passwords with it.
+  for (const secret of ["targetUrl", "sourceUrl"] as const) {
+    Object.defineProperty(approved, secret, {
+      value: approved[secret],
+      enumerable: false,
+    })
+  }
   const frozen = Object.freeze(approved)
   issued.add(frozen)
   return frozen
@@ -324,6 +337,14 @@ export async function assertMigrationTarget(
     .filter(([name, value]) => /^PG[A-Z_]+$/.test(name) && Boolean(value))
     .map(([name]) => name)
     .sort()
+  // The same for the switch that stops Node checking certificates, for
+  // the question to Neon (which carries the key) and for any driver.
+  if (env.NODE_TLS_REJECT_UNAUTHORIZED?.trim() === "0") {
+    throw new MigrationGuardError(
+      "TLS_CHECK_DISABLED",
+      "NODE_TLS_REJECT_UNAUTHORIZED is 0, which turns certificate checking off. Unset it for this run"
+    )
+  }
   if (libpq.length > 0) {
     throw new MigrationGuardError(
       "PG_VARIABLES_SET",
@@ -474,7 +495,7 @@ export async function assertMigrationTarget(
   if (!endpoint.isDefaultBranch) {
     throw new MigrationGuardError(
       "NOT_DEFAULT_BRANCH",
-      `--target production needs the default branch of project ${projectId}; ${host} is branch "${endpoint.branchName}"`
+      `--target production needs the default branch of project ${projectId}; ${host} is branch ${JSON.stringify(endpoint.branchName)}`
     )
   }
   const today = utcDate(deps.now())
@@ -491,7 +512,7 @@ export async function assertMigrationTarget(
     )
   }
   const typed = await deps.prompt(
-    `This run targets PRODUCTION: branch "${endpoint.branchName}" on ${host} (${mode}), reading from ${sourceHost}. Type the Neon project id to continue: `
+    `This run targets PRODUCTION: branch ${JSON.stringify(endpoint.branchName)} on ${host} (${mode}), reading from ${sourceHost}. Type the Neon project id to continue: `
   )
   if (typed.trim() !== projectId) {
     throw new MigrationGuardError(
