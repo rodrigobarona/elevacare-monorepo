@@ -56,6 +56,19 @@ What it cannot see:
 - an `import` in an `.mdx` file, and anything in a folder at the top of an
   app that is named like a generated one (`dist`, `coverage`, `.next`).
 
+- a loader kept in a variable first
+  (`const load = createRequire(...); load("stripe")`).
+
+Known to refuse more than it should:
+
+- a file of an app's own named like a banned module (`./better-auth`,
+  `@/lib/slate`): the vendor bans match the name anywhere in a path. Name
+  the file another way;
+- a folder of an app's own named `packages` or `apps`, reached by climbing
+  two folders (`../../packages/list`). Use the `@/` alias;
+- a type-only import of a vendor SDK (`import type Stripe from "stripe"`).
+  Types are let through for the database package only.
+
 Everything under an app counts as that app: its `e2e/` and `scripts/` too.
 `vi.mock("@eleva/db")` in a test is allowed; `await import("@eleva/db")` is
 not.

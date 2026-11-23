@@ -205,6 +205,7 @@ test("an app's lint config file is the shared configs, and no other code", () =>
   const laidOut = [
     web.replaceAll('"', "'").replaceAll("\n", ";\n") + "// a note\n",
     `/** @type {import("eslint").Linter.Config} */\n${web}`,
+    web.replace(/\]\n$/, "] // the shared configs only\n"),
     web.replace(
       /export default \[(.*)\]/,
       (_all, entries) =>
@@ -591,6 +592,11 @@ test("a frontend takes the listed reads and types from the database, and no more
     line('import type { Plan } from "../packages/types"'),
     // A type from the query builder is not a query.
     line('import type { InferSelectModel } from "drizzle-orm"'),
+    // What a test loads past its own mock is a load.
+    line(
+      'const real = await vi.importActual("@eleva/db")',
+      "no-restricted-syntax"
+    ),
     // Text that names the database and loads nothing.
     line('export const fine = () => import("@eleva/ui/components/button")'),
     line('vi.mock("@eleva/db", () => ({}))'),
@@ -832,6 +838,7 @@ test("every app keeps the vendor and health-data boundaries, in every file", asy
     // nothing.
     line('export const kinds = () => import("stripe-event-types")'),
     line('describe.each([1])("stripe", () => {})'),
+    line('export const field = form.require("ai")'),
     line('export const label = useTranslations("providers")("resend")'),
   ]
   for (const app of ["apps/expert", "apps/account", "apps/admin", "apps/api"]) {

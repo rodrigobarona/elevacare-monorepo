@@ -58,13 +58,16 @@ import { importBansWithout } from "./base.js"
  */
 /**
  * A workspace named by its place on disk instead of by its package name:
- * a path that climbs out to `packages/` or `apps/`, or one into
- * `node_modules/`. A folder of an app's own named `packages` or `apps` is
- * not that (`./packages/list`, `@/components/apps/card`).
+ * a path that climbs two folders or more to `packages/` or `apps/`, or one
+ * into `node_modules/`. A folder of an app's own named `packages` or
+ * `apps` is not that when it is reached from beside it or by the app's
+ * alias (`./packages/list`, `../packages/list`, `@/components/apps/card`);
+ * reached by climbing two folders it is refused all the same, and the
+ * alias is the way round.
  */
 const BY_PATH = "\\.\\./\\.\\./(packages|apps)/|(^|/)node_modules/"
 const BY_PATH_MESSAGE =
-  "Import workspace code by its package name (@eleva/...), not by a path that climbs out to packages/ or apps/, or into node_modules/: a path gets around every rule about what may import what (boundary lint)."
+  "Import workspace code by its package name (@eleva/...), not by a path that climbs out to packages/ or apps/, or into node_modules/: a path gets around every rule about what may import what. For a folder of this app's own named packages or apps, use the @/ alias (boundary lint)."
 
 const REVEAL_MESSAGE =
   "Decrypted PHI is unwrapped only inside @eleva/records / @eleva/encryption when mapping into a response DTO (Phase 10 PHI lint)."
@@ -244,9 +247,11 @@ const BOUNDARY_IMPORT_BANS = {
  * The same module named as text where it can be loaded from, which the
  * import rule does not read: `import("x")`, `` import(`x`) ``,
  * `require("x")`, `module.require("x")`, `require.resolve("x")`,
- * `import.meta.resolve("x")`, `createRequire(...)("x")`, with or without a
- * type cast around the text. Other calls are left alone: `vi.mock("x")` in
- * a test is not a load, nor is `path.resolve("x")`.
+ * `import.meta.resolve("x")`, `createRequire(...)("x")`,
+ * `vi.importActual("x")`, with or without a type cast around the text.
+ * Other calls are left alone: `vi.mock("x")` in a test is not a load, nor
+ * is `path.resolve("x")`. Not seen: a loader kept in a variable first
+ * (`const load = createRequire(...); load("x")`).
  *
  * @param {string} text A regular expression, as text, for the module name.
  * @param {string} message
@@ -254,7 +259,9 @@ const BOUNDARY_IMPORT_BANS = {
 export function namedAsText(text, message) {
   const loaders = [
     "CallExpression[callee.name='require']",
-    "CallExpression[callee.property.name='require']",
+    "CallExpression[callee.property.name='require'][callee.object.name='module']",
+    // What a test loads past its own mock: vi.importActual("x").
+    "CallExpression[callee.property.name=/^(importActual|requireActual)$/]",
     "CallExpression[callee.property.name='resolve'][callee.object.name='require']",
     "CallExpression[callee.property.name='resolve'][callee.object.type='MetaProperty']",
     // createRequire(import.meta.url)("x")

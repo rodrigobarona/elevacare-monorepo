@@ -122,6 +122,13 @@ Each entry should include:
   - Lint reads script files only: an `import` in an `.mdx` file is not
     read. A folder at the top of an app named `dist`, `coverage` or like
     another generated folder is not linted, whatever is in it.
+  - A loader kept in a variable first
+    (`const load = createRequire(...); load("stripe")`) is not seen.
+  - It refuses more than it should in three cases, each with a way round
+    in the lint package's README: a file of an app's own named like a
+    banned module (`./better-auth`; this was so before), a folder of an
+    app's own named `packages` or `apps` reached by climbing two folders,
+    and a type-only import of a vendor SDK.
   - Everything under an app counts as that app, its `e2e/` and `scripts/`
     too. A test in a frontend that loads the database with `import()` is
     refused; one that mocks it (`vi.mock`) is not.

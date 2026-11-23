@@ -192,7 +192,9 @@ export function sharedConfigText(workspace) {
 export function isSharedConfigText(workspace, source) {
   const bare = source
     .replace(/\/\*[\s\S]*?\*\//g, "")
-    .replace(/^\s*\/\/.*$/gm, "")
+    // No text in these few lines holds "//", so the rest of a line after
+    // it is a comment.
+    .replace(/\/\/.*$/gm, "")
     .replace(/[\s;]/g, "")
     .replace(/'/g, '"')
     .replace(/,\]/g, "]")
@@ -238,7 +240,7 @@ export function appConfigProblems(workspace, config, source) {
 }
 
 function configFile(dir) {
-  return ["js", "mjs", "cjs", "ts"]
+  return ["js", "mjs", "cjs", "ts", "mts", "cts"]
     .map((extension) => path.join(dir, `eslint.config.${extension}`))
     .find((file) => existsSync(file))
 }
@@ -412,7 +414,7 @@ async function appProblems(root, workspace, eslint, results, canaries) {
   for (const file of sources) {
     if (!linted.has(file)) {
       problems.push(
-        `${path.relative(root, file)}: is not linted (a lint config ignores it), so no boundary rule runs on it`
+        `${path.relative(root, file)}: is not linted (a lint config ignores it, or none applies to this kind of file), so no boundary rule runs on it`
       )
     }
   }
