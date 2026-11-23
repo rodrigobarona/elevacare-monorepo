@@ -37,6 +37,7 @@ import {
   readdirSync,
   readFileSync,
   realpathSync,
+  rmSync,
   writeFileSync,
 } from "node:fs"
 import path from "node:path"
@@ -223,6 +224,14 @@ export function buildSboms(
     ? all.filter((one) => apps.includes(one.app))
     : all
   mkdirSync(out, { recursive: true })
+  // What an earlier run wrote here goes first: a run of some apps, or one
+  // that fails for an app, must not leave an older bill beside a manifest
+  // that does not name it. Only the files this script writes.
+  for (const file of readdirSync(out)) {
+    if (file === "manifest.json" || file.endsWith(".cdx.json")) {
+      rmSync(path.join(out, file))
+    }
+  }
 
   const problems = []
   const files = []

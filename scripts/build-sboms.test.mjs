@@ -282,9 +282,18 @@ test("a file that leaves a production dependency out fails, and is still written
   assert.match(problems[0], /^web: does not list 5 package\(s\)/)
   assert.ok(readdirSync(out).includes("web.cdx.json"))
 
+  // What an earlier run left is not passed off as this run's: a bill from
+  // before, for this app or another, is gone; a file that is not ours stays.
+  writeFileSync(path.join(out, "gone.cdx.json"), "{}")
+  writeFileSync(path.join(out, "notes.txt"), "kept")
   assert.deepEqual(buildSboms(root, { out, run: () => "not json" }).problems, [
     "web: pnpm did not write JSON",
   ])
+  assert.deepEqual(readdirSync(out).sort(), ["manifest.json", "notes.txt"])
+  assert.deepEqual(
+    JSON.parse(readFileSync(path.join(out, "manifest.json"), "utf8")).files,
+    []
+  )
   assert.throws(
     () => buildSboms(root, { out, apps: ["poc"], run: () => "{}" }),
     /Not a deployed app: poc \(deployed: web\)/

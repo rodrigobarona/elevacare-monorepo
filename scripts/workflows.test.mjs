@@ -66,24 +66,34 @@ test("every workflow says what its token may do, and starts from little", () => 
   }
 })
 
+/**
+ * The checkouts of a workflow: for each, whether it says what happens to
+ * the token and whether it keeps it. Read without the comments, so a
+ * line that is commented out says nothing.
+ */
+function checkouts(source) {
+  return code(source)
+    .split(/\n(?=\s*- )/)
+    .filter((step) => /uses:\s*actions\/checkout@/.test(step))
+    .map((step) => ({
+      step: step.trim().split("\n")[0],
+      says: /^\s*persist-credentials:\s*(true|false)\s*(#.*)?$/m.test(step),
+      keeps: /^\s*persist-credentials:\s*true\s*(#.*)?$/m.test(step),
+    }))
+}
+
 test("a checkout leaves the token behind only where a later step needs it", () => {
   // The one job that does: gitleaks fetches the base branch after the
   // checkout, to scan the commits a pull request adds.
   const KEEPS_TOKEN = { "ci.yml": 1 }
   for (const [name, source] of Object.entries(WORKFLOWS)) {
-    let kept = 0
-    for (const step of source.split(/\n(?=\s*- )/)) {
-      if (!/uses:\s*actions\/checkout@/.test(step)) continue
+    const found = checkouts(source)
+    for (const checkout of found) {
       // Said either way, never left to the default (which keeps it).
-      assert.match(
-        step,
-        /persist-credentials:\s*(true|false)/,
-        `${name}: ${step.trim().split("\n")[0]}`
-      )
-      if (/persist-credentials:\s*true/.test(step)) kept += 1
+      assert.ok(checkout.says, `${name}: ${checkout.step}`)
     }
     assert.equal(
-      kept,
+      found.filter((checkout) => checkout.keeps).length,
       KEEPS_TOKEN[name] ?? 0,
       `${name}: checkouts that keep the token`
     )
@@ -92,6 +102,43 @@ test("a checkout leaves the token behind only where a later step needs it", () =
     WORKFLOWS["ci.yml"],
     /persist-credentials: true\n\s+fetch-depth: 0[\s\S]*?git fetch --no-tags origin "\$BASE_REF"/
   )
+})
+
+test("a commented-out line does not count as saying what happens to the token", () => {
+  const checkout = (lines) =>
+    [
+      "jobs:",
+      "  build:",
+      "    steps:",
+      "      - uses: actions/checkout@0123456789012345678901234567890123456789 # v6",
+      "        with:",
+      ...lines.map((line) => `          ${line}`),
+      "      - run: pnpm test",
+      "",
+    ].join("\n")
+  const said = (lines) => checkouts(checkout(lines)).map((one) => one.says)
+  const kept = (lines) => checkouts(checkout(lines)).map((one) => one.keeps)
+
+  assert.deepEqual(said(["persist-credentials: false"]), [true])
+  assert.deepEqual(kept(["persist-credentials: false"]), [false])
+  assert.deepEqual(kept(["persist-credentials: true"]), [true])
+  // Left to the default, which keeps the token: not said.
+  assert.deepEqual(said(["fetch-depth: 0"]), [false])
+  assert.deepEqual(said(["# persist-credentials: false", "fetch-depth: 0"]), [
+    false,
+  ])
+  // A commented-out "true" beside a real "false" keeps nothing.
+  assert.deepEqual(
+    kept(["# persist-credentials: true", "persist-credentials: false"]),
+    [false]
+  )
+  // A note after the value does not change it.
+  assert.deepEqual(kept(["persist-credentials: true # gitleaks"]), [true])
+  assert.deepEqual(said(["persist-credentials: false # not needed"]), [true])
+  // A word after the value is not the value.
+  assert.deepEqual(said(["persist-credentials: falsey"]), [false])
+  // The step that follows is its own step.
+  assert.equal(checkouts(checkout(["persist-credentials: false"])).length, 1)
 })
 
 test("CodeQL scans the product and the workflows, on pull requests, on main and weekly", () => {
