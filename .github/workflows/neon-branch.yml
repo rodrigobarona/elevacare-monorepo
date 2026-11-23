@@ -198,7 +198,7 @@ jobs:
           ELEVA_DB_INTEGRATION: "1"
         run: |
           pnpm --filter=@eleva/auth exec vitest run --no-file-parallelism src/__tests__/practice-closure.integration.test.ts src/__tests__/team-members.integration.test.ts src/__tests__/clinic-review.integration.test.ts src/__tests__/partner-review.integration.test.ts
-          pnpm --filter=@eleva/billing exec vitest run --no-file-parallelism src/server/__tests__/seat-cap.integration.test.ts
+          pnpm --filter=@eleva/billing exec vitest run --no-file-parallelism src/server/__tests__/seat-cap.integration.test.ts src/server/__tests__/seat-sync.integration.test.ts
 
   delete-branch:
     name: neon-branch-delete

@@ -1,8 +1,11 @@
+import { createHash } from "node:crypto"
 import type Stripe from "stripe"
 import { withAudit } from "@eleva/audit"
-import { main, withPlatformAdminContext } from "@eleva/db"
+import { countBillableSeats, main, withPlatformAdminContext } from "@eleva/db"
 import { eq } from "drizzle-orm"
 import { stripe } from "./client"
+import { SEAT_PRICE_TYPE } from "./seat-cap"
+import { withSharedSeatLock } from "./seats"
 
 /**
  * Stripe product metadata keys used to identify Eleva subscription tiers.
@@ -62,14 +65,10 @@ export async function findTierPrice(tier: ProductTier): Promise<string | null> {
 }
 
 /**
- * Finds the per-seat price for a given product tier, if one exists.
- * Prefers the metered (`per_seat_metered`) price over the legacy
- * licensed (`per_seat`) price so clinics opt into Eleva seat sync as
- * soon as `seed-products.ts --apply` creates the metered price.
+ * Finds the per-seat price for a given product tier, if one exists: a
+ * licensed price whose quantity Eleva sets (`syncSeatQuantity`).
  */
-async function findSeatPriceWithType(
-  tier: ProductTier
-): Promise<{ priceId: string; metered: boolean } | null> {
+async function findSeatPrice(tier: ProductTier): Promise<string | null> {
   const metadataKey = PRODUCT_KEYS[tier]
   const products = await stripe().products.search({
     query: `metadata["eleva_product_key"]:"${metadataKey}"`,
@@ -84,43 +83,41 @@ async function findSeatPriceWithType(
     type: "recurring",
     limit: 10,
   })
-
-  // Prefer metered, fall back to legacy licensed.
-  const meteredPrice = prices.data.find(
-    (p) => p.metadata.eleva_price_type === "per_seat_metered"
+  return (
+    prices.data.find((p) => p.metadata.eleva_price_type === SEAT_PRICE_TYPE)
+      ?.id ?? null
   )
-  if (meteredPrice) {
-    return { priceId: meteredPrice.id, metered: true }
-  }
-  const licensedPrice = prices.data.find(
-    (p) => p.metadata.eleva_price_type === "per_seat"
-  )
-  if (licensedPrice) {
-    return { priceId: licensedPrice.id, metered: false }
-  }
-  return null
 }
 
+/**
+ * The items of a subscription on `tier`: the plan, and for a clinic plan
+ * the seat item, at the number of seats Eleva counts for this clinic. The
+ * buyer never chooses that number.
+ *
+ * `allowZeroSeats`: a subscription accepts a seat item at quantity 0, so a
+ * new clinic gets its seat item from the start. Checkout refuses a line at
+ * 0 ("must be greater than or equal to 1", Stripe test mode 2026-11-22):
+ * there the line is left out at 0 and the seat sync adds the item once the
+ * subscription is active.
+ */
 async function buildSubscriptionItems(input: {
   tier: ProductTier
-  quantity?: number
+  orgId: string
+  allowZeroSeats: boolean
 }): Promise<{
-  items: Array<{ price: string; quantity?: number }>
+  items: Array<{ price: string; quantity: number }>
   priceId: string
 } | null> {
   const priceId = await findTierPrice(input.tier)
   if (!priceId) return null
 
-  const items: Array<{ price: string; quantity?: number }> = [
-    { price: priceId, quantity: 1 },
-  ]
+  const items = [{ price: priceId, quantity: 1 }]
 
-  const seatPrice = await findSeatPriceWithType(input.tier)
-  if (seatPrice) {
-    if (seatPrice.metered) {
-      items.push({ price: seatPrice.priceId })
-    } else if (input.quantity && input.quantity > 0) {
-      items.push({ price: seatPrice.priceId, quantity: input.quantity })
+  const seatPriceId = await findSeatPrice(input.tier)
+  if (seatPriceId) {
+    const seats = await countBillableSeats(input.orgId)
+    if (seats > 0 || input.allowZeroSeats) {
+      items.push({ price: seatPriceId, quantity: seats })
     }
   }
 
@@ -146,9 +143,9 @@ export async function getBillingCustomerForOrg(
  * Creates a subscription for an org on the given tier.
  * Used during provisioning to give every org a subscription from day one.
  *
- * Base tier is always quantity=1. For clinic tiers a seat item is
- * attached automatically (per ADR-016). Seat quantity is owned by
- * `@eleva/billing` `syncSeatQuantity`.
+ * Base tier is always quantity=1. A clinic tier always gets its seat item
+ * too (per ADR-016), at the number of seats the clinic has now, zero
+ * included. From then on the quantity is owned by `syncSeatQuantity`.
  *
  * `eleva_org_id` and `eleva_tier` are stamped in subscription metadata
  * so the webhook can resolve the tenant from event metadata even
@@ -158,10 +155,12 @@ export async function createOrgSubscription(input: {
   customerId: string
   tier: ProductTier
   orgId: string
-  /** Legacy: only honored for non-metered seat prices. */
-  quantity?: number
 }): Promise<Stripe.Subscription | null> {
-  const itemResult = await buildSubscriptionItems(input)
+  const itemResult = await buildSubscriptionItems({
+    tier: input.tier,
+    orgId: input.orgId,
+    allowZeroSeats: true,
+  })
   if (!itemResult) return null
 
   return stripe().subscriptions.create({
@@ -175,15 +174,46 @@ export async function createOrgSubscription(input: {
   })
 }
 
+/** How long the same request counts as the same attempt at Checkout. */
+const CHECKOUT_ATTEMPT_MS = 10 * 60 * 1000
+
+/**
+ * One Checkout Session for one attempt: the same person asking for the
+ * same things within ten minutes (a double press, a reload, a retry) gets
+ * the same session. A different seat count or return address is another
+ * request, and so is trying again later: a key fixed per person and plan
+ * handed back a finished or expired session for a day.
+ */
+export function checkoutIdempotencyKey(
+  input: {
+    orgId: string
+    tier: ProductTier
+    actorUserId: string
+    returnUrl: string
+    items: Array<{ price: string; quantity: number }>
+  },
+  now: number = Date.now()
+): string {
+  const attempt = Math.floor(now / CHECKOUT_ATTEMPT_MS)
+  const request = createHash("sha256")
+    .update(JSON.stringify([input.returnUrl, input.items, attempt]))
+    .digest("hex")
+    .slice(0, 16)
+  return `checkout_${input.orgId}_${input.tier}_${input.actorUserId}_${request}`
+}
+
 export async function createSubscriptionCheckoutSession(input: {
   customerId: string
   tier: ProductTier
   orgId: string
   actorUserId: string
   returnUrl: string
-  quantity?: number
 }): Promise<{ id: string; clientSecret: string }> {
-  const itemResult = await buildSubscriptionItems(input)
+  const itemResult = await buildSubscriptionItems({
+    tier: input.tier,
+    orgId: input.orgId,
+    allowZeroSeats: false,
+  })
   if (!itemResult) {
     throw new Error(`Product for tier '${input.tier}' not found in Stripe.`)
   }
@@ -199,6 +229,11 @@ export async function createSubscriptionCheckoutSession(input: {
       automatic_tax: { enabled: true },
       tax_id_collection: { enabled: true },
       billing_address_collection: "required",
+      // The customer exists already (provisioning made it, without an
+      // address). Without this, what the buyer types in Checkout (the
+      // company name, the address, and with them the VAT number) is not
+      // saved on that customer.
+      customer_update: { name: "auto", address: "auto" },
       metadata: {
         eleva_org_id: input.orgId,
         eleva_tier: input.tier,
@@ -211,7 +246,10 @@ export async function createSubscriptionCheckoutSession(input: {
       },
     },
     {
-      idempotencyKey: `checkout_${input.orgId}_${input.tier}_${input.actorUserId}`,
+      idempotencyKey: checkoutIdempotencyKey({
+        ...input,
+        items: itemResult.items,
+      }),
     }
   )
 
@@ -275,13 +313,27 @@ export async function createBillingPortalSession(input: {
 /**
  * Swaps an existing subscription to a different tier.
  * Used for upgrades (Expert Community -> Top Expert) and clinic tier changes.
+ *
+ * The seat item moves to the new plan's seat price with its quantity given
+ * outright: Stripe resets an item to 1 when its price changes and no
+ * quantity is sent, which would bill one seat whatever the clinic has.
+ *
+ * It counts and writes under the clinic's seat lock, like the seat sync: a
+ * seat change at the same moment could otherwise be overwritten by the
+ * count this took a moment earlier.
  */
 export async function swapSubscriptionTier(input: {
   subscriptionId: string
   newTier: ProductTier
   orgId: string
-  /** Legacy: only honored for non-metered seat prices. */
-  quantity?: number
+}): Promise<Stripe.Subscription | null> {
+  return withSharedSeatLock(input.orgId, () => swapTierUnderSeatLock(input))
+}
+
+async function swapTierUnderSeatLock(input: {
+  subscriptionId: string
+  newTier: ProductTier
+  orgId: string
 }): Promise<Stripe.Subscription | null> {
   const newPriceId = await findTierPrice(input.newTier)
   if (!newPriceId) return null
@@ -290,16 +342,12 @@ export async function swapSubscriptionTier(input: {
     input.subscriptionId
   )
 
+  const isSeatItem = (item: Stripe.SubscriptionItem) =>
+    item.price.metadata?.eleva_price_type === SEAT_PRICE_TYPE
   const currentBaseItem = subscription.items.data.find(
-    (item) =>
-      item.price.metadata?.eleva_price_type !== "per_seat" &&
-      item.price.metadata?.eleva_price_type !== "per_seat_metered"
+    (item) => !isSeatItem(item)
   )
-  const currentSeatItem = subscription.items.data.find(
-    (item) =>
-      item.price.metadata?.eleva_price_type === "per_seat" ||
-      item.price.metadata?.eleva_price_type === "per_seat_metered"
-  )
+  const currentSeatItem = subscription.items.data.find(isSeatItem)
 
   const items: Stripe.SubscriptionUpdateParams.Item[] = []
 
@@ -309,16 +357,14 @@ export async function swapSubscriptionTier(input: {
     items.push({ price: newPriceId, quantity: 1 })
   }
 
-  const newSeatPrice = await findSeatPriceWithType(input.newTier)
-  if (newSeatPrice) {
-    const itemUpdate: Stripe.SubscriptionUpdateParams.Item = {
-      price: newSeatPrice.priceId,
-    }
-    if (currentSeatItem) itemUpdate.id = currentSeatItem.id
-    if (!newSeatPrice.metered && input.quantity && input.quantity > 0) {
-      itemUpdate.quantity = input.quantity
-    }
-    items.push(itemUpdate)
+  const newSeatPriceId = await findSeatPrice(input.newTier)
+  if (newSeatPriceId) {
+    const seats = await countBillableSeats(input.orgId)
+    items.push({
+      ...(currentSeatItem ? { id: currentSeatItem.id } : {}),
+      price: newSeatPriceId,
+      quantity: seats,
+    })
   } else if (currentSeatItem) {
     items.push({ id: currentSeatItem.id, deleted: true })
   }

@@ -130,4 +130,17 @@ describe("OpenAPI coverage", () => {
     )
     expect(own["POST /bookings/confirm"]).toContain("Stripe retrieve")
   })
+
+  it("describes clinic checkout as the code runs it", () => {
+    const checkout = generateOpenApiSpec().paths?.["/billing/checkout"]?.post
+    expect(checkout?.description).toContain("ui_mode=embedded_page")
+    expect(checkout?.description).toContain("counted by Eleva")
+    // The buyer never names how many seats to pay for.
+    expect(JSON.stringify(checkout?.requestBody)).not.toContain("quantity")
+    expect(
+      JSON.stringify(
+        generateOpenApiSpec().paths?.["/billing/subscribe"]?.post?.requestBody
+      )
+    ).not.toContain("quantity")
+  })
 })

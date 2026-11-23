@@ -30,12 +30,58 @@ export function clinicPlanTier(
     : DEFAULT_CLINIC_TIER
 }
 
-/** A subscription in one of these states is the clinic's current plan. */
-const CURRENT_SUBSCRIPTION_STATUSES = [
+/**
+ * A subscription in one of these states is the clinic's current plan. One
+ * list for the seat limit and the seat sync, so the two always agree on
+ * which subscription counts.
+ */
+export const CURRENT_SUBSCRIPTION_STATUSES = [
   "active",
   "trialing",
   "past_due",
 ] as const
+
+export function isCurrentSubscriptionStatus(status: string): boolean {
+  return (CURRENT_SUBSCRIPTION_STATUSES as readonly string[]).includes(status)
+}
+
+/** `metadata.eleva_price_type` of the price that bills seats (licensed). */
+export const SEAT_PRICE_TYPE = "per_seat"
+
+/**
+ * How a subscription item bills seats, if it does. `licensed`: the item
+ * Eleva sets the quantity of. `metered`: the older design (a price fed by
+ * usage records), which no price uses any more but an old subscription
+ * could still carry. It is never given a quantity, and never gets a
+ * licensed item beside it: that would bill the same seats twice.
+ */
+export function seatItemKind(item: {
+  price: {
+    metadata?: Record<string, string> | null
+    recurring?: { usage_type?: string | null } | null
+  }
+}): "licensed" | "metered" | null {
+  const type = item.price.metadata?.eleva_price_type
+  if (type === SEAT_PRICE_TYPE) return "licensed"
+  if (
+    type === "per_seat_metered" ||
+    item.price.recurring?.usage_type === "metered"
+  ) {
+    return "metered"
+  }
+  return null
+}
+
+/** The plans that bill seats. */
+export const CLINIC_PLAN_TIERS = Object.keys(
+  CLINIC_SEAT_CAPS
+) as ClinicPlanTier[]
+
+export function isClinicPlanTier(tier: string | null | undefined): boolean {
+  return (
+    tier !== null && tier !== undefined && Object.hasOwn(CLINIC_SEAT_CAPS, tier)
+  )
+}
 
 /**
  * The plan the clinic is on now: its current clinic subscription. Ended
@@ -53,7 +99,7 @@ async function clinicPlan(tx: Tx, orgId: string): Promise<ClinicPlanTier> {
         inArray(main.billingSubscriptions.status, [
           ...CURRENT_SUBSCRIPTION_STATUSES,
         ]),
-        inArray(main.billingSubscriptions.tier, Object.keys(CLINIC_SEAT_CAPS))
+        inArray(main.billingSubscriptions.tier, CLINIC_PLAN_TIERS)
       )
     )
   return rows
