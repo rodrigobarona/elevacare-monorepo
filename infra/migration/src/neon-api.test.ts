@@ -119,7 +119,9 @@ describe("createNeonEndpointResolver", () => {
     await expect(resolver(api({}))(HOST)).rejects.toThrow()
     await expect(
       resolver(api({ default: false, primary: true }))(HOST)
-    ).rejects.toThrow(/default=false and primary=true/)
+    ).rejects.toThrow(
+      /two different things about whether the branch is the default/
+    )
     await expect(resolver(api({ default: false }, 401))(HOST)).rejects.toThrow(
       /401/
     )

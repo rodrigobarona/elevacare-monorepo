@@ -32,6 +32,145 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-23: The migration tool has one door to a database, and a command that only checks the target (14.2) (active)
+
+- Change (Phase 14.2): the migration package had a guard and nothing that
+  called it. It now has (a) one command, `guard`, that runs the guard with
+  the flags a real run takes, says what was approved and stops, and (b)
+  the one module that will open connections, `src/connect.ts`. Nothing in
+  the package has ever connected to a database, and this slice does not
+  change that: every test uses fakes, and no driver is installed.
+- **An approval is a thing the guard gives, not a shape.** The guard keeps
+  each target it approved in a private set and freezes it. The connection
+  module asks the guard whether the object it was handed is one of those:
+  a copy, or an object built by hand from the environment, is refused
+  before anything is opened, and an approved one cannot have its
+  connection strings changed afterwards. Before this, any code could
+  build an "approved target" that type-checked.
+- **Sessions are read-only unless the run writes.** The MVP side always,
+  the v3 side in a dry run: the driver is told to open the connection
+  read-only, the setting is made for the session and read back from the
+  server, and a session that does not answer "on" is closed. This guards
+  against a mapper with a bug; it does not stop code that sets out to
+  write. On the MVP side the real boundary is the read-only database role
+  the operator creates (N1). On the v3 side in a dry run there is no such
+  role: there this setting is the safeguard there is. The driver has to
+  give one dedicated connection per session, never a pool, and the
+  contract says so.
+- **Pooled hosts are refused by the guard**, on both sides
+  (`TARGET_HOST_POOLED`, `SOURCE_HOST_POOLED`). The first version let the
+  guard approve one and refused it only when connecting: the check a
+  rehearsal passed was not the check the real run passes (both reviewers
+  caught it). 14.1 had treated a pooled host as fine; it is not, for a
+  migration.
+- **Exit statuses:** 0 approved, 2 refused (a usage error or a guard
+  refusal, nothing connected to), 1 anything unexpected (never read as
+  approval), and 3 for "approved, a connection was tried, and the database
+  did not answer or would not be read-only". No command connects yet; the
+  command line already reports such a failure with its side and status,
+  so the table does not change when one does. An unapproved target handed
+  to the connection module is a bug in the caller: 1, not 3. A missing
+  `NEON_API_KEY` is its own refusal (`NEON_API_KEY_MISSING`), decided
+  before any network call, and so is one with a space or a line break in
+  it (`NEON_API_KEY_INVALID`).
+- **Nothing printed carries a secret, as far as the tests can tell.** The
+  summary names the hosts, the project and the branch, never a URL, a
+  user or a password. A refusal prints the guard's own message. An error
+  the code did not word itself is shown by its class only, and only when
+  the class looks like one; a failed connection adds the driver's code
+  when it has the shape of a code. The first version repeated the message
+  of any error from the question to Neon: a key pasted with a line break
+  makes the runtime throw an error that quotes the whole header, key
+  included, and that reached the terminal (the security review reproduced
+  it). Messages about arguments no longer repeat what was typed unless it
+  is a plain short word: a connection string pasted where a flag belongs
+  carried its password into the message. Tests look for two passwords and
+  an API key in what every outcome prints, those two cases included.
+- Rule 13 of the execution plan holds: the command loads no `.env` file,
+  reads the process's environment and arguments in `main.ts` only (a test
+  keeps it so), defaults to a dry run against a branch, refuses on missing
+  identity, and production needs today's date, a terminal and the typed
+  project id.
+- Decided here: **no driver yet.** The catalog has the Neon driver, whose
+  session form only reaches Neon, and nobody has confirmed what the MVP's
+  production database runs on (F-02). The driver is an argument, and 14.3
+  adds the real one in `connect.ts` once that is known. Pooled or direct:
+  direct, enforced.
+- Proof: 164 tests in the package (75 before), all with fakes: each exit
+  status, each family of refusal, production with fakes only, usage errors
+  that never reach Neon, a forged approval (a copy, a prototype, a proxy),
+  the environment changed after approval, both sides' read-only state and
+  every shape of a wrong answer to it, a database that does not answer, a
+  failed second connection, `close()` twice, the terminal's question
+  answered, ended and already closed, and four runs of the real process
+  (`node --import tsx/esm src/main.ts`) with an empty environment: status
+  2, `TARGET_URL_MISSING`, no network, and a `.env` file left beside the
+  package not read. Three scans keep the shape: what any file but
+  `connect.ts` may import is a short allow-list, in every folder; only
+  `main.ts` reads the process's environment and arguments; the guard is
+  called from one place and the real question to Neon built in one place.
+- Judges, first commit: security 7.3, engineering 7.6. What they found is
+  what the second commit answers: the key in an error message, the guard
+  approving a pooled host, a read-only claim larger than what one `SET`
+  gives, scans that looked at one folder and a list of driver names, a
+  question on a closed terminal that left the process to end with a
+  status of its own (13), a status 3 that also meant "a bug" and "refused",
+  and arguments echoed into messages. Second pair: security 7.7,
+  engineering 8.3. The third commit answers what they reproduced: the
+  command took its exit status from the error it was handed, so an error
+  dressed up with a status of 0 ended as "approved" (it now reads a
+  closed table by the error's code, and the entry point passes on only a
+  status the table knows); a key set where the project id belongs was
+  repeated in the question to Neon and so in the refusal (the id's shape
+  is checked first and never repeated); a URL with no user, password or
+  database was approved, leaving a driver to fill the gaps from its own
+  environment; a branch name from Neon with a line break could print a
+  second "approved:" line; the deadline covered the connection and not
+  the read-only check; a driver that threw at once escaped unwrapped; a
+  short token typed as an argument was echoed; the test that proves no
+  `.env` file is read could overwrite a real one; and the scans looked
+  only at `src`, let a relative path leave the package, and matched a
+  call's spelling where they now match the name. The pooled-host check
+  kept in the connection module could no longer be reached and is gone.
+  Third security review: 7.8, with no path found to "approved" without
+  the guard and no realistic leak of a credential. The fourth commit
+  answers it: the port is written into the rebuilt URL, and a run with a
+  `PG*` variable set is refused, since a driver reads those beside any
+  connection string; a URL has exactly one "@", so a piece of a password
+  cannot be shown as a host; nothing Neon says is put into a message
+  except a branch's name, quoted; the table of statuses is frozen and an
+  error is asked for its code once; the scans read the text as written
+  (taking comments out first was a way to hide code from them), know
+  every kind of code file, refuse an import that is worked out, and say
+  that only one file reaches the network. Fourth security review, on a
+  stated threat model (an operator's honest mistake, a wrong answer from
+  Neon, a driver that misbehaves, a later engineer who did not read the
+  rules): 8.2. From it, in the fifth commit: an approval logged or
+  written as JSON no longer shows its two connection strings; the command
+  is handed its own variables and no others; `NODE_TLS_REJECT_UNAUTHORIZED=0`
+  is refused; an answer from Neon about another branch than the
+  endpoint's is refused; the way to open a session is named in one file
+  only. Not scored again. Engineering stays at 8.3 from the second round.
+- Known and left: the scans read text, so they stop a mistake and not
+  someone set on getting around them, and they do not look inside test
+  files; the guard accepts only port 5432 for the MVP too, which F-02 may
+  change; an approval can be used more than once.
+- Decided for 14.3, so it does not have to be found out there: the
+  inventory reads only the MVP, and today's guard and connection module
+  need a v3 target as well. 14.3 adds an approval for the source alone
+  and a way to open only it, beside these, and extends the scan that
+  says who may ask the guard. An approval today can be used more than
+  once and does not expire; the commands that connect make one, use it
+  and end.
+- Not proven, and not meant to be yet: a connection to any real database;
+  the read-only setting against a real server; the command against the
+  real Neon API (an operator runs it against a rehearsal branch from the
+  runbook; the agent never points it at the real project).
+- Owner: engineering; founder (F-02, what the MVP runs on); operator (N1,
+  the read-only role)
+- Related: `infra/migration/README.md`; `execution-plan/phases/14-mvp-migration.md`;
+  ADR-019; execution-plan README, rule 13
+
 ### 2026-11-23: Staff queues have pages, and reading one is on record (12.6) (active)
 
 - Change (Phase 12.6): the two staff queues (clinic verifications, licence

@@ -29,7 +29,14 @@ export type MigrationGuardErrorCode =
   | "SOURCE_URL_MISSING"
   | "SOURCE_IS_TARGET"
   | "SOURCE_IN_TARGET_PROJECT"
+  | "TARGET_HOST_POOLED"
+  | "SOURCE_HOST_POOLED"
+  | "PG_VARIABLES_SET"
+  | "TLS_CHECK_DISABLED"
   | "NEON_PROJECT_MISSING"
+  | "NEON_PROJECT_INVALID"
+  | "NEON_API_KEY_MISSING"
+  | "NEON_API_KEY_INVALID"
   | "NEON_LOOKUP_FAILED"
   | "ENDPOINT_NOT_IN_PROJECT"
   | "ENDPOINT_NOT_WRITABLE"
@@ -53,6 +60,25 @@ export class MigrationGuardError extends Error {
   }
 }
 
+/**
+ * A failure to ask Neon whose message was written here, on purpose, and is
+ * safe to show an operator. Any other error from a resolver is shown by its
+ * class only: a runtime's own message can quote a request header, and the
+ * header carries the API key.
+ */
+export class NeonLookupError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "NeonLookupError"
+  }
+}
+
+/** A short name for an unknown error: letters and digits only, never its message. */
+export function errorKind(error: unknown): string {
+  const name = error instanceof Error ? error.name : ""
+  return /^[A-Za-z][A-Za-z0-9]{0,40}$/.test(name) ? name : "unknown error"
+}
+
 /** What the Neon API says about the endpoint behind a hostname. */
 export interface NeonEndpointInfo {
   endpointId: string
@@ -66,6 +92,8 @@ export interface NeonEndpointInfo {
 }
 
 export interface MigrationGuardEnv {
+  /** Node's switch that turns certificate checking off when it is "0". */
+  NODE_TLS_REJECT_UNAUTHORIZED?: string
   TARGET_DATABASE_URL?: string
   MVP_DATABASE_URL?: string
   NEON_PROJECT_ID?: string
@@ -89,7 +117,10 @@ export interface MigrationGuardDeps {
 export interface ApprovedMigrationTarget {
   kind: MigrationTargetKind
   mode: MigrationMode
+  /** The v3 database's host. */
   host: string
+  /** The MVP database's host, so an operator sees which one was approved. */
+  sourceHost: string
   projectId: string
   branchId: string
   branchName: string
@@ -97,10 +128,12 @@ export interface ApprovedMigrationTarget {
    * The only connection strings a run may use. They are rebuilt from the
    * parts the guard checked, so nothing in the original URL (a `host` or
    * `options` parameter, a second host) can send the driver elsewhere.
-   * They carry credentials: never log them.
+   * They carry credentials, so they are kept out of sight: they do not
+   * appear when the approval is logged, inspected or turned into JSON,
+   * only when a caller asks for them by name.
    */
-  targetUrl: string
-  sourceUrl: string
+  readonly targetUrl: string
+  readonly sourceUrl: string
 }
 
 /**
@@ -133,6 +166,15 @@ function checkedUrl(
   if (!url?.trim()) {
     throw new MigrationGuardError(missing, `${name} is not set`)
   }
+  // One "@", between the password and the host. A second one is a password
+  // with a character that was not percent-encoded: the parse would shift,
+  // and a piece of the password would be read, and shown, as the host.
+  if ((url.match(/@/g) ?? []).length !== 1) {
+    throw new MigrationGuardError(
+      invalid,
+      `${name} must have exactly one "@", between the password and the host. Percent-encode an "@" in the password as %40`
+    )
+  }
   let parsed: URL
   try {
     parsed = new URL(url.trim())
@@ -143,6 +185,20 @@ function checkedUrl(
     )
   }
   const host = parsed.hostname.toLowerCase()
+  // A user, a password and one database name, all in the URL. A driver
+  // fills whatever is missing from its own environment (PGUSER,
+  // PGPASSWORD, PGDATABASE), and the run would then connect with
+  // something the guard never saw.
+  if (
+    parsed.username === "" ||
+    parsed.password === "" ||
+    !/^\/[^/]+$/.test(parsed.pathname)
+  ) {
+    throw new MigrationGuardError(
+      invalid,
+      `${name} must name a user, a password and one database (user:password@host/database). Percent-encode special characters in the password`
+    )
+  }
   if (
     !/^postgres(ql)?:$/.test(parsed.protocol) ||
     !/^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$/.test(host) ||
@@ -198,12 +254,47 @@ function checkedUrl(
       `the password in ${name} starts with "endpoint=" or "project=", which Neon reads as the endpoint to connect to. Use the plain password`
     )
   }
-  const rebuilt = new URL(`postgresql://${host}`)
+  // The port is written out even when the URL left it to the default: a
+  // driver takes a missing one from its environment (PGPORT).
+  const rebuilt = new URL(`postgresql://${host}:5432`)
   rebuilt.username = parsed.username
   rebuilt.password = parsed.password
   rebuilt.pathname = parsed.pathname
   rebuilt.search = parameters.toString()
   return { host, url: rebuilt.toString() }
+}
+
+// Every target this module approved, and nothing else. An object that only
+// looks approved (built by hand, copied, read from a file) is not in it.
+const issued = new WeakSet<object>()
+
+/**
+ * Records an approval and makes it unchangeable: the connection strings in
+ * it are the ones that were checked, for as long as the object lives.
+ */
+function issue(approved: ApprovedMigrationTarget): ApprovedMigrationTarget {
+  // A report or a log line that includes "what was approved" must not
+  // carry two passwords with it.
+  for (const secret of ["targetUrl", "sourceUrl"] as const) {
+    Object.defineProperty(approved, secret, {
+      value: approved[secret],
+      enumerable: false,
+    })
+  }
+  const frozen = Object.freeze(approved)
+  issued.add(frozen)
+  return frozen
+}
+
+/**
+ * True only for an object the guard returned in this run.
+ * The module that opens connections asks this before it opens anything, so
+ * a type that matches is not enough to reach a database.
+ */
+export function isApprovedMigrationTarget(
+  value: unknown
+): value is ApprovedMigrationTarget {
+  return typeof value === "object" && value !== null && issued.has(value)
 }
 
 /** `ep-name-123-pooler.region.aws.neon.tech` as its direct host. */
@@ -237,6 +328,29 @@ export async function assertMigrationTarget(
   deps: MigrationGuardDeps
 ): Promise<ApprovedMigrationTarget> {
   const { env, target, mode } = input
+  // A Postgres driver reads PGHOST, PGPORT, PGUSER, PGPASSWORD, PGOPTIONS
+  // and their kin for anything a connection string leaves out, and
+  // PGOPTIONS even when it leaves nothing out. With one of them set, what
+  // the guard checks is not all of what the run would use. Only the names
+  // are shown.
+  const libpq = Object.entries(env as Record<string, string | undefined>)
+    .filter(([name, value]) => /^PG[A-Z_]+$/.test(name) && Boolean(value))
+    .map(([name]) => name)
+    .sort()
+  // The same for the switch that stops Node checking certificates, for
+  // the question to Neon (which carries the key) and for any driver.
+  if (env.NODE_TLS_REJECT_UNAUTHORIZED?.trim() === "0") {
+    throw new MigrationGuardError(
+      "TLS_CHECK_DISABLED",
+      "NODE_TLS_REJECT_UNAUTHORIZED is 0, which turns certificate checking off. Unset it for this run"
+    )
+  }
+  if (libpq.length > 0) {
+    throw new MigrationGuardError(
+      "PG_VARIABLES_SET",
+      `unset ${libpq.join(", ")} for this run: a driver would use ${libpq.length === 1 ? "it" : "them"} beside the connection strings the guard checks`
+    )
+  }
   const checkedTarget = checkedUrl(
     env.TARGET_DATABASE_URL,
     "TARGET_URL_MISSING",
@@ -263,11 +377,40 @@ export async function assertMigrationTarget(
       "MVP_DATABASE_URL and TARGET_DATABASE_URL point to the same database"
     )
   }
+  // A migration needs a session of its own: read-only for the whole
+  // session, one snapshot, transactions. A pooled host gives each
+  // transaction to whichever connection is free, so none of that holds
+  // there. Refused here, so the check a rehearsal passes is the check the
+  // real run passes.
+  if (directHost(host) !== host) {
+    throw new MigrationGuardError(
+      "TARGET_HOST_POOLED",
+      `TARGET_DATABASE_URL uses a pooled host (its name has "-pooler"). Use the direct host of the same branch: ${directHost(host)}`
+    )
+  }
+  if (directHost(sourceHost) !== sourceHost) {
+    throw new MigrationGuardError(
+      "SOURCE_HOST_POOLED",
+      `MVP_DATABASE_URL uses a pooled host (its name has "-pooler"). Use the direct host of the same database`
+    )
+  }
   const projectId = env.NEON_PROJECT_ID?.trim()
   if (!projectId) {
     throw new MigrationGuardError(
       "NEON_PROJECT_MISSING",
       "NEON_PROJECT_ID (the v3 production Neon project) is not set"
+    )
+  }
+  // The id goes into the question to Neon and into what is printed. A
+  // value that is not shaped like one (an API key or a connection string
+  // set in the wrong variable) is refused without being repeated.
+  if (
+    !/^[a-z0-9]+(-[a-z0-9]+){0,5}$/.test(projectId) ||
+    projectId.length > 40
+  ) {
+    throw new MigrationGuardError(
+      "NEON_PROJECT_INVALID",
+      "NEON_PROJECT_ID is not a Neon project id (lower-case letters, digits and dashes). Check that the variables were not swapped"
     )
   }
 
@@ -277,9 +420,11 @@ export async function assertMigrationTarget(
     try {
       return await deps.resolveEndpoint(name)
     } catch (err) {
+      // A refusal the caller already worded (no API key) stays as it is.
+      if (err instanceof MigrationGuardError) throw err
       throw new MigrationGuardError(
         "NEON_LOOKUP_FAILED",
-        `could not ask Neon about ${name} (${err instanceof Error ? err.message : "unknown error"}). Check NEON_API_KEY and NEON_PROJECT_ID, then run again`
+        `could not ask Neon about ${name} (${err instanceof NeonLookupError ? err.message : errorKind(err)}). Check NEON_API_KEY and NEON_PROJECT_ID, then run again`
       )
     }
   }
@@ -304,7 +449,14 @@ export async function assertMigrationTarget(
       `the target host ${host} is a read replica. Use the read-write endpoint of the same branch`
     )
   }
-  if (!endpoint.branchId || typeof endpoint.isDefaultBranch !== "boolean") {
+  // The branch's name and id are printed, and asked about at the prompt:
+  // text from outside is shown only when it is plain.
+  if (
+    !endpoint.branchId ||
+    typeof endpoint.isDefaultBranch !== "boolean" ||
+    !/^[\w-]{1,64}$/.test(endpoint.branchId) ||
+    !/^[\x20-\x7e]{1,128}$/.test(endpoint.branchName)
+  ) {
     throw new MigrationGuardError(
       "BRANCH_UNKNOWN",
       `Neon did not say which branch ${host} belongs to, so the run stops. Run again; if it repeats, check the endpoint in the Neon console`
@@ -315,6 +467,7 @@ export async function assertMigrationTarget(
     kind: target,
     mode,
     host,
+    sourceHost,
     projectId,
     branchId: endpoint.branchId,
     branchName: endpoint.branchName,
@@ -336,13 +489,13 @@ export async function assertMigrationTarget(
         `${host} is not in MIGRATION_ALLOWED_TARGET_HOSTS. Add the rehearsal branch's host to it`
       )
     }
-    return approved
+    return issue(approved)
   }
 
   if (!endpoint.isDefaultBranch) {
     throw new MigrationGuardError(
       "NOT_DEFAULT_BRANCH",
-      `--target production needs the default branch of project ${projectId}; ${host} is branch "${endpoint.branchName}"`
+      `--target production needs the default branch of project ${projectId}; ${host} is branch ${JSON.stringify(endpoint.branchName)}`
     )
   }
   const today = utcDate(deps.now())
@@ -359,7 +512,7 @@ export async function assertMigrationTarget(
     )
   }
   const typed = await deps.prompt(
-    `This run targets PRODUCTION: branch "${endpoint.branchName}" on ${host} (${mode}), reading from ${sourceHost}. Type the Neon project id to continue: `
+    `This run targets PRODUCTION: branch ${JSON.stringify(endpoint.branchName)} on ${host} (${mode}), reading from ${sourceHost}. Type the Neon project id to continue: `
   )
   if (typed.trim() !== projectId) {
     throw new MigrationGuardError(
@@ -367,5 +520,5 @@ export async function assertMigrationTarget(
       "the Neon project id typed does not match NEON_PROJECT_ID. Nothing was run"
     )
   }
-  return approved
+  return issue(approved)
 }

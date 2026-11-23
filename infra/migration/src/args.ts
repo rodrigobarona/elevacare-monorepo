@@ -29,6 +29,15 @@ export class MigrationArgsError extends Error {
 const ISO_INSTANT =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?(Z|[+-]\d{2}:\d{2})$/
 
+/**
+ * A flag as it was typed, for a message, only when it looks like a flag.
+ * A value is never repeated: a connection string or a token pasted in the
+ * wrong place would go to the terminal and its scrollback.
+ */
+function shown(flag: string): string {
+  return /^--[a-z][a-z-]{0,30}$/.test(flag) ? `"${flag}"` : "what was given"
+}
+
 function valueOf(flag: string, argv: readonly string[], index: number): string {
   const value = argv[index + 1]
   if (value === undefined || value.startsWith("--")) {
@@ -57,7 +66,7 @@ export function parseMigrationArgs(argv: readonly string[]): MigrationArgs {
         const value = valueOf(flag, argv, index)
         if (value !== "branch" && value !== "production") {
           throw new MigrationArgsError(
-            `--target must be "branch" or "production", not "${value}"`
+            `--target must be "branch" or "production"`
           )
         }
         target = value
@@ -69,7 +78,7 @@ export function parseMigrationArgs(argv: readonly string[]): MigrationArgs {
         const instant = new Date(value)
         if (!ISO_INSTANT.test(value) || Number.isNaN(instant.getTime())) {
           throw new MigrationArgsError(
-            `--since must be an ISO-8601 instant with a time zone (for example 2026-11-21T10:00:00Z), not "${value}"`
+            `--since must be an ISO-8601 instant with a time zone (for example 2026-11-21T10:00:00Z)`
           )
         }
         since = instant
@@ -81,7 +90,7 @@ export function parseMigrationArgs(argv: readonly string[]): MigrationArgs {
         index += 1
         break
       default:
-        throw new MigrationArgsError(`unknown argument "${flag}"`)
+        throw new MigrationArgsError(`unknown argument ${shown(flag)}`)
     }
   }
 

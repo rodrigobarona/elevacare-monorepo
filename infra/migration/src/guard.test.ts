@@ -1,7 +1,9 @@
+import { inspect } from "node:util"
 import { describe, expect, it, vi } from "vitest"
 import {
   assertMigrationTarget,
   MigrationGuardError,
+  NeonLookupError,
   utcDate,
   type MigrationGuardDeps,
   type MigrationGuardEnv,
@@ -15,6 +17,9 @@ const REHEARSAL_POOLED =
 const PRODUCTION_HOST = "ep-prod-z9y8x7w6.eu-central-1.aws.neon.tech"
 const MVP_URL =
   "postgresql://reader:pw@ep-mvp-11112222.eu-west-2.aws.neon.tech/mvp"
+/** The MVP URL as the guard hands it back: the port written out. */
+const MVP_REBUILT =
+  "postgresql://reader:pw@ep-mvp-11112222.eu-west-2.aws.neon.tech:5432/mvp"
 const NOW = new Date("2026-11-21T23:30:00.000Z")
 
 const ENDPOINTS: Record<string, NeonEndpointInfo> = {
@@ -84,33 +89,82 @@ describe("rehearsal (--target branch)", () => {
   it("accepts an allowed branch of the production project, and never prompts", async () => {
     const d = deps()
     for (const mode of ["dry-run", "apply"] as const) {
-      await expect(
-        assertMigrationTarget({ target: "branch", mode, env: env() }, d)
-      ).resolves.toEqual({
+      const approved = await assertMigrationTarget(
+        { target: "branch", mode, env: env() },
+        d
+      )
+      expect(approved).toEqual({
         kind: "branch",
         mode,
         host: REHEARSAL_HOST,
+        sourceHost: "ep-mvp-11112222.eu-west-2.aws.neon.tech",
         projectId: PROJECT,
         branchId: "br-rehearsal",
         branchName: "rehearsal-2026-11-21",
-        // Neither URL said anything about TLS: both ask for it.
-        targetUrl: `postgresql://app:pw@${REHEARSAL_HOST}/eleva?sslmode=require`,
-        sourceUrl: `${MVP_URL}?sslmode=require`,
       })
+      // The two connection strings are there for whoever asks by name.
+      // Neither URL said anything about TLS: both ask for it. The port is
+      // written out, so a driver takes it from nowhere else.
+      expect(approved.targetUrl).toBe(
+        `postgresql://app:pw@${REHEARSAL_HOST}:5432/eleva?sslmode=require`
+      )
+      expect(approved.sourceUrl).toBe(`${MVP_REBUILT}?sslmode=require`)
+      // And they do not travel with the approval into a log or a report.
+      expect(JSON.stringify(approved)).not.toContain("pw@")
+      expect(inspect(approved, { depth: 5 })).not.toContain("pw@")
+      expect(Object.keys(approved)).not.toContain("targetUrl")
     }
     expect(d.prompt).not.toHaveBeenCalled()
   })
 
-  it("treats the pooled and the direct host as the same database", async () => {
-    const pooled = env({
-      TARGET_DATABASE_URL: `postgresql://app:pw@${REHEARSAL_POOLED}/eleva`,
-    })
-    await expect(
+  it("refuses a pooled host on either side, and names the direct one to use", async () => {
+    // A migration needs a session of its own; a pool gives each
+    // transaction to whichever connection is free.
+    const target = await refusal(
       assertMigrationTarget(
-        { target: "branch", mode: "apply", env: pooled },
+        {
+          target: "branch",
+          mode: "apply",
+          env: env({
+            TARGET_DATABASE_URL: `postgresql://app:s3cret-pw@${REHEARSAL_POOLED}/eleva`,
+          }),
+        },
         deps()
       )
-    ).resolves.toMatchObject({ host: REHEARSAL_POOLED })
+    )
+    expect(target.code).toBe("TARGET_HOST_POOLED")
+    expect(target.exitCode).toBe(2)
+    expect(target.message).toContain(REHEARSAL_HOST)
+    expect(target.message).not.toContain("s3cret-pw")
+
+    const source = await refusal(
+      assertMigrationTarget(
+        {
+          target: "branch",
+          mode: "dry-run",
+          env: env({
+            MVP_DATABASE_URL:
+              "postgresql://reader:s3cret-pw@ep-mvp-11112222-pooler.eu-west-2.aws.neon.tech/mvp",
+          }),
+        },
+        deps()
+      )
+    )
+    expect(source.code).toBe("SOURCE_HOST_POOLED")
+    expect(source.message).not.toContain("s3cret-pw")
+  })
+
+  it("lets the allow-list name the pooled form of the direct host it approves", async () => {
+    await expect(
+      assertMigrationTarget(
+        {
+          target: "branch",
+          mode: "apply",
+          env: env({ MIGRATION_ALLOWED_TARGET_HOSTS: REHEARSAL_POOLED }),
+        },
+        deps()
+      )
+    ).resolves.toMatchObject({ host: REHEARSAL_HOST })
   })
 
   it("refuses the default branch, whatever the allowlist says", async () => {
@@ -381,7 +435,7 @@ describe("the connection a run may use", () => {
         target: "branch",
         mode: "apply",
         env: env({
-          TARGET_DATABASE_URL: `postgres://app:p%40ss@${REHEARSAL_POOLED.toUpperCase()}:5432/eleva?sslmode=require&channel_binding=require`,
+          TARGET_DATABASE_URL: `postgres://app:p%40ss@${REHEARSAL_HOST.toUpperCase()}:5432/eleva?sslmode=require&channel_binding=require`,
         }),
       },
       deps({
@@ -389,9 +443,9 @@ describe("the connection a run may use", () => {
       })
     )
     expect(approved.targetUrl).toBe(
-      `postgresql://app:p%40ss@${REHEARSAL_POOLED}/eleva?sslmode=require&channel_binding=require`
+      `postgresql://app:p%40ss@${REHEARSAL_HOST}:5432/eleva?sslmode=require&channel_binding=require`
     )
-    expect(approved.sourceUrl).toBe(`${MVP_URL}?sslmode=require`)
+    expect(approved.sourceUrl).toBe(`${MVP_REBUILT}?sslmode=require`)
     // The host the driver will use is the host that was approved.
     expect(new URL(approved.targetUrl).hostname).toBe(approved.host)
   })
@@ -425,6 +479,53 @@ describe("the connection a run may use", () => {
     )
     expect(err.code).toBe("NEON_LOOKUP_FAILED")
     expect(err.exitCode).toBe(2)
+  })
+
+  it("repeats a resolver's words only when the resolver wrote them to be shown", async () => {
+    const worded = await refusal(
+      assertMigrationTarget(
+        { target: "branch", mode: "apply", env: env() },
+        deps({
+          resolveEndpoint: async () => {
+            throw new NeonLookupError("Neon API answered 401 for /projects/x")
+          },
+        })
+      )
+    )
+    expect(worded.message).toContain("Neon API answered 401")
+
+    // What a runtime says about a bad header quotes the header, key and all.
+    const runtime = await refusal(
+      assertMigrationTarget(
+        { target: "branch", mode: "apply", env: env() },
+        deps({
+          resolveEndpoint: async () => {
+            throw new TypeError(
+              'Headers.append: "Bearer napi_SECRETKEY" is an invalid header value.'
+            )
+          },
+        })
+      )
+    )
+    expect(runtime.code).toBe("NEON_LOOKUP_FAILED")
+    expect(runtime.message).toContain("(TypeError)")
+    expect(runtime.message).not.toContain("napi_SECRETKEY")
+
+    // Even the class of an unknown error is shown only when it looks like one.
+    const hostile = new Error("x")
+    hostile.name = "postgresql://u:hunter2@h/db"
+    const named = await refusal(
+      assertMigrationTarget(
+        { target: "branch", mode: "apply", env: env() },
+        deps({
+          resolveEndpoint: async () => {
+            throw hostile
+          },
+        })
+      )
+    )
+    expect(named.message).toContain("(unknown error)")
+    expect(named.message).not.toContain("hunter2")
   })
 })
 
@@ -576,5 +677,145 @@ describe("cutover (--target production)", () => {
       )
     )
     expect(err.code).toBe("PRODUCTION_NOT_CONFIRMED")
+  })
+})
+
+describe("what a driver could take from somewhere else", () => {
+  it("refuses a run with a PG variable set, and shows its name only", async () => {
+    const err = await refusal(
+      assertMigrationTarget(
+        {
+          target: "branch",
+          mode: "dry-run",
+          env: {
+            ...env(),
+            PGPORT: "6543",
+            PGOPTIONS: "-c default_transaction_read_only=off",
+            PGPASSWORD: "s3cret-pw",
+            // Set and empty is not set.
+            PGHOST: "",
+          } as MigrationGuardEnv,
+        },
+        deps()
+      )
+    )
+    expect(err.code).toBe("PG_VARIABLES_SET")
+    expect(err.exitCode).toBe(2)
+    expect(err.message).toContain("PGOPTIONS, PGPASSWORD, PGPORT")
+    expect(err.message).not.toContain("PGHOST")
+    expect(err.message).not.toContain("6543")
+    expect(err.message).not.toContain("s3cret-pw")
+    expect(err.message).not.toContain("read_only")
+  })
+
+  it("refuses a URL with a second @, without showing any piece of it", async () => {
+    // An unencoded "@" and "/" in the password shift the parse: a piece of
+    // the password would be read as the host.
+    for (const [name, url, code] of [
+      [
+        "TARGET_DATABASE_URL",
+        `postgresql://app:t4rget@pa55frag/tail@${REHEARSAL_HOST}`,
+        "TARGET_URL_INVALID",
+      ],
+      [
+        "MVP_DATABASE_URL",
+        "postgresql://reader:s0urce@pa55frag/tail@ep-mvp-11112222.eu-west-2.aws.neon.tech",
+        "SOURCE_URL_INVALID",
+      ],
+    ] as const) {
+      const err = await refusal(
+        assertMigrationTarget(
+          { target: "branch", mode: "dry-run", env: env({ [name]: url }) },
+          deps()
+        )
+      )
+      expect(err.code).toBe(code)
+      expect(err.message).not.toContain("pa55frag")
+      expect(err.message).not.toContain("t4rget")
+      expect(err.message).not.toContain("s0urce")
+    }
+  })
+})
+
+describe("what else the guard will not start with", () => {
+  it("refuses every PG variable a driver reads, whichever it is", async () => {
+    for (const name of [
+      "PGUSER",
+      "PGDATABASE",
+      "PGSSLMODE",
+      "PGSERVICE",
+      "PGHOSTADDR",
+      "PGAPPNAME",
+    ]) {
+      const err = await refusal(
+        assertMigrationTarget(
+          {
+            target: "branch",
+            mode: "dry-run",
+            env: { ...env(), [name]: "x" } as MigrationGuardEnv,
+          },
+          deps()
+        )
+      )
+      expect(err.code, name).toBe("PG_VARIABLES_SET")
+      expect(err.message).toContain(name)
+    }
+  })
+
+  it("refuses a run with certificate checking turned off", async () => {
+    const err = await refusal(
+      assertMigrationTarget(
+        {
+          target: "branch",
+          mode: "dry-run",
+          env: env({ NODE_TLS_REJECT_UNAUTHORIZED: "0" }),
+        },
+        deps()
+      )
+    )
+    expect(err.code).toBe("TLS_CHECK_DISABLED")
+    // Left at its default, or set to keep checking, it is fine.
+    await expect(
+      assertMigrationTarget(
+        {
+          target: "branch",
+          mode: "dry-run",
+          env: env({ NODE_TLS_REJECT_UNAUTHORIZED: "1" }),
+        },
+        deps()
+      )
+    ).resolves.toMatchObject({ kind: "branch" })
+  })
+
+  it("refuses a URL that names no user, since a driver would take one from the machine", async () => {
+    const err = await refusal(
+      assertMigrationTarget(
+        {
+          target: "branch",
+          mode: "dry-run",
+          env: env({
+            TARGET_DATABASE_URL: `postgresql://:pw@${REHEARSAL_HOST}/eleva`,
+          }),
+        },
+        deps()
+      )
+    )
+    expect(err.code).toBe("TARGET_URL_INVALID")
+  })
+
+  it("refuses a branch id from Neon that is not shaped like one", async () => {
+    const err = await refusal(
+      assertMigrationTarget(
+        { target: "branch", mode: "dry-run", env: env() },
+        deps({
+          resolveEndpoint: forTarget({
+            ...ENDPOINTS[REHEARSAL_HOST]!,
+            branchId: "br-1) source=evil.example mode=apply",
+          }),
+        })
+      )
+    )
+    expect(err.code).toBe("BRANCH_UNKNOWN")
+    expect(err.message).not.toContain("evil.example")
   })
 })

@@ -8,9 +8,13 @@
 | Touches    | `infra/migration/**` (new package `@eleva/infra-migration`), `packages/db` (staging tables `migration_*`), `apps/web` redirects (`next.config` / gateway), `packages/email` (welcome/set-password campaign), `docs/eleva-v3/operator-tasks/**`                                           |
 | Exit gate  | Three full rehearsals on Neon branches of a production snapshot with row-count and checksum reports within tolerance; every migrated expert can sign in via magic link and sees history; records decrypted from WorkOS Vault and re-encrypted; Stripe objects linked; rollback rehearsed |
 
-## Status on 2026-11-21
+## Status on 2026-11-23
 
-Slice 14.1 is on `main`: the target guard in `infra/migration`. No tool reads or writes data yet.
+Slice 14.1 is on `main`: the target guard in `infra/migration`. Slice 14.2 (2026-11-23) adds a
+command that only runs the guard, and the one module that will open connections; no driver is
+installed. No tool reads or writes data yet. Exit statuses (0 approved, 2 refused, 1 unexpected,
+3 a connection that failed after approval) and the refusal codes are in
+`infra/migration/README.md`.
 The slices still to build, in a safe order, are in
 [`remaining-roadmap.md`](../remaining-roadmap.md#phase-14-moving-the-mvps-data): 14.2 to 14.25
 and two operator steps. The first blocker is access to the MVP database and knowing what
@@ -19,6 +23,12 @@ production runs (roadmap, F-02), not code.
 Where this file no longer matches what exists (checked against the MVP snapshot in
 `_context/clone-repo/eleva-care-app`):
 
+- **The MVP data cannot be loaded into a `legacy` schema of the v3 branch**, as the sections
+  below describe. The guard refuses a source inside the v3 project and a source that is the
+  target (14.1), and the connection module is built on two databases: the MVP and v3 (14.2).
+  A rehearsal reads from the MVP's own database, or from a copy of it outside the v3 project.
+- **Pooled hosts are refused on both sides** (14.2): a migration needs a session of its own.
+  A step that adds a rehearsal host to the allow-list adds the direct host.
 - **No step loads the full data into production.** This file never applies to production, and
   Phase 15 runs only the changes since a date. The runbook needs a dated full-load step.
 - "Changes since" by `updated_at` does not fit every table: availability rows have no timestamps,

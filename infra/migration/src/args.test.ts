@@ -48,4 +48,37 @@ describe("parseMigrationArgs", () => {
     expect(() => parseMigrationArgs(argv)).toThrow(MigrationArgsError)
     expect(() => parseMigrationArgs(argv)).toThrow(message)
   })
+
+  it("never repeats what was typed when it could be a secret", () => {
+    // A connection string pasted where a flag or a value belongs.
+    const pasted = "postgresql://writer:hunter2@ep-x.neon.tech/eleva"
+    for (const argv of [
+      [pasted],
+      ["--target", pasted],
+      ["--since", pasted],
+      ["--target", "x".repeat(200)],
+    ]) {
+      let message = ""
+      try {
+        parseMigrationArgs(argv)
+      } catch (error) {
+        message = (error as Error).message
+      }
+      expect(message).not.toBe("")
+      expect(message).not.toContain("hunter2")
+      expect(message).not.toContain("postgresql")
+      expect(message.length).toBeLessThan(160)
+    }
+    // A short token is not shown either: it could be a key.
+    expect(() => parseMigrationArgs(["npg_AbC123xyz456"])).toThrow(
+      "unknown argument what was given"
+    )
+    expect(() => parseMigrationArgs(["--target", "staging"])).toThrow(
+      '--target must be "branch" or "production"'
+    )
+    // A flag that looks like one is shown, so a typo is easy to see.
+    expect(() => parseMigrationArgs(["--frobnicate"])).toThrow(
+      'unknown argument "--frobnicate"'
+    )
+  })
 })
