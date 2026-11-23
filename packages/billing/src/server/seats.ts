@@ -1,5 +1,5 @@
 import { Redis } from "@upstash/redis"
-import { and, desc, eq, inArray, isNull, lt, or, sql } from "drizzle-orm"
+import { and, desc, eq, inArray, lt, sql } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
 import {
   countBillableSeats,
@@ -15,11 +15,23 @@ import {
   CLINIC_PLAN_TIERS,
   CURRENT_SUBSCRIPTION_STATUSES,
   isCurrentSubscriptionStatus,
+  SEAT_PRICE_TYPE,
 } from "./seat-cap"
+
+/** Why a sync sent nothing: all of them final, none an error to retry. */
+export type SeatSyncSkipReason =
+  | "not_a_clinic"
+  | "no_current_subscription"
+  /** Stripe says ended, unpaid or never paid, or the plan bills no seats. */
+  | "nothing_to_bill_in_stripe"
+  /** Stripe no longer has the subscription. */
+  | "gone_in_stripe"
 
 export interface SyncSeatQuantityResult {
   synced: boolean
   quantity?: number
+  /** Set when `synced` is false. */
+  reason?: SeatSyncSkipReason
   /**
    * Set when the sync found or created the seat item in Stripe and the
    * mirror did not know it yet: the caller stores it.
@@ -62,8 +74,6 @@ export interface SyncSeatQuantityDeps {
  * change for both the quantity update and a new seat item.
  */
 const SEAT_PRORATION_BEHAVIOR = "create_prorations" as const
-
-export const SEAT_PRICE_TYPE = "per_seat"
 
 const inflight = new Map<string, Promise<SyncSeatQuantityResult>>()
 const SEAT_LOCK_TTL_SECONDS = 180
@@ -271,7 +281,7 @@ async function syncSeatQuantityOnce(
   const getOrgType = deps.getOrgType ?? defaultOrgType
   const orgType = await getOrgType(orgId)
   if (orgType !== "team") {
-    return { synced: false }
+    return { synced: false, reason: "not_a_clinic" }
   }
 
   const getCurrentSubscription =
@@ -280,7 +290,7 @@ async function syncSeatQuantityOnce(
   // No current clinic subscription (none, unpaid, ended): nothing to bill
   // seats on. Not an error, and nothing to try again.
   if (!subscription) {
-    return { synced: false }
+    return { synced: false, reason: "no_current_subscription" }
   }
 
   const countSeats = deps.countSeats ?? countBillableSeats
@@ -292,7 +302,7 @@ async function syncSeatQuantityOnce(
     quantity: number
   ): Promise<SyncSeatQuantityResult> => {
     const ensured = await gateway.ensureSeatItem(stripeSubscriptionId, quantity)
-    if (!ensured) return { synced: false }
+    if (!ensured) return { synced: false, reason: "nothing_to_bill_in_stripe" }
     // An item that was already there keeps whatever quantity it had.
     if (!ensured.created) await gateway.setQuantity(ensured.itemId, quantity)
     return {
@@ -302,25 +312,37 @@ async function syncSeatQuantityOnce(
     }
   }
 
+  /** Set the item the mirror knows. False when Stripe no longer has it. */
+  const setKnownItem = async (itemId: string, quantity: number) => {
+    try {
+      await gateway.setQuantity(itemId, quantity)
+      return true
+    } catch (error) {
+      if (isGoneInStripe(error)) return false
+      throw error
+    }
+  }
+
   let lastError: unknown
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       // Counted again on every attempt, and sent as the whole number (never
       // "one more"), so a repeat is harmless.
       const quantity = await countSeats(orgId)
-      if (!subscription.seatItemId) return await viaStripe(quantity)
-      try {
-        await gateway.setQuantity(subscription.seatItemId, quantity)
+      if (
+        subscription.seatItemId &&
+        (await setKnownItem(subscription.seatItemId, quantity))
+      ) {
         return { synced: true, quantity }
-      } catch (error) {
-        // The item the mirror knows is gone: ask Stripe what there is.
-        if (!isGoneInStripe(error)) throw error
-        return await viaStripe(quantity)
       }
+      // No item in the mirror, or the one it knew is gone: ask Stripe.
+      return await viaStripe(quantity)
     } catch (error) {
-      // Gone for good (the subscription itself): the same answer next time,
-      // so it ends here and is not left for the sweep to repeat.
-      if (isGoneInStripe(error)) return { synced: false }
+      // The subscription itself is gone: the same answer next time, so it
+      // ends here instead of failing every time it is tried.
+      if (isGoneInStripe(error)) {
+        return { synced: false, reason: "gone_in_stripe" }
+      }
       lastError = error
     }
   }
@@ -361,11 +383,12 @@ export async function syncSeatQuantity(
  */
 export async function syncSeatQuantityAudited(
   orgId: string,
-  actorUserId?: string | null
+  actorUserId?: string | null,
+  deps: SyncSeatQuantityDeps = {}
 ): Promise<SyncSeatQuantityResult> {
   let result: SyncSeatQuantityResult
   try {
-    result = await syncSeatQuantity(orgId)
+    result = await syncSeatQuantity(orgId, deps)
   } catch (err) {
     await withAudit({ orgId, actorUserId }, async (_tx, ctx) => {
       await ctx.emit({
@@ -404,6 +427,7 @@ export async function syncSeatQuantityAudited(
       payload: {
         synced: result.synced,
         quantity: result.quantity,
+        ...(result.reason ? { reason: result.reason } : {}),
         ...(seatItem
           ? { seatItemId: seatItem.itemId, seatItemCreated: seatItem.created }
           : {}),
@@ -445,11 +469,12 @@ const SEAT_SYNC_STALE_MS = 2 * 60 * 1000
 
 /**
  * Finishes seat syncs that were marked but never reached Stripe (the API
- * answered before Stripe did, or Stripe was unreachable), and gives a seat
- * item to every current clinic subscription that has none (one that became
- * active without a seat line, or dates from before seat items were always
- * attached). Runs every ten minutes; each clinic is recounted and synced
- * like a fresh request, so a failure simply waits for the next run.
+ * answered before Stripe did, or Stripe was unreachable; or the webhook
+ * marked a clinic plan that became current). Runs every ten
+ * minutes; each clinic is recounted and synced like a fresh request, so a
+ * failure simply waits for the next run. Only marked rows are swept: a
+ * clinic the sync has nothing to send for is not looked at again until
+ * something marks it.
  */
 export async function sweepPendingSeatSyncs(
   options: { limit?: number; now?: Date } = {}
@@ -463,17 +488,8 @@ export async function sweepPendingSeatSyncs(
       .from(main.billingSubscriptions)
       .where(
         and(
-          lt(main.billingSubscriptions.updatedAt, staleBefore),
-          or(
-            sql`${main.billingSubscriptions.metadata}->>'seatSyncPending' = 'true'`,
-            and(
-              isNull(main.billingSubscriptions.seatItemId),
-              inArray(main.billingSubscriptions.status, [
-                ...CURRENT_SUBSCRIPTION_STATUSES,
-              ]),
-              inArray(main.billingSubscriptions.tier, CLINIC_PLAN_TIERS)
-            )
-          )
+          sql`${main.billingSubscriptions.metadata}->>'seatSyncPending' = 'true'`,
+          lt(main.billingSubscriptions.updatedAt, staleBefore)
         )
       )
       .limit(options.limit ?? 50)

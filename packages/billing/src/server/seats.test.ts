@@ -47,7 +47,7 @@ describe("syncSeatQuantity", () => {
       ...clinic({ stripeSubscriptionId: SUB, seatItemId: "si_1" }, 2, stripe),
       getOrgType: async () => "expert",
     })
-    expect(result).toEqual({ synced: false })
+    expect(result).toEqual({ synced: false, reason: "not_a_clinic" })
     expect(calls).toEqual([])
   })
 
@@ -57,7 +57,7 @@ describe("syncSeatQuantity", () => {
     const { stripe, calls } = gateway()
     await expect(
       syncSeatQuantity("org_1", clinic(null, 3, stripe))
-    ).resolves.toEqual({ synced: false })
+    ).resolves.toEqual({ synced: false, reason: "no_current_subscription" })
     expect(calls).toEqual([])
   })
 
@@ -132,7 +132,7 @@ describe("syncSeatQuantity", () => {
         "org_1",
         clinic({ stripeSubscriptionId: SUB, seatItemId: null }, 2, stripe)
       )
-    ).resolves.toEqual({ synced: false })
+    ).resolves.toEqual({ synced: false, reason: "nothing_to_bill_in_stripe" })
   })
 
   it("asks Stripe again when the item the mirror knows is gone", async () => {
@@ -167,7 +167,7 @@ describe("syncSeatQuantity", () => {
         "org_1",
         clinic({ stripeSubscriptionId: SUB, seatItemId: "si_old" }, 2, stripe)
       )
-    ).resolves.toEqual({ synced: false })
+    ).resolves.toEqual({ synced: false, reason: "gone_in_stripe" })
     expect(stripe.ensureSeatItem).toHaveBeenCalledTimes(1)
   })
 

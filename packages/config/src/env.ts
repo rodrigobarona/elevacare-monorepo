@@ -96,10 +96,10 @@ const s2Schema = z.object({
   STRIPE_CONNECT_WEBHOOK_SECRET: stringOptional,
   STRIPE_CONNECT_CLIENT_ID: stringOptional,
   /**
-   * Stripe API version pin. Boot refuses anything older than 2023-08-16
-   * (Connect Embedded Components). The code in fact needs 2026-03-25.dahlia
-   * or later (embedded Checkout's `ui_mode: "embedded_page"`); the example
-   * env names the installed SDK's own version.
+   * Stripe API version pin. Nothing checks its value at boot (only that
+   * the Stripe variables are set). The code needs 2026-03-25.dahlia or
+   * later (embedded Checkout's `ui_mode: "embedded_page"`); the example env
+   * names the installed SDK's own version.
    */
   STRIPE_API_VERSION: stringOptional,
   /** Payment Method Configuration id for marketplace booking (pmc_...). */

@@ -45,6 +45,9 @@ export function isCurrentSubscriptionStatus(status: string): boolean {
   return (CURRENT_SUBSCRIPTION_STATUSES as readonly string[]).includes(status)
 }
 
+/** `metadata.eleva_price_type` of the price that bills seats (licensed). */
+export const SEAT_PRICE_TYPE = "per_seat"
+
 /** The plans that bill seats. */
 export const CLINIC_PLAN_TIERS = Object.keys(
   CLINIC_SEAT_CAPS

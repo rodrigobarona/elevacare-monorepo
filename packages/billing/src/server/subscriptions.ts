@@ -4,7 +4,7 @@ import { withAudit } from "@eleva/audit"
 import { countBillableSeats, main, withPlatformAdminContext } from "@eleva/db"
 import { eq } from "drizzle-orm"
 import { stripe } from "./client"
-import { SEAT_PRICE_TYPE } from "./seats"
+import { SEAT_PRICE_TYPE } from "./seat-cap"
 
 /**
  * Stripe product metadata keys used to identify Eleva subscription tiers.
@@ -88,11 +88,6 @@ async function findSeatPrice(tier: ProductTier): Promise<string | null> {
   )
 }
 
-/** Looks the seat count up when the caller did not inject one (tests do). */
-export interface SeatCountDeps {
-  countSeats?: (orgId: string) => Promise<number>
-}
-
 /**
  * The items of a subscription on `tier`: the plan, and for a clinic plan
  * the seat item, at the number of seats Eleva counts for this clinic. The
@@ -104,10 +99,11 @@ export interface SeatCountDeps {
  * there the line is left out at 0 and the seat sync adds the item once the
  * subscription is active.
  */
-async function buildSubscriptionItems(
-  input: { tier: ProductTier; orgId: string; allowZeroSeats: boolean },
-  deps: SeatCountDeps = {}
-): Promise<{
+async function buildSubscriptionItems(input: {
+  tier: ProductTier
+  orgId: string
+  allowZeroSeats: boolean
+}): Promise<{
   items: Array<{ price: string; quantity: number }>
   priceId: string
 } | null> {
@@ -118,7 +114,7 @@ async function buildSubscriptionItems(
 
   const seatPriceId = await findSeatPrice(input.tier)
   if (seatPriceId) {
-    const seats = await (deps.countSeats ?? countBillableSeats)(input.orgId)
+    const seats = await countBillableSeats(input.orgId)
     if (seats > 0 || input.allowZeroSeats) {
       items.push({ price: seatPriceId, quantity: seats })
     }
@@ -154,18 +150,16 @@ export async function getBillingCustomerForOrg(
  * so the webhook can resolve the tenant from event metadata even
  * before the local mirror has caught up.
  */
-export async function createOrgSubscription(
-  input: {
-    customerId: string
-    tier: ProductTier
-    orgId: string
-  },
-  deps: SeatCountDeps = {}
-): Promise<Stripe.Subscription | null> {
-  const itemResult = await buildSubscriptionItems(
-    { tier: input.tier, orgId: input.orgId, allowZeroSeats: true },
-    deps
-  )
+export async function createOrgSubscription(input: {
+  customerId: string
+  tier: ProductTier
+  orgId: string
+}): Promise<Stripe.Subscription | null> {
+  const itemResult = await buildSubscriptionItems({
+    tier: input.tier,
+    orgId: input.orgId,
+    allowZeroSeats: true,
+  })
   if (!itemResult) return null
 
   return stripe().subscriptions.create({
@@ -181,8 +175,10 @@ export async function createOrgSubscription(
 
 /**
  * A Checkout Session is the same request only when it asks for the same
- * things. A fixed key would hand back yesterday's finished session, and
- * would error as soon as the seat count or the return address differed.
+ * things. A key fixed per person and plan errors as soon as the seat count
+ * or the return address differs. An identical request inside Stripe's
+ * key lifetime still gets the same session back, finished or not: telling
+ * a clinic that already pays from one that does not is 11.8's.
  */
 function checkoutIdempotencyKey(input: {
   orgId: string
@@ -198,20 +194,18 @@ function checkoutIdempotencyKey(input: {
   return `checkout_${input.orgId}_${input.tier}_${input.actorUserId}_${request}`
 }
 
-export async function createSubscriptionCheckoutSession(
-  input: {
-    customerId: string
-    tier: ProductTier
-    orgId: string
-    actorUserId: string
-    returnUrl: string
-  },
-  deps: SeatCountDeps = {}
-): Promise<{ id: string; clientSecret: string }> {
-  const itemResult = await buildSubscriptionItems(
-    { tier: input.tier, orgId: input.orgId, allowZeroSeats: false },
-    deps
-  )
+export async function createSubscriptionCheckoutSession(input: {
+  customerId: string
+  tier: ProductTier
+  orgId: string
+  actorUserId: string
+  returnUrl: string
+}): Promise<{ id: string; clientSecret: string }> {
+  const itemResult = await buildSubscriptionItems({
+    tier: input.tier,
+    orgId: input.orgId,
+    allowZeroSeats: false,
+  })
   if (!itemResult) {
     throw new Error(`Product for tier '${input.tier}' not found in Stripe.`)
   }
@@ -316,14 +310,11 @@ export async function createBillingPortalSession(input: {
  * outright: Stripe resets an item to 1 when its price changes and no
  * quantity is sent, which would bill one seat whatever the clinic has.
  */
-export async function swapSubscriptionTier(
-  input: {
-    subscriptionId: string
-    newTier: ProductTier
-    orgId: string
-  },
-  deps: SeatCountDeps = {}
-): Promise<Stripe.Subscription | null> {
+export async function swapSubscriptionTier(input: {
+  subscriptionId: string
+  newTier: ProductTier
+  orgId: string
+}): Promise<Stripe.Subscription | null> {
   const newPriceId = await findTierPrice(input.newTier)
   if (!newPriceId) return null
 
@@ -348,7 +339,7 @@ export async function swapSubscriptionTier(
 
   const newSeatPriceId = await findSeatPrice(input.newTier)
   if (newSeatPriceId) {
-    const seats = await (deps.countSeats ?? countBillableSeats)(input.orgId)
+    const seats = await countBillableSeats(input.orgId)
     items.push({
       ...(currentSeatItem ? { id: currentSeatItem.id } : {}),
       price: newSeatPriceId,

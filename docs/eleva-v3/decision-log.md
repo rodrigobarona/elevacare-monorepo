@@ -43,9 +43,12 @@ Each entry should include:
     seats the clinic has, zero included;
   - the seat sync creates the item when the clinic's current subscription
     has none, and sets its quantity to the count;
-  - every ten minutes the sweep gives a seat item to any current clinic
-    subscription still without one, so clinics from before this slice are
-    repaired without waiting for their next change.
+  - the subscription webhook asks for a sync when a clinic plan becomes
+    current (paid in Checkout) and whenever a current clinic plan has no
+    seat item, so a clinic from before this slice is repaired at its next
+    Stripe event or seat change. The first version repaired on a timer
+    instead; the review showed it would have asked Stripe every ten
+    minutes, for ever, about any subscription it could never fix.
 - **Seats are counted by Eleva, never by the request.** `quantity` is gone
   from `POST /billing/checkout` and `POST /billing/subscribe`: the number is
   the members with a published service. A plan change sends the seat
@@ -93,11 +96,30 @@ Each entry should include:
   `embedded_page`); `.env.example` pinned Stripe API `2023-08-16`, which
   predates `embedded_page` (what is deployed is still the operator's check,
   O-5); the unused "metered seat" branch and its comments are gone.
+- A sync that sends nothing now says why (not a clinic, no current
+  subscription, nothing to bill in Stripe, gone in Stripe), in its result
+  and in its audit record.
 - Proof: `@eleva/billing` unit tests (seat sync: 14 cases with a recording
   gateway; the Stripe side of the seat item and the order of Stripe and
-  database work: 11; subscription items, Checkout parameters and plan
-  change: 10; the activation rule: 3); the mirror's merge of metadata was
-  evaluated on Postgres with literals.
+  database work: 10; subscription items, Checkout parameters and plan
+  change: 10; the rule for when the webhook asks for a sync: 4). On
+  Postgres (`seat-sync.integration.test.ts`, the dev branch here and the
+  pull request's branch in CI): the webhook's mirror for unpaid, paid, late
+  and repeated events; the mark set once and kept while Stripe's metadata
+  replaces the rest; seats billed on the paid subscription and never the
+  unpaid one beside it; the new item stored on that row only; nothing sent
+  once the plan has ended.
+- Judges, first commit: payments 7.6, engineering 7.3 (the timer above; new
+  queries that had only run against mocks; a comment that claimed a boot
+  check that does not exist). The second commit answers those and was not
+  scored again.
+- Left open on this path: a plan change runs outside the clinic's seat
+  lock and leaves no mark, so a seat change at the same moment can leave a
+  stale quantity until the next one; an identical Checkout request within a
+  day still gets the same session back, finished or not; a subscription
+  with one of the old metered seat items would get a second, licensed one
+  (none is known; the seed script has refused to run beside a metered price
+  for months). The first two belong to 11.8.
 - Not in this slice: the Billing page and a guard against a second Checkout
   for a clinic that already pays (11.8); whether provisioning should keep
   creating an unpaid clinic subscription that expires in 23 hours;
@@ -105,6 +127,7 @@ Each entry should include:
   SDK no longer has.
 - Owner: engineering; accountant (A-03); operator (the test account's
   address, O-5)
+
 ### 2026-11-22: A slow rate-limit store no longer lets public requests through (13.3) (active)
 
 - Change (Phase 13.3): the limiter treated only a thrown error as "the

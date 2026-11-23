@@ -159,7 +159,10 @@ describe("the seat item in Stripe", () => {
       })
       await expect(
         syncSeatQuantity("org_1", clinicWithoutSeatItem(2))
-      ).resolves.toEqual({ synced: false })
+      ).resolves.toEqual({
+        synced: false,
+        reason: "nothing_to_bill_in_stripe",
+      })
       expect(fake.prices.list).not.toHaveBeenCalled()
       expect(fake.subscriptionItems.create).not.toHaveBeenCalled()
       expect(fake.subscriptionItems.update).not.toHaveBeenCalled()
@@ -176,7 +179,7 @@ describe("the seat item in Stripe", () => {
     })
     await expect(
       syncSeatQuantity("org_1", clinicWithoutSeatItem(2))
-    ).resolves.toEqual({ synced: false })
+    ).resolves.toEqual({ synced: false, reason: "nothing_to_bill_in_stripe" })
     expect(fake.subscriptionItems.create).not.toHaveBeenCalled()
   })
 })

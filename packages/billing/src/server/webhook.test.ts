@@ -1,7 +1,7 @@
 import type Stripe from "stripe"
 import { describe, expect, it } from "vitest"
 import {
-  clinicPlanBecameCurrent,
+  clinicPlanNeedsSeatSync,
   extractErrorDetail,
   mapSubscriptionAction,
   orgIdFromMetadata,
@@ -108,33 +108,34 @@ describe("mapSubscriptionAction", () => {
   })
 })
 
-describe("clinicPlanBecameCurrent", () => {
+describe("clinicPlanNeedsSeatSync", () => {
+  const needs = (
+    tier: string,
+    status: string,
+    priorStatus: string | null,
+    hasSeatItem = true
+  ) => clinicPlanNeedsSeatSync({ tier, status, priorStatus, hasSeatItem })
+
   it("asks for a seat recount when a clinic plan becomes current", () => {
     // Paid in Checkout, or a first event that is already active.
-    expect(clinicPlanBecameCurrent("clinic_starter", "active", null)).toBe(true)
-    expect(
-      clinicPlanBecameCurrent("clinic_starter", "active", "incomplete")
-    ).toBe(true)
-    expect(clinicPlanBecameCurrent("clinic_growth", "trialing", null)).toBe(
-      true
-    )
-    expect(clinicPlanBecameCurrent("clinic_growth", "active", "canceled")).toBe(
-      true
-    )
+    expect(needs("clinic_starter", "active", null)).toBe(true)
+    expect(needs("clinic_starter", "active", "incomplete")).toBe(true)
+    expect(needs("clinic_growth", "trialing", null)).toBe(true)
+    expect(needs("clinic_growth", "active", "canceled")).toBe(true)
   })
 
-  it("does not ask again while the plan stays current", () => {
+  it("does not ask again while the plan stays current with its seat item", () => {
     // What Eleva's own seat update looks like when Stripe reports it back,
     // and the same event delivered twice: no loop, no second mark.
-    expect(clinicPlanBecameCurrent("clinic_starter", "active", "active")).toBe(
-      false
-    )
-    expect(
-      clinicPlanBecameCurrent("clinic_starter", "active", "past_due")
-    ).toBe(false)
-    expect(
-      clinicPlanBecameCurrent("clinic_starter", "past_due", "active")
-    ).toBe(false)
+    expect(needs("clinic_starter", "active", "active")).toBe(false)
+    expect(needs("clinic_starter", "active", "past_due")).toBe(false)
+    expect(needs("clinic_starter", "past_due", "active")).toBe(false)
+  })
+
+  it("asks when a current clinic plan has no seat item", () => {
+    // Paid in Checkout with no seats, or older than seat items.
+    expect(needs("clinic_starter", "active", "active", false)).toBe(true)
+    expect(needs("clinic_growth", "past_due", "active", false)).toBe(true)
   })
 
   it("never asks for a plan that is not current, or bills no seats", () => {
@@ -145,12 +146,10 @@ describe("clinicPlanBecameCurrent", () => {
       "unpaid",
       "paused",
     ]) {
-      expect(clinicPlanBecameCurrent("clinic_starter", status, null)).toBe(
-        false
-      )
+      expect(needs("clinic_starter", status, null, false)).toBe(false)
     }
-    expect(clinicPlanBecameCurrent("expert_top", "active", null)).toBe(false)
-    expect(clinicPlanBecameCurrent("unknown", "active", null)).toBe(false)
+    expect(needs("expert_top", "active", null, false)).toBe(false)
+    expect(needs("unknown", "active", null, false)).toBe(false)
   })
 })
 

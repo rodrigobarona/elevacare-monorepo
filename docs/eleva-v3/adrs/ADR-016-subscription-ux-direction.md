@@ -36,7 +36,7 @@ The full direction:
 
 ### Subscription purchase (initial subscribe + plan upgrade) — Embedded Checkout
 
-- Server creates a Stripe Checkout Session with `mode: "subscription"`, `ui_mode: "embedded"`, `customer`, `client_reference_id` (Eleva user/org id), `subscription_data.metadata.eleva_org_id`, `subscription_data.metadata.eleva_tier`, `automatic_tax[enabled]: true`, `tax_id_collection[enabled]: true`, `payment_method_types: ["card", "sepa_debit"]` (NOT MB WAY/Multibanco — they cannot recur).
+- Server creates a Stripe Checkout Session with `mode: "subscription"`, `ui_mode: "embedded_page"` (the name since Stripe API 2026-03-25.dahlia; this ADR first said `"embedded"`), `customer`, `client_reference_id` (Eleva user/org id), `subscription_data.metadata.eleva_org_id`, `subscription_data.metadata.eleva_tier`, `automatic_tax[enabled]: true`, `tax_id_collection[enabled]: true`, `payment_method_types: ["card", "sepa_debit"]` (NOT MB WAY/Multibanco — they cannot recur).
 - Client renders via `EmbeddedCheckoutProvider` from `@stripe/react-stripe-js`, scoped per app surface.
 - On `checkout.session.completed`, the webhook persists `billing_subscriptions` and updates `expert_profiles.top_expert_active` where applicable. The return URL forces a WorkOS `session.refresh()` before reading entitlements.
 
