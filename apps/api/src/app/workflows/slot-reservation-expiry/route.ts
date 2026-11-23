@@ -37,8 +37,11 @@ export const POST = reportedJob(
   "slot-reservation-expiry",
   async (request: Request) => {
     return runInternalWorkflow(request, async () => {
-      const result = await expireStaleReservations()
-      await comeBackForHolds(result, await whichRun(request))
+      // One "now" for both: a hold that lapses while this runs is then
+      // either dealt with here or the next one to come back for.
+      const now = new Date()
+      const result = await expireStaleReservations({ now })
+      await comeBackForHolds(result, await whichRun(request), now)
       return result
     })
   }
@@ -52,7 +55,8 @@ export const POST = reportedJob(
  */
 async function comeBackForHolds(
   result: SlotExpiryResult,
-  run: { again: number; fromTick: boolean }
+  run: { again: number; fromTick: boolean },
+  now: Date
 ): Promise<void> {
   try {
     const dealtWith = result.expired + result.kept + result.retried
@@ -66,7 +70,7 @@ async function comeBackForHolds(
       // at all would otherwise start these runs again every hour.
       await runJobAgain("slot-reservation-expiry", run.again)
     }
-    const next = await nextReservationExpiry()
+    const next = await nextReservationExpiry(now)
     if (next) await runJobAt("slot-reservation-expiry", next)
   } catch (err) {
     logError("[slot-reservation-expiry] the next run was not asked for", err)

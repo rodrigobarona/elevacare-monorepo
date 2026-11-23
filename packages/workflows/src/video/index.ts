@@ -27,6 +27,7 @@ export {
 export {
   addSessionParticipant,
   countActiveDelegates,
+  dailyFailureKind,
   isRetryableDailyFailure,
   isSelfDelegate,
   removeSessionParticipant,

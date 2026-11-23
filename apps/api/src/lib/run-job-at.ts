@@ -120,9 +120,13 @@ export function againSteps(job: TickJob): readonly number[] {
 export async function runJobAgain(
   job: TickJob,
   after: number,
-  now: Date = new Date()
+  now: Date = new Date(),
+  /** `few`: the default steps even for a job with denser ones of its own. */
+  steps: "own" | "few" = "own"
 ): Promise<"asked" | "left to the tick"> {
-  const wait = againSteps(job)[after]
+  const wait = (
+    steps === "few" ? AGAIN_AFTER_SECONDS.default : againSteps(job)
+  )[after]
   if (wait === undefined) return "left to the tick"
   await runJobAt(
     job,

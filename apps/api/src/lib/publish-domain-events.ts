@@ -83,6 +83,12 @@ export function publishDomainEventsNow(): Promise<void> {
   }
   running = publish().finally(() => {
     running = null
+    // A call made while this was finishing (asking the job to go on, or
+    // failing) was told "one more pass" and has not had it.
+    if (askedAgain) {
+      askedAgain = false
+      void publishDomainEventsNow()
+    }
   })
   return running
 }
@@ -104,8 +110,6 @@ async function publish(): Promise<void> {
     else if (result.failed > 0) await runJobAgain("domain-events-publisher", 0)
   } catch (err) {
     logError("[domain-events] publishing after the request failed", err)
-  } finally {
-    askedAgain = false
   }
 }
 

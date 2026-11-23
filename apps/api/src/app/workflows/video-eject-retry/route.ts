@@ -33,9 +33,16 @@ export const POST = reportedJob(
       // tries go on for as long as the video service is away. What it
       // refuses outright is not counted here: that is reported for a
       // person to look at, and tried again by the hourly run only.
+      const { again, fromTick } = await whichRun(request)
       if (result.pending > 0 || result.capacity.pending > 0) {
-        const { again } = await whichRun(request)
         await runJobAgain("video-eject-retry", again)
+      } else if (
+        (result.unsure > 0 || result.capacity.unsure > 0) &&
+        !fromTick
+      ) {
+        // Failed for a reason not known: a few more tries, as for any
+        // other job, and not started again by the tick.
+        await runJobAgain("video-eject-retry", again, new Date(), "few")
       }
       return result
     })

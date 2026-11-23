@@ -133,6 +133,32 @@ describe("publishDomainEventsNow", () => {
     expect(runJobAt.mock.calls[0]![0]).toBe("domain-events-publisher")
   })
 
+  it("does not lose a call made while a run is finishing", async () => {
+    // The run has made its passes and is asking the job to try a failed
+    // delivery again when another request writes an event.
+    publishPendingDomainEvents.mockResolvedValueOnce({
+      ...none,
+      claimed: 1,
+      failed: 1,
+    })
+    let letGo!: () => void
+    runJobAgain.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          letGo = () => resolve("asked")
+        })
+    )
+    const first = publishDomainEventsNow()
+    await vi.waitFor(() => expect(runJobAgain).toHaveBeenCalledTimes(1))
+    void publishDomainEventsNow()
+    letGo()
+    await first
+    // A new run starts for it.
+    await vi.waitFor(() =>
+      expect(publishPendingDomainEvents).toHaveBeenCalledTimes(2)
+    )
+  })
+
   it("asks for a run that tries again when a delivery failed", async () => {
     publishPendingDomainEvents.mockResolvedValueOnce({
       ...none,

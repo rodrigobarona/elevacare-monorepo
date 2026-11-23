@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { buildSessionRoomBody, DailyHttpError } from "@eleva/video"
 import {
+  dailyFailureKind,
   isRetryableDailyFailure,
   isSelfDelegate,
   runRevokedParticipantDailyCleanup,
@@ -29,6 +30,28 @@ describe("shouldRepairRoomCapacity", () => {
   it("waits while a revoked participant is still pending eject", () => {
     expect(shouldRepairRoomCapacity(1)).toBe(false)
     expect(shouldRepairRoomCapacity(0)).toBe(true)
+  })
+})
+
+describe("dailyFailureKind", () => {
+  it("is away when the service could not answer: tried every minute or two", () => {
+    expect(dailyFailureKind(new DailyHttpError(503, "busy"))).toBe("away")
+    expect(dailyFailureKind(new DailyHttpError(429, "slow"))).toBe("away")
+    expect(dailyFailureKind(new DOMException("t", "TimeoutError"))).toBe("away")
+    expect(dailyFailureKind(new TypeError("fetch failed"))).toBe("away")
+  })
+
+  it("is refused only when the service says we may not: hourly, and reported", () => {
+    expect(dailyFailureKind(new DailyHttpError(401, "key"))).toBe("refused")
+    expect(dailyFailureKind(new DailyHttpError(403, "no"))).toBe("refused")
+  })
+
+  it("is unsure for the rest: it may pass, so it is not left for an hour at once", () => {
+    expect(dailyFailureKind(new DailyHttpError(400, "bad"))).toBe("unsure")
+    expect(dailyFailureKind(new DailyHttpError(409, "busy"))).toBe("unsure")
+    expect(dailyFailureKind(new DailyHttpError(423, "locked"))).toBe("unsure")
+    expect(dailyFailureKind(new TypeError("terminated"))).toBe("unsure")
+    expect(dailyFailureKind(new Error("something else"))).toBe("unsure")
   })
 })
 

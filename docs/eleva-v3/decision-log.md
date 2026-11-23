@@ -92,7 +92,9 @@ Each entry should include:
   work undone asks for the next: 90 seconds, 5 minutes, 15 minutes, then
   nothing, and the hourly tick is the next try. A run the tick started
   does not begin these steps again, or one hold that can never be dealt
-  with would cost four runs an hour for ever. A backlog is not a failure:
+  with would cost four runs an hour for ever. The rule is per run: a run
+  asked for by a newer hold counts as a first run, so a hold that never
+  works is tried a few times more whenever another hold lapses. A backlog is not a failure:
   a run that took a full batch and got somewhere goes on at once (the
   publisher makes up to twenty passes, 500 deliveries, before it asks).
   A full batch in which every item failed does not: it would be the same
@@ -106,11 +108,15 @@ Each entry should include:
   through now counts as "still to do" and is tried again (before, the
   route answered with an error and the per-minute job happened to pick
   it up). The route asks for a run on any failure it cannot name, because
-  the removal may already be written. What the service refuses outright
-  (a changed key, a closed account) is not tried every minute: it is
-  reported to Sentry for a person to look at and tried again by the
-  hourly run, since asking more often would not change the answer and
-  would keep the database awake most of every hour.
+  the removal may already be written. A failure is one of three kinds. The service
+  could not answer (5xx, "not now", a timeout, no network): tried on the
+  dense steps for as long as it takes. The service says we may not (401,
+  403: a changed key, a closed account): reported to Sentry for a person
+  to look at and tried by the hourly run, since asking more often would
+  not change the answer. Anything else: reported, tried on the three
+  ordinary steps, then hourly. While the service is away this costs
+  about eleven runs an hour and keeps the database awake about forty
+  minutes of each hour, on purpose.
 - The tick moved from five past the hour to the hour, where the two-hourly
   and daily QStash jobs already run, so that they share one waking.
 - **What this should cost, as an estimate and not a measurement:** about
@@ -144,13 +150,16 @@ Each entry should include:
   deadline (a request to book, an account deletion) is now late by up to
   an hour and no more.
 - Slower than before when something is down, and by how much. Stripe
-  away for more than about twenty minutes after a hold lapsed: the slot
-  of an abandoned checkout stays blocked until the next hourly run after
-  Stripe is back (before: a minute). A delivery that keeps failing
+  away for more than about twenty minutes after a hold lapsed: a checkout
+  abandoned at the pay step keeps its slot (its unpaid booking holds it,
+  the lapsed hold does not) until the next hourly run after Stripe is
+  back (before: a minute). A delivery that keeps failing
   reaches its tenth and last try after about six hours (before: about an
   hour). The video service away for more than a quarter of an hour: a
-  removed person can stay up to about ten minutes after it is back
-  (before: a minute).
+  removed person can stay up to ten and a half minutes after it is back
+  (before: a minute); a removal the service refuses, or one made while
+  the queue itself is down, waits for the hourly run. The queue is now
+  the only fast path: before, nothing fast depended on it.
 - The hourly tick asks the database one thing before it starts the
   twelve jobs, so that they do not all start against a database that is
   still waking.

@@ -115,6 +115,11 @@ describe("the job that releases lapsed holds", () => {
     await run(holds, "slot-reservation-expiry")
     expect(runJobAt).toHaveBeenCalledWith("slot-reservation-expiry", next)
     expect(runJobAgain).not.toHaveBeenCalled()
+    // One "now" for what lapsed and for what lapses next: a hold that
+    // lapses while the run is out is one or the other, never neither.
+    const { now } = expireStaleReservations.mock.calls[0]![0] as { now: Date }
+    expect(now).toBeInstanceOf(Date)
+    expect(nextReservationExpiry).toHaveBeenCalledWith(now)
   })
 
   it("still asks for the next lapse when the tick ran it", async () => {
@@ -239,16 +244,23 @@ describe("the job that publishes events", () => {
 })
 
 describe("the job that finishes removing people from calls", () => {
-  const retried = (pending: number, capacityPending = 0, refused = 0) => ({
-    scanned: pending + refused,
+  const retried = (
+    pending: number,
+    capacityPending = 0,
+    refused = 0,
+    unsure = 0
+  ) => ({
+    scanned: pending + refused + unsure,
     ejected: 0,
     pending,
     refused,
+    unsure,
     capacity: {
       scanned: capacityPending,
       repaired: 0,
       pending: capacityPending,
       refused: 0,
+      unsure: 0,
     },
   })
 
@@ -277,6 +289,18 @@ describe("the job that finishes removing people from calls", () => {
     retryPendingEjects.mockResolvedValue(retried(0, 0, 2))
     await run(ejects, "video-eject-retry", TICK)
     await run(ejects, "video-eject-retry", { again: 3 })
+    expect(runJobAgain).not.toHaveBeenCalled()
+  })
+
+  it("tries a few more times for a failure it cannot name, and the tick does not start that again", async () => {
+    retryPendingEjects.mockResolvedValue(retried(0, 0, 0, 1))
+    await run(ejects, "video-eject-retry", { again: 1 })
+    expect(runJobAgain).toHaveBeenCalledTimes(1)
+    const [job, step, , steps] = runJobAgain.mock.calls[0]!
+    expect([job, step, steps]).toEqual(["video-eject-retry", 1, "few"])
+
+    runJobAgain.mockClear()
+    await run(ejects, "video-eject-retry", TICK)
     expect(runJobAgain).not.toHaveBeenCalled()
   })
 

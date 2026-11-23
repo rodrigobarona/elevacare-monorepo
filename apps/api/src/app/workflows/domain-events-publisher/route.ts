@@ -15,6 +15,9 @@ export const ROUTE_POLICY = {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
+/** Up to twenty passes of sending: as long as the tick itself may take. */
+export const maxDuration = 300
+
 /** 20 passes of 25: what one run publishes before it asks for another. */
 const PASSES_OF_A_RUN = 20
 

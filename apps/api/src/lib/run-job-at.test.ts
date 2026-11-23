@@ -159,6 +159,14 @@ describe("runJobAgain", () => {
     expect(publishWorkflowJob).not.toHaveBeenCalled()
   })
 
+  it("can use the few default steps for a job that has denser ones of its own", async () => {
+    expect(await runJobAgain("video-eject-retry", 0, NOW, "few")).toBe("asked")
+    expect(await runJobAgain("video-eject-retry", 3, NOW, "few")).toBe(
+      "left to the tick"
+    )
+    expect(waits()).toEqual([[90, { again: 1 }]])
+  })
+
   it("gives a step its own message, so a first run in the same half minute does not swallow it", async () => {
     const when = at("2026-12-01T10:05:00Z")
     await runJobAt("video-eject-retry", when, {}, NOW)
