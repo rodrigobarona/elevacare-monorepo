@@ -74,8 +74,8 @@ Each entry should include:
   copy the reason first: the page promises only what it can do, and a
   write that fails at the press keeps the reviewer on the page with that
   sentence under the button. A draft is given back for an hour
-  (`DRAFT_MAX_AGE_MS`): after that the reviewer is told "More than an
-  hour passed, so what you had entered is no longer here", and drafts
+  (`DRAFT_MAX_AGE_MS`): after that the reviewer is told "Too much time
+  passed, so what you had entered is no longer here", and drafts
   nobody came back for, or anyone else's, are removed from the tab the
   next time a review opens in it. A tab left on the sign-in page keeps
   its draft until then or until it closes: storage cannot be cleaned
@@ -178,9 +178,10 @@ Each entry should include:
   so the one that was pressed does not move. The brief asked for a
   status role on the notice after the return; it is a note that takes
   focus, because a status that arrives with its words is often not said.
-- Both forms use one piece for the press on an old sign-in and its
-  answer (`useDecisionSignIn`): they kept their own copies in the first
-  version, which is how they had drifted before.
+- Both forms use one hook for a press on an old sign-in and its answer
+  (`useDecisionSignIn`), where the first version had two copies, which
+  is how they had drifted before. Each form still has a few lines of its
+  own around its buttons.
 - Proof: unit tests for the draft's rules (kept, given back once, someone
   else, new details, nothing entered, a browser that refuses storage), the
   console path (what is refused, and that it can only resolve on the
@@ -260,7 +261,19 @@ Each entry should include:
   browser's cache after the reviewer signed out is loaded again, so the
   filing does not stay on screen; the sign-in page never goes on by
   itself when it could not tell who was signed in when the link was sent.
+  A last look at that commit alone gave the code 8.2 and found the hole
+  closed and the arithmetic right. Four small things from it are in the
+  commit after: the check on a page brought back from the browser's
+  cache runs on every review (the decided ones too), also when someone
+  else is signed in by then, and keeps what was typed before it loads
+  the page again; a refusal made at the end of a press is tied to what
+  the page knows then, not to what it knew when the press began; the
+  confirmation's own buttons take no press while one is being answered.
   Not scored again, and not walked in the real console.
+- Still true and not fixed: "You're signed in again. Nothing was decided"
+  can show for a moment while the press that learned of the newer
+  sign-in is itself being sent; the two forms share the hook and the
+  notices, and each still has a few lines of its own for the press.
 - **How the notices look now is proven; the journey with them is not.**
   A playground page (`apps/poc` `fixtures/sign-in-again`) shows every
   state of the notices with the console's own words, read from its

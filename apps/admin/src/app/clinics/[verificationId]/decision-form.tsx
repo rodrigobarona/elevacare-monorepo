@@ -249,14 +249,14 @@ export function DecisionForm({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel
-              isDisabled={pending !== null}
+              isDisabled={busy !== null}
               data-testid="clinic-reject-cancel"
             >
               {t("rejectConfirm.cancel")}
             </AlertDialogCancel>
             <Button
               variant="destructive"
-              isDisabled={pending !== null}
+              isDisabled={busy !== null}
               onPress={() => {
                 setConfirmingReject(false)
                 void decide("reject")

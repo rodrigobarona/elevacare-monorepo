@@ -261,16 +261,7 @@ export function DecisionSignInScope({
     }
     const onShown = () => void look()
     const onRestored = (event: PageTransitionEvent) => {
-      if (!event.persisted) return
-      // Back to a page the browser kept as it was. If the browser is
-      // signed out by now (the reviewer pressed "Sign in again" and came
-      // back), the filing must not stay on screen: the page is loaded
-      // again, and the console sends a signed-out visitor to sign in.
-      void readBrowserSession().then((now) => {
-        if (stopped) return
-        if (now === null) window.location.reload()
-        else void look()
-      })
+      if (event.persisted) void look()
     }
     // A timer cannot wait longer than about 24 days; the rule is hours.
     const wait = left()
@@ -302,35 +293,54 @@ export function DecisionSignInScope({
     return false
   }, [expired, newerSignIn, learn])
 
-  // Back from the sign-in page to a page the browser kept as it was: the
-  // button must not stay on "Opening...".
+  // What is on the form at this moment, kept for the way back.
+  const keepNow = React.useCallback(() => {
+    const now = entriesRef.current?.()
+    const kept = keepDraft(sessionDraftStorage(), signIn.draftKey, {
+      ownerId: signIn.reviewer.id,
+      version: now?.version ?? "",
+      ticks: now?.ticks ?? [],
+      text: now?.text ?? "",
+      keptAt: Date.now(),
+    })
+    return {
+      kept,
+      entered: Boolean(now && (now.ticks.length > 0 || now.text.trim())),
+    }
+  }, [signIn.draftKey, signIn.reviewer.id])
+
+  // Back to a page the browser kept as it was drawn. The button must not
+  // stay on "Opening...". And if the browser is signed out by now, or
+  // signed in as someone else, the filing must not stay on screen: what
+  // was typed is kept for its owner, and the page is loaded again (the
+  // console sends a signed-out visitor to sign in). On every review, the
+  // decided ones too.
+  const reviewerId = signIn.reviewer.id
   React.useEffect(() => {
+    let stopped = false
     const shown = (event: PageTransitionEvent) => {
-      if (event.persisted) setLeaving(false)
+      if (!event.persisted) return
+      setLeaving(false)
+      void readBrowserSession().then((now) => {
+        // `undefined` is "could not tell": the page stays as it is.
+        if (stopped || now === undefined) return
+        if (now === null || now.userId !== reviewerId) {
+          keepNow()
+          window.location.reload()
+        }
+      })
     }
     window.addEventListener("pageshow", shown)
-    return () => window.removeEventListener("pageshow", shown)
-  }, [])
+    return () => {
+      stopped = true
+      window.removeEventListener("pageshow", shown)
+    }
+  }, [reviewerId, keepNow])
 
   const signInAgain = React.useCallback(
     (from: Pressed) => {
       if (leaving) return
       const storage = sessionDraftStorage()
-      // What is on the form at this moment, kept for the way back.
-      const keepNow = () => {
-        const now = entriesRef.current?.()
-        const kept = keepDraft(storage, signIn.draftKey, {
-          ownerId: signIn.reviewer.id,
-          version: now?.version ?? "",
-          ticks: now?.ticks ?? [],
-          text: now?.text ?? "",
-          keptAt: Date.now(),
-        })
-        return {
-          kept,
-          entered: Boolean(now && (now.ticks.length > 0 || now.text.trim())),
-        }
-      }
       const { kept, entered } = keepNow()
       // The browser took no draft although the page had said it would: the
       // reviewer is told to copy their reason, and leaves on the next press.
@@ -378,7 +388,7 @@ export function DecisionSignInScope({
         }
       })
     },
-    [leaving, signIn, canKeep]
+    [leaving, signIn, canKeep, keepNow]
   )
 
   const state = React.useMemo(
@@ -607,13 +617,20 @@ export function useDecisionSignIn<Decision extends string>(input: {
     })
   }, [signIn.draftKey, signIn.reviewer.id])
 
-  const refuse = React.useCallback(
-    (decision: Decision) => {
-      presses.current += 1
-      setRefused({ decision, press: presses.current, renewed })
-    },
-    [renewed]
-  )
+  // The count as it is when the refusal is made, not when the press began:
+  // a press can learn of a newer sign-in and still be refused by the API.
+  const renewedNow = React.useRef(renewed)
+  React.useEffect(() => {
+    renewedNow.current = renewed
+  })
+  const refuse = React.useCallback((decision: Decision) => {
+    presses.current += 1
+    setRefused({
+      decision,
+      press: presses.current,
+      renewed: renewedNow.current,
+    })
+  }, [])
   const clearRefusal = React.useCallback(() => setRefused(null), [])
   const forget = React.useCallback(() => {
     dropDraft(sessionDraftStorage(), signIn.draftKey)
