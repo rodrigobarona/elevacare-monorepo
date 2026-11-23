@@ -4,16 +4,68 @@ Tools for moving the MVP's data into Eleva v3 (Phase 14, ADR-019). The
 package is temporary: it is removed after cutover (Phase 16.16). Nothing in
 `apps/**` or `packages/**` may import it (`pnpm check:no-migration-imports`).
 
-**What exists today:** the argument parser (`src/args.ts`) and the target
-guard (`src/guard.ts`), both covered by tests. There is no command to run
-yet: no mapper, no database connection and no script that writes anything.
+**What exists today:** the argument parser (`src/args.ts`), the target
+guard (`src/guard.ts`), one command that runs the guard and stops
+(`src/cli.ts`, `src/main.ts`), and the one module that will open
+connections (`src/connect.ts`), all covered by tests that use fakes. There
+is no database driver installed, no mapper, no report and no script that
+writes anything: nothing here has ever connected to a database.
+
+## The guard command
+
+```bash
+pnpm --filter @eleva/infra-migration guard                      # a dry run against a rehearsal branch
+pnpm --filter @eleva/infra-migration guard --apply              # the same check for a run that would write
+pnpm --filter @eleva/infra-migration guard --target production  # needs today's date, a terminal and the typed project id
+```
+
+It runs the target guard with the flags a real run takes, prints what was
+approved and stops. It opens no database connection and writes nothing; its
+only network calls are the guard's two read-only questions to the Neon API.
+It does not load a `.env` file: set the variables in the table at the end
+of this page for the run. Use it to check a rehearsal branch's variables
+before the first command that connects exists.
+
+| Exit status | Meaning                                                                   | What is printed                                                                                                        |
+| ----------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| 0           | The guard approved this target                                            | On standard output: the target kind, the mode, the host, the project id, the branch. Never a URL, a user or a password |
+| 2           | Refused: a usage error (`USAGE`) or one of the guard's refusals below     | One line on standard error: `refused <CODE>: <what to do>`                                                             |
+| 1           | Something unexpected (a bug). Never read it as approval                   | One line on standard error with the kind of error only                                                                 |
+| 3           | Reserved for the commands that connect: approved, and a connection failed | See "Connections"                                                                                                      |
+
+## Connections
+
+`openMigrationConnections()` (`src/connect.ts`) is the only place in the
+package that opens a database connection, and a test keeps every other
+file from importing a driver.
+
+- It takes only the object the guard returned in this process. A copy, or
+  an object built by hand with the same fields, is refused (`NOT_APPROVED`)
+  before anything is opened. The approved object cannot be changed.
+- It connects with the two connection strings the guard rebuilt and never
+  reads the environment.
+- The MVP session is read-only before it is handed out, and so is the v3
+  session in a dry run: the setting is made for the session and read back
+  from the server. Only `--apply` gets a v3 session that can write. This is
+  a second safeguard. The first is the read-only database role the operator
+  creates for the MVP.
+- A pooled host (its name has `-pooler`) is refused (`POOLED_HOST`): a
+  session setting does not hold there. Use the direct host.
+- If the second connection fails, the first is closed. `close()` closes
+  both and can be called twice.
+- A failure is a `MigrationConnectError` (exit status 3) that names the
+  side and the kind of error, never a host, a URL or a password.
+
+No driver is installed yet. It comes in through the `open` argument, and
+the first command that connects (14.3) adds the real one in `connect.ts`,
+once it is known what the MVP's production database runs on (roadmap F-02).
 
 ## The target guard
 
 `assertMigrationTarget()` (`src/guard.ts`) runs before any connection is
 opened and decides whether a run may touch the database behind
 `TARGET_DATABASE_URL`. A refusal is a `MigrationGuardError` with a code (the
-table below); the command built on the guard will exit 2 on one.
+table below); a command built on the guard exits 2 on one.
 
 | Run                         | The target must be                                                                                                       | Also needed                                                                                                                     |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
@@ -54,6 +106,7 @@ Nothing has been connected to when a refusal is shown.
 | `SOURCE_IS_TARGET`                         | Source and target are the same database                                       | Set `MVP_DATABASE_URL` to the MVP database                                                      |
 | `SOURCE_IN_TARGET_PROJECT`                 | `MVP_DATABASE_URL` points into the v3 project                                 | Set it to the MVP database                                                                      |
 | `NEON_PROJECT_MISSING`                     | `NEON_PROJECT_ID` is not set                                                  | Set it to the v3 production project                                                             |
+| `NEON_API_KEY_MISSING`                     | `NEON_API_KEY` is not set, so Neon cannot be asked (no network call was made) | Set it to a key that can read the v3 project                                                    |
 | `NEON_LOOKUP_FAILED`                       | The Neon API could not be asked, or its answer could not be read              | Check `NEON_API_KEY` and `NEON_PROJECT_ID`, then run again                                      |
 | `ENDPOINT_NOT_IN_PROJECT`                  | The target host is not an endpoint of `NEON_PROJECT_ID`                       | Check both variables                                                                            |
 | `ENDPOINT_NOT_WRITABLE`                    | The target host is a read replica                                             | Use the read-write endpoint of the same branch                                                  |

@@ -32,6 +32,66 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-23: The migration tool has one door to a database, and a command that only checks the target (14.2) (active)
+
+- Change (Phase 14.2): the migration package had a guard and nothing that
+  called it. It now has (a) one command, `guard`, that runs the guard with
+  the flags a real run takes, says what was approved and stops, and (b)
+  the one module that will open connections, `src/connect.ts`. Nothing in
+  the package has ever connected to a database, and this slice does not
+  change that: every test uses fakes, and no driver is installed.
+- **An approval is a thing the guard gives, not a shape.** The guard keeps
+  each target it approved in a private set and freezes it. The connection
+  module asks the guard whether the object it was handed is one of those:
+  a copy, or an object built by hand from the environment, is refused
+  before anything is opened, and an approved one cannot have its
+  connection strings changed afterwards. Before this, any code could
+  build an "approved target" that type-checked.
+- **Sessions are read-only unless the run writes.** The MVP side always,
+  the v3 side in a dry run: the setting is made for the session and read
+  back from the server, and a session that does not answer "on" is closed.
+  A pooled host is refused, because a session setting does not hold on
+  one. This is the second safeguard; the first is the read-only database
+  role the operator creates for the MVP (N1).
+- **Exit statuses:** 0 approved, 2 refused (a usage error or a guard
+  refusal, nothing connected to), 1 anything unexpected (never read as
+  approval), and 3 reserved for "approved, and a connection failed", so
+  the table does not change when the commands that connect arrive. A
+  missing `NEON_API_KEY` is its own refusal (`NEON_API_KEY_MISSING`),
+  decided before any network call.
+- **Nothing printed carries a secret.** The summary names the host, the
+  project and the branch, never a URL, a user or a password. A refusal
+  prints the guard's own message. An unexpected error prints its class
+  only, and a failed connection the side and the class: a driver's message
+  can carry the whole connection string. Tests look for two passwords and
+  an API key in everything every outcome prints.
+- Rule 13 of the execution plan holds: the command loads no `.env` file,
+  reads the process's environment and arguments in `main.ts` only (a test
+  keeps it so), defaults to a dry run against a branch, refuses on missing
+  identity, and production needs today's date, a terminal and the typed
+  project id.
+- Decided here: **no driver yet.** The catalog has the Neon driver, whose
+  session form only reaches Neon, and nobody has confirmed what the MVP's
+  production database runs on (F-02). The driver is an argument, and 14.3
+  adds the real one in `connect.ts` once that is known. Pooled or direct:
+  direct, enforced.
+- Proof: 41 new tests (115 in the package): each exit status, each family
+  of refusal, production with fakes only, usage errors that never reach
+  Neon, a forged approval, the environment changed after approval, both
+  sides' read-only state, a failed second connection, `close()` twice, a
+  scan that only `connect.ts` may import a driver, and three runs of the
+  real process (`node --import tsx/esm src/main.ts`) with an empty
+  environment: status 2, `TARGET_URL_MISSING`, no network, no hang without
+  a terminal.
+- Not proven, and not meant to be yet: a connection to any real database;
+  the read-only setting against a real server; the command against the
+  real Neon API (an operator runs it against a rehearsal branch from the
+  runbook; the agent never points it at the real project).
+- Owner: engineering; founder (F-02, what the MVP runs on); operator (N1,
+  the read-only role)
+- Related: `infra/migration/README.md`; `execution-plan/phases/14-mvp-migration.md`;
+  ADR-019; execution-plan README, rule 13
+
 ### 2026-11-23: Staff queues have pages, and reading one is on record (12.6) (active)
 
 - Change (Phase 12.6): the two staff queues (clinic verifications, licence

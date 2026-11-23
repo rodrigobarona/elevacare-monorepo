@@ -30,6 +30,7 @@ export type MigrationGuardErrorCode =
   | "SOURCE_IS_TARGET"
   | "SOURCE_IN_TARGET_PROJECT"
   | "NEON_PROJECT_MISSING"
+  | "NEON_API_KEY_MISSING"
   | "NEON_LOOKUP_FAILED"
   | "ENDPOINT_NOT_IN_PROJECT"
   | "ENDPOINT_NOT_WRITABLE"
@@ -206,6 +207,31 @@ function checkedUrl(
   return { host, url: rebuilt.toString() }
 }
 
+// Every target this module approved, and nothing else. An object that only
+// looks approved (built by hand, copied, read from a file) is not in it.
+const issued = new WeakSet<object>()
+
+/**
+ * Records an approval and makes it unchangeable: the connection strings in
+ * it are the ones that were checked, for as long as the object lives.
+ */
+function issue(approved: ApprovedMigrationTarget): ApprovedMigrationTarget {
+  const frozen = Object.freeze(approved)
+  issued.add(frozen)
+  return frozen
+}
+
+/**
+ * True only for an object `assertMigrationTarget` returned in this process.
+ * The module that opens connections asks this before it opens anything, so
+ * a type that matches is not enough to reach a database.
+ */
+export function isApprovedMigrationTarget(
+  value: unknown
+): value is ApprovedMigrationTarget {
+  return typeof value === "object" && value !== null && issued.has(value)
+}
+
 /** `ep-name-123-pooler.region.aws.neon.tech` as its direct host. */
 export function directHost(host: string): string {
   return host.toLowerCase().replace(/^([^.]+)-pooler\./, "$1.")
@@ -277,6 +303,8 @@ export async function assertMigrationTarget(
     try {
       return await deps.resolveEndpoint(name)
     } catch (err) {
+      // A refusal the caller already worded (no API key) stays as it is.
+      if (err instanceof MigrationGuardError) throw err
       throw new MigrationGuardError(
         "NEON_LOOKUP_FAILED",
         `could not ask Neon about ${name} (${err instanceof Error ? err.message : "unknown error"}). Check NEON_API_KEY and NEON_PROJECT_ID, then run again`
@@ -336,7 +364,7 @@ export async function assertMigrationTarget(
         `${host} is not in MIGRATION_ALLOWED_TARGET_HOSTS. Add the rehearsal branch's host to it`
       )
     }
-    return approved
+    return issue(approved)
   }
 
   if (!endpoint.isDefaultBranch) {
@@ -367,5 +395,5 @@ export async function assertMigrationTarget(
       "the Neon project id typed does not match NEON_PROJECT_ID. Nothing was run"
     )
   }
-  return approved
+  return issue(approved)
 }
