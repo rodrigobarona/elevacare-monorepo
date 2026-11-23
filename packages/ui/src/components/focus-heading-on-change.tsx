@@ -36,6 +36,14 @@ export function FocusHeadingOnChange({
       heading.setAttribute("tabindex", "-1")
     if (describedBy) heading.setAttribute("aria-describedby", describedBy)
     heading.focus()
+    // The description is this component's only while it is the one it set.
+    return () => {
+      if (
+        describedBy &&
+        heading.getAttribute("aria-describedby") === describedBy
+      )
+        heading.removeAttribute("aria-describedby")
+    }
   }, [value, describedBy])
   return null
 }
