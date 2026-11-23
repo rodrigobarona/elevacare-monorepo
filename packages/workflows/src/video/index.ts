@@ -28,6 +28,7 @@ export {
   addSessionParticipant,
   countActiveDelegates,
   dailyFailureKind,
+  EJECT_RETRY_BATCH_SIZE,
   isRetryableDailyFailure,
   isSelfDelegate,
   removeSessionParticipant,

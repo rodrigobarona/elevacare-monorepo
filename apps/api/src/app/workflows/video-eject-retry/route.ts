@@ -1,11 +1,14 @@
-import { retryPendingEjects } from "@eleva/workflows/video"
+import {
+  EJECT_RETRY_BATCH_SIZE,
+  retryPendingEjects,
+} from "@eleva/workflows/video"
 import type { RoutePolicy } from "@/lib/route-policy"
 import {
   internalWorkflowOptions,
   runInternalWorkflow,
 } from "@/lib/internal-workflow"
 import { reportedJob } from "@/lib/reported-job"
-import { runJobAgain, whichRun } from "@/lib/run-job-at"
+import { runJobAgain, runJobAt, whichRun } from "@/lib/run-job-at"
 
 export const ROUTE_POLICY = {
   auth: "internal",
@@ -34,7 +37,11 @@ export const POST = reportedJob(
       // refuses outright is not counted here: that is reported for a
       // person to look at, and tried again by the hourly run only.
       const { again, fromTick } = await whichRun(request)
-      if (result.pending > 0 || result.capacity.pending > 0) {
+      if (result.scanned >= EJECT_RETRY_BATCH_SIZE && result.ejected > 0) {
+        // A full run that got somewhere: more people may be waiting to
+        // be put out, now, and not in a minute.
+        await runJobAt("video-eject-retry", new Date())
+      } else if (result.pending > 0 || result.capacity.pending > 0) {
         await runJobAgain("video-eject-retry", again)
       } else if (
         (result.unsure > 0 || result.capacity.unsure > 0) &&

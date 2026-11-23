@@ -561,9 +561,12 @@ async function retryStaleRoomCapacities(
   return { scanned: rooms.length, repaired, pending, refused, unsure }
 }
 
+/** How many removals one run of the retry takes. A full run means more may wait. */
+export const EJECT_RETRY_BATCH_SIZE = 25
+
 export async function retryPendingEjects(
   deps: SessionParticipantDeps = {},
-  limit = 25
+  limit = EJECT_RETRY_BATCH_SIZE
 ) {
   const pending = await withPlatformAdminContext(async (tx) => {
     return tx

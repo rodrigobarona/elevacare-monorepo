@@ -30,7 +30,10 @@ vi.mock("@eleva/workflows/scheduling", () => ({
 }))
 vi.mock("@eleva/scheduling", () => ({ nextReservationExpiry }))
 vi.mock("@/lib/publish-domain-events", () => ({ publishPasses }))
-vi.mock("@eleva/workflows/video", () => ({ retryPendingEjects }))
+vi.mock("@eleva/workflows/video", () => ({
+  retryPendingEjects,
+  EJECT_RETRY_BATCH_SIZE: 25,
+}))
 vi.mock("@eleva/observability", () => ({
   logError,
   captureException: vi.fn(async () => {}),
@@ -290,6 +293,26 @@ describe("the job that finishes removing people from calls", () => {
     await run(ejects, "video-eject-retry", TICK)
     await run(ejects, "video-eject-retry", { again: 3 })
     expect(runJobAgain).not.toHaveBeenCalled()
+  })
+
+  it("goes on at once after a full run in which people were put out: more may be waiting", async () => {
+    retryPendingEjects.mockResolvedValue({
+      ...retried(0),
+      scanned: 25,
+      ejected: 25,
+    })
+    await run(ejects, "video-eject-retry", TICK)
+    expect(runJobAt).toHaveBeenCalledTimes(1)
+    expect(runJobAt.mock.calls[0]![0]).toBe("video-eject-retry")
+    expect(runJobAgain).not.toHaveBeenCalled()
+  })
+
+  it("does not go on at once after a full run in which nobody was put out", async () => {
+    // It would be the same twenty-five again: the steps are for that.
+    retryPendingEjects.mockResolvedValue({ ...retried(25), ejected: 0 })
+    await run(ejects, "video-eject-retry")
+    expect(runJobAt).not.toHaveBeenCalled()
+    expect(runJobAgain).toHaveBeenCalledWith("video-eject-retry", 0)
   })
 
   it("tries a few more times for a failure it cannot name, and the tick does not start that again", async () => {
