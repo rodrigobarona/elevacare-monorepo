@@ -4,6 +4,8 @@ import type { ListPublicExpertsResponse } from "@eleva/api-client"
 import { ArrowRightIcon, ShieldCheckIcon } from "@eleva/icons"
 import { defaultLocale, isLocale, type Locale } from "@eleva/config/i18n"
 import { ElevaImage } from "@eleva/media/image"
+import { CtaBand, ctaBandLinkClass } from "@eleva/ui/blocks/cta-band"
+import { ExpertCard, expertPortraitFrame } from "@eleva/ui/blocks/expert-card"
 import { ExpertPortrait } from "@eleva/ui/blocks/expert-portrait"
 import { Container } from "@eleva/ui/blocks/section"
 import { buttonVariants } from "@eleva/ui/components/button-variants"
@@ -36,15 +38,6 @@ const H2 = "font-display text-3xl tracking-tight text-balance sm:text-4xl"
 const LINK =
   "inline-flex min-h-11 items-center gap-1.5 font-medium text-primary underline decoration-[1.5px] underline-offset-[5px]"
 
-/**
- * One frame for every portrait on the page: a sand field, with the person
- * cut out of her photograph's background and set at one face size, so a row
- * of portraits reads as one set. A photograph that has not been cut out
- * fills the same frame.
- */
-const PORTRAIT =
-  "overflow-hidden rounded-xl bg-coral-100 [&_img]:object-cover [&_img]:object-top"
-
 type Directory = ListPublicExpertsResponse | null
 
 /**
@@ -53,14 +46,10 @@ type Directory = ListPublicExpertsResponse | null
  * with one question and one action; need-first browsing is a list of
  * questions; experts speak through their own headline. Two colour fields,
  * each used once: deep teal for how experts are checked, coral to close.
- *
- * The page uses a cooler paper than the product (`--background` is set on
- * the wrapper), so the change stays on this page until the direction is
- * signed off for `@eleva/ui`.
  */
 export async function MarketingHome() {
   return (
-    <div className="flex min-h-dvh flex-col bg-background [--background:var(--color-neutral-50)] [--border:var(--color-neutral-200)] [--muted:var(--color-neutral-100)]">
+    <div className="flex min-h-dvh flex-col">
       <SiteHeader />
       <main className="flex-1">
         <MarketingContent />
@@ -260,79 +249,38 @@ async function People({
                     })
             return (
               <li key={expert.username}>
-                <article
+                <ExpertCard
                   data-testid="home-expert-card"
-                  className="group relative grid h-full grid-cols-[5.5rem_minmax(0,1fr)] content-start gap-x-4 rounded-3xl border bg-card p-3.5 transition-colors focus-within:ring-3 focus-within:ring-ring/50 hover:border-foreground/40 sm:flex sm:flex-col"
-                >
-                  <div
-                    className={cn(PORTRAIT, "aspect-square sm:aspect-[18/19]")}
-                  >
+                  href={`/${expert.username}`}
+                  linkAs={Link}
+                  media={
                     <ExpertPortrait
                       displayName={expert.displayName}
                       avatarUrl={expert.avatarUrl}
                     />
-                  </div>
-                  <div className="self-center sm:order-2 sm:mt-5 sm:self-auto sm:px-2.5">
-                    <h3 className="text-lg font-medium">
-                      <Link
-                        href={`/${expert.username}`}
-                        className="outline-none after:absolute after:inset-0 after:rounded-3xl"
-                      >
-                        {expert.displayName}
-                      </Link>
-                    </h3>
-                    {areas.length > 0 ? (
-                      <p className="text-base text-muted-foreground">
-                        {areas.join(" · ")}
-                      </p>
-                    ) : null}
-                    <p className="mt-1.5 flex items-start gap-1.5 text-base">
-                      <ShieldCheckIcon
-                        aria-hidden
-                        weight="fill"
-                        className="mt-1 size-4 shrink-0"
-                      />
-                      {tExperts("checkedMark")}
-                    </p>
-                  </div>
-                  {expert.headline ? (
-                    // In the expert's own words, so it is set as speech.
-                    <p className="col-span-2 mt-4 line-clamp-3 font-display text-xl leading-snug tracking-tight text-pretty sm:order-1 sm:mt-5 sm:min-h-[4.2em] sm:px-2.5">
-                      {expert.headline}
-                    </p>
-                  ) : null}
-                  <div className="col-span-2 mt-4 flex flex-col sm:order-3 sm:mx-2.5 sm:mt-auto sm:pt-5">
-                    {languages.length > 0 || price ? (
-                      <dl className="grid grid-cols-2 gap-4 border-t py-3.5 text-base">
-                        {languages.length > 0 ? (
-                          <div>
-                            <dt className="text-muted-foreground">
-                              {t("people.speaks")}
-                            </dt>
-                            <dd className="font-medium">
-                              {list.format(languages)}
-                            </dd>
-                          </div>
-                        ) : null}
-                        {price ? (
-                          <div>
-                            <dt className="text-muted-foreground">
-                              {t("people.sessions")}
-                            </dt>
-                            <dd className="font-medium">{price}</dd>
-                          </div>
-                        ) : null}
-                      </dl>
-                    ) : null}
-                    <p
-                      aria-hidden
-                      className="flex min-h-12 items-center gap-1.5 border-t pt-1 text-lg font-medium text-primary group-hover:underline group-hover:underline-offset-[5px]"
-                    >
-                      {t("people.profile")}
-                      <ArrowRightIcon className="size-4.5" />
-                    </p>
-                  </div>
-                </article>
+                  }
+                  name={expert.displayName}
+                  headline={expert.headline}
+                  badge={
+                    expert.topExpertActive ? tExperts("topExpert") : undefined
+                  }
+                  checkedLabel={tExperts("checkedMark")}
+                  meta={areas.length > 0 ? areas.join(" · ") : undefined}
+                  facts={[
+                    ...(languages.length > 0
+                      ? [
+                          {
+                            label: tExperts("card.speaks"),
+                            value: list.format(languages),
+                          },
+                        ]
+                      : []),
+                    ...(price
+                      ? [{ label: tExperts("card.sessions"), value: price }]
+                      : []),
+                  ]}
+                  action={tExperts("card.profile")}
+                />
               </li>
             )
           })}
@@ -518,7 +466,7 @@ async function Advisors({ locale }: { locale: Locale }) {
               >
                 <span
                   className={cn(
-                    PORTRAIT,
+                    expertPortraitFrame,
                     "relative block aspect-[18/19] sm:w-36"
                   )}
                 >
@@ -586,46 +534,36 @@ async function Faq() {
 async function Close() {
   const t = await getTranslations("home")
   return (
-    <section className="bg-coral-400 px-4 py-18 text-neutral-950 sm:px-6 sm:py-24">
-      <Container className="grid items-end gap-10 lg:grid-cols-[1.4fr_1fr] lg:gap-18">
-        <div>
-          <h2 className={H2}>{t("close.heading")}</h2>
-          <p className="mt-3.5 max-w-[24em] text-xl text-pretty">
-            {t("close.lead")}
-          </p>
-          <Link
-            href="/experts"
-            className={cn(
-              buttonVariants({ variant: "inverse", size: "xl" }),
-              "mt-7 w-full sm:w-auto"
-            )}
-          >
-            {t("close.cta")}
-          </Link>
-        </div>
-        <div className="border-neutral-950/40 max-lg:border-t max-lg:pt-8 lg:border-l lg:pl-10">
+    <CtaBand
+      title={t("close.heading")}
+      lead={t("close.lead")}
+      actions={
+        <Link
+          href="/experts"
+          className={cn(
+            buttonVariants({ variant: "inverse", size: "xl" }),
+            "w-full sm:w-auto"
+          )}
+        >
+          {t("close.cta")}
+        </Link>
+      }
+      aside={
+        <>
           <h3 className="font-display text-2xl tracking-tight">
             {t("close.pro.heading")}
           </h3>
           <p className="mt-2 text-lg text-pretty">{t("close.pro.lead")}</p>
           <p className="mt-2 flex flex-wrap gap-x-6">
-            {(
-              [
-                ["/become-expert", "cta"],
-                ["/for-clinics", "clinics"],
-              ] as const
-            ).map(([href, key]) => (
-              <Link
-                key={href}
-                href={href}
-                className="inline-flex min-h-11 items-center font-medium underline decoration-[1.5px] underline-offset-[5px]"
-              >
-                {t(`close.pro.${key}`)}
-              </Link>
-            ))}
+            <Link href="/become-expert" className={ctaBandLinkClass}>
+              {t("close.pro.cta")}
+            </Link>
+            <Link href="/for-clinics" className={ctaBandLinkClass}>
+              {t("close.pro.clinics")}
+            </Link>
           </p>
-        </div>
-      </Container>
-    </section>
+        </>
+      }
+    />
   )
 }

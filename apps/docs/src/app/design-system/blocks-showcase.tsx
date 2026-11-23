@@ -7,7 +7,7 @@ import {
 } from "@eleva/icons"
 import { ElevaImage } from "@eleva/media/image"
 import { ElevaVideo } from "@eleva/media/video"
-import { CtaBand } from "@eleva/ui/blocks/cta-band"
+import { CtaBand, ctaBandLinkClass } from "@eleva/ui/blocks/cta-band"
 import { ExpertCard, ExpertCardInitials } from "@eleva/ui/blocks/expert-card"
 import { MediaCard } from "@eleva/ui/blocks/media-card"
 import { MediaHero, MediaHeroActions } from "@eleva/ui/blocks/media-hero"
@@ -133,7 +133,6 @@ export function BlocksShowcase() {
         <Section spacing="compact">
           <Container className="flex flex-col gap-10">
             <SectionHeader
-              eyebrow="Services"
               title={
                 <>
                   Care for <Accent>every stage</Accent>
@@ -187,9 +186,12 @@ export function BlocksShowcase() {
                     name={expert.name}
                     headline={expert.headline}
                     badge={expert.badge}
-                    tags={expert.tags}
                     meta={expert.meta}
-                    price={expert.price}
+                    facts={[
+                      { label: "Speaks", value: expert.tags.join(", ") },
+                      { label: "Sessions", value: expert.price },
+                    ]}
+                    action="See profile"
                   />
                 </li>
               ))}
@@ -215,45 +217,42 @@ export function BlocksShowcase() {
         </Section>
       </BlockFrame>
 
-      <BlockFrame name="CtaBand (gradient) and CtaBand with media">
-        <Section spacing="compact">
-          <Container className="flex flex-col gap-8">
-            <CtaBand
-              title="Ready when you are"
-              lead="One clear action per band."
-              actions={
-                <a
-                  href="#blocks"
-                  className={buttonVariants({ variant: "inverse", size: "lg" })}
-                >
-                  Get started
-                </a>
-              }
-            />
-            <CtaBand
-              eyebrow="For experts"
-              title="Grow your practice"
-              lead="Split layout when a photo helps."
-              media={
-                <ElevaImage
-                  slug="expert-at-desk"
-                  locale="en"
-                  fill
-                  sizes="(min-width: 1024px) 40vw, 100vw"
-                  className="object-cover"
-                />
-              }
-              actions={
-                <a
-                  href="#blocks"
-                  className={buttonVariants({ variant: "inverse", size: "lg" })}
-                >
-                  Become an expert
-                </a>
-              }
-            />
-          </Container>
-        </Section>
+      <BlockFrame name="CtaBand, and CtaBand with a second door">
+        <CtaBand
+          title="Ready when you are"
+          lead="One clear action per band."
+          actions={
+            <a
+              href="#blocks"
+              className={buttonVariants({ variant: "inverse", size: "xl" })}
+            >
+              Get started
+            </a>
+          }
+        />
+        <CtaBand
+          className="mt-8"
+          title="Not sure who to ask?"
+          lead="The closing block of the public site."
+          actions={
+            <a
+              href="#blocks"
+              className={buttonVariants({ variant: "inverse", size: "xl" })}
+            >
+              See the experts
+            </a>
+          }
+          aside={
+            <>
+              <p className="font-display text-2xl tracking-tight">
+                Are you a health professional?
+              </p>
+              <a href="#blocks" className={ctaBandLinkClass}>
+                Become an expert
+              </a>
+            </>
+          }
+        />
       </BlockFrame>
     </div>
   )

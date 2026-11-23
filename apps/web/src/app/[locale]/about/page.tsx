@@ -16,11 +16,13 @@ import {
   VideoCameraIcon,
 } from "@eleva/icons"
 import { ElevaImage } from "@eleva/media/image"
-import { CtaBand } from "@eleva/ui/blocks/cta-band"
+import { CtaBand, ctaBandLinkClass } from "@eleva/ui/blocks/cta-band"
+import { expertPortraitFrame } from "@eleva/ui/blocks/expert-card"
 import { Container, Section, SectionHeader } from "@eleva/ui/blocks/section"
 import { TrustStrip } from "@eleva/ui/blocks/trust-strip"
 import { buttonVariants } from "@eleva/ui/components/button-variants"
-import { Accent, Heading } from "@eleva/ui/components/typography"
+import { Heading } from "@eleva/ui/components/typography"
+import { cn } from "@eleva/ui/lib/utils"
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import { Link } from "@/i18n/navigation"
 import { ADVISORS } from "@/lib/advisors"
@@ -98,9 +100,13 @@ const LEADERSHIP = [
   {
     id: "patriciaMota",
     name: "Patrícia Mota, PT, PhD",
-    slug: "team-patricia-mota",
+    slug: "team-patricia-mota-cutout",
   },
-  { id: "rodrigoBarona", name: "Rodrigo Barona", slug: "team-rodrigo-barona" },
+  {
+    id: "rodrigoBarona",
+    name: "Rodrigo Barona",
+    slug: "team-rodrigo-barona-cutout",
+  },
 ] as const
 
 export default async function AboutPage({ params }: Props) {
@@ -118,18 +124,8 @@ export default async function AboutPage({ params }: Props) {
       <main className="flex-1">
         <Section>
           <Container className="grid items-center gap-12 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
-            <SectionHeader
-              as="h1"
-              eyebrow={t("eyebrow")}
-              title={
-                <>
-                  {t("heading")}
-                  <Accent>{t("headingAccent")}</Accent>
-                </>
-              }
-              lead={t("intro")}
-            />
-            <div className="relative aspect-4/3 overflow-hidden rounded-4xl shadow-2">
+            <SectionHeader as="h1" title={t("heading")} lead={t("intro")} />
+            <div className="relative aspect-4/3 overflow-hidden rounded-3xl">
               <ElevaImage
                 slug="community-women"
                 locale={locale}
@@ -144,9 +140,9 @@ export default async function AboutPage({ params }: Props) {
 
         <Section tone="muted" spacing="compact">
           <Container className="flex flex-col gap-8">
-            <p className="text-sm font-medium tracking-wide text-teal-800 uppercase dark:text-teal-300">
-              {t("stats.eyebrow")}
-            </p>
+            <h2 className="font-display text-2xl tracking-tight">
+              {t("stats.heading")}
+            </h2>
             <ul className="grid gap-4 md:grid-cols-3">
               <FactCard
                 title={t("stats.modes.title")}
@@ -178,7 +174,7 @@ export default async function AboutPage({ params }: Props) {
 
         <Section>
           <Container className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
-            <div className="relative order-last aspect-4/3 overflow-hidden rounded-4xl lg:order-first">
+            <div className="relative order-last aspect-4/3 overflow-hidden rounded-3xl lg:order-first">
               <ElevaImage
                 slug="support-conversation"
                 locale={locale}
@@ -188,10 +184,7 @@ export default async function AboutPage({ params }: Props) {
               />
             </div>
             <div className="flex flex-col gap-6">
-              <SectionHeader
-                eyebrow={t("mission.eyebrow")}
-                title={t("mission.heading")}
-              />
+              <SectionHeader title={t("mission.heading")} />
               <div className="flex max-w-xl flex-col gap-4 text-lg text-pretty text-muted-foreground">
                 <p>{t("mission.p1")}</p>
                 <p>{t("mission.p2")}</p>
@@ -205,13 +198,7 @@ export default async function AboutPage({ params }: Props) {
             <SectionHeader
               align="center"
               inverse
-              eyebrow={t("vision.eyebrow")}
-              title={
-                <>
-                  {t("vision.heading")}
-                  <Accent>{t("vision.headingAccent")}</Accent>
-                </>
-              }
+              title={t("vision.heading")}
               lead={t("vision.lead")}
             />
           </Container>
@@ -219,10 +206,7 @@ export default async function AboutPage({ params }: Props) {
 
         <Section>
           <Container className="flex flex-col gap-12">
-            <SectionHeader
-              eyebrow={t("beliefs.eyebrow")}
-              title={t("beliefs.heading")}
-            />
+            <SectionHeader title={t("beliefs.heading")} />
             <TrustStrip
               items={[
                 {
@@ -253,10 +237,7 @@ export default async function AboutPage({ params }: Props) {
         <Section tone="muted" id="team">
           <Container className="grid gap-12 lg:grid-cols-[1fr_1.2fr] lg:gap-16">
             <div className="flex flex-col items-start gap-6">
-              <SectionHeader
-                eyebrow={t("team.eyebrow")}
-                title={t("team.heading")}
-              />
+              <SectionHeader title={t("team.heading")} />
               <div className="flex max-w-xl flex-col gap-4 text-pretty text-muted-foreground">
                 <p>{t("team.p1")}</p>
                 <p>{t("team.p2")}</p>
@@ -276,7 +257,12 @@ export default async function AboutPage({ params }: Props) {
               <ul className="grid gap-6 sm:grid-cols-2">
                 {LEADERSHIP.map((person) => (
                   <li key={person.id} className="flex flex-col gap-4">
-                    <div className="relative aspect-square overflow-hidden rounded-3xl bg-muted">
+                    <div
+                      className={cn(
+                        expertPortraitFrame,
+                        "relative aspect-[18/19]"
+                      )}
+                    >
                       <ElevaImage
                         slug={person.slug}
                         locale={locale}
@@ -303,16 +289,20 @@ export default async function AboutPage({ params }: Props) {
         <Section id="advisors">
           <Container className="flex flex-col gap-12">
             <SectionHeader
-              eyebrow={t("advisors.eyebrow")}
               title={t("advisors.heading")}
               lead={t("advisors.lead")}
             />
             <ul className="grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
               {ADVISORS.map((person) => (
                 <li key={person.id} className="flex flex-col gap-4">
-                  <div className="relative aspect-square overflow-hidden rounded-3xl bg-muted">
+                  <div
+                    className={cn(
+                      expertPortraitFrame,
+                      "relative aspect-[18/19]"
+                    )}
+                  >
                     <ElevaImage
-                      slug={person.slug}
+                      slug={person.cutout}
                       locale={locale}
                       fill
                       sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
@@ -325,7 +315,7 @@ export default async function AboutPage({ params }: Props) {
                       {t(`advisors.${person.id}.role`)}
                     </p>
                   </div>
-                  <blockquote className="border-l-2 border-primary/30 pl-4 font-heading text-base text-pretty text-foreground italic">
+                  <blockquote className="border-l-2 border-foreground/20 pl-4 font-display text-lg leading-snug text-pretty text-foreground">
                     {t(`advisors.${person.id}.quote`)}
                   </blockquote>
                 </li>
@@ -334,49 +324,23 @@ export default async function AboutPage({ params }: Props) {
           </Container>
         </Section>
 
-        <Section spacing="compact" className="pb-24">
-          <Container>
-            <CtaBand
-              eyebrow={t("join.eyebrow")}
-              title={t("join.heading")}
-              lead={t("join.lead")}
-              media={
-                <ElevaImage
-                  slug="physio-session"
-                  locale={locale}
-                  fill
-                  sizes="(min-width: 1024px) 40vw, 100vw"
-                  className="object-cover"
-                />
-              }
-              actions={
-                <>
-                  <Link
-                    href="/become-expert"
-                    className={buttonVariants({
-                      variant: "inverse",
-                      size: "lg",
-                    })}
-                  >
-                    {t("join.cta")}
-                    <ArrowRightIcon data-icon="inline-end" />
-                  </Link>
-                  <Link
-                    href="/experts"
-                    className={buttonVariants({
-                      variant: "ghost",
-                      size: "lg",
-                      className:
-                        "text-white hover:bg-white/10 hover:text-white",
-                    })}
-                  >
-                    {t("join.secondary")}
-                  </Link>
-                </>
-              }
-            />
-          </Container>
-        </Section>
+        <CtaBand
+          title={t("join.heading")}
+          lead={t("join.lead")}
+          actions={
+            <>
+              <Link
+                href="/become-expert"
+                className={buttonVariants({ variant: "inverse", size: "xl" })}
+              >
+                {t("join.cta")}
+              </Link>
+              <Link href="/experts" className={ctaBandLinkClass}>
+                {t("join.secondary")}
+              </Link>
+            </>
+          }
+        />
       </main>
       <SiteFooter />
     </div>

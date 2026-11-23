@@ -5,3 +5,29 @@
 @import "@eleva/site-chrome/sources.css";
 @import "@eleva/billing/sources.css";
 @import "@eleva/dashboard/sources.css";
+
+/*
+ * The public site's own paper and type scale (design direction E,
+ * docs/eleva-v3/design-audit/brand-directions.md). Set here, for apps/web
+ * only: @eleva/ui is unchanged, so no dashboard moves.
+ *
+ * - A cooler paper than the product's sand, with rules and quiet surfaces
+ *   to match.
+ * - Headings at an ordinary size. The largest text on a page is 48px; a
+ *   section heading is 36px. Big type is not the idea of these pages.
+ */
+:root:not(.dark) {
+  --background: var(--color-neutral-50);
+  --border: var(--color-neutral-200);
+  --muted: var(--color-neutral-100);
+}
+:root {
+  --text-display: clamp(2.25rem, 1.75rem + 2.2vw, 3rem);
+  --text-display--line-height: 1.08;
+  --text-display--letter-spacing: -0.02em;
+  --text-headline: clamp(1.875rem, 1.65rem + 1vw, 2.25rem);
+  --text-headline--line-height: 1.14;
+  --text-headline--letter-spacing: -0.018em;
+  --text-title: 1.5rem;
+  --text-title--line-height: 1.25;
+}

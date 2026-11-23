@@ -67,7 +67,7 @@ export function FormCard({
   children: ReactNode
 }) {
   return (
-    <fieldset className="space-y-5 rounded-4xl bg-card p-6 shadow-1 ring-1 ring-foreground/5">
+    <fieldset className="space-y-5 rounded-3xl border bg-card p-6">
       <legend className="sr-only">{title}</legend>
       <h2 aria-hidden className="font-display text-lg font-medium">
         {title}

@@ -1,6 +1,5 @@
 import { defaultLocale, isLocale, type Locale } from "@eleva/config/i18n"
 import {
-  ArrowRightIcon,
   BuildingsIcon,
   CalendarCheckIcon,
   ChartBarIcon,
@@ -13,11 +12,12 @@ import {
   type Icon,
 } from "@eleva/icons"
 import { ElevaImage } from "@eleva/media/image"
+import { CtaBand } from "@eleva/ui/blocks/cta-band"
 import { Container, Section, SectionHeader } from "@eleva/ui/blocks/section"
 import { Steps } from "@eleva/ui/blocks/steps"
 import { TrustStrip } from "@eleva/ui/blocks/trust-strip"
 import { buttonVariants } from "@eleva/ui/components/button-variants"
-import { Eyebrow, Heading, Lead } from "@eleva/ui/components/typography"
+import { Heading, Lead } from "@eleva/ui/components/typography"
 import { getLocale } from "next-intl/server"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
@@ -56,7 +56,6 @@ export type ContactChannel = {
 }
 
 type Props = {
-  eyebrow: string
   heading: string
   headingTestId: string
   body: string
@@ -82,7 +81,6 @@ type Props = {
 
 /** Public landing pages for professionals and clinics, and the contact page. */
 export async function MarketingPage({
-  eyebrow,
   heading,
   headingTestId,
   body,
@@ -106,7 +104,7 @@ export async function MarketingPage({
   const benefitItems = benefits.map((item) => {
     const IconComponent = MARKETING_ICONS[item.icon]
     return {
-      icon: <IconComponent weight="duotone" aria-hidden />,
+      icon: <IconComponent aria-hidden />,
       title: item.title,
       description: item.body,
     }
@@ -125,7 +123,6 @@ export async function MarketingPage({
             }
           >
             <div className="flex flex-col items-start gap-6">
-              <Eyebrow>{eyebrow}</Eyebrow>
               <Heading
                 as="h1"
                 size="display"
@@ -138,12 +135,11 @@ export async function MarketingPage({
               {cta ? (
                 <a href={cta.href} className={buttonVariants({ size: "xl" })}>
                   {cta.label}
-                  <ArrowRightIcon data-icon="inline-end" />
                 </a>
               ) : null}
             </div>
             {imageSlug ? (
-              <div className="relative aspect-4/5 overflow-hidden rounded-4xl shadow-2">
+              <div className="relative aspect-4/5 overflow-hidden rounded-3xl">
                 <ElevaImage
                   slug={imageSlug}
                   locale={locale}
@@ -158,34 +154,32 @@ export async function MarketingPage({
         </Section>
 
         {contacts.length > 0 ? (
-          <Section tone="muted">
+          <Section spacing="compact" className="pb-20 sm:pb-28">
             <Container className="flex flex-col gap-10">
               {contactsHeading ? (
                 <SectionHeader title={contactsHeading} />
               ) : null}
               <ul
                 data-testid="contact-channels"
-                className="grid gap-4 sm:grid-cols-2"
+                className="grid gap-x-14 sm:grid-cols-2"
               >
                 {contacts.map((channel) => {
                   const IconComponent = MARKETING_ICONS[channel.icon]
                   return (
                     <li
                       key={channel.email}
-                      className="flex flex-col gap-3 rounded-3xl border border-border bg-card p-6"
+                      className="flex flex-col gap-2 border-t py-6"
                     >
-                      <span className="flex size-10 items-center justify-center rounded-full bg-accent text-accent-foreground">
-                        <IconComponent weight="duotone" aria-hidden />
-                      </span>
-                      <p className="font-medium text-foreground">
+                      <IconComponent aria-hidden className="size-7" />
+                      <p className="font-display text-2xl tracking-tight text-foreground">
                         {channel.title}
                       </p>
-                      <p className="text-sm text-pretty text-muted-foreground">
+                      <p className="text-lg text-pretty text-muted-foreground">
                         {channel.body}
                       </p>
                       <a
                         href={`mailto:${channel.email}`}
-                        className="mt-auto w-fit text-sm font-medium text-primary underline-offset-4 hover:underline"
+                        className="mt-1 inline-flex min-h-11 w-fit items-center font-medium text-primary underline decoration-[1.5px] underline-offset-[5px]"
                       >
                         {channel.email}
                       </a>
@@ -225,11 +219,16 @@ export async function MarketingPage({
           <Section tone="muted">
             <Container className="flex max-w-4xl flex-col gap-10">
               <SectionHeader title={requirementsHeading} />
-              <ul className="grid gap-8 sm:grid-cols-2">
+              <ul className="grid gap-x-14 sm:grid-cols-2">
                 {requirements.map((item) => (
-                  <li key={item.title} className="flex flex-col gap-2">
-                    <p className="font-medium text-foreground">{item.title}</p>
-                    <p className="text-sm text-pretty text-muted-foreground">
+                  <li
+                    key={item.title}
+                    className="flex flex-col gap-1.5 border-t py-5"
+                  >
+                    <p className="font-display text-2xl tracking-tight text-foreground">
+                      {item.title}
+                    </p>
+                    <p className="text-lg text-pretty text-muted-foreground">
                       {item.body}
                     </p>
                   </li>
@@ -240,20 +239,20 @@ export async function MarketingPage({
         ) : null}
 
         {finalHeading && finalBody ? (
-          <Section>
-            <Container className="flex max-w-3xl flex-col items-start gap-6">
-              <SectionHeader title={finalHeading} lead={finalBody} />
-              {finalCta ? (
+          <CtaBand
+            title={finalHeading}
+            lead={finalBody}
+            actions={
+              finalCta ? (
                 <a
                   href={finalCta.href}
-                  className={buttonVariants({ size: "xl" })}
+                  className={buttonVariants({ variant: "inverse", size: "xl" })}
                 >
                   {finalCta.label}
-                  <ArrowRightIcon data-icon="inline-end" />
                 </a>
-              ) : null}
-            </Container>
-          </Section>
+              ) : null
+            }
+          />
         ) : null}
       </main>
       <SiteFooter />

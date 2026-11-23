@@ -4,7 +4,7 @@ import { ElevaImage } from "@eleva/media/image"
 import { CtaBand } from "@eleva/ui/blocks/cta-band"
 import { Container, Section, SectionHeader } from "@eleva/ui/blocks/section"
 import { buttonVariants } from "@eleva/ui/components/button-variants"
-import { Accent, Heading } from "@eleva/ui/components/typography"
+import { Heading } from "@eleva/ui/components/typography"
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import { Link } from "@/i18n/navigation"
 import { SiteFooter } from "@/components/site-footer"
@@ -47,24 +47,18 @@ export default async function HistoryPage({ params }: Props) {
             <SectionHeader
               as="h1"
               align="center"
-              eyebrow={t("eyebrow")}
-              title={
-                <>
-                  {t("heading")}
-                  <Accent>{t("headingAccent")}</Accent>
-                </>
-              }
+              title={t("heading")}
               lead={t("lead")}
             />
             <div className="flex items-center justify-center gap-3">
-              <div className="relative size-12 overflow-hidden rounded-full bg-muted">
+              <div className="relative size-12 overflow-hidden rounded-full bg-coral-100">
                 <ElevaImage
-                  slug="team-patricia-mota"
+                  slug="team-patricia-mota-cutout"
                   locale={locale}
                   decorative
                   fill
                   sizes="48px"
-                  className="object-cover"
+                  className="object-cover object-top"
                 />
               </div>
               <div>
@@ -80,7 +74,7 @@ export default async function HistoryPage({ params }: Props) {
         <Section spacing="none">
           <Container size="wide">
             <figure className="flex flex-col gap-3">
-              <div className="relative aspect-3/2 overflow-hidden rounded-4xl shadow-2">
+              <div className="relative aspect-3/2 overflow-hidden rounded-3xl">
                 <ElevaImage
                   slug="founders-photo"
                   locale={locale}
@@ -122,7 +116,7 @@ export default async function HistoryPage({ params }: Props) {
                 </section>
               ))}
               <footer className="flex flex-col gap-1 border-t pt-8">
-                <p className="font-heading text-lg text-muted-foreground italic">
+                <p className="font-display text-xl text-muted-foreground">
                   {t("signOff")}
                 </p>
                 <p className="font-medium text-foreground">{t("author")}</p>
@@ -134,31 +128,17 @@ export default async function HistoryPage({ params }: Props) {
           </Container>
         </Section>
 
-        <Section spacing="compact" className="pb-24">
-          <Container>
-            <CtaBand
-              eyebrow={t("cta.eyebrow")}
-              title={t("cta.heading")}
-              media={
-                <ElevaImage
-                  slug="online-session-home"
-                  locale={locale}
-                  fill
-                  sizes="(min-width: 1024px) 50vw, 100vw"
-                />
-              }
-              actions={
-                <Link
-                  href="/experts"
-                  className={buttonVariants({ variant: "inverse", size: "lg" })}
-                >
-                  {t("cta.action")}
-                  <ArrowRightIcon data-icon="inline-end" />
-                </Link>
-              }
-            />
-          </Container>
-        </Section>
+        <CtaBand
+          title={t("cta.heading")}
+          actions={
+            <Link
+              href="/experts"
+              className={buttonVariants({ variant: "inverse", size: "xl" })}
+            >
+              {t("cta.action")}
+            </Link>
+          }
+        />
       </main>
       <SiteFooter />
     </div>

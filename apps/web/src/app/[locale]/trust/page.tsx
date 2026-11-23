@@ -110,12 +110,7 @@ export default async function TrustIndexPage({ params }: Props) {
       <main className="flex-1">
         <Section>
           <Container>
-            <SectionHeader
-              as="h1"
-              eyebrow={t("eyebrow")}
-              title={t("heading")}
-              lead={t("lead")}
-            />
+            <SectionHeader as="h1" title={t("heading")} lead={t("lead")} />
             <section
               aria-labelledby="trust-documents"
               data-testid="trust-index-documents"

@@ -30,7 +30,6 @@ export default async function NewsletterPage({ params }: Props) {
 
   return (
     <PillarPage
-      eyebrow={t("eyebrow")}
       heading={t("heading")}
       body={t("body")}
       primaryCta={{

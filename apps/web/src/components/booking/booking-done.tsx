@@ -228,7 +228,7 @@ export function BookingDone({
       ) : null}
 
       <div className="mt-10 grid items-start gap-6 md:grid-cols-2">
-        <article className="flex flex-col rounded-4xl bg-card p-6 shadow-md ring-1 ring-foreground/5">
+        <article className="flex flex-col rounded-3xl border bg-card p-6">
           <div className="flex items-center gap-4">
             <div className="shrink-0">{media}</div>
             <div className="min-w-0">
@@ -269,7 +269,7 @@ export function BookingDone({
         </article>
 
         {steps.length > 0 || isConfirmed ? (
-          <section className="rounded-4xl bg-muted/60 p-6">
+          <section className="rounded-3xl bg-muted/60 p-6">
             <h2 className="font-display text-xl font-medium">
               {t("done.nextHeading")}
             </h2>
@@ -329,7 +329,7 @@ export function BookingDone({
       {isConfirmed && !isRequest ? (
         <section
           aria-labelledby="booking-space-invite"
-          className="mt-6 grid gap-6 rounded-4xl bg-card p-6 shadow-1 ring-1 ring-foreground/5 md:grid-cols-[1fr_auto] md:items-center md:p-8"
+          className="mt-6 grid gap-6 rounded-3xl border bg-card p-6 md:grid-cols-[1fr_auto] md:items-center md:p-8"
           data-testid="booking-space-invite"
         >
           <div className="space-y-2">

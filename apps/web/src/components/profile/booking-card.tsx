@@ -77,7 +77,7 @@ export function BookingCard({
   return (
     <section
       aria-labelledby={headingId}
-      className="flex flex-col gap-5 rounded-4xl border bg-card p-6 shadow-2"
+      className="flex flex-col gap-5 rounded-3xl border bg-card p-6"
     >
       <h2
         id={headingId}

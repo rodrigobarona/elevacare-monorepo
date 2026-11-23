@@ -88,10 +88,7 @@
       }
     },
     "people": {
-      "heading": "The people who answer",
-      "speaks": "Speaks",
-      "sessions": "Sessions",
-      "profile": "See profile"
+      "heading": "The people who answer"
     },
     "checked": {
       "heading": "Every expert here is registered with their professional body. We check that before a profile goes live.",
@@ -195,12 +192,9 @@
   "about": {
     "title": "About — Eleva.care",
     "description": "Eleva Care connects women with independent, licensed women's health experts. Meet our mission, our beliefs and the team behind it.",
-    "eyebrow": "About us",
-    "heading": "Transforming women's health with compassion and ",
-    "headingAccent": "proven care",
+    "heading": "Transforming women's health with compassion and proven care",
     "intro": "We're here to make it easier to find the right help, at the right moment. Eleva Care connects you with licensed care experts through a secure, trusted technology platform.",
     "stats": {
-      "eyebrow": "Eleva at a glance",
       "modes": {
         "title": "ways to meet your expert",
         "items": {
@@ -214,22 +208,19 @@
       },
       "specialities": {
         "title": "care areas to start with"
-      }
+      },
+      "heading": "Eleva at a glance"
     },
     "mission": {
-      "eyebrow": "Our mission",
       "heading": "Care you can trust, at every step",
       "p1": "We believe every woman deserves access to knowledgeable, compassionate care. Our platform helps you find independent, licensed experts you can trust, so you feel supported at every step.",
       "p2": "We provide the technology that makes care simpler to access. Your chosen expert provides your care. Together, we help you move forward with confidence."
     },
     "vision": {
-      "eyebrow": "Our vision",
-      "heading": "Bridging science and care, so support feels ",
-      "headingAccent": "personal",
+      "heading": "Bridging science and care, so support feels personal",
       "lead": "We bring trusted expertise closer to you, making specialised care easier to access across every life stage."
     },
     "beliefs": {
-      "eyebrow": "Our beliefs",
       "heading": "What we stand for",
       "access": {
         "title": "Quality care access",
@@ -249,7 +240,6 @@
       }
     },
     "team": {
-      "eyebrow": "Meet our team",
       "heading": "Led by healthcare innovators and compassionate experts",
       "p1": "Eleva Care grew from a simple idea: expert care should be easier to reach. Our founders and advisors saw the gaps women face, and built a better way to connect you with trusted professionals.",
       "p2": "Today, Eleva Care operates a secure digital platform that connects women with independent, licensed care experts. We provide the technology; your chosen expert provides your care.",
@@ -261,7 +251,6 @@
       }
     },
     "advisors": {
-      "eyebrow": "Guided by leading experts",
       "heading": "Board of advisors",
       "lead": "Our advisory board brings together leaders in women's health, innovation and clinical research.",
       "kariBo": {
@@ -298,7 +287,6 @@
       }
     },
     "join": {
-      "eyebrow": "Join our network",
       "heading": "Transform women's health care with us",
       "lead": "Join a community of independent professionals making quality care accessible to women everywhere. Set your own schedule, rates and policies; we provide the technology, you provide the care.",
       "cta": "Become an expert",
@@ -309,7 +297,6 @@
     "title": "Find an expert — Eleva.care",
     "categoryTitle": "{category} experts — Eleva.care",
     "description": "Browse independent women's health experts, their offers and upcoming availability in your language and country.",
-    "eyebrow": "Find your expert",
     "heading": "Find the right women's health expert for you",
     "categoryHeading": "{category}",
     "intro": "Real people with real training. Pick someone whose work fits you, then meet by video, by phone or in person.",
@@ -350,7 +337,6 @@
     "categoriesLabel": "Areas of care",
     "allCategories": "All areas",
     "join": {
-      "eyebrow": "For experts",
       "heading": "Bring your practice to Eleva",
       "lead": "Set your own schedule, rates and policies. We provide the technology; you provide the care.",
       "cta": "Become an expert"
@@ -372,7 +358,12 @@
     "sortedBy": "Sorted by: {sort}",
     "removeSort": "Remove sorting: {sort}",
     "checkedMark": "Registration checked by Eleva",
-    "orderedBy": "Sorted by: {sort}."
+    "orderedBy": "Sorted by: {sort}.",
+    "card": {
+      "speaks": "Speaks",
+      "sessions": "Sessions",
+      "profile": "See profile"
+    }
   },
   "profile": {
     "title": "{name} — Eleva.care",
@@ -799,7 +790,6 @@
         "body": "Members book and pay online. You and the member receive confirmations and reminders by email."
       }
     ],
-    "eyebrow": "For experts",
     "benefitsHeading": "Why practise on Eleva",
     "benefits": [
       {
@@ -861,7 +851,6 @@
     "heading": "Clinics and Teams",
     "body": "Clinics use Eleva.care as a Team: several licensed experts under one organization, on the same digital health platform members already use to book. Eleva runs scheduling, booking and payout technology so your team can focus on care.",
     "cta": "Create your account",
-    "eyebrow": "For clinics",
     "stepsHeading": "How a Team clinic works",
     "steps": [
       {
@@ -941,7 +930,6 @@
     "newsletter": {
       "title": "Femme Focus — Eleva.care",
       "description": "Subscribe to Femme Focus, the Eleva newsletter on women's health.",
-      "eyebrow": "Newsletter",
       "heading": "Femme Focus by Eleva",
       "body": "Essays, clinical context and community stories from the Eleva editorial team. Subscribe on Beehiiv—no Eleva account required.",
       "cta": "Subscribe on Beehiiv",
@@ -950,7 +938,6 @@
     "podcast": {
       "title": "Just Between Us… and Science — Eleva.care",
       "description": "Podcast conversations on women's health research and practice.",
-      "eyebrow": "Podcast",
       "heading": "Just Between Us… and Science",
       "body": "Hosted conversations with researchers and clinicians. Listen on your favourite platform; new episodes announced in Femme Focus.",
       "spotify": "Spotify",
@@ -961,7 +948,6 @@
     "community": {
       "title": "Community — Eleva.care",
       "description": "Join the Femme Focus community on Beehiiv.",
-      "eyebrow": "Community",
       "heading": "Femme Focus community",
       "body": "Discuss episodes and newsletter topics with other members. The community lives on Beehiiv today; Eleva accounts are optional.",
       "cta": "Open community"
@@ -970,7 +956,6 @@
   "contact": {
     "title": "Contact — Eleva.care",
     "description": "Write to the Eleva.care team about a booking, your account, your privacy, a partnership or a security issue.",
-    "eyebrow": "Contact",
     "heading": "We're here to help",
     "body": "Write to the team that can help you best. We read every message and reply in English, Portuguese or Spanish.",
     "channelsHeading": "Who to write to",
@@ -1000,7 +985,6 @@
     "index": {
       "title": "Trust and security — Eleva.care",
       "description": "Every document that explains how Eleva looks after your information, with the date each one last changed.",
-      "eyebrow": "Trust",
       "heading": "Trust and security",
       "lead": "Everything that explains how we look after your information, in one place. Each document shows the date it last changed.",
       "trustGroup": "How we protect your data",
@@ -1031,7 +1015,6 @@
   "credits": {
     "title": "Photo credits",
     "description": "The photographers whose work appears on Eleva.care.",
-    "eyebrow": "Thank you",
     "lead": "Some of the photos on Eleva.care come from Pexels. These are the photographers behind them.",
     "viewOnPexels": "View on Pexels",
     "pexels": "Pexels",
@@ -1040,9 +1023,7 @@
   "history": {
     "title": "Our story — Eleva.care",
     "description": "A letter from our founder, Patrícia Mota, about why Eleva Care exists.",
-    "eyebrow": "A letter from our founder",
-    "heading": "The story behind ",
-    "headingAccent": "Eleva Care",
+    "heading": "The story behind Eleva Care",
     "lead": "How a physiotherapist became a pioneer in evidence-based women's health.",
     "author": "Patrícia Mota",
     "authorRole": "Founder, physiotherapist and PhD in biomechanics",
@@ -1097,7 +1078,6 @@
     "signOff": "With dedication to science and genuine care,",
     "photoCaption": "Patrícia Mota and Rodrigo Barona, founders of Eleva Care",
     "cta": {
-      "eyebrow": "Ready for evidence-based care?",
       "heading": "Find an expert who understands your health journey",
       "action": "Find an expert"
     }

@@ -30,8 +30,9 @@ const LEGAL_LABEL: Record<
   complaints: "complaints",
 }
 
+// Each link is at least 24px tall (WCAG 2.5.8); the list keeps its rhythm.
 const LINK_CLASS =
-  "text-sm text-muted-foreground transition-colors hover:text-foreground"
+  "inline-flex min-h-7 w-fit items-center text-base text-muted-foreground transition-colors hover:text-foreground"
 
 function FooterColumn({
   title,
@@ -46,9 +47,9 @@ function FooterColumn({
     <nav
       aria-label={title}
       data-testid={testId}
-      className="flex flex-col gap-3"
+      className="flex flex-col gap-1"
     >
-      <p className="eyebrow text-foreground">{title}</p>
+      <p className="mb-1.5 text-base font-medium text-foreground">{title}</p>
       {children}
     </nav>
   )
@@ -61,7 +62,7 @@ export function PublicSiteFooter({ locale: rawLocale }: { locale: string }) {
   const href = (path: string) => gatewayMarketingPath(locale, path)
 
   return (
-    <footer className="border-t bg-muted/60 px-4 pt-16 pb-10 sm:px-6">
+    <footer className="border-t px-4 pt-16 pb-10 sm:px-6">
       <div className="mx-auto flex max-w-7xl flex-col gap-12">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
           <div className="flex max-w-xs flex-col gap-4">
@@ -72,7 +73,7 @@ export function PublicSiteFooter({ locale: rawLocale }: { locale: string }) {
             >
               <Logo className="h-7" />
             </a>
-            <p className="text-sm text-pretty text-muted-foreground">
+            <p className="text-base text-pretty text-muted-foreground">
               {t.tagline}
             </p>
           </div>
@@ -164,8 +165,13 @@ export function PublicSiteFooter({ locale: rawLocale }: { locale: string }) {
             ))}
           </FooterColumn>
         </div>
-        <div className="flex flex-col gap-2 border-t pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+        {/* The page signs off with the wordmark at full width. */}
+        <Logo aria-hidden title="" className="h-auto w-full" />
+        {/* Who runs the site: legal name, tax number and registered address
+            (e-Commerce Directive, art. 5). */}
+        <div className="flex flex-col gap-2 border-t pt-6 text-sm text-muted-foreground sm:flex-row sm:items-start sm:justify-between sm:gap-8">
           <p>{t.rights(year)}</p>
+          <p className="text-pretty sm:max-w-xl sm:text-right">{t.operator}</p>
         </div>
       </div>
     </footer>

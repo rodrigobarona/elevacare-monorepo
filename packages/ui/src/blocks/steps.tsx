@@ -6,7 +6,10 @@ export type StepItem = {
   description: React.ReactNode
 }
 
-/** Numbered "how it works" list; numbers are decorative, order is the list. */
+/**
+ * Numbered "how it works" list, for things that really happen in order. The
+ * numbers are quiet and decorative; the order is the list.
+ */
 function Steps({
   items,
   className,
@@ -20,15 +23,15 @@ function Steps({
       className={cn("grid gap-8 sm:grid-cols-3 sm:gap-6", className)}
     >
       {items.map((item, index) => (
-        <li key={index} className="flex flex-col gap-3 border-t pt-6">
+        <li key={index} className="flex flex-col gap-2 border-t pt-5">
           <span
             aria-hidden
-            className="font-display text-headline leading-none text-primary italic"
+            className="font-display text-2xl leading-none text-muted-foreground"
           >
-            {String(index + 1).padStart(2, "0")}
+            {index + 1}
           </span>
-          <h3 className="text-xl font-medium tracking-tight">{item.title}</h3>
-          <p className="text-pretty text-muted-foreground">
+          <h3 className="font-display text-2xl tracking-tight">{item.title}</h3>
+          <p className="text-lg text-pretty text-muted-foreground">
             {item.description}
           </p>
         </li>

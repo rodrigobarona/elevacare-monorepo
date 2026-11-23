@@ -496,6 +496,27 @@
   },
   {
     "kind": "image",
+    "slug": "team-alexandre-delgado-cutout",
+    "key": "media/eleva/team-alexandre-delgado-cutout-56b0769550fe73420b4d6102156645ef.webp",
+    "width": 720,
+    "height": 760,
+    "blurDataURL": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRkxOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0//wAARCAAZABgDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDvCQqlicADJrlLjxHrEVz5y6ZCbDqAZP3rL6+mfauqYBkKnowxXA3qrDfiJo1ykmQhlO49un+eK5pyatY7KcIyvc7yCVJ4I5ojlJFDqfYjIoplkixWUES9EjUfpRVmZMRkYrBktftmuyKQCsbDccfw4BxW73/Coo/9fN+FZTjzDhNxuOAAPvRSfxn60VpEln//2Q==",
+    "alt": {
+      "en": "Portrait of Alexandre Delgado",
+      "pt": "Retrato de Alexandre Delgado",
+      "es": "Retrato de Alexandre Delgado"
+    },
+    "tags": ["team", "cutout"],
+    "license": "eleva-owned",
+    "credit": {
+      "name": "Eleva Care"
+    },
+    "source": {
+      "provider": "eleva"
+    }
+  },
+  {
+    "kind": "image",
     "slug": "team-annelie-gutke",
     "key": "media/eleva/team-annelie-gutke-S23DaQF18VPjIupklsyA1sGVecUEIx.jpg",
     "width": 400,
@@ -507,6 +528,27 @@
       "es": "Retrato de Annelie Gutke"
     },
     "tags": ["team", "advisors"],
+    "license": "eleva-owned",
+    "credit": {
+      "name": "Eleva Care"
+    },
+    "source": {
+      "provider": "eleva"
+    }
+  },
+  {
+    "kind": "image",
+    "slug": "team-annelie-gutke-cutout",
+    "key": "media/eleva/team-annelie-gutke-cutout-a5005800f6f183796176b6dfc1e60488.webp",
+    "width": 720,
+    "height": 760,
+    "blurDataURL": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRkxOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0//wAARCAAZABgDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDqtf1A6dpjPEyi5lIigB7uen5dfwrKltNXsbM30Wry3EqLueJwCr4649Ko+L70r4p0i3uI2+zRsHHozNwD+BxVy+MMELmaGSOGJWk4k6HvmsbnSopmxoerQ6xp63MXDDh1/umiuF+Ht+39tG3ibEMqtuU9D1IxRTJOovdQ0nVyYZgoEDrJHJJ8uSCCcHt0/Gqev2o1CyKm5Mds4wZCflANYH8DfSuku/8AkS1/65p/MVpKCTViITbTuZ/g/StKs7qOX7bI91GWChgFRuoyO/T1orNtP9ZF9R/OirdJGaqs/9k=",
+    "alt": {
+      "en": "Portrait of Annelie Gutke",
+      "pt": "Retrato de Annelie Gutke",
+      "es": "Retrato de Annelie Gutke"
+    },
+    "tags": ["team", "cutout"],
     "license": "eleva-owned",
     "credit": {
       "name": "Eleva Care"
@@ -622,6 +664,27 @@
   },
   {
     "kind": "image",
+    "slug": "team-joana-barros-cutout",
+    "key": "media/eleva/team-joana-barros-cutout-6615f20ed88ecb4008cb7393f6102ccf.webp",
+    "width": 720,
+    "height": 760,
+    "blurDataURL": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRkxOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0//wAARCAAZABgDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDtL+6FnavNtLsB8qjua5hNd8QRxPf3FrB9lXnygMMR3wal8Qalt8Q2WnygCCRlDNnpkjH88VPq6MYoEubgom5lcxDA9v8ACuGpUknodkIKRu2d1DfWcV1bPuimUMp9qK5HwVqcNpf3nh+Z9rLM0lsD3U8lf6/nRXQndXMjmvEN/NPrazSZAR1J29eueK7Owum1nw8LlrfDuzDbnqVYgH+VcLr3/H5J/v8A+Fd74W/5Fm1/3W/ma5p/AjSDtJnHWttL/wAJxEt2GBlPySKOmRww+h/lRXYr/wAfVl/11SitKT5o6kyVmz//2Q==",
+    "alt": {
+      "en": "Portrait of Joana Goulão Barros",
+      "pt": "Retrato de Joana Goulão Barros",
+      "es": "Retrato de Joana Goulão Barros"
+    },
+    "tags": ["team", "cutout"],
+    "license": "eleva-owned",
+    "credit": {
+      "name": "Eleva Care"
+    },
+    "source": {
+      "provider": "eleva"
+    }
+  },
+  {
+    "kind": "image",
     "slug": "team-kari-bo",
     "key": "media/eleva/team-kari-bo-x6XwNt1nq7mcXxgPMKKiHVSxzqP6hi.jpg",
     "width": 1198,
@@ -685,6 +748,27 @@
   },
   {
     "kind": "image",
+    "slug": "team-patricia-driusso-cutout",
+    "key": "media/eleva/team-patricia-driusso-cutout-882e584702b3a0a487e6faaefa2f1fbc.webp",
+    "width": 720,
+    "height": 760,
+    "blurDataURL": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRkxOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0//wAARCAAZABgDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDupHWKNpHOEQFmPoBWDPrdykQuUNqUP3bcn52743Z647YqTxhqAsdAnCt+9nHloO5Hf9P51zB1m2+z/aInVcr/AKtY+AfX0zWDv0O2lFS3O30rUrbVbFbq1YlTwynqrdwaK898M+If7O1KRmUm1uD86DqD/e+vWinczcex0HiixfUZJHVfM2IRGAcHd/hXMadphudIuZPOUGB2SYHkRADO78eRXdP94/U/yrh9F/5FfxB/2z/maUFe5tWfIlYo6Zpc17bNdRuoRJNpU9R/nNFX/Cf+ou/r/wDE0VM9GdGHhGUE2j//2Q==",
+    "alt": {
+      "en": "Portrait of Patricia Driusso",
+      "pt": "Retrato de Patricia Driusso",
+      "es": "Retrato de Patricia Driusso"
+    },
+    "tags": ["team", "cutout"],
+    "license": "eleva-owned",
+    "credit": {
+      "name": "Eleva Care"
+    },
+    "source": {
+      "provider": "eleva"
+    }
+  },
+  {
+    "kind": "image",
     "slug": "team-patricia-mota",
     "key": "media/eleva/team-patricia-mota-Wacm67fYlEj4wsY3WZvxg7pRu9Ab1c.jpg",
     "width": 720,
@@ -696,6 +780,27 @@
       "es": "Retrato de Patrícia Mota"
     },
     "tags": ["team", "leadership"],
+    "license": "eleva-owned",
+    "credit": {
+      "name": "Eleva Care"
+    },
+    "source": {
+      "provider": "eleva"
+    }
+  },
+  {
+    "kind": "image",
+    "slug": "team-patricia-mota-cutout",
+    "key": "media/eleva/team-patricia-mota-cutout-48752e1dc7d632ab2c40c45cc205f980.webp",
+    "width": 720,
+    "height": 760,
+    "blurDataURL": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRkxOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0//wAARCAAZABgDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDsNWvv7P0+S4VVaQcRqxwGbsK89h8Y+IbW7S6vVWS0L/NFsC5X2PXit7xteR/bdOtZJAsUcollz39B/n1rn/EQYJF5jSMjBwcgDnPH6VyOo1PlO6NFSg5HpsMqTwRzRNujkUMp9QRkUVz/AICuXuPCtuJDkws0Y+nUfoaK1MDlvFer2erXjx28fyopTeRyxI64/wA9qTWIvtenRJbybhFGCcn+HHWsU/8AH1c/h/6Ca1Y/+QVN/wBerfzNY1o2aaOqhLRpkvhDxjbaTCNMurZ2gDZFxFyRnHVfT6UVymn/AOsf/dorpaRxptn/2Q==",
+    "alt": {
+      "en": "Portrait of Patrícia Mota",
+      "pt": "Retrato de Patrícia Mota",
+      "es": "Retrato de Patrícia Mota"
+    },
+    "tags": ["team", "cutout"],
     "license": "eleva-owned",
     "credit": {
       "name": "Eleva Care"
@@ -727,6 +832,27 @@
   },
   {
     "kind": "image",
+    "slug": "team-rodrigo-barona-cutout",
+    "key": "media/eleva/team-rodrigo-barona-cutout-f37336d680c0b8e072662de61d0fafaf.webp",
+    "width": 720,
+    "height": 760,
+    "blurDataURL": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRkxOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0//wAARCAAZABgDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDuZpPKgklIJ2IWwO+BmuJtdS8UT2Da491apbqDItpt4KDsTjPTvmu2mjMsMkYYpvUruHVcjrXCaGYrOS50y5jjd4JdijJYlsYJA9+tYt2Wh0JJvU7yKQSwxygYDqGAPuM0UqKERUHRRiigRgXN9/aDSQDKRsxVP3hUsB3p2j6SlrIZHI3qQTtx8/Jxn8qov/yG4f8Ark38xW3D95v+A/1ro5VaxldmiXJ5Kj86KrN91PrRSsB//9k=",
+    "alt": {
+      "en": "Portrait of Rodrigo Barona",
+      "pt": "Retrato de Rodrigo Barona",
+      "es": "Retrato de Rodrigo Barona"
+    },
+    "tags": ["team", "cutout"],
+    "license": "eleva-owned",
+    "credit": {
+      "name": "Eleva Care"
+    },
+    "source": {
+      "provider": "eleva"
+    }
+  },
+  {
+    "kind": "image",
     "slug": "team-ruben-barakat",
     "key": "media/eleva/team-ruben-barakat-nERQsNakumxTHV6YOctqfe70Sh52Vy.jpg",
     "width": 840,
@@ -738,6 +864,27 @@
       "es": "Retrato de Ruben Barakat"
     },
     "tags": ["team", "advisors"],
+    "license": "eleva-owned",
+    "credit": {
+      "name": "Eleva Care"
+    },
+    "source": {
+      "provider": "eleva"
+    }
+  },
+  {
+    "kind": "image",
+    "slug": "team-ruben-barakat-cutout",
+    "key": "media/eleva/team-ruben-barakat-cutout-1040f8712d2def5d3c9be870c88ec8b7.webp",
+    "width": 720,
+    "height": 760,
+    "blurDataURL": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRkxOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0//wAARCAAZABgDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDuLiXybeSXBOxScCsCzvJROGaD5i/zOJOSPXFb8ki+WcAN22nvXKWdrdN4ggd4ikKk7gT19Kz5Wa80TryQoySAPU0VS1SRo4gjAbXIwfQiilYpa7Gcb43Nw0MB8uM8s7Hp9KfYRPDfO7SFrcIBHu6lieT7duKzNN/13/A63P8Alsv1raKurs55uzsivqd2jpJb5PmqVI9BRVPUv+P1vqf6UVlN6m1Ne6f/2Q==",
+    "alt": {
+      "en": "Portrait of Ruben Barakat",
+      "pt": "Retrato de Ruben Barakat",
+      "es": "Retrato de Ruben Barakat"
+    },
+    "tags": ["team", "cutout"],
     "license": "eleva-owned",
     "credit": {
       "name": "Eleva Care"

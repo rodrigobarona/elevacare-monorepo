@@ -42,7 +42,6 @@ export default async function ContactPage({ params }: Props) {
 
   return (
     <MarketingPage
-      eyebrow={t("eyebrow")}
       heading={t("heading")}
       headingTestId="contact-heading"
       body={t("body")}

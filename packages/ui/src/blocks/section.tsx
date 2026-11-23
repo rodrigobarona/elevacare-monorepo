@@ -1,14 +1,15 @@
 import type * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@eleva/ui/lib/utils"
-import { Eyebrow, Heading, Lead } from "@eleva/ui/components/typography"
+import { Heading, Lead } from "@eleva/ui/components/typography"
 
 const sectionVariants = cva("relative px-4 sm:px-6", {
   variants: {
     tone: {
       default: "bg-background text-foreground",
       muted: "bg-muted text-foreground",
-      primary: "bg-teal-900 text-white",
+      // The deep field: used once on a page, for the thing a visitor must trust.
+      primary: "bg-teal-950 text-white",
     },
     spacing: {
       default: "py-20 sm:py-28",
@@ -56,9 +57,8 @@ function Container({
   )
 }
 
-/** Eyebrow + heading + lead, the opening of every marketing section. */
+/** Heading and lead, the opening of a marketing section. No label above it. */
 function SectionHeader({
-  eyebrow,
   title,
   lead,
   align = "start",
@@ -66,7 +66,6 @@ function SectionHeader({
   as = "h2",
   className,
 }: {
-  eyebrow?: React.ReactNode
   title: React.ReactNode
   lead?: React.ReactNode
   align?: "start" | "center"
@@ -83,14 +82,11 @@ function SectionHeader({
         className
       )}
     >
-      {eyebrow ? (
-        <Eyebrow tone={inverse ? "inverse" : "default"}>{eyebrow}</Eyebrow>
-      ) : null}
       <Heading as={as} size="headline" tone={inverse ? "inverse" : "default"}>
         {title}
       </Heading>
       {lead ? (
-        <Lead className={cn(inverse && "text-white/80")}>{lead}</Lead>
+        <Lead className={cn(inverse && "text-white/85")}>{lead}</Lead>
       ) : null}
     </header>
   )
