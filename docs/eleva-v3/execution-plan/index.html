@@ -1269,8 +1269,8 @@ of 2026-11-21 merged without one (F-13).</li>
 <td></td>
 </tr>
 <tr>
-<td>The database&#39;s own list of reserved words was written once (migration 0027) and lacks about thirty-five reserved since. A call made straight to the auth server&#39;s create-organization endpoint is not checked against the list, and the list of experts does not leave a reserved name out.</td>
-<td><code>packages/db</code> (<code>reserved_public_handles()</code>, <code>queries/public.ts</code>), <code>packages/auth/src/server/auth.ts</code></td>
+<td>The database&#39;s own list of reserved words was written once (migration 0027) and lacks about thirty-five reserved since; since 14.22 the auth server refuses them when an organization is created. The list of experts does not leave a reserved name out.</td>
+<td><code>packages/db</code> (<code>reserved_public_handles()</code>, <code>queries/public.ts</code>)</td>
 <td></td>
 </tr>
 <tr>
