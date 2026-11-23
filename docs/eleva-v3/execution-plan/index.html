@@ -953,7 +953,10 @@ the plan it landed. First entry: <code>2026-09-07-review-response.md</code>.</li
 <article id="remaining-roadmap">
 <p class="doc-meta">Source: <code>docs/eleva-v3/execution-plan/remaining-roadmap.md</code></p>
 <h1 id="remaining-roadmap--remaining-roadmap-from-today-to-launch"><a class="anchor" href="#remaining-roadmap--remaining-roadmap-from-today-to-launch" aria-label="Link to section">#</a>Remaining roadmap: from today to launch</h1>
-<p>Status: Living. Reviewed 2026-11-21 against <code>main</code> at <code>58816804</code>.</p>
+<p>Status: Living. Reviewed 2026-11-21 against <code>main</code> at <code>58816804</code>. Updated 2026-11-23 after
+the night that merged seven slices (<code>main</code> at <code>3a4bec75</code>): section 1, section 3, new items in
+section 4, lessons 17 to 22, and the slice tables. <strong>Read O-2 first: the development database
+is over its quota and nothing that needs it can run or merge until that is lifted.</strong></p>
 <p>This page says what is left to build before Eleva v3 replaces the MVP at <code>eleva.care</code>, in what
 order, and what is waiting on a person. It does not replace the phase files: each phase file
 still holds the full scope, and this page holds the state of each phase and the next slices.
@@ -988,18 +991,18 @@ asks them. Sizes are estimates: S is under a day, M one to two days, L more.</li
 </tr>
 <tr>
 <td>11 Clinics</td>
-<td>Slices 11.1 to 11.6 merged: clinic profile, invitations, the Team page, the seat limit, the Verification page, the decision notice, the Overview card.</td>
-<td>12 slices (section 5): billing, sessions, schedule, settings, the public page. Four items wait on a person.</td>
+<td>Slices 11.1 to 11.7 merged: clinic profile, invitations, the Team page, the seat limit, the Verification page, the decision notice, the Overview card, a seat item on every clinic subscription.</td>
+<td>11 slices (section 6): billing, sessions, schedule, settings, the public page. 11.8 waits on the operator (O-8). Four items wait on a person.</td>
 </tr>
 <tr>
 <td>12 Staff console</td>
-<td>Licence review and 12.1 to 12.4 merged: clinic verification, a recent sign-in for decisions, a record each time staff open a filing or a licence review.</td>
-<td>21 slices (section 6). The security base (second factor, roles, two-person approval) comes before the features.</td>
+<td>Licence review and 12.1 to 12.6 merged: clinic verification, a recent sign-in for decisions, a record each time staff open a filing or read a queue page, API keys that identify their owner, queues with pages. 12.7 is open (#463), waiting on the database (O-2).</td>
+<td>19 slices (section 7). The security base (second factor, roles, two-person approval) comes before the features.</td>
 </tr>
 <tr>
 <td>13 Hardening</td>
-<td>13.1 merged: two CI guards. Dependency audit, Renovate, security headers and server-side Sentry were already there.</td>
-<td>33 slices (section 7). Several are small and worth doing early.</td>
+<td>13.1 to 13.4 and 13.28 merged: CI guards, &quot;Try again&quot; on every error page, a limiter that refuses when its store is slow, tests for the route guard, preview database branches that expire.</td>
+<td>29 slices (section 8). Several are small and worth doing early.</td>
 </tr>
 <tr>
 <td>14 Migration</td>
@@ -1017,8 +1020,8 @@ asks them. Sizes are estimates: S is under a day, M one to two days, L more.</li
 <td>21 slices (section 10).</td>
 </tr>
 </tbody></table>
-<p>Numbers on <code>main</code>: 166 route handlers, 80 main migrations (<code>0000</code> to <code>0079</code>), 31 Playwright
-specs, 33 packages.</p>
+<p>Numbers on <code>main</code>: 166 route handlers, 80 main migrations (<code>0000</code> to <code>0079</code>), 33 Playwright
+specs, 33 packages. The staff console (<code>apps/admin</code>) has a unit-test runner since 12.6.</p>
 <h2 id="remaining-roadmap--2-what-we-learned-and-the-rule-each-lesson-became"><a class="anchor" href="#remaining-roadmap--2-what-we-learned-and-the-rule-each-lesson-became" aria-label="Link to section">#</a>2. What we learned, and the rule each lesson became</h2>
 <p><strong>How we work</strong></p>
 <ol>
@@ -1054,6 +1057,32 @@ use (section 4, F-12).</li>
 <li><strong>Say what was not proven.</strong> Every pull request kept a &quot;not proven&quot; list (a real email
 arriving, the page in Portuguese, the guard against a running auth server). Keep it.</li>
 </ol>
+<p><strong>What the night of 2026-11-22 added</strong></p>
+<ol start="17">
+<li><strong>Every fix is scored again, and the second look finds what the first fix broke.</strong> 12.7
+went through three blind panels. The first found that a wrong browser clock could block a
+decision. The fix for it redrew the page on focus, and the second panel found that each
+redraw was a recorded read of a filing and could take the form away. Fix, then score the
+fix.</li>
+<li><strong>A read that is recorded must only happen when a person asks.</strong> Prefetching a link,
+building a tab title from an API call and redrawing a page on focus each wrote an access
+record nobody caused (12.6, 12.7). On a page whose reads are audited, nothing fetches ahead
+and nothing refreshes by itself.</li>
+<li><strong>Tell the browser how long, not when.</strong> A page that compares a server moment with its own
+clock is wrong on every machine whose clock is wrong. The server counts the time left and
+the page counts down from there (12.7).</li>
+<li><strong>Prove it in the real app once the fixture is green.</strong> The playground showed the pager&#39;s
+states; the real console showed the columns moving between pages, the tab title and the
+audit count. Both kinds of proof are kept, and the real one is the one that is believed.</li>
+<li><strong>The development database has a quota, and a night of tests can spend it.</strong> At 02:46 UTC
+on 2026-11-23 Neon began refusing every query from the dev branch and from pull-request
+branches (HTTP 402). Seven pull requests&#39; database jobs and about twenty local browser and
+integration runs came before it. Until the plan question (O-2) is settled, database-backed
+runs are spent on what cannot be proven another way.</li>
+<li><strong>What is written and not run is said to be so.</strong> The last two commits of 12.7 added steps
+to the browser test that never ran. The log and the pull request say which, and the slice
+stays open until they do.</li>
+</ol>
 <p><strong>What the product now does on purpose</strong></p>
 <ol start="13">
 <li>A clinic or expert that is verified is always told it stays verified, whatever happens to
@@ -1068,7 +1097,9 @@ standing, the tax-number rule, the company&#39;s legal line.</li>
 </ol>
 <h2 id="remaining-roadmap--3-fix-first-what-this-review-found"><a class="anchor" href="#remaining-roadmap--3-fix-first-what-this-review-found" aria-label="Link to section">#</a>3. Fix first: what this review found</h2>
 <p>Each row was checked in the code by hand on 2026-11-21. None was tested in a browser or
-against a vendor.</p>
+against a vendor. On 2026-11-23, rows 1 to 4 and 7 are fixed on <code>main</code> (12.5 #458, 11.7 #459,
+13.2 #456, 13.3 #457); the deployed Stripe API version in row 7 still needs a look (O-5). Rows
+5 and 6 wait on a person.</p>
 <table>
 <thead>
 <tr>
@@ -1136,6 +1167,56 @@ production runs Clerk. Nobody has confirmed what production runs (F-02).</li>
 <li><code>execution-plan/README.md</code> says branch protection needs one human approval. The pull requests
 of 2026-11-21 merged without one (F-13).</li>
 </ul>
+<p>Found on 2026-11-23 while building, small, and not yet a slice:</p>
+<table>
+<thead>
+<tr>
+<th>What</th>
+<th>Where</th>
+<th>Goes with</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Four DELETE handlers take the path id as it comes (no UUID check, so a bad id is a 500), and one list route returns the raw error message.</td>
+<td><code>apps/api/src/app/expert/{locations,schedules,event-types}/[id]</code>, <code>event-types/[id]/modes/[modeId]</code>, <code>schedule/overrides</code></td>
+<td>13.4</td>
+</tr>
+<tr>
+<td>The kit&#39;s outline button has a border of about 1.2:1; the pager and the sign-in notice override it one by one. The focus ring is about 2.96:1 in the light theme. A filled button&#39;s hover loses contrast.</td>
+<td><code>packages/ui/src/components/button-variants.ts</code>, <code>globals.css</code> (<code>--ring</code>)</td>
+<td>13.32</td>
+</tr>
+<tr>
+<td>DM Sans as shipped has no tabular figures, so <code>tabular-nums</code> does nothing anywhere.</td>
+<td><code>packages/ui/src/fonts/</code></td>
+<td>13.32</td>
+</tr>
+<tr>
+<td>Dashboards format numbers and dates with <code>pt</code> and <code>en</code>, not <code>pt-PT</code> and <code>en-IE</code>. In Portuguese, &quot;0 pessoa na clínica&quot; (zero takes the singular).</td>
+<td><code>packages/dashboard/src/request-config.ts</code>, <code>apps/admin/messages/pt.json</code></td>
+<td>13.33</td>
+</tr>
+<tr>
+<td>The staff queues page by row count: a colleague&#39;s decision moves rows between pages. Paging by &quot;after this row&quot; would not.</td>
+<td><code>packages/config/src/pagination.ts</code></td>
+<td>12.15</td>
+</tr>
+<tr>
+<td>A licence can be rejected in one press; a clinic&#39;s rejection asks first.</td>
+<td><code>apps/admin/src/app/partners/[expertProfileId]/decision-form.tsx</code></td>
+<td>12.24</td>
+</tr>
+<tr>
+<td>The console&#39;s layout sends a person whose cookie is no longer good to sign in with no way back (the proxy, for no cookie at all, keeps the way back since 12.7).</td>
+<td><code>apps/admin/src/app/layout.tsx</code></td>
+<td>12.8</td>
+</tr>
+<tr>
+<td>Nothing in CI runs the <code>/dashboard?console=</code> redirect or the proxy&#39;s return address: <code>apps/account</code> has no unit tests and the browser test is opt-in.</td>
+<td><code>apps/account/src/app/(auth)/dashboard/route.ts</code>, <code>packages/auth/src/proxy.ts</code></td>
+<td>13.25</td>
+</tr>
+</tbody></table>
 <h2 id="remaining-roadmap--4-waiting-on-a-person"><a class="anchor" href="#remaining-roadmap--4-waiting-on-a-person" aria-label="Link to section">#</a>4. Waiting on a person</h2>
 <p>Engineering does not wait silently on these: it builds every slice that does not depend on
 them, and stops at the one that does.</p>
@@ -1185,7 +1266,7 @@ them, and stops at the one that does.</p>
 </tr>
 <tr>
 <td>F-08</td>
-<td>Rate limits: the code has 10 and 60 a minute, the Phase 13 file says 20 and 120. Which numbers, and do signed-in limits refuse when the store is down?</td>
+<td>Rate limits: the code has 10 and 60 a minute, the Phase 13 file says 20 and 120. Which numbers, and do signed-in limits refuse when the store is down? Since 13.3 public and webhook routes refuse when the store is slow or down: confirm that a provider&#39;s webhook should be refused then (the provider retries).</td>
 <td>13.6</td>
 </tr>
 <tr>
@@ -1218,6 +1299,16 @@ them, and stops at the one that does.</p>
 <td>Book an EU penetration test, and choose the DPO provider.</td>
 <td>Phase 15 gate</td>
 </tr>
+<tr>
+<td>F-15</td>
+<td>API keys: nobody can make one today (12.5 closed the door: any session could mint a key that never expired). Before it reopens: an expiry, revoked on password reset, tied to one workspace, and never for staff decisions or money. Which of these, and who may create one?</td>
+<td>Agents using keys</td>
+</tr>
+<tr>
+<td>F-16</td>
+<td>May a token or an API key read the staff queues at all? Today it may, and the record says how the read was made; a key cannot decide.</td>
+<td>12.12</td>
+</tr>
 </tbody></table>
 <p><strong>DPO</strong> (ids start with P, for privacy; <code>D-NN</code> stays the name of the decision gates in the README)</p>
 <table>
@@ -1235,13 +1326,13 @@ them, and stops at the one that does.</p>
 </tr>
 <tr>
 <td>P-02</td>
-<td>Retention periods: ended invitations (90 days proposed, never under 37), refused filings, staff access records, published events, legacy audit rows.</td>
+<td>Retention periods: ended invitations (90 days proposed, never under 37), refused filings, staff access records (a filing opened, and since 12.6 each page of a queue served), published events, legacy audit rows.</td>
 <td>13.21 to 13.24 schedules</td>
 </tr>
 <tr>
 <td>P-03</td>
-<td>Privacy-notice lines for invited people and for clinics, and how staff are told that opening a filing is recorded.</td>
-<td>First real clinic</td>
+<td>Privacy-notice lines for invited people and for clinics, and how staff are told that their reads are recorded. The entry screen&#39;s sentence was changed in 12.6 to say what happens (&quot;What you open and what you change are recorded&quot;); it is interim, nobody approved it, and only people arriving from another workspace see it. The formal notice has to exist before the console is used in production.</td>
+<td>First real clinic, staff console in production</td>
 </tr>
 <tr>
 <td>P-04</td>
@@ -1262,6 +1353,11 @@ them, and stops at the one that does.</p>
 <td>P-07</td>
 <td>Sign the impact assessment, add clinic verification and the access log to the record of processing, and close the two Phase 10 items (retention of records, the AI-processing copy).</td>
 <td>Phase 15 gate</td>
+</tr>
+<tr>
+<td>P-08</td>
+<td>The staff access log: who may read colleagues&#39; records and who must review them, how often; whether logging employees&#39; reads needs a review under employment law; whether a record per queue page, which cannot say whose rows were on it, is enough.</td>
+<td>Staff console in production</td>
 </tr>
 </tbody></table>
 <p><strong>Counsel</strong></p>
@@ -1310,8 +1406,8 @@ them, and stops at the one that does.</p>
 </tr>
 <tr>
 <td>A-03</td>
-<td>May the clinic plan&#39;s invoice be recorded as pending while issuing stays closed? How are seat changes prorated?</td>
-<td>11.7, 11.8</td>
+<td>May the clinic plan&#39;s invoice be recorded as pending while issuing stays closed? How are seat changes prorated? Since 11.7 the first sync of a clinic that already has members charges the seats in use, prorated, on the next invoice: confirm that this is wanted.</td>
+<td>11.8</td>
 </tr>
 <tr>
 <td>A-04</td>
@@ -1333,7 +1429,7 @@ them, and stops at the one that does.</p>
 </tr>
 <tr>
 <td>O-2</td>
-<td>Check the Neon plan: the docs include ten branches, and the limit was hit with six pull requests open.</td>
+<td><strong>Blocking since 2026-11-23 02:46 UTC.</strong> The Neon project used by local development and by pull-request branches answers every query with HTTP 402, &quot;exceeded the quota&quot;. Production reads were checked and work. Until the quota is lifted or the plan changed: no local browser or integration run, and every pull request&#39;s <code>neon-branch-migrate-and-rls</code> job fails, so nothing merges. Also still open: the docs include ten branches, and the limit was hit with six pull requests open.</td>
 </tr>
 <tr>
 <td>O-3</td>
@@ -1345,11 +1441,35 @@ them, and stops at the one that does.</p>
 </tr>
 <tr>
 <td>O-5</td>
-<td>Check which Stripe API version is deployed.</td>
+<td>Check which Stripe API version is deployed. A check at start-up that refuses an older one was proposed in review and held back until this is known.</td>
 </tr>
 <tr>
 <td>O-6</td>
 <td>Staging evidence still owed: pay to payout (Phase 06) and the two-browser session with webhooks (Phase 09).</td>
+</tr>
+<tr>
+<td>O-7</td>
+<td>Daily webhooks: set <code>retryType</code> to <code>exponential</code> (the command is in <code>operator-tasks/daily-setup.md</code>). Since 13.3 a webhook is refused while the limiter&#39;s store is down, and Daily&#39;s default gives up after a few tries.</td>
+</tr>
+<tr>
+<td>O-8</td>
+<td>Give the Stripe test account a head-office address. Without it Checkout with automatic tax cannot be tried, which blocks 11.8.</td>
+</tr>
+<tr>
+<td>O-9</td>
+<td>Delete the API keys made before 2026-11-24 (<code>auth.apikey</code>): they are refused since 12.5 and only take up room.</td>
+</tr>
+<tr>
+<td>O-10</td>
+<td>Look at the latency of the Upstash store from the API&#39;s region: the limiter now gives it one second.</td>
+</tr>
+<tr>
+<td>O-11</td>
+<td>Set <code>ADMIN_URL</code> on the account project in every environment, or a staging sign-in started from the console returns to the production console (12.7).</td>
+</tr>
+<tr>
+<td>O-12</td>
+<td>Once O-2 is lifted: run <code>e2e/admin-clinics.spec.ts</code> on the 12.7 branch, retake its captures, and merge #463 and the roadmap update.</td>
 </tr>
 </tbody></table>
 <h2 id="remaining-roadmap--5-order-of-work"><a class="anchor" href="#remaining-roadmap--5-order-of-work" aria-label="Link to section">#</a>5. Order of work</h2>
@@ -1383,7 +1503,8 @@ them, and stops at the one that does.</p>
 <td>D7.6 to D7.8, then D2.3 to D2.5, D4, D5, D3, D6</td>
 </tr>
 </tbody></table>
-<p><strong>Wave 0: fix what the review found.</strong> 12.5, 11.7, 13.2, 13.3. Operator: O-1. Start the slow
+<p><strong>Wave 0: fix what the review found.</strong> Done on 2026-11-23: 12.5, 11.7, 13.2, 13.3 are on
+<code>main</code>, with 13.4, 13.28 and 12.6 beside them. Operator: O-1, and now O-2 before anything else. Start the slow
 human items the same week, because they set the launch date more than any code does: F-01,
 F-02, F-03, F-14, P-07.</p>
 <p><strong>Wave 1: clinics can pay and be found.</strong> 11.8 to 11.18. Beside it: tests that run signed in on
@@ -1415,7 +1536,7 @@ them are slices here (12.8, 13.14, 13.32).</p>
 </thead>
 <tbody><tr>
 <td>11.7</td>
-<td>Every clinic subscription has a seat item</td>
+<td><strong>Merged (#459).</strong> Every clinic subscription has a seat item</td>
 <td>Attach it at creation and checkout; create it when missing; save the tax number (<code>customer_update</code>); correct the API text. Finding 2 and 7.</td>
 <td>A-03</td>
 <td>S</td>
@@ -1426,7 +1547,7 @@ them are slices here (12.8, 13.14, 13.32).</p>
 <td>11.8</td>
 <td>The clinic&#39;s Billing page</td>
 <td><code>/team/{slug}/billing</code>: plan, seats in use, checkout in the page, invoices. Where a plan change happens (Stripe&#39;s portal or our server) is tried in test mode first (section 11).</td>
-<td>11.7, C-02</td>
+<td>O-8, C-02</td>
 <td>M</td>
 <td>Yes</td>
 <td>New opt-in e2e. Refs <code>11-team/14</code> to <code>17</code></td>
@@ -1553,7 +1674,7 @@ as safe as the door in front of them.</p>
 </thead>
 <tbody><tr>
 <td>12.5</td>
-<td>API keys identify their owner again; the staff guard is proven</td>
+<td><strong>Merged (#458).</strong> API keys identify their owner again; the staff guard is proven</td>
 <td>Read <code>referenceId</code>; a test that drives the sign-in guard through a real auth instance, with a cookie, a bearer token and both. Finding 1.</td>
 <td>none</td>
 <td>M</td>
@@ -1562,7 +1683,7 @@ as safe as the door in front of them.</p>
 </tr>
 <tr>
 <td>12.6</td>
-<td>Queues have pages, and reading them is on record</td>
+<td><strong>Merged (#462).</strong> Queues have pages, and reading them is on record</td>
 <td>A page size for both queues; a record of each queue read.</td>
 <td>none</td>
 <td>S</td>
@@ -1571,7 +1692,7 @@ as safe as the door in front of them.</p>
 </tr>
 <tr>
 <td>12.7</td>
-<td>The sign-in-again message helps</td>
+<td><strong>Open (#463), waits on O-2 for its last browser run.</strong> The sign-in-again message helps</td>
 <td>A link to sign in, the typed reason kept, and the check when the page opens.</td>
 <td>none</td>
 <td>S</td>
@@ -1741,7 +1862,11 @@ as safe as the door in front of them.</p>
 <td>Seeded e2e</td>
 </tr>
 </tbody></table>
-<p>12.5, 12.6 and 12.7 can start now.</p>
+<p>Next: 12.8. It also owns two things 12.7 left: the sign-in page still greets a reviewer in the
+middle of a decision with &quot;Welcome back&quot; and &quot;Create an account&quot;, and &quot;Sign in again&quot; ends the
+session in every Eleva tab without saying so. 12.11 (the console&#39;s own cookie) changes how a
+sign-in at the gateway reaches the console: the way back built in 12.7 has to be walked again
+with it.</p>
 <p>Waiting on a person: F-03 (roles, two people), F-04 (impersonation, break-glass read), A-04 (refund
 threshold), P-03 and P-07 (what staff and clinics are told; the record of processing).
 References for impersonation (<code>13-admin/07</code>, <code>08</code>) and staff-only notes (<code>13-admin/09</code>, <code>10</code>) are
@@ -1761,21 +1886,21 @@ saved in case F-04 reopens it.</p>
 <tbody><tr>
 <td>Security</td>
 <td>13.2</td>
-<td>&quot;Try again&quot; works on every error page</td>
+<td><strong>Merged (#456).</strong> &quot;Try again&quot; works on every error page</td>
 <td>S</td>
 <td>Finding 3</td>
 </tr>
 <tr>
 <td></td>
 <td>13.3</td>
-<td>A slow limiter store no longer lets public requests through</td>
+<td><strong>Merged (#457).</strong> A slow limiter store no longer lets public requests through</td>
 <td>S</td>
 <td>Finding 4: a short timeout, and &quot;timed out&quot; counts as &quot;store down&quot;</td>
 </tr>
 <tr>
 <td></td>
 <td>13.4</td>
-<td>The route guard has its own tests</td>
+<td><strong>Merged (#461).</strong> The route guard has its own tests</td>
 <td>S</td>
 <td>Validation becomes a list of what counts, not what does not</td>
 </tr>
@@ -1943,7 +2068,7 @@ saved in case F-04 reopens it.</p>
 <tr>
 <td></td>
 <td>13.28</td>
-<td>Preview database branches expire by themselves</td>
+<td><strong>Merged (#460).</strong> Preview database branches expire by themselves</td>
 <td>S</td>
 <td>Lesson 2</td>
 </tr>
@@ -3294,7 +3419,8 @@ cookie-only POST -&gt; 403 <code>CSRF_ORIGIN_MISMATCH</code>; tossed/duplicate s
 row-count parity script prints <code>auth.* == main.*</code> for users, orgs, memberships; every FK
 validated (<code>pg_constraint.convalidated = true</code>).</li>
 <li><input disabled="" type="checkbox"> <code>requireApiAuth()</code> accepts: cookie session; <code>Authorization: Bearer &lt;session token&gt;</code>;
-<code>x-api-key</code> created via <code>apiKey</code> plugin scoped to an org; JWT from <code>/auth/token</code> verified
+<code>x-api-key</code> created via <code>apiKey</code> plugin (owned by a person since slice 12.5, not scoped to an
+org); JWT from <code>/auth/token</code> verified
 via JWKS (Bearer value routed by shape: compact JWS -&gt; JWT verifier, anything else -&gt;
 session-token verifier). JWTs are short-lived (<code>15m</code>) and <strong>non-revocable</strong> (JWKS only;
 no session-table check). After <code>revoke-other-sessions</code>, cookie/opaque bearer of that
@@ -3500,7 +3626,9 @@ PR 02.1 — server + schema + API:
    (b) Authorization: Bearer &lt;token&gt;: if the value is a compact JWS (three base64url segments,
    kid header) verify it as a JWT with JWKS from /auth/jwks (jwt plugin), otherwise verify it as
    a Better Auth session token (bearer plugin) — one discriminator, two verifiers, never both;
-   (c) x-api-key (apiKey plugin -&gt; referenceId = orgId; an API key sent as Bearer is rejected).
+   (c) x-api-key (apiKey plugin; since Better Auth 1.7 a key names one owner in `referenceId`, here a
+   person, and the workspace comes from `x-eleva-org` or the owner&#39;s default one: decision log
+   2026-11-22, slice 12.5; an API key sent as Bearer is rejected).
    Before verifying anything, count the credential sources present (cookie, Authorization,
    x-api-key); if more than one is present return 400 AMBIGUOUS_CREDENTIALS (audited) — never
    pick the first match. Return { userId, orgId, roles, capabilities, authMode }. Unit tests:
