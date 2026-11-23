@@ -1,6 +1,6 @@
 import { createPaymentIntentForReservation } from "@eleva/billing/server"
 import { env, requireCronSecret } from "@eleva/config/env"
-import { heartbeat, logError, reportProbeFailure } from "@eleva/observability"
+import { logError, reportProbeFailure } from "@eleva/observability"
 import {
   BOOKING_PROBE_FAKE_RESERVATION_ID,
   BOOKING_PROBE_FAKE_TOKEN,
@@ -11,6 +11,7 @@ import { corsHeaders } from "@/lib/cors"
 import { bearerMatches } from "@/lib/internal-auth"
 import type { RoutePolicy } from "@/lib/route-policy"
 import { secureJson } from "@/lib/security-headers"
+import { reportedJob } from "@/lib/reported-job"
 
 export const ROUTE_POLICY = {
   auth: "internal",
@@ -29,8 +30,8 @@ export const ROUTE_POLICY = {
  *   1. GET seeded `fisiomota/first-visit` slots
  *   2. POST `/payments/intent` with a fake reservation (404/422 healthy)
  *
- * Failures go to Sentry via `reportProbeFailure` (on-call). Success
- * pings BetterStack `heartbeat("booking-probes")`.
+ * Failures go to Sentry via `reportProbeFailure` (on-call), and the run
+ * is reported as failed (`reportedJob`); a healthy run is reported as done.
  */
 
 export const dynamic = "force-dynamic"
@@ -47,7 +48,7 @@ function resolveProbeBaseUrl(request: Request): string | undefined {
   }
 }
 
-export async function GET(request: Request): Promise<Response> {
+export const GET = reportedJob("booking-probes", async (request: Request) => {
   const headers = corsHeaders(request, "GET, OPTIONS")
   let secret: string
   try {
@@ -94,9 +95,7 @@ export async function GET(request: Request): Promise<Response> {
   )
   const allOk = checks.every((check) => check.ok)
 
-  if (allOk) {
-    await heartbeat("booking-probes")
-  } else {
+  if (!allOk) {
     await reportProbeFailure(
       "booking-probes",
       new Error("booking funnel probe failed"),
@@ -116,7 +115,7 @@ export async function GET(request: Request): Promise<Response> {
       headers,
     }
   )
-}
+})
 
 export function OPTIONS(request: Request) {
   return new Response(null, {

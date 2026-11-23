@@ -4,6 +4,7 @@ import { corsHeaders } from "@/lib/cors"
 import { authorizeInternalWorkflow } from "@/lib/internal-workflow"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
+import { reportedJob } from "@/lib/reported-job"
 
 export const ROUTE_POLICY = {
   auth: "internal",
@@ -14,7 +15,7 @@ export const ROUTE_POLICY = {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-export async function POST(request: Request) {
+export const POST = reportedJob("dsar-export", async (request: Request) => {
   const headers = corsHeaders(request, "POST, OPTIONS")
 
   const denied = await authorizeInternalWorkflow(request)
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
       { status: 500, headers }
     )
   }
-}
+})
 
 export async function OPTIONS(request: Request) {
   return new Response(null, {

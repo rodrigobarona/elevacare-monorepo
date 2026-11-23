@@ -1,5 +1,5 @@
 import { env } from "@eleva/config/env"
-import { captureException } from "@eleva/observability"
+import { captureException, reportJobRun } from "@eleva/observability"
 import { corsHeaders } from "@/lib/cors"
 import { bearerMatches } from "@/lib/internal-auth"
 import {
@@ -23,6 +23,11 @@ export const ROUTE_POLICY = {
  * route (manual runs, tests); a tick calls those handlers in-process, in
  * parallel, so one failing job never blocks the others. Every job is
  * idempotent, so a retry of the whole tick is safe.
+ *
+ * Each job reports its own run (`reportedJob` on its route). The tick
+ * reports as `tick-{cadence}` that it ran: done once every job was called,
+ * also when one of them failed, because that job has already said so. A
+ * tick that stops reporting means the schedule itself stopped.
  *
  * GET is Vercel Cron (`apps/api/vercel.json`), which sends
  * `Authorization: Bearer ${CRON_SECRET}`. Ticks run on Vercel Cron, not
@@ -95,6 +100,8 @@ async function runTick(request: Request, { params }: TickContext) {
       failed += 1
     }
   })
+
+  await reportJobRun(`tick-${cadence}`, "ok")
 
   // 500 records the tick as failed in the cron log; jobs that answer report
   // their own errors to Sentry, jobs that throw are reported above.

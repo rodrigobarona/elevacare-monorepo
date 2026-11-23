@@ -40,7 +40,8 @@
     "./professional-bodies": "./src/professional-bodies.ts",
     "./tax-id": "./src/tax-id.ts",
     "./legal-entity": "./src/legal-entity.ts",
-    "./pagination": "./src/pagination.ts"
+    "./pagination": "./src/pagination.ts",
+    "./background-jobs": "./src/background-jobs.ts"
   },
   "scripts": {
     "lint": "eslint .",

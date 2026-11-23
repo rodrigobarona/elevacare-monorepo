@@ -1,12 +1,12 @@
 import { and, eq, lt, or, sql } from "drizzle-orm"
 import { main, withPlatformAdminContext } from "@eleva/db"
-import { captureException, heartbeat } from "@eleva/observability"
+import { captureException } from "@eleva/observability"
 
 /**
  * Stripe webhook stuck-event detector. Finds events sitting in
  * non-terminal states (`received` or `processing`) past their
- * expected window and surfaces them via Sentry + an optional
- * BetterStack heartbeat.
+ * expected window and surfaces them via Sentry. Its route reports each
+ * completed scan as done, also one that found nothing stuck.
  *
  * Ops can also query the table directly:
  *
@@ -30,12 +30,6 @@ export interface StuckEventOptions {
   processingAgeMs?: number
   /** Max rows reported per scan. */
   batchSize?: number
-  /**
-   * Heartbeat name for the BetterStack monitor. Heartbeat fires when the
-   * scan completes (regardless of whether stuck rows were found) so the
-   * status page shows liveness of the alerting job itself.
-   */
-  heartbeatName?: string
 }
 
 export interface StuckEvent {
@@ -130,12 +124,6 @@ export async function detectStuckStripeEvents(
         resolvedOrgId: event.resolvedOrgId,
       }
     ).catch(() => {})
-  }
-
-  // Heartbeat ALWAYS fires (even when stuck=0) so monitors confirm
-  // the detector itself is running.
-  if (options.heartbeatName) {
-    void heartbeat(options.heartbeatName).catch(() => {})
   }
 
   return { scanned: now, stuck }

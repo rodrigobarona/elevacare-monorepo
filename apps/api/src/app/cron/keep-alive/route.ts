@@ -2,9 +2,10 @@ import { NextResponse } from "next/server"
 
 import { pingAuditDb, pingMainDb } from "@eleva/db"
 import { requireCronSecret } from "@eleva/config/env"
-import { heartbeat, logError } from "@eleva/observability"
+import { logError } from "@eleva/observability"
 import { bearerMatches } from "@/lib/internal-auth"
 import type { RoutePolicy } from "@/lib/route-policy"
+import { reportedJob } from "@/lib/reported-job"
 
 export const ROUTE_POLICY = {
   auth: "internal",
@@ -29,8 +30,9 @@ export const ROUTE_POLICY = {
  *      driver. Today both URLs share one Neon endpoint, so this is
  *      mildly redundant; pinging both keeps the cron correct if/when
  *      audit moves to its own compute.
- *   3. Pings BetterStack via @eleva/observability `heartbeat()` so
- *      the on-call dashboard surfaces missed runs.
+ *   3. Reports the run (`reportedJob`): done when both pings succeed,
+ *      failed when either does not, so the monitor shows a missed or a
+ *      failed run.
  *
  * Returns 200 when both pings succeed, 500 when either fails. The
  * detail body is intentionally small (no stack traces) — anyone with
@@ -61,7 +63,7 @@ async function timed<T>(fn: () => Promise<T>): Promise<CheckResult> {
   }
 }
 
-export async function GET(request: Request): Promise<Response> {
+export const GET = reportedJob("keep-alive", async (request: Request) => {
   let secret: string
   try {
     secret = requireCronSecret().CRON_SECRET
@@ -86,12 +88,6 @@ export async function GET(request: Request): Promise<Response> {
     timed(() => pingAuditDb()),
   ])
 
-  // Heartbeat is best-effort: never fail the cron because BetterStack
-  // is unreachable. The helper itself swallows errors.
-  if (main.ok && audit.ok) {
-    await heartbeat("keep-alive")
-  }
-
   const allOk = main.ok && audit.ok
   return NextResponse.json(
     {
@@ -105,4 +101,4 @@ export async function GET(request: Request): Promise<Response> {
       headers: { "Cache-Control": "no-store" },
     }
   )
-}
+})

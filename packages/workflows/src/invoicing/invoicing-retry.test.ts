@@ -37,7 +37,7 @@ describe("processInvoicingRetry", () => {
     vi.resetModules()
   })
 
-  it("returns both sweep results and heartbeats", async () => {
+  it("returns both sweep results", async () => {
     const backfill = {
       ...emptyBackfill(),
       scanned: 1,
@@ -54,8 +54,6 @@ describe("processInvoicingRetry", () => {
       }),
       backfillMissingPlatformFeeInvoices: vi.fn().mockResolvedValue(backfill),
     })
-    const heartbeat = vi.fn().mockResolvedValue(undefined)
-    vi.doMock("@eleva/observability", () => ({ heartbeat }))
 
     const { processInvoicingRetry } = await import("./invoicing-retry")
     await expect(processInvoicingRetry()).resolves.toEqual({
@@ -69,7 +67,6 @@ describe("processInvoicingRetry", () => {
     })
     expect(mocks.retryFailedExpertInvoices).toHaveBeenCalledTimes(1)
     expect(mocks.backfillMissingPlatformFeeInvoices).toHaveBeenCalledTimes(1)
-    expect(heartbeat).toHaveBeenCalledWith("invoicing-retry")
   })
 
   it("keeps the expert-invoice result when the backfill throws", async () => {
@@ -78,31 +75,10 @@ describe("processInvoicingRetry", () => {
         .fn()
         .mockRejectedValue(new Error("db down")),
     })
-    const heartbeat = vi.fn().mockResolvedValue(undefined)
-    vi.doMock("@eleva/observability", () => ({ heartbeat }))
 
     const { processInvoicingRetry } = await import("./invoicing-retry")
     const result = await processInvoicingRetry()
     expect(result.scanned).toBe(0)
     expect(result.platformFeeBackfill.errors).toBe(1)
-    expect(heartbeat).toHaveBeenCalledWith("invoicing-retry")
-  })
-
-  it("still returns the sweep result when the heartbeat fails", async () => {
-    mockAccounting({})
-    const heartbeat = vi.fn().mockRejectedValue(new Error("betterstack down"))
-    vi.doMock("@eleva/observability", () => ({ heartbeat }))
-
-    const { processInvoicingRetry } = await import("./invoicing-retry")
-    await expect(processInvoicingRetry()).resolves.toEqual({
-      scanned: 0,
-      retried: 0,
-      skipped: 0,
-      blocked: 0,
-      deadLettered: 0,
-      errors: 0,
-      platformFeeBackfill: emptyBackfill(),
-    })
-    expect(heartbeat).toHaveBeenCalledWith("invoicing-retry")
   })
 })

@@ -1,7 +1,7 @@
 import { runStripeToconlineReconciliation } from "@eleva/accounting"
-import { captureException, heartbeat } from "@eleva/observability"
+import { captureException } from "@eleva/observability"
 
-const RECONCILIATION_HEARTBEAT = "stripe-toconline-reconciliation"
+const RECONCILIATION_PROBE = "stripe-toconline-reconciliation"
 
 /**
  * QStash cron + `runInternalWorkflow` (D-18). Not Vercel Workflows DevKit.
@@ -24,7 +24,7 @@ export async function processStripeToconlineReconciliation(
       await captureException(
         new Error("stripe_toconline_reconciliation_mismatch"),
         {
-          probe: RECONCILIATION_HEARTBEAT,
+          probe: RECONCILIATION_PROBE,
           month: run.month,
           mismatchBps: run.mismatchBps,
           missingInvoiceCount: run.details.missingInvoiceCount,
@@ -33,11 +33,6 @@ export async function processStripeToconlineReconciliation(
     } catch (err) {
       console.error("[stripe-toconline-reconciliation] alert failed", err)
     }
-  }
-  try {
-    await heartbeat(RECONCILIATION_HEARTBEAT)
-  } catch (err) {
-    console.error("[stripe-toconline-reconciliation] heartbeat failed", err)
   }
   return {
     month: run.month,

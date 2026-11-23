@@ -5,7 +5,6 @@ import {
   type InvoicingRetryResult,
   type PlatformFeeBackfillResult,
 } from "@eleva/accounting"
-import { heartbeat } from "@eleva/observability"
 
 export async function processInvoicingRetry(): Promise<
   InvoicingRetryResult & { platformFeeBackfill: PlatformFeeBackfillResult }
@@ -17,11 +16,6 @@ export async function processInvoicingRetry(): Promise<
   } catch (err) {
     console.error("[invoicing-retry] platform-fee backfill failed", err)
     platformFeeBackfill.errors += 1
-  }
-  try {
-    await heartbeat("invoicing-retry")
-  } catch (err) {
-    console.error("[invoicing-retry] heartbeat failed", err)
   }
   return { ...result, platformFeeBackfill }
 }

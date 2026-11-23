@@ -62,7 +62,8 @@ const s1aSchema = z.object({
   SENTRY_PROJECT: stringOptional,
   SENTRY_AUTH_TOKEN: stringOptional,
 
-  BETTERSTACK_HEARTBEAT_URL: urlOptional,
+  /** JSON object of job name to its heartbeat address (`@eleva/observability` job-runs). */
+  BETTERSTACK_HEARTBEAT_URLS: stringOptional,
   BETTERSTACK_LOGS_SOURCE_TOKEN: stringOptional,
 
   EDGE_CONFIG: urlOptional,

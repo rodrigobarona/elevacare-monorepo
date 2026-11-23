@@ -4,6 +4,7 @@ import {
   internalWorkflowOptions,
   runInternalWorkflow,
 } from "@/lib/internal-workflow"
+import { reportedJob } from "@/lib/reported-job"
 
 export const ROUTE_POLICY = {
   auth: "internal",
@@ -20,9 +21,12 @@ export const ROUTE_POLICY = {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-export async function POST(request: Request) {
-  return runInternalWorkflow(request, async () => retryPendingEjects())
-}
+export const POST = reportedJob(
+  "video-eject-retry",
+  async (request: Request) => {
+    return runInternalWorkflow(request, async () => retryPendingEjects())
+  }
+)
 
 export async function OPTIONS(request: Request) {
   return internalWorkflowOptions(request)

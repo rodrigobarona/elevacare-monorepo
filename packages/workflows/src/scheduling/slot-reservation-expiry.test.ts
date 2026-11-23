@@ -21,10 +21,7 @@ vi.mock("@eleva/scheduling", () => ({
   listExpiredReservations,
   finalizeExpiredReservation,
 }))
-vi.mock("@eleva/observability", () => ({
-  captureException,
-  heartbeat: vi.fn(async () => undefined),
-}))
+vi.mock("@eleva/observability", () => ({ captureException }))
 
 import { expireStaleReservations } from "./slot-reservation-expiry"
 

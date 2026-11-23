@@ -1,5 +1,5 @@
 import { settleExpiredReservationIntent } from "@eleva/billing/server"
-import { captureException, heartbeat } from "@eleva/observability"
+import { captureException } from "@eleva/observability"
 import {
   deferKeptReservation,
   finalizeExpiredReservation,
@@ -106,6 +106,5 @@ export async function expireStaleReservations(
     await captureException(err, { workflow: "slotReservationExpiry" })
   }
 
-  await heartbeat("slot-reservation-expiry")
   return result
 }
