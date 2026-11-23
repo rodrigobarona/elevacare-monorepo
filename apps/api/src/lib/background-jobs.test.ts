@@ -33,9 +33,23 @@ const scheduled = Object.entries(BACKGROUND_JOBS)
 const ticks = scheduled.filter(([name]) => name.startsWith("tick-"))
 
 describe("every background job reports its run", () => {
-  it("finds the job routes", () => {
+  it("finds the job routes, and no route it does not know", () => {
     // The 20 workflow routes and the 2 cron routes there are today.
     expect(Object.keys(ROUTES).length).toBeGreaterThanOrEqual(22)
+    // Every route file under the two folders, however deep: one job per
+    // folder, and the tick. A route put anywhere else is not checked by
+    // the tests below, so it fails here.
+    const found: string[] = []
+    const walk = (dir: string) => {
+      for (const name of readdirSync(dir)) {
+        const path = join(dir, name)
+        if (statSync(path).isDirectory()) walk(path)
+        else if (/^route\.(ts|tsx|js|mjs)$/.test(name)) found.push(path)
+      }
+    }
+    walk(join(app, "workflows"))
+    walk(join(app, "cron"))
+    expect(found.sort()).toEqual([...Object.values(ROUTES), TICK_ROUTE].sort())
   })
 
   it.each(Object.keys(ROUTES))("%s is in the list of jobs", (name) => {
@@ -199,15 +213,20 @@ describe("the list of jobs agrees with the schedules", () => {
     const registered = [
       ...source.matchAll(/path: "(\/workflows\/[\w-]+)",\s*cron: "([^"]+)"/g),
     ].map(([, path, schedule]) => ({ path: path!, schedule: schedule! }))
-    const unique = [
-      ...new Map(registered.map((one) => [one.path, one])).values(),
-    ]
-    const listed = scheduled
-      .filter(([, job]) => job.trigger === "qstash")
-      .map(([, job]) => ({ path: job.path, schedule: job.schedule }))
-    const byPath = (a: { path: string }, b: { path: string }) =>
-      a.path.localeCompare(b.path)
-    expect(unique.length).toBeGreaterThanOrEqual(5)
-    expect(listed.sort(byPath)).toEqual(unique.sort(byPath))
+    // Every schedule in the scripts is a path with its cron beside it.
+    expect(registered.length).toBe((source.match(/\bcron: "/g) ?? []).length)
+    const listed = Object.fromEntries(
+      scheduled
+        .filter(([, job]) => job.trigger === "qstash")
+        .map(([, job]) => [job.path, job.schedule])
+    )
+    // Each one, as often as it is written: two scripts that register the
+    // same job must both agree with the list.
+    for (const { path, schedule } of registered) {
+      expect(listed[path], `${path} in infra/qstash`).toBe(schedule)
+    }
+    expect([...new Set(registered.map((one) => one.path))].sort()).toEqual(
+      Object.keys(listed).sort()
+    )
   })
 })

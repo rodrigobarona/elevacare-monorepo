@@ -50,7 +50,9 @@ Each entry should include:
   failed (Better Stack's `/fail`), with the status and nothing else: no
   error text, because it can name a person. A caller who is refused (401,
   422, 429) reports nothing, so a stranger cannot make a job look alive or
-  broken. A tick reports as `tick-{cadence}` that the schedule fired and
+  broken. One exception: when the server's own secret for these routes is
+  missing, every call answers 500 before it is checked; the job cannot run
+  at all then, and it is reported as failed. A tick reports as `tick-{cadence}` that the schedule fired and
   every job was called; a job that failed inside it has already said so.
 - **Each failed attempt is reported, also one QStash will retry.** The alert
   comes early and the retry that succeeds clears it. Chosen over waiting
@@ -58,15 +60,30 @@ Each entry should include:
 - **Reporting cannot hurt a job.** Two tries of four seconds, then it gives
   up and logs why without the address, which is a secret. It is awaited
   before the job answers, so the platform cannot cut it off; the cost is at
-  most eight seconds on a run where the monitor is down.
+  most eight seconds on a run where the monitor is down, and sixteen for a
+  tick, which reports for itself after its jobs have.
 - **Setting.** `BETTERSTACK_HEARTBEAT_URLS` replaces
   `BETTERSTACK_HEARTBEAT_URL`: a JSON object of job name to that job's
   heartbeat address. Unset, or with no address for a job, that job reports
-  nothing. A wrong value (not JSON, not https, an unknown job) is logged
-  once and never stops a job.
+  nothing. A wrong value (not JSON, not https, an address with a `?` or `#`
+  part, an unknown job) is logged once and never stops a job. A name that
+  is not a job is counted, not printed: it may be an address put on the
+  wrong side.
+- **How late is late.** Vercel Cron may skip a run and never retries, so
+  jobs it starts wait for two missed runs (every minute, every ten minutes)
+  or one (hourly, daily). QStash does not skip; it retries for about 33
+  minutes, so its jobs wait one hour, which is less than one missed run on
+  purpose. `retention-sweep` is marked as not registered yet (it waits for
+  the DPO), so 13.19 must not create its monitor.
+- **On-demand jobs** have no monitor. Two of them (`dsar-export`,
+  `booking-reminder`) answered 500 on a failure without telling anyone;
+  their routes now send the failure to Sentry.
 - Tests fail when a job route does not report under its own name, when a
-  job is in the list with no route, and when a schedule changes in
-  `vercel.json`, the tick table or `infra/qstash` and not in the list.
+  route file sits anywhere the scan does not know, when a job is in the
+  list with no route, when a period does not follow its schedule, and when
+  a schedule changes in `vercel.json` or `infra/qstash` and not in the
+  list. The tick table does not compile when its jobs differ from the
+  list's.
 - Behaviour that stays as it was: `slot-reservation-expiry` and
   `invoicing-retry` answer 200 when single items failed inside the run
   (those go to Sentry), so the run is reported as done.

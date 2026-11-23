@@ -14,14 +14,17 @@ import { reportJobRun, type JobFailure } from "@eleva/observability"
  *   and nothing else. A throw is passed on as it was.
  * - anything else (401, 422, 429): the caller was refused before the job
  *   began. Nothing is reported, so a stranger cannot make a job look
- *   alive or look broken.
+ *   alive or look broken. One exception: when the server's own secret for
+ *   these routes is missing, every call answers 500 before it is checked.
+ *   The job cannot run at all then, and it is reported as failed.
  *
  * A failed attempt is reported each time, also one that QStash will retry:
  * the alert is early, and the retry that succeeds clears it.
  *
  * The report is awaited before the answer is returned, so the platform
  * cannot cut it off. Nobody waits on these answers; the cost is at most
- * eight seconds on a run where the monitor is down.
+ * eight seconds on a run where the monitor is down, and sixteen for a
+ * tick, which reports for itself after its jobs have.
  */
 export function reportedJob<Args extends unknown[]>(
   job: BackgroundJobName,

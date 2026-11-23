@@ -1,3 +1,4 @@
+import { captureException } from "@eleva/observability"
 import { BookingReminderRequestSchema } from "@eleva/api-client"
 import { deliverBookingReminder } from "@eleva/workflows/notifications"
 import { corsHeaders } from "@/lib/cors"
@@ -55,6 +56,8 @@ export const POST = reportedJob(
       const result = await deliverBookingReminder(parsed.data)
       return secureJson({ ...result, ok: true }, { status: 200, headers })
     } catch (err) {
+      // On demand, so no monitor expects it: Sentry is where it shows.
+      void captureException(err, { probe: "booking-reminder" })
       const message = err instanceof Error ? err.message : String(err)
       return secureJson(
         { ok: false, error: "internal", message },

@@ -60,6 +60,16 @@ describe("reportedJob", () => {
     ])
   })
 
+  it.each([301, 302, 304])(
+    "reports nothing for %i: neither done nor failed",
+    async (status) => {
+      const response = new Response(null, { status })
+      const run = reportedJob("keep-alive", async () => response)
+      expect(await run()).toBe(response)
+      expect(reportJobRun).not.toHaveBeenCalled()
+    }
+  )
+
   it.each([401, 403, 404, 422, 429])(
     "reports nothing for %i: the caller was refused before the job began",
     async (status) => {

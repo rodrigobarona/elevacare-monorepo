@@ -1,3 +1,4 @@
+import { captureException } from "@eleva/observability"
 import { DsarExportWorkflowRequestSchema } from "@eleva/api-client"
 import { processDsarExport } from "@eleva/compliance"
 import { corsHeaders } from "@/lib/cors"
@@ -41,6 +42,8 @@ export const POST = reportedJob("dsar-export", async (request: Request) => {
     }
     return secureJson({ ok: true, ...result }, { status: 200, headers })
   } catch (err) {
+    // On demand, so no monitor expects it: Sentry is where it shows.
+    void captureException(err, { probe: "dsar-export" })
     const message = err instanceof Error ? err.message : String(err)
     return secureJson(
       { ok: false, error: "internal", message },

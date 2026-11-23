@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
  *   rest still succeed, and captureException is called with the row id.
  * - On the Nth attempt (attempts >= maxAttempts) the row is marked
  *   'failed' in the outbox.
- * - Heartbeat is fired even on zero rows.
+ * - A run with zero rows completes (its route reports it as done).
  * - Idempotency: re-running over the same pending set (simulated by
  *   returning the same rows again) yields the same shipped count.
  */

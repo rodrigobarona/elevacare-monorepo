@@ -1,6 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { BACKGROUND_JOBS } from "@eleva/config/background-jobs"
-import { reportJobRun } from "./job-runs"
+
+type Report = (typeof import("./job-runs"))["reportJobRun"]
+
+/**
+ * The reporter, loaded anew for each test: it remembers the setting it
+ * last read, and a test must not see what an earlier one left.
+ */
+const reportJobRun: Report = async (...given) =>
+  (await import("./job-runs")).reportJobRun(...given)
 
 const ADDRESS = "https://monitor.example/api/v1/heartbeat"
 const SECRET = "tok3nTok3nTok3nTok3nTok3n"
@@ -15,11 +23,12 @@ function monitor(...answers: (number | "down" | "hangs")[]) {
     const answer = answers[Math.min(calls.length - 1, answers.length - 1)]
     if (answer === "down") throw new TypeError("fetch failed")
     if (answer === "hangs") {
-      // What `AbortSignal.timeout` does to a request that gets no answer.
+      // What a request that gets no answer does when its time is up.
       await new Promise((_resolve, reject) => {
-        init?.signal?.addEventListener("abort", () =>
+        const timedOut = () =>
           reject(new DOMException("timed out", "TimeoutError"))
-        )
+        if (init?.signal?.aborted) timedOut()
+        else init?.signal?.addEventListener("abort", timedOut)
       })
     }
     return new Response(null, { status: answer as number })
@@ -39,13 +48,13 @@ describe("reportJobRun", () => {
   let errors: ReturnType<typeof vi.spyOn>
 
   beforeEach(() => {
+    vi.resetModules()
     errors = vi.spyOn(console, "error").mockImplementation(() => {})
   })
   afterEach(() => {
     vi.unstubAllEnvs()
     vi.unstubAllGlobals()
-    vi.useRealTimers()
-    errors.mockRestore()
+    vi.restoreAllMocks()
   })
 
   /** Everything logged, as one text. */
@@ -206,19 +215,22 @@ describe("reportJobRun", () => {
     })
 
     it("stops waiting on a monitor that never answers, within ten seconds", async () => {
-      vi.useFakeTimers()
-      const { fetchMock } = monitor("hangs")
-      let settled = false
-      const reported = reportJobRun("keep-alive", "ok").then(() => {
-        settled = true
+      // The time limit of each try, without waiting for it: the limit is
+      // read, and a signal whose time is already up is given back.
+      const limits: number[] = []
+      vi.spyOn(AbortSignal, "timeout").mockImplementation((ms) => {
+        limits.push(ms)
+        return AbortSignal.abort(new DOMException("timed out", "TimeoutError"))
       })
-      await vi.advanceTimersByTimeAsync(7_900)
-      expect(settled).toBe(false)
-      await vi.advanceTimersByTimeAsync(200)
-      await reported
-      expect(settled).toBe(true)
+      const { fetchMock } = monitor("hangs")
+      await expect(reportJobRun("keep-alive", "ok")).resolves.toBeUndefined()
       expect(fetchMock).toHaveBeenCalledTimes(2)
+      expect(limits).toHaveLength(2)
+      expect(limits.reduce((sum, ms) => sum + ms, 0)).toBeLessThanOrEqual(
+        10_000
+      )
       expect(logged()).toContain("did not answer in time")
+      expect(logged()).not.toContain(SECRET)
     })
   })
 
@@ -259,13 +271,47 @@ describe("reportJobRun", () => {
       expect(logged()).not.toContain(SECRET)
     })
 
-    it("ignores a name that is not a job, by name", async () => {
-      configure({ "not-a-job": `${ADDRESS}/${SECRET}` })
+    it("ignores a name that is not a job, without printing it", async () => {
+      // An address put where the name goes must not reach the log.
+      configure({
+        [`${ADDRESS}/${SECRET}`]: "keep-alive",
+        "not-a-job": `${ADDRESS}/${SECRET}`,
+      })
       const { fetchMock } = monitor(200)
       await reportJobRun("keep-alive", "ok")
       expect(fetchMock).not.toHaveBeenCalled()
-      expect(logged()).toContain('"not-a-job"')
+      expect(logged()).toContain("2 name(s) that are not jobs")
       expect(logged()).not.toContain(SECRET)
+      expect(logged()).not.toContain("monitor.example")
+    })
+
+    it.each([
+      ["a ? part", `${ADDRESS}/${SECRET}?team=1`],
+      ["a # part", `${ADDRESS}/${SECRET}#top`],
+      ["a name and password", `https://user:pass@monitor.example/${SECRET}`],
+      ["no https", `ftp://monitor.example/${SECRET}`],
+      ["no address at all", "keep-alive"],
+    ])(
+      "does not use an address with %s: /fail could not follow it",
+      async (_what, address) => {
+        configure({ "keep-alive": address })
+        const { fetchMock } = monitor(200)
+        await reportJobRun("keep-alive", "fail", "status 500")
+        await reportJobRun("keep-alive", "ok")
+        expect(fetchMock).not.toHaveBeenCalled()
+        expect(logged()).toContain('"keep-alive"')
+        expect(logged()).not.toContain(SECRET)
+      }
+    )
+
+    it("is not fooled by names every object has", async () => {
+      configure(
+        `{"__proto__":"${ADDRESS}/a","constructor":"${ADDRESS}/b","toString":"${ADDRESS}/c"}`
+      )
+      const { fetchMock } = monitor(200)
+      await reportJobRun("keep-alive", "ok")
+      expect(fetchMock).not.toHaveBeenCalled()
+      expect(({} as Record<string, unknown>).keep).toBeUndefined()
     })
 
     it("reads the setting again when it changes", async () => {

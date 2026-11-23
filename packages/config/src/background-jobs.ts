@@ -13,8 +13,9 @@
  * - Vercel Cron delivers at best effort and never retries, so one skipped
  *   run is expected now and then. Jobs that run every minute or every ten
  *   minutes wait for two missed runs; hourly and daily jobs for one.
- * - QStash retries a failed run three times over about 33 minutes (12 s,
- *   2.5 min, 30 min). Those jobs get one hour, the monthly one six.
+ * - QStash does not skip: it retries a failed run three times over about
+ *   33 minutes (12 s, 2.5 min, 30 min). Those jobs wait one hour, which is
+ *   less than one missed run on purpose; the monthly one waits six.
  */
 
 const MINUTE = 60
@@ -26,7 +27,7 @@ type Trigger = "vercel-cron" | "tick" | "qstash"
 interface ScheduledJob {
   /** The route that runs it. */
   path: string
-  /** What starts it. A `tick` job runs inside the tick of its cadence. */
+  /** What starts it. A `tick` job runs inside the tick of its `cadence`. */
   trigger: Trigger
   /** Cron expression of the schedule that starts it, in UTC. */
   schedule: string
@@ -34,6 +35,13 @@ interface ScheduledJob {
   periodSeconds: number
   /** How late a run may report before it counts as missed. */
   graceSeconds: number
+  /** `tick` jobs only: the tick it runs in. */
+  cadence?: TickCadence
+  /**
+   * Set while the schedule is not registered: what it waits for. Such a
+   * job does not run, so a monitor for it must not be created yet.
+   */
+  notRegisteredUntil?: string
 }
 
 /** The three ticks: their Vercel Cron schedule, period and grace. */
@@ -55,12 +63,22 @@ const TICK_SCHEDULES = {
   },
 } as const
 
-const tickJob = (
-  name: string,
-  cadence: keyof typeof TICK_SCHEDULES
-): ScheduledJob => ({
-  path: `/workflows/${name}`,
-  trigger: "tick",
+export type TickCadence = keyof typeof TICK_SCHEDULES
+
+const tick = <Cadence extends TickCadence>(cadence: Cadence) => ({
+  path: `/workflows/tick/${cadence}` as const,
+  trigger: "vercel-cron" as const,
+  ...TICK_SCHEDULES[cadence],
+})
+
+/** A job that runs inside a tick: expected as often as the tick runs. */
+const inTick = <Name extends string, Cadence extends TickCadence>(
+  name: Name,
+  cadence: Cadence
+) => ({
+  path: `/workflows/${name}` as const,
+  trigger: "tick" as const,
+  cadence,
   ...TICK_SCHEDULES[cadence],
 })
 
@@ -80,35 +98,24 @@ export const BACKGROUND_JOBS = {
     periodSeconds: DAY,
     graceSeconds: DAY,
   },
-  "tick-minutely": {
-    path: "/workflows/tick/minutely",
-    trigger: "vercel-cron",
-    ...TICK_SCHEDULES.minutely,
-  },
-  "tick-10min": {
-    path: "/workflows/tick/10min",
-    trigger: "vercel-cron",
-    ...TICK_SCHEDULES["10min"],
-  },
-  "tick-hourly": {
-    path: "/workflows/tick/hourly",
-    trigger: "vercel-cron",
-    ...TICK_SCHEDULES.hourly,
-  },
+  "tick-minutely": tick("minutely"),
+  "tick-10min": tick("10min"),
+  "tick-hourly": tick("hourly"),
 
-  // Inside a tick (`apps/api/src/lib/workflow-ticks.ts`).
-  "slot-reservation-expiry": tickJob("slot-reservation-expiry", "minutely"),
-  "booking-request-expiry": tickJob("booking-request-expiry", "minutely"),
-  "domain-events-publisher": tickJob("domain-events-publisher", "minutely"),
-  "video-eject-retry": tickJob("video-eject-retry", "minutely"),
-  "stripe-stuck-events": tickJob("stripe-stuck-events", "10min"),
-  "video-room-sweep": tickJob("video-room-sweep", "10min"),
-  "video-attendance-sweep": tickJob("video-attendance-sweep", "10min"),
-  "seat-sync-sweep": tickJob("seat-sync-sweep", "10min"),
-  "audit-outbox-drainer": tickJob("audit-outbox-drainer", "hourly"),
-  "account-deletion-sweep": tickJob("account-deletion-sweep", "hourly"),
-  "crm-follow-up-due": tickJob("crm-follow-up-due", "hourly"),
-  "invoicing-retry": tickJob("invoicing-retry", "hourly"),
+  // Inside a tick (`apps/api/src/lib/workflow-ticks.ts`, which must list
+  // the same jobs under the same cadence, or it does not compile).
+  "slot-reservation-expiry": inTick("slot-reservation-expiry", "minutely"),
+  "booking-request-expiry": inTick("booking-request-expiry", "minutely"),
+  "domain-events-publisher": inTick("domain-events-publisher", "minutely"),
+  "video-eject-retry": inTick("video-eject-retry", "minutely"),
+  "stripe-stuck-events": inTick("stripe-stuck-events", "10min"),
+  "video-room-sweep": inTick("video-room-sweep", "10min"),
+  "video-attendance-sweep": inTick("video-attendance-sweep", "10min"),
+  "seat-sync-sweep": inTick("seat-sync-sweep", "10min"),
+  "audit-outbox-drainer": inTick("audit-outbox-drainer", "hourly"),
+  "account-deletion-sweep": inTick("account-deletion-sweep", "hourly"),
+  "crm-follow-up-due": inTick("crm-follow-up-due", "hourly"),
+  "invoicing-retry": inTick("invoicing-retry", "hourly"),
 
   // QStash schedules (`infra/qstash`).
   "process-expert-transfers": {
@@ -136,25 +143,26 @@ export const BACKGROUND_JOBS = {
     path: "/workflows/stripe-toconline-reconciliation",
     trigger: "qstash",
     schedule: "0 4 1 * *",
-    // The longest month, so a 31-day month is not a missed run.
+    // The longest month, so a 31-day month is not a missed run. After a
+    // shorter month a missed run shows up to three days late.
     periodSeconds: 31 * DAY,
     graceSeconds: 6 * HOUR,
   },
-  // Registered only with `--with-retention`, after the DPO signs (AUD-028).
-  // Until then it does not run, and a monitor for it stays pending.
   "retention-sweep": {
     path: "/workflows/retention-sweep",
     trigger: "qstash",
     schedule: "0 2 * * *",
     periodSeconds: DAY,
     graceSeconds: HOUR,
+    // `pnpm qstash:setup:all -- --with-retention` registers it.
+    notRegisteredUntil: "the DPO signs the retention periods (AUD-028)",
   },
 } as const satisfies Record<string, ScheduledJob>
 
 /**
  * Jobs that run when something asks, not on a schedule. Nothing can say
- * one is late, so no monitor watches them: a failed run goes to Sentry and
- * answers 500, which QStash retries.
+ * one is late, so no monitor watches them: a run that fails is sent to
+ * Sentry by its route and answers 500, which QStash retries.
  */
 export const ON_DEMAND_JOBS = {
   "booking-reminder":
@@ -167,6 +175,19 @@ export type ScheduledJobName = keyof typeof BACKGROUND_JOBS
 export type OnDemandJobName = keyof typeof ON_DEMAND_JOBS
 export type BackgroundJobName = ScheduledJobName | OnDemandJobName
 
+/** The jobs that run inside the tick of one cadence. */
+export type JobsInTick<Cadence extends TickCadence> = {
+  [Name in ScheduledJobName]: (typeof BACKGROUND_JOBS)[Name] extends {
+    cadence: Cadence
+  }
+    ? Name
+    : never
+}[ScheduledJobName]
+
 export function isScheduledJob(name: string): name is ScheduledJobName {
   return Object.hasOwn(BACKGROUND_JOBS, name)
+}
+
+export function isOnDemandJob(name: string): name is OnDemandJobName {
+  return Object.hasOwn(ON_DEMAND_JOBS, name)
 }

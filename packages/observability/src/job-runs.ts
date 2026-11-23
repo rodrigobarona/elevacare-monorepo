@@ -1,4 +1,5 @@
 import {
+  isOnDemandJob,
   isScheduledJob,
   type BackgroundJobName,
   type ScheduledJobName,
@@ -52,30 +53,51 @@ function heartbeatUrls(): Partial<Record<ScheduledJobName, string>> {
     )
     return parsed
   }
+  let unknown = 0
   for (const [name, url] of Object.entries(value)) {
+    if (isOnDemandJob(name)) {
+      console.error(
+        `[job-runs] BETTERSTACK_HEARTBEAT_URLS names "${name}", which runs on demand and has no monitor; it is ignored`
+      )
+      continue
+    }
     if (!isScheduledJob(name)) {
+      // Not printed: a name that is not a job may be an address put on
+      // the wrong side.
+      unknown += 1
+      continue
+    }
+    const address = typeof url === "string" ? heartbeatAddress(url) : null
+    if (!address) {
       console.error(
-        `[job-runs] BETTERSTACK_HEARTBEAT_URLS names "${name}", which is not a scheduled job; it is ignored`
+        `[job-runs] the address for "${name}" in BETTERSTACK_HEARTBEAT_URLS is not a plain https address; that job does not report`
       )
       continue
     }
-    if (typeof url !== "string" || !isHttpsUrl(url)) {
-      console.error(
-        `[job-runs] the address for "${name}" in BETTERSTACK_HEARTBEAT_URLS is not an https address; that job does not report`
-      )
-      continue
-    }
-    parsed[name] = url.replace(/\/+$/, "")
+    parsed[name] = address
+  }
+  if (unknown > 0) {
+    console.error(
+      `[job-runs] BETTERSTACK_HEARTBEAT_URLS has ${unknown} name(s) that are not jobs; they are ignored`
+    )
   }
   return parsed
 }
 
-function isHttpsUrl(value: string): boolean {
+/**
+ * The address without a slash at its end, or null when it cannot be used:
+ * not https, or with a `?` or `#` part, which `/fail` cannot follow.
+ */
+function heartbeatAddress(value: string): string | null {
+  let url: URL
   try {
-    return new URL(value).protocol === "https:"
+    url = new URL(value)
   } catch {
-    return false
+    return null
   }
+  if (url.protocol !== "https:" || url.search || url.hash) return null
+  if (url.username || url.password) return null
+  return `${url.origin}${url.pathname.replace(/\/+$/, "")}`
 }
 
 async function request(url: string, body: string | undefined) {
