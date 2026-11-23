@@ -3,7 +3,12 @@
 import { useEffect, useRef, useState, type FormEvent } from "react"
 import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { authClient, MFA_RETURN_TO_STORAGE_KEY } from "@eleva/auth/client"
+import {
+  authClient,
+  MFA_RETURN_TO_STORAGE_KEY,
+  readBrowserSession,
+  signInLinkWasUsed,
+} from "@eleva/auth/client"
 import { toGatewayCallbackURL } from "@eleva/auth/return-to"
 import {
   ArrowRightIcon,
@@ -45,6 +50,12 @@ export function LoginForm() {
   const [signedIn, setSignedIn] = useState(false)
   const [googlePending, setGooglePending] = useState(false)
   const autofillStarted = useRef(false)
+  // The sign-in this browser carried when the link was sent: its start, or
+  // null for signed out. `undefined` while that could not be told.
+  const signedInWhenSent = useRef<number | null | undefined>(undefined)
+  // When the link was asked for. If the sign-in above could not be read,
+  // only a sign-in that began after this counts as the link being used.
+  const linkSentAt = useRef(0)
 
   function finish() {
     setSignedIn(true)
@@ -67,6 +78,50 @@ export function LoginForm() {
       },
     })
   }, [next])
+
+  // An email link opens wherever the mail app opens it, often another tab.
+  // This tab may hold what the person was doing (a form kept while they
+  // sign in again), so once the link has been used it goes on by itself
+  // when they come back to it.
+  useEffect(() => {
+    if (step !== "magicSent") return
+    let gone = false
+    let looking = false
+    const look = async () => {
+      if (gone || document.visibilityState !== "visible") return
+      if (looking) return
+      looking = true
+      const now = await readBrowserSession().finally(() => {
+        looking = false
+      })
+      // Only a sign-in of the person the link was sent to, made since the
+      // link was sent: someone who was already signed in (as them or as
+      // another person) stays on this step until the link is used.
+      if (
+        gone ||
+        !signInLinkWasUsed({
+          now,
+          email,
+          before: signedInWhenSent.current,
+          linkSentAt: linkSentAt.current,
+        })
+      ) {
+        return
+      }
+      gone = true
+      setSignedIn(true)
+      // A full load, as after every sign-in: the next page reads the new
+      // session from the server.
+      window.location.href = next
+    }
+    document.addEventListener("visibilitychange", look)
+    window.addEventListener("focus", look)
+    return () => {
+      gone = true
+      document.removeEventListener("visibilitychange", look)
+      window.removeEventListener("focus", look)
+    }
+  }, [step, next, email])
 
   function goTo(nextStep: Step) {
     setError(null)
@@ -120,6 +175,12 @@ export function LoginForm() {
   async function onMagic() {
     setPending(true)
     setError(null)
+    // The sign-in this browser carries now, if any: the step that follows
+    // goes on only for a newer one.
+    const before = await readBrowserSession()
+    signedInWhenSent.current =
+      before === undefined ? undefined : (before?.startedAt?.getTime() ?? null)
+    linkSentAt.current = Date.now()
     const sent = await sendMagicLink()
     setPending(false)
     if (sent) goTo("magicSent")
@@ -162,6 +223,7 @@ export function LoginForm() {
           title={t("magicSentTitle")}
           description={t("magicSentBody", { email })}
         />
+        <p className="text-sm text-muted-foreground">{t("magicSentReturn")}</p>
         <InboxActions email={email} onResend={sendMagicLink} />
         {errorText}
         <Button

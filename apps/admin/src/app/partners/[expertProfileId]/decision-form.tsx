@@ -14,6 +14,7 @@ import { Button } from "@eleva/ui/components/button"
 import { CheckboxField } from "@eleva/ui/components/checkbox-field"
 import { Label } from "@eleva/ui/components/label"
 import { Textarea } from "@eleva/ui/components/textarea"
+import { useDecisionSignIn } from "@/components/decision-sign-in"
 import { decideLicence, type DecideLicenceError } from "./actions"
 
 interface Props {
@@ -23,6 +24,8 @@ interface Props {
 }
 
 type Decision = LicenceDecisionRequest["decision"]
+
+const REASON_MAX_LENGTH = 1000
 
 export function DecisionForm({
   expertProfileId,
@@ -36,38 +39,100 @@ export function DecisionForm({
   >({})
   const [reason, setReason] = React.useState("")
   const [pending, setPending] = React.useState<Decision | null>(null)
-  const [error, setError] = React.useState<DecideLicenceError | null>(null)
+  // The moment between a press on an old sign-in and its answer: the
+  // session is being asked once more. The button shows it is working and
+  // takes no second press; nothing has been sent.
+  const [checking, setChecking] = React.useState<Decision | null>(null)
+  // The refusal is shown beside the button that was pressed.
+  const [error, setError] = React.useState<{
+    decision: Decision
+    code: DecideLicenceError
+  } | null>(null)
 
+  // What is in hand: a press being answered here, or a decision on its way.
+  // The button that was pressed stays enabled (it only takes no second
+  // press), so the keyboard's place is not lost while it works.
+  const busy = pending ?? checking
   const allChecked = LICENCE_CHECKLIST_ITEMS.every((item) => checked[item])
   const hasReason = reason.trim().length > 0
 
+  // What is on the form survives signing in again, and comes back once.
+  const signIn = useDecisionSignIn<Decision>({
+    version: submittedAt,
+    items: LICENCE_CHECKLIST_ITEMS,
+    maxText: REASON_MAX_LENGTH,
+    read: () => ({
+      ticks: LICENCE_CHECKLIST_ITEMS.filter((item) => checked[item]),
+      text: reason,
+    }),
+    restore: ({ ticks, text }) => {
+      setChecked(Object.fromEntries(ticks.map((item) => [item, true])))
+      setReason(text)
+    },
+  })
+
+  /**
+   * True when a press on a sign-in the page knows is too old was answered
+   * on the page: the message is shown and nothing is sent.
+   */
+  async function answeredHere(decision: Decision): Promise<boolean> {
+    if (!signIn.expired) return false
+    setChecking(decision)
+    const stillOld = await signIn
+      .stillExpired()
+      .finally(() => setChecking(null))
+    if (stillOld) signIn.refuse(decision)
+    return stillOld
+  }
+
   async function decide(decision: Decision) {
-    setPending(decision)
     setError(null)
+    signIn.clearRefusal()
+    // A sign-in the page already knows is too old is answered here,
+    // without asking the API for a refusal it is sure to give. It looks
+    // at the session once more first: another tab may just have signed in.
+    if (await answeredHere(decision)) return
+    setPending(decision)
     const target = { applicationId, submittedAt }
+    // A request that never reaches the server must not lock the form.
     const result = await decideLicence(
       expertProfileId,
       decision === "approve"
         ? { ...target, decision, checklist: checked }
         : { ...target, decision, reason: reason.trim() }
     )
-    setPending(null)
+      .catch(() => ({ ok: false as const, error: "failed" as const }))
+      .finally(() => setPending(null))
     if (!result.ok) {
-      setError(result.error)
+      // The API said the sign-in is too old: the same message.
+      if (result.error === "step-up") signIn.refuse(decision)
+      else setError({ decision, code: result.error })
       return
     }
+    signIn.forget()
     toast.success(t(`toasts.${decision}`))
     router.refresh()
   }
 
+  // Beside the button that was pressed: what went wrong, or, on an old
+  // sign-in, the calm "not saved, sign in again" (a routine step, not
+  // something that went wrong).
+  function refusal(shown: (decision: Decision) => boolean) {
+    const signInAgain = signIn.refusalFor(shown)
+    if (signInAgain) return signInAgain
+    if (!error || !shown(error.decision)) return null
+    return (
+      <Alert variant="destructive" role="alert">
+        <AlertDescription data-testid="licence-decision-error">
+          {t(`errors.${error.code}`)}
+        </AlertDescription>
+      </Alert>
+    )
+  }
+
   return (
     <div className="space-y-6">
-      {error ? (
-        <Alert variant="destructive">
-          <AlertDescription>{t(`errors.${error}`)}</AlertDescription>
-        </Alert>
-      ) : null}
-
+      {signIn.notice}
       <div className="space-y-3">
         <p className="text-sm text-muted-foreground">{t("checklistHelp")}</p>
         {LICENCE_CHECKLIST_ITEMS.map((item) => (
@@ -81,12 +146,15 @@ export function DecisionForm({
           />
         ))}
         <Button
-          isDisabled={!allChecked || pending !== null}
-          isPending={pending === "approve"}
+          isDisabled={!allChecked || (busy !== null && busy !== "approve")}
+          isPending={busy === "approve"}
           onPress={() => decide("approve")}
+          data-testid="licence-approve"
         >
           {pending === "approve" ? t("approving") : t("approve")}
         </Button>
+        {/* After the button, so it does not move under the pointer. */}
+        {refusal((decision) => decision === "approve")}
       </div>
 
       <div className="space-y-3 border-t pt-6">
@@ -95,30 +163,41 @@ export function DecisionForm({
           <Textarea
             id="licence-decision-reason"
             value={reason}
-            maxLength={1000}
+            maxLength={REASON_MAX_LENGTH}
             rows={3}
+            aria-describedby="licence-decision-reason-help"
+            data-testid="licence-decision-reason"
             onChange={(event) => setReason(event.target.value)}
           />
-          <p className="text-sm text-muted-foreground">{t("reasonHelp")}</p>
+          <p
+            id="licence-decision-reason-help"
+            className="text-sm text-muted-foreground"
+          >
+            {t("reasonHelp")}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
-            isDisabled={!hasReason || pending !== null}
-            isPending={pending === "needs_changes"}
+            isDisabled={
+              !hasReason || (busy !== null && busy !== "needs_changes")
+            }
+            isPending={busy === "needs_changes"}
             onPress={() => decide("needs_changes")}
+            data-testid="licence-needs-changes"
           >
             {pending === "needs_changes" ? t("saving") : t("needsChanges")}
           </Button>
           <Button
             variant="destructive"
-            isDisabled={!hasReason || pending !== null}
-            isPending={pending === "reject"}
+            isDisabled={!hasReason || (busy !== null && busy !== "reject")}
+            isPending={busy === "reject"}
             onPress={() => decide("reject")}
           >
             {pending === "reject" ? t("saving") : t("reject")}
           </Button>
         </div>
+        {refusal((decision) => decision !== "approve")}
       </div>
     </div>
   )

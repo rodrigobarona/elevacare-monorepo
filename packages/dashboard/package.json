@@ -51,6 +51,7 @@
     "./use-resolved-appearance": "./src/use-resolved-appearance.ts",
     "./server-theme": "./src/server-theme.ts",
     "./workspace-api": "./src/workspace-api.ts",
+    "./sign-in-again-model": "./src/sign-in-again-model.ts",
     "./*": "./src/*.tsx"
   }
 }

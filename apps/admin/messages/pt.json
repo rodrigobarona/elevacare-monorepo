@@ -72,8 +72,7 @@
         "decided": "Alguém já decidiu este pedido.",
         "self": "Não pode rever o seu próprio pedido.",
         "forbidden": "Não tem acesso a esta revisão.",
-        "failed": "Não foi possível concluir. Tente novamente.",
-        "step-up": "Iniciou sessão há mais de 12 horas. Termine a sessão e inicie-a de novo para decidir. Se escreveu um motivo, copie-o primeiro: esta página não o guarda."
+        "failed": "Não foi possível concluir. Tente novamente."
       }
     }
   },
@@ -145,8 +144,7 @@
         "decided": "Alguém já decidiu este envio. Recarregue para ver a decisão.",
         "self": "Não pode rever uma clínica de que faz parte. Peça a outra pessoa da equipa.",
         "forbidden": "Não tem acesso a esta revisão.",
-        "failed": "Não foi possível concluir. Tente novamente.",
-        "step-up": "Iniciou sessão há mais de 12 horas. Termine a sessão e inicie-a de novo para decidir. Se escreveu um motivo, copie-o primeiro: esta página não o guarda."
+        "failed": "Não foi possível concluir. Tente novamente."
       },
       "notes": {
         "approved": "Este envio está aprovado: a clínica está verificada. A Eleva avisa por email quem é titular ou administra a clínica.",
@@ -166,9 +164,35 @@
       }
     }
   },
+  "signInAgain": {
+    "banner": {
+      "title": "Inicie sessão de novo antes de decidir",
+      "body": "Iniciou sessão há mais de {hours, plural, one {# hora} other {# horas}}. Uma decisão precisa de um início de sessão {hours, plural, one {da última hora} other {das últimas # horas}}, para que ninguém possa decidir em seu nome numa consola que tenha ficado aberta mais tempo do que isso."
+    },
+    "kept": "O que assinalar e escrever aqui fica neste separador enquanto inicia sessão.",
+    "notKept": "Copie o motivo antes de iniciar sessão: este navegador não o guarda.",
+    "refused": {
+      "title": "Essa decisão não foi guardada.",
+      "body": "Iniciou sessão há mais de {hours, plural, one {# hora} other {# horas}} e uma decisão precisa de um início de sessão mais recente.",
+      "kept": "O que preencheu continua aqui."
+    },
+    "action": "Iniciar sessão de novo",
+    "actionPending": "A abrir...",
+    "restored": "Já iniciou sessão de novo. O que assinalou e o motivo continuam aqui. Reveja tudo e decida.",
+    "restoredSome": "Já iniciou sessão de novo. O que tinha preenchido continua aqui. Reveja tudo e decida.",
+    "lapsed": "Já iniciou sessão de novo. Passou demasiado tempo, por isso o que tinha preenchido já não está aqui.",
+    "changed": {
+      "clinic": "Já iniciou sessão de novo. A clínica enviou novos dados entretanto, por isso as verificações ficaram por assinalar.",
+      "expert": "Já iniciou sessão de novo. O especialista enviou novos dados entretanto, por isso as verificações ficaram por assinalar."
+    },
+    "reasonKept": "O motivo continua aqui.",
+    "unavailable": "Não foi possível abrir a página de início de sessão. Tente novamente daqui a pouco.",
+    "writeFailed": "Este navegador não guardou o que preencheu. Copie o motivo e inicie sessão de novo.",
+    "renewed": "Já iniciou sessão de novo. Nada foi decidido: reveja o formulário e decida."
+  },
   "staffEntry": {
     "title": "Entrar na consola da equipa",
-    "body": "Aqui vê dados de membros e especialistas de toda a Eleva. O que abrir e o que alterar fica guardado no registo de auditoria.",
+    "body": "Aqui vê dados de membros e especialistas de toda a Eleva. O que abrir e o que alterar fica guardado no registo de auditoria. Ao entrar, segue para a página que pediu.",
     "enter": "Entrar na consola da equipa",
     "back": "Voltar à Eleva",
     "error": "Não foi possível abrir a consola da equipa. Tente novamente daqui a pouco."

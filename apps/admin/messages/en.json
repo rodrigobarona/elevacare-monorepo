@@ -72,8 +72,7 @@
         "decided": "Someone already decided this application.",
         "self": "You cannot review your own application.",
         "forbidden": "You do not have access to this review.",
-        "failed": "That did not work. Please try again.",
-        "step-up": "You signed in more than 12 hours ago. Sign out and sign in again, then decide. Copy your reason first if you wrote one: this page will not keep it."
+        "failed": "That did not work. Please try again."
       }
     }
   },
@@ -145,8 +144,7 @@
         "decided": "Someone already decided this filing. Reload to see the decision.",
         "self": "You cannot review a clinic you belong to. Ask another reviewer.",
         "forbidden": "You do not have access to this review.",
-        "failed": "That did not work. Please try again.",
-        "step-up": "You signed in more than 12 hours ago. Sign out and sign in again, then decide. Copy your reason first if you wrote one: this page will not keep it."
+        "failed": "That did not work. Please try again."
       },
       "notes": {
         "approved": "This filing is approved: the clinic is verified. Eleva tells the clinic's owner and admins by email.",
@@ -166,9 +164,35 @@
       }
     }
   },
+  "signInAgain": {
+    "banner": {
+      "title": "Sign in again before you decide",
+      "body": "You signed in more than {hours, plural, one {# hour} other {# hours}} ago. A decision needs a sign-in from the last {hours, plural, one {hour} other {# hours}}, so a console left open longer than that can't be used to decide in your name."
+    },
+    "kept": "What you tick and write here stays in this tab while you sign in.",
+    "notKept": "Copy your reason before you sign in: this browser won't keep it.",
+    "refused": {
+      "title": "That decision wasn't saved.",
+      "body": "You signed in more than {hours, plural, one {# hour} other {# hours}} ago, and a decision needs a newer sign-in.",
+      "kept": "What you entered is still here."
+    },
+    "action": "Sign in again",
+    "actionPending": "Opening...",
+    "restored": "You're signed in again. Your ticks and your reason are still here. Check them, then decide.",
+    "restoredSome": "You're signed in again. What you entered is still here. Check it, then decide.",
+    "lapsed": "You're signed in again. Too much time passed, so what you had entered is no longer here.",
+    "changed": {
+      "clinic": "You're signed in again. The clinic has sent new details since, so the checks are unticked.",
+      "expert": "You're signed in again. The expert has sent new details since, so the checks are unticked."
+    },
+    "reasonKept": "Your reason is still here.",
+    "unavailable": "We couldn't open the sign-in page. Try again in a moment.",
+    "writeFailed": "This browser didn't keep what you entered. Copy your reason, then sign in again.",
+    "renewed": "You're signed in again. Nothing was decided: check the form, then decide."
+  },
   "staffEntry": {
     "title": "Enter the staff console",
-    "body": "Here you can see members' and experts' data across Eleva. What you open and what you change are recorded in the audit log.",
+    "body": "Here you can see members' and experts' data across Eleva. What you open and what you change are recorded in the audit log. Entering takes you to the page you asked for.",
     "enter": "Enter the staff console",
     "back": "Back to Eleva",
     "error": "We couldn't open the staff console. Try again in a moment."

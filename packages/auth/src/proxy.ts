@@ -40,7 +40,16 @@ export const DEFAULT_UNAUTHENTICATED_PATHS = [
 
 export { ELEVA_PATHNAME_HEADER }
 
-export type RedirectStrategy = { kind: "gateway"; baseUrl: string }
+export type RedirectStrategy = {
+  kind: "gateway"
+  baseUrl: string
+  /**
+   * The `returnTo` for this request, when the app's own address is not one
+   * the sign-in page can return to (the staff console: `consoleReturnTo`).
+   * By default it is the address that was asked for.
+   */
+  returnTo?: (req: NextRequest) => string
+}
 export type OptimisticSessionState = "signed-in" | "signed-out" | "ambiguous"
 
 export interface AuthProxyOptions {
@@ -78,9 +87,16 @@ function buildAuthFlowResponse(req: NextRequest): NextResponse {
   return response
 }
 
-function buildGatewayRedirect(req: NextRequest, baseUrl: string): NextResponse {
-  const returnTo = encodeURIComponent(req.nextUrl.toString())
-  return NextResponse.redirect(`${baseUrl}${LOGIN_PATH}?returnTo=${returnTo}`)
+function buildGatewayRedirect(
+  req: NextRequest,
+  redirect: RedirectStrategy
+): NextResponse {
+  const returnTo = encodeURIComponent(
+    redirect.returnTo?.(req) ?? req.nextUrl.toString()
+  )
+  return NextResponse.redirect(
+    `${redirect.baseUrl}${LOGIN_PATH}?returnTo=${returnTo}`
+  )
 }
 
 /**
@@ -125,7 +141,7 @@ export function createAuthProxy(options: AuthProxyOptions = {}): ProxyHandler {
       enforce && !signedIn && !matchesPath(pathname, unauthenticatedPaths)
 
     if (needsRedirect) {
-      const response = buildGatewayRedirect(req, redirect.baseUrl)
+      const response = buildGatewayRedirect(req, redirect)
       if (sessionState === "ambiguous") applyExpiredSessionCookies(response)
       return response
     }

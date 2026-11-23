@@ -317,6 +317,7 @@
     "signedIn": "You're in. Opening your Space…",
     "magicSentTitle": "Check your inbox",
     "magicSentBody": "We sent a sign-in link to {email}. It works for 5 minutes.",
+    "magicSentReturn": "Open the link in this browser. If you were in the middle of something here, come back to this tab: it carries on by itself.",
     "openGmail": "Open Gmail",
     "openOutlook": "Open Outlook",
     "resend": "Resend link",

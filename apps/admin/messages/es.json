@@ -72,8 +72,7 @@
         "decided": "Alguien ya ha decidido esta solicitud.",
         "self": "No puedes revisar tu propia solicitud.",
         "forbidden": "No tienes acceso a esta revisión.",
-        "failed": "No se ha podido completar. Inténtalo de nuevo.",
-        "step-up": "Iniciaste sesión hace más de 12 horas. Cierra sesión y vuelve a iniciarla para decidir. Si escribiste un motivo, cópialo antes: esta página no lo guarda."
+        "failed": "No se ha podido completar. Inténtalo de nuevo."
       }
     }
   },
@@ -145,8 +144,7 @@
         "decided": "Alguien ya ha decidido este envío. Recarga para ver la decisión.",
         "self": "No puedes revisar una clínica de la que formas parte. Pídeselo a otra persona del equipo.",
         "forbidden": "No tienes acceso a esta revisión.",
-        "failed": "No se ha podido completar. Inténtalo de nuevo.",
-        "step-up": "Iniciaste sesión hace más de 12 horas. Cierra sesión y vuelve a iniciarla para decidir. Si escribiste un motivo, cópialo antes: esta página no lo guarda."
+        "failed": "No se ha podido completar. Inténtalo de nuevo."
       },
       "notes": {
         "approved": "Este envío está aprobado: la clínica está verificada. Eleva avisa por correo a quien es titular o administra la clínica.",
@@ -166,9 +164,35 @@
       }
     }
   },
+  "signInAgain": {
+    "banner": {
+      "title": "Vuelve a iniciar sesión antes de decidir",
+      "body": "Iniciaste sesión hace más de {hours, plural, one {# hora} other {# horas}}. Una decisión necesita un inicio de sesión {hours, plural, one {de la última hora} other {de las últimas # horas}}, para que nadie pueda decidir en tu nombre desde una consola que lleve abierta más de ese tiempo."
+    },
+    "kept": "Lo que marques y escribas aquí se queda en esta pestaña mientras inicias sesión.",
+    "notKept": "Copia el motivo antes de iniciar sesión: este navegador no lo guarda.",
+    "refused": {
+      "title": "Esa decisión no se ha guardado.",
+      "body": "Iniciaste sesión hace más de {hours, plural, one {# hora} other {# horas}} y una decisión necesita un inicio de sesión más reciente.",
+      "kept": "Lo que has rellenado sigue aquí."
+    },
+    "action": "Volver a iniciar sesión",
+    "actionPending": "Abriendo...",
+    "restored": "Ya has vuelto a iniciar sesión. Lo que has marcado y el motivo siguen aquí. Revísalos y decide.",
+    "restoredSome": "Ya has vuelto a iniciar sesión. Lo que habías rellenado sigue aquí. Revísalo y decide.",
+    "lapsed": "Ya has vuelto a iniciar sesión. Ha pasado demasiado tiempo, así que lo que habías rellenado ya no está aquí.",
+    "changed": {
+      "clinic": "Ya has vuelto a iniciar sesión. La clínica ha enviado nuevos datos mientras tanto, así que las comprobaciones están sin marcar.",
+      "expert": "Ya has vuelto a iniciar sesión. El especialista ha enviado nuevos datos mientras tanto, así que las comprobaciones están sin marcar."
+    },
+    "reasonKept": "El motivo sigue aquí.",
+    "unavailable": "No hemos podido abrir la página de inicio de sesión. Inténtalo de nuevo en un momento.",
+    "writeFailed": "Este navegador no ha guardado lo que has rellenado. Copia el motivo y vuelve a iniciar sesión.",
+    "renewed": "Ya has vuelto a iniciar sesión. No se ha decidido nada: revisa el formulario y decide."
+  },
   "staffEntry": {
     "title": "Entrar en la consola del equipo",
-    "body": "Aquí ves datos de miembros y especialistas de toda Eleva. Lo que abras y lo que cambies queda guardado en el registro de auditoría.",
+    "body": "Aquí ves datos de miembros y especialistas de toda Eleva. Lo que abras y lo que cambies queda guardado en el registro de auditoría. Al entrar, vas a la página que has pedido.",
     "enter": "Entrar en la consola del equipo",
     "back": "Volver a Eleva",
     "error": "No hemos podido abrir la consola del equipo. Inténtalo de nuevo en un momento."

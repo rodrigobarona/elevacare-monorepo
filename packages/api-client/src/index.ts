@@ -125,6 +125,8 @@ export const SessionRecordSchema = z.object({
   userId: z.string(),
   activeOrganizationId: z.string().nullable().optional(),
   expiresAt: z.union([z.string(), z.date()]).optional(),
+  /** When the person signed in. */
+  createdAt: z.union([z.string(), z.date()]).optional(),
 })
 
 export const SessionResponseSchema = z

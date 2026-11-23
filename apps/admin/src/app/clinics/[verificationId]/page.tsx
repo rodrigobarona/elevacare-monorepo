@@ -8,6 +8,13 @@ import {
 } from "@eleva/config/clinic-verification"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { StatusPill } from "@eleva/ui/components/status-pill"
+import {
+  DecisionSignInBanner,
+  DecisionSignInScope,
+  ForgetDecisionDraft,
+} from "@/components/decision-sign-in"
+import { decisionSignIn } from "@/lib/decision-sign-in"
+import { DECISION_TITLE_ID } from "@/lib/decision-title"
 import { getAuthedApiClient } from "@/lib/server-api"
 import { FILING_STATUS_TONES } from "../filing-status-tones"
 import { DecisionForm } from "./decision-form"
@@ -42,6 +49,10 @@ export default async function ClinicReviewPage({
     getFormatter(),
   ])
   const { verification, clinic, owner, history } = review
+  // Only a filing that waits on staff can be decided, so only it shows
+  // the banner and the form.
+  const canDecide = verification.status === "pending"
+  const signIn = await decisionSignIn("clinic", verification.id)
   const formatDate = (value: string) =>
     format.dateTime(new Date(value), {
       dateStyle: "medium",
@@ -64,170 +75,188 @@ export default async function ClinicReviewPage({
   ].filter(Boolean)
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
-      {/* Not fetched ahead: each read of the queue is recorded. */}
-      <Link
-        href="/clinics"
-        prefetch={false}
-        className="text-sm text-muted-foreground underline-offset-4 hover:underline"
-      >
-        {t("detail.back")}
-      </Link>
-      <div>
-        <PageHeader title={clinic.displayName} className="mb-3" />
-        {/* Separate items, so a narrow screen wraps between them. */}
-        <ul className="flex flex-wrap gap-x-4 gap-y-1 text-base text-muted-foreground">
-          {owner ? <li>{t("detail.owner", { name: owner.name })}</li> : null}
-          <li>{t("detail.people", { people: review.people })}</li>
-        </ul>
-      </div>
-      <div className="flex flex-wrap items-center gap-3">
-        <StatusPill tone={FILING_STATUS_TONES[verification.status]}>
-          {t(`states.${verification.status}`)}
-        </StatusPill>
-        {review.verified && verification.status !== "approved" ? (
-          <p className="text-sm text-muted-foreground">
-            {t("detail.verifiedNote")}
-          </p>
-        ) : null}
-      </div>
-
-      <section className="space-y-4 rounded-xl border p-6">
-        <div className="space-y-1">
-          <h2 className="text-base font-semibold tracking-tight">
-            {t("detail.snapshotTitle")}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {t("detail.sentAt", { date: formatDate(verification.submittedAt) })}
-            {verification.reviewedAt
-              ? ` · ${t("detail.reviewedAt", {
-                  date: formatDate(verification.reviewedAt),
-                })}`
-              : ""}
-          </p>
+    // A review that cannot be decided has no time to watch.
+    <DecisionSignInScope
+      signIn={canDecide ? signIn : { ...signIn, msLeft: null }}
+    >
+      <div className="mx-auto max-w-3xl space-y-8">
+        {/* Not fetched ahead: each read of the queue is recorded. */}
+        <Link
+          href="/clinics"
+          prefetch={false}
+          className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+        >
+          {t("detail.back")}
+        </Link>
+        <div>
+          <PageHeader title={clinic.displayName} className="mb-3" />
+          {/* Separate items, so a narrow screen wraps between them. */}
+          <ul className="flex flex-wrap gap-x-4 gap-y-1 text-base text-muted-foreground">
+            {owner ? <li>{t("detail.owner", { name: owner.name })}</li> : null}
+            <li>{t("detail.people", { people: review.people })}</li>
+          </ul>
         </div>
-        <dl className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <dt className="text-sm text-muted-foreground">
-              {t("detail.legalName")}
-            </dt>
-            <dd>
-              <span className="block font-medium">
-                {verification.legalName}
-              </span>
-              <a
-                href={COMPANY_REGISTER_URL}
-                target="_blank"
-                rel="noreferrer"
-                className="text-sm underline underline-offset-4"
-              >
-                {t("detail.openRegister")}
-                <span className="sr-only"> {t("detail.newTab")}</span>
-              </a>
-            </dd>
+        <div className="flex flex-wrap items-center gap-3">
+          <StatusPill tone={FILING_STATUS_TONES[verification.status]}>
+            {t(`states.${verification.status}`)}
+          </StatusPill>
+          {review.verified && verification.status !== "approved" ? (
+            <p className="text-sm text-muted-foreground">
+              {t("detail.verifiedNote")}
+            </p>
+          ) : null}
+        </div>
+        {/* Said before the reviewer reads, ticks or writes anything. */}
+        {canDecide ? (
+          <DecisionSignInBanner />
+        ) : (
+          <ForgetDecisionDraft draftKey={signIn.draftKey} />
+        )}
+
+        <section className="space-y-4 rounded-xl border p-6">
+          <div className="space-y-1">
+            <h2 className="text-base font-semibold tracking-tight">
+              {t("detail.snapshotTitle")}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {t("detail.sentAt", {
+                date: formatDate(verification.submittedAt),
+              })}
+              {verification.reviewedAt
+                ? ` · ${t("detail.reviewedAt", {
+                    date: formatDate(verification.reviewedAt),
+                  })}`
+                : ""}
+            </p>
           </div>
-          <div>
-            <dt className="text-sm text-muted-foreground">
-              {t("detail.taxId")}
-            </dt>
-            <dd>
-              <span className="block font-mono">{verification.taxId}</span>
-              <a
-                href={VIES_URL}
-                target="_blank"
-                rel="noreferrer"
-                className="text-sm underline underline-offset-4"
-              >
-                {t("detail.openVies")}
-                <span className="sr-only"> {t("detail.newTab")}</span>
-              </a>
-            </dd>
-          </div>
-          <div>
-            <dt className="text-sm text-muted-foreground">
-              {t("detail.address")}
-            </dt>
-            <dd className="whitespace-pre-line">
-              {address.length > 0 ? address.join("\n") : t("detail.notGiven")}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-sm text-muted-foreground">
-              {t("detail.website")}
-            </dt>
-            <dd>
-              {clinic.websiteUrl ? (
+          <dl className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <dt className="text-sm text-muted-foreground">
+                {t("detail.legalName")}
+              </dt>
+              <dd>
+                <span className="block font-medium">
+                  {verification.legalName}
+                </span>
                 <a
-                  href={clinic.websiteUrl}
+                  href={COMPANY_REGISTER_URL}
                   target="_blank"
-                  rel="noreferrer nofollow"
-                  className="break-all underline underline-offset-4"
+                  rel="noreferrer"
+                  className="text-sm underline underline-offset-4"
                 >
-                  {clinic.websiteUrl}
+                  {t("detail.openRegister")}
                   <span className="sr-only"> {t("detail.newTab")}</span>
                 </a>
-              ) : (
-                t("detail.notGiven")
-              )}
-            </dd>
-          </div>
-          {verification.reason ? (
-            <div className="sm:col-span-2">
-              <dt className="text-sm text-muted-foreground">
-                {t("detail.lastReason")}
-              </dt>
-              <dd className="whitespace-pre-line">{verification.reason}</dd>
+              </dd>
             </div>
-          ) : null}
-        </dl>
-      </section>
-
-      {verification.status === "pending" ? (
-        <section className="space-y-4 rounded-xl border p-6">
-          <h2 className="text-base font-semibold tracking-tight">
-            {t("detail.decisionTitle")}
-          </h2>
-          <DecisionForm
-            key={verification.submittedAt}
-            verificationId={verification.id}
-            submittedAt={verification.submittedAt}
-          />
+            <div>
+              <dt className="text-sm text-muted-foreground">
+                {t("detail.taxId")}
+              </dt>
+              <dd>
+                <span className="block font-mono">{verification.taxId}</span>
+                <a
+                  href={VIES_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm underline underline-offset-4"
+                >
+                  {t("detail.openVies")}
+                  <span className="sr-only"> {t("detail.newTab")}</span>
+                </a>
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm text-muted-foreground">
+                {t("detail.address")}
+              </dt>
+              <dd className="whitespace-pre-line">
+                {address.length > 0 ? address.join("\n") : t("detail.notGiven")}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm text-muted-foreground">
+                {t("detail.website")}
+              </dt>
+              <dd>
+                {clinic.websiteUrl ? (
+                  <a
+                    href={clinic.websiteUrl}
+                    target="_blank"
+                    rel="noreferrer nofollow"
+                    className="break-all underline underline-offset-4"
+                  >
+                    {clinic.websiteUrl}
+                    <span className="sr-only"> {t("detail.newTab")}</span>
+                  </a>
+                ) : (
+                  t("detail.notGiven")
+                )}
+              </dd>
+            </div>
+            {verification.reason ? (
+              <div className="sm:col-span-2">
+                <dt className="text-sm text-muted-foreground">
+                  {t("detail.lastReason")}
+                </dt>
+                <dd className="whitespace-pre-line">{verification.reason}</dd>
+              </div>
+            ) : null}
+          </dl>
         </section>
-      ) : (
-        <FilingNote verificationId={verification.id}>
-          {t(`detail.notes.${verification.status}`)}
-        </FilingNote>
-      )}
 
-      {history.length > 0 ? (
-        <section className="space-y-3">
-          <h2 className="text-base font-semibold tracking-tight">
-            {t("detail.historyTitle")}
-          </h2>
-          <ul className="divide-y rounded-xl border">
-            {history.map((filing) => (
-              <li
-                key={filing.id}
-                className="flex flex-wrap items-center justify-between gap-3 p-4"
-              >
-                <div>
-                  <p className="font-medium">{filing.legalName}</p>
-                  <p className="text-sm text-muted-foreground">
-                    <span className="font-mono">{filing.taxId}</span>
-                    {" · "}
-                    {t("detail.sentAt", {
-                      date: formatDate(filing.submittedAt),
-                    })}
-                  </p>
-                </div>
-                <StatusPill tone={FILING_STATUS_TONES[filing.status]}>
-                  {t(`states.${filing.status}`)}
-                </StatusPill>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-    </div>
+        {canDecide ? (
+          <section className="space-y-4 rounded-xl border p-6">
+            {/* Focus is only ever put here by the page, and can be seen. */}
+            <h2
+              id={DECISION_TITLE_ID}
+              tabIndex={-1}
+              className="rounded-sm text-base font-semibold tracking-tight outline-none focus:ring-2 focus:ring-primary focus:ring-offset-4 focus:ring-offset-background"
+            >
+              {t("detail.decisionTitle")}
+            </h2>
+            <DecisionForm
+              key={verification.submittedAt}
+              verificationId={verification.id}
+              submittedAt={verification.submittedAt}
+            />
+          </section>
+        ) : (
+          <FilingNote verificationId={verification.id}>
+            {t(`detail.notes.${verification.status}`)}
+          </FilingNote>
+        )}
+
+        {history.length > 0 ? (
+          <section className="space-y-3">
+            <h2 className="text-base font-semibold tracking-tight">
+              {t("detail.historyTitle")}
+            </h2>
+            <ul className="divide-y rounded-xl border">
+              {history.map((filing) => (
+                <li
+                  key={filing.id}
+                  className="flex flex-wrap items-center justify-between gap-3 p-4"
+                >
+                  <div>
+                    <p className="font-medium">{filing.legalName}</p>
+                    <p className="text-sm text-muted-foreground">
+                      <span className="font-mono">{filing.taxId}</span>
+                      {" · "}
+                      {t("detail.sentAt", {
+                        date: formatDate(filing.submittedAt),
+                      })}
+                    </p>
+                  </div>
+                  <StatusPill tone={FILING_STATUS_TONES[filing.status]}>
+                    {t(`states.${filing.status}`)}
+                  </StatusPill>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+      </div>
+    </DecisionSignInScope>
   )
 }

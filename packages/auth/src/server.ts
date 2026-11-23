@@ -127,6 +127,19 @@ export const getSession = cache(async (): Promise<ElevaSession | null> => {
 })
 
 /**
+ * When the person signed in (the start of this browser session), or null
+ * with no session or a start that cannot be read. For pages that say ahead
+ * of time that a task needs a recent sign-in; the API still decides.
+ */
+export const getSessionStartedAt = cache(async (): Promise<Date | null> => {
+  const payload = await loadBetterAuthPayload()
+  const raw = payload?.session?.createdAt
+  if (!raw) return null
+  const startedAt = raw instanceof Date ? raw : new Date(raw)
+  return Number.isNaN(startedAt.getTime()) ? null : startedAt
+})
+
+/**
  * Org-aware session loader. Resolves the session using the org slug
  * from URL params so multi-org users land in the correct org context.
  *
