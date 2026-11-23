@@ -32,6 +32,171 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-23: Four brand directions for the public site, judged blind twice (D8.1) (needs-review)
+
+- **What was built (design slice D8.1, playground only).** `apps/poc` gains
+  `/brand-lab`: the same homepage, expert profile and step before payment in
+  four directions, with the fictional demo experts. A Tide (evolves cream
+  and teal), B Clay and Aubergine (a change of colour), C Folio (led by
+  type), and D Estuary, built after the first panel from what its judges
+  asked for. No product page changed. Captures:
+  `design-audit/captures/2026-11-23-brand-lab/`.
+- **Decision needed from the founder:** which direction the public site
+  takes. Nothing is chosen. The record of each direction, with palettes and
+  calculated contrast, is `design-audit/brand-directions.md`.
+- **Blind panel, round 1** (A, B, C under neutral letters; four judges, each
+  alone, who saw captures, saved criteria and published Awwwards scores,
+  and no notes or names):
+
+  | Seat                           | A Tide | B Clay | C Folio |
+  | ------------------------------ | ------ | ------ | ------- |
+  | Awwwards jury (panel scale)    | 7.60   | 7.20   | 7.70    |
+  | Awwwards' own scale (estimate) | 6.50   | 6.24   | 6.65    |
+  | UI and visual design           | 7.5    | 6.5    | 8.0     |
+  | UX and flow                    | 7.5    | 6.5    | 7.0     |
+  | UX writing (same words in all) | 7.5    | 7.5    | 7.5     |
+  | Trust and accessibility        | 8.0    | 6.5    | 7.5     |
+
+  B came last on every seat: on a phone a decorative shape covered a
+  heading and a sentence (P1), and colour had no fixed job. The judges
+  agreed on the way forward: C's type and discipline with A's hero.
+
+- **Blind panel, round 2** (new judges; A, C and D under new letters):
+
+  | Seat                           | A Tide | C Folio | D Estuary |
+  | ------------------------------ | ------ | ------- | --------- |
+  | Awwwards jury (panel scale)    | 7.35   | 7.35    | 7.90      |
+  | Awwwards' own scale (estimate) | 6.32   | 6.53    | 6.70      |
+  | UI and visual design           | 7.0    | 7.5     | 8.0       |
+  | UX and flow                    | 7.0    | 6.5     | 8.0       |
+  | UX writing                     | 7.0    | 6.5     | 8.0       |
+  | Trust and accessibility        | 6.5    | 6.0     | 8.0       |
+
+  D is first on every seat. **No direction has reached 8.5, so nothing
+  here passes the gate**, and the gate is for product pages in any case:
+  it applies to each page of `apps/web` when it is rebuilt in the chosen
+  direction.
+
+- **Founder's first reaction to D (2026-11-23):** the hero has too much
+  in it; it should be clean and have one goal. Changed the same day: D's
+  hero is now the headline, one line, one labelled search with its button
+  and one large photograph. The need chips and the experts follow it. The
+  header keeps its links and loses its second "Find an expert" button, so
+  the first screen has one action. **Not judged again**: the scores above
+  are for the busier hero.
+- **A hero film in place of the still (founder, 2026-11-23).** He asked for
+  a video like the one on today's homepage. Today's is 131 seconds and
+  35 MB, cut from clips in very different light, and three of its scenes
+  (a woman in distress, a fairground ride, a product shot) do not belong on
+  a calm first screen. The lab has a new cut: six clips from Pexels in one
+  soft, warm light (an expert guiding a woman, pregnancy, a newborn, a
+  video consultation, midlife, friends), 22.8 seconds, a seamless loop,
+  2.0 MB as MP4 and 1.7 MB as WebM at 1280 by 720, silent. Phones and
+  reduced motion get the poster only and never download it, and it has a
+  pause button because it moves for longer than five seconds. Credits are
+  in `apps/poc/public/brand-lab/film/credits.json`. **Not done:** it is
+  not in the media library or on the media host, it is not on the live
+  homepage, the cut for production should be made at 1920 wide, and no
+  judge has seen it.
+- **Founder's second reaction, and direction E (2026-11-23).** A to D need
+  more character; a design that leans on a typeface "looks a little bit AI
+  slop"; "even the OURA ring is more fun to read"; use Anthropic's
+  frontend-design skill; no "rainbow or funfair". The skill's list of marks
+  of a generated page matched A to D closely (cream page with a serif
+  display, one italic phrase, labels above headings, numbered markers, an
+  arrow on every link). Direction E, "In her words", is built from what
+  women ask: the film fills the first screen with one question and one
+  action, and the question changes with the film, clip by clip; need-first
+  browsing is eight questions; experts are introduced by their own words;
+  colour is two flat fields, the brand's teal and coral. A first attempt
+  with a sunrise gradient and five tints was dropped before it was shown.
+  **The blind judges had preferred the type-led direction; the founder's
+  taste decides, and E has not been judged.**
+- **What stands between D and 8.5** (the judges' lists, merged): a hero
+  photograph with real scale, graded like the portraits; the real pay step
+  (card form, consent, promo code, tax number); a fuller profile with a
+  registration block that says who checked and when; a priced expert higher
+  on a phone; one hairline colour and three type voices; a few lines of
+  copy; the company's number and address in the footer and a seller and VAT
+  line in the summary (facts the founder supplies).
+- **A finding for the live homepage (HOME-13, P2, assigned to D3.2).** Three
+  judges, each alone, flagged the advisor quote on today's homepage: it
+  reads as a treatment claim, in clinical words, at display size. Proposed:
+  a plain statement of what advisors do, her role as "Advisor to Eleva",
+  and counsel reads the final wording.
+- **Not proven.**
+  - Judges saw stills. Motion, hover, focus order, keyboard use and screen
+    readers were not judged. Contrast was calculated for the palettes and
+    estimated by judges from JPEG pixels.
+  - The playground pages use fictional experts, times and prices, and
+    their forms are not wired. The card step, thank-you page, empty and
+    error states and the no-photo expert card are not in the lab.
+  - Scores of A and C fell between rounds beside a stronger neighbour, so
+    a score is comparable only within its round.
+  - No member has seen any direction. The brand seat's suggested five-second
+    test with women aged 28 to 55 has not been run.
+  - Portuguese and Spanish were not set in any direction; long words in a
+    serif headline at 390px are untested.
+  - Newsreader, Bricolage Grotesque and Figtree are self-hosted in the
+    playground only (SIL Open Font Licence 1.1); nothing was added to
+    `@eleva/ui`.
+- Owner: founder (the choice), Track E thread (the build).
+- Related: `design-audit/brand-directions.md`, `design-audit/judges-panel.md`,
+  `design-audit/plan.json` (D8.1), `apps/poc/src/app/brand-lab/`.
+- Next review: when the founder has chosen.
+- **Blind panel, rounds 3 and 4 (D beside E), same day.** The founder asked
+  what the panel thinks of E. Five new judges per round, neutral letters,
+  with machine measurements and the page's words as text. Three judging
+  criteria were first changed to match his decisions (hero with one goal,
+  needs or search straight after it, no required display size) in
+  `01-homepage` and `15-brand-art-direction`.
+
+  | Seat                           | R3: D | R3: E | R4: D | R4: E, second pass |
+  | ------------------------------ | ----- | ----- | ----- | ------------------ |
+  | Awwwards jury (panel scale)    | 7.90  | 7.75  | 7.90  | 8.15               |
+  | Awwwards' own scale (estimate) | 6.83  | 6.86  | 6.65  | 6.84               |
+  | UI and visual design           | 8.0   | 7.5   | 8.0   | 7.5                |
+  | UX and flow                    | 8.0   | 7.0   | 7.5   | 8.0                |
+  | UX writing                     | 7.5   | 8.0   | 7.5   | 8.0                |
+  | Compliance and accessibility   | 7.5   | 6.5   | 7.5   | 8.0                |
+
+  Round 3 found two blocking faults in E's hero (the button changed its
+  destination with the film; white text crossed bright film) and a weak
+  page below it. E was revised between the rounds: a fixed action, words
+  on a panel, three equal expert cards with price and registration, steps
+  that show the product, a coral closing block, and a keyboard-operable
+  picker on the booking path (shared with D). After round 4, four of five
+  judges would build on E. All ten said E meets the founder's three taste
+  rules and D does not. **Nothing has reached 8.5.**
+
+- **Open after round 4:** one treatment for expert portraits (the founder
+  has ruled out black and white), a visual element of its own for the middle
+  of the page, the company's legal details, the film licence for
+  first-person health questions beside faces, and the tax and payment
+  wording. The list is in `brand-directions.md`. Fixes applied after round 4
+  are not judged.
+- **Not claimed:** "nobody pays to appear here". The live site has a paid
+  "Top Expert" plan, so the listing line only says how the three shown were
+  chosen. Advisors' institutions and the €50 to €70 range shown in the lab
+  are unconfirmed.
+- **Founder, 2026-11-23, on E after rounds 3 and 4:** "I think we are in a
+  right direction... keep going?" E is the working direction for the public
+  site. It is not yet a signed-off brand: no page has passed the panel.
+- **Round 5 (E alone, third pass, new judges):** Awwwards seat 8.25 (own
+  scale 6.63), UI 7.5, UX 8.0, writing 8.0, compliance and accessibility
+  8.0. Before the round every portrait was cut out and set on one sand
+  field at one face size (the founder had ruled out black and white), and a
+  row of professions was added under the questions. The scores have
+  levelled off near 8.0. What is left is stock film and portraits, a visual
+  element of Eleva's own for the middle of the page, facts only the founder
+  has, and states a static page cannot show.
+- **Recommendation recorded:** stop polishing the playground and build the
+  real homepage in `apps/web` (D3.1) in this direction, where the remaining
+  findings can be closed and the GDPR and security seats can run.
+- **A product requirement this raises (not built):** the portrait rule needs
+  a background-removal step for expert photographs and upload guidance (head
+  and shoulders, room above the head). That belongs to the platform track.
+
 ### 2026-11-23: The public site gets its own track, a full rethink and a seven-seat panel (active)
 
 - **Decision (founder, 2026-11-23):** the public site (homepage, expert

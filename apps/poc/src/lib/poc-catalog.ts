@@ -503,6 +503,17 @@ export const POC_DOMAINS: PocDomain[] = [
     specPath: "_context/PoCs/booking-flow/readme.md",
     walkthroughs: [],
   },
+  {
+    id: "brand-lab",
+    slug: "brand-lab",
+    title: "Brand lab",
+    description:
+      "Three brand directions for the public site, each on the same homepage, profile and pay step.",
+    status: "live",
+    href: "/brand-lab",
+    specPath: "docs/eleva-v3/design-audit/brand-directions.md",
+    walkthroughs: [],
+  },
 ]
 
 export function getPocDomain(slug: string): PocDomain | undefined {

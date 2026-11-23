@@ -221,7 +221,8 @@
             "HOME-09",
             "HOME-10",
             "TRUST-11",
-            "TRUST-14"
+            "TRUST-14",
+            "HOME-13"
           ],
           "effort": "M"
         },
@@ -510,7 +511,7 @@
         {
           "id": "D8.1",
           "title": "A brand direction for the public site",
-          "scope": "Three directions (palette with a role for each colour, type, imagery, shapes) shown on the real homepage, expert card and pay step, side by side. The founder chooses. The choice becomes the tokens of apps/web first, so the dashboards do not change under it, and the brand book is corrected to match the code.",
+          "scope": "Directions (palette with a role for each colour, type, imagery, shapes) shown on the real homepage, expert profile and pay step, side by side, and scored by a blind panel. The founder chooses. The choice becomes the tokens of apps/web first, so the dashboards do not change under it, and the brand book is corrected to match the code. State on 2026-11-23: five directions are built in the playground (apps/poc, /brand-lab). A to D were judged blind twice and D led at about 8.0; the founder then asked for more character and less reliance on type, and E, In her words, was built with the frontend-design skill. E is not judged. Waiting for the founder's choice.",
           "findings": [
             "BRAND-01",
             "BRAND-02",
