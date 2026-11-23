@@ -292,15 +292,22 @@ export function DecisionSignInScope({
     (from: Pressed) => {
       if (leaving) return
       const storage = sessionDraftStorage()
-      const now = entriesRef.current?.()
-      const kept = keepDraft(storage, signIn.draftKey, {
-        ownerId: signIn.reviewer.id,
-        version: now?.version ?? "",
-        ticks: now?.ticks ?? [],
-        text: now?.text ?? "",
-        keptAt: Date.now(),
-      })
-      const entered = Boolean(now && (now.ticks.length > 0 || now.text.trim()))
+      // What is on the form at this moment, kept for the way back.
+      const keepNow = () => {
+        const now = entriesRef.current?.()
+        const kept = keepDraft(storage, signIn.draftKey, {
+          ownerId: signIn.reviewer.id,
+          version: now?.version ?? "",
+          ticks: now?.ticks ?? [],
+          text: now?.text ?? "",
+          keptAt: Date.now(),
+        })
+        return {
+          kept,
+          entered: Boolean(now && (now.ticks.length > 0 || now.text.trim())),
+        }
+      }
+      const { kept, entered } = keepNow()
       // The browser took no draft although the page had said it would: the
       // reviewer is told to copy their reason, and leaves on the next press.
       if (!kept && entered && canKeep !== false) {
@@ -324,14 +331,18 @@ export function DecisionSignInScope({
               )
             ),
           ]),
-        leave: () =>
+        leave: () => {
+          // The form stays usable while the sign-out is on its way: what
+          // was typed in that moment goes too.
+          keepNow()
           window.location.assign(
             signInAgainUrl({
               loginUrl: signIn.loginUrl,
               consolePath: window.location.pathname,
               email: signIn.reviewer.email,
             })
-          ),
+          )
+        },
       }).then((outcome) => {
         if (outcome === "failed") {
           // Still signed in and still on the review: what is on the form
