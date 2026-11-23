@@ -32,6 +32,58 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-23: The route guard has its own tests, and a list of what counts as validation (13.4) (active)
+
+- Change (Phase 13.4): `pnpm check:route-guards` holds every API route to
+  its declared policy, and had no test of its own: all its logic ran at the
+  top of the file and ended in `process.exit`. It now exports its logic and
+  has 12 tests (`scripts/check-route-guards.test.mjs`, run by
+  `pnpm test:scripts` in CI): each auth mode, the policy shapes it refuses,
+  rate limit, BotID, and the rule below.
+- **"Validates the request" was a list of what does not count.** A mutating
+  route passed when any `.parse(` appeared whose receiver was not one of
+  eight names, or an audit wrapper, or two helper names that do not exist,
+  anywhere within two imports. So another library's `parse`, an output
+  schema, or a shared module that happened to parse something, each let a
+  route through. It is now a list of what counts (`REQUEST_VALIDATION`): a
+  Zod parse on a schema (a name ending in `Schema`, or an inline `z.…`
+  chain) that is not inside the building of a response, or
+  `rejectUnexpectedBody()`, in the route file or a handler beside it.
+- The new rule found two routes that validated nothing, and both are fixed
+  here: deleting a schedule override and disconnecting a calendar took the
+  path id as sent. Each now refuses an id that is not well formed (422).
+  The first also answered a failure with the caught error's own message;
+  it now logs it and answers with the code. No route was given an
+  exemption: the only one is still Better Auth's own handler.
+- An audit wrapper no longer counts as validation: recording a write says
+  nothing about what was written.
+- What the rule still cannot see, each pinned by a test: it reads the
+  file, not each handler, so one method's parse covers another method of
+  the same route; it does not know that the value parsed came from the
+  request (only that it is not `process.env`), that every path id is
+  parsed, or that the result is used; and for rate limit, BotID and auth a
+  call written inside a string still counts.
+- So "two routes that validated nothing" is true by file, not by handler.
+  The review found four `DELETE` handlers that pass on another method's
+  parse and still use their path id as sent: `expert/locations/[id]`,
+  `expert/schedules/[id]`, `expert/event-types/[id]` (which also answers a
+  failure with the caught error's message) and
+  `expert/event-types/[id]/modes/[modeId]`; and `expert/schedule/overrides`
+  (the list route) answers a failure with the error's message too. They are
+  the next slice on this track (parse every path id, never answer with an
+  error's own words), with a rule per handler to go with it.
+- The guard also follows `export { POST } from "./handler"` now, as it
+  followed imports. And a shared module under `apps/api/src/lib` counts for
+  neither auth nor validation however its import is written: `../../lib/x`
+  used to slip past a rule that looked at the spelling (Greptile).
+- The script also fails when it finds no route at all (a wrong path used
+  to pass with "0 routes").
+- Proof: `pnpm test:scripts` (27 tests, 13 new); the guard passes on the 166
+  routes; route tests for the two fixed routes.
+- Judge: 8.0 at the first commit (a parse of the environment still counted;
+  the per-file limit was not said). The second commit answers both and was
+  not scored again.
+
 ### 2026-11-23: Preview database branches expire by themselves (13.28) (active)
 
 - Change (Phase 13.28): a pull request's Neon branch (`pr-N`) was deleted
