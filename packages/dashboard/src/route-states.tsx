@@ -26,6 +26,42 @@ export async function RouteLoading() {
   )
 }
 
+/**
+ * `loading.tsx` body for a page that is a table (a queue, a list): the page
+ * header, a card with a header row and rows, and the footer bar, so the
+ * layout does not jump when the rows arrive.
+ */
+export async function RouteTableLoading() {
+  const t = await getTranslations("routeStates")
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="mx-auto max-w-5xl space-y-8"
+    >
+      <span className="sr-only">{t("loading")}</span>
+      <div className="mb-10 space-y-3">
+        <Skeleton className="h-10 w-72 max-w-full" />
+        <Skeleton className="h-5 w-[32rem] max-w-full" />
+      </div>
+      <div className="overflow-hidden rounded-xl border bg-card shadow-1">
+        <div className="border-b p-4">
+          <Skeleton className="h-4 w-2/3" />
+        </div>
+        {Array.from({ length: 8 }, (_, row) => (
+          <div key={row} className="border-b p-4">
+            <Skeleton className="h-5" />
+          </div>
+        ))}
+        <div className="flex items-center justify-between gap-2 p-4">
+          <Skeleton className="h-4 w-44" />
+          <Skeleton className="h-8 w-40 rounded-4xl" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /** Default `not-found.tsx` body. */
 export async function RouteNotFound() {
   const t = await getTranslations("routeStates")

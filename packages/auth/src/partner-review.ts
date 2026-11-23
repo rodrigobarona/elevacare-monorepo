@@ -1,12 +1,16 @@
 import { and, eq, inArray, isNull } from "drizzle-orm"
 import { withPlatformAudit } from "@eleva/audit"
+import { STAFF_QUEUE_PAGE_SIZE } from "@eleva/config/pagination"
 import type { LicenceChecklistItem } from "@eleva/config/professional-bodies"
 import { main, withPlatformAdminContext } from "@eleva/db"
 import {
   _emitPartnerDecisionEvent,
+  _listLicenceReviewQueue,
   _readLicenceReview,
   type LicenceReview,
+  type LicenceReviewQueueRow,
 } from "@eleva/db/queries/partner-applications"
+import type { StaffQueuePage, StaffQueueReader } from "./clinic-review"
 
 export type LicenceDecision =
   | { decision: "approve"; checklist: Record<LicenceChecklistItem, true> }
@@ -190,6 +194,44 @@ export async function decideLicenceApplication(input: {
       return { status: outcome.status, profileStatus }
     }
   )
+}
+
+/**
+ * One page of the licence review queue, oldest first.
+ *
+ * A page shows people's names and their regulator to a staff member, so
+ * each read is recorded (`partner_application.listed`) in the same
+ * transaction: who read, which page, how many rows. Never the names. The
+ * record sits under the staff workspace: a page spans many practices.
+ */
+export async function listLicenceQueue(input: {
+  page: number
+  viewer: StaffQueueReader
+}): Promise<StaffQueuePage<LicenceReviewQueueRow>> {
+  return withPlatformAudit(input.viewer, async (tx, ctx) => {
+    const { rows, window } = await _listLicenceReviewQueue(tx, {
+      page: input.page,
+      pageSize: STAFF_QUEUE_PAGE_SIZE,
+    })
+    await ctx.emit({
+      entity: "partner_application",
+      action: "listed",
+      entityId: null,
+      payload: {
+        page: window.page,
+        pages: window.pages,
+        shown: rows.length,
+        total: window.total,
+      },
+    })
+    return {
+      items: rows,
+      total: window.total,
+      page: window.page,
+      pages: window.pages,
+      pageSize: STAFF_QUEUE_PAGE_SIZE,
+    }
+  })
 }
 
 /**

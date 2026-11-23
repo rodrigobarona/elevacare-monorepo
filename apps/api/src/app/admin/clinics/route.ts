@@ -1,4 +1,7 @@
-import { AdminClinicQueueResponseSchema } from "@eleva/api-client"
+import {
+  AdminClinicQueueResponseSchema,
+  StaffQueueQuerySchema,
+} from "@eleva/api-client"
 import { listClinicVerificationQueue } from "@eleva/auth/clinic-review"
 import { corsHeaders } from "@/lib/cors"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -14,16 +17,33 @@ export const ROUTE_POLICY = {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-/** GET /admin/clinics — staff queue of clinic identity filings. */
+/**
+ * GET /admin/clinics?page= — one page of the staff queue of clinic identity
+ * filings. Each read is recorded with the reader.
+ */
 export async function GET(request: Request) {
   const headers = corsHeaders(request, "GET, OPTIONS")
   const staff = await requireStaffReviewer(request, headers)
   if (staff instanceof Response) return staff
 
-  const rows = await listClinicVerificationQueue()
+  const query = StaffQueueQuerySchema.safeParse(
+    Object.fromEntries(new URL(request.url).searchParams)
+  )
+  if (!query.success) {
+    return secureJson(
+      { error: "validation", issues: query.error.issues },
+      { status: 422, headers }
+    )
+  }
+
+  const queue = await listClinicVerificationQueue({
+    page: query.data.page,
+    viewer: { actorUserId: staff.userId, orgId: staff.orgId },
+  })
   return secureJson(
     AdminClinicQueueResponseSchema.parse({
-      items: rows.map((row) => ({
+      ...queue,
+      items: queue.items.map((row) => ({
         ...row,
         waitingSince: row.waitingSince.toISOString(),
       })),

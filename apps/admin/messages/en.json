@@ -77,6 +77,17 @@
       }
     }
   },
+  "queue": {
+    "range": "Showing {from, number} to {to, number} of {total, number}",
+    "rangeSingle": "Showing {to, number} of {total, number}",
+    "previous": "Previous",
+    "next": "Next",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "pages": "Pages",
+    "end": "You’ve reached the end of the queue.",
+    "titleWithPage": "{title} · Page {page, number} of {pages, number}"
+  },
   "clinics": {
     "title": "Clinic verifications",
     "description": "Check each clinic's legal name and NIF against the public register before it is shown as verified.",

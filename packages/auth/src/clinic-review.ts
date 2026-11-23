@@ -1,6 +1,7 @@
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm"
+import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm"
 import { withPlatformAudit } from "@eleva/audit"
 import type { ClinicChecklistItem } from "@eleva/config/clinic-verification"
+import { pageWindow, STAFF_QUEUE_PAGE_SIZE } from "@eleva/config/pagination"
 import { auth, main, withPlatformAdminContext, type Tx } from "@eleva/db"
 import { _emitClinicDecisionEvent } from "@eleva/db/queries/clinic-verifications"
 import type { ClinicBillingAddress } from "@eleva/db/schema"
@@ -72,17 +73,51 @@ export interface ClinicVerificationQueueRow {
   waitingSince: Date
 }
 
+/** The staff member reading a queue, and the staff workspace they act in. */
+export interface StaffQueueReader {
+  actorUserId: string
+  orgId: string
+}
+
+/** One page of a staff queue, and where it sits in the whole queue. */
+export interface StaffQueuePage<Row> {
+  items: Row[]
+  total: number
+  /** The page returned: the one asked for, or the last one if it was past it. */
+  page: number
+  pages: number
+  pageSize: number
+}
+
 /**
- * Filings waiting on staff (`pending`, oldest first), then the ones sent
- * back to the clinic (`needs_changes`), which wait on the clinic.
+ * One page of the filings in review: those waiting on staff (`pending`,
+ * oldest first), then the ones sent back to the clinic (`needs_changes`),
+ * which wait on the clinic.
+ *
+ * A page shows clinics' legal names to a staff member, so each read is
+ * recorded (`clinic_verification.listed`) in the same transaction: who
+ * read, which page, how many rows. Never the names themselves. The record
+ * sits under the staff workspace: a page spans many clinics.
  */
-export async function listClinicVerificationQueue(): Promise<
-  ClinicVerificationQueueRow[]
-> {
+export async function listClinicVerificationQueue(input: {
+  page: number
+  viewer: StaffQueueReader
+}): Promise<StaffQueuePage<ClinicVerificationQueueRow>> {
   const v = main.clinicVerifications
   const c = main.clinicProfiles
-  return withPlatformAdminContext(async (tx) => {
-    const rows = await tx
+  const inReview = inArray(v.status, ["pending", "needs_changes"])
+  return withPlatformAudit(input.viewer, async (tx, ctx) => {
+    const [counted] = await tx
+      .select({ total: count() })
+      .from(v)
+      .innerJoin(c, eq(c.orgId, v.orgId))
+      .where(inReview)
+    const window = pageWindow({
+      total: counted?.total ?? 0,
+      page: input.page,
+      pageSize: STAFF_QUEUE_PAGE_SIZE,
+    })
+    const items = await tx
       .select({
         verificationId: v.id,
         orgId: v.orgId,
@@ -98,9 +133,34 @@ export async function listClinicVerificationQueue(): Promise<
       })
       .from(v)
       .innerJoin(c, eq(c.orgId, v.orgId))
-      .where(inArray(v.status, ["pending", "needs_changes"]))
-      .orderBy(desc(sql`${v.status} = 'pending'`), asc(v.submittedAt))
-    return rows
+      .where(inReview)
+      // The id settles two filings sent at the same moment, so a row is
+      // never on two pages or on none.
+      .orderBy(
+        desc(sql`${v.status} = 'pending'`),
+        asc(v.submittedAt),
+        asc(v.id)
+      )
+      .limit(STAFF_QUEUE_PAGE_SIZE)
+      .offset(window.offset)
+    await ctx.emit({
+      entity: "clinic_verification",
+      action: "listed",
+      entityId: null,
+      payload: {
+        page: window.page,
+        pages: window.pages,
+        shown: items.length,
+        total: window.total,
+      },
+    })
+    return {
+      items,
+      total: window.total,
+      page: window.page,
+      pages: window.pages,
+      pageSize: STAFF_QUEUE_PAGE_SIZE,
+    }
   })
 }
 

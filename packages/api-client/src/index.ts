@@ -1895,8 +1895,25 @@ const ExpertProfileStatusSchema = z.enum([
   "suspended",
 ])
 
-/** Staff licence review queue, oldest first. */
+/** `?page=` of a staff queue: a whole number from 1. */
+export const StaffQueueQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).max(10_000).default(1),
+})
+
+/**
+ * Where a page of a staff queue sits in the whole queue. `page` is the page
+ * returned: the one asked for, or the last one when that was past the end.
+ */
+const StaffQueuePageFields = {
+  total: z.number().int().min(0),
+  page: z.number().int().min(1),
+  pages: z.number().int().min(1),
+  pageSize: z.number().int().min(1),
+}
+
+/** One page of the staff licence review queue, oldest first. */
 export const AdminPartnerQueueResponseSchema = z.object({
+  ...StaffQueuePageFields,
   items: z.array(
     z.object({
       expertProfileId: z.string().uuid(),
@@ -1987,8 +2004,12 @@ export const AdminClinicFilingSchema = z.object({
   reason: z.string().nullable(),
 })
 
-/** Staff clinic verification queue: filings to decide first, oldest first. */
+/**
+ * One page of the staff clinic verification queue: filings to decide first,
+ * oldest first.
+ */
 export const AdminClinicQueueResponseSchema = z.object({
+  ...StaffQueuePageFields,
   items: z.array(
     z.object({
       verificationId: z.string().uuid(),
@@ -4140,8 +4161,12 @@ export function createApiClient(options: ApiClientOptions) {
     /** Staff console surface (`applications:review`). */
     admin: {
       partners: {
-        async list() {
-          const raw = await request<unknown>("GET", "/admin/partners")
+        /** One page of the queue (25 rows); `page` counts from 1. */
+        async list(input: { page?: number } = {}) {
+          const raw = await request<unknown>(
+            "GET",
+            `/admin/partners${input.page && input.page > 1 ? `?page=${input.page}` : ""}`
+          )
           return AdminPartnerQueueResponseSchema.parse(raw)
         },
         async get(expertProfileId: string) {
@@ -4161,8 +4186,12 @@ export function createApiClient(options: ApiClientOptions) {
         },
       },
       clinics: {
-        async list() {
-          const raw = await request<unknown>("GET", "/admin/clinics")
+        /** One page of the queue (25 rows); `page` counts from 1. */
+        async list(input: { page?: number } = {}) {
+          const raw = await request<unknown>(
+            "GET",
+            `/admin/clinics${input.page && input.page > 1 ? `?page=${input.page}` : ""}`
+          )
           return AdminClinicQueueResponseSchema.parse(raw)
         },
         async get(verificationId: string) {

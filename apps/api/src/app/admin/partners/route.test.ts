@@ -4,10 +4,8 @@ const requireCapability = vi.fn()
 const listQueue = vi.fn()
 const getReview = vi.fn()
 
-vi.mock("@eleva/db", () => ({
-  listLicenceReviewQueue: () => listQueue(),
-}))
 vi.mock("@eleva/auth/partner-review", () => ({
+  listLicenceQueue: (...args: unknown[]) => listQueue(...args),
   openLicenceReview: (...args: unknown[]) => getReview(...args),
 }))
 
@@ -42,7 +40,10 @@ function detail(id = PROFILE_ID) {
 describe("GET /admin/partners", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    requireCapability.mockResolvedValue({ user: { id: "staff-1" } })
+    requireCapability.mockResolvedValue({
+      user: { id: "staff-1" },
+      orgId: "staff-org",
+    })
   })
 
   it("refuses non-staff sessions", async () => {
@@ -58,20 +59,35 @@ describe("GET /admin/partners", () => {
   })
 
   it("lists the queue with listed profiles that were never verified", async () => {
-    listQueue.mockResolvedValue([
-      {
-        expertProfileId: PROFILE_ID,
-        displayName: "Ana Mota",
-        username: "fisiomota",
-        profileStatus: "active",
-        reviewState: "needs_verification",
-        professionalBody: null,
-        waitingSince: new Date("2026-09-01T10:00:00.000Z"),
-      },
-    ])
-    const res = await getQueue(new Request(URL))
+    listQueue.mockResolvedValue({
+      total: 26,
+      page: 2,
+      pages: 2,
+      pageSize: 25,
+      items: [
+        {
+          expertProfileId: PROFILE_ID,
+          displayName: "Ana Mota",
+          username: "fisiomota",
+          profileStatus: "active",
+          reviewState: "needs_verification",
+          professionalBody: null,
+          waitingSince: new Date("2026-09-01T10:00:00.000Z"),
+        },
+      ],
+    })
+    const res = await getQueue(new Request(`${URL}?page=2`))
     expect(res.status).toBe(200)
+    // The read is recorded for this staff member, in the staff workspace.
+    expect(listQueue).toHaveBeenCalledWith({
+      page: 2,
+      viewer: { actorUserId: "staff-1", orgId: "staff-org" },
+    })
     await expect(res.json()).resolves.toEqual({
+      total: 26,
+      page: 2,
+      pages: 2,
+      pageSize: 25,
       items: [
         {
           expertProfileId: PROFILE_ID,
@@ -84,6 +100,14 @@ describe("GET /admin/partners", () => {
         },
       ],
     })
+  })
+
+  it("refuses a page that is not a number before reading anything", async () => {
+    for (const page of ["0", "abc", "2.5"]) {
+      const res = await getQueue(new Request(`${URL}?page=${page}`))
+      expect(res.status, page).toBe(422)
+    }
+    expect(listQueue).not.toHaveBeenCalled()
   })
 
   it("returns the licence snapshot staff check", async () => {

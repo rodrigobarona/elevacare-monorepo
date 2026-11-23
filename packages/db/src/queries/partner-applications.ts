@@ -1,4 +1,17 @@
-import { and, asc, desc, eq, inArray, isNull, ne, or, sql } from "drizzle-orm"
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  inArray,
+  isNull,
+  ne,
+  or,
+  sql,
+} from "drizzle-orm"
+
+import { pageWindow, type PageWindow } from "@eleva/config/pagination"
 
 import { withOrgContext, withPlatformAdminContext, type Tx } from "../context"
 import * as auth from "../schema/auth"
@@ -150,57 +163,71 @@ export interface LicenceReviewQueueRow {
   waitingSince: Date
 }
 
-const REVIEW_QUEUE_LIMIT = 200
-
 /**
- * Staff queue, oldest first: open applications plus listed profiles with no
- * approved application. Approved is terminal per profile, so the latest
- * application says whether one exists.
+ * One page of the staff queue, oldest first, and how long the queue is:
+ * open applications plus listed profiles with no approved application.
+ * Approved is terminal per profile, so the latest application says whether
+ * one exists. Read inside the caller's transaction, so `@eleva/auth` can
+ * record who read it in the same one (`listLicenceQueue`). Not for apps: a
+ * read of the queue is always audited.
  */
-export async function listLicenceReviewQueue(): Promise<
-  LicenceReviewQueueRow[]
-> {
+export async function _listLicenceReviewQueue(
+  tx: Tx,
+  input: { page: number; pageSize: number }
+): Promise<{ rows: LicenceReviewQueueRow[]; window: PageWindow }> {
   const p = main.expertProfiles
   const a = main.becomePartnerApplications
-  return withPlatformAdminContext(async (tx) => {
-    const latest = tx
-      .selectDistinctOn([a.expertProfileId], {
-        expertProfileId: a.expertProfileId,
-        status: a.status,
-        professionalBody: a.professionalBody,
-        submittedAt: a.submittedAt,
-      })
-      .from(a)
-      .orderBy(a.expertProfileId, desc(a.submittedAt))
-      .as("latest")
-    const rows = await tx
-      .select({
-        expertProfileId: p.id,
-        displayName: p.displayName,
-        username: p.username,
-        profileStatus: p.status,
-        status: latest.status,
-        professionalBody: latest.professionalBody,
-        submittedAt: latest.submittedAt,
-        createdAt: p.createdAt,
-      })
-      .from(p)
-      .leftJoin(latest, eq(latest.expertProfileId, p.id))
-      .where(
-        and(
-          isNull(p.deletedAt),
-          or(
-            inArray(latest.status, [...main.OPEN_PARTNER_APPLICATION_STATUSES]),
-            and(
-              eq(p.status, "active"),
-              or(isNull(latest.status), ne(latest.status, "approved"))
-            )
-          )
-        )
+  const latest = tx
+    .selectDistinctOn([a.expertProfileId], {
+      expertProfileId: a.expertProfileId,
+      status: a.status,
+      professionalBody: a.professionalBody,
+      submittedAt: a.submittedAt,
+    })
+    .from(a)
+    .orderBy(a.expertProfileId, desc(a.submittedAt))
+    .as("latest")
+  const inQueue = and(
+    isNull(p.deletedAt),
+    or(
+      inArray(latest.status, [...main.OPEN_PARTNER_APPLICATION_STATUSES]),
+      and(
+        eq(p.status, "active"),
+        or(isNull(latest.status), ne(latest.status, "approved"))
       )
-      .orderBy(asc(sql`coalesce(${latest.submittedAt}, ${p.createdAt})`))
-      .limit(REVIEW_QUEUE_LIMIT)
-    return rows.map((row) => ({
+    )
+  )
+  const [counted] = await tx
+    .select({ total: count() })
+    .from(p)
+    .leftJoin(latest, eq(latest.expertProfileId, p.id))
+    .where(inQueue)
+  const window = pageWindow({ ...input, total: counted?.total ?? 0 })
+  const rows = await tx
+    .select({
+      expertProfileId: p.id,
+      displayName: p.displayName,
+      username: p.username,
+      profileStatus: p.status,
+      status: latest.status,
+      professionalBody: latest.professionalBody,
+      submittedAt: latest.submittedAt,
+      createdAt: p.createdAt,
+    })
+    .from(p)
+    .leftJoin(latest, eq(latest.expertProfileId, p.id))
+    .where(inQueue)
+    // The id settles two profiles with the same time, so a row is never on
+    // two pages or on none.
+    .orderBy(
+      asc(sql`coalesce(${latest.submittedAt}, ${p.createdAt})`),
+      asc(p.id)
+    )
+    .limit(input.pageSize)
+    .offset(window.offset)
+  return {
+    window,
+    rows: rows.map((row) => ({
       expertProfileId: row.expertProfileId,
       displayName: row.displayName,
       username: row.username,
@@ -208,8 +235,8 @@ export async function listLicenceReviewQueue(): Promise<
       reviewState: licenceReviewState(row.profileStatus, row.status),
       professionalBody: row.professionalBody,
       waitingSince: row.submittedAt ?? row.createdAt,
-    }))
-  })
+    })),
+  }
 }
 
 export interface LicenceReview {

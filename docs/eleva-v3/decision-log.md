@@ -32,6 +32,56 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-23: Staff queues have pages, and reading one is on record (12.6) (active)
+
+- Change (Phase 12.6): the two staff queues (clinic verifications, licence
+  reviews) asked the API for the whole queue and showed every row; the
+  licence one stopped silently at 200. Each now shows 25 rows a page, says
+  where the reader is ("Showing 26 to 50 of 112") and links to the pages on
+  either side. The API returns one page with `total`, `page` and `pages`,
+  so a staff member is sent no more names than the page they asked for.
+- **Each read of a queue page is recorded** (`clinic_verification.listed`,
+  `partner_application.listed`): who read, which page, how many rows, in
+  the same transaction as the read, so nothing is shown when the record
+  cannot be written. Never the names. A page spans many clinics or
+  practices, so the record sits under the staff workspace of the reader.
+  The pager never fetches a page ahead of the reader: a page nobody opened
+  leaves no record.
+- The page is in the address (`/clinics?page=2`), so Back, a reload and a
+  shared link show the same rows. Page 1 has no parameter. A value that is
+  not a page goes to page 1, and a page past the end (the queue shrank
+  after decisions) goes to the last page: never an empty table with a
+  pager. The order is the same as before with the row's id to settle ties,
+  so a row is never on two pages or on none.
+- Design: three Mobbin references saved first (`13-admin/17` to `19`: range
+  and total beside Previous and Next in words; a count on the queue itself;
+  the count of the filtered list). Previous and Next, not "Load more": a
+  reviewer opens a filing, decides and comes back, and the place in the
+  list must survive that. On the last page the footer says so in words. A
+  list that fits on one page shows the range and no controls. The title of
+  the tab names the page ("Clinic verifications · Page 2 of 5"), and focus
+  moves to the heading after a page change.
+- Shared, because the clinic's list of sessions (11.13) needs the same:
+  `pageWindow` and `parsePageParam` in `@eleva/config/pagination`, `Pager`
+  and `FocusHeadingOnChange` in `@eleva/ui`, a table-shaped loading state
+  in `@eleva/dashboard`.
+- Proof: unit tests for the paging maths, the pager and both routes; on
+  Postgres (the dev branch here, the pull request's branch in CI), both
+  queues return one page, pull a page past the end back to the last, keep
+  their order, and leave a record of each read with no name in it; in a
+  browser, `pnpm e2e:pager` (opt-in, 6 cases) on a playground page that
+  shows each state of the footer: links, the unavailable control out of
+  the tab order, keyboard, Portuguese, 320 and 375 px. Captures in
+  `design-audit/captures/2026-11-23-staff-queue-pager-after/`.
+- Not proven: the two queue pages in the real console (the redirects, the
+  tab title, focus after a page change, the loading skeleton): that needs a
+  signed-in staff member and more than 25 filings, which the local data
+  does not have.
+- Left for a person (P-03): the staff entry screen tells staff that what
+  they change is recorded. Reads of a queue and of a filing are recorded
+  too, and that sentence does not say so yet.
+- Owner: engineering
+
 ### 2026-11-22: An API key identifies its owner again, and no session can make one (12.5) (active)
 
 - Change (Phase 12.5): signing in to the API with a key read `key.userId`,

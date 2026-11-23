@@ -135,6 +135,8 @@ export type AuditAction =
   | "scheduled"
   | "paid_out"
   | "opened"
+  /** Staff read one page of a review queue. */
+  | "listed"
   | "closed"
   | "issued"
   | "credited"

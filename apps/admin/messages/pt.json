@@ -77,6 +77,17 @@
       }
     }
   },
+  "queue": {
+    "range": "A mostrar {from, number} a {to, number} de {total, number}",
+    "rangeSingle": "A mostrar {to, number} de {total, number}",
+    "previous": "Anterior",
+    "next": "Seguinte",
+    "previousPage": "Página anterior",
+    "nextPage": "Página seguinte",
+    "pages": "Páginas",
+    "end": "Chegou ao fim da fila.",
+    "titleWithPage": "{title} · Página {page, number} de {pages, number}"
+  },
   "clinics": {
     "title": "Verificação de clínicas",
     "description": "Confirme a denominação social e o NIF de cada clínica no registo público antes de a mostrar como verificada.",

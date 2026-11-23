@@ -23,7 +23,7 @@ export async function requireStaffReviewer(
   request: Request,
   headers: Record<string, string>,
   options: { decision?: boolean } = {}
-): Promise<{ userId: string } | Response> {
+): Promise<{ userId: string; orgId: string } | Response> {
   let session
   // A session whose start cannot be read is treated as old.
   let authenticatedAt: Date | null = null
@@ -76,5 +76,5 @@ export async function requireStaffReviewer(
       { status: 403, headers }
     )
   }
-  return { userId: session.user.id }
+  return { userId: session.user.id, orgId: session.orgId }
 }

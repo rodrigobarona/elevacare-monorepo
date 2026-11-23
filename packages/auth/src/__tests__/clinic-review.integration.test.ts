@@ -39,9 +39,39 @@ describe.skipIf(!enabled || !databaseUrl)(
   { timeout: 120_000 },
   () => {
     const clinicId = randomUUID()
+    const staffOrgId = randomUUID()
     const owner = randomUUID()
     const staff = randomUUID()
     const suffix = clinicId.slice(0, 8)
+    const viewer = { actorUserId: staff, orgId: staffOrgId }
+
+    /** This clinic's row in the queue, on whichever page it is. */
+    async function inQueue() {
+      const first = await listClinicVerificationQueue({ page: 1, viewer })
+      for (let page = 1; page <= first.pages; page += 1) {
+        const { items } =
+          page === 1
+            ? first
+            : await listClinicVerificationQueue({ page, viewer })
+        const row = items.find((item) => item.orgId === clinicId)
+        if (row) return row
+      }
+      return undefined
+    }
+
+    /** The records of queue reads, kept under the staff workspace. */
+    async function queueReads() {
+      return db()
+        .select({
+          action: main.auditOutbox.action,
+          entityId: main.auditOutbox.entityId,
+          actorUserId: main.auditOutbox.actorUserId,
+          payload: main.auditOutbox.payload,
+        })
+        .from(main.auditOutbox)
+        .where(eq(main.auditOutbox.orgId, staffOrgId))
+        .orderBy(main.auditOutbox.createdAt)
+    }
 
     async function file(legalName: string, taxId: string) {
       const summary = await fileClinicVerification({
@@ -103,12 +133,20 @@ describe.skipIf(!enabled || !databaseUrl)(
         ])
       await db()
         .insert(auth.organization)
-        .values({
-          id: clinicId,
-          name: "Review clinic",
-          slug: `review-${suffix}`,
-          type: "team",
-        })
+        .values([
+          {
+            id: clinicId,
+            name: "Review clinic",
+            slug: `review-${suffix}`,
+            type: "team",
+          },
+          {
+            id: staffOrgId,
+            name: "Review staff",
+            slug: `review-staff-${suffix}`,
+            type: "staff",
+          },
+        ])
       await db()
         .insert(auth.member)
         .values({ organizationId: clinicId, userId: owner, role: "owner" })
@@ -126,23 +164,56 @@ describe.skipIf(!enabled || !databaseUrl)(
     afterAll(async () => {
       await db()
         .delete(main.auditOutbox)
-        .where(eq(main.auditOutbox.orgId, clinicId))
+        .where(inArray(main.auditOutbox.orgId, [clinicId, staffOrgId]))
       // Approved filings keep their reviewer (RESTRICT): filings go first.
       await db()
         .delete(main.clinicVerifications)
         .where(eq(main.clinicVerifications.orgId, clinicId))
       await db()
         .delete(auth.organization)
-        .where(eq(auth.organization.id, clinicId))
+        .where(inArray(auth.organization.id, [clinicId, staffOrgId]))
       await db()
         .delete(auth.user)
         .where(inArray(auth.user.id, [owner, staff]))
     })
 
+    it("returns one page of the queue, says where it sits, and records the read", async () => {
+      const before = (await queueReads()).length
+      const first = await listClinicVerificationQueue({ page: 1, viewer })
+      expect(first.page).toBe(1)
+      expect(first.pageSize).toBe(25)
+      expect(first.items.length).toBeLessThanOrEqual(25)
+      expect(first.items.length).toBe(Math.min(25, first.total))
+      expect(first.pages).toBe(Math.max(1, Math.ceil(first.total / 25)))
+      // A page past the end is the last page, never an empty one.
+      const past = await listClinicVerificationQueue({ page: 9_999, viewer })
+      expect(past.page).toBe(first.pages)
+      // The same order every time: the same rows, in the same places.
+      const again = await listClinicVerificationQueue({ page: 1, viewer })
+      expect(again.items.map((row) => row.verificationId)).toEqual(
+        first.items.map((row) => row.verificationId)
+      )
+      // Each read left a record: who, which page, how many, never a name.
+      const reads = (await queueReads()).slice(before)
+      expect(reads).toHaveLength(3)
+      expect(reads[0]).toMatchObject({
+        action: "clinic_verification.listed",
+        entityId: null,
+        actorUserId: staff,
+        payload: {
+          page: 1,
+          pages: first.pages,
+          shown: first.items.length,
+          total: first.total,
+        },
+      })
+      expect(reads[1]?.payload).toMatchObject({ page: first.pages })
+      expect(JSON.stringify(reads)).not.toMatch(/Lda|Clinic/)
+    })
+
     it("queues a pending filing and shows staff what to check", async () => {
       const filing = await file("Review Clinic, Lda", "PT 515 001 708")
-      const queue = await listClinicVerificationQueue()
-      expect(queue.find((row) => row.orgId === clinicId)).toMatchObject({
+      expect(await inQueue()).toMatchObject({
         verificationId: filing.id,
         clinicName: "Review Clinic",
         legalName: "Review Clinic, Lda",
@@ -365,17 +436,15 @@ describe.skipIf(!enabled || !databaseUrl)(
         payload: { verificationId: refiled.id, reason: null, verified: true },
       })
       // Decided filings leave the queue.
-      const queue = await listClinicVerificationQueue()
-      expect(queue.find((row) => row.orgId === clinicId)).toBeUndefined()
+      expect(await inQueue()).toBeUndefined()
     })
 
     it("keeps the clinic verified when a later filing is rejected", async () => {
       const later = await file("Another Name, Lda", "PT515001708")
-      expect(
-        (await listClinicVerificationQueue()).find(
-          (row) => row.orgId === clinicId
-        )
-      ).toMatchObject({ status: "pending", verified: true })
+      expect(await inQueue()).toMatchObject({
+        status: "pending",
+        verified: true,
+      })
       const result = await decideClinicVerification({
         verificationId: later.id,
         submittedAt: later.submittedAt,

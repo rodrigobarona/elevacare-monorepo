@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto"
 import { and, eq, inArray } from "drizzle-orm"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { auth, db, main } from "@eleva/db"
-import { openLicenceReview } from "../partner-review"
+import { listLicenceQueue, openLicenceReview } from "../partner-review"
 
 /**
  * Staff opening an expert's licence review, on the PR's Neon branch
@@ -22,6 +22,7 @@ describe.skipIf(!enabled || !databaseUrl)(
   { timeout: 120_000 },
   () => {
     const orgId = randomUUID()
+    const staffOrgId = randomUUID()
     const expert = randomUUID()
     const staff = randomUUID()
     const profileId = randomUUID()
@@ -62,12 +63,20 @@ describe.skipIf(!enabled || !databaseUrl)(
         ])
       await db()
         .insert(auth.organization)
-        .values({
-          id: orgId,
-          name: "Licence practice",
-          slug: `licence-${suffix}`,
-          type: "expert",
-        })
+        .values([
+          {
+            id: orgId,
+            name: "Licence practice",
+            slug: `licence-${suffix}`,
+            type: "expert",
+          },
+          {
+            id: staffOrgId,
+            name: "Licence staff",
+            slug: `licence-staff-${suffix}`,
+            type: "staff",
+          },
+        ])
       await db()
         .insert(auth.member)
         .values({ organizationId: orgId, userId: expert, role: "owner" })
@@ -86,13 +95,51 @@ describe.skipIf(!enabled || !databaseUrl)(
     afterAll(async () => {
       await db()
         .delete(main.auditOutbox)
-        .where(eq(main.auditOutbox.orgId, orgId))
+        .where(inArray(main.auditOutbox.orgId, [orgId, staffOrgId]))
       await db()
         .delete(auth.organization)
-        .where(eq(auth.organization.id, orgId))
+        .where(inArray(auth.organization.id, [orgId, staffOrgId]))
       await db()
         .delete(auth.user)
         .where(inArray(auth.user.id, [expert, staff]))
+    })
+
+    it("returns one page of the queue and records who read it", async () => {
+      const viewer = { actorUserId: staff, orgId: staffOrgId }
+      const first = await listLicenceQueue({ page: 1, viewer })
+      expect(first).toMatchObject({ page: 1, pageSize: 25 })
+      expect(first.items.length).toBe(Math.min(25, first.total))
+      expect(first.pages).toBe(Math.max(1, Math.ceil(first.total / 25)))
+      // Oldest first, and the same order on every read.
+      const times = first.items.map((row) => row.waitingSince.getTime())
+      expect(times).toEqual([...times].sort((a, b) => a - b))
+      const past = await listLicenceQueue({ page: 9_999, viewer })
+      expect(past.page).toBe(first.pages)
+
+      const reads = await db()
+        .select({
+          action: main.auditOutbox.action,
+          entityId: main.auditOutbox.entityId,
+          actorUserId: main.auditOutbox.actorUserId,
+          payload: main.auditOutbox.payload,
+        })
+        .from(main.auditOutbox)
+        .where(eq(main.auditOutbox.orgId, staffOrgId))
+        .orderBy(main.auditOutbox.createdAt)
+      expect(reads).toHaveLength(2)
+      expect(reads[0]).toMatchObject({
+        action: "partner_application.listed",
+        entityId: null,
+        actorUserId: staff,
+        payload: {
+          page: 1,
+          pages: first.pages,
+          shown: first.items.length,
+          total: first.total,
+        },
+      })
+      // Who and how many, never whose licences.
+      expect(JSON.stringify(reads)).not.toContain("Licence Expert")
     })
 
     it("records a profile that never filed, with no application to name", async () => {
