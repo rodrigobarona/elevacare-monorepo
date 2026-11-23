@@ -1,3 +1,4 @@
+import { z } from "zod"
 import type { JobsInTick } from "@eleva/config/background-jobs"
 import { logError } from "@eleva/observability"
 import { publishWorkflowJob } from "./qstash-publish"
@@ -25,46 +26,92 @@ const GROUP_SECONDS = 30
 const SOONEST_MS = 5_000
 
 /**
+ * What a job's route is sent beside its own input: which run after a
+ * failure this is, and whether the tick sent it. Both are optional and
+ * anything else in the body is the route's own.
+ */
+export const JobRunSchema = z
+  .object({
+    again: z.number().int().min(1).max(50).optional(),
+    tick: z.literal(true).optional(),
+  })
+  .passthrough()
+
+/** Which run this is: 0 for a first run, and whether the hourly tick sent it. */
+export async function whichRun(
+  request: Request
+): Promise<{ again: number; fromTick: boolean }> {
+  const parsed = JobRunSchema.safeParse(
+    await request
+      .clone()
+      .json()
+      .catch(() => null)
+  )
+  return {
+    again: parsed.success ? (parsed.data.again ?? 0) : 0,
+    fromTick: parsed.success ? parsed.data.tick === true : false,
+  }
+}
+
+let saidNoQueue = false
+
+/**
  * Asks for one run of `job` at `at` (or a little after). Without a queue
  * (on a laptop) nothing is sent, and the job runs when someone runs it.
  */
 export async function runJobAt(
   job: TickJob,
   at: Date,
-  body: Record<string, unknown> = {},
+  body: { again?: number } = {},
   now: Date = new Date()
 ): Promise<void> {
   const soonest = now.getTime() + SOONEST_MS
   const seconds = Math.ceil(Math.max(at.getTime(), soonest) / 1000)
   const grouped = Math.ceil(seconds / GROUP_SECONDS) * GROUP_SECONDS
   try {
-    await publishWorkflowJob(`/workflows/${job}`, body, {
+    const sent = await publishWorkflowJob(`/workflows/${job}`, body, {
       notBefore: new Date(grouped * 1000),
-      deduplicationId: `${job}:${grouped}`,
+      // Per job, per moment, and per step of a ladder: a first run and a
+      // later step that fall in the same half minute are two messages.
+      deduplicationId: `${job}:${grouped}:${body.again ?? 0}`,
     })
+    // Deployed with no queue set up, every one of these is lost and the
+    // work waits for the hour. Said once, so that it is not found late.
+    if (sent === "inline" && process.env.VERCEL_ENV && !saidNoQueue) {
+      saidNoQueue = true
+      logError(
+        "[run-job-at] no queue is set up here: jobs run hourly only",
+        new Error("QSTASH_TOKEN, WORKFLOWS_DRAIN_SECRET or API_URL is missing")
+      )
+    }
   } catch (err) {
     logError(`[run-job-at] ${job} was not scheduled`, err)
   }
 }
 
 /**
- * How long after a run that left work undone the next run comes: the
- * first soon, then further apart, then no more: the hourly tick takes
- * over. Kept short on purpose: every step is a message and a waking of
- * the database.
+ * How long after a run that left work undone the next run comes: soon,
+ * then further apart, then no more, and the hourly tick takes over. Each
+ * step is a message and a waking of the database, so a job gets the
+ * steps its work is worth.
+ *
+ * Putting a person out of a call they were removed from is worth the
+ * most: about every minute at first, and no gap over ten minutes for the
+ * whole hour until the tick. For that job the tick starts the steps
+ * again, so they go on for as long as someone is still to be put out.
  */
-const AGAIN_AFTER_SECONDS = [90, 300, 900] as const
+const AGAIN_AFTER_SECONDS = {
+  default: [90, 300, 900],
+  "video-eject-retry": [60, 60, 120, 120, 300, 300, 600, 600, 600, 600],
+} as const satisfies { default: readonly number[] } & {
+  [Job in TickJob]?: readonly number[]
+}
 
-/** Which of those runs a request is: 0 for the tick or a first run. */
-export async function againNumber(request: Request): Promise<number> {
-  const body = (await request
-    .clone()
-    .json()
-    .catch(() => null)) as { again?: unknown } | null
-  const again = body?.again
-  return typeof again === "number" && Number.isInteger(again) && again > 0
-    ? again
-    : 0
+/** The steps of one job, as seconds to wait after each run. */
+export function againSteps(job: TickJob): readonly number[] {
+  return job in AGAIN_AFTER_SECONDS
+    ? AGAIN_AFTER_SECONDS[job as keyof typeof AGAIN_AFTER_SECONDS]
+    : AGAIN_AFTER_SECONDS.default
 }
 
 /**
@@ -77,7 +124,7 @@ export async function runJobAgain(
   after: number,
   now: Date = new Date()
 ): Promise<"asked" | "left to the tick"> {
-  const wait = AGAIN_AFTER_SECONDS[after]
+  const wait = againSteps(job)[after]
   if (wait === undefined) return "left to the tick"
   await runJobAt(
     job,

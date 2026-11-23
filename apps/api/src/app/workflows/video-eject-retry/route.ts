@@ -5,7 +5,7 @@ import {
   runInternalWorkflow,
 } from "@/lib/internal-workflow"
 import { reportedJob } from "@/lib/reported-job"
-import { againNumber, runJobAgain } from "@/lib/run-job-at"
+import { runJobAgain, whichRun } from "@/lib/run-job-at"
 
 export const ROUTE_POLICY = {
   auth: "internal",
@@ -29,8 +29,12 @@ export const POST = reportedJob(
       const result = await retryPendingEjects()
       // Someone removed from a call is still in it, or a room is still
       // too small for someone added: not something to leave for an hour.
+      // After the tick's run too (it counts as a first run), so the
+      // tries go on for as long as someone is still to be put out. It
+      // ends: a room that is gone counts as done.
       if (result.pending > 0 || result.capacity.pending > 0) {
-        await runJobAgain("video-eject-retry", await againNumber(request))
+        const { again } = await whichRun(request)
+        await runJobAgain("video-eject-retry", again)
       }
       return result
     })

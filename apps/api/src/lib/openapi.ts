@@ -5940,7 +5940,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
         operationId: "expireBookingRequests",
         summary: "Expire unanswered Request to book rows",
         description:
-          "Every minute: cancel awaiting_confirmation bookings past approval_deadline_at (24 hours or session start). Full refund and slot release. Does not create a session or guest login.",
+          "In the hourly tick: cancel awaiting_confirmation bookings past approval_deadline_at (24 hours or session start). Full refund and slot release. Does not create a session or guest login.",
       }),
       "/workflows/stripe-stuck-events": internalWorkflow({
         operationId: "detectStuckStripeEvents",

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import { buildSessionRoomBody, DailyHttpError } from "@eleva/video"
 import {
   isRetryableDailyFailure,
+  isRoomGone,
   isSelfDelegate,
   runRevokedParticipantDailyCleanup,
   SessionParticipantError,
@@ -32,11 +33,45 @@ describe("shouldRepairRoomCapacity", () => {
   })
 })
 
+describe("isRoomGone", () => {
+  it("is only the service saying the room is not there", () => {
+    expect(isRoomGone(new DailyHttpError(404, "not found"))).toBe(true)
+    expect(isRoomGone(new DailyHttpError(500, "down"))).toBe(false)
+    expect(isRoomGone(new DailyHttpError(403, "no"))).toBe(false)
+    expect(isRoomGone(new DOMException("timed out", "TimeoutError"))).toBe(
+      false
+    )
+  })
+
+  it("is never a reason to try again: there is nobody left to put out", () => {
+    expect(isRetryableDailyFailure(new DailyHttpError(404, "not found"))).toBe(
+      false
+    )
+  })
+})
+
 describe("isRetryableDailyFailure", () => {
   it("retries Daily 5xx and rethrows other failures", () => {
     expect(isRetryableDailyFailure(new DailyHttpError(503, "busy"))).toBe(true)
     expect(isRetryableDailyFailure(new DailyHttpError(404, "gone"))).toBe(false)
     expect(isRetryableDailyFailure(new Error("db"))).toBe(false)
+    // "Not now" is as good a reason to try again as "could not".
+    expect(isRetryableDailyFailure(new DailyHttpError(429, "slow"))).toBe(true)
+    expect(isRetryableDailyFailure(new DailyHttpError(408, "late"))).toBe(true)
+    expect(isRetryableDailyFailure(new DailyHttpError(403, "no"))).toBe(false)
+    // No answer at all: the ten-second limit of the client, or no network.
+    expect(
+      isRetryableDailyFailure(new DOMException("timed out", "TimeoutError"))
+    ).toBe(true)
+    expect(
+      isRetryableDailyFailure(new DOMException("aborted", "AbortError"))
+    ).toBe(true)
+    expect(isRetryableDailyFailure(new TypeError("fetch failed"))).toBe(true)
+    // A mistake of our own is not the service being away.
+    expect(isRetryableDailyFailure(new TypeError("x is not a function"))).toBe(
+      false
+    )
+    expect(isRetryableDailyFailure("timeout")).toBe(false)
   })
 })
 

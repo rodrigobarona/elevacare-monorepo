@@ -62,8 +62,31 @@ export function isSelfDelegate(
   return userId === expertUserId || userId === memberUserId
 }
 
+/**
+ * Whether a call to the video service that failed is worth making again:
+ * the service said it could not (5xx), said "not now" (408, 429), or
+ * said nothing at all (the call timed out or never reached it). A person
+ * removed from a session is then still to be put out of the call, and
+ * the caller must say so and not answer as if the removal had failed.
+ */
 export function isRetryableDailyFailure(err: unknown) {
-  return err instanceof DailyHttpError && err.status >= 500
+  if (err instanceof DailyHttpError) {
+    return err.status >= 500 || err.status === 408 || err.status === 429
+  }
+  if (!(err instanceof Error)) return false
+  return (
+    err.name === "TimeoutError" ||
+    err.name === "AbortError" ||
+    (err instanceof TypeError && /fetch failed|network/i.test(err.message))
+  )
+}
+
+/**
+ * The room is not there any more (it was deleted after the session):
+ * nobody can be in it, so there is nobody left to put out.
+ */
+export function isRoomGone(err: unknown) {
+  return err instanceof DailyHttpError && err.status === 404
 }
 
 /** Do not shrink a room while a revoked participant is still waiting to eject. */
@@ -563,9 +586,13 @@ export async function retryPendingEjects(
     if (row.dailyRoomName && isElevaRoomName(row.dailyRoomName)) {
       try {
         await daily(deps).ejectParticipants(row.dailyRoomName, [row.userId])
-      } catch {
-        pendingCount += 1
-        continue
+      } catch (err) {
+        // A room that is gone ends it: without this the same row would
+        // be tried again for ever.
+        if (!isRoomGone(err)) {
+          pendingCount += 1
+          continue
+        }
       }
     }
     await withPlatformAudit(

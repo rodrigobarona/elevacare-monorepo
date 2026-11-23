@@ -10,7 +10,9 @@ import { test } from "node:test"
  * say so leaves its email, calendar entry or call room waiting for it.
  */
 const ROOT = path.resolve(import.meta.dirname, "..")
-const WRITE = /\.insert\(\s*main\.domainEventsOutbox\s*\)/g
+// The table under any name it is imported by, and written in SQL.
+const WRITE =
+  /\.insert\(\s*(?:\w+\.)*domainEventsOutbox\s*\)|insert\s+into\s+"?domain_events_outbox"?/gi
 const SAID = /\bdomainEventWritten\(\)/g
 
 function sources(dir) {
@@ -69,6 +71,33 @@ test("a write is recognised however it is laid out", () => {
     count("await tx\n  .insert(\n    main.domainEventsOutbox\n  )"),
     1
   )
+  assert.equal(count("tx.insert(domainEventsOutbox).values(x)"), 1)
+  assert.equal(count("tx.insert(schema.main.domainEventsOutbox)"), 1)
+  assert.equal(
+    count("sql`INSERT INTO domain_events_outbox (id) VALUES (1)`"),
+    1
+  )
   assert.equal(count("tx.insert(main.domainEventDeliveries)"), 0)
   assert.equal(count("tx.select().from(main.domainEventsOutbox)"), 0)
+})
+
+test("the API listens, or every email waits for the hourly tick", () => {
+  // Nothing else connects the two: take this line out of the API's
+  // start-up and every writer still says so, to nobody.
+  const startUp = readFileSync(
+    path.join(ROOT, "apps/api/src/instrumentation.ts"),
+    "utf8"
+  )
+  assert.match(
+    startUp,
+    /onDomainEventWritten\(\s*publishDomainEventsAfterResponse\s*\)/
+  )
+  const listener = readFileSync(
+    path.join(ROOT, "apps/api/src/lib/publish-domain-events.ts"),
+    "utf8"
+  )
+  assert.match(
+    listener,
+    /export function publishDomainEventsAfterResponse\(\): void \{\s*afterResponse\(publishDomainEventsNow\)/
+  )
 })

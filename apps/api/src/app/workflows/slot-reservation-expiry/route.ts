@@ -11,7 +11,7 @@ import {
   runInternalWorkflow,
 } from "@/lib/internal-workflow"
 import { reportedJob } from "@/lib/reported-job"
-import { againNumber, runJobAgain, runJobAt } from "@/lib/run-job-at"
+import { runJobAgain, runJobAt, whichRun } from "@/lib/run-job-at"
 
 export const ROUTE_POLICY = {
   auth: "internal",
@@ -38,7 +38,7 @@ export const POST = reportedJob(
   async (request: Request) => {
     return runInternalWorkflow(request, async () => {
       const result = await expireStaleReservations()
-      await comeBackForHolds(result, await againNumber(request))
+      await comeBackForHolds(result, await whichRun(request))
       return result
     })
   }
@@ -52,14 +52,16 @@ export const POST = reportedJob(
  */
 async function comeBackForHolds(
   result: SlotExpiryResult,
-  again: number
+  run: { again: number; fromTick: boolean }
 ): Promise<void> {
   try {
-    if (
-      result.errors > 0 ||
-      result.scanned >= SLOT_RESERVATION_EXPIRY_BATCH_SIZE
-    ) {
-      await runJobAgain("slot-reservation-expiry", again)
+    if (result.scanned >= SLOT_RESERVATION_EXPIRY_BATCH_SIZE) {
+      // A full batch is not a failure: more are waiting, now.
+      await runJobAt("slot-reservation-expiry", new Date())
+    } else if (result.errors > 0 && !run.fromTick) {
+      // Not after the tick's own run: a hold that cannot be dealt with
+      // at all would otherwise start these runs again every hour.
+      await runJobAgain("slot-reservation-expiry", run.again)
     }
     const next = await nextReservationExpiry()
     if (next) await runJobAt("slot-reservation-expiry", next)

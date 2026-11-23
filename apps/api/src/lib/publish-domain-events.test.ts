@@ -8,13 +8,19 @@ type Result = {
 }
 const none: Result = { claimed: 0, succeeded: 0, failed: 0, dead: 0 }
 
-const { publishPendingDomainEvents, runJobAgain, afterResponse, logError } =
-  vi.hoisted(() => ({
-    publishPendingDomainEvents: vi.fn(),
-    runJobAgain: vi.fn(async () => "asked" as const),
-    afterResponse: vi.fn(() => true),
-    logError: vi.fn(),
-  }))
+const {
+  publishPendingDomainEvents,
+  runJobAgain,
+  runJobAt,
+  afterResponse,
+  logError,
+} = vi.hoisted(() => ({
+  publishPendingDomainEvents: vi.fn(),
+  runJobAgain: vi.fn(async () => "asked" as const),
+  runJobAt: vi.fn(async (..._args: unknown[]) => {}),
+  afterResponse: vi.fn(() => true),
+  logError: vi.fn(),
+}))
 vi.mock("@eleva/workflows/domain-events", () => ({
   publishPendingDomainEvents,
 }))
@@ -22,7 +28,7 @@ vi.mock("@eleva/workflows/subscribers", () => ({
   defaultDomainEventSubscribers: () => ({}),
 }))
 vi.mock("@eleva/observability", () => ({ logError }))
-vi.mock("./run-job-at", () => ({ runJobAgain }))
+vi.mock("./run-job-at", () => ({ runJobAgain, runJobAt }))
 vi.mock("./after-response", () => ({ afterResponse }))
 
 import {
@@ -48,6 +54,7 @@ describe("publishDomainEventsNow", () => {
     publishPendingDomainEvents.mockReset()
     publishPendingDomainEvents.mockResolvedValue(none)
     runJobAgain.mockClear()
+    runJobAt.mockClear()
     logError.mockClear()
     vi.spyOn(console, "error").mockImplementation(() => {})
   })
@@ -63,7 +70,7 @@ describe("publishDomainEventsNow", () => {
     expect(runJobAgain).not.toHaveBeenCalled()
   })
 
-  it("looks again while a pass comes back full, and stops at four", async () => {
+  it("looks again while a pass comes back full, and after four hands over to the job", async () => {
     publishPendingDomainEvents.mockResolvedValue({
       ...none,
       claimed: 25,
@@ -71,6 +78,18 @@ describe("publishDomainEventsNow", () => {
     })
     await publishDomainEventsNow()
     expect(publishPendingDomainEvents).toHaveBeenCalledTimes(4)
+    // What is left is not left for the hour.
+    expect(runJobAt).toHaveBeenCalledTimes(1)
+    expect(runJobAt.mock.calls[0]![0]).toBe("domain-events-publisher")
+  })
+
+  it("does not hand over when the outbox was emptied", async () => {
+    publishPendingDomainEvents
+      .mockResolvedValueOnce({ ...none, claimed: 25, succeeded: 25 })
+      .mockResolvedValueOnce({ ...none, claimed: 4, succeeded: 4 })
+    await publishDomainEventsNow()
+    expect(publishPendingDomainEvents).toHaveBeenCalledTimes(2)
+    expect(runJobAt).not.toHaveBeenCalled()
   })
 
   it("is one run at a time, and a call made meanwhile gets one more pass", async () => {

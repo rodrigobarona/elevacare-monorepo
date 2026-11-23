@@ -96,6 +96,10 @@ export async function DELETE(
       )
     }
     logError("[sessions/participants/delete] unexpected error", err)
+    // The removal may be written and the person still in the call (the
+    // failure came after). A run that finds nobody to put out costs
+    // little; a person left in a session they were removed from does not.
+    afterResponse(() => runJobAgain("video-eject-retry", 0))
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }

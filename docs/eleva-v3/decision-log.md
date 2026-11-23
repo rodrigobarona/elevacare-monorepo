@@ -55,17 +55,18 @@ Each entry should include:
   work gets done.** Where a person would notice an hour, the work is
   started when it is created or falls due:
 
-  | What                                      | Was                     | Now                                                                             |
-  | ----------------------------------------- | ----------------------- | ------------------------------------------------------------------------------- |
-  | Emails, calendar entries, call rooms      | Published every minute  | Published by the request that wrote the event, once it has answered             |
-  | A delivery that failed (email not sent)   | Tried again each minute | One run 90 seconds later, then 5 and 15 minutes, then the hourly tick           |
-  | A hold on a slot that lapses              | Swept every minute      | One delayed run at the moment it lapses, asked for when the hold is made        |
-  | A hold that was extended                  | Swept every minute      | The job asks to be run again when the next hold lapses                          |
-  | Someone removed from a call, still in it  | Tried again each minute | One run 90 seconds later, then 5 and 15 minutes, then the hourly tick           |
-  | A request to book past its deadline       | Every minute            | Hourly: the deadline is 24 hours, and the expert is refused after it either way |
-  | Stuck Stripe events (an alert, no repair) | Every 10 minutes        | Hourly                                                                          |
-  | A call room that was not made, old rooms  | Every 10 minutes        | Hourly: it looks two hours ahead, and a failed delivery is tried again as above |
-  | Attendance after a session, clinic seats  | Every 10 minutes        | Hourly                                                                          |
+  | What                                      | Was                     | Now                                                                                    |
+  | ----------------------------------------- | ----------------------- | -------------------------------------------------------------------------------------- |
+  | Emails, calendar entries, call rooms      | Published every minute  | Published by the request that wrote the event, once it has answered                    |
+  | A delivery that failed (email not sent)   | Tried again each minute | One run 90 seconds later, then 5 and 15 minutes, then the hourly tick                  |
+  | A hold on a slot that lapses              | Swept every minute      | One delayed run at the moment it lapses, asked for when the hold is made               |
+  | A hold that was extended                  | Swept every minute      | The job asks to be run again when the next hold lapses                                 |
+  | Someone removed from a call, still in it  | Tried again each minute | A minute later, then never more than ten minutes apart, for as long as it takes        |
+  | A request to book past its deadline       | Every minute            | Hourly: the deadline is 24 hours, and the expert is refused after it either way        |
+  | Stuck Stripe events (an alert, no repair) | Every 10 minutes        | Hourly                                                                                 |
+  | A call room that was not made, old rooms  | Every 10 minutes        | Hourly: it looks two hours ahead, and a failed delivery is tried again as above        |
+  | Attendance after a session                | Every 10 minutes        | Hourly                                                                                 |
+  | Clinic seats counted after a plan change  | Every 10 minutes        | At once when a route changes them; hourly when Stripe's webhook does (before: ~12 min) |
 
 - **How an event is published without a clock.** Whatever writes an
   event to the outbox says so (`domainEventWritten()` in `@eleva/db`,
@@ -82,27 +83,57 @@ Each entry should include:
   reminders already work. The job is the same one the tick runs: it looks
   for what is due, so a message that is early, late or doubled does no
   harm, and one that never arrives is caught within the hour. Items due
-  within the same 30 seconds share one message.
+  within the same 30 seconds share one message. A route is told which run
+  it is (`again`) and whether the tick sent it (`tick`), read with one
+  Zod schema (`JobRunSchema`).
+- **Trying again after a failure, and where it stops.** A run that left
+  work undone asks for the next: 90 seconds, 5 minutes, 15 minutes, then
+  nothing, and the hourly tick is the next try. A run the tick started
+  does not begin these steps again, or one hold that can never be dealt
+  with would cost four runs an hour for ever. A backlog is not a failure:
+  a run that took a full batch goes on at once (the publisher makes up to
+  twenty passes, 500 deliveries, before it asks).
+- **Removing a person from a call is the exception, on purpose.** A
+  person removed from a health session must not stay in it. The steps
+  are a minute, a minute, two, two, five, five, then ten minutes four
+  times, and the tick starts them again, so the tries go on for as long
+  as someone is still to be put out. Two things changed in the removal
+  itself: a call to the video service that times out, is refused for
+  rate, or never gets through now counts as "still to do" and is tried
+  again (before, the route answered with an error and the per-minute job
+  happened to pick it up); and a room that no longer exists ends the
+  tries (before, such a row was tried every minute for ever). The route
+  asks for a run on any failure it cannot name, because the removal may
+  already be written.
 - The tick moved from five past the hour to the hour, where the two-hourly
   and daily QStash jobs already run, so that they share one waking.
 - **What this should cost, as an estimate and not a measurement:** about
   24 wakings a day of five to six minutes each, a little over two hours
-  awake, about half a compute-hour a day and 17 a month, plus whatever
-  real visits use. To be read from Neon after the first week on
-  production.
+  awake, about half a compute-hour a day and 17 a month. On top of that,
+  and not counted: real visits; one more waking for each hold (its run
+  five minutes later); two reminder messages for each booking; Stripe's,
+  Daily's and Resend's webhooks; the daily probe. To be read from Neon
+  after the first week on production.
+- **What a visitor may notice:** the first request after a quiet spell
+  waits for the database to wake, which it did not while it never slept.
 - **Not proven, because nothing here could be run against a database or
   the queue** (the database is not answering until 2026-12-01): that
   `after()` is reached from inside a transaction on the real driver; the
   query that finds the next hold to lapse; that a delayed message reaches
-  a job route and is accepted. Each has unit tests around it and none has
-  run for real. The first booking on staging after the merge is the
+  a job route and is accepted; that twelve jobs starting together wake
+  the database in time (five connections, ten seconds to connect). Each
+  has unit tests around it and none has run for real. The first booking on staging after the merge is the
   check: the confirmation email with no tick in between, and the hold of
   an abandoned checkout released about five minutes later.
 - Known limits. A hold abandoned at the pay step is released when it
   lapses only if the queue delivers; if it does not, within the hour
-  (before: within a minute). Each hold costs one to three queue messages
-  against QStash's daily allowance, which per-minute schedules used up on
-  2026-11-07; at this traffic that is far below it. Work with a long
+  (before: within a minute). A hold usually costs one to three queue
+  messages; more when the visitor extends it several times, and one
+  every ten minutes while a payment is still settling at the bank. They
+  count against QStash's daily allowance, which per-minute schedules used
+  up on 2026-11-07; at this traffic that is far below it. Where no queue
+  is set up, every one of these is lost and the work is hourly: the API
+  says so once in its log. Work with a long
   deadline (a request to book, an account deletion) is now late by up to
   an hour and no more.
 - Operator: after the deployment, the Cron Jobs page of `elevacare-api`

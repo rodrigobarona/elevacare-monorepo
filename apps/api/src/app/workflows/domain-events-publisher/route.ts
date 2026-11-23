@@ -1,11 +1,10 @@
-import { publishPendingDomainEvents } from "@eleva/workflows/domain-events"
-import { defaultDomainEventSubscribers } from "@eleva/workflows/subscribers"
 import { corsHeaders } from "@/lib/cors"
 import { authorizeInternalWorkflow } from "@/lib/internal-workflow"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
 import { reportedJob } from "@/lib/reported-job"
-import { againNumber, runJobAgain } from "@/lib/run-job-at"
+import { publishPasses } from "@/lib/publish-domain-events"
+import { runJobAgain, runJobAt, whichRun } from "@/lib/run-job-at"
 
 export const ROUTE_POLICY = {
   auth: "internal",
@@ -16,6 +15,9 @@ export const ROUTE_POLICY = {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
+/** 20 passes of 25: what one run publishes before it asks for another. */
+const PASSES_OF_A_RUN = 20
+
 export const POST = reportedJob(
   "domain-events-publisher",
   async (request: Request) => {
@@ -24,13 +26,17 @@ export const POST = reportedJob(
     if (denied) return denied
 
     try {
-      const result = await publishPendingDomainEvents({
-        subscribers: defaultDomainEventSubscribers(),
-      })
-      // A delivery that failed is due again in a minute or two, and this
-      // job's own schedule is hourly: ask for the run that tries again.
-      if (result.failed > 0) {
-        await runJobAgain("domain-events-publisher", await againNumber(request))
+      // As many passes as a run can reasonably make: a backlog is not
+      // left at 25 an hour.
+      const { more, ...result } = await publishPasses(PASSES_OF_A_RUN)
+      const { again, fromTick } = await whichRun(request)
+      if (more) {
+        await runJobAt("domain-events-publisher", new Date())
+      } else if (result.failed > 0 && !fromTick) {
+        // A delivery that failed is due again in a minute or two, and
+        // this job's own schedule is hourly: ask for the run that tries
+        // again. Not after the tick's own run: the next tick is that.
+        await runJobAgain("domain-events-publisher", again)
       }
       return secureJson({ ok: true, ...result }, { status: 200, headers })
     } catch (err) {

@@ -2,7 +2,7 @@ import { logError } from "@eleva/observability"
 import { publishPendingDomainEvents } from "@eleva/workflows/domain-events"
 import { defaultDomainEventSubscribers } from "@eleva/workflows/subscribers"
 import { afterResponse } from "./after-response"
-import { runJobAgain } from "./run-job-at"
+import { runJobAgain, runJobAt } from "./run-job-at"
 
 /**
  * Publishing events when they are written, not when a clock says so.
@@ -20,8 +20,51 @@ import { runJobAgain } from "./run-job-at"
 /** How many deliveries one pass takes; a full pass means more may wait. */
 const BATCH = 25
 
-/** A stop for the loop below: a pass that keeps filling is the job's work. */
-const MOST_PASSES = 4
+/** What several passes did, added up. */
+export type Published = {
+  claimed: number
+  succeeded: number
+  failed: number
+  dead: number
+  /** The last pass came back full: more is waiting. */
+  more: boolean
+}
+
+/**
+ * Passes over the outbox until one comes back less than full, or
+ * `mostPasses` were made. `keepGoing` lets a caller ask for one more
+ * pass (see below).
+ */
+export async function publishPasses(
+  mostPasses: number,
+  keepGoing: () => boolean = () => false
+): Promise<Published> {
+  const total: Published = {
+    claimed: 0,
+    succeeded: 0,
+    failed: 0,
+    dead: 0,
+    more: false,
+  }
+  for (let pass = 0; pass < mostPasses; pass += 1) {
+    const result = await publishPendingDomainEvents({
+      subscribers: defaultDomainEventSubscribers(),
+      batchSize: BATCH,
+    })
+    total.claimed += result.claimed
+    total.succeeded += result.succeeded
+    total.failed += result.failed
+    total.dead += result.dead
+    total.more = result.claimed >= BATCH
+    if (!total.more && !keepGoing()) return total
+  }
+  // Out of passes with a caller still asking: something is left.
+  total.more = total.more || keepGoing()
+  return total
+}
+
+/** After a request: a few passes, and the job takes over from there. */
+const PASSES_AFTER_A_REQUEST = 4
 
 let running: Promise<void> | null = null
 let askedAgain = false
@@ -43,26 +86,24 @@ export function publishDomainEventsNow(): Promise<void> {
 }
 
 async function publish(): Promise<void> {
-  for (let pass = 0; pass < MOST_PASSES; pass += 1) {
-    askedAgain = false
-    let full: boolean
-    try {
-      const result = await publishPendingDomainEvents({
-        subscribers: defaultDomainEventSubscribers(),
-        batchSize: BATCH,
-      })
-      full = result.claimed >= BATCH
-      if (result.failed > 0 || result.dead > 0) {
-        console.error("[domain-events] deliveries failed", result)
-      }
-      // A delivery that failed is tried again by the job, soon: a
-      // confirmation email does not wait for the next hour.
-      if (result.failed > 0) await runJobAgain("domain-events-publisher", 0)
-    } catch (err) {
-      logError("[domain-events] publishing after the request failed", err)
-      return
+  try {
+    const result = await publishPasses(PASSES_AFTER_A_REQUEST, () => {
+      const asked = askedAgain
+      askedAgain = false
+      return asked
+    })
+    if (result.failed > 0 || result.dead > 0) {
+      console.error("[domain-events] deliveries failed", result)
     }
-    if (!full && !askedAgain) return
+    // More than a request should carry: the job goes on from here, now.
+    if (result.more) await runJobAt("domain-events-publisher", new Date())
+    // A delivery that failed is tried again by the job, soon: a
+    // confirmation email does not wait for the next hour.
+    else if (result.failed > 0) await runJobAgain("domain-events-publisher", 0)
+  } catch (err) {
+    logError("[domain-events] publishing after the request failed", err)
+  } finally {
+    askedAgain = false
   }
 }
 
