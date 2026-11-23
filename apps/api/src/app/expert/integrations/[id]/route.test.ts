@@ -42,7 +42,7 @@ const remove = (id: string) =>
   )
 
 describe("DELETE /expert/integrations/{id}", () => {
-  it("refuses an id that is not well formed, before reading anything", async () => {
+  it("refuses an id that is not well formed, before it lists any integration", async () => {
     const response = await remove("google-calendar")
     expect(response.status).toBe(422)
     await expect(response.json()).resolves.toMatchObject({

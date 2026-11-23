@@ -12,8 +12,8 @@
  *
  * "Reachable" for rate limit and BotID = the route file or a local module
  * it imports (two import hops, `@/` and relative specifiers). For auth and
- * for validation = the route file or a sibling handler it delegates to
- * (relative imports only): a shared helper under `lib/` never counts.
+ * for validation = the route file or a handler it delegates to by a
+ * relative path: a shared helper imported from `@/lib` never counts.
  *
  * The logic is exported (`findRouteGuardProblems`, `validatesRequest`) and
  * tested in `check-route-guards.test.mjs`.
@@ -62,9 +62,11 @@ const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"])
  * What counts as validating a request. A list of what counts, not of what
  * does not: a new library's `.parse(` must never pass by not being listed.
  *
- * What this cannot see: whether the parsed value came from the request, and
- * whether the result is used. A route that parses only one of two path ids,
- * or a schema parse of something else entirely, still passes.
+ * What this cannot see, each pinned by a test so nobody takes it for more:
+ * it looks at the file, not at each handler, so one method's parse covers
+ * another method of the same route; it does not know whether the value came
+ * from the request (only that it is not `process.env`), nor whether every
+ * path id is parsed, nor whether the result is used.
  */
 export const REQUEST_VALIDATION = {
   /**
@@ -86,6 +88,8 @@ export const REQUEST_VALIDATION = {
    * checking what Eleva sends, not what the caller sent.
    */
   responseBuilders: new Set(["secureJson", "json"]),
+  /** A parse of the environment is configuration, not a request. */
+  notARequest: "process",
 }
 
 function calleeName(call) {
@@ -148,7 +152,11 @@ export function validatesRequest(source, fileName = "route.ts") {
         const isSchema = ts.isIdentifier(receiver)
           ? REQUEST_VALIDATION.schemaName.test(receiver.text)
           : chainRoot(receiver) === REQUEST_VALIDATION.inlineRoot
-        if (isSchema && !buildsAResponse(node)) {
+        const [parsed] = node.arguments
+        const readsEnvironment =
+          parsed !== undefined &&
+          chainRoot(parsed) === REQUEST_VALIDATION.notARequest
+        if (isSchema && !readsEnvironment && !buildsAResponse(node)) {
           found = true
           return
         }
@@ -232,9 +240,13 @@ export async function findRouteGuardProblems(root) {
     const resolved = []
     sf.forEachChild((node) => {
       // `import … from` and `export { POST } from`: both hand work to
-      // another module.
+      // another module. A type-only one hands over nothing.
+      const typeOnly = ts.isImportDeclaration(node)
+        ? node.importClause?.isTypeOnly
+        : ts.isExportDeclaration(node) && node.isTypeOnly
       if (
         (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
+        !typeOnly &&
         node.moduleSpecifier &&
         ts.isStringLiteral(node.moduleSpecifier)
       ) {
@@ -380,6 +392,15 @@ async function main() {
     ? path.resolve(process.argv[2])
     : path.resolve(import.meta.dirname, "..")
   const found = await findRouteGuardProblems(root)
+
+  // A guard that looked at nothing has not passed: a wrong path, or a moved
+  // apps/api, must be loud.
+  if (found.routes === 0) {
+    console.error(
+      `Route guard check failed. No route handler found under ${path.join(root, "apps/api/src/app")}.`
+    )
+    process.exit(1)
+  }
 
   if (found.missingPolicy.length > 0) {
     console.error(

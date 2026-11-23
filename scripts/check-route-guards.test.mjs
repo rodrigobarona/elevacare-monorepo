@@ -1,9 +1,9 @@
 import assert from "node:assert/strict"
 import { execFileSync, spawnSync } from "node:child_process"
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
-import { test } from "node:test"
+import { after, test } from "node:test"
 import {
   findRouteGuardProblems,
   validatesRequest,
@@ -12,9 +12,15 @@ import {
 const SCRIPT = path.join(import.meta.dirname, "check-route-guards.mjs")
 const API = "apps/api/src/app"
 
+const made = []
+after(() => {
+  for (const root of made) rmSync(root, { recursive: true, force: true })
+})
+
 /** A throwaway repository holding these files (path -> source). */
 function repo(files) {
   const root = mkdtempSync(path.join(tmpdir(), "route-guards-"))
+  made.push(root)
   for (const [relative, source] of Object.entries(files)) {
     const file = path.join(root, relative)
     mkdirSync(path.dirname(file), { recursive: true })
@@ -174,6 +180,8 @@ test("what does not validate a request", async () => {
   const notValidation = {
     "another library's parse": `  const jar = cookie.parse(request.headers.get("cookie") ?? "")\n`,
     "JSON.parse": `  const body = JSON.parse(await request.text())\n`,
+    "an environment schema": `  const env = EnvSchema.parse(process.env)\n`,
+    "an inline parse of the environment": `  const max = z.coerce.number().parse(process.env.MAX)\n`,
     "an output schema inside the response": `  return secureJson(TeamSummarySchema.parse(row))\n`,
     "an output schema inside Response.json": `  return Response.json(ResultSchema.parse(row))\n`,
     "an audit wrapper alone": `  await withAudit({ orgId }, async (tx, ctx) => { await ctx.emit(event) })\n`,
@@ -241,6 +249,37 @@ test("validatesRequest reads calls, by receiver and by position", () => {
   )
 })
 
+test("what the rule cannot see, written down so nobody takes it for more", async () => {
+  // It reads the file, not each handler: PATCH's parse covers DELETE, which
+  // uses its path id as sent.
+  const mixed =
+    policy("session") +
+    handler(
+      "PATCH",
+      AUTH + LIMIT + `  BodySchema.safeParse(await request.json())\n`
+    ) +
+    handler("DELETE", AUTH + LIMIT + `  await remove((await params).id)\n`)
+  assert.deepEqual(await problemsOf(mixed), [])
+  // A call written inside a string still counts for rate limit: call sites
+  // are found in text with comments cut out, not in the syntax tree.
+  const inAString =
+    policy("public") +
+    `const hint = "applyRateLimit(key)"\nexport function GET() {}\n`
+  assert.deepEqual(await problemsOf(inAString), [])
+  // A type-only re-export hands nothing over.
+  const typeOnly =
+    policy("public") +
+    `export type { Limit } from "./handler"\nexport function GET() {}\n`
+  assert.equal(
+    (
+      await problemsOf(typeOnly, {
+        [`${API}/thing/handler.ts`]: handler("GET", LIMIT),
+      })
+    ).length,
+    1
+  )
+})
+
 test("only mutating public and session routes are asked for validation", async () => {
   assert.deepEqual(
     await problemsOf(policy("session") + handler("GET", AUTH + LIMIT)),
@@ -293,6 +332,11 @@ test("the script passes on this repository and names what fails elsewhere", () =
     /thing\/route\.ts: mutating session route that validates nothing/
   )
   assert.match(run.stderr, /rejectUnexpectedBody\(\)/)
+
+  // A path with no routes under it has not passed.
+  const empty = spawnSync("node", [SCRIPT, repo({})], { encoding: "utf8" })
+  assert.equal(empty.status, 1)
+  assert.match(empty.stderr, /No route handler found/)
 
   const noPolicy = repo({ [`${API}/thing/route.ts`]: handler("GET", "") })
   const second = spawnSync("node", [SCRIPT, noPolicy], { encoding: "utf8" })

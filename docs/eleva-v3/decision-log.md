@@ -57,13 +57,30 @@ Each entry should include:
   exemption: the only one is still Better Auth's own handler.
 - An audit wrapper no longer counts as validation: recording a write says
   nothing about what was written.
-- What the rule still cannot see, and nobody should claim it does: whether
-  the value parsed came from the request, whether the result is used, and
-  whether every path id of a route is parsed.
+- What the rule still cannot see, each pinned by a test: it reads the
+  file, not each handler, so one method's parse covers another method of
+  the same route; it does not know that the value parsed came from the
+  request (only that it is not `process.env`), that every path id is
+  parsed, or that the result is used; and for rate limit, BotID and auth a
+  call written inside a string still counts.
+- So "two routes that validated nothing" is true by file, not by handler.
+  The review found four `DELETE` handlers that pass on another method's
+  parse and still use their path id as sent: `expert/locations/[id]`,
+  `expert/schedules/[id]`, `expert/event-types/[id]` (which also answers a
+  failure with the caught error's message) and
+  `expert/event-types/[id]/modes/[modeId]`; and `expert/schedule/overrides`
+  (the list route) answers a failure with the error's message too. They are
+  the next slice on this track (parse every path id, never answer with an
+  error's own words), with a rule per handler to go with it.
 - The guard also follows `export { POST } from "./handler"` now, as it
   followed imports.
-- Proof: `pnpm test:scripts` (26 tests, 12 new); the guard passes on the 166
+- The script also fails when it finds no route at all (a wrong path used
+  to pass with "0 routes").
+- Proof: `pnpm test:scripts` (27 tests, 13 new); the guard passes on the 166
   routes; route tests for the two fixed routes.
+- Judge: 8.0 at the first commit (a parse of the environment still counted;
+  the per-file limit was not said). The second commit answers both and was
+  not scored again.
 - Owner: engineering
 
 ### 2026-11-22: An API key identifies its owner again, and no session can make one (12.5) (active)
