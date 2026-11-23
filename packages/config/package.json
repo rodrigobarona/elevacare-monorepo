@@ -39,7 +39,8 @@
     "./practice-closure": "./src/practice-closure.ts",
     "./professional-bodies": "./src/professional-bodies.ts",
     "./tax-id": "./src/tax-id.ts",
-    "./legal-entity": "./src/legal-entity.ts"
+    "./legal-entity": "./src/legal-entity.ts",
+    "./pagination": "./src/pagination.ts"
   },
   "scripts": {
     "lint": "eslint .",

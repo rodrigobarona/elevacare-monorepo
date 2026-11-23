@@ -88,8 +88,12 @@ proof.
   - unusual `record.decrypted` volume;
   - staff reads that are audited: session records (`record.decrypted`),
     clinic verification filings (`clinic_verification.opened`) and licence
-    reviews (`partner_application.opened`). Not yet in the stream: the two
-    staff queues (decision log, 2026-11-21, 12.2 and 12.3);
+    reviews (`partner_application.opened`), and each page of the two staff
+    queues that was served (`clinic_verification.listed`,
+    `partner_application.listed`, since 12.6). A queue record carries how
+    the read was authenticated (`via`): many pages from one reader in a
+    short time, or any `via` other than `cookie`, is what a walk through
+    the queue by a script or a taken key looks like;
   - `org_data_key` events (`rotated`, `shredded`);
   - membership and role changes;
   - refunds above the dual-control threshold.

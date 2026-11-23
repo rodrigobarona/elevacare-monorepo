@@ -32,6 +32,170 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-23: Staff queues have pages, and reading one is on record (12.6) (active)
+
+- Change (Phase 12.6): the two staff queues (clinic verifications, licence
+  reviews) asked the API for the whole queue and showed every row; the
+  licence one stopped silently at 200. Each now shows 25 rows a page, says
+  where the reader is ("Showing 26 to 50 of 112") and links to the pages on
+  either side. The API returns one page with `total`, `page` and `pages`,
+  so a staff member is sent no more names than the page they asked for.
+- **Each read of a queue page is recorded** (`clinic_verification.listed`,
+  `partner_application.listed`): who read, which page, how many rows, and
+  how the read was authenticated (`via`: a browser session, a token or a
+  key), in
+  the same transaction as the read, so nothing is shown when the record
+  cannot be written. Never the names. A page spans many clinics or
+  practices, so the record sits under the staff workspace of the reader. A
+  key walking every page and a person paging must not look the same
+  afterwards (the second panel's finding). `via` tells a key from a
+  session; it cannot tell a person from a script that holds their session
+  cookie: that takes a look at how many pages one reader took and how
+  fast, which the breach runbook now names.
+- **A record means "served", and care was taken that it means no more.**
+  Nothing fetches a queue ahead of the reader: the pager's links and the
+  "back to the queue" links on a review are never prefetched, and the tab
+  title is built from the address, not from a read (the first version read
+  the queue for the title, and Next can ask for a page's title before a
+  visit: the review caught it). The guarantee is `prefetch={false}` on
+  those links, which Next documents as never fetching ahead, and the
+  title's unit test: the browser test below ran on the dev server, where
+  Next fetches nothing ahead anyway, so its "resting on a link" steps
+  cannot fail for that reason. Two mismatches remain. Recorded twice: an
+  address with a page past the end is read, then the reader is sent to
+  the last page and that is read too. Shown again without a record: Back
+  shows the rows the browser kept, with no new read. The brief asked for
+  "Page 2 of 5" in the tab title; it says "Page 2", because knowing the
+  5 would take a second, recorded read.
+- The page is in the address (`/clinics?page=2`), so Back, a reload and a
+  shared link show the same rows. Page 1 has no parameter. A value that is
+  not a page goes to page 1, and a page past the end (the queue shrank
+  after decisions) goes to the last page: never an empty table with a
+  pager. A number too large to be a page (`?page=123456`) is past the end
+  like any other. The clinic queue keeps its order (to check first, oldest
+  first). The licence queue was oldest first across every state, so listed
+  experts with no licence on file sat on top and a licence to check could
+  be on any page: it now puts the licences that wait on staff first too.
+  Both use the row's id to settle ties,
+  so in a queue that does not change a row is never on two pages or on
+  none. When a filing is decided while someone pages, the rows after it
+  move up by one and the next page starts one row later: the reviewer can
+  miss a row until they come back to the top. The rows and the count come
+  from one statement (`count(*) over ()`), so they describe the same
+  moment: the first version counted, then read, and a filing decided in
+  between could come back as an empty last page with no way back (the
+  review caught it). A page with no row at its place is looked for again
+  from the top of the queue, `readPage` in `@eleva/config/pagination`.
+- Design: three Mobbin references saved first (`13-admin/17` to `19`: range
+  and total beside Previous and Next in words; a count on the queue itself;
+  the count of the filtered list). Previous and Next, not "Load more": a
+  reviewer opens a filing, decides and comes back, and the place in the
+  list must survive that (with the browser's Back: the link on a review
+  goes to the top of the queue, where the next filing to check is). On the
+  last page the footer says so in words. A list that fits on one page shows
+  the range and no controls. The title of the tab names the page ("Clinic
+  verifications · Page 2"), and focus moves to the heading after a page
+  change, which then reads the range.
+- Shared, because the clinic's list of sessions (11.13) needs the same:
+  `pageWindow` and `parsePageParam` in `@eleva/config/pagination`, `Pager`
+  and `FocusHeadingOnChange` in `@eleva/ui`, a table-shaped loading state
+  in `@eleva/dashboard`.
+- Proof: unit tests for the paging maths (an empty queue, a page past the
+  end, a queue one row shorter than when the address was made, a queue that
+  keeps shrinking), the pager and both routes. The console has its first
+  unit tests (`apps/admin` had no test runner): what each address does, the
+  footer's words in each case, and that asking either queue for its tab
+  title reaches no API. On Postgres (the dev branch here, the pull
+  request's branch in CI), both queues return one page, pull a page past
+  the end back to the last, and leave a record of each read with no name
+  in it; 26 clinic filings sent at the same moment come back 25 and then 1
+  in id order; 26 listed profiles made at the same moment are each on
+  exactly one page, with every licence to check before them.
+- **In the real console** (`e2e/admin-clinics.spec.ts`, opt-in, local API
+  and console on the dev server, signed in as staff, 51 filings seeded): 25
+  rows and "Showing 1 to 25 of N"; Next is a link to `?page=2`, a page in
+  the middle with both ways on; the tab reads "Clinic verifications · Page
+  2"; the keyboard's place is the heading, described by the range, as the
+  table is; **two pages served leave exactly two records, both
+  `via: cookie`**; a reload keeps the page; a filing opened from page 2
+  and the browser's Back show page 2 again with no new record;
+  `?page=999` and `?page=123456` end on the last page with
+  the end sentence; `abc`, `0` and `1` end on the clean address; opening a
+  filing and resting on its link back reads nothing, pressing it reads
+  once; the first and second page's sentence in Portuguese and Spanish; a
+  phone in the dark theme with nothing running off the side; a control
+  reached with Tab, for the focus outline. Captures in
+  `design-audit/captures/2026-11-23-staff-queue-pager-after/13-admin/`
+  (the queue before this slice is `2026-11-21-admin-clinics-after/13-admin/01`).
+  `pnpm e2e:pager` (6 cases) still covers each state of the footer on a
+  playground page, at 320 and 375 px.
+- Not proven: the loading skeleton against the real page (no capture), the
+  licence queue in a browser (same components, clinic queue proven), and
+  anything on staging.
+- **The sentence staff read is interim.** The entry screen said that what
+  staff change is recorded; it now says "What you open and what you change
+  is recorded in the audit log", because leaving the old one would have
+  claimed less than what happens. Only people who arrive from another
+  workspace see that screen. The brief held this wording for P-03, and
+  nobody has approved it: the formal notice to staff, in words the DPO
+  chooses and shown to every staff member, has to exist before the console
+  is used in production. Also for the DPO (P-02, P-03, P-07), named in the
+  retention matrix: how long `.listed` and `.opened` records are kept; who
+  may read colleagues' access records, who must review them and how
+  often; whether a token or an API key should read these queues at all
+  (the code allows it and labels it; a key cannot decide); whether logging employees' reads
+  needs a review under employment law; whether a record per page (which
+  cannot say whose rows were on it) is enough; the record of processing
+  that names staff as data subjects of the access log.
+- The API takes `?page=` by the rule the console's addresses follow
+  (digits, from 1) and refuses anything else, a repeated `page` and an
+  unknown parameter included. The OpenAPI parameter says the default, the
+  limit and what a page past the end returns.
+- Judges, blind, against the design brief. First commit: engineering 7.0,
+  UI 7.2, UX and writing 8.1, trust and accessibility 7.8 (the title's
+  read, no test with a second page, captures taken before the controls got
+  their border). Second panel, after those fixes and the reviewers'
+  (Greptile: an empty last page when the queue shrank between the count
+  and the read; CodeRabbit: a heading that kept a description): 8.0, 7.8,
+  8.2, 8.1. Its findings are what the third commit answers: the licence
+  queue's order, `via`, the console's tests and the real-console proof,
+  the licence queue's second page on Postgres, the skeleton in columns,
+  the end sentence that wraps whole, wider controls on a phone, the
+  Spanish and Portuguese of the staff sentence, and this entry's plain
+  statement that the sentence is interim. Third panel: engineering 8.6, UI
+  8.4, UX and writing 8.6, trust and accessibility 8.5. From it, in the
+  fourth commit: columns of a fixed width, so a page with longer names
+  does not move them; a footer as tall with controls as without, and under
+  the loading state; a focus outline on the controls that can be seen in
+  the light theme; taller controls on a phone; the licence queue's order
+  in the API description and the breach runbook's list of audited reads,
+  both of which still said the old thing; a page pattern in the API
+  description that refuses what the API refuses; a reason on the 422 for a
+  repeated `page`; a heading that no longer takes focus on a later return
+  to a queue; and a browser test with a real middle page, the browser's
+  Back, and the main sentence in all three languages. Not scored again.
+- Left for later, each from a judge: DM Sans as shipped has no tabular
+  figures, so the range's width moves with its digits (the class was
+  removed; a font build with them is a kit change, 13.32); the pager's
+  visible border should become the kit's outline, not a one-off (13.32);
+  numbers and dates use `pt` and `en`, not `pt-PT` and `en-IE` (one line in
+  `@eleva/dashboard` that changes every dashboard, so its own slice); the
+  total is only in the footer; paging by "after this row" would stop a
+  colleague's decision from moving rows between pages; the console's
+  proxy sends a signed-out person to sign in with an address the sign-in
+  page cannot return to, so a deep link is lost (12.7 touches this).
+- Owner: engineering (the queues, the record, the proof); DPO (the notice
+  to staff, how long the records are kept and who reads them: P-02, P-03,
+  P-07); founder (whether a key may read a staff queue)
+- Related: `docs/eleva-v3/data-retention-export-matrix.md` (staff access
+  records under "Expert licences" and "Clinics");
+  `docs/eleva-v3/legal/breach-response.md` (what a walk through a queue
+  looks like in the audit stream); `execution-plan/remaining-roadmap.md`
+  section 7; the design brief's references in
+  `_context/mobbin/library/13-admin/` (17 to 19)
+- Next review: before the console is used in production (the notice to
+  staff)
+
 ### 2026-11-22: Every clinic subscription has a seat item (11.7) (active)
 
 - Change (Phase 11.7): a clinic's subscription got a seat item only when it

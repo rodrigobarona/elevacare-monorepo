@@ -1,6 +1,6 @@
 {
   "nav": {
-    "overview": "Vista General",
+    "overview": "Vista general",
     "partners": "Revisión de colegiaciones",
     "clinics": "Verificación de clínicas"
   },
@@ -76,6 +76,18 @@
         "step-up": "Iniciaste sesión hace más de 12 horas. Cierra sesión y vuelve a iniciarla para decidir. Si escribiste un motivo, cópialo antes: esta página no lo guarda."
       }
     }
+  },
+  "queue": {
+    "range": "Mostrando del {from, number} al {to, number} de {total, number}",
+    "rangeSingle": "Mostrando {to, number} de {total, number}",
+    "rangeLastRow": "Mostrando la fila {to, number} de {total, number}",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "previousPage": "Página anterior",
+    "nextPage": "Página siguiente",
+    "pages": "Páginas",
+    "end": "Has llegado al final de la cola.",
+    "titleWithPage": "{title} · Página {page, number}"
   },
   "clinics": {
     "title": "Verificación de clínicas",
@@ -156,7 +168,7 @@
   },
   "staffEntry": {
     "title": "Entrar en la consola del equipo",
-    "body": "Aquí ves datos de miembros y expertos de toda Eleva. Los cambios que hagas quedan registrados en el registro de auditoría.",
+    "body": "Aquí ves datos de miembros y especialistas de toda Eleva. Lo que abras y lo que cambies queda guardado en el registro de auditoría.",
     "enter": "Entrar en la consola del equipo",
     "back": "Volver a Eleva",
     "error": "No hemos podido abrir la consola del equipo. Inténtalo de nuevo en un momento."

@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { getFormatter, getTranslations } from "next-intl/server"
 import { BuildingsIcon } from "@eleva/icons"
 import { DataTableShell } from "@eleva/ui/components/data-table-shell"
@@ -13,17 +14,44 @@ import {
   TableRow,
 } from "@eleva/ui/components/table"
 import { getAuthedApiClient } from "@/lib/server-api"
-import { FILING_STATUS_TONES } from "./filing-status-tones"
+import {
+  followQueuePage,
+  QUEUE_RANGE_ID,
+  QueuePager,
+  queueTitle,
+  requestedQueuePage,
+  type QueueSearchParams,
+} from "@/lib/staff-queue"
+import { FILING_STATUS_TONES } from "../filing-status-tones"
 
 export const dynamic = "force-dynamic"
 
-export default async function ClinicsPage() {
+const PATH = "/clinics"
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: QueueSearchParams
+}): Promise<Metadata> {
+  const t = await getTranslations("clinics")
+  return { title: await queueTitle(t("title"), searchParams) }
+}
+
+export default async function ClinicsPage({
+  searchParams,
+}: {
+  searchParams: QueueSearchParams
+}) {
+  const page = await requestedQueuePage(searchParams, PATH)
   const api = await getAuthedApiClient()
-  const [{ items }, t, format] = await Promise.all([
-    api.admin.clinics.list(),
+  // Each read of a queue is recorded: this is the only one for this view.
+  const [queue, t, format] = await Promise.all([
+    api.admin.clinics.list({ page }),
     getTranslations("clinics"),
     getFormatter(),
   ])
+  followQueuePage(PATH, page, queue)
+  const { items } = queue
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
@@ -35,13 +63,22 @@ export default async function ClinicsPage() {
           description={t("emptyBody")}
         />
       ) : (
-        <DataTableShell>
-          <Table aria-label={t("title")}>
+        <DataTableShell footer={<QueuePager path={PATH} queue={queue} />}>
+          {/* Fixed columns: a page with longer names must not move them. */}
+          <Table
+            aria-label={t("title")}
+            aria-describedby={QUEUE_RANGE_ID}
+            className="min-w-160 table-fixed"
+          >
             <TableHeader>
-              <TableHead isRowHeader>{t("columns.clinic")}</TableHead>
-              <TableHead>{t("columns.legalName")}</TableHead>
-              <TableHead>{t("columns.state")}</TableHead>
-              <TableHead>{t("columns.waiting")}</TableHead>
+              <TableHead isRowHeader className="w-[30%]">
+                {t("columns.clinic")}
+              </TableHead>
+              <TableHead className="w-[34%]">
+                {t("columns.legalName")}
+              </TableHead>
+              <TableHead className="w-[16%]">{t("columns.state")}</TableHead>
+              <TableHead className="w-[20%]">{t("columns.waiting")}</TableHead>
             </TableHeader>
             <TableBody>
               {items.map((item) => (

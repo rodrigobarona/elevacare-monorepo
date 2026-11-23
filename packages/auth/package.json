@@ -21,6 +21,7 @@
     "./organizations": "./src/organizations.ts",
     "./partner-review": "./src/partner-review.ts",
     "./clinic-review": "./src/clinic-review.ts",
+    "./staff-queue": "./src/staff-queue.ts",
     "./org-routing": "./src/org-routing.ts",
     "./permissions": "./src/permissions.ts",
     "./client": "./src/client.ts",

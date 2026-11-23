@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto"
 import { and, eq, inArray } from "drizzle-orm"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { auth, db, main } from "@eleva/db"
-import { openLicenceReview } from "../partner-review"
+import { listLicenceQueue, openLicenceReview } from "../partner-review"
 
 /**
  * Staff opening an expert's licence review, on the PR's Neon branch
@@ -22,10 +22,16 @@ describe.skipIf(!enabled || !databaseUrl)(
   { timeout: 120_000 },
   () => {
     const orgId = randomUUID()
+    const staffOrgId = randomUUID()
     const expert = randomUUID()
     const staff = randomUUID()
     const profileId = randomUUID()
     const suffix = orgId.slice(0, 8)
+    const viewer = {
+      actorUserId: staff,
+      orgId: staffOrgId,
+      via: "cookie" as const,
+    }
 
     async function openings() {
       return db()
@@ -62,12 +68,20 @@ describe.skipIf(!enabled || !databaseUrl)(
         ])
       await db()
         .insert(auth.organization)
-        .values({
-          id: orgId,
-          name: "Licence practice",
-          slug: `licence-${suffix}`,
-          type: "expert",
-        })
+        .values([
+          {
+            id: orgId,
+            name: "Licence practice",
+            slug: `licence-${suffix}`,
+            type: "expert",
+          },
+          {
+            id: staffOrgId,
+            name: "Licence staff",
+            slug: `licence-staff-${suffix}`,
+            type: "staff",
+          },
+        ])
       await db()
         .insert(auth.member)
         .values({ organizationId: orgId, userId: expert, role: "owner" })
@@ -86,13 +100,126 @@ describe.skipIf(!enabled || !databaseUrl)(
     afterAll(async () => {
       await db()
         .delete(main.auditOutbox)
-        .where(eq(main.auditOutbox.orgId, orgId))
+        .where(inArray(main.auditOutbox.orgId, [orgId, staffOrgId]))
       await db()
         .delete(auth.organization)
-        .where(eq(auth.organization.id, orgId))
+        .where(inArray(auth.organization.id, [orgId, staffOrgId]))
       await db()
         .delete(auth.user)
         .where(inArray(auth.user.id, [expert, staff]))
+    })
+
+    it("returns one page of the queue and records who read it", async () => {
+      const first = await listLicenceQueue({ page: 1, viewer })
+      expect(first).toMatchObject({ page: 1, pageSize: 25 })
+      expect(first.items.length).toBe(Math.min(25, first.total))
+      expect(first.pages).toBe(Math.max(1, Math.ceil(first.total / 25)))
+      const past = await listLicenceQueue({ page: 9_999, viewer })
+      expect(past.page).toBe(first.pages)
+
+      const reads = await db()
+        .select({
+          action: main.auditOutbox.action,
+          entityId: main.auditOutbox.entityId,
+          actorUserId: main.auditOutbox.actorUserId,
+          payload: main.auditOutbox.payload,
+        })
+        .from(main.auditOutbox)
+        .where(eq(main.auditOutbox.orgId, staffOrgId))
+        .orderBy(main.auditOutbox.createdAt)
+      expect(reads).toHaveLength(2)
+      expect(reads[0]).toMatchObject({
+        action: "partner_application.listed",
+        entityId: null,
+        actorUserId: staff,
+        payload: {
+          page: 1,
+          pages: first.pages,
+          shown: first.items.length,
+          total: first.total,
+          via: "cookie",
+        },
+      })
+      // Who and how many, never whose licences.
+      expect(JSON.stringify(reads)).not.toContain("Licence Expert")
+    })
+
+    it("pages 26 listed profiles made at the same moment: each on one page, licences to check first", async () => {
+      const madeAt = new Date("2001-01-01T00:00:00.000Z")
+      const tag = `q${suffix}`
+      const batch = Array.from({ length: 26 }, (_, index) => ({
+        org: randomUUID(),
+        user: randomUUID(),
+        profile: randomUUID(),
+        name: `${tag}-${index}`,
+      }))
+      await db()
+        .insert(auth.user)
+        .values(
+          batch.map((row) => ({
+            id: row.user,
+            name: "Paging expert",
+            email: `${row.name}@example.test`,
+          }))
+        )
+      await db()
+        .insert(auth.organization)
+        .values(
+          batch.map((row) => ({
+            id: row.org,
+            name: "Paging practice",
+            slug: row.name,
+            type: "expert",
+          }))
+        )
+      try {
+        // Listed with no licence on file: in the queue, with nothing to
+        // order them but the id.
+        await db()
+          .insert(main.expertProfiles)
+          .values(
+            batch.map((row) => ({
+              id: row.profile,
+              orgId: row.org,
+              userId: row.user,
+              username: row.name,
+              displayName: "Paging expert",
+              status: "active" as const,
+              createdAt: madeAt,
+            }))
+          )
+        const first = await listLicenceQueue({ page: 1, viewer })
+        expect(first.pages).toBeGreaterThanOrEqual(2)
+        const all = [...first.items]
+        for (let page = 2; page <= first.pages; page++) {
+          all.push(...(await listLicenceQueue({ page, viewer })).items)
+        }
+        // No profile on two pages, and none of the 26 on none.
+        const ids = all.map((row) => row.expertProfileId)
+        expect(new Set(ids).size).toBe(ids.length)
+        const seeded: string[] = batch.map((row) => row.profile).sort()
+        expect(ids.filter((id) => seeded.includes(id))).toEqual(seeded)
+        // What waits on staff is at the top, whatever the page.
+        const waits = all.map((row) => row.reviewState === "pending")
+        expect(waits).toEqual([...waits].sort((a, b) => Number(b) - Number(a)))
+      } finally {
+        await db()
+          .delete(auth.organization)
+          .where(
+            inArray(
+              auth.organization.id,
+              batch.map((row) => row.org)
+            )
+          )
+        await db()
+          .delete(auth.user)
+          .where(
+            inArray(
+              auth.user.id,
+              batch.map((row) => row.user)
+            )
+          )
+      }
     })
 
     it("records a profile that never filed, with no application to name", async () => {

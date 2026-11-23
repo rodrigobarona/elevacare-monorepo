@@ -5,6 +5,8 @@ import {
 } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
+import { StaffQueueQuerySchema } from "@eleva/api-client"
+import type { StaffQueueReader } from "@eleva/auth/staff-queue"
 import { STAFF_DECISION_SIGN_IN_MAX_AGE_MS } from "@eleva/config/clinic-verification"
 import { isRecentSignIn } from "@eleva/config/practice-closure"
 
@@ -23,7 +25,9 @@ export async function requireStaffReviewer(
   request: Request,
   headers: Record<string, string>,
   options: { decision?: boolean } = {}
-): Promise<{ userId: string } | Response> {
+): Promise<
+  { userId: string; orgId: string; via: StaffQueueReader["via"] } | Response
+> {
   let session
   // A session whose start cannot be read is treated as old.
   let authenticatedAt: Date | null = null
@@ -76,5 +80,35 @@ export async function requireStaffReviewer(
       { status: 403, headers }
     )
   }
-  return { userId: session.user.id }
+  return {
+    userId: session.user.id,
+    orgId: session.orgId,
+    via: session.authMode ?? "unknown",
+  }
+}
+
+/**
+ * The page a queue request asks for (`?page=`, 1 when absent), or the 422
+ * that refuses it. One rule for both queues.
+ */
+export function requestedQueuePage(
+  request: Request,
+  headers: Record<string, string>
+): number | Response {
+  const params = new URL(request.url).searchParams
+  const query = StaffQueueQuerySchema.safeParse(Object.fromEntries(params))
+  // `?page=1&page=2` names two pages: refused, not settled by position.
+  const repeated = params.getAll("page").length > 1
+  if (!query.success || repeated) {
+    return secureJson(
+      {
+        error: "validation",
+        issues: query.success
+          ? [{ path: ["page"], message: "page is given more than once" }]
+          : query.error.issues,
+      },
+      { status: 422, headers }
+    )
+  }
+  return query.data.page
 }

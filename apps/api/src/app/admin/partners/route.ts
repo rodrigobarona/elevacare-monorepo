@@ -1,10 +1,12 @@
 import { AdminPartnerQueueResponseSchema } from "@eleva/api-client"
-import { listLicenceReviewQueue } from "@eleva/db"
+import { listLicenceQueue } from "@eleva/auth/partner-review"
 import { corsHeaders } from "@/lib/cors"
-import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
-import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
+import {
+  requestedQueuePage,
+  requireStaffReviewer,
+} from "@/lib/staff-review-http"
 
 export const ROUTE_POLICY = {
   auth: "session",
@@ -15,30 +17,27 @@ export const ROUTE_POLICY = {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-/** Staff licence review queue, oldest first. */
+/**
+ * GET /admin/partners?page= — one page of the staff licence review queue:
+ * licences to check first, oldest first, then the rest. Each read is
+ * recorded with the reader.
+ */
 export async function GET(request: Request) {
   const headers = corsHeaders(request, "GET, OPTIONS")
+  const staff = await requireStaffReviewer(request, headers)
+  if (staff instanceof Response) return staff
 
-  let session
-  try {
-    session = await requireApiCapability(request, "applications:review")
-  } catch (err) {
-    const failure = apiAuthFailure(err, headers)
-    if (failure) return failure
-    throw err
-  }
+  const page = requestedQueuePage(request, headers)
+  if (page instanceof Response) return page
 
-  const rateLimited = await applyRateLimit(
-    rateLimitKey(request, session.user.id),
-    RATE_LIMITS.authenticated,
-    headers
-  )
-  if (rateLimited) return rateLimited
-
-  const rows = await listLicenceReviewQueue()
+  const queue = await listLicenceQueue({
+    page,
+    viewer: { actorUserId: staff.userId, orgId: staff.orgId, via: staff.via },
+  })
   return secureJson(
     AdminPartnerQueueResponseSchema.parse({
-      items: rows.map((row) => ({
+      ...queue,
+      items: queue.items.map((row) => ({
         ...row,
         waitingSince: row.waitingSince.toISOString(),
       })),

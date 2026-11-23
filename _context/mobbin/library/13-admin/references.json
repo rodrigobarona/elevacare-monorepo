@@ -3,7 +3,7 @@
   "title": "Staff console: queues, people, approvals and logs",
   "researcher": "Trust and operations",
   "date": "2026-11-21",
-  "summary": "The clinic verification queue (Phase 12). References show the details to check grouped under plain labels, a short checklist where each item has its own state, and a status said in words on every row. The screens follow the licence review already shipped, so staff learn one pattern. References 04 and 06 to 16 (2026-11-21) prepare the rest of the console: finding a person and signing them out everywhere, the bar shown while acting as someone else, notes only staff see, a request that waits for a second person, a log of who did what, and failed deliveries that can be sent again.",
+  "summary": "The clinic verification queue (Phase 12). References show the details to check grouped under plain labels, a short checklist where each item has its own state, and a status said in words on every row. The screens follow the licence review already shipped, so staff learn one pattern. References 04 and 06 to 16 (2026-11-21) prepare the rest of the console: finding a person and signing them out everywhere, the bar shown while acting as someone else, notes only staff see, a request that waits for a second person, a log of who did what, and failed deliveries that can be sent again. References 17 to 22 (2026-11-22) prepare two small slices: queues with pages (12.6: a count in words, Previous and Next, the page kept in the address) and the sign-in-again message (12.7: said when the page opens, with a button, and nothing typed is lost).",
   "references": [
     {
       "id": "13-admin/01",
@@ -184,6 +184,78 @@
       "why": "'Deliveries' filters by channel, status and date range. Each row has the time, the message, the recipient and a 'Failed' tag. Ticking rows shows '4 selected', '4 failed emails selected' and a 'Retry selected' button. 'Last updated today at...' and an auto refresh switch sit above the list.",
       "apply": "Let staff narrow the list to failed events, tick several and press 'Run again' once. Say how many are selected and when the list was last refreshed, and report the result for each event.",
       "query": "webhook delivery attempts list with failed events and a resend button"
+    },
+    {
+      "id": "13-admin/17",
+      "file": "img/17-navattic-rows-range-previous-next.jpg",
+      "app": "Navattic",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/406b9908-584c-4f05-8432-abd77533bfa4?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Table footer in three parts: rows per page on the left, '1-6 of 6' and Previous / Next in words on the right",
+      "why": "'Visitors' ends with a footer row: a '25 rows per page' select on the left and, on the right, the range and the total ('1-6 of 6') beside 'Previous' and 'Next' buttons with words. On a single page both buttons are greyed out but stay in place, so the footer never jumps. Search, a filter and a sort sit above the table.",
+      "apply": "Both staff queues end with the same footer: 'Showing 1 to 25 of 112' on the left, 'Previous' and 'Next' as words on the right. The page size is fixed at 25 to start; add the 'rows per page' select only when a queue regularly runs past a few pages. At the first and last page the button is disabled, not hidden.",
+      "query": "admin table with pagination showing rows per page and a count of results"
+    },
+    {
+      "id": "13-admin/18",
+      "file": "img/18-stackai-queue-tabs-counts-pages.jpg",
+      "app": "StackAI",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/3ee3b3f3-ee96-480d-bb21-17369bed1b03?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A review queue split by state, each tab with its count, and Prev / Next under the rows",
+      "why": "'Pull Requests' is a queue of requests waiting for a decision. Tabs on top read 'Pending (1)', 'Approved (0)', 'Rejected (0)'. Each row is a sentence ('Alex Smith wants to publish…'), when it was created, a status pill, and reject and approve at the end. The footer has 'Prev' and 'Next' on the left and the page size (10, 20, 30 rows) on the right.",
+      "apply": "Say how much waits on the queue itself: 'Showing 1 to 25 of 112' now, and a count on each state ('To check (12)', 'Waiting on the clinic (4)') when states become tabs or a filter. Changing the state goes back to page 1. Use buttons with words where StackAI uses a bare tick and cross, and 'Previous' in full.",
+      "query": "review queue list of pending requests with previous and next page buttons"
+    },
+    {
+      "id": "13-admin/19",
+      "file": "img/19-circle-log-filters-showing-range.jpg",
+      "app": "Circle",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/5de52a3a-4801-4f05-86d1-bf3df8d4c769?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Filters as chips above the table, and 'Showing 1-4 of 4' beside Previous / Next below it",
+      "why": "A member's 'Logs' has filter chips on top ('Event: Invited to community, Removed from comm… + 8', 'Performed by', 'Date'), then a three-column table. Under it: 'Previous', 'Next' and 'Showing 1-4 of 4'. The count is of the filtered list, so the reader sees at once how much the filter left.",
+      "apply": "Keep the page and any filter in the address (?page=2&state=pending), so Back, reload and a shared link open the same rows. The count is of the filtered list. When a filter leaves nothing, say so and offer 'Clear filter'; that is a different message from an empty queue.",
+      "query": "activity log list with a load more button at the bottom"
+    },
+    {
+      "id": "13-admin/20",
+      "file": "img/20-gitbook-reauthenticate-methods.jpg",
+      "app": "GitBook",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/a25d1396-c170-4cfd-bb17-723a22803f68?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A small dialog over the page: one sentence on why, then the ways to sign in again as buttons",
+      "why": "On account settings, a sensitive action opens 'Reauthenticate' over the page: 'You need to reauthenticate yourself to perform this sensitive action', then two full-width buttons, 'Password' and 'Email link'. The settings page stays behind the dialog, so nothing the person did is lost, and they choose the method that suits them.",
+      "apply": "When a decision is refused because the sign-in is more than 12 hours old, say why in one sentence and give one button, 'Sign in again', beside the button that was pressed. The page stays as it is: the ticks and the typed reason are kept and come back after signing in. Use plain words where GitBook says 'reauthenticate'.",
+      "query": "session expired message asking to sign in again"
+    },
+    {
+      "id": "13-admin/21",
+      "file": "img/21-todoist-confirm-account-in-place.jpg",
+      "app": "Todoist",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/e9526af4-b67d-4d1e-9cd7-8a04113744b9?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Signing in again in place: the account's email is already filled in, and every sign-in method is offered",
+      "why": "'Confirm your account' opens over Settings: one sentence, then 'Continue with Google', 'Continue with Facebook' and 'Continue with Apple', and below them the email already filled in with the line 'The email address associated with your current account', a password field, 'Log out' and 'Log in with email'. The person never retypes who they are.",
+      "apply": "'Sign in again' opens Eleva's sign-in with the staff member's email already filled in and comes back to the same review. Nothing is asked twice: the email, the ticks and the reason are all carried. Offer the same methods as the normal sign-in (Google, email link, password), so nobody has to remember or retype a password to go on. Todoist blames a failed check; Eleva gives the real reason.",
+      "query": "session expired message asking to sign in again"
+    },
+    {
+      "id": "13-admin/22",
+      "file": "img/22-airwallex-banner-before-submit.jpg",
+      "app": "Airwallex",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/542e34a0-a41d-4163-882a-91517e820cad?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A banner above the form says what is needed before submitting and why, with the action on the same line",
+      "why": "'Review your information' opens with an amber box above the details: 'Your email has not been confirmed. For security purposes, you will need to confirm your email before submitting your account verification.' and a 'Resend email' button at its right. The person learns it before reading and filling in the page, not after pressing Submit.",
+      "apply": "When a review opens on a sign-in older than 12 hours, show a banner above 'Your decision': 'Sign in again before you decide', one sentence on why, and 'Sign in again'. The filing stays readable. Use an icon and words, never colour alone, and keep the tone calm: this is a routine check, not an error.",
+      "query": "banner at the top of a page warning that you need to verify your identity before making changes"
     }
   ],
   "judging_criteria": [
@@ -196,6 +268,8 @@
     "Is it clear at the composer that a note is for Eleva staff only, does each note show who wrote it and when, and is the note absent from everything the member, the expert or the clinic can open (their activity, exports and emails)? (Shopify 13-admin/09, Zendesk 13-admin/10)",
     "For an action that needs two people, can the second person see what is asked, by whom, when and why, and approve or reject it, while the first sees that it is waiting and for how many approvals, and is the person who asked unable to approve their own request? (Airwallex 13-admin/11, Acctual 13-admin/12)",
     "Can staff answer who did what, to which record and when from the audit log, by filtering on person, action, record and date, with each row readable as a sentence? (Front 13-admin/13, Customer.io 13-admin/14)",
-    "Can staff find the webhook events that failed, see why each one failed and how many times it was tried, run one or several again, and then see the result of each one, not only that a retry was asked? (Resend 13-admin/15, Customer.io 13-admin/16)"
+    "Can staff find the webhook events that failed, see why each one failed and how many times it was tried, run one or several again, and then see the result of each one, not only that a retry was asked? (Resend 13-admin/15, Customer.io 13-admin/16)",
+    "Does each queue load one page at a time, say where the reader is in words ('Showing 26 to 50 of 112'), move with 'Previous' and 'Next' buttons that are disabled at the ends, and keep the page in the address so Back, reload and a shared link open the same rows? (Navattic 13-admin/17, StackAI 13-admin/18, Circle 13-admin/19)",
+    "When a decision needs a newer sign-in, does the reviewer learn it when the page opens, before typing; does the message say why and offer 'Sign in again'; and are the ticks and the typed reason still there after signing in, with no detail asked twice? (GitBook 13-admin/20, Todoist 13-admin/21, Airwallex 13-admin/22)"
   ]
 }

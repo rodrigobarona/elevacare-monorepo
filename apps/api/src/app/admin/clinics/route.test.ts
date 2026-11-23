@@ -21,7 +21,7 @@ const mocks = vi.hoisted(() => {
 
 vi.mock("@eleva/auth/clinic-review", () => ({
   ClinicReviewError: mocks.ClinicReviewError,
-  listClinicVerificationQueue: () => mocks.listQueue(),
+  listClinicVerificationQueue: (...args: unknown[]) => mocks.listQueue(...args),
   getClinicVerificationReview: (...args: unknown[]) => mocks.getReview(...args),
   decideClinicVerification: (...args: unknown[]) => mocks.decide(...args),
 }))
@@ -85,10 +85,19 @@ const approve = {
   checklist: { legal_entity_checked: true, tax_id_checked: true },
 }
 
+/** A page as the domain returns it. */
+function queuePage<Row>(items: Row[]) {
+  return { items, total: items.length, page: 1, pages: 1, pageSize: 25 }
+}
+
 describe("/admin/clinics", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mocks.readAuth.mockResolvedValue({ user: { id: "staff-1" } })
+    mocks.readAuth.mockResolvedValue({
+      user: { id: "staff-1" },
+      orgId: "staff-org",
+      authMode: "cookie",
+    })
     // A console session that started a moment ago.
     mocks.writeAuth.mockResolvedValue({
       user: { id: "staff-1" },
@@ -170,28 +179,56 @@ describe("/admin/clinics", () => {
   it("reads the queue and a filing with a session of any age", async () => {
     mocks.readAuth.mockResolvedValue({
       user: { id: "staff-1" },
+      orgId: "staff-org",
       authenticatedAt: new Date(0),
     })
-    mocks.listQueue.mockResolvedValue([])
+    mocks.listQueue.mockResolvedValue(queuePage([]))
     expect((await getQueue(new Request(URL))).status).toBe(200)
   })
 
-  it("lists the queue", async () => {
-    mocks.listQueue.mockResolvedValue([
-      {
-        verificationId: ID,
-        orgId: ORG_ID,
-        clinicName: "Clínica Lumen",
-        legalName: "Clínica Lumen, Lda",
-        countryCode: "PT",
-        status: "pending",
-        verified: false,
-        waitingSince: new Date(SUBMITTED_AT),
-      },
-    ])
-    const res = await getQueue(new Request(URL))
+  it("lists one page of the queue, and says where it sits", async () => {
+    mocks.listQueue.mockResolvedValue({
+      ...queuePage([
+        {
+          verificationId: ID,
+          orgId: ORG_ID,
+          clinicName: "Clínica Lumen",
+          legalName: "Clínica Lumen, Lda",
+          countryCode: "PT",
+          status: "pending",
+          verified: false,
+          waitingSince: new Date(SUBMITTED_AT),
+        },
+      ]),
+      total: 51,
+      page: 3,
+      pages: 3,
+    })
+    const res = await getQueue(new Request(`${URL}?page=3`))
     expect(res.status).toBe(200)
+    // The read is recorded for this staff member, in the staff workspace,
+    // with how it was made.
+    expect(mocks.listQueue).toHaveBeenCalledWith({
+      page: 3,
+      viewer: { actorUserId: "staff-1", orgId: "staff-org", via: "cookie" },
+    })
+
+    // A key reads the queue too, and the record says it was a key.
+    mocks.readAuth.mockResolvedValue({
+      user: { id: "staff-1" },
+      orgId: "staff-org",
+      authMode: "api-key",
+    })
+    await getQueue(new Request(URL))
+    expect(mocks.listQueue).toHaveBeenLastCalledWith({
+      page: 1,
+      viewer: { actorUserId: "staff-1", orgId: "staff-org", via: "api-key" },
+    })
     await expect(res.json()).resolves.toEqual({
+      total: 51,
+      page: 3,
+      pages: 3,
+      pageSize: 25,
       items: [
         {
           verificationId: ID,
@@ -205,6 +242,33 @@ describe("/admin/clinics", () => {
         },
       ],
     })
+  })
+
+  it("starts at the first page, and refuses a page that is not a number", async () => {
+    mocks.listQueue.mockResolvedValue(queuePage([]))
+    await getQueue(new Request(URL))
+    expect(mocks.listQueue).toHaveBeenLastCalledWith(
+      expect.objectContaining({ page: 1 })
+    )
+    // The console's own rule for an address: digits, from 1, nothing else.
+    for (const query of [
+      "page=0",
+      "page=-1",
+      "page=abc",
+      "page=1.5",
+      "page=99999",
+      "page=02",
+      "page=2e0",
+      "page=0x2",
+      "page=%202",
+      "page=",
+      "page=1&page=2",
+      "page=2&limit=500",
+    ]) {
+      const res = await getQueue(new Request(`${URL}?${query}`))
+      expect(res.status, query).toBe(422)
+    }
+    expect(mocks.listQueue).toHaveBeenCalledTimes(1)
   })
 
   it("returns one filing, or 404 and 422", async () => {
