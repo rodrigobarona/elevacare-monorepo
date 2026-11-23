@@ -11,7 +11,9 @@ import {
 import {
   canKeepDrafts,
   dropDraft,
+  gainFromNewerSignIn,
   keepDraft,
+  msLeftNow,
   returnDraft,
   sessionDraftStorage,
   signInAgainUrl,
@@ -85,6 +87,20 @@ let keepsDrafts: boolean | null = null
 const readKeepsDrafts = () =>
   (keepsDrafts ??= canKeepDrafts(sessionDraftStorage()))
 const neverChanges = () => () => {}
+
+// When each drawing of a page was first seen, by this browser's clock: only
+// differences of it are used, so the clock being wrong does not matter.
+// Kept outside the component: the browser's Back brings a page back as it
+// was drawn, and the time spent since must still count.
+const firstSeen = new WeakMap<DecisionSignIn, number>()
+function elapsedSince(drawn: DecisionSignIn): number {
+  const seenAt = firstSeen.get(drawn)
+  if (seenAt === undefined) {
+    firstSeen.set(drawn, Date.now())
+    return 0
+  }
+  return Date.now() - seenAt
+}
 
 // The session is asked at most this often, however often the tab is shown.
 const PROBE_GAP_MS = 5_000
@@ -172,8 +188,8 @@ export function DecisionSignInScope({
   const gained = seen.gained
   const newerSignIn = React.useCallback(
     (always: boolean): Promise<number | null> => {
-      const { startedAt, reviewer } = signIn
-      if (!startedAt) return Promise.resolve(null)
+      const { startedAt, reviewer, msLeft } = signIn
+      if (!startedAt || msLeft === null) return Promise.resolve(null)
       if (asking.current) return asking.current
       if (!always && Date.now() - askedAt.current < PROBE_GAP_MS) {
         return Promise.resolve(null)
@@ -188,8 +204,14 @@ export function DecisionSignInScope({
           ) {
             return null
           }
-          const delta = now.startedAt.getTime() - Date.parse(startedAt)
-          return Number.isFinite(delta) && delta > gained ? delta : null
+          // Only a sign-in that is itself still good, after the time
+          // already spent on this page.
+          return gainFromNewerSignIn({
+            msLeft,
+            gained,
+            elapsed: elapsedSince(signIn),
+            delta: now.startedAt.getTime() - Date.parse(startedAt),
+          })
         })
         .catch(() => null)
         .finally(() => {
@@ -203,7 +225,7 @@ export function DecisionSignInScope({
   const learn = React.useCallback(
     (delta: number) => {
       setSeen((now) =>
-        now.drawn === signIn
+        now.drawn === signIn && delta > now.gained
           ? { ...now, gained: delta, renewed: now.renewed + 1, passed: false }
           : now
       )
@@ -211,20 +233,11 @@ export function DecisionSignInScope({
     [signIn]
   )
 
-  // When the page was drawn, by this browser's clock: only differences of
-  // it are used, so it being wrong does not matter. Kept across a newer
-  // sign-in, so the time already spent on the page still counts.
-  const drawnAt = React.useRef<{ drawn: DecisionSignIn; at: number } | null>(
-    null
-  )
   React.useEffect(() => {
     const { msLeft } = signIn
     if (msLeft === null) return
-    if (drawnAt.current?.drawn !== signIn) {
-      drawnAt.current = { drawn: signIn, at: Date.now() }
-    }
-    const since = drawnAt.current.at
-    const left = () => msLeft + gained - (Date.now() - since)
+    const left = () =>
+      msLeftNow({ msLeft, gained, elapsed: elapsedSince(signIn) })
     let stopped = false
 
     // A timer alone is not enough: it does not count the hours a laptop
@@ -248,12 +261,23 @@ export function DecisionSignInScope({
     }
     const onShown = () => void look()
     const onRestored = (event: PageTransitionEvent) => {
-      if (event.persisted) void look()
+      if (!event.persisted) return
+      // Back to a page the browser kept as it was. If the browser is
+      // signed out by now (the reviewer pressed "Sign in again" and came
+      // back), the filing must not stay on screen: the page is loaded
+      // again, and the console sends a signed-out visitor to sign in.
+      void readBrowserSession().then((now) => {
+        if (stopped) return
+        if (now === null) window.location.reload()
+        else void look()
+      })
     }
     // A timer cannot wait longer than about 24 days; the rule is hours.
     const wait = left()
     const timer =
       wait > 0 ? window.setTimeout(() => void look(true), wait) : null
+    // Learned of a newer sign-in that has itself run out since: said now.
+    if (wait <= 0 && msLeft + gained > 0) void look(true)
     document.addEventListener("visibilitychange", onShown)
     window.addEventListener("focus", onShown)
     window.addEventListener("pageshow", onRestored)
@@ -271,12 +295,12 @@ export function DecisionSignInScope({
   // ago in another tab is not refused here.
   const stillExpired = React.useCallback(async () => {
     if (!expired) return false
+    // A gain is only ever one that is still good now: see `newerSignIn`.
     const delta = await newerSignIn(true)
     if (delta === null) return true
     learn(delta)
-    const { msLeft } = signIn
-    return msLeft !== null && msLeft + delta <= 0
-  }, [expired, newerSignIn, learn, signIn])
+    return false
+  }, [expired, newerSignIn, learn])
 
   // Back from the sign-in page to a page the browser kept as it was: the
   // button must not stay on "Opening...".
@@ -435,8 +459,11 @@ export function DecisionSignInBanner() {
           size="roomy"
           data-testid="decision-sign-in-banner"
         >
-          {t("banner.body", { hours })}{" "}
-          {state.canKeep === false ? t("notKept") : t("kept")}
+          {t("banner.body", { hours })}
+          {/* The line under the button already says it for a failed write. */}
+          {notice.failure && state.trouble?.kind === "write"
+            ? null
+            : ` ${state.canKeep === false ? t("notKept") : t("kept")}`}
         </SignInAgainNotice>
       ) : null}
     </>
@@ -459,8 +486,10 @@ export function DecisionSignInRefusal() {
       answersAPress
       data-testid="decision-sign-in-refusal"
     >
-      {t("refused.body", { hours })}{" "}
-      {state.canKeep === false ? t("notKept") : t("refused.kept")}
+      {t("refused.body", { hours })}
+      {notice.failure && state.trouble?.kind === "write"
+        ? null
+        : ` ${state.canKeep === false ? t("notKept") : t("refused.kept")}`}
     </SignInAgainNotice>
   )
 }

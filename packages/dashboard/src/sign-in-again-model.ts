@@ -170,6 +170,38 @@ export function returnDraft(
 }
 
 /**
+ * How long a sign-in is still good for, now: what the server counted when
+ * it drew the page, plus what a newer sign-in learned of since has added,
+ * minus the time that has passed on the page. Zero or less is too old.
+ */
+export function msLeftNow(input: {
+  msLeft: number
+  gained: number
+  elapsed: number
+}): number {
+  return input.msLeft + input.gained - input.elapsed
+}
+
+/**
+ * What a newer sign-in adds, or null when it adds nothing that counts.
+ * `delta` is how much later than the page's own sign-in it started. It
+ * counts only when it is newer than what the page already knows of, and
+ * only when it is itself still good after the time spent on the page: a
+ * sign-in made last night in another tab does not make this morning's
+ * press a recent one.
+ */
+export function gainFromNewerSignIn(input: {
+  msLeft: number
+  gained: number
+  elapsed: number
+  delta: number
+}): number | null {
+  const { msLeft, gained, elapsed, delta } = input
+  if (!Number.isFinite(delta) || delta <= gained) return null
+  return msLeftNow({ msLeft, gained: delta, elapsed }) > 0 ? delta : null
+}
+
+/**
  * Removes every draft under `prefix` that was kept more than
  * `DRAFT_MAX_AGE_MS` ago, belongs to someone other than `ownerId`, or
  * cannot be read. It runs when a page that uses drafts opens, so a draft

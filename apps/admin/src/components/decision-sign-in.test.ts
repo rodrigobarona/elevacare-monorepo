@@ -122,7 +122,7 @@ describe("the answer to a decision pressed on an old sign-in", () => {
     expect(text.trim().startsWith("That decision wasn&#x27;t saved.")).toBe(
       true
     )
-    expect(html).toContain("Your ticks and your reason are still here.")
+    expect(html).toContain("What you entered is still here.")
     expect(html).toMatch(/data-testid="sign-in-again"[^>]*>Sign in again</)
     expect(html).not.toMatch(/text-destructive/)
   })

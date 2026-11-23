@@ -678,7 +678,7 @@ test.describe("Phase 12 — staff verify a clinic", () => {
     await expect(refusal).toBeVisible()
     await expect(refusal).toContainText("That decision wasn't saved.")
     await expect(refusal).toContainText(
-      "You signed in more than 12 hours ago, and a decision needs a newer sign-in. Your ticks and your reason are still here."
+      "You signed in more than 12 hours ago, and a decision needs a newer sign-in. What you entered is still here."
     )
     // After the buttons: the one that was pressed did not move.
     const pressed = (await page
@@ -854,7 +854,7 @@ test.describe("Phase 12 — staff verify a clinic", () => {
     // The reason is back; the tick is not, because it was made on other
     // details; and a sentence says why.
     await expect(changed).toHaveText(
-      "You're signed in again. The clinic has sent new details, so the checks are unticked. Your reason is still here.",
+      "You're signed in again. The clinic has sent new details since, so the checks are unticked. Your reason is still here.",
       { timeout: 90_000 }
     )
     await expect(
@@ -981,6 +981,12 @@ test.describe("Phase 12 — staff verify a clinic", () => {
       REASON
     )
     expect(await opened()).toBe(readsBefore)
+    // Reject, now that it can go through, asks first as it always does: a
+    // rejection is never sent by the press alone.
+    await other.getByTestId("clinic-reject").click()
+    await expect(other.getByTestId("clinic-reject-confirm")).toBeVisible()
+    await other.getByTestId("clinic-reject-cancel").click()
+    expect(await status(captures)).toBe("pending")
     // And the press now reaches the API, which accepts it.
     await other.getByTestId("clinic-needs-changes").click()
     await expect(other.getByTestId("clinic-filing-note")).toContainText(

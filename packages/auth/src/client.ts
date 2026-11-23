@@ -198,24 +198,34 @@ export interface BrowserSession {
   startedAt: Date | null
 }
 
+/** How long a question about the session may take before it counts as unanswered. */
+const SESSION_READ_TIMEOUT_MS = 5_000
+
 /**
  * Asks the auth server which session this browser carries now: who, in
- * which workspace, and since when. Null when signed out or when the answer
- * cannot be read. For a page that needs to notice a sign-in made in
- * another tab without loading anything else.
+ * which workspace, and since when. `null` when the browser is signed out.
+ * `undefined` when the question got no answer that can be read (offline, a
+ * stalled connection, an error): a caller must not take that for "signed
+ * out". For a page that needs to notice a sign-in made in another tab
+ * without loading anything else.
  */
-export async function readBrowserSession(): Promise<BrowserSession | null> {
+export async function readBrowserSession(): Promise<
+  BrowserSession | null | undefined
+> {
+  let timer: ReturnType<typeof setTimeout> | undefined
   try {
-    const { data } = await authClient.getSession()
-    const session = data?.session as Record<string, unknown> | undefined
-    const user = data?.user as Record<string, unknown> | undefined
-    if (
-      !session ||
-      !user ||
-      typeof user.id !== "string" ||
-      typeof user.email !== "string"
-    ) {
-      return null
+    const answer = await Promise.race([
+      authClient.getSession(),
+      new Promise<"late">((resolve) => {
+        timer = setTimeout(() => resolve("late"), SESSION_READ_TIMEOUT_MS)
+      }),
+    ])
+    if (answer === "late" || answer.error) return undefined
+    const session = answer.data?.session as Record<string, unknown> | undefined
+    const user = answer.data?.user as Record<string, unknown> | undefined
+    if (!session || !user) return null
+    if (typeof user.id !== "string" || typeof user.email !== "string") {
+      return undefined
     }
     const started =
       typeof session.createdAt === "string" || session.createdAt instanceof Date
@@ -231,7 +241,9 @@ export async function readBrowserSession(): Promise<BrowserSession | null> {
       startedAt: started && !Number.isNaN(started.getTime()) ? started : null,
     }
   } catch {
-    return null
+    return undefined
+  } finally {
+    clearTimeout(timer)
   }
 }
 

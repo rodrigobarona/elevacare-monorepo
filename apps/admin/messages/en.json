@@ -174,16 +174,16 @@
     "refused": {
       "title": "That decision wasn't saved.",
       "body": "You signed in more than {hours, plural, one {# hour} other {# hours}} ago, and a decision needs a newer sign-in.",
-      "kept": "Your ticks and your reason are still here."
+      "kept": "What you entered is still here."
     },
     "action": "Sign in again",
     "actionPending": "Opening...",
     "restored": "You're signed in again. Your ticks and your reason are still here. Check them, then decide.",
     "restoredSome": "You're signed in again. What you entered is still here. Check it, then decide.",
-    "lapsed": "You're signed in again. More than an hour passed, so what you had entered is no longer here.",
+    "lapsed": "You're signed in again. Too much time passed, so what you had entered is no longer here.",
     "changed": {
-      "clinic": "You're signed in again. The clinic has sent new details, so the checks are unticked.",
-      "expert": "You're signed in again. The expert has sent new details, so the checks are unticked."
+      "clinic": "You're signed in again. The clinic has sent new details since, so the checks are unticked.",
+      "expert": "You're signed in again. The expert has sent new details since, so the checks are unticked."
     },
     "reasonKept": "Your reason is still here.",
     "unavailable": "We couldn't open the sign-in page. Try again in a moment.",

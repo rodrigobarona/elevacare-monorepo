@@ -49,7 +49,10 @@ export function LoginForm() {
   const [signedIn, setSignedIn] = useState(false)
   const [googlePending, setGooglePending] = useState(false)
   const autofillStarted = useRef(false)
-  const signedInWhenSent = useRef<number | null>(null)
+  // The sign-in this browser carried when the link was sent: its start, or
+  // null for signed out. `undefined` while that could not be told, and then
+  // the tab never goes on by itself.
+  const signedInWhenSent = useRef<number | null | undefined>(undefined)
 
   function finish() {
     setSignedIn(true)
@@ -80,9 +83,14 @@ export function LoginForm() {
   useEffect(() => {
     if (step !== "magicSent") return
     let gone = false
+    let looking = false
     const look = async () => {
       if (gone || document.visibilityState !== "visible") return
-      const now = await readBrowserSession()
+      if (looking || signedInWhenSent.current === undefined) return
+      looking = true
+      const now = await readBrowserSession().finally(() => {
+        looking = false
+      })
       // Only a sign-in of the person the link was sent to, made since the
       // link was sent: someone who was already signed in (as them or as
       // another person) stays on this step until the link is used.
@@ -163,8 +171,9 @@ export function LoginForm() {
     setError(null)
     // The sign-in this browser carries now, if any: the step that follows
     // goes on only for a newer one.
+    const before = await readBrowserSession()
     signedInWhenSent.current =
-      (await readBrowserSession())?.startedAt?.getTime() ?? null
+      before === undefined ? undefined : (before?.startedAt?.getTime() ?? null)
     const sent = await sendMagicLink()
     setPending(false)
     if (sent) goTo("magicSent")

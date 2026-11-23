@@ -39,12 +39,20 @@ export function DecisionForm({
   >({})
   const [reason, setReason] = React.useState("")
   const [pending, setPending] = React.useState<Decision | null>(null)
+  // The moment between a press on an old sign-in and its answer: the
+  // session is being asked once more. The button shows it is working and
+  // takes no second press; nothing has been sent.
+  const [checking, setChecking] = React.useState<Decision | null>(null)
   // The refusal is shown beside the button that was pressed.
   const [error, setError] = React.useState<{
     decision: Decision
     code: DecideLicenceError
   } | null>(null)
 
+  // What is in hand: a press being answered here, or a decision on its way.
+  // The button that was pressed stays enabled (it only takes no second
+  // press), so the keyboard's place is not lost while it works.
+  const busy = pending ?? checking
   const allChecked = LICENCE_CHECKLIST_ITEMS.every((item) => checked[item])
   const hasReason = reason.trim().length > 0
 
@@ -63,16 +71,27 @@ export function DecisionForm({
     },
   })
 
+  /**
+   * True when a press on a sign-in the page knows is too old was answered
+   * on the page: the message is shown and nothing is sent.
+   */
+  async function answeredHere(decision: Decision): Promise<boolean> {
+    if (!signIn.expired) return false
+    setChecking(decision)
+    const stillOld = await signIn
+      .stillExpired()
+      .finally(() => setChecking(null))
+    if (stillOld) signIn.refuse(decision)
+    return stillOld
+  }
+
   async function decide(decision: Decision) {
     setError(null)
     signIn.clearRefusal()
     // A sign-in the page already knows is too old is answered here,
     // without asking the API for a refusal it is sure to give. It looks
     // at the session once more first: another tab may just have signed in.
-    if (signIn.expired && (await signIn.stillExpired())) {
-      signIn.refuse(decision)
-      return
-    }
+    if (await answeredHere(decision)) return
     setPending(decision)
     const target = { applicationId, submittedAt }
     // A request that never reaches the server must not lock the form.
@@ -127,8 +146,8 @@ export function DecisionForm({
           />
         ))}
         <Button
-          isDisabled={!allChecked || pending !== null}
-          isPending={pending === "approve"}
+          isDisabled={!allChecked || (busy !== null && busy !== "approve")}
+          isPending={busy === "approve"}
           onPress={() => decide("approve")}
           data-testid="licence-approve"
         >
@@ -160,8 +179,10 @@ export function DecisionForm({
         <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
-            isDisabled={!hasReason || pending !== null}
-            isPending={pending === "needs_changes"}
+            isDisabled={
+              !hasReason || (busy !== null && busy !== "needs_changes")
+            }
+            isPending={busy === "needs_changes"}
             onPress={() => decide("needs_changes")}
             data-testid="licence-needs-changes"
           >
@@ -169,8 +190,8 @@ export function DecisionForm({
           </Button>
           <Button
             variant="destructive"
-            isDisabled={!hasReason || pending !== null}
-            isPending={pending === "reject"}
+            isDisabled={!hasReason || (busy !== null && busy !== "reject")}
+            isPending={busy === "reject"}
             onPress={() => decide("reject")}
           >
             {pending === "reject" ? t("saving") : t("reject")}

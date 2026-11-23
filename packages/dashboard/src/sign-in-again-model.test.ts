@@ -4,7 +4,9 @@ import {
   canKeepDrafts,
   DRAFT_MAX_AGE_MS,
   dropDraft,
+  gainFromNewerSignIn,
   keepDraft,
+  msLeftNow,
   returnDraft,
   signInAgainUrl,
   sweepDrafts,
@@ -259,5 +261,49 @@ describe("signInAgainUrl", () => {
     expect(consoleReturnPath(callback.searchParams.get("console"))).toBe(
       "/clinics/00000000-0000-4000-8000-000000000001"
     )
+  })
+})
+
+describe("the time a sign-in is still good for", () => {
+  const HOUR = 60 * 60 * 1000
+
+  it("is what the server counted, less the time spent on the page", () => {
+    expect(msLeftNow({ msLeft: 2 * HOUR, gained: 0, elapsed: HOUR })).toBe(HOUR)
+    expect(
+      msLeftNow({ msLeft: 2 * HOUR, gained: 0, elapsed: 3 * HOUR })
+    ).toBeLessThan(0)
+    // Drawn an hour too old, then a sign-in made 13 hours later is learned of.
+    expect(msLeftNow({ msLeft: -HOUR, gained: 13 * HOUR, elapsed: 0 })).toBe(
+      12 * HOUR
+    )
+  })
+
+  it("counts a newer sign-in only while it is itself still good", () => {
+    // Page drawn an hour too old; a moment later another tab signs in.
+    expect(
+      gainFromNewerSignIn({
+        msLeft: -HOUR,
+        gained: 0,
+        elapsed: 60_000,
+        delta: 13 * HOUR,
+      })
+    ).toBe(13 * HOUR)
+    // The same sign-in, found out about 13 hours later: it has run out too.
+    expect(
+      gainFromNewerSignIn({
+        msLeft: -HOUR,
+        gained: 0,
+        elapsed: 13 * HOUR,
+        delta: 13 * HOUR,
+      })
+    ).toBeNull()
+  })
+
+  it("ignores the sign-in it already knows of, an older one, and nonsense", () => {
+    const base = { msLeft: -HOUR, gained: 13 * HOUR, elapsed: 0 }
+    expect(gainFromNewerSignIn({ ...base, delta: 13 * HOUR })).toBeNull()
+    expect(gainFromNewerSignIn({ ...base, delta: 2 * HOUR })).toBeNull()
+    expect(gainFromNewerSignIn({ ...base, delta: Number.NaN })).toBeNull()
+    expect(gainFromNewerSignIn({ ...base, delta: 14 * HOUR })).toBe(14 * HOUR)
   })
 })

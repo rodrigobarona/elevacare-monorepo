@@ -63,16 +63,21 @@ export function SignInAgainNotice({
       <InfoIcon aria-hidden />
       {/* Side by side only where there is room for both: the console's
           sidebar takes its share from 768 px up. */}
-      <div className="col-start-2 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
+      <div
+        className={cn(
+          "col-start-2 flex flex-col gap-3 lg:flex-row lg:justify-between lg:gap-4",
+          // With a line under the button the two sides differ in height:
+          // the words stay beside the icon.
+          failure ? "lg:items-start" : "lg:items-center"
+        )}
+      >
         <div
           className="space-y-0.5"
           role={answersAPress ? "alert" : undefined}
           data-testid="sign-in-again-words"
         >
           {title ? (
-            <AlertTitle className={size === "roomy" ? "font-semibold" : ""}>
-              {title}
-            </AlertTitle>
+            <AlertTitle className="font-semibold">{title}</AlertTitle>
           ) : null}
           <AlertDescription className="text-pretty">
             {children}
@@ -98,7 +103,7 @@ export function SignInAgainNotice({
           {failure ? (
             <p
               role="alert"
-              className="text-sm text-destructive lg:max-w-56 lg:text-right"
+              className="text-sm text-destructive lg:max-w-48 lg:text-right"
               data-testid="sign-in-again-failure"
             >
               {failure}
