@@ -50,10 +50,17 @@ Each entry should include:
   protected; anything else stops the job. Neon itself refuses an expiry on
   a default or protected branch, and on a branch with children (`preview`
   while any `pr-N` exists).
-- If Neon refuses the call (its API reference marks the field early
-  access), the job warns and goes on: the delete on close and the nightly
-  sweep still apply. The proof of whether it is accepted is this pull
-  request's own run of the job.
+- Neon accepts it: this pull request's own run printed the branch before
+  (`"expires_at":null`) and after (`"expires_at":"2026-11-30T00:10:53Z"`,
+  `"ttl_interval_seconds":604800`). Its API reference marks the field early
+  access, so if Neon ever refuses, or cannot be reached, the job warns and
+  goes on: the delete on close and the nightly sweep still apply. Only a
+  branch that fails the check above stops the job.
+- The expiry is set by that call and not by the action that creates the
+  branch, which also takes one: a refusal there would fail the create, and
+  with it the database job of every pull request. The cost is that a job
+  which dies between the create and this step leaves a branch with no
+  expiry until its next run.
 - The job that deletes the branch on close now looks for it first, and is
   green when the branch is already gone (expired, or swept).
 - Not changed: the nightly sweep; the limit of three open pull requests
