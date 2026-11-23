@@ -107,7 +107,91 @@ def ratio(a,b): hi,lo=sorted((lum(a),lum(b)),reverse=True); return (hi+0.05)/(lo
 
 ---
 
-## Recommendation
+## Direction D: Estuary (built from the first blind panel)
+
+Added on 2026-11-23, after four blind judges scored A, B and C. They agreed on the way forward:
+Folio's typography and discipline, with Tide's hero. D is that, in the teal the logo already has,
+so the logo needs no new colour.
+
+**Feeling:** a calm, well-edited page that lets her act at once.
+
+**Palette**
+
+| Role                                  | Colour     | Hex     | Contrast                                       |
+| ------------------------------------- | ---------- | ------- | ---------------------------------------------- |
+| Page                                  | Warm ivory | #FAF6EE | ink on it 15.32; second ink #55605C 6.06       |
+| Surface                               | White      | #FFFFFF | second ink 6.53                                |
+| Text                                  | Ink        | #16211F |                                                |
+| Primary action, links                 | Deep teal  | #0B5A63 | label #FAF6EE on it 7.33; as link on page 7.33 |
+| Deep field, once per page             | Sea        | #0E3338 | ivory text 12.57                               |
+| Highlight behind one phrase           | Butter     | #F1E1A0 | ink on it 12.60                                |
+| Trust and health facts, selected rows | Mist       | #DCE9E3 | ink 13.22; second ink 5.23; teal 6.33          |
+| Borders of controls                   | Stone      | #76817D | 3.74 on the page, 4.03 on white                |
+
+**Type.** Newsreader for the headline (weight 300, up to 110px, one italic phrase with the butter
+mark, on the homepage only), section headings and prose. DM Sans for every control and label.
+IBM Plex Mono only for the three step numbers. All under the SIL Open Font Licence 1.1.
+
+**Imagery.** Every portrait in one crop (4:5, head and shoulders) and one warm monochrome
+grade. Care photographs in colour, slightly muted. No picture carries text.
+
+**Shape.** One radius (6px) for fields, buttons, photographs and panels; pills only for the need
+chips. Rows on hairlines in place of cards. No shadows except the phone bar.
+
+**What it changes on the page.** A hero with one goal: the headline, one line, one labelled
+search with its button, and one large photograph. The founder asked for this on 2026-11-23,
+after the panel: the version the judges scored also held eight need chips, a proof line, a
+smaller photograph, a bookable expert and a facts strip in the hero, and he found it cluttered.
+The need chips and the experts now come straight after the hero. Experts as ruled rows that
+stack on a phone with their price; steps that show pieces of the product; one statement about advisors in
+place of the quote; the wordmark as the close. On the booking path: how she meets is chosen and
+shown, the time zone sits beside the time, the button says "Continue to payment", and a bar on
+phones keeps the next free time in reach.
+
+## What the blind panel scored
+
+Judges saw neutral letters, never the names or these notes. Scale: 8.5 means "stands beside the
+saved references". The Awwwards seat also estimated each direction on Awwwards' own scale, where
+real Sites of the Day score 7.1 to 7.7 and an Honorable Mention needs 6.5.
+
+| Seat                                          | A Tide | B Clay | C Folio | D Estuary |
+| --------------------------------------------- | ------ | ------ | ------- | --------- |
+| Round 1: Awwwards jury                        | 7.60   | 7.20   | 7.70    |           |
+| Round 1: Awwwards' own scale (estimate)       | 6.50   | 6.24   | 6.65    |           |
+| Round 1: UI and visual design                 | 7.5    | 6.5    | 8.0     |           |
+| Round 1: UX and flow                          | 7.5    | 6.5    | 7.0     |           |
+| Round 1: UX writing (same words in all three) | 7.5    | 7.5    | 7.5     |           |
+| Round 1: trust and accessibility              | 8.0    | 6.5    | 7.5     |           |
+| Round 2: Awwwards jury                        | 7.35   |        | 7.35    | **7.90**  |
+| Round 2: Awwwards' own scale (estimate)       | 6.32   |        | 6.53    | **6.70**  |
+| Round 2: UI and visual design                 | 7.0    |        | 7.5     | **8.0**   |
+| Round 2: UX and flow                          | 7.0    |        | 6.5     | **8.0**   |
+| Round 2: UX writing                           | 7.0    |        | 6.5     | **8.0**   |
+| Round 2: trust and accessibility              | 6.5    |        | 6.0     | **8.0**   |
+
+Round 2 used new judges. A and C scored lower beside D than they had alone, which is what a
+stronger neighbour does to a score. No direction has reached 8.5.
+
+D's hero was simplified after round 2 and has not been judged again. Two judges had praised
+the chips and the bookable expert on the first screen, so the UX score may move; the visual
+seats had asked for a photograph with real scale, which the simpler hero has.
+
+**What stands between D and 8.5, from the judges, largest first**
+
+1. A hero photograph with real scale, graded to sit with the portraits (Awwwards, UI).
+2. The pay step itself: card form, total-and-pay bar, health-data consent, promo code and tax
+   number (UX). This needs the real page, not the playground.
+3. A fuller profile: approach and training, and a registration block that says who checked and
+   when, with a one-tap explanation (UX, trust, writing).
+4. A priced expert within the first screen and a half on a phone (UX).
+5. One hairline colour, three type voices instead of four, a phone header with the logo and one
+   control (UI).
+6. Small words: "Independent experts" says itself twice; add "How much does it cost?"; "Free to
+   cancel until ... After that, you pay the full €60." (writing).
+7. The company's number and address in the footer, and a seller and VAT line in the summary
+   (trust). These are facts the founder supplies.
+
+## The brand seat's recommendation, before the panel
 
 1. Direction A, Tide, as the base: it fixes today's real weaknesses (roles for colour, depth of page, one treatment for photographs) and keeps the logo, the fonts and the token scales, so it can ship through `@eleva/ui` without a rebrand.
 2. Borrow two things from C: one display moment per page at 8% of the width, and numbered rows on hairlines in place of some card rows.

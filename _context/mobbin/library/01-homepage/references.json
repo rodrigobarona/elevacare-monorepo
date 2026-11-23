@@ -176,6 +176,19 @@
         "01-homepage/18",
         "01-homepage/16"
       ]
+    },
+    {
+      "id": "HOME-13",
+      "severity": "P2",
+      "lens": "trust",
+      "title": "The advisor quote reads as a treatment claim, in clinical words, at display size",
+      "evidence": [
+        "2026-11-14-before/01-homepage/01-home.desktop.jpg",
+        "2026-11-23-brand-lab/15-brand-art-direction/01-tide-home.desktop.jpg"
+      ],
+      "detail": "The homepage sets one sentence in very large type on a deep band: 'Evidence-based pelvic-floor muscle training not only prevents and treats dysfunction; it empowers women to live confidently and fully at every stage of life.' Three blind judges of the brand lab (2026-11-23), each working alone, flagged it: it promises a result, it uses clinical words a member would not, and it is the loudest sentence on the page. Her role reads 'Board advisor', which is an internal title.",
+      "recommendation": "Replace the quote with a plain statement of what advisors do for Eleva ('Guided by people who study women's health', then one line), name her as 'Advisor to Eleva' with her institution, and keep any quote short, in her own plain words and approved by her. Counsel reads the final wording, because a health claim on a public page is theirs to judge.",
+      "references": ["01-homepage/06", "01-homepage/07"]
     }
   ],
   "references": [

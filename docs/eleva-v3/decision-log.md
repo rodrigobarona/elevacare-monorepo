@@ -32,6 +32,91 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-23: Four brand directions for the public site, judged blind twice (D8.1) (needs-review)
+
+- **What was built (design slice D8.1, playground only).** `apps/poc` gains
+  `/brand-lab`: the same homepage, expert profile and step before payment in
+  four directions, with the fictional demo experts. A Tide (evolves cream
+  and teal), B Clay and Aubergine (a change of colour), C Folio (led by
+  type), and D Estuary, built after the first panel from what its judges
+  asked for. No product page changed. Captures:
+  `design-audit/captures/2026-11-23-brand-lab/`.
+- **Decision needed from the founder:** which direction the public site
+  takes. Nothing is chosen. The record of each direction, with palettes and
+  calculated contrast, is `design-audit/brand-directions.md`.
+- **Blind panel, round 1** (A, B, C under neutral letters; four judges, each
+  alone, who saw captures, saved criteria and published Awwwards scores,
+  and no notes or names):
+
+  | Seat                           | A Tide | B Clay | C Folio |
+  | ------------------------------ | ------ | ------ | ------- |
+  | Awwwards jury (panel scale)    | 7.60   | 7.20   | 7.70    |
+  | Awwwards' own scale (estimate) | 6.50   | 6.24   | 6.65    |
+  | UI and visual design           | 7.5    | 6.5    | 8.0     |
+  | UX and flow                    | 7.5    | 6.5    | 7.0     |
+  | UX writing (same words in all) | 7.5    | 7.5    | 7.5     |
+  | Trust and accessibility        | 8.0    | 6.5    | 7.5     |
+
+  B came last on every seat: on a phone a decorative shape covered a
+  heading and a sentence (P1), and colour had no fixed job. The judges
+  agreed on the way forward: C's type and discipline with A's hero.
+
+- **Blind panel, round 2** (new judges; A, C and D under new letters):
+
+  | Seat                           | A Tide | C Folio | D Estuary |
+  | ------------------------------ | ------ | ------- | --------- |
+  | Awwwards jury (panel scale)    | 7.35   | 7.35    | 7.90      |
+  | Awwwards' own scale (estimate) | 6.32   | 6.53    | 6.70      |
+  | UI and visual design           | 7.0    | 7.5     | 8.0       |
+  | UX and flow                    | 7.0    | 6.5     | 8.0       |
+  | UX writing                     | 7.0    | 6.5     | 8.0       |
+  | Trust and accessibility        | 6.5    | 6.0     | 8.0       |
+
+  D is first on every seat. **No direction has reached 8.5, so nothing
+  here passes the gate**, and the gate is for product pages in any case:
+  it applies to each page of `apps/web` when it is rebuilt in the chosen
+  direction.
+
+- **Founder's first reaction to D (2026-11-23):** the hero has too much
+  in it; it should be clean and have one goal. Changed the same day: D's
+  hero is now the headline, one line, one labelled search with its button
+  and one large photograph. The need chips and the experts follow it. The
+  header keeps its links and loses its second "Find an expert" button, so
+  the first screen has one action. **Not judged again**: the scores above
+  are for the busier hero.
+- **What stands between D and 8.5** (the judges' lists, merged): a hero
+  photograph with real scale, graded like the portraits; the real pay step
+  (card form, consent, promo code, tax number); a fuller profile with a
+  registration block that says who checked and when; a priced expert higher
+  on a phone; one hairline colour and three type voices; a few lines of
+  copy; the company's number and address in the footer and a seller and VAT
+  line in the summary (facts the founder supplies).
+- **A finding for the live homepage (HOME-13, P2, assigned to D3.2).** Three
+  judges, each alone, flagged the advisor quote on today's homepage: it
+  reads as a treatment claim, in clinical words, at display size. Proposed:
+  a plain statement of what advisors do, her role as "Advisor to Eleva",
+  and counsel reads the final wording.
+- **Not proven.**
+  - Judges saw stills. Motion, hover, focus order, keyboard use and screen
+    readers were not judged. Contrast was calculated for the palettes and
+    estimated by judges from JPEG pixels.
+  - The playground pages use fictional experts, times and prices, and
+    their forms are not wired. The card step, thank-you page, empty and
+    error states and the no-photo expert card are not in the lab.
+  - Scores of A and C fell between rounds beside a stronger neighbour, so
+    a score is comparable only within its round.
+  - No member has seen any direction. The brand seat's suggested five-second
+    test with women aged 28 to 55 has not been run.
+  - Portuguese and Spanish were not set in any direction; long words in a
+    serif headline at 390px are untested.
+  - Newsreader, Bricolage Grotesque and Figtree are self-hosted in the
+    playground only (SIL Open Font Licence 1.1); nothing was added to
+    `@eleva/ui`.
+- Owner: founder (the choice), Track E thread (the build).
+- Related: `design-audit/brand-directions.md`, `design-audit/judges-panel.md`,
+  `design-audit/plan.json` (D8.1), `apps/poc/src/app/brand-lab/`.
+- Next review: when the founder has chosen.
+
 ### 2026-11-23: The public site gets its own track, a full rethink and a seven-seat panel (active)
 
 - **Decision (founder, 2026-11-23):** the public site (homepage, expert
