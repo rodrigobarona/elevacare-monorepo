@@ -71,6 +71,11 @@ interface DecisionSignInState {
   /** What went wrong on the last press, and on which notice's button. */
   trouble: { on: Pressed; kind: "signOut" | "write" } | null
   signInAgain: (from: Pressed) => void
+  /**
+   * Asked just before a press is answered on the page as "too old": looks
+   * at the session once more, and says whether it still is.
+   */
+  stillExpired: () => Promise<boolean>
   /** The form says how to read what is on it; a draft is made from that. */
   registerEntries: (read: (() => DecisionEntries) | null) => void
 }
@@ -83,6 +88,8 @@ const neverChanges = () => () => {}
 
 // The session is asked at most this often, however often the tab is shown.
 const PROBE_GAP_MS = 5_000
+// How long a sign-out may take before the page says it did not work.
+const SIGN_OUT_WAIT_MS = 10_000
 
 const DecisionSignInContext = React.createContext<DecisionSignInState | null>(
   null
@@ -132,8 +139,10 @@ export function DecisionSignInScope({
   const [leaving, setLeaving] = React.useState(false)
   const [trouble, setTrouble] =
     React.useState<DecisionSignInState["trouble"]>(null)
-  // A write that failed at the press, after the probe had said yes.
-  const canKeep = trouble?.kind === "write" ? false : probed
+  // A write that failed at the press, after the probe had said yes. Never
+  // taken back: the page must not promise again what it could not do.
+  const [writeFailed, setWriteFailed] = React.useState(false)
+  const canKeep = writeFailed ? false : probed
   const entriesRef = React.useRef<(() => DecisionEntries) | null>(null)
   const registerEntries = React.useCallback(
     (read: (() => DecisionEntries) | null) => {
@@ -142,46 +151,81 @@ export function DecisionSignInScope({
     []
   )
 
-  // Drafts nobody came back for do not stay in the tab.
+  // Drafts nobody came back for, and anyone else's, do not stay in the tab.
   React.useEffect(() => {
-    sweepDrafts(sessionDraftStorage(), DECISION_DRAFT_PREFIX, Date.now())
-  }, [])
+    sweepDrafts(
+      sessionDraftStorage(),
+      DECISION_DRAFT_PREFIX,
+      Date.now(),
+      signIn.reviewer.id
+    )
+  }, [signIn.reviewer.id])
 
+  // Asking the session whether the browser now carries a newer sign-in of
+  // the same person in the same staff workspace: another tab may have
+  // signed in again. Only the session is read, never the filing (a read of
+  // a filing is recorded), and what is on the form is not touched. One
+  // question at a time; when the tab is merely shown, at most one every
+  // few seconds.
+  const asking = React.useRef<Promise<number | null> | null>(null)
+  const askedAt = React.useRef(0)
   const gained = seen.gained
-  React.useEffect(() => {
-    const { msLeft, startedAt, reviewer } = signIn
-    if (msLeft === null) return
-    const since = Date.now()
-    const left = () => msLeft + gained - (Date.now() - since)
-    let probing = false
-    let probedAt = 0
-    let stopped = false
+  const newerSignIn = React.useCallback(
+    (always: boolean): Promise<number | null> => {
+      const { startedAt, reviewer } = signIn
+      if (!startedAt) return Promise.resolve(null)
+      if (asking.current) return asking.current
+      if (!always && Date.now() - askedAt.current < PROBE_GAP_MS) {
+        return Promise.resolve(null)
+      }
+      askedAt.current = Date.now()
+      const answer = readBrowserSession()
+        .then((now) => {
+          if (
+            !now?.startedAt ||
+            now.userId !== reviewer.id ||
+            now.activeOrganizationId !== reviewer.orgId
+          ) {
+            return null
+          }
+          const delta = now.startedAt.getTime() - Date.parse(startedAt)
+          return Number.isFinite(delta) && delta > gained ? delta : null
+        })
+        .catch(() => null)
+        .finally(() => {
+          asking.current = null
+        })
+      asking.current = answer
+      return answer
+    },
+    [signIn, gained]
+  )
+  const learn = React.useCallback(
+    (delta: number) => {
+      setSeen((now) =>
+        now.drawn === signIn
+          ? { ...now, gained: delta, renewed: now.renewed + 1, passed: false }
+          : now
+      )
+    },
+    [signIn]
+  )
 
-    // Another tab may have signed in again. The session says so without
-    // reading the filing again (a read of a filing is recorded) and
-    // without touching what is on the form. Only a newer sign-in of the
-    // same person, in the same staff workspace, counts.
-    const newerSignIn = async (): Promise<number | null> => {
-      if (!startedAt || probing || Date.now() - probedAt < PROBE_GAP_MS) {
-        return null
-      }
-      probing = true
-      probedAt = Date.now()
-      try {
-        const now = await readBrowserSession()
-        if (
-          !now?.startedAt ||
-          now.userId !== reviewer.id ||
-          now.activeOrganizationId !== reviewer.orgId
-        ) {
-          return null
-        }
-        const delta = now.startedAt.getTime() - Date.parse(startedAt)
-        return Number.isFinite(delta) && delta > gained ? delta : null
-      } finally {
-        probing = false
-      }
+  // When the page was drawn, by this browser's clock: only differences of
+  // it are used, so it being wrong does not matter. Kept across a newer
+  // sign-in, so the time already spent on the page still counts.
+  const drawnAt = React.useRef<{ drawn: DecisionSignIn; at: number } | null>(
+    null
+  )
+  React.useEffect(() => {
+    const { msLeft } = signIn
+    if (msLeft === null) return
+    if (drawnAt.current?.drawn !== signIn) {
+      drawnAt.current = { drawn: signIn, at: Date.now() }
     }
+    const since = drawnAt.current.at
+    const left = () => msLeft + gained - (Date.now() - since)
+    let stopped = false
 
     // A timer alone is not enough: it does not count the hours a laptop
     // slept, which is the "console left open" the rule is about. The page
@@ -189,31 +233,27 @@ export function DecisionSignInScope({
     const look = async (timeIsUp = false) => {
       if (stopped || document.visibilityState !== "visible") return
       if (!timeIsUp && left() > 0) return
-      const delta = await newerSignIn()
+      const delta = await newerSignIn(false)
       if (stopped) return
-      setSeen((now) => {
-        if (now.drawn !== signIn) return now
-        if (delta !== null) {
-          return {
-            ...now,
-            gained: delta,
-            renewed: now.renewed + 1,
-            passed: false,
-          }
-        }
+      if (delta !== null) {
+        learn(delta)
+        return
+      }
+      setSeen((now) =>
         // Old when it was drawn is not "became old while open".
-        return msLeft + now.gained <= 0 || now.passed
+        now.drawn !== signIn || msLeft + now.gained <= 0 || now.passed
           ? now
           : { ...now, passed: true }
-      })
+      )
     }
     const onShown = () => void look()
     const onRestored = (event: PageTransitionEvent) => {
       if (event.persisted) void look()
     }
-    // A timer cannot wait longer than about 24 days; 12 hours fits.
+    // A timer cannot wait longer than about 24 days; the rule is hours.
+    const wait = left()
     const timer =
-      left() > 0 ? window.setTimeout(() => void look(true), left()) : null
+      wait > 0 ? window.setTimeout(() => void look(true), wait) : null
     document.addEventListener("visibilitychange", onShown)
     window.addEventListener("focus", onShown)
     window.addEventListener("pageshow", onRestored)
@@ -224,7 +264,19 @@ export function DecisionSignInScope({
       window.removeEventListener("focus", onShown)
       window.removeEventListener("pageshow", onRestored)
     }
-  }, [signIn, gained])
+  }, [signIn, gained, newerSignIn, learn])
+
+  // Before a press is answered on the page as "too old": one more look at
+  // the session, however recent the last one, so a sign-in made a moment
+  // ago in another tab is not refused here.
+  const stillExpired = React.useCallback(async () => {
+    if (!expired) return false
+    const delta = await newerSignIn(true)
+    if (delta === null) return true
+    learn(delta)
+    const { msLeft } = signIn
+    return msLeft !== null && msLeft + delta <= 0
+  }, [expired, newerSignIn, learn, signIn])
 
   // Back from the sign-in page to a page the browser kept as it was: the
   // button must not stay on "Opening...".
@@ -252,15 +304,26 @@ export function DecisionSignInScope({
       // The browser took no draft although the page had said it would: the
       // reviewer is told to copy their reason, and leaves on the next press.
       if (!kept && entered && canKeep !== false) {
+        setWriteFailed(true)
         setTrouble({ on: from, kind: "write" })
         return
       }
       setTrouble(null)
       setLeaving(true)
       // The old session ends first: the sign-in page then starts a new one.
-      // The same tab, because the draft does not follow a new tab.
+      // The same tab, because the draft does not follow a new tab. A
+      // sign-out that never answers counts as one that failed.
       void signOutAndLeave({
-        signOut: () => authClient.signOut(),
+        signOut: () =>
+          Promise.race([
+            authClient.signOut(),
+            new Promise<never>((_, reject) =>
+              window.setTimeout(
+                () => reject(new Error("sign-out timed out")),
+                SIGN_OUT_WAIT_MS
+              )
+            ),
+          ]),
         leave: () =>
           window.location.assign(
             signInAgainUrl({
@@ -293,6 +356,7 @@ export function DecisionSignInScope({
       leaving,
       trouble,
       signInAgain,
+      stillExpired,
       registerEntries,
     }),
     [
@@ -304,6 +368,7 @@ export function DecisionSignInScope({
       leaving,
       trouble,
       signInAgain,
+      stillExpired,
       registerEntries,
     ]
   )
@@ -346,7 +411,11 @@ export function DecisionSignInBanner() {
           page: a screen reader says what is put into a region it already
           knows, and often nothing for one that arrives with its words. */}
       <p role="status" className="sr-only" data-testid="decision-sign-in-said">
-        {state.expiredWhileOpen ? t("banner.title") : ""}
+        {state.expiredWhileOpen
+          ? t("banner.title")
+          : state.renewed > 0
+            ? t("renewed")
+            : ""}
       </p>
       {state.expired ? (
         <SignInAgainNotice
@@ -418,6 +487,12 @@ export function useDecisionSignIn<Decision extends string>(input: {
    * worth keeping for the ones nobody expected).
    */
   expired: boolean
+  /**
+   * Call before `refuse` on an expired page: looks at the session once
+   * more (a sign-in made a moment ago in another tab) and says whether the
+   * press still cannot be saved.
+   */
+  stillExpired: () => Promise<boolean>
   /** Shows the "not saved, sign in again" message for this decision. */
   refuse: (decision: Decision) => void
   /** A new press: the last answer no longer stands. */
@@ -521,17 +596,34 @@ export function useDecisionSignIn<Decision extends string>(input: {
   } else if (returned.kind === "lapsed") {
     words = t("lapsed")
   }
-  const notice = words ? (
+  // Good news only when everything is back: unticked checks and a draft
+  // that is gone are things to know, not a tick.
+  let notice: React.ReactNode = words ? (
     <SignedInAgainNotice
-      tone={returned.kind === "lapsed" ? "plain" : "good"}
+      tone={returned.kind === "restored" ? "good" : "plain"}
       data-testid="decision-restored"
     >
       {words}
     </SignedInAgainNotice>
   ) : null
+  // A newer sign-in learned of from another tab: the banner and the old
+  // answer went by themselves, so a sentence says where things stand. It
+  // does not take focus: the reviewer did nothing on this page.
+  if (!notice && renewed > 0) {
+    notice = (
+      <SignedInAgainNotice
+        tone="plain"
+        takeFocus={false}
+        data-testid="decision-renewed"
+      >
+        {t("renewed")}
+      </SignedInAgainNotice>
+    )
+  }
 
   return {
     expired: state.expired,
+    stillExpired: state.stillExpired,
     refuse,
     clearRefusal,
     refusalFor,

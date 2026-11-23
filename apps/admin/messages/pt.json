@@ -167,9 +167,9 @@
   "signInAgain": {
     "banner": {
       "title": "Inicie sessão de novo antes de decidir",
-      "body": "Iniciou sessão há mais de {hours, plural, one {# hora} other {# horas}}. Uma decisão precisa de um início de sessão {hours, plural, one {da última hora} other {das últimas # horas}}, para que ninguém possa decidir em seu nome numa consola deixada aberta de um dia para o outro."
+      "body": "Iniciou sessão há mais de {hours, plural, one {# hora} other {# horas}}. Uma decisão precisa de um início de sessão {hours, plural, one {da última hora} other {das últimas # horas}}, para que ninguém possa decidir em seu nome numa consola deixada aberta mais tempo do que isso."
     },
-    "kept": "O que assinalou e o motivo que escreveu ficam neste separador enquanto inicia sessão.",
+    "kept": "O que assinalar e escrever aqui fica neste separador enquanto inicia sessão.",
     "notKept": "Copie o motivo antes de iniciar sessão: este navegador não o guarda.",
     "refused": {
       "title": "Essa decisão não foi guardada.",
@@ -180,18 +180,19 @@
     "actionPending": "A abrir...",
     "restored": "Já iniciou sessão de novo. O que assinalou e o motivo continuam aqui. Reveja tudo e decida.",
     "restoredSome": "Já iniciou sessão de novo. O que tinha preenchido continua aqui. Reveja tudo e decida.",
-    "lapsed": "Já iniciou sessão de novo. Passou algum tempo, por isso o que tinha preenchido já não está aqui.",
+    "lapsed": "Já iniciou sessão de novo. Passou mais de uma hora, por isso o que tinha preenchido já não está aqui.",
     "changed": {
       "clinic": "Já iniciou sessão de novo. A clínica enviou novos dados entretanto, por isso as verificações ficaram por assinalar.",
       "expert": "Já iniciou sessão de novo. O especialista enviou novos dados entretanto, por isso as verificações ficaram por assinalar."
     },
     "reasonKept": "O motivo continua aqui.",
     "unavailable": "Não foi possível abrir a página de início de sessão. Tente novamente daqui a pouco.",
-    "writeFailed": "Este navegador não guardou o motivo. Copie-o e tente de novo."
+    "writeFailed": "Este navegador não guardou o que preencheu. Copie o motivo e inicie sessão de novo.",
+    "renewed": "Já iniciou sessão de novo. Nada foi decidido: reveja o formulário e decida."
   },
   "staffEntry": {
     "title": "Entrar na consola da equipa",
-    "body": "Aqui vê dados de membros e especialistas de toda a Eleva. O que abrir e o que alterar fica guardado no registo de auditoria.",
+    "body": "Aqui vê dados de membros e especialistas de toda a Eleva. O que abrir e o que alterar fica guardado no registo de auditoria. Ao entrar, segue para a página que pediu.",
     "enter": "Entrar na consola da equipa",
     "back": "Voltar à Eleva",
     "error": "Não foi possível abrir a consola da equipa. Tente novamente daqui a pouco."

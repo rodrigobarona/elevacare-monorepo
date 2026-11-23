@@ -64,10 +64,10 @@ describe("the banner on a review", () => {
     // The rule's own number, and the reason in plain words.
     expect(html).toContain(`You signed in more than ${HOURS} hours ago.`)
     expect(html).toContain(
-      "so a console left open overnight can&#x27;t be used to decide in your name"
+      "so a console left open longer than that can&#x27;t be used to decide in your name"
     )
     expect(html).toContain(
-      "Your ticks and your reason stay in this tab while you sign in."
+      "What you tick and write here stays in this tab while you sign in."
     )
     // One button, by its name.
     expect(html.match(/<button/g)).toHaveLength(1)

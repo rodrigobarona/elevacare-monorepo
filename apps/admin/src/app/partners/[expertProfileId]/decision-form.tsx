@@ -67,8 +67,9 @@ export function DecisionForm({
     setError(null)
     signIn.clearRefusal()
     // A sign-in the page already knows is too old is answered here,
-    // without asking the API for a refusal it is sure to give.
-    if (signIn.expired) {
+    // without asking the API for a refusal it is sure to give. It looks
+    // at the session once more first: another tab may just have signed in.
+    if (signIn.expired && (await signIn.stillExpired())) {
       signIn.refuse(decision)
       return
     }

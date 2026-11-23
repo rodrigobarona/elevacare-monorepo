@@ -643,10 +643,10 @@ test.describe("Phase 12 — staff verify a clinic", () => {
     await expect(banner).toBeVisible({ timeout: 90_000 })
     await expect(banner).toContainText("Sign in again before you decide")
     await expect(banner).toContainText(
-      "You signed in more than 12 hours ago. A decision needs a sign-in from the last 12 hours, so a console left open overnight can't be used to decide in your name."
+      "You signed in more than 12 hours ago. A decision needs a sign-in from the last 12 hours, so a console left open longer than that can't be used to decide in your name."
     )
     await expect(banner).toContainText(
-      "Your ticks and your reason stay in this tab while you sign in."
+      "What you tick and write here stays in this tab while you sign in."
     )
     // Said before the filing, and not as an interruption.
     await expect(banner).toHaveAttribute("role", "note")
@@ -756,7 +756,7 @@ test.describe("Phase 12 — staff verify a clinic", () => {
       timeout: 60_000,
     })
     await expect(page.getByTestId("login-magic-sent")).toContainText(
-      "After you open the link, come back to this tab. It carries on from here."
+      "If you were in the middle of something here, come back to this tab: it carries on by itself."
     )
     cookie = await expertSession(request)
     await page.context().addCookies(
@@ -973,6 +973,10 @@ test.describe("Phase 12 — staff verify a clinic", () => {
       await expect(stale).toHaveCount(0, { timeout: 2_000 })
     }).toPass({ timeout: 45_000 })
     await expect(other.getByTestId("decision-sign-in-refusal")).toHaveCount(0)
+    // A sentence says where things stand, without taking the keyboard.
+    await expect(other.getByTestId("decision-renewed")).toHaveText(
+      "You're signed in again. Nothing was decided: check the form, then decide."
+    )
     await expect(other.getByTestId("clinic-decision-reason")).toHaveValue(
       REASON
     )

@@ -171,14 +171,17 @@ export function returnDraft(
 
 /**
  * Removes every draft under `prefix` that was kept more than
- * `DRAFT_MAX_AGE_MS` ago, or cannot be read. A reviewer who never came
- * back leaves nothing in the tab for longer than that. Returns how many
- * were removed.
+ * `DRAFT_MAX_AGE_MS` ago, belongs to someone other than `ownerId`, or
+ * cannot be read. It runs when a page that uses drafts opens, so a draft
+ * nobody came back for stays until then, or until the tab closes: storage
+ * cannot be cleaned from a page that is not open. Returns how many were
+ * removed.
  */
 export function sweepDrafts(
   storage: DraftStorage | null,
   prefix: string,
-  now: number
+  now: number,
+  ownerId: string
 ): number {
   if (!storage) return 0
   try {
@@ -192,7 +195,10 @@ export function sweepDrafts(
       } catch {
         // Not a draft: removed below.
       }
-      const age = isDraft(draft) ? now - draft.keptAt : Number.NaN
+      const age =
+        isDraft(draft) && draft.ownerId === ownerId
+          ? now - draft.keptAt
+          : Number.NaN
       if (!(age >= 0 && age <= DRAFT_MAX_AGE_MS)) stale.push(key)
     }
     for (const key of stale) storage.removeItem(key)

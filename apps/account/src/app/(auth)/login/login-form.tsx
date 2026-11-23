@@ -49,6 +49,7 @@ export function LoginForm() {
   const [signedIn, setSignedIn] = useState(false)
   const [googlePending, setGooglePending] = useState(false)
   const autofillStarted = useRef(false)
+  const signedInWhenSent = useRef<number | null>(null)
 
   function finish() {
     setSignedIn(true)
@@ -82,12 +83,14 @@ export function LoginForm() {
     const look = async () => {
       if (gone || document.visibilityState !== "visible") return
       const now = await readBrowserSession()
-      // Only a session of the person the link was sent to: someone signed
-      // in as another person stays on this step until the link is used.
+      // Only a sign-in of the person the link was sent to, made since the
+      // link was sent: someone who was already signed in (as them or as
+      // another person) stays on this step until the link is used.
       if (
         gone ||
         !now ||
-        now.email.toLowerCase() !== email.trim().toLowerCase()
+        now.email.toLowerCase() !== email.trim().toLowerCase() ||
+        (now.startedAt?.getTime() ?? null) === signedInWhenSent.current
       ) {
         return
       }
@@ -158,6 +161,10 @@ export function LoginForm() {
   async function onMagic() {
     setPending(true)
     setError(null)
+    // The sign-in this browser carries now, if any: the step that follows
+    // goes on only for a newer one.
+    signedInWhenSent.current =
+      (await readBrowserSession())?.startedAt?.getTime() ?? null
     const sent = await sendMagicLink()
     setPending(false)
     if (sent) goTo("magicSent")

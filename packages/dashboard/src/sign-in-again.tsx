@@ -29,7 +29,6 @@ export function SignInAgainNotice({
   failure,
   answersAPress = false,
   size = "compact",
-  className,
   "data-testid": testId,
 }: {
   title?: string
@@ -40,18 +39,24 @@ export function SignInAgainNotice({
   answersAPress?: boolean
   /** `roomy` at the top of a page, beside cards; `compact` inside one. */
   size?: "compact" | "roomy"
-  className?: string
   "data-testid"?: string
 }) {
+  // The answer to a press appears after the buttons: it is brought into
+  // view when it is not, with its button, and the keyboard's place stays
+  // on the button that was pressed.
+  const ref = React.useRef<HTMLDivElement>(null)
+  React.useEffect(() => {
+    if (answersAPress) ref.current?.scrollIntoView({ block: "nearest" })
+  }, [answersAPress])
   return (
     <Alert
+      ref={ref}
       variant="notice"
       role="note"
       // The page's own hairline, so the notice has an edge on a pale ground.
       className={cn(
         "rounded-xl border-border max-sm:px-3",
-        size === "roomy" && "sm:px-6 sm:py-4",
-        className
+        size === "roomy" && "sm:px-6 sm:py-4"
       )}
       data-testid={testId}
     >
@@ -81,7 +86,7 @@ export function SignInAgainNotice({
             // On the notice's tinted ground the kit's hairline is lost: the
             // one way forward gets an edge that can be seen. Wide enough
             // for its longer label, so the words beside it do not move.
-            className="min-w-36 border-input-border bg-background max-sm:h-10 max-sm:w-full"
+            className="min-w-48 border-input-border bg-background max-sm:h-10 max-sm:w-full"
             // Stays in the tab order while it works, so a second press
             // does nothing and the keyboard's place is not lost.
             isPending={action.isPending}
@@ -106,39 +111,42 @@ export function SignInAgainNotice({
 }
 
 /**
- * What a person reads when they are back from signing in and what they
- * had entered is on the page again. It takes the keyboard's place when it
- * appears, so they continue from the form and not from the top of the
- * page; being focused is how a screen reader comes to say it.
+ * What a person reads when they are back from signing in: what they had
+ * entered is on the page again, or what became of it. It takes the
+ * keyboard's place when it appears, so they continue from the form and not
+ * from the top of the page; being focused is how a screen reader comes to
+ * say it, and its words are its name so that it says all of them.
  */
 export function SignedInAgainNotice({
   children,
   tone = "good",
-  className,
+  takeFocus = true,
   "data-testid": testId,
 }: {
   children: React.ReactNode
   /** `good`: it is all back. `plain`: something to know, not good news. */
   tone?: "good" | "plain"
-  className?: string
+  /** False when the person did nothing on this page to bring it about. */
+  takeFocus?: boolean
   "data-testid"?: string
 }) {
   const ref = React.useRef<HTMLDivElement>(null)
+  const wordsId = React.useId()
   React.useEffect(() => {
-    ref.current?.focus()
-  }, [])
+    if (takeFocus) ref.current?.focus()
+  }, [takeFocus])
   return (
     <Alert
       ref={ref}
       tabIndex={-1}
       variant="notice"
       role="note"
+      aria-labelledby={wordsId}
       // A different ground from the warning, and an edge that stays after
       // the keyboard has moved on. Focus is only ever put here by the page.
       className={cn(
-        "rounded-xl outline-none focus:ring-2 focus:ring-ring",
-        tone === "good" ? "border-primary/30 bg-primary/5" : "border-border",
-        className
+        "rounded-xl outline-none focus:ring-2 focus:ring-primary",
+        tone === "good" ? "border-primary/30 bg-primary/5" : "border-border"
       )}
       data-testid={testId}
     >
@@ -147,7 +155,7 @@ export function SignedInAgainNotice({
       ) : (
         <InfoIcon aria-hidden />
       )}
-      <AlertDescription className="text-pretty text-foreground">
+      <AlertDescription id={wordsId} className="text-pretty text-foreground">
         {children}
       </AlertDescription>
     </Alert>

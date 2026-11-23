@@ -61,7 +61,10 @@ export default async function PartnerReviewPage({
     })
 
   return (
-    <DecisionSignInScope signIn={signIn}>
+    // A review that cannot be decided has no time to watch.
+    <DecisionSignInScope
+      signIn={decidable ? signIn : { ...signIn, msLeft: null }}
+    >
       <div className="mx-auto max-w-3xl space-y-8">
         {/* Not fetched ahead: each read of the queue is recorded. */}
         <Link
@@ -175,7 +178,7 @@ export default async function PartnerReviewPage({
             <h2
               id={DECISION_TITLE_ID}
               tabIndex={-1}
-              className="rounded-sm text-base font-semibold tracking-tight outline-none focus:ring-2 focus:ring-ring focus:ring-offset-4 focus:ring-offset-background"
+              className="rounded-sm text-base font-semibold tracking-tight outline-none focus:ring-2 focus:ring-primary focus:ring-offset-4 focus:ring-offset-background"
             >
               {t("detail.decisionTitle")}
             </h2>

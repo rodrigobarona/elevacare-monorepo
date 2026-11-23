@@ -122,7 +122,7 @@ describe("keeping a draft while someone signs in", () => {
 })
 
 describe("drafts nobody came back for", () => {
-  it("are removed after an hour, with anything unreadable; the rest stay", () => {
+  it("are removed after an hour, with anyone else's and anything unreadable; the rest stay", () => {
     const storage = memoryStorage()
     const prefix = "eleva.decision-draft:"
     keepDraft(storage, `${prefix}clinic:fresh`, draft)
@@ -130,18 +130,24 @@ describe("drafts nobody came back for", () => {
       ...draft,
       keptAt: KEPT_AT - DRAFT_MAX_AGE_MS - 1,
     })
+    keepDraft(storage, `${prefix}clinic:theirs`, {
+      ...draft,
+      ownerId: "staff-2",
+    })
     storage.setItem(`${prefix}expert:broken`, "not json")
     storage.setItem("something-else", "kept")
-    expect(sweepDrafts(storage, prefix, KEPT_AT)).toBe(2)
+    expect(sweepDrafts(storage, prefix, KEPT_AT, "staff-1")).toBe(3)
     expect(storage.getItem(`${prefix}clinic:fresh`)).not.toBeNull()
     expect(storage.getItem(`${prefix}clinic:old`)).toBeNull()
+    expect(storage.getItem(`${prefix}clinic:theirs`)).toBeNull()
     expect(storage.getItem(`${prefix}expert:broken`)).toBeNull()
     expect(storage.getItem("something-else")).toBe("kept")
   })
 
   it("never throws where storage is refused", () => {
-    expect(sweepDrafts(refusing, "eleva.decision-draft:", KEPT_AT)).toBe(0)
-    expect(sweepDrafts(null, "eleva.decision-draft:", KEPT_AT)).toBe(0)
+    const prefix = "eleva.decision-draft:"
+    expect(sweepDrafts(refusing, prefix, KEPT_AT, "staff-1")).toBe(0)
+    expect(sweepDrafts(null, prefix, KEPT_AT, "staff-1")).toBe(0)
   })
 })
 

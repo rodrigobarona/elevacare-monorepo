@@ -74,9 +74,12 @@ Each entry should include:
   copy the reason first: the page promises only what it can do, and a
   write that fails at the press keeps the reviewer on the page with that
   sentence under the button. A draft is given back for an hour
-  (`DRAFT_MAX_AGE_MS`): after that the reviewer is told "It took a while,
-  so what you had entered is no longer here", and drafts nobody came back
-  for are removed from the tab the next time a review opens in it. It is
+  (`DRAFT_MAX_AGE_MS`): after that the reviewer is told "More than an
+  hour passed, so what you had entered is no longer here", and drafts
+  nobody came back for, or anyone else's, are removed from the tab the
+  next time a review opens in it. A tab left on the sign-in page keeps
+  its draft until then or until it closes: storage cannot be cleaned
+  from a page that is not open. It is
   removed when signing out fails (the
   form still has everything, and it must not come back later under
   "you're signed in again") and when the review can no longer be decided.
@@ -93,8 +96,11 @@ Each entry should include:
   configuration, so nothing a link carries can change where it lands, and
   the console checks who arrives as it does on every request. No absolute
   address was added to any allow-list. The console's own proxy uses the
-  same form, so a signed-out person who opens a console address comes
-  back to it after signing in (the 12.6 entry listed that as lost).
+  same form, so a person with no sign-in cookie who opens a console
+  address comes back to it after signing in (the 12.6 entry listed that
+  as lost). A cookie that is there but no longer good passes the proxy,
+  and the console's layout still sends its holder to sign in with no way
+  back: left as it was.
 - **The page is told how long is left, not at what moment it ends.** The
   server counts the time left on its own clock (the one the API uses) and
   the page counts down from there. The first version compared a moment
@@ -105,7 +111,11 @@ Each entry should include:
   whether the browser now carries a newer sign-in of the same person in
   the same staff workspace (`readBrowserSession` in `@eleva/auth/client`,
   at most every five seconds). If so the banner and the old answer go by
-  themselves and a press reaches the API. Only the session is read: the
+  themselves, a sentence says "You're signed in again. Nothing was
+  decided", and a press reaches the API. A press on a page that believes
+  it is old asks the session once more before it is answered there. The
+  time already spent on the page keeps counting after a newer sign-in is
+  learned of. Only the session is read: the
   second version redrew the whole page instead, and each redraw read the
   filing again (a recorded read, so one reading became several) and could
   take the form away with what was on it (the second panel caught it).
@@ -115,8 +125,11 @@ Each entry should include:
   sign-in page's "check your inbox" step now goes on by itself once the
   link has been used and the person comes back to that tab
   (`apps/account` `login-form.tsx`): that tab has the draft. It goes on
-  only for the person the link was sent to, and the step now says "After
-  you open the link, come back to this tab. It carries on from here."
+  only for a sign-in of the person the link was sent to that was not
+  there when the link was sent, and the step now says "Open the link in
+  this browser. If you were in the middle of something here, come back
+  to this tab: it carries on by itself." Opened on another device, the
+  link signs that device in and this tab stays where it is.
   The tab the link opened shows the review with an empty form, so the
   banner says "stay in this tab", not "on this page".
 - **Signing out first.** The sign-in page lets a signed-in person sign in
@@ -220,17 +233,32 @@ Each entry should include:
   page going on for any session, a draft that lapsed without a word, a
   refusal that looked like help text, a row that would squeeze beside the
   sidebar, and "left open" where the rule is about a night.
-- **The third commit was not walked in a browser.** The dev database
+  Third panel: 8.0, 8.5, 8.3, 8.3. The fourth commit answers it: the
+  countdown that started over after a newer sign-in, a question to the
+  session that could be skipped while another was on its way, a press
+  answered without one more look, the sentence on the sign-in page that
+  was only true in the same browser, "overnight" for a rule of twelve
+  hours (the banner now says "left open longer than that"), a notice
+  whose words were not its name, a tick on news that is not good, and a
+  refusal that could appear below the screen. Not scored again.
+- **The third and fourth commits were not walked in a browser.** The dev database
   stopped answering at 02:46 UTC on 2026-11-23 ("exceeded the quota",
   Neon, HTTP 402): the local stack cannot sign anyone in, and the pull
   request's database job fails for the same reason. The second commit's
-  journey passed in full before that (the list above). What the third
-  commit adds to the browser test is written and has never run: the two
+  journey passed in full before that (the list above), and the captures
+  are of that commit: the refusal has since gained a title and moved
+  after the buttons, and several sentences changed. What the later
+  commits add to the browser test is written and has never run: the two
   tabs (the banner going from the session alone, with no new reading of
   the filing on record), the refusal after the buttons, the sentence on
-  the "check your inbox" step, and the changed wording. Its unit tests,
-  types and lint pass. It needs one run of `e2e/admin-clinics.spec.ts`
-  once the database answers, and is not to be read as proven until then.
+  the "check your inbox" step, and the changed wording. Their unit tests,
+  types and lint pass. They need one run of `e2e/admin-clinics.spec.ts`
+  once the database answers, with the captures retaken, and are not to
+  be read as proven until then. Also with no test behind it: the
+  arithmetic of the time left after a newer sign-in; the API's refusal
+  reaching the page as the same message (every walked press was one the
+  page already knew about); the tab order by keyboard alone; contrast
+  measured on screen (the figures are worked out from the palette).
 - Left for later: the sign-in page still greets a reviewer in the middle
   of a decision with "Welcome back" and "Create an account" (12.8 builds
   the staff's own way in); "Sign in again" ends the session in every
