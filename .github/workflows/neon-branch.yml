@@ -13,6 +13,12 @@ permissions:
 
 env:
   NODE_VERSION: 24
+  # A pull request's database branch deletes itself this many days after its
+  # last run of this workflow. It is only used by this job (Vercel previews
+  # use the `preview` branch), so losing it costs one re-run, and a push
+  # makes it again. Seven days is well inside Neon's 30-day maximum and long
+  # enough that work in review does not lose its branch over a weekend.
+  NEON_PR_BRANCH_TTL_DAYS: 7
 
 jobs:
   neon-branch-migrate-and-rls:
@@ -78,6 +84,54 @@ jobs:
           parent: true
           cs_database: neondb
           api_key: ${{ secrets.NEON_API_KEY }}
+
+      # A branch that outlives its pull request holds one of the project's
+      # few branch slots; six open pull requests once used them all. Neon
+      # deletes an expired branch by itself. Set after every reset, so each
+      # push moves the date, and a branch made before this step existed gets
+      # one too. If Neon refuses (the API marks the field early access), the
+      # job goes on: the delete on close and the nightly sweep still apply.
+      - name: Set the branch to expire
+        if: steps.neon-creds.outputs.ready == 'true'
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID || vars.NEON_PROJECT_ID }}
+          BRANCH_ID: ${{ steps.create-branch.outputs.branch_id }}
+          EXPECTED_NAME: pr-${{ github.event.number }}
+        run: |
+          set -euo pipefail
+          api="https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}/branches/${BRANCH_ID}"
+          summary='.branch | {name, default, protected, expires_at, ttl_interval_seconds}'
+          answer="${RUNNER_TEMP}/neon-branch.json"
+          # Only the refusal below may fail this job: a network error while
+          # asking Neon is a warning, the database tests still run.
+          if ! curl -fsS --max-time 30 --retry 2 -o "$answer" \
+            -H "Authorization: Bearer ${NEON_API_KEY}" "$api"; then
+            echo "::warning::Could not read ${EXPECTED_NAME} from Neon; no expiry was set on this run."
+            exit 0
+          fi
+          branch=$(jq -c "$summary" "$answer")
+          name=$(jq -r '.name' <<< "$branch")
+          # Only ever this pull request's own branch: never the default
+          # (production) branch, a protected one, or `preview`. A branch
+          # that does not say it is neither is refused too.
+          if [ "$name" != "$EXPECTED_NAME" ] || ! [[ "$name" =~ ^pr-[0-9]+$ ]] ||
+            [ "$(jq -r '.default == false and .protected == false' <<< "$branch")" != "true" ]; then
+            echo "::error::Refusing to set an expiry on branch '${name}'."
+            exit 1
+          fi
+          expires_at=$(date -u -d "+${NEON_PR_BRANCH_TTL_DAYS} days" +'%Y-%m-%dT%H:%M:%SZ')
+          body=$(jq -nc --arg at "$expires_at" '{branch: {expires_at: $at}}')
+          status=$(curl -sS --max-time 30 --retry 2 -o "$answer" -w '%{http_code}' -X PATCH \
+            -H "Authorization: Bearer ${NEON_API_KEY}" \
+            -H "Content-Type: application/json" -d "$body" "$api") || status="000"
+          if [ "$status" = "200" ]; then
+            echo "before: ${branch}"
+            echo "after:  $(jq -c "$summary" "$answer")"
+          else
+            echo "::warning::Neon answered ${status} to an expiry for ${name}: $(jq -r '.message // .code // "no message"' "$answer" 2>/dev/null || echo unreadable). The branch is still deleted when the pull request closes, and by the nightly sweep."
+          fi
+          rm -f "$answer"
 
       - name: Derive audit database URL
         if: steps.neon-creds.outputs.ready == 'true'
@@ -168,8 +222,36 @@ jobs:
             echo "ready=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Delete Neon branch
+      # The branch may be gone already (it expired, or the nightly sweep
+      # took it): that is the outcome this job wants, not a failure.
+      - name: Find the branch
         if: steps.neon-creds.outputs.ready == 'true'
+        id: find-branch
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID || vars.NEON_PROJECT_ID }}
+          BRANCH_NAME: pr-${{ github.event.number }}
+        run: |
+          set -euo pipefail
+          api="https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}"
+          # If Neon cannot be asked, try the delete as before: skipping it
+          # on a failed lookup would leave the branch behind.
+          if ! found=$(curl -fsS --max-time 30 --retry 2 \
+            -H "Authorization: Bearer ${NEON_API_KEY}" \
+            "${api}/branches?search=${BRANCH_NAME}&limit=100" |
+            jq -r --arg name "$BRANCH_NAME" '[.branches[] | select(.name == $name)] | length'); then
+            echo "::warning::Could not look ${BRANCH_NAME} up; trying the delete."
+            found=1
+          fi
+          if [ "$found" -gt 0 ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::${BRANCH_NAME} is already gone; nothing to delete."
+          fi
+
+      - name: Delete Neon branch
+        if: steps.neon-creds.outputs.ready == 'true' && steps.find-branch.outputs.exists == 'true'
         uses: neondatabase/delete-branch-action@4468d825d5a88ef4012f1705a82f02ec3072f776 # v3.2.1
         with:
           project_id: ${{ secrets.NEON_PROJECT_ID || vars.NEON_PROJECT_ID }}
