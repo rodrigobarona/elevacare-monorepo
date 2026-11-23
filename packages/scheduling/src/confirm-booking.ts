@@ -2,6 +2,7 @@ import { logError } from "@eleva/observability"
 import { and, eq, inArray, isNull, ne, or } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
 import {
+  domainEventWritten,
   lockMemberHealthConsentInvariant,
   main,
   withPlatformAdminContext,
@@ -552,6 +553,7 @@ export async function emitGuestActivationRequired(
     reservationId: string
   }
 ) {
+  domainEventWritten()
   const inserted = await tx
     .insert(main.domainEventsOutbox)
     .values({

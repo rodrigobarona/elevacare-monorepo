@@ -1,5 +1,4 @@
 import { logError } from "@eleva/observability"
-import { after } from "next/server"
 import {
   ConfirmBookingRequestSchema,
   ConfirmBookingResponseSchema,
@@ -13,15 +12,14 @@ import {
   confirmBookingPayment,
   confirmFreeReservation,
 } from "@eleva/scheduling"
-import { publishPendingDomainEvents } from "@eleva/workflows/domain-events"
 import { shouldAwaitDomainEventPublish } from "@eleva/workflows/should-await-domain-event-publish"
-import { defaultDomainEventSubscribers } from "@eleva/workflows/subscribers"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, resolveApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { checkBot } from "@/lib/bot-protection"
 import { withIdempotency } from "@/lib/idempotency"
 import { PUBLIC_NOT_FOUND } from "@/lib/public-marketplace"
+import { publishDomainEventsNow } from "@/lib/publish-domain-events"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
 
@@ -33,19 +31,6 @@ export const ROUTE_POLICY = {
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
-
-async function kickGuestActivationPublisher(): Promise<void> {
-  try {
-    const result = await publishPendingDomainEvents({
-      subscribers: defaultDomainEventSubscribers(),
-    })
-    if (result.failed > 0 || result.dead > 0) {
-      console.error("[bookings/confirm] publisher deliveries failed", result)
-    }
-  } catch (err) {
-    logError("[bookings/confirm] publisher kick failed", err)
-  }
-}
 
 export async function POST(request: Request) {
   const headers = corsHeaders(request, "POST, OPTIONS")
@@ -209,11 +194,11 @@ export async function POST(request: Request) {
         return secureJson({ error: "internal" }, { status: 500, headers })
       }
 
-      if (shouldAwaitDomainEventPublish()) {
-        await kickGuestActivationPublisher()
-      } else {
-        after(kickGuestActivationPublisher)
-      }
+      // The events this wrote are published once this has answered, as
+      // for every request that writes one (`publish-domain-events.ts`).
+      // On a laptop and in the browser tests it is waited for, so that
+      // what follows (the email, the room) is there when this returns.
+      if (shouldAwaitDomainEventPublish()) await publishDomainEventsNow()
 
       return secureJson(
         ConfirmBookingResponseSchema.parse({

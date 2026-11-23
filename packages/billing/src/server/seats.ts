@@ -476,8 +476,8 @@ const SEAT_SYNC_STALE_MS = 2 * 60 * 1000
 /**
  * Finishes seat syncs that were marked but never reached Stripe (the API
  * answered before Stripe did, or Stripe was unreachable; or the webhook
- * marked a clinic plan that became current). Runs every ten
- * minutes; each clinic is recounted and synced like a fresh request, so a
+ * marked a clinic plan that became current). Runs in the
+ * hourly tick; each clinic is recounted and synced like a fresh request, so a
  * failure simply waits for the next run. Only marked rows are swept: a
  * clinic the sync has nothing to send for is not looked at again until
  * something marks it.

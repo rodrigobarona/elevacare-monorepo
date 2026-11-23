@@ -1,4 +1,5 @@
 import type { Tx } from "../context"
+import { domainEventWritten } from "../domain-event-signal"
 import * as main from "../schema/main"
 
 /**
@@ -39,6 +40,7 @@ export async function _emitClinicDecisionEvent(
     reviewedAt: Date
   }
 ): Promise<void> {
+  domainEventWritten()
   const [event] = await tx
     .insert(main.domainEventsOutbox)
     .values({

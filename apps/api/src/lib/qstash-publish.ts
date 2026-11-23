@@ -1,8 +1,17 @@
 import { Client } from "@upstash/qstash"
 
+/** For a message that is to arrive later, and only once. */
+export interface PublishLater {
+  /** Not before this moment. */
+  notBefore: Date
+  /** Messages with the same id, sent close together, are delivered once. */
+  deduplicationId: string
+}
+
 export async function publishWorkflowJob(
   path: string,
-  body: Record<string, unknown>
+  body: Record<string, unknown>,
+  later?: PublishLater
 ): Promise<"published" | "inline"> {
   const token = process.env.QSTASH_TOKEN
   const secret = process.env.WORKFLOWS_DRAIN_SECRET
@@ -32,6 +41,12 @@ export async function publishWorkflowJob(
     url: destination,
     body,
     headers: { Authorization: `Bearer ${secret}` },
+    ...(later
+      ? {
+          notBefore: Math.ceil(later.notBefore.getTime() / 1000),
+          deduplicationId: later.deduplicationId,
+        }
+      : {}),
   })
   return "published"
 }

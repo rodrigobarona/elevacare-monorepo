@@ -7,19 +7,27 @@
  * `periodSeconds` and `graceSeconds` instead of deriving them again.
  *
  * A job's name is its route folder: `/workflows/{name}` or `/cron/{name}`.
- * The three ticks are `tick-{cadence}` for `/workflows/tick/{cadence}`.
+ * The tick is `tick-{cadence}` for `/workflows/tick/{cadence}`.
+ *
+ * **Nothing here runs more often than once an hour, on purpose.** The
+ * database sleeps when nobody asks it anything and is paid for by the
+ * time it is awake, and every one of these jobs asks it something on
+ * every run. A job on a schedule is the net under the work, not the way
+ * the work gets done: what a person waits for is started by the request
+ * that caused it (an email, by the request that wrote its event) or by
+ * one delayed message for the moment it falls due (a hold that lapses).
+ * See `apps/api/src/lib/run-job-at.ts`. Before adding a schedule shorter
+ * than an hour, find the moment the work is created and start it there.
  *
  * Grace is how late a run may report before it counts as missed:
  * - Vercel Cron delivers at best effort and never retries, so one skipped
- *   run is expected now and then. Jobs that run every minute or every ten
- *   minutes wait for two missed runs; hourly and daily jobs for one.
+ *   run is expected now and then: hourly and daily jobs wait for one.
  * - QStash does not skip: it retries a failed run three times over about
  *   33 minutes (12 s, 2.5 min, 30 min). Those jobs wait one hour, which is
  *   less than one missed run on purpose; the monthly one waits six.
  */
 
-const MINUTE = 60
-const HOUR = 60 * MINUTE
+const HOUR = 60 * 60
 const DAY = 24 * HOUR
 
 type Trigger = "vercel-cron" | "tick" | "qstash"
@@ -44,20 +52,13 @@ interface ScheduledJob {
   notRegisteredUntil?: string
 }
 
-/** The three ticks: their Vercel Cron schedule, period and grace. */
+/**
+ * The tick: its Vercel Cron schedule, period and grace. On the hour, as
+ * the QStash jobs are, so that they share one waking of the database.
+ */
 const TICK_SCHEDULES = {
-  minutely: {
-    schedule: "* * * * *",
-    periodSeconds: MINUTE,
-    graceSeconds: 2 * MINUTE,
-  },
-  "10min": {
-    schedule: "*/10 * * * *",
-    periodSeconds: 10 * MINUTE,
-    graceSeconds: 20 * MINUTE,
-  },
   hourly: {
-    schedule: "5 * * * *",
+    schedule: "0 * * * *",
     periodSeconds: HOUR,
     graceSeconds: HOUR,
   },
@@ -98,20 +99,18 @@ export const BACKGROUND_JOBS = {
     periodSeconds: DAY,
     graceSeconds: DAY,
   },
-  "tick-minutely": tick("minutely"),
-  "tick-10min": tick("10min"),
   "tick-hourly": tick("hourly"),
 
   // Inside a tick (`apps/api/src/lib/workflow-ticks.ts`, which must list
   // the same jobs under the same cadence, or it does not compile).
-  "slot-reservation-expiry": inTick("slot-reservation-expiry", "minutely"),
-  "booking-request-expiry": inTick("booking-request-expiry", "minutely"),
-  "domain-events-publisher": inTick("domain-events-publisher", "minutely"),
-  "video-eject-retry": inTick("video-eject-retry", "minutely"),
-  "stripe-stuck-events": inTick("stripe-stuck-events", "10min"),
-  "video-room-sweep": inTick("video-room-sweep", "10min"),
-  "video-attendance-sweep": inTick("video-attendance-sweep", "10min"),
-  "seat-sync-sweep": inTick("seat-sync-sweep", "10min"),
+  "slot-reservation-expiry": inTick("slot-reservation-expiry", "hourly"),
+  "booking-request-expiry": inTick("booking-request-expiry", "hourly"),
+  "domain-events-publisher": inTick("domain-events-publisher", "hourly"),
+  "video-eject-retry": inTick("video-eject-retry", "hourly"),
+  "stripe-stuck-events": inTick("stripe-stuck-events", "hourly"),
+  "video-room-sweep": inTick("video-room-sweep", "hourly"),
+  "video-attendance-sweep": inTick("video-attendance-sweep", "hourly"),
+  "seat-sync-sweep": inTick("seat-sync-sweep", "hourly"),
   "audit-outbox-drainer": inTick("audit-outbox-drainer", "hourly"),
   "account-deletion-sweep": inTick("account-deletion-sweep", "hourly"),
   "crm-follow-up-due": inTick("crm-follow-up-due", "hourly"),

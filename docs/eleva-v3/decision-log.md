@@ -32,6 +32,94 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-23: Nothing runs on a schedule more often than once an hour, so the database can sleep (13.35) (active)
+
+- Problem: the database is paid for by the time it is awake, and it goes
+  to sleep when nothing has asked it anything for about five minutes.
+  Since 2026-11-07 a tick ran every minute and another every ten, and
+  every one of their eight jobs asked the database something on every
+  run, work or no work (six transactions a minute with nothing to do).
+  Production's database was awake around the clock: 370 hours in sixteen
+  days, six compute-hours a day, about 180 a month, on a plan that allows
+  far less. On 2026-11-23 the allowance ran out and every branch of the
+  project, production's too, stopped answering. Eleva is a low-traffic
+  product: nothing in it needs a clock that ticks every minute.
+- Decision (founder, 2026-11-23): "I do not need cron jobs every few
+  minutes ... do not overuse the platform with no reason."
+- Change (Phase 13.35): **one tick, hourly, on the hour.** The per-minute
+  and ten-minute ticks are gone from `apps/api/vercel.json` and from
+  `@eleva/config/background-jobs`; their eight jobs run in the hourly
+  tick with the four that were there. A test in the list refuses any
+  schedule shorter than an hour, and says why.
+- **A job on a schedule is now the net under the work, not the way the
+  work gets done.** Where a person would notice an hour, the work is
+  started when it is created or falls due:
+
+  | What                                      | Was                     | Now                                                                             |
+  | ----------------------------------------- | ----------------------- | ------------------------------------------------------------------------------- |
+  | Emails, calendar entries, call rooms      | Published every minute  | Published by the request that wrote the event, once it has answered             |
+  | A delivery that failed (email not sent)   | Tried again each minute | One run 90 seconds later, then 5 and 15 minutes, then the hourly tick           |
+  | A hold on a slot that lapses              | Swept every minute      | One delayed run at the moment it lapses, asked for when the hold is made        |
+  | A hold that was extended                  | Swept every minute      | The job asks to be run again when the next hold lapses                          |
+  | Someone removed from a call, still in it  | Tried again each minute | One run 90 seconds later, then 5 and 15 minutes, then the hourly tick           |
+  | A request to book past its deadline       | Every minute            | Hourly: the deadline is 24 hours, and the expert is refused after it either way |
+  | Stuck Stripe events (an alert, no repair) | Every 10 minutes        | Hourly                                                                          |
+  | A call room that was not made, old rooms  | Every 10 minutes        | Hourly: it looks two hours ahead, and a failed delivery is tried again as above |
+  | Attendance after a session, clinic seats  | Every 10 minutes        | Hourly                                                                          |
+
+- **How an event is published without a clock.** Whatever writes an
+  event to the outbox says so (`domainEventWritten()` in `@eleva/db`,
+  nine places). The API listens (`instrumentation.ts`) and publishes once
+  the request has answered, with Next's `after()`, so the visitor does
+  not wait for it and the transaction has ended. This also covers what
+  waited for the tick before: a payment confirmed by Stripe's webhook
+  when the browser never came back, an expert's accept or decline, a
+  cancellation, a staff decision. A repository test fails when a write to
+  the outbox does not say so. No frontend app writes events; all of it
+  goes through the API.
+- **How a job is run at a moment.** `runJobAt(job, when)` sends one
+  delayed message through QStash to the job's own route, the way booking
+  reminders already work. The job is the same one the tick runs: it looks
+  for what is due, so a message that is early, late or doubled does no
+  harm, and one that never arrives is caught within the hour. Items due
+  within the same 30 seconds share one message.
+- The tick moved from five past the hour to the hour, where the two-hourly
+  and daily QStash jobs already run, so that they share one waking.
+- **What this should cost, as an estimate and not a measurement:** about
+  24 wakings a day of five to six minutes each, a little over two hours
+  awake, about half a compute-hour a day and 17 a month, plus whatever
+  real visits use. To be read from Neon after the first week on
+  production.
+- **Not proven, because nothing here could be run against a database or
+  the queue** (the database is not answering until 2026-12-01): that
+  `after()` is reached from inside a transaction on the real driver; the
+  query that finds the next hold to lapse; that a delayed message reaches
+  a job route and is accepted. Each has unit tests around it and none has
+  run for real. The first booking on staging after the merge is the
+  check: the confirmation email with no tick in between, and the hold of
+  an abandoned checkout released about five minutes later.
+- Known limits. A hold abandoned at the pay step is released when it
+  lapses only if the queue delivers; if it does not, within the hour
+  (before: within a minute). Each hold costs one to three queue messages
+  against QStash's daily allowance, which per-minute schedules used up on
+  2026-11-07; at this traffic that is far below it. Work with a long
+  deadline (a request to book, an account deletion) is now late by up to
+  an hour and no more.
+- Operator: after the deployment, the Cron Jobs page of `elevacare-api`
+  lists three jobs, not five. `BETTERSTACK_HEARTBEAT_URLS`, when it is
+  set up (O-3), has no `tick-minutely` or `tick-10min`: 20 jobs are
+  listed and 19 run. Nothing to run for QStash.
+- **Merge this first when the database answers again** (after #467, which
+  it is built on). Until it is deployed, production's per-minute tick
+  starts spending December's allowance from the first minute of the
+  month, at six compute-hours a day.
+- Owner: engineering
+- Related: `packages/config/src/background-jobs.ts`;
+  `apps/api/src/lib/run-job-at.ts`, `publish-domain-events.ts`;
+  `packages/db/src/domain-event-signal.ts`;
+  `execution-plan/remaining-roadmap.md` (O-2); the entry of 2026-11-07
+  that moved the ticks to Vercel Cron
+
 ### 2026-11-23: Every background job reports that it ran (13.18) (active)
 
 - Problem: 7 of 23 job routes sent a heartbeat, in three different ways,

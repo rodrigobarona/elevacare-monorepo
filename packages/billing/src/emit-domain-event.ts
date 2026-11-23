@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm"
-import { main, type Tx } from "@eleva/db"
+import { domainEventWritten, main, type Tx } from "@eleva/db"
 
 export const PAYMENT_PAYOUT_NOTIFICATION_EVENT_TYPES = [
   "payment.receipt",
@@ -74,6 +74,7 @@ export async function emitPaymentPayoutNotificationEvent(
       : { payoutStateId: input.payoutStateId }),
   }
 
+  domainEventWritten()
   const inserted = await tx
     .insert(main.domainEventsOutbox)
     .values({

@@ -28,6 +28,12 @@ export async function register(): Promise<void> {
         await import("@eleva/auth/server/auth")
       const { createAuthMailer } = await import("@eleva/notifications")
       setAuthTransactionalMailer(createAuthMailer())
+      // An event written during a request is published once the request
+      // has answered: the job that publishes them runs hourly.
+      const { onDomainEventWritten } = await import("@eleva/db")
+      const { publishDomainEventsAfterResponse } =
+        await import("@/lib/publish-domain-events")
+      onDomainEventWritten(publishDomainEventsAfterResponse)
     } catch (error) {
       console.error("[api instrumentation] register failed", error)
       throw error

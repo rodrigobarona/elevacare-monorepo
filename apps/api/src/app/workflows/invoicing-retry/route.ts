@@ -15,7 +15,7 @@ export const ROUTE_POLICY = {
 /**
  * POST /workflows/invoicing-retry
  *
- * Slow-stage retry for failed expert invoices (every 30 minutes).
+ * Slow-stage retry for failed expert invoices (in the hourly tick).
  * Re-dispatches through `issueExpertServiceInvoice`; the TOConline v1
  * issuance gate stays closed, so retries record skip/blocked and never
  * POST commercial sales documents.

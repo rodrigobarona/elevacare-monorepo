@@ -23,7 +23,7 @@ vi.mock("@/lib/workflow-ticks", async () => {
   }
   return {
     WORKFLOW_TICKS: {
-      minutely: {
+      "one-fails": {
         "slot-reservation-expiry": reportedJob("slot-reservation-expiry", done),
         "booking-request-expiry": reportedJob("booking-request-expiry", failed),
         "domain-events-publisher": reportedJob(
@@ -32,14 +32,14 @@ vi.mock("@/lib/workflow-ticks", async () => {
         ),
         "video-eject-retry": reportedJob("video-eject-retry", done),
       },
-      "10min": {
+      "all-fine": {
         "stripe-stuck-events": reportedJob("stripe-stuck-events", done),
       },
       hourly: {},
     },
     isWorkflowTickCadence: (value: string) =>
       // "broken" is let through with no jobs behind it: a tick that breaks.
-      ["minutely", "10min", "hourly", "broken"].includes(value),
+      ["one-fails", "all-fine", "hourly", "broken"].includes(value),
   }
 })
 
@@ -68,8 +68,8 @@ describe("what a tick reports", () => {
 
   it("each job for itself, and the tick as done once all were called", async () => {
     const response = await POST(
-      new Request(url("minutely"), { method: "POST" }),
-      context("minutely")
+      new Request(url("one-fails"), { method: "POST" }),
+      context("one-fails")
     )
     // One job answered 500 and one threw: the tick's own answer says so.
     expect(response.status).toBe(500)
@@ -87,20 +87,20 @@ describe("what a tick reports", () => {
     )
     // The tick reports last, after every job has answered: the schedule
     // fired and every job was called. Their failures are already said.
-    expect(reports.at(-1)).toEqual(["tick-minutely", "ok"])
+    expect(reports.at(-1)).toEqual(["tick-one-fails", "ok"])
   })
 
   it("the same when Vercel Cron starts it", async () => {
     const response = await GET(
-      new Request(url("10min"), {
+      new Request(url("all-fine"), {
         headers: { authorization: "Bearer cron-secret" },
       }),
-      context("10min")
+      context("all-fine")
     )
     expect(response.status).toBe(200)
     expect(reports).toEqual([
       ["stripe-stuck-events", "ok"],
-      ["tick-10min", "ok"],
+      ["tick-all-fine", "ok"],
     ])
   })
 
@@ -114,18 +114,18 @@ describe("what a tick reports", () => {
 
   it("nothing for a caller who is refused", async () => {
     const refused = await GET(
-      new Request(url("minutely"), {
+      new Request(url("one-fails"), {
         headers: { authorization: "Bearer wrong" },
       }),
-      context("minutely")
+      context("one-fails")
     )
     expect(refused.status).toBe(401)
     authorize.mockResolvedValue(
       Response.json({ error: "unauthorized" }, { status: 401 })
     )
     await POST(
-      new Request(url("minutely"), { method: "POST" }),
-      context("minutely")
+      new Request(url("one-fails"), { method: "POST" }),
+      context("one-fails")
     )
     expect(reports).toEqual([])
   })

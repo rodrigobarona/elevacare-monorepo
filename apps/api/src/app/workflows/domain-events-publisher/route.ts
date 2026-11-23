@@ -5,6 +5,7 @@ import { authorizeInternalWorkflow } from "@/lib/internal-workflow"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
 import { reportedJob } from "@/lib/reported-job"
+import { againNumber, runJobAgain } from "@/lib/run-job-at"
 
 export const ROUTE_POLICY = {
   auth: "internal",
@@ -26,6 +27,11 @@ export const POST = reportedJob(
       const result = await publishPendingDomainEvents({
         subscribers: defaultDomainEventSubscribers(),
       })
+      // A delivery that failed is due again in a minute or two, and this
+      // job's own schedule is hourly: ask for the run that tries again.
+      if (result.failed > 0) {
+        await runJobAgain("domain-events-publisher", await againNumber(request))
+      }
       return secureJson({ ok: true, ...result }, { status: 200, headers })
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)

@@ -11,8 +11,8 @@ export const SLOT_RESERVATION_EXPIRY_BATCH_SIZE = 100
 const SEARCH_RETRY_RECHECK_MS = 60 * 1000
 
 /**
- * Expire active slot reservations whose hold has passed (every minute via
- * QStash). Stripe is consulted before any DB write: a reservation whose
+ * Expire active slot reservations whose hold has passed (run when a hold
+ * lapses, and hourly as the net underneath). Stripe is consulted before any DB write: a reservation whose
  * intent can still settle (MB WAY `processing`, succeeded awaiting confirm)
  * is kept and re-checked after 10 minutes; otherwise the intent is cancelled and the reservation expired
  * together with its `pending_payment` booking and private-link use.

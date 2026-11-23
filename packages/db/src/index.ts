@@ -8,6 +8,7 @@ export {
   __resetContextClientForTests,
   type Tx,
 } from "./context"
+export { domainEventWritten, onDomainEventWritten } from "./domain-event-signal"
 export * as main from "./schema/main/index"
 export * as auth from "./schema/auth/index"
 export * as audit from "./schema/audit/index"

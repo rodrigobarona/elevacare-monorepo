@@ -17,7 +17,8 @@ export const BOOKING_CHECKOUT_METADATA_MARKER = "elements"
  * Session lifetime from the reservation's creation. Stripe requires 30 min
  * to 24 h from the session's own creation; sessions are only created while
  * the hold (5-10 min) is active, so 60 min from reserve always leaves more
- * than 30. The hold-expiry sweep expires the session long before this.
+ * than 30. The hold-expiry job, run when the hold lapses, expires the
+ * session long before this.
  */
 export const CHECKOUT_SESSION_EXPIRES_SECONDS = 60 * 60
 

@@ -401,7 +401,7 @@ const WorkflowFailureSchema = z.union([
 
 const TickResultSchema = z.object({
   ok: z.boolean(),
-  cadence: z.enum(["minutely", "10min", "hourly"]),
+  cadence: z.enum(["hourly"]),
   failed: z.number().int().nonnegative(),
   results: z.record(
     z.string(),
@@ -5891,7 +5891,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "runWorkflowTick",
           summary: "Run every job of one cadence",
           description:
-            "One QStash schedule per cadence (minutely, 10min, hourly) instead of one per job. Runs the cadence's jobs in parallel through their own handlers; a failing job never blocks the others and is reported in results. 500 when any job failed.",
+            "One Vercel Cron schedule runs every job of the tick, once an hour: nothing is scheduled more often, so that the database can sleep between runs. Runs the jobs in parallel through their own handlers; a failing job never blocks the others and is reported in results. 500 when any job failed.",
         })
         return {
           ...item,
@@ -5899,7 +5899,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             ...item.post!,
             requestParams: {
               path: z.object({
-                cadence: z.enum(["minutely", "10min", "hourly"]),
+                cadence: z.enum(["hourly"]),
               }),
             },
             responses: {

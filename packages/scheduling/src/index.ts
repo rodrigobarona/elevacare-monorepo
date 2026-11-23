@@ -162,6 +162,7 @@ export {
   INTENT_SEARCH_GRACE_MS,
   KEPT_RESERVATION_RECHECK_MS,
   listExpiredReservations,
+  nextReservationExpiry,
 } from "./expire-reservation"
 export type {
   ExpiredReservationCandidate,

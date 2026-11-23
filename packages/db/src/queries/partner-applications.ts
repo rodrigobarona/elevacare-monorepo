@@ -4,6 +4,7 @@ import { readPage, type PageWindow } from "@eleva/config/pagination"
 
 import { withOrgContext, type Tx } from "../context"
 import * as auth from "../schema/auth"
+import { domainEventWritten } from "../domain-event-signal"
 import * as main from "../schema/main"
 
 export interface PartnerApplicationLicence {
@@ -307,6 +308,7 @@ export async function _emitPartnerDecisionEvent(
     reviewedAt: Date
   }
 ): Promise<void> {
+  domainEventWritten()
   const [event] = await tx
     .insert(main.domainEventsOutbox)
     .values({
