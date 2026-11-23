@@ -508,7 +508,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       title: "Eleva Care API",
       version: "1.0.0",
       description:
-        "API-first platform for Eleva Care. Supports session-based auth (browser) and Bearer token auth (AI agents, M2M).",
+        "API-first platform for Eleva Care. A browser signs in with a session cookie. An agent or a service sends a session token or a short-lived JWT as a Bearer token, or an API key in `x-api-key`.",
     },
     servers: [
       {
@@ -520,10 +520,11 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
         description: "Local development",
       },
     ],
-    security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+    security: [{ bearerAuth: [] }, { apiKeyAuth: [] }, { cookieAuth: [] }],
     paths: {
       "/onboarding/complete": {
         post: {
+          security: [{ bearerAuth: [] }, { cookieAuth: [] }],
           operationId: "completeOnboarding",
           summary: "Complete user onboarding",
           description:
@@ -583,6 +584,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       },
       "/onboarding/sync-existing": {
         post: {
+          security: [{ bearerAuth: [] }, { cookieAuth: [] }],
           operationId: "syncExistingOnboardingMembership",
           summary: "Confirm an existing organization membership",
           description:
@@ -694,6 +696,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       },
       "/organizations/active": {
         post: {
+          security: [{ bearerAuth: [] }, { cookieAuth: [] }],
           operationId: "setActiveOrganization",
           summary: "Set the active organization on the current session",
           tags: ["Organizations"],
@@ -1158,6 +1161,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       },
       "/expert/closure": {
         post: {
+          security: [{ bearerAuth: [] }, { cookieAuth: [] }],
           operationId: "closeExpertPractice",
           summary: "Close the expert practice",
           description:
@@ -3183,10 +3187,11 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       },
       "/admin/clinics/{verificationId}/decision": {
         post: {
+          security: [{ bearerAuth: [] }, { cookieAuth: [] }],
           operationId: "decideClinicVerification",
           summary: "Decide a pending clinic filing",
           description:
-            "Staff-only (`applications:review`, revocable credential; from a browser the session must have started in the last 12 hours, 403 STEP_UP_REQUIRED otherwise). `approve` needs both checks (legal entity and NIF found in the public register) and is the clinic's verification record. `needs_changes` and `reject` need a reason the clinic reads; after `needs_changes` the clinic files again. `submittedAt` is the filing staff reviewed: a refile since then answers 409 VERIFICATION_CHANGED. 409 VERIFICATION_ALREADY_DECIDED when the filing is not pending. 403 SELF_REVIEW for a member of that clinic. A clinic already verified under an earlier filing stays verified. Each decision queues a notice (clinic.verified, clinic.needs_changes or clinic.rejected) in the same transaction: the clinic's owner and admins get an email with the reason and an inbox notice. Audited as clinic_verification.approved, .changes_requested or .rejected.",
+            "Staff-only (`applications:review`, a signed-in session that started in the last 12 hours, 403 STEP_UP_REQUIRED otherwise; an API key or a JWT cannot decide). `approve` needs both checks (legal entity and NIF found in the public register) and is the clinic's verification record. `needs_changes` and `reject` need a reason the clinic reads; after `needs_changes` the clinic files again. `submittedAt` is the filing staff reviewed: a refile since then answers 409 VERIFICATION_CHANGED. 409 VERIFICATION_ALREADY_DECIDED when the filing is not pending. 403 SELF_REVIEW for a member of that clinic. A clinic already verified under an earlier filing stays verified. Each decision queues a notice (clinic.verified, clinic.needs_changes or clinic.rejected) in the same transaction: the clinic's owner and admins get an email with the reason and an inbox notice. Audited as clinic_verification.approved, .changes_requested or .rejected.",
           tags: ["Admin"],
           requestParams: {
             path: z.object({ verificationId: z.string().uuid() }),
@@ -3262,10 +3267,11 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       },
       "/admin/partners/{expertProfileId}/decision": {
         post: {
+          security: [{ bearerAuth: [] }, { cookieAuth: [] }],
           operationId: "decidePartnerReview",
           summary: "Decide an open licence application",
           description:
-            "Staff-only (`applications:review`, revocable credential; from a browser the session must have started in the last 12 hours, 403 STEP_UP_REQUIRED otherwise). `approve` needs every checklist item and is the licence verification record: an `approved` profile becomes `active`, an `active` profile stays active. `needs_changes` and `reject` need a reason and leave the profile status alone. The expert gets an email on each decision.",
+            "Staff-only (`applications:review`, a signed-in session that started in the last 12 hours, 403 STEP_UP_REQUIRED otherwise; an API key or a JWT cannot decide). `approve` needs every checklist item and is the licence verification record: an `approved` profile becomes `active`, an `active` profile stays active. `needs_changes` and `reject` need a reason and leave the profile status alone. The expert gets an email on each decision.",
           tags: ["Admin"],
           requestParams: {
             path: z.object({ expertProfileId: z.string().uuid() }),
@@ -3286,7 +3292,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             ...stdErrors,
             "403": {
               description:
-                "Missing applications:review, SELF_REVIEW when staff decide their own application, or STEP_UP_REQUIRED when the browser session started more than 12 hours ago",
+                "Missing applications:review, SELF_REVIEW when staff decide their own application, or STEP_UP_REQUIRED when the session started more than 12 hours ago or the request used an API key",
               content: { "application/json": { schema: ErrorSchema } },
             },
             "404": {
@@ -3303,6 +3309,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       },
       "/payouts/{id}/approve": {
         post: {
+          security: [{ bearerAuth: [] }, { cookieAuth: [] }],
           operationId: "approvePayout",
           summary: "Approve an approval_required payout",
           description:
@@ -3330,6 +3337,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       },
       "/payouts/{id}/hold": {
         post: {
+          security: [{ bearerAuth: [] }, { cookieAuth: [] }],
           operationId: "holdPayout",
           summary: "Add a manual hold to a payout",
           tags: ["Payouts"],
@@ -3355,6 +3363,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       },
       "/payouts/{id}/release": {
         post: {
+          security: [{ bearerAuth: [] }, { cookieAuth: [] }],
           operationId: "releasePayoutHold",
           summary: "Remove a manual hold from a payout",
           tags: ["Payouts"],
@@ -5731,6 +5740,8 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       },
       "/storage/upload": {
         post: {
+          // Only the sealed upload token it was given, as a bearer token.
+          security: [{ bearerAuth: [] }],
           operationId: "createStorageUpload",
           summary: "Presign a public upload",
           description:
@@ -5984,7 +5995,14 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           type: "http",
           scheme: "bearer",
           description:
-            "API key (elk_ prefix) or M2M JWT token for agent/service auth",
+            "A session token, or a short-lived JWT from `/auth/token`. An API key is never sent here: use `x-api-key`.",
+        },
+        apiKeyAuth: {
+          type: "apiKey",
+          in: "header",
+          name: "x-api-key",
+          description:
+            "An API key, for agents and services. Keys are issued by Eleva for now: no session can make one for itself. A key acts as the person who owns it, with what that person may do now, in the workspace named by the `x-eleva-org` header (a slug) or else their default one. Send it alone: a request with a key and a cookie or bearer token is refused (400 AMBIGUOUS_CREDENTIALS). Operations that need a signed-in person (onboarding, switching workspace, closing a practice, staff decisions, staff payout actions) do not list this scheme and refuse a key; a refund made as staff refuses one too.",
         },
         cookieAuth: {
           type: "apiKey",

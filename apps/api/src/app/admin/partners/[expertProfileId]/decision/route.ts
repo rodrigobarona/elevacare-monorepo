@@ -30,8 +30,8 @@ export async function POST(
 ) {
   const headers = corsHeaders(request, "POST, OPTIONS")
 
-  // The same door as a clinic decision: a revocable credential, the
-  // staff rate limit, and from a browser a session that started today.
+  // The same door as a clinic decision: the staff rate limit and a
+  // signed-in session that started today (never a JWT or an API key).
   const staff = await requireStaffReviewer(request, headers, {
     decision: true,
   })
