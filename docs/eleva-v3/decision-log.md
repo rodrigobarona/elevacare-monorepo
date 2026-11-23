@@ -95,7 +95,9 @@ Each entry should include:
   console. Both now send it to Sentry and throw, so the route answers 500
   and the run is reported as failed. What stays as it was: one hold or one
   invoice that fails inside a run is counted and sent to Sentry, and the
-  run is still done. In `invoicing-retry` the expert-invoice part runs
+  run is still done. (For a platform-fee invoice that was true of the
+  count only: its failure was written to the console. It now goes to
+  Sentry the same way an expert invoice's does.) In `invoicing-retry` the expert-invoice part runs
   first and stands when the backfill fails.
 - **Known limit: "done" means the run ended, not that every item worked.**
   Jobs that work through a list count each item that fails and still

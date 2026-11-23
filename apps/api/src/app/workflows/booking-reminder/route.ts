@@ -57,7 +57,7 @@ export const POST = reportedJob(
       return secureJson({ ...result, ok: true }, { status: 200, headers })
     } catch (err) {
       // On demand, so no monitor expects it: Sentry is where it shows.
-      void captureException(err, { probe: "booking-reminder" })
+      await captureException(err, { probe: "booking-reminder" })
       const message = err instanceof Error ? err.message : String(err)
       return secureJson(
         { ok: false, error: "internal", message },
