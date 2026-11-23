@@ -241,7 +241,22 @@ Each entry should include:
   hours (the banner now says "left open longer than that"), a notice
   whose words were not its name, a tick on news that is not good, and a
   refusal that could appear below the screen. Not scored again.
-- **The third and fourth commits were not walked in a browser.** The dev database
+- **How the notices look now is proven; the journey with them is not.**
+  A playground page (`apps/poc` `fixtures/sign-in-again`) shows every
+  state of the notices with the console's own words, read from its
+  message files, and `pnpm e2e:sign-in-again` (opt-in, no database) checks
+  them in a browser: the banner's words and its one button; the answer to
+  a press after the buttons, with its title, and only its words as the
+  alert; the button keeping its width while the tab leaves; the notice
+  after the return named by its words and focused; good news on its own
+  ground and the other three notices not; the button under the words
+  beside a sidebar (800 px), on a phone (390 px) and at 320 px with
+  nothing running off the side; Portuguese, Spanish and the dark theme.
+  29 captures of the current design are in
+  `design-audit/captures/2026-11-23-sign-in-again-after/states/`. The
+  captures in `13-admin/` beside them are the real console, one design
+  older.
+- **The third and later commits were not walked in the real console.** The dev database
   stopped answering at 02:46 UTC on 2026-11-23 ("exceeded the quota",
   Neon, HTTP 402): the local stack cannot sign anyone in, and the pull
   request's database job fails for the same reason. The second commit's
