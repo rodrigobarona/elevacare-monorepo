@@ -1269,8 +1269,13 @@ of 2026-11-21 merged without one (F-13).</li>
 <td></td>
 </tr>
 <tr>
-<td>The database&#39;s own list of reserved words was written once (migration 0027) and lacks about thirty reserved since. A call made straight to the auth server&#39;s create-organization endpoint is not checked against the list.</td>
-<td><code>packages/db</code> (<code>reserved_public_handles()</code>), <code>packages/auth/src/server/auth.ts</code></td>
+<td>The database&#39;s own list of reserved words was written once (migration 0027) and lacks about thirty-five reserved since. A call made straight to the auth server&#39;s create-organization endpoint is not checked against the list, and the list of experts does not leave a reserved name out.</td>
+<td><code>packages/db</code> (<code>reserved_public_handles()</code>, <code>queries/public.ts</code>), <code>packages/auth/src/server/auth.ts</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Two public addresses the MVP&#39;s code wrote are not in the map of its public pages: <code>/services/...</code> (its footer) and <code>/become-partner</code>.</td>
+<td><code>packages/config/src/public-site-parity.ts</code></td>
 <td></td>
 </tr>
 <tr>
@@ -1536,7 +1541,7 @@ them, and stops at the one that does.</p>
 </tr>
 <tr>
 <td>O-12</td>
-<td>Once O-2 is lifted: run <code>e2e/admin-clinics.spec.ts</code> on the 12.7 branch (its later steps have never run; a case for Reject pressed while the page still shows the old sign-in is still to be written), retake its real-console captures, and read whether anyone has one of 14.22&#39;s nine reserved words as a username. Then merge in this order: #463, #465, #466, #467, #468, #469, #470, #471, and this roadmap update last. Each one conflicts with the one before in <code>decision-log.md</code> (keep both entries); #469 and #468 both add a row to <code>README.md</code>; #470 after #463 conflicts in the sign-in form (keep 13.5&#39;s <code>sendMagicLink</code> and 12.7&#39;s check of who was signed in when the link was sent). After the merges run <code>pnpm docs:execution-plan:html</code> and rebuild the design-audit page.</td>
+<td>Once O-2 is lifted: run <code>e2e/admin-clinics.spec.ts</code> on the 12.7 branch (its later steps have never run; a case for Reject pressed while the page still shows the old sign-in is still to be written), retake its real-console captures, and read whether anyone has one of 14.22&#39;s fifteen newly reserved words as a username. Then merge in this order: #463, #465, #466, #467, #468, #469, #470, #471, and this roadmap update last. Each one conflicts with the one before in <code>decision-log.md</code> (keep both entries); #469 and #468 both add a row to <code>README.md</code>; #470 after #463 conflicts in the sign-in form (keep 13.5&#39;s <code>sendMagicLink</code> and 12.7&#39;s check of who was signed in when the link was sent). After the merges run <code>pnpm docs:execution-plan:html</code> and rebuild the design-audit page.</td>
 </tr>
 <tr>
 <td>O-13</td>
