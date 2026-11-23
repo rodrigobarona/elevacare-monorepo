@@ -1,4 +1,4 @@
-import { SealCheckIcon } from "@eleva/icons"
+import { ArrowRightIcon, SealCheckIcon } from "@eleva/icons"
 import { FOOTER, LEGAL } from "./content"
 import { ES_EXPERTS } from "./estuary"
 import { HeroFilm } from "./hero-film"
@@ -21,7 +21,14 @@ import { LabLogo } from "./lab-bar"
  * steps show the product, and the page ends in a block of its own.
  */
 
-const colour = (slug: string) => `/brand-lab/faces-colour/${slug}.jpg`
+/**
+ * Every portrait is cut out of its background and set on one sand field, at
+ * one face size. Experts upload their own photographs, so this is the rule
+ * that makes them one set (the fourth blind panel's first finding). A tight
+ * crop that touches three edges of its frame cannot be cut out well; the
+ * real upload step needs to ask for head and shoulders with room above.
+ */
+const cutout = (slug: string) => `/brand-lab/cutouts/${slug}.webp`
 
 /** The first four show on a phone, so they cover four different moments of life. */
 const ASKS = [
@@ -38,7 +45,7 @@ const ASKS = [
   { ask: "Is my baby getting enough milk?", to: "Nurses and midwives" },
   { ask: "What should I eat while trying for a baby?", to: "Nutritionists" },
   {
-    ask: "When can I run again after the birth?",
+    ask: "When can I run again after giving birth?",
     to: "Pelvic health physiotherapists",
   },
   {
@@ -56,11 +63,20 @@ const PEOPLE: Record<string, { says: string; body: string }> = {
     says: "No strict diets and no long lists of banned foods. We build a plan around your real week.",
     body: "Ordem dos Nutricionistas",
   },
-  sofiacosta: {
-    says: "You can say here what you can't say anywhere else. We go at your pace.",
-    body: "Ordem dos Psicólogos",
+  yasminhaddad: {
+    says: "We look at what is changing for you, and at what would help.",
+    body: "Ordem dos Médicos",
   },
 }
+
+const PROFESSIONS = [
+  "Physiotherapists",
+  "Midwives",
+  "Nurses",
+  "Nutritionists",
+  "Psychologists",
+  "Doctors",
+] as const
 
 const BODIES = [
   "Ordem dos Fisioterapeutas",
@@ -98,7 +114,7 @@ const FAQ = [
   },
   {
     q: "Who are the experts?",
-    a: "Physiotherapists, midwives, nurses, nutritionists, psychologists and doctors who work in women's health. Each one runs her own practice.",
+    a: "Physiotherapists, midwives, nurses, nutritionists, psychologists and doctors who work in women's health.",
   },
   {
     q: "How much does it cost?",
@@ -106,7 +122,7 @@ const FAQ = [
   },
   {
     q: "How does a session work?",
-    a: "It depends on the expert: some meet by video or phone, some in person, some both. A video session opens from the link in your email.",
+    a: "It depends on the expert: some meet by video or phone, some in person, some both. Her page says which.",
   },
   {
     q: "Can I cancel?",
@@ -115,16 +131,22 @@ const FAQ = [
 ] as const
 
 const NAV = [
-  { label: "Find care", href: "#experts" },
+  { label: "Experts", href: "#experts" },
   { label: "How it works", href: "#session" },
   { label: "For experts", href: "#close" },
   { label: "Sign in", href: "#experts" },
 ] as const
 
 export function VoicesHome() {
-  const people = ES_EXPERTS.slice(0, 3)
+  const ORDER = ["joanalima", "fisiomota", "yasminhaddad"] // soonest free time first
+  const people = ORDER.flatMap((slug) =>
+    ES_EXPERTS.filter((expert) => expert.slug === slug)
+  )
   return (
     <>
+      <a href="#asks" className="vo-skip">
+        Skip to the questions
+      </a>
       <section className="vo-hero">
         <div className="vo-shade" aria-hidden />
         <header className="vo-nav">
@@ -155,29 +177,35 @@ export function VoicesHome() {
 
       <main>
         <section className="vo-asks bl-wrap" id="asks">
-          <div className="vo-head">
-            <h2>What do you want to ask?</h2>
-            <a href="#experts" className="vo-link">
-              See experts by profession
-            </a>
-          </div>
+          <h2>What do you want to ask?</h2>
           <ul>
             {ASKS.map((item) => (
               <li key={item.ask}>
                 <a href="#experts">
                   <span>{item.ask}</span>
                   <small>{item.to}</small>
+                  <ArrowRightIcon aria-hidden />
                 </a>
               </li>
             ))}
           </ul>
+          <div className="vo-profs">
+            <span>Or go by profession</span>
+            <ul>
+              {PROFESSIONS.map((profession) => (
+                <li key={profession}>
+                  <a href="#experts">{profession}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
         </section>
 
         <section className="vo-experts bl-wrap" id="experts">
           <div className="vo-head">
             <div>
               <h2>The people who answer</h2>
-              <p>Three experts with time free this week.</p>
+              <p>Three experts with time free this week, soonest first.</p>
             </div>
             <a href="#experts" className="vo-link">
               See all experts
@@ -188,7 +216,7 @@ export function VoicesHome() {
               <li key={expert.slug}>
                 <a href="#experts" className="vo-person">
                   <span className="vo-photo">
-                    <img src={colour(expert.slug)} alt="" />
+                    <img src={cutout(expert.slug)} alt="" />
                   </span>
                   <q>{PEOPLE[expert.slug]?.says}</q>
                   <span className="vo-who">
@@ -233,14 +261,14 @@ export function VoicesHome() {
               </li>
               <li>
                 <b>You see the price first</b>
-                And the last day you can cancel without charge.
+                It is on her card, before you choose a time.
               </li>
             </ul>
           </div>
         </section>
 
         <section className="vo-session bl-wrap" id="session">
-          <h2>What a first session is like</h2>
+          <h2>How booking works</h2>
           <ol>
             <li>
               <div className="vo-ui vo-ui-times" aria-hidden>
@@ -254,7 +282,7 @@ export function VoicesHome() {
               </div>
               <span className="vo-step">First</span>
               <b>You pick a time</b>
-              <p>No account needed. You pay when you book.</p>
+              <p>You pay when you book.</p>
             </li>
             <li>
               <div className="vo-ui vo-ui-mail" aria-hidden>
@@ -292,8 +320,8 @@ export function VoicesHome() {
             <div>
               <h2>Guided by people who study women&apos;s health</h2>
               <p>
-                Our advisors bring clinical research into how Eleva works. Your
-                care comes from the expert you choose.
+                Three researchers advise Eleva on the evidence. Your care comes
+                from the expert you choose.
               </p>
               <a href="#close" className="vo-link">
                 Meet the advisors
@@ -303,7 +331,7 @@ export function VoicesHome() {
               {ADVISORS.map((advisor) => (
                 <li key={advisor.slug}>
                   <span className="vo-photo">
-                    <img src={colour(advisor.slug)} alt="" />
+                    <img src={cutout(advisor.slug)} alt="" />
                   </span>
                   <span>
                     <b>{advisor.name}</b>

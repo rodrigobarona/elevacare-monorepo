@@ -179,6 +179,23 @@ Each entry should include:
   "Top Expert" plan, so the listing line only says how the three shown were
   chosen. Advisors' institutions and the €50 to €70 range shown in the lab
   are unconfirmed.
+- **Founder, 2026-11-23, on E after rounds 3 and 4:** "I think we are in a
+  right direction... keep going?" E is the working direction for the public
+  site. It is not yet a signed-off brand: no page has passed the panel.
+- **Round 5 (E alone, third pass, new judges):** Awwwards seat 8.25 (own
+  scale 6.63), UI 7.5, UX 8.0, writing 8.0, compliance and accessibility
+  8.0. Before the round every portrait was cut out and set on one sand
+  field at one face size (the founder had ruled out black and white), and a
+  row of professions was added under the questions. The scores have
+  levelled off near 8.0. What is left is stock film and portraits, a visual
+  element of Eleva's own for the middle of the page, facts only the founder
+  has, and states a static page cannot show.
+- **Recommendation recorded:** stop polishing the playground and build the
+  real homepage in `apps/web` (D3.1) in this direction, where the remaining
+  findings can be closed and the GDPR and security seats can run.
+- **A product requirement this raises (not built):** the portrait rule needs
+  a background-removal step for expert photographs and upload guidance (head
+  and shoulders, room above the head). That belongs to the platform track.
 
 ### 2026-11-23: The public site gets its own track, a full rethink and a seven-seat panel (active)
 

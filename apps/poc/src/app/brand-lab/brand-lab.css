@@ -3600,6 +3600,8 @@
   /* Two radii and the pill: 24px for frames and cards, 12px for small controls. */
   --bl-radius: 12px;
   --vo-card: 24px;
+  /* One backdrop for every portrait: the brand's sand, a little deeper. */
+  --vo-sand: #f4ddd0;
   --bl-display: var(--font-fraunces), ui-serif, Georgia, serif;
   --bl-text: var(--font-dm-sans), system-ui, sans-serif;
   --bl-ui: var(--font-dm-sans), system-ui, sans-serif;
@@ -3636,12 +3638,15 @@
 .vo-photo {
   display: block;
   overflow: hidden;
-  background: var(--bl-tint);
+  background: var(--vo-sand);
 }
-/* Experts upload their own portraits; one grade brings them closer together. */
 .vo-photo img,
 [data-direction="voices"] .kit-portrait img {
-  filter: saturate(0.84) contrast(1.03);
+  object-position: 50% 100%;
+}
+[data-direction="voices"] .kit-portrait {
+  aspect-ratio: 4.4 / 5.2;
+  background: var(--vo-sand);
 }
 .vo-head {
   display: flex;
@@ -3664,7 +3669,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  min-height: min(90vh, 840px);
+  min-height: min(80vh, 740px);
   margin: 8px;
   overflow: hidden;
   isolation: isolate;
@@ -3677,9 +3682,27 @@
   z-index: -1;
   inset: 0;
 }
+.vo-film:has(button) + .vo-posed {
+  right: 150px;
+}
+.vo-skip {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 20;
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: var(--bl-ink);
+  color: #ffffff !important;
+  font: 600 15px/1 var(--bl-ui);
+  transform: translateY(-200%);
+}
+.vo-skip:focus {
+  transform: none;
+}
 .vo-posed {
   position: absolute;
-  right: 150px;
+  right: 24px;
   bottom: 24px;
   display: flex;
   align-items: center;
@@ -3687,7 +3710,7 @@
   padding: 0 14px;
   border-radius: 999px;
   background: rgb(10 30 34 / 82%);
-  font: 400 14px/1 var(--bl-ui);
+  font: 400 15px/1 var(--bl-ui);
 }
 .vo-film img,
 .vo-film video {
@@ -3704,7 +3727,7 @@
 .vo-shade {
   position: absolute;
   inset: 0 0 auto;
-  height: 220px;
+  height: 150px;
   background: linear-gradient(
     180deg,
     rgb(10 30 34 / 82%) 0%,
@@ -3775,7 +3798,7 @@
   margin: auto 24px 24px;
   padding: 36px 40px 40px;
   border-radius: var(--vo-card);
-  background: rgb(10 30 34 / 84%);
+  background: rgb(10 30 34 / 92%);
   backdrop-filter: blur(16px);
 }
 .vo-q {
@@ -3798,7 +3821,7 @@
 .vo-ask .vo-lead {
   max-width: 26em;
   margin: 18px 0 28px;
-  font-size: 19px;
+  font-size: 20px;
   line-height: 1.45;
   color: rgb(255 255 255 / 92%);
 }
@@ -3816,39 +3839,80 @@
 
 /* What do you want to ask? Each question says who answers it. */
 .vo-asks {
-  padding-top: 104px;
+  padding-top: 72px;
 }
-.vo-asks ul {
+.vo-asks h2 {
+  margin-bottom: 32px;
+}
+.vo-profs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  margin-top: 28px;
+  font: 500 17px/1.3 var(--bl-ui);
+}
+.vo-profs > span {
+  color: var(--bl-ink-2);
+}
+.vo-profs ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.vo-profs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  background: var(--bl-surface);
+  box-shadow: inset 0 0 0 1px var(--bl-line);
+}
+.vo-profs a:hover {
+  box-shadow: inset 0 0 0 1.5px var(--bl-action);
+  color: var(--bl-action);
+}
+.vo-asks > ul {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   column-gap: 56px;
 }
-.vo-asks li {
+.vo-asks > ul > li {
   border-top: 1px solid var(--bl-line);
 }
-.vo-asks li:nth-last-child(-n + 2) {
+.vo-asks > ul > li:nth-last-child(-n + 2) {
   border-bottom: 1px solid var(--bl-line);
 }
-.vo-asks li a {
-  display: flex;
+.vo-asks > ul > li a {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  min-height: 72px;
-  padding: 16px 4px;
+  column-gap: 20px;
+  min-height: 84px;
+  padding: 14px 4px;
 }
-.vo-asks li span {
-  font: 420 clamp(19px, 1.6vw, 23px) / 1.25 var(--bl-display);
+.vo-asks > ul > li span {
+  font: 420 24px/1.25 var(--bl-display);
   letter-spacing: -0.01em;
 }
-.vo-asks li small {
-  flex: none;
-  max-width: 11em;
+.vo-asks > ul > li small {
+  grid-column: 1;
   font: 500 15px/1.3 var(--bl-ui);
   color: var(--bl-ink-2);
-  text-align: right;
 }
-.vo-asks li a:hover span {
+.vo-asks > ul > li svg {
+  grid-area: 1 / 2 / span 2;
+  width: 20px;
+  height: 20px;
+  color: var(--bl-ink-2);
+  transition: transform 0.2s;
+}
+.vo-asks > ul > li a:hover svg {
+  color: var(--bl-action);
+  transform: translateX(4px);
+}
+.vo-asks > ul > li a:hover span {
   color: var(--bl-action);
   text-decoration: underline;
   text-decoration-thickness: 1.5px;
@@ -3871,23 +3935,21 @@
   padding: 14px 14px 0;
   border-radius: var(--vo-card);
   background: var(--bl-surface);
+  box-shadow: inset 0 0 0 1px var(--bl-line);
   transition: background 0.2s;
 }
 .vo-person:hover {
   background: var(--bl-tint);
 }
 .vo-person .vo-photo {
-  aspect-ratio: 5 / 4.3;
+  aspect-ratio: 4.4 / 4.6;
   border-radius: var(--bl-radius);
-}
-.vo-person .vo-photo img {
-  object-position: 50% 22%;
 }
 .vo-person q {
   display: block;
   min-height: 3.9em;
   margin: 24px 12px 0;
-  font: 420 22px/1.3 var(--bl-display);
+  font: 420 24px/1.28 var(--bl-display);
   letter-spacing: -0.01em;
   quotes: "“" "”";
 }
@@ -3901,7 +3963,7 @@
   font: 600 17px/1.3 var(--bl-ui);
 }
 .vo-who > span {
-  font-size: 16px;
+  font-size: 15px;
   color: var(--bl-ink-2);
 }
 .vo-who small {
@@ -3909,7 +3971,7 @@
   align-items: center;
   gap: 6px;
   margin: 8px 0 18px;
-  font: 500 14px/1.3 var(--bl-ui);
+  font: 500 15px/1.3 var(--bl-ui);
 }
 .vo-cells {
   display: grid;
@@ -3925,7 +3987,7 @@
 .vo-cells small {
   display: block;
   margin-bottom: 2px;
-  font: 400 14px/1.3 var(--bl-ui);
+  font: 400 15px/1.3 var(--bl-ui);
   color: var(--bl-ink-2);
 }
 .vo-go {
@@ -3933,7 +3995,7 @@
   padding: 14px 0 18px;
   border-top: 1px solid var(--bl-line);
   color: var(--bl-action);
-  font: 600 16px/1.3 var(--bl-ui);
+  font: 600 17px/1.3 var(--bl-ui);
 }
 .vo-person:hover .vo-go {
   text-decoration: underline;
@@ -3962,7 +4024,7 @@
 .vo-checked h2 {
   max-width: 17em;
   margin-top: 20px;
-  font-size: clamp(27px, 2.9vw, 40px);
+  font-size: clamp(26px, 2.6vw, 36px);
 }
 .vo-checked div > p {
   max-width: 36em;
@@ -3980,7 +4042,7 @@
   display: block;
   margin-bottom: 4px;
   color: #ffffff;
-  font: 420 23px/1.2 var(--bl-display);
+  font: 420 24px/1.2 var(--bl-display);
 }
 
 /* What a first session is like: each step shows a piece of the product. */
@@ -4010,7 +4072,7 @@
   color: #3b4b4a;
 }
 .vo-ui b {
-  font: 420 28px/1.15 var(--bl-display);
+  font: 420 24px/1.2 var(--bl-display);
   letter-spacing: -0.012em;
 }
 .vo-ui-times {
@@ -4030,7 +4092,7 @@
   min-height: 46px;
   border-radius: var(--bl-radius);
   background: #ffffff;
-  font: 500 16px/1 var(--bl-ui);
+  font: 500 17px/1 var(--bl-ui);
 }
 /* Pieces of the product shown as pictures: nothing here is in the action colour. */
 .vo-ui-times span[data-on] {
@@ -4063,7 +4125,7 @@
 .vo-session li > b {
   display: block;
   margin-top: 6px;
-  font: 420 25px/1.2 var(--bl-display);
+  font: 420 24px/1.2 var(--bl-display);
   letter-spacing: -0.01em;
 }
 .vo-session li > p {
@@ -4109,18 +4171,15 @@
 }
 .vo-advisors li .vo-photo {
   width: 132px;
-  aspect-ratio: 1;
+  aspect-ratio: 4.4 / 4.6;
   margin-bottom: 18px;
   border-radius: var(--bl-radius);
-}
-.vo-advisors li .vo-photo img {
-  mix-blend-mode: multiply;
 }
 .vo-advisors li b {
   display: block;
   margin-bottom: 2px;
   color: var(--bl-ink);
-  font: 600 16px/1.35 var(--bl-ui);
+  font: 600 17px/1.35 var(--bl-ui);
 }
 .vo-advisors li span span {
   display: block;
@@ -4147,7 +4206,7 @@
   justify-content: space-between;
   gap: 16px;
   padding: 22px 0;
-  font: 420 23px/1.25 var(--bl-display);
+  font: 420 24px/1.25 var(--bl-display);
   cursor: pointer;
   list-style: none;
 }
@@ -4157,7 +4216,7 @@
 .vo-faq summary::after {
   content: "+";
   color: var(--bl-ink);
-  font: 300 28px/1 var(--bl-ui);
+  font: 300 24px/1 var(--bl-ui);
   transition: transform 0.2s;
 }
 .vo-faq details[open] summary::after {
@@ -4183,13 +4242,13 @@
   align-items: end;
 }
 .vo-close h2 {
-  font-size: clamp(30px, 3vw, 42px);
+  font-size: clamp(26px, 2.6vw, 36px);
   line-height: 1.08;
 }
 .vo-close p {
   max-width: 24em;
   margin: 14px 0 28px;
-  font-size: 19px;
+  font-size: 20px;
 }
 .vo-close .bl-btn {
   min-height: 54px;
@@ -4208,7 +4267,7 @@
 }
 .vo-close div + div b {
   display: block;
-  font: 420 25px/1.2 var(--bl-display);
+  font: 420 24px/1.2 var(--bl-display);
   letter-spacing: -0.01em;
 }
 .vo-close div + div p {
@@ -4270,7 +4329,7 @@
   margin-top: 28px;
   padding-top: 16px;
   border-top: 1px solid var(--bl-line);
-  font-size: 14px;
+  font-size: 15px;
   color: var(--bl-ink-2);
 }
 .vo-foot-legal span {
@@ -4288,6 +4347,37 @@
 }
 [data-direction="voices"] .kit-services li:has(input:checked) {
   background: var(--bl-tint);
+  box-shadow: inset 0 0 0 1px var(--bl-ink);
+}
+/* One rule for what is chosen: ink. Teal stays for what can be pressed next. */
+[data-direction="voices"] .ek .kit-days li:has(input:checked),
+[data-direction="voices"] .ek .kit-times li:has(input:checked),
+[data-direction="voices"] .ek-mode label:has(input:checked) {
+  background: var(--bl-ink);
+}
+@media (max-width: 960px) {
+  /* The registration line runs the full width under the portrait row. */
+  [data-direction="voices"] .ek .kit-id > div {
+    display: contents;
+  }
+  [data-direction="voices"] .ek .kit-id {
+    grid-template-rows: auto 1fr;
+    row-gap: 4px;
+  }
+  [data-direction="voices"] .ek .kit-portrait {
+    grid-row: 1 / span 2;
+  }
+  [data-direction="voices"] .ek .kit-id h1 {
+    align-self: end;
+  }
+  [data-direction="voices"] .ek .kit-role {
+    align-self: start;
+  }
+  [data-direction="voices"] .ek .kit-checked,
+  [data-direction="voices"] .ek .kit-facts {
+    grid-column: 1 / -1;
+    max-width: none;
+  }
 }
 [data-direction="voices"] .kit-summary p {
   color: var(--bl-ink);
@@ -4295,7 +4385,7 @@
 
 @media (max-width: 960px) {
   .vo-hero {
-    min-height: min(78vh, 660px);
+    min-height: min(72vh, 600px);
   }
   .vo-nav {
     padding: 16px 18px;
@@ -4315,18 +4405,19 @@
     padding: 24px 22px 22px;
   }
   .vo-q {
-    font-size: 33px;
+    font-size: 36px;
   }
   .vo-ask .vo-lead {
     margin: 12px 0 20px;
     font-size: 17px;
   }
   .vo-posed {
-    top: 76px;
-    right: 18px;
+    top: 70px;
+    right: auto;
+    left: 18px;
     bottom: auto;
     min-height: 32px;
-    font-size: 13px;
+    font-size: 15px;
   }
   .vo-ask .bl-btn {
     width: 100%;
@@ -4338,34 +4429,51 @@
     margin-bottom: 24px;
   }
   .vo-asks {
-    padding-top: 64px;
+    padding-top: 48px;
   }
-  .vo-asks ul {
+  .vo-asks h2 {
+    margin-bottom: 20px;
+  }
+  .vo-profs {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    margin-top: 22px;
+  }
+  /* One row that scrolls sideways inside itself; the page does not. */
+  .vo-profs ul {
+    flex-wrap: nowrap;
+    width: calc(100% + 40px);
+    max-width: calc(100% + 40px);
+    margin: 0 -20px;
+    padding: 2px 20px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .vo-profs li {
+    flex: none;
+  }
+  .vo-asks > ul {
     grid-template-columns: minmax(0, 1fr);
   }
-  .vo-asks li:nth-child(n + 5) {
+  .vo-asks > ul > li:nth-child(n + 5) {
     display: none;
   }
-  .vo-asks li:nth-last-child(-n + 2) {
+  .vo-asks > ul > li:nth-last-child(-n + 2) {
     border-bottom: 0;
   }
-  .vo-asks li:nth-child(4) {
+  .vo-asks > ul > li:nth-child(4) {
     border-bottom: 1px solid var(--bl-line);
   }
-  .vo-asks li a {
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 2px;
-    min-height: 70px;
+  .vo-asks > ul > li a {
+    min-height: 72px;
     padding: 12px 0;
   }
-  .vo-asks li small {
-    max-width: none;
-    text-align: left;
+  .vo-asks > ul > li span {
+    font-size: 20px;
   }
   .vo-experts {
-    padding-top: 72px;
+    padding-top: 56px;
   }
   .vo-people {
     grid-template-columns: minmax(0, 1fr);
@@ -4381,6 +4489,9 @@
   .vo-person .vo-photo {
     grid-area: 1 / 1;
     aspect-ratio: 1;
+  }
+  .vo-person .vo-photo img {
+    object-position: 50% 0;
   }
   .vo-who {
     grid-area: 1 / 2;
@@ -4405,7 +4516,10 @@
   .vo-go {
     grid-area: 4 / 1 / auto / -1;
     margin: 0 4px;
-    padding: 12px 0 4px;
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 4px 0 0;
   }
   .vo-checked {
     margin-top: 88px;
@@ -4556,7 +4670,7 @@
 }
 .ek-about h2 {
   margin-top: 0;
-  font-size: 22px !important;
+  font-size: 24px !important;
 }
 .ek-about p,
 .ek-about li {

@@ -351,6 +351,61 @@ Two judges disagreed and the choice is recorded: the writing seat wanted the fil
 not repeated in the list below; the accessibility seat needs them there, because the changing
 line is hidden from assistive technology. Accessibility won.
 
+### Round 5: E alone, third pass (2026-11-23)
+
+The founder said the direction is right and to keep going. E was revised again and judged alone
+against the saved references by five new judges.
+
+**What changed before the round**
+
+- **Portraits.** Each one is cut out of its background by an automatic step and set on one sand
+  field (#F4DDD0) at one face size, on cards, advisors and the profile. The founder had ruled out
+  black and white. A tight crop that touches three edges of its frame cannot be cut out well, so
+  the upload step has to ask for head and shoulders with room above; the lab swapped one demo
+  expert for that reason.
+- **A way in by profession:** a row of six under the questions.
+- **Phone:** an expert with her price now lands inside two screens.
+
+| Seat                                | Round 5: E, third pass |
+| ----------------------------------- | ---------------------- |
+| Awwwards jury (panel scale)         | 8.25                   |
+| Awwwards' own scale (estimate)      | 6.63                   |
+| UI and visual design                | 7.5                    |
+| UX and flow                         | 8.0                    |
+| UX writing                          | 8.0                    |
+| Compliance, legal and accessibility | 8.0                    |
+
+All five said E meets the founder's three wishes. Nothing is at 8.5.
+
+**The scores have levelled off near 8.0, and the reasons have changed.** In rounds 3 and 4 the
+findings were about structure. In round 5 they are about material and detail:
+
+1. **Stock material (UI, Awwwards).** The six film clips do not share one grade and one is
+   plainly stock (a doctor at a laptop). The cut-outs have hard edges. This needs a film cut made
+   for Eleva and a careful portrait step, not more layout.
+2. **Nothing visual that is Eleva's own in the middle of the page (UI, Awwwards).** The idea
+   lives in the words and the hero. The UI judge named the leaf in the logo as a shape that never
+   leaves the logo.
+3. **Facts only the founder has (compliance):** the company's address, registration and tax
+   number, a contact address, the complaints book, each expert's registration number, the rule
+   that orders experts, the tax position of the price.
+4. **Things a static page cannot show (UX):** a language switch, the bar that becomes "Continue"
+   once a time is chosen, the service control inside the picker, the pay step.
+5. **One conflict between seats.** Accessibility asked for the hero words on a solid panel; the
+   UI seat then read the panel as "a card on stock video" and asked for type set on a film graded
+   darker where the type sits. A film cut for Eleva can satisfy both.
+
+**Applied after round 5 and not judged:** one type scale on the homepage (15, 17, 20, 24, 36,
+47px, down from thirteen sizes), ink for what is chosen and teal only for what can be pressed,
+question rows with who answers under the question and an arrow, a lower hero so the next heading
+shows, a lighter scrim behind the navigation, the writing judge's cuts of repeated facts, "How
+booking works" as the steps' heading, experts ordered soonest first, the registration line at
+full width on a phone profile, a skip link.
+
+**Recommendation.** Stop polishing the playground. The next gains come from the real page: real
+portraits and a film cut for Eleva, the legal facts, and states a static page cannot show. The
+GDPR and security seats can also only run there.
+
 ## The brand seat's recommendation, before the panel
 
 1. Direction A, Tide, as the base: it fixes today's real weaknesses (roles for colour, depth of page, one treatment for photographs) and keeps the logo, the fonts and the token scales, so it can ship through `@eleva/ui` without a rebrand.

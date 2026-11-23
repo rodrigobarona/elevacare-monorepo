@@ -6,7 +6,7 @@ const SERVICES = [
   {
     name: "First visit",
     meta: "50 min · Video or in person",
-    line: "We talk through what is happening, and you leave with a plan you can follow at home.",
+    line: "For a new concern, or your first time with Inês.",
     price: "€60",
   },
   {
@@ -40,7 +40,7 @@ export function EstuaryKit({
   faces = "faces",
   home = "/brand-lab/estuary",
 }: {
-  faces?: "faces" | "faces-colour"
+  faces?: "faces" | "cutouts"
   home?: string
 }) {
   const expert = ES_EXPERTS[0]
@@ -63,7 +63,10 @@ export function EstuaryKit({
         <section className="kit-profile" aria-label="Expert profile">
           <div className="kit-id">
             <span className="kit-portrait">
-              <img src={`/brand-lab/${faces}/${expert.slug}.jpg`} alt="" />
+              <img
+                src={`/brand-lab/${faces}/${expert.slug}.${faces === "cutouts" ? "webp" : "jpg"}`}
+                alt=""
+              />
             </span>
             <div>
               <h1>{expert.name}</h1>
@@ -83,9 +86,9 @@ export function EstuaryKit({
             </div>
           </div>
           <p className="kit-bio">
-            I am a physiotherapist specialised in pelvic health. I see women in
-            pregnancy, after birth and through menopause for leaking, pain and
-            getting back to sport.
+            I&apos;m a physiotherapist and I specialise in pelvic health. I see
+            women in pregnancy, after birth and through menopause for leaking,
+            pain and getting back to sport.
           </p>
           <div className="ek-about">
             <div>
@@ -200,8 +203,8 @@ export function EstuaryKit({
               </div>
             </dl>
             <p>
-              €60.00 is the full price. Cancel free until Tuesday 24 November,
-              10:30. After that the session is charged in full.
+              Nothing is added to this price. Cancel free until Tuesday 24
+              November, 10:30. After that the session is charged in full.
             </p>
           </div>
           <label className="kit-field">
@@ -209,7 +212,7 @@ export function EstuaryKit({
             <input type="email" defaultValue="leonor@example.test" />
           </label>
           <button type="button" className="bl-btn kit-pay">
-            Continue to payment · €60.00
+            Go to payment
           </button>
           <p className="kit-secure">
             <ShieldCheckIcon aria-hidden />

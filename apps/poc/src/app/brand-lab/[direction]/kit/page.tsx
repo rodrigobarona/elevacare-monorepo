@@ -50,7 +50,7 @@ export default async function BrandKitPage({
       <div className="bl" data-direction={direction}>
         <LabBar current={direction} view="kit" />
         <EstuaryKit
-          faces={direction === "voices" ? "faces-colour" : "faces"}
+          faces={direction === "voices" ? "cutouts" : "faces"}
           home={`/brand-lab/${direction}`}
         />
       </div>
