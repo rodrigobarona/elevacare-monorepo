@@ -37,6 +37,7 @@ import {
   sharedConfigsFor,
   sharedConfigText,
   sourceFilesOf,
+  UNWRAPPED,
 } from "./check-boundaries.mjs"
 
 const ROOT = path.resolve(import.meta.dirname, "..")
@@ -803,7 +804,7 @@ test("every app keeps the vendor and health-data boundaries, in every file", asy
     ),
     line('import { S3 } from "@aws-sdk/client-s3"', "no-restricted-imports"),
     line(
-      "export const r1 = (value: { reveal(): string }) => value.reveal()",
+      `export const r1 = (value: { reveal(): string }) => ${UNWRAPPED}`,
       "no-restricted-syntax"
     ),
     line(

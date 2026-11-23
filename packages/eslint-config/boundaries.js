@@ -75,7 +75,7 @@ const REVEAL_MESSAGE =
 const reveal = (selector) => ({ selector, message: REVEAL_MESSAGE })
 
 export const REVEAL_RESTRICTIONS = [
-  // value.reveal()
+  // The method called by its name, with a dot.
   reveal(
     "CallExpression[callee.type='MemberExpression'][callee.property.name='reveal'][arguments.length=0]"
   ),

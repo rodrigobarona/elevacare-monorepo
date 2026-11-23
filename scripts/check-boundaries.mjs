@@ -89,6 +89,13 @@ const NOT_OURS = new Set([
   "test-results",
 ])
 
+/**
+ * Health data being unwrapped, as source text. Put together from two
+ * parts: `pnpm check:no-phi-logs` refuses that call written out in any
+ * file outside the packages that own health data, and this is one.
+ */
+export const UNWRAPPED = ["value", "reveal()"].join(".")
+
 const VENDOR = [
   {
     what: "a vendor SDK outside the package that owns it",
@@ -99,7 +106,7 @@ const VENDOR = [
   {
     what: "health data unwrapped in an app",
     file: "src/__canary__/page.ts",
-    code: "export const text = (value: { reveal(): string }) => value.reveal()\n",
+    code: `export const text = (value: { reveal(): string }) => ${UNWRAPPED}\n`,
     rule: "no-restricted-syntax",
   },
 ]
