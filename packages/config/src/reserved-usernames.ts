@@ -1,3 +1,5 @@
+import { LEGACY_PRIVATE_SECTIONS } from "./legacy-private-routes"
+
 /**
  * Reserved usernames / clinic slugs.
  *
@@ -75,12 +77,13 @@ export const RESERVED_USERNAMES: ReadonlySet<string> = new Set([
   "account",
   "onboarding",
   "setup",
-  // Where the MVP's signed-in pages were (./legacy-private-routes.ts): an
-  // old link must not open the public profile of whoever took the word.
-  "appointments",
-  "booking",
-  "register",
-  "unauthorized",
+  // Written like the sign-in addresses above: a username here would look
+  // like one of Eleva's own.
+  "sign-up",
+  "sign-out",
+  // Where the MVP's signed-in pages were, and the words its emails wrote:
+  // an old link must not open the public profile of whoever took the word.
+  ...Object.keys(LEGACY_PRIVATE_SECTIONS),
   // Account-app paths at the gateway root: a username here would sit at
   // an address that looks like an Eleva sign-in or invitation link.
   "verify-email",

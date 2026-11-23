@@ -137,29 +137,49 @@ describe("createGatewayProxy integration", () => {
     )
   })
 
-  it("301s the MVP's signed-in addresses to their new place, without the query", async () => {
+  it("sends the MVP's signed-in addresses to their new place, without the query", async () => {
     const proxy = createGatewayProxy({
       origins: testOrigins,
       intlMiddleware: marketingIntl,
     })
-    for (const [from, to] of [
-      ["/appointments/patients/8f1c2d", "/dashboard"],
-      ["/booking/schedule/limits", "/dashboard"],
-      ["/setup", "/dashboard"],
-      ["/dashboard/subscription", "/dashboard"],
-      ["/account/identity/callback", "/dashboard"],
-      ["/register", "/signup"],
-      ["/unauthorized", "/login"],
+    for (const [from, to, status] of [
+      ["/appointments/patients/8f1c2d", "/dashboard", 301],
+      ["/booking/schedule/limits", "/dashboard", 301],
+      ["/setup", "/dashboard", 301],
+      ["/register", "/signup", 301],
+      ["/unauthorized", "/login", 301],
+      ["/sign-in", "/login", 301],
+      ["/profile/complete", "/dashboard", 301],
+      ["/unsubscribe", "/account/notifications", 301],
+      // Under a word that is still v3's: not for good.
+      ["/dashboard/subscription", "/dashboard", 302],
+      ["/account/identity/callback", "/dashboard", 302],
     ] as const) {
       const res = await proxy(
-        makeRequest(from, { search: "?redirect=%2Fx&console=%2Fy" })
+        makeRequest(from, { search: "?redirect=%2Fx&token=abc&console=%2Fy" })
       )
-      expect(res.status, from).toBe(301)
-      // What the MVP put in the query means nothing to v3.
+      expect(res.status, from).toBe(status)
+      // Nothing of the old query goes along, whatever it carried.
       expect(res.headers.get("location"), from).toBe(
         `http://localhost:3000${to}`
       )
     }
+  })
+
+  it("sends the MVP's \"become an expert\" button to v3's, and still drops the query", async () => {
+    const proxy = createGatewayProxy({
+      origins: testOrigins,
+      intlMiddleware: marketingIntl,
+    })
+    const res = await proxy(
+      makeRequest("/register", {
+        search: "?expert=true&plan=community-paygo",
+      })
+    )
+    expect(res.status).toBe(301)
+    expect(res.headers.get("location")).toBe(
+      "http://localhost:3000/account/workspaces/create/expert"
+    )
   })
 
   it("does not move the addresses v3 serves under the same words", async () => {
@@ -170,12 +190,14 @@ describe("createGatewayProxy integration", () => {
     })
     for (const path of [
       "/dashboard",
+      "/dashboard/",
       "/account/billing",
       "/account/settings",
+      "/account/workspaces/create/expert",
       "/onboarding",
     ]) {
       const res = await proxy(makeRequest(path))
-      expect(res.status, path).not.toBe(301)
+      expect([301, 302], path).not.toContain(res.status)
       expect(res.headers.get("x-middleware-rewrite"), path).toContain(
         "localhost:3006"
       )

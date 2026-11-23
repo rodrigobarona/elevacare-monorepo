@@ -9,24 +9,30 @@
  *
  * A bookmark, an old email or a calendar note that points at one of these
  * lands somewhere useful, not on "page not found" or, worse, on the public
- * profile of whoever took the word as a username. Every first word here
- * is a reserved username (`./reserved-usernames.ts`); a test holds that.
+ * profile of whoever took the word as a username. Every first word in
+ * `LEGACY_PRIVATE_SECTIONS` is a reserved username: `./reserved-usernames.ts`
+ * takes them from here.
  *
  * The MVP's public addresses are in `./public-site-parity.ts`. Its
  * `/login`, `/onboarding`, `/dashboard`, `/account/billing`,
  * `/account/notifications`, `/account/security` and `/admin/*` are
- * addresses v3 serves itself, and are left alone.
+ * addresses v3 answers itself, and are left alone.
  *
- * The gateway (`apps/web`) answers these with a permanent redirect and
- * drops the query: nothing the MVP put there means anything to v3.
+ * The gateway (`apps/web`) answers these with a redirect and drops the
+ * query. One thing the MVP put there is read first: `expert=true` on
+ * `/register`, its "become an expert" button.
  */
 
 /** Where a signed-in person is sent to their own place. */
 const OWN_PLACE = "/dashboard"
 
+/** Where v3's own "become an expert" button goes. */
+const BECOME_EXPERT = "/account/workspaces/create/expert"
+
 /**
  * Addresses that moved, whatever comes after the first word:
  * `/appointments`, `/appointments/patients/123`, `/booking/events/new`.
+ * v3 does not use these words again, so the redirect is permanent.
  */
 export const LEGACY_PRIVATE_SECTIONS = {
   // Sessions, the people an expert sees, their records.
@@ -39,32 +45,59 @@ export const LEGACY_PRIVATE_SECTIONS = {
   register: "/signup",
   // "You may not see this page": signing in again is the way forward.
   unauthorized: "/login",
+
+  // Not pages of the MVP, but addresses its own code and emails wrote:
+  // where it sent a person after signing out, or after a Google error.
+  "sign-in": "/login",
+  // "Complete your profile", in its welcome email.
+  profile: OWN_PLACE,
+  // The foot of its emails. v3 keeps what it sends to a person here.
+  unsubscribe: "/account/notifications",
 } as const satisfies Record<string, string>
 
 /**
- * Addresses under a word v3 still serves, that v3 does not have:
+ * Addresses under a word v3 still answers, that v3 does not have:
  * `/dashboard/subscription` (v3's `/dashboard` is one address),
  * `/account/identity` (the identity check is part of an expert's set-up).
- * Each is `[first word, second word or "*" for any]`.
+ * `page` is the second word, or "*" for any.
+ *
+ * The word is v3's and v3 may build under it one day, so this redirect is
+ * not permanent: a browser must not remember it for good.
  */
 export const LEGACY_PRIVATE_PAGES = [
   { under: "dashboard", page: "*", to: OWN_PLACE },
   { under: "account", page: "identity", to: OWN_PLACE },
 ] as const
 
+/** Where one of the MVP's addresses went, and whether for good. */
+export interface LegacyPrivateMove {
+  to: string
+  /** False where v3 may one day have a page at the old address. */
+  permanent: boolean
+}
+
 /**
  * The new address for one of the MVP's signed-in addresses, or null when
- * the path is not one of them.
+ * the path is not one of them. `search` is the query of the old address
+ * (`?expert=true`), read for the one case named above.
  */
-export function rewriteLegacyPrivatePath(pathname: string): string | null {
+export function rewriteLegacyPrivatePath(
+  pathname: string,
+  search = ""
+): LegacyPrivateMove | null {
   const segments = pathname.split("/").filter(Boolean)
   const first = segments[0]?.toLowerCase()
   if (!first) return null
 
   if (Object.hasOwn(LEGACY_PRIVATE_SECTIONS, first)) {
-    return LEGACY_PRIVATE_SECTIONS[
-      first as keyof typeof LEGACY_PRIVATE_SECTIONS
-    ]
+    const section = first as keyof typeof LEGACY_PRIVATE_SECTIONS
+    const becomingExpert =
+      section === "register" &&
+      new URLSearchParams(search).get("expert") === "true"
+    return {
+      to: becomingExpert ? BECOME_EXPERT : LEGACY_PRIVATE_SECTIONS[section],
+      permanent: true,
+    }
   }
 
   const second = segments[1]?.toLowerCase()
@@ -72,11 +105,5 @@ export function rewriteLegacyPrivatePath(pathname: string): string | null {
   const moved = LEGACY_PRIVATE_PAGES.find(
     (one) => one.under === first && (one.page === "*" || one.page === second)
   )
-  return moved?.to ?? null
+  return moved ? { to: moved.to, permanent: false } : null
 }
-
-/** Every first word this module answers for. */
-export const LEGACY_PRIVATE_FIRST_SEGMENTS = [
-  ...Object.keys(LEGACY_PRIVATE_SECTIONS),
-  ...LEGACY_PRIVATE_PAGES.map((one) => one.under),
-] as const

@@ -41,39 +41,80 @@ Each entry should include:
   "page not found", and an expert could have taken one of those words as a
   username and received everyone's old links.
 - Change (Phase 14.22): `@eleva/config/legacy-private-routes` is the map,
-  and the gateway answers each with a permanent redirect, before it looks
-  at the address for anything else.
+  and the gateway answers each with a redirect before it decides which
+  app the address belongs to (after its three older redirects: retired
+  locales, `for-organizations`, and the public pages of Phase 4).
 
-  | The MVP's address                                      | Goes to      |
-  | ------------------------------------------------------ | ------------ |
-  | `/appointments` and everything under it                | `/dashboard` |
-  | `/booking` and everything under it                     | `/dashboard` |
-  | `/setup`                                               | `/dashboard` |
-  | `/dashboard/subscription`, any page under `/dashboard` | `/dashboard` |
-  | `/account/identity` and under it                       | `/dashboard` |
-  | `/register`                                            | `/signup`    |
-  | `/unauthorized`                                        | `/login`     |
+  | The MVP's address                                       | Goes to                             | For good |
+  | ------------------------------------------------------- | ----------------------------------- | -------- |
+  | `/appointments` and everything under it                 | `/dashboard`                        | yes, 301 |
+  | `/booking` and everything under it                      | `/dashboard`                        | yes, 301 |
+  | `/setup`                                                | `/dashboard`                        | yes, 301 |
+  | `/register`                                             | `/signup`                           | yes, 301 |
+  | `/register?expert=true` (its "become an expert" button) | `/account/workspaces/create/expert` | yes, 301 |
+  | `/unauthorized`                                         | `/login`                            | yes, 301 |
+  | `/sign-in`                                              | `/login`                            | yes, 301 |
+  | `/profile` and everything under it                      | `/dashboard`                        | yes, 301 |
+  | `/unsubscribe`                                          | `/account/notifications`            | yes, 301 |
+  | `/dashboard/subscription`, any page under `/dashboard`  | `/dashboard`                        | no, 302  |
+  | `/account/identity` and under it                        | `/dashboard`                        | no, 302  |
 
 - **Why `/dashboard` and not the page itself.** In v3 each practice has its
   own address (`/expert/{slug}`), which only the session knows.
   `/dashboard` sends a signed-in person to their own practice or Space, and
   anyone else to sign in. An old link to one person's record goes there
-  too: the records get new ids in the move.
-- The query is dropped: nothing the MVP put there means anything to v3.
-- The four words are now reserved usernames. If someone in the MVP has one
-  of them as a username, the migration stops on it (14.9), which is the
-  rule for every reserved name.
-- Left alone, because v3 serves the same address: `/login`, `/onboarding`,
+  too: v3 has no page at that old address.
+- **Three words that were never pages of the MVP.** `/sign-in` (where its
+  code sent a person after signing out), `/profile/complete` (in its
+  welcome email) and `/unsubscribe` (the foot of its emails, by default)
+  were written in its code and templates. Which of those emails were in
+  fact sent was not checked; the words are reserved and sent somewhere
+  useful either way.
+- **Permanent only where v3 will not use the word again.** `/dashboard`
+  and `/account` are v3's own, and it may build under them (an identity
+  page in settings is easy to imagine), so those two answer 302: a browser
+  does not keep them.
+- The query is dropped, once the rule has read it. The one thing read is
+  `expert=true` on `/register`, which every "Get started" button on the
+  MVP's become-an-expert page carried. The plan named beside it
+  (`plan=community-paygo`) is lost: in v3 a new expert starts on the basic plan and can change it
+  later.
+- `appointments`, `booking`, `register`, `unauthorized`, `sign-in`,
+  `profile` and `unsubscribe` are now reserved usernames, taken from the
+  map itself, with `sign-up` and `sign-out` beside them. The roadmap's
+  rule for the move (14.9, not built) is that a reserved name stops the
+  run, so a person in the MVP who has one of these as a username will have
+  to be handled there.
+- Left alone, because v3 answers the same address: `/login`, `/onboarding`,
   `/dashboard`, `/account`, `/account/billing`, `/account/notifications`,
-  `/account/security`. `/admin/*` already goes to the staff console's own
-  host. The MVP's public addresses were done in Phase 4
-  (`public-site-parity`).
-- The test reads the MVP's own route list from the snapshot in the
-  repository and fails if a signed-in page of the MVP is neither moved nor
-  named as one v3 serves.
-- Not checked: that each address v3 "serves at the same path" shows the
-  same thing as the MVP's did (`/account/billing` is a different page
-  now); and nothing was run in a browser.
+  `/account/security`. `/admin/*` goes to the staff console's own host,
+  where the MVP's five staff pages (`categories`, `payments`,
+  `payments/{id}`, `subscriptions`, `users`) are "page not found": the
+  console has clinics and partners today. The MVP's public addresses were
+  done in Phase 4 (`public-site-parity`).
+- The tests read two lists from the repository: the MVP's route list from
+  its snapshot (a signed-in page that is neither moved nor named as one v3
+  answers fails), and the account app's own folders (a destination, or an
+  address named as answered by v3, that the account app does not have
+  fails).
+- Not checked: whether a person in v3 already has one of the nine words as
+  a username (the database was not answering; their profile would stop
+  opening, so this is one read to make before the merge); that each
+  address v3 "answers at the same path" shows the same thing as the MVP's
+  did (`/account/billing` is a different page now); and nothing was run in
+  a browser, so there are no rows for these in `e2e/legacy-urls.spec.ts`.
+- Left for later: the database's own list of reserved words
+  (`reserved_public_handles()`, written once in migration 0027) does not
+  have these nine, nor `space`, `join` and `history` from before. The
+  application refuses them when a name is chosen and when a profile is
+  read; the database rule needs a migration of its own. Three more
+  addresses from the MVP's emails reach the account app and are "page not
+  found" there: `/account/schedule`, `/account/profile`,
+  `/account/billing/receipts/{id}`.
+- Owner: engineering
+- Related: `execution-plan/remaining-roadmap.md` (14.22, 14.9);
+  `packages/config/src/public-site-parity.ts`;
+  `packages/config/src/reserved-usernames.ts`
 
 ### 2026-11-23: Staff queues have pages, and reading one is on record (12.6) (active)
 
