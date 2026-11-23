@@ -204,14 +204,14 @@
         {
           "id": "D3.1",
           "title": "Homepage first two screens",
-          "scope": "Need chips or search in the hero, a row of real bookable experts straight under it, tighter hero copy. Reuses the D2.4 card.",
+          "scope": "Rebuilt in direction E on 2026-11-23, with D3.2: the film with one question and one action, eight questions that lead to areas of care, three experts from the directory, how experts are checked, how booking works, advisors, five questions, a closing block. Built, not yet judged.",
           "findings": ["HOME-01", "HOME-02", "HOME-07", "HOME-11"],
           "effort": "M"
         },
         {
           "id": "D3.2",
           "title": "Homepage proof and rhythm",
-          "scope": "Proof that is proof (how experts are checked, member voice and numbers when true), advisors merged into one band lower down, one way to browse, how-it-works shown with the product, a closing action for members with questions answered, shorter phone page, footer with a way back into care and who is behind Eleva.",
+          "scope": "Built with D3.1 on 2026-11-23: how experts are checked as its own band, advisors in one band after the experts and the steps, steps that show the product, a closing block. Member voice and numbers wait until they are true. Not yet judged.",
           "findings": [
             "HOME-03",
             "HOME-04",

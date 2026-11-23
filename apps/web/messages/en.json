@@ -64,49 +64,80 @@
   },
   "home": {
     "hero": {
-      "eyebrow": "Women's health, elevated",
-      "heading": "Women's health experts, ",
-      "headingAccent": "on your schedule.",
-      "description": "Book trusted specialists in pregnancy, pelvic health and every stage of life. Online, by phone or in person.",
-      "cta": "Find an expert",
-      "ctaSecondary": "Become an expert",
-      "disclaimer": "Eleva connects you with independent health experts who run their own practice.",
-      "aside": {
-        "stages": "Care for every stage of life",
-        "listen": "Experts who listen"
+      "heading": "Who do I even ask about this?",
+      "lead": "Ask someone who knows. Book a registered women's health expert, by video, phone or in person.",
+      "cta": "See the experts",
+      "pause": "Pause film",
+      "play": "Play film",
+      "posed": "Posed by models"
+    },
+    "questions": {
+      "heading": "What do you want to ask?",
+      "areas": "Or go by area",
+      "items": {
+        "leakLaugh": "Is it normal to leak when I laugh?",
+        "backPainPregnancy": "How do I ease back pain in pregnancy?",
+        "eatTrying": "What should I eat while trying for a baby?",
+        "pelvicFloorMenopause": "What happens to my pelvic floor in menopause?",
+        "healAfterBirth": "What helps my body heal after giving birth?",
+        "painfulPeriods": "Why are my periods so painful?",
+        "livingWithPain": "Is this pain something I just have to live with?",
+        "movingAfterCancer": "How do I get moving again after cancer treatment?"
       }
     },
-    "trust": {
-      "independent": {
-        "title": "Independent experts",
-        "description": "Qualified professionals with their own practice."
+    "people": {
+      "heading": "The people who answer",
+      "speaks": "Speaks",
+      "sessions": "Sessions",
+      "profile": "See profile"
+    },
+    "checked": {
+      "heading": "Every expert here is registered with their professional body. We check that before a profile goes live.",
+      "practice": {
+        "title": "They run their own practice",
+        "body": "You book them and talk with them directly."
       },
-      "modes": {
-        "title": "Online or in person",
-        "description": "Video, phone or a clinic near you."
+      "price": {
+        "title": "You see the price first",
+        "body": "It is on each profile, before you choose a time."
+      }
+    },
+    "how": {
+      "heading": "How booking works",
+      "cta": "See the experts",
+      "pick": {
+        "label": "First",
+        "title": "You pick a time",
+        "body": "You pay when you book."
       },
-      "languages": {
-        "title": "In your language",
-        "description": "English, Portuguese and Spanish."
+      "meet": {
+        "label": "Then",
+        "title": "You meet",
+        "body": "A video session opens from the link in your email. In person, you go to them."
       },
-      "pricing": {
-        "title": "Clear prices",
-        "description": "Pay when you book. Cancellation terms upfront."
+      "next": {
+        "label": "After",
+        "title": "You decide what comes next",
+        "body": "Book a follow-up, or don't."
+      },
+      "sample": {
+        "day": "Wednesday 25 November",
+        "email": "Your confirmation email",
+        "when": "Wednesday, 10:30",
+        "session": "Video session · 50 min",
+        "join": "Join the session",
+        "followUp": "Follow-up",
+        "followUpMeta": "30 min",
+        "again": "Book again"
       }
     },
     "advisors": {
-      "heading": "Guided by leaders in ",
-      "headingAccent": "women's health",
+      "heading": "Guided by people who study women's health",
       "lead": "Our board of advisors brings clinical research into how Eleva works. Your care comes from the independent expert you choose.",
       "cta": "Meet the board",
       "more": "{count} more advisors"
     },
     "services": {
-      "eyebrow": "How we support you",
-      "heading": "Expert-led care, ",
-      "headingAccent": "tailored to you",
-      "lead": "From your first pregnancy scan to life after menopause, find the specialist who understands where you are.",
-      "action": "Find experts",
       "pregnancy": {
         "title": "Pregnancy & postpartum",
         "description": "Calm, evidence-based support through pregnancy and early motherhood."
@@ -122,40 +153,41 @@
       "cancerJourney": {
         "title": "Your cancer journey",
         "description": "Gentle, expert care during and after treatment."
-      },
-      "browseLabel": "Browse experts by specialty"
-    },
-    "how": {
-      "eyebrow": "How it works",
-      "heading": "From first question to first session",
-      "lead": "No waiting lists and no account needed to book.",
-      "find": {
-        "title": "Find your expert",
-        "description": "Browse by need, language, price and how you want to meet."
-      },
-      "book": {
-        "title": "Book a time",
-        "description": "Pick a slot that suits you and pay securely in a few steps."
-      },
-      "meet": {
-        "title": "Meet your expert",
-        "description": "Join online from your confirmation email, or meet in person."
       }
     },
-    "belief": {
-      "eyebrow": "Our belief",
-      "heading": "Women's health is a ",
-      "headingAccent": "lifelong journey",
-      "lead": "We bring together experts who listen, explain and work with you, so every decision about your health feels like your own.",
-      "cta": "Our mission"
+    "faq": {
+      "heading": "Before you book",
+      "account": {
+        "q": "Do I need an account to book?",
+        "a": "No. Choose a time, add your email and pay. Everything you need arrives in your confirmation email."
+      },
+      "who": {
+        "q": "Who are the experts?",
+        "a": "Independent health professionals who work in women's health. Each profile says what they do and how they trained."
+      },
+      "cost": {
+        "q": "How much does it cost?",
+        "a": "Each expert sets their own price. You see it on their profile before you choose a time."
+      },
+      "session": {
+        "q": "How does a session work?",
+        "a": "It depends on the expert: some meet by video or phone, some in person, some both. Their profile says which."
+      },
+      "cancel": {
+        "q": "Can I cancel?",
+        "a": "Yes. Before you pay, you see the last day you can cancel without charge."
+      }
     },
-    "experts": {
-      "eyebrow": "For experts",
-      "heading": "Grow your practice ",
-      "headingAccent": "with Eleva",
-      "lead": "Bookings, payments and video sessions in one place, so you can focus on care.",
-      "cta": "Become an expert",
-      "ctaSecondary": "For clinics"
+    "close": {
+      "heading": "Not sure who to ask?",
+      "lead": "Start with the experts. Each profile says what they help with.",
+      "cta": "See the experts",
+      "pro": {
+        "heading": "Are you a health professional?",
+        "lead": "Set your own prices and see members on your own terms.",
+        "cta": "Become an expert",
+        "clinics": "For clinics"
+      }
     }
   },
   "about": {

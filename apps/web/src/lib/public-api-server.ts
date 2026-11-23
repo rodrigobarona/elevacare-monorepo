@@ -38,6 +38,20 @@ export async function createServerPublicApiClient() {
   })
 }
 
+/**
+ * The first page of the directory, for pages that only use it to enrich what
+ * they show (the homepage). Null when it cannot be loaded, so the page still
+ * renders.
+ */
+export const getPublicDirectory = cache(async () => {
+  try {
+    const api = await createServerPublicApiClient()
+    return await api.public.listExperts({})
+  } catch {
+    return null
+  }
+})
+
 export const getPublicExpert = cache(async (username: string) => {
   const api = await createServerPublicApiClient()
   return api.public.getExpert(username)

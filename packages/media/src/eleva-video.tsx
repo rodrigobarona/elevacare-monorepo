@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { useSyncExternalStore } from "react"
+import { useRef, useState, useSyncExternalStore } from "react"
 
 import type { Locale } from "@eleva/config/i18n-locales"
 import { cn } from "@eleva/ui/lib/utils"
@@ -30,6 +30,10 @@ function useAmbientVideo(): boolean {
  * Progressive WebM (when curated) then MP4 on the media host — no third-party
  * player or tracking. Reduced motion and small screens show the poster only,
  * so phones never download the video.
+ *
+ * Pass `pause` whenever the film runs for more than five seconds: it adds a
+ * button that stops and restarts it (WCAG 2.2.2). `onTime` reports the
+ * playhead, so words that follow the film stop with it.
  */
 export function ElevaVideo({
   slug,
@@ -37,15 +41,36 @@ export function ElevaVideo({
   className,
   sizes = "100vw",
   priority = false,
+  pause,
+  onTime,
 }: {
   slug: string
   locale: Locale
   className?: string
   sizes?: string
   priority?: boolean
+  /** Labels (and optional classes) for the pause and play button. */
+  pause?: { pauseLabel: string; playLabel: string; className?: string }
+  /** Called with the playhead in seconds while the film plays. */
+  onTime?: (seconds: number) => void
 }) {
   const video = getVideo(slug)
   const showVideo = useAmbientVideo()
+  const element = useRef<HTMLVideoElement>(null)
+  const [isPaused, setIsPaused] = useState(false)
+
+  function toggle() {
+    const film = element.current
+    if (!film) return
+    if (film.paused) {
+      void film.play()
+      setIsPaused(false)
+    } else {
+      film.pause()
+      setIsPaused(true)
+    }
+  }
+
   return (
     <div className={cn("relative overflow-hidden", className)}>
       <Image
@@ -59,20 +84,38 @@ export function ElevaVideo({
         className="object-cover"
       />
       {showVideo ? (
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          aria-hidden
-          tabIndex={-1}
-          className="absolute inset-0 size-full object-cover"
-        >
-          {video.webmUrl ? (
-            <source src={video.webmUrl} type="video/webm" />
+        <>
+          <video
+            ref={element}
+            autoPlay
+            muted
+            loop
+            playsInline
+            aria-hidden
+            tabIndex={-1}
+            className="absolute inset-0 size-full object-cover"
+            onTimeUpdate={
+              onTime
+                ? (event) => onTime(event.currentTarget.currentTime)
+                : undefined
+            }
+          >
+            {video.webmUrl ? (
+              <source src={video.webmUrl} type="video/webm" />
+            ) : null}
+            <source src={video.url} type="video/mp4" />
+          </video>
+          {pause ? (
+            <button
+              type="button"
+              onClick={toggle}
+              aria-pressed={isPaused}
+              className={pause.className}
+            >
+              {isPaused ? pause.playLabel : pause.pauseLabel}
+            </button>
           ) : null}
-          <source src={video.url} type="video/mp4" />
-        </video>
+        </>
       ) : null}
     </div>
   )

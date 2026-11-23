@@ -1,28 +1,25 @@
+import { Suspense } from "react"
 import { getLocale, getTranslations } from "next-intl/server"
-import {
-  ArrowRightIcon,
-  SealCheckIcon,
-  TagIcon,
-  TranslateIcon,
-  VideoCameraIcon,
-} from "@eleva/icons"
+import type { ListPublicExpertsResponse } from "@eleva/api-client"
+import { ArrowRightIcon, ShieldCheckIcon } from "@eleva/icons"
 import { defaultLocale, isLocale, type Locale } from "@eleva/config/i18n"
 import { ElevaImage } from "@eleva/media/image"
-import { ElevaVideo } from "@eleva/media/video"
-import { CtaBand } from "@eleva/ui/blocks/cta-band"
-import { MediaCard } from "@eleva/ui/blocks/media-card"
-import { MediaHero, MediaHeroActions } from "@eleva/ui/blocks/media-hero"
-import { Container, Section, SectionHeader } from "@eleva/ui/blocks/section"
-import { Steps } from "@eleva/ui/blocks/steps"
-import { TrustStrip } from "@eleva/ui/blocks/trust-strip"
+import { ExpertPortrait } from "@eleva/ui/blocks/expert-portrait"
+import { Container } from "@eleva/ui/blocks/section"
 import { buttonVariants } from "@eleva/ui/components/button-variants"
-import { Accent, Eyebrow, Heading, Lead } from "@eleva/ui/components/typography"
-import { Link } from "@/i18n/navigation"
+import { cn } from "@eleva/ui/lib/utils"
+import { HomeHero } from "@/components/home/home-hero"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
+import { Link } from "@/i18n/navigation"
 import { ADVISORS } from "@/lib/advisors"
-import { CARE_AREAS } from "@/lib/care-areas"
-import { MARKETPLACE_CATEGORY_SLUGS } from "@/lib/marketplace-categories"
+import { formatEur } from "@/lib/format-eur"
+import { HERO_FILM_QUESTIONS, HOME_QUESTIONS } from "@/lib/home-questions"
+import {
+  isMarketplaceCategory,
+  MARKETPLACE_CATEGORY_SLUGS,
+} from "@/lib/marketplace-categories"
+import { getPublicDirectory } from "@/lib/public-api-server"
 
 const FEATURED_ADVISOR_IDS: readonly string[] = [
   "kariBo",
@@ -30,9 +27,31 @@ const FEATURED_ADVISOR_IDS: readonly string[] = [
   "cristineHomsiJorge",
 ]
 
+/** How many experts the homepage introduces. The directory has the rest. */
+const HOME_EXPERTS = 3
+/** A phone shows this many questions; the area row and the directory follow. */
+const PHONE_QUESTIONS = 4
+
+const H2 = "font-display text-3xl tracking-tight text-balance sm:text-4xl"
+const LINK =
+  "inline-flex min-h-11 items-center gap-1.5 font-medium text-primary underline decoration-[1.5px] underline-offset-[5px]"
+
+type Directory = ListPublicExpertsResponse | null
+
+/**
+ * The public homepage, built from what women ask (design direction E,
+ * `docs/eleva-v3/design-audit/brand-directions.md`). The hero is the film
+ * with one question and one action; need-first browsing is a list of
+ * questions; experts speak through their own headline. Two colour fields,
+ * each used once: deep teal for how experts are checked, coral to close.
+ *
+ * The page uses a cooler paper than the product (`--background` is set on
+ * the wrapper), so the change stays on this page until the direction is
+ * signed off for `@eleva/ui`.
+ */
 export async function MarketingHome() {
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex min-h-dvh flex-col bg-background [--background:var(--color-neutral-50)] [--border:var(--color-neutral-200)] [--muted:var(--color-neutral-100)]">
       <SiteHeader />
       <main className="flex-1">
         <MarketingContent />
@@ -43,397 +62,552 @@ export async function MarketingHome() {
 }
 
 async function MarketingContent() {
-  const [t, tAbout, tExperts, requestLocale] = await Promise.all([
+  const [t, requestLocale] = await Promise.all([
     getTranslations("home"),
-    getTranslations("about"),
-    getTranslations("experts"),
     getLocale(),
   ])
   const locale: Locale = isLocale(requestLocale) ? requestLocale : defaultLocale
-  const quotedAdvisor = ADVISORS[0]
-  const featuredAdvisors = ADVISORS.filter((person) =>
-    FEATURED_ADVISOR_IDS.includes(person.id)
-  )
-  const otherAdvisors = ADVISORS.filter(
-    (person) => !FEATURED_ADVISOR_IDS.includes(person.id)
-  )
+  // Not awaited here: the hero must not wait for the directory.
+  const directory = getPublicDirectory()
 
   return (
     <>
-      <MediaHero
-        media={
-          <ElevaVideo
-            slug="hero-intro"
-            locale={locale}
-            sizes="(min-width: 1024px) 64vw, 100vw"
-            priority
-          />
-        }
-        aside={
-          <>
-            <MediaCard
-              variant="overlay"
-              aspect="fill"
-              titleAs="p"
-              linkAs={Link}
-              href="/experts/wellness"
-              media={
-                <ElevaImage
-                  slug="menopause-portrait"
-                  locale={locale}
-                  fill
-                  sizes="30vw"
-                />
-              }
-              title={t("hero.aside.stages")}
-            />
-            <MediaCard
-              variant="overlay"
-              aspect="fill"
-              titleAs="p"
-              linkAs={Link}
-              href="/experts"
-              media={
-                <ElevaImage
-                  slug="support-conversation"
-                  locale={locale}
-                  fill
-                  sizes="30vw"
-                />
-              }
-              title={t("hero.aside.listen")}
-            />
-          </>
-        }
-      >
-        <div className="flex max-w-4xl flex-col gap-6">
-          <Eyebrow tone="inverse">{t("hero.eyebrow")}</Eyebrow>
-          <Heading
-            as="h1"
-            size="display"
-            tone="inverse"
-            data-testid="marketing-hero"
-            className="font-light text-balance"
-          >
-            {t("hero.heading")}
-            <Accent>{t("hero.headingAccent")}</Accent>
-          </Heading>
-          <Lead className="max-w-xl text-white/85">
-            {t("hero.description")}
-          </Lead>
-        </div>
-        <MediaHeroActions>
-          <Link
-            href="/experts"
-            className={buttonVariants({ variant: "inverse", size: "xl" })}
-          >
-            {t("hero.cta")}
-            <ArrowRightIcon data-icon="inline-end" />
-          </Link>
-          <Link
-            href="/become-expert"
-            className={buttonVariants({
-              variant: "ghost",
-              size: "xl",
-              className: "text-white hover:bg-white/10 hover:text-white",
-            })}
-          >
-            {t("hero.ctaSecondary")}
-          </Link>
-        </MediaHeroActions>
-        <p className="max-w-md text-sm text-white/75">{t("hero.disclaimer")}</p>
-      </MediaHero>
+      <div className="pt-2 sm:pt-3">
+        <HomeHero
+          locale={locale}
+          heading={t("hero.heading")}
+          lead={t("hero.lead")}
+          action={t("hero.cta")}
+          pauseLabel={t("hero.pause")}
+          playLabel={t("hero.play")}
+          posedLabel={t("hero.posed")}
+          scenes={HERO_FILM_QUESTIONS.map((scene) => ({
+            from: scene.from,
+            text: scene.id
+              ? t(`questions.items.${scene.id}`)
+              : t("hero.heading"),
+          }))}
+        />
+      </div>
 
-      <Section spacing="none" className="py-6 sm:py-8">
-        <Container>
-          <TrustStrip
-            variant="bar"
-            items={[
-              {
-                icon: <SealCheckIcon weight="duotone" />,
-                title: t("trust.independent.title"),
-              },
-              {
-                icon: <VideoCameraIcon weight="duotone" />,
-                title: t("trust.modes.title"),
-              },
-              {
-                icon: <TranslateIcon weight="duotone" />,
-                title: t("trust.languages.title"),
-              },
-              {
-                icon: <TagIcon weight="duotone" />,
-                title: t("trust.pricing.title"),
-              },
-            ]}
-          />
-        </Container>
-      </Section>
+      {/* Until the directory answers, every question leads to all experts. */}
+      <Suspense fallback={<Questions directory={null} />}>
+        <Questions directory={directory} />
+      </Suspense>
 
-      <Section spacing="compact">
-        <Container className="flex flex-col gap-10">
-          <SectionHeader
-            eyebrow={tAbout("advisors.heading")}
-            title={
-              <>
-                {t("advisors.heading")}
-                <Accent>{t("advisors.headingAccent")}</Accent>
-              </>
-            }
-            lead={t("advisors.lead")}
-          />
-          <div className="grid reveal gap-x-6 gap-y-8 sm:grid-cols-3">
-            {featuredAdvisors.map((person) => (
-              <MediaCard
-                key={person.id}
-                variant="overlay"
-                aspect="square"
-                linkAs={Link}
-                href="/about#advisors"
-                media={
-                  <ElevaImage
-                    slug={person.slug}
-                    locale={locale}
-                    fill
-                    sizes="(min-width: 640px) 33vw, 100vw"
-                  />
+      <Suspense fallback={null}>
+        <People directory={directory} locale={locale} />
+      </Suspense>
+
+      <Checked />
+      <HowBookingWorks />
+      <Advisors locale={locale} />
+      <Faq />
+      <Close />
+    </>
+  )
+}
+
+/** Areas of care that have at least one listed expert. */
+function listedAreas(directory: Directory): ReadonlySet<string> {
+  return new Set(
+    (directory?.experts ?? []).flatMap((expert) => expert.categorySlugs)
+  )
+}
+
+async function Questions({
+  directory: pending,
+}: {
+  directory: Promise<Directory> | null
+}) {
+  const [t, tExperts, directory] = await Promise.all([
+    getTranslations("home"),
+    getTranslations("experts"),
+    pending,
+  ])
+  const areas = listedAreas(directory)
+  const areaChips = MARKETPLACE_CATEGORY_SLUGS.filter((slug) => areas.has(slug))
+
+  return (
+    <section id="questions" className="px-4 pt-16 sm:px-6 sm:pt-20">
+      <Container>
+        <h2 className={H2}>{t("questions.heading")}</h2>
+        <ul className="mt-8 grid gap-x-14 sm:grid-cols-2">
+          {HOME_QUESTIONS.map((question, index) => (
+            <li
+              key={question.id}
+              className={cn(
+                "border-t last:border-b sm:nth-last-[2]:border-b",
+                index >= PHONE_QUESTIONS && "max-sm:hidden",
+                index === PHONE_QUESTIONS - 1 && "max-sm:border-b"
+              )}
+            >
+              <Link
+                // An area with nobody listed would be a dead end.
+                href={
+                  areas.has(question.category)
+                    ? `/experts/${question.category}`
+                    : "/experts"
                 }
-                title={person.name}
-                description={tAbout(`advisors.${person.id}.role`)}
-              />
-            ))}
+                className="group grid min-h-20 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-5 px-1 py-3.5"
+              >
+                <span className="font-display text-xl leading-snug tracking-tight text-pretty decoration-[1.5px] underline-offset-[5px] group-hover:underline sm:text-2xl">
+                  {t(`questions.items.${question.id}`)}
+                </span>
+                <span className="col-start-1 text-base text-muted-foreground">
+                  {tExperts(`categories.${question.category}`)}
+                </span>
+                <ArrowRightIcon
+                  aria-hidden
+                  className="col-start-2 row-span-2 row-start-1 size-5 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary"
+                />
+              </Link>
+            </li>
+          ))}
+        </ul>
+        {areaChips.length >= 2 ? (
+          <nav
+            aria-label={t("questions.areas")}
+            className="mt-7 flex flex-col gap-x-5 gap-y-3 sm:flex-row sm:items-center"
+          >
+            <span className="text-base text-muted-foreground" aria-hidden>
+              {t("questions.areas")}
+            </span>
+            <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 py-0.5 sm:mx-0 sm:flex-wrap sm:px-0">
+              {areaChips.map((slug) => (
+                <li key={slug} className="shrink-0">
+                  <Link
+                    href={`/experts/${slug}`}
+                    className="inline-flex min-h-11 items-center rounded-full border bg-card px-4.5 text-base whitespace-nowrap transition-colors hover:border-primary hover:text-primary"
+                  >
+                    {tExperts(`categories.${slug}`)}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ) : null}
+      </Container>
+    </section>
+  )
+}
+
+async function People({
+  directory: pending,
+  locale,
+}: {
+  directory: Promise<Directory>
+  locale: Locale
+}) {
+  const [t, tExperts, directory] = await Promise.all([
+    getTranslations("home"),
+    getTranslations("experts"),
+    pending,
+  ])
+  const people = (directory?.experts ?? []).slice(0, HOME_EXPERTS)
+  // No experts to show, or the directory is unreachable: the page goes
+  // straight from the questions to how experts are checked.
+  if (people.length === 0) return null
+  const list = new Intl.ListFormat(locale, { type: "conjunction" })
+
+  return (
+    <section id="experts" className="px-4 pt-16 sm:px-6 sm:pt-24">
+      <Container>
+        <div className="flex flex-col gap-x-8 gap-y-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className={H2}>{t("people.heading")}</h2>
+            {/* How the list is ordered sits beside it (TRUST-13, DISC-05). */}
+            <p className="mt-2.5 text-base text-pretty text-muted-foreground">
+              {tExperts("orderedBy", { sort: tExperts("sort.relevance") })}{" "}
+              <Link
+                href={`/legal/terms#${tExperts("rankingAnchor")}`}
+                className="underline underline-offset-4 hover:text-foreground"
+              >
+                {tExperts("rankingLink")}
+              </Link>
+            </p>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-3">
-            <div aria-hidden className="flex -space-x-3">
-              {otherAdvisors.map((person) => (
-                <span
-                  key={person.id}
-                  className="relative size-12 overflow-hidden rounded-full bg-muted ring-2 ring-background"
+          <Link href="/experts" className={LINK}>
+            {tExperts("seeAll")}
+          </Link>
+        </div>
+
+        <ul className="mt-8 grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+          {people.map((expert) => {
+            const areas = expert.categorySlugs
+              .filter(isMarketplaceCategory)
+              .slice(0, 2)
+              .map((slug) => tExperts(`categories.${slug}`))
+            const languages = expert.languages
+              .filter((code) => code === "en" || code === "pt" || code === "es")
+              .map((code) => tExperts(`languages.${code}`))
+            const price =
+              expert.minPriceCents == null
+                ? null
+                : expert.minPriceCents === 0
+                  ? tExperts("freeSession")
+                  : tExperts("fromPrice", {
+                      price: formatEur(expert.minPriceCents, locale),
+                    })
+            return (
+              <li key={expert.username}>
+                <article
+                  data-testid="home-expert-card"
+                  className="group relative grid h-full grid-cols-[5.5rem_minmax(0,1fr)] content-start gap-x-4 rounded-3xl border bg-card p-3.5 transition-colors focus-within:ring-3 focus-within:ring-ring/50 hover:border-foreground/40 sm:flex sm:flex-col"
                 >
+                  <div className="aspect-square overflow-hidden rounded-xl bg-coral-100 sm:aspect-[4/3.7] [&_img]:object-cover [&_img]:object-[center_22%]">
+                    <ExpertPortrait
+                      displayName={expert.displayName}
+                      avatarUrl={expert.avatarUrl}
+                    />
+                  </div>
+                  <div className="self-center sm:order-2 sm:mt-5 sm:self-auto sm:px-2.5">
+                    <h3 className="text-lg font-medium">
+                      <Link
+                        href={`/${expert.username}`}
+                        className="outline-none after:absolute after:inset-0 after:rounded-3xl"
+                      >
+                        {expert.displayName}
+                      </Link>
+                    </h3>
+                    {areas.length > 0 ? (
+                      <p className="text-base text-muted-foreground">
+                        {areas.join(" · ")}
+                      </p>
+                    ) : null}
+                    <p className="mt-1.5 flex items-start gap-1.5 text-base">
+                      <ShieldCheckIcon
+                        aria-hidden
+                        weight="fill"
+                        className="mt-1 size-4 shrink-0"
+                      />
+                      {tExperts("checkedMark")}
+                    </p>
+                  </div>
+                  {expert.headline ? (
+                    // In the expert's own words, so it is set as speech.
+                    <p className="col-span-2 mt-4 line-clamp-3 font-display text-xl leading-snug tracking-tight text-pretty sm:order-1 sm:mt-5 sm:min-h-[4.2em] sm:px-2.5">
+                      {expert.headline}
+                    </p>
+                  ) : null}
+                  <div className="col-span-2 mt-4 flex flex-col sm:order-3 sm:mx-2.5 sm:mt-auto sm:pt-5">
+                    {languages.length > 0 || price ? (
+                      <dl className="grid grid-cols-2 gap-4 border-t py-3.5 text-base">
+                        {languages.length > 0 ? (
+                          <div>
+                            <dt className="text-muted-foreground">
+                              {t("people.speaks")}
+                            </dt>
+                            <dd className="font-medium">
+                              {list.format(languages)}
+                            </dd>
+                          </div>
+                        ) : null}
+                        {price ? (
+                          <div>
+                            <dt className="text-muted-foreground">
+                              {t("people.sessions")}
+                            </dt>
+                            <dd className="font-medium">{price}</dd>
+                          </div>
+                        ) : null}
+                      </dl>
+                    ) : null}
+                    <p
+                      aria-hidden
+                      className="flex min-h-12 items-center gap-1.5 border-t pt-1 text-lg font-medium text-primary group-hover:underline group-hover:underline-offset-[5px]"
+                    >
+                      {t("people.profile")}
+                      <ArrowRightIcon className="size-4.5" />
+                    </p>
+                  </div>
+                </article>
+              </li>
+            )
+          })}
+        </ul>
+      </Container>
+    </section>
+  )
+}
+
+async function Checked() {
+  const t = await getTranslations("home")
+  return (
+    <section className="mt-20 bg-teal-950 px-4 py-18 text-white sm:mt-28 sm:px-6 sm:py-24">
+      <Container className="grid items-start gap-10 lg:grid-cols-[1.5fr_1fr] lg:gap-20">
+        <div>
+          <ShieldCheckIcon
+            aria-hidden
+            weight="fill"
+            className="size-11 text-teal-200"
+          />
+          <h2 className={cn(H2, "mt-5 max-w-[19em]")}>
+            {t("checked.heading")}
+          </h2>
+        </div>
+        <ul className="text-lg text-white/90">
+          {(["practice", "price"] as const).map((key) => (
+            <li key={key} className="border-t border-white/30 py-5">
+              <b className="block font-display text-2xl font-normal tracking-tight text-white">
+                {t(`checked.${key}.title`)}
+              </b>
+              {t(`checked.${key}.body`)}
+            </li>
+          ))}
+        </ul>
+      </Container>
+    </section>
+  )
+}
+
+/** A piece of the product drawn as a picture: nothing in it can be pressed. */
+function Sample({
+  className,
+  children,
+}: {
+  className?: string
+  children: React.ReactNode
+}) {
+  return (
+    <div
+      aria-hidden
+      className={cn(
+        "flex min-h-52 flex-col justify-center gap-1.5 rounded-3xl bg-teal-100/70 p-6 text-base text-neutral-800 select-none",
+        className
+      )}
+    >
+      {children}
+    </div>
+  )
+}
+
+async function HowBookingWorks() {
+  const t = await getTranslations("home")
+  const times = ["09:00", "10:30", "11:15", "14:00", "15:30", "17:00"]
+  const steps = [
+    {
+      key: "pick",
+      sample: (
+        <Sample>
+          <span>{t("how.sample.day")}</span>
+          <span className="mt-2 grid grid-cols-3 gap-2">
+            {times.map((time) => (
+              <span
+                key={time}
+                className={cn(
+                  "grid min-h-11 place-content-center rounded-xl text-lg font-medium",
+                  time === "10:30"
+                    ? "bg-neutral-950 text-white"
+                    : "bg-white text-neutral-950"
+                )}
+              >
+                {time}
+              </span>
+            ))}
+          </span>
+        </Sample>
+      ),
+    },
+    {
+      key: "meet",
+      sample: (
+        <Sample>
+          <span>{t("how.sample.email")}</span>
+          <span className="font-display text-2xl tracking-tight text-neutral-950">
+            {t("how.sample.when")}
+          </span>
+          <span>{t("how.sample.session")}</span>
+          <span className="mt-3 self-start rounded-full bg-neutral-950 px-5 py-3 leading-none font-medium text-white">
+            {t("how.sample.join")}
+          </span>
+        </Sample>
+      ),
+    },
+    {
+      key: "next",
+      sample: (
+        <Sample>
+          <span className="font-display text-2xl tracking-tight text-neutral-950">
+            {t("how.sample.followUp")}
+          </span>
+          <span>{t("how.sample.followUpMeta")}</span>
+          <span className="mt-3 self-start rounded-full px-5 py-3 leading-none font-medium text-neutral-950 ring-[1.5px] ring-neutral-950">
+            {t("how.sample.again")}
+          </span>
+        </Sample>
+      ),
+    },
+  ] as const
+
+  return (
+    <section id="how" className="px-4 py-18 sm:px-6 sm:py-28">
+      <Container>
+        <h2 className={H2}>{t("how.heading")}</h2>
+        <ol className="mt-9 grid gap-x-5 gap-y-10 lg:grid-cols-[1.3fr_1fr_1fr]">
+          {steps.map((step) => (
+            <li key={step.key}>
+              {step.sample}
+              <p className="mt-6 text-base font-medium text-muted-foreground">
+                {t(`how.${step.key}.label`)}
+              </p>
+              <h3 className="mt-1 font-display text-2xl tracking-tight">
+                {t(`how.${step.key}.title`)}
+              </h3>
+              <p className="mt-1.5 max-w-[24em] text-lg text-pretty text-muted-foreground">
+                {t(`how.${step.key}.body`)}
+              </p>
+            </li>
+          ))}
+        </ol>
+        <Link
+          href="/experts"
+          className={cn(
+            buttonVariants({ size: "xl" }),
+            "mt-11 w-full sm:w-auto"
+          )}
+        >
+          {t("how.cta")}
+        </Link>
+      </Container>
+    </section>
+  )
+}
+
+async function Advisors({ locale }: { locale: Locale }) {
+  const [t, tAbout] = await Promise.all([
+    getTranslations("home"),
+    getTranslations("about"),
+  ])
+  const featured = ADVISORS.filter((person) =>
+    FEATURED_ADVISOR_IDS.includes(person.id)
+  )
+  const others = ADVISORS.length - featured.length
+
+  return (
+    <section className="bg-card px-4 py-18 sm:px-6 sm:py-24">
+      <Container className="grid items-center gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-18">
+        <div>
+          <h2 className={H2}>{t("advisors.heading")}</h2>
+          <p className="mt-4 max-w-[28em] text-lg text-pretty text-muted-foreground">
+            {t("advisors.lead")}
+          </p>
+          <Link href="/about#advisors" className={cn(LINK, "mt-4")}>
+            {t("advisors.cta")}
+          </Link>
+        </div>
+        <div>
+          <ul className="grid gap-x-7 max-sm:divide-y sm:grid-cols-3">
+            {featured.map((person) => (
+              <li
+                key={person.id}
+                className="grid grid-cols-[4.5rem_minmax(0,1fr)] items-center gap-x-4 py-3.5 sm:block sm:py-0"
+              >
+                <span className="relative block aspect-square overflow-hidden rounded-xl bg-coral-100 sm:w-32">
                   <ElevaImage
                     slug={person.slug}
                     locale={locale}
                     decorative
                     fill
-                    sizes="48px"
-                    className="object-cover"
+                    sizes="(min-width: 640px) 128px, 72px"
+                    className="object-cover object-top"
                   />
                 </span>
-              ))}
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {t("advisors.more", { count: otherAdvisors.length })}
+                <span className="block sm:mt-4">
+                  <b className="block text-lg leading-snug font-medium">
+                    {person.name}
+                  </b>
+                  <span className="block text-base text-muted-foreground">
+                    {tAbout(`advisors.${person.id}.role`)}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+          {others > 0 ? (
+            <p className="mt-6 text-base text-muted-foreground">
+              {t("advisors.more", { count: others })}
             </p>
-            <Link
-              href="/about#advisors"
-              className={buttonVariants({
-                variant: "outline",
-                size: "lg",
-                className: "bg-card shadow-1",
-              })}
-            >
-              {t("advisors.cta")}
-              <ArrowRightIcon data-icon="inline-end" />
-            </Link>
-          </div>
-        </Container>
-      </Section>
+          ) : null}
+        </div>
+      </Container>
+    </section>
+  )
+}
 
-      <Section>
-        <Container className="flex flex-col gap-12">
-          <SectionHeader
-            eyebrow={t("services.eyebrow")}
-            title={
-              <>
-                {t("services.heading")}
-                <Accent>{t("services.headingAccent")}</Accent>
-              </>
-            }
-            lead={t("services.lead")}
-          />
-          <nav
-            aria-label={t("services.browseLabel")}
-            className="flex flex-wrap gap-2"
+async function Faq() {
+  const t = await getTranslations("home")
+  const items = ["account", "who", "cost", "session", "cancel"] as const
+  return (
+    <section className="px-4 py-18 sm:px-6 sm:py-28">
+      <Container size="narrow">
+        <h2 className={H2}>{t("faq.heading")}</h2>
+        <div className="mt-7 border-b">
+          {items.map((key, index) => (
+            <details key={key} open={index === 0} className="group border-t">
+              <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 py-4 font-display text-xl tracking-tight sm:text-2xl [&::-webkit-details-marker]:hidden">
+                {t(`faq.${key}.q`)}
+                <span
+                  aria-hidden
+                  className="text-2xl leading-none font-light transition-transform group-open:rotate-45"
+                >
+                  +
+                </span>
+              </summary>
+              <p className="max-w-[36em] pb-6 text-lg text-pretty text-muted-foreground">
+                {t(`faq.${key}.a`)}
+              </p>
+            </details>
+          ))}
+        </div>
+      </Container>
+    </section>
+  )
+}
+
+async function Close() {
+  const t = await getTranslations("home")
+  return (
+    <section className="bg-coral-400 px-4 py-18 text-neutral-950 sm:px-6 sm:py-24">
+      <Container className="grid items-end gap-10 lg:grid-cols-[1.4fr_1fr] lg:gap-18">
+        <div>
+          <h2 className={H2}>{t("close.heading")}</h2>
+          <p className="mt-3.5 max-w-[24em] text-xl text-pretty">
+            {t("close.lead")}
+          </p>
+          <Link
+            href="/experts"
+            className={cn(
+              buttonVariants({ variant: "inverse", size: "xl" }),
+              "mt-7 w-full sm:w-auto"
+            )}
           >
-            {MARKETPLACE_CATEGORY_SLUGS.map((slug) => (
+            {t("close.cta")}
+          </Link>
+        </div>
+        <div className="border-neutral-950/40 max-lg:border-t max-lg:pt-8 lg:border-l lg:pl-10">
+          <h3 className="font-display text-2xl tracking-tight">
+            {t("close.pro.heading")}
+          </h3>
+          <p className="mt-2 text-lg text-pretty">{t("close.pro.lead")}</p>
+          <p className="mt-2 flex flex-wrap gap-x-6">
+            {(
+              [
+                ["/become-expert", "cta"],
+                ["/for-clinics", "clinics"],
+              ] as const
+            ).map(([href, key]) => (
               <Link
-                key={slug}
-                href={`/experts/${slug}`}
-                className={buttonVariants({
-                  variant: "outline",
-                  className: "bg-card shadow-1",
-                })}
+                key={href}
+                href={href}
+                className="inline-flex min-h-11 items-center font-medium underline decoration-[1.5px] underline-offset-[5px]"
               >
-                {tExperts(`categories.${slug}`)}
+                {t(`close.pro.${key}`)}
               </Link>
             ))}
-          </nav>
-          <div className="grid reveal gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
-            {CARE_AREAS.map((service) => (
-              <MediaCard
-                key={service.key}
-                linkAs={Link}
-                href={service.href}
-                media={
-                  <ElevaImage
-                    slug={service.slug}
-                    locale={locale}
-                    fill
-                    sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-                  />
-                }
-                title={t(`services.${service.key}.title`)}
-                description={t(`services.${service.key}.description`)}
-                actionLabel={t("services.action")}
-              />
-            ))}
-          </div>
-        </Container>
-      </Section>
-
-      <Section tone="primary">
-        <Container size="narrow" className="reveal">
-          <figure className="flex flex-col gap-8">
-            <Eyebrow tone="inverse">{tAbout("advisors.eyebrow")}</Eyebrow>
-            <blockquote className="font-display text-3xl leading-tight font-light text-balance sm:text-5xl">
-              {tAbout("advisors.kariBo.quote")}
-            </blockquote>
-            <figcaption className="flex items-center gap-4">
-              <span className="relative size-14 shrink-0 overflow-hidden rounded-full">
-                <ElevaImage
-                  slug={quotedAdvisor.slug}
-                  locale={locale}
-                  decorative
-                  fill
-                  sizes="56px"
-                  className="object-cover"
-                />
-              </span>
-              <span className="flex flex-col gap-0.5">
-                <span className="font-medium">{quotedAdvisor.name}</span>
-                <span className="text-sm text-white/75">
-                  {tAbout("advisors.kariBo.role")}
-                </span>
-              </span>
-            </figcaption>
-          </figure>
-        </Container>
-      </Section>
-
-      <Section tone="muted">
-        <Container className="grid items-center gap-12 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
-          <div className="flex flex-col gap-12">
-            <SectionHeader
-              eyebrow={t("how.eyebrow")}
-              title={t("how.heading")}
-              lead={t("how.lead")}
-            />
-            <Steps
-              className="sm:grid-cols-1 sm:gap-8"
-              items={[
-                {
-                  title: t("how.find.title"),
-                  description: t("how.find.description"),
-                },
-                {
-                  title: t("how.book.title"),
-                  description: t("how.book.description"),
-                },
-                {
-                  title: t("how.meet.title"),
-                  description: t("how.meet.description"),
-                },
-              ]}
-            />
-          </div>
-          <div className="relative aspect-[4/5] reveal overflow-hidden rounded-4xl shadow-2">
-            <ElevaImage
-              slug="online-session-home"
-              locale={locale}
-              fill
-              sizes="(min-width: 1024px) 45vw, 100vw"
-              className="object-cover"
-            />
-          </div>
-        </Container>
-      </Section>
-
-      <Section>
-        <Container className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
-          <div className="relative order-last aspect-[4/3] reveal overflow-hidden rounded-4xl lg:order-first">
-            <ElevaImage
-              slug="community-women"
-              locale={locale}
-              fill
-              sizes="(min-width: 1024px) 50vw, 100vw"
-              className="object-cover"
-            />
-          </div>
-          <div className="flex flex-col items-start gap-8">
-            <SectionHeader
-              eyebrow={t("belief.eyebrow")}
-              title={
-                <>
-                  {t("belief.heading")}
-                  <Accent>{t("belief.headingAccent")}</Accent>
-                </>
-              }
-              lead={t("belief.lead")}
-            />
-            <Link
-              href="/about"
-              className={buttonVariants({ variant: "outline", size: "lg" })}
-            >
-              {t("belief.cta")}
-              <ArrowRightIcon data-icon="inline-end" />
-            </Link>
-          </div>
-        </Container>
-      </Section>
-
-      <Section spacing="compact" className="pb-20 sm:pb-28">
-        <Container size="wide">
-          <CtaBand
-            eyebrow={t("experts.eyebrow")}
-            title={
-              <>
-                {t("experts.heading")}
-                <Accent>{t("experts.headingAccent")}</Accent>
-              </>
-            }
-            lead={t("experts.lead")}
-            media={
-              <ElevaImage
-                slug="physio-session"
-                locale={locale}
-                fill
-                sizes="(min-width: 1024px) 50vw, 100vw"
-              />
-            }
-            actions={
-              <>
-                <Link
-                  href="/become-expert"
-                  className={buttonVariants({ variant: "accent", size: "xl" })}
-                >
-                  {t("experts.cta")}
-                  <ArrowRightIcon data-icon="inline-end" />
-                </Link>
-                <Link
-                  href="/for-clinics"
-                  className={buttonVariants({
-                    variant: "ghost",
-                    size: "xl",
-                    className: "text-white hover:bg-white/10 hover:text-white",
-                  })}
-                >
-                  {t("experts.ctaSecondary")}
-                </Link>
-              </>
-            }
-          />
-        </Container>
-      </Section>
-    </>
+          </p>
+        </div>
+      </Container>
+    </section>
   )
 }
