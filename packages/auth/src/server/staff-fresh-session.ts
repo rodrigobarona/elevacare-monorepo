@@ -22,28 +22,6 @@ export const NEW_CREDENTIAL_PATHS: ReadonlySet<string> = new Set([
   "/organization/invite-member",
 ])
 
-/**
- * Every session a request carries, as the auth server's request hook must
- * see them. A session sent as `Authorization: Bearer` is only turned into a
- * cookie by a plugin that runs after the hook, and it then replaces the
- * cookie the hook saw. So a request can carry two sessions, and the
- * endpoint may act for either: the guard is asked about both, never just
- * the first one it finds.
- */
-export async function sessionsForRequestHook<S>(input: {
-  fromCookie: () => Promise<S | null | undefined>
-  headers: Headers | undefined
-  fromHeaders: (headers: Headers) => Promise<S | null | undefined>
-}): Promise<S[]> {
-  const viaHeader = input.headers?.get("authorization")
-    ? await input.fromHeaders(input.headers)
-    : null
-  const viaCookie = await input.fromCookie()
-  return [viaHeader, viaCookie].filter(
-    (session): session is NonNullable<typeof session> => Boolean(session)
-  ) as S[]
-}
-
 async function isStaff(userId: string): Promise<boolean> {
   const [row] = await db()
     .select({ id: auth.member.id })
@@ -97,26 +75,53 @@ export async function staffMustSignInAgain(
 export const STEP_UP_REQUIRED = "STEP_UP_REQUIRED"
 
 /**
- * The whole decision the request hook makes, in one place so it can be
- * tested without an auth server: for a path that hands out a new
- * credential, every session the request carries is asked, and one old
- * staff session is enough to refuse.
+ * What the request hook answers for a path that hands out a new credential:
+ * go on, 401 (`no-session`) or 403 STEP_UP_REQUIRED (`sign-in-again`).
  */
-export async function mustRefuseForStaleStaffSession<
-  S extends { user: { id: string }; session: { createdAt: Date | string } },
->(
+export type NewCredentialVerdict = "allow" | "no-session" | "sign-in-again"
+
+type HookSession = {
+  user: { id: string }
+  session: { createdAt: Date | string }
+}
+
+/**
+ * The whole decision the request hook makes, in one place so it can be
+ * tested without an auth server. For a path that hands out a new credential:
+ *
+ * - every session the request carries is asked, and one old staff session
+ *   is enough to refuse. A session sent as `Authorization: Bearer` is only
+ *   turned into a cookie by a plugin that runs after the hook, and it then
+ *   replaces the cookie the hook saw: a request can carry two sessions, and
+ *   the endpoint may act for either.
+ * - a cookie or a bearer token that the session store no longer knows
+ *   (signed out elsewhere, banned, password reset) is refused outright. The
+ *   endpoint behind the hook may read the browser's 5-minute copy of that
+ *   session, so the hook must not wave it through as "nobody".
+ */
+export async function newCredentialVerdict<S extends HookSession>(
   input: {
     path: string
+    /** Whether the request sends a session cookie. */
+    hasSessionCookie: boolean
     fromCookie: () => Promise<S | null | undefined>
     headers: Headers | undefined
     fromHeaders: (headers: Headers) => Promise<S | null | undefined>
     now?: Date
   },
   deps: { isStaff?: (userId: string) => Promise<boolean> } = {}
-): Promise<boolean> {
-  if (!NEW_CREDENTIAL_PATHS.has(input.path)) return false
-  const sessions = await sessionsForRequestHook(input)
-  for (const current of sessions) {
+): Promise<NewCredentialVerdict> {
+  if (!NEW_CREDENTIAL_PATHS.has(input.path)) return "allow"
+  const viaHeader =
+    input.headers?.get("authorization") && input.headers
+      ? ((await input.fromHeaders(input.headers)) ?? null)
+      : undefined
+  const viaCookie = (await input.fromCookie()) ?? null
+  if (viaHeader === null || (input.hasSessionCookie && !viaCookie)) {
+    return "no-session"
+  }
+  for (const current of [viaHeader, viaCookie]) {
+    if (!current) continue
     if (
       await staffMustSignInAgain(
         {
@@ -128,8 +133,8 @@ export async function mustRefuseForStaleStaffSession<
         deps
       )
     ) {
-      return true
+      return "sign-in-again"
     }
   }
-  return false
+  return "allow"
 }

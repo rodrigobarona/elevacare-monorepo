@@ -169,7 +169,8 @@ identity tables/columns** (Phase 3).
       row-count parity script prints `auth.* == main.*` for users, orgs, memberships; every FK
       validated (`pg_constraint.convalidated = true`).
 - [ ] `requireApiAuth()` accepts: cookie session; `Authorization: Bearer <session token>`;
-      `x-api-key` created via `apiKey` plugin scoped to an org; JWT from `/auth/token` verified
+      `x-api-key` created via `apiKey` plugin (owned by a person since slice 12.5, not scoped to an
+      org); JWT from `/auth/token` verified
       via JWKS (Bearer value routed by shape: compact JWS -> JWT verifier, anything else ->
       session-token verifier). JWTs are short-lived (`15m`) and **non-revocable** (JWKS only;
       no session-table check). After `revoke-other-sessions`, cookie/opaque bearer of that
@@ -377,7 +378,9 @@ PR 02.1 — server + schema + API:
    (b) Authorization: Bearer <token>: if the value is a compact JWS (three base64url segments,
    kid header) verify it as a JWT with JWKS from /auth/jwks (jwt plugin), otherwise verify it as
    a Better Auth session token (bearer plugin) — one discriminator, two verifiers, never both;
-   (c) x-api-key (apiKey plugin -> referenceId = orgId; an API key sent as Bearer is rejected).
+   (c) x-api-key (apiKey plugin; since Better Auth 1.7 a key names one owner in `referenceId`, here a
+   person, and the workspace comes from `x-eleva-org` or the owner's default one: decision log
+   2026-11-22, slice 12.5; an API key sent as Bearer is rejected).
    Before verifying anything, count the credential sources present (cookie, Authorization,
    x-api-key); if more than one is present return 400 AMBIGUOUS_CREDENTIALS (audited) — never
    pick the first match. Return { userId, orgId, roles, capabilities, authMode }. Unit tests:

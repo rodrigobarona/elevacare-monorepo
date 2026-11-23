@@ -31,6 +31,15 @@ vi.mock("../provision-personal-space", () => ({
 vi.mock("@eleva/db", () => ({
   db: () => ({ select: dbSelect }),
   auth: {
+    user: {
+      id: "id",
+      email: "email",
+      name: "name",
+      image: "image",
+      emailVerified: "email_verified",
+      banned: "banned",
+      banExpires: "ban_expires",
+    },
     member: {
       role: "role",
       userId: "user_id",
@@ -65,7 +74,45 @@ function membershipRow() {
   }
 }
 
-function mockMembership() {
+const OWNER_ID = "0b9f6a52-2f0e-4c53-9d0c-6a1a4e8f1c11"
+
+function ownerRow(overrides: Record<string, unknown> = {}) {
+  return {
+    id: OWNER_ID,
+    email: "ada@example.test",
+    name: "Ada",
+    image: null,
+    emailVerified: true,
+    banned: false,
+    banExpires: null,
+    ...overrides,
+  }
+}
+
+/** What the installed key plugin answers for a key that verifies. */
+function verifiedKey(overrides: Record<string, unknown> = {}) {
+  return {
+    valid: true,
+    error: null,
+    key: {
+      id: "key-1",
+      configId: "default",
+      name: "ci",
+      referenceId: OWNER_ID,
+      createdAt: new Date("2026-12-01T10:00:00.000Z"),
+      enabled: true,
+      metadata: null,
+      permissions: null,
+      ...overrides,
+    },
+  }
+}
+
+/**
+ * Membership reads join two tables; the read of a key's owner does not.
+ * `owner` is the row that second read finds (none when null).
+ */
+function mockMembership(owner: Record<string, unknown> | null = ownerRow()) {
   dbSelect.mockReturnValue({
     from: () => ({
       innerJoin: () => ({
@@ -73,7 +120,16 @@ function mockMembership() {
           limit: async () => [membershipRow()],
         }),
       }),
+      where: () => ({
+        limit: async () => (owner ? [owner] : []),
+      }),
     }),
+  })
+}
+
+function withKey(headers: Record<string, string> = {}) {
+  return new Request("http://localhost/x", {
+    headers: { "x-api-key": "key_abc", ...headers },
   })
 }
 
@@ -166,17 +222,104 @@ describe("requireApiAuth", () => {
     expect(getSession).not.toHaveBeenCalled()
   })
 
-  it("resolves x-api-key alone", async () => {
-    verifyApiKey.mockResolvedValue({
-      valid: true,
-      key: { userId: "user-1", referenceId: "org-1", name: "ci" },
-    })
-    const identity = await requireApiAuth(
-      new Request("http://localhost/x", {
-        headers: { "x-api-key": "key_abc" },
-      })
-    )
+  it("resolves x-api-key alone as the person who owns the key", async () => {
+    verifyApiKey.mockResolvedValue(verifiedKey())
+    findDefaultOrganizationId.mockResolvedValue("org-1")
+    const identity = await requireApiAuth(withKey())
     expect(identity.authMode).toBe("api-key")
+    // The owner's own row, not the key's name or an empty address.
+    expect(identity.user).toEqual({
+      id: OWNER_ID,
+      email: "ada@example.test",
+      displayName: "Ada",
+      avatarUrl: null,
+    })
+    // A key carries no sign-in moment, so it can pass no recency check.
+    expect(identity.authenticatedAt).toBeNull()
+    // The key names no workspace: the owner's default one is used, and the
+    // owner's id is never taken for an organization.
+    expect(findDefaultOrganizationId).toHaveBeenCalledWith(OWNER_ID)
+    expect(identity.orgId).toBe("org-1")
+  })
+
+  it("acts in the workspace the request names, when the owner belongs to it", async () => {
+    verifyApiKey.mockResolvedValue(verifiedKey())
+    const identity = await requireApiAuth(
+      withKey({ "x-eleva-org": "space-user1" })
+    )
+    expect(identity.orgSlug).toBe("space-user1")
+    expect(findDefaultOrganizationId).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    [
+      "the plugin says it is not valid",
+      { valid: false, error: null, key: null },
+    ],
+    ["the plugin answers nothing", null],
+    ["valid, but with no key record", { valid: true, error: null, key: null }],
+    [
+      "a key of another configuration, whose owner may be an organization",
+      verifiedKey({ configId: "organization-keys" }),
+    ],
+    ["a key with no owner", verifiedKey({ referenceId: null })],
+    [
+      "a key made while any session could make one",
+      verifiedKey({ createdAt: new Date("2026-11-23T23:59:59.000Z") }),
+    ],
+    ["a key with no readable date", verifiedKey({ createdAt: undefined })],
+    [
+      "an owner that is not a person's id",
+      verifiedKey({ referenceId: "org_staff" }),
+    ],
+    [
+      "an old key that only has the field the plugin dropped",
+      verifiedKey({ referenceId: undefined, userId: OWNER_ID }),
+    ],
+  ])("refuses a key when %s", async (_name, answer) => {
+    verifyApiKey.mockResolvedValue(answer)
+    await expect(requireApiAuth(withKey())).rejects.toMatchObject({
+      code: "invalid-token",
+    })
+    // Refused before any person or workspace is looked up.
+    expect(dbSelect).not.toHaveBeenCalled()
+    expect(findDefaultOrganizationId).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ["is gone", null],
+    ["never verified their address", ownerRow({ emailVerified: false })],
+    ["is banned", ownerRow({ banned: true })],
+    [
+      "is banned until tomorrow",
+      ownerRow({ banned: true, banExpires: new Date(Date.now() + 86_400_000) }),
+    ],
+  ])("refuses a valid key whose owner %s", async (_name, owner) => {
+    verifyApiKey.mockResolvedValue(verifiedKey())
+    mockMembership(owner)
+    await expect(requireApiAuth(withKey())).rejects.toMatchObject({
+      code: "invalid-token",
+    })
+    expect(findDefaultOrganizationId).not.toHaveBeenCalled()
+  })
+
+  it("refuses a valid key whose owner belongs to no workspace, as a member problem", async () => {
+    verifyApiKey.mockResolvedValue(verifiedKey())
+    findDefaultOrganizationId.mockResolvedValue(null)
+    // 403, not "no credential": optional sign-in must not treat it as a visitor.
+    await expect(requireApiAuth(withKey())).rejects.toMatchObject({
+      code: "not-a-member",
+    })
+  })
+
+  it("accepts a key again once its owner's ban has run out", async () => {
+    verifyApiKey.mockResolvedValue(verifiedKey())
+    findDefaultOrganizationId.mockResolvedValue("org-1")
+    mockMembership(
+      ownerRow({ banned: true, banExpires: new Date(Date.now() - 1000) })
+    )
+    const identity = await requireApiAuth(withKey())
+    expect(identity.user.id).toBe(OWNER_ID)
   })
 
   it.each([
@@ -311,10 +454,8 @@ describe("requireApiAuth", () => {
   })
 
   it("allows API-key POST from a cross-site caller", async () => {
-    verifyApiKey.mockResolvedValue({
-      valid: true,
-      key: { userId: "user-1", referenceId: "org-1", name: "ci" },
-    })
+    verifyApiKey.mockResolvedValue(verifiedKey())
+    findDefaultOrganizationId.mockResolvedValue("org-1")
     const identity = await requireApiAuth(
       new Request("http://localhost/x", {
         method: "POST",

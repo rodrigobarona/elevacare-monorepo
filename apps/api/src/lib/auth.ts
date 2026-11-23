@@ -107,11 +107,22 @@ export async function requireRevocableApiCapability(
   return session
 }
 
+/**
+ * Staff approving, holding or releasing a payout, or refunding as staff.
+ * Never with an API key: a key does not expire and has no sign-in moment,
+ * the same reason it cannot make a staff decision (`requireStaffReviewer`).
+ */
 export async function requireStaffPayoutMutator(
   request: Request,
   capability: string
 ): Promise<ElevaSession> {
   const session = await requireRevocableApiCapability(request, capability)
+  if (session.authMode === "api-key") {
+    throw new UnauthorizedError(
+      "missing-capability",
+      "A signed-in session is required; an API key cannot move money as staff"
+    )
+  }
   const authUserRole = await getAuthUserRole(session.user.id)
   if (
     !canMutateStaffPayouts({

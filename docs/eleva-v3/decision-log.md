@@ -32,6 +32,99 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-22: An API key identifies its owner again, and no session can make one (12.5) (active)
+
+- Change (Phase 12.5): signing in to the API with a key read `key.userId`,
+  a field the installed key plugin (Better Auth 1.7.18) no longer returns,
+  and took `referenceId`, which is now the owner's own id, for the
+  organization. No key could authenticate as anyone: a valid one ended in 403. It failed closed, but "every endpoint works for agents" did not hold
+  for keys. TypeScript could not see it because the plugin's answer was
+  typed by hand; the key record is now typed from the plugin.
+- What a key is now: it stands for **the person who owns it**, with what
+  that person may do at the time of the request. The plugin checks the key
+  and nothing about its owner, so the owner is read on every request: a
+  person who is banned, deleted or never verified their address is refused,
+  and so is a key that names anything but a person (an old row, or a key of
+  another configuration). The key names no workspace. The request does
+  (`x-eleva-org`, checked against the owner's memberships), or the owner's
+  default one is used, as for a session. This replaces the Phase 2 plan of
+  keys "scoped to an org", which the plugin no longer supports in that
+  form.
+- **Fixing keys would have opened a door, so the door is shut: read this.**
+  A key does not expire, and it outlives a sign-out and a password reset.
+  Until this slice that did not matter, because no key worked. With keys
+  working, anyone holding a session for a few minutes (a stolen cookie)
+  could have made a key through `POST /auth/api-key/create` and kept the
+  account for good, with no screen where its owner could see or revoke it.
+  So that endpoint is now off (404). A key exists only when it is issued on
+  the server (`auth.api.createApiKey`), which no code does yet. In effect
+  keys are correct and proven, and switched off at the source, until there
+  are rules for them (below) and a screen.
+- Keys made before 2026-11-24 are refused (`API_KEYS_ISSUED_FROM`). The
+  endpoint was open to any signed-in person until this slice, and nobody
+  has looked at whether `auth.apikey` holds rows in staging or production:
+  without that line, whatever was made while the door was open would have
+  come alive on deploy. Operator: those rows can be deleted.
+- A key is also refused where a signed-in person is the point: a staff
+  decision (403 `STEP_UP_REQUIRED`, "An API key cannot decide"), and staff
+  approving, holding or releasing a payout or refunding as staff. The
+  review routes had accepted a key "issued on purpose" (12.4), on a path no
+  key could reach; that line is reversed here and is the founder's to
+  confirm or undo. Reading the review queue or a filing still takes a key.
+  Onboarding, switching workspace and closing a practice already refused
+  one. The OpenAPI spec no longer lists the key scheme on those operations.
+- The staff guard on new credentials is tighter in two ways. It read the
+  session from the 5-minute cookie cache, and Better Auth keeps the first
+  answer for the rest of the request, so a session revoked a minute earlier
+  (signed out elsewhere, banned, password reset) could still act; both reads
+  now go to the session store. And a cookie or bearer token that the store
+  no longer knows is refused by the guard itself (401), because the
+  endpoint behind it may still read the browser's cached copy.
+- The plugin's own limit, 10 verifications a day for each key, is off: the
+  API already limits each caller, and ten calls a day stops an agent before
+  lunch.
+- For agents: the OpenAPI spec names `x-api-key` as a scheme, says keys are
+  issued by Eleva for now, and no longer says a key is a Bearer token with
+  an `elk_` prefix.
+- Proof: `auth-keys.memory.test.ts` runs Eleva's own auth configuration
+  (the same plugins and request hook as production, through a seam that
+  swaps the database and refuses to run in a deployed app) on Better Auth's
+  in-memory adapter, with the Postgres lookups served from the same
+  in-memory tables. 18 cases: no session can make a key; changing a key
+  with a cookie, a bearer token and both, for sessions from today and older
+  ones; whose session the endpoint acts for when two arrive together, which
+  proves the guard runs before the plugin hooks; a revoked session holding a
+  cached copy; and signing in with a key that is unknown, deleted, disabled
+  or expired, whose owner is banned, deleted, unverified or out of the
+  workspace, past ten requests, with a cookie or bearer beside it. Undoing
+  the fixes made four of them fail. The unit tests no longer mock the shape
+  the plugin dropped.
+- Not proven: against Postgres or the deployed auth server (the in-memory
+  run leaves out `databaseHooks`, which provision and audit there); a staff
+  decision or payout made with a real key end to end (the routes are tested
+  with a key's identity, not a key).
+- Staff routes that would still take a key, to settle before key creation
+  comes back or invoicing opens: replaying a platform-fee invoice
+  (`invoicing/platform-fee`, two routes, which write rows and events and
+  move no money), and reading platform-fee invoices, the accounting
+  reconciliation and the payouts list.
+- **What opening keys will mean, for the founder to decide (with F-03).** A
+  key reaches everything its owner can do: session records, the data
+  export, account deletion, Stripe account sessions, payouts and refunds of
+  their own practice. Before `POST /auth/api-key/create` comes back: should
+  keys expire by default; should a password reset or "sign out everywhere"
+  revoke them; should a key carry a narrower scope than its owner or be tied
+  to one workspace (today a leaked key would reach every workspace of its
+  owner); may a key ever make a staff decision or move money as staff. A
+  screen to list and revoke keys comes with it.
+- Left for later: `auth.apikey.user_id` is no longer written by the plugin,
+  so deleting a person no longer deletes their keys through the foreign key
+  (a key is refused at once, and the account purge deletes by either
+  column, but an erased account leaves the key's name and metadata behind);
+  `auth.apikey.key` has no index; the typed client has no option for a key;
+  `x-eleva-org` is not a documented parameter of the spec.
+- Owner: engineering (the fix); founder (the questions)
+
 ### 2026-11-22: A slow rate-limit store no longer lets public requests through (13.3) (active)
 
 - Change (Phase 13.3): the limiter treated only a thrown error as "the

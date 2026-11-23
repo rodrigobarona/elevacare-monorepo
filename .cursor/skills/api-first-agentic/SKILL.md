@@ -148,7 +148,7 @@ Use `requireApiAuth()` to reject anonymous callers with 401.
 ## BotID
 
 - Only on public-facing POST routes (onboarding, signup, contact forms)
-- Skip for Bearer-authenticated routes (agents use API keys, not browsers)
+- Skip for requests that carry a bearer token or an `x-api-key` (agents, not browsers)
 - Skip for internal routes (cron, QStash, workflow drainer)
 - Uses `checkBot()` from `apps/api/src/lib/bot-protection.ts`
 - Opt-in: gracefully passes through when `botid` package is not installed
