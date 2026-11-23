@@ -43,7 +43,8 @@ Each entry should include:
   in all.
 - For each form it checks that the email says its language (`<html lang>`),
   that no value is missing from the text (`undefined`, `{name}`), that the
-  names, dates and amounts the English email shows are in the other two,
+  names, dates and amounts the English email shows are in the other two
+  (and that each shared sentence given a name, a date or a number says it),
   that **no English is left in the Portuguese or the Spanish**, and that
   Portuguese and Spanish are not one pasted over the other.
 - English is found three ways: a sentence the same as the English email's
@@ -59,17 +60,19 @@ Each entry should include:
   windows, session modes), has no entry in it. That search is by text: it
   says a form is listed, not under which email.
 - It found nothing to fix: every sentence was already translated. The check
-  was proven able to fail fifteen ways, each tried and then undone. Among
+  was proven able to fail eighteen ways, each tried and then undone. Among
   them: an English sentence, a short title, reworded English, and a
   function's sentence put into the Portuguese words; English written in
-  three templates; a sign-in paragraph half in English; a greeting that
-  dropped the name; a `{placeholder}` left in; a new kind; a new reminder
-  window.
-- Two blind reviews each scored an earlier state 6 out of 10 and named the
-  gaps that the later commits close. The last state has its own review in
-  the pull request.
+  three templates; a sign-in subject reworded in English; a sign-in
+  paragraph half in English; a greeting that dropped the name; a subject
+  that dropped the date; a `{placeholder}` left in; a new kind; a new
+  reminder window.
+- Three blind reviews scored earlier states 6, 6 and 7 out of 10 and named
+  the gaps that the later commits close. The last state's score is in the
+  pull request.
 - Not covered: whether a translation reads well to a native speaker (a
-  person's review); words a template writes itself in a branch that no form
+  person's review); a short English label with no common English word in it
+  that differs from the English email's ("On hold"); words a template writes itself in a branch that no form
   renders (a new branch with its own words needs a form); which heading the
   sender picks for which booking event, and the policy, language and
   country names it writes (`packages/notifications`); SMS and in-app text.

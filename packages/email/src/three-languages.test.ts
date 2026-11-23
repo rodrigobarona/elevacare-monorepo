@@ -560,14 +560,19 @@ function englishLeft(english: string, other: string): string[] {
 }
 
 /**
- * Words English cannot do without and neither Portuguese nor Spanish has.
- * English that was reworded, so that no sentence matches the English
- * email any more, still has them.
+ * Common English words that neither Portuguese nor Spanish has. English
+ * that was reworded, so that no sentence matches the English email any
+ * more, nearly always has one. A short English label can have none ("On
+ * hold"): this narrows the gap, it does not close it.
+ *
+ * Left out on purpose, because Portuguese or Spanish use them: for, a, no,
+ * do, as, has, can, in, on (the last two inside "check-in", "on-line").
  */
 const ENGLISH_WORDS = new Set(
-  "the your you this with and will please that from have been was were our their they here when what not".split(
-    " "
-  )
+  (
+    "the your you this with and will please that from have been was were " +
+    "our their they here when what not to is of it an we be if at by"
+  ).split(" ")
 )
 
 /** The sentences of a Portuguese or Spanish text that have English words. */
@@ -596,8 +601,10 @@ describe("every email, in three languages", () => {
   })
 
   it.each(names)("%s: says the same things in each", async (name) => {
-    // A name, a date or an amount the English email shows is in the other
-    // two: a translation that dropped one would send an email without it.
+    // A name, a date or an amount the English email shows is somewhere in
+    // the other two: a translation that dropped one everywhere would send
+    // an email without it. One shown twice and dropped once is not seen
+    // here; the shared words below check each sentence that is given one.
     const english = await EMAILS[name]!("en")
     const shown = Object.values(GIVEN).filter((value) =>
       english.includes(value)
@@ -729,6 +736,11 @@ describe("every email, in three languages", () => {
         expect(pt![part], `${which} ${part} in pt`).not.toBe(en![part])
         expect(es![part], `${which} ${part} in es`).not.toBe(en![part])
         expect(es![part], `${which} ${part} pt and es`).not.toBe(pt![part])
+        // Reworded English is still English.
+        expect(
+          withEnglishWords([...split(pt![part]), ...split(es![part])]),
+          `${which} ${part}: English words`
+        ).toEqual([])
       }
     }
   })
@@ -744,7 +756,10 @@ describe("the list of emails above", () => {
   const listed = (text: string) => list.includes(text)
 
   it("is found in this file, whole", () => {
-    expect(listEnds).toBeGreaterThan(0)
+    expect(
+      listEnds,
+      "the list ends where the comment above split() begins: keep its first line"
+    ).toBeGreaterThan(0)
     expect(listed("const EMAILS")).toBe(true)
     expect(listed("describe(")).toBe(false)
   })
@@ -868,7 +883,7 @@ describe("the words the emails share", () => {
   // between them reach both sides of a yes or no, and one and many.
   // A name given to a function is taken out again before comparing.
   const SAMPLES: unknown[][] = [
-    [GIVEN.member, GIVEN.member],
+    [GIVEN.member, GIVEN.date],
     [true, true],
     [false, false],
     [1, 1],
@@ -927,6 +942,40 @@ describe("the words the emails share", () => {
       expect(same, `${locale}: entries still in English`).toEqual([])
       expect(words, `${locale}: entries with English words`).toEqual([])
       expect(pasted, `${locale}: entries the same as Portuguese`).toEqual([])
+    }
+  })
+
+  it("say what they are given, in each language", () => {
+    /** Every entry that is a function, by its path. */
+    type Says = (...given: unknown[]) => unknown
+    function functions(value: unknown, path = ""): [string, Says][] {
+      if (typeof value === "function") return [[path, value as Says]]
+      if (typeof value !== "object" || value === null) return []
+      return Object.entries(value).flatMap(([key, inner]) =>
+        functions(inner, path ? `${path}.${key}` : key)
+      )
+    }
+    const english = functions(getEmailTranslations("en"))
+    expect(english.length).toBeGreaterThan(10)
+    for (const locale of ["pt", "es"] as const) {
+      const other = new Map(functions(getEmailTranslations(locale)))
+      const dropped: string[] = []
+      for (const [path, say] of english) {
+        for (const given of SAMPLES) {
+          const there = String(other.get(path)!(...given))
+          // A name, a date or a number the English sentence says.
+          for (const value of given) {
+            if (typeof value === "boolean") continue
+            if (
+              String(say(...given)).includes(String(value)) &&
+              !there.includes(String(value))
+            ) {
+              dropped.push(`${path}: ${String(value)} is not in "${there}"`)
+            }
+          }
+        }
+      }
+      expect(dropped, `${locale}: values a sentence dropped`).toEqual([])
     }
   })
 })
