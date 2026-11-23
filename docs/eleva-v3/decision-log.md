@@ -41,7 +41,8 @@ Each entry should include:
   configured, so nothing was lost.
 - Change (Phase 13.18): one list, `@eleva/config/background-jobs`, names
   every job: 22 on a schedule (with how often each is expected and how late
-  it may be) and 3 that run on demand (with the reason no monitor can watch
+  it may be; 21 run today, `retention-sweep` waits for the DPO) and 3 that
+  run on demand (with the reason no monitor can watch
   them). One wrapper, `reportedJob` in `apps/api`, is on every job route. One
   reporter, `reportJobRun` in `@eleva/observability`, sends the report. The
   old helper and its seven calls are gone.
@@ -50,10 +51,13 @@ Each entry should include:
   failed (Better Stack's `/fail`), with the status and nothing else: no
   error text, because it can name a person. A caller who is refused (401,
   422, 429) reports nothing, so a stranger cannot make a job look alive or
-  broken. One exception: when the server's own secret for these routes is
-  missing, every call answers 500 before it is checked; the job cannot run
-  at all then, and it is reported as failed. A tick reports as `tick-{cadence}` that the schedule fired and
-  every job was called; a job that failed inside it has already said so.
+  broken. One exception: when the server itself is set up wrong (its secret
+  for these routes missing, or its environment invalid), a call fails
+  before the caller is checked; the job cannot run at all then, and it is
+  reported as failed. A tick reports as `tick-{cadence}` that the schedule
+  fired and every job was called; a job that failed inside it has already
+  said so. A tick that breaks before it has called every job reports
+  failed.
 - **Each failed attempt is reported, also one QStash will retry.** The alert
   comes early and the retry that succeeds clears it. Chosen over waiting
   for the last attempt, which is 33 minutes later for a payout job.
@@ -66,9 +70,9 @@ Each entry should include:
   `BETTERSTACK_HEARTBEAT_URL`: a JSON object of job name to that job's
   heartbeat address. Unset, or with no address for a job, that job reports
   nothing. A wrong value (not JSON, not https, an address with a `?` or `#`
-  part, an unknown job) is logged once and never stops a job. A name that
-  is not a job is counted, not printed: it may be an address put on the
-  wrong side.
+  part or already ending in `/fail`, one address given to two jobs, an
+  unknown job) is logged once and never stops a job. A name that is not a
+  job is counted, not printed: it may be an address put on the wrong side.
 - **How late is late.** Vercel Cron may skip a run and never retries, so
   jobs it starts wait for two missed runs (every minute, every ten minutes)
   or one (hourly, daily). QStash does not skip; it retries for about 33
@@ -84,9 +88,15 @@ Each entry should include:
   a schedule changes in `vercel.json` or `infra/qstash` and not in the
   list. The tick table does not compile when its jobs differ from the
   list's.
-- Behaviour that stays as it was: `slot-reservation-expiry` and
-  `invoicing-retry` answer 200 when single items failed inside the run
-  (those go to Sentry), so the run is reported as done.
+- **Two jobs said "done" when the whole run had failed; they no longer
+  do.** `slot-reservation-expiry` swallowed a failure to read the list of
+  holds (the database down) and answered 200; `invoicing-retry` did the
+  same when the whole platform-fee backfill threw, and only wrote it to the
+  console. Both now send it to Sentry and throw, so the route answers 500
+  and the run is reported as failed. What stays as it was: one hold or one
+  invoice that fails inside a run is counted and sent to Sentry, and the
+  run is still done. In `invoicing-retry` the expert-invoice part runs
+  first and stands when the backfill fails.
 - **Not built, and not claimed:** no heartbeat exists in Better Stack and
   the setting is empty everywhere, so today no job reports anything. The
   operator account is O-3 and the script that creates the heartbeats from

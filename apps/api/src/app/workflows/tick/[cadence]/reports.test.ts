@@ -38,7 +38,8 @@ vi.mock("@/lib/workflow-ticks", async () => {
       hourly: {},
     },
     isWorkflowTickCadence: (value: string) =>
-      ["minutely", "10min", "hourly"].includes(value),
+      // "broken" is let through with no jobs behind it: a tick that breaks.
+      ["minutely", "10min", "hourly", "broken"].includes(value),
   }
 })
 
@@ -127,6 +128,13 @@ describe("what a tick reports", () => {
       context("minutely")
     )
     expect(reports).toEqual([])
+  })
+
+  it("failed, when the tick itself breaks before every job was called", async () => {
+    await expect(
+      POST(new Request(url("broken"), { method: "POST" }), context("broken"))
+    ).rejects.toThrow()
+    expect(reports).toEqual([["tick-broken", "fail", "threw"]])
   })
 
   it("nothing for a cadence that does not exist", async () => {

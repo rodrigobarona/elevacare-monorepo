@@ -32,9 +32,13 @@ function mockAccounting(overrides: {
   return { retryFailedExpertInvoices, backfillMissingPlatformFeeInvoices }
 }
 
+const captureException = vi.fn(async () => undefined)
+
 describe("processInvoicingRetry", () => {
   beforeEach(() => {
     vi.resetModules()
+    captureException.mockClear()
+    vi.doMock("@eleva/observability", () => ({ captureException }))
   })
 
   it("returns both sweep results", async () => {
@@ -69,16 +73,19 @@ describe("processInvoicingRetry", () => {
     expect(mocks.backfillMissingPlatformFeeInvoices).toHaveBeenCalledTimes(1)
   })
 
-  it("keeps the expert-invoice result when the backfill throws", async () => {
-    mockAccounting({
-      backfillMissingPlatformFeeInvoices: vi
-        .fn()
-        .mockRejectedValue(new Error("db down")),
+  it("fails the run when the backfill throws, after the expert invoices were retried", async () => {
+    const down = new Error("db down")
+    const mocks = mockAccounting({
+      backfillMissingPlatformFeeInvoices: vi.fn().mockRejectedValue(down),
     })
 
     const { processInvoicingRetry } = await import("./invoicing-retry")
-    const result = await processInvoicingRetry()
-    expect(result.scanned).toBe(0)
-    expect(result.platformFeeBackfill.errors).toBe(1)
+    await expect(processInvoicingRetry()).rejects.toBe(down)
+    // The first part ran before the second failed, and stands.
+    expect(mocks.retryFailedExpertInvoices).toHaveBeenCalledTimes(1)
+    expect(captureException).toHaveBeenCalledWith(down, {
+      workflow: "invoicingRetry",
+      step: "platformFeeBackfill",
+    })
   })
 })

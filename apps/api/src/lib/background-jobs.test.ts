@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync } from "node:fs"
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 import { BACKGROUND_JOBS, ON_DEMAND_JOBS } from "@eleva/config/background-jobs"
@@ -30,7 +30,6 @@ const ROUTES: Record<string, string> = Object.fromEntries([
 const TICK_ROUTE = join(app, "workflows", "tick", "[cadence]", "route.ts")
 
 const scheduled = Object.entries(BACKGROUND_JOBS)
-const ticks = scheduled.filter(([name]) => name.startsWith("tick-"))
 
 describe("every background job reports its run", () => {
   it("finds the job routes, and no route it does not know", () => {
@@ -86,9 +85,10 @@ describe("every background job reports its run", () => {
         wrapped.map((match) => match[1]),
         `${name}: every handler is reportedJob("${name}", ...)`
       ).toEqual(handlers.map((match) => match[1]))
-      // No handler exported another way, and no second way to report.
-      expect(source).not.toMatch(
-        new RegExp(`export\\s*\\{[^}]*\\bas\\s+(${METHODS})\\b`)
+      // No handler exported another way (a list of exports, or another
+      // file's), and no second way to report.
+      expect(source, `${name}: export { ... } or export *`).not.toMatch(
+        /export\s*(\{|\*)/
       )
       expect(source).not.toMatch(/\breportJobRun\(|\bheartbeat\(/)
     }
@@ -114,6 +114,9 @@ describe("every background job reports its run", () => {
   it("the tick reports for itself, under the cadence it ran", () => {
     const source = read(TICK_ROUTE)
     expect(source).toMatch(/reportJobRun\(`tick-\$\{cadence\}`, "ok"\)/)
+    expect(source).toMatch(
+      /reportJobRun\(`tick-\$\{cadence\}`, "fail", "threw"\)/
+    )
     expect(source).not.toMatch(/\bheartbeat\(/)
   })
 
@@ -142,16 +145,11 @@ describe("every background job reports its run", () => {
       }
     }
     walk(join(api, "src"))
-    for (const name of [
-      "workflows",
-      "observability",
-      "scheduling",
-      "billing",
-      "accounting",
-      "notifications",
-    ]) {
-      walk(join(repo, "packages", name, "src"))
-    }
+    const packages = readdirSync(join(repo, "packages")).filter((name) =>
+      existsSync(join(repo, "packages", name, "src"))
+    )
+    expect(packages.length).toBeGreaterThan(20)
+    for (const name of packages) walk(join(repo, "packages", name, "src"))
     expect(offenders).toEqual([])
   })
 })
@@ -169,39 +167,14 @@ describe("the list of jobs agrees with the schedules", () => {
     expect(listed.sort(byPath)).toEqual([...crons].sort(byPath))
   })
 
-  it("has every job of every tick, at the tick's own cadence", () => {
-    // Read as text: importing the table would load every job's route.
+  it("has the jobs of every tick: the table does not compile otherwise", () => {
+    // `satisfies` in workflow-ticks.ts ties the table to the list, job by
+    // job and tick by tick; `tsc` is what fails. This only says the tie
+    // is still there.
     const source = read(api, "src", "lib", "workflow-ticks.ts")
-    const table = source.slice(source.indexOf("export const WORKFLOW_TICKS"))
-    const inTicks: Record<string, string> = {}
-    for (const [, cadence, body] of table.matchAll(
-      /^ {2}"?([\w]+)"?: \{\n([\s\S]*?)^ {2}\},/gm
-    )) {
-      for (const [, job] of body!.matchAll(/^ {4}"([\w-]+)":/gm)) {
-        inTicks[job!] = cadence!
-      }
-    }
-    expect(Object.keys(inTicks).length).toBeGreaterThanOrEqual(12)
-
-    const listed = Object.fromEntries(
-      scheduled
-        .filter(([, job]) => job.trigger === "tick")
-        .map(([name, job]) => {
-          const tick = ticks.find(([, one]) => one.schedule === job.schedule)
-          return [name, tick?.[0].replace("tick-", "")]
-        })
+    expect(source).toMatch(
+      /as const satisfies \{\s*\[Cadence in TickCadence\]: Record<\s*JobsInTick<Cadence>,/
     )
-    expect(listed).toEqual(inTicks)
-    // A job in a tick is expected as often as the tick runs.
-    for (const [name, cadence] of Object.entries(inTicks)) {
-      const job = BACKGROUND_JOBS[name as keyof typeof BACKGROUND_JOBS]
-      const tick =
-        BACKGROUND_JOBS[`tick-${cadence}` as keyof typeof BACKGROUND_JOBS]
-      expect(
-        [job.periodSeconds, job.graceSeconds],
-        `${name} in the ${cadence} tick`
-      ).toEqual([tick.periodSeconds, tick.graceSeconds])
-    }
   })
 
   it("has the QStash schedules of infra/qstash, and no other", () => {

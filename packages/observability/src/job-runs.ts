@@ -76,6 +76,22 @@ function heartbeatUrls(): Partial<Record<ScheduledJobName, string>> {
     }
     parsed[name] = address
   }
+  // One address for two jobs would let the one that runs hide the one
+  // that does not: neither reports.
+  const jobsAt = new Map<string, ScheduledJobName[]>()
+  for (const [name, address] of Object.entries(parsed)) {
+    jobsAt.set(address, [
+      ...(jobsAt.get(address) ?? []),
+      name as ScheduledJobName,
+    ])
+  }
+  for (const names of jobsAt.values()) {
+    if (names.length < 2) continue
+    for (const name of names) delete parsed[name]
+    console.error(
+      `[job-runs] BETTERSTACK_HEARTBEAT_URLS gives one address to ${names.map((name) => `"${name}"`).join(" and ")}; each job needs its own, so none of them reports`
+    )
+  }
   if (unknown > 0) {
     console.error(
       `[job-runs] BETTERSTACK_HEARTBEAT_URLS has ${unknown} name(s) that are not jobs; they are ignored`
@@ -86,7 +102,9 @@ function heartbeatUrls(): Partial<Record<ScheduledJobName, string>> {
 
 /**
  * The address without a slash at its end, or null when it cannot be used:
- * not https, or with a `?` or `#` part, which `/fail` cannot follow.
+ * not https, with a `?` or `#` part (which `/fail` cannot follow), or
+ * already ending in `/fail` or an exit code, which is how a failure is
+ * said and would turn every report around.
  */
 function heartbeatAddress(value: string): string | null {
   let url: URL
@@ -97,7 +115,9 @@ function heartbeatAddress(value: string): string | null {
   }
   if (url.protocol !== "https:" || url.search || url.hash) return null
   if (url.username || url.password) return null
-  return `${url.origin}${url.pathname.replace(/\/+$/, "")}`
+  const path = url.pathname.replace(/\/+$/, "")
+  if (path === "" || /\/(fail|\d+)$/i.test(path)) return null
+  return `${url.origin}${path}`
 }
 
 async function request(url: string, body: string | undefined) {

@@ -102,8 +102,11 @@ export async function expireStaleReservations(
       }
     }
   } catch (err) {
-    result.errors += 1
+    // The run itself failed (the list could not be read): nothing was
+    // released. Thrown on, so the route answers 500 and the run is
+    // reported as failed, not as a quiet minute.
     await captureException(err, { workflow: "slotReservationExpiry" })
+    throw err
   }
 
   return result

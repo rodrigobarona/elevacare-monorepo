@@ -7,7 +7,11 @@ import {
   internalWorkflowOptions,
 } from "@/lib/internal-workflow"
 import { secureJson } from "@/lib/security-headers"
-import { isWorkflowTickCadence, WORKFLOW_TICKS } from "@/lib/workflow-ticks"
+import {
+  isWorkflowTickCadence,
+  WORKFLOW_TICKS,
+  type WorkflowTickCadence,
+} from "@/lib/workflow-ticks"
 import type { RoutePolicy } from "@/lib/route-policy"
 
 export const ROUTE_POLICY = {
@@ -27,7 +31,8 @@ export const ROUTE_POLICY = {
  * Each job reports its own run (`reportedJob` on its route). The tick
  * reports as `tick-{cadence}` that it ran: done once every job was called,
  * also when one of them failed, because that job has already said so. A
- * tick that stops reporting means the schedule itself stopped.
+ * tick that stops reporting means the schedule itself stopped; one that
+ * reports failed broke before it had called every job.
  *
  * GET is Vercel Cron (`apps/api/vercel.json`), which sends
  * `Authorization: Bearer ${CRON_SECRET}`. Ticks run on Vercel Cron, not
@@ -65,6 +70,27 @@ async function runTick(request: Request, { params }: TickContext) {
     return secureJson({ error: "not_found" }, { status: 404, headers })
   }
 
+  let outcome: Awaited<ReturnType<typeof runJobs>>
+  try {
+    outcome = await runJobs(request, cadence)
+  } catch (err) {
+    // The tick itself broke, before every job was called.
+    await reportJobRun(`tick-${cadence}`, "fail", "threw")
+    throw err
+  }
+  await reportJobRun(`tick-${cadence}`, "ok")
+
+  // 500 records the tick as failed in the cron log; jobs that answer report
+  // their own errors to Sentry, jobs that throw are reported above.
+  const { failed, results } = outcome
+  return secureJson(
+    { ok: failed === 0, cadence, failed, results },
+    { status: failed === 0 ? 200 : 500, headers }
+  )
+}
+
+/** Calls every job of the cadence, in parallel, and gathers what each answered. */
+async function runJobs(request: Request, cadence: WorkflowTickCadence) {
   const jobs = Object.entries(WORKFLOW_TICKS[cadence])
   const settled = await Promise.allSettled(
     jobs.map(async ([name, run]) => {
@@ -100,15 +126,7 @@ async function runTick(request: Request, { params }: TickContext) {
       failed += 1
     }
   })
-
-  await reportJobRun(`tick-${cadence}`, "ok")
-
-  // 500 records the tick as failed in the cron log; jobs that answer report
-  // their own errors to Sentry, jobs that throw are reported above.
-  return secureJson(
-    { ok: failed === 0, cadence, failed, results },
-    { status: failed === 0 ? 200 : 500, headers }
-  )
+  return { failed, results }
 }
 
 export async function OPTIONS(request: Request) {

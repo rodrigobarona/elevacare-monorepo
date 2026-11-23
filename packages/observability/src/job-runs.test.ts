@@ -290,6 +290,9 @@ describe("reportJobRun", () => {
       ["a # part", `${ADDRESS}/${SECRET}#top`],
       ["a name and password", `https://user:pass@monitor.example/${SECRET}`],
       ["no https", `ftp://monitor.example/${SECRET}`],
+      ["/fail already at its end", `${ADDRESS}/${SECRET}/fail`],
+      ["an exit code at its end", `${ADDRESS}/${SECRET}/1`],
+      ["no path", "https://monitor.example"],
       ["no address at all", "keep-alive"],
     ])(
       "does not use an address with %s: /fail could not follow it",
@@ -303,6 +306,21 @@ describe("reportJobRun", () => {
         expect(logged()).not.toContain(SECRET)
       }
     )
+
+    it("lets no two jobs share an address: the one that runs would hide the other", async () => {
+      configure({
+        "keep-alive": `${ADDRESS}/${SECRET}`,
+        "booking-probes": `${ADDRESS}/${SECRET}/`,
+        "tick-hourly": `${ADDRESS}/its-own`,
+      })
+      const { calls } = monitor(200)
+      await reportJobRun("keep-alive", "ok")
+      await reportJobRun("booking-probes", "ok")
+      await reportJobRun("tick-hourly", "ok")
+      expect(calls.map((call) => call.url)).toEqual([`${ADDRESS}/its-own`])
+      expect(logged()).toContain('"keep-alive" and "booking-probes"')
+      expect(logged()).not.toContain(SECRET)
+    })
 
     it("is not fooled by names every object has", async () => {
       configure(
