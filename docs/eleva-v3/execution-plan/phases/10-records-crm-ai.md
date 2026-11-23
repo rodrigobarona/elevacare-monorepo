@@ -279,7 +279,7 @@ first command; run the checks and both review loops only AFTER the task work exi
   DPO re-sign before production PHI). Do not STOP; PR 10.1 can open.
 - git checkout main && git pull --ff-only && git checkout -b phase-10.1/records-consent-retention
 - Second PR (opened after the first merges): phase-10.2/crm-ai-reports. Each PR: <= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
-- Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
+- Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:boundaries && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,

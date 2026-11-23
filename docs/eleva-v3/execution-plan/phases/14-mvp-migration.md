@@ -255,7 +255,7 @@ Workflow (mandatory) — this is the outer loop; the "PHASE 14 TASK" section fur
 what you implement at the "Implement the deliverables" step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-14/mvp-migration
-- Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
+- Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:boundaries && pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
   remaining Minor/Trivial listed in the PR body "Deferred findings" table with a reason each).

@@ -283,7 +283,7 @@ what you implement at the "Implement the deliverables" step. Read the whole prom
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-04b.1/practice-locations-schedules-calendars
 - Second PR (opened after the first merges): phase-04b.2/event-type-builder-links-editor. Each PR: <= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
-- Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
+- Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:boundaries && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,

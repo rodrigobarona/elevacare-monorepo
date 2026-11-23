@@ -11,9 +11,9 @@ function repoFilesOnly(filenames) {
 }
 
 export default {
-  // eslint-plugin-only-warn in @eleva/eslint-config downgrades errors to
-  // warnings; the boundaries rules explicitly re-escalate the ones that
-  // must block a commit. So we do not pass --max-warnings here.
+  // eslint-plugin-only-warn in @eleva/eslint-config turns every finding
+  // into a warning, the boundary rules too, so nothing here stops a commit.
+  // What must not get in is refused in CI by `pnpm check:boundaries`.
   "*.{ts,tsx,js,mjs,cjs}": (filenames) => {
     const files = repoFilesOnly(filenames)
     if (files.length === 0) return []

@@ -32,6 +32,129 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-23: The boundary lint rules fail the build, and frontends read from a list (13.10) (active)
+
+- Found while building 13.10: **no lint rule in the repository could fail a
+  build.** The shared config uses `eslint-plugin-only-warn`, which turns
+  every finding into a warning, and nothing runs lint with a limit on
+  warnings. A Stripe import in an app, or health data unwrapped in an app,
+  was a warning and `pnpm lint` exited 0. The commit hook's comment said
+  the boundary rules were "re-escalated"; they were not. The code was
+  clean: run alone over 44 workspaces, the boundary rules found nothing in
+  our own files.
+- Found too: in every `actions.ts` the vendor bans were off. A config for
+  those files set `no-restricted-imports` again, and in a flat config a
+  later setting replaces the earlier one, it is not added to it.
+- Change (Phase 13.10), three parts.
+  - **`pnpm check:boundaries`** (`scripts/check-boundaries.mjs`, in CI)
+    runs the boundary rules alone over every workspace with a lint config
+    and fails on any finding. It does not obey `eslint-disable` comments,
+    and a file it cannot parse is a finding. It also makes sure nothing
+    switches the rules off by mistake. **An app's lint config must be the
+    shared configs, in order, and nothing else**: its file is three lines,
+    read as text before it is ever loaded, so a rule set again, a folder
+    ignored or any other code fails by name; what an app needs changed
+    goes into `@eleva/eslint-config`. Every source file of an app must be
+    linted, an app has one lint config (none inside its folders), no link
+    to code or to a folder, every file must have the boundary rules as the
+    shared configs set them, and in each app a few lines that must be
+    refused are linted. An app with no lint config fails.
+    `node scripts/check-boundaries.mjs apps/web` checks one workspace.
+  - **`@eleva/eslint-config/frontend-db-reads`**, on every app except
+    `apps/api`: from `@eleva/db` an app takes the read helpers on one list
+    (`FRONTEND_DB_READS`, the 21 that `apps/expert` uses today) and types.
+    It does not take a write helper, a database handle (`db`,
+    `withOrgContext`, `withPlatformAdminContext`), a read that is not on
+    the list, anything from a subpath (`/queries/*`, `/client`, `/rls`,
+    `/schema`, `@eleva/db?raw`), `drizzle-orm` or a database driver, or
+    any of those named as text where it is loaded (`import("@eleva/db")`,
+    a template literal, `require`, `require.resolve`,
+    `createRequire(...)("@eleva/db")`, with or without a type cast).
+    `vi.mock("@eleva/db")` in a test is not a load and is allowed. Adding a read to the list is a reviewed change: does the
+    helper scope what it reads to the caller's organization, and is the
+    read one that need not be recorded?
+  - **Removed:** `@eleva/eslint-config/api-first-actions` and
+    `pnpm check:api-first-actions`. They banned eight write helpers by name
+    in `actions.ts` only; the new rule covers every file and every name,
+    and the lint config was the one that switched the vendor bans off. The
+    docs and phase prompts that named the old command name the new one.
+- **Why a list and not a name pattern.** The first version allowed any
+  helper named `get…`, `list…` or `count…`. A blind review counted 66 such
+  exports, about 25 of which read as the platform by a bare id
+  (`getMemberProfile(userId)`, `listMemberPayments`): the raw reads this
+  slice is named for. A name does not say how a helper is scoped; a list
+  that someone reviews does.
+- **No workspace is imported by its place on disk**, in any app: a path
+  that climbs out to `packages/` or `apps/`
+  (`../../packages/db/src/client`), or one into `node_modules/`. A path
+  gets around every rule about what may import what; workspace code is
+  imported by its package name. A folder of an app's own named `packages`
+  or `apps` is left alone.
+- Also tightened: `value["reveal"]()` and `value.reveal.call(value)` are
+  refused like `value.reveal()`; vendor SDKs are refused by any path inside
+  them (`stripe/lib/...`), and every module the import bans refuse whole is
+  refused when loaded with `import()` or `require` too (that list is
+  derived from the bans, not written twice); a route folder named
+  `coverage` is no longer skipped; what Fumadocs generates (`.source`) is
+  no longer linted.
+  `packages/auth` had lost the icon ban the same way `actions.ts` had lost
+  the vendor bans: the three packages that wrap a vendor (`auth`, `icons`,
+  `editor`) no longer copy the bans by hand, they take the shared ones
+  without their own (`baseImportBansWithout`, `boundaryImportBansWithout`).
+- No app had to change.
+- **What this is for.** It stops a boundary from being crossed or switched
+  off by mistake, or quietly, in an ordinary change. It does not stand
+  against someone who sets out to defeat it: a package's lint config is
+  code, the shared configs and the script can be edited, and the CI step
+  can be removed. Review stands against that.
+- **Limits.**
+  - A module name put together at run time (`import("@eleva/" + name)`, a
+    name held in a variable), or reached through an alias (`imports` in
+    `package.json`, `paths` in `tsconfig.json`, a renamed dependency),
+    cannot be seen by lint. No app has such an alias to the database
+    today.
+  - Two bans are on single names of a module (`Decrypted` from
+    `@eleva/observability`, the `decrypt…` helpers from
+    `@eleva/encryption`). Loaded with `import()`, those modules are not
+    refused, so the names can be reached that way.
+  - A relative path that climbs out of an app without naming `packages/`
+    or `apps/` (`../../../other-app/src/x`) is not refused.
+  - Lint reads script files only: an `import` in an `.mdx` file is not
+    read. A folder at the top of an app named `dist`, `coverage` or like
+    another generated folder is not linted, whatever is in it.
+  - A loader kept in a variable first
+    (`const load = createRequire(...); load("stripe")`) is not seen.
+  - It refuses more than it should in three cases, each with a way round
+    in the lint package's README: a file of an app's own named like a
+    banned module (`./better-auth`; this was so before), a folder of an
+    app's own named `packages` or `apps` reached by climbing two folders,
+    and a type-only import of a vendor SDK.
+  - Everything under an app counts as that app, its `e2e/` and `scripts/`
+    too. A test in a frontend that loads the database with `import()` is
+    refused; one that mocks it (`vi.mock`) is not.
+  - The list says which reads a frontend may use; that each of them scopes
+    its read to the caller's organization was checked by reading them (20
+    take the organization and run in its context, one is a mapper), not by
+    a test.
+  - **Packages are not covered.** Each has its own lint config, and none
+    uses the boundary config, so `packages/ui` could import Stripe or the
+    database and a frontend would get it through the package. None does
+    today. Giving packages the boundary rules, with an exception for each
+    owner, is its own slice.
+  - Domain packages that frontends call (`@eleva/auth` and others) may
+    write, by design.
+  - `only-warn` stays, so the other lint rules (unused variables, React
+    hooks) are still warnings that fail nothing. Making all of lint fail a
+    build means first clearing every warning in 44 workspaces.
+  - The commit hook stops nothing; CI is the gate. Whether the Lint job is
+    a required check in branch protection was not looked at.
+- Read before building: ESLint's flat-config rule on repeated rule settings,
+  its `ruleFilter`, `allowInlineConfig` and `calculateConfigForFile`,
+  `no-restricted-imports`
+  (`allowImportNames`, `regex`), typescript-eslint's `no-restricted-imports`
+  (`allowTypeImports`), each checked against the installed version by
+  running it.
+
 ### 2026-11-23: Staff queues have pages, and reading one is on record (12.6) (active)
 
 - Change (Phase 12.6): the two staff queues (clinic verifications, licence

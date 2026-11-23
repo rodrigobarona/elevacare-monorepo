@@ -275,7 +275,7 @@ first command; run the checks and both review loops only AFTER the task work exi
   cannot stay <= 60 files / 800 lines (and never >= 100 reviewable files), split the *backlog
   item* into 16.<N>a / 16.<N>b rows in
   the table first (each with its own phase file, branch and PR), never the branch.
-- Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
+- Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:boundaries && pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
   remaining Minor/Trivial listed in the PR body "Deferred findings" table with a reason each).

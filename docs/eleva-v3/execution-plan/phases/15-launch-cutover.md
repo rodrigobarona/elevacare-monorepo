@@ -185,7 +185,7 @@ first command; run the checks and both review loops only AFTER the task work exi
 - git checkout main && git pull --ff-only && git checkout -b phase-15/launch-cutover
 - Implement the deliverables of the PHASE 15 TASK below (runbook, scripts, gate report, docs) in
   the order listed. Keep the PR at <= 30 files / 400 lines where possible; split above 60 files / 800 lines and always before 100 reviewable files (the review cap).
-- Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
+- Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:boundaries && pnpm build &&
   pnpm e2e
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,

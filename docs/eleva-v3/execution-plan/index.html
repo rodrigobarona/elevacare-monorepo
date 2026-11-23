@@ -306,7 +306,7 @@ and live money flows are opt-in loopback runs.</p>
   A[git checkout main and pull] --&gt; B[git checkout -b phase-NN/slug]
   B --&gt; C[Read local refs and Context7 docs listed in the phase]
   C --&gt; D[Implement]
-  D --&gt; E[pnpm lint, typecheck, test, build, check:api-first-actions]
+  D --&gt; E[pnpm lint, typecheck, test, build, check:boundaries]
   E --&gt; F[pnpm review - CodeRabbit CLI on uncommitted]
   F --&gt;|findings| D
   F --&gt;|clean| G[Conventional commit]
@@ -806,7 +806,7 @@ what you implement at the &quot;Implement the deliverables&quot; step. Read the 
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b &lt;branch from this phase&gt;
 - Implement the deliverables in the order listed. Keep the PR at &lt;= 30 files / 400 lines where possible; split above 60 files / 800 lines and always before 100 reviewable files (the review cap); split into phase-NN.1 / phase-NN.2 branches if needed.
-- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build
+- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:boundaries &amp;&amp; pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
   remaining Minor/Trivial listed in the PR body &quot;Deferred findings&quot; table with a reason each).
@@ -2643,7 +2643,7 @@ what you implement at the &quot;Implement the deliverables&quot; step. Read the 
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-00/execution-plan-and-review-loop
 - Implement the deliverables in the order listed. Keep the PR at &lt;= 30 files / 400 lines where possible; split above 60 files / 800 lines and always before 100 reviewable files (the review cap); split into phase-NN.1 / phase-NN.2 branches if needed.
-- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build
+- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:boundaries &amp;&amp; pnpm build
 - Bootstrap (Phase 0 only — the pnpm review scripts do not exist until this phase adds them):
   install the CodeRabbit CLI from the official docs (https://docs.coderabbit.ai/cli): download
   the installer to a file, read it, verify it against the release checksum, then run it — never
@@ -2922,7 +2922,7 @@ what you implement at the &quot;Implement the deliverables&quot; step. Read the 
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-01/rebaseline-adrs-ci
 - Implement the deliverables in the order listed. Keep the PR at &lt;= 30 files / 400 lines where possible; split above 60 files / 800 lines and always before 100 reviewable files (the review cap); if the docs rewrite plus CI exceed it, split into phase-01.1/adrs-handbook and phase-01.2/ci-foundations.
-- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build
+- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:boundaries &amp;&amp; pnpm build
 - Run: pnpm review -&gt; fix all findings -&gt; repeat until clean or the review cap is reached (README
   section 4 rule 4: max 3 rounds, zero Critical/Major left, remaining Minor/Trivial listed in the
   PR body &quot;Deferred findings&quot; table with a reason each). Commit (Conventional Commits).
@@ -3294,7 +3294,8 @@ cookie-only POST -&gt; 403 <code>CSRF_ORIGIN_MISMATCH</code>; tossed/duplicate s
 row-count parity script prints <code>auth.* == main.*</code> for users, orgs, memberships; every FK
 validated (<code>pg_constraint.convalidated = true</code>).</li>
 <li><input disabled="" type="checkbox"> <code>requireApiAuth()</code> accepts: cookie session; <code>Authorization: Bearer &lt;session token&gt;</code>;
-<code>x-api-key</code> created via <code>apiKey</code> plugin scoped to an org; JWT from <code>/auth/token</code> verified
+<code>x-api-key</code> created via <code>apiKey</code> plugin (owned by a person since slice 12.5, not scoped to an
+org); JWT from <code>/auth/token</code> verified
 via JWKS (Bearer value routed by shape: compact JWS -&gt; JWT verifier, anything else -&gt;
 session-token verifier). JWTs are short-lived (<code>15m</code>) and <strong>non-revocable</strong> (JWKS only;
 no session-table check). After <code>revoke-other-sessions</code>, cookie/opaque bearer of that
@@ -3372,7 +3373,7 @@ what you implement at the &quot;Implement the deliverables&quot; step. Read the 
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-02.0/spike-better-auth
 - Then, after each merge: phase-02.1/auth-server-schema, then phase-02.2/auth-clients-account-ui. Each PR: &lt;= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
-- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build
+- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:boundaries &amp;&amp; pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
   remaining Minor/Trivial listed in the PR body &quot;Deferred findings&quot; table with a reason each).
@@ -3500,7 +3501,9 @@ PR 02.1 — server + schema + API:
    (b) Authorization: Bearer &lt;token&gt;: if the value is a compact JWS (three base64url segments,
    kid header) verify it as a JWT with JWKS from /auth/jwks (jwt plugin), otherwise verify it as
    a Better Auth session token (bearer plugin) — one discriminator, two verifiers, never both;
-   (c) x-api-key (apiKey plugin -&gt; referenceId = orgId; an API key sent as Bearer is rejected).
+   (c) x-api-key (apiKey plugin; since Better Auth 1.7 a key names one owner in `referenceId`, here a
+   person, and the workspace comes from `x-eleva-org` or the owner&#39;s default one: decision log
+   2026-11-22, slice 12.5; an API key sent as Bearer is rejected).
    Before verifying anything, count the credential sources present (cookie, Authorization,
    x-api-key); if more than one is present return 400 AMBIGUOUS_CREDENTIALS (audited) — never
    pick the first match. Return { userId, orgId, roles, capabilities, authMode }. Unit tests:
@@ -3761,7 +3764,7 @@ what you implement at the &quot;Implement the deliverables&quot; step. Read the 
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-03/remove-workos
 - Keep the PR at &lt;= 30 files / 400 lines where possible; split above 60 files / 800 lines and always before 100 reviewable files (the review cap); deletions count. Split into phase-03.1/encryption-calendar and phase-03.2/infra-cleanup if needed.
-- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build
+- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:boundaries &amp;&amp; pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
   remaining Minor/Trivial listed in the PR body &quot;Deferred findings&quot; table with a reason each).
@@ -4361,7 +4364,7 @@ what you implement at the &quot;Implement the deliverables&quot; step. Read the 
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-04.1/public-api-and-explorer
 - Second PR (opened after the first merges): phase-04.2/booking-funnel-payment. Each PR: &lt;= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
-- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
+- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:boundaries &amp;&amp; pnpm build &amp;&amp;
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
@@ -4539,7 +4542,7 @@ PR 04.1 — data, scheduling engine, public API, explorer + profile:
    Security forward-pull (review 6.2): scripts/check-route-guards.mjs walks apps/api/src/app/**/
    route.ts and fails when a handler lacks the exported ROUTE_POLICY = { auth, rateLimit, botId }
    declaration (add the declaration to every existing route in this PR); wire it as
-   pnpm check:route-guards in CI next to check:api-first-actions.
+   pnpm check:route-guards in CI next to check:boundaries.
 
 PR 04.2 — funnel + payment + marketing/legal:
 5. apps/api: POST /bookings/reserve (guest {email,name,phone?} or session; body also carries
@@ -5046,7 +5049,7 @@ what you implement at the &quot;Implement the deliverables&quot; step. Read the 
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-04b.1/practice-locations-schedules-calendars
 - Second PR (opened after the first merges): phase-04b.2/event-type-builder-links-editor. Each PR: &lt;= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
-- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
+- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:boundaries &amp;&amp; pnpm build &amp;&amp;
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
@@ -5485,7 +5488,7 @@ Workflow (mandatory) — this is the outer loop; the &quot;PHASE 5 TASK&quot; se
 what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-05/member-app
-- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
+- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:boundaries &amp;&amp; pnpm build &amp;&amp;
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
@@ -5895,7 +5898,7 @@ first command; run the checks and both review loops only AFTER the task work exi
   webhook paths, anonymous 401s, unsigned webhooks never process, payout workflows reject
   missing drain secrets). Each PR: &lt;= 30 files / 400 lines where possible; split above 60 /
   800 and always before 100 reviewable files.
-- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
+- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:boundaries &amp;&amp; pnpm build &amp;&amp;
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
@@ -6422,7 +6425,7 @@ first command; run the checks and both review loops only AFTER the task work exi
   on commission reduction. Then STOP and report the production-issuance / AT Comunicação
   block. Never POST `/api/v1/commercial_sales_documents`. Each PR:
   &lt;= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
-- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
+- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:boundaries &amp;&amp; pnpm build &amp;&amp;
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
@@ -6872,7 +6875,7 @@ Workflow (mandatory) — this is the outer loop; the &quot;PHASE 8 TASK&quot; se
 what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-08/notifications-lane1
-- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
+- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:boundaries &amp;&amp; pnpm build &amp;&amp;
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
@@ -7340,7 +7343,7 @@ Workflow (mandatory) — this is the outer loop; the &quot;PHASE 9 TASK&quot; se
 what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-09/video-daily
-- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
+- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:boundaries &amp;&amp; pnpm build &amp;&amp;
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
@@ -7793,7 +7796,7 @@ first command; run the checks and both review loops only AFTER the task work exi
   DPO re-sign before production PHI). Do not STOP; PR 10.1 can open.
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-10.1/records-consent-retention
 - Second PR (opened after the first merges): phase-10.2/crm-ai-reports. Each PR: &lt;= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
-- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
+- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:boundaries &amp;&amp; pnpm build &amp;&amp;
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
@@ -8211,7 +8214,7 @@ what you implement at the &quot;Implement the deliverables&quot; step. Read the 
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-11/team-clinics
 - Keep the PR at &lt;= 30 files / 400 lines where possible; split above 60 files / 800 lines and always before 100 reviewable files (the review cap). Split into phase-11.1/team-core-billing and phase-11.2/team-dashboard-public if needed.
-- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
+- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:boundaries &amp;&amp; pnpm build &amp;&amp;
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
@@ -8541,7 +8544,7 @@ what you implement at the &quot;Implement the deliverables&quot; step. Read the 
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-12.1/admin-users-partners
 - Second PR (opened after the first merges): phase-12.2/admin-money-ops. Each PR: &lt;= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
-- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
+- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:boundaries &amp;&amp; pnpm build &amp;&amp;
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
@@ -8958,7 +8961,7 @@ what you implement at the &quot;Implement the deliverables&quot; step. Read the 
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-13.1/security-observability
 - Second PR (opened after the first merges): phase-13.2/i18n-performance-e2e. Keep the PR at &lt;= 30 files / 400 lines where possible; split above 60 files / 800 lines and always before 100 reviewable files (the review cap); message JSON files count — split further by app if needed.
-- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
+- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:boundaries &amp;&amp; pnpm build &amp;&amp;
   pnpm check:i18n-parity &amp;&amp; pnpm e2e
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
@@ -9375,7 +9378,7 @@ Workflow (mandatory) — this is the outer loop; the &quot;PHASE 14 TASK&quot; s
 what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-14/mvp-migration
-- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build
+- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:boundaries &amp;&amp; pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
   remaining Minor/Trivial listed in the PR body &quot;Deferred findings&quot; table with a reason each).
@@ -9761,7 +9764,7 @@ first command; run the checks and both review loops only AFTER the task work exi
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-15/launch-cutover
 - Implement the deliverables of the PHASE 15 TASK below (runbook, scripts, gate report, docs) in
   the order listed. Keep the PR at &lt;= 30 files / 400 lines where possible; split above 60 files / 800 lines and always before 100 reviewable files (the review cap).
-- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
+- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:boundaries &amp;&amp; pnpm build &amp;&amp;
   pnpm e2e
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
@@ -10288,7 +10291,7 @@ first command; run the checks and both review loops only AFTER the task work exi
   cannot stay &lt;= 60 files / 800 lines (and never &gt;= 100 reviewable files), split the *backlog
   item* into 16.&lt;N&gt;a / 16.&lt;N&gt;b rows in
   the table first (each with its own phase file, branch and PR), never the branch.
-- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build
+- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:boundaries &amp;&amp; pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
   remaining Minor/Trivial listed in the PR body &quot;Deferred findings&quot; table with a reason each).

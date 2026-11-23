@@ -108,7 +108,7 @@ Rules:
 
 1. One phase (or feature) = one branch `phase-NN/<slug>` from an
    up-to-date `main` = one PR.
-2. Run `pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build`
+2. Run `pnpm lint && pnpm typecheck && pnpm test && pnpm check:boundaries && pnpm build`
    before `pnpm review`; the CLI should review working code.
 3. Fix every Critical/Major CLI finding before merge — they are never
    deferred. Minor/Trivial findings left at the review cap
