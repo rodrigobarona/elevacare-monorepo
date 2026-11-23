@@ -80,13 +80,14 @@
   "queue": {
     "range": "A mostrar {from, number} a {to, number} de {total, number}",
     "rangeSingle": "A mostrar {to, number} de {total, number}",
+    "rangeLastRow": "A mostrar a linha {to, number} de {total, number}",
     "previous": "Anterior",
     "next": "Seguinte",
     "previousPage": "Página anterior",
     "nextPage": "Página seguinte",
     "pages": "Páginas",
     "end": "Chegou ao fim da fila.",
-    "titleWithPage": "{title} · Página {page, number} de {pages, number}"
+    "titleWithPage": "{title} · Página {page, number}"
   },
   "clinics": {
     "title": "Verificação de clínicas",
@@ -167,7 +168,7 @@
   },
   "staffEntry": {
     "title": "Entrar na consola da equipa",
-    "body": "Aqui vê dados de membros e especialistas de toda a Eleva. As alterações que fizer ficam registadas no registo de auditoria.",
+    "body": "Aqui vê dados de membros e especialistas de toda a Eleva. O que abrir e o que alterar fica registado no registo de auditoria.",
     "enter": "Entrar na consola da equipa",
     "back": "Voltar à Eleva",
     "error": "Não foi possível abrir a consola da equipa. Tente novamente daqui a pouco."

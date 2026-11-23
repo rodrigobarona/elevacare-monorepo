@@ -103,9 +103,9 @@ describe("GET /admin/partners", () => {
   })
 
   it("refuses a page that is not a number before reading anything", async () => {
-    for (const page of ["0", "abc", "2.5"]) {
-      const res = await getQueue(new Request(`${URL}?page=${page}`))
-      expect(res.status, page).toBe(422)
+    for (const query of ["page=0", "page=abc", "page=2.5", "page=2&page=3"]) {
+      const res = await getQueue(new Request(`${URL}?${query}`))
+      expect(res.status, query).toBe(422)
     }
     expect(listQueue).not.toHaveBeenCalled()
   })

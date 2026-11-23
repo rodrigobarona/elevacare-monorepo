@@ -49,7 +49,7 @@ export function DataTableShell({
       ) : null}
       <div className="overflow-x-auto">{children}</div>
       {footer ? (
-        <div className="flex items-center justify-between gap-2 border-t p-4 text-sm text-muted-foreground">
+        <div className="flex items-center justify-between gap-2 border-t px-3 py-4 text-sm text-muted-foreground">
           {footer}
         </div>
       ) : null}

@@ -28,11 +28,18 @@ interface PagerProps {
   className?: string
 }
 
-// The kit's outline is a hairline; a control that is the only way to the
-// next page gets a border that can be seen (3:1).
+// The kit's outline is a hairline, and the footer's text is muted. A
+// control that is the only way to the next page gets a border that can be
+// seen (3:1) and full-strength words; the unavailable one stays in place,
+// quieter but still readable.
 const control = cn(
   buttonVariants({ variant: "outline", size: "sm" }),
   "border-input-border"
+)
+const available = cn(control, "text-foreground")
+const unavailable = cn(
+  control,
+  "pointer-events-none text-muted-foreground opacity-70"
 )
 
 function PageLink({
@@ -52,7 +59,7 @@ function PageLink({
         role="link"
         aria-disabled="true"
         aria-label={label}
-        className={cn(control, "pointer-events-none opacity-50")}
+        className={unavailable}
       >
         {children}
       </span>
@@ -61,7 +68,7 @@ function PageLink({
   return (
     // Never fetched ahead: on a staff queue each page read is recorded,
     // and a page nobody opened must leave no record.
-    <Link href={href} prefetch={false} aria-label={label} className={control}>
+    <Link href={href} prefetch={false} aria-label={label} className={available}>
       {children}
     </Link>
   )
@@ -90,6 +97,8 @@ export function Pager({
     >
       <p id={rangeId} className="tabular-nums">
         {range}
+        {/* The range is a phrase; with a sentence after it, it needs its stop. */}
+        {end ? "." : null}
         {end ? <span className="block sm:inline"> {end}</span> : null}
       </p>
       {links ? (

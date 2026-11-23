@@ -70,7 +70,14 @@ describe("Pager", () => {
     expect(last).toMatch(/<span role="link" aria-disabled="true"[^>]*>Next/)
     // In words, straight after the range, not only a greyed button.
     expect(last).toMatch(
-      /Showing 26 to 50 of 112<span[^>]*> You’ve reached the end of the queue\.<\/span>/
+      /Showing 26 to 50 of 112\.<span[^>]*> You’ve reached the end of the queue\.<\/span>/
+    )
+    // The available control is the stronger of the two.
+    expect(last).toMatch(
+      /<a [^>]*class="[^"]*text-foreground[^"]*"[^>]*>Previous/
+    )
+    expect(last).toMatch(
+      /<span role="link"[^>]*class="[^"]*text-muted-foreground[^"]*"[^>]*>Next/
     )
   })
 

@@ -80,13 +80,14 @@
   "queue": {
     "range": "Showing {from, number} to {to, number} of {total, number}",
     "rangeSingle": "Showing {to, number} of {total, number}",
+    "rangeLastRow": "Showing row {to, number} of {total, number}",
     "previous": "Previous",
     "next": "Next",
     "previousPage": "Previous page",
     "nextPage": "Next page",
     "pages": "Pages",
     "end": "You’ve reached the end of the queue.",
-    "titleWithPage": "{title} · Page {page, number} of {pages, number}"
+    "titleWithPage": "{title} · Page {page, number}"
   },
   "clinics": {
     "title": "Clinic verifications",
@@ -167,7 +168,7 @@
   },
   "staffEntry": {
     "title": "Enter the staff console",
-    "body": "Here you can see members' and experts' data across Eleva. Changes you make are recorded in the audit log.",
+    "body": "Here you can see members' and experts' data across Eleva. What you open and what you change is recorded in the audit log.",
     "enter": "Enter the staff console",
     "back": "Back to Eleva",
     "error": "We couldn't open the staff console. Try again in a moment."

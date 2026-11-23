@@ -45,30 +45,44 @@ Each entry should include:
   the same transaction as the read, so nothing is shown when the record
   cannot be written. Never the names. A page spans many clinics or
   practices, so the record sits under the staff workspace of the reader.
-  The pager never fetches a page ahead of the reader: a page nobody opened
-  leaves no record.
+- **A record means "served", and care was taken that it means no more.**
+  Nothing fetches a queue ahead of the reader: the pager's links and the
+  "back to the queue" links on a review are never prefetched, and the tab
+  title is built from the address, not from a read (the first version read
+  the queue for the title, and Next can ask for a page's title before a
+  visit: the review caught it). Two cases are still recorded more than a
+  reader would expect: an address with a page past the end is read, then
+  the reader is sent to the last page and that is read too; and Back shows
+  the rows the browser kept, with no new read and no new record.
 - The page is in the address (`/clinics?page=2`), so Back, a reload and a
   shared link show the same rows. Page 1 has no parameter. A value that is
   not a page goes to page 1, and a page past the end (the queue shrank
   after decisions) goes to the last page: never an empty table with a
   pager. The order is the same as before with the row's id to settle ties,
-  so a row is never on two pages or on none.
+  so in a queue that does not change a row is never on two pages or on
+  none. When a filing is decided while someone pages, the rows after it
+  move up by one and the next page starts one row later: the reviewer can
+  miss a row until they come back to the top. The count and the page are
+  two reads, so for an instant they can disagree by a row.
 - Design: three Mobbin references saved first (`13-admin/17` to `19`: range
   and total beside Previous and Next in words; a count on the queue itself;
   the count of the filtered list). Previous and Next, not "Load more": a
   reviewer opens a filing, decides and comes back, and the place in the
-  list must survive that. On the last page the footer says so in words. A
-  list that fits on one page shows the range and no controls. The title of
-  the tab names the page ("Clinic verifications · Page 2 of 5"), and focus
-  moves to the heading after a page change.
+  list must survive that (with the browser's Back: the link on a review
+  goes to the top of the queue, where the next filing to check is). On the
+  last page the footer says so in words. A list that fits on one page shows
+  the range and no controls. The title of the tab names the page ("Clinic
+  verifications · Page 2"), and focus moves to the heading after a page
+  change, which then reads the range.
 - Shared, because the clinic's list of sessions (11.13) needs the same:
   `pageWindow` and `parsePageParam` in `@eleva/config/pagination`, `Pager`
   and `FocusHeadingOnChange` in `@eleva/ui`, a table-shaped loading state
   in `@eleva/dashboard`.
 - Proof: unit tests for the paging maths, the pager and both routes; on
   Postgres (the dev branch here, the pull request's branch in CI), both
-  queues return one page, pull a page past the end back to the last, keep
-  their order, and leave a record of each read with no name in it; in a
+  queues return one page, pull a page past the end back to the last, and
+  leave a record of each read with no name in it; 26 filings sent at the
+  same moment come back 25 and then 1, in id order, each exactly once; in a
   browser, `pnpm e2e:pager` (opt-in, 6 cases) on a playground page that
   shows each state of the footer: links, the unavailable control out of
   the tab order, keyboard, Portuguese, 320 and 375 px. Captures in
@@ -77,9 +91,19 @@ Each entry should include:
   tab title, focus after a page change, the loading skeleton): that needs a
   signed-in staff member and more than 25 filings, which the local data
   does not have.
-- Left for a person (P-03): the staff entry screen tells staff that what
-  they change is recorded. Reads of a queue and of a filing are recorded
-  too, and that sentence does not say so yet.
+- The staff entry screen said that what staff change is recorded. It now
+  says "What you open and what you change is recorded in the audit log",
+  which is what happens. The formal notice to staff, and how long these
+  records are kept, are still the DPO's (P-02, P-03); the retention matrix
+  names the new records.
+- The API takes `?page=` by the rule the console's addresses follow
+  (digits, from 1) and refuses anything else, a repeated `page` and an
+  unknown parameter included.
+- Judges, first commit: engineering 7.0, UI 7.2, UX and writing 8.1, trust
+  and accessibility 7.8. They found the title's read above, that no test
+  had a second page, captures taken before the controls got their border,
+  and a range that ran into the sentence after it. The second commit
+  answers those and was not scored again.
 - Owner: engineering
 
 ### 2026-11-22: An API key identifies its owner again, and no session can make one (12.5) (active)

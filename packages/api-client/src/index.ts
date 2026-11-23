@@ -20,6 +20,7 @@ import {
   SOCIAL_LINK_KINDS,
 } from "@eleva/config/expert-profile-content"
 import { LocaleSchema } from "@eleva/config/i18n"
+import { MAX_PAGE, PAGE_PARAM_PATTERN } from "@eleva/config/pagination"
 import {
   ERS_REGISTRATION_NUMBER_MAX_LENGTH,
   ERS_REGISTRATION_NUMBER_PATTERN,
@@ -1895,10 +1896,20 @@ const ExpertProfileStatusSchema = z.enum([
   "suspended",
 ])
 
-/** `?page=` of a staff queue: a whole number from 1. */
-export const StaffQueueQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).max(10_000).default(1),
-})
+/**
+ * The query of a staff queue: `?page=`, a whole number from 1 written in
+ * digits (the rule the console's addresses follow), and nothing else.
+ */
+export const StaffQueueQuerySchema = z
+  .object({
+    page: z
+      .string()
+      .regex(PAGE_PARAM_PATTERN)
+      .transform(Number)
+      .pipe(z.number().int().min(1).max(MAX_PAGE))
+      .default(1),
+  })
+  .strict()
 
 /**
  * Where a page of a staff queue sits in the whole queue. `page` is the page

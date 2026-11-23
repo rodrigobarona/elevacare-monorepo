@@ -12,8 +12,18 @@ const seen = new Map<string, string>()
  * address (another page of a list, another filter), so a keyboard or
  * screen reader user continues from the top of the new content and not
  * from a control that is gone. Does nothing on the first visit.
+ *
+ * `describedBy` (an element id) is read after the heading: "Clinic
+ * verifications, Showing 26 to 50 of 112", so the change is said even
+ * where the tab title is not announced.
  */
-export function FocusHeadingOnChange({ value }: { value: string | number }) {
+export function FocusHeadingOnChange({
+  value,
+  describedBy,
+}: {
+  value: string | number
+  describedBy?: string
+}) {
   useEffect(() => {
     const address = window.location.pathname
     const previous = seen.get(address)
@@ -24,7 +34,8 @@ export function FocusHeadingOnChange({ value }: { value: string | number }) {
     if (!heading) return
     if (!heading.hasAttribute("tabindex"))
       heading.setAttribute("tabindex", "-1")
+    if (describedBy) heading.setAttribute("aria-describedby", describedBy)
     heading.focus()
-  }, [value])
+  }, [value, describedBy])
   return null
 }

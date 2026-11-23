@@ -52,8 +52,10 @@ export default async function PartnerReviewPage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
+      {/* Not fetched ahead: each read of the queue is recorded. */}
       <Link
         href="/partners"
+        prefetch={false}
         className="text-sm text-muted-foreground underline-offset-4 hover:underline"
       >
         {t("detail.back")}

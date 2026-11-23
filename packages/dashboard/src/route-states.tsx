@@ -34,27 +34,23 @@ export async function RouteLoading() {
 export async function RouteTableLoading() {
   const t = await getTranslations("routeStates")
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="mx-auto max-w-5xl space-y-8"
-    >
+    <div role="status" className="mx-auto max-w-5xl space-y-8">
       <span className="sr-only">{t("loading")}</span>
       <div className="mb-10 space-y-3">
-        <Skeleton className="h-10 w-72 max-w-full" />
-        <Skeleton className="h-5 w-[32rem] max-w-full" />
+        <Skeleton className="h-11 w-72 max-w-full" />
+        <Skeleton className="h-7 w-[32rem] max-w-full" />
       </div>
       <div className="overflow-hidden rounded-xl border bg-card shadow-1">
-        <div className="border-b p-4">
-          <Skeleton className="h-4 w-2/3" />
+        <div className="border-b p-3">
+          <Skeleton className="h-5 w-2/3" />
         </div>
         {Array.from({ length: 8 }, (_, row) => (
-          <div key={row} className="border-b p-4">
+          <div key={row} className="border-b p-3">
             <Skeleton className="h-5" />
           </div>
         ))}
-        <div className="flex items-center justify-between gap-2 p-4">
-          <Skeleton className="h-4 w-44" />
+        <div className="flex flex-col gap-3 px-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <Skeleton className="h-5 w-44" />
           <Skeleton className="h-8 w-40 rounded-4xl" />
         </div>
       </div>

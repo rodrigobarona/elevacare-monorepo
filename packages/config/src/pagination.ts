@@ -6,8 +6,11 @@
 /** Rows a staff queue shows on one page. */
 export const STAFF_QUEUE_PAGE_SIZE = 25
 
-/** The highest page a request may name; anything above is the last page. */
+/** The highest page a request may name. A larger number is not a page. */
 export const MAX_PAGE = 10_000
+
+/** What a page number looks like in an address: digits, no sign, no zero in front. */
+export const PAGE_PARAM_PATTERN = /^[1-9]\d{0,4}$/
 
 export interface PageWindow {
   /** The page shown, from 1: the one asked for, pulled back inside the list. */
@@ -60,7 +63,7 @@ export function pageWindow(input: {
 export function parsePageParam(
   value: string | string[] | undefined
 ): number | null {
-  if (typeof value !== "string" || !/^[1-9]\d{0,4}$/.test(value)) return null
+  if (typeof value !== "string" || !PAGE_PARAM_PATTERN.test(value)) return null
   const page = Number(value)
   return page <= MAX_PAGE ? page : null
 }

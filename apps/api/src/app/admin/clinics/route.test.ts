@@ -236,9 +236,23 @@ describe("/admin/clinics", () => {
     expect(mocks.listQueue).toHaveBeenLastCalledWith(
       expect.objectContaining({ page: 1 })
     )
-    for (const page of ["0", "-1", "abc", "1.5", "99999"]) {
-      const res = await getQueue(new Request(`${URL}?page=${page}`))
-      expect(res.status, page).toBe(422)
+    // The console's own rule for an address: digits, from 1, nothing else.
+    for (const query of [
+      "page=0",
+      "page=-1",
+      "page=abc",
+      "page=1.5",
+      "page=99999",
+      "page=02",
+      "page=2e0",
+      "page=0x2",
+      "page=%202",
+      "page=",
+      "page=1&page=2",
+      "page=2&limit=500",
+    ]) {
+      const res = await getQueue(new Request(`${URL}?${query}`))
+      expect(res.status, query).toBe(422)
     }
     expect(mocks.listQueue).toHaveBeenCalledTimes(1)
   })

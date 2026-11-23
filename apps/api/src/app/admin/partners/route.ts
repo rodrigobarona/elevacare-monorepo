@@ -26,12 +26,12 @@ export async function GET(request: Request) {
   const staff = await requireStaffReviewer(request, headers)
   if (staff instanceof Response) return staff
 
-  const query = StaffQueueQuerySchema.safeParse(
-    Object.fromEntries(new URL(request.url).searchParams)
-  )
-  if (!query.success) {
+  const params = new URL(request.url).searchParams
+  const query = StaffQueueQuerySchema.safeParse(Object.fromEntries(params))
+  // `?page=1&page=2` names two pages: refused, not settled by position.
+  if (!query.success || params.getAll("page").length > 1) {
     return secureJson(
-      { error: "validation", issues: query.error.issues },
+      { error: "validation", issues: query.error?.issues ?? [] },
       { status: 422, headers }
     )
   }

@@ -85,8 +85,13 @@ Use this document to answer:
 - Audit access: yes for every decision, and for every time staff open a
   review (`partner_application.opened`, with the review's state, never the
   numbers or the email). The queue, which lists experts by name and
-  professional body, is not recorded per row. **For the DPO to decide:**
-  whether `partner_application.opened` rows follow the retention
+  professional body, is not recorded per row: each page a staff member is
+  served is recorded once (`partner_application.listed`, and
+  `clinic_verification.listed` for the clinic queue, since slice 12.6) with
+  the reader, the page number and how many rows, never a name, under the
+  staff workspace. These records are there to account for access, not to
+  measure staff. **For the DPO to decide:**
+  whether `partner_application.opened` and the `.listed` rows follow the retention
   schedule's periods for the audit stream (10 years in `audit_events`, 90
   days for shipped outbox rows; `legal/retention-schedule.md`) or a
   shorter one, and whether an expert may learn who at Eleva opened their

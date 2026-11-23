@@ -1,4 +1,3 @@
-import { cache } from "react"
 import type { Metadata } from "next"
 import { getFormatter, getTranslations } from "next-intl/server"
 import { BuildingsIcon } from "@eleva/icons"
@@ -29,23 +28,13 @@ export const dynamic = "force-dynamic"
 
 const PATH = "/clinics"
 
-// One read for the page and its title: each read of a queue is recorded.
-const loadQueue = cache(async (page: number) => {
-  const api = await getAuthedApiClient()
-  return api.admin.clinics.list({ page })
-})
-
 export async function generateMetadata({
   searchParams,
 }: {
   searchParams: QueueSearchParams
 }): Promise<Metadata> {
-  const page = await requestedQueuePage(searchParams, PATH)
-  const [queue, t] = await Promise.all([
-    loadQueue(page),
-    getTranslations("clinics"),
-  ])
-  return { title: await queueTitle(t("title"), queue) }
+  const t = await getTranslations("clinics")
+  return { title: await queueTitle(t("title"), searchParams) }
 }
 
 export default async function ClinicsPage({
@@ -54,8 +43,10 @@ export default async function ClinicsPage({
   searchParams: QueueSearchParams
 }) {
   const page = await requestedQueuePage(searchParams, PATH)
+  const api = await getAuthedApiClient()
+  // Each read of a queue is recorded: this is the only one for this view.
   const [queue, t, format] = await Promise.all([
-    loadQueue(page),
+    api.admin.clinics.list({ page }),
     getTranslations("clinics"),
     getFormatter(),
   ])

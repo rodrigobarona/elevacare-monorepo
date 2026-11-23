@@ -188,14 +188,9 @@ describe.skipIf(!enabled || !databaseUrl)(
       // A page past the end is the last page, never an empty one.
       const past = await listClinicVerificationQueue({ page: 9_999, viewer })
       expect(past.page).toBe(first.pages)
-      // The same order every time: the same rows, in the same places.
-      const again = await listClinicVerificationQueue({ page: 1, viewer })
-      expect(again.items.map((row) => row.verificationId)).toEqual(
-        first.items.map((row) => row.verificationId)
-      )
       // Each read left a record: who, which page, how many, never a name.
       const reads = (await queueReads()).slice(before)
-      expect(reads).toHaveLength(3)
+      expect(reads).toHaveLength(2)
       expect(reads[0]).toMatchObject({
         action: "clinic_verification.listed",
         entityId: null,
@@ -209,6 +204,74 @@ describe.skipIf(!enabled || !databaseUrl)(
       })
       expect(reads[1]?.payload).toMatchObject({ page: first.pages })
       expect(JSON.stringify(reads)).not.toMatch(/Lda|Clinic/)
+    })
+
+    it("pages a queue of 26 filings sent at the same moment: each on one page, none on two", async () => {
+      // Older than anything else in the queue, so they fill its first 26
+      // places whatever else the shared database holds.
+      const sentAt = new Date("2001-01-01T00:00:00.000Z")
+      const batch = Array.from({ length: 26 }, () => randomUUID())
+      const tag = `p${suffix}`
+      await db()
+        .insert(auth.organization)
+        .values(
+          batch.map((id, index) => ({
+            id,
+            name: `Paging clinic ${index}`,
+            slug: `${tag}-${index}`,
+            type: "team",
+          }))
+        )
+      try {
+        await db()
+          .insert(main.clinicProfiles)
+          .values(
+            batch.map((orgId, index) => ({
+              orgId,
+              slug: `${tag}-${index}`,
+              displayName: `Paging clinic ${index}`,
+              countryCode: "PT",
+              billingAddress: { city: "Lisboa", country: "PT" },
+            }))
+          )
+        const filed = await db()
+          .insert(main.clinicVerifications)
+          .values(
+            batch.map((orgId, index) => ({
+              orgId,
+              legalName: `Paging clinic ${index}, Lda`,
+              taxId: `PT5150017${String(index).padStart(2, "0")}`,
+              status: "pending" as const,
+              submittedAt: sentAt,
+            }))
+          )
+          .returning({ id: main.clinicVerifications.id })
+        const seeded = filed.map((row) => row.id).sort()
+
+        const first = await listClinicVerificationQueue({ page: 1, viewer })
+        const second = await listClinicVerificationQueue({ page: 2, viewer })
+        expect(first.items).toHaveLength(25)
+        expect(first.pages).toBeGreaterThanOrEqual(2)
+        // The 26 share one moment: only the id can order them. All of the
+        // first page, then the first row of the second, in id order.
+        expect(first.items.map((row) => row.verificationId)).toEqual(
+          seeded.slice(0, 25)
+        )
+        expect(second.items[0]?.verificationId).toBe(seeded[25])
+        const shown = [...first.items, ...second.items].map(
+          (row) => row.verificationId
+        )
+        for (const id of seeded) {
+          expect(shown.filter((seen) => seen === id)).toHaveLength(1)
+        }
+      } finally {
+        await db()
+          .delete(main.clinicVerifications)
+          .where(inArray(main.clinicVerifications.orgId, batch))
+        await db()
+          .delete(auth.organization)
+          .where(inArray(auth.organization.id, batch))
+      }
     })
 
     it("queues a pending filing and shows staff what to check", async () => {

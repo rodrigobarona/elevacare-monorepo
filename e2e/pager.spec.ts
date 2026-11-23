@@ -54,6 +54,21 @@ test("says where the reader is, and links to the pages on either side", async ({
   await expect(pages.getByRole("link", { name: "Next page" })).toHaveText(
     "Next"
   )
+  // A control that is the way to the next page has an edge that can be
+  // seen, and is the stronger of the two beside an unavailable one.
+  const edge = (name: string, testId: string) =>
+    page
+      .getByTestId(testId)
+      .getByRole("link", { name })
+      .evaluate((node) => {
+        const style = getComputedStyle(node)
+        return { border: style.borderTopColor, opacity: style.opacity }
+      })
+  const next = await edge("Next page", "pager-first")
+  const previous = await edge("Previous page", "pager-first")
+  expect(next.border).not.toMatch(/rgba\(0, 0, 0, 0\)|transparent/)
+  expect(next.opacity).toBe("1")
+  expect(Number(previous.opacity)).toBeLessThan(1)
   await capture(page, "en-desktop")
 })
 
@@ -78,7 +93,7 @@ test("keeps an unavailable control in place, out of the tab order", async ({
     "true"
   )
   await expect(last).toContainText(
-    "Showing 101 to 112 of 112 You’ve reached the end of the queue."
+    "Showing 101 to 112 of 112. You’ve reached the end of the queue."
   )
   // The footer is the same height at either end as in the middle.
   const heights = await Promise.all(

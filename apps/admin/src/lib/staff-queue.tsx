@@ -50,14 +50,19 @@ export function followQueuePage(
   if (queue.page !== asked) redirect(queueHref(path, queue.page))
 }
 
-/** "Clinic verifications · Page 2 of 5", or the title alone on one page. */
+/**
+ * "Clinic verifications · Page 2", or the title alone on the first page.
+ * From the address, with no read of the queue: Next may ask for a page's
+ * title ahead of a visit, and each read of a queue is recorded.
+ */
 export async function queueTitle(
   title: string,
-  queue: QueuePosition
+  searchParams: QueueSearchParams
 ): Promise<string> {
-  if (queue.pages <= 1) return title
+  const page = parsePageParam((await searchParams).page)
+  if (page === null || page === 1) return title
   const t = await getTranslations("queue")
-  return t("titleWithPage", { title, page: queue.page, pages: queue.pages })
+  return t("titleWithPage", { title, page })
 }
 
 /** The footer of a queue: where the reader is, and the pages on either side. */
@@ -75,9 +80,11 @@ export async function QueuePager({
       <Pager
         rangeId={QUEUE_RANGE_ID}
         range={
-          from === to
+          total === 1
             ? t("rangeSingle", { to, total })
-            : t("range", { from, to, total })
+            : from === to
+              ? t("rangeLastRow", { to, total })
+              : t("range", { from, to, total })
         }
         end={queue.pages > 1 && !hasNext ? t("end") : undefined}
         links={
@@ -96,7 +103,7 @@ export async function QueuePager({
           nextPage: t("nextPage"),
         }}
       />
-      <FocusHeadingOnChange value={queue.page} />
+      <FocusHeadingOnChange value={queue.page} describedBy={QUEUE_RANGE_ID} />
     </>
   )
 }
