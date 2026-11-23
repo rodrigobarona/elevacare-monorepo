@@ -118,6 +118,7 @@ describe("where the MVP's signed-in addresses go", () => {
     // Written in the MVP's own code and emails.
     ["/sign-in", "/dashboard"],
     ["/sign-out", "/logout"],
+    ["/sign-up", "/signup"],
     ["/events", "/dashboard"],
     ["/events/evt_1", "/dashboard"],
     ["/settings/calendar", "/dashboard"],
@@ -286,14 +287,24 @@ describe("where the MVP's signed-in addresses go", () => {
     }
   })
 
+  it("is keyed by words as the rule reads them", () => {
+    // The rule lowers the address before it looks a word up, so a key
+    // written any other way would never match and would still reserve.
+    for (const word of Object.keys(LEGACY_PRIVATE_SECTIONS)) {
+      expect(word, word).toMatch(/^[a-z][a-z0-9-]*$/)
+    }
+    for (const one of LEGACY_PRIVATE_PAGES) {
+      const path = "below" in one ? one.below : one.from
+      expect(path, path).toMatch(/^(\/[a-z][a-z0-9-]*)+$/)
+    }
+  })
+
   it("no first word of theirs can be taken as a username", () => {
     for (const word of Object.keys(LEGACY_PRIVATE_SECTIONS)) {
       expect(isReserved(word), word).toBe(true)
     }
     expect(isReserved("dashboard")).toBe(true)
     expect(isReserved("account")).toBe(true)
-    // And the one that is written like `sign-in`.
-    expect(isReserved("sign-up")).toBe(true)
   })
 })
 
@@ -363,10 +374,14 @@ describe("the addresses the MVP's own code wrote", () => {
     )
   }
 
-  /** `'/x/y'`, `"https://eleva.care/x"`, `` `/x/${id}` ``: the path of each. */
+  /**
+   * The path of each address that begins a quoted text: `'/x/y'`,
+   * `"https://eleva.care/x"`, `` `/x/${id}` ``, and `` `${BASE_URL}/x` ``,
+   * which is how its emails wrote a whole address.
+   */
   function written(text: string): string[] {
     const quoted =
-      /['"`](?:https?:\/\/(?:www\.)?eleva\.care)?(\/[a-z][^'"`\s]*)['"`]?/g
+      /['"`](?:https?:\/\/(?:www\.)?eleva\.care|\$\{[^}'"`]*\})?(\/[a-z][^'"`\s]*)['"`]?/g
     return [...text.matchAll(quoted)].flatMap((match) => {
       const path = match[1]!
         .split(/[?#]/)[0]!
@@ -392,6 +407,13 @@ describe("the addresses the MVP's own code wrote", () => {
     foo: "an example in a comment",
     partner: "in its permission list, with no page behind it",
     providers: "sample data in the preview of an email",
+    // Written after `/account/billing` in its notices; moved under it.
+    multibanco: "the end of an address under /account/billing",
+    refunds: "the end of an address under /account/billing",
+    retry: "the end of an address under /account/billing",
+    // Written after another service's address.
+    fail: "the end of its uptime monitor's address",
+    v1: "the API of its notification service",
     // Public addresses. The public pages are Phase 4's
     // (`public-site-parity`); these two are not in it.
     services: "public pages of its footer",
@@ -409,6 +431,23 @@ describe("the addresses the MVP's own code wrote", () => {
       "/unauthorized",
       "/sign-in",
     ]) {
+      expect(all, known).toContain(known)
+    }
+  })
+
+  it("reads an address written after the site's own address", () => {
+    expect(written("`${DEFAULT_BASE_URL}/unsubscribe`")).toEqual([
+      "/unsubscribe",
+    ])
+    expect(
+      written("`${process.env.NEXT_PUBLIC_APP_URL}/dashboard/x?a=1`")
+    ).toEqual(["/dashboard/x"])
+    expect(written("'https://eleva.care/receipts/123'")).toEqual([
+      "/receipts/123",
+    ])
+    expect(written("`/events/${eventId}`")).toEqual(["/events/example"])
+    expect(written("'/img/share.png'")).toEqual([])
+    for (const known of ["/unsubscribe", "/dashboard/subscription"]) {
       expect(all, known).toContain(known)
     }
   })

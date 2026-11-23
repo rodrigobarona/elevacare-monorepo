@@ -57,7 +57,10 @@ export const LEGACY_PRIVATE_SECTIONS = {
   // Not pages of the MVP, but addresses its own code and emails wrote:
   // where it sent a person after signing out, or after a Google error.
   "sign-in": OWN_PLACE,
-  // The address its sign-out went by. v3's page asks before signing out.
+  // The two words it set aside beside `sign-in`. Its settings named
+  // `/sign-up` as where an account was made; nothing of its own wrote
+  // `/sign-out`. v3's page for that asks before signing anyone out.
+  "sign-up": "/signup",
   "sign-out": "/logout",
   // "Complete your profile", in its welcome email.
   profile: OWN_PLACE,
@@ -89,9 +92,9 @@ export const LEGACY_PRIVATE_PAGES = [
   { from: "/account/verification", to: OWN_PLACE },
   // Password, sessions, two-factor, devices: one page in v3.
   { below: "/account/security", to: "/account/security" },
-  // Receipts, a payment to try again, Multibanco, refunds. v3's billing
-  // page says where each person's own are. (`/account/billing/return` is
-  // v3's, so these are named one by one.)
+  // Receipts, a payment to try again, Multibanco, refunds: v3's billing
+  // page, which sends a member on to their own payments.
+  // (`/account/billing/return` is v3's, so these are named one by one.)
   { from: "/account/billing/receipts", to: "/account/billing" },
   { from: "/account/billing/retry", to: "/account/billing" },
   { from: "/account/billing/multibanco", to: "/account/billing" },

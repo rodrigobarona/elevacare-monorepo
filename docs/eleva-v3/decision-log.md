@@ -50,7 +50,7 @@ Each entry should include:
   | `/appointments`, `/booking`, `/setup`, `/events`, `/settings`, and everything under  | `/dashboard`                        |
   | `/profile`, `/appointment`, `/receipt`, `/receipts`, `/payment`, `/meet`, and under  | `/dashboard`                        |
   | `/unauthorized`, `/sign-in`                                                          | `/dashboard`                        |
-  | `/sign-out`                                                                          | `/logout`                           |
+  | `/sign-out`, `/sign-up`                                                              | `/logout`, `/signup`                |
   | `/register`                                                                          | `/signup`                           |
   | `/register?expert=true` (its "become an expert" button)                              | `/account/workspaces/create/expert` |
   | `/unsubscribe`                                                                       | `/account/notifications`            |
@@ -71,23 +71,27 @@ Each entry should include:
   asks before signing anyone out.
 - **Addresses that were never pages of the MVP.** Its pages were
   `/appointments`, `/booking`, `/setup`, `/register`, `/unauthorized`,
-  `/dashboard/subscription` and `/account/identity`. Every other row was
-  written by its code without a page behind it: `/sign-in` and `/sign-out`
-  (its sign-out), `/events` (its notice of a coming payout), `/settings`
+  `/dashboard/subscription`, `/dashboard/widgets-kitchen-sink` and
+  `/account/identity`. Every other row was
+  written by its code without a page behind it: `/sign-in` (where its
+  sign-out sent a person), `/events` (its notice of a coming payout), `/settings`
   (its calendar connection), `/profile`, `/appointment`, `/receipt`,
   `/receipts`, `/payment` and `/meet` (what its emails linked to when the
   sender gave no address), `/unsubscribe` (the foot of its emails), and
   the `/account/...` addresses other than `identity` (its notices and its
-  payment webhooks). Which of those emails and notices were in fact sent
+  payment webhooks). Two more are words it set aside and its settings
+  named, with nothing of its own writing them: `/sign-up` goes to
+  `/signup` and `/sign-out` to `/logout`. Which of those emails and notices were in fact sent
   was not checked; each now lands on the page in v3 that covers the same
   thing.
 - **The list is what a read of the code found, and a test repeats the
-  read.** Every quoted address in the MVP's code (505 files) is read by
-  the test. Each must be moved, answered by v3, or named in the test as
+  read.** Every address that begins a quoted text in the MVP's code (505 files),
+  alone or after the site's own address, is read by the test. Each must be moved, answered by v3, or named in the test as
   something that is not a signed-in address, with what it is: its API
   routes, its email template files, two folders its robots file names,
   the route its error reports went through, a permission entry with no
-  page (`/partner`), sample data in an email preview (`/providers`), and
+  page (`/partner`), sample data in an email preview (`/providers`), the
+  ends of addresses written after another address, and
   two public addresses that Phase 4's map does not have (`/services/...`
   from its footer, `/become-partner`).
 - **Every answer is a 302, none is permanent.** These were pages behind a
@@ -99,14 +103,13 @@ Each entry should include:
   MVP's become-an-expert page carried. The plan named beside it
   (`plan=community-paygo`) is lost: in v3 a new expert starts on the basic
   plan and can change it later.
-- Every first word in the first seven rows is now a reserved username,
-  taken from the map itself: fourteen that were not reserved before
-  (`appointments`, `booking`, `events`, `register`, `unauthorized`,
-  `sign-in`, `sign-out`, `profile`, `appointment`, `receipt`, `receipts`,
-  `payment`, `meet`, `unsubscribe`), and `sign-up` beside them. The
-  roadmap's rule for the move (14.9, not built) is that a reserved name
-  stops the run, so a person in the MVP who has one of these as a username
-  will have to be handled there.
+- Every first word in the first seven rows is a reserved username, taken
+  from the map itself. Fifteen were not reserved before: `appointments`,
+  `booking`, `events`, `register`, `unauthorized`, `sign-in`, `sign-out`,
+  `sign-up`, `profile`, `appointment`, `receipt`, `receipts`, `payment`,
+  `meet` and `unsubscribe`. The roadmap's rule for the move (14.9, not
+  built) is that a reserved name stops the run, so a person in the MVP
+  who has one of these as a username will have to be handled there.
 - The address where a person starts a work organization is now built in
   one place, `createWorkspacePath()` in `@eleva/config/routing`, used by
   this map, the two public pages that link to it and the picker. The page

@@ -77,9 +77,6 @@ export const RESERVED_USERNAMES: ReadonlySet<string> = new Set([
   "account",
   "onboarding",
   "setup",
-  // Written like the sign-in addresses above: a username here would look
-  // like one of Eleva's own.
-  "sign-up",
   // Where the MVP's signed-in pages were, and the words its emails wrote:
   // an old link must not open the public profile of whoever took the word.
   ...Object.keys(LEGACY_PRIVATE_SECTIONS),

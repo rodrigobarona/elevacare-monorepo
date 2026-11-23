@@ -190,7 +190,7 @@
         "../../vitest.shared.ts",
         "../../apps/account/src/app/**/page.tsx",
         "../../apps/account/src/app/**/route.ts",
-        "../../apps/web/src/app/*/*/page.tsx",
+        "../../apps/web/src/app/*/**/page.tsx",
         "../../_context/clone-repo/eleva-care-app/src/**/*.ts",
         "../../_context/clone-repo/eleva-care-app/src/**/*.tsx"
       ]
