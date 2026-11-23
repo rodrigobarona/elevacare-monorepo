@@ -3,7 +3,7 @@
   "title": "Public booking funnel and checkout",
   "researcher": "Booking and checkout",
   "date": "2026-11-14",
-  "summary": "The funnel is short, honest and already carries a summary card, a time zone line, a dated cancellation deadline and a hold on the slot, so the bones are right. It feels weak because the money moment is thin: the pay step has no real order summary, no reassurance beside the button and a hold timer that scrolls away on a phone, while the step before it asks for five ticks and the whole thing sits inside the marketing header and a forty-link footer. The one change that matters most is to rebuild the pay step as a confirm-and-pay page: one order summary (who, what, when, price, dated cancellation), the hold and the reassurance next to the button, promo and tax number tucked into the summary, in a quiet checkout chrome. Note: capture 01-paid-funnel-entry shows the time step, because the seeded paid service has one way to meet and the funnel skips the meet step, so the meet step was not audited.",
+  "summary": "The funnel is short, honest and already carries a summary card, a time zone line, a dated cancellation deadline and a hold on the slot, so the bones are right. It feels weak because the money moment is thin: the pay step has no real order summary, no reassurance beside the button and a hold timer that scrolls away on a phone, while the step before it asks for five ticks and the whole thing sits inside the marketing header and a forty-link footer. The one change that matters most is to rebuild the pay step as a confirm-and-pay page: one order summary (who, what, when, price, dated cancellation), the hold and the reassurance next to the button, promo and tax number tucked into the summary, in a quiet checkout chrome. Note: capture 01-paid-funnel-entry shows the time step, because the seeded paid service has one way to meet and the funnel skips the meet step, so the meet step was not audited. References 23 to 34 (2026-11-23) cover the journey as a flow: what carries forward between steps, one frame for every step on a phone, where the promo code and the wallet button sit, the seconds after paying, and what a guest can still change on the thank-you page.",
   "strengths": [
     "A summary card travels with every step and already holds expert, service, duration, way of meeting, chosen time, price and one cancellation line (01-paid-funnel-entry.desktop.jpg, 07-paid-step-pay.desktop.jpg). Keep it and make it work harder.",
     "The funnel is short: three steps for a paid session, and the meet step is skipped when there is only one way to meet. 'Step 1 of 3' plus a segmented bar is clear without being loud.",
@@ -50,7 +50,9 @@
         "04-booking-checkout/02a",
         "04-booking-checkout/03",
         "04-booking-checkout/04",
-        "04-booking-checkout/05"
+        "04-booking-checkout/05",
+        "04-booking-checkout/23a",
+        "04-booking-checkout/24a"
       ]
     },
     {
@@ -67,7 +69,8 @@
       "references": [
         "04-booking-checkout/01",
         "04-booking-checkout/04",
-        "04-booking-checkout/03"
+        "04-booking-checkout/03",
+        "04-booking-checkout/24a"
       ]
     },
     {
@@ -103,7 +106,8 @@
       "references": [
         "04-booking-checkout/02a",
         "04-booking-checkout/01",
-        "04-booking-checkout/04"
+        "04-booking-checkout/04",
+        "04-booking-checkout/27a"
       ]
     },
     {
@@ -117,7 +121,7 @@
       ],
       "detail": "'Hold expires in 04:42' lives in a pale blue pill inside the side card. On a phone that card is at the top of the page, so the countdown is off screen while the member fills in her card. The wording is about the system's hold, not about her time, and the blue pill is a colour used nowhere else in the funnel. The expired state in the source is a bare sentence and a button.",
       "recommendation": "Say it as a promise and keep it in view: 'We are holding your time for 04:42' directly above the payment methods on desktop and inside the fixed pay bar on phones. Keep it calm (teal on cream) until the last minute, then switch to the existing 'Need more time?' offer. When the hold ends, show a card that names the time that was released, says her details are saved, and offers 'See open times'.",
-      "references": ["04-booking-checkout/01"]
+      "references": ["04-booking-checkout/01", "04-booking-checkout/26"]
     },
     {
       "id": "BOOK-07",
@@ -133,7 +137,11 @@
       "references": [
         "04-booking-checkout/03",
         "04-booking-checkout/05",
-        "04-booking-checkout/01"
+        "04-booking-checkout/01",
+        "04-booking-checkout/23b",
+        "04-booking-checkout/25b",
+        "04-booking-checkout/28",
+        "04-booking-checkout/29"
       ]
     },
     {
@@ -148,7 +156,11 @@
       ],
       "detail": "A video session shows a 'Phone number' field with the hint 'Needed for a phone session', not marked optional, so a member booking video wonders if she must fill it. A tax number field ('NIF / VAT') sits in a card called 'Optional details' on every booking, including the free one, where there is no invoice. The note field's helper uses the internal word 'pre-agenda'. Together with the consents this makes a three-card form that runs to more than four phone screens for what is really a name and an email. No reference was found for a tax number field in a health booking; the Fresha and Turo references show the general pattern of optional extras kept behind an 'Add' link in the summary.",
       "recommendation": "Show the phone field only when the session is by phone (or label it 'Phone (optional), for reminders'). Remove the tax number from free bookings. On paid bookings move it to the pay step as a link in the order summary, 'Add your NIF to the invoice', collected through Stripe. Rename the helper to 'Your expert reads this before your session.' With those gone the step is one card: name, email, an optional note, then the agreement.",
-      "references": ["04-booking-checkout/05", "04-booking-checkout/03"]
+      "references": [
+        "04-booking-checkout/05",
+        "04-booking-checkout/03",
+        "04-booking-checkout/27a"
+      ]
     },
     {
       "id": "BOOK-09",
@@ -212,7 +224,11 @@
         "04-booking-checkout/02a",
         "04-booking-checkout/04",
         "04-booking-checkout/05",
-        "04-booking-checkout/01"
+        "04-booking-checkout/01",
+        "04-booking-checkout/23a",
+        "04-booking-checkout/24a",
+        "04-booking-checkout/25a",
+        "04-booking-checkout/25b"
       ]
     },
     {
@@ -230,7 +246,11 @@
         "04-booking-checkout/09b",
         "04-booking-checkout/10",
         "04-booking-checkout/11",
-        "04-booking-checkout/02b"
+        "04-booking-checkout/02b",
+        "04-booking-checkout/23c",
+        "04-booking-checkout/24c",
+        "04-booking-checkout/25c",
+        "04-booking-checkout/27b"
       ]
     },
     {
@@ -244,7 +264,11 @@
       ],
       "detail": "'Create your Eleva account' is the filled button, placed beside 'Add to calendar' inside the next-steps card, with one hint: 'Save this session to your Space and manage it later.' The button says account, the hint says Space, and neither says what she gains or that her details are already filled in. As the strongest button on the page it also competes with the thing she needs first, the calendar entry.",
       "recommendation": "Give the invitation its own band below the confirmation. Title: 'Keep everything in one place'. Two or three benefits in plain words: see and change your sessions, find your expert's notes, book faster next time. Then 'Your name and email are already filled in.' and one button, 'Create your Space', with a quiet line: 'Not now? The email has everything you need.' Use Space throughout, never account.",
-      "references": ["04-booking-checkout/12", "04-booking-checkout/09b"]
+      "references": [
+        "04-booking-checkout/12",
+        "04-booking-checkout/09b",
+        "04-booking-checkout/34"
+      ]
     },
     {
       "id": "BOOK-15",
@@ -258,7 +282,7 @@
       ],
       "detail": "The free quick chat shows 'Price €0.00', a refund policy ('Full refund if you cancel at least 24 hours before', 'No refund if you cancel after 10 Dec') and a tax number field for an invoice that will never exist. The thank-you page repeats 'Price €0.00' and 'Changes and refunds follow the Flexible cancellation policy.' Refund language on a free session is confusing and makes the page look unfinished. No reference was kept for this one; during the search a Selfridges appointment flow labelled its free booking 'Complimentary' in the summary, which is the same idea.",
       "recommendation": "Show 'Free' in place of €0.00. Replace the refund rules with a courtesy line: 'Plans changed? Cancel or move your session any time before it starts, so someone else can take the time.' Hide the tax number field. On the thank-you page drop the refund sentence and keep the change link.",
-      "references": []
+      "references": ["04-booking-checkout/33", "04-booking-checkout/32"]
     },
     {
       "id": "BOOK-16",
@@ -271,7 +295,11 @@
       ],
       "detail": "These states were not captured; this is read from the funnel source and its strings. A taken slot shows a red strip above the picker ('That time was just taken. Please pick another.'). An ended hold replaces the payment form with one sentence and a button. A declined payment says 'Pick a time again to retry', which sends the member back two steps. Each of these is the moment a member is most likely to give up, and each is handled as an error message, not as a next step.",
       "recommendation": "Design them as states of the step. Slot taken: stay on the time step, name the time that went, and highlight the nearest open times on the same day. Hold ended: a card that says her details are saved and offers 'See open times'. Payment declined: stay on the pay step with the hold intact where possible, say nothing was charged, and offer another method. Capture all three for the next audit.",
-      "references": ["04-booking-checkout/08"]
+      "references": [
+        "04-booking-checkout/08",
+        "04-booking-checkout/24b",
+        "04-booking-checkout/26"
+      ]
     },
     {
       "id": "BOOK-17",
@@ -336,7 +364,78 @@
       ],
       "detail": "The invite has a heading, three bullets, a prefilled line, a button and a 'Not now?' line; 'Need to change something?' has two paragraphs.",
       "recommendation": "Invite: headline, one line, button. Change: one sentence.",
-      "references": ["04-booking-checkout/22"]
+      "references": ["04-booking-checkout/22", "04-booking-checkout/27b"]
+    },
+    {
+      "id": "BOOK-22",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "On a phone each step has a different frame",
+      "evidence": [
+        "2026-11-17-checkout-after/04-booking-checkout/04-paid-slot-picked.mobile.jpg",
+        "2026-11-17-checkout-after/04-booking-checkout/06-paid-details-filled.mobile.jpg",
+        "2026-11-17-checkout-after/04-booking-checkout/07b-paid-pay-bar.mobile.jpg"
+      ],
+      "detail": "Step 1 shows the summary as one line ('Inês Mota · First visit, 60 minutes · Video · €60.00') and a bar with 'Continue with Wed, 16 Dec, 16:00'. Step 2 brings back a taller summary card and ends in a small 'Continue to payment' button beside 'Back', at the foot of a page nearly three screens long. Step 3 shows the full summary card, about 380px tall, before the title, and a fixed bar with the total and 'Pay €60.00'. The member meets a new layout at every step, and on the pay step the payment methods start at the bottom of the first screen.",
+      "recommendation": "One frame for all three steps on phones: the one-line summary at the top, which opens the full summary as a sheet, and a fixed bottom bar with the step's one action ('Continue with …', 'Continue to payment', 'Pay €60.00'). From step 2 on, the bar also shows the total.",
+      "references": [
+        "04-booking-checkout/31",
+        "04-booking-checkout/23a",
+        "04-booking-checkout/23b",
+        "04-booking-checkout/29"
+      ]
+    },
+    {
+      "id": "BOOK-23",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "Promo code and tax number sit in two different steps, outside the summary",
+      "evidence": [
+        "2026-11-17-checkout-after/04-booking-checkout/06-paid-details-filled.mobile.jpg",
+        "2026-11-17-checkout-after/04-booking-checkout/07-paid-step-pay.desktop.jpg"
+      ],
+      "detail": "'Need an invoice in your name? Add your tax number' is a link under the note field on the details step, between the emergency line and the consent card. 'Add a promo code' is a link under the payment form on the pay step, between the Link terms and the hold line. Both change what she pays or what her invoice says, and neither is in the summary card where the total is. An applied code has no visible home there yet.",
+      "recommendation": "Move both into the summary card on the pay step, as two quiet links under the total: 'Add a promo code' and 'Add your tax number'. Each opens in place. An applied code becomes a named line above the total with a way to remove it, and a tax number becomes a line with 'Change'. Both still go through Stripe, as today.",
+      "references": [
+        "04-booking-checkout/24a",
+        "04-booking-checkout/25b",
+        "04-booking-checkout/23b",
+        "04-booking-checkout/28"
+      ]
+    },
+    {
+      "id": "BOOK-24",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "The pay button sits under an optional 'save my information' block",
+      "evidence": [
+        "2026-11-17-checkout-after/04-booking-checkout/07-paid-step-pay.desktop.jpg",
+        "2026-11-17-checkout-after/04-booking-checkout/07-paid-step-pay.mobile.jpg"
+      ],
+      "detail": "On desktop the payment form runs: Card or MB WAY, four card fields, then a boxed 'Optional: Save my information for faster checkout' with email, mobile number and full name and a line of Link terms. 'Add a promo code', the hold line and 'Pay €60.00' come after it, about 975px down the page. The three optional fields read as part of the payment and ask again for an email she gave one step earlier. No wallet button is in the capture. That may be the capture browser, so it needs a check on a phone with Apple Pay or Google Pay.",
+      "recommendation": "Put a wallet button first when the device has one, with 'or pay by card' under it. Collapse or turn off the save-my-information block through the payment form's settings, so the card form is four fields and the pay button is on the first screen. Check both on a real phone before judging.",
+      "references": [
+        "04-booking-checkout/30",
+        "04-booking-checkout/29",
+        "04-booking-checkout/24a"
+      ]
+    },
+    {
+      "id": "BOOK-25",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "A guest is told to create a Space to move or cancel, and cannot fix a wrong email",
+      "evidence": [
+        "2026-11-17-checkout-after/04-booking-checkout/09-free-thank-you.desktop.jpg",
+        "2026-11-17-checkout-after/04-booking-checkout/09-free-thank-you.mobile.jpg"
+      ],
+      "detail": "Under 'Need to change something?' the thank-you page says: 'To move or cancel it, sign in or create your Space below with this email.' A member who booked as a guest, which the funnel invites, has no direct way to change the session from this page. The page shows the address the confirmation went to, but a typo cannot be corrected there, and the join link lives in that email.",
+      "recommendation": "Offer 'Move' and 'Cancel' on the page itself, with the dated deadline shown when she confirms. Add 'Not your address? Change it' beside the email. How a guest is recognised for both (this browser session, or the signed link in her email) needs a product and security decision first. The Space invitation stays optional.",
+      "references": [
+        "04-booking-checkout/27b",
+        "04-booking-checkout/32",
+        "04-booking-checkout/25c"
+      ]
     }
   ],
   "references": [
@@ -627,6 +726,234 @@
       "why": "Changing a booking is one sentence, not a policy recap.",
       "apply": "'Need to change something?' says in one sentence how to move or cancel; the Space invite is a headline, one line and a button.",
       "query": "appointment booking confirmation page with what happens next and add to calendar"
+    },
+    {
+      "id": "04-booking-checkout/23a",
+      "file": "img/23a-airbnb-confirm-pay-summary.jpg",
+      "app": "Airbnb",
+      "platform": "ios",
+      "type": "flow",
+      "mobbin_url": "https://mobbin.com/flows/8cbcaf23-5bb1-4f0c-8efa-05806e484b0d?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Phone confirm and pay, top half: the summary as short labelled blocks with Change beside each",
+      "why": "iOS. One screen titled 'Confirm and pay' follows the time sheet directly. It opens with the service's photo, its name, who gives it and the rating. Then Date, Guests, Location and Total price as short blocks, with 'Change' or 'Details' beside the ones that can be edited. 'Free cancellation: Cancel before Sep 4, 12:00 PM (EDT) for full refund' closes the card. A small 'Review' pill floats over the page and takes her down to the button. Travel marketplace, kept for the structure.",
+      "apply": "The phone summary as a person and a moment: photo, 'First visit with Inês Mota', the day and time range, the total and the dated refund line, with 'Change' wherever a change is possible without going back a step.",
+      "query": "Airbnb booking an experience"
+    },
+    {
+      "id": "04-booking-checkout/23b",
+      "file": "img/23b-airbnb-confirm-pay-coupon-total.jpg",
+      "app": "Airbnb",
+      "platform": "ios",
+      "type": "flow",
+      "mobbin_url": "https://mobbin.com/flows/8cbcaf23-5bb1-4f0c-8efa-05806e484b0d?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Bottom half: payment method as one row, coupon as one row, price lines, one sentence of agreement, the button",
+      "why": "iOS, the same screen scrolled. 'Payment method' is one row with the chosen method and an arrow. 'Coupons' is one row, 'Enter a coupon'. 'Price details' is one line and the total. One sentence carries the agreement with its links, directly above 'Confirm and pay'. Everything from the coupon to the button fits in the lower half of the screen.",
+      "apply": "On phones keep the promo code as a row between the payment method and the price lines, so the code, the total and the pay button are within one thumb's reach. An applied code becomes a line above the total.",
+      "query": "Airbnb booking an experience"
+    },
+    {
+      "id": "04-booking-checkout/23c",
+      "file": "img/23c-airbnb-reservation-confirmed-card.jpg",
+      "app": "Airbnb",
+      "platform": "ios",
+      "type": "flow",
+      "mobbin_url": "https://mobbin.com/flows/8cbcaf23-5bb1-4f0c-8efa-05806e484b0d?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "After paying: one headline, one card with the photo, the date and 'Paid', one button",
+      "why": "iOS. 'Your reservation is confirmed!' above one card: the photo, the service, 'Sep 6, 2025 at 12:00 PM', '1 guest' and 'Paid $45.00 USD'. One button, 'Next', leads to the trips list, where the same card carries a small 'In 3 months' label. The whole flow is four screens: the page, the time sheet, confirm and pay, confirmed.",
+      "apply": "Say what was paid on the thank-you card ('Paid €60.00') beside the time. Count the screens from the profile to the thank-you page; a time picked on the profile should not be asked for again.",
+      "query": "Airbnb booking an experience"
+    },
+    {
+      "id": "04-booking-checkout/24a",
+      "file": "img/24a-preply-checkout-tutor-summary.jpg",
+      "app": "Preply",
+      "platform": "web",
+      "type": "flow",
+      "mobbin_url": "https://mobbin.com/flows/be043981-1705-4a7a-acc3-717c53ac5b9c?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Checkout with the person first: 'Your tutor', a date tile, a length that can still change, the promo link under the total",
+      "why": "The left column is three small cards. 'Your tutor' has the name, rating, photo and two numbers. 'Trial lesson details' has a calendar tile and 'Thursday, 08:00 – 08:25' with a note on the time zone. 'Checkout info' keeps the 25 or 50 minute switch, so the length can change here without going back, then the price lines, the total and 'Have a promo code?'. On the right, Card, Apple Pay and Google Pay are tabs and the button reads 'Book lesson and pay · $4.98'. Two quiet lines under it give the refund policy link and one sentence on security. Mobbin's capture has grey blocks over parts of the left column. Education marketplace, kept for the structure.",
+      "apply": "Head the summary 'Your expert' with photo, name and profession. Show the day as a tile and the time as a range. Keep 'Add a promo code' and 'Add your tax number' as links under the total, inside the summary. Name the action and the amount on the button.",
+      "query": "Preply booking a trial lesson with a tutor"
+    },
+    {
+      "id": "04-booking-checkout/24b",
+      "file": "img/24b-preply-reviewing-payment.jpg",
+      "app": "Preply",
+      "platform": "web",
+      "type": "flow",
+      "mobbin_url": "https://mobbin.com/flows/be043981-1705-4a7a-acc3-717c53ac5b9c?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "The seconds after pressing pay: a dialog that says what is happening and what not to do",
+      "why": "After the button, a small dialog covers the checkout: 'Reviewing payment details', a ring with a lock, and 'Please don't close or refresh this page.' The page behind is dimmed, so nothing can be pressed twice.",
+      "apply": "Give the wait its own state: 'Confirming your payment', one line ('This takes a few seconds. Please keep this page open.') and the pay bar locked. The thank-you page follows with no blank moment between.",
+      "query": "Preply booking a trial lesson with a tutor"
+    },
+    {
+      "id": "04-booking-checkout/24c",
+      "file": "img/24c-preply-confirmation-both-faces.jpg",
+      "app": "Preply",
+      "platform": "web",
+      "type": "flow",
+      "mobbin_url": "https://mobbin.com/flows/be043981-1705-4a7a-acc3-717c53ac5b9c?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Confirmation with both faces, the tutor's name in the headline, and one action that prepares the lesson",
+      "why": "The student's and the tutor's photos sit together above 'We'll tell [tutor] you're ready to start!'. One card repeats the subject, 'Thursday, December 11 · 08:00 – 08:25' and where the lesson happens, then a tinted line with the guarantee and one button, 'Get ready for your lesson'. The page offers one thing to do, and it is about the lesson, not about the account.",
+      "apply": "After the calendar button, the next action on the thank-you page can be about the session itself ('Tell Inês what you want to talk about'). The confetti is not what Eleva takes; the page stays calm.",
+      "query": "Preply booking a trial lesson with a tutor"
+    },
+    {
+      "id": "04-booking-checkout/25a",
+      "file": "img/25a-getyourguide-summary-edit-in-place.jpg",
+      "app": "GetYourGuide",
+      "platform": "web",
+      "type": "flow",
+      "mobbin_url": "https://mobbin.com/flows/4f6058c3-d206-4d4f-a28f-583636abd179?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Change the date and time inside the summary, without leaving the step",
+      "why": "On the contact step, 'Change date or participants' turns the order summary's own lines into three menus (date, time, participants) with a 'Cancel' link under them. The form on the left keeps what was typed, and the total updates in place. The hold line stays above the title. A travel product, kept for its structure.",
+      "apply": "'Change' beside the time opens a small picker in the summary card, or a sheet on phones, and returns to the same step with the details she typed still there.",
+      "query": "guest checkout for an activity or experience ticket"
+    },
+    {
+      "id": "04-booking-checkout/25b",
+      "file": "img/25b-getyourguide-payment-contact-row.jpg",
+      "app": "GetYourGuide",
+      "platform": "web",
+      "type": "flow",
+      "mobbin_url": "https://mobbin.com/flows/4f6058c3-d206-4d4f-a28f-583636abd179?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A finished step leaves a row in the summary, with Edit",
+      "why": "On the payment step the summary has gained a row: the name, email and phone from the step before, with 'Edit'. Above it are the date and time with 'Change date or participants' and the dated free cancellation. Below it are 'Enter promo or gift code' and the total with 'All taxes and fees included'. Payment methods are a list of rows (card, PayPal, Google Pay, Klarna), and the card fields open under the chosen one.",
+      "apply": "After 'Your details', add 'Beatriz Nunes · beatriz@example.com · Edit' to the summary on the pay step, so she sees where the confirmation will go before she pays. Promo code and tax number sit as links in the same card.",
+      "query": "guest checkout for an activity or experience ticket"
+    },
+    {
+      "id": "04-booking-checkout/25c",
+      "file": "img/25c-getyourguide-confirmed-email-edit.jpg",
+      "app": "GetYourGuide",
+      "platform": "web",
+      "type": "flow",
+      "mobbin_url": "https://mobbin.com/flows/4f6058c3-d206-4d4f-a28f-583636abd179?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "The confirmation names the email it used, with an 'edit' link beside it",
+      "why": "'Your order is confirmed' is followed by four short lines. One reads 'Confirmation was sent to' with the address and 'edit' beside it. A wrong address can be put right on this page, with no message to support. The offers under the lines are not what Eleva takes.",
+      "apply": "Beside 'We sent your confirmation to …' offer 'Not right? Change it', which sends the confirmation and the join link to the corrected address. It needs a security check first: only from the browser session that made the booking.",
+      "query": "guest checkout for an activity or experience ticket"
+    },
+    {
+      "id": "04-booking-checkout/26",
+      "file": "img/26-airbnb-bank-confirm-hold.jpg",
+      "app": "Airbnb",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/flows/5f4115be-c840-4c41-92a3-146ee1be61ab?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Before the bank's own screen: one page that says why, and that the booking is held",
+      "why": "iOS. Between 'Confirm and pay' and the bank's passcode page, a full screen shows a small illustration, 'Your bank may need you to confirm a few details' and 'Don't worry, we'll hold your booking while you take care of this', with one button, Continue. The step that looks least like the product is announced by the product first.",
+      "apply": "When a payment needs the bank's confirmation (3-D Secure, or an MB WAY approval on the phone), say so in one sentence in the pay step and keep the hold while it runs: 'Your bank may ask you to confirm. We keep your time while you do.'",
+      "query": "Airbnb booking an experience"
+    },
+    {
+      "id": "04-booking-checkout/27a",
+      "file": "img/27a-square-one-page-checkout-policy-timeline.jpg",
+      "app": "Square",
+      "platform": "web",
+      "type": "flow",
+      "mobbin_url": "https://mobbin.com/flows/6992da62-212e-4947-991d-588142829394?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Details, note, policy and total on one page; the cancellation deadline drawn on a line from today to the appointment",
+      "why": "One page holds what Eleva splits in two: the contact fields, 'Appointment note' as a heading with a link (here 'Edit', after a note was added), the cancellation policy, and the summary with one button. The policy is a bar from 'Today' to 'Appointment' with a marker labelled 'Cancel before Dec 31', then one sentence, 'Please cancel or reschedule before 1:30 PM on Tuesday, December 31', and 'See full policy'. 'Appointment held for' sits under the title. The small print says an account is created on booking; Eleva does not take that. A booking tool for small businesses, kept for the structure.",
+      "apply": "Two things. The optional note as a link, 'Add a note for Inês', that opens a field, so the details step is a name and an email. And the policy as a small line from today to the session with the free-cancellation part marked, above the dated sentence.",
+      "query": "booking an appointment with a health professional"
+    },
+    {
+      "id": "04-booking-checkout/27b",
+      "file": "img/27b-square-thanks-calendar-actions.jpg",
+      "app": "Square",
+      "platform": "web",
+      "type": "flow",
+      "mobbin_url": "https://mobbin.com/flows/6992da62-212e-4947-991d-588142829394?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Thank-you page: 'Add to calendar' full width, then Reschedule, Cancel and Book again as three small buttons",
+      "why": "'Thanks for booking' and one card with the day, the time range and the services. 'Add to calendar' is the widest button. Under it sit three equal buttons with icons: Reschedule, Cancel, Book again. 'Next steps', 'Payment' and 'Cancellation policy' follow as separate small cards. Changing the booking needs no sign-in on this page.",
+      "apply": "Put 'Move' and 'Cancel' on the thank-you page as real actions under the calendar button, each showing the dated deadline when she confirms. How a guest is recognised (this browser session, or the signed link in her email) is a product and security decision.",
+      "query": "booking an appointment with a health professional"
+    },
+    {
+      "id": "04-booking-checkout/28",
+      "file": "img/28-upwork-promo-applied-line.jpg",
+      "app": "Upwork",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/258ee01d-64f8-4cca-8552-b4f95ac5719d?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "An applied code: the code marked 'Added' with a remove cross, and a named discount line above the total",
+      "why": "In the summary column the promo field shows the code with a small green 'Added' tag and a cross to remove it. Below, the lines read Subtotal, then the code's own name with '-$10.00' in green and how long it lasts, then taxes and 'Estimated total'. The pay button and one protection line follow. A subscription upgrade, kept for the applied state.",
+      "apply": "After a code is applied in the summary: 'WELCOME10 · Added' with a way to remove it, a line 'WELCOME10 −€6.00' above 'Total you pay today', and the pay button and the phone bar updated to the new amount.",
+      "query": "booking checkout order summary with an applied promo code shown as a discount line"
+    },
+    {
+      "id": "04-booking-checkout/29",
+      "file": "img/29-luma-one-screen-checkout-coupon.jpg",
+      "app": "Luma",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/6490283f-b69b-459c-b8e0-ef95ec4ee1bc?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A whole paid registration on one phone screen, with coupon, total and wallet button in the lower third",
+      "why": "iOS. The top holds what is being bought: a thumbnail, the event name and the date. 'Ticket' is one row with the price. 'Payment Method' is one row showing Apple Pay with an edit icon. The rest of the screen is empty down to the foot, where 'Apply Coupon' is a small link right above 'Total US$5.00' and the wallet button fills the width. Nothing needs a scroll. An events product, kept for where things sit.",
+      "apply": "On the phone pay step, keep the lower third for what a thumb needs: 'Add a promo code' as a link above the total, the total, the pay button. When a wallet is available, the button is the wallet button.",
+      "query": "booking payment screen with Apple Pay button above card form and a fixed total bar"
+    },
+    {
+      "id": "04-booking-checkout/30",
+      "file": "img/30-trainline-wallet-first-pay-buttons.jpg",
+      "app": "Trainline",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/3fb118ef-50d1-47a5-b484-63e3b34ab480?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Wallet first: a discount row, 'To pay' with the total, then one pay button per method",
+      "why": "iOS, a European train booking. 'Add a discount code' is one row with an arrow. 'To pay' lists the fee and the total in large type. Three full-width buttons follow in order: 'Buy with Apple Pay', 'Pay by card', 'Pay with PayPal'. No card form is on the screen until 'Pay by card' is pressed, so a member with a wallet pays in one tap.",
+      "apply": "Show Apple Pay or Google Pay as a button above the card form when the device has one, with 'or pay by card' under it, through Stripe's wallet button. MB WAY keeps its own tab for Portuguese members.",
+      "query": "booking payment screen with Apple Pay button above card form and a fixed total bar"
+    },
+    {
+      "id": "04-booking-checkout/31",
+      "file": "img/31-klook-total-bar-price-summary.jpg",
+      "app": "Klook",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/5ba62796-f1d4-4632-b84e-94de05b2f3e9?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "The total in the fixed bar opens the price summary as a sheet over the page",
+      "why": "iOS. The fixed bar shows 'US$ 17.59', a small 'See details' with an arrow, and the main button. Tapping it raises a sheet, 'Price summary', that lists each line. The form behind stays where it was. The summary takes no height in the page and is one tap from the button. Travel product, kept for the bar.",
+      "apply": "On the details and pay steps on phones, shrink the summary card to one line at the top and let 'Total €60.00' in the bar open the full summary (person, time, refund date, code, tax number) as a sheet.",
+      "query": "booking checkout screen with a collapsed order summary bar that expands on tap"
+    },
+    {
+      "id": "04-booking-checkout/32",
+      "file": "img/32-luma-youre-in-countdown.jpg",
+      "app": "Luma",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/b520e950-3a01-4bff-994c-dcf66672257b?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "'You're In': the email used, a countdown to the start, and when the join button will appear",
+      "why": "After registering, the event page itself changes. A card says 'You're In' and 'A confirmation email has been sent to' with the address. A tinted row reads 'Event starting in 14h 23m' and 'The join button will be shown when the event is about to start.' 'Add to Calendar' is a small chip, and one line offers a way out: 'No longer able to attend? Notify the host by canceling your registration.' No price or refund wording appears. An events product, kept for the structure.",
+      "apply": "For a free session the thank-you page says she is in, shows how long until the session, and says when the join link opens (15 minutes before). Cancelling is one linked sentence, with no refund wording.",
+      "query": "free event registration confirmation page with add to calendar"
+    },
+    {
+      "id": "04-booking-checkout/33",
+      "file": "img/33-selfridges-complimentary-summary.jpg",
+      "app": "Selfridges",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/flows/e5cf516c-6b42-4bb9-b0c2-291623dc0124?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A free appointment: 'Complimentary' in the price place and in the total, and a last step called Confirmation",
+      "why": "An in-store consultation booked in four steps: Service, Appointment, Your details, Confirmation. The summary on the right lists the date and time, the duration and the location, then the service line with 'Complimentary' where a price would be, and 'Total: Complimentary'. No payment step, card field or refund text appears anywhere in the flow. A department store, kept for how a free booking is worded.",
+      "apply": "On a free session write the word wherever a price would be (Eleva's word is 'Free'), call the last step 'Confirm', and keep refund wording out of every step and out of the thank-you page.",
+      "query": "booking an appointment with a health professional"
+    },
+    {
+      "id": "04-booking-checkout/34",
+      "file": "img/34-nordvpn-email-chip-one-field.jpg",
+      "app": "NordVPN",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/d859885f-d376-4155-b680-261ffc8b81a0?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "The account step after a purchase asks one thing, with the email shown as a fixed chip",
+      "why": "Right after paying, the page 'Create your password' shows the buyer's email as a small chip that cannot be edited, one field and one button. A list on the left, 'Activation steps', has 'Complete purchase' ticked and 'Activate account' as the current step, so the page reads as the next step of something already done. A security product, kept for the structure.",
+      "apply": "The page behind 'Create your Space' shows her email as a fixed chip and her name filled in, and asks only for the one choice that is left. A short list, 'Session booked' ticked and 'Create your Space' current, tells her the booking is safe whatever she does next.",
+      "query": "order confirmation page for a guest with a save your details by creating a password prompt"
     }
   ],
   "judging_criteria": [
@@ -637,6 +964,9 @@
     "Does the member make at most two ticks to book, with health data consent as its own explicit tick, the other notices as a linked sentence or readable rows, and optional choices clearly apart from required ones? (Headspace 04-booking-checkout/09a, Turo 04-booking-checkout/03)",
     "On a phone, does the time step show day chips and at least six times for the chosen day on the first screen, grey out days with no times, and offer the next available time when a day or week is empty? (Future Pro 04-booking-checkout/07, Fresha 04-booking-checkout/08, Zoom 04-booking-checkout/06)",
     "Does the thank-you page name the expert and the time in its headline, show the email address used, put add-to-calendar first with a choice of calendars, list dated next steps, and keep the Space invitation in its own band with a benefit and 'details already filled in'? (Headspace 04-booking-checkout/09b, Warby Parker 04-booking-checkout/10, Cal.com 04-booking-checkout/11, Oyster 04-booking-checkout/12)",
-    "Does checkout keep each consent to its statement and one line, with how to withdraw one tap away, and does the thank-you page say each thing once (join link, calendar, changes, Space invite)? (04-booking-checkout/20, 04-booking-checkout/21, 04-booking-checkout/22)"
+    "Does checkout keep each consent to its statement and one line, with how to withdraw one tap away, and does the thank-you page say each thing once (join link, calendar, changes, Space invite)? (04-booking-checkout/20, 04-booking-checkout/21, 04-booking-checkout/22)",
+    "Watching the journey from the profile: does a member who picked a service and a time there reach the pay step without being asked for either again, and reach the thank-you page in at most five screens as a guest? (04-booking-checkout/23a, 04-booking-checkout/24a, 03-profile/27b)",
+    "On a phone, does every step share one frame: a one-line summary that opens the full summary, and a fixed bottom bar with that step's one action, with promo code, total and pay button in the lower third of the pay step? (04-booking-checkout/31, 04-booking-checkout/29, 04-booking-checkout/23b)",
+    "Can she recover without starting again: change the time from the summary and keep what she typed, see a named state while the payment or her bank's check runs, and correct her email or move the session from the thank-you page? (04-booking-checkout/25a, 04-booking-checkout/24b, 04-booking-checkout/26, 04-booking-checkout/25c, 04-booking-checkout/27b)"
   ]
 }

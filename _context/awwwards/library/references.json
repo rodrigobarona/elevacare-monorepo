@@ -1,0 +1,400 @@
+{
+  "title": "Awwwards reference library",
+  "researcher": "Awwwards seat",
+  "date": "2026-11-23",
+  "summary": "Twenty-three sites that the Awwwards jury recognised and that teach Eleva something about art direction or page structure: health and care brands, booking products, calm editorial sites, brand systems and two trust-heavy products. Awards, dates and scores are copied from each site's Awwwards page; an Honorable Mention page shows no scores, so those entries have none. The captures show each live site on 23 November 2026, which is not always the design the jury saw; where it has changed, the entry says so.",
+  "references": [
+    {
+      "id": "awwwards/01",
+      "site": "Heva Health",
+      "url": "https://www.hevahealth.com/",
+      "awwwards_url": "https://www.awwwards.com/sites/heva-health",
+      "award": "Site of the Day, 26 July 2024, and Developer Award (its page gives no date)",
+      "scores": "Overall 7.11: Design 7.18, Usability 7.04, Creativity 7.04, Content 7.25",
+      "developer_score": "7.55: Semantics and SEO 7.60, Animations 7.40, Accessibility 7.20, Performance 8.00, Responsive 7.60, Markup 7.20",
+      "category": "health",
+      "files": [
+        "img/01-heva-home.desktop.jpg",
+        "img/01-heva-home.full.jpg",
+        "img/01-heva-home.mobile.jpg"
+      ],
+      "teaches": "A two-colour brand carries a whole clinic: cream and deep olive, a light condensed serif with italics for headlines (\"Vitality, refined.\") and a small grotesque for body text, over warm dusk photography. The page then answers the three trust questions in order. \"The people behind every protocol\" shows four clinicians with portrait, credentials, focus tags and a short bio. \"Three steps, one path forward\" numbers the way in. The FAQ is written as real questions from named people (\"Charles from New York asks: How much does Heva actually cost?\").",
+      "apply": "Homepage: show four checked experts with portrait, title, focus tags and two lines of bio, before any testimonial. FAQ on the homepage and on become an expert: write each question the way a member would ask it. Brand as a whole: one pill-shaped navigation bar over the hero photo, and a palette of two colours plus photography.",
+      "caution": "The hero and sections have changed since the award; the palette and type are the same. A 30% discount form interrupts the page after the hero, and the page uses before and after body photos; Eleva takes neither. The full capture is cropped above the footer, which carries a US compliance badge."
+    },
+    {
+      "id": "awwwards/02",
+      "site": "Function Health",
+      "url": "https://www.functionhealth.com",
+      "awwwards_url": "https://www.awwwards.com/sites/function-health",
+      "award": "Honorable Mention, 9 July 2024",
+      "category": "health",
+      "files": [
+        "img/02-function-health-home.desktop.jpg",
+        "img/02-function-health-home.full.jpg",
+        "img/02-function-health-home.mobile.jpg"
+      ],
+      "teaches": "The first screen is one portrait, a three-word serif headline (\"Check your health.\") and a strip of three facts with a label under each (160+ lab tests, whole body, $1 per day). Every section heading is a serif sentence with one word in terracotta italics (\"Testing is easy\", \"Know what to do next\"). Cream background, terracotta buttons, a grotesque for body text. A comparison table (\"Not your average checkup\") and a price card (\"What could cost you $15,000 is $365\") say the offer in numbers.",
+      "apply": "Homepage hero: a facts strip under the headline with three things Eleva can prove (experts checked, session length, starting price). Homepage: a short table of booking with Eleva against finding an expert alone. Brand as a whole: the heading pattern of one emphasised word in italics works with a serif such as Lora.",
+      "caution": "The page is about 14,000px long and leans on celebrity quotes and press logos. The full capture shows the cookie panel over the hero. The medical board is shown far down the page; Eleva should show its experts early."
+    },
+    {
+      "id": "awwwards/03",
+      "site": "Maxima Therapy",
+      "url": "https://maximatherapy.com/",
+      "awwwards_url": "https://www.awwwards.com/sites/maxima-therapy",
+      "award": "Site of the Day, 7 April 2026, and Developer Award (its page gives no date)",
+      "scores": "Overall 7.73: Design 7.80, Usability 7.38, Creativity 8.12, Content 7.76",
+      "developer_score": "7.98: Semantics and SEO 8.00, Animations 8.20, Accessibility 7.40, Performance 8.00, Responsive 8.20, Markup 7.80",
+      "category": "health",
+      "files": [
+        "img/03-maxima-home.desktop.jpg",
+        "img/03-maxima-home.full.jpg",
+        "img/03-maxima-home.mobile.jpg"
+      ],
+      "teaches": "A therapy provider owns an illustration language instead of stock photos: flat shapes with small faces in yellow, orange-red, blue and green, a heavy condensed display face in capitals and a rounded grotesque for reading. The characters even sit on top of the one photograph. Near the end, a calm white card states the worry and answers it: \"We understand this can be a big step, but we made the process as quick, easy, and stress-free as possible\", with three named steps.",
+      "apply": "Brand as a whole: commission a small set of illustrations Eleva owns (people, bodies, life stages) so that pages without photography still look like Eleva. Homepage and become an expert: a reassurance card that names the worry, then three steps.",
+      "caution": "The page is driven by scroll animation and has long empty stretches; the helper's full-page shot came out mostly blank and the capture here was taken one screen at a time. The primary colours and the playful tone suit children's services, not an adult health companion. Usability is its lowest jury score."
+    },
+    {
+      "id": "awwwards/04",
+      "site": "Hello Period",
+      "url": "https://helloperiod.com/",
+      "awwwards_url": "https://www.awwwards.com/sites/hello-period",
+      "award": "Honorable Mention, 12 April 2024",
+      "category": "health",
+      "files": [
+        "img/04-hello-period-home.desktop.jpg",
+        "img/04-hello-period-home.full.jpg",
+        "img/04-hello-period-home.mobile.jpg"
+      ],
+      "teaches": "A women's health brand that is warm and direct without being clinical: a red-orange wordmark and headings in a high-contrast serif, on mint, blush, lilac and pale blue blocks, with products shot on flat colour. Trust is built in layers down the page: press logos, star reviews marked \"Verified\", a live counter (\"804,726,717 single-use period products we've saved from the landfill\") and a row of four facts with icons, among them that it was designed by a nurse and is female founded. \"Hello Academy\" gathers a comparison chart, a quiz and a how-to in three cards.",
+      "apply": "Homepage: a row of four plain facts about who is behind Eleva. Content pages: a three-card learning strip (a guide, a short quiz that points to the right kind of expert, a how-it-works). Brand as a whole: a pastel family used as section backgrounds with one strong accent for headings and buttons.",
+      "caution": "It is a shop, so the hero is a product carousel and the page pushes bundles and discounts. The hero has changed since the award. Six background colours on one page is the upper limit; Eleva should use fewer."
+    },
+    {
+      "id": "awwwards/05",
+      "site": "Q Psychology",
+      "url": "https://qpsychology.com.au/",
+      "awwwards_url": "https://www.awwwards.com/sites/q-psychology",
+      "award": "Honorable Mention, 23 January 2025",
+      "category": "health",
+      "files": [
+        "img/05-q-psychology-home.desktop.jpg",
+        "img/05-q-psychology-home.full.jpg",
+        "img/05-q-psychology-home.mobile.jpg",
+        "img/05-q-psychology-team.desktop.jpg",
+        "img/05-q-psychology-team.full.jpg",
+        "img/05-q-psychology-fees.desktop.jpg",
+        "img/05-q-psychology-fees.full.jpg"
+      ],
+      "teaches": "The team page is a small, calm directory: two rows of filter chips (clinic location, practice area), then portraits in arch-shaped frames with name, pronouns, role, location tags and a \"See profile\" button. The fees page puts every price in one place: an accordion per service with fee and rebate, a line for the cancellation policy and two questions about payment. The brand is deep green and mint on off-white, very large light serif headlines and photographs of the real rooms and the real team. The footer ends with a crisis line in its own strip.",
+      "apply": "Explorer: filter chips above the grid and a card that shows portrait, name, title, mode and place, with one button. Trust and legal: a single page for prices, what a refund depends on and how to cancel, as accordions. Site footer: a line that says where to go in an emergency.",
+      "caution": "On desktop the hero sets white serif text over a busy photo and the paragraph is hard to read. The hero headline runs to four lines."
+    },
+    {
+      "id": "awwwards/06",
+      "site": "Roczen",
+      "url": "https://www.roczen.com/",
+      "awwwards_url": "https://www.awwwards.com/sites/roczen-health",
+      "award": "Honorable Mention, 27 January 2023",
+      "category": "health",
+      "files": [
+        "img/06-roczen-home.desktop.jpg",
+        "img/06-roczen-home.full.jpg",
+        "img/06-roczen-home.mobile.jpg"
+      ],
+      "teaches": "A UK care programme shows its evidence in a fixed order. First, \"Clinically proven results\": four numbers, each with its unit and a one-line label. Then one plain sentence on who evaluated the service, with the journals named. Then reviews, each signed \"Member\". Then the organisations that use it, and the regulator's mark in the footer. The FAQ starts with \"Who are my doctors and nurses?\". It calls the people it serves members, as Eleva does.",
+      "apply": "Homepage and the evidence-based care page: an evidence band in this order (numbers Eleva can stand behind, who checks the experts, member words, where Eleva is registered). FAQ: open with who the experts are. About: name the controller and registration in the footer.",
+      "caution": "The subject is weight management; the structure is the lesson. Sections fade in on scroll, so the helper's full-page shot was blank and the capture was taken one screen at a time. The pastel gradient and blue are generic."
+    },
+    {
+      "id": "awwwards/07",
+      "site": "Klearmind Clinics",
+      "url": "https://klearmindclinics.com/",
+      "awwwards_url": "https://www.awwwards.com/sites/klearmind-clinics",
+      "award": "Honorable Mention, 30 August 2025",
+      "category": "health",
+      "files": [
+        "img/07-klearmind-home.desktop.jpg",
+        "img/07-klearmind-home.full.jpg",
+        "img/07-klearmind-home.mobile.jpg"
+      ],
+      "teaches": "Imagery for a medical service that is neither stock photos nor cartoons: single flowers cut out on blush and cream, and one collage of a woman's face with flowers. White, blush and cream with orange buttons, a light soft serif for headlines and a plain sans for text. The structure is careful too: \"A clear path from questions to care\" as four cards, and \"Know the risks before treatment\" as a plain list beside a photo of a consultation, before any sales message.",
+      "apply": "Brand as a whole: botanical still life as a photography direction for pages where portraits are not right (trust, legal, empty states). Homepage: four step cards from first question to first session. Profile and checkout: say what a session cannot do, plainly, beside what it can.",
+      "caution": "This is a ketamine clinic in California; take the art direction and the structure, nothing about the service. The full capture stops before the sections that are specific to US rules. The light headline weight gets thin on a phone."
+    },
+    {
+      "id": "awwwards/08",
+      "site": "Letters",
+      "url": "https://letters.app/",
+      "awwwards_url": "https://www.awwwards.com/sites/letters",
+      "award": "Honorable Mention, 23 April 2025",
+      "category": "health",
+      "files": [
+        "img/08-letters-home.desktop.jpg",
+        "img/08-letters-home.full.jpg",
+        "img/08-letters-home.mobile.jpg"
+      ],
+      "teaches": "A page that sells a tool to clinicians in their own terms: \"Patients, not paperwork\", the saving in hours in the second line, and a before and after of the actual document under the button. \"Your data is safe\" is three tiles that each state one fact, the strongest being \"Your data never leaves Australia\" with the city named. Pricing is three cards with a free tier first. Sky-blue gradient, white cards, black pill buttons and a rounded grotesque.",
+      "apply": "Become an expert: lead with what the expert gets back (time, members, payouts), then show the real product, then three data tiles that state facts (where records are stored in the EU, who can read them, what is never stored). Clinics: the same tiles, plus pricing cards.",
+      "caution": "It says \"patients\"; Eleva says members. \"Bank-grade protection\" is a vague claim; the tile that names the country is the one to copy. Headings animate on scroll and leave gaps in the capture."
+    },
+    {
+      "id": "awwwards/09",
+      "site": "Therapy in London",
+      "url": "https://www.therapyin.london/",
+      "awwwards_url": "https://www.awwwards.com/sites/therapy-in-london",
+      "award": "Honorable Mention, 10 January 2025",
+      "category": "marketplace",
+      "files": [
+        "img/09-therapy-in-london-home.desktop.jpg",
+        "img/09-therapy-in-london-home.full.jpg",
+        "img/09-therapy-in-london-home.mobile.jpg",
+        "img/09-therapy-in-london-profile.desktop.jpg",
+        "img/09-therapy-in-london-profile.full.jpg",
+        "img/09-therapy-in-london-join.desktop.jpg",
+        "img/09-therapy-in-london-join.full.jpg"
+      ],
+      "teaches": "The closest match to Eleva in the library. The hero is the search itself, two questions in plain words: \"What do you need help with?\" and \"Where are you based?\". The profile lets the therapist speak: a quote, a welcome video, \"I am going to help you by\" as three step cards, then prices in a two-cell table (\"Telephone Consultation (15 mins) Free\", \"Individual Session (50 minutes) £150\"), tags for therapy types and session types, and the membership body with the registration number. The join page gives four steps, says which documents are checked and how long approval takes (\"up to 72 hours\"), and prints the cost on two stamps. Paper beige with blue, green, lilac and orange, ruled lines and hand-drawn furniture, a geometric grotesque.",
+      "apply": "Homepage hero: a need question and a place or mode question as the first thing on the page. Profile: a first free call and the session price side by side, a short \"how I work\" in three steps, and the professional body with the register number. Become an expert: steps, the documents Eleva checks, the review time and the cost, all on one page.",
+      "caution": "Heavy scroll animation, tilted cards and words that draw themselves; the helper's full-page shot was blank and these captures were taken one screen at a time, so the profile's fixed side panel repeats down the image. The profile is very long. The personal prompts (favourite colour, what I am watching) are too casual for a clinical expert."
+    },
+    {
+      "id": "awwwards/10",
+      "site": "Contra",
+      "url": "https://contra.com/",
+      "awwwards_url": "https://www.awwwards.com/sites/contra-1",
+      "award": "Honorable Mention, 16 April 2024",
+      "category": "marketplace",
+      "files": [
+        "img/10-contra-home.desktop.jpg",
+        "img/10-contra-home.full.jpg",
+        "img/10-contra-home.mobile.jpg"
+      ],
+      "teaches": "A marketplace homepage that is already the product: one input with three suggestion chips, a switch between \"Projects\" and \"People\", a row of category chips, then shelves with a title, one line of explanation and \"View more\". The first shelf is \"Verified studios\", with a green mark beside the heading and beside each name. The footer is split by audience (\"For independents\", \"For companies\"). Black on white, one grotesque.",
+      "apply": "Explorer: category chips above the results, and shelves with a one-line reason for each (\"Pelvic health, checked by Eleva\"). The checked mark sits beside the expert's name, not in a separate badge row. Footer: one column for members and one for experts and clinics.",
+      "caution": "Kept for structure only; it is a freelance marketplace. The homepage has changed since the award: the version on the Awwwards page asked \"What do you need help with?\" with a switch between hiring and freelancing. The open prompt box asks a lot of a first-time visitor; chips with real needs are kinder. The full capture is cropped above the footer, which carries a US compliance badge."
+    },
+    {
+      "id": "awwwards/11",
+      "site": "Hi, skin",
+      "url": "https://www.hiskin.care/",
+      "awwwards_url": "https://www.awwwards.com/sites/hi-skin",
+      "award": "Site of the Day, 9 January 2021, and Developer Award (its page gives no date). Both were given to an earlier design; the live site has been redesigned since.",
+      "scores": "Overall 7.37: Design 7.59, Usability 7.16, Creativity 7.24, Content 7.37 (the 2021 design)",
+      "developer_score": "7.33: Semantics and SEO 6.00, Animations 7.67, Accessibility 7.33, Performance 8.00, Responsive 8.00, Markup 7.00 (the 2021 design)",
+      "category": "marketplace",
+      "files": [
+        "img/11-hi-skin-home.desktop.jpg",
+        "img/11-hi-skin-home.full.jpg",
+        "img/11-hi-skin-home.mobile.jpg",
+        "img/11-hi-skin-booking.desktop.jpg"
+      ],
+      "teaches": "A booking product puts proof beside the button: \"185,000+ facials | 4.9 stars\" above the headline and \"4/5 members strongly recommend us\" under it. One entry service is named with its price (\"Starting at $119\") and six outcomes. \"How it works\" is three words: Assess, Treat, Results. The first booking step is a single choice, \"Select a location\", sorted by distance with opening hours, and a bar fixed to the bottom that repeats the choice and holds the one \"Next\" button.",
+      "apply": "Checkout: one decision per step and a fixed bar that repeats what the member chose and carries the only primary button. Profile: lead with one named first session, its price and what it includes. Homepage hero: a line of proof directly above the headline.",
+      "caution": "Not the design the jury scored; kept for the live booking flow. Capital-letter headlines, electric blue and before and after photos are not Eleva's voice. A discount form sits in the footer."
+    },
+    {
+      "id": "awwwards/12",
+      "site": "Core Atelier Pilates",
+      "url": "https://coreatelierpilates.com/",
+      "awwwards_url": "https://www.awwwards.com/sites/core-atelier-pilates",
+      "award": "Honorable Mention, 25 March 2026",
+      "category": "marketplace",
+      "files": [
+        "img/12-core-atelier-home.desktop.jpg",
+        "img/12-core-atelier-home.full.jpg",
+        "img/12-core-atelier-home.mobile.jpg"
+      ],
+      "teaches": "A warm, premium palette that is not pink: blush and espresso brown, with one mid-brown band for the testimonial. Headlines are a large old-style serif in lower case, with the second half in italics (\"elevated pilates, crafted for you.\"). The photographs show the room in daylight, with one person small in the frame. One member quote is shown at a time, counted (\"1 of 5 reflections\"), with first name and initial.",
+      "apply": "Brand as a whole: blush with a deep brown or deep teal as a calmer pair than cream and teal alone, and a serif headline with an italic ending. Clinics and in-person offers: photograph the room, in daylight. Homepage: one quote at a time with a count, first name and initial.",
+      "caution": "The booking page opens with a \"packages required\" dialog over the class list before a visitor can look; Eleva lets people browse first. White text over the hero photo is low in contrast at the left edge."
+    },
+    {
+      "id": "awwwards/13",
+      "site": "Designed by Women",
+      "url": "https://designedbywomen.org/",
+      "awwwards_url": "https://www.awwwards.com/sites/designed-by-women",
+      "award": "Site of the Day, 4 January 2021, and Developer Award (its page gives no date)",
+      "scores": "Overall 7.52: Design 7.56, Usability 7.37, Creativity 7.42, Content 8.02",
+      "developer_score": "7.98: Semantics and SEO 7.67, Animations 7.67, Accessibility 7.67, Performance 8.00, Responsive 8.67, Markup 8.00",
+      "category": "editorial",
+      "files": [
+        "img/13-designed-by-women-home.desktop.jpg",
+        "img/13-designed-by-women-home.full.jpg",
+        "img/13-designed-by-women-home.mobile.jpg"
+      ],
+      "teaches": "An editorial site about women's work with the highest Content score in this library (8.02). Each section has a small orange label (About, Exhibition, Designers, Work, Story), a bold soft serif headline and one short paragraph. The people are listed as a typographic index: a name per row with dates, ruled lines between, one \"Discover\" button. \"Designer of the month\" gives one person a full-width portrait. Near-black and white with an orange button, a humanist sans for text.",
+      "apply": "Community and content pages: a labelled section rhythm (label, serif headline, one paragraph, one button). About: an \"Expert of the month\" feature with a large portrait and a link to the profile. A plain name index is a good second view of the explorer for people who already know who they want.",
+      "caution": "It opens with a loader of several seconds; the helper captured only the loader twice, and these captures needed a 12 second wait. Objects float over the hero headline and cover part of it."
+    },
+    {
+      "id": "awwwards/14",
+      "site": "ORDR",
+      "url": "https://www.ordrhealth.com",
+      "awwwards_url": "https://www.awwwards.com/sites/ordr",
+      "award": "Honorable Mention, 29 April 2026",
+      "category": "editorial",
+      "files": [
+        "img/14-ordr-home.desktop.jpg",
+        "img/14-ordr-home.full.jpg",
+        "img/14-ordr-home.mobile.jpg"
+      ],
+      "teaches": "A health newsletter page in five short moves. The promise in three lines (\"Clear, actionable wellness insights delivered in a 5-minute weekly newsletter. Completely Free.\"), the email field in the first screen, \"New here? Check it out\" with a sample issue, an archive as overlapping cards, and a second sign-up at the end. The small print under the field says \"Completely free. Leave whenever.\" Paper white and charcoal green, a condensed serif in capitals, one grainy black and white photograph.",
+      "apply": "The /newsletter page: say how long an issue takes to read and how often it comes, show one real issue before asking for the email, and write the leaving rule under the field. An archive of past issues as cards gives the page a reason to return to.",
+      "caution": "Body text is very small and centred, and the capitals and stitched-badge graphics give a sports-club tone. The sign-up button is a thin outline that is easy to miss."
+    },
+    {
+      "id": "awwwards/15",
+      "site": "Fried Egg Golf",
+      "url": "https://www.thefriedegg.com/",
+      "awwwards_url": "https://www.awwwards.com/sites/fried-egg-golf",
+      "award": "Honorable Mention, 29 September 2026",
+      "category": "editorial",
+      "files": [
+        "img/15-fried-egg-golf-home.desktop.jpg",
+        "img/15-fried-egg-golf-home.full.jpg",
+        "img/15-fried-egg-golf-home.mobile.jpg"
+      ],
+      "teaches": "One homepage holds a magazine, a newsletter, podcasts and a paid club without confusion, because each has its own band with its own label. Topic chips sit under the logo. \"The latest\" mixes formats, each card labelled with its format or topic and a reading time. The newsletter band says when it arrives (\"Mondays, Wednesdays and Fridays\"). The podcast band has a show switcher and \"Play on YouTube\" and \"Play on Spotify\". The club band lists three benefits beside a video. Yellow on dark photographs, a bold rounded grotesque.",
+      "apply": "The Learn and community hub: one band per pillar (newsletter, podcast, community, academy), each with a label chip, one line on what it is and how often, and its own action. Label every card with its format.",
+      "caution": "Outside health, kept for structure. The page is about 13,600px long and mixes a shop and a sale banner into the editorial flow."
+    },
+    {
+      "id": "awwwards/16",
+      "site": "Helen Macpherson Smith Trust",
+      "url": "https://hmstrust.org.au/",
+      "awwwards_url": "https://www.awwwards.com/sites/helen-macpherson-smith-trust",
+      "award": "Honorable Mention, 14 October 2024",
+      "category": "editorial",
+      "files": [
+        "img/16-hms-trust-home.desktop.jpg",
+        "img/16-hms-trust-home.full.jpg",
+        "img/16-hms-trust-home.mobile.jpg"
+      ],
+      "teaches": "The calmest page in the library. A light serif headline with one word underlined, a second line in the local First Nations language, one small button, and two documentary photos set at a slight tilt. Then one paragraph and three numbers with a label under each ($4.8m, 15, $151.3m). Two colour tiles (lilac, sage) carry loose hand-drawn line illustrations. A salmon band shows one \"Impact Story\" with the project and the amount. The page closes with a row of link pills under \"Interested in learning more?\". Warm off-white, salmon, lilac and sage.",
+      "apply": "About: this exact order (who Eleva is in one sentence, three numbers, two areas of care as illustrated tiles, one story, link pills). Brand as a whole: hand-drawn line illustration on soft colour tiles, and photographs of real people at work, slightly tilted, in place of posed portraits.",
+      "caution": "Outside health. Labels under the numbers are very small."
+    },
+    {
+      "id": "awwwards/17",
+      "site": "The Podcast Coach",
+      "url": "https://thepodcastcoach.co.uk",
+      "awwwards_url": "https://www.awwwards.com/sites/the-podcast-coach",
+      "award": "Honorable Mention, 1 February 2026",
+      "category": "editorial",
+      "files": [
+        "img/17-podcast-coach-home.desktop.jpg",
+        "img/17-podcast-coach-home.full.jpg",
+        "img/17-podcast-coach-home.mobile.jpg"
+      ],
+      "teaches": "A brand built from one shape. The logo's leaf form is used as the mask for the hero photograph and returns as a small mark above sections. Forest green, sage white and sand with a lime accent, heavy rounded grotesque headlines in green. The hero pairs a primary and a quiet action (\"Book a Strategy Call\", \"Our Process\"). Testimonials are a two-column wall of full paragraphs, each with a small portrait, name and role. The FAQ is titled \"Your Podcast Questions. Answered.\"",
+      "apply": "Brand as a whole: take one shape from the Eleva mark and use it as the photo mask across the site. The /podcast page and contact: a primary and a quiet action together. Homepage: longer member quotes with first name and context read as more honest than one-line praise.",
+      "caution": "It is an agency site, about 15,800px long, and repeats the same call to action many times. Take the mask idea and the green family, not the length."
+    },
+    {
+      "id": "awwwards/18",
+      "site": "TrueKind Skincare",
+      "url": "https://truekindskincare.com/",
+      "awwwards_url": "https://www.awwwards.com/sites/truekind-skincare",
+      "award": "Site of the Day, 29 April 2025, and Developer Award (its page gives no date)",
+      "scores": "Overall 7.47: Design 7.71, Usability 7.35, Creativity 7.27, Content 7.29",
+      "developer_score": "7.85: Semantics and SEO 8.00, Animations 8.80, Accessibility 6.00, Performance 7.60, Responsive 8.20, Markup 7.80",
+      "category": "brand",
+      "files": [
+        "img/18-truekind-home.desktop.jpg",
+        "img/18-truekind-home.full.jpg",
+        "img/18-truekind-home.mobile.jpg"
+      ],
+      "teaches": "Photography of real skin at very close range: freckles, pores and texture, lit softly, on women of different skin tones. It reads as honest and premium at once. The type pairs a grotesque in capitals with an italic serif inside the same line (\"True to Oneself, kind to Nature\", \"EXPLORE pure potency\"). Warm stone and blush with charcoal, product on blush and lilac. One statement gets a whole screen: \"RADICAL TRANSPARENCY. HIDE NOTHING.\"",
+      "apply": "Brand as a whole: a photography brief of real bodies and skin, unretouched, close and softly lit, for a women's health companion. Homepage: a grotesque and italic serif pair inside one heading. Trust and legal: give the main promise a full screen of its own.",
+      "caution": "It opens with a loader of several seconds, the helper's full-page shot timed out, and the developer jury gave Accessibility 6.00, the lowest mark in this library. Small grey text on stone is hard to read. Motion is heavy."
+    },
+    {
+      "id": "awwwards/19",
+      "site": "Thrive Childcare Centers",
+      "url": "https://www.thrivechildcarecenters.com/",
+      "awwwards_url": "https://www.awwwards.com/sites/thrive-childcare-centers",
+      "award": "Honorable Mention, 2 August 2025",
+      "category": "brand",
+      "files": [
+        "img/19-thrive-home.desktop.jpg",
+        "img/19-thrive-home.full.jpg",
+        "img/19-thrive-home.mobile.jpg"
+      ],
+      "teaches": "A care brand that is soft and still confident. White and blush backgrounds, with cobalt blue, orange, pale lime and dark green used as paper-cut shapes and card colours. A light high-contrast serif carries the headlines (\"Where Boston's children blossom.\") and small spaced capitals carry labels and buttons. Photographs are cut into loose hand-cut shapes. Each programme is a coloured card with a pill label. The three locations are cards with a small map, an age range and a \"Now enrolling\" seal.",
+      "apply": "Brand as a whole: paper-cut shapes and hand-cut photo masks as a warmer alternative to rounded rectangles; blush as the second background. Clinics and in-person offers: a location card with map, who it is for and a status seal. Homepage: one colour per kind of care.",
+      "caution": "The tilted cards and child-sized palette are right for a nursery; Eleva would keep the cards straight and the palette quieter. Parent quotes are set at an angle and are harder to read."
+    },
+    {
+      "id": "awwwards/20",
+      "site": "Twofold Therapy",
+      "url": "https://twofoldny.com/",
+      "awwwards_url": "https://www.awwwards.com/sites/twofold-therapy",
+      "award": "Honorable Mention, 2 August 2026",
+      "category": "brand",
+      "files": [
+        "img/20-twofold-home.desktop.jpg",
+        "img/20-twofold-home.full.jpg",
+        "img/20-twofold-home.mobile.jpg"
+      ],
+      "teaches": "A photographic idea that says what the service is without a caption: double exposures of one woman in two positions, in muted grey and beige. The type mixes a bold grotesque and a text serif inside one heading (\"Individual psychotherapy / and psychoanalysis\"). Services are a numbered table, 01 to 04, with the name in serif and two lines of description at the right. White, soft grey and black only.",
+      "apply": "Brand as a whole: commission one photographic idea for mental health and for change over time (pregnancy, recovery, menopause) instead of buying stock. Profile and offers: a numbered list of services with two lines each.",
+      "caution": "There is no booking action in the first screens and no guidance for a nervous visitor. Paragraphs are set tight in a bold face and are tiring to read. It is quiet to the point of being cold."
+    },
+    {
+      "id": "awwwards/21",
+      "site": "Wise Design",
+      "url": "https://wise.design/",
+      "awwwards_url": "https://www.awwwards.com/sites/wise-design",
+      "award": "Site of the Day, 24 March 2023, and Developer Award (its page gives no date)",
+      "scores": "Overall 7.55: Design 7.69, Usability 7.50, Creativity 7.33, Content 7.52",
+      "developer_score": "7.16: Semantics and SEO 6.40, Animations 7.00, Accessibility 7.40, Performance 7.40, Responsive 7.80, Markup 7.00",
+      "category": "brand",
+      "files": [
+        "img/21-wise-home.desktop.jpg",
+        "img/21-wise-home.mobile.jpg",
+        "img/21-wise-direction.desktop.jpg",
+        "img/21-wise-direction.full.jpg"
+      ],
+      "teaches": "A money company that people must trust publishes its brand rules as a public site. \"Direction\" is a grid of tiles, one per part of the system: Brand, Cards, Colour, Flags, Icons, Illustration, Logo, Motion. The identity rests on one pair, bright green on forest green, with a grotesque. \"Inspiration\" shows the brand in use as a strip of photographs in pill and circle masks.",
+      "apply": "Brand as a whole: after the rethink, turn the brand book into a small public page with one tile per part (colour, type, photography, illustration, voice, motion), so experts, clinics and press use it correctly. A confident two-colour core is easier to trust and to keep consistent than a wide palette.",
+      "caution": "The homepage is a single screen of moving images with no words, so it has no full-page capture and tells a newcomer nothing. The lesson is the system, not the page. Semantics and SEO is its lowest developer mark (6.40)."
+    },
+    {
+      "id": "awwwards/22",
+      "site": "Butter Insurance",
+      "url": "https://butterinsurance.com.au/",
+      "awwwards_url": "https://www.awwwards.com/sites/butter-insurance",
+      "award": "Honorable Mention, 16 August 2024",
+      "category": "trust",
+      "files": [
+        "img/22-butter-home.desktop.jpg",
+        "img/22-butter-home.full.jpg",
+        "img/22-butter-home.mobile.jpg",
+        "img/22-butter-faqs.desktop.jpg",
+        "img/22-butter-faqs.full.jpg"
+      ],
+      "teaches": "Insurance explained in amounts, not adjectives. Each cover is a tile with its limit as a small label (\"Unlimited\", \"Up to $40,000\") and one sentence in plain words (\"We'll cover your pre-paid, non-refundable trip costs if you need to cancel or interrupt your trip.\"). \"Total peace of mind\" is a set of tiles that each hold one fact (24/7, $0 excess, 173 countries). Extras are switches. Every claim with a condition carries an asterisk that is answered in the footer, beside the company and licence details. The FAQ page opens with \"The things travellers ask us most, explained without the jargon\" and groups questions by moment: \"Before you buy\", \"Your policy and portal\", \"What is and isn't covered\", \"Optional packs\", \"If something goes wrong\".",
+      "apply": "Trust and legal: group the help and policy questions by moment (before you book, your booking, what a session includes, if something goes wrong) and open each legal page with one plain sentence on what it covers. Checkout: show what is included and the refund rule as amounts and times. Footer: name the controller and registration beside the small print.",
+      "caution": "It opens with a loader of several seconds; the helper captured only the loader twice, and these captures needed a 12 second wait. Bright yellow and black is loud for health. The footer small print is very small."
+    },
+    {
+      "id": "awwwards/23",
+      "site": "Counter Culture Coffee, Transparency Report",
+      "url": "https://counterculturecoffee.com/pages/transparency-report",
+      "awwwards_url": "https://www.awwwards.com/sites/transparency-report-2023",
+      "award": "Honorable Mention, 18 July 2024, given to the 2023 edition. The same address now shows the 2025 edition, with new art direction.",
+      "category": "trust",
+      "files": [
+        "img/23-counter-culture-home.desktop.jpg",
+        "img/23-counter-culture-home.full.jpg",
+        "img/23-counter-culture-home.mobile.jpg"
+      ],
+      "teaches": "A company earns trust by publishing its own numbers as a readable page, every year. A \"Chapters\" button stays at the top for moving around. Each chapter is a short heading with one phrase circled by hand, two paragraphs and the numbers as large badges (\"921 samples processed\", \"110 coffee releases\"). The prices it pays are drawn against the market benchmarks on one chart. Staff tenure, retention and the amounts given by each fund are printed in full. Purple, orange, coral and lime blocks with a heavy grotesque and an italic serif.",
+      "apply": "Trust and legal: a yearly \"How Eleva works\" page with chapters: how many experts applied and how many were accepted, what is checked, what Eleva keeps from a booking and what the expert receives, how refunds went, how data requests were handled. Numbers as badges, one chart, chapter navigation.",
+      "caution": "Not the design the jury saw. The page is about 24,700px long; the capture holds the first 12,000px. The colours are saturated and change every screen; Eleva would use one calm palette."
+    }
+  ]
+}

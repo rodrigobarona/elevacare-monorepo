@@ -3,7 +3,7 @@
   "title": "Expert public profile (/{username})",
   "researcher": "Marketplace and profile",
   "date": "2026-11-14",
-  "summary": "The profile's booking mechanics are sound: real next times, a sticky card on desktop, a sticky bar on phones, a cancellation line on every service. What is weak is the person. With no photo, no profession line and a short bio, the page is a monogram, a name and grey small print, and the one fact Eleva has checked (the professional registration) reads like a legal footnote. The change that matters most is to turn that checked registration into a visible proof block beside the name and to give every profile a structured \"about\" (profession, focus, approach, training, what a first session looks like) that still looks complete when an expert is new. References 25 and 26 (2026-11-21) prepare the clinic's public page: the team shown as people, and choosing a professional or the first one free.",
+  "summary": "The profile's booking mechanics are sound: real next times, a sticky card on desktop, a sticky bar on phones, a cancellation line on every service. What is weak is the person. With no photo, no profession line and a short bio, the page is a monogram, a name and grey small print, and the one fact Eleva has checked (the professional registration) reads like a legal footnote. The change that matters most is to turn that checked registration into a visible proof block beside the name and to give every profile a structured \"about\" (profession, focus, approach, training, what a first session looks like) that still looks complete when an expert is new. References 25 and 26 (2026-11-21) prepare the clinic's public page: the team shown as people, and choosing a professional or the first one free. References 27 to 34 (2026-11-23) look at the profile as the first step of the booking flow: service rows of one shape, an availability card that asks in order, and a phone bar that opens the time picker.",
   "strengths": [
     "Next open times are on the profile itself, grouped by day, with the member's timezone named. On desktop the booking card stays in view while she reads (01-profile-paid.desktop.jpg).",
     "Phones already have a sticky bar with the starting price and \"See times\" (01-profile-paid.mobile.jpg, 02-profile-free.mobile.jpg). Keep it and make it do more.",
@@ -89,7 +89,15 @@
       "evidence": ["01-profile-paid.mobile.jpg", "02-profile-free.mobile.jpg"],
       "detail": "The mobile order is header, service cards, then the booking card. On the paid profile the booking card starts about 1,450px down with two services; an expert with five services pushes it far further. The sticky bar helps, but it shows only \"From €45.00\" and \"See times\", the same label as the button in each service card, and it jumps down the page instead of starting a booking. A member never sees when the expert is next free until she gets there.",
       "recommendation": "Show the next open time in the header on phones (\"Next: Mon 16 Nov, 08:00\") and in the sticky bar beside the price. Rename the bar's button \"Book a session\" and open a bottom sheet with the same picker (service, how you meet, day, time), so booking starts from anywhere on the page. Add a short row of anchor tabs under the header (Services, About, Training, Reviews) so the long page can be jumped through.",
-      "references": ["03-profile/01", "03-profile/09", "03-profile/05"]
+      "references": [
+        "03-profile/01",
+        "03-profile/09",
+        "03-profile/05",
+        "03-profile/27a",
+        "03-profile/27b",
+        "03-profile/28",
+        "03-profile/32a"
+      ]
     },
     {
       "id": "PROF-06",
@@ -102,7 +110,14 @@
       ],
       "detail": "For an expert with three locations the first day shows \"08:00 Madrid, 12:00 Lisboa, 12:00 Porto, 12:00 Madrid, 12:30 Lisboa, 12:30 Porto\". The same hour appears three times and the city, the bigger decision, is the smallest text in the chip. On the free profile each time appears twice, told apart only by a small video or phone icon with no label. Only one day and six times are shown, and the way to other days is a text link.",
       "recommendation": "Ask in order: service, then how and where (a segmented choice: Video, Lisboa, Porto, Madrid), then a strip of the next seven days with unavailable days greyed, then the times for the chosen day. Label modes in words. Keep the summary lines at the foot of the card (length and price, \"No account needed\", cancellation window); they are good.",
-      "references": ["03-profile/01", "03-profile/10"]
+      "references": [
+        "03-profile/01",
+        "03-profile/10",
+        "03-profile/29",
+        "03-profile/32a",
+        "03-profile/32b",
+        "03-profile/31"
+      ]
     },
     {
       "id": "PROF-07",
@@ -112,7 +127,14 @@
       "evidence": ["01-profile-paid.desktop.jpg", "01-profile-paid.mobile.jpg"],
       "detail": "\"Follow-up\" comes before \"First visit\", so a new member reads the wrong service first. Follow-up has addresses, an included item and two accordions; First visit has a title, a price and nothing else. The eyebrow \"45-MIN IN PERSON · LISBOA, PORTO, MADRID\" is repeated by three address rows directly under it, and on phones it wraps to three lines of spaced capitals beside the price. Each card has its own \"See times\" button, the booking card has \"See all times\" and the phone has a sticky \"See times\": three controls with nearly the same label and different behaviour. Prices carry cents (\"€45.00\").",
       "recommendation": "Order services with first visits first and tag one \"Start here\". Require a one-sentence description per service and show it on the card. Use one meta line in sentence case with icons (\"45 min · In person · Lisboa, Porto, Madrid\") and keep full addresses behind \"See addresses\". Make the card's button \"Choose a time\", which selects that service in the booking card (or opens the sheet on phones). Show whole euros.",
-      "references": ["03-profile/09", "03-profile/05", "03-profile/10"]
+      "references": [
+        "03-profile/09",
+        "03-profile/05",
+        "03-profile/10",
+        "03-profile/27a",
+        "03-profile/30",
+        "03-profile/34"
+      ]
     },
     {
       "id": "PROF-08",
@@ -172,7 +194,13 @@
       ],
       "detail": "Two solid teal buttons compete with the booking card's own primary flow.",
       "recommendation": "Make the card button outline so the booking card stays the one primary action.",
-      "references": ["03-profile/22", "03-profile/24"]
+      "references": [
+        "03-profile/22",
+        "03-profile/24",
+        "03-profile/34",
+        "03-profile/33",
+        "03-profile/31"
+      ]
     },
     {
       "id": "PROF-13",
@@ -197,6 +225,24 @@
       "detail": "About 70 words unfold under the licence lines; the booking card repeats the badge.",
       "recommendation": "Move 'What we check' into an (i) popover; drop the repeat from the booking card footer, along with the repeated duration and price line.",
       "references": ["03-profile/23", "03-profile/24"]
+    },
+    {
+      "id": "PROF-15",
+      "severity": "P2",
+      "lens": "ux",
+      "title": "The phone bar quotes the follow-up's price and says nothing about when",
+      "evidence": [
+        "2026-11-17-profile-after/03-profile/01-profile-paid.mobile.jpg",
+        "2026-11-17-profile-after/03-profile/02-profile-free.mobile.jpg"
+      ],
+      "detail": "The bar reads 'From €45.00' and 'See times'. €45 is the follow-up; a first visit, the service a new member books, is €60. The bar gives no next open time and no cancellation line, and its button has the same label as the button on each service card. On the free profile the bar says 'Free' and 'See times'. The booking card with the real times still sits under every service.",
+      "recommendation": "Let the bar speak for the first service a new member can book: 'First visit · €60' with 'Next: Fri 20 Nov, 09:00' under it, and one button that opens a sheet with a day strip and each service's times. Show the cancellation window in the sheet beside the chosen time. On the free profile say 'Free · 20 min' and the next time.",
+      "references": [
+        "03-profile/27a",
+        "03-profile/27b",
+        "03-profile/28",
+        "03-profile/32a"
+      ]
     }
   ],
   "references": [
@@ -511,6 +557,126 @@
       "why": "After the service, a step called 'Select professional' offers 'Any professional, for maximum availability' as the first card, then one card per person with name and role. The breadcrumb reads Services, Professional, Time, Confirm, and the summary on the right keeps the business, the service and the total.",
       "apply": "When a member books from a clinic's page, ask who she wants to see as its own step: 'First available' first, then each clinician with photo, profession and next free time. Keep the clinic and the service in the summary beside it.",
       "query": "salon or clinic public booking page listing team members to book"
+    },
+    {
+      "id": "03-profile/27a",
+      "file": "img/27a-airbnb-service-rows-floating-reserve.jpg",
+      "app": "Airbnb",
+      "platform": "ios",
+      "type": "flow",
+      "mobbin_url": "https://mobbin.com/flows/8cbcaf23-5bb1-4f0c-8efa-05806e484b0d?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Phone service page: services as rows of one shape, and one floating bar with the starting price and Reserve",
+      "why": "iOS. A photographer's page lists two services as rows of the same shape: a thumbnail, the name, '$45 / group · 1 hr' and a description cut at two lines. No row has a button of its own. One floating bar holds 'From $45 / group', 'Free cancellation' and Reserve, and it is the only action on the screen. Travel marketplace, kept for the structure.",
+      "apply": "On phones give every service the same row: name, '60 min · Video call · €60', one sentence. Longer details open on tap. Keep one bar with the price, the cancellation line and one button.",
+      "query": "Airbnb booking an experience"
+    },
+    {
+      "id": "03-profile/27b",
+      "file": "img/27b-airbnb-schedule-sheet-times-per-service.jpg",
+      "app": "Airbnb",
+      "platform": "ios",
+      "type": "flow",
+      "mobbin_url": "https://mobbin.com/flows/8cbcaf23-5bb1-4f0c-8efa-05806e484b0d?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "The bar opens one sheet: a week of days, then each service with its own row of times",
+      "why": "iOS, the next screen of the same flow. Reserve opens a sheet titled 'Schedule your photo shoot'. A strip of seven days sits on top with the chosen day filled. Under it each service is listed again with its price and length and a row of time chips of its own. One tap on a chip chooses the service and the time together. The foot of the sheet keeps the price and Next.",
+      "apply": "The phone bar opens this sheet, it does not scroll the page: a day strip, then 'First visit' and 'Follow-up', each with its times for that day. Picking a chip carries service, day and time into the funnel, so its first step is already done.",
+      "query": "Airbnb booking an experience"
+    },
+    {
+      "id": "03-profile/28",
+      "file": "img/28-alan-next-availability-sticky-button.jpg",
+      "app": "Alan",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/ed903d4c-3065-4f73-a2f4-f7c6852d3736?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Next availability as a fact under the name; price and cancellation under the one fixed button",
+      "why": "iOS, a European health product. A psychologist's profile: a small photo, the name, 'Psychologist', then two icon rows. The first reads 'Available on Thursday' with '45 min video session' under it. A fixed button says 'See availabilities', and two quiet lines under it read 'From €70 per session' and 'Free cancellation up to 48 hours in advance.' The note for people in distress sits in the page, away from the booking area.",
+      "apply": "Put the next open time in the header facts ('Next: Thu 26 Nov, 09:00') and in the phone bar. Under the bar's button keep one line with the price of the service a new member starts with and the cancellation window.",
+      "query": "service provider profile screen with a sticky booking bar showing price and next available time"
+    },
+    {
+      "id": "03-profile/29",
+      "file": "img/29-zocdoc-mode-toggle-three-days.jpg",
+      "app": "Zocdoc",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/flows/26c741b6-0231-4040-b5e9-890f0b6db100?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "How you meet as a two-part switch, then the place, then three days of times",
+      "why": "iOS. The booking block asks in order. First a switch with two halves, 'In person' and 'Video visit'. Then a selector with the address and '1 more location'. Then three days, each a date heading with its times as large chips, and 'View more availability'. Each time appears once because the way of meeting and the place were chosen first. A US product, kept for the order of the questions.",
+      "apply": "In the availability card: a switch for Video or In person, a place selector only when in person, then the next three days with their times, then 'See all times'. A chip carries the hour and nothing else.",
+      "query": "Zocdoc booking a doctor appointment"
+    },
+    {
+      "id": "03-profile/30",
+      "file": "img/30-tripadvisor-option-cards-start-time.jpg",
+      "app": "Tripadvisor",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/c047161a-f5ab-4c39-a403-f8577564b258?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Option cards of equal height: each holds its start time, its dated cancellation and its total; one button serves all",
+      "why": "Three options sit side by side as cards of the same height. Each has a title, two bullet lines cut with 'Read more', a 'Choose start time' menu, 'Free cancellation before 11:00 AM on Oct 3' and a total. A radio in the corner marks the chosen card, and one 'Reserve Now' button serves all three. Long text is cut so the cards stay level. Travel product, kept for the card.",
+      "apply": "Service cards with a fixed anatomy: title, one or two lines with 'Read more', length and way of meeting, price, the cancellation line. Choosing a card selects that service in the booking card, so the card needs no solid button of its own.",
+      "query": "booking marketplace service list with price, duration and a book button per service"
+    },
+    {
+      "id": "03-profile/31",
+      "file": "img/31-fresha-service-rows-time-chips.jpg",
+      "app": "Fresha",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/flows/bc85d0f8-d234-4bdb-8d7a-5522c8351bb7?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Each service row shows its next open times as chips",
+      "why": "Search results. Under each venue, service rows show the name, the length and the price, then a row of the next open times as chips. A day strip above ('Today', 'Tomorrow', 'Thu 17') sets which day the chips show. The member sees when she could come before she opens anything. Beauty marketplace, kept for the row.",
+      "apply": "An option to test against the booking card, not to add beside it: each service card ends with its next three times as chips and 'More times'. A chip opens the funnel with service and time already chosen. The same row would suit the expert cards on the explorer.",
+      "query": "Fresha booking a salon appointment"
+    },
+    {
+      "id": "03-profile/32a",
+      "file": "img/32a-airbnb-next-dates-cards-choose.jpg",
+      "app": "Airbnb",
+      "platform": "ios",
+      "type": "flow",
+      "mobbin_url": "https://mobbin.com/flows/5f4115be-c840-4c41-92a3-146ee1be61ab?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Next open dates as cards on the page, each with one Choose; the bar's button says what it opens",
+      "why": "iOS. A section titled 'Choose from available dates' says '2 available for Feb 6 – 7' and shows each date as a card: day, time range, price and one 'Choose' button. 'Show more dates' sits under the cards. The fixed bar repeats 'From $45 / person' and its button reads 'Show dates', so the label states what will open. The cancellation policy follows as one sentence with an arrow.",
+      "apply": "The availability card as a short list of the next open times, each a row with the day, the time range and one action, then 'See all times'. Name the phone bar's button after what it opens: 'See times' opens the times sheet.",
+      "query": "Airbnb booking an experience"
+    },
+    {
+      "id": "03-profile/32b",
+      "file": "img/32b-airbnb-date-options-refund-line.jpg",
+      "app": "Airbnb",
+      "platform": "ios",
+      "type": "flow",
+      "mobbin_url": "https://mobbin.com/flows/5f4115be-c840-4c41-92a3-146ee1be61ab?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "The full list of times: choices as chips on top, one card per time, the refund date written on each",
+      "why": "iOS, the next screen. '2 options available' with chips for the dates and the number of guests. Each day has a heading and each time is a card with the range, the price, 'Choose' and the line 'Get a full refund if you cancel by Feb 5, 10:00 AM (EST)'. The promise is dated for that slot before she picks it.",
+      "apply": "In the times sheet, show the dated cancellation line for a time as soon as it is picked ('Full refund if you cancel before Tue 15 Dec, 16:00'), not only later in checkout.",
+      "query": "Airbnb booking an experience"
+    },
+    {
+      "id": "03-profile/33",
+      "file": "img/33-preply-book-modal-over-page.jpg",
+      "app": "Preply",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/flows/be043981-1705-4a7a-acc3-717c53ac5b9c?tab=screens&utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "On desktop, booking starts in a dialog over the page: length, a week of days, grouped times, Continue",
+      "why": "'Book trial lesson' on a tutor's card opens a dialog over the same page. Its header keeps the tutor's photo and says what the lesson is for. A switch sets 25 or 50 minutes, a week strip sets the day, and the times follow under 'Morning' and 'Afternoon' with the time zone named. Continue is at the foot and is the only filled button. The page behind does not change, so closing the dialog loses nothing. Education marketplace, kept for the structure.",
+      "apply": "On desktop 'See times' on a service card can open the same picker in a dialog with that service chosen, so the member sees a whole week without leaving the profile. Continue takes her into the funnel at 'Your details'.",
+      "query": "Preply booking a trial lesson with a tutor"
+    },
+    {
+      "id": "03-profile/34",
+      "file": "img/34-fresha-even-service-rows-sticky-card.jpg",
+      "app": "Fresha",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/de7ad5b2-44d4-430d-9543-194a44da61bd?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Desktop pairing: service rows of one height with a small outline Book, beside one card with the only filled button",
+      "why": "A salon page on desktop. Every service is a row of the same height: the name, the length with a short note ('15 mins · Female only'), the price, and a small outline 'Book' on the right. Category chips above keep a long list short. The card on the right holds the name, the rating, one filled 'Book now', the opening hours and the address. There is one filled button on the screen. Beauty marketplace, kept for the layout.",
+      "apply": "The desktop services column: one row height, the same three lines in the same order, one small outline action per row. The booking card keeps the only filled button. Addresses and 'What to expect' open from the row and do not stretch it.",
+      "query": "booking marketplace service list with price, duration and a book button per service"
     }
   ],
   "judging_criteria": [
@@ -522,6 +688,9 @@
     "Does a new expert's page (no reviews, short bio) still look complete and ordered? (03-profile/12, 03-profile/06)",
     "When an expert cannot be booked, does the booking block explain why and offer a next step? (03-profile/02)",
     "Is the page calm: one primary booking action, service cards led by their title with a quiet duration and mode line, trust shown once with how it is checked one tap away? (03-profile/22, 03-profile/23, 03-profile/24)",
-    "On a clinic's public page, is every clinician listed with photo, name and profession, and can a member book either the first available clinician or one she names? (03-profile/25, 03-profile/26)"
+    "On a clinic's public page, is every clinician listed with photo, name and profession, and can a member book either the first available clinician or one she names? (03-profile/25, 03-profile/26)",
+    "On a phone, can a member go from anywhere on the profile to a chosen service and time in two taps: the bar, then a time in the sheet it opens? (03-profile/27a, 03-profile/27b)",
+    "Does the phone bar show the price of the first service a new member books and the next open time, and does its button say what it opens? (03-profile/28, 03-profile/32a)",
+    "When she enters the funnel from the profile, are the service, the way of meeting and the time she picked already filled in, so that nothing is asked twice? (03-profile/27b, 03-profile/33)"
   ]
 }

@@ -31,7 +31,7 @@ How it was made, so you know how far to trust it:
 | 13 Hardening                 | 13.1 merged: two CI guards. Dependency audit, Renovate, security headers and server-side Sentry were already there.                                      | 33 slices (section 7). Several are small and worth doing early.                                                 |
 | 14 Migration                 | 14.1 merged: the target guard. No tool reads or writes data yet.                                                                                         | 24 slices and two operator steps (section 8). The first blocker is access to the MVP database, not code.        |
 | 15 Launch                    | Not started.                                                                                                                                             | 8 slices, then the operated cutover (section 8).                                                                |
-| Design plan (`design-audit`) | 18 of 39 slices merged (D0, D1, D2.1, D2.2, D5.7 to D5.9, D7.1 to D7.5).                                                                                 | 21 slices (section 10).                                                                                         |
+| Design plan (`design-audit`) | 18 of 42 slices merged (D0, D1, D2.1, D2.2, D5.7 to D5.9, D7.1 to D7.5).                                                                                 | 24 slices (section 10).                                                                                         |
 
 Numbers on `main`: 166 route handlers, 80 main migrations (`0000` to `0079`), 31 Playwright
 specs, 33 packages.
@@ -172,14 +172,26 @@ them, and stops at the one that does.
 
 ## 5. Order of work
 
-Four tracks run side by side, one open pull request each, three open in total.
+Five tracks run side by side, one open pull request each.
+
+**Track E is its own thread and its own worktree** (since 2026-11-23). It owns every public
+page in `apps/web`: the homepage (D3.1, D3.2), become an expert (D3.3), for clinics and About
+(D3.4), the expert explorer and the public profile (D2.4, D2.3), the trust centre and legal
+pages (D6.1), checkout and thank-you polish, and the content pages (newsletter, podcast,
+community, evidence-based care, contact, history, credits). The founder opened the whole
+public design for a rethink, brand colours, type and imagery included, so a brand direction
+is chosen before the pages are rebuilt. Track D keeps the signed-in product. A change to a
+shared package (`@eleva/ui`, `@eleva/site-chrome`) that would alter a dashboard is agreed in
+the pull request before it merges. Its panel and its bar are in
+`design-audit/judges-panel.md`.
 
 | Track       | What                            | Order                                                  |
 | ----------- | ------------------------------- | ------------------------------------------------------ |
 | A Product   | Clinics, then the staff console | 11.7 to 11.18, then 12.5 to 12.25                      |
 | B Platform  | Hardening                       | 13.2, 13.3, 13.25 to 13.28 first; then by group        |
 | C Migration | MVP data                        | 14.2 to 14.5 now (no data needed); the rest after F-02 |
-| D Design    | The design plan's open slices   | D7.6 to D7.8, then D2.3 to D2.5, D4, D5, D3, D6        |
+| D Design    | The design plan's open slices   | D7.6 to D7.8, then D2.5, D4, D5 (signed-in product)    |
+| E Marketing | The public site, rethought      | D8.1 first, then D3, D2.4, D2.3, D6.1, D8.2, D8.3      |
 
 **Wave 0: fix what the review found.** 12.5, 11.7, 13.2, 13.3. Operator: O-1. Start the slow
 human items the same week, because they set the launch date more than any code does: F-01,
@@ -390,7 +402,9 @@ These are not new work; they are proofs and signatures the earlier phases still 
 
 ## 10. Design: open slices and saved references
 
-The design plan (`design-audit/plan.json`) has 21 slices open:
+The design plan (`design-audit/plan.json`) has 24 slices open: the 21 of 2026-11-21 and the three
+of Phase 8, added on 2026-11-23. D8, D3, D2.3, D2.4 and D6 belong to Track E (the marketing
+thread, section 5); the rest to Track D:
 
 | Group                  | Open slices                                                                                                  |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------ |
@@ -400,6 +414,7 @@ The design plan (`design-audit/plan.json`) has 21 slices open:
 | D5 Dashboards          | D5.1 expert Today; D5.2 member home; D5.3 privacy controls; D5.4 calendar and services; D5.5; D5.6 calendars |
 | D6 Trust centre        | D6.1 trust centre and policy layout                                                                          |
 | D7 Calm                | D7.6 service editor; D7.7 practice menu and home; D7.8 clinic and Academy without promises                   |
+| D8 Public site         | D8.1 a brand direction for the public site; D8.2 checkout on a phone; D8.3 content pages                     |
 
 References saved on 2026-11-21 for the screens of sections 6 to 8. Each surface's
 `references.json` holds the pattern, why it works, how to use it and a criterion for the panel.

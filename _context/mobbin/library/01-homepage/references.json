@@ -25,7 +25,12 @@
       ],
       "detail": "The page shows eight advisors by name and face, and zero experts a member can book. A first-time visitor reads the advisor portraits as 'these are the experts', then the lead tells her 'Your care comes from the independent expert you choose', and the page never shows who that could be. Reaching one real person takes Find an expert, then the directory, then a profile. For a marketplace the supply is the product; hiding it makes the page feel like a brochure and is the main reason it reads as weak.",
       "recommendation": "Add a 'Meet our experts' row directly under the value strip: four to six real expert cards with photo, name, profession, languages, how they meet (video, phone, in person), price from, and the next free slot, each linking to the profile, plus 'See all experts'. On a phone make it a horizontal scroll so a card and a half is visible. Design the card for a new expert with no photo and a short bio (initials on a brand tint, profession and languages still carry the card). Rotate by category so every profession gets shown.",
-      "references": ["01-homepage/03", "01-homepage/04"]
+      "references": [
+        "01-homepage/03",
+        "01-homepage/04",
+        "01-homepage/15",
+        "01-homepage/16"
+      ]
     },
     {
       "id": "HOME-02",
@@ -35,7 +40,12 @@
       "evidence": ["01-home.desktop.jpg", "01-home.mobile.jpg"],
       "detail": "A member arrives with a need (pelvic pain after birth, breastfeeding, menopause), but the hero gives her only 'Find an expert'. The category chips sit two screens down on desktop and about four screens down on a phone, after three full-width advisor portraits. The two photo cards beside the hero ('Care for every stage of life', 'Experts who listen') look like navigation but are captions that link to /experts/wellness and /experts, and they disappear on mobile.",
       "recommendation": "Let the member say what she needs inside the hero. Either a single search field ('What do you need help with?') with the nine categories as suggestions, or a row of five or six need chips under the lead line that go straight to the filtered directory. Replace the two caption cards with need tiles that name a real destination (Pregnancy and postpartum, Pelvic health, Menopause). Keep 'Find an expert' as the fallback button.",
-      "references": ["01-homepage/01", "01-homepage/02"]
+      "references": [
+        "01-homepage/01",
+        "01-homepage/02",
+        "01-homepage/12",
+        "01-homepage/13"
+      ]
     },
     {
       "id": "HOME-03",
@@ -45,7 +55,15 @@
       "evidence": ["01-home.desktop.jpg", "01-home.mobile.jpg"],
       "detail": "The strip under the hero reads 'Independent experts', 'Online or in person', 'In your language', 'Clear prices'. Each is a claim with nothing behind it, set in small text with wide gaps, so it is easy to miss. The page has no member story, no count of experts or professions, and it never says that Eleva checks each expert's professional registration, which the become-expert page does say. A woman deciding whether to pay a stranger for health care needs exactly that sentence.",
       "recommendation": "Turn the strip into four claims with substance, for example 'Every expert's professional registration is checked before they go live', 'Video, phone or in person', 'Sessions in English, Portuguese and Spanish', 'You see the price before you book'. Add a short 'Who you will meet' block with honest figures (experts live, professions covered, advisors on the board) and link it to the trust page. When members consent, add two or three short stories tagged by need. Use real numbers only; a small true number beats none.",
-      "references": ["01-homepage/05", "01-homepage/08", "01-homepage/02"]
+      "references": [
+        "01-homepage/05",
+        "01-homepage/08",
+        "01-homepage/02",
+        "01-homepage/14",
+        "01-homepage/15",
+        "01-homepage/19",
+        "01-homepage/20"
+      ]
     },
     {
       "id": "HOME-04",
@@ -73,7 +91,12 @@
       ],
       "detail": "'Expert-led care, tailored to you' shows nine chips named by profession (Psychology, Midwifery, Lactation...) and under them four stock-photo cards named by life stage (Pregnancy and postpartum, Pelvic health, Through every stage...). They are two taxonomies for the same directory, and neither says what a member will find behind it. The photo cards are the part of the page that looks most like a template, and on a phone they add four tall cards in a column.",
       "recommendation": "Use one grid, 'Start from what you need', with six to eight tiles. Each tile names the need in the member's words, lists two or three example services ('Pelvic floor assessment', 'Return to exercise after birth') and shows how many experts offer it. Keep professions as a filter inside the directory. On mobile lay the tiles out two per row, or as one scrolling row.",
-      "references": ["01-homepage/02"]
+      "references": [
+        "01-homepage/02",
+        "01-homepage/17",
+        "01-homepage/18",
+        "01-homepage/13"
+      ]
     },
     {
       "id": "HOME-06",
@@ -93,7 +116,7 @@
       "evidence": ["01-home.desktop.jpg", "01-home.mobile.jpg"],
       "detail": "The eyebrow 'Women's health, elevated' is a slogan that adds no information. The second hero button is 'Become an expert', which gives the most valuable spot on the page to a different audience that already has a nav menu and its own band. The line under the buttons, 'Eleva connects you with independent health experts who run their own practice', reads as a legal hedge where a reassurance should be.",
       "recommendation": "Drop the eyebrow or use it for place and language ('Portugal · English, Portuguese, Spanish'). Replace the second button with 'How it works' or with need chips (see HOME-02) and leave expert recruitment to the header and the band. Rewrite the last line as a benefit that still states the model: 'You choose your expert. They run their own practice; Eleva takes care of booking and payment.'",
-      "references": ["01-homepage/01", "01-homepage/02"]
+      "references": ["01-homepage/01", "01-homepage/02", "01-homepage/12"]
     },
     {
       "id": "HOME-08",
@@ -103,7 +126,7 @@
       "evidence": ["01-home.mobile.jpg", "home-scroll.mobile.webm"],
       "detail": "The mobile capture is 10,566px tall. The hero fills the whole first screen with a dimmed video in which a face sits directly behind the headline, the header carries four unlabelled icons (globe, person, search, menu), and the value strip wraps into an uneven two-by-two block. Advisors, service cards and the how-it-works photo each stack at full width, and the footer alone is about 1,900px.",
       "recommendation": "Shorten the mobile hero so the value strip and the top of the next section show on the first screen, and use a still crop that keeps faces clear of the text. Make the strip a tidy two-column grid. Turn advisors, experts and need tiles into horizontal rows. Target under 6,500px in total. Label or reduce the header icons: logo, 'Find an expert', menu.",
-      "references": ["01-homepage/03"]
+      "references": ["01-homepage/03", "01-homepage/14"]
     },
     {
       "id": "HOME-09",
@@ -113,7 +136,7 @@
       "evidence": ["01-home.desktop.jpg", "01-home.mobile.jpg"],
       "detail": "The last three blocks are a belief statement ('Women's health is a lifelong journey'), a link to the mission, and 'Grow your practice with Eleva'. A member who has scrolled the whole page still has open questions (what a session costs, how a video session works, whether she can cancel, who the experts are) and the final button she sees is 'Become an expert'.",
       "recommendation": "Add a short FAQ before the expert band with five or six questions in the member's words: What is Eleva? Who are the experts and how are they checked? How much does a session cost? How do online sessions work? Can I cancel or reschedule? Do I need an account? Close with a member call to action ('Find an expert') and keep the expert band as the last, clearly separate block. Fold the belief statement into the About page or into one line above the FAQ.",
-      "references": ["01-homepage/10"]
+      "references": ["01-homepage/10", "01-homepage/23", "01-homepage/24"]
     },
     {
       "id": "HOME-10",
@@ -123,7 +146,7 @@
       "evidence": ["01-home.desktop.jpg", "01-home.mobile.jpg"],
       "detail": "The Legal column lists fourteen links and is twice the height of the others. The first column is titled 'Join Eleva' but holds About and Our story. There is no 'Find care' column with the categories, no contact or help line, and no language switch. On a phone the footer is a single list about 1,900px long.",
       "recommendation": "Regroup into Find care (the categories), For professionals, Company, and Help. Keep four or five legal links visible (Terms, Privacy, Health data, Cookies, Complaints book) and put the rest behind 'All policies'. Add the Femme Focus newsletter sign-up and the language switch. On mobile collapse the columns into accordions.",
-      "references": ["01-homepage/11"]
+      "references": ["01-homepage/11", "01-homepage/25"]
     },
     {
       "id": "HOME-11",
@@ -138,6 +161,21 @@
       "detail": "The large empty areas in the two JPEGs (under 'Guided by leaders', under the category chips, the dark teal band, beside the steps and beside 'Our belief') are not empty on the live page. Those blocks use a scroll-driven fade from zero opacity, which a full-page screenshot never triggers; the scroll videos show the advisor cards, care cards, quote and photos in place. The stills were re-captured with reduced motion on 2026-11-14 and now show the content. Two real points remain: the first video frame shows the hero panel and both side cards with no image while media loads, and any tool that renders the page without scrolling (previews, print, some screenshot services) gets the blank version. No Mobbin reference was found for this; it is an implementation point.",
       "recommendation": "Give the hero video a poster image and the side cards a colour placeholder so the first paint is never an empty dark panel. Keep the entrance animation to a small upward move and start it from a visible state (for example 60% opacity) so no content is ever fully hidden.",
       "references": []
+    },
+    {
+      "id": "HOME-12",
+      "severity": "P2",
+      "lens": "ui",
+      "title": "Ten unrelated stock photographs and one repeated section layout set the look",
+      "evidence": ["01-home.desktop.jpg", "01-home.mobile.jpg"],
+      "detail": "The page shows about ten stock photographs (the hero video, the two side cards, four care cards, the how-it-works photo, the belief photo and the expert band) and they do not match: street daylight, a pale studio, a saturated outdoor group shot, a gym wall. None shows an Eleva expert or the product. Five sections in a row use the same layout: a mono eyebrow, a two-line serif heading whose second half is italic, a grey lead and a row of rounded images. Each part is well made, but the repetition and the mixed photographs are what make the page read as a template. On a phone the same photos stack at full width and account for much of the 10,566px.",
+      "recommendation": "Choose one image treatment and hold it: one crop, one warm grade, and a cream or teal brand tile where there is no good photograph. Keep photographs for what is real (experts, advisors, the product) and cut the rest. Make two sections typographic only (the need grid, the numbers). Vary the composition from one section to the next: centred, two unequal columns, a full-width band, a ruled grid. Use the italic half-heading once per screen at most.",
+      "references": [
+        "01-homepage/21",
+        "01-homepage/22",
+        "01-homepage/18",
+        "01-homepage/16"
+      ]
     }
   ],
   "references": [
@@ -272,6 +310,174 @@
       "why": "Three link columns of six items each (Company, Explore, Community), a newsletter sign-up with a concrete offer, social icons, and the policy links reduced to one small row; the long legal text sits below the card in small print.",
       "apply": "Balance Eleva's footer the same way: short columns of similar length, the Femme Focus sign-up in the footer, and legal links cut to the essential few with the rest behind 'All policies'.",
       "query": "health company footer"
+    },
+    {
+      "id": "01-homepage/12",
+      "file": "img/12-craft-hero-question-search-chips.jpg",
+      "app": "Craft",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/1509a6d6-fa2f-4b1e-ba6e-da143d4d7e06?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A question as the headline, one search field and nine topic chips under it",
+      "why": "The hero is a question ('how can we help you?'), one wide search field and nine chips that wrap onto a second row, all inside a cream band with a rounded lower edge. One chip is tinted to mark what is new. Nothing else competes, and the next section's heading already shows below the band.",
+      "apply": "The layout for Eleva's hero: 'What do you need help with?' as the field and the nine areas of care as chips under it, aligned to the left edge of the field so two rows still look tidy. Nine chips fit without a carousel. Tint a chip only when there is a reason. From a note-taking app's help centre; kept for its structure only.",
+      "query": "hero section with suggestion chips under a search field"
+    },
+    {
+      "id": "01-homepage/13",
+      "file": "img/13-miro-hero-needs-as-text-links.jpg",
+      "app": "Miro",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/ab31f4f4-2c22-441a-89ef-eeeb93b953e8?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Needs written as underlined text links under a serif statement, ending in 'Browse all'",
+      "why": "A three-line serif statement says who the experts are ('hand-selected consultants and agencies'). Directly under it five needs sit as underlined text links in two short rows, followed by 'Browse all' with an arrow. There are no boxes or icons, so the type carries the block and it still reads as a list of choices. A video starts below and overlaps the edge of the band.",
+      "apply": "A quieter option than chips for Eleva's hero or need section: five or six needs as underlined links in DM Sans under a Lora line, ending in 'See all areas'. It suits the serif and removes a row of pills from a page that already has many. From a software experts directory on a dark ground; kept for the composition only.",
+      "query": "find a therapist website hero section"
+    },
+    {
+      "id": "01-homepage/14",
+      "file": "img/14-biograph-hero-facts-strip.jpg",
+      "app": "Biograph",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/b226f222-74f1-46a9-9015-b704a7e740ff?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Three facts on the lower edge of the hero, inside the frame",
+      "why": "The headline, one line of text and one button sit bottom left over a full-width photograph. Bottom right, on the same baseline, three facts are split by thin vertical rules, each a bold value over a short label ('Up to 30+ Assessments', 'Clinician-led Expert medical guidance'). The facts belong to the first screen and need no band of their own.",
+      "apply": "Move Eleva's value claims onto the lower edge of the hero as value-over-label pairs ('Registration checked, every expert', 'Video, phone or in person', 'English, Portuguese, Spanish', 'Price shown before you book'), so they show on the first screen at every width. On a phone they become a two-by-two grid under the button. Keep faces in the photograph clear of the text column. Health membership product.",
+      "query": "health service closing call to action section"
+    },
+    {
+      "id": "01-homepage/15",
+      "file": "img/15-care-com-checked-people-row.jpg",
+      "app": "Care.com",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/f5a2f425-cc06-4022-ac37-1587cb49d91f?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A row of real people with the check stated in the row's heading",
+      "why": "The heading does two jobs: it says what to do and that everyone shown was checked ('Browse background checked tutors near Menlo Park, CA'). Six square portraits of one size follow, each with a first name and initial, the place, a price from and years of experience, and some with a line of local proof ('Hired by 2 neighbors'). An arrow at the right shows the row continues. The photos are the people's own and uneven, and the fixed square crop still holds the row together.",
+      "apply": "Eleva's 'Meet our experts' row on desktop: a heading that carries the trust claim ('Experts with a checked registration, ready to book'), five or six equal portrait tiles and three short lines under each (profession, languages, price from with the next time). The whole tile links to the profile. Care marketplace outside health; kept for the row and its heading.",
+      "query": "coaching marketplace browse coaches page with specialty filter"
+    },
+    {
+      "id": "01-homepage/16",
+      "file": "img/16-headspace-expert-portraits-brand-colour.jpg",
+      "app": "Headspace",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/40229370-d0b6-41cf-bc35-a899dc8c326e?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Expert portraits on flat brand colours, with the name set on the image",
+      "why": "A centred two-line heading, one sentence and one button sit above a row of tall portrait cards that runs off both edges of the screen. Each person is shown from the chest up on a single flat colour from the brand palette, with the name in white low on the card. People photographed at different times read as one set because the backdrop, the crop and the name position repeat.",
+      "apply": "One treatment for every featured expert and advisor on the homepage: the same tall crop, a cream or soft teal backdrop where the photo allows, the name in the same place. It also gives the fallback its look: a card with no photo uses the same backdrop with initials, so it belongs to the row. Mental health product.",
+      "query": "therapy service team section with provider portrait cards"
+    },
+    {
+      "id": "01-homepage/17",
+      "file": "img/17-mailchimp-need-tiles-expert-count.jpg",
+      "app": "Mailchimp",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/757eacb5-1ca5-429b-b3f7-dc12782ca0aa?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "'What do you need help with?' tiles, each with a count of experts",
+      "why": "A serif question heads the section, with two lines that say who the experts are. Each tile has a photo of an expert at work, the need as a serif title, one line on what the help looks like and a count in the link colour ('285 experts'). The count tells the visitor there is someone behind the tile before she clicks.",
+      "apply": "The single need grid for Eleva: six to eight tiles, each with the need in the member's words, one line of example services and a true count ('3 experts'), or 'Opening soon' where there is nobody yet. Use photographs of Eleva's own experts where they agree; a tile with no photo keeps the title, the line and the count. From an email software experts directory; kept for the tile content.",
+      "query": "women's health service categories section with photo tiles"
+    },
+    {
+      "id": "01-homepage/18",
+      "file": "img/18-function-typographic-category-grid.jpg",
+      "app": "Function",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/11f6d5b0-ee42-407c-8053-d2b83915df13?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A category grid made only of type and thin rules",
+      "why": "On cream, six cells are divided by thin rules with no boxes, shadows or photographs. Each cell has a two-line serif title, a small count in the accent colour ('16 Biomarkers') and four or five example items that fade out towards the bottom, which says there is more without a link in every cell. The last cell is tinted and holds the one action ('See all tests'). The heading mixes roman and italic serif, close to Eleva's own type.",
+      "apply": "A way to show Eleva's areas of care with no stock photograph: a ruled grid on cream, each cell with the area in Lora, a count of experts and three example services in the member's words, and a last cell that says 'See all experts'. It gives the page one section that is pure typography, which breaks the run of photo cards. Health testing product.",
+      "query": "women's health service categories section with photo tiles"
+    },
+    {
+      "id": "01-homepage/19",
+      "file": "img/19-glide-numbers-rows-with-links.jpg",
+      "app": "Glide",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/979fe5b7-85d8-450e-8b61-5534ff3f1f97?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Numbers as rows, each with a sentence and a link to what stands behind it",
+      "why": "Three rows are separated by thin rules. On the left is a very large figure. On the right one plain sentence says what the figure counts, with a text link to where it can be checked ('Browse our templates', 'Read their stories'). Each number leads somewhere, so it reads as a fact and not as decoration.",
+      "apply": "Eleva's 'Who you will meet' block: two or three true figures set large in Lora (experts live, professions, advisors on the board), each with one sentence and a link (See the experts, How we check each expert, Meet the board). A small number set this way looks deliberate. Show only a figure that is true today. From a no-code software product on a dark ground; kept for the row structure.",
+      "query": "health app statistics section with large numbers"
+    },
+    {
+      "id": "01-homepage/20",
+      "file": "img/20-calm-member-quotes-first-name.jpg",
+      "app": "Calm",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/5f31344b-7bb1-43ba-9ec6-d691fff0e465?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Member quotes signed with a first name and the year the member joined",
+      "why": "Each card has a photo across the top, a quote of three to five lines and a signature in two parts: a first name in capitals and 'Calm member since 2017'. The cards are one height, each quote describes a change in the person's own words, and no surname, job title or star rating is shown.",
+      "apply": "The signature for Eleva's member stories: first name, 'Member since 2026' and the area of care. That is enough to be believed and keeps a health story private. Keep quotes to four lines and cards to one height; on a phone show one card with the next one peeking in. Publish only words a member has agreed to share. Meditation product.",
+      "query": "wellness service testimonial section with customer portrait"
+    },
+    {
+      "id": "01-homepage/21",
+      "file": "img/21-ease-serif-headline-asymmetric-tiles.jpg",
+      "app": "Ease",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/6695790f-7142-4e99-86a9-2632963b795d?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A large serif headline on off-white over two tiles of unequal width, one a brand pattern",
+      "why": "A two-line serif headline in deep green sits top left with a short paragraph, and the right half of the row stays empty. Below, a narrow tile filled with a brand pattern sits beside a wide photograph of two people talking in a warm room. The pattern tile gives the brand a second image without a second stock photo, and the unequal split keeps the block from looking like a card grid.",
+      "apply": "A composition for Eleva's belief or how-it-works section: a Lora headline at the left, generous empty space, then one photograph at two thirds width beside a teal or cream tile that carries the leaf mark or a simple line pattern. Use it once on the page so it stays distinctive. Software for care practices; kept for the composition.",
+      "query": "health service closing call to action section"
+    },
+    {
+      "id": "01-homepage/22",
+      "file": "img/22-headspace-portrait-brand-shape.jpg",
+      "app": "Headspace",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/436b4325-7a04-40f6-93b9-bd45c883c276?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Portraits cropped into one brand shape beside a flat colour",
+      "why": "Each statement has one black-and-white portrait cropped into a half circle, with a matching half circle of flat brand colour beside it. The next block mirrors the pair. Photographs of different people look like one series because the crop, the tone and the shape repeat, and the page gets a recognisable image style from very little material.",
+      "apply": "Give Eleva one repeatable treatment for editorial images (for example a soft arch crop with a cream or teal partner shape) in the belief block, the advisor lead and the closing band, in place of rounded rectangles with different light and colour. Keep expert portraits in the directory natural. Mental health company page.",
+      "query": "find a therapist website hero section"
+    },
+    {
+      "id": "01-homepage/23",
+      "file": "img/23-altitude-faq-two-column-help.jpg",
+      "app": "Altitude",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/17e2dea2-6d10-44f8-b7fd-f11dc717ffd4?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "FAQ in two columns: the heading and a route to a person on the left, the questions on the right",
+      "why": "The left column holds a two-line heading, one line ('Still got questions? Reach out to our team.') and a small outlined button. The right column holds five questions divided by thin rules, the first one open and a plus sign on the others. The section is short, uses no cards and no background, and the way to reach a person stays in view while reading.",
+      "apply": "The layout for Eleva's homepage FAQ: a Lora heading and 'Still have a question? Write to us' on the left, six questions on the right with ruled lines, the first answer open. On a phone the left column sits above the list. The order of the questions stays as in reference 10. From a payment card product; kept for the layout only.",
+      "query": "FAQ section with a contact support card"
+    },
+    {
+      "id": "01-homepage/24",
+      "file": "img/24-luffu-closing-line-faces-one-action.jpg",
+      "app": "Luffu",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/75b47ca0-19ee-468a-b191-a87b626f9874?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A closing line in the visitor's words, a cluster of faces and one action",
+      "why": "On a soft sage ground, one serif sentence speaks to the feeling behind the visit ('You don't have to carry it all alone.'), a short line sits under it, and six round faces overlap in a row. One full-width white row holds the single action. There is no second button and no large image, so the section is calm and takes little height.",
+      "apply": "Eleva's closing action for members, placed after the FAQ and before the expert band: one Lora line in the member's register, a row of small faces of real experts and 'Find an expert' as the one action. The belief statement can live here as that one line. Family care product; the action there is a waiting list.",
+      "query": "final call to action section with photograph for a care service"
+    },
+    {
+      "id": "01-homepage/25",
+      "file": "img/25-clay-footer-contact-line.jpg",
+      "app": "Clay",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/7dc58113-4db9-46fd-9ea9-99fa6602083c?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A line of help with a phone number and an email above the footer links",
+      "why": "Before the link row, the footer says one serif sentence ('Whether it's just a question or to say hello, we're here if you need anything.') and gives two labelled routes, 'Call' and 'General enquiries'. The links themselves are cut to one small row. The last thing on the page is a way to reach a person.",
+      "apply": "Open Eleva's footer with one line and the real help routes (help centre, email), then the Find care column. It answers the missing contact line without adding a column. Show only routes that are answered. From a contacts app on a black ground; kept for the structure.",
+      "query": "final call to action section with photograph for a care service"
     }
   ],
   "judging_criteria": [
@@ -281,6 +487,9 @@
     "Does the page state that every expert's professional registration is checked, with at least one true number beside it? (01-homepage/05 Hims)",
     "Do the advisors appear once, in a single band with credentials and institutions, placed after the experts and services? (01-homepage/06 Superpower, 01-homepage/07 SwimClub)",
     "Does each 'how it works' step show a piece of the real Eleva interface? (01-homepage/09 Function)",
-    "Does the page answer 'what is Eleva, who are the experts, what does it cost' in an FAQ and end with a call to action for members before the expert band? (01-homepage/10 Hims)"
+    "Does the page answer 'what is Eleva, who are the experts, what does it cost' in an FAQ and end with a call to action for members before the expert band? (01-homepage/10 Hims)",
+    "On a phone, does the first screen show the headline, the search field or need chips and the start of the proof line, with no face behind the text? (01-homepage/12 Craft, 01-homepage/14 Biograph)",
+    "Do all photographs on the page share one treatment (crop, light, colour or brand shape), with no more than one stock photograph in view at a time? (01-homepage/16 Headspace, 01-homepage/21 Ease, 01-homepage/22 Headspace)",
+    "Does each section differ in composition from the one before it (centred, two unequal columns, full-width band, ruled type-only grid), so no two neighbours repeat the same eyebrow, heading and card row? (01-homepage/18 Function, 01-homepage/19 Glide, 01-homepage/21 Ease)"
   ]
 }

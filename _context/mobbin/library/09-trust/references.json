@@ -3,7 +3,7 @@
   "title": "Trust, legal and governance (cross-cutting)",
   "researcher": "Trust, legal and governance",
   "date": "2026-11-14",
-  "summary": "The legal substance is unusually complete for a pre-launch product: consents are separate and unticked, every policy is dated, the controller is named, and export and deletion are in the product. The design does not yet let a member feel that. Trust facts sit in grey fine print, in documents and in FAQ accordions, while the moments that carry the most weight (the health-data consent, the pay step, the privacy controls) are the least explained. The one change that matters most: explain each trust moment in one plain sentence at the place where it is asked, starting with the health-data consent and the cancellation deadline next to the Pay button. References 13 and 14 (2026-11-21) prepare planned maintenance: a notice in advance with the exact window, and a status page that answers in one line. References 15 to 17 (2026-11-22) prepare the dashboard error page (slice 13.2): the error stays inside the app, 'Try again' works, there is a second way out and a reference to copy for support.",
+  "summary": "The legal substance is unusually complete for a pre-launch product: consents are separate and unticked, every policy is dated, the controller is named, and export and deletion are in the product. The design does not yet let a member feel that. Trust facts sit in grey fine print, in documents and in FAQ accordions, while the moments that carry the most weight (the health-data consent, the pay step, the privacy controls) are the least explained. The one change that matters most: explain each trust moment in one plain sentence at the place where it is asked, starting with the health-data consent and the cancellation deadline next to the Pay button. References 13 and 14 (2026-11-21) prepare planned maintenance: a notice in advance with the exact window, and a status page that answers in one line. References 15 to 17 (2026-11-22) prepare the dashboard error page (slice 13.2): the error stays inside the app, 'Try again' works, there is a second way out and a reference to copy for support. References 18 to 33 (2026-11-23) prepare the trust centre and policy layout (slice D6.1) and the trust moments of the public site: the plain-language layer and contents on phones, acting on a right from the page that describes it, the cookie dialog, newsletter consent, who runs Eleva in the footer and on the contact page, the pay step and the accessibility statement.",
   "strengths": [
     "Checkout consents are four separate, unticked checkboxes, and the AI and transcription choice is marked Optional and left off (04-booking-checkout/05-paid-step-details). Keep the separation; improve the explanation.",
     "The details step turns the cancellation policy into dated facts for this booking: \"Full refund if you cancel before 15 Nov 2026, 10:00\" (04-booking-checkout/06-paid-details-filled). This is the best trust line in the funnel.",
@@ -54,7 +54,7 @@
       ],
       "detail": "The details step states the exact refund deadline. One step later, where the member pays, the mobile summary card shows only the service, time and hold timer: no cancellation terms at all. Desktop keeps one grey line, \"Full refund if you cancel at least 24 hours before the session\", without the date. The member commits money on the screen with the least information about getting it back. Showing the main terms, including cancellation, directly before the payment action is also a consumer-law expectation; the exact wording, and whether a withdrawal-right statement is required for a dated health service, needs legal review.",
       "recommendation": "Carry the dated line into the summary card on both breakpoints, with an icon and normal text colour: \"Free cancellation until Sun 15 Nov, 10:00. After that, no refund.\" with a \"Cancellation policy\" link that opens the full Flexible rules in a sheet. Repeat one short line directly under the Pay button: \"By paying you confirm this booking and its cancellation policy.\" Use the same component on the thank-you page and in the confirmation email so the member reads one sentence three times.",
-      "references": ["09-trust/03"]
+      "references": ["09-trust/03", "09-trust/31"]
     },
     {
       "id": "TRUST-04",
@@ -82,7 +82,7 @@
       ],
       "detail": "The page is two grids of identical white cards. A member who wants to know \"is my health information safe here?\" has to choose between Security, Data processing agreement, Sub-processors and Health data notice and then read a policy. The first card a member meets after Security is a contract written for experts and clinics. There are no facts on the page itself, no icons, no grouping by reader, and no word on who is behind Eleva. On mobile it is thirteen stacked cards, about 4,300 px, before the contact line.",
       "recommendation": "Lead with proof, then documents. Under the heading add five or six fact tiles, each an icon, a specific claim and a link: who can read your session notes, where data is stored, how session records are encrypted, how expert registration is checked, how payments are handled, that sessions are not recorded. Then group the documents by reader with a short label each: \"For members\", \"For experts and clinics\", \"Security researchers\". Add a \"Who runs Eleva\" block (legal name, NIPC, address, regulator registration, privacy and security contacts) and a \"Report a concern\" entry. Keep the dated cards; they are good.",
-      "references": ["09-trust/06"]
+      "references": ["09-trust/06", "09-trust/18", "09-trust/29"]
     },
     {
       "id": "TRUST-06",
@@ -95,7 +95,7 @@
       ],
       "detail": "The summary names \"Fisio Mota\" and a price, and the page is branded Eleva. Nothing at the point of contract says the session is delivered by an independent expert, that Eleva arranges booking and payment, or who issues the invoice. \"Total\" sits alone on a line with the amount on the next line and no tax note. The subheading \"Card, Apple Pay, Google Pay, Link, and MB WAY may appear\" sounds unsure. There is no line saying the card details go to Stripe. Platform transparency and total-price rules both point at this screen; the exact statements need legal review.",
       "recommendation": "Add a provider line to the summary card: \"Your session is with Fisio Mota, an independent physiotherapist. Eleva takes care of booking and payment, and your expert sends the invoice.\" Set the total as one row, label left and amount right, with \"Taxes included\" or the correct VAT wording beneath (needs legal review). Replace the subheading with \"We hold your time while you pay.\" and add a lock line under the button: \"Paid securely through Stripe. Eleva never sees your card number.\" All of this is copy around the Payment Element, not a change to it.",
-      "references": ["09-trust/04", "09-trust/03"]
+      "references": ["09-trust/04", "09-trust/03", "09-trust/31"]
     },
     {
       "id": "TRUST-07",
@@ -108,7 +108,18 @@
       ],
       "detail": "The privacy notice is well written but opens straight into \"1. Who the controller is\". There is no short summary for a member who will read thirty seconds. On mobile the page runs about 11,700 px with no contents list or jump links, and the two-column legal bases table squeezes into narrow columns. Section 8 tells members to write an email to use their rights, although export and deletion already exist in Privacy settings. Section 10 joins \"Artificial intelligence and cookies\", two unrelated topics. The DPO bullet describes an appointment still to come, which reads as something missing; how to state the current contact needs legal review.",
       "recommendation": "Add an \"In short\" box under the title with five bullets (what we collect, who sees health information, where it is stored, how long, your choices) and the note that the full text below is what applies. On mobile add a collapsible \"On this page\" under the date and a back-to-top control; stack the table as purpose-then-basis cards. In \"Your rights\" add two buttons, \"Download your data\" and \"Delete your account\", that go to Privacy settings, plus a short request form for people who booked as guests. Split AI and cookies into two sections. State the data protection contact positively as the one address that reaches the right person. Apply the same template to every policy.",
-      "references": ["09-trust/07"]
+      "references": [
+        "09-trust/07",
+        "09-trust/19",
+        "09-trust/20",
+        "09-trust/21",
+        "09-trust/22",
+        "09-trust/23",
+        "09-trust/24",
+        "09-trust/26",
+        "09-trust/27",
+        "09-trust/33"
+      ]
     },
     {
       "id": "TRUST-08",
@@ -121,7 +132,7 @@
       ],
       "detail": "The explanation uses \"Account-scope data\", \"Booking-scope consents\", \"de-identified\", \"retain-then-destroy rule\" and \"This cannot be shortened from this screen\". A member cannot tell from this whether her session notes are deleted. The reassuring fact, a 14-day window to change her mind, is the last line. The button is a pale pink pill that looks disabled. The page does not suggest downloading data first, and the capture set has no confirmation step, so its design could not be judged. \"Download your data\" has no state for a request in progress or a past export.",
       "recommendation": "Rewrite as two short lists. \"What we delete\": your profile, your sign-in, your notification and marketing choices. \"What we keep, and why\": session records, with your name removed, for the period Portuguese health-record rules require; payment records for tax law. Lead with \"You have 14 days to change your mind\". Offer \"Download your data first\" inside the delete card. Make the confirmation a dialog that repeats the consequences in one sentence, links the privacy notice, and uses an explicit button label such as \"Delete my account\". After a request, show a dated status row for export and for deletion with a \"Cancel deletion\" action. Retention statements need legal review.",
-      "references": ["09-trust/09", "09-trust/10"]
+      "references": ["09-trust/09", "09-trust/10", "09-trust/26"]
     },
     {
       "id": "TRUST-09",
@@ -150,7 +161,7 @@
       ],
       "detail": "The profile has \"Website\" and \"Share this page\" but no \"Report\". The thank-you page has no \"Something wrong?\" route. The only path is the footer link to the complaints policy, which is a document, not an action. For a health marketplace, a member who sees a wrong credential or has a bad session needs a short, safe way to say so, and seeing that route exists is itself a trust signal. A notice route for listings is also expected of online platforms; scope needs legal review.",
       "recommendation": "Add a quiet \"Report a concern\" link at the foot of every profile and on each session in the member Space. Open a two-step dialog: pick a reason (registration or identity, conduct in a session, payment or refund, something else), add details. State \"Your expert will not see who sent this\" where that is true, confirm with a reference number and the time to a reply, and link the complaints policy and the electronic complaints book. List the same route on the trust centre.",
-      "references": ["09-trust/11"]
+      "references": ["09-trust/11", "09-trust/32"]
     },
     {
       "id": "TRUST-11",
@@ -164,7 +175,7 @@
       ],
       "detail": "The Legal column runs from Terms to Cookie settings in one undifferentiated list, mixing member essentials with Expert agreement, Photo credits and Evidence-based care. The complaints book, which Portuguese members look for, is tenth. The bottom line reads \"© 2026 Eleva.care. All rights reserved.\" with no legal name, registration number or address, so a visitor has to open the privacy notice to learn which company holds her data. On mobile the footer is longer than a screen and a half.",
       "recommendation": "Split into two shorter columns: \"Legal\" (Terms, Privacy, Cookies, Payments and refunds, Complaints, Electronic complaints book) and \"Trust\" (Trust and security, Health data, AI, Accessibility, Cookie settings). Move Expert agreement under the professionals column and Photo credits to the bottom bar. Replace the copyright line with an identity line: legal name, NIPC, registered address, and the regulator registration where one applies. Show the official complaints-book mark if its use is required or permitted (needs legal review).",
-      "references": ["09-trust/12"]
+      "references": ["09-trust/12", "09-trust/29", "09-trust/30"]
     },
     {
       "id": "TRUST-12",
@@ -231,7 +242,21 @@
       ],
       "detail": "No capture shows the consent banner, so its design could not be judged. The source (packages/consent/src/consent-chrome.tsx) describes a compact bottom bar with both choices in one row and \"Customize\" as a text link on phones, which is the right shape. Equal visual weight for accept and reject, and the wording, still need a visual check and legal review.",
       "recommendation": "Add first-visit captures of the banner and the preferences dialog on desktop and mobile. Check that accept and reject are the same size and style, that necessary cookies are labelled \"Always on\" and optional groups start off, and that the dialog can be confirmed with one button.",
-      "references": ["09-trust/08"]
+      "references": ["09-trust/08", "09-trust/25"]
+    },
+    {
+      "id": "TRUST-17",
+      "severity": "P3",
+      "lens": "copy",
+      "title": "The cookie dialog names each group but hides what it does behind a plus sign",
+      "evidence": [
+        "2026-11-14-d0.3/11-states/02-cookie-preferences.desktop.jpg",
+        "2026-11-14-d0.3/11-states/02-cookie-preferences.mobile.jpg",
+        "2026-11-14-d0.3/11-states/01-cookie-banner.desktop.jpg"
+      ],
+      "detail": "The first-visit captures now exist (2026-11-14-d0.3), so TRUST-16 can be judged. The banner is the right shape: 'Reject optional' and 'Accept all' are the same size and style. In the preferences dialog the two groups are bare labels, 'Essential' and 'Newsletter sign-up', each behind a small plus. The descriptions Eleva has written (what essential cookies do, that the newsletter form comes from Beehiiv) stay hidden until a tap, so a visitor deciding on 'Newsletter sign-up' cannot see that it only shows a sign-up form. The locked Essential switch is told apart by a paler colour only. On the banner 'Customize' is greyer than the other two buttons and reads as switched off.",
+      "recommendation": "Show each group's one-sentence description under its name without a tap, and write 'Always on' beside the Essential switch. Give 'Customize' the same text colour as the other two choices. On the newsletter page, say beside the form what the member agrees to and who provides the form, so the choice is clear where it is made. In the cookie policy, put a 'Cookie settings' button where withdrawal is described. Wording needs legal review.",
+      "references": ["09-trust/25", "09-trust/24", "09-trust/28"]
     }
   ],
   "references": [
@@ -446,6 +471,198 @@
       "why": "'An error occurred. Please reload the page.' with a 'Reload' button and, under it, a small text link, 'Go to dashboard'. The second action is plainly the lesser one, so the eye goes to the retry first, and there is still a way out when retrying keeps failing.",
       "apply": "'Try again' is the only filled button. Beside it sits a quiet link with the same words as the not-found page ('Go to dashboard'). Eleva writes a fuller message than Chronicle: what failed, what to do next and the reference.",
       "query": "dashboard error page with a try again button"
+    },
+    {
+      "id": "09-trust/18",
+      "file": "img/18-canva-trust-tabs-questions.jpg",
+      "app": "Canva",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/abbc8646-b8bd-4733-9499-1930d65b0ee9?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Trust centre with four tabs, and its questions written the way a visitor asks them",
+      "why": "A slim bar under the header reads Trust, then Overview, Security, Privacy and Legal, so the trust centre is one place with four doors. The Security tab ends with questions in the visitor's words ('How do you store my data?', 'What laws do you comply with when it comes to data privacy?') and a short 'Security questions' block with one 'Contact us' button. A design tool, kept for the structure.",
+      "apply": "Group /trust by what the visitor wants to know, not by document: a short anchor bar (Your health information, Security, Experts we check, Documents). Under the fact tiles, answer four or five questions in a member's words, two sentences each, with a link to the document. End the page with one contact block for privacy and security.",
+      "query": "security section of a health app website"
+    },
+    {
+      "id": "09-trust/19",
+      "file": "img/19-craft-policy-tldr-contents.jpg",
+      "app": "Craft",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/186d65b3-ec98-4a7b-af3d-5e200b92debf?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "One 'TLDR' paragraph above the policy, with searchable contents in a side rail",
+      "why": "Under the title sits one paragraph that starts in bold: 'TLDR: Craft does not own your data, nor do we sell it to others or use it for advertising.' A dotted rule then separates it from the legal text. The left rail lists every section and has a search field, so a reader reaches 'Data Retention' or 'Your Privacy Rights' in one step. A notes product, kept for the layout.",
+      "apply": "Open every policy with an 'In short' block of three to five plain sentences, set apart from the full text by a rule and the line that the full text below is what applies. Eleva's summary says what Eleva does: who sees health information, where it is stored, how long it is kept, and your choices. Summary wording needs legal review.",
+      "query": "privacy policy page with a plain-language summary"
+    },
+    {
+      "id": "09-trust/20",
+      "file": "img/20-grammarly-policy-dates-previous-version.jpg",
+      "app": "Grammarly",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/98becf25-25eb-4e27-84dc-e658656860c9?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Two dates over the title (posted, and in effect) and a link to the previous version",
+      "why": "A small line over the title reads 'Effective as of March 1, 2023 | Posted: December 1, 2022', so a reader sees the change was announced three months before it applied. Directly under the title is '(View Previous Version)'. After two short paragraphs a 'Summary' heading introduces 'a brief overview of some important points'. A writing tool, kept for the dating.",
+      "apply": "Show 'Last updated' on every policy and, when a change is announced ahead, 'In effect from', and link the previous version. Eleva already stores the consent version as a date, so a member can open the exact text she agreed to.",
+      "query": "privacy policy page with a plain-language summary"
+    },
+    {
+      "id": "09-trust/21",
+      "file": "img/21-hbx-policy-contents-phone.jpg",
+      "app": "HBX",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/3f42e196-4233-463f-89bd-e4cd6e03319d?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "On a phone: sibling policies as a scrolling tab row, then the dates, then numbered contents as the first screen",
+      "why": "An iOS screen. Under the title a row of tabs (About, Terms & Conditions, Privacy Policy) lets the reader change document without going back. The effective date and the last-updated date come next, and the rest of the first screen is a numbered list of thirteen sections. No legal text shows until the reader picks a section. A fashion retailer, kept for the phone layout.",
+      "apply": "On phones, put 'On this page' directly under the date and the 'In short' block as a numbered list that can be folded, and add a scrolling row of sibling policies so a reader moves from Privacy to Cookies to Health data in one tap. Give each row at least 24px of height.",
+      "query": "privacy policy screen with a short summary and section list"
+    },
+    {
+      "id": "09-trust/22",
+      "file": "img/22-ikea-privacy-summary-cards-phone.jpg",
+      "app": "IKEA",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/1103289a-dd94-4194-a391-62072c634305?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A plain-language layer first: cards that explain the policy, with the full text one link below",
+      "why": "An iOS screen. The Policies page says 'Explore a different kind of privacy policy to understand how your data works for you' and shows cards, each with a drawing, one sentence ('And here's how to be the boss of your data') and 'Learn more'. Under the cards a lock row reads 'Read our full privacy policy'. The short version and the legal version are plainly two layers. A furniture retailer, kept for the layering.",
+      "apply": "Offer the summary as its own layer: three or four cards (what we collect, who sees your health information, how long we keep it, your choices), each linking to its section, then 'Read the full privacy notice'. On Eleva the cards stack on phones instead of scrolling sideways, so nothing sits off screen.",
+      "query": "privacy policy screen with a short summary and section list"
+    },
+    {
+      "id": "09-trust/23",
+      "file": "img/23-babbel-policy-manage-settings-phone.jpg",
+      "app": "Babbel",
+      "platform": "ios",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/dd414e9e-46c2-40c5-bb23-6d55041ce946?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "An action button directly under the policy title, and 'Who we are' as the first section",
+      "why": "An iOS screen from a Berlin company. The first thing under 'Privacy Policy' is a filled button, 'Manage settings'. The first heading is 'Who we are, and the purpose of this Privacy Policy'; its first sentence names the company and its street address, and the paragraph says it is the controller. A reader can act before reading and knows who is responsible within one screen. A language app, kept for the order.",
+      "apply": "Under each policy title add the action that belongs to it: 'Manage your privacy choices' on the privacy notice, 'Cookie settings' on the cookie policy. Keep 'Who the controller is' as section 1 with the legal name and address in the first line, as Eleva already does.",
+      "query": "privacy policy screen with a short summary and section list"
+    },
+    {
+      "id": "09-trust/24",
+      "file": "img/24-pitch-withdraw-consent-in-policy.jpg",
+      "app": "Pitch",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/7213cc84-4dae-4c68-b5ba-099dd8c708c4?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "The button to withdraw consent sits inside the policy, under the paragraph that describes the right",
+      "why": "A Berlin company's privacy policy sets out each purpose under the same small headings: nature and purpose, legal basis, recipients, withdrawal of consent. Under 'Withdrawal of Consent' the text says you can withdraw at any time by clicking 'Manage cookie settings' below, and the outlined button is right there. A presentation tool, kept for the structure.",
+      "apply": "In the cookie policy and the privacy notice, place a 'Cookie settings' button where withdrawal is described, and 'Download your data' and 'Delete your account' buttons in 'Your rights'. Use the same sub-headings for each purpose so every section reads the same way.",
+      "query": "cookie consent banner with reject and accept buttons"
+    },
+    {
+      "id": "09-trust/25",
+      "file": "img/25-luma-cookie-preferences-described.jpg",
+      "app": "Luma",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/1f148a12-5294-4265-8c8c-0649e648c605?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Each cookie group says what it does in one or two always-visible sentences, with one save button",
+      "why": "The dialog lists Essential, Analytics and Marketing. Under each name one or two grey sentences say what the group does and what it is not used for ('This data is aggregated and not used for advertising'). The Essential switch is on and dimmed, and the intro says 'Essential cookies are always active'. A Cookie Policy link and one 'Save Preferences' button close it. A media tool, kept for the row copy; Eleva keeps its equal 'Reject optional' and 'Accept all' buttons, which this dialog leaves out.",
+      "apply": "Show the description Eleva has already written under each group name without a tap: what essential cookies do, and that 'Newsletter sign-up' shows the Femme Focus form provided by Beehiiv. Write 'Always on' beside the locked switch so its state is not told by colour alone.",
+      "query": "cookie consent banner"
+    },
+    {
+      "id": "09-trust/26",
+      "file": "img/26-duolingo-data-vault-access-erase.jpg",
+      "app": "Duolingo",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/2a93dd58-8d48-4fb6-8300-61b82ac8194c?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "One page with two rights, each a short paragraph, the time it takes and one button",
+      "why": "'Data Vault' has two sections. 'Access Personal Data' says the button requests a copy of all personal data and 'This can take up to 30 days'. 'Erase Personal Data' says which accounts are deleted, what is lost, in bold that it cannot be undone, how long it takes, and what the deletion does not cancel. Each section ends in one labelled button. A learning app, kept for the structure; the mascot drawings are not Eleva's voice.",
+      "apply": "Give 'Your rights' in the privacy notice, and one entry on /trust, the same shape: 'Get a copy of your data' and 'Delete your account', each with two sentences, the time to a reply (one month under the GDPR) and one button to Privacy settings. Say what deleting does to a booked session.",
+      "query": "privacy request form to access or delete personal data"
+    },
+    {
+      "id": "09-trust/27",
+      "file": "img/27-getyourguide-guest-deletion-request.jpg",
+      "app": "GetYourGuide",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/a603533f-dd14-4a12-b3fe-2be1b0893e9c?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A deletion request for people without an account: one email field inside the help answer",
+      "why": "In the help centre of a Berlin booking marketplace, 'Data and privacy' opens two answers: 'Unsubscribe from marketing emails' and 'Delete account and all personal data'. The second says you can delete your account and personal data at any time, then shows one required field, 'Email address', and a 'Send' button. No sign-in, no reason, no other field. A bot-check badge sits in the corner. A travel marketplace, kept for the form.",
+      "apply": "Add a short request form to 'Your rights' for members who booked as guests: email, the right they want to use (copy, correction, deletion), Send. Confirm on the page with the date and when to expect a reply, and check the address by email before acting. Post it through the API with bot protection.",
+      "query": "privacy request form to access or delete personal data"
+    },
+    {
+      "id": "09-trust/28",
+      "file": "img/28-legora-newsletter-consent.jpg",
+      "app": "Legora",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/7f7badac-ccf6-43ec-9a54-750d8bb73221?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Newsletter sign-up with one field, one unticked box that names the purpose, and the privacy line apart",
+      "why": "The form asks for an email address only. Under it is an unticked checkbox: 'I agree to receive marketing communications about Legora's products, services, and events and understand that I can unsubscribe at any time.' A separate line links the Privacy Policy, then 'Subscribe'. The consent says what will be sent and how to stop, and is tied to nothing else. A Swedish legal software company, kept for the consent wording.",
+      "apply": "Beside the Femme Focus form, state the consent in Eleva's words: what arrives and how often, that Beehiiv sends it for Eleva, that every email has an unsubscribe link, and a link to the privacy notice. Ask for the email address only. Never tie the newsletter to booking or sign-up.",
+      "query": "newsletter sign-up form with consent text"
+    },
+    {
+      "id": "09-trust/29",
+      "file": "img/29-pitch-imprint-company-identity.jpg",
+      "app": "Pitch",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/5f75388f-3ffc-4ee8-a9ca-6c12861fd095?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Company identity as labelled facts: legal name, address, who is responsible, register and number, VAT number",
+      "why": "A Berlin company's legal notice sets its identity out as facts, not as a sentence: the legal name in bold with street, city, country and an email address; then three label-and-value pairs for the managing director, the commercial register with court and number, and the VAT ID. Labels are grey, values bold. A reader finds any one fact in a second. A presentation tool, kept for the block.",
+      "apply": "Add a 'Who runs Eleva' block to /trust and /contact with the same label-and-value layout: legal name (Búzios e Tartarugas, Lda), registered address, NIPC, the ERS registration where it applies, and the privacy, security and support addresses. The footer carries the one-line version.",
+      "query": "footer with company registration number and registered address"
+    },
+    {
+      "id": "09-trust/30",
+      "file": "img/30-revolut-footer-security-column.jpg",
+      "app": "Revolut",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/e910aae1-4106-4dc5-aad2-6bc57731c923?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A footer column for security and protection, a short legal row, then the registered entity and its regulator in plain paragraphs",
+      "why": "The footer gives security its own column, 'Security & Protection', with five links such as 'How We Protect Your Money' and 'Security Bugs', apart from Help and Company. The legal links are one short row under the logo, beside the country. Below, plain paragraphs name the company, its registration number, the authority that authorises it and the registered address. A bank, kept for the three layers.",
+      "apply": "Split Eleva's fourteen-link Legal column into 'Trust' (Trust and security, Health data, How we check experts, Accessibility, Report a security issue) and a short 'Legal' list (Terms, Privacy, Cookies, Complaints, Electronic complaints book, Cookie settings). Close with one identity sentence: legal name, NIPC, registered address, ERS registration where it applies.",
+      "query": "footer with company registration number and registered address"
+    },
+    {
+      "id": "09-trust/31",
+      "file": "img/31-babbel-pay-total-withdrawal.jpg",
+      "app": "Babbel",
+      "platform": "web",
+      "type": "screen",
+      "mobbin_url": "https://mobbin.com/screens/06c179e7-7ff6-4d82-81d9-198a895f5544?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "At the pay step: a security line above the methods, the total with 'VAT included', and the terms and withdrawal information linked under the button",
+      "why": "A Berlin company's payment page. Above the payment methods a lock row says 'Secure Payment. All transactions will be processed over an SSL-encrypted connection.' The order summary ends in one box, 'Total price' with '(VAT included)' beneath. Directly under 'Buy now' one line links the Terms & Conditions and the withdrawal information. The dates and how to cancel are in the summary. A language app, kept for the pay-step facts an EU buyer expects.",
+      "apply": "At Eleva's pay step show the total as one row with the tax note beneath, one lock line beside the button ('Paid securely through Stripe. Eleva never sees your card number.'), and under the button one line linking the Terms of use and the cancellation policy with its dated deadline. Whether a withdrawal statement applies to a dated health session needs legal review.",
+      "query": "booking checkout payment step with secure payment reassurance next to the pay button"
+    },
+    {
+      "id": "09-trust/32",
+      "file": "img/32-resend-contact-addresses-by-purpose.jpg",
+      "app": "Resend",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/a24357ae-2832-4a05-bf8d-948a9a75d0b5?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Contact page with a two-field form and an address for each purpose, security included",
+      "why": "'Get in touch' has two fields, the email address and 'How can we help?', and one Submit button. To the right are three labelled addresses: 'Get help', 'Work at Resend' and 'Report security concerns', each with its own email. A visitor with a security report or a plain question sees where to write without reading a paragraph. An email tool on a dark theme, kept for the structure.",
+      "apply": "Keep Eleva's addresses by purpose (support, privacy, legal, security) and add 'Report a concern about an expert or a session' as its own entry. If a form is added, ask for an email and a message only, say that health details are not needed here, and name who reads it and when to expect a reply.",
+      "query": "responsible disclosure page for reporting a security vulnerability"
+    },
+    {
+      "id": "09-trust/33",
+      "file": "img/33-webflow-accessibility-statement.jpg",
+      "app": "Webflow",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/42cb7841-73a8-4d8e-be41-24fbec360aa6?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Accessibility statement with a date, its own small menu, and a 'Conformance status' section that names the standard",
+      "why": "The header holds a small menu (Accessibility at Webflow, Statement, Checklist), the title and 'Last updated on May 20th, 2021'. The first section is 'Conformance status': a left column lists the three areas covered, and the text names what was tested (keyboard operability, screen reader support) and links the standard, 'WCAG 2.1 Level AA'. A site builder, kept for the structure.",
+      "apply": "Give Eleva's accessibility statement the same order: last updated, the standard Eleva works to (WCAG 2.2 AA) and how it is tested, what is covered (public site, booking, member Space), and a clear way to tell Eleva when something does not work, with a reply time. The content of the statement needs legal review against the European Accessibility Act.",
+      "query": "accessibility statement page"
     }
   ],
   "judging_criteria": [
@@ -457,6 +674,15 @@
     "Can a member see the current state and date of every consent, change each optional one with a single switch, and follow an export or deletion request through a dated status, with a delete confirmation that names what is erased and what is kept? (09-trust/08, 09-trust/09, 09-trust/10)",
     "Can a reader of any policy page get a short summary, jump between sections on a phone, start a data request from the rights section, and report a concern about an expert in two steps with a reference number? (09-trust/07, 09-trust/11)",
     "Before and during planned maintenance, does Eleva say when it starts and ends in the reader's time zone and what will not work, and does the status page answer whether Eleva is working in one sentence? (09-trust/13, 09-trust/14)",
-    "When a signed-in page fails to load, does the menu stay usable, does the page say in plain words what happened and what to do, does 'Try again' load the page again, is there a second way out, and can the reader copy a reference to send to support? (09-trust/15, 09-trust/16, 09-trust/17)"
+    "When a signed-in page fails to load, does the menu stay usable, does the page say in plain words what happened and what to do, does 'Try again' load the page again, is there a second way out, and can the reader copy a reference to send to support? (09-trust/15, 09-trust/16, 09-trust/17)",
+    "Does the trust centre group its content by what a visitor asks (health information, security, expert checks, documents), answer at least four questions in a member's words on the page, and end with one contact block? (09-trust/18)",
+    "Does every policy page open with an 'In short' summary set apart from the legal text, show a last-updated date with a link to the previous version, and name the controller in the first section? (09-trust/19, 09-trust/20, 09-trust/23)",
+    "At 390px wide, does a policy page show its contents list within the first two screens, let the reader move to a sibling policy in one tap, and keep every link at least 24px tall? (09-trust/21, 09-trust/22)",
+    "Is there a button to act on a right in the place where the right is described (cookie settings, download your data, delete your account), with the time to a reply stated, and a one-field route for people who booked without an account? (09-trust/24, 09-trust/26, 09-trust/27)",
+    "In the cookie dialog, can you read what each group does without opening it, is the essential group marked 'Always on' in words, and are reject and accept the same size and style on the first layer? (09-trust/25, 09-trust/08)",
+    "Does the newsletter sign-up ask for an email address only, state beside the form what will be sent and how to unsubscribe, and stay separate from any other agreement? (09-trust/28)",
+    "Does the footer separate trust links from legal links and state the legal name, registration number and registered address, and does /trust or /contact show the same identity as labelled facts with an address for each purpose? (09-trust/29, 09-trust/30, 09-trust/32)",
+    "On the pay screen, can you read the total with its tax note, one payment-security line that names the payment provider, and links to the terms and the cancellation policy, all without scrolling away from the button? (09-trust/31)",
+    "Does the accessibility statement show its date, name the standard it works to, list what it covers and give a way to report a barrier? (09-trust/33)"
   ]
 }

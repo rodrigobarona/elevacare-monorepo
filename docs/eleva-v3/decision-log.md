@@ -32,6 +32,84 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-23: The public site gets its own track, a full rethink and a seven-seat panel (active)
+
+- **Decision (founder, 2026-11-23):** the public site (homepage, expert
+  explorer and profile, checkout, marketing, landing and content pages) is
+  its own track, Track E, worked in its own thread and worktree. Every design
+  choice on it is open: "ALL design changes are possible. From the brand
+  colors to the website, image, ALL, rethink all." The voice stays. The logo
+  stays unless the founder asks for a new one (the founder named colours,
+  the website and images; the logo is this entry's reading, to be confirmed).
+- **Scope split.** Track E owns D3.1 to D3.4, D2.3, D2.4, D6.1, checkout and
+  thank-you polish, and the content pages. Track D keeps the signed-in
+  product (D2.5, D4, D5, D7.6 to D7.8). Recorded in
+  `execution-plan/remaining-roadmap.md` section 5. A change to a shared
+  package that would alter a dashboard is agreed in the pull request first.
+- **Research saved (no product code in this change).** A six-seat panel
+  searched Mobbin and Awwwards:
+  - 119 new Mobbin reference entries in `_context/mobbin/library/`: homepage (14),
+    explorer (8), profile (10), booking funnel (19), marketing pages (11),
+    trust and legal (16), and two new surfaces, `14-content-pages` (17) and
+    `15-brand-art-direction` (24).
+  - 23 Awwwards-recognised sites in `_context/awwwards/library/`, each with
+    screenshots of the live site and, for Sites of the Day, the jury scores
+    Awwwards published. `_context/awwwards/evaluation.md` records how the
+    Awwwards jury scores, with a source beside every fact.
+  - 16 new findings: BRAND-01 to BRAND-07, HOME-12, DISC-10, PROF-15,
+    BOOK-22 to BOOK-25, TRUST-17. Each is assigned to a slice in
+    `design-audit/plan.json`, which gains Phase 8 (D8.1 a brand direction,
+    D8.2 checkout on a phone, D8.3 content pages).
+  - `design-audit/brand-directions.md`: three brand directions with
+    palettes, type, imagery and calculated contrast. **Proposed, not
+    chosen.** The founder chooses after seeing them on real pages (D8.1).
+  - `design-audit/voice-notes.md`: ten writing rules with a before and after.
+    Some "after" lines carry facts nobody has confirmed (how often the
+    newsletter goes out, a reply time, a fee example in euros); each is
+    marked and must be true before it ships.
+- **The panel for the public site** is `design-audit/judges-panel.md`: seven
+  blind seats (Awwwards jury, UI, UX, UX writing, GDPR, compliance and
+  accessibility, security), each 8.5 or more to pass. The Awwwards seat uses
+  Awwwards' four parameters and weights (design 40%, usability 30%,
+  creativity 20%, content 10%).
+- **One choice to confirm with the founder.** The Sites of the Day in the
+  library scored 7.11 to 7.73 on Awwwards' own scale, and an Honorable
+  Mention needs 6.5. An 8.5 on that scale is above every winner we saved. So
+  the Awwwards seat gives two numbers: one on the panel's scale (8.5 means
+  "stands beside the saved references"), which is the gate, and an honest
+  estimate on Awwwards' scale, which is recorded and is not a gate.
+- **Not proven, and limits.**
+  - Nothing was built or captured, so no judge has scored anything yet.
+  - Awards, dates and scores were copied from Awwwards pages on 2026-11-23.
+    Sixteen of the 23 sites are Honorable Mentions, which publish no scores.
+    Two entries (11 and 23) were awarded for an earlier design than the one
+    captured; five have changed their hero since the award. Each entry says so.
+  - No well-known women's health brand has an Awwwards award in the listings
+    searched, and Mobbin has no menopause, pelvic health or midwifery site.
+    Those references are structural.
+  - Twenty-one of the 24 brand references were checked from Mobbin's
+    previews, three at full size.
+  - The content pages have references and criteria but no captures or
+    findings yet.
+  - The checklists in `judges-panel.md` name EU laws and WCAG criteria as
+    review prompts. They are not legal advice and no lawyer has read them.
+  - Reference screenshots belong to their owners. **Founder, 2026-11-23:
+    keep them in a private library shared across projects.** Done the same
+    day: `rodrigobarona/design-references` (private) holds every reference
+    from this repository, 401 catalogued entries. The 200 screenshots added
+    by this change were taken out of it before merge and live only there;
+    the notes and links stay here, and the audit page reads images from
+    `_context/design-references` when the library is linked. Screenshots
+    committed to `main` before that date are still public here, and stay in
+    its history whatever is done next; removing them from the working tree
+    is the founder's call, because the other tracks save references the
+    same way.
+- Owner: founder (direction, brand choice), Track E thread (work).
+- Related: `design-audit/judges-panel.md`, `design-audit/brand-directions.md`,
+  `design-audit/voice-notes.md`, `design-audit/plan.json` (Phase 8),
+  `execution-plan/remaining-roadmap.md` (section 5).
+- Next review: when the founder has chosen a brand direction (D8.1).
+
 ### 2026-11-23: Staff queues have pages, and reading one is on record (12.6) (active)
 
 - Change (Phase 12.6): the two staff queues (clinic verifications, licence

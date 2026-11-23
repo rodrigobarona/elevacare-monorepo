@@ -6,9 +6,15 @@
 //   _context/mobbin/library/{surface}/references.json   findings, references, criteria
 //   docs/eleva-v3/design-audit/plan.json                top moves and roadmap
 //   docs/eleva-v3/design-audit/captures/{label}/        screenshots and videos
+//   _context/awwwards/library/references.json          award-winning sites (public site)
+// Images added since 2026-11-23 are not in this repository. They live in the
+// private library rodrigobarona/design-references, cloned or linked at
+// _context/design-references (ignored by git). The page points there, so it
+// shows them to whoever has the library and a broken image to whoever has not.
 // Output:
 //   docs/eleva-v3/design-audit/index.html
 //   _context/mobbin/library/{surface}/readme.md
+//   _context/awwwards/library/readme.md
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
@@ -18,6 +24,22 @@ const root = path.resolve(here, "../../..")
 const libraryDir = path.join(root, "_context/mobbin/library")
 const capturesDir = path.join(here, "captures")
 const libraryHref = "../../../_context/mobbin/library"
+const awwwardsDir = path.join(root, "_context/awwwards/library")
+const privateHref = "../../../_context/design-references"
+const privateUrl =
+  "https://github.com/rodrigobarona/design-references/blob/main"
+
+/** A Mobbin image: in this repository when it was committed here, else private. */
+const inRepo = (surface, file) =>
+  existsSync(path.join(libraryDir, surface, file))
+const mobbinSrc = (surface, file) =>
+  inRepo(surface, file)
+    ? `${libraryHref}/${href(surface, file)}`
+    : `${privateHref}/${href("mobbin/library", surface, file)}`
+const mobbinLink = (surface, file) =>
+  inRepo(surface, file)
+    ? file
+    : `${privateUrl}/${href("mobbin/library", surface, file)}`
 
 const plan = JSON.parse(readFileSync(path.join(here, "plan.json"), "utf8"))
 const baseline = plan.baseline
@@ -59,6 +81,12 @@ const surfaces = dirs(libraryDir)
     ),
     dir: name,
   }))
+
+/** Award-winning sites for the public site; absent until the first research. */
+const awwwardsFile = path.join(awwwardsDir, "references.json")
+const awwwards = existsSync(awwwardsFile)
+  ? { references: [], ...JSON.parse(readFileSync(awwwardsFile, "utf8")) }
+  : null
 
 /** "2026-11-16-x-before" or "2026-11-15-before-x": a slice's before set. */
 const isBefore = (label) => /(^|-)before(-|$)/.test(label)
@@ -201,7 +229,7 @@ function readme(surface) {
     "| --- | --- | --- | --- | --- |",
     ...surface.references.map(
       (reference) =>
-        `| [${reference.id.split("/")[1]}](${reference.file}) | ${cell(reference.app)} (${reference.platform}) | ${cell(reference.pattern)} | ${cell(reference.apply)} | [open](${reference.mobbin_url}) |`
+        `| [${reference.id.split("/")[1]}](${mobbinLink(surface.dir, (reference.files ?? [reference.file])[0])}) | ${cell(reference.app)} (${reference.platform}) | ${cell(reference.pattern)} | ${cell(reference.apply)} | [open](${reference.mobbin_url}) |`
     ),
     "",
     "## Judging criteria",
@@ -219,6 +247,35 @@ for (const surface of surfaces) {
     path.join(libraryDir, surface.dir, "readme.md"),
     readme(surface)
   )
+}
+
+function awwwardsReadme(library) {
+  const cell = (text) => String(text ?? "").replaceAll("|", "\\|")
+  return [
+    `# ${library.title}`,
+    "",
+    `> Generated from \`references.json\` by \`docs/eleva-v3/design-audit/build.mjs\`. Edit the JSON, then run the build.`,
+    "",
+    `Researcher seat: ${library.researcher}. Date: ${library.date}.`,
+    "",
+    library.summary,
+    "",
+    "The jury seat of the public-site panel reads these before scoring, so a score here means what it means on Awwwards. The panel is in [`docs/eleva-v3/design-audit/judges-panel.md`](../../../docs/eleva-v3/design-audit/judges-panel.md).",
+    "",
+    "Awards, dates and scores are copied from each site's Awwwards page. Screenshots were taken from the live sites on the date above and belong to their owners. They are not in this repository: they are in the private library `rodrigobarona/design-references` under `awwwards/library/img/`, kept for internal design review only.",
+    "",
+    "| Ref | Site | Award | Jury score | What Eleva takes from it | Not to copy |",
+    "| --- | --- | --- | --- | --- | --- |",
+    ...library.references.map(
+      (reference) =>
+        `| [${reference.id.split("/")[1]}](${privateUrl}/${href("awwwards/library", reference.files[0])}) | [${cell(reference.site)}](${reference.url}) (${cell(reference.category)}) | [${cell(reference.award)}](${reference.awwwards_url}) | ${cell(reference.scores ?? "not published")} | ${cell(reference.apply)} | ${cell(reference.caution ?? "")} |`
+    ),
+    "",
+  ].join("\n")
+}
+
+if (awwwards) {
+  writeFileSync(path.join(awwwardsDir, "readme.md"), awwwardsReadme(awwwards))
 }
 
 // ---------------------------------------------------------------- page
@@ -311,7 +368,7 @@ function referenceCard(surface, reference) {
   return `<article class="reference" id="ref-${reference.id.replace("/", "-")}">
   <div class="ref-images">${images
     .map((file) => {
-      const src = `${libraryHref}/${href(surface.dir, file)}`
+      const src = mobbinSrc(surface.dir, file)
       return `<button class="frame ref" data-full="${src}" data-caption="${esc(caption)}" data-mobbin="${esc(reference.mobbin_url)}"><img loading="lazy" src="${src}" alt="${esc(caption)}"></button>`
     })
     .join("")}</div>
@@ -350,6 +407,36 @@ function surfaceSection(surface) {
   <ol class="criteria">${surface.judging_criteria.map((item) => `<li><label><input type="checkbox"> <span>${esc(item)}</span></label></li>`).join("")}</ol>
 </div></section>`
 }
+
+function awwwardsCard(reference) {
+  const caption = `${reference.site} · ${reference.award}`
+  return `<article class="reference" id="ref-${reference.id.replace("/", "-")}">
+  <div class="ref-images">${reference.files
+    .map((file) => {
+      const src = `${privateHref}/${href("awwwards/library", file)}`
+      return `<button class="frame ref" data-full="${src}" data-caption="${esc(caption)}"><img loading="lazy" src="${src}" alt="${esc(caption)}"></button>`
+    })
+    .join("")}</div>
+  <p class="ref-head"><code>${reference.id}</code> <b>${esc(reference.site)}</b> <span class="lens">${esc(reference.category)}</span></p>
+  <h5>${esc(reference.award)}${reference.scores ? ` · ${esc(reference.scores)}` : ""}</h5>
+  <p>${esc(reference.teaches)}</p>
+  <p><b>Eleva takes:</b> ${esc(reference.apply)}</p>
+  ${reference.caution ? `<p><b>Not to copy:</b> ${esc(reference.caution)}</p>` : ""}
+  <p class="meta"><a href="${esc(reference.url)}" target="_blank" rel="noreferrer">Open the site</a> · <a href="${esc(reference.awwwards_url)}" target="_blank" rel="noreferrer">Open on Awwwards</a></p>
+</article>`
+}
+
+const awwwardsSection = awwwards
+  ? `<section class="surface" id="awwwards"><div class="wrap">
+  <header>
+    <p class="eyebrow">awwwards · ${esc(awwwards.researcher)}</p>
+    <h2>${esc(awwwards.title)}</h2>
+    <p class="lede">${esc(awwwards.summary)}</p>
+    <p class="counts"><span class="pill">${awwwards.references.length} award-winning sites</span></p>
+  </header>
+  <div class="references">${awwwards.references.map(awwwardsCard).join("\n")}</div>
+</div></section>`
+  : ""
 
 const roadmap = plan.phases
   .map(
@@ -491,7 +578,7 @@ footer{padding:36px 0;color:var(--muted);font-size:.85rem}
 <nav class="toc"><div class="wrap"><div class="links">
   <a href="#moves">Top moves</a><a href="#roadmap">Roadmap</a><a href="#method">Method</a>
   ${surfaces.map((surface) => `<a href="#${surface.dir}">${esc(surface.dir.replace(/^\d+-/, "").replaceAll("-", " "))}</a>`).join("")}
-  <a href="#gaps">Gaps</a></div>
+  ${awwwards ? `<a href="#awwwards">awwwards</a>` : ""}<a href="#gaps">Gaps</a></div>
   <span class="filter" role="group" aria-label="Filter findings by severity">${["All", "P1", "P2", "P3"].map((value) => `<button data-sev="${value}" aria-pressed="${value === "All"}">${value}</button>`).join("")}</span>
 </div></nav>
 <main>
@@ -510,25 +597,26 @@ footer{padding:36px 0;color:var(--muted);font-size:.85rem}
 <section id="method"><div class="wrap">
   <p class="eyebrow">Method</p>
   <h2>How each slice is designed and judged</h2>
-  <p class="lede">The same loop for every design challenge from now on. Mobbin sets the bar; the Eleva logo, palette, type and voice stay.</p>
+  <p class="lede">The same loop for every design challenge from now on. Mobbin sets the bar, and the Eleva voice stays. In the signed-in product the logo, palette and type stay too. On the public site the founder opened the whole design for a rethink on 2026-11-23: Awwwards winners join the references and a seven-seat panel judges (<a href="judges-panel.md">judges-panel.md</a>).</p>
   <ol class="steps">
     <li><h5>Search Mobbin</h5><p>Search for the slice's problems and add what teaches something to <code>_context/mobbin/library/{surface}/references.json</code>.</p></li>
     <li><h5>Capture before</h5><p>Run the capture spec if the surface changed since ${esc(baseline)}.</p></li>
     <li><h5>Design and build</h5><p>One slice, against the findings it closes and the references they cite.</p></li>
     <li><h5>Capture after</h5><p>Same spec, new label. This page then shows before and after side by side.</p></li>
-    <li><h5>Judges panel</h5><p>Three judges score out of 10: UI and visual design; UX and UX writing; trust, legal, compliance and accessibility. Each reads the after captures against the surface's criteria with the references open.</p></li>
+    <li><h5>Judges panel</h5><p>Three judges score out of 10: UI and visual design; UX and UX writing; trust, legal, compliance and accessibility. Each reads the after captures against the surface's criteria with the references open. The public site has seven blind seats: an Awwwards jury seat (design 40%, usability 30%, creativity 20%, content 10%), UI, UX, UX writing, GDPR, compliance and accessibility, and security.</p></li>
     <li><h5>Pass or revise</h5><p>A slice ships only when every judge scores 8.5 or more and its P1 findings are closed. Otherwise it is revised and judged again. Anything marked for legal review also goes to a lawyer before launch.</p></li>
   </ol>
   <p class="meta">Capture command: <code>E2E_DESIGN_CAPTURE=1 E2E_SKIP_WEBSERVER=1 E2E_ALLOW_DB_WRITES=1 DESIGN_CAPTURE_LABEL={date}-{slice} pnpm exec playwright test e2e/design-capture.spec.ts --project=chromium --workers=1</code>, then <code>node docs/eleva-v3/design-audit/build.mjs</code>.</p>
 </div></section>
 ${surfaces.map(surfaceSection).join("\n")}
+${awwwardsSection}
 <section id="gaps"><div class="wrap">
   <p class="eyebrow">Honest limits</p>
   <h2>What this pass did not cover</h2>
   <ul class="keep">${plan.notCovered.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>
 </div></section>
 </main>
-<footer><div class="wrap">Generated by <code>docs/eleva-v3/design-audit/build.mjs</code>. Reference screens are from Mobbin and belong to their owners; they are kept here for internal design review.</div></footer>
+<footer><div class="wrap">Generated by <code>docs/eleva-v3/design-audit/build.mjs</code>. Reference screens are from Mobbin and from the live sites of Awwwards winners, and belong to their owners. Those added since 2026-11-23 are in the private library (<code>rodrigobarona/design-references</code>, linked at <code>_context/design-references</code>) and show here only when it is present.</div></footer>
 <dialog id="lightbox"><div class="box"><div class="bar"><span id="lb-caption"></span><a id="lb-mobbin" target="_blank" rel="noreferrer" hidden>Open on Mobbin</a><button id="lb-close">Close</button></div><div class="scroll"><img id="lb-img" alt=""></div></div></dialog>
 <script>
 const box = document.getElementById("lightbox")

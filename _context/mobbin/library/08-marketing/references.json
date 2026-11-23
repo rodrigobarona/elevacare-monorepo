@@ -24,7 +24,7 @@
       ],
       "detail": "The headline is 'Practise on Eleva.care' and the lead is a five-line paragraph: 'Eleva.care is a digital health platform for independent, licensed professionals. You keep full clinical autonomy. Eleva runs the scheduling, booking and payment technology...'. It reads like the first clause of an agreement. An expert with ten seconds does not learn what she gains, what it costs or how fast she can start. The homepage band that links here ('Grow your practice with Eleva. Bookings, payments and video sessions in one place, so you can focus on care') is a better pitch than the page itself. On mobile the paragraph runs to eight lines before the button.",
       "recommendation": "Lead with the outcome and three facts. Headline along the lines of 'Your practice, booked and paid in one place'. One line of lead. Then three short proof points under the button: '15% per booking, no monthly fee', 'You set your prices and cancellation policy', 'Paid to your bank through Stripe'. Primary button 'Create your account', secondary 'See how it works'. Move the clinical-independence sentence into the benefits below.",
-      "references": ["08-marketing/01"]
+      "references": ["08-marketing/01", "08-marketing/12"]
     },
     {
       "id": "MKT-02",
@@ -37,7 +37,14 @@
       ],
       "detail": "'Eleva keeps 15% of each booking, with no other deductions' appears in the middle of a 60-word card called 'Your rates and policies', and again inside step 01. There is no pricing block, no example of what an expert takes home, and payout timing is given as a rule ('the later of 7 days after payment or 24 hours after the session; Stripe then pays it to your bank') that needs reading twice. Price is the first thing a professional looks for; she has to hunt for it.",
       "recommendation": "Add a pricing section right after the benefits: '15% per booking. Nothing else.' as the heading, a checklist of what that includes (booking page, calendar, video sessions, reminders, payments), and a worked example ('A member pays 60 euros. You receive 51 euros.') or a small slider where the expert sets her session price. State payout timing as a short timeline: member pays, session happens, money reaches Stripe, Stripe pays your bank. Use only the figures already on the page and have finance confirm the example.",
-      "references": ["08-marketing/04", "08-marketing/05", "08-marketing/06"]
+      "references": [
+        "08-marketing/04",
+        "08-marketing/05",
+        "08-marketing/06",
+        "08-marketing/13",
+        "08-marketing/14",
+        "08-marketing/15"
+      ]
     },
     {
       "id": "MKT-03",
@@ -52,7 +59,7 @@
       ],
       "detail": "/become-expert and /for-clinics are the same five blocks: text hero with a photo, six cards with identical teal icon circles, four numbered steps, four small text items, a text call to action. There is no screenshot of a public profile, the service builder, the calendar or the earnings view. An expert is asked to move her practice onto software she is never shown, and the two pages are hard to tell apart at a glance. On a phone each page is about 6,000px of text cards.",
       "recommendation": "Replace the six-icon grid with four or five feature tabs or rows, each with a real screen: your public profile and booking page, a service with price and cancellation policy, your week with calendar sync, a video session, your earnings and payouts. One line of benefit per screen. Give the clinics page its own structure (see MKT-04) so the two pages stop mirroring each other.",
-      "references": ["08-marketing/03", "08-marketing/02"]
+      "references": ["08-marketing/03", "08-marketing/02", "08-marketing/17"]
     },
     {
       "id": "MKT-04",
@@ -62,7 +69,12 @@
       "evidence": ["02-for-clinics.desktop.jpg", "02-for-clinics.mobile.jpg"],
       "detail": "'We'll share seat pricing and the partnership terms with you before launch', 'Terms before launch: We'll share the partnership terms and seat pricing with you before launch' and 'We will publish final clinic terms before launch' all appear on one page. A clinic owner cannot learn the price, yet the only button is self-service sign-up. The card 'Partner onboarding: Contact us when you need a walkthrough' has no link, email or form. The page tells the reader what is not ready, which also goes against Eleva's own rule of describing what it does.",
       "recommendation": "Make the primary action a conversation: 'Talk to us about your clinic' opening a short form (name, clinic, number of experts, email, anything else) with three lines beside it on what happens next and who replies. Keep 'Create your account' as the secondary action for clinics that want to start now. Say once, positively, how pricing works today ('We agree terms with each clinic; tell us about your team and we will send them'). Remove the repeated 'before launch' lines.",
-      "references": ["08-marketing/09", "08-marketing/05", "08-marketing/02"]
+      "references": [
+        "08-marketing/09",
+        "08-marketing/05",
+        "08-marketing/02",
+        "08-marketing/19"
+      ]
     },
     {
       "id": "MKT-05",
@@ -75,7 +87,7 @@
       ],
       "detail": "The clinics headline is 'Clinics and Teams', a plan name, not a promise. The page then uses 'as a Team', 'Team organization', 'Team space', 'clinic space', 'modality', 'Operational owner', 'Member-ready experience' and 'seat pricing'. /become-expert uses 'standard plan' without naming any other plan, 'Honest, evidence-based words' and 'Languages you publish'. These are labels from inside the product and the agreement; a clinic manager or physiotherapist has to translate them.",
       "recommendation": "Rewrite in the reader's words. Clinics headline: 'One place for your clinic's bookings, team and payments'. 'Operational owner' becomes 'One person runs the clinic account'. 'Member-ready experience' becomes 'Members book your team the same way they book any Eleva expert'. 'Modality' becomes 'online, by phone or in person'. On /become-expert drop 'standard plan' or explain it in the pricing block, and rename the two rule items 'What we ask of your profile' and 'Write in the languages you work in'.",
-      "references": ["08-marketing/02"]
+      "references": ["08-marketing/02", "08-marketing/16"]
     },
     {
       "id": "MKT-06",
@@ -88,7 +100,7 @@
       ],
       "detail": "Neither page shows an expert who uses Eleva, a quote, a face, or how many experts and professions are on the platform. Professionals join where their peers already are. Eleva has unusually good material for this and does not use it here: a co-founder who is a physiotherapist with a PhD, and a board of eight clinical advisors.",
       "recommendation": "Add a short 'Built with clinicians' block to /become-expert: a two-line note from the co-founder who practises, the advisor faces in a row, and, as soon as they agree, two early experts with name, profession, city and one concrete sentence about what changed for them. Add honest figures when they exist (experts live, professions).",
-      "references": ["08-marketing/07", "08-marketing/01"]
+      "references": ["08-marketing/07", "08-marketing/01", "08-marketing/18"]
     },
     {
       "id": "MKT-07",
@@ -101,7 +113,7 @@
       ],
       "detail": "Eligibility sits in four 14px grey paragraphs with no structure, mixing who qualifies (registered professional) with content rules ('promise no results, quote no unproven figures') and payout checks. The verification step is a trust asset but is not shown as a process: what to have ready, how long it takes. There is no FAQ on fees, payouts, invoices, cancellations or leaving.",
       "recommendation": "Turn 'Who can join' into a checklist titled 'What you need to start': your professional registration number, an identity document, your bank details for Stripe, and the languages you work in, with a line on how long the check takes. Follow it with a six-question FAQ: What does it cost? When am I paid? Who sets my prices and cancellation policy? What happens if a member cancels? Can I keep my own clients and calendar? Can I leave?",
-      "references": ["08-marketing/08"]
+      "references": ["08-marketing/08", "08-marketing/15", "08-marketing/16"]
     },
     {
       "id": "MKT-08",
@@ -135,7 +147,7 @@
       "evidence": ["03-about.desktop.jpg", "03-about.mobile.jpg"],
       "detail": "Mission, vision, 'What we stand for' and the team introduction each restate one idea; 'we provide the technology, your chosen expert provides your care' appears three times. The headline 'Transforming women's health with compassion and proven care' is abstract. The founders appear as two photos with titles and no words of their own, and the real story sits behind a 'Read our story' link. The four belief cards ('Knowledge is power', 'Quality care access') could belong to any health company.",
       "recommendation": "Open with a short first-person note from the founders: what they saw in practice, why they started Eleva, what they promise, signed with name and credential. Merge mission and vision into one short section and state the platform model once. Replace the four belief cards with two or three commitments Eleva actually keeps (every registration checked, sessions not recorded, prices shown before booking), each linked to the trust page.",
-      "references": ["08-marketing/10"]
+      "references": ["08-marketing/10", "08-marketing/20", "08-marketing/21"]
     },
     {
       "id": "MKT-11",
@@ -153,9 +165,9 @@
       "lens": "ux",
       "title": "About ends with a pitch to experts; members get the secondary link",
       "evidence": ["03-about.desktop.jpg", "03-about.mobile.jpg"],
-      "detail": "The closing band is 'Transform women's health care with us' with 'Become an expert' as the main button and 'Find an expert' as plain text beside it. Most About readers are members checking whether Eleva can be trusted; their next step is the minor one. No Mobbin reference was searched for this point.",
+      "detail": "The closing band is 'Transform women's health care with us' with 'Become an expert' as the main button and 'Find an expert' as plain text beside it. Most About readers are members checking whether Eleva can be trusted; their next step is the minor one.",
       "recommendation": "Close About with two equal doors: 'Looking for care? Find an expert' and 'Are you a professional? Practise on Eleva', or put the member action first and the expert band after it, as on the homepage.",
-      "references": []
+      "references": ["08-marketing/22"]
     }
   ],
   "references": [
@@ -290,6 +302,138 @@
       "why": "A short claim at the left with partner logos under it; at the right two cards, each a large figure with a one-line label and a small visual that explains it (a dot map for locations, a bar chart for results delivered). Cream and serif, close to Eleva's look.",
       "apply": "Rework 'Eleva at a glance' so every large numeral is evidence with context (advisors, professions, registrations checked), with a small visual or source line. Two strong cards beat three weak ones.",
       "query": "health service trust stats section"
+    },
+    {
+      "id": "08-marketing/12",
+      "file": "img/12-classpass-partner-hero-checklist.jpg",
+      "app": "ClassPass",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/68f02f4d-e61d-4016-8324-fbad495dc272?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Provider hero: an eight-word offer, one line on how you earn, and a short 'what happens next' card",
+      "why": "The headline is the offer, 'Fill your class spots and appointments for free' (8 words). The lead says how money is made in 12: 'List your venue on ClassPass, and earn money for every reservation booked.' A card beside it asks 'Ready to start earning more?' and answers in four short lines, the first being 'Sign up in less than 10 minutes', above one button. Wellness and beauty venues, so close to Eleva's audience.",
+      "apply": "Word budget for the /become-expert hero: a headline of eight words or fewer that names the gain, one lead of about 12 words on how the expert is paid, then three or four facts of about six words each. Leave out lines like 'Generate incremental revenue'; say '15% per booking, no monthly fee'. The button names the step ('Create your account'), not 'Get started'.",
+      "query": "become a host hero section for a marketplace"
+    },
+    {
+      "id": "08-marketing/13",
+      "file": "img/13-unfair-fee-worked-example.jpg",
+      "app": "Unfair",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/a5537594-a34d-4a98-aa9a-796a46f8e5b4?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "The fee as a three-row receipt: what is paid, the cut, what you get",
+      "why": "'We take 0%' is three words. Under it, eight more: 'You built the audience. You keep the money.' The card beside it is a receipt with three rows: 'Brand pays $400', 'Our cut $0', 'You get $400'. The reader does no arithmetic.",
+      "apply": "Eleva's worked example in the same three rows, in euros, under '15% per booking. Nothing else.': 'Member pays 60 euros', 'Eleva keeps 9 euros', 'You receive 51 euros'. Finance confirms the figures before it ships. Sponsorship marketplace for creators; kept for the pattern.",
+      "query": "earnings explanation section for marketplace providers"
+    },
+    {
+      "id": "08-marketing/14",
+      "file": "img/14-wise-fees-included-table.jpg",
+      "app": "Wise",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/3573bd7f-2d63-44f0-a0ff-6a19e76edd4d?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Fee promise in five words, then a table of what is free and what costs",
+      "why": "'Fair prices, no hidden fees.' is five words. The line under it is 18: 'No subscriptions, no monthly fees. You'll always see the fee upfront, and only pay for what you use.' Each thing you can do is then a row with a tick, a short note and its price in a column of its own, where 'Free' is written out.",
+      "apply": "Under Eleva's fee heading, list what the 15% covers as rows (profile and booking page, calendar sync, video sessions, reminders, payments) with 'Included' beside each, and one row for the fee itself. Say 'no monthly fee' once, in the line under the heading, and nowhere else on the page. Money transfer product; kept for the copy and the table.",
+      "query": "Wise pricing section explaining fees"
+    },
+    {
+      "id": "08-marketing/15",
+      "file": "img/15-railway-fee-numeral-open-faq.jpg",
+      "app": "Railway",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/1f0013a6-3354-40e2-9c30-5a46f9904def?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "The percentage as a large numeral that starts its own sentence, with eight short answers open below",
+      "why": "Under 'How payment works', a display-size '15%' runs straight into its sentence: 'of every invoice from your referrals within 12 months of signup goes directly to you as commission.' Eight questions follow in two columns, all open, each answered in one to four lines. 'When do I get paid?' starts with the answer: 'At the end of the month.'",
+      "apply": "Eleva's fee block can read as one sentence: a large '15%' followed by 'of each booking is Eleva's fee. The rest is yours.' Each answer below starts with the answer ('7 days after the member pays, or 24 hours after the session, whichever is later.') and adds detail after. Dark developer styling is not for Eleva, and the referral scheme is unrelated; kept for structure.",
+      "query": "FAQ section for providers about getting paid"
+    },
+    {
+      "id": "08-marketing/16",
+      "file": "img/16-acctual-faq-doubt-first.jpg",
+      "app": "Acctual",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/7e7f76e3-84e5-44a9-8abb-28045d546a9a?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "FAQ that opens with the reader's doubt, answered in three sentences",
+      "why": "The first question is the one a careful reader is already thinking: 'How does Acctual make money if there's no monthly fee?' The answer is three sentences with the exact rates, ending 'You pay nothing until money actually comes in.' The other eight are 13 words or fewer and most use 'I' or 'my': 'How fast do I get paid?', 'Will my clients take an invoice from a tool they haven't used before?'",
+      "apply": "Order the /become-expert FAQ by doubt, not by topic: 'How does Eleva make money?' first, then 'When am I paid?', 'What happens if a member cancels?', 'Can I keep my own clients and calendar?', 'Can I leave?'. Write each question as the expert would say it, with 'I' and 'my', and never with product words such as 'standard plan'. Invoicing tool; kept for the questions.",
+      "query": "FAQ section for providers about getting paid"
+    },
+    {
+      "id": "08-marketing/17",
+      "file": "img/17-iso-meet-screens-short-captions.jpg",
+      "app": "ISO Meet",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/61db1036-5bb3-426e-88f0-eb6ba3a91bff?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Four product screens, each with a two-word title and one line",
+      "why": "Each tile shows a real screen and almost no copy: 'Create project' with 'Add requirements, upload references.', 'Communication' with 'All DMs are finally in one app.', 'Freely trust' with 'Choose talent on rating and reviews.' Titles are one or two words and captions are four to seven. A switch ('Hirer', 'Talent') shows each audience its own screens.",
+      "apply": "Caption budget for the Eleva screens on /become-expert: a title of three words or fewer ('Your booking page', 'Your week', 'Your earnings') and one line of eight words or fewer on what the expert does there. The screen carries the rest. Marketplace for photographers; kept for structure.",
+      "query": "product screenshots section for a booking tool for professionals"
+    },
+    {
+      "id": "08-marketing/18",
+      "file": "img/18-airbnb-host-quote-figure.jpg",
+      "app": "Airbnb",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/aca0abfb-fe56-4f40-9eb4-2f0ced7b9fd7?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "A peer's quote with one sourced figure under it",
+      "why": "A host's own words at heading size (28 words, ending 'a sense of control to invest in myself'), her photo beside them, and one plain line below: 'Hosts like Gina, in downtown San Diego, earned an average of $9,646 per year', with an info mark that opens the source. The feeling comes from the person and the number comes from the platform.",
+      "apply": "The peer block on /become-expert: one expert's sentence in her own words, her photo, then a line with her name, profession and city. Add a figure only when Eleva has a real one and can show where it comes from. Home rental; kept for the format.",
+      "query": "Airbnb host landing hero section with earnings estimate"
+    },
+    {
+      "id": "08-marketing/19",
+      "file": "img/19-employment-hero-talk-to-specialist.jpg",
+      "app": "Employment Hero",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/49719c64-fd2a-4b0e-a454-c639b69f1bd7?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Hero for health employers with one action: talk to a person",
+      "why": "The headline speaks about the reader's own team in eight words: 'Healthcare heroes. Let us look after your people.' The lead holds a five-word promise, 'You can count on us.' The only button in the hero is 'Talk to a specialist today', which says who the reader will reach.",
+      "apply": "On /for-clinics the hero carries one action that names a conversation, 'Talk to us about your clinic', said once. Account creation moves to the page header or a text link. Staff management software; kept for the action. The lead's 'with big ambitions' is padding Eleva leaves out.",
+      "query": "clinic software landing hero section with talk to us button"
+    },
+    {
+      "id": "08-marketing/20",
+      "file": "img/20-koppen-founders-note.jpg",
+      "app": "KÖPPEN",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/81d6349f-9811-4b17-9b2d-327dbabfa4fa?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Founders' note in one paragraph, signed by both",
+      "why": "Under the plain label 'Founders' Note', about 90 words say where the company began ('in our parents' garage'), the one belief that guided it and where it is now. It closes 'Thank you for being part of it.' and is signed 'Parag & Priya, Co-Founders', beside one portrait of the two together.",
+      "apply": "The founders' story on About, told once and in about 90 words: what the founder saw in her practice and research, the one belief behind Eleva, a thank-you to the reader, both first names, one photo of the two. That length shows whole on a phone, with 'Read the full letter' linking to /history. Grooming brand; kept for the format.",
+      "query": "about page founder story section for a health brand"
+    },
+    {
+      "id": "08-marketing/21",
+      "file": "img/21-headspace-vision-one-line.jpg",
+      "app": "Headspace",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/436b4325-7a04-40f6-93b9-bd45c883c276?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Vision as one nine-word line, with no paragraph under it",
+      "why": "A small label, 'Our vision', then the whole section: 'A world where everyone is kind to their mind'. Nine words and no supporting copy. The mission below is set the same way. Nothing is said twice because there is no room to.",
+      "apply": "About today gives mission, vision, beliefs and the team introduction a heading and a paragraph each, on a page of more than 500 words. Give Eleva's purpose one line of twelve words or fewer under one label, and let the founders' note carry the rest.",
+      "query": "mission and values section for a wellness company"
+    },
+    {
+      "id": "08-marketing/22",
+      "file": "img/22-mailchimp-two-doors-closing.jpg",
+      "app": "Mailchimp",
+      "platform": "web",
+      "type": "section",
+      "mobbin_url": "https://mobbin.com/sites/sections/5a80546c-e935-41e6-aa0a-d13f0c9abad1?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
+      "pattern": "Two equal doors to close a page, each a question and a two-word button",
+      "why": "Side by side with a thin rule between them: 'Ready to explore the benefits?' with 'See benefits', and 'Looking for freelancer tools?' with 'See tools'. Each question is five words or fewer, in the reader's voice, and each button names where it goes. Neither door is louder than the other.",
+      "apply": "Close About with two doors, members first: 'Looking for care?' with 'Find an expert', and 'Are you a health professional?' with 'Practise on Eleva'. Same size and weight on desktop; the member door comes first on a phone. Email marketing tool; kept for the pattern.",
+      "query": "closing call to action section with two audiences for a marketplace"
     }
   ],
   "judging_criteria": [
@@ -299,6 +443,15 @@
     "Can a clinic start a conversation from /for-clinics through a short form, with the page saying what happens next and nothing about what is not ready? (08-marketing/09 Notion, 08-marketing/02 Ease)",
     "Does at least one named peer (profession, city, own words) appear on the pages that recruit professionals? (08-marketing/07 Webflow)",
     "Does an FAQ answer cost, payout timing, cancellations and leaving in the expert's own questions? (08-marketing/08 Square)",
-    "Does About open with the founders' own words, and is every large number on the page real evidence? (08-marketing/10 Daylight, 08-marketing/11 Function)"
+    "Does About open with the founders' own words, and is every large number on the page real evidence? (08-marketing/10 Daylight, 08-marketing/11 Function)",
+    "Is the /become-expert hero a headline of eight words or fewer and a lead of 20 words or fewer, with the fee stated in six words or fewer? (08-marketing/12 ClassPass, 08-marketing/14 Wise)",
+    "Does the fee block show a worked example as rows a reader can check without arithmetic: member pays, Eleva keeps, you receive? (08-marketing/13 Unfair)",
+    "Is every FAQ question in the expert's own words, with 'I' or 'my', and does every answer give the answer in its first sentence? (08-marketing/15 Railway, 08-marketing/16 Acctual)",
+    "Does every product screen have a title of three words or fewer and one caption of eight words or fewer? (08-marketing/17 ISO Meet)",
+    "Does every button on the three pages name what happens next, with no 'Learn more', 'Get started' or 'Submit', and does the /for-clinics hero have one action that names a conversation? (08-marketing/19 Employment Hero, 08-marketing/22 Mailchimp)",
+    "Is each fact said once per page: the fee, payout timing, who provides the care, and how clinic terms are agreed? (08-marketing/14 Wise, 08-marketing/21 Headspace)",
+    "Is the founders' note on About 120 words or fewer, in the first person, signed by name, and readable whole on a phone without a 'show more'? (08-marketing/20 KÖPPEN)",
+    "Are all three pages free of product and contract words (Team organization, modality, seat pricing, standard plan, operational owner), and is every sentence in the hero and fee block 20 words or fewer? (08-marketing/16 Acctual, 08-marketing/14 Wise)",
+    "Does About end with the member's next step first, or equal to the expert's? (08-marketing/22 Mailchimp)"
   ]
 }
