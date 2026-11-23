@@ -387,7 +387,18 @@ const EMAILS: Record<string, Render> = {
     }),
 }
 
-/** What a reader sees: the email's text, piece by piece, without its markup. */
+/**
+ * A paragraph as its sentences. A paragraph half translated is not the
+ * English paragraph, but one of its sentences is an English sentence.
+ */
+function split(text: string): string[] {
+  return text
+    .split(/(?<=[.!?])\s+/)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean)
+}
+
+/** What a reader sees: the email's text, sentence by sentence, without its markup. */
 function sentences(html: string): string[] {
   const body = html
     .replace(/<head[\s\S]*?<\/head>/gi, " ")
@@ -405,7 +416,7 @@ function sentences(html: string): string[] {
         .replace(/\s+/g, " ")
         .trim()
     )
-    .filter(Boolean)
+    .flatMap(split)
 }
 
 // The company's registered details and the product's name: the same in
@@ -523,6 +534,16 @@ describe("every email, in three languages", () => {
       const mixed = portuguese.replace("</body>", `<p>${left}</p></body>`)
       expect(englishLeft(english, mixed)).toEqual([left])
     }
+    // A paragraph half translated: an English sentence, then a Portuguese
+    // one, in the same paragraph.
+    const full = pieces.find(
+      (piece) => ownWords(piece).length >= 3 && piece.endsWith(".")
+    )!
+    const half = portuguese.replace(
+      "</body>",
+      `<p>${full} Esta frase está em português.</p></body>`
+    )
+    expect(englishLeft(english, half)).toEqual([full])
     // What the caller gave, and the company's own details, are not words
     // of the email.
     expect(
@@ -710,8 +731,16 @@ describe("the words the emails share", () => {
       const same: string[] = []
       for (const [path, text] of texts(getEmailTranslations(locale))) {
         expect(text.trim(), `${locale} ${path}`).not.toBe("")
-        if (english.get(path) === text && !SAME_AS_ENGLISH.has(text)) {
-          same.push(`${path}: ${text}`)
+        // Sentence by sentence: an entry half translated has English in it.
+        const inEnglish = new Set(split(english.get(path) ?? ""))
+        for (const sentence of split(text)) {
+          if (
+            inEnglish.has(sentence) &&
+            ownWords(sentence).length > 0 &&
+            !SAME_AS_ENGLISH.has(sentence)
+          ) {
+            same.push(`${path}: ${sentence}`)
+          }
         }
       }
       expect(same, `${locale}: entries still in English`).toEqual([])

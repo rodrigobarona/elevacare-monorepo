@@ -44,8 +44,9 @@ Each entry should include:
   that no value is missing from the text (`undefined`, `{name}`), that **no
   English is left in the Portuguese or the Spanish, down to a one-word
   label**, and that Portuguese and Spanish are not one pasted over the
-  other. Text that is rightly the same as English is a short named list
-  (today: "Email").
+  other. Text is compared sentence by sentence, so a paragraph half
+  translated fails too. Text that is rightly the same as English is a short
+  named list (today: "Email").
 - The shared words (`i18n.ts`) are compared entry by entry at any length,
   and each entry that is a function is called and compared by what it says,
   so a sentence in a branch no form reaches is still read.
@@ -53,13 +54,13 @@ Each entry should include:
   renderer, or a form an email comes in (its kinds, statuses, reminder
   windows, session modes), has no entry in it.
 - It found nothing to fix: every sentence was already translated. The check
-  was proven able to fail six ways, each tried and then undone: an English
+  was proven able to fail seven ways, each tried and then undone: an English
   sentence, a short title, and a function's sentence put into the Portuguese
-  words; an English word written in a template; a new kind; a new reminder
-  window.
+  words; an English word written in a template; a sign-in paragraph half in
+  English; a new kind; a new reminder window.
 - Not covered: whether a translation reads well to a native speaker (a
-  person's review); a paragraph that is translated but has one English
-  clause inside it; what the sender writes before the email is made (policy
+  person's review); a sentence that is translated but has a few English
+  words inside it; what the sender writes before the email is made (policy
   names, language and country names, headings for booking requests, which
   come from `packages/notifications`); SMS and in-app text.
 
