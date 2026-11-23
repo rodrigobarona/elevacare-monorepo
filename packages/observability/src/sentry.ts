@@ -67,14 +67,25 @@ export async function initSentry(
 
 /**
  * Escape hatch for manual captureException wrapped in redaction.
+ *
+ * Never rejects: callers send it off without waiting (`void`), often from
+ * a `catch` that is already answering a failed request, and a report that
+ * cannot be made must not become a second, unhandled failure there.
  */
 export async function captureException(
   err: unknown,
   context?: Record<string, unknown>
-) {
-  const Sentry = await loadSentry()
-  const safeContext = context ? redactPayload(context) : undefined
-  Sentry.captureException(err, safeContext ? { extra: safeContext } : undefined)
+): Promise<void> {
+  try {
+    const Sentry = await loadSentry()
+    const safeContext = context ? redactPayload(context) : undefined
+    Sentry.captureException(
+      err,
+      safeContext ? { extra: safeContext } : undefined
+    )
+  } catch {
+    // Nothing to do: the caller's own failure is already being handled.
+  }
 }
 
 type RequestErrorArgs = Parameters<typeof SentryNextjs.captureRequestError>

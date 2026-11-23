@@ -64,7 +64,9 @@ describe("reportJobRun", () => {
     it.each([undefined, "", "   "])(
       "asks nothing and logs nothing when the setting is %j",
       async (value) => {
-        if (value !== undefined) vi.stubEnv("BETTERSTACK_HEARTBEAT_URLS", value)
+        // Also for `undefined`: a value in the shell that runs the tests
+        // must not decide this case.
+        vi.stubEnv("BETTERSTACK_HEARTBEAT_URLS", value)
         const { fetchMock } = monitor(200)
         for (const job of Object.keys(BACKGROUND_JOBS)) {
           await reportJobRun(job as keyof typeof BACKGROUND_JOBS, "ok")

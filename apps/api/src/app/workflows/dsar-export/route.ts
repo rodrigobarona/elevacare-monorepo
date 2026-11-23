@@ -40,6 +40,15 @@ export const POST = reportedJob("dsar-export", async (request: Request) => {
         { status: 500, headers }
       )
     }
+    if (result.status === "failed") {
+      // The export itself failed and the request is marked so; the cause
+      // is on the request's audit trail. Nothing is thrown this far, so
+      // this is the only place Sentry can hear of it.
+      void captureException(new Error("dsar export failed"), {
+        probe: "dsar-export",
+        dsarId: parsed.data.dsarId,
+      })
+    }
     return secureJson({ ok: true, ...result }, { status: 200, headers })
   } catch (err) {
     // On demand, so no monitor expects it: Sentry is where it shows.
