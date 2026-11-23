@@ -49,11 +49,15 @@ Each entry should include:
   - **`pnpm check:boundaries`** (`scripts/check-boundaries.mjs`, in CI)
     runs the boundary rules alone over every workspace with a lint config
     and fails on any finding. It does not obey `eslint-disable` comments,
-    and a file it cannot parse is a finding. It also proves the rules are
-    on: in each app it lints a few lines that must be refused, and every
-    file of an app must have the boundary rules set exactly as the app's
-    ordinary file has them, so a config that switches one off, or sets it
-    again, for one folder fails by name. An app with no lint config fails.
+    and a file it cannot parse is a finding. It also makes sure nothing
+    switches the rules off. **An app's lint config must be the shared
+    configs, in order, and nothing else**: a rule set again, a folder
+    ignored, a processor or an entry left out fails by name, and what an
+    app needs changed goes into `@eleva/eslint-config`. Every source file
+    of an app must be linted, no lint config may sit inside an app's
+    folders, every file must have the boundary rules as the shared configs
+    set them, and in each app a few lines that must be refused are linted.
+    An app with no lint config fails.
   - **`@eleva/eslint-config/frontend-db-reads`**, on every app except
     `apps/api`: from `@eleva/db` an app takes the read helpers on one list
     (`FRONTEND_DB_READS`, the 21 that `apps/expert` uses today) and types.
@@ -61,8 +65,9 @@ Each entry should include:
     `withOrgContext`, `withPlatformAdminContext`), a read that is not on
     the list, anything from a subpath (`/queries/*`, `/client`, `/rls`,
     `/schema`), the package by its path on disk, `drizzle-orm` or a
-    database driver, or the package through `import()` or `require` written
-    as text. Adding a read to the list is a reviewed change: does the
+    database driver, or any of those named as text where it can be loaded
+    from (`import("@eleva/db")`, a template literal, `require`,
+    `createRequire(...)("@eleva/db")`). Adding a read to the list is a reviewed change: does the
     helper scope what it reads to the caller's organization, and is the
     read one that need not be recorded?
   - **Removed:** `@eleva/eslint-config/api-first-actions` and
@@ -76,14 +81,22 @@ Each entry should include:
   (`getMemberProfile(userId)`, `listMemberPayments`): the raw reads this
   slice is named for. A name does not say how a helper is scoped; a list
   that someone reviews does.
-- Also tightened: `value["reveal"]()` is refused like `value.reveal()`;
-  vendor SDKs are refused by any path inside them (`stripe/lib/...`);
+- Also tightened: `value["reveal"]()` and `value.reveal.call(value)` are
+  refused like `value.reveal()`; vendor SDKs are refused by any path inside
+  them (`stripe/lib/...`) and when loaded with `import("stripe")` or
+  `require`; a route folder named `coverage` is no longer skipped.
   `packages/auth` had lost the icon ban the same way `actions.ts` had lost
-  the vendor bans; a route folder named `coverage` is no longer skipped.
+  the vendor bans: the three packages that wrap a vendor (`auth`, `icons`,
+  `editor`) no longer copy the bans by hand, they take the shared ones
+  without their own (`baseImportBansWithout`, `boundaryImportBansWithout`).
 - No app had to change.
 - **Limits.**
-  - A module name put together at run time (`import("@eleva/" + name)`)
-    cannot be seen by lint.
+  - A module name put together at run time (`import("@eleva/" + name)`, a
+    name held in a variable) cannot be seen by lint.
+  - The list says which reads a frontend may use; that each of them scopes
+    its read to the caller's organization was checked by reading them (20
+    take the organization and run in its context, one is a mapper), not by
+    a test.
   - **Packages are not covered.** Each has its own lint config, and none
     uses the boundary config, so `packages/ui` could import Stripe or the
     database and a frontend would get it through the package. None does
@@ -97,7 +110,8 @@ Each entry should include:
   - The commit hook stops nothing; CI is the gate. Whether the Lint job is
     a required check in branch protection was not looked at.
 - Read before building: ESLint's flat-config rule on repeated rule settings,
-  its `ruleFilter` and `allowInlineConfig` options, `no-restricted-imports`
+  its `ruleFilter`, `allowInlineConfig` and `calculateConfigForFile`,
+  `no-restricted-imports`
   (`allowImportNames`, `regex`), typescript-eslint's `no-restricted-imports`
   (`allowTypeImports`), each checked against the installed version by
   running it.

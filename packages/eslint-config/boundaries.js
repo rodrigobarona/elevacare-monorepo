@@ -1,3 +1,5 @@
+import { importBansWithout } from "./base.js"
+
 /**
  * @file Eleva boundary rules.
  *
@@ -50,26 +52,48 @@
 
 /**
  * `Decrypted#reveal()` outside the packages that own health data. Named, so
- * a config that adds its own `no-restricted-syntax` entries can keep this
- * one: a later setting of a rule replaces an earlier one, it is not added
- * to it.
+ * a config that adds its own `no-restricted-syntax` entries can keep these:
+ * a later setting of a rule replaces an earlier one, it is not added to it.
  */
 const REVEAL_MESSAGE =
   "Decrypted PHI is unwrapped only inside @eleva/records / @eleva/encryption when mapping into a response DTO (Phase 10 PHI lint)."
 
+const reveal = (selector) => ({ selector, message: REVEAL_MESSAGE })
+
 export const REVEAL_RESTRICTIONS = [
-  {
-    selector:
-      "CallExpression[callee.type='MemberExpression'][callee.property.name='reveal'][arguments.length=0]",
-    message: REVEAL_MESSAGE,
-  },
-  {
-    // value["reveal"]()
-    selector:
-      "CallExpression[callee.type='MemberExpression'][callee.property.value='reveal'][arguments.length=0]",
-    message: REVEAL_MESSAGE,
-  },
+  // value.reveal()
+  reveal(
+    "CallExpression[callee.type='MemberExpression'][callee.property.name='reveal'][arguments.length=0]"
+  ),
+  // value["reveal"]() and value[`reveal`]()
+  reveal(
+    "CallExpression[callee.type='MemberExpression'][callee.property.value='reveal'][arguments.length=0]"
+  ),
+  reveal(
+    "CallExpression[callee.type='MemberExpression'] > MemberExpression.callee > TemplateLiteral.property > TemplateElement[value.raw='reveal']"
+  ),
+  // value.reveal.call(value)
+  reveal(
+    "CallExpression[callee.property.name=/^(call|apply|bind)$/][callee.object.property.name='reveal']"
+  ),
 ]
+
+/**
+ * A vendor SDK loaded at run time, written as text: `import("stripe")`,
+ * `require("twilio")`. The import rule only reads `import ... from`.
+ */
+const VENDOR_TEXT =
+  "/^(stripe|twilio|resend|platejs|ai)(\\/|$)|^(@stripe|@aws-sdk|@daily-co|@ai-sdk|@platejs)\\//"
+const VENDOR_MESSAGE =
+  "Vendor SDKs are imported only by the package that owns them, also when loaded at run time (boundary lint)."
+
+export const VENDOR_AT_RUN_TIME = [
+  `ImportExpression Literal[value=${VENDOR_TEXT}]`,
+  `CallExpression[callee.name='require'] > Literal[value=${VENDOR_TEXT}]`,
+].map((selector) => ({ selector, message: VENDOR_MESSAGE }))
+
+/** What `boundariesConfig` sets for `no-restricted-syntax`. */
+export const BOUNDARY_SYNTAX = [...REVEAL_RESTRICTIONS, ...VENDOR_AT_RUN_TIME]
 
 /** @type {import("eslint").Linter.Config[]} */
 export const boundariesConfig = [
@@ -241,7 +265,22 @@ export const boundariesConfig = [
   },
   {
     rules: {
-      "no-restricted-syntax": ["error", ...REVEAL_RESTRICTIONS],
+      "no-restricted-syntax": ["error", ...BOUNDARY_SYNTAX],
     },
   },
 ]
+
+const boundaryImportBans = boundariesConfig.find(
+  (entry) => entry.rules?.["no-restricted-imports"]
+).rules["no-restricted-imports"][1]
+
+/**
+ * The boundary import bans without the ones a package owns: for a package
+ * that wraps a vendor and sets `no-restricted-imports` itself
+ * (`packages/editor`). See `baseImportBansWithout`.
+ *
+ * @param {(module: string) => boolean} isOwned
+ */
+export function boundaryImportBansWithout(isOwned) {
+  return ["error", importBansWithout(boundaryImportBans, isOwned)]
+}

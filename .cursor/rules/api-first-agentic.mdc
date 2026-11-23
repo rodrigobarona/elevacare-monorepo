@@ -91,8 +91,8 @@ Server Actions are thin proxies. They MUST:
 
 ## No direct DB writes in frontend apps
 
-- `@eleva/db` query helpers (e.g. `getExpertProfileForOrg()`) are OK for reads in Server Components.
-- Raw `db()` + `main.*` imports in frontend apps are forbidden for new code.
+- The `@eleva/db` read helpers listed in `@eleva/eslint-config/frontend-db-reads` (e.g. `getExpertProfileForOrg()`) are OK for reads in Server Components. Any other read goes through `apps/api`, or is added to that list in a reviewed change.
+- `db()`, `main.*`, `withOrgContext`, `@eleva/db/*` subpaths and `drizzle-orm` are forbidden in frontend apps. `pnpm check:boundaries` fails the build on them.
 - Writes go through domain package functions or `apps/api` endpoints.
 
 ## CORS

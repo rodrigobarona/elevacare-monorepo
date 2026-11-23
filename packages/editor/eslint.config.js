@@ -1,92 +1,20 @@
 import { config } from "@eleva/eslint-config/base"
+import { boundaryImportBansWithout } from "@eleva/eslint-config/boundaries"
 
 /**
- * ADR-023: Plate / Slate / Radix are allowed here. Keep every other vendor
- * boundary from `@eleva/eslint-config/boundaries` so the editor package cannot
- * import Stripe, Better Auth, S3, Twilio, Resend, etc. directly.
+ * ADR-023: Plate / Slate / Radix are allowed here. Every other vendor
+ * boundary from `@eleva/eslint-config/boundaries` stays, so the editor
+ * package cannot import Stripe, Better Auth, S3, Twilio, Resend, etc.
  */
 export default [
   ...config,
   {
     rules: {
-      "no-restricted-imports": [
-        "error",
-        {
-          paths: [
-            {
-              name: "stripe",
-              message:
-                "Import Stripe through @eleva/billing/server (boundary lint).",
-            },
-            {
-              name: "@stripe/connect-js",
-              message:
-                "Use @eleva/billing/embedded.ElevaConnectProvider (boundary lint).",
-            },
-            {
-              name: "@stripe/react-connect-js",
-              message:
-                "Use re-exports from @eleva/billing/embedded (boundary lint).",
-            },
-            {
-              name: "@stripe/stripe-js",
-              message:
-                "Stripe.js access goes through @eleva/billing/embedded (boundary lint).",
-            },
-            {
-              name: "@aws-sdk/client-s3",
-              message: "Use @eleva/storage helpers (boundary lint).",
-            },
-            {
-              name: "@aws-sdk/s3-request-presigner",
-              message:
-                "Use @eleva/storage/upload-client (browser) or @eleva/storage/upload-handler (route handler) (boundary lint).",
-            },
-            {
-              name: "twilio",
-              message:
-                "Import Twilio only through @eleva/notifications (boundary lint).",
-            },
-            {
-              name: "resend",
-              message:
-                "Import Resend only through @eleva/notifications (boundary lint).",
-            },
-            {
-              name: "ai",
-              message:
-                "Import the Vercel AI SDK only through @eleva/ai (boundary lint).",
-            },
-          ],
-          patterns: [
-            {
-              group: ["better-auth", "better-auth/*", "@better-auth/*"],
-              message:
-                "Import Better Auth only through @eleva/auth (boundary lint).",
-            },
-            {
-              group: ["@workos-inc", "@workos-inc/**"],
-              message:
-                "Leftover identity-provider SDKs are removed. Use @eleva/auth.",
-            },
-            {
-              group: [
-                "lucide-react",
-                "lucide-react/**",
-                "@phosphor-icons/react",
-                "@phosphor-icons/react/**",
-              ],
-              message:
-                "Import icons from @eleva/icons (or @eleva/icons/client); only packages/icons wraps the vendor set.",
-            },
-            {
-              group: ["@ai-sdk", "@ai-sdk/**", "ai/*", "ai/**"],
-              message:
-                "Import AI SDK providers only through @eleva/ai (boundary lint).",
-            },
-          ],
-        },
-      ],
+      "no-restricted-imports": boundaryImportBansWithout((module) =>
+        /^(platejs|@platejs|slate|slate-\*|@udecode\/slate|@udecode\/slate-\*|@radix-ui)(\/|$)/.test(
+          module
+        )
+      ),
     },
   },
 ]

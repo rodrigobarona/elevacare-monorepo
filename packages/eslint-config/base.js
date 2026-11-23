@@ -81,3 +81,34 @@ export const config = [
     ],
   },
 ]
+
+const baseImportBans = config.find(
+  (entry) => entry.rules?.["no-restricted-imports"]
+).rules["no-restricted-imports"][1]
+
+/**
+ * The base import bans without the ones a package owns: for the package
+ * that wraps a vendor (`packages/auth`, `packages/icons`). Setting
+ * `no-restricted-imports` in a package's own config replaces the base
+ * setting, so the owner has to carry the other bans; this carries them.
+ *
+ * @param {(module: string) => boolean} isOwned
+ */
+export function baseImportBansWithout(isOwned) {
+  return ["error", importBansWithout(baseImportBans, isOwned)]
+}
+
+/** @param {{ paths?: object[], patterns?: object[] }} bans */
+export function importBansWithout(bans, isOwned) {
+  return {
+    ...(bans.paths
+      ? { paths: bans.paths.filter((path) => !isOwned(path.name)) }
+      : {}),
+    patterns: (bans.patterns ?? [])
+      .map((pattern) => ({
+        ...pattern,
+        group: pattern.group.filter((module) => !isOwned(module)),
+      }))
+      .filter((pattern) => pattern.group.length > 0),
+  }
+}

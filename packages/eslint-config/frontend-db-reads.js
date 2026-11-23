@@ -1,4 +1,4 @@
-import { REVEAL_RESTRICTIONS } from "./boundaries.js"
+import { BOUNDARY_SYNTAX } from "./boundaries.js"
 
 /**
  * @file What an app other than `apps/api` may take from `@eleva/db`.
@@ -20,8 +20,8 @@ import { REVEAL_RESTRICTIONS } from "./boundaries.js"
  *   one, are read through the API so that each read is recorded.
  *
  * Use after `boundariesConfig`. It sets `no-restricted-syntax` again, with
- * the entries `boundariesConfig` had, because a later setting of a rule
- * replaces an earlier one.
+ * the entries `boundariesConfig` had (`BOUNDARY_SYNTAX`), because a later
+ * setting of a rule replaces an earlier one.
  */
 
 /**
@@ -66,12 +66,19 @@ const HOW =
 const DRIVERS =
   "An app does not query the database itself: no drizzle-orm, no database driver. Use a listed @eleva/db read helper or call apps/api (frontend-db-reads lint)."
 
-/** `import("@eleva/db")` and `require("@eleva/db")`, written as text. */
+/**
+ * The database package, or what is under it, named as text anywhere it can
+ * be loaded from: `import("@eleva/db")`, `` import(`@eleva/db`) ``,
+ * `require(...)`, `createRequire(...)("@eleva/db")`, a path into
+ * `packages/db`. The import rule only reads `import ... from`.
+ */
+const DATABASE_TEXT =
+  "/(^|\\/)(@eleva|packages)\\/(\\.\\/)*db(\\/|$)|^drizzle-orm(\\/|$)|^@neondatabase\\//"
 const LOADED_AT_RUN_TIME = [
-  "ImportExpression[source.value=/^@eleva\\/db(\\/|$)/]",
-  "ImportExpression > TemplateLiteral > TemplateElement[value.raw=/@eleva\\/db/]",
-  "CallExpression[callee.name='require'][arguments.0.value=/^@eleva\\/db(\\/|$)/]",
-  "CallExpression[callee.name='require'] > TemplateLiteral > TemplateElement[value.raw=/@eleva\\/db/]",
+  `ImportExpression Literal[value=${DATABASE_TEXT}]`,
+  `ImportExpression TemplateElement[value.raw=${DATABASE_TEXT}]`,
+  `CallExpression > Literal[value=${DATABASE_TEXT}]`,
+  `CallExpression > TemplateLiteral > TemplateElement[value.raw=${DATABASE_TEXT}]`,
 ].map((selector) => ({ selector, message: HOW }))
 
 /** @type {import("eslint").Linter.Config[]} */
@@ -100,12 +107,13 @@ export const frontendDbReadsConfig = [
               message: HOW,
             },
             {
-              // The package by its place on disk.
-              regex: "(^|/)packages/db(/|$)",
+              // The package by its place on disk, in the repository or
+              // under node_modules.
+              regex: "(^|/)(packages|node_modules/@eleva)/(\\./)*db(/|$)",
               message: HOW,
             },
             {
-              regex: "^(drizzle-orm|@neondatabase/|pg$|postgres$)",
+              regex: "^(drizzle-orm|pg|postgres)(/|$)|^@neondatabase/",
               message: DRIVERS,
             },
           ],
@@ -113,7 +121,7 @@ export const frontendDbReadsConfig = [
       ],
       "no-restricted-syntax": [
         "error",
-        ...REVEAL_RESTRICTIONS,
+        ...BOUNDARY_SYNTAX,
         ...LOADED_AT_RUN_TIME,
       ],
     },

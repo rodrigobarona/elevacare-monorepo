@@ -15,16 +15,33 @@ Shared eslint configuration for the workspace.
 `./base` uses `eslint-plugin-only-warn`: every finding is a warning, so
 `pnpm lint` exits 0 whatever it finds. The boundary rules must not be
 warnings, so CI runs them alone with `pnpm check:boundaries`
-(`scripts/check-boundaries.mjs`), which fails on any finding.
+(`scripts/check-boundaries.mjs`), which fails on any finding. It does not
+obey `eslint-disable` comments.
 
-That check does not obey `eslint-disable` comments. It also lints a few
-lines in each app that must be refused, and compares how the boundary rules
-are set for every file of an app. This catches a config that leaves a rule
-out, sets it twice, or switches it off for one folder: in a flat config a
-later setting of a rule replaces the earlier one, it is not added to it.
+## An app's lint config is the shared configs, and nothing else
 
-Packages have their own lint configs and are not covered by the boundary
-config or by those checks.
-A config that needs its own `no-restricted-imports` or `no-restricted-syntax`
-entries has to carry the earlier entries with it, as `./frontend-db-reads`
-does for `REVEAL_RESTRICTION`.
+```js
+export default [...nextJsConfig, ...boundariesConfig, ...frontendDbReadsConfig]
+```
+
+`pnpm check:boundaries` fails an app whose config has anything more or less
+(`apps/api` leaves out `frontendDbReadsConfig`; an app that is not Next.js
+starts from the base config). The reason: in a flat config a later setting
+of a rule replaces the earlier one, it is not added to it, and an `ignores`
+entry takes a folder out of lint. One extra entry in one app can switch a
+boundary off without a word. A change an app needs goes here, in this
+package.
+
+A shared config that needs its own `no-restricted-imports` or
+`no-restricted-syntax` entries has to carry the earlier entries with it, as
+`./frontend-db-reads` does with `BOUNDARY_SYNTAX`.
+
+## Packages
+
+A package has its own lint config. One that wraps a vendor sets
+`no-restricted-imports` itself, and so has to carry every other ban:
+`baseImportBansWithout(isOwned)` and `boundaryImportBansWithout(isOwned)`
+return the shared bans without the package's own (`packages/auth`,
+`packages/icons`, `packages/editor`). Packages do not get the boundary
+config by default, and `pnpm check:boundaries` checks their findings only,
+not what their configs leave out.

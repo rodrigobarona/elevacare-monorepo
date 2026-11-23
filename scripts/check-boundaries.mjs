@@ -10,24 +10,30 @@
  * alone, over every workspace that has a lint config, and fails on any
  * finding.
  *
- * It also checks that the rules are switched on, three ways:
- * - in each app it lints a few lines that must be refused. An app whose
- *   lint config leaves a rule out, or sets it again and so replaces it,
- *   fails here;
- * - every file of an app must have the boundary rules exactly as that
- *   app's ordinary file has them. A config that switches a rule off, or
- *   sets it differently, for one folder fails here;
+ * It also checks that nothing switches the rules off:
+ * - an app's lint config is the shared configs, in order, and nothing
+ *   else (`appConfigProblems`). A rule set again, a folder ignored, a
+ *   processor: all of that is an addition, and fails. What an app needs
+ *   changed goes into `@eleva/eslint-config`, where it is reviewed once;
+ * - every file of an app has the boundary rules set exactly as the shared
+ *   configs set them, and every source file of an app is linted;
+ * - in each app a few lines that must be refused are linted, and are;
  * - comments in a file (`eslint-disable`) are not obeyed, and a file that
  *   cannot be parsed is a finding, not a pass.
  *
  * What it cannot see: a module name put together at run time
- * (`import("@eleva/" + name)`), and packages, which have their own lint
- * configs and no canaries.
+ * (`import("@eleva/" + name)`), and packages. A package has its own lint
+ * config, so one that wraps a vendor can allow it; only its findings are
+ * checked here, not what its config leaves out.
  */
-import { existsSync, readdirSync } from "node:fs"
+import { existsSync, readdirSync, realpathSync } from "node:fs"
 import { createRequire } from "node:module"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
+import { config as baseConfig } from "../packages/eslint-config/base.js"
+import { boundariesConfig } from "../packages/eslint-config/boundaries.js"
+import { frontendDbReadsConfig } from "../packages/eslint-config/frontend-db-reads.js"
+import { nextJsConfig } from "../packages/eslint-config/next.js"
 
 /** The rules that carry a boundary. Nothing else is run. */
 export const BOUNDARY_RULES = new Set([
@@ -42,6 +48,21 @@ const SKIPPED = new Set(["apps/poc"])
 
 /** The one app that owns the database: it takes what it needs from it. */
 const DATABASE_OWNER = "apps/api"
+
+const SOURCE_FILE = /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/
+
+/** Folders of an app that hold no source of ours. */
+const NOT_OURS = new Set([
+  "node_modules",
+  ".next",
+  ".turbo",
+  ".vercel",
+  ".react-email",
+  ".source",
+  "dist",
+  "playwright-report",
+  "test-results",
+])
 
 const VENDOR = [
   {
@@ -91,6 +112,47 @@ export function canariesFor(workspace) {
   return workspace === DATABASE_OWNER ? VENDOR : [...VENDOR, ...DATABASE]
 }
 
+/**
+ * The shared configs an app's lint config is made of, in order: the base
+ * (for a Next.js app, or for one that is not), then the boundaries, then,
+ * for every app that does not own the database, what a frontend may take
+ * from it.
+ */
+export function sharedConfigsFor(workspace) {
+  const rest =
+    workspace === DATABASE_OWNER
+      ? boundariesConfig
+      : [...boundariesConfig, ...frontendDbReadsConfig]
+  return [
+    [...nextJsConfig, ...rest],
+    [...baseConfig, ...rest],
+  ]
+}
+
+/**
+ * What is wrong with an app's lint config: anything but the shared
+ * configs, entry for entry. `config` is what the app's `eslint.config.js`
+ * exports.
+ */
+export function appConfigProblems(workspace, config) {
+  const same = (expected) =>
+    Array.isArray(config) &&
+    config.length === expected.length &&
+    config.every((entry, index) => entry === expected[index])
+  if (sharedConfigsFor(workspace).some(same)) return []
+  const frontend =
+    workspace === DATABASE_OWNER ? "" : ", ...frontendDbReadsConfig"
+  return [
+    `${workspace}/eslint.config.js: an app's lint config is [...nextJsConfig (or the base config), ...boundariesConfig${frontend}] and nothing else. A rule set here, a folder ignored here or an entry left out can switch a boundary off; put the change in @eleva/eslint-config`,
+  ]
+}
+
+function configFile(dir) {
+  return ["js", "mjs", "cjs", "ts"]
+    .map((extension) => path.join(dir, `eslint.config.${extension}`))
+    .find((file) => existsSync(file))
+}
+
 /** Every workspace with a lint config of its own. */
 export function lintedWorkspaces(root) {
   const found = []
@@ -100,10 +162,7 @@ export function lintedWorkspaces(root) {
     for (const name of readdirSync(dir).sort()) {
       const workspace = `${group}/${name}`
       if (SKIPPED.has(workspace)) continue
-      const hasConfig = ["js", "mjs", "cjs", "ts"].some((extension) =>
-        existsSync(path.join(dir, name, `eslint.config.${extension}`))
-      )
-      if (hasConfig) found.push(workspace)
+      if (configFile(path.join(dir, name))) found.push(workspace)
     }
   }
   return found
@@ -121,12 +180,44 @@ export function appsWithoutLint(root) {
     .sort()
 }
 
-function loadEslint(root) {
+/** Every source file of ours under an app, and every lint config in it. */
+export function sourceFilesOf(cwd) {
+  const sources = []
+  const configs = []
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (NOT_OURS.has(entry.name)) continue
+      const file = path.join(dir, entry.name)
+      if (entry.isDirectory()) {
+        // The coverage report, at the top of the app only.
+        if (dir === cwd && entry.name === "coverage") continue
+        walk(file)
+      } else if (/^eslint\.config\./.test(entry.name)) {
+        configs.push(file)
+      } else if (SOURCE_FILE.test(entry.name)) {
+        sources.push(file)
+      }
+    }
+  }
+  walk(cwd)
+  return { sources, configs }
+}
+
+/** ESLint for one workspace, as this check runs it. */
+export function createEslint(root, cwd, options = {}) {
   // ESLint is a dependency of the lint config package, not of the root.
   const require = createRequire(
     path.join(root, "packages", "eslint-config", "package.json")
   )
-  return require("eslint").ESLint
+  const { ESLint } = require("eslint")
+  return new ESLint({
+    cwd,
+    errorOnUnmatchedPattern: false,
+    // A comment in a file does not switch a boundary off.
+    allowInlineConfig: false,
+    ruleFilter: ({ ruleId }) => BOUNDARY_RULES.has(ruleId),
+    ...options,
+  })
 }
 
 /**
@@ -145,114 +236,178 @@ export function boundaryFindings(root, results) {
   )
 }
 
-/** The rules an app's files must all have set the same way. */
+/** The rules every file of an app must have as the shared configs set them. */
 const SAME_IN_EVERY_FILE = [
   "no-restricted-imports",
   "@typescript-eslint/no-restricted-imports",
   "no-restricted-syntax",
 ]
 
-const boundarySettings = (config) =>
-  JSON.stringify(
-    SAME_IN_EVERY_FILE.map((rule) => config?.rules?.[rule] ?? "not set")
-  )
+const SEVERITY = { off: 0, warn: 1, error: 2 }
 
-/**
- * Files of an app whose boundary rules are not set as the app's ordinary
- * file has them: switched off, or set again with other bans, for a folder
- * or a kind of file.
- */
-export async function filesWithOtherRules(eslint, root, cwd, files) {
-  const ordinary = boundarySettings(
-    await eslint.calculateConfigForFile(
-      path.join(cwd, "src", "__canary__", "page.ts")
+/** A rule's setting in one form: `[2, ...options]`, or "not set". */
+function setting(value) {
+  if (value === undefined) return "not set"
+  const [severity, ...options] = Array.isArray(value) ? value : [value]
+  return JSON.stringify([SEVERITY[severity] ?? severity, ...options])
+}
+
+/** What the shared configs set for the boundary rules of an app's files. */
+export function sharedSettingsFor(workspace) {
+  const [configs] = sharedConfigsFor(workspace)
+  return SAME_IN_EVERY_FILE.map((rule) =>
+    setting(
+      configs
+        .map((entry) => entry.rules?.[rule])
+        .filter((value) => value !== undefined)
+        .at(-1)
     )
   )
+}
+
+/**
+ * Files of an app whose boundary rules are not set as the shared configs
+ * set them (switched off, or set again with other bans), or that go
+ * through a processor.
+ */
+export async function filesWithOtherRules(eslint, root, workspace, files) {
+  const shared = sharedSettingsFor(workspace).join("\n")
   const other = []
   for (const file of files) {
     const config = await eslint.calculateConfigForFile(file)
-    if (config && boundarySettings(config) !== ordinary) {
+    if (!config) continue
+    const here = SAME_IN_EVERY_FILE.map((rule) =>
+      setting(config.rules?.[rule])
+    ).join("\n")
+    if (here !== shared || config.processor) {
       other.push(
-        `${path.relative(root, file)}: the boundary rules are not set for this file as for the rest of the app (a lint config switches one off, or sets it again, for this path)`
+        `${path.relative(root, file)}: the boundary rules are not set for this file as @eleva/eslint-config sets them (a lint config switches one off, sets it again, or adds a processor for this path)`
       )
     }
   }
   return other
 }
 
+/** What is wrong with one app beyond the findings in its code. */
+async function appProblems(root, workspace, eslint, results, canaries) {
+  const cwd = path.join(root, workspace)
+  const problems = []
+
+  const config = (await import(pathToFileURL(configFile(cwd)).href)).default
+  problems.push(...appConfigProblems(workspace, config))
+
+  const linted = new Set(results.map((result) => result.filePath))
+  if (linted.size === 0) problems.push(`${workspace}: no file was linted`)
+  const { sources, configs } = sourceFilesOf(cwd)
+  for (const file of sources) {
+    if (!linted.has(file)) {
+      problems.push(
+        `${path.relative(root, file)}: is not linted (a lint config ignores it), so no boundary rule runs on it`
+      )
+    }
+  }
+  for (const file of configs) {
+    if (path.dirname(file) !== cwd) {
+      problems.push(
+        `${path.relative(root, file)}: a lint config inside an app replaces the app's own for that folder; an app has one, at its top`
+      )
+    }
+  }
+  problems.push(
+    ...(await filesWithOtherRules(eslint, root, workspace, [...linted]))
+  )
+
+  for (const canary of canaries(workspace)) {
+    const [result] = await eslint.lintText(canary.code, {
+      filePath: path.join(cwd, canary.file),
+    })
+    const refused = result?.messages.some(
+      (message) => message.ruleId === canary.rule
+    )
+    if (!refused) {
+      problems.push(
+        `${workspace}: the lint config lets through ${canary.what} (${canary.rule} is off, or set again after the config that sets it)`
+      )
+    }
+  }
+  return problems
+}
+
 /**
  * Everything wrong under `root`: boundary findings in the code, and apps
- * where a boundary rule is not switched on.
+ * where a boundary rule is, or could be, switched off.
  */
 export async function findBoundaryProblems(
   root,
   { workspaces = lintedWorkspaces(root), canaries = canariesFor } = {}
 ) {
-  const ESLint = loadEslint(root)
   const problems = appsWithoutLint(root).map(
     (app) => `${app}: no eslint.config.js, so no boundary rule checks this app`
   )
   let files = 0
 
   for (const workspace of workspaces) {
-    const cwd = path.join(root, workspace)
-    const eslint = new ESLint({
-      cwd,
-      errorOnUnmatchedPattern: false,
-      // A comment in a file does not switch a boundary off.
-      allowInlineConfig: false,
-      ruleFilter: ({ ruleId }) => BOUNDARY_RULES.has(ruleId),
-    })
-    const results = await eslint.lintFiles(["."])
-    files += results.length
-    problems.push(...boundaryFindings(root, results))
-    if (workspace.startsWith("apps/")) {
-      problems.push(
-        ...(await filesWithOtherRules(
-          eslint,
-          root,
-          cwd,
-          results.map((result) => result.filePath)
-        ))
-      )
-    }
-
-    for (const canary of canaries(workspace)) {
-      const [result] = await eslint.lintText(canary.code, {
-        filePath: path.join(cwd, canary.file),
-      })
-      const refused = result?.messages.some(
-        (message) => message.ruleId === canary.rule
-      )
-      if (!refused) {
+    try {
+      const eslint = createEslint(root, path.join(root, workspace))
+      const results = await eslint.lintFiles(["."])
+      files += results.length
+      problems.push(...boundaryFindings(root, results))
+      if (workspace.startsWith("apps/")) {
         problems.push(
-          `${workspace}: the lint config lets through ${canary.what} (${canary.rule} is off, or set again after the config that sets it)`
+          ...(await appProblems(root, workspace, eslint, results, canaries))
         )
       }
+    } catch (error) {
+      // One workspace that cannot be linted fails the check, by name.
+      const why = error instanceof Error ? error.message : String(error)
+      problems.push(
+        `${workspace}: could not be checked (${why.split("\n")[0]})`
+      )
     }
   }
   return { problems, files, workspaces: workspaces.length }
 }
 
-async function main() {
-  const root = path.resolve(import.meta.dirname, "..")
-  const { problems, files, workspaces } = await findBoundaryProblems(root)
+/** What to print, and the exit code, for what was found. */
+export function report(root, { problems, files, workspaces }) {
   if (workspaces === 0 || files === 0) {
-    console.error(
-      `Boundary check failed. Nothing was linted under ${root} (${workspaces} workspaces, ${files} files).`
-    )
-    process.exit(1)
+    return {
+      code: 1,
+      lines: [
+        `Boundary check failed. Nothing was linted under ${root} (${workspaces} workspaces, ${files} files).`,
+      ],
+    }
   }
   if (problems.length > 0) {
-    console.error("Boundary check failed:\n")
-    for (const problem of problems) console.error(`- ${problem}`)
-    process.exit(1)
+    return {
+      code: 1,
+      lines: [
+        "Boundary check failed:",
+        "",
+        ...problems.map((problem) => `- ${problem}`),
+      ],
+    }
   }
-  console.log(
-    `Boundary check passed (${files} files in ${workspaces} workspaces).`
-  )
+  return {
+    code: 0,
+    lines: [
+      `Boundary check passed (${files} files in ${workspaces} workspaces).`,
+    ],
+  }
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
+async function main() {
+  const root = path.resolve(import.meta.dirname, "..")
+  const { code, lines } = report(root, await findBoundaryProblems(root))
+  for (const line of lines) (code === 0 ? console.log : console.error)(line)
+  process.exit(code)
+}
+
+// Compared by real path, so that a run through a link is still a run.
+if (
+  process.argv[1] &&
+  existsSync(process.argv[1]) &&
+  import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href
+) {
   await main()
 }
