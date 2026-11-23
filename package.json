@@ -17,6 +17,7 @@
     "test:scripts": "node --test scripts/*.test.mjs",
     "check:no-migration-imports": "node scripts/check-no-migration-imports.mjs",
     "check:no-phi-logs": "node scripts/check-no-phi-logs.mjs",
+    "sbom:apps": "node scripts/build-sboms.mjs",
     "check:google-oauth": "node scripts/check-google-oauth.mjs",
     "clear:better-auth-rate-limits": "node scripts/clear-better-auth-rate-limits.mjs",
     "check:i18n-parity": "node --import tsx/esm scripts/check-i18n-parity.mjs",

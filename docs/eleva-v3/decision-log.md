@@ -32,6 +32,76 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-11-23: Code scanning and a bill of materials in CI (13.13) (active)
+
+- Change (Phase 13.13), two parts.
+- **Code scanning.** `.github/workflows/codeql.yml` runs GitHub's CodeQL on
+  every pull request, on `main`, and once a week. It scans the product's
+  TypeScript and JavaScript, and the workflow files themselves. It leaves
+  out the reference snapshots (`_context`) and the playground (`apps/poc`),
+  which hold three times as many script files as the product; the same two
+  paths are left out of Renovate and gitleaks.
+  - **It reports; it does not block.** The scan's own jobs fail when the
+    scan cannot run, not when it finds something. What it finds shows in
+    the repository's Security tab and as the check
+    "Code scanning results / CodeQL" on a pull request. That check stops a
+    merge only when a person makes it required, or adds a code scanning
+    ruleset. Neither exists today.
+  - It uses the `default` query suite (few false alarms). `security-extended`
+    is the next step once the first findings are sorted.
+  - GitHub's "default setup" for code scanning must stay off: switching it
+    on disables this workflow, and it would scan the snapshots too.
+- **Bill of materials.** `pnpm sbom:apps` (`scripts/build-sboms.mjs`) writes
+  one CycloneDX 1.7 file for each of the nine deployed apps, with a
+  manifest that names the commit and gives each file's SHA-256. CI runs it
+  on every pull request and on `main`, and keeps the files of `main` as an
+  artifact (`sbom-{commit}`) for 90 days.
+  - Each file lists what the app depends on in production, its own
+    packages and those it gets through the `@eleva/*` packages it uses
+    (846 to 1,134 components an app), with name, version, package URL, the
+    tarball's SHA-512 and, for about four in five, the licence.
+  - The script fails when a file does not list a package the app depends
+    on in production. That is the reason it is not one line of pnpm: asked
+    for an app alone, pnpm 11.1 leaves out everything the app gets through
+    workspace packages (the API's file had 121 components and no Stripe).
+  - It uses pnpm's own `sbom` command; no new tool or action was added.
+- **What a file is not.** It is what the lockfile resolves, not what Vercel
+  traced into a deployment, so it is larger (binaries for every platform,
+  some packages that are only peers of others, such as `vitest`). It is
+  made in CI from the commit, not by the build that deploys. It does not
+  list the Node.js runtime, the build image, hosted services or our own
+  `@eleva/*` packages. The root component names the workspace, not the
+  app. Supplier is not filled. It meets the Cyber Resilience Act's wording
+  ("a commonly used and machine-readable format covering at the very least
+  the top-level dependencies"); it is not claimed to meet BSI TR-03183-2,
+  which asks for more fields.
+- Also: one test now reads every workflow and fails on an action that is
+  not pinned to a commit, on `pull_request_target`, on a workflow that does
+  not say what its token may do, and on a checkout that keeps the token
+  where no later step needs it. The placeholder CodeRabbit workflow had no
+  permissions written; it now has none granted.
+- **For a person to do (operator).**
+  - To make findings block a merge: add "Code scanning results / CodeQL"
+    to the required checks, or a code scanning ruleset. Sort the first
+    findings before doing so.
+  - Leave code scanning's default setup at "not configured".
+  - **The dependency graph is off on this repository.** With it off,
+    GitHub cannot review the dependencies a pull request adds
+    (`dependency-review-action`), and cannot export its own bill of
+    materials. That job is not in this change, because it would fail on
+    every pull request until the graph is on.
+- Not built: signing or attesting the files (the deployment is built by
+  Vercel, so there is nothing made here to bind an attestation to); a bill
+  for a deployment as traced by the host; keeping the files longer than 90
+  days.
+- Pinned: `github/codeql-action` v4.39.3. v4.39.4 was two days and 23
+  hours old, under the three days Renovate waits for.
+- Read before building: GitHub's CodeQL workflow options, query suites and
+  merge protection; pnpm's `sbom` command; the Cyber Resilience Act's Annex
+  I, ENISA's SBOM advisory, BSI TR-03183-2 and the NTIA minimum elements;
+  the OpenSSF Scorecard checks for workflows. Not run before this pull
+  request: the scan itself.
+
 ### 2026-11-23: Staff queues have pages, and reading one is on record (12.6) (active)
 
 - Change (Phase 12.6): the two staff queues (clinic verifications, licence
