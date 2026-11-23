@@ -81,15 +81,16 @@ Each entry should include:
 - **What a refused caller is told.** The answer (HTTP 429) now has the code
   `RATE_LIMITED`, the seconds in its body (`retryAfter`) and in a standard
   `Retry-After` header that a browser on another origin may read. The
-  sign-in screens say the number: "To keep accounts safe, we pause after
-  many tries in a short time. You can try again in 1 minute." On the
-  sign-in screen it adds "In the meantime, you can try signing in another
-  way." It names a rule, not a fault: from an office, the tries may be a
+  sign-in screens say the number: "To keep accounts safe, we pause this
+  step after several tries in a short time. You can try again in 1
+  minute." On the sign-in screen it adds "Meanwhile, you can sign in
+  another way." It names a rule, not a fault: from an office, the tries may be a
   colleague's. It is one fixed sentence, so a screen reader says it once.
   The second step's own lock (ten wrong codes) is said as 15 minutes.
   Sign-in, sign-up, the sign-in link and its "send again", the password
   reset, both second-step screens and the password change all use it, in
-  three languages. In Security it is a toast that stays ten seconds.
+  three languages. In Security it is a toast that stays as long as the
+  wait, up to a minute.
 - Two faults found on the way and fixed: the Google button spun for ever
   when it was refused, with nothing said; and "send again" restarted its
   own 30 seconds when it had been told to wait longer.
@@ -101,7 +102,9 @@ Each entry should include:
   ends. They fail when a rule names a path the installed Better Auth does
   not serve, and when any of its 92 endpoints has neither a rule nor a
   written reason to be on the default, so a release that adds one asks for
-  a decision.
+  a decision. Four groups are on the default as a whole (organization,
+  staff, API keys, passkeys): a new endpoint inside one of those is not
+  asked about.
 - **Not built, and it matters.** The limiter knows the address a request
   comes from, not the account it is about. Someone with many addresses can
   keep trying one account's password (Better Auth 1.7 counts failures for

@@ -133,17 +133,23 @@ export function LoginForm() {
   async function onGoogle() {
     setGooglePending(true)
     setError(null)
-    // Typed loosely by the client: what matters here is whether it failed.
-    const { error: result } = (await authClient.signIn.social({
-      provider: "google",
-      callbackURL: next,
-      errorCallbackURL: oauthErrorCallbackURL(),
-    })) as { error?: Parameters<typeof authErrorMessage>[0] | null }
-    // On success the browser is already leaving for Google. Refused, the
-    // button must not spin for ever with nothing said.
-    if (result) {
+    try {
+      // Typed loosely by the client: what matters here is whether it failed.
+      const { error: result } = (await authClient.signIn.social({
+        provider: "google",
+        callbackURL: next,
+        errorCallbackURL: oauthErrorCallbackURL(),
+      })) as { error?: Parameters<typeof authErrorMessage>[0] | null }
+      // On success the browser is already leaving for Google. Refused,
+      // the button must not spin for ever with nothing said.
+      if (result) {
+        setGooglePending(false)
+        setError(authErrorMessage(result, t, "signIn"))
+      }
+    } catch {
+      // The call did not get through at all.
       setGooglePending(false)
-      setError(authErrorMessage(result, t, "signIn"))
+      setError(t("errorGeneric"))
     }
   }
 

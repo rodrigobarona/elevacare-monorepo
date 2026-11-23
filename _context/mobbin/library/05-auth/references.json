@@ -324,7 +324,7 @@
       "mobbin_url": "https://mobbin.com/screens/893a9846-5bae-4cc0-bc2c-76a9fff210f1?utm_source=claude-code&utm_medium=ai-assistant&utm_source_platform=mcp",
       "pattern": "A wait said as a number, without blame",
       "why": "\"You have entered the wrong code too many times. It happens to the best of us, try again in 5 minutes.\" It says how long, and it is kind about it. \"Use Face ID\" stays available below.",
-      "apply": "Say the wait as a number taken from the answer (seconds up to a minute, minutes above), never \"later\" or a fixed \"a minute\". Eleva does not say \"you\": from an office the tries may be a colleague, so it says \"there were many tries\".",
+      "apply": "Say the wait as a number taken from the answer (seconds under a minute, minutes from there), never \"later\" or a fixed \"a minute\". Eleva names the rule and not a fault (\"we pause this step after several tries in a short time\"): from an office the tries may be a colleague's.",
       "query": "verification code screen with resend code countdown and too many attempts try again later message"
     },
     {

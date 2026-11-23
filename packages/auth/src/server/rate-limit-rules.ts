@@ -32,8 +32,10 @@
  * Paths are written without the `/auth` prefix. The first rule that
  * matches wins, so a path comes before the pattern that also covers it.
  * `*` stands for one part of a path. A test fails when a path here is not
- * an endpoint of the installed Better Auth, or when an endpoint for
- * signing in, signing up or the second factor has no rule.
+ * an endpoint of the installed Better Auth, or when an endpoint has neither
+ * a rule nor a written reason to be on the default. Four groups are on the
+ * default as a whole (organization, staff, API keys, passkeys): a new
+ * endpoint inside one of those is not asked about.
  */
 
 const MINUTE = 60
