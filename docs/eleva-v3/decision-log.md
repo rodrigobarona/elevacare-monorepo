@@ -37,32 +37,42 @@ Each entry should include:
 - Change (Phase 13.34): one test, `packages/email/src/three-languages.test.ts`,
   renders every email Eleva sends in English, Portuguese and Spanish: the
   five sign-in emails, booking confirmed (to the member, to the expert, in
-  person, by phone), rescheduled, cancelled, both reminders, the invoice
-  notices with their reasons, the partner and clinic decisions, and the
-  payment and payout notices. 41 forms in all.
+  person, by phone, as a request), rescheduled, cancelled (by the member, by
+  the expert), both reminders, the invoice notices with their reasons, the
+  partner and clinic decisions, and the payment and payout notices. 47 forms
+  in all.
 - For each form it checks that the email says its language (`<html lang>`),
-  that no value is missing from the text (`undefined`, `{name}`), that **no
-  English is left in the Portuguese or the Spanish, down to a one-word
-  label**, and that Portuguese and Spanish are not one pasted over the
-  other. Text is compared sentence by sentence, so a paragraph half
-  translated fails too. Text that is rightly the same as English is a short
-  named list (today: "Email").
-- The shared words (`i18n.ts`) are compared entry by entry at any length,
-  and each entry that is a function is called and compared by what it says,
-  so a sentence in a branch no form reaches is still read.
+  that no value is missing from the text (`undefined`, `{name}`), that the
+  names, dates and amounts the English email shows are in the other two,
+  that **no English is left in the Portuguese or the Spanish**, and that
+  Portuguese and Spanish are not one pasted over the other.
+- English is found three ways: a sentence the same as the English email's
+  (down to a one-word label, sentence by sentence inside a paragraph,
+  whatever its capitals or full stop); a common English word (the, your,
+  with) anywhere in Portuguese or Spanish, which catches English that was
+  reworded; and the shared words (`i18n.ts`) compared entry by entry, each
+  function called and compared by what it says, so a sentence in a branch
+  no form reaches is still read. Text that is rightly the same as English
+  is a short named list (today: "Email").
 - The list keeps itself whole: the test reads the package and fails when a
   renderer, or a form an email comes in (its kinds, statuses, reminder
-  windows, session modes), has no entry in it.
+  windows, session modes), has no entry in it. That search is by text: it
+  says a form is listed, not under which email.
 - It found nothing to fix: every sentence was already translated. The check
-  was proven able to fail seven ways, each tried and then undone: an English
-  sentence, a short title, and a function's sentence put into the Portuguese
-  words; an English word written in a template; a sign-in paragraph half in
-  English; a new kind; a new reminder window.
+  was proven able to fail fifteen ways, each tried and then undone. Among
+  them: an English sentence, a short title, reworded English, and a
+  function's sentence put into the Portuguese words; English written in
+  three templates; a sign-in paragraph half in English; a greeting that
+  dropped the name; a `{placeholder}` left in; a new kind; a new reminder
+  window.
+- Two blind reviews each scored an earlier state 6 out of 10 and named the
+  gaps that the later commits close. The last state has its own review in
+  the pull request.
 - Not covered: whether a translation reads well to a native speaker (a
-  person's review); a sentence that is translated but has a few English
-  words inside it; what the sender writes before the email is made (policy
-  names, language and country names, headings for booking requests, which
-  come from `packages/notifications`); SMS and in-app text.
+  person's review); words a template writes itself in a branch that no form
+  renders (a new branch with its own words needs a form); which heading the
+  sender picks for which booking event, and the policy, language and
+  country names it writes (`packages/notifications`); SMS and in-app text.
 
 ### 2026-11-23: Staff queues have pages, and reading one is on record (12.6) (active)
 

@@ -26,9 +26,14 @@ import {
  * name), so whatever sentence is the same in two languages came from the
  * email itself.
  *
- * Two checks work together. The rendered emails catch words written in a
- * template. The shared words (`i18n.ts`) are compared entry by entry, at
- * any length, so a branch no form here reaches is still read.
+ * Three checks work together. The rendered emails catch words written in
+ * a template. The shared words (`i18n.ts`) are compared entry by entry, at
+ * any length, so a branch no form here reaches is still read. And common
+ * English words (the, your, with) fail wherever they turn up in Portuguese
+ * or Spanish, so English that was reworded is caught too.
+ *
+ * What this cannot see: words a template writes itself in a branch that no
+ * form below renders. A new branch with words of its own needs a form.
  */
 const LOCALES = ["en", "pt", "es"] as const satisfies readonly EmailLocale[]
 
@@ -45,6 +50,7 @@ const GIVEN = {
   reference: "REF-20261201-0042",
   href: "https://eleva.care/x/1",
   reason: "R-17",
+  code: "482913",
   email: "leonor@example.test",
   phone: "+351 910 000 000",
   masked: "+351 *** *** 000",
@@ -53,6 +59,7 @@ const GIVEN = {
   // Written by the sender in the reader's language before the email is
   // made: the policy's name, and the member's language and country.
   policy: "PL-2",
+  directions: "D-9, 2",
   language: "LG-1",
   country: "CT-1",
 }
@@ -69,6 +76,7 @@ const inPerson = {
     name: GIVEN.clinic,
     address: GIVEN.street,
     mapsHref: GIVEN.href,
+    instructions: GIVEN.directions,
   },
 }
 const byPhone = {
@@ -82,6 +90,15 @@ const EMAILS: Record<string, Render> = {
   "verify-email": async (locale) =>
     (await renderAuthEmail({ kind: "verify-email", url: GIVEN.href, locale }))
       .html,
+  "verify-email, with a name": async (locale) =>
+    (
+      await renderAuthEmail({
+        kind: "verify-email",
+        url: GIVEN.href,
+        name: GIVEN.member,
+        locale,
+      })
+    ).html,
   "reset-password": async (locale) =>
     (await renderAuthEmail({ kind: "reset-password", url: GIVEN.href, locale }))
       .html,
@@ -89,8 +106,13 @@ const EMAILS: Record<string, Render> = {
     (await renderAuthEmail({ kind: "magic-link", url: GIVEN.href, locale }))
       .html,
   "two-factor-otp": async (locale) =>
-    (await renderAuthEmail({ kind: "two-factor-otp", code: "482913", locale }))
-      .html,
+    (
+      await renderAuthEmail({
+        kind: "two-factor-otp",
+        code: GIVEN.code,
+        locale,
+      })
+    ).html,
   "organization-invitation": async (locale) =>
     (
       await renderAuthEmail({
@@ -161,6 +183,19 @@ const EMAILS: Record<string, Render> = {
       formattedDate: GIVEN.date,
       locale,
     }),
+  "booking request sent, as the sender words it": (locale) => {
+    const t = getEmailTranslations(locale)
+    return renderBookingConfirmed({
+      ...online,
+      expertName: GIVEN.expert,
+      formattedDate: GIVEN.date,
+      heading: t.booking.requestedTitle,
+      subheading: t.booking.requestedSubtitle,
+      preview: t.subject.requested(GIVEN.member, GIVEN.date),
+      showIcsHint: false,
+      locale,
+    })
+  },
   "booking confirmed, by phone, the number not known": (locale) =>
     renderBookingConfirmed({
       ...byPhone,
@@ -186,6 +221,37 @@ const EMAILS: Record<string, Render> = {
       urgentHelp: "full",
       locale,
     }),
+  "booking rescheduled, by phone": (locale) =>
+    renderBookingRescheduled({
+      ...byPhone,
+      previousDate: GIVEN.earlier,
+      newDate: GIVEN.date,
+      locale,
+    }),
+  "booking cancelled by the expert, to the member": (locale) => {
+    const t = getEmailTranslations(locale)
+    return renderBookingCancelled({
+      ...booking,
+      formattedDate: GIVEN.date,
+      refundAmount: GIVEN.amount,
+      subheading: t.booking.cancelledByExpertSubtitle(GIVEN.expert, true),
+      preview: t.booking.cancelledByExpertSubject(GIVEN.expert),
+      counterpartLabel: t.labels.expert,
+      counterpartName: GIVEN.expert,
+      rebookHref: GIVEN.href,
+      locale,
+    })
+  },
+  "booking cancelled by the expert, to the expert": (locale) => {
+    const t = getEmailTranslations(locale)
+    return renderBookingCancelled({
+      ...booking,
+      formattedDate: GIVEN.date,
+      greetingName: GIVEN.expert,
+      subheading: t.booking.expertCancelledByYouSubtitle(true),
+      locale,
+    })
+  },
   "booking cancelled, with a refund": (locale) =>
     renderBookingCancelled({
       ...booking,
@@ -219,6 +285,13 @@ const EMAILS: Record<string, Render> = {
   "reminder, an hour before": (locale) =>
     renderBookingReminder({
       ...online,
+      window: "1h",
+      formattedDate: GIVEN.date,
+      locale,
+    }),
+  "reminder, in person": (locale) =>
+    renderBookingReminder({
+      ...inPerson,
       window: "1h",
       formattedDate: GIVEN.date,
       locale,
@@ -446,27 +519,61 @@ function ownWords(piece: string): string[] {
     .filter((word) => /\p{L}{2,}/u.test(word))
 }
 
+/** A sentence without its capitals and its last full stop. */
+function plain(sentence: string): string {
+  return sentence
+    .toLowerCase()
+    .replace(/[.!?:…]+$/, "")
+    .trim()
+}
+
 /**
  * Text that is rightly the same in English and another language. Each is
  * a decision: add one only for a word both languages really share.
  */
-const SAME_AS_ENGLISH = new Set<string>(["Email"])
+const SAME_AS_ENGLISH = new Set<string>(["email"])
 
 /**
- * The pieces of one email found, word for word, in another: those with at
- * least `words` words of the email's own.
+ * The sentences of one text found in another, whatever their capitals or
+ * last full stop: those with at least `words` words of the email's own.
  */
-function sameSentences(html: string, other: string, words: number): string[] {
-  const there = new Set(sentences(other))
-  return sentences(html)
+function shared(text: string[], other: string[], words: number): string[] {
+  const there = new Set(other.map(plain))
+  return text
     .filter((piece) => ownWords(piece).length >= words)
-    .filter((piece) => there.has(piece))
+    .filter((piece) => there.has(plain(piece)))
 }
 
-/** Any text of an English email, a single word included, left in another. */
+function sameSentences(html: string, other: string, words: number): string[] {
+  return shared(sentences(html), sentences(other), words)
+}
+
+/** English left in another language's text, a single word included. */
+function englishIn(english: string[], other: string[]): string[] {
+  return shared(english, other, 1).filter(
+    (piece) => !SAME_AS_ENGLISH.has(plain(piece))
+  )
+}
+
 function englishLeft(english: string, other: string): string[] {
-  return sameSentences(english, other, 1).filter(
-    (piece) => !SAME_AS_ENGLISH.has(piece)
+  return englishIn(sentences(english), sentences(other))
+}
+
+/**
+ * Words English cannot do without and neither Portuguese nor Spanish has.
+ * English that was reworded, so that no sentence matches the English
+ * email any more, still has them.
+ */
+const ENGLISH_WORDS = new Set(
+  "the your you this with and will please that from have been was were our their they here when what not".split(
+    " "
+  )
+)
+
+/** The sentences of a Portuguese or Spanish text that have English words. */
+function withEnglishWords(text: string[]): string[] {
+  return text.filter((piece) =>
+    ownWords(piece).some((word) => ENGLISH_WORDS.has(word.toLowerCase()))
   )
 }
 
@@ -483,8 +590,25 @@ describe("every email, in three languages", () => {
       expect(text.length, `${name} in ${locale}`).toBeGreaterThan(40)
       // Nothing that is a hole where a value or a sentence should be.
       expect(text, `${name} in ${locale}`).not.toMatch(
-        /\bundefined\b|\bnull\b|\[object Object\]|\bNaN\b|\{\{|\}\}|\{[a-zA-Z_.]+\}/
+        /\bundefined\b|\bnull\b|\[object Object\]|\bNaN\b|\{\{|\}\}|\{[\w.]+\}/
       )
+    }
+  })
+
+  it.each(names)("%s: says the same things in each", async (name) => {
+    // A name, a date or an amount the English email shows is in the other
+    // two: a translation that dropped one would send an email without it.
+    const english = await EMAILS[name]!("en")
+    const shown = Object.values(GIVEN).filter((value) =>
+      english.includes(value)
+    )
+    expect(shown.length, `${name}: values shown`).toBeGreaterThan(0)
+    for (const locale of ["pt", "es"] as const) {
+      const html = await EMAILS[name]!(locale)
+      expect(
+        shown.filter((value) => !html.includes(value)),
+        `${name}: missing in ${locale}`
+      ).toEqual([])
     }
   })
 
@@ -492,17 +616,27 @@ describe("every email, in three languages", () => {
     "%s: no English is left in Portuguese or Spanish",
     async (name) => {
       const english = await EMAILS[name]!("en")
-      // The check can see this email: against itself, every piece of its
-      // own is found. Without that, an email whose words the check cannot
-      // read would pass by saying nothing.
+      // The check can see this email: against itself, every sentence of
+      // its own is found, and the shortest email has more than three.
+      // Without that, an email whose words the check cannot read would
+      // pass by saying nothing.
       expect(
         sameSentences(english, english, 1).length,
-        `${name}: pieces the check can see`
+        `${name}: sentences the check can see`
       ).toBeGreaterThan(3)
+      expect(
+        withEnglishWords(sentences(english)).length,
+        `${name}: English words seen in English`
+      ).toBeGreaterThan(0)
       for (const locale of ["pt", "es"] as const) {
+        const html = await EMAILS[name]!(locale)
         expect(
-          englishLeft(english, await EMAILS[name]!(locale)),
+          englishLeft(english, html),
           `${name}: English left in ${locale}`
+        ).toEqual([])
+        expect(
+          withEnglishWords(sentences(html)),
+          `${name}: English words in ${locale}`
         ).toEqual([])
       }
     }
@@ -544,6 +678,17 @@ describe("every email, in three languages", () => {
       `<p>${full} Esta frase está em português.</p></body>`
     )
     expect(englishLeft(english, half)).toEqual([full])
+    // English with its capitals or its full stop changed is still English.
+    const changed = portuguese.replace(
+      "</body>",
+      `<p>${full.toUpperCase().replace(/\.$/, "")}</p></body>`
+    )
+    expect(englishLeft(english, changed)).toHaveLength(1)
+    // English reworded matches no sentence, and still has English words.
+    expect(withEnglishWords(sentences(portuguese))).toEqual([])
+    expect(
+      withEnglishWords(["A sua sessão.", "Thank you for your booking."])
+    ).toEqual(["Thank you for your booking."])
     // What the caller gave, and the company's own details, are not words
     // of the email.
     expect(
@@ -570,7 +715,12 @@ describe("every email, in three languages", () => {
     for (const form of forms) {
       const [en, pt, es] = await Promise.all(
         LOCALES.map((locale) =>
-          renderAuthEmail({ ...form, url: GIVEN.href, code: "482913", locale })
+          renderAuthEmail({
+            ...form,
+            url: GIVEN.href,
+            code: GIVEN.code,
+            locale,
+          })
         )
       )
       const which = JSON.stringify(form)
@@ -589,7 +739,15 @@ describe("the list of emails above", () => {
   const read = (...path: string[]) => readFileSync(join(here, ...path), "utf8")
   // The list itself and what it is built from, not the checks after it.
   const thisFile = read("three-languages.test.ts")
-  const list = thisFile.slice(0, thisFile.indexOf("\n/** What a reader sees"))
+  const listEnds = thisFile.indexOf("\n/**\n * A paragraph as its sentences.")
+  const list = thisFile.slice(0, listEnds)
+  const listed = (text: string) => list.includes(text)
+
+  it("is found in this file, whole", () => {
+    expect(listEnds).toBeGreaterThan(0)
+    expect(listed("const EMAILS")).toBe(true)
+    expect(listed("describe(")).toBe(false)
+  })
 
   it("has every email the package can render", () => {
     const renderers = [
@@ -612,14 +770,15 @@ describe("the list of emails above", () => {
       ])
     )
     for (const renderer of renderers) {
-      expect(list, `${renderer} has no entry`).toContain(`${renderer}({`)
+      expect(listed(`${renderer}({`), `${renderer} has no entry`).toBe(true)
     }
   })
 
   it("has every form of each email that comes in forms", () => {
     // `export type SomethingKind = "a" | "b"`: a form added to an email and
     // not to the list above fails here. The name's ending says which input
-    // carries it.
+    // carries it. The search is by text (`kind: "a"` somewhere in the list),
+    // so it says a form was listed, not which email it was listed under.
     const INPUT = {
       Kind: "kind",
       Status: "status",
@@ -634,10 +793,14 @@ describe("the list of emails above", () => {
           .filter((file) => file.endsWith(".tsx"))
           .map((file) => read(folder, file))
       ),
-    ].join("\n")
+    ]
+      .join("\n")
+      // A note written inside a type is not part of it.
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/\/\/[^\n]*/g, "")
     const declared = [
       ...sources.matchAll(
-        /export type (\w+(Kind|Status|Window|Detail|Mode))\b[^=\n]*=/g
+        /export type (\w+(Kind|Status|Window|Detail|Mode))\b[^=\n]*=\s*\|?\s*"/g
       ),
     ].map((match) => match[1]!)
     const unions = [
@@ -649,8 +812,9 @@ describe("the list of emails above", () => {
       input: INPUT[match[2] as keyof typeof INPUT],
       members: [...match[3]!.matchAll(/"([^"]+)"/g)].map((one) => one[1]!),
     }))
-    // Every such type was read: one written in a way this cannot read
-    // fails here instead of being skipped.
+    // Every such type made of quoted names was read to its end: one
+    // written in a way this cannot read fails here instead of being
+    // skipped.
     expect(unions.map((union) => union.name).sort()).toEqual(declared.sort())
     expect(declared).toEqual(
       expect.arrayContaining([
@@ -666,9 +830,10 @@ describe("the list of emails above", () => {
     )
     for (const { name, input, members } of unions) {
       for (const member of members) {
-        expect(list, `${name} "${member}" has no entry`).toContain(
-          `${input}: "${member}"`
-        )
+        expect(
+          listed(`${input}: "${member}"`),
+          `${name} "${member}" has no entry`
+        ).toBe(true)
       }
     }
   })
@@ -701,8 +866,9 @@ describe("the words the emails share", () => {
 
   // A function is read by what it says: called with each of these, which
   // between them reach both sides of a yes or no, and one and many.
+  // A name given to a function is taken out again before comparing.
   const SAMPLES: unknown[][] = [
-    ["Zq", "Zq"],
+    [GIVEN.member, GIVEN.member],
     [true, true],
     [false, false],
     [1, 1],
@@ -726,24 +892,41 @@ describe("the words the emails share", () => {
 
   it("leave no entry empty, and none in English, at any length", () => {
     const english = new Map(texts(getEmailTranslations("en")))
+    // Today there are more than 200: the strings, and each function five
+    // times. Far fewer means this stopped reading them.
     expect(english.size).toBeGreaterThan(150)
+    const portuguese = new Map(texts(getEmailTranslations("pt")))
     for (const locale of ["pt", "es"] as const) {
       const same: string[] = []
+      const words: string[] = []
+      const pasted: string[] = []
       for (const [path, text] of texts(getEmailTranslations(locale))) {
         expect(text.trim(), `${locale} ${path}`).not.toBe("")
         // Sentence by sentence: an entry half translated has English in it.
-        const inEnglish = new Set(split(english.get(path) ?? ""))
-        for (const sentence of split(text)) {
-          if (
-            inEnglish.has(sentence) &&
-            ownWords(sentence).length > 0 &&
-            !SAME_AS_ENGLISH.has(sentence)
-          ) {
-            same.push(`${path}: ${sentence}`)
+        for (const left of englishIn(
+          split(english.get(path) ?? ""),
+          split(text)
+        )) {
+          same.push(`${path}: ${left}`)
+        }
+        for (const sentence of withEnglishWords(split(text))) {
+          words.push(`${path}: ${sentence}`)
+        }
+        // Spanish that is the Portuguese, pasted. Short entries are often
+        // rightly the same in the two, so only sentences count.
+        if (locale === "es") {
+          for (const sentence of shared(
+            split(portuguese.get(path) ?? ""),
+            split(text),
+            4
+          )) {
+            pasted.push(`${path}: ${sentence}`)
           }
         }
       }
       expect(same, `${locale}: entries still in English`).toEqual([])
+      expect(words, `${locale}: entries with English words`).toEqual([])
+      expect(pasted, `${locale}: entries the same as Portuguese`).toEqual([])
     }
   })
 })
