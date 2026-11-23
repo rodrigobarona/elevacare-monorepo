@@ -169,19 +169,19 @@
       "title": "Inicie sessão de novo antes de decidir",
       "body": "Iniciou sessão há mais de {hours, plural, one {# hora} other {# horas}}. Uma decisão precisa de um início de sessão {hours, plural, one {da última hora} other {das últimas # horas}}, para que ninguém possa decidir em seu nome numa consola deixada aberta."
     },
-    "kept": "O que assinalou e o motivo que escreveu ficam nesta página enquanto inicia sessão.",
+    "kept": "O que assinalou e o motivo que escreveu ficam neste separador enquanto inicia sessão.",
     "notKept": "Copie o motivo antes de iniciar sessão: este navegador não o guarda.",
     "refused": "Essa decisão não foi guardada. Iniciou sessão há mais de {hours, plural, one {# hora} other {# horas}} e uma decisão precisa de um início de sessão mais recente.",
     "refusedKept": "O que assinalou e o motivo ficam guardados.",
     "action": "Iniciar sessão de novo",
-    "actionPending": "A abrir o início de sessão…",
-    "restored": "Já iniciou sessão de novo. O que assinalou e o motivo continuam aqui. Confirme e decida.",
+    "actionPending": "A abrir o início de sessão...",
+    "restored": "Já iniciou sessão de novo. O que assinalou e o motivo continuam aqui. Reveja tudo e decida.",
     "changed": {
       "clinic": "Já iniciou sessão de novo. A clínica enviou novos dados entretanto, por isso as verificações ficaram por assinalar.",
       "expert": "Já iniciou sessão de novo. O especialista enviou novos dados entretanto, por isso as verificações ficaram por assinalar."
     },
     "reasonKept": "O motivo continua aqui.",
-    "unavailable": "Não foi possível abrir a página de início de sessão. Tente de novo dentro de momentos."
+    "unavailable": "Não foi possível abrir a página de início de sessão. Tente novamente daqui a pouco."
   },
   "staffEntry": {
     "title": "Entrar na consola da equipa",

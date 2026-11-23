@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { authClient } from "@eleva/auth/client"
 import { signOutAndLeave } from "@eleva/auth/sign-out"
@@ -12,7 +13,6 @@ import {
   canKeepDrafts,
   dropDraft,
   keepDraft,
-  msUntil,
   returnDraft,
   sessionDraftStorage,
   signInAgainUrl,
@@ -24,11 +24,14 @@ import { DECISION_TITLE_ID } from "@/lib/decision-title"
 /** What a review page knows, on the server, about the reviewer's sign-in. */
 export interface DecisionSignIn {
   /**
-   * The moment this sign-in stops being good for a decision (ISO), or null
-   * when the page could not read when it started. The API decides either
-   * way: this only lets the page say so before the reviewer writes.
+   * How long this sign-in is still good for a decision, in milliseconds,
+   * as the server counted it when it drew the page: 0 when it is already
+   * too old, null when the page could not read when it started. A length
+   * of time, not a moment, so the browser's own clock being wrong cannot
+   * turn a good sign-in into an old one. The API decides either way: this
+   * only lets the page say so before the reviewer writes.
    */
-  decideBy: string | null
+  msLeft: number | null
   /** The rule in hours, from the shared constant, for the sentences. */
   hours: number
   reviewer: { id: string; email: string }
@@ -89,32 +92,30 @@ export function DecisionSignInScope({
   signIn,
   children,
 }: {
-  /** Null on a review that cannot be decided: nothing to guard. */
-  signIn: DecisionSignIn | null
-  children: React.ReactNode
-}) {
-  if (!signIn) return children
-  return (
-    <DecisionSignInProvider signIn={signIn}>{children}</DecisionSignInProvider>
-  )
-}
-
-function DecisionSignInProvider({
-  signIn,
-  children,
-}: {
   signIn: DecisionSignIn
   children: React.ReactNode
 }) {
-  const [expired, setExpired] = React.useState(
-    () => msUntil(signIn.decideBy, Date.now()) === 0
-  )
-  const [expiredWhileOpen, setExpiredWhileOpen] = React.useState(false)
-  const canKeep = React.useSyncExternalStore<boolean | null>(
+  const router = useRouter()
+  // What the page has seen pass since the server counted `msLeft`. Started
+  // over whenever the server counts again (a refresh, a new sign-in).
+  const [clock, setClock] = React.useState({
+    msLeft: signIn.msLeft,
+    passed: false,
+  })
+  if (clock.msLeft !== signIn.msLeft) {
+    setClock({ msLeft: signIn.msLeft, passed: false })
+  }
+  const expired = signIn.msLeft === 0 || clock.passed
+  const expiredWhileOpen = clock.passed
+
+  const probed = React.useSyncExternalStore<boolean | null>(
     neverChanges,
     readKeepsDrafts,
     () => null
   )
+  // A write that failed at the press, after the probe had said yes.
+  const [writeFailed, setWriteFailed] = React.useState(false)
+  const canKeep = writeFailed ? false : probed
   const [leaving, setLeaving] = React.useState(false)
   const [unavailable, setUnavailable] = React.useState(false)
   const entriesRef = React.useRef<(() => DecisionEntries) | null>(null)
@@ -125,30 +126,69 @@ function DecisionSignInProvider({
     []
   )
 
-  // The banner appears by itself when the moment passes on an open page.
   React.useEffect(() => {
-    const left = msUntil(signIn.decideBy, Date.now())
-    // Unknown, or already past when the page opened (the first state).
-    if (left === null || left === 0) return
+    const { msLeft } = signIn
+    if (msLeft === null) return
+    // A timer alone is not enough: it does not count the hours a laptop
+    // slept, which is the "console left open" the rule is about. The page
+    // looks again whenever it is shown or comes to the front.
+    const since = Date.now()
+    const look = () => {
+      if (document.visibilityState !== "visible") return
+      if (msLeft > 0) {
+        if (Date.now() - since >= msLeft) {
+          setClock((now) => (now.passed ? now : { ...now, passed: true }))
+        }
+        return
+      }
+      // Already too old when the page was drawn. The reviewer may have
+      // signed in again in another tab since: ask the server, which keeps
+      // what is on this form and takes the banner away if so.
+      router.refresh()
+    }
     // A timer cannot wait longer than about 24 days; 12 hours fits.
-    const timer = window.setTimeout(() => {
-      setExpired(true)
-      setExpiredWhileOpen(true)
-    }, left)
-    return () => window.clearTimeout(timer)
-  }, [signIn.decideBy])
+    const timer = msLeft > 0 ? window.setTimeout(look, msLeft) : null
+    document.addEventListener("visibilitychange", look)
+    window.addEventListener("focus", look)
+    window.addEventListener("pageshow", look)
+    return () => {
+      if (timer !== null) window.clearTimeout(timer)
+      document.removeEventListener("visibilitychange", look)
+      window.removeEventListener("focus", look)
+      window.removeEventListener("pageshow", look)
+    }
+  }, [signIn, router])
+
+  // Back from the sign-in page to a page the browser kept as it was: the
+  // button must not stay on "Opening sign-in…".
+  React.useEffect(() => {
+    const shown = (event: PageTransitionEvent) => {
+      if (event.persisted) setLeaving(false)
+    }
+    window.addEventListener("pageshow", shown)
+    return () => window.removeEventListener("pageshow", shown)
+  }, [])
 
   const signInAgain = React.useCallback(() => {
     if (leaving) return
-    setLeaving(true)
     setUnavailable(false)
+    const storage = sessionDraftStorage()
     const now = entriesRef.current?.()
-    keepDraft(sessionDraftStorage(), signIn.draftKey, {
+    const kept = keepDraft(storage, signIn.draftKey, {
       ownerId: signIn.reviewer.id,
       version: now?.version ?? "",
       ticks: now?.ticks ?? [],
       text: now?.text ?? "",
+      keptAt: Date.now(),
     })
+    const entered = Boolean(now && (now.ticks.length > 0 || now.text.trim()))
+    // The browser took no draft although the page had said it would: the
+    // reviewer is told to copy their reason, and leaves on the next press.
+    if (!kept && entered && canKeep !== false) {
+      setWriteFailed(true)
+      return
+    }
+    setLeaving(true)
     // The old session ends first: the sign-in page then starts a new one.
     // The same tab, because the draft does not follow a new tab.
     void signOutAndLeave({
@@ -163,11 +203,15 @@ function DecisionSignInProvider({
         ),
     }).then((outcome) => {
       if (outcome === "failed") {
+        // Still signed in and still on the review: what is on the form is
+        // the only copy that matters, so no draft is left behind to come
+        // back later under "you're signed in again".
+        dropDraft(storage, signIn.draftKey)
         setUnavailable(true)
         setLeaving(false)
       }
     })
-  }, [leaving, signIn])
+  }, [leaving, signIn, canKeep])
 
   const state = React.useMemo(
     () => ({
@@ -216,20 +260,28 @@ export function DecisionSignInBanner() {
   const state = useDecisionSignInState()
   const t = useTranslations("signInAgain")
   const action = useAction(state)
-  if (!state.expired) return null
   const { hours } = state.signIn
   return (
-    <SignInAgainNotice
-      title={t("banner.title")}
-      action={action}
-      failure={state.unavailable ? t("unavailable") : null}
-      // Present when the page opened: ordinary content. Appeared later: said.
-      announce={state.expiredWhileOpen ? "polite" : "off"}
-      data-testid="decision-sign-in-banner"
-    >
-      {t("banner.body", { hours })}{" "}
-      {state.canKeep === false ? t("notKept") : t("kept")}
-    </SignInAgainNotice>
+    <>
+      {/* Always on the page and empty until the moment passes on an open
+          page: a screen reader says what is put into a region it already
+          knows, and often nothing for one that arrives with its words. */}
+      <p role="status" className="sr-only" data-testid="decision-sign-in-said">
+        {state.expiredWhileOpen ? t("banner.title") : ""}
+      </p>
+      {state.expired ? (
+        <SignInAgainNotice
+          title={t("banner.title")}
+          action={action}
+          failure={state.unavailable ? t("unavailable") : null}
+          size="roomy"
+          data-testid="decision-sign-in-banner"
+        >
+          {t("banner.body", { hours })}{" "}
+          {state.canKeep === false ? t("notKept") : t("kept")}
+        </SignInAgainNotice>
+      ) : null}
+    </>
   )
 }
 
@@ -246,7 +298,7 @@ export function DecisionSignInRefusal() {
     <SignInAgainNotice
       action={action}
       failure={state.unavailable ? t("unavailable") : null}
-      announce="now"
+      answersAPress
       data-testid="decision-sign-in-refusal"
     >
       {t("refused", { hours })}{" "}
@@ -274,13 +326,16 @@ export function useDecisionSignIn(input: {
 }): {
   expired: boolean
   /** What came back, for the notice above the form. */
-  returned: DraftReturn["kind"]
+  returned: { kind: DraftReturn["kind"]; withText: boolean }
   /** After a decision went through: nothing of it is kept. */
   forget: () => void
 } {
   const state = useDecisionSignInState()
   const { signIn, registerEntries } = state
-  const [returned, setReturned] = React.useState<DraftReturn["kind"]>("none")
+  const [returned, setReturned] = React.useState<{
+    kind: DraftReturn["kind"]
+    withText: boolean
+  }>({ kind: "none", withText: false })
 
   // The newest `read` and `restore`, without re-running the effects.
   const latest = React.useRef(input)
@@ -304,6 +359,7 @@ export function useDecisionSignIn(input: {
         version: latest.current.version,
         ticks: latest.current.items,
         maxText: latest.current.maxText,
+        now: Date.now(),
       }
     )
     // Nothing found on a second run means the first run took it.
@@ -311,10 +367,12 @@ export function useDecisionSignIn(input: {
     if (back.kind === "empty") {
       // Nothing to give back and nothing to announce: only the place.
       document.getElementById(DECISION_TITLE_ID)?.focus()
-    } else {
-      latest.current.restore({ ticks: back.ticks, text: back.text })
+      setReturned({ kind: "empty", withText: false })
+      return
     }
-    setReturned(back.kind)
+    latest.current.restore({ ticks: back.ticks, text: back.text })
+    // Said once, about what came back: not about what is typed afterwards.
+    setReturned({ kind: back.kind, withText: back.text.trim() !== "" })
   }, [signIn.draftKey, signIn.reviewer.id])
 
   const forget = React.useCallback(() => {
@@ -330,20 +388,28 @@ export function useDecisionSignIn(input: {
  */
 export function DecisionRestoredNotice({
   returned,
-  hasText,
 }: {
-  returned: DraftReturn["kind"]
-  /** Whether a reason came back, for the "new details" sentence. */
-  hasText: boolean
+  returned: { kind: DraftReturn["kind"]; withText: boolean }
 }) {
   const state = useDecisionSignInState()
   const t = useTranslations("signInAgain")
-  if (returned !== "restored" && returned !== "changed") return null
+  if (returned.kind !== "restored" && returned.kind !== "changed") return null
   return (
     <SignedInAgainNotice data-testid="decision-restored">
-      {returned === "restored"
+      {returned.kind === "restored"
         ? t("restored")
-        : `${t(`changed.${state.signIn.subject}`)}${hasText ? ` ${t("reasonKept")}` : ""}`}
+        : `${t(`changed.${state.signIn.subject}`)}${returned.withText ? ` ${t("reasonKept")}` : ""}`}
     </SignedInAgainNotice>
   )
+}
+
+/**
+ * On a review that can no longer be decided (someone decided it while the
+ * reviewer was signing in): nothing of a draft for it stays in the tab.
+ */
+export function ForgetDecisionDraft({ draftKey }: { draftKey: string }) {
+  React.useEffect(() => {
+    dropDraft(sessionDraftStorage(), draftKey)
+  }, [draftKey])
+  return null
 }

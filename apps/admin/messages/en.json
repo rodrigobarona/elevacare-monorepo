@@ -169,12 +169,12 @@
       "title": "Sign in again before you decide",
       "body": "You signed in more than {hours, plural, one {# hour} other {# hours}} ago. A decision needs a sign-in from the last {hours, plural, one {hour} other {# hours}}, so a console left open can't be used to decide in your name."
     },
-    "kept": "Your ticks and your reason stay on this page while you sign in.",
+    "kept": "Your ticks and your reason stay in this tab while you sign in.",
     "notKept": "Copy your reason before you sign in: this browser won't keep it.",
     "refused": "That decision wasn't saved. You signed in more than {hours, plural, one {# hour} other {# hours}} ago, and a decision needs a newer sign-in.",
     "refusedKept": "Your ticks and your reason are kept.",
     "action": "Sign in again",
-    "actionPending": "Opening sign-in…",
+    "actionPending": "Opening sign-in...",
     "restored": "You're signed in again. Your ticks and your reason are still here. Check them, then decide.",
     "changed": {
       "clinic": "You're signed in again. The clinic sent new details while you were away, so the checks are unticked.",

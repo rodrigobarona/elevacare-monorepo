@@ -7,9 +7,13 @@ import en from "../../messages/en.json"
 import es from "../../messages/es.json"
 import pt from "../../messages/pt.json"
 
-// The browser's auth client is not needed to draw the notices.
+// The browser's auth client and the router are not needed to draw the
+// notices.
 vi.mock("@eleva/auth/client", () => ({
   authClient: { signOut: vi.fn() },
+}))
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
 }))
 
 import {
@@ -22,9 +26,9 @@ import {
 const HOURS = STAFF_DECISION_SIGN_IN_MAX_AGE_MS / (60 * 60 * 1000)
 const MESSAGES = { en, pt, es } as const
 
-function signIn(decideBy: string | null): DecisionSignIn {
+function signIn(msLeft: number | null): DecisionSignIn {
   return {
-    decideBy,
+    msLeft,
     hours: HOURS,
     reviewer: { id: "staff-1", email: "ana@eleva.care" },
     loginUrl: "https://eleva.care/login",
@@ -33,12 +37,13 @@ function signIn(decideBy: string | null): DecisionSignIn {
   }
 }
 
-const LONG_AGO = "2001-01-01T00:00:00.000Z"
-const FAR_AHEAD = "2999-01-01T00:00:00.000Z"
+// As the server counted it: nothing left, or eleven hours still to go.
+const LONG_AGO = 0
+const FAR_AHEAD = 11 * 60 * 60 * 1000
 
 function draw(
   locale: keyof typeof MESSAGES,
-  decideBy: string | null,
+  msLeft: number | null,
   child: ReactNode
 ): string {
   return renderToStaticMarkup(
@@ -47,7 +52,7 @@ function draw(
       messages: MESSAGES[locale],
       timeZone: "UTC",
       children: createElement(DecisionSignInScope, {
-        signIn: signIn(decideBy),
+        signIn: signIn(msLeft),
         children: child,
       }),
     })
@@ -64,7 +69,7 @@ describe("the banner on a review", () => {
       "so a console left open can&#x27;t be used to decide in your name"
     )
     expect(html).toContain(
-      "Your ticks and your reason stay on this page while you sign in."
+      "Your ticks and your reason stay in this tab while you sign in."
     )
     // One button, by its name.
     expect(html.match(/<button/g)).toHaveLength(1)
@@ -73,16 +78,23 @@ describe("the banner on a review", () => {
 
   it("is ordinary content when the page opens with it, not an interruption", () => {
     const html = draw("en", LONG_AGO, createElement(DecisionSignInBanner))
+    expect(html).toMatch(/data-testid="decision-sign-in-banner"/)
     expect(html).toMatch(/role="note"/)
-    expect(html).toMatch(/aria-live="off"/)
+    // Nothing in it is a live region, and no politeness is set on a note.
+    expect(html).not.toMatch(/role="alert"|aria-live/)
+    // The region that says it when it appears later is there, and empty.
+    expect(html).toMatch(/<p role="status"[^>]*><\/p>/)
     // Calm, not the red style of a refusal.
     expect(html).not.toMatch(/text-destructive/)
   })
 
   it("is absent on a recent sign-in, and when the page cannot tell", () => {
-    expect(draw("en", FAR_AHEAD, createElement(DecisionSignInBanner))).toBe("")
+    const quiet = /^<p role="status"[^>]*><\/p>$/
+    expect(draw("en", FAR_AHEAD, createElement(DecisionSignInBanner))).toMatch(
+      quiet
+    )
     // Unknown is not "old": the API still decides when a button is pressed.
-    expect(draw("en", null, createElement(DecisionSignInBanner))).toBe("")
+    expect(draw("en", null, createElement(DecisionSignInBanner))).toMatch(quiet)
   })
 
   it("says the same in Portuguese and Spanish", () => {
@@ -98,7 +110,14 @@ describe("the banner on a review", () => {
 describe("the answer to a decision pressed on an old sign-in", () => {
   it("says first that the decision was not saved, and is said at once", () => {
     const html = draw("en", LONG_AGO, createElement(DecisionSignInRefusal))
-    expect(html).toMatch(/role="alert"/)
+    // The words are the alert, once, with no politeness beside the role;
+    // the button is outside it, so its label changing is not read as one.
+    expect(html.match(/role="alert"/g)).toHaveLength(1)
+    expect(html).not.toMatch(/aria-live/)
+    expect(html).toMatch(
+      /role="alert"[^>]*>(?:(?!<button)[\s\S])*That decision wasn/
+    )
+    expect(html).not.toMatch(/role="alert"[^>]*>(?:(?!<\/div>)[\s\S])*<button/)
     const text = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ")
     expect(text.trim().startsWith("That decision wasn&#x27;t saved.")).toBe(
       true

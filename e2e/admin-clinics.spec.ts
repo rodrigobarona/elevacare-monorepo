@@ -646,7 +646,7 @@ test.describe("Phase 12 — staff verify a clinic", () => {
       "You signed in more than 12 hours ago. A decision needs a sign-in from the last 12 hours, so a console left open can't be used to decide in your name."
     )
     await expect(banner).toContainText(
-      "Your ticks and your reason stay on this page while you sign in."
+      "Your ticks and your reason stay in this tab while you sign in."
     )
     // Said before the filing, and not as an interruption.
     await expect(banner).toHaveAttribute("role", "note")
@@ -679,8 +679,17 @@ test.describe("Phase 12 — staff verify a clinic", () => {
     await expect(refusal).toContainText(
       "That decision wasn't saved. You signed in more than 12 hours ago, and a decision needs a newer sign-in. Your ticks and your reason are kept."
     )
-    await expect(refusal).toHaveAttribute("role", "alert")
+    // The words are the alert; the button beside them is not part of it.
+    await expect(refusal.getByRole("alert")).toContainText(
+      "That decision wasn't saved."
+    )
+    await expect(refusal.getByRole("alert").getByRole("button")).toHaveCount(0)
     await expect(page.getByTestId("clinic-needs-changes")).toBeFocused()
+    // Reject on a sign-in the page knows is too old asks for no
+    // confirmation: the answer is the same, and nothing was sent.
+    await page.getByTestId("clinic-reject").click()
+    await expect(page.getByTestId("clinic-reject-confirm")).toHaveCount(0)
+    await expect(refusal).toBeVisible()
     expect(await status(journey)).toBe("pending")
     await shot(page, "12-sign-in-again-refused.desktop", true)
 
@@ -731,8 +740,15 @@ test.describe("Phase 12 — staff verify a clinic", () => {
     )
     expect((await ended.json())?.session ?? null).toBeNull()
 
-    // Signing in (the sign-in page's own steps are the auth suite's): a
-    // new session, then the address the sign-in page goes to next.
+    // Signing in with an email link, the method that opens another tab:
+    // the reviewer asks for the link here, uses it elsewhere (the suite's
+    // helper makes that session), and comes back to this tab, which goes
+    // on by itself to the review. This is the tab that holds the draft.
+    await page.locator("#email").press("Enter")
+    await page.getByTestId("login-magic").click()
+    await expect(page.getByTestId("login-magic-sent")).toBeVisible({
+      timeout: 60_000,
+    })
     cookie = await expertSession(request)
     await page.context().addCookies(
       cookie.split("; ").map((pair) => {
@@ -740,9 +756,7 @@ test.describe("Phase 12 — staff verify a clinic", () => {
         return { name: name!, value: rest.join("="), url: adminUrl }
       })
     )
-    await page.goto(
-      `${webUrl}/dashboard?console=${encodeURIComponent(`/clinics/${journey}`)}`
-    )
+    await page.evaluate(() => window.dispatchEvent(new Event("focus")))
     await expect(page).toHaveURL(`${adminUrl}/clinics/${journey}`, {
       timeout: 90_000,
     })
@@ -799,7 +813,10 @@ test.describe("Phase 12 — staff verify a clinic", () => {
     await expect(late).toHaveCount(0)
     await second.clock.fastForward("02:00")
     await expect(late).toBeVisible()
-    await expect(late).toHaveAttribute("role", "status")
+    // Said by a region that was on the page, empty, since it opened.
+    await expect(second.getByTestId("decision-sign-in-said")).toHaveText(
+      "Sign in again before you decide"
+    )
     await second.getByText("NIF or VAT number belongs to that company").click()
     await second.getByTestId("clinic-decision-reason").fill(REASON)
     // The banner's own button this time.
@@ -893,5 +910,16 @@ test.describe("Phase 12 — staff verify a clinic", () => {
     await phone.context().close()
     // The sign-in is as recent as it was, for whatever runs next.
     await signedInHoursAgo(cookie, 0)
+
+    // A browser whose clock is 13 hours ahead: the page was told how long
+    // is left, not at what moment it ends, so a fresh sign-in stays fresh.
+    const ahead = await pageWithSession(browser, withoutCache(cookie))
+    await ahead.clock.install({ time: Date.now() + 13 * 60 * 60 * 1000 })
+    await ahead.goto(`${adminUrl}/clinics/${captures}`)
+    await expect(
+      ahead.getByRole("heading", { name: "Your decision" })
+    ).toBeVisible({ timeout: 90_000 })
+    await expect(ahead.getByTestId("decision-sign-in-banner")).toHaveCount(0)
+    await ahead.context().close()
   })
 })

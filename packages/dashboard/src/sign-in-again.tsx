@@ -17,17 +17,18 @@ export interface SignInAgainAction {
  * A calm notice that a task needs a newer sign-in, with the one button that
  * gets it. Not an error style: nothing is wrong with what the person did.
  *
- * `announce` says how a screen reader hears it. A notice that is on the
- * page when it opens is ordinary content (`off`); one that appears later
- * is said when the reader pauses (`polite`); one that answers a press that
- * did not go through is said at once (`now`).
+ * The notice itself is ordinary content (a note). With `answersAPress` its
+ * words are an alert: it appeared because a press did not go through, so a
+ * screen reader says it at once. Only the words are the alert: the button
+ * changing its label must not make the whole message be read again.
  */
 export function SignInAgainNotice({
   title,
   children,
   action,
   failure,
-  announce = "off",
+  answersAPress = false,
+  size = "compact",
   className,
   "data-testid": testId,
 }: {
@@ -36,41 +37,45 @@ export function SignInAgainNotice({
   action: SignInAgainAction
   /** Shown under the button when the sign-in page could not be opened. */
   failure?: string | null
-  announce?: "off" | "polite" | "now"
+  answersAPress?: boolean
+  /** `roomy` at the top of a page, beside cards; `compact` inside one. */
+  size?: "compact" | "roomy"
   className?: string
   "data-testid"?: string
 }) {
   return (
     <Alert
       variant="notice"
-      role={
-        announce === "now" ? "alert" : announce === "polite" ? "status" : "note"
-      }
-      aria-live={
-        announce === "now"
-          ? "assertive"
-          : announce === "polite"
-            ? "polite"
-            : "off"
-      }
-      className={className}
+      role="note"
+      // The page's own hairline, so the notice has an edge on a pale ground.
+      className={cn(
+        "rounded-xl border-border max-sm:px-3",
+        size === "roomy" && "sm:px-6 sm:py-4",
+        className
+      )}
       data-testid={testId}
     >
       <InfoIcon aria-hidden />
-      <div className="col-start-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-        <div className="space-y-0.5">
+      <div className="col-start-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        <div
+          className="space-y-0.5"
+          role={answersAPress ? "alert" : undefined}
+          data-testid="sign-in-again-words"
+        >
           {title ? <AlertTitle>{title}</AlertTitle> : null}
           <AlertDescription className="text-pretty">
             {children}
           </AlertDescription>
         </div>
-        <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+        {/* On a phone the button lines up with the notice, not the text
+            column: back under the icon, the full width. */}
+        <div className="flex shrink-0 flex-col gap-2 max-sm:-ml-6.5 sm:items-end">
           <Button
             variant="outline"
-            size="sm"
             // On the notice's tinted ground the kit's hairline is lost: the
-            // one way forward gets an edge that can be seen.
-            className="border-input-border bg-background max-sm:h-10 max-sm:w-full"
+            // one way forward gets an edge that can be seen. Wide enough
+            // for its longer label, so the words beside it do not move.
+            className="min-w-36 border-input-border bg-background max-sm:h-10 max-sm:w-full"
             // Stays in the tab order while it works, so a second press
             // does nothing and the keyboard's place is not lost.
             isPending={action.isPending}
@@ -97,7 +102,8 @@ export function SignInAgainNotice({
 /**
  * What a person reads when they are back from signing in and what they
  * had entered is on the page again. It takes the keyboard's place when it
- * appears, so they continue from the form and not from the top of the page.
+ * appears, so they continue from the form and not from the top of the
+ * page; being focused is how a screen reader comes to say it.
  */
 export function SignedInAgainNotice({
   children,
@@ -113,21 +119,23 @@ export function SignedInAgainNotice({
     ref.current?.focus()
   }, [])
   return (
-    <div
+    <Alert
       ref={ref}
       tabIndex={-1}
+      variant="notice"
+      role="note"
+      // A different ground from the warning, and an edge that stays after
+      // the keyboard has moved on. Focus is only ever put here by the page.
       className={cn(
-        "rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+        "rounded-xl border-primary/30 bg-primary/5 outline-none focus:ring-2 focus:ring-ring",
         className
       )}
       data-testid={testId}
     >
-      <Alert variant="notice">
-        <CheckCircleIcon aria-hidden />
-        <AlertDescription className="text-pretty text-foreground">
-          {children}
-        </AlertDescription>
-      </Alert>
-    </div>
+      <CheckCircleIcon aria-hidden />
+      <AlertDescription className="text-pretty text-foreground">
+        {children}
+      </AlertDescription>
+    </Alert>
   )
 }

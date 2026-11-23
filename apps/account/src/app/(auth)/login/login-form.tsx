@@ -68,6 +68,32 @@ export function LoginForm() {
     })
   }, [next])
 
+  // An email link opens wherever the mail app opens it, often another tab.
+  // This tab may hold what the person was doing (a form kept while they
+  // sign in again), so once the link has been used it goes on by itself
+  // when they come back to it.
+  useEffect(() => {
+    if (step !== "magicSent") return
+    let gone = false
+    const look = async () => {
+      if (gone || document.visibilityState !== "visible") return
+      const { data } = await authClient.getSession()
+      if (gone || !data?.session) return
+      gone = true
+      setSignedIn(true)
+      // A full load, as after every sign-in: the next page reads the new
+      // session from the server.
+      window.location.href = next
+    }
+    document.addEventListener("visibilitychange", look)
+    window.addEventListener("focus", look)
+    return () => {
+      gone = true
+      document.removeEventListener("visibilitychange", look)
+      window.removeEventListener("focus", look)
+    }
+  }, [step, next])
+
   function goTo(nextStep: Step) {
     setError(null)
     setStep(nextStep)

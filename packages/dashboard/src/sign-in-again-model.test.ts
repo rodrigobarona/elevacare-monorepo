@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest"
 import { consoleReturnPath, toGatewayCallbackURL } from "@eleva/auth/return-to"
 import {
   canKeepDrafts,
+  DRAFT_MAX_AGE_MS,
   dropDraft,
   keepDraft,
-  msUntil,
   returnDraft,
   signInAgainUrl,
   takeDraft,
@@ -36,17 +36,21 @@ const refusing: DraftStorage = {
 }
 
 const KEY = "eleva.decision-draft:clinic:1"
+const KEPT_AT = Date.parse("2026-11-23T10:00:00.000Z")
 const draft: KeptDraft = {
   ownerId: "staff-1",
   version: "2026-11-20T10:00:00.000Z",
   ticks: ["legal_entity_checked", "tax_id_checked"],
   text: "The NIF belongs to another company.",
+  keptAt: KEPT_AT,
 }
+// Two minutes later: the time signing in again takes.
 const now = {
   ownerId: "staff-1",
   version: draft.version,
   ticks: ["legal_entity_checked", "tax_id_checked"],
   maxText: 1000,
+  now: KEPT_AT + 2 * 60 * 1000,
 }
 
 describe("keeping a draft while someone signs in", () => {
@@ -90,6 +94,7 @@ describe("keeping a draft while someone signs in", () => {
       JSON.stringify({ ownerId: "staff-1" }),
       JSON.stringify({ ...draft, ticks: [1, 2] }),
       JSON.stringify({ ...draft, text: 5 }),
+      JSON.stringify({ ...draft, keptAt: "yesterday" }),
     ]) {
       storage.setItem(KEY, value)
       expect(takeDraft(storage, KEY), value).toBeNull()
@@ -131,6 +136,20 @@ describe("what a returning person gets back", () => {
     ).toEqual({ kind: "changed", ticks: [], text: draft.text })
   })
 
+  it("nothing once the draft is an abandoned one", () => {
+    // An hour covers a slow sign-in; after that it is not a task in progress.
+    expect(
+      returnDraft(draft, { ...now, now: KEPT_AT + DRAFT_MAX_AGE_MS })
+    ).toMatchObject({ kind: "restored" })
+    expect(
+      returnDraft(draft, { ...now, now: KEPT_AT + DRAFT_MAX_AGE_MS + 1 })
+    ).toEqual({ kind: "none" })
+    // A draft from the future is a clock that changed: not trusted.
+    expect(returnDraft(draft, { ...now, now: KEPT_AT - 1 })).toEqual({
+      kind: "none",
+    })
+  })
+
   it("says nothing was entered when nothing was", () => {
     expect(returnDraft({ ...draft, ticks: [], text: "  " }, now)).toEqual({
       kind: "empty",
@@ -152,19 +171,6 @@ describe("what a returning person gets back", () => {
       ticks: ["tax_id_checked"],
       text: "x".repeat(10),
     })
-  })
-})
-
-describe("msUntil", () => {
-  const at = Date.parse("2026-11-23T12:00:00.000Z")
-  it("counts down to the moment and stops at it", () => {
-    expect(msUntil("2026-11-23T12:00:01.000Z", at)).toBe(1000)
-    expect(msUntil("2026-11-23T12:00:00.000Z", at)).toBe(0)
-    expect(msUntil("2026-11-23T00:00:00.000Z", at)).toBe(0)
-  })
-  it("is unknown without a moment", () => {
-    expect(msUntil(null, at)).toBeNull()
-    expect(msUntil("not a date", at)).toBeNull()
   })
 })
 

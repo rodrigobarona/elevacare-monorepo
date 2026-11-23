@@ -55,7 +55,10 @@ export function DecisionForm({
   const [error, setError] = React.useState<{
     decision: Decision
     code: DecideClinicError
+    /** Counts the presses, so a second refusal is said again. */
+    press: number
   } | null>(null)
+  const presses = React.useRef(0)
 
   const allChecked = CLINIC_CHECKLIST_ITEMS.every((item) => checked[item])
   const hasReason = reason.trim().length > 0
@@ -80,8 +83,10 @@ export function DecisionForm({
     // A sign-in the page already knows is too old is answered here: the
     // API would refuse it, and an old session that tries to decide is a
     // line in its log worth keeping for the ones nobody expected.
+    presses.current += 1
+    const press = presses.current
     if (signIn.expired) {
-      setError({ decision, code: "step-up" })
+      setError({ decision, code: "step-up", press })
       return
     }
     setPending(decision)
@@ -95,7 +100,7 @@ export function DecisionForm({
       .catch(() => ({ ok: false as const, error: "failed" as const }))
       .finally(() => setPending(null))
     if (!result.ok) {
-      setError({ decision, code: result.error })
+      setError({ decision, code: result.error, press })
       return
     }
     signIn.forget()
@@ -111,7 +116,9 @@ export function DecisionForm({
   function refusal(shown: boolean) {
     if (!error || !shown) return null
     // Signing in again is a routine step, not something that went wrong.
-    if (error.code === "step-up") return <DecisionSignInRefusal />
+    if (error.code === "step-up") {
+      return <DecisionSignInRefusal key={error.press} />
+    }
     return (
       <Alert variant="destructive" role="alert">
         <AlertDescription data-testid="clinic-decision-error">
@@ -123,7 +130,7 @@ export function DecisionForm({
 
   return (
     <div className="space-y-6">
-      <DecisionRestoredNotice returned={signIn.returned} hasText={hasReason} />
+      <DecisionRestoredNotice returned={signIn.returned} />
       <div className="space-y-3">
         <p className="text-sm text-muted-foreground">{t("checklistHelp")}</p>
         {CLINIC_CHECKLIST_ITEMS.map((item) => (
@@ -181,7 +188,11 @@ export function DecisionForm({
             variant="destructive"
             isDisabled={!hasReason || pending !== null}
             isPending={pending === "reject"}
-            onPress={() => setConfirmingReject(true)}
+            // On a sign-in the page knows is too old there is nothing to
+            // confirm: the answer is that it was not saved.
+            onPress={() =>
+              signIn.expired ? void decide("reject") : setConfirmingReject(true)
+            }
             data-testid="clinic-reject"
           >
             {pending === "reject" ? t("saving") : t("reject")}

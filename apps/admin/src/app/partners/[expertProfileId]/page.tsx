@@ -12,6 +12,7 @@ import { StatusPill } from "@eleva/ui/components/status-pill"
 import {
   DecisionSignInBanner,
   DecisionSignInScope,
+  ForgetDecisionDraft,
 } from "@/components/decision-sign-in"
 import { decisionSignIn } from "@/lib/decision-sign-in"
 import { DECISION_TITLE_ID } from "@/lib/decision-title"
@@ -50,11 +51,9 @@ export default async function PartnerReviewPage({
   const { application, reviewState } = review
   const body = professionalBodyById(application?.professionalBody)
   const canDecide = reviewState === "pending" || reviewState === "needs_changes"
-  // Only a review that can be decided needs a recent sign-in.
-  const signIn =
-    application && canDecide
-      ? await decisionSignIn("expert", review.expertProfileId)
-      : null
+  // Only a review that can be decided shows the banner and the form.
+  const decidable = Boolean(application && canDecide)
+  const signIn = await decisionSignIn("expert", review.expertProfileId)
   const formatDate = (value: string) =>
     format.dateTime(new Date(value), {
       dateStyle: "medium",
@@ -90,7 +89,11 @@ export default async function PartnerReviewPage({
           ) : null}
         </div>
         {/* Said before the reviewer reads, ticks or writes anything. */}
-        {signIn ? <DecisionSignInBanner /> : null}
+        {decidable ? (
+          <DecisionSignInBanner />
+        ) : (
+          <ForgetDecisionDraft draftKey={signIn.draftKey} />
+        )}
 
         {application ? (
           <section className="space-y-4 rounded-xl border p-6">
@@ -168,10 +171,11 @@ export default async function PartnerReviewPage({
 
         {application && canDecide ? (
           <section className="space-y-4 rounded-xl border p-6">
+            {/* Focus is only ever put here by the page, and can be seen. */}
             <h2
               id={DECISION_TITLE_ID}
               tabIndex={-1}
-              className="text-base font-semibold tracking-tight outline-none"
+              className="rounded-sm text-base font-semibold tracking-tight outline-none focus:ring-2 focus:ring-ring focus:ring-offset-4 focus:ring-offset-background"
             >
               {t("detail.decisionTitle")}
             </h2>

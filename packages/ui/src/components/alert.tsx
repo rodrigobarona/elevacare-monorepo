@@ -32,9 +32,13 @@ function Alert({
   // readers interrupt. Other variants are advisory → polite `role="status"` so
   // reading flow isn't interrupted. Consumers can still override via
   // `role` / `aria-live`. The registry hard-codes `role="alert"`.
+  // `aria-live` goes only with a status: an alert is assertive by its role
+  // (both together are read twice by some screen readers), and a role that
+  // is not a live region (`note`) must not be made one.
   const isDestructive = variant === "destructive"
   const computedRole = role ?? (isDestructive ? "alert" : "status")
-  const computedAriaLive = ariaLive ?? (isDestructive ? undefined : "polite")
+  const computedAriaLive =
+    ariaLive ?? (computedRole === "status" ? "polite" : undefined)
   return (
     <div
       data-slot="alert"

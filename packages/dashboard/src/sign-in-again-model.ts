@@ -23,7 +23,16 @@ export interface KeptDraft {
   version: string
   ticks: string[]
   text: string
+  /** When it was kept (`Date.now()`): a draft is not given back for ever. */
+  keptAt: number
 }
+
+/**
+ * How long a kept draft is given back. Signing in again takes a minute or
+ * two; an hour covers a slow one, and after that what is in the tab is an
+ * abandoned draft, not a task in progress.
+ */
+export const DRAFT_MAX_AGE_MS = 60 * 60 * 1000
 
 /** What a returning person gets back. */
 export type DraftReturn =
@@ -93,6 +102,7 @@ function isDraft(value: unknown): value is KeptDraft {
     typeof draft.ownerId === "string" &&
     typeof draft.version === "string" &&
     typeof draft.text === "string" &&
+    typeof draft.keptAt === "number" &&
     Array.isArray(draft.ticks) &&
     draft.ticks.every((tick) => typeof tick === "string")
   )
@@ -121,8 +131,9 @@ export function takeDraft(
 
 /**
  * What to give back to the person now on the page. Someone else's draft is
- * never given back. The text always is; the ticks only when they were made
- * on the details now shown, and only those the form still has.
+ * never given back, nor one kept more than `DRAFT_MAX_AGE_MS` ago. The text
+ * always is; the ticks only when they were made on the details now shown,
+ * and only those the form still has.
  */
 export function returnDraft(
   draft: KeptDraft | null,
@@ -131,22 +142,18 @@ export function returnDraft(
     version: string
     ticks: readonly string[]
     maxText: number
+    /** The time now (`Date.now()`). */
+    now: number
   }
 ): DraftReturn {
   if (!draft || draft.ownerId !== now.ownerId) return { kind: "none" }
+  const age = now.now - draft.keptAt
+  if (age < 0 || age > DRAFT_MAX_AGE_MS) return { kind: "none" }
   const text = draft.text.slice(0, now.maxText)
   const ticks = draft.ticks.filter((tick) => now.ticks.includes(tick))
   if (ticks.length === 0 && text.trim() === "") return { kind: "empty" }
   if (draft.version !== now.version) return { kind: "changed", ticks: [], text }
   return { kind: "restored", ticks, text }
-}
-
-/** Milliseconds until `deadline`, never negative. Null when it is not a date. */
-export function msUntil(deadline: string | null, now: number): number | null {
-  if (!deadline) return null
-  const at = Date.parse(deadline)
-  if (Number.isNaN(at)) return null
-  return Math.max(0, at - now)
 }
 
 /**

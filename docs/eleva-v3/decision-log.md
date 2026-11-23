@@ -42,7 +42,9 @@ Each entry should include:
   - **Before anything is written**, a calm banner under the page header
     says a newer sign-in is needed, why ("so a console left open can't be
     used to decide in your name") and has one button. It also appears by
-    itself when the 12 hours pass on an open page.
+    itself when the 12 hours pass on an open page: by a timer, and again
+    whenever the page is shown or comes to the front, because a timer does
+    not count the hours a laptop slept.
   - **After a decision pressed on an old sign-in**, the message sits beside
     the button that was pressed, on both forms, and its first words are
     "That decision wasn't saved."
@@ -69,7 +71,16 @@ Each entry should include:
   filing they were made on: if the clinic or the expert sent new details
   meanwhile, the reason comes back, the checks are unticked and a sentence
   says why. Where the browser will not keep a draft, the message says to
-  copy the reason first: the page promises only what it can do.
+  copy the reason first: the page promises only what it can do, and a
+  write that fails at the press keeps the reviewer on the page with that
+  sentence. A draft is given back for an hour (`DRAFT_MAX_AGE_MS`): after
+  that it is an abandoned one. It is removed when signing out fails (the
+  form still has everything, and it must not come back later under
+  "you're signed in again") and when the review can no longer be decided.
+  It holds the reviewer's id, the filing's date, the names of the ticks
+  and the reason they wrote, in that tab only; the reviewer's email is in
+  the sign-in address, as it is for anyone the sign-in page fills it in
+  for.
 - **The way back.** The console has its own address, and the sign-in page
   returns only to paths on the gateway, so a console page could not be a
   `returnTo` (it was dropped, or on a local machine read as a gateway
@@ -81,6 +92,23 @@ Each entry should include:
   address was added to any allow-list. The console's own proxy uses the
   same form, so a signed-out person who opens a console address comes
   back to it after signing in (the 12.6 entry listed that as lost).
+- **The page is told how long is left, not at what moment it ends.** The
+  server counts the time left on its own clock (the one the API uses) and
+  the page counts down from there. The first version compared a moment
+  with the browser's clock: a clock twelve hours ahead would have made
+  every new sign-in look old, with no way out, since the page answered
+  the press itself (the panel caught it). A page that was drawn on an old
+  sign-in asks the server again when it comes to the front, so a reviewer
+  who signed in again in another tab is not told to do it twice; what is
+  on the form stays.
+- **An email link opens another tab.** The sign-in page offers Google, a
+  password, a passkey or an email link. The link opens wherever the mail
+  app opens it, and the draft is in the tab that asked for it. The
+  sign-in page's "check your inbox" step now goes on by itself once the
+  link has been used and the person comes back to that tab
+  (`apps/account` `login-form.tsx`): that tab has the draft. The tab the
+  link opened shows the review with an empty form, so the sentence says
+  "stay in this tab", not "on this page".
 - **Signing out first.** The sign-in page lets a signed-in person sign in
   again, which would leave the old session alive beside the new one. The
   button ends the old session, then leaves. If that fails, the reviewer
@@ -108,14 +136,21 @@ Each entry should include:
   and brings them back. No reference showed typed text coming back: that
   part is Eleva's own. Calm notice style, not the red one: nothing is
   wrong with what the reviewer did.
-- Accessibility (WCAG 2.2): nothing entered is asked twice (3.3.7); the
-  work continues after signing in again without loss (2.2.5, taken as the
-  bar); a banner present when the page opens is ordinary content, one that
-  appears later is polite, the answer to a press is an alert (4.1.3);
-  focus stays on the pressed button with "Sign in again" next to it, lands
-  on the notice after the return, or on the "Your decision" heading when
-  nothing had been entered (2.4.3); nothing leaves the page without a
-  press (3.2.2).
+- Accessibility (WCAG 2.2), as built; **no screen reader was run**, so
+  what is heard is a claim from the markup, not a finding: nothing
+  entered is asked twice (3.3.7); the work continues after signing in
+  again without loss (2.2.5, taken as the bar); a banner present when the
+  page opens is ordinary content (a note); when it appears later, its
+  title is put into a status region that was on the page, empty, since it
+  opened; the answer to a press is an alert made of the words only, with
+  the button outside it, and is said again on a second press (4.1.3; the
+  kit's `Alert` no longer sets a politeness beside an alert role, which
+  some screen readers read twice); focus stays on the pressed button with
+  "Sign in again" next to it, lands on the notice after the return, or on
+  the "Your decision" heading when nothing had been entered, both with a
+  ring that can be seen (2.4.3, 2.4.7); nothing leaves the page without a
+  press (3.2.2). Reject on a sign-in the page knows is too old asks for
+  no confirmation first.
 - Proof: unit tests for the draft's rules (kept, given back once, someone
   else, new details, nothing entered, a browser that refuses storage), the
   console path (what is refused, and that it can only resolve on the
@@ -127,24 +162,47 @@ Each entry should include:
   decision pressed, refused beside the button, nothing saved, focus still
   on the button; the API refusing the same decision sent to it directly;
   a sign-out that fails, told, with nothing lost; then the sign-in page
-  with the way back and the email filled in; the old session ended; a new
-  session; the review again with the ticks and the reason, the notice
+  with the way back and the email filled in; the old session ended; an
+  email link asked for in that tab and used elsewhere, and the tab going
+  on by itself to the review; the ticks and the reason there, the notice
   focused, the banner gone, nothing decided; the reviewer's own press
   deciding, and no draft left. A second trip: a sign-in one minute short
   of too old, the banner appearing by itself when the minute passes; the
   clinic sending new details meanwhile; the reason back, the tick not,
   and the sentence that says why. A signed-out request for
-  `/clinics?page=2` is sent to sign in with the way back to it.
-  Portuguese on a phone in the dark theme. Captures:
+  `/clinics?page=2` is sent to sign in with the way back to it. A
+  browser whose clock is 13 hours ahead shows no banner on a fresh
+  sign-in. Portuguese on a phone in the dark theme. Captures:
   `design-audit/captures/2026-11-23-sign-in-again-before/` and `-after/`.
-- Not proven: the sign-in page's own steps inside this journey (the test
-  makes the new session with the suite's helper, then opens the address
-  the sign-in page goes to next; that address is unit-tested, and
-  signing in is the auth suite's); the return after Google, a passkey or a
-  second factor (same address, not walked); the licence form in a browser
-  (same component as the clinic form); the copy for a browser that
-  refuses storage, in a browser; staging and production, where the
-  console, the gateway and the API are three hosts.
+- Not proven: any screen-reader run (NVDA, VoiceOver: the late banner,
+  the refusal on both forms, the failed sign-out, the notice after the
+  return); the return after a password, Google, a passkey or a second
+  factor (the same address and the same tab, not walked: the email link
+  is the one walked, with the suite's helper standing in for the click in
+  the mail); a laptop woken from sleep and a second open tab (handled by
+  the same listener, not walked); the licence form in a browser (same
+  component as the clinic form); the copy for a browser that refuses
+  storage, in a browser; 320 px; staging and production, where the
+  console, the gateway and the API are three hosts. There the account
+  project needs `ADMIN_URL`, or a staging sign-in returns to the
+  production console. Slice 12.11 (the console's own cookie) changes the
+  premise that a gateway sign-in gives a console session, and this
+  return path has to be walked again with it.
+- Judges, blind, against the design brief, first commit: engineering and
+  security 7.3, UI 8.3, UX and writing 8.0, trust and accessibility 7.6.
+  No open redirect was found through `?console=`. What they found is
+  what the second commit answers: the browser's clock, the email link,
+  the timer and a sleeping laptop, a draft with no end of life, a
+  sentence that could show when it was not true ("you're signed in
+  again" after a failed sign-out; "your reason is still here" following
+  the field), announcements claimed from roles, a focus ring that could
+  not be seen, a banner with no edge in the light theme, and a phone
+  button out of line.
+- Left for later: the sign-in page still greets a reviewer in the middle
+  of a decision with "Welcome back" and "Create an account" (12.8 builds
+  the staff's own way in); "Sign in again" ends the session in every
+  Eleva tab of that browser, and the words do not say so; a console
+  address with two parameters comes back with the first only.
 - Left for a person: a native reader for the Portuguese and Spanish
   sentences before release.
 - Owner: engineering
