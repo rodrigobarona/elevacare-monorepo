@@ -221,7 +221,7 @@ them, and stops at the one that does.
 | O-9  | Delete the API keys made before 2026-11-24 (`auth.apikey`): they are refused since 12.5 and only take up room.                                                                                                                                                                                                                                                                                                                                                                                |
 | O-10 | Look at the latency of the Upstash store from the API's region: the limiter now gives it one second.                                                                                                                                                                                                                                                                                                                                                                                          |
 | O-11 | Set `ADMIN_URL` on the account project in every environment, or a staging sign-in started from the console returns to the production console (12.7).                                                                                                                                                                                                                                                                                                                                          |
-| O-12 | Once O-2 is lifted: run `e2e/admin-clinics.spec.ts` on the 12.7 branch, retake its captures, and merge #463 and the roadmap update.                                                                                                                                                                                                                                                                                                                                                           |
+| O-12 | Once O-2 is lifted: run `e2e/admin-clinics.spec.ts` on the 12.7 branch (its later steps have never run), retake its real-console captures, then merge #463 (12.7), #465 (14.2, nothing in it uses a database) and this roadmap update. #464 and #465 both regenerate `execution-plan/index.html`: after the first merges, run `pnpm docs:execution-plan:html` on the other.                                                                                                                   |
 
 ## 5. Order of work
 
@@ -381,34 +381,34 @@ The order is safe by construction: count before writing, dry run before apply, o
 data per slice, the same result when run twice, a report after each, a rehearsal on a database
 branch before production.
 
-| Id    | Title                                                                              | Depends on  | Size | Proof                                 |
-| ----- | ---------------------------------------------------------------------------------- | ----------- | ---- | ------------------------------------- |
-| N1    | Operator: confirm what production runs; a read-only role                           | F-02        | -    | The role cannot write                 |
-| 14.2  | One guarded connection, and a command that only runs the guard                     | none        | S    | Exit-code tests                       |
-| 14.3  | Inventory, read only: tables, counts, value shapes, no personal data in the output | N1          | M    | A committed counts report             |
-| 14.4  | The migration's own tables: runs, id map, checksums                                | 14.2        | S    | Constraint tests                      |
-| 14.5  | The dry-run frame: mapper contract, safe re-runs, a report                         | 14.4        | M    | A fixture applied twice, same counts  |
-| 14.6  | People and accounts without passwords                                              | 14.5        | M    | People in equals people out           |
-| 14.7  | Organizations, Spaces, memberships                                                 | 14.6        | S    | One fixture per kind                  |
-| N2    | Operator: export names, verified flags and Google ids                              | N1          | -    | The export matches the people count   |
-| 14.8  | Google sign-in from the export only                                                | N2, 14.6    | S    | Two runs, no duplicates               |
-| 14.9  | Expert profiles, categories, listings, applications, public names                  | 14.7        | M    | A reserved name stops the run         |
-| 14.10 | Services, schedules, overrides                                                     | 14.9        | M    | Addresses preserved                   |
-| 14.11 | Bookings and their payments                                                        | 14.10       | M    | No loss; time zones tested            |
-| 14.12 | Payouts and legacy invoice rows                                                    | 14.11       | M    | Every paid booking has a row          |
-| 14.13 | Stripe check, read only                                                            | 14.9        | S    | Every id found                        |
-| 14.14 | Plans and kept commissions                                                         | A-02        | S    | One fixture per plan                  |
-| 14.15 | Session notes: decrypt, encrypt again, checksum                                    | N1, F-11    | M    | Checksums match                       |
-| 14.16 | Consents                                                                           | P-05        | S    | One fixture per case                  |
-| 14.17 | Files: from the MVP's storage to R2                                                | 14.9        | M    | Counts and sizes match                |
-| 14.18 | Legacy audit rows                                                                  | P-02        | S    | Counts match                          |
-| 14.19 | Verify: counts, orphans, checksums, a sample of addresses                          | 14.11       | M    | A planted orphan is found             |
-| 14.20 | The rehearse command; rehearsal one                                                | 14.19, P-06 | S    | A rehearsal report                    |
-| 14.21 | Changes since a date, with deletions; rehearsal two                                | 14.20       | M    | Edit, delete, run again               |
-| 14.22 | Old private addresses redirect                                                     | none        | S    | Redirect tests                        |
-| 14.23 | The welcome email, in waves; the calendar notice                                   | 14.6, F-10  | M    | A dry run prints who would receive it |
-| 14.24 | The way back: reverse export, and a rollback rehearsal                             | 14.21       | L    | Replayed twice, no duplicates         |
-| 14.25 | The cutover runbook, with a full-load step; rehearsal three                        | all, F-10   | S    | A timed report                        |
+| Id    | Title                                                                                                  | Depends on  | Size | Proof                                 |
+| ----- | ------------------------------------------------------------------------------------------------------ | ----------- | ---- | ------------------------------------- |
+| N1    | Operator: confirm what production runs; a read-only role                                               | F-02        | -    | The role cannot write                 |
+| 14.2  | **Open (#465), waits on O-2 to merge.** One guarded connection, and a command that only runs the guard | none        | S    | Exit-code tests                       |
+| 14.3  | Inventory, read only: tables, counts, value shapes, no personal data in the output                     | N1          | M    | A committed counts report             |
+| 14.4  | The migration's own tables: runs, id map, checksums                                                    | 14.2        | S    | Constraint tests                      |
+| 14.5  | The dry-run frame: mapper contract, safe re-runs, a report                                             | 14.4        | M    | A fixture applied twice, same counts  |
+| 14.6  | People and accounts without passwords                                                                  | 14.5        | M    | People in equals people out           |
+| 14.7  | Organizations, Spaces, memberships                                                                     | 14.6        | S    | One fixture per kind                  |
+| N2    | Operator: export names, verified flags and Google ids                                                  | N1          | -    | The export matches the people count   |
+| 14.8  | Google sign-in from the export only                                                                    | N2, 14.6    | S    | Two runs, no duplicates               |
+| 14.9  | Expert profiles, categories, listings, applications, public names                                      | 14.7        | M    | A reserved name stops the run         |
+| 14.10 | Services, schedules, overrides                                                                         | 14.9        | M    | Addresses preserved                   |
+| 14.11 | Bookings and their payments                                                                            | 14.10       | M    | No loss; time zones tested            |
+| 14.12 | Payouts and legacy invoice rows                                                                        | 14.11       | M    | Every paid booking has a row          |
+| 14.13 | Stripe check, read only                                                                                | 14.9        | S    | Every id found                        |
+| 14.14 | Plans and kept commissions                                                                             | A-02        | S    | One fixture per plan                  |
+| 14.15 | Session notes: decrypt, encrypt again, checksum                                                        | N1, F-11    | M    | Checksums match                       |
+| 14.16 | Consents                                                                                               | P-05        | S    | One fixture per case                  |
+| 14.17 | Files: from the MVP's storage to R2                                                                    | 14.9        | M    | Counts and sizes match                |
+| 14.18 | Legacy audit rows                                                                                      | P-02        | S    | Counts match                          |
+| 14.19 | Verify: counts, orphans, checksums, a sample of addresses                                              | 14.11       | M    | A planted orphan is found             |
+| 14.20 | The rehearse command; rehearsal one                                                                    | 14.19, P-06 | S    | A rehearsal report                    |
+| 14.21 | Changes since a date, with deletions; rehearsal two                                                    | 14.20       | M    | Edit, delete, run again               |
+| 14.22 | Old private addresses redirect                                                                         | none        | S    | Redirect tests                        |
+| 14.23 | The welcome email, in waves; the calendar notice                                                       | 14.6, F-10  | M    | A dry run prints who would receive it |
+| 14.24 | The way back: reverse export, and a rollback rehearsal                                                 | 14.21       | L    | Replayed twice, no duplicates         |
+| 14.25 | The cutover runbook, with a full-load step; rehearsal three                                            | all, F-10   | S    | A timed report                        |
 
 What the code review of the MVP snapshot showed, to settle before the mappers: the MVP has no
 passwords to move (people set a new one or use Google); no time zone on the person, while
