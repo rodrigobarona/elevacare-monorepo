@@ -1216,6 +1216,16 @@ of 2026-11-21 merged without one (F-13).</li>
 <td><code>apps/account/src/app/(auth)/dashboard/route.ts</code>, <code>packages/auth/src/proxy.ts</code></td>
 <td>13.25</td>
 </tr>
+<tr>
+<td>Jobs that work through a list answer 200 when every item failed (Stripe down for a whole run), so the run is reported as done. Two of them write item failures to the console only.</td>
+<td><code>packages/workflows/src/scheduling/slot-reservation-expiry.ts</code>, <code>payments/process-expert-transfers.ts</code>, <code>packages/billing/src/server/seats.ts</code>, <code>packages/scheduling/src/booking-request.ts</code>, <code>packages/crm/src/due.ts</code></td>
+<td></td>
+</tr>
+<tr>
+<td>A manual run of the monthly reconciliation for another month reports done and restarts the monitor&#39;s clock. Several job routes return the raw error message in their 500 answer.</td>
+<td><code>apps/api/src/app/workflows/stripe-toconline-reconciliation/route.ts</code>, <code>apps/api/src/app/workflows/*/route.ts</code></td>
+<td></td>
+</tr>
 </tbody></table>
 <h2 id="remaining-roadmap--4-waiting-on-a-person"><a class="anchor" href="#remaining-roadmap--4-waiting-on-a-person" aria-label="Link to section">#</a>4. Waiting on a person</h2>
 <p>Engineering does not wait silently on these: it builds every slice that does not depend on
@@ -1998,16 +2008,16 @@ saved in case F-04 reopens it.</p>
 <tr>
 <td></td>
 <td>13.18</td>
-<td>Every background job reports that it ran</td>
+<td><strong>Open (#467), waits on O-2 to merge.</strong> Every background job reports that it ran</td>
 <td>S</td>
-<td>5 of 20 do today</td>
+<td>One list of 22 jobs, one wrapper, one reporter; no heartbeat exists yet</td>
 </tr>
 <tr>
 <td></td>
 <td>13.19</td>
 <td>Monitors as code, and a health check that checks</td>
 <td>M</td>
-<td>After 13.18, O-3</td>
+<td>After 13.18, O-3. Reads <code>@eleva/config/background-jobs</code>; skips a job marked <code>notRegisteredUntil</code>; 22 heartbeats are more than the free plan&#39;s 10</td>
 </tr>
 <tr>
 <td></td>
